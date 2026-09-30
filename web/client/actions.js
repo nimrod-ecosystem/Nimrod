@@ -381,6 +381,11 @@ export const MODULE_VERBS = {
   name_that:     { next: 'name_that/next', prev: 'name_that/prev', select: 'name_that/select',
                    back: 'name_that/skip' },
   karaoke:       { next: 'karaoke/next', prev: 'karaoke/prev', play: 'karaoke/play', pause: 'karaoke/pause' },
+  // ROW 2.37. Solitaire: next / prev walk the list (cards that can move + Draw / Undo / New game, or a picked
+  // card's legal places + Put it back), select takes the lit one, back puts a picked card back.
+  solitaire:     { next: 'solitaire/next', prev: 'solitaire/prev', select: 'solitaire/select', back: 'solitaire/back' },
+  // The note: next / prev walk its buttons, select presses the lit one, back closes the change form or the history.
+  note:          { next: 'note/next', prev: 'note/prev', select: 'note/select', back: 'note/back' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.

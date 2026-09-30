@@ -99,6 +99,8 @@ import './modules/spelling.js';        // registers 'spelling' (row 2.45)
 import './modules/simple_math.js';     // registers 'simple_math'
 import './modules/name_that.js';       // registers 'name_that' (animal / state / person)
 import './modules/karaoke.js';         // registers 'karaoke'
+import './modules/solitaire.js';       // registers 'solitaire' (row 2.37, Klondike)
+import './modules/note.js';            // registers 'note' (row 2.37, a note from someone)
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';

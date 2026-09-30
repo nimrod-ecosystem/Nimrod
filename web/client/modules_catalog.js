@@ -258,6 +258,19 @@ export const CATALOG = [
     note: 'Five rooms to start from, drawn with Claude Design. Movement can be slowed or stopped, '
       + 'and stops by itself if the device asks for reduced motion.',
   },
+  // Row 2.37. `touch`: left alone it is a note on the wall, and nothing waits on anybody.
+  {
+    type: 'note',
+    title: 'Note from someone',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'A short note somebody left, with who wrote it and when.',
+    needs: 'Nothing. Somebody to leave a note: on this screen, or from a phone or computer signed in '
+      + 'to the same account.',
+    why: 'Words from a person who was here, in their own name, where they will be seen: a sticky '
+      + 'note, the fridge, a desk. It can be read aloud, and changed by typing or, with no keyboard, '
+      + 'by picking a ready-made note. Every earlier note is kept and can be put back.',
+  },
   {
     type: 'pond',
     group: 'comfort',
@@ -474,6 +487,17 @@ export const CATALOG = [
     why: 'The people game is the messages from the family with a question on top, so the answer '
       + 'is also the reward. A missed name is met gently by default: it says whose message it was '
       + 'and offers to play it again.',
+  },
+  // Row 2.37: the first card game.
+  {
+    type: 'solitaire',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Klondike solitaire, with big cards in four suit colours.',
+    needs: 'Nothing. The deck and the rules are built in.',
+    why: 'A move is two short choices: pick a card, then pick from the places it can go. One switch '
+      + 'can play a whole game, and so can a touch or a mouse; nothing needs a drag. There is no '
+      + 'timer and no losing screen: when nothing helps, it offers Undo or a new deal.',
   },
   {
     type: 'sprint',

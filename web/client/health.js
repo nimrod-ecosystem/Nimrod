@@ -88,6 +88,8 @@ export const HEALTH_EXPECT = {
   spelling:    { idle: true },
   simple_math: { idle: true },
   name_that:   { idle: true },
+  // Row 2.37's card game: a table nobody is playing is a table, not a stalled panel.
+  solitaire:   { idle: true },
   karaoke:     { expectMs: 90 * 60 * 1000 },
   // *** ADDED 2026-08-31, AND ALL FOUR WERE ALREADY WRONG. ***
   //
@@ -138,6 +140,9 @@ export const HEALTH_EXPECT = {
   // A room: scenery with a clock on the wall. It publishes only when somebody presses a piece of
   // its furniture, and a room nobody has touched all day is a room doing its job.
   room:        { idle: true },
+  // A note on the wall (row 2.37). It publishes nothing, and a note nobody has changed all week is a
+  // note doing its job.
+  note:        { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

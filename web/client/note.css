@@ -1,0 +1,58 @@
+/* note.css — the look of `modules/note.js` (a note from someone). Loaded by the module itself, from a
+   <link> inside its own mount, the way scoreboard.css is.
+
+   THE PAPER. A sticky note is a physical thing with a colour of its own, so the paper is NOT a theme
+   surface: it is the panel's `paper` setting (default a sticky-note yellow), set inline on the note
+   as `--note-paper`, with the ink picked from it (`inkFor` in note.js: whichever of a dark and a light
+   ink reads better, measured), so any paper somebody chooses stays readable. The fallbacks below are
+   declarations — the one place a literal colour belongs — and everything else is a theme token.
+
+   SIZE: everything is in container units, so the same note reads on a whole panel, in a sticky-note
+   slot on a desk close-up, or small on the fridge. */
+
+.nt-wrap{
+  --note-paper-default: #fbf3a8;
+  --note-ink-default: #2a2414;
+  width:100%;height:100%;min-height:0;container-type:size;color:var(--text);font-family:var(--font);
+}
+.nt-wrap *{box-sizing:border-box}
+.nt{height:100%;display:flex;flex-direction:column;gap:clamp(6px, 2cqmin, 18px);padding:clamp(6px, 2.5cqmin, 24px);
+  overflow:auto}
+.nt [hidden]{display:none !important}
+
+.nt-paper{
+  flex:1 1 auto;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:1.5cqmin;
+  background:var(--note-paper, var(--note-paper-default));color:var(--note-ink, var(--note-ink-default));
+  border-radius:4px;padding:clamp(10px, 4cqmin, 40px);
+  box-shadow:0 1cqmin 2.4cqmin color-mix(in srgb, var(--text) 25%, transparent);
+}
+.nt-paper[data-tilt="1"]{transform:rotate(-1.5deg)}
+.nt-text{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-weight:650;line-height:1.3}
+.nt-text[data-size="big"]{font-size:clamp(18px, 11cqmin, 110px)}
+.nt-text[data-size="mid"]{font-size:clamp(15px, 8cqmin, 76px)}
+.nt-text[data-size="small"]{font-size:clamp(13px, 5.5cqmin, 48px)}
+.nt-empty{margin:0;font-size:clamp(15px, 6cqmin, 48px);font-weight:600;opacity:.8}
+.nt-who{margin:0;font-size:clamp(12px, 3.6cqmin, 32px);font-weight:600;opacity:.85}
+
+.nt-btns,.nt-choices{display:flex;flex-wrap:wrap;gap:clamp(4px, 1.4cqmin, 12px)}
+.nt-btn{min-height:44px;padding:0 clamp(10px, 2cqmin, 20px);border:2px solid var(--border);border-radius:12px;
+  background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:clamp(14px, 3.4cqmin, 28px);cursor:pointer}
+.nt-btn[aria-pressed="true"]{border-color:var(--accent);background:var(--surface-alt)}
+.nt-btn[aria-pressed="true"]::after{content:"\00a0\2713"}
+.nt-btn[disabled]{opacity:.5;cursor:default}
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit button reads without colour. */
+.nt [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+.nt-btn[data-on="1"]::before{content:"\25B8\00a0"}
+
+.nt-edit{display:flex;flex-direction:column;gap:clamp(6px, 1.6cqmin, 14px)}
+.nt-head{margin:0;font-size:clamp(14px, 3.6cqmin, 30px);font-weight:700;color:var(--text-strong)}
+.nt-input,.nt-name{width:100%;font:inherit;font-size:clamp(15px, 4cqmin, 32px);padding:8px 10px;border-radius:10px;
+  border:2px solid var(--border);background:var(--surface);color:var(--text)}
+.nt-input{min-height:4.5em;resize:vertical}
+.nt-hint,.nt-err{margin:0;font-size:clamp(12px, 2.8cqmin, 22px);color:var(--text-muted)}
+.nt-err{color:var(--text-strong);font-weight:700}
+
+.nt-hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(6px, 1.6cqmin, 14px)}
+.nt-hist li{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
+.nt-hist .nt-htext{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(14px, 3.6cqmin, 28px)}
+.nt-hist .nt-hwho{margin:0;font-size:clamp(12px, 2.8cqmin, 22px);color:var(--text-muted)}

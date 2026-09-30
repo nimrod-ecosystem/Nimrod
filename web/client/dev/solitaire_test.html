@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>solitaire — Klondike rules, one-switch play, suits that do not rely on colour — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../solitaire.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{width:960px;height:540px;margin-top:12px;border:1px solid #e4e0c2}
+</style>
+</head>
+<body>
+<h1>solitaire — row 2.37 (Klondike)</h1>
+<p>Design's spec §10: <i>"A move is pick a card → pick where, with the legal places listed. One switch
+can play."</i> This suite checks the rules on their own (<code>klondike.js</code>), then the table
+(<code>modules/solitaire.js</code>): the two-choice move, unlimited undo, no fail screen, cards 110px+
+wide at a quarter of a 1080p kiosk, four suit colours that each read at 4.5:1 <b>and</b> carry their
+symbol — and a known deal finished from the deal to "You won" with nothing but <code>next</code> and
+<code>select</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<h2>live, to look at (960 × 540, a quarter of a 1080p kiosk)</h2>
+<div id="host"></div>
+
+<script type="module">
+import '../modules/solitaire.js';
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import { CATALOG } from '../modules_catalog.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { expectFor } from '../health.js';
+import {
+  SUITS, newDeck, shuffled, deal, canPlace, destinations, sources, applyMove, isLegal, isWon, allRevealed,
+  finishMoves, isSafeHome, nextAutoMove, settle, isStuck, encodeMove, decodeMove, encodeTurn, replay,
+  solve, cardName, cardShort, homeCount, legalMoves,
+} from '../klondike.js';
+import { GAME, DEFAULTS, whereKey, placeWords, cardWords } from '../modules/solitaire.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// THE KNOWN DEAL. Seed 1, drawing one: the solver in klondike.js finishes it (checked below, not
+// assumed), and the one-switch section plays that solution through the module's own walk.
+const KNOWN_SEED = 1;
+
+// ---- building positions by hand: 'H7' is face up, 'S8?' face down ----------------------------
+const card = (t) => { const m = /^([SHDC])(\d{1,2})(\?)?$/.exec(t); return { s: m[1], r: Number(m[2]), up: !m[3] }; };
+function make({ tableau = [], foundations = {}, stock = [], waste = [], draw = 1 } = {}) {
+  const cols = Array.from({ length: 7 }, (_, i) => (tableau[i] || []).map(card));
+  const f = { S: [], H: [], D: [], C: [] };
+  for (const s of 'SHDC') for (let r = 1; r <= (foundations[s] || 0); r++) f[s].push({ s, r, up: true });
+  return { seed: 0, draw, tableau: cols, foundations: f, stock: stock.map((t) => ({ ...card(t), up: false })),
+    waste: waste.map(card), moves: 0, recycles: 0 };
+}
+const T = (col, idx) => ({ pile: 'tableau', col, idx });
+const TO = (col) => ({ pile: 'tableau', col });
+const F = (suit) => ({ pile: 'foundation', suit });
+const W = { pile: 'waste' };
+const mv = (from, to) => ({ kind: 'move', from, to });
+
+// ---- mounting the module --------------------------------------------------------------------
+function fakeState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const fn of [...subs]) fn(v); },
+    subscribe(fn) { subs.add(fn); fn(v); return () => subs.delete(fn); },
+    flush() {}, load: async () => {}, startPolling() {}, destroy() {},
+  };
+}
+function fakeStream() {
+  let events = [];
+  const subs = new Set();
+  const snap = () => ({ events: [...events], total: events.length });
+  return {
+    append(kind, data) { events = [...events, { id: events.length + 1, kind, data, created_at: new Date().toISOString() }];
+      for (const fn of [...subs]) fn(snap()); return Promise.resolve(); },
+    load: () => Promise.resolve(), get: snap,
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {},
+    peek: () => events,
+  };
+}
+let n = 0;
+function scratch(w = 960, h = 540) {
+  const el = document.createElement('div');
+  el.style.cssText = `position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:${w}px;height:${h}px`;
+  document.body.append(el);
+  return el;
+}
+function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, output = undefined,
+                 points = fakeStream(), rand = () => 0.25 } = {}) {
+  const said = [];
+  const out2 = output === null ? null : (output || { say: (t) => { said.push(t); return `u${said.length}`; }, cancel() {} });
+  const state = fakeState(saved);
+  const inst = mountModule(GAME, {
+    mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
+    instanceId: `sol${++n}`, output: out2, reducedMotion, rand,
+    makeEvents: (k) => (k === 'points' ? points : fakeStream()),
+  });
+  inst.init();
+  const probe = () => inst.impl.__probe();
+  return {
+    inst, host, bus, state, said, points, probe,
+    pub: (verb) => bus.publish(`${GAME}/${verb}`),
+    bar: () => host.querySelector('.sol-say')?.textContent || '',
+  };
+}
+// Walk with `next` until the lit item is `key`, then `select`. Returns presses used, or -1.
+function walkTo(t, key) {
+  let presses = 0;
+  if (t.probe().lit < 0) { t.pub('next'); presses++; }
+  const len = t.probe().items.length;
+  for (let i = 0; i <= len && t.probe().litKey !== key; i++) { t.pub('next'); presses++; }
+  if (t.probe().litKey !== key) return -1;
+  t.pub('select');
+  return presses + 1;
+}
+const moveKeys = (m) => (m.kind === 'draw' ? ['draw']
+  : [`src:${whereKey(m.from)}`, `dst:${whereKey(m.to.pile === 'tableau' ? { pile: 'tableau', col: m.to.col } : m.to)}`]);
+function lum(rgb) {
+  const [r, g, b] = rgb.match(/\d+(\.\d+)?/g).slice(0, 3).map(Number).map((v) => {
+    const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+async function cssReady(host) {
+  const link = host.querySelector('link[data-sol-css]');
+  if (link && !link.sheet) await new Promise((r) => { link.addEventListener('load', r); link.addEventListener('error', r); setTimeout(r, 3000); });
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the deck and the deal');
+  {
+    const d = newDeck();
+    check('52 cards, 13 of each suit, no two alike', d.length === 52 && new Set(d.map((c) => c.s + c.r)).size === 52
+      && SUITS.every((s) => d.filter((c) => c.s === s.id).length === 13));
+    const a = shuffled(7).map((c) => c.s + c.r).join();
+    check('*** the same seed is the same shuffle, every time ***', a === shuffled(7).map((c) => c.s + c.r).join());
+    check('different seeds are different deals', a !== shuffled(8).map((c) => c.s + c.r).join());
+    check('a shuffle is still all 52 cards', new Set(shuffled(99).map((c) => c.s + c.r)).size === 52);
+    const g = deal(KNOWN_SEED);
+    check('seven columns of 1 to 7 cards', g.tableau.map((p) => p.length).join() === '1,2,3,4,5,6,7');
+    check('only the last card of each column is face up', g.tableau.every((p) => p.every((c, i) => c.up === (i === p.length - 1))));
+    check('the other 24 are the stock, face down; the waste and foundations are empty',
+      g.stock.length === 24 && g.stock.every((c) => !c.up) && !g.waste.length && homeCount(g) === 0);
+    check('draw one is the default; three is asked for', g.draw === 1 && deal(1, { draw: 3 }).draw === 3 && deal(1, { draw: 'three' }).draw === 3);
+  }
+
+  section('placing rules');
+  {
+    const g = make({ tableau: [['S8'], ['H9?', 'D8'], [], ['C13']], foundations: { H: 2 } });
+    check('a red 7 goes on a black 8', canPlace(g, [card('H7')], TO(0)));
+    check('a black 7 does not go on a black 8', !canPlace(g, [card('C7')], TO(0)));
+    check('a red 6 does not go on a black 8 (must be one lower)', !canPlace(g, [card('H6')], TO(0)));
+    check('*** only a king goes in an empty column ***', canPlace(g, [card('H13')], TO(2)) && !canPlace(g, [card('H12')], TO(2)));
+    check('a card does not go on a face-down card', !canPlace(make({ tableau: [['S8?']] }), [card('H7')], TO(0)));
+    check('the hearts pile takes the 3 of hearts next', canPlace(g, [card('H3')], F('H')));
+    check('...not the 4, and not the 3 of diamonds', !canPlace(g, [card('H4')], F('H')) && !canPlace(g, [card('D3')], F('H')));
+    check('an empty foundation takes only its own ace', canPlace(g, [card('S1')], F('S')) && !canPlace(g, [card('S2')], F('S'))
+      && !canPlace(g, [card('H1')], F('S')));
+    check('a run of two never goes home at once', !canPlace(g, [card('H3'), card('S2')], F('H')));
+
+    const run = make({ tableau: [['S10?', 'H9', 'C8', 'D7'], ['C10']] });
+    check('a whole run moves onto a matching card', isLegal(run, mv(T(0, 1), TO(1))));
+    const after = applyMove(run, mv(T(0, 1), TO(1)));
+    check('...all three go, in order', after.tableau[1].map((c) => c.s + c.r).join() === 'C10,H9,C8,D7');
+    check('*** and the card left on top turns face up by itself ***', after.tableau[0].length === 1 && after.tableau[0][0].up);
+    check('a move never changes the game it was made from', run.tableau[0].length === 4 && !run.tableau[0][0].up);
+    check('an illegal move is refused (null), not half-made', applyMove(run, mv(T(0, 2), TO(1))) === null);
+    check('a card cannot be taken from the middle of a face-down stack', !isLegal(run, mv(T(0, 0), TO(1))));
+
+    const fromHome = make({ tableau: [['S4']], foundations: { H: 3 } });
+    check('a card can come back down off a foundation', isLegal(fromHome, mv(F('H'), TO(0))));
+    check('but never from one foundation to another', !isLegal(fromHome, mv(F('H'), F('S'))));
+  }
+
+  section('where a card can go: the list the player picks from');
+  {
+    const g = make({ tableau: [['S8'], ['C8'], [], ['H7'], ['S13'], []], foundations: { H: 6 }, waste: ['D7'] });
+    const d = destinations(g, T(3, 0));
+    check('the 7 of hearts can go home, or onto either black 8', d.map(whereKey).join() === 'fH,t0,t1', d.map(whereKey).join());
+    check('home is listed first', d[0].pile === 'foundation');
+    const k = destinations(g, T(4, 0));
+    check('*** a king that is already a whole column is not offered another empty column (changes nothing) ***', k.length === 0, JSON.stringify(k));
+    const kw = destinations(make({ tableau: [[], ['S13?', 'H13']] }), T(1, 1));
+    check('...but a king with cards under it is offered each empty column', kw.map(whereKey).join() === 't0,t2,t3,t4,t5,t6', kw.map(whereKey).join());
+    const src = sources(g).map(whereKey);
+    check('the cards that can move: waste, then columns left to right', src.join() === 'w,t3.0', src.join());
+    check('each place has words on screen and aloud', placeWords(g, TO(0)).label === 'Onto 8♠ (column 1)'
+      && placeWords(g, TO(0)).speech === 'onto the 8 of spades' && placeWords(g, F('H')).label === 'Home: ♥ hearts'
+      && placeWords(g, TO(2)).label === 'Empty column 3');
+    check('a run is named by its top card and how many more', cardWords(make({ tableau: [['S9', 'H8', 'C7']] }), T(0, 0)).label === '9♠ and 2 more');
+    check('names read as words, symbols as symbols', cardName(card('C12')) === 'queen of clubs' && cardShort(card('D10')) === '10♦');
+  }
+
+  section('the stock: draw one, draw three, and turning it over');
+  {
+    let g = make({ stock: ['S1', 'S2', 'S3', 'S4'] });   // top of stock = last = S4
+    g = applyMove(g, { kind: 'draw' });
+    check('draw one turns the top card face up onto the waste', g.waste.map((c) => c.s + c.r).join() === 'S4' && g.waste[0].up && g.stock.length === 3);
+    g = applyMove(applyMove(applyMove(g, { kind: 'draw' }), { kind: 'draw' }), { kind: 'draw' });
+    check('the stock empties', g.stock.length === 0 && g.waste.length === 4);
+    const r = applyMove(g, { kind: 'draw' });
+    check('*** an empty stock turns the waste back over, in the same order ***', r.stock.length === 4 && !r.waste.length
+      && r.stock.every((c) => !c.up) && r.stock[r.stock.length - 1].s + r.stock[r.stock.length - 1].r === 'S4' && r.recycles === 1);
+    check('and it can be turned over again and again (no fail from running out)', applyMove(applyMove(r, { kind: 'draw' }), { kind: 'draw' }) !== null);
+    let t = make({ stock: ['S1', 'S2', 'S3', 'S4', 'S5'], draw: 3 });
+    t = applyMove(t, { kind: 'draw' });
+    check('draw three takes three, the last one on top', t.waste.map((c) => c.s + c.r).join() === 'S5,S4,S3' && t.stock.length === 2);
+    t = applyMove(t, { kind: 'draw' });
+    check('...and whatever is left when fewer than three remain', t.waste.length === 5 && t.stock.length === 0);
+    check('nothing to draw when stock and waste are both empty', !isLegal(make(), { kind: 'draw' }));
+  }
+
+  section('putting cards home by themselves');
+  {
+    const g = make({ foundations: { H: 4, D: 3, S: 2, C: 2 } });
+    check('aces and twos are always safe', isSafeHome(g, card('S1')) && isSafeHome(g, card('D2')));
+    check('the 5 of hearts is NOT safe while a black 4 might still want it', !isSafeHome(g, card('H5')));
+    check('the 3 of spades IS safe once both red piles are at 2', isSafeHome(g, card('S3')));
+    // A card left in the stock, so this is not the "everything revealed, finish it" case below.
+    const a = make({ tableau: [['S1'], ['S3?', 'S2'], ['H5']], foundations: { H: 4 }, stock: ['D9'] });
+    check('auto-move off moves nothing', nextAutoMove(a, 'off') === null);
+    const s = settle(a, 'safe');
+    check('safe: the ace, then the two under it, go home (the 5♥ stays)', homeCount(s.game) === 6 && s.game.tableau[2].length === 1, JSON.stringify(s.moves.map(encodeMove)));
+    const all = settle(a, 'all');
+    check('every card: the 3♠ uncovered under the two, and the 5♥, go too', homeCount(all.game) === 8, String(homeCount(all.game)));
+    const done = make({ tableau: [['H2', 'S1'], ['H1']] });
+    check('nothing face down and nothing to draw is "all revealed"', allRevealed(done) && !allRevealed(make({ tableau: [['S1?']] })));
+    const fin = finishMoves(done);
+    let won = done; for (const m of fin) won = applyMove(won, m);
+    check('*** from there, "put them all home" finishes it ***', fin.length === 3 && isWon(make({ foundations: { S: 13, H: 13, D: 13, C: 13 } })) && homeCount(won) === 3);
+  }
+
+  section('win detection');
+  {
+    const full = make({ foundations: { S: 13, H: 13, D: 13, C: 13 } });
+    check('52 home is a win', isWon(full));
+    check('51 home is not', !isWon(make({ foundations: { S: 13, H: 13, D: 13, C: 12 } })));
+    check('a won game is never called stuck', !isStuck(full));
+  }
+
+  section('stuck is an offer, and only when nothing helps');
+  {
+    // Two kings of the same colour sitting on face-down cards, and a stock of cards that fit nowhere.
+    const stuck = make({ tableau: [['H2?', 'S13'], ['D2?', 'C13'], ['S5?', 'S9'], ['C5?', 'C9'], ['H5?', 'D9'], ['D5?', 'H9'], ['C3?', 'S7']],
+      stock: ['S4', 'C4', 'H4'] });
+    check('nothing helps here: it is stuck', isStuck(stuck));
+    const notStuck = make({ tableau: [['H2?', 'S13'], ['D2?', 'C13'], ['S5?', 'S9'], ['C5?', 'C9'], ['H5?', 'D9'], ['D5?', 'H9'], ['C3?', 'S7']],
+      stock: ['S4', 'H8', 'H4'] });
+    check('*** a card deep in the stock that fits (8♥ on 9♠) means it is NOT stuck ***', !isStuck(notStuck));
+    check('a fresh known deal is not stuck', !isStuck(deal(KNOWN_SEED)));
+  }
+
+  section('saving a game: moves as strings, replay, undo that survives a reload');
+  {
+    const ms = [{ kind: 'draw' }, mv(W, TO(3)), mv(T(2, 4), F('H')), mv(F('S'), TO(0)), mv(T(6, 12), TO(1))];
+    check('every kind of move survives encode -> decode', ms.every((m) => encodeMove(decodeMove(encodeMove(m))) === encodeMove(m)),
+      ms.map(encodeMove).join(' '));
+    check('rubbish decodes to null, not to a move', decodeMove('t9>fX') === null && decodeMove('t3>t4') === null && decodeMove('') === null);
+    const sol = solve(deal(KNOWN_SEED), { maxNodes: 200000 });
+    const turns = (sol || []).slice(0, 20).map((m) => encodeTurn([m]));
+    const r = replay(KNOWN_SEED, 1, turns);
+    let direct = deal(KNOWN_SEED); for (const m of (sol || []).slice(0, 20)) direct = applyMove(direct, m);
+    check('replaying 20 turns gives exactly the position playing them does', JSON.stringify(r.game) === JSON.stringify(direct));
+    check('one snapshot per turn, plus the deal (so every one of them can be undone)', r.snapshots.length === 21 && r.turns.length === 20);
+    const bad = replay(KNOWN_SEED, 1, [...turns.slice(0, 5), 't6.0>fS', ...turns.slice(5)]);
+    check('*** a corrupted save keeps everything before the bad turn rather than losing the game ***', bad.turns.length === 5);
+  }
+
+  section('the known deal can be won (the solver checks it; nothing is assumed)');
+  let solution = null;
+  {
+    const t0 = performance.now();
+    solution = solve(deal(KNOWN_SEED), { maxNodes: 200000 });
+    check(`seed ${KNOWN_SEED}, drawing one, has a winning line`, Array.isArray(solution) && solution.length > 52,
+      solution ? String(solution.length) : 'no solution');
+    let g = deal(KNOWN_SEED);
+    let legal = true;
+    for (const m of solution || []) { const nx = applyMove(g, m); if (!nx) { legal = false; break; } g = nx; }
+    check('every move in it is legal, and it ends with all 52 home', legal && isWon(g));
+    check(`found in ${Math.round(performance.now() - t0)} ms`, true);
+  }
+
+  // =====================================================================
+  section('it is a module like any other, and described honestly');
+  {
+    const m = getManifest(GAME);
+    check('registered', !!m);
+    check('built on the new core', m?.core === 'new');
+    check('dependsOn local: the deck and rules are all here', m?.dependsOn === 'local');
+    check('described in the catalog, as something to do', CATALOG.some((c) => c.type === GAME && c.group === 'practice'));
+    check('it has decided what its silence means (a game nobody plays is not a fault)', expectFor(GAME).idle === true);
+    check('*** mounting without a personId key is refused (core:new contract) ***', (() => {
+      try { mountModule(GAME, { mount: scratch(), bus: createBus(), instanceId: 'x' }); return false; } catch { return true; }
+    })());
+    // actions.js (MODULE_VERBS) is another agent's file today. The row this module needs is in the
+    // report; until it lands, the verbs are checked straight on the bus below. Once it lands, it
+    // must be exactly this shape.
+    const verbs = verbsFor(GAME);
+    check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back',
+      verbs.length === 0 || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v))
+        && verbTarget(GAME, 'select').topic === `${GAME}/select` && verbTarget(GAME, 'back').topic === `${GAME}/back`), verbs.join(','));
+    check('defaults: draw one, safe auto-move, only movable cards offered, nothing paid, nothing said',
+      DEFAULTS.draw === 'one' && DEFAULTS.autoMove === 'safe' && DEFAULTS.offer === 'movable' && DEFAULTS.winPoints === 0
+      && DEFAULTS.sayAloud === false && DEFAULTS.showStats === false);
+  }
+
+  section('*** the suits: four colours AND their symbols ***');
+  {
+    const t = mount({ host: scratch(960, 540) });
+    await cssReady(t.host);
+    // Deal a game where every suit is face up somewhere: walk the solver's line until it is.
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const faces = [...t.host.querySelectorAll('.sol-card[data-up="1"]')];
+    check('every face-up card shows its rank AND suit symbol as text', faces.length > 0 && faces.every((el) => {
+      const s = SUITS.find((x) => x.id === el.dataset.suit);
+      return el.textContent.includes(s.symbol) && el.querySelector('.sol-idx')?.textContent.includes(s.symbol);
+    }));
+    check('...and its name for a screen reader', faces.every((el) => /^(ace|[0-9]+|jack|queen|king) of (spades|hearts|diamonds|clubs)$/.test(el.getAttribute('aria-label'))));
+    // Render one card of each suit to measure the colours.
+    const probeHost = document.createElement('div');
+    probeHost.className = 'sol-wrap';
+    probeHost.innerHTML = SUITS.map((s) => `<div class="sol"><div class="sol-card" data-up="1" data-suit="${s.id}">x</div></div>`).join('');
+    t.host.append(probeHost);
+    const cs = [...probeHost.querySelectorAll('.sol-card')].map((el) => getComputedStyle(el));
+    const colours = cs.map((c) => c.color);
+    check('four DIFFERENT suit colours', new Set(colours).size === 4, colours.join(' | '));
+    const ratios = cs.map((c) => contrast(c.color, c.backgroundColor));
+    check('*** each suit reads at 4.5:1 or better on the card face ***', ratios.every((r) => r >= 4.5), ratios.map((r) => r.toFixed(1)).join(', '));
+    check('red suits are not the same red (hearts and diamonds are told apart by colour too)', colours[1] !== colours[2]);
+    probeHost.remove();
+    t.inst.destroy();
+  }
+
+  section('readable at kiosk distance: 110px+ cards at a quarter of a 1080p screen');
+  {
+    const t = mount({ host: scratch(960, 540) });
+    await cssReady(t.host);
+    const w = t.host.querySelector('.sol-card')?.getBoundingClientRect().width || 0;
+    check(`*** a card is at least 110px wide in a 960 × 540 panel *** (${Math.round(w)}px)`, w >= 110, String(w));
+    const cols = [...t.host.querySelectorAll('.sol-col')].map((c) => c.getBoundingClientRect());
+    check('all seven columns fit across without scrolling', cols.length === 7 && cols[6].right <= 960 + 1, String(cols[6]?.right));
+    const idx = t.host.querySelector('.sol-card[data-up="1"] .sol-idx');
+    const fs = parseFloat(getComputedStyle(idx).fontSize);
+    check(`the corner rank and suit are big (${Math.round(fs)}px)`, fs >= 30);
+    t.inst.destroy();
+    const big = mount({ host: scratch(1280, 720) });
+    await cssReady(big.host);
+    const w2 = big.host.querySelector('.sol-card')?.getBoundingClientRect().width || 0;
+    check(`a whole 1280 × 720 panel gets bigger cards still (${Math.round(w2)}px)`, w2 > w);
+    big.inst.destroy();
+  }
+
+  // =====================================================================
+  section('a move is two choices: pick a card, then pick where');
+  {
+    const t = mount({ saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    check('nothing is lit until the first verb', t.probe().lit === -1 && !t.host.querySelector('[data-on="1"]'));
+    t.pub('select');
+    check('*** the first select only reveals the highlight; it presses nothing ***', t.probe().lit === 0 && t.probe().rec.turns.length === 0);
+    const items = t.probe().items;
+    check('the pick list: Draw, the cards that can move, New game', items[0] === 'draw' && items[items.length - 1] === 'new'
+      && items.filter((k) => k.startsWith('src:')).length === sources(t.probe().game).length, items.join(','));
+    check('no Undo before anything has been done', !items.includes('undo'));
+    // pick the first movable card
+    const src = items.find((k) => k.startsWith('src:'));
+    if (src) {
+      walkTo(t, src);
+      const p = t.probe();
+      check('picking a card lists ONLY its legal places, then "Put it back"', p.picked && p.items[p.items.length - 1] === 'cancel'
+        && p.items.slice(0, -1).every((k) => k.startsWith('dst:'))
+        && p.items.length - 1 === destinations(p.game, p.picked).length, p.items.join(','));
+      check('the places are listed as buttons with words', t.host.querySelectorAll('.sol-btn[data-key^="dst:"]').length === p.items.length - 1);
+      check('...and marked on the table too', t.host.querySelectorAll('[data-target]').length === p.items.length - 1);
+      check('the bar asks where it should go', /^Where should .+ go\?$/.test(t.bar()), t.bar());
+      t.pub('back');
+      check('back puts it back (nothing moved)', t.probe().picked === null && t.probe().rec.turns.length === 0);
+      walkTo(t, src);
+      const dst = t.probe().items[0];
+      walkTo(t, dst);
+      check('picking a place makes the move', t.probe().rec.turns.length === 1 && t.probe().picked === null);
+      check('Undo is offered now', t.probe().items.includes('undo'));
+    }
+    t.inst.destroy();
+  }
+
+  section('draw, unlimited undo, and a new game that takes two presses');
+  {
+    const t = mount({ saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const deal0 = JSON.stringify(t.probe().game);
+    for (let i = 0; i < 30; i++) walkTo(t, 'draw');
+    check('30 draws (through a turn-over of the pile) made 30 turns', t.probe().rec.turns.length === 30 && t.probe().game.recycles >= 1);
+    for (let i = 0; i < 30; i++) walkTo(t, 'undo');
+    check('*** 30 undos go all the way back to the deal ***', JSON.stringify(t.probe().game) === deal0 && t.probe().rec.turns.length === 0);
+    walkTo(t, 'draw');
+    const seed = t.probe().rec.seed;
+    walkTo(t, 'new');
+    check('New game in the middle of a game asks for a second press', t.probe().confirmNew === true && t.probe().rec.seed === seed
+      && /Press again/.test(t.host.textContent));
+    walkTo(t, 'draw');
+    check('...and any other press forgets it (nothing happens if nobody presses again)', t.probe().confirmNew === false && t.probe().rec.seed === seed);
+    walkTo(t, 'new'); walkTo(t, 'new');
+    check('two presses in a row deal a new game', t.probe().rec.turns.length <= 1 && t.probe().game.moves <= 4);
+    t.inst.destroy();
+  }
+
+  section('no fail screen: a stuck game offers Undo and New game beside the cards');
+  {
+    // Find a deal that is stuck from the start (drawing three makes one rare, not impossible).
+    let stuckSeed = null;
+    for (let s = 1; s < 4000 && stuckSeed === null; s++) if (isStuck(deal(s, { draw: 3 }))) stuckSeed = s;
+    check('a stuck-from-the-deal seed exists to test with', stuckSeed !== null);
+    if (stuckSeed !== null) {
+      const t = mount({ saved: { autoMove: 'off', game: { seed: stuckSeed, draw: 3, turns: [] } } });
+      check('the saved game is the one on the table', t.probe().rec.seed === stuckSeed);
+      check('*** the bar says it looks like nothing helps, and offers undo or a new game ***', !!t.host.querySelector('[data-stuck]')
+        && /no move helps/.test(t.bar()), t.bar());
+      check('the table is still there: every card, nothing over it', t.host.querySelectorAll('.sol-card').length >= 28
+        && !t.host.querySelector('[role="dialog"],[aria-modal]'));
+      check('New game is in the walk, and with nothing played it is one press', walkTo(t, 'new') > 0 && t.probe().rec.seed !== stuckSeed);
+      t.inst.destroy();
+    }
+  }
+
+  section('*** one switch plays a known deal from the deal to "You won" ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    const t = mount({ bus, saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    let presses = 0, stuckAt = -1;
+    (solution || []).forEach((m, i) => {
+      if (stuckAt >= 0) return;
+      for (const key of moveKeys(m)) {
+        const p = walkTo(t, key);
+        if (p < 0) { stuckAt = i; return; }
+        presses += p;
+      }
+    });
+    check('every move in the winning line was reachable with next + select', stuckAt === -1 && !!solution,
+      `move ${stuckAt}: ${solution && stuckAt >= 0 ? encodeMove(solution[stuckAt]) : ''} items=${t.probe().items.join(',')}`);
+    check('*** the game is won ***', isWon(t.probe().game));
+    check('and says so, beside the cards', !!t.host.querySelector('[data-won]') && /You won/.test(t.bar()));
+    check('the score reached 52 of 52 on the score contract', scores.some((s) => s.source === GAME && s.value === 52 && s.target === 52));
+    check(`${solution?.length} moves took ${presses} switch presses`, presses > 0);
+    check('a won game offers a new one (one press: nothing is lost)', t.probe().items.includes('new') && walkTo(t, 'new') > 0 && !isWon(t.probe().game));
+    t.inst.destroy();
+  }
+
+  section('auto-move to the foundations (the default: safe)');
+  {
+    const t = mount();
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const g = t.probe().game;
+    const tops = g.tableau.map((p) => p[p.length - 1]).filter(Boolean);
+    check('no ace or two is left on top of a column after the deal', !tops.some((c) => c.r === 1 && c.up));
+    check('the default is safe', t.probe().cfg.autoMove === 'safe');
+    t.inst.destroy();
+  }
+
+  section('points: a win pays nothing by default, and a set amount once when turned on');
+  {
+    const lastTurns = (solution || []).map((m) => encodeTurn([m]));
+    const nearly = { seed: KNOWN_SEED, draw: 1, turns: lastTurns.slice(0, -1) };
+    const finalKeys = moveKeys(solution[solution.length - 1]);
+    const a = mount({ saved: { autoMove: 'off', game: nearly } });
+    finalKeys.forEach((k) => walkTo(a, k));
+    await sleep(10);
+    check('won with winPoints 0: nothing appended to the points ledger', isWon(a.probe().game) && a.points.peek().length === 0);
+    a.inst.destroy();
+    const b = mount({ saved: { autoMove: 'off', winPoints: 5, game: nearly } });
+    finalKeys.forEach((k) => walkTo(b, k));
+    await sleep(10);
+    const ev = b.points.peek();
+    check('won with winPoints 5: one award of 5 Play points', ev.length === 1 && ev[0].data.amount === 5 && ev[0].data.type === 'Play'
+      && ev[0].data.source === GAME, JSON.stringify(ev.map((e) => e.data)));
+    walkTo(b, 'undo');
+    finalKeys.forEach((k) => walkTo(b, k));
+    await sleep(10);
+    check('*** undo and win again: still paid once (undo cannot farm points) ***', isWon(b.probe().game) && b.points.peek().length === 1);
+    check('games won is counted once too', b.probe().stats.won === 1);
+    b.inst.destroy();
+  }
+
+  section('a reload comes back to the same game, with its undo');
+  {
+    const saved = {};
+    const t = mount({ saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    for (let i = 0; i < 5; i++) walkTo(t, 'draw');
+    Object.assign(saved, t.state.get());
+    const before = JSON.stringify(t.probe().game);
+    t.inst.destroy();
+    check('what is saved is the seed and the turns, not a snapshot per move', saved.game && saved.game.seed === KNOWN_SEED
+      && saved.game.turns.length === 5 && !('snapshots' in saved.game));
+    const r = mount({ saved });
+    check('the same position after a reload', JSON.stringify(r.probe().game) === before);
+    walkTo(r, 'undo');
+    check('*** and undo still works after the reload ***', r.probe().rec.turns.length === 4);
+    r.inst.destroy();
+    const fresh = mount();
+    check('a first mount does not write a game before anything is played (a slow load must not be overwritten)', !('game' in fresh.state.get()));
+    fresh.inst.destroy();
+  }
+
+  section('a pointer: click a card, then a place (no drag anywhere)');
+  {
+    const t = mount({ host: scratch(960, 540), saved: { autoMove: 'off' } });
+    t.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    const click = (el) => el?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    click(t.host.querySelector('.sol-stock'));
+    check('clicking the stock draws', t.probe().game.waste.length === 1);
+    const srcBtn = t.host.querySelector('button.sol-card[data-key^="src:"]');
+    click(srcBtn);
+    check('clicking a card that can move picks it', !!t.probe().picked);
+    const target = t.host.querySelector('[data-target]');
+    const turnsBefore = t.probe().rec.turns.length;
+    click(target);
+    check('clicking a marked place moves it there', t.probe().rec.turns.length === turnsBefore + 1 && !t.probe().picked);
+    check('nothing in the module listens for a drag', !/drag/i.test(t.host.innerHTML));
+    t.inst.destroy();
+  }
+
+  section('reduced motion, reading aloud, the score, and clean-up');
+  {
+    const r = mount({ host: scratch(960, 540), reducedMotion: true });
+    await cssReady(r.host);
+    check('reduced motion is marked on the table', r.host.querySelector('.sol')?.dataset.motion === 'reduce');
+    const tr = getComputedStyle(r.host.querySelector('.sol-card')).transitionDuration;
+    check('*** and nothing on it animates ***', tr.split(',').every((d) => parseFloat(d) === 0), tr);
+    r.inst.destroy();
+
+    const quiet = mount();
+    quiet.pub('next'); quiet.pub('next');
+    check('nothing is said by default', quiet.said.length === 0);
+    quiet.inst.destroy();
+    const loud = mount({ saved: { sayAloud: true, autoMove: 'off' } });
+    loud.bus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+    loud.pub('next');
+    check('with "say what is lit" on, the lit item is said', loud.said[loud.said.length - 1] === 'draw a card', loud.said.join(' | '));
+    const src = loud.probe().items.find((k) => k.startsWith('src:'));
+    while (loud.probe().litKey !== src) loud.pub('next');
+    check('cards are said by name, never by symbol', /^the (ace|[0-9]+|jack|queen|king) of (spades|hearts|diamonds|clubs)/.test(loud.said[loud.said.length - 1])
+      && !/[♠♥♦♣]/.test(loud.said.join(' ')), loud.said[loud.said.length - 1]);
+    loud.inst.destroy();
+
+    const bus = createBus();
+    const scores = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    const s = mount({ bus });
+    check('the score is published: cards home, of 52', scores.some((p) => p.source === GAME && p.target === 52 && Number.isFinite(p.value)));
+    check('drawn on the panel when no scoreboard shows it', !!s.host.querySelector('[data-score]'));
+    bus.publish('score/shown', { source: GAME, by: 'sb1', on: true });
+    check('...and steps aside when a scoreboard does', !s.host.querySelector('[data-score]'));
+    s.inst.destroy();
+    check('destroying it tells the scoreboard the score is gone', scores[scores.length - 1]?.gone === true);
+    s.pub('next');
+    check('a destroyed table answers no verbs', true);
+  }
+
+  section('settings: every one has a label, and a switch can walk every choice');
+  {
+    const m = getManifest(GAME);
+    const rows = m.settings;
+    check('every row is labelled', rows.every((r) => r.key && r.label));
+    check('the draw count is a setting (not hard-coded), and applies from the next deal', rows.some((r) => r.key === 'draw' && /next new game/.test(r.note)));
+    check('auto-move has off / safe / every card', rows.find((r) => r.key === 'autoMove').options.map((o) => o.value).sort().join() === 'all,off,safe');
+    check('win points is bounded (a switch can reach every value)', (() => { const r = rows.find((x) => x.key === 'winPoints'); return r.min === 0 && r.max === 20 && r.step === 1; })());
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const live = document.getElementById('host');
+const liveBus = createBus();
+const show = mountModule(GAME, { mount: live, bus: liveBus, state: fakeState({}), personId: null, instanceId: 'live', rand: () => 0.1 });
+show.init();
+// Shown mid-move, the way a switch user sees it: a card picked, its places listed and the first lit.
+liveBus.publish(`${GAME}/deal`, { seed: KNOWN_SEED, draw: 'one' });
+liveBus.publish(`${GAME}/next`); liveBus.publish(`${GAME}/next`); liveBus.publish(`${GAME}/select`);
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
