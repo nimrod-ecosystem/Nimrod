@@ -383,7 +383,9 @@ try {
     const busyR = rig({ busy: () => true });
     const c = busyR.phone('mike@x');
     await c.s.start(); await flush();
-    check('while the room is busy (a call): refused, no chime', c.s.reason() === 'busy' && busyR.chimes.length === 0);
+    check('while the room is busy (a call): refused as "in a call", no chime', c.s.reason() === 'in-a-call' && busyR.chimes.length === 0);
+    check('...and the phone is told the true reason, not "open with somebody else"',
+      /on a call/.test(END_REASONS['in-a-call'] || '') && !/somebody else/.test(END_REASONS['in-a-call'] || ''));
     busyR.recv.destroy();
     // A call that ARRIVES while an intercom is open (the other direction). The rule is the screen's
     // (kiosk.js + call_transport.js `busy`); this file carries the person's choice and the words.

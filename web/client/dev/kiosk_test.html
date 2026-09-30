@@ -3225,8 +3225,8 @@ const ds = () => root.querySelector('.kiosk').dataset;
         const origLive = ct.isLive;
         ct.isLive = () => true;
         driver.sendSignal({ kind: 'offer', purpose: 'intercom', session: 'ic-wire-2', sdp: SDP });
-        check('*** intercom: a LIVE CALL -> the phone is told "busy", and nothing opens in the room ***',
-          await settled(() => back.some((s) => s.purpose === 'intercom' && s.session === 'ic-wire-2' && s.kind === 'bye' && s.reason === 'busy'), 6000)
+        check('*** intercom: a LIVE CALL -> the phone is told "in a call", and nothing opens in the room ***',
+          await settled(() => back.some((s) => s.purpose === 'intercom' && s.session === 'ic-wire-2' && s.kind === 'bye' && s.reason === 'in-a-call'), 6000)
           && note().hidden && vr.state().held === null, JSON.stringify(back));
         ct.isLive = origLive;
       }
