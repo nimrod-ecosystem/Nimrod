@@ -53,22 +53,44 @@
 /* What a second microphone heard differently, underneath: smaller, and introduced in words. */
 .subs-alt { display: block; font-size: .72em; font-weight: 500; font-style: italic; }
 
-/* Scroll back: the live lines step aside; the earlier ones are drawn in their own container. */
 .subs-hist { display: flex; flex-direction: column; align-items: center; gap: .22em; }
 .subs-hist[hidden] { display: none; }
-.subs-back > .subs-line { display: none; }
 .subs-mark { font-size: .6em; font-weight: 700; }
 
-/* THE CRAWL: a style option (plain is the default). The lines lean back and the older ones fade and
-   shrink toward the top. The lines keep their letterbox background, so contrast does not change. */
-.subs-crawl { perspective: 22em; perspective-origin: 50% 0%; }
-.subs-crawl > .subs-line, .subs-crawl .subs-hist > .subs-line {
-  transform: rotateX(18deg);
-  transform-origin: 50% 100%;
-  animation: subs-crawl-in .6s ease-out;
+/* ---- row 2.47: STYLES (subtitles.js SUBTITLE_STYLES). Every line keeps the letterbox background in
+   every style, so the measured contrast is the same in all four. ---- */
+/* One panel (flow, eye chart, running text): the lines sit on a single letterbox band. */
+.subs-panel { background: var(--letterbox); border-radius: .3em; overflow: hidden; gap: 0; align-items: stretch; }
+.subs-panel .subs-hist { align-items: stretch; gap: 0; }
+/* ROLLING UP (flow, eye chart): left-aligned like a text-message thread; the newest rises in at the
+   bottom of the panel and the older ones glide up (subtitles.js `glide`, none when still). */
+.subs-roll > .subs-line, .subs-roll .subs-hist > .subs-line { text-align: start; border-radius: 0; }
+.subs-roll > .subs-line { animation: subs-rise .26s ease-out; }
+@keyframes subs-rise { from { opacity: 0; transform: translateY(100%); } }
+/* RUNNING TEXT: the lines run on, wrapping across the full width, clipped to the chosen number of
+   rows; subtitles.js keeps the panel scrolled to the newest words. */
+.subs-snake {
+  display: block;
+  text-align: start;
+  padding: .18em .55em;
+  box-sizing: content-box;
+  max-height: calc(var(--subs-rows, 3) * 1.25em);   /* the rows; the padding is outside it */
 }
-.subs-crawl > .subs-line:not(:last-of-type) { opacity: .82; font-size: .9em; }
-@keyframes subs-crawl-in { from { opacity: 0; transform: rotateX(18deg) translateY(1.2em); } }
+.subs-snake .subs-hist { display: block; }
+.subs-snake > .subs-line, .subs-snake .subs-hist > .subs-line {
+  display: inline;
+  padding: 0;
+  border-radius: 0;
+  text-align: start;
+  animation: none;
+}
+.subs-snake .subs-line + .subs-line { margin-inline-start: .6em; }
+.subs-snake .subs-mark { display: block; }
+.subs-snake .subs-alt { display: inline; margin-inline-start: .4em; }
+
+/* Scroll back: the live lines step aside; the earlier ones are drawn in their own container. After
+   the styles, and more specific, so it wins in every one of them. */
+.subs.subs-back > .subs-line { display: none; }
 
 @keyframes subs-in { from { opacity: 0; transform: translateY(.25em); } }
 .subs-still .subs-line, .subs-still .subs-fixed { animation: none; transition: none; }

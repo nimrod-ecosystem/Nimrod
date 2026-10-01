@@ -70,9 +70,23 @@
 //     was said since the mode came on - kept in memory only, cleared when the mode goes off, never
 //     written anywhere. It goes back to the latest lines by itself (`backMs`), so it is never a state
 //     only an input can leave.
-//   * THE STAR WARS CRAWL is a STYLE (`subtitlesStyle: 'crawl'`); plain captions are the default,
-//     because slanted, shrinking text is harder to read for low vision or tired eyes (chat's note on
-//     2.47). With reduced motion the crawl is drawn plain.
+//   * STYLES (row 2.47, Mike via chat note AQ, 2026-10-01): *"a teleprompter or text-message flow,
+//     new lines coming in at the bottom and moving up, not a Star Wars crawl."* The crawl is gone (a
+//     stored 'crawl' reads as 'flow', which is what was meant). Four styles, see SUBTITLE_STYLES:
+//       flow      ROLLING UP (the default). One panel, lines left-aligned, the newest enters at the
+//                 bottom and the older ones glide up; the oldest leaves at the top. Broadcast live
+//                 captions use this "roll-up" form for live speech [training knowledge], which is
+//                 what this is. Reduced motion: the same layout, moved instantly.
+//       plain     Classic captions: each line its own centred box, nothing glides.
+//       eyechart  The "upside-down eye chart": flow, with the newest line at the chosen size and each
+//                 older line a step smaller (`subtitlesShrink`), never below `subtitlesSmallestPx`.
+//       snake     RUNNING TEXT - Code's interpretation of Mike's "snake", for him to confirm: the
+//                 lines run on one after another and wrap across the full width, so the words wind
+//                 left-to-right, row after row, newest at the bottom right. Most words per row of
+//                 any style. NOT boustrophedon (alternate rows reversed), which is unreadable.
+//     THE THEME NAMES A DEFAULT; THE PERSON'S CHOICE OVERRIDES IT. A theme carries
+//     `--subtitles-style` among its variables (theme.js); the person's `subtitlesStyle` is 'theme'
+//     until they pick one. See `resolveSubtitleStyle`.
 //   * THE ONLINE ROUTE (`subtitlesRoute`) is a setting whose default is 'local'. Mike said "maybe"
 //     to an online model for subtitle mode; nothing here turns it on. What 'online' means on the
 //     kiosk: the browser's own recogniser (which sends the room's sound to the browser's maker) ALSO
@@ -110,8 +124,15 @@ export const SUBTITLES_DEFAULTS = Object.freeze({
   screenLabel: 'Screen',
   // What a line the recogniser could not make out says, rather than vanishing.
   unclearText: '(not clear)',
-  // Row 2.47. Plain captions; the crawl is a choice.
-  style: 'plain',
+  // Row 2.47. The person's choice; 'theme' = whatever the theme names (flow when it names nothing).
+  style: 'theme',
+  // The eye chart: each older line is this fraction of the one below it. 0.8 at the default three
+  // lines is 100% / 80% / 64%. A guess - a setting.
+  shrink: 0.8,
+  // ...and no line is ever smaller than this. 24 px is WCAG's "large text" (18 pt) and the smallest
+  // `large` itself can be; the research (row 2.48, table 2 row 7) found no published size floor, so
+  // this is a setting, not a rule.
+  smallestPx: 24,
   // Words below this confidence are marked as unsure. 0.6: in the desktop measurement (2026-09-30)
   // right words mostly came back at 0.7+ and the misheard single words ("Vogue" for "book", 0.28)
   // well below; 0 turns the marks off.
@@ -128,7 +149,43 @@ export const SUBTITLES_DEFAULTS = Object.freeze({
   backMs: 20000,
 });
 
-export const SUBTITLE_STYLES = ['plain', 'crawl'];
+export const SUBTITLE_STYLES = ['flow', 'plain', 'eyechart', 'snake'];
+// What 'theme' falls back to when the theme names nothing usable.
+export const SUBTITLE_STYLE_FALLBACK = 'flow';
+// The theme variable that names a theme's default style (theme.js BASE carries it).
+export const SUBTITLE_STYLE_VAR = '--subtitles-style';
+// Old stored values and what they meant. 'crawl' was the 2026-09-30 reading of "teleprompter".
+const LEGACY_STYLES = Object.freeze({ crawl: 'flow' });
+// How long an older line takes to glide up in flow and eye chart (none with reduced motion).
+export const SUBS_FLOW_MS = 260;
+// Running text keeps this many lines per visible row in the page, so a row of short lines still
+// fills; the visible amount is the person's row count (overflow is clipped). Not a person-visible
+// number: it only bounds what is kept off screen.
+const SNAKE_KEEP_PER_ROW = 3;
+export const SUBTITLE_SHRINKS = [0.9, 0.8, 0.7];
+export const SUBTITLE_SMALLEST_PX = [24, 32, 40];
+
+/**
+ * *** WHICH STYLE IS DRAWN. *** Pure. The person's choice wins when it is a real style; 'theme',
+ * missing or broken means the theme's own (`--subtitles-style`); a theme that names nothing usable
+ * means 'flow'. A legacy value reads as what it meant.
+ */
+export function resolveSubtitleStyle(choice, themeStyle = null) {
+  return styleOf(choice) || styleOf(themeStyle) || SUBTITLE_STYLE_FALLBACK;
+}
+// A value -> a real style, or null. Tolerates a CSS variable's quotes and spaces.
+function styleOf(x) {
+  const s = String(x ?? '').trim().replace(/^['"]|['"]$/g, '').toLowerCase();
+  const m = LEGACY_STYLES[s] || s;
+  return SUBTITLE_STYLES.includes(m) ? m : null;
+}
+
+/** The eye chart's size for a line `age` lines older than the newest (0 = newest). Pure. */
+export function eyeChartFontSize(age, { shrink = SUBTITLES_DEFAULTS.shrink, smallestPx = SUBTITLES_DEFAULTS.smallestPx } = {}) {
+  const k = Math.max(0, Math.round(Number(age) || 0));
+  const f = Math.pow(shrink, k);
+  return `max(${smallestPx}px, ${Number(f.toFixed(4))}em)`;
+}
 export const SUBTITLE_ROUTES = ['local', 'online'];
 export const SUBTITLE_EARS = ['both', 'surer'];
 
@@ -174,10 +231,27 @@ export const SUBTITLES_FIELDS = [
   { key: 'subtitlesStyle', label: 'Subtitles: style', kind: 'choice',
     default: SUBTITLES_DEFAULTS.style, level: 'standard',
     options: [
-      { value: 'plain', label: 'Plain captions' },
-      { value: 'crawl', label: 'A crawl, like the start of a space film' },
+      { value: 'theme', label: 'Whatever the theme uses' },
+      { value: 'flow', label: 'Rolling up: newest at the bottom, older lines move up (like a text-message thread)' },
+      { value: 'plain', label: 'Plain captions: each line in its own box' },
+      { value: 'eyechart', label: 'Eye chart: the newest line largest, older lines smaller' },
+      { value: 'snake', label: 'Running text: the lines run on across the full width' },
     ],
-    note: 'The crawl slants and shrinks older lines; plain is easier to read.' },
+    note: 'Eye chart and running text fit more words; rolling up and plain keep every line the same size.' },
+  { key: 'subtitlesShrink', label: 'Subtitles (eye chart): how much smaller each older line is', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.shrink, level: 'advanced',
+    options: [
+      { value: 0.9, label: 'A little' },
+      { value: 0.8, label: 'More' },
+      { value: 0.7, label: 'A lot' },
+    ] },
+  { key: 'subtitlesSmallestPx', label: 'Subtitles (eye chart): the smallest an older line gets', kind: 'choice',
+    default: SUBTITLES_DEFAULTS.smallestPx, level: 'advanced',
+    options: [
+      { value: 24, label: 'Large print (24 px)' },
+      { value: 32, label: 'Larger (32 px)' },
+      { value: 40, label: 'Largest (40 px)' },
+    ] },
   { key: 'subtitlesLowAt', label: 'Subtitles: mark words it is unsure of', kind: 'choice',
     default: SUBTITLES_DEFAULTS.lowAt, level: 'standard',
     options: [
@@ -202,8 +276,12 @@ export const SUBTITLES_FIELDS = [
     note: 'Online: tell everyone in the room first. Anything said near the screen is sent.' },
 ];
 
-/** A settings row -> this file's options. Each unset or broken key is its default. */
-export function subtitlesOptionsFrom(values = {}) {
+/**
+ * A settings row -> this file's options. Each unset or broken key is its default. `themeStyle` is
+ * the theme's named style (`--subtitles-style`); `style` is what is drawn, `styleChoice` what the
+ * person picked ('theme' until they pick).
+ */
+export function subtitlesOptionsFrom(values = {}, { themeStyle = null } = {}) {
   const v = values || {};
   const num = (x, lo, hi, d) => {
     const n = Number(x);
@@ -216,7 +294,10 @@ export function subtitlesOptionsFrom(values = {}) {
     size: SUBTITLE_SIZES[v.subtitlesSize] ? v.subtitlesSize : SUBTITLES_DEFAULTS.size,
     screen: typeof v.subtitlesScreen === 'boolean' ? v.subtitlesScreen : SUBTITLES_DEFAULTS.screen,
     sureAt: num(v.subtitlesSureAt, 0.01, 1, SUBTITLES_DEFAULTS.sureAt),
-    style: SUBTITLE_STYLES.includes(v.subtitlesStyle) ? v.subtitlesStyle : SUBTITLES_DEFAULTS.style,
+    styleChoice: styleOf(v.subtitlesStyle) || 'theme',
+    style: resolveSubtitleStyle(v.subtitlesStyle, themeStyle),
+    shrink: SUBTITLE_SHRINKS.includes(v.subtitlesShrink) ? v.subtitlesShrink : SUBTITLES_DEFAULTS.shrink,
+    smallestPx: SUBTITLE_SMALLEST_PX.includes(v.subtitlesSmallestPx) ? v.subtitlesSmallestPx : SUBTITLES_DEFAULTS.smallestPx,
     lowAt: num(v.subtitlesLowAt, 0, 1, SUBTITLES_DEFAULTS.lowAt),
     ears: SUBTITLE_EARS.includes(v.subtitlesEars) ? v.subtitlesEars : SUBTITLES_DEFAULTS.ears,
     // Only the exact string 'online' is online. Anything else - missing, broken, a typo - is local.
@@ -364,6 +445,9 @@ export function createSubtitles(host, {
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   flashLimit = FLASH_LIMIT_DEFAULT,   // the screen's flash limit (flash_limit.js): a number or a getter
+  // The theme's named style: a string or a getter. null = read the theme's own `--subtitles-style`
+  // where the subtitles sit, so any page that applies a theme gets its default with no wiring.
+  themeStyle = null,
 } = {}) {
   if (!host || !doc) throw new Error('createSubtitles: a host element is required');
   const limitNow = () => {
@@ -372,6 +456,7 @@ export function createSubtitles(host, {
   };
   ensureStyles(doc);
   let opts = subtitlesOptionsFrom(settings);
+  let still = false;
   let seq = 0;
   let lines = [];                          // { id, at, text, source, speaker, who, el, timer, cid, pieces, others, ... }
   let hist = [];                           // every line since the mode came on (the same objects), for scroll back
@@ -391,13 +476,72 @@ export function createSubtitles(host, {
   const histEl = doc.createElement('div');
   histEl.className = 'subs-hist';
 
+  // The theme's style, read where the box sits (so a panel wearing its own theme is honoured).
+  function themeNow() {
+    try {
+      if (typeof themeStyle === 'function') return themeStyle();
+      if (themeStyle != null) return themeStyle;
+      return view?.getComputedStyle?.(box)?.getPropertyValue(SUBTITLE_STYLE_VAR) || null;
+    } catch { return null; }
+  }
+  const rolls = () => opts.style === 'flow' || opts.style === 'eyechart';
+  const cap = () => (opts.style === 'snake' ? opts.lines * SNAKE_KEEP_PER_ROW : opts.lines);
+
+  // Re-reads the theme every time, so a theme change shows at the next line (or `restyle()`).
   function applyLook() {
+    opts = { ...opts, style: resolveSubtitleStyle(opts.styleChoice, themeNow()) };
     box.style.setProperty('--subs-size', SUBTITLE_SIZES[opts.size] || SUBTITLE_SIZES.large);
-    const still = reducedMotion == null ? prefersStill(view) : !!reducedMotion;
+    box.style.setProperty('--subs-rows', String(opts.lines));
+    still = reducedMotion == null ? prefersStill(view) : !!reducedMotion;
     box.classList.toggle('subs-still', still);
-    // The crawl is motion: with reduced motion it is drawn as plain captions.
-    box.classList.toggle('subs-crawl', opts.style === 'crawl' && !still);
+    // Every style keeps its LAYOUT with reduced motion; only the gliding goes.
+    box.classList.toggle('subs-panel', opts.style !== 'plain');
+    box.classList.toggle('subs-roll', rolls());
+    box.classList.toggle('subs-snake', opts.style === 'snake');
     box.dataset.style = opts.style;
+    sizeLines();
+    pin();
+  }
+
+  // THE EYE CHART: the newest line at the chosen size, each older one a step smaller, floored.
+  // Every other style clears the sizes it might have left.
+  function sizeLines() {
+    const eye = opts.style === 'eyechart';
+    const set = (els) => els.forEach((el, i) => {
+      el.style.fontSize = eye ? eyeChartFontSize(els.length - 1 - i, opts) : '';
+    });
+    set(lines.map((l) => l.el).filter(Boolean));
+    set([...histEl.children].filter((el) => !el.classList.contains('subs-mark')));
+  }
+  // RUNNING TEXT: the newest words are at the bottom of a clipped panel, so keep it scrolled there.
+  function pin() {
+    if (opts.style !== 'snake' || box.hidden) return;
+    try {
+      const top = box.scrollHeight;
+      if (still || typeof box.scrollTo !== 'function') box.scrollTop = top;
+      else box.scrollTo({ top, behavior: 'smooth' });
+    } catch { /* nothing to scroll */ }
+  }
+  // ROLLING UP: the older lines glide from where they were to where they are now (a FLIP). Never
+  // with reduced motion: there the layout simply changes.
+  function topsNow() {
+    if (still || !rolls()) return null;
+    const m = new Map();
+    for (const l of lines) if (l.el) { try { m.set(l.el, l.el.getBoundingClientRect().top); } catch { /* detached */ } }
+    return m;
+  }
+  function glide(before) {
+    if (!before) return;
+    for (const [el, top] of before) {
+      if (!el.isConnected || typeof el.animate !== 'function') continue;
+      let d = 0;
+      try { d = top - el.getBoundingClientRect().top; } catch { continue; }
+      if (Math.abs(d) < 0.5) continue;
+      try {
+        el.animate([{ transform: `translateY(${d}px)` }, { transform: 'translateY(0)' }],
+          { duration: SUBS_FLOW_MS, easing: 'ease-out' });
+      } catch { /* no animation: it has already moved */ }
+    }
   }
   applyLook();
 
@@ -431,13 +575,19 @@ export function createSubtitles(host, {
     return where;
   }
 
-  function drop(line) {
+  // `quiet`: part of a bigger change (`show`) that measures and glides once for all of it.
+  function drop(line, { quiet = false } = {}) {
     if (line.timer != null) { try { clearTimer(line.timer); } catch { /* gone */ } line.timer = null; }
+    const before = quiet ? null : topsNow();
     line.el?.remove();
     line.el = null;
     lines = lines.filter((l) => l !== line);
     if (!lines.length && !back) box.hidden = true;
+    if (quiet) return;
+    sizeLines();
     place();
+    glide(before);
+    pin();
   }
 
   // *** OUTLINE: ONE FLASH PER FLASH PERIOD, NOT ONE PER RECOGNISER PASS. *** (Photosensitivity
@@ -517,14 +667,23 @@ export function createSubtitles(host, {
     if (back) { back += 1; drawBack(); }       // looking back: the view stays on the same lines
   }
   function show(line) {
+    // Re-read the theme's style first (a theme change shows at the next line), then measure where
+    // the older lines are, so they can glide from there.
+    const was = opts.style;
+    opts = { ...opts, style: resolveSubtitleStyle(opts.styleChoice, themeNow()) };
+    if (opts.style !== was) applyLook();
+    const before = topsNow();
     line.el = render(line);
     box.insertBefore(line.el, histEl.parentNode === box ? histEl : null);
     lines.push(line);
-    while (lines.length > opts.lines) drop(lines[0]);
+    while (lines.length > cap()) drop(lines[0], { quiet: true });
     box.hidden = false;
     arm(line);
     remember(line);
+    sizeLines();
     place();
+    glide(before);
+    pin();
   }
   const pub = (line) => ({ id: line.id, at: line.at, text: line.text, source: line.source, speaker: line.speaker,
                            who: { ...line.who }, ...(line.cid ? { caption: line.cid, partial: !!line.partial,
@@ -573,7 +732,7 @@ export function createSubtitles(host, {
       Object.assign(known, { text, pieces, others, partial: !!c.partial, agreed: !!c.agreed,
                              revised: known.revised || (!!c.revised && changedWords) });
       if (c.speaker) { known.speaker = c.speaker; known.who = whoOf(c.speaker); }
-      if (known.el) { fill(known.el, known); arm(known); place(); }
+      if (known.el) { fill(known.el, known); arm(known); place(); pin(); }
       if (back) drawBack();
       return pub(known);
     }
@@ -599,7 +758,9 @@ export function createSubtitles(host, {
     mark.textContent = start > 0 ? `Earlier - ${back} line${back === 1 ? '' : 's'} back` : 'The start';
     histEl.append(mark);
     for (const l of hist.slice(start, end)) histEl.append(render(l));
+    sizeLines();
     place();
+    pin();
   }
   function earlier(n = opts.lines) {
     if (!opts.on || !hist.length) return 0;
@@ -686,9 +847,17 @@ export function createSubtitles(host, {
       opts = subtitlesOptionsFrom(values);
       applyLook();
       if (was && !opts.on) clear();
-      while (lines.length > opts.lines) drop(lines[0]);
+      while (lines.length > cap()) drop(lines[0]);
       return { ...opts };
     },
+    /** The theme changed: re-read its style now rather than at the next line. */
+    restyle() {
+      applyLook();
+      while (lines.length > cap()) drop(lines[0]);
+      return opts.style;
+    },
+    /** The style being drawn ('flow' | 'plain' | 'eyechart' | 'snake'). */
+    style: () => opts.style,
     setReducedMotion(v) { reducedMotion = v == null ? null : !!v; applyLook(); },
     lines: () => lines.map(pub),
     options: () => ({ ...opts }),
