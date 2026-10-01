@@ -1975,3 +1975,49 @@ Mike's rulings, second pass (change-list rows 2.37 and 2.39; `docs/from_chat/roo
    Christine's -- her Pi still runs the Cici dashboard (*"Her Pi is still on the old site. Not
    Nimrod."*). The plan's own gates stand (the bench soak before Stage 4).
 
+
+## The flash limit is the photosensitivity setting, not a cap on everyone; visitor notes; SVG avatars; hide and mute; Home on a switch -- 2026-10-01
+
+Mike's rulings, 2026-10-01: items 1 and 3-8 were answered directly in Code's chat; item 2 came through chat
+(private `NOTES_FOR_CODE.md` note AR, from the accessibility research brief). Logged by Code at his request.
+
+1. **There is no flash cap by default for everyone.** Code had proposed 3 flashes a second as a fixed ceiling
+   nobody could raise (public `a12ae98`, and the 2026-09-30 list). Mike: *"That's only for the
+   photosensitivity setting. I wouldn't make it impossible to raise. That cap shouldn't be there for everyone
+   though."*
+   - Ticking the photosensitivity starting-default sets a limit, and the person can raise or remove it.
+   - Rhythm's 175-a-minute top tempo existed only because of that cap (*"Why the cap?"*), so it goes with it.
+   - The photos/videos backoff on repeated errors is not a flash rule and stays.
+   - Supersedes the fixed 3/s ceiling in `a12ae98` (never logged here; recorded as retired in PRINCIPLES.md
+     §4).
+2. **From the research brief (note AR):**
+   - preset conflicts are put to the person ticking the boxes, and the answer is logged;
+   - the photosensitivity floor is WCAG 2.3.1, and its default is the stricter 2.3.2;
+   - OLED burn-in drift is off on a screen that isn't OLED (*"She doesn't have OLED"*) and offered for OLED
+     screens.
+   - Code reads item 2 together with item 1: when the box is ticked the default is 2.3.2, with 2.3.1 and "no
+     limit" also offered. Chat is confirming that reading with Mike.
+3. **A visitor can leave the note from their own account:** *"yes."* That needs a grant-scoped append route
+   for the note stream, with the server stamping the author.
+4. **An avatar someone brings in as an SVG may be animated.** Mike asked what the risk was and judged it
+   acceptable (*"Seems like it should be okay"*). The risk is inline untrusted SVG: scripts, event handlers,
+   foreign HTML, external references, and page-wide styles. It is drawn only after a strict allow-list
+   sanitizer, and falls back to the still image if sanitizing fails.
+5. **Hiding a module and its sound is a per-module setting.** *"Seems like a setting for modules. I'd say
+   maybe start with a popup that asks if they want it muted."*
+   - The popup asks when a person hides a sound-making module by their own action.
+   - If nobody answers, the module carries on as before (a question, not a gate).
+   - Automatic hides use the setting without asking.
+   - Which contexts count as hiding is being tabled for him.
+6. **A switch can be bound to Home's Save** (and Save as, the module picker, History, and the cat's
+   next/back). *"Is there some reason it shouldn't be able to?"* There wasn't one. These stay off the
+   remote-drive allowlist: binding is for a person's own switch.
+7. **Avatar movement follows the person** *"unless it conflicts with the screens capabilities or someone's
+   settings for medical things. Again sounds like an option."* The order is:
+   - a medical or accessibility setting (reduced motion, a flash limit);
+   - then the screen's capability;
+   - then the person's own choice;
+   - then the default.
+8. **A call arriving during an intercom rings by default** (built in `53d2504`). If it's answered, the
+   intercom ends and the phone is told why; `busy` is a per-person setting. Mike asked for an explanation;
+   this is not yet ratified.
