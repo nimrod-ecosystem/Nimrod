@@ -28,6 +28,7 @@ is taken down. Also: the maker announces a save.</p>
 <script type="module">
 import {
   avatarView, avatarHtml, createAvatarCache, AVATAR_CHANGED_EVENT, DISPLAY_DEFAULTS,
+  avatarMotion, avatarMotionContext, AVATAR_MOTION_FIELD,
 } from '../avatar_display.js';
 import { surprise, normalizeRecord, renderAvatar } from '../avatar.js';
 import '../modules/avatar.js';
@@ -263,6 +264,131 @@ try {
     await sleep(120); await settle();
     check('*** it failed to decode: the drawing replaced it, no broken image left ***', !stage.querySelector('img') && !!stage.querySelector('.nav-av svg'));
     off(); cache.destroy(); stage.innerHTML = '';
+  }
+
+  // ===================================================================================
+  section('*** whether a face moves: the precedence table (Mike, 2026-10-01) ***');
+  {
+    // [why the row exists, context, person, big, expected animate, expected because]
+    const C = (o = {}) => ({ deviceReduced: false, reduceMotion: false, screen: 'follow', lowPower: false, flashLimit: Infinity, ...o });
+    const TABLE = [
+      ['nothing set, large face',                      C(), null, true, true, 'default-large'],
+      ['nothing set, small chip',                      C(), null, false, false, 'default-small'],
+      ['person chose moves: a large face moves',       C(), true, true, true, 'person-moves'],
+      ['person chose moves: a small chip moves too',   C(), true, false, true, 'person-moves'],
+      ['person chose still: even a large face',        C(), false, true, false, 'person-still'],
+      ['screen "large only": a chip is still...',      C({ screen: 'big' }), true, false, false, 'screen-large-only'],
+      ['...but a large face follows the person',       C({ screen: 'big' }), true, true, true, 'person-moves'],
+      ['...and a large face of a still person is still', C({ screen: 'big' }), false, true, false, 'person-still'],
+      ['screen "never" beats the person',              C({ screen: 'still' }), true, true, false, 'screen-still'],
+      ['a low-power screen beats the person',          C({ lowPower: true }), true, true, false, 'low-power-screen'],
+      ['the reduce-motion setting beats the screen',   C({ reduceMotion: true, screen: 'follow' }), true, true, false, 'reduce-motion-setting'],
+      ['the device\'s reduced motion beats everything', C({ deviceReduced: true }), true, true, false, 'device-reduced-motion'],
+      ['medical before screen, in the reason given',   C({ reduceMotion: true, screen: 'still', lowPower: true }), true, true, false, 'reduce-motion-setting'],
+      ['the photosensitivity box\'s 3 a second does NOT still a face', C({ flashLimit: 3 }), null, true, true, 'default-large'],
+      ['...nor 1 a second',                            C({ flashLimit: 1 }), true, false, true, 'person-moves'],
+      ['a stored limit too low for a 9 s blink stills it', C({ flashLimit: 0.1 }), true, true, false, 'flash-limit'],
+      ['an unknown screen value reads as "follow"',    { screen: 'sideways' }, null, true, true, 'default-large'],
+      ['no context at all: the defaults',              undefined, null, false, false, 'default-small'],
+    ];
+    for (const [why, context, person, big, want, because] of TABLE) {
+      const m = avatarMotion({ context, person, big });
+      check(`${why}: ${want ? 'moves' : 'still'} (${because})`, m.animate === want && m.because === because, `${m.animate} ${m.because}`);
+    }
+    check('the flash limit travels with the decision', avatarMotion({ context: { flashLimit: 2 }, big: true }).flashLimit === 2
+      && avatarMotion({ big: true }).flashLimit === Infinity);
+    check('the screen\'s setting is offered as a menu row: follow (the default), large only, never', AVATAR_MOTION_FIELD.key === 'avatarMotion'
+      && AVATAR_MOTION_FIELD.default === 'follow' && AVATAR_MOTION_FIELD.options.map((o) => o.value).join() === 'follow,big,still'
+      && !/Christine|Cici|her screen/i.test(JSON.stringify(AVATAR_MOTION_FIELD)));
+  }
+
+  section('avatarMotionContext: what the host knows, read the way the flash limit is');
+  {
+    const ctx = (o) => avatarMotionContext({ deviceReduced: false, ...o });
+    check('nothing anywhere: no reduced motion, screen follows, no flash limit', ctx({}).reduceMotion === false && ctx({}).screen === 'follow' && ctx({}).flashLimit === Infinity);
+    check('the starting-defaults layer fills reduceMotion when no row chose', ctx({ layer: { reduceMotion: true } }).reduceMotion === true);
+    check('a row that CHOSE off keeps it off over the layer ("defaults, never locks")', ctx({ screen: { reduceMotion: false }, layer: { reduceMotion: true } }).reduceMotion === false);
+    check('where both rows chose, the stricter (on) wins', ctx({ screen: { reduceMotion: false }, viewer: { reduceMotion: true } }).reduceMotion === true);
+    check('the screen\'s avatarMotion is read from the screen row only', ctx({ screen: { avatarMotion: 'still' } }).screen === 'still'
+      && ctx({ viewer: { avatarMotion: 'still' } }).screen === 'follow');
+    check('the flash limit is read from the rows over the layer (flash_limit.js)', ctx({ layer: { flashLimitPerSecond: 3 } }).flashLimit === 3
+      && ctx({ screen: { flashLimitPerSecond: 2 }, viewer: { flashLimitPerSecond: 1 } }).flashLimit === 1);
+    check('...or taken from a host that already has it (a getter)', ctx({ flashLimit: () => 2 }).flashLimit === 2);
+    check('lowPower only when the host says so (never guessed)', ctx({}).lowPower === false && ctx({ lowPower: true }).lowPower === true);
+  }
+
+  section('avatarHtml follows the decision');
+  {
+    const big = (view, context) => { const b = document.createElement('div'); b.innerHTML = avatarHtml(view, { animate: true, context, reducedMotion: false }); return b.querySelector('svg')?.dataset.motion; };
+    const chip = (view, context) => { const b = document.createElement('div'); b.innerHTML = avatarHtml(view, { context, reducedMotion: false }); return b.querySelector('svg')?.dataset.motion; };
+    const moves = avatarView({ use: 'drawn', drawn: REC, animate: true });
+    check('a person who chose "always moves": `moves` says so', moves.moves === true && moves.still === false);
+    check('their chip moves', chip(moves) === 'on');
+    check('...not on a screen set to large faces only', chip(moves, { screen: 'big' }) === 'off' && big(moves, { screen: 'big' }) === 'on');
+    check('...not under the reduce-motion setting', big(moves, { reduceMotion: true }) === 'off');
+    check('a person with no choice: chip still, large face moves (today\'s behaviour)', chip(dv) === 'off' && big(dv) === 'on');
+    const b = document.createElement('div');
+    b.innerHTML = avatarHtml(moves, { context: { screen: 'still' }, reducedMotion: false });
+    check('the reason is on the face, for anybody debugging a still one', b.firstElementChild.dataset.motionWhy === 'screen-still');
+  }
+
+  section('a brought-in drawing (.svg): read once, made safe, drawn inline so it can move');
+  {
+    const SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><circle cx="256" cy="256" r="200" fill="#f3cfb5"/>
+      <g id="eyes"><circle cx="200" cy="220" r="14"/><circle cx="312" cy="220" r="14"/></g><g id="mouth"><path d="M200 320Q256 360 312 320" fill="none" stroke="#3b2219" stroke-width="8"/></g>
+      <script>window.__avPwned=1<\/script><rect width="9" height="9" onclick="window.__avPwned=1"/><image href="/__probe/avatar-display.png" width="9" height="9"/></svg>`;
+    const stage = document.getElementById('stage');
+    const texts = { 'people/me.svg': SVG, 'people/big.svg': `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9">${'<circle r="1"/>'.repeat(4000)}</svg>`, 'people/broken.svg': 'not svg <' };
+    const reads = [];
+    const fs = fakePersonStates({
+      a: { use: 'picture', picture: { sourceId: 's1', path: 'people/me.svg' }, animate: true },
+      b: { use: 'picture', picture: { sourceId: 's1', path: 'people/big.svg' } },
+      c: { use: 'picture', picture: { sourceId: 's1', path: 'people/broken.svg' } },
+      d: { use: 'picture', picture: { sourceId: 's1', path: 'people/me.png' } },
+      e: { use: 'picture', picture: { sourceId: 's1', path: 'people/gone.svg' } },
+    });
+    let screen = 'follow';
+    const cache = createAvatarCache({
+      makePersonState: fs.make, refreshOnVisible: false,
+      sourcesFor: () => ({ list: async () => [{ id: 's1' }] }),
+      resolveUrl: async (src, path) => ({ url: `blob:${path}`, release() {} }),
+      fetchText: async (url) => { reads.push(url); const p = url.slice(5); if (p === 'people/gone.svg') throw new Error('offline'); return texts[p] ?? null; },
+      context: () => avatarMotionContext({ screen: { avatarMotion: screen }, deviceReduced: false }),
+    });
+    for (const p of ['a', 'b', 'c', 'd', 'e']) cache.get(p);
+    await settle(); await settle();
+    for (let i = 0; i < 20; i++) for (const p of ['a', 'b', 'c', 'd', 'e']) cache.get(p);
+    await settle();
+    check('*** each .svg read ONCE however often it is drawn; a .png never read ***',
+      reads.slice().sort().join() === 'blob:people/big.svg,blob:people/broken.svg,blob:people/gone.svg,blob:people/me.svg', reads.join());
+    const va = cache.get('a');
+    check('the safe description is on the view', va.show === 'picture' && va.svg?.ok === true && va.svg.parts.eyes === 'eyes');
+    check('the motion context is on the view, from the host', va.context?.screen === 'follow');
+    stage.innerHTML = `<span>${avatarHtml(va, { personId: 'a' })}Robin</span>`;
+    const face = stage.querySelector('.nav-av');
+    check('*** drawn INLINE, not as an <img> ***', face.dataset.avatarKind === 'svg' && face.querySelector('svg[data-avatar="imported"]') && !face.querySelector('img'));
+    check('...a person who chose "always moves": even the small chip moves, eyes marked for the blink',
+      face.querySelector('svg').dataset.motion === 'on' && face.querySelector('[data-part="eyes"]') && face.querySelector('[data-part="mouth"]'));
+    check('...and the file\'s script, handler and outside picture are not there', !face.querySelector('script,image,[onclick]') && window.__avPwned === undefined);
+    await sleep(200);
+    check('...nor was the outside picture requested', !performance.getEntriesByType('resource').some((e) => e.name.includes('/__probe/avatar-display')));
+    screen = 'still';
+    stage.innerHTML = avatarHtml(cache.get('a'), { personId: 'a', animate: true });
+    check('the screen set to "never": the same drawing, still, with no animation written', stage.querySelector('svg').dataset.motion === 'off' && !/animation/.test(stage.innerHTML));
+    screen = 'follow';
+    for (const [p, why] of [['b', 'over the caps'], ['c', 'not an SVG at all'], ['e', 'could not be read']]) {
+      const v = cache.get(p);
+      stage.innerHTML = avatarHtml(v, { personId: p });
+      check(`a drawing ${why}: shown as the still <img> it always was`, v.show === 'picture' && !v.svg && stage.querySelector('img') && !stage.querySelector('svg'));
+    }
+    stage.innerHTML = avatarHtml(cache.get('d'), { personId: 'd' });
+    check('a .png: the <img>, exactly as before', stage.querySelector('img')?.getAttribute('src') === 'blob:people/me.png');
+    const off = cache.get('a');
+    fs.handles.get('a').set({ use: 'picture', picture: { sourceId: 's1', path: 'people/me.svg' }, animate: false });
+    await settle();
+    stage.innerHTML = avatarHtml(cache.get('a'), { animate: true, personId: 'a' });
+    check('the person changing to "still" redraws (a change of movement alone is a change)', stage.querySelector('svg').dataset.motion === 'off' && off.moves === true);
+    cache.destroy(); stage.innerHTML = '';
   }
 
   // ===================================================================================

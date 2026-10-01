@@ -44,7 +44,7 @@ import {
   declaredColors, avatarWarnings, describeAvatar, readAvatar, featureInkFor, outlineFor, stepPart, colorOf,
   AVATAR_KEY, DEFAULT_WARN_BELOW, MOTION_CSS,
 } from '../avatar.js';
-import { PROMPT_PHOTO, PROMPT_DESCRIBE, MAKE_ACTIONS } from '../modules/avatar.js';
+import { PROMPT_PHOTO, PROMPT_DESCRIBE, MAKE_ACTIONS, MOTION_CHOICES } from '../modules/avatar.js';
 import { contrast, normalizeHex } from '../color_picker.js';
 
 const out = document.getElementById('results');
@@ -481,6 +481,52 @@ try {
     off.ctx.state.set({ animate: true });
     check('...and back on, live', off.q('[data-avatar-shown] svg')?.dataset.motion === 'on');
     off.inst.destroy();
+  }
+
+  section('the person\'s own movement choice is kept on their avatar (Mike, 2026-10-01)');
+  {
+    const kept = { use: 'drawn', drawn: surprise('mc') };
+    const t = mount({ person: kept });
+    await tick();
+    const btnM = () => t.q('[data-act="motion"]');
+    check('a movement button is offered, starting at "the usual", storing nothing', btnM() && btnM().dataset.motionChoice === 'usual'
+      && t.personStates[0].get().animate == null && t.probe().personChoice === null);
+    check('...and it is on the one-switch walk', [...t.host.querySelectorAll('[data-walk]')].some((b) => b.dataset.act === 'motion'));
+    t.press('[data-act="motion"]');
+    check('one press: "always moves", written ON THE PERSON', t.personStates[0].get().animate === true && btnM().dataset.motionChoice === 'moves');
+    t.press('[data-act="motion"]');
+    check('another: "still" — and the face here stops', t.personStates[0].get().animate === false
+      && t.q('[data-avatar-shown] svg')?.dataset.motion === 'off' && t.probe().motionWhy === 'person-still');
+    t.press('[data-act="make"]'); t.press('[data-act="surprise"]'); t.press('[data-act="save"]');
+    check('saving a new face keeps the movement choice already made', t.personStates[0].get().animate === false && t.personStates[0].get().use === 'drawn');
+    t.press('[data-act="motion"]');
+    check('a third press: back to "the usual", written as null (a merged write would keep a missing key)', t.personStates[0].get().animate === null
+      && t.q('[data-avatar-shown] svg')?.dataset.motion === 'on');
+    t.inst.destroy();
+    const calm = mount({ person: { ...kept, animate: true }, reducedMotion: true });
+    await tick();
+    check('the person chose "always moves", but this device asks for reduced motion: still', calm.q('[data-avatar-shown] svg')?.dataset.motion === 'off'
+      && calm.probe().motionWhy === 'device-reduced-motion');
+    calm.inst.destroy();
+    const panelOff = mount({ person: { ...kept, animate: true }, saved: { animate: false } });
+    await tick();
+    check('...and this panel\'s own "Gentle movement" off wins over the person too (it stands where a screen\'s setting does)',
+      panelOff.q('[data-avatar-shown] svg')?.dataset.motion === 'off' && panelOff.probe().motionWhy === 'screen-still');
+    panelOff.inst.destroy();
+    const none = mount();
+    check('no avatar: no movement button', !none.q('[data-act="motion"]'));
+    none.inst.destroy();
+    check('the choices, in press order', MOTION_CHOICES.map((c) => c.value).join() === ',true,false');
+  }
+
+  section('make your own: says a drawing can now move, and that unsafe parts are taken out');
+  {
+    const t = mount();
+    t.press('[data-act="to-own"]');
+    const words = t.host.textContent.replace(/\s+/g, ' ');
+    check('it no longer says the drawing will only ever be still', !/For now it shows as a still picture/.test(words)
+      && /SVG file can move/.test(words) && /cannot be made safe shows as a still picture/.test(words));
+    t.inst.destroy();
   }
 
   section('only shows it, when set to');

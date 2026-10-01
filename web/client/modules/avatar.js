@@ -28,6 +28,9 @@
 // DEFAULTS CHOSEN HERE — each a setting, each on Mike's list:
 //   * It moves (a blink every 9 s, a slow breath), because "animated avatars of people" was the ask.
 //     Off in one row; off by itself when the device asks for reduced motion.
+//   * The PERSON's own movement choice (Mike, 2026-10-01) is kept on their avatar and follows them to
+//     every screen: "the usual" (no choice, stored as null), "always moves", "still" — one button, one press each.
+//     Health settings and a screen's own setting still come first (avatar_display.js `avatarMotion`).
 //   * Contrast warns at 1.3:1 (`avatar.js`, DEFAULT_WARN_BELOW) and never stops a Save.
 //   * A new avatar starts from "surprise me" seeded with the person's id — not from one fixed face.
 
@@ -36,7 +39,8 @@ import {
   renderAvatar, surprise, normalizeRecord, readAvatar, avatarWarnings, PARTS, partOf, optionFor,
   describeAvatar, AVATAR_KEY, DEFAULT_WARN_BELOW,
 } from '../avatar.js';
-import { AVATAR_CHANGED_EVENT } from '../avatar_display.js';
+import { AVATAR_CHANGED_EVENT, avatarMotion } from '../avatar_display.js';
+import { flashLimit } from '../flash_limit.js';
 import { createCardImages } from '../card_face.js';
 import { createMediaSourcesClient, listItemNames } from '../media_sources.js';
 import { normalizeHex } from '../color_picker.js';
@@ -63,7 +67,7 @@ export const PROMPT_DESCRIBE = [
 const SETTINGS = [
   { key: 'animate', label: 'Gentle movement', default: true, level: 'standard',
     onLabel: 'Blinks and breathes', offLabel: 'Still',
-    note: 'Stays still by itself when this device asks for reduced motion.' },
+    note: 'Off keeps the face still on this panel, whatever the person chose. It is always still when this device asks for reduced motion.' },
   { key: 'allowChange', label: 'Change the avatar from this panel', default: true, level: 'standard',
     onLabel: 'Allowed', offLabel: 'Only shows it' },
   { key: 'warnBelow', label: 'Warn when a colour is this close to the background', kind: 'number',
@@ -74,6 +78,15 @@ export const DEFAULTS = Object.freeze(Object.fromEntries(SETTINGS.map((s) => [s.
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+// THE PERSON'S MOVEMENT CHOICE, kept on their avatar (`animate` on the row), in the order one press
+// steps through them. "The usual" is no choice (null), so somebody who never touches it gets whatever each
+// screen does by default (large faces move, small ones are still — avatar_display.js).
+export const MOTION_CHOICES = Object.freeze([
+  Object.freeze({ value: null, label: 'the usual (moves when shown large)' }),
+  Object.freeze({ value: true, label: 'always moves' }),
+  Object.freeze({ value: false, label: 'still' }),
+]);
 
 // The action buttons after the parts, in walk order. Save LAST so `prev` from the first part reaches it.
 export const MAKE_ACTIONS = Object.freeze([
@@ -112,7 +125,14 @@ registerModule(
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
       try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; }
     };
-    const moving = () => !!cfg.animate && !reducedMotion();
+    // THE SAME DECISION EVERY OTHER FACE MAKES (avatar_display.js `avatarMotion`), as a large face: the
+    // device's reduced motion first, then this panel's own "Gentle movement" (it stands where a screen's
+    // setting would), then the person's choice kept on their avatar, then "large faces move".
+    const motionNow = () => avatarMotion({
+      context: { deviceReduced: reducedMotion(), screen: cfg.animate ? 'follow' : 'still', flashLimit: flashLimit(ctx) },
+      person: personChoice(), big: true,
+    });
+    const moving = () => motionNow().animate;
     const personIdNow = () => { try { return ctx.personId || null; } catch { return null; } };
     const seedBase = () => personIdNow() || ctx.instanceId || 'avatar';
 
@@ -145,9 +165,21 @@ registerModule(
       return (state?.get?.() || {})[AVATAR_KEY] || {};
     };
     const saved = () => readAvatar(savedRow());
+    // The person's own movement choice, kept on the avatar row (Mike, 2026-10-01: movement follows the
+    // person): true "always moves", false "still", null "the usual" (no choice made).
+    function personChoice() {
+      const a = savedRow().animate;
+      return a === true || a === false ? a : null;
+    }
     function writeRow(patch) {
       ensureStore();
-      const row = { ...readAvatar(savedRow()), ...patch, at: now() };
+      const cur = savedRow();
+      const row = { ...readAvatar(cur), ...patch, at: now() };
+      // A save of the face keeps the movement choice already made; only the movement button changes it.
+      // "The usual" is written as null, not left out: a person's state is MERGED on write (state.js
+      // `set`), so a key left out would keep the old choice.
+      if (!Object.prototype.hasOwnProperty.call(patch, 'animate')) row.animate = cur.animate;
+      if (typeof row.animate !== 'boolean') row.animate = null;
       if (personStore) {
         personStore.set(row); try { personStore.flush?.(); } catch { /* retried by the handle */ }
         // Tell any face on this page showing this person (`avatar_display.js`), with the row itself,
@@ -240,6 +272,13 @@ registerModule(
       toShow();
     }
     function noAvatar() { writeRow({ use: 'none' }); toShow(); }
+    // One press steps the choice round: the usual -> always moves -> still -> the usual.
+    function stepMotion() {
+      const at = MOTION_CHOICES.findIndex((c) => c.value === personChoice());
+      writeRow({ animate: MOTION_CHOICES[(at + 1) % MOTION_CHOICES.length].value });
+      msg = '';
+      render();
+    }
     function useDrawn() { writeRow({ use: 'drawn' }); toShow(); }
 
     async function copy(which) {
@@ -271,6 +310,7 @@ registerModule(
         case 'to-own': view = 'own'; openPart = null; msg = ''; if (lit >= 0) lit = 0; render(); return;
         case 'no-avatar': noAvatar(); return;
         case 'use-drawn': useDrawn(); return;
+        case 'motion': stepMotion(); return;
         case 'part': if (openPart === el.dataset.part) closePart(true); else { if (openPart) closePart(true); openPartRow(el.dataset.part); } return;
         case 'opt': {
           const key = el.dataset.part;
@@ -316,6 +356,8 @@ registerModule(
         btn('to-picture', 'Use a picture instead'),
         btn('to-own', 'Make your own'),
         s.use === 'picture' && s.drawn ? btn('use-drawn', 'Use the drawn one again') : '',
+        s.use !== 'none' ? btn('motion', `Movement: ${esc(MOTION_CHOICES.find((c) => c.value === personChoice()).label)}`,
+          ` data-motion-choice="${personChoice() === null ? 'usual' : personChoice() ? 'moves' : 'still'}"`) : '',
         s.use !== 'none' ? btn('no-avatar', 'No avatar') : '',
       ].join('') : '';
       return `<div class="av-show">${face}<div class="av-btns">${btns}</div></div>`;
@@ -392,7 +434,10 @@ registerModule(
         ${btn('copy', 'Copy the description prompt', ' data-which="describe"')}
         ${msg ? `<p class="av-msg" role="status" data-avatar-msg>${esc(msg)}</p>` : ''}
         <p class="av-hint">Save what the AI makes into one of your picture folders, then choose it with
-          <b>Use a picture instead</b>. For now it shows as a still picture.</p>
+          <b>Use a picture instead</b>. A drawing saved as an SVG file can move: if its eyes are in a group
+          named eyes they blink, and the figure breathes gently. Anything in the file that could run, or
+          reach another website, is taken out before it is shown; a file that cannot be made safe shows as
+          a still picture. Photos and other pictures stay still.</p>
         <div class="av-btns">${btn('to-picture', 'Use a picture instead')}${btn('back', draft ? 'Back to making one' : 'Back')}</div>
       </div>`;
     }
@@ -476,7 +521,7 @@ registerModule(
 
     return {
       __probe: () => ({ view, lit, openPart, draft: draft ? { ...draft } : null, saved: saved(), cfg: { ...cfg },
-        moving: moving(), litAct: lit >= 0 ? walk()[lit]?.dataset.act : null,
+        moving: moving(), motionWhy: motionNow().because, personChoice: personChoice(), litAct: lit >= 0 ? walk()[lit]?.dataset.act : null,
         litLabel: lit >= 0 ? walk()[lit]?.textContent.trim().replace(/\s+/g, ' ') : null,
         stored: personStore ? 'person' : 'panel', pickedPicture }),
       init() {
