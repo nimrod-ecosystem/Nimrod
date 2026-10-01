@@ -386,10 +386,16 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //   gentle(item, cfg)         the gentle line
 //   canReplay                 true when the question is a clip that can be played again
 //   unknownLine(value, cfg)   what to say for a value `judge` could not judge
+//
+// `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
+// `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
+// misses; the gentle miss; or skipped after at least one miss (a skip before any try is not a
+// result: nothing was attempted). Rating and spaced review hang off this; a game that does not
+// pass one is unchanged.
 export function createQuizEngine({
   games = {}, cfg = () => ({}), rand = Math.random,
   say = () => {}, award = () => {}, chime = () => {}, onChange = () => {}, publishGrammar = () => {},
-  onReplay = () => {}, onDeal = () => {},
+  onReplay = () => {}, onDeal = () => {}, onResult = () => {},
   setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id),
 } = {}) {
   const c = () => ({ ...FLOW_DEFAULTS, ...(cfg() || {}) });
@@ -400,6 +406,7 @@ export function createQuizEngine({
   let item = null;
   let serial = 0;
   let paidSerial = -1;
+  let resultSerial = -1;
   let phase = 'idle';
   let misses = 0;
   let hintsGiven = 0;
@@ -476,8 +483,18 @@ export function createQuizEngine({
     ci = 0; highlight = 0; entry = '';
   }
 
+  // ONCE PER QUESTION, like the points: the serial guard means a second hearing cannot report twice.
+  function report(extra) {
+    if (!item || resultSerial === serial) return;
+    resultSerial = serial;
+    try { onResult({ game: gameId, item, misses, hintsGiven, revealed, skipped: false, right: false, ...extra }); }
+    catch (err) { console.error('quiz: result', err); }
+  }
+
   function nextItem() {
     stopTimer();
+    // Skipped after trying: a result (it was hard). Skipped before any try: nothing to report.
+    if (item && phase === 'asking' && misses > 0) report({ skipped: true });
     const items = call('items', c(), rand);
     if (items == null) { item = null; phase = 'loading'; feedback = null; changed(); return; }
     if (!items.length) {
@@ -547,6 +564,7 @@ export function createQuizEngine({
       try { award({ amount: Number(c().correctPoints) || 0, game: gameId, item, answer }); }
       catch (err) { console.error('quiz: award', err); }
     }
+    report({ right: true, answer });
     speak(fill(c().rightLine, { explain: pair.explain }));
     try { chime(); } catch (err) { console.error('quiz: chime', err); }
     const ms = Math.max(0, Number(c().celebrateMs) || FLOW_DEFAULTS.celebrateMs);
@@ -567,6 +585,7 @@ export function createQuizEngine({
     const answer = answerOf();
     revealed = true;
     pair = { answer, explain: explainOf(answer) };
+    report({ right: false });
     stopTimer();
     phase = 'another';
     highlight = 0;
@@ -579,6 +598,7 @@ export function createQuizEngine({
     const answer = answerOf();
     revealed = true;
     pair = { answer, explain: explainOf(answer) };
+    report({ right: false });
     phase = 'gentle';
     highlight = 0;
     unsure = null;
@@ -862,9 +882,19 @@ export function createQuizEngine({
     press(s[i].act);
   }
 
+  /**
+   * A WHOLE ANSWER CHOSEN DIRECTLY — a touched tile ("the smallest is 3"), not an offer walked to.
+   * Judged exactly as a heard or offered answer is; `via` is anything but 'voice', so a wrong one
+   * gets the switch line ("That is incorrect."), never "It sounded like you said".
+   */
+  function answer(value, via = 'touch') {
+    if (dead || !item || phase !== 'asking' || value == null || value === '') return;
+    judgeValue(value, via);
+  }
+
   return {
     start: (id) => setGame(id != null ? id : Object.keys(games)[0]),
-    setGame, refresh, hear, press, stops, grammar, select,
+    setGame, refresh, hear, press, stops, grammar, select, answer,
     type, erase, clearEntry, check,
     next: () => move(1),
     prev: () => move(-1),

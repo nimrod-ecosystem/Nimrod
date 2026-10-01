@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>rating — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>rating, the ladder and the question writer (row 2.45)</h1>
+<p>Elo for players and questions, Mike's 80% rule (add the harder level, retire the easiest), spaced
+review on an expanding schedule, two players at different levels taking turns, and the open-model
+question writer hook. Everything pure is called with numbers; the session is driven with a fake
+clock and a fake store.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { harness } from './quiz_test_rig.js';
+import * as R from '../rating.js';
+import { createAdaptiveSession, parsePlayers, mergeLadder, adaptiveSettings, ADAPTIVE_DEFAULTS, emptyLadder,
+  EXTRA_CAP } from '../adaptive_play.js';
+import { isOpenModel, buildWriterPrompt, parseWritten, checkWritten, writeQuestions } from '../question_writer.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const { check, section, finish } = harness();
+const near = (a, b, eps = 1e-9) => Math.abs(a - b) < eps;
+let seed = 11;
+const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+
+// A toy bank: 6 questions at each of levels 1..5, ids "q<level>-<i>".
+const BANK = [];
+for (let l = 1; l <= 5; l++) for (let i = 0; i < 6; i++) BANK.push({ id: `q${l}-${i}`, level: l });
+const levelOfId = (id) => Number(String(id).slice(1, 2));
+
+function memStore(init = {}) {
+  let v = { ...init };
+  return { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() {}, peek: () => v };
+}
+function sess(cfg = {}, opts = {}) {
+  let t = 1_000_000;
+  const c = { ...ADAPTIVE_DEFAULTS, ...cfg };
+  const s = createAdaptiveSession({ cfg: () => c, bankFor: () => BANK, rand, now: () => t, ...opts });
+  return { s, c, tick: (ms) => { t += ms; }, now: () => t, set: (p) => Object.assign(c, p) };
+}
+const play = (x, game, result) => { const q = x.s.deal(game); return { q, r: x.s.record({ item: q, ...result }) }; };
+
+try {
+  // =====================================================================================
+  section('Elo: the expected score and one update');
+  {
+    check('equal ratings: 50%', near(R.expected(1000, 1000), 0.5));
+    check('400 points better: 10 to 1 (about 91%)', near(R.expected(1400, 1000), 10 / 11));
+    check('a 150-point level gap is about 70/30', Math.abs(R.expected(1150, 1000) - 0.703) < 0.002, R.expected(1150, 1000));
+    const k0 = R.kFactor(0); const k10 = R.kFactor(10); const kBig = R.kFactor(100000);
+    check('K: 64 for somebody new, halfway at 10 answers, 16 when settled', k0 === 64 && near(k10, 40) && Math.abs(kBig - 16) < 0.01, `${k0} ${k10} ${kBig}`);
+    check('uncertainty: 1 new, falling', R.uncertainty(0) === 1 && R.uncertainty(10) === 0.5 && R.uncertainty(90) === 0.1);
+    const r = R.rateAnswer({ rating: 1000, n: 50 }, { rating: 1000, n: 50 }, 1);
+    check('a right answer on an even question: player up, question down, by the same amount when both are settled',
+      r.player.rating > 1000 && r.question.rating < 1000 && near(r.player.rating - 1000, 1000 - r.question.rating), JSON.stringify(r));
+    check('...and both counts go up by one', r.player.n === 51 && r.question.n === 51);
+    const miss = R.rateAnswer({ rating: 1000, n: 50 }, { rating: 1000, n: 50 }, 0);
+    check('a miss is the mirror image', near(miss.player.rating - 1000, -(r.player.rating - 1000)));
+    const easy = R.rateAnswer({ rating: 1300, n: 50 }, { rating: 1000, n: 50 }, 1);
+    const hard = R.rateAnswer({ rating: 1000, n: 50 }, { rating: 1300, n: 50 }, 1);
+    check('an expected right answer moves little; a surprising one moves a lot', easy.change < hard.change && easy.change > 0);
+    const fresh = R.rateAnswer({ rating: 1000, n: 50 }, { rating: 1000, n: 0 }, 1);
+    const settled = R.rateAnswer({ rating: 1000, n: 50 }, { rating: 1000, n: 50 }, 1);
+    check('*** a brand-new question moves a settled player LESS (it has no rating yet) ***', fresh.change < settled.change,
+      `${fresh.change} vs ${settled.change}`);
+    const newP = R.rateAnswer({ rating: 1000, n: 0 }, { rating: 1000, n: 50 }, 1);
+    check('a new player moves faster than a settled one', newP.change > settled.change);
+    check('nothing is mutated', (() => { const p = { rating: 1000, n: 1 }; R.rateAnswer(p, {}, 1); return p.rating === 1000 && p.n === 1; })());
+    check('scores: clean 1, helped 0.5, missed 0', R.scoreOf('clean') === 1 && R.scoreOf('helped') === 0.5 && R.scoreOf('missed') === 0);
+    check('outcomes from the engine: right first time is clean; after a hint or miss is helped; not right is missed',
+      R.outcomeOf({ right: true }) === 'clean' && R.outcomeOf({ right: true, misses: 1 }) === 'helped'
+        && R.outcomeOf({ right: true, hintsGiven: 1 }) === 'helped' && R.outcomeOf({ right: false }) === 'missed');
+  }
+
+  section('levels and the pool');
+  {
+    check('level 1 is centred on 1000, each level 150 more', R.levelRating(1) === 1000 && R.levelRating(3) === 1300);
+    check('levelOf rounds to the nearest level and never goes below 1',
+      R.levelOf(1000) === 1 && R.levelOf(1074) === 1 && R.levelOf(1076) === 2 && R.levelOf(400) === 1 && R.levelOf(1610) === 5);
+    const qs = BANK.map((q) => ({ id: q.id, rating: R.levelRating(q.level) }));
+    const pool = R.poolFor(qs, 2, { levelsAtOnce: 2 });
+    check('a floor of 2 with two levels at once: levels 2 and 3, nothing else',
+      pool.length === 12 && pool.every((q) => [2, 3].includes(levelOfId(q.id))));
+    const drifted = qs.map((q) => (q.id === 'q2-0' ? { ...q, rating: R.levelRating(4) } : q));
+    check('*** a question rated by play LEAVES its written level: a "level 2" everybody misses is in level 4 now ***',
+      !R.poolFor(drifted, 2, { levelsAtOnce: 2 }).some((q) => q.id === 'q2-0')
+        && R.poolFor(drifted, 4, { levelsAtOnce: 1 }).some((q) => q.id === 'q2-0'));
+    check('the window stops at the top level', JSON.stringify(R.poolLevels(5, 2, 5)) === '{"lo":5,"hi":5}');
+  }
+
+  section('*** MIKE\'S RULE: above 80% adds the harder level and retires the easiest ***');
+  {
+    check('nothing is judged before the window is full', R.judgeWindow([1, 1, 1, 1, 1, 1, 1, 1, 1], { judgeOver: 10 }) === null);
+    check('9 of 10: up (strictly above 80%)', R.judgeWindow([1, 1, 1, 1, 0, 1, 1, 1, 1, 1], { judgeOver: 10 }) === 'up');
+    check('*** exactly 8 of 10 is NOT above 80%: no move ***', R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10 }) === null);
+    check('4 of 10: down (below 50%)', R.judgeWindow([1, 0, 0, 1, 0, 1, 0, 0, 1, 0], { judgeOver: 10 }) === 'down');
+    check('"never easier" (0) turns moving down off', R.judgeWindow([0, 0, 0, 0, 0], { judgeOver: 5, moveDownBelow: 0 }) === null);
+    check('the threshold is a setting: 70% moves on 8 of 10', R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10, moveUpAbove: 0.7 }) === 'up');
+    check('helped answers count half', R.recentRate([1, 0.5, 0.5, 1], 4) === 0.75);
+    let st = { floor: 1, recent: [] };
+    for (let i = 0; i < 9; i++) st = R.stepFloor(st, 1, { judgeOver: 10 });
+    check('nine right: still level 1', st.floor === 1 && st.recent.length === 9);
+    st = R.stepFloor(st, 1, { judgeOver: 10 });
+    check('the tenth: up to 2, and the window starts again', st.floor === 2 && st.moved === 'up' && st.recent.length === 0);
+    const qs = BANK.map((q) => ({ id: q.id, rating: R.levelRating(q.level) }));
+    const before = R.poolFor(qs, 1, { levelsAtOnce: 2 }).map((q) => levelOfId(q.id));
+    const after = R.poolFor(qs, st.floor, { levelsAtOnce: 2 }).map((q) => levelOfId(q.id));
+    check('...level 3 questions came in', !before.includes(3) && after.includes(3));
+    check('...and level 1 questions went out', before.includes(1) && !after.includes(1));
+    check('the top level is a ceiling', R.stepFloor({ floor: 5, recent: Array(9).fill(1) }, 1, { judgeOver: 10, maxLevel: 5 }).floor === 5);
+    check('level 1 is a floor', R.stepFloor({ floor: 1, recent: Array(9).fill(0) }, 0, { judgeOver: 10 }).floor === 1);
+  }
+
+  section('choosing inside the pool: nearest the target success rate, not repeating');
+  {
+    const qs = [{ id: 'easy', rating: 700 }, { id: 'aim', rating: 1000 - 241 + 0 }, { id: 'even', rating: 1000 }, { id: 'hard', rating: 1400 }];
+    const pick = R.choose(qs, { playerRating: 1000, spread: 1, rand: () => 0 });
+    check('with a spread of one: the question nearest 80% expected', pick.id === 'aim', pick.id);
+    check('a recently asked one is skipped', R.choose(qs, { playerRating: 1000, spread: 1, recentIds: ['aim'], avoidRecent: 4, rand: () => 0 }).id !== 'aim');
+    check('...unless nothing else is left', R.choose([qs[1]], { playerRating: 1000, recentIds: ['aim'], rand: () => 0 }).id === 'aim');
+    check('nothing to choose from: null', R.choose([], {}) === null);
+  }
+
+  section('*** SPACED REVIEW (register 256): missed things come back further apart each time ***');
+  {
+    const at = (now, asked, sitting = 's1') => ({ now, asked, sitting, steps: 'standard' });
+    const DAY = R.DAY_MS;
+    let e = R.scheduleReview(null, 'missed', at(0, 5));
+    check('a miss: back after 2 more questions in this sitting', e.step === 0 && e.dueAsked === 7);
+    check('...not due after one', !R.isDue(e, { now: 0, asked: 6, sitting: 's1' }));
+    check('...due after two', R.isDue(e, { now: 0, asked: 7, sitting: 's1' }));
+    check('...and due at the start of the NEXT sitting if this one ends first', R.isDue(e, { now: 10, asked: 0, sitting: 's2' }));
+    e = R.scheduleReview(e, 'clean', at(0, 7));
+    check('right when due: after 5 more', e.step === 1 && e.dueAsked === 12);
+    e = R.scheduleReview(e, 'clean', at(0, 12));
+    check('right again: tomorrow', e.step === 2 && e.dueAsked === null && e.dueAt === DAY);
+    check('...not due an hour later', !R.isDue(e, { now: 3600e3, asked: 20, sitting: 's1' }));
+    const early = R.scheduleReview(e, 'clean', at(3600e3, 20));
+    check('a clean answer BEFORE it was due changes nothing (it was not a review)', early === e);
+    const steps = [];
+    let t = DAY;
+    for (let i = 0; i < 6 && e; i++) { e = R.scheduleReview(e, 'clean', at(t, 0)); if (e) { steps.push(Math.round((e.dueAt - t) / DAY)); t = e.dueAt; } }
+    check('then 3, 7, 14 and 30 days', steps.join(',') === '3,7,14,30', steps.join(','));
+    check('...and after the last step it is learned: no entry', e === null);
+    const reset = R.scheduleReview({ step: 4, dueAt: 0, dueAsked: null }, 'helped', at(0, 3));
+    check('*** needing a hint puts it back to the start ***', reset.step === 0 && reset.dueAsked === 5);
+    check('right first time and never missed: nothing to review', R.scheduleReview(null, 'clean', at(0, 1)) === null);
+    check('"days": the first return is tomorrow, not two questions later',
+      R.scheduleReview(null, 'missed', { now: 0, asked: 1, sitting: 's', steps: 'days' }).dueAt === DAY);
+    check('"off": nothing is ever scheduled', R.scheduleReview(null, 'missed', { now: 0, steps: 'off' }) === null);
+    const due = R.dueIds({ a: { dueAsked: 9, sitting: 's', dueAt: 0 }, b: { dueAsked: 4, sitting: 's', dueAt: 0 },
+      c: { dueAsked: null, dueAt: 5 }, d: { dueAsked: null, dueAt: 10 ** 12 } }, { now: 100, asked: 9, sitting: 's' });
+    check('due ids, most overdue first, the not-yet-due left out', due.join(',') === 'b,a,c', due.join(','));
+  }
+
+  // =====================================================================================
+  section('players: names in turn order');
+  {
+    const ps = parsePlayers('Ann, Bob ,ann, , Cy\nDee; Eve');
+    check('names in order, a repeat dropped, at most four', ps.map((p) => p.name).join('|') === 'Ann|Bob|Cy|Dee', JSON.stringify(ps));
+    check('ids are stable from the name', ps[0].id === 'name:ann' && ps[1].index === 1);
+    const one = parsePlayers('', { personId: 'p7' });
+    check('empty: one player, the screen\'s own person, no name drawn', one.length === 1 && one[0].id === 'person:p7' && one[0].name === '');
+  }
+
+  section('the session: one player climbs');
+  {
+    const x = sess();
+    let q = x.s.deal('g');
+    check('a new player starts at level 1: levels 1 and 2 only', [1, 2].includes(q.level));
+    x.s.record({ item: q, right: true });
+    let moved = null;
+    for (let i = 0; i < 12 && !moved; i++) moved = play(x, 'g', { right: true }).r.moved;
+    check('ten right in a row (the first one included): up a level', moved === 'up' && x.s.windowFor('player', 'g').floor === 2);
+    const levels = new Set();
+    for (let i = 0; i < 20; i++) levels.add(play(x, 'g', { right: true, misses: 1 }).q.level);
+    check('now it deals levels 2 and 3 (and level 1 only as a review)', [...levels].every((l) => l >= 2 && l <= 3), [...levels].join(','));
+    check('the player\'s rating went up', x.s.playerRow('player', 'g').rating > 1000);
+    check('adapt off: stays at the starting level', (() => {
+      const y = sess({ adapt: false, startLevel: 3 });
+      for (let i = 0; i < 15; i++) play(y, 'g', { right: true });
+      return y.s.windowFor('player', 'g').floor === 3;
+    })());
+  }
+
+  section('the session: a miss comes back');
+  {
+    const x = sess();
+    const first = x.s.deal('g');
+    x.s.record({ item: first, right: false, revealed: true });
+    check('the question\'s own rating went UP when it was missed', x.s.questionRow(first).rating > R.levelRating(first.level));
+    const next = [];
+    for (let i = 0; i < 4; i++) { const q = x.s.deal('g'); next.push(q.id); x.s.record({ item: q, right: true }); }
+    check('*** the missed question comes back after two OTHER questions ***',
+      next[2] === first.id && next[0] !== first.id && next[1] !== first.id, `${first.id} | ${next.join(',')}`);
+    check('...and, answered right, moves on to its next step', x.s.playerRow('player', 'g').review[first.id]?.step === 1);
+  }
+
+  section('*** TWO PLAYERS, A SKILL GAP, ONE SCREEN ***');
+  {
+    const store = memStore();
+    const x = sess({ players: 'Ann, Bob' }, { store });
+    // Ann has been playing for weeks at level 4; Bob is new.
+    const ladder = emptyLadder();
+    ladder.players['name:ann'] = { name: 'Ann', games: { g: { rating: R.levelRating(4), n: 80, floor: 4, recent: [], review: {} } } };
+    store.set({ ladder });
+    const y = sess({ players: 'Ann, Bob' }, { store });
+    await new Promise((r) => setTimeout(r, 0));
+    const dealt = [];
+    for (let i = 0; i < 8; i++) {
+      const who = y.s.currentPlayer().name;
+      const q = y.s.deal('g');
+      dealt.push([who, q.level]);
+      y.s.record({ item: q, right: true, misses: 1 });
+    }
+    check('turns alternate: Ann, Bob, Ann, Bob ...', dealt.map((d) => d[0]).join('') === 'AnnBobAnnBobAnnBobAnnBob');
+    check('*** Ann gets level 4-5 questions, Bob level 1-2, on the same screen ***',
+      dealt.filter((d) => d[0] === 'Ann').every((d) => d[1] >= 4) && dealt.filter((d) => d[0] === 'Bob').every((d) => d[1] <= 2),
+      JSON.stringify(dealt));
+    check('each has their own rating', y.s.playerRow('name:ann', 'g').rating > 1400 && y.s.playerRow('name:bob', 'g').rating < 1300);
+    check('it is saved to the shared ladder', !!store.peek().ladder.players['name:bob'].games.g);
+    const chip = y.s.turnHtml({ phase: 'asking' }, 'g');
+    check('whose turn is on screen: a name and a coloured initial', /data-turn="name:ann"/.test(chip) && />A</.test(chip) && /Ann/.test(chip), chip);
+    const nextChip = y.s.turnHtml({ phase: 'another' }, 'g');
+    check('between questions it says who is next', /data-next/.test(nextChip) && /Next: Ann/.test(nextChip), nextChip);
+    check('the question is said with the name first', y.s.askPrefix() === 'Ann, your turn. ');
+    check('the score names both', /^Ann \d+ · Bob \d+$/.test(y.s.scoreDetail()), y.s.scoreDetail());
+    const q = y.s.deal('g');
+    check('points: the first player\'s right answer pays', y.s.allowAward() === true);
+    y.s.record({ item: q, right: true });
+    y.s.deal('g');
+    check('*** a second player\'s does not, by default ***', y.s.allowAward() === false);
+    y.set({ pointsFor: 'all' });
+    check('...unless "every player"', y.s.allowAward() === true);
+    const solo = sess();
+    check('one player: no chip, no name before the question', solo.s.turnHtml({ phase: 'asking' }, 'g') === '' && solo.s.askPrefix() === '');
+    const shown = sess({ showLevel: true });
+    shown.s.deal('g');
+    check('show the level (a setting): one player gets a chip with the level', /level 1/.test(shown.s.turnHtml({ phase: 'asking' }, 'g')));
+  }
+
+  section('the ladder survives a reload, and two pages\' writes merge');
+  {
+    const a = emptyLadder(); a.players.p = { name: 'P', games: { g: { rating: 1200, n: 5 } } }; a.questions.q1 = { rating: 900, n: 3 };
+    const b = emptyLadder(); b.players.p = { name: 'P', games: { h: { rating: 1100, n: 2 } } }; b.questions.q2 = { rating: 1100, n: 1 };
+    const m = mergeLadder(a, b);
+    check('both games kept for the same player, both questions kept', m.players.p.games.g && m.players.p.games.h && m.questions.q1 && m.questions.q2);
+    const big = emptyLadder(); big.extra.g = Array.from({ length: EXTRA_CAP + 20 }, (_, i) => ({ id: `x${i}` }));
+    check('AI-written questions are capped', mergeLadder(emptyLadder(), big).extra.g.length === EXTRA_CAP);
+  }
+
+  // =====================================================================================
+  section('*** THE QUESTION WRITER: an open model, off unless turned on ***');
+  {
+    check('Claude is refused as the writer (row 2.50)', !isOpenModel('claude-3-5-sonnet') && !isOpenModel('anthropic/claude') && !isOpenModel(''));
+    check('an open model is fine', isOpenModel('qwen2.5:7b') && isOpenModel('llama3.1:8b'));
+    const p = buildWriterPrompt('groups', 2, [{ things: ['a', 'b', 'c'], group: 'g', accept: ['g'], cue: 'x' }], 5);
+    check('the prompt asks for JSON, at a level, with examples, and rules out lyrics', p.length === 2
+      && /JSON/.test(p[0].content) && /lyrics/.test(p[0].content) && /level 2/.test(p[1].content) && /Write 5/.test(p[1].content));
+    const reply = '```json\n{"questions":[{"things":["pear","plum","fig"],"group":"fruit","accept":["fruits"],"cue":"sweet and grow on trees"},'
+      + '{"things":["a","b"],"group":"x","cue":"y"},{"things":["cat","dog","fruit"],"group":"fruit","cue":"z"},'
+      + '{"things":["oak","elm","ash"],"group":"trees","cue":"trees are tall"}]}\n```';
+    const got = parseWritten('groups', reply, 3, 'qwen2.5:7b');
+    check('the good one is kept, read out of a fenced reply', got.length === 1 && got[0].group === 'fruit' && got[0].level === 3, JSON.stringify(got));
+    check('...with where it came from (so later training can leave it out)', got[0].source === 'ai' && got[0].writtenBy === 'qwen2.5:7b');
+    check('two things, the answer among the things, and a hint that SAYS the answer: all refused', got.length === 1);
+    check('a finish question needs endings that fit and two that do not',
+      !!checkWritten('finish', { stem: 'I tie my', accept: ['shoes'], wrong: ['soup', 'cloud'], cue: 'on your feet' })
+        && !checkWritten('finish', { stem: 'I tie my', accept: ['shoes'], wrong: ['soup'], cue: 'x' })
+        && !checkWritten('finish', { stem: '<b>I</b>', accept: ['a'], wrong: ['b', 'c'], cue: 'x' }));
+    const fakeAI = (model) => ({ calls: 0, async resolveModel() { return { ok: true, model }; },
+      async chat() { this.calls += 1; return { ok: true, text: '{"questions":[{"things":["ant","cat","bus"]}]}' }; } });
+    const claude = fakeAI('claude-opus');
+    const refused = await writeQuestions({ ai: claude, game: 'things', level: 1 });
+    check('*** a Claude model is never even asked ***', !refused.ok && claude.calls === 0, JSON.stringify(refused));
+    const open = await writeQuestions({ ai: fakeAI('qwen2.5:7b'), game: 'things', level: 1 });
+    check('an open model\'s questions come back checked', open.ok && open.items.length === 1 && open.items[0].kind === 'things');
+    check('numbers are never written (they are generated)', !(await writeQuestions({ ai: fakeAI('q'), game: 'numbers' })).ok);
+
+    // The session asks for more only when turned on and only when a player is running out.
+    const calls = [];
+    const writer = async (req) => { calls.push(req); return [{ id: `w${calls.length}-a`, level: req.level }, { id: `w${calls.length}-b`, level: req.level }]; };
+    const off = sess({}, { writer });
+    for (let i = 0; i < 6; i++) play(off, 'g', { right: true });
+    check('off by default: never called', calls.length === 0);
+    const on = sess({ aiWrite: 'local', aiWhenFewer: 20 }, { writer });
+    on.s.deal('g');
+    await new Promise((r) => setTimeout(r, 0));
+    check('on, and running low: asks once, at the top of the player\'s levels', calls.length === 1 && calls[0].level === 2 && calls[0].game === 'g');
+    check('...and the new questions join the bank at that level', on.s.allQuestions('g').some((q) => q.id === 'w1-a' && q.level === 2));
+  }
+
+  section('the settings');
+  {
+    const rows = adaptiveSettings({ ai: true }).map(normalizeField).filter(Boolean);
+    const keys = rows.map((r) => r.key);
+    check('players, adapt, the threshold, the window, the levels, review, points, and the writer are all settings',
+      ['players', 'adapt', 'startLevel', 'moveUpAbove', 'moveDownBelow', 'judgeOver', 'levelsAtOnce', 'review', 'showLevel',
+        'pointsFor', 'aiWrite', 'aiWhenFewer', 'turnLine'].every((k) => keys.includes(k)), keys.join(','));
+    check('Mike\'s 80% is the default', rows.find((r) => r.key === 'moveUpAbove').default === 0.8);
+    check('the writer is off by default', rows.find((r) => r.key === 'aiWrite').default === 'off');
+    const errs = auditFields(rows, { type: 'adaptive' }).filter((f) => f.severity === 'error');
+    check('no audit errors', errs.length === 0, JSON.stringify(errs));
+    check('no row says she / her', !/\b(she|her|hers|herself)\b/i.test(rows.map((r) => `${r.label} ${r.note || ''}`).join(' ')));
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

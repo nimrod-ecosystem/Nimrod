@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>thinking games — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>thinking games (row 2.45)</h1>
+<p>A speech therapist's exercises, our own versions: smallest of three numbers, biggest of three things,
+name the group, finish the sentence (no example given). Answered by voice, a switch or touch, through
+the shared miss flow. Each player at their own level; two players take turns.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { getManifest, listManifests } from '../module.js';
+import '../modules/think_games.js';
+import '../modules/word_games.js';
+import '../modules/name_that.js';
+import '../modules/simple_math.js';
+import '../modules/algebra.js';
+import { GAME, GAMES, MIX_ORDER, LINES, DEFAULTS, judgeItem, targetOf, shownOf, saysPhrase } from '../modules/think_games.js';
+import { BANKS, NUMBERS, THINGS, GROUPS, FINISH, GROUP_NAMES } from '../think_banks.js';
+import { UNKNOWN, FLOW_LINES, numberWord } from '../quiz_flow.js';
+import { emptyLadder, LADDER_KEY } from '../adaptive_play.js';
+import { levelRating } from '../rating.js';
+import { auditFields, auditAcross } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+
+function ladderStore(init = {}) {
+  let v = { ...init };
+  const h = { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() { h.destroyed = true; }, peek: () => v };
+  return h;
+}
+const R = (saved = {}, opts = {}) => {
+  const store = opts.store || ladderStore();
+  const r = rig(GAME, { saved, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  return Object.assign(r, { ladder: store, item: () => r.probe().item, session: () => r.inst.impl.__session });
+};
+const tiles = (r) => [...r.host.querySelectorAll('[data-pick]')].map((b) => b.dataset.pick);
+const tap = (r, v) => r.host.querySelector(`[data-pick="${CSS.escape(String(v))}"]`)?.click();
+const askText = (r) => r.host.querySelector('.wg-ask')?.textContent.trim() || '';
+
+try {
+  section('the banks: every question well-formed, at five levels');
+  {
+    const all = Object.values(BANKS).flat();
+    check('every id is unique across all four banks', new Set(all.map((q) => q.id)).size === all.length);
+    for (const [g, list] of Object.entries(BANKS)) {
+      const per = [1, 2, 3, 4, 5].map((l) => list.filter((q) => q.level === l).length);
+      check(`${g}: at least 8 questions at each of levels 1-5`, per.every((n) => n >= 8), per.join(','));
+    }
+    check('numbers: three different numbers each', NUMBERS.every((q) => new Set(q.nums).size === 3));
+    check('numbers: level 1 is single digits at least 3 apart; level 3 two digits in different tens; level 5 three digits',
+      NUMBERS.filter((q) => q.level === 1).every((q) => { const s = [...q.nums].sort((a, b) => a - b); return s[2] <= 9 && s[1] - s[0] >= 3 && s[2] - s[1] >= 3; })
+        && NUMBERS.filter((q) => q.level === 3).every((q) => q.nums.every((n) => n >= 10 && n <= 99) && new Set(q.nums.map((n) => Math.floor(n / 10))).size === 3)
+        && NUMBERS.filter((q) => q.level === 5).every((q) => q.nums.every((n) => n >= 100 && n <= 999)));
+    check('numbers: the same every load (a fixed seed), so ratings stay attached', NUMBERS[0].id === BANKS.numbers[0].id && /^num-\d+-\d+-\d+$/.test(NUMBERS[0].id));
+    check('things: three different things each', THINGS.every((q) => new Set(q.things).size === 3));
+    check('groups: no thing is itself an answer, and no hint says the answer',
+      GROUPS.every((q) => !q.things.some((t) => q.accept.includes(t)) && !q.accept.some((a) => saysPhrase(q.cue, a))),
+      JSON.stringify(GROUPS.find((q) => q.things.some((t) => q.accept.includes(t)) || q.accept.some((a) => saysPhrase(q.cue, a)))));
+    check('groups: Mike\'s three are there (fruit, animals, buildings)', ['fruit', 'animals', 'buildings'].every((g) => GROUP_NAMES.includes(g)));
+    check('finish: right and wrong endings never overlap, and every hint leaves the answer out',
+      FINISH.every((q) => !q.wrong.some((w) => q.accept.some((a) => saysPhrase(w, a))) && !q.accept.some((a) => saysPhrase(q.cue, a))),
+      JSON.stringify(FINISH.find((q) => q.accept.some((a) => saysPhrase(q.cue, a)))));
+    check('finish: "I wash my ___" is in it (the example from the ruling)', FINISH.some((q) => q.stem === 'I wash my'));
+    const text = JSON.stringify(BANKS) + JSON.stringify(LINES);
+    check('no site copy names the person this was first built for', !/christine|cici|her screen/i.test(text));
+  }
+
+  section('judging, pure');
+  {
+    const n = { kind: 'numbers', nums: [7, 3, 5], want: 'smallest', id: 'x' };
+    check('numbers: 3 is right, 7 is wrong, "three" is right', judgeItem(n, '3') === true && judgeItem(n, '7') === false && judgeItem(n, 'it is three') === true);
+    check('*** a number that is not one of the three is not a miss ***', judgeItem(n, '4') === null);
+    check('biggest: 7', judgeItem({ ...n, want: 'biggest' }, '7') === true && targetOf({ ...n, want: 'biggest' }) === 7);
+    const t = { kind: 'things', things: ['ant', 'dog', 'house'], want: 'biggest', id: 't' };
+    check('things: "the house" right, "a dog" wrong, "a bicycle" cannot be judged',
+      judgeItem(t, 'the house') === true && judgeItem(t, 'a dog') === false && judgeItem(t, 'a bicycle') === null);
+    check('things, smallest: the ant', targetOf({ ...t, want: 'smallest' }) === 'ant');
+    const fruit = GROUPS.find((g) => g.group === 'fruit');
+    check('groups: "fruit", "fruits", "they are all fruit" are right', ['fruit', 'fruits', 'they are all fruit'].every((v) => judgeItem(fruit, v) === true));
+    check('groups: another group is wrong; a word that is no group cannot be judged',
+      judgeItem(fruit, 'animals') === false && judgeItem(fruit, 'sunshine') === null);
+    const birds = GROUPS.find((g) => g.group === 'birds');
+    check('birds: "animals" is right too (a bird is an animal)', judgeItem(birds, 'animals') === true);
+    const wash = FINISH.find((q) => q.stem === 'I wash my');
+    check('finish: "hands", "my face", "I wash my hair" are right', ['hands', 'my face', 'I wash my hair'].every((v) => judgeItem(wash, v) === true));
+    check('finish: a listed wrong ending is wrong', judgeItem(wash, 'sky') === false);
+    check('*** finish: "dog" is a fine sentence nobody listed, so it is NOT marked wrong ***', judgeItem(wash, 'dog') === null);
+    check('the shown order is mixed and the same every time', shownOf(t).join() === shownOf(t).join() && shownOf(t).length === 3);
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    check('built on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'local');
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('which game: a mix and the four exercises', (f('game')?.options || []).map((o) => o.value).join(',') === GAMES.join(','));
+    check('the mix is the default', DEFAULTS.game === 'mix');
+    check('ask for the smallest number / the biggest thing by default (the exercise as given), either way a setting',
+      f('numbersAsk').default === 'smallest' && f('thingsAsk').default === 'biggest');
+    const all = { ...FLOW_LINES, ...LINES };
+    const missing = Object.keys(all).filter((k) => { const s = f(k); return !s || s.kind !== 'text' || s.default !== all[k]; });
+    check('*** every spoken line is an editable text setting ***', missing.length === 0, missing.join(','));
+    check('the gentler miss words are the default here; Mike\'s are one edit away',
+      f('wrongLine').default === LINES.wrongLine && !/incorrect/i.test(LINES.wrongLine + LINES.switchWrongLine));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    const byModule = Object.fromEntries(listManifests().filter((x) => Array.isArray(x.settings))
+      .map((x) => [x.type, x.settings.map(normalizeField).filter(Boolean)]));
+    const clash = auditAcross(byModule).filter((x) => x.severity === 'error');
+    check('*** no key is declared as a different kind than another module declares it ***', clash.length === 0, JSON.stringify(clash));
+    check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
+  }
+
+  // =====================================================================================
+  section('smallest of three numbers: touch, switch and voice');
+  {
+    const r = R({ game: 'numbers' });
+    const it = r.item();
+    check('a numbers question at level 1 or 2 for a new player', it.kind === 'numbers' && [1, 2].includes(it.level), JSON.stringify(it));
+    const shown = shownOf(it).map(String);
+    check('said: "Which is the smallest: a, b or c?" then the first offer',
+      r.said[0].startsWith(`Which is the smallest: ${shown[0]}, ${shown[1]} or ${shown[2]}?`) && /Is it \d+\?$/.test(r.said[0]), r.said[0]);
+    check('three big tiles on screen, one per number', tiles(r).join() === shown.join());
+    const target = targetOf(it);
+    const wrong = shown.find((v) => Number(v) !== target);
+    tap(r, wrong);
+    check('touching a wrong one: "Not that one." and a hint that takes one away', r.last().startsWith('Not that one. Here is a hint: it is not')
+      && r.phase() === 'asking' && r.probe().misses === 1, r.last());
+    tap(r, target);
+    check('touching the smallest: right', r.phase() === 'celebrate' && /is the smallest\.$/.test(r.last()), r.last());
+    await sleep(10);
+    check('...one School point', r.points().length === 1);
+    r.timers.flush();
+    check('then "another one?"', r.phase() === 'another');
+    r.inst.destroy();
+
+    const s = R({ game: 'numbers' });
+    const is = s.item();
+    let guard = 0;
+    while (s.probe().candidate !== String(targetOf(is)) && guard++ < 5) s.host.querySelector('[data-act="no"]').click();
+    s.host.querySelector('[data-act="yes"]').click();
+    check('the switch: No past the others, Yes on the smallest: right, no miss', s.phase() === 'celebrate' && s.probe().misses === 0);
+    s.inst.destroy();
+
+    const v = R({ game: 'numbers' });
+    const iv = v.item();
+    v.eng.hear({ text: `it's ${targetOf(iv)}`, confidence: 0.9 });
+    check('aloud: "it\'s 3": right', v.phase() === 'celebrate');
+    v.inst.destroy();
+    const u = R({ game: 'numbers' });
+    u.eng.hear({ text: '0', confidence: 0.95 });
+    check('*** aloud, a number that is not on screen: said so, NOT a miss ***',
+      u.phase() === 'asking' && u.probe().misses === 0 && /is not one of the three/.test(u.last()), u.last());
+    check('the grammar: the three numbers as words, and [unk]', (() => {
+      const g = u.lastGrammar(); const it2 = u.item();
+      return g.open && g.words.includes(UNKNOWN) && it2.nums.every((n) => g.words.includes(numberWord(n)));
+    })(), JSON.stringify(u.lastGrammar()));
+    u.inst.destroy();
+    const b = R({ game: 'numbers', numbersAsk: 'biggest' });
+    check('ask for the biggest (a setting)', b.item().want === 'biggest' && /^Which is the biggest/.test(b.said[0]));
+    b.inst.destroy();
+  }
+
+  section('biggest of three things');
+  {
+    const r = R({ game: 'things' });
+    const it = r.item();
+    check('a things question, three tiles', it.kind === 'things' && tiles(r).length === 3);
+    check('said with all three', r.said[0].startsWith('Which is the biggest:') && it.things.every((t) => r.said[0].includes(t)), r.said[0]);
+    r.eng.hear({ text: 'a spaceship', confidence: 0.95 });
+    check('a thing that is not one of the three: not a miss', r.probe().misses === 0 && /not one of the three/.test(r.last()));
+    const wrong = it.things.find((t) => t !== targetOf(it));
+    r.eng.hear({ text: `the ${wrong}`, confidence: 0.95 });
+    check('a wrong one aloud: gentle words and "it is not the ..."', new RegExp(`^It sounded like you said the ${wrong}\\. Not that one\\. Here is a hint: it is not the `).test(r.last()), r.last());
+    r.eng.hear({ text: targetOf(it), confidence: 0.95 });
+    check('the right one aloud: "The X is the biggest."', r.phase() === 'celebrate' && r.last() === `Yes! The ${targetOf(it)} is the biggest.`, r.last());
+    r.inst.destroy();
+  }
+
+  section('name the group');
+  {
+    const r = R({ game: 'groups' });
+    const it = r.item();
+    check('the three things on screen as cards, and the question', it.kind === 'groups'
+      && r.host.querySelectorAll('[data-things] .qz-card').length === 3 && askText(r) === 'What group do they all belong to?');
+    check('said: the three, then the question', r.said[0].toLowerCase().startsWith(`${it.things[0]}, ${it.things[1]}, ${it.things[2]}. what group`), r.said[0]);
+    const offers = r.probe().candidates;
+    check('the switch offers three groups, exactly one of them right', offers.length === 3 && offers.filter((o) => judgeItem(it, o) === true).length === 1, offers.join(','));
+    check('...and the same three can be touched', tiles(r).join() === offers.join());
+    r.eng.hear({ text: 'sunshine', confidence: 0.95 });
+    check('a word that is no group: not a miss', r.probe().misses === 0 && r.phase() === 'asking');
+    const other = offers.find((o) => judgeItem(it, o) === false);
+    r.eng.hear({ text: other, confidence: 0.95 });
+    check('*** first hint: what it MEANS (a meaning cue), not the answer ***', r.probe().hints[0] === it.cue, r.probe().hints.join('|'));
+    r.eng.hear({ text: other, confidence: 0.95 });
+    r.eng.hear({ text: 'try again', confidence: 0.95 });
+    check('second hint: the first letter (a sound cue)', r.probe().hints[1] === `it starts with ${it.group[0].toUpperCase()}`, r.probe().hints.join('|'));
+    r.eng.hear({ text: `they are all ${it.group}`, confidence: 0.95 });
+    check('"they are all fruit": right, and said as a sentence', r.phase() === 'celebrate' && new RegExp(`are all ${it.group}\\.$`).test(r.last()), r.last());
+    r.inst.destroy();
+  }
+
+  section('finish the sentence — no example given');
+  {
+    const r = R({ game: 'finish' });
+    const it = r.item();
+    check('the sentence with its gap on screen', it.kind === 'finish' && r.host.querySelector('[data-gap]') && askText(r).startsWith(it.stem));
+    const asked = r.said[0].split('?')[0];
+    check('*** the question gives NO example ending ***', !it.accept.some((a) => saysPhrase(asked.replace(it.stem, ''), a)), r.said[0]);
+    r.eng.hear({ text: 'xylophone', confidence: 0.95 });
+    check('an ending nobody listed: "I\'m not sure about ...", NOT a miss', r.probe().misses === 0 && /not sure about xylophone/.test(r.last()), r.last());
+    r.eng.hear({ text: it.wrong[0], confidence: 0.95 });
+    check('a listed wrong ending: a miss, and the meaning hint', r.probe().misses === 1 && r.probe().hints[0] === it.cue);
+    const say = it.accept[it.accept.length - 1];
+    r.eng.hear({ text: `${it.stem} ${say}`, confidence: 0.95 });
+    check('the whole sentence said, with an ending that fits: right, and said back with THAT ending',
+      r.phase() === 'celebrate' && r.last() === `Yes! ${it.stem} ${say}.`, r.last());
+    r.inst.destroy();
+  }
+
+  section('the mix: one of each, in turn');
+  {
+    const r = R({ game: 'mix' });
+    const kinds = [];
+    for (let i = 0; i < 5; i++) { kinds.push(r.item().kind); r.eng.skip(); }
+    check('numbers, things, groups, finish, then numbers again', kinds.join(',') === [...MIX_ORDER, MIX_ORDER[0]].join(','), kinds.join(','));
+    r.inst.destroy();
+  }
+
+  section('*** TWO PLAYERS ON ONE SCREEN, EACH AT THEIR OWN LEVEL ***');
+  {
+    // Ann has played a lot and sits at level 4 on numbers; Bob has never played.
+    const ladder = emptyLadder();
+    ladder.players['name:ann'] = { name: 'Ann', games: { numbers: { rating: levelRating(4), n: 60, floor: 4, recent: [], review: {} } } };
+    const store = ladderStore({ ladder });
+    const r = R({ game: 'numbers', players: 'Ann, Bob' }, { store });
+    await sleep(0);
+    r.eng.skip();     // the first deal happened before the saved ladder arrived; deal again now it is here
+    const chip = () => r.host.querySelector('.qz-turn');
+    check('Ann\'s turn: her name and initial in front of the question', chip()?.dataset.turn === 'name:ann' && /Ann/.test(chip().textContent));
+    check('...and said first', r.last().startsWith('Ann, your turn. Which is the smallest'), r.last());
+    const annQ = r.item();
+    check('*** Ann gets a level 4-5 question (two-digit numbers in the same tens, or three digits) ***', annQ.level >= 4, JSON.stringify(annQ));
+    tap(r, targetOf(annQ));
+    check('right: the celebration still names Ann', r.phase() === 'celebrate' && chip()?.dataset.turn === 'name:ann');
+    await sleep(10);
+    check('Ann\'s right answer earns a point', r.points().length === 1);
+    r.timers.flush();
+    check('"another one?": the chip says Bob is next', r.phase() === 'another' && chip()?.hasAttribute('data-next') && /Next: Bob/.test(chip().textContent));
+    r.eng.press('more');
+    const bobQ = r.item();
+    check('Bob\'s turn, said first', chip()?.dataset.turn === 'name:bob' && r.last().startsWith('Bob, your turn.'));
+    check('*** Bob gets a level 1-2 question (single digits) ***', bobQ.level <= 2 && bobQ.nums.every((n) => n <= 9), JSON.stringify(bobQ));
+    tap(r, targetOf(bobQ));
+    await sleep(10);
+    check('*** Bob\'s right answer does NOT pay into the screen\'s points (a setting) ***', r.points().length === 1);
+    const sc = r.scores[r.scores.length - 1];
+    check('the published score names both: "Ann 1 · Bob 1"', sc && sc.detail === 'Ann 1 · Bob 1', JSON.stringify(sc));
+    r.timers.flush();
+    r.eng.press('more');
+    check('and back to Ann', chip()?.dataset.turn === 'name:ann');
+    const saved = store.peek().ladder;
+    check('both players are on the saved ladder, each with their own numbers rating',
+      saved.players['name:ann'].games.numbers.n === 61 && saved.players['name:bob'].games.numbers.n === 1);
+    r.inst.destroy();
+    check('the ladder handle is let go with the panel', store.destroyed === true);
+  }
+
+  section('one player: nothing about turns at all');
+  {
+    const r = R({ game: 'numbers' });
+    check('no chip, no name before the question', !r.host.querySelector('.qz-turn') && r.said[0].startsWith('Which is'));
+    r.inst.destroy();
+  }
+
+  section('the AI writer, from the panel: off by default, an open model when on');
+  {
+    const asks = [];
+    const fakeAI = { async resolveModel() { return { ok: true, model: 'qwen2.5:7b' }; },
+      async chat(msgs) { asks.push(msgs); return { ok: true, text: JSON.stringify({ questions: [
+        { stem: 'I tie my', accept: ['shoes', 'laces'], wrong: ['soup', 'cloud'], cue: 'they are on your feet' }] }) }; } };
+    const off = R({ game: 'finish' }, { extra: { questionAI: fakeAI } });
+    for (let i = 0; i < 3; i++) off.eng.skip();
+    await sleep(10);
+    check('off: never asked', asks.length === 0);
+    off.inst.destroy();
+    // One level at a time leaves 8 questions, 7 not just seen: fewer than 10, so it asks.
+    const on = R({ game: 'finish', aiWrite: 'local', aiWhenFewer: 10, levelsAtOnce: 1 }, { extra: { questionAI: fakeAI } });
+    await sleep(10);
+    check('on, and a player running low: the open model is asked', asks.length === 1);
+    const kept = on.ladder.peek().ladder?.extra?.finish || [];
+    check('...and its question is kept on the screen\'s ladder, marked as written by it',
+      kept.length === 1 && kept[0].writtenBy === 'qwen2.5:7b' && kept[0].source === 'ai', JSON.stringify(kept));
+    on.inst.destroy();
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

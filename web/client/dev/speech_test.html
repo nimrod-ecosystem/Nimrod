@@ -1217,8 +1217,10 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     verbFor('play') === 'play' && routeFor('play') === null && verbFor('play opposites') === null);
   // 2026-09-30: the "name that" games (row 2.45, public e42cc92) joined, on their own module's /play.
   const { GAMES: NT_GAMES } = await import('../modules/name_that.js');
-  const gamesOf = { [WG_PLAY]: WG_GAMES, 'name_that/play': NT_GAMES };
-  check('every route opens a game its module knows (the word games, or "name that")',
+  // 2026-10-01: the thinking games (row 2.45, the SLP exercises) joined the same way.
+  const { GAMES: TG_GAMES } = await import('../modules/think_games.js');
+  const gamesOf = { [WG_PLAY]: WG_GAMES, 'name_that/play': NT_GAMES, 'think_games/play': TG_GAMES };
+  check('every route opens a game its module knows (the word games, "name that", or the thinking games)',
     Object.values(ROUTES).every((r) => (gamesOf[r.topic] || []).includes(r.payload.game)),
     JSON.stringify(Object.values(ROUTES).map((r) => [r.topic, r.payload])));
   check('*** “play name that animal / state / person” are routes to the name-that game ***',

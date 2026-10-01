@@ -22,7 +22,8 @@
 // is what gets shown when the answer is missed. A generator without a `how` would be a
 // quiz; with it, it's a lesson.
 
-import { registerModule } from '../module.js';
+import { registerModule, extendCtx } from '../module.js';
+import { beginnerMath, beginnerSettings, DEFAULTS as BEGINNER_DEFAULTS } from '../math_beginner.js';
 import { createPointsLedger } from '../points.js';
 import { createTelemetry } from '../telemetry.js';
 import { createLessons, gate, lockedTopics, LESSON_TOPIC,
@@ -173,29 +174,43 @@ const esc = (s) => String(s == null ? '' : s)
 //
 // LEVEL: only what somebody actually changes is `standard`. Everything that prices the economy
 // is `advanced`, so the common case is a short menu rather than a long one.
+// *** THE BEGINNER LEVEL (row 2.45, Mike 2026-10-01: "the math module should have some questions for
+// absolute beginners"). *** "Which problems" gains `beginner`: counting dots, then small sums, asked
+// one at a time ("Is it 7?") with the shared miss flow, aloud or on one switch — the game that used to
+// be the separate "Simple math" panel (`simple_math.js`, which still holds it). A calculator on screen
+// is the right tool for solving for x and the wrong one for "how many dots", so at this level the
+// panel shows the beginner game instead of the calculator; the other three levels are unchanged.
+// THE DEFAULT STAYS `mixed`: every Math panel that never chose a level reads the default, so making
+// beginner the default would turn every existing Math panel into a counting game overnight.
+// Each row below says which level it belongs to (`appliesWhen`), so the menu only shows the rows
+// that do something at the level chosen.
+export const BEGINNER = 'beginner';
+const atBeginner = (v) => (v || {}).pool === BEGINNER;
+const notBeginner = (v) => !atBeginner(v);
 const SETTINGS = [
   { key: 'pool', label: 'Which problems', kind: 'choice', default: 'mixed', level: 'standard',
     options: [
+      { value: BEGINNER, label: 'Beginner — counting and small sums' },
       { value: 'warm', label: 'Warm up — one step' },
       { value: 'mixed', label: 'Mixed' },
       { value: 'boss', label: 'Hardest only' },
     ] },
   { key: 'roundLength', label: 'Problems in a round', kind: 'choice', default: 10,
-    level: 'standard',
+    level: 'standard', appliesWhen: notBeginner,
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
               { value: 15, label: '15' }, { value: 20, label: '20' }] },
   { key: 'tryPoints', label: 'Points for a miss, once the working is read', kind: 'number',
-    default: 1, level: 'advanced', min: 0, max: 10, step: 1 },
+    default: 1, level: 'advanced', min: 0, max: 10, step: 1, appliesWhen: notBeginner },
   { key: 'streakEvery', label: 'Streak bonus every', kind: 'choice', default: 5,
-    level: 'advanced',
+    level: 'advanced', appliesWhen: notBeginner,
     options: [{ value: 0, label: 'No streak bonus' }, { value: 3, label: '3 in a row' },
               { value: 5, label: '5 in a row' }, { value: 10, label: '10 in a row' }] },
   { key: 'streakBonus', label: 'Streak bonus points', kind: 'number', default: 3,
-    level: 'advanced', min: 0, max: 20, step: 1 },
+    level: 'advanced', min: 0, max: 20, step: 1, appliesWhen: notBeginner },
   // TEXT, and therefore not cycleable - it says so rather than pretending, the same way
   // `photos.js` handles `album`. Nobody types a subject name with one switch.
   { key: 'subject', label: 'Credit counts toward', kind: 'text', default: 'Math',
-    level: 'advanced', note: 'which subject a point of credit discharges' },
+    level: 'advanced', note: 'which subject a point of credit discharges', appliesWhen: notBeginner },
   // Row 2.40 (Mike, 2026-09-30: "we probably have a bunch of modules drawing their own
   // scoreboards. We shouldn't have that."). The points-solved-streak line is PUBLISHED on the score
   // contract (`../score_source.js`); this row decides whether the panel draws it too. `auto` by
@@ -203,7 +218,17 @@ const SETTINGS = [
   // comet give: Mike ruled 2026-09-22 that games show a score by default.
   ownScoreField({ level: 'standard',
     note: 'Points this sitting, problems solved, and the streak. A Scoreboard on the same screen can show it instead.' }),
+  // The beginner level's own rows, shown only at that level. `mathLevel` defaults to ADAPTIVE here
+  // (a new beginner climbs by themselves); an old Simple math panel keeps 'fixed'.
+  ...beginnerSettings({ when: atBeginner, levelDefault: 'adaptive', withScore: false }),
 ];
+
+// The beginner game as Math mounts it: bus prefix and score source `algebra`, so the switch verbs,
+// the score contract and the points ledger all keep the identifier this panel already has. `select`
+// also answers on `algebra/submit`, the one verb actions.js gives Math today.
+export const BEGINNER_DEFAULTS_FOR_MATH = Object.freeze({ ...BEGINNER_DEFAULTS, mathLevel: 'adaptive', pool: BEGINNER });
+const beginnerGame = beginnerMath({ type: GAME, title: 'Math', scoreLabel: 'Math: right answers',
+  defaults: BEGINNER_DEFAULTS_FOR_MATH, extraTopics: { select: ['algebra/submit'] } });
 
 // THE ONE PORT THIS MODULE DECLARES, and it is a SINK (2026-09-28: the calculator became its own
 // module, and this is the second half of the first data link between two real modules). A number
@@ -217,6 +242,104 @@ export const ALGEBRA_PORTS = [
   { id: 'answer', direction: 'in', class: 'event', type: 'number', label: 'Answer' },
 ];
 
+// ---------- the calculator game (every level but Beginner) — unchanged ----------
+function calculatorGame(ctx) {
+  return calculatorFactory(ctx);
+}
+
+// ---------- WHICH GAME THE PANEL SHOWS, by level ----------
+//
+// One panel, two games: Beginner mounts `../math_beginner.js`'s one-at-a-time game, every other level
+// mounts the calculator game above, exactly as before. The level is a setting, so it can change while
+// the panel is on screen; the panel then takes the old game down and puts the other up.
+//
+// Each game is given a WRAPPED state and bus, so taking one down takes down everything it listened
+// to: its state subscription (the calculator game never kept the unsubscribe) and every bus topic
+// it subscribed. Without that, a calculator game taken down would still hear every settings change
+// and draw into a panel that now belongs to the beginner game.
+export function mathModule(ctx) {
+  const { state, bus, mount } = ctx;
+  let inner = null;
+  let mode = null;
+  let last;
+  let have = false;
+  let started = false;
+  let hidden = false;
+  let dead = false;
+  let subs = new Set();
+  let offs = [];
+  const modeOf = (snap) => ((snap || {}).pool === BEGINNER ? 'beginner' : 'calculator');
+
+  const subState = {
+    get: () => state?.get?.(),
+    set: (p) => state?.set?.(p),
+    flush: () => state?.flush?.(),
+    load: () => state?.load?.(),
+    startPolling: () => state?.startPolling?.(),
+    subscribe(fn) {
+      subs.add(fn);
+      if (have) { try { fn(last); } catch (err) { console.error('math: state', err); } }
+      return () => subs.delete(fn);
+    },
+    destroy() { /* the panel's own handle; mountModule destroys it */ },
+  };
+  const track = (off) => { offs.push(off); return off; };
+  const subBus = {
+    subscribe: (topic, handler) => track(bus.subscribe(topic, handler)),
+    addBinding: (b) => track(bus.addBinding(b)),
+    publish: (...a) => bus.publish(...a),
+    createSource: (...a) => bus.createSource(...a),
+    instanceId: bus.instanceId,
+  };
+
+  function mountMode(m) {
+    if (inner) { try { inner.destroy?.(); } catch (err) { console.error('math: destroy', err); } }
+    while (offs.length) { try { offs.pop()(); } catch { /* already gone */ } }
+    subs = new Set();
+    mount.innerHTML = '';
+    mode = m;
+    inner = (m === 'beginner' ? beginnerGame : calculatorGame)(extendCtx(ctx, { state: subState, bus: subBus }));
+    try { inner.init?.(); } catch (err) { console.error('math: init', err); }
+    if (hidden) { try { inner.onHide?.(); } catch { /* noop */ } }
+  }
+
+  return {
+    // Test escape hatches: the game on screen right now, and (at Beginner) its engine.
+    __mode: () => mode,
+    __inner: () => inner,
+    get __engine() { return inner?.__engine; },
+    get __board() { return inner?.__board; },
+    get __session() { return inner?.__session; },
+    __probe: () => inner?.__probe?.(),
+    hear: (r) => inner?.hear?.(r),
+    init() {
+      state?.subscribe?.((snap) => {
+        if (dead) return;
+        last = snap;
+        have = true;
+        if (!started) return;
+        const m = modeOf(snap);
+        if (!inner || m !== mode) { mountMode(m); return; }
+        for (const fn of [...subs]) { try { fn(snap); } catch (err) { console.error('math: state', err); } }
+      });
+      started = true;
+      if (!inner) mountMode(modeOf(have ? last : state?.get?.()));
+    },
+    onResize() { inner?.onResize?.(); },
+    onHide() { hidden = true; inner?.onHide?.(); },
+    onShow() { hidden = false; inner?.onShow?.(); },
+    settingsChoices: () => inner?.settingsChoices?.() || {},
+    destroy() {
+      dead = true;
+      try { inner?.destroy?.(); } finally {
+        inner = null;
+        while (offs.length) { try { offs.pop()(); } catch { /* already gone */ } }
+        subs = new Set();
+      }
+    },
+  };
+}
+
 registerModule(
     // `local`, MEASURED RATHER THAN GUESSED (2026-09-05). Mounted with every handle rejecting -
     // a dead platform, with the factories still present the way a real kiosk supplies them -
@@ -229,9 +352,15 @@ registerModule(
     // is for.
   { type: 'algebra', title: 'Math', // Describes rather than justifies (PRIORITY.md #4): "the point is the method, not the
     // arithmetic" is the reasoning, and it is kept in the catalog's `why`.
-    description: 'Solve for x, one step at a time, with a calculator on screen',
+    description: 'Counting and small sums for beginners, then solve for x, one step at a time, with a calculator on screen',
     dependsOn: 'local', settings: SETTINGS, ports: ALGEBRA_PORTS },
-  (ctx) => {
+  mathModule,
+);
+
+// The calculator game, as it always was (the body below is unchanged; it moved out of the
+// `registerModule` call when Math gained its Beginner level).
+function calculatorFactory(ctx) {
+  {
     const { mount, bus, state } = ctx;
     const rand = ctx.rand || Math.random;
 
@@ -463,5 +592,5 @@ registerModule(
         if (mode) { mode.destroy(); mode = null; }
       },
     };
-  },
-);
+  }
+}
