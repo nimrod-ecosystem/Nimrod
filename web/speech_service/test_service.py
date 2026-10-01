@@ -21,7 +21,7 @@ import wave
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from speech_service.backends import FakeBackend  # noqa: E402
+from speech_service.backends import FakeBackend, FakeWakeDetector, _Edge  # noqa: E402
 from speech_service.service import (  # noqa: E402
     CLOSE_UNAUTHORISED, Session, create_app, secrets_match, serve_websockets)
 
@@ -136,6 +136,81 @@ async def session_tests():
           got == [('a', 'one'), ('b', 'two')], got)
 
 
+# ------------------------------------------------------------------ the wake stream ------------
+def mark(ms: int = 20) -> bytes:
+    """Audio the fake wake detector 'hears' as its phrase."""
+    return pcm(ms, 12345)
+
+
+async def wake_tests():
+    sent, closed = [], []
+
+    async def send(m):
+        sent.append(m)
+
+    async def close(code):
+        closed.append(code)
+
+    e = _Edge(0.5, 2.0)
+    fires = [e.check('w', s, t) for s, t in [(0.6, 0.08), (0.9, 0.16), (0.7, 0.24), (0.1, 0.32),
+                                                (0.8, 0.40), (0.1, 2.5), (0.8, 2.6)]]
+    check('*** the edge rule: ONE fire per crossing, and none again inside the refractory time ***',
+          fires == [True, False, False, False, False, False, True], fires)
+
+    s = Session(FakeBackend(script=['computer please pause'], partials=False), send, close,
+                wake=FakeWakeDetector())
+    await s.on_text(json.dumps({'type': 'hello'}))
+    check('hello says which wake words this service can hear', sent[-1]['wake'] == ['computer_please'], sent[-1])
+    await s.on_bytes(mark())
+    check('no wake events until the screen asks for the stream', len(sent) == 1, sent)
+    await s.on_text(json.dumps({'type': 'wake', 'on': True}))
+    await s.on_bytes(pcm(500, 0))
+    await s.on_bytes(mark())
+    w = sent[-1]
+    check('*** wake on: audio OUTSIDE any utterance is scored, and the phrase comes back as an event ***',
+          w['kind'] == 'wake' and w['word'] == 'computer_please' and w['score'] == 0.9
+          and w['atMs'] == 520 and 'utteranceId' not in w and w['detector'] == 'fake-wake:computer_please', w)
+    n = len(sent)
+    await s.on_bytes(mark())
+    await s.on_bytes(pcm(500, 0))
+    await s.on_bytes(mark())
+    check('the phrase again inside the refractory time: no second event', len(sent) == n, sent[n:])
+    await s.on_bytes(pcm(2000, 0))
+    await s.on_text(json.dumps({'type': 'begin', 'utteranceId': 'u9'}))
+    await s.on_bytes(mark())
+    await s.on_bytes(pcm(300))
+    await s.on_text(json.dumps({'type': 'end', 'utteranceId': 'u9'}))
+    await s.drain()
+    kinds = [(m['kind'], m.get('utteranceId')) for m in sent[n:]]
+    check('*** inside an utterance: the wake event names it and comes BEFORE its final; the final still comes ***',
+          kinds == [('wake', 'u9'), ('final', 'u9')], kinds)
+    check('the utterance audio still reaches the recogniser whole (wake scoring takes nothing away)',
+          sent[-1]['audioMs'] == 320, sent[-1])
+    await s.on_text(json.dumps({'type': 'wake', 'on': False}))
+    n = len(sent)
+    await s.on_bytes(pcm(3000, 0))
+    await s.on_bytes(mark())
+    check('wake off: no more events', len(sent) == n, sent[n:])
+
+    sent.clear()
+    s2 = Session(FakeBackend(), send, close)
+    await s2.on_text(json.dumps({'type': 'hello'}))
+    await s2.on_text(json.dumps({'type': 'wake', 'on': True}))
+    check('wake on a service with no detector: an error, said', sent[0]['wake'] == []
+          and sent[-1] == {'kind': 'error', 'error': 'no wake detector on this service'}, sent)
+
+    sent.clear()
+    s3 = Session(None, send, close, wake=FakeWakeDetector(word='hey_jarvis'))
+    await s3.on_text(json.dumps({'type': 'hello'}))
+    await s3.on_text(json.dumps({'type': 'begin', 'utteranceId': 'x'}))
+    await s3.on_text(json.dumps({'type': 'wake', 'on': True}))
+    await s3.on_bytes(mark())
+    check('*** a wake-only service (--backend none): engine none, refuses begin, still wakes ***',
+          sent[0]['engine'] == 'none' and sent[1]['kind'] == 'error' and sent[1]['utteranceId'] == 'x'
+          and sent[-1]['kind'] == 'wake' and sent[-1]['word'] == 'hey_jarvis', sent)
+    check('a wake-only service never answers a final', not any(m['kind'] == 'final' for m in sent), sent)
+
+
 # ------------------------------------------------------------------ FastAPI --------------------
 def fastapi_tests():
     from fastapi.testclient import TestClient
@@ -143,7 +218,7 @@ def fastapi_tests():
     c = TestClient(app)
     h = c.get('/health').json()
     check('/health: up, which engine, whether a secret is needed - and nothing heard',
-          h == {'ok': True, 'engine': 'fake', 'protocol': 1, 'secret': True}, h)
+          h == {'ok': True, 'engine': 'fake', 'protocol': 1, 'secret': True, 'wake': []}, h)
     with c.websocket_connect('/speech') as ws:
         ws.send_text(json.dumps({'type': 'hello', 'secret': 'k'}))
         check('fastapi: hello', ws.receive_json()['kind'] == 'hello')
@@ -168,7 +243,7 @@ def free_port() -> int:
         return s.getsockname()[1]
 
 
-def start_ws_server(backend, secret=None):
+def start_ws_server(backend, secret=None, wake=None):
     port = free_port()
     ready = threading.Event()
     loop = asyncio.new_event_loop()
@@ -176,7 +251,8 @@ def start_ws_server(backend, secret=None):
     def run():
         asyncio.set_event_loop(loop)
         try:
-            loop.run_until_complete(serve_websockets(backend, '127.0.0.1', port, secret=secret, ready=ready))
+            loop.run_until_complete(serve_websockets(backend, '127.0.0.1', port, secret=secret, ready=ready,
+                                                     wake=wake))
         except Exception:  # noqa: BLE001 - stopped
             pass
 
@@ -232,6 +308,24 @@ def websockets_tests():
     e, code = asyncio.run(bad())
     check('plain websockets: a wrong secret -> error, close 4401', e['error'] == 'secret' and code == CLOSE_UNAUTHORISED,
           (e, code))
+
+    # The wake stream over a real socket: 20 ms frames, no utterance, one event back.
+    wport, _ = start_ws_server(None, wake=FakeWakeDetector(word='hey_jarvis'))
+
+    async def wake_client():
+        from websockets.asyncio.client import connect
+        async with connect(f'ws://127.0.0.1:{wport}/speech') as ws:
+            await ws.send(json.dumps({'type': 'hello'}))
+            hello = json.loads(await ws.recv())
+            await ws.send(json.dumps({'type': 'wake', 'on': True}))
+            for _ in range(25):
+                await ws.send(pcm(20, 0))
+            await ws.send(mark())
+            return hello, json.loads(await asyncio.wait_for(ws.recv(), 5))
+    hello, ev = asyncio.run(wake_client())
+    check('*** plain websockets, wake-only: hello lists the word; streamed frames -> one wake event ***',
+          hello['engine'] == 'none' and hello['wake'] == ['hey_jarvis'] and ev['kind'] == 'wake'
+          and ev['word'] == 'hey_jarvis' and ev['atMs'] == 520, (hello, ev))
 
 
 def read_wav(p: Path) -> bytes:
@@ -311,6 +405,7 @@ if __name__ == '__main__':
         live(sys.argv[i + 1], sys.argv[i + 2], grammar=g, secret=sec)
         sys.exit(0)
     asyncio.run(session_tests())
+    asyncio.run(wake_tests())
     fastapi_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')

@@ -20,13 +20,24 @@ ONE PROTOCOL, over one WebSocket at /speech. Text frames are JSON; binary frames
                                                        utterance begun last
     {"type":"end", "utteranceId":str}                  they stopped: transcribe it
     {"type":"cancel", "utteranceId":str}               never mind (a click, not speech)
+    {"type":"wake", "on":bool}                         start/stop the WAKE STREAM (a service started
+                                                       with --wake). While on, EVERY binary frame -
+                                                       inside an utterance or not - is also scored by
+                                                       the wake detector. Not stored: the detector
+                                                       holds its last ~10 s of features in memory.
 
   service -> client
-    {"kind":"hello", "engine", "grammar":bool, "partials":bool, "protocol":1}
+    {"kind":"hello", "engine", "grammar":bool, "partials":bool, "protocol":1, "wake":[words]}
     {"kind":"partial", "utteranceId", "text", "engine"}                (backends that have them)
     {"kind":"final", "utteranceId", "text", "confidence":0..1|null,
        "words":[{"w","conf"}], "engine", "ms":decode ms, "audioMs", "cut":bool}
+    {"kind":"wake", "word", "score":0..1, "atMs":where in the stream, "ms":compute ms,
+       "detector", "utteranceId"?:the one open on this socket}           (once per crossing)
     {"kind":"error", "error":str, "utteranceId"?}
+
+A WAKE-ONLY SERVICE (`--backend none --wake hey_jarvis`) answers hello with engine 'none' and
+refuses `begin`; a screen streams to it for wake events and sends its utterances elsewhere. The
+two can also share one process (`--backend vosk --wake ...`), each on its own socket.
 
 THE CLIENT DECIDES WHERE AN UTTERANCE STARTS AND ENDS, not the service. That is what lets one
 utterance go to several services (the ranked list) and come back under ONE id from each - a fast
@@ -64,8 +75,10 @@ class Session:
     server hands in, and `on_text` / `on_bytes` are called with what arrives."""
 
     def __init__(self, backend, send, close, secret: str | None = None,
-                 max_utterance_s: float = MAX_UTTERANCE_S):
+                 max_utterance_s: float = MAX_UTTERANCE_S, wake=None):
         self.b = backend
+        self.wake = wake              # a detector (backends.make_wake) or None
+        self.wake_stream = None       # this socket's stream, while the screen asked for one
         self._send = send
         self._close = close
         self.secret = secret or None
@@ -115,9 +128,26 @@ class Session:
                 await self.fail(f'rate must be {SAMPLE_RATE}', CLOSE_PROTOCOL)
                 return
             self.greeted = True
-            await self.send({'kind': 'hello', 'engine': self.b.name, 'protocol': PROTOCOL,
+            await self.send({'kind': 'hello', 'engine': self.b.name if self.b is not None else 'none',
+                             'protocol': PROTOCOL,
                              'grammar': bool(getattr(self.b, 'supports_grammar', False)),
-                             'partials': bool(getattr(self.b, 'partials', False))})
+                             'partials': bool(getattr(self.b, 'partials', False)),
+                             'wake': list(getattr(self.wake, 'words', None) or [])})
+            return
+        if t == 'wake':
+            if msg.get('on') is False:
+                self.wake_stream = None
+            elif self.wake is None:
+                await self.send({'kind': 'error', 'error': 'no wake detector on this service'})
+            elif self.wake_stream is None:
+                try:
+                    self.wake_stream = self.wake.stream()
+                except Exception as err:  # noqa: BLE001
+                    await self.send({'kind': 'error', 'error': f'wake: {err}'})
+            return
+        if t == 'begin' and self.b is None:
+            await self.send({'kind': 'error', 'error': 'this service only detects wake words',
+                             'utteranceId': str(msg.get('utteranceId') or '')})
             return
         if t == 'mode':
             g = msg.get('grammar')
@@ -154,6 +184,8 @@ class Session:
         if not self.greeted:
             await self.fail('hello first', CLOSE_PROTOCOL)
             return
+        if self.wake_stream is not None and data:
+            await self._wake_feed(data)
         c = self.cur
         if not c or not data:
             return          # audio between utterances is not anybody's words: dropped, not stored
@@ -174,6 +206,26 @@ class Session:
         if partial is not None and partial != c['last_partial']:
             c['last_partial'] = partial
             await self.send({'kind': 'partial', 'utteranceId': c['id'], 'text': partial, 'engine': self.b.name})
+
+    async def _wake_feed(self, data: bytes):
+        # ON THE LOOP, not a thread: one 80 ms step is a few ms (bench: see the report), the order of
+        # frames matters, and a thread hop per 20 ms frame would cost more than the step itself.
+        t0 = time.perf_counter()
+        try:
+            hits = self.wake_stream.feed(data)
+        except Exception as err:  # noqa: BLE001
+            self.wake_stream = None
+            await self.send({'kind': 'error', 'error': f'wake: {err}'})
+            return
+        if not hits:
+            return
+        ms = round((time.perf_counter() - t0) * 1000, 1)
+        for h in hits:
+            ev = {'kind': 'wake', 'word': h['word'], 'score': h['score'], 'atMs': h['atMs'], 'ms': ms,
+                  'detector': getattr(self.wake, 'name', 'wake')}
+            if self.cur:
+                ev['utteranceId'] = self.cur['id']
+            await self.send(ev)
 
     async def _end_current(self, abandon: bool):
         c, self.cur = self.cur, None
@@ -215,7 +267,7 @@ class Session:
 # THE TWO SERVERS. FastAPI where it is installed (the desktop); plain `websockets` where it is not
 # (the bench Pi's Vosk venv has websockets and no FastAPI, and nothing new is installed for this).
 # ---------------------------------------------------------------------------------------------
-def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_UTTERANCE_S):
+def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_UTTERANCE_S, wake=None):
     from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
     app = FastAPI(title='speech service', docs_url=None, redoc_url=None, openapi_url=None)
@@ -223,13 +275,14 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
     @app.get('/health')
     def health():
         # Says only that it is up and which engine. Never anything heard.
-        return {'ok': True, 'engine': backend.name, 'protocol': PROTOCOL, 'secret': bool(secret)}
+        return {'ok': True, 'engine': backend.name if backend is not None else 'none', 'protocol': PROTOCOL,
+                'secret': bool(secret), 'wake': list(getattr(wake, 'words', None) or [])}
 
     @app.websocket('/speech')
     async def speech(ws: WebSocket):
         await ws.accept()
         s = Session(backend, ws.send_json, lambda code: ws.close(code=code), secret=secret,
-                    max_utterance_s=max_utterance_s)
+                    max_utterance_s=max_utterance_s, wake=wake)
         try:
             while not s.closed:
                 m = await ws.receive()
@@ -247,7 +300,7 @@ def create_app(backend, secret: str | None = None, max_utterance_s: float = MAX_
 
 
 async def serve_websockets(backend, host: str, port: int, secret: str | None = None,
-                           max_utterance_s: float = MAX_UTTERANCE_S, ready=None):
+                           max_utterance_s: float = MAX_UTTERANCE_S, ready=None, wake=None):
     from websockets.asyncio.server import serve
 
     async def handler(ws):
@@ -261,7 +314,7 @@ async def serve_websockets(backend, host: str, port: int, secret: str | None = N
         async def close(code):
             await ws.close(code=code)
 
-        s = Session(backend, send, close, secret=secret, max_utterance_s=max_utterance_s)
+        s = Session(backend, send, close, secret=secret, max_utterance_s=max_utterance_s, wake=wake)
         try:
             async for m in ws:
                 if isinstance(m, (bytes, bytearray)):
