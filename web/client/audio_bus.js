@@ -187,7 +187,13 @@ const defaultFloorOf = (ch) => (CHANNEL_FLOORS[ch] != null ? CHANNEL_FLOORS[ch] 
 export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pause',
                                  master = 1, masterFloor = MASTER_FLOOR,
                                  faders = {}, floors = {} } = {}) {
-  const sources = new Map();      // id -> {id, tier, tierP, channel, group, gp, duck, onGain, active, seq, level}
+  const sources = new Map();      // id -> {id, tier, tierP, channel, group, gp, duck, onGain, active, seq, level, owner}
+  // *** HIDDEN AND MUTED (2026-10-01, hide_sound.js). *** Owners (module instance ids) whose sources
+  // are muted because their panel is hidden and its "When hidden" setting says so. A DECISION, like
+  // exclusivity and hush: the level is 0 and no floor lifts it. And a muted source is not SOUNDING, so
+  // it does not duck anything, hold a group's slot, or count as a call - a hidden video muted by its
+  // own setting must not silence the game music on the panel somebody is actually looking at.
+  const mutedOwners = new Set();
   let seq = 0;
   let hushed = false;
   let inRecompute = false;
@@ -236,7 +242,11 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     if (inRecompute) return;
     inRecompute = true;
     try {
-      const active = [...sources.values()].filter((s) => s.active);
+      const all = [...sources.values()].filter((s) => s.active);
+      const isMuted = (s) => !!(s.owner && mutedOwners.has(s.owner));
+      // Everything below decides with the sources that can actually be HEARD. A muted one still
+      // gets its 0 (step 4c), but it ducks nobody, wins no group and starts no call.
+      const active = all.filter((s) => !isMuted(s));
       const topP = active.reduce((m, s) => Math.max(m, s.tierP), 0);
       const inCall = active.some((s) => s.tier === 'call');
 
@@ -275,6 +285,8 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
         if (s.tier === 'media' && active.some((o) => o.silence && o.tierP > s.tierP)) level = 0;
         apply(s, mixed(level, s.channel, g));                  // 5. fader x master, then the floor
       }
+      // 4c. hidden and muted by its own setting: 0, which the floor never lifts.
+      for (const s of all) if (isMuted(s)) apply(s, 0);
     } finally {
       inRecompute = false;
     }
@@ -288,8 +300,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     // every source registered before the mixer existed lands where it belongs with no change.
     // `silence`: while this source is active, every MEDIA source under it goes to 0 instead of
     // ducking (4b above). Off unless asked for; a source registered without it is unchanged.
+    // `owner`: the module instance this source belongs to (module.js tags it from `ctx.instanceId`,
+    // so a module never has to). It is what `muteOwner` mutes. Sticks across re-registers.
     register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
-                   duck = null, channel = null, silence = null } = {}) {
+                   duck = null, channel = null, silence = null, owner = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -311,8 +325,24 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       if (duck !== null) s.duck = duck;
       if (silence !== null) s.silence = !!silence;
       if (onGain) s.onGain = onGain;
+      if (owner !== null && owner !== undefined && owner !== '') s.owner = String(owner);
       return s;
     },
+
+    // ---- HIDDEN AND MUTED (hide_sound.js) -----------------------------------------------
+    // Every source `owner` registered - now and later - goes to 0 while muted, and comes back to
+    // whatever the arbiter says when unmuted. Returns whether it is now muted.
+    muteOwner(owner, on) {
+      if (!owner) return false;
+      const key = String(owner);
+      const was = mutedOwners.has(key);
+      if (on) mutedOwners.add(key); else mutedOwners.delete(key);
+      if (was !== !!on) recompute();
+      return mutedOwners.has(key);
+    },
+    isOwnerMuted: (owner) => !!owner && mutedOwners.has(String(owner)),
+    // The ids of the sources an owner has registered: "does this panel make sound at all".
+    sourcesOf: (owner) => [...sources.values()].filter((s) => owner && s.owner === String(owner)).map((s) => s.id),
 
     // The one signal that drives everything: "I am / am not making sound right now."
     setActive(id, on) {
@@ -411,11 +441,12 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     state() {
       const out = {};
       for (const [id, s] of sources) {
-        out[id] = { tier: s.tier, channel: s.channel, group: s.group ?? null, gp: s.gp, active: s.active, level: s.level };
+        out[id] = { tier: s.tier, channel: s.channel, group: s.group ?? null, gp: s.gp, active: s.active, level: s.level,
+                    owner: s.owner ?? null, muted: !!(s.owner && mutedOwners.has(s.owner)) };
       }
       return out;
     },
 
-    destroy() { sources.clear(); hushed = false; },
+    destroy() { sources.clear(); mutedOwners.clear(); hushed = false; },
   };
 }

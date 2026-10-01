@@ -451,6 +451,39 @@ section('the Layers window');
 }
 
 // =====================================================================
+section('*** a PERSON pressing Hidden is told apart from every other change (hide_sound.js) ***');
+{
+  const m = fresh();
+  const heard = [];
+  const events = [];
+  m.subscribe((e) => events.push(e));
+  const w = mountLayersWindow(host, m, { onShownToggle: (id, shown) => heard.push([id, shown]) });
+  q(w.el, 'shown:clock').click();
+  check('pressing Hidden calls onShownToggle(id, false)', JSON.stringify(heard) === '[["clock",false]]', JSON.stringify(heard));
+  check('the model event says change: shown, shown: false',
+    events.some((e) => e.type === 'items' && e.change === 'shown' && e.shown === false && e.ids[0] === 'clock'));
+  q(w.el, 'shown:clock').click();
+  check('pressing Shown calls it with true', JSON.stringify(heard[1]) === '["clock",true]');
+  heard.length = 0;
+  m.toggleShown('pic');
+  check('a change made through the model directly is NOT a press', heard.length === 0);
+  q(w.el, 'act:undo').click();
+  check('Undo is not a press on Hidden either', heard.length === 0);
+  check('a move carries no change: shown', events.filter((e) => e.change === 'shown').length === 3
+    && (m.moveLayer('pic', 1), events[events.length - 1].change === undefined));
+  w.destroy();
+  const w2 = mountLayersWindow(host, fresh(), { onShownToggle: () => { throw new Error('boom'); } });
+  let threw = false;
+  try { q(w2.el, 'shown:clock').click(); } catch { threw = true; }
+  check('a callback that throws does not break the window', !threw && /Hidden/.test(q(w2.el, 'shown:clock').textContent));
+  w2.destroy();
+  const w3 = mountLayersWindow(host, fresh());
+  q(w3.el, 'shown:clock').click();
+  check('no callback given: the window works exactly as before', /Hidden/.test(q(w3.el, 'shown:clock').textContent));
+  w3.destroy();
+}
+
+// =====================================================================
 section('the Text effects window');
 {
   const m = fresh({ selectedId: 'pic' });

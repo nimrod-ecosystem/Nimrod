@@ -535,6 +535,54 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
         String(r2.last('video')));
     }
 
+    section('*** hidden and muted: muteOwner (hide_sound.js, 2026-10-01) ***');
+    {
+      const r = rig();
+      r.src('yt', { ...video, owner: 'panel-1' });
+      r.src('yt-sfx', { tier: 'sfx', owner: 'panel-1' });
+      r.src('game', { ...game, owner: 'panel-2' });
+      r.src('cue', { tier: 'voice' });
+      check('register records the owner', r.bus.state().yt.owner === 'panel-1' && r.bus.state().cue.owner === null);
+      check('sourcesOf lists an owner’s sources', JSON.stringify(r.bus.sourcesOf('panel-1').sort()) === '["yt","yt-sfx"]',
+        JSON.stringify(r.bus.sourcesOf('panel-1')));
+      check('...and nothing for an owner with none', r.bus.sourcesOf('nobody').length === 0 && r.bus.sourcesOf(null).length === 0);
+      r.bus.setActive('yt', true); r.bus.setActive('yt-sfx', true); r.bus.setActive('game', true);
+      check('(setup) the video wins the music group, the game is silenced', r.last('yt') === 1 && r.last('game') === 0);
+      check('muteOwner returns that it is now muted', r.bus.muteOwner('panel-1', true) === true && r.bus.isOwnerMuted('panel-1'));
+      check('*** every source of that owner goes to 0 ***', r.last('yt') === 0 && r.last('yt-sfx') === 0,
+        `${r.last('yt')} ${r.last('yt-sfx')}`);
+      check('*** a muted video gives up the music group: the visible game is heard ***', r.last('game') === 1, String(r.last('game')));
+      check('state() says which are muted', r.bus.state().yt.muted === true && r.bus.state().game.muted === false);
+      r.bus.setActive('cue', true);
+      check('a cue still ducks the game, not the muted video back up', r.last('game') === DUCK_TO && r.last('yt') === 0);
+      r.bus.setActive('cue', false);
+      r.bus.setFloor('media', 0.4);
+      check('*** a channel floor never lifts a muted source (a decision, not a volume) ***', r.last('yt') === 0, String(r.last('yt')));
+      r.bus.setFloor('media', 0);
+      r.bus.muteOwner('panel-1', false);
+      check('unmuting gives it back to the arbiter: the video wins again', r.last('yt') === 1 && r.last('game') === 0,
+        `${r.last('yt')} ${r.last('game')}`);
+      // muted BEFORE it registered or started
+      r.bus.muteOwner('panel-3', true);
+      r.src('late', { tier: 'media', owner: 'panel-3' });
+      r.bus.setActive('late', true);
+      check('a source that registers and starts while its owner is muted starts at 0', r.last('late') === 0, String(r.last('late')));
+      r.bus.muteOwner('panel-3', false);
+      check('...and is heard once unmuted', r.last('late') > 0, String(r.last('late')));
+      // a muted call does not pause media
+      const c = rig();
+      c.src('call', { tier: 'call', owner: 'call-panel' });
+      c.src('music', { tier: 'media' });
+      c.bus.setActive('music', true); c.bus.setActive('call', true);
+      check('(setup) a call pauses media', c.last('music') === 0);
+      c.bus.muteOwner('call-panel', true);
+      check('a muted call is not sounding, so it no longer pauses media', c.last('music') === 1 && c.last('call') === 0,
+        `${c.last('music')} ${c.last('call')}`);
+      check('muteOwner with no owner is refused', r.bus.muteOwner('', true) === false && r.bus.isOwnerMuted('') === false);
+      r.bus.muteOwner('panel-1', true); r.bus.destroy();
+      check('destroy forgets every mute', r.bus.isOwnerMuted('panel-1') === false);
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

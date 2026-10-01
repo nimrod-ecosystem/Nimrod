@@ -222,6 +222,19 @@ export function extendCtx(ctx = {}, extra = {}) {
   return out;
 }
 
+/**
+ * The audio bus as one module instance sees it: the same bus, except every `register` carries
+ * `owner: instanceId` unless the caller named an owner itself. A prototype over the real bus, so
+ * every other method (and `play`, which calls `this.register`) is the bus's own. Anything that is
+ * not a bus with a `register` is handed back untouched.
+ */
+export function ownedAudio(audio, instanceId) {
+  if (!audio || typeof audio.register !== 'function' || !instanceId) return audio;
+  const owned = Object.create(audio);
+  owned.register = (id, spec = {}) => audio.register(id, { ...(spec || {}), owner: spec?.owner ?? instanceId });
+  return owned;
+}
+
 // Mount one instance. `state` and `events` are the instance's own handles; the
 // runtime disposes them (and the bus scope) on destroy, so nothing leaks.
 export function mountModule(type, ctx) {
@@ -250,7 +263,28 @@ export function mountModule(type, ctx) {
   const scoped = ctx.bus.scope(ctx.instanceId || null);
   // NOT `{ ...ctx, bus: scoped }`: that turned every getter the host supplied into the value it
   // had at this instant. See `extendCtx`.
-  const instance = entry.factory(extendCtx(ctx, { bus: scoped }));
+  const extra = { bus: scoped };
+  // THE SPEAKER, TAGGED WITH WHOSE IT IS (hide_sound.js). Every source this module registers on the
+  // audio bus carries `owner: ctx.instanceId`, so "mute this panel while it is hidden" can find all of
+  // its sounds without the module naming them. A getter, so a host getter stays live (see extendCtx).
+  if ('audio' in (ctx || {}) && ctx.instanceId) {
+    const id = ctx.instanceId;
+    let seen = null, owned = null;
+    Object.defineProperty(extra, 'audio', {
+      enumerable: true, configurable: true,
+      get() { const a = ctx.audio; if (a !== seen) { seen = a; owned = ownedAudio(a, id); } return owned; },
+    });
+  }
+  const instance = entry.factory(extendCtx(ctx, extra));
+  // What the host's hide policy is told about this instance (hide_sound.js). Read at the moment of
+  // the hide, never captured: `ctx.hidePolicy` may be a host getter, and absent means "do nothing",
+  // which is exactly what every page did before it existed.
+  const tell = (verb, info) => {
+    try {
+      ctx.hidePolicy?.[verb]?.({ instanceId: ctx.instanceId || null, type, manifest: entry.manifest,
+        audio: ctx.audio || null, impl: instance, state: ctx.state || null, by: info?.by || 'auto' });
+    } catch (err) { console.error(`[${type}] hide policy ${verb}`, err); }
+  };
 
   // The fitting contract, applied by the host rather than asked of the module. `mod-host` is
   // what makes the mount a positioned, scrolling box (see modules.css) — so a full-bleed
@@ -274,17 +308,23 @@ export function mountModule(type, ctx) {
     impl:     instance,
     init:     () => { const r = instance.init?.(); box.arm?.(); return r; },
     onResize: () => instance.onResize?.(),
-    onHide:   () => instance.onHide?.(),
+    // `info.by`: 'person' when somebody hid it by their own action, anything else is automatic.
+    // The module's own onHide runs FIRST, then the host's hide policy (mute / pause, hide_sound.js).
+    onHide:   (info) => { const r = instance.onHide?.(); tell('hidden', info); return r; },
     // The counterpart `onHide` never had. A host that hides a child and later shows it again
     // had no way to say so through the contract, so the only route back was `impl`, which is
     // documented above as the TEST escape hatch. Added when `director.js` needed to park a
     // wallpaper's clock while it was covered up; optional like the rest of the lifecycle, so
     // every existing module is unaffected.
-    onShow:   () => instance.onShow?.(),
+    // The policy is undone BEFORE the module's own onShow, so a module that restarts its sound
+    // there is heard.
+    onShow:   (info) => { tell('shown', info); return instance.onShow?.(); },
     destroy:  () => {
       // First, and outside the try: an observer left running holds the mount element and the
       // module's closure alive, which is the exact shape the soak meter caught three of.
       box.stop?.();
+      // A remount under the same id (recovery's `remountPanel`) must not start out muted.
+      tell('gone');
       try { instance.destroy?.(); }
       finally { scoped.dispose(); ctx.state?.destroy?.(); ctx.events?.destroy?.(); }
     },

@@ -28,7 +28,7 @@
 <div id="host"></div>
 
 <script type="module">
-import { registerModule, getManifest, listManifests, mountModule } from '../module.js';
+import { registerModule, getManifest, listManifests, mountModule, ownedAudio } from '../module.js';
 import { createBus } from '../bus.js';
 
 const out = document.getElementById('results');
@@ -273,6 +273,86 @@ try {
     const copy = { ...seen };
     check('a spread of the module’s ctx still has every key (a container that spreads ctx for a child)',
       'personId' in copy && 'callTransport' in copy && 'bus' in copy);
+  }
+
+  // =====================================================================================
+  section('*** the speaker, tagged with whose it is; the host’s hide policy (hide_sound.js) ***');
+  {
+    const { createAudioBus } = await import('../audio_bus.js');
+    const audio = createAudioBus();
+    const type = uniqueType('noisy');
+    let seen = null;
+    registerModule({ type, title: 'Noisy' }, (ctx) => {
+      seen = ctx;
+      return { init() { ctx.audio.register('noisy-a', { tier: 'media' }); ctx.audio.play('noisy-b', { tier: 'sfx' }); },
+               onHide() { calls.push('module:hide'); }, onShow() { calls.push('module:show'); } };
+    });
+    const calls = [];
+    const told = [];
+    const policy = {
+      hidden: (i) => { calls.push('policy:hidden'); told.push(['hidden', i]); },
+      shown: (i) => { calls.push('policy:shown'); told.push(['shown', i]); },
+      gone: (i) => { told.push(['gone', i]); },
+    };
+    const state = { get: () => ({}), set() {}, destroy() {} };
+    const rec = mountModule(type, baseCtx({ instanceId: 'inst-7', audio, hidePolicy: policy, state }));
+    rec.init();
+    check('*** a source the module registers carries its instance id as owner ***', audio.state()['noisy-a'].owner === 'inst-7',
+      JSON.stringify(audio.state()['noisy-a']));
+    check('...through play() too (play calls this.register)', audio.state()['noisy-b'].owner === 'inst-7');
+    check('...and every other method is the real bus’s', seen.audio.isActive('noisy-b') === true && typeof seen.audio.hush === 'function');
+    rec.onHide();
+    check('onHide runs the module’s own onHide FIRST, then the policy', calls.join() === 'module:hide,policy:hidden', calls.join());
+    const h = told[0][1];
+    check('the policy is told the instance, type, raw audio bus, impl and state', h.instanceId === 'inst-7' && h.type === type
+      && h.audio === audio && h.impl === rec.impl && h.state === state && h.manifest?.title === 'Noisy');
+    check('an onHide with no info is automatic', h.by === 'auto', h.by);
+    rec.onHide({ by: 'person' });
+    check('onHide({ by: "person" }) says so', told[1][1].by === 'person');
+    calls.length = 0;
+    rec.onShow();
+    check('onShow undoes the policy BEFORE the module’s own onShow', calls.join() === 'policy:shown,module:show', calls.join());
+    rec.destroy();
+    check('destroy tells the policy the instance is gone (a remount must not start muted)',
+      told.some(([v, i]) => v === 'gone' && i.instanceId === 'inst-7'));
+
+    // A host with no policy, and a module with no hooks, are both fine.
+    const t2 = uniqueType('plain');
+    registerModule({ type: t2 }, () => ({}));
+    const r2 = mountModule(t2, baseCtx({ audio }));
+    let threw = false;
+    try { r2.init(); r2.onHide(); r2.onShow(); r2.destroy(); } catch { threw = true; }
+    check('no hidePolicy on the host: hide/show/destroy do what they always did', !threw);
+    const t3 = uniqueType('throws');
+    registerModule({ type: t3 }, () => ({}));
+    const r3 = mountModule(t3, baseCtx({ hidePolicy: { hidden() { throw new Error('boom'); } } }));
+    threw = false;
+    try { r3.onHide(); } catch { threw = true; }
+    check('a policy that throws cannot break the hide', !threw);
+
+    // The audio handle stays live through a host getter.
+    let live = null;
+    const t4 = uniqueType('late-audio');
+    let s4 = null;
+    registerModule({ type: t4 }, (ctx) => { s4 = ctx; return {}; });
+    const hostCtx = baseCtx({ instanceId: 'inst-late' });
+    Object.defineProperty(hostCtx, 'audio', { get: () => live, enumerable: true, configurable: true });
+    mountModule(t4, hostCtx);
+    check('(setup) no bus yet', s4.audio === null);
+    live = createAudioBus();
+    s4.audio.register('late-src', {});
+    check('*** a bus that arrives after mount is still tagged with the owner ***', live.state()['late-src'].owner === 'inst-late');
+    check('...and it is the same wrapped handle on every read', s4.audio === s4.audio);
+    const fake = { hello: 1 };
+    const t5 = uniqueType('fake-audio');
+    let s5 = null;
+    registerModule({ type: t5 }, (ctx) => { s5 = ctx; return {}; });
+    mountModule(t5, baseCtx({ audio: fake }));
+    check('something that is not a bus is handed through untouched', s5.audio === fake);
+    // A container that hands its ctx to a child (view.js, karaoke.js) - the child is its own owner.
+    const child = ownedAudio(ownedAudio(audio, 'parent'), 'child');
+    child.register('nested', {});
+    check('a nested module’s sources belong to the nested instance, not its container', audio.state().nested.owner === 'child');
   }
 
 } catch (e) {
