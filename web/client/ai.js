@@ -255,13 +255,42 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
   // the server's own limit, as before. Measured 2026-09-29: asked for "as many questions as this
   // supports", qwen2.5:7b on this CPU wrote 2,000+ tokens for one 900-word piece — 15+ minutes — and
   // ran into the 4,096-token window, which cuts the answer mid-JSON.
-  async function chat(messages, { model = '', json = false, temperature = 0.2, timeoutMs: t, signal, maxTokens = 0 } = {}) {
+  //
+  // `contextTokens` (2026-10-01, row 2.24): how big a window this call needs (transcript_quiz.js
+  // `contextFor`). *** MEASURED on Ollama 0.34.4: the OpenAI-style endpoint ignores a context size
+  // however it is sent; only Ollama's own `/api/chat` honours `options.num_ctx`. *** So a call that
+  // names one goes to `<server>/api/chat` when the address ends in `/v1` (Ollama's shape); if that
+  // endpoint is not there (any failure but a refusal, a timeout or Cancel) the call is made the
+  // standard way and `contextTokens` in the result is null — not applied, and saying so. Without
+  // `contextTokens` nothing here changes. The ONE place this adapter knows a backend's own API.
+  async function chat(messages, { model = '', json = false, temperature = 0.2, timeoutMs: t, signal, maxTokens = 0,
+                                  contextTokens = 0 } = {}) {
     const started = Date.now();
     let use = model;
     if (!use) {
       const m = await resolveModel('', { signal });
       if (!m.ok) return { ok: false, reason: m.reason, cancelled: m.cancelled };
       use = m.model;
+    }
+    const ctxN = Number(contextTokens) > 0 ? Math.floor(Number(contextTokens)) : 0;
+    const root = /\/v1$/i.test(settings().baseUrl) ? settings().baseUrl.replace(/\/v1$/i, '') : '';
+    if (ctxN && root) {
+      const options = { temperature, num_ctx: ctxN };
+      if (Number(maxTokens) > 0) options.num_predict = Math.floor(Number(maxTokens));
+      const nb = { model: use, messages, stream: false, options };
+      if (json) nb.format = 'json';
+      const n = await request(`${root}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(nb),
+      }, { signal, timeoutMs: t });
+      if (n.ok) {
+        const text = n.body?.message?.content;
+        if (typeof text === 'string') return { ok: true, text, model: use, ms: Date.now() - started, contextTokens: ctxN };
+      } else if (n.cancelled || n.timedOut || n.status === 403) {
+        return { ...n, ms: Date.now() - started };
+      }
+      // Not Ollama (or an answer in another shape): the standard way, below.
     }
     const body = { model: use, messages, temperature, stream: false };
     if (json) body.response_format = { type: 'json_object' };
@@ -276,7 +305,7 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     if (typeof text !== 'string') {
       return { ok: false, reason: explainFailure({ kind: 'unreadable' }), ms: Date.now() - started };
     }
-    return { ok: true, text, model: use, ms: Date.now() - started };
+    return { ok: true, text, model: use, ms: Date.now() - started, ...(ctxN ? { contextTokens: null } : {}) };
   }
 
   return {

@@ -27,6 +27,7 @@ import {
   transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer, quizProgress, quizDrop,
   reviewItems, poolFrom, isPaid, REVIEW_KINDS, MINUTE_CHOICES,
   FACT, buildFactPrompt, parseFactReply, quoteSource, sameAnswer, buildComparePrompt, parseCompareReply, factCheck,
+  parsePieceSummary, contextFor, videoPass, buildVideoPrompt, SCOPE, VIDEO_PASS_MARK, MAX_SOURCE_LINES,
 } from '../transcript_quiz.js';
 
 const out = document.getElementById('results');
@@ -525,6 +526,115 @@ That is why a strong hive grows so quickly.`;
     check('...and keeps which contest raised it and from which screen',
       cf.q1.flags[0].contest === true && cf.q1.flags[0].contestId === 'c1' && cf.q1.flags[0].module === 'trivia', J(cf.q1.flags[0]));
     check('an ordinary flag is not marked as a contest', reviewItems(ev).find((i) => i.id === 'q2').flags[0].contest === false);
+
+    // ---------------------------------------------------------------------------------------
+    // Row 2.24 addition (Mike, 2026-10-01): keep the pieces, add ONE pass over their summaries
+    // for whole-video questions, and set the context size explicitly on every call.
+    // ---------------------------------------------------------------------------------------
+    section('*** the context size: set per call, sized for the prompt and the answer ***');
+    {
+      const small = [{ role: 'system', content: 'x'.repeat(1500) }, { role: 'user', content: 'y'.repeat(5400) }];
+      const c1 = contextFor(small, { answerTokens: 1200 });
+      check('*** a 900-word piece with a 1,200-token answer asks for 4,096 — the window the server already used ***',
+        c1.tokens === 4096 && c1.fits, J(c1));
+      const big = [{ role: 'user', content: 'y'.repeat(18000) }];
+      const c2 = contextFor(big, { answerTokens: 1200 });
+      check('a 3,000-word piece needs more and gets the next step up, 8,192', c2.tokens === 8192 && c2.fits, J(c2));
+      const huge = [{ role: 'user', content: 'y'.repeat(60000) }];
+      const c3 = contextFor(huge, { answerTokens: 1200, ceiling: 8192 });
+      check('*** never above the ceiling (the person\'s setting) — and it says it did not fit ***',
+        c3.tokens === 8192 && c3.fits === false, J(c3));
+      check('...a bigger ceiling lets it grow', contextFor(huge, { answerTokens: 1200, ceiling: 32768 }).tokens === 32768);
+      check('"No limit" on the answer is still given room (2,048 tokens)', contextFor(small, { answerTokens: 0 }).need
+        === contextFor(small, { answerTokens: 2048 }).need);
+      check('a ceiling below the floor wins (a small computer set to 4,096 never gets more)',
+        contextFor(big, { answerTokens: 1200, ceiling: 4096 }).tokens === 4096);
+      check('junk in is the floor, never a throw', contextFor(null).tokens === 4096 && contextFor(undefined, {}).tokens === 4096);
+    }
+
+    section('*** each piece also writes its summary when there are several pieces ***');
+    {
+      const withS = buildPrompt('One sentence here. Another one.', null, { part: 1, parts: 3, summary: true });
+      const without = buildPrompt('One sentence here. Another one.', null, { part: 1, parts: 3 });
+      check('asked for: the reply shape starts with "summary"', /\{"summary": "\.\.\.", "questions"/.test(withS[0].content), withS[0].content);
+      check('not asked for by default (one piece: its questions already saw the whole video)',
+        !/summary/i.test(without[0].content), without[0].content);
+      check('the summary is read from a whole reply', parsePieceSummary('{"summary": "Bees make honey.", "questions": []}') === 'Bees make honey.');
+      check('*** ...and from a reply CUT OFF by the length cap (the summary comes first) ***',
+        parsePieceSummary('{"summary": "Bees \\"dance\\" to share.", "questions": [ {"source_line": "Bees') === 'Bees "dance" to share.');
+      check('no summary is \'\', and junk never throws', parsePieceSummary('{"questions": []}') === ''
+        && parsePieceSummary(null) === '' && parsePieceSummary('{{{') === '');
+    }
+
+    section('*** a whole-video question may quote up to three lines; each must be real ***');
+    {
+      const T = 'Bees collect nectar from flowers. Later in the hive the nectar slowly becomes honey. Honey keeps for years.';
+      const ok = { question: 'What does nectar become?', answer: 'honey', wrong: ['wax', 'pollen', 'jelly'],
+        source_lines: ['Bees collect nectar from flowers', 'Later in the hive the nectar slowly becomes honey'] };
+      check('*** lines from two places, answer in their words: passes ***', grounded(ok, T).ok, J(grounded(ok, T)));
+      check('one invented line fails the whole question', !grounded({ ...ok, source_lines: [...ok.source_lines, 'Bees invented fire long ago'] }, T).ok);
+      check('an answer in no quoted line fails', !grounded({ ...ok, answer: 'years' }, T).ok);
+      check(`more than ${MAX_SOURCE_LINES} lines is refused (quoting everything proves nothing)`,
+        !grounded({ ...ok, source_lines: ['Bees collect nectar from flowers', 'the nectar slowly becomes honey',
+          'Honey keeps for years', 'Later in the hive the nectar'] }, T).ok);
+      const p = parseQuestions(J({ questions: [{ source_lines: ok.source_lines, question: ok.question, answer: 'honey', wrong: ok.wrong }] }));
+      check('the reader keeps the lines, and joins them for the one source a person sees',
+        p.length === 1 && p[0].source_lines.length === 2 && p[0].source_line.includes(' … '), J(p));
+      check('a one-line question reads exactly as before (no source_lines field)',
+        !('source_lines' in parseQuestions(J({ questions: [{ source_line: 'Honey keeps for years', question: 'q?', answer: 'years', wrong: ['a', 'b', 'c'] }] }))[0]));
+    }
+
+    section('*** the whole-video pass: once, tagged, sized, and it can only add ***');
+    {
+      const T = 'Bees collect nectar from flowers. They carry it home in a special stomach. '
+        + 'Later in the hive the nectar slowly becomes honey. Workers fan their wings to dry it. Honey keeps for years.';
+      const parts = [
+        { summary: 'Bees gather nectar and carry it home.', lines: ['Bees collect nectar from flowers', 'They carry it home in a special stomach'] },
+        { summary: 'In the hive nectar is dried into honey.', lines: ['Later in the hive the nectar slowly becomes honey', 'Workers fan their wings to dry it'] },
+        { summary: 'Honey lasts.', lines: ['Honey keeps for years'] },
+      ];
+      const good = { questions: [
+        { source_lines: ['Bees collect nectar from flowers', 'Later in the hive the nectar slowly becomes honey'],
+          question: 'What does what bees collect turn into?', answer: 'honey', wrong: ['wax', 'pollen', 'jelly'] },
+        { source_line: 'Bees invented fire long ago', question: 'What did bees invent?', answer: 'fire', wrong: ['a', 'b', 'c'] },
+      ] };
+      const calls = [];
+      const fake = (reply) => async (messages, opts) => { calls.push({ messages, opts }); return reply; };
+      const r1 = await videoPass(parts, { chat: fake({ ok: true, text: J(good), ms: 7 }), transcript: T, answerTokens: 1200, ceiling: 8192 });
+      check('*** the pass is ONE model call, however many parts ***', calls.length === 1, String(calls.length));
+      check('...and that call is the whole-video one, shown every part\'s summary and quotes',
+        calls[0].messages[0].content.includes(VIDEO_PASS_MARK) && /PART 3/.test(calls[0].messages[1].content)
+          && calls[0].messages[1].content.includes('Honey lasts.') && calls[0].messages[1].content.includes('- Workers fan their wings to dry it'),
+        calls[0].messages[1].content);
+      check('*** its context size is set explicitly (and its answer cap passed on) ***',
+        calls[0].opts.contextTokens === 4096 && calls[0].opts.maxTokens === 1200 && r1.contextTokens === 4096, J(calls[0].opts));
+      check('*** its questions are tagged whole-video ***', r1.ok && r1.items.length === 1 && r1.items[0].scope === SCOPE.VIDEO
+        && r1.parsed.every((q) => q.scope === SCOPE.VIDEO), J(r1));
+      check('...and the grounded check still applies: the invented one is rejected', r1.rejected.length === 1, J(r1.rejected));
+      const lq = toLessonQuestion(r1.items[0], seeded(3));
+      check('the tag survives into the lesson question (and so into the review log)', lq.scope === 'video' && !('part' in lq), J(lq));
+      check('a piece\'s question carries its part', J(toLessonQuestion({ question: 'q', answer: 'a', wrong: ['b', 'c', 'd'], source_line: 's',
+        scope: 'part', part: 2 }, seeded(1))).includes('"part":2'));
+      check('an untagged question converts exactly as before (no scope field)',
+        !('scope' in toLessonQuestion({ question: 'q', answer: 'a', wrong: ['b', 'c', 'd'], source_line: 's' }, seeded(1))));
+
+      calls.length = 0;
+      const r2 = await videoPass(parts, { chat: fake({ ok: false, reason: 'The model took too long.' }), transcript: T });
+      check('*** a failed pass is ok:false with the reason — never a throw, never questions taken away ***',
+        r2.ran && !r2.ok && r2.reason === 'The model took too long.' && !r2.items.length && !r2.parsed.length, J(r2));
+      const r3 = await videoPass(parts, { chat: async () => { throw new Error('boom'); }, transcript: T });
+      check('a chat that THROWS is the same: ok:false, said', r3.ran && !r3.ok && /boom/.test(r3.reason), J(r3));
+      const r4 = await videoPass(parts, { chat: fake({ ok: true, text: 'Sure, here you go!' }), transcript: T });
+      check('an unreadable answer is ok:false, said', !r4.ok && /could be read/.test(r4.reason), J(r4));
+      const r5 = await videoPass(parts, { chat: fake({ ok: false, cancelled: true, reason: 'Cancelled.' }), transcript: T });
+      check('Cancel is reported as cancelled (the caller stops, as for a piece)', r5.cancelled === true);
+      calls.length = 0;
+      const r6 = await videoPass([parts[0]], { chat: fake({ ok: true, text: J(good) }), transcript: T });
+      check('fewer than two parts with notes: it does not run at all (no call)', !r6.ran && calls.length === 0, J(r6));
+      const bounded = buildVideoPrompt([{ summary: 's', lines: Array.from({ length: 20 }, (_, i) => `line number ${i} here`) }]);
+      check('quotes per part are bounded (6 by default), so an hour-long video stays inside the window',
+        (bounded[1].content.match(/^- /gm) || []).length === 6, bounded[1].content);
+    }
 
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
