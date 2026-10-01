@@ -228,8 +228,12 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     return { ...poolLevels(floor, Number(c().levelsAtOnce) || 2, maxLevel), maxLevel, floor };
   }
 
-  /** The next question for whoever's turn it is. Due reviews first, then the pool. */
-  function deal(game) {
+  /**
+   * The next question for whoever's turn it is. Due reviews first, then the pool.
+   * `again`: deal THIS question again (row 2.45's word builder: one set of letters is several answers,
+   * each rated on its own, so the same question is dealt once per word until it is used up).
+   */
+  function deal(game, { again = null } = {}) {
     const list = allQuestions(game);
     if (!list.length) return null;
     const p = currentPlayer();
@@ -237,9 +241,9 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     const rated = list.map((q) => ({ id: q.id, rating: questionRow(q).rating, item: q }));
     const byId = new Map(rated.map((q) => [q.id, q]));
     const mine = recent[p.id] || [];
-    let pick = null;
+    let pick = again != null && byId.has(again) ? byId.get(again) : null;
     let review = false;
-    if (c().review !== 'off') {
+    if (!pick && c().review !== 'off') {
       const due = dueIds(row.review, { now: now(), asked, sitting })
         .filter((id) => byId.has(id) && id !== mine[mine.length - 1]);
       if (due.length) { pick = byId.get(due[0]); review = true; }

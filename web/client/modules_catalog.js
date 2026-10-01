@@ -514,6 +514,25 @@ export const CATALOG = [
       + 'Two people can take turns on one screen. Missed questions come back later, further apart each time.',
   },
   {
+    type: 'word_builder',
+    title: 'Word builder',
+    group: 'practice',
+    use: 'answer',
+    lead: 'A few big letters: find the words they make.',
+    needs: 'Nothing. The words are built in.',
+    why: 'Three letters to start, more as the words come easily, for each player. Read aloud; say the word, '
+      + 'build it on one switch, or touch the letters. A real word that is not on its list is not marked wrong.',
+  },
+  {
+    type: 'brain_games',
+    title: 'Brain games',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Quick rounds: which one is different, remember the order, how many dots, what comes next.',
+    needs: 'Nothing. The questions are built in.',
+    why: 'Short rounds, each player at their own level. Nothing is timed unless that is turned on.',
+  },
+  {
     type: 'name_that',
     group: 'practice',
     use: 'answer',

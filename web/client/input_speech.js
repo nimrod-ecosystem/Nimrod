@@ -208,6 +208,20 @@ export const ROUTES = {
     phrases: ['play name the group', 'name the group'] },
   'play-finish': { topic: 'think_games/play', payload: { game: 'finish' }, label: 'Play Finish the sentence',
     phrases: ['play finish the sentence', 'finish the sentence'] },
+  // Row 2.45, 2026-10-01: the word builder and the brain games. Question-like names are "play ..." only,
+  // so "what comes next?" said in passing does not start a game.
+  'play-word-builder': { topic: 'word_builder/play', payload: { game: 'word_builder' }, label: 'Play Word builder',
+    phrases: ['play word builder', 'word builder'] },
+  'play-brain': { topic: 'brain_games/play', payload: { game: 'mix' }, label: 'Play Brain games',
+    phrases: ['play brain games', 'brain games'] },
+  'play-different': { topic: 'brain_games/play', payload: { game: 'odd' }, label: 'Play Which one is different',
+    phrases: ['play odd one out', 'play which is different'] },
+  'play-order': { topic: 'brain_games/play', payload: { game: 'order' }, label: 'Play Remember the order',
+    phrases: ['play remember the order'] },
+  'play-count': { topic: 'brain_games/play', payload: { game: 'count' }, label: 'Play Quick count',
+    phrases: ['play quick count', 'quick count'] },
+  'play-next': { topic: 'brain_games/play', payload: { game: 'next' }, label: 'Play What comes next',
+    phrases: ['play what comes next'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

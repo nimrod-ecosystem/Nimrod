@@ -116,6 +116,8 @@ import './modules/word_games.js';      // registers 'word_games'
 import './modules/spelling.js';        // registers 'spelling' (row 2.45)
 import './modules/simple_math.js';     // registers 'simple_math' (kept so old screens still mount; folded into Math)
 import './modules/think_games.js';     // registers 'think_games' (row 2.45: her SLP's exercises, adaptive)
+import './modules/word_builder.js';    // registers 'word_builder' (row 2.45: letters to words, adaptive)
+import './modules/brain_games.js';     // registers 'brain_games' (row 2.45: quick rounds, adaptive)
 import './modules/name_that.js';       // registers 'name_that' (animal / state / person)
 import './modules/karaoke.js';         // registers 'karaoke'
 import './modules/solitaire.js';       // registers 'solitaire' (row 2.37, Klondike)
