@@ -736,7 +736,8 @@ class _Store:
         "profile_modules": ("Which modules are on each screen, and in what order.", False,
                             "when you add a module to a screen"),
         "state":           ("Settings for those modules - a photo interval, a theme, a "
-                            "layout. Small, and yours.", False,
+                            "layout. Small, and yours. Also the name you sign notes with, "
+                            "if you choose one.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
                             "when, a game result. It GROWS over time. Sensor readings, if you "

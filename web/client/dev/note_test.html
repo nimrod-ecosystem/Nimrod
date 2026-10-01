@@ -97,7 +97,7 @@ function scratch(w = 480, h = 420) {
   document.body.append(el);
   return el;
 }
-function mount({ host = scratch(), bus = createBus(), s = streams(), saved = {}, author = undefined, noEvents = false } = {}) {
+function mount({ host = scratch(), bus = createBus(), s = streams(), saved = {}, author = undefined, noEvents = false, locked = undefined } = {}) {
   const said = [];
   const made = [];
   const inst = mountModule('note', {
@@ -106,6 +106,7 @@ function mount({ host = scratch(), bus = createBus(), s = streams(), saved = {},
     output: { say: (t) => { said.push(t); return `u${said.length}`; }, cancel() {} },
     ...(noEvents ? {} : { makeEvents: (k, o) => { made.push({ k, o }); return s.make(k); } }),
     ...(author !== undefined ? { author } : {}),
+    ...(locked !== undefined ? { authorLocked: locked } : {}),
   });
   inst.init();
   const probe = () => inst.impl.__probe();
@@ -277,6 +278,62 @@ try {
     m2.press('change');
     check('*** a host that hands in ctx.author starts the form on that name ***', m2.probe().draft.author === 'Jo');
     m2.inst.destroy();
+  }
+
+  section('*** a visitor on their own account signs as themselves (ctx.authorLocked) ***');
+  {
+    const s = streams();
+    const w = s.make('note');
+    await w.append('note', { text: 'Older', author: 'Ann' });
+    const t = mount({ s, author: 'Aunt Dolly', locked: true });
+    await tick();
+    t.press('change');
+    const offered = [...t.host.querySelectorAll('[data-act="author"]')].map((b) => b.dataset.name);
+    check('*** only their own name and "Someone" are offered - not the names in the history ***',
+      offered.join('|') === `Aunt Dolly|${SOMEONE}`, offered.join('|'));
+    check('*** and there is no box to type another name ***', !t.host.querySelector('[data-note-name]'));
+    check('the form starts on their name', t.probe().draft.author === 'Aunt Dolly');
+    t.press('ready'); t.press('save');
+    await tick();
+    check('saved under their name', s.data.note[s.data.note.length - 1].data.author === 'Aunt Dolly' && /^Aunt Dolly · /.test(t.who()));
+    t.press('change');
+    t.host.querySelector(`[data-act="author"][data-name="${SOMEONE}"]`).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    t.press('ready'); t.press('save');
+    await tick();
+    check('they may choose to be "Someone"', s.data.note[s.data.note.length - 1].data.author === SOMEONE);
+    t.press('history');
+    const oldest = [...t.host.querySelectorAll('[data-note-history] li')].pop();
+    oldest.querySelector('[data-act="putback"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    const last = s.data.note[s.data.note.length - 1].data;
+    check('*** putting somebody else’s note back signs it as the visitor (they are putting it there) ***',
+      last.text === 'Older' && last.author === 'Aunt Dolly' && last.via === 'put back', JSON.stringify(last));
+    t.inst.destroy();
+    const anon = mount({ author: '', locked: true });
+    await tick();
+    anon.press('change');
+    check('a visitor with no name set: only "Someone"', [...anon.host.querySelectorAll('[data-act="author"]')].map((b) => b.dataset.name).join() === SOMEONE);
+    anon.inst.destroy();
+    const free = mount({ s, author: 'Jo' });
+    await tick();
+    free.press('change');
+    check('unlocked (the kiosk): history names and the typing box are still there',
+      !!free.host.querySelector('[data-note-name]') && !!free.host.querySelector('[data-act="author"][data-name="Ann"]'));
+    free.inst.destroy();
+  }
+
+  section('a refusal from the server says what happened');
+  {
+    const refusing = (status) => ({ make: () => ({ append: () => Promise.reject(Object.assign(new Error('no'), { status })),
+      load: () => Promise.resolve(), get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {} }) });
+    for (const [status, rx] of [[403, /cannot leave a note here/], [429, /a lot of notes/], [500, /did not save/]]) {
+      const t = mount({ s: refusing(status), author: 'Jo', locked: true });
+      await tick();
+      t.press('change'); t.press('ready'); t.press('save');
+      await tick(); await tick();
+      check(`${status}: ${rx}`, rx.test(t.host.querySelector('[data-note-err]')?.textContent || ''), t.host.querySelector('[data-note-err]')?.textContent);
+      t.inst.destroy();
+    }
   }
 
   section('every change is kept, and an old note can be put back');

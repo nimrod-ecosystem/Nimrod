@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>note_visit — leave a note from your own account, and who may — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>note_visit — a note left from another account (Mike, 2026-10-01)</h1>
+<p>The visitor's side (the note module mounted against the server's note route, signed as the visitor)
+and the owner's side (who may, ticked on the person's own row). The server half of the rule is
+<code>web/server/test_notes.py</code>; the last section here runs the page against the real routes
+when the server takes a dev sign-in.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  noteWritersFrom, writerCandidates, mountNoteWriters, mountNoteVisit, noteURL, screensURL, WRITERS_FIELD,
+} from '../note_visit.js';
+import { mountRemote } from '../remote.js';
+import { SOMEONE } from '../modules/note.js';
+import { createEvents } from '../events.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const tick = () => sleep(0);
+function scratch() {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;width:520px;height:900px';
+  document.body.append(el);
+  return el;
+}
+const click = (el) => el?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+function row(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  const h = { sets: [], get: () => v, load: async () => {},
+    set(p) { h.sets.push(p); v = { ...v, ...p }; subs.forEach((f) => f(v)); return Promise.resolve(); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, destroy() { subs.clear(); } };
+  return h;
+}
+
+// A fake server for the visitor side: /api/me, the screen list, the name PUT. Note rows go through a
+// fake events factory, so what the page asks for (which URL) is what is checked.
+function fakeServer({ screens = [{ id: 's1', name: 'Bedside', has_note: true }], screensStatus = 200, name = '' } = {}) {
+  const calls = [];
+  const srv = { name, calls, puts: [] };
+  srv.fetch = async (url, init = {}) => {
+    calls.push({ url, method: init.method || 'GET' });
+    const res = (status, body) => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+    if (url === '/api/me') return res(200, { user: 'vis', display_name: srv.name });
+    if (url.endsWith('/notes/screens')) return res(screensStatus, screensStatus === 200 ? { screens } : { detail: 'no' });
+    if (url === '/api/me/display-name') {
+      const { name: n } = JSON.parse(init.body);
+      srv.puts.push(n);
+      if (/</.test(n)) return res(400, { detail: 'a name is letters, numbers…' });
+      srv.name = n.trim().replace(/\s+/g, ' ');
+      return res(200, { display_name: srv.name });
+    }
+    return res(404, {});
+  };
+  srv.streams = {};
+  srv.eventsFor = (url) => {
+    const list = (srv.streams[url] ||= []);
+    const subs = new Set();
+    const snap = () => ({ events: [...list], total: list.length });
+    return { url, load: async () => {}, get: snap, startPolling() {}, destroy() {},
+      subscribe(f) { subs.add(f); return () => subs.delete(f); },
+      async append(kind, data) {
+        // The server's own rule: the name is the account's, unless they asked to be Someone.
+        const author = data.author === SOMEONE ? SOMEONE : (srv.name || SOMEONE);
+        list.push({ id: list.length + 1, kind, data: { ...data, author }, created_at: new Date().toISOString() });
+        subs.forEach((f) => f(snap()));
+      } };
+  };
+  return srv;
+}
+
+(async () => {
+try {
+  // =====================================================================
+  section('the rules, pure');
+  check('the ticked list: plain names, no repeats', noteWritersFrom({ noteWriters: ['a', ' b', 'a'] }).join() === 'a,b');
+  check('the intercom list’s {account} shape is read too', noteWritersFrom({ noteWriters: [{ account: 'a', name: 'A' }] }).join() === 'a');
+  check('junk is ignored', noteWritersFrom({ noteWriters: [null, 3, {}] }).length === 0 && noteWritersFrom(null).length === 0
+    && noteWritersFrom({ noteWriters: 'a' }).length === 0);
+  check('the field is the one the server reads', WRITERS_FIELD === 'noteWriters');
+  const NOW = '2026-10-01T12:00:00+00:00';
+  const cands = writerCandidates({ now: NOW, ticked: ['gone@x'], grants: [
+    { subject_id: 'bea@x', subject_kind: 'account', label: 'Bea', expires_at: null },
+    { subject_id: 'ot@x', subject_kind: 'account', expires_at: '2026-09-01T00:00:00+00:00' },
+    { subject_id: 'grp', subject_kind: 'group' },
+  ] });
+  check('candidates: everybody with a drive grant, nobody else', cands.map((c) => c.account).join() === 'bea@x,ot@x,gone@x');
+  check('a lapsed grant is shown as such (can be unticked, not ticked)', cands[1].current === false && /ended/.test(cands[1].note));
+  check('somebody ticked whose grant is gone is still listed, so they can be removed', cands[2].current === false);
+  check('a group grant is not a candidate (groups do not resolve)', !cands.some((c) => c.account === 'grp'));
+  check('URLs: the person, the screen, the stream', noteURL('p 1', 's1') === '/api/people/p%201/notes/s1/note'
+    && noteURL('p1', 's1', 'note2') === '/api/people/p1/notes/s1/note2' && screensURL('p1') === '/api/people/p1/notes/screens');
+
+  // =====================================================================
+  section('*** the owner: who may leave a note, empty until ticked ***');
+  {
+    const host = scratch();
+    const st = row({ intercomAllowed: [{ account: 'bea@x', name: 'Bea' }] });
+    const w = mountNoteWriters(host, { personName: 'Robin', state: st,
+      loadGrants: async () => [{ subject_id: 'bea@x', subject_kind: 'account', label: 'daughter', expires_at: null }] });
+    await w.ready;
+    const box = host.querySelector('[data-account="bea@x"] [data-allow-note]');
+    check('the heading names the person', /Who may leave a note for Robin/.test(host.textContent));
+    check('*** nobody is ticked to start with - a drive grant (or the intercom) is not a yes to notes ***', box && !box.checked && w.ticked().length === 0);
+    box.checked = true; box.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick();
+    check('ticking writes the PERSON’s row, and leaves the intercom list alone', st.sets.length === 1
+      && st.get().noteWriters.join() === 'bea@x' && st.get().intercomAllowed.length === 1, JSON.stringify(st.get()));
+    check('and says so', /can leave a note now/.test(host.textContent));
+    const box2 = host.querySelector('[data-account="bea@x"] [data-allow-note]');
+    box2.checked = false; box2.dispatchEvent(new Event('change', { bubbles: true }));
+    await tick();
+    check('unticking takes them off', st.get().noteWriters.length === 0 && /no longer leave a note/.test(host.textContent));
+    w.destroy();
+    check('destroy empties it', host.innerHTML === '');
+    const noneHost = scratch();
+    const none = mountNoteWriters(noneHost, { state: row(), loadGrants: async () => [] });
+    await none.ready;
+    check('with no grants, it says to add somebody first', /Add them above first/.test(noneHost.textContent));
+    none.destroy();
+  }
+
+  // =====================================================================
+  section('the visitor: not allowed yet');
+  {
+    const host = scratch();
+    const srv = fakeServer({ screensStatus: 403 });
+    const v = mountNoteVisit(host, { personId: 'p9', personName: 'Robin', user: 'vis', fetchImpl: srv.fetch, eventsFor: srv.eventsFor, output: null });
+    check('loading first, not an empty box', /Loading/.test(host.textContent));
+    await v.ready;
+    check('*** a 403 says plainly that the owner can allow it, and shows no note ***', v.status() === 'refused'
+      && /cannot leave a note for Robin yet/.test(host.textContent) && !host.querySelector('[data-note]'), host.textContent);
+    check('no site copy names a particular person or "her screen"', !/her screen|Christine|Cici/i.test(host.textContent));
+    v.destroy();
+  }
+
+  section('*** the visitor: allowed - the note, their name, and saving one ***');
+  {
+    const host = scratch();
+    const srv = fakeServer({ name: 'Aunt Dolly', screens: [{ id: 's0', name: 'Kitchen', has_note: false }, { id: 's1', name: 'Bedside', has_note: true }] });
+    const v = mountNoteVisit(host, { personId: 'p9', personName: 'Robin', user: 'vis', fetchImpl: srv.fetch, eventsFor: srv.eventsFor, output: null });
+    await v.ready;
+    await tick();
+    check('ok, two screens, and the one WITH a note panel is picked first', v.status() === 'ok' && v.screenId() === 's1');
+    check('a chip per screen', host.querySelectorAll('[data-nv-screen]').length === 2);
+    check('the note is mounted, and reads the person’s note route for that screen',
+      !!host.querySelector('[data-note]') && Object.keys(srv.streams).includes('/api/people/p9/notes/s1/note'), Object.keys(srv.streams).join());
+    check('their name is shown, from /api/me', host.querySelector('[data-nv-name]').value === 'Aunt Dolly' && v.displayName() === 'Aunt Dolly');
+    click(host.querySelector('[data-act="change"]'));
+    const offered = [...host.querySelectorAll('[data-act="author"]')].map((b) => b.dataset.name);
+    check('*** the form offers only their own name and "Someone", no typing box ***',
+      offered.join('|') === `Aunt Dolly|${SOMEONE}` && !host.querySelector('[data-note-name]'), offered.join('|'));
+    click(host.querySelector('[data-act="ready"]'));
+    click(host.querySelector('[data-act="save"]'));
+    await tick(); await tick();
+    const saved = srv.streams['/api/people/p9/notes/s1/note'];
+    check('*** saved to that screen’s note, signed with their name ***', saved.length === 1 && saved[0].data.author === 'Aunt Dolly'
+      && /^Aunt Dolly · /.test(host.querySelector('[data-note-who]')?.textContent || ''), JSON.stringify(saved));
+
+    // Change the name.
+    host.querySelector('[data-nv-name]').value = '  Dolly  ';
+    host.querySelector('[data-nv-name-form]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await tick(); await tick();
+    check('a new name is saved to the account', srv.puts.pop() === '  Dolly  ' && v.displayName() === 'Dolly' && /Your notes say “Dolly”/.test(host.textContent));
+    host.querySelector('[data-nv-name]').value = '<b>x</b>';
+    host.querySelector('[data-nv-name-form]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await tick(); await tick();
+    check('a refused name says why, and the old one stands', v.displayName() === 'Dolly' && /letters, numbers/.test(host.textContent));
+    click(host.querySelector('[data-act="change"]'));
+    check('the form follows the new name at once', [...host.querySelectorAll('[data-act="author"]')][0]?.dataset.name === 'Dolly');
+    click(host.querySelector('[data-act="close"]'));
+
+    click(host.querySelector('[data-nv-screen="s0"]'));
+    await tick();
+    check('*** another screen: the note follows it, and says it has no panel yet ***', v.screenId() === 's0'
+      && Object.keys(srv.streams).includes('/api/people/p9/notes/s0/note') && !!host.querySelector('[data-nv-nopanel]'));
+    v.destroy();
+    check('destroy empties it and lets go of the note', host.innerHTML === '' && v.note() === null);
+  }
+
+  section('the visitor: nobody set a name, or there are no screens');
+  {
+    const srv = fakeServer({ name: '' });
+    const host = scratch();
+    const v = mountNoteVisit(host, { personId: 'p9', user: 'vis', fetchImpl: srv.fetch, eventsFor: srv.eventsFor, output: null });
+    await v.ready; await tick();
+    check('empty name -> the box is empty, with "Someone" as its hint', host.querySelector('[data-nv-name]').value === ''
+      && host.querySelector('[data-nv-name]').placeholder === SOMEONE);
+    click(host.querySelector('[data-act="change"]'));
+    check('and the form offers only "Someone"', [...host.querySelectorAll('[data-act="author"]')].map((b) => b.dataset.name).join() === SOMEONE);
+    v.destroy();
+    const empty = fakeServer({ screens: [] });
+    const h2 = scratch();
+    const v2 = mountNoteVisit(h2, { personId: 'p9', personName: 'Robin', user: 'vis', fetchImpl: empty.fetch, eventsFor: empty.eventsFor, output: null });
+    await v2.ready;
+    check('no screens: says so, no note', !!h2.querySelector('[data-nv-none]') && !h2.querySelector('[data-note]'));
+    v2.destroy();
+  }
+
+  // =====================================================================
+  section('in the Remote tab');
+  {
+    const host = scratch();
+    const mounted = [];
+    const stub = (root, opts) => { mounted.push(opts); root.innerHTML = `<p data-stub>${opts.personName}</p>`; return { destroy() { root.innerHTML = ''; mounted.push('destroyed'); } }; };
+    const fakeSocket = () => ({ send() {}, close() {} });
+    const st = row();
+    const panel = mountRemote(host, { personId: 'p1', personName: 'Robin', user: 'own',
+      profiles: { driveGrants: async () => [{ id: 'g1', subject_id: 'bea@x', subject_kind: 'account', label: '', expires_at: null }],
+        grantDrive: async () => ({}), revokeDrive: async () => ({}),
+        sharedWithMe: async () => [{ person_id: 'p9', name: 'Sam', owner_id: 'other', grant_id: 'g9', expires_at: null }] },
+      makePersonState: () => st, whoami: async () => 'own', connect: fakeSocket, noteVisit: stub });
+    await panel.refresh();
+    await panel.noteWriters()?.ready;
+    await tick();
+    check('*** the note is mounted for the person picked, as this account ***', mounted[0]?.personId === 'p1' && mounted[0]?.user === 'own');
+    check('the owner sees "Who may leave a note", after the intercom list',
+      /Who may leave a note for Robin/.test(host.querySelector('[data-note-writers]')?.textContent || '')
+      && host.querySelector('[data-note-writers]').previousElementSibling === host.querySelector('[data-intercom-approvals]'));
+    check('...on the same person’s row the intercom list uses', panel.noteWriters() && (() => {
+      const b = host.querySelector('[data-note-writers] [data-allow-note]'); b.checked = true; b.dispatchEvent(new Event('change', { bubbles: true }));
+      return st.get().noteWriters?.join() === 'bea@x';
+    })());
+    await panel.retarget('p9');
+    await tick();
+    check('*** switching person drops the old note and mounts the new one ***', mounted[1] === 'destroyed' && mounted[2]?.personId === 'p9' && mounted[2]?.personName === 'Sam');
+    check('somebody else’s person: no "who may" list (only an owner can tick)', !host.querySelector('[data-note-writers] .nw'));
+    panel.destroy();
+    check('destroying the tab destroys the note', mounted[mounted.length - 1] === 'destroyed');
+    const bare = mountRemote(scratch(), { personId: 'p1', connect: fakeSocket, noteVisit: (r, o) => { mounted.push('bare'); return { destroy() {} }; } });
+    check('a panel with no server behind it (no profiles) shows no note', !mounted.includes('bare'));
+    bare.destroy();
+  }
+
+  // =====================================================================
+  section('live: the page against the real routes (needs a server that takes a dev sign-in)');
+  {
+    const tag = Math.random().toString(36).slice(2, 8);
+    const OWN = `nv-own-${tag}`, VIS = `nv-vis-${tag}`;
+    const H = (u, extra = {}) => ({ 'X-Dev-User': u, ...extra });
+    const j = async (u, url, method = 'GET', body) => {
+      const r = await fetch(url, { method, headers: H(u, body ? { 'Content-Type': 'application/json' } : {}), body: body ? JSON.stringify(body) : undefined });
+      return { status: r.status, body: await r.json().catch(() => null) };
+    };
+    let me = null;
+    try { me = await j(OWN, '/api/me'); } catch { me = null; }
+    if (!me || me.status !== 200 || me.body?.user !== OWN) {
+      check('SKIPPED: this server does not take a dev sign-in (production, or no server) - test_notes.py covers the routes', true);
+    } else {
+      const person = (await j(OWN, '/api/people')).body.people[0].id;
+      const screen = (await j(OWN, '/api/profiles', 'POST', { name: 'Bedside', person_id: person })).body.id;
+      await j(OWN, `/api/profiles/${screen}/modules`, 'POST', { type: 'note' });
+      await j(OWN, `/api/people/${person}/drive-grants`, 'POST', { subject_id: VIS });
+      await j(VIS, '/api/me/display-name', 'PUT', { name: 'Aunt Dolly' });
+
+      const h1 = scratch();
+      const before = mountNoteVisit(h1, { personId: person, personName: 'Robin', user: VIS, output: null });
+      await before.ready;
+      check('*** live: granted but not ticked -> refused ***', before.status() === 'refused', before.status());
+      before.destroy();
+
+      await j(OWN, `/api/people/${person}/state/input-bindings`, 'PUT', { data: { noteWriters: [VIS] }, base_version: 0 });
+      const h2 = scratch();
+      const v = mountNoteVisit(h2, { personId: person, personName: 'Robin', user: VIS, output: null,
+        eventsFor: (url, opts) => createEvents({ url, user: VIS, ...opts }) });
+      await v.ready; await sleep(50);
+      check('live: ticked -> the note, on the screen with the panel', v.status() === 'ok' && v.screenId() === screen && v.displayName() === 'Aunt Dolly');
+      click(h2.querySelector('[data-act="change"]'));
+      const input = h2.querySelector('[data-note-input]');
+      input.value = 'Thinking of you. Back Sunday.'; input.dispatchEvent(new Event('input', { bubbles: true }));
+      click(h2.querySelector('[data-act="save"]'));
+      for (let i = 0; i < 40 && !/Back Sunday/.test(h2.querySelector('[data-note-text]')?.textContent || ''); i++) await sleep(50);
+      check('*** live: saved, and shown as from Aunt Dolly ***', /^Aunt Dolly · /.test(h2.querySelector('[data-note-who]')?.textContent || ''),
+        h2.querySelector('[data-nv-note]')?.textContent.slice(0, 160));
+      const ownView = (await j(OWN, `/api/profiles/${screen}/events/note`)).body.events;
+      check('*** live: the screen’s own stream has it, stamped with the visitor’s account ***',
+        ownView.length === 1 && ownView[0].data.text === 'Thinking of you. Back Sunday.' && ownView[0].principal_id === VIS
+        && ownView[0].data.author === 'Aunt Dolly', JSON.stringify(ownView));
+      const forged = await j(VIS, `/api/people/${person}/notes/${screen}/note`, 'POST', { kind: 'note', data: { text: 'x', author: 'Mom' } });
+      check('live: a forged author from a hand-made request is still signed by the account', forged.body?.data?.author === 'Aunt Dolly');
+      v.destroy();
+    }
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

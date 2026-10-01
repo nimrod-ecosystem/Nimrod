@@ -13,19 +13,21 @@
 // Putting an old note back is a NEW row that copies it, so even that is in the history.
 //
 // WHO WROTE IT. Each row carries `author`, a plain name typed or picked when the note is changed, or
-// "Someone" when nobody said. A host that knows who is signed in on the screen can hand the name in as
-// `ctx.author` and the change form starts on it; no host does that yet, because the site has no
-// display names for accounts. On the kiosk, the form offers the names already in the note's history
-// (one press each on a switch), "Someone", and a box to type a new one. It never guesses the last
-// writer: on a shared screen that would sign a new visitor's note with the previous visitor's name.
+// "Someone" when nobody said. A host that knows who is signed in can hand the name in as `ctx.author`
+// and the change form starts on it. On the kiosk, the form offers the names already in the note's
+// history (one press each on a switch), "Someone", and a box to type a new one. It never guesses the
+// last writer: on a shared screen that would sign a new visitor's note with the previous visitor's name.
 //
-// WHO CAN WRITE — THE SEAM, AND WHAT IS MISSING. Writes go through whatever `makeEvents` the host
-// hands in, so this module writes wherever its screen's account may write. That covers the kiosk, and
-// a family member's own phone or laptop signed into the SAME account. It does NOT yet cover a visitor
-// on their OWN account: the server only lets an account write its own profiles (`owned_profile` in
-// app.py), and `grants.py` grants DRIVING a screen, not writing to it. Needed, and listed for Mike: a
-// grant-scoped append route for this one stream, and a host page that mounts the note for a granted
-// person. Nothing here has to change when that lands — the host hands in a different `makeEvents`.
+// `ctx.authorLocked` — A VISITOR SIGNS AS THEMSELVES. A host that mounts this for somebody on their OWN
+// account (note_visit.js, the Remote tab) sets it: the form then offers only that account's name and
+// "Someone", with no box to type another and no names from the history (those are other people). The
+// server stamps the name anyway (server/notes.py) - this only keeps the form from offering a choice the
+// server will not honour.
+//
+// WHO CAN WRITE. Writes go through whatever `makeEvents` the host hands in. On the kiosk and the
+// owner's own devices that is the screen's own stream. A visitor on their own account writes through a
+// narrow server route that appends to this stream only, and only once the owner has allowed them
+// (server/notes.py has the rule and the argument for it); the host hands in a `makeEvents` for it.
 //
 // A SWITCH REACHES EVERYTHING. `next`/`prev` walk every button in reading order and wrap; `select`
 // presses the lit one; `back` closes the change form or the history. The first `select` only reveals
@@ -205,6 +207,12 @@ registerModule(
     let offStream = null;
 
     const ctxAuthor = () => { try { return cleanName(typeof ctx.author === 'function' ? ctx.author() : ctx.author); } catch { return ''; } };
+    const locked = () => { try { return !!(typeof ctx.authorLocked === 'function' ? ctx.authorLocked() : ctx.authorLocked); } catch { return false; } };
+    // Signed by the host's name, or "Someone" if that was picked (or there is no name).
+    const lockedAuthor = (picked) => (cleanName(picked) === SOMEONE ? SOMEONE : (ctxAuthor() || SOMEONE));
+    // Why a save failed, in words: the server's two refusals that are not "try again".
+    const failWords = (e, fallback) => (e?.status === 403 ? 'You cannot leave a note here any more.'
+      : e?.status === 429 ? 'That is a lot of notes. Try again in a few minutes.' : fallback);
 
     function say(text) {
       if (!text || !ctx.output?.say) return;
@@ -291,7 +299,7 @@ registerModule(
       readDraft();
       const text = cleanText(draft.text);
       if (!text) { err = 'Write a note, or pick one, first.'; render(); return; }
-      const author = cleanName(draft.typedName) || cleanName(draft.author) || SOMEONE;
+      const author = locked() ? lockedAuthor(draft.author) : (cleanName(draft.typedName) || cleanName(draft.author) || SOMEONE);
       saving = true;
       try {
         await append({ text, author, via: 'changed' });
@@ -299,7 +307,7 @@ registerModule(
         if (lit >= 0) lit = 0;
       } catch (e) {
         console.error('note: save', e);
-        err = 'That did not save. The note is still here; try Save again.';
+        err = failWords(e, 'That did not save. The note is still here; try Save again.');
       } finally { saving = false; }
       render();
     }
@@ -308,8 +316,10 @@ registerModule(
       const e = list[i];
       if (!e) return;
       saving = true;
-      try { await append({ text: cleanText(e.data.text), author: authorOf(e), via: 'put back', from: e.id ?? null }); view = 'note'; err = ''; }
-      catch (x) { console.error('note: put back', x); err = 'That did not save. Try again.'; }
+      // A visitor putting one back signs it themselves: they are the one putting it there now.
+      const author = locked() ? lockedAuthor('') : authorOf(e);
+      try { await append({ text: cleanText(e.data.text), author, via: 'put back', from: e.id ?? null }); view = 'note'; err = ''; }
+      catch (x) { console.error('note: put back', x); err = failWords(x, 'That did not save. Try again.'); }
       finally { saving = false; }
       if (lit >= 0) lit = 0;
       render();
@@ -355,8 +365,10 @@ registerModule(
 
     function editHtml() {
       const ready = parseReady(cfg.readyNotes);
-      const names = [...new Set([ctxAuthor(), ...knownAuthors(rows)].filter(Boolean))];
-      const chosen = cleanName(draft.typedName) ? null : (cleanName(draft.author) || SOMEONE);
+      const lock = locked();
+      const names = lock ? [ctxAuthor()].filter((n) => n && n !== SOMEONE)
+        : [...new Set([ctxAuthor(), ...knownAuthors(rows)].filter(Boolean))];
+      const chosen = !lock && cleanName(draft.typedName) ? null : (cleanName(draft.author) || SOMEONE);
       const nameBtn = (n) => btn('author', esc(n), ` data-name="${esc(n)}" aria-pressed="${chosen === n}"`);
       return `
         <div class="nt-edit" role="group" aria-label="Change the note">
@@ -367,7 +379,7 @@ registerModule(
           <div class="nt-choices">${ready.map((t) => btn('ready', esc(t), ` data-text="${esc(t)}" aria-pressed="${cleanText(draft.text) === t}"`)).join('')}</div>
           <p class="nt-head">Who is it from?</p>
           <div class="nt-choices">${names.map(nameBtn).join('')}${nameBtn(SOMEONE)}</div>
-          <input class="nt-name" data-note-name type="text" maxlength="${MAX_NAME}" aria-label="Another name" placeholder="Or type a name" value="${esc(draft.typedName)}">
+          ${lock ? '' : `<input class="nt-name" data-note-name type="text" maxlength="${MAX_NAME}" aria-label="Another name" placeholder="Or type a name" value="${esc(draft.typedName)}">`}
           ${err ? `<p class="nt-err" role="alert" data-note-err>${esc(err)}</p>` : ''}
           <div class="nt-btns">${btn('save', 'Save')}${btn('close', 'Cancel')}</div>
         </div>`;
