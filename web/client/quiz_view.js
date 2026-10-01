@@ -119,7 +119,8 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *                      turnHtml(s, cfg)   whose turn it is, drawn in front of the question
  *                      onResult(r, api)   one finished question (quiz_flow.js `onResult`)
  *                      allowAward(p)      false keeps a right answer from paying points
- *                      scoreDetail(s), scoreLine(s)  the published detail / the panel's own line }
+ *                      scoreDetail(s), scoreLine(s)  the published detail / the panel's own line
+ *                      onKey(k, api)      a board key carrying `view` (not `key`/`cmd`): the view's own }
  *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
  *                    drive the same moves (Math keeps `algebra/submit` answering as select)
  *
@@ -228,6 +229,9 @@ export function quizModule(spec) {
 
     function handleKey(k) {
       if (!k) return;
+      // A key the VIEW owns, not the engine (row 2.45: the word builder's Hint and New letters, the
+      // order game's Ready). Absent from every older board, so they are unchanged.
+      if (k.view != null) { try { view.onKey?.(k, api); } catch (err) { console.error(`${type}: key`, err); } return; }
       if (k.key != null) engine.type(k.key, 'switch');
       else if (k.cmd) engine.press(k.cmd);
     }

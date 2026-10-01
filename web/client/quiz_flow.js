@@ -386,6 +386,8 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //   gentle(item, cfg)         the gentle line
 //   canReplay                 true when the question is a clip that can be played again
 //   unknownLine(value, cfg)   what to say for a value `judge` could not judge
+//   command(cmd, item, cfg)   a spoken command `fromVoice` returned that the engine does not know:
+//                             'ask' (re-ask), another truthy value (handled), or falsy (not caught)
 //
 // `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
 // `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
@@ -701,6 +703,12 @@ export function createQuizEngine({
     if (cmd === 'check') return check('voice');
     if (cmd === 'repeat') return repeat();
     if (cmd === 'replay') return press('replay');
+    // A command the GAME owns (row 2.45: the word builder's "hint" and "new letters", the order
+    // game's "ready"), said with confidence. 'ask' re-asks the question; any other truthy answer
+    // means the game handled it itself; nothing means it was not one, as before.
+    const own = call('command', cmd, item, c());
+    if (own === 'ask') return repeat();
+    if (own) return undefined;
     return notCaught();
   }
 

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>word builder — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>word builder (row 2.45)</h1>
+<p>A few big letters; find the words they make. Read aloud; answered by voice (the word, or spelled),
+one switch (walk the letters, Check, Undo) or touch. Levels on the shared rating ladder; two players
+take turns, each with their own letters.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep } from './quiz_test_rig.js';
+import { getManifest, listManifests } from '../module.js';
+import '../modules/word_builder.js';
+import '../modules/think_games.js';
+import '../modules/spelling.js';
+import '../modules/word_games.js';
+import { GAME, LINES, DEFAULTS, MIN_WORD, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
+import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom } from '../word_builder_words.js';
+import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { emptyLadder, LADDER_KEY, createAdaptiveSession } from '../adaptive_play.js';
+import { levelRating } from '../rating.js';
+import { auditFields, auditAcross } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+
+function ladderStore(init = {}) {
+  let v = { ...init };
+  const h = { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() { h.destroyed = true; }, peek: () => v };
+  return h;
+}
+const R = (saved = {}, opts = {}) => {
+  const store = opts.store || ladderStore();
+  const r = rig(GAME, { saved, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  return Object.assign(r, { ladder: store, set: () => r.inst.impl.__current(), session: () => r.inst.impl.__session });
+};
+const key = (r, label) => [...r.host.querySelectorAll('.qz-key')].find((b) => b.textContent.trim() === label);
+const letterKey = (r, ch) => r.host.querySelector(`.qz-key[data-letter="${ch}"]`);
+function typeWord(r, w) { for (const ch of w) letterKey(r, ch)?.click(); }
+const askText = (r) => r.host.querySelector('.wg-ask')?.textContent.trim() || '';
+const sameLetters = (a, b) => a.slice().sort().join('') === b.slice().sort().join('');
+
+try {
+  section('the words and the letter sets');
+  {
+    check('a hand-written list of a few hundred everyday words, three to five letters, a to z only',
+      WORDS.length >= 400 && WORDS.every((w) => /^[a-z]{3,5}$/.test(w)), `${WORDS.length}`);
+    check('*** nothing on the left-out list is on the word list ***', !LEFT_OUT.some((w) => WORDS.includes(w)));
+    check('every word has a tier of 1, 2 or 3', WORDS.every((w) => [1, 2, 3].includes(TIER[w])));
+    check('every set id is unique', new Set(PUZZLES.map((p) => p.id)).size === PUZZLES.length);
+    const per = [1, 2, 3, 4, 5].map((l) => PUZZLES.filter((p) => p.level === l).length);
+    check('at least eight sets at each of levels 1-5', per.every((n) => n >= 8), per.join(','));
+    check('level 1 is three letters; nothing is more than five', PUZZLES.filter((p) => p.level === 1).every((p) => p.letters.length === 3)
+      && PUZZLES.every((p) => p.letters.length >= 3 && p.letters.length <= 5));
+    check('every set asks for at least two words, every one of them made from its letters',
+      PUZZLES.every((p) => p.pool.length >= 2 && p.pool.every((w) => canMake(w, p.letters) && w.length >= MIN_WORD)),
+      JSON.stringify(PUZZLES.find((p) => p.pool.length < 2)));
+    check('the asked-for words are no rarer than the set itself (a tier-1 set asks only for tier-1 words)',
+      PUZZLES.every((p) => p.pool.every((w) => TIER[w] <= p.tier)));
+    check('a set\'s word list is everything on the list its letters make', PUZZLES.every((p) => p.all.length === wordsFrom(p.letters).length));
+    check('the letters are never shown spelling the whole word in order', PUZZLES.every((p) => p.letters.join('') !== p.root));
+    check('the same every load (no random source), so ratings stay attached', PUZZLES[0].id === PUZZLES.slice()[0].id && /^wb-[a-z]+$/.test(PUZZLES[0].id));
+    check('canMake uses each letter once: "bell" needs two Ls', canMake('bell', ['b', 'e', 'l', 'l']) && !canMake('bell', ['b', 'e', 'l']));
+    const text = JSON.stringify(PUZZLES) + JSON.stringify(LINES);
+    check('no site copy names the person this was first built for', !/christine|cici|her screen/i.test(text));
+    check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
+  }
+
+  section('judging and hints, pure');
+  {
+    const cat = PUZZLES.find((p) => p.id === 'wb-act');
+    check('C, A, T is a level-1 set that asks for CAT and ACT', cat && cat.level === 1 && ['cat', 'act'].every((w) => cat.pool.includes(w)), JSON.stringify(cat));
+    const st = newSet(cat);
+    check('cat: right', judgeWord(st, 'cat') === true && judgeWord(st, 'CAT') === true);
+    check('*** dog: these letters cannot make it: the only kind of miss ***', judgeWord(st, 'dog') === false);
+    check('*** tca: made from the letters, not on the list: NOT a miss ***', judgeWord(st, 'tca') === null);
+    check('two letters: cannot say (too short), not a miss', judgeWord(st, 'at') === null);
+    st.found.push('cat');
+    check('a word already found: not a miss, not right again', judgeWord(st, 'cat') === null);
+    check('the hint word is the first one still to find', target(st) === 'act' && toFind(st).join() === 'act');
+    check('first hint: the first letter', hintText(st, 1) === 'one word starts with A');
+    check('second hint: one more letter, and how many are left', hintText(st, 2) === 'one word starts A, C, then 1 more', hintText(st, 2));
+    check('*** hints never give the whole word, however many are asked for ***', hintText(st, 9) === hintText(st, 2));
+    check('remaining letters: one used per typed letter', remaining(['b', 'e', 'l', 'l'], 'l').join('') === 'bel');
+    const big = newSet(PUZZLES.find((p) => p.pool.length >= 6), { wordsPerSet: 3 });
+    check('words per set (a setting): three asked for, the rest are bonus words', big.required.length === 3 && big.bonus.length >= 3);
+    check('a bonus word is right too', judgeWord(big, big.bonus[0]) === true);
+    check('voice: a whole word', readVoice(st, 'act').value === 'act');
+    check('voice: spelled "C A T" is the word cat', readVoice(st, 'C A T').value === 'cat');
+    check('voice: one letter said alone is a letter typed', readVoice(st, 'c').append === 'c');
+    check('voice: "it is act" finds the word in the sentence', readVoice(st, 'it is act').value === 'act');
+    check('voice: "hint", "new letters", "undo", "check" are commands',
+      readVoice(st, 'hint').command === 'hint' && readVoice(st, 'new letters').command === 'new'
+        && readVoice(st, 'undo').command === 'erase' && readVoice(st, 'check').command === 'check');
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    check('built on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'local');
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('letters at most: 3, 4 or 5, five by default', f('maxLetters').default === 5 && f('maxLetters').options.map((o) => o.value).join() === '3,4,5');
+    check('words per set and the blanks are settings', f('wordsPerSet').default === 5 && f('showBlanks').default === true);
+    check('the ladder\'s settings are here (players, harder above 80%)', f('players') && f('moveUpAbove').default === 0.8);
+    const all = { ...FLOW_LINES, ...LINES };
+    const missing = Object.keys(all).filter((k) => { const s = f(k); return !s || s.kind !== 'text' || s.default !== all[k]; });
+    check('*** every spoken line is an editable text setting ***', missing.length === 0, missing.join(','));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    const byModule = Object.fromEntries(listManifests().filter((x) => Array.isArray(x.settings))
+      .map((x) => [x.type, x.settings.map(normalizeField).filter(Boolean)]));
+    const clash = auditAcross(byModule).filter((x) => x.severity === 'error');
+    check('*** no key is declared as a different kind than another module declares it ***', clash.length === 0, JSON.stringify(clash));
+  }
+
+  section('touch: letters, Check, the list');
+  {
+    const r = R({});
+    const st = r.set();
+    check('a new player gets a three-letter set (level 1)', st.letters.length === 3 && st.level === 1, JSON.stringify(st));
+    check('said: "Make a word from X, Y, Z."', r.said[0] === `Make a word from ${st.letters.map((l) => l.toUpperCase()).join(', ')}.`, r.said[0]);
+    check('the letters are big keys on the board', r.host.querySelectorAll('.qz-key[data-letter]').length === 3);
+    check('the words still to find are blanks with their length', r.host.querySelectorAll('[data-found] [data-blank]').length === st.required.length);
+    const w = st.required[0];
+    typeWord(r, w);
+    check('typing uses each letter up: none left after a three-letter word', r.host.querySelectorAll('.qz-key[data-letter]').length === 0
+      && r.probe().entry === w, r.probe().entry);
+    check('*** not checked until Check (words differ in length) ***', r.phase() === 'asking');
+    key(r, 'Check').click();
+    check('Check: right, "Yes! CAT. 1 more to find."', r.phase() === 'celebrate' && r.last() === `Yes! ${w.toUpperCase()}. ${toFind(st).length} more to find.`, r.last());
+    await sleep(10);
+    check('one School point for the word', r.points().length === 1);
+    r.timers.flush();
+    r.eng.press('more');
+    const leftN = toFind(st).length;
+    check('the SAME letters again, "Make another word ... N to find."', r.set() === st
+      && r.last().endsWith(`${leftN} ${leftN === 1 ? 'word' : 'words'} to find.`) && r.last().startsWith('Make another word from'), r.last());
+    check('...and the found word is written in the list', r.host.querySelector(`[data-found] [data-word="${w}"]`)?.textContent === w.toUpperCase());
+    const nonsense = st.letters.slice().reverse().join('');
+    if (judgeWord(st, nonsense) === null && !st.found.includes(nonsense)) {
+      typeWord(r, nonsense);
+      key(r, 'Check').click();
+      check('*** a string not on the list: "... is not on this list", NOT a miss ***', r.probe().misses === 0 && /is not on this list/.test(r.last()), r.last());
+      await sleep(0);
+      check('...and the letters are given back for the next try', r.probe().entry === '' && r.host.querySelectorAll('.qz-key[data-letter]').length === 3);
+    } else check('(skipped: the reversed letters happen to be a word)', true);
+    typeWord(r, st.letters[0]);
+    key(r, 'Undo').click();
+    check('Undo takes the last letter back', r.probe().entry === '');
+    let w2 = '';
+    while (toFind(st).length) {
+      w2 = toFind(st)[0];
+      typeWord(r, w2);
+      key(r, 'Check').click();
+      if (toFind(st).length) { r.timers.flush(); r.eng.press('more'); }
+    }
+    check('the last word: "That is all of them!"', r.phase() === 'celebrate' && new RegExp(`${w2.toUpperCase()}\\. That is all of them!$`).test(r.last()), r.last());
+    r.timers.flush();
+    r.eng.press('more');
+    check('then NEW letters', r.set() !== st && r.set().id !== st.id);
+    r.inst.destroy();
+  }
+
+  section('one switch: walk the letters, select to add, Check; back is Undo');
+  {
+    const r = R({});
+    const st = r.set();
+    const w = st.required[0];
+    const nx = () => r.publish(`${GAME}/next`);
+    const sel = () => r.publish(`${GAME}/select`);
+    for (const ch of w) {
+      sel();                                     // into the letters row
+      const row = [...r.host.querySelectorAll('.qz-row[data-row="0"] .qz-key[data-letter]')].map((b) => b.dataset.letter);
+      for (let i = 0; i < row.indexOf(ch); i++) nx();
+      sel();                                     // add it; back to the rows
+    }
+    check('the word built on one switch', r.probe().entry === w, r.probe().entry);
+    r.publish(`${GAME}/back`);
+    check('the back verb is Undo', r.probe().entry === w.slice(0, -1));
+    sel();                                       // a row of one letter: Select presses it at once
+    check('...and the letter goes back on', r.probe().entry === w);
+    if (r.host.querySelector('.qz-key[data-letter]')) nx();   // past any letters left, to the stops
+    sel(); sel();                                // into the stops row, then Check (its first stop)
+    check('Check on the switch: right', r.phase() === 'celebrate', r.phase());
+    r.inst.destroy();
+  }
+
+  section('hints: the Hint stop and "hint" aloud, never the whole word');
+  {
+    const r = R({});
+    const st = r.set();
+    key(r, 'Hint').click();
+    check('the Hint stop: the question again with "Here is a hint: one word starts with ..."',
+      new RegExp(`Here is a hint: one word starts with ${target(st)[0].toUpperCase()}\\.$`).test(r.last()), r.last());
+    check('...and it is on screen', /one word starts with/.test(r.host.querySelector('[data-key-hint]')?.textContent || ''));
+    for (let i = 0; i < 6; i++) key(r, 'Hint').click();
+    const shown = r.host.querySelector('[data-key-hint]').textContent;
+    check('*** however many times: never the whole word ***', shown === hintText(st, target(st).length - 1), shown);
+    check('hints are not misses', r.probe().misses === 0);
+    r.eng.hear({ text: 'hint', confidence: 0.95 });
+    check('"hint" said aloud: the same, through the game\'s own command', /Here is a hint/.test(r.last()) && r.phase() === 'asking');
+    r.eng.hear({ text: target(st), confidence: 0.95 });
+    check('then the word said aloud: right', r.phase() === 'celebrate');
+    const rec = r.session().ladder().players.player.games[GAME];
+    check('*** the ladder heard it as HELPED (a hint was used), not clean ***', rec.n === 1 && rec.recent[0] === 0.5, JSON.stringify(rec));
+    r.inst.destroy();
+  }
+
+  section('voice: the word, a miss, the unsure line, new letters');
+  {
+    const r = R({});
+    const st = r.set();
+    check('the grammar: the words, the commands, and [unk]', (() => {
+      const g = r.lastGrammar(); return g.open && g.words.includes(UNKNOWN) && st.required.every((w) => g.words.includes(w)) && g.words.includes('hint');
+    })(), JSON.stringify(r.lastGrammar()?.words?.slice(0, 12)));
+    const notIn = WORDS.find((w) => !canMake(w, st.letters));
+    r.eng.hear({ text: notIn, confidence: 0.95 });
+    check('a word these letters cannot make, aloud: a miss, said gently, then the first-letter hint',
+      r.probe().misses === 1 && new RegExp(`^It sounded like you said ${notIn.toUpperCase()}\\. That is not in these letters\\. Here is a hint: one word starts with`).test(r.last()), r.last());
+    r.eng.hear({ text: st.required[0], confidence: 0.4 });
+    check('a quiet hearing: "It sounds like you might be saying ..." (not judged)', r.phase() === 'unsure');
+    r.eng.hear({ text: 'yes', confidence: 0.95 });
+    check('...yes: right', r.phase() === 'celebrate');
+    r.timers.flush();
+    r.eng.press('more');
+    r.eng.hear({ text: 'new letters', confidence: 0.95 });
+    check('"new letters": a different set', r.set().id !== st.id);
+    const id2 = r.set().id;
+    key(r, 'New letters').click();
+    check('the New letters stop: a different set again', r.set().id !== id2);
+    r.inst.destroy();
+  }
+
+  section('*** TWO PLAYERS, EACH WITH THEIR OWN LETTERS AT THEIR OWN LEVEL ***');
+  {
+    const ladder = emptyLadder();
+    ladder.players['name:ann'] = { name: 'Ann', games: { [GAME]: { rating: levelRating(4), n: 60, floor: 4, recent: [], review: {} } } };
+    const store = ladderStore({ ladder });
+    const r = R({ players: 'Ann, Bob' }, { store });
+    await sleep(0);
+    r.eng.skip();
+    const annSet = r.set();
+    check('Ann first, said first', r.last().startsWith('Ann, your turn. Make a word from'), r.last());
+    check('*** Ann gets four or five letters (level 4 or above) ***', annSet.letters.length >= 4 && annSet.level >= 4, JSON.stringify(annSet));
+    typeWord(r, annSet.required[0]);
+    key(r, 'Check').click();
+    await sleep(10);
+    check('Ann\'s word earns a point', r.points().length === 1);
+    r.timers.flush();
+    r.eng.press('more');
+    const bobSet = r.set();
+    check('Bob\'s turn, with his own three letters', r.last().startsWith('Bob, your turn.') && bobSet !== annSet && bobSet.letters.length === 3);
+    typeWord(r, bobSet.required[0]);
+    key(r, 'Check').click();
+    await sleep(10);
+    check('*** Bob\'s word does NOT pay into the screen\'s points (a setting) ***', r.points().length === 1);
+    const sc = r.scores[r.scores.length - 1];
+    check('the published score names both: "Ann 1 · Bob 1"', sc && sc.detail === 'Ann 1 · Bob 1', JSON.stringify(sc));
+    r.timers.flush();
+    r.eng.press('more');
+    check('*** back to Ann: HER letters, with her word still found ***', r.set() === annSet && annSet.found.length === 1);
+    r.inst.destroy();
+  }
+
+  section('a spoken "play word builder" with the game on screen carries on');
+  {
+    const r = R({});
+    typeWord(r, r.set().required[0]);
+    key(r, 'Check').click();
+    r.timers.flush();
+    const asked = r.probe().asked;
+    r.publish(`${GAME}/play`);
+    check('at "another one?": the next word', r.phase() === 'asking' && r.probe().asked === asked + 1);
+    const n = r.said.length;
+    r.publish(`${GAME}/play`);
+    check('while asking: the letters are said again', r.phase() === 'asking' && r.said.length === n + 1 && r.probe().asked === asked + 1);
+    r.inst.destroy();
+  }
+
+  section('the ladder: the same set dealt again, one answer per word');
+  {
+    const bank = [{ id: 'a', level: 1 }, { id: 'b', level: 1 }, { id: 'c', level: 1 }];
+    const s = createAdaptiveSession({ bankFor: () => bank, rand: () => 0 });
+    const first = s.deal('g');
+    s.record({ item: first, right: true });
+    const again = s.deal('g', { again: first.id });
+    check('deal(game, { again }) deals that question, though it was just asked', again.id === first.id);
+    s.record({ item: again, right: true });
+    check('...and both answers are on the ladder against it', s.questionRow(first).n === 2 && s.playerRow('player', 'g').n === 2);
+    check('an id it does not have: an ordinary deal', !!s.deal('g', { again: 'zzz' }));
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

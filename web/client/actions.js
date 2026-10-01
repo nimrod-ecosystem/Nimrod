@@ -403,6 +403,10 @@ export const MODULE_VERBS = {
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back' },
   // Row 2.45: the thinking games. next / prev walk the offered answers, select answers, back skips.
   think_games:   { next: 'think_games/next', prev: 'think_games/prev', select: 'think_games/select', back: 'think_games/skip' },
+  // Row 2.45: word builder. next/prev walk the letters and stops, select adds a letter or presses a stop, back undoes a letter.
+  word_builder:  { next: 'word_builder/next', prev: 'word_builder/prev', select: 'word_builder/select', back: 'word_builder/back' },
+  // Row 2.45: brain games. next/prev walk the offered answers (or things to pick), select answers, back skips.
+  brain_games:   { next: 'brain_games/next', prev: 'brain_games/prev', select: 'brain_games/select', back: 'brain_games/skip' },
   // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
