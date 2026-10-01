@@ -23,13 +23,14 @@
 // A press can only be judged ONCE PER BEAT (the first press nearest a beat is that beat's answer), so
 // mashing the switch does not score: each beat's first mashed press lands half a beat early.
 //
-// *** FLASHING (WCAG 2.3.1): at most three a second, tested. *** One tile lights per beat and the
-// tempo is capped at 175 bpm (see rhythm_beat.js for why not 180). A hit shows as a mark INSIDE the
-// tile that is already lit - never a second light - and the line under the tiles changes at most
-// three times a second too (STATUS_GAP_MS). `dev/rhythm_test.html` counts every onset.
-// THE LIMIT IS THE SCREEN'S, not this file's: `flashLimit(ctx)` (flash_limit.js) - 3 unless the host
-// says lower (the "Flashing can cause seizures" starting default, or a setting). A lower limit slows
-// the beat, the words and the hit mark to fit, and a limit changed mid-game restarts the beat at once.
+// *** FLASHING: THE SCREEN'S LIMIT WHEN ONE IS SET, the game's own range when not (2026-10-01). ***
+// One tile lights per beat. The tempo tops out at the game's own 300 bpm (rhythm_beat.js argues it);
+// a screen with a flash limit (the "Flashing can cause seizures" starting default, or the setting)
+// caps it lower - 175 at 3 a second, 115 at 2, 55 at 1 - and slows the hit mark to fit. A hit shows as
+// a mark INSIDE the tile that is already lit - never a second light. A limit changed mid-game restarts
+// the beat at once. `dev/rhythm_test.html` counts every onset.
+// THE WORDS UNDER THE TILES change at most about three times a second at ANY limit (STATUS_GAP_MS):
+// that one is readability, not flashing - a line replaced faster than that cannot be read.
 //
 // HITS ARE SHOWN WITH MORE THAN COLOUR: a lit tile carries a big dot; a hit puts "✓ Hit!" in it; early
 // and late say "◀ A little early" / "A little late ▶" under the tiles; the tally is a number.
@@ -54,17 +55,22 @@ import {
   MAX_BPM, TEMPOS, WINDOWS, LIT_FRACTION, PATTERNS, clampBpm, lightEvery, windowMs, judge,
   roundOf, createPattern, maxBpmFor,
 } from '../rhythm_beat.js';
-import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
+import { flashLimit, minFlashPeriodMs, normalizeFlashLimit } from '../flash_limit.js';
 
 export const GAME = 'rhythm';
 export const SCORE_LABEL = 'Rhythm: on the beat';
 
-// The line under the tiles changes no more often than this (three a second, with a margin), so a
-// burst of presses cannot make text flicker. The last word is shown when the gap allows.
-// At a LOWER flash limit the gap grows with it (`statusGapMs`): the words and the hit mark are
-// visible changes too, and keep the same limit as the lights.
+// The line under the tiles changes no more often than this (about three a second), so a burst of
+// presses cannot make text flicker. The last word is shown when the gap allows. KEPT WITH NO FLASH
+// LIMIT, argued: FOR dropping it, it was born beside the flash rule; AGAINST, and it wins, a line of
+// words replaced faster than this cannot be read by anybody, so it is a reading floor, not a flash one.
+// At a STRICTER flash limit the gap grows with it (`statusGapMs`).
 export const STATUS_GAP_MS = 350;
 export const statusGapMs = (limit) => Math.max(STATUS_GAP_MS, minFlashPeriodMs(limit));
+// The hit mark INSIDE a lit tile. Under a flash limit it keeps the words' gap, exactly as before; with
+// no limit it follows the beat (every hit is marked - the mark is the game's own feedback, and a tile
+// can only be lit once a beat anyway).
+export const markGapMs = (limit) => (Number.isFinite(normalizeFlashLimit(limit)) ? statusGapMs(limit) : 0);
 // Clicks are scheduled this far ahead on the audio clock, so a late frame does not make a late click.
 const LOOKAHEAD_MS = 120;
 // Endless play (no rounds): the beat stops after this many beats with no press. Argued, not a setting.
@@ -103,8 +109,8 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'Beats hit this round. A Scoreboard on the same screen can show it instead.' }),
   { key: 'tempo', label: 'Speed of the beat', kind: 'choice', default: 60, level: 'essential',
     options: TEMPOS.map((b) => ({ value: b, label: `${b} a minute${b === 60 ? ' (one a second)' : ''}` })),
-    note: `Never faster than ${MAX_BPM} a minute: the tiles must not flash more than three times a second. `
-      + `A screen set to fewer flashes a second slows the beat to fit (2 a second: ${maxBpmFor(2)}; 1 a second: ${maxBpmFor(1)}).` },
+    note: `Up to ${MAX_BPM} a minute. A screen with a flashing limit slows the beat to fit `
+      + `(3 a second: ${maxBpmFor(3)}; 2 a second: ${maxBpmFor(2)}; 1 a second: ${maxBpmFor(1)}).` },
   { key: 'window', label: 'How close to the beat counts', kind: 'choice', default: 'generous', level: 'essential',
     options: [
       { value: 'tight', label: 'Close (a tenth of a second)' }, { value: 'normal', label: 'Fairly close' },
@@ -155,7 +161,7 @@ export const VERDICT_WORDS = Object.freeze({ hit: '✓ On the beat!', early: '�
 registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new',
     description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. '
-      + 'Slow and forgiving by default, and never flashes more than three times a second.',
+      + 'Slow and forgiving by default, and keeps to the screen\'s flashing limit when one is set.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -398,11 +404,11 @@ registerModule(
         root.dataset.motion = reducedMotion() ? 'reduce' : 'full';
         root.dataset.running = run ? '1' : '0';
       }
-      // The hit mark is itself a change on the screen, so it keeps the same three-a-second rule as
+      // The hit mark is itself a change on the screen, so under a flash limit it keeps the same rule as
       // the lights: at the fastest tempos a hit whose mark would come too soon after the last one is
-      // still counted, sounded and tallied - it just does not draw a mark.
+      // still counted, sounded and tallied - it just does not draw a mark. No limit: every hit is marked.
       const tNow = now();
-      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= statusGapMs(limitNow())) {
+      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= markGapMs(limitNow())) {
         markedK = lit.k; lastMarkAt = tNow;
       }
       tileEls.forEach((el, i) => {

@@ -742,8 +742,11 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
             m.worst <= L && m.worst >= 1 && m.commissions === m.pressed && m.phase === 'wait', JSON.stringify(m));
         }
       }
+      // 2026-10-01 (Mike): no flash limit unless one is set. A host that passes none blooms on every
+      // press (as before the audit); every press is still recorded.
       const d = mash(undefined, 100);
-      check('*** a host with no limit gets 3 bursts a second at most ***', d.worst <= 3 && d.commissions === d.pressed);
+      check('*** a host with no limit blooms on every press (not held to 3) ***',
+        d.n === d.pressed && d.worst > 3 && d.commissions === d.pressed, JSON.stringify(d));
       // Normal pace: a press every 1.5 s blooms every time, the same instant as before.
       const slow = mash(3, 1500);
       check('*** a press every 1.5 s bursts every time (normal play unchanged) ***', slow.n === slow.pressed,

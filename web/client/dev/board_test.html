@@ -1391,8 +1391,13 @@ try {
         check(`...and no ring is left on afterwards`, r.after === 0 && r.stuck <= 1);
       }
     }
-    const def = tapRun(undefined, 250, true);
-    check('*** a host with no limit gets 3 a second at most ***', def.worst <= 3 && def.said === def.taps);
+    // 2026-10-01 (Mike): no flash limit unless one is set. A host that passes none lights the ring on
+    // every tap - 250 ms apart on one card is 5 rings in a closed second (at 3 it would be held to 3).
+    const def = tapRun(undefined, 250, false);
+    check('*** a host with no limit lights the ring on every tap (not held to 3) ***',
+      def.onsets.length === def.taps && def.worst === 5 && def.said === def.taps, `${def.onsets.length}/${def.taps}, worst ${def.worst}`);
+    const held = tapRun(3, 250, false);
+    check('...while the same taps at 3 a second are held (the photosensitivity setting still works)', held.worst <= 3);
     // A tap slower than the floor is untouched: every tap lights the ring.
     const slow = tapRun(3, 1500, false);
     check('*** a tap every 1.5 s lights the ring every time (normal use unchanged) ***',

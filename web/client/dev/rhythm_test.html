@@ -38,10 +38,10 @@ import { CATALOG } from '../modules_catalog.js';
 import { verbsFor, verbTarget } from '../actions.js';
 import { expectFor, HEALTH_EXPECT } from '../health.js';
 import {
-  FLASH_LIMIT_PER_SEC, MAX_BPM, MIN_BPM, TEMPOS, WINDOWS, WINDOW_MAX_FRACTION, clampBpm, lightEvery, windowMs,
+  MAX_BPM, MIN_BPM, TEMPOS, LIT_FRACTION, WINDOWS, WINDOW_MAX_FRACTION, clampBpm, lightEvery, windowMs,
   judge, roundOf, createPattern,
 } from '../rhythm_beat.js';
-import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs } from '../modules/rhythm.js';
+import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs, markGapMs } from '../modules/rhythm.js';
 import { maxBpmFor } from '../rhythm_beat.js';
 import { worstInAnySecond, maxPerMinute, FRAME_MS } from '../flash_limit.js';
 
@@ -132,16 +132,21 @@ function playRound(t, { lag = 80, r = 0, skip = () => false, beats = 16 } = {}) 
 (async () => {
 try {
   // =====================================================================
-  section('the flash limit, as arithmetic');
+  section('the game\'s own range (no flash limit set - the default since 2026-10-01), as arithmetic');
   {
+    // Mike, on the old 175: "Why the cap?" It came from the flash limit, which is no longer on for
+    // everybody. The game's own top is what a tile can show and a press can be judged against.
     const iv = 60000 / MAX_BPM;
-    check(`*** at the fastest tempo (${MAX_BPM}), four lights span more than a second plus a 60 Hz frame ***`,
-      3 * iv > 1000 + 1000 / 60, `${(3 * iv).toFixed(1)} ms`);
-    check('the tempo is clamped to the limit, and to a floor', clampBpm(400) === MAX_BPM && clampBpm(5) === MIN_BPM && clampBpm('x') === 60);
-    check('every tempo offered is inside the limit', TEMPOS.every((b) => b <= MAX_BPM && b >= MIN_BPM));
-    check('a faster tempo from the screen lights every 2nd or 4th beat', lightEvery(240) === 2 && lightEvery(175) === 1
-      && lightEvery(400) === 4 && 400 / lightEvery(400) <= MAX_BPM);
-    check('WCAG\'s number is three', FLASH_LIMIT_PER_SEC === 3);
+    check(`*** the game's own top is ${MAX_BPM} a minute: a beat of ${iv} ms, lit for ${iv * LIT_FRACTION} ms (six 60 Hz frames or more) ***`,
+      MAX_BPM === 300 && iv * LIT_FRACTION >= 6 * 1000 / 60 - 1e-9, `${iv * LIT_FRACTION} ms`);
+    check('...and even the widest timing window is at most 80 ms there (40% of the gap)', windowMs('very-generous', iv) === 80);
+    check('the tempo is clamped to the game\'s top, and to a floor', clampBpm(400) === MAX_BPM && clampBpm(5) === MIN_BPM && clampBpm('x') === 60);
+    check('every tempo offered is inside the range, and the top choice reaches it',
+      TEMPOS.every((b) => b <= MAX_BPM && b >= MIN_BPM) && TEMPOS[TEMPOS.length - 1] === MAX_BPM);
+    check('*** with no limit 240 is played as 240; only past the game\'s top is a screen tempo halved ***',
+      lightEvery(240) === 1 && lightEvery(300) === 1 && lightEvery(400) === 2 && lightEvery(700) === 4 && 700 / lightEvery(700) <= MAX_BPM);
+    check('at 3 a second (the photosensitivity setting) the old halving is exactly as before',
+      lightEvery(240, 3) === 2 && lightEvery(175, 3) === 1 && lightEvery(400, 3) === 4 && 400 / lightEvery(400, 3) <= 175);
   }
 
   section('the judge');
@@ -312,10 +317,10 @@ try {
     t.inst.destroy();
   }
 
-  section('*** WCAG 2.3.1: never more than three flashes in any second, at the fastest tempo, with presses landing everywhere ***');
+  section('*** THE PHOTOSENSITIVITY SETTING (3 a second): never more than three flashes in any second, at the fastest tempo, with presses landing everywhere ***');
   {
-    const t = mount({ saved: { tempo: MAX_BPM, stopWhenIdle: false } });
-    check(`the saved tempo is the limit (${MAX_BPM})`, t.probe().cfg.tempo === MAX_BPM);
+    const t = mount({ saved: { tempo: MAX_BPM, stopWhenIdle: false }, flashLimitPerSecond: 3 });
+    check(`the saved tempo is the game's top (${MAX_BPM}); the beat runs at 175`, t.probe().cfg.tempo === MAX_BPM);
     t.pub('select');
     const tiles = [...t.host.querySelectorAll('.rh-tile')];
     let prev = tiles.map(() => ({ lit: false, mark: false }));
@@ -355,17 +360,22 @@ try {
   // =====================================================================
   section('*** THE SCREEN\'S FLASH LIMIT (flash_limit.js): the cap is derived from it, and a lower limit is honoured, onset by onset ***');
   {
-    check('*** 175 is DERIVED, not a constant: MAX_BPM === maxPerMinute(3) === maxBpmFor() === 175 ***',
-      MAX_BPM === 175 && maxPerMinute(3) === 175 && maxBpmFor() === 175 && maxBpmFor(3) === 175);
+    check('*** 175 is DERIVED from the limit, not a constant: maxBpmFor(3) === maxPerMinute(3) === 175 ***',
+      maxPerMinute(3) === 175 && maxBpmFor(3) === 175);
+    check('*** no limit (the default): the cap is the game\'s own top, 300 ***', maxBpmFor() === MAX_BPM && maxBpmFor(Infinity) === 300
+      && maxBpmFor('none') === 300);
     check('a lower limit lowers the cap: 2 a second -> 115, 1 a second -> 55', maxBpmFor(2) === 115 && maxBpmFor(1) === 55,
       `${maxBpmFor(2)} / ${maxBpmFor(1)}`);
     for (const L of [1, 2, 3]) {
       const iv = 60000 / maxBpmFor(L);
       check(`at limit ${L}: ${L + 1} lights span more than a second plus a 60 Hz frame (${(L * iv).toFixed(1)} ms)`, L * iv > 1000 + FRAME_MS);
     }
-    check('a limit above 3 is read as 3 - the ceiling is not a choice', maxBpmFor(10) === 175 && clampBpm(400, 10) === 175);
+    check('a RAISED limit is obeyed (nothing clamps it to 3), up to the game\'s own top',
+      maxBpmFor(10) === 300 && clampBpm(400, 10) === 300 && maxBpmFor(5) === Math.min(300, maxPerMinute(5)) && maxBpmFor(5) > 175);
     check('clampBpm and lightEvery take the limit', clampBpm(150, 1) === 55 && lightEvery(240, 1) === 8 && 240 / lightEvery(240, 1) <= 55);
     check('the words under the tiles slow with the limit', statusGapMs(3) === STATUS_GAP_MS && statusGapMs(1) > 1000);
+    check('*** with no limit the words keep their reading gap (350 ms), but every hit is marked ***',
+      statusGapMs(Infinity) === STATUS_GAP_MS && markGapMs(Infinity) === 0 && markGapMs(3) === statusGapMs(3) && markGapMs(1) === statusGapMs(1));
 
     // Play for 20 s at the fastest saved tempo, pressing at random, and count every onset.
     const flashRun = (t, ms = 20000) => {
@@ -406,6 +416,18 @@ try {
       t.inst.destroy();
     }
     {
+      // NO LIMIT (the default): the beat runs at the saved tempo - the game's own top - and is not held.
+      const t = mount({ saved: { tempo: MAX_BPM, stopWhenIdle: false } });
+      t.pub('select');
+      check(`*** no limit: the beat runs at the saved ${MAX_BPM} a minute (was capped at 175) ***`,
+        Math.abs(t.probe().run.interval - 60000 / MAX_BPM) < 1e-9, String(t.probe().run.interval));
+      const r = flashRun(t);
+      const wl = worstInAnySecond(r.litOn), ws = worstInAnySecond(r.statusAt);
+      check(`no limit: lights in a closed second reach ${wl} (5 a second at 300)`, wl >= 5 && wl <= 6, String(wl));
+      check(`no limit: the words still change at most 3 times in a closed second (reading gap), here ${ws}`, ws <= 3, String(ws));
+      t.inst.destroy();
+    }
+    {
       const bus = createBus();
       const clock = manualClock();
       const t = mount({ bus, clock, saved: { beatFrom: 'screen', stopWhenIdle: false }, flashLimitPerSecond: 1 });
@@ -436,11 +458,11 @@ try {
     {
       const t = mount({ flashLimitPerSecond: () => { throw new Error('broken host'); } });
       t.pub('select');
-      check('a host whose limit throws gets the ceiling, not a crash', t.probe().running && t.probe().run.limit === 3);
+      check('a host whose limit throws gets no limit, not a crash', t.probe().running && t.probe().run.limit === Infinity);
       t.inst.destroy();
       const u = mount();
       u.pub('select');
-      check('a host that supplies no limit gets the ceiling (3)', u.probe().run.limit === 3);
+      check('a host that supplies no limit gets no limit (2026-10-01)', u.probe().run.limit === Infinity);
       u.inst.destroy();
     }
   }
@@ -449,10 +471,12 @@ try {
   {
     const bus = createBus();
     const clock = manualClock();
-    const t = mount({ bus, clock, saved: { beatFrom: 'screen' } });
+    // At the photosensitivity setting (3 a second) - exactly as before. With no limit, 240 is played as 240
+    // (checked in the arithmetic section); a tempo past the game's own 300 is halved the same way.
+    const t = mount({ bus, clock, saved: { beatFrom: 'screen' }, flashLimitPerSecond: 3 });
     bus.publish(TEMPO_TOPIC, { bpm: 240, origin: clock.now() - 10, meter: 4 });
     t.pub('select');
-    check('*** a screen tempo of 240 lights every second beat: 120 a minute ***', Math.abs(t.probe().run.interval - 500) < 1e-9, String(t.probe().run.interval));
+    check('*** limit 3: a screen tempo of 240 lights every second beat: 120 a minute ***', Math.abs(t.probe().run.interval - 500) < 1e-9, String(t.probe().run.interval));
     check('and the lights land on the screen\'s own beats', Math.abs(((t.beat(t.probe().run.k0) - (clock.now() - 10)) % 250)) < 1e-6);
     bus.publish(TEMPO_TOPIC, { bpm: 90, origin: clock.now(), meter: 4 });
     check('a new tempo on the screen is followed at once', Math.abs(t.probe().run.interval - 60000 / 90) < 1e-9);

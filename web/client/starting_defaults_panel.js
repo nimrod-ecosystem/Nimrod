@@ -21,7 +21,7 @@
 
 import {
   CONDITIONS, LEVEL_OPTIONS, AGE_BANDS, DEVICE_NOTE, ONLINE_WARNING,
-  defaultsFor, planChanges, describePlan, saveOnline,
+  defaultsFor, planChanges, describePlan, saveOnline, conflictQuestion,
 } from './starting_defaults.js';
 
 export function mountStartingDefaults(host, {
@@ -29,13 +29,16 @@ export function mountStartingDefaults(host, {
   library = null,
   getCurrent = () => ({}),
   onChange = () => {},
+  conditions = CONDITIONS,
   doc = (host && host.ownerDocument) || document,
 } = {}) {
   if (!host) throw new Error('mountStartingDefaults: host is required');
   if (!store) throw new Error('mountStartingDefaults: store is required');
 
   const stored = store.get().answers;
-  let answers = { level: stored.level, conditions: stored.conditions.slice(), age: stored.age };
+  const copy = (a) => ({ level: a.level, conditions: a.conditions.slice(), age: a.age, resolved: { ...(a.resolved || {}) } });
+  let answers = copy(stored);
+  const resultNow = () => defaultsFor(answers, { conditions });
   let warningOpen = false;
   let includeAnswers = false;
   let cursorEl = null;
@@ -67,7 +70,7 @@ export function mountStartingDefaults(host, {
   const boxes = el('fieldset', 'sd-boxes');
   boxes.append(el('legend', 'sd-legend', 'Tick every one that fits'));
   const boxBtns = new Map();
-  for (const c of CONDITIONS) {
+  for (const c of conditions) {
     const b = button('condition', '', c.id);
     b.setAttribute('aria-pressed', 'false');
     const name = el('span', 'sd-box-label', c.label);
@@ -84,6 +87,13 @@ export function mountStartingDefaults(host, {
   const ageBtn = button('age', '');
   const ageRow = el('div', 'sd-row'); ageRow.append(ageBtn);
   root.append(ageRow);
+
+  // TWO BOXES, TWO VALUES FOR ONE SETTING: the question, one row per setting, one button per value.
+  // Rebuilt on every render (the boxes decide which questions exist). Nothing is applied until each
+  // has an answer - see starting_defaults.js, "ASK, THEN LOG THE ANSWER".
+  const conflictsEl = el('div', 'sd-conflicts');
+  conflictsEl.setAttribute('aria-live', 'polite');
+  root.append(conflictsEl);
 
   root.append(el('h3', 'sd-subtitle', 'What this would change'));
   const preview = el('div', 'sd-preview');
@@ -134,8 +144,26 @@ export function mountStartingDefaults(host, {
       b.classList.toggle('is-on', on);
       b.querySelector('.sd-box-mark').textContent = on ? '[x] ' : '[ ] ';
     }
-    const next = defaultsFor(answers);
+    const next = resultNow();
     const plan = planChanges({ current: getCurrent() || {}, oldLayer: store.layer(), next });
+    conflictsEl.replaceChildren();
+    for (const c of next.conflicts) {
+      const q = conflictQuestion(c);
+      const box = el('div', 'sd-conflict');
+      box.dataset.key = q.key;
+      box.append(el('p', 'sd-conflict-q', q.question));
+      q.choices.forEach((ch, i) => {
+        const b = button('resolve', `${ch.chosen ? '(chosen) ' : ''}${ch.label}`);
+        b.dataset.key = q.key; b.dataset.i = String(i);
+        b.setAttribute('aria-pressed', ch.chosen ? 'true' : 'false');
+        box.append(b);
+      });
+      conflictsEl.append(box);
+    }
+    conflictsEl.hidden = !next.conflicts.length;
+    const waiting = next.unanswered.length > 0;
+    applyBtn.disabled = waiting;
+    applyBtn.textContent = waiting ? 'Use these starting settings - answer the question above first' : 'Use these starting settings';
     preview.replaceChildren();
     const ul = el('ul', 'sd-lines');
     for (const line of describePlan(plan)) ul.append(el('li', '', line));
@@ -194,20 +222,29 @@ export function mountStartingDefaults(host, {
       const id = b.dataset.id;
       const has = answers.conditions.includes(id);
       answers = { ...answers, conditions: has ? answers.conditions.filter((x) => x !== id) : [...answers.conditions, id] };
+    } else if (act === 'resolve') {
+      const key = b.dataset.key; const i = Number(b.dataset.i);
+      const c = resultNow().conflicts.find((x) => x.key === key);
+      const ch = c ? conflictQuestion(c).choices[i] : null;
+      if (ch) answers = { ...answers, resolved: { ...answers.resolved, [key]: ch.value } };
+      render();
+      setCursor([...root.querySelectorAll('.sd-conflicts button')]
+        .find((x) => x.dataset.key === key && x.dataset.i === String(i)) || null);
+      return;
     } else if (act === 'apply') {
-      store.apply(defaultsFor(answers));
+      store.apply(resultNow());
       say(store.persisted ? 'Done. Kept on this device.' : 'Done for now - this browser will not keep it.');
       onChange(store.layer());
     } else if (act === 'putBack') {
       if (store.putBack()) {
         const a = store.get().answers;
-        answers = { level: a.level, conditions: a.conditions.slice(), age: a.age };
+        answers = copy(a);
         say('Put back.');
         onChange(store.layer());
       }
     } else if (act === 'forget') {
       store.forgetAnswers();
-      answers = { level: '', conditions: [], age: '' };
+      answers = { level: '', conditions: [], age: '', resolved: {} };
       say('What was ticked is no longer kept on this device. The settings stay as they are.');
     } else if (act === 'online') {
       warningOpen = true; includeAnswers = false;
@@ -240,7 +277,7 @@ export function mountStartingDefaults(host, {
     prev: () => move(-1),
     select: () => { if (cursorEl && !cursorEl.disabled) cursorEl.click(); },
     refresh: render,
-    answers: () => ({ ...answers, conditions: answers.conditions.slice() }),
+    answers: () => copy(answers),
     destroy() { root.removeEventListener('click', onClick); root.remove(); },
   };
 }

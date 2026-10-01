@@ -62,7 +62,7 @@ import { verbTopic } from './actions.js';
 import { MASTER_DEFAULTS } from './master_volume.js';
 import { floorKey } from './mixer.js';
 import { CHANNELS } from './audio_bus.js';
-import { FLASH_LIMIT_MAX, FRAME_MS, minFlashPeriodMs, normalizeFlashLimit } from './flash_limit.js';
+import { FLASH_LIMIT_DEFAULT, FRAME_MS, minFlashPeriodMs, normalizeFlashLimit } from './flash_limit.js';
 
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
@@ -141,28 +141,37 @@ export const DEFAULT_GUARDS = Object.freeze({
   ]),
 });
 
-// *** THE ONE LIMIT HERE THAT IS NOT A PREFERENCE: AN LFO CANNOT BE FASTER THAN ONCE A SECOND. ***
-// A wave on a colour or a brightness is a light that pulses, and a light that pulses three or more
-// times a second is the photosensitive-seizure threshold (WCAG 2.3.1, "three flashes"). One a
-// second keeps a full swing well under it with margin. The person who wants faster - a strobe for
-// a party screen - is real; on a product whose first screen is at a bedside, that is a decision for
-// Mike, not a default (on his list). A fast BUS source (a sensor flapping) is NOT covered by this;
-// see `minIntervalMs`.
+// *** HOW FAST AN LFO MAY SWING. Two floors; the one-second floor is now a FLASH floor (2026-10-01). ***
 //
-// *** AND THE SCREEN'S FLASH LIMIT ON TOP (2026-09-30). *** One LFO period is one full swing - one
-// flash - so the period a running LFO may have is ALSO bounded by the screen's `flashLimitPerSecond`
-// (flash_limit.js): `lfoMinPeriodMs(limit, tickMs)`. The jitter is the LFO's own tick (it re-reads on
-// a 100 ms tick, so a peak can land up to a tick early or late). At the ceiling (3) and at 2 the
-// one-second floor above is still the stricter; at 1 a second the limit wins (about 1117 ms at the
-// default tick: a second, plus a tick, plus a frame). A stored binding is NEVER rewritten by this - it runs slower while the limit is lower, and
-// at its own speed again when the limit rises.
+// 1. WITH A FLASH LIMIT SET (flash_limit.js, `flashLimitPerSecond`): never faster than once a second,
+//    AND never faster than the limit allows - exactly as before. One LFO period is one full swing, one
+//    flash; the jitter is the LFO's own tick (it re-reads on a 100 ms tick, so a peak can land up to a
+//    tick early or late). At 3 and at 2 a second the one-second floor is the stricter; at 1 a second
+//    the limit wins (about 1117 ms at the default tick: a second, plus a tick, plus a frame).
+// 2. WITH NO FLASH LIMIT: only the SAMPLING floor - four ticks (400 ms at the default 100 ms tick).
+//    Argued, because the one-second floor used to apply to everybody:
+//      FOR keeping one second for everyone: a slow wave is calmer, and this product's first home is a
+//      bedside.
+//      AGAINST, and it wins: the one-second floor was written as a flash rule ("three flashes",
+//      WCAG 2.3.1, with margin) - it IS the flash cap in another file, and Mike's ruling is that the
+//      cap is for the photosensitivity setting, not for everybody. The calm default is still there:
+//      a new LFO breathes every 4 s (`lfoPeriodMs`). What remains is physics: a wave re-read four
+//      times a period draws a recognisable swing; at two samples a sine can read the same value twice
+//      and alias to a flat line, so below four ticks the "wave" is noise. A default, on Mike's list.
+// A fast BUS source (a sensor flapping) is covered by the event floor below, not by this.
+// A stored binding is NEVER rewritten by any of this - it runs slower while a limit is stricter, and
+// at its own speed again when the limit is raised or removed.
 export const LFO_MIN_PERIOD_MS = 1000;
+export const LFO_MIN_TICKS = 4;
 
 /** The shortest LFO period allowed at this flash limit and tick. */
-export function lfoMinPeriodMs(limit = FLASH_LIMIT_MAX, tickMs = AUTOMATION_DEFAULTS.lfoTickMs) {
+export function lfoMinPeriodMs(limit = FLASH_LIMIT_DEFAULT, tickMs = AUTOMATION_DEFAULTS.lfoTickMs) {
+  const tick = Math.min(1000, Math.max(0, Number(tickMs) || 0));
+  const sampling = LFO_MIN_TICKS * tick;
+  if (!Number.isFinite(normalizeFlashLimit(limit))) return sampling;
   // The jitter: the wave's own tick (a peak is read up to a tick from where it really is), plus the
   // frame the change is then drawn on. A tick is capped at a second - a slower tick is its own limit.
-  const jitterMs = Math.min(1000, Math.max(0, Number(tickMs) || 0)) + FRAME_MS;
+  const jitterMs = tick + FRAME_MS;
   return Math.max(LFO_MIN_PERIOD_MS, minFlashPeriodMs(limit, { jitterMs }));
 }
 
@@ -185,7 +194,7 @@ export function lfoMinPeriodMs(limit = FLASH_LIMIT_MAX, tickMs = AUTOMATION_DEFA
 //   declaration (a fact about the field, like `automatable: false`, not a preference).
 // clock (once a minute) and lfo (its own floor, lfoMinPeriodMs) are not gated again. An explicit
 // `minIntervalMs` still applies on top, exactly as before.
-export function eventFloorMs(limit = FLASH_LIMIT_MAX) {
+export function eventFloorMs(limit = FLASH_LIMIT_DEFAULT) {
   return Math.ceil(minFlashPeriodMs(limit));
 }
 export function eventFloorApplies(source, rawDecl = null) {
@@ -244,8 +253,10 @@ export function normalizeSource(raw) {
     return { kind, points: pts.length ? pts : D.clockPoints.map((p) => [...p]), tickMs, range: [0, 1] };
   }
   // lfo
-  const periodMs = Math.max(LFO_MIN_PERIOD_MS, num(raw.periodMs, D.lfoPeriodMs));
   const tickMs = Math.max(16, num(raw.tickMs, D.lfoTickMs));
+  // The stored period keeps whatever was asked, down to the sampling floor; the flash floor (one second,
+  // and the screen's limit) is applied as it RUNS (`lfoMinPeriodMs`), so it follows a changed limit.
+  const periodMs = Math.max(LFO_MIN_TICKS * Math.min(1000, tickMs), num(raw.periodMs, D.lfoPeriodMs));
   const shape = LFO_SHAPES.includes(raw.shape) ? raw.shape : D.lfoShape;
   return { kind, shape, periodMs, tickMs, range: [0, 1] };
 }
@@ -407,12 +418,12 @@ export function createAutomation({
   onChange = null,
   onStatus = null,
   // The screen's flash limit (flash_limit.js): a number or a function read on every LFO tick, so a
-  // changed setting applies to a running wave. Missing or broken reads as the ceiling, 3.
-  flashLimit = FLASH_LIMIT_MAX,
+  // changed setting applies to a running wave. Missing or broken reads as no limit (flash_limit.js).
+  flashLimit = FLASH_LIMIT_DEFAULT,
 } = {}) {
   const limitNow = () => {
     try { return normalizeFlashLimit(typeof flashLimit === 'function' ? flashLimit() : flashLimit); }
-    catch { return FLASH_LIMIT_MAX; }
+    catch { return FLASH_LIMIT_DEFAULT; }
   };
   const bindings = new Map();     // id -> normalized binding
   const targets = new Map();      // instance -> { fields, raw, handle, overlay, listeners }

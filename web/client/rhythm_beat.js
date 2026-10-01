@@ -9,33 +9,41 @@
 // next click sounds - is worked out from that and the time now. Nothing counts ticks, so a slow
 // frame never makes the beat drift.
 
-// *** THE FLASH LIMIT: WCAG 2.3.1, "Three Flashes or Below Threshold" (Level A). *** A lit tile going
-// dark and lighting again is a flash, and a tile lights once per beat, so the beat itself is the
-// flash rate. THREE A SECOND would be 180 beats a minute - but a screen shows whole frames, so at
-// exactly 180 four onsets can land inside one second by a frame's rounding. MAX_BPM is 175: three
-// intervals are then 1029 ms, more than a second plus a 60 Hz frame. This is a SAFETY limit, the one
-// kind of absolute this project allows (CLAUDE.md, "Design absolutes"): nobody's preference is
-// served by a screen that can trigger a seizure, so no setting goes above it and a faster tempo
-// from elsewhere on the screen is halved until it fits (`lightEvery`).
+// *** TWO CAPS, AND ONLY ONE OF THEM IS ALWAYS THERE. ***
 //
-// *** THE CAP IS DERIVED FROM THE SCREEN'S FLASH LIMIT, NOT A SEPARATE CONSTANT (2026-09-30). ***
-// `flash_limit.js`'s `maxPerMinute(limit)` is the one formula: at the WCAG ceiling (3) it is 175, the
-// number this file always used; a person whose limit is 2 gets 115, at 1 gets 55. Every function
-// below takes the limit as an optional last argument and defaults to the ceiling.
-import { FLASH_LIMIT_MAX, maxPerMinute, normalizeFlashLimit } from './flash_limit.js';
+// 1. THE GAME'S OWN TOP SPEED, MAX_BPM = 300 (2026-10-01). Mike, on the old 175: *"Why the cap?"* -
+//    it existed only because of the flash limit, and the flash limit is no longer on for everybody
+//    (flash_limit.js). What is left is what the tiles can physically show and a press can be judged
+//    against. Argued:
+//      FOR going higher: a 60 Hz screen could draw a lit-then-dark tile up to 30 beats a second.
+//      AGAINST, and it sets 300: at 300 a beat is 200 ms, so a tile is lit for 100 ms (six frames)
+//      and the judging window is at most 80 ms (40% of the gap). Faster, the lit half drops under six
+//      frames and the window under the jitter a browser adds to a press (a frame, plus a switch's
+//      own debounce), so "on the beat" stops being something the game can measure. 300 is also past
+//      almost any music this would play along with. A default, on Mike's list; one constant to change.
+// 2. THE SCREEN'S FLASH LIMIT, WHEN ONE IS SET. A lit tile going dark and lighting again is a flash,
+//    and a tile lights once per beat, so the beat is the flash rate. `flash_limit.js`'s
+//    `maxPerMinute(limit)` is the one formula: at 3 a second it is 175 (three gaps of 1029 ms, more
+//    than a second plus a 60 Hz frame - why not 180), at 2 it is 115, at 1 it is 55. With no limit set
+//    it is Infinity and only cap 1 applies. A faster tempo from elsewhere on the screen is halved
+//    until it fits under both (`lightEvery`).
+//
+// Every function below takes the limit as an optional last argument; omitted, it is the default
+// (no limit), so the game's own range applies.
+import { FLASH_LIMIT_DEFAULT, maxPerMinute, normalizeFlashLimit } from './flash_limit.js';
 
-export const FLASH_LIMIT_PER_SEC = FLASH_LIMIT_MAX;
-export const MAX_BPM = maxPerMinute(FLASH_LIMIT_MAX);
-// Below 30 a "beat" is two seconds of nothing: not a rhythm any more, and too slow to feel. The flash
-// limit's own floor (1 a second) caps tempo at 55, so this floor never overrides the limit.
+export const MAX_BPM = 300;
+// Below 30 a "beat" is two seconds of nothing: not a rhythm any more, and too slow to feel. A flash
+// limit under about half a flash a second would cap the tempo below 30; the cap wins (`clampBpm`).
 export const MIN_BPM = 30;
 
-/** The fastest tempo at this flash limit (default: the ceiling, 175). */
-export const maxBpmFor = (limit = FLASH_LIMIT_MAX) => maxPerMinute(normalizeFlashLimit(limit));
+/** The fastest tempo at this flash limit: the lower of the game's own top (300) and the limit's cap. */
+export const maxBpmFor = (limit = FLASH_LIMIT_DEFAULT) => Math.min(MAX_BPM, maxPerMinute(normalizeFlashLimit(limit)));
 
-// The tempo setting's choices. Top choice 150, well inside the limit; the slow end is where a switch
-// user starts (the module's default is 60: one beat a second).
-export const TEMPOS = Object.freeze([40, 50, 60, 72, 90, 110, 130, 150]);
+// The tempo setting's choices. The slow end is where a switch user starts (the module's default is 60:
+// one beat a second); the fast end reaches the game's own top. A choice above the screen's flash limit
+// is slowed to the limit while that limit is set (the setting's note says so).
+export const TEMPOS = Object.freeze([40, 50, 60, 72, 90, 110, 130, 150, 180, 240, 300]);
 
 // The timing window, ± milliseconds either side of the beat that still count as "on the beat".
 export const WINDOWS = Object.freeze({ tight: 100, normal: 175, generous: 250, 'very-generous': 350 });
@@ -48,7 +56,7 @@ export const WINDOW_MAX_FRACTION = 0.4;
 export const LIT_FRACTION = 0.5;
 export const PATTERNS = Object.freeze(['walk', 'bounce', 'random']);
 
-export function clampBpm(bpm, limit = FLASH_LIMIT_MAX) {
+export function clampBpm(bpm, limit = FLASH_LIMIT_DEFAULT) {
   const top = maxBpmFor(limit);
   const n = Number(bpm);
   if (!Number.isFinite(n) || n <= 0) return Math.min(60, top);
@@ -57,7 +65,7 @@ export function clampBpm(bpm, limit = FLASH_LIMIT_MAX) {
 }
 
 /** For a tempo from elsewhere: light every nth beat, n a power of two, so the lights stay under the limit. */
-export function lightEvery(bpm, limit = FLASH_LIMIT_MAX) {
+export function lightEvery(bpm, limit = FLASH_LIMIT_DEFAULT) {
   const top = maxBpmFor(limit);
   const b = Number(bpm);
   if (!Number.isFinite(b) || b <= 0) return 1;
@@ -66,7 +74,7 @@ export function lightEvery(bpm, limit = FLASH_LIMIT_MAX) {
   return n;
 }
 
-export const intervalFor = (bpm, limit = FLASH_LIMIT_MAX) => 60000 / clampBpm(bpm, limit);
+export const intervalFor = (bpm, limit = FLASH_LIMIT_DEFAULT) => 60000 / clampBpm(bpm, limit);
 
 /** The window actually used at this interval: the setting, capped at WINDOW_MAX_FRACTION of the gap. */
 export function windowMs(setting, intervalMs) {
