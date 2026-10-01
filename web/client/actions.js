@@ -59,6 +59,17 @@ export const SYSTEM_ACTIONS = [
   { id: SYSTEM_TOPICS.settings, label: 'Open the settings menu', topic: SYSTEM_TOPICS.settings, group: 'System' },
   { id: SYSTEM_TOPICS.modules, label: 'Show the panels on this screen (the bar)', topic: SYSTEM_TOPICS.modules, group: 'System' },
   { id: SYSTEM_TOPICS.dashboards, label: 'Choose a screen (Home)', topic: SYSTEM_TOPICS.dashboards, group: 'System' },
+  // *** HOME'S OWN BUTTONS, ON A SWITCH (Mike, 2026-10-01: "Is there some reason it shouldn't be able to?"
+  // -- there wasn't one). *** The same `shell/host` press the bar, the ⚙ menu rows and the fallback bar
+  // send (shell_verbs.js SHELL_HOST, written out here so this file imports nothing), so Save is one thing
+  // however it is reached. On a screen that is not Home nothing answers them, which is harmless. Still NOT
+  // on the remote-drive allowlist: binding is for the person's own switch, not a socket at the far end.
+  { id: 'shell/host/save', label: 'Home: Save', topic: 'shell/host', payload: { act: 'save' }, group: 'System' },
+  { id: 'shell/host/saveas', label: 'Home: Save as…', topic: 'shell/host', payload: { act: 'saveas' }, group: 'System' },
+  { id: 'shell/host/picker', label: 'Home: choose a module', topic: 'shell/host', payload: { act: 'picker' }, group: 'System' },
+  { id: 'shell/host/history', label: 'Home: history', topic: 'shell/host', payload: { act: 'history' }, group: 'System' },
+  { id: 'nimrod-cat/next', label: 'Nimrod the cat: next step', topic: 'nimrod-cat/next', group: 'System' },
+  { id: 'nimrod-cat/prev', label: 'Nimrod the cat: back a step', topic: 'nimrod-cat/prev', group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
