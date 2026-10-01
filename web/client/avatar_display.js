@@ -25,8 +25,21 @@
 //      folder is not connected on this device, the file will not resolve, or the image fails to decode
 //      (`bindErrors`), it falls back to the drawn avatar when there is one, else to no avatar.
 
+//   4. A DRAWING SOMEBODY BROUGHT IN CAN MOVE (Mike, 2026-10-01: "What's the risk? Seems like it should
+//      be okay."). A `picture` that is an .svg file is read once, made safe by `svg_sanitize.js` (an
+//      allow-list: no script, no handler, no link out, no fetch, styles kept inside the drawing), and
+//      drawn INLINE so its `eyes` group can blink. A file that cannot be made safe, or cannot be read,
+//      shows as the still <img> it always was.
+//
+//   5. WHETHER A FACE MOVES FOLLOWS THE PERSON — inside what the viewer's health and the screen allow
+//      (Mike, 2026-10-01: "unless it conflicts with the screen's capabilities or someone's settings for
+//      medical things"). `avatarMotion` is the one place that decides; its table is below.
+
 import { readAvatar, renderAvatar, AVATAR_KEY } from './avatar.js';
 import { createMediaSourcesClient, resolveItemUrl } from './media_sources.js';
+import { sanitizeSvg, svgMarkup, newSvgUid, looksLikeSvgPath, minAnimationMs, SVG_LIMITS } from './svg_sanitize.js';
+import { flashLimitFrom, normalizeFlashLimit, FLASH_LIMIT_DEFAULT } from './flash_limit.js';
+import { isChosen } from './starting_defaults.js';
 
 // The maker announces a save on the page with this, so a display on the same page redraws without a
 // request. `detail: { personId, row }`.
@@ -43,8 +56,9 @@ export const AVATAR_CHANGED_EVENT = 'nimrod:avatar-changed';
 //                 the kind of movement that pulls the eye away from the thing being read, and at 1.6em
 //                 a blink is two pixels of lid, too small to be the "animated person" that was asked
 //                 for. AGAINST: "animated avatars" was the ask, and a still chip is less alive. So a
-//                 caller showing a BIG face (a call tile, the room's window) passes `animate: true`,
-//                 and reduced motion and a person's own `animate: false` still win over it.
+//                 caller showing a BIG face (a call tile, the room's window) passes `animate: true`.
+//                 This is only the DEFAULT for a person who chose nothing: `avatarMotion` (below)
+//                 puts health settings, the screen and the person's own choice above it.
 //   round true    A circle is how a person's picture is shown in a list almost everywhere, so it reads
 //                 as "this is who" rather than as a thumbnail of content. The drawn avatar is made
 //                 inside a square with its shoulders at the bottom, which a circle crops only at the
@@ -62,6 +76,113 @@ function systemReduced(win) {
   try { return !!win?.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { return false; }
 }
 
+// ---------------------------------------------------------------------------------------
+// *** WHETHER A FACE MOVES: THE PRECEDENCE (Mike, 2026-10-01). ***
+//
+// Only TWO things can make a face move: the person's own choice, and (when they made none) the size
+// it is shown at. Everything above them can only make it STILL. In order, the first that applies wins:
+//
+//   1. medical   the device asks for reduced motion (prefers-reduced-motion), or the viewer's or the
+//                screen's `reduceMotion` setting is on (the "movement makes me unwell" box in
+//                starting_defaults.js, filling only what nobody chose)              -> still
+//   2. screen    the screen's `avatarMotion` is 'still', or the host says it is a
+//                low-power screen                                                  -> still
+//                the screen's `avatarMotion` is 'big' and this face is small       -> still
+//   3. person    the person chose still                                            -> still
+//                the person chose "always moves"                                   -> moves
+//   4. default   a large face (a call, the room's window) moves; a small chip stays still
+//
+// THE FLASH LIMIT IS A CEILING ON SPEED, NOT AN ON/OFF, ARGUED. It is applied to every face that moves:
+// the blink is one flash in 9 s (far under the photosensitivity box's 3 a second, or even 1), and a
+// brought-in drawing's own animations are stretched to it (`svg_sanitize.js`). Only a limit so low that
+// the 9 s blink itself would break it (under about one flash in 4.5 s; nothing offers that, but nothing
+// clamps a stored value either — flash_limit.js) stills the face, as step 1. FOR stilling every face
+// when the box is ticked: a person is protected twice. AGAINST, and it wins: the box sets only the
+// flash limit (starting_defaults.js refuses to infer reduced motion from it — an unsourced clinical
+// claim), and a gentle blink is not a flash. "Nothing moves" is `reduceMotion`.
+//
+// THE PERSON'S "ALWAYS MOVES" BEATS THE SMALL-CHIP DEFAULT, ARGUED. FOR: Mike's ruling is that movement
+// follows the person, and a person who asked for it should get it. AGAINST: a row of chips blinking out
+// of step pulls the eye from what is being read. It wins anyway because the viewer keeps two ways to
+// say no — `reduceMotion`, and this screen's own `avatarMotion: 'big'` — and nobody who has not chosen
+// is changed: a person with no choice still gets a still chip. [On Mike's list.]
+//
+// LOW POWER IS NOT GUESSED, ARGUED. FOR detecting it (navigator.hardwareConcurrency/deviceMemory): a
+// slow screen would get still faces with nobody setting anything. AGAINST, and it wins: a Pi 400 reports
+// 4 cores and 4 GB, the same as many laptops, deviceMemory exists only in Chromium, and a guess that is
+// wrong in both directions silently changes what people see. A CSS transform on a few small drawings is
+// cheap. The screen's own setting ('still') is the switch; a host that KNOWS passes `lowPower: true`.
+// ---------------------------------------------------------------------------------------
+
+export const AVATAR_MOTION_KEY = 'avatarMotion';
+export const AVATAR_MOTION_VALUES = Object.freeze(['follow', 'big', 'still']);
+/** The screen's row a host's menu shows (beside the flash limit). `follow` changes nobody's screen. */
+export const AVATAR_MOTION_FIELD = Object.freeze({
+  key: AVATAR_MOTION_KEY,
+  label: 'Faces moving',
+  kind: 'choice',
+  default: 'follow',
+  level: 'standard',
+  options: Object.freeze([
+    Object.freeze({ value: 'follow', label: 'As each person chose' }),
+    Object.freeze({ value: 'big', label: 'Only large faces' }),
+    Object.freeze({ value: 'still', label: 'Never on this screen' }),
+  ]),
+  note: 'People\'s faces blink and breathe gently. Movement turned off for health reasons always wins.',
+  automatable: false,
+});
+const screenMotion = (v) => (AVATAR_MOTION_VALUES.includes(v) ? v : 'follow');
+// The drawn blink's cycle and its keyframe stops (avatar.js MOTION_CSS: navBlink, 9 s, five stops), the
+// slowest-to-honour movement a face has, so the one the flash limit is checked against.
+const BLINK_CYCLE_MS = 9000;
+const BLINK_STOPS = 5;
+
+/**
+ * What a host knows about the viewer and the screen, read once into one object for `avatarHtml`.
+ *   screen  the screen's settings row     viewer  the settings row of the person the screen is for
+ *   layer   the starting-defaults layer on this device (fills only what neither row chose)
+ *   lowPower  true when the host KNOWS this is a slow screen (never guessed, argued above)
+ *   flashLimit  a number or a getter, when the host already has one (else read from the rows)
+ * `reduceMotion`, like the flash limit (flash_limit.js `flashLimitFrom`): where either row CHOSE, the
+ * stricter (on) wins; where neither did, the layer's.
+ */
+export function avatarMotionContext({ screen = {}, viewer = {}, layer = {}, lowPower = false,
+  flashLimit = null, win = globalThis, deviceReduced = null } = {}) {
+  const rows = [screen, viewer].filter((r) => r && typeof r === 'object');
+  const chosen = rows.filter((r) => isChosen(r, 'reduceMotion')).map((r) => r.reduceMotion === true);
+  const reduceMotion = chosen.length ? chosen.some(Boolean) : (layer || {}).reduceMotion === true;
+  let fl;
+  try { fl = typeof flashLimit === 'function' ? flashLimit() : flashLimit; } catch { fl = null; }
+  if (fl === null || fl === undefined) { try { fl = flashLimitFrom(rows, layer || {}); } catch { fl = FLASH_LIMIT_DEFAULT; } }
+  return {
+    deviceReduced: deviceReduced === null ? systemReduced(win) : !!deviceReduced,
+    reduceMotion,
+    screen: screenMotion((screen || {})[AVATAR_MOTION_KEY]),
+    lowPower: !!lowPower,
+    flashLimit: normalizeFlashLimit(fl),
+  };
+}
+
+/**
+ * THE DECISION. `context` from `avatarMotionContext` (or any part of it), `person` the person's own
+ * choice (true / false / null for none), `big` whether this face is shown large.
+ * Returns { animate, because, flashLimit }.  PURE.
+ */
+export function avatarMotion({ context = {}, person = null, big = false } = {}) {
+  const c = context || {};
+  const flashLimit = normalizeFlashLimit(c.flashLimit);
+  const still = (because) => ({ animate: false, because, flashLimit });
+  if (c.deviceReduced) return still('device-reduced-motion');
+  if (c.reduceMotion) return still('reduce-motion-setting');
+  if (minAnimationMs(BLINK_STOPS, flashLimit) > BLINK_CYCLE_MS) return still('flash-limit');
+  if (c.screen === 'still') return still('screen-still');
+  if (c.lowPower) return still('low-power-screen');
+  if (c.screen === 'big' && !big) return still('screen-large-only');
+  if (person === false) return still('person-still');
+  if (person === true) return { animate: true, because: 'person-moves', flashLimit };
+  return big ? { animate: true, because: 'default-large', flashLimit } : still('default-small');
+}
+
 /**
  * The avatar to show for a person, from the row kept on them and the state of its picture.
  *   { show: 'none' | 'drawn' | 'picture', drawn, url, still, fallback }
@@ -71,14 +192,19 @@ function systemReduced(win) {
 export function avatarView(row, { picture = null } = {}) {
   if (!row || typeof row !== 'object') return { show: 'none' };
   const a = readAvatar(row);
+  // The person's own movement choice: false (still), true (always moves), or none.
   const still = row.animate === false;
-  if (a.use === 'drawn' && a.drawn) return { show: 'drawn', drawn: a.drawn, still };
+  const moves = row.animate === true;
+  if (a.use === 'drawn' && a.drawn) return { show: 'drawn', drawn: a.drawn, still, moves };
   if (a.use === 'picture' && a.picture) {
-    if (picture && picture.status === 'ok' && picture.url) return { show: 'picture', url: picture.url, drawn: a.drawn, still };
+    // `svg`: the file made safe to draw inline (rule 4), when it is one and it could be.
+    if (picture && picture.status === 'ok' && picture.url) {
+      return { show: 'picture', url: picture.url, svg: picture.svg && picture.svg.ok ? picture.svg : null, drawn: a.drawn, still, moves };
+    }
     // Missing or broken: the drawn one if there is one. Still resolving: nothing yet (today's display),
     // so a picture does not flash a drawing it is about to replace.
     // (A second try at a picture that failed keeps showing the fallback while it runs.)
-    if (picture && (picture.status === 'failed' || picture.retry) && a.drawn) return { show: 'drawn', drawn: a.drawn, still, fallback: true };
+    if (picture && (picture.status === 'failed' || picture.retry) && a.drawn) return { show: 'drawn', drawn: a.drawn, still, moves, fallback: true };
     return { show: 'none', pending: !picture || picture.status === 'pending' };
   }
   return { show: 'none' };
@@ -88,27 +214,58 @@ export function avatarView(row, { picture = null } = {}) {
  * The small face, as markup, or '' when there is nothing to show (rule 1). Decorative: the name beside
  * it already says who, so it is hidden from a screen reader rather than read out a second time.
  *   size     a CSS length in px/em/rem (DISPLAY_DEFAULTS.size)
- *   animate  whether a drawn avatar may move (DISPLAY_DEFAULTS.animate); reduced motion and the
- *            person's own `still` override it
+ *   animate  whether this is a LARGE face, which moves by default (DISPLAY_DEFAULTS.animate: false,
+ *            a small chip); the decision is `avatarMotion`'s, so health settings, the screen and the
+ *            person's own choice all come first
  *   round    circle (true) or square
  *   personId marks a picture so `bindErrors` knows whose failed
- *   reducedMotion  true/false to decide it here; omitted, the device's own setting is asked
+ *   reducedMotion  true/false to decide the device's reduced motion here; omitted, the device is asked
+ *   context  `avatarMotionContext(...)`; omitted, the one the cache put on the view (`view.context`)
  */
 export function avatarHtml(view, { size = DISPLAY_DEFAULTS.size, animate = DISPLAY_DEFAULTS.animate,
-  round = DISPLAY_DEFAULTS.round, personId = '', reducedMotion = null, win = globalThis } = {}) {
+  round = DISPLAY_DEFAULTS.round, personId = '', reducedMotion = null, win = globalThis, context = null } = {}) {
   if (!view || (view.show !== 'drawn' && view.show !== 'picture')) return '';
   const s = cssSize(size);
   const style = `display:inline-block;width:${s};height:${s};vertical-align:middle;overflow:hidden;`
     + `flex:none;line-height:0;margin-inline-end:.4em;border-radius:${round ? '50%' : '.2em'}`;
+  const ctx = { ...(context || view.context || {}) };
+  if (reducedMotion != null) ctx.deviceReduced = !!reducedMotion;
+  else if (ctx.deviceReduced == null) ctx.deviceReduced = systemReduced(win);
+  const person = view.still ? false : view.moves ? true : null;
+  const m = avatarMotion({ context: ctx, person, big: !!animate });
   if (view.show === 'picture') {
+    if (view.svg) {
+      // Drawn inline, from the sanitized description only — never from the file's own text.
+      const markup = svgMarkup(view.svg, { uid: newSvgUid(), animate: m.animate, flashLimit: m.flashLimit,
+        delay: (hashOf(personId) % 90) / 10 });
+      if (markup) {
+        return `<span class="nav-av" data-avatar-shown="picture" data-avatar-kind="svg" data-motion-why="${m.because}" aria-hidden="true" style="${style}">`
+          + `${markup}</span>`;
+      }
+    }
     return `<span class="nav-av" data-avatar-shown="picture" aria-hidden="true" style="${style}">`
       + `<img src="${esc(view.url)}" alt="" data-avatar-person="${esc(personId)}" `
       + 'style="display:block;width:100%;height:100%;object-fit:cover"></span>';
   }
-  const reduced = reducedMotion == null ? systemReduced(win) : !!reducedMotion;
-  const moving = !!animate && !view.still && !reduced;
-  return `<span class="nav-av" data-avatar-shown="drawn" aria-hidden="true" style="${style}">`
-    + renderAvatar(view.drawn, { size: '100%', animate: moving, title: '' }) + '</span>';
+  return `<span class="nav-av" data-avatar-shown="drawn" data-motion-why="${m.because}" aria-hidden="true" style="${style}">`
+    + renderAvatar(view.drawn, { size: '100%', animate: m.animate, title: '' }) + '</span>';
+}
+
+// A stable small number from a person's id, so two brought-in faces side by side do not blink in step.
+function hashOf(s) {
+  let h = 0x811c9dc5;
+  for (const ch of String(s || '')) { h ^= ch.codePointAt(0); h = Math.imul(h, 0x01000193); }
+  return h >>> 0;
+}
+
+/** Read a picture's text for `svg_sanitize.js`: once, with a size cap before it is read as text. */
+async function fetchSvgText(url, { maxChars = SVG_LIMITS.maxChars } = {}) {
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const b = await r.blob();
+  // Characters are at most 4 bytes; a file over this many bytes cannot be under the cap.
+  if (b.size > maxChars * 4) return null;
+  return b.text();
 }
 
 /**
@@ -119,11 +276,16 @@ export function avatarHtml(view, { size = DISPLAY_DEFAULTS.size, animate = DISPL
  *   poll                            false: no polling (argued above, rule 2). true: the handle polls
  *   refreshOnVisible                re-read each person once when the page is shown again, which is how
  *                                   a change made in another tab or on another device arrives
+ *   context()                       the host's `avatarMotionContext(...)`, asked on every `get` (cheap),
+ *                                   so a face follows a changed health or screen setting at its next draw
+ *   fetchText(url)                  reads an .svg picture's text (rule 4); once per picture
+ *   svgLimits                       overrides for svg_sanitize.js's caps
  * Returns { get(personId) -> view, subscribe(fn(personId)) -> off, markBroken(personId),
  *           bindErrors(el) -> off, refresh(personId?), forget(personId), destroy() }.
  */
 export function createAvatarCache({ makePersonState = null, sourcesFor = null, user = null,
-  resolveUrl = resolveItemUrl, poll = false, refreshOnVisible = true, win = globalThis } = {}) {
+  resolveUrl = resolveItemUrl, poll = false, refreshOnVisible = true, win = globalThis,
+  context = null, fetchText = fetchSvgText, svgLimits = {} } = {}) {
   const entries = new Map();
   const subs = new Set();
   const sourceLists = new Map();          // personId -> Promise<sources[]>, listed once
@@ -144,7 +306,7 @@ export function createAvatarCache({ makePersonState = null, sourcesFor = null, u
     if (!e || dead) return;
     const r = row && typeof row === 'object' ? row : {};
     const a = readAvatar(r);
-    const key = JSON.stringify([a, r.animate === false]);
+    const key = JSON.stringify([a, r.animate === false ? 0 : r.animate === true ? 1 : null]);
     if (e.loaded && key === e.key) return;
     e.loaded = true; e.key = key; e.row = r;
     const picKey = a.use === 'picture' && a.picture ? `${a.picture.sourceId}\n${a.picture.path}` : null;
@@ -173,8 +335,17 @@ export function createAvatarCache({ makePersonState = null, sourcesFor = null, u
         const src = list.find((x) => x && x.id === ref.sourceId);
         if (src) got = await resolveUrl(src, ref.path);
       } catch (err) { console.warn('avatar: could not resolve a picture', err); got = null; }
+      // An .svg is read ONCE and made safe here, so every chip after this draws from the description,
+      // never re-reading or re-parsing the file. Any failure leaves `svg` empty: the still <img>.
+      let svg = null;
+      if (got && got.url && looksLikeSvgPath(ref.path) && typeof fetchText === 'function') {
+        try {
+          const text = await fetchText(got.url);
+          svg = typeof text === 'string' ? sanitizeSvg(text, svgLimits) : null;
+        } catch (err) { console.warn('avatar: could not read a drawing; showing it still', err); svg = null; }
+      }
       if (dead || e.pic !== pic) { try { got?.release?.(); } catch { /* gone */ } return; }
-      if (got && got.url) { pic.status = 'ok'; pic.url = got.url; pic.release = got.release || null; }
+      if (got && got.url) { pic.status = 'ok'; pic.url = got.url; pic.release = got.release || null; pic.svg = svg; }
       else pic.status = 'failed';
       notify(pid);
     })();
@@ -208,7 +379,11 @@ export function createAvatarCache({ makePersonState = null, sourcesFor = null, u
     if (!e || !e.loaded) return { show: 'none', pending: !!e };
     const a = readAvatar(e.row);
     const pic = a.use === 'picture' && a.picture ? ensurePicture(pid, e, a.picture) : null;
-    return avatarView(e.row, { picture: pic });
+    const view = avatarView(e.row, { picture: pic });
+    if (typeof context === 'function') {
+      try { view.context = context() || null; } catch (err) { console.warn('avatar: motion context', err); view.context = null; }
+    }
+    return view;
   }
 
   function markBroken(pid) {

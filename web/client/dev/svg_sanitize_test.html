@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>svg_sanitize — a brought-in drawing, made safe to draw inline — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .victim{color:rgb(1, 2, 3)}
+  #stage span{display:inline-block;width:48px;height:48px}
+</style>
+</head>
+<body>
+<h1>svg_sanitize — Mike, 2026-10-01: an avatar somebody brings in can move</h1>
+<p>An SVG made with the "make your own" prompt is drawn INLINE so its eyes can blink. That is only safe
+if nothing from the file reaches the page except what is on an allow-list. This suite feeds it a corpus
+of hostile files, one per known risk, and checks that each comes out inert — nothing runs, nothing is
+fetched, nothing outside the drawing is restyled, no id collides — while a benign drawing keeps its
+animation groups, and every animation is held to the flash limit.</p>
+<p id="eyes" class="victim">The page's own element with id "eyes" (a drawing must not take it over).</p>
+<p id="victim-page" class="victim">A page element a drawing's stylesheet tries to hide.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div>
+<script>
+  window.addEventListener('error', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done && e.message) s.textContent = `threw: ${e.message} (${e.filename || ''}:${e.lineno || ''})`; });
+  window.addEventListener('unhandledrejection', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done) s.textContent = `threw: ${e.reason && (e.reason.stack || e.reason.message) || e.reason}`; });
+</script>
+<script type="module">
+import {
+  sanitizeSvg, svgMarkup, newSvgUid, SVG_LIMITS, WRITABLE, minAnimationMs, flashesPerCycle, looksLikeSvgPath,
+} from '../svg_sanitize.js';
+import { minFlashPeriodMs } from '../flash_limit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const stage = document.getElementById('stage');
+
+const NS = 'xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"';
+const wrap = (inner, extra = '') => `<svg ${NS} viewBox="0 0 100 100"${extra}>${inner}<circle cx="50" cy="50" r="20" fill="#3f6fd1"/></svg>`;
+const P = (name) => `/__probe/${name}`;
+
+// ONE FILE PER RISK. `probe` names a URL the file tries to reach; none may ever be requested.
+const HOSTILE = [
+  ['<script> element', wrap('<script>window.__pwned="script"<\/script>')],
+  ['<script> with an external src', wrap(`<script href="${P('script.js')}"/><script xlink:href="${P('script2.js')}"/>`)],
+  ['<script> hidden in a CDATA <style> breakout', wrap('<style><![CDATA[</style><script>window.__pwned="cdata"<\/script>]]></style>')],
+  ['onload on the root', wrap('', ' onload="window.__pwned=\'root-onload\'"')],
+  ['on* handlers on shapes (any case)', wrap('<circle r="9" onclick="window.__pwned=1" onmouseover="window.__pwned=1" ONFOCUS="window.__pwned=1" onfocusin="window.__pwned=1" onanimationstart="window.__pwned=1"/>')],
+  ['javascript: link', wrap('<a href="javascript:window.__pwned=\'a\'"><rect width="100" height="100"/></a><a xlink:href="javascript:window.__pwned=\'xa\'"><rect width="9" height="9"/></a>')],
+  ['javascript: in a <use>', wrap('<use href="javascript:window.__pwned=1"/>')],
+  ['data: URL image', wrap('<image width="10" height="10" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIG9ubG9hZD0iYWxlcnQoMSkiLz4="/>')],
+  ['data: URL in a <use>', wrap('<use href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 id=%22x%22/%3E#x"/>')],
+  ['<foreignObject> with HTML in it', wrap(`<foreignObject width="100" height="100"><body xmlns="http://www.w3.org/1999/xhtml"><img src="${P('fo.png')}" onerror="window.__pwned='fo'"/><iframe src="${P('fo.html')}"></iframe><p>hello</p></body></foreignObject>`)],
+  ['<iframe>, <embed>, <object> in the SVG namespace', wrap(`<iframe src="${P('iframe.html')}"/><embed src="${P('embed.svg')}"/><object data="${P('object.svg')}"/>`)],
+  ['external <image>', wrap(`<image width="10" height="10" href="${P('image.png')}"/><image width="10" height="10" xlink:href="${P('image2.png')}"/>`)],
+  ['external <use>', wrap(`<use href="${P('use.svg')}#x"/><use xlink:href="${P('use2.svg')}#x"/>`)],
+  ['external gradient href', wrap(`<defs><linearGradient id="g" href="${P('grad.svg')}#g"/></defs><rect width="10" height="10" fill="url(#g)"/>`)],
+  ['url() to another file in attributes', wrap(`<rect width="10" height="10" fill="url(${P('fill.svg')}#a)" mask="url(${P('mask.svg')}#m)" clip-path="url('${P('clip.svg')}#c')"/>`)],
+  ['url() in a style attribute', wrap(`<rect width="10" height="10" style="fill:url(${P('style.svg')}#a);stroke:red"/>`)],
+  ['<filter> with <feImage>', wrap(`<filter id="f"><feImage href="${P('feimage.png')}"/></filter><rect width="10" height="10" filter="url(#f)"/>`)],
+  ['<pattern> holding an image', wrap(`<pattern id="p" width="10" height="10"><image href="${P('pattern.png')}" width="10" height="10"/></pattern><rect width="10" height="10" fill="url(#p)"/>`)],
+  ['<style> restyling the page', wrap('<style>body{display:none!important} .victim{color:rgb(255,0,0)!important} :root{--x:1} *{opacity:0} p{display:none}</style>')],
+  ['<style> @import, @font-face, @media, @namespace', wrap(`<style>@import url(${P('import.css')}); @import "${P('import2.css')}"; @font-face{font-family:x;src:url(${P('font.woff')})} @media all{body{display:none}} @namespace x url(http://x); circle{font-family:x}</style>`)],
+  ['<style> url() to another file', wrap(`<style>circle{fill:url(${P('css-fill.svg')}#a)} rect{background:url(${P('bg.png')})} g{cursor:url(${P('cursor.png')}),auto} path{mask:url("${P('cssmask.svg')}#m")}</style>`)],
+  ['<style> selectors that reach outside', wrap('<style>~ *{display:none} + p{display:none} :root p{display:none} html body{display:none} [id]{display:none} a:hover{display:none}</style>')],
+  ['<style> brace injection and escapes', wrap('<style>circle{fill:red;}} body{display:none} {} \\62 ody{display:none} circle{fill:\\72 ed} circle{behavior:url(x.htc);-moz-binding:url(x.xml)} circle{width:expression(alert(1))}</style>')],
+  ['SMIL <set> rewriting href to javascript:', wrap('<a><set attributeName="href" to="javascript:window.__pwned=\'set\'" begin="0s"/><rect width="100" height="100"/></a>')],
+  ['SMIL <animate> on a handler and a URL', wrap(`<animate attributeName="onload" values="window.__pwned=1" begin="0s"/><rect width="9" height="9"><set attributeName="fill" to="url(${P('smil.svg')}#a)" begin="0s"/></rect>`)],
+  ['an attribute value breaking out of its quotes', wrap('<rect width="9" height="9" fill=\'red" onload="window.__pwned=1\' class=\'a" onclick="x\'/>')],
+  ['a scheme hidden in a transform', wrap('<rect width="9" height="9" transform="translate(javascript:alert(1))"/>')],
+  ['xml:base and foreign attributes', wrap(`<g xml:base="${P('base/')}" xmlns:ev="http://www.w3.org/2001/xml-events" ev:event="click"><use href="#c"/></g><circle id="c" r="1"/>`)],
+  ['a processing instruction stylesheet', `<?xml-stylesheet href="${P('pi.css')}" type="text/css"?>${wrap('')}`],
+  ['a nested <svg> with its own onload', wrap('<svg onload="window.__pwned=\'nested\'"><circle r="3"/></svg>')],
+  ['id collision with the page', wrap('<g id="eyes"><circle id="victim-page" r="4"/></g><style>#victim-page{display:none} #eyes{display:none}</style>')],
+  ['tabindex/focus and aria taking focus', wrap('<rect width="9" height="9" tabindex="0" autofocus="" role="button" aria-label="x"/>')],
+];
+
+function inertStructure(markup, uid) {
+  const problems = [];
+  if (!markup) return problems;
+  const doc = new DOMParser().parseFromString(markup, 'image/svg+xml');
+  if (doc.getElementsByTagName('parsererror').length) return ['markup does not parse'];
+  for (const el of doc.getElementsByTagName('*')) {
+    if (!WRITABLE.elements.includes(el.localName)) problems.push(`element ${el.localName}`);
+    for (const a of el.attributes) {
+      if (a.name === 'xmlns') continue;
+      if (!WRITABLE.attrs.includes(a.name)) problems.push(`attr ${a.name}`);
+      if (/^on/i.test(a.name)) problems.push(`handler ${a.name}`);
+      // (A style attribute is "prop:value" pairs; its values are held to the same rules below.)
+      if (/:/.test(a.name === 'style' ? a.value.replace(/(^|;)\s*[a-z-]+\s*:/g, '$1') : a.value)) problems.push(`':' in ${a.name}`);
+      if (/javascript|expression|@import|\\/i.test(a.value)) problems.push(`bad value in ${a.name}`);
+      if (a.name === 'href' && !a.value.startsWith(`#${uid}-`)) problems.push(`href ${a.value}`);
+      for (const m of a.value.matchAll(/url\(([^)]*)\)/g)) if (!m[1].startsWith(`#${uid}-`)) problems.push(`url ${m[1]}`);
+      if (a.name === 'id' && a.value !== uid && !a.value.startsWith(`${uid}-`)) problems.push(`id ${a.value}`);
+    }
+  }
+  // Every rule reaches only inside the drawing.
+  for (const st of doc.getElementsByTagName('style')) {
+    const sheet = new CSSStyleSheet();
+    try { sheet.replaceSync(st.textContent); } catch (e) { problems.push(`css ${e.message}`); continue; }
+    const walkRules = (rules, inMedia) => {
+      for (const r of rules) {
+        if (r instanceof CSSStyleRule) {
+          for (const s of r.selectorText.split(',')) if (!s.trim().startsWith(`#${uid} `)) problems.push(`selector ${s}`);
+          if (/url\((?!["']?#)/.test(r.cssText)) problems.push(`css url ${r.cssText}`);
+        } else if (r instanceof CSSKeyframesRule) {
+          if (!r.name.startsWith(`${uid}-`)) problems.push(`keyframes ${r.name}`);
+        } else if (r instanceof CSSMediaRule && !inMedia && /prefers-reduced-motion: no-preference/.test(r.conditionText)) {
+          walkRules(r.cssRules, true);
+        } else problems.push(`rule ${r.constructor.name}`);
+      }
+    };
+    walkRules(sheet.cssRules, false);
+  }
+  return problems;
+}
+
+(async () => {
+try {
+  // The spies: no request of any kind while the corpus is parsed, drawn and poked.
+  const requests = [];
+  const realFetch = window.fetch;
+  window.fetch = (...a) => { requests.push(`fetch ${a[0]}`); return realFetch(...a); };
+  const realOpen = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function (...a) { requests.push(`xhr ${a[1]}`); return realOpen.apply(this, a); };
+  const probeEntries = () => performance.getEntriesByType('resource').map((e) => e.name).filter((n) => n.includes('/__probe/'));
+
+  // =====================================================================================
+  section('the positive control: this page CAN see a request to /__probe/ when one is made');
+  {
+    const img = new Image();
+    await new Promise((r) => { img.onload = r; img.onerror = r; img.src = '/__probe/control.png'; setTimeout(r, 1500); });
+    await sleep(50);
+    check('a plain <img> to /__probe/control.png shows up in resource timing (so an absence below means something)',
+      probeEntries().some((n) => n.endsWith('/__probe/control.png')), probeEntries().join());
+  }
+  const before = probeEntries().length;
+  check('the structural test itself sees a problem in every raw hostile file (so a pass below means something)',
+    HOSTILE.filter(([, svg]) => !/<\?xml-stylesheet/.test(svg)).every(([, svg]) => inertStructure(svg.replace(/<\?[^>]*\?>/, ''), 'navxnobody').length > 0),
+    HOSTILE.filter(([, svg]) => inertStructure(svg, 'navxnobody').length === 0).map(([n]) => n).join(' | '));
+
+  // =====================================================================================
+  section('the hostile corpus: every file comes out inert');
+  window.__pwned = undefined;
+  const drawn = [];
+  for (const [name, svg] of HOSTILE) {
+    const clean = sanitizeSvg(svg);
+    const uid = newSvgUid();
+    const markup = clean.ok ? svgMarkup(clean, { uid, animate: true, flashLimit: 3 }) : '';
+    const probs = inertStructure(markup, uid);
+    check(`${name}: ${clean.ok ? 'kept only allowed parts' : `refused (${clean.reason})`}`, probs.length === 0, probs.slice(0, 4).join(' | '));
+    if (markup) { const s = document.createElement('span'); s.innerHTML = markup; stage.append(s); drawn.push({ name, el: s, uid }); }
+  }
+  // Poke everything that could carry a handler.
+  for (const { el } of drawn) {
+    for (const n of el.querySelectorAll('*')) {
+      for (const t of ['click', 'mouseover', 'focus', 'focusin', 'load', 'animationstart']) n.dispatchEvent(new Event(t, { bubbles: true }));
+      try { n.focus?.(); } catch { /* not focusable */ }
+    }
+  }
+  await sleep(400);
+  check('*** nothing ran: no script, handler, javascript: link or SMIL rewrite set the flag ***', window.__pwned === undefined, String(window.__pwned));
+  check('*** nothing was requested: no /__probe/ URL in resource timing after parsing, drawing and poking ***',
+    probeEntries().length === before, probeEntries().slice(before).join());
+  check('...and no fetch or XHR was made by the sanitizer or the drawings', requests.length === 0, requests.join());
+  check('the page is not restyled: body still shown, its .victim colour unchanged, no paragraph hidden',
+    getComputedStyle(document.body).display !== 'none' && getComputedStyle(document.querySelector('p.victim')).color === 'rgb(1, 2, 3)'
+      && getComputedStyle(document.getElementById('victim-page')).display !== 'none' && getComputedStyle(document.querySelector('h1')).opacity === '1');
+  check('ids do not collide: the page\'s #eyes and #victim-page are still the page\'s own',
+    document.getElementById('eyes')?.tagName === 'P' && document.getElementById('victim-page')?.tagName === 'P');
+  check('nothing in a drawing took focus or a tab stop', !stage.querySelector('[tabindex],[autofocus]') && !stage.contains(document.activeElement));
+  window.fetch = realFetch;
+  XMLHttpRequest.prototype.open = realOpen;
+
+  // =====================================================================================
+  section('size and shape caps: refused before they can hang anything');
+  {
+    const big = wrap(`<path d="M0 0${' L1 1'.repeat(70000)}"/>`);
+    check('over maxChars: refused before parsing', big.length > SVG_LIMITS.maxChars && sanitizeSvg(big).reason === 'too-big');
+    const many = wrap('<circle r="1"/>'.repeat(SVG_LIMITS.maxElements + 5));
+    check('over maxElements: refused', sanitizeSvg(many).reason === 'too-many');
+    const deep = wrap(`${'<g>'.repeat(SVG_LIMITS.maxDepth + 5)}<circle r="1"/>${'</g>'.repeat(SVG_LIMITS.maxDepth + 5)}`);
+    check('nested deeper than maxDepth: refused', sanitizeSvg(deep).reason === 'too-deep');
+    let bomb = '<defs><circle id="l0" r="1"/>';
+    for (let i = 1; i <= 8; i++) bomb += `<g id="l${i}">${Array.from({ length: 10 }, () => `<use href="#l${i - 1}"/>`).join('')}</g>`;
+    bomb += '</defs><use href="#l8"/>';
+    const t0 = performance.now();
+    const bombR = sanitizeSvg(wrap(bomb));
+    check('a <use> bomb (10^8 when expanded): refused, quickly', bombR.reason === 'too-many' && performance.now() - t0 < 500, `${bombR.reason} ${performance.now() - t0}ms`);
+    check('a <use> loop: refused', sanitizeSvg(wrap('<g id="a"><use href="#b"/></g><g id="b"><use href="#a"/></g>')).reason === 'use-loop');
+    check('a <use> of its own ancestor: refused', sanitizeSvg(wrap('<g id="a"><circle r="1"/><use href="#a"/></g>')).reason === 'use-loop');
+    const lol = `<?xml version="1.0"?><!DOCTYPE svg [<!ENTITY a "aaaaaaaaaa"><!ENTITY b "&a;&a;&a;&a;&a;&a;&a;&a;&a;&a;">]>${wrap('<desc>&b;</desc>')}`;
+    check('a DOCTYPE with entities (billion laughs): refused before parsing', sanitizeSvg(lol).reason === 'doctype');
+    check('the caps are parameters: a lower maxElements refuses a smaller file', sanitizeSvg(wrap('<circle r="1"/>'.repeat(20)), { maxElements: 10 }).reason === 'too-many'
+      && sanitizeSvg(wrap('<circle r="1"/>'.repeat(20))).ok);
+    const nearCap = wrap(`<path d="M0 0${' L1 1'.repeat(55000)}"/>`.slice(0, SVG_LIMITS.maxChars - 200) + '"/></svg>');
+    const t1 = performance.now();
+    sanitizeSvg(nearCap);
+    check('a file just under the size cap is handled in well under a second', performance.now() - t1 < 1000, `${Math.round(performance.now() - t1)}ms`);
+    check('not SVG at all: refused', sanitizeSvg('<html><body>hi</body></html>').ok === false && sanitizeSvg('not xml <').ok === false && sanitizeSvg('').ok === false);
+    check('no frame (no viewBox, no size): refused, so it shows still', sanitizeSvg(`<svg ${NS}><circle r="1"/></svg>`).reason === 'no-frame');
+    check('a numeric width and height stand in for a viewBox', sanitizeSvg(`<svg ${NS} width="64" height="32"><circle r="1"/></svg>`).viewBox === '0 0 64 32');
+    check('svgMarkup of a refused file is empty (the caller shows the still picture)', svgMarkup({ ok: false }) === '' && svgMarkup(null) === '');
+    check('only .svg paths are tried', looksLikeSvgPath('a/b/Me.SVG') && looksLikeSvgPath('me.svg?x=1') && !looksLikeSvgPath('me.png') && !looksLikeSvgPath('me.svgz') && !looksLikeSvgPath(''));
+  }
+
+  // =====================================================================================
+  section('a benign drawing keeps its look and its animation groups');
+  const BENIGN = `<svg ${NS} viewBox="0 0 512 512">
+    <defs><linearGradient id="skin"><stop offset="0" stop-color="#f3cfb5"/><stop offset="1" stop-color="#dba27a"/></linearGradient>
+    <clipPath id="clip"><circle cx="256" cy="256" r="250"/></clipPath></defs>
+    <style>/* the AI's own */ .arm{animation: wave 2s ease-in-out infinite alternate; transform-origin: 300px 300px}
+      @keyframes wave{from{transform:rotate(0deg)}to{transform:rotate(10deg)}}
+      .flick{animation: flick 100ms steps(2) infinite; animation-duration: 10ms}
+      @keyframes flick{0%{opacity:1}50%{opacity:0}100%{opacity:1}}
+      #mouth path{stroke:#3b2219}</style>
+    <g clip-path="url(#clip)">
+      <circle cx="256" cy="200" r="120" fill="url(#skin)" stroke="#2b2320" stroke-width="6"/>
+      <g id="Eyes" transform="translate(0,4)"><circle cx="210" cy="190" r="12"/><circle cx="302" cy="190" r="12"/></g>
+      <g id="mouth"><path d="M216 250 Q256 280 296 250" fill="none" stroke-width="6"/></g>
+      <rect class="arm" x="330" y="300" width="40" height="120" rx="20" style="fill:#3f6fd1;animation:wave 50ms infinite"/>
+      <circle class="flick" cx="100" cy="100" r="5" fill="#d4a63a"/>
+      <use href="#mouth" xlink:href="#mouth" y="40"/>
+    </g></svg>`;
+  const clean = sanitizeSvg(BENIGN);
+  check('it is accepted', clean.ok, clean.reason);
+  check('the eyes and mouth groups are found (case forgiven)', clean.parts?.eyes === 'Eyes' && clean.parts?.mouth === 'mouth');
+  {
+    const uid = newSvgUid();
+    const m = svgMarkup(clean, { uid, animate: true, flashLimit: Infinity });
+    check('its own markup is inert by the same structural test', inertStructure(m, uid).length === 0, inertStructure(m, uid).join(' | '));
+    const s = document.createElement('span'); s.innerHTML = m; stage.append(s);
+    const eyesWrap = s.querySelector('[data-part="eyes"]'), mouthWrap = s.querySelector('[data-part="mouth"]');
+    check('the eyes and the mouth are wrapped in groups of our own, marked data-part', eyesWrap && mouthWrap
+      && eyesWrap.firstElementChild.id === `${uid}-Eyes` && mouthWrap.firstElementChild.id === `${uid}-mouth`);
+    check('...so the file\'s own transform on its eyes is kept, not overwritten', eyesWrap.firstElementChild.getAttribute('transform') === 'translate(0,4)');
+    check('its gradient and clip still resolve, inside this drawing', s.querySelector('circle[fill]').getAttribute('fill') === `url(#${uid}-skin)`
+      && s.querySelector(`#${uid}-skin`) && s.querySelector('g[clip-path]').getAttribute('clip-path') === `url(#${uid}-clip)`);
+    check('a <use> of its own mouth is kept (one href, not two)', s.querySelector('use')?.getAttribute('href') === `#${uid}-mouth` && s.querySelectorAll('use')[0].attributes.length === 2);
+    check('its stylesheet colour reaches its own mouth', getComputedStyle(s.querySelector(`#${uid}-mouth path`)).stroke === 'rgb(59, 34, 25)');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const anim = getComputedStyle(eyesWrap).animationName;
+    check('the eyes blink (our keyframes, this drawing\'s name), unless this device asks for reduced motion',
+      reduced ? anim === 'none' : anim === `${uid}--blink`, anim);
+    check('the file\'s own animation runs under its own prefixed name', reduced || getComputedStyle(s.querySelector('rect')).animationName === `${uid}-k-wave`);
+    check('a style attribute keeps its colour but not its animation (not re-timeable there)', /fill:#3f6fd1/.test(s.querySelector('rect').getAttribute('style'))
+      && !/animation/.test(s.querySelector('rect').getAttribute('style')));
+    check('an animation-duration on its own is dropped (it would dodge the re-timing)', !/animation-duration/.test(m));
+    const still = svgMarkup(clean, { uid: newSvgUid(), animate: false });
+    check('still: no animation and no keyframes are written at all', !/animation|@keyframes/.test(still) && /data-motion="off"/.test(still));
+    check('still keeps the drawing\'s look (its colour rules)', /stroke:#3b2219/.test(still));
+    const a = svgMarkup(clean, { uid: 'navxa' }), b = svgMarkup(clean, { uid: 'navxb' });
+    check('two copies on one page share no id', !a.includes('navxb') && !b.includes('navxa') && newSvgUid() !== newSvgUid());
+  }
+
+  // =====================================================================================
+  section('the flash limit: every animation is stretched to it, counted from its own keyframes');
+  {
+    const durOf = (m, uid, name) => Number(new RegExp(`${uid}-k-${name} (\\d+)ms`).exec(m)?.[1]);
+    const u3 = newSvgUid(), u1 = newSvgUid(), un = newSvgUid();
+    const m3 = svgMarkup(clean, { uid: u3, animate: true, flashLimit: 3 });
+    const m1 = svgMarkup(clean, { uid: u1, animate: true, flashLimit: 1 });
+    const mn = svgMarkup(clean, { uid: un, animate: true, flashLimit: Infinity });
+    check('a 3-stop keyframes is at most one flash a cycle', flashesPerCycle(3) === 1 && flashesPerCycle(2) === 1 && flashesPerCycle(5) === 2);
+    check('100 ms flicker at 3 a second: stretched to one flash period', durOf(m3, u3, 'flick') === Math.ceil(minFlashPeriodMs(3)), String(durOf(m3, u3, 'flick')));
+    check('...at 1 a second: to over a second', durOf(m1, u1, 'flick') === Math.ceil(minFlashPeriodMs(1)) && durOf(m1, u1, 'flick') > 1000);
+    check('...with no limit set: left as the file wrote it', durOf(mn, un, 'flick') === 100);
+    check('a slow wave already under the limit is untouched', durOf(m1, u1, 'wave') === 2000);
+    const blink = (m, uid) => Number(new RegExp(`${uid}--blink (\\d+)ms`).exec(m)?.[1]);
+    check('our own blink is 9 s, under even 1 a second', blink(m1, u1) === 9000 && minAnimationMs(5, 1) < 9000);
+    const uLow = newSvgUid();
+    check('...and is stretched too, if a stored limit is ever lower than it can honour', blink(svgMarkup(clean, { uid: uLow, animate: true, flashLimit: 0.1 }), uLow) > 9000);
+    const zero = sanitizeSvg(wrap('<style>circle{animation:z infinite}@keyframes z{to{opacity:0}}</style>'));
+    const uz = newSvgUid();
+    check('an animation with no period (0 s, draws nothing) is not turned into one', durOf(svgMarkup(zero, { uid: uz, animate: true, flashLimit: 3 }), uz, 'z') === 0);
+    const unknown = sanitizeSvg(wrap('<style>circle{animation:navBlink 1s infinite}</style>'));
+    check('an animation naming keyframes not in the file (the page\'s own) is dropped', unknown.ok && !/navBlink/.test(svgMarkup(unknown, { animate: true })));
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
