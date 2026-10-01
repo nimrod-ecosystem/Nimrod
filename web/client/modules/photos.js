@@ -28,6 +28,7 @@ import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { flashLimit, minFlashPeriodMs, failureBackoffMs } from '../flash_limit.js';
+import { applyGrade } from '../lut.js';
 
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
 // a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
@@ -394,6 +395,9 @@ registerModule(
       }
       el.style.objectFit = cfg.fit;
       el.className = 'shot';
+      // Row 2.49: this device's colour grade (lut.js), OFF by default. With none chosen it does not
+      // touch the element at all, so a photo shows exactly as it always has.
+      applyGrade(el, item.kind === 'video' ? 'video' : 'photos');
       st.append(el);
       // Whether the panel has something to look at decides how a status message is drawn
       // — a corner chip over a photo, a full panel over nothing. See setStatus.

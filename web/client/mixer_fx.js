@@ -39,11 +39,18 @@
 // imported or evaluated from the network. Whoever can put a plugin object on the page could already
 // run anything on it, so this adds no new door. A plugin format and a way to install one are later
 // work (row 2.35: "build only the insert slot now").
+//   *** THE FORMAT, 2026-10-01 (row 2.49): Web Audio Modules, from the person's own folder. ***
+//   `addWamFromFolder` loads a WAM 2.0 plugin out of the storage root's `audio-plugins/` folder
+//   (wam_loader.js: read from this device, never from the network) and hands it to `addPlugin`
+//   like any other — same checks, same bypass, same silence watchdog. That IS a new door: a folder's
+//   code runs on the page. So it is OFF by default — nothing calls it unless a person names a plugin
+//   — and wam_loader.js says so in the folder's README. (VSTs cannot run in a browser at all.)
 //
 // ORDER IN A CHAIN: compressor -> plugins (in the order added) -> reverb. The compressor evens the
 // dry sound; the reverb goes last so its tail is not squashed by the compressor.
 
 import { CHANNEL_IDS } from './audio_bus.js';
+import { loadWam } from './wam_loader.js';
 
 // *** REVERB PRESETS — TUNE HERE. *** seconds: impulse length. decay: how fast it dies (higher is
 // faster). wet: how much reverb is ADDED to the untouched dry sound (the dry path is always 1).
@@ -455,6 +462,23 @@ export function createMixerFx({
       ch.plugins = ch.plugins.filter((p) => p !== plugin);
       const b = ch.bypassed.find((x) => x.id === plugin.id);
       return { ok: false, why: b ? b.why : 'bypassed' };
+    },
+
+    /**
+     * Load a Web Audio Module from `pluginDir` (a folder inside the storage root's `audio-plugins/`,
+     * `pluginsDir`) into `channel`'s slot. Async; resolves `addPlugin`'s `{ ok, why }` (plus `id`).
+     * OFF BY DEFAULT: only ever called because a person chose a plugin. `load` is a test seam.
+     */
+    async addWamFromFolder(chId, pluginDir, pluginsDir, { load = loadWam, importModule } = {}) {
+      if (!known.has(chId)) return { ok: false, why: 'no such channel' };
+      const c = getContext();
+      if (!c) return { ok: false, why: 'this device has no Web Audio' };
+      let r;
+      try { r = await load(pluginDir, { pluginsDir, audioContext: c, ...(importModule ? { importModule } : {}) }); }
+      catch (err) { r = { ok: false, why: msg(err) }; }
+      if (!r || !r.ok) return { ok: false, why: (r && r.why) || 'the plugin could not be loaded' };
+      if (destroyed) { safe(() => r.plugin.create(c).destroy?.()); return { ok: false, why: 'the mixer was closed' }; }
+      return { ...this.addPlugin(chId, r.plugin), id: r.plugin.id };
     },
 
     removePlugin(chId, id) {
