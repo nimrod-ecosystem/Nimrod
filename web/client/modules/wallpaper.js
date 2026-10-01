@@ -49,6 +49,7 @@ import {
   MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
   usableItems, nextItem, wallpaperMode,
 } from '../wallpaper.js';
+import { applyGrade } from '../lut.js';
 
 const DEFAULTS = {
   sourceId: '', album: '',
@@ -192,12 +193,14 @@ registerModule(
         v.muted = true; v.defaultMuted = true; v.loop = true; v.autoplay = true;
         v.playsInline = true; v.setAttribute('playsinline', '');
         v.src = url;
+        applyGrade(v, 'wallpaper');    // row 2.49, lut.js: off by default, untouched when off
         back.append(v);
         v.play?.().catch(() => { /* a wallpaper that will not autoplay is not an error worth showing */ });
       } else {
         const img = document.createElement('img');
         img.alt = '';                  // decorative: a wallpaper is not content to announce
         img.src = url;
+        applyGrade(img, 'wallpaper');
         back.append(img);
       }
       // Cross-fade. At `still` there is no fade — a hard change is less motion than a

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>user folders — fonts, colour looks and audio plugins from the storage root — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>user folders — row 2.49</h1>
+<p>The one storage root's <code>fonts/</code>, <code>luts/</code> and <code>audio-plugins/</code> subfolders,
+against FAKE folders (an in-memory directory handle — no picker, no prompt, no files). The colour grade is
+checked by actually drawing through the SVG filter; the plugin loader by actually importing modules and
+running an AudioWorklet from rewritten <code>blob:</code> URLs in an OfflineAudioContext.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { SUBFOLDERS, ensureTree, subfolder, listFiles, pickRoot, recallRoot, ROOT_KEY } from '../user_folders.js';
+import { faceFromName, fontStack, loadUserFonts, chooseUserFont, chosenUserFont, userFontStack, USER_FONT_KEY } from '../user_fonts.js';
+import { parseCube, compileLut, filterMarkup, applyGrade, readGrade, saveGrade, setGradeTarget, clearGrade, gradeFromFile,
+  describeFit, GRADE_KEY, FILTER_ID } from '../lut.js';
+import { resolvePath, referencesOf, rewriteSource, folderToUrls, loadWam } from '../wam_loader.js';
+import { createMixerFx } from '../mixer_fx.js';
+import { CHANNEL_IDS } from '../audio_bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+
+// ---- an in-memory folder: { name: string | Uint8Array (a file) | {…} (a folder) } ----
+const isDir = (v) => v && typeof v === 'object' && !(v instanceof Uint8Array);
+const notFound = () => new DOMException('not found', 'NotFoundError');
+function fakeFile(name, tree) {
+  return {
+    kind: 'file', name,
+    async getFile() { return new File([tree[name]], name); },
+    async createWritable() {
+      let buf = '';
+      return { write: async (d) => { buf += d; }, close: async () => { tree[name] = buf; } };
+    },
+  };
+}
+function fakeDir(name, tree) {
+  return {
+    kind: 'directory', name, tree,
+    async getDirectoryHandle(n, o) {
+      if (!(n in tree)) { if (o && o.create) tree[n] = {}; else throw notFound(); }
+      if (!isDir(tree[n])) throw new DOMException('a file', 'TypeMismatchError');
+      return fakeDir(n, tree[n]);
+    },
+    async getFileHandle(n, o) {
+      if (!(n in tree)) { if (o && o.create) tree[n] = ''; else throw notFound(); }
+      if (isDir(tree[n])) throw new DOMException('a folder', 'TypeMismatchError');
+      return fakeFile(n, tree);
+    },
+    async *entries() { for (const k of Object.keys(tree)) yield [k, isDir(tree[k]) ? fakeDir(k, tree[k]) : fakeFile(k, tree)]; },
+    async queryPermission() { return 'granted'; },
+    async requestPermission() { return 'granted'; },
+  };
+}
+function memStorage(init = {}) {
+  const m = new Map(Object.entries(init));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), _m: m };
+}
+
+// Nothing may leave the device: every fetch the page makes while this suite runs is counted.
+const realFetch = window.fetch;
+const fetched = [];
+window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); return realFetch(...a); };
+
+(async () => {
+  try {
+    // =========================================================================================
+    section('the storage root: three named subfolders, each with a README, made once');
+    {
+      const tree = { 'my notes.txt': 'mine' };
+      const root = fakeDir('Nimrod', tree);
+      const r1 = await ensureTree(root);
+      check('*** fonts/, luts/ and audio-plugins/ are made ***',
+        isDir(tree.fonts) && isDir(tree.luts) && isDir(tree['audio-plugins']) && J(r1.made) === J(['fonts', 'luts', 'audio-plugins']), J(Object.keys(tree)));
+      check('each has a short README saying what goes in it', /font files/i.test(tree.fonts['README.txt'])
+        && /\.cube/.test(tree.luts['README.txt']) && /VST plugins cannot run in a web browser/.test(tree['audio-plugins']['README.txt']));
+      check('*** the plugins README says plainly that a plugin is a program ***',
+        /can do anything this page can do/.test(tree['audio-plugins']['README.txt']));
+      tree.fonts['README.txt'] = 'my own notes about fonts';
+      const r2 = await ensureTree(root);
+      check('*** run again: nothing made, and a README somebody edited is NOT overwritten ***',
+        r2.made.length === 0 && tree.fonts['README.txt'] === 'my own notes about fonts', J(r2));
+      check('the person\'s own files in the root are untouched', tree['my notes.txt'] === 'mine');
+      check('subfolder() finds one and never creates', !!(await subfolder(root, 'luts')) && (await subfolder(root, 'nope')) === null
+        && !('nope' in tree));
+      check('no root: nothing, no throw', (await ensureTree(null)).ok === false && (await subfolder(null, 'fonts')) === null);
+      let refused = '';
+      try { await pickRoot({ view: {} }); } catch (e) { refused = e.message; }
+      check('a browser without the folder picker is told so, not crashed', /cannot open a folder/.test(refused));
+      // pickRoot with a fake picker and a fake IndexedDB-less environment: remembers under the root key.
+      const picked = fakeDir('Chosen', {});
+      const view = { showDirectoryPicker: async (o) => { view.opts = o; return picked; } };
+      const r3 = await pickRoot({ view, idb: null });
+      check('picking asks for read+write under its own id, and makes the tree', view.opts.mode === 'readwrite'
+        && view.opts.id === 'nimrod-root' && r3.made.length === 3, J(view.opts));
+      check('the root is remembered under its own key (fs_sink, not a new store)', ROOT_KEY === 'root'
+        && J(await recallRoot({ idb: null })) === J({ handle: null, permission: 'unknown' }));
+    }
+
+    // =========================================================================================
+    section('fonts: names from the file, loaded with FontFace, never fetched');
+    {
+      check('family and weight from the name', J(faceFromName('Atkinson-Hyperlegible-Bold.ttf')) === J({ family: 'Atkinson Hyperlegible', weight: 700, style: 'normal' }));
+      check('SemiBold is not read as Bold', faceFromName('Lexend-SemiBold.woff2').weight === 600);
+      check('BoldItalic', J(faceFromName('Lexend_BoldItalic.otf')) === J({ family: 'Lexend', weight: 700, style: 'italic' }));
+      check('Italic alone', J(faceFromName('Lexend-Italic.otf')) === J({ family: 'Lexend', weight: 400, style: 'italic' }));
+      check('a word that is not a style stays in the name', faceFromName('OpenDyslexic.otf').family === 'OpenDyslexic'
+        && faceFromName('Comic-Neue.ttf').family === 'Comic Neue');
+      check('variable-font names lose their axis tags', faceFromName('Inter[wght].ttf').family === 'Inter'
+        && faceFromName('Roboto-VariableFont_wght.ttf').family === 'Roboto');
+      check('a CSS stack: quoted, with the fallback', fontStack('Lexend', 'Arial, sans-serif') === '"Lexend", Arial, sans-serif'
+        && fontStack('') === 'system-ui, sans-serif' && fontStack('a"b') === '"ab", system-ui, sans-serif');
+
+      const tree = { 'Lexend-Regular.ttf': new Uint8Array([1, 2, 3]), 'Lexend-Bold.ttf': new Uint8Array([4, 5]),
+        'Broken.woff2': new Uint8Array([66, 65, 68]), 'notes.txt': 'not a font', '.hidden.ttf': new Uint8Array([1]) };
+      const made = []; const added = [];
+      class FakeFace {
+        constructor(family, bytes, desc) { this.family = family; this.bytes = bytes; this.desc = desc; made.push(this); }
+        async load() { if (new Uint8Array(this.bytes)[0] === 66) throw new Error('OTS parsing error'); return this; }
+      }
+      const r = await loadUserFonts(fakeDir('fonts', tree), { FontFaceImpl: FakeFace, fontSet: { add: (f) => added.push(f) } });
+      check('*** every font file becomes a face of its family; other files are ignored ***',
+        J(r.families) === J([{ family: 'Lexend', faces: 2 }]) && added.length === 2, J(r));
+      check('*** the BYTES are handed to FontFace (no URL is made for the file at all) ***',
+        made.every((f) => f.bytes instanceof ArrayBuffer), J(made.map((f) => typeof f.bytes)));
+      check('weights carried as descriptors', made.find((f) => f.desc.weight === '700') && made.find((f) => f.desc.weight === '400'));
+      check('*** a file the browser cannot read is reported, and does not stop the others ***',
+        r.failed.length === 1 && r.failed[0].name === 'Broken.woff2' && /OTS/.test(r.failed[0].why), J(r.failed));
+      // The REAL FontFace with junk bytes: rejected, reported, never thrown.
+      const real = await loadUserFonts(fakeDir('fonts', { 'Junk-Regular.ttf': new Uint8Array([0, 1, 2, 3]) }));
+      check('the real FontFace refuses junk, and that is a reported failure', real.failed.length === 1 && !real.families.length, J(real));
+      const st = memStorage();
+      check('no choice: the theme\'s font is used unchanged', chosenUserFont(st) === '' && userFontStack('Georgia, serif', st) === 'Georgia, serif');
+      chooseUserFont('Lexend', st);
+      check('*** a choice puts it in front of the theme\'s font, which stays as the fallback ***',
+        userFontStack('Georgia, serif', st) === '"Lexend", Georgia, serif' && st._m.has(USER_FONT_KEY));
+      chooseUserFont('', st);
+      check('clearing it goes back to the theme\'s font', userFontStack('Georgia, serif', st) === 'Georgia, serif');
+      check('storage that throws reads as no choice', chosenUserFont({ getItem() { throw new Error('x'); } }) === '');
+    }
+
+    // =========================================================================================
+    section('LUTs: reading .cube');
+    const cube3 = (size, f, extra = '') => {
+      const lines = [`TITLE "test"`, `LUT_3D_SIZE ${size}`, extra];
+      for (let b = 0; b < size; b++) for (let g = 0; g < size; g++) for (let r = 0; r < size; r++) {
+        const [R, G, B] = f(r / (size - 1), g / (size - 1), b / (size - 1));
+        lines.push(`${R.toFixed(6)} ${G.toFixed(6)} ${B.toFixed(6)}`);
+      }
+      return lines.join('\n');
+    };
+    {
+      const id = parseCube(cube3(2, (r, g, b) => [r, g, b]));
+      check('a 3D cube is read, red fastest', id.ok && id.lut.kind === '3d' && id.lut.size === 2 && id.lut.data.length === 24
+        && id.lut.data[3] === 1 && id.lut.data[4] === 0, J(id.ok ? [...id.lut.data] : id));
+      const one = parseCube('# comment\nLUT_1D_SIZE 2\n0 0 0\n1 1 1\n');
+      check('a 1D cube is read', one.ok && one.lut.kind === '1d' && one.lut.size === 2);
+      check('*** wrong count, junk, no size: a plain reason, never a throw ***',
+        /expected 8 colours/.test(parseCube('LUT_3D_SIZE 2\n0 0 0').why) && /not three numbers/.test(parseCube('LUT_1D_SIZE 2\n0 0\n1 1 1').why)
+          && /no LUT_3D_SIZE/.test(parseCube('0 0 0').why) && /empty/.test(parseCube('').why) && !parseCube(null).ok);
+      check('DOMAIN lines are read', parseCube('DOMAIN_MIN 0 0 0\nDOMAIN_MAX 2 2 2\nLUT_1D_SIZE 2\n0 0 0\n1 1 1').lut.max[0] === 2);
+    }
+
+    section('LUTs: compiled to what an SVG filter can do, with the error measured');
+    {
+      const ident = compileLut(parseCube(cube3(17, (r, g, b) => [r, g, b])).lut);
+      check('an identity cube compiles to (near) identity curves, error ~0', ident.error.max < 0.01
+        && Math.abs(ident.tables[0][128] - 128 / 255) < 0.01, J(ident.error));
+      const gamma = compileLut(parseCube(cube3(17, (r, g, b) => [r ** 2, g, b ** 0.5])).lut);
+      check('*** a per-channel look (curves only) comes out EXACT (curves, no matrix) ***', gamma.matrix === null && gamma.error.max < 0.02,
+        J(gamma.error));
+      const desat = (r, g, b) => { const y = 0.3 * r + 0.59 * g + 0.11 * b; return [0.5 * r + 0.5 * y, 0.5 * g + 0.5 * y, 0.5 * b + 0.5 * y]; };
+      const mix = compileLut(parseCube(cube3(17, desat)).lut);
+      check('*** a channel-mixing look (half desaturated) is fitted with a colour matrix, closely ***',
+        Array.isArray(mix.matrix) && mix.matrix.length === 12 && mix.error.mean < 0.005, J([mix.matrix, mix.error]));
+      const twist = compileLut(parseCube(cube3(9, (r, g, b) => [g, b, r])).lut);
+      check('a channel swap is a matrix too, and fits', twist.error.mean < 0.01, J(twist.error));
+      const hue = compileLut(parseCube(cube3(9, (r, g, b) => [Math.max(r, g) * b, Math.abs(g - b), r * r * g])).lut);
+      check('*** a look the filter cannot reproduce is NOT hidden: its error is measured and said ***',
+        hue.error.mean > 0.02 && /roughly/.test(describeFit(hue)), J(hue.error));
+      check('1D is exact by construction', compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut).error.max === 0
+        && describeFit(compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut)) === 'Applied exactly.');
+      const mk = filterMarkup(mix);
+      check('*** the filter works on the stored (sRGB) values, not linear ones ***', /color-interpolation-filters="sRGB"/.test(mk));
+      check('matrix then curves, alpha untouched', /feColorMatrix[^>]*values="[^"]+ 0 0 0 1 0"/.test(mk)
+        && mk.indexOf('feColorMatrix') < mk.indexOf('feComponentTransfer') && /feFuncA type="identity"/.test(mk), mk.slice(0, 300));
+    }
+
+    section('*** the SVG filter, drawn for real: what is compiled is what is shown ***');
+    {
+      // Draw a solid colour through the filter on a canvas (ctx.filter = 'url(#…)') and read it back.
+      const inv = compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut);
+      const holder = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      holder.setAttribute('width', '0'); holder.setAttribute('height', '0');
+      holder.innerHTML = filterMarkup(inv, 'probe-inv');
+      document.body.append(holder);
+      const c = document.createElement('canvas'); c.width = 4; c.height = 4;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.filter = 'url(#probe-inv)';
+      g.fillStyle = 'rgb(200, 50, 100)'; g.fillRect(0, 0, 4, 4);
+      const px = [...g.getImageData(1, 1, 1, 1).data];
+      const supported = g.filter === 'url(#probe-inv)' || g.filter === 'url("#probe-inv")';
+      check('*** an inverting LUT turns rgb(200,50,100) into rgb(55,205,155) through the real filter ***',
+        Math.abs(px[0] - 55) <= 2 && Math.abs(px[1] - 205) <= 2 && Math.abs(px[2] - 155) <= 2, `${J(px)} filter=${g.filter} supported=${supported}`);
+      holder.remove();
+    }
+
+    section('*** the hook photos and wallpaper call: OFF by default, and off means UNTOUCHED ***');
+    {
+      const st = memStorage();
+      const img = document.createElement('img');
+      check('*** no grade: returns false and the element has NO style attribute at all ***',
+        applyGrade(img, 'photos', { storage: st }) === false && img.getAttribute('style') === null && !document.getElementById('nimrod-colour-grade-defs'));
+      const compiled = compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut);
+      saveGrade({ name: 'Invert', compiled }, st);
+      check('a saved grade starts with EVERY target off', J(readGrade(st).targets) === J({ photos: false, video: false, wallpaper: false }));
+      check('*** grade saved, target off: still untouched ***', applyGrade(img, 'photos', { storage: st }) === false && img.getAttribute('style') === null);
+      setGradeTarget('photos', true, st);
+      const vid = document.createElement('video');
+      check('*** photos on: the picture gets the filter; a video (its own switch, off) does not ***',
+        applyGrade(img, 'photos', { storage: st }) === true && img.style.filter.includes(FILTER_ID)
+          && applyGrade(vid, 'video', { storage: st }) === false && vid.getAttribute('style') === null, img.getAttribute('style'));
+      check('...and the filter is in the page once', document.querySelectorAll('#nimrod-colour-grade-defs').length === 1
+        && !!document.getElementById(FILTER_ID));
+      applyGrade(document.createElement('img'), 'photos', { storage: st });
+      check('a second picture does not add a second copy', document.querySelectorAll(`#${FILTER_ID}`).length === 1);
+      clearGrade(st);
+      const after = document.createElement('img');
+      check('cleared: back to untouched', applyGrade(after, 'photos', { storage: st }) === false && after.getAttribute('style') === null);
+      check('junk in storage, or storage that throws, is "no grade" — never a throw',
+        readGrade(memStorage({ [GRADE_KEY]: '{bad' })) === null && applyGrade(after, 'photos', { storage: { getItem() { throw new Error('x'); } } }) === false
+          && applyGrade(null, 'photos', { storage: st }) === false);
+      const st2 = memStorage();
+      const r = await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': cube3(5, (r, g, b) => [Math.min(1, r * 1.1), g, b * 0.9]) }), st2);
+      check('a .cube from the folder becomes this device\'s grade, targets off', r.ok && readGrade(st2).name === 'test'
+        && Object.values(readGrade(st2).targets).every((v) => v === false) && typeof r.fit === 'string', J(r.ok ? r.fit : r));
+      const bad = await gradeFromFile(fakeFile('Bad.cube', { 'Bad.cube': 'hello' }), st2);
+      check('a broken .cube is refused with the reason, and the old grade stays', !bad.ok && /not three numbers|LUT_3D_SIZE/.test(bad.why) && readGrade(st2).name === 'test');
+      const stored = st2._m.get(GRADE_KEY).length;
+      check('stored COMPILED and small (a few KB), so it works after a reload without the folder', stored < 8000, String(stored));
+    }
+
+    // =========================================================================================
+    section('audio plugins: the loader\'s rewriting');
+    {
+      check('paths resolve inside the folder', resolvePath('a/b/c.js', '../d.js') === 'a/d.js' && resolvePath('index.js', './x/y.js') === 'x/y.js'
+        && resolvePath('index.js', '../escape.js') === null);
+      const src = `import { a } from './lib/a.js';\nimport './side.js';\nexport * from "../up.js";\nconst m = await import('./dyn.js');\n`
+        + `const u = new URL('./proc.js', import.meta.url); const w = new URL('https://x.test/y.js', import.meta.url);`;
+      check('*** every visible relative reference is found ***', J(referencesOf('sub/index.js', src).sort())
+        === J(['sub/dyn.js', 'sub/lib/a.js', 'sub/proc.js', 'sub/side.js', 'up.js']), J(referencesOf('sub/index.js', src)));
+      const rw = rewriteSource('sub/index.js', src, (p) => `blob:${p}`);
+      check('...and rewritten to the files\' URLs; an absolute URL is left alone',
+        rw.includes(`from 'blob:sub/lib/a.js'`) && rw.includes(`import 'blob:sub/side.js'`) && rw.includes('from "blob:up.js"')
+          && rw.includes(`import('blob:sub/dyn.js')`) && rw.includes(`new URL('blob:sub/proc.js')`) && rw.includes(`new URL('https://x.test/y.js', import.meta.url)`), rw);
+      let cyc = '';
+      try { await folderToUrls(fakeDir('p', { 'index.js': `import './a.js';`, 'a.js': `import './index.js';` })); } catch (e) { cyc = e.message; }
+      check('*** two files importing each other: refused, naming them, and saying a server is needed ***',
+        /circle/.test(cyc) && /index\.js/.test(cyc) && /web server/.test(cyc), cyc);
+      let miss = '';
+      try { await folderToUrls(fakeDir('p', { 'index.js': `import './gone.js';` })); } catch (e) { miss = e.message; }
+      check('a missing file is named', /needs gone\.js/.test(miss), miss);
+    }
+
+    section('*** audio plugins: a real WAM-shaped folder, imported and RUN from blob: URLs, into the mixer ***');
+    {
+      const pluginsTree = {
+        'wam-sdk': { 'index.js': `export async function initializeWamHost(ctx) {
+            globalThis.__wamHostInits = (globalThis.__wamHostInits || 0) + 1; return ['group-1', 'key-1']; }` },
+        halfgain: {
+          'index.js': `import { makeNode } from './lib/node.js';
+            export default class FakeWam {
+              static async createInstance(groupId, ctx) {
+                await ctx.audioWorklet.addModule(new URL('./proc/processor.js', import.meta.url));
+                const descriptor = await (await fetch(new URL('./descriptor.json', import.meta.url))).json();
+                return { audioNode: makeNode(ctx), descriptor, groupId };
+              } }`,
+          'descriptor.json': '{"name": "Half gain"}',
+          'config.js': 'export const GAIN = 0.5;',
+          lib: { 'node.js': `import { GAIN } from '../config.js';
+            export function makeNode(ctx) { return new AudioWorkletNode(ctx, 'test-half-gain', { processorOptions: { gain: GAIN } }); }` },
+          proc: {
+            'processor.js': `import { scale } from './dsp.js';
+              registerProcessor('test-half-gain', class extends AudioWorkletProcessor {
+                constructor(o) { super(); this.g = o.processorOptions.gain; }
+                process(inputs, outputs) { const i = inputs[0], o = outputs[0];
+                  for (let c = 0; c < o.length; c++) { const s = i[c] || i[0]; if (s) scale(s, o[c], this.g); } return true; } });`,
+            'dsp.js': 'export function scale(a, b, g) { for (let k = 0; k < b.length; k++) b[k] = (a[k] || 0) * g; }',
+          },
+        },
+        loop: { 'index.js': `import './a.js'; export default {};`, 'a.js': `import './index.js';` },
+        notwam: { 'index.js': 'export default { hello: 1 };' },
+      };
+      const pluginsDir = fakeDir('audio-plugins', pluginsTree);
+      const ch = CHANNEL_IDS[0];
+      const sr = 48000; const len = 4800;
+      const render = async (withPlugin) => {
+        const off = new OfflineAudioContext(1, len, sr);
+        const fx = createMixerFx({ context: off, destination: off.destination, watchMs: 0 });
+        let r = null;
+        if (withPlugin) r = await fx.addWamFromFolder(ch, await pluginsDir.getDirectoryHandle('halfgain'), pluginsDir);
+        const osc = off.createOscillator(); osc.frequency.value = 440;
+        osc.connect(fx.input(ch)); osc.start();
+        const buf = await off.startRendering();
+        const d = buf.getChannelData(0); let s = 0; for (let k = 0; k < d.length; k++) s += d[k] * d[k];
+        return { rms: Math.sqrt(s / d.length), r, state: fx.state()[ch] };
+      };
+      const fetchedBefore = fetched.length;
+      const dry = await render(false);
+      const wet = await render(true);
+      check('*** the plugin loads from the folder: ok, in the chain, under its own id ***',
+        wet.r && wet.r.ok && wet.state.chain.includes('wam-halfgain'), J([wet.r, wet.state]));
+      check('*** and it really runs: its AudioWorklet (imported from a rewritten blob: URL) halves the sound ***',
+        dry.rms > 0.3 && Math.abs(wet.rms / dry.rms - 0.5) < 0.05, `dry ${dry.rms} wet ${wet.rms}`);
+      check('the host files were initialised from the wam-sdk folder', globalThis.__wamHostInits >= 1);
+      const net = fetched.slice(fetchedBefore).filter((u) => !u.startsWith('blob:'));
+      check('*** nothing left the device: the only fetch was the plugin reading its own file, as a blob: URL ***',
+        net.length === 0, J(fetched.slice(fetchedBefore)));
+      const off2 = new OfflineAudioContext(1, 128, sr);
+      const fx2 = createMixerFx({ context: off2, watchMs: 0 });
+      check('*** OFF BY DEFAULT: a new mixer has no plugin in any channel ***',
+        Object.values(fx2.state()).every((c) => !c.plugins.length && !c.chain.length));
+      const loop = await fx2.addWamFromFolder(ch, await pluginsDir.getDirectoryHandle('loop'), pluginsDir);
+      check('a plugin whose files import each other: refused with the reason, mixer untouched',
+        !loop.ok && /circle/.test(loop.why) && !fx2.state()[ch].plugins.length, J(loop));
+      const nw = await fx2.addWamFromFolder(ch, await pluginsDir.getDirectoryHandle('notwam'), pluginsDir);
+      check('a folder that is not a WAM: refused, said', !nw.ok && /not a Web Audio Module/.test(nw.why), J(nw));
+      const nosdk = await loadWam(await pluginsDir.getDirectoryHandle('halfgain'),
+        { pluginsDir: fakeDir('empty', {}), audioContext: new OfflineAudioContext(1, 128, sr) });
+      check('*** no host files: refused with the plain sentence (put the SDK in wam-sdk; nothing is downloaded) ***',
+        !nosdk.ok && /wam-sdk/.test(nosdk.why) && /Nothing is downloaded/.test(nosdk.why), J(nosdk));
+      const nochan = await fx2.addWamFromFolder('no-such-channel', null, pluginsDir);
+      check('an unknown channel is refused before anything loads', !nochan.ok && /no such channel/.test(nochan.why));
+    }
+
+    check('*** over the whole suite: no request to anywhere but blob: URLs ***',
+      fetched.every((u) => u.startsWith('blob:')), J(fetched));
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

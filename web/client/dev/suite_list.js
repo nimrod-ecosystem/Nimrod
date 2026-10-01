@@ -59,7 +59,7 @@ export const SUITES = [
   // Infrastructure: sign-in, the bus, server push, and the two polling back-offs.
   'auth', 'bus', 'push', 'poll_backoff', 'state_events_backoff',
   // Input devices and the press primitives every control is built from.
-  'keyboard', 'input_pointer', 'input_facegesture', 'button', 'pressable', 'choice_card', 'hide_sound', 'color_picker',
+  'keyboard', 'input_pointer', 'input_facegesture', 'button', 'pressable', 'choice_card', 'hide_sound', 'user_folders', 'color_picker',
   // Modules as things: the module contract, try-before-add, prefabs, presets, the editor windows,
   // and data links with the wire transforms and tempo values that ride on them.
   'module', 'module_try', 'prefab', 'presets', 'starting_defaults', 'settings_module', 'edit_windows', 'links', 'conditioning', 'tempo',

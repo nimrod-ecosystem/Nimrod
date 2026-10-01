@@ -208,6 +208,59 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     host.remove();
   }
 
+  // *** ROW 2.49: THE COLOUR GRADE (lut.js) IS OFF BY DEFAULT, AND OFF MEANS UNTOUCHED. ***
+  // Photos are the module that matters most. With no grade chosen on this device the picture
+  // element must come out EXACTLY as before: the one inline style photos.js always set (object-fit)
+  // and nothing else. Then, with a grade saved and its photos switch on, the next picture gets it.
+  {
+    section('the colour grade: off by default, and off leaves the photo exactly as it was');
+    const { GRADE_KEY, saveGrade, compileLut, parseCube, FILTER_ID } = await import('../lut.js');
+    let saved = null;
+    try { saved = localStorage.getItem(GRADE_KEY); localStorage.removeItem(GRADE_KEY); } catch { /* private */ }
+    const ITEMS = [1, 2, 3].map((i) => ({ id: 'g' + i, path: 'g' + i + '.jpg', name: 'g' + i, kind: 'image', url: 'data:,g' + i }));
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+    document.body.append(host);
+    let cfg = { sourceId: 'src-1', intervalMs: 3600000, fit: 'contain' };
+    const subs = [];
+    const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+                    subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+    const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
+    const inst = mountModule('photos', {
+      mount: host, bus: createBus(), state, instanceId: 'photos-grade',
+      events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+      user: USER, profileId: 'p',
+      sources: { list: async () => [source], add: async () => source, remove: async () => {} },
+      resolveListing: async () => ({ items: ITEMS.map((it) => ({ ...it })), albums: [], album: '', count: ITEMS.length }),
+    });
+    inst.init();
+    await sleep(150);
+    const shown = () => host.querySelector('.stage')?.firstChild;
+    const el1 = shown();
+    check('PRECONDITION: a photo is on screen', el1 && el1.tagName === 'IMG', host.innerHTML.slice(0, 200));
+    check('*** no grade: the photo\'s style is exactly what it always was (object-fit, nothing else) ***',
+      el1 && el1.getAttribute('style') === 'object-fit: contain;' && !el1.style.filter, el1 && el1.getAttribute('style'));
+    check('...and no filter was put in the page', !document.getElementById(FILTER_ID));
+    try {
+      saveGrade({ name: 'Invert', compiled: compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut), targets: { photos: true } });
+      host.querySelector('[data-next]').click();
+      await sleep(80);
+      const el2 = shown();
+      check('with a grade and its photos switch ON, the next photo is graded', el2 && el2 !== el1
+        && el2.style.filter.includes(FILTER_ID), el2 && el2.getAttribute('style'));
+      saveGrade({ name: 'Invert', compiled: compileLut(parseCube('LUT_1D_SIZE 2\n1 1 1\n0 0 0').lut), targets: { photos: false } });
+      host.querySelector('[data-next]').click();
+      await sleep(80);
+      const el3 = shown();
+      check('switched off again: the next photo is untouched', el3 && el3.getAttribute('style') === 'object-fit: contain;',
+        el3 && el3.getAttribute('style'));
+    } finally {
+      try { if (saved == null) localStorage.removeItem(GRADE_KEY); else localStorage.setItem(GRADE_KEY, saved); } catch { /* private */ }
+      inst.destroy();
+      host.remove();
+    }
+  }
+
   // *** "SETTING PHOTOS TO 30 SECONDS DOESN'T SEEM TO WORK NOW." *** (Mike, 2026-09-29, live.)
   //
   // The setting was stored and read correctly the whole time. Measured on the real kiosk with
