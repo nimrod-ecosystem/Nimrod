@@ -162,6 +162,14 @@ export const SPEECH_PASS_FIELDS = [
     level: 'advanced' },
   { key: 'speechLocalUrl', label: 'The recogniser on this screen: its address', kind: 'text',
     default: LOCAL_URL, level: 'advanced' },
+  // A WAKE-WORD DETECTOR (openWakeWord through web/speech_service --wake): it hears the wake phrase
+  // itself, within a fraction of a second, so "Listening" and the duck happen while the person is
+  // still talking; the command is still read by the recognisers above. EMPTY = off: no trained model
+  // for "computer please" exists yet (openwakeword_measure_20261001.md), so there is nothing to
+  // point it at by default.
+  { key: 'speechWakeUrl', label: 'Wake-phrase detector on this screen: its address', kind: 'text',
+    default: '', level: 'advanced',
+    note: 'For example ws://127.0.0.1:8798/speech. Empty: the recogniser hears the wake phrase itself (slower).' },
   { key: 'speechSureAt', label: 'How sure the first guess must be to act at once', kind: 'choice',
     default: ENGINE_DEFAULTS.sureAt, level: 'advanced',
     options: [
@@ -231,7 +239,9 @@ export function enginePlanFrom(values = {}) {
     if (!/^wss?:\/\//i.test(info.url)) { skipped.push({ ...info, why: 'no address' }); continue; }
     passes.push(info);
   }
-  return { browser: false, passes, skipped, ...common };
+  const wakeUrl = text(v.speechWakeUrl);
+  const wake = /^wss?:\/\//i.test(wakeUrl) ? { url: wakeUrl } : null;
+  return { browser: false, passes, skipped, wake, ...common };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -324,6 +334,10 @@ export function connectEngine({
   retryMs = RETRY_MS,
   maxBuffered = MAX_BUFFERED_BYTES,
   onResult = null, onState = null,
+  // A WAKE connection: after hello it asks for the service's wake stream, `stream(pcm)` sends every
+  // frame (no utterances), and `onWake` hears { word, score, atMs, ... }. A service with no detector
+  // leaves it 'refused' (why: 'no wake detector') - said in the status, nothing streamed.
+  wake = false, onWake = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -370,13 +384,21 @@ export function connectEngine({
       try { m = JSON.parse(e.data); } catch { return; }
       if (!m || typeof m !== 'object') return;
       if (m.kind === 'hello') {
-        info = { engine: m.engine || null, grammar: !!m.grammar, partials: !!m.partials };
+        info = { engine: m.engine || null, grammar: !!m.grammar, partials: !!m.partials,
+                 wake: Array.isArray(m.wake) ? m.wake.slice() : [] };
         tries = 0;
-        if (mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar || null });
+        if (wake) {
+          if (!info.wake.length) { set('refused', 'no wake detector'); return; }
+          sendJson({ type: 'wake', on: true });
+        } else if (mode) sendJson({ type: 'mode', mode: mode.mode, grammar: mode.grammar || null });
         set('ready');
         return;
       }
       if (m.kind === 'error' && m.error === 'secret') { set('refused', 'secret'); return; }
+      if (m.kind === 'wake') {
+        if (wake) { try { onWake?.({ ...m, slot, name }); } catch (err) { console.error('speech engine: onWake', err); } }
+        return;
+      }
       if (m.kind === 'partial' || m.kind === 'final') {
         try { onResult?.({ ...m, slot, name }); } catch (err) { console.error('speech engine: onResult', err); }
       }
@@ -407,6 +429,15 @@ export function connectEngine({
         return true;
       } catch { return false; }
     },
+    /** A wake connection: every frame, utterance or not. */
+    stream(pcm) {
+      if (!wake || state !== 'ready' || !ws) return false;
+      try {
+        if (typeof ws.bufferedAmount === 'number' && ws.bufferedAmount > maxBuffered) return false;
+        ws.send(pcm.buffer.byteLength === pcm.byteLength ? pcm.buffer : pcm.slice().buffer);
+        return true;
+      } catch { return false; }
+    },
     end(id) { if (current !== id) return false; current = null; return sendJson({ type: 'end', utteranceId: id }); },
     cancel(id) { if (current !== id) return false; current = null; return sendJson({ type: 'cancel', utteranceId: id }); },
     setMode(m) {
@@ -430,6 +461,8 @@ export function connectEngine({
 // it ending. 500 ms: a phone's audio arrives over WebRTC a few hundred ms late [training knowledge,
 // unmeasured here], and two people rarely answer each other inside half a second.
 export const PAIR_MS = 500;
+// One wake from two ears inside this is one wake (see wakeHeard).
+export const WAKE_DEDUPE_MS = 1500;
 // A group whose engines never all answered is closed this long after its last ear ended, so a
 // caption is not left "still checking" by a computer that went away mid-sentence.
 export const GIVE_UP_MS = 15000;
@@ -658,7 +691,9 @@ export function createRanker({
  * with no recogniser answering never records the room (its status says "waiting").
  *
  * The seam:  start(onText) · stop() · running · setMode(m)
- * And more:  status() / onStatus(fn)  { state: 'waiting'|'listening'|'blocked'|'no-mic'|'stopped', engines, ears }
+ * And more:  status() / onStatus(fn)  { state: 'waiting'|'listening'|'blocked'|'no-mic'|'stopped', engines, ears,
+ *                                        wake: { state } | null }
+ *            onWake(fn)               the wake-phrase detector (plan.wake) heard its phrase - see `wakeSays`
  *                                      (blocked: the browser holds sound until the page is touched)
  *            onCaption(fn)            every answer, for subtitles (see createRanker's caption shape)
  *            onRevision(fn)           a later pass disagreed with a command that already acted
@@ -688,6 +723,13 @@ export function rankedRecognizer({
   capture = true,
   // See createRanker. The kiosk passes input_speech.js's `meansSomething` with the person's wake phrases.
   actsOn = null,
+  // THE WAKE HOOK (plan.wake set). What a wake event hands the command path: the person's own wake
+  // phrase as if it had been heard ALONE, so input_speech.js opens its listening window exactly as it
+  // does for a transcribed one - cue, tone, duck, and the window the command lands in - seconds before
+  // the recogniser's transcript arrives. That transcript then lands in the open window ("computer
+  // please pause" fires and closes it; "computer please" alone re-opens it). null = tell `onWake`
+  // listeners only.
+  wakeSays = null,
 } = {}) {
   const captionFns = new Set();
   const statusFns = new Set();
@@ -695,6 +737,8 @@ export function rankedRecognizer({
   // Row 2.44: the utterances as they are cut ({ type, ear, uid, group, t, pcm? }), for voice_recording.js.
   // Nothing listens unless a person turned recording on; this opens nothing and sends nothing anywhere.
   const utteranceFns = new Set();
+  const wakeFns = new Set();
+  let lastWakeAt = -Infinity;
   const emit = (set, x) => { for (const fn of [...set]) { try { fn(x); } catch (err) { console.error('speech recogniser', err); } } };
 
   let onText = null;
@@ -714,7 +758,7 @@ export function rankedRecognizer({
 
   const slots = () => plan.passes.map((p) => p.slot);
   const connsOf = (slot) => [...conns.entries()].filter(([k]) => k.startsWith(`${slot}|`)).map(([, c]) => c);
-  const anyReady = () => [...conns.values()].some((c) => c.ready());
+  const anyReady = () => [...conns.entries()].some(([k, c]) => !k.startsWith('wake|') && c.ready());
 
   function status() {
     const es = plan.passes.map((p) => {
@@ -732,8 +776,9 @@ export function rankedRecognizer({
         state = ctx && ctx.state === 'suspended' ? 'blocked' : 'listening';
       } else state = 'waiting';
     }
+    const w = plan.wake ? conns.get(`wake|${firstEar}`) : null;
     return { state, engines: es, skipped: (plan.skipped || []).map((s) => ({ slot: s.slot, name: s.name, why: s.why })),
-             ears: [...ears.keys()] };
+             ears: [...ears.keys()], wake: plan.wake ? { state: w ? w.state() : 'closed' } : null };
   }
   let lastSig = '';
   function tellStatus() {
@@ -758,6 +803,9 @@ export function rankedRecognizer({
     const e = earState(ear);
     e.frames = (e.frames || 0) + 1;
     connectEar(ear);
+    // The wake detector hears EVERY frame, not only the segmenter's utterances: it keeps its own
+    // rolling context, and a phrase must not lose its first syllable to the segmenter's onset.
+    if (plan.wake) conns.get(`wake|${ear}`)?.stream(frame);
     for (const ev of e.seg.push(frame, t)) {
       const uid = `${ear}:${ev.id}`;
       if (ev.type === 'begin') {
@@ -798,6 +846,29 @@ export function rankedRecognizer({
                                 onState: (s) => engineState(p.slot, ear, s) });
       conns.set(key, c);
       if (mode) c.setMode(mode);
+    }
+    const wk = `wake|${ear}`;
+    if (plan.wake && !conns.has(wk)) {
+      // Its own state handler: a wake detector answering does NOT open the microphone - with no
+      // recogniser up, a heard wake phrase would open a window no command could ever land in.
+      conns.set(wk, connectEngine({ slot: 'wake', name: 'Wake phrase', url: plan.wake.url, key: plan.wake.key || '',
+                                    WebSocketImpl, retryMs, setTimer, clearTimer, wake: true,
+                                    onWake: (w) => wakeHeard(ear, w), onState: () => tellStatus() }));
+    }
+  }
+  // Two microphones hear one phrase: one wake, not two. 1.5 s - the same phrase through a phone and the
+  // room's microphone arrives within a few hundred ms [training knowledge]; the service already keeps
+  // one ear from firing twice inside 2 s.
+  function wakeHeard(ear, w) {
+    if (!running) return;
+    const t = now();
+    if (t - lastWakeAt < WAKE_DEDUPE_MS) return;
+    lastWakeAt = t;
+    emit(wakeFns, { word: w.word, score: w.score, ear, atMs: w.atMs, detector: w.detector || null, t });
+    if (typeof wakeSays === 'string' && wakeSays.trim()) {
+      const c = Number(w.score);
+      try { onText?.(wakeSays, { ...(Number.isFinite(c) ? { confidence: Math.max(0, Math.min(1, c)) } : {}), wake: true }); }
+      catch (err) { console.error('speech: onText (wake)', err); }
     }
   }
   function disconnectEar(ear) {
@@ -946,6 +1017,8 @@ export function rankedRecognizer({
     onRevision(fn) { revisionFns.add(fn); return () => revisionFns.delete(fn); },
     /** Row 2.44: each utterance as it is cut - begin, its 16 kHz audio frames, end or cancel. */
     onUtterance(fn) { utteranceFns.add(fn); return () => utteranceFns.delete(fn); },
+    /** The wake-phrase detector heard its phrase: { word, score, ear, atMs, detector, t }. */
+    onWake(fn) { wakeFns.add(fn); return () => wakeFns.delete(fn); },
     sourcesChanged() { syncPhones(); },
     feed(ear, frame, t) { onFrame(ear, frame, t); },
     /** Per ear: frames heard, the room's noise floor (dB), whether somebody is talking. Never audio. */

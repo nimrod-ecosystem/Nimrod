@@ -254,7 +254,167 @@ def make_backend(kind: str, **kw) -> object:
         return VoskBackend(kw['model'])
     if kind == 'fake':
         return FakeBackend(script=kw.get('script'))
+    if kind == 'none':
+        return None          # a wake-word-only service: no transcription at all
     raise ValueError(f'unknown backend {kind!r}')
 
 
-__all__ = ['SAMPLE_RATE', 'WhisperBackend', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads']
+# ---------------------------------------------------------------------------------------------
+# WAKE-WORD DETECTORS (row 2.28 / note AO 2): a stream, not utterances
+# ---------------------------------------------------------------------------------------------
+# A wake detector does not transcribe. It scores ONE phrase, continuously, every 80 ms, and says
+# when the score crosses its threshold - so the screen can show "Listening" and duck the video the
+# moment the phrase ends, while the command itself goes to Whisper/Vosk as before (~2 s later on the
+# desktop). Bench numbers: openwakeword_measure_20261001.md (private repo).
+#
+#     detector.name              e.g. 'oww:hey_jarvis'
+#     detector.words             what it can hear, e.g. ['hey_jarvis']
+#     detector.stream() -> s     one per connection (each holds its own ~10 s of audio features)
+#     s.feed(pcm) -> [events]    {word, score, atMs}: atMs = where in THIS stream's audio it fired
+#
+# *** ONE FIRE PER CROSSING. *** The score stays over the threshold for several 80 ms frames while
+# the phrase ends; a detector that fired on each would duck, unduck and re-duck. After a fire the
+# word is quiet until its score has dropped back under the threshold AND `refractory_s` has passed.
+
+WAKE_THRESHOLD = 0.5      # openWakeWord's own documented default; a flag (--wake-threshold)
+WAKE_REFRACTORY_S = 2.0   # nobody says the wake phrase twice inside 2 s; a flag (--wake-refractory-s)
+_OWW_CHUNK = 1280         # 80 ms at 16 kHz: the frame openWakeWord's models step by
+
+
+class _Edge:
+    """The one-fire-per-crossing rule, shared by the real detector and the fake."""
+
+    def __init__(self, threshold: float, refractory_s: float):
+        self.threshold = float(threshold)
+        self.refractory = float(refractory_s)
+        self.last = {}        # word -> audio seconds of its last fire
+        self.armed = {}       # word -> may fire again
+
+    def check(self, word: str, score: float, t: float):
+        armed = self.armed.get(word, True)
+        last = self.last.get(word)
+        if score >= self.threshold:
+            if armed and (last is None or t - last >= self.refractory):
+                self.armed[word] = False
+                self.last[word] = t
+                return True
+            return False
+        if not armed and (last is None or t - last >= self.refractory):
+            self.armed[word] = True
+        return False
+
+
+class OpenWakeWordDetector:
+    def __init__(self, models=('hey_jarvis',), threshold: float = WAKE_THRESHOLD,
+                 refractory_s: float = WAKE_REFRACTORY_S, vad_threshold: float = 0.0,
+                 framework: str = 'onnx'):
+        # `models`: openWakeWord's pre-trained names ('hey_jarvis', 'alexa', ...) or paths to a
+        # custom .onnx/.tflite. NOTHING IS DOWNLOADED HERE: a model missing from the machine is an
+        # error to report (the models were fetched once, by hand, with Mike's OK - 2026-10-01).
+        # onnx, not tflite: tflite-runtime has no wheel for Python 3.13 on the Pi (Trixie), and
+        # onnxruntime is what openWakeWord uses on Windows anyway - one framework everywhere.
+        import openwakeword  # noqa: WPS433 (heavy import, on purpose here)
+        self._oww = openwakeword
+        self.models = [str(m) for m in models]
+        self.threshold = float(threshold)
+        self.refractory_s = float(refractory_s)
+        self.vad_threshold = float(vad_threshold)
+        self.framework = framework
+        probe = self._model()                  # fail at start-up, not on the first connection
+        self.words = list(probe.models.keys())
+        self.name = 'oww:' + '+'.join(self.words)
+
+    def _model(self):
+        return self._oww.Model(wakeword_models=list(self.models), inference_framework=self.framework,
+                               vad_threshold=self.vad_threshold)
+
+    def stream(self):
+        return _OwwStream(self)
+
+
+class _OwwStream:
+    def __init__(self, d: OpenWakeWordDetector):
+        import numpy as np  # noqa: WPS433
+        self._np = np
+        self.d = d
+        self.model = d._model()
+        # openWakeWord keeps 10 s of raw audio in a deque and list()-copies all of it every 80 ms step,
+        # but reads only the last ~110 ms. 2 s is plenty: measured 2026-10-01, scores identical (max
+        # difference 3e-7), the step ~10% cheaper on the Pi 400 (28.9% -> 25.6% of a core) and ~1/3
+        # cheaper on the desktop. A private attribute, so only when it is there.
+        from collections import deque  # noqa: WPS433
+        pre = getattr(self.model, 'preprocessor', None)
+        if pre is not None and isinstance(getattr(pre, 'raw_data_buffer', None), deque):
+            pre.raw_data_buffer = deque(pre.raw_data_buffer, maxlen=SAMPLE_RATE * 2)
+        self.edge = _Edge(d.threshold, d.refractory_s)
+        self.pending = bytearray()
+        self.samples = 0                       # audio fed so far, for atMs
+
+    def feed(self, pcm: bytes):
+        self.pending.extend(pcm)
+        out = []
+        step = _OWW_CHUNK * 2
+        while len(self.pending) >= step:
+            chunk = bytes(self.pending[:step])
+            del self.pending[:step]
+            self.samples += _OWW_CHUNK
+            scores = self.model.predict(self._np.frombuffer(chunk, dtype='<i2'))
+            t = self.samples / SAMPLE_RATE
+            for word, score in scores.items():
+                s = float(score)
+                if self.edge.check(word, s, t):
+                    out.append({'word': word, 'score': round(s, 3), 'atMs': round(t * 1000)})
+        return out
+
+    def reset(self):
+        self.model.reset()
+        self.pending.clear()
+
+
+class FakeWakeDetector:
+    """For the tests: fires `word` wherever a 20 ms run of the sample value `marker` appears in the
+    audio. Same edge rule as the real one, so the tests exercise it."""
+
+    def __init__(self, word: str = 'computer_please', marker: int = 12345, score: float = 0.9,
+                 threshold: float = WAKE_THRESHOLD, refractory_s: float = WAKE_REFRACTORY_S):
+        self.words = [word]
+        self.name = f'fake-wake:{word}'
+        self.word, self.marker, self.score = word, int(marker), float(score)
+        self.threshold, self.refractory_s = float(threshold), float(refractory_s)
+
+    def stream(self):
+        return _FakeWakeStream(self)
+
+
+class _FakeWakeStream:
+    def __init__(self, d: FakeWakeDetector):
+        self.d = d
+        self.edge = _Edge(d.threshold, d.refractory_s)
+        self.samples = 0
+        self.mark = d.marker.to_bytes(2, 'little', signed=True) * 320
+
+    def feed(self, pcm: bytes):
+        out = []
+        n = len(pcm) // 2
+        hit = self.mark in pcm
+        self.samples += n
+        t = self.samples / SAMPLE_RATE
+        if self.edge.check(self.d.word, self.d.score if hit else 0.0, t):
+            out.append({'word': self.d.word, 'score': self.d.score, 'atMs': round(t * 1000)})
+        return out
+
+    def reset(self):
+        pass
+
+
+def make_wake(models, **kw):
+    if not models:
+        return None
+    if list(models) == ['fake']:
+        return FakeWakeDetector()
+    return OpenWakeWordDetector(models=models, **{k: v for k, v in kw.items() if k in (
+        'threshold', 'refractory_s', 'vad_threshold', 'framework')})
+
+
+__all__ = ['SAMPLE_RATE', 'WhisperBackend', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
+           'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S']

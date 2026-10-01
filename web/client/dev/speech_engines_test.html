@@ -28,7 +28,7 @@ import {
   SPEECH_PASS_FIELDS, ENGINE_DEFAULTS, SEGMENT_DEFAULTS, LOCAL_URL, PASS_CHOICES, RETRY_MS,
 } from '../speech_engines.js';
 import { createDownsampler, CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
-import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething } from '../input_speech.js';
+import { attachSpeech, SPEECH_ON_FIELDS, speechSwitchFrom, phraseControl, meansSomething, LISTENING_TOPIC } from '../input_speech.js';
 import { createSubtitles } from '../subtitles.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
@@ -97,13 +97,18 @@ function makeServers() {
       queueMicrotask(() => this.onclose?.({ code: 1000 }));
     }
   }
-  function server(url, { engine = 'fake', secret = null, answer = () => ({ text: '' }), hold = false, partials = false } = {}) {
+  function server(url, { engine = 'fake', secret = null, answer = () => ({ text: '' }), hold = false, partials = false, wake = null } = {}) {
     const s = { url, engine, secret, answer, hold, partials, down: false, conns: new Set(), held: [], utts: new Map(),
-                modes: [], begun: [], ended: [], audioBytes: 0, hellos: [] };
+                modes: [], begun: [], ended: [], audioBytes: 0, hellos: [], wakeOns: [], wakeBytes: 0 };
     const reply = (ws, m) => queueMicrotask(() => { if (ws.readyState === 1) ws.onmessage?.({ data: JSON.stringify(m) }); });
+    // The wake stream (web/speech_service --wake): `fire` is the detector hearing its phrase.
+    s.fire = (word = 'hey_jarvis', score = 0.8, only = null) => {
+      for (const ws of s.conns) if (ws.wakeOn && (!only || only(ws))) reply(ws, { kind: 'wake', word, score, atMs: 1200, ms: 4, detector: 'fake' });
+    };
     s.receive = (ws, data) => {
       if (typeof data !== 'string') {
         s.audioBytes += data.byteLength;
+        if (ws.wakeOn) s.wakeBytes += data.byteLength;
         const u = ws.cur && s.utts.get(ws.cur); if (u) u.bytes += data.byteLength;
         if (u && s.partials) reply(ws, { kind: 'partial', utteranceId: ws.cur, text: 'partial', engine });
         return;
@@ -112,8 +117,9 @@ function makeServers() {
       if (m.type === 'hello') {
         s.hellos.push(m);
         if (secret && m.secret !== secret) { reply(ws, { kind: 'error', error: 'secret' }); queueMicrotask(() => ws.close()); return; }
-        reply(ws, { kind: 'hello', engine, grammar: true, partials, protocol: 1 });
-      } else if (m.type === 'mode') s.modes.push(m);
+        reply(ws, { kind: 'hello', engine, grammar: true, partials, protocol: 1, wake: wake || [] });
+      } else if (m.type === 'wake') { s.wakeOns.push(m.on); ws.wakeOn = m.on !== false && !!(wake && wake.length); }
+      else if (m.type === 'mode') s.modes.push(m);
       else if (m.type === 'begin') { ws.cur = m.utteranceId; s.begun.push(m.utteranceId); s.utts.set(m.utteranceId, { bytes: 0 }); }
       else if (m.type === 'end') {
         s.ended.push(m.utteranceId); ws.cur = null;
@@ -514,6 +520,91 @@ try {
     sp.destroy();
     check('*** stopped: every socket closed, nothing scheduled ***', !rec.running && c.pending() === 0 && rec.status().state === 'stopped');
     subs.destroy();
+  }
+
+  // ======================================================================================
+  section('the wake-phrase detector: "Listening" and the duck at once, the command still from the recogniser');
+  {
+    check('*** OFF by default: no wake address, no wake connection planned ***',
+      enginePlanFrom({}).wake === null && SPEECH_PASS_FIELDS.find((f) => f.key === 'speechWakeUrl')?.default === '');
+    check('an address that is not a websocket plans nothing', enginePlanFrom({ speechWakeUrl: 'http://x' }).wake === null);
+    const WURL = 'ws://127.0.0.1:8798/speech';
+    check('a wake address plans one', enginePlanFrom({ speechWakeUrl: ` ${WURL} ` }).wake?.url === WURL);
+
+    const { FakeWS, server } = makeServers();
+    const c = fakeClock();
+    const srvL = server(LOCAL_URL, { engine: 'whisper:small.en', hold: true, answer: () => ({ text: 'pause', confidence: 0.9, words: [] }) });
+    const srvW = server(WURL, { engine: 'none', wake: ['hey_jarvis'] });
+    const rec = rankedRecognizer({ plan: enginePlanFrom({ speechWakeUrl: WURL }), WebSocketImpl: FakeWS, setTimer: c.setTimer,
+      clearTimer: c.clearTimer, now: c.now, capture: false, wakeSays: 'computer please' });
+    const presses = [];
+    const input = { down: (d, ctl) => presses.push(ctl), up() {} };
+    const said = [];
+    const bus = { publish: (topic, p) => said.push([topic, p]), subscribe: () => () => {} };
+    const wakes = [];
+    rec.onWake((w) => wakes.push(w));
+    const sp = attachSpeech(input, { recognizer: rec, confirm: 'off', nearMiss: false, bus, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer });
+    sp.start();
+    await settle(); await settle(); await settle();
+    check('the detector answered and was asked for its stream (and is not counted as a recogniser)',
+      srvW.wakeOns.join() === 'true' && rec.status().wake?.state === 'ready' && rec.status().engines.length === 1, JSON.stringify(rec.status()));
+    let t = c.now();
+    for (let i = 0; i < 30; i++) { rec.feed('room', frame(QUIET, i), t); t += 20; }
+    c.advance(t - c.now());
+    await settle();
+    check('*** EVERY frame goes to the detector - with no utterance at all (quiet room) ***',
+      srvW.wakeBytes === 30 * SPF * 2 && srvW.begun.length === 0 && srvL.begun.length === 0, `${srvW.wakeBytes} ${srvW.begun.length}`);
+    // Somebody says the phrase: the utterance begins, and the detector fires BEFORE it ends.
+    for (let i = 0; i < 20; i++) { rec.feed('room', frame(LOUD, i), t); t += 20; }
+    srvW.fire('hey_jarvis', 0.82);
+    await settle(); await settle();
+    const opened = said.filter(([topic, p]) => topic === LISTENING_TOPIC && p.on);
+    check('*** the detector fired mid-utterance: the listening window is ALREADY open (cue + duck), nothing pressed ***',
+      opened.length === 1 && opened[0][1].reason === 'wake' && presses.length === 0 && sp.windowOpen, JSON.stringify(said));
+    check('onWake told: word, score, which ear', wakes.length === 1 && wakes[0].word === 'hey_jarvis' && wakes[0].score === 0.82
+      && wakes[0].ear === 'room', JSON.stringify(wakes));
+    for (let i = 0; i < 60; i++) { rec.feed('room', frame(QUIET, i), t); t += 20; }
+    c.advance(t - c.now());
+    srvL.flush();
+    await settle(); await settle(); await settle();
+    check('*** the recogniser\'s transcript ("pause", no wake words) lands in that window: pause pressed, window closed ***',
+      presses.length === 1 && presses[0] === phraseControl('pause') && !sp.windowOpen
+      && said.some(([topic, p]) => topic === LISTENING_TOPIC && p.on === false && p.reason === 'command'), `${presses} ${JSON.stringify(said)}`);
+    // Two ears hear one phrase.
+    for (let i = 0; i < 5; i++) { rec.feed('room', frame(QUIET, i), t); rec.feed('phone1', frame(QUIET, i), t); t += 20; }
+    c.advance(5000);
+    await settle(); await settle(); await settle();
+    check('a second ear gets its own wake stream', rec.connections().filter((x) => x.slot === 'wake' && x.state === 'ready').length === 2,
+      JSON.stringify(rec.connections()));
+    srvW.fire('hey_jarvis', 0.7);
+    await settle(); await settle();
+    check('*** two ears, one phrase: ONE wake, one window ***', wakes.length === 2
+      && said.filter(([topic, p]) => topic === LISTENING_TOPIC && p.on).length === 2, `${wakes.length}`);
+    sp.destroy();
+    check('stopped: wake sockets closed too, nothing scheduled', c.pending() === 0 && rec.status().state === 'stopped'
+      && rec.connections().length === 0);
+
+    // A service with no detector: refused and said; nothing streamed. A detector alone opens no microphone.
+    const m2 = makeServers();
+    m2.server(WURL, { engine: 'vosk:small' });
+    let gum = 0;
+    const r2 = rankedRecognizer({ plan: enginePlanFrom({ speechWakeUrl: WURL, speechLocalUrl: 'ws://nobody:1/speech' }),
+      WebSocketImpl: m2.FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now,
+      getUserMedia: () => { gum += 1; return Promise.reject(new Error('no')); } });
+    r2.start(() => {});
+    await settle(); await settle(); await settle();
+    check('*** a service with no wake detector: "refused", said in the status, nothing streamed ***',
+      r2.status().wake?.state === 'refused' && m2.servers[WURL].wakeBytes === 0, JSON.stringify(r2.status()));
+    const m3 = makeServers();
+    m3.server(WURL, { engine: 'none', wake: ['hey_jarvis'] });
+    const r3 = rankedRecognizer({ plan: enginePlanFrom({ speechWakeUrl: WURL, speechLocalUrl: 'ws://nobody:1/speech' }),
+      WebSocketImpl: m3.FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now,
+      getUserMedia: () => { gum += 1; return Promise.reject(new Error('no')); } });
+    r3.start(() => {});
+    await settle(); await settle(); await settle();
+    check('*** a detector up but NO recogniser: no microphone opened, status "waiting" ***',
+      gum === 0 && r3.status().wake?.state === 'ready' && r3.status().state === 'waiting', JSON.stringify(r3.status()));
+    r2.stop(); r3.stop();
   }
 
   // ======================================================================================

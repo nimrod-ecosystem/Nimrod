@@ -5,6 +5,7 @@ From `web/`:
     py -3.13 -m speech_service --backend whisper                 # this desktop, faster-whisper small.en
     python3 -m speech_service --backend vosk --model ~/vosk-bench/models/vosk-model-small-en-us-0.15
     py -3.13 -m speech_service --backend fake                    # the protocol with no model
+    python3 -m speech_service --backend none --wake hey_jarvis   # wake events only (openWakeWord)
 
 It binds 127.0.0.1:8797 by default: the room's sound stays on the machine that heard it, and only a
 screen on that same machine can reach it. The screen's "this screen" recogniser looks there.
@@ -25,7 +26,7 @@ import asyncio
 import os
 import sys
 
-from .backends import default_threads, make_backend
+from .backends import WAKE_REFRACTORY_S, WAKE_THRESHOLD, default_threads, make_backend, make_wake
 from .service import MAX_UTTERANCE_S
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
@@ -34,7 +35,17 @@ LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
 def parse(argv=None):
     p = argparse.ArgumentParser(prog='speech_service', description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('--backend', choices=['whisper', 'vosk', 'fake'], default='whisper')
+    p.add_argument('--backend', choices=['whisper', 'vosk', 'fake', 'none'], default='whisper',
+                   help="'none': no transcription - a wake-word-only service (needs --wake)")
+    p.add_argument('--wake', default=None,
+                   help="wake-word models, comma-separated: openWakeWord pre-trained names (hey_jarvis) "
+                        "or paths to a custom .onnx; 'fake' for tests. Off when not given.")
+    p.add_argument('--wake-threshold', type=float, default=WAKE_THRESHOLD,
+                   help=f'score that counts as the wake phrase (default {WAKE_THRESHOLD}, openWakeWord\'s own)')
+    p.add_argument('--wake-refractory-s', type=float, default=WAKE_REFRACTORY_S,
+                   help=f'quiet time after a wake before the same phrase can fire again (default {WAKE_REFRACTORY_S})')
+    p.add_argument('--wake-vad', type=float, default=0.0,
+                   help="openWakeWord's Silero VAD gate, 0..1 (default 0 = off)")
     p.add_argument('--model', default=None,
                    help="whisper: a model name in the local cache (default small.en); vosk: the model folder")
     p.add_argument('--threads', type=int, default=None,
@@ -72,8 +83,14 @@ def main(argv=None):
             print('--model is required for vosk (the model folder)', file=sys.stderr)
             return 2
         kw['model'] = os.path.expanduser(a.model)
+    if a.backend == 'none' and not a.wake:
+        print('--backend none needs --wake (otherwise the service would do nothing)', file=sys.stderr)
+        return 2
     backend = make_backend(a.backend, **kw)
-    print(f'speech service: {backend.name} on ws://{a.host}:{a.port}/speech', file=sys.stderr)
+    wake = make_wake([w.strip() for w in (a.wake or '').split(',') if w.strip()],
+                     threshold=a.wake_threshold, refractory_s=a.wake_refractory_s, vad_threshold=a.wake_vad)
+    names = ' + '.join(x.name for x in (backend, wake) if x is not None)
+    print(f'speech service: {names} on ws://{a.host}:{a.port}/speech', file=sys.stderr)
     server = a.server
     if server == 'auto':
         try:
@@ -85,13 +102,13 @@ def main(argv=None):
     if server == 'fastapi':
         import uvicorn
         from .service import create_app
-        uvicorn.run(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s),
+        uvicorn.run(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s, wake=wake),
                     host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20)
     else:
         from .service import serve_websockets
         try:
             asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
-                                         max_utterance_s=a.max_utterance_s))
+                                         max_utterance_s=a.max_utterance_s, wake=wake))
         except KeyboardInterrupt:
             pass
     return 0
