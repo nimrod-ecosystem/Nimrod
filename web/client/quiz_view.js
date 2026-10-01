@@ -74,6 +74,26 @@ const CSS = `
 .qz-media video,.qz-media img{width:100%;height:100%;object-fit:contain;display:block}
 .qz-media .qz-sound{font:800 clamp(24px,14cqmin,160px)/1 var(--font);color:var(--text-soft)}
 .qz-note{margin:0;font-size:clamp(12px,3cqmin,36px);color:var(--text-soft)}
+.qz-turn{display:inline-flex;align-items:center;gap:.35em;margin-inline-end:.5em;padding:.1em .55em .1em .15em;
+  border-radius:999px;border:max(2px,.4cqmin) solid var(--border);background:var(--surface);color:var(--text);
+  font-size:.62em;font-weight:800;vertical-align:middle;white-space:nowrap}
+.qz-turn[data-next]{border-style:dashed}
+.qz-token{display:inline-grid;place-items:center;width:1.5em;height:1.5em;border-radius:50%;
+  background:var(--accent);color:var(--surface);font-weight:800}
+.qz-token[data-p="1"]{background:var(--link)}
+.qz-token[data-p="2"]{background:var(--text)}
+.qz-token[data-p="3"]{background:var(--text-soft)}
+.qz-picks{display:flex;flex-wrap:wrap;gap:2cqmin;justify-content:center;align-items:stretch}
+.qz-pick{min-width:max(72px,20cqmin);min-height:max(64px,17cqmin);padding:1cqmin 2.5cqmin;border-radius:2.5cqmin;
+  border:max(2px,.6cqmin) solid var(--border);background:var(--surface);color:var(--text);
+  font:800 clamp(24px,11cqmin,132px)/1.1 var(--font);cursor:pointer}
+.qz-pick[data-small]{min-height:max(56px,13cqmin);font-size:clamp(16px,5.5cqmin,66px)}
+.qz-dots[data-count] .qz-dot{width:clamp(18px,8cqmin,72px)}
+.qz-dots[data-count] .qz-dotrow{gap:2cqmin}
+.qz-pick[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.5cqmin)}
+.qz-left-stack{display:grid;gap:2cqmin;justify-items:center}
+.qz-things{display:flex;flex-wrap:wrap;gap:1.5cqmin;justify-content:center}
+.qz-things .qz-card{font-size:clamp(16px,5.5cqmin,64px);padding:1.5cqmin 3cqmin}
 `;
 export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(STYLE_ID)) return;
@@ -94,11 +114,21 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *   spec.gameKey     the setting that picks the game ('game'), or null for a one-game module
  *   spec.view        { askHtml, left, leftEl, board, entryHtml, pairHtml, explainHtml, pointNote,
  *                      init, destroy, onHide, onShow, onConfig, onDeal, onReplay, speechGate,
- *                      settingsChoices }
+ *                      settingsChoices,
+ *                      — added for row 2.45's adaptive games, each optional and absent = unchanged:
+ *                      turnHtml(s, cfg)   whose turn it is, drawn in front of the question
+ *                      onResult(r, api)   one finished question (quiz_flow.js `onResult`)
+ *                      allowAward(p)      false keeps a right answer from paying points
+ *                      scoreDetail(s), scoreLine(s)  the published detail / the panel's own line }
+ *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
+ *                    drive the same moves (Math keeps `algebra/submit` answering as select)
+ *
+ * A button carrying `data-pick="<value>"` anywhere in the panel answers with that value (a touched
+ * tile), through the engine's `answer`, so it is judged exactly like a heard or offered answer.
  */
 export function quizModule(spec) {
   const { type, title = type, scoreLabel = `${title}: right answers`, games, defaults = {},
-    gameKey = null } = spec;
+    gameKey = null, extraTopics = {} } = spec;
   const view = spec.view || {};
   const ids = Object.keys(games);
 
@@ -163,6 +193,8 @@ export function quizModule(spec) {
 
     function award({ amount, game, item, answer }) {
       if (!ledger || !(amount > 0)) return;
+      try { if (view.allowAward && view.allowAward({ amount, game, item, answer }) === false) return; }
+      catch (err) { console.error(`${type}: allowAward`, err); }
       let note = `${game}: ${answer}`;
       try { if (view.pointNote) note = view.pointNote(game, item, answer); } catch { /* keep the plain one */ }
       Promise.resolve(ledger.award({ amount, source: type, type: 'School', tags: [type, game], note }))
@@ -185,6 +217,7 @@ export function quizModule(spec) {
       publishGrammar: (g) => announceGrammar(g),
       onReplay: (item) => view.onReplay?.(item, api),
       onDeal: (item) => view.onDeal?.(item, api),
+      onResult: (r) => view.onResult?.(r, api),
       setTimer, clearTimer,
     });
 
@@ -248,15 +281,20 @@ export function quizModule(spec) {
 
     function scoreHtml(s) {
       const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
-      return own ? `<p class="wg-count" data-score>${s.rightCount} right so far.</p>` : '';
+      if (!own) return '';
+      const line = view.scoreLine ? String(view.scoreLine(s, cfg) || '') : `${s.rightCount} right so far.`;
+      return `<p class="wg-count" data-score>${esc(line)}</p>`;
     }
 
     function render() {
       if (dead) return;
       ensureSkeleton();
       const s = engine.snapshot();
-      try { score?.set(s.rightCount, { detail: s.asked ? `${s.rightCount} of ${s.asked}` : '' }); }
-      catch (err) { console.error(`${type}: score`, err); }
+      try {
+        const detail = view.scoreDetail ? String(view.scoreDetail(s, cfg) || '')
+          : (s.asked ? `${s.rightCount} of ${s.asked}` : '');
+        score?.set(s.rightCount, { detail });
+      } catch (err) { console.error(`${type}: score`, err); }
       // A new question or a new phase starts the board over, at the top.
       const key = `${s.serial}:${s.phase}`;
       if (key !== lastKey) { lastKey = key; board.reset(); }
@@ -345,7 +383,10 @@ export function quizModule(spec) {
         ask = esc(cfg.doneLine);
         st = `<div class="wg-right">${scoreHtml(s)}${btns(stops, s.highlight)}</div>`;
       }
-      askEl.innerHTML = ask;
+      let turn = '';
+      try { turn = view.turnHtml ? String(view.turnHtml(s, cfg) || '') : ''; }
+      catch (err) { console.error(`${type}: turn`, err); }
+      askEl.innerHTML = turn + ask;
       stEl.innerHTML = st;
       footEl.innerHTML = foot;
       extraEl.innerHTML = extra;
@@ -377,6 +418,11 @@ export function quizModule(spec) {
         bus.subscribe(`${type}/prev`, onPrev);
         bus.subscribe(`${type}/select`, onSelect);
         bus.subscribe(`${type}/skip`, () => engine.skip());
+        const moves = { next: onNext, prev: onPrev, select: onSelect, skip: () => engine.skip() };
+        for (const [move, topics] of Object.entries(extraTopics || {})) {
+          if (!moves[move]) continue;
+          for (const t of (Array.isArray(topics) ? topics : [topics])) if (t) bus.subscribe(t, moves[move]);
+        }
         if (gameKey) {
           bus.subscribe(`${type}/play`, (p) => {
             const g = typeof p === 'string' ? p : p?.[gameKey] ?? p?.game;
@@ -387,6 +433,8 @@ export function quizModule(spec) {
         mount.addEventListener('click', (e) => {
           const a = e.target.closest?.('button[data-act]');
           if (a) { engine.press(a.dataset.act); return; }
+          const p = e.target.closest?.('button[data-pick]');
+          if (p) { engine.answer(p.dataset.pick, 'touch'); return; }
           const k = e.target.closest?.('button[data-k]');
           if (k) {
             const [ri, ci] = k.dataset.k.split('.').map(Number);

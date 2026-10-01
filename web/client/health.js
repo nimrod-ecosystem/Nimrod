@@ -87,6 +87,7 @@ export const HEALTH_EXPECT = {
   // youtube's own bound.
   spelling:    { idle: true },
   simple_math: { idle: true },
+  think_games: { idle: true },
   name_that:   { idle: true },
   // Row 2.37's card game: a table nobody is playing is a table, not a stalled panel.
   solitaire:   { idle: true },

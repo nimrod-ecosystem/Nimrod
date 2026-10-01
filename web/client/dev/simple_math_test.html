@@ -23,11 +23,14 @@ time: "Is it 7?"), on a number pad, or aloud. Hints: how to count it (with dots)
 
 <script type="module">
 import { harness, rig, sleep } from './quiz_test_rig.js';
-import { getManifest } from '../module.js';
+import { getManifest, listManifests } from '../module.js';
 import '../modules/simple_math.js';
-import { GAME, LINES, DEFAULTS, makeProblems, padBoard } from '../modules/simple_math.js';
+import '../modules/algebra.js';
+import { GAME, LINES, DEFAULTS, makeProblems, padBoard, FOLDED_INTO, mathBank, MATH_LEVELS } from '../modules/simple_math.js';
+import { BEGINNER, BEGINNER_DEFAULTS_FOR_MATH } from '../modules/algebra.js';
+import { LADDER_KEY } from '../adaptive_play.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
-import { auditFields } from '../settings_audit.js';
+import { auditFields, walkCosts } from '../settings_audit.js';
 import { normalizeField } from '../settings_fields.js';
 
 const { check, section, finish } = harness();
@@ -155,6 +158,147 @@ try {
     for (const d of String(it.answer)) r.host.querySelector(`[data-letter="${d}"]`).click();
     check('typing the answer checks it: right', r.phase() === 'celebrate', `${it.a}x${it.b} ${r.probe().entry}`);
     r.inst.destroy();
+  }
+
+  // =====================================================================================
+  // ROW 2.45, 2026-10-01: "The simple math isn't a separate game... the math module should have some
+  // questions for absolute beginners." The game is now Math's Beginner level; the old type stays.
+  // =====================================================================================
+  // A state handle of the full shape (the calculator game's quest mode reads one too).
+  const ladderStore = () => {
+    let v = {};
+    return { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() {}, peek: () => v,
+      startPolling() {}, flush() {}, subscribe: (fn) => { fn(v); return () => {}; } };
+  };
+
+  section('*** AN EXISTING SIMPLE MATH PANEL KEEPS WORKING, EXACTLY AS IT WAS SET ***');
+  {
+    const m = getManifest(GAME);
+    check('the type is still registered, and says it is folded into Math', !!m && m.foldedInto === 'algebra' && FOLDED_INTO === 'algebra');
+    const r = R({ ops: 'mul', maxNumber: 5, answerWith: 'pad', dots: 'always' });
+    const it = r.probe().item;
+    check('its saved settings still apply: a times question within 5, on the number pad, with dots',
+      it.op === 'mul' && it.a <= 5 && it.b <= 5 && r.probe().entryMode === 'digits' && !!r.host.querySelector('.qz-dot'));
+    check('*** it stays on the FIXED sums somebody chose: no ladder, no turn chip ***',
+      !('id' in it) && !r.host.querySelector('.qz-turn') && m.settings.find((s) => s.key === 'mathLevel').default === 'fixed');
+    r.inst.destroy();
+    const n = R();
+    check('a panel nobody configured: still plus and minus within ten, as before', ['add', 'sub'].includes(n.probe().item.op));
+    n.inst.destroy();
+    const math = getManifest('algebra');
+    const kindOf = (man, k) => normalizeField(man.settings.find((s) => s.key === k) || {})?.kind;
+    const keys = m.settings.map((s) => s.key);
+    const missing = keys.filter((k) => kindOf(math, k) !== kindOf(m, k));
+    check('*** every key the old panel saved means the same thing on Math (same key, same kind) ***', missing.length === 0, missing.join(','));
+    const store = ladderStore();
+    const a = R({ mathLevel: 'adaptive' }, { extra: { makeState: (k) => (k === LADDER_KEY ? store : null) } });
+    const ia = a.probe().item;
+    check('the ladder is one setting away on it: adaptive starts at counting', ia.op === 'count' && ia.level === 1 && typeof ia.id === 'string');
+    a.inst.destroy();
+  }
+
+  section('the beginner ladder');
+  {
+    const bank = mathBank();
+    check('every problem has a unique id', new Set(bank.map((p) => p.id)).size === bank.length);
+    check('six levels: counting, plus within 5, plus/minus within 10, within 20, times to 5, times to 10',
+      MATH_LEVELS.map((l) => l.ops.join('+') + l.max).join(',') === 'count5,add5,add+sub10,add+sub20,mul5,mul10');
+    check('a problem sits at the FIRST level that asks it (2 + 2 is level 2, not 3 or 4)', bank.find((p) => p.id === 'add:2+2').level === 2);
+    check('every answer is right, and none is below one', bank.every((p) => p.answer >= 1 && p.answer === (
+      p.op === 'count' ? p.a : p.op === 'add' ? p.a + p.b : p.op === 'sub' ? p.a - p.b : p.a * p.b)));
+    check('counting: the dots ARE the question, so they show without a hint', (() => {
+      const r = R({ ops: 'count', maxNumber: 5 });
+      const ok = r.host.querySelectorAll('.qz-dot').length === r.probe().item.a && r.said[0].startsWith('How many dots are there?');
+      r.inst.destroy();
+      return ok;
+    })());
+  }
+
+  section('*** MATH, AT ITS BEGINNER LEVEL ***');
+  {
+    const store = ladderStore();
+    const r = rig('algebra', { saved: { pool: BEGINNER }, extra: { makeState: (k) => (k === LADDER_KEY ? store : ladderStore()) } });
+    const mode = () => r.inst.impl.__mode();
+    const probe = () => r.inst.impl.__probe();
+    const eng = () => r.inst.impl.__engine;
+    check('Beginner shows the one-at-a-time game, not the calculator', mode() === 'beginner'
+      && !!r.host.querySelector('[data-quiz-root]') && !r.host.querySelector('.al-calc'));
+    const it = probe().item;
+    check('an absolute beginner starts by counting dots', it.op === 'count' && it.level === 1
+      && r.host.querySelectorAll('.qz-dot').length === it.a, JSON.stringify(it));
+    eng().hear({ text: String(it.answer), confidence: 0.95 });
+    check('a right answer aloud: right', probe().phase === 'celebrate');
+    await sleep(10);
+    check('...and a School point, under Math\'s own identifier', (r.store.points || []).length === 1
+      && (r.store.points[0].data.source || r.store.points[0].data?.source) === 'algebra', JSON.stringify(r.store.points));
+    r.timers.flush();
+    const serial = probe().serial;
+    r.publish('algebra/submit');
+    check('*** the one verb Math has today (algebra/submit) answers as select: "Yes, another one" ***', probe().serial === serial + 1);
+    r.publish('algebra/next');
+    check('algebra/next walks the choices', probe().highlight === 1);
+    for (let i = 0; i < 12; i++) {
+      const q = probe().item;
+      eng().hear({ text: String(q.answer), confidence: 0.95 });
+      r.timers.flush();
+      eng().press('more');
+    }
+    const ops = new Set();
+    for (let i = 0; i < 8; i++) {
+      const q = probe().item; ops.add(q.op);
+      eng().hear({ text: String(q.answer), confidence: 0.95 }); r.timers.flush(); eng().press('more');
+    }
+    check('*** right after right, it moves on past counting by itself ***', !ops.has('count'), [...ops].join(','));
+    check('the ladder is saved where every game on the screen can read it', !!store.peek().ladder?.players?.player?.games?.math);
+
+    r.setCfg({ pool: 'mixed' });
+    await sleep(20);
+    check('*** changing the level to Mixed takes the beginner game down and puts the calculator up ***',
+      mode() === 'calculator' && !r.host.querySelector('[data-quiz-root]') && !!r.host.querySelector('.al-calc'));
+    check('the beginner game said its score is gone', r.scores.some((s) => s.source === 'algebra' && s.gone));
+    const said = r.said.length;
+    r.publish('speech/answer', { text: 'five', confidence: 0.99 });
+    r.publish('algebra/next');
+    check('*** and it is really gone: nothing it subscribed to still answers ***', r.said.length === said);
+    r.setCfg({ pool: BEGINNER });
+    check('and back again', mode() === 'beginner' && !!r.host.querySelector('[data-quiz-root]'));
+    r.inst.destroy();
+
+    const plain = rig('algebra', {});
+    await sleep(20);
+    check('*** a Math panel that never chose a level is still the calculator (the default did not change) ***',
+      plain.inst.impl.__mode() === 'calculator' && !!plain.host.querySelector('.al-calc'));
+    plain.inst.destroy();
+  }
+
+  section('Math\'s settings: each row shows only at the level it belongs to');
+  {
+    const m = getManifest('algebra');
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const f = (k) => fields.find((x) => x.key === k);
+    check('"Beginner" is the first choice under Which problems, and Mixed is still the default',
+      f('pool').options[0].value === BEGINNER && f('pool').default === 'mixed');
+    const applies = (k, v) => !f(k).appliesWhen || f(k).appliesWhen(v) !== false;
+    check('at Mixed: the calculator rows show, the beginner rows do not',
+      applies('roundLength', { pool: 'mixed' }) && !applies('answerWith', { pool: 'mixed' }) && !applies('players', { pool: 'mixed' }));
+    check('at Beginner: the opposite', !applies('roundLength', { pool: BEGINNER }) && applies('answerWith', { pool: BEGINNER })
+      && applies('players', { pool: BEGINNER }));
+    check('at Beginner, adaptive by default: players and the ladder show, the fixed sums do not',
+      applies('adapt', { pool: BEGINNER }) && !applies('ops', { pool: BEGINNER })
+        && applies('ops', { pool: BEGINNER, mathLevel: 'fixed' }) && !applies('adapt', { pool: BEGINNER, mathLevel: 'fixed' }));
+    check('Math\'s beginner level starts adaptive; the old panel starts fixed',
+      f('mathLevel').default === 'adaptive' && BEGINNER_DEFAULTS_FOR_MATH.mathLevel === 'adaptive');
+    // `streakEvery` reads like a duration to the audit and has since 2026-09-05; it is a count of
+    // answers, not a time, and it is not this change's to rename (a rename needs a `legacy` read).
+    const errs = auditFields(fields, { type: 'algebra' })
+      .filter((x) => x.severity !== 'info' && !(x.code === 'duration-key' && x.key === 'streakEvery'));
+    check('the settings audit finds nothing new to warn about', errs.length === 0, JSON.stringify(errs));
+    const shown = (v) => fields.filter((x) => !x.appliesWhen || x.appliesWhen(v) !== false);
+    const worst = ['mixed', BEGINNER].map((p) => walkCosts(shown({ pool: p }), { level: 'standard' }).worst?.total || 0);
+    const worstFixed = walkCosts(shown({ pool: BEGINNER, mathLevel: 'fixed' }), { level: 'standard' }).worst?.total || 0;
+    check('*** with only the rows that apply, no level\'s menu costs more than 12 presses to change one thing ***',
+      Math.max(...worst, worstFixed) <= 12, `${worst.join(',')},${worstFixed}`);
+    check('no row on Math says she / her', !/\b(she|her|hers|herself)\b/i.test(fields.map((x) => `${x.label} ${x.note || ''}`).join(' ')));
   }
 
   finish();

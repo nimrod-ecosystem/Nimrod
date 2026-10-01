@@ -471,7 +471,7 @@ export const CATALOG = [
     type: 'algebra',
     group: 'practice',
     use: 'answer',
-    lead: 'Solve for x, with a calculator on screen.',
+    lead: 'Counting and small sums for beginners, then solve for x with a calculator on screen.',
     needs: 'Nothing.',
     why: 'The calculator is on screen on purpose. Somebody whose arithmetic is slower than '
       + 'it used to be has not lost the method, and being made to do sums by hand tests the '
@@ -501,14 +501,17 @@ export const CATALOG = [
       + 'can be touched or said aloud too. A miss gets the first letter as a hint, then how many '
       + 'letters there are, never a buzzer.',
   },
+  // Row 2.45, corrected 2026-10-01: simple math is not its own game (it is Math's Beginner level);
+  // these are the SLP's exercises, adaptive per player.
   {
-    type: 'simple_math',
+    type: 'think_games',
+    title: 'Thinking games',
     group: 'practice',
     use: 'answer',
-    lead: 'Plus, minus and times on small numbers: "What is 3 plus 4?"',
-    needs: 'Nothing. How big the numbers get is a setting.',
-    why: 'The near end of the scale from Solve for x. On one switch it offers one number at a '
-      + 'time ("Is it 7?"); there is a number pad for working it out, and dots to count with the hint.',
+    lead: 'Smallest or biggest of three, name the group, finish the sentence.',
+    needs: 'Nothing. The questions are built in.',
+    why: 'Each player gets questions at their own level, and it gets harder after nine right out of ten. '
+      + 'Two people can take turns on one screen. Missed questions come back later, further apart each time.',
   },
   {
     type: 'name_that',
@@ -667,6 +670,7 @@ export const NOT_FOR_CAREGIVERS = {
   presslog: 'a development test panel',
   interstitials: 'retired — replaced by Lineup',
   keyboard: 'a device module, not a software one — see this file’s own note just above',
+  simple_math: 'folded into Math (its Beginner level) — kept so old screens do not break',
 };
 
 /**

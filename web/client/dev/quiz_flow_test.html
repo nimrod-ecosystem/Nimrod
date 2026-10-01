@@ -295,6 +295,41 @@ try {
     check('*** a refresh never snatches a question somebody is answering ***', t.phase() === 'asking' && t.e.snapshot().serial === 1);
   }
 
+  section('row 2.45 (adaptive games): one result per question, and a touched answer');
+  {
+    const results = [];
+    const t = eng({ onResult: (r) => results.push(r) });
+    t.e.start('toy');
+    const it = t.e.snapshot().item;
+    t.e.answer(it.wrong2, 'touch');
+    check('a touched wrong answer: the switch line, never "It sounded like you said"', t.last().startsWith('That is incorrect.') && t.e.snapshot().misses === 1, t.last());
+    check('...and no result yet (the question is still open)', results.length === 0);
+    t.e.answer(it.a, 'touch');
+    check('a touched right answer: right', t.phase() === 'celebrate');
+    check('ONE result: right, after one miss', results.length === 1 && results[0].right === true && results[0].misses === 1
+      && results[0].item === it && results[0].game === 'toy', JSON.stringify(results));
+    t.e.hear({ text: it.a, confidence: 1 });
+    t.e.answer(it.a, 'touch');
+    check('*** a second hearing or touch cannot report it twice ***', results.length === 1);
+    t.e.answer('blue', 'touch');
+    check('answer() does nothing outside a question', t.phase() === 'celebrate');
+    t.flush(); t.e.press('more');
+    const it2 = t.e.snapshot().item;
+    t.e.hear({ text: it2.wrong2, confidence: 1 }); t.e.hear({ text: it2.wrong2, confidence: 1 });
+    t.e.press('reveal');
+    check('hearing the answer: a result, not right', results.length === 2 && results[1].right === false && results[1].revealed === true);
+    t.e.press('more');
+    t.e.skip();
+    check('a skip before any try: no result (nothing was attempted)', results.length === 2);
+    t.e.hear({ text: t.e.snapshot().item.wrong2, confidence: 1 });
+    t.e.skip();
+    check('a skip after a miss: a result, marked skipped', results.length === 3 && results[2].skipped === true && results[2].misses === 1);
+    const plain = eng();
+    plain.e.start('toy');
+    plain.e.answer(plain.e.snapshot().item.a);
+    check('a game with no onResult is unchanged', plain.phase() === 'celebrate');
+  }
+
   section('the shared settings are declared the way word games declares them');
   {
     const fields = QF.flowSettings().map(normalizeField).filter(Boolean);

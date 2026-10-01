@@ -197,6 +197,17 @@ export const ROUTES = {
     phrases: ['play name that state', 'name that state'] },
   'play-name-person': { topic: 'name_that/play', payload: { game: 'person' }, label: 'Play Name that person',
     phrases: ['play name that person', 'name that person'] },
+  // Row 2.45, 2026-10-01: the thinking games (the SLP exercises).
+  'play-thinking': { topic: 'think_games/play', payload: { game: 'mix' }, label: 'Play Thinking games',
+    phrases: ['play thinking games', 'thinking games'] },
+  'play-smallest': { topic: 'think_games/play', payload: { game: 'numbers' }, label: 'Play Smallest number',
+    phrases: ['play smallest number', 'smallest number'] },
+  'play-biggest': { topic: 'think_games/play', payload: { game: 'things' }, label: 'Play Biggest thing',
+    phrases: ['play biggest thing', 'biggest thing'] },
+  'play-groups': { topic: 'think_games/play', payload: { game: 'groups' }, label: 'Play Name the group',
+    phrases: ['play name the group', 'name the group'] },
+  'play-finish': { topic: 'think_games/play', payload: { game: 'finish' }, label: 'Play Finish the sentence',
+    phrases: ['play finish the sentence', 'finish the sentence'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

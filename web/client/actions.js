@@ -319,7 +319,7 @@ export const MODULE_VERBS = {
   // wraps; `select` takes whatever it is on. `back` skips a question somebody does not want.
   trivia:        { next: 'trivia/next', prev: 'trivia/prev', select: 'trivia/select',
                    back: 'trivia/skip' },
-  algebra:       { select: 'algebra/submit' },
+  algebra:       { next: 'algebra/next', prev: 'algebra/prev', select: 'algebra/submit', back: 'algebra/skip' },
   // THE STANDALONE CALCULATOR (2026-09-28). `algebra` above has a calculator keypad inside it and
   // answers only `select` (Submit) - no verb ever reached its keys, so somebody with one switch could
   // submit an answer but not work one out. This one is a keypad and nothing else, so the verbs are
@@ -401,6 +401,8 @@ export const MODULE_VERBS = {
   // stops or starts the gliding paddle (follow: changes the angle), back pauses. Rhythm: every press verb is a tap on the beat.
   brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back' },
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back' },
+  // Row 2.45: the thinking games. next / prev walk the offered answers, select answers, back skips.
+  think_games:   { next: 'think_games/next', prev: 'think_games/prev', select: 'think_games/select', back: 'think_games/skip' },
   // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
