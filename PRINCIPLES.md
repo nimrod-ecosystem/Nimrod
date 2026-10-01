@@ -406,13 +406,15 @@ to be wrong.
 | no image or recording of one named person is ever used to promote the project | Withdrawn as a person-specific rule and generalised: anything afforded her is afforded to any user. The general protection is stronger than the exception was. | 2026-08-29 |
 | "the communication board does not follow the profile theme" | Mike's own, narrowed by him the same day it was written. Right about the risk — a learned appearance should not move because somebody changed a theme — and wrong to state it as a prohibition. Replaced by: a setting, defaulting to pinned. His reason for the setting: *"Just because someone can't speak doesn't mean they have vision problems."* | 2026-09-02 |
 | "no face. Ever." — on AAC person symbols | Written into the symbol style reference by the drafter rather than ratified, with §0 open on the same desk the same session. Right about the risk (a drawn expression makes an adult's board look like a nursery, pins a mood on a card pressed in every mood, and smears at 60 px) and wrong as a prohibition: it forbade the obvious answer for the ten feeling symbols. Replaced by: a strong default on person symbols, with feelings still open. | 2026-09-02 |
+| a 3-flashes-a-second ceiling on every screen that "nobody can raise" | Proposed by Code (public `a12ae98`), not ratified, and turned down by Mike: *"That's only for the photosensitivity setting. I wouldn't make it impossible to raise. That cap shouldn't be there for everyone though."* Right about the risk — WCAG 2.3.1's threshold is real — and wrong to apply it to people who never asked for it. Replaced by: the photosensitivity setting sets a limit, raisable by the person; no limit otherwise. | 2026-10-01 |
 
-**The pattern across all ten is the same, and it is the argument for §0.** Every one was written by
+**The pattern across all eleven is the same, and it is the argument for §0.** Every one was written by
 someone reasoning carefully about a real risk. Every one was correct about the risk and wrong about
-the remedy, because it stated as a prohibition something that was really a default. Eight of the ten
-were caught by Mike pushing back on the documentation, his own included — and the tenth is the
+the remedy, because it stated as a prohibition something that was really a default. Nine of the eleven
+were caught by Mike pushing back on the documentation, his own included — and the "no face" row is the
 sharpest evidence for §0 there is, because it was written by someone who had read §0 that same
-session and wrote "ever" anyway.
+session and wrote "ever" anyway. The eleventh (2026-10-01) did not become a rule: it was put to Mike as
+a sign-off, which is §0 working.
 
 ---
 
