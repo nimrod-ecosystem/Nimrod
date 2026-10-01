@@ -34,6 +34,7 @@ from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
 from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch
+import notes
 
 log = logging.getLogger("nimrod")
 
@@ -1048,6 +1049,115 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         await announce()
 
 
+# ------------------------------------------------- a note left from another account
+# Mike, 2026-10-01: a visitor CAN leave the "note from someone" from their own account. The
+# rule (owner, or a live drive grant AND the owner's tick) is pure and lives in notes.py, with
+# the argument for it. These routes reach ONE thing: the note streams of a screen that belongs
+# to the person. Append and read only - there is no edit and no delete, because the note's
+# history is the note. Every refusal for "not allowed" and "no such person" is the SAME 403, so
+# this cannot be used to find out which person ids are real.
+_note_limit = notes.RateLimit()
+
+# A display name lives in the ordinary state table under a reserved scope, like per-person
+# rows do (db.person_scope). Real profile ids are 32 hex characters, so `_account` cannot
+# collide; it is one small row, and only for an account that chose to set a name.
+ACCOUNT_SCOPE = "_account"
+DISPLAY_NAME_KEY = "display-name"
+
+
+def _display_name(account: str) -> str:
+    try:
+        v = (store.get_state(account, ACCOUNT_SCOPE, DISPLAY_NAME_KEY).get("data") or {}).get("name")
+        return notes.clean_display_name(v)
+    except ValueError:
+        return ""
+
+
+def _note_gate(user: str, person_id: str) -> str:
+    """The owner's account if `user` may leave notes for this person, else the one 403."""
+    _check(person_id, ID_RE, "person id")
+    owner = _person_owner(person_id)
+    row = (store.get_state(owner, person_scope(person_id), notes.PERSON_ROW_KEY).get("data")
+           if owner else None)
+    if not notes.may_leave_note(person_id, account=user, owner=owner,
+                                grants=store.grants_on_person(person_id) if owner else [],
+                                writers=notes.writers_from(row), now_iso=_now_iso()):
+        raise HTTPException(status_code=403, detail="not allowed to leave notes for this person")
+    return owner
+
+
+def _note_screen(owner: str, person_id: str, pid: str, stream: str) -> dict:
+    """The screen, if it is THIS person's; 404 otherwise (another person's, another account's)."""
+    _check(pid, ID_RE, "profile id")
+    if stream not in notes.NOTE_STREAMS:
+        raise HTTPException(status_code=400, detail="only a note can be left here")
+    profile = store.get_profile(owner, pid)
+    if profile is None or profile.get("person_id") != person_id:
+        raise HTTPException(status_code=404, detail="no such screen")
+    return profile
+
+
+class DisplayNamePut(BaseModel):
+    name: str = ""
+
+
+@app.put("/api/me/display-name")
+def put_display_name(body: DisplayNamePut, user: str = Depends(current_user)):
+    """The name your notes are signed with. Empty clears it, and your notes say "Someone"."""
+    try:
+        name = notes.clean_display_name(body.name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    cur = store.get_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY)
+    store.put_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY, {"name": name}, cur.get("version", 0))
+    return {"display_name": name}
+
+
+@app.get("/api/people/{person_id}/notes/screens")
+def note_screens(person_id: str, user: str = Depends(current_user)):
+    """Which of this person's screens a note can be left on - names and ids only."""
+    owner = _note_gate(user, person_id)
+    out = []
+    for p in store.list_profiles(owner, person_id):
+        full = store.get_profile(owner, p["id"]) or {}
+        out.append({"id": p["id"], "name": p["name"],
+                    "has_note": any(m.get("type") == "note" for m in full.get("modules", []))})
+    return {"screens": out}
+
+
+@app.get("/api/people/{person_id}/notes/{pid}/{stream}")
+def list_person_notes(person_id: str, pid: str, stream: str, limit: int = 50,
+                      user: str = Depends(current_user)):
+    """The note and its history, as the screen shows them - no account ids."""
+    owner = _note_gate(user, person_id)
+    _note_screen(owner, person_id, pid, stream)
+    got = store.list_events(owner, pid, stream, max(1, min(limit, 200)))
+    return {"events": [notes.visible_row(e) for e in got["events"] if e.get("kind") == notes.NOTE_KIND],
+            "total": got["total"]}
+
+
+@app.post("/api/people/{person_id}/notes/{pid}/{stream}")
+def leave_person_note(person_id: str, pid: str, stream: str, body: EventPost, request: Request,
+                      user: str = Depends(current_user)):
+    """Append one note. The author is stamped HERE, from the signed-in account."""
+    owner = _note_gate(user, person_id)
+    _note_screen(owner, person_id, pid, stream)
+    if body.kind != notes.NOTE_KIND:
+        raise HTTPException(status_code=400, detail="only a note can be left here")
+    try:
+        data = notes.build_row(body.data, display_name=_display_name(user))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not _note_limit.hit(f"{user}|{person_id}"):
+        raise HTTPException(status_code=429, detail="that is a lot of notes - try again in a few minutes")
+    row = store.append_event(owner, pid, stream, notes.NOTE_KIND, data,
+                             principal_id=user, principal_type="human")
+    # The screen listens on its OWN url for this stream; tell it, so the note changes at once.
+    _push.publish(owner, f"/api/profiles/{pid}/events/{stream}")
+    _push.publish(user, request.url.path)
+    return notes.visible_row(row)
+
+
 # --------------------------------------------------------------------- server push (SSE)
 # "This URL has new data" — nothing more. See push.py for the full reasoning: the
 # 2026-08-10 decision was "server push = SSE, not WebSocket," and state.js/events.js's
@@ -1232,7 +1342,9 @@ def api_dev_test_pages():
 # 401 -> show "Sign in with Google". A device key or an OAuth session both satisfy it.
 @app.get("/api/me")
 def api_me(request: Request, user: str = Depends(current_user)):
-    return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK}
+    # `display_name`: what this account's notes are signed with ('' = "Someone"). See notes.py.
+    return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK,
+            "display_name": _display_name(user)}
 
 
 def _safe_next(path: str | None) -> str | None:

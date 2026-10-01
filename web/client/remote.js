@@ -44,6 +44,7 @@
 import { connectDrive, DRIVE_VERBS } from './drive.js';
 import { VERBS, FOCUS_VERBS, verbTopic } from './actions.js';
 import { mountIntercomApprovals } from './intercom_approvals.js';
+import { mountNoteVisit, mountNoteWriters } from './note_visit.js';
 import { INPUTS_KEY } from './input_runtime.js';
 import { authHeaders } from './auth.js';
 
@@ -99,6 +100,9 @@ export function mountRemote(root, {
   // signed in. Absent `makePersonState` -> no approvals block (a local backend has nowhere to keep it).
   makePersonState = null,
   whoami = () => whoamiFromServer(user),
+  // THE NOTE (note_visit.js): leave one for whoever is picked, from this account. Only on a
+  // server-backed panel (`profiles` given). `noteVisit: null` turns it off; a test hands in its own.
+  noteVisit = mountNoteVisit,
 } = {}) {
   let link = null;
   let grants = [];
@@ -127,8 +131,10 @@ export function mountRemote(root, {
         <span>Send what <b>I</b> press — my keyboard and switches drive their screen</span>
       </label>
       <p class="h-hint" data-fwd-note></p>
+      <div class="r-grants" data-note-visit></div>
       <div class="r-grants" data-grants></div>
       <div class="r-grants" data-intercom-approvals></div>
+      <div class="r-grants" data-note-writers></div>
     </div>`;
 
   const el = (sel) => root.querySelector(sel);
@@ -184,9 +190,12 @@ export function mountRemote(root, {
   let me = null;
   let torn = false;
   const whoamiOnce = async () => { if (me == null) { try { me = await whoami(); } catch { me = null; } } return me; };
+  let noteWriters = null;       // who may leave a note: same person's row, same owner-only rule
   function dropApprovals({ state: dropState = false } = {}) {
     try { approvals?.destroy(); } catch { /* already gone */ }
     approvals = null;
+    try { noteWriters?.destroy(); } catch { /* already gone */ }
+    noteWriters = null;
     if (dropState && approvalsState) { try { approvalsState.destroy?.(); } catch { /* already gone */ } approvalsState = null; }
   }
   async function renderApprovals() {
@@ -206,6 +215,22 @@ export function mountRemote(root, {
     approvals = mountIntercomApprovals(host, {
       personName, state: approvalsState, loadGrants: async () => grants, whoami: whoamiOnce,
     });
+    const nwHost = el('[data-note-writers]');
+    if (nwHost) noteWriters = mountNoteWriters(nwHost, { personName, state: approvalsState, loadGrants: async () => grants });
+  }
+
+  // A NOTE FOR WHOEVER IS PICKED, from this account (note_visit.js). Follows the chip row: switching
+  // person drops the old note, the same rule as the drive socket.
+  let noteView = null;
+  function renderNoteVisit() {
+    try { noteView?.destroy(); } catch { /* already gone */ }
+    noteView = null;
+    const host = el('[data-note-visit]');
+    if (!host) return;
+    host.innerHTML = '';
+    if (!profiles || typeof noteVisit !== 'function' || !target.id) return;
+    try { noteView = noteVisit(host, { personId: target.id, personName: target.name || '', user }); }
+    catch (err) { console.error('remote: note', err); noteView = null; }
   }
 
   function renderStatus() {
@@ -316,6 +341,7 @@ export function mountRemote(root, {
     renderShared();
     renderGrants();
     renderApprovals().catch((err) => console.error('remote: intercom approvals', err));
+    renderNoteVisit();
     openLink(target.id);
   }
 
@@ -323,6 +349,7 @@ export function mountRemote(root, {
   renderForward();
   renderStatus();
   openLink(personId);
+  renderNoteVisit();
 
   async function refresh() {
     if (profiles) {
@@ -355,8 +382,13 @@ export function mountRemote(root, {
     retarget,
     // The intercom approvals block (null unless shown), for a test.
     approvals: () => approvals,
+    // The note blocks (null unless shown), for a test.
+    noteWriters: () => noteWriters,
+    noteView: () => noteView,
     destroy() {
       torn = true;
+      try { noteView?.destroy(); } catch { /* already gone */ }
+      noteView = null;
       dropApprovals({ state: true });
       stopForwarding();
       listeners.abort();
