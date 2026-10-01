@@ -1145,8 +1145,17 @@ Say it once and move on.`;
       // Part 2 fails on BOTH tries (2026-09-29: a piece that gives nothing is asked once more).
       // Part 3 gives nothing readable the first time and good questions on the retry.
       const tries = {};
+      // Row 2.24 addition (2026-10-01): the ONE whole-video pass, after the pieces. It FAILS here,
+      // and the pieces' questions must all survive that. Every call's context size is recorded.
+      const videoCalls = [];
+      const ctxs = [];
       const pieceAI = { ...fakeAI(ROOTS_QS),
         chat: async (messages, opts = {}) => {
+          ctxs.push(opts.contextTokens);
+          if (messages[0].content.includes('THE WHOLE VIDEO')) {
+            videoCalls.push({ messages, opts });
+            return { ok: false, reason: 'The model gave up on the whole video.' };
+          }
           const c = messages[1].content;
           calls.push(c);
           calls.caps = [...(calls.caps || []), opts.maxTokens];
@@ -1183,6 +1192,47 @@ Say it once and move on.`;
       check('the quiz still starts from the pieces that worked', !!xhost.querySelector('[data-tq-progress]'), tqText('.l-tq'));
       check('...and says plainly that one part could not be read', /1 part of the transcript could not be read/.test(tqText('[data-tq-pieces-failed]')),
         tqText('.l-tq'));
+      check('*** the whole-video pass ran ONCE, after the pieces ***', videoCalls.length === 1, String(videoCalls.length));
+      check('*** every model call — pieces, retries and the pass — had its context size set ***',
+        ctxs.length === calls.length + videoCalls.length && ctxs.every((n) => Number.isInteger(n) && n >= 4096), JSON.stringify(ctxs));
+      check('*** a failed whole-video pass loses NONE of the pieces\' questions, and says so ***',
+        !!xhost.querySelector('[data-tq-progress]') && /No questions about the whole video this time \(The model gave up on the whole video\)/.test(tqText('[data-tq-video]'))
+          && /questions from each part are all here/.test(tqText('[data-tq-video]')), tqText('.l-tq'));
+
+      // And once more with a pass that WORKS: its question quotes two parts, and is tagged.
+      xinst.destroy(); xhost.innerHTML = '';
+      const vpCalls = [];
+      const sysSeen = [];
+      const WHOLE = { question: 'Which word names what this video is mostly not about?', answer: 'nothing much',
+        wrong: ['every root', 'the alphabet', 'Greek gods'],
+        source_lines: ['Knowing a root lets you guess a new word.', 'This is filler sentence number 2 about nothing much.'] };
+      const goodAI = { ...fakeAI(ROOTS_QS),
+        chat: async (messages, opts = {}) => {
+          sysSeen.push(messages[0].content);
+          if (messages[0].content.includes('THE WHOLE VIDEO')) {
+            vpCalls.push(opts);
+            return { ok: true, model: opts.model, ms: 5, text: JSON.stringify({ questions: [WHOLE] }) };
+          }
+          return { ok: true, model: opts.model, ms: 5,
+            text: JSON.stringify({ summary: 'Roots and filler.', questions: ROOTS_QS }) };
+        } };
+      xinst = await mountX(goodAI);
+      await sleep(700);
+      xhost.querySelector('[data-open="punctuation"]').click(); await sleep(80);
+      xhost.querySelector('[data-tq-open="punctuation"]').click(); await sleep(80);
+      const ta6 = xhost.querySelector('[data-tq-text]');
+      ta6.value = LONG; ta6.dispatchEvent(new Event('input', { bubbles: true }));
+      await sleep(50);
+      xhost.querySelector('[data-tq-make]').click();
+      await sleep(900);
+      check('the pass ran once again', vpCalls.length === 1 && Number.isInteger(vpCalls[0].contextTokens), JSON.stringify(vpCalls));
+      check('*** each piece is asked for a summary when the transcript is in pieces ***',
+        sysSeen.filter((s) => !s.includes('THE WHOLE VIDEO')).every((s) => /"summary"/.test(s)), sysSeen[0]);
+      check('*** a working pass adds its question, and the panel says so ***',
+        /1 question is about the whole video/.test(tqText('[data-tq-video]')), tqText('.l-tq'));
+      check('...and the quiz runs with it alongside the pieces\' questions',
+        !!xhost.querySelector('[data-tq-progress]') && /All \d+ questions checked out/.test(tqText('[data-tq-rejected]'))
+          || /dropped/.test(tqText('[data-tq-rejected]')), tqText('.l-tq'));
       xst.set({ pieceWords: 900 }); await xst.flush();
     }
 

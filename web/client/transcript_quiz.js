@@ -188,7 +188,13 @@ export function splitTranscript(transcript, { maxWords = 900 } = {}) {
  * supports; given (the "Most questions to write" setting), it is a ceiling, never a target.
  * `{ part, parts }` tells the model it is reading one piece of a longer transcript.
  */
-export function buildPrompt(transcript, count = null, { part = 0, parts = 0 } = {}) {
+// `summary: true` (row 2.24 addition, 2026-10-01) also asks for a short summary of the piece, for
+// the ONE whole-video pass (`videoPass`). Asked in the SAME call as the piece's questions rather
+// than a call of its own: on this CPU every model turn is minutes, and a separate summary call per
+// piece would double the job. FIRST in the reply, so an answer cut off by the length cap still has
+// it (`parsePieceSummary` reads it out of an unfinished reply). Only asked when there ARE several
+// pieces — a one-piece transcript's questions were already written with the whole video in view.
+export function buildPrompt(transcript, count = null, { part = 0, parts = 0, summary = false } = {}) {
   const n = Number(count) >= 1 && Number.isFinite(Number(count)) ? Math.floor(Number(count)) : 0;
   const text = cleanTranscript(transcript);
   const system = [
@@ -198,7 +204,10 @@ export function buildPrompt(transcript, count = null, { part = 0, parts = 0 } = 
     // `source_line` FIRST, on purpose: a model writes in order, so it picks the sentence and then
     // takes the answer out of it. Measured 2026-09-28 with the answer asked for first, qwen2.5:7b
     // quoted the sentence BEFORE the one holding the answer, and the check rejected all three.
-    '{"questions": [{"source_line": "...", "question": "...", "answer": "...", "wrong": ["...", "...", "..."]}]}',
+    summary
+      ? '{"summary": "...", "questions": [{"source_line": "...", "question": "...", "answer": "...", "wrong": ["...", "...", "..."]}]}'
+      : '{"questions": [{"source_line": "...", "question": "...", "answer": "...", "wrong": ["...", "...", "..."]}]}',
+    ...(summary ? ['First write "summary": two or three plain sentences saying what this part of the video is about, its main ideas in order.'] : []),
     'For each question: first copy one sentence from the transcript into "source_line", exactly, word for word (verbatim).',
     'Then write a question whose answer is a word or phrase taken from that same sentence.',
     '"answer" should use the same words the transcript uses.',
@@ -291,7 +300,11 @@ export function parseQuestions(text) {
     if (!it || typeof it !== 'object') continue;
     const question = firstStr(it, ['question', 'q']);
     const answer = firstStr(it, ['answer', 'correct', 'correct_answer']);
-    const source = firstStr(it, ['source_line', 'source', 'quote', 'sourceLine']);
+    // `source_lines` (several quotes): the whole-video pass, whose answer may join two parts.
+    // Shown to a person as one source, the quotes joined; `grounded` checks each one.
+    const lines = (Array.isArray(it.source_lines) ? it.source_lines : Array.isArray(it.quotes) ? it.quotes : [])
+      .map(str).filter(Boolean);
+    const source = lines.length ? lines.join(' … ') : firstStr(it, ['source_line', 'source', 'quote', 'sourceLine']);
     const rawWrong = [it.wrong, it.wrong_answers, it.distractors, it.incorrect].find(Array.isArray) || [];
     const seen = new Set([answer.toLowerCase()]);
     const wrong = [];
@@ -303,9 +316,28 @@ export function parseQuestions(text) {
       if (wrong.length === 3) break;
     }
     if (!question || !answer || !source || wrong.length < 3) continue;
-    out.push({ question, answer, wrong, source_line: source });
+    out.push(lines.length ? { question, answer, wrong, source_line: source, source_lines: lines }
+      : { question, answer, wrong, source_line: source });
   }
   return out;
+}
+
+/**
+ * The piece's summary out of a reply to `buildPrompt(..., { summary: true })`, or ''. Read with a
+ * pattern rather than only by parsing, because the summary comes FIRST and an answer cut off by the
+ * length cap never closes its JSON — the summary in it is still whole. Never throws.
+ */
+export function parsePieceSummary(text) {
+  if (typeof text !== 'string' || !text.trim()) return '';
+  for (const c of jsonCandidates(text)) {
+    try {
+      const d = JSON.parse(c);
+      if (d && typeof d === 'object' && !Array.isArray(d) && str(d.summary)) return str(d.summary);
+    } catch { /* next */ }
+  }
+  const m = /"summary"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text);
+  if (!m) return '';
+  try { return str(JSON.parse(`"${m[1]}"`)); } catch { return ''; }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -360,14 +392,27 @@ const MIN_SOURCE_WORDS = 3;
  *      number in the source line.
  * Never throws; junk in is `{ ok: false }`.
  */
+// A whole-video question may quote up to this many lines (`source_lines`). More would let a model
+// quote half the transcript and make any answer "found" — the check would stop checking anything.
+export const MAX_SOURCE_LINES = 3;
+
 export function grounded(item, transcript) {
   if (!item || typeof item !== 'object') return { ok: false, reason: 'not a question' };
   if (typeof transcript !== 'string' || !transcript.trim()) return { ok: false, reason: 'no transcript' };
-  const line = normalizeText(item.source_line);
-  const lineWords = line ? line.split(' ') : [];
-  if (lineWords.length < MIN_SOURCE_WORDS) return { ok: false, reason: 'the quoted line is too short to check' };
+  // `source_lines` (the whole-video pass): EACH line must pass rule 1 on its own, and the answer is
+  // then checked against the words of all of them together — that is what "how two parts connect"
+  // needs. One line is the old rule exactly.
+  const quoted = Array.isArray(item.source_lines) && item.source_lines.length ? item.source_lines : [item.source_line];
+  if (quoted.length > MAX_SOURCE_LINES) return { ok: false, reason: `more than ${MAX_SOURCE_LINES} quoted lines` };
   const whole = ` ${normalizeText(cleanTranscript(transcript))} `;
-  if (!whole.includes(` ${line} `)) return { ok: false, reason: 'the quoted line is not in the transcript' };
+  const lineWords = [];
+  for (const q of quoted) {
+    const line = normalizeText(q);
+    const words = line ? line.split(' ') : [];
+    if (words.length < MIN_SOURCE_WORDS) return { ok: false, reason: 'the quoted line is too short to check' };
+    if (!whole.includes(` ${line} `)) return { ok: false, reason: 'the quoted line is not in the transcript' };
+    lineWords.push(...words);
+  }
 
   const answerWords = normalizeText(item.answer).split(' ').filter(Boolean);
   const content = answerWords.filter((w) => !STOPWORDS.has(w));
@@ -393,6 +438,130 @@ export function checkQuestions(items, transcript) {
     if (v.ok) passed.push(it); else rejected.push({ item: it, reason: v.reason });
   }
   return { passed, rejected };
+}
+
+// ---------------------------------------------------------------------------------------------
+// *** THE CONTEXT SIZE, SET ON EVERY CALL (row 2.24 addition, Mike 2026-10-01) ***
+// ---------------------------------------------------------------------------------------------
+//
+// The pieces exist because the model server here silently ran with a 4,096-token window (measured
+// 2026-09-29). Relying on a server's default is how that went unseen, so every call now says how
+// big a window it needs — `contextTokens` on `ai.js`'s `chat`.
+//
+// *** MEASURED 2026-10-01, Ollama 0.34.4 on this desktop: its OpenAI-style endpoint IGNORES a
+// context size *** (sent as `options.num_ctx` and as a top-level `num_ctx`: `/api/ps` still showed
+// 4096). Only Ollama's own `/api/chat` takes it (sent 3072, `/api/ps` showed 3072). So `ai.js` sends
+// a call that names a context size to that endpoint when the server is Ollama, and falls back to the
+// standard endpoint (size not applied, said so in the result) when it is not.
+//
+// ONE RULE FOR EVERY CALL TYPE, argued per type by its answer allowance (the caller's):
+//   the prompt's own size (characters / 3 — English runs nearer 4 per token, so this OVER-counts,
+//   on purpose: a window a little too big costs memory, one too small cuts the transcript silently)
+//   + the room the answer may take + a small margin, rounded UP to a power of two, never below
+//   `floor`, never above `ceiling`.
+//   * floor 4,096: what this server used anyway, so an ordinary call (a 900-word piece, the summary
+//     pass of a video under about an hour, a fact check) asks for EXACTLY the window it already had.
+//     That matters: Ollama reloads the model whenever the window changes, which on this CPU is
+//     seconds per call, and a window that changed per call would pay it every time.
+//   * ceiling: the person's setting (`modules/lessons.js` `contextMax`, default 8,192 — every piece
+//     size on offer fits in it). Memory grows with the window; a Pi with 4 GB cannot afford what a
+//     desktop can, which is why it is a setting and not a number here.
+// `fits: false` means the call needed more than the ceiling: it is still sent, at the ceiling, and
+// the caller can say so (the server cuts the start of an over-long prompt, as before).
+const CTX_STEPS = [2048, 4096, 8192, 16384, 32768, 65536, 131072];
+export function contextFor(messages, { answerTokens = 0, floor = 4096, ceiling = 8192, margin = 256 } = {}) {
+  const chars = (Array.isArray(messages) ? messages : [])
+    .reduce((n, m) => n + String((m && m.content) || '').length + 8, 0);
+  // "No limit" on the answer (0) is allowed room for the longest ramble measured here: 2,000+ tokens.
+  const answer = Number(answerTokens) > 0 ? Math.floor(Number(answerTokens)) : 2048;
+  const need = Math.ceil(chars / 3) + answer + margin;
+  const hi = Number(ceiling) > 0 ? Math.floor(Number(ceiling)) : 8192;
+  const lo = Math.min(hi, Number(floor) > 0 ? Math.floor(Number(floor)) : 4096);
+  const step = CTX_STEPS.find((s) => s >= need) || CTX_STEPS[CTX_STEPS.length - 1];
+  return { tokens: Math.min(hi, Math.max(lo, step)), need, fits: need <= hi };
+}
+
+// ---------------------------------------------------------------------------------------------
+// *** THE WHOLE-VIDEO PASS (row 2.24 addition, Mike 2026-10-01: "Keep the pieces, and add one pass
+// over the pieces' summaries for whole-video questions.") — map, then reduce, ONCE ***
+// ---------------------------------------------------------------------------------------------
+//
+// The pieces see one stretch each, so nothing asks how the parts connect or what the video is
+// mainly about. This is ONE more model call, after the pieces: it is shown each piece's summary
+// (written by the piece's own call, `buildPrompt(..., { summary: true })`) and the lines that
+// piece's checked questions quoted — real transcript sentences, already proven to be in it.
+//
+// *** THE ANSWER KEY STILL COMES FROM THE TRANSCRIPT. *** A summary is the model's own words and
+// can be wrong, so a whole-video question must quote 1-3 of those transcript lines (`source_lines`)
+// and its answer must be in them — `grounded`, unchanged in spirit. A question that only the
+// summaries support is dropped like any other. The summaries steer the question; they never are
+// the evidence.
+//
+// *** IT CAN ONLY ADD. *** It runs after every piece is done, and anything that goes wrong here —
+// no answer, an unreadable one, nothing that checks — comes back as `ok: false` with a reason, and
+// the pieces' questions are untouched. Cancel still cancels (`cancelled`).
+
+export const SCOPE = Object.freeze({ PART: 'part', VIDEO: 'video' });
+// In the system prompt, and nowhere else: lets a test (or a log reader) tell this call apart.
+export const VIDEO_PASS_MARK = 'THE WHOLE VIDEO';
+
+/**
+ * Chat messages for the whole-video pass. `parts`: `[{ summary, lines }]` in order. At most
+ * `quotesPerPart` lines from each part, so a long video's prompt stays bounded (an hour is ~10
+ * parts: ten summaries and sixty quotes, ~3,000 tokens — inside the default window).
+ */
+export function buildVideoPrompt(parts, { quotesPerPart = 6 } = {}) {
+  const per = Number(quotesPerPart) >= 1 ? Math.floor(Number(quotesPerPart)) : 6;
+  const system = [
+    `You write multiple-choice quiz questions about ${VIDEO_PASS_MARK}, from notes on each of its parts.`,
+    'Each part has a SUMMARY and QUOTES copied word for word from the transcript.',
+    'Ask about the video as a whole: its main idea, how ideas in different parts connect, or what changes from start to end.',
+    'Do not ask about one small detail; those questions already exist.',
+    'Reply with strict JSON only, no prose, in exactly this shape:',
+    '{"questions": [{"source_lines": ["...", "..."], "question": "...", "answer": "...", "wrong": ["...", "...", "..."]}]}',
+    'For each question: first copy one to three QUOTES into "source_lines", exactly, word for word, preferably from different parts.',
+    'The answer must be a word or short phrase taken from those quotes. The summaries are only a guide; the answer must be in the quotes.',
+    'The question must not contain the answer.',
+    'Write exactly three wrong options of similar length and form to the answer, so length does not give the answer away.',
+    'Write only as many questions as the video supports: a few good ones, none as filler.',
+  ].join('\n');
+  const body = (parts || []).map((p, i) => {
+    const quotes = [...new Set((p && Array.isArray(p.lines) ? p.lines : []).map(str).filter(Boolean))].slice(0, per);
+    return [`PART ${i + 1}`, `SUMMARY: ${str(p && p.summary) || '(none)'}`, 'QUOTES:',
+      ...quotes.map((q) => `- ${q}`)].join('\n');
+  }).join('\n\n');
+  return [{ role: 'system', content: system }, { role: 'user', content: body }];
+}
+
+/**
+ * Run the pass. `chat(messages, { contextTokens, maxTokens })` resolves as `ai.js`'s `chat` (the
+ * caller binds model, JSON mode, timeout and Cancel). Resolves
+ *   `{ ran, ok, items, parsed, rejected, reason, cancelled?, ms, contextTokens, fits }`
+ * `items`: the questions that passed `grounded`, each tagged `scope: 'video'`; `parsed`: everything
+ * readable, tagged the same (for a caller that runs its own single check over all questions).
+ * `ran: false` when there is nothing to connect (fewer than two parts with notes). Never throws.
+ */
+export async function videoPass(parts, { chat, transcript, answerTokens = 0, ceiling = 8192, floor = 4096,
+  quotesPerPart = 6, signal } = {}) {
+  const usable = (parts || []).filter((p) => p && (str(p.summary) || (Array.isArray(p.lines) && p.lines.length)));
+  const base = { ran: false, ok: false, items: [], parsed: [], rejected: [], reason: '', ms: 0, contextTokens: 0, fits: true };
+  if (usable.length < 2) return { ...base, reason: 'There were not two parts with notes to connect.' };
+  if (signal?.aborted) return { ...base, cancelled: true, reason: 'Cancelled.' };
+  try {
+    const messages = buildVideoPrompt(usable, { quotesPerPart });
+    const ctx = contextFor(messages, { answerTokens, floor, ceiling });
+    const r = await chat(messages, { contextTokens: ctx.tokens, maxTokens: Number(answerTokens) > 0 ? answerTokens : 0 });
+    const ran = { ...base, ran: true, ms: Number(r && r.ms) || 0, contextTokens: ctx.tokens, fits: ctx.fits };
+    if (r?.cancelled || signal?.aborted) return { ...ran, cancelled: true, reason: 'Cancelled.' };
+    if (!r || !r.ok) return { ...ran, reason: (r && r.reason) || 'The model did not answer.' };
+    const parsed = parseQuestions(r.text).map((q) => ({ ...q, scope: SCOPE.VIDEO }));
+    if (!parsed.length) return { ...ran, reason: 'No whole-video questions could be read from what the model wrote.' };
+    const { passed, rejected } = checkQuestions(parsed, transcript);
+    if (!passed.length) return { ...ran, parsed, rejected, reason: 'None of the whole-video questions could be checked against the transcript.' };
+    return { ...ran, ok: true, items: passed, parsed, rejected };
+  } catch (err) {
+    return { ...base, ran: true, reason: `The whole-video pass went wrong: ${String((err && err.message) || err)}` };
+  }
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -591,12 +760,17 @@ function shuffle(list, rand = Math.random) {
 
 /** A parsed item as a lesson/pack question: `{ question, correct, answers (shuffled), source }`. */
 export function toLessonQuestion(item, rand = Math.random) {
-  return {
+  const lq = {
     question: item.question,
     correct: item.answer,
     answers: shuffle([item.answer, ...item.wrong.slice(0, 3)], rand),
     source: item.source_line,
   };
+  // Where it came from: one piece ('part', with its number) or the whole-video pass ('video').
+  // Carried into the review log with the question, so a screen or a later version can tell them apart.
+  if (item.scope === SCOPE.VIDEO || item.scope === SCOPE.PART) lq.scope = item.scope;
+  if (item.scope === SCOPE.PART && Number(item.part) > 0) lq.part = Number(item.part);
+  return lq;
 }
 
 /**

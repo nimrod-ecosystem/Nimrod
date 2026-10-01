@@ -148,6 +148,42 @@ const MODELS = { object: 'list', data: [{ id: 'qwen2.5:7b' }, { id: 'nomic-embed
       check('*** maxTokens -> OpenAI max_tokens in the body ***', f3.calls[0].body.max_tokens === 1200, J(f3.calls[0].body));
     }
 
+    // 2026-10-01 (row 2.24): the context size set per call. MEASURED on Ollama 0.34.4 here: its
+    // OpenAI-style endpoint ignores num_ctx however sent; only its own /api/chat honours it.
+    section('chat — contextTokens: Ollama\'s own endpoint when asked, the standard one otherwise');
+    {
+      const f = fakeFetch((url) => (url.endsWith('/api/chat')
+        ? resp(200, { message: { role: 'assistant', content: '{"ok":1}' }, done: true })
+        : resp(200, { choices: [{ message: { content: 'std' } }] })));
+      const ai = createAI({ fetchImpl: f, storage: memStorage() });
+      const r = await ai.chat([{ role: 'user', content: 'x' }], { model: 'qwen2.5:7b', json: true, temperature: 0.3,
+        maxTokens: 900, contextTokens: 8192 });
+      const c = f.calls[0];
+      check('*** a call naming a context size goes to <server>/api/chat (the /v1 dropped) ***',
+        f.calls.length === 1 && c.url === 'http://127.0.0.1:11434/api/chat', J(f.calls.map((x) => x.url)));
+      check('*** ...with options.num_ctx set, and the answer cap as num_predict ***',
+        c.body.options.num_ctx === 8192 && c.body.options.num_predict === 900 && c.body.options.temperature === 0.3
+          && c.body.format === 'json' && c.body.stream === false && c.body.model === 'qwen2.5:7b', J(c.body));
+      check('the text comes back the same way, and says the size was applied', r.ok && r.text === '{"ok":1}' && r.contextTokens === 8192, J(r));
+      const f2 = fakeFetch((url) => (url.endsWith('/api/chat') ? resp(404, 'not found')
+        : resp(200, { choices: [{ message: { content: 'std' } }] })));
+      const r2 = await createAI({ fetchImpl: f2, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm', contextTokens: 4096 });
+      check('*** a server without that endpoint: the standard call, and contextTokens null (not applied, said) ***',
+        r2.ok && r2.text === 'std' && r2.contextTokens === null && f2.calls[1].url.endsWith('/v1/chat/completions'), J([r2, f2.calls.map((x) => x.url)]));
+      const f3 = fakeFetch(() => resp(403, ''));
+      const r3 = await createAI({ fetchImpl: f3, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm', contextTokens: 4096 });
+      check('a refusal (403) is reported as before, not retried the other way', !r3.ok && r3.status === 403 && f3.calls.length === 1, J(r3));
+      const f4 = fakeFetch(() => resp(200, { choices: [{ message: { content: 'std' } }] }));
+      const ai4 = createAI({ fetchImpl: f4, storage: memStorage({ [AI_SETTINGS_KEY]: J({ baseUrl: 'http://10.0.0.5:8080' }) }) });
+      const r4 = await ai4.chat([{ role: 'user', content: 'x' }], { model: 'm', contextTokens: 4096 });
+      check('an address not shaped like Ollama\'s (no /v1) is never sent to /api/chat',
+        r4.ok && f4.calls.length === 1 && f4.calls[0].url === 'http://10.0.0.5:8080/chat/completions' && r4.contextTokens === null, J(f4.calls));
+      const f5 = fakeFetch(() => resp(200, { choices: [{ message: { content: 'std' } }] }));
+      const r5 = await createAI({ fetchImpl: f5, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('*** without contextTokens nothing changes: one standard call, no new field ***',
+        f5.calls.length === 1 && f5.calls[0].url.endsWith('/v1/chat/completions') && !('contextTokens' in r5), J(r5));
+    }
+
     section('chat — failures come back as a plain reason, never a throw');
     {
       const ai403 = createAI({ fetchImpl: fakeFetch(() => resp(403, '')), storage: memStorage(), pageOrigin: 'https://nimrodecosystem.com' });

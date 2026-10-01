@@ -44,7 +44,7 @@ import {
   videoMinutes, requiredAnswers, splitTranscript, buildPrompt, parseQuestions, checkQuestions, toLessonQuestion,
   toRoutedQuestion, questionId, transcriptKey, lengthTellsFor, startQuiz, quizCurrent, quizAnswer,
   quizProgress, quizDrop, reviewItems, poolFrom, isPaid, TRANSCRIPT_STREAM, REVIEW_KINDS, MINUTE_CHOICES,
-  factCheck, FACT,
+  factCheck, FACT, parsePieceSummary, contextFor, videoPass, SCOPE,
 } from '../transcript_quiz.js';
 import { createContests, contestKey, CONTEST_STATUS, CONTEST_TOPIC } from '../contests.js';
 
@@ -86,6 +86,8 @@ export const DEFAULTS = {
   maxQuestions: 0,
   pieceWords: 900,
   answerLength: 1200,
+  connectPieces: true,  // row 2.24 addition, 2026-10-01: the one whole-video pass; see its settings row
+  contextMax: 8192,      // the largest model window any call may ask for; see its settings row
   autoApprove: true,     // flipped 2026-09-28 (Mike: "Flip review."); see its settings row
   factCheck: false,
   aiModel: '',
@@ -257,6 +259,23 @@ const SETTINGS = [
   { key: 'answerLength', label: 'Longest answer per piece', kind: 'choice', default: 1200, level: 'advanced',
     options: [{ value: 800, label: 'Short (about 6 questions)' }, { value: 1200, label: 'Medium (about 9)' },
               { value: 2000, label: 'Long (about 15)' }, { value: 0, label: 'No limit' }] },
+  // *** THE WHOLE-VIDEO PASS (Mike, 2026-10-01, row 2.24: "Keep the pieces, and add one pass over the
+  // pieces' summaries for whole-video questions"). *** ON by default because Mike asked for it. For
+  // OFF: it is one more model turn after the pieces (minutes on a CPU-only machine) for a few extra
+  // questions. For ON: without it nothing asks how the parts of a long video connect. Only ever runs
+  // when the transcript went in more than one piece; a failure keeps every piece's questions.
+  { key: 'connectPieces', label: 'Also ask about the whole video', kind: 'toggle', default: true,
+    level: 'advanced',
+    note: 'For a long transcript sent in pieces: one more pass over short summaries of the pieces, for questions about how the parts connect. Takes one more turn of the AI.' },
+  // *** THE CONTEXT WINDOW, SET ON EVERY CALL (same day: "Set the context size explicitly per call"). ***
+  // Each call asks for the window its own prompt and answer need (transcript_quiz.js `contextFor`), at
+  // least 4,096 (what the model server here used anyway, so an ordinary call never makes it reload)
+  // and at most this. 8,192 by default: every piece size offered above fits in it. Bigger costs memory
+  // — fine on a desktop, too much for a small computer — so it is a setting, flagged to Mike (Rule 1).
+  // Only an Ollama server takes a window per call (measured, ai.js); others ignore it.
+  { key: 'contextMax', label: 'Largest AI window', kind: 'choice', default: 8192, level: 'advanced',
+    options: [{ value: 4096, label: '4,096 tokens (small computers)' }, { value: 8192, label: '8,192 tokens' },
+              { value: 16384, label: '16,384 tokens' }, { value: 32768, label: '32,768 tokens (lots of memory)' }] },
   // §0h, agreed 2026-09-17: the review queue is ON by default; skipping it is opt-in.
   // *** FLIPPED 2026-09-28 — Mike: "Flip review." *** Auto-approve is the DEFAULT now: a question that
   // passes `grounded` (and, when the fact check is on, is not flagged by it) joins the games with no
@@ -736,7 +755,8 @@ registerModule(
       } else if (s.stage === 'working') {
         body = `
           <p class="l-tq-working" role="status">Writing questions${s.modelName ? ` with ${esc(s.modelName)}` : ''}…
-            ${s.parts > 1 && s.part ? `<span data-tq-part>part ${s.part} of ${s.parts}</span> · ` : ''}<span data-tq-elapsed>0:00</span></p>
+            ${s.videoWorking ? '<span data-tq-part>questions about the whole video</span> · '
+              : s.parts > 1 && s.part ? `<span data-tq-part>part ${s.part} of ${s.parts}</span> · ` : ''}<span data-tq-elapsed>0:00</span></p>
           <p class="l-tq-help">A model on a computer without a graphics card can take several minutes.
             Everything else here keeps working while it runs.</p>
           <div class="l-actions"><button type="button" class="l-btn" data-tq-cancel>Cancel</button></div>`;
@@ -759,6 +779,9 @@ registerModule(
             : `All ${plural(s.kept, 'question')} checked out against the transcript.`}</p>
           ${s.piecesFailed ? `<p class="l-tq-help" data-tq-pieces-failed>${plural(s.piecesFailed, 'part')} of the transcript
             could not be read by the model, so there are no questions from ${s.piecesFailed === 1 ? 'it' : 'them'}.</p>` : ''}
+          ${s.videoPass && s.videoPass.ran ? `<p class="l-tq-help" data-tq-video>${s.videoPass.ok
+            ? `${plural(s.videoPass.count, 'question is', 'questions are')} about the whole video.`
+            : `No questions about the whole video this time (${esc(String(s.videoPass.reason || '').replace(/\.$/, ''))}). The questions from each part are all here.`}</p>` : ''}
           ${s.paidAlready ? '<p class="l-tq-help">This video’s points were already earned, so this round is practice.</p>' : ''}
           ${s.fellBack ? `<p class="l-tq-help">The model chosen in settings is not on this device, so ${esc(s.modelName)} was used.</p>` : ''}
           ${factLine}
@@ -902,11 +925,19 @@ registerModule(
       let lastFail = null;
       let piecesFailed = 0;
       const r = { ms: 0 };
+      // The whole-video pass (row 2.24 addition): only when the transcript is in pieces — one piece
+      // already saw the whole video. Each piece's own call also writes its summary for it.
+      const wantVideo = !!cfg.connectPieces && pieces.length > 1;
+      const notes = [];
+      const ctxOpts = (answerTokens) => ({ answerTokens, ceiling: cfg.contextMax });
       for (let i = 0; i < pieces.length; i++) {
         if (ceiling && parsed.length >= ceiling) break;
         session.part = i + 1;
         if (tq === session) renderTq();
         const left = ceiling ? ceiling - parsed.length : null;
+        const msgs = buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length, summary: wantVideo });
+        // Set explicitly on every call (Mike, 2026-10-01), sized for THIS prompt and answer cap.
+        const contextTokens = contextFor(msgs, ctxOpts(cfg.answerLength)).tokens;
         // *** ONE RETRY FOR A PIECE THAT GAVE NOTHING (measured 2026-09-29). *** On a real 36-minute
         // transcript, 2 of 7 pieces came back empty: one ran to the length cap with nothing readable,
         // one was stopped by Ollama itself ("token repeat limit reached" — the model looping). Each
@@ -916,9 +947,9 @@ registerModule(
         let got = [];
         let one = null;
         for (let attempt = 0; attempt < 2 && !got.length; attempt++) {
-          one = await ai().chat(buildPrompt(pieces[i], left, { part: i + 1, parts: pieces.length }),
+          one = await ai().chat(msgs,
             { model: m.model, json: true, temperature: attempt ? 0.6 : 0.2, timeoutMs: cfg.aiTimeoutMs, signal,
-              maxTokens: cfg.answerLength });
+              maxTokens: cfg.answerLength, contextTokens });
           if (tq !== session) return;
           if (!one.ok && one.cancelled) { failWith(session, one); return; }
           if (one.ok) { r.ms += Number(one.ms) || 0; got = parseQuestions(one.text); }
@@ -928,9 +959,34 @@ registerModule(
           piecesFailed += 1;
           continue;
         }
+        for (const q of got) { q.scope = SCOPE.PART; q.part = i + 1; }
+        // The pass's notes on this piece: its summary, and the lines its CHECKED questions quoted
+        // (real transcript sentences), which are what a whole-video answer must come from.
+        if (wantVideo) {
+          notes.push({ summary: parsePieceSummary(one.text),
+            lines: checkQuestions(got, text).passed.map((q) => q.source_line) });
+        }
         parsed.push(...got);
       }
       if (!parsed.length && lastFail) { failWith(session, lastFail); return; }
+      session.videoPass = null;
+      if (wantVideo && parsed.length && !(ceiling && parsed.length >= ceiling)) {
+        session.part = 0;
+        session.videoWorking = true;
+        if (tq === session) renderTq();
+        const vp = await videoPass(notes, {
+          chat: (messages, o) => ai().chat(messages, { model: m.model, json: true, temperature: 0.2,
+            timeoutMs: cfg.aiTimeoutMs, signal, maxTokens: o.maxTokens, contextTokens: o.contextTokens }),
+          transcript: text, answerTokens: cfg.answerLength, ceiling: cfg.contextMax, signal });
+        session.videoWorking = false;
+        if (tq !== session) return;
+        if (vp.cancelled) { failWith(session, { cancelled: true }); return; }
+        r.ms += vp.ms;
+        // Pushed as PARSED, so the one check below counts them with everything else. A pass that
+        // failed adds nothing and takes nothing away: the pieces' questions are already in `parsed`.
+        if (vp.ran) parsed.push(...vp.parsed);
+        session.videoPass = { ran: vp.ran, ok: vp.ok, count: vp.items.length, reason: vp.reason };
+      }
       if (ceiling && parsed.length > ceiling) parsed.length = ceiling;
       session.piecesFailed = piecesFailed;
 
@@ -1014,8 +1070,12 @@ registerModule(
       session.fact = job;
       factJobs.add(job);
       const { signal } = job.controller;
+      // The window is set on these calls too (row 2.24 addition). Answer room 512: the first turn
+      // answers with one quoted sentence and a few words, the second with one short sentence; the
+      // Wikipedia passages are the bulk, and `contextFor` counts them.
       const chat = (messages) => ai().chat(messages, { model, json: true, temperature: 0,
-        timeoutMs: cfg.aiTimeoutMs, signal });
+        timeoutMs: cfg.aiTimeoutMs, signal,
+        contextTokens: contextFor(messages, { answerTokens: 512, ceiling: cfg.contextMax }).tokens });
       const lookup = (q, a) => wiki().lookup(q, a, { signal });
       try {
         for (const q of lqs) {
@@ -1499,6 +1559,9 @@ registerModule(
             // 0 is real here too ("No limit"), so an unset null/'' falls to the default.
             answerLength: snap.answerLength == null || snap.answerLength === '' ? DEFAULTS.answerLength
               : num('answerLength', (n) => n >= 0),
+            connectPieces: snap.connectPieces === false || snap.connectPieces === 'false' ? false
+              : snap.connectPieces === true || snap.connectPieces === 'true' ? true : DEFAULTS.connectPieces,
+            contextMax: num('contextMax', (n) => n >= 2048),
             // Default ON since 2026-09-28, so — like `factCheck` below — only an explicit false
             // turns it off, and never set reads as the default.
             autoApprove: snap.autoApprove === false || snap.autoApprove === 'false' ? false
