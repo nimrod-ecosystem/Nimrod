@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>hide_sound.js — what a hidden panel's sound does — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:78ch}
+  #host{position:relative;width:480px;height:320px;margin-top:12px;border:1px solid #999}
+</style>
+</head>
+<body>
+<h1>hide_sound.js — what a hidden panel's sound does</h1>
+<div class="note">
+  Mike, 2026-10-01: hiding a module and muting it is <i>"a setting for modules"</i>, and
+  <i>"maybe start with a popup that asks if they want it muted."</i> Per panel: keep playing (the
+  default, as today) / mute / pause. The question is asked once, only after a person hid it, and
+  <b>if nobody answers, nothing changes</b> and the card goes away by itself.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import {
+  createHideSound, storedMode, makesSound, WHEN_HIDDEN_KEY, WHEN_HIDDEN_DEFAULT, WHEN_HIDDEN_FIELD,
+  WHEN_HIDDEN_MODES, HIDE_ASK_TIMEOUT_FIELD, HIDE_QUESTION_ID, PENDING_MS,
+} from '../hide_sound.js';
+import { createAudioBus, MUSIC_GROUP, VIDEO_PRIORITY, GAME_MUSIC_PRIORITY } from '../audio_bus.js';
+import { createChoiceMemory, openChoiceCard, CHOICE_TIMEOUT_MS } from '../choice_card.js';
+import { registerModule, mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { normalizeField, fieldItems } from '../settings_fields.js';
+
+const out = document.getElementById('results');
+const host = document.getElementById('host');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+
+function fakeClock() {
+  let t = 1000, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+function fakeStore(v = {}) {
+  let val = { ...v };
+  return { get: () => val, set: (p) => { val = { ...val, ...p }; } };
+}
+
+// A screen: one audio bus, fake sources that record what they were handed, and panels.
+function screen({ memoryRow = fakeStore(), timeout = 20000 } = {}) {
+  const audio = createAudioBus();
+  const clock = fakeClock();
+  const memory = createChoiceMemory(memoryRow, { now: clock.now });
+  const policy = createHideSound({ memory, host: () => host, askTimeoutMs: () => timeout,
+    setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now });
+  const heard = {};
+  // A panel: its state row, its sources (owner = its id), and optionally a pause verb.
+  const panel = (id, { sources = [['src', { tier: 'media' }]], mode, pausable = false, title = 'Videos' } = {}) => {
+    const state = fakeStore(mode ? { [WHEN_HIDDEN_KEY]: mode } : {});
+    const log = [];
+    const impl = pausable ? { pause: () => log.push('pause'), resume: () => log.push('resume') } : {};
+    for (const [sid, spec] of sources) {
+      const key = `${id}:${sid}`;
+      heard[key] = [];
+      audio.register(key, { ...spec, owner: id, onGain: (l) => heard[key].push(l) });
+      audio.setActive(key, true);
+    }
+    const info = (by) => ({ instanceId: id, type: 'youtube', manifest: { title }, audio, impl, state, by });
+    return { id, state, log, impl, info,
+      hide: (by) => policy.hidden(info(by)), show: () => policy.shown(info()), gone: () => policy.gone(info()),
+      level: (sid = 'src') => { const a = heard[`${id}:${sid}`]; return a[a.length - 1]; } };
+  };
+  return { audio, clock, memory, memoryRow, policy, panel, card: () => openChoiceCard(HIDE_QUESTION_ID) };
+}
+const press = (label) => {
+  const b = [...host.querySelectorAll('.choice-card .cc-opt')].find((x) => x.textContent === label);
+  if (!b) throw new Error(`no option "${label}"`);
+  b.click();
+};
+const tick = (sel) => { const c = host.querySelector(`.choice-card ${sel}`); c.checked = true; };
+const clear = () => { const c = openChoiceCard(HIDE_QUESTION_ID); if (c) c.close('close'); host.innerHTML = ''; };
+
+try {
+  section('the setting, declared as data');
+  {
+    const f = normalizeField(WHEN_HIDDEN_FIELD);
+    check('a choice field keyed instanceWhenHidden', f && f.kind === 'choice' && f.key === 'instanceWhenHidden');
+    check('*** default: keep playing (what every screen does today) ***', WHEN_HIDDEN_DEFAULT === 'keep' && f.default === 'keep');
+    check('three options: keep / mute / pause', JSON.stringify(f.options.map((o) => o.value)) === JSON.stringify(WHEN_HIDDEN_MODES));
+    let v = 'keep'; const row = () => fieldItems([f], { values: () => ({ [WHEN_HIDDEN_KEY]: v }), onStep: (k, nv) => { v = nv; } })[0];
+    row().run(); row().run(); row().run();
+    check('one switch reaches every option and wraps back (keep -> mute -> pause -> keep)', v === 'keep', v);
+    check('the pause row says what happens when a module cannot pause', /mutes it if it cannot pause/.test(f.options[2].label));
+    const t = normalizeField(HIDE_ASK_TIMEOUT_FIELD);
+    check('the question’s timeout is a setting, in ms, defaulting to the choice card’s own', t.key.endsWith('Ms') && t.default === CHOICE_TIMEOUT_MS);
+    check('storedMode: unset is undefined (not the same as an explicit keep)', storedMode(fakeStore()) === undefined
+      && storedMode(fakeStore({ [WHEN_HIDDEN_KEY]: 'keep' })) === 'keep' && storedMode(fakeStore({ [WHEN_HIDDEN_KEY]: 'loud' })) === undefined);
+    check('storedMode survives a broken state', storedMode({ get() { throw new Error('x'); } }) === undefined && storedMode(null) === undefined);
+  }
+
+  section('*** the three modes, enacted through the audio bus ***');
+  {
+    const s = screen();
+    const keep = s.panel('p-keep');
+    keep.hide();
+    check('unset (= keep): hidden, still playing', keep.level() === 1 && !s.audio.isOwnerMuted('p-keep'));
+    const mute = s.panel('p-mute', { mode: 'mute', sources: [['a', { tier: 'media' }], ['b', { tier: 'sfx' }]] });
+    mute.hide();
+    check('mute: every source of the panel goes to 0 while hidden', mute.level('a') === 0 && mute.level('b') === 0);
+    mute.show();
+    check('...and comes back when it is shown', mute.level('a') > 0 && mute.level('b') > 0 && !s.audio.isOwnerMuted('p-mute'));
+    const pz = s.panel('p-pause', { mode: 'pause', pausable: true });
+    pz.hide();
+    check('pause: the module’s own pause verb, not a mute', pz.log.join() === 'pause' && !s.audio.isOwnerMuted('p-pause'));
+    pz.show();
+    check('...and its resume when shown', pz.log.join() === 'pause,resume');
+    const nopz = s.panel('p-nopause', { mode: 'pause' });
+    nopz.hide();
+    check('*** pause on a module with no pause verb: muted instead (silence was asked for) ***', nopz.level() === 0);
+    nopz.show();
+    check('...and unmuted when shown', nopz.level() > 0);
+    const twice = s.panel('p-twice', { mode: 'pause', pausable: true });
+    twice.hide(); twice.hide();
+    check('hidden twice (a container forwards its hide to its child): paused once', twice.log.join() === 'pause');
+    twice.show(); twice.show();
+    check('shown twice: resumed once, and only because WE paused it', twice.log.join() === 'pause,resume');
+    const never = s.panel('p-never', { mode: 'pause', pausable: true });
+    never.show();
+    check('shown without having been hidden: nothing is resumed', never.log.length === 0);
+    const gone = s.panel('p-gone', { mode: 'mute' });
+    gone.hide(); gone.gone();
+    check('destroyed while hidden (stage swap, screen swap, remount): unmuted, so a remount is heard', !s.audio.isOwnerMuted('p-gone'));
+    const pp = s.panel('p-probe', { mode: 'mute' });
+    pp.hide();
+    check('probe lists hidden and muted', s.policy.probe().hidden.includes('p-probe') && s.policy.probe().muted.includes('p-probe'));
+    s.policy.destroy();
+    check('destroy undoes every mute it made', !s.audio.isOwnerMuted('p-probe'));
+  }
+
+  section('*** a hidden, muted video gives the visible game its music back ***');
+  {
+    const s = screen();
+    const vid = s.panel('vid', { mode: 'mute', sources: [['v', { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY }]] });
+    const gm = s.panel('game', { sources: [['m', { tier: 'media', group: MUSIC_GROUP, groupPriority: GAME_MUSIC_PRIORITY }]] });
+    check('(setup) the video outranks the game music', vid.level('v') === 1 && gm.level('m') === 0);
+    vid.hide();
+    check('hiding the video (mute) lets the game music play', vid.level('v') === 0 && gm.level('m') === 1, `${vid.level('v')} ${gm.level('m')}`);
+    vid.show();
+    check('showing it again takes the slot back', vid.level('v') === 1 && gm.level('m') === 0);
+  }
+
+  section('*** the question: only after a PERSON hid it, never for an automatic hide ***');
+  {
+    const s = screen();
+    const p = s.panel('auto-1');
+    p.hide();
+    check('an automatic hide (a director covering it, a container) asks nobody anything', !s.card() && !host.querySelector('.choice-card'));
+    p.show();
+    p.hide('person');
+    check('a hide by a person raises the card', !!s.card() && host.querySelector('.choice-card'));
+    const txt = host.querySelector('.choice-card').textContent;
+    check('it names the panel and says it is still playing', /Videos is hidden/.test(txt) && /still playing sound/.test(txt), txt);
+    check('it offers Keep playing and Mute while hidden (no Pause: this one cannot pause)',
+      JSON.stringify(s.card().probe().options) === '["keep","mute"]', JSON.stringify(s.card().probe().options));
+    check('*** non-modal, and it says it goes away by itself ***', host.querySelector('.choice-card').getAttribute('aria-modal') === 'false'
+      && /goes away by itself/.test(txt));
+    check('nothing changed while it waits: still playing', p.level() === 1);
+    clear();
+    const pz = s.panel('pz-1', { pausable: true });
+    pz.hide('person');
+    check('a module with a pause verb is offered Pause too', JSON.stringify(s.card()?.probe().options) === '["keep","mute","pause"]');
+    clear();
+  }
+
+  section('*** WHAT HAPPENS IF NOBODY ANSWERS? NOTHING. ***');
+  {
+    const s = screen({ timeout: 20000 });
+    const p = s.panel('t-1');
+    p.hide('person');
+    check('(setup) the card is up', !!s.card());
+    check('its delay is the setting', s.card().probe().waitMs === 20000, String(s.card().probe().waitMs));
+    s.clock.advance(19999);
+    check('still up just before the delay', !!s.card());
+    s.clock.advance(1);
+    check('*** gone by itself after the delay ***', !s.card() && !host.querySelector('.choice-card'));
+    check('*** and the panel kept doing what it was doing: still playing ***', p.level() === 1 && !s.audio.isOwnerMuted('t-1'));
+    check('...and nothing was written to its setting', storedMode(p.state) === undefined);
+    p.show(); p.hide('person');
+    check('asked at most once per panel per page load, answered or not', !s.card());
+    const s2 = screen({ timeout: 1 });
+    const q = s2.panel('t-2');
+    q.hide('person');
+    check('a timeout setting shorter than the card’s minimum is lifted to it (a card nobody can read)', s2.card().probe().waitMs >= 8000);
+    clear();
+    const s3 = screen({ timeout: 0 });
+    s3.panel('t-3').hide('person');
+    check('a timeout of 0 never means "stays forever"', s3.card().probe().waitMs === CHOICE_TIMEOUT_MS);
+    clear();
+  }
+
+  section('answering: the answer IS the panel’s setting');
+  {
+    const s = screen();
+    const p = s.panel('a-1');
+    p.hide('person');
+    press('Mute while hidden');
+    check('pressing Mute while hidden mutes it now (it is hidden now)', p.level() === 0 && s.audio.isOwnerMuted('a-1'));
+    check('*** and writes the panel’s own setting, so it is visible and changeable there ***', p.state.get()[WHEN_HIDDEN_KEY] === 'mute');
+    check('the card is gone', !s.card());
+    p.show();
+    check('shown: heard again', p.level() > 0);
+    p.hide('person');
+    check('next hide: muted by the setting, and NOT asked again', p.level() === 0 && !s.card());
+    p.show();
+    const k = s.panel('a-2');
+    k.hide('person');
+    press('Keep playing');
+    check('Keep playing is an answer too: written as keep, still playing', k.state.get()[WHEN_HIDDEN_KEY] === 'keep' && k.level() === 1);
+    const set = s.panel('a-3', { mode: 'keep' });
+    set.hide('person');
+    check('a panel whose setting somebody already chose is never asked', !s.card());
+    const quiet = { instanceId: 'a-4', manifest: { title: 'Clock' }, audio: s.audio, impl: {}, state: fakeStore(), by: 'person' };
+    s.policy.hidden(quiet);
+    check('a panel that makes no sound is never asked', !s.card());
+    check('makesSound: a registered source, or a manifest that says sound/sounds', makesSound({ instanceId: 'a-1', audio: s.audio })
+      && makesSound({ manifest: { sounds: true } }) && makesSound({ manifest: { sound: 'click' } }) && !makesSound({ manifest: {} }));
+    const late = s.panel('a-5');
+    late.hide('person');
+    late.show();
+    check('showing the panel again closes its question (it is moot)', !s.card());
+    clear();
+  }
+
+  section('the two checkboxes: about the QUESTION, per screen (the shared choices row)');
+  {
+    const row = fakeStore();
+    const s = screen({ memoryRow: row });
+    const a = s.panel('c-1');
+    a.hide('person');
+    tick('[data-cc-always]');
+    press('Mute while hidden');
+    check('(setup) muted', a.level() === 0);
+    check('"Always use this option" is kept in the screen’s choices row', row.get()[HIDE_QUESTION_ID]?.answer === 'mute');
+    const b = s.panel('c-2');
+    b.hide('person');
+    check('*** the next panel hidden for the first time: no card, the remembered answer applied ***', !s.card() && b.level() === 0);
+    check('...and written as THAT panel’s setting too, so it is visible in its own settings', b.state.get()[WHEN_HIDDEN_KEY] === 'mute');
+    s.memory.forget(HIDE_QUESTION_ID);
+    const c = s.panel('c-3');
+    c.hide('person');
+    check('forget brings the question back', !!s.card());
+    tick('[data-cc-mute]');
+    s.card().close('close');
+    const d = s.panel('c-4');
+    d.hide('person');
+    check('*** "Don’t show again" (ticked, then closed): never asked again on this screen ***', !s.card());
+    check('...and nothing applied: it keeps playing', d.level() === 1 && storedMode(d.state) === undefined);
+    const fresh = screen({ memoryRow: row });
+    fresh.panel('c-5').hide('person');
+    check('it follows the SCREEN: a new page on the same profile row is not asked either', !fresh.card());
+    clear();
+  }
+
+  section('the Layers press arrives before the hide lands (applyPlaced is asynchronous)');
+  {
+    const s = screen();
+    const p = s.panel('l-1');
+    const r = s.policy.personHid('l-1');
+    check('the press first: nothing to ask about yet, it waits', r.reason === 'pending' && !s.card());
+    p.hide();                                   // arrangement's onHide carries no "by"
+    check('*** the hide lands: now it asks ***', !!s.card());
+    clear();
+    const q = s.panel('l-2');
+    q.hide();
+    s.policy.personHid('l-2');
+    check('the hide first, then the press: it asks at the press', !!s.card());
+    clear();
+    const z = s.panel('l-3');
+    s.policy.personHid('l-3');
+    s.clock.advance(PENDING_MS + 1);
+    z.hide();
+    check('a press whose hide never landed in time cannot turn a later AUTOMATIC hide into a question', !s.card());
+    const y = s.panel('l-4');
+    s.policy.personHid('l-4');
+    y.show();
+    y.hide();
+    check('shown again before it hid: the press is dropped', !s.card());
+    clear();
+  }
+
+  section('the contexts, end to end through module.js');
+  {
+    const s = screen();
+    let impl = null;
+    registerModule({ type: 'hs-video', title: 'Videos' }, (ctx) => ({
+      init() { ctx.audio.play('hs-video-src', { tier: 'media' }); },
+      onHide() { impl.ownHides = (impl.ownHides || 0) + 1; },
+    }));
+    const state = fakeStore({ [WHEN_HIDDEN_KEY]: 'mute' });
+    const el = document.createElement('div'); host.append(el);
+    const rec = mountModule('hs-video', { mount: el, bus: createBus(), instanceId: 'hs-1', audio: s.audio, hidePolicy: s.policy, state });
+    impl = rec.impl;
+    rec.init();
+    check('(setup) the module’s source is owned by its instance and playing', s.audio.state()['hs-video-src'].owner === 'hs-1'
+      && s.audio.levelOf('hs-video-src') === 1);
+    rec.onHide();                                       // a placed panel set to Hidden (arrangement.js applyPlaced)
+    check('placed panel set Hidden: the module’s own onHide ran AND the setting muted it', impl.ownHides === 1
+      && s.audio.levelOf('hs-video-src') === 0);
+    rec.onShow();
+    check('set Shown: heard again', s.audio.levelOf('hs-video-src') === 1);
+    rec.onHide({ by: 'person' });
+    check('a person’s hide with the setting already chosen: muted, nobody asked', s.audio.levelOf('hs-video-src') === 0 && !s.card());
+    rec.destroy();                                      // swapped off the stage / screen swap / remount
+    check('destroyed while hidden: the instance is unmuted for whoever mounts next', !s.audio.isOwnerMuted('hs-1'));
+    document.dispatchEvent(new Event('visibilitychange'));
+    check('the tab going to the background is NOT a hide: nothing is muted by it', s.policy.probe().muted.length === 0);
+    el.remove();
+    clear();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>

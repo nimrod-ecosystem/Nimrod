@@ -285,7 +285,11 @@ export function mountSnapWindow(host, model, { onClose } = {}) {
 // ---------------------------------------------------------------------------------------
 const ACTIONS = [['undo', 'Undo'], ['redo', 'Redo'], ['duplicate', 'Duplicate'], ['copy', 'Copy'], ['paste', 'Paste'], ['remove', 'Delete']];
 
-export function mountLayersWindow(host, model, { onClose } = {}) {
+// `onShownToggle(id, shown)`: called after a PRESS on a row's Shown/Hidden button changed it - the one
+// place a hide is unmistakably somebody's own action, which is what the "mute it while hidden?"
+// question (hide_sound.js) waits for. Not called for undo/redo or for a change made through the model
+// directly: those are not a person pressing Hidden.
+export function mountLayersWindow(host, model, { onClose, onShownToggle } = {}) {
   const afterColon = (k) => k.slice(k.indexOf(':') + 1);
   return mountWindow(host, model, {
     kind: 'layers',
@@ -315,7 +319,11 @@ export function mountLayersWindow(host, model, { onClose } = {}) {
       if (a === 'pick') model.select(id);
       else if (a === 'up') model.moveLayer(id, 1);
       else if (a === 'down') model.moveLayer(id, -1);
-      else if (a === 'shown') model.toggleShown(id);
+      else if (a === 'shown') {
+        if (model.toggleShown(id)) {
+          try { onShownToggle?.(id, !!model.item(id)?.shown); } catch (err) { console.error('edit_windows: onShownToggle', err); }
+        }
+      }
       else if (a === 'lock') model.toggleLocked(id);
       else if (a === 'act' && ACTIONS.some(([x]) => x === id)) model[id]();
     },

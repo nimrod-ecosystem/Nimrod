@@ -301,13 +301,14 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     for (const fn of [...subs]) { try { fn(evt); } catch (err) { console.error('edit_model: subscriber', err); } }
   }
   const snapshot = () => ({ items: clone(list), sel });
-  function commit(nextList, ids, nextSel = sel) {
+  // `extra` rides on the event, so a subscriber can tell WHAT changed without diffing (a hide, below).
+  function commit(nextList, ids, nextSel = sel, extra = null) {
     undoStack.push(snapshot());
     if (undoStack.length > cfg.historyMax) undoStack.shift();
     redoStack.length = 0;
     list = nextList;
     sel = nextSel;
-    emit({ type: 'items', ids });
+    emit({ type: 'items', ids, ...(extra || {}) });
     return true;
   }
   const get = (id) => list.find((it) => it.id === id) || null;
@@ -398,8 +399,12 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
       return commit(next, [id]);
     },
     canMoveLayer(id, dir) { const it = get(id); return !!(it && !it.locked && moveLayer(list, id, dir)); },
-    /** Shown / Hidden and Lock work on a locked thing — otherwise nothing could unlock it. */
-    toggleShown(id = sel) { const it = get(id); return it ? commit(patch(id, { shown: !it.shown }), [id]) : false; },
+    /** Shown / Hidden and Lock work on a locked thing — otherwise nothing could unlock it.
+     *  The event says `change: 'shown', shown` so a host can tell a hide from a move (hide_sound.js). */
+    toggleShown(id = sel) {
+      const it = get(id);
+      return it ? commit(patch(id, { shown: !it.shown }), [id], sel, { change: 'shown', shown: !it.shown }) : false;
+    },
     toggleLocked(id = sel) { const it = get(id); return it ? commit(patch(id, { locked: !it.locked }), [id]) : false; },
 
     // ---- text effects ---------------------------------------------------------------
