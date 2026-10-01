@@ -28,6 +28,7 @@ import {
   createSubtitles, speakerLabel, placeSubtitles, devicePrior, subtitlesOptionsFrom,
   SUBTITLES_DEFAULTS, SUBTITLES_FIELDS, SUBTITLE_SIZES, ANSWER_AREA_SELECTORS,
   captionPieces, earLabel, SUBTITLE_ACTIONS,
+  resolveSubtitleStyle, eyeChartFontSize, SUBTITLE_STYLES, SUBTITLE_STYLE_VAR, SUBTITLE_STYLE_FALLBACK,
 } from '../subtitles.js';
 import { createOutputBus } from '../output.js';
 import { defaultChannels } from '../output_channels.js';
@@ -293,8 +294,8 @@ try {
   section('row 2.47: a fast guess, corrected in place; unsure words marked; scroll back; the crawl; the online route');
   {
     const o = subtitlesOptionsFrom({});
-    check('*** defaults: plain captions, unsure words marked, both ears shown, the route LOCAL ***',
-      o.style === 'plain' && o.lowAt === SUBTITLES_DEFAULTS.lowAt && o.lowAt > 0 && o.ears === 'both' && o.route === 'local');
+    check('*** defaults: the theme\'s style (rolling up when it names none), unsure words marked, both ears shown, the route LOCAL ***',
+      o.styleChoice === 'theme' && o.style === 'flow' && o.lowAt === SUBTITLES_DEFAULTS.lowAt && o.lowAt > 0 && o.ears === 'both' && o.route === 'local');
     check('*** the online route is on ONLY for the exact word "online" - anything broken is local ***',
       subtitlesOptionsFrom({ subtitlesRoute: 'online' }).route === 'online'
       && ['Online', 'cloud', true, 1, null].every((x) => subtitlesOptionsFrom({ subtitlesRoute: x }).route === 'local'));
@@ -373,17 +374,6 @@ try {
     check('*** turned off: the history is gone too (nothing kept, nothing to scroll back to) ***',
       subs.history().length === 0 && subs.earlier() === 0);
     subs.setOn(true);
-    // The crawl.
-    subs.update({ subtitlesOn: true, subtitlesStyle: 'crawl' });
-    check('*** the crawl is a style: a class on the box, off by default ***', box.classList.contains('subs-crawl') && box.dataset.style === 'crawl');
-    subs.caption({ id: 'c1', text: 'a long time ago' });
-    const tr = getComputedStyle(box.querySelector('[data-caption="c1"]')).transform;
-    check('...its lines lean back (a 3-D transform)', tr && tr !== 'none', tr);
-    subs.setReducedMotion(true);
-    check('*** with reduced motion the crawl is drawn as plain captions ***', !box.classList.contains('subs-crawl'));
-    subs.setReducedMotion(false);
-    subs.update({ subtitlesOn: true });
-    check('back to plain', !box.classList.contains('subs-crawl'));
     const off = createSubtitles(host, { settings: {} });
     check('*** a caption with the mode off is not shown and not kept ***', off.caption({ id: 'x', text: 'private' }) === null
       && off.history().length === 0);
@@ -436,6 +426,159 @@ try {
     const slow = churn(3, 1500);
     check('*** a correction every 1.5 s gets a fresh outline every time (normal use unchanged) ***',
       slow.onsets.length === slow.passes - 1, JSON.stringify(slow));
+  }
+
+  // ==== ROW 2.47 (note AQ, 2026-10-01): STYLES ====
+  section('*** styles: rolling up (not a crawl), plain, eye chart, running text; the theme names a default ***');
+  {
+    check('*** the person\'s choice wins; "theme" means the theme\'s; nothing usable means rolling up ***',
+      resolveSubtitleStyle('plain', 'snake') === 'plain' && resolveSubtitleStyle('theme', 'snake') === 'snake'
+      && resolveSubtitleStyle(undefined, ' "eyechart" ') === 'eyechart' && resolveSubtitleStyle('theme', 'nonsense') === 'flow'
+      && resolveSubtitleStyle(null, null) === 'flow' && resolveSubtitleStyle(42, '') === 'flow' && SUBTITLE_STYLE_FALLBACK === 'flow');
+    const sf = SUBTITLES_FIELDS.find((f) => f.key === 'subtitlesStyle');
+    check('*** the Star Wars crawl is gone; a stored "crawl" reads as rolling up, which is what was meant ***',
+      !SUBTITLE_STYLES.includes('crawl') && !sf.options.some((o) => o.value === 'crawl')
+      && resolveSubtitleStyle('crawl', 'plain') === 'flow' && subtitlesOptionsFrom({ subtitlesStyle: 'crawl' }).styleChoice === 'flow');
+    check('the style setting defaults to "whatever the theme uses" and offers every style',
+      sf.default === 'theme' && SUBTITLE_STYLES.every((s) => sf.options.some((o) => o.value === s)));
+    check('*** every theme names a real style: High contrast plain, the rest rolling up ***',
+      Object.values(THEMES).every((t) => SUBTITLE_STYLES.includes(t.vars[SUBTITLE_STYLE_VAR]))
+      && THEMES.contrast.vars[SUBTITLE_STYLE_VAR] === 'plain' && THEMES.default.vars[SUBTITLE_STYLE_VAR] === 'flow'
+      && Object.entries(THEMES).filter(([id]) => id !== 'contrast').every(([, t]) => t.vars[SUBTITLE_STYLE_VAR] === 'flow'));
+
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0 }, reducedMotion: true });
+    const box = subs.element();
+    applyTheme(document.documentElement, 'contrast');
+    subs.add({ text: 'one' });
+    check('*** the theme\'s default is read off the page: High contrast draws plain captions ***',
+      subs.style() === 'plain' && box.dataset.style === 'plain' && !box.classList.contains('subs-panel'), subs.style());
+    applyTheme(document.documentElement, 'default');
+    subs.restyle();
+    check('...a theme change shows at once with restyle()', subs.style() === 'flow' && box.classList.contains('subs-roll'));
+    applyTheme(document.documentElement, 'contrast');
+    subs.add({ text: 'two' });
+    check('...and at the next line by itself', subs.style() === 'plain');
+    subs.update({ subtitlesOn: true, subtitlesHoldMs: 0, subtitlesStyle: 'snake' });
+    check('*** the person\'s own choice overrides the theme\'s ***', subs.style() === 'snake' && box.classList.contains('subs-snake'));
+    subs.update({ subtitlesOn: true, subtitlesHoldMs: 0, subtitlesStyle: 'theme' });
+    check('...and "whatever the theme uses" gives it back', subs.style() === 'plain');
+    const themed = createSubtitles(host, { settings: { subtitlesOn: true }, themeStyle: () => 'eyechart', reducedMotion: true });
+    check('a host can hand the theme\'s style in instead', themed.style() === 'eyechart');
+    themed.destroy();
+    applyTheme(document.documentElement, 'default');
+    subs.destroy();
+  }
+
+  section('*** rolling up: newest at the bottom, older lines glide up; instant when still ***');
+  {
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 3, subtitlesStyle: 'flow' },
+      reducedMotion: false });
+    const box = subs.element();
+    subs.add({ text: 'first line' });
+    subs.add({ text: 'second line' });
+    const [a, b] = box.querySelectorAll(':scope > .subs-line');
+    check('*** the newest is at the bottom, the older above it ***',
+      /second/.test(b.textContent) && a.getBoundingClientRect().top < b.getBoundingClientRect().top);
+    const glides = (el) => el.getAnimations().filter((an) => !(an instanceof CSSAnimation));
+    check('*** the older line glides up from where it was (no jump) ***',
+      glides(a).length === 1 && /translateY\([1-9]/.test(JSON.stringify(glides(a)[0].effect.getKeyframes()[0].transform)),
+      JSON.stringify(glides(a).map((x) => x.effect.getKeyframes()[0])));
+    check('...the new one rises in at the bottom', getComputedStyle(b).animationName === 'subs-rise', getComputedStyle(b).animationName);
+    check('one panel, the lines left-aligned like a message thread',
+      box.classList.contains('subs-panel') && getComputedStyle(a).textAlign === 'start'
+      && rgb(getComputedStyle(box).backgroundColor)?.a === 1, getComputedStyle(box).backgroundColor);
+    subs.add({ text: 'third line' }); subs.add({ text: 'fourth line' });
+    check('the oldest leaves at the top; the order holds',
+      subs.lines().map((l) => l.text).join() === 'second line,third line,fourth line'
+      && /fourth/.test(box.querySelector(':scope > .subs-line:last-of-type').textContent));
+    for (const an of box.getAnimations({ subtree: true })) an.cancel();
+    subs.setReducedMotion(true);
+    subs.add({ text: 'fifth line' });
+    check('*** reduced motion: the same layout, moved instantly (no glide, no rise) ***',
+      box.getAnimations({ subtree: true }).length === 0 && box.classList.contains('subs-roll')
+      && getComputedStyle(box.querySelector(':scope > .subs-line:last-of-type')).animationName === 'none');
+    subs.destroy();
+  }
+
+  section('*** the eye chart: newest largest, each older line smaller, never below the floor ***');
+  {
+    check('eyeChartFontSize: the newest is the chosen size; each step is a fraction; the floor is in px',
+      eyeChartFontSize(0) === 'max(24px, 1em)' && eyeChartFontSize(2, { shrink: 0.8, smallestPx: 32 }) === 'max(32px, 0.64em)',
+      eyeChartFontSize(2, { shrink: 0.8, smallestPx: 32 }));
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 6,
+      subtitlesStyle: 'eyechart', subtitlesSize: 'largest' }, reducedMotion: true });
+    const box = subs.element();
+    for (let i = 1; i <= 6; i++) subs.add({ text: `line ${i}` });
+    const sizes = () => [...box.querySelectorAll(':scope > .subs-line')].map((e) => parseFloat(getComputedStyle(e).fontSize));
+    const px = sizes();
+    const chosen = parseFloat(getComputedStyle(box).fontSize);
+    check('*** the newest line is the chosen size ***', Math.abs(px[5] - chosen) < 0.6, `${px[5]} vs ${chosen}`);
+    check('*** each older line is no larger than the one below it, and the next is a step smaller ***',
+      px.every((x, i) => i === 0 || px[i - 1] <= x + 0.01) && Math.abs(px[4] - Math.max(24, chosen * 0.8)) < 0.6, px.join(' '));
+    check('*** never below the floor (24 px, WCAG\'s large text) ***', px.every((x) => x >= 24 - 0.01), px.join(' '));
+    subs.update({ subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 6, subtitlesStyle: 'eyechart', subtitlesSize: 'largest',
+      subtitlesSmallestPx: 32, subtitlesShrink: 0.7 });
+    const px2 = sizes();
+    check('the floor and the step are settings', px2.every((x) => x >= 32 - 0.01) && Math.abs(px2[4] - Math.max(32, chosen * 0.7)) < 0.6, px2.join(' '));
+    subs.earlier(3);
+    const hp = [...box.querySelectorAll('.subs-hist > .subs-line:not(.subs-mark)')].map((e) => e.style.fontSize);
+    check('scrolled back, the earlier lines are an eye chart too', hp.length && hp[hp.length - 1] === 'max(32px, 1em)', hp.join(' | '));
+    subs.latest();
+    subs.update({ subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 6, subtitlesStyle: 'flow' });
+    check('another style clears the sizes', [...box.querySelectorAll(':scope > .subs-line')].every((e) => !e.style.fontSize));
+    check('a broken step or floor is its default',
+      subtitlesOptionsFrom({ subtitlesShrink: 0.01, subtitlesSmallestPx: 3 }).shrink === SUBTITLES_DEFAULTS.shrink
+      && subtitlesOptionsFrom({ subtitlesSmallestPx: '40' }).smallestPx === 24);
+    subs.destroy();
+  }
+
+  section('*** running text ("snake"): the lines run on across the width, newest words in view ***');
+  {
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 2, subtitlesStyle: 'snake' },
+      reducedMotion: true });
+    const box = subs.element();
+    for (let i = 1; i <= 12; i++) subs.add({ text: `this is what was said in number ${i}` });
+    const ln = box.querySelector(':scope > .subs-line');
+    check('*** the lines run on: inline, not a box each ***', getComputedStyle(ln).display === 'inline');
+    check('more lines are kept than rows, so short lines still fill a row', subs.lines().length > 2 && subs.lines().length <= 6, String(subs.lines().length));
+    const fs = parseFloat(getComputedStyle(box).fontSize);
+    check('*** the panel is the chosen number of rows high ***', box.clientHeight <= fs * (2 * 1.25 + 0.36) + 2 && box.clientHeight >= fs * 2,
+      `${box.clientHeight} vs ${fs}`);
+    const last = box.querySelector(':scope > .subs-line:last-of-type').getBoundingClientRect();
+    const br = box.getBoundingClientRect();
+    check('*** ...scrolled to the newest words ***',
+      box.scrollTop + box.clientHeight >= box.scrollHeight - 1 && last.bottom <= br.bottom + 1 && last.top >= br.top - 1,
+      `${box.scrollTop}+${box.clientHeight} of ${box.scrollHeight}`);
+    subs.destroy();
+  }
+
+  section('*** every style keeps everything that exists: no line dropped, corrected in place, unsure marks, scroll back, off keeps nothing, readable ***');
+  for (const style of SUBTITLE_STYLES) {
+    const clock = fakeClock();
+    const subs = createSubtitles(host, { settings: { subtitlesOn: true, subtitlesHoldMs: 0, subtitlesLines: 3, subtitlesStyle: style },
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, reducedMotion: false });
+    const box = subs.element();
+    let dropped = 0;
+    for (const conf of [0, 0.5, 1, NaN, null, 'x']) if (!subs.add({ text: `line ${conf}`, speaker: { name: 'Alex', confidence: conf } })) dropped++;
+    subs.caption({ id: 'k', ear: 'room', text: 'turn it off', words: [{ w: 'turn', conf: 0.9 }, { w: 'it', conf: 0.9 }, { w: 'off', conf: 0.3 }] });
+    const p = box.querySelector('[data-caption="k"]');
+    const lowOk = [...p.querySelectorAll('.subs-low')].map((e) => e.textContent).join() === 'off';
+    const top = p.getBoundingClientRect().top;
+    subs.caption({ id: 'k', ear: 'room', text: 'turn it up', revised: true, words: [{ w: 'turn', conf: 0.9 }, { w: 'it', conf: 0.9 }, { w: 'up', conf: 0.9 }] });
+    const same = box.querySelector('[data-caption="k"]') === p && Math.abs(p.getBoundingClientRect().top - top) < 1
+      && [...p.querySelectorAll('.subs-fixed')].map((e) => e.textContent).join() === 'up';
+    const n = subs.earlier();
+    const backOk = n > 0 && !!box.querySelector('.subs-hist') && getComputedStyle(p).display === 'none';
+    clock.advance(SUBTITLES_DEFAULTS.backMs + 1);
+    const backAgain = subs.scrolledBack() === 0 && p.isConnected && getComputedStyle(p).display !== 'none';
+    const fg = rgb(getComputedStyle(p).color); const bg = rgb(getComputedStyle(p).backgroundColor);
+    const ratio = fg && bg && bg.a === 1 ? contrast(hex(fg), hex(bg)) : 0;
+    subs.setOn(false);
+    const offOk = subs.lines().length === 0 && subs.history().length === 0 && box.hidden;
+    check(`*** ${style}: no line dropped, corrected in place, unsure marked, scroll back and back by itself, off keeps nothing, ${ratio.toFixed(1)}:1 ***`,
+      subs.style() === style && dropped === 0 && lowOk && same && backOk && backAgain && offOk && ratio >= 7,
+      JSON.stringify({ dropped, lowOk, same, backOk, backAgain, offOk, ratio }));
+    subs.destroy();
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

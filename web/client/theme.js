@@ -116,6 +116,9 @@ const BASE = {
   // arguing. A NUMBER rather than a color because the wallpaper varies lightness and
   // saturation itself; a theme that wants a different mood changes this one line.
   '--wallpaper-hue': '158',      // the green the rest of this palette is built on
+  // The theme's default subtitles style (subtitles.js SUBTITLE_STYLES), read by subtitles.js; the
+  // person's own choice overrides it. Rolling up, newest at the bottom (row 2.47).
+  '--subtitles-style': 'flow',
   // The board's own pinned values (modules.css), carried here so "every theme defines every
   // key" still holds for the new `--board-*` roles a live theme's `surface: veil|clear` reads.
   // Spread LAST -- see BOARD_BASE's own comment in live_themes.js. Without this, switching from
@@ -190,6 +193,8 @@ export const THEMES = {
       '--on-dark': '#ffffff',
       '--accent-warm': '#b3005a',
       '--accent-warm-deep': '#8a0046',
+      // The legibility theme takes the most conventional captions: a box per line, nothing gliding.
+      '--subtitles-style': 'plain',
     },
   },
 
