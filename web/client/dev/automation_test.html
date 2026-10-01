@@ -35,7 +35,7 @@ import { AMPLIFY_FIELDS } from '../amplify.js';
 import { createTryHost } from '../module_try.js';
 import {
   createAutomation, normalizeBinding, normalizeSource, normalizeMap, applyCurve, clockValue, lfoValue,
-  readNumber, bindable, bindableSettings, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, DEFAULT_GUARDS, lfoMinPeriodMs,
+  readNumber, bindable, bindableSettings, AUTOMATION_DEFAULTS, LFO_MIN_PERIOD_MS, LFO_MIN_TICKS, DEFAULT_GUARDS, lfoMinPeriodMs,
 } from '../automation.js';
 import { worstInAnySecond } from '../flash_limit.js';
 import { mountAutomationPanel } from '../automation_panel.js';
@@ -150,8 +150,11 @@ try {
     check('a missing id is generated, not refused',
       /^auto-/.test(normalizeBinding({ target: { instance: 'p', key: 'k' }, source: { kind: 'clock' } }).id));
     check('an unknown curve reads as straight', normalizeMap({ curve: 'wiggle' }).curve === 'linear');
-    check('*** an LFO can never be faster than once a second (the photosensitivity line) ***',
-      normalizeSource({ kind: 'lfo', periodMs: 50 }).periodMs === LFO_MIN_PERIOD_MS && LFO_MIN_PERIOD_MS >= 334);
+    // 2026-10-01: the one-second floor is a FLASH floor now (applied as the wave runs, only while a flash
+    // limit is set); the stored period keeps only the sampling floor - four ticks.
+    check('*** an LFO\'s stored period has a sampling floor of four ticks (400 ms at the default tick) ***',
+      normalizeSource({ kind: 'lfo', periodMs: 50 }).periodMs === LFO_MIN_TICKS * 100
+        && normalizeSource({ kind: 'lfo', periodMs: 50, tickMs: 250 }).periodMs === 1000 && LFO_MIN_PERIOD_MS >= 334);
     check('every default is a named value on AUTOMATION_DEFAULTS',
       ['lfoPeriodMs', 'lfoTickMs', 'clockTickMs', 'clockPoints', 'verbStep', 'smoothMs', 'whenQuiet', 'quietMs', 'peakWidth']
         .every((k) => k in AUTOMATION_DEFAULTS));
@@ -216,8 +219,9 @@ try {
     bus.publish('room/light', 'nonsense');
     check('a non-number is ignored, not applied', st.get().level === 100);
     bus.publish('room/light', wrapValue({ value: 0.5, class: 'continuous' }));
-    // 100 -> 50 is a reversal inside one flash period of the first move: held, then it lands.
-    check('(a reversal inside one flash period is held...)', st.get().level === 100);
+    // No flash limit on this engine (2026-10-01: none unless one is set), so a reversal lands at once.
+    // (The held-reversal case is the event-floor section below, at limits 3, 2 and 1.)
+    check('(with no flash limit a reversal lands at once)', st.get().level === 50);
     clk.advance(340);
     check('another module\'s link envelope drives it too', st.get().level === 50);
     check('*** the base in storage never saw any of it ***', base.get().level === 30 && base.writes.length === 0);
@@ -308,9 +312,9 @@ try {
     bus.publish('verb/dial-up'); bus.publish('verb/dial-up');
     check('at the top: 100', st.get().level === 100);
     bus.publish('verb/dial-up');
-    // THE EVENT FLOOR (flash limit, 2026-09-30): the wrap is a REVERSAL (up, then all the way
-    // down), so it lands one flash period (339 ms at 3) after the last one, not in the same instant.
-    check('a wrap straight after climbing is held for the flash period, not dropped', st.get().level === 100);
+    // The wrap is a REVERSAL (up, then all the way down). This engine has no flash limit, so it lands
+    // at once; under a limit it is held one flash period (the event-floor section below).
+    check('a wrap straight after climbing lands at once with no flash limit', st.get().level === 0);
     await sleep(400);
     check('one more press WRAPS to the bottom', st.get().level === 0);
     await sleep(400);
@@ -353,11 +357,14 @@ try {
 
   section('*** THE SCREEN\'S FLASH LIMIT (flash_limit.js): an LFO never swings more often than the limit, counted peak by peak ***');
   {
-    check('at the ceiling (3) and at 2 the one-second floor is still the stricter', lfoMinPeriodMs(3) === LFO_MIN_PERIOD_MS
-      && lfoMinPeriodMs(2) === LFO_MIN_PERIOD_MS && lfoMinPeriodMs() === LFO_MIN_PERIOD_MS);
+    check('at 3 and at 2 the one-second floor is still the stricter (unchanged)', lfoMinPeriodMs(3) === LFO_MIN_PERIOD_MS
+      && lfoMinPeriodMs(2) === LFO_MIN_PERIOD_MS);
+    check('*** NO LIMIT (the default now): only the sampling floor, four ticks - 400 ms at 100, 64 ms at 16 ***',
+      lfoMinPeriodMs() === 400 && lfoMinPeriodMs(Infinity, 100) === 400 && lfoMinPeriodMs('none', 16) === 64);
     check('at 1 a second the limit wins: a second, plus one 100 ms tick, plus a frame',
       Math.abs(lfoMinPeriodMs(1, 100) - (1100 + 1000 / 60)) < 1e-9, String(lfoMinPeriodMs(1, 100)));
-    check('a limit above 3 is read as 3', lfoMinPeriodMs(10) === LFO_MIN_PERIOD_MS);
+    check('a raised limit (10 a second) is obeyed, and the one-second floor still applies while ANY limit is set',
+      lfoMinPeriodMs(10) === LFO_MIN_PERIOD_MS);
     // A FLASH is one swing up then down: count the PEAKS of the value on screen, read every 16 ms
     // frame. A peak is a run of equal values higher than both neighbours; its time is the MIDDLE of
     // the run (rounding makes the top of a wave flat, and the middle is where the wave really peaks).
@@ -423,9 +430,12 @@ try {
     }
     {
       const r = runLfo({ limit: () => { throw new Error('broken'); }, periodMs: 50 });
-      check('a limit that throws reads as the ceiling: the one-second floor, never faster', r.period === LFO_MIN_PERIOD_MS && r.worst <= 3);
+      check('a limit that throws reads as no limit: the sampling floor, not a crash', r.period === 400);
       const d = runLfo({ periodMs: 50 });
-      check('no limit given: the ceiling', d.period === LFO_MIN_PERIOD_MS);
+      check('*** no limit given: asked for 50 ms, runs at the sampling floor, 400 ms - faster than the old one-second cap ***',
+        d.period === 400 && d.worst >= 2, `${d.period} ${d.worst}`);
+      const own = runLfo({ periodMs: 600 });
+      check('no limit: a 600 ms wave runs at its own 600 ms', own.period === 600);
     }
   }
 
@@ -474,8 +484,10 @@ try {
           f.worst <= L && f.worst >= 1 && f.final === f.lastSent * 100 && f.timers === 0, JSON.stringify({ w: f.worst, final: f.final, last: f.lastSent, timers: f.timers }));
       }
     }
+    // 2026-10-01: no flash limit unless one is set - a host that passes none is not held.
     const def = flap({});
-    check('*** no limit given: the ceiling, 3 ***', def.worst <= 3);
+    check('*** no limit given: not held - every reversal is shown, and the last value lands ***',
+      def.worst > 3 && def.final === def.lastSent * 100, JSON.stringify({ w: def.worst, final: def.final }));
     // A RAMP IS NOT A FLASH: a sensor climbing every 50 ms is shown every step, at once.
     {
       const bus = createBus(); const clk = fakeClock();

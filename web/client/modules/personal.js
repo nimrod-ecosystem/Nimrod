@@ -61,7 +61,7 @@ import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
-import { flashLimit, minFlashPeriodMs, failureBackoffMs } from '../flash_limit.js';
+import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 
 // `stallMs` matches youtube's for the same reason: long enough that a big clip loading off
 // a media agent over facility wifi is not cut off, short enough that nobody sits in front
@@ -305,7 +305,7 @@ registerModule(
       };
       // A clip that ENDS inside one flash period of appearing (zero-length, truncated) is a
       // failure, not a message: it takes the FAILURE BACKOFF. One that played is handled at once.
-      if (now() - shownAt < minFlashPeriodMs(flashLimit(ctx))) { afterFailure(finish); return; }
+      if (now() - shownAt < failureFloorMs(flashLimit(ctx))) { afterFailure(finish); return; }
       failStreak = 0;
       finish();
     }

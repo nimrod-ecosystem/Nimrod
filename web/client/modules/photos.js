@@ -27,7 +27,7 @@ import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
-import { flashLimit, minFlashPeriodMs, failureBackoffMs } from '../flash_limit.js';
+import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { applyGrade } from '../lut.js';
 
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
@@ -363,7 +363,7 @@ registerModule(
         // treated like an error - see failedItem. A one-second Live Photo still plays normally.
         const onEnded = () => {
           videoStall.disarm();
-          if (now() - shownAt >= minFlashPeriodMs(flashLimit(ctx))) { failStreak = 0; bus.publish('photos/next', undefined, OWN); }
+          if (now() - shownAt >= failureFloorMs(flashLimit(ctx))) { failStreak = 0; bus.publish('photos/next', undefined, OWN); }
           else failedItem();
         };
         // An explicit failure moves on after one flash period; a RUN of them backs off

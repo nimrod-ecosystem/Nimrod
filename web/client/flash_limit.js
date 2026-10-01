@@ -1,36 +1,45 @@
-// flash_limit.js — HOW MANY TIMES A SECOND ANYTHING ON THIS SCREEN MAY FLASH. One number, one helper.
+// flash_limit.js — HOW MANY TIMES A SECOND ANYTHING ON THIS SCREEN MAY FLASH. One setting, one helper.
 //
-// MIKE_CHANGE_LIST.md rows 2.43 + 2.48: `starting_defaults.js` gives the "Flashing can cause seizures"
-// box the setting `flashLimitPerSecond: 3` (WCAG 2.3.1). Until this file NOTHING READ IT - rhythm had
-// its own 175 bpm constant and automation its own one-second LFO floor. Now there is one reader:
+// MIKE_CHANGE_LIST.md rows 2.43 + 2.48. Every repeated visible change on the screen (a tile lighting, a
+// pulse, a wave on a colour, a sign flickering) reads its period from here:
 //
 //   flashLimit(ctx)                 what a MODULE calls. Reads `ctx.flashLimitPerSecond` (a value or a
-//                                   getter the host supplies); a host that supplies nothing gets 3.
+//                                   getter the host supplies). A host that supplies nothing: no limit.
+//   flashProfile(ctx)               the same, plus whether the WCAG 2.3.1 small-or-faint exception is on.
 //   flashLimitFrom(rows, layer)     what the HOST calls: the screen's and the person's settings rows,
 //                                   with the starting-defaults layer filling only what nobody chose
 //                                   (`withStartingDefaults`, so "defaults, never locks" still holds).
-//   minFlashPeriodMs(limit, {jitterMs})  the shortest gap between two repeats of a visible change.
-//   maxPerMinute(limit)             the same, as "per minute" (a tempo).
+//   minFlashPeriodMs(limit, {jitterMs, belowThreshold})  the shortest gap between two repeats. 0 = none.
+//   maxPerMinute(limit)             the same, as "per minute" (a tempo). Infinity = none.
 //
 // A "flash" is WCAG's: a pair of opposing changes (lit then dark). Anything that repeats a visible
-// change - a tile lighting, a pulse, a wave on a colour - repeats a flash once per period.
+// change repeats a flash once per period.
 //
 // ---------------------------------------------------------------------------------------
-// *** THE CEILING IS 3 AND NO SETTING GOES ABOVE IT. *** This is a SAFETY invariant - the one kind of
-// absolute CLAUDE.md allows - so it is stated as one, and listed for Mike's sign-off (not yet given):
-//   WHO WANTS THE OPPOSITE? A party screen that wants a strobe; a music visualiser. Real wants. But a
-//   screen whose first home is a bedside cannot tell who is looking at it, and a seizure is not a
-//   preference somebody opted into. A strobe mode, if Mike wants one, is its own separately-argued
-//   feature with its own warning - not this number set to 10.
-//   WHAT HAPPENS IF NOBODY ANSWERS? Nothing: this is a cap, never a gate. Nothing waits for it.
+// *** NO LIMIT BY DEFAULT. THE PHOTOSENSITIVITY BOX SETS ONE; ANYBODY CAN RAISE OR REMOVE IT. ***
+// Mike, 2026-10-01, on the old fixed ceiling of 3 that no setting could raise: *"That's only for the
+// photosensitivity setting. I wouldn't make it impossible to raise. That cap shouldn't be there for
+// everyone though."* So:
+//   * a screen nobody set up has NO flash limit - every module runs at its own natural rate;
+//   * the "Flashing can cause seizures" starting-default box sets 3 a second, any size (WCAG 2.3.2's
+//     form - research decision, note AR: "the default is 2.3.2");
+//   * the menu offers: no limit, 3 a second except small or faint flashes (WCAG 2.3.1, the looser
+//     published form - "the floor is 2.3.1"), 3, 2 and 1 a second, any size;
+//   * NOTHING CLAMPS A CHOICE. A stored 5, or 0.5, is obeyed as 5 or 0.5. Only a value that is not a
+//     rate at all (text, a negative, zero, true) is ignored - and an ignored value counts as NOT CHOSEN,
+//     so the starting-defaults layer under it still applies (a corrupted row never quietly removes the
+//     limit somebody's box set).
 //
-// *** THE FLOOR IS 1, ARGUED (a default, on Mike's list). ***
-//   FOR allowing lower (0.5, or "never"): a person who wants nothing to flash at all is real.
-//   AGAINST, and it wins for now: under one a second a repeat is no longer a flash in the sense the
-//   published guidance means (it is about seizure-rate flicker), every slow pulse on the product
-//   (listening cue 1.6 s, room ring 1.4 s, clock alert 1 s) would have to be rebuilt to honour it,
-//   and "nothing moves" is already its own setting (`reduceMotion`, the "movement makes me unwell"
-//   box). If Mike wants "never flash", that is a toggle beside this, not a smaller number.
+// WHY ZERO IS NOT "NEVER FLASH": a zero would have to mean "nothing on the screen may ever change twice",
+// which no module can honour; "nothing moves" is its own setting (`reduceMotion`). If Mike wants a
+// "never flash" toggle it is a separate control, not a number here.
+//
+// *** WCAG 2.3.1 TODAY BEHAVES AS 3 A SECOND FOR EVERY MODULE. *** Its exception is for flashes below the
+// general and red flash thresholds (small area, small luminance change, no saturated red). No module can
+// measure its own flash area or luminance change as it draws, so none declares `belowThreshold` yet, and
+// every one keeps 3 a second. The choice is still worth offering and recording: it is the published
+// floor, and a module that CAN show it is small and faint (a thin outline, say) passes
+// `{ belowThreshold: true }` to `minFlashPeriodMs` and is then not limited under it.
 //
 // *** THE MARGIN: ONE 60 Hz FRAME (or the source's own tick). *** A screen draws whole frames, so a
 // change due at time t lands up to one frame late. At exactly three a second four onsets can
@@ -42,70 +51,107 @@
 import { withStartingDefaults } from './starting_defaults.js';
 
 export const FLASH_LIMIT_KEY = 'flashLimitPerSecond';
-/** WCAG 2.3.1 / 2.3.2. The ceiling: no setting, layer or host goes above it. */
-export const FLASH_LIMIT_MAX = 3;
-/** The lowest limit a setting may ask for (argued above; on Mike's list). */
-export const FLASH_LIMIT_MIN = 1;
-/** What a screen with no setting and no starting default gets: the ceiling itself. */
-export const FLASH_LIMIT_DEFAULT = FLASH_LIMIT_MAX;
+/** The stored value for "no limit" (a settings row goes through JSON, which has no Infinity). */
+export const FLASH_NO_LIMIT = 'none';
+/** The stored value for WCAG 2.3.1: 3 a second, except flashes below the general and red thresholds. */
+export const FLASH_WCAG_231 = 'wcag-2.3.1';
+/** The published count both WCAG criteria use, and what the photosensitivity box sets (2.3.2's form). */
+export const FLASH_LIMIT_WCAG = 3;
+/** What a screen with no setting and no starting default gets: no limit (a normalized limit is a number). */
+export const FLASH_LIMIT_DEFAULT = Infinity;
 /** One 60 Hz frame: how late a change can land on screen. */
 export const FRAME_MS = 1000 / 60;
 /** Tempos are offered and shown as round numbers: a per-minute cap rounds DOWN to a multiple of this. */
 export const PER_MINUTE_STEP = 5;
 
-/** Any value in, a usable limit out: clamped to [MIN, MAX]; garbage reads as the default (3). */
-export function normalizeFlashLimit(v) {
-  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return FLASH_LIMIT_DEFAULT;
+/** Is `v` a real flash-limit choice (as opposed to unset or garbage)? */
+export function isFlashLimitChoice(v) {
+  if (v === FLASH_NO_LIMIT || v === FLASH_WCAG_231 || v === Infinity) return true;
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return false;
   const n = Number(v);
-  if (!Number.isFinite(n)) return FLASH_LIMIT_DEFAULT;
-  return Math.max(FLASH_LIMIT_MIN, Math.min(FLASH_LIMIT_MAX, n));
+  return Number.isFinite(n) && n > 0;
 }
 
 /**
- * THE MODULE'S READ. `ctx.flashLimitPerSecond` may be a number or a function; anything missing or
- * broken is 3 - a module mounted by a host that knows nothing of this is exactly as safe as before.
- * Read it when you need it (it is a getter on the kiosk, so it follows a changed setting).
+ * Any value in, a usable limit (flashes a second) out. Infinity = no limit. 'wcag-2.3.1' reads as 3
+ * (its exception is only reachable through `flashProfile`). Never clamped; garbage reads as the default.
  */
-export function flashLimit(ctx) {
-  let v;
+export function normalizeFlashLimit(v) {
+  if (v && typeof v === 'object' && 'perSecond' in v) return normalizeFlashLimit(v.perSecond);
+  if (!isFlashLimitChoice(v)) return FLASH_LIMIT_DEFAULT;
+  if (v === FLASH_NO_LIMIT || v === Infinity) return Infinity;
+  if (v === FLASH_WCAG_231) return FLASH_LIMIT_WCAG;
+  return Number(v);
+}
+
+/** { perSecond, belowThresholdExempt } - the limit plus whether the WCAG 2.3.1 exception is on. */
+export function normalizeFlashProfile(v) {
+  if (v && typeof v === 'object' && 'perSecond' in v) {
+    return { perSecond: normalizeFlashLimit(v.perSecond), belowThresholdExempt: !!v.belowThresholdExempt };
+  }
+  return { perSecond: normalizeFlashLimit(v), belowThresholdExempt: v === FLASH_WCAG_231 };
+}
+
+const readCtx = (ctx) => {
   try {
-    v = ctx ? ctx[FLASH_LIMIT_KEY] : undefined;
+    let v = ctx ? ctx[FLASH_LIMIT_KEY] : undefined;
     if (typeof v === 'function') v = v();
-  } catch { v = undefined; }
-  return normalizeFlashLimit(v);
-}
+    return v;
+  } catch { return undefined; }
+};
 
 /**
- * THE HOST'S READ. `rows` is one settings row or a list (the screen's, the person's). A row that
- * CHOSE a value keeps it - the starting-defaults layer fills only a row that did not. Where more than
- * one row chose, THE STRICTER WINS: a room screen is seen by everyone in the room, so the lowest limit
- * anybody set is the one that protects them all. (A default, argued, on Mike's list.)
+ * THE MODULE'S READ. `ctx.flashLimitPerSecond` may be a value or a function; anything missing or
+ * broken is no limit. Read it when you need it (it is a getter on the kiosk, so it follows a change).
  */
-export function flashLimitFrom(rows, layer = {}) {
+export function flashLimit(ctx) { return normalizeFlashLimit(readCtx(ctx)); }
+export function flashProfile(ctx) { return normalizeFlashProfile(readCtx(ctx)); }
+
+// Strictness order: the lower rate first; at the same rate, no exception is stricter than 2.3.1's.
+const stricter = (a, b) => (a.perSecond !== b.perSecond ? a.perSecond < b.perSecond
+  : (!a.belowThresholdExempt && b.belowThresholdExempt));
+
+/**
+ * THE HOST'S PROFILE. `rows` is one settings row or a list (the screen's, the person's). A row that
+ * CHOSE a value keeps it - the starting-defaults layer fills only when no row did. Where more than one
+ * row chose, THE STRICTER WINS: a room screen is seen by everyone in the room, so the lowest limit
+ * anybody set is the one that protects them all. (A default, argued, on Mike's list.) A value that is
+ * not a rate (garbage) is NOT a choice, so it can never cancel the layer.
+ */
+export function flashProfileFrom(rows, layer = {}) {
   const list = (Array.isArray(rows) ? rows : [rows]).filter((r) => r && typeof r === 'object');
-  const chosen = list
-    .map((r) => r[FLASH_LIMIT_KEY])
-    .filter((v) => v !== undefined && v !== null && v !== '')
-    .map(normalizeFlashLimit);
-  if (chosen.length) return Math.min(...chosen);
-  return normalizeFlashLimit(withStartingDefaults({}, layer || {})[FLASH_LIMIT_KEY]);
+  const chosen = list.map((r) => r[FLASH_LIMIT_KEY]).filter(isFlashLimitChoice).map(normalizeFlashProfile);
+  if (chosen.length) return chosen.reduce((best, p) => (stricter(p, best) ? p : best));
+  const fromLayer = withStartingDefaults({}, layer || {})[FLASH_LIMIT_KEY];
+  return normalizeFlashProfile(isFlashLimitChoice(fromLayer) ? fromLayer : undefined);
 }
 
-/** The shortest period (ms) a repeating visible change may have at `limit` flashes a second. */
-export function minFlashPeriodMs(limit, { jitterMs = FRAME_MS } = {}) {
+/** THE HOST'S READ: the limit (a number; Infinity = none) for these rows over this layer. */
+export function flashLimitFrom(rows, layer = {}) { return flashProfileFrom(rows, layer).perSecond; }
+
+/**
+ * The shortest period (ms) a repeating visible change may have at `limit` (a number, a stored value or
+ * a profile). 0 when there is no limit - and 0 under WCAG 2.3.1 for a caller that passes
+ * `belowThreshold: true` (its flash is small and faint; see the header).
+ */
+export function minFlashPeriodMs(limit, { jitterMs = FRAME_MS, belowThreshold = false } = {}) {
+  const p = normalizeFlashProfile(limit);
+  if (belowThreshold && p.belowThresholdExempt) return 0;
+  if (!Number.isFinite(p.perSecond)) return 0;
   const j = Math.max(0, Number(jitterMs) || 0);
-  return (1000 + j) / normalizeFlashLimit(limit);
+  return (1000 + j) / p.perSecond;
 }
 
 /**
  * The most repeats a MINUTE at `limit` (a tempo cap), rounded DOWN to a multiple of PER_MINUTE_STEP.
- * At 3 this is 175 (the number rhythm_beat.js has always used, now derived): 3 gaps of 60000/175 =
- * 1028.6 ms > 1000 + one frame. At 2: 115. At 1: 55.
+ * Infinity when there is no limit. At 3: 175 (3 gaps of 60000/175 = 1028.6 ms > 1000 + one frame).
+ * At 2: 115. At 1: 55.
  */
 export function maxPerMinute(limit, { jitterMs = FRAME_MS, step = PER_MINUTE_STEP } = {}) {
-  const raw = 60000 / minFlashPeriodMs(limit, { jitterMs });
+  const period = minFlashPeriodMs(limit, { jitterMs });
+  if (!(period > 0)) return Infinity;
   const s = Math.max(1, Number(step) || 1);
-  return Math.floor(raw / s) * s;
+  return Math.floor(60000 / period / s) * s;
 }
 
 /**
@@ -123,13 +169,21 @@ export function worstInAnySecond(times, windowMs = 1000) {
 }
 
 /**
- * *** FAILURE BACKOFF: A RUN OF BROKEN ITEMS MUST NOT BECOME A STROBE. *** (Photosensitivity audit,
- * 2026-09-30.) Photos, personal videos and YouTube all move on the moment an item errors - right for
- * one broken file, and a strobe when EVERY file is broken: each new item appears, fails in a few
- * milliseconds, and the next replaces it, as fast as the browser can go. This is how long the
- * `streak`-th failure IN A ROW must stay up (from when it appeared) before the next item replaces it:
+ * *** FAILURE BACKOFF: A RUN OF BROKEN ITEMS MUST NOT BECOME A STROBE - FOR EVERYBODY. *** (Photosensitivity
+ * audit, 2026-09-30.) Photos, personal videos and YouTube all move on the moment an item errors - right
+ * for one broken file, and a strobe when EVERY file is broken: each new item appears, fails in a few
+ * milliseconds, and the next replaces it, as fast as the browser can go.
  *
- *   1st         one flash period - 339 ms at 3, 1017 ms at 1 (was: at once)
+ * *** THIS IS NOT A FLASH SETTING, SO "NO LIMIT" DOES NOT REMOVE IT (argued, 2026-10-01). ***
+ *   FOR letting it follow the limit to zero: Mike's ruling is that no cap is there for everyone.
+ *   AGAINST, and it wins: the ruling is about effects somebody CHOSE - a fast game, a party light. A
+ *   dead folder spinning is a malfunction nobody chose, and it also spins a Pi 400's CPU and the logs.
+ *   Nobody is served by it at any limit. So it holds at the published 3-a-second numbers whatever the
+ *   limit says, and only a STRICTER limit lengthens it.
+ *
+ * How long the `streak`-th failure IN A ROW must stay up (from when it appeared) before the next item
+ * replaces it:
+ *   1st         one 3-a-second period, or the screen's period if longer - 339 ms; 1017 ms at 1 a second
  *   2nd, 3rd... BASE, doubling, capped: 2 s, 4 s, 8 s, 16 s, 30 s, 30 s ...
  *
  * NUMBERS ARGUED (defaults, on Mike's list): BASE 2 s is the photo slideshow's own floor
@@ -137,31 +191,69 @@ export function worstInAnySecond(times, windowMs = 1000) {
  * may go. CAP 30 s: long enough that a dead folder is not a spinner on a Pi 400; short enough that
  * one good item among many broken ones is still reached within a few minutes. The streak resets the
  * moment anything plays properly, so NORMAL TIMING NEVER CHANGES - only a failure is ever held.
+ *
+ * `failureFloorMs(limit)` is the first hold un-rounded: a clip that ENDS sooner than this after it
+ * appeared did not really play (photos.js / personal.js use it for that test).
  */
+export const FAIL_BACKOFF_RATE = FLASH_LIMIT_WCAG;
 export const FAIL_BACKOFF_BASE_MS = 2000;
 export const FAIL_BACKOFF_CAP_MS = 30000;
+export function failureFloorMs(limit = FLASH_LIMIT_DEFAULT) {
+  return Math.max(minFlashPeriodMs(FAIL_BACKOFF_RATE), minFlashPeriodMs(limit));
+}
 export function failureBackoffMs(streak, limit = FLASH_LIMIT_DEFAULT) {
-  const first = Math.ceil(minFlashPeriodMs(limit));
+  const first = Math.ceil(failureFloorMs(limit));
   const n = Math.max(1, Math.floor(Number(streak) || 1));
   if (n === 1) return first;
   return Math.max(first, Math.min(FAIL_BACKOFF_CAP_MS, FAIL_BACKOFF_BASE_MS * 2 ** (n - 2)));
 }
 
 /**
- * The settings row a host's menu shows (the screen's or the person's). Options only go DOWN from 3:
- * the ceiling is not a choice. Level 'standard' - it is a safety setting, but a caregiver's one.
+ * The settings row a host's menu shows (the screen's or the person's). Ordered loosest to strictest, so
+ * one switch walks it in one direction and wraps. Level 'standard' - a caregiver's setting.
+ * Not automatable: a safety setting that a sensor or a wave could change is not one.
  */
+export const FLASH_LIMIT_OPTIONS = Object.freeze([
+  Object.freeze({ value: FLASH_NO_LIMIT, label: 'No limit' }),
+  Object.freeze({ value: FLASH_WCAG_231, label: '3 a second, except small or faint flashes (WCAG 2.3.1)' }),
+  Object.freeze({ value: 3, label: '3 a second, any size (WCAG 2.3.2)' }),
+  Object.freeze({ value: 2, label: '2 a second' }),
+  Object.freeze({ value: 1, label: '1 a second' }),
+]);
 export const FLASH_LIMIT_FIELD = Object.freeze({
   key: FLASH_LIMIT_KEY,
-  label: 'Flashing: no more than',
+  label: 'Flashing limit',
   kind: 'choice',
-  default: FLASH_LIMIT_DEFAULT,
+  default: FLASH_NO_LIMIT,
   level: 'standard',
-  options: Object.freeze([
-    Object.freeze({ value: 3, label: '3 a second (the published limit)' }),
-    Object.freeze({ value: 2, label: '2 a second' }),
-    Object.freeze({ value: 1, label: '1 a second' }),
-  ]),
-  note: 'Tiles, pulses and waves on this screen never repeat faster than this. It never goes above 3.',
+  options: FLASH_LIMIT_OPTIONS,
+  note: 'How often tiles, pulses and waves on this screen may flash. The "Flashing can cause seizures" '
+    + 'starting setting picks 3 a second, any size. Any choice here can be raised, lowered or removed.',
   automatable: false,
 });
+
+/**
+ * The same field, but an UNSET row shows what is really in force: the starting-defaults layer's value
+ * (`layer` is the layer object or a function returning it). Without this a screen whose box set 3 would
+ * show "No limit" in the menu while obeying 3.
+ */
+export function flashLimitFieldWith(layer) {
+  return Object.freeze({
+    ...FLASH_LIMIT_FIELD,
+    defaultFrom: () => {
+      let l;
+      try { l = typeof layer === 'function' ? layer() : layer; } catch { l = null; }
+      const v = l && typeof l === 'object' ? l[FLASH_LIMIT_KEY] : undefined;
+      return isFlashLimitChoice(v) ? v : undefined;
+    },
+  });
+}
+
+/** A limit in plain words ("no limit", "3 a second, any size"...), for previews and notes. */
+export function sayFlashLimit(v) {
+  if (!isFlashLimitChoice(v) || normalizeFlashLimit(v) === Infinity) return 'no limit';
+  const hit = FLASH_LIMIT_OPTIONS.find((o) => String(o.value) === String(v));
+  if (hit) return hit.label.replace(/ \(WCAG [0-9.]+\)$/, '');
+  const n = Number(v);
+  return `${n} a second`;
+}

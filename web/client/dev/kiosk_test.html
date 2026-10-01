@@ -3297,14 +3297,21 @@ const ds = () => root.querySelector('.kiosk').dataset;
         JSON.stringify(back.slice(-2)));
 
       // ---- 3. THE FLASH LIMIT ----
-      check('flash limit: 3 when nobody chose (the ceiling)', wk.flashLimit() === 3 && probeCtx?.flashLimitPerSecond === 3
-        && wk.automation().flashLimit() === 3, `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond}`);
+      // 2026-10-01 (Mike): no flash limit unless somebody sets one - the photosensitivity box, or this row.
+      check('flash limit: NONE when nobody chose (no cap for everyone)', wk.flashLimit() === Infinity
+        && probeCtx?.flashLimitPerSecond === Infinity && wk.automation().flashLimit() === Infinity,
+        `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond}`);
       wk.menu.open();
       check('*** flash limit and zoom on focus: in the menu under "Movement and flashing" ***',
         !!item('motion-head') && !!item('set:flashLimitPerSecond') && !!item('set:zoomFocus')
         && wk.menu.items().findIndex((r) => r.id === 'motion-head') < wk.menu.items().findIndex((r) => r.id === 'set:zoomFocus'));
       check('(setup) the flash row is on the walk', walkTo('set:flashLimitPerSecond'));
+      // The row runs loosest to strictest: no limit -> WCAG 2.3.1 (3, small/faint excepted) -> 3 -> 2 -> 1.
       wk.menu.select();
+      check('flash limit: one press from "no limit" is WCAG 2.3.1, which every reader takes as 3',
+        await settled(() => wk.flashLimit() === 3 && probeCtx?.flashLimitPerSecond === 3 && wk.automation().flashLimit() === 3, 4000),
+        `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond} ${wk.automation().flashLimit()}`);
+      wk.menu.select(); wk.menu.select();
       check('*** flash limit: set to 2 from the menu -> every reader follows (kiosk, a module’s ctx, automation) ***',
         await settled(() => wk.flashLimit() === 2 && probeCtx?.flashLimitPerSecond === 2 && wk.automation().flashLimit() === 2, 4000),
         `${wk.flashLimit()} ${probeCtx?.flashLimitPerSecond} ${wk.automation().flashLimit()}`);
@@ -3325,8 +3332,9 @@ const ds = () => root.querySelector('.kiosk').dataset;
       for (let i = 0; i < 3; i += 1) wk.menu.select();
       check('...and back to off leaves nothing behind', await settled(() => !('zoomFocus' in kEl.dataset), 4000));
       walkTo('set:flashLimitPerSecond');
-      wk.menu.select(); wk.menu.select();
-      await settled(() => wk.flashLimit() === 3, 4000);
+      wk.menu.select(); wk.menu.select();   // 2 -> 1 -> wraps to "no limit"
+      check('flash limit: the row wraps from 1 back to "no limit"', await settled(() => wk.flashLimit() === Infinity, 4000),
+        String(wk.flashLimit()));
       wk.menu.close();
 
       // ---- 5. AVATARS IN "WHO THIS SCREEN IS FOR" ----

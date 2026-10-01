@@ -29,7 +29,7 @@ import {
   SOURCES, CONDITIONS, AGE_BANDS, LEVEL_OPTIONS, SETTING_WORDS,
   normalizeAnswers, defaultsFor, combineValues, planChanges, describePlan, withStartingDefaults,
   createDeviceStore, DEVICE_KEY, DEVICE_NOTE, ONLINE_WARNING, STARTING_DEFAULTS_PRESET_TYPE,
-  onlinePayload, saveOnline, recordFromOnline,
+  onlinePayload, saveOnline, recordFromOnline, conflictQuestion,
 } from '../starting_defaults.js';
 import { mountStartingDefaults } from '../starting_defaults_panel.js';
 import { createPresetLibrary } from '../presets.js';
@@ -37,8 +37,9 @@ import { LEVELS } from '../settings_fields.js';
 import { THEMES, contrast } from '../theme.js';
 import { SUBTITLES_FIELDS } from '../subtitles.js';
 import {
-  FLASH_LIMIT_KEY, FLASH_LIMIT_MAX, FLASH_LIMIT_MIN, FLASH_LIMIT_DEFAULT, FLASH_LIMIT_FIELD,
+  FLASH_LIMIT_KEY, FLASH_LIMIT_WCAG, FLASH_NO_LIMIT, FLASH_WCAG_231, FLASH_LIMIT_DEFAULT, FLASH_LIMIT_FIELD,
   normalizeFlashLimit, flashLimit, flashLimitFrom, minFlashPeriodMs, maxPerMinute, worstInAnySecond,
+  flashProfile, flashProfileFrom, isFlashLimitChoice, failureBackoffMs, failureFloorMs, flashLimitFieldWith, sayFlashLimit,
 } from '../flash_limit.js';
 
 const out = document.getElementById('results');
@@ -117,8 +118,9 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
       CONDITIONS.filter((c) => c.status === 'to-be-filled').every((c) => c.sets.length === 0));
     check('every source says where it comes from (provenance), what it is, and what it says',
       Object.values(SOURCES).every((s) => s.name && s.says && s.provenance));
-    check('every published-guidance source is marked [training knowledge] — none claims in-repo verification it does not have',
-      Object.values(SOURCES).filter((s) => s.kind === 'published').every((s) => /training knowledge/.test(s.provenance)));
+    check('every published source says HOW it is known: [training knowledge], re-checked at its URL (with the date), or carried from the research unchecked',
+      Object.values(SOURCES).filter((s) => s.kind === 'published')
+        .every((s) => /training knowledge|checked against the published text at https?:\/\/\S+ on 20\d\d-\d\d-\d\d|not re-checked/.test(s.provenance)));
     check('every setting a box can make has plain words to show it with',
       CONDITIONS.every((c) => c.sets.every((s) => SETTING_WORDS[s.key] && typeof SETTING_WORDS[s.key].say === 'function'))
         && !!SETTING_WORDS.complexity);
@@ -140,8 +142,9 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
 
       const ph = defaultsFor({ conditions: ['photosensitive'] });
       const e = entry(ph, 'flashLimitPerSecond');
-      check('*** photosensitive epilepsy sets the no-flash default: at most 3 flashes a second (WCAG 2.3.1) ***',
-        e && e.value === 3 && e.sources.some((s) => s.id === 'wcag-2.3.1'), JSON.stringify(ph.entries));
+      check('*** photosensitive epilepsy sets 3 flashes a second AT ANY SIZE - WCAG 2.3.2, the research decision\'s default (not 2.3.1) ***',
+        e && e.value === 3 && e.sources.some((s) => s.id === 'wcag-2.3.2') && !e.sources.some((s) => s.id === 'wcag-2.3.1'),
+        JSON.stringify(ph.entries));
       check('...and the layer carries exactly that value', ph.layer.flashLimitPerSecond === 3);
       check('...and the entry says which box set it', e && e.from.includes('photosensitive'));
 
@@ -272,7 +275,7 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
         raw.answers?.conditions?.includes('stroke'));
       check('the record remembers which box set each setting and from what source',
         raw.why?.flashLimitPerSecond?.from?.includes('photosensitive')
-          && raw.why.flashLimitPerSecond.sources.includes('wcag-2.3.1'), JSON.stringify(raw.why));
+          && raw.why.flashLimitPerSecond.sources.includes('wcag-2.3.2'), JSON.stringify(raw.why));
       check('now there is something to put back', store.canPutBack());
 
       store.apply(defaultsFor({ conditions: ['motion'] }));
@@ -447,31 +450,49 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
       reopened.destroy();
     }
 
-    section('*** flashLimitPerSecond IS READ (flash_limit.js) - no longer a value nothing looks at ***');
+    section('*** flashLimitPerSecond IS READ (flash_limit.js) - NO LIMIT by default; the box sets one; nothing clamps a choice ***');
     {
       const ph = defaultsFor({ conditions: ['photosensitive'] });
       check('the photosensitive layer, read by the host helper, is 3', flashLimitFrom([{}], ph.layer) === 3);
-      check('no layer and no setting: the ceiling (3)', flashLimitFrom([{}], {}) === FLASH_LIMIT_DEFAULT && FLASH_LIMIT_DEFAULT === 3);
+      check('*** no layer and no setting: NO LIMIT (Mike, 2026-10-01: "That cap shouldn\'t be there for everyone") ***',
+        flashLimitFrom([{}], {}) === Infinity && FLASH_LIMIT_DEFAULT === Infinity);
       check('*** a chosen value wins over the layer (defaults, never locks) ***', flashLimitFrom([{ flashLimitPerSecond: 1 }], ph.layer) === 1);
+      check('*** ...including RAISING it: "no limit" chosen over the box\'s 3 is no limit ***',
+        flashLimitFrom([{ flashLimitPerSecond: FLASH_NO_LIMIT }], ph.layer) === Infinity);
+      check('...and raising it to the looser WCAG 2.3.1 form', flashLimitFrom([{ flashLimitPerSecond: FLASH_WCAG_231 }], ph.layer) === 3
+        && flashProfileFrom([{ flashLimitPerSecond: FLASH_WCAG_231 }], ph.layer).belowThresholdExempt === true);
       check('the layer fills only a row that did not choose', flashLimitFrom([{ theme: 'warm' }], { flashLimitPerSecond: 2 }) === 2);
       check('*** two rows (screen, person) that both chose: the stricter wins ***',
         flashLimitFrom([{ flashLimitPerSecond: 3 }, { flashLimitPerSecond: 1 }], {}) === 1
-          && flashLimitFrom([{ flashLimitPerSecond: 2 }, {}], {}) === 2);
-      check('*** NOTHING goes above 3: not a setting, not a layer ***',
-        flashLimitFrom([{ flashLimitPerSecond: 10 }], {}) === 3 && flashLimitFrom([{}], { flashLimitPerSecond: 60 }) === 3
-          && normalizeFlashLimit(4) === FLASH_LIMIT_MAX);
-      check('below the floor reads as the floor (1)', normalizeFlashLimit(0) === FLASH_LIMIT_MIN && normalizeFlashLimit(-5) === 1
-        && FLASH_LIMIT_MIN === 1);
-      check('garbage reads as the default, never as 0 or "unlimited"', [null, undefined, '', 'lots', NaN, true, {}].every((v) => normalizeFlashLimit(v) === 3));
+          && flashLimitFrom([{ flashLimitPerSecond: 2 }, {}], {}) === 2
+          && flashLimitFrom([{ flashLimitPerSecond: FLASH_NO_LIMIT }, { flashLimitPerSecond: 2 }], {}) === 2);
+      check('...at the same rate, 2.3.2 (no exception) is stricter than 2.3.1',
+        flashProfileFrom([{ flashLimitPerSecond: FLASH_WCAG_231 }, { flashLimitPerSecond: 3 }], {}).belowThresholdExempt === false);
+      check('*** NOTHING CLAMPS A CHOICE: 10 is 10, 0.5 is 0.5 (the old 1-3 clamp is gone) ***',
+        flashLimitFrom([{ flashLimitPerSecond: 10 }], {}) === 10 && flashLimitFrom([{}], { flashLimitPerSecond: 60 }) === 60
+          && normalizeFlashLimit(4) === 4 && normalizeFlashLimit(0.5) === 0.5 && normalizeFlashLimit('2') === 2);
+      check('stored forms: "none" is Infinity, "wcag-2.3.1" is 3', normalizeFlashLimit('none') === Infinity
+        && normalizeFlashLimit('wcag-2.3.1') === 3 && FLASH_LIMIT_WCAG === 3);
+      check('garbage (0, negatives, text, true, {}) is not a choice and reads as the default',
+        [null, undefined, '', 'lots', NaN, true, {}, 0, -5].every((v) => !isFlashLimitChoice(v) && normalizeFlashLimit(v) === Infinity));
+      check('*** a GARBAGE row is NOT a choice, so it can never cancel the limit a box set ***',
+        flashLimitFrom([{ flashLimitPerSecond: 'lots' }, { flashLimitPerSecond: 0 }], ph.layer) === 3);
       check('a module reads it off ctx - a value or a getter', flashLimit({ flashLimitPerSecond: 2 }) === 2
         && flashLimit({ flashLimitPerSecond: () => 1 }) === 1
-        && flashLimit({ get flashLimitPerSecond() { return 1; } }) === 1);
-      check('a host that supplies nothing, or throws, gets 3', flashLimit({}) === 3 && flashLimit(null) === 3
-        && flashLimit({ flashLimitPerSecond: () => { throw new Error('x'); } }) === 3);
+        && flashLimit({ get flashLimitPerSecond() { return 1; } }) === 1
+        && flashProfile({ flashLimitPerSecond: () => FLASH_WCAG_231 }).belowThresholdExempt === true);
+      check('a host that supplies nothing, or throws, gets no limit', flashLimit({}) === Infinity && flashLimit(null) === Infinity
+        && flashLimit({ flashLimitPerSecond: () => { throw new Error('x'); } }) === Infinity);
       check('the key is the one starting_defaults.js sets', FLASH_LIMIT_KEY === 'flashLimitPerSecond'
         && CONDITIONS.find((c) => c.id === 'photosensitive').sets.some((s) => s.key === FLASH_LIMIT_KEY));
       check('the shortest period at 3 is a third of (a second plus a frame)', Math.abs(minFlashPeriodMs(3) - (1000 + 1000 / 60) / 3) < 1e-9);
-      check('per minute: 175 / 115 / 55 at 3 / 2 / 1', maxPerMinute(3) === 175 && maxPerMinute(2) === 115 && maxPerMinute(1) === 55);
+      check('*** no limit: the shortest period is 0 and the tempo cap is Infinity ***',
+        minFlashPeriodMs(Infinity) === 0 && minFlashPeriodMs('none') === 0 && maxPerMinute(Infinity) === Infinity);
+      check('*** WCAG 2.3.1: a caller that declares its flash small and faint is not limited; every other caller gets 3 ***',
+        minFlashPeriodMs(FLASH_WCAG_231, { belowThreshold: true }) === 0
+          && Math.abs(minFlashPeriodMs(FLASH_WCAG_231) - minFlashPeriodMs(3)) < 1e-9
+          && Math.abs(minFlashPeriodMs(3, { belowThreshold: true }) - minFlashPeriodMs(3)) < 1e-9);
+      check('per minute: 175 / 115 / 55 at 3 / 2 / 1 (unchanged)', maxPerMinute(3) === 175 && maxPerMinute(2) === 115 && maxPerMinute(1) === 55);
       for (const L of [1, 2, 3]) {
         const p = 60000 / maxPerMinute(L);
         check(`at ${L}: ${L} gaps exceed a second plus a frame (${(L * p).toFixed(1)} ms)`, L * p > 1000 + 1000 / 60);
@@ -479,9 +500,144 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
       check('worstInAnySecond counts a CLOSED second (1000 ms apart is the same second)',
         worstInAnySecond([0, 1000]) === 2 && worstInAnySecond([0, 1000.1]) === 1 && worstInAnySecond([]) === 0
           && worstInAnySecond([0, 300, 600, 900, 1200]) === 4);
-      check('the settings row only offers 3 and below, defaults to 3, and cannot be driven by an automation',
-        FLASH_LIMIT_FIELD.options.every((o) => o.value <= 3 && o.value >= 1) && FLASH_LIMIT_FIELD.default === 3
+      check('*** the settings row: no limit (the default), 2.3.1, 3, 2, 1 - loosest first - and no automation can drive it ***',
+        FLASH_LIMIT_FIELD.default === FLASH_NO_LIMIT
+          && JSON.stringify(FLASH_LIMIT_FIELD.options.map((o) => o.value)) === JSON.stringify([FLASH_NO_LIMIT, FLASH_WCAG_231, 3, 2, 1])
+          && FLASH_LIMIT_FIELD.options.every((o) => isFlashLimitChoice(o.value))
           && FLASH_LIMIT_FIELD.automatable === false && FLASH_LIMIT_FIELD.key === FLASH_LIMIT_KEY);
+      check('the row\'s note names the box and says any choice can be raised or removed',
+        /seizures/.test(FLASH_LIMIT_FIELD.note) && /raised|removed/.test(FLASH_LIMIT_FIELD.note));
+      const withLayer = flashLimitFieldWith(() => ph.layer);
+      check('*** flashLimitFieldWith: an UNSET row shows the layer\'s 3, not "No limit" ***',
+        withLayer.defaultFrom({}) === 3 && flashLimitFieldWith({}).defaultFrom({}) === undefined
+          && flashLimitFieldWith(() => { throw new Error('x'); }).defaultFrom({}) === undefined);
+      check('plain words', sayFlashLimit('none') === 'no limit' && sayFlashLimit(undefined) === 'no limit'
+        && /any size/.test(sayFlashLimit(3)) && /small or faint/.test(sayFlashLimit(FLASH_WCAG_231)) && sayFlashLimit(5) === '5 a second');
+      check('the preview\'s words agree', SETTING_WORDS.flashLimitPerSecond.say('none') === 'no limit'
+        && /any size/.test(SETTING_WORDS.flashLimitPerSecond.say(3)) && /small or faint/.test(SETTING_WORDS.flashLimitPerSecond.say('wcag-2.3.1')));
+    }
+
+    section('*** THE ERROR BACKOFF IS NOT A FLASH SETTING: it holds with no limit ***');
+    {
+      check('at 3 / 2 / 1 the first hold is exactly the flash period, as before',
+        [3, 2, 1].every((L) => failureBackoffMs(1, L) === Math.ceil(minFlashPeriodMs(L))));
+      check('*** with no limit (or a raised one) the first hold stays the 3-a-second period, 339 ms - never 0 ***',
+        failureBackoffMs(1, Infinity) === 339 && failureBackoffMs(1) === 339 && failureBackoffMs(1, 10) === 339
+          && failureFloorMs(Infinity) === minFlashPeriodMs(3));
+      check('...and the run still backs off 2, 4, 8, 16, 30, 30 s with no limit',
+        JSON.stringify([2, 3, 4, 5, 6, 7].map((n) => failureBackoffMs(n, Infinity))) === JSON.stringify([2000, 4000, 8000, 16000, 30000, 30000]));
+    }
+
+    section('*** TABLE 2 (accessibility research 2026-10-01): only sourced shifts with a value are applied ***');
+    {
+      const srcs = (id, key) => (entry(defaultsFor({ conditions: [id] }), key)?.sources || []).map((s) => s.id);
+      check('colour blindness: never colour alone - WCAG 1.4.1 and GOV.UK', ['wcag-1.4.1', 'gov-uk-2016'].every((s) => srcs('colourVision', 'colourNotAlone').includes(s)));
+      check('hard of hearing: subtitles on - WCAG 1.2.2, 1.2.4 and GOV.UK', ['wcag-1.2.2', 'wcag-1.2.4', 'gov-uk-2016'].every((s) => srcs('hearing', 'subtitlesOn').includes(s)));
+      check('motion sensitivity: reduced motion - now also the WebKit vestibular triggers', srcs('motion', 'reduceMotion').includes('webkit-motion-2017'));
+      check('*** every source a published box\'s default rests on was re-checked at its URL, except the two older training-knowledge ones ***',
+        CONDITIONS.filter((c) => c.status === 'published').flatMap((c) => c.sets.flatMap((s) => s.sources))
+          .filter((id) => !['wcag-2.3.3', 'mq5-reduced-motion', 'wcag-1.4.6', 'wcag-2.5.5'].includes(id))
+          .every((id) => /^checked against the published text/.test(SOURCES[id].provenance)));
+      check('*** brain injury still sets NOTHING: the COGA source, re-read, is about content not moving UNEXPECTEDLY, not reduced motion ***',
+        cond('tbi').status === 'to-be-filled' && defaultsFor({ conditions: ['tbi'] }).entries.length === 0
+          && cond('tbi').awaiting.some((a) => a.sources.includes('coga-4.5.1')));
+      check('Parkinson\'s, autism, stroke, aphasia, dyslexia stay to be filled (direction only, no value), each with what the research found kept in `awaiting`',
+        ['parkinsons', 'autism', 'stroke', 'aphasia', 'dyslexia'].every((id) => cond(id).status === 'to-be-filled' && cond(id).awaiting.length > 0));
+      check('*** dyslexia sets NO font (the evidence is against a "dyslexia font" default) ***',
+        defaultsFor({ conditions: ['dyslexia'] }).entries.length === 0 && /NO "dyslexia font"/.test(cond('dyslexia').awaiting[0].what));
+      check('every `awaiting` source id is a known source', CONDITIONS.every((c) => (c.awaiting || []).every((a) => a.sources.every((id) => !!SOURCES[id]))));
+      check('*** no box sets burn-in drift (OLED drift stays OFF by default, a screen choice, not a condition) ***',
+        CONDITIONS.every((c) => c.sets.every((s) => s.key !== 'burnIn')));
+    }
+
+    section('*** PRESET CONFLICTS: ask the person ticking the boxes, then log the answer (Mike, note AR) ***');
+    {
+      // Today's boxes never conflict, so the suite brings two that do (the shape a future row will have).
+      const TEST_CONDS = [
+        { id: 'a', label: 'Box A', aka: 'a', status: 'published', awaiting: [],
+          sets: [{ key: 'flashLimitPerSecond', value: 3, combine: 'min', sources: ['wcag-2.3.2'] },
+            { key: 'theme', value: 'contrast', combine: 'first', sources: ['wcag-1.4.6'] }] },
+        { id: 'b', label: 'Box B', aka: 'b', status: 'published', awaiting: [],
+          sets: [{ key: 'flashLimitPerSecond', value: 1, combine: 'min', sources: ['wcag-2.3.2'] },
+            { key: 'theme', value: 'dusk', combine: 'first', sources: ['wcag-1.4.6'] }] },
+        { id: 'c', label: 'Box C', aka: 'c', status: 'published', awaiting: [],
+          sets: [{ key: 'flashLimitPerSecond', value: 3, combine: 'min', sources: ['wcag-2.3.2'] }] },
+      ];
+      const opts = { conditions: TEST_CONDS };
+      check('*** today\'s real boxes, all ticked at once, raise NO conflict ***',
+        defaultsFor({ conditions: CONDITIONS.map((c) => c.id) }).conflicts.length === 0);
+      check('two boxes that AGREE are not a conflict', defaultsFor({ conditions: ['a', 'c'] }, opts).conflicts.length === 0);
+      const r = defaultsFor({ conditions: ['a', 'b'] }, opts);
+      check('*** two boxes wanting different values: one conflict per setting, each listing every box\'s value ***',
+        r.conflicts.length === 2 && r.unanswered.length === 2
+          && r.conflicts.find((c) => c.key === 'flashLimitPerSecond').wants.map((w) => `${w.from}=${w.value}`).join() === 'a=3,b=1',
+        JSON.stringify(r.conflicts));
+      check('...the suggestion is the stricter (the box\'s own combine), and is what the layer carries meanwhile',
+        r.conflicts.find((c) => c.key === 'flashLimitPerSecond').suggested === 1 && r.layer.flashLimitPerSecond === 1);
+      const q = conflictQuestion(r.conflicts.find((c) => c.key === 'flashLimitPerSecond'));
+      check('the question is plain words, one choice per value, naming the boxes and marking the stricter',
+        /ask for different things/.test(q.question) && q.choices.length === 2
+          && q.choices.some((c) => /Box B/.test(c.label) && /stricter/.test(c.label) && c.suggested), JSON.stringify(q));
+      check('the preview says to choose', /please choose/.test(describePlan(planChanges({ current: {}, next: r })).join(' ')));
+      const answered = defaultsFor({ conditions: ['a', 'b'], resolved: { flashLimitPerSecond: 3, theme: 'dusk' } }, opts);
+      check('*** an answer is used - even the LOOSER one, because the person chose it ***',
+        answered.unanswered.length === 0 && answered.layer.flashLimitPerSecond === 3 && answered.layer.theme === 'dusk');
+      check('...and the preview repeats the answer', /you chose/.test(describePlan(planChanges({ current: {}, next: answered })).join(' ')));
+      const stale = defaultsFor({ conditions: ['a', 'b'], resolved: { flashLimitPerSecond: 2 } }, opts);
+      check('an answer no box asks for any more is not used - the question comes back',
+        stale.conflicts.find((c) => c.key === 'flashLimitPerSecond').answer === undefined && stale.unanswered.length === 2);
+
+      const storage = fakeStorage();
+      let t = 1000;
+      const store = createDeviceStore({ storage, conditions: TEST_CONDS, now: () => t });
+      let threw = '';
+      try { store.apply(r); } catch (e) { threw = e.message; }
+      check('*** the store REFUSES to apply while a conflict has no answer (inaction, not a guess) ***',
+        /answer the conflict/.test(threw) && Object.keys(store.layer()).length === 0, threw);
+      t = 2000;
+      store.apply(answered);
+      const log = store.log();
+      check('*** applying LOGS each answer: when, which setting, what each box wanted, what was chosen ***',
+        log.length === 2 && log.every((e) => e.at === 2000)
+          && log.some((e) => e.key === 'flashLimitPerSecond' && e.chose === 3 && e.wants.map((w) => w.from).join() === 'a,b'),
+        JSON.stringify(log));
+      check('...on THIS DEVICE, in the same record as the boxes', (JSON.parse(storage.getItem(DEVICE_KEY)).log || []).length === 2);
+      check('...the answer is kept with the boxes, so reopening shows it', store.get().answers.resolved.theme === 'dusk');
+      check('the log goes online only with the boxes', onlinePayload(store.get()).log === undefined
+        && onlinePayload(store.get(), { includeAnswers: true }).log.length === 2);
+      check('put back keeps the log (what was answered still happened)', store.putBack() && store.log().length === 2);
+      store.forgetAnswers();
+      check('"forget what was ticked" clears the log too (it names the boxes)', store.log().length === 0);
+
+      // The panel asks.
+      const stage = document.getElementById('stage');
+      const pstore = createDeviceStore({ storage: fakeStorage(), conditions: TEST_CONDS });
+      const panel = mountStartingDefaults(stage, { store: pstore, conditions: TEST_CONDS });
+      const btn = (act, id) => stage.querySelector(`[data-act="${act}"]${id ? `[data-id="${id}"]` : ''}`);
+      btn('condition', 'a').click();
+      check('one box: no question, "use these" enabled', stage.querySelector('.sd-conflicts').hidden === true && !btn('apply').disabled);
+      btn('condition', 'b').click();
+      const qs = () => [...stage.querySelectorAll('.sd-conflicts [data-act="resolve"]')];
+      check('*** the second box raises the question, with a button per value ***',
+        stage.querySelector('.sd-conflicts').hidden === false && qs().length === 4);
+      check('*** "use these" waits for the answers, and says why (a disabled control with its reason) ***',
+        btn('apply').disabled === true && /answer the question/.test(btn('apply').textContent));
+      check('the answer buttons are cursor stops a switch reaches', qs().every((b) => panel.stops().includes(b)));
+      const looser = qs().find((b) => b.dataset.key === 'flashLimitPerSecond' && /Box A/.test(b.textContent));
+      looser.click();
+      check('choosing one marks it and keeps the cursor on it',
+        panel.cursor() && panel.cursor().dataset.key === 'flashLimitPerSecond' && panel.cursor().getAttribute('aria-pressed') === 'true');
+      check('...one question answered is not enough', btn('apply').disabled === true);
+      qs().find((b) => b.dataset.key === 'theme' && /Box A/.test(b.textContent)).click();
+      check('both answered: "use these" is enabled', btn('apply').disabled === false);
+      btn('apply').click();
+      check('*** applied with the person\'s answers, and logged ***',
+        pstore.layer().flashLimitPerSecond === 3 && pstore.layer().theme === 'contrast' && pstore.log().length === 2);
+      panel.destroy();
+      const re = mountStartingDefaults(stage, { store: pstore, conditions: TEST_CONDS });
+      check('reopening shows the answers already given', stage.querySelectorAll('.sd-conflicts [aria-pressed="true"]').length === 2
+        && !btn('apply').disabled);
+      re.destroy();
     }
 
   } catch (e) {

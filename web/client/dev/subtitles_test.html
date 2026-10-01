@@ -421,8 +421,11 @@ try {
           c.worst <= L && c.worst >= 1 && c.right && c.marked === c.passes - 1, JSON.stringify({ w: c.worst, m: c.marked, p: c.passes }));
       }
     }
+    // 2026-10-01 (Mike): no flash limit unless one is set, so a host that passes none is not limited -
+    // every correction gets its own fresh outline, as before the audit.
     const d = churn(undefined, 100);
-    check('*** a host with no limit gets 3 a second at most ***', d.worst <= 3);
+    check('*** a host with no limit is not held: every correction gets a fresh outline ***',
+      d.onsets.length === d.passes - 1 && d.worst > 3 && d.right, JSON.stringify({ w: d.worst, o: d.onsets.length, p: d.passes }));
     const slow = churn(3, 1500);
     check('*** a correction every 1.5 s gets a fresh outline every time (normal use unchanged) ***',
       slow.onsets.length === slow.passes - 1, JSON.stringify(slow));
