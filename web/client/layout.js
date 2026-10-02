@@ -21,6 +21,26 @@ export const PRESETS = [
   { id: 'main',  label: 'Main + two',   slots: 3, cols: '2fr 1fr', rows: '1fr 1fr',
     // slot 0 spans both rows of the left column; 1 and 2 stack on the right.
     areas: ['1 / 1 / 3 / 2', '1 / 2 / 2 / 3', '2 / 2 / 3 / 3'] },
+  // *** MORE WAYS TO ARRANGE A DASHBOARD (Mike, 2026-10-02: "an easy way to change the layout of any
+  // dashboard. Probably more choices for layouts"). *** The four he named, and no more, argued:
+  //   three   Three across: three things of equal weight side by side (a clock, the weather, photos) --
+  //           the one arrangement of three that `main` cannot make, because `main` always favours one.
+  //   twoone  Two over one: two small things above a wide one (two games over a video).
+  //   onethree One over three: the wide thing first (the photos), three small ones under it.
+  //   strip   Big + side strip: one large panel and three small ones stacked beside it -- the TV layout,
+  //           a picture with a column of controls.
+  // AGAINST MORE (six up, a 3x3): every preset is a stop in the menu's Layout list and a button in the
+  // composer, and a sixth or ninth of a 10-inch tablet is too small to read across a room; free placement
+  // (the editor) is there for anything the grid cannot do. AGAINST FEWER: the three-panel and four-panel
+  // shapes people ask for were not makeable at all -- `quad` and `main` were the only multi-panel answers.
+  // Areas are grid-area shorthand: row-start / column-start / row-end / column-end.
+  { id: 'three', label: 'Three across', slots: 3, cols: '1fr 1fr 1fr', rows: '1fr' },
+  { id: 'twoone', label: 'Two over one', slots: 3, cols: '1fr 1fr', rows: '1fr 1fr',
+    areas: ['1 / 1 / 2 / 2', '1 / 2 / 2 / 3', '2 / 1 / 3 / 3'] },
+  { id: 'onethree', label: 'One over three', slots: 4, cols: '1fr 1fr 1fr', rows: '2fr 1fr',
+    areas: ['1 / 1 / 2 / 4', '2 / 1 / 3 / 2', '2 / 2 / 3 / 3', '2 / 3 / 3 / 4'] },
+  { id: 'strip', label: 'Big + side strip', slots: 4, cols: '3fr 1fr', rows: '1fr 1fr 1fr',
+    areas: ['1 / 1 / 4 / 2', '1 / 2 / 2 / 3', '2 / 2 / 3 / 3', '3 / 2 / 4 / 3'] },
 ];
 
 export const DEFAULT_PRESET = 'full';
@@ -265,6 +285,43 @@ export function resolveLayout(saved, modules = []) {
     if (!l.slots[i] && rawSlots[i]) l.slots[i] = spare.shift().id;
   }
   return l.slots.some(Boolean) || (l.placed && l.placed.length) ? l : null;
+}
+
+/**
+ * *** A SAVED LAYOUT WITH ANOTHER PRESET (the menu's Layout list, 2026-10-02). ***
+ *
+ * The panels keep their places, in order: slot 0 stays slot 0, and so on. A preset with MORE slots is
+ * filled from the modules on this screen that no slot or free placement holds (never the camera or the
+ * clock -- unplaced, those are the HUD, `resolveLayout`'s own rule). A preset with FEWER slots keeps the
+ * extra ids in the saved list: they render nowhere (`normalizeLayout` reads only the preset's count, and
+ * the bar still offers them as unplaced chips), and switching back to a bigger preset puts them back
+ * where they were -- so trying a layout costs nothing. Anything else on the layout (`placed`, `scene`)
+ * is kept as it was. Pure: returns a new layout, writes nothing.
+ */
+// `spareOk(module)`: the host's say on which spare modules may fill a slot (the kiosk leaves out an
+// ambient module, which is scenery, not a panel). Absent: every module but the camera and the clock.
+export function withPreset(saved, presetId, modules = [], { spareOk = null } = {}) {
+  const p = preset(presetId);
+  const valid = new Set((modules || []).map((m) => m && m.id).filter(Boolean));
+  const base = saved && typeof saved === 'object' ? { ...saved } : {};
+  const free = new Set((Array.isArray(base.placed) ? base.placed : []).map((e) => e && e.id).filter(Boolean));
+  const seen = new Set();
+  const slots = [];
+  for (const id of Array.isArray(base.slots) ? base.slots : []) {
+    if (id && valid.has(id) && !seen.has(id) && !free.has(id)) { seen.add(id); slots.push(id); }
+    else slots.push(null);
+  }
+  const spare = (modules || []).filter((m) => m && m.id && !seen.has(m.id) && !free.has(m.id)
+    && m.type !== 'camera' && m.type !== 'clock'
+    && (typeof spareOk !== 'function' || (() => { try { return spareOk(m) !== false; } catch { return true; } })()));
+  for (let i = 0; i < p.slots && spare.length; i += 1) {
+    if (i >= slots.length) slots.push(null);
+    if (!slots[i]) { const m = spare.shift(); slots[i] = m.id; seen.add(m.id); }
+  }
+  while (slots.length < p.slots) slots.push(null);
+  // Trailing empties beyond the preset carry nothing worth keeping.
+  while (slots.length > p.slots && !slots[slots.length - 1]) slots.pop();
+  return { ...base, preset: p.id, slots };
 }
 
 // Which modules are placed, and which are left over — the composer shows both.

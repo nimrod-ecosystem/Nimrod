@@ -357,9 +357,14 @@ const views = (box) => [...box.querySelectorAll('.view')];
     };
     k.dashboard().arrangement().openDoor(hClk.id);
     check('(setup) H > R > D again', await toDesk(), k.screenId());
-    // A switch's select on the billboard: dashboard/open on that instance.
+    // A switch's select on the billboard: dashboard/open on that instance. (2026-10-02: once the billboard is
+    // up -- it listens for the press only once it has filled, and D's billboard builds H live inside it; a
+    // press sent before then went to nobody, which is what made this check fail on a loaded machine.)
+    await settled(() => !!box.querySelector('.view.v-nested[data-nest-depth="1"] .v-nest-open'), 15000);
     bus.publish(bus.instanceTopic(dBoard.id, NEST_OPEN_TOPIC));
-    check('*** the cycle: pressing D\'s billboard (it shows H) goes to H ***', await settled(() => k.screenId() === H.id, 8000), k.screenId());
+    // (15 s, not 8: H is built whole, invisibly, before the swap -- its billboard showing R's room live inside
+    // it -- and on a machine running other suites that build alone measured past 8 s, 2026-10-02.)
+    check('*** the cycle: pressing D\'s billboard (it shows H) goes to H ***', await settled(() => k.screenId() === H.id, 15000), k.screenId());
     check('*** ...and the trail is CUT, not grown: just H, breadcrumb hidden ***', J(trailIds()) === J([H.id]) && crumbs().hidden === true,
       J(trailIds()));
     // ---- kiosk/home from three deep, and a crumb jump ----
@@ -445,9 +450,15 @@ const views = (box) => [...box.querySelectorAll('.view')];
       check('(setup) the usual path', !kp.dashboardPath());
       pb.querySelector(`[data-placed="${pClk.id}"] > .k-door`)?.click();
       check('a door on the usual path swaps to R', await settled(() => kp.screenId() === R.id, 8000), kp.screenId());
-      check('...with the breadcrumb', kp.crumbsEl().hidden === false && J(kp.trail().map((t) => t.id)) === J([P.id, R.id]));
+      // (2026-10-02: on the usual path `screenId()` says R the moment the swap STARTS -- the incoming screen's
+      // rows are read by that id -- and the breadcrumb is drawn when its panels are up. R is a room, so that
+      // takes a while on a loaded machine; reading the breadcrumb straight away raced it, and failed whenever
+      // other suites were running. Wait for the swap to finish, which is what the check means.)
+      check('...with the breadcrumb', await settled(() => kp.crumbsEl().hidden === false, 15000)
+        && J(kp.trail().map((t) => t.id)) === J([P.id, R.id]), `hidden=${kp.crumbsEl().hidden} trail=${J(kp.trail().map((t) => t.id))}`);
       pbus.publish(SCREEN_HOME, {});
-      check('...and home brings it back', await settled(() => kp.screenId() === P.id, 8000) && kp.crumbsEl().hidden === true);
+      check('...and home brings it back', await settled(() => kp.screenId() === P.id && kp.crumbsEl().hidden === true, 15000),
+        `screen=${kp.screenId()} hidden=${kp.crumbsEl().hidden}`);
       kp.destroy(); pb.remove();
     }
 

@@ -10,8 +10,9 @@
 //   2. ENACTED THROUGH THE AUDIO BUS. Mute = `audio.muteOwner(instanceId)`: every source the panel
 //      registered (module.js tags them with the instance id) goes to 0 while it is hidden and comes
 //      back when it is shown. Pause = the module's own `pause()` / `resume()` if its factory offers
-//      them; a module that offers no pause is MUTED instead (silence is what was asked for, and mute
-//      is the nearest silence it has).
+//      them, else (2026-10-02) the `pause` / `play` VERBS if it answers them -- the same pause the bar's
+//      Pause button and a spoken "pause" use; a module that offers neither is MUTED instead (silence is
+//      what was asked for, and mute is the nearest silence it has).
 //   3. A QUESTION, ASKED ONCE. The first time a PERSON hides a sound-making panel by their own action
 //      (the Layers window's Shown/Hidden button), the shared choice card asks whether to mute it.
 //
@@ -51,10 +52,33 @@
 // panels is whoever is arranging THIS screen, and a screen's sound habits belong to the screen.
 
 import { showChoiceCard, CHOICE_TIMEOUT_MS } from './choice_card.js';
+import { verbTarget } from './actions.js';
 
 export const WHEN_HIDDEN_KEY = 'instanceWhenHidden';
 export const WHEN_HIDDEN_MODES = Object.freeze(['keep', 'mute', 'pause']);
 export const WHEN_HIDDEN_DEFAULT = 'keep';
+
+// *** THE DEFAULT IS PER MODULE NOW (2026-10-02), AND IT IS STILL "KEEP PLAYING" FOR EVERY MODULE THAT
+// SHIPS. *** A module's manifest may say `whenHidden: 'keep' | 'mute' | 'pause'`, the mode a panel of
+// it uses until somebody chooses (the panel's own setting, or "every <module> panel" in the menu, wins).
+// Mike, on calls: a hidden call panel MAY mute, and by default it does not -- `modules/call.js` declares
+// 'keep' outright, so the day the site-wide default is argued the other way a call does not go silent
+// with it (somebody on a call who hides the panel to look at photos is still talking to that person).
+// A value that is not one of the three is no declaration.
+export function whenHiddenDefault(manifest) {
+  const v = manifest && manifest.whenHidden;
+  return WHEN_HIDDEN_MODES.includes(v) ? v : WHEN_HIDDEN_DEFAULT;
+}
+
+// *** "PAUSE" IS THE PAUSE VERB (2026-10-02). *** Before this, "pause it" paused only a module whose
+// factory offered `pause()` / `resume()`, and MUTED everything else -- including YouTube, Karaoke, Music
+// and Brick breaker, which already answer the `pause` and `play` verbs (actions.js MODULE_VERBS). Now a
+// module that answers the verb is paused with it, sent to THAT panel (instance-addressed, the router's
+// own rule), exactly as the bar's Pause button and a spoken "pause" pause it. Mute stays the fallback
+// for a module that can do neither (silence is what was asked for).
+export function answersPause(type, maps) {
+  try { return !!verbTarget(type, 'pause', maps) && !!verbTarget(type, 'play', maps); } catch { return false; }
+}
 export const HIDE_QUESTION_ID = 'hide.sound';
 // How long a person's press waits for its hide to land (the placement is applied asynchronously).
 export const PENDING_MS = 5000;
@@ -117,6 +141,9 @@ export function createHideSound({
   label = (info) => info?.manifest?.title || info?.type || 'This panel',
   setTimer, clearTimer,
   now = () => Date.now(),
+  // The screen's bus, for pausing a module by its `pause` verb (above). Absent: only a module's own
+  // `pause()` can pause, exactly as before.
+  bus = null,
 } = {}) {
   const hiddenNow = new Map();     // instanceId -> the info it was hidden with
   const muted = new Set();         // instanceIds this policy muted
@@ -127,16 +154,31 @@ export function createHideSound({
   const pending = new Map();
   let card = null;
 
-  function modeFor(info) { return storedMode(info?.state) || WHEN_HIDDEN_DEFAULT; }
-  const canPause = (info) => !!(info?.impl && typeof info.impl.pause === 'function');
+  function modeFor(info) { return storedMode(info?.state) || whenHiddenDefault(info?.manifest); }
+  const ownPause = (info) => !!(info?.impl && typeof info.impl.pause === 'function');
+  const verbPause = (info) => !!(bus && info?.type && answersPause(info.type));
+  const canPause = (info) => ownPause(info) || verbPause(info);
+  // The verb, to THIS panel: its instance-addressed topic where the bus has them (bus.js `instanceTopic`).
+  function sendVerb(id, info, verb) {
+    const t = verbTarget(info.type, verb);
+    if (!t) return false;
+    const topic = typeof bus.instanceTopic === 'function' ? bus.instanceTopic(id, t.topic) : t.topic;
+    bus.publish(topic, t.payload, { from: 'hide' });
+    return true;
+  }
+  const pausedBy = new Map();      // instanceId -> 'own' | 'verb', so the resume matches the pause
 
   function enact(id, info) {
     const mode = modeFor(info);
     if (mode === 'keep') return;
     if (mode === 'pause' && canPause(info)) {
       if (paused.has(id)) return;
-      try { info.impl.pause(); paused.add(id); return; }
-      catch (err) { console.error('hide_sound: pause', err); }   // falls to mute: silence was asked for
+      try {
+        if (ownPause(info)) { info.impl.pause(); pausedBy.set(id, 'own'); }
+        else { sendVerb(id, info, 'pause'); pausedBy.set(id, 'verb'); }
+        paused.add(id);
+        return;
+      } catch (err) { console.error('hide_sound: pause', err); }   // falls to mute: silence was asked for
     }
     if (info?.audio?.muteOwner) {
       try { info.audio.muteOwner(id, true); muted.add(id); } catch (err) { console.error('hide_sound: mute', err); }
@@ -145,8 +187,14 @@ export function createHideSound({
   function undo(id, info) {
     if (muted.delete(id)) { try { (info?.audio || hiddenNow.get(id)?.audio)?.muteOwner?.(id, false); } catch { /* bus gone */ } }
     if (paused.delete(id)) {
-      const impl = info?.impl || hiddenNow.get(id)?.impl;
-      try { impl?.resume?.(); } catch (err) { console.error('hide_sound: resume', err); }
+      const how = pausedBy.get(id) || 'own';
+      pausedBy.delete(id);
+      const before = hiddenNow.get(id) || {};
+      const was = { impl: info?.impl || before.impl, type: info?.type || before.type };
+      try {
+        if (how === 'verb') { if (bus && was.type) sendVerb(id, was, 'play'); }
+        else was.impl?.resume?.();
+      } catch (err) { console.error('hide_sound: resume', err); }
     }
   }
 
@@ -219,13 +267,14 @@ export function createHideSound({
     },
 
     // ---- for a host's settings menu and the suites ---------------------------------------
-    modeOf: (state) => storedMode(state) || WHEN_HIDDEN_DEFAULT,
+    modeOf: (state, manifest = null) => storedMode(state) || whenHiddenDefault(manifest),
+    canPause: (info) => canPause(info || {}),
     makesSound,
     probe: () => ({ hidden: [...hiddenNow.keys()], muted: [...muted], paused: [...paused],
                     asked: [...asked], pending: [...pending.keys()], card: card ? card.id : null }),
     destroy() {
       for (const id of [...hiddenNow.keys()]) undo(id, hiddenNow.get(id));
-      hiddenNow.clear(); pending.clear();
+      hiddenNow.clear(); pending.clear(); pausedBy.clear();
       if (card) { try { card.handle.close('close'); } catch { /* gone */ } card = null; }
     },
   };

@@ -52,6 +52,155 @@
 import { VERBS, verbTopic, MENU_TAB_TOPIC } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
+import { normalizeField, fieldItems, fieldValue, displayValue } from './settings_fields.js';
+
+// ---------------------------------------------------------------------------------
+// *** LEVELS: EDIT A SETTING AT WHATEVER LEVEL YOU ARE EDITING (2026-10-02). ***
+//
+// Mike: "You should really be able to edit something at whatever level you're editing. That should
+// probably be a dropdown at the top of the settings menu along with how much to show." The chain is the
+// one DECISIONS.md 2026-09-30 ("theme at every level") names and kiosk.js's `fields()` comment has named
+// since slice 2: instance, module, screen/dashboard, device, person, account -- "each level is follow or
+// its own, and the nearest one set wins". This is that rule, pure, so it is tested without a browser:
+//
+//   resolveLevel(key, layers, { from })   the nearest level at or above `from` that SET the key
+//   levelFieldItems(fields, {...})        a level's rows: each shows the value AT that level, and when the
+//                                         level has not set it, says so ("Following: this screen - Blue")
+//                                         and steps from "Follow" onto the real choices and back
+//
+// A LEVEL "SETS" A KEY when its row holds a value that is not null/undefined. "Follow" is written as
+// null (state.js keeps a null through JSON; an undefined would vanish on the way to the server and the
+// old value would come back on the next poll). The host decides which levels exist on a screen (a
+// screen with no person has no person level; nothing stores an account level yet) -- this file only
+// walks whatever layers it is handed, in this order, and never invents one.
+// ---------------------------------------------------------------------------------
+export const SETTING_LEVELS = Object.freeze([
+  Object.freeze({ id: 'instance', label: 'this panel' }),
+  Object.freeze({ id: 'module', label: 'every panel of this kind' }),
+  Object.freeze({ id: 'dashboard', label: 'this dashboard' }),
+  Object.freeze({ id: 'screen', label: 'this screen' }),
+  Object.freeze({ id: 'device', label: 'this device' }),
+  Object.freeze({ id: 'person', label: 'this person' }),
+  Object.freeze({ id: 'account', label: 'this account' }),
+]);
+export const LEVEL_ORDER = Object.freeze(SETTING_LEVELS.map((l) => l.id));
+/** The value of a level row's "Follow" option. Never stored: choosing it writes null. */
+export const FOLLOW = '__follow__';
+const isSetValue = (v) => v !== undefined && v !== null && v !== FOLLOW;
+const levelName = (id, labels = {}) => labels[id] || SETTING_LEVELS.find((l) => l.id === id)?.label || id;
+
+/** The nearest level at or above `from` whose row SET `key`: `{ value, at }`, or `{ value: undefined, at: null }`. */
+export function resolveLevel(key, layers = {}, { from = LEVEL_ORDER[0], order = LEVEL_ORDER } = {}) {
+  const start = Math.max(0, order.indexOf(from));
+  for (let i = start; i < order.length; i += 1) {
+    const row = layers ? layers[order[i]] : null;
+    if (row && typeof row === 'object' && isSetValue(row[key])) return { value: row[key], at: order[i] };
+  }
+  return { value: undefined, at: null };
+}
+
+/** The first level ABOVE `level` (in `order`) -- what "Follow" on `level` follows. Null at the top. */
+export function levelAbove(level, order = LEVEL_ORDER) {
+  const i = order.indexOf(level);
+  return i >= 0 && i + 1 < order.length ? order[i + 1] : null;
+}
+
+/**
+ * A LEVEL'S ROWS. `fields` are raw declarations (settings_fields.js shape); `layers()` returns
+ * `{ [level]: row }` for the levels the host has (read at every paint and press, never a snapshot);
+ * `order` is the chain the host offers, most specific first; `write(key, valueOrNull)` stores at `level`.
+ * Each row:
+ *   * a choice or a toggle gets a FIRST option "Follow <the level above>" -- one press from following to
+ *     choosing, and the lap comes back round to following, so a one-switch user can always undo a choice;
+ *   * while the level follows, the hint says from where and what: "Following: this screen - Blue";
+ *   * any other kind (a number, a colour, text) shows the value in force at this level, and while the
+ *     level has its own value a second row "<label>: follow <the level above>" puts it back.
+ * Ordinary `fieldItems` rows otherwise (ids `set:<key>` unless `idPrefix` says), so the cursor, the
+ * complexity filter and the swatches all work as they do everywhere else.
+ */
+export function levelFieldItems(fields = [], {
+  level = 'screen', layers = () => ({}), order = LEVEL_ORDER, write = null, labels = {},
+  complexity = 'standard', idPrefix = 'set:', defaultLabel = 'the default',
+} = {}) {
+  const read = () => { try { return (typeof layers === 'function' ? layers() : layers) || {}; } catch { return {}; } };
+  const above = levelAbove(level, order);
+  const aboveName = above ? levelName(above, labels) : defaultLabel;
+  const out = [];
+  for (const raw of fields || []) {
+    const base = normalizeField(raw);
+    if (!base) continue;
+    const key = base.key;
+    const own = () => (read()[level] || {})[key];
+    const inherited = () => (above ? resolveLevel(key, read(), { from: above, order }) : { value: undefined, at: null });
+    const followHint = () => {
+      const inh = inherited();
+      const where = inh.at ? levelName(inh.at, labels) : defaultLabel;
+      const shown = displayValue(base, fieldValue(base, inh.at ? { [key]: inh.value } : {}));
+      return `Following: ${where} — ${shown}`;
+    };
+    const store = (k, v) => { try { write?.(k, v === FOLLOW ? null : v); } catch (err) { console.warn('settings: level write threw', err); } };
+    if (base.kind === 'choice' || base.kind === 'toggle') {
+      const real = base.kind === 'toggle'
+        ? [{ value: true, label: base.onLabel }, { value: false, label: base.offLabel }]
+        : (base.options || []);
+      const derived = {
+        ...raw, kind: 'choice', default: FOLLOW,
+        options: [{ value: FOLLOW, label: `Follow ${aboveName}` }, ...real],
+      };
+      const items = fieldItems([normalizeField(derived)].filter(Boolean), {
+        values: () => ({ [key]: isSetValue(own()) ? own() : FOLLOW }),
+        level: complexity, idPrefix, onStep: (k, v) => store(k, v),
+      });
+      for (const it of items) {
+        const following = !isSetValue(own());
+        out.push({ ...it, level, following, ...(following ? { hint: followHint() } : {}) });
+      }
+      continue;
+    }
+    const items = fieldItems([base], {
+      values: () => ({ [key]: isSetValue(own()) ? own() : inherited().value }),
+      level: complexity, idPrefix, onStep: (k, v) => store(k, v),
+    });
+    for (const it of items) {
+      const following = !isSetValue(own());
+      out.push({ ...it, level, following, ...(following ? { hint: followHint() } : {}) });
+      if (!following) {
+        out.push({ kind: 'item', id: `${idPrefix}${key}:follow`, level, label: `${base.label}: follow ${aboveName}`,
+          hint: 'put it back to following', run: () => store(key, null) });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * THE DEVICE LEVEL's row: this browser's own storage (`localStorage` shape), one JSON record. A storage
+ * that refuses (a private window) is an empty row that writes nowhere -- the level still renders, it just
+ * keeps nothing, and `persisted` says so. `{ get, set(patch), subscribe(fn) -> off, persisted }`.
+ */
+export const DEVICE_SETTINGS_KEY = 'nimrod:device-settings';
+export function createLocalRow({
+  storage = (() => { try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch { return null; } })(),
+  key = DEVICE_SETTINGS_KEY,
+} = {}) {
+  let row = {};
+  let persisted = !!storage;
+  try { const raw = storage ? storage.getItem(key) : null; if (raw) { const v = JSON.parse(raw); if (v && typeof v === 'object') row = v; } }
+  catch { persisted = false; }
+  const subs = new Set();
+  return {
+    get: () => ({ ...row }),
+    set(patch = {}) {
+      const next = { ...row };
+      for (const [k, v] of Object.entries(patch || {})) { if (v === null || v === undefined) delete next[k]; else next[k] = v; }
+      row = next;
+      try { storage?.setItem(key, JSON.stringify(row)); persisted = !!storage; } catch { persisted = false; }
+      for (const fn of [...subs]) { try { fn({ ...row }); } catch (err) { console.warn('settings: device row subscriber', err); } }
+    },
+    subscribe(fn) { if (typeof fn !== 'function') return () => {}; subs.add(fn); return () => subs.delete(fn); },
+    get persisted() { return persisted; },
+  };
+}
 
 export const MENU_VERB = 'menu';
 export const MENU_TOPIC = verbTopic(MENU_VERB);
@@ -180,7 +329,9 @@ export function buildItems({
   out.push({
     kind: 'heading',
     id: 'subject',
-    label: subject ? `This panel — ${subject.title || subject.type}` : 'No panel selected',
+    // (2026-10-02, levels: a subject that is a LEVEL rather than a panel -- "Every Photos panel", "This
+    // screen" -- names itself with `heading`.)
+    label: subject ? (subject.heading || `This panel — ${subject.title || subject.type}`) : 'No panel selected',
   });
   if (subject && fields.length) {
     out.push(...fields);
@@ -440,7 +591,8 @@ export function mountSettings(root, {
     if (subjects) {
       const list = subjectList();
       const cur = currentSubject();
-      const at = cur ? list.indexOf(cur) : -1;
+      // By id: a host may build its list afresh at every read (the kiosk does), so the objects differ.
+      const at = cur ? list.findIndex((s) => s.id === cur.id) : -1;
       top.push({
         kind: 'item', id: 'subject-pick', tab: '*top',
         label: `Settings for: ${cur ? cur.label : 'this screen'}`,

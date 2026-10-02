@@ -35,11 +35,13 @@
 // with the keyboard inside it, it stays.
 
 import { registerModule } from '../module.js';
-import { barModel, drawChips, drawHelpButton, helpOn } from '../transport_bar.js';
+import { barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, drawCallControls } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
+  SHELL_PLAY_PAUSE,
 } from '../shell_verbs.js';
+import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
 
 // How near the pointer has to come to bring a tucked bar back: the kiosk's own rule for its bar
@@ -53,6 +55,9 @@ const REVEAL_MARGIN_PX = 140;
 const BUTTONS = [
   { act: 'home', verb: SHELL_HOME, label: '⌂ Home', title: 'your screens', embed: false },
   { act: 'back', verb: SHELL_PREV, label: '◂ Back', title: 'back — the one before this' },
+  // Pause / Play (2026-10-02): the selected panel's, between Back and Next where a transport has it. The
+  // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
+  { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the selected panel' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
   { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next panel' },
   // "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the
@@ -84,6 +89,11 @@ registerModule(
     })();
     let helpEl = null;
     let hostEl = null;
+    // Pause / Play: the shell's word on the selected panel (its getter at mount, then SHELL_STATE).
+    let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
+    // A live call's controls (actions.js CALL_CONTROLS_TOPIC), drawn while a call is live.
+    let callState = (() => { try { const s = ctx.shell?.callControls?.(); return s && s.live ? { ...s } : null; } catch { return null; } })();
+    let callEl = null;
     const offs = [];
     const host = ctx.shell?.host || null;
     const doc = () => (typeof document !== 'undefined' ? document : null);
@@ -218,6 +228,8 @@ registerModule(
         h.setAttribute('aria-pressed', hushed ? 'true' : 'false');
       }
       if (helpEl) helpEl.hidden = !helpShown;
+      paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
+      drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }));
       drawHost();
       wordShell();
     }
@@ -232,6 +244,12 @@ registerModule(
         modsEl.className = 'tb-mods';
         const actions = document.createElement('div');
         actions.className = 'tb-actions';
+        // The call's controls first, while a call is live: they are what somebody on a call reaches for.
+        callEl = document.createElement('span');
+        callEl.className = 'tb-call';
+        callEl.dataset.callControls = '';
+        callEl.hidden = true;
+        actions.append(callEl);
         for (const b of BUTTONS) {
           if (b.embed === false && ctx.embedded) continue;
           const el = document.createElement('button');
@@ -264,10 +282,13 @@ registerModule(
           if (!s) return;
           if ('hushed' in s) hushed = !!s.hushed;
           if ('help' in s) helpShown = !!s.help;
-          if ('hushed' in s || 'help' in s || 'menuOpen' in s) draw();
+          if ('playPause' in s) playPause = s.playPause || null;
+          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
         });
         if (typeof off2 === 'function') offs.push(off2);
+        const offCall = say?.subscribe?.(CALL_CONTROLS_TOPIC, (s) => { callState = s && s.live ? { ...s } : null; draw(); });
+        if (typeof offCall === 'function') offs.push(offCall);
         if (host && typeof host.subscribe === 'function') {
           try {
             const off3 = host.subscribe(() => draw());
@@ -307,7 +328,7 @@ registerModule(
       destroy() {
         clearTimeout(hideT); hideT = null;
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
-        root?.remove(); root = null; modsEl = null; helpEl = null; hostEl = null;
+        root?.remove(); root = null; modsEl = null; helpEl = null; hostEl = null; callEl = null;
       },
       // For a suite and a diagnostic page: is it tucked away right now.
       tucked: () => tucked,

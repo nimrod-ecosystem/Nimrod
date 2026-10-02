@@ -304,6 +304,36 @@ export const ROUTES = {
   // opens the bar holding the scan. Each phrase names the bar or "my home", so none is a panel verb.
   'home-edit-bar': { action: 'shell/host/editbar', label: 'Home: the edit bar',
     phrases: ['edit bar', 'open the edit bar', 'show the edit bar', 'edit my home'] },
+  // *** MAKE THE SELECTED PANEL BIGGER / SMALLER (2026-10-02; actions.js `shell/promote` / `shell/demote`). ***
+  // One level a time: the panel fills its dashboard, then the screen. "full screen" is here because that
+  // is where "bigger" ends up, and nothing else claimed the words (the bar's full-screen key is F, and
+  // `system/fullscreen` has no phrase). Not "bigger" alone: a word a room says about anything.
+  'promote': { action: 'shell/promote', label: 'Make the selected panel bigger',
+    phrases: ['make it bigger', 'bigger please', 'full screen', 'fill the screen'] },
+  'demote': { action: 'shell/demote', label: 'Make it smaller again',
+    phrases: ['make it smaller', 'smaller please', 'exit full screen', 'leave full screen'] },
+  // *** A LIVE CALL'S CONTROLS (2026-10-02; actions.js CALL_ACTIONS). *** Each phrase names WHOSE thing it is
+  // ("my", "their", "the speaker", "the call"), so none is a panel verb and none of them can be heard as the
+  // other: "mute my mic" never touches the speaker, "hide my video" never hides theirs. On and off, never a
+  // toggle, for MEDIA_VERBS' reason (said twice, it must stay muted). Nothing happens with no call live.
+  // Vocabulary [unverified on the bench]: "mic" and "unmute" are the words to check in the small model
+  // first ("unpause" was not in it) -- "microphone" and "turn ... on" phrasings are the fallbacks.
+  'call-mic-off': { action: 'call/mic-off', label: 'Call: mute my microphone',
+    phrases: ['mute my mic', 'mute my microphone', 'turn my mic off', 'my microphone off'] },
+  'call-mic-on': { action: 'call/mic-on', label: 'Call: unmute my microphone',
+    phrases: ['unmute my mic', 'unmute my microphone', 'turn my mic on', 'my microphone on'] },
+  'call-speaker-off': { action: 'call/speaker-off', label: 'Call: mute the speaker',
+    phrases: ['mute the speaker', 'mute the call', 'speaker off', 'turn the speaker off'] },
+  'call-speaker-on': { action: 'call/speaker-on', label: 'Call: unmute the speaker',
+    phrases: ['unmute the speaker', 'unmute the call', 'speaker on', 'turn the speaker on'] },
+  'call-their-video-off': { action: 'call/their-video-off', label: 'Call: hide their video',
+    phrases: ['hide their video', 'hide the caller', 'their video off'] },
+  'call-their-video-on': { action: 'call/their-video-on', label: 'Call: show their video',
+    phrases: ['show their video', 'show the caller', 'their video on'] },
+  'call-my-video-off': { action: 'call/my-video-off', label: 'Call: stop sending my video',
+    phrases: ['hide my video', 'stop my video', 'my video off', 'turn my camera off'] },
+  'call-my-video-on': { action: 'call/my-video-on', label: 'Call: send my video again',
+    phrases: ['show my video', 'start my video', 'my video on', 'turn my camera on'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the
