@@ -23,7 +23,7 @@ export const SUITES = [
   'composer_reach', 'device_pick', 'director', 'drive',
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',
-  'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'map_editor', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
+  'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'edit_mode', 'map_editor', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
   'marker', 'mic_owner', 'modules_catalog', 'output',
   'output_panel',
   'output_remote', 'pair', 'pairing', 'panel_fit', 'people', 'personal', 'photos', 'pond',
@@ -75,12 +75,16 @@ export const SUITES = [
   'quiz_flow', 'rating', 'think_games', 'word_builder', 'brain_games', 'spelling', 'simple_math', 'name_that', 'karaoke',
   // Row 2.37: Klondike on one switch, and a note from someone.
   'solitaire', 'note', 'note_visit', 'weather', 'brickbreaker', 'rhythm', 'avatar', 'avatar_display', 'svg_sanitize',
+  // 2026-10-02 late: games wait for Start (autostart a setting), the computer's demo and its players, card sort.
+  'game_start', 'card_sort',
   // The room, the cat, ambient motion and sound.
   'room', 'room_scene', 'scene_motion', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // Row 2.37, second pass: the window's weather, the library, petting, close-ups, zoom on focus.
   'room_objects',
   // 2026-10-02: the 3D room (CSS 3D transforms): its walls, modules on them, the drift and its guards.
   'room3d',
+  // 2026-10-02: a 3D room flattened to a 2D room (doors and screens still live), and two levels of detail.
+  'room_flat',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the
@@ -99,6 +103,11 @@ export const SUITES = [
   'unlocks',
   // 2026-10-02: the Nimrod guide as the AI module (talk to your own AI; actions only on a press; notes).
   'nimrod_ai',
+  // 2026-10-02: AI characters as profiles (seeds, a person's own, rooms as dashboards) and the profile card.
+  'ai_characters', 'profile',
+  // 2026-10-02: "Modules", the library of everything addable (categories, sort, filter, the game's locks,
+  // the AI's place / swap); transport_test drives it in a panel's place in a real kiosk.
+  'library',
   // 2026-10-02: settings at every level, Pause / Play on the bar, a panel made bigger, a call's controls,
   // more layouts. Mounts real kiosks (needs the server).
   'screen_controls',

@@ -128,6 +128,14 @@ export const HEALTH_EXPECT = {
   nimrod:        { idle: true },
   devices:       { idle: true },
   whats_new:     { idle: true },
+  // The Modules library (2026-10-02): a grid to look through; nobody looking is not a fault.
+  library:       { idle: true },
+  // 2026-10-02: the builder's place for the library, the panel editor's options, a profile card, card sort
+  // (which waits for Start): each left alone is a thing to look at, not a fault.
+  library_slot:  { idle: true },
+  options:       { idle: true },
+  profile:       { idle: true },
+  card_sort:     { idle: true },
   ambient_drift: { idle: true },
   comet_ambient: { idle: true },
   quests:      { idle: true },

@@ -295,7 +295,9 @@ export const KEEP_TURNS = 12;     // turns sent with each message: a small local
 export const REPLY_TOKENS = 400;  // a reply that is read aloud should be short; this stops a runaway
 
 export function createGuideChat({ ai, prefs = () => aiPrefs({}), context = () => ({}), actions = () => allowedActions(),
-                                  model = () => '', now = () => Date.now() } = {}) {
+                                  model = () => '', now = () => Date.now(), system = null } = {}) {
+  // `system({ prefs, actions, context })`: a caller's own system prompt (an AI character's, ai_characters.js via
+  // modules/profile.js). Absent, or returning nothing, it is Nimrod the guide's.
   const log = [];   // { role: 'user'|'assistant', text, raw?, at, failed? }
   let busy = false;
   async function send(text, { signal } = {}) {
@@ -306,7 +308,8 @@ export function createGuideChat({ ai, prefs = () => aiPrefs({}), context = () =>
     const c = context() || {};
     const list = typeof actions === 'function' ? actions() : actions;
     const msgs = [
-      { role: 'system', content: systemPrompt({ prefs: prefs(), node: c.node, nodes: c.nodes || GUIDE_NODES, actions: list, intro: c.intro }) },
+      { role: 'system', content: (typeof system === 'function' && system({ prefs: prefs(), actions: list, context: c }))
+        || systemPrompt({ prefs: prefs(), node: c.node, nodes: c.nodes || GUIDE_NODES, actions: list, intro: c.intro }) },
       ...log.filter((m) => !m.failed).slice(-KEEP_TURNS * 2).map((m) => ({ role: m.role, content: m.raw ?? m.text })),
     ];
     busy = true;

@@ -57,6 +57,11 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 
+// Module files are named for their type -- with ONE exception, named here so it cannot spread quietly:
+// the panel editor's `options` lives in modules/edit_options.js (2026-10-02, edit_mode.js).
+const FILE_FOR_TYPE = Object.freeze({ options: 'edit_options' });
+const TYPE_FOR_FILE = Object.freeze(Object.fromEntries(Object.entries(FILE_FOR_TYPE).map(([t, f]) => [f, t])));
+
 // `import './modules/photos.js';` -> photos. Comments are stripped first so a commented-out
 // import does not count as a live one — which is exactly how this would rot back.
 async function importedModules(page) {
@@ -67,7 +72,7 @@ async function importedModules(page) {
     .split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
   const names = new Set();
   for (const m of src.matchAll(/import\s+['"]\.\/modules\/([A-Za-z0-9_-]+)\.js['"]/g)) {
-    names.add(m[1]);
+    names.add(TYPE_FOR_FILE[m[1]] || m[1]);
   }
   return names;
 }
@@ -140,9 +145,9 @@ section('*** THE CATALOG\u2019S NAMES ARE THE MODULES\u2019 NAMES ***');
   // weeks after it stopped being one, and Mike found it by reading his own site.
   // Actually load them — `importedModules()` above only PARSES a page's import lines, so the
   // registry would be empty and every check below would pass on nothing. Module files are named
-  // for their type, so this needs no list to maintain.
+  // for their type (FILE_FOR_TYPE above holds the one exception).
   const loaded = await Promise.all(CATALOG.map(
-    (c) => import(`../modules/${c.type}.js`).then(() => c.type, () => null)));
+    (c) => import(`../modules/${FILE_FOR_TYPE[c.type] || c.type}.js`).then(() => c.type, () => null)));
   check('every catalog entry has a module file to load', loaded.every(Boolean),
     CATALOG.map((c) => c.type).filter((t, i) => !loaded[i]).join(', '));
   const man = listManifests();

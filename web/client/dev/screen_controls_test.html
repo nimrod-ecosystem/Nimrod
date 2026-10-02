@@ -402,15 +402,23 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const t = (topic) => (bus.instanceTopic ? bus.instanceTopic(ids[1], topic) : topic);
       bus.subscribe(t('brickbreaker/pause'), () => heard.push('pause'));
       bus.subscribe(t('brickbreaker/resume'), () => heard.push('play'));
-      check('Brick breaker selected: Pause is live', kiosk.playPause().can === true && !ppBtn().disabled);
+      // 2026-10-02 (games wait for Start, game_start.js): the game says it is not playing yet, so the button
+      // reads Play, and its first press STARTS it -- the same `play` verb as resuming.
+      check('Brick breaker selected: Pause / Play is live, and reads Play (it waits for Start)',
+        kiosk.playPause().can === true && !ppBtn().disabled && kiosk.playPause().paused === true && ppBtn().textContent === '▶ Play', ppBtn().textContent);
       ppBtn().click();
-      check('*** pressing it sends the pause VERB to that panel, and it reads Play ***', J(heard) === J(['pause']) && ppBtn().textContent === '▶ Play', J(heard));
+      await sleep(20);
+      check('*** pressing it sends the play VERB to that panel (it starts), and it reads Pause ***', J(heard) === J(['play']) && /Pause/.test(ppBtn().textContent), `${J(heard)} ${ppBtn().textContent}`);
       bus.publish(PLAY_PAUSE_TOPIC, {});
-      check('...a bound switch (the same topic) plays it again', J(heard) === J(['pause', 'play']) && kiosk.playPause().paused === false);
+      await sleep(20);
+      check('...a bound switch (the same topic) pauses it', J(heard) === J(['play', 'pause']) && kiosk.playPause().paused === true);
       // (Brick breaker's own pause opens the screen's menu about itself -- its `pauseOpensMenu`, on by
       // default -- and a verb said with the menu open goes to the menu, not the panel. Closed first.)
       kiosk.menu.close();
       await sleep(20);
+      bus.publish('verb/play');
+      await sleep(20);
+      check('a spoken "play" reaching it through the router: the button follows', kiosk.playPause().paused === false);
       bus.publish('verb/pause');
       await sleep(20);
       check('a spoken "pause" reaching it through the router: the button follows', kiosk.playPause().paused === true);

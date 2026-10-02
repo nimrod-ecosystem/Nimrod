@@ -237,6 +237,11 @@ export const ROUTES = {
     phrases: ['play quick count', 'quick count'] },
   'play-next': { topic: 'brain_games/play', payload: { game: 'next' }, label: 'Play What comes next',
     phrases: ['play what comes next'] },
+  // 2026-10-02: card sort (name the suit, then higher / lower). Asking for it by name starts it, as for the
+  // others (quiz_view.js: a game asked for by name is a game whose Start was pressed). Not "card games":
+  // that is solitaire's to claim one day.
+  'play-card-sort': { topic: 'card_sort/play', payload: { game: 'card_sort' }, label: 'Play Card sort',
+    phrases: ['play card sort', 'card sort', 'play the card sort', 'sort the cards'] },
 
   // *** THE SCREEN BY VOICE (2026-10-02). *** Mike: "We should probably add voice commands for the menus
   // and everything, if we don't already have them. Also, the cursor should have voice commands ... Other
@@ -297,13 +302,21 @@ export const ROUTES = {
     phrases: ['people settings', 'user settings', 'users settings', 'person settings'] },
   'menu-tab-screen': { action: 'menu/tab-screen', label: 'Settings menu: this screen',
     phrases: ['screen settings', 'this screen settings'] },
-  // "Switch module" (2026-10-02): the selected panel's short list of other modules.
+  // "Switch module" (2026-10-02): the Modules library in the selected panel's place (kiosk.js openLibraryAt).
+  // NO "put <module> where <module> is" ROUTE, argued: the recogniser listens for a closed list of phrases, and
+  // that sentence over ~45 modules and every panel on the screen is hundreds of near-identical phrases, rebuilt
+  // whenever a panel changes -- the shape a closed-grammar recogniser mis-hears worst. The AI reads free speech
+  // and asks for `place` / `swap` (library.js LIBRARY_AI_ACTIONS); with no AI, "switch module" then a press.
   'switch-module': { action: 'menu/switch-module', label: 'Switch the selected panel to another module',
     phrases: ['switch module', 'switch the module', 'change module', 'change the module', 'swap module'] },
   // Home's edit bar (2026-10-02): the same action a switch binds (actions.js `shell/host/editbar`), which
   // opens the bar holding the scan. Each phrase names the bar or "my home", so none is a panel verb.
   'home-edit-bar': { action: 'shell/host/editbar', label: 'Home: the edit bar',
     phrases: ['edit bar', 'open the edit bar', 'show the edit bar', 'edit my home'] },
+  // Edit the chosen panel in place (2026-10-02; actions.js `shell/edit-panel`, edit_mode.js). Said again, it
+  // stops; "go back" with nothing else to cancel stops too (kiosk.js backUnhandled).
+  'edit-panel': { action: 'shell/edit-panel', label: 'Edit the chosen panel',
+    phrases: ['edit this panel', 'edit the panel'] },
   // *** MAKE THE SELECTED PANEL BIGGER / SMALLER (2026-10-02; actions.js `shell/promote` / `shell/demote`). ***
   // One level a time: the panel fills its dashboard, then the screen. "full screen" is here because that
   // is where "bigger" ends up, and nothing else claimed the words (the bar's full-screen key is F, and
