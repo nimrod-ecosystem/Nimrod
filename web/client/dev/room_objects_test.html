@@ -253,6 +253,13 @@ try {
     check('pressing it pets it', r?.did === 'pet' && pets.includes('rex'));
     const el = host.querySelector('.rs-item[data-id="rex"]');
     check('...it hops (motion allowed)', el.classList.contains('rs-petted'));
+    // The hop MEANS something (it answers the press), so the room's motion clock (which slows the
+    // always-on decoration to a few steps a second) does not take it: it runs at full rate by itself.
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      scene.motionTick();
+      const hop = el.getAnimations().find((a) => a.animationName === 'rsHop');
+      check('...and the hop is not slowed by the motion clock (finite: it runs by itself)', !!hop && hop.playState === 'running', hop ? hop.playState : 'no hop');
+    }
     check('...a heart shows above it', !!host.querySelector('.rs-pet-mark[data-pet-for="rex"]'));
     check('...and its own sound goes to the host', sounds.some(([n, e]) => n === 'knock' && e === 'pet'));
     scene.pet('cat');

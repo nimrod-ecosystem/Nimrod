@@ -88,6 +88,10 @@
   animation: none !important; transition: none !important;
 }
 .rs[data-motion="still"] .rs-sec{ display: none; }
+/* Paused because nobody can see it (the page is hidden, the room is off screen or not drawn, or the host
+   said so): every animation holds where it is, so the browser draws nothing for the room. The motion
+   clock (room_scene.js) stops with it; nothing jumps when it comes back except to where it would be. */
+.rs[data-paused] *, .rs[data-paused] *::before, .rs[data-paused] *::after{ animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce){ .rs .rs-sec{ display: none; } }
 @keyframes rmFlame{ from{ transform: scale(1,1); } to{ transform: scale(.9,1.1); } }
 @keyframes rmGlow{ from{ opacity: .62; } to{ opacity: .86; } }

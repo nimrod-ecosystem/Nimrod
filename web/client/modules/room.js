@@ -88,13 +88,23 @@ import { flashLimit } from '../flash_limit.js';
 //                      the scan for a switch user; "Off" removes them.
 //   closeupReturnMs 120000  room_scene.js RENDER_DEFAULTS says why two minutes.
 //   petSound true      room_scene.js RENDER_DEFAULTS says why: it answers the person's own press.
+//   motionRate 'light' how often the room's always-on decoration is redrawn (room_scene.js createMotionClock):
+//                      'light' = 6 a second (20 for falling leaves), measured on the bench Pi at ~0.4 cores
+//                      against ~1.4 before; every slow thing steps by under a pixel, so it looks the same.
+//                      'smooth' = 12 (30): finer steps, about double the work. 'full' = every frame, the
+//                      old way (~1.4-2 cores on a Pi 400). Advanced: nobody should have to think about it.
+export const MOTION_RATES = Object.freeze({
+  light: { motionFps: 6, travelFps: 20 },
+  smooth: { motionFps: 12, travelFps: 30 },
+  full: { motionFps: 0, travelFps: 30 },
+});
 export const DEFAULTS = Object.freeze({
   preset: DEFAULT_PRESET, light: 'auto', labels: 'always', motion: 'gentle',
   liftReturnMs: RENDER_DEFAULTS.liftReturnMs, zoom: 'off', signWords: '', showSlots: false,
   shelf: OBJECT_DEFAULTS.shelf, books: 'screen', bookList: '', windowShows: OBJECT_DEFAULTS.windowShows,
   windowPress: OBJECT_DEFAULTS.windowPress,
   aiVisits: RENDER_DEFAULTS.aiVisits, closeups: OBJECT_DEFAULTS.closeups, closeupReturnMs: RENDER_DEFAULTS.closeupReturnMs,
-  petSound: RENDER_DEFAULTS.petSound,
+  petSound: RENDER_DEFAULTS.petSound, motionRate: 'light',
 });
 
 export const SETTINGS = [
@@ -119,6 +129,13 @@ export const SETTINGS = [
       { value: 'gentle', label: 'gentle — as designed' },
       { value: 'calm', label: 'calm — slower' },
       { value: 'still', label: 'still — no movement at all' },
+    ] },
+  { key: 'motionRate', label: 'How smoothly it moves', kind: 'choice', default: DEFAULTS.motionRate, level: 'advanced',
+    help: 'Smoother redraws the room more often, which is more work for a small computer.',
+    options: [
+      { value: 'light', label: 'Light on the computer (looks the same)' },
+      { value: 'smooth', label: 'Smoother (about twice the work)' },
+      { value: 'full', label: 'Every frame (the most work)' },
     ] },
   { key: 'liftReturnMs', label: 'Put a lifted panel back after', kind: 'choice', default: DEFAULTS.liftReturnMs,
     level: 'standard',
@@ -210,7 +227,7 @@ const FIELDS = Object.fromEntries(SETTINGS.map(normalizeField).filter(Boolean).m
 export function configFrom(row = {}) {
   const cfg = {};
   for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, row || {});
-  for (const k of ['preset', 'light', 'labels', 'motion', 'zoom', 'shelf', 'books', 'windowShows', 'windowPress', 'aiVisits', 'closeups']) {
+  for (const k of ['preset', 'light', 'labels', 'motion', 'motionRate', 'zoom', 'shelf', 'books', 'windowShows', 'windowPress', 'aiVisits', 'closeups']) {
     if (!FIELDS[k].options.some((x) => x.value === cfg[k])) cfg[k] = DEFAULTS[k];
   }
   for (const k of ['liftReturnMs', 'closeupReturnMs']) {
@@ -237,6 +254,7 @@ const renderOpts = (cfg) => ({
   shelf: cfg.shelf, books: booksOption(cfg), windowShows: cfg.windowShows,
   windowPress: cfg.windowPress === 'nothing' ? 'recipe' : cfg.windowPress, aiVisits: cfg.aiVisits,
   closeups: cfg.closeups, closeupReturnMs: cfg.closeupReturnMs, petSound: cfg.petSound,
+  ...(MOTION_RATES[cfg.motionRate] || MOTION_RATES.light),
 });
 
 registerModule(
@@ -410,9 +428,11 @@ registerModule(
         });
       },
       onResize() { scene?.fit(); },
-      // Parked while covered, like `scene`: nothing moves behind something else. Coming back is instant.
-      onHide() { scene?.setOptions({ motion: 'still' }); },
-      onShow() { scene?.setOptions({ motion: cfg.motion }); },
+      // Parked while covered, like `scene`: nothing moves behind something else, and nothing is drawn.
+      // `paused` (not 'still'): the room keeps its moving drawings and simply holds them, so coming back
+      // is instant and does not rebuild the cat or the window.
+      onHide() { scene?.setOptions({ paused: true }); },
+      onShow() { scene?.setOptions({ paused: false }); },
       destroy() {
         torn = true;
         while (offs.length) { try { offs.pop()(); } catch { /* gone */ } }

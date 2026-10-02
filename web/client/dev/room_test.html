@@ -126,6 +126,16 @@ try {
   state.set({ signWords: 'Our den' });
   check('Words on the signs: every sign says them', host.querySelector('.rs-sign-text')?.textContent === 'Our den');
   state.set({ preset: 'theRoom', labels: 'always', motion: 'gentle', light: 'auto', signWords: '' });
+  const sysReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!sysReduced) {
+    // On screen first: a room scrolled out of view holds still by itself (room_scene_test pins that).
+    host.scrollIntoView({ block: 'start' });
+    await sleep(150);
+    state.set({ motionRate: 'full' });
+    check('How smoothly it moves: "every frame" lets the motion clock go (the old way)', !scene.motionClock().running);
+    state.set({ motionRate: 'light' });
+    check('...and "light" (the default) drives the decoration again', scene.motionClock().running);
+  }
 
   section('the verbs');
   const got = [];
@@ -174,7 +184,16 @@ try {
   check('every declared setting has a row', rows.length === SETTINGS.length, String(rows.length));
 
   section('*** teardown: clean, and no timer left behind ***');
-  inst.onHide(); inst.onShow();
+  host.scrollIntoView({ block: 'start' });
+  await sleep(150);
+  inst.onHide();
+  if (!sysReduced) {
+    check('*** a hidden panel: the room holds still and draws nothing (paused, not rebuilt as "still") ***',
+      scene.motionClock().paused && !scene.motionClock().running && host.querySelector('.rs').dataset.motion === 'gentle'
+      && host.querySelector('.rs').getAnimations({ subtree: true }).every((a) => a.playState !== 'running'));
+  }
+  inst.onShow();
+  if (!sysReduced) check('shown again: it moves again', !scene.motionClock().paused && scene.motionClock().running);
   inst.destroy();
   recording = false;
   await sleep(20);

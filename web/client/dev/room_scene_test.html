@@ -33,7 +33,8 @@ import { THEMES, applyTheme, contrast } from '../theme.js';
 import { ROOM_SHELLS, FURNITURE, FRAME_SPECS, CLOCK_FACE, CALENDAR_FACE, SIGN_LOOKS, lightFor as partsLight } from '../room_parts.js';
 import { depthScale, sideWallTransform, wallAt, viewFor, lightFor, drawOrder, itemBox, gridUnits, growToFit,
   normalizeRole, normalizeRecipe, reactionsFor, DEFAULT_NOTIFY_RULES, ROOM_ACTIONS, topicForAction, ROOM_TOPICS,
-  SCAN_ROWS, GRID_UNIT, LIFT_UNIT, GROW_CAP, mountRoomScene, ensureRoomCss } from '../room_scene.js';
+  SCAN_ROWS, GRID_UNIT, LIFT_UNIT, GROW_CAP, mountRoomScene, ensureRoomCss,
+  MOTION_FPS_DEFAULT, TRAVEL_FPS_DEFAULT, SOFT_FPS_DEFAULT } from '../room_scene.js';
 import { ROOM_PRESETS, presetRecipe, listPresets, DEFAULT_PRESET } from '../room_presets.js';
 import { FRAME_ART } from '../modules/button.js';
 
@@ -547,6 +548,110 @@ try {
       if (/<script|\son[a-z]+\s*=|href\s*=|url\(\s*(?!#)|<text|<foreignObject|<image|Cici|Christine/i.test(t)) bad.push(`${f}: content`);
     }
     check('the sleeping pose is served, with no script, handler, outside link or text', bad.length === 0, bad.join('; '));
+  }
+
+  // =====================================================================================
+  section('*** the room is cheap to draw: compositor-only motion, a budget, a slow clock, paused when unseen ***');
+  // Measured on the bench Pi 400 (2026-10-02): the room cost ~1.4-2.0 cores at ~50 fps because ~60
+  // decorations each made the screen draw every frame. room_scene.js createMotionClock moves them on a
+  // few times a second instead. These pin what made it cheap.
+  {
+    const sysReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
+    const META = new Set(['offset', 'easing', 'composite', 'computedOffset']);
+    // THE BUDGET: always-on (infinite) animations in Home's room, the most at any light. 60 at night when
+    // this was written (46 of them the window's stars). More is allowed only by raising this on purpose.
+    const BUDGET = 64;
+    const infinite = (a) => { try { return a.effect.getComputedTiming().iterations === Infinity; } catch { return false; } };
+    const propsOf = (a) => { const s = new Set(); for (const kf of a.effect?.getKeyframes?.() || []) for (const k of Object.keys(kf)) if (!META.has(k)) s.add(k); return [...s]; };
+    if (sysReduced) {
+      note('this browser asks for reduced motion: the moving room cannot be measured here');
+    } else {
+      for (const light of ['day', 'evening', 'night']) {
+        const host = makeHost();
+        // On screen: a room scrolled out of view is PAUSED (that is one of the things tested below).
+        host.scrollIntoView({ block: 'start' });
+        const scene = mountRoomScene(host, presetRecipe('theRoom'), { light });
+        await sleep(600);                       // the cat's animated drawing arrives by fetch
+        const all = host.getAnimations({ subtree: true });
+        const bad = all.filter((a) => propsOf(a).some((p) => !COMPOSITED.has(p)));
+        check(`${light}: every animation in the room is transform/opacity only (no layout, no paint property)`, all.length > 0 && bad.length === 0,
+          bad.slice(0, 4).map((a) => `${a.animationName}: ${propsOf(a).join('/')}`).join('; '));
+        const inf = all.filter(infinite);
+        check(`${light}: always-on animations within the budget (${inf.length} <= ${BUDGET})`, inf.length <= BUDGET);
+        scene.motionTick();
+        const mc = scene.motionClock();
+        const loose = host.getAnimations({ subtree: true }).filter((a) => infinite(a) && a.playState === 'running');
+        check(`*** ${light}: after a tick, no always-on decoration runs by itself (the clock drives all ${mc.driven}) ***`,
+          mc.running && mc.driven === inf.length && loose.length === 0, `${loose.length} running: ${loose.slice(0, 3).map((a) => a.animationName).join(', ')}`);
+        check('the defaults: drift 6, travel 20, soft (blurred, slow) 2 a second', MOTION_FPS_DEFAULT === 6 && TRAVEL_FPS_DEFAULT === 20 && SOFT_FPS_DEFAULT === 2);
+        if (light === 'evening') {
+          check(`evening: the falling leaves in the window step at ${TRAVEL_FPS_DEFAULT} a second`, mc.travelling > 0 && Math.abs(mc.intervalMs - 1000 / TRAVEL_FPS_DEFAULT) < 1, JSON.stringify(mc));
+        } else {
+          check(`${light}: nothing travels, so the room is redrawn ${MOTION_FPS_DEFAULT} times a second, not 60`, mc.travelling === 0 && Math.abs(mc.intervalMs - 1000 / MOTION_FPS_DEFAULT) < 1, JSON.stringify(mc));
+        }
+        // A blurred slow loop (aurora, haze, canopy) is repainted rarely, NOT given its own layer: its blur
+        // is then painted once instead of re-applied on every frame drawn.
+        const softEls = [...host.querySelectorAll('.rs-view *')].filter((e) => getComputedStyle(e).filter !== 'none'
+          && e.getAnimations().some((x) => infinite(x) && x.effect.getComputedTiming().duration >= 10000
+            && !propsOf(x).includes('translate')));      // a falling leaf travels, blurred or not
+        check(`${light}: blurred slow movers are the soft tier, with no will-change of their own`,
+          mc.soft === softEls.length && softEls.every((e) => !e.style.willChange), `${mc.soft} vs ${softEls.length}`);
+        // ...and they still move, to where they would have been.
+        // (A drift one: it steps on a 1/6 s grid, so 250 ms later it has moved by 250 ms plus at most one step.)
+        const a = host.getAnimations({ subtree: true }).find((x) => infinite(x) && x.playState === 'paused' && x.effect.target?.style?.willChange);
+        const t0 = Number(a?.currentTime);
+        await sleep(250);
+        scene.motionTick();
+        const moved = Number(a?.currentTime) - t0;
+        check('a driven decoration still moves with time (~250 ms of it)', moved > 150 && moved < 500, `${moved.toFixed(0)} ms`);
+        check('a driven element keeps its own layer (will-change), so a step is not a repaint',
+          host.querySelectorAll('.rs-view [style*="will-change"], .rm-curtain[style*="will-change"]').length > 0);
+        // Paused because nobody can see it.
+        scene.setOptions({ paused: true });
+        const runningPaused = host.getAnimations({ subtree: true }).filter((a2) => a2.playState === 'running');
+        check(`*** ${light}: paused (host): the clock stops and NOTHING in the room runs ***`,
+          !scene.motionClock().running && scene.motionClock().paused && runningPaused.length === 0, `${runningPaused.length} running`);
+        scene.setOptions({ paused: false });
+        check(`${light}: unpaused, the clock runs again`, scene.motionClock().running && !scene.motionClock().paused);
+        if (light === 'night') {
+          host.style.display = 'none';
+          await sleep(200);
+          check('*** not drawn (display:none): the clock stops by itself ***', !scene.motionClock().running && scene.motionClock().paused, JSON.stringify(scene.motionClock()));
+          host.style.display = '';
+          await sleep(200);
+          check('drawn again: it moves again', scene.motionClock().running && !scene.motionClock().paused);
+          scene.setOptions({ motionFps: 0 });
+          // (Counted again: a display:none -> shown round trip restarts CSS animations, and an SVG's may not all come back.)
+          const nowInf = host.getAnimations({ subtree: true }).filter(infinite);
+          const native = nowInf.filter((a2) => a2.playState === 'running');
+          check('motionFps 0: the clock lets go and every decoration runs by itself, as it used to', !scene.motionClock().running && native.length > 0 && native.length === nowInf.length, `${native.length} of ${nowInf.length}`);
+          scene.setOptions({ motionFps: 12, motion: 'still' });
+          await sleep(50);
+          check('*** "still": no animation in the room at all, and no clock ***', host.getAnimations({ subtree: true }).length === 0 && !scene.motionClock().running);
+          scene.setOptions({ motion: 'gentle' });
+          await sleep(600);
+          scene.motionTick();
+          check('back to gentle: the clock drives them again', scene.motionClock().running && scene.motionClock().driven > 0);
+        }
+        scene.destroy();
+        check(`${light}: destroy stops the clock and leaves no timer`, !scene.motionClock().running && scene.timers() === 0);
+        host.remove();
+      }
+    }
+    // A reaction (it MEANS something) and a pet's hop are not slowed: they run at full rate by themselves.
+    {
+      const host = makeHost();
+      host.scrollIntoView({ block: 'start' });
+      const scene = mountRoomScene(host, presetRecipe('theRoom'), { light: 'day', reducedMotion: false });
+      await sleep(150);
+      scene.notify('message');
+      scene.motionTick();
+      const ring = host.querySelector('.rs-react-ring');
+      if (!sysReduced) check('a notification\'s pulse is not taken by the clock (it runs by itself)', !!ring && ring.getAnimations()[0]?.playState === 'running');
+      scene.destroy();
+      host.remove();
+    }
   }
 
   // =====================================================================================

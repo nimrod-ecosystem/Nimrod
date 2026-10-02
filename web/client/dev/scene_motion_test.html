@@ -31,6 +31,7 @@ element by its own height.</p>
 
 <script type="module">
 import { mountScene, SCENES, listOverlays } from '../livescene.js';
+import { createMotionClock } from '../room_scene.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -81,6 +82,50 @@ if (!motionOn) {
     check(`${id}: no running animation changes a layout property`, bad.length === 0,
       bad.slice(0, 4).map((x) => `${x.a.effect.target.className}: ${x.p.join('/')} (${x.a.animationName})`).join('; ')
       + (bad.length > 4 ? ` ...and ${bad.length - 4} more` : ''));
+    s.destroy();
+  }
+
+  // The room's window shows one of these (night, cozy by day, fall in the evening), and the room's motion
+  // clock moves it a few times a second by setting each animation's time (room_scene.js createMotionClock).
+  // That stays a compositor update only while every mover animates transform/opacity: a filter, a shadow
+  // or a colour would be a repaint per step.
+  section('the scenes a room\'s window shows animate only transform/opacity');
+  {
+    const COMPOSITED = new Set(['transform', 'translate', 'rotate', 'scale', 'opacity']);
+    const META = new Set(['offset', 'easing', 'composite', 'computedOffset']);
+    for (const id of ['night', 'cozy', 'fall']) {
+      const s = mountScene(box, { scene: id, overlays: [] });
+      await nextFrame();
+      const bad = box.getAnimations({ subtree: true }).filter((a) => (a.effect?.getKeyframes?.() || [])
+        .some((kf) => Object.keys(kf).some((k) => !META.has(k) && !COMPOSITED.has(k))));
+      check(`${id}: every mover is transform/opacity only`, bad.length === 0,
+        bad.slice(0, 4).map((a) => `${a.effect.target.className} (${a.animationName})`).join('; '));
+      s.destroy();
+    }
+  }
+
+  section('the motion clock drives a scene: paused, stepped, and handed back');
+  {
+    const s = mountScene(box, { scene: 'fall', overlays: [] });
+    await nextFrame();
+    const inf = box.getAnimations({ subtree: true }).filter((a) => a.effect.getComputedTiming().iterations === Infinity);
+    const clock = createMotionClock(box, { fps: 12, travelFps: 30, take: () => true, setTimer: () => 0, clearTimer: () => {} });
+    clock.start();
+    clock.tick();
+    const loose = box.getAnimations({ subtree: true }).filter((a) => a.playState === 'running' && a.effect.getComputedTiming().iterations === Infinity);
+    check('every always-on mover is taken (paused, moved by the clock)', clock.driven() === inf.length && loose.length === 0, `${clock.driven()} of ${inf.length}, ${loose.length} loose`);
+    const leaves = box.querySelectorAll('.ng-leaf, .ng-seed').length;
+    check('the falling leaves and seeds are the travellers (30 a second); the rest drift (12)', clock.travelling() === leaves && Math.abs(clock.interval() - 1000 / 30) < 1,
+      `${clock.travelling()} vs ${leaves}, ${clock.interval()} ms`);
+    const leaf = box.querySelector('.ng-leaf').getAnimations()[0];
+    const t0 = Number(leaf.currentTime);
+    await new Promise((r) => setTimeout(r, 200));
+    clock.tick();
+    const moved = Number(leaf.currentTime) - t0;
+    check('a tick moves a leaf to where it would have been by now', moved > 120 && moved < 400, `${moved.toFixed(0)} ms`);
+    clock.release();
+    const back = box.getAnimations({ subtree: true }).filter((a) => a.effect.getComputedTiming().iterations === Infinity && a.playState === 'running');
+    check('release hands every one back to the browser', back.length === inf.length && clock.driven() === 0, `${back.length} of ${inf.length}`);
     s.destroy();
   }
 

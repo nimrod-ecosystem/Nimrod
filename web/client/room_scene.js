@@ -534,6 +534,182 @@ export function ensureRoomCss(doc = document) {
 export const assetBase = () => new URL('./design-assets/', import.meta.url).href;
 
 // ---------------------------------------------------------------------------------------------
+// THE MOTION CLOCK: the room's decoration redrawn a few times a second, not sixty.
+// ---------------------------------------------------------------------------------------------
+// *** WHY (measured on the bench Pi 400, 1080p, 2026-10-02). *** The room ran ~60 always-on CSS
+// animations: the window's live view (46 stars at night, 29 falling leaves in the evening), the
+// curtains, the plant, the lamp's glow and the sleeping cat. Each one is compositor-friendly
+// (transform/opacity) on its own, but a running animation makes the screen draw EVERY frame, and the
+// page's gamepad poll (input_gamepad.js, a requestAnimationFrame loop) gives every frame a main-thread
+// pass too, in which each running animation's style is recalculated and the cat's inline SVG is laid
+// out and repainted. Result: ~1.7 cores and ~50 fps for a room that is meant to be scenery.
+//
+// *** WHAT IT DOES. *** It pauses the room's INFINITE decorative animations and moves them on from one
+// timer, each to exactly where it would have been (the timeline's time minus its own start, so phase,
+// delay, direction and 'calm' are all kept). Between steps nothing changes, so the browser draws
+// nothing. Three speeds, all on ONE shared grid of the timeline (so every thing due steps in the SAME
+// frame, and the screen is drawn at the fastest rate present, not the sum of them):
+//   drift   `fps` (6) a second: the curtains, the plant, the cat, the stars, the lamp's glow. Each moves
+//           under a pixel per step at 1080p (the curtain's hem ~0.6 px, a leaf tip ~0.7 px, the cat's
+//           breath ~0.3 px, a star ~0.2 px), which is why it looks the same.
+//   travel  `travelFps` (20): things that cross the window (falling leaves and seeds, keyframes on
+//           `translate`/`top`/`left`), ~2.5 px a step.
+//   soft    `softFps` (2): a BLURRED thing on a slow loop (a filter, and 10 s or more a cycle: the aurora,
+//           the haze, a canopy, a light shaft). It is NOT given its own layer, so its blur is painted once
+//           into the layer under it instead of being re-applied to every frame the screen draws (that
+//           blur pass, per frame, was most of the Pi's GPU time in the evening); it steps rarely because a
+//           repaint is the cost of its step, and its own blur hides a step of a pixel or two.
+//   * Finite animations are left alone: a pet's hop, a door opening, a camera move, a reaction's
+//     pulse — the motion that MEANS something runs at full rate.
+//   * Only decoration is taken: the window's view (`.rs-view`), the cat (`.rs-cat`) and the room's own
+//     `rm-*` parts. A module mounted in a slot or placed in the room is the module's business.
+//   * An unblurred element gets `will-change` for what it animates, so a step is a compositor update
+//     and not a repaint (it already had its own layer while it animated; this keeps it). A blurred one
+//     gets none, in any tier (see `capture`).
+//   * `fps` 0 = the old way: every animation runs by itself, every frame.
+export const MOTION_FPS_DEFAULT = 6;
+export const TRAVEL_FPS_DEFAULT = 20;
+export const SOFT_FPS_DEFAULT = 2;
+// A soft thing is blurred and slow: a cycle at least this long (the fastest blurred loop in the scenes is
+// the steam, 6 s, which travels too far per step to be stepped twice a second).
+const SOFT_MIN_CYCLE_MS = 10000;
+const TRAVEL_PROPS = ['translate', 'top', 'left', 'right', 'bottom'];
+const DRIVEN_PROPS = ['transform', 'translate', 'rotate', 'scale', 'opacity'];
+/** Is this animation's target room decoration the clock may drive? */
+export function isRoomDecoration(target) {
+  if (!target || typeof target.closest !== 'function') return false;
+  if (target.closest('.rs-slot, .rs-liftlayer, .rs-lift')) return false;
+  if (target.closest('.rs-view, .rs-cat')) return true;
+  const cls = typeof target.className === 'string' ? target.className : target.getAttribute?.('class') || '';
+  return /(^|\s)rm-/.test(cls);
+}
+function keyframeProps(a) {
+  const props = new Set();
+  try { for (const kf of a.effect?.getKeyframes?.() || []) for (const k of Object.keys(kf)) props.add(k); } catch { /* none */ }
+  return props;
+}
+
+/**
+ * Drive `root`'s decorative animations from one timer. Returns
+ * { start, stop, tick, rescan, release, running(), driven(), travelling(), ticks() }.
+ * `setTimer`/`clearTimer` are injectable (a suite steps it by hand with `tick()`).
+ */
+export function createMotionClock(root, { fps = MOTION_FPS_DEFAULT, travelFps = TRAVEL_FPS_DEFAULT,
+  softFps = SOFT_FPS_DEFAULT, setTimer, clearTimer, take = isRoomDecoration } = {}) {
+  const doc = root.ownerDocument || document;
+  const win = doc.defaultView || window;
+  const setT = setTimer || ((fn, ms) => win.setTimeout(fn, ms));
+  const clearT = clearTimer || ((id) => win.clearTimeout(id));
+  const recs = new Map();        // Animation -> { start, rate, tier, el, wc, lastStep }
+  let timer = null, on = false, dirty = true, nticks = 0;
+  const nowMs = () => Number(doc.timeline?.currentTime) || win.performance.now();
+  // Each tier's rate, never faster than the drift (a host that asks for 2 a second gets 2 everywhere
+  // except travel, which never goes below drift either).
+  const rateOf = (tier) => (tier === 'travel' ? Math.max(fps, travelFps) : tier === 'soft' ? Math.min(fps, softFps) : fps);
+  const isBlurred = (el) => {
+    try { const f = win.getComputedStyle(el).filter; return !!f && f !== 'none'; } catch { return false; }
+  };
+
+  function capture() {
+    dirty = false;
+    let list = [];
+    try { list = root.getAnimations({ subtree: true }); } catch { return; }
+    const t = nowMs();
+    for (const a of list) {
+      if (recs.has(a)) continue;
+      if (a.playState !== 'running') { if (a.playState === 'pending' || a.pending) dirty = true; continue; }
+      let iters = 1;
+      try { iters = a.effect.getComputedTiming().iterations; } catch { continue; }
+      if (iters !== Infinity) continue;
+      const el = a.effect?.target;
+      if (!take(el)) continue;
+      const rate = a.playbackRate || 1;
+      const start = a.startTime != null ? Number(a.startTime) : t - Number(a.currentTime || 0) / rate;
+      const props = keyframeProps(a);
+      const isHtml = !!(el && el.style && typeof win.HTMLElement === 'function' && el instanceof win.HTMLElement);
+      let cycle = 0;
+      try { cycle = Number(a.effect.getComputedTiming().duration) || 0; } catch { /* 0 */ }
+      const blurred = isHtml && isBlurred(el);
+      const tier = TRAVEL_PROPS.some((p) => props.has(p)) ? 'travel'
+        : blurred && cycle >= SOFT_MIN_CYCLE_MS ? 'soft' : 'drift';
+      const rec = { start, rate, tier, el, wc: null, lastStep: -1 };
+      // A step is a compositor update, not a repaint, only if the element keeps its own layer. A BLURRED
+      // one is deliberately not given one, whatever its speed: as a layer its blur is re-applied on every
+      // frame the screen draws; painted, it costs a small repaint only when it steps (bench Pi, evening
+      // window: 0.77 -> 0.66 cores for the 15 blurred falling leaves alone).
+      if (isHtml && !blurred) {
+        const want = DRIVEN_PROPS.filter((p) => props.has(p));
+        if (want.length) { rec.wc = el.style.willChange; el.style.willChange = want.join(', '); }
+      }
+      try { a.pause(); } catch { continue; }
+      recs.set(a, rec);
+    }
+  }
+  function drop(a, rec) {
+    recs.delete(a);
+    if (rec.wc !== null && rec.el?.style) rec.el.style.willChange = rec.wc;
+  }
+  // The fastest tier present sets the tick; the others step on its multiples.
+  const interval = () => {
+    let r = 0;
+    for (const rec of recs.values()) r = Math.max(r, rateOf(rec.tier));
+    return 1000 / (r || fps);
+  };
+
+  function tick() {
+    if (timer != null) { clearT(timer); timer = null; }   // a tick by hand does not start a second chain
+    nticks++;
+    if (dirty) capture();
+    const t = nowMs();
+    // READ EVERYTHING, THEN WRITE EVERYTHING. A CSS animation's `playState` brings the page's style up
+    // to date before it answers, so reading it after a write costs a whole style pass per animation
+    // (measured: ~680 a second instead of 12). One read pass, one write pass, one style pass per tick.
+    const due = [];
+    for (const [a, rec] of recs) {
+      if (!rec.el?.isConnected || a.playState === 'idle' || a.playState === 'finished') { drop(a, rec); continue; }
+      // Each tier steps when ITS slot on the shared timeline grid changes, so everything due moves in
+      // the same frame (a frame drawn for the curtain also carries the stars, never one each).
+      const step = Math.floor(t / (1000 / rateOf(rec.tier)));
+      if (step === rec.lastStep) continue;
+      rec.lastStep = step;
+      due.push([a, rec]);
+    }
+    for (const [a, rec] of due) { try { a.currentTime = (t - rec.start) * rec.rate; } catch { drop(a, rec); } }
+    if (on) timer = setT(tick, interval());
+  }
+  function start() {
+    if (!(fps > 0)) return false;
+    on = true;
+    if (timer == null) timer = setT(tick, 0);
+    return true;
+  }
+  function stop() { on = false; if (timer != null) { clearT(timer); timer = null; } }
+  /** Hand every driven animation back to the browser (they run by themselves again). */
+  function release() {
+    stop();
+    for (const [a, rec] of [...recs]) {
+      drop(a, rec);
+      try { if (a.playState === 'paused') { a.currentTime = (nowMs() - rec.start) * rec.rate; a.play(); } } catch { /* gone */ }
+    }
+  }
+  return {
+    start, stop, tick, release,
+    rescan() { dirty = true; },
+    setRate(next = {}) {
+      if ('fps' in next) fps = Number(next.fps) || 0;
+      if ('travelFps' in next) travelFps = Number(next.travelFps) || TRAVEL_FPS_DEFAULT;
+      if ('softFps' in next) softFps = Number(next.softFps) || SOFT_FPS_DEFAULT;
+    },
+    running: () => on,
+    driven: () => recs.size,
+    travelling: () => [...recs.values()].filter((r) => r.tier === 'travel').length,
+    soft: () => [...recs.values()].filter((r) => r.tier === 'soft').length,
+    ticks: () => nticks,
+    interval,
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
 // THE RENDERER
 // ---------------------------------------------------------------------------------------------
 
@@ -569,11 +745,23 @@ export const assetBase = () => new URL('./design-assets/', import.meta.url).href
 //                        by the screen's master volume. It answers the person's OWN press — unlike the
 //                        wake tone Mike turned off, which sounds unasked.
 //   weather null         what the window's weather pane shows until `weather/now` says otherwise.
+//   motionFps 6          how many times a second the room's slow decoration moves on (createMotionClock).
+//                        FOR: at 6 every slow thing in Home's room steps by under a pixel at 1080p, so it
+//                        looks the same, and the bench Pi draws the room 6 times a second instead of 60
+//                        (measured: each frame of this room costs the Pi ~30 ms of CPU, so the rate IS
+//                        the cost). AGAINST: the fastest decorations elsewhere step visibly on a close
+//                        look (the fireplace's flames ~2 px, a mug's steam ~3 px under its blur). 12 halves
+//                        those steps for about double the cost; 0 = every frame, the old way.
+//   travelFps 20         the same for things that cross the window (falling leaves, evening): ~2.5 px a
+//                        step. 30 is smoother (~1.7 px) and costs half as much again.
+//   softFps 2            blurred slow loops (aurora, haze, canopy, light shafts): repainted, not layered.
+//   paused false         a host can hold the room still while it is covered (nothing moves, nothing drawn).
 export const RENDER_DEFAULTS = Object.freeze({
   labels: 'always', motion: 'gentle', liftReturnMs: 60000, notifyMs: 8000, petMs: 2600, zoom: null, showSlots: false,
   restMs: 300, onCatPress: null,
   shelf: 'recipe', windowShows: 'recipe', windowPress: 'recipe', closeups: 'recipe', books: null,
   closeupReturnMs: 120000, aiVisits: 'news', petSound: true, weather: null,
+  motionFps: MOTION_FPS_DEFAULT, travelFps: TRAVEL_FPS_DEFAULT, softFps: SOFT_FPS_DEFAULT, paused: false,
 });
 const OPTION_KEYS = ['shelf', 'windowShows', 'windowPress', 'closeups'];
 // *** THE SECOND PASS, TURNED ON: what a room a PERSON sees uses (the room module's defaults, argued in
@@ -640,6 +828,35 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   liftL.className = 'rs-liftlayer';
   root.append(stage, liftL);
   host.append(root);
+
+  // ------------------------------------------------------------------ the motion clock
+  // (createMotionClock says why.) It runs only while the room can be seen and is allowed to move: not
+  // under 'still' or reduced motion (nothing animates then anyway), not while the page is hidden, and
+  // not while the room is off screen or not drawn (display:none, a hidden panel, scrolled away). Paused,
+  // every decoration holds where it is and the browser draws nothing for the room at all.
+  const rates = () => ({ fps: Number(o.motionFps) || 0, travelFps: Number(o.travelFps) || TRAVEL_FPS_DEFAULT,
+    softFps: Number(o.softFps) || SOFT_FPS_DEFAULT });
+  const clock = createMotionClock(root, { ...rates(), setTimer: (fn, ms) => later(fn, ms), clearTimer: cancel });
+  let docHidden = !!doc.hidden;
+  let offscreen = false;
+  const shouldMove = () => !destroyed && animated() && !docHidden && !offscreen && !o.paused && Number(o.motionFps) > 0;
+  function syncClock() {
+    if (shouldMove()) { clock.rescan(); clock.start(); }
+    else if (Number(o.motionFps) > 0 || destroyed) clock.stop();
+    else clock.release();             // motionFps 0: every animation runs by itself, as it used to
+    // Paused for being hidden: the animations not (yet) driven stop too, so NOTHING in the room runs.
+    root.toggleAttribute('data-paused', !destroyed && animated() && (docHidden || offscreen || !!o.paused));
+  }
+  const onVis = () => { docHidden = !!doc.hidden; syncClock(); };
+  doc.addEventListener('visibilitychange', onVis);
+  const io = typeof win.IntersectionObserver === 'function'
+    ? new win.IntersectionObserver((es) => { const e = es[es.length - 1]; if (!e || destroyed) return; offscreen = !e.isIntersecting; syncClock(); })
+    : null;
+  io?.observe(root);
+  // New decoration (the cat's animated drawing arrives later, a glow at dusk, a rebuilt view) is picked
+  // up at the next tick.
+  const mo = typeof win.MutationObserver === 'function' ? new win.MutationObserver(() => clock.rescan()) : null;
+  mo?.observe(root, { childList: true, subtree: true });
 
   // Per item: { it, role, el, art, slotEl, wrap, chip, button, cat, clock, cal, scene }
   let recs = [];
@@ -1181,6 +1398,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       if (r.scene) { try { r.scene.set({ motion: motion() }); } catch { /* keep */ } }
       r.cat?.refresh();
     }
+    syncClock();
   }
   const onMq = (e) => { systemReduced = !!e.matches; applyMotion(); scheduleTick(); };
   mq?.addEventListener?.('change', onMq);
@@ -1777,6 +1995,12 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     toast,
     fit,
     timers: () => timers.size,
+    /** The motion clock, for a host or a suite: is it moving, how many it drives, how often. */
+    motionClock: () => ({ running: clock.running(), driven: clock.driven(), travelling: clock.travelling(),
+      soft: clock.soft(), ticks: clock.ticks(), intervalMs: clock.running() ? clock.interval() : null,
+      paused: root.hasAttribute('data-paused') }),
+    /** Step the motion clock now (a suite; a host has no need). */
+    motionTick: () => { if (clock.running()) clock.tick(); return clock.driven(); },
     // The second pass.
     closeup, closeupExit,
     closedUp: () => (cam ? cam.id : null),
@@ -1823,6 +2047,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       if ('weather' in next) weatherNow = readWeather(next.weather);
       if (rebuild) { recipe = derive(); build(); listen(); }
       if ('closeupReturnMs' in next) armCloseup();
+      if ('motionFps' in next || 'travelFps' in next || 'softFps' in next) clock.setRate(rates());
       applyMotion();
       applyLight(true);
       scheduleTick();
@@ -1835,9 +2060,13 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       destroyed = true;
       while (busOffs.length) { try { busOffs.pop()(); } catch { /* gone */ } }
       for (const ev of ['pointerdown', 'keydown', 'wheel']) root.removeEventListener(ev, onActivity);
+      clock.stop();
       for (const id of [...timers]) cancel(id);
       mq?.removeEventListener?.('change', onMq);
       ro?.disconnect();
+      io?.disconnect();
+      mo?.disconnect();
+      doc.removeEventListener('visibilitychange', onVis);
       for (const r of recs) { try { r.scene?.destroy(); } catch { /* gone */ } }
       recs = [];
       root.remove();
@@ -1850,5 +2079,6 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   build();
   listen();
   scheduleTick();
+  syncClock();
   return api;
 }
