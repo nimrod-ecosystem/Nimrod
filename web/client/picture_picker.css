@@ -1,0 +1,55 @@
+/* picture_picker.css — the look of `picture_picker.js`, the one place a picture is chosen.
+   Loaded by the picker itself (a <link> in the head, once).
+
+   NO LITERAL COLOURS: theme tokens only, with the browser's own system colours as the fallback, so
+   `web/tools/check_hardcoded_colors.py` finds nothing here.
+
+   SIZE: container units where the picker sits in a panel, so the same grid works in a settings menu,
+   a small tile and a full screen. The switch cursor is an outline AND a marker (note.css's rule): the
+   lit stop reads without colour. */
+
+.pp{container-type:inline-size;color:var(--text, CanvasText);font-family:var(--font, system-ui, sans-serif);
+  display:flex;flex-direction:column;gap:8px;min-width:0}
+.pp *{box-sizing:border-box}
+.pp [hidden]{display:none !important}
+.pp-head{margin:0;font-weight:700;font-size:clamp(15px, 3.6cqi, 24px);color:var(--text-strong, CanvasText)}
+.pp-note,.pp-status,.pp-label{margin:0;font-size:clamp(12px, 2.8cqi, 18px);color:var(--text-muted, GrayText)}
+.pp-label{font-weight:700}
+.pp-status:empty{display:none}
+.pp-status{color:var(--text-strong, CanvasText);font-weight:700}
+.pp-warn{margin:0;padding:6px 8px;border-left:4px solid var(--accent-warm, var(--accent, Highlight));
+  background:var(--surface-alt, Canvas);font-size:clamp(12px, 2.8cqi, 18px)}
+
+.pp-row{border-radius:12px;padding:3px}
+.pp-acts{display:flex;flex-wrap:wrap;gap:6px}
+.pp-tiles{display:grid;grid-template-columns:repeat(var(--pp-cols, 4), minmax(0, 1fr));gap:6px}
+.pp-grid{display:flex;flex-direction:column;gap:2px;max-height:min(60vh, 520px);overflow:auto;overscroll-behavior:contain}
+
+.pp-btn{min-height:44px;padding:0 14px;border:2px solid var(--border, ButtonBorder);border-radius:12px;
+  background:var(--surface, ButtonFace);color:var(--text, ButtonText);font:inherit;font-weight:700;
+  font-size:clamp(13px, 3cqi, 18px);cursor:pointer}
+.pp-btn[aria-pressed="true"]{border-color:var(--accent, Highlight);background:var(--surface-alt, Canvas)}
+.pp-btn[aria-pressed="true"]::after{content:"\00a0\2713"}
+
+.pp-tile{display:flex;flex-direction:column;gap:3px;min-width:0;padding:4px;border:2px solid var(--border, ButtonBorder);
+  border-radius:12px;background:var(--surface, ButtonFace);color:var(--text, ButtonText);font:inherit;cursor:pointer;text-align:center}
+.pp-tile[aria-pressed="true"]{border-color:var(--accent, Highlight);border-width:3px}
+.pp-thumb{display:block;width:100%;aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--surface-alt, Canvas)}
+.pp-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.pp-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:clamp(11px, 2.4cqi, 15px)}
+
+.pp-search{display:flex;flex-direction:column;gap:3px;font-size:clamp(12px, 2.8cqi, 16px);font-weight:700}
+.pp-search input{min-height:40px;padding:6px 10px;border:2px solid var(--border, ButtonBorder);border-radius:10px;
+  background:var(--surface, Field);color:var(--text, FieldText);font:inherit}
+.pp-search input:focus{outline:3px solid var(--accent, Highlight);outline-offset:1px}
+
+/* THE SWITCH CURSOR. A lit ROW gets a ring around the whole row; a lit thing inside it gets its own. */
+.pp [data-on="1"]{outline:4px solid var(--link, Highlight);outline-offset:2px}
+.pp-row[data-on="1"]{background:var(--surface-alt, Canvas)}
+.pp-btn[data-on="1"]::before,.pp-tile[data-on="1"] .pp-name::before{content:"\25B8\00a0"}
+
+/* THE DIALOG, for a host with no place of its own (openPictureDialog). */
+.pp-dialog{position:fixed;inset:0;z-index:var(--z-menus, 1000);display:flex;align-items:center;justify-content:center;
+  padding:16px;background:color-mix(in srgb, var(--text, CanvasText) 35%, transparent)}
+.pp-dialog-box{width:min(760px, 100%);max-height:100%;overflow:auto;padding:16px;border-radius:16px;
+  background:var(--surface, Canvas);border:1px solid var(--border, CanvasText)}

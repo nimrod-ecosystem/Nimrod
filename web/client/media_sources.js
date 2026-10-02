@@ -20,7 +20,8 @@
 import { cachedFetch } from './cache.js';
 import { authHeaders, httpError } from './auth.js';
 import { listFolderSources, removeFolderSource, resolveFolderListing,
-         folderFileUrl, listFolderNames } from './folder_source.js';
+         folderFileUrl, listFolderEntries } from './folder_source.js';
+import { DEVICE_SOURCE, DEVICE_SOURCE_ID, listDevicePictures, devicePictureUrl } from './device_pictures.js';
 
 const trimSlash = (u) => String(u || '').replace(/\/+$/, '');
 
@@ -156,16 +157,41 @@ export async function resolveListing(source, album = '', { fetchImpl = fetch } =
  * folder (see `listFolderNames`). For an agent, `/list` already is names only.
  */
 export async function listItemNames(source, album = '', { fetchImpl = fetch } = {}) {
-  if (!source) return [];
-  if (source.kind === 'folder') return listFolderNames(source, album);
+  return (await listPictureEntries(source, album, { fetchImpl })).items;
+}
+
+/**
+ * The same, plus the SUB-FOLDERS ("albums") at that level: `{ items, albums }`. Added 2026-10-02
+ * for the shared picture picker (`picture_picker.js`), which opens a sub-folder the way the board
+ * editor's own picker did. One request for an agent (its `/list` already carries both).
+ * A `device` source (`device_pictures.js`, pictures added from this device) has no sub-folders.
+ */
+export async function listPictureEntries(source, album = '', { fetchImpl = fetch } = {}) {
+  if (!source) return { items: [], albums: [] };
+  if (source.kind === 'folder') return listFolderEntries(source, album);
+  if (source.kind === 'device') return { items: await listDevicePictures(), albums: [] };
   const base = trimSlash(source.base_url);
   const q = album ? `?album=${encodeURIComponent(album)}` : '';
   const res = await fetchImpl(`${base}/list${q}`);
   if (!res.ok) throw httpError(res, `media source "${source.label}": /list -> ${res.status}`);
   const body = await res.json();
-  return (body.items || []).map((it) => ({
+  const items = (body.items || []).map((it) => ({
     path: it.path, name: it.name || String(it.path || '').split('/').pop(), kind: it.kind,
   })).filter((it) => it.path);
+  return { items, albums: Array.isArray(body.albums) ? body.albums.map(String) : [] };
+}
+
+/**
+ * THE SOURCE A STORED REFERENCE NAMES, out of a listed registry — or the pictures added on this
+ * device, which are deliberately NOT in that list (`device_pictures.js` says why: `photos` reads the
+ * list, and an extra source would change which one a new photos panel adopts). Every picture
+ * loader looks its source up through this, so a picture added from this device shows everywhere a
+ * picture from a folder does: a button, an avatar, a board card.
+ */
+export function sourceById(list, id) {
+  const hit = (Array.isArray(list) ? list : []).find((s) => s && s.id === id);
+  if (hit) return hit;
+  return id === DEVICE_SOURCE_ID ? DEVICE_SOURCE : null;
 }
 
 /**
@@ -180,6 +206,7 @@ export async function listItemNames(source, album = '', { fetchImpl = fetch } = 
 export async function resolveItemUrl(source, path) {
   if (!source || !path) return null;
   if (source.kind === 'folder') return folderFileUrl(source.id, path);
+  if (source.kind === 'device') return devicePictureUrl(path);
   return { url: mediaUrl(source.base_url, path), release: () => {} };
 }
 

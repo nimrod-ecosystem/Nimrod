@@ -51,6 +51,7 @@
 
 import { VERBS, verbTopic } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
+import { mountPicturePicker } from './picture_picker.js';
 
 export const MENU_VERB = 'menu';
 export const MENU_TOPIC = verbTopic(MENU_VERB);
@@ -303,6 +304,8 @@ export function mountSettings(root, {
   let page = null;             // the open page's id, or null for the list
   // THE ONE TEXT BOX that may be open, as `{ id, draft }`, or null. See "TEXT ROWS" below.
   let editing = null;
+  // THE PICTURE PICKER, while a picture row has it open (see "PICTURE ROWS" below), or null.
+  let picker = null;
   let items = [];
   let nav = createNav([]);
   let returnFocus = null;
@@ -461,16 +464,58 @@ export function mountSettings(root, {
   const saveEdit = () => endEdit({ save: true });
   const cancelEdit = () => endEdit({ save: false });
 
+  // ---------------------------------------------------------------------------------
+  // PICTURE ROWS (2026-10-02). Mike: "Having the pictures scroll through all your pictures in the
+  // settings menu isn't a good way to do it. There should be upload or a folder picker."
+  //
+  // A row carrying `picture` (settings_fields.js, kind `picture`) opens the shared picker
+  // (`picture_picker.js`) where this menu's pages go, and the four moves drive IT while it is
+  // open: rows of pictures by `next`/`prev`, into a row by `select`, out by `back`, and `back` from
+  // its rows (or its Cancel) is back to this list. A choice commits through the row's `commit()` -
+  // the host's `onStep`, the one write path - and the list comes back with the row showing it.
+  // ---------------------------------------------------------------------------------
+  function openPicture(item) {
+    if (!item || !item.picture) return null;
+    if (editing) editing = null;
+    if (picker) closePage();
+    page = '__picture';
+    listEl.hidden = true;
+    pageEl.hidden = false;
+    pageEl.innerHTML = '<div data-page-body data-picture-page></div>';
+    const id = item.id;
+    picker = mountPicturePicker(pageEl.querySelector('[data-page-body]'), {
+      ...item.picture,
+      onPick: (ref) => {
+        const it = items.find((x) => x.id === id) || item;
+        let wrote = false;
+        try { wrote = !!it.commit?.(ref); } catch (err) { console.warn('settings: commit threw', err); }
+        closePage();
+        if (wrote) onSelect?.(it);
+        if (open) { render(); panel.focus?.(); }
+      },
+      onCancel: () => { closePage(); panel.focus?.(); },
+    });
+    panel.focus?.();
+    return item;
+  }
+
   // --- the four moves. Everything else in the file exists to serve these. ---
   // While a page is open the only control is Back, so moving does nothing rather than
-  // scrolling a cursor nobody can see.
+  // scrolling a cursor nobody can see - except the picture picker, which is driven by them.
   // A move while a box is open leaves the box first (see TEXT ROWS) - never a trap.
-  function next() { if (!open || page) return null; if (editing) editing = null; const it = nav.next(); paint(); return it; }
-  function prev() { if (!open || page) return null; if (editing) editing = null; const it = nav.prev(); paint(); return it; }
+  function next() {
+    if (open && picker) { picker.next(); return null; }
+    if (!open || page) return null; if (editing) editing = null; const it = nav.next(); paint(); return it;
+  }
+  function prev() {
+    if (open && picker) { picker.prev(); return null; }
+    if (!open || page) return null; if (editing) editing = null; const it = nav.prev(); paint(); return it;
+  }
 
   function activate(item) {
     if (!item || item.disabled) return null;
     if (item.page) { openPage(item.page); return item; }
+    if (item.picture) return openPicture(item);
     // A text row opens its box. `onSelect` is not told yet: nothing has been chosen until the
     // box commits (and then it is, from `endEdit`).
     if (item.edit) return openEditor(item);
@@ -502,6 +547,7 @@ export function mountSettings(root, {
 
   function select() {
     if (!open) return null;
+    if (picker) { picker.select(); return { id: 'picture' }; }
     if (page) { closePage(); return { id: 'page-back' }; }
     // Select while typing is "done": it saves, the same as Enter.
     if (editing) { const id = editing.id; saveEdit(); return { id, saved: true }; }
@@ -513,6 +559,7 @@ export function mountSettings(root, {
   // getting back to a place costs real presses. The same for a text box: back leaves the box.
   function back() {
     if (!open) return;
+    if (picker) { picker.back(); return; }
     if (page) { closePage(); return; }
     if (editing) { cancelEdit(); return; }
     close();
@@ -538,6 +585,7 @@ export function mountSettings(root, {
   }
 
   function closePage() {
+    if (picker) { const p = picker; picker = null; try { p.destroy(); } catch { /* already gone */ } }
     page = null;
     pageEl.hidden = true;
     pageEl.innerHTML = '';

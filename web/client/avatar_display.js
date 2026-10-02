@@ -36,7 +36,7 @@
 //      medical things"). `avatarMotion` is the one place that decides; its table is below.
 
 import { readAvatar, renderAvatar, AVATAR_KEY } from './avatar.js';
-import { createMediaSourcesClient, resolveItemUrl } from './media_sources.js';
+import { createMediaSourcesClient, resolveItemUrl, sourceById } from './media_sources.js';
 import { sanitizeSvg, svgMarkup, newSvgUid, looksLikeSvgPath, minAnimationMs, SVG_LIMITS } from './svg_sanitize.js';
 import { flashLimitFrom, normalizeFlashLimit, FLASH_LIMIT_DEFAULT } from './flash_limit.js';
 import { isChosen } from './starting_defaults.js';
@@ -332,7 +332,8 @@ export function createAvatarCache({ makePersonState = null, sourcesFor = null, u
       let got = null;
       try {
         const list = await listSources(pid);
-        const src = list.find((x) => x && x.id === ref.sourceId);
+        // `sourceById`: a picture added from this device has a source not in the registry list.
+        const src = sourceById(list, ref.sourceId);
         if (src) got = await resolveUrl(src, ref.path);
       } catch (err) { console.warn('avatar: could not resolve a picture', err); got = null; }
       // An .svg is read ONCE and made safe here, so every chip after this draws from the description,

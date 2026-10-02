@@ -12,20 +12,25 @@
 // has shipped the demo.
 //
 // ---------------------------------------------------------------------------------------
-// *** NOTHING IS UPLOADED, AND THERE IS NO CODE HERE THAT COULD BE. ***
+// *** NOTHING LEAVES THE DEVICE, AND THERE IS NO CODE HERE THAT COULD SEND IT. ***
 // ---------------------------------------------------------------------------------------
 //
-// Mike: *"Use the existing folder picker for images: there is no upload path in the client and
-// there must not be one."*
+// Mike, earlier: *"Use the existing folder picker for images: there is no upload path in the client
+// and there must not be one."* REVISITED BY MIKE 2026-10-02: *"There should be upload or a folder
+// picker."* What survives is the reason the first rule existed: the BYTES never leave the machine
+// they are on. "Add a picture from this device" keeps the file in this browser
+// (`device_pictures.js`), not on any server, and the picker's suite fails if adding one makes a
+// single network request.
 //
-// A picture is chosen from a folder the person has already connected — the same registry
-// `photos` uses — and what is saved is a REFERENCE, `{sourceId, path}`. The bytes never leave
-// the machine they are on. There is no `FormData` in this file, no POST of anything but the
-// board's own text, and the picker reads a listing the browser produced locally.
+// A picture is chosen in the SHARED picker (`picture_picker.js`) — the same one a button's and an
+// avatar's picture are chosen with — and what is saved is a REFERENCE, `{sourceId, path}`. There is
+// no `FormData` in this file, and no POST of anything but the board's own text.
 //
 // The saved reference is deliberately not the URL the picker displayed: a folder listing
 // revokes its own object URLs when anything lists that folder again, so a stored URL would go
-// blank without an error. The board resolves its own, per card, through `resolveItemUrl`.
+// blank without an error. The board resolves its own, per card, through `resolveItemUrl`. (This
+// editor's own picker used to list through `resolveListing`, which did exactly that revoking to a
+// photo panel showing the same folder; the shared picker gives each thumbnail a URL of its own.)
 //
 // ---------------------------------------------------------------------------------------
 // *** IT CLOSES ITSELF, AND THAT IS THE MOST IMPORTANT LINE IN THE FILE. ***
@@ -45,8 +50,7 @@
 // waiting the next time somebody opens the editor.
 
 import { normalizeBoard, gridOf, checkBoard } from './aac_vocab.js';
-import { resolveListing } from './media_sources.js';
-import { isFolderPickerSupported, pickFolder } from './folder_source.js';
+import { mountPicturePicker } from './picture_picker.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -96,8 +100,10 @@ export function mountBoardEditor(root, {
   // does not press Save.
   making = !board,
   sources = null,                       // a media-sources client; injectable for tests
-  resolve = resolveListing,
-  folders = null,                       // { isSupported, pick }; injectable for tests
+  // The shared picker's seams, passed straight through (see `picture_picker.js`): the listing,
+  // the thumbnail URLs, the folder picker, the device store, storage for the recent list.
+  picker: pickerOpts = {},
+  folders = null,                       // { isSupported, pick, request }; injectable for tests
   onSave = () => {},
   onCancel = () => {},
   onIdle = null,
@@ -105,13 +111,11 @@ export function mountBoardEditor(root, {
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
-  const fs = folders || { isSupported: isFolderPickerSupported, pick: pickFolder };
-
   // The board being edited is a COPY. Cancel has to mean cancel, and an editor holding a
   // reference to the live board would have already changed it by the time somebody pressed it.
   let draft = normalizeBoard(board || blankBoard());
   let picked = -1;                      // which slot is open for editing, -1 for none
-  let picking = null;                   // { sourceId, album, items } while choosing a picture
+  let picking = null;                   // { el, api } while the shared picker is open
   let note = '';                        // an inline message; never an alert, never a modal
   let idleId = null;
   let warnId = null;
@@ -210,58 +214,38 @@ export function mountBoardEditor(root, {
   // PICTURES
   // ---------------------------------------------------------------------------------------
 
-  async function openPicker() {
+  // THE SHARED PICKER (`picture_picker.js`), mounted into an element of its own that outlives this
+  // editor's redraws: `render()` rebuilds the form (the idle warning, a grid change), and the
+  // picker — with where somebody had got to in it — is put back into its slot each time rather than
+  // thrown away. It opens on the card's own picture when it has one.
+  function openPicker() {
     note = '';
-    picking = { sourceId: '', album: '', items: [], list: [], loading: true };
-    render();
-    try {
-      picking.list = (sources ? await sources.list() : []) || [];
-    } catch (err) {
-      console.warn('board editor: could not list media sources', err);
-      picking.list = [];
-    }
-    picking.loading = false;
-    // One source and nothing to choose between: go straight to the pictures. A picker whose
-    // first screen is a list of one is a step that exists only because the code has a step.
-    if (picking.list.length === 1) await chooseSource(picking.list[0].id);
-    else render();
-  }
-
-  async function chooseSource(id, album = '') {
-    const src = (picking.list || []).find((s) => s.id === id);
-    if (!src) return;
-    picking = { ...picking, sourceId: id, album, items: [], albums: [], loading: true };
-    render();
-    try {
-      const listing = await resolve(src, album);
-      picking.items = (listing.items || []).filter((it) => it.kind === 'image');
-      picking.albums = listing.albums || [];
-      picking.error = '';
-    } catch (err) {
-      // A folder whose permission lapsed is a different problem from an agent that is not
-      // answering, and `folderError` carries the code that says which. Saying the right one
-      // is the difference between one click and somebody checking their wifi.
-      picking.error = err && err.code === 'permission'
-        ? 'That folder needs permission again — open it from Media and allow access.'
-        : `Could not read that folder: ${err && err.message ? err.message : err}`;
-      picking.items = [];
-    }
-    picking.loading = false;
+    closePicker();
+    const el = document.createElement('div');
+    el.className = 'be-picker';
+    const cell = draft.cells[picked] || null;
+    const api = mountPicturePicker(el, {
+      ...pickerOpts,
+      sources: pickerOpts.sources || sources || { list: async () => [] },
+      ...(folders ? { folders } : {}),
+      value: cell && cell.image ? cell.image : null,
+      title: 'Choose a picture for this card',
+      // Columns of thumbnails at the board editor's own width: a caregiver's form, so a pointer
+      // and a keyboard, and the picker handles its own arrow keys here.
+      keys: true,
+      onPick: (ref) => {
+        if (ref) setCell(picked, { image: { sourceId: ref.sourceId, path: ref.path } });
+        closePicker(); render();
+      },
+      onCancel: () => { closePicker(); render(); },
+    });
+    picking = { el, api };
     render();
   }
-
-  async function connectFolder() {
-    try {
-      const src = await fs.pick('');
-      picking.list = [...(picking.list || []), src];
-      await chooseSource(src.id);
-    } catch (err) {
-      // Includes the person simply closing the browser's folder dialog, which is not an error
-      // and must not be reported as one.
-      if (err && err.name === 'AbortError') return;
-      note = 'No folder was connected.';
-      render();
-    }
+  function closePicker() {
+    const p = picking;
+    picking = null;
+    try { p?.api?.destroy(); } catch { /* gone */ }
   }
 
   // ---------------------------------------------------------------------------------------
@@ -312,45 +296,8 @@ export function mountBoardEditor(root, {
       </div>`;
   }
 
-  function pickerMarkup() {
-    if (picking.loading) return '<p class="be-hint">Reading…</p>';
-    if (picking.error) {
-      return `<p class="be-warn">${esc(picking.error)}</p>
-        <button type="button" class="be-btn" data-pic-back>Back</button>`;
-    }
-    if (!picking.sourceId) {
-      const rows = (picking.list || []).map((s) =>
-        `<button type="button" class="be-btn" data-src="${esc(s.id)}">${esc(s.label || s.id)}</button>`)
-        .join('');
-      return `
-        <div class="be-picker">
-          <p class="be-hint">${picking.list.length
-            ? 'Pictures come from a folder on this machine. Nothing is uploaded.'
-            : 'No folders are connected yet. Pictures stay on this machine — Nimrod only '
-              + 'remembers where they are.'}</p>
-          <div class="be-picgrid-btns">${rows}
-            ${fs.isSupported()
-              ? '<button type="button" class="be-btn be-primary" data-connect>Connect a folder…</button>'
-              : '<span class="be-hint">This browser cannot open a folder directly — that needs '
-                + 'Chrome or Edge. Connect a media agent from the Media page instead.</span>'}
-          </div>
-          <button type="button" class="be-btn" data-pic-back>Back</button>
-        </div>`;
-    }
-    const albums = (picking.albums || []).map((a) =>
-      `<button type="button" class="be-btn" data-album="${esc(a)}">${esc(a)}/</button>`).join('');
-    const pics = picking.items.map((it) =>
-      `<button type="button" class="be-pic" data-path="${esc(it.path)}" title="${esc(it.name)}">
-         <img src="${esc(it.url)}" alt="" loading="lazy"></button>`).join('');
-    return `
-      <div class="be-picker">
-        ${picking.album ? `<p class="be-hint">${esc(picking.album)}</p>` : ''}
-        <div class="be-picgrid-btns">${albums}</div>
-        <div class="be-picgrid">${pics
-          || '<span class="be-hint">No pictures in this folder.</span>'}</div>
-        <button type="button" class="be-btn" data-pic-back>Back</button>
-      </div>`;
-  }
+  // The slot the shared picker is put back into after every redraw (see `openPicker`).
+  const pickerMarkup = () => '<div data-picker-slot></div>';
 
   function render() {
     if (dead) return;
@@ -388,39 +335,24 @@ export function mountBoardEditor(root, {
                 + 'form. Whatever you have typed is kept.'
               : 'This stays open until you close it.'}</p>`}
       </div>`;
+    if (picking) root.querySelector('[data-picker-slot]')?.replaceWith(picking.el);
   }
 
   // ---------------------------------------------------------------------------------------
   // WIRING
   // ---------------------------------------------------------------------------------------
 
-  listen(root, 'click', async (e) => {
+  listen(root, 'click', (e) => {
     armIdle();
     const t = e.target;
+    // The shared picker handles its own presses; a click in it only counts as somebody being here.
+    if (t.closest('[data-picture-picker]')) return;
     const slot = t.closest('[data-slot]');
-    if (slot) { picked = Number(slot.dataset.slot); picking = null; note = ''; render(); return; }
+    if (slot) { picked = Number(slot.dataset.slot); closePicker(); note = ''; render(); return; }
     // `armIdle` at the top of this handler has already reset the clock and cleared the warning;
     // the button exists so somebody who is reading rather than pressing has something to press.
     if (t.closest('[data-stay]')) return;
-    if (t.closest('[data-pic]')) { await openPicker(); return; }
-    if (t.closest('[data-pic-back]')) {
-      // Back out of the source list rather than out of the picker entirely, when there is a
-      // level to go back to. One "Back" that always means "give up" is a picker somebody has
-      // to restart every time they open the wrong folder.
-      if (picking && picking.sourceId) picking = { ...picking, sourceId: '', items: [], error: '' };
-      else picking = null;
-      render(); return;
-    }
-    if (t.closest('[data-connect]')) { await connectFolder(); return; }
-    const src = t.closest('[data-src]');
-    if (src) { await chooseSource(src.dataset.src); return; }
-    const alb = t.closest('[data-album]');
-    if (alb) { await chooseSource(picking.sourceId, alb.dataset.album); return; }
-    const pic = t.closest('[data-path]');
-    if (pic) {
-      setCell(picked, { image: { sourceId: picking.sourceId, path: pic.dataset.path } });
-      picking = null; render(); return;
-    }
+    if (t.closest('[data-pic]')) { openPicker(); return; }
     if (t.closest('[data-pic-clear]')) { setCell(picked, { image: null }); render(); return; }
     if (t.closest('[data-clear-slot]')) { setCell(picked, { word: '' }); render(); return; }
     if (t.closest('[data-cancel]')) { disarmIdle(); onCancel(); return; }
@@ -467,7 +399,7 @@ export function mountBoardEditor(root, {
     __probe: () => ({
       name: draft.name, cols: gridOf(draft).cols, rows: gridOf(draft).rows,
       cells: draft.cells.filter(Boolean).length, picked, note,
-      picking: picking ? { sourceId: picking.sourceId, items: picking.items.length } : null,
+      picking: picking ? (({ cur, items }) => ({ sourceId: cur.sourceId, album: cur.album, items }))(picking.api.__probe()) : null,
       warning,
       slots: [...root.querySelectorAll('[data-slot]')].length,
     }),
@@ -475,6 +407,7 @@ export function mountBoardEditor(root, {
     destroy() {
       dead = true;
       disarmIdle();
+      closePicker();
       gone.abort();
       root.innerHTML = '';
     },

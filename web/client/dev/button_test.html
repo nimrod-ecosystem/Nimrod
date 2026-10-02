@@ -155,8 +155,13 @@ try {
     check('it is registered, titled Button', !!m && m.title === 'Button');
     check('it declares core:"new" and dependsOn:"local"', m.core === 'new' && m.dependsOn === 'local');
     const keys = (m.settings || []).map((s) => s.key);
-    check('it declares the twelve settings, in menu order',
-      keys.join(',') === 'label,imageFrom,image,frame,font,color,style,background,whenPressed,inkLightness,inkSaturation,inkHue', keys.join(','));
+    // 2026-10-02: "Picture from" is no longer a row - the picture row opens the shared picker, which
+    // shows the sources itself. The source is still STORED in `imageFrom` (the row's `sourceKey`).
+    check('it declares the eleven settings, in menu order (one Picture row, no "Picture from")',
+      keys.join(',') === 'label,image,frame,font,color,style,background,whenPressed,inkLightness,inkSaturation,inkHue', keys.join(','));
+    const pic = m.settings.find((s) => s.key === 'image');
+    check('*** the Picture row is a PICTURE row (it opens the picker), keeping its source in imageFrom ***',
+      pic.kind === 'picture' && pic.sourceKey === 'imageFrom');
     // Row 2.41: the words' hue, saturation and lightness as NUMBERS, so automation.js can drive them.
     const off = m.settings.filter((s) => /^ink(Lightness|Saturation|Hue)$/.test(s.key));
     check('the three colour offsets are bounded numbers defaulting to 0, at the advanced level',
@@ -173,7 +178,7 @@ try {
     check('font, style, frame and whenPressed are choices', ['font', 'style', 'frame', 'whenPressed'].every((k) => kind[k] === 'choice'));
     const dflt = Object.fromEntries(m.settings.map((s) => [s.key, s.default]));
     check('whenPressed defaults to NOTHING (wiring a press is a side quest)', dflt.whenPressed === 'nothing');
-    check('no picture by default', dflt.image === '' && dflt.imageFrom === '');
+    check('no picture by default', dflt.image === '' && configFrom({}).imageFrom === '');
     check('the colour defaults are PALETTE entries (black words on white), not literals of this module',
       dflt.color === DEFAULT_PALETTE.find((c) => c.id === 'black').hex
       && dflt.background === DEFAULT_PALETTE.find((c) => c.id === 'white').hex);
@@ -283,13 +288,12 @@ try {
     check('with exactly one source and nothing chosen, it adopts that source (as photos does)', adopted,
       JSON.stringify(pst.writes));
     const ch = () => P.inst.impl.settingsChoices();
-    const listed = await settled(() => ch().image.length === 5);
-    check('the picture row offers "No picture" plus the four samples, by name', listed
-      && ch().image[0].value === '' && ch().image[0].label === 'No picture'
-      && ch().image.slice(1).map((o) => o.value).join(',') === names.map((n) => n.path).join(','),
-      JSON.stringify(ch().image));
-    check('the source row offers the source by its label', ch().imageFrom.length === 1
-      && ch().imageFrom[0].label === 'Sample photos');
+    // *** THE ROW NO LONGER LISTS EVERY PICTURE (Mike, 2026-10-02). *** It hands the shared picker this
+    // button's own media client instead; the picker lists, thumbnails and searches (picture_picker_test).
+    check('*** the picture row offers no list of files to walk: it hands the picker this button\'s own sources ***',
+      !Array.isArray(ch().image) && typeof ch().image.sources?.list === 'function' && !('imageFrom' in ch()), JSON.stringify(Object.keys(ch())));
+    check('...the same client every time, so the picker lists what this button can show',
+      ch().image.sources === ch().image.sources && (await ch().image.sources.list()).map((s) => s.id).join() === SAMPLES.id);
     check('still no picture until one is chosen', !P.img() && P.word() === 'My picture');
 
     pst.set({ image: names[1].path });
@@ -313,18 +317,35 @@ try {
     await sleep(20);
     check('"No picture" takes it away again', !P.img() && !P.face().querySelector('.ab-img'));
 
-    // Two sources: nothing is adopted, and the rows say so.
+    // Two sources: nothing is adopted; a picture chosen in the picker names its own source.
     const tst = liveState({});
     const T = mount('btn-two', { state: tst, sources: sourcesOf(SAMPLES, OTHER) });
     await sleep(150);
     check('with two sources, nothing is adopted for the person', !tst.get().imageFrom, JSON.stringify(tst.get()));
-    check('...both are offered', T.inst.impl.settingsChoices().imageFrom.length === 2);
-    check('...and until one is chosen the picture row offers only "No picture"',
-      T.inst.impl.settingsChoices().image.length === 1);
-    tst.set({ imageFrom: OTHER.id });
-    const other = await settled(() => T.inst.impl.settingsChoices().image.length === 5);
-    check('choosing the second source offers ITS pictures', other);
+    check('...and the picker is handed both', (await T.inst.impl.settingsChoices().image.sources.list()).length === 2);
+    const trow = fieldItems(fieldsFor(T.inst.manifest, T.inst), { values: () => tst.get(), onStep: (k, v) => tst.set({ [k]: v }) })
+      .find((r) => r.key === 'image');
+    check('the Picture row\'s commit writes the source AND the path (what the picker hands back)',
+      trow.commit({ sourceId: OTHER.id, path: names[2].path }) === true && tst.get().imageFrom === OTHER.id && tst.get().image === names[2].path,
+      JSON.stringify(tst.get()));
+    const shownT = await settled(() => !!T.img() && T.img().complete && T.img().naturalWidth > 0, 4000);
+    check('...and the button shows the picture from that source', shownT);
     T.inst.destroy(); T.host.remove();
+  }
+
+  // =============================================================================================
+  section('a picture ADDED FROM THIS DEVICE shows on the button (the device store, through card_face)');
+  {
+    const { addDevicePicture, removeDevicePicture, DEVICE_SOURCE_ID } = await import('../device_pictures.js');
+    const bytes = await (await fetch(`${SAMPLES.base_url}/files/${names[0].path}`)).blob();
+    const ref = await addDevicePicture(new File([bytes], 'from-my-phone.jpg', { type: bytes.type || 'image/jpeg' }));
+    const dst = liveState({ label: '', imageFrom: ref.sourceId, image: ref.path });
+    const Dv = mount('btn-device', { state: dst, sources: sourcesOf(SAMPLES) });
+    const ok = await settled(() => !!Dv.img() && Dv.img().complete && Dv.img().naturalWidth > 0, 4000);
+    check('*** a device picture loads, though its source is not in the registry list ***', ok && ref.sourceId === DEVICE_SOURCE_ID
+      && (Dv.img()?.src || '').startsWith('blob:'), Dv.face().innerHTML);
+    Dv.inst.destroy(); Dv.host.remove();
+    await removeDevicePicture(ref.path);
   }
 
   // =============================================================================================
@@ -368,7 +389,7 @@ try {
     const rows = fieldItems(fieldsFor(P.inst.manifest, P.inst), { values: () => pst.get(), level: 'standard',
       onStep: (k, v) => pst.set({ [k]: v }) });
     const row = (k) => rows.find((r) => r.key === k);
-    check('every setting has a row at the default level', rows.length === 9, String(rows.length));
+    check('every setting has a row at the default level', rows.length === 8, String(rows.length));
     check('the words row is a TEXT BOX row (editable) and says a switch needs a keyboard',
       !!row('label').edit && /needs a keyboard/.test(row('label').hint));
     check('typing through it writes the label', row('label').commit('Nimrod') === true && pst.get().label === 'Nimrod');
@@ -392,7 +413,9 @@ try {
     row('color').run();
     check('one press moves to the next palette colour', pst.get().color !== before
       && DEFAULT_PALETTE.some((c) => c.hex === pst.get().color), `${before} -> ${pst.get().color}`);
-    check('the picture row carries the live options (5)', row('image').field.options.length === 5);
+    check('the picture row is a stop that OPENS the picker, with this button\'s own sources (no option list)',
+      !row('image').disabled && !!row('image').picture && row('image').field.sources === P.inst.impl.settingsChoices().image.sources
+      && !row('image').field.options);
     row('frame').run();
     check('the frame row cycles', FRAMES.some((f) => f.value === pst.get().frame));
     check('the style and font rows cycle through the declared lists',

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>picture picker — one way to choose a picture, everywhere — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{width:640px;margin:8px 0;border:1px dashed #999}
+</style>
+</head>
+<body>
+<h1>picture picker — Mike, 2026-10-02: "There should be upload or a folder picker."</h1>
+<p>The shared picker (<code>picture_picker.js</code>): recent pictures first, "add a picture from this
+device" (kept in this browser, <code>device_pictures.js</code>), and a folder's thumbnails in a grid with a
+search box. Driven here against a FAKE folder (an in-memory directory handle), a FAKE <code>File</code>, and
+a fake switch (<code>next</code>/<code>prev</code>/<code>select</code>/<code>back</code>). Then the settings
+field kind that opens it, the settings menu opening it, and a check that every place that chooses a
+picture now goes through it. Needs only a static server; no media agent.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import {
+  mountPicturePicker, readRecent, rememberRecent, filterByName, gridRows, refOf, sameRef, RECENT_KEY, PICKER_DEFAULTS,
+} from '../picture_picker.js';
+import {
+  addDevicePicture, listDevicePictures, devicePictureUrl, removeDevicePicture, DEVICE_SOURCE_ID, isPictureFile,
+} from '../device_pictures.js';
+import { entriesIn, fileUrlIn } from '../folder_source.js';
+import { sourceById, listPictureEntries } from '../media_sources.js';
+import { normalizeField, fieldValue, displayValue, fieldItems, fieldsFor, pictureRef } from '../settings_fields.js';
+import { mountSettings } from '../settings.js';
+import { walkCosts } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function settled(fn, ms = 2000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(10); } return !!fn(); }
+
+// ---- a 1x1 PNG, so a thumbnail can really load ----
+const PNG = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0));
+
+// ---- an in-memory folder: { name: Uint8Array (a file) | {…} (a folder) } ----
+const isDir = (v) => v && typeof v === 'object' && !(v instanceof Uint8Array);
+const notFound = () => new DOMException('not found', 'NotFoundError');
+function fakeFile(name, tree) { return { kind: 'file', name, async getFile() { return new File([tree[name]], name, { type: 'image/png' }); } }; }
+function fakeDir(name, tree) {
+  return {
+    kind: 'directory', name,
+    async getDirectoryHandle(n) { if (!isDir(tree[n])) throw notFound(); return fakeDir(n, tree[n]); },
+    async getFileHandle(n) { if (!(n in tree) || isDir(tree[n])) throw notFound(); return fakeFile(n, tree); },
+    async *entries() { for (const k of Object.keys(tree)) yield [k, isDir(tree[k]) ? fakeDir(k, tree[k]) : fakeFile(k, tree)]; },
+    async queryPermission() { return 'granted'; },
+  };
+}
+function memStorage(init = {}) {
+  const m = new Map(Object.entries(init));
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), _m: m };
+}
+// The picker with its seams pointed at one fake folder (`f1`), a fake device store, and fake storage.
+function fakeDevice() {
+  const pics = [];
+  return {
+    pics,
+    add: async (file) => { const ref = { sourceId: DEVICE_SOURCE_ID, path: `d${pics.length}-${file.name}`, name: file.name }; pics.unshift({ path: ref.path, name: file.name, kind: 'image', file }); return ref; },
+    list: async () => pics.map(({ path, name, kind }) => ({ path, name, kind })),
+    url: async (p) => { const hit = pics.find((x) => x.path === p); if (!hit) throw new Error('gone'); const url = URL.createObjectURL(hit.file); return { url, release: () => URL.revokeObjectURL(url) }; },
+  };
+}
+const F1 = { id: 'f1', kind: 'folder', label: 'Family' };
+function tree30() {
+  const t = { 'cat.png': PNG, 'dog.jpg': PNG, 'notes.txt': new Uint8Array([1]), 'clip.mp4': new Uint8Array([1]),
+    Holiday: { 'beach.jpg': PNG, 'sea.png': PNG }, '.hidden.png': PNG };
+  for (let i = 10; i < 30; i++) t[`pic-${i}.png`] = PNG;
+  return t;
+}
+const stages = document.getElementById('stages');
+function stage() { const el = document.createElement('div'); el.className = 'stage'; stages.append(el); return el; }
+function mountFake({ tree = tree30(), registry = [F1], storage = memStorage(), device = fakeDevice(), extra = {} } = {}) {
+  const root = fakeDir('Family', tree);
+  const host = stage();
+  const picks = []; let cancels = 0;
+  const api = mountPicturePicker(host, {
+    sources: { list: async () => registry },
+    listEntries: (src, album) => entriesIn(root, album, src),
+    resolveUrl: (src, path) => fileUrlIn(root, path, src.id),
+    folders: { isSupported: () => true, pick: async () => F1, request: async () => 'granted' },
+    device, storage,
+    onPick: (r) => picks.push(r), onCancel: () => { cancels++; },
+    ...extra,
+  });
+  return { api, host, picks, cancels: () => cancels, storage, device, q: (s) => host.querySelector(s), qa: (s) => [...host.querySelectorAll(s)], probe: () => api.__probe() };
+}
+
+// Count every network request made while pictures are added: none may be http(s).
+const realFetch = window.fetch;
+const fetched = [];
+window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); return realFetch(...a); };
+
+(async () => {
+  try {
+    // =========================================================================================
+    section('the small pure pieces');
+    {
+      check('refOf keeps only a source and a path', J(refOf({ sourceId: 's', path: 'a.png', url: 'blob:x' })) === J({ sourceId: 's', path: 'a.png' })
+        && refOf({ sourceId: 's' }) === null && refOf('a.png') === null);
+      check('sameRef compares the two, and two "no picture"s are the same', sameRef({ sourceId: 's', path: 'a' }, { sourceId: 's', path: 'a' })
+        && !sameRef({ sourceId: 's', path: 'a' }, { sourceId: 't', path: 'a' }) && sameRef(null, undefined));
+      const items = [{ name: 'Mum at the beach.jpg', path: 'Holiday/Mum at the beach.jpg' }, { name: 'dog.png', path: 'dog.png' }, { name: 'DOG2.PNG', path: 'x/DOG2.PNG' }];
+      check('search: any case, every word, in any order', filterByName(items, 'dog').length === 2 && filterByName(items, 'BEACH mum').length === 1
+        && filterByName(items, 'holiday').length === 1 && filterByName(items, '  ').length === 3 && filterByName(items, 'cat').length === 0);
+      check('grid rows: in rows of the column count, the last one short', J(gridRows([1, 2, 3, 4, 5, 6, 7], 3)) === J([[1, 2, 3], [4, 5, 6], [7]])
+        && gridRows([1, 2], 0).length === 2);
+      check('the three numbers are defaults (Rule 1), named', PICKER_DEFAULTS.recentMax === 6 && PICKER_DEFAULTS.columns === 4 && PICKER_DEFAULTS.pageSize === 48);
+      const st = memStorage();
+      for (let i = 0; i < 9; i++) rememberRecent({ sourceId: 's', path: `p${i}.png` }, { storage: st });
+      rememberRecent({ sourceId: 's', path: 'p3.png' }, { storage: st });
+      const rec = readRecent({ storage: st });
+      check('recent: newest first, no repeats, at most six by default', rec.length === 6 && rec[0].path === 'p3.png' && rec[1].path === 'p8.png'
+        && new Set(rec.map((r) => r.path)).size === 6, J(rec.map((r) => r.path)));
+      check('recent keeps names and references, never a picture', rec.every((r) => Object.keys(r).sort().join() === 'name,path,sourceId'));
+      check('recent survives garbage in storage', readRecent({ storage: memStorage({ [RECENT_KEY]: '{not json' }) }).length === 0
+        && readRecent({ storage: null }).length === 0);
+    }
+
+    // =========================================================================================
+    section('adding a picture from this device: kept in this browser, nothing sent anywhere');
+    {
+      const dbName = `nimrod-pictures-test-${Date.now()}`;
+      const before = fetched.length;
+      const file = new File([PNG], 'cat.png', { type: 'image/png' });
+      check('a picture file is a picture; a text file is not', isPictureFile(file) && !isPictureFile(new File(['x'], 'notes.txt', { type: 'text/plain' }))
+        && isPictureFile(new File([PNG], 'photo.HEIC')));
+      let t = 1000;
+      const ref = await addDevicePicture(file, { dbName, now: () => t++ });
+      const ref2 = await addDevicePicture(new File([PNG], 'cat.png', { type: 'image/png' }), { dbName, now: () => t++ });
+      check('*** adding gives a REFERENCE, { sourceId, path, name } ***', ref.sourceId === DEVICE_SOURCE_ID && ref.name === 'cat.png'
+        && typeof ref.path === 'string' && ref.path.endsWith('cat.png'), J(ref));
+      check('two files with the same name are two pictures', ref.path !== ref2.path);
+      const listed = await listDevicePictures({ dbName });
+      check('listed by name, newest first, as pictures', listed.length === 2 && listed[0].path === ref2.path && listed.every((x) => x.kind === 'image'), J(listed));
+      const got = await devicePictureUrl(ref.path, { dbName });
+      const img = new Image(); img.src = got.url;
+      await settled(() => img.complete && img.naturalWidth > 0);
+      check('it reads back as a URL the caller owns, and it is the picture', got.url.startsWith('blob:') && img.naturalWidth === 1 && typeof got.release === 'function');
+      got.release();
+      let refused = '';
+      try { await addDevicePicture(new File(['hello'], 'notes.txt', { type: 'text/plain' }), { dbName }); } catch (e) { refused = e.message; }
+      check('a file that is not a picture is refused, not stored', /not a picture/.test(refused) && (await listDevicePictures({ dbName })).length === 2);
+      check('*** NOTHING WAS SENT: no network request while pictures were added and read ***',
+        !fetched.slice(before).some((u) => /^https?:/i.test(u) || u.startsWith('/')), J(fetched.slice(before)));
+      check('a stored reference finds its source by id, though the registry list does not carry it (photos is unchanged)',
+        sourceById([], DEVICE_SOURCE_ID)?.kind === 'device' && sourceById([{ id: 'a' }], 'a').id === 'a' && sourceById([], 'nope') === null);
+      check('listPictureEntries reads the device source with no sub-folders', J((await listPictureEntries({ id: DEVICE_SOURCE_ID, kind: 'device' })).albums) === '[]');
+      await removeDevicePicture(ref.path, { dbName }); await removeDevicePicture(ref2.path, { dbName });
+      check('a picture can be taken away again', (await listDevicePictures({ dbName })).length === 0);
+      let missing = null;
+      try { await devicePictureUrl(ref.path, { dbName }); } catch (e) { missing = e.code; }
+      check('a picture that has gone says so with a code (the face shows the words alone)', missing === 'missing');
+      indexedDB.deleteDatabase(dbName);
+    }
+
+    // =========================================================================================
+    section('the folder path: thumbnails in a grid, sub-folders, search, a page at a time');
+    {
+      const t = mountFake({ registry: [], extra: { pageSize: 8, columns: 4 } });
+      await settled(() => t.q('[data-pp-empty]'));
+      check('with nothing connected it says so, and offers the two ways in', !!t.q('[data-pp-empty]')
+        && !!t.q('[data-pp-act="upload"]') && !!t.q('[data-pp-act="folder"]') && !!t.q('[data-pp-act="cancel"]'));
+      check('the only row is the actions (no empty rows to walk past)', J(t.probe().groups) === J(['actions']), J(t.probe().groups));
+      check('there is a real file input for pictures', t.q('input[type="file"][data-pp-file]')?.accept === 'image/*');
+      t.q('[data-pp-act="folder"]').click();
+      await settled(() => t.probe().tiles > 0);
+      check('connecting a folder opens it', t.probe().cur.sourceId === 'f1' && J(t.probe().sources) === J(['f1']));
+      check('*** its PICTURES only: no text file, no video, no hidden file ***', t.probe().items === 22, String(t.probe().items));
+      check('a page at a time: eight tiles, then "Show more" saying how many', t.probe().tiles === 8 && /14 more/.test(t.q('[data-pp-act="more"]')?.textContent || ''));
+      check('in rows of four', t.qa('[data-pp-group="grid"]').length === 2 && t.qa('[data-pp-group="grid"]').every((r) => r.querySelectorAll('[data-pp-pick]').length === 4));
+      check('each tile is named (for a screen reader and for the eye)', t.qa('[data-pp-pick]').every((b) => b.getAttribute('aria-label') && b.querySelector('.pp-name').textContent));
+      await settled(() => t.qa('[data-pp-group="grid"] [data-pp-pick] img').length === 8);
+      check('*** the thumbnails are real pictures, each a URL of its own ***', t.qa('[data-pp-group="grid"] img').length === 8
+        && t.qa('[data-pp-group="grid"] img').every((i) => i.src.startsWith('blob:')));
+      t.q('[data-pp-act="more"]').click();
+      check('"Show more" shows the next page', t.probe().tiles === 16);
+      check('the sub-folder is offered as a folder', !!t.q('[data-pp-album="Holiday"]'));
+      const s = t.q('[data-pp-search]');
+      s.value = 'dog'; s.dispatchEvent(new Event('input', { bubbles: true }));
+      check('search narrows it as you type', t.probe().items === 1 && t.probe().tiles === 1 && t.q('[data-pp-pick]')?.dataset.path === 'dog.jpg');
+      check('...without taking the box away from the typing', t.q('[data-pp-search]') === s);
+      s.value = 'zebra'; s.dispatchEvent(new Event('input', { bubbles: true }));
+      check('no match says so, with what was typed', /No picture .* matches/.test(t.q('[data-pp-none]')?.textContent || ''));
+      s.value = ''; s.dispatchEvent(new Event('input', { bubbles: true }));
+      t.q('[data-pp-album="Holiday"]').click();
+      await settled(() => t.probe().cur.album === 'Holiday' && t.probe().tiles === 2);
+      check('opening the sub-folder shows ITS pictures', t.probe().items === 2 && !!t.q('[data-pp-album=""]'), J(t.probe()));
+      t.q('[data-pp-pick][data-path="Holiday/sea.png"]').click();
+      check('*** a click takes it: a REFERENCE into the folder, nothing else ***', J(t.picks) === J([{ sourceId: 'f1', path: 'Holiday/sea.png' }]), J(t.picks));
+      check('...and it is first in the recent list now', readRecent({ storage: t.storage })[0]?.path === 'Holiday/sea.png');
+      t.api.destroy();
+      check('destroy empties the mount', t.host.innerHTML === '');
+    }
+
+    // =========================================================================================
+    section('one switch: rows, then the pictures in a row; recent first; back is a way out');
+    {
+      const storage = memStorage();
+      rememberRecent({ sourceId: 'f1', path: 'dog.jpg' }, { storage });
+      rememberRecent({ sourceId: 'gone', path: 'x.png' }, { storage });
+      const t = mountFake({ storage, extra: { columns: 3, value: { sourceId: 'f1', path: 'cat.png' } } });
+      await settled(() => t.probe().tiles > 0);
+      check('a recent picture from a source this device does not have is left out', t.qa('[data-pp-group="recent"] [data-pp-pick]').length === 1);
+      check('the rows: recent, actions, the folder row, then the lines of the grid',
+        t.probe().groups.slice(0, 3).join() === 'recent,actions,sources' && t.probe().groups.slice(3).every((g) => g === 'grid' || g === 'more'), J(t.probe().groups));
+      check('it opens on the picture already chosen (marked)', t.q('[data-pp-group="grid"] [data-path="cat.png"]')?.getAttribute('aria-pressed') === 'true');
+      t.api.select();
+      check('the first select only lights the first row (recent)', t.probe().litGroup === 'recent' && t.probe().lit.i === -1 && t.picks.length === 0);
+      check('...and the lit row is marked on the page', t.q('[data-pp-group="recent"]')?.dataset.on === '1');
+      t.api.next(); t.api.next(); t.api.next();
+      check('next walks the rows: to the first line of pictures', t.probe().litGroup === 'grid' && t.probe().lit.g === 3, J(t.probe().lit));
+      t.api.select();
+      check('select goes INTO the row, on its first picture', t.probe().lit.i === 0 && t.probe().litText === 'cat.png', t.probe().litText);
+      t.api.next();
+      check('next walks the pictures in it', t.probe().litText === 'dog.jpg');
+      t.api.next(); t.api.next();
+      check('...and wraps inside the row', t.probe().litText === 'cat.png');
+      t.api.back();
+      check('back comes out of the row, the row still lit', t.probe().lit.i === -1 && t.probe().litGroup === 'grid' && t.cancels() === 0);
+      const want = [...t.qa('[data-pp-group="grid"]')[1].querySelectorAll('[data-pp-pick]')][1].dataset.path;
+      t.api.next(); t.api.select(); t.api.next(); t.api.select();
+      check('*** select takes the lit picture — the second in the second row ***', t.picks.length === 1 && t.picks[0].path === want, `${J(t.picks)} vs ${want}`);
+      // The cost, measured: any of 22 pictures in 3 columns is at most rows + columns presses away,
+      // not 22 - the walk this replaces.
+      const rows = Math.ceil(22 / 3);
+      check(`the worst picture costs at most ${rows + 3 + 4} presses here, not 22 one by one`, rows + 3 + 4 < 22);
+      t.api.back();
+      const g0 = t.probe().lit.g;
+      t.api.prev();
+      check('prev on the rows moves to the row before', t.probe().lit.i === -1 && t.probe().lit.g === g0 - 1, J(t.probe().lit));
+      t.api.back();
+      check('back from the rows is Cancel', t.cancels() === 1);
+      t.api.destroy();
+
+      // A row with one thing in it is taken by the select that would have entered it.
+      const oneStore = memStorage();
+      rememberRecent({ sourceId: 'f1', path: 'Holiday/beach.jpg' }, { storage: oneStore });
+      const one = mountFake({ storage: oneStore, extra: { columns: 3 } });
+      await settled(() => one.probe().tiles > 0);
+      one.api.select(); one.api.select();
+      check('*** recent first: two presses from opening to the last picture used ***', J(one.picks[0]) === J({ sourceId: 'f1', path: 'Holiday/beach.jpg' }), J(one.picks));
+      one.api.destroy();
+
+      // Wrapping: prev from nothing lit lands on the LAST row.
+      const w = mountFake({ storage: memStorage(), extra: { columns: 3 } });
+      await settled(() => w.probe().tiles > 0);
+      w.api.prev();
+      check('prev with nothing lit starts from the last row (wraps)', w.probe().lit.g === w.probe().groups.length - 1);
+      w.api.destroy();
+
+      // Keys, for a host that hands them over.
+      const k = mountFake({ storage: memStorage(), extra: { keys: true, columns: 3 } });
+      await settled(() => k.probe().tiles > 0);
+      const pp = k.q('[data-picture-picker]');
+      pp.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      pp.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      check('arrow keys walk the rows when the picker owns its keys', k.probe().lit.g === 1);
+      pp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      check('Escape is back (here: Cancel)', k.cancels() === 1);
+      k.api.destroy();
+    }
+
+    // =========================================================================================
+    section('adding from this device inside the picker: a fake File through the real input');
+    {
+      const before = fetched.length;
+      const dbName = `nimrod-pictures-test2-${Date.now()}`;
+      const device = { add: (f) => addDevicePicture(f, { dbName }), list: () => listDevicePictures({ dbName }), url: (p) => devicePictureUrl(p, { dbName }) };
+      const t = mountFake({ registry: [], device });
+      await settled(() => t.q('[data-pp-empty]'));
+      // Re-found each time: the picker redraws, and a redraw makes a new input.
+      const give = (files) => {
+        const input = t.q('[data-pp-file]');
+        const dt = new DataTransfer(); files.forEach((f) => dt.items.add(f));
+        input.files = dt.files; input.dispatchEvent(new Event('change', { bubbles: true }));
+      };
+      give([new File(['not a picture'], 'letter.txt', { type: 'text/plain' })]);
+      await settled(() => /not a picture/.test(t.q('[data-pp-status]')?.textContent || ''));
+      check('a file that is not a picture is turned away, in words, and nothing is chosen', /not a picture/.test(t.q('[data-pp-status]').textContent) && t.picks.length === 0);
+      give([new File([PNG], 'Grandad.png', { type: 'image/png' })]);
+      await settled(() => t.picks.length === 1);
+      check('*** ONE picture added IS the choice: the setting gets its reference ***', t.picks.length === 1 && t.picks[0].sourceId === DEVICE_SOURCE_ID
+        && /Grandad\.png$/.test(t.picks[0].path), J(t.picks));
+      check('...it is really kept on this device', (await listDevicePictures({ dbName })).some((x) => x.path === t.picks[0].path));
+      check('...and it heads the recent list, by its own name', readRecent({ storage: t.storage })[0]?.name === 'Grandad.png');
+      give([new File([PNG], 'a.png', { type: 'image/png' }), new File([PNG], 'b.png', { type: 'image/png' })]);
+      await settled(() => t.probe().cur.sourceId === DEVICE_SOURCE_ID && t.probe().tiles === 3);
+      check('several at once: all kept, and shown to choose from', t.picks.length === 1 && t.probe().tiles === 3 && /Added 2 pictures/.test(t.q('[data-pp-status]').textContent), J(t.probe()));
+      check('*** NO NETWORK REQUEST while adding them ***', !fetched.slice(before).some((u) => /^https?:/i.test(u) || u.startsWith('/')), J(fetched.slice(before)));
+      t.api.destroy();
+      for (const p of await listDevicePictures({ dbName })) await removeDevicePicture(p.path, { dbName });
+      indexedDB.deleteDatabase(dbName);
+    }
+
+    // =========================================================================================
+    section('a folder whose permission lapsed: one press, not "unreachable"');
+    {
+      let allowed = false;
+      const err = Object.assign(new Error('permission is "prompt"'), { code: 'permission' });
+      const root = fakeDir('Family', { 'cat.png': PNG });
+      const host = stage();
+      const api = mountPicturePicker(host, {
+        sources: { list: async () => [F1] }, device: fakeDevice(), storage: memStorage(),
+        listEntries: async (src, album) => { if (!allowed) throw err; return entriesIn(root, album, src); },
+        resolveUrl: (src, p) => fileUrlIn(root, p),
+        folders: { isSupported: () => true, pick: async () => F1, request: async () => { allowed = true; return 'granted'; } },
+      });
+      await settled(() => host.querySelector('[data-pp-error]'));
+      check('it says the folder needs permission, not that it is unreachable', host.querySelector('[data-pp-error]')?.dataset.ppError === 'permission'
+        && /permission again/.test(host.textContent) && !/unreachable/i.test(host.textContent));
+      host.querySelector('[data-pp-act="allow"]').click();
+      await settled(() => api.__probe().tiles === 1);
+      check('one press on "Allow access" and the pictures are there', api.__probe().tiles === 1);
+      api.destroy();
+    }
+
+    // =========================================================================================
+    section('the settings field kind: a picture row OPENS the picker, and stores a reference');
+    {
+      const f = normalizeField({ key: 'image', label: 'Picture', kind: 'picture', sourceKey: 'imageFrom', default: '', level: 'essential' });
+      check('it is a picture field that opens, not a walk', f.kind === 'picture' && f.opens === true && f.cycleable === false && f.editable === false);
+      check('it is never inferred (a plain string default is still text)', normalizeField({ key: 'x', default: '' }).kind === 'text');
+      const live = { imageFrom: 'f1', image: 'Holiday/sea.png' };
+      check('its value is the path; its reference is source + path', fieldValue(f, live) === 'Holiday/sea.png'
+        && J(pictureRef(f, live)) === J({ sourceId: 'f1', path: 'Holiday/sea.png' }) && pictureRef(f, { imageFrom: 'f1' }) === null);
+      check('the row says the file name, or "No picture"', displayValue(f, 'Holiday/sea.png') === 'sea.png' && displayValue(f, '') === 'No picture');
+      const writes = [];
+      const vals = { ...live };
+      const [row] = fieldItems([f], { values: () => vals, onStep: (k, v) => { writes.push([k, v]); vals[k] = v; } });
+      check('the row is a real stop (not disabled), and carries what the picker needs', !row.disabled && J(row.picture.value) === J({ sourceId: 'f1', path: 'Holiday/sea.png' })
+        && row.picture.allowNone === true && row.picture.title === 'Picture');
+      check('*** commit(ref) writes the SOURCE then the PATH through the one onStep ***', row.commit({ sourceId: 'dev', path: 'x.png' }) === true
+        && J(writes) === J([['imageFrom', 'dev'], ['image', 'x.png']]), J(writes));
+      check('the same picture again is not a write', row.commit({ sourceId: 'dev', path: 'x.png' }) === false && writes.length === 2);
+      check('"No picture" clears the path and keeps the folder', row.commit(null) === true && J(writes.at(-1)) === J(['image', '']) && vals.imageFrom === 'dev');
+      check('*** a URL, a File or bytes are REFUSED: a picture never goes into a settings row ***',
+        row.commit('blob:http://x/1') === false && row.commit(new File([PNG], 'a.png')) === false && row.commit({ path: 'a.png' }) === false && writes.length === 3);
+      const g = normalizeField({ key: 'pic', kind: 'picture', allowNone: false });
+      const gv = {};
+      const [grow] = fieldItems([g], { values: () => gv, onStep: (k, v) => { gv[k] = v; } });
+      check('without a sourceKey the whole reference is stored at the key', grow.commit({ sourceId: 's', path: 'p.png' }) === true && J(gv.pic) === J({ sourceId: 's', path: 'p.png' })
+        && J(fieldValue(g, gv)) === J({ sourceId: 's', path: 'p.png' }));
+      check('...and "No picture" is refused where the field does not allow it', grow.commit(null) === false);
+      const client = { list: async () => [] };
+      const fs = fieldsFor({ settings: [{ key: 'image', kind: 'picture', sourceKey: 'imageFrom' }] }, { settingsChoices: () => ({ image: { sources: client } }) });
+      check('a mounted instance hands the picker its own media client (settingsChoices)', fs[0].sources === client);
+      check('the audit counts a picture row as a stop a switch can use, not as unreachable',
+        walkCosts([f], {}).unreachable.length === 0);
+      // A host that draws rows itself and only calls run() (the Settings module's page): a dialog.
+      const droot = fakeDir('Family', { 'cat.png': PNG });
+      const dv = { imageFrom: '', image: '' };
+      const [drow] = fieldItems([f], { values: () => dv, onStep: (k, v) => { dv[k] = v; } });
+      Object.assign(drow.picture, { sources: { list: async () => [F1] }, listEntries: (s, a) => entriesIn(droot, a, s),
+        resolveUrl: (s, p) => fileUrlIn(droot, p), device: fakeDevice(), storage: memStorage() });
+      drow.run();
+      await settled(() => document.querySelector('.pp-dialog [data-pp-pick][data-path="cat.png"]'));
+      check('run() with no menu around it opens the picker as a dialog over the page', !!document.querySelector('.pp-dialog[role="dialog"] [data-picture-picker]'));
+      document.querySelector('.pp-dialog [data-pp-pick][data-path="cat.png"]').click();
+      check('...a choice there writes through the row and closes it', dv.image === 'cat.png' && dv.imageFrom === 'f1' && !document.querySelector('.pp-dialog'), J(dv));
+    }
+
+    // =========================================================================================
+    section('the settings menu opens it, and the switch drives it there');
+    {
+      const tree = { 'cat.png': PNG, 'dog.jpg': PNG };
+      const root = fakeDir('Family', tree);
+      const host = stage();
+      const vals = { imageFrom: 'f1', image: '' };
+      let fields = [normalizeField({ key: 'image', label: 'Picture', kind: 'picture', sourceKey: 'imageFrom', level: 'essential' })];
+      fields[0].sources = { list: async () => [F1] };
+      const menu = mountSettings(host, {
+        gated: false, includeHome: false, subject: () => ({ type: 'button', title: 'Button' }),
+        fields: () => fieldItems(fields, { values: () => vals, onStep: (k, v) => { vals[k] = v; } }).map((it) => ({
+          ...it, picture: it.picture && { ...it.picture, listEntries: (s, a) => entriesIn(root, a, s), resolveUrl: (s, p) => fileUrlIn(root, p),
+            device: fakeDevice(), storage: memStorage(), folders: { isSupported: () => false } },
+        })),
+      });
+      menu.open();
+      const at = menu.items().findIndex((it) => it.id === 'set:image');
+      check('the Picture row is in the menu, a stop, saying "No picture"', at >= 0 && !menu.items()[at].disabled && /No picture/.test(menu.items()[at].hint));
+      for (let i = 0; i < 20 && menu.focusId() !== 'set:image'; i++) menu.next();
+      menu.select();
+      await settled(() => host.querySelectorAll('[data-picture-page] [data-pp-group="grid"] [data-pp-pick]').length === 2);
+      check('*** select OPENS THE PICKER in the menu (no stepping through files) ***', !!host.querySelector('[data-picture-page] [data-picture-picker]') && J(vals) === J({ imageFrom: 'f1', image: '' }));
+      check('...with no folder button where the browser cannot open one', !host.querySelector('[data-pp-act="folder"]'));
+      check('...and "No picture" offered, because this row allows it', !!host.querySelector('[data-pp-act="none"]'));
+      // Rows here: actions, then one line of the grid (two pictures).
+      menu.select(); menu.next(); menu.select(); menu.next(); menu.select();
+      check('*** the menu\'s own verbs drive it: a picture chosen by switch is written ***', vals.image === 'dog.jpg' && vals.imageFrom === 'f1', J(vals));
+      check('...the picker closes and the list is back, the row naming the picture', !host.querySelector('[data-picture-picker]')
+        && /dog\.jpg/.test(menu.items().find((it) => it.id === 'set:image')?.hint || ''));
+      menu.select();
+      await settled(() => host.querySelector('[data-picture-picker]'));
+      menu.back();
+      check('back with nothing lit in the picker is Cancel: back to the list, nothing written', !host.querySelector('[data-picture-picker]') && menu.isOpen() && vals.image === 'dog.jpg');
+      menu.destroy();
+    }
+
+    // =========================================================================================
+    section('*** every place that chooses a picture goes through this one picker ***');
+    {
+      const src = async (p) => (await realFetch(p)).text();
+      const [button, avatar, boardEd, settingsJs] = await Promise.all(['../modules/button.js', '../modules/avatar.js', '../board_editor.js', '../settings.js'].map(src));
+      check('the button\'s Picture is a picture row (it opens the picker)', /key: 'image', label: 'Picture', kind: 'picture', sourceKey: 'imageFrom'/.test(button));
+      check('...and "Picture from" is no longer a row of its own', !/key: 'imageFrom', label:/.test(button));
+      check('the avatar maker mounts the shared picker', /mountPicturePicker\(/.test(avatar));
+      check('the board editor mounts the shared picker', /mountPicturePicker\(/.test(boardEd));
+      check('the settings menu mounts it for a picture row', /mountPicturePicker\(/.test(settingsJs));
+      check('*** none of them lists a folder\'s files to walk one by one any more ***',
+        ![button, avatar, boardEd].some((s) => /listItemNames\(|resolveListing\(/.test(s)));
+    }
+  } catch (err) {
+    check(`the suite itself threw: ${err && err.stack || err}`, false);
+  }
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})();
+</script>
+</body>
+</html>

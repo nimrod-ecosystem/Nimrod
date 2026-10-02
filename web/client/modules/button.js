@@ -14,8 +14,12 @@
 //
 // EVERY SETTING GOES THROUGH THE UNIVERSAL MENU, declared below as data:
 //   label        the words (a sign's words; a picture's caption and its accessible name)
-//   imageFrom    which of the person's Media sources the picture comes from (live choice)
-//   image        which picture in that source (live choice; "No picture" by default)
+//   image        the picture: ONE row that opens the shared picture picker (`picture_picker.js`,
+//                2026-10-02) - recent pictures, "add one from this device", or a folder's
+//                thumbnails. Stored as two keys, as always: the path here, the source in `imageFrom`.
+//                (Until 2026-10-02 these were two `choice` rows, "Picture from" and "Picture", and
+//                choosing meant walking every file in the folder by name. Mike: "isn't a good way
+//                to do it. There should be upload or a folder picker.")
 //   frame        none, or one of Claude Design's seven frames (the picture sits in its window)
 //   font         a short list of fonts every device already has — nothing is downloaded
 //   style        plain, or one of Design's six signs (the words sit on it)
@@ -47,7 +51,7 @@
 
 import { registerModule } from '../module.js';
 import { cardFaceHTML, createCardImages } from '../card_face.js';
-import { createMediaSourcesClient, listItemNames } from '../media_sources.js';
+import { createMediaSourcesClient } from '../media_sources.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { DEFAULT_PALETTE, normalizeHex, contrast } from '../color_picker.js';
 import { speak as speakDefault } from '../voice.js';
@@ -317,13 +321,13 @@ export function inkOrder(style, background) {
 export const SETTINGS = [
   { key: 'label', label: 'Words', kind: 'text', default: DEFAULTS.label, level: 'essential',
     placeholder: 'No words yet' },
-  // LIVE: the person's Media sources (`settingsChoices` below). With exactly one, it is adopted
-  // on mount — the same thing `photos` does — so nobody has to choose between one thing.
-  { key: 'imageFrom', label: 'Picture from', kind: 'choice', default: '', level: 'essential',
-    emptyLabel: 'No source chosen' },
-  // LIVE: the pictures in that source, by name, one press each. See `IMAGE CHOICES` below.
-  { key: 'image', label: 'Picture', kind: 'choice', default: '', level: 'essential',
-    options: [{ value: '', label: 'No picture' }] },
+  // ONE ROW FOR THE PICTURE: `select` opens the shared picker (settings_fields.js, kind
+  // `picture`). The path is stored here and the source id in `imageFrom` - the same two keys as
+  // before, so every saved picture still shows. "Picture from" is no longer a row of its own: the
+  // picker shows the sources itself, and a second row choosing the same thing was a second way in.
+  // With exactly one source and none chosen, it is still adopted on mount (as `photos` does).
+  { key: 'image', label: 'Picture', kind: 'picture', sourceKey: 'imageFrom', default: '',
+    level: 'essential', emptyLabel: 'No picture' },
   { key: 'frame', label: 'Frame', kind: 'choice', default: DEFAULTS.frame, aliases: LEGACY_FRAMES,
     level: 'essential', options: FRAMES.map(({ value, label }) => ({ value, label })) },
   { key: 'font', label: 'Font', kind: 'choice', default: DEFAULTS.font, level: 'essential',
@@ -361,6 +365,8 @@ const FIELDS = Object.fromEntries(SETTINGS.map(normalizeField).filter(Boolean).m
 export function configFrom(row = {}) {
   const cfg = {};
   for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, row || {});
+  // The picture's source has no row of its own (the picker chooses it); it is read here.
+  cfg.imageFrom = row?.imageFrom == null ? DEFAULTS.imageFrom : String(row.imageFrom);
   if (!FONTS.some((x) => x.value === cfg.font)) cfg.font = DEFAULTS.font;
   if (!STYLES.some((x) => x.value === cfg.style)) cfg.style = DEFAULTS.style;
   if (!FRAMES.some((x) => x.value === cfg.frame)) cfg.frame = DEFAULTS.frame;
@@ -407,15 +413,12 @@ registerModule(
     const images = createCardImages({ sources: { list: () => sourcesClient().list() },
                                       alive: () => !torn });
     let knownSources = [];
-    const namesBySource = new Map();  // sourceId -> [{path,name,kind}] (images only)
 
     // ------------------------------------------------------------------------------------
-    // IMAGE CHOICES. The menu paints SYNCHRONOUSLY (settings_fields.js `fieldsFor`), so the
-    // options come from lists this instance already fetched. Every source's top level is listed
-    // BY NAME ONLY at mount (`listItemNames` — no files read, and for a folder no object URLs, so
-    // a photo panel showing the same folder is never blanked by this). A source with hundreds of
-    // pictures is hundreds of presses to walk with one switch; that cost is real and is said in
-    // the catalog note — a small folder of the pictures you want is the quick way.
+    // THE PICTURE. Chosen in the shared picker (`picture_picker.js`), opened from the menu's
+    // Picture row; this instance hands it its own media client (`settingsChoices`), so the picker
+    // lists exactly what this button can show. Nothing here lists a folder's files any more: the
+    // picker reads names and thumbnails itself, a page at a time, and releases them when it closes.
     // ------------------------------------------------------------------------------------
     const effectiveSource = () => cfg.imageFrom
       || (knownSources.length === 1 ? knownSources[0].id : '');
@@ -435,21 +438,7 @@ registerModule(
       if (knownSources.length === 1 && !row.imageFrom) {
         try { state?.set?.({ imageFrom: knownSources[0].id }); } catch { /* a dead platform */ }
       }
-      await Promise.all(knownSources.map((s) => listNames(s)));
       if (!torn) paint();
-    }
-
-    async function listNames(source) {
-      if (!source || namesBySource.has(source.id)) return;
-      try {
-        const names = await listItemNames(source, '');
-        namesBySource.set(source.id, (names || []).filter((n) => n.kind === 'image'));
-      } catch (err) {
-        // A folder whose permission lapsed lists nothing; the row says "No picture" and the
-        // words still show. The picture itself will say nothing either — silence on the face.
-        console.warn('button: could not list pictures', err);
-        namesBySource.set(source.id, []);
-      }
     }
 
     // ------------------------------------------------------------------------------------
@@ -625,9 +614,6 @@ registerModule(
         faceEl.style.setProperty('--nb-bg', cfg.background);
         return;
       }
-      const src = effectiveSource();
-      const known = knownSources.find((s) => s.id === src);
-      if (known && !namesBySource.has(src)) listNames(known).then(() => { if (!torn) paint(); });
       paint();
     }
 
@@ -679,12 +665,11 @@ registerModule(
         faceEl = null;
       },
 
-      // LIVE OPTIONS for the menu: the sources, the pictures in the one in use, and the words'
-      // colours in the walk order for THIS look (`inkOrder`: what reads first, what vanishes last).
+      // LIVE for the menu: this button's own media client for the picture picker (so it lists what
+      // this button can show), and the words' colours in the walk order for THIS look (`inkOrder`:
+      // what reads first, what vanishes last).
       settingsChoices: () => ({
-        imageFrom: knownSources.map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
-        image: [{ value: '', label: 'No picture' },
-          ...(namesBySource.get(effectiveSource()) || []).map((n) => ({ value: n.path, label: n.name }))],
+        image: { sources: sourcesClient() },
         color: inkOrder(cfg.style, cfg.background),
       }),
     };

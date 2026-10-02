@@ -24,7 +24,7 @@
 // spans (`ab-img`, `ab-sym`, `ab-word`) are kept so the board's stylesheet is untouched; a module
 // that reuses the face styles them under its own root.
 
-import { createMediaSourcesClient, resolveItemUrl } from './media_sources.js';
+import { createMediaSourcesClient, resolveItemUrl, sourceById } from './media_sources.js';
 
 export function escapeHtml(s) {
   return String(s == null ? '' : s)
@@ -71,7 +71,9 @@ export function createCardImages({ sources = null, user = null, personId = null,
         sourcesP = client.list();
       }
       const list = (await sourcesP) || [];
-      const src = list.find((x) => x.id === ref.sourceId);
+      // `sourceById`, not a bare find: a picture added from this device (`device_pictures.js`)
+      // has a source that is deliberately not in the registry's list.
+      const src = sourceById(list, ref.sourceId);
       if (!src) return false;                 // the folder is not connected on this device
       const got = await resolveItemUrl(src, ref.path);
       if (!got || !alive() || !cardEl.isConnected) { got?.release?.(); return false; }

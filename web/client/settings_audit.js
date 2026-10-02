@@ -115,7 +115,9 @@ export function walkCosts(fields = [], { level = 'standard', usage = null } = {}
   // A STOP IS ANYTHING THE CURSOR LANDS ON, and since 2026-09-28 that includes an EDITABLE text
   // row (the menu opens a text box on it). It costs a press to pass even though a switch cannot
   // use it, so it counts toward everything after it - but it has no lap, so it gets no row.
-  const stops = shown.filter((f) => f.cycleable || f.editable);
+  // A PICTURE row (2026-10-02) is a stop too: `select` opens the picture picker, which a switch
+  // scans by rows. It has no lap here - its cost is in the picker, not in the menu.
+  const stops = shown.filter((f) => f.cycleable || f.editable || f.opens);
   const rows = [];
   stops.forEach((f, i) => {
     if (!f.cycleable) return;
@@ -138,7 +140,7 @@ export function walkCosts(fields = [], { level = 'standard', usage = null } = {}
       costPerUse: uses == null ? null : (uses === 0 ? null : (i + walk) / uses),
     });
   });
-  const unreachable = shown.filter((f) => !f.cycleable).map((f) => ({ key: f.key, why: f.why }));
+  const unreachable = shown.filter((f) => !f.cycleable && !f.opens).map((f) => ({ key: f.key, why: f.why }));
   return {
     level,
     rows,
