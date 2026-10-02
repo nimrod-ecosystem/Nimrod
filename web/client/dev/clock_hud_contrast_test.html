@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>corner clock contrast - readable over anything, in every theme - test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  /* The page's own report text, kept off the kiosk rules above. */
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* The kiosk root is `position:fixed;inset:0` — parked off screen so the report stays readable. */
+  #rig .kiosk{left:-9999px;width:800px;height:500px}
+</style>
+</head>
+<body>
+<h1>corner clock contrast</h1>
+
+<p>The Stage 4 bench soak (2026-10-01) found the corner clock nearly unreadable on High Contrast:
+its pale text on a 14%-white backing, sitting over the photos panel's white letterbox. A HUD floats
+over whatever is under its corner, so its own backing has to carry the contrast. This mounts the
+REAL clock module inside the kiosk's clock HUD, with the real stylesheets, applies each theme, reads
+the computed colours, composites the backing over pure white and over pure black (the two extremes
+any panel content lies between), and requires every text in the HUD to reach 4.5:1 on both.</p>
+
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="rig"><div class="kiosk" data-clock-corner="bl"><div class="k-clock"><div class="k-mod" id="host"></div></div></div></div>
+
+<script type="module">
+import { mountModule } from '../module.js';
+import '../modules/clock.js';
+import { createBus } from '../bus.js';
+import { THEMES, applyTheme, contrast } from '../theme.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+function note(t) { const d = document.createElement('div'); d.textContent = t; out.append(d); }
+
+// Computed colours come back as `rgb(r, g, b)`, `rgba(r, g, b, a)`, or — for color-mix() —
+// `color(srgb r g b / a)` with 0..1 channels. All three, to [r, g, b, a] in 0..255 / 0..1.
+function parseColor(s) {
+  let m = /^rgba?\(([^)]+)\)$/.exec(s);
+  if (m) {
+    const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number);
+    return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1];
+  }
+  m = /^color\(srgb\s+([^)]+)\)$/.exec(s);
+  if (m) {
+    const p = m[1].split(/[\s/]+/).filter(Boolean).map(Number);
+    return [p[0] * 255, p[1] * 255, p[2] * 255, p.length > 3 ? p[3] : 1];
+  }
+  throw new Error(`unparsed colour: ${s}`);
+}
+const hex = ([r, g, b]) => '#' + [r, g, b].map((c) => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0')).join('');
+// Source-over: a translucent layer on an opaque one.
+const over = ([r, g, b, a], [R, G, B]) => [r * a + R * (1 - a), g * a + G * (1 - a), b * a + B * (1 - a)];
+const WHITE = [255, 255, 255], BLACK = [0, 0, 0];
+
+function fakeState(initial = {}) {
+  let s = { ...initial }; const subs = [];
+  return { get: () => s, set: (p) => { s = { ...s, ...p }; subs.forEach((f) => f(s)); },
+           subscribe: (f) => { subs.push(f); f(s); return () => {}; }, flush: () => {}, load: async () => {} };
+}
+const events = { append: async () => {}, load: async () => {}, flush: async () => {},
+  get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {} };
+
+const host = document.getElementById('host');
+const hud = host.parentElement;
+const inst = mountModule('clock', { mount: host, bus: createBus(), state: fakeState({}), events });
+inst.init();
+
+// Every text the HUD can show: the clock's time and date, and a countdown's three lines.
+const TEXTS = [['time', '.time'], ['date', '.date'], ['countdown label', '.cd-label'],
+  ['countdown value', '.cd-value'], ['countdown status', '.cd-status']];
+// The five shipped themes are the requirement; the live themes are measured too, and held to it.
+const FIVE = ['default', 'dusk', 'contrast', 'warm', 'forge'];
+
+section('the meter can see the old failure');
+{
+  // The backing and text this replaced, on white: must read as a failure, or the meter is blind.
+  const oldBg = [255, 255, 255, 0.14], oldText = [238, 244, 240];
+  const r = contrast(hex(oldText), hex(over(oldBg, WHITE)));
+  check('the old HUD (pale text on 14% white) measures under 4.5 over white', r < 4.5, r.toFixed(2));
+}
+
+const rows = [];
+for (const id of Object.keys(THEMES)) {
+  applyTheme(document.documentElement, id);
+  section(`${id}${FIVE.includes(id) ? '' : ' (live theme)'}`);
+  const bg = parseColor(getComputedStyle(hud).backgroundColor);
+  check(`${id}: the HUD has a backing of its own`, bg[3] >= 0.5, `alpha ${bg[3]}`);
+  const onWhite = hex(over(bg, WHITE)), onBlack = hex(over(bg, BLACK));
+  let worst = Infinity;
+  for (const [label, sel] of TEXTS) {
+    const el = host.querySelector(sel);
+    if (!el) { check(`${id}: ${label} exists`, false); continue; }
+    const fg = parseColor(getComputedStyle(el).color);
+    check(`${id}: ${label} text is opaque`, fg[3] === 1, `alpha ${fg[3]}`);
+    const w = contrast(hex(fg), onWhite), b = contrast(hex(fg), onBlack);
+    worst = Math.min(worst, w, b);
+    check(`${id}: ${label} >= 4.5:1 over white`, w >= 4.5, w.toFixed(2));
+    check(`${id}: ${label} >= 4.5:1 over black`, b >= 4.5, b.toFixed(2));
+  }
+  const t = parseColor(getComputedStyle(host.querySelector('.time')).color);
+  rows.push(`${id.padEnd(10)} time ${contrast(hex(t), onWhite).toFixed(2)} on white, ${contrast(hex(t), onBlack).toFixed(2)} on black; worst text ${worst.toFixed(2)}`);
+}
+section('table');
+rows.forEach(note);
+
+inst.destroy();
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

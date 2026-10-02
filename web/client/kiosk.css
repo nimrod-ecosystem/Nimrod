@@ -186,18 +186,29 @@
   .kiosk[data-mirror-corner="tl"] .k-mirror{top:2.5vmin;left:2.5vmin}
   .kiosk[data-mirror-corner="br"] .k-mirror{bottom:2.5vmin;right:2.5vmin}
   .kiosk[data-mirror-corner="bl"] .k-mirror{bottom:2.5vmin;left:2.5vmin}
-  /* translucent clock HUD — corner is a per-profile setting (default bottom-left) */
+  /* translucent clock HUD — corner is a per-profile setting (default bottom-left)
+     *** ITS OWN BACKING, DARK ENOUGH TO READ OVER ANYTHING (Stage 4 bench soak, 2026-10-01). ***
+     This was `rgba(255,255,255,.14)` under near-white text: fine over the dark frame it was drawn
+     for, and nearly invisible the moment it sat over a panel instead — on High Contrast the photos
+     panel's white letterbox put pale text on white. A HUD floats over whatever is under its
+     corner, so the backing has to carry the contrast by itself: the theme's own `--letterbox`,
+     at most of its strength, under the theme's own `--on-dark` (the role defined as "text over
+     the letterbox"). Measured by dev/clock_hud_contrast_test.html over pure white AND pure black,
+     the two extremes everything else lies between, in every theme. */
   .k-clock{position:absolute;z-index:calc(var(--z-floating) + 1);padding:9px 15px;border-radius:12px;
-    background:rgba(255,255,255,.14);color:#eef4f0;max-width:34vw}
+    background:color-mix(in srgb, var(--letterbox) 82%, transparent);color:var(--on-dark);max-width:34vw}
   .kiosk[data-clock-corner="bl"] .k-clock{bottom:2.5vmin;left:2.5vmin}
   .kiosk[data-clock-corner="br"] .k-clock{bottom:2.5vmin;right:2.5vmin}
   .kiosk[data-clock-corner="tl"] .k-clock{top:2.5vmin;left:2.5vmin}
   .kiosk[data-clock-corner="tr"] .k-clock{top:2.5vmin;right:2.5vmin}
   .k-clock .k-mod{width:100%}
   .k-clock .clock{align-items:flex-start;gap:2px}
-  .k-clock .clock .time{color:#fff;font-size:2.6rem}
+  .k-clock .clock .time{color:var(--on-dark);font-size:2.6rem}
   .k-clock .clock .when{display:none}
-  .k-clock .clock .date{color:#d3e6db;font-size:.95rem}
+  .k-clock .clock .date{color:var(--on-dark);font-size:.95rem}
+  /* A countdown in the corner too: clock.js colours these for a PANEL (`--text-strong`, dark in
+     every light theme), which on this dark backing would be dark on dark. */
+  .k-clock .clock .cd-label,.k-clock .clock .cd-value,.k-clock .clock .cd-status{color:var(--on-dark)}
   /* MIRROR MODE (M): the camera fills the whole screen */
   .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
     border:0;border-radius:0;box-shadow:none;z-index:calc(var(--z-panels) + 50)}
