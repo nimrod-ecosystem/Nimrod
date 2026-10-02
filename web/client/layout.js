@@ -96,7 +96,8 @@ export function isArranged(layout) {
 // Beside the snapped grid, a layout may carry `placed`: modules placed freely, each with a PLACE --
 //
 //   { id, place: 'scene' | 'screen' | 'overlay', x, y, w?, h?, scale?, rot?, layer?, surface?, slot?,
-//     shown?, locked?, opens? }      (`opens`: another dashboard's id -- pressing this one shows it, row 2.38)
+//     shown?, locked?, opens?, scan? }  (`opens`: another dashboard's id -- pressing this one shows it, row 2.38;
+//                                        `scan`: in the switch lap or not -- see normalizePlacedEntry)
 //
 //   scene    in the dashboard's scene (the room): in one of the room's slots (`slot`, a recipe item's
 //            id), or at x/y on a surface (`surface`: back / left / right wall, floor).
@@ -149,6 +150,10 @@ export function normalizePlacedEntry(raw) {
   if (typeof raw.slot === 'string' && raw.slot) e.slot = raw.slot;
   if (raw.shown === false) e.shown = false;
   if (raw.locked === true) e.locked = true;
+  // Mike's list 09-30 (Scoreboard item 5): whether this placed module is a stop in the switch lap. true / false
+  // is somebody's choice; absent is the default for its place (arrangement.js `scanOff`: an overlay is in the
+  // lap, first -- Design's rule -- unless its module declares `overlayScan: 'skip'`, as the scoreboard does).
+  if (typeof raw.scan === 'boolean') e.scan = raw.scan;
   // ROW 2.38: a placed module can be a DOOR -- pressing it shows another dashboard (`opens`: its id).
   // Kept as data on the placement, not on the module's own settings: what pressing a thing does HERE is
   // the layout's, the way where it sits is (the map editor edits layouts).

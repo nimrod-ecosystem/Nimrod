@@ -49,3 +49,19 @@
 .sb-ov-figure{margin:0;display:flex;align-items:baseline;gap:8px}
 .sb-ov .sb-value{font-size:clamp(40px,22cqmin,200px)}
 .sb-ov-label{margin:0;font-weight:700;font-size:clamp(14px,4cqmin,36px);color:var(--text-strong)}
+
+/* FLOATING over the dashboard (the dashboard placed it as an overlay -- modules/scoreboard.js says how).
+   READABLE OVER ANY PANEL: a SOLID backdrop of the theme's own --surface, with the theme's own text on it, so
+   the contrast is the theme's (which every theme is checked for) and never whatever photo or video happens
+   to be underneath. Not see-through on purpose: any amount of see-through hands the contrast to the panel
+   below, which nobody chose. A border of the theme's --border marks its edge against a panel of the same
+   colour. */
+.sb[data-mode="float"]{height:100%;padding:8px 10px;background:var(--surface);color:var(--text-strong);
+  border:2px solid var(--border);border-radius:14px;overflow:auto}
+.sb-float{display:flex;flex-direction:column;gap:8px;min-height:100%;justify-content:center}
+.sb-fl-item{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.sb-float:not(.sb-float-one) .sb-fl-item{flex-direction:row;justify-content:space-between;text-align:left;gap:10px}
+.sb-float-one .sb-value{font-size:clamp(32px,20cqmin,180px)}
+.sb-float:not(.sb-float-one) .sb-value{font-size:clamp(20px,9cqmin,64px)}
+.sb-float:not(.sb-float-one) .sb-ov-label{order:-1}
+.sb-fl-btns{justify-content:center}

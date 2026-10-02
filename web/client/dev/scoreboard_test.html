@@ -35,7 +35,9 @@ import { expectFor } from '../health.js';
 import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC, normalizeScore, createScoreSource,
          watchShown, ownScoreField, ownScoreMode, showOwnScore, OWN_SCORE_MODES } from '../score_source.js';
 import { localDay, periodKey, rollCounter, bump, stepTarget, cyclePeriod, describe, earnedIn,
-         newCounter, BUILTIN_SOURCES, SCOREBOARD_STATE } from '../modules/scoreboard.js';
+         newCounter, BUILTIN_SOURCES, SCOREBOARD_STATE,
+         PLACE_REQUEST_TOPIC, PLACED_TOPIC, FLOAT_DEFAULTS } from '../modules/scoreboard.js';
+import * as ARR from '../arrangement.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -338,6 +340,84 @@ try {
     click(t.host, 'panel');
     check('back to the whole board', t.host.querySelector('[data-sb]').dataset.mode === 'panel'
       && t.host.querySelectorAll('[data-counter]').length === 2);
+    t.inst.destroy(); t.host.remove();
+  }
+
+  // Mike's list 09-30, Scoreboard item 5: "'Show as overlay' is one big counter for now -- a true floating
+  // overlay needs the dashboard to mount things in front." The dashboard can now (arrangement.js, `shell/place`).
+  section('*** a TRUE floating overlay: the dashboard floats it, readable over anything, out of the switch lap unless chosen ***');
+  {
+    check('the two topics are the dashboard’s own (arrangement.js), written out here so the module imports no host file',
+      PLACE_REQUEST_TOPIC === ARR.PLACE_REQUEST_TOPIC && PLACED_TOPIC === ARR.PLACED_TOPIC,
+      `${PLACE_REQUEST_TOPIC}/${ARR.PLACE_REQUEST_TOPIC} ${PLACED_TOPIC}/${ARR.PLACED_TOPIC}`);
+    check('*** floating, it declares it stays OUT of the switch lap (a number to glance at, not a stop on every lap) ***',
+      getManifest('scoreboard').overlayScan === 'skip');
+    check('where it floats to first: a small box in the top-left, clear of the mirror (top right) and the clock (bottom left)',
+      FLOAT_DEFAULTS.x < 50 && FLOAT_DEFAULTS.y < 50 && FLOAT_DEFAULTS.w <= 30 && FLOAT_DEFAULTS.h <= 30
+      && FLOAT_DEFAULTS.x - FLOAT_DEFAULTS.w / 2 >= 0 && FLOAT_DEFAULTS.y - FLOAT_DEFAULTS.h / 2 >= 0, JSON.stringify(FLOAT_DEFAULTS));
+
+    const bus = createBus();
+    const asks = [];
+    // A dashboard that floats things: it takes the request for its own panel, and answers on the panel's own topic.
+    bus.subscribe(PLACE_REQUEST_TOPIC, (p) => { if (!p || p.id !== 'sbF') return; asks.push(p); p.claim?.(); });
+    const tell = (id, p) => bus.publish(bus.instanceTopic(id, PLACED_TOPIC), p);
+    const t = mount({ bus, id: 'sbF' });
+    const mode = () => t.host.querySelector('[data-sb]').dataset.mode;
+    click(t.host, 'add'); click(t.host, 'add');
+    click(t.host, 'inc', 1); click(t.host, 'inc', 1); click(t.host, 'inc', 1);
+    const second = t.probe().counters[1].id;
+    click(t.host, 'overlay', 1);
+    check('*** "Show as overlay" ASKS the dashboard to float this panel, at the default box ***',
+      asks.length === 1 && asks[0].place === 'overlay' && asks[0].x === FLOAT_DEFAULTS.x && asks[0].y === FLOAT_DEFAULTS.y
+      && asks[0].w === FLOAT_DEFAULTS.w && asks[0].h === FLOAT_DEFAULTS.h, JSON.stringify(asks[0] || null));
+    check('...and with the dashboard taking it, does NOT also fake one inside its own box', mode() === 'panel', mode());
+    check('which counter the overlay shows is this panel’s own choice (its own state)', t.own.peek().focus === second
+      && !t.row.peek().focus);
+    tell('sbF', { place: 'overlay', scan: false });
+    check('*** told it floats: one counter, large ***', mode() === 'float'
+      && t.host.querySelectorAll('[data-counter]').length === 1 && value(t.host) === '3', `${mode()} ${value(t.host)}`);
+    check('...on a backdrop of its own, so it reads over whatever is under it', !!t.host.querySelector('.sb-float'));
+    check('the add / follow controls are out of the way', t.host.querySelector('[data-add-area]').hidden === true);
+    check('*** there is always a way back into the dashboard ***', /Back into the dashboard/.test(actBtn(t.host, 'unfloat')?.textContent || ''));
+    check('whether it is in the switch lap is shown, in words', /Switch scan: off/.test(actBtn(t.host, 'scan')?.textContent || ''),
+      actBtn(t.host, 'scan')?.textContent);
+    click(t.host, 'scan');
+    check('*** pressing it CHOOSES the scan: asked of the dashboard, which owns the lap ***',
+      asks.length === 2 && asks[1].scan === true && !('place' in asks[1]), JSON.stringify(asks[1] || null));
+    tell('sbF', { place: 'overlay', scan: true });
+    check('...and says so once the dashboard has done it', /Switch scan: on/.test(actBtn(t.host, 'scan')?.textContent || ''));
+    click(t.host, 'unfloat');
+    check('Back asks the dashboard to put it back', asks.length === 3 && asks[2].place === 'slot', JSON.stringify(asks[2] || null));
+    tell('sbF', { place: 'slot', scan: true });
+    check('*** back in the dashboard, it is the whole board again ***', mode() === 'panel'
+      && t.host.querySelectorAll('[data-counter]').length === 2 && t.host.querySelector('[data-add-area]').hidden === false);
+    tell('elsewhere', { place: 'overlay', scan: false });
+    check('a message for another panel changes nothing here', mode() === 'panel');
+
+    // Placed as an overlay some other way (the edit view's Place: Overlay), with no counter chosen: every one, compact.
+    const u = mount({ bus, id: 'sbG', row: t.row });
+    tell('sbG', { place: 'overlay', scan: false });
+    check('floating with no counter chosen shows every counter', u.host.querySelector('[data-sb]').dataset.mode === 'float'
+      && u.host.querySelectorAll('[data-counter]').length === 2);
+
+    // READABLE OVER ANY PANEL: the backdrop and the figures are the theme's own surface and text, nothing literal.
+    await sleep(150);   // the stylesheet is a <link> inside the mount
+    u.host.style.setProperty('--surface', 'rgb(1, 2, 3)');
+    u.host.style.setProperty('--text-strong', 'rgb(4, 5, 6)');
+    const root = u.host.querySelector('[data-sb]');
+    check('*** the backdrop is the theme’s --surface, solid ***', getComputedStyle(root).backgroundColor === 'rgb(1, 2, 3)',
+      getComputedStyle(root).backgroundColor);
+    check('...and the number is the theme’s --text-strong on it', getComputedStyle(u.host.querySelector('.sb-value')).color === 'rgb(4, 5, 6)',
+      getComputedStyle(u.host.querySelector('.sb-value')).color);
+    u.inst.destroy(); u.host.remove();
+
+    // Nobody to float it: the old in-box counter, unchanged.
+    const lone = mount();
+    click(lone.host, 'add');
+    click(lone.host, 'overlay');
+    check('*** with no dashboard answering, "Show as overlay" is the big counter in its own box, as before ***',
+      lone.host.querySelector('[data-sb]').dataset.mode === 'overlay');
+    lone.inst.destroy(); lone.host.remove();
     t.inst.destroy(); t.host.remove();
   }
 
