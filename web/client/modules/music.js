@@ -33,6 +33,7 @@ import { registerModule } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createYtPlayer } from './youtube.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+import { followPerson, personSources } from '../person_known.js';
 import {
   watchFavourites, normalizeFavourites, parseSource, normalizeSource, describeSource, newFavouriteId,
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
@@ -106,14 +107,12 @@ registerModule(
     const { mount, bus, state, audio = null } = ctx;
     const instanceId = ctx.instanceId || 'music';
     const makePlayer = ctx.playerFactory || createYtPlayer;
-    const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
-    const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
 
     let cfg = { ...DEFAULTS };
     let favs = [];
     let personList = null;         // watchFavourites handle, when the list is kept for the person
-    let personTries = 0;
-    let personTimer = null;
+    let personFor = null;          // whose list `personList` is
+    let offPerson = null;
     let view = 'main';
     let lit = -1;
     let status = { playing: false, name: null, kind: null, reason: null, message: '', asking: null };
@@ -139,29 +138,45 @@ registerModule(
       favs = clean;
       render();
     }
-    // The person may not be known yet when this mounts (kiosk.js resolves it in the background), so
-    // look again a few times. Until then, and on a host with no person at all, the panel keeps its own.
-    function tryPerson() {
-      personTimer = null;
-      if (dead || personList) return;
-      const pid = ctx.personId;
-      if (pid && typeof ctx.makePersonState === 'function') {
-        personList = watchFavourites({ makePersonState: ctx.makePersonState, personId: pid, onChange: adoptList });
-        if (personList) {
+    // WHOSE LIST: the screen's person, followed (person_known.js `followPerson`, 2026-10-02). The person
+    // may not be known when this mounts (kiosk.js resolves it in the background); this panel used to look
+    // again ten times, 1.5 s apart, and gave up for good after fifteen seconds. Now it draws with the
+    // panel's own list, and the screen's one answer -- however late, or never (it then carries on as
+    // nobody, after person_known's bounded wait) -- moves it to the person's.
+    function usePerson(pid) {
+      if (dead) return;
+      const want = pid && typeof ctx.makePersonState === 'function' ? pid : null;
+      if (want === personFor && (personList || !want)) return;
+      try { personList?.destroy(); } catch { /* gone */ }
+      personList = null;
+      personFor = want;
+      if (want) {
+        const pl = watchFavourites({ makePersonState: ctx.makePersonState, personId: want, onChange: adoptList });
+        if (pl) {
+          personList = pl;
           // What was kept in the panel before the person was known moves across once, if theirs is empty.
           const mine = normalizeFavourites(state?.get?.()?.favourites);
-          personList.ready.then(() => {
-            if (!dead && mine.length && !personList.list().length) personList.set(mine);
+          pl.ready.then(() => {
+            if (!dead && pl === personList && mine.length && !pl.list().length) pl.set(mine);
           });
           return;
         }
+        personFor = null;
       }
-      if (typeof ctx.makePersonState === 'function' && ++personTries < 10) personTimer = setTimer(tryPerson, 1500);
+      // Nobody's screen (or a host with no per-person state): the panel keeps its own list.
+      favs = normalizeFavourites(state?.get?.()?.favourites);
+      render();
     }
 
     // ---- players -------------------------------------------------------------------------------
-    const sources = ctx.sources || (ctx.user !== undefined
-      ? createMediaSourcesClient({ user: ctx.user, personId: ctx.personId || null, cache: true }) : null);
+    // The media sources a music file or folder plays from: WHOEVER THE SCREEN IS FOR, not whoever it was at
+    // mount (person_known.js `personSources`: its list waits, bounded, for the answer, and the editor's
+    // folder list is re-read if the answer changes after it was made).
+    const scopedSources = ctx.sources ? null : (ctx.user !== undefined
+      ? personSources(ctx, (pid) => createMediaSourcesClient({ user: ctx.user, personId: pid, cache: true }),
+        { onChange: () => { if (!dead && view === 'edit') loadSources(); } })
+      : null);
+    const sources = ctx.sources || scopedSources;
     const local = createLocalMusic({
       audio, audioId: `music:${instanceId}:local`, sources,
       ...(ctx.makeAudio ? { makeAudio: ctx.makeAudio } : {}),
@@ -447,14 +462,16 @@ registerModule(
         bus.subscribe('music/prev', () => moveLit(-1));
         bus.subscribe('music/select', () => selectLit());
         bus.subscribe('music/back', () => { if (view !== 'main') { view = 'main'; lit = -1; render(); } });
-        tryPerson();
+        offPerson = followPerson(ctx, usePerson);
         render();
       },
       onResize() {},
       onHide() { try { state?.flush?.(); } catch { /* nothing to do */ } },
       destroy() {
         dead = true;
-        if (personTimer !== null) { clearTimer(personTimer); personTimer = null; }
+        try { offPerson?.(); } catch { /* gone */ }
+        offPerson = null;
+        try { scopedSources?.dispose(); } catch { /* gone */ }
         mount.removeEventListener('click', onClick);
         mount.removeEventListener('input', onInput);
         mount.removeEventListener('change', onInput);

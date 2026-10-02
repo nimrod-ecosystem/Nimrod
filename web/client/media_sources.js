@@ -223,6 +223,132 @@ export async function sourceHealth(source, { fetchImpl = fetch } = {}) {
   }
 }
 
+// ------------------------------------------------- a source should degrade, not stop
+// (MIKE_CHANGE_LIST §3e, Mike 2026-09-08: "If a chosen source can't be reached and an equivalent one
+// can, use it and say so somewhere visible. If none can, show something rather than nothing.")
+//
+// Photos and personal videos both resolved a chosen `sourceId` and stopped there: an agent that was
+// down at boot, or a source taken out of the registry, left the panel saying so to nobody. These are
+// the shared half -- which other sources may stand in, and the try-in-order -- so the two panels
+// cannot disagree about whose sources are fair game. What a panel SAYS and what it keeps is its own.
+
+/**
+ * HOW LONG A PANEL WAITS FOR A SOURCE'S LISTING BEFORE TRYING ANOTHER: 20 seconds. Argued:
+ *   - A refused or dead agent fails at once; this only bites a request that HANGS, which on facility
+ *     wifi happens (the same reason person_known.js has a wait at all).
+ *   - The same figure personal.js already gives a big clip to start over that wifi (`stallMs`), so a
+ *     listing is not held to a stricter standard than the clips it lists.
+ *   - Shorter risks giving up on a slow-but-working agent with a large folder; that costs little,
+ *     because the chosen source is asked again every SOURCE_RECHECK_MS and taken back when it answers.
+ *   - Longer is that much longer looking at "Loading" when something else could be showing.
+ * A seam (`ctx.listingWaitMs`) for tests; 0 means wait however long.
+ */
+export const LISTING_WAIT_MS = 20000;
+
+/**
+ * HOW OFTEN A PANEL SHOWING A STAND-IN ASKS WHETHER ITS CHOSEN SOURCE IS BACK: every 60 seconds.
+ * One listing request to one source. Shorter is more requests at a source that is down (a /list of
+ * a big folder is not free); longer keeps the stand-in on screen that much after the chosen one is
+ * back. A minute is well inside how long anybody would notice. Seam: `ctx.sourceRecheckMs`.
+ */
+export const SOURCE_RECHECK_MS = 60000;
+
+const ownerOf = (s) => (s && s.person_id) || null;
+
+/**
+ * THE SOURCES THAT MAY STAND IN FOR `chosenId`, in the order to try them: the person's own other
+ * sources first, then the account-wide ones (no person). NEVER ANOTHER RESIDENT'S: a source filed
+ * under a different person is left out, and so is EVERY person's source when whose screen this is
+ * is not known (`personId` null) -- the list a screen gets after its person lookup timed out is the
+ * whole account's, and "the only other one there" may be somebody else's photographs.
+ * A device-local folder carries no person; it is this device's, and counts as account-wide.
+ */
+export function fallbackSources(sources, { chosenId = null, personId = null } = {}) {
+  const list = (Array.isArray(sources) ? sources : []).filter((s) => s && s.id && s.id !== chosenId);
+  const own = personId ? list.filter((s) => ownerOf(s) === personId) : [];
+  const shared = list.filter((s) => ownerOf(s) === null);
+  return [...own, ...shared];
+}
+
+/** True when a source may be shown on this person's screen at all (own, or account-wide). */
+export function mayShowSource(source, personId = null) {
+  const o = ownerOf(source);
+  return o === null || (!!personId && o === personId);
+}
+
+/**
+ * The words for a panel showing something other than what it was set to. Plain text: escape it
+ * before it goes into markup. `shownLabel` null means "the last pictures" (photos keeps those).
+ */
+export function degradedLine({ shownLabel = null, chosenLabel = null, err = null } = {}) {
+  const shown = shownLabel ? `“${shownLabel}”` : 'the last pictures';
+  const chosen = chosenLabel ? `“${chosenLabel}”` : 'the chosen source';
+  const why = err && err.code === 'permission' ? 'needs permission again'
+    : err && err.code === 'album' ? 'doesn’t have that album'
+      : 'can’t be reached';
+  return `Showing ${shown} — ${chosen} ${why}.`;
+}
+
+function codedError(code, message) { const e = new Error(message); e.code = code; return e; }
+
+/**
+ * One listing, given at most `waitMs` to answer. Resolves `{ ok, listing, items }` or `{ ok:false, err }`
+ * (err.code 'timeout' when the wait ran out). Never rejects. A listing that lands after the wait is
+ * dropped here -- the recheck asks again.
+ */
+export function listingWithin(resolve, source, album, { accept = (l) => (l && l.items) || [], waitMs = LISTING_WAIT_MS,
+  setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id) } = {}) {
+  return new Promise((done) => {
+    let finished = false;
+    const t = Number(waitMs) > 0 ? setTimer(() => {
+      if (finished) return;
+      finished = true;
+      done({ ok: false, err: codedError('timeout', `media source "${source && source.label}": no answer in ${waitMs} ms`) });
+    }, Number(waitMs)) : null;
+    Promise.resolve().then(() => resolve(source, album)).then(
+      (listing) => ({ ok: true, listing, items: accept(listing) || [] }),
+      (err) => ({ ok: false, err: err || codedError('unreachable', 'listing failed') }),
+    ).then((r) => {
+      if (finished) return;
+      finished = true;
+      if (t != null) clearTimer(t);
+      done(r);
+    });
+  });
+}
+
+/**
+ * THE CHOSEN SOURCE, OR THE BEST STAND-IN. `chosen` is the source row (null when the chosen id is no
+ * longer in the list -- removed, or moved to another person); `chosenId` the id the panel was set to.
+ *   - The chosen one answers: it is used, EVEN WITH NOTHING IN IT (reachable and empty is a fact about
+ *     the folder, not a failure -- the panel says "no photos" as it always did).
+ *   - It does not: each stand-in (fallbackSources) is tried in order, with the panel's album and
+ *     then without it, and the first with something to show wins.
+ * Returns `{ source, listing, items, album, fellBack, failure }`; `source` null means nothing from
+ * any source could be shown. NOTHING HERE SAVES ANYTHING: a stand-in is never written back as the
+ * chosen source -- the caller shows it and goes back when the chosen one returns.
+ */
+export async function listOrFallback({ sources, chosen = null, chosenId = null, album = '', personId = null,
+  resolve, accept, waitMs = LISTING_WAIT_MS, setTimer, clearTimer } = {}) {
+  const opts = { accept, waitMs, ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
+  const cid = (chosen && chosen.id) || chosenId || null;
+  let failure;
+  if (chosen) {
+    const r = await listingWithin(resolve, chosen, album, opts);
+    if (r.ok) return { source: chosen, listing: r.listing, items: r.items, album, fellBack: false, failure: null };
+    failure = r.err;
+  } else {
+    failure = codedError('gone', 'the chosen source is not in the list');
+  }
+  for (const s of fallbackSources(sources, { chosenId: cid, personId })) {
+    for (const a of (album ? [album, ''] : [''])) {
+      const r = await listingWithin(resolve, s, a, opts);
+      if (r.ok && r.items.length) return { source: s, listing: r.listing, items: r.items, album: a, fellBack: true, failure };
+    }
+  }
+  return { source: null, listing: null, items: [], album, fellBack: false, failure };
+}
+
 // ---------------------------------------------------------------------- pairing
 // SIX CHARACTERS INSTEAD OF AN IP ADDRESS.
 //

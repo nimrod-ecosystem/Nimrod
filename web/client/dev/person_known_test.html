@@ -39,6 +39,7 @@ import '../modules/board.js';
 import '../modules/pressgame.js';
 import '../modules/youtube.js';
 import '../modules/keyboard.js';
+import '../modules/music.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -477,6 +478,65 @@ try {
     pk.settle('p1');
     check('a late person\'s bindings still arrive', await settled(() => rows(h).length === 1 && /^X/.test(rows(h)[0])), rows(h).join(' | '));
     inst.destroy(); h.remove();
+  }
+
+  // MUSIC used its own ten tries, 1.5 s apart, for the person's favourites, and built its media-sources
+  // client once with whatever `ctx.personId` was at mount. Now: followPerson + personSources.
+  section('music (the favourites, and its music folders)');
+  {
+    const per = new Map();
+    const HYMNS = [{ id: 'f1', name: 'Hymns', source: { kind: 'folder', sourceId: 'src-p1', album: 'Hymns' } }];
+    const makePersonState = (pid, key) => {
+      const k = `${pid}:${key}`;
+      if (!per.has(k)) per.set(k, mem(pid === 'p1' ? { favourites: HYMNS } : {}));
+      return per.get(k);
+    };
+    const folders = (h) => [...h.querySelectorAll('[data-fav-source] option')].map((o) => o.textContent);
+    {
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 0 });
+      const h = box();
+      // The panel's timer runs at once, so the old "ten tries, 1.5 s apart" (15 s) is used up in moments:
+      // the person below then arrives LATER than that window, as on a slow boot.
+      const inst = mountModule('music', screenCtx(pk, { mount: h, bus: createBus(), state: mem({}), events: evs(),
+        user: `pk-music-${RUN}`, instanceId: 'mu-slow', makePersonState, setTimer: (fn) => setTimeout(fn, 0), clearTimer: (id) => clearTimeout(id) }));
+      inst.init();
+      await sleep(120);
+      const probe = () => inst.impl.__probe();
+      check('SLOW: the music panel draws before the person is known, with its own (empty) list',
+        /No favourites yet/.test(h.textContent) && probe().personList === false, h.textContent.slice(0, 120));
+      h.querySelector('[data-act="edit"]').click();
+      await sleep(120);
+      check('...and its folder list has NOT asked for the account\'s whole list meanwhile', registryAsks().length === 0, registryAsks().join(' '));
+      // Long after the old ten tries would have run out (the person is late, not lost).
+      pk.settle('p1');
+      check('*** SLOW: once the person arrives, music shows THEIR favourites ***',
+        await settled(() => probe().personList === true && probe().favs.some((f) => f.name === 'Hymns')), JSON.stringify(probe().favs));
+      check('*** ...and its music folders are THEIR sources ***',
+        await settled(() => folders(h).includes('P1 albums')), folders(h).join());
+      check('...and it never asked without the person', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+      inst.destroy(); h.remove();
+    }
+    {
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 150 });
+      const h = box();
+      const OWN = [{ id: 'f2', name: 'Panel tune', source: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ' }];
+      const inst = mountModule('music', screenCtx(pk, { mount: h, bus: createBus(), state: mem({ favourites: OWN }), events: evs(),
+        user: `pk-music-n-${RUN}`, instanceId: 'mu-never', makePersonState }));
+      inst.init();
+      const probe = () => inst.impl.__probe();
+      check('NEVER: the music panel draws at once, with the panel\'s own list', /Panel tune/.test(h.textContent), h.textContent.slice(0, 120));
+      h.querySelector('[data-act="edit"]').click();
+      check('*** NEVER: after the wait it carries on -- its music folders are listed (as nobody\'s) ***',
+        await settled(() => unscoped().length >= 1 && folders(h).length > 1, 1500), `${registryAsks().join(' ')} / ${folders(h).join()}`);
+      check('...and the list is still the panel\'s own', probe().personList === false && probe().favs.some((f) => f.name === 'Panel tune'));
+      pk.settle('p1');
+      check('a person arriving AFTER the wait is still picked up', await settled(() => probe().personList === true
+        && probe().favs.some((f) => f.name === 'Hymns')), JSON.stringify(probe().favs));
+      check('...and the editor\'s folder list is re-read for them', await settled(() => scopedTo('p1').length >= 1), registryAsks().join(' '));
+      inst.destroy(); h.remove();
+    }
   }
 
   // =============================================================================================

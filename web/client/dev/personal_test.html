@@ -151,6 +151,84 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     }
   }
 
+  // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e). *** photos.js's twin: a chosen source
+  // that cannot be listed gives way to the person's own other source, then the account's -- never another
+  // resident's -- says so under the clip, is never saved over, and is taken back when it answers.
+  {
+    const RUN = Date.now().toString(36);
+    const RECHECK = 777, WAIT = 555;
+    const S = {
+      mine:   { id: 'mine',   label: 'Her messages',   kind: 'agent', person_id: 'p1' },
+      other:  { id: 'other',  label: 'Next door',      kind: 'agent', person_id: 'p2' },
+      family: { id: 'family', label: 'Family',         kind: 'agent', person_id: null },
+    };
+    function rigV({ sources, mode, seed = {}, personId = 'p1' }) {
+      const host = document.createElement('div');
+      document.body.append(host);
+      const timers = [], sets = [], asked = [];
+      let cfg = { autoplay: false, ...seed };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { sets.push(p); cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+        subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const inst = mountModule('personal', {
+        mount: host, bus: createBus(), state, user: `personal-deg-${RUN}`, profileId: 'p', personId,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        sources: { list: async () => sources.slice(), add: async () => { throw new Error('no add'); }, remove: async () => {} },
+        resolveListing: (src, album) => {
+          asked.push(src.id);
+          const m = mode[src.id] || 'up';
+          if (m === 'down') return Promise.reject(new Error(`${src.id} /list -> 502`));
+          return Promise.resolve({ album, albums: [], items: [1, 2].map((i) => ({ id: `${src.id}-${i}.mp4`, path: `${src.id}-${i}.mp4`, name: `${src.id} ${i}`, kind: 'video', url: `data:,${src.id}-${i}` })) });
+        },
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+        listingWaitMs: WAIT, sourceRecheckMs: RECHECK, progressMs: 1e9,
+      });
+      inst.init();
+      return { host, inst, sets, asked,
+        caption: () => host.querySelector('[data-name]')?.textContent || '',
+        status: () => { const s = host.querySelector('[data-status]'); return s && !s.hidden ? s.textContent : ''; },
+        src: () => host.querySelector('video')?.getAttribute('src') || '',
+        live: (ms) => timers.filter((t) => t.live && t.ms === ms).length,
+        fire: (ms) => { const t = timers.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } },
+        done() { inst.destroy(); host.remove(); } };
+    }
+    const until = async (fn, ms = 1500) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(20); } return !!fn(); };
+    const saved = (r) => r.sets.filter((p) => 'sourceId' in p);
+
+    const mode = { mine: 'down' };
+    const r = rigV({ sources: [S.other, S.mine, S.family], mode, seed: { sourceId: 'mine', subjectName: 'Mum' } });
+    check('*** personal, UNREACHABLE: the account\'s source stands in and a clip plays from it ***',
+      await until(() => /^data:,family-/.test(r.src())), r.src() + ' / ' + r.status());
+    check('*** ...and the caption says so, instead of putting "From Mum" on somebody else\'s clip ***',
+      /Showing “Family” — “Her messages” can’t be reached/.test(r.caption()) && !/Mum/.test(r.caption()), r.caption());
+    check('...next door\'s source was never asked', !r.asked.includes('other'), r.asked.join(' '));
+    check('*** ...nothing saved ***', saved(r).length === 0, JSON.stringify(r.sets));
+    check('...it asks after the chosen source on a timer', r.live(RECHECK) === 1);
+    mode.mine = 'up';
+    r.fire(RECHECK);
+    check('*** COMES BACK: the chosen source plays again, captioned as before ***',
+      await until(() => /^data:,mine-/.test(r.src()) && /From Mum/.test(r.caption())), `${r.src()} / ${r.caption()}`);
+    check('...no more rechecks, still nothing saved', r.live(RECHECK) === 0 && saved(r).length === 0);
+    r.done();
+
+    const g = rigV({ sources: [S.family], mode: {}, seed: { sourceId: 'gone-id' } });
+    check('personal, MISSING: another source stands in', await until(() => /^data:,family-/.test(g.src())), g.src());
+    check('*** ...and the choice is NOT overwritten with the only source left ***', saved(g).length === 0, JSON.stringify(g.sets));
+    g.done();
+
+    const x = rigV({ sources: [S.mine, S.other], mode: { mine: 'down' }, seed: { sourceId: 'mine' } });
+    await until(() => /unreachable/i.test(x.status()));
+    check('*** personal: the only other source is next door\'s -- not played, not asked; says unreachable, offers Retry ***',
+      !x.src() && !x.asked.includes('other') && /unreachable/i.test(x.status()) && !!x.host.querySelector('[data-retry]'),
+      `${x.src()} / ${x.asked.join(' ')} / ${x.status()}`);
+    x.done();
+    const n = rigV({ sources: [S.mine, S.other, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, personId: null });
+    check('*** personal, whose screen unknown: the account\'s source stands in, never next door\'s ***',
+      await until(() => /^data:,family-/.test(n.src())) && !n.asked.includes('other'), `${n.src()} / ${n.asked.join(' ')}`);
+    n.done();
+  }
+
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
   // Without this, seven assertions about a real video from a real agent failed on 2026-09-06 for
   // the single reason that nothing was listening on 8771. The control presses above need no

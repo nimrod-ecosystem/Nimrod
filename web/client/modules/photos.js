@@ -24,8 +24,12 @@
 
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
-import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
-import { personSources } from '../person_known.js';
+import {
+  createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
+  LISTING_WAIT_MS, SOURCE_RECHECK_MS,
+} from '../media_sources.js';
+import { personSources, personOf } from '../person_known.js';
+import { cacheGet, cacheSet } from '../cache.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
@@ -56,6 +60,18 @@ const DEFAULTS = { sourceId: '', album: '', intervalMs: 15000, fit: 'contain' };
 const VIDEO_STALL_MS = 15000;
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
 const HOLD_PULSE_MS = 15 * 60 * 1000;   // a held slideshow's "still here" (see `pulseHold`)
+// *** THE LAST PICTURES SEEN (§3e: "If none can, show something rather than nothing"). *** When no source
+// at all can be listed, the panel keeps showing pictures that already appeared on it -- they may well
+// still be in the browser's cache -- rather than freezing or going blank. Remembered per PANEL and per
+// PERSON (so one resident's pictures never come back on another's screen), on this device only.
+//   KEEP_LAST 50: about twelve minutes of pictures at the default 15 s before one repeats, and ~10 KB
+//     of addresses in local storage. More buys variety nobody in a fallback needs; fewer starts to loop.
+//   KEEP_WRITE_MS 60 s: how often the list may be written to storage. A slideshow over a big folder
+//     shows a new picture every few seconds and the list does not need to be on disk that fast; the
+//     last unwritten minute is written when the panel hides or closes.
+// Not settings: nobody choosing a slideshow's interval is served by tuning a cache.
+const KEEP_LAST = 50;
+const KEEP_WRITE_MS = 60 * 1000;
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
 // WHAT THE SETTINGS MENU SHOWS.
@@ -301,6 +317,22 @@ registerModule(
     let multiSource = null;
     let loadSeq = 0;                // guards against overlapping reloads (races)
 
+    // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e, 2026-10-02). ***
+    // `degraded` is set while the panel shows something other than its chosen source -- a stand-in
+    // (media_sources.js `listOrFallback`: the person's own other sources, then the account's, never
+    // another resident's) or the last pictures seen. It says so in a corner chip, asks after the chosen
+    // source every SOURCE_RECHECK_MS, and goes back to it when it answers. NOTHING HERE IS SAVED: the
+    // chosen source stays the chosen source.
+    let degraded = null;            // { chosenId, chosenLabel, err, chosenSource, shownLabel }
+    let keptMode = false;           // showing the last pictures seen, because no source could be listed
+    let recheckTimer = null;
+    let lastFailure = null;         // { source, err, sources } -- the words to fall back on
+    const labels = {};              // every source's label seen, so a vanished chosen one can be named
+    let seen = [];                  // the last pictures that really appeared here (KEEP_LAST)
+    let seenDirty = false, seenWrittenAt = 0;
+    const listingWaitMs = () => Number(ctx.listingWaitMs ?? LISTING_WAIT_MS);
+    const recheckMs = () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS);
+
     const stage = () => mount.querySelector('[data-stage]');
 
     // A STATUS MESSAGE MUST NOT BLACK OUT A PHOTO THAT IS ALREADY THERE. It used to be a
@@ -448,6 +480,10 @@ registerModule(
         // reader is noise. A plain category word is the honest thing to say about a picture
         // nobody has described.
         el.src = item.url; el.alt = item.name || 'Photo';
+        // A picture that really appeared is one the panel can fall back on (KEEP_LAST); one of those
+        // that no longer loads is dropped from the fallback and the slideshow moves on.
+        el.addEventListener('load', () => rememberSeen(item), { once: true });
+        el.addEventListener('error', () => keptFailed(item.id), { once: true });
       }
       el.style.objectFit = cfg.fit;
       el.className = 'shot';
@@ -590,12 +626,17 @@ registerModule(
       return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
     }
 
+    // WHICH SOURCE THIS PANEL MEANS: `{ source, chosenId, sources }`. `source` is the row to list (the
+    // chosen one, or the account's only one); `chosenId` is set when a choice is stored, EVEN WHEN THAT
+    // SOURCE IS NO LONGER IN THE LIST -- `reload` then shows a stand-in without replacing the choice.
     async function ensureSource() {
       const sources = await client.list();
       knownSources = sources;
+      multiSource = null;
+      for (const s of sources) if (s && s.id) labels[s.id] = s.label || s.base_url || s.id;
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);
-        if (found) return found;
+        if (found) return { source: found, chosenId: cfg.sourceId, sources };
       }
       // dev seed via query param: register once, then remember in config
       const qp = new URLSearchParams(location.search);
@@ -605,13 +646,18 @@ registerModule(
         const existing = sources.find((s) => s.base_url === base);
         const src = existing || await client.add({ label: 'dev photos', base_url: base, kind: 'agent' });
         state.set({ sourceId: src.id, album: qp.get('photoAlbum') || cfg.album });
-        return src;
+        return { source: src, chosenId: src.id, sources };
       }
+      // *** A CHOSEN SOURCE MISSING FROM THE LIST IS NOT REPLACED (§3e). *** This used to fall through to
+      // "the only source there, so save it", which overwrote somebody's choice the first time their
+      // source was missing for a moment (an agent re-paired, a source moved between people). Now the
+      // panel shows a stand-in and keeps the choice, and goes back when it reappears.
+      if (cfg.sourceId) return { source: null, chosenId: cfg.sourceId, sources };
       // Saved only when the screen KNOWS whose it is: a list made after the person lookup timed out is
       // shown, never saved from (person_known.js `trusted`) -- a late person re-lists and saves then.
       if (sources.length === 1) {
         if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
-        return sources[0];
+        return { source: sources[0], chosenId: null, sources };
       }
       // *** MORE THAN ONE SOURCE USED TO BE A DEAD END, AND IT WAS A LOUD ONE. ***
       //
@@ -627,29 +673,184 @@ registerModule(
       // `sourceId` is a declared setting ("Photos from"), which is the real way out. On a
       // GRID kiosk that menu currently shows no panel settings at all (see §F19-audit), so
       // the message points at the composer, which is somewhere the reader can actually get to.
-      if (sources.length > 1) {
-        multiSource = sources;
-        return null;
-      }
-      multiSource = null;
-      return null;
+      if (sources.length > 1) multiSource = sources;
+      return { source: null, chosenId: null, sources };
     }
 
-    async function reload() {
-      const seq = ++loadSeq;
-      clearAdvance();
-      setStatus('Loading photos…');
-      let source;
+    // ---- degrade, don't stop (§3e) -------------------------------------------------------------
+    const keptKey = () => (ctx.instanceId
+      ? `photos-last:${user || 'anon'}:${personOf(ctx) || 'none'}:${ctx.instanceId}` : null);
+
+    // Only pictures (a clip is rarely in the cache whole), only ones that really appeared, and never a
+    // folder's object URL (`blob:`), which dies with the page.
+    function rememberSeen(item) {
+      if (keptMode || !item || item.kind !== 'image' || !item.url || /^blob:/.test(item.url)) return;
+      const sid = item.sourceId || '';
+      if (seen.some((s) => s.id === item.id && s.sourceId === sid)) return;
+      seen.unshift({ id: item.id, url: item.url, name: item.name || '', path: item.path || item.id, sourceId: sid });
+      if (seen.length > KEEP_LAST) seen.length = KEEP_LAST;
+      seenDirty = true;
+      if (Date.now() - seenWrittenAt >= KEEP_WRITE_MS) writeSeen();
+    }
+    function writeSeen() {
+      const k = keptKey();
+      if (!k || !seenDirty) return;
+      seenDirty = false;
+      seenWrittenAt = Date.now();
+      cacheSet(k, seen);
+    }
+    // The pictures to fall back on: this session's, then the ones stored for this panel and person.
+    // A picture whose source is in the list and may NOT be shown here (another resident's) is left out.
+    function keptPictures(sources) {
+      const pid = personOf(ctx);
+      const rows = Array.isArray(sources) ? sources : [];
+      const k = keptKey();
+      const stored = k ? cacheGet(k) : null;
+      const out = [];
+      const ids = new Set();
+      for (const it of [...seen, ...(Array.isArray(stored) ? stored : [])]) {
+        if (!it || !it.id || !it.url || /^blob:/.test(it.url) || ids.has(it.id)) continue;
+        const src = rows.find((s) => s && s.id === it.sourceId);
+        if (src && !mayShowSource(src, pid)) continue;
+        ids.add(it.id);
+        out.push({ id: it.id, url: it.url, name: it.name || '', path: it.path || it.id, kind: 'image', sourceId: it.sourceId });
+        if (out.length >= KEEP_LAST) break;
+      }
+      return out;
+    }
+    function useItems(list) {
+      items = list;
+      byId = Object.fromEntries(items.map((it) => [it.id, it]));
+      ids = items.map((it) => it.id);
+      channels = Object.fromEntries(items.map((it) => [it.id, albumOf(it.path)]));
+      recent = []; history = []; histPos = -1;
+    }
+    function setLabel(text) {
+      const el = mount.querySelector('[data-source-label]');
+      if (el) el.textContent = text;
+    }
+    // The Allow button for a folder whose permission lapsed. The click IS the user gesture the prompt
+    // requires -- which is the whole reason this is a button and not a retry on a timer.
+    function allowAction(source) {
+      return {
+        label: 'Allow',
+        run: async () => {
+          setStatus('Asking…');
+          try {
+            const { requestFolderAccess } = await import('../folder_source.js');
+            const res = await requestFolderAccess(source.id);
+            if (res === 'granted') { reload(); return; }
+            // Refused or dismissed. Leave the button there: somebody who clicked the wrong
+            // thing must be able to try again without going to find a menu.
+            setStatus('Permission was not given.', false,
+              { label: 'Allow', run: () => reload() });
+          } catch (err2) {
+            console.error('photos: requesting folder access', err2);
+            setStatus('That folder could not be opened.', true);
+          }
+        },
+      };
+    }
+    // The quiet line while a stand-in or the last pictures are showing. A chip, because a picture is.
+    function sayDegraded() {
+      if (!degraded) return;
+      const d = degraded;
+      const text = escapeHtml(degradedLine({ shownLabel: keptMode ? null : d.shownLabel, chosenLabel: d.chosenLabel, err: d.err }));
+      const perm = d.err && d.err.code === 'permission' && d.chosenSource;
+      setStatus(text, keptMode && !perm, perm ? allowAction(d.chosenSource) : null);
+    }
+    function clearRecheck() { if (recheckTimer != null) { clearTimer(recheckTimer); recheckTimer = null; } }
+    function armRecheck() {
+      clearRecheck();
+      if (!degraded || !degraded.chosenId || !(recheckMs() > 0)) return;
+      recheckTimer = setTimer(() => { recheckTimer = null; recheck(); }, recheckMs());
+    }
+    // Is the chosen source back? One quiet listing; if it answers, reload -- which takes it back.
+    async function recheck() {
+      if (!degraded) return;
+      const seq = loadSeq;
+      const want = degraded.chosenId;
+      let back = false;
       try {
-        source = await ensureSource();
-      } catch (e) {
-        if (seq === loadSeq) setStatus('Could not reach the platform', true);
+        const rows = (await client.list()) || [];
+        const chosen = rows.find((s) => s && s.id === want);
+        if (chosen) {
+          const r = await listingWithin(resolveList, chosen, cfg.album,
+            { accept: (l) => slideshowItems(l && l.items), waitMs: recheckMs(), setTimer, clearTimer });
+          back = r.ok;
+        }
+      } catch { back = false; }
+      if (seq !== loadSeq || !degraded || degraded.chosenId !== want) return;   // something else moved on
+      if (back) reload(); else armRecheck();
+    }
+    function applyListing(source, listing, album, fb = null) {
+      keptMode = false;
+      useItems(slideshowItems(listing.items)   // songs in the same folder are not photos
+        .map((it) => (it.sourceId ? it : { ...it, sourceId: source.id })));
+      setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}`);
+      degraded = fb ? { ...fb, shownLabel: source.label || source.base_url || source.id } : null;
+      if (degraded) armRecheck(); else clearRecheck();
+      if (!items.length) { setStatus('No photos in this source/album.'); return; }
+      setStatus(null);
+      advance();
+      sayDegraded();   // after the first picture, so it is a chip over it rather than a sheet
+    }
+    function showKept(sources) {
+      const kept = keptPictures(sources);
+      if (!kept.length) return false;
+      keptMode = true;
+      useItems(kept);
+      setLabel(`The last pictures seen — ${kept.length} item${kept.length === 1 ? '' : 's'}`);
+      setStatus(null);
+      advance();
+      sayDegraded();
+      return true;
+    }
+    // A kept picture that no longer loads (not in the cache after all): out of the fallback, and on.
+    function keptFailed(id) {
+      if (!keptMode || !byId[id]) return;
+      items = items.filter((it) => it.id !== id);
+      delete byId[id];
+      ids = ids.filter((x) => x !== id);
+      seen = seen.filter((s) => s.id !== id);
+      seenDirty = true;
+      if (!ids.length) {
+        keptMode = false;
+        clearAdvance();
+        currentId = null;
+        const st = stage();
+        if (st) { st.innerHTML = ''; st.dataset.showing = ''; }
+        if (lastFailure) sayFailure(lastFailure);
         return;
       }
-      if (seq !== loadSeq) return;   // a newer reload superseded us
+      if (id === currentId) failedItem();
+    }
+
+    // NOTHING COULD BE SHOWN FROM ANY SOURCE: the words this panel has always used for it.
+    async function sayFailure({ source, err, sources }) {
       if (!source) {
-        // Nothing to show from here on, so a later message is a full panel again.
-        if (stage()) stage().dataset.showing = '';
+        // The chosen source is no longer in the list and nothing else could stand in for it.
+        // Named only from the sources this screen may show: never another resident's.
+        const mine = (sources || []).filter((x) => mayShowSource(x, personOf(ctx)));
+        if (mine.length) {
+          const names = mine.map((x) => x.label || x.base_url || x.id).join(', ');
+          setStatus(`The chosen photo source is gone (${escapeHtml(names)} connected). `
+            + 'Pick one for this panel in Screens — this panel’s “Photos from” setting.', true);
+          return;
+        }
+        return showNoSource();
+      }
+      // The words come from `listingFailure` so they can be checked without a browser; this
+      // half is only the wiring. See §E-fail for what they used to be.
+      const f = listingFailure(err, source, cfg.album);
+      if (f.action === 'Allow') setStatus(f.text, false, allowAction(source));
+      else setStatus(f.text, f.retry);
+    }
+
+    async function showNoSource() {
+      // Nothing to show from here on, so a later message is a full panel again.
+      if (stage()) stage().dataset.showing = '';
+      {
         if (multiSource) {
           const names = multiSource.map((x) => x.label || x.base_url || x.id).join(', ');
           setStatus(`More than one photo source is connected (${names}). `
@@ -683,51 +884,47 @@ registerModule(
         items = ids = []; byId = channels = {};
         return;
       }
-      let listing;
+    }
+
+    async function reload() {
+      const seq = ++loadSeq;
+      clearAdvance();
+      clearRecheck();
+      setStatus('Loading photos…');
+      let found;
       try {
-        listing = await resolveList(source, cfg.album);
+        found = await ensureSource();
       } catch (e) {
         if (seq !== loadSeq) return;
-        // The words come from `listingFailure` so they can be checked without a browser; this
-        // half is only the wiring. See §E-fail for what they used to be.
-        const f = listingFailure(e, source, cfg.album);
-        if (f.action === 'Allow') {
-          setStatus(f.text, false, {
-            label: 'Allow',
-            run: async () => {
-              setStatus('Asking…');
-              try {
-                const { requestFolderAccess } = await import('../folder_source.js');
-                // The click IS the user gesture the prompt requires — which is the whole
-                // reason this is a button and not a retry on a timer.
-                const res = await requestFolderAccess(source.id);
-                if (res === 'granted') { reload(); return; }
-                // Refused or dismissed. Leave the button there: somebody who clicked the wrong
-                // thing must be able to try again without going to find a menu.
-                setStatus('Permission was not given.', false,
-                  { label: 'Allow', run: () => reload() });
-              } catch (err2) {
-                console.error('photos: requesting folder access', err2);
-                setStatus('That folder could not be opened.', true);
-              }
-            },
-          });
-        } else {
-          setStatus(f.text, f.retry);
-        }
+        // The registry itself failed (rare: it has an offline mirror). The last pictures, if any.
+        degraded = cfg.sourceId ? { chosenId: cfg.sourceId, chosenLabel: labels[cfg.sourceId] || null, err: e, chosenSource: null } : null;
+        if (degraded && showKept([])) { armRecheck(); return; }
+        degraded = null;
+        setStatus('Could not reach the platform', true);
         return;
       }
+      if (seq !== loadSeq) return;   // a newer reload superseded us
+      const { source, chosenId, sources } = found;
+      if (!source && !chosenId) { degraded = null; keptMode = false; await showNoSource(); return; }
+      // The chosen source -- or, when it cannot be listed, the best stand-in (§3e, media_sources.js).
+      const got = await listOrFallback({
+        sources, chosen: source, chosenId, album: cfg.album, personId: personOf(ctx),
+        resolve: resolveList, accept: (l) => slideshowItems(l && l.items),
+        waitMs: listingWaitMs(), setTimer, clearTimer,
+      });
       if (seq !== loadSeq) return;
-      items = slideshowItems(listing.items);   // songs in the same folder are not photos
-      byId = Object.fromEntries(items.map((it) => [it.id, it]));
-      ids = items.map((it) => it.id);
-      channels = Object.fromEntries(items.map((it) => [it.id, albumOf(it.path)]));
-      recent = []; history = []; histPos = -1;
-      mount.querySelector('[data-source-label]').textContent =
-        `${source.label}${cfg.album ? ' · ' + cfg.album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}`;
-      if (!items.length) { setStatus('No photos in this source/album.'); return; }
-      setStatus(null);
-      advance();
+      const cid = (source && source.id) || chosenId;
+      const chosenRef = { chosenId: cid, chosenLabel: (source && source.label) || labels[cid] || null,
+        err: got.failure, chosenSource: source };
+      if (got.source) { applyListing(got.source, got.listing, got.album, got.fellBack ? chosenRef : null); return; }
+      // NOTHING FROM ANY SOURCE. Keep asking after the chosen one, show the last pictures if there are
+      // any, and otherwise say what is wrong -- over the picture already there, which is left up.
+      lastFailure = { source, err: got.failure, sources };
+      degraded = chosenRef;
+      armRecheck();
+      if (showKept(sources)) return;
+      keptMode = false;
+      await sayFailure(lastFailure);
     }
 
     function syncControls() {
@@ -849,11 +1046,14 @@ registerModule(
         });
       },
       onResize() {},
-      onHide() { videoStall.disarm(); state.flush(); },
+      onHide() { videoStall.disarm(); writeSeen(); state.flush(); },
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
-      destroy() { loadSeq += 1; clearAdvance(); clearResume(); scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
+      destroy() {
+        loadSeq += 1; clearAdvance(); clearResume(); clearRecheck(); writeSeen(); degraded = null;
+        scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
+      },
 
       // EDIT MODE (edit_mode.js, 2026-10-02). The picture on screen, and the line naming where the photos come
       // from, each with the rows about it -- this panel's own declared settings, nothing new. A picture has no
@@ -868,7 +1068,7 @@ registerModule(
           help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
       },
-      __probe: () => ({ waiting, paused, currentId }),
+      __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice() }),
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
       // a modules tab will want to read it off a module that is not even running - while the
