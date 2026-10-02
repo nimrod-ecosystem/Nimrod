@@ -35,6 +35,10 @@ import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY 
 import { BANKS, GROUP_NAMES, GROUPS, shownOrder } from '../think_banks.js';
 import { createAI } from '../ai.js';
 import { writeQuestions } from '../question_writer.js';
+// 2026-10-02 late (Mike: "When a game is in the dashboard. It shouldn't start right away."): it opens
+// waiting for Start, says nothing until then, and "start" said aloud starts it (quiz_view.js start gate,
+// game_start.js). No demo yet - so no "While nobody is playing" row: a row that does nothing is a lie.
+import { autostartFields, START_VOICE } from '../game_start.js';
 
 export const GAME = 'think_games';
 export const GAMES = Object.freeze(['mix', 'numbers', 'things', 'groups', 'finish']);
@@ -77,11 +81,14 @@ export const DEFAULTS = Object.freeze({
   game: 'mix',
   numbersAsk: 'smallest',
   thingsAsk: 'biggest',
+  autostart: false,
+  autostartAlone: 'same',
   ...ADAPTIVE_DEFAULTS,
   ...LINES,
 });
 
 const SETTINGS = [
+  ...autostartFields({ on: false }),
   { key: 'game', label: 'Which game', kind: 'choice', default: 'mix', level: 'essential',
     options: [{ value: 'mix', label: 'A mix of all four' }, { value: 'numbers', label: 'Smallest of three numbers' },
               { value: 'things', label: 'Biggest of three things' }, { value: 'groups', label: 'Name the group' },
@@ -170,7 +177,7 @@ registerModule(
       + 'questions at their own level, and it gets harder as they get better.',
     // Nothing to fetch: the questions are built in. The AI writer is an extra, off by default, and the
     // game is complete without it.
-    dependsOn: 'local', importance: 'optional', settings: SETTINGS },
+    dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;
     let cfgNow = { ...DEFAULTS };
@@ -314,7 +321,7 @@ registerModule(
     };
 
     const inner = quizModule({ type: GAME, title: 'Thinking games', scoreLabel: 'Thinking games: right answers',
-      games, defaults: DEFAULTS, gameKey: 'game', view })(ctx);
+      games, defaults: DEFAULTS, gameKey: 'game', view, startGate: true, autostart: DEFAULTS.autostart })(ctx);
     // The test escape hatch: the ladder, the same object the module plays with.
     inner.__session = session;
     return inner;

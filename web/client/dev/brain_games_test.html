@@ -33,7 +33,9 @@ import { GAME, GAMES, MIX_ORDER, LINES, DEFAULTS, judgeItem, answerOf, orderAnsw
 import { BANKS, ODD, COUNT, NEXT, ORDER, SHAPE_NAMES, shapeSvg } from '../brain_banks.js';
 import { BANKS as THINK } from '../think_banks.js';
 import { PUZZLES } from '../word_builder_words.js';
-import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { UNKNOWN, FLOW_LINES, numberWord } from '../quiz_flow.js';
+import { createBus } from '../bus.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
 import { emptyLadder, LADDER_KEY } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
 import { auditFields, auditAcross } from '../settings_audit.js';
@@ -46,9 +48,13 @@ function ladderStore(init = {}) {
   const h = { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() { h.destroyed = true; }, peek: () => v };
   return h;
 }
+// The sections written before 2026-10-02's Start button test the game in play (and in the yes / no
+// shape they were written for), so `R` opens it started with `answerBy: 'yesno'`; `fresh: true` mounts
+// it as it now ships.
 const R = (saved = {}, opts = {}) => {
   const store = opts.store || ladderStore();
-  const r = rig(GAME, { saved, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  const s = opts.fresh ? saved : { autostart: true, answerBy: 'yesno', ...saved };
+  const r = rig(GAME, { saved: s, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
   return Object.assign(r, { ladder: store, item: () => r.probe().item, st: () => r.inst.impl.__state() });
 };
 const tap = (r, v) => r.host.querySelector(`[data-pick="${CSS.escape(String(v))}"]`)?.click();
@@ -348,6 +354,107 @@ try {
     const g = r.lastGrammar();
     check('the tiles\' names and [unk]', g.open && g.words.includes(UNKNOWN) && r.item().tiles.every((t) => g.words.includes(t)));
     r.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** IT WAITS FOR START, SILENTLY (Mike, 2026-10-02 late: "Brain games just starts talking") ***');
+  {
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const r = R({}, { fresh: true, bus });
+    const gate = () => r.inst.impl.__gate();
+    check('*** opens waiting: not started, NOTHING SAID ***', gate().begun === false && r.said.length === 0, JSON.stringify(r.said));
+    check('a Start button is up, lit for a switch', !!r.host.querySelector('[data-start][data-on="1"]'));
+    check('*** the grammar is closed: a waiting game does not take the room\'s words ***', !r.grammars.some((g) => g.open));
+    check('the shell is told it is not playing', states.length && states[states.length - 1].playing === false);
+    check('*** the demo is on: the computer has a question up (silently) ***', gate().demo === true && !!gate().demoSnap?.item
+      && gate().agent === 'computer');
+    // Play the demo for a while: the computer walks to the answer and takes it.
+    for (let i = 0; i < 12; i++) r.timers.flush();
+    check('*** ...and answers questions, and none of it is said, scored or paid ***', r.said.length === 0
+      && r.points().length === 0 && !r.scores.some((s) => s.source === GAME && s.value > 0) && r.chimes.length === 0,
+      JSON.stringify({ said: r.said, pts: r.points().length }));
+    check('the ladder never heard of the demo', !Object.keys(r.ladder.peek().ladder?.players || {}).length
+      && r.inst.impl.__session.asked() === 0);
+    // Any press starts it.
+    r.publish(`${GAME}/next`);
+    check('*** a press (next) starts the real game: the demo stops, the question is asked aloud ***', gate().begun === true
+      && gate().demo === false && r.said.length === 1 && !!r.item());
+    check('...Start is gone, the grammar opens, the shell is told it is playing', !r.host.querySelector('[data-start]')
+      && r.lastGrammar()?.open === true && states[states.length - 1].playing === true);
+    // Pause and go on.
+    r.publish(`${GAME}/pause`);
+    check('*** pause: "Go on" is up, the grammar closes ***', gate().paused === true && /Go on/.test(r.host.querySelector('[data-start]')?.textContent || '')
+      && r.lastGrammar()?.open === false);
+    const n = r.said.length;
+    r.publish(`${GAME}/next`);
+    check('...a press goes on, and the question is asked again', gate().paused === false && r.said.length === n + 1);
+    r.inst.destroy();
+  }
+  {
+    const r = R({}, { fresh: true });
+    r.host.querySelector('[data-start]').click();
+    check('the Start button starts it', r.inst.impl.__gate().begun === true && r.said.length === 1);
+    r.inst.destroy();
+    const v = R({}, { fresh: true });
+    v.publish(`${GAME}/play`, { game: 'count' });
+    check('*** "play quick count" said aloud starts THAT game ***', v.inst.impl.__gate().begun && v.item()?.kind === 'count');
+    v.inst.destroy();
+    const a = R({ autostart: true }, { fresh: true });
+    check('autostart on: it starts at once', a.inst.impl.__gate().begun === true && a.said.length === 1);
+    a.inst.destroy();
+    const off = R({ attract: false }, { fresh: true });
+    check('"While nobody is playing: it waits, still": no demo', off.inst.impl.__gate().demo === false && !!off.host.querySelector('[data-start]'));
+    off.inst.destroy();
+    const rm = R({}, { fresh: true, reducedMotion: true });
+    check('reduced motion: no demo', rm.inst.impl.__gate().demo === false);
+    rm.inst.destroy();
+    const alone = R({ autostartAlone: 'on' }, { fresh: true, extra: { panelCount: 1 } });
+    check('alone on the dashboard, set to start by itself then: it does', alone.inst.impl.__gate().begun === true);
+    alone.inst.destroy();
+    const m = getManifest(GAME);
+    check('"start" said aloud is in the manifest', m.voice?.start === 'play');
+    check('the rows are there: when it opens (off), the demo (on)', m.settings.find((s) => s.key === 'autostart')?.default === false
+      && m.settings.find((s) => s.key === 'attract')?.default === true);
+  }
+
+  section('*** SAY THE ANSWER BY DEFAULT, NOT YES / NO (Mike, 2026-10-02 late) ***');
+  {
+    check('the default is "say it, tap it, or step through the answers"', DEFAULTS.answerBy === 'choices'
+      && getManifest(GAME).settings.find((s) => s.key === 'answerBy')?.default === 'choices');
+    const r = R({ game: 'count', answerBy: 'choices' });
+    const it = r.item();
+    check('*** asked WITHOUT an offer: no "Is it 3?" after the question ***', r.said.length === 1 && !/Is it/.test(r.last()), r.last());
+    check('no Yes / No buttons', ![...r.host.querySelectorAll('button[data-act]')].some((b) => /^(yes|no)$/.test(b.dataset.act)));
+    r.inst.impl.hear({ text: numberWord(it.n), confidence: 0.95 });
+    check('*** saying the number is answering ***', r.phase() === 'celebrate', r.phase());
+    r.inst.destroy();
+    const o = R({ game: 'odd', answerBy: 'choices' });
+    o.inst.impl.hear({ text: o.item().odd, confidence: 0.95 });
+    check('*** saying the shape\'s name is answering ***', o.phase() === 'celebrate', o.phase());
+    o.inst.destroy();
+    // THE SWITCH STILL WORKS: it walks the answers themselves.
+    const s = R({ game: 'count', answerBy: 'choices' });
+    const want = String(s.item().n);
+    const cands = s.probe().candidates;
+    check('the switch\'s stops ARE the answers', s.eng.stops().filter((x) => x.act === 'pick').map((x) => x.value).join() === cands.join());
+    let lit = s.probe().lit;
+    check('the first answer is lit on its tile', lit === cands[0] && s.host.querySelector(`[data-pick="${CSS.escape(cands[0])}"]`)?.dataset.on === '1');
+    let guard = 0;
+    while (s.probe().lit !== want && guard++ < 5) s.publish(`${GAME}/next`);
+    check('next walks to the right one, and says it as it gets there', s.probe().lit === want && s.last() === want, s.last());
+    s.publish(`${GAME}/select`);
+    check('*** select answers it: right ***', s.phase() === 'celebrate');
+    s.inst.destroy();
+    // YES / NO IS AN OPTION (a nod and a shake).
+    const y = R({ game: 'count', answerBy: 'yesno' });
+    check('*** yes / no: "Is it ...?" is offered, Yes and No are the stops ***', /Is it/.test(y.last())
+      && y.eng.stops().map((x) => x.act).slice(0, 2).join() === 'yes,no', y.last());
+    y.inst.destroy();
+    const two = R({ game: 'count', answerBy: 'choices', twoSwitch: 'yesno' });
+    check('two switches that are Yes and No mean the yes / no shape whatever "Answering" says', two.probe().offers === 'yesno');
+    two.inst.destroy();
   }
 
   finish();

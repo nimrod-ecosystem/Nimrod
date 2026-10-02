@@ -26,7 +26,7 @@
 // TYPING IS NOT INPUT. Keystrokes inside a text field belong to the field. The adapter
 // stands down whenever the focus is somewhere a person is writing.
 
-import { ROLE_CYCLE_ACTION, verbTopic } from './actions.js';
+import { ROLE_CYCLE_ACTION, PLAY_PAUSE_TOPIC, verbTopic } from './actions.js';
 
 export const KEYBOARD_DEVICE = 'keyboard';
 
@@ -74,8 +74,20 @@ export function isTyping(target) {
 // The kiosk's mirror moved off M to C, which was the better mnemonic anyway (it is the
 // CAMERA mirror).
 //
-// SPACE is Next as well as ArrowDown. It is the most-used key at the bedside and losing it
-// to a refactor would be felt immediately.
+// *** SPACE IS PLAY / PAUSE (Mike, 2026-10-02 late: "I think space should be universal for
+// play/pause and primary select will launch"). *** It used to be Next as well as ArrowDown. It is
+// now the bar's one Pause / Play (actions.js `shell/play-pause`, the SAME action the bar's button
+// and a bound switch press), for whichever panel is selected - a video, a song, a game. Argued:
+//   FOR: Space is play / pause in every video player and most games a person has ever used, so it
+//     is the key people already reach for; Mike already uses it that way; and one pause that means
+//     the same on every panel is the point of the bar's button (kiosk.js `playPauseSelected`).
+//   AGAINST: a switch interface that types a space was a second Next for free, and a keyboard-only
+//     scanner loses a big key. ArrowDown is still Next, and a switch that types a space can be
+//     bound back to Next in one step (or bound to anything) - it is an ordinary binding.
+// A PERSON'S SAVED BINDINGS ARE THEIRS: this list is only what an account with nothing saved gets
+// (input_runtime.js `normalizeRecord`). Somebody who saved a setup keeps Space doing whatever their
+// record says - including Next, if that is what it said - until they change it. Silently re-pointing
+// a key somebody set up is the thing that file refuses to do for a v1 record, for the same reason.
 //
 // All of these are ordinary bindings: rebind them, or move them onto a switch, and the
 // keyboard simply stops being the only way in.
@@ -91,7 +103,8 @@ export const DEFAULT_BINDINGS = [
   kb('default/select', 'key:enter', verbTopic('select'), 'Primary select'),
   kb('default/focus-next', 'key:arrowright', verbTopic('focus-next'), 'Next panel'),
   kb('default/focus-prev', 'key:arrowleft', verbTopic('focus-prev'), 'Previous panel'),
-  kb('default/next-space', 'key: ', verbTopic('next'), 'Next'),
+  // `shell/play-pause` is the action's id as well as its topic (actions.js SYSTEM_ACTIONS).
+  kb('default/play-pause', 'key: ', PLAY_PAUSE_TOPIC, 'Pause or play'),
   kb('default/menu', 'key:escape', verbTopic('menu'), 'Menu'),
   kb('default/menu-m', 'key:m', verbTopic('menu'), 'Menu'),
 ];

@@ -19,11 +19,14 @@
 import { registerModule } from '../module.js';
 import { normalizeRecord, INPUTS_KEY } from '../input_runtime.js';
 import { KEYBOARD_DEVICE, DEFAULT_BINDINGS } from '../input_keyboard.js';
-import { VERBS, FOCUS_VERBS } from '../actions.js';
+import { VERBS, FOCUS_VERBS, MEDIA_VERBS, SYSTEM_ACTIONS } from '../actions.js';
 
-const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS].map((v) => [v.id, v.label]));
+const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS].map((v) => [v.id, v.label]));
+// The screen's own actions by their own labels (Space is "Pause or play the selected panel" since 2026-10-02).
+const ACTION_LABEL = Object.fromEntries(SYSTEM_ACTIONS.map((a) => [a.id, a.label]));
 const labelForAction = (actionId) => {
   if (actionId === 'system/role-cycle') return 'Cycle who may act';
+  if (ACTION_LABEL[actionId]) return ACTION_LABEL[actionId];
   const verbId = String(actionId || '').replace(/^verb\//, '');
   return VERB_LABEL[verbId] || actionId || '(unknown)';
 };

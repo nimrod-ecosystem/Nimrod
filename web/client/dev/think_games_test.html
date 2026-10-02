@@ -47,7 +47,8 @@ function ladderStore(init = {}) {
 }
 const R = (saved = {}, opts = {}) => {
   const store = opts.store || ladderStore();
-  const r = rig(GAME, { saved, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  // Opened started: these sections test the game in play (2026-10-02's Start button is tested on its own).
+  const r = rig(GAME, { saved: opts.fresh ? saved : { autostart: true, ...saved }, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
   return Object.assign(r, { ladder: store, item: () => r.probe().item, session: () => r.inst.impl.__session });
 };
 const tiles = (r) => [...r.host.querySelectorAll('[data-pick]')].map((b) => b.dataset.pick);

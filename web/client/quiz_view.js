@@ -19,6 +19,16 @@
 //   * THE SCORE through `score_source.js` (row 2.40): published, and drawn here only when no
 //     scoreboard on the screen is showing it (`ownScore`, default `auto`).
 //   * THE BOARD: an entry game's letters or numbers, scanned by `createScanBoard` on one switch.
+//   * *** THE START BUTTON, PAUSE, AND THE DEMO (2026-10-02 late; game_start.js argues them). *** A game
+//     that opts in (`spec.startGate`) opens WAITING: a Start button, nothing said, the grammar closed -
+//     Mike: "Brain games just starts talking." Any press, a tap, "start" / "play" (the manifest's `voice`),
+//     or the bar's Play starts it, unless the panel's `autostart` says it starts by itself. Pause (the
+//     bar's button, Space, "pause") silences it and puts up "Go on"; going on asks the question again.
+//     While it waits, a game whose adapter can deal a `demo` question shows the computer answering one
+//     after another (game_agent.js) - on a SECOND engine that says nothing, pays nothing, rates nothing
+//     and reports nothing, so the demo can never touch the person's score, points or ladder.
+//   * THE ANSWERS, LIT: in the 'choices' shape (quiz_flow.js `answerBy`) the switch walks the answers
+//     themselves, and the tile it is on is outlined (`data-on`) - the tiles a view draws with `data-pick`.
 
 import { createPointsLedger } from './points.js';
 import { createScoreSource, ownScoreMode, showOwnScore } from './score_source.js';
@@ -26,6 +36,14 @@ import {
   createQuizEngine, createScanBoard, ANSWER_TOPIC, GRAMMAR_TOPIC, FLOW_DEFAULTS,
   esc, fillHtml, defaultChime, STARS, CAT_URL,
 } from './quiz_flow.js';
+import {
+  shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, ensureStartStyle, startOverlayHtml,
+} from './game_start.js';
+import { gameAgentFor, askAgent } from './game_agent.js';
+
+// How often the computer makes a move in a quiz demo: long enough to read the answer it has lit, quick
+// enough that the panel looks alive. Argued, not a setting (nobody's play changes with it).
+export const DEMO_STEP_MS = 1500;
 
 export const up = (w) => String(w == null ? '' : w).toUpperCase();
 
@@ -123,6 +141,8 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *                      onKey(k, api)      a board key carrying `view` (not `key`/`cmd`): the view's own }
  *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
  *                    drive the same moves (Math keeps `algebra/submit` answering as select)
+ *   spec.startGate   true: open waiting for Start (the header). Absent = starts at once, as before.
+ *   spec.autostart   the module's default for the `autostart` setting (false for a game)
  *
  * A button carrying `data-pick="<value>"` anywhere in the panel answers with that value (a touched
  * tile), through the engine's `answer`, so it is judged exactly like a heard or offered answer.
@@ -132,6 +152,8 @@ export function quizModule(spec) {
     gameKey = null, extraTopics = {} } = spec;
   const view = spec.view || {};
   const ids = Object.keys(games);
+  const gate = spec.startGate === true;
+  const autostartDefault = spec.autostart === true;
 
   return (ctx) => {
     const { mount, bus, state } = ctx;
@@ -145,6 +167,19 @@ export function quizModule(spec) {
     let hidden = false;
     let lastKey = '';
     let leftHtml = null;
+    // ---- Start, pause and the demo ----
+    let begun = false;            // the real game has started (Start, a press, or autostart)
+    let paused = false;
+    let demoEng = null;           // the demo's own engine (silent, pays nothing, rates nothing)
+    let demoGames = null;
+    let demoTimer = null;
+    let demoSteps = 0;
+    let demoRested = false;
+    let demoMemory = {};
+    let agentNow = null;
+    let lastOverlay = null;
+    const reportNow = createPlayReporter(bus, ctx);
+    const report = (p) => { if (gate) reportNow(p); };
     const reducedMotion = () => {
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
       try { return !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; }
@@ -164,7 +199,9 @@ export function quizModule(spec) {
       } catch (err) { console.error(`${type}: say`, err); }
     }
     function say(lines) {
-      if (!cfg.speak || dead) return;
+      // NOTHING IS SAID BEFORE START, OR WHILE PAUSED. The real engine only runs after Start, so this is
+      // the belt to that pair of braces: a paused game's timers move on silently.
+      if (!cfg.speak || dead || !begun || paused) return;
       const text = lines.filter(Boolean).join(' ');
       if (!text) return;
       if (gated()) { held.push(text); return; }
@@ -181,7 +218,8 @@ export function quizModule(spec) {
     }
 
     function announceGrammar(g) {
-      const closed = hidden || dead || gated();
+      // Closed before Start and while paused: a waiting game must not take the room's words as answers.
+      const closed = hidden || dead || gated() || !begun || paused;
       try {
         bus.publish(GRAMMAR_TOPIC, { source: type, instanceId: ctx.instanceId || null, ...g,
           ...(closed ? { open: false, words: [] } : {}) });
@@ -235,9 +273,90 @@ export function quizModule(spec) {
       if (k.key != null) engine.type(k.key, 'switch');
       else if (k.cmd) engine.press(k.cmd);
     }
-    const onNext = () => { if (boardActive()) { board.next(); render(); } else engine.next(); };
-    const onPrev = () => { if (boardActive()) { board.prev(); render(); } else engine.prev(); };
+    // ---- START, PAUSE, GO ON --------------------------------------------------------------------------
+    function begin() {
+      if (begun || dead) return false;
+      stopDemo();
+      begun = true; paused = false;
+      report(true);
+      engine.start(gameOf(cfg));
+      render();
+      return true;
+    }
+    function pauseGame() {
+      if (!begun || paused || dead) return;
+      paused = true;
+      try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
+      lastSpeech = null;
+      held = [];
+      report(false);
+      reannounce();
+      render();
+    }
+    function resumeGame() {
+      if (begin()) return;
+      if (!paused || dead) return;
+      paused = false;
+      report(true);
+      reannounce();
+      engine.press('repeat');      // the question again, if one is waiting
+      render();
+    }
+    // ANY PRESS, waiting or paused, is Start / Go on - and nothing else.
+    const gateInput = () => {
+      if (!begun) { begin(); return true; }
+      if (paused) { resumeGame(); return true; }
+      return false;
+    };
+
+    // ---- THE DEMO: a second engine, answered by the computer ------------------------------------------
+    const demoWanted = () => gate && !begun && !hidden && !dead && cfg.attract !== false && !reducedMotion()
+      && typeof games[gameOf(cfg)]?.demo === 'function';
+    function stopDemo() {
+      if (demoTimer != null) { try { clearTimer(demoTimer); } catch { /* gone */ } demoTimer = null; }
+      try { demoEng?.destroy(); } catch { /* gone */ }
+      demoEng = null; demoGames = null;
+    }
+    function startDemo() {
+      stopDemo();
+      demoRested = false; demoSteps = 0; demoMemory = {};
+      if (!demoWanted()) { render(); return; }
+      const g = gameOf(cfg);
+      const A = games[g];
+      demoGames = { [g]: { ...A, items: () => {
+        let it = null;
+        try { it = A.demo(rand); } catch (err) { console.error(`${type}: demo`, err); }
+        return it ? [it] : [];
+      } } };
+      // Its own engine: no say, no award, no chime, no grammar, no result - the defaults are all nothing.
+      demoEng = createQuizEngine({ games: demoGames, rand, setTimer, clearTimer, onChange: () => render(),
+        cfg: () => ({ ...cfg, answerBy: 'choices', twoSwitch: 'scan', sayChoice: false, askAnother: false, speak: false }) });
+      agentNow = gameAgentFor(type, 'quiz');
+      demoEng.start(g);
+      demoTimer = setTimer(demoStep, DEMO_STEP_MS);
+      render();
+    }
+    function demoStep() {
+      demoTimer = null;
+      if (!demoEng || dead || begun) return;
+      demoSteps += 1;
+      if (demoSteps * DEMO_STEP_MS >= demoLimitMs(cfg.attractForMs)) { demoRested = true; render(); return; }
+      const s = demoEng.snapshot();
+      let answer = null;
+      try { answer = s.item ? String(demoGames[s.game]?.answer?.(s.item) ?? '') : null; } catch { answer = null; }
+      const obs = { game: type, kind: 'quiz', t: demoSteps * DEMO_STEP_MS, actions: ['next', 'select', 'pick'],
+        state: { phase: s.phase, question: s.askLine, choices: (s.candidates || []).map(String), highlight: s.highlight, answer } };
+      const a = askAgent(agentNow, obs, { rand, memory: demoMemory });
+      if (a?.act === 'next') demoEng.next();
+      else if (a?.act === 'select') demoEng.select();
+      else if (a?.act === 'pick' && a.value != null) demoEng.answer(String(a.value), 'touch');
+      if (demoEng) demoTimer = setTimer(demoStep, DEMO_STEP_MS);
+    }
+
+    const onNext = () => { if (gateInput()) return; if (boardActive()) { board.next(); render(); } else engine.next(); };
+    const onPrev = () => { if (gateInput()) return; if (boardActive()) { board.prev(); render(); } else engine.prev(); };
     const onSelect = () => {
+      if (gateInput()) return;
       if (!boardActive()) { engine.select(); return; }
       const k = board.select();
       if (k) handleKey(k); else render();
@@ -247,16 +366,29 @@ export function quizModule(spec) {
       engine, cfg: () => cfg, render: () => render(), release, reannounce,
       dropHeld: () => { held = []; },
       setTimer, clearTimer, bus, ctx, mount, rand,
+      begun: () => begun, paused: () => paused, start: () => begin(),
     };
 
     function ensureSkeleton() {
       if (mount.querySelector('[data-quiz-root]')) return;
       // `.wg` is the size container (word games' rules); the grid is one level in, so it can ask
       // the container how wide it is and put a letter board beside the word rather than under it.
-      mount.innerHTML = `<div class="wg" data-quiz-root data-quiz="${esc(type)}"><div class="qz-body" data-body>
+      mount.innerHTML = `<div class="wg gs-host" data-quiz-root data-quiz="${esc(type)}"><div class="qz-body" data-body>
         <h2 class="wg-ask" data-ask></h2>
         <div class="wg-mid" data-mid><div class="qz-left" data-left hidden></div><div class="wg-st" data-st aria-live="polite"></div></div>
-        <div data-foot></div></div><div data-extra></div></div>`;
+        <div data-foot></div></div><div data-extra></div><div data-start-host hidden></div></div>`;
+    }
+    // The Start / Go on overlay, over whatever is showing (the demo, or the still first screen).
+    function paintOverlay(root) {
+      const host = root.querySelector('[data-start-host]');
+      if (!host) return;
+      const html = !gate || (begun && !paused) ? ''
+        : paused ? startOverlayHtml({ label: 'Go on', text: 'Paused.' })
+          : startOverlayHtml({ demo: !!demoEng && !demoRested });
+      if (html !== lastOverlay) { host.innerHTML = html; lastOverlay = html; host.hidden = !html; }
+      root.dataset.started = begun ? '1' : '0';
+      root.dataset.paused = paused ? '1' : '0';
+      root.dataset.demo = !begun && demoEng && !demoRested ? '1' : '0';
     }
 
     const q = (w) => `<q>${esc(w)}</q>`;
@@ -284,6 +416,7 @@ export function quizModule(spec) {
     }
 
     function scoreHtml(s) {
+      if (!begun) return '';           // the demo's "right answers" are not anybody's
       const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
       if (!own) return '';
       const line = view.scoreLine ? String(view.scoreLine(s, cfg) || '') : `${s.rightCount} right so far.`;
@@ -293,12 +426,16 @@ export function quizModule(spec) {
     function render() {
       if (dead) return;
       ensureSkeleton();
-      const s = engine.snapshot();
-      try {
-        const detail = view.scoreDetail ? String(view.scoreDetail(s, cfg) || '')
-          : (s.asked ? `${s.rightCount} of ${s.asked}` : '');
-        score?.set(s.rightCount, { detail });
-      } catch (err) { console.error(`${type}: score`, err); }
+      // Waiting for Start with a demo running: the demo's engine is what is drawn. Never scored.
+      const E = !begun && demoEng ? demoEng : engine;
+      const s = E.snapshot();
+      if (begun) {
+        try {
+          const detail = view.scoreDetail ? String(view.scoreDetail(s, cfg) || '')
+            : (s.asked ? `${s.rightCount} of ${s.asked}` : '');
+          score?.set(s.rightCount, { detail });
+        } catch (err) { console.error(`${type}: score`, err); }
+      }
       // A new question or a new phase starts the board over, at the top.
       const key = `${s.serial}:${s.phase}`;
       if (key !== lastKey) { lastKey = key; board.reset(); }
@@ -317,7 +454,7 @@ export function quizModule(spec) {
       // `data-entry-mode`, not `data-entry`: that one is the typed letters' own element.
       if (s.phase === 'asking' && s.entryMode) body.dataset.entryMode = s.entryMode; else delete body.dataset.entryMode;
 
-      const stops = engine.stops();
+      const stops = E.stops();
       let ask = '';
       let st = '';
       let foot = '';
@@ -336,6 +473,14 @@ export function quizModule(spec) {
       }
       leftEl.hidden = !showLeft;
       midEl.className = `wg-mid${showLeft ? '' : ' wg-one'}`;
+      // THE LIT ANSWER ('choices'): the tile the switch is on, outlined. Set on the live tiles, so a view's
+      // cached markup is not rebuilt for every step of the switch.
+      const pickTiles = [...leftEl.querySelectorAll('[data-pick]')];
+      for (const el of pickTiles) {
+        const on = s.phase === 'asking' && s.lit != null && el.dataset.pick === String(s.lit);
+        if ((el.dataset.on === '1') !== on) { if (on) el.dataset.on = '1'; else delete el.dataset.on; }
+      }
+      const tilesShowPicks = s.offers === 'choices' && pickTiles.length > 0;
 
       if (!s.item) {
         ask = esc(title);
@@ -353,6 +498,15 @@ export function quizModule(spec) {
         st = `${fb}${s.entryMode && view.entryHtml ? view.entryHtml(s, cfg) : ''}`;
         if (s.entryMode) {
           foot = `<div class="wg-foot qz-foot">${boardHtml(s)}</div>`;
+        } else if (s.offers === 'choices') {
+          // The answers are the stops. Drawn as the view's own tiles when it has them (lit above), else as
+          // buttons here; either way a tap answers through `data-pick`.
+          const lead = s.voiceSeen ? 'Or step through them with your switch.' : 'Say it, tap it, or step through with your switch.';
+          const shown = stops.map((x, i) => [x, i]).filter(([x]) => !(tilesShowPicks && x.act === 'pick'));
+          const html = shown.map(([x, i]) => (x.act === 'pick'
+            ? `<button type="button" class="wg-btn" data-pick="${esc(x.value)}" data-stop="${i}"${i === s.highlight ? ' data-on="1"' : ''}>${esc(x.label)}</button>`
+            : btn(x, i, i === s.highlight))).join('');
+          foot = `<div class="wg-foot"><span>${lead}</span>${html ? `<div class="wg-btns">${html}</div>` : ''}</div>`;
         } else {
           const lead = s.voiceSeen ? 'Or press your switch.' : 'Press your switch, or tap.';
           const offer = s.candLine ? ` <b data-offer-line>${esc(s.candLine)}</b>` : '';
@@ -400,6 +554,7 @@ export function quizModule(spec) {
       stEl.innerHTML = st;
       footEl.innerHTML = foot;
       extraEl.innerHTML = extra;
+      paintOverlay(root);
     }
 
     function explainHtml(s) {
@@ -417,30 +572,45 @@ export function quizModule(spec) {
       __board: board,
       __probe: () => engine.snapshot(),
       __api: api,
-      hear: (result) => engine.hear(result),
+      // Start, pause and the demo, for the suites.
+      __gate: () => ({ begun, paused, demo: !!demoEng, demoRested, demoSteps, agent: agentNow?.id || null,
+        demoSnap: demoEng ? demoEng.snapshot() : null }),
+      hear: (result) => { if (begun && !paused) engine.hear(result); },
       init() {
         ensureQuizStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
         catch (err) { ledger = null; console.error(`${type}: no points ledger`, err); }
         score = createScoreSource(bus, { source: type, label: scoreLabel, instance: ctx.instanceId || null,
           onShownChange: () => render() });
+        const onSkip = () => { if (gateInput()) return; engine.skip(); };
         bus.subscribe(`${type}/next`, onNext);
         bus.subscribe(`${type}/prev`, onPrev);
         bus.subscribe(`${type}/select`, onSelect);
-        bus.subscribe(`${type}/skip`, () => engine.skip());
-        const moves = { next: onNext, prev: onPrev, select: onSelect, skip: () => engine.skip() };
+        bus.subscribe(`${type}/skip`, onSkip);
+        // Pause / Play (the bar's button, Space, "pause" / "play" / "start" - actions.js maps the verbs here).
+        // `/resume` and not `/play`: `/play` already names a game ("play brain games").
+        bus.subscribe(`${type}/pause`, () => pauseGame());
+        bus.subscribe(`${type}/resume`, () => resumeGame());
+        const moves = { next: onNext, prev: onPrev, select: onSelect, skip: onSkip };
         for (const [move, topics] of Object.entries(extraTopics || {})) {
           if (!moves[move]) continue;
           for (const t of (Array.isArray(topics) ? topics : [topics])) if (t) bus.subscribe(t, moves[move]);
         }
         if (gameKey) {
+          // "Play brain games" said aloud, or a switch bound to it: that game, and - waiting for Start - it
+          // starts, because asking for a game by name IS pressing Start.
           bus.subscribe(`${type}/play`, (p) => {
             const g = typeof p === 'string' ? p : p?.[gameKey] ?? p?.game;
-            if (ids.includes(g) && engine.setGame(g)) state?.set?.({ [gameKey]: g });
+            if (!ids.includes(g)) return;
+            if (!begun) { state?.set?.({ [gameKey]: g }); cfg = { ...cfg, [gameKey]: g }; begin(); return; }
+            if (paused) resumeGame();
+            if (engine.setGame(g)) state?.set?.({ [gameKey]: g });
           });
         }
-        bus.subscribe(ANSWER_TOPIC, (r) => engine.hear(r));
+        bus.subscribe(ANSWER_TOPIC, (r) => { if (begun && !paused) engine.hear(r); });
         mount.addEventListener('click', (e) => {
+          // Waiting or paused: a press anywhere on it (Start, Go on, a demo tile) starts or goes on.
+          if (gate && (!begun || paused) && mount.contains(e.target)) { gateInput(); return; }
           const a = e.target.closest?.('button[data-act]');
           if (a) { engine.press(a.dataset.act); return; }
           const p = e.target.closest?.('button[data-pick]');
@@ -453,26 +623,44 @@ export function quizModule(spec) {
           }
         });
         try { view.init?.(api); } catch (err) { console.error(`${type}: view init`, err); }
-        let started = false;
+        if (gate) ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
+        let configured = false;
         const apply = (snap) => {
           const prevGame = gameOf(cfg);
           const prevCfg = cfg;
           cfg = { ...FLOW_DEFAULTS, ...defaults, ...(snap || {}) };
           try { view.onConfig?.(cfg, prevCfg, api); } catch (err) { console.error(`${type}: config`, err); }
+          if (!configured) return;                 // the first settings: whether it starts is decided below
           const g = gameOf(cfg);
-          if (!started) { started = true; engine.start(g); }
-          else if (g !== prevGame && g !== engine.game()) engine.setGame(g);
+          // Still waiting for Start: the demo follows the game picked and "While nobody is playing".
+          if (!begun) {
+            if (g !== prevGame || prevCfg.attract !== cfg.attract || !!demoEng !== demoWanted()) startDemo(); else render();
+            return;
+          }
+          if (g !== prevGame && g !== engine.game()) engine.setGame(g);
           else render();
         };
         if (state?.subscribe) state.subscribe(apply);
-        if (!started) { started = true; engine.start(gameOf(cfg)); }
+        configured = true;
+        // OPENS WAITING FOR START (a game that opts in), unless the panel starts by itself (game_start.js).
+        if (!gate || shouldAutostart(cfg, { fallback: autostartDefault, alone: panelAlone(ctx) })) begin();
+        else { report(false); startDemo(); }
       },
       onResize() {},
-      onHide() { hidden = true; reannounce(); state?.flush?.(); try { view.onHide?.(api); } catch { /* noop */ } },
-      onShow() { hidden = false; reannounce(); try { view.onShow?.(api); } catch { /* noop */ } },
+      onHide() {
+        hidden = true;
+        if (!begun) stopDemo();
+        reannounce(); state?.flush?.(); try { view.onHide?.(api); } catch { /* noop */ }
+      },
+      onShow() {
+        hidden = false;
+        if (!begun && !demoRested) startDemo();
+        reannounce(); try { view.onShow?.(api); } catch { /* noop */ }
+      },
       settingsChoices: () => (view.settingsChoices ? view.settingsChoices() : {}),
       destroy() {
         dead = true;
+        stopDemo();
         reannounce();
         engine.destroy();
         try { view.destroy?.(api); } catch { /* gone */ }

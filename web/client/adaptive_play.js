@@ -18,8 +18,8 @@
 // long wait between one person's turns, and four is as many distinct colours as the theme has.
 
 import {
-  RATING_DEFAULTS, LADDER_DEFAULTS, REVIEW_SCHEDULES, rateAnswer, levelRating, poolFor, poolLevels,
-  stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf,
+  RATING_DEFAULTS, LADDER_DEFAULTS, THRESHOLD_DEFAULTS, REVIEW_SCHEDULES, rateAnswer, levelRating, poolFor, poolLevels,
+  stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf, thresholdsAt,
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
 
@@ -39,6 +39,7 @@ export const ADAPTIVE_DEFAULTS = Object.freeze({
   adapt: true,
   moveUpAbove: LADDER_DEFAULTS.moveUpAbove,
   moveDownBelow: LADDER_DEFAULTS.moveDownBelow,
+  ...THRESHOLD_DEFAULTS,
   judgeOver: LADDER_DEFAULTS.judgeOver,
   levelsAtOnce: LADDER_DEFAULTS.levelsAtOnce,
   review: 'standard',
@@ -57,10 +58,11 @@ const pct = (v) => `${Math.round(v * 100)}%`;
  * uses these in one mode (Math's beginner level) can hide them in the others.
  *
  * EACH DEFAULT, ARGUED:
- *   moveUpAbove 80%   Mike's number. Strictly above: with the last 10 judged, that is 9 of 10.
- *   moveDownBelow 50% Not asked for, and a GUESS on Mike's list. Without it somebody moved up by a
- *                     lucky streak is stuck on questions they keep missing. Half is clearly above
- *                     chance on three choices (33%) and clearly struggling. "Never" is a choice.
+ *   moveUpAbove / moveDownBelow 'auto'   BY LEVEL (Mike, 2026-10-02: "different defaults depending on
+ *                     your difficulty level. For easier levels it should be like 90% ... right or 75%
+ *                     wrong"). The curve's four ends are rows below; rating.js `thresholdsAt` argues it.
+ *                     A number is still offered: one threshold at every level, the old rule.
+ *   upEasy 90% / upHard 70%, downEasy 75% / downHard 50%   rating.js THRESHOLD_DEFAULTS argues each.
  *   judgeOver 10      Fewer is noise: at 5 answers, somebody who really gets 60% right shows 4 of 5
  *                     about a third of the time. More is slow: 20 answers can be twenty minutes.
  *   levelsAtOnce 2    The level being worked on plus the one below it, so most questions in a
@@ -86,11 +88,22 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
       onLabel: 'Yes, for each player', offLabel: 'No, stay at the starting level' }),
     w({ key: 'startLevel', label: 'A new player starts at level', kind: 'choice', default: 1, level: 'advanced',
       options: Array.from({ length: Math.max(2, startLevels) }, (_, i) => ({ value: i + 1, label: String(i + 1) })) }),
-    w({ key: 'moveUpAbove', label: 'Harder questions when the last answers are more than', kind: 'choice',
-      default: 0.8, level: 'advanced', options: [0.6, 0.7, 0.75, 0.8, 0.85, 0.9].map((v) => ({ value: v, label: `${pct(v)} right` })) }),
-    w({ key: 'moveDownBelow', label: 'Easier questions when the last answers are less than', kind: 'choice',
-      default: 0.5, level: 'advanced',
-      options: [{ value: 0, label: 'Never easier' }, ...[0.3, 0.4, 0.5, 0.6].map((v) => ({ value: v, label: `${pct(v)} right` }))] }),
+    w({ key: 'moveUpAbove', label: 'Harder questions when the last answers are', kind: 'choice',
+      default: 'auto', level: 'advanced', options: [{ value: 'auto', label: 'By level (the four rows below)' },
+        ...[0.6, 0.7, 0.75, 0.8, 0.85, 0.9].map((v) => ({ value: v, label: `More than ${pct(v)} right, at every level` }))] }),
+    w({ key: 'moveDownBelow', label: 'Easier questions when the last answers are', kind: 'choice',
+      default: 'auto', level: 'advanced',
+      options: [{ value: 'auto', label: 'By level (the four rows below)' }, { value: 0, label: 'Never easier' },
+        ...[0.3, 0.4, 0.5, 0.6].map((v) => ({ value: v, label: `Less than ${pct(v)} right, at every level` }))] }),
+    w({ key: 'upEasy', label: 'By level: harder, at the easiest level, from', kind: 'choice', default: THRESHOLD_DEFAULTS.upEasy,
+      level: 'advanced', options: [0.8, 0.85, 0.9, 0.95, 1].map((v) => ({ value: v, label: `${pct(v)} right` })),
+      note: 'The levels between the easiest and the hardest go in even steps between this and the next row.' }),
+    w({ key: 'upHard', label: 'By level: harder, at the hardest level, from', kind: 'choice', default: THRESHOLD_DEFAULTS.upHard,
+      level: 'advanced', options: [0.6, 0.65, 0.7, 0.75, 0.8, 0.9].map((v) => ({ value: v, label: `${pct(v)} right` })) }),
+    w({ key: 'downEasy', label: 'By level: easier, at the easiest level, from', kind: 'choice', default: THRESHOLD_DEFAULTS.downEasy,
+      level: 'advanced', options: [0.5, 0.6, 0.7, 0.75, 0.8, 0.9].map((v) => ({ value: v, label: `${pct(v)} wrong` })) }),
+    w({ key: 'downHard', label: 'By level: easier, at the hardest level, from', kind: 'choice', default: THRESHOLD_DEFAULTS.downHard,
+      level: 'advanced', options: [0.3, 0.4, 0.5, 0.6, 0.75].map((v) => ({ value: v, label: `${pct(v)} wrong` })) }),
     w({ key: 'judgeOver', label: 'Judged over the last', kind: 'choice', default: 10, level: 'advanced',
       options: [5, 10, 15, 20].map((v) => ({ value: v, label: `${v} answers` })) }),
     w({ key: 'levelsAtOnce', label: 'Levels mixed together', kind: 'choice', default: 2, level: 'advanced',
@@ -212,9 +225,14 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     data.players[p.id] = { ...was, name: p.name || was.name || '', games: { ...(was.games || {}), [game]: row } };
   }
 
+  // 'auto' (by level) passes through as 'auto'; a number is the old flat rule (rating.js thresholdsAt).
+  const auto = (v) => (v === 'auto' || v == null || v === '' ? 'auto' : Number(v));
+  const share = (v, d) => (Number.isFinite(Number(v)) && Number(v) >= 0 && Number(v) <= 1 ? Number(v) : d);
   function ladderOpts(maxLevel) {
     const k = c();
-    return { moveUpAbove: Number(k.moveUpAbove), moveDownBelow: Number(k.moveDownBelow),
+    return { moveUpAbove: auto(k.moveUpAbove), moveDownBelow: auto(k.moveDownBelow),
+      upEasy: share(k.upEasy, THRESHOLD_DEFAULTS.upEasy), upHard: share(k.upHard, THRESHOLD_DEFAULTS.upHard),
+      downEasy: share(k.downEasy, THRESHOLD_DEFAULTS.downEasy), downHard: share(k.downHard, THRESHOLD_DEFAULTS.downHard),
       judgeOver: Number(k.judgeOver) || LADDER_DEFAULTS.judgeOver,
       levelsAtOnce: Number(k.levelsAtOnce) || LADDER_DEFAULTS.levelsAtOnce, maxLevel, ...R };
   }
@@ -342,6 +360,11 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     questionRow,
     windowFor,
     allQuestions,
+    /** The step-up / step-down this player has right now in this game (rating.js `thresholdsAt`). */
+    thresholds(game, pid = currentPlayer().id) {
+      const w = windowFor(pid, game);
+      return thresholdsAt(w.floor, w.maxLevel, ladderOpts(w.maxLevel));
+    },
     tally: () => ({ ...tally }),
     lastPlayer: () => lastPlayer,
     lastMove: () => lastMove,

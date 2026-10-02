@@ -47,13 +47,21 @@
 //   * PAUSED IS OBVIOUS AND STILL: a "Paused" sign on the field, the music and the sounds stop, the
 //     loop stops, and nothing (pointer, tracker, step) moves the paddle. A press, "resume", the pause
 //     key again or Back goes on. Opening the screen's settings menu pauses it too (`shell/state`).
-//   * KEYS, ONCE THE GAME HAS THE KEYBOARD (it takes it when clicked or touched): the pause key
-//     (`pauseKey`, SPACE by default, a setting) pauses and goes on; ESCAPE pauses and opens the screen's
-//     settings menu, which is about this panel (`pauseOpensMenu`, on by default). Handled on the game's
-//     own root, never the window - two games on one screen must not pause each other.
-//     THE LIMIT, stated: until the game is clicked, Space is still the screen's Next and Escape the
-//     screen's (input_keyboard.js) - keys are bound for the whole screen, and a panel cannot know it
-//     has the switch focus. The general fix is "keys while focused" in the input layer; on Mike's list.
+//   * KEYS, ONCE THE GAME HAS THE KEYBOARD (it takes it when clicked or touched): ESCAPE pauses and opens
+//     the screen's settings menu, which is about this panel (`pauseOpensMenu`, on by default). Handled on
+//     the game's own root, never the window - two games on one screen must not pause each other.
+//   *** SPACE IS THE SCREEN'S PLAY / PAUSE NOW, NOT THIS GAME'S (Mike, 2026-10-02 late: "I think space
+//     should be universal for play/pause and primary select will launch"). *** Space is bound for the
+//     whole screen to the bar's Pause / Play (input_keyboard.js), which sends this panel `pause` / `play`
+//     when it is the selected one - so Space pauses brick breaker whether or not it was clicked, which is
+//     what the old game-owned Space could not do. A pause that comes from the bar (`meta.from ===
+//     'transport'`) only pauses: it is a transport button, not "pause and show me the settings". The game's
+//     own key is now P or nothing (`pauseKey`, off by default); a saved 'space' reads as off.
+//   *** IT DOES NOT START ITSELF, AND THE BALL DOES NOT GO BY ITSELF (Mike, same day: "It shouldn't
+//     default to auto launch. That could be a setting. People might want it open without necessarily
+//     playing."). *** `autostart` off (game_start.js argues it): a Start button over a demo the computer
+//     plays (game_agent.js), silent, never scoring; any press starts a real game, and select launches.
+//     `autoLaunch` is now 0 by default (a resting ball waits for a press); the old 3 seconds is one choice.
 //   * VERBS (actions.js MODULE_VERBS, so each is a switch binding too): left / right a step, stop (the
 //     gliding paddle), launch, pause (and the menu, as Escape), play = resume. Spoken while this panel
 //     has focus through the manifest's `voice` (input_speech.js `moduleVoiceTable`): "stop" here is the
@@ -74,6 +82,11 @@ import { SYSTEM_TOPICS } from '../actions.js';
 import { AIM_TOPIC, aimIn } from '../aim.js';
 import { SHELL_STATE } from '../shell_verbs.js';
 import {
+  autostartFields, attractFields, shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, demoReturnMs,
+  ATTRACT_DEFAULTS, START_VOICE, START_LINES, ensureStartStyle, startOverlayHtml,
+} from '../game_start.js';
+import { gameAgentFor, askAgent } from '../game_agent.js';
+import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_H, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, SWEEP_SPEEDS, STEP_SIZES,
   CONTROLS, newGame, launch, step, setPaddleX, nudgePaddle, landingX, togglePause, setPaused, nextWall, aliveCount,
 } from '../breakout.js';
@@ -91,20 +104,29 @@ export const REST_MS = 3000;
 export const IDLE_BALLS = 3;
 // The topic a tracker publishes to put the paddle somewhere: `{ x: 0..1 }` across the field.
 export const AIM = `${GAME}/aim`;
-export const PAUSE_KEYS = Object.freeze({ space: ' ', p: 'p', off: null });
+// The game's own pause key, once it has the keyboard. Space is not one any more (the header says why); a
+// saved 'space' is read as 'off', which is what Space does here now anyway (the screen's play / pause).
+export const PAUSE_KEYS = Object.freeze({ p: 'p', off: null });
+// The demo paddle moves no faster than `follow` mode's own (the ball's speed x 1.5): fast enough to get
+// to the ball, so the misses come from the agent's aim, not from a paddle that cannot keep up.
+export const DEMO_PADDLE_SPEED = 1.5;
 // The spoken commands while this panel has focus (input_speech.js `moduleVoiceTable`). Only "stop" and
 // "stop the paddle" differ from the screen-wide table (where bare "stop" is pause); the rest are listed
-// so the game's whole vocabulary is in one place.
+// so the game's whole vocabulary is in one place. "Start" (game_start.js START_VOICE) is play: it starts
+// a game that is waiting, and on a game in play it is resume, which changes nothing.
 export const VOICE = Object.freeze({
   left: 'left', right: 'right', stop: 'stop', 'stop the paddle': 'stop', launch: 'launch',
-  pause: 'pause', resume: 'play',
+  pause: 'pause', resume: 'play', ...START_VOICE,
 });
 
 export const DEFAULTS = Object.freeze({
-  // Mike: "space bar by default". FOR: the biggest key, and the one every game uses. AGAINST: a switch
-  // interface that types a space is Next everywhere else - so it only applies once the game has the
-  // keyboard (clicked or touched), and 'off' is one setting away.
-  pauseKey: 'space',
+  // Off: Space is the screen's play / pause (input_keyboard.js), which reaches this game whenever it is
+  // the selected panel. P is for somebody who wants a key of the game's own as well.
+  pauseKey: 'off',
+  // game_start.js argues all four: a game waits for Start, the computer plays meanwhile, silently.
+  autostart: false,
+  autostartAlone: 'same',
+  ...ATTRACT_DEFAULTS,
   // Escape and the Pause command also open the settings menu (Mike: "pause (pauses and brings up
   // settings)"). Off: they only pause.
   pauseOpensMenu: true,
@@ -114,7 +136,11 @@ export const DEFAULTS = Object.freeze({
   sweepSpeed: 'slow',
   restart: 'toward',
   stepSize: 'medium',
-  autoLaunch: 3,          // seconds a resting ball waits before it goes by itself; 0 = only on a press
+  // Seconds a resting ball waits before it goes by itself; 0 = only on a press. 0 by default (Mike: "It
+  // shouldn't default to auto launch. That could be a setting."). FOR 3 s (the old default): a one-switch
+  // player's every press then goes on stopping the paddle, never on launching. AGAINST, and it wins: a ball
+  // that goes by itself is the game playing without the person; select launching is one press a ball.
+  autoLaunch: 0,
   lives: 0,               // 0 = off
   rows: 4,
   cols: 8,
@@ -139,8 +165,10 @@ const SETTINGS = [
       { value: 'follow', label: 'It catches every ball; a press changes the angle' },
     ],
     note: 'A pointer can always move the paddle, and a click is a press.' },
-  { key: 'pauseKey', label: 'Key that pauses', kind: 'choice', default: 'space', level: 'standard',
-    options: [{ value: 'space', label: 'Space bar' }, { value: 'p', label: 'P' }, { value: 'off', label: 'None' }],
+  ...autostartFields({ on: false }),
+  ...attractFields({ on: true, sound: true }),
+  { key: 'pauseKey', label: 'A key of its own that pauses', kind: 'choice', default: 'off', level: 'advanced',
+    options: [{ value: 'off', label: 'None: Space (the screen\'s pause / play) does it' }, { value: 'p', label: 'P' }],
     note: 'Once the game has been clicked or touched. Escape always pauses.' },
   { key: 'pauseOpensMenu', label: 'Escape and the Pause command also open the settings', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'No, they only pause' },
@@ -159,7 +187,7 @@ const SETTINGS = [
     note: 'Only when it glides by itself.' },
   { key: 'stepSize', label: 'How far one press moves the paddle', kind: 'choice', default: 'medium', level: 'standard',
     options: [{ value: 'small', label: 'A little' }, { value: 'medium', label: 'Some' }, { value: 'large', label: 'A lot' }] },
-  { key: 'autoLaunch', label: 'A ball on the paddle goes by itself after', kind: 'choice', default: 3, level: 'standard',
+  { key: 'autoLaunch', label: 'A ball on the paddle goes by itself after', kind: 'choice', default: 0, level: 'standard',
     options: [{ value: 0, label: 'Never: only on a press' }, { value: 2, label: '2 seconds' }, { value: 3, label: '3 seconds' },
       { value: 5, label: '5 seconds' }, { value: 8, label: '8 seconds' }] },
   { key: 'lives', label: 'Balls per game', kind: 'choice', default: 0, level: 'standard',
@@ -243,6 +271,19 @@ registerModule(
     let drawnBricks = null;
     let lastSay = '', lastScore = '';
     let score = null, ledger = null, tones = null, music = null;
+    // ---- waiting for Start, and the demo (game_start.js, game_agent.js) ----
+    let started = true;           // false: the Start button is up and `g` is the demo's game
+    let demo = false;             // the computer is playing (only while not started)
+    let demoMs = 0;               // how long this demo has run
+    let demoRested = false;       // it ran its time (`attractForMs`): the last frame stays
+    let demoMemory = {};          // the agent's own notes, thrown away with the demo
+    let readyMs = 0;              // how long the demo's ball has sat on its paddle
+    let agent = null;
+    let restTimer = null;         // a real game come to rest: when the demo comes back
+    let overlayEl = null, lastOverlay = null;
+    const report = createPlayReporter(bus, ctx);
+    const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
+    const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
 
     const opts = () => ({
       speed: pick(cfg.ballSpeed, BALL_SPEEDS, 'slow'),
@@ -257,10 +298,18 @@ registerModule(
     // ---- sound ------------------------------------------------------------------------------
     function sound(ev) {
       if (!cfg.sounds || !armed || !tones) return;
+      if (!started && cfg.attractSound !== true) return;     // the demo is silent unless asked
       const t = TONES[ev];
       if (t) tones.tone(t[0], t[1], { type: t[2], level: 0.7 });
     }
     function syncAudio() {
+      if (!started) {
+        // The demo: never the music; its bounces only with `attractSound` (and only after a press has woken
+        // the speaker - a browser will not play before one, and that is fine for a silent default).
+        tones?.setActive(!dead && !hidden && armed && demo && !demoRested && cfg.attractSound === true && !!cfg.sounds);
+        try { music?.pause(); } catch { /* quiet */ }
+        return;
+      }
       const playing = !dead && !hidden && armed && g && g.phase !== 'paused' && !idle;
       tones?.setActive(playing && g.phase === 'play' && !!cfg.sounds);
       try {
@@ -275,6 +324,7 @@ registerModule(
     // ---- the loop: runs only while something is moving ---------------------------------------
     function needsFrames() {
       if (dead || hidden || !g) return false;
+      if (!started) return demo && !demoRested;
       if (g.phase === 'paused') return false;
       if (g.phase === 'play' || g.phase === 'cleared' || g.phase === 'again') return true;
       // ready: a sweeping paddle, or a ball about to go by itself
@@ -300,14 +350,46 @@ registerModule(
       if (needsFrames()) { loopHandle = clock.request(frame); } else last = null;
     }
 
+    // ---- the demo: the computer (or whoever registered) plays a game of its own -------------------
+    // `g` IS the demo's game while not started; Start throws it away and deals a fresh one. Nothing here
+    // touches the score, the points, the stats or the saved state.
+    function demoObservation() {
+      return { game: GAME, kind: 'paddle', t: demoMs, actions: ['aim', 'launch'],
+        state: { phase: g.phase, ball: { x: g.ball.x, y: g.ball.y, vx: g.ball.vx, vy: g.ball.vy },
+          paddle: { x: g.paddle.x, w: g.paddle.w }, landingX: landingX(g), fieldW: FIELD_W, fieldH: FIELD_H, readyMs } };
+    }
+    function applyDemo(a, dt) {
+      if (!a || started || dead || !g) return;
+      const o = opts();
+      if (a.act === 'launch' && g.phase === 'ready') { launch(g, { speed: o.speed, rand, control: 'steps' }); readyMs = 0; return; }
+      if (a.act === 'aim' && g.phase !== 'paused') {
+        const want = Math.max(0, Math.min(1, Number(a.x) || 0)) * FIELD_W;
+        const max = o.speed * DEMO_PADDLE_SPEED * Math.max(0, dt) / 1000;
+        setPaddleX(g, g.paddle.x + Math.max(-max, Math.min(max, want - g.paddle.x)));
+      }
+    }
+    function advanceDemo(dt) {
+      if (!demo || demoRested) return [];
+      demoMs += dt;
+      if (demoMs >= demoLimitMs(cfg.attractForMs)) { demoRested = true; syncAudio(); render(); return []; }
+      if (g.phase === 'ready') readyMs += dt; else readyMs = 0;
+      const a = askAgent(agent, demoObservation(), { rand, memory: demoMemory }, { onLate: (x) => applyDemo(x, 33) });
+      applyDemo(a, dt);
+      const events = step(g, dt, { ...opts(), control: 'steps', autoLaunchMs: 0, idle: true });
+      for (const ev of events) sound(ev);
+      render();
+      return events;
+    }
+
     function advance(dt) {
+      if (!started) return advanceDemo(dt);
       const before = g.phase;
       const events = step(g, dt, opts());
       for (const ev of events) {
         sound(ev);
         if (ev === 'miss') {
           missesSinceInput++;
-          if (missesSinceInput >= IDLE_BALLS) { idle = true; g.paddle.moving = false; }
+          if (missesSinceInput >= IDLE_BALLS) { idle = true; g.paddle.moving = false; scheduleDemo(); }
         }
         if (ev === 'cleared') {
           stats = { ...stats, walls: (Number(stats.walls) || 0) + 1 };
@@ -331,10 +413,46 @@ registerModule(
     // ---- presses ------------------------------------------------------------------------------
     function markInput() {
       idle = false; missesSinceInput = 0;
+      clearRest();
       if (!armed) { armed = true; tones?.resume(); }
+    }
+
+    // ---- Start, and back to the Start screen ----------------------------------------------------------
+    function clearRest() { if (restTimer != null) { try { clearT(restTimer); } catch { /* gone */ } restTimer = null; } }
+    // A real game come to rest (nobody pressing): the demo comes back after `attractAfterMs` (0 = never).
+    function scheduleDemo() {
+      const ms = demoReturnMs(cfg.attractAfterMs);
+      if (!(ms > 0) || restTimer != null || dead) return;
+      restTimer = setT(() => { restTimer = null; if (!dead && started && idle && g?.phase !== 'paused') toStartScreen(); }, ms);
+    }
+    const demoWanted = () => cfg.attract !== false && !reducedMotion();
+    function toStartScreen() {
+      if (dead) return;
+      clearRest();
+      stopLoop();
+      started = false;
+      g = newGame({ rows: cfg.rows, cols: cfg.cols, paddle: cfg.paddleWidth, lives: 0 });
+      idle = true; missesSinceInput = 0;
+      demo = demoWanted();
+      demoMs = 0; demoRested = false; demoMemory = {}; readyMs = 0;
+      agent = demo ? gameAgentFor(GAME, 'paddle') : null;
+      report(false);
+      syncAudio(); render(); ensureLoop();
+    }
+    // ANY PRESS STARTS A REAL GAME: a fresh wall, the ball on the paddle, waiting for select to launch it.
+    function startGame() {
+      if (dead || started) return false;
+      stopLoop();
+      started = true; demo = false; agent = null; demoMemory = {};
+      fresh();
+      markInput();
+      report(true);
+      syncAudio(); render(); ensureLoop();
+      return true;
     }
     function select() {
       if (dead) return;
+      if (startGame()) return;
       markInput();
       const o = opts();
       if (g.phase === 'paused') togglePause(g);
@@ -361,6 +479,7 @@ registerModule(
     }
     function nudge(dir) {
       if (dead) return;
+      if (startGame()) return;
       markInput();
       if (g.phase === 'paused') return;
       if (cfg.control === 'follow') g.aim = dir;
@@ -371,9 +490,10 @@ registerModule(
       syncAudio(); render(); ensureLoop();
     }
     function back() {
-      if (dead) return;
+      if (dead || !started) return;      // nothing to pause while it waits for Start
       markInput();
       togglePause(g);
+      report(g.phase !== 'paused');
       syncAudio(); render();
       if (g.phase === 'paused') stopLoop(); else ensureLoop();
     }
@@ -391,20 +511,25 @@ registerModule(
     }
     // IDEMPOTENT: pausing a paused game leaves it paused (a command heard twice, a menu opening twice).
     function pauseGame({ menu = false } = {}) {
-      if (dead || !g) return;
+      if (dead || !g || !started) return;   // a game waiting for Start is not going: nothing to pause
       if (setPaused(g, true)) stopLoop();
+      report(false);
       syncAudio(); render();
       if (menu && cfg.pauseOpensMenu !== false) openMenu();
     }
+    // "Resume" / "play" / the bar's Play / Space: goes on - or, waiting for Start, starts.
     function resumeGame() {
       if (dead || !g) return;
+      if (startGame()) return;
       markInput();
       setPaused(g, false);
+      report(true);
       syncAudio(); render(); ensureLoop();
     }
     // "Stop": the gliding paddle stops where it is. Nothing else changes - the ball keeps going.
     function stopPaddle() {
       if (dead || !g) return;
+      if (startGame()) return;
       markInput();
       if (g.phase === 'paused') return;
       g.paddle.moving = false;
@@ -413,6 +538,7 @@ registerModule(
     // "Launch": a resting ball goes (and, gliding, the paddle starts - the same as a launching press).
     function launchBall() {
       if (dead || !g) return;
+      if (startGame()) return;
       markInput();
       if (g.phase !== 'ready') return;
       const o = opts();
@@ -423,7 +549,8 @@ registerModule(
     // A tracker (or anything) putting the paddle at `x` (0..1 across the field). The pointer rule.
     function aimAt(p) {
       const x = Number(typeof p === 'number' ? p : p?.x);
-      if (!Number.isFinite(x) || dead || !g || cfg.control === 'follow' || g.phase === 'paused') return;
+      // Not while it waits for Start: an aim is a position, not a press, and the demo's paddle is the demo's.
+      if (!Number.isFinite(x) || dead || !g || !started || cfg.control === 'follow' || g.phase === 'paused') return;
       missesSinceInput = 0;
       g.paddle.moving = false;
       setPaddleX(g, Math.max(0, Math.min(1, x)) * FIELD_W);
@@ -438,13 +565,13 @@ registerModule(
     }
     // Keys, on the game's own root (see the header): the pause key, and Escape.
     function onKey(e) {
-      if (dead || !g || e.repeat) return;
+      if (dead || !g || e.repeat || !started) return;
       if (e.key === 'Escape') {
         e.preventDefault(); e.stopPropagation();
         pauseGame({ menu: true });
         return;
       }
-      const want = Object.prototype.hasOwnProperty.call(PAUSE_KEYS, cfg.pauseKey) ? PAUSE_KEYS[cfg.pauseKey] : PAUSE_KEYS.space;
+      const want = Object.prototype.hasOwnProperty.call(PAUSE_KEYS, cfg.pauseKey) ? PAUSE_KEYS[cfg.pauseKey] : null;
       if (want && String(e.key).toLowerCase() === want) {
         e.preventDefault(); e.stopPropagation();
         if (g.phase === 'paused') resumeGame(); else pauseGame();
@@ -459,7 +586,7 @@ registerModule(
       return ((e.clientX - r.left) / r.width) * FIELD_W;
     }
     function onPointerMove(e) {
-      if (dead || cfg.control === 'follow' || !g || g.phase === 'paused') return;
+      if (dead || !started || cfg.control === 'follow' || !g || g.phase === 'paused') return;
       const x = fieldX(e);
       if (x == null) return;
       missesSinceInput = 0;
@@ -471,6 +598,7 @@ registerModule(
       if (dead || !(e.target instanceof Element) || !mount.contains(e.target)) return;
       // The game takes the keyboard when it is clicked or touched, so the pause key and Escape reach it.
       try { rootEl?.focus?.({ preventScroll: true }); } catch { /* not focusable here */ }
+      if (startGame()) return;           // waiting for Start: a click anywhere on it is Start
       if (cfg.control !== 'follow') { const x = fieldX(e); if (x != null && g.phase !== 'paused') setPaddleX(g, x); }
       select();
       // select() starts a sweep on launch; a pointer is holding the paddle, so it stays put.
@@ -503,6 +631,13 @@ registerModule(
         bb.dataset.phase = g.phase;
         bb.dataset.control = cfg.control;
         bb.dataset.motion = reducedMotion() ? 'reduce' : 'full';
+        bb.dataset.started = started ? '1' : '0';
+        bb.dataset.demo = !started && demo && !demoRested ? '1' : '0';
+      }
+      // THE START BUTTON, over the field, while it waits. The words are under the field, as always.
+      if (overlayEl) {
+        const html = started ? '' : startOverlayHtml({ demo: demo && !demoRested, note: false });
+        if (html !== lastOverlay) { overlayEl.innerHTML = html; lastOverlay = html; overlayEl.hidden = started; }
       }
       for (const b of g.bricks) {
         const el = brickEls.get(b.id);
@@ -530,8 +665,14 @@ registerModule(
         ballEl.hidden = g.phase === 'cleared' || g.phase === 'again';
       }
       if (pausedEl && pausedEl.hidden === (g.phase === 'paused')) pausedEl.hidden = g.phase !== 'paused';
-      const line = statusFor(g, { control: cfg.control, idle, autoLaunch: Number(cfg.autoLaunch) || 0 });
+      const line = !started ? (demo && !demoRested ? START_LINES.demo : START_LINES.still)
+        : statusFor(g, { control: cfg.control, idle, autoLaunch: Number(cfg.autoLaunch) || 0 });
       if (sayEl && line !== lastSay) { sayEl.textContent = line; lastSay = line; }
+      // THE DEMO NEVER SCORES: nothing drawn, nothing published.
+      if (!started) {
+        if (scoreEl && lastScore !== '') { scoreEl.textContent = ''; scoreEl.hidden = true; lastScore = ''; }
+        return;
+      }
       const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
       const lives = g.livesLeft != null ? ` · Balls left: ${g.livesLeft}` : '';
       const txt = own ? `Bricks: ${g.broken}${g.walls ? ` · Walls down: ${g.walls}` : ''}${lives}` : '';
@@ -548,18 +689,21 @@ registerModule(
 
     return {
       __probe: () => ({ game: g, cfg: { ...cfg }, idle, armed, missesSinceInput, looping: loopHandle != null,
-        stats: { ...stats }, tones: tones?.state() || null, music: music?.state() || null, menuAsks }),
+        stats: { ...stats }, tones: tones?.state() || null, music: music?.state() || null, menuAsks,
+        started, demo, demoRested, demoMs, agent: agent?.id || null, restPending: restTimer != null }),
       // The suite's handle on time: advance the game by `dt` ms exactly as a frame would.
       __step: (dt) => (dead ? [] : advance(dt)),
       init() {
         let cssHref = '';
         try { cssHref = new URL('../brickbreaker.css', import.meta.url).href; } catch { /* unstyled, still works */ }
+        ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-bb-css href="${esc(cssHref)}">` : ''}`
-          + '<div class="bb-wrap" data-bb-root tabindex="0" aria-label="Brick breaker"><div class="bb" data-bb>'
+          + '<div class="bb-wrap gs-host" data-bb-root tabindex="0" aria-label="Brick breaker"><div class="bb" data-bb>'
           + '<div class="bb-stage"><div class="bb-field" data-field role="img" aria-label="A wall of bricks, a ball and a paddle"></div></div>'
           + '<div class="bb-bar"><p class="bb-say" role="status" aria-live="polite"></p><p class="bb-score" data-score hidden></p></div>'
-          + '</div></div>';
+          + '</div><div data-start-host hidden></div></div>';
         rootEl = mount.querySelector('[data-bb-root]');
+        overlayEl = mount.querySelector('[data-start-host]');
         fieldEl = mount.querySelector('[data-field]');
         sayEl = mount.querySelector('.bb-say');
         scoreEl = mount.querySelector('[data-score]');
@@ -596,7 +740,12 @@ registerModule(
         };
         applyCfg(state?.get?.());
         fresh();
-        state?.subscribe?.((s) => { applyCfg(s); syncAudio(); render(); ensureLoop(); });
+        // A setting changed while it waits for Start: the demo follows "While nobody is playing" at once.
+        state?.subscribe?.((s) => {
+          applyCfg(s);
+          if (!started && demoWanted() !== demo) { toStartScreen(); return; }
+          syncAudio(); render(); ensureLoop();
+        });
 
         bus.subscribe(`${GAME}/next`, () => nudge(1));
         bus.subscribe(`${GAME}/prev`, () => nudge(-1));
@@ -607,29 +756,37 @@ registerModule(
         bus.subscribe(`${GAME}/right`, () => nudge(1));
         bus.subscribe(`${GAME}/stop`, () => stopPaddle());
         bus.subscribe(`${GAME}/launch`, () => launchBall());
-        bus.subscribe(`${GAME}/pause`, () => pauseGame({ menu: true }));
+        // A pause from the bar's Pause / Play (or Space, which is that button) only pauses; a spoken or
+        // switched "pause" also asks for the settings (Mike: "pause (pauses and brings up settings)").
+        bus.subscribe(`${GAME}/pause`, (_p, _t, meta) => pauseGame({ menu: !(meta && meta.from === 'transport') }));
         bus.subscribe(`${GAME}/resume`, () => resumeGame());
         bus.subscribe(AIM, (p) => aimAt(p));
         bus.subscribe(AIM_TOPIC, (a) => { try { onAim(a); } catch { /* an aim must never break the game */ } });
         // The screen's settings menu opening (from anywhere) pauses a game in play: a ball nobody can see
         // behind the menu is a ball lost. Closing it does NOT resume - the person may not be looking at the
         // field yet; a press, "resume" or the pause key goes on.
-        bus.subscribe(SHELL_STATE, (p) => { if (p && p.menuOpen === true && g && g.phase !== 'paused') pauseGame(); });
+        bus.subscribe(SHELL_STATE, (p) => { if (p && p.menuOpen === true && started && g && g.phase !== 'paused') pauseGame(); });
         // A fresh game (the suite, or anything that wants to hand somebody a new wall).
-        bus.subscribe(`${GAME}/new`, () => { fresh(); stopLoop(); syncAudio(); render(); });
+        bus.subscribe(`${GAME}/new`, () => { if (!started) { toStartScreen(); return; } fresh(); stopLoop(); syncAudio(); render(); });
+        // Back to the Start screen (and the demo), as if it had come to rest.
+        bus.subscribe(`${GAME}/attract`, () => toStartScreen());
 
-        render();
+        // OPENS WAITING FOR START, unless this panel starts by itself (game_start.js).
+        if (shouldAutostart(state?.get?.() || {}, { fallback: DEFAULTS.autostart, alone: panelAlone(ctx) })) {
+          started = true; report(true); render();
+        } else toStartScreen();
       },
       onResize() { render(); },
       onHide() {
         hidden = true;
-        if (g && g.phase === 'play') togglePause(g);   // somebody coming back finds it paused, not lost
+        if (started && g && g.phase === 'play') { togglePause(g); report(false); }   // somebody coming back finds it paused, not lost
         stopLoop(); syncAudio(); render();
         try { state?.flush?.(); } catch { /* nothing to do */ }
       },
       onShow() { hidden = false; syncAudio(); render(); ensureLoop(); },
       destroy() {
         dead = true;
+        clearRest();
         stopLoop();
         mount.removeEventListener('pointermove', onPointerMove);
         mount.removeEventListener('pointerdown', onPointerDown);
