@@ -39,6 +39,7 @@ import { expectFor } from '../health.js';
 import {
   NOTE_STREAM, NOTE_KIND, SOMEONE, MAX_TEXT, READY_NOTES, DEFAULTS, DEFAULT_PAPER, noteRows, currentNote,
   knownAuthors, parseReady, whenWords, sizeFor, inkFor, contrastRatio, spoken, authorOf, cleanText,
+  TAKEN_DOWN, isTakeDown, historyRows,
 } from '../modules/note.js';
 
 const out = document.getElementById('results');
@@ -132,6 +133,19 @@ try {
     check('a row that is not a note, or has no words, is ignored', noteRows(rows).length === 3);
     check('*** the note on show is the newest ***', currentNote(rows).data.text === 'third');
     check('no rows is no note (not a crash)', currentNote([]) === null && currentNote(null) === null);
+  {
+    const down = (at, id, from) => ({ id, kind: NOTE_KIND, data: { text: '', author: 'Jo', via: TAKEN_DOWN, from }, created_at: new Date(at).toISOString() });
+    const withDown = [...rows, down(T0 + 4000, 4, 3)];
+    check('the take-down word is the server\'s (notes.py TAKEN_DOWN)', TAKEN_DOWN === 'taken down');
+    check('*** a take-down as the newest entry: no note on show ***', currentNote(withDown) === null);
+    check('...but it is a row in the history, and the notes are all still there',
+      historyRows(withDown).length === 4 && isTakeDown(historyRows(withDown)[3]) && noteRows(withDown).length === 3);
+    check('*** a note after a take-down is on show again ***', currentNote([...withDown, row('fourth', 'Ann', T0 + 6000, 6)])?.data.text === 'fourth');
+    check('an older take-down does not hide a newer note (time order, not arrival order)',
+      currentNote([row('later', 'Ann', T0 + 9000, 9), down(T0 + 8000, 8, 3)])?.data.text === 'later');
+    check('whoever took a note down is not offered as a name to sign with',
+      !knownAuthors([down(T0, 1, null)]).length);
+  }
     check('*** a note nobody signed is from "Someone" ***', authorOf(currentNote(rows)) === SOMEONE && SOMEONE === 'Someone');
     check('names already used are offered, newest first, "Someone" left out, no repeats',
       knownAuthors([...rows, row('again', 'mike', T0 + 4000, 4)]).join() === 'mike,Ann', knownAuthors(rows).join());
@@ -363,6 +377,103 @@ try {
     t.pub('back');
     check('back closes the history', t.probe().view === 'note');
     t.inst.destroy();
+  }
+
+  section('*** taking the note down: a new entry, and the panel shows no note ***');
+  {
+    const s = streams();
+    const w = s.make('note');
+    await w.append('note', { text: 'First', author: 'Mike' });
+    await w.append('note', { text: 'Back soon.', author: 'Ann' });
+    const t = mount({ s, author: 'Jo' });
+    const other = mount({ s });
+    await tick();
+    check('with a note up, "Take the note down" is offered', t.btn('takedown')?.textContent === 'Take the note down');
+    t.press('takedown');
+    await tick();
+    const last = s.data.note[s.data.note.length - 1];
+    check('*** it is a NEW row: three rows now, nothing edited or removed ***', s.data.note.length === 3
+      && s.data.note.slice(0, 2).map((e) => e.data.text).join() === 'First,Back soon.');
+    check('*** the row says "taken down", has no words, and points at the note it took down ***',
+      last.kind === NOTE_KIND && last.data.via === TAKEN_DOWN && last.data.text === '' && last.data.from === s.data.note[1].id,
+      JSON.stringify(last));
+    check('it is signed like a change (the host\'s name here)', last.data.author === 'Jo');
+    check('*** the panel is back in its no-note state ***', !t.host.querySelector('[data-note-text]')
+      && !!t.host.querySelector('[data-note-empty]') && t.btn('change')?.textContent === 'Leave a note');
+    check('no Read it aloud and no second take-down when nothing shows', !t.btn('read') && !t.btn('takedown'));
+    check('*** another panel on the same note goes blank too ***', !other.text() && !!other.host.querySelector('[data-note-empty]'));
+    check('"Earlier notes" counts every note now (none is on show)', t.btn('history')?.textContent === 'Earlier notes (2)');
+    t.press('history');
+    const items = [...t.host.querySelectorAll('[data-note-history] li')];
+    check('*** the history shows the take-down, newest first, with who and when ***', items.length === 3
+      && items[0].hasAttribute('data-down') && /Taken down/.test(items[0].textContent) && /^Jo · /.test(items[0].querySelector('.nt-hwho').textContent));
+    check('nothing is marked "on show now", and the take-down cannot be "put back"',
+      !t.host.querySelector('[data-current]') && !items[0].querySelector('[data-act="putback"]') && !/on show now/.test(t.host.textContent));
+    items[1].querySelector('[data-act="putback"]').dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    await tick();
+    check('*** "Put this one back" undoes it: the note is up again, as a fourth row ***', s.data.note.length === 4
+      && t.text() === 'Back soon.' && other.text() === 'Back soon.');
+    t.inst.destroy(); other.inst.destroy();
+  }
+
+  section('taking it down: by switch, by a visitor, when it fails, and where it is not offered');
+  {
+    const s = streams();
+    await s.make('note').append('note', { text: 'Back soon.', author: 'Ann' });
+    const t = mount({ s });
+    await tick();
+    t.pub('select');
+    for (let i = 0; i < 20 && t.probe().litAct !== 'takedown'; i++) t.pub('next');
+    t.pub('select');
+    await tick();
+    check('*** a switch reaches it: next and select alone take the note down ***', !t.text() && s.data.note.length === 2
+      && s.data.note[1].data.via === TAKEN_DOWN && t.probe().current === null);
+    check('...signed "Someone" when the host knows no name', s.data.note[1].data.author === SOMEONE);
+    t.inst.destroy();
+
+    const v = mount({ s: (() => { const x = streams(); x.make('note').append('note', { text: 'Hi', author: 'Ann' }); return x; })(), author: 'Aunt Dolly', locked: true });
+    await tick();
+    v.press('takedown');
+    await tick();
+    check('a visitor on their own account takes it down under their own name', v.probe().current === null
+      && v.s.data.note[v.s.data.note.length - 1].data.author === 'Aunt Dolly');
+    v.inst.destroy();
+
+    const f = streams();
+    await f.make('note').append('note', { text: 'Stay up', author: 'Ann' });
+    const u = mount({ s: f });
+    await tick();
+    f.failOnce();
+    u.press('takedown');
+    await tick(); await tick();
+    check('*** a take-down that fails says so, and the note stays up ***', u.text() === 'Stay up'
+      && /still up/.test(u.host.querySelector('[data-note-err]')?.textContent || ''), u.host.querySelector('[data-note-err]')?.textContent);
+    u.inst.destroy();
+
+    const refused = { make: () => ({ append: () => Promise.reject(Object.assign(new Error('no'), { status: 403 })), load: () => Promise.resolve(),
+      get: () => ({ events: [{ id: 1, kind: NOTE_KIND, data: { text: 'Hi', author: 'Ann' }, created_at: new Date(T0).toISOString() }] }),
+      subscribe: () => () => {}, startPolling() {}, destroy() {} }) };
+    const r = mount({ s: refused, author: 'Jo', locked: true });
+    await tick(); await tick();
+    r.press('takedown');
+    await tick(); await tick();
+    check('a 403 (no longer allowed) says so in words', /cannot leave a note here/.test(r.host.querySelector('[data-note-err]')?.textContent || ''));
+    r.inst.destroy();
+
+    const s2 = streams();
+    await s2.make('note').append('note', { text: 'Back at 3.', author: 'Mike' });
+    const n2 = mount({ s: s2, saved: { allowChange: false } });
+    await tick();
+    check('*** a panel that must not change the note cannot take it down either ***', !n2.btn('takedown'));
+    n2.inst.destroy();
+
+    const local = mount({ noEvents: true });
+    local.press('change'); local.press('ready'); local.press('save');
+    await tick();
+    local.press('takedown');
+    await tick();
+    check('with no server: taken down on this panel too', !local.text() && !!local.host.querySelector('[data-note-empty]'));
+    local.inst.destroy();
   }
 
   section('two panels on one note agree; a second note is separate');

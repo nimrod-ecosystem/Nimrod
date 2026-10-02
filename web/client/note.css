@@ -55,4 +55,6 @@
 .nt-hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(6px, 1.6cqmin, 14px)}
 .nt-hist li{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface)}
 .nt-hist .nt-htext{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:clamp(14px, 3.6cqmin, 28px)}
+/* A take-down in the history: said in words ("Taken down"), set apart without relying on colour. */
+.nt-hist li[data-down] .nt-htext{font-style:italic;color:var(--text-muted)}
 .nt-hist .nt-hwho{margin:0;font-size:clamp(12px, 2.8cqmin, 22px);color:var(--text-muted)}

@@ -30,7 +30,8 @@ import { AI_STATE_KEY } from '../nimrod_ai.js';
 import { HOME_STATE_KEY } from '../home_dashboard.js';
 import { AVATAR_KEY } from '../avatar.js';
 import { AI_CHARACTERS_KEY, seedById, NAMES_RE, AI_ROOM_DONE_KEY } from '../ai_characters.js';
-import { SUBJECT_KEY, DEFAULT_SUBJECT, PROFILE_VERB_TOPICS, CALL_NOT_BUILT, connectHelpFor, PROFILE_SETTINGS } from '../modules/profile.js';
+import { SUBJECT_KEY, DEFAULT_SUBJECT, PROFILE_VERB_TOPICS, connectHelpFor, PROFILE_SETTINGS,
+  CALL_ON_SCREEN, CALL_NOT_ALLOWED, CALL_HELP, callURL, mayCall, onScreen } from '../modules/profile.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -75,13 +76,15 @@ function fakeAI({ replies = [], models = ['qwen2.5:3b'], baseUrl = 'http://127.0
     chat: async (msgs, opts) => { calls.chat.push({ msgs, opts }); if (fail) return { ok: false, reason: fail }; const r = replies.length ? replies.shift() : 'Okay.'; return { ok: true, text: r, model: models[0] }; },
   };
 }
-function fakeScreens({ people = [] } = {}) {
+function fakeScreens({ people = [], shared = [] } = {}) {
   const screens = new Map();
   let n = 0;
-  const calls = { create: [], addModule: [], people: 0 };
+  const calls = { create: [], addModule: [], people: 0, shared: 0 };
   return {
     calls, screens,
     people: async () => { calls.people++; return people; },
+    // /api/drive/shared's rows; a function to throw, for "could not be read".
+    sharedWithMe: async () => { calls.shared++; if (typeof shared === 'function') return shared(); return shared; },
     list: async () => [...screens.values()].map((s) => ({ id: s.id, name: s.name, person_id: s.person_id })),
     create: async (name, personId = '') => { const id = `s${++n}`; screens.set(id, { id, name, person_id: personId, modules: [] }); calls.create.push({ name, personId }); return { id, name }; },
     get: async (pid) => { const s = screens.get(pid); return s ? { ...s, modules: [...s.modules] } : null; },
@@ -92,11 +95,19 @@ function bank() {
   const made = {};
   return { made, make: (pid, key, init) => { made[`${pid}/${key}`] = made[`${pid}/${key}`] || fakeState(init || {}); return made[`${pid}/${key}`]; } };
 }
-function box() { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; }
+// `wrap`: a class for an element the card is mounted inside (e.g. 'kiosk', the real kiosk's panel root).
+function box(wrap = '') {
+  const b = document.createElement('div'); b.className = 'box';
+  if (!wrap) { document.body.append(b); return b; }
+  const w = document.createElement('div'); w.className = wrap; w.append(b); document.body.append(w); return b;
+}
 
 async function mountCard({ subject = null, ai = fakeAI(), person = 'p1', personRows = {}, people = [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }],
-                           screens = fakeScreens({ people }), output = fakeOutput(), bus = createBus(), rooms = true, id = 'pf1' } = {}) {
-  const mount = box();
+                           shared = [], screens = fakeScreens({ people, shared }), output = fakeOutput(), bus = createBus(), rooms = true, id = 'pf1', wrap = '' } = {}) {
+  const mount = box(wrap);
+  // A followed link is recorded, never navigated: this page must stay where it is.
+  const followed = [];
+  mount.addEventListener('click', (e) => { const a = e.target.closest?.('a[href]'); if (a) { e.preventDefault(); followed.push(a.getAttribute('href')); } });
   const persons = bank();
   for (const [k, v] of Object.entries(personRows)) { const [pid, key] = k.split('/'); persons.make(pid, key, v); }
   const states = bank();
@@ -111,7 +122,8 @@ async function mountCard({ subject = null, ai = fakeAI(), person = 'p1', personR
   const doBtn = (what, n = 0) => mount.querySelectorAll(`[data-pf-do="${what}"]`)[n];
   const probe = () => inst.impl.__probe();
   const type = async (text) => { q('[data-pf-field="say"]').value = text; doBtn('send').click(); await inst.impl.__settled(); };
-  return { mount, inst, q, doBtn, probe, type, bus, output, ai, screens, persons, states, state, goes, done: () => { inst.destroy(); mount.remove(); } };
+  return { mount, inst, q, doBtn, probe, type, bus, output, ai, screens, persons, states, state, goes, followed,
+    done: () => { inst.destroy(); (wrap ? mount.parentElement : mount).remove(); } };
 }
 
 try {
@@ -157,8 +169,8 @@ try {
     const t = await mountCard({ subject: { kind: 'person', id: 'p2' }, personRows: { [`p2/${HOME_STATE_KEY}`]: { homeId: 'home-p2' } } });
     await until(() => !t.doBtn('visit-home').disabled);
     check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this account');
-    check('*** Call is DIMMED, with the reason (a screen answers calls, it does not place them) ***',
-      t.doBtn('call').disabled && t.doBtn('call').title === CALL_NOT_BUILT);
+    check('*** off a screen, Call is a link to the caller page for them ***',
+      t.doBtn('call').tagName === 'A' && t.doBtn('call').getAttribute('href') === '/call.html?person=p2' && t.doBtn('call').title === CALL_HELP);
     check('their Home is offered once it is found', !t.doBtn('visit-home').disabled && /Visit their Home/.test(t.doBtn('visit-home').textContent));
     check('nothing opened by looking', t.goes.length === 0);
     t.doBtn('visit-home').click();
@@ -171,6 +183,77 @@ try {
     check('the viewer is "You"; with no Home made, Visit is dimmed and says so',
       me.q('[data-pf-line]').textContent === 'You' && me.doBtn('visit-home').disabled && me.doBtn('visit-home').title === 'No Home made yet.');
     me.done();
+  }
+
+  // ============================================================================================
+  section('*** Call: never from a screen; from a person\'s own browser, only to people this account may call ***');
+  {
+    // The rules, pure.
+    check('their own people may be called', mayCall('p1', { own: [{ id: 'p1' }], shared: null }) === true);
+    check('...and people shared with this account by a drive grant (call_page.js\'s same list)',
+      mayCall('p9', { own: [{ id: 'p1' }], shared: [{ person_id: 'p9' }] }) === true);
+    check('*** anybody else may not ***', mayCall('p9', { own: [{ id: 'p1' }], shared: [] }) === false);
+    check('not known yet while a list is still loading', mayCall('p9', { own: [{ id: 'p1' }], shared: null }) === null);
+    check('no id, no call', mayCall('', { own: [], shared: [] }) === false);
+    check('the link carries the person, encoded', callURL('a b&c') === '/call.html?person=a%20b%26c');
+    const inside = (cls) => { const w = document.createElement('div'); w.className = cls; const m = document.createElement('div'); w.append(m); document.body.append(w); return { m, w }; };
+    const k = inside('kiosk'); const e = inside('kiosk k-embed'); const free = inside('plain');
+    check('*** inside the real kiosk: a screen ***', onScreen(k.m, '/kiosk.html') === true && onScreen(k.m, '/whatever') === true);
+    check('*** inside a kiosk EMBEDDED in another page (Home, the modules page): not a screen ***', onScreen(e.m, '/home.html') === false);
+    check('on an ordinary page: not a screen', onScreen(free.m, '/home.html') === false);
+    check('on kiosk.html, even outside the kiosk element: a screen', onScreen(free.m, '/kiosk.html') === true);
+    check('not on a page yet: counted as a screen (it offers nothing it cannot keep)', onScreen(document.createElement('div'), '/home.html') === true);
+    [k, e, free].forEach((x) => x.w.remove());
+
+    // *** On a screen: dimmed, saying where calls are placed. ***
+    const s = await mountCard({ subject: { kind: 'person', id: 'p2' }, wrap: 'kiosk' });
+    check('*** on a kiosk screen, Call stays DIMMED, with the honest reason ***',
+      s.doBtn('call').tagName === 'BUTTON' && s.doBtn('call').disabled && s.doBtn('call').title === CALL_ON_SCREEN
+      && /phone or a computer/.test(CALL_ON_SCREEN) && /\/call\.html/.test(CALL_ON_SCREEN));
+    check('...and no link to the caller page anywhere on the card', !s.mount.querySelector('a[href*="call.html"]'));
+    check('a dimmed Call is not a stop for a switch', !s.probe().stops.includes('Call'));
+    s.done();
+
+    const em = await mountCard({ subject: { kind: 'person', id: 'p2' }, wrap: 'kiosk k-embed' });
+    check('in a kiosk embedded on Home: the link', em.doBtn('call').tagName === 'A' && em.doBtn('call').getAttribute('href') === callURL('p2'));
+    em.done();
+
+    // *** Off a screen: a link, and pressing it follows it. ***
+    const t = await mountCard({ subject: { kind: 'person', id: 'p2' } });
+    check('one of this account\'s own: Call is a link, and a stop for a switch', t.doBtn('call').tagName === 'A' && t.probe().stops.includes('Call'));
+    t.doBtn('call').click();
+    check('*** pressing it goes to /call.html?person=<id> - and nothing else happens ***',
+      J(t.followed) === J(['/call.html?person=p2']) && t.goes.length === 0 && t.probe().view === 'card', J(t.followed));
+    t.done();
+
+    const sw = await mountCard({ subject: { kind: 'person', id: 'p2' } });
+    const scanned = () => sw.mount.querySelector('.is-scan')?.dataset.pfDo;
+    for (let i = 0; i < 6 && scanned() !== 'call'; i++) sw.bus.publish(PROFILE_VERB_TOPICS.next, {});
+    sw.bus.publish(PROFILE_VERB_TOPICS.select, {});
+    check('*** a switch\'s select on Call follows the link too ***', J(sw.followed) === J([callURL('p2')]), J(sw.followed));
+    sw.done();
+
+    // *** Somebody who is not this account's own: only if shared with it. ***
+    const sh = await mountCard({ subject: { kind: 'person', id: 'p9' }, shared: [{ person_id: 'p9', name: 'Sam', owner_id: 'o', grant_id: 'g' }] });
+    await until(() => sh.doBtn('call').tagName === 'A');
+    check('*** shared with this account by a drive grant: the link ***', sh.doBtn('call').getAttribute('href') === callURL('p9'));
+    check('the shared list was asked for once', sh.screens.calls.shared === 1);
+    sh.done();
+
+    const no = await mountCard({ subject: { kind: 'person', id: 'p9' }, shared: [{ person_id: 'p7' }] });
+    await until(() => no.doBtn('call').title === CALL_NOT_ALLOWED);
+    check('*** not shared: DIMMED, saying whom to ask ***', no.doBtn('call').disabled && no.doBtn('call').title === CALL_NOT_ALLOWED
+      && !no.mount.querySelector('a[href*="call.html"]'));
+    no.done();
+
+    const broken = await mountCard({ subject: { kind: 'person', id: 'p9' }, shared: () => { throw new Error('offline'); } });
+    await until(() => broken.doBtn('call').title === CALL_NOT_ALLOWED);
+    check('the shared list could not be read: dimmed (offers nothing it cannot check)', broken.doBtn('call').disabled);
+    broken.done();
+
+    const own = await mountCard({ subject: { kind: 'person', id: 'p2' } });
+    check('one of this account\'s own needs no shared list', own.screens.calls.shared === 0);
+    own.done();
   }
 
   // ============================================================================================
