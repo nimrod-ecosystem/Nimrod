@@ -347,6 +347,91 @@
      ground at all, as Design specifies: the halo and the outline carry it. */
   .trystage[data-chrome="clear"] .v-dock-left .st-item{background:transparent}
 </style>
+<!-- *** HOME ON A PHONE (MIKE_LIST_20260930 "a phone layout", 2026-10-02). ***
+     Its own <style>, and EVERY rule in it sits inside the media query below: nothing here can reach a desktop
+     or a Pi kiosk (1280x720, 1920x1080), and dev/home_phone_test.html checks exactly that, rule by rule.
+
+     620px is the page's existing "phone" line (the parts page's own narrow rule above), argued rather than
+     picked fresh: every phone held upright is under 480, every laptop and kiosk is over 1000, and the one
+     line keeps the parts page and Home turning into their phone shapes together. It is not a setting: it
+     answers "how wide is this window", which a person does not choose.
+
+     What changes, and why (the numbers are Mike's brief: a 16px gutter, 44px targets):
+       - the page column has a 16px gutter, and every control of Home's own is at least 44px;
+       - the starting points are ONE strip that scrolls sideways, the next card peeking (seven stacked cards
+         put the stage 2,800px down a 812px phone);
+       - the stage is a screenful (88% of the height: the other 12% is room to grab the PAGE and scroll past
+         it, which a stage exactly the screen's height would take away while its own panels scroll);
+       - the bar in the stage is one row that scrolls sideways (wrapped, it was a 750px tower over the
+         dashboard), and the ⚙ menu covers the dashboard ABOVE the bar instead of squeezing it beside a 60%
+         drawer;
+       - the edit bar's trays are bottom sheets, their Close first and pinned at the top of the sheet;
+       - a GRID dashboard stacks, one panel per screenful of the stage. Argued against shrinking it: four
+         panels at 375px are 140px each and every module's own controls are cut off or under 44px, and a
+         shrunk dashboard can be looked at but not used. A room or a scene (placed things on a picture) is
+         left to fit its box as it does everywhere: it is a picture, and stacking a picture apart breaks it.
+         The cost: on a phone the stacked order is the grid's reading order, not its shape. -->
+<style data-phone>
+  @media (max-width:620px){
+    .wrap{padding:0 16px}
+    .top .wrap{gap:10px}
+    .brand,.top nav a{display:inline-flex;align-items:center;min-height:44px}
+    .theme-pick{min-height:44px}
+
+    body.is-home .detail{padding:8px}
+    .welcome{padding:12px}
+    .ex-cards{display:flex;overflow-x:auto;scroll-snap-type:x proximity;overscroll-behavior-x:contain;padding-bottom:6px}
+    .ex-card{flex:0 0 82%;scroll-snap-align:start}
+
+    body.is-home .trystage{height:88vh;height:88svh;min-height:360px}
+
+    .home-edit .ed-note{flex-basis:100%;margin-left:0}
+    .home-tray{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:calc(var(--z-menus) + 50);
+      max-height:70vh;max-height:70svh;padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));
+      border-width:1px 0 0;border-radius:var(--radius) var(--radius) 0 0;
+      box-shadow:0 -10px 40px color-mix(in srgb,var(--text-strong) 30%,transparent)}
+    /* The info line (hover_info.js) owns the bottom strip and the page already keeps 2.6em clear for it
+       (`body.has-infoline` above): the sheet stands on it rather than losing its last row under it. */
+    body.has-infoline .home-tray{bottom:2.6em}
+    .home-tray .tray-head{position:sticky;top:0;z-index:1;margin:0;padding:10px 0 8px;background:var(--surface)}
+
+    .home-dlg{max-width:calc(100% - 32px);padding:16px}
+
+    /* The bar in the stage: one row. The `:has` selector repeats the desktop rule's own, so it wins by order. */
+    .trystage .view:has(> .v-dock-left .st-scrim:not([hidden])) > .v-dock-bottom{padding-left:1vmin}
+    /* minmax(0,…) all the way down: a grid column's floor is otherwise its widest content, so one unwrapped
+       row of buttons widened the dashboard, then the stage, then the page (measured: 1,816px). */
+    .trystage .view.v-docked{grid-template-columns:minmax(0,1fr)}
+    body.is-home .browser{grid-template-columns:minmax(0,1fr)}
+    .trystage .view > .v-dock-bottom,.trystage .v-dock-bottom > .v-chrome{min-width:0;max-width:100%}
+    .trystage .tb-bar{flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;max-width:100%;min-width:0}
+    .trystage .tb-mods,.trystage .tb-actions{flex-wrap:nowrap;flex:none}
+    .trystage .tb-bar button{min-height:44px;min-width:44px;white-space:nowrap;flex:none}
+
+    /* The ⚙ menu: in the dashboard's own row, over the panels, above the bar. */
+    /* Both in column 1, said outright: a dock placed in row 2 first would push an auto-placed stage into a
+       second, implicit column (measured: the dashboard 19px wide beside the menu). */
+    .trystage .view.v-docked > .k-stage{grid-column:1}
+    .trystage .view.v-docked > .v-dock-left,.trystage .view.v-docked > .v-dock-right{position:relative;
+      grid-row:2;grid-column:1;width:auto;top:auto;bottom:auto;left:auto;right:auto;min-height:0}
+    .trystage .st-item{flex-wrap:wrap;min-height:44px}
+    .trystage .st-hint{flex:0 1 auto;max-width:100%;min-width:0;overflow-wrap:anywhere}
+
+    /* A grid dashboard stacks. `!important` because the arrangement writes the grid and each cell's place
+       inline; a panel shown on its own (promoted) keeps the whole stage. NO scroll snapping, and not for
+       taste: `scroll-snap-type` on this grid froze the page outright (no script running, nothing to pause)
+       in most runs of dev/home_phone_test.html (7 of 10), and in none of eight runs without it. */
+    .trystage :not([data-promoted-panel]) > .k-stage.k-grid{grid-template-columns:minmax(0,1fr)!important;
+      grid-template-rows:none!important;grid-auto-rows:100%!important;overflow-y:auto}
+    .trystage :not([data-promoted-panel]) > .k-stage.k-grid > .k-cell{grid-area:auto!important}
+
+    /* Two panels' own controls, at a phone's width only. The Devices panel's rows are a column of their own
+       (modules.css's microphone list also says `.dv-row{display:flex}`, which put its name, words and buttons
+       side by side and cut the buttons off); the Modules library's buttons get the 44px floor. */
+    .trystage .dv-root .dv-row{display:block}
+    .trystage .lib-btn,.trystage .lib-chip,.trystage .lib-tools input,.trystage .lib-tools select{min-height:44px}
+  }
+</style>
 </head>
 <body>
 <!--

@@ -105,6 +105,8 @@ export const SUITES = [
   'home_dashboard', 'home_page',
   // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, hot swap).
   'home_profile',
+  // 2026-10-02: Home on a phone (375 and 320 wide; untouched at 1280 and 1920).
+  'home_phone',
   'nimrod_guide', 'whats_new',
   // 2026-10-02: the Nimrod Game - game / learning / sandbox, unlocks gating Add, the tour's points.
   'unlocks',
