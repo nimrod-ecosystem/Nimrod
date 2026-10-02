@@ -79,6 +79,21 @@ export const CALL_ACTIONS = [
   callAct('quieter', 'Call: quieter', { volume: -1 }),
 ];
 
+// *** ANSWER, DECLINE, HANG UP (2026-10-02, call_notice.js). *** The Call panel has always listened on these
+// three (modules/call.js CALL_ANSWER / CALL_DECLINE / CALL_HANGUP, the same strings, written out here so this
+// file imports nothing), and the screen's incoming-call notice listens on the first two - but nothing a person
+// could bind or say ever pressed them: the panel's own hint says "Say decline to refuse this call" and there
+// was no such phrase. Registered so a switch can be bound to each, and the spoken routes "answer", "decline"
+// and "hang up" press them (input_speech.js ROUTES). With no call ringing or live, nothing answers them.
+export const CALL_ANSWER_TOPIC = 'call/answer';
+export const CALL_DECLINE_TOPIC = 'call/decline';
+export const CALL_HANGUP_TOPIC = 'call/hangup';
+export const CALL_RING_ACTIONS = [
+  { id: 'call/answer', label: 'Call: answer', topic: CALL_ANSWER_TOPIC, group: 'Calls' },
+  { id: 'call/decline', label: 'Call: decline', topic: CALL_DECLINE_TOPIC, group: 'Calls' },
+  { id: 'call/hang-up', label: 'Call: hang up', topic: CALL_HANGUP_TOPIC, group: 'Calls' },
+];
+
 export const SYSTEM_TOPICS = Object.freeze({
   fullscreen: 'system/fullscreen',
   settings: 'system/settings',
@@ -659,6 +674,7 @@ export function createDefaultRegistry() {
   reg.registerAll(MENU_ACTIONS);
   reg.registerAll(SYSTEM_ACTIONS);
   reg.registerAll(CALL_ACTIONS);
+  reg.registerAll(CALL_RING_ACTIONS);
   reg.register(ROOM_HOLD_ACTION);
   return reg;
 }

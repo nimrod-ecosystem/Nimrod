@@ -51,8 +51,12 @@ import {
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
-  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC,
+  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC, CALL_HANGUP_TOPIC,
 } from './actions.js';
+// 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
+// over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
+import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD } from './call_notice.js';
+import { CALL_ENDED } from './modules/call.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
@@ -576,6 +580,11 @@ export async function mountKiosk(root, {
   // capture null forever — and that only works if the binding exists from the start.
   let drive = null;
   let callTransport = null;
+  // A call arriving at this screen with no Call panel on it (call_notice.js, 2026-10-02): the notice, the
+  // call it answered (the Call module hosted over the panels until hang-up), and whether either has the scan.
+  let callNotice = null;
+  let callView = null;
+  let callScanHeld = false;
   let cursor = null;
   let cursorDrive = null;        // cursor_drive.js: "cursor left", "click", "scroll down" move the aim
   let markerTracker = null;
@@ -718,6 +727,40 @@ export async function mountKiosk(root, {
   function onCallLive(on) {
     try { voiceRec?.hold('call', !!on); } catch (err) { console.error('kiosk: voice recording hold', err); }
     if (on) { try { intercomRx?.endAll('call'); } catch (err) { console.error('kiosk: intercom', err); } }
+  }
+  // *** THE CALL TRANSPORT — the reason the Call panel could never ring. ***
+  //
+  // `modules/call.js` has always read `ctx.callTransport` and nothing ever supplied one,
+  // so the panel mounted, showed its idle state and waited forever. It is built LAZILY
+  // from the drive socket, because that socket is opened during the async person lookup
+  // below and a module mounted before it resolved would otherwise capture null for good —
+  // the same reason `personId` and `output` are getters. (2026-10-02: the screen also builds it
+  // as soon as the socket attaches, for the incoming-call notice - see `attachCallNotice`.)
+  //
+  // ONE SOCKET, NOT TWO. Signalling rides the connection this screen already has: it is
+  // already authenticated, it already knows which two devices belong to one person, and
+  // it already reconnects on facility wifi. A second socket would be a second thing to
+  // get all three of those right.
+  function callTransportNow() {
+    if (!callTransport && drive) {
+      callTransport = createCallTransport({
+        link: drive,
+        role: 'screen',              // a bedside screen answers; it never places a call
+        // ICE comes from the person's own settings when they have any, and falls back to
+        // public STUN. NO TURN RELAY IS CONFIGURED and there is no UI to add one yet —
+        // so a call works wherever a direct path exists and fails honestly where it does
+        // not. See call_transport.js for why that is the right default rather than a gap.
+        config: (settings.get() || {}).call || {},
+        onLog: (...a) => console.debug('call:', ...a),
+        // A NEW call while an intercom is open: refused as busy only if the person's row chose that
+        // (intercom.js `callDuringIntercom`, default 'ring' - argued there).
+        busy: () => callRefusedForIntercom(),
+      });
+      // A call going live (answered) or ending: voice recording holds for it, and an open intercom
+      // gives the room to it. See `onCallLive`.
+      callTransport.onLive((on) => onCallLive(on));
+    }
+    return callTransport;
   }
   function callRefusedForIntercom() {
     try {
@@ -1207,27 +1250,9 @@ export async function mountKiosk(root, {
     // already authenticated, it already knows which two devices belong to one person, and
     // it already reconnects on facility wifi. A second socket would be a second thing to
     // get all three of those right.
-    get callTransport() {
-      if (!callTransport && drive) {
-        callTransport = createCallTransport({
-          link: drive,
-          role: 'screen',              // a bedside screen answers; it never places a call
-          // ICE comes from the person's own settings when they have any, and falls back to
-          // public STUN. NO TURN RELAY IS CONFIGURED and there is no UI to add one yet —
-          // so a call works wherever a direct path exists and fails honestly where it does
-          // not. See call_transport.js for why that is the right default rather than a gap.
-          config: (settings.get() || {}).call || {},
-          onLog: (...a) => console.debug('call:', ...a),
-          // A NEW call while an intercom is open: refused as busy only if the person's row chose that
-          // (intercom.js `callDuringIntercom`, default 'ring' - argued there).
-          busy: () => callRefusedForIntercom(),
-        });
-        // A call going live (answered) or ending: voice recording holds for it, and an open intercom
-        // gives the room to it. See `onCallLive`.
-        callTransport.onLive((on) => onCallLive(on));
-      }
-      return callTransport;
-    },
+    // (Built by `callTransportNow`, below: since 2026-10-02 the screen builds it itself the moment the drive
+    // socket attaches, so a screen with no Call panel can still ring - call_notice.js.)
+    get callTransport() { return callTransportNow(); },
     // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
     // A module that only speaks wants `output`; this is for the things that keep playing.
     audio,
@@ -2280,7 +2305,7 @@ export async function mountKiosk(root, {
     } else if (!screensOpen && was) {
       // (Row 2.38: not while the edit windows or the map hold the scan -- they give it back themselves. Nor
       // while the Modules library stands in a panel's place, 2026-10-02.)
-      try { if (!menu?.isOpen?.() && !editScanHeld && !hostScanHeld && !libScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+      try { if (!menu?.isOpen?.() && !editScanHeld && !hostScanHeld && !libScanHeld && !callScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
     }
     // Row 2.38: opening gives the bar the tray's wait; closing gives it back its own (`armBarHide`). Not
     // when the bar is already hidden -- that is the bar's own timer putting the tray away.
@@ -2373,7 +2398,7 @@ export async function mountKiosk(root, {
     if (want) releaseHostScan();
     try {
       if (want) runtime?.router?.setPaused?.(true);
-      else if (!screensOpen && !menu?.isOpen?.() && !hostScanHeld && !libScanHeld) runtime?.router?.setPaused?.(false);
+      else if (!screensOpen && !menu?.isOpen?.() && !hostScanHeld && !libScanHeld && !callScanHeld) runtime?.router?.setPaused?.(false);
     } catch { /* no router yet */ }
   }
   function armEditIdle() {
@@ -2557,7 +2582,7 @@ export async function mountKiosk(root, {
       clearTimeout(hostScanT); hostScanT = null;
       // Given back AFTER this verb has finished travelling, so the verb that let go is not also a panel's.
       queueMicrotask(() => {
-        if (torn || hostScanHeld || screensOpen || editScanHeld || libScanHeld) return;
+        if (torn || hostScanHeld || screensOpen || editScanHeld || libScanHeld || callScanHeld) return;
         try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
       });
     }
@@ -3204,6 +3229,11 @@ export async function mountKiosk(root, {
     ...(!embedded ? [{ ...TRAY_OPEN_FIELD }, { ...NEST_LIVE_DEPTH_FIELD }] : []),
     // ROW 2.38, the map editor: how long the edit windows wait with nobody pressing (dashboard_nest.js).
     { ...EDIT_IDLE_FIELD },
+    // 2026-10-02 (call_notice.js): a call to this screen when it has no Call panel - a notice to answer or
+    // decline (the default), or no ring here at all. The SCREEN's: it is about this room (a bedroom screen
+    // that should not ring at night, a hallway one that should), not the person, who rings on every screen.
+    // Not on an embed (an embed never has the drive socket a call arrives on).
+    ...(!embedded ? [{ ...CALL_NOTICE_FIELD }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -3576,7 +3606,7 @@ export async function mountKiosk(root, {
     libScanHeld = !!on;
     try {
       if (on) runtime?.router?.setPaused?.(true);
-      else if (!screensOpen && !menu?.isOpen?.() && !editScanHeld && !hostScanHeld) runtime?.router?.setPaused?.(false);
+      else if (!screensOpen && !menu?.isOpen?.() && !editScanHeld && !hostScanHeld && !callScanHeld) runtime?.router?.setPaused?.(false);
     } catch { /* no router yet */ }
   }
   /** Put the Modules library in panel `id`'s place. `onPick(item)`: a host page's own switch (Home) -- the
@@ -3713,7 +3743,8 @@ export async function mountKiosk(root, {
   for (const [verb, as] of [['next', 'next'], ['prev', 'prev'], ['select', 'select'], ['back', 'back'], ['up', 'up'],
     ['down', 'down'], ['left', 'left'], ['right', 'right'], ['focus-next', 'next'], ['focus-prev', 'prev']]) {
     offsScreen.push(bus.subscribe(verbTopic(verb), () => {
-      if (!libOpen || torn || screensOpen || editScanHeld) return;
+      // (A call notice or a hosted call over the panels has the scan while it shows: see `holdCallScan`.)
+      if (!libOpen || torn || screensOpen || editScanHeld || callScanHeld) return;
       try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
       try { libOpen.inst?.impl?.verb?.(as); } catch (err) { console.error('kiosk: library verb', err); }
     }));
@@ -3909,6 +3940,162 @@ export async function mountKiosk(root, {
     ];
   }
 
+  // ---- A CALL TO A SCREEN WITH NO CALL PANEL (2026-10-02; call_notice.js) ------------------------------
+  // The notice rings over the panels; its Answer claims the call and hands it HERE, where the Call module is
+  // mounted over the panels to host it - its full view, the bar's live-call controls (it reports them, as a
+  // panel does), the camera and microphone opened only once the claim is won - until somebody hangs up. Then
+  // the view goes, and the screen is exactly as it was: nothing underneath was hidden, swapped or remounted.
+  //
+  // *** WHY AN OVERLAY, NOT THE CALL IN A PANEL'S PLACE (the library's `openLibraryAt`). Argued: ***
+  //   FOR a panel's place: it reuses the library's box-beside-the-panel mechanism, and it is what the old Cici
+  //   design did (the call overrode the clock quadrant).
+  //   AGAINST, and it wins: it has to CHOOSE a panel to stand in for, and every choice is wrong somewhere - a
+  //   one-panel screen loses its photos; a locked panel may not be touched; a TV or a room has no "place" a
+  //   call fits; the panel promoted to full screen is the one somebody is looking at. Cici's clock quadrant
+  //   was a choice for one fixed layout, and no layout here is fixed. A dashboard swap mid-ring would also
+  //   tear an in-place notice down with the panel it stood in. An overlay chooses nothing, survives a swap,
+  //   is always the same size and place, and "everything returns as it was" is just removing it.
+  // THE CALL VIEW is in the `floating` band, BEFORE the mirror in the document: the mirror (same band, later)
+  // stays on top of it, because the mirror IS the self-view (call.js header) - a call never draws a second
+  // view of this room. The bar (above it) keeps its live-call controls. The NOTICE is above the menu, so a
+  // ring is never hidden behind it; while the menu is open a switch drives the menu, and pointer and voice
+  // still reach the notice.
+  // WHILE EITHER SHOWS IT HAS THE SCAN (the library's rule): the panel router is paused, the dashboards tray
+  // and a host page's controls let go, and next / prev / select / back walk the notice (Decline first, see
+  // call_notice.js) or the call view (its Hang up). The menu, the edit view and the map keep the scan while
+  // they are open - whoever has them open is at the screen.
+  const CALL_VIEW_ROW = 'call-notice';     // the hosted call's own row: its volume, kept for this screen
+  const CALL_VIEW_ID = 'call:notice';
+  function holdCallScan(on) {
+    callScanHeld = !!on;
+    try {
+      if (on) {
+        if (screensOpen) toggleScreens(false);
+        releaseHostScan();
+        runtime?.router?.setPaused?.(true);
+      } else if (!screensOpen && !menu?.isOpen?.() && !editScanHeld && !hostScanHeld && !libScanHeld) {
+        runtime?.router?.setPaused?.(false);
+      }
+    } catch { /* no router yet */ }
+  }
+  // While the call view shows: one stop, Hang up. Nothing is lit at first (a stray select does nothing);
+  // `back` hangs up, as it does on a Call panel (actions.js `call: { back: 'call/hangup' }`).
+  function callViewVerb(v) {
+    const cv = callView;
+    if (!cv) return;
+    if (v === 'next' || v === 'prev') cv.lit = 0;
+    else if (v === 'select') { if (cv.lit === 0) hangUpCallView(); }
+    else if (v === 'back') hangUpCallView();
+    paintCallView(cv);
+  }
+  function paintCallView(cv) {
+    if (!cv?.hang) return;
+    const on = cv.lit === 0;
+    if (on) cv.hang.dataset.lit = '1'; else delete cv.hang.dataset.lit;
+    cv.hang.style.boxShadow = on ? '0 0 0 4px var(--scan-ring, var(--focus))' : '';
+  }
+  // Hang up the hosted call the way every other way does: the topic the Call module listens on.
+  function hangUpCallView() { try { bus.publish(CALL_HANGUP_TOPIC, { from: 'kiosk' }); } catch (err) { console.error('kiosk: hang up', err); } }
+  for (const [verb, as] of [['next', 'next'], ['prev', 'prev'], ['select', 'select'], ['back', 'back'],
+    ['focus-next', 'next'], ['focus-prev', 'prev']]) {
+    offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+      if (torn || !callScanHeld || screensOpen || editScanHeld) return;
+      try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
+      try {
+        if (callNotice?.showing?.()) callNotice.verb(as);
+        else if (callView) callViewVerb(as);
+      } catch (err) { console.error('kiosk: call verb', err); }
+    }));
+  }
+  function attachCallNotice() {
+    if (callNotice || torn || embedded || typeof document === 'undefined') return;
+    const t = callTransportNow();
+    if (!t || typeof t.onRing !== 'function') return;
+    try {
+      callNotice = createCallNotice({
+        transport: t, host: kioskEl, bus,
+        mode: () => callNoticeModeOf(settings.get() || {}),
+        output: () => output,
+        holdScan: (on) => { if (on) holdCallScan(true); else if (!callView) holdCallScan(false); },
+        openCall: (from, opts) => openCallView(from, opts),
+        zIndex: LAYERS.menus + 50,
+      });
+    } catch (err) { console.error('kiosk: call notice', err); callNotice = null; }
+  }
+  /** Host an answered call over the panels: the Call module, handed the call (call.js `takeCall`). */
+  async function openCallView(from, { ringStartedAt = null } = {}) {
+    if (torn || typeof document === 'undefined') return false;
+    if (callView) closeCallView('replaced');
+    const box = document.createElement('div');
+    box.className = 'k-callview';
+    box.dataset.callView = '';
+    box.setAttribute('role', 'region');
+    box.setAttribute('aria-label', 'Call');
+    box.style.cssText = `position:absolute;inset:0;z-index:${LAYERS.floating};pointer-events:auto;background:var(--bg)`;
+    const slot = document.createElement('div');
+    slot.style.cssText = 'position:absolute;inset:0';
+    // The way out, on the screen the whole call (a pointer, a scan, "hang up" said, `back`).
+    const hang = document.createElement('button');
+    hang.type = 'button';
+    hang.dataset.callHangup = '';
+    hang.textContent = 'Hang up';
+    hang.style.cssText = 'position:absolute;top:2.5vmin;left:50%;transform:translateX(-50%);z-index:1;'
+      + 'min-height:56px;min-width:8em;padding:.5em 1.4em;border-radius:12px;cursor:pointer;'
+      + 'font:600 clamp(16px,2.4vmin,26px) system-ui,-apple-system,Segoe UI,sans-serif;'
+      + 'background:var(--surface);color:var(--text);border:2px solid var(--focus)';
+    hang.addEventListener('click', () => hangUpCallView());
+    box.append(slot, hang);
+    if (mirrorEl && mirrorEl.parentNode === kioskEl) kioskEl.insertBefore(box, mirrorEl);
+    else kioskEl.append(box);
+    const cv = { box, slot, hang, inst: null, state: null, events: null, lit: -1, offs: [] };
+    callView = cv;
+    holdCallScan(true);
+    try {
+      cv.state = withTypeLayer(stateFor(CALL_VIEW_ROW), 'call');
+      // Its own record, so an answer from the notice is recorded with its ring-to-answer time, as a panel's is.
+      cv.events = eventsFor(CALL_VIEW_ROW);
+      cv.inst = mountModule('call', extendCtx(childCtx({ id: CALL_VIEW_ID, type: 'call' }), {
+        mount: slot, state: cv.state, events: cv.events,
+      }));
+      await cv.state.load?.().catch?.(() => {});
+      if (callView !== cv) return false;
+      await cv.inst.init();
+      if (callView !== cv) return false;
+      cv.state.startPolling?.();
+    } catch (err) {
+      console.error('kiosk: the call view would not open', err);
+      if (callView === cv) closeCallView('failed');
+      return false;
+    }
+    const live = () => { try { return !!cv.inst?.impl?.controls?.()?.live; } catch { return false; } };
+    // IT GOES WHEN THE CALL ENDS, however it ends: the module's own `call/ended` (a hang-up here or there, a
+    // dropped connection, a failed answer), or the transport saying the call is no longer live (a Call panel
+    // mounted mid-call by a dashboard swap would take the transport's end from this module).
+    cv.offs.push(bus.subscribe(CALL_ENDED, () => { if (callView === cv && !live()) closeCallView('ended'); }));
+    try {
+      cv.offs.push(callTransport?.onLive?.((on) => { if (!on && callView === cv) queueMicrotask(() => { if (callView === cv && !live()) closeCallView('ended'); }); }) || (() => {}));
+    } catch { /* no transport */ }
+    let took = false;
+    try { took = await cv.inst.impl.takeCall(from, { ringStartedAt }); }
+    catch (err) { console.error('kiosk: answering in the call view', err); took = false; }
+    if (callView === cv && !took && !live()) closeCallView('failed');
+    return true;     // the module had the call: whatever became of it, it hung up its own way
+  }
+  function closeCallView(why = 'ended') {
+    const cv = callView;
+    if (!cv) return false;
+    callView = null;
+    cv.offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    // A call still live is hung up by the module itself on the way out (call.js `destroy`).
+    if (cv.inst) { try { cv.inst.destroy(); } catch (err) { console.error('kiosk: closing the call view', err); } }
+    else { try { cv.state?.destroy?.(); } catch { /* gone */ } }
+    try { cv.events?.destroy?.(); } catch { /* gone */ }
+    try { cv.box.remove(); } catch { /* gone */ }
+    if (!torn && !callNotice?.showing?.()) holdCallScan(false);
+    void why;
+    return true;
+  }
+
   // `:scope >` is not decoration. The camera module draws its OWN hidden `[data-settings]` inline
   // panel inside the mirror overlay, which comes EARLIER in document order, so a bare
   // `querySelector('[data-settings]')` mounted this menu inside it: open, but hidden by its
@@ -4096,7 +4283,9 @@ export async function mountKiosk(root, {
     // back as it closes (settings.js); with the Modules library standing in a panel's place, the library
     // still holds the scan, so it is taken again here (this hook runs after that).
     // (2026-10-02: and the device's fonts and looks are read again next time -- a file added meanwhile shows.)
-    onClose: () => { offWhoAvatars(); layoutOpen = false; deviceLookRead = null; if (libOpen && !torn) holdLibraryScan(true); },
+    onClose: () => { offWhoAvatars(); layoutOpen = false; deviceLookRead = null; if (libOpen && !torn) holdLibraryScan(true);
+      // A call notice or a hosted call keeps the scan it had (the menu's close gives the router back).
+      if (callScanHeld && !torn) holdCallScan(true); },
     // The menu's own Home row opens the same picker rather than navigating, so there are not
     // two controls with the same name doing different things. Leaving is the picker's last row.
     onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
@@ -4448,6 +4637,10 @@ export async function mountKiosk(root, {
         // A call transport can exist from now on (`childCtx`'s getter builds it from `drive`). The
         // panels mounted before this moment -- usually all of them -- are told, so a call panel that
         // found no transport at mount binds to it now instead of never ringing. 2026-09-30.
+        // FIRST the screen's own incoming-call notice (2026-10-02, call_notice.js): it builds the transport
+        // and watches its rings, so a call to a screen with NO Call panel on it is no longer silent. Before
+        // the "ready", so a panel that binds on it is already the one a ring finds (no double ring).
+        if (!torn) attachCallNotice();
         if (!torn) bus.publish(CALL_TRANSPORT_READY);
         // A PHONE AS A MICROPHONE (row 2.42): the screen's half rides the same socket, so only people
         // the server already lets drive this screen can join one. Joining plays nothing by itself --
@@ -5606,8 +5799,13 @@ export async function mountKiosk(root, {
     recordingPill: () => recPill,
     intercom: () => intercomRx,
     intercomNotice: () => intercomNote,
-    // The call transport, if a call panel has asked for one (the intercom's busy check reads it).
+    // The call transport (built when the drive socket attaches; the intercom's busy check reads it).
     callTransport: () => callTransport,
+    // 2026-10-02 (call_notice.js), for the suites: the incoming-call notice (null until the drive socket),
+    // the call it answered while that is hosted over the panels (else null), and whether either has the scan.
+    callNotice: () => callNotice,
+    callView: () => (callView ? { el: callView.box, lit: callView.lit, controls: callView.inst?.impl?.controls?.() || null } : null),
+    callScanHeld: () => callScanHeld,
     // The screen's flash limit as everything on it reads it, and the who page's avatar cache (null
     // until that page is first drawn).
     flashLimit: () => flashLimitNow(),
@@ -5668,6 +5866,9 @@ export async function mountKiosk(root, {
       // The recogniser first: no microphone left open, no miss-log schedule left pruning.
       onVoiceChange = null;
       stopSpeech();
+      // A call hosted over the panels hangs up (its module tells the far end), and the notice goes.
+      try { closeCallView('gone'); } catch { /* already gone */ }
+      try { callNotice?.destroy(); } catch { /* already gone */ } callNotice = null;
       // Before the socket, so the far end is told rather than left watching a frozen frame.
       try { callTransport?.destroy(); } catch { /* already gone */ } callTransport = null;
       // A phone joined as a microphone is told the screen has gone (before the socket closes).
