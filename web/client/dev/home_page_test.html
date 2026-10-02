@@ -30,6 +30,7 @@ import { authHeaders } from '../auth.js';
 import { EXAMPLE_ORDER, PREBUILT_KEY } from '../dashboards.js';
 import { createGame } from '../game/game.js';
 import { verbTopic } from '../actions.js';
+import { LANDING_INTRO } from '../nimrod_guide_data.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('home-page-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -505,6 +506,77 @@ try {
     check('...its two panels are on the stage', await until(() => doc.querySelectorAll('#stage [data-nbtn]').length >= 2, 8000));
     check('...no examples pushed at somebody who has a Home', ex().hidden);
     check('...and nothing was changed or made', (await op.list()).length === 2 && (await op.get(profileId)).modules.length === 2);
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-02: the landing Home, Nimrod the guide, the info line, the tutorial and its locks ***');
+  {
+    const NU = `${USER}-nim`;
+    const np = createProfilesClient({ user: NU });
+    await open(`user=${encodeURIComponent(NU)}`);
+    check('*** a new person lands on the landing Home, TRIED on the stage (the first example) ***',
+      await until(() => card('start')?.getAttribute('aria-current') === 'true' && /Trying “Start here”/.test($('#stagenote')?.textContent || ''), 45000),
+      $('#stagenote')?.textContent);
+    check('*** four up: pictures, the settings panel, Nimrod and the devices ***',
+      await until(() => !!$('#stage [data-nimrod-guide]') && !!$('#stage .dv-root') && !!$('#stage [data-settings-root]')
+        && !!$('#stage .k-cell[data-kind="photos"]'), 15000));
+    check('*** Nimrod says Mike’s words ***', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 8000),
+      $('#stage [data-ng-say]')?.textContent);
+    check('*** the settings panel opened on its Theme page ***',
+      await until(() => /Theme/.test($('#stage [data-settings-root] [data-page] .st-head')?.textContent || ''), 8000));
+    check('*** the info line along the bottom is put away while Nimrod is there saying it himself ***',
+      await until(() => $('.nimrod-infoline')?.hidden === true, 4000));
+    $('#stage [data-ng-choice="0"]').click();               // A. game or learning
+    check('*** his choice A shows the game settings in the settings panel (Learning mode) ***',
+      await until(() => /Learning mode/.test($('#stage [data-settings-root] [data-page] .st-head')?.textContent || ''), 6000)
+      && /no real-world value/.test($('#stage [data-ng-say]').textContent));
+    $('#stage [data-ng-back]').click();
+    check('Back takes him back', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 4000));
+    check('nothing was made by looking (only the default screen)', (await np.list()).length === 1);
+
+    await ensureMenu('tutorial');
+    hrow('tutorial').click();
+    check('*** the ⚙ menu’s "Nimrod’s tutorial" tries the tutorial on the stage ***',
+      await until(() => /Trying “The tutorial”/.test($('#stagenote').textContent) && /tutorial dashboard/.test($('#stage [data-ng-say]')?.textContent || ''), 15000),
+      $('#stagenote').textContent);
+    await until(() => hb('save') && !hb('save').disabled, 8000);
+    hb('save').click();
+    await until(() => dlgOpen(), 4000);
+    dlgBtn('dosaveas')?.click();
+    check('*** Save makes it your Home ***', await until(async () => !!(await (async () => {
+      const people = await np.people(); const h = createState({ url: np.personStateURL(people[0].id, 'home'), user: NU });
+      try { return (await h.load()).homeId; } finally { h.destroy(); } })()), 20000));
+    const tlist = await np.list();
+    const T = tlist.find((s) => s.name === 'Tutorial');
+    const tmods = T ? (await np.get(T.id)).modules : [];
+    const tdoc = T ? await row(T.id, 'settings', NU) : {};
+    check('...with Nimrod and the settings LOCKED (their instance ids on the dashboard)',
+      J(tdoc.locked) === J(['nimrod', 'settings'].map((t) => tmods.find((m) => m.type === t)?.id)), J(tdoc.locked));
+    check('the stage is the live Home now, in edit view', await until(() => /Your Home, live/.test($('#stagenote').textContent) && editIdle(), 20000));
+    if (tray().hidden || !/Change/.test(tray().textContent)) eb('change').click();
+    await until(() => !tray().hidden && !!tray().querySelector('[data-edit-change="next"]'), 4000);
+    for (let i = 0; i < 5 && !/Change: Nimrod/.test(tray().textContent); i++) {
+      tray().querySelector('[data-edit-change="next"]').click();
+      await sleep(150);
+    }
+    check('(the Change tray is on Nimrod)', /Change: Nimrod/.test(tray().textContent), tray().textContent.slice(0, 80));
+    const tb = (act) => tray().querySelector(`[data-edit-change="${act}"]`);
+    check('*** locked: Remove and Switch module are DIMMED, saying why; Unlock is offered ***',
+      tb('remove')?.disabled && tb('switch')?.disabled && /locks it/.test(tb('remove').title) && !!tb('unlock') && !tb('unlock').disabled);
+    tb('unlock').click();
+    check('*** Unlock: Nimrod comes off the lock list (the settings stay locked) ***', await until(async () => {
+      const d = await row(T.id, 'settings', NU); return J(d.locked) === J([tmods.find((m) => m.type === 'settings').id]);
+    }, 8000));
+    check('...and Remove can act on him now', await until(() => tb('remove') && !tb('remove').disabled, 6000));
+
+    await open(`user=${encodeURIComponent(NU)}&m=photos`);
+    check('*** with Nimrod NOT on the stage, the info line shows, saying how to find him ***',
+      await until(() => $('.nimrod-infoline') && !$('.nimrod-infoline').hidden && /tutorial/.test($('.nimrod-infoline').textContent), 15000),
+      $('.nimrod-infoline')?.textContent);
+    await until(() => !!hb('save'), 15000);
+    hb('save').dispatchEvent(new win.PointerEvent('pointerover', { bubbles: true }));
+    check('*** pointing at the bar’s Save: the line says what it does ***',
+      await until(() => /Save: keep what you changed/.test($('.nimrod-infoline').textContent), 3000), $('.nimrod-infoline').textContent);
   }
 
   // ============================================================================================

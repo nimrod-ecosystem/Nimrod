@@ -358,6 +358,89 @@ export function selectionFrom(doc = (typeof document !== 'undefined' ? document 
 }
 
 // ---------------------------------------------------------------------------------------------
+// *** WHAT IS UNDER THE POINTER (or the scan cursor) — "Hover over anything and Nimrod tells you what
+// it does" (Mike, 2026-10-02; Kontakt's info pane). *** `selectionFrom` above answers "what is SELECTED
+// on this page"; this answers "what is THIS element", from the element up, with the same words
+// (`explain`) — so the bubble, the guide's info pane and the page's status line can never describe one
+// thing two ways. In this order, nearest first:
+//   1. `data-help` on it or an ancestor (an edit-window field, a guide choice, anything that says itself);
+//   2. a settings row (`.st-item`): the field, looked up on the menu's subject (the focused panel's type);
+//   3. a room object (`.rs-obj-wrap` / `.rs-obj`, room_scene.js): its role and its label;
+//   4. a control that names itself (a bar button's `title`, an `aria-label` longer than its text);
+//   5. a panel (`.k-cell[data-kind]`): its module, from the catalog;
+//   6. a starting-point card on Home (`.ex-card`): its title and blurb;
+//   7. a bare button or link: its own words.
+// Null for anything that is none of these (empty space, the page's own prose): the caller keeps what it
+// last said rather than saying "this is a div".
+// ---------------------------------------------------------------------------------------------
+const textOf = (el) => String(el?.textContent || '').replace(/\s+/g, ' ').trim();
+export function selectionAt(target, { fieldLookup = defaultFieldLookup } = {}) {
+  let el = target || null;
+  if (el && el.nodeType !== 1) el = el.parentElement || null;
+  if (!el?.closest || el.closest('[data-hover-ignore]')) return null;
+
+  const helped = el.closest('[data-help]');
+  const row = el.closest('.st-item');
+  // A row inside something that explains itself more closely wins; otherwise the nearer of the two.
+  if (helped && (!row || row.contains(helped))) {
+    return { kind: 'help', help: helped.getAttribute('data-help'), el: helped,
+      title: helped.getAttribute('data-help-title') || helped.getAttribute('aria-label') || textOf(helped).slice(0, 60) || null };
+  }
+  if (row) {
+    const id = row.getAttribute('data-id') || null;
+    const key = id && id.startsWith('set:') ? id.slice(4) : null;
+    const scope = row.closest('.kiosk') || row.ownerDocument;
+    const focused = scope?.querySelector?.('.k-cell[data-focused]') || null;
+    const panelType = row.closest('.k-cell[data-kind]')?.getAttribute('data-kind') || focused?.getAttribute('data-kind') || null;
+    let field = null;
+    if (key && panelType) { try { field = fieldLookup?.(panelType, key) || null; } catch { field = null; } }
+    return {
+      kind: 'setting', id, key, field, el: row,
+      label: row.querySelector('.st-label')?.textContent.trim() || textOf(row),
+      value: row.querySelector('.st-hint')?.textContent.trim() || '',
+      disabled: row.disabled === true,
+      help: row.getAttribute('data-help') || null,
+    };
+  }
+  const obj = el.closest('.rs-obj-wrap, .rs-obj');
+  if (obj) {
+    const wrap = obj.closest('.rs-obj-wrap') || obj;
+    const btn = wrap.querySelector?.('.rs-obj') || obj;
+    const label = btn.getAttribute?.('aria-label') || wrap.getAttribute?.('aria-label') || '';
+    return { kind: 'object', id: wrap.dataset?.id || null, role: wrap.dataset?.role || null,
+      label: label.split(':')[0].trim() || 'thing', el: wrap };
+  }
+  const control = el.closest('button, a[href], [role="button"], [role="tab"], select, input');
+  if (control) {
+    const name = textOf(control) || control.getAttribute('aria-label') || control.getAttribute('value') || '';
+    const says = control.getAttribute('title') || '';
+    const aria = control.getAttribute('aria-label') || '';
+    if (says || (aria && aria !== name)) {
+      return { kind: 'help', el: control, title: name || aria || 'This button', help: says || aria };
+    }
+  }
+  const cell = el.closest('.k-cell[data-kind]');
+  if (cell) return { kind: 'module', type: cell.getAttribute('data-kind'), el: cell };
+  const card = el.closest('.ex-card');
+  if (card) {
+    return { kind: 'help', el: card, title: card.querySelector('h3')?.textContent.trim() || 'A starting point',
+      help: [card.querySelector('.ex-kind')?.textContent.trim(), card.querySelector('p')?.textContent.trim()].filter(Boolean).join(': ') };
+  }
+  if (control) {
+    const name = textOf(control) || control.getAttribute('value') || '';
+    if (name) return { kind: 'help', el: control, title: name, help: `A button: “${name}”. Press it to do that.` };
+  }
+  return null;
+}
+
+/** The words for whatever `el` is ({ title, text, sel }), or null when it is nothing describable. */
+export function explainAt(el, { chat = 'some', fieldLookup = defaultFieldLookup } = {}) {
+  const sel = selectionAt(el, { fieldLookup });
+  if (!sel) return null;
+  return { ...explain(sel, { chat, screen: 'page' }), sel };
+}
+
+// ---------------------------------------------------------------------------------------------
 // HIM
 // ---------------------------------------------------------------------------------------------
 

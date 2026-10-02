@@ -53,6 +53,19 @@ import { createState } from '../state.js';
 import { applyTheme, listThemes, resolveThemeId } from '../theme.js';
 import { MODE_KEY, MODES, modeFrom, PROFILE_SETTINGS_KEY } from '../lessons.js';
 
+// *** WHERE IT OPENS, AND BEING ASKED TO SHOW A PAGE (2026-10-02, the landing Home). *** Mike: the landing
+// Home's settings panel "launches on themes tab", and Nimrod's choices show the page they talk about ("It
+// would also open up the Nimrod Game settings menu in the settings menu window"). Two additions, neither
+// changing what a panel with no `startPage` does:
+//   startPage   on the panel's state: the page it opens on ('sc-theme', 'sc-mode', 'sc-device', or
+//               'type:<module>' for a sibling's own settings). Written by the dashboard that made it
+//               (dashboards.js), not a menu row: where a panel first opens is the dashboard's choice.
+//   SETTINGS_OPEN_TOPIC { page }: anything on the screen (Nimrod) asks the panel to show a page. Showing a
+//               page takes nothing from anybody: this panel never pauses the switch router.
+// `type:<module>` resolves to the FIRST panel of that type on this screen; none, and nothing changes.
+export const SETTINGS_OPEN_TOPIC = 'settings-module/open';
+export const START_PAGE_KEY = 'startPage';
+
 function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -84,6 +97,7 @@ registerModule(
     const pages = {};          // built up as the profile's own modules become known
     let moduleRows = [];       // [{id, type, title}], filled in once, read by `extras()`
     let profiles = null;
+    const offs = [];           // bus subscriptions (SETTINGS_OPEN_TOPIC)
 
     // MODULE SCOPE — one page per sibling instance, each a live read/write against that
     // instance's own saved state (never a copy of it).
@@ -199,6 +213,19 @@ registerModule(
 
     return {
       async init() {
+        // A PANEL DOES NOT TAKE THE KEYBOARD BY ARRIVING (2026-10-02). Opening the inline menu focuses its
+        // panel (settings.js `show`), and an open menu keeps Tab inside itself -- right for the screen's
+        // one menu, wrong for a panel that is simply ON a dashboard (the landing Home has one): a keyboard
+        // user would land in it and could not Tab out. So focus goes back to where it was after opening.
+        const doc = mount.ownerDocument;
+        const had = doc?.activeElement || null;
+        const giveBack = () => {
+          try {
+            if (!doc || !mount.contains(doc.activeElement)) return;
+            if (had && had !== doc.body && had.isConnected && !mount.contains(had)) had.focus?.();
+            else doc.activeElement?.blur?.();
+          } catch { /* nothing to give back */ }
+        };
         mount.innerHTML = '<div data-settings-root style="width:100%;height:100%"></div>';
         profiles = createProfilesClient({ user: ctx.user });
 
@@ -219,6 +246,31 @@ registerModule(
         });
         menu.open();
 
+        // Asked to show a page (Nimrod). Before the sibling list is in, a `type:` page is remembered and
+        // shown when it is.
+        let wanted = null;
+        const showPage = (page) => {
+          const p = String(page || '');
+          const sib = p.startsWith('type:') ? moduleRows.find((r) => r.type === p.slice(5)) : null;
+          const id = p.startsWith('type:') ? (sib ? `mod-${sib.id}` : null) : p;
+          if (!id || !pages[id]) { wanted = p.startsWith('type:') ? p : null; return false; }
+          wanted = null;
+          // Showing a page because somebody ELSE asked (Nimrod) must not move their keyboard focus here.
+          const before = doc?.activeElement || null;
+          try { if (menu.page?.()) menu.closePage?.(); menu.openPage(id); } catch (err) { console.error('settings: open page', err); }
+          try { if (before && before !== doc.body && before.isConnected && !mount.contains(before)) before.focus?.(); } catch { /* gone */ }
+          return true;
+        };
+        try {
+          const off = ctx.bus?.subscribe?.(SETTINGS_OPEN_TOPIC, (p) => { if (!torn) showPage(p?.page); });
+          if (typeof off === 'function') offs.push(off);
+        } catch { /* no bus: nothing can ask */ }
+        let start = null;
+        try { await ctx.state?.load?.(); start = (ctx.state?.get?.() || {})[START_PAGE_KEY] || null; } catch { start = null; }
+        if (torn) return;
+        if (start) showPage(start);
+        giveBack();
+
         try {
           const profile = await profiles.get(ctx.profileId);
           if (torn) return;
@@ -229,6 +281,7 @@ registerModule(
             .map((m) => ({ id: m.id, type: m.type, title: m.manifest.title || m.type }));
           for (const row of moduleRows) pages[`mod-${row.id}`] = buildModulePage(row);
           menu.refresh();
+          if (wanted && !menu.page?.()) showPage(wanted);
         } catch (err) {
           console.error('settings: could not list this profile’s modules', err);
         }
@@ -237,10 +290,11 @@ registerModule(
       onHide() {},
       destroy() {
         torn = true;
+        for (const off of offs.splice(0)) { try { off(); } catch { /* gone */ } }
         try { menu?.destroy?.(); } catch { /* already gone */ }
       },
       // For a test to assert on without reaching into the closure by hand.
-      __probe: () => ({ moduleRows: moduleRows.map((r) => ({ ...r })), open: menu?.isOpen?.() }),
+      __probe: () => ({ moduleRows: moduleRows.map((r) => ({ ...r })), open: menu?.isOpen?.(), page: menu?.page?.() || null }),
     };
   },
 );

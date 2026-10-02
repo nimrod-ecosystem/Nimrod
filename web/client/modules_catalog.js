@@ -532,6 +532,34 @@ export const CATALOG = [
     needs: 'Nothing. The questions are built in.',
     why: 'Short rounds, each player at their own level. Nothing is timed unless that is turned on.',
   },
+  // 2026-10-02 (Mike's landing Home): the guide, the devices list, and What's new.
+  {
+    type: 'nimrod',
+    title: 'Nimrod',
+    group: 'practice',
+    use: 'touch',
+    lead: 'A guide: what everything does, and what to try next.',
+    needs: 'Nothing.',
+    why: 'Choices you can walk back through, a map of where you are, and an explanation of whatever you point at. '
+      + 'Replace him whenever you like; say “tutorial” to find him again.',
+  },
+  {
+    type: 'devices',
+    group: 'practice',
+    use: 'touch',
+    lead: 'Every way of telling the screen what to do, and where each is set up.',
+    needs: 'Nothing.',
+    why: 'Voice, tracking, keys and switches, phones and other screens, in one list, each one press from its settings.',
+  },
+  {
+    type: 'whats_new',
+    title: 'What’s new',
+    group: 'record',
+    use: 'touch',
+    lead: 'What changed lately, newest first, and where to find it.',
+    needs: 'Nothing.',
+    why: 'Patch notes in plain words, so a new thing is something you can go and use.',
+  },
   {
     type: 'name_that',
     group: 'practice',

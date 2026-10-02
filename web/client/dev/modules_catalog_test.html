@@ -61,6 +61,9 @@ import '../modules/spelling.js';
 import '../modules/simple_math.js';
 import '../modules/think_games.js';
 import '../modules/word_builder.js';
+import '../modules/nimrod.js';
+import '../modules/devices.js';
+import '../modules/whats_new.js';
 import '../modules/brain_games.js';
 import '../modules/name_that.js';
 import '../modules/karaoke.js';
@@ -171,13 +174,15 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: row 2.45's `karaoke`, `name_that`, `simple_math` and `spelling` are built on the new core.
   // 2026-09-30: row 2.37's `note` and `solitaire` are built on the new core.
   // 2026-09-30: row 2.37 item 10's `brickbreaker` and `rhythm` are built on the new core.
-  const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'button', 'calculator', 'karaoke', 'name_that', 'note', 'rhythm', 'room',
-    'scoreboard', 'simple_math', 'solitaire', 'spelling', 'think_games', 'voice_review', 'weather', 'word_builder', 'word_games'];
+  const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'button', 'calculator', 'devices', 'karaoke', 'name_that', 'nimrod', 'note',
+    'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'think_games', 'voice_review', 'weather', 'whats_new',
+    'word_builder', 'word_games'];
+  // 2026-10-02: the landing Home's `nimrod`, `devices` and `whats_new` are built on the new core.
   // 2026-10-01: row 2.45's `word_builder` and `brain_games` are built on the new core.
   // 2026-10-01: row 2.45's `think_games` (the SLP exercises) is built on the new core.
   // 2026-09-30: row 2.37's `weather` is built on the new core.
   // 2026-09-30: row 2.44's `voice_review` (the voice recordings kept on this screen) is built on the new core.
-  check('exactly nineteen modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, karaoke, name_that, note, rhythm, room, scoreboard, simple_math, solitaire, spelling, think_games, voice_review, weather, word_builder and word_games',
+  check('exactly twenty-two modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, devices, karaoke, name_that, nimrod, note, rhythm, room, scoreboard, simple_math, solitaire, spelling, think_games, voice_review, weather, whats_new, word_builder and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

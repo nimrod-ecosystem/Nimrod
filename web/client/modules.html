@@ -209,6 +209,8 @@
    * "Modules: <name>", Save / Save as / History / Full screen, and the real transport bar and
    * settings menu inside the stage. `is-home` is set only for a signed-in visitor; signed out, every
    * rule below is inert and the page is the parts page it always was. */
+  /* The info line (hover_info.js) sits along the bottom: the page ends above it, so it covers nothing. */
+  body.has-infoline{padding-bottom:2.6em}
   body.is-home .wrap{max-width:1600px}
   body.is-home header.hero, body.is-home .legend, body.is-home .gaps{display:none}
   body.is-home .browser{grid-template-columns:1fr;gap:12px;margin-top:14px}
@@ -530,6 +532,12 @@ import './modules/karaoke.js';
 // morning and was visible only inside the running kiosk.
 import './modules/trivia.js';
 import './modules/bank.js';
+// 2026-10-02 (Mike's landing Home): Nimrod the guide, the devices panel and What's new - in the catalog.
+import './modules/nimrod.js';
+import './modules/devices.js';
+import './modules/whats_new.js';
+// "Hover over anything and Nimrod tells you what it does": the line along the bottom when he is not here.
+import { mountInfoLine } from './hover_info.js';
 // `settings` (and `keyboard` above it) are deliberately NOT imported here -- this is the
 // public "what you can put on a screen" page, for the person the screen is set up for.
 // Settings is a caregiver/admin tool, the same reason keyboard.js was pulled from this page
@@ -545,7 +553,7 @@ import * as HD from './home_dashboard.js';
 // edit bar over the real dashboard (home_profile.js).
 import * as HP from './home_profile.js';
 import { EXAMPLE_ORDER, PREBUILT_DASHBOARDS, exampleCards, prebuiltRecord, layoutFor as exampleLayout,
-  createDashboardMaker } from './dashboards.js';
+  createDashboardMaker, LOCKED_KEY } from './dashboards.js';
 import { createGame, kioskURL } from './game/game.js';
 import { CAT_STEPS, HOME_PAGE as CAT_HOME, CAT_BAR_SELECTOR, catGoThere, rememberCatProfile } from './game/cat_steps.js';
 
@@ -669,6 +677,7 @@ const HOME = {
   editView: false,        // edit view: the ⚙ menu open AND Design's edit bar showing
   tray: null,             // the edit bar's open tray: 'scene' | 'add' | 'change' | 'switch' | null
   sel: null,              // the chosen thing on the Home (a module instance id)
+  locked: [],             // instance ids this Home keeps in place (the tutorial's; home_profile.js isLocked)
   undo: HP.createUndo(),
   editBusy: false,
   rebuilding: false,
@@ -1147,7 +1156,7 @@ function homeView() {
 const HOME_HOST = {
   barItems: () => (HOME.on ? HD.homeBarItems(homeView()) : []),
   label: (act, state) => (HOME.on ? HD.homeShellLabel(act, state) : null),
-  press: (act) => homePress(act),
+  press: (act, p) => homePress(act, p),
   menuItems: () => (HOME.on
     ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
@@ -1168,11 +1177,15 @@ function hostChanged() {
   for (const fn of [...hostSubs]) { try { fn(); } catch (err) { console.error('home: host listener', err); } }
 }
 
-/** THE ONE PRESS. Whatever pressed it; a press that cannot act right now does nothing. */
-function homePress(act) {
+/** THE ONE PRESS. Whatever pressed it; a press that cannot act right now does nothing. `p`: what the
+ *  sender added (Nimrod's "Replace the pictures" names the module type to switch). */
+function homePress(act, p = null) {
   if (!HOME.on || !act) return;
   const t = HOME.target;
   switch (act) {
+    // 2026-10-02: the tutorial dashboard, tried on the stage like any example (Make this my Home or Save
+    // keeps it) -- from Nimrod's "Go to the tutorial" and the ⚙ menu's "Nimrod's tutorial".
+    case 'tutorial': requestSubject(HD.PROFILE_SUBJECT, { previewKey: 'tutorial' }); break;
     case 'picker': togglePicker(); break;
     case 'save': doSave(); break;
     case 'saveas': if (t && !HOME.busy) openDialog('saveAs', { name: defaultSaveName() }); break;
@@ -1183,8 +1196,9 @@ function homePress(act) {
       openExamples();
       break;
     case 'examples': openExamples(); break;
-    // Switch module (the bar's, or the menu's): the Switch tray for the panel the bar's Panel ▸ chose.
-    case 'switch': openSwitch(); break;
+    // Switch module (the bar's, or the menu's): the Switch tray for the panel the bar's Panel ▸ chose --
+    // or, when the sender named a type (Nimrod: "Replace the pictures"), the first panel of that type.
+    case 'switch': openSwitch(p && typeof p.type === 'string' ? p.type : null); break;
     // The edit bar, holding the scan: the menu's "Edit bar…", a bound switch, "edit bar" said aloud.
     case 'editbar': takeBarScan(); break;
     case 'cat': startWalk(); break;
@@ -1235,6 +1249,8 @@ function paintHome() {
   paintEdit();
   // What Nimrod's first step watches for: your Home exists (cat_steps.js PROFILE_MADE).
   document.body.dataset.homeProfile = HOME.profileMade ? 'made' : 'preview';
+  // The info line: shown unless Nimrod is on the stage saying it himself, or the setting is off.
+  try { infoLine?.sync(); } catch { /* not mounted yet (the first paint is before it) */ }
   const stage = $h('stage');
   if (stage) {
     const screenSurface = HOME.subject === HD.PROFILE_SUBJECT
@@ -1380,10 +1396,31 @@ function themeNow() {
 
 async function readHomeLayout() {
   const h = createState({ url: HOME.profiles.stateURL(HOME.home.id, 'settings'), user: HOME.user });
-  try { const s = await h.load(); return (s && s.kiosk && s.kiosk.layout) || null; }
+  try {
+    const s = await h.load();
+    // What this dashboard keeps in place (the tutorial's Nimrod and settings; home_profile.js isLocked).
+    HOME.locked = Array.isArray(s && s[LOCKED_KEY]) ? [...s[LOCKED_KEY]] : [];
+    return (s && s.kiosk && s.kiosk.layout) || null;
+  }
   catch { return HOME.layoutNow || null; }
   finally { h.destroy(); }
 }
+/** Unlock: `id` comes off this dashboard's lock list (one press; the tray says what it does). */
+function unlockThing() {
+  const t = selThing();
+  if (!t || !HP.isLocked(HOME.locked, t.id)) return Promise.resolve();
+  return editOp(async () => {
+    const h = createState({ url: HOME.profiles.stateURL(HOME.home.id, 'settings'), user: HOME.user });
+    try {
+      const cur = (await h.load().catch(() => ({}))) || {};
+      HOME.locked = HP.unlockIn(cur[LOCKED_KEY], t.id);
+      h.set({ [LOCKED_KEY]: HOME.locked });
+      await h.flush();
+    } finally { h.destroy(); }
+    return `${thingTitle(t)} is unlocked: it can be switched, moved or removed now.`;
+  }, { rebuild: false });
+}
+const lockedNow = (t) => !!t && HP.isLocked(HOME.locked, t.id);
 async function writeHomeLayout(next) {
   const h = createState({ url: HOME.profiles.stateURL(HOME.home.id, 'settings'), user: HOME.user });
   try {
@@ -1491,6 +1528,7 @@ function addThing(key) {
 function switchTo(key) {
   const old = selThing();
   if (!old) return Promise.resolve();
+  if (lockedNow(old)) { toast(`${thingTitle(old)} is locked on this dashboard. Change: Unlock lets it go.`); return Promise.resolve(); }
   const { label } = pieceOrType(key);
   return editOp(async () => {
     const mod = await addModuleFor(key);
@@ -1512,6 +1550,7 @@ function switchTo(key) {
 function removeThing() {
   const t = selThing();
   if (!t) return Promise.resolve();
+  if (lockedNow(t)) { toast(`${thingTitle(t)} is locked on this dashboard. Change: Unlock lets it go.`); return Promise.resolve(); }
   const nextSel = HP.stepThing(things().filter((x) => x.id !== t.id), t.id, 1)?.id || null;
   return editOp(async () => {
     const cur = await readHomeLayout();
@@ -1525,7 +1564,7 @@ function removeThing() {
 /** Move or resize a thing placed freely: written, then applied IN PLACE (nothing remounts). */
 function placeThing(change) {
   const t = selThing();
-  if (!t) return Promise.resolve();
+  if (!t || lockedNow(t)) return Promise.resolve();
   return editOp(async () => {
     const cur = await readHomeLayout();
     const next = change(cur, t.id);
@@ -1591,11 +1630,13 @@ function chooseThing(id) {
   paintEdit(); hostChanged();
 }
 
-function openSwitch() {
+function openSwitch(type = null) {
   if (!homeLive()) return;
   leaveFullScreen();
   const f = (() => { try { return dash()?.focused?.(); } catch { return null; } })();
-  if (f && things().some((x) => x.id === f.id)) HOME.sel = f.id;
+  const ofType = type ? things().find((x) => x.type === type) : null;
+  if (ofType) HOME.sel = ofType.id;
+  else if (f && things().some((x) => x.id === f.id)) HOME.sel = f.id;
   if (!selThing()) HOME.sel = things()[0]?.id || null;
   HOME.tray = HOME.tray === 'switch' ? null : 'switch';
   // The Switch tray takes the scan while it is open, the dashboards tray's rule: however it was opened (the
@@ -1760,6 +1801,12 @@ function paintTray(live, list, t) {
   }
   if (which === 'switch') {
     const title = t ? `Switch ${esc(thingTitle(t))} for…` : 'Choose a thing first';
+    if (lockedNow(t)) {
+      setHTML(tray, trayHead(title) + `<p class="stagenote">${esc(thingTitle(t))} is locked on this dashboard, so it stays where it is.</p>`
+        + `<div class="hbtns">${ebtn('data-edit-change="unlock"', 'Unlock', { hint: 'let this one be changed or removed, like anything else' })}`
+        + `${ebtn('data-edit-change="next"', 'Next thing ›', { disabled: list.length < 2 })}</div>`);
+      return;
+    }
     setHTML(tray, trayHead(title) + (t
       ? '<p class="stagenote">One press: the module you choose takes its place, exactly where it is. Undo puts it back.</p>'
         + moduleButtons('data-edit-switch', { except: t.type })
@@ -1768,7 +1815,7 @@ function paintTray(live, list, t) {
   }
   // 'change'
   const placed = !!(t && HP.whereIs(HOME.layoutNow, t.id)?.kind === 'placed');
-  const model = HP.changeTrayModel({ thing: t, placed, count: list.length });
+  const model = HP.changeTrayModel({ thing: t, placed, count: list.length, locked: lockedNow(t) });
   const head = t ? `Change: ${esc(thingTitle(t))} <small>(${list.findIndex((x) => x.id === t.id) + 1} of ${list.length})</small>` : 'Choose a thing';
   const btns = model.filter((b) => b.act !== 'close').map((b) => ebtn(
     `data-edit-change="${b.act}"${b.d != null ? ` data-d="${esc(Array.isArray(b.d) ? b.d.join(',') : b.d)}"` : ''}`,
@@ -1882,6 +1929,7 @@ document.addEventListener('click', (e) => {
       case 'move': placeThing((L, id) => HP.nudgeInLayout(L, id, d[0], d[1])); break;
       case 'size': placeThing((L, id) => HP.resizeInLayout(L, id, d[0])); break;
       case 'remove': removeThing(); break;
+      case 'unlock': unlockThing(); break;
       default: break;
     }
   }
@@ -2136,6 +2184,7 @@ window.addEventListener('beforeunload', (e) => {
   if (HOME.on && HOME.draft?.dirty()) { e.preventDefault(); e.returnValue = ''; }
 });
 
+/** The three modules Home's stage needs that this page's catalog does not list yet (see the imports). */
 async function bootHome(wanted) {
   const user = currentUser;
   const profiles = createProfilesClient({ user });
@@ -2282,6 +2331,19 @@ const wanted = new URLSearchParams(location.search).get('m');
 // helper AND the answer to "who is this". If Home cannot start (offline, an old account with no
 // person), the page falls back to what it was, rather than showing nothing.
 const auditMode = new URLSearchParams(location.search).get('all') === '1';
+// *** "HOVER OVER ANYTHING AND NIMROD TELLS YOU WHAT IT DOES" (Mike, 2026-10-02). *** When Nimrod is on the
+// stage his own box says it; otherwise this line along the bottom does (hover_info.js). Home's setting
+// "Explain what the pointer is on" turns it off (signed out, it is on). It takes no pointer events and
+// covers nothing: the page gets bottom padding while it shows (`.has-infoline`).
+const guideShowing = () => !!document.querySelector('#stage [data-nimrod-guide]');
+const infoLine = auditMode ? null : mountInfoLine(document, {
+  enabled: () => !HOME.on || HOME.settings.hoverLine !== false,
+  hidden: guideShowing,
+  idle: () => (HOME.on
+    ? 'Point at anything and Nimrod will tell you what it does. He is not on this dashboard: say “tutorial”, or the ⚙ menu has Nimrod’s tutorial.'
+    : 'Point at anything and Nimrod will tell you what it does.'),
+});
+window.__home.infoLine = () => infoLine;
 Promise.allSettled([
   loadEmbedding().catch((err) => { console.error('modules: embedded kiosk unavailable', err); }),
   signedIn,

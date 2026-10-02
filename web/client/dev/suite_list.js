@@ -92,6 +92,7 @@ export const SUITES = [
   'home_dashboard', 'home_page',
   // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, hot swap).
   'home_profile',
+  'nimrod_guide', 'whats_new',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

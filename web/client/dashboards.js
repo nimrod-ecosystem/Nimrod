@@ -48,6 +48,10 @@ export const PANEL_SURFACES = Object.freeze(['solid', 'veil', 'clear']);
 export const PREBUILT_KEY = 'prebuilt';
 export const PREBUILT_REFS_KEY = 'prebuiltRefs';
 export const PREBUILT_DONE_KEY = 'prebuiltDone';
+// The modules a dashboard keeps in place (2026-10-02, the tutorial): their INSTANCE ids, on the dashboard's
+// settings doc. A record names them by ref (`locked: ['nimrod', 'settings']`); the maker writes the ids.
+// What "locked" means is home_profile.js's to say (`isLocked`, and the Change tray that honours it).
+export const LOCKED_KEY = 'locked';
 
 // =====================================================================================================
 // THE THREE, AS DATA. Every value below is a starting point (Rule 1), argued, and on Mike's list:
@@ -117,7 +121,59 @@ export const FIRESIDE_SPOTS = Object.freeze({
 });
 export const CLASSIC_THEME = 'fall';
 
+// =====================================================================================================
+// *** THE LANDING HOME AND THE TUTORIAL (Mike, 2026-10-02, DECISIONS.md second set, item 3). ***
+// "The home dashboard that the site lands on clockwise from top left: pictures, settings (launches on
+// themes tab), devices, Nimrod." A quad's slots are TL, TR, BL, BR (STARTER_MODULES' order), so clockwise
+// from the top left is TL photos, TR settings, BR devices, BL Nimrod: slots [photos, settings, nimrod,
+// devices]. It is the FIRST example (EXAMPLE_ORDER), so it is what a new person's Home shows on the stage,
+// TRIED, not made -- "offered, not forced" stands: nothing is made on an account by looking, and one press
+// (Make this my Home, or Save on the bar) makes it. Code's guess, on Mike's list:
+// the other reading, making it at first sign-in, would put a dashboard on every account that signs in once.
+//   settings   the settings PANEL (modules/settings.js), opened on its Theme page (`startPage`).
+//   devices    modules/devices.js: every device, and where each one is set up.
+//   Nimrod     modules/nimrod.js, saying Mike's words (`intro: 'landing'`).
+//   look       the plain Nimrod look: the default theme, solid panels. FOR: it is the first thing anybody
+//              sees, and four solid panels read as four things. AGAINST: it is the least pretty example;
+//              the rooms are one press away and Nimrod's first choices include the theme.
+//
+// "Have there be a special tutorial dashboard you can always go to that has Nimrod and settings locked into
+// the bottom two slots." The same four, with Nimrod BL and the settings BR, both LOCKED (`locked`: on the
+// dashboard's settings doc, as instance ids). Locked, argued (home_profile.js has the rest): the edit bar
+// does not remove, switch or move them while on this dashboard, and says why. NOT a lock with no key: the
+// Change tray offers Unlock, one press, because the person who wants the opposite -- somebody who has
+// learned the site and wants this dashboard for something else -- has a perfectly good reason, and a lock
+// with no way out is the undismissable-gate failure in a smaller coat. The top two are the pictures and
+// the devices, Code's pick (the two things a first visit most often sets up).
+//   It is in the bar's tray (PREBUILT_ORDER, LAST, so the three before it keep their places and a switch
+//   user's habits) and spoken as "tutorial"; it is not one of Home's cards (Nimrod and the ⚙ menu reach it).
+// =====================================================================================================
 export const PREBUILT_DASHBOARDS = Object.freeze({
+  start: Object.freeze({
+    key: 'start', label: 'Start', name: 'My Home', kind: 'static', title: 'Start here',
+    blurb: 'Four to begin with: your pictures, the settings, your devices, and Nimrod, who shows you around.',
+    modules: [
+      { ref: 'photos', type: 'photos' },
+      { ref: 'settings', type: 'settings', state: { startPage: 'sc-theme' } },
+      { ref: 'nimrod', type: 'nimrod', state: { intro: 'landing' } },
+      { ref: 'devices', type: 'devices' },
+    ],
+    layout: { preset: 'quad', slots: ['photos', 'settings', 'nimrod', 'devices'] },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+  }),
+  tutorial: Object.freeze({
+    key: 'tutorial', label: 'Tutorial', name: 'Tutorial', kind: 'static', title: 'The tutorial',
+    blurb: 'Nimrod and the settings, always in the bottom two places, with your pictures and your devices above.',
+    modules: [
+      { ref: 'photos', type: 'photos' },
+      { ref: 'devices', type: 'devices' },
+      { ref: 'nimrod', type: 'nimrod', state: { intro: 'tutorial' } },
+      { ref: 'settings', type: 'settings' },
+    ],
+    layout: { preset: 'quad', slots: ['photos', 'devices', 'nimrod', 'settings'] },
+    locked: ['nimrod', 'settings'],
+    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+  }),
   room: Object.freeze({
     key: 'room', label: 'Room', name: 'My room', kind: 'room', title: 'The room',
     blurb: 'A room to furnish. Your picture and your name sign hang on its wall.',
@@ -211,13 +267,15 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
 
 // The order the bar's tray offers them in: the room first (row 2.34 names it first; it is the new thing).
 // The tray's three, unchanged (see the block above EXAMPLE_KINDS for why the rooms are not added here).
-export const PREBUILT_ORDER = Object.freeze(['room', 'basic', 'classic']);
+// 2026-10-02: the tutorial joins them, LAST ("a special tutorial dashboard you can always go to").
+export const PREBUILT_ORDER = Object.freeze(['room', 'basic', 'classic', 'tutorial']);
 
 // The order HOME offers its starting points in: Mike's own list, in his order (static 2D, a live theme,
 // Design's rooms, then 3D). 3D is the CSS-3D room (room3d.js), appended after the rooms once the bench Pi
 // held it at 1080p with drift on (2026-10-02, the numbers on Mike's list). A WebGL room would need three.js
 // vendored (~650 KB) -- still Mike's call, and not what this card is.
-export const EXAMPLE_ORDER = Object.freeze(['basic', 'classic', 'room', 'study', 'fireside', 'room3d']);
+// 2026-10-02 (second set): the landing Home ('start') goes FIRST -- it is what the site lands on.
+export const EXAMPLE_ORDER = Object.freeze(['start', 'basic', 'classic', 'room', 'study', 'fireside', 'room3d']);
 
 /** Home's cards: one per starting point, in EXAMPLE_ORDER, in words (`kindLabel`). */
 export function exampleCards(order = EXAMPLE_ORDER) {
@@ -259,6 +317,11 @@ export function layoutFor(rec, refs = {}) {
   return normalizeLayout(raw, Object.values(refs));
 }
 
+/** The record's locked refs as instance ids (`refs`: ref -> id); refs with no id are left out. */
+export function lockedIds(rec, refs = {}) {
+  return (Array.isArray(rec?.locked) ? rec.locked : []).map((r) => refs[r]).filter(Boolean);
+}
+
 /**
  * WHAT IS WRONG WITH A RECORD, as sentences (empty = valid). The suite runs it over all three, so a
  * record that names a module nobody registered, a theme that is gone, a room that is not a room, or a
@@ -283,6 +346,11 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
   const L = rec.layout || {};
   const usedRefs = [...(L.slots || []).filter(Boolean), ...(L.placed || []).map((p) => p.ref)];
   for (const r of usedRefs) if (!refs[r]) out.push(`the layout names ${r}, which is not one of its modules`);
+  // A lock names modules that are ON the dashboard (a lock on something not shown keeps nothing in place).
+  if (rec.locked !== undefined) {
+    if (!Array.isArray(rec.locked)) out.push('locked is not a list');
+    else for (const r of rec.locked) if (!usedRefs.includes(r)) out.push(`locked names ${r}, which is not on the dashboard`);
+  }
   const lay = layoutFor(rec, refs);
   const kept = [...lay.slots.filter(Boolean), ...(lay.placed || []).map((p) => p.id)];
   if (kept.length !== usedRefs.length) out.push(`the layout keeps ${kept.length} of its ${usedRefs.length} modules`);
@@ -403,6 +471,7 @@ export function createDashboardMaker({ profiles, makeSettings, makeInstanceState
     // DONE LAST, with the arrangement and the look, in one write.
     await patchDoc(pid, (cur) => ({
       ...rec.settings,
+      ...(Array.isArray(rec.locked) ? { [LOCKED_KEY]: lockedIds(rec, refs) } : {}),
       kiosk: { ...(cur.kiosk || {}), layout },
       [PREBUILT_KEY]: key, [PREBUILT_REFS_KEY]: { ...refs }, [PREBUILT_DONE_KEY]: true,
     }));
@@ -446,6 +515,11 @@ export const PREBUILT_ROUTES = Object.freeze({
     phrases: ['go to basic', 'basic dashboard', 'open basic'] },
   'dashboard-classic': { topic: DASHBOARD_GO_TOPIC, payload: { prebuilt: 'classic' }, label: 'Go to the classic dashboard',
     phrases: ['go to classic', 'classic dashboard', 'open classic'] },
+  // 2026-10-02: Mike, "a special tutorial dashboard you can always go to", reached "by voice 'tutorial'".
+  // The bare word is a phrase on purpose: it is the one word somebody lost on the site will say.
+  // [unverified on the bench: "tutorial" in the small Vosk model.]
+  'dashboard-tutorial': { topic: DASHBOARD_GO_TOPIC, payload: { prebuilt: 'tutorial' }, label: 'Go to the tutorial',
+    phrases: ['tutorial', 'go to the tutorial', 'open the tutorial', 'show me the tutorial'] },
   // The picker itself: the same `system/dashboards` a switch or a room's object sends.
   'dashboard-picker': { topic: SYSTEM_TOPICS.dashboards, payload: {}, label: 'Choose a dashboard',
     phrases: ['my dashboards', 'show my dashboards', 'choose a dashboard', 'change dashboard'] },
@@ -552,7 +626,7 @@ export function dashboardsSignature(routes) {
 // =====================================================================================================
 export const DASHBOARD_OFFERS_KEY = 'dashboardOffers';
 export const DASHBOARD_OFFERS_FIELD = Object.freeze({
-  key: DASHBOARD_OFFERS_KEY, label: 'Offer the ready-made dashboards (Room, Basic, Classic 2D) under Home',
+  key: DASHBOARD_OFFERS_KEY, label: 'Offer the ready-made dashboards (Room, Basic, Classic 2D, Tutorial) under Home',
   kind: 'toggle', level: 'advanced', default: true, onLabel: 'Yes', offLabel: 'No',
 });
 export const offersOn = (row) => !(row && row[DASHBOARD_OFFERS_KEY] === false);
