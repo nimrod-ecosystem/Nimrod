@@ -2084,3 +2084,63 @@ Mike's rulings, later on 2026-10-02 (Code's chat). Logged by Code.
 10. **Accounts** (direction, not yet built):
     - anyone an account allows can create a user on it;
     - accounts link as friends and choose which profiles and permissions to share.
+
+## Games wait for Start; Space is play/pause; a modules library instead of a shop; land on the landing dashboard; AIs as profiles -- 2026-10-02 (third set)
+
+Mike's rulings, late on 2026-10-02 (Code's chat). Logged by Code. Where Mike said "maybe" or "could", the entry
+says direction, not ruling.
+
+1. **Space is the universal play/pause key.** Primary select (Enter, left click, a switch's select) launches a
+   brick-breaker ball. *"I like it for pause bc that's what we're already using for other things."* A person's own
+   saved key bindings are kept.
+2. **Games don't start on load.** Autostart is a per-module setting: on by default for YouTube and picture
+   slideshows, off for games. There may be a separate setting for when it's the only thing on a dashboard.
+   - A game that hasn't started shows a Start button and stays quiet. *"Brain games just starts talking"* was the
+     bug.
+   - Brick breaker doesn't auto-launch by default: *"People might want it open without necessarily playing."*
+3. **Direction: attract mode.** Games that are open but not in use are played by the computer, *"like classic
+   video games"*, optionally by the person's own AI. A demo never earns points.
+4. **Brain games take a spoken answer by default.** Yes/no questions stay an option. That's good for head-tracking
+   yes/no.
+5. **A card-sort game** from therapy practice:
+   - name the suit;
+   - then say whether your card is higher or lower than, or in the middle of, cards you've already done.
+   - Levels go from one card (higher/lower) up to sorting against every card done.
+
+   Design draws playing cards for each theme.
+6. **There is no "shop". It's the modules module,** a library of everything you can add (modules, furniture, 3D
+   pieces, scenes), with:
+   - categories (games, learning, visual, furniture, 3D...);
+   - sort and filter;
+   - a Game/Sandbox toggle.
+
+   No money words: *"so people don't think there's money involved."*
+7. **Switch module opens the modules library in place of the selected module.** Double-click an item there and it
+   replaces the library in that place. With an AI connected: *"put the calendar module where the clock module is
+   now, please."*
+8. **Long option lists (modules, pictures, themes) open as pickers, not click-through.** Stepping through one at a
+   time is an option for switch users. *"We're making a site that should be accessible to switch users, but that
+   doesn't need to be the default for everyone."*
+9. **Where you land:**
+   - You land on the landing dashboard (pictures, settings, devices, Nimrod). *"The home page is gone now ... that
+     should be what you land on."*
+   - Examples are listed still first, then live, rooms, 3D (Nimrod light first).
+   - Mike's old picked Home showing up on sign-in was wrong as the default.
+10. **One builder dashboard, clockwise from top left:** the module you're editing, settings, the modules library,
+    Nimrod/AI. Profile editing is the same dashboard with your profile top left.
+    - Every module has an edit mode as a global function, so you edit where you are, not only on the builder.
+    - In edit mode, clicking any button, piece of furniture or other part shows its options in settings.
+11. **Direction: the Nimrod/AI module holds AI characters as profiles,** starting with Nimrod and a few others.
+    - Each character has rooms with fitting modules (a math tutor with a calculator) and can join a dashboard as
+      an avatar or a profile module.
+    - Friends' and other users' profiles can be modules too, and AIs can be shared the way users link.
+    - Mike may make a "second self" AI from his own recordings, with an avatar like him.
+
+    *Not built yet.*
+12. **Direction: 3D.** Mike asked whether these are right; Code argues for each in its outbox entry of this date:
+    - 3D off by default and easy to add;
+    - a way to flatten a 3D scene to 2D, like a game's photo mode, keeping interactive things interactive, so
+      scenes built on a desktop run on a Pi;
+    - a level-of-detail system.
+13. **Blender is approved** on Mike's desktop for organic models. Code scripts it headless; final models are public
+    like the bricks.
