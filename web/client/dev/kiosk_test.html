@@ -408,14 +408,17 @@ const toTab = (m, id) => {
       // `levelSubjects`), and "Make Photos bigger" is the corner button's row for a scan. The old rows grew by
       // four (31): "Show other people's own avatars" and "...move", on the screen's Display tab and the
       // person's People tab (OTHERS_AVATAR_FIELDS). Home is two presses further: 9.
+      // (2026-10-02, 6fd7575: "How you choose things" on the Devices tab makes the old rows 32. The lap is unchanged.)
+      // (2026-10-02, edit_mode.js: "Edit this panel" -- the ✎ corner's row for a scan -- makes the lap TWELVE,
+      // beside Switch module, and Home one press further: 10.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
-        && !['tabs', 'subject-pick', 'switch-module', 'promote', 'game'].includes(i.id));
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 11 stops (was every row: 31) ***',
-        lapStops.length === 11 && oldStops.length === 31 && lapStops.includes('subject-pick') && lapStops.includes('promote'),
+        && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game'].includes(i.id));
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 12 stops (was every row: 32) ***',
+        lapStops.length === 12 && oldStops.length === 32 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
-      check('...and Home is 9 presses from where the menu opens (was 25)', homeAt === 9, String(homeAt));
+      check('...and Home is 10 presses from where the menu opens (was 25)', homeAt === 10, String(homeAt));
       kiosk.menu.showTab('module');
 
       // A PRESS IN THE MENU REACHES THE MODULE'S OWN STATE. The hint is re-read from the
@@ -590,6 +593,22 @@ const toTab = (m, id) => {
         kiosk.menu.select();
       }
       kiosk.menu.setChooseMode(null);
+
+      // *** "HOW YOU CHOOSE THINGS" IS A ROW OF ITS OWN, ON THE DEVICES TAB (6fd7575's lines, wired in kiosk.js
+      // 2026-10-02). *** Not only the suite's override above: a person can flip it, and the theme row follows.
+      {
+        const cm = () => kiosk.menu.items().find((r) => r.id === 'set:chooseMode');
+        check('*** the "How you choose things" row is there, on the Devices tab ***', !!cm() && cm().tab === 'devices', JSON.stringify(cm()));
+        check('...point and click by default: Colours opens a list', kiosk.menu.chooseMode() === 'point' && kiosk.menu.opensList('set:theme') === true);
+        kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
+        await sleep(50);
+        check('*** flipping the row: step through, and the theme row now STEPS instead of opening a list ***',
+          kiosk.menu.chooseMode() === 'step' && kiosk.menu.opensList('set:theme') === false && /Step through/.test(cm()?.hint || ''),
+          JSON.stringify([kiosk.menu.chooseMode(), cm()?.hint]));
+        kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
+        await sleep(50);
+        check('flipped back: point and click, Colours a list again', kiosk.menu.chooseMode() === 'point' && kiosk.menu.opensList('set:theme') === true);
+      }
 
       // 2.18 — BURN-IN PROTECTION, reachable from the bedside menu, off by default, and only
       // ever two real modes (no content-hiding screensaver — see kiosk.js's own comment).
@@ -3211,10 +3230,11 @@ const toTab = (m, id) => {
       check('*** "previous tab" comes back ***', bk3.menu.tab() === 'audio', String(bk3.menu.tab()));
       say('computer please close the menu');
       say('computer please switch module');
-      check('*** "switch module" opens the focused panel’s Switch list ***',
-        bk3.menu.isOpen() && bk3.switchOpen()?.id === bbId && bk3.menu.focusId() === 'switch-keep', JSON.stringify(bk3.switchOpen()));
-      say('computer please close the menu');
-      check('"close the menu" closes it (and the list with it)', !bk3.menu.isOpen() && bk3.switchOpen() === null);
+      await new Promise((r) => setTimeout(r, 400));
+      check('*** "switch module" opens the Modules library in the focused panel’s place (2026-10-02) ***',
+        bk3.switchOpen()?.id === bbId && !!bk3.library()?.slot?.isConnected && !bk3.menu.isOpen(), JSON.stringify(bk3.switchOpen()));
+      say('computer please go back');
+      check('"go back" puts the panel back (the library takes the back verb while it is open)', bk3.switchOpen() === null);
     } catch (e) {
       check('the voice-wiring section threw', false, String((e && e.stack) || e));
     } finally {

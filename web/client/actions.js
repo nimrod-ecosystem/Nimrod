@@ -46,6 +46,8 @@ export const ROLE_CYCLE_TOPIC  = 'system/role-cycle';
 export const PLAY_PAUSE_TOPIC = 'shell/play-pause';
 export const PROMOTE_TOPIC = 'shell/promote';
 export const DEMOTE_TOPIC = 'shell/demote';
+// edit_mode.js EDIT_PANEL_TOPIC, the same string (written out so this file imports nothing).
+export const EDIT_PANEL_TOPIC = 'shell/edit-panel';
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute my
@@ -117,6 +119,9 @@ export const SYSTEM_ACTIONS = [
   // 2026-10-02: Home's edit bar (Scene / Add / Change…), opened WITH the scan -- next / prev / select / back
   // walk it, Close first, back leaves a tray and then the bar. It opens the bar; back and Close put it away.
   { id: 'shell/host/editbar', label: 'Home: the edit bar (scene, add, change)', topic: 'shell/host', payload: { act: 'editbar' }, group: 'System' },
+  // 2026-10-02 (room_flat.js): flatten Home's 3D room to a 2D picture of it, or bake it again. A `shell/host`
+  // act like the rows above, NOT a system/* topic (kiosk_test holds SYSTEM_TOPICS equal to room_scene's ROOM_ACTIONS).
+  { id: 'shell/host/flatten', label: 'Home: flatten the 3D room to 2D (or re-bake it)', topic: 'shell/host', payload: { act: 'flatten' }, group: 'System' },
   // *** ROW 2.34: A SWITCH STRAIGHT TO A READY-MADE DASHBOARD. *** The picker is `system/dashboards` above;
   // these skip it, the way "computer please go to my room" does. `dashboard/go` (dashboards.js
   // DASHBOARD_GO_TOPIC, written out here so this file imports nothing): the person's own if they have it,
@@ -143,6 +148,9 @@ export const SYSTEM_ACTIONS = [
   { id: 'shell/play-pause', label: 'Pause or play the selected panel', topic: PLAY_PAUSE_TOPIC, group: 'System' },
   { id: 'shell/promote', label: 'Make the selected panel bigger (its dashboard, then the screen)', topic: PROMOTE_TOPIC, group: 'System' },
   { id: 'shell/demote', label: 'Make it smaller again (one level)', topic: DEMOTE_TOPIC, group: 'System' },
+  // 2026-10-02 (edit_mode.js): edit the chosen (focused) panel; pressed again, stop. `shell/edit-panel` with no
+  // id means the focused panel and no `on` toggles (arrangement.js answers it).
+  { id: 'shell/edit-panel', label: 'Edit the chosen panel', topic: EDIT_PANEL_TOPIC, payload: {}, group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
@@ -307,11 +315,20 @@ export const CURSOR_ACTIONS = [
 // ROUTES speaks them ("next tab", "sound settings", "switch module").
 //   menu/tab            { dir: 1 | -1 } steps the tabs; { tab } goes to one. Opens the menu when it is
 //                       closed (settings.js answers it).
-//   shell/switch-module  "switch the selected panel to another module": the kiosk opens the short list
-//                       (the module tab's Switch rows), or a host page's own chooser where it has one.
+//   shell/switch-module  "switch the selected panel to another module": the kiosk opens the Modules
+//                       library IN THAT PANEL'S PLACE (library.js; `{ type }` names the panel by its
+//                       module), or a host page's own chooser where it has one.
 // The tab ids are the kiosk's (kiosk.js MENU_TAB_DEFS); a host without one of them shows nothing for it.
 export const MENU_TAB_TOPIC = 'menu/tab';
 export const SWITCH_MODULE_TOPIC = 'shell/switch-module';
+// THE MODULES LIBRARY'S TWO SCREEN TOPICS (2026-10-02, library.js). Not bindable actions: each carries
+// what no switch can supply.
+//   shell/panel-list     { reply(list) } -- the kiosk answers AT ONCE with the panels on the screen,
+//                        [{ id, type, title }]: how the AI's place / swap name a panel that is really there.
+//   shell/place-module   { id, type } -- that panel becomes that module, through the library in its place
+//                        (so the Nimrod Game's lock is asked exactly as for a press).
+export const PANEL_LIST_TOPIC = 'shell/panel-list';
+export const PLACE_MODULE_TOPIC = 'shell/place-module';
 export const MENU_TAB_IDS = Object.freeze(['module', 'audio', 'display', 'devices', 'people', 'screen']);
 const menuTab = (tab, label) => ({ id: `menu/tab-${tab}`, label, topic: MENU_TAB_TOPIC, payload: { tab }, group: 'Settings menu' });
 export const MENU_ACTIONS = [
@@ -487,7 +504,12 @@ export const MODULE_VERBS = {
   nimrod:        { next: 'nimrod/next', prev: 'nimrod/prev', select: 'nimrod/select', back: 'nimrod/back' },
   devices:       { next: 'devices/next', prev: 'devices/prev', select: 'devices/select' },
   whats_new:     { next: 'whats_new/next', prev: 'whats_new/prev', select: 'whats_new/select' },
-  sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
+  // THE MODULES LIBRARY (2026-10-02, library.js): next/prev walk its stops (one at a time, or a row at a time
+  // with "Switch scanning: rows"), up/down a row of cards, select shows a thing then puts it here, back closes
+  // the details (and, in another panel's place, puts that panel back).
+  library:       { next: 'library/next', prev: 'library/prev', select: 'library/select', back: 'library/back',
+                   up: 'library/up', down: 'library/down', left: 'library/left', right: 'library/right' },
+  sprint:       { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
                    back:   { topic: 'sprint/control', payload: 'pause' } },
   // The pond answers a switch, which is the whole reason it was worth porting: cursor and
@@ -567,13 +589,24 @@ export const MODULE_VERBS = {
   brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back',
                    left: 'brickbreaker/left', right: 'brickbreaker/right', stop: 'brickbreaker/stop',
                    launch: 'brickbreaker/launch', pause: 'brickbreaker/pause', play: 'brickbreaker/resume' },
-  rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back' },
+  // 2026-10-02 (games wait for Start; Space is Pause / Play): play / pause start-or-resume and pause, on every
+  // game below. The quiz games answer `<type>/resume`, not `/play` (quiz_view.js: `/play` names a game).
+  rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back',
+                   play: 'rhythm/play', pause: 'rhythm/pause' },
   // Row 2.45: the thinking games. next / prev walk the offered answers, select answers, back skips.
-  think_games:   { next: 'think_games/next', prev: 'think_games/prev', select: 'think_games/select', back: 'think_games/skip' },
+  think_games:   { next: 'think_games/next', prev: 'think_games/prev', select: 'think_games/select', back: 'think_games/skip',
+                   play: 'think_games/resume', pause: 'think_games/pause' },
   // Row 2.45: word builder. next/prev walk the letters and stops, select adds a letter or presses a stop, back undoes a letter.
-  word_builder:  { next: 'word_builder/next', prev: 'word_builder/prev', select: 'word_builder/select', back: 'word_builder/back' },
+  word_builder:  { next: 'word_builder/next', prev: 'word_builder/prev', select: 'word_builder/select', back: 'word_builder/back',
+                   play: 'word_builder/resume', pause: 'word_builder/pause' },
   // Row 2.45: brain games. next/prev walk the offered answers (or things to pick), select answers, back skips.
-  brain_games:   { next: 'brain_games/next', prev: 'brain_games/prev', select: 'brain_games/select', back: 'brain_games/skip' },
+  brain_games:   { next: 'brain_games/next', prev: 'brain_games/prev', select: 'brain_games/select', back: 'brain_games/skip',
+                   play: 'brain_games/resume', pause: 'brain_games/pause' },
+  // Card sort (a quiz_view game): next / prev walk the piles, select sorts the card, back skips it.
+  card_sort:     { next: 'card_sort/next', prev: 'card_sort/prev', select: 'card_sort/select', back: 'card_sort/skip',
+                   play: 'card_sort/resume', pause: 'card_sort/pause' },
+  // A profile card (a person or an AI character): next / prev walk its buttons, select presses one, back closes.
+  profile:       { next: 'profile/next', prev: 'profile/prev', select: 'profile/select', back: 'profile/back' },
   // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.

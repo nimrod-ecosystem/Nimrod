@@ -150,6 +150,8 @@ export const STARTER_ITEMS = Object.freeze({
   // The game's own tools.
   'module:scoreboard': 'where the game’s points are shown',
   'module:whats_new': 'what changed on the site',
+  // The library (library.js) is where things are unlocked from: locking it would lock the way to unlocking.
+  'module:library': 'where everything is found and unlocked',
   // The profile's old pieces (home_profile.js ADD_PIECES): a person's picture and their name.
   'piece:picture': 'a person’s own picture',
   'piece:sign': 'a person’s own name',
