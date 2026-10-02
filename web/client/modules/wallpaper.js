@@ -45,6 +45,7 @@
 
 import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing, mediaUrl } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import {
   MOTIONS, SCENES, VIDEO_POLICIES, ambientFrame, frameToCss, motionOf,
   usableItems, nextItem, wallpaperMode,
@@ -109,7 +110,11 @@ registerModule(
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     const now = ctx.now || (() => Date.now());
-    const client = createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
+    // Whose sources: whoever the screen is for, once it knows (person_known.js) -- the ambient draws at
+    // once regardless; only the folder's pictures wait, and they re-list if the answer changes.
+    const client = personSources(ctx,
+      (pid) => createMediaSourcesClient({ user, cache: true, personId: pid }),
+      { onChange: () => { if (!destroyed) reload().catch((e) => console.warn('wallpaper: reload', e)); } });
 
     let cfg = { ...DEFAULTS };
     let items = [];
@@ -340,6 +345,7 @@ registerModule(
 
       destroy() {
         destroyed = true;
+        client.dispose();
         stopTick(); stopSwap();
         mq?.removeEventListener?.('change', onMq);
         for (const l of layers) { try { clearLayer(l); } catch { /* already gone */ } }

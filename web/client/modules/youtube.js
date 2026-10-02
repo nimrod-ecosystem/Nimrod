@@ -31,6 +31,7 @@ import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
+import { followPerson } from '../person_known.js';
 import { flashLimit, failureBackoffMs } from '../flash_limit.js';
 import {
   autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
@@ -492,9 +493,12 @@ registerModule(
     // suite, a signed-out demo): `presetsLib` is then null, `activePreset()` always answers
     // null, and every `effective*` helper below falls straight through to the instance's own
     // cfg — i.e. exactly today's behavior, unchanged.
-    const presetsLib = (ctx.personId && ctx.makePersonState)
-      ? createPresetLibrary({ makeState: (key, opts) => ctx.makePersonState(ctx.personId, key, opts) })
-      : null;
+    // *** WHOSE PRESETS IS DECIDED WHEN THE SCREEN KNOWS, NOT AT MOUNT (person_known.js, 2026-10-02). ***
+    // Read once here, a panel mounted before the screen's person lookup landed had no library for good.
+    // `presetsLib` is now (re)made by `usePresets` -- at init with whoever is known, and again when the
+    // screen's answer names somebody -- and is null until then, which every reader below already handles.
+    let presetsLib = null;
+    let offPerson = null;
     // The settings menu PAINTS SYNCHRONOUSLY (see `settingsChoices` below, and photos.js's
     // identical `knownSources`), so this is refreshed from `presetsLib`'s own live subscription
     // rather than fetched fresh on every menu open.
@@ -1534,21 +1538,34 @@ registerModule(
           applyConfig();
         });
 
-        // Presets (register #255): load this person's library once, then keep `knownPresets`
+        // Presets (register #255): load this person's library, then keep `knownPresets`
         // (for the synchronous `settingsChoices` menu) and whatever is actually playing
         // (`applyConfig`, via `effective*`) current as presets are added, edited, renamed or
         // deleted anywhere — this screen included. Absent host (no `ctx.personId`/
         // `ctx.makePersonState`): `presetsLib` is null and none of this runs, same as today.
-        if (presetsLib) {
-          presetsLib.load()
-            .then(() => { knownPresets = presetsLib.listPresets(); if (!destroyed) applyConfig(); })
+        // Made for whoever the screen is for, and remade if that changes (person_known.js `followPerson`):
+        // a panel mounted before the screen knew its person gets the library when it does.
+        const usePresets = (pid) => {
+          if (destroyed) return;
+          const had = !!presetsLib;
+          try { presetsLib?.destroy(); } catch { /* already gone */ }
+          presetsLib = (pid && ctx.makePersonState)
+            ? createPresetLibrary({ makeState: (key, opts) => ctx.makePersonState(pid, key, opts) })
+            : null;
+          knownPresets = [];
+          if (!presetsLib) { if (had) applyConfig(); return; }
+          const lib = presetsLib;
+          lib.load()
+            .then(() => { if (lib !== presetsLib || destroyed) return; knownPresets = lib.listPresets(); applyConfig(); })
             .catch((e) => console.error('youtube: presets load', e));
-          presetsLib.subscribe(() => {
-            knownPresets = presetsLib.listPresets();
-            if (!destroyed) applyConfig();
+          lib.subscribe(() => {
+            if (lib !== presetsLib || destroyed) return;
+            knownPresets = lib.listPresets();
+            applyConfig();
           });
-          presetsLib.startPolling?.();
-        }
+          lib.startPolling?.();
+        };
+        offPerson = followPerson(ctx, usePresets);
 
       },
       onResize() {},
@@ -1565,6 +1582,7 @@ registerModule(
         // A module torn down while held must publish its end, or whatever reacted to the hold
         // is stuck in a state only the destroyed module could have left. See `held.js` rule 3.
         heldSignal.release();
+        try { offPerson?.(); } catch { /* already gone */ }
         try { presetsLib?.destroy(); } catch { /* already gone */ }
         try { player?.destroy(); } catch { /* noop */ } player = null; },
 

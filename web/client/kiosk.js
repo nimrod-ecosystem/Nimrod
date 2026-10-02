@@ -133,6 +133,7 @@ import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
 import { cachedFetch } from './cache.js';
+import { createPersonKnown, PERSON_KNOWN, PERSON_WAIT_MS } from './person_known.js';
 import './modules/clock.js';
 import './modules/keyboard.js';
 import './modules/camera.js';
@@ -329,6 +330,9 @@ export async function mountKiosk(root, {
   // Subtitles' ONLINE route (row 2.47, NOT approved - Mike said "maybe"): made only when a person's row
   // sets `subtitlesRoute: 'online'`, and it only ever writes lines. Off by default.
   makeOnlineCaptioner = ({ lang } = {}) => browserRecognizer({ lang }),
+  // How long the screen waits to learn whose it is before its panels carry on without the answer
+  // (person_known.js argues the 10 s; 0 = wait however long). A seam for the suites.
+  personWaitMs = PERSON_WAIT_MS,
 } = {}) {
   // WHICH PATH. An embed: its option, as at Stage 3. A real screen: its own settings row (Stage 4) --
   // decided once the row has loaded, below (`settings.load()`), before anything reads this. Nothing
@@ -477,6 +481,21 @@ export async function mountKiosk(root, {
   // zone at that moment, which threw. Null until the background resolve lands, which every
   // consumer already has to handle anyway.
   let personId = null;
+  // *** "PERSON KNOWN" (person_known.js, 2026-10-02): THE ONE PLACE THAT SAYS WHEN THAT ANSWER IS IN. ***
+  // A getter could only say "null" -- not whether null meant "still looking" or "this screen is
+  // nobody's". Panels that read the person once at mount (photos, personal videos, the wallpaper, a
+  // button, a board, Wait and Go's music, YouTube's presets, the keyboard's bindings) started without
+  // the person on a slow boot -- `personId` above is filled by the background lookup, which starts
+  // after they mount. Yet THE SCREEN'S OWN ROW, which this file awaits before ANY panel mounts (see
+  // `arr.setProfile` below; live, or the last-known-good copy offline), already names the person. So the
+  // handle settles from that row, before the first panel; the background lookup settles it again (the
+  // same answer changes nothing; a different one -- the screen handed to somebody between the two
+  // reads -- makes every panel re-read). Retained, so a panel mounted at any time is told at once. If no
+  // answer comes within `personWaitMs` the screen carries on as nobody's, and a late answer still lands.
+  const personKnown = createPersonKnown({
+    timeoutMs: personWaitMs,
+    onSettle: (v) => { try { bus.publish(PERSON_KNOWN, v); } catch (err) { console.error('kiosk: person known', err); } },
+  });
 
   // The output bus for this surface. Built once, shared by every module on the screen -
   // which is the whole point of it: there is ONE pair of ears, so arbitration has to happen
@@ -1150,7 +1169,13 @@ export async function mountKiosk(root, {
     // than a value - a module mounted before the lookup returns would otherwise capture
     // null forever. Bindings have been per-person since the input runtime landed; this is
     // media catching up to the same idea.
-    get personId() { return personId; },
+    // 2026-10-02: the screen's "person known" answer first (settled from the screen's row before any
+    // panel mounts -- see `personKnown`), then the background lookup's.
+    get personId() { return personKnown.get().personId || personId || null; },
+    // THE ANSWER ITSELF, retained (person_known.js): `get()`, `subscribe(fn)`, `whenSettled()`. A panel
+    // that must not use a person before the screen knows (a media list) waits on it; one that draws
+    // first follows it. Hosts without it (home.js, the suites' own ctx) are treated as already settled.
+    personKnown,
     rootBus: bus, instanceId: mod.id,
     // *** THE OUTPUT BUS, WHICH THE KIOSK DID NOT HAVE. *** Exactly the gap input_runtime.js
     // closed on the other side: the whole output layer was constructed inside the Output TAB,
@@ -1743,6 +1768,11 @@ export async function mountKiosk(root, {
   arr.setProfile((makeState || embedded)
     ? await profiles.get(profileId)        // local backend: it IS the source of truth
     : await cachedFetch(`profile:${user}:${profileId}`, () => profiles.get(profileId)));
+  // WHOSE SCREEN, KNOWN BEFORE THE FIRST PANEL MOUNTS (see `personKnown`): this row names the person.
+  try {
+    const pidFromRow = arr.profile()?.person_id || null;
+    personKnown.settle(pidFromRow, pidFromRow ? 'screen-row' : 'none');
+  } catch (err) { console.error('kiosk: person from the screen row', err); }
 
   // This screen's links (port-order step 5): built and owned by the arrangement, with the reasoning
   // beside it in arrangement.js. The shell only syncs them once the modules exist, and unhooks them.
@@ -4069,8 +4099,10 @@ export async function mountKiosk(root, {
       // as "…", i.e. as "still loading". A screen that has never been handed to anybody then
       // looked like a screen whose lookup had hung. `false` is the finished answer, and the
       // who row offers to fix it.
-      if (!p?.person_id) { whoState = false; menu.refresh(); return; }
+      if (!p?.person_id) { whoState = false; menu.refresh(); if (!torn) personKnown.settle(null, 'none'); return; }
       personId = p.person_id;
+      // The live answer (usually the same one the screen's row gave at boot, which changes nothing).
+      if (!torn) personKnown.settle(p.person_id, 'found');
       // Whose voice recordings these are (they are kept per person, on this device).
       try { voiceRec?.setPersonId(p.person_id); } catch (err) { console.error('kiosk: voice recording', err); }
       if (profiles.people) {
@@ -5271,8 +5303,12 @@ export async function mountKiosk(root, {
     // This screen's bus, for something ABOVE the modules that answers verbs on it -- Home's walkthrough
     // (Nimrod the cat hears `nimrod-cat/next|prev|skip` here, so a switch bound to them drives him).
     bus: () => bus,
+    // Whose screen this is, and whether that is settled yet (person_known.js) -- for a suite, and for
+    // anything above the panels that needs the same answer they get.
+    personKnown: () => personKnown,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
       // The Modules library, if it stands in a panel's place: its row and its game handle let go.
       try { closeLibrary('gone'); } catch { /* already gone */ }
       clearTimeout(plainSummonT); clearTimeout(barGraceT);

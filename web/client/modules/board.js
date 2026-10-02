@@ -60,6 +60,7 @@ import { createScan, SCAN_DEFAULTS } from '../input_scan.js';
 import { symbolSvg } from '../aac_symbols.js';
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { mountBoardEditor, blankBoard } from '../board_editor.js';
 import { speak as speakDefault } from '../voice.js';
@@ -742,10 +743,20 @@ registerModule(
     // would go blank the moment a photo panel refreshed the same folder. See `folderFileUrl`.
     // The loader lives in `card_face.js` now (2026-09-28), shared with `modules/button.js`, so
     // that rule is written once. Sources are still listed once per mount, not once per card.
-    // `personId` is read when the first picture loads (a getter on the kiosk's ctx), as before.
+    // WHOSE SOURCES (person_known.js, 2026-10-02): whoever the screen is for, once it knows. The words
+    // draw at once; a picture waits for that answer (bounded) like any late picture, and if the answer
+    // changes after the pictures were listed they are listed again and the cards redrawn.
+    const scoped = ctx.mediaSources ? null : personSources(ctx,
+      (pid) => createMediaSourcesClient({ user: ctx.user, cache: true, personId: pid }),
+      { onChange: () => {
+        if (destroyed) return;
+        releaseImages();
+        cardImages = null;
+        if ((board?.cells || []).some((c) => c && c.image)) draw();
+      } });
     let cardImages = null;
     const images = () => cardImages || (cardImages = createCardImages({
-      sources: ctx.mediaSources || null, user: ctx.user, personId: ctx.personId || null,
+      sources: ctx.mediaSources || scoped, user: ctx.user,
       alive: () => !destroyed,
     }));
 
@@ -1174,8 +1185,7 @@ registerModule(
         // stored row has no value at all, which is somebody who has never been asked.
         idleMs: cfg.editorIdleSec === 0 ? 0
           : Math.max(0, Number(cfg.editorIdleSec) || 0) * 1000 || undefined,
-        sources: ctx.mediaSources
-          || createMediaSourcesClient({ user: ctx.user, cache: true, personId: ctx.personId || null }),
+        sources: ctx.mediaSources || scoped,
         setTimer, clearTimer,
         onCancel: () => closeEditor(),
         onIdle: (draftBoard) => {
@@ -1490,6 +1500,7 @@ registerModule(
 
       destroy() {
         destroyed = true;
+        scoped?.dispose();
         stopScan();
         try { ro?.disconnect(); } catch { /* already gone */ } ro = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }

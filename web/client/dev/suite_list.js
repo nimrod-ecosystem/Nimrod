@@ -77,6 +77,8 @@ export const SUITES = [
   'solitaire', 'note', 'note_visit', 'weather', 'brickbreaker', 'rhythm', 'avatar', 'avatar_display', 'svg_sanitize',
   // 2026-10-02 late: games wait for Start (autostart a setting), the computer's demo and its players, card sort.
   'game_start', 'card_sort',
+  // 2026-10-02: "person known" -- panels that read the person once at mount end up with the person on a slow boot.
+  'person_known',
   // The room, the cat, ambient motion and sound.
   'room', 'room_scene', 'scene_motion', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // Row 2.37, second pass: the window's weather, the library, petting, close-ups, zoom on focus.

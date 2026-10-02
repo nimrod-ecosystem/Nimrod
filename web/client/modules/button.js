@@ -52,6 +52,7 @@
 import { registerModule } from '../module.js';
 import { cardFaceHTML, createCardImages } from '../card_face.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { DEFAULT_PALETTE, normalizeHex, contrast } from '../color_picker.js';
 import { speak as speakDefault } from '../voice.js';
@@ -405,9 +406,15 @@ registerModule(
 
     // The person's Media, listed once per mount. `ctx.sources` is the kiosk's injected registry
     // (signed out: the bundled samples); `ctx.mediaSources` is the board's name for the same seam.
+    // WHOSE MEDIA is whoever the screen is for, once it knows (person_known.js, 2026-10-02): read once
+    // at mount, a button mounted before the screen's person lookup landed listed every resident's
+    // sources for good. The words draw at once; the listing waits (bounded) and re-runs on a change.
     let client = null;
+    let scoped = null;
     const sourcesClient = () => client || (client = ctx.sources || ctx.mediaSources
-      || createMediaSourcesClient({ user: ctx.user, cache: true, personId: ctx.personId || null }));
+      || (scoped = personSources(ctx,
+        (pid) => createMediaSourcesClient({ user: ctx.user, cache: true, personId: pid }),
+        { onChange: () => { if (!torn) listSources(); } })));
     // The loader asks the same client; once `listSources` has the list it hands it over, so a
     // picture never costs a second listing.
     const images = createCardImages({ sources: { list: () => sourcesClient().list() },
@@ -435,7 +442,9 @@ registerModule(
       // One source and nothing chosen: adopt it, as `photos` does, so the picture row is usable
       // at once. Only when the stored row has no choice at all — a choice somebody made stands.
       const row = state?.get?.() || {};
-      if (knownSources.length === 1 && !row.imageFrom) {
+      // ...and only when the screen KNOWS whose it is (person_known.js `trusted`): a list made after the
+      // person lookup timed out is the whole account's, and is used to show, never to save.
+      if (knownSources.length === 1 && !row.imageFrom && sourcesClient().trusted?.() !== false) {
         try { state?.set?.({ imageFrom: knownSources[0].id }); } catch { /* a dead platform */ }
       }
       if (!torn) paint();
@@ -658,6 +667,7 @@ registerModule(
       onHide() {},
       destroy() {
         torn = true;
+        scoped?.dispose();
         resizeObs?.disconnect(); resizeObs = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
         images.releaseAll();

@@ -2369,10 +2369,15 @@ const toTab = (m, id) => {
         storage: { getItem: () => null, setItem() {}, removeItem() {} },
         session: { getItem: () => null, setItem() {}, removeItem() {} },
         navigate: () => {}, reloadPage: () => {} });
-      check('(setup) the probe mounted as the ambient layer, with the person, the aim and the transport all still null',
-        gk.hasAmbient() && probeAtMount && probeAtMount.personId === null && probeAtMount.aim === null
+      // 2026-10-02 (person_known.js): the PERSON is no longer null here. The screen's own row, awaited
+      // before any panel mounts, names whose screen it is, and the kiosk now says so from that row -- so a
+      // panel mounted this early already has the person. The aim and the transport are still late.
+      check('(setup) the probe mounted as the ambient layer, with the aim and the transport still null',
+        gk.hasAmbient() && probeAtMount && probeAtMount.aim === null
         && probeAtMount.callTransport === null && !!gFull.person_id, JSON.stringify(probeAtMount && {
           personId: probeAtMount.personId, aim: !!probeAtMount.aim, callTransport: !!probeAtMount.callTransport }));
+      check('*** ...but the PERSON is already known at its mount, from the screen row (person_known.js) ***',
+        probeAtMount && probeAtMount.personId === gFull.person_id, `${probeAtMount?.personId} vs ${gFull.person_id}`);
       release();
       check('(setup) the person lookup finished and the drive socket attached',
         await settled(() => gk.drive() !== null, 6000));
