@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>row 2.34 — ready-made dashboards and the dashboard picker</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:640px;height:360px;margin-top:12px;border:1px solid #ccc}
+  .box .kiosk{position:absolute}
+</style>
+</head>
+<body>
+<h1>row 2.34 — ready-made dashboards and the dashboard picker</h1>
+<p>The three ready-made dashboards are DATA (valid records, each with its own theme), are made only when a
+person first picks one (never by listing or opening the picker, never twice, finished if a page died half-way,
+never adopted from a screen that merely shares the name), and the picker is reachable by the bar, the scan, a
+switch and voice, and swaps load-then-swap on the dashboard path and through today's strip on today's path.
+Against the server, with a fresh account per run.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk, DASHBOARD_MODULE_KEY } from '../kiosk.js';
+import { listManifests } from '../module.js';
+import { THEMES, DEFAULT_THEME } from '../theme.js';
+import { STARTER_MODULES } from '../modules_catalog.js';
+import { STARTER_SCHEDULE } from '../local_store.js';
+import { profileSetup } from '../game/game.js';
+import { ROOM_PRESETS } from '../room_presets.js';
+import { SYSTEM_TOPICS, verbTopic } from '../actions.js';
+import { PHRASES, ROUTES, spokenTable, duplicatePhrases, normalize } from '../input_speech.js';
+import { INPUTS_KEY } from '../input_runtime.js';
+import {
+  PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor, createDashboardMaker,
+  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, DASHBOARD_GO_TOPIC,
+  PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY,
+} from '../dashboards.js';
+
+const STAMP = Math.floor(performance.now()) + '-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 4000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(25); }
+  return false;
+};
+const mkBox = () => { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; };
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+const seams = () => ({ storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+const themeVar = (name) => document.documentElement.style.getPropertyValue(name).trim();
+
+function backend(user) {
+  const profiles = createProfilesClient({ user });
+  const doc = (pid, key) => createState({ url: profiles.stateURL(pid, key), user });
+  const read = async (pid, key) => { const s = doc(pid, key); await s.load().catch(() => {}); const v = { ...(s.get() || {}) }; s.destroy(); return v; };
+  const write = async (pid, key, patch) => { const s = doc(pid, key); await s.load().catch(() => {}); s.set(patch); await s.flush(); s.destroy(); };
+  return { profiles, read, write,
+    makeSettings: (pid) => doc(pid, 'settings'), makeInstanceState: (pid, mid) => doc(pid, mid) };
+}
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('1. the three ready-made dashboards are DATA, and valid');
+    {
+      const known = new Set(listManifests().map((m) => m.type));
+      check('three, in the order the picker offers them: room, basic, classic', J(PREBUILT_ORDER) === J(['room', 'basic', 'classic'])
+        && PREBUILT_ORDER.every((k) => PREBUILT_DASHBOARDS[k]?.key === k));
+      for (const k of PREBUILT_ORDER) {
+        const rec = prebuiltRecord(k, { personName: 'Ada' });
+        const probs = recordProblems(rec, { knownTypes: known });
+        check(`*** ${k}: a valid record (registered modules, a layout that keeps every one, a real theme and panel background) ***`,
+          probs.length === 0, probs.join('; '));
+        check(`${k}: it carries its OWN theme and panel backgrounds`, !!rec.settings.theme && !!rec.settings.panelSurface, J(rec.settings));
+      }
+      const room = prebuiltRecord('room', { personName: 'Ada' });
+      const setup = profileSetup('Ada');
+      check('*** room: the dashboard\'s scene is a room (Design\'s preset), with a picture and a name sign placed in it ***',
+        room.layout.scene.kind === 'room' && !!ROOM_PRESETS[room.layout.scene.preset]
+        && room.layout.placed.length === 2 && room.layout.placed.every((p) => p.place === 'scene'), J(room.layout));
+      check('room: the picture and the sign start as the profile game\'s (profileSetup), the sign with the person\'s name',
+        J(room.modules.find((m) => m.ref === 'picture').state) === J(setup.picture)
+        && room.modules.find((m) => m.ref === 'sign').state.label === 'Ada', J(room.modules));
+      check('room: nobody named yet -> the sign says "Your name" (never somebody else\'s)',
+        prebuiltRecord('room').modules.find((m) => m.ref === 'sign').state.label === 'Your name');
+      const basic = prebuiltRecord('basic');
+      check('*** basic: the default cream-and-green theme, SOLID panels, NO live background, photos + a clock ***',
+        basic.settings.theme === DEFAULT_THEME && !THEMES[basic.settings.theme].scene && basic.settings.panelSurface === 'solid'
+        && J(basic.modules.map((m) => m.type)) === J(['photos', 'clock']), J(basic));
+      const classic = prebuiltRecord('classic');
+      check('*** classic 2D: see-through panels over a LIVE background, today\'s starter modules in their seeded order ***',
+        !!THEMES[classic.settings.theme]?.scene && classic.settings.panelSurface === 'veil'
+        && J(classic.modules.map((m) => m.type)) === J(STARTER_MODULES) && J(classic.layout.slots) === J(STARTER_MODULES)
+        && classic.layout.preset === 'quad', J(classic));
+      check('classic 2D: its YouTube starts with the starter schedule',
+        J(classic.modules.find((m) => m.type === 'youtube').state.schedule) === J(STARTER_SCHEDULE));
+      // Negative controls: the validator is a real check, not a rubber stamp.
+      const bad1 = { ...prebuiltRecord('basic'), settings: { theme: 'no-such-theme', panelSurface: 'solid' } };
+      const bad2 = prebuiltRecord('basic'); bad2.layout.slots = ['photos', 'nobody'];
+      const bad3 = prebuiltRecord('basic'); bad3.modules[0].type = 'no_such_module';
+      const bad4 = prebuiltRecord('room'); bad4.layout.scene.preset = 'nowhere';
+      check('the validator catches a theme that does not exist', recordProblems(bad1).some((p) => /theme/.test(p)));
+      check('...a layout that names a module the record does not have', recordProblems(bad2).some((p) => /nobody/.test(p)));
+      check('...a module nobody registered', recordProblems(bad3, { knownTypes: known }).some((p) => /no_such_module/.test(p)));
+      check('...a room that does not exist', recordProblems(bad4).some((p) => /nowhere/.test(p)));
+      const copy = prebuiltRecord('basic'); copy.settings.theme = 'dusk'; copy.modules.push({ ref: 'x', type: 'x' });
+      check('a record is a COPY: changing one changes nothing offered', PREBUILT_DASHBOARDS.basic.settings.theme === DEFAULT_THEME
+        && PREBUILT_DASHBOARDS.basic.modules.length === 2);
+      const lay = layoutFor(room, { picture: 'P1', sign: 'S1' });
+      check('layoutFor turns refs into ids and keeps the scene and both placed modules',
+        lay.scene?.kind === 'room' && J(lay.placed.map((p) => p.id)) === J(['P1', 'S1']) && lay.placed[0].surface === 'back', J(lay));
+    }
+
+    // =================================================================================================
+    section('2. made only when first picked, once, finished if interrupted, per person');
+    {
+      const B = backend(`dash-maker-${STAMP}`);
+      const S0 = await B.profiles.create('Home screen');
+      await B.profiles.addModule(S0.id, 'photos');
+      const s0 = await B.profiles.get(S0.id);
+      // A screen somebody happened to NAME like a ready-made one, with no stamp: never adopted.
+      const lookalike = await B.profiles.create('My room', s0.person_id);
+      const maker = createDashboardMaker({ profiles: B.profiles, makeSettings: B.makeSettings,
+        makeInstanceState: B.makeInstanceState, personId: () => s0.person_id, personName: () => 'Ada' });
+      const n0 = (await B.profiles.list()).length;
+      const offered0 = await maker.offered(await B.profiles.list());
+      check('*** a person with none: all three are OFFERED, and asking made nothing ***',
+        J(offered0) === J(['room', 'basic', 'classic']) && (await B.profiles.list()).length === n0, J(offered0));
+      check('a screen that is merely NAMED "My room" is not taken for the room', offered0.includes('room'));
+
+      const [r1, r2] = await Promise.all([maker.ensure('room'), maker.ensure('room')]);
+      const n1 = (await B.profiles.list()).length;
+      check('*** two picks at once make ONE room ***', r1.id === r2.id && n1 === n0 + 1 && r1.created === true, `${J(r1)} ${J(r2)} n=${n0}->${n1}`);
+      const r3 = await maker.ensure('room');
+      check('*** picking it again goes to the same one (created: false), nothing new ***',
+        r3.id === r1.id && r3.created === false && (await B.profiles.list()).length === n1);
+      check('the lookalike was left alone', r1.id !== lookalike.id);
+      const roomScreen = await B.profiles.get(r1.id);
+      const roomDoc = await B.read(r1.id, 'settings');
+      check('*** the room is a real screen: two buttons, its OWN theme and backgrounds, stamped done ***',
+        J(roomScreen.modules.map((m) => m.type)) === J(['button', 'button']) && roomDoc.theme === DEFAULT_THEME
+        && roomDoc.panelSurface === 'clear' && roomDoc[PREBUILT_KEY] === 'room' && roomDoc[PREBUILT_DONE_KEY] === true, J(roomDoc));
+      const ids = roomScreen.modules.map((m) => m.id).sort();
+      check('...its layout is the room scene with both buttons placed in it, by their real ids',
+        roomDoc.kiosk?.layout?.scene?.kind === 'room' && J(roomDoc.kiosk.layout.placed.map((p) => p.id).sort()) === J(ids),
+        J(roomDoc.kiosk));
+      const signId = roomDoc[PREBUILT_REFS_KEY]?.sign;
+      check('...and the sign carries the person\'s name (its own state row, written before anything mounts it)',
+        (await B.read(r1.id, signId)).label === 'Ada');
+      check('it belongs to the person', roomScreen.person_id === s0.person_id);
+      check('*** once made, it is no longer OFFERED (it is in their list like any dashboard) ***',
+        J(await maker.offered(await B.profiles.list())) === J(['basic', 'classic']));
+
+      // A page that died half-way: stamped, one module made, not done. The next pick FINISHES it.
+      const half = await B.profiles.create('Basic', s0.person_id);
+      const photos = await B.profiles.addModule(half.id, 'photos');
+      await B.write(half.id, 'settings', { [PREBUILT_KEY]: 'basic', [PREBUILT_REFS_KEY]: { photos: photos.id } });
+      const maker2 = createDashboardMaker({ profiles: B.profiles, makeSettings: B.makeSettings,
+        makeInstanceState: B.makeInstanceState, personId: () => s0.person_id });
+      check('a half-made one counts as made (it is not offered twice)', !(await maker2.offered(await B.profiles.list())).includes('basic'));
+      const nb = (await B.profiles.list()).length;
+      const rb = await maker2.ensure('basic');
+      const halfMods = (await B.profiles.get(half.id)).modules.map((m) => m.type);
+      const halfDoc = await B.read(half.id, 'settings');
+      check('*** an interrupted one is FINISHED, not made again: same screen, photos not doubled, the clock added, done ***',
+        rb.id === half.id && rb.created === false && (await B.profiles.list()).length === nb
+        && J(halfMods) === J(['photos', 'clock']) && halfDoc[PREBUILT_DONE_KEY] === true
+        && J(halfDoc.kiosk?.layout?.slots?.length) === '2' && halfDoc.panelSurface === 'solid', `${J(halfMods)} ${J(halfDoc)}`);
+
+      const rc = await maker.ensure('classic');
+      const cDoc = await B.read(rc.id, 'settings');
+      const cMods = (await B.profiles.get(rc.id)).modules;
+      const tube = cMods.find((m) => m.type === 'youtube');
+      check('*** classic 2D: four starter modules in a quad, a live theme, see-through, and its schedule ***',
+        J(cMods.map((m) => m.type)) === J(STARTER_MODULES) && cDoc.kiosk?.layout?.preset === 'quad'
+        && J(cDoc.kiosk.layout.slots) === J(cMods.map((m) => m.id)) && !!THEMES[cDoc.theme]?.scene && cDoc.panelSurface === 'veil'
+        && J((await B.read(rc.id, tube.id)).schedule) === J(STARTER_SCHEDULE), J(cDoc));
+      check('all three made: nothing left to offer', (await maker.offered(await B.profiles.list())).length === 0);
+
+      // Per PERSON: somebody else on the same account gets their own.
+      const bo = await B.profiles.addPerson('Bo');
+      const makerBo = createDashboardMaker({ profiles: B.profiles, makeSettings: B.makeSettings,
+        makeInstanceState: B.makeInstanceState, personId: () => bo.id, personName: () => 'Bo' });
+      check('*** another person on the account is still OFFERED the room (Ada\'s is hers) ***',
+        (await makerBo.offered(await B.profiles.list())).includes('room'));
+      const rBo = await makerBo.ensure('room');
+      check('...and picking it makes THEIRS, with their name on the sign', rBo.id !== r1.id && rBo.created
+        && (await B.read(rBo.id, (await B.read(rBo.id, 'settings'))[PREBUILT_REFS_KEY].sign)).label === 'Bo');
+      await maker.ensure('nothing').then(() => check('an unknown key is refused', false), () => check('an unknown key is refused', true));
+    }
+
+    // =================================================================================================
+    section('3. dashboards as spoken routes (pure)');
+    {
+      const list = [{ id: 'a1', name: 'Kitchen' }, { id: 'b2', name: 'Top 40' }, { id: 'c3', name: 'My room' }, { id: 'd4', name: 'Menu' }];
+      const { routes, skipped } = dashboardSpeechRoutes(list);
+      check('*** a dashboard\'s name becomes "go to <name>" and "open <name>" ***',
+        J(routes['dashboard-go-a1']?.phrases) === J(['go to kitchen', 'open kitchen'])
+        && routes['dashboard-go-a1'].topic === DASHBOARD_GO_TOPIC && routes['dashboard-go-a1'].payload.id === 'a1', J(routes['dashboard-go-a1']));
+      check('a name with digits is skipped with a reason (the recogniser writes numbers as words)',
+        skipped.some((s) => s.name === 'Top 40' && s.why === 'digits') && !routes['dashboard-go-b2'], J(skipped));
+      check('*** the person\'s own "My room" wins "go to my room" over the ready-made room ***',
+        routes['dashboard-go-c3']?.phrases.includes('go to my room') && !routes['dashboard-room'].phrases.includes('go to my room')
+        && routes['dashboard-room'].phrases.includes('go to the room'), `${J(routes['dashboard-go-c3'])} ${J(routes['dashboard-room'])}`);
+      check('"open the menu" stays the menu: a dashboard called "Menu" does not get "open menu" if taken, and nothing collides',
+        duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes })).length === 0, J(duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes }))));
+      const none = dashboardSpeechRoutes([]).routes;
+      check('*** with no dashboards at all, "go to my room" / basic / classic and the picker are still speakable ***',
+        J(Object.keys(none).sort()) === J(Object.keys(PREBUILT_ROUTES).sort()) && none['dashboard-room'].payload.prebuilt === 'room'
+        && none['dashboard-picker'].topic === SYSTEM_TOPICS.dashboards);
+      const odd = Object.values(PREBUILT_ROUTES).flatMap((r) => r.phrases).filter((p) => p !== normalize(p) || p.split(' ').length > 4);
+      check('ready-made phrases are plain lowercase, four words at most (the rule every route keeps)', odd.length === 0, odd.join(', '));
+      const acts = dashboardSpeechActions(routes);
+      const binds = dashboardSpeechBindings(routes);
+      check('each route is an action carrying its payload, and a speech binding pressing it',
+        acts.length === Object.keys(routes).length && acts.every((a) => a.id.startsWith('speech/dashboard-') && a.topic && a.payload)
+        && binds.every((b) => b.device === 'speech' && b.control.startsWith('phrase:dashboard-')), J(acts.slice(0, 2)));
+    }
+
+    // =================================================================================================
+    section('4. the picker on the DASHBOARD path: bar, scan, switch, voice, and a load-then-swap');
+    {
+      const USER = `dash-kiosk-${STAMP}`;
+      const B = backend(USER);
+      const A = await B.profiles.create('Alpha screen');
+      await B.profiles.addModule(A.id, 'photos');
+      const aFull = await B.profiles.get(A.id);
+      await B.write(A.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, theme: 'dusk', panelSurface: 'veil' });
+      const setPerson = async (patch) => {
+        const s = createState({ url: B.profiles.personStateURL(aFull.person_id, INPUTS_KEY), user: USER });
+        await s.load().catch(() => {}); s.set(patch); await s.flush(); s.destroy();
+      };
+      await setPerson({ speechOn: false, subtitlesOn: false, speechEngine: 'local', speechPass2: 'none' });
+      // The stand-in recogniser (kiosk_test's): `cb(text)` is "the room said this".
+      const rk = { cb: null, running: false, st: { state: 'listening', engines: [], skipped: [], ears: ['room'] },
+        start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; this.cb = null; },
+        status() { return this.st; }, onStatus() { return () => {}; }, onCaption() { return () => {}; }, sourcesChanged() {} };
+      const box = mkBox();
+      const bus = createBus();
+      const k = await mountKiosk(box, { user: USER, profileId: A.id, profiles: B.profiles, bus, ...seams(),
+        makeRecognizer: () => rk });
+      const tray = () => box.querySelector('[data-screens]');
+      const n0 = (await B.profiles.list()).length;
+      check('(setup) booted on the dashboard path', k.dashboardPath() && !!k.dashboard());
+      check('the picker starts closed', tray().hidden === true && k.dashboardPicker().open === false);
+
+      // ---- THE BAR ----
+      const home = await settled(() => box.querySelector('.view .tb-bar [data-act="home"]'), 4000)
+        && box.querySelector('.view .tb-bar [data-act="home"]');
+      check('*** the placed bar has the one button (Home) that opens it ***', !!home);
+      home?.click();
+      const texts = () => k.dashboardPicker().items.map((i) => i.text);
+      check('*** pressing it opens the tray: Close first, your dashboards, then + Room, + Basic, + Classic 2D, then the way out ***',
+        await settled(() => J(texts()) === J(['✕ Close', 'Alpha screen', '+ Room', '+ Basic', '+ Classic 2D', 'Set up dashboards ↗']), 6000),
+        J(texts()));
+      check('the dashboard you are on is marked and not pressable', k.dashboardPicker().items[1].disabled === true
+        && !!tray().querySelector('.k-scr.on[disabled][aria-current="true"]'));
+      check('*** opening it (and listing what is offered) made NOTHING ***', (await B.profiles.list()).length === n0);
+      check('it is a strip above the bar, not a scrim: the panels are still there underneath',
+        !!box.querySelector('.view .k-stage .photos') && !box.querySelector('.st-scrim:not([hidden])'));
+
+      // ---- THE SCAN ----
+      check('*** while it is open it takes the scan: the panel router is paused, the cursor is on Close (the way out first) ***',
+        k.runtime.router.isPaused() === true && k.dashboardPicker().cursor?.kind === 'close');
+      bus.publish(verbTopic('next'));
+      check('next moves the cursor past the dashboard you are on, to + Room', k.dashboardPicker().cursor?.key === 'room',
+        J(k.dashboardPicker().cursor));
+      check('...and the cursor is drawn where the press will land', tray().querySelector('[data-cursor="1"]')?.dataset.key === 'room');
+      bus.publish(verbTopic('prev'));
+      check('prev moves it back', k.dashboardPicker().cursor?.kind === 'close');
+      bus.publish(verbTopic('back'));
+      check('*** back puts the tray away and hands the scan back to the panels ***',
+        tray().hidden === true && k.runtime.router.isPaused() === false);
+
+      // ---- A SWITCH ----
+      check('a switch can be bound to "Choose a dashboard" and to each ready-made one (registered actions)',
+        k.runtime.actions.has(SYSTEM_TOPICS.dashboards) && ['room', 'basic', 'classic'].every((x) => k.runtime.actions.has(`dashboard/go/${x}`)));
+      bus.publish(SYSTEM_TOPICS.dashboards, { claim() {} });
+      check('*** system/dashboards (a switch, a room\'s object) opens it ***', await settled(() => tray().hidden === false, 3000));
+
+      // ---- A SWAP VIA THE PICKER: + Basic, by the scan ----
+      await settled(() => texts().includes('+ Basic'), 4000);
+      const dashBefore = k.dashboard();
+      check('(setup) A shows its own theme and see-through panels', themeVar('--bg') === THEMES.dusk.vars['--bg']
+        && box.querySelector('.kiosk').dataset.panelSurface === 'veil', `${themeVar('--bg')} ${box.querySelector('.kiosk').dataset.panelSurface}`);
+      bus.publish(verbTopic('next')); bus.publish(verbTopic('next'));
+      check('(the cursor is on + Basic)', k.dashboardPicker().cursor?.key === 'basic', J(k.dashboardPicker().cursor));
+      bus.publish(verbTopic('select'));
+      check('*** select makes Basic and swaps to it in place ***',
+        await settled(() => k.screenId() !== A.id && k.dashboard() !== dashBefore, 8000), `${k.screenId()}`);
+      const basicId = k.screenId();
+      check('...load-then-swap: exactly one dashboard on screen afterwards, the old one gone',
+        box.querySelectorAll('.kiosk > .k-dash').length === 1 && !!box.querySelector('.view .k-stage .k-cell .photos')
+        && !!box.querySelector('.view .k-stage .k-cell .clock'));
+      check('*** Basic brings its OWN look: the default theme and SOLID panels (A\'s were dusk and see-through) ***',
+        await settled(() => themeVar('--bg') === THEMES[DEFAULT_THEME].vars['--bg'] && box.querySelector('.kiosk').dataset.panelSurface === 'solid', 3000),
+        `${themeVar('--bg')} ${box.querySelector('.kiosk').dataset.panelSurface}`);
+      check('the tray put itself away', tray().hidden === true);
+      check('exactly one screen was made', (await B.profiles.list()).length === n0 + 1);
+      home && box.querySelector('.view .tb-bar [data-act="home"]')?.click();
+      check('*** Basic is in the list now, and no longer offered ***',
+        await settled(() => texts().includes('Basic') && !texts().includes('+ Basic') && texts().includes('+ Room'), 6000), J(texts()));
+      // Back to A by its chip, by a click.
+      [...tray().querySelectorAll('.k-scr')].find((b) => b.textContent === 'Alpha screen')?.click();
+      check('a click on a dashboard swaps back to it, with ITS look again', await settled(() => k.screenId() === A.id
+        && themeVar('--bg') === THEMES.dusk.vars['--bg'] && box.querySelector('.kiosk').dataset.panelSurface === 'veil', 8000));
+
+      // ---- VOICE ----
+      await setPerson({ speechOn: true });
+      check('(setup) speech is listening', await settled(() => rk.running && !!rk.cb, 12000));
+      check('*** the dashboards are spoken routes, added at runtime: "go to my room", "go to alpha screen", "go to basic" ***',
+        await settled(() => {
+          const r = k.dashboardRoutes();
+          return r['dashboard-room']?.phrases.includes('go to my room') && r[`dashboard-go-${A.id}`]?.phrases.includes('go to alpha screen')
+            && Object.values(r).some((x) => x.phrases.includes('go to basic'));
+        }, 6000), J(Object.values(k.dashboardRoutes()).map((r) => r.phrases[0])));
+      check('...as runtime extras, never written into the person\'s saved bindings',
+        k.runtime.extraBindings().some((b) => b.actionId === 'speech/dashboard-room'));
+      await settled(() => rk.running && !!rk.cb, 6000);
+      rk.cb('computer please go to my room', { confidence: 0.95 });
+      check('*** "computer please go to my room": the room is MADE (first pick) and shown ***',
+        await settled(() => k.screenId() !== A.id && k.screenId() !== basicId, 10000), k.screenId());
+      const roomId = k.screenId();
+      check('...it is the room: the room scene, with the picture and the sign placed in it',
+        await settled(() => !!box.querySelector('.view .k-placed[data-place="scene"] [data-room]')
+          && box.querySelectorAll('.view .k-placed [data-placed]').length === 2, 6000),
+        `${box.querySelectorAll('.view [data-placed]').length}`);
+      check('...with its own see-through-to-the-wall panels (clear)', box.querySelector('.kiosk').dataset.panelSurface === 'clear');
+      const nRoom = (await B.profiles.list()).length;
+      await settled(() => rk.running && !!rk.cb, 6000);
+      rk.cb('computer please go to basic', { confidence: 0.95 });
+      check('*** "go to basic" goes to the Basic that exists -- nothing new is made ***',
+        await settled(() => k.screenId() === basicId, 8000) && (await B.profiles.list()).length === nRoom, k.screenId());
+      await settled(() => rk.running && !!rk.cb, 6000);
+      rk.cb('computer please go to alpha screen', { confidence: 0.95 });
+      check('*** "go to <a dashboard\'s name>" goes there ***', await settled(() => k.screenId() === A.id, 8000), k.screenId());
+      await settled(() => rk.running && !!rk.cb, 6000);
+      rk.cb('computer please show my dashboards', { confidence: 0.95 });
+      check('"show my dashboards" opens the picker', await settled(() => tray().hidden === false, 3000));
+      bus.publish(verbTopic('select'));     // the cursor is on Close
+      check('a select on Close closes it', await settled(() => tray().hidden === true, 2000));
+      const once = (await B.profiles.list()).length;
+      await settled(() => rk.running && !!rk.cb, 6000);
+      rk.cb('computer please go to my room', { confidence: 0.95 });
+      check('*** the room again: the SAME room, still only one ***', await settled(() => k.screenId() === roomId, 8000)
+        && (await B.profiles.list()).length === once);
+      k.destroy(); box.remove();
+    }
+
+    // =================================================================================================
+    section('5. today\'s path: the same picker through the existing strip; a failed make changes nothing; the offers row');
+    {
+      const USER = `dash-classic-${STAMP}`;
+      const B = backend(USER);
+      const P = await B.profiles.create('Plain screen');
+      await B.profiles.addModule(P.id, 'photos');
+      await B.write(P.id, 'settings', { theme: 'warm' });
+      const box = mkBox();
+      const k = await mountKiosk(box, { user: USER, profileId: P.id, profiles: B.profiles, bus: createBus(), ...seams() });
+      const tray = () => box.querySelector('[data-screens]');
+      check('(setup) today\'s path, no dashboard module', !k.dashboardPath() && !k.dashboard());
+      box.querySelector('.k-controls [data-act="home"]').click();
+      check('*** the plain bar\'s Home opens the same tray, with the ready-made ones offered ***',
+        await settled(() => k.dashboardPicker().items.map((i) => i.text).includes('+ Basic'), 6000), J(k.dashboardPicker().items.map((i) => i.text)));
+      const href = location.href;
+      [...tray().querySelectorAll('.k-scr')].find((b) => b.textContent === '+ Basic')?.click();
+      check('*** picking + Basic makes it and swaps the modules in place (today\'s showScreen), without navigating ***',
+        await settled(() => k.screenId() !== P.id && !!box.querySelector('.k-stage .photos') && !!box.querySelector('.k-stage .clock'), 8000)
+        && location.href === href, k.screenId());
+      check('today\'s path keeps the boot screen\'s look (documented: only the arrangement follows a swap there)',
+        themeVar('--bg') === THEMES.warm.vars['--bg'], themeVar('--bg'));
+      k.destroy(); box.remove();
+
+      // A make that fails: the tray says so, and nothing about the screen changes.
+      const broken = { ...B.profiles, create: async () => { throw new Error('the server said no'); } };
+      const P2 = await B.profiles.create('Second screen');
+      await B.profiles.addModule(P2.id, 'photos');
+      const box2 = mkBox();
+      const k2 = await mountKiosk(box2, { user: USER, profileId: P2.id, profiles: broken, bus: createBus(), ...seams() });
+      box2.querySelector('.k-controls [data-act="home"]').click();
+      await settled(() => k2.dashboardPicker().items.some((i) => i.text === '+ Room'), 6000);
+      const n = (await B.profiles.list()).length;
+      [...box2.querySelectorAll('[data-screens] .k-scr')].find((b) => b.textContent === '+ Room')?.click();
+      check('*** a make that fails says so in the tray, and the screen is exactly where it was ***',
+        await settled(() => /Could not make Room/.test(box2.querySelector('[data-screens]').textContent), 6000)
+        && k2.screenId() === P2.id && (await B.profiles.list()).length === n && !!box2.querySelector('.k-stage .photos'),
+        box2.querySelector('[data-screens]').textContent);
+      k2.destroy(); box2.remove();
+
+      // The row that turns the offers off (Rule 1: a setting, default on).
+      // (The row is at "Everything", so the screen is set to show everything.)
+      await B.write(P2.id, 'settings', { [DASHBOARD_OFFERS_KEY]: false, complexity: 'advanced' });
+      const box3 = mkBox();
+      const k3 = await mountKiosk(box3, { user: USER, profileId: P2.id, profiles: B.profiles, bus: createBus(), ...seams() });
+      k3.menu.open();
+      check('the menu has the row ("Offer the ready-made dashboards"), reading No',
+        await settled(() => k3.menu.items().find((r) => r.id === `set:${DASHBOARD_OFFERS_KEY}`)?.hint === 'No', 4000),
+        J(k3.menu.items().find((r) => r.id === `set:${DASHBOARD_OFFERS_KEY}`)) + ' ' + k3.menu.items().map((r) => r.id).filter((x) => /set:/.test(x || '')).join());
+      k3.menu.close();
+      box3.querySelector('.k-controls [data-act="home"]').click();
+      await settled(() => k3.dashboardPicker().items.length > 2, 6000);
+      check('*** with it off, the tray offers none of them (the made ones are still listed) ***',
+        !k3.dashboardPicker().items.some((i) => i.kind === 'prebuilt') && k3.dashboardPicker().items.some((i) => i.text === 'Basic'),
+        J(k3.dashboardPicker().items.map((i) => i.text)));
+      k3.destroy(); box3.remove();
+    }
+
+    document.getElementById('summary').textContent =
+      failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+  } catch (err) {
+    check('unexpected error', false, String((err && err.stack) || err));
+    document.getElementById('summary').textContent = `${failed} FAILED / ${passed} passed`;
+    document.getElementById('summary').className = 'fail';
+  }
+})();
+</script>
+</body>
+</html>

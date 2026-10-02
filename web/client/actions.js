@@ -68,6 +68,13 @@ export const SYSTEM_ACTIONS = [
   { id: 'shell/host/saveas', label: 'Home: Save as…', topic: 'shell/host', payload: { act: 'saveas' }, group: 'System' },
   { id: 'shell/host/picker', label: 'Home: choose a module', topic: 'shell/host', payload: { act: 'picker' }, group: 'System' },
   { id: 'shell/host/history', label: 'Home: history', topic: 'shell/host', payload: { act: 'history' }, group: 'System' },
+  // *** ROW 2.34: A SWITCH STRAIGHT TO A READY-MADE DASHBOARD. *** The picker is `system/dashboards` above;
+  // these skip it, the way "computer please go to my room" does. `dashboard/go` (dashboards.js
+  // DASHBOARD_GO_TOPIC, written out here so this file imports nothing): the person's own if they have it,
+  // made once if not. Not on the remote-drive allowlist, for the reason the rest of this list is not.
+  { id: 'dashboard/go/room', label: 'Go to the room dashboard', topic: 'dashboard/go', payload: { prebuilt: 'room' }, group: 'System' },
+  { id: 'dashboard/go/basic', label: 'Go to the basic dashboard', topic: 'dashboard/go', payload: { prebuilt: 'basic' }, group: 'System' },
+  { id: 'dashboard/go/classic', label: 'Go to the classic 2D dashboard', topic: 'dashboard/go', payload: { prebuilt: 'classic' }, group: 'System' },
   { id: 'nimrod-cat/next', label: 'Nimrod the cat: next step', topic: 'nimrod-cat/next', group: 'System' },
   { id: 'nimrod-cat/prev', label: 'Nimrod the cat: back a step', topic: 'nimrod-cat/prev', group: 'System' },
 ];
