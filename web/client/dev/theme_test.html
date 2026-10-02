@@ -32,7 +32,7 @@ persistence of a theme setting through the live server's overwrite-state store
 import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME,
          onColor, contrast, ACCENT_VARS, getStoredTheme, setStoredTheme,
          mountThemePicker, luminance, focusColor, worstContrast, FOCUS_MIN,
-         TEXT_MIN } from '../theme.js';
+         TEXT_MIN, scanRingColor } from '../theme.js';
 import { ANSWER_MARKS, answerMarkHtml } from '../answer_mark.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
@@ -475,6 +475,96 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     }
   } catch (e) {
     check('focus ring / muted text checks ran', false, String(e && e.stack || e));
+  }
+
+  // ── *** THE SWITCH-SCAN RING: 3:1 IN EVERY THEME, AND NO RING DRAWN IN THE RAW GOLD *** ──────
+  //
+  // The scan/focus ring in nimrod, devices, profile, what's new, library and `.nbtn` was drawn in
+  // `--highlight` (#ffd36e), about 1.2:1 on a light theme against AA's 3:1. `--scan-ring` keeps the
+  // gold wherever it passes and falls back to `--focus` where it does not (theme.js scanRingColor).
+  try {
+    const scratchS = document.createElement('div');
+    const moved = [];
+    for (const id of Object.keys(THEMES)) {
+      const v = THEMES[id].vars;
+      applyTheme(scratchS, id);
+      const ring = scratchS.style.getPropertyValue('--scan-ring').trim();
+      const r = worstContrast(ring, v);
+      const gold = worstContrast(v['--highlight'], v);
+      moved.push(`${id} ${gold.toFixed(2)}->${r.toFixed(2)}${ring === v['--highlight'] ? ' (gold kept)' : ` (${ring})`}`);
+      check(`${id}: the scan ring ${ring} clears ${FOCUS_MIN}:1 on every surface, deuteranopia included (${r.toFixed(2)}:1)`,
+        !!ring && r >= FOCUS_MIN, `--highlight alone was ${gold.toFixed(2)}`);
+      // The gold is kept EXACTLY wherever it already passes - the design colour is not traded away
+      // in a theme where it works.
+      if (gold >= FOCUS_MIN) {
+        check(`${id}: the gold passes here (${gold.toFixed(2)}:1), so the scan ring IS the gold`,
+          ring === v['--highlight'], ring);
+      }
+    }
+    console.log('scan ring, highlight -> ring (worst incl. deuteranopia):', moved.join(' | '));
+
+    // The derivation, as a contract.
+    const base = THEMES.default.vars;
+    check('a light theme whose gold fails gets its own --focus as the scan ring',
+      scanRingColor(base) === focusColor(base), `${scanRingColor(base)} vs ${focusColor(base)}`);
+    check('a theme can name its own scan ring (--scan-ring), and gets it when it passes',
+      scanRingColor({ ...base, '--scan-ring': '#0A3323' }) === '#0A3323');
+    check('...and a named scan ring that fails falls back rather than being trusted',
+      worstContrast(scanRingColor({ ...base, '--scan-ring': '#ffffff' }), base) >= FOCUS_MIN,
+      scanRingColor({ ...base, '--scan-ring': '#ffffff' }));
+    check('a scan ring that is not a hex colour is passed through untouched',
+      scanRingColor({ ...base, '--scan-ring': 'Highlight' }) === 'Highlight');
+    check('...and --highlight itself is NOT moved by any of this (it is also fills and glows)',
+      Object.keys(THEMES).every((id) => { const b = document.createElement('div'); applyTheme(b, id);
+        return b.style.getPropertyValue('--highlight').trim() === THEMES[id].vars['--highlight']; }));
+
+    // Drawn, not just declared: the rule the modules use, resolved through applyTheme in every theme.
+    const toHexS = (c) => '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3)
+      .map((n) => Math.round(Number(n)).toString(16).padStart(2, '0')).join('');
+    let worstDrawn = Infinity, worstDrawnAt = '';
+    for (const id of Object.keys(THEMES)) {
+      const box = document.createElement('div');
+      document.body.append(box);
+      applyTheme(box, id);
+      box.innerHTML = '<i style="display:block;outline:3px solid var(--scan-ring, var(--highlight))">x</i>';
+      const r = worstContrast(toHexS(getComputedStyle(box.firstChild).outlineColor), THEMES[id].vars);
+      if (r < worstDrawn) { worstDrawn = r; worstDrawnAt = id; }
+      box.remove();
+    }
+    check(`the scan ring as drawn clears ${FOCUS_MIN}:1 in every theme (worst ${worstDrawn.toFixed(2)}:1, ${worstDrawnAt})`,
+      worstDrawn >= FOCUS_MIN, worstDrawnAt);
+
+    // *** NO OUTLINE IS DRAWN IN THE RAW --highlight. *** Read from source, because a scan state is
+    // module-internal and a :focus-visible cannot be produced in a hidden document. Every client .js
+    // (walked by the server, so a new module is covered without anybody listing it), every sheet in
+    // CSS_SHEETS, and the .css sibling of every .js. `var(--scan-ring, var(--highlight))` is the
+    // allowed form; anything else putting --highlight into an outline is a failure.
+    const files = await (await fetch('/api/dev/client-modules', { cache: 'no-store' })).json();
+    check('the server listed the client .js files for the outline read', Array.isArray(files) && files.length > 50,
+      String(files && files.length));
+    const CSS_SHEETS = ['kiosk.css', 'modules.css', 'settings.css', 'color_picker.css', 'picture_picker.css',
+      'starting_defaults.css', 'choice_card.css', 'learn/learn.css', 'rhythm.css', 'layers.css', 'edit_windows.css',
+      'edit_map.css', 'room_scene.css', 'room3d.css', 'screen_pair.css', 'live_notices.css', 'listening_cue.css',
+      'scoreboard.css', 'subtitles.css', 'weather.css', 'music.css', 'note.css', 'avatar.css', 'solitaire.css',
+      'brickbreaker.css', 'card_sort.css', 'phone_mic.css'];
+    const paths = new Set([...files, ...CSS_SHEETS, ...files.map((f) => f.replace(/\.js$/, '.css'))]);
+    const ALLOWED = /var\(\s*--scan-ring\s*,\s*var\(\s*--highlight\s*\)\s*\)/g;
+    const OUTLINE = /outline(?:-color|Color)?\s*[:=]\s*([^;}\n]*)/g;
+    const bad = [];
+    let read = 0;
+    for (const p of paths) {
+      const res = await fetch('../' + p, { cache: 'no-store' });
+      if (!res.ok) continue;
+      read++;
+      const text = await res.text();
+      for (const m of text.matchAll(OUTLINE)) {
+        if (/var\(\s*--highlight/.test(m[1].replace(ALLOWED, ''))) bad.push(`${p}: ${m[0].trim().slice(0, 80)}`);
+      }
+    }
+    check(`no outline anywhere is drawn in the raw --highlight (${read} files read)`,
+      bad.length === 0 && read > 50, bad.join(' || ') || `read ${read}`);
+  } catch (e) {
+    check('scan ring checks ran', false, String(e && e.stack || e));
   }
 
   // ── *** RIGHT AND WRONG ANSWERS: A SHAPE AND A WORD, NOT COLOUR ALONE *** ──────────────────

@@ -37,7 +37,7 @@ const STYLE = `
 .wn-day{margin:12px 0 4px;font-size:.95rem;color:var(--text-muted)}
 .wn-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .wn-item{padding:8px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--border)}
-.wn-item.is-scan{outline:3px solid var(--highlight);outline-offset:2px}
+.wn-item.is-scan{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .wn-where{display:block;color:var(--text-muted);font-size:.9rem;margin-top:2px}
 `;
 

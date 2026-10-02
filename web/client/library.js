@@ -425,8 +425,8 @@ const CSS = `
   -webkit-box-orient:vertical;overflow:hidden}
 .lib-badge{font-size:.75rem;border:1px solid var(--border);border-radius:999px;padding:0 7px;color:var(--text-soft,var(--text-muted))}
 .lib-card.is-off .t{color:var(--text-muted)}
-.lib .is-scan{outline:3px solid var(--highlight);outline-offset:2px}
-.lib .is-row{outline:2px dashed var(--highlight);outline-offset:2px;border-radius:12px}
+.lib .is-scan{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
+.lib .is-row{outline:2px dashed var(--scan-ring, var(--highlight));outline-offset:2px;border-radius:12px}
 .lib-detail{position:absolute;left:8px;right:8px;bottom:8px;max-height:72%;overflow:auto;background:var(--surface);
   border:2px solid var(--accent);border-radius:14px;padding:12px 14px;z-index:2}
 .lib-detail[hidden]{display:none}
