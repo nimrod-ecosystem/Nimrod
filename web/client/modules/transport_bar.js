@@ -35,7 +35,9 @@
 // with the keyboard inside it, it stays.
 
 import { registerModule } from '../module.js';
-import { barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, drawCallControls } from '../transport_bar.js';
+import {
+  barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
+} from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
@@ -213,13 +215,20 @@ registerModule(
       const panel = root.querySelector('[data-act="panel"]');
       if (panel) panel.hidden = !a?.layout?.() || n < 2;
       // Switch module: dimmed with no panel to switch; gone when the host page has its own (Home).
-      const sw = root.querySelector('.tb-actions:not(.tb-host) [data-act="switch"]');
+      // (2026-10-02: and dimmed, saying why, while a piece of the room is selected -- transport_bar.js
+      // "A PIECE OF THE ROOM, SELECTED"; Back and Next dim with it, as on the plain bar.)
+      const piece = pieceOf(a);
+      const shell = root.querySelector('.tb-actions:not(.tb-host)');
+      try { paintPieceInert(shell, piece); } catch { /* not drawn */ }
+      const sw = shell?.querySelector('[data-act="switch"]');
       if (sw) {
         let hostHas = false;
         try { hostHas = !!host && typeof host.barItems === 'function' && (host.barItems() || []).some((it) => it && it.act === 'switch'); }
         catch { hostHas = false; }
         sw.hidden = hostHas;
-        sw.disabled = !a?.focusedRec?.();
+        sw.disabled = !a?.focusedRec?.() || !!piece;
+        if (sw.dataset.baseTitle === undefined) sw.dataset.baseTitle = sw.title || '';
+        sw.title = piece ? PIECE_SWITCH_TITLE(piece.label) : sw.dataset.baseTitle;
       }
       const h = root.querySelector('[data-act="hush"]');
       if (h) {

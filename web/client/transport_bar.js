@@ -148,16 +148,61 @@ export function drawCallControls(el, s, send) {
   b('louder', 'Call louder', false, `the call is at ${pct}%`, { volume: 1 });
 }
 
+// *** A PIECE OF THE ROOM, SELECTED (2026-10-02; Mike's list 09-30 ~1341). *** When the switch scan is on a
+// piece of a dashboard's room (a door, the window -- arrangement.js `focusedTarget`), BOTH bars say so the
+// same way, from here:
+//   * the piece has its own chip, lit, with its name (`drawChips`, from `barModel`'s `piece`), and no panel's
+//     chip is lit;
+//   * Switch module is dimmed, its title saying why (`PIECE_SWITCH_TITLE`): a piece is not a panel;
+//   * Back and Next -- the selected PANEL's previous / next thing -- are dimmed too (`paintPieceInert`). They
+//     would do nothing (kiosk.js `panelSubject`), and a button that does nothing must say so (D16). Pause is
+//     dimmed already: the shell reports it can't, for a piece.
+/** The selected stop when it is a piece of the room (arrangement.js `focusedTarget`), else null. */
+export function pieceOf(arr) {
+  try { const t = arr?.focusedTarget?.(); return t && t.kind === 'piece' ? t : null; } catch { return null; }
+}
+export const PIECE_SWITCH_TITLE = (label) => `${label} is part of the room, not a panel: Switch module is for panels`;
+// The buttons that act on the selected panel's content, dimmed while a piece is selected.
+export const PIECE_INERT_ACTS = Object.freeze(['back', 'next']);
+/** Dim `PIECE_INERT_ACTS` under `scope` while `piece` is selected (title says why); put them back after. */
+export function paintPieceInert(scope, piece) {
+  if (!scope || typeof scope.querySelector !== 'function') return;
+  for (const act of PIECE_INERT_ACTS) {
+    const b = scope.querySelector(`[data-act="${act}"]`);
+    if (!b) continue;
+    if (b.dataset.baseTitle === undefined) b.dataset.baseTitle = b.title || '';
+    b.disabled = !!piece;
+    b.title = piece ? `${piece.label} is selected: ${act === 'next' ? 'Next' : 'Back'} is for panels` : b.dataset.baseTitle;
+  }
+}
+function drawPieceChip(modsEl, piece, focus) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'k-dot on k-piece';
+  b.dataset.piece = piece.id;
+  b.textContent = piece.label;
+  b.setAttribute('aria-current', 'true');
+  b.setAttribute('aria-label', `In the room: ${piece.label}, selected`);
+  b.title = 'a piece of the room is selected: select presses it, and the ⚙ menu shows its options';
+  // Pressed: it stays selected, as a panel's chip does.
+  b.addEventListener('click', () => { try { focus?.(piece.id); } catch { /* it has gone */ } });
+  modsEl.append(b);
+}
+
 /**
  * The model both bars draw from, read fresh from an arrangement (`arrangement.js`) and an input
  * runtime-like object (`{ router }`). Pure reads; nothing is kept.
  */
 export function barModel(arr, runtime, { audio = null } = {}) {
   if (!arr) return null;
+  // 2026-10-02: with the scan on a PIECE of the dashboard's room (arrangement.js `focusedTarget`), that piece
+  // is what is lit -- its own chip, `piece` -- and no panel's.
+  const piece = pieceOf(arr);
   return {
     layout: arr.layout(), profile: arr.profile() || { modules: [] }, slotRecs: arr.slotRecs,
     placedRecs: arr.placedRecs || [],             // Stage R: modules placed freely are panels too
-    stageDefs: arr.stageDefs(), primary: arr.primary(), focusId: arr.focusedRec()?.id,
+    stageDefs: arr.stageDefs(), primary: arr.primary(), focusId: piece ? piece.id : arr.focusedRec()?.id,
+    piece: piece ? { id: piece.id, label: piece.label } : null,
     runtime: runtime || null,
     focusPlaced: arr.focusPlaced, showUnplaced: arr.showUnplaced, showPrimary: arr.showPrimary,
     instanceTitle: arr.instanceTitle,
@@ -297,6 +342,8 @@ export function drawChips(modsEl, m) {
         modsEl.append(b);
       }
     }
+    // A selected piece of the room: its own chip, last (after the panels, as in the switch lap).
+    if (m.piece) drawPieceChip(modsEl, m.piece, focusPlaced);
     return;
   }
 
