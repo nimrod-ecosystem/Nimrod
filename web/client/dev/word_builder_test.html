@@ -298,6 +298,20 @@ try {
     check('an id it does not have: an ordinary deal', !!s.deal('g', { again: 'zzz' }));
   }
 
+  // 2026-10-02 late: every quiz game with answers to walk got `answerBy` (say it by default, yes / no as
+  // the option). The word builder has no offer to say yes or no to - the word is said, or built from the
+  // letters by touch or one switch - so it has no row: a row that changes nothing is a lie.
+  section('*** no "Answering" row: the word builder already takes the word, with nothing offered ***');
+  {
+    check('no answerBy row', !getManifest(GAME).settings.some((s) => s.key === 'answerBy'));
+    const r = R({});
+    check('asked with nothing offered after it (the letters are the switch path)',
+      r.probe().candLine === '' && !r.eng.stops().some((s) => s.act === 'yes') && !/Is it/.test(r.said[0]), r.said[0]);
+    const g = r.lastGrammar();
+    check('the open vocabulary carries every word the letters make', g.open && r.probe().item.required.every((w) => g.words.includes(w)));
+    r.inst.destroy();
+  }
+
   finish();
 } catch (err) { finish(err); }
 </script>

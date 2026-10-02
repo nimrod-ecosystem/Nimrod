@@ -5,8 +5,9 @@
 // multiple clips or audio with a picture."*
 //
 // One module with a `game` setting, the way word games holds opposites, rhyming and yes/no: the
-// three are the same kind of question ("which one is it?"), answered the same way — one name
-// offered at a time on a switch, or said aloud — on the shared engine (`quiz_flow.js`).
+// three are the same kind of question ("which one is it?"), answered the same way — said aloud, a
+// name tapped, or three names stepped through on a switch ("Is it a cow?", one at a time, is the
+// `answerBy` option) — on the shared engine (`quiz_flow.js`).
 //
 //   STATE   a text clue: its nickname ("the Sunshine State"), hints its region then its capital.
 //           No map is downloaded and none is drawn here: fifty outlines are Design's work, and a
@@ -42,7 +43,7 @@ import { ownScoreField } from '../score_source.js';
 import {
   createMediaSourcesClient, resolveListing, listItemNames, resolveItemUrl,
 } from '../media_sources.js';
-import { flowSettings, fill, esc, normalize, shuffle } from '../quiz_flow.js';
+import { flowSettings, answerByField, fill, esc, normalize, shuffle } from '../quiz_flow.js';
 import { quizModule, up } from '../quiz_view.js';
 
 export const GAME = 'name_that';
@@ -69,6 +70,12 @@ const LINE_LABELS = {
 export const DEFAULTS = Object.freeze({
   // Animal first: it works the moment it is added, with nothing to set up.
   game: 'animal',
+  // SAY THE NAME, NOT "IS IT A COW?", BY DEFAULT (Mike's brain-games ruling, 2026-10-02 late, carried
+  // here). FOR: naming is the whole game - "Is it Annie?" answers "who is this?" for the person. Every
+  // name is in the open vocabulary (all the animals, all fifty states, everybody with a message), and the
+  // three names to tap or step through are on screen. AGAINST: somebody who can only nod or shake; one
+  // row away, and two Yes / No switches get it whatever this says.
+  answerBy: 'choices',
   personMiss: 'gentle',
   sourceId: '',
   album: '',
@@ -79,6 +86,7 @@ const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: 'animal', level: 'essential',
     options: [{ value: 'animal', label: 'Name that animal' }, { value: 'state', label: 'Name that state' },
               { value: 'person', label: 'Name that person' }] },
+  answerByField({ on: 'choices', example: 'Is it a cow?' }),
   ownScoreField({ level: 'essential', note: 'How many are right. A Scoreboard on the same screen can show it instead.' }),
   { key: 'personMiss', label: 'Name that person: when a name is missed', kind: 'choice', default: 'gentle',
     level: 'standard',

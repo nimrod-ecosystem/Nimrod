@@ -427,6 +427,37 @@ try {
     check('a game with no onResult is unchanged', plain.phase() === 'celebrate');
   }
 
+  section('*** answerBy (2026-10-02 late): the two shapes, and a spoken yes / no in the yes/no one ***');
+  {
+    const y = eng();
+    y.e.start('toy');
+    const it = y.e.snapshot().item;
+    check('a game that says nothing gets yes / no (the toy)', y.e.snapshot().offers === 'yesno' && QF.FLOW_DEFAULTS.answerBy === 'yesno');
+    check('yes / no: the grammar carries yes and no while an offer is up', ['yes', 'no'].every((w) => y.grams[y.grams.length - 1].words.includes(w)));
+    y.e.hear({ text: 'no', confidence: 0.95 });
+    check('*** "no" said to a wrong offer: the next offer, not a miss ***', y.e.snapshot().misses === 0 && y.e.snapshot().candidate === it.a, y.last());
+    y.e.hear({ text: 'yes', confidence: 0.3 });
+    check('an unsure "yes" is not acted on', y.phase() === 'asking' && y.last() === FLOW_LINES.notCaughtLine);
+    y.e.hear({ text: 'yes', confidence: 0.95 });
+    check('*** "yes" said to the right offer: right ***', y.phase() === 'celebrate');
+    // A yes or no that is this question's own word is an answer, not a reply to the offer.
+    const NOQ = { ...TOY, items: () => [{ q: 'What is the opposite of yes?', a: 'no', wrong2: 'maybe', offers: ['maybe', 'no', 'okay'] }] };
+    const n = eng({}, {}, { n: NOQ });
+    n.e.start('n');
+    n.e.hear({ text: 'no', confidence: 0.95 });
+    check('*** "no" to "the opposite of yes": the ANSWER (right), not No to the offer ***', n.phase() === 'celebrate');
+    const c = eng({}, { answerBy: 'choices' });
+    c.e.start('toy');
+    check('choices: nothing offered, and no yes / no in the grammar', c.e.snapshot().candLine === ''
+      && !c.grams[c.grams.length - 1].words.includes('yes') && c.said[0] === c.e.snapshot().item.q, c.said[0]);
+    c.e.next();
+    check('choices: next lights the second answer and says it', c.e.snapshot().lit === c.e.snapshot().candidates[1] && c.last() === c.e.snapshot().candidates[1]);
+    const f = QF.answerByField({ on: 'choices', example: 'Is it 7?', appliesWhen: (v) => v.x !== 1 });
+    check('the row: the game\'s own example in the yes / no option, and where it applies',
+      f.options[1].label === 'Yes / no questions ("Is it 7?")' && f.appliesWhen({ x: 1 }) === false && f.default === 'choices');
+    check('...and with no appliesWhen, none is declared', !('appliesWhen' in QF.answerByField()));
+  }
+
   section('the shared settings are declared the way word games declares them');
   {
     const fields = QF.flowSettings().map(normalizeField).filter(Boolean);

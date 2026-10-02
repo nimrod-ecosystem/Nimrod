@@ -68,6 +68,16 @@
 //              themselves with a switch (next / prev light one, select answers it). Brain games' default.
 // `twoSwitch: 'yesno'` (Select is Yes, Next is No) means the yes/no shape whatever `answerBy` says: two
 // switches that ARE yes and no have nothing to walk.
+//
+// *** EVERY GAME WITH CHOICES TO WALK NOW DEFAULTS TO 'choices' (2026-10-02 late, the same ruling carried
+// to the rest). *** Each game declares its own default beside its DEFAULTS and argues it there; this file's
+// 'yesno' is only what a game that says nothing gets (the toy in quiz_flow_test). An ENTRY game (spelling,
+// word builder, math's number pad) has no offer at all, so neither shape applies to it and it has no row.
+//
+// *** IN THE YES / NO SHAPE, A SPOKEN "YES" OR "NO" ANSWERS THE OFFER. *** "Is it 7?" - "yes". Before,
+// a voice "yes" was judged as if it were the answer itself ("That is incorrect"), which made the yes / no
+// option a switch-only option. A yes or no that is one of THIS question's own words ("the opposite of
+// stop") is still an answer, the same guard as the stop phrases.
 
 import { YES_WORDS, NO_WORDS } from './word_games_words.js';
 
@@ -150,14 +160,17 @@ export const FLOW_DEFAULTS = Object.freeze({
 });
 
 /**
- * The "how a switch answers" row, for a game that offers the choice (brain games). `on` is the game's
- * default. The yes/no shape is the one a head tracker's nod and shake can drive.
+ * The "how a switch answers" row, for every game that offers the choice. `on` is the game's default;
+ * `example` is that game's own offer, so the option reads as what it will hear ("Is it 7?"); `appliesWhen`
+ * hides the row where it changes nothing (math's number pad, the yes / no quiz). The yes/no shape is the
+ * one a head tracker's nod and shake can drive.
  */
-export function answerByField({ on = 'choices', level = 'standard' } = {}) {
+export function answerByField({ on = 'choices', level = 'standard', example = 'Is it the square?', appliesWhen = null } = {}) {
   return { key: 'answerBy', label: 'Answering', kind: 'choice', default: on, level,
     options: [{ value: 'choices', label: 'Say it, tap it, or step through the answers' },
-              { value: 'yesno', label: 'Yes / no questions ("Is it the square?")' }],
-    note: 'Yes / no suits two switches, or a nod and a shake. Saying the answer works either way.' };
+              { value: 'yesno', label: `Yes / no questions ("${example}")` }],
+    note: 'Yes / no suits two switches, or a nod and a shake. Saying the answer works either way.',
+    ...(appliesWhen ? { appliesWhen } : {}) };
 }
 
 /** The "how long the answer stays" row, shared with word_games.js (its own SETTINGS list). */
@@ -526,6 +539,8 @@ export function createQuizEngine({
   const candidate = () => cands[ci] ?? null;
   // The switch path's shape (`answerBy`, the header): 'choices' walks the answers; 'yesno' offers one.
   const offers = () => (c().answerBy === 'choices' && c().twoSwitch !== 'yesno' ? 'choices' : 'yesno');
+  // A spoken yes / no answers the offer (the header): only in the yes/no shape, with an offer up.
+  const offerByVoice = () => !!item && offers() === 'yesno' && !entryMode() && candidate() != null;
   function askLine() { return item ? String(call('ask', item, c()) || '') : ''; }
   function candLine() {
     const cand = candidate();
@@ -550,7 +565,7 @@ export function createQuizEngine({
       if (entryMode()) add(['delete', 'back', 'start over', 'check', 'done', 'say it again']);
       if (canReplay()) add(['listen again', 'play it again']);
     };
-    if (phase === 'asking') answers();
+    if (phase === 'asking') { answers(); if (offerByVoice()) { add(YES_WORDS); add(NO_WORDS); } }
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
     else if (phase === 'gentle') { add(YES_WORDS); add(NO_WORDS); add(['listen again', 'again']); }
@@ -889,6 +904,11 @@ export function createQuizEngine({
     switch (phase) {
       case 'asking':
         if (confident && canReplay() && isListen(text)) return press('replay');
+        // "Is it 7?" - "yes" (the yes/no shape; the header). Not when yes / no is this question's own word.
+        if (offerByVoice() && (isYes(text) || isNo(text)) && !answerVocab().has(text)) {
+          if (!confident) return notCaught();
+          return press(isYes(text) ? 'yes' : 'no');
+        }
         return answerFrom(text, raw, result, confident);
       case 'unsure':
         if (confident && isYes(text)) return press('confirm');

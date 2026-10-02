@@ -23,7 +23,7 @@ the shared miss flow. Each player at their own level; two players take turns.</p
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
 import { getManifest, listManifests } from '../module.js';
 import '../modules/think_games.js';
 import '../modules/word_games.js';
@@ -47,8 +47,10 @@ function ladderStore(init = {}) {
 }
 const R = (saved = {}, opts = {}) => {
   const store = opts.store || ladderStore();
-  // Opened started: these sections test the game in play (2026-10-02's Start button is tested on its own).
-  const r = rig(GAME, { saved: opts.fresh ? saved : { autostart: true, ...saved }, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  // Opened started: these sections test the game in play (2026-10-02's Start button is tested on its own),
+  // and in the yes / no shape they were written for ("Is it 3?"); `asShipped` leaves `answerBy` alone.
+  const base = opts.fresh ? {} : { autostart: true, ...(opts.asShipped ? {} : { answerBy: 'yesno' }) };
+  const r = rig(GAME, { saved: { ...base, ...saved }, ...opts, extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
   return Object.assign(r, { ladder: store, item: () => r.probe().item, session: () => r.inst.impl.__session });
 };
 const tiles = (r) => [...r.host.querySelectorAll('[data-pick]')].map((b) => b.dataset.pick);
@@ -308,6 +310,25 @@ try {
     check('...and its question is kept on the screen\'s ladder, marked as written by it',
       kept.length === 1 && kept[0].writtenBy === 'qwen2.5:7b' && kept[0].source === 'ai', JSON.stringify(kept));
     on.inst.destroy();
+  }
+
+  section('*** SAY THE ANSWER BY DEFAULT, NOT "IS IT 3?" (Mike\'s brain-games ruling, 2026-10-02 late, carried here) ***');
+  {
+    const m = getManifest(GAME);
+    const ship = (saved) => R(saved, { asShipped: true });
+    const it = (r) => r.item();
+    answerByChecks({ check, mount: ship, type: GAME, name: 'numbers', saved: { game: 'numbers' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => String(targetOf(it(r))), say: (r) => numberWord(targetOf(it(r))) });
+    answerByChecks({ check, mount: ship, type: GAME, name: 'things', saved: { game: 'things' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => targetOf(it(r)) });
+    answerByChecks({ check, mount: ship, type: GAME, name: 'groups', saved: { game: 'groups' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => it(r).group });
+    answerByChecks({ check, mount: ship, type: GAME, name: 'finish', saved: { game: 'finish' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => it(r).accept[0] });
+    const r = ship({ game: 'groups' });
+    r.inst.impl.hear({ text: GROUP_NAMES.find((g) => judgeItem(r.item(), g) === false && !r.probe().candidates.includes(g)), confidence: 0.95 });
+    check('*** saying a group that is NOT one of the three on screen is still a real answer (and a miss) ***', r.probe().misses === 1);
+    r.inst.destroy();
   }
 
   finish();

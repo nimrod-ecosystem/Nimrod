@@ -23,10 +23,10 @@ aloud. Person's miss flow is gentle by default and a setting.</p>
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
 import { getManifest } from '../module.js';
 import '../modules/name_that.js';
-import { GAME, GAMES, STATES, ANIMALS, LINES, personFromFileName } from '../modules/name_that.js';
+import { GAME, GAMES, STATES, ANIMALS, LINES, DEFAULTS, personFromFileName } from '../modules/name_that.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { auditFields } from '../settings_audit.js';
 import { normalizeField } from '../settings_fields.js';
@@ -57,7 +57,10 @@ function media({ flat = [], albums = {}, sources = null } = {}) {
     },
   };
 }
-const R = (saved = {}, extra = {}, opts = {}) => rig('name_that', { saved, extra, ...opts });
+// The sections written before 2026-10-02 late test the yes / no shape ("Is it a cow?"), so `R` pins it;
+// `ship` mounts the game as it now ships (say it, tap it, or step through the names).
+const R = (saved = {}, extra = {}, opts = {}) => rig('name_that', { saved: { answerBy: 'yesno', ...saved }, extra, ...opts });
+const ship = (saved = {}, extra = {}, opts = {}) => rig('name_that', { saved, extra, ...opts });
 const waitFor = async (fn, ms = 1500) => { const t0 = Date.now(); while (!fn() && Date.now() - t0 < ms) await sleep(10); return fn(); };
 
 try {
@@ -222,6 +225,29 @@ try {
     r.eng.hear({ text: it.answer.toLowerCase(), confidence: 0.95 });
     check('...a name said in lower case is still right', r.phase() === 'celebrate');
     r.inst.destroy();
+  }
+
+  section('*** SAY THE NAME BY DEFAULT, NOT "IS IT A COW?" (Mike\'s brain-games ruling, 2026-10-02 late, carried here) ***');
+  {
+    const m = getManifest(GAME);
+    const mount = (saved) => ship(saved);
+    const right = (r) => r.probe().item.answer;
+    answerByChecks({ check, mount, type: GAME, name: 'animal', saved: { game: 'animal' }, defaults: DEFAULTS, manifest: m, right });
+    answerByChecks({ check, mount, type: GAME, name: 'state', saved: { game: 'state' }, defaults: DEFAULTS, manifest: m, right });
+    const s = ship({ game: 'state' });
+    const other = STATES.find((x) => !s.probe().candidates.includes(x.answer)).answer;
+    s.inst.impl.hear({ text: other, confidence: 0.95 });
+    check('*** a state that is not one of the three on screen is still heard, and is a miss ***', s.probe().misses === 1, s.last());
+    s.inst.destroy();
+    // The person game: the clip first, then "Who is this?" with nothing offered after it.
+    const md = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
+    const p = ship({ game: 'person' }, md.ctx);
+    await waitFor(() => md.played.length === 1);
+    md.end();
+    check('person: when the clip ends, "Who is this?" and NO name offered', p.last() === LINES.askPerson && p.probe().offers === 'choices', p.last());
+    p.inst.impl.hear({ text: p.probe().item.answer, confidence: 0.95 });
+    check('person: saying the name is right', p.phase() === 'celebrate');
+    p.inst.destroy();
   }
 
   finish();
