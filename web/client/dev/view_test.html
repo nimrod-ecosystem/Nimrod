@@ -457,6 +457,44 @@ const PLAIN = {
       r.inst.destroy();
     }
 
+    // ================= ROW 2.34: THE TYPE IS `dashboard`, AND `view` STILL LOADS =================
+    section('row 2.34: registered as `dashboard`, with `view` kept as an alias');
+    {
+      const { getManifest } = await import('../module.js');
+      const { DASHBOARD_TYPE, DASHBOARD_ALIASES } = await import('../modules/view.js');
+      check('*** the registered type is `dashboard` ***', DASHBOARD_TYPE === 'dashboard'
+        && getManifest('dashboard')?.type === 'dashboard' && getManifest('dashboard')?.title === 'Dashboard');
+      check('*** `view` is still registered, and says it is the old name of `dashboard` ***',
+        DASHBOARD_ALIASES.includes('view') && getManifest('view')?.aliasOf === 'dashboard');
+      // The same arrangement, mounted under each name: the same panels, the same contract.
+      const mountAs = async (type) => {
+        const host = document.createElement('div');
+        document.getElementById('host').append(host);
+        const stores = makeCounted();
+        const bus = createBus();
+        const inst = mountModule(type, { mount: host, bus, rootBus: bus, viewId: `al-${type}`, user: 'u',
+          arrangement: { id: `al-${type}`, modules: [{ id: `al-${type}-p`, type: 'photos' }, { id: `al-${type}-w`, type: 'wordforge' }] },
+          makeState: stores.makeState, makeEvents: stores.makeEvents, personId: null,
+          storage: { getItem: () => null, setItem() {}, removeItem() {} },
+          state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {},
+                   load: () => Promise.resolve(), startPolling() {}, destroy() {} } });
+        await inst.init();
+        await sleep(120);
+        const impl = inst.impl || inst;
+        const got = { container: impl.container === true, panels: impl.panels().map((p) => p.type).join(),
+          modules: impl.modules().map((m) => m.type).join(), stage: !!host.querySelector('.view .k-stage .photos') };
+        inst.destroy();
+        host.remove();
+        return got;
+      };
+      const asDash = await mountAs('dashboard');
+      const asView = await mountAs('view');
+      check('*** mounted as `dashboard`: a container with its panels on its stage ***',
+        asDash.container && asDash.stage && asDash.modules === 'photos,wordforge', JSON.stringify(asDash));
+      check('*** mounted as `view` (a saved screen, an old page): exactly the same thing ***',
+        JSON.stringify(asView) === JSON.stringify(asDash), `${JSON.stringify(asView)} vs ${JSON.stringify(asDash)}`);
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

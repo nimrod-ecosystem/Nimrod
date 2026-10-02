@@ -42,14 +42,20 @@ import {
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS,
 } from './shell_verbs.js';
-import { SYSTEM_TOPICS } from './actions.js';
+import { SYSTEM_TOPICS, verbTopic } from './actions.js';
+// Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
+import {
+  createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
+  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature,
+} from './dashboards.js';
+import { createDashboardPicker } from './dashboard_picker.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
-  SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES,
+  SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES, spokenTable,
 } from './input_speech.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
@@ -671,6 +677,11 @@ export async function mountKiosk(root, {
   let musicFavs = null;
   let musicRoutes = {};
   let offMusicActions = null;
+  // ROW 2.34: THE PERSON'S DASHBOARDS AS SPOKEN ROUTES ("go to <name>"), and the ready-made ones ("go to my
+  // room"), added the same way as the music favourites -- see `applyDashboards`.
+  let dashRoutes = {};
+  let offDashActions = null;
+  let lastDashList = [];
   const SILENT_INPUT = { down() {}, up() {} };   // subtitles-only: the room is heard, nothing is pressed
   // `subtitlesRoute` is here too: the online captioner starts and stops with the recogniser.
   const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS]
@@ -704,14 +715,14 @@ export async function mountKiosk(root, {
     const subsOn = r.subtitlesOn === true;
     const want = sw.on || subsOn;
     const sig = JSON.stringify([want, !!runtime, torn, sigOf(r, SPEECH_KEYS),
-      favouritesSignature(musicFavs?.list?.() || [])]);
+      favouritesSignature(musicFavs?.list?.() || []), dashboardsSignature(dashRoutes)]);
     if (sig === speechSig) return;
     speechSig = sig;
     stopSpeech();
     speechStatus = 'off';
     if (torn || !want || !runtime) { onVoiceChange?.(); return; }
     let rec = null;
-    const routes = { ...ROUTES, ...musicRoutes };
+    const routes = { ...ROUTES, ...musicRoutes, ...dashRoutes };
     try {
       const wakes = speechOptionsFrom(r).wake;
       rec = makeRecognizer({ engine: sw.engine, lang: 'en-US', values: r, micOwner,
@@ -804,7 +815,37 @@ export async function mountKiosk(root, {
       const off = runtime?.actions?.registerAll?.(musicSpeechActions(musicRoutes));
       offMusicActions = typeof off === 'function' ? off : null;
     } catch (err) { console.error('kiosk: music actions', err); }
-    try { runtime?.setExtraBindings?.(musicSpeechBindings(musicRoutes)); } catch (err) { console.error('kiosk: music bindings', err); }
+    // The dashboards' phrases are made around the music's, so a change here may free or take one of theirs.
+    applyDashboards(lastDashList);
+    applyExtraSpeechBindings();
+    if (personRow) syncSpeech(personRow);
+  }
+  // The runtime's extra bindings are ONE list (input_runtime.js `setExtraBindings` replaces it), so the
+  // music favourites' and the dashboards' are always set together.
+  function applyExtraSpeechBindings() {
+    try { runtime?.setExtraBindings?.([...musicSpeechBindings(musicRoutes), ...dashboardSpeechBindings(dashRoutes)]); }
+    catch (err) { console.error('kiosk: spoken bindings', err); }
+  }
+  // ROW 2.34: the dashboards the picker lists become "go to <name>" (made AFTER the music favourites, so
+  // nothing here can take one of their phrases), plus the ready-made ones' "go to my room". Re-attaches
+  // speech only when what is speakable changed (the signature in `syncSpeech`). An embed has no other
+  // dashboards and answers none of this.
+  function applyDashboards(list) {
+    if (embedded || torn) return;
+    lastDashList = Array.isArray(list) ? list : [];
+    let made = {};
+    try {
+      made = dashboardSpeechRoutes(list || [], { taken: spokenTable(PHRASES, { ...ROUTES, ...musicRoutes }) }).routes || {};
+    } catch (err) { console.error('kiosk: dashboard routes', err); made = {}; }
+    if (dashboardsSignature(made) === dashboardsSignature(dashRoutes) && offDashActions) return;
+    dashRoutes = made;
+    try { offDashActions?.(); } catch { /* gone */ }
+    offDashActions = null;
+    try {
+      const off = runtime?.actions?.registerAll?.(dashboardSpeechActions(dashRoutes));
+      offDashActions = typeof off === 'function' ? off : null;
+    } catch (err) { console.error('kiosk: dashboard actions', err); }
+    applyExtraSpeechBindings();
     if (personRow) syncSpeech(personRow);
   }
   function watchMusic(personId) {
@@ -1264,8 +1305,20 @@ export async function mountKiosk(root, {
   // asking Design to calibrate a second, panel-specific color per theme. `solid` (today's only
   // behaviour) stays the default -- nobody's screen changes until they pick this.
   const PANEL_SURFACES = ['solid', 'veil', 'clear'];
+  // ROW 2.34: on a real screen's dashboard path the panel backgrounds are the SHOWING dashboard's, like its
+  // theme (`shownTheme` below): the ready-made Basic is solid and Classic 2D see-through, and each keeps its
+  // own when you swap between them. A dashboard that never picked keeps the screen's own row (the theme's
+  // rule, for the theme's reason). Everywhere else it is the screen's row, as it always was. `s` is accepted
+  // and ignored on the dashboard path, so every existing caller is unchanged.
+  function shownPanelSurface(s) {
+    const own = s && s.panelSurface;
+    if (!useDashboard || embedded || !dash) return own;
+    let v;
+    try { v = dash.impl.settings?.()?.panelSurface; } catch { v = undefined; }
+    return PANEL_SURFACES.includes(v) ? v : own;
+  }
   function applyPanelSurface(s) {
-    const v = s && s.panelSurface;
+    const v = shownPanelSurface(s);
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
   }
   // *** STAGE 4: THE THEME IS THE SHOWING DASHBOARD'S (row 2.34, ruled; the plan's R3). *** On a real
@@ -1287,6 +1340,9 @@ export async function mountKiosk(root, {
     try { return dash.impl.settingsDoc?.() || settings; } catch { return settings; }
   }
   function syncShownTheme() {
+    // The panel backgrounds follow with the theme (row 2.34): every caller of this is a swap or a change
+    // to the showing dashboard's own settings.
+    applyPanelSurface(settings.get());
     const id = shownTheme();
     if (id === lastShownTheme) return;
     lastShownTheme = id;
@@ -1687,46 +1743,133 @@ export async function mountKiosk(root, {
    * to the composer, and going to another page is going to another page.
    */
   const screensEl = root.querySelector('[data-screens]');
+  screensEl.setAttribute('aria-label', 'your dashboards');
   const goHome = () => { location.href = '/home.html'; };
   let screensOpen = false;
 
-  async function drawScreens() {
-    let list = [];
-    try { list = (await profiles.list()) || []; } catch (err) {
+  // *** ROW 2.34: THE STRIP IS THE DASHBOARD PICKER NOW (dashboard_picker.js). *** The person's dashboards,
+  // then the ready-made ones they have not made yet ("+ Room", "+ Basic", "+ Classic 2D" -- dashboards.js),
+  // then the way out to the composer; its own Close first. The SAME strip on both paths: on the dashboard
+  // path a pick swaps load-then-swap (`swapDashboard`) and brings that dashboard's theme; on today's path it
+  // is today's `showScreen`, which swaps the modules and keeps the boot screen's look (see showScreen).
+  let makerInst = null;
+  function dashboardMaker() {
+    if (makerInst) return makerInst;
+    if (typeof profiles?.create !== 'function' || typeof profiles?.addModule !== 'function') return null;
+    makerInst = createDashboardMaker({
+      profiles,
+      // No local-first cache (`cacheKey: null`): "is this one of the ready-made ones, and is it finished?"
+      // must be the server's answer, not a copy cached before another device made it.
+      makeSettings: (pid) => stateForProfile('settings', { cacheKey: null }, pid),
+      makeInstanceState: (pid, mid) => stateForProfile(mid, { cacheKey: null }, pid),
+      // Whose: the person this screen is for (resolved after boot), else the screen record's own.
+      personId: () => personId || arr.profile()?.person_id || '',
+      personName: () => (whoState && whoState.name) || '',
+    });
+    return makerInst;
+  }
+  let pickerMaking = null;          // the ready-made key being made right now (the tray says so)
+  let pickerNote = null;            // a sentence for the tray (a make that failed)
+  const picker = createDashboardPicker(screensEl, {
+    onClose: () => toggleScreens(false),
+    onPick: async (id) => { toggleScreens(false); await showScreen(id); },
+    onMake: (key) => { goToPrebuilt(key, { fromPicker: true }).catch(() => {}); },
+    onLeave: goHome,
+  });
+
+  async function listDashboards() {
+    try { return (await profiles.list()) || []; } catch (err) {
       console.error('kiosk: could not list screens', err);
+      return null;                  // null = could not ask (offline), [] = asked, none
     }
-    screensEl.innerHTML = '';
-    if (!list.length) {
-      // Offline, signed out, or a demo kiosk with no account. Saying so beats an empty box,
-      // and the way out is still on the row below.
-      const p = document.createElement('div');
-      p.className = 'k-scr-note';
-      p.textContent = 'No other screens to show from here.';
-      screensEl.append(p);
+  }
+
+  // Never throws at its caller: a tray that cannot draw leaves the screen exactly as it was.
+  function drawScreens() {
+    drawScreensNow().catch((err) => console.error('kiosk: the dashboard picker', err));
+  }
+  async function drawScreensNow() {
+    const got = await listDashboards();
+    const list = got || [];
+    let offers = [];
+    const maker = !embedded && got && offersOn(settings.get()) ? dashboardMaker() : null;
+    if (maker) {
+      try { offers = (await maker.offered(list)).map((k) => ({ key: k, ...PREBUILT_DASHBOARDS[k] })); }
+      catch (err) { console.error('kiosk: ready-made dashboards', err); offers = []; }
     }
-    for (const s2 of list) {
-      const b = document.createElement('button');
-      b.className = 'k-scr' + (s2.id === profileId ? ' on' : '');
-      b.textContent = s2.name || 'Screen';
-      b.disabled = s2.id === profileId;
-      b.addEventListener('click', async () => {
-        toggleScreens(false);
-        await showScreen(s2.id);
-      });
-      screensEl.append(b);
-    }
-    const setup = document.createElement('button');
-    setup.className = 'k-scr k-scr-out';
-    setup.textContent = 'Set up screens ↗';
-    setup.title = 'opens the composer — this does leave full screen, because it leaves the screen';
-    setup.addEventListener('click', goHome);
-    screensEl.append(setup);
+    if (!screensOpen || torn) return;
+    picker.draw({
+      list, current: profileId, offers, making: pickerMaking, note: pickerNote,
+      // Offline, signed out, or a demo kiosk with no account. Saying so beats an empty box, and the way
+      // out is still on the row below.
+      empty: list.length || offers.length ? null : 'No other dashboards to show from here.',
+    });
+    // What the picker lists is what can be said: "go to <name>".
+    applyDashboards(list);
   }
 
   function toggleScreens(want) {
+    const was = screensOpen;
     screensOpen = want === undefined ? !screensOpen : !!want;
     screensEl.hidden = !screensOpen;
+    // WHILE IT IS OPEN IT TAKES THE SCAN (the menu's rule): the panel router is paused so next / prev /
+    // select move and press the tray's cursor instead of the panel underneath. The menu is put away first
+    // -- two things answering one "next" is the double-move the menu's own note warns about.
+    if (screensOpen && !was) {
+      try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
+      pickerNote = null;
+      picker.reset();
+      try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ }
+    } else if (!screensOpen && was) {
+      try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+    }
     if (screensOpen) drawScreens();
+  }
+
+  /** A ready-made dashboard: this person's if they have it, made once if not, then shown. By the tray's
+   *  "+ Room", by voice ("go to my room") or by a `dashboard/go { prebuilt }` from anything else. */
+  async function goToPrebuilt(key, { fromPicker = false } = {}) {
+    const maker = dashboardMaker();
+    if (!maker || !PREBUILT_DASHBOARDS[key]) return null;
+    pickerMaking = key; pickerNote = null;
+    if (screensOpen) drawScreens();
+    let got = null;
+    try { got = await maker.ensure(key); }
+    catch (err) {
+      console.error('kiosk: could not make the ready-made dashboard', key, err);
+      pickerNote = `Could not make ${PREBUILT_DASHBOARDS[key].label} just now. Nothing on this screen changed.`;
+    } finally { pickerMaking = null; }
+    if (!got) { if (fromPicker && screensOpen) drawScreens(); return null; }
+    if (screensOpen) toggleScreens(false);
+    // It is in the list now: "go to my room" and its name are speakable from here on.
+    listDashboards().then((l) => { if (l) applyDashboards(l); }).catch(() => {});
+    return got.id === profileId ? got.id : showScreen(got.id);
+  }
+
+  // The tray's scan: the same verbs the menu takes, only while it is open (and the menu is not).
+  for (const [verb, fn] of [['next', () => picker.next()], ['prev', () => picker.prev()],
+    ['select', () => picker.select()], ['back', () => toggleScreens(false)]]) {
+    offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+      if (!screensOpen || torn) return;
+      try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
+      fn();
+      // A press is somebody using it: the tray does not put itself away under them (the bar's 3 s, poke).
+      if (screensOpen) poke();
+    }));
+  }
+  // The menu opening puts the tray away (subscribed BEFORE the menu's own handler, so the tray hands the
+  // router back first and the menu then takes it): one thing holds the scan at a time.
+  for (const t of [verbTopic('menu'), SHELL_MENU]) {
+    offsScreen.push(bus.subscribe(t, () => { if (screensOpen) toggleScreens(false); }));
+  }
+  // "Go to <dashboard>" from speech, a bound switch, or a state machine: `{ id }` or `{ prebuilt }`. Not on
+  // an embed: it has no other dashboards (and its showScreen refuses).
+  if (!embedded) {
+    offsScreen.push(bus.subscribe(DASHBOARD_GO_TOPIC, (p) => {
+      if (!p || torn) return;
+      if (p.prebuilt) goToPrebuilt(p.prebuilt).catch(() => {});
+      else if (p.id) showScreen(p.id).catch(() => {});
+    }));
   }
 
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', () => toggleScreens());
@@ -1943,6 +2086,8 @@ export async function mountKiosk(root, {
     ...(!embedded ? [{ key: DASHBOARD_MODULE_KEY,
       label: 'Put this screen together as one dashboard (new, being tested; restarts the screen)',
       kind: 'toggle', level: 'advanced', default: !!dashboardDefault, onLabel: 'Yes', offLabel: 'No' }] : []),
+    // ROW 2.34: whether Home's picker offers the ready-made dashboards (dashboards.js argues the default).
+    ...(!embedded ? [{ ...DASHBOARD_OFFERS_FIELD }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -2161,13 +2306,15 @@ export async function mountKiosk(root, {
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
-        values: () => ({ ...(settings.get() || {}), theme: shownTheme() }),
+        // (Row 2.34: "Panel backgrounds" likewise -- the showing dashboard's, `shownPanelSurface`.)
+        values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()) }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
         level: complexity(),
         onStep: (key, value) => {
           if (key === 'theme') themeDoc().set({ theme: value });
+          else if (key === 'panelSurface') themeDoc().set({ panelSurface: value });
           else settings.set({ [key]: value });
           // A THEME PICKED HERE, BY SOMEBODY AT THIS SCREEN. Published after the set (which
           // applies the theme synchronously), so a listener sees the new theme already on screen.
@@ -2649,6 +2796,12 @@ export async function mountKiosk(root, {
   await runtime.load();
   // The menu takes the verbs while it is open and hands them back when it closes.
   menu.attachBus(bus, runtime.router);
+  // ROW 2.34: the dashboards as spoken routes from the start ("go to my room" works before anybody has
+  // opened the picker). Fire and forget: a list that will not come is no reason to hold the screen up.
+  if (!embedded) {
+    listDashboards().then((l) => { if (!torn) applyDashboards(l || []); })
+      .catch((err) => console.error('kiosk: dashboard routes', err));
+  }
   // The Voice section's status row follows the recogniser (listening / none on this screen).
   onVoiceChange = () => { try { if (!torn) menu.refresh(); } catch { /* a menu that cannot repaint is not a reason to stop */ } };
 
@@ -3216,7 +3369,8 @@ export async function mountKiosk(root, {
     (dashHost || stageEl).after(host);
     let d = null;
     try {
-      d = mountModule('view', extendCtx(childCtx({ id: `dashboard:${id}`, type: 'view' }), {
+      // (Registered as `dashboard` since row 2.34; `view` stays an alias -- modules/view.js.)
+      d = mountModule('dashboard', extendCtx(childCtx({ id: `dashboard:${id}`, type: 'dashboard' }), {
         mount: host, state: null, events: null,
         viewId: id, profileId: id, arrangement: record,
         ...(layout !== undefined ? { layoutOverride: layout } : {}),
@@ -3466,6 +3620,13 @@ export async function mountKiosk(root, {
     // The person's music favourites watch (null with no person), and the spoken routes made from it.
     musicFavourites: () => musicFavs,
     musicRoutes: () => ({ ...musicRoutes }),
+    // Row 2.34, for a suite and a diagnostic page: the dashboards' spoken routes, the picker (open?, its
+    // stops, where its cursor is), and the ready-made maker (null where screens cannot be made).
+    dashboardRoutes: () => ({ ...dashRoutes }),
+    dashboardPicker: () => ({ open: screensOpen, items: picker.items(), cursor: picker.cursor(),
+      making: pickerMaking, note: pickerNote }),
+    dashboardMaker: () => dashboardMaker(),
+    goToPrebuilt: (key) => goToPrebuilt(key),
     onlineCaptioner: () => onlineCap,
     speechStatus: () => speechStatus,
     misses: () => missStore,
@@ -3563,6 +3724,9 @@ export async function mountKiosk(root, {
       try { subtitles?.destroy(); } catch { /* already gone */ } subtitles = null;
       // The music favourites' watch (its poll) and the actions it registered.
       try { offMusicActions?.(); } catch { /* already gone */ } offMusicActions = null;
+      // ...and the dashboards' spoken actions, and the picker's own listener (row 2.34).
+      try { offDashActions?.(); } catch { /* already gone */ } offDashActions = null;
+      try { picker.destroy(); } catch { /* already gone */ }
       try { musicFavs?.destroy(); } catch { /* already gone */ } musicFavs = null;
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }

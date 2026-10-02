@@ -65,8 +65,8 @@
 // now means THE BACKDROP a dashboard sits in (the room, fall, a castle, a live theme) -- the word the
 // person using the site already uses -- and the Home-Assistant sense above is renamed "PRESET". The
 // paragraph above is left as it was written. And Mike's word for this file's thing is "dashboard" ("the
-// dashboard itself is a type of module ... a container module"); the registered type stays `view`
-// for now because several suites enumerate registered types, and the rename is its own commit.
+// dashboard itself is a type of module ... a container module"). Since row 2.34 (2026-10-01) the
+// registered type IS `dashboard`, with `view` kept as an alias (see the registration at the bottom).
 //
 // ---------------------------------------------------------------------------------------
 // STEP 6 STAGE 2 (2026-09-30): A THIN MODULE OVER `arrangement.js`
@@ -136,11 +136,21 @@ export function partition(modules = [], layout = null) {
   return out;
 }
 
-registerModule(
-  { type: 'view', title: 'View',
-    description: 'A set of modules and where they sit — switchable as one thing',
-    importance: 'normal', dependsOn: 'server', settings: [] },
-  (ctx) => {
+// *** REGISTERED AS `dashboard` (row 2.34, 2026-10-01), WITH `view` KEPT AS AN ALIAS. *** Mike's word for
+// this thing is "dashboard" ("the dashboard itself is a type of module ... a container module"), and the
+// step 6 plan's question 1 recommended it. `view` stays registered -- the SAME factory under its old name,
+// its manifest saying `aliasOf: 'dashboard'` -- so anything saved or written against `view` (a screen
+// record, a state machine's mount, a page not yet updated) keeps loading. The file keeps its name: it is
+// imported from five places, and a rename of the file is a separate, mechanical commit.
+export const DASHBOARD_TYPE = 'dashboard';
+export const DASHBOARD_ALIASES = Object.freeze(['view']);
+const DASHBOARD_MANIFEST = {
+  type: DASHBOARD_TYPE, title: 'Dashboard',
+  description: 'A set of modules and where they sit — switchable as one thing',
+  importance: 'normal', dependsOn: 'server', settings: [],
+};
+
+function dashboardFactory(ctx) {
     // `viewId` is which arrangement to show. It is a ctx value rather than a setting because
     // a view is mounted BY something that already knows which one it wants — a surface at
     // boot, or a state machine switching.
@@ -667,5 +677,10 @@ registerModule(
       },
     };
     return self;
-  },
-);
+}
+
+registerModule(DASHBOARD_MANIFEST, dashboardFactory);
+for (const alias of DASHBOARD_ALIASES) {
+  registerModule({ ...DASHBOARD_MANIFEST, type: alias, aliasOf: DASHBOARD_TYPE,
+    title: 'Dashboard (old name: view)' }, dashboardFactory);
+}
