@@ -250,6 +250,34 @@ export const CURSOR_ACTIONS = [
 ];
 
 // ---------------------------------------------------------------------------------------
+// THE SETTINGS MENU'S TABS, AND "SWITCH MODULE" (2026-10-02). Mike: "The settings menu needs to be
+// broken up into tabs" and "modules on a dashboard should be as hot swappable as possible. Maybe a
+// switch module button on the transport bar for the selected module." SCREEN actions, like the cursor's:
+// the menu and the bar are not panels, so nothing here goes through focus. A switch can be bound to any
+// of them (registered below, offered in the binder under "The settings menu"), and input_speech.js
+// ROUTES speaks them ("next tab", "sound settings", "switch module").
+//   menu/tab            { dir: 1 | -1 } steps the tabs; { tab } goes to one. Opens the menu when it is
+//                       closed (settings.js answers it).
+//   shell/switch-module  "switch the selected panel to another module": the kiosk opens the short list
+//                       (the module tab's Switch rows), or a host page's own chooser where it has one.
+// The tab ids are the kiosk's (kiosk.js MENU_TAB_DEFS); a host without one of them shows nothing for it.
+export const MENU_TAB_TOPIC = 'menu/tab';
+export const SWITCH_MODULE_TOPIC = 'shell/switch-module';
+export const MENU_TAB_IDS = Object.freeze(['module', 'audio', 'display', 'devices', 'people', 'screen']);
+const menuTab = (tab, label) => ({ id: `menu/tab-${tab}`, label, topic: MENU_TAB_TOPIC, payload: { tab }, group: 'Settings menu' });
+export const MENU_ACTIONS = [
+  { id: 'menu/next-tab', label: 'Settings menu: next tab', topic: MENU_TAB_TOPIC, payload: { dir: 1 }, group: 'Settings menu' },
+  { id: 'menu/prev-tab', label: 'Settings menu: previous tab', topic: MENU_TAB_TOPIC, payload: { dir: -1 }, group: 'Settings menu' },
+  menuTab('module', 'Settings menu: the selected panel'),
+  menuTab('audio', 'Settings menu: sound'),
+  menuTab('display', 'Settings menu: display'),
+  menuTab('devices', 'Settings menu: devices'),
+  menuTab('people', 'Settings menu: people'),
+  menuTab('screen', 'Settings menu: this screen'),
+  { id: 'menu/switch-module', label: 'Switch the selected panel to another module', topic: SWITCH_MODULE_TOPIC, group: 'Settings menu' },
+];
+
+// ---------------------------------------------------------------------------------------
 // CUSTOM VERBS — Mike: *"a verb is just a variable. You bind something to verb X and then
 // verb X performs this action in your module."*
 //
@@ -534,6 +562,7 @@ export function createDefaultRegistry() {
     id: verbTopic(v.id), label: v.label, topic: verbTopic(v.id), group: 'Games and menus',
   })));
   reg.registerAll(CURSOR_ACTIONS);
+  reg.registerAll(MENU_ACTIONS);
   reg.registerAll(SYSTEM_ACTIONS);
   reg.register(ROOM_HOLD_ACTION);
   return reg;

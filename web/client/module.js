@@ -231,7 +231,34 @@ export function extendCtx(ctx = {}, extra = {}) {
 export function ownedAudio(audio, instanceId) {
   if (!audio || typeof audio.register !== 'function' || !instanceId) return audio;
   const owned = Object.create(audio);
-  owned.register = (id, spec = {}) => audio.register(id, { ...(spec || {}), owner: spec?.owner ?? instanceId });
+  // *** AND WHAT IT IS INSIDE (2026-10-02). *** A dashboard placed in a dashboard (a TV showing another
+  // one, modules/view.js) hands its children the audio it was given, so a child's register passes back
+  // through the TV's wrapper on its way to the bus. The child's own owner wins (it is the innermost), and
+  // each wrapper it passes through adds itself to `within` - so the bus knows a sound is the TV's too:
+  // muting or turning down the TV reaches everything on it (audio_bus.js `setLevel`, `muteOwner`).
+  owned.register = (id, spec = {}) => {
+    const s = spec || {};
+    const inner = s.owner != null && s.owner !== '' && String(s.owner) !== String(instanceId);
+    return audio.register(id, {
+      ...s,
+      owner: s.owner ?? instanceId,
+      ...(inner ? { within: [...(Array.isArray(s.within) ? s.within : []), String(instanceId)] } : {}),
+    });
+  };
+  // THE EFFECTS, AS THIS INSTANCE'S (2026-10-02, "sound like it's in the room"): where a module connects
+  // a Web Audio source (`effects().input(channel)`), it is handed ITS OWN entry point, which runs through
+  // its own room reverb when one is set and then into the channel (mixer_fx.js `ownerInput`). Nested, the
+  // child's entry feeds the TV's. Anything without `ownerInput` is handed back as it was.
+  if (typeof audio.effects === 'function') {
+    owned.effects = () => {
+      let fx = null;
+      try { fx = audio.effects(); } catch { fx = null; }
+      if (!fx || typeof fx.ownerInput !== 'function') return fx;
+      const mine = Object.create(fx);
+      mine.input = (ch) => fx.ownerInput(String(instanceId), ch, () => fx.input(ch));
+      return mine;
+    };
+  }
   return owned;
 }
 

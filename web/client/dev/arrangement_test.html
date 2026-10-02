@@ -36,6 +36,7 @@ import { createArrangement } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { readConfig } from '../restart.js';
 import '../modules/ambient_drift.js';     // a real `mount: 'ambient'` manifest for partition()
+import '../modules/clock.js';             // a registered type to switch a panel TO (switchPanel refuses unknown ones)
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -130,7 +131,10 @@ try {
       // Row 2.38 (2026-10-01): a placed module that is a door -- dashboard_nest_test.html drives these.
       'opensOf', 'openDoor',
       // Row 2.38, the map editor: the room's own objects and their doors -- map_editor_test.html drives it.
-      'roomObjects'];
+      'roomObjects',
+      // 2026-10-02: "Switch module" (transport_test drives it), Home's in-place replace, and the room's slots
+      // (where the bar sits on the cabinet -- dashboard_nest_test drives it).
+      'switchPanel', 'baseTypeOf', 'replaceSlot', 'roomSlots'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),
@@ -317,6 +321,28 @@ try {
       (await t.arr.swapPanel('p1', 'clock')) === true && t.arr.recFor('p1')?.type === 'clock'
       && t.log.forgot.includes('p1'));
     check('swapPanel with no type does nothing', (await t.arr.swapPanel('t1', '')) === false);
+  }
+
+  section('"Switch module" and Home\'s replace (2026-10-02)');
+  {
+    const t = make({ modules: [M.p1, M.t1] });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition(); await t.arr.mountLayout();
+    const host = t.arr.recFor('t1').el;
+    check('switchPanel: the SAME panel id becomes the other type, in the same host, on its own row',
+      (await t.arr.switchPanel('t1', 'clock')) === true && t.arr.recFor('t1')?.type === 'clock'
+      && t.arr.recFor('t1').el === host && t.arr.profile().modules.find((m) => m.id === 't1')?.stateKey === 't1--clock');
+    check('...and it remembers what it was', t.arr.baseTypeOf('t1') !== 'clock' && !!t.arr.baseTypeOf('t1'));
+    check('switchPanel to an unknown type is refused, nothing torn down',
+      (await t.arr.switchPanel('t1', 'no-such-module')) === false && t.arr.recFor('t1')?.type === 'clock');
+    const base = t.arr.baseTypeOf('t1');
+    check('switching back to what it was: its own row again (no stateKey)', (await t.arr.switchPanel('t1', base)) === true
+      && t.arr.recFor('t1')?.type === base && !t.arr.profile().modules.find((m) => m.id === 't1')?.stateKey);
+    check('replaceSlot: ANOTHER instance into the slot, the list and the layout say so',
+      (await t.arr.replaceSlot('p1', { id: 'c9', type: 'clock' })) === true && t.arr.recFor('c9')?.type === 'clock'
+      && !t.arr.recFor('p1') && t.arr.layout().slots.includes('c9') && !t.arr.layout().slots.includes('p1')
+      && t.arr.profile().modules.some((m) => m.id === 'c9') && !t.arr.profile().modules.some((m) => m.id === 'p1'));
+    check('replaceSlot: nothing to replace', (await t.arr.replaceSlot('zz', { id: 'q', type: 'clock' })) === false);
+    check('roomSlots: an empty Map with no room', t.arr.roomSlots() instanceof Map && t.arr.roomSlots().size === 0);
   }
 
   section('the mirror/clock corners');

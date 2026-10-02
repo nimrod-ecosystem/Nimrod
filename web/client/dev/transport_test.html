@@ -336,6 +336,10 @@ function unreachableChips() {
       !!root.querySelector('.k-stage .photos'),
       root.querySelector('.k-stage')?.innerHTML.slice(0, 40) || 'empty');
 
+    // WAITED FOR, not slept for (2026-10-02): the tray draws after the screen list AND the ready-made
+    // dashboards' check come back from the server, and a fixed 300 ms went red under a busy machine
+    // with nothing wrong (twice in one afternoon, in a long run of suites).
+    for (let t = Date.now(); Date.now() - t < 5000 && !root.querySelector('.k-scr'); ) await sleep(40);
     const rows = [...root.querySelectorAll('.k-scr')].map((x) => x.textContent.trim());
     check('the picker lists the other screen and a way out to the composer',
       rows.some((t) => /T-two/.test(t)) && rows.some((t) => /Set up/.test(t)), rows.join(' | '));
@@ -432,6 +436,103 @@ function unreachableChips() {
     kiosk.destroy();
     root.innerHTML = '';
     root.style.cssText = '';
+  }
+
+  // =====================================================================================
+  section('*** "Switch module": the selected panel becomes another module, in place (2026-10-02) ***');
+  // Mike: "modules on a dashboard should be as hot swappable as possible. Maybe a switch module button on
+  // the transport bar for the selected module."
+  {
+    const { SHELL_SWITCH_MODULE } = await import('../shell_verbs.js');
+    const { SWITCH_MODULE_TOPIC, MENU_ACTIONS } = await import('../actions.js');
+    const { createState } = await import('../state.js');
+    check('the bar’s topic IS the registered action’s (one press, however it is reached)', SHELL_SWITCH_MODULE === SWITCH_MODULE_TOPIC
+      && MENU_ACTIONS.some((a) => a.id === 'menu/switch-module' && a.topic === SWITCH_MODULE_TOPIC));
+    const p = await profiles.create('T-switch');
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'trivia');
+    const full = await profiles.get(p.id);
+    const ids = (full.modules || []).map((m) => m.id);
+    const photosId = full.modules.find((m) => m.type === 'photos').id;
+    const layout = { preset: 'main', slots: [ids[0], ids[1], null] };
+    stashPreviewLayout(p.id, layout);
+    const bus = createBus();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
+    await sleep(400);
+    const swb = root.querySelector('.k-actions [data-act="switch"]');
+    check('the plain bar has a "Switch module" button', !!swb && /Switch module/.test(swb.textContent));
+    chips().find((c) => c.dataset.id === photosId)?.click();
+    await sleep(60);
+    check('(setup) photos is the selected panel', kiosk.panels().some((x) => x.id === photosId && x.type === 'photos'));
+    swb.click();
+    await sleep(60);
+    check('*** pressing it opens the menu on the panel’s own tab, as the Switch list, cursor on "Keep" ***',
+      kiosk.menu.isOpen() && kiosk.menu.tab() === 'module' && kiosk.switchOpen()?.id === photosId && kiosk.menu.focusId() === 'switch-keep',
+      JSON.stringify([kiosk.menu.isOpen(), kiosk.menu.tab(), kiosk.switchOpen(), kiosk.menu.focusId()]));
+    const vis = () => kiosk.menu.visibleItems().map((i) => i.id);
+    check('...the way out ("Keep") first, "More…" last', vis().indexOf('switch-keep') >= 0 && vis().indexOf('switch-keep') < vis().indexOf('switch-more'), vis().join(','));
+    kiosk.menu.focusRow('switch-more'); kiosk.menu.select();
+    check('"More…" is every module this screen can show (the catalog), not the one it is', vis().includes('switch:calculator')
+      && !vis().includes('switch:photos') && !vis().includes('switch:transport_bar'), vis().join(','));
+    // Something of photos' own, so "kept" can be seen.
+    const photosRow = createState({ url: profiles.stateURL(p.id, photosId), user: USER });
+    await photosRow.load().catch(() => {});
+    photosRow.set({ intervalMs: 30000 }); await photosRow.flush(); photosRow.destroy();
+    await sleep(200);
+    kiosk.menu.focusRow('switch:calculator'); kiosk.menu.select();
+    await sleep(400);
+    const after = kiosk.panels().find((x) => x.id === photosId);
+    check('*** select a module: the SAME panel (same id, same place) is now that module ***',
+      after?.type === 'calculator' && !!root.querySelector('.k-stage .k-cell .calc') && !root.querySelector('.k-stage .photos'),
+      JSON.stringify(after));
+    check('...its chip says so, in the same place', chips().find((c) => c.dataset.id === photosId)?.textContent.trim() === after?.title,
+      labels().join(','));
+    check('*** ...and it reads ITS OWN row (settings for the new type start fresh) ***', after?.stateKey === `${photosId}--calculator`);
+    check('the list closed, the cursor back on "Switch … to another module"', !kiosk.switchOpen() && kiosk.menu.focusId() === 'switch-module',
+      String(kiosk.menu.focusId()));
+    const sset = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+    await sleep(300);
+    await sset.load().catch(() => {});
+    check('*** the switch is remembered on the dashboard (panelSwitches) ***', sset.get()?.panelSwitches?.[photosId] === 'calculator',
+      JSON.stringify(sset.get()?.panelSwitches));
+    sset.destroy();
+    // Back: the list now offers what it was, by name.
+    kiosk.openSwitch(photosId);
+    await sleep(60);
+    check('*** the list offers what the panel WAS, marked so ***',
+      kiosk.menu.visibleItems().find((i) => i.id === 'switch:photos')?.hint === 'what this panel was', vis().join(','));
+    kiosk.menu.focusRow('switch:photos'); kiosk.menu.select();
+    await sleep(400);
+    const back = kiosk.panels().find((x) => x.id === photosId);
+    check('*** switched back: photos again, on its OWN row - what it had is still there ***',
+      back?.type === 'photos' && back?.stateKey === null && kiosk.menu.visibleItems().find((i) => i.id === 'set:intervalMs')?.hint === '30 seconds',
+      JSON.stringify([back, kiosk.menu.visibleItems().find((i) => i.id === 'set:intervalMs')?.hint]));
+    check('the recent list remembers what it was switched to', kiosk.menu.isOpen() && (kiosk.openSwitch(photosId), true)
+      && kiosk.menu.visibleItems().find((i) => i.id === 'switch:calculator')?.hint === 'recent', vis().join(','));
+    kiosk.menu.close();
+    // Remembered across a restart.
+    await kiosk.switchPanel(photosId, 'calculator');
+    await sleep(300);
+    kiosk.destroy(); root.innerHTML = '';
+    stashPreviewLayout(p.id, layout);
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus() });
+    await sleep(500);
+    check('*** a restart comes back with the panel switched (the dashboard remembered it) ***',
+      kiosk.panels().find((x) => x.id === photosId)?.type === 'calculator', JSON.stringify(kiosk.panels()));
+    // The bus: a bound switch / "switch module" said aloud.
+    kiosk.destroy(); root.innerHTML = '';
+    const bus2 = createBus();
+    stashPreviewLayout(p.id, layout);
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: bus2 });
+    await sleep(400);
+    chips().find((c) => c.dataset.id === photosId)?.click(); await sleep(40);
+    bus2.publish(SWITCH_MODULE_TOPIC, {});
+    await sleep(40);
+    check('*** shell/switch-module on the bus (a switch, a phrase, a placed bar) opens the same list ***',
+      kiosk.menu.isOpen() && kiosk.switchOpen()?.id === photosId);
+    kiosk.menu.close();
+    check('closing the menu closes the list', kiosk.switchOpen() === null);
+    kiosk.destroy(); root.innerHTML = '';
   }
 
   document.getElementById('summary').textContent = failed

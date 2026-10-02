@@ -23,9 +23,6 @@ export const SUITES = [
   'composer_reach', 'device_pick', 'director', 'drive',
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',
-  'picture_picker',
-  // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, switch module).
-  'home_profile',
   'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'map_editor', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
   'marker', 'mic_owner', 'modules_catalog', 'output',
   'output_panel',
@@ -42,6 +39,8 @@ export const SUITES = [
   'transport',
   'press_overlay', 'preview', 'progress', 'record_panel', 'recorder', 'qr', 'quests', 'recovery', 'resilience',
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
+  // 2026-10-02: the one picture picker (recent, add from this device, a folder's thumbnails).
+  'picture_picker',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function
@@ -89,6 +88,8 @@ export const SUITES = [
   'voice_recording', 'intercom',
   // Rows 2.29 / 2.30: Home is the modules page (save, save as, history, the first sign-in).
   'home_dashboard', 'home_page',
+  // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, hot swap).
+  'home_profile',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

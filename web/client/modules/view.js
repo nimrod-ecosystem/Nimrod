@@ -113,6 +113,9 @@ import { openDashboardEditor } from '../dashboard_editor.js';
 import { mapLoader } from '../dashboard_map.js';
 // Row 2.38: a dashboard placed INSIDE another one (recursion), its depth and its live limit.
 import { DASHBOARD_GO_TOPIC, NEST_OPEN_TOPIC, nestMode, nestLiveDepthFrom, NEST_LIVE_DEPTH_KEY } from '../dashboard_nest.js';
+// 2026-10-02: a panel's own sound (its volume, its room, a TV's things), and where the bar sits in a room.
+import { watchPanelSound } from '../panel_sound.js';
+import { barPlaceFrom, cabinetSlot, CABINET_STRIP_STYLE, fitBarInto, unfitBar } from '../room_bar.js';
 
 // ---------------------------------------------------------------------------------------
 // *** ROW 2.38: A DASHBOARD INSIDE A DASHBOARD ("turtles all the way down"). ***
@@ -259,6 +262,7 @@ function dashboardFactory(ctx) {
     function destroyRec(rec) {
       if (!rec) return;
       try { rec.instance.destroy(); } catch { /* noop */ }
+      try { rec.offSound?.(); } catch { /* noop */ }
       try { rec.state?.destroy?.(); } catch { /* noop */ }
       try { rec.events?.destroy?.(); } catch { /* noop */ }
     }
@@ -271,14 +275,16 @@ function dashboardFactory(ctx) {
       // STAGE 4: a host that layers something over each panel's own state hands in `ctx.wrapState`
       // (the kiosk's automation layer, row 2.41: a bound input drives a panel's number setting without
       // writing it). Absent, the panel gets its own handle exactly as before.
-      const raw = childState(def.id);
+      // (`stateKey`: a panel switched to another type reads that type's own row -- arrangement.js
+      // `switchPanel`, kiosk.js `mountInstance` says why.)
+      const raw = childState(def.stateKey || def.id);
       let state = raw;
       if (raw && typeof hostWrapState === 'function') {
         try { state = hostWrapState(def.id, raw, def.type) || raw; } catch (err) {
           console.error('view: wrapState', err); state = raw;
         }
       }
-      const events = childEvents(def.id);
+      const events = childEvents(def.stateKey || def.id);
       // `extendCtx`, not a spread: the host's getters (`personId`, `callTransport`, `aim`...) stay
       // getters for the child, so a child mounted before a value arrives still sees it. 2026-09-30.
       const instance = mountModule(def.type, extendCtx(ctx, {
@@ -301,11 +307,13 @@ function dashboardFactory(ctx) {
         if (v === 'solid' || v === 'veil' || v === 'clear') host.dataset.panelSurface = v;
         else delete host.dataset.panelSurface;
       });
+      // THIS PANEL'S OWN SOUND (panel_sound.js): the same rows, applied the same way as the kiosk's panels.
+      const offSound = watchPanelSound(ctx.audio, def.id, state);
       instance.init();
       state?.startPolling?.();
       events?.startPolling?.();
       return { instance, state, events, type: def.type, id: def.id,
-               title: instance.manifest?.title, el: host };
+               title: instance.manifest?.title, el: host, offSound, ...(def.stateKey ? { stateKey: def.stateKey } : {}) };
     }
 
     // THE HOST'S HEALTH WATCH, if it handed one in. A watch must never break a mount.
@@ -338,6 +346,9 @@ function dashboardFactory(ctx) {
         }
       }
       for (const fn of listeners) { try { fn(); } catch (err) { console.error('view: onChange', err); } }
+      // After the listeners: the placed bar has just redrawn its chips, so a bar on the cabinet is fitted
+      // to what it now holds (2026-10-02).
+      placeChromeBar();
     }
 
     const brief = (rec) => (rec ? { id: rec.id, type: rec.type, title: rec.title || rec.type } : null);
@@ -426,10 +437,63 @@ function dashboardFactory(ctx) {
       }
       changed();
     }
+    // *** THE BAR ON THE ROOM'S CABINET (2026-10-02; room_bar.js argues it and the default). *** The ONE
+    // placed bar's host is moved -- never remounted -- between its dock and the room object that holds the
+    // transport bar, as this dashboard's `barPlace` setting says. Run on every change (a room drawn or torn
+    // down takes the slot with it: back to the dock, and in again when the room is back) and on a settings
+    // change. Nothing about the bar itself changes: its buttons, chips and words are the same module's.
+    let placingBar = false;
+    function placeChromeBar() {
+      if (placingBar || torn) return;
+      placingBar = true;
+      try {
+        const want = barPlaceFrom(settingsHandle?.get?.() || {});
+        const slot = want === 'cabinet' && arr ? cabinetSlot(arr.roomSlots?.()) : null;
+        for (const rec of chromeRecs.values()) {
+          if (rec.role !== 'bar' || !rec.host || rec.status === 'failed') continue;
+          if (!rec.dockEl) rec.dockEl = rec.host.parentNode;
+          if (slot && slot.el) {
+            if (rec.host.parentNode !== slot.el) {
+              if (rec.plainCss == null) rec.plainCss = rec.host.style.cssText;
+              slot.el.append(rec.host);
+            }
+            rec.host.style.cssText = CABINET_STRIP_STYLE;
+            // (The host is a module mount, and modules.css gives every one `overflow:auto !important`; the
+            // fitted bar never needs a scrollbar, and a scrollbar on a strip this small hides a third of it.)
+            rec.host.style.setProperty('overflow', 'hidden', 'important');
+            rec.host.dataset.onCabinet = slot.id || '1';
+            // The whole bar, scaled to the strip (room_bar.js `fitBarInto`), and again whenever the strip
+            // changes size -- the cabinet pressed and lifted flat is a bigger strip, and a bigger bar.
+            const fit = () => { try { fitBarInto(rec.host.querySelector('.tb-bar'), rec.host); } catch { /* not drawn yet */ } };
+            fit();
+            if (!rec.fitRO && typeof ResizeObserver !== 'undefined') {
+              rec.fitRO = new ResizeObserver(() => { if (rec.host.dataset.onCabinet) fit(); });
+              rec.fitRO.observe(rec.host);
+            }
+          } else if (rec.dockEl && (rec.host.parentNode !== rec.dockEl || rec.host.dataset.onCabinet)) {
+            rec.dockEl.append(rec.host);
+            if (rec.plainCss != null) { rec.host.style.cssText = rec.plainCss; rec.plainCss = null; }
+            delete rec.host.dataset.onCabinet;
+            try { rec.fitRO?.disconnect(); } catch { /* gone */ }
+            rec.fitRO = null;
+            unfitBar(rec.host.querySelector('.tb-bar'));
+          }
+        }
+      } catch (err) { console.error('view: placing the bar', err); }
+      finally { placingBar = false; }
+    }
+    /** Where the placed bar is: 'cabinet' | 'dock' | null (no bar). For the menu and the suites. */
+    function barPlace() {
+      const rec = [...chromeRecs.values()].find((r) => r.role === 'bar' && r.host && r.status !== 'failed');
+      if (!rec) return null;
+      return rec.host.dataset.onCabinet ? 'cabinet' : 'dock';
+    }
+
     function removeChrome(id) {
       const rec = chromeRecs.get(id);
       if (!rec) return false;
       chromeRecs.delete(id);
+      try { rec.fitRO?.disconnect(); } catch { /* already gone */ }
       try { rec.instance?.destroy(); } catch { /* already gone */ }
       rec.host.remove();
       changed();
@@ -636,6 +700,23 @@ function dashboardFactory(ctx) {
       bring: (type) => (arr ? arr.showModule(type) : Promise.resolve(false)),
       remount: (id) => (arr ? arr.remountPanel(id) : Promise.resolve(false)),
       swap: (id, type) => (arr ? arr.swapPanel(id, type) : Promise.resolve(false)),
+      // 2026-10-02 -- "Switch module": the panel `id` becomes a `type`, in place, remembered on this
+      // dashboard (arrangement.js `switchPanel` argues the keep-the-old-row rule).
+      switchPanel: (id, type) => (arr ? arr.switchPanel(id, type) : Promise.resolve(false)),
+      // ...and Home's editor: ANOTHER instance into a slot, the arrangement's list and placement updated
+      // (arrangement.js `replaceSlot`, then the placement through the in-place path). The caller saves.
+      replace: async (oldId, def, nextLayout) => {
+        if (!arr || !def?.id) return { applied: false };
+        if (arr.slotRecs.some((r) => r.id === oldId)) {
+          const ok = await arr.replaceSlot(oldId, def);
+          if (nextLayout) rawLayout = nextLayout;
+          changed();
+          return { applied: !!ok, replaced: !!ok };
+        }
+        const p = arr.profile();
+        arr.setProfile({ ...p, modules: [...(p.modules || []).filter((m) => m.id !== oldId), { ...def }] });
+        return applyPlacedHere(nextLayout);
+      },
       onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
       // THIS DASHBOARD'S ARRANGEMENT (arrangement.js), read-only by convention. Read by the kiosk
       // shell (its plain bar, its menu, recovery's hands) and by the placed transport bar, so both
@@ -644,6 +725,10 @@ function dashboardFactory(ctx) {
       // ---- chrome (Stage 3b; see above) ----
       chrome: () => chromeStatus(),
       removeChrome,
+      // 2026-10-02: where the placed bar is ('cabinet' | 'dock' | null), and whether this dashboard has a
+      // room object that can hold it (the menu offers the row only then).
+      barPlace,
+      canHoldBar: () => !!(arr && cabinetSlot(arr.roomSlots?.())),
       // ---- STAGE 4: THIS DASHBOARD'S OWN SETTINGS, for the shell that shows it ----
       // Per-dashboard themes (row 2.34, ruled; the step 6 plan's R3): the theme is part of what a
       // dashboard IS, so the shell reads it here when this dashboard is the one showing, and the menu's
@@ -800,6 +885,7 @@ function dashboardFactory(ctx) {
           const off = settingsHandle.subscribe((s) => {
             if (torn) return;
             arr.applyLayout(s || {});
+            placeChromeBar();                 // 2026-10-02: the bar on the room's cabinet, or not
             // STAGE 4: whoever shows this dashboard's own settings (its theme, R3) hears they changed.
             for (const fn of settingsListeners) { try { fn(s || {}); } catch (err) { console.error('view: onSettings', err); } }
           });

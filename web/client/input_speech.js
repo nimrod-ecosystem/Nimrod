@@ -239,8 +239,9 @@ export const ROUTES = {
   // general things like scroll up or down." WHAT ALREADY EXISTED: "menu" / "settings" / "open the menu"
   // (the menu verb, a toggle), and while the menu is open "next", "previous", "select", "back" walk it.
   // ADDED: "open settings" (OPENS, never closes - `system/settings`, which the kiosk answers with open-if-
-  // closed), "close the menu" (the close verb, PHRASES above), and the cursor below. No "next tab": the
-  // menu has no tabs today; when it does, they are two verbs and two rows here.
+  // closed), "close the menu" (the close verb, PHRASES above), and the cursor below. The menu's TABS
+  // arrived the same day (settings.js "TABS"): "next tab" / "previous tab" and "<tab> settings", below,
+  // press actions.js MENU_ACTIONS - routes, not verbs, for the cursor's reason: the menu is not a panel.
   //
   // *** A ROUTE MAY NAME AN EXISTING ACTION (`action`) instead of a topic. *** These press actions that
   // are already registered (actions.js SYSTEM_ACTIONS and CURSOR_ACTIONS), so a switch and a phrase
@@ -273,6 +274,28 @@ export const ROUTES = {
     phrases: ['scroll up', 'page up', 'scroll back up'] },
   'scroll-down':  { action: 'cursor/scroll-down', label: 'Scroll down',
     phrases: ['scroll down', 'page down', 'scroll further down'] },
+  // THE SETTINGS MENU'S TABS (2026-10-02, actions.js MENU_ACTIONS). Each opens the menu if it is closed.
+  // "<tab> settings" says which; every phrase ends in "tab" or "settings", so none is a panel verb, and
+  // none is "settings" alone (that is the menu verb, a toggle).
+  'menu-next-tab': { action: 'menu/next-tab', label: 'Settings menu: next tab',
+    phrases: ['next tab', 'the next tab', 'go to next tab'] },
+  'menu-prev-tab': { action: 'menu/prev-tab', label: 'Settings menu: previous tab',
+    phrases: ['previous tab', 'the previous tab', 'last tab', 'go back a tab'] },
+  'menu-tab-module': { action: 'menu/tab-module', label: 'Settings menu: the selected panel',
+    phrases: ['panel settings', 'module settings', 'this panel settings'] },
+  'menu-tab-audio': { action: 'menu/tab-audio', label: 'Settings menu: sound',
+    phrases: ['sound settings', 'audio settings', 'volume settings'] },
+  'menu-tab-display': { action: 'menu/tab-display', label: 'Settings menu: display',
+    phrases: ['display settings', 'video settings', 'colour settings', 'color settings'] },
+  'menu-tab-devices': { action: 'menu/tab-devices', label: 'Settings menu: devices',
+    phrases: ['device settings', 'devices settings', 'switch settings', 'input settings'] },
+  'menu-tab-people': { action: 'menu/tab-people', label: 'Settings menu: people',
+    phrases: ['people settings', 'user settings', 'users settings', 'person settings'] },
+  'menu-tab-screen': { action: 'menu/tab-screen', label: 'Settings menu: this screen',
+    phrases: ['screen settings', 'this screen settings'] },
+  // "Switch module" (2026-10-02): the selected panel's short list of other modules.
+  'switch-module': { action: 'menu/switch-module', label: 'Switch the selected panel to another module',
+    phrases: ['switch module', 'switch the module', 'change module', 'change the module', 'swap module'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

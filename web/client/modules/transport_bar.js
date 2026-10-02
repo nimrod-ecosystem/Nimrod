@@ -38,7 +38,7 @@ import { registerModule } from '../module.js';
 import { barModel, drawChips, drawHelpButton, helpOn } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
-  SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS,
+  SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
 } from '../shell_verbs.js';
 import { EDGE_TOPIC } from '../input.js';
 
@@ -55,6 +55,11 @@ const BUTTONS = [
   { act: 'back', verb: SHELL_PREV, label: '◂ Back', title: 'back — the one before this' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
   { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next panel' },
+  // "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the
+  // selected module"): the selected panel's short list of other modules (kiosk.js `openSwitch`). Dimmed,
+  // never hidden, when there is no panel to switch (D16). Not drawn when the host page has its own
+  // switch button (Home): ONE chooser, however it is reached.
+  { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'switch the selected panel to another module' },
   { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false },
   { act: 'hush', verb: SHELL_HUSH, label: 'Hush',
     title: 'pause the music and video so you can talk (voices and speech are still heard)' },
@@ -191,12 +196,21 @@ registerModule(
     function draw() {
       if (!root) return;
       const a = arrangement();
-      drawChips(modsEl, barModel(a, ctx.router ? { router: ctx.router } : null));
+      drawChips(modsEl, barModel(a, ctx.router ? { router: ctx.router } : null, { audio: ctx.audio || null }));
       // Panel ▸ only on an arranged screen with more than one panel to move between -- the plain
       // bar's own rule (kiosk.js `syncPanelBtn`).
       const n = (ctx.router?.reachable?.() || []).length;
       const panel = root.querySelector('[data-act="panel"]');
       if (panel) panel.hidden = !a?.layout?.() || n < 2;
+      // Switch module: dimmed with no panel to switch; gone when the host page has its own (Home).
+      const sw = root.querySelector('.tb-actions:not(.tb-host) [data-act="switch"]');
+      if (sw) {
+        let hostHas = false;
+        try { hostHas = !!host && typeof host.barItems === 'function' && (host.barItems() || []).some((it) => it && it.act === 'switch'); }
+        catch { hostHas = false; }
+        sw.hidden = hostHas;
+        sw.disabled = !a?.focusedRec?.();
+      }
       const h = root.querySelector('[data-act="hush"]');
       if (h) {
         h.dataset.on = hushed ? '1' : '0';

@@ -66,6 +66,9 @@ import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_n
 import { classifyLayoutChange, sceneDoorChanges } from './room_doors.js';
 export { classifyLayoutChange };
 
+// Where a dashboard remembers its panels switched to another module (`switchPanel`): { id: type }.
+export const PANEL_SWITCHES_KEY = 'panelSwitches';
+
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
 const KDEF = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
@@ -967,6 +970,106 @@ export function createArrangement({
     return true;
   }
 
+  // =================================================================================================
+  // *** "SWITCH MODULE" (2026-10-02). *** Mike: "modules on a dashboard should be as hot swappable as
+  // possible. Maybe a switch module button on the transport bar for the selected module."
+  //
+  // A panel switched to another type KEEPS ITS INSTANCE ID: its place (slot, placement, layer), its chip,
+  // its focus, its doors - everything that is about WHERE it is. What changes is the type, and the ROW its
+  // settings live in: `<id>--<type>` (`stateKey`, read by both mounting hosts). So, argued:
+  //   * THE NEW TYPE STARTS FRESH: a clock does not inherit a photo slideshow's keys from a shared row.
+  //   * THE OLD ONE IS KEPT: switching back to the original type reads the panel's own row again, and
+  //     back to a type it was switched to before reads that type's row - everything as it was left.
+  //     AGAINST: rows that are never cleaned up, one per type a panel was ever switched to. They are
+  //     small, and losing somebody's settings because they tried another module for a minute is worse.
+  //   * IT IS REMEMBERED, on the dashboard's own settings doc (`panelSwitches: { id: type }`), and
+  //     applied whenever the arrangement is given its modules (`setProfile`). FOR: "hot swappable" means
+  //     the TV keeps showing what it was switched to; a switch that undoes itself at the next restart is a
+  //     control that lies. AGAINST: a stray press changes a saved dashboard for everybody using it -
+  //     which is why the list it comes from puts the panel's original module first (kiosk.js), one press.
+  //   * NOT RECOVERY'S `swapPanel`, which stays exactly as it was: a temporary fallback that is never
+  //     saved, and comes back by itself.
+  // =================================================================================================
+  const switchKey = (id, type) => `${id}--${type}`.slice(0, 64);
+  function readSwitches() {
+    let sw = null;
+    try { sw = settings?.get?.()?.[PANEL_SWITCHES_KEY]; } catch { sw = null; }
+    return sw && typeof sw === 'object' && !Array.isArray(sw) ? sw : {};
+  }
+  function withSwitches(p) {
+    if (!p || !Array.isArray(p.modules)) return p;
+    const sw = readSwitches();
+    if (!Object.keys(sw).length) return p;
+    let changed = false;
+    const modules = p.modules.map((m) => {
+      const t = m && sw[m.id];
+      if (!m || typeof t !== 'string' || !t || t === m.type || !getManifest(t)) return m;
+      changed = true;
+      return { ...m, type: t, switchedFrom: m.type, stateKey: switchKey(m.id, t) };
+    });
+    return changed ? { ...p, modules } : p;
+  }
+  async function switchPanel(id, toType) {
+    const rec = recFor(id);
+    const def = profile?.modules?.find((m) => m.id === id);
+    if (!rec || !def || !toType) return false;
+    if (toType === rec.type) return true;
+    const base = def.switchedFrom || def.type;
+    // An unknown type is refused before anything is torn down (back to what it was is always allowed:
+    // it was mounted here before).
+    if (toType !== base && !getManifest(toType)) return false;
+    const next = toType === base
+      ? (() => { const { switchedFrom, stateKey, ...rest } = def; void switchedFrom; void stateKey; return { ...rest, type: base }; })()
+      : { ...def, type: toType, switchedFrom: base, stateKey: switchKey(id, toType) };
+    const host = rec.el;
+    try { health()?.forget?.(id); } catch { /* not load-bearing */ }
+    destroyRec(rec);
+    host.innerHTML = '';
+    let fresh = null;
+    try {
+      fresh = watchRec(await mountInstance(next, host));
+    } catch (err) {
+      // The new module would not start: the panel goes back to what it was, so nobody is left with a
+      // dead box. (The old one started before; if it now will not either, that is recovery's to handle.)
+      console.error(`arrangement: switching to ${toType} failed`, err);
+      host.innerHTML = '';
+      replaceRec(id, watchRec(await mountInstance(def, host)));
+      renderMods();
+      return false;
+    }
+    replaceRec(id, fresh);
+    profile = { ...profile, modules: profile.modules.map((m) => (m.id === id ? next : m)) };
+    stageDefs = stageDefs.map((d) => (d.id === id ? next : d));
+    try {
+      const nx = { ...readSwitches() };
+      if (toType === base) delete nx[id]; else nx[id] = toType;
+      settings?.set?.({ [PANEL_SWITCHES_KEY]: nx });
+    } catch (err) { console.error('arrangement: remembering a switch', err); }
+    const f = focusedRec();
+    if (f) paintFocus(f.id);
+    renderMods();
+    return true;
+  }
+  /** What a panel was before it was switched (its original type), or its own type. */
+  const baseTypeOf = (id) => { const d = profile?.modules?.find((m) => m.id === id); return d ? (d.switchedFrom || d.type) : null; };
+
+  // *** REPLACE ONE SLOT'S MODULE WITH ANOTHER INSTANCE (Home's edit flow, 2026-10-02). *** Not a switch:
+  // the slot gets a DIFFERENT instance (its own id and row), and the arrangement's module list and layout
+  // say so - the shape the Home page's editor saves. Its caller saves the dashboard; this only mounts.
+  async function replaceSlot(oldId, def) {
+    const at = slotRecs.findIndex((r) => r.id === oldId);
+    if (at < 0 || !def?.id) return false;
+    const host = slotRecs[at].el;
+    try { health()?.forget?.(oldId); } catch { /* not load-bearing */ }
+    destroyRec(slotRecs[at]);
+    host.innerHTML = '';
+    profile = { ...profile, modules: [...profile.modules.filter((m) => m.id !== oldId), { ...def }] };
+    if (layout) layout = { ...layout, slots: layout.slots.map((s) => (s === oldId ? def.id : s)) };
+    slotRecs[at] = watchRec(await mountInstance(def, host));
+    renderMods();
+    return true;
+  }
+
   // Every mounted record, and the links runner. The shell tears down everything else.
   function destroy() {
     screenLinks?.destroy();
@@ -1001,7 +1104,8 @@ export function createArrangement({
     // `partition` export answers from this rather than keeping a second copy of the rule).
     hudDefs: () => ({ camera: cameraDef, clock: clockDef, ambient: ambientDef }),
     // ---- changing what is on the screen ----
-    setProfile(next) { profile = next; },
+    // (2026-10-02: with any panel switches this dashboard remembers applied - see `switchPanel`.)
+    setProfile(next) { profile = withSwitches(next); },
     resolve,
     partition,
     mountOverlays,
@@ -1023,6 +1127,12 @@ export function createArrangement({
     recFor,
     remountPanel,
     swapPanel,
+    // ---- "Switch module" and Home's replace (2026-10-02) ----
+    switchPanel,
+    baseTypeOf,
+    replaceSlot,
+    // The room's slots (room_scene.js `slots()`), while the scene is a mounted room; an empty Map otherwise.
+    roomSlots: () => { try { return roomScene?.slots?.() || new Map(); } catch { return new Map(); } },
     // ---- the mirror/clock corners ----
     applyLayout,
     patchMirror,

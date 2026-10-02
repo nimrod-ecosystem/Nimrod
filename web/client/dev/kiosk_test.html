@@ -71,6 +71,13 @@ const settled = async (fn, ms = 4000) => {
 const mirrorHas = (sel) => !!root.querySelector('.k-mirror ' + sel);
 const clockHas = (sel) => !!root.querySelector('.k-clock ' + sel);
 const ds = () => root.querySelector('.kiosk').dataset;
+// *** THE MENU HAS TABS (2026-10-02, settings.js "TABS"). *** A walk to a row is now: its tab, then the
+// walk. The tab row is ONE stop whose select goes to the next tab; `toTab` goes there the way a pointer
+// would, so every walk below still proves the row is a stop on the one-switch walk OF ITS TAB.
+const toTab = (m, id) => {
+  const t = m.tabOf?.(id);
+  if (t && !String(t).startsWith('*') && m.tab?.() !== t) m.showTab(t);
+};
 
 (async () => {
   let kiosk = null;
@@ -356,6 +363,55 @@ const ds = () => root.querySelector('.kiosk').dataset;
       check('and Home is still reachable from that same walk — the way out is never hidden',
         stops.has('home'));
 
+      // *** THE TABS (2026-10-02). Mike: "The settings menu needs to be broken up into tabs." ***
+      // 1. NO ROW IS LOST TO A TAB. Every row the menu has (`items()`, every tab) is on exactly one tab -
+      //    or, for the rows above the tabs and the ways out, on every tab - and every row the menu had at
+      //    4edeeae (before tabs; this screen, "The usual", measured then) is still here.
+      // 2. THE WALK, deliberately changed: one lap of the panel's tab is NINE stops - Settings for (one
+      //    panel on a one-at-a-time stage: shown, not a stop), How much this menu shows, the tab row,
+      //    this panel's background, the interval, how photos fit, Switch module, Full screen, Home, Close.
+      //    It was one list of every row on the screen (27 stops at "The usual", counted below from the
+      //    same rows), so Home is now 7 presses from where the menu opens instead of 25.
+      await settled(() => kiosk.menu.items().some((i) => i.id === 'set:speechOn'), 6000);
+      kiosk.menu.refresh();
+      const every = ['subject-pick', 'tabs', 'set:complexity', 'fullscreen', 'home', 'close'];
+      const all = kiosk.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
+      const placed = new Map();
+      const tabsNow = kiosk.menu.tabs();
+      for (const t of tabsNow) {
+        kiosk.menu.showTab(t.id);
+        for (const it of kiosk.menu.visibleItems()) if (it.kind === 'item') placed.set(it.id, [...(placed.get(it.id) || []), t.id]);
+      }
+      const lost = all.filter((id) => !placed.has(id));
+      const twice = all.filter((id) => !every.includes(id) && (placed.get(id) || []).length !== 1);
+      check('*** tabs: every row of the menu is on a tab - none lost ***', lost.length === 0, lost.join(','));
+      check('*** tabs: ...and on exactly ONE tab (the rows above the tabs and the ways out on every one) ***',
+        twice.length === 0 && every.filter((id) => all.includes(id)).every((id) => (placed.get(id) || []).length === tabsNow.length),
+        `${twice.join(',')} | ${JSON.stringify([...placed].filter(([k]) => every.includes(k)))}`);
+      const BEFORE_4EDEEAE = ['who-pick', 'set:speechOn', 'set:subtitlesOn', 'set:amplifyOn', 'set:voiceRecording',
+        'set:instancePanelSurface', 'set:intervalMs', 'set:fit', 'set:sourceId', 'set:album', 'controls', 'activity',
+        'connections', 'set:on', 'restart-resume', 'restart-top', 'restart-screen', 'screen-name', 'set:theme',
+        'set:complexity', 'set:burnIn', 'set:panelSurface', 'set:zoomFocus', 'set:flashLimitPerSecond',
+        'set:avatarMotion', 'set:masterVolume', 'edit-view', 'fullscreen', 'home', 'close'];
+      const gone = BEFORE_4EDEEAE.filter((id) => !all.includes(id));
+      check('*** tabs: every row the menu had before tabs (4edeeae, "The usual") is still in it ***', gone.length === 0, gone.join(','));
+      check('tabs: this screen offers The panel, Sound, Display, Devices, People and This screen (no host page here)',
+        tabsNow.map((t) => t.id).join() === 'module,audio,display,devices,people,screen', JSON.stringify(tabsNow));
+      kiosk.menu.showTab('module');
+      kiosk.menu.focusRow('tabs');
+      const lapStops = [];
+      for (let i = 0; i < 40; i += 1) { const id = kiosk.menu.focusId(); if (lapStops.includes(id)) break; lapStops.push(id); kiosk.menu.next(); }
+      // (The old walk's rows: everything but the tab row, "Settings for" and "Switch module", which are new.)
+      const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
+        && !['tabs', 'subject-pick', 'switch-module'].includes(i.id));
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 9 stops (was every row: 27) ***',
+        lapStops.length === 9 && oldStops.length === 27,
+        `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
+      kiosk.menu.close(); await press('Escape');
+      const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
+      check('...and Home is 7 presses from where the menu opens (was 25)', homeAt === 7, String(homeAt));
+      kiosk.menu.showTab('module');
+
       // A PRESS IN THE MENU REACHES THE MODULE'S OWN STATE. The hint is re-read from the
       // instance's state handle on every paint, so a changed hint IS the write landing.
       while (kiosk.menu.focusId() !== 'set:fit') kiosk.menu.next();
@@ -453,6 +509,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // BOUNDED. An unbounded `while` looking for a row that is not there hangs the whole
       // suite instead of failing it, and a check that can hang is a check nobody trusts.
       const walkTo = (id) => {
+        toTab(kiosk.menu, id);
         for (let i = 0; i < 60 && kiosk.menu.focusId() !== id; i += 1) kiosk.menu.next();
         return kiosk.menu.focusId() === id;
       };
@@ -1339,6 +1396,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
     // Turn it on the same way a person would — through the real menu, not by poking state.
     bk.menu.open();
     const walkToB = (id) => {
+      toTab(bk.menu, id);
       for (let i = 0; i < 60 && bk.menu.focusId() !== id; i += 1) bk.menu.next();
       return bk.menu.focusId() === id;
     };
@@ -1405,6 +1463,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
 
     ipk.menu.open();
     const walkToI = (id) => {
+      toTab(ipk.menu, id);
       for (let i = 0; i < 60 && ipk.menu.focusId() !== id; i += 1) ipk.menu.next();
       return ipk.menu.focusId() === id;
     };
@@ -1621,6 +1680,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // `select()` acts on whichever row the menu's own cursor is currently on, same as every
       // other menu test in this file.
       const walkToMode = (id) => {
+        toTab(k.menu, id);
         for (let i = 0; i < 60 && k.menu.focusId() !== id; i += 1) k.menu.next();
         return k.menu.focusId() === id;
       };
@@ -2586,7 +2646,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
         storage: wStore, session: mem(), navigate: () => {}, reloadPage: () => {} });
       await sleep(150);
       const item = (id) => wk.menu.items().find((r) => r.id === id);
-      const walkTo = (id) => { for (let i = 0; i < 90 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
+      const walkTo = (id) => { toTab(wk.menu, id); for (let i = 0; i < 90 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
       const stepTo = (id, hint, max = 30) => { for (let i = 0; i < max && item(id)?.hint !== hint; i += 1) wk.menu.select(); return item(id)?.hint === hint; };
 
       // ---- 1. THE MASTER VOLUME (row 2.28 call 4 / row 2.35) ----
@@ -2810,7 +2870,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       vk = await mountKiosk(vbox, { user: vUser, profileId: vp.id, profiles: vProfiles, bus: createBus(),
         storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {} });
       const item = (k, id) => k.menu.items().find((r) => r.id === id);
-      const walkTo = (k, id) => { for (let i = 0; i < 120 && k.menu.focusId() !== id; i += 1) k.menu.next(); return k.menu.focusId() === id; };
+      const walkTo = (k, id) => { toTab(k.menu, id); for (let i = 0; i < 120 && k.menu.focusId() !== id; i += 1) k.menu.next(); return k.menu.focusId() === id; };
       const stepTo = (k, id, hint, max = 30) => { for (let i = 0; i < max && item(k, id)?.hint !== hint; i += 1) k.menu.select(); return item(k, id)?.hint === hint; };
       check('(setup) the person’s row has arrived (the Voice section is in the menu)',
         await settled(() => !!item(vk, 'set:speechOn'), 9000), vk.menu.items().map((r) => r.id).join(','));
@@ -3005,6 +3065,83 @@ const ds = () => root.querySelector('.kiosk').dataset;
     }
   }
 
+  // *** 2026-10-02: THE VOICE KIOSK LINES (87bcd41's waiting wiring), AND THE MENU'S TABS BY VOICE. ***
+  // A focused brick breaker hears its OWN "stop" (the paddle, not pause) and "launch"; "scroll down" and
+  // "cursor right" reach the cursor drive; "next tab", "sound settings" and "switch module" reach the menu.
+  {
+    const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+    const { verbTopic } = await import('../actions.js');
+    const bUser = USER + '-voice-wired';
+    const bProfiles = createProfilesClient({ user: bUser });
+    const bbox = document.createElement('div');
+    bbox.style.cssText = 'position:relative;width:640px;height:420px;margin:8px 0';
+    document.body.append(bbox);
+    let bk3 = null;
+    try {
+      const bp = await bProfiles.create('TEST-voice-wired');
+      await bProfiles.addModule(bp.id, 'brickbreaker');
+      const bFull = await bProfiles.get(bp.id);
+      const bbId = bFull.modules.find((m) => m.type === 'brickbreaker').id;
+      const s = createState({ url: bProfiles.personStateURL(bFull.person_id, INPUTS_KEY), user: bUser });
+      await s.load().catch(() => {}); s.set({ speechOn: true, speechEngine: 'browser' }); await s.flush(); s.destroy();
+      const fake = { onText: null, running: false,
+        start(cb) { this.onText = cb; this.running = true; }, stop() { this.running = false; this.onText = null; } };
+      const say = (t) => fake.onText?.(t);
+      const bbus = createBus();
+      bk3 = await mountKiosk(bbox, { user: bUser, profileId: bp.id, profiles: bProfiles, bus: bbus,
+        storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, makeRecognizer: () => fake });
+      check('(setup) the recogniser started for the person', await settled(() => fake.running, 9000));
+      check('(setup) brick breaker is the focused panel', bk3.runtime.router.focused?.()?.type === 'brickbreaker',
+        JSON.stringify(bk3.runtime.router.focused?.()));
+      const heard = [];
+      const on = (t) => bbus.subscribe(bbus.instanceTopic ? bbus.instanceTopic(bbId, t) : t, () => heard.push(t));
+      const offs = ['brickbreaker/launch', 'brickbreaker/stop', 'brickbreaker/pause'].map(on);
+      const pauses = []; const offP = bbus.subscribe(verbTopic('pause'), () => pauses.push(1));
+      say('computer please launch');
+      check('*** wired: a focused brick breaker hears "launch" ***', heard.includes('brickbreaker/launch'), heard.join());
+      heard.length = 0;
+      say('computer please stop');
+      check('*** wired: ...and its OWN "stop" (the paddle), not the table’s "stop" = pause ***',
+        heard.includes('brickbreaker/stop') && !heard.includes('brickbreaker/pause') && pauses.length === 0, `${heard.join()} pauses=${pauses.length}`);
+      offs.forEach((f) => f()); offP();
+      check('wired: the cursor drive is attached', !!bk3.cursorDrive());
+      const aimBefore = bk3.runtime.aim.latest?.() || { x: 0.5, y: 0.5 };
+      say('computer please cursor right');
+      const aimAfter = bk3.runtime.aim.latest?.();
+      check('*** wired: "cursor right" reaches the cursor drive (the aim moves right) ***',
+        !!aimAfter && aimAfter.x > aimBefore.x, JSON.stringify([aimBefore, aimAfter]));
+      const scroller = document.scrollingElement;
+      const topWas = scroller.scrollTop;
+      scroller.scrollTop = 0;                 // from the top, so there is somewhere to scroll to
+      const top0 = scroller.scrollTop;
+      const scrolls = []; const offS = bbus.subscribe('cursor/scroll', (p) => scrolls.push(p?.dir));
+      say('computer please scroll down');
+      offS();
+      check('*** wired: "scroll down" reaches the cursor drive (and the page under the cursor scrolls) ***',
+        scrolls.includes('down') && scroller.scrollTop > top0, `${scrolls} ${top0} -> ${scroller.scrollTop}`);
+      scroller.scrollTop = topWas;
+      // THE MENU'S TABS, BY VOICE.
+      check('(setup) the menu is closed', !bk3.menu.isOpen());
+      say('computer please sound settings');
+      check('*** "sound settings" opens the menu ON the Sound tab ***', bk3.menu.isOpen() && bk3.menu.tab() === 'audio', String(bk3.menu.tab()));
+      say('computer please next tab');
+      check('*** "next tab" goes to the next one ***', bk3.menu.tab() === 'display', String(bk3.menu.tab()));
+      say('computer please previous tab');
+      check('*** "previous tab" comes back ***', bk3.menu.tab() === 'audio', String(bk3.menu.tab()));
+      say('computer please close the menu');
+      say('computer please switch module');
+      check('*** "switch module" opens the focused panel’s Switch list ***',
+        bk3.menu.isOpen() && bk3.switchOpen()?.id === bbId && bk3.menu.focusId() === 'switch-keep', JSON.stringify(bk3.switchOpen()));
+      say('computer please close the menu');
+      check('"close the menu" closes it (and the list with it)', !bk3.menu.isOpen() && bk3.switchOpen() === null);
+    } catch (e) {
+      check('the voice-wiring section threw', false, String((e && e.stack) || e));
+    } finally {
+      try { bk3?.destroy(); } catch { /* already gone */ }
+      bbox.remove();
+    }
+  }
+
   // *** ROWS 2.46/2.47: THE RANKED RECOGNISER IN THE KIOSK, AND MUSIC FAVOURITES AS SPOKEN ROUTES. ***
   // The recogniser here is a stand-in with the ranked one's extra surface (status, captions, sources);
   // speech_engines_test covers the real one against fake sockets.
@@ -3165,7 +3302,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
       wk = await mountKiosk(wbox, { user: wUser, profileId: wp.id, profiles: wProfiles, bus: wBus,
         storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, makeRecognizer: () => rk });
       const item = (id) => wk.menu.items().find((r) => r.id === id);
-      const walkTo = (id) => { for (let i = 0; i < 160 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
+      const walkTo = (id) => { toTab(wk.menu, id); for (let i = 0; i < 160 && wk.menu.focusId() !== id; i += 1) wk.menu.next(); return wk.menu.focusId() === id; };
       check('(setup) the person’s row has arrived and the recogniser is running',
         await settled(() => rk.running && wk.voiceRecording()?.state().attached === true, 9000),
         JSON.stringify(wk.voiceRecording()?.state()));
