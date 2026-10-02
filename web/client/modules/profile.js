@@ -101,7 +101,7 @@ const STYLE = `
 .pf-btn{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
   color:var(--text);font:inherit;cursor:pointer;text-align:left}
 .pf-btn[disabled]{opacity:.5;cursor:default}
-.pf-btn.is-warn{border-color:var(--highlight)}
+.pf-btn.is-warn{border:2px solid var(--scan-ring, var(--highlight))}
 .pf-btn.is-scan,.pf-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .pf-btn[aria-pressed="true"]{background:var(--surface-alt);font-weight:700}
 .pf-list{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
