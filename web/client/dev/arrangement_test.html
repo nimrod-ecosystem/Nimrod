@@ -136,7 +136,9 @@ try {
       // (where the bar sits on the cabinet -- dashboard_nest_test drives it).
       'switchPanel', 'baseTypeOf', 'replaceSlot', 'roomSlots',
       // 2026-10-02: a panel made bigger, one level at a time (screen_controls_test drives these).
-      'promote', 'demote', 'promotedId', 'setPromoteTop'];
+      'promote', 'demote', 'promotedId', 'setPromoteTop',
+      // 2026-10-02: edit any panel in place (edit_mode_test drives these).
+      'editPanel', 'editing', 'editSelect', 'editSelection'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),

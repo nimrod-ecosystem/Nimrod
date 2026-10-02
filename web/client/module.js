@@ -346,6 +346,10 @@ export function mountModule(type, ctx) {
     // The policy is undone BEFORE the module's own onShow, so a module that restarts its sound
     // there is heard.
     onShow:   (info) => { tell('shown', info); return instance.onShow?.(); },
+    // EDIT MODE (2026-10-02, edit_mode.js): the elements a module offers to be chosen one by one while its
+    // panel is being edited, `[{ id, label, el, keys? | fields? }]`. Optional like the rest; null (no
+    // opinion) for a module that has none, and the whole panel is then the one thing to choose.
+    editTargets: () => (typeof instance.editTargets === 'function' ? instance.editTargets() : null),
     destroy:  () => {
       // First, and outside the try: an observer left running holds the mount element and the
       // module's closure alive, which is the exact shape the soak meter caught three of.
