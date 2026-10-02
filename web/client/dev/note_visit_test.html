@@ -302,6 +302,15 @@ try {
         && ownView[0].data.author === 'Aunt Dolly', JSON.stringify(ownView));
       const forged = await j(VIS, `/api/people/${person}/notes/${screen}/note`, 'POST', { kind: 'note', data: { text: 'x', author: 'Mom' } });
       check('live: a forged author from a hand-made request is still signed by the account', forged.body?.data?.author === 'Aunt Dolly');
+      click(h2.querySelector('[data-act="takedown"]'));
+      for (let i = 0; i < 40 && !h2.querySelector('[data-note-empty]'); i++) await sleep(50);
+      check('*** live: the visitor takes the note down, and their panel shows no note ***',
+        !!h2.querySelector('[data-note-empty]') && !h2.querySelector('[data-note-text]'), h2.querySelector('[data-nv-note]')?.textContent.slice(0, 160));
+      const afterDown = (await j(OWN, `/api/profiles/${screen}/events/note`)).body.events;
+      const down = afterDown[afterDown.length - 1];
+      check('*** live: the take-down is a NEW row in the screen’s stream (nothing deleted), stamped with the visitor ***',
+        afterDown.length === 3 && down.data.via === 'taken down' && down.data.text === '' && down.principal_id === VIS
+        && afterDown[0].data.text === 'Thinking of you. Back Sunday.', JSON.stringify(afterDown.map((e) => e.data)));
       v.destroy();
     }
   }

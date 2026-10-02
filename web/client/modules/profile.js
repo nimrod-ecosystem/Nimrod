@@ -8,12 +8,22 @@
 //                     Visit <room> (its room, made into a dashboard on that press, once, then opened),
 //                     Copy (a ready-made one: "copy it, and change the copy") or Change / Copy / Remove (one
 //                     of the person's own), and Who… (choose somebody else).
-//   a person          Call — DIMMED, with the reason: modules/call.js answers calls and never places one
-//                     (kiosk.js: "a bedside screen answers; it never places a call"), so there is nothing to
-//                     call WITH yet. Visit their Home (home_dashboard.js `homeId` on their record), and Who….
+//   a person          Call (below), Visit their Home (home_dashboard.js `homeId` on their record), and Who….
 //                     Only the people on THIS account: linking accounts is not built, so a friend's profile
 //                     cannot be shown, and the picker says so rather than pretending.
 //   Dimmed, never hidden (Design's rule, home_profile.js): a button that cannot act says why.
+//
+// *** CALL: A SCREEN NEVER PLACES A CALL; A PERSON'S OWN BROWSER CAN. *** (kiosk.js: "a bedside screen answers;
+// it never places a call".) Calls are placed from call.html (call_page.js, 2d87fe7) on a phone or computer,
+// signed in to the caller's own account. So:
+//   - on a SCREEN (this panel inside the real kiosk, `onScreen` below) Call stays DIMMED and says where calls
+//     are placed. It does not open call.html there: that would turn the screen into a caller, and a page
+//     somebody cannot leave on their own.
+//   - anywhere else (Home on somebody's phone, the modules page) Call is a LINK to /call.html?person=<id>,
+//     but only for a person this account may call: the same list call_page.js offers (`mayCall`) - the
+//     account's own people, plus the people shared with it by a live drive grant (/api/drive/shared). The
+//     server's drive ticket is still the real check, on call.html, before anything opens; this only keeps
+//     the card from offering a call the page would refuse.
 //
 // *** NOTHING IS SENT ANYWHERE WITHOUT A PRESS. *** Mounting reads records (who, which face); it never asks
 // the AI anything (ai.js's rule), never makes a dashboard and never speaks. The AI is first asked on Talk
@@ -60,7 +70,33 @@ export const LOG_SHOWN = 20;            // the last turns drawn; the chat keeps 
 // removes nothing).
 export const REMOVE_ARM_MS = 6000;
 
-export const CALL_NOT_BUILT = 'Calling somebody from here is not built yet: a screen answers calls, it does not place them.';
+// The Call button's reasons, in words (Design's rule: dimmed, never hidden, says why).
+export const CALL_ON_SCREEN = 'Calls are placed from a phone or a computer, at /call.html. A screen answers calls; it does not place them.';
+export const CALL_NOT_ALLOWED = 'This account may not call them. Whoever looks after their screens can share them with you, on their Remote tab.';
+export const CALL_CHECKING = 'Checking whether this account may call them…';
+export const CALL_HELP = 'A video or audio call to their screens, from this phone or computer.';
+export const callURL = (personId) => `/call.html?person=${encodeURIComponent(personId)}`;
+
+/** May this account call `personId`? PURE. The same people call_page.js offers: the account's own (`own`, from
+ *  /api/people) and those shared with it by a live drive grant (`shared`, /api/drive/shared rows). true / false,
+ *  or null while it cannot be told yet (a list still loading). */
+export function mayCall(personId, { own = null, shared = null } = {}) {
+  if (!personId) return false;
+  if (Array.isArray(own) && own.some((p) => p && p.id === personId)) return true;
+  if (Array.isArray(shared) && shared.some((p) => p && p.person_id === personId)) return true;
+  return own === null || shared === null ? null : false;
+}
+
+/** Is this panel on a SCREEN (the real kiosk), where a call is never placed? PURE over the DOM it is handed.
+ *  The kiosk draws its panels inside `.kiosk`; when it is only embedded in another page (Home, the modules
+ *  page: module_try.js `mountEmbeddedKiosk`) that element also carries `.k-embed` and is not a screen.
+ *  A panel not on a page yet, or on kiosk.html itself, counts as a screen: it offers nothing it cannot keep. */
+export function onScreen(mount, pathname = (typeof location !== 'undefined' ? location.pathname : '')) {
+  if (mount?.closest?.('.k-embed')) return false;
+  if (mount?.closest?.('.kiosk')) return true;
+  if (/\/kiosk\.html$/.test(String(pathname || ''))) return true;
+  return !mount?.isConnected;
+}
 export const NO_LINKS_NOTE = 'Friends on other accounts will show here once accounts can be linked.';
 
 export const PROFILE_SETTINGS = Object.freeze([
@@ -101,6 +137,7 @@ const STYLE = `
 .pf-btn{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
   color:var(--text);font:inherit;cursor:pointer;text-align:left}
 .pf-btn[disabled]{opacity:.5;cursor:default}
+a.pf-btn{display:inline-flex;align-items:center;box-sizing:border-box;text-decoration:none}
 .pf-btn.is-warn{border:2px solid var(--scan-ring, var(--highlight))}
 .pf-btn.is-scan,.pf-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .pf-btn[aria-pressed="true"]{background:var(--surface-alt);font-weight:700}
@@ -139,7 +176,10 @@ registerModule(
     let row = {};                 // the person's characters row, as last read
     let aiRow = null;             // nimrod_ai.js's record: "your AI"'s name and persona, for the Nimrod card
     let people = null;            // [{ id, name }] once asked; null = not asked / not available
+    let peopleAsked = false;      // loadPeople has answered (people may still be null: none to be had)
     let peopleNote = '';
+    let shared = null;            // /api/drive/shared rows, for Call (mayCall); null = not asked yet
+    let sharedAsking = false;
     let homes = new Map();        // person id -> homeId | null (read once each)
     let avatars = null;           // avatar_display.js cache, for people's faces (made on first need)
     let draft = null;             // the edit form: { mode, id?, name, persona, goodAt, drawn, faceN, voice, room }
@@ -183,10 +223,36 @@ registerModule(
       try { await h.load?.(); aiRow = h.get?.() || null; } catch { aiRow = null; } finally { try { h.destroy?.(); } catch { /* gone */ } }
     }
     async function loadPeople() {
-      if (typeof ctx.profiles?.people !== 'function') { people = null; peopleNote = ''; return; }
+      if (typeof ctx.profiles?.people !== 'function') { people = null; peopleNote = ''; peopleAsked = true; return; }
       try { people = (await ctx.profiles.people()) || []; peopleNote = ''; }
       catch { people = null; peopleNote = 'The people on this account could not be read just now.'; }
+      peopleAsked = true;
     }
+    // Who else's screens this account may use (a drive grant), for Call. Asked once, and only off a screen
+    // for a person who is not one of the account's own (whom it may always call). No list = nobody shared.
+    function loadShared() {
+      if (shared !== null || sharedAsking) return;
+      if (typeof ctx.profiles?.sharedWithMe !== 'function') { shared = []; return; }
+      sharedAsking = true;
+      Promise.resolve().then(() => ctx.profiles.sharedWithMe())
+        .then((r) => { shared = Array.isArray(r) ? r : []; }, () => { shared = []; })
+        .then(() => { sharedAsking = false; if (!torn) render(); });
+    }
+    let peopleAsking = false;
+    function askPeople() {
+      if (peopleAsking) return;
+      peopleAsking = true;
+      loadPeople().finally(() => { peopleAsking = false; if (!torn) render(); });
+    }
+    const callable = (pid) => mayCall(pid, { own: Array.isArray(people) ? people : (peopleAsked ? [] : null), shared });
+    const callButton = (p) => {
+      if (onScreen(mount)) return btn('call', 'Call', { disabled: true, help: CALL_ON_SCREEN });
+      const may = callable(p.id);
+      if (may === null) { if (peopleAsked) loadShared(); else askPeople(); return btn('call', 'Call', { disabled: true, help: CALL_CHECKING }); }
+      if (!may) return btn('call', 'Call', { disabled: true, help: CALL_NOT_ALLOWED });
+      return `<a class="pf-btn" data-pf-stop data-pf-do="call" data-pf-id="${esc(p.id)}" href="${esc(callURL(p.id))}"
+        title="${esc(CALL_HELP)}" data-help="${esc(CALL_HELP)}">Call</a>`;
+    };
     async function homeOf(pid) {
       if (homes.has(pid)) return homes.get(pid);
       homes.set(pid, undefined);
@@ -278,7 +344,7 @@ registerModule(
           <div><b class="pf-name" data-pf-name>${esc(p.name || 'Somebody')}</b><p class="pf-line" data-pf-line>${you ? 'You' : 'On this account'}</p>
             <div class="pf-kind">Person</div></div></div>
         <div class="pf-btns">
-          ${btn('call', 'Call', { disabled: true, help: CALL_NOT_BUILT })}
+          ${callButton(p)}
           ${btn('visit-home', home === undefined ? 'Their Home…' : you ? 'Visit your Home' : 'Visit their Home', {
             disabled: !home, help: home ? 'Open the Home they made.' : home === null ? 'No Home made yet.' : 'Looking for their Home…' })}
           ${btn('pick', 'Who…', { help: 'Choose who this panel shows.' })}
@@ -623,7 +689,9 @@ registerModule(
         case 'savesetup': saveSetup(); return;
         case 'visit': visit(id); return;
         case 'visit-home': visitHome(); return;
-        case 'call': return;
+        // Only ever drawn as a link (off a screen, for somebody this account may call). A switch's select
+        // follows it the way a click does; a click on the link itself never comes here (onClick).
+        case 'call': { const a = root?.querySelector('a[data-pf-do="call"]'); if (a) a.click(); return; }
         case 'copy': copyNow(); return;
         case 'edit': { const c = currentChar(); if (c && !c.seed) startEdit(c); return; }
         case 'new': startEdit(null); return;
@@ -641,6 +709,7 @@ registerModule(
       const el = e.target instanceof Element ? e.target.closest('[data-pf-do]') : null;
       if (!el || !root?.contains(el) || el.disabled) return;
       cursor = Math.max(0, stops().indexOf(el));
+      if (el.tagName === 'A') return;   // a link (Call): the browser follows it
       doPress(el.dataset.pfDo, el.dataset.pfId ?? null);
     }
     function onKey(e) {

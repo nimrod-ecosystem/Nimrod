@@ -12,6 +12,14 @@
 // the stream cannot be edited, and the server stamps the time (the client clock is never the record).
 // Putting an old note back is a NEW row that copies it, so even that is in the history.
 //
+// TAKING THE NOTE DOWN is a new row too (Mike's list 2026-09-30 item 4: a "Back soon." note otherwise
+// stayed up until somebody wrote another): kind 'note', `via: 'taken down'`, no words, `from` = the row
+// it took down. When the newest row is a take-down, the panel is back in its no-note state; the note it
+// took down is still in the history and can be put back. It is offered wherever changing the note is
+// (`allowChange`), and the server lets exactly the accounts that may write a note take one down
+// (server/notes.py TAKEN_DOWN). It is one press, with no "are you sure": "Put this one back" undoes it in
+// two, and a panel where an accidental press matters turns `allowChange` off.
+//
 // WHO WROTE IT. Each row carries `author`, a plain name typed or picked when the note is changed, or
 // "Someone" when nobody said. A host that knows who is signed in can hand the name in as `ctx.author`
 // and the change form starts on it. On the kiosk, the form offers the names already in the note's
@@ -49,6 +57,7 @@ import { registerModule } from '../module.js';
 export const NOTE_STREAM = 'note';
 export const NOTE_KIND = 'note';
 export const SOMEONE = 'Someone';
+export const TAKEN_DOWN = 'taken down';
 export const MAX_TEXT = 280;
 export const MAX_NAME = 40;
 export const DEFAULT_PAPER = '#fbf3a8';
@@ -102,16 +111,27 @@ export function whenOf(e) {
   return Number.isFinite(a) ? a : 0;
 }
 
-/** The note rows, oldest first, whatever order they arrived in. Rows that are not notes are ignored. */
-export function noteRows(events) {
-  return (Array.isArray(events) ? events : [])
-    .filter((e) => e && e.kind === NOTE_KIND && e.data && cleanText(e.data.text))
-    .map((e, i) => ({ e, i }))
-    .sort((a, b) => (whenOf(a.e) - whenOf(b.e)) || ((Number(a.e.id) || 0) - (Number(b.e.id) || 0)) || (a.i - b.i))
-    .map((x) => x.e);
+/** A row that took the note down (no words; "no note showing"). */
+export const isTakeDown = (e) => !!(e && e.kind === NOTE_KIND && e.data && e.data.via === TAKEN_DOWN);
+
+const byTime = (list) => list
+  .map((e, i) => ({ e, i }))
+  .sort((a, b) => (whenOf(a.e) - whenOf(b.e)) || ((Number(a.e.id) || 0) - (Number(b.e.id) || 0)) || (a.i - b.i))
+  .map((x) => x.e);
+
+/** Every entry in the note's history — notes AND take-downs — oldest first. Rows that are neither are ignored. */
+export function historyRows(events) {
+  return byTime((Array.isArray(events) ? events : [])
+    .filter((e) => e && e.kind === NOTE_KIND && e.data && (isTakeDown(e) || cleanText(e.data.text))));
 }
-/** The note on show: the newest. */
-export const currentNote = (events) => { const r = noteRows(events); return r.length ? r[r.length - 1] : null; };
+/** The note rows (with words), oldest first, whatever order they arrived in. */
+export const noteRows = (events) => historyRows(events).filter((e) => !isTakeDown(e));
+/** The note on show: the newest entry, unless that entry took the note down (then none). */
+export const currentNote = (events) => {
+  const r = historyRows(events);
+  const last = r.length ? r[r.length - 1] : null;
+  return last && !isTakeDown(last) ? last : null;
+};
 
 /** Names already in the history, newest first, "Someone" left out (it is always offered anyway). */
 export function knownAuthors(events, limit = 4) {
@@ -255,7 +275,10 @@ registerModule(
     // can be read aloud if the panel is set to.
     function arrived(first = false) {
       const cur = currentNote(rows);
-      const id = cur ? `${cur.id ?? ''}:${whenOf(cur)}` : null;
+      // Keyed on the newest ENTRY, so a take-down counts as a change (it is never read aloud: nothing shows).
+      const all = historyRows(rows);
+      const last = all.length ? all[all.length - 1] : null;
+      const id = last ? `${last.id ?? ''}:${whenOf(last)}` : null;
       if (id === lastSeenId) return;
       const was = lastSeenId;
       lastSeenId = id;
@@ -311,10 +334,22 @@ registerModule(
       } finally { saving = false; }
       render();
     }
+    // Takes the note on show down: a new row, so the history keeps the note and who took it down.
+    async function takeDown() {
+      const cur = currentNote(rows);
+      if (!cur) return;
+      saving = true;
+      const author = locked() ? lockedAuthor('') : (ctxAuthor() || SOMEONE);
+      try { await append({ text: '', author, via: TAKEN_DOWN, from: cur.id ?? null }); view = 'note'; err = ''; }
+      catch (x) { console.error('note: take down', x); err = failWords(x, 'That did not work. The note is still up; try again.'); }
+      finally { saving = false; }
+      if (lit >= 0) lit = 0;
+      render();
+    }
     async function putBack(i) {
-      const list = noteRows(rows);
+      const list = historyRows(rows);
       const e = list[i];
-      if (!e) return;
+      if (!e || isTakeDown(e)) return;
       saving = true;
       // A visitor putting one back signs it themselves: they are the one putting it there now.
       const author = locked() ? lockedAuthor('') : authorOf(e);
@@ -332,11 +367,12 @@ registerModule(
       switch (a) {
         case 'read': say(spoken(currentNote(rows), cfg)); return;
         case 'change': openEdit(); return;
-        case 'history': view = 'history'; if (lit >= 0) lit = 0; render(); return;
+        case 'history': view = 'history'; err = ''; if (lit >= 0) lit = 0; render(); return;
         case 'close': close(); return;
         case 'ready': draft.text = b.dataset.text || ''; err = ''; render(); return;
         case 'author': draft.author = b.dataset.name || SOMEONE; draft.typedName = ''; render(); return;
         case 'save': save(); return;
+        case 'takedown': takeDown(); return;
         case 'putback': putBack(Number(b.dataset.i)); return;
         default:
       }
@@ -352,14 +388,17 @@ registerModule(
       const body = cur
         ? `<p class="nt-text" data-note-text data-size="${sizeFor(cleanText(cur.data.text))}">${esc(cleanText(cur.data.text))}</p>
            <p class="nt-who" data-note-who>${esc(authorOf(cur))} · ${esc(whenWords(whenOf(cur), now()))}</p>`
-        : '<p class="nt-empty" data-note-empty>No note yet.</p>';
-      const count = noteRows(rows).length;
+        : `<p class="nt-empty" data-note-empty>${historyRows(rows).length ? 'No note right now.' : 'No note yet.'}</p>`;
+      // Earlier = every note with words except the one on show (all of them, once it is taken down).
+      const earlier = noteRows(rows).length - (cur ? 1 : 0);
       return `
         <div class="nt-paper" data-tilt="${cfg.tilt ? 1 : 0}" style="${style}" role="figure" aria-label="The note">${body}</div>
+        ${err ? `<p class="nt-err" role="alert" data-note-err>${esc(err)}</p>` : ''}
         <div class="nt-btns">
           ${cur ? btn('read', 'Read it aloud') : ''}
           ${cfg.allowChange ? btn('change', cur ? 'Change the note' : 'Leave a note') : ''}
-          ${count > 1 ? btn('history', `Earlier notes (${count - 1})`) : ''}
+          ${cur && cfg.allowChange ? btn('takedown', 'Take the note down') : ''}
+          ${earlier > 0 ? btn('history', `Earlier notes (${earlier})`) : ''}
         </div>`;
     }
 
@@ -386,16 +425,22 @@ registerModule(
     }
 
     function historyHtml() {
-      const list = noteRows(rows);
+      // Notes and take-downs, newest first. Indexes are into historyRows (what putBack reads).
+      const list = historyRows(rows);
       const items = list.map((e, i) => ({ e, i })).reverse();
+      const onShow = (i) => i === list.length - 1 && !isTakeDown(list[i]);
       return `
         <p class="nt-head">Every note, newest first</p>
-        <ol class="nt-hist" data-note-history>${items.map(({ e, i }) => `
-          <li${i === list.length - 1 ? ' data-current' : ''}>
+        <ol class="nt-hist" data-note-history>${items.map(({ e, i }) => (isTakeDown(e) ? `
+          <li data-down>
+            <p class="nt-htext">Taken down</p>
+            <p class="nt-hwho">${esc(authorOf(e))} · ${esc(whenWords(whenOf(e), now()))}</p>
+          </li>` : `
+          <li${onShow(i) ? ' data-current' : ''}>
             <p class="nt-htext">${esc(cleanText(e.data.text))}</p>
-            <p class="nt-hwho">${esc(authorOf(e))} · ${esc(whenWords(whenOf(e), now()))}${e.data.via === 'put back' ? ' · put back' : ''}${i === list.length - 1 ? ' · on show now' : ''}</p>
-            ${i === list.length - 1 || !cfg.allowChange ? '' : btn('putback', 'Put this one back', ` data-i="${i}"`)}
-          </li>`).join('')}</ol>
+            <p class="nt-hwho">${esc(authorOf(e))} · ${esc(whenWords(whenOf(e), now()))}${e.data.via === 'put back' ? ' · put back' : ''}${onShow(i) ? ' · on show now' : ''}</p>
+            ${onShow(i) || !cfg.allowChange ? '' : btn('putback', 'Put this one back', ` data-i="${i}"`)}
+          </li>`)).join('')}</ol>
         ${err ? `<p class="nt-err" role="alert">${esc(err)}</p>` : ''}
         <div class="nt-btns">${btn('close', 'Back to the note')}</div>`;
     }

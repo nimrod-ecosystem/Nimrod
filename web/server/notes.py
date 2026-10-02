@@ -48,7 +48,11 @@ SOMEONE = "Someone"
 NOTE_KIND = "note"
 # The streams the module's "Which note" setting can pick. Nothing else is reachable here.
 NOTE_STREAMS = ("note", "note2", "note3")
-VIA = ("changed", "put back")
+# TAKING THE NOTE DOWN is a row too (note.js TAKEN_DOWN): kind 'note', via 'taken down', no words,
+# `from` = the row it took down. The history is never shortened - "nothing showing" is just the
+# newest entry - and it needs no permission of its own: whoever may leave a note may take one down.
+TAKEN_DOWN = "taken down"
+VIA = ("changed", "put back", TAKEN_DOWN)
 
 # WHERE THE TICK LIVES: the person's own row (person state, key `input-bindings` - the client's
 # INPUTS_KEY, where the intercom's `intercomAllowed` already lives). Only the person's owner can
@@ -108,15 +112,16 @@ def build_row(data: dict | None, *, display_name: str) -> dict:
     "Someone"; any other name in the body is replaced by their own.
     """
     d = data if isinstance(data, dict) else {}
-    text = str(d.get("text") or "").replace("\r\n", "\n").replace("\r", "\n").strip()
-    if not text:
+    via = d.get("via") if d.get("via") in VIA else "changed"
+    # A take-down carries no words, whatever the body sent: it is "no note showing", not a note.
+    text = "" if via == TAKEN_DOWN else str(d.get("text") or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not text and via != TAKEN_DOWN:
         raise ValueError("write a note first")
     if len(text) > MAX_TEXT:
         # Refused rather than cut: a note silently shortened says something its writer did not.
         raise ValueError(f"a note is at most {MAX_TEXT} characters")
     asked = re.sub(r"\s+", " ", str(d.get("author") or "")).strip()
     author = SOMEONE if asked.lower() == SOMEONE.lower() else (display_name or SOMEONE)
-    via = d.get("via") if d.get("via") in VIA else "changed"
     src = d.get("from")
     src = src if isinstance(src, int) and not isinstance(src, bool) else None
     return {"text": text, "author": author, "via": via, "from": src}

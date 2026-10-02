@@ -13,7 +13,7 @@ import sys
 import tempfile
 
 from notes import (
-    MAX_NAME, MAX_TEXT, NOTE_STREAMS, SOMEONE, RateLimit, build_row, clean_display_name,
+    MAX_NAME, MAX_TEXT, NOTE_STREAMS, SOMEONE, TAKEN_DOWN, RateLimit, build_row, clean_display_name,
     may_leave_note, visible_row, writers_from,
 )
 
@@ -104,6 +104,19 @@ check("an unknown 'via' becomes 'changed'", build_row({"text": "x", "via": "hax"
 check("'from' must be a row number", build_row({"text": "x", "from": "1; drop"}, display_name="")["from"] is None
       and build_row({"text": "x", "from": True}, display_name="")["from"] is None)
 check("the note streams are the module's three", NOTE_STREAMS == ("note", "note2", "note3"))
+
+section("*** taking the note down - a row of its own, never a delete ***")
+td = build_row({"via": TAKEN_DOWN, "from": 7, "author": "Mom"}, display_name="Jo")
+check("*** a take-down needs no words, and is a row like any other ***",
+      td == {"text": "", "author": "Jo", "via": TAKEN_DOWN, "from": 7}, str(td))
+check("*** words sent with a take-down are dropped (it is 'no note showing', not a note) ***",
+      build_row({"via": TAKEN_DOWN, "text": "sneaky"}, display_name="")["text"] == "")
+check("a take-down is signed the same way as a note (the account's name, or 'Someone')",
+      build_row({"via": TAKEN_DOWN, "author": SOMEONE}, display_name="Jo")["author"] == SOMEONE
+      and build_row({"via": TAKEN_DOWN}, display_name="")["author"] == SOMEONE)
+check("the words 'taken down' are the module's own (note.js TAKEN_DOWN)", TAKEN_DOWN == "taken down")
+check("an empty note that is NOT a take-down is still refused",
+      raises(lambda: build_row({"text": "", "via": "changed"}, display_name="")))
 
 section("what a visitor reads back - the screen's view, not the log's")
 full = {"id": 4, "kind": "note", "data": {"text": "hi", "author": "Jo", "via": "changed", "from": None,
@@ -261,6 +274,31 @@ check("the owner may use the same route, with no grant and no tick, signed by th
       r.status_code == 200 and r.json()["data"]["author"] == SOMEONE, r.text)
 check("...and sees the screen list", c.get(f"{base}/screens", headers=H(OWN)).status_code == 200)
 
+section("*** taking the note down, through the route ***")
+before_td = c.get(url, headers=H(OWN)).json()
+on_show = before_td["events"][-1]
+r = c.post(url, json={"kind": "note", "data": {"via": TAKEN_DOWN, "from": on_show["id"], "text": "sneaky"}},
+           headers=H(VIS))
+check("*** a ticked visitor may take the note down - the same permission as writing one ***",
+      r.status_code == 200 and r.json()["data"]["via"] == TAKEN_DOWN and r.json()["data"]["text"] == ""
+      and r.json()["data"]["from"] == on_show["id"], r.text)
+check("the take-down is signed by the server, like a note", r.status_code == 200 and r.json()["data"]["author"] == "Aunt Dolly")
+after_td = c.get(url, headers=H(OWN)).json()
+check("*** nothing is deleted: the history grew by one, every earlier note still there ***",
+      after_td["total"] == before_td["total"] + 1
+      and [e["id"] for e in after_td["events"][:-1]] == [e["id"] for e in before_td["events"]], str(after_td["total"]))
+check("the take-down is the newest entry (the screen reads it as 'no note showing')",
+      after_td["events"][-1]["data"]["via"] == TAKEN_DOWN)
+check("the owner's log knows who took it down",
+      c.get(f"/api/profiles/{screen}/events/note", headers=H(OWN)).json()["events"][-1].get("principal_id") == VIS)
+check("*** a stranger cannot take it down ***",
+      c.post(url, json={"kind": "note", "data": {"via": TAKEN_DOWN}}, headers=H(STR)).status_code == 403)
+r = c.post(f"/api/profiles/{screen}/events/note", json={"kind": "note", "data": {"via": TAKEN_DOWN, "text": ""}},
+           headers=H(OWN))
+check("the screen itself takes it down through its own route", r.status_code == 200, r.text)
+r = c.post(url, json={"kind": "note", "data": {"text": "Back again", "via": "put back", "from": on_show["id"]}}, headers=H(VIS))
+check("a note can go up again after a take-down", r.status_code == 200 and r.json()["data"]["text"] == "Back again")
+
 section("rate limit")
 appmod._note_limit.reset()
 before = c.get(url, headers=H(OWN)).json()["total"]
@@ -279,6 +317,8 @@ c.put(f"/api/people/{person}/state/input-bindings",
       json={"data": {"noteWriters": []}, "base_version": 1}, headers=H(OWN))
 check("*** unticked: refused at once ***",
       c.post(url, json={"kind": "note", "data": {"text": "x"}}, headers=H(VIS)).status_code == 403)
+check("*** ...and cannot take the note down either ***",
+      c.post(url, json={"kind": "note", "data": {"via": TAKEN_DOWN}}, headers=H(VIS)).status_code == 403)
 c.put(f"/api/people/{person}/state/input-bindings",
       json={"data": {"noteWriters": [VIS]}, "base_version": 2}, headers=H(OWN))
 check("ticked again: allowed", c.post(url, json={"kind": "note", "data": {"text": "back"}}, headers=H(VIS)).status_code == 200)
