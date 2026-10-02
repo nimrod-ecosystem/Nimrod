@@ -317,6 +317,9 @@ export const ROUTES = {
   // stops; "go back" with nothing else to cancel stops too (kiosk.js backUnhandled).
   'edit-panel': { action: 'shell/edit-panel', label: 'Edit the chosen panel',
     phrases: ['edit this panel', 'edit the panel'] },
+  // 2026-10-02 (eccafdd): hand the transport bar the switch (and say it again to give it back).
+  'bar-scan': { action: 'shell/bar-scan', label: 'Walk the transport bar',
+    phrases: ['walk the bar', 'use the bar'] },
   // *** MAKE THE SELECTED PANEL BIGGER / SMALLER (2026-10-02; actions.js `shell/promote` / `shell/demote`). ***
   // One level a time: the panel fills its dashboard, then the screen. "full screen" is here because that
   // is where "bigger" ends up, and nothing else claimed the words (the bar's full-screen key is F, and

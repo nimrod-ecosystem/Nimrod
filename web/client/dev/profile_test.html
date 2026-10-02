@@ -103,7 +103,8 @@ function box(wrap = '') {
 }
 
 async function mountCard({ subject = null, ai = fakeAI(), person = 'p1', personRows = {}, people = [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }],
-                           shared = [], screens = fakeScreens({ people, shared }), output = fakeOutput(), bus = createBus(), rooms = true, id = 'pf1', wrap = '' } = {}) {
+                           shared = [], screens = fakeScreens({ people, shared }), output = fakeOutput(), bus = createBus(), rooms = true, id = 'pf1', wrap = '',
+                           isScreen = undefined } = {}) {
   const mount = box(wrap);
   // A followed link is recorded, never navigated: this page must stay where it is.
   const followed = [];
@@ -116,6 +117,7 @@ async function mountCard({ subject = null, ai = fakeAI(), person = 'p1', personR
   bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { goes.push(p); p.claim?.(); });
   const inst = mountModule('profile', { mount, bus, state, events: null, output, user: null, profileId: 'host', personId: person, instanceId: id, ai,
     profiles: screens, makePersonState: (pid, key) => persons.make(pid, key),
+    ...(isScreen !== undefined ? { isScreen } : {}),
     ...(rooms ? { nestMakeState: (key, opts, pid) => states.make(pid, key) } : {}) });
   await inst.init();
   const q = (s) => mount.querySelector(s);
@@ -217,6 +219,14 @@ try {
     const em = await mountCard({ subject: { kind: 'person', id: 'p2' }, wrap: 'kiosk k-embed' });
     check('in a kiosk embedded on Home: the link', em.doBtn('call').tagName === 'A' && em.doBtn('call').getAttribute('href') === callURL('p2'));
     em.done();
+
+    // The kiosk's own word wins over reading the page (kiosk.js ctx.isScreen, 2026-10-02).
+    const said = await mountCard({ subject: { kind: 'person', id: 'p2' }, isScreen: true });
+    check('*** ctx.isScreen true: dimmed even on an ordinary page ***', said.doBtn('call').tagName === 'BUTTON' && said.doBtn('call').disabled);
+    said.done();
+    const saidNo = await mountCard({ subject: { kind: 'person', id: 'p2' }, wrap: 'kiosk', isScreen: false });
+    check('*** ctx.isScreen false: the link, even inside a .kiosk element ***', saidNo.doBtn('call').tagName === 'A');
+    saidNo.done();
 
     // *** Off a screen: a link, and pressing it follows it. ***
     const t = await mountCard({ subject: { kind: 'person', id: 'p2' } });

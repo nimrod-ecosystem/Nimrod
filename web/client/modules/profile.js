@@ -246,7 +246,8 @@ registerModule(
     }
     const callable = (pid) => mayCall(pid, { own: Array.isArray(people) ? people : (peopleAsked ? [] : null), shared });
     const callButton = (p) => {
-      if (onScreen(mount)) return btn('call', 'Call', { disabled: true, help: CALL_ON_SCREEN });
+      // The kiosk says so when it can (ctx.isScreen); otherwise the page is read (`onScreen`).
+      if (typeof ctx?.isScreen === 'boolean' ? ctx.isScreen : onScreen(mount)) return btn('call', 'Call', { disabled: true, help: CALL_ON_SCREEN });
       const may = callable(p.id);
       if (may === null) { if (peopleAsked) loadShared(); else askPeople(); return btn('call', 'Call', { disabled: true, help: CALL_CHECKING }); }
       if (!may) return btn('call', 'Call', { disabled: true, help: CALL_NOT_ALLOWED });
