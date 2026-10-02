@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>row 2.38 — dashboards inside dashboards, and the way back out</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#555}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:800px;height:450px;margin-top:12px;border:1px solid #ccc}
+  .box .kiosk{position:absolute}
+  .vbox{position:relative;width:800px;height:450px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>row 2.38 — dashboards inside dashboards ("turtles all the way down"), and the way back out</h1>
+<p>Proves: an object (a room's desk) or a placed module carrying <code>opens</code> swaps the screen to that
+dashboard, load-then-swap, by pointer and by scan; the trail is a trail (a cycle cuts it, never grows it); the
+breadcrumb, the tray's Back/Home, <code>kiosk/back</code>/<code>kiosk/home</code> and an unanswered
+<code>back</code> all lead out; a dashboard placed inside another renders live up to the depth setting and a card
+below it; a dashboard containing itself terminates; and the tray's wait is a setting. The "cost" section
+measures what each live level costs in this browser (headless Chrome on the desktop, NOT a Pi 400).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/view.js';
+import '../modules/clock.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk, SCREEN_HOME, DASHBOARD_MODULE_KEY } from '../kiosk.js';
+import { createState } from '../state.js';
+import { verbTopic, MODULE_VERBS, SYSTEM_ACTIONS } from '../actions.js';
+import { normalizePlacedEntry, normalizeLayout } from '../layout.js';
+import { normalizeRole, applyRoomOptions, OPENS_ACTION, OPENS_TOPIC } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import { SCAN_DEFAULTS } from '../input_scan.js';
+import { DASHBOARD_GO_TOPIC as DASHBOARDS_GO, NAV_ROUTES, dashboardSpeechRoutes } from '../dashboards.js';
+import {
+  DASHBOARD_GO_TOPIC, nestMode, nestLiveDepthFrom, NEST_LIVE_DEPTH_DEFAULT, NEST_LIVE_DEPTH_KEY, NEST_LIVE_DEPTH_FIELD,
+  trayOpenMsFrom, TRAY_OPEN_DEFAULT_MS, TRAY_OPEN_KEY, TRAY_OPEN_FIELD, trailAfter, OPENS_TYPE, NEST_OPEN_TOPIC,
+} from '../dashboard_nest.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function info(text) { const d = document.createElement('div'); d.className = 'info'; d.textContent = `info  ${text}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 6000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(25); }
+  return false;
+};
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+const seams = () => ({ storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+
+// ---- a host with no server, for the dashboard module on its own (view_test's shape) ----
+function fakeHost(records, seed) {
+  const makeState = (key, _opts, pid) => {
+    let data = ((seed[pid] || {})[key]) || {};
+    const subs = new Set();
+    return { load: () => Promise.resolve(), get: () => data,
+             set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+             subscribe: (f) => { subs.add(f); f(data); return () => subs.delete(f); },
+             startPolling() {}, destroy() {} };
+  };
+  const makeEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }),
+    append: () => Promise.resolve(), subscribe: () => () => {}, startPolling() {}, destroy() {} });
+  const gets = [];
+  const profiles = { get: async (id) => { gets.push(id); return records[id] ? JSON.parse(J(records[id])) : null; } };
+  return { makeState, makeEvents, profiles, gets };
+}
+function mountTop(viewId, host, { limit, bus = createBus() } = {}) {
+  const box = document.createElement('div'); box.className = 'vbox'; document.body.append(box);
+  const inst = mountModule('dashboard', {
+    mount: box, bus, rootBus: bus, viewId, user: 'u', personId: null,
+    makeState: host.makeState, makeEvents: host.makeEvents, profiles: host.profiles,
+    storage: memStore(), nestLiveDepth: () => limit,
+    state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {}, load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+  });
+  inst.init();
+  return { box, inst, bus };
+}
+// A dashboard "A" that holds a clock and ITSELF (a cycle), side by side.
+function cycleRecords() {
+  return {
+    records: { A: { id: 'A', name: 'Hall of mirrors', modules: [{ id: 'clk', type: 'clock' }, { id: 'nd', type: 'dashboard' }] } },
+    seed: { A: { settings: { kiosk: { layout: { preset: 'side', slots: ['clk', 'nd'] } } }, nd: { shows: 'A' } } },
+  };
+}
+const views = (box) => [...box.querySelectorAll('.view')];
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('1. pure: the depth rule, the two settings, the trail, `opens` as data');
+    check('the screen itself is always live; nested live up to the limit, a card below it',
+      nestMode(0, 0) === 'live' && nestMode(1, 2) === 'live' && nestMode(2, 2) === 'live' && nestMode(3, 2) === 'card'
+      && nestMode(1, 0) === 'card' && nestMode(2) === 'card' && nestMode(1) === 'live');
+    check('the live limit defaults to 1 (measured on the Pi 400) and reads only whole numbers 0..4',
+      nestLiveDepthFrom({}) === 1 && NEST_LIVE_DEPTH_DEFAULT === 1 && nestLiveDepthFrom({ [NEST_LIVE_DEPTH_KEY]: 0 }) === 0
+      && nestLiveDepthFrom({ [NEST_LIVE_DEPTH_KEY]: '3' }) === 3 && nestLiveDepthFrom({ [NEST_LIVE_DEPTH_KEY]: 9 }) === 1
+      && nestLiveDepthFrom({ [NEST_LIVE_DEPTH_KEY]: 1.5 }) === 1);
+    check('*** the tray waits 15 s by default -- the scan\'s own response time (input_scan.js) ***',
+      trayOpenMsFrom({}) === TRAY_OPEN_DEFAULT_MS && TRAY_OPEN_DEFAULT_MS === SCAN_DEFAULTS.stepMs
+      && trayOpenMsFrom({ [TRAY_OPEN_KEY]: 0 }) === 0 && trayOpenMsFrom({ [TRAY_OPEN_KEY]: 3000 }) === 3000
+      && trayOpenMsFrom({ [TRAY_OPEN_KEY]: -1 }) === TRAY_OPEN_DEFAULT_MS);
+    check('both are menu fields whose default is one of their own options',
+      [NEST_LIVE_DEPTH_FIELD, TRAY_OPEN_FIELD].every((f) => f.options.some((o) => o.value === f.default)));
+    check('the trail: a new dashboard is pushed', J(trailAfter(['H'], 'R', 'D')) === J(['H', 'R']));
+    check('*** the trail: going to one already on it CUTS it there (a cycle never grows it) ***',
+      J(trailAfter(['H', 'R'], 'D', 'H')) === J([]) && J(trailAfter(['H', 'R'], 'D', 'R')) === J(['H']));
+    let s = [];
+    for (let i = 0; i < 50; i++) s = trailAfter(s, i % 2 ? 'B' : 'A', i % 2 ? 'A' : 'B');
+    check('fifty trips round an A <-> B cycle leave a trail of at most one', s.length <= 1, J(s));
+    check('a placed entry keeps `opens` (trimmed), drops junk',
+      normalizePlacedEntry({ id: 'x', place: 'scene', opens: '  abc ' }).opens === 'abc'
+      && !('opens' in normalizePlacedEntry({ id: 'x', opens: '' })) && !('opens' in normalizePlacedEntry({ id: 'x', opens: 5 }))
+      && !('opens' in normalizePlacedEntry({ id: 'x', opens: 'y'.repeat(500) })));
+    check('...and survives normalizeLayout (what the composer and the edit windows save)',
+      normalizeLayout({ preset: 'full', slots: [null], placed: [{ id: 'm', place: 'screen', opens: 'D1' }] }, ['m']).placed[0].opens === 'D1');
+    const desk = { id: 'desk', kind: 'furniture', part: 'desk', x: 50, y: 88, opens: 'D1' };
+    const r = normalizeRole(desk);
+    check('*** a room object with `opens` is a button that shows that dashboard ***',
+      r.role === 'button' && r.action === OPENS_ACTION && r.opens === 'D1' && OPENS_TOPIC === DASHBOARD_GO_TOPIC && r.label === 'Desk',
+      J(r));
+    check('...and the room options do not turn it into a close-up (an explicit choice wins)',
+      applyRoomOptions({ items: [desk] }, { closeups: 'on' }).items[0].role === undefined
+      && normalizeRole(applyRoomOptions({ items: [desk] }, { closeups: 'on' }).items[0]).role === 'button');
+    check('one topic: dashboards.js re-exports dashboard_nest.js\'s', DASHBOARDS_GO === DASHBOARD_GO_TOPIC);
+    check('a switch reaches a nested dashboard and a door: MODULE_VERBS.dashboard / .opens select',
+      MODULE_VERBS.dashboard?.select === NEST_OPEN_TOPIC && MODULE_VERBS.view?.select === NEST_OPEN_TOPIC
+      && MODULE_VERBS[OPENS_TYPE]?.select === 'opens/press');
+    check('Back and Home are bindable actions (a switch)',
+      SYSTEM_ACTIONS.some((a) => a.topic === 'kiosk/back') && SYSTEM_ACTIONS.some((a) => a.topic === SCREEN_HOME));
+    const sr = dashboardSpeechRoutes([]).routes;
+    check('voice: "go home" and "previous dashboard" are routes; "go back" stays the back verb',
+      sr['dashboard-home']?.phrases.includes('go home') && sr['dashboard-back']?.phrases.includes('previous dashboard')
+      && !Object.values(sr).some((x) => x.phrases.includes('go back')) && Object.keys(NAV_ROUTES).length === 2);
+
+    // =================================================================================================
+    section('2. the dashboard module: live to the limit, a card below it, a cycle terminates');
+    {
+      const { records, seed } = cycleRecords();
+      for (const limit of [0, 1, 2, 3]) {
+        const host = fakeHost(records, seed);
+        const t = mountTop('A', host, { limit });
+        const want = limit + 2;     // the screen's own + `limit` live + one card
+        const ok = await settled(() => views(t.box).length === want && !!t.box.querySelector('.view[data-nest="card"]'), 8000);
+        await sleep(400);
+        const n = views(t.box).length;
+        const live = t.box.querySelectorAll('.view[data-nest="live"]').length;
+        const cards = t.box.querySelectorAll('.view[data-nest="card"]').length;
+        check(`*** limit ${limit}: a dashboard holding ITSELF draws ${limit} live level(s), then one card, and STOPS ***`,
+          ok && n === want && live === limit && cards === 1, J({ n, live, cards }));
+        const card = t.box.querySelector('.view[data-nest="card"]');
+        if (limit === 1) {
+          check('the card says which dashboard and what is on it, and that pressing goes in',
+            /Hall of mirrors/.test(card?.textContent || '') && /Clock/.test(card?.textContent || '') && /Press to go in/.test(card?.textContent || ''),
+            card?.textContent);
+          check('the card is at depth limit + 1', card?.dataset.nestDepth === String(limit + 1));
+          check('a card mounts nothing: no stage cell, no clock under it', !card.querySelector('.k-cell, .ck, [data-panel-failed]'));
+          // Pressing a nested one: dashboard/go with ITS dashboard's id.
+          const got = [];
+          t.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { got.push(p); p?.claim?.(); });
+          const liveEl = t.box.querySelector('.view[data-nest="live"]');
+          liveEl.querySelector(':scope > .v-nest-open')?.click();
+          check('*** pressing a live nested dashboard asks the screen to show it (dashboard/go { id }) ***',
+            got.length === 1 && got[0].id === 'A' && got[0].source === 'pointer', J(got.map((g) => ({ id: g.id, source: g.source }))));
+          card.querySelector(':scope > .v-nest-open')?.click();
+          check('...and so does pressing the card', got.length === 2 && got[1].id === 'A');
+          // A switch: `select` on the nested panel arrives as dashboard/open on that instance.
+          t.bus.publish(t.bus.instanceTopic('nd', NEST_OPEN_TOPIC));
+          check('...and a switch\'s select on it (dashboard/open on that instance)', got.length >= 3 && got[got.length - 1].source === 'scan',
+            J(got.map((g) => g.source)));
+          check('the nested one is drawn without the screen\'s chrome (no dock, no bar of its own)',
+            !liveEl.querySelector('.v-dock'));
+        }
+        t.inst.destroy(); t.box.remove();
+        check(`limit ${limit}: destroying the screen's dashboard takes every nested one with it`, !t.box.querySelector('.view'));
+      }
+      // A nested one with nothing chosen says so (and mounts nothing).
+      const host = fakeHost({ E: { id: 'E', name: 'Empty frame', modules: [{ id: 'nd2', type: 'dashboard' }] } }, {});
+      const t = mountTop('E', host, { limit: 2 });
+      check('a nested dashboard with nothing chosen says so', await settled(() => /Nothing is chosen/.test(t.box.textContent), 3000));
+      t.inst.destroy(); t.box.remove();
+      // It reads ITS dashboard's own settings, never its parent's (the scoping the nest makers exist for).
+      const h2 = fakeHost({
+        P: { id: 'P', name: 'Parent', modules: [{ id: 'n', type: 'dashboard' }] },
+        Q: { id: 'Q', name: 'Child', modules: [{ id: 'qc', type: 'clock' }] },
+      }, { P: { n: { shows: 'Q' } }, Q: { settings: { kiosk: { layout: { preset: 'full', slots: ['qc'] } } } } });
+      const seen = [];
+      const mk = h2.makeState;
+      h2.makeState = (key, opts, pid) => { seen.push(`${pid}:${key}`); return mk(key, opts, pid); };
+      const t2 = mountTop('P', h2, { limit: 2 });
+      check('*** a live nested dashboard opens ITS OWN settings and panels (Q), not its parent\'s ***',
+        await settled(() => seen.includes('Q:settings') && seen.includes('Q:qc') && !!t2.box.querySelector('.view[data-nest="live"] .k-cell'), 4000),
+        J(seen));
+      // The pulse that keeps the health watch from calling a billboard stalled (until health.js has its row).
+      const pbus = createBus();
+      const pulses = [];
+      pbus.subscribe('dashboard/state', (_p, _t, meta) => pulses.push(meta?.panel));
+      const t4 = mountTop('P', fakeHost({ P: { id: 'P', name: 'Parent', modules: [{ id: 'n', type: 'dashboard' }] }, Q: { id: 'Q', name: 'Child', modules: [] } },
+        { P: { n: { shows: 'Q' } } }), { limit: 2, bus: pbus });
+      await settled(() => pulses.length > 0, 2000);
+      check('a nested dashboard says it is alive, tagged with its own panel id (health.js\'s owner rule)', pulses[0] === 'n', J(pulses));
+      t4.inst.destroy(); t4.box.remove();
+      t2.inst.destroy(); t2.box.remove();
+    }
+
+    // =================================================================================================
+    section('3. cost of each live level (headless Chrome on the DESKTOP -- not the Pi 400)');
+    {
+      const { records, seed } = cycleRecords();
+      // The ROOM version: a room (with its live window) holding itself on its back wall.
+      const roomRec = { R: { id: 'R', name: 'Room of rooms', modules: [{ id: 'rclk', type: 'clock' }, { id: 'rnd', type: 'dashboard' }] } };
+      const roomSeed = { R: { settings: { kiosk: { layout: { preset: 'full', slots: [null],
+        scene: { kind: 'room', recipe: presetRecipe('living') },
+        placed: [{ id: 'rclk', place: 'scene', x: 20, y: 20, w: 12, h: 12 }, { id: 'rnd', place: 'scene', x: 62, y: 40, w: 36, h: 36 }] } } },
+        rnd: { shows: 'R' } } };
+      const rows = [];
+      for (const [label, recs, sd, top] of [['grid', records, seed, 'A'], ['room', roomRec, roomSeed, 'R']]) {
+        for (const limit of [0, 1, 2, 3]) {
+          const host = fakeHost(recs, sd);
+          const t0 = performance.now();
+          const t = mountTop(top, host, { limit });
+          const ok = await settled(() => views(t.box).length === limit + 2 && !!t.box.querySelector('.view[data-nest="card"]'), 10000);
+          const ms = Math.round(performance.now() - t0);
+          await sleep(300);
+          const nodes = t.box.querySelectorAll('*').length;
+          // Frames drawn in one second while it all runs (rAF runs in headless Chrome).
+          let frames = 0; let go = true;
+          const tick = () => { if (!go) return; frames++; requestAnimationFrame(tick); };
+          requestAnimationFrame(tick);
+          await sleep(1000); go = false;
+          rows.push({ label, limit, ok, ms, nodes, fps: frames });
+          t.inst.destroy(); t.box.remove();
+          await sleep(100);
+        }
+      }
+      for (const r of rows) info(`${r.label} holding itself, live levels ${r.limit}: up in ${r.ms} ms, ${r.nodes} nodes, ${r.fps} frames/s${r.ok ? '' : ' (DID NOT SETTLE)'}`);
+      check('every measured nesting came up and stopped (grid and room, limits 0-3)', rows.every((r) => r.ok), J(rows.filter((r) => !r.ok)));
+      const g = rows.filter((r) => r.label === 'grid');
+      check('the DOM grows by about one dashboard per live level (no runaway)',
+        g[3].nodes < g[0].nodes * 6 && g[1].nodes > g[0].nodes, J(g.map((r) => r.nodes)));
+      window.__nestCost = rows;
+    }
+
+    // =================================================================================================
+    section('4. the real screen: doors, the swap, the trail, the breadcrumb, Back and Home');
+    const USER = 'nest-test-user-' + Math.floor(performance.now()) + '-' + Math.floor(Math.random() * 1e6);
+    const real = createProfilesClient({ user: USER });
+    const setRow = async (id, key, patch) => {
+      const st = createState({ url: real.stateURL(id, key), user: USER });
+      await st.load().catch(() => {}); st.set(patch); await st.flush(); st.destroy();
+    };
+    // H (where the screen starts): a clock that is a DOOR to R, and a billboard showing R.
+    const H = await real.create('Nest home');
+    const R = await real.create('Nest room');
+    const D = await real.create('Nest desk');
+    const hClk = await real.addModule(H.id, 'clock');
+    const hBoard = await real.addModule(H.id, 'dashboard');
+    const rClk = await real.addModule(R.id, 'clock');
+    const dClk = await real.addModule(D.id, 'clock');
+    const dBoard = await real.addModule(D.id, 'dashboard');
+    const studyWithDoor = presetRecipe('study');
+    studyWithDoor.items = studyWithDoor.items.map((it) => (it.id === 'desk' ? { ...it, opens: D.id } : it));
+    // (Two live levels on this screen, so D's billboard -> H -> H's billboard -> R is all live; the default
+    // of one is checked further down.)
+    await setRow(H.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, [NEST_LIVE_DEPTH_KEY]: 2, kiosk: { layout: { preset: 'full', slots: [null], placed: [
+      { id: hClk.id, place: 'screen', x: 25, y: 50, w: 25, h: 30, opens: R.id },
+      { id: hBoard.id, place: 'screen', x: 70, y: 50, w: 45, h: 60 }] } } });
+    await setRow(H.id, hBoard.id, { shows: R.id });
+    await setRow(R.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [null],
+      scene: { kind: 'room', recipe: studyWithDoor }, placed: [{ id: rClk.id, place: 'scene', x: 66, y: 12, w: 12, h: 12 }] } } });
+    await setRow(D.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [null], placed: [
+      { id: dClk.id, place: 'screen', x: 20, y: 20, w: 20, h: 20 },
+      { id: dBoard.id, place: 'screen', x: 65, y: 55, w: 50, h: 70 }] } } });
+    await setRow(D.id, dBoard.id, { shows: H.id });
+
+    const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+    const bus = createBus();
+    const k = await mountKiosk(box, { user: USER, profileId: H.id, profiles: real, bus, ...seams() });
+    const crumbs = () => k.crumbsEl();
+    const trailIds = () => k.trail().map((t) => t.id);
+    check('(setup) booted on the dashboard path at H', k.dashboardPath() && k.screenId() === H.id);
+    check('at the start the breadcrumb is hidden (it would only say where you already are)', crumbs()?.hidden === true && k.trail().length === 1);
+    check('*** H\'s billboard shows R, LIVE, with R\'s room drawn inside it ***',
+      await settled(() => !!box.querySelector('.view[data-nest="live"] .k-room'), 8000));
+    const arrH = k.dashboard().arrangement();
+    check('the door is in the scan ring as type `opens`; the billboard as `dashboard`',
+      arrH.focusRing().some((m) => m.id === hClk.id && m.type === OPENS_TYPE) && arrH.focusRing().some((m) => m.id === hBoard.id && m.type === 'dashboard'),
+      J(arrH.focusRing()));
+    // ---- the screen ANSWERS dashboard/go (claims it), so a room's object does not also say "nothing answers" ----
+    let claimedGo = false;
+    bus.publish(DASHBOARD_GO_TOPIC, { id: 'no-such-dashboard', source: 'test', claim: () => { claimedGo = true; } });
+    await sleep(300);
+    check('the screen claims a dashboard/go it answers (and one to nowhere changes nothing)',
+      claimedGo && k.screenId() === H.id && k.screenStack().length === 0);
+    // ---- a door, by pointer ----
+    const door = box.querySelector(`[data-placed="${hClk.id}"] > .k-door`);
+    check('(setup) the placed clock carries a door button', !!door);
+    door?.click();
+    check('*** pressing the door swaps the screen to R ***', await settled(() => k.screenId() === R.id, 8000), k.screenId());
+    check('the trail is H > R and the breadcrumb shows it, H a button, R where you are',
+      J(trailIds()) === J([H.id, R.id]) && crumbs().hidden === false
+      && crumbs().querySelectorAll('button[data-crumb]').length === 1 && /Nest home/.test(crumbs().textContent)
+      && crumbs().querySelector('[aria-current]')?.textContent === 'Nest room', crumbs()?.textContent);
+    // ---- a room object, by pointer ----
+    const deskBtn = await settled(() => !!box.querySelector('.rs-obj[data-id="desk"]'), 6000) && box.querySelector('.rs-obj[data-id="desk"]');
+    check('(setup) R\'s desk is a pressable object', !!deskBtn);
+    deskBtn?.click();
+    check('*** pressing the desk (an object with `opens`) swaps to D ***', await settled(() => k.screenId() === D.id, 8000), k.screenId());
+    check('the trail is H > R > D', J(trailIds()) === J([H.id, R.id, D.id]) && crumbs().querySelectorAll('button[data-crumb]').length === 2);
+    check('*** in D (limit set to 2), its billboard shows H live, and H\'s own billboard (depth 2) shows R live too ***',
+      await settled(() => !!box.querySelector('.view[data-nest="live"][data-nest-depth="2"]'), 8000)
+      && !box.querySelector('.view[data-nest-depth="3"][data-nest="live"]'));
+    check('...and depth 3 (R holds no dashboard) never appears: the chain ends by itself', !box.querySelector('.view[data-nest-depth="3"]'));
+    // ---- the tray: Back and Home first ----
+    bus.publish('system/dashboards', {});
+    await settled(() => k.trayOpen() && k.picker().items().length > 2, 3000);
+    const items = k.picker().items();
+    check('*** the tray: Close, then Back (to R), then Home (H) -- the way back first ***',
+      items[0].kind === 'close' && items[1].kind === 'back' && items[1].id === R.id && items[2].kind === 'home' && items[2].id === H.id,
+      J(items.slice(0, 3)));
+    bus.publish(verbTopic('next'));
+    bus.publish(verbTopic('select'));
+    check('*** a switch: next, select = Back, to R ***', await settled(() => k.screenId() === R.id && !k.trayOpen(), 8000), k.screenId());
+    check('the trail is H > R again', J(trailIds()) === J([H.id, R.id]));
+    // ---- "go back": the back verb, unanswered by the panel in front ----
+    bus.publish(verbTopic('back'));
+    check('*** "go back" (the back verb, nothing in front to cancel) goes back to H ***',
+      await settled(() => k.screenId() === H.id, 8000), k.screenId());
+    check('...the trail is just H and the breadcrumb hides', J(trailIds()) === J([H.id]) && crumbs().hidden === true);
+    bus.publish(verbTopic('back'));
+    await sleep(300);
+    check('at H, back with nowhere to go does nothing (the screen stays)', k.screenId() === H.id);
+    // ---- a cycle: H -> R -> D, then D's billboard (which shows H) ----
+    const toDesk = async () => {
+      await settled(() => k.screenId() === R.id, 8000);
+      await settled(() => !!box.querySelector('.rs-obj[data-id="desk"]'), 6000);
+      box.querySelector('.rs-obj[data-id="desk"]')?.click();
+      return settled(() => k.screenId() === D.id, 8000);
+    };
+    k.dashboard().arrangement().openDoor(hClk.id);
+    check('(setup) H > R > D again', await toDesk(), k.screenId());
+    // A switch's select on the billboard: dashboard/open on that instance.
+    bus.publish(bus.instanceTopic(dBoard.id, NEST_OPEN_TOPIC));
+    check('*** the cycle: pressing D\'s billboard (it shows H) goes to H ***', await settled(() => k.screenId() === H.id, 8000), k.screenId());
+    check('*** ...and the trail is CUT, not grown: just H, breadcrumb hidden ***', J(trailIds()) === J([H.id]) && crumbs().hidden === true,
+      J(trailIds()));
+    // ---- kiosk/home from three deep, and a crumb jump ----
+    bus.publish(bus.instanceTopic(hClk.id, 'opens/press'));   // a switch's select on the door
+    check('a switch\'s select on the door (opens/press) swaps too', await settled(() => k.screenId() === R.id, 8000));
+    await toDesk();
+    bus.publish(SCREEN_HOME, {});
+    check('*** kiosk/home from D goes to H and clears the trail ***',
+      await settled(() => k.screenId() === H.id, 8000) && k.screenStack().length === 0 && crumbs().hidden === true);
+    // The screen's live limit back to its default (1): in D, H is live inside the billboard, R below it a card.
+    k.dashboard().settingsDoc().set({ [NEST_LIVE_DEPTH_KEY]: null });
+    await sleep(100);
+    k.dashboard().arrangement().openDoor(hClk.id);
+    check('(setup) H > R > D once more', await toDesk(), k.screenId());
+    check('*** at the default limit (1): D\'s billboard shows H live, and H\'s billboard is a CARD for R ***',
+      await settled(() => !!box.querySelector('.view[data-nest="live"][data-nest-depth="1"]')
+        && /Nest room/.test(box.querySelector('.view[data-nest="card"][data-nest-depth="2"]')?.textContent || ''), 8000)
+      && !box.querySelector('.view[data-nest="live"][data-nest-depth="2"]'));
+    crumbs().querySelector('button[data-crumb="1"]')?.click();
+    check('*** a breadcrumb press jumps back to that level (R), the trail cut there ***',
+      await settled(() => k.screenId() === R.id, 8000) && J(trailIds()) === J([H.id, R.id]), J(trailIds()));
+    crumbs().querySelector('button[data-crumb="0"]')?.click();
+    check('...and the first crumb is home', await settled(() => k.screenId() === H.id, 8000) && k.screenStack().length === 0);
+    // ---- a door to nowhere leaves everything as it was ----
+    await k.dashboard().settingsDoc().set({ kiosk: { layout: { preset: 'full', slots: [null], placed: [
+      { id: hClk.id, place: 'screen', x: 25, y: 50, w: 25, h: 30, opens: 'no-such-dashboard' },
+      { id: hBoard.id, place: 'screen', x: 70, y: 50, w: 45, h: 60 }] } } });
+    await settled(() => k.dashboard().arrangement().opensOf(hClk.id) === 'no-such-dashboard', 3000);
+    box.querySelector(`[data-placed="${hClk.id}"] > .k-door`)?.click();
+    await sleep(800);
+    check('*** a door to a dashboard that does not exist: nothing changes, nothing pushed ***',
+      k.screenId() === H.id && k.screenStack().length === 0 && crumbs().hidden === true);
+    // ---- taking `opens` off makes it a plain module again ----
+    await k.dashboard().settingsDoc().set({ kiosk: { layout: { preset: 'full', slots: [null], placed: [
+      { id: hClk.id, place: 'screen', x: 25, y: 50, w: 25, h: 30 },
+      { id: hBoard.id, place: 'screen', x: 70, y: 50, w: 45, h: 60 }] } } });
+    check('taking `opens` off removes the door in place (no remount): ring type back to clock',
+      await settled(() => !box.querySelector(`[data-placed="${hClk.id}"] > .k-door`)
+        && k.dashboard().arrangement().focusRing().some((m) => m.id === hClk.id && m.type === 'clock'), 3000));
+
+    // =================================================================================================
+    section('5. the tray\'s wait is a setting');
+    const doc = k.dashboard().settingsDoc();
+    const ctl = box.querySelector('.kiosk > .k-controls');
+    const openTray = async () => { bus.publish('system/dashboards', {}); return settled(() => k.trayOpen(), 2000); };
+    const closeTray = async () => { k.picker().select(); await settled(() => !k.trayOpen(), 2000); };   // the cursor starts on Close
+    await openTray();
+    await sleep(3400);
+    check('*** by default the tray is still open after the bar\'s old 3 s (it waits 15 s) ***', k.trayOpen());
+    await closeTray();
+    doc.set({ [TRAY_OPEN_KEY]: 1000 });
+    await sleep(100);
+    await openTray();
+    check('set to 1 s: it puts itself away after about a second', await settled(() => !k.trayOpen(), 2500));
+    check('...and the bar goes with it', ctl.classList.contains('hidden'));
+    doc.set({ [TRAY_OPEN_KEY]: 0 });
+    await sleep(100);
+    await openTray();
+    await sleep(3400);
+    check('set to "until it is closed": still open after 3.4 s', k.trayOpen());
+    await closeTray();
+    check('...Close closes it', !k.trayOpen());
+    doc.set({ [TRAY_OPEN_KEY]: 3000 });
+    await sleep(100);
+    await openTray();
+    check('set to 3 s (the old behaviour): closes with the bar', await settled(() => !k.trayOpen(), 4500));
+    doc.set({ [TRAY_OPEN_KEY]: null });
+
+    k.destroy();
+    check('destroy: the breadcrumb and every dashboard are gone', !box.querySelector('.k-crumbs') && !box.querySelector('.view'));
+    box.remove();
+
+    // =================================================================================================
+    section('6. today\'s path (no dashboard module): a door still swaps and the way back still works');
+    {
+      const P = await real.create('Nest plain');
+      const pClk = await real.addModule(P.id, 'clock');
+      await setRow(P.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [null], placed: [
+        { id: pClk.id, place: 'screen', x: 50, y: 50, w: 30, h: 30, opens: R.id }] } } });
+      const pb = document.createElement('div'); pb.className = 'box'; document.body.append(pb);
+      const pbus = createBus();
+      const kp = await mountKiosk(pb, { user: USER, profileId: P.id, profiles: real, bus: pbus, ...seams() });
+      check('(setup) the usual path', !kp.dashboardPath());
+      pb.querySelector(`[data-placed="${pClk.id}"] > .k-door`)?.click();
+      check('a door on the usual path swaps to R', await settled(() => kp.screenId() === R.id, 8000), kp.screenId());
+      check('...with the breadcrumb', kp.crumbsEl().hidden === false && J(kp.trail().map((t) => t.id)) === J([P.id, R.id]));
+      pbus.publish(SCREEN_HOME, {});
+      check('...and home brings it back', await settled(() => kp.screenId() === P.id, 8000) && kp.crumbsEl().hidden === true);
+      kp.destroy(); pb.remove();
+    }
+  } catch (e) {
+    check('suite threw', false, String(e && e.stack || e));
+  }
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+  document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

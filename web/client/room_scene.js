@@ -63,6 +63,7 @@ import { iconSvg } from './weather_icons.js';
 import { getManifest } from './module.js';
 import { renderAvatar, normalizeRecord } from './avatar.js';
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
+import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 
 export const W = STAGE.w;
 export const H = STAGE.h;
@@ -224,6 +225,16 @@ export const ROOM_ACTIONS = Object.freeze({
 // control with no argument. Until the kiosk's lines land (see the report), nobody claims it and the
 // room says what the press would do.
 export const MODULE_TOPIC = 'system/module';
+// *** ROW 2.38: ANY OBJECT CAN OPEN ANOTHER DASHBOARD (`opens: '<dashboard id>'` on the item). *** Mike:
+// "the scene objects open different dashboards ... Any object in any scene could really be like that."
+// Pressing it publishes `dashboard/go { id, claim }` (dashboard_nest.js) -- the verb the kiosk answers with
+// its load-then-swap -- as action `dashboard.open`. Like `module.open`, NOT in ROOM_ACTIONS: it carries an
+// argument (which dashboard), and that table is the argument-free screen controls. `opens` is an explicit
+// choice on the item, so it wins over a role the room options would have given it (a desk that opens a
+// dashboard is not ALSO a close-up).
+export const OPENS_ACTION = 'dashboard.open';
+export const OPENS_TOPIC = DASHBOARD_GO_TOPIC;
+const opensOf = (it) => (it && typeof it.opens === 'string' && it.opens.trim() ? it.opens.trim() : null);
 // *** WHICH MODULES ARE ON THIS SCREEN: `system/module-list` { reply(list) }. *** A library with no
 // books of its own asks; the kiosk replies with the screen's modules (types, or { module, label }).
 // Nobody answering (the modules page, a test) leaves DEFAULT_BOOKS.
@@ -325,6 +336,8 @@ export function normalizeBooks(list) {
 export function applyRoomOptions(recipe = {}, opts = {}) {
   const items = (Array.isArray(recipe.items) ? recipe.items : []).map((it0) => {
     if (!it0 || typeof it0 !== 'object') return it0;
+    // Row 2.38: an object that opens a dashboard is already what it is; the room options do not re-role it.
+    if (opensOf(it0)) return it0;
     let it = it0;
     const part = it.kind === 'furniture' ? it.part : null;
     if (part === 'bookshelf' && opts.shelf === 'library' && it.role !== 'library') {
@@ -364,6 +377,9 @@ export function normalizeRole(it) {
   let role = ROLES.has(it.role) ? it.role : null;
   let action = it.action || null;
   let module = it.module || null;
+  // Row 2.38: `opens` makes it a button that shows that dashboard (see OPENS_ACTION).
+  const opens = opensOf(it);
+  if (opens) { role = 'button'; action = OPENS_ACTION; module = null; }
   if (!role && ia) {
     const mode = ia.module?.mode;
     const does = ia.select?.do;
@@ -384,13 +400,14 @@ export function normalizeRole(it) {
   const def = it.kind === 'furniture' ? FURNITURE[it.part] : null;
   const fallbackLabel = role === 'pet' ? (it.kind === 'cat' ? 'Nimrod' : def?.label || 'Animal')
     : role === 'library' ? 'Books'
+    : opens ? (def?.label || MOUNT_KINDS[it.kind]?.label || 'Open')
       : (role === 'button' && action !== 'module.open' && ROOM_ACTIONS[action]?.label) || MODULE_LABELS[module] || (module ? moduleLabel(module) : null)
         || it.key || def?.label || MOUNT_KINDS[it.kind]?.label || 'Object';
   const needs = Array.isArray(it.needs) && it.needs.length === 2 ? it.needs.map((n) => Math.max(0, Number(n) || 0)) : [1, 1];
   const slot = Array.isArray(it.slot) && it.slot.length === 4 ? it.slot.map(Number) : DEFAULT_SLOT;
   const petRaw = it.pet && typeof it.pet === 'object' ? it.pet : (FURNITURE[it.part]?.animal && typeof FURNITURE[it.part].animal === 'object' ? FURNITURE[it.part].animal : {});
   return {
-    role, action, module, needs, slot, zoom,
+    role, action, module, needs, slot, zoom, opens,
     label: String(it.label || fallbackLabel),
     group: it.group || null, key: it.key ?? null,
     grow: it.grow !== false && !!module && !NO_SLOT.has(role) && action !== 'module.open',
@@ -1189,6 +1206,14 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         if (role.action === 'module.open') {
           const claimed = role.module ? openModule(role.module, it.id) : false;
           return { did: 'action', action: role.action, topic: MODULE_TOPIC, module: role.module, claimed };
+        }
+        // Row 2.38: show another dashboard. Unclaimed (no kiosk answering: a preview, the modules page),
+        // the host hears it through `onUnclaimed` like any other button, and can say so.
+        if (role.action === OPENS_ACTION) {
+          let claimed = false;
+          publish(OPENS_TOPIC, { id: role.opens, source: 'room', objectId: it.id, claim: () => { claimed = true; } });
+          if (!claimed) { try { o.onUnclaimed?.(role.action, { id: it.id, topic: OPENS_TOPIC, opens: role.opens, api }); } catch (err) { console.error('room: onUnclaimed', err); } }
+          return { did: 'action', action: role.action, topic: OPENS_TOPIC, opens: role.opens, claimed };
         }
         const topic = topicForAction(role.action);
         let claimed = false;

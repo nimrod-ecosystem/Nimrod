@@ -157,6 +157,10 @@ export const HEALTH_EXPECT = {
   music:       { idle: true },
   // The avatar maker (row 2.37 item 5): a face nobody is editing is a face, not a stalled panel.
   avatar:      { idle: true },
+  // A dashboard placed as a panel (a billboard, a frame showing another dashboard, row 2.38) is a container:
+  // its own panels are watched; the container doing nothing is not a stall.
+  dashboard:   { idle: true },
+  view:        { idle: true },
   // The voice recordings (row 2.44): a list nobody is reviewing is a list, not a stalled panel.
   voice_review: { idle: true },
 };

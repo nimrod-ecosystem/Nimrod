@@ -41,7 +41,7 @@ import { PHRASES, ROUTES, spokenTable, duplicatePhrases, normalize } from '../in
 import { INPUTS_KEY } from '../input_runtime.js';
 import {
   PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor, createDashboardMaker,
-  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, DASHBOARD_GO_TOPIC,
+  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, NAV_ROUTES, DASHBOARD_GO_TOPIC,
   PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY,
 } from '../dashboards.js';
 
@@ -224,10 +224,15 @@ function backend(user) {
       check('"open the menu" stays the menu: a dashboard called "Menu" does not get "open menu" if taken, and nothing collides',
         duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes })).length === 0, J(duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes }))));
       const none = dashboardSpeechRoutes([]).routes;
-      check('*** with no dashboards at all, "go to my room" / basic / classic and the picker are still speakable ***',
-        J(Object.keys(none).sort()) === J(Object.keys(PREBUILT_ROUTES).sort()) && none['dashboard-room'].payload.prebuilt === 'room'
-        && none['dashboard-picker'].topic === SYSTEM_TOPICS.dashboards);
-      const odd = Object.values(PREBUILT_ROUTES).flatMap((r) => r.phrases).filter((p) => p !== normalize(p) || p.split(' ').length > 4);
+      check('*** with no dashboards at all, "go to my room" / basic / classic, the picker, back and home are still speakable ***',
+        J(Object.keys(none).sort()) === J([...Object.keys(PREBUILT_ROUTES), ...Object.keys(NAV_ROUTES)].sort())
+        && none['dashboard-room'].payload.prebuilt === 'room'
+        && none['dashboard-picker'].topic === SYSTEM_TOPICS.dashboards
+        && none['dashboard-back'].topic === 'kiosk/back' && none['dashboard-home'].topic === 'kiosk/home');
+      check('row 2.38: "go back" stays the back verb (reused, not duplicated); "go home" is the home route',
+        !Object.values(none).some((r) => r.phrases.includes('go back')) && none['dashboard-home'].phrases.includes('go home'));
+      const odd = [...Object.values(PREBUILT_ROUTES), ...Object.values(NAV_ROUTES)].flatMap((r) => r.phrases)
+        .filter((p) => p !== normalize(p) || p.split(' ').length > 4);
       check('ready-made phrases are plain lowercase, four words at most (the rule every route keeps)', odd.length === 0, odd.join(', '));
       const acts = dashboardSpeechActions(routes);
       const binds = dashboardSpeechBindings(routes);

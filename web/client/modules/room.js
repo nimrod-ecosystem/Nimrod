@@ -315,6 +315,8 @@ registerModule(
         return;
       }
       if (action === 'settings.open') { api?.toast('On a screen, this door opens Settings.'); return; }
+      // Row 2.38: an object that opens another dashboard, pressed where nothing can swap the screen.
+      if (action === 'dashboard.open') { api?.toast('On a screen, this opens another dashboard.'); return; }
       if (action === 'module.open') {
         const { module } = info || {};
         // The window's weather: what the room already knows says itself, even with no Weather panel here.
