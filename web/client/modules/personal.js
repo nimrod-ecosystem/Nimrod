@@ -56,8 +56,11 @@
 // ---------------------------------------------------------------------------------------
 
 import { registerModule } from '../module.js';
-import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
-import { personSources } from '../person_known.js';
+import {
+  createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
+  LISTING_WAIT_MS, SOURCE_RECHECK_MS,
+} from '../media_sources.js';
+import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
@@ -165,9 +168,24 @@ registerModule(
     let lastSourceRef = null;
     let loadSeq = 0;
     let sourceLabel = '';
+    // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e) -- photos.js's twin, without the
+    // "last pictures": a clip is rarely in the browser's cache whole, so there is nothing honest to keep.
+    // While a stand-in plays, `degraded` holds the chosen source, the panel says so, asks after the
+    // chosen one every SOURCE_RECHECK_MS and goes back when it answers. Nothing is saved.
+    let degraded = null;            // { chosenId, chosenLabel, err, shownLabel }
+    let recheckTimer = null;
+    const labels = {};
+    const listingWaitMs = () => Number(ctx.listingWaitMs ?? LISTING_WAIT_MS);
+    const recheckMs = () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS);
+    const videosOf = (listing) => ((listing && listing.items) || []).filter((it) => it.kind === 'video');
 
     const stage = () => mount.querySelector('[data-stage]');
-    const subjectName = () => (cfg.subjectName || sourceLabel || cfg.album || 'Someone');
+    // While a stand-in plays, its messages are NOT from whoever the panel's subject is: the caption
+    // names the source actually playing rather than putting the wrong name on somebody's face.
+    // The words go in the CAPTION under the clip, not the status sheet: that sheet covers the video,
+    // and a stand-in that is playing is exactly what should be seen.
+    const standIn = () => !!(degraded && degraded.shownLabel);
+    const subjectName = () => (standIn() ? (sourceLabel || 'Someone') : (cfg.subjectName || sourceLabel || cfg.album || 'Someone'));
 
     // `action`, added 2026-09-08, matches `photos.js`'s own setStatus exactly — same shape,
     // same reason: a source-picker prompt needs the click that triggers it to BE a user
@@ -190,7 +208,9 @@ registerModule(
     }
     function setName() {
       const el = mount.querySelector('[data-name]');
-      if (el) el.textContent = currentId ? `From ${subjectName()}` : '';
+      if (!el) return;
+      if (standIn() && currentId) el.textContent = degradedLine({ shownLabel: degraded.shownLabel, chosenLabel: degraded.chosenLabel, err: degraded.err });
+      else el.textContent = currentId ? `From ${subjectName()}` : '';
     }
 
     function clearVideoEnd() { if (videoEndOff) { videoEndOff(); videoEndOff = null; } }
@@ -441,11 +461,14 @@ registerModule(
       return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
     }
 
+    // `{ source, chosenId, sources }`, as in photos.js: a stored choice missing from the list is kept
+    // (`chosenId`) and a stand-in shown, never replaced by "the only source there" (§3e).
     async function ensureSource() {
       const sources = await client.list();
+      for (const s of sources) if (s && s.id) labels[s.id] = s.label || s.base_url || s.id;
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);
-        if (found) return found;
+        if (found) return { source: found, chosenId: cfg.sourceId, sources };
       }
       const qp = new URLSearchParams(location.search);
       const ps = qp.get('personalSource');
@@ -454,24 +477,86 @@ registerModule(
         const existing = sources.find((s) => s.base_url === base);
         const src = existing || await client.add({ label: 'dev personal', base_url: base, kind: 'agent' });
         state.set({ sourceId: src.id, album: qp.get('personalAlbum') || cfg.album, subjectName: qp.get('personalSubject') || cfg.subjectName });
-        return src;
+        return { source: src, chosenId: src.id, sources };
       }
+      if (cfg.sourceId) return { source: null, chosenId: cfg.sourceId, sources };
       // Not saved from a list made after the person lookup timed out (person_known.js `trusted`; photos.js).
       if (sources.length === 1) {
         if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
-        return sources[0];
+        return { source: sources[0], chosenId: null, sources };
       }
-      return null;
+      return { source: null, chosenId: null, sources };
+    }
+
+    function clearRecheck() { if (recheckTimer != null) { clearTimer(recheckTimer); recheckTimer = null; } }
+    function armRecheck() {
+      clearRecheck();
+      if (destroyed || !degraded || !degraded.chosenId || !(recheckMs() > 0)) return;
+      recheckTimer = setTimer(() => { recheckTimer = null; recheck(); }, recheckMs());
+    }
+    // Is the chosen source back? One quiet listing; if it answers, reload, which takes it back.
+    async function recheck() {
+      if (!degraded || destroyed) return;
+      const seq = loadSeq;
+      const want = degraded.chosenId;
+      let back = false;
+      try {
+        const rows = (await client.list()) || [];
+        const chosen = rows.find((s) => s && s.id === want);
+        if (chosen) {
+          const r = await listingWithin(ctx.resolveListing || resolveListing, chosen, cfg.album,
+            { accept: videosOf, waitMs: recheckMs(), setTimer, clearTimer });
+          back = r.ok;
+        }
+      } catch { back = false; }
+      if (destroyed || seq !== loadSeq || !degraded || degraded.chosenId !== want) return;
+      if (back) reload(); else armRecheck();
     }
 
     async function reload() {
       const seq = ++loadSeq;
       clearVideoEnd();
+      clearRecheck();
       setStatus('Loading messages…');
-      let source;
-      try { source = await ensureSource(); }
+      let found;
+      try { found = await ensureSource(); }
       catch (e) { if (seq === loadSeq) setStatus('Could not reach the platform', true); return; }
       if (seq !== loadSeq) return;
+      const { source: chosenSource, chosenId, sources } = found;
+      let source = chosenSource;
+      let listing = null;
+      if (source || chosenId) {
+        // The chosen source -- or, when it cannot be listed, the best stand-in (media_sources.js).
+        const got = await listOrFallback({
+          sources, chosen: chosenSource, chosenId, album: cfg.album, personId: personOf(ctx),
+          resolve: ctx.resolveListing || resolveListing, accept: videosOf,
+          waitMs: listingWaitMs(), setTimer, clearTimer,
+        });
+        if (seq !== loadSeq) return;
+        const cid = (chosenSource && chosenSource.id) || chosenId;
+        if (got.source) {
+          source = got.source; listing = got.listing;
+          degraded = got.fellBack
+            ? { chosenId: cid, chosenLabel: (chosenSource && chosenSource.label) || labels[cid] || null, err: got.failure,
+              shownLabel: got.source.label || got.source.base_url || got.source.id }
+            : null;
+        } else {
+          // Nothing from any source: keep asking after the chosen one, and say what is wrong.
+          // (`shownLabel` null: nothing is standing in, so the caption claims nothing.)
+          degraded = { chosenId: cid, chosenLabel: (chosenSource && chosenSource.label) || labels[cid] || null, err: got.failure, shownLabel: null };
+          armRecheck();
+          if (chosenSource) { setStatus(`Source “${escapeHtml(chosenSource.label)}” unreachable`, true); return; }
+          const mine = (sources || []).filter((x) => mayShowSource(x, personOf(ctx)));
+          if (mine.length) {
+            setStatus(`The chosen video source is gone (${escapeHtml(mine.map((x) => x.label || x.base_url || x.id).join(', '))} connected). `
+              + 'Pick one for this panel in Screens.', true);
+            return;
+          }
+          source = null;
+        }
+      } else {
+        degraded = null;
+      }
       if (!source) {
         // *** CONNECT FROM HERE, NOT ONLY FROM MEDIA / SOURCES. *** Added 2026-09-08, same fix
         // and same reasoning as `photos.js`'s own — Mike's "sources structural rule."
@@ -492,13 +577,10 @@ registerModule(
         } : null);
         items = ids = []; byId = {}; return;
       }
-      let listing;
-      try { listing = await (ctx.resolveListing || resolveListing)(source, cfg.album); }
-      catch (e) { if (seq === loadSeq) setStatus(`Source “${source.label}” unreachable`, true); return; }
-      if (seq !== loadSeq) return;
+      if (degraded) armRecheck(); else clearRecheck();
       sourceLabel = source.label;
       // recorded PERSONAL videos: keep only video clips (audio-only messages are a later add)
-      items = listing.items.filter((it) => it.kind === 'video');
+      items = videosOf(listing);
       byId = Object.fromEntries(items.map((it) => [it.id, it]));
       ids = items.map((it) => it.id);
       recent = []; history = []; histPos = -1;
@@ -510,6 +592,7 @@ registerModule(
       // hidden, freshly-loaded provider never emits a spurious segment/done). Standalone
       // it autostarts the first clip.
       if (!cfg.directed) advance();
+      setName();   // the caption says a stand-in is playing even when the clip is the same one
     }
 
     return {
@@ -610,6 +693,7 @@ registerModule(
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
         destroyed = true;
+        clearRecheck();
         scoped?.dispose();
         clearTimer(pollTimer); pollTimer = null;
         clearFailWait();

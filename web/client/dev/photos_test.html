@@ -629,6 +629,174 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     q.inst.destroy(); q.host.remove();
   }
 
+  // *** A SOURCE SHOULD DEGRADE, NOT STOP (MIKE_CHANGE_LIST §3e, Mike 2026-09-08): "If a chosen source
+  // can't be reached and an equivalent one can, use it and say so somewhere visible. If none can, show
+  // something rather than nothing." *** No agent and no server: a registry of tagged sources, a listing
+  // seam that can be up / down / hung per source, fake timers, and pictures that really load (SVG data
+  // URLs), because "the last pictures seen" means pictures that appeared.
+  {
+    section('*** a source should degrade, not stop (§3e) ***');
+    const { fallbackSources, degradedLine, mayShowSource } = await import('../media_sources.js');
+    const S = {
+      mine:   { id: 'mine',   label: 'Her albums',        kind: 'agent', person_id: 'p1' },
+      mine2:  { id: 'mine2',  label: 'Her other albums',  kind: 'agent', person_id: 'p1' },
+      other:  { id: 'other',  label: 'Next door albums',  kind: 'agent', person_id: 'p2' },
+      family: { id: 'family', label: 'Family',            kind: 'agent', person_id: null },
+      folder: { id: 'folder', label: 'This device',       kind: 'folder' },
+    };
+    const order = (list, o) => fallbackSources(list, o).map((s) => s.id).join();
+    check('stand-ins: the person\'s own other sources first, then the account\'s -- never another resident\'s',
+      order([S.other, S.family, S.mine, S.mine2, S.folder], { chosenId: 'mine', personId: 'p1' }) === 'mine2,family,folder',
+      order([S.other, S.family, S.mine, S.mine2, S.folder], { chosenId: 'mine', personId: 'p1' }));
+    check('*** whose screen unknown: only the account\'s sources may stand in, no resident\'s at all ***',
+      order([S.other, S.family, S.mine, S.mine2], { chosenId: 'mine', personId: null }) === 'family',
+      order([S.other, S.family, S.mine, S.mine2], { chosenId: 'mine', personId: null }));
+    check('mayShowSource: own and account-wide yes, another resident\'s no',
+      mayShowSource(S.mine, 'p1') && mayShowSource(S.family, 'p1') && !mayShowSource(S.other, 'p1') && !mayShowSource(S.mine, null));
+    check('the words name both: what is showing, and what cannot be reached',
+      degradedLine({ shownLabel: 'Family', chosenLabel: 'Her albums' }) === 'Showing “Family” — “Her albums” can’t be reached.',
+      degradedLine({ shownLabel: 'Family', chosenLabel: 'Her albums' }));
+
+    const RUN = Date.now().toString(36);
+    const WAIT = 555, RECHECK = 777;
+    const pic = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
+    const itemsOf = (sid) => [1, 2, 3].map((i) => ({ id: `${sid}-${i}.jpg`, path: `${sid}-${i}.jpg`, name: `${sid} ${i}`,
+      kind: 'image', url: pic(`${sid}-${i}`), sourceId: sid }));
+    function rigD({ sources, mode, seed = {}, personId = 'p1', instanceId = `ph-deg-${RUN}`, user = `${USER}-deg-${RUN}` }) {
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const timers = [], sets = [], asked = [];
+      let cfg = { intervalMs: 8000, ...seed };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { sets.push(p); cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+        subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const inst = mountModule('photos', {
+        mount: host, bus: createBus(), state, instanceId, user, profileId: 'p', personId,
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        sources: { list: async () => sources.slice(), add: async () => { throw new Error('no add in test'); }, remove: async () => {} },
+        resolveListing: (src, album) => {
+          asked.push(`${src.id}|${album}`);
+          const m = mode[src.id] || 'up';
+          if (m === 'hang') return new Promise(() => {});
+          if (m === 'down') return Promise.reject(new Error(`${src.id} /list -> 502`));
+          return Promise.resolve({ items: itemsOf(src.id), albums: [], album, count: 3 });
+        },
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+        listingWaitMs: WAIT, sourceRecheckMs: RECHECK,
+      });
+      inst.init();
+      const fire = (ms) => { const t = timers.filter((x) => x.live && x.ms === ms).pop(); if (t) { t.live = false; t.fn(); } return !!t; };
+      return { host, inst, timers, sets, asked, fire, setState: (p) => state.set(p),
+        label: () => host.querySelector('[data-source-label]')?.textContent || '',
+        status: () => { const s = host.querySelector('[data-status]'); return s && !s.hidden ? s.textContent : ''; },
+        chip: () => !!host.querySelector('[data-status].chip:not([hidden])'),
+        img: () => host.querySelector('[data-stage] img'),
+        live: (ms) => timers.filter((t) => t.live && t.ms === ms).length,
+        probe: () => inst.impl.__probe(),
+        done() { inst.destroy(); host.remove(); } };
+    }
+    const until = async (fn, ms = 1500) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(20); } return !!fn(); };
+    const savedSource = (r) => r.sets.filter((p) => 'sourceId' in p);
+
+    // 1. UNREACHABLE: the chosen agent refuses; the person's own other source stands in.
+    {
+      const mode = { mine: 'down' };
+      const r = rigD({ sources: [S.other, S.mine, S.family, S.mine2], mode, seed: { sourceId: 'mine' } });
+      check('*** UNREACHABLE: the person\'s own other source stands in (not the account\'s, not next door\'s) ***',
+        await until(() => /Her other albums/.test(r.label())), r.label() + ' / ' + r.status());
+      check('...a picture is showing', !!r.img());
+      check('*** ...and it SAYS so, quietly: a corner chip naming both ***',
+        /Showing “Her other albums” — “Her albums” can’t be reached/.test(r.status()) && r.chip(), r.status());
+      check('...next door\'s source was never even asked', !r.asked.some((a) => a.startsWith('other|')), r.asked.join(' '));
+      check('*** ...and NOTHING WAS SAVED: the chosen source is still the chosen source ***',
+        savedSource(r).length === 0, JSON.stringify(r.sets));
+      check('...it asks after the chosen source on a timer', r.live(RECHECK) === 1, String(r.live(RECHECK)));
+      // 2. IT COMES BACK.
+      r.fire(RECHECK);                       // still down: asks again later
+      await sleep(30);
+      check('still down at the recheck: the stand-in stays and it asks again later',
+        /Her other albums/.test(r.label()) && r.live(RECHECK) === 1);
+      mode.mine = 'up';
+      r.fire(RECHECK);
+      check('*** COMES BACK: the chosen source is shown again ***', await until(() => /Her albums —/.test(r.label())), r.label());
+      check('...the chip is gone', await until(() => !r.status()), r.status());
+      check('...no more rechecks', r.live(RECHECK) === 0);
+      check('...and still nothing saved', savedSource(r).length === 0, JSON.stringify(r.sets));
+      r.done();
+    }
+    // 3. MISSING: the chosen id is not in the list at all, and exactly one other source is. This is the
+    // case that used to SAVE the other one over the choice ("the only source there").
+    {
+      const r = rigD({ sources: [S.family], mode: {}, seed: { sourceId: 'gone-id' } });
+      check('*** MISSING: a source that is no longer listed: another one stands in ***',
+        await until(() => /Family/.test(r.label())), r.label() + ' / ' + r.status());
+      check('...and says the chosen one cannot be reached', /Showing “Family” — the chosen source can’t be reached/.test(r.status()), r.status());
+      check('*** ...and the choice is NOT overwritten with the only source left ***',
+        savedSource(r).length === 0, JSON.stringify(r.sets));
+      r.done();
+    }
+    // 4. HUNG: the chosen agent never answers. After the wait, a stand-in.
+    {
+      const mode = { mine: 'hang' };
+      const r = rigD({ sources: [S.mine, S.family], mode, seed: { sourceId: 'mine' } });
+      await sleep(60);
+      check('HUNG: while the chosen source has not answered, it is still loading', /Loading/.test(r.status()) && !r.img(), r.status());
+      r.fire(WAIT);
+      check('*** HUNG: after the wait, the account\'s source stands in ***', await until(() => /Family/.test(r.label())), r.label());
+      r.done();
+    }
+    // 5. NEVER ANOTHER RESIDENT'S, whether the person is known or not.
+    {
+      const r = rigD({ sources: [S.mine, S.other], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: `ph-x-${RUN}` });
+      await until(() => /unreachable/i.test(r.status()));
+      check('*** the only other source is next door\'s: it is NOT shown, and the panel says what is wrong ***',
+        !/Next door/.test(r.label()) && /unreachable/i.test(r.status()) && !r.asked.some((a) => a.startsWith('other|')),
+        `${r.label()} / ${r.status()} / ${r.asked.join(' ')}`);
+      check('...Retry is still there', !!r.host.querySelector('[data-retry]'));
+      r.done();
+      const n = rigD({ sources: [S.mine, S.other, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, personId: null, instanceId: `ph-n-${RUN}` });
+      check('*** whose screen unknown: the account\'s source stands in, next door\'s is never asked ***',
+        await until(() => /Family/.test(n.label())) && !n.asked.some((a) => a.startsWith('other|')), `${n.label()} / ${n.asked.join(' ')}`);
+      n.done();
+    }
+    // 6. NONE CAN: show the last pictures seen rather than nothing -- this session's, then remembered.
+    {
+      const mode = { mine: 'up' };
+      const inst = `ph-keep-${RUN}`;
+      const r = rigD({ sources: [S.mine], mode, seed: { sourceId: 'mine' }, instanceId: inst });
+      await until(() => r.probe().seen >= 1);
+      r.fire(8000); await until(() => r.probe().seen >= 2);
+      r.fire(8000); await until(() => r.probe().seen >= 3);
+      check('PRECONDITION: pictures really appeared', r.probe().seen >= 2, String(r.probe().seen));
+      // The source goes down, and the panel lists again (what a changed album, a Retry or a late person
+      // does). The test's own write is cleared from the record, so only the panel's writes are counted.
+      mode.mine = 'down';
+      r.setState({ album: 'Holiday' });
+      r.sets.length = 0;
+      check('*** NONE CAN: the last pictures keep showing (a slideshow over them, not a frozen frame) ***',
+        await until(() => r.probe().keptMode) && !!r.img() && r.live(8000) >= 1, JSON.stringify(r.probe()));
+      check('...and it says so', /Showing the last pictures — “Her albums”/.test(r.status()), r.status());
+      check('...with Retry', !!r.host.querySelector('[data-retry]'));
+      check('...nothing saved', savedSource(r).length === 0, JSON.stringify(r.sets));
+      check('...it keeps asking after the chosen one', r.live(RECHECK) === 1);
+      r.done();
+      // Remembered across a restart: a new panel (same panel id, same person) whose source is down from the start.
+      const again = rigD({ sources: [S.mine], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: inst });
+      check('*** AFTER A RESTART with the source down: the remembered pictures show, not "unreachable" over nothing ***',
+        await until(() => again.probe().keptMode && !!again.img()), `${again.status()} ${JSON.stringify(again.probe())}`);
+      again.done();
+      // Remembered per PERSON: the same panel on a screen whose person is unknown does not get them.
+      const nobody = rigD({ sources: [S.mine], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, instanceId: inst, personId: null });
+      await until(() => /unreachable/i.test(nobody.status()));
+      check('*** ...but never on somebody else\'s screen: another person\'s panel gets none of them ***',
+        !nobody.probe().keptMode && !nobody.img(), JSON.stringify(nobody.probe()));
+      nobody.done();
+    }
+  }
+
   // *** 15 SECONDS BY DEFAULT, AND A NEW PANEL STARTS FROM ONE ALREADY ON THE SCREEN. ***
   // Mike, 2026-09-29: "8 seconds is too short for the default though. Make it 15." and "keep it
   // per panel, copy from existing". Both backends: the server's profile client and the signed-out
