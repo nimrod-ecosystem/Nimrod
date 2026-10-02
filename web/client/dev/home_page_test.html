@@ -382,6 +382,26 @@ try {
   check('*** a Room row (Light) changes the room — its own copy of the recipe, saved ***',
     await until(async () => !!(await layoutOf(HID))?.scene?.recipe && (await layoutOf(HID)).scene.recipe.light !== 'night', 15000), J((await layoutOf(HID))?.scene));
   await until(editIdle, 15000);
+  // *** THE 3D ROOM (2026-10-02): in the Scene tray, things hung on its walls, its own rows, drift opt-in. ***
+  if (tray().hidden) eb('scene').click();
+  check('*** the Scene tray lists the 3D room ***', await until(() => !!tray().querySelector('[data-edit-scene="room3d:box"]')));
+  tray().querySelector('[data-edit-scene="room3d:box"]').click();
+  check('*** picking it: the scene is the 3D room and every thing is ON one of its walls ***', await until(async () => {
+    const L = await layoutOf(HID); return L?.scene?.kind === 'room3d' && L.placed?.length && L.placed.every((p) => p.place === 'scene' && (p.surface || p.slot));
+  }, 15000), J(await layoutOf(HID)));
+  await until(editIdle, 15000);
+  if (tray().hidden) eb('scene').click();
+  check('*** its rows are its OWN: camera drift and depth, none of the 2D room\'s ***',
+    await until(() => !!tray().querySelector('[data-edit-room="drift"]') && !!tray().querySelector('[data-edit-room="depth"]')
+      && !tray().querySelector('[data-edit-room="light"]') && /Camera drift: Off/.test(tray().querySelector('[data-edit-room="drift"]').textContent), 8000),
+    tray().textContent);
+  check('the 3D room is drawn on the stage, still (drift is opt-in)', await until(() => doc.querySelector('#stage [data-room3d]')?.dataset.drift === 'off', 8000));
+  tray().querySelector('[data-edit-room="drift"]').click();
+  check('*** one press turns the drift on, saved for this dashboard ***',
+    await until(async () => (await layoutOf(HID))?.scene?.options?.drift === 'on', 15000), J((await layoutOf(HID))?.scene));
+  check('...and the room on the stage drifts (this browser does not ask for reduced motion)',
+    await until(() => matchMedia('(prefers-reduced-motion: reduce)').matches || doc.querySelector('#stage [data-room3d]')?.dataset.drift === 'on', 10000));
+  await until(editIdle, 15000);
   if (tray().hidden) eb('scene').click();
   await until(() => !!tray().querySelector('[data-edit-scene="theme:fall"]'));
   tray().querySelector('[data-edit-scene="theme:fall"]').click();
