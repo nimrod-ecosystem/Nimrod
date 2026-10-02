@@ -29,6 +29,7 @@ import { createState } from '../state.js';
 import { authHeaders } from '../auth.js';
 import { EXAMPLE_ORDER, PREBUILT_KEY } from '../dashboards.js';
 import { createGame } from '../game/game.js';
+import { verbTopic } from '../actions.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('home-page-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -163,9 +164,10 @@ try {
   check('*** Switch module is on the bar, DIMMED until there is a Home to switch things on ***', hb('switch')?.disabled === true);
   check('*** in EDIT view: the menu is open AND Design’s edit bar is above the stage ***',
     await until(() => menuShown() && !$('#home-edit').hidden));
-  check('the edit bar: Scene, Add, Choose a thing, Transform…, Undo, Redo — all there, all DIMMED before the Home exists',
-    $$('#home-edit button').map((b) => b.dataset.edit).join() === 'scene,add,change,transform,undo,redo'
-    && $$('#home-edit button').every((b) => b.disabled), $$('#home-edit button').map((b) => b.dataset.edit).join());
+  check('the edit bar: Close, then Scene, Add, Choose a thing, Transform…, Undo, Redo — all there, all but Close DIMMED before the Home exists',
+    $$('#home-edit button').map((b) => b.dataset.edit).join() === 'closebar,scene,add,change,transform,undo,redo'
+    && $$('#home-edit button').filter((b) => b.dataset.edit !== 'closebar').every((b) => b.disabled) && !eb('closebar').disabled,
+    $$('#home-edit button').map((b) => b.dataset.edit).join());
   check('...and it says why, in words', /Make this my Home/.test(edNote()), edNote());
 
   card('fireside').querySelector('[data-ex-try]').click();
@@ -279,6 +281,94 @@ try {
     await until(() => !!$('#stage [data-ew="close"]'), 8000));
   $$('#stage [data-ew="close"]').forEach((b) => b.click());
   check('...and they close with their own Close', await until(() => !$('#stage [data-ew="close"]'), 5000));
+
+  // ============================================================================================
+  section('*** the edit bar BY SWITCH: it takes the scan; next / select / back walk it, Close first ***');
+  {
+    const K = () => win.__home?.kiosk || null;
+    const send = (topic, p) => K().bus().publish(topic, p);
+    const verb = async (v, n = 1) => { for (let i = 0; i < n; i++) { send(verbTopic(v)); await sleep(60); } };
+    const cur = () => $('#home-edit button[data-cursor], #home-tray button[data-cursor]');
+    const curText = () => cur()?.textContent || '';
+    const held = () => K()?.hostScanHeld?.() === true;
+    const paused = () => K()?.runtime?.router?.isPaused?.() === true;
+    const barShown = () => !$('#home-edit').hidden;
+    check('(setup) the page hands its kiosk out for diagnostics', !!K()?.bus);
+    await until(editIdle, 15000);
+    await ensureMenu('editbar');
+    check('*** "Edit bar…" is a row in the ⚙ menu (how a switch walking the menu gets to the bar) ***', !!hrow('editbar') && !hrow('editbar').disabled);
+    hrow('editbar').click();
+    check('*** pressing it hands the scan to the edit bar: the menu is put away, the bar stays, the cursor is on its Close ***',
+      await until(() => !menuShown() && barShown() && held() && paused() && cur() === eb('closebar'), 4000),
+      `menu=${menuShown()} bar=${barShown()} held=${held()} paused=${paused()} cursor="${curText()}"`);
+    await verb('back');
+    check('*** back on the bar leaves it: the bar goes, the switch is the panels’ again ***',
+      await until(() => !barShown() && !held() && !paused() && !cur(), 3000), `bar=${barShown()} held=${held()} paused=${paused()}`);
+
+    send('shell/host', { act: 'editbar' });
+    check('*** what a bound switch and “edit bar” said aloud send (shell/host editbar) opens the bar WITH the scan, Close first ***',
+      await until(() => barShown() && held() && cur() === eb('closebar'), 3000), `bar=${barShown()} held=${held()} cursor="${curText()}"`);
+    await verb('next');
+    check('next: Scene', cur() === eb('scene'), curText());
+    await verb('next');
+    check('next: Add', cur() === eb('add'), curText());
+    await verb('select');
+    check('*** select on Add opens its tray, and the cursor goes INTO it, on its Close (the way out first) ***',
+      await until(() => !tray().hidden && /Add to your Home/.test(tray().textContent) && curText() === 'Close' && tray().contains(cur()), 3000), curText());
+    await verb('next');
+    check('next walks the tray', tray().contains(cur()) && cur()?.dataset.editAdd === 'piece:picture', curText());
+    await verb('back');
+    check('*** back in a tray leaves the TRAY, back onto Add on the bar ***', await until(() => tray().hidden && cur() === eb('add'), 2000), curText());
+
+    // A real change, made by switch: Change -> walk to Move right -> select.
+    await verb('next');
+    check('next: Change', cur() === eb('change'), curText());
+    await verb('select');
+    await until(() => !tray().hidden && tray().contains(cur()), 3000);
+    // Make sure the chosen thing is placed freely (Move can act on it).
+    const moveR = () => $$('#home-tray [data-edit-change="move"]').find((b) => b.textContent === 'Move right');
+    for (let i = 0; i < 4 && moveR()?.disabled; i++) { tray().querySelector('[data-edit-change="next"]').click(); await sleep(200); }
+    check('(setup) the chosen thing can move', !!moveR() && !moveR().disabled, eb('change').textContent);
+    const xs0 = new Map((await layoutOf(HID)).placed.map((p) => [p.id, p.x]));
+    const movedBy3 = async () => {
+      const now = (await layoutOf(HID)).placed;
+      const moved = now.filter((p) => p.x !== xs0.get(p.id));
+      return moved.length === 1 && moved[0].x === xs0.get(moved[0].id) + 3;
+    };
+    for (let i = 0; i < 14 && curText() !== 'Move right'; i++) await verb('next');
+    check('next walks the Change tray to Move right', curText() === 'Move right', curText());
+    await verb('select');
+    check('*** select presses it: the chosen thing (and only it) moves 3%, saved ***', await until(movedBy3, 10000),
+      J((await layoutOf(HID)).placed.map((p) => [p.id, xs0.get(p.id), p.x])));
+    await until(editIdle, 10000);
+    check('*** ...and the cursor is still on Move right (a switch user pressing it again does not lose the place) ***',
+      await until(() => curText() === 'Move right', 3000) && held(), curText());
+    // The Switch tray, by switch: into it and back out.
+    for (let i = 0; i < 14 && curText() !== 'Switch module…'; i++) await verb('prev');
+    await verb('select');
+    check('*** Switch module… in the Change tray opens the Switch tray, the cursor on ITS Close ***',
+      await until(() => /Switch .* for/.test(tray().textContent) && curText() === 'Close' && tray().contains(cur()), 3000), curText());
+    await verb('back');
+    check('back leaves it, onto Change on the bar', await until(() => tray().hidden && cur() === eb('change'), 2000), curText());
+
+    // Transform… by switch: the edit windows take the scan; when they close, the bar has it again.
+    await verb('next');
+    check('next: Transform…', cur() === eb('transform'), curText());
+    await verb('select');
+    check('*** select on Transform… opens the edit windows, and THEY hold the scan now (one holder at a time) ***',
+      await until(() => !!$('#stage [data-ew="close"]') && K()?.editScanHeld?.() && !held(), 8000), `held=${held()} edit=${K()?.editScanHeld?.()}`);
+    $$('#stage [data-ew="close"]')[0]?.click();
+    check('*** ...and when they close, the scan comes back to the edit bar ***',
+      await until(() => !$('#stage [data-ew="close"]') && held() && barShown() && !!cur(), 5000), `held=${held()} cursor="${curText()}"`);
+
+    // The menu takes the scan back.
+    send(verbTopic('menu'));
+    check('*** the Menu verb opens the menu and takes the scan from the bar (the bar shows, no cursor on it) ***',
+      await until(() => menuShown() && !held() && !cur() && barShown(), 3000), `menu=${menuShown()} held=${held()} cursor="${curText()}"`);
+    check('no label on the bar or its trays says "her screen", Christine or Cici',
+      !/her screen|Christine|Cici/i.test($('#home-edit').textContent + tray().textContent));
+  }
+  await ensureMenu();
 
   // ============================================================================================
   section('*** the scene editor: rooms, moving scenes, still ones; and the room’s own rows ***');

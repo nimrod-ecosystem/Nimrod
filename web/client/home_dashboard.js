@@ -181,7 +181,7 @@ export function homeShellLabel(act, { menuOpen = false, full = false } = {}) {
  * welcome and Nimrod's walk. Rows that cannot act are disabled (the menu's scan skips them).
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
-  settings = HOME_DEFAULTS, catReady = true, canSwitch = false } = {}) {
+  settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
@@ -192,6 +192,10 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
     item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),
+    // The edit bar (Scene / Add / Change…) sits above the stage, outside this menu: this row is how a switch
+    // walking the menu gets to it -- the bar then takes the scan and the menu goes (one holder at a time).
+    // `canEdit`: the page says whether Your Home is on the stage (on a module page there is no bar).
+    item('editbar', 'Edit bar…', { hint: 'scene, add, change: the bar above, walked by your switch', disabled: !canEdit }),
     // The starting points are up front on the page; this row is how a switch (or the plain bar's ⚙) gets
     // back to them once a Home exists.
     item('examples', 'Start from an example…', { hint: 'ready-made Homes to begin from' }),

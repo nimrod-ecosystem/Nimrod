@@ -78,6 +78,9 @@ export const SYSTEM_ACTIONS = [
   { id: 'shell/host/saveas', label: 'Home: Save as…', topic: 'shell/host', payload: { act: 'saveas' }, group: 'System' },
   { id: 'shell/host/picker', label: 'Home: choose a module', topic: 'shell/host', payload: { act: 'picker' }, group: 'System' },
   { id: 'shell/host/history', label: 'Home: history', topic: 'shell/host', payload: { act: 'history' }, group: 'System' },
+  // 2026-10-02: Home's edit bar (Scene / Add / Change…), opened WITH the scan -- next / prev / select / back
+  // walk it, Close first, back leaves a tray and then the bar. It opens the bar; back and Close put it away.
+  { id: 'shell/host/editbar', label: 'Home: the edit bar (scene, add, change)', topic: 'shell/host', payload: { act: 'editbar' }, group: 'System' },
   // *** ROW 2.34: A SWITCH STRAIGHT TO A READY-MADE DASHBOARD. *** The picker is `system/dashboards` above;
   // these skip it, the way "computer please go to my room" does. `dashboard/go` (dashboards.js
   // DASHBOARD_GO_TOPIC, written out here so this file imports nothing): the person's own if they have it,

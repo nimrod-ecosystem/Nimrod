@@ -289,6 +289,10 @@ export async function mountKiosk(root, {
   //   menuItems()         a section of the ⚙ menu (settings.js items; `run` for a press)
   //   barHideMs()         how long a placed bar waits in full screen before tucking away (0 = never)
   //   subscribe(fn)       the host's state changed: the bar and the menu redraw
+  //   scan                (2026-10-02) the page's own controls taking the switch -- Home's edit bar:
+  //                       { held(), next(), prev(), select(), back(), release() }. While `held()` the
+  //                       switch's verbs are the page's and the panel router is paused; `release()` is
+  //                       how the kiosk asks for it back (see syncHostScan)
   // `fullscreenElement` is a seam for the suites (a real full screen needs a person's gesture).
   host = null,
   fullscreenElement = () => (typeof document !== 'undefined' ? document.fullscreenElement : null),
@@ -1877,6 +1881,9 @@ export async function mountKiosk(root, {
   const goHome = () => { location.href = '/home.html'; };
   let screensOpen = false;
   let editScanHeld = false;        // row 2.38: the edit windows or the map hold the scan (see openEditView)
+  let hostScanHeld = false;        // 2026-10-02: the host page's own controls hold it (see syncHostScan)
+  let hostScanT = null;            // ...and their "nobody answering" wait
+  let hostScanFresh = false;       // ...taken during THIS verb: the verb that took it is not also theirs
 
   // *** ROW 2.34: THE STRIP IS THE DASHBOARD PICKER NOW (dashboard_picker.js). *** The person's dashboards,
   // then the ready-made ones they have not made yet ("+ Room", "+ Basic", "+ Classic 2D" -- dashboards.js),
@@ -1956,12 +1963,13 @@ export async function mountKiosk(root, {
     // -- two things answering one "next" is the double-move the menu's own note warns about.
     if (screensOpen && !was) {
       try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
+      releaseHostScan();
       pickerNote = null;
       picker.reset();
       try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ }
     } else if (!screensOpen && was) {
       // (Row 2.38: not while the edit windows or the map hold the scan -- they give it back themselves.)
-      try { if (!menu?.isOpen?.() && !editScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+      try { if (!menu?.isOpen?.() && !editScanHeld && !hostScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
     }
     // Row 2.38: opening gives the bar the tray's wait; closing gives it back its own (`armBarHide`). Not
     // when the bar is already hidden -- that is the bar's own timer putting the tray away.
@@ -2050,9 +2058,11 @@ export async function mountKiosk(root, {
     const want = !torn && (!!editorNow() || !!mapWin);
     if (want === editScanHeld) return;
     editScanHeld = want;
+    // The edit windows opening (Home's Transform… among the ways) take the scan from a host page's controls.
+    if (want) releaseHostScan();
     try {
       if (want) runtime?.router?.setPaused?.(true);
-      else if (!screensOpen && !menu?.isOpen?.()) runtime?.router?.setPaused?.(false);
+      else if (!screensOpen && !menu?.isOpen?.() && !hostScanHeld) runtime?.router?.setPaused?.(false);
     } catch { /* no router yet */ }
   }
   function armEditIdle() {
@@ -2187,7 +2197,77 @@ export async function mountKiosk(root, {
   }
   // The menu opening puts them away (the tray's rule: one thing holds the scan at a time).
   for (const t of [verbTopic('menu'), SHELL_MENU]) {
-    offsScreen.push(bus.subscribe(t, () => { closeMap(); closeEditView(); }));
+    offsScreen.push(bus.subscribe(t, () => { closeMap(); closeEditView(); releaseHostScan(); }));
+  }
+
+  // ---------------------------------------------------------------------------------
+  // *** THE HOST PAGE'S OWN CONTROLS, BY SWITCH (2026-10-02: Home's edit bar). *** A page embedding this
+  // kiosk (Home) may have controls of its own OUTSIDE the stage -- Home's edit bar (Scene / Add / Change…)
+  // sits above it -- and a switch reaches them through this kiosk, because its input runtime is the one
+  // that hears the switch. `host.scan` (see the option) is the same rule as the tray and the edit view:
+  //   * WHILE THE PAGE SAYS IT HOLDS THE SCAN (`held()`, re-read whenever the host says it changed) next /
+  //     prev / select / back are the page's, and the panel router is paused. The page draws the cursor
+  //     and keeps its own way out first.
+  //   * ONE HOLDER AT A TIME: the page taking it puts the menu, the tray, the edit windows and the map away;
+  //     any of those opening tells the page to let go (`release()`).
+  //   * NOBODY ANSWERING: after the edit view's own wait (`editIdleMs`, argued in dashboard_nest.js -- it IS
+  //     an edit view, of the page's) the page is told to let go and the switch is the panels' again.
+  //     Nothing is lost: a change on Home is made as it is pressed.
+  const hostHolds = () => {
+    if (!hostPage || torn) return false;
+    try { return !!hostPage.scan?.held?.(); } catch { return false; }
+  };
+  function armHostScanIdle() {
+    clearTimeout(hostScanT); hostScanT = null;
+    if (!hostScanHeld || torn) return;
+    let wait = 0;
+    try { wait = editIdleMsFrom(settings.get() || {}); } catch { wait = 0; }
+    if (!wait) return;
+    hostScanT = setTimeout(() => { hostScanT = null; releaseHostScan(); }, wait);
+  }
+  function syncHostScan() {
+    const want = hostHolds();
+    if (want && !hostScanHeld) {
+      hostScanHeld = true;
+      // A menu row or a bar button pressed by `select` hands the page the scan in the middle of that verb's
+      // delivery; the verb that took it is not also the page's (it would press its first stop). A bus publish is
+      // delivered synchronously, so the flag clears once this delivery is over.
+      hostScanFresh = true;
+      queueMicrotask(() => { hostScanFresh = false; });
+      try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
+      if (screensOpen) toggleScreens(false);
+      closeMap();
+      closeEditView();
+      watchMenu();
+      armHostScanIdle();
+    } else if (!want && hostScanHeld) {
+      hostScanHeld = false;
+      clearTimeout(hostScanT); hostScanT = null;
+      // Given back AFTER this verb has finished travelling, so the verb that let go is not also a panel's.
+      queueMicrotask(() => {
+        if (torn || hostScanHeld || screensOpen || editScanHeld) return;
+        try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+      });
+    }
+    if (hostScanHeld) { try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ } }
+  }
+  function releaseHostScan() {
+    if (!hostScanHeld && !hostHolds()) return;
+    try { hostPage?.scan?.release?.(); } catch (err) { console.error('kiosk: host scan release', err); }
+    syncHostScan();
+  }
+  offsScreen.push(() => { clearTimeout(hostScanT); hostScanT = null; });
+  if (hostPage) {
+    for (const verb of ['next', 'prev', 'select', 'back']) {
+      offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+        if (torn || hostScanFresh) return;
+        syncHostScan();
+        if (!hostScanHeld) return;
+        try { hostPage.scan?.[verb]?.(); } catch (err) { console.error('kiosk: host scan', verb, err); }
+        syncHostScan();
+        armHostScanIdle();
+      }));
+    }
   }
   // Another screen came in: today's editor was about the screen that left; a dashboard's went with it.
   offsScreen.push(bus.subscribe(SCREEN_SHOWN, () => {
@@ -2202,7 +2282,7 @@ export async function mountKiosk(root, {
     if (menuWatch || typeof MutationObserver === 'undefined') return;
     const scrim = kioskEl.querySelector('[data-settings] [data-scrim]');
     if (!scrim) return;
-    menuWatch = new MutationObserver(() => { if (!scrim.hidden) { closeMap(); closeEditView(); } });
+    menuWatch = new MutationObserver(() => { if (!scrim.hidden) { closeMap(); closeEditView(); releaseHostScan(); } });
     menuWatch.observe(scrim, { attributes: true, attributeFilter: ['hidden'] });
   }
   offsScreen.push(() => {
@@ -3914,7 +3994,12 @@ export async function mountKiosk(root, {
     // The host's state changed (a save finished, a setting cycled): the menu shows its rows' new values.
     if (hostPage && typeof hostPage.subscribe === 'function') {
       try {
-        const offHost = hostPage.subscribe(() => { if (!torn) { try { menu.refresh(); } catch { /* not up */ } } });
+        // ...and whether its own controls hold the scan now (Home's edit bar, `host.scan`: syncHostScan).
+        const offHost = hostPage.subscribe(() => {
+          if (torn) return;
+          try { menu.refresh(); } catch { /* not up */ }
+          syncHostScan();
+        });
         if (typeof offHost === 'function') offsShell.push(offHost);
       } catch (err) { console.error('kiosk: host subscribe', err); }
     }
@@ -4234,6 +4319,8 @@ export async function mountKiosk(root, {
     openMap,
     closeMap,
     editScanHeld: () => editScanHeld,
+    // 2026-10-02: whether the host page's own controls (Home's edit bar) hold the scan -- for the suites.
+    hostScanHeld: () => hostScanHeld,
     stageCount: () => arr.stageDefs().length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is

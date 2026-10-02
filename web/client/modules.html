@@ -278,6 +278,10 @@
   .home-tray .tray-head{display:flex;align-items:center;gap:10px;margin:0 0 8px}
   .home-tray .grp{margin:8px 0 4px;font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
   .home-tray .hbtns + .hbtns{margin-top:6px}
+  /* The switch's cursor while the edit bar holds the scan: dashed and warm, so it reads differently from a
+     pressed or open button (solid, --link). 4px: the dashboards tray's cursor is 3px solid; a dash needs one
+     more pixel to read as clearly from across a room. */
+  .home-edit .hbtn[data-cursor],.home-tray .hbtn[data-cursor]{outline:4px dashed var(--accent-warm-deep);outline-offset:3px}
   .hbtn.warn{color:var(--accent-warm-deep);border-color:var(--accent-warm-deep)}
   .hbtn small{font-weight:500;color:var(--text-muted)}
 
@@ -668,6 +672,10 @@ const HOME = {
   undo: HP.createUndo(),
   editBusy: false,
   rebuilding: false,
+  // 2026-10-02: the edit bar BY SWITCH. `on`: the bar holds the scan (the kiosk's host seam); `level` and
+  // `key`: where the cursor is (home_profile.js editScanStep); `resume`: Transform… handed the scan to the
+  // edit windows, and the bar takes it back when they close.
+  scan: { on: false, level: 'bar', key: null, resume: false },
 };
 const PROFILE_TITLE = HD.HOME_TITLE;
 
@@ -1001,7 +1009,8 @@ function wrapRow(draft, handle, key, typeOf) {
 function applyView(v) {
   // Edit view on your Home is the ⚙ menu open AND Design's edit bar showing (one switch between them).
   HOME.editView = v === 'edit' && HOME.subject === HD.PROFILE_SUBJECT;
-  if (!HOME.editView) HOME.tray = null;
+  // (The bar holding the scan keeps its tray: a rebuild after a change made by switch lands here too.)
+  if (!HOME.editView && !HOME.scan.on) HOME.tray = null;
   paintEdit();
   const menu = embed?.kiosk?.menu;
   if (!menu) return;
@@ -1019,6 +1028,8 @@ async function openSubject(subject, { view = null } = {}) {
   // draft, never into this one.
   const draft = HD.createDraft({ onChange: () => { if (HOME.draft === draft) paintHome(); }, isUserEdit });
   Object.assign(HOME, { draft, subject, target: null });
+  // Another subject: the edit bar (if it held the scan) is gone with the old stage.
+  HOME.scan = { on: false, level: 'bar', key: null, resume: false };
   selected = subject;
   renderList();
   document.body.classList.remove('pick-open');
@@ -1130,6 +1141,7 @@ function homeView() {
     pickerOpen: document.body.classList.contains('pick-open'), docCurrent: HOME.doc?.current || null,
     settings: HOME.settings,
     canSwitch: HOME.target?.kind === 'home' && !HOME.editBusy, switchOpen: HOME.tray === 'switch',
+    canEdit: HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target,
   };
 }
 const HOME_HOST = {
@@ -1141,7 +1153,17 @@ const HOME_HOST = {
     : []),
   barHideMs: () => HOME.settings.barHideMs,
   subscribe(fn) { hostSubs.add(fn); return () => { hostSubs.delete(fn); }; },
+  // The edit bar by switch (kiosk.js `host.scan`): defined with the bar, further down.
+  scan: {
+    held: () => barScanHeld(),
+    next: () => barScanVerb('next'), prev: () => barScanVerb('prev'),
+    select: () => barScanVerb('select'), back: () => barScanVerb('back'),
+    release: () => releaseBarScan(),
+  },
 };
+// The stage's kiosk, for the suites and a diagnostic page (as talk.html and intercom.html hand theirs out):
+// its bus is where a switch's verbs travel, so a suite can press the edit bar the way a switch does.
+window.__home = { get kiosk() { return embed?.kiosk || null; } };
 function hostChanged() {
   for (const fn of [...hostSubs]) { try { fn(); } catch (err) { console.error('home: host listener', err); } }
 }
@@ -1163,6 +1185,8 @@ function homePress(act) {
     case 'examples': openExamples(); break;
     // Switch module (the bar's, or the menu's): the Switch tray for the panel the bar's Panel ▸ chose.
     case 'switch': openSwitch(); break;
+    // The edit bar, holding the scan: the menu's "Edit bar…", a bound switch, "edit bar" said aloud.
+    case 'editbar': takeBarScan(); break;
     case 'cat': startWalk(); break;
     default:
       if (act.startsWith('set:')) {
@@ -1574,7 +1598,10 @@ function openSwitch() {
   if (f && things().some((x) => x.id === f.id)) HOME.sel = f.id;
   if (!selThing()) HOME.sel = things()[0]?.id || null;
   HOME.tray = HOME.tray === 'switch' ? null : 'switch';
-  paintEdit(); hostChanged();
+  // The Switch tray takes the scan while it is open, the dashboards tray's rule: however it was opened (the
+  // bar's Switch module, the menu's row, "switch module" said aloud), a switch can then pick in it.
+  if (HOME.tray === 'switch') takeBarScan();
+  else { paintEdit(); hostChanged(); }
   $h('home-tray')?.querySelector('button:not([disabled])')?.focus();
 }
 
@@ -1604,8 +1631,15 @@ async function attachHomeEditing() {
   // panel; the thing just added or switched in is the one being changed).
   if (HOME.sel) { try { await d?.focus?.(HOME.sel); } catch { /* not focusable */ } }
   let lastFocus = (() => { try { return d?.focused?.()?.id || null; } catch { return null; } })();
+  let wasEditing = false;
   if (d?.onChange) {
     offDash = d.onChange(() => {
+      // Transform… pressed BY SWITCH handed the scan to the edit windows; when they close it comes back
+      // to the bar, so the switch user is where they were, not back at the panels.
+      let editingNow = false;
+      try { editingNow = !!d.editing?.(); } catch { editingNow = false; }
+      if (wasEditing && !editingNow && HOME.scan.resume) { HOME.scan.resume = false; takeBarScan(); }
+      wasEditing = editingNow;
       // The bar's Panel ▸ chooses a panel; when it MOVES, the edit bar follows it, so Switch module means
       // the one outlined.
       try {
@@ -1623,7 +1657,11 @@ async function attachHomeEditing() {
     menuObs = new MutationObserver(() => {
       if (HOME.rebuilding || HOME.subject !== HD.PROFILE_SUBJECT) return;
       const open = menuOpen();
-      if (open !== HOME.editView) { HOME.editView = open; if (!open && HOME.tray !== 'switch') HOME.tray = null; paintEdit(); }
+      if (open !== HOME.editView) {
+        HOME.editView = open;
+        if (!open && HOME.tray !== 'switch' && !HOME.scan.on) HOME.tray = null;
+        paintEdit();
+      }
     });
     menuObs.observe(stage, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
   }
@@ -1632,16 +1670,19 @@ async function attachHomeEditing() {
 
 /** Replace `el`'s markup only when it changed, and keep focus on the same control (a keyboard user
  *  pressing Move left four times must not lose their place after the first). */
+// What one edit-bar or tray button IS, as a string: the same across redraws (the focus kept below, and the
+// switch's cursor, home_profile.js editScanStep, both find their button again by it).
+const EDIT_BTN_KEYS = ['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd'];
+const editBtnKey = (b) => EDIT_BTN_KEYS.map((k) => b.dataset[k] || '').join('|');
 function setHTML(el, html) {
   if (el.dataset.sig === html) return;
   const a = document.activeElement;
-  const key = a && el.contains(a) ? ['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd']
-    .map((k) => a.dataset[k] || '').join('|') : null;
+  const key = a && el.contains(a) ? editBtnKey(a) : null;
   el.innerHTML = html;
   el.dataset.sig = html;
   if (key) {
     for (const b of el.querySelectorAll('button')) {
-      if (['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd'].map((k) => b.dataset[k] || '').join('|') === key) { b.focus(); break; }
+      if (editBtnKey(b) === key) { b.focus(); break; }
     }
   }
 }
@@ -1655,9 +1696,10 @@ function paintEdit() {
   const bar = $h('home-edit');
   const tray = $h('home-tray');
   if (!bar || !tray) return;
-  const show = HOME.on && HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target && (HOME.editView || HOME.tray === 'switch');
+  const show = HOME.on && HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target
+    && (HOME.editView || HOME.tray === 'switch' || HOME.scan.on);
   bar.hidden = !show;
-  if (!show) { tray.hidden = true; return; }
+  if (!show) { tray.hidden = true; paintScanCursor(); return; }
   const live = homeLive() && !HOME.editBusy;
   const list = things();
   const t = selThing();
@@ -1669,6 +1711,7 @@ function paintEdit() {
     + model.map((b) => ebtn(`data-edit="${b.act}"`, esc(b.label), { disabled: b.disabled, expanded: b.expanded, hint: b.hint })).join('')
     + `<span class="ed-note" role="status" aria-live="polite">${esc(note)}</span>`);
   paintTray(live, list, t);
+  paintScanCursor();
 }
 
 function trayHead(title) {
@@ -1730,13 +1773,89 @@ function paintTray(live, list, t) {
     + (t && !placed ? '<p class="stagenote">This one sits in a grid cell: Transform… moves and sizes it.</p>' : ''));
 }
 
+// ---- THE EDIT BAR BY SWITCH (2026-10-02) -------------------------------------------------------------
+// The bar and its trays sit above the stage, outside the kiosk -- but the kiosk's input runtime is what hears
+// a switch, so the kiosk hands the verbs over while the bar HOLDS THE SCAN (kiosk.js `host.scan`, the tray's
+// and the edit view's rule: router paused, one holder at a time, let go after the edit view's wait). Taken
+// by the ⚙ menu's "Edit bar…", a bound switch or "edit bar" said aloud (`shell/host` editbar), and by the
+// Switch tray opening. The walk is home_profile.js editScanStep; this draws it and presses.
+const barKeyFor = (act) => EDIT_BTN_KEYS.map((k) => (k === 'edit' ? act || '' : '')).join('|');
+function scanButtons(level) {
+  const el = $h(level === 'tray' ? 'home-tray' : 'home-edit');
+  if (!el || el.hidden) return [];
+  return [...el.querySelectorAll('button')].filter((b) => !b.disabled);
+}
+function scanView() {
+  const tray = HOME.tray ? scanButtons('tray') : [];
+  return { bar: scanButtons('bar').map(editBtnKey), tray: tray.length ? tray.map(editBtnKey) : null,
+    trayOf: HOME.tray ? barKeyFor(HP.trayOwner(HOME.tray)) : null };
+}
+function barScanHeld() {
+  return HOME.on && HOME.scan.on && HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target;
+}
+/** The cursor: on the stop `key` names, else the first one (Close). Kept by key, so a redraw -- a change
+ *  finishing, a tray refilling -- leaves it where it was; nothing that can act (Changing…) leaves it alone. */
+function paintScanCursor() {
+  for (const b of document.querySelectorAll('#home-edit button[data-cursor], #home-tray button[data-cursor]')) delete b.dataset.cursor;
+  if (!barScanHeld()) return;
+  const level = HOME.scan.level === 'tray' && HOME.tray && scanButtons('tray').length ? 'tray' : 'bar';
+  const bs = scanButtons(level);
+  if (!bs.length) return;
+  const keys = bs.map(editBtnKey);
+  const key = level === HOME.scan.level ? HOME.scan.key : barKeyFor(HP.trayOwner(HOME.tray) || null);
+  bs[HP.scanAt(keys, key)].dataset.cursor = '1';
+}
+/** Give the bar the scan: the bar shows (with the tray that is open, if any), its way out first. */
+function takeBarScan() {
+  if (!HOME.on || HOME.subject !== HD.PROFILE_SUBJECT || !HOME.target) return;
+  // In full screen only the stage is painted, and the bar is above it: leave, as the Switch tray does.
+  leaveFullScreen();
+  if (!HOME.scan.on) HOME.scan = { ...HOME.scan, on: true, level: HOME.tray ? 'tray' : 'bar', key: null };
+  paintEdit(); hostChanged();
+}
+/** The kiosk asked for the scan back (the menu, the tray or the edit windows opened; nobody answered). The
+ *  bar stays only if edit view is showing it anyway. */
+function releaseBarScan() {
+  if (!HOME.scan.on) return;
+  HOME.scan = { ...HOME.scan, on: false };
+  if (!HOME.editView && !menuOpen() && HOME.tray !== 'switch') HOME.tray = null;
+  paintEdit(); hostChanged();
+}
+/** Close on the bar, or back on it: the edit bar goes, and edit view with it. */
+function closeBar() {
+  HOME.scan = { on: false, level: 'bar', key: null, resume: false };
+  HOME.tray = null;
+  if (HOME.editView || menuOpen()) applyView('live');
+  paintEdit(); hostChanged();
+}
+function barScanVerb(verb) {
+  if (!barScanHeld()) return;
+  const r = HP.editScanStep({ level: HOME.scan.level, key: HOME.scan.key }, verb, scanView());
+  HOME.scan = { ...HOME.scan, level: r.state.level, key: r.state.key };
+  if (r.leave) { closeBar(); return; }
+  if (r.closeTray) HOME.tray = null;
+  if (r.press) {
+    const b = scanButtons(HOME.scan.level).find((x) => editBtnKey(x) === r.press);
+    const trayBefore = HOME.tray;
+    if (b?.dataset.edit === 'transform') HOME.scan.resume = true;
+    b?.click();
+    if (!HOME.scan.on) return;                          // Close (or something it did) let go of the bar
+    if (HOME.tray && HOME.tray !== trayBefore) HOME.scan = { ...HOME.scan, level: 'tray', key: null };
+    else if (!HOME.tray && trayBefore) HOME.scan = { ...HOME.scan, level: 'bar', key: barKeyFor(HP.trayOwner(trayBefore)) };
+  }
+  paintEdit(); hostChanged();
+}
+
 document.addEventListener('click', (e) => {
   if (!HOME.on) return;
   const b = e.target instanceof Element ? e.target.closest('#home-edit button, #home-tray button') : null;
   if (!b || b.disabled) return;
   const ds = b.dataset;
+  // A pointer press while the bar holds the scan moves the cursor there too (the dashboards tray does the same).
+  if (HOME.scan.on) HOME.scan = { ...HOME.scan, level: b.closest('#home-tray') ? 'tray' : 'bar', key: editBtnKey(b) };
   if (ds.edit) {
     switch (ds.edit) {
+      case 'closebar': closeBar(); return;
       case 'scene': case 'add': HOME.tray = HOME.tray === ds.edit ? null : ds.edit; break;
       case 'change': HOME.tray = HOME.tray === 'change' || HOME.tray === 'switch' ? null : 'change'; if (HOME.sel) chooseThing(HOME.sel); break;
       case 'closetray': HOME.tray = null; break;

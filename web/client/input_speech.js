@@ -296,6 +296,10 @@ export const ROUTES = {
   // "Switch module" (2026-10-02): the selected panel's short list of other modules.
   'switch-module': { action: 'menu/switch-module', label: 'Switch the selected panel to another module',
     phrases: ['switch module', 'switch the module', 'change module', 'change the module', 'swap module'] },
+  // Home's edit bar (2026-10-02): the same action a switch binds (actions.js `shell/host/editbar`), which
+  // opens the bar holding the scan. Each phrase names the bar or "my home", so none is a panel verb.
+  'home-edit-bar': { action: 'shell/host/editbar', label: 'Home: the edit bar',
+    phrases: ['edit bar', 'open the edit bar', 'show the edit bar', 'edit my home'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

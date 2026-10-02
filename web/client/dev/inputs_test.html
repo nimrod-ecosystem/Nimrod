@@ -407,7 +407,7 @@ const logText = (r) => r.q('[data-log]').textContent;
         check('*** the voice games’ “play …” routes are pickable ***',
           SPEECH_ACTIONS.length > 0 && SPEECH_ACTIONS.every((a) => vals(inGroup('Voice games')).includes(a.id)));
         check('*** Home’s Save (and Save as, the module picker, History) and the cat’s next/back are pickable for a switch ***',
-          ['shell/host/save', 'shell/host/saveas', 'shell/host/picker', 'shell/host/history', 'nimrod-cat/next', 'nimrod-cat/prev']
+          ['shell/host/save', 'shell/host/saveas', 'shell/host/picker', 'shell/host/history', 'shell/host/editbar', 'nimrod-cat/next', 'nimrod-cat/prev']
             .every((id) => vals(inGroup('The screen')).includes(id)), JSON.stringify(vals(inGroup('The screen'))));
         check('*** holding on a room object (pet an animal) is pickable ***',
           vals(inGroup('Room')).includes(ROOM_HOLD_ACTION.id));
