@@ -107,9 +107,11 @@ import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flas
 // Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
 import { createHideSound, WHEN_HIDDEN_FIELD, HIDE_ASK_TIMEOUT_FIELD, makesSound, whenHiddenDefault } from './hide_sound.js';
 import { createChoiceMemory } from './choice_card.js';
-// User folders (867a7ff): fonts from the device's own folder, never prompting.
-import { recallRoot, subfolder } from './user_folders.js';
-import { loadUserFonts } from './user_fonts.js';
+// User folders (867a7ff, 15eb6b3, 2026-10-02): this device's fonts and colour look, never prompting; the
+// "Your own folders" page in the menu.
+import { checkDeviceLook } from './user_folders.js';
+import { loadDeviceFonts } from './user_fonts.js';
+import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE } from './user_folders_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
@@ -1636,16 +1638,14 @@ export async function mountKiosk(root, {
     applyKioskTheme(id);
   }
   await settings.load().catch(() => {});
-  // USER FOLDERS (867a7ff): fonts from this device's own folder, if somebody already chose one and the
-  // browser still grants it. NEVER PROMPTS, and fire-and-forget: it must not delay or break the boot.
+  // USER FOLDERS: this device's fonts from wherever its fonts folder is now (the Nimrod folder's fonts/,
+  // or one chosen just for fonts), and a colour look whose .cube is gone goes back to None. NEVER
+  // PROMPTS, and fire-and-forget: it must not delay or break the boot.
   (async () => {
     try {
-      const { handle, permission } = (await recallRoot()) || {};
-      if (handle && permission === 'granted') {
-        const d = await subfolder(handle, 'fonts');
-        if (d && !torn) await loadUserFonts(d);
-      }
-    } catch (err) { console.error('kiosk: user fonts', err); }
+      if (!torn) await loadDeviceFonts();
+      if (!torn) await checkDeviceLook();
+    } catch (err) { console.error('kiosk: user folders', err); }
   })();
   // STAGE 4: a real screen's path, from its own row (see `dashboardPathFor`). Read once, at boot: the
   // two paths build different things, so a change to the row is applied by a reload (the watch below).
@@ -4155,6 +4155,8 @@ export async function mountKiosk(root, {
     pages: {
       get controls() { return runtime ? controlPages({ runtime, subjectName }).controls : undefined; },
       get activity() { return runtime ? controlPages({ runtime, subjectName }).activity : undefined; },
+      // "Your own folders" (15eb6b3): fonts, colour looks, plugins on this device.
+      get [USER_FOLDERS_PAGE]() { return userFoldersPage(); },
       // THE NIMROD GAME (unlocks.js, 2026-10-02): its settings page, on this screen's own rows and bus.
       get game() {
         return gameSettingsPage({ makeState: (k, o) => stateFor(k, o), makeEvents: (k, o) => eventsFor(k, o), bus });
@@ -4276,6 +4278,7 @@ export async function mountKiosk(root, {
       // The Nimrod Game's page (unlocks.js), on the This screen tab.
       ...tagged([{ kind: 'item', id: 'game', label: 'Nimrod Game', page: 'game' }], 'screen', 2),
       ...tagged(CONNECTION_ITEMS, 'devices', 3),
+      ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
       // bench first" has to mean in practice. Written to the same profile settings blob the
