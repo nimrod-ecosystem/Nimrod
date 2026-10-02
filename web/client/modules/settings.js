@@ -58,6 +58,8 @@ import { MODE_KEY, MODES, modeFrom, PROFILE_SETTINGS_KEY } from '../lessons.js';
 // (no answer = no panel on this dashboard, and he suggests the settings menu or the tutorial instead).
 import { gameSettingsPage, SETTINGS_SHOWN_TOPIC, GAME_SETTINGS_PAGE } from '../unlocks.js';
 import { createEvents } from '../events.js';
+// YOUR OWN FOLDERS (row 2.49, 2026-10-02): fonts, colour looks and audio plugins on this device.
+import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE } from '../user_folders_page.js';
 
 // *** WHERE IT OPENS, AND BEING ASKED TO SHOW A PAGE (2026-10-02, the landing Home). *** Mike: the landing
 // Home's settings panel "launches on themes tab", and Nimrod's choices show the page they talk about ("It
@@ -268,6 +270,10 @@ registerModule(
       },
     };
 
+    // THIS DEVICE'S OWN FOLDERS (user_folders_page.js). Per device, like the folders themselves: the
+    // handles live in this browser, so the page reads whichever device is showing this panel.
+    pages[USER_FOLDERS_PAGE] = userFoldersPage();
+
     return {
       async init() {
         // A PANEL DOES NOT TAKE THE KEYBOARD BY ARRIVING (2026-10-02). Opening the inline menu focuses its
@@ -300,6 +306,7 @@ registerModule(
             { kind: 'item', id: 'sc-mode', label: 'Learning mode', page: 'sc-mode' },
             { kind: 'item', id: GAME_SETTINGS_PAGE, label: 'Nimrod Game', page: GAME_SETTINGS_PAGE },
             { kind: 'item', id: 'sc-device', label: 'This screen', page: 'sc-device' },
+            ...USER_FOLDER_ITEMS,
           ],
           pages,
         });
