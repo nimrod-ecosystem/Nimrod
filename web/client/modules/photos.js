@@ -108,6 +108,19 @@ const SETTINGS = [
   // two rows, ON by default -- exactly what this panel did before the row existed. Off: the first picture
   // shows and stays, with a Start button, until Play (the bar's button, Space, a switch) or a press on it.
   ...autostartFields({ on: true }),
+  // *** A PAUSED SLIDESHOW CARRIES ON BY ITSELF (2026-10-02). *** CLAUDE.md's signed-off invariant: a screen
+  // must never enter a state that only an input can leave, when the person in front of it cannot give that
+  // input. One stray press of Space or a switch would otherwise freeze the pictures until somebody came by.
+  // 30 minutes: long enough for a deliberate pause during a visit or a call, short enough that a stray one
+  // doesn't hold the pictures for a night. "Never" is there for anybody who wants a pause to mean pause.
+  // Only a PAUSE times out -- a slideshow waiting for Start because autostart was set off waits as it was set.
+  { key: 'resumeAfterMs', label: 'After a pause, carry on by itself', kind: 'choice', default: 30 * 60 * 1000, level: 'standard',
+    options: [
+      { value: 10 * 60 * 1000, label: 'after 10 minutes' },
+      { value: 30 * 60 * 1000, label: 'after 30 minutes' },
+      { value: 2 * 60 * 60 * 1000, label: 'after 2 hours' },
+      { value: 0, label: 'never: stay paused until Play' },
+    ] },
 ];
 // The words over a slideshow that is waiting, or that somebody paused. Site copy: no names.
 export const PHOTOS_START_LINES = Object.freeze({
@@ -243,6 +256,7 @@ registerModule(
     let startDecided = false;
     let waiting = false;
     let paused = false;
+    let resumeTimer = null;   // a pause carries on by itself (`resumeAfterMs`)
     const holding = () => waiting || paused;
     const reportPlay = createPlayReporter(bus, ctx);
 
@@ -528,6 +542,7 @@ registerModule(
       if (!holding()) return false;
       const wasWaiting = waiting;
       waiting = false; paused = false;
+      clearResume();
       syncHold();
       const item = currentId ? byId[currentId] : null;
       if (wasWaiting && item) logPlay(item.id);
@@ -545,8 +560,13 @@ registerModule(
       videoStall.disarm();
       try { currentVideo?.pause?.(); } catch { /* gone */ }
       syncHold();
+      // See `resumeAfterMs` in the fields: a pause carries on by itself unless the setting says never.
+      clearResume();
+      const after = Number(cfg.resumeAfterMs ?? 30 * 60 * 1000);
+      if (after > 0) resumeTimer = setTimer(() => { resumeTimer = null; if (paused) carryOn(); }, after);
       return true;
     }
+    function clearResume() { if (resumeTimer != null) { clearTimer(resumeTimer); resumeTimer = null; } }
 
     function prev() {
       if (histPos > 0) { histPos -= 1; show(history[histPos], false); }
@@ -817,7 +837,7 @@ registerModule(
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
-      destroy() { loadSeq += 1; clearAdvance(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
+      destroy() { loadSeq += 1; clearAdvance(); clearResume(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
 
       // EDIT MODE (edit_mode.js, 2026-10-02). The picture on screen, and the line naming where the photos come
       // from, each with the rows about it -- this panel's own declared settings, nothing new. A picture has no
@@ -828,7 +848,7 @@ registerModule(
         const st = stage();
         const out = [];
         if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album'] });
-        if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone'],
+        if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone', 'resumeAfterMs'],
           help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
       },
