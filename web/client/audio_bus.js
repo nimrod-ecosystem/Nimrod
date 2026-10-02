@@ -194,6 +194,37 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
   // it does not duck anything, hold a group's slot, or count as a call - a hidden video muted by its
   // own setting must not silence the game music on the panel somebody is actually looking at.
   const mutedOwners = new Set();
+  // *** A PANEL'S OWN VOLUME, AND A TV'S (2026-10-02). *** Mike, on a TV in a room showing a live
+  // dashboard that plays sound: "It has to be accessible through the transport bar and settings menu."
+  // A LEVEL per owner PATH: `['tv']` is the TV and everything on it, `['tv', 'yt']` is the YouTube panel
+  // ON that TV only (a source's path is what it is inside, outermost first, then its owner - module.js
+  // `ownedAudio` builds it). A level is a VOLUME, like a fader: it multiplies, and the channel's floor
+  // still holds. EXCEPT 0, WHICH IS MUTE, A DECISION: 0 is never lifted by a floor and a muted source
+  // ducks nobody - the hide rule above, for the same reason (a TV muted on purpose must not silence the
+  // music somebody is listening to). Separate from `mutedOwners` on purpose: hiding and showing a panel
+  // must never undo a mute somebody chose, nor a mute un-hide a panel.
+  const levels = new Map();           // 'tv>yt' -> 0..1
+  const pathKey = (p) => (Array.isArray(p) ? p : [p]).filter((x) => x != null && x !== '').map(String).join('>');
+  const pathOf = (s) => [...(Array.isArray(s.within) ? s.within.slice().reverse() : []), ...(s.owner ? [s.owner] : [])];
+  // Does rule `r` (an id list) sit inside path `p`, in order and side by side?
+  const inPath = (r, p) => {
+    if (!r.length || r.length > p.length) return false;
+    for (let i = 0; i + r.length <= p.length; i += 1) {
+      let ok = true;
+      for (let j = 0; j < r.length; j += 1) if (p[i + j] !== r[j]) { ok = false; break; }
+      if (ok) return true;
+    }
+    return false;
+  };
+  // The product of every level that reaches this source (1 when none does; a broken one is 1).
+  function ownerGain(s) {
+    if (!levels.size) return 1;
+    const p = pathOf(s);
+    if (!p.length) return 1;
+    let g = 1;
+    for (const [k, v] of levels) if (inPath(k.split('>'), p)) g *= v;
+    return Number.isFinite(g) ? Math.max(0, Math.min(1, g)) : 1;
+  }
   let seq = 0;
   let hushed = false;
   let inRecompute = false;
@@ -243,7 +274,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     inRecompute = true;
     try {
       const all = [...sources.values()].filter((s) => s.active);
-      const isMuted = (s) => !!(s.owner && mutedOwners.has(s.owner));
+      // Hidden-and-muted reaches what a hidden TV has on it too (`within`), and a level of 0 is mute.
+      const isMuted = (s) => !!((s.owner && mutedOwners.has(s.owner))
+        || (Array.isArray(s.within) && s.within.some((w) => mutedOwners.has(w)))
+        || ownerGain(s) === 0);
       // Everything below decides with the sources that can actually be HEARD. A muted one still
       // gets its 0 (step 4c), but it ducks nobody, wins no group and starts no call.
       const active = all.filter((s) => !isMuted(s));
@@ -283,7 +317,8 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
         // talking to the screen. Owned by that source rather than by the hush button, so turning
         // it off can never un-hush a room somebody hushed by hand.
         if (s.tier === 'media' && active.some((o) => o.silence && o.tierP > s.tierP)) level = 0;
-        apply(s, mixed(level, s.channel, g));                  // 5. fader x master, then the floor
+        // 5. fader x master x the panel's own volume (a TV's too), then the floor.
+        apply(s, mixed(level * ownerGain(s), s.channel, g));
       }
       // 4c. hidden and muted by its own setting: 0, which the floor never lifts.
       for (const s of all) if (isMuted(s)) apply(s, 0);
@@ -302,8 +337,9 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     // ducking (4b above). Off unless asked for; a source registered without it is unchanged.
     // `owner`: the module instance this source belongs to (module.js tags it from `ctx.instanceId`,
     // so a module never has to). It is what `muteOwner` mutes. Sticks across re-registers.
+    // `within`: what that owner is inside, innermost first (module.js adds it for a module on a TV).
     register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
-                   duck = null, channel = null, silence = null, owner = null } = {}) {
+                   duck = null, channel = null, silence = null, owner = null, within = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -326,8 +362,25 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       if (silence !== null) s.silence = !!silence;
       if (onGain) s.onGain = onGain;
       if (owner !== null && owner !== undefined && owner !== '') s.owner = String(owner);
+      if (Array.isArray(within)) s.within = within.filter((w) => w != null && w !== '').map(String);
       return s;
     },
+
+    // ---- A PANEL'S OWN VOLUME (see `levels` above) ----------------------------------------
+    // `path`: an owner id, or [outer, ..., inner]. `v` 0..1 (0 = mute; a broken value is 1, never
+    // silence). 1 removes the rule. Returns what is now in force.
+    setLevel(path, v) {
+      const key = pathKey(path);
+      if (!key) return null;
+      let n = Number(v);
+      if (v === null || v === undefined || v === '' || !Number.isFinite(n)) n = 1;
+      n = Math.max(0, Math.min(1, n));
+      const was = levels.has(key) ? levels.get(key) : 1;
+      if (n === 1) levels.delete(key); else levels.set(key, n);
+      if (was !== n) recompute();
+      return n;
+    },
+    levelFor: (path) => { const k = pathKey(path); return levels.has(k) ? levels.get(k) : 1; },
 
     // ---- HIDDEN AND MUTED (hide_sound.js) -----------------------------------------------
     // Every source `owner` registered - now and later - goes to 0 while muted, and comes back to
@@ -341,8 +394,14 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       return mutedOwners.has(key);
     },
     isOwnerMuted: (owner) => !!owner && mutedOwners.has(String(owner)),
-    // The ids of the sources an owner has registered: "does this panel make sound at all".
-    sourcesOf: (owner) => [...sources.values()].filter((s) => owner && s.owner === String(owner)).map((s) => s.id),
+    // The ids of the sources an owner has registered: "does this panel make sound at all". A TV's
+    // include what is on it (`within`, 2026-10-02).
+    sourcesOf: (owner) => [...sources.values()].filter((s) => owner && (s.owner === String(owner)
+      || (Array.isArray(s.within) && s.within.includes(String(owner))))).map((s) => s.id),
+    // The owners INSIDE `owner` that make sound (a TV's panels), innermost owner ids, in order seen.
+    ownersWithin: (owner) => [...new Set([...sources.values()]
+      .filter((s) => owner && Array.isArray(s.within) && s.within.includes(String(owner)) && s.owner)
+      .map((s) => s.owner))],
 
     // The one signal that drives everything: "I am / am not making sound right now."
     setActive(id, on) {
@@ -442,11 +501,12 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       const out = {};
       for (const [id, s] of sources) {
         out[id] = { tier: s.tier, channel: s.channel, group: s.group ?? null, gp: s.gp, active: s.active, level: s.level,
-                    owner: s.owner ?? null, muted: !!(s.owner && mutedOwners.has(s.owner)) };
+                    owner: s.owner ?? null, muted: !!(s.owner && mutedOwners.has(s.owner)),
+                    within: Array.isArray(s.within) ? s.within.slice() : [], ownerLevel: ownerGain(s) };
       }
       return out;
     },
 
-    destroy() { sources.clear(); mutedOwners.clear(); hushed = false; },
+    destroy() { sources.clear(); mutedOwners.clear(); levels.clear(); hushed = false; },
   };
 }

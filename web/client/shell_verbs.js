@@ -23,6 +23,12 @@ export const SHELL_MIRROR = 'shell/mirror';        // the camera full screen
 // screen, whichever bar was pressed -- two bars each bringing their own would be two cats.
 export const SHELL_HELP = 'shell/help';
 
+// "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the selected
+// module"): the selected panel's short list of other modules. The SAME topic actions.js registers as
+// `menu/switch-module` (SWITCH_MODULE_TOPIC, written out here so this file imports nothing; transport_test
+// checks the two agree), so the bar, a bound switch and "switch module" said aloud are one press.
+export const SHELL_SWITCH_MODULE = 'shell/switch-module';
+
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
 // plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
 // button is offered: the person's "Cat help" setting, read by the shell) and/or { barHeld } (something

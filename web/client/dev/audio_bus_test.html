@@ -583,6 +583,89 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       check('destroy forgets every mute', r.bus.isOwnerMuted('panel-1') === false);
     }
 
+    // =====================================================================================
+    section('*** a panel’s own volume, and a TV’s (2026-10-02: a dashboard placed in a dashboard) ***');
+    {
+      const { ownedAudio } = await import('../module.js');
+      const PS = await import('../panel_sound.js');
+      const MF = await import('../mixer_fx.js');
+      check('panel_sound.js’s room choices are mixer_fx.js’s (written out so a dashboard does not import the effects)',
+        JSON.stringify(PS.ROOM_SOUND_CHOICES) === JSON.stringify(MF.ROOM_SOUND_CHOICES));
+      const r = rig();
+      // A TV (panel "tv") showing a dashboard with a YouTube panel ("yt") and a game ("g") on it; a radio
+      // ("radio") on the screen itself. Built through module.js's wrapper, the way a nested dashboard is.
+      const tv = ownedAudio(r.bus, 'tv');
+      const yt = ownedAudio(tv, 'yt');
+      const g = ownedAudio(tv, 'g');
+      const radio = ownedAudio(r.bus, 'radio');
+      const reg = (aud, id, spec) => { r.seen[id] = []; aud.register(id, { ...spec, onGain: (l) => r.seen[id].push(l) }); };
+      reg(yt, 'yt-video', { tier: 'media' });
+      reg(g, 'g-beep', { tier: 'media', channel: 'sfx' });   // same tier as the video, so nothing ducks it
+      reg(radio, 'radio-music', { tier: 'media', group: 'radio' });
+      for (const id of ['yt-video', 'g-beep', 'radio-music']) r.bus.setActive(id, true);
+      const st = r.bus.state();
+      check('*** a thing on a TV knows it is on the TV: owner = itself, within = [tv] ***',
+        st['yt-video'].owner === 'yt' && JSON.stringify(st['yt-video'].within) === '["tv"]', JSON.stringify(st['yt-video']));
+      check('...and a thing on the screen itself is inside nothing', JSON.stringify(st['radio-music'].within) === '[]');
+      check('the TV "makes sound" because what is on it does (sourcesOf)',
+        r.bus.sourcesOf('tv').sort().join() === 'g-beep,yt-video', r.bus.sourcesOf('tv').join());
+      check('...and says which things on it do (ownersWithin)', r.bus.ownersWithin('tv').sort().join() === 'g,yt');
+      check('(setup) all three are heard', r.last('yt-video') === 1 && r.last('g-beep') === 1 && r.last('radio-music') === 1);
+      r.bus.setLevel('tv', 0.5);
+      check('*** turning the TV down turns down everything on it, and nothing else ***',
+        r.last('yt-video') === 0.5 && r.last('g-beep') === 0.5 && r.last('radio-music') === 1,
+        `${r.last('yt-video')} ${r.last('g-beep')} ${r.last('radio-music')}`);
+      r.bus.setLevel(['tv', 'yt'], 0);
+      check('*** muting ONE thing on the TV ([tv, yt]) mutes that one only ***',
+        r.last('yt-video') === 0 && r.last('g-beep') === 0.5, `${r.last('yt-video')} ${r.last('g-beep')}`);
+      check('...and the levels read back', r.bus.levelFor(['tv', 'yt']) === 0 && r.bus.levelFor('tv') === 0.5);
+      r.bus.setLevel(['tv', 'yt'], 1);
+      r.bus.setLevel('tv', 0);
+      check('*** a TV muted (level 0) is a DECISION: silent, and it ducks nobody ***',
+        r.last('yt-video') === 0 && r.last('g-beep') === 0 && r.last('radio-music') === 1);
+      // A floor never lifts a mute; a volume above zero is lifted to the floor like any fader.
+      const f = rig();
+      const ftv = ownedAudio(f.bus, 'tv2');
+      f.seen.v = []; ftv.register('v', { tier: 'voice', channel: 'aac', onGain: (l) => f.seen.v.push(l) });
+      f.bus.setActive('v', true);
+      f.bus.setLevel('tv2', 0.1);
+      check('a TV turned down is a VOLUME: the channel’s floor (AAC 60%) still holds', Math.abs(f.last('v') - 0.6) < 1e-9, String(f.last('v')));
+      f.bus.setLevel('tv2', 0);
+      check('...but muted is muted: no floor lifts it', f.last('v') === 0, String(f.last('v')));
+      f.bus.setLevel('tv2', 'loud');
+      check('a broken level is full (1), never silence', f.bus.levelFor('tv2') === 1 && f.last('v') === 1);
+      // Hide = mute reaches what is on a hidden TV.
+      r.bus.setLevel('tv', 1);
+      r.bus.muteOwner('tv', true);
+      check('*** a hidden TV (hide = mute) mutes what is on it ***', r.last('yt-video') === 0 && r.last('g-beep') === 0);
+      r.bus.muteOwner('tv', false);
+      check('...and shown again it is heard again', r.last('yt-video') === 1 && r.last('g-beep') === 1);
+      // panel_sound: the row -> the bus.
+      PS.applyPanelSound(r.bus, 'tv', { panelVolume: 0.25, nestedMuted: { g: true } });
+      check('*** panel_sound: a TV’s row (volume, a thing on it muted) reaches the bus ***',
+        r.last('yt-video') === 0.25 && r.last('g-beep') === 0, `${r.last('yt-video')} ${r.last('g-beep')}`);
+      PS.applyPanelSound(r.bus, 'tv', {});
+      check('...and an empty row puts everything back', r.last('yt-video') === 1 && r.last('g-beep') === 1);
+      check('panel_sound: a broken volume is 1, never silence', PS.panelVolumeFrom({ panelVolume: 'x' }) === 1
+        && PS.panelVolumeFrom({}) === 1 && PS.panelVolumeFrom({ panelVolume: 0 }) === 0);
+      const p1 = PS.toggleMutePatch({ panelVolume: 0.5 });
+      const p2 = PS.toggleMutePatch({ ...p1 });
+      check('the chip’s toggle: muted, then back to the level it had', p1.panelVolume === 0 && p2.panelVolume === 0.5,
+        JSON.stringify([p1, p2]));
+      check('room sound is OFF unless a row says otherwise', PS.roomSoundFrom({}) === 'off' && PS.roomSoundFrom({ roomSound: 'huge' }) === 'off'
+        && PS.ROOM_SOUND_FIELD.default === 'off');
+      // watchPanelSound clears what it set when the panel goes.
+      const stRows = []; let fire = null;
+      const fakeState = { subscribe: (fn) => { fire = fn; fn({ panelVolume: 0.5 }); return () => { fire = null; }; } };
+      const off = PS.watchPanelSound(r.bus, 'tv', fakeState);
+      check('watchPanelSound applies the row at once', r.bus.levelFor('tv') === 0.5);
+      fire({ panelVolume: 0.75 });
+      check('...and every change to it', r.bus.levelFor('tv') === 0.75);
+      off();
+      check('...and clears it when the panel goes (no level left behind on the bus)', r.bus.levelFor('tv') === 1 && fire === null);
+      void stRows;
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

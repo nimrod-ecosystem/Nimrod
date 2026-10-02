@@ -201,6 +201,35 @@
 .st-mini[data-edit-save] { background: var(--link, currentColor); border-color: var(--link, currentColor); color: var(--on-link, Canvas); font-weight: 700; }
 .st-mini:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
 
+/* ---- 2026-10-02: THE TABS (settings.js "TABS"). The row above them ("Tab: Sound") is the one cursor
+ * stop; these buttons are for a POINTER, like the colour swatches, so they are plain and compact. The
+ * current tab is drawn like the cursor's colour pair (--link on --bg), which is legible in every theme
+ * for the reason given at `.st-item.on`. Tokens with keyword fallbacks only. ---- */
+.st-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(4px, 0.7vmin, 8px);
+  padding: 0 clamp(6px, 1vmin, 10px) clamp(4px, 0.8vmin, 8px);
+}
+.st-tab {
+  font: inherit;
+  font-size: clamp(0.85rem, 1.8vmin, 1.1rem);
+  min-height: 44px;
+  padding: clamp(6px, 1vmin, 10px) clamp(10px, 1.6vmin, 16px);
+  border: 1px solid var(--border, currentColor);
+  border-radius: 999px;
+  background: var(--surface-alt, Canvas);
+  color: var(--text, CanvasText);
+  cursor: pointer;
+}
+.st-tab.on {
+  background: var(--link, CanvasText);
+  border-color: var(--link, CanvasText);
+  color: var(--bg, Canvas);
+  font-weight: 700;
+}
+.st-tab:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
+
 @media (prefers-reduced-motion: no-preference) {
   .st-item { transition: background 120ms ease, color 120ms ease; }
 }

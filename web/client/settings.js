@@ -49,7 +49,7 @@
 // WHY THAT MATTERED: a screen handed to nobody rendered "Setting up for …" forever, and the
 // SCREEN section held nothing but "Close menu". Two universal headings, no universal content.
 
-import { VERBS, verbTopic } from './actions.js';
+import { VERBS, verbTopic, MENU_TAB_TOPIC } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
 
@@ -128,8 +128,27 @@ export function buildItems({
   // See the Home row below. Default true, because "there should be SOME way out" is the
   // default that survived F18's correction.
   includeHome = true,
+  // TABS (2026-10-02; see "TABS" above mountSettings). When a host has tabs, every row is TAGGED
+  // with the tab it belongs to: its own `tab` if the host gave one, else its slot's default here
+  // (`{ who, subject, extras, screen }`). Absent, nothing is tagged and the list is exactly what it
+  // always was. The ways out are tagged `*end`: they are on every tab.
+  slotTabs = null,
 } = {}) {
   const out = [];
+  if (slotTabs) {
+    const res = buildItems({ person, subject, extras, fields, whoItems, screenItems, canFullscreen,
+      isFullscreen, includeHome });
+    // Which slot each row came from, by walking the slots in the order buildItems lays them out.
+    let slot = 'who';
+    return res.map((it) => {
+      if (it.kind === 'heading' && it.id === 'who') slot = 'who';
+      else if (it.kind === 'heading' && it.id === 'subject') slot = 'subject';
+      else if (it.kind === 'heading' && it.id === 'screen' && !it.tab) slot = 'screen';
+      else if (slot === 'subject' && !(fields || []).includes(it) && it.id !== 'panel-settings') slot = 'extras';
+      if (['fullscreen', 'home', 'close'].includes(it.id) && it.kind === 'item' && !it.tab) return { ...it, tab: '*end' };
+      return it.tab ? it : { ...it, tab: slotTabs[slot] || slotTabs.screen || null };
+    });
+  }
 
   // WHO. Stated here; PICKED by whatever the host puts in `whoItems`.
   //
@@ -295,10 +314,35 @@ export function mountSettings(root, {
   // the same rows. Nothing about what the menu CAN do changes with it.
   inline = false,
   includeHome = true,
+  // ---- TABS (2026-10-02; see "TABS" below). All optional: a host that passes none of these gets
+  // the one flat list it always had. ----
+  // `tabs`: [{ id, label }] or a function returning it, in the order the strip shows them. A tab with
+  // no row in it is not shown (an empty tab is a press that leads nowhere).
+  tabs = null,
+  // Which tab each SLOT's rows land on when a row does not name its own `tab`.
+  slotTabs = null,
+  // Which tab the menu opens on (read at every open). Absent: the first tab that has rows.
+  startTab = null,
+  // Row ids pinned ABOVE the tabs, on every tab (Mike: "The choice for what to show should be at the
+  // top above the tabs" - the complexity row).
+  topIds = [],
+  // THE SUBJECT: what the menu's panel rows are about. `subjects()` -> [{ id, label }], and
+  // `defaultSubject()` -> the id to start on at every open (the focused panel). The row "Settings
+  // for: <label>" sits above the tabs and steps through them; the host reads the choice back with
+  // `subjectId()`. Absent: no row, and `subjectId()` is null.
+  subjects = null,
+  defaultSubject = null,
+  onSubject = null,
   documentRef = (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!root) throw new Error('mountSettings: a root element is required');
   const doc = documentRef;
+  const tabsOn = !!tabs;
+  const SLOT_TABS = slotTabs || { who: 'people', subject: 'module', extras: 'screen', screen: 'display' };
+  let tab = null;              // the tab showing, while tabs are on
+  let tabList = [];            // the tabs with rows in them, at the last render
+  let allItems = [];           // every row, every tab (what `items()` reports)
+  let subjectSel = null;       // the chosen subject's id
 
   let open = false;
   let page = null;             // the open page's id, or null for the list
@@ -326,8 +370,120 @@ export function mountSettings(root, {
 
   const isFullscreen = () => !!(doc && doc.fullscreenElement);
 
-  function render() {
-    items = buildItems({
+  // ---------------------------------------------------------------------------------
+  // TABS (2026-10-02). Mike: "The settings menu needs to be broken up into tabs. The choice for
+  // what to show should be at the top above the tabs and then tabs for things like the active
+  // module, audio, video, devices, users, etc."
+  //
+  // WHAT A TAB IS HERE: a filter on the ONE list, never a second menu. Every row is built exactly as
+  // before (buildItems, the host's slots) and tagged with one tab; the cursor walks
+  //     [Settings for: <subject>] [rows pinned above the tabs] [Tab: <name>] <that tab's rows> [ways out]
+  // and wraps. So:
+  //   * NO ROW CAN BE LOST TO A TAB: a row whose tab is unknown lands on the first tab (`tabFor`), and
+  //     `items()` still reports every row of every tab - kiosk_test compares the two.
+  //   * THE WAYS OUT ARE ON EVERY TAB (full screen, Home, Close), last, as they always were.
+  //   * ONE SWITCH: the tab row is ONE stop; `select` on it goes to the next tab and the cursor stays
+  //     on it, so the next press goes on again. Argued against a stop per tab: six tabs as six stops
+  //     would put six presses in front of every row on every walk, which is the cost the tabs exist to
+  //     take away. The strip of tab buttons under it is for a POINTER and is not a stop (the colour
+  //     swatches' rule). Voice and a bound switch reach `nextTab` / `prevTab` / `showTab` directly.
+  //   * THE LEVELS STILL WORK INSIDE A TAB: a level decides which rows exist; a tab only which of them
+  //     are showing. A tab left with nothing in it at a level is not offered at that level.
+  // ---------------------------------------------------------------------------------
+  const safeCall = (fn, dflt) => { try { const v = typeof fn === 'function' ? fn() : fn; return v == null ? dflt : v; } catch (err) { console.warn('settings: host read threw', err); return dflt; } };
+  function subjectList() { return subjects ? (safeCall(subjects, []) || []).filter((s) => s && s.id) : []; }
+  function currentSubject() {
+    const list = subjectList();
+    return list.find((s) => s.id === subjectSel) || list[0] || null;
+  }
+  function chooseSubject(id) {
+    subjectSel = id;
+    try { onSubject?.(id); } catch (err) { console.warn('settings: onSubject threw', err); }
+  }
+  function stepSubject(by = 1) {
+    const list = subjectList();
+    if (list.length < 2) return null;
+    const at = Math.max(0, list.findIndex((s) => s.id === currentSubject()?.id));
+    const next = list[(at + by + list.length) % list.length];
+    chooseSubject(next.id);
+    return next;
+  }
+  const visibleTab = (t) => tabList.some((d) => d.id === t);
+  // The rows of one tab, with any heading that has nothing under it on THIS tab left out.
+  // One tab gathers rows from several of the host's slots, so a row may carry `rank` (default 0): the
+  // tab is sorted by it, stably, which keeps each section's rows in the order they were built.
+  function rowsOf(t, list) {
+    const mine = list.map((it, i) => [it, i]).filter(([it]) => it.tab === t)
+      .sort((a, b) => ((Number(a[0].rank) || 0) - (Number(b[0].rank) || 0)) || (a[1] - b[1]))
+      .map(([it]) => it);
+    return mine.filter((it, n) => {
+      if (it.kind !== 'heading') return true;
+      const nx = mine[n + 1];
+      return !!nx && nx.kind !== 'heading';
+    });
+  }
+  function tabbed(flat) {
+    const defs = (safeCall(tabs, []) || []).filter((d) => d && d.id);
+    const known = new Set(defs.map((d) => d.id));
+    const pinned = new Set(topIds || []);
+    // Every row has exactly one place: pinned above, the ends, or a tab the strip shows.
+    const fallback = defs[0]?.id || null;
+    allItems = flat.map((it) => {
+      if (pinned.has(it.id)) return { ...it, tab: '*top' };
+      if (it.tab === '*end') return it;
+      return known.has(it.tab) ? it : { ...it, tab: fallback };
+    });
+    tabList = defs.filter((d) => allItems.some((it) => it.tab === d.id && it.kind !== 'heading'))
+      .map((d) => ({ id: d.id, label: d.label || d.id }));
+    if (!visibleTab(tab)) tab = tabList[0]?.id || null;
+    const top = [];
+    if (subjects) {
+      const list = subjectList();
+      const cur = currentSubject();
+      const at = cur ? list.indexOf(cur) : -1;
+      top.push({
+        kind: 'item', id: 'subject-pick', tab: '*top',
+        label: `Settings for: ${cur ? cur.label : 'this screen'}`,
+        ...(list.length > 1 ? { hint: `${at + 1} of ${list.length} — press for the next` } : {}),
+        // One subject cannot be changed: a stop that does nothing is a press spent for nothing.
+        disabled: list.length < 2,
+        subjectPick: true,
+      });
+    }
+    top.push(...allItems.filter((it) => it.tab === '*top'));
+    if (tabList.length) {
+      const at = tabList.findIndex((d) => d.id === tab);
+      top.push({
+        kind: 'item', id: 'tabs', tab: '*top', tabStrip: true,
+        label: `Tab: ${tabList[at]?.label || ''}`,
+        hint: tabList.length > 1 ? `${at + 1} of ${tabList.length} — press for the next tab` : '',
+        disabled: tabList.length < 2,
+      });
+    }
+    return [...top, ...rowsOf(tab, allItems), ...allItems.filter((it) => it.tab === '*end')];
+  }
+  /** Show a tab. The cursor goes to the tab row, so one more press goes on to the next tab. */
+  function showTab(id, { focus = 'tabs' } = {}) {
+    if (!tabsOn) return null;
+    if (!open) { tab = id; return id; }
+    render();
+    if (!visibleTab(id)) return null;
+    tab = id;
+    if (editing) editing = null;
+    render({ keepCursor: false });
+    const n = items.findIndex((it) => it.id === focus && it.kind === 'item' && !it.disabled);
+    if (n >= 0) nav.setIndex(n);
+    paint();
+    return tab;
+  }
+  function stepTab(by) {
+    if (!tabsOn || !tabList.length) return null;
+    const at = Math.max(0, tabList.findIndex((d) => d.id === tab));
+    return showTab(tabList[(at + by + tabList.length) % tabList.length].id);
+  }
+
+  function render({ keepCursor = true } = {}) {
+    const flat = buildItems({
       person: person(),
       subject: subject(),
       extras: extras(),
@@ -345,8 +501,11 @@ export function mountSettings(root, {
       canFullscreen: !!fullscreenTarget,
       includeHome,
       isFullscreen: isFullscreen(),
+      slotTabs: tabsOn ? SLOT_TABS : null,
     });
-    const keep = nav.current()?.id;
+    if (tabsOn) items = tabbed(flat);
+    else { items = flat; allItems = flat; }
+    const keep = keepCursor ? nav.current()?.id : null;
     nav = createNav(items);
     // Rebuilding must not throw the cursor back to the top under somebody's hand: if the
     // item they were on still exists, stay on it.
@@ -393,6 +552,13 @@ export function mountSettings(root, {
         ? swatchesHTML({ palette: it.color.palette, value: it.color.value, label: it.label,
           attrs: `data-for="${n}"` })
         : '';
+      // THE TAB STRIP, for a POINTER: one button per tab, under the tab row. Not cursor stops (see
+      // TABS); the row above them is the one stop, and `select` on it goes to the next tab.
+      const strip = it.tabStrip ? `<div class="st-tabs" role="tablist" aria-label="Settings tabs">${
+        tabList.map((d) => `<button type="button" class="st-tab${d.id === tab ? ' on' : ''}" role="tab"
+          data-tab="${esc(d.id)}" aria-selected="${d.id === tab ? 'true' : 'false'}">${esc(d.label)}</button>`).join('')
+      }</div>` : '';
+      if (it.tabStrip) return row + strip;
       const editor = isEditing ? `<div class="st-edit" data-edit-for="${n}">
           <input class="st-input" type="text" data-edit-input value="${esc(editing.draft)}"
             placeholder="${esc(it.edit.placeholder || '')}" aria-label="${esc(it.label)}"
@@ -514,6 +680,10 @@ export function mountSettings(root, {
 
   function activate(item) {
     if (!item || item.disabled) return null;
+    // The tab row: on to the next tab, the cursor staying on the row (see TABS).
+    if (item.tabStrip) { stepTab(1); return item; }
+    // "Settings for": on to the next subject. The rows below it follow on the repaint.
+    if (item.subjectPick) { stepSubject(1); render(); return item; }
     if (item.page) { openPage(item.page); return item; }
     if (item.picture) return openPicture(item);
     // A text row opens its box. `onSelect` is not told yet: nothing has been chosen until the
@@ -593,13 +763,25 @@ export function mountSettings(root, {
     paint();
   }
 
-  function show() {
-    if (open) return true;
+  function show(opts = null) {
+    if (open) {
+      // Already open: a request to show a particular tab or row still lands there.
+      if (opts && opts.tab) showTab(opts.tab, { focus: opts.focus || 'tabs' });
+      else if (opts && opts.focus) focusRow(opts.focus);
+      return true;
+    }
     // The gate. Refusing SILENTLY would look like a broken switch, so the host is told.
     if (gated && !isModerator()) { onRefused?.({ reason: 'moderator-only' }); return false; }
     open = true;
     returnFocus = doc?.activeElement || null;
-    render();
+    // EVERY OPEN STARTS IN THE SAME PLACE: the subject is the focused panel and the tab is the host's
+    // start tab (the panel's). Argued: the same first stops at every open is what a switch user can
+    // learn; "where I left it" is a caregiver's convenience that costs the switch user that.
+    if (subjects) subjectSel = safeCall(defaultSubject, null);
+    if (tabsOn) tab = (opts && opts.tab) || safeCall(startTab, null) || tab;
+    // (Without tabs the cursor stays where it was last time, as it always has.)
+    render({ keepCursor: !tabsOn });
+    if (opts && opts.focus) focusRow(opts.focus);
     scrim.hidden = false;
     router?.setPaused?.(true);
     panel.focus?.();
@@ -627,6 +809,20 @@ export function mountSettings(root, {
 
   function toggle() { return open ? (close(), false) : show(); }
 
+  /** Put the cursor on row `id`, going to its tab first when it is on another. False if it is not a stop. */
+  function focusRow(id) {
+    if (!open || !id) return false;
+    if (tabsOn) {
+      const t = allItems.find((it) => it.id === id)?.tab;
+      if (t && t !== tab && !String(t).startsWith('*') && visibleTab(t)) { tab = t; render({ keepCursor: false }); }
+    }
+    const n = items.findIndex((it) => it.id === id && it.kind === 'item' && !it.disabled);
+    if (n < 0) return false;
+    nav.setIndex(n);
+    paint();
+    return true;
+  }
+
   // --- mouse. Clicking is still how most caregivers will use this. ---
   const listeners = new AbortController();
   const sig = { signal: listeners.signal };
@@ -636,6 +832,9 @@ export function mountSettings(root, {
     if (e.target.closest('[data-edit-save]')) { saveEdit(); return; }
     if (e.target.closest('[data-edit-cancel]')) { cancelEdit(); return; }
     if (e.target.closest('.st-edit')) return;            // a click INTO the box is typing, not a choice
+    // A TAB BUTTON (a pointer's way to a tab): that tab, the cursor on the tab row.
+    const tb = e.target.closest('[data-tab]');
+    if (tb) { showTab(tb.dataset.tab); return; }
     // A SWATCH sets its colour outright, through the row's `commit()` - the host's write path.
     const sw = e.target.closest('[data-swatch]');
     if (sw) {
@@ -738,6 +937,19 @@ export function mountSettings(root, {
       // "Close the menu" (actions.js ACTION_VERBS, 2026-10-02): closes it and never opens it, so a
       // spoken close heard twice cannot put the menu back.
       bus.subscribe(verbTopic('close'), () => { if (open) close(); }),
+      // THE TABS, by a bound switch or a spoken "next tab" / "audio settings" (actions.js MENU_ACTIONS).
+      // `{ dir }` steps; `{ tab }` goes to one. Either OPENS the menu when it is closed: "audio
+      // settings" said to a closed menu means "show me them", and stepping a closed menu would be a
+      // press that shows nothing.
+      bus.subscribe(MENU_TAB_TOPIC, (p) => {
+        if (!tabsOn) { if (!open) show(); return; }
+        const want = p && typeof p.tab === 'string' ? p.tab : null;
+        // (Closed and told to STEP: it opens where it always opens. A step from a menu nobody can see
+        // would land somewhere nobody chose.)
+        if (!open) { show(want ? { tab: want } : null); return; }
+        if (want) showTab(want);
+        else stepTab(p && Number(p.dir) < 0 ? -1 : 1);
+      }),
     ];
     busOffs.push(...off);
     return () => off.forEach((fn) => fn());
@@ -755,9 +967,26 @@ export function mountSettings(root, {
     page: () => page,
     // The id of the row whose text box is open, or null.
     editing: () => editing?.id || null,
-    items: () => items.map((it) => ({ ...it })),
+    // EVERY row (with tabs: every tab's, each tagged with its `tab`, after the rows above the tabs).
+    // What the cursor walks right now is `visibleItems()`.
+    items: () => (tabsOn
+      ? [...items.filter((it) => it.tab === '*top' && (it.subjectPick || it.tabStrip)),
+        ...allItems].map((it) => ({ ...it }))
+      : items.map((it) => ({ ...it }))),
+    visibleItems: () => items.map((it) => ({ ...it })),
     focusIndex: () => nav.index(),
     focusId: () => nav.current()?.id || null,
+    focusRow,
+    // ---- tabs (all null / no-ops on a host without them) ----
+    tabs: () => tabList.map((d) => ({ ...d })),
+    tab: () => (tabsOn ? tab : null),
+    showTab: (id) => showTab(id),
+    nextTab: () => stepTab(1),
+    prevTab: () => stepTab(-1),
+    tabOf: (id) => (allItems.find((it) => it.id === id) || items.find((it) => it.id === id))?.tab || null,
+    // ---- the subject ("Settings for") ----
+    subjectId: () => (subjects ? (currentSubject()?.id || null) : null),
+    setSubject(id) { chooseSubject(id); if (open) render(); return currentSubject()?.id || null; },
     attachBus,
     destroy() {
       close();
@@ -771,4 +1000,6 @@ export function mountSettings(root, {
 
 // Exported so a host can assert it wired every verb the menu understands.
 export const MENU_VERBS = ['menu', 'next', 'prev', 'select', 'back', 'close'];
+// ...and what else it answers on the bus: the tabs (actions.js MENU_ACTIONS).
+export const MENU_TOPICS = [MENU_TAB_TOPIC];
 export const ALL_VERB_IDS = VERBS.map((v) => v.id);

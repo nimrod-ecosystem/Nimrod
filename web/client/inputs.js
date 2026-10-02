@@ -52,7 +52,7 @@
 
 import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, verbTopic,
-         MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION, ACTION_VERBS, CURSOR_ACTIONS } from './actions.js';
+         MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION, ACTION_VERBS, CURSOR_ACTIONS, MENU_ACTIONS } from './actions.js';
 import { SPEECH_ACTIONS, NEAR_MISS_ACTIONS } from './input_speech.js';
 import { SUBTITLE_ACTIONS } from './subtitles.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
@@ -125,6 +125,8 @@ const EXTRA_ACTION_GROUPS = [
   // registered in createDefaultRegistry, offered here so a switch can be bound to each.
   { label: 'Games and menus', actions: ACTION_VERBS.map((v) => ({ id: verbTopic(v.id), label: v.label })) },
   { label: 'The cursor', actions: CURSOR_ACTIONS },
+  // 2026-10-02: the settings menu's tabs and "Switch module" (actions.js MENU_ACTIONS).
+  { label: 'The settings menu', actions: MENU_ACTIONS },
 ];
 export const EXTRA_ACTIONS = EXTRA_ACTION_GROUPS.flatMap((g) => g.actions);
 

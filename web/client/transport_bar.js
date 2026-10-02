@@ -19,6 +19,7 @@
 
 import { readCatPrefs } from './cat_guide.js';
 import { mountCatHelp, selectionFrom } from './cat_help.js';
+import { panelVolumeFrom, toggleMutePatch } from './panel_sound.js';
 
 export const HELP_ACT = 'help';
 
@@ -87,7 +88,7 @@ export function mountBarHelp(host, { output = () => null, storage, focused = () 
  * The model both bars draw from, read fresh from an arrangement (`arrangement.js`) and an input
  * runtime-like object (`{ router }`). Pure reads; nothing is kept.
  */
-export function barModel(arr, runtime) {
+export function barModel(arr, runtime, { audio = null } = {}) {
   if (!arr) return null;
   return {
     layout: arr.layout(), profile: arr.profile() || { modules: [] }, slotRecs: arr.slotRecs,
@@ -96,7 +97,38 @@ export function barModel(arr, runtime) {
     runtime: runtime || null,
     focusPlaced: arr.focusPlaced, showUnplaced: arr.showUnplaced, showPrimary: arr.showPrimary,
     instanceTitle: arr.instanceTitle,
+    audio,                                        // 2026-10-02: a TV's sound, on its chip
   };
+}
+
+// *** A TV'S SOUND, ON ITS CHIP (2026-10-02). *** Mike, on a TV in a room showing a live dashboard that
+// plays sound: "It has to be accessible through the transport bar and settings menu." A panel that is a
+// DASHBOARD (a TV, a billboard: modules/view.js nested) and has sound on it gets a second, small button
+// right after its chip: "Sound" / "Muted", pressed to toggle the whole TV (panel_sound.js, the panel's own
+// row, so the menu's rows and another device agree with it). Volume and each thing on the TV are the
+// menu's Sound tab. Only dashboards: every sound-making panel getting one would double a bar that already
+// has to fit nine chips on a small tablet (transport_test), and the menu has the rest.
+const NESTED_TYPES = new Set(['dashboard', 'view']);
+function drawSoundToggle(modsEl, rec, audio) {
+  if (!rec || !NESTED_TYPES.has(rec.type) || !rec.state || !audio?.sourcesOf) return;
+  let has = false;
+  try { has = (audio.sourcesOf(rec.id) || []).length > 0; } catch { has = false; }
+  if (!has) return;
+  const row = rec.state.get?.() || {};
+  const muted = panelVolumeFrom(row) === 0;
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'k-dot-sound';
+  b.dataset.soundFor = rec.id;
+  b.textContent = muted ? 'Muted' : 'Sound';
+  b.setAttribute('aria-pressed', muted ? 'true' : 'false');
+  b.setAttribute('aria-label', `${rec.title || rec.type}: ${muted ? 'muted, press for sound' : 'sound on, press to mute'}`);
+  b.title = muted ? 'sound off on this panel — press for sound' : 'press to mute this panel';
+  b.addEventListener('click', () => {
+    try { rec.state.set(toggleMutePatch(rec.state.get?.() || {})); } catch (err) { console.error('transport bar: sound', err); }
+    b.textContent = b.textContent === 'Muted' ? 'Sound' : 'Muted';
+  });
+  modsEl.append(b);
 }
 
 // *** THE TRANSPORT BAR. ***
@@ -190,6 +222,7 @@ export function drawChips(modsEl, m) {
         b.dataset.id = rec.id;
         b.addEventListener('click', () => focusPlaced(rec.id));
         modsEl.append(b);
+        drawSoundToggle(modsEl, rec, m.audio);
       } else {
         const b = document.createElement('button');
         b.className = 'k-dot k-off';

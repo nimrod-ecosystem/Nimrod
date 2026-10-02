@@ -509,6 +509,87 @@ const swallowPlugin = (id = 'swallow', hook = {}) => ({
       }
     }
 
+    // =====================================================================================
+    section('*** "sound like it’s in the room": a reverb per THING, off by default (2026-10-02) ***');
+    {
+      const MF = await import('../mixer_fx.js');
+      check('the choices are off / a small room / a large room', JSON.stringify(MF.ROOM_SOUND_CHOICES) === '["off","small","large"]');
+      // The wiring, against the graph that traces connections.
+      const ctx = fakeCtx();
+      const fx = F?.({ context: ctx });
+      const chIn = fx?.input('media');
+      const tvIn = fx?.ownerInput('tv', 'media');
+      check('an owner gets its OWN entry, not the channel’s', !!tvIn && tvIn !== chIn);
+      check('...the same one every time it asks', fx?.ownerInput('tv', 'media') === tvIn);
+      check('*** off (the default): one pass-through, straight into the channel, no reverb made ***',
+        fx?.ownerReverb('tv') === 'off' && fx?.owners().every((o) => !o.wired) && ctx.of('convolver').length === 0,
+        JSON.stringify(fx?.owners()));
+      fx?.setOwnerReverb('tv', 'large');
+      check('*** set: a reverb sits between, rewired IN PLACE (the same entry node) ***',
+        fx?.ownerInput('tv', 'media') === tvIn && fx?.owners().some((o) => o.owner === 'tv' && o.wired && o.room === 'large')
+        && ctx.of('convolver').length === 1, JSON.stringify(fx?.owners()));
+      const ytIn = fx?.ownerInput('yt', 'media', () => tvIn);
+      check('a thing ON the TV feeds the TV’s entry (its sound gets the TV’s room too)', !!ytIn && ytIn !== tvIn
+        && ctx.reaches(ytIn, tvIn));
+      fx?.setOwnerReverb('yt', 'large');
+      check('*** two things in a large room share ONE reverb (one per size per channel, not one per thing) ***',
+        JSON.stringify(fx?.rooms()) === '["large|media"]' && fx?.owners().filter((o) => o.wired).length === 2,
+        JSON.stringify([fx?.rooms(), fx?.owners()]));
+      check('...and the dry sound still goes straight on from each entry (never only through the reverb)',
+        ctx.reaches(tvIn, chIn) && (ctx.edges.get(tvIn) || new Set()).size === 2);
+      fx?.setOwnerReverb('yt', 'off');
+      fx?.setOwnerReverb('tv', 'nonsense');
+      check('anything that is not a choice is off', fx?.ownerReverb('tv') === 'off' && fx?.owners().every((o) => !o.wired));
+      check('...and a room nobody uses is taken down', (fx?.rooms() || []).length === 0, JSON.stringify(fx?.rooms()));
+      check('an unknown channel gets the downstream, never an owner node', fx?.ownerInput('tv', 'nope', () => null) === null);
+      fx?.destroy();
+      check('destroy forgets every owner', (fx?.owners() || []).length === 0);
+      const noAudio = F?.({ makeContext: () => null });
+      check('no Web Audio at all: null, and the caller plays direct as it always did', noAudio?.ownerInput('tv', 'media') === null);
+    }
+    if (OAC) {
+      // REAL SOUND: a click through a small room and a large one, against off.
+      const tailOf = async (choice) => {
+        const c = new OAC(1, 48000, 48000);
+        const fx = F?.({ context: c });
+        fx?.setOwnerReverb('tv', choice);
+        tone(c, 0.5, fx?.ownerInput('tv', 'media') || c.destination, 0, 0.05);
+        const b = await c.startRendering();
+        return rms(b, 0.08, 0.6);                 // after the 50 ms tone has stopped
+      };
+      const tOff = await tailOf('off'), tSmall = await tailOf('small'), tLarge = await tailOf('large');
+      check('*** measured: a room leaves a tail, off leaves none ***', tSmall > 1e-4 && tOff < 1e-5,
+        `small ${tSmall.toFixed(5)} off ${tOff.toExponential(2)}`);
+      check('...and a large room more than a small one', tLarge > tSmall, `large ${tLarge.toFixed(5)} small ${tSmall.toFixed(5)}`);
+      // *** CPU, MEASURED (Mike: "argue CPU on a Pi 400"). *** Wall time to render 20 s of sound through N
+      // owners' reverbs, in this headless Chrome: how many times faster than real time it runs. A Pi 400 is
+      // roughly an order of magnitude slower than a desktop core for this work [estimate, not measured on
+      // the bench], so "N x real time here" is about "N/10 x" there.
+      const SECS = 20;
+      const timeIt = async (owners, choice) => {
+        const c = new OAC(2, 48000 * SECS, 48000);
+        const fx = F?.({ context: c });
+        for (let i = 0; i < owners; i++) {
+          fx?.setOwnerReverb(`o${i}`, choice);
+          tone(c, 0.2, fx?.ownerInput(`o${i}`, 'media') || c.destination);
+        }
+        const t0 = performance.now();
+        await c.startRendering();
+        return (performance.now() - t0) / 1000;
+      };
+      const base = await timeIt(1, 'off');
+      const one = await timeIt(1, 'large');
+      const three = await timeIt(3, 'large');
+      const fold = (s) => (SECS / Math.max(1e-3, s));
+      info(`CPU: ${SECS}s of sound rendered in ${base.toFixed(2)}s with no room (${fold(base).toFixed(0)}x real time), `
+        + `${one.toFixed(2)}s through one large room (${fold(one).toFixed(0)}x), ${three.toFixed(2)}s through three (${fold(three).toFixed(0)}x).`);
+      check('*** measured: one large room renders far faster than real time here (CPU, recorded above) ***',
+        fold(one) > 10, `${fold(one).toFixed(1)}x`);
+      check('*** measured: three things in a large room cost about what one does (the room is shared) ***',
+        three < one * 2.5, `one ${one.toFixed(3)}s, three ${three.toFixed(3)}s`);
+      window.__roomSoundCpu = { secs: SECS, base, one, three };
+    }
+
     // THE BUS AND THE EFFECTS NEVER DOUBLE-COUNT: the graph carries no fader and no master.
     section('the graph applies no volume of its own');
     {

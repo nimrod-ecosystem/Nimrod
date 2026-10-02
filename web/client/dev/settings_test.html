@@ -1330,6 +1330,115 @@ section('the shell — a colour row: switch cycles, mouse picks');
   window.__menu = m;
 }
 
+// =====================================================================
+section('*** TABS (2026-10-02, Mike: "broken up into tabs ... the choice for what to show at the top") ***');
+{
+  const bus = createBus();
+  let subj = 'p2';
+  const subjects = [{ id: 'p1', label: 'Photos' }, { id: 'p2', label: 'Clock' }, { id: 'p3', label: 'Trivia' }];
+  const told = [];
+  const m = mountSettings(makeHost(), {
+    person: () => ({ name: 'Robin' }),
+    subject: () => ({ type: 'x', title: subjects.find((s) => s.id === (m?.subjectId?.() || subj))?.label }),
+    whoItems: () => [{ id: 'who-pick', label: 'Someone else' }],
+    fields: () => [{ kind: 'item', id: 'set:a', label: 'A', tab: 'module' },
+      { kind: 'item', id: 'set:loud', label: 'Loudness', tab: 'audio', rank: 0 }],
+    extras: () => [{ kind: 'heading', id: 'empty-head', label: 'A heading with nothing on its tab', tab: 'display' },
+      { kind: 'item', id: 'x-dev', label: 'Devices row', tab: 'devices' },
+      { kind: 'item', id: 'x-lost', label: 'A row naming no known tab', tab: 'nowhere' }],
+    screenItems: () => [{ kind: 'heading', id: 'sound-head', label: 'Sound', tab: 'audio', rank: 1 },
+      { kind: 'item', id: 'set:master', label: 'Volume', tab: 'audio', rank: 1 },
+      { kind: 'item', id: 'set:level', label: 'How much this menu shows', tab: 'display' },
+      { kind: 'item', id: 'set:theme', label: 'Colours', tab: 'display' }],
+    tabs: () => [{ id: 'module', label: 'The panel' }, { id: 'audio', label: 'Sound' }, { id: 'display', label: 'Display' },
+      { id: 'devices', label: 'Devices' }, { id: 'people', label: 'People' }, { id: 'empty', label: 'Nothing here' }],
+    slotTabs: { who: 'people', subject: 'module', extras: 'screen', screen: 'display' },
+    startTab: () => 'module',
+    topIds: ['set:level'],
+    subjects: () => subjects,
+    defaultSubject: () => subj,
+    onSubject: (id) => told.push(id),
+    onHome: () => {},
+  });
+  m.attachBus(bus);
+  m.open();
+  const vis = () => m.visibleItems().map((i) => i.id);
+  check('it opens on the start tab', m.tab() === 'module', String(m.tab()));
+  check('*** above the tabs: "Settings for: <subject>", then the pinned row, then the tab row ***',
+    vis()[0] === 'subject-pick' && vis()[1] === 'set:level' && vis()[2] === 'tabs', vis().join(','));
+  check('"Settings for" names the subject it opened on (the host’s default: the focused panel)',
+    m.visibleItems()[0].label === 'Settings for: Clock' && m.subjectId() === 'p2', m.visibleItems()[0].label);
+  check('the module tab shows its rows and the ways out, and NOT the other tabs’ rows',
+    vis().includes('set:a') && !vis().includes('set:loud') && !vis().includes('set:theme')
+    && ['home', 'close'].every((id) => vis().includes(id)), vis().join(','));
+  check('a tab with no rows is not offered (an empty tab is a press that leads nowhere)',
+    !m.tabs().some((t) => t.id === 'empty'), JSON.stringify(m.tabs()));
+  check('items() is EVERY row of every tab (nothing is lost to a tab)',
+    ['set:a', 'set:loud', 'set:master', 'set:theme', 'x-dev', 'who-pick', 'x-lost'].every((id) => m.items().some((i) => i.id === id)));
+  check('a row naming a tab nobody offers lands on the first tab, never nowhere', m.tabOf('x-lost') === 'module');
+  check('a row from a slot that named none gets its slot’s tab', m.tabOf('who-pick') === 'people');
+  check('the ways out are on every tab', m.tabOf('home') === '*end' && m.tabOf('close') === '*end');
+  // The tab row: ONE stop; select goes to the next tab and the cursor stays on it.
+  m.focusRow('tabs');
+  m.select();
+  check('*** select on the tab row goes to the NEXT tab, cursor still on the tab row ***',
+    m.tab() === 'audio' && m.focusId() === 'tabs', `${m.tab()} ${m.focusId()}`);
+  check('the tab row says which, and how many', /Tab: Sound/.test(m.visibleItems().find((i) => i.id === 'tabs').label)
+    && /2 of 5/.test(m.visibleItems().find((i) => i.id === 'tabs').hint), JSON.stringify(m.visibleItems().find((i) => i.id === 'tabs')));
+  check('*** a tab gathers rows from several slots, ordered by `rank` (the panel’s sound before the screen’s) ***',
+    vis().indexOf('set:loud') < vis().indexOf('sound-head') && vis().indexOf('sound-head') < vis().indexOf('set:master'), vis().join(','));
+  m.showTab('display');
+  check('a heading with nothing under it on THIS tab is left out', !vis().includes('empty-head') && vis().includes('set:theme'), vis().join(','));
+  check('the pinned row is above the tabs on every tab, and only once', vis().filter((x) => x === 'set:level').length === 1
+    && vis().indexOf('set:level') < vis().indexOf('tabs'));
+  // Wraps: the last tab's next is the first.
+  m.showTab('people'); m.focusRow('tabs'); m.select();
+  check('the tabs wrap (one switch only travels one way)', m.tab() === 'module', m.tab());
+  m.prevTab();
+  check('prevTab goes back (and wraps)', m.tab() === 'people');
+  // The cursor walk on one tab: it wraps, and never leaves the tab.
+  m.showTab('module');
+  const lap = new Set(); for (let i = 0; i < 20; i += 1) { lap.add(m.focusId()); m.next(); }
+  check('*** the one-switch walk stays on its tab and wraps: [Settings for, pinned, Tab, rows, ways out] ***',
+    [...lap].sort().join(',') === ['close', 'home', 'set:a', 'set:level', 'subject-pick', 'tabs', 'x-lost'].sort().join(','), [...lap].join(','));
+  // "Settings for" steps the subject.
+  m.focusRow('subject-pick'); m.select();
+  check('*** select on "Settings for" steps to the next subject, and the host is told ***',
+    m.subjectId() === 'p3' && told.at(-1) === 'p3' && m.visibleItems()[0].label === 'Settings for: Trivia', `${m.subjectId()} ${told}`);
+  m.select();
+  check('...and wraps', m.subjectId() === 'p1');
+  // The bus: a bound switch or a spoken "audio settings".
+  bus.publish('menu/tab', { tab: 'audio' });
+  check('*** menu/tab { tab } (a switch, or "sound settings") goes to that tab ***', m.tab() === 'audio');
+  bus.publish('menu/tab', { dir: 1 });
+  check('menu/tab { dir: 1 } is "next tab"', m.tab() === 'display');
+  bus.publish('menu/tab', { dir: -1 });
+  check('menu/tab { dir: -1 } is "previous tab"', m.tab() === 'audio');
+  m.close();
+  bus.publish('menu/tab', { tab: 'devices' });
+  check('*** said to a CLOSED menu it opens it, on that tab ***', m.isOpen() && m.tab() === 'devices');
+  check('...and every open starts from the host’s default subject again', m.subjectId() === 'p2');
+  m.close();
+  bus.publish('menu/tab', { dir: 1 });
+  check('a STEP said to a closed menu opens it where it always opens (not one tab on from nowhere)', m.isOpen() && m.tab() === 'module');
+  // A pointer: the tab buttons.
+  const btn = [...document.querySelectorAll('.st-tab')].find((b) => b.dataset.tab === 'people');
+  btn?.click();
+  check('a pointer’s tab button goes to its tab (and is not a cursor stop)', m.tab() === 'people'
+    && !m.visibleItems().some((i) => i.id === 'people'));
+  m.open({ tab: 'display', focus: 'set:theme' });
+  check('open({ tab, focus }) on an open menu lands on that row', m.tab() === 'display' && m.focusId() === 'set:theme');
+  check('focusRow goes to a row on another tab', m.focusRow('x-dev') && m.tab() === 'devices' && m.focusId() === 'x-dev');
+  m.destroy();
+  // A host with no tabs is EXACTLY what it was.
+  const plain = mountSettings(makeHost(), { subject: () => ({ type: 'x', title: 'X' }), fields: () => [{ kind: 'item', id: 'set:a', label: 'A', tab: 'audio' }] });
+  plain.open();
+  check('*** a host with no tabs: one flat list, no tab row, no "Settings for", tab() null ***',
+    !plain.items().some((i) => i.id === 'tabs' || i.id === 'subject-pick') && plain.tab() === null
+    && plain.items().some((i) => i.id === 'set:a') && plain.visibleItems().length === plain.items().length);
+  plain.destroy();
+}
+
 await tick();
 const s = document.getElementById('summary');
 s.textContent = `${passed} passed, ${failed} failed`;

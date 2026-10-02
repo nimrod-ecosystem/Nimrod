@@ -81,6 +81,21 @@ export function reverbForScene(sceneId, map = SCENE_REVERB) {
   return p && REVERB_PRESETS[p] ? p : 'none';
 }
 
+// *** "SOUND LIKE IT'S IN THE ROOM" — A REVERB PER THING, OFF BY DEFAULT (2026-10-02). *** Mike, on a TV
+// in a room playing a live dashboard: "Would be nice if you could add room reverb to things in the room as
+// an option. Probably not something we need to include in the site as a default." So it is an option on a
+// placed module (panel_sound.js ROOM_SOUND_FIELD), 'off' unless somebody picks it, and it reaches only
+// that module's own sound (and, on a TV, what is on it): `ownerInput` below.
+//   small  a furnished room: short and faint - the TV is across the room, not in a cathedral.
+//   large  a big open room: longer, a little more of it.
+// The impulse is GENERATED (makeImpulse: seeded decaying noise, nothing downloaded, the same every load).
+// Unmeasured by ear; best guesses, for Mike's list (the "sounds like a room / a hall" presets' rule).
+export const ROOM_SOUND_PRESETS = Object.freeze({
+  small: Object.freeze({ seconds: 0.6, decay: 4, wet: 0.16 }),
+  large: Object.freeze({ seconds: 1.4, decay: 3, wet: 0.24 }),
+});
+export const ROOM_SOUND_CHOICES = Object.freeze(['off', 'small', 'large']);
+
 const RESERVED = ['compressor', 'reverb'];
 const ID_RX = /^[A-Za-z0-9][\w.-]{0,39}$/;
 
@@ -377,16 +392,121 @@ export function createMixerFx({
     } catch { return false; }
   }
 
+  function chanInput(chId) {
+    if (!known.has(chId)) return null;
+    const ch = settingsOf(chId);
+    if (!ch.input) { if (!nodesOf(ch)) return null; rebuild(ch); }
+    return ch.input;
+  }
+
+  // ---- ONE THING'S OWN ROOM REVERB (ROOM_SOUND_PRESETS above) -----------------------------------
+  // Each owner (a module instance) that plays through Web Audio gets ITS OWN entry node per channel,
+  // made the first time it asks (module.js `ownedAudio` hands it out as `effects().input`). The entry
+  // always goes straight on to what is downstream (the channel, or on a TV the TV's own entry): the DRY
+  // sound, untouched, at 1. Off, that is all there is - one pass-through node, nothing running.
+  //
+  // *** ONE REVERB PER ROOM SIZE PER CHANNEL, SHARED - NOT ONE PER THING. *** Set, the entry ALSO feeds
+  // a send into that size's reverb on that channel (made on first use, taken down when nobody uses it).
+  // Measured 2026-10-02 in headless Chrome (dev/mixer_test.html prints it): one large room is ~1.8% of a
+  // desktop core at real time, and per-thing reverbs scale with the number of things (six: ~9%); a Pi 400
+  // is roughly ten times slower at this [estimate, not measured on the bench]. Shared, six things in a
+  // large room cost what one does. AGAINST: two things in "a large room" share ONE room's echo rather
+  // than each having its own - which is what being in the same room sounds like anyway.
+  // Rewired IN PLACE, so a module already playing is heard in the room at once, no restart. A reverb that
+  // cannot be made or wired is left out and the dry sound goes on: never silence.
+  const owners = new Map();          // `${owner}|${ch}` -> { owner, ch, input, down, room }
+  const ownerRoom = new Map();       // owner -> 'small' | 'large'
+  const rooms = new Map();           // `${size}|${ch}` -> { rev, users:Set }
+  function roomFor(size, ch) {
+    const k = `${size}|${ch}`;
+    let r = rooms.get(k);
+    if (r) return r;
+    const into = chanInput(ch);
+    if (!into) return null;
+    const preset = ROOM_SOUND_PRESETS[size];
+    // The shared room is WET ONLY (send -> convolver -> wet): every user's dry sound already goes
+    // straight on from its own entry.
+    const conv = ctx.createConvolver();
+    conv.buffer = makeImpulse(ctx, preset);
+    const wet = ctx.createGain();
+    try { wet.role = 'wet'; } catch { /* a frozen node is fine */ }
+    wet.gain.value = preset.wet;
+    const input = ctx.createGain();
+    input.connect(conv); conv.connect(wet); wet.connect(into);
+    r = { key: k, input, conv, wet, users: new Set(),
+      destroy() { for (const n of [input, conv, wet]) safe(() => n.disconnect()); } };
+    rooms.set(k, r);
+    return r;
+  }
+  function leaveRoom(o) {
+    if (!o.room) return;
+    safe(() => o.input.disconnect(o.room.input));
+    o.room.users.delete(o);
+    if (!o.room.users.size) { o.room.destroy(); rooms.delete(o.room.key); }
+    o.room = null;
+  }
+  function wireOwner(o) {
+    leaveRoom(o);
+    safe(() => o.input.disconnect());
+    safe(() => o.input.connect(o.down));       // the dry sound, always
+    const size = ownerRoom.get(o.owner) || 'off';
+    if (!ROOM_SOUND_PRESETS[size]) return;
+    try {
+      const r = roomFor(size, o.ch);
+      if (!r) return;
+      o.input.connect(r.input);
+      r.users.add(o);
+      o.room = r;
+    } catch (err) {
+      console.error('mixer: room sound', err);
+      leaveRoom(o);
+      emit({ type: 'bypass', channel: o.ch, id: `room:${o.owner}`, why: `could not be wired in: ${msg(err)}` });
+    }
+  }
+
   return {
     context: () => getContext(),
 
     /** Where a Web Audio source connects to play on `channel`. null: play direct, as before. */
-    input(chId) {
-      if (!known.has(chId)) return null;
-      const ch = settingsOf(chId);
-      if (!ch.input) { if (!nodesOf(ch)) return null; rebuild(ch); }
-      return ch.input;
+    input: chanInput,
+
+    /**
+     * `owner`'s own entry into `channel` (see above). `downstream()` says where it leads (default: the
+     * channel itself). null whenever the channel itself would be: play direct, as before.
+     */
+    ownerInput(owner, chId, downstream = null) {
+      if (!owner || !known.has(chId)) return typeof downstream === 'function' ? downstream() : chanInput(chId);
+      const k = `${owner}|${chId}`;
+      const have = owners.get(k);
+      if (have) return have.input;
+      const c = getContext();
+      if (!c) return null;
+      let down = null;
+      try { down = typeof downstream === 'function' ? downstream() : chanInput(chId); } catch { down = null; }
+      if (!down) return null;
+      let input;
+      try { input = c.createGain(); } catch { return down; }
+      const o = { owner: String(owner), ch: chId, input, down, room: null };
+      owners.set(k, o);
+      wireOwner(o);
+      return o.input;
     },
+
+    /** 'off' | 'small' | 'large' for one owner (anything else is 'off'). Returns what is now in force. */
+    setOwnerReverb(owner, choice) {
+      if (!owner) return 'off';
+      const v = ROOM_SOUND_CHOICES.includes(choice) ? choice : 'off';
+      const key = String(owner);
+      if (v === 'off') ownerRoom.delete(key); else ownerRoom.set(key, v);
+      for (const o of owners.values()) if (o.owner === key) wireOwner(o);
+      return v;
+    },
+    ownerReverb: (owner) => ownerRoom.get(String(owner)) || 'off',
+    /** Every owner entry: { owner, channel, room, wired } - for a suite and a diagnostic page. */
+    owners: () => [...owners.values()].map((o) => ({ owner: o.owner, channel: o.ch,
+      room: o.room ? o.room.key.split('|')[0] : 'off', wired: !!o.room })),
+    /** The shared rooms running now: ['large|media', ...] (one per size per channel, however many use it). */
+    rooms: () => [...rooms.keys()],
 
     /**
      * Send an <audio>/<video> element's sound through `channel`. REFUSES (returns false, and the
@@ -403,7 +523,7 @@ export function createMixerFx({
       if (!el || !known.has(chId)) return false;
       const c = getContext();
       if (!c || typeof c.createMediaElementSource !== 'function') return false;
-      const inp = this.input(chId);
+      const inp = chanInput(chId);
       if (!inp) return false;
       if (routed.has(el)) {
         const src = routed.get(el);
@@ -516,6 +636,9 @@ export function createMixerFx({
         for (const n of [ch.input, ch.output, ch.probeIn, ch.probeOut]) if (n) safe(() => n.disconnect());
       }
       chans.clear();
+      for (const o of owners.values()) safe(() => o.input.disconnect());
+      for (const r of rooms.values()) r.destroy();
+      owners.clear(); ownerRoom.clear(); rooms.clear();
       // Only a context this file made is closed; a shared one belongs to whoever passed it in.
       if (ownContext) safe(() => ctx.close?.());
       ctx = null;

@@ -44,7 +44,7 @@ import {
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS,
 } from './shell_verbs.js';
-import { SYSTEM_TOPICS, verbTopic } from './actions.js';
+import { SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, verbsFor } from './actions.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
@@ -62,12 +62,17 @@ import { mountMapWindow } from './edit_windows.js';
 import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
+import { watchPanelSound, PANEL_VOLUME_FIELD, ROOM_SOUND_FIELD, NESTED_MUTED_KEY, nestedMutedFrom } from './panel_sound.js';
+import { BAR_PLACE_FIELD } from './room_bar.js';
+import { reconcile as reconcileCatalog } from './modules_catalog.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
   SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES, spokenTable,
+  moduleVoiceTable,
 } from './input_speech.js';
+import { attachCursorDrive } from './cursor_drive.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
@@ -357,6 +362,8 @@ export async function mountKiosk(root, {
           <button data-act="next" title="next (→ / space)">Next ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
+          <!-- SWITCH MODULE (2026-10-02): the selected panel's short list of other modules - see openSwitch. -->
+          <button data-act="switch" title="switch the selected panel to another module">Switch module</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
           <!-- *** PLAY/PAUSE WAS INVESTIGATED AND DELIBERATELY LEFT OUT. ***
                NO BACKTICKS IN THIS COMMENT — same trap as the one above: this lives inside
@@ -526,6 +533,7 @@ export async function mountKiosk(root, {
   let drive = null;
   let callTransport = null;
   let cursor = null;
+  let cursorDrive = null;        // cursor_drive.js: "cursor left", "click", "scroll down" move the aim
   let markerTracker = null;
   let markerState = null;
   let deviceState = null;      // the person's ordered microphone preference — see micOwner above
@@ -567,12 +575,22 @@ export async function mountKiosk(root, {
   // `audio.effects()`), and the saved mix is replayed onto it then. Until that moment the mixer's effect
   // settings are remembered in the settings row and applied to nothing, which is exactly what they did.
   let fxReal = null;
+  // "Sound like it's in the room" per panel (panel_sound.js), remembered here until the chain exists and
+  // replayed onto it then - choosing a room for a panel must not, by itself, start an audio context.
+  const ownerRoom = new Map();
   function effects() {
     if (fxReal || torn) return fxReal;
     try { fxReal = createMixerFx(); } catch (err) { console.error('kiosk: no mixer effects', err); fxReal = null; return null; }
     try { mixer?.sync(); mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer effects', err); }
+    for (const [owner, v] of ownerRoom) { try { fxReal.setOwnerReverb(owner, v); } catch (err) { console.error('kiosk: room sound', err); } }
     return fxReal;
   }
+  audio.setOwnerReverb = (owner, v) => {
+    if (!owner) return 'off';
+    if (v && v !== 'off') ownerRoom.set(String(owner), v); else ownerRoom.delete(String(owner));
+    return fxReal ? fxReal.setOwnerReverb(owner, v) : (v || 'off');
+  };
+  audio.ownerReverb = (owner) => ownerRoom.get(String(owner)) || 'off';
   const fxLazy = {
     setCompressor: (ch, on) => fxReal?.setCompressor(ch, on),
     setReverb: (ch, v) => fxReal?.setReverb(ch, v),
@@ -720,6 +738,15 @@ export async function mountKiosk(root, {
     offMissSchedule = null;
     missStore = null;
   }
+  // THE FOCUSED MODULE'S OWN SPOKEN COMMANDS (87bcd41, wired 2026-10-02): its manifest's `voice`, as a
+  // table of only the verbs it answers (input_speech.js `moduleVoiceTable`). Read at the moment
+  // something is heard, so focus moving needs no restart of the recogniser.
+  const focusedVoice = () => {
+    try {
+      const m = runtime?.router?.focused?.();
+      return m ? moduleVoiceTable(getManifest(m.type)?.voice, { verbs: verbsFor(m.type) }) : null;
+    } catch { return null; }
+  };
   // (Re)attach speech from the person's row -- only when one of ITS settings changed, so a poll that
   // brings nothing new never restarts a recogniser under somebody who is mid-sentence.
   function syncSpeech(row) {
@@ -741,7 +768,7 @@ export async function mountKiosk(root, {
       rec = makeRecognizer({ engine: sw.engine, lang: 'en-US', values: r, micOwner,
                              phoneStreams: () => phoneRx?.streams?.() || [],
                              // Subtitles-only has no commands, so every sure guess is as good as any.
-                             actsOn: sw.on ? (t) => meansSomething(t, wakes, PHRASES, routes) : null,
+                             actsOn: sw.on ? (t) => meansSomething(t, wakes, PHRASES, routes, focusedVoice()) : null,
                              // A wake-phrase detector (speechWakeUrl, 82d97a4) opens the listening window
                              // the moment it hears the phrase.
                              wakeSays: sw.on ? (wakes[0] || null) : null });
@@ -787,6 +814,7 @@ export async function mountKiosk(root, {
         recognizer: rec,
         ...opts,
         routes,
+        scoped: sw.on ? focusedVoice : null,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
         ...(sw.on ? {} : { confirm: 'off', nearMiss: false }),
@@ -1195,8 +1223,13 @@ export async function mountKiosk(root, {
   });
 
   async function mountInstance(mod, host) {
-    const state = automation.wrapState(mod.id, stateFor(mod.id), { manifest: getManifest(mod.type) });
-    const events = eventsFor(mod.id);
+    // `stateKey` (2026-10-02, "Switch module"): a panel switched to another type keeps the SAME instance
+    // id (its place, its chip, its focus) but reads and writes ITS OWN row for that type, so the new
+    // type starts fresh and the old one's settings are still there when it is switched back
+    // (arrangement.js `switchPanel`).
+    const rowKey = mod.stateKey || mod.id;
+    const state = automation.wrapState(mod.id, stateFor(rowKey), { manifest: getManifest(mod.type) });
+    const events = eventsFor(rowKey);
     // `extendCtx`, NOT `{ ..., ...childCtx(mod) }`: a spread reads every getter on `childCtx` once and
     // hands the module the value it had at this instant, which is exactly what the getters exist to
     // avoid (a call panel mounted before the drive socket kept a null transport for good). 2026-09-30.
@@ -1216,13 +1249,18 @@ export async function mountKiosk(root, {
       if (v === 'solid' || v === 'veil' || v === 'clear') host.dataset.panelSurface = v;
       else delete host.dataset.panelSurface;
     });
+    // THIS PANEL'S OWN SOUND (panel_sound.js, 2026-10-02): its volume, "sound like it's in the room", and on
+    // a TV the things on it - kept on the same row, applied to the bus here, cleared when it goes.
+    const offSound = watchPanelSound(audio, mod.id, state);
     instance.init();
     state.startPolling(); events.startPolling();
-    return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host };
+    return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host, offSound,
+      ...(mod.stateKey ? { stateKey: mod.stateKey } : {}) };
   }
   function destroyRec(rec) {
     if (!rec) return;
     try { rec.instance.destroy(); } catch { /* noop */ }
+    try { rec.offSound?.(); } catch { /* noop */ }
     rec.state.destroy?.(); rec.events.destroy?.();
   }
 
@@ -1558,7 +1596,10 @@ export async function mountKiosk(root, {
     try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
     // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
     // fresh on every draw, because a swap replaces all of it.
-    drawChips(modsEl, barModel(arr, runtime));
+    drawChips(modsEl, barModel(arr, runtime, { audio }));
+    // Switch module: dimmed with no panel to switch (D16: never hidden).
+    const sw = controlsEl?.querySelector?.('[data-act="switch"]');
+    if (sw) { try { sw.disabled = !arr.focusedRec(); } catch { sw.disabled = true; } }
   }
 
   // ---------------------------------------------------------------------------------
@@ -2318,6 +2359,67 @@ export async function mountKiosk(root, {
   // broken.
   const canPickPerson = () => !!(profiles.people && profiles.moveToPerson);
 
+  // ---- THE MENU'S TABS (2026-10-02; settings.js "TABS" is the mechanism) -------------------------------
+  //
+  // Mike: "The settings menu needs to be broken up into tabs. The choice for what to show should be at
+  // the top above the tabs and then tabs for things like the active module, audio, video, devices,
+  // users, etc." THE SET, argued, and every existing row is in exactly one (kiosk_test checks):
+  //   <the panel>   its own settings, "Switch module", its background - named for the panel, because
+  //                 "the active module" is a thing, not a category. FIRST, and where the menu opens.
+  //   Sound         the panel's own sound first (its volume, "sound like it's in the room", a TV's
+  //                 things, what hiding it does), then the screen's master and mixer, then Amplify.
+  //   Display       Mike's "video": colours, backgrounds, burn-in, movement and flashing, the room, the
+  //                 background's own settings, subtitles.
+  //   Devices       spoken commands and what they listen with, the voice recording, how long a switch
+  //                 is held for the plain bar, "what can I press" / "why nothing happened", connections.
+  //   People        who this screen is for, and the intercom.
+  //   This page     a host page's own rows (Home's Save, Save as, History...): only on such a page.
+  //   This screen   its name, the dashboard rows, Edit and the Map, when something stops working, and
+  //                 where a cold boot lands.
+  // AGAINST more tabs (a Voice tab, a Room tab): each tab is a press on the tab row before its rows, and
+  // a tab of two rows costs more presses than it saves. AGAINST fewer: Sound and Display are where
+  // somebody standing at the screen goes first; folding them into "This screen" was the old menu.
+  // ABOVE THE TABS: "Settings for: <panel>" and "How much this menu shows" (Mike's "the choice for what to
+  // show"). The SUBJECT is a panel on this screen - the one with focus when the menu opens, steppable to
+  // any other. Not "this screen" or "a person": those are tabs already, and the same choice in two places
+  // is two things that can disagree.
+  // `rank` orders sections WITHIN a tab (settings.js sorts by it), since one tab gathers rows from several
+  // of the shell's slots.
+  const tagTab = (tab) => (rank = 0) => ({ tab, rank });
+  const MENU_TAB = {
+    module: tagTab('module'), audio: tagTab('audio'), display: tagTab('display'), devices: tagTab('devices'),
+    people: tagTab('people'), page: tagTab('page'), screen: tagTab('screen'),
+  };
+  const MENU_TAB_DEFS = () => [
+    { id: 'module', label: (() => { const r = menuSubjectRec(); return r ? (r.title || r.type) : 'This panel'; })() },
+    { id: 'audio', label: 'Sound' },
+    { id: 'display', label: 'Display' },
+    { id: 'devices', label: 'Devices' },
+    { id: 'people', label: 'People' },
+    { id: 'page', label: 'This page' },
+    { id: 'screen', label: 'This screen' },
+  ];
+  // Which tab (and section) each of the screen's own rows is on.
+  const SCREEN_FIELD_TABS = {
+    theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0],
+    plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
+  };
+  const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
+  // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
+  // stepped to another; a panel that has gone since is the focused one again.
+  function menuPanelRecs() {
+    try {
+      if (arr.layout()) return arr.panelRecs();
+      return [arr.stageRec()].filter(Boolean);
+    } catch { return []; }
+  }
+  function menuSubjectRec() {
+    let id = null;
+    try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    if (id) { const r = menuPanelRecs().find((x) => x.id === id); if (r) return r; }
+    return focusedRec();
+  }
+
   const SCREEN_FIELDS = () => [
     // COLOURS. Themes are already per-screen (`theme.js`, DECISIONS.md) and the kiosk already
     // applies one — there was simply no way to change it from the screen it applies to.
@@ -2431,6 +2533,12 @@ export async function mountKiosk(root, {
     const f = focusedRec();
     if (f?.type === 'room') return f;
     return [arr.stageRec(), ...(arr.slotRecs || []), ...(arr.placedRecs || [])].find((r) => r?.type === 'room') || null;
+  }
+  // THE BAR ON THE ROOM'S LOW CABINET (room_bar.js): offered only where it can happen -- a real screen's
+  // dashboard whose room has an object that holds the bar (its placed bar is the one that moves).
+  function barCanSitOnCabinet() {
+    if (!useDashboard || embedded || !dash) return false;
+    try { return !!dash.impl.canHoldBar?.(); } catch { return false; }
   }
   // "Room reactions…": the room's own editor (room_notify_editor.js), opened in THAT room -- addressed to
   // its instance (bus.js `instanceTopic`), so a screen with two rooms opens one. The menu closes first:
@@ -2573,7 +2681,159 @@ export async function mountKiosk(root, {
     });
     if (!items.length) return [];
     const status = voiceStatusItem();
-    return [{ kind: 'heading', id: 'voice-head', label: 'Voice' }, ...(status ? [status] : []), ...items];
+    // *** THE TABS (2026-10-02): the voice section is four things, and each goes where somebody would
+    // look for it. *** Spoken commands, what they listen with and the voice recording are DEVICES (an
+    // input, like a switch); subtitles are DISPLAY (words on the screen); amplify is SOUND (a hearing aid
+    // through the speaker); the intercom is PEOPLE (who may talk in). Every row is in exactly one, under
+    // its own heading; the rules above for which rows show are unchanged.
+    const keyOf = (it) => String(it.id || '').replace(/^set:/, '');
+    const SUBS = new Set(SUBTITLES_FIELDS.map((f) => f.key));
+    const AMP = new Set(AMPLIFY_FIELDS.map((f) => f.key));
+    const IC = new Set(INTERCOM_FIELDS.map((f) => f.key));
+    const group = (set) => items.filter((it) => set.has(keyOf(it)));
+    const subs = group(SUBS), amp = group(AMP), ic = group(IC);
+    const dev = items.filter((it) => !SUBS.has(keyOf(it)) && !AMP.has(keyOf(it)) && !IC.has(keyOf(it)));
+    const t = MENU_TAB;
+    return [
+      ...(dev.length || status ? [{ kind: 'heading', id: 'voice-head', label: 'Voice', ...t.devices(0) },
+        ...(status ? [{ ...status, ...t.devices(0) }] : []), ...dev.map((it) => ({ ...it, ...t.devices(0) }))] : []),
+      ...(subs.length ? [{ kind: 'heading', id: 'subtitles-head', label: 'Subtitles', ...t.display(4) },
+        ...subs.map((it) => ({ ...it, ...t.display(4) }))] : []),
+      ...(amp.length ? [{ kind: 'heading', id: 'amplify-head', label: 'Amplify the room', ...t.audio(3) },
+        ...amp.map((it) => ({ ...it, ...t.audio(3) }))] : []),
+      ...(ic.length ? [{ kind: 'heading', id: 'intercom-head', label: 'Intercom', ...t.people(1) },
+        ...ic.map((it) => ({ ...it, ...t.people(1) }))] : []),
+    ];
+  }
+
+  // ---- "SWITCH MODULE" (2026-10-02) ----------------------------------------------------------------
+  //
+  // Mike: "modules on a dashboard should be as hot swappable as possible. Maybe a switch module button on
+  // the transport bar for the selected module." Reached four ways, one list: the bar's "Switch module"
+  // (both bars), the panel tab's "Switch <panel> to another module…", a bound switch (`menu/switch-module`)
+  // and "switch module" said aloud. The list is THE MENU'S PANEL TAB, swapped for a list while it is open,
+  // so the one-switch cursor, voice and Back all work on it with nothing new:
+  //   Keep <panel>            the way out, FIRST, and where the cursor starts (a stray press keeps it)
+  //   <what it was>           the panel's original module, when it has been switched away from it
+  //   the person's recent     the last few modules switched TO, newest first
+  //   More…                   every module this screen can show (the catalog), in place of the short list
+  // The switch itself is the arrangement's (`switchPanel`: same place, a fresh row for the new type, the
+  // old one kept, remembered on the dashboard). A host page with its OWN chooser (Home) gets the press
+  // instead: one chooser, however it is reached.
+  // HOW MANY RECENT: six (SWITCH_RECENT_MAX), argued - a short list is the point (one scan lap, no
+  // scrolling on a small screen), and the rest is one press away under More…. Kept on the PERSON's row
+  // when the screen has one (they are that person's habits, and follow them), else on the screen's.
+  const SWITCH_RECENT_MAX = 6;
+  const SWITCH_RECENT_KEY = 'switchRecent';
+  let switchOpen = null;            // { id, all } while the list is showing, for panel `id`
+  const switchRow = () => (personInputs && personRow ? (personInputs.get?.() || {}) : (settings.get() || {}));
+  function switchRecent() {
+    const v = switchRow()[SWITCH_RECENT_KEY];
+    return Array.isArray(v) ? v.filter((t) => typeof t === 'string' && getManifest(t)) : [];
+  }
+  function rememberSwitch(type) {
+    const next = [type, ...switchRecent().filter((t) => t !== type)].slice(0, SWITCH_RECENT_MAX);
+    try {
+      if (personInputs && personRow) personInputs.set?.({ [SWITCH_RECENT_KEY]: next });
+      else settings.set({ [SWITCH_RECENT_KEY]: next });
+    } catch (err) { console.error('kiosk: switch recent', err); }
+  }
+  // Every module this screen can show, by its catalog (what a caregiver is offered elsewhere), in the
+  // catalog's order. Not the chrome, the HUD-only types or what the panel already is.
+  function switchCatalog(rec) {
+    let described = [];
+    try { described = reconcileCatalog(listManifests()).described || []; } catch { described = []; }
+    return described.map((c) => c.type)
+      .filter((t) => t && t !== rec.type && !getManifest(t)?.chrome && getManifest(t)?.mount !== 'ambient');
+  }
+  const typeTitle = (t) => getManifest(t)?.title || t;
+  function hostSwitch() {
+    if (!hostPage || typeof hostPage.press !== 'function' || typeof hostPage.barItems !== 'function') return false;
+    try { return (hostPage.barItems() || []).some((it) => it && it.act === 'switch'); } catch { return false; }
+  }
+  /** Open the list for panel `id` (default: the focused one). */
+  function openSwitch(id = null) {
+    if (torn) return false;
+    if (hostSwitch()) {
+      try { hostPage.press('switch', { from: 'switch-module' }); } catch (err) { console.error('kiosk: host switch', err); }
+      return true;
+    }
+    const rec = id ? menuPanelRecs().find((r) => r.id === id) || null : focusedRec();
+    if (!rec) { if (!menu.isOpen()) menu.open(); return false; }
+    switchOpen = { id: rec.id, all: false };
+    if (!menu.isOpen()) {
+      menu.open({ tab: 'module', focus: 'switch-keep' });
+      // The menu opens about the FOCUSED panel; a list asked for another one is about that one.
+      if (menu.subjectId() !== rec.id) { menu.setSubject(rec.id); switchOpen = { id: rec.id, all: false }; menu.focusRow('switch-keep'); }
+    } else {
+      if (menu.subjectId() !== rec.id) { menu.setSubject(rec.id); switchOpen = { id: rec.id, all: false }; }
+      menu.refresh();
+      menu.open({ tab: 'module', focus: 'switch-keep' });
+    }
+    return true;
+  }
+  async function doSwitch(id, type) {
+    let ok = false;
+    try { ok = !!(await arr.switchPanel(id, type)); } catch (err) { console.error('kiosk: switch module', err); ok = false; }
+    if (ok) rememberSwitch(type);
+    switchOpen = null;
+    try {
+      if (menu.isOpen()) { menu.refresh(); menu.focusRow('switch-module'); }
+    } catch { /* the menu may be gone */ }
+    renderMods();
+    return ok;
+  }
+  function switchRows(rec) {
+    const title = rec.title || rec.type;
+    const base = arr.baseTypeOf?.(rec.id) || rec.type;
+    const row = (t, hint = '') => ({ kind: 'item', id: `switch:${t}`, label: typeTitle(t), ...(hint ? { hint } : {}),
+      ...MENU_TAB.module(0), run: () => { doSwitch(rec.id, t); } });
+    const out = [
+      { kind: 'heading', id: 'switch-head', label: `Switch ${title} to`, ...MENU_TAB.module(0) },
+      { kind: 'item', id: 'switch-keep', label: `Keep ${title}`, hint: 'leave it as it is', ...MENU_TAB.module(0),
+        run: () => { switchOpen = null; menu.refresh(); menu.focusRow('switch-module'); } },
+    ];
+    if (switchOpen.all) {
+      for (const t of switchCatalog(rec)) out.push(row(t, t === base ? 'what this panel was' : ''));
+      return out;
+    }
+    const seen = new Set([rec.type]);
+    if (base !== rec.type && getManifest(base)) { out.push(row(base, 'what this panel was')); seen.add(base); }
+    for (const t of switchRecent()) {
+      if (seen.has(t)) continue;
+      seen.add(t);
+      out.push(row(t, 'recent'));
+    }
+    out.push({ kind: 'item', id: 'switch-more', label: 'More…', hint: 'every module this screen can show',
+      ...MENU_TAB.module(0), run: () => { switchOpen = { ...switchOpen, all: true }; menu.refresh(); menu.focusRow('switch-keep'); } });
+    return out;
+  }
+
+  // ---- A TV'S THINGS, ON THE SOUND TAB (2026-10-02; panel_sound.js) -----------------------------------
+  // For a panel that is a dashboard showing another one: one row per thing on it that makes sound, "On" /
+  // "Muted", kept on the TV's own row. The things are what the bus knows is playing ON the TV (its
+  // `within`), named by the TV's own dashboard where it can say.
+  function nestedSoundRows(rec) {
+    let inner = [];
+    try { inner = audio.ownersWithin?.(rec.id) || []; } catch { inner = []; }
+    if (!inner.length) return [];
+    let names = new Map();
+    try {
+      const a = rec.instance?.impl?.arrangement?.();
+      const recs = a ? [a.stageRec?.(), ...(a.slotRecs || []), ...(a.placedRecs || [])].filter(Boolean) : [];
+      names = new Map(recs.map((r) => [r.id, r.title || r.type]));
+    } catch { names = new Map(); }
+    const muted = () => nestedMutedFrom(rec.state.get() || {});
+    return inner.map((id) => ({
+      kind: 'item', id: `nested-sound:${id}`,
+      label: `On it: ${names.get(id) || 'something playing'}`,
+      hint: muted()[id] ? 'Muted' : 'On',
+      run: () => {
+        const cur = { ...muted() };
+        if (cur[id]) delete cur[id]; else cur[id] = true;
+        try { rec.state.set({ [NESTED_MUTED_KEY]: cur }); } catch (err) { console.error('kiosk: TV sound', err); }
+      },
+    }));
   }
 
   // `:scope >` is not decoration. The camera module draws its OWN hidden `[data-settings]` inline
@@ -2607,8 +2867,13 @@ export async function mountKiosk(root, {
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
     screenItems: () => [
-      ...(arr.profile()?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
+      ...(arr.profile()?.name ? [{ kind: 'item', id: 'screen-name', disabled: true, ...MENU_TAB.screen(0),
           label: `This screen: ${arr.profile().name}`, hint: 'renamed in Dashboards, on the home page' }] : []),
+      // (Tabs: "How it looks" heads the Display tab's first rows; "Switches" the hold row on Devices; "Hidden
+      // panels" the hide question's wait on Sound. Each row's tab: SCREEN_FIELD_TABS, else This screen.)
+      { kind: 'heading', id: 'look-head', label: 'How it looks', ...MENU_TAB.display(0) },
+      { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
+      { kind: 'heading', id: 'hide-head', label: 'Hidden panels', ...MENU_TAB.audio(2) },
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
@@ -2629,6 +2894,9 @@ export async function mountKiosk(root, {
           // Topic: `THEME_PICKED_TOPIC` in modules/board.js (its suite checks this line).
           if (key === 'theme') bus.publish('screen/theme-picked', { theme: value });
         },
+      }).map((it) => {
+        const [tab, rank] = SCREEN_FIELD_TABS[String(it.id || '').replace(/^set:/, '')] || ['screen', 0];
+        return { ...it, tab, rank };
       }),
       // MOVEMENT AND FLASHING (argued at MOTION_FIELDS): written to the screen's row, seen at once (the
       // settings subscribe applies zoom; the flash limit is read live by everything that repeats).
@@ -2638,31 +2906,42 @@ export async function mountKiosk(root, {
           level: complexity(),
           onStep: (key, value) => { settings.set({ [key]: value }); },
         });
-        return rows.length ? [{ kind: 'heading', id: 'motion-head', label: 'Movement and flashing' }, ...rows] : [];
+        return rows.length ? tagged([{ kind: 'heading', id: 'motion-head', label: 'Movement and flashing' }, ...rows], 'display', 1) : [];
       })(),
       // THE SCREEN'S SOUND: written to the same screen row, heard at once (the settings subscribe above
-      // re-syncs the master and the mixer on every change).
-      { kind: 'heading', id: 'sound-head', label: 'Sound' },
-      ...fieldItems(SOUND_FIELDS().map(normalizeField).filter(Boolean), {
-        values: () => settings.get() || {},
-        level: complexity(),
-        onStep: (key, value) => { settings.set({ [key]: value }); },
-      }),
-      // THE ROOM'S REACTIONS (rows 2.36/2.37): which object lights, rings or pulses for which event. Only
-      // while a room is on the screen -- a row that opens nothing is a row that lies.
-      ...(roomRec() ? [{ kind: 'item', id: 'room-reactions', label: 'Room reactions…',
-          hint: 'what the room’s things do when something happens', run: () => openRoomReactions() }] : []),
+      // re-syncs the master and the mixer on every change). On the Sound tab, after the panel's own.
+      ...tagged([{ kind: 'heading', id: 'sound-head', label: 'Sound' },
+        ...fieldItems(SOUND_FIELDS().map(normalizeField).filter(Boolean), {
+          values: () => settings.get() || {},
+          level: complexity(),
+          onStep: (key, value) => { settings.set({ [key]: value }); },
+        })], 'audio', 1),
+      // THE ROOM (Display tab): its reactions, and where the transport bar is.
+      ...tagged([
+        ...(roomRec() || barCanSitOnCabinet() ? [{ kind: 'heading', id: 'room-head', label: 'The room' }] : []),
+        // THE ROOM'S REACTIONS (rows 2.36/2.37): which object lights, rings or pulses for which event. Only
+        // while a room is on the screen -- a row that opens nothing is a row that lies.
+        ...(roomRec() ? [{ kind: 'item', id: 'room-reactions', label: 'Room reactions…',
+            hint: 'what the room’s things do when something happens', run: () => openRoomReactions() }] : []),
+        // THE BAR ON THE LOW CABINET (room_bar.js argues it, off by default): only where the showing
+        // dashboard's room has an object that holds the bar and there is a placed bar to move.
+        ...(barCanSitOnCabinet() ? fieldItems([normalizeField(BAR_PLACE_FIELD)].filter(Boolean), {
+          values: () => (themeDoc().get?.() || {}),
+          level: complexity(),
+          onStep: (key, value) => { themeDoc().set({ [key]: value }); },
+        }) : []),
+      ], 'display', 3),
       // ROW 2.38, the map editor: the edit view and the map, for a pointer (a switch binds `system/edit` /
       // `system/map`). Every row here is a stop on the one-switch walk ahead of Home, so: ONE row at "The
       // usual" (Edit -- the map is one press inside it, the Opens-and-shows window's Map), the Map's own row
       // only at "Everything", and neither at "Just the essentials" (the way out and legibility, nothing
       // else). The map not on an embed (nowhere to go).
       ...(complexity() !== 'essential' ? [
-        { kind: 'item', id: 'edit-view', label: 'Edit this dashboard…',
+        { kind: 'item', id: 'edit-view', label: 'Edit this dashboard…', ...MENU_TAB.screen(1),
           hint: 'move things, and choose what each one opens or shows', run: () => openEditView() },
       ] : []),
       ...(complexity() === 'advanced' && !embedded ? [{ kind: 'item', id: 'dashboard-map', label: 'Map of your dashboards…',
-        hint: 'every dashboard, and what opens or shows which', run: () => openMap() }] : []),
+        ...MENU_TAB.screen(1), hint: 'every dashboard, and what opens or shows which', run: () => openMap() }] : []),
       // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
       //
       // `mount:'ambient'` content is never `focusedRec()` — it has no stage slot, so it never
@@ -2677,11 +2956,16 @@ export async function mountKiosk(root, {
       // live in, not of any one panel. Empty array (today's only OTHER ambient module,
       // `ambient_drift`, declares no settings) is a silent no-op, so this costs nothing when
       // there is nothing to show.
-      ...(arr.ambientRec() ? fieldItems(fieldsFor(arr.ambientRec().instance.manifest, arr.ambientRec().instance), {
-        values: () => arr.ambientRec().state.get() || {},
-        level: complexity(),
-        onStep: (key, value) => { arr.ambientRec().state.set({ [key]: value }); },
-      }) : []),
+      ...(arr.ambientRec() ? (() => {
+        const rows = fieldItems(fieldsFor(arr.ambientRec().instance.manifest, arr.ambientRec().instance), {
+          values: () => arr.ambientRec().state.get() || {},
+          level: complexity(),
+          onStep: (key, value) => { arr.ambientRec().state.set({ [key]: value }); },
+        });
+        // (Display tab, under its own name: "Behind everything: <the ambient module>".)
+        return rows.length ? tagged([{ kind: 'heading', id: 'ambient-head',
+          label: `Behind everything: ${arr.ambientRec().title || arr.ambientRec().type}` }, ...rows], 'display', 2) : [];
+      })() : []),
     ],
     // In a laid-out screen every panel is visible at once and the kiosk has no focus
     // concept yet, so there is no single subject and the menu says so rather than
@@ -2689,13 +2973,30 @@ export async function mountKiosk(root, {
     // mountInstance flattens the manifest: the record carries `title`, NOT `manifest`.
     // Reading `manifest.title` silently fell back to the raw type, so the menu said
     // "This panel — photos" instead of "Photos".
+    // (2026-10-02: the menu's SUBJECT -- the focused panel unless "Settings for" was stepped -- not
+    // always the focused one. `menuSubjectRec` above.)
     subject: () => {
-      const r = focusedRec();
+      const r = menuSubjectRec();
       return r ? { type: r.type, title: r.title || r.type } : null;
     },
+    // ---- THE TABS (2026-10-02; MENU_TAB_DEFS above argues the set) ----
+    tabs: () => MENU_TAB_DEFS(),
+    slotTabs: { who: 'people', subject: 'module', extras: 'screen', screen: 'screen' },
+    // Where it opens: the panel's tab -- except on a host page with its own rows (Home), where they are what
+    // somebody opening the menu came for (the gear there reads "Edit"), so "This page" first.
+    startTab: () => {
+      try { if (hostPage && typeof hostPage.menuItems === 'function' && (hostPage.menuItems() || []).length) return 'page'; }
+      catch { /* a host that throws costs its own tab, never the menu */ }
+      return 'module';
+    },
+    topIds: ['set:complexity'],
+    subjects: () => menuPanelRecs().map((r) => ({ id: r.id, label: r.title || r.type })),
+    defaultSubject: () => focusedRec()?.id || null,
+    // A different subject closes an open Switch list: it was about the other panel.
+    onSubject: () => { switchOpen = null; },
     fullscreenTarget: root,
-    // The who page's avatar subscription lets go with the menu (see the page).
-    onClose: () => offWhoAvatars(),
+    // The who page's avatar subscription lets go with the menu (see the page). An open Switch list closes.
+    onClose: () => { offWhoAvatars(); switchOpen = null; },
     // The menu's own Home row opens the same picker rather than navigating, so there are not
     // two controls with the same name doing different things. Leaving is the picker's last row.
     onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
@@ -2712,25 +3013,39 @@ export async function mountKiosk(root, {
     // In a laid-out screen every panel is visible at once and there is no single focused
     // subject, so there are no panel settings to show rather than a guess at whose.
     fields: () => {
-      const rec = focusedRec();
+      const rec = menuSubjectRec();
       if (!rec) return [];
+      // (2026-10-02: the Switch list replaces the panel's own rows while it is open -- `switchRows`.)
+      if (switchOpen && switchOpen.id === rec.id) return switchRows(rec);
       // The instance-level override goes FIRST — "which panel is this" before "what does this
       // kind of panel let you change" — and through the same `fieldItems`/`onStep` call as the
       // module's own fields, so cycling, hints and disabling all work identically; it is only a
       // different SOURCE array, not a different mechanism.
-      const items = fieldItems([
-        ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
-        // Hide = mute (ad7dc49): "when this panel is hidden", only on a panel that makes sound.
-        ...(makesSound({ instanceId: rec.id, audio, manifest: rec.instance.manifest }) ? [normalizeField(WHEN_HIDDEN_FIELD)] : []),
-        ...fieldsFor(rec.instance.manifest, rec.instance),
-      ], {
+      const fieldsOpts = {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
         // otherwise step from the same stale value twice, and the second press would look
         // dropped — which somebody debugs as a broken switch.
         values: () => rec.state.get() || {},
         level: complexity(),
         onStep: (key, value) => { rec.state.set({ [key]: value }); },
-      });
+      };
+      const items = fieldItems([
+        ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
+        ...fieldsFor(rec.instance.manifest, rec.instance),
+      ], fieldsOpts).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
+      // *** THE PANEL'S OWN SOUND, on the Sound tab (2026-10-02; panel_sound.js). *** Only on a panel that
+      // makes sound -- a TV counts when anything on it does (audio_bus.js `within`). "When this panel is
+      // hidden" (ad7dc49) moved here from the panel's rows: it is about sound.
+      const sounds = makesSound({ instanceId: rec.id, audio, manifest: rec.instance.manifest });
+      if (sounds) {
+        const soundRows = fieldItems([
+          normalizeField(PANEL_VOLUME_FIELD),
+          normalizeField(WHEN_HIDDEN_FIELD),
+          normalizeField(ROOM_SOUND_FIELD),
+        ].filter(Boolean), fieldsOpts);
+        items.push(...tagged([{ kind: 'heading', id: 'panel-sound-head', label: `${rec.title || rec.type}: its sound` },
+          ...soundRows, ...nestedSoundRows(rec)], 'audio', 0));
+      }
       // *** "MAKE YOUR OWN PACK WITH THE AI OF YOUR CHOICE" NEEDED A WAY BACK IN. ***
       // `games.html`'s course page already has the prompt; without this, the file it produces
       // had nowhere to go. A plain item with `page:` here, a matching entry in `pages` below —
@@ -2740,11 +3055,16 @@ export async function mountKiosk(root, {
       // that does nothing on a panel with no concept of a pack.
       if (['trivia', 'wordforge', 'quests'].includes(rec.type)) {
         items.push({
-          kind: 'item', id: 'load-pack', page: 'pack-loader',
+          kind: 'item', id: 'load-pack', page: 'pack-loader', ...MENU_TAB.module(0),
           label: 'Load your own pack',
           hint: 'from a file, or paste JSON',
         });
       }
+      // "SWITCH MODULE" (2026-10-02): the way in to the short list, last on the panel's tab.
+      // Not at "Just the essentials" (that level is legibility and the ways out); the bar's button is there.
+      if (complexity() !== 'essential') items.push({ kind: 'item', id: 'switch-module', ...MENU_TAB.module(0),
+        label: `Switch ${rec.title || rec.type} to another module…`,
+        hint: 'its settings are kept for when you switch back', run: () => openSwitch(rec.id) });
       return items;
     },
     // THE MENU'S OTHER CONTENT: things the shell should not know about, contributed by the
@@ -2776,7 +3096,7 @@ export async function mountKiosk(root, {
       // gets the unrestricted loader — a teacher managing the whole points economy from one
       // place may be loading either kind for a game they are not currently looking at.
       get 'pack-loader'() {
-        const rec = focusedRec();
+        const rec = menuSubjectRec();
         const kind = rec?.type === 'trivia' ? 'trivia' : rec?.type === 'wordforge' ? 'words' : null;
         return {
           title: 'Load your own pack',
@@ -2858,26 +3178,29 @@ export async function mountKiosk(root, {
       // THE HOST PAGE'S SECTION (Home: its Save / Save as / History and its page settings), first in
       // the menu's middle: they are what somebody on that page came to the menu for. A host that throws
       // costs its own rows, never the menu -- the menu is the tool for repairing the broken thing.
+      // (Tabs: its own tab, "This page" -- unless a row names another. Only on a page that has rows.)
       ...(() => {
         if (!hostPage || typeof hostPage.menuItems !== 'function') return [];
-        try { return hostPage.menuItems() || []; } catch (err) { console.error('kiosk: host menu', err); return []; }
+        try { return (hostPage.menuItems() || []).map((it) => (it && !it.tab ? { ...it, ...MENU_TAB.page(0) } : it)); }
+        catch (err) { console.error('kiosk: host menu', err); return []; }
       })(),
-      ...(runtime ? CONTROL_ITEMS : []),
-      ...CONNECTION_ITEMS,
+      // (Tabs: "what can I press" and "what else this talks to" are Devices.)
+      ...tagged(runtime ? CONTROL_ITEMS : [], 'devices', 2),
+      ...tagged(CONNECTION_ITEMS, 'devices', 3),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
       // bench first" has to mean in practice. Written to the same profile settings blob the
       // engine reads, so there is one source of truth rather than two.
-      { kind: 'heading', id: 'recovery-head', label: 'When something stops working' },
-      ...fieldItems(RECOVERY_SETTINGS.map(normalizeField).filter(Boolean), {
-        values: () => (settings.get() || {}).recovery || {},
-        level: complexity(),
-        onStep: (key, value) => {
-          const cur = (settings.get() || {}).recovery || {};
-          settings.set({ recovery: { ...cur, [key]: value } });
-        },
-      }),
-      ...restartItems(restart, {
+      ...tagged([{ kind: 'heading', id: 'recovery-head', label: 'When something stops working' },
+        ...fieldItems(RECOVERY_SETTINGS.map(normalizeField).filter(Boolean), {
+          values: () => (settings.get() || {}).recovery || {},
+          level: complexity(),
+          onStep: (key, value) => {
+            const cur = (settings.get() || {}).recovery || {};
+            settings.set({ recovery: { ...cur, [key]: value } });
+          },
+        })], 'screen', 2),
+      ...tagged(restartItems(restart, {
       screenName: arr.profile()?.name ? `“${arr.profile().name}”` : 'this screen',
       onChange: ({ mode }) => {
         // Choosing "always come back here" names THE SCREEN YOU ARE STANDING ON. That is
@@ -2887,7 +3210,7 @@ export async function mountKiosk(root, {
           : { mode }, storage);
         menu.refresh();
       },
-    })],
+    }), 'screen', 3)],
     // Still ungated at the bedside, deliberately. The three-way switch in input.js gates
     // which BINDINGS fire; it does not answer "is a moderator standing here", and inventing
     // that mapping would be guessing at semantics nobody has decided. Open, and recorded as
@@ -2895,6 +3218,7 @@ export async function mountKiosk(root, {
     gated: false,
   });
   controlsEl.querySelector('[data-act="settings"]').addEventListener('click', () => menu.toggle());
+  controlsEl.querySelector('[data-act="switch"]')?.addEventListener('click', () => openSwitch());
   // WHO THIS SCREEN IS FOR, resolved in the background and never blocking the boot. It
   // brings two things: the name the menu shows, and THE PERSON'S OWN BINDINGS. A screen
   // that will not come up because a name lookup failed is strictly worse than one that
@@ -3139,6 +3463,10 @@ export async function mountKiosk(root, {
     aim: runtime.aim,
     settings: () => (settings.get() || {}).cursor || {},
   });
+  // THE CURSOR BY COMMAND (87bcd41, wired 2026-10-02): a bound switch or "cursor left" / "click" / "scroll
+  // down" moves the aim, so the cursor above draws it.
+  try { cursorDrive = attachCursorDrive({ bus, aim: runtime.aim, settings: () => (settings.get() || {}).cursor || {} }); }
+  catch (err) { console.error('kiosk: cursor drive', err); }
   // A settings edit should move the cursor now, not the next time somebody points.
   settings.subscribe?.(() => { try { cursor?.refresh(); } catch { /* never fatal */ } });
 
@@ -3625,6 +3953,9 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.fullscreen, (p) => { claimed(p); toggleFs(); }));
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.settings, (p) => { claimed(p); if (!menu.isOpen()) menu.open(); }));
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.modules, (p) => { claimed(p); revealBar(); }));
+  // "Switch module" (2026-10-02): the bar's button (both bars), a bound switch and "switch module" said
+  // aloud all arrive here (shell_verbs.js SHELL_SWITCH_MODULE is the same topic). Every path.
+  offsScreen.push(bus.subscribe(SWITCH_MODULE_TOPIC, (p) => { claimed(p); openSwitch(); }));
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
   }
@@ -3973,6 +4304,14 @@ export async function mountKiosk(root, {
     // mixer's, the effects chain (null until something asked for one) and the scene the mix follows.
     master: () => master,
     mixer: () => mixer,
+    // 2026-10-02: the cursor by command, the effects chain (null until something asked for it), the
+    // menu's Switch list (which panel it is open for, or null) and the switch itself.
+    cursorDrive: () => cursorDrive,
+    switchOpen: () => (switchOpen ? { ...switchOpen } : null),
+    openSwitch: (id) => openSwitch(id),
+    switchPanel: (id, type) => doSwitch(id, type),
+    // Every panel on the screen as { id, type, title, stateKey } (what the menu's "Settings for" steps through).
+    panels: () => menuPanelRecs().map((r) => ({ id: r.id, type: r.type, title: r.title, stateKey: r.stateKey || null })),
     effects: () => fxReal,
     soundScene: () => soundScene,
     listening: () => listening,
@@ -4096,6 +4435,7 @@ export async function mountKiosk(root, {
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }
       try { cursor?.destroy(); } catch { /* already gone */ }
+      try { cursorDrive?.destroy?.(); } catch { /* already gone */ } cursorDrive = null;
       try { markerTracker?.destroy(); } catch { /* already gone */ }
       try { micOwner.destroy(); } catch { /* already gone */ }
       try { markerState?.destroy?.(); } catch { /* already gone */ }

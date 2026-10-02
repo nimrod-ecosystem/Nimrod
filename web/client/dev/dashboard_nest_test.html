@@ -450,6 +450,114 @@ const views = (box) => [...box.querySelectorAll('.view')];
       check('...and home brings it back', await settled(() => kp.screenId() === P.id, 8000) && kp.crumbsEl().hidden === true);
       kp.destroy(); pb.remove();
     }
+
+    // =================================================================================================
+    section('7. a TV\'s sound, on its chip and in the menu; a room in the room; the bar on the low cabinet (2026-10-02)');
+    // Mike, on a TV in a room showing a live dashboard that plays sound: "It has to be accessible through
+    // the transport bar and settings menu. Would be nice if you could add room reverb to things in the
+    // room as an option." And: "The low cabinet as a transport bar meant that the buttons from the
+    // transport bar are supposed to be on the cabinet instead."
+    {
+      const { registerModule } = await import('../module.js');
+      const heardBy = {};
+      // A module that plays something the moment it mounts, through the audio bus (test only).
+      registerModule({ type: 'soundtest7', title: 'Sound test', description: 'test only', settings: [] }, (ctx) => {
+        const id = `st7-${ctx.instanceId}`;
+        return {
+          init() {
+            heardBy[ctx.instanceId] = [];
+            ctx.mount.textContent = 'playing';
+            ctx.audio?.register?.(id, { tier: 'media', onGain: (l) => heardBy[ctx.instanceId].push(l) });
+            ctx.audio?.setActive?.(id, true);
+          },
+          onResize() {}, onHide() {},
+          destroy() { try { ctx.audio?.unregister?.(id); } catch { /* gone */ } },
+        };
+      });
+      const T = await real.create('TV room');
+      const S = await real.create('On the TV');
+      const tv = await real.addModule(T.id, 'dashboard');
+      const sMod = await real.addModule(S.id, 'soundtest7');
+      await setRow(T.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [null],
+        scene: { kind: 'room', preset: 'theRoom' },
+        placed: [{ id: tv.id, place: 'scene', x: 50, y: 40, w: 30, h: 30 }] } } });
+      await setRow(T.id, tv.id, { shows: S.id });
+      await setRow(S.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [sMod.id] } } });
+      const tb = document.createElement('div'); tb.className = 'box'; document.body.append(tb);
+      const tbus = createBus();
+      const kt = await mountKiosk(tb, { user: USER, profileId: T.id, profiles: real, bus: tbus, ...seams() });
+      const lastOf = () => { const l = heardBy[sMod.id] || []; return l[l.length - 1]; };
+      check('(setup) the TV shows S live, and what is on it is playing',
+        await settled(() => !!tb.querySelector('.view[data-nest="live"]') && lastOf() === 1, 9000), J(heardBy));
+      const st = () => kt.audio().state()[`st7-${sMod.id}`] || {};
+      check('*** the bus knows the sound is ON THE TV (within carries the TV\'s id) ***',
+        (st().within || []).includes(tv.id) && st().owner === sMod.id, J(st()));
+      // ---- the bar's chip ----
+      const chip = () => tb.querySelector(`.tb-bar [data-sound-for="${tv.id}"]`);
+      kt.dashboard().arrangement().focusPlaced(tv.id);
+      check('*** the TV\'s chip on the bar carries a sound button ***', await settled(() => !!chip(), 4000)
+        && chip().textContent === 'Sound', chip()?.outerHTML?.slice(0, 120) || 'none');
+      chip().click();
+      check('*** pressing it mutes everything on the TV ***', await settled(() => lastOf() === 0, 3000), J(heardBy[sMod.id]));
+      check('...and the chip says so', await settled(() => chip()?.textContent === 'Muted', 3000));
+      chip().click();
+      check('...pressed again, the sound comes back', await settled(() => lastOf() === 1, 3000), J(heardBy[sMod.id]));
+      // ---- the menu's Sound tab, about the TV ----
+      kt.menu.open({ tab: 'audio' });
+      const vis = () => kt.menu.visibleItems().map((i) => i.id);
+      check('*** the menu\'s Sound tab, about the TV: its volume and the thing on it ***',
+        await settled(() => { kt.menu.refresh(); return vis().includes('set:panelVolume') && vis().includes(`nested-sound:${sMod.id}`); }, 4000),
+        vis().join(','));
+      kt.menu.focusRow(`nested-sound:${sMod.id}`); kt.menu.select();
+      check('*** muting the thing on the TV from the menu reaches the bus ***', await settled(() => lastOf() === 0, 3000), J(heardBy[sMod.id]));
+      check('...and the row says "Muted"', await settled(() => { kt.menu.refresh(); return kt.menu.visibleItems().find((i) => i.id === `nested-sound:${sMod.id}`)?.hint === 'Muted'; }, 3000));
+      kt.menu.select();
+      check('...and again, back on', await settled(() => lastOf() === 1, 3000));
+      kt.menu.focusRow('set:panelVolume'); kt.menu.select();
+      check('the TV\'s own volume row turns it down (one step: "A little quieter")', await settled(() => Math.abs(lastOf() - 0.75) < 1e-9, 3000),
+        J(heardBy[sMod.id]));
+      // "Sound like it's in the room" is an "Everything" row.
+      check('room sound is not on "The usual" (an Everything row, off by default)', !vis().includes('set:roomSound'));
+      kt.menu.showTab('module'); kt.menu.focusRow('set:complexity');
+      for (let i = 0; i < 4 && kt.menu.items().find((r) => r.id === 'set:complexity')?.hint !== 'Everything'; i += 1) kt.menu.select();
+      kt.menu.showTab('audio');
+      check('(setup) at "Everything" the room row is there', await settled(() => { kt.menu.refresh(); return vis().includes('set:roomSound'); }, 3000), vis().join(','));
+      check('it is OFF by default', kt.menu.visibleItems().find((i) => i.id === 'set:roomSound')?.hint === 'Off');
+      kt.menu.focusRow('set:roomSound'); kt.menu.select();
+      check('*** stepped to "A small room", it reaches the screen\'s effects for the TV ***',
+        await settled(() => kt.audio().ownerReverb?.(tv.id) === 'small', 3000), String(kt.audio().ownerReverb?.(tv.id)));
+      // ---- the bar on the low cabinet ----
+      kt.menu.showTab('display');
+      check('*** the Display tab offers where the bar is (this room has a cabinet that holds it) ***',
+        await settled(() => { kt.menu.refresh(); return vis().includes('set:barPlace'); }, 3000), vis().join(','));
+      check('it starts along the bottom (off by default)', kt.menu.visibleItems().find((i) => i.id === 'set:barPlace')?.hint === 'Along the bottom'
+        && kt.dashboard().barPlace() === 'dock');
+      kt.menu.focusRow('set:barPlace'); kt.menu.select();
+      check('*** "On the low cabinet": the bar moves INTO the cabinet\'s slot in the room ***',
+        await settled(() => kt.dashboard().barPlace() === 'cabinet', 4000)
+        && !!tb.querySelector('.rs-slot[data-slot="cab"] .tb-bar'), String(kt.dashboard().barPlace()));
+      const cabBar = tb.querySelector('.rs-slot[data-slot="cab"] .tb-bar');
+      check('...the same live bar: its chips and buttons are all there', !!cabBar?.querySelector('[data-act="hush"]')
+        && !!cabBar?.querySelector(`[data-id="${tv.id}"]`));
+      check('...on the plain strip, with the hook for Design\'s art', /--cabinet-bar-art/.test(cabBar?.parentNode?.style?.background || '')
+        && cabBar?.parentNode?.dataset?.onCabinet === 'cab', cabBar?.parentNode?.style?.cssText || '');
+      kt.menu.close();
+      await sleep(100);
+      const hushEl = cabBar?.querySelector('[data-act="hush"]');
+      hushEl?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      const hr = hushEl?.getBoundingClientRect();
+      const hit = hr ? document.elementFromPoint(hr.left + hr.width / 2, hr.top + hr.height / 2) : null;
+      check('*** a POINTER on the cabinet lands on the bar\'s button (nothing of the room covers it) ***',
+        !!hit && (hit === hushEl || hushEl.contains(hit)), hit ? `${hit.tagName}.${hit.className}` : 'nothing');
+      cabBar?.querySelector('[data-act="hush"]')?.click();
+      check('*** a button on the cabinet works: Hush hushes ***', await settled(() => kt.audio().isHushed() === true, 2000));
+      cabBar?.querySelector('[data-act="hush"]')?.click();
+      kt.menu.open({ tab: 'display', focus: 'set:barPlace' }); kt.menu.select();
+      check('*** back to "Along the bottom": the bar returns to its dock ***', await settled(() => kt.dashboard().barPlace() === 'dock', 4000)
+        && !tb.querySelector('.rs-slot[data-slot="cab"] .tb-bar') && !!tb.querySelector('.v-dock .tb-bar'));
+      kt.menu.close();
+      kt.destroy(); tb.remove();
+    }
   } catch (e) {
     check('suite threw', false, String(e && e.stack || e));
   }
