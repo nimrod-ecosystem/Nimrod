@@ -35,7 +35,7 @@ import { flattenLayout, unflattenLayout, rebakeLayout, flatState, flatActions, a
 import { chooseLod, measureCapability, deviceCapability, resetCapability, budgetFor, slowNote, lodOptionsFor,
   BUDGETS, SLOW_MS, SLOW_NOTE, DETAIL_FIELD, LOD_DEFAULTS } from '../room_lod.js';
 import { normalizeLayout } from '../layout.js';
-import { createArrangement } from '../arrangement.js';
+import { createArrangement, ROOM_PIECE_TYPE, ROOM_PIECE_PRESS_TOPIC, ROOM_PIECE_PREFIX } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
 import { withDoor } from '../room_doors.js';
@@ -295,6 +295,58 @@ try {
     check('*** the door hotspot opens its dashboard on the screen\'s bus ***', heard.length === 1 && heard[0].id === 'D2', J(heard));
     check('the arrangement hands the map editor the hotspots', two.arr.roomObjects().map((o) => o.id).join() === 'cabinet,shelf,table', two.arr.roomObjects().map((o) => o.id).join());
     two.arr.destroy();
+  }
+
+  // =====================================================================================================
+  // Mike's list 2026-09-30: room objects were not in a switch user's scan on a dashboard. The 3D room's doors
+  // and the flattened room's door hotspots are stops in the dashboard's lap now, in READING ORDER (left to right
+  // by where each is drawn), the same order in 3D and flattened, and only the pieces that do something.
+  section('6b. *** the switch lap reaches a 3D room\'s doors and a flattened room\'s hotspots, in the same order ***');
+  {
+    const L = threeD();
+    L.scene.recipe.furniture[1].opens = 'D5';           // the table: a door too
+    L.scene.recipe.furniture[2].opens = 'D7';           // and the shelf
+    const pieceIds = (m) => m.arr.focusRing().filter((x) => x.type === ROOM_PIECE_TYPE).map((x) => x.id);
+    const three = await mountLayout(L);
+    const r3 = three.arr.roomScene();
+    const recipe = normalizeRoom3d(L.scene), view = viewOf(recipe, {});
+    const cx = (id) => { const r = boxRect(recipe.furniture.find((f) => f.id === id), view); return r.left + r.w / 2; };
+    const byDrawn = ['cabinet', 'table', 'shelf'].sort((a, b) => cx(a) - cx(b));
+    const got3 = pieceIds(three);
+    check('*** 3D: one stop per door, in reading order (left to right as drawn), not recipe order ***',
+      J(got3) === J(byDrawn.map((id) => `${ROOM_PIECE_PREFIX}o:${id}`)) && byDrawn.join() !== 'cabinet,table,shelf', `${J(got3)} drawn ${byDrawn}`);
+    check('the 3D room\'s own walk is in that order too (scanTargets)', J(r3.scanTargets().map((b) => b.closest('[data-object]').dataset.object)) === J(byDrawn));
+    check('the panels come first', J(three.arr.focusRing().slice(0, 4).map((x) => x.id)) === J(['p1', 'k1', 'tv', 'n1']), J(three.arr.focusRing()));
+    const heard = [];
+    three.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard.push(p); p.claim?.(); });
+    three.bus.publish(three.bus.instanceTopic(`${ROOM_PIECE_PREFIX}o:table`, ROOM_PIECE_PRESS_TOPIC));
+    check('*** select on the table\'s stop opens its dashboard (what a click on it does) ***', heard.length === 1 && heard[0].id === 'D5' && heard[0].objectId === 'table', J(heard));
+    three.arr.paintFocus(`${ROOM_PIECE_PREFIX}o:shelf`);
+    const box = (id) => three.kioskEl.querySelector(`.r3-box[data-object="${id}"]`);
+    check('*** the focused 3D piece is marked (is-scan), and only it ***', box('shelf')?.classList.contains('is-scan')
+      && !box('table')?.classList.contains('is-scan') && !box('cabinet')?.classList.contains('is-scan'));
+    const outline = getComputedStyle(box('shelf').querySelector('.r3-bf-front')).outlineStyle;
+    check('...and drawn with the room\'s own focus outline', outline === 'solid', outline);
+    r3.setObjectOpens('shelf', 'D8');
+    check('the mark survives the piece being redrawn (its door changed in place)', box('shelf')?.classList.contains('is-scan'));
+    three.arr.paintFocus('p1');
+    check('focus on a panel clears it', !three.kioskEl.querySelector('.r3-box.is-scan'));
+    r3.setObjectOpens('table', null);
+    check('*** a piece that stops being a door leaves the lap (it would do nothing) ***', !pieceIds(three).includes(`${ROOM_PIECE_PREFIX}o:table`), J(pieceIds(three)));
+    three.arr.destroy();
+
+    const two = await mountLayout(flattenLayout(L));
+    const got2 = pieceIds(two);
+    check('*** flattened: the hotspots are the same stops, in the same order, as in 3D ***', J(got2) === J(got3), `${J(got2)} vs ${J(got3)}`);
+    const heard2 = [];
+    two.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard2.push(p); p.claim?.(); });
+    two.bus.publish(two.bus.instanceTopic(`${ROOM_PIECE_PREFIX}o:cabinet`, ROOM_PIECE_PRESS_TOPIC));
+    check('select on a hotspot\'s stop opens its dashboard', heard2.length === 1 && heard2[0].id === 'D2', J(heard2));
+    two.arr.destroy();
+    const plain = await mountLayout(flattenLayout(threeD()));
+    check('a hotspot that is not a door is not a stop (only the cabinet is one here)',
+      J(pieceIds(plain)) === J([`${ROOM_PIECE_PREFIX}o:cabinet`]), J(pieceIds(plain)));
+    plain.arr.destroy();
   }
 
   // =====================================================================================================

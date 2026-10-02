@@ -122,6 +122,11 @@ export const PANEL_SWITCHES_KEY = 'panelSwitches';
 // The dashboard's ROOM, as one more thing edit mode can edit beside its panels (see "THE DASHBOARD'S ROOM,
 // EDITED IN PLACE" below). A fixed name, not a module instance's id.
 export const ROOM_PANEL_ID = 'scene:room';
+// THE ROOM'S PIECES IN THE SWITCH LAP (2026-10-02; "THE ROOM'S PIECES" below). Each pressable piece is a ring
+// stop `scene:room/<key>` of this type; actions.js MODULE_VERBS routes its `select` to this topic on that stop.
+export const ROOM_PIECE_TYPE = 'room-piece';
+export const ROOM_PIECE_PRESS_TOPIC = 'room-piece/press';
+export const ROOM_PIECE_PREFIX = `${ROOM_PANEL_ID}/`;
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -429,7 +434,8 @@ export function createArrangement({
     // re-runs this function and would otherwise leave the ring on a cell that no longer exists.
     // (Stage R: the first stop of the RING, which is the first slot unless something is placed as an
     // overlay -- an overlay takes the scan first. With nothing placed, exactly `slotRecs[0]` as before.)
-    const first = panelRecs()[0];
+    // (2026-10-02: a dashboard whose every panel failed to start can still have a room: its first piece then.)
+    const first = panelRecs()[0] || roomStops()[0];
     if (first) {
       try { runtime()?.router?.setFocus?.(first.id); } catch { /* focus is not load-bearing */ }
       paintFocus(first.id);
@@ -597,6 +603,12 @@ export function createArrangement({
       pm.wrap.dataset.focused = '1';
       pm.wrap.style.outline = '3px solid var(--accent,#839958)';
       pm.wrap.style.outlineOffset = '2px';
+    }
+    // A piece of the dashboard's room (THE ROOM'S PIECES, below): the room draws it, in its own scan look;
+    // focus anywhere else takes that off.
+    if (roomScene && typeof roomScene.focusTarget === 'function') {
+      const stop = isPieceId(id) ? roomStops().find((s) => s.id === id) : null;
+      try { roomScene.focusTarget(stop ? stop.el : null); } catch (err) { console.error('arrangement: the room\'s focus', err); }
     }
   }
 
@@ -894,10 +906,51 @@ export function createArrangement({
     while (placedRecs.length) destroyRec(placedRecs.pop());
     for (const m of placedMeta.values()) dropDoor(m);
     placedMeta.clear();
+    dropPieceSubs();                        // the room's stops go with the room
     try { roomScene?.destroy(); } catch { /* already gone */ }
     roomScene = null; roomFree = null; roomHost = null;
     for (const k of Object.keys(placedLayers)) { placedLayers[k].remove(); delete placedLayers[k]; }
     placedMounted = false;
+  }
+
+  // =================================================================================================
+  // *** THE HUD PAIR FOLLOW A PLACEMENT CHANGE (2026-10-02; Mike's list 09-30, Stage R item 6: "a removed
+  // camera doesn't return to the corner until the next rebuild"). *** `partition()` is the one rule: an
+  // UNPLACED camera is the corner mirror, an unplaced clock the corner clock (and an unplaced ambient module
+  // the ambient mount). `applyPlaced` changes what is placed WITHOUT a rebuild, so it has to re-run that rule
+  // and act on the difference, or the corner stays as the last rebuild left it:
+  //   * placed now, in a corner before -> the corner one is torn down BEFORE the panel mounts (`dropHud`),
+  //     so one camera is never opened by two instances at once;
+  //   * in a corner now, placed before -> it mounts in its corner AFTER the panel is torn down (`raiseHud`).
+  // Each answers the ids it moved, so `applyPlaced` can say so (`hud: { dropped, raised }`).
+  // =================================================================================================
+  const hudSlots = () => [
+    { def: () => cameraDef, rec: () => cameraRec, set: (r) => { cameraRec = r; }, el: mirrorEl },
+    { def: () => clockDef, rec: () => clockRec, set: (r) => { clockRec = r; }, el: clockEl },
+    { def: () => ambientDef, rec: () => ambientRec, set: (r) => { ambientRec = r; }, el: ambientEl },
+  ];
+  function dropHud() {
+    const dropped = [];
+    for (const h of hudSlots()) {
+      const rec = h.rec();
+      if (!rec || (h.def() && h.def().id === rec.id)) continue;
+      destroyRec(rec);
+      h.set(null);
+      if (h.el) { h.el.innerHTML = ''; h.el.hidden = true; }
+      dropped.push(rec.id);
+    }
+    return dropped;
+  }
+  async function raiseHud() {
+    const raised = [];
+    for (const h of hudSlots()) {
+      const def = h.def();
+      if (!def || h.rec() || !h.el) continue;
+      const rec = await mountOverlay(def, h.el);
+      h.set(rec);
+      if (rec) raised.push(def.id);
+    }
+    return raised;
   }
 
   /**
@@ -914,7 +967,8 @@ export function createArrangement({
    * (the kiosk reloads; a dashboard module rebuilds). Before the first mount, the layout is only
    * recorded, and `resolve` / `mountLayout` use it.
    *
-   * Resolves `{ applied, moved, added, removed }` (id lists), or `{ applied: false, reason }`.
+   * Resolves `{ applied, moved, added, removed, hud: { dropped, raised } }` (id lists; `hud`: the camera /
+   * clock that left or came back to a corner, see `dropHud`), or `{ applied: false, reason }`.
    */
   async function applyPlaced(next) {
     const none = { applied: false, moved: [], added: [], removed: [] };
@@ -943,9 +997,12 @@ export function createArrangement({
     const before = new Map(placedOf().map((e) => [e.id, e]));
     const after = l.placed || [];
     const keep = new Set(after.map((e) => e.id));
-    const out = { applied: true, moved: [], added: [], removed: [], doors: doors.map((d) => d.id) };
+    const out = { applied: true, moved: [], added: [], removed: [], doors: doors.map((d) => d.id), hud: { dropped: [], raised: [] } };
     for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
     layout = l;
+    // The HUD pair, by the same rule as a rebuild (see `dropHud`): what is placed now leaves its corner first.
+    partition();
+    out.hud.dropped = dropHud();
     for (const d of doors) { try { roomScene?.setObjectOpens?.(d.id, d.opens); } catch (err) { console.error('arrangement: door', err); } }
     if (after.length || isRoomScene(l.scene)) await mountRoom();
     for (const entry of after) {
@@ -966,13 +1023,16 @@ export function createArrangement({
       syncDoor(entry.id);                   // row 2.38: `opens` added, changed or taken off
       out.moved.push(entry.id);
     }
+    // ...and what is no longer placed goes back to its corner, now that its panel is gone.
+    out.hud.raised = await raiseHud();
     // Empty layers go, so a screen whose last overlay was removed has no empty overlay layer.
     for (const k of Object.keys(placedLayers)) {
       if (k === 'scene' && roomScene) continue;
       if (!placedLayers[k].children.length) { placedLayers[k].remove(); delete placedLayers[k]; }
     }
-    const f = focusedRec();
-    if (f) paintFocus(f.id);
+    // The ring stays where focus is -- on a room piece too, not only a panel (THE ROOM'S PIECES).
+    const fid = ringFocusId();
+    if (fid) paintFocus(fid);
     renderMods();
     return out;
   }
@@ -1038,9 +1098,102 @@ export function createArrangement({
   // nothing placed it is the slots, exactly as it was.)
   // (Row 2.38: a placed module that is a DOOR is reported as type `opens`, so the router routes `select`
   // on it to the door -- see `syncDoor`. Nothing else reads the ring's types.)
+  // (2026-10-02: and after the panels, the pieces of the dashboard's ROOM -- see "THE ROOM'S PIECES" below.)
   const focusRing = () => (layout
-    ? panelRecs().map((r) => ({ id: r.id, type: doorOf(r.id) ? OPENS_TYPE : r.type }))
+    ? [...panelRecs().map((r) => ({ id: r.id, type: doorOf(r.id) ? OPENS_TYPE : r.type })),
+       ...roomStops().map((s) => ({ id: s.id, type: ROOM_PIECE_TYPE }))]
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
+
+  // =================================================================================================
+  // *** THE ROOM'S PIECES, IN THE SWITCH LAP (2026-10-02). *** Mike's list 09-30: "room objects (2D or 3D)
+  // aren't in a switch user's scan on a dashboard yet." Each renderer already had its walk (`scanTargets()`:
+  // room_scene.js in Design's order, row by row and left to right; room3d.js its doors left to right as drawn;
+  // a flattened room is a 2D room, so its door hotspots come the 2D way) -- but only the room MODULE drove it.
+  // Here the dashboard's lap reads it: ONE STOP PER PRESSABLE PIECE, IN THE ROOM'S OWN ORDER, and `select` on
+  // a stop is a click on that piece (so a door opens its dashboard, a cabinet lifts, the window opens the
+  // weather -- whatever a click does, and nothing a click does not).
+  //
+  // WHERE IN THE LAP: AFTER THE PANELS. A guess, argued (on Mike's list):
+  //   FOR after: (1) the ring already runs front to back -- overlays, the grid, flat on the screen, the scene --
+  //   and the room IS the scene, the back of it; (2) focus starts on the first stop, and a door there would make
+  //   a stray first press LEAVE the dashboard; (3) the panels are what people come for (photos, a call), so
+  //   they should not sit behind six pieces of furniture on every lap; (4) on a dashboard that is mostly room
+  //   (Home), there are few panels, so the doors come round almost at once anyway.
+  //   AGAINST: on a dashboard whose room is its menu, the doors ARE the point and cost a press per panel first.
+  //   The ring is one list in one place (here), so turning it round is a one-line change if Mike wants it.
+  //
+  // SKIPPED, because pressing them does nothing: anything the room draws as no button at all (a lamp, a 3D
+  // piece that is not a door, a hotspot that is not one), and a 2D DISPLAY piece with no module in its slot (it
+  // would lift an empty box). NOT stops while a panel fills the dashboard (`promoted`): the room cannot be seen.
+  //
+  // A STOP'S NAME is `scene:room/<key>`: `o:<object id>` for a piece, `b:<module>` for a book, `back` for a
+  // close-up's or a lifted panel's way out -- stable while the piece is there, so focus stays on it across a
+  // repaint. A press that CHANGES the room (a close-up, a lifted panel, its way back) takes the pressed stop away;
+  // focus then goes on from the room's FIRST stop, which is the way out whenever there is one (the room puts it
+  // first), so the next select is "Back" rather than a jump to the first panel.
+  // =================================================================================================
+  const pieceSubs = new Map();               // stop id -> unsubscribe
+  function pieceKey(el, i) {
+    if (el.dataset?.id) return `o:${el.dataset.id}`;
+    if (el.dataset?.book) return `b:${el.dataset.book}`;
+    const obj = el.closest?.('[data-object]')?.dataset?.object;
+    if (obj) return `o:${obj}`;
+    if (el.classList?.contains('rs-lift-back') || el.classList?.contains('rs-closeup-back')) return 'back';
+    return `i:${i}`;
+  }
+  function pieceDoesSomething(el) {
+    if (!el || el.disabled) return false;
+    const wrap = el.closest?.('.rs-obj-wrap');
+    if (wrap && wrap.dataset.role === 'display') {
+      let slot = null;
+      try { slot = roomScene?.slots?.().get(wrap.dataset.id) || null; } catch { slot = null; }
+      return !!slot?.el?.querySelector?.('.k-pcell');
+    }
+    return true;
+  }
+  function roomStops() {
+    if (!layout || !roomScene || promoted || typeof roomScene.scanTargets !== 'function') return [];
+    let els = [];
+    try { els = roomScene.scanTargets() || []; } catch (err) { console.error('arrangement: the room\'s stops', err); return []; }
+    const seen = new Set();
+    const out = [];
+    els.forEach((el, i) => {
+      if (!pieceDoesSomething(el)) return;
+      let key = pieceKey(el, i);
+      if (seen.has(key)) key = `${key}~${i}`;
+      seen.add(key);
+      const id = `${ROOM_PIECE_PREFIX}${key}`;
+      out.push({ id, el });
+      if (!pieceSubs.has(id) && bus?.subscribe) {
+        const topic = bus.instanceTopic ? bus.instanceTopic(id, ROOM_PIECE_PRESS_TOPIC) : `${ROOM_PIECE_PRESS_TOPIC}#${id}`;
+        pieceSubs.set(id, bus.subscribe(topic, () => { pressPiece(id); }));
+      }
+    });
+    return out;
+  }
+  const isPieceId = (id) => typeof id === 'string' && id.startsWith(ROOM_PIECE_PREFIX);
+  function dropPieceSubs() {
+    for (const off of pieceSubs.values()) { try { off(); } catch { /* gone */ } }
+    pieceSubs.clear();
+  }
+  /** `select` on a stop: a click on that piece, exactly as a pointer's. True if there was one to press. */
+  function pressPiece(id) {
+    const stop = roomStops().find((s) => s.id === id);
+    if (!stop) return false;
+    try { stop.el.click(); } catch (err) { console.error('arrangement: pressing a room piece', err); }
+    const now = roomStops();
+    const next = now.some((s) => s.id === id) ? id : now[0]?.id;
+    if (next && next !== id) { try { runtime()?.router?.setFocus?.(next); } catch { /* focus is not load-bearing */ } }
+    if (next) { paintFocus(next); renderMods(); }
+    return true;
+  }
+  /** The ring stop focus is on: the router's, when it is one of the ring's; else the panel `focusedRec` names. */
+  function ringFocusId() {
+    let id = null;
+    try { id = runtime()?.router?.focused?.()?.id || null; } catch { id = null; }
+    if (isPieceId(id) && roomStops().some((s) => s.id === id)) return id;
+    return focusedRec()?.id || null;
+  }
 
   // ---- recovery's hands. The ladder that decides when to use them (kiosk.js `recoveryStep`) stays
   // in the shell: it cannot live inside the thing it may have to replace.
@@ -1162,8 +1315,8 @@ export function createArrangement({
       if (toType === base) delete nx[id]; else nx[id] = toType;
       settings?.set?.({ [PANEL_SWITCHES_KEY]: nx });
     } catch (err) { console.error('arrangement: remembering a switch', err); }
-    const f = focusedRec();
-    if (f) paintFocus(f.id);
+    const fid = ringFocusId();
+    if (fid) paintFocus(fid);
     renderMods();
     return true;
   }
@@ -1392,6 +1545,7 @@ export function createArrangement({
     const r = resolveLayout(nextRaw, profile.modules);
     if (!r || !isRoomScene(r.scene)) return false;
     for (const m of placedMeta.values()) { if (m.where !== 'flat') m.wrap.remove(); }
+    dropPieceSubs();
     try { roomScene?.destroy(); } catch { /* already gone */ }
     try { roomHost?.remove(); } catch { /* already gone */ }
     roomScene = null; roomFree = null; roomHost = null;
