@@ -51,7 +51,20 @@
 // (its box is redrawn; the walls, their slots and the modules in them are not touched), which is what the
 // map editor's Opens window and the arrangement's `applyPlaced` call.
 
+//
+// *** LEVEL OF DETAIL (2026-10-02, room_lod.js). *** Each piece is drawn `full` (its four faces) or as a
+// `proxy` (its front face alone: the same place, the same colour, the same button when it is a door). Which,
+// is room_lod.js `chooseLod`: a piece drawn under `lodNearPx` CSS px is far, and past this device's face
+// budget the smallest pieces drop first. The budget comes from a MEASUREMENT of the device (room_lod.js
+// argues the numbers) unless the host passes `lodBudget` or `lod: 'full' | 'proxy'`. On a desktop the box
+// room is all full; nothing about a door, a slot or a module changes with the level.
+//
+// *** PROJECTION, AS PURE FUNCTIONS (2026-10-02, for room_flat.js's "flatten to 2D"). *** `project`,
+// `faceToWorld`, `boxCorners`, `boxFaces`, `boxRect`: the same perspective the stage draws with, so a
+// flattened room and a LOD decision are measured against exactly what the browser shows.
+
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
+import { chooseLod, deviceCapability, budgetFor, LOD_DEFAULTS } from './room_lod.js';
 
 export const OPENS_ACTION = 'dashboard.open';   // room_scene.js's name for the same press
 export const OPENS_MAX = 200;                    // layout.js OPENS_MAX: an id, not prose
@@ -90,7 +103,12 @@ export const H = 540;
 export const ROOM3D_DEFAULTS = Object.freeze({
   lens: 700, depth: 467, eye: 15, front: 140,
   drift: 'off', driftDeg: 2.5, driftSeconds: 40, motion: 'gentle', reducedMotion: false, labels: 'always',
+  // Level of detail (room_lod.js argues each): 'auto' | 'full' | 'proxy'; null = room_lod.js's own number.
+  lod: 'auto', lodNearPx: null, lodBudget: null,
 });
+/** What each level of a piece costs, in faces drawn: a box is four (front, top, two sides), its proxy one. */
+export const BOX_FACES = 4;
+export const PROXY_FACES = 1;
 export const MOTIONS = Object.freeze(['gentle', 'calm', 'still']);
 export const CALM_STRETCH = 1.8;                 // the same factor livescene.js uses for 'calm'
 export const SURFACES = Object.freeze(['back', 'left', 'right', 'floor', 'ceiling']);
@@ -265,6 +283,84 @@ export function boxPlace(f, view) {
   return { x, y: H, z };
 }
 
+// ---------------------------------------------------------------------------------------------
+// PROJECTION: where a point of the room is drawn. Pure, and the stage's own perspective exactly:
+// `perspective: lens` with its origin at (W/2, eye% of H), z toward the viewer, the screen plane at z = 0.
+// ---------------------------------------------------------------------------------------------
+/** The nearest a point may come to the eye before it is cut off (a fraction of the lens). A point at the
+ *  eye itself has no picture; 0.98 keeps every drawn point finite. Geometry, not a preference. */
+export const NEAR_CLIP = 0.98;
+/** A point [x, y, z] (stage px) -> where it is drawn [sx, sy] (stage px). */
+export function project(view, x, y, z) {
+  const ox = W / 2, oy = (view.eye / 100) * H, P = view.lens;
+  const k = P / Math.max(P - z, P * (1 - NEAR_CLIP));
+  return [ox + (x - ox) * k, oy + (y - oy) * k];
+}
+/** A point on a face, (u, v) in that face's own px from its top-left corner -> [x, y, z] in the room.
+ *  faceTransforms() run as arithmetic (CSS rotateX(a): y' = y cos a - z sin a; rotateY(a): x' = x cos a + z sin a). */
+export function faceToWorld(surface, u, v, view) {
+  const D = view.depth, F = view.front;
+  switch (surface) {
+    case 'floor': return [u, H, -D + v];          // translate3d(0, H, -D) rotateX(90deg): v runs back -> front
+    case 'ceiling': return [u, 0, F - v];         // translate3d(0, 0, F) rotateX(-90deg): v runs front -> back
+    case 'left': return [0, v, F - u];            // translate3d(0, 0, F) rotateY(90deg): u runs front -> back
+    case 'right': return [W, v, -D + u];          // translate3d(W, 0, -D) rotateY(-90deg): u runs back -> front
+    default: return [u, v, -D];                   // the back wall
+  }
+}
+/** A face's size in its own px: { w, h } (faceTransforms' sizes). */
+export function faceSize(surface, view) {
+  const ft = faceTransforms(view);
+  const f = ft[SURFACES.includes(surface) ? surface : 'back'];
+  return { w: f.w, h: f.h };
+}
+/**
+ * A piece's box, as its four drawn faces in the room: `{ front, top, left, right }`, each four [x, y, z]
+ * corners in order around the face, and whether it can be SEEN from the eye -- a face turned
+ * away is hidden by `backface-visibility`, so it is neither drawn by the bake nor counted.
+ */
+function boxExtent(f, view) {
+  const p = boxPlace(f, view);
+  return { x0: p.x - f.w / 2, x1: p.x + f.w / 2, y0: H - f.h, y1: H, z0: p.z - f.d / 2, z1: p.z + f.d / 2 };
+}
+export function boxFaces(f, view) {
+  const { x0, x1, y0, y1, z0, z1 } = boxExtent(f, view);
+  const ox = W / 2, oy = (view.eye / 100) * H;
+  return {
+    front: { pts: [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], seen: true },
+    top: { pts: [[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]], seen: oy < y0 },
+    left: { pts: [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]], seen: ox < x0 },
+    right: { pts: [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]], seen: ox > x1 },
+  };
+}
+/** The box's eight corners in the room. */
+export function boxCorners(f, view) {
+  const { x0, x1, y0, y1, z0, z1 } = boxExtent(f, view);
+  const out = [];
+  for (const x of [x0, x1]) for (const y of [y0, y1]) for (const z of [z0, z1]) out.push([x, y, z]);
+  return out;
+}
+/** The rectangle a piece is drawn in, stage px: { left, top, w, h }. */
+export function boxRect(f, view) {
+  const pts = boxCorners(f, view).map(([x, y, z]) => project(view, x, y, z));
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const left = Math.min(...xs), top = Math.min(...ys);
+  return { left, top, w: Math.max(...xs) - left, h: Math.max(...ys) - top };
+}
+/** The level each piece is drawn at (room_lod.js `chooseLod`), for a view and a fit `scale`. */
+export function lodPlan(recipe, view, scale = 1, opts = {}) {
+  const objs = (recipe.furniture || []).map((f) => {
+    const r = boxRect(f, view);
+    return { id: f.id, w: r.w, h: r.h, faces: BOX_FACES, proxyFaces: PROXY_FACES };
+  });
+  const mode = ['auto', 'full', 'proxy'].includes(opts.lod) ? opts.lod : 'auto';
+  const budget = Number.isFinite(Number(opts.lodBudget)) && opts.lodBudget !== null && opts.lodBudget !== ''
+    ? Number(opts.lodBudget)
+    : mode === 'auto' ? budgetFor(opts.capability || deviceCapability()) : Infinity;
+  const nearPx = Number.isFinite(Number(opts.lodNearPx)) && opts.lodNearPx !== null && opts.lodNearPx !== '' ? Number(opts.lodNearPx) : LOD_DEFAULTS.nearPx;
+  return chooseLod(objs, { scale, mode, nearPx, budget });
+}
+
 /** The motion actually used: the system's reduced-motion and the host's own ask can only lower it. */
 export function motionFor(opts = {}, systemReduced = false) {
   if (opts.reducedMotion || systemReduced) return 'still';
@@ -336,6 +432,9 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
   const faces = {};           // surface -> element
   const slotEls = new Map();  // slot id -> { id, el, surface, slot }
   const boxes = new Map();    // furniture id -> its element
+  let lod = null;             // room_lod.js chooseLod's last answer: which level each piece is drawn at
+  const levelOf = (id) => (lod && lod.levels.get(id)) || 'full';
+  const planNow = () => lodPlan(recipe, view, scale, o);
   const publish = (topic, payload) => { try { o.bus?.publish?.(topic, payload); } catch (err) { console.error('room3d: publish', topic, err); } };
 
   /** Press a piece of furniture, exactly as a click on it does. Returns what happened (null: not a door). */
@@ -352,10 +451,12 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
 
   // One piece of furniture: a box of four faces. A door's FRONT face is a real <button> (its name is the
   // button's name, so a keyboard, a screen reader and Tab reach it); a press on ANY of its faces presses it.
-  function buildBox(f) {
+  // `level` 'proxy' (room_lod.js): the front face alone -- the same place, colour, name and button.
+  function buildBox(f, level = levelOf(f.id)) {
     const p = boxPlace(f, view);
     const b = el('r3-box');
     b.dataset.object = f.id;
+    b.dataset.lod = level;
     b.title = f.name;
     b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
     const door = opensOf(f);
@@ -369,9 +470,11 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       return d;
     };
     const front = face('r3-bf-front', f.w, f.h, `translate3d(0px, ${-f.h / 2}px, ${f.d / 2}px)`, door ? 'button' : 'div');
-    face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
-    face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
-    face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);
+    if (level !== 'proxy') {
+      face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
+      face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
+      face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);
+    }
     if (door) {
       b.dataset.opens = door;
       front.type = 'button';
@@ -410,6 +513,7 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       s.style.width = `${sl.w}%`; s.style.height = `${sl.h}%`;
       slotEls.set(sl.id, { id: sl.id, el: s, surface: sl.surface, slot: { ...sl } });
     }
+    lod = planNow();
     for (const f of recipe.furniture) {
       const b = buildBox(f);
       cam.append(b);
@@ -423,9 +527,26 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     const r = root.getBoundingClientRect();
     const k = Math.min(r.width / W, r.height / H);
     if (!(k > 0)) return scale;
+    const was = scale;
     scale = k;
     stage.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})`;
+    if (k !== was) relod();
     return scale;
+  }
+  /** The levels again (the room was drawn at a new size, or the options changed): only a piece whose level
+   *  CHANGED is redrawn, so the walls, their slots and the modules in them are never touched. Returns how many. */
+  function relod() {
+    if (destroyed) return 0;
+    const next = planNow();
+    const changed = recipe.furniture.filter((f) => (next.levels.get(f.id) || 'full') !== levelOf(f.id));
+    lod = next;
+    for (const f of changed) {
+      const old = boxes.get(f.id);
+      const b = buildBox(f);
+      if (old && old.parentNode) old.replaceWith(b); else cam.append(b);
+      boxes.set(f.id, b);
+    }
+    return changed.length;
   }
   const ro = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { if (!destroyed) fit(); }) : null;
   ro?.observe(root);
@@ -496,11 +617,15 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     scanTargets: () => [...boxes.values()].map((b) => b.querySelector('button.r3-bf-front')).filter(Boolean),
     drifting: () => root.dataset.drift === 'on',
     motion: () => root.dataset.motion,
+    /** The levels the pieces are drawn at: `{ levels: { id: 'full' | 'proxy' }, cost, budget, far, dropped }`. */
+    lod: () => ({ levels: Object.fromEntries(lod ? lod.levels : []), cost: lod ? lod.cost : 0,
+      budget: lod ? lod.budget : Infinity, far: lod ? [...lod.far] : [], dropped: lod ? [...lod.dropped] : [] }),
     setOptions(next = {}) {
       if (destroyed) return;
       const rebuild = ['lens', 'depth', 'eye', 'front'].some((k) => k in next && next[k] !== o[k]);
+      const relevel = ['lod', 'lodNearPx', 'lodBudget', 'capability'].some((k) => k in next && next[k] !== o[k]);
       Object.assign(o, next);
-      if (rebuild) { view = viewOf(recipe, o); build(); }
+      if (rebuild) { view = viewOf(recipe, o); build(); } else if (relevel) relod();
       applyMotion();
     },
     fit,

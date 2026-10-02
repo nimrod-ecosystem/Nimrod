@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room_flat + room_lod - a 3D room flattened to a 2D room, and two levels of detail - test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* 960 x 540: both rooms' own stage, so the fit is 1 and drawn positions are stage px. */
+  #host{position:fixed;left:0;top:0;width:960px;height:540px;pointer-events:none;
+        --surface-alt: rgb(1, 2, 3); --surface: rgb(250, 250, 250); --text: rgb(10, 20, 30)}
+</style>
+</head>
+<body>
+<h1>room_flat + room_lod</h1>
+<p>"Flatten to 2D": a 3D room baked into an ordinary 2D room whose doors and screens still work, checked
+against the browser's own drawing of the 3D room. Then the two levels of detail: by size, by the device's
+budget, and the measured capability behind the budget.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountRoom3d, ensureRoom3dCss, ROOM3D_PRESETS, normalizeRoom3d, viewOf, project, faceToWorld, faceSize,
+  boxRect, boxFaces, boxCorners, lodPlan, BOX_FACES, PROXY_FACES, W, H } from '../room3d.js';
+import { mountRoomScene, ensureRoomCss, quadOf, hotspotClip } from '../room_scene.js';
+import { quadHomography, applyHomography, quadMatrix, normalizeBackdrop, paintCss, PAINTS, FLAT_TOKENS } from '../room_backdrop.js';
+import { flattenLayout, unflattenLayout, rebakeLayout, flatState, flatActions, applyFlatAction, bakePlan, hotspotFor,
+  slotQuad, placedQuad, convexHull, sourceHash, FLAT_VERSION, FLAT_SLOT_PREFIX, flatOf } from '../room_flat.js';
+import { chooseLod, measureCapability, deviceCapability, resetCapability, budgetFor, slowNote, lodOptionsFor,
+  BUDGETS, SLOW_MS, SLOW_NOTE, DETAIL_FIELD, LOD_DEFAULTS } from '../room_lod.js';
+import { normalizeLayout } from '../layout.js';
+import { createArrangement } from '../arrangement.js';
+import { createBus } from '../bus.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
+import { withDoor } from '../room_doors.js';
+import { EXAMPLE_ORDER, PREBUILT_ORDER, PREBUILT_DASHBOARDS } from '../dashboards.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.textContent = `note: ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const host = document.getElementById('host');
+const rectOf = (el) => { const r = el.getBoundingClientRect(), h = host.getBoundingClientRect(); return { left: r.left - h.left, top: r.top - h.top, w: r.width, h: r.height }; };
+const bboxOf = (pts) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); return { left: Math.min(...xs), top: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }; };
+const sameRect = (a, b, tol) => near(a.left, b.left, tol) && near(a.top, b.top, tol) && near(a.w, b.w, tol) && near(a.h, b.h, tol);
+const pctPts = (q) => q.map(([x, y]) => [x / 100 * W, y / 100 * H]);
+
+// The 3D dashboard every section flattens: the box room, photos in its back slot, a clock in its left slot, a
+// "TV" placed freely on the right wall (turned a little), a note placed freely on the back wall, the cabinet a door.
+const MODS = [{ id: 'p1', type: 'photos' }, { id: 'k1', type: 'clock' }, { id: 'tv', type: 'youtube' }, { id: 'n1', type: 'note' }];
+function threeD() {
+  const recipe = JSON.parse(J(ROOM3D_PRESETS.box.recipe));
+  recipe.furniture[0].opens = 'D2';
+  return { preset: 'full', slots: [null], scene: { kind: 'room3d', preset: 'box', recipe }, placed: [
+    { id: 'p1', place: 'scene', slot: 'back' },
+    { id: 'k1', place: 'scene', slot: 'left' },
+    { id: 'tv', place: 'scene', surface: 'right', x: 90, y: 42, w: 8, h: 14, rot: 4 },
+    { id: 'n1', place: 'scene', surface: 'back', x: 30, y: 28, w: 12, h: 12, scale: 120 },
+  ] };
+}
+function makeArrangement() {
+  host.innerHTML = '';
+  const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
+  const kioskEl = el('kiosk'), stageEl = el('k-stage'), mirrorEl = el('k-mirror'), clockEl = el('k-clock'), ambientEl = el('k-ambient');
+  kioskEl.style.cssText = 'position:absolute;inset:0';
+  kioskEl.append(stageEl, mirrorEl, clockEl, ambientEl);
+  mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+  const log = { mounts: [] };
+  let data = {};
+  const bus = createBus();
+  const arr = createArrangement({
+    bus, user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true,
+    settings: { get: () => data, set: (p) => { data = { ...data, ...p }; } },
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance: async (def, h) => {
+      log.mounts.push(def.id); h.textContent = def.id;
+      return { id: def.id, type: def.type, title: def.type, el: h,
+        instance: { manifest: { title: def.type }, destroy() {}, onResize() {} },
+        state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
+    },
+    destroyRec: (rec) => { if (rec) rec.instance.destroy(); },
+    watchRec: (rec) => rec, renderMods() {},
+    runtime: () => ({ router: { focused: () => null, setFocus() {}, focusNext() {}, reachable: () => [] } }),
+    health: () => ({ forget() {} }), profileId: () => 'scr',
+  });
+  arr.setProfile({ id: 'scr', modules: MODS });
+  return { arr, bus, kioskEl, log };
+}
+async function mountLayout(layout) {
+  const m = makeArrangement();
+  m.arr.resolve(normalizeLayout(layout, MODS.map((x) => x.id)));
+  m.arr.partition(); await m.arr.mountOverlays();
+  await m.arr.mountLayout();
+  return m;
+}
+const wrapOf = (kioskEl, id) => kioskEl.querySelector(`[data-placed="${id}"]`);
+
+(async () => {
+try {
+  await ensureRoom3dCss();
+  await ensureRoomCss();
+  const view = viewOf({}, {});
+
+  // =====================================================================================================
+  section('1. projection: a known box at a known camera lands at the expected rectangle');
+  {
+    // Worked by hand, not by the code under test: lens 700, eye 15% (81px), the box 100px each way, its foot
+    // centre at x 480 and halfway into the room (z -233.5). Front face z -183.5 -> k 700/883.5; back z -283.5
+    // -> k 700/983.5. Left/right: 480 -+ 50k(front); top: 81 + 359k(back); bottom: 81 + 459k(front).
+    const f = { id: 'k', name: 'K', x: 50, z: 50, w: 100, h: 100, d: 100 };
+    const r = boxRect(f, view);
+    check('*** the box is drawn at left 440.385, top 336.516, right 519.615, bottom 444.667 ***',
+      near(r.left, 440.385, 0.01) && near(r.top, 336.516, 0.01) && near(r.left + r.w, 519.615, 0.01) && near(r.top + r.h, 444.667, 0.01), J(r));
+    const fs = boxFaces(f, view);
+    check('it shows its top (the eye is above it) and neither side (it is straight ahead)', fs.top.seen && !fs.left.seen && !fs.right.seen);
+    const b0 = project(view, 0, 0, -view.depth), b1 = project(view, W, H, -view.depth);
+    check('the back wall is drawn 20%..80% across (lens / (lens + depth) = 0.6)', near(b0[0], 0.2 * W, 0.2) && near(b1[0], 0.8 * W, 0.2), J([b0, b1]));
+    check('a point on the screen plane is drawn where it is', J(project(view, 123, 456, 0)) === J([123, 456]));
+    check('a point at or past the eye is held finite (the near clip), never Infinity', project(view, 0, 0, view.lens + 50).every(Number.isFinite));
+    // Against the BROWSER: the real 3D room, every face and every box, measured.
+    host.innerHTML = '';
+    const room = mountRoom3d(host, { kind: 'room3d', preset: 'box' }, { lod: 'full' });
+    const L = view.depth + view.front;
+    const faceCorners = (s) => { const { w, h } = faceSize(s, view); return [[0, 0], [w, 0], [w, h], [0, h]].map(([u, v]) => project(view, ...faceToWorld(s, u, v, view))); };
+    for (const s of ['back', 'left', 'right', 'floor', 'ceiling']) {
+      const want = bboxOf(faceCorners(s)), got = rectOf(room.surface(s));
+      check(`faceToWorld + project agree with the browser: the ${s} face`, sameRect(want, got, 1), J({ want, got }));
+    }
+    check('(the floor and ceiling run L = depth + front long)', faceSize('floor', view).h === L);
+    const rec = normalizeRoom3d({ preset: 'box' });
+    for (const f2 of rec.furniture) {
+      const want = boxRect(f2, view);
+      const got = rectOf(room.root.querySelector(`[data-object="${f2.id}"] .r3-bf-front`));
+      const front = bboxOf(boxFaces(f2, view).front.pts.map(([x, y, z]) => project(view, x, y, z)));
+      check(`the ${f2.id}'s front face is drawn where projected`, sameRect(front, got, 1), J({ front, got }));
+      check(`...and its whole box (boxRect) contains it`, want.left <= got.left + 1 && want.top <= got.top + 1);
+    }
+    for (const sl of rec.slots) {
+      const q = slotQuad(sl, view);
+      const want = bboxOf(pctPts(q.quad)), got = rectOf(room.slots().get(sl.id).el);
+      check(`*** the ${sl.id} slot's quad is exactly where the browser draws that slot ***`, sameRect(want, got, 1), J({ want, got }));
+    }
+    room.destroy();
+  }
+
+  // =====================================================================================================
+  section('2. the homography: a module box drawn onto four corners');
+  {
+    const q = [[100, 50], [400, 80], [380, 300], [120, 260]];
+    const m = quadHomography(200, 100, q);
+    const corners = [[0, 0], [200, 0], [200, 100], [0, 100]].map(([u, v]) => applyHomography(m, u, v));
+    check('*** each corner of the 200x100 box lands on its corner of the quad ***', corners.every((c, i) => near(c[0], q[i][0], 1e-6) && near(c[1], q[i][1], 1e-6)), J(corners));
+    const par = quadHomography(10, 10, [[0, 0], [10, 0], [12, 10], [2, 10]]);
+    check('a parallelogram is affine (no perspective terms)', par[6] === 0 && par[7] === 0);
+    check('a degenerate quad (all one point) gives no transform, not NaN', quadMatrix(10, 10, [[5, 5], [5, 5], [5, 5], [5, 5]]) === '' && quadHomography(0, 10, q) === null);
+    host.innerHTML = '';
+    const e = document.createElement('div');
+    e.style.cssText = `position:absolute;left:0;top:0;width:200px;height:100px;transform-origin:0 0;transform:${quadMatrix(200, 100, q)}`;
+    host.append(e);
+    check('*** and the browser draws an element with quadMatrix on that quad ***', sameRect(rectOf(e), bboxOf(q), 1), J(rectOf(e)));
+    e.remove();
+  }
+
+  // =====================================================================================================
+  section('3. hotspots keep their ids, names and doors; their outline is the box\'s silhouette');
+  {
+    const rec = normalizeRoom3d(threeD().scene);
+    const hs = rec.furniture.map((f) => hotspotFor(f, view));
+    check('one hotspot per piece, same ids', J(hs.map((h) => h.id)) === J(['cabinet', 'table', 'shelf']));
+    check('same names, as the label', J(hs.map((h) => h.label)) === J(['Cabinet', 'Table', 'Bookshelf']));
+    check('*** the door keeps its door; the others have none ***', hs[0].opens === 'D2' && !('opens' in hs[1]) && !('opens' in hs[2]));
+    for (const [i, f] of rec.furniture.entries()) {
+      const h = hs[i];
+      const box = { left: (h.x / 100) * W - h.w / 2, top: (h.y / 100) * H - h.h / 2, w: h.w, h: h.h };
+      check(`the ${f.id} hotspot's box is the box's drawn rectangle`, sameRect(box, boxRect(f, view), 0.2), J({ box, r: boxRect(f, view) }));
+      check(`...its outline has 4..6 corners (a box seen from one side)`, h.poly.length >= 4 && h.poly.length <= 6, String(h.poly.length));
+    }
+    const hull = convexHull([[0, 0], [10, 0], [10, 10], [0, 10], [5, 5], [5, 0]]);
+    check('convexHull drops inside points and points on an edge', hull.length === 4, J(hull));
+    check('hotspotClip makes a CSS polygon from the outline; junk makes none', hotspotClip(hs[0]).startsWith('polygon(') && hotspotClip({ poly: [[0, 0], ['x', 1], [2, 2]] }) === '');
+  }
+
+  // =====================================================================================================
+  section('4. flattenLayout: the 3D dashboard -> an ordinary 2D room dashboard');
+  const L3 = threeD();
+  const flat = flattenLayout(L3);
+  {
+    check('a layout that is not a 3D room is not flattened (null)', flattenLayout({ preset: 'quad', slots: [] }) === null && flattenLayout(null) === null);
+    check('*** the scene is a 2D ROOM ***', flat.scene.kind === 'room' && Array.isArray(flat.scene.recipe.items));
+    const items = flat.scene.recipe.items;
+    check('its wall slots are module mounts with the SAME ids', ['back', 'left', 'right'].every((id) => items.find((it) => it.id === id)?.kind === 'module'));
+    check('a module placed freely on a wall gets a slot of its own, p-<id>, with a quad',
+      items.some((it) => it.id === `${FLAT_SLOT_PREFIX}tv` && quadOf(it)) && items.some((it) => it.id === `${FLAT_SLOT_PREFIX}n1` && quadOf(it)));
+    const byId = Object.fromEntries(flat.placed.map((e) => [e.id, e]));
+    check('*** modules in slots stay in the same slots; free ones are pointed at their new slot ***',
+      byId.p1.slot === 'back' && byId.k1.slot === 'left' && byId.tv.slot === 'p-tv' && byId.n1.slot === 'p-n1', J(flat.placed));
+    check('the 3D source is not changed by flattening it (a copy is taken)', J(L3) === J(threeD()));
+    check('it remembers its source and the source\'s hash', flat.scene.recipe.flat.v === FLAT_VERSION
+      && flat.scene.recipe.flat.source.scene.kind === 'room3d' && flat.scene.recipe.flat.hash === sourceHash(L3.scene, L3.placed));
+    const kept = normalizeLayout(flat, MODS.map((m) => m.id));
+    check('*** it survives normalizeLayout whole: the scene, every placed entry and its slot ***',
+      kept.scene?.kind === 'room' && J(kept.scene.recipe) === J(flat.scene.recipe) && kept.placed.length === 4 && kept.placed.find((e) => e.id === 'tv')?.slot === 'p-tv');
+    const bk = normalizeBackdrop(flat.scene.recipe.backdrop);
+    check('the backdrop is a plan every shape of which survives the checks', bk && bk.shapes.length === flat.scene.recipe.backdrop.shapes.length, `${bk?.shapes.length} of ${flat.scene.recipe.backdrop.shapes.length}`);
+    const paints = new Set(flat.scene.recipe.backdrop.shapes.flatMap((s) => [s.fill, s.stroke, ...(s.grad ? s.grad.stops.map((x) => x[1]) : [])]).filter(Boolean));
+    check('every paint it names is a named paint (no colour in a record)', [...paints].every((p) => paintCss(p)), [...paints].join());
+    check('a paint that is CSS is refused', paintCss('red') === null && paintCss('url(x)') === null && paintCss('shade:101') === null && normalizeBackdrop({ kind: 'plan', shapes: [{ pts: [[0, 0], [1, 1], [2, 0]], fill: 'red' }] }) === null);
+    check('an image backdrop must be this site\'s or a data: picture', normalizeBackdrop({ kind: 'image', src: 'https://elsewhere/x.png' }) === null
+      && normalizeBackdrop({ kind: 'image', src: '//elsewhere/x.png' }) === null && normalizeBackdrop({ kind: 'image', src: '/a.png' })?.src === '/a.png');
+    check(`the plan is small: ${J(flat.scene.recipe).length} characters of recipe`, J(flat.scene.recipe).length < 20000);
+    // The paints are the 3D room's own tokens, word for word.
+    const css = await (await fetch('../room3d.css')).text();
+    const decl = (n) => (css.match(new RegExp(`--r3-${n}:\\s*([^;]+);`)) || [])[1]?.trim();
+    check('*** FLAT_TOKENS are room3d.css\'s five declarations, word for word ***',
+      ['wall', 'floor', 'wood', 'shade', 'line'].every((n) => decl(n) === FLAT_TOKENS[n]), J(['wall', 'floor', 'wood', 'shade', 'line'].map((n) => [decl(n), FLAT_TOKENS[n]])));
+    check('no paint carries a literal colour: every one is a theme token or a system colour', Object.values(PAINTS).every((v) => !/#[0-9a-f]{3,8}\b|rgb\(|hsl\(/i.test(v)));
+  }
+
+  // =====================================================================================================
+  section('5. the flattened recipe mounts as a 2D room: its backdrop, its door, its slots');
+  {
+    host.innerHTML = '';
+    const bus = createBus();
+    const heard = [];
+    bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard.push(p); p.claim?.(); });
+    const room = mountRoomScene(host, flat.scene.recipe, { bus });
+    const svg = room.root.querySelector('svg.rs-backdrop');
+    check('*** the backdrop is drawn (one SVG) instead of the 2D room\'s own walls ***', svg && !room.root.querySelector('[data-wall]'));
+    const polys = svg ? [...svg.querySelectorAll('polygon')] : [];
+    check('every polygon is painted through var() or a gradient: no literal colour in the drawing',
+      polys.length > 10 && polys.every((p) => /var\(|url\(/.test(p.style.fill + p.style.stroke)), String(polys.length));
+    const wallFill = svg && getComputedStyle(svg.querySelector('[data-paint="wall"]')).fill;
+    check('...and the wall is the theme\'s --surface-alt (this page sets it to rgb(1, 2, 3))', wallFill === 'rgb(1, 2, 3)', wallFill);
+    check('the 3D room has no day and night: no lighting veil', room.light === 'day');
+    const doorBtn = room.root.querySelector('.rs-obj[data-id="cabinet"]');
+    check('*** the cabinet (a door) is a button; the table and the shelf are not ***', doorBtn && !room.root.querySelector('.rs-obj[data-id="table"]') && !room.root.querySelector('.rs-obj[data-id="shelf"]'));
+    check('its name is on its chip and is its accessible name', room.root.querySelector('[data-chip-for="cabinet"]')?.textContent === 'Cabinet' && doorBtn?.getAttribute('aria-label') === 'Cabinet');
+    const hit = doorBtn?.querySelector('.rs-hit');
+    check('only its outline takes a press (a clipped child); the button itself is not clipped', hit && hit.style.clipPath.startsWith('polygon(') && !doorBtn.style.clipPath);
+    hit?.click();
+    check('*** pressing the door hotspot publishes dashboard/go for its dashboard, as the 3D door did ***',
+      heard.length === 1 && heard[0].id === 'D2' && heard[0].objectId === 'cabinet', J(heard));
+    const r = room.press('cabinet');
+    check('room.press does the same (the scan\'s select)', r?.opens === 'D2' && r.claimed === true && heard.length === 2);
+    check('the scan walks it', room.scanTargets().includes(doorBtn));
+    // Farthest first: a nearer hotspot is drawn over a farther one where their outlines overlap.
+    check('*** the map editor sees all three pieces, by id, with their doors (farthest first) ***',
+      J(room.objects()) === J([{ id: 'cabinet', name: 'Cabinet', opens: 'D2' }, { id: 'shelf', name: 'Bookshelf', opens: null }, { id: 'table', name: 'Table', opens: null }]), J(room.objects()));
+    check('...and can make another of them a door, in place', room.setObjectOpens('table', 'D5') === true && room.root.querySelector('.rs-obj[data-id="table"]'));
+    check('*** its slots are the 3D room\'s slots plus one per free module ***', J([...room.slots().keys()].sort()) === J(['back', 'left', 'p-n1', 'p-tv', 'right']), J([...room.slots().keys()]));
+    for (const id of ['back', 'left', 'right']) {
+      const it = flat.scene.recipe.items.find((x) => x.id === id);
+      check(`the ${id} slot is drawn on its quad`, sameRect(rectOf(room.slots().get(id).el), bboxOf(pctPts(it.quad)), 1));
+    }
+    check('an empty slot on a quad shows no "module slot" card (the 3D room shows nothing there)',
+      getComputedStyle(room.root.querySelector('.rs-mount[data-quad] > .rs-slot-card')).display === 'none');
+    room.destroy();
+  }
+
+  // =====================================================================================================
+  section('6. *** through the real arrangement: every module where it was in 3D, the door still a door ***');
+  {
+    const three = await mountLayout(L3);
+    const r3 = three.arr.roomScene();
+    check('the 3D dashboard mounts (the reference)', r3 && r3.kind === 'room3d' && ['p1', 'k1', 'tv', 'n1'].every((id) => three.log.mounts.includes(id)));
+    const where3 = Object.fromEntries(['p1', 'k1', 'tv', 'n1'].map((id) => [id, rectOf(wrapOf(three.kioskEl, id))]));
+    three.arr.destroy();
+    const two = await mountLayout(flat);
+    const r2 = two.arr.roomScene();
+    check('*** the flattened dashboard mounts a 2D room (no 3D anywhere) ***', r2 && r2.kind !== 'room3d' && !two.kioskEl.querySelector('[data-room3d]') && two.kioskEl.querySelector('svg.rs-backdrop'));
+    check('every module mounted', ['p1', 'k1', 'tv', 'n1'].every((id) => two.log.mounts.includes(id)), two.log.mounts.join());
+    for (const id of ['p1', 'k1', 'tv', 'n1']) {
+      const got = rectOf(wrapOf(two.kioskEl, id));
+      check(`*** ${id} is drawn where it was in 3D (its rectangle, within 2px) ***`, sameRect(got, where3[id], 2), J({ was: where3[id], now: got }));
+    }
+    check('...and it is IN its slot (the module itself, live, not a picture of it)', r2.slots().get('p-tv').el.contains(two.arr.recFor('tv')?.el) && r2.slots().get('back').el.contains(two.arr.recFor('p1')?.el));
+    const heard = [];
+    two.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard.push(p); p.claim?.(); });
+    two.kioskEl.querySelector('.rs-obj[data-id="cabinet"] .rs-hit').click();
+    check('*** the door hotspot opens its dashboard on the screen\'s bus ***', heard.length === 1 && heard[0].id === 'D2', J(heard));
+    check('the arrangement hands the map editor the hotspots', two.arr.roomObjects().map((o) => o.id).join() === 'cabinet,shelf,table', two.arr.roomObjects().map((o) => o.id).join());
+    two.arr.destroy();
+  }
+
+  // =====================================================================================================
+  section('7. re-bake: knowing when the 3D source changed, and keeping what was set on the flat room');
+  {
+    check('freshly flattened: not stale', flatState(flat).flat === true && flatState(flat).stale === false);
+    check('a 3D room is not flat, and can be', J(flatState(L3)) === J({ flat: false, can: true }) && flatState({ preset: 'quad' }).can === false);
+    check('the 3D room\'s menu offers Flatten', J(flatActions(L3).map((a) => [a.key, a.enabled])) === J([['flatten', true]]));
+    check('a fresh flat room offers Re-bake DIMMED (not hidden) and Back to 3D', J(flatActions(flat).map((a) => [a.key, a.enabled])) === J([['rebake', false], ['unflatten', true]]));
+    // The source it was made from changed (a separate 3D layout, passed in): a door added on the table.
+    const L3b = threeD(); L3b.scene.recipe.furniture[1].opens = 'D9';
+    check('*** given the 3D layout it came from, a change there makes it stale ***', flatState(flat, { source: L3b }).stale === true && flatState(flat, { source: L3 }).stale === false);
+    const moved = threeD(); moved.placed[2].x = 85;
+    check('...a module moved on a 3D wall does too', flatState(flat, { source: moved }).stale === true);
+    // Its own source would draw differently now (a preset changed in code, or the bake changed): stale.
+    const old = JSON.parse(J(flat)); old.scene.recipe.flat.hash = '00000000';
+    check('*** a hash that no longer matches what its source draws is stale (a preset or the bake changed) ***', flatState(old).stale === true);
+    const oldV = JSON.parse(J(flat)); oldV.scene.recipe.flat.v = FLAT_VERSION - 1;
+    check('...and so is one baked by an older bake', flatState(oldV).stale === true && flatActions(oldV)[0].enabled === true);
+    // Door edits on the flat room survive Re-bake and Back to 3D.
+    const edited = { ...flat, scene: withDoor(flat.scene, 'table', 'D7') };
+    check('the map editor\'s door edit works on a flattened room (room_doors.js, by hotspot id)', edited.scene && edited.scene.recipe.items.find((i) => i.id === 'table')?.opens === 'D7');
+    const back = unflattenLayout(edited);
+    check('*** Back to 3D: the 3D room again, with the door set on the flat room ***', back.scene.kind === 'room3d'
+      && normalizeRoom3d(back.scene).furniture.find((f) => f.id === 'table')?.opens === 'D7' && normalizeRoom3d(back.scene).furniture.find((f) => f.id === 'cabinet')?.opens === 'D2');
+    check('...every module back where it was in 3D (free ones off their flat slots)', J(back.placed) === J(threeD().placed), J(back.placed));
+    const re = rebakeLayout(old);
+    check('*** Re-bake: fresh again, same ids, same slots ***', flatState(re).stale === false && J(re.scene.recipe.items.map((i) => i.id)) === J(flat.scene.recipe.items.map((i) => i.id)) && J(re.placed) === J(flat.placed));
+    const re2 = applyFlatAction(edited, 'rebake');
+    check('...and a re-bake keeps a door set on the flat room', re2.scene.recipe.items.find((i) => i.id === 'table')?.opens === 'D7');
+    const unflatPreset = unflattenLayout(flattenLayout({ ...threeD(), scene: { kind: 'room3d', preset: 'box' } }));
+    check('a room that named only its preset still names only its preset after a round trip', J(unflatPreset.scene) === J({ kind: 'room3d', preset: 'box' }), J(unflatPreset.scene));
+    const added = { ...flat, placed: [...flat.placed, { id: 'x9', place: 'screen', x: 10, y: 10 }] };
+    check('a module added on the flat room is kept by Back to 3D', unflattenLayout(added).placed.some((e) => e.id === 'x9'));
+    check('applyFlatAction: unknown keys do nothing (null)', applyFlatAction(flat, 'nope') === null && applyFlatAction(L3, 'unflatten') === null);
+    check('flatOf: a plain 2D room is not a flattened one', flatOf({ scene: { kind: 'room', preset: 'room' } }) === null);
+  }
+
+  // =====================================================================================================
+  section('8. level of detail: two levels, by size and by the device\'s budget');
+  {
+    const objs = [{ id: 'big', w: 300, h: 120, faces: 4, proxyFaces: 1 }, { id: 'mid', w: 90, h: 80, faces: 4, proxyFaces: 1 }, { id: 'tiny', w: 30, h: 20, faces: 4, proxyFaces: 1 }];
+    const a = chooseLod(objs);
+    check('*** by size: under 64 CSS px is far (its proxy), over is full ***', a.levels.get('big') === 'full' && a.levels.get('mid') === 'full' && a.levels.get('tiny') === 'proxy' && J(a.far) === '["tiny"]');
+    check('...measured in CSS px, so a room drawn at half size makes "mid" far too', chooseLod(objs, { scale: 0.5 }).levels.get('mid') === 'proxy');
+    const b = chooseLod(objs, { budget: 6 });
+    check('*** by budget: past it the SMALLEST full objects drop first, until it fits ***', b.levels.get('big') === 'full' && b.levels.get('mid') === 'proxy' && b.cost <= 6 && J(b.dropped) === '["mid"]', J({ cost: b.cost, d: b.dropped }));
+    const z = chooseLod(objs, { budget: 0 });
+    check('a budget too small for even the proxies still draws every object (lowers detail, never hides)', [...z.levels.values()].every((l) => l === 'proxy') && z.levels.size === 3);
+    check('mode full / proxy: everything at that level, no budget', [...chooseLod(objs, { mode: 'full', budget: 1 }).levels.values()].every((l) => l === 'full')
+      && [...chooseLod(objs, { mode: 'proxy' }).levels.values()].every((l) => l === 'proxy'));
+    // The 3D room itself.
+    host.innerHTML = '';
+    const room = mountRoom3d(host, { kind: 'room3d', preset: 'box' }, { lod: 'auto', lodBudget: 6, capability: { slow: true } });
+    const lod = room.lod();
+    check('*** in the 3D room: a budget of 6 faces keeps ONE piece full and draws the others as proxies ***',
+      Object.values(lod.levels).filter((l) => l === 'full').length === 1 && lod.cost <= 6, J(lod));
+    const proxyId = Object.keys(lod.levels).find((k) => lod.levels[k] === 'proxy');
+    const proxyEl = room.root.querySelector(`[data-object="${proxyId}"]`);
+    check('a proxy is ONE face (its front); a full piece is four', proxyEl.querySelectorAll('.r3-face').length === PROXY_FACES
+      && room.root.querySelector(`[data-object="${Object.keys(lod.levels).find((k) => lod.levels[k] === 'full')}"]`).querySelectorAll('.r3-face').length === BOX_FACES);
+    check('the proxy is drawn where the full piece\'s front was', sameRect(rectOf(proxyEl.querySelector('.r3-bf-front')),
+      bboxOf(boxFaces(normalizeRoom3d({ preset: 'box' }).furniture.find((f) => f.id === proxyId), view).front.pts.map(([x, y, zz]) => project(view, x, y, zz))), 1));
+    room.setObjectOpens(proxyId, 'D4');
+    const door = room.root.querySelector(`[data-object="${proxyId}"] button.r3-bf-front`);
+    check('*** a proxy that is a door is still a button, labelled, and still opens its dashboard ***', door && door.getAttribute('aria-label') && room.press(proxyId)?.opens === 'D4');
+    const slotEl = room.slots().get('back').el;
+    room.setOptions({ lodBudget: null, lod: 'full' });
+    check('*** changing the level redraws only the pieces: the walls\' slots are the same elements ***',
+      Object.values(room.lod().levels).every((l) => l === 'full') && room.slots().get('back').el === slotEl);
+    room.setOptions({ lod: 'auto', lodNearPx: 5000 });
+    check('a "far" threshold bigger than every piece makes every piece a proxy', Object.values(room.lod().levels).every((l) => l === 'proxy'));
+    room.destroy();
+    check('lodPlan with no budget given uses the capability: fast -> 400 faces, slow -> 24',
+      lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: false } }).budget === BUDGETS.fast && lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: true } }).budget === BUDGETS.slow);
+    check('the box room (12 furniture faces) is all full even on a slow device -- it is the measured-good room',
+      [...lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: true } }).levels.values()].every((l) => l === 'full'));
+  }
+
+  // =====================================================================================================
+  section('9. the measured capability, and "may be slow on this device" (3D stays on offer)');
+  {
+    let t = 0;
+    const clock = (step) => () => { t += step; return t; };
+    const slow = measureCapability({ now: clock(SLOW_MS + 1) });
+    const fast = measureCapability({ now: clock(1) });
+    check('*** a device that takes longer than SLOW_MS for the work is slow; faster is not ***', slow.slow === true && fast.slow === false && slow.measured);
+    resetCapability();
+    let measured = 0;
+    const cap1 = deviceCapability({ measure: () => { measured++; return { ms: 3, slow: false, measured: true }; } });
+    const cap2 = deviceCapability({ measure: () => { measured++; return { ms: 30, slow: true, measured: true }; } });
+    check('measured ONCE per page, then remembered', measured === 1 && cap1.ms === 3 && cap2.ms === 3);
+    check('the device\'s own setting overrides the measurement both ways', deviceCapability({ detail: 'proxy' }).slow === true && deviceCapability({ detail: 'full' }).slow === false);
+    check('lodOptionsFor: the setting -> room3d.js options', J(Object.keys(lodOptionsFor('proxy'))) === J(['lod', 'capability']) && lodOptionsFor('nonsense').lod === 'auto');
+    check('the setting\'s row: auto by default, three choices', DETAIL_FIELD.default === 'auto' && DETAIL_FIELD.options.length === 3);
+    resetCapability();
+    const real = deviceCapability();
+    note(`this browser measured ${real.ms} ms for the work (slow above ${SLOW_MS}): ${real.slow ? 'slow' : 'fast'}`);
+    check('the real measurement gives a number', Number.isFinite(real.ms) && real.measured === true);
+    check('*** a 3D card on a slow device carries the note; on a fast one, none ***', slowNote('room3d', { slow: true }) === SLOW_NOTE && slowNote('room3d', { slow: false }) === '');
+    check('a 2D room never carries it', slowNote('room', { slow: true }) === '' && slowNote('static', { slow: true }) === '');
+    check('the note says what it means, no more', SLOW_NOTE === 'May be slow on this device');
+    // 3D is never the default.
+    const scene = (k) => PREBUILT_DASHBOARDS[k]?.layout?.scene?.kind || null;
+    check('*** the landing Home and the first starting point are not 3D ***', scene(EXAMPLE_ORDER[0]) !== 'room3d' && !PREBUILT_DASHBOARDS.start.layout.scene);
+    check('the bar\'s tray of ready-made dashboards has no 3D', PREBUILT_ORDER.every((k) => scene(k) !== 'room3d'), PREBUILT_ORDER.join());
+    check('3D is offered as a starting point, not hidden', EXAMPLE_ORDER.some((k) => scene(k) === 'room3d'));
+    note(`LOD_DEFAULTS.nearPx = ${LOD_DEFAULTS.nearPx}; budgets ${J(BUDGETS)}`);
+  }
+} catch (err) {
+  check('the suite ran without throwing', false, err && (err.stack || err.message || String(err)));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
