@@ -131,6 +131,45 @@ export function trayOpenMsFrom(row) {
 }
 
 // =====================================================================================================
+// SETTING 3 (row 2.38, the map editor): HOW LONG THE EDIT VIEW STAYS OPEN WITH NOBODY PRESSING ANYTHING.
+//
+// While the edit windows are open they hold the SWITCH (next / prev / select walk the windows, not the
+// panels; the tray's rule). The what-if-nobody-answers test (CLAUDE.md): somebody opens the edit view on a
+// screen and walks away. Nothing is blocked -- the panels keep playing, every change is already saved, the
+// plain bar is a long press away -- but the person at the screen's switch now walks edit windows instead of
+// their panels. So the edit view puts itself away after this long with no press, no key and no pointer in
+// it. Closing it loses nothing (changes are applied as they are made); reopening is one press.
+//   DEFAULT 60 s. FOR longer: editing is deliberate -- reading a window, typing a number -- and a slow
+//   switch user stepping through choices needs the scan's response time PER STOP (15 s, input_scan.js).
+//   FOR shorter (the tray's 15 s): the switch is somebody else's for less time. A minute is four scan
+//   steps of silence: long enough that a person mid-edit is not shut out, short enough that a screen left
+//   in the edit view gives its switch back before anybody wonders why it stopped working. "Until it is
+//   closed" is one choice away for a screen nobody else uses.
+// The MAP (`system/map`) waits the TRAY's time (`dashboardTrayMs` above): it is a way to go somewhere, the
+// same job as the tray, so it keeps the same patience.
+// =====================================================================================================
+export const EDIT_IDLE_KEY = 'editIdleMs';
+export const EDIT_IDLE_DEFAULT_MS = 60000;
+export const EDIT_IDLE_FIELD = Object.freeze({
+  key: EDIT_IDLE_KEY,
+  label: 'Put the edit windows away, with nobody pressing, after',
+  kind: 'choice', level: 'advanced', default: EDIT_IDLE_DEFAULT_MS,
+  options: Object.freeze([
+    { value: 15000, label: '15 seconds' },
+    { value: 30000, label: '30 seconds' },
+    { value: 60000, label: '1 minute' },
+    { value: 300000, label: '5 minutes' },
+    { value: 0, label: 'Until they are closed' },
+  ]),
+});
+/** The edit view's wait from a settings row, in ms. 0 = until it is closed. */
+export function editIdleMsFrom(row) {
+  const v = row && row[EDIT_IDLE_KEY];
+  const n = typeof v === 'string' && v.trim() !== '' ? Number(v) : v;
+  return Number.isInteger(n) && n >= 0 && n <= 3600000 ? n : EDIT_IDLE_DEFAULT_MS;
+}
+
+// =====================================================================================================
 // THE TRAIL (the breadcrumb). The back stack is a TRAIL, not a log of every swap:
 // going to a dashboard that is already on the trail goes BACK to it (the trail is cut there), so a
 // cycle -- room A's door to B, B's door back to A -- never grows it, and the breadcrumb always reads as

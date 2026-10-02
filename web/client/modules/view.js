@@ -105,10 +105,12 @@ import './transport_bar.js';
 import './settings_menu.js';
 import { createArrangement } from '../arrangement.js';
 import { flashLimit } from '../flash_limit.js';
-import { layoutChange, placedGeometry } from '../layout.js';
-// Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below).
-import { createEditModel } from '../edit_model.js';
-import { mountTransformWindow, mountLayersWindow } from '../edit_windows.js';
+// Row 2.38: a change that only moves a room object's door is a placement change too (room_doors.js).
+import { classifyLayoutChange as layoutChange } from '../room_doors.js';
+// Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below). Since row
+// 2.38 the editor itself is dashboard_editor.js, shared with the kiosk's own path.
+import { openDashboardEditor } from '../dashboard_editor.js';
+import { mapLoader } from '../dashboard_map.js';
 // Row 2.38: a dashboard placed INSIDE another one (recursion), its depth and its live limit.
 import { DASHBOARD_GO_TOPIC, NEST_OPEN_TOPIC, nestMode, nestLiveDepthFrom, NEST_LIVE_DEPTH_KEY } from '../dashboard_nest.js';
 
@@ -222,6 +224,9 @@ function dashboardFactory(ctx) {
     let arr = null;
     let settingsHandle = null;
     const offs = [];                             // every subscription this view made, undone on destroy
+    // Row 2.38: the subscriptions made while FILLING it (its settings, its links, its opener) -- undone on
+    // destroy and also when a nested one is told to show something else and fills itself again.
+    const fillOffs = [];
     const listeners = new Set();                 // onChange
     const settingsListeners = new Set();         // onSettings (Stage 4)
     // a doc the host lends (Stage 4), never closed here. (Never a nested one's: the lent doc is the screen's.)
@@ -462,77 +467,45 @@ function dashboardFactory(ctx) {
     // NOT BUILT: a copy/paste/duplicate of a module. A copy needs a module INSTANCE of its own on this
     // screen (profiles.addModule), not just a second box; the model's copy is taken back out and the
     // editor says so in `notes()`, rather than showing a box that is not on the screen.
-    function openEdit({ windows = ['transform', 'layers'], host: winHost = null } = {}) {
+    //
+    // ROW 2.38: the editor is dashboard_editor.js now (shared with the kiosk's own path), and it edits
+    // more: what each thing OPENS, what a frame SHOWS, the room's own objects' doors, and the Map. The
+    // person's dashboards come from the screens client; the map reads every dashboard's rows through the
+    // UNSCOPED makers (a nested one's `nestMakeState`, else this one's own), never this dashboard's
+    // scoped `childMakes`.
+    const rowMaker = ctx.nestMakeState || makeState;
+    function openEdit({ windows, host: winHost = null } = {}) {
       if (!arr || !root) return null;
       if (editor) return editor;
-      const notes = [];
-      const known = () => new Set((arrangement?.modules || []).map((m) => m.id));
-      const toItem = (e) => {
-        const g = placedGeometry(e);
-        const rec = arr.recFor(e.id);
-        return { id: e.id, name: rec?.title || rec?.type || e.id, x: g.x, y: g.y, scale: g.scale, rot: g.rot,
-          layer: g.layer, place: e.place, surface: g.surface, shown: e.shown !== false, locked: e.locked === true };
-      };
-      const fromItem = (it, prev) => {
-        const e = { ...(prev || { id: it.id }), place: it.place, x: it.x, y: it.y, scale: it.scale, rot: it.rot, layer: it.layer };
-        if (it.place === 'scene') e.surface = it.surface; else delete e.surface;
-        if (it.shown === false) e.shown = false; else delete e.shown;
-        if (it.locked) e.locked = true; else delete e.locked;
-        return e;
-      };
-      const model = createEditModel({ items: arr.placed().map(toItem) });
-      let syncing = false;
-      const unsub = model.subscribe((evt) => {
-        if (!evt || evt.type !== 'items' || syncing || !arr) return;
-        const ok = known();
-        const ghosts = model.items().filter((it) => !ok.has(it.id));
-        if (ghosts.length) {
-          notes.push('A copy of a module needs a module of its own on this screen. That is not built yet, so the copy was not placed.');
-          syncing = true;
-          try { for (const g of ghosts) model.remove(g.id); } finally { syncing = false; }
-        }
-        const prev = new Map(arr.placed().map((e) => [e.id, e]));
-        const placed = model.items().filter((it) => ok.has(it.id)).map((it) => fromItem(it, prev.get(it.id)));
-        const base = rawLayout || arr.layout() || { preset: 'full', slots: [] };
-        const next = { ...base, placed };
-        applyPlacedHere(next).catch((err) => console.error('view: edit', err));
-        if (!overridden && settingsHandle?.set) {
+      const ed = openDashboardEditor({
+        arr, mountIn: root, host: winHost,
+        ...(windows ? { windows } : {}),
+        baseLayout: () => rawLayout || arr.layout(),
+        apply: (next) => applyPlacedHere(next),
+        // Saved unless the host handed the layout in and did not say it may be saved (the modules page:
+        // memory only, as it promises). A REAL screen hands its boot layout in too (Stage 4) and says
+        // `saveLayout` -- without it, an edit on a real screen's dashboard was never written anywhere.
+        save: (overridden && ctx.saveLayout !== true) || !settingsHandle?.set ? null : (next) => {
           try {
             const cur = settingsHandle.get?.()?.kiosk || {};
             settingsHandle.set({ kiosk: { ...cur, layout: next } });
           } catch (err) { console.error('view: saving the placement', err); }
-        }
+        },
+        listDashboards: typeof profiles?.list === 'function' ? () => profiles.list() : null,
+        createDashboard: typeof profiles?.create === 'function'
+          ? (name) => profiles.create(name, (() => { try { return arrangement?.person_id || ctx.personId || ''; } catch { return ''; } })())
+          : null,
+        currentId: () => viewId,
+        loadMap: typeof profiles?.list === 'function' && typeof rowMaker === 'function'
+          ? mapLoader({ profiles, makeRow: (pid, key) => rowMaker(key, { cacheKey: null }, pid), title: (t) => getManifest(t)?.title || t })
+          : null,
+        onGo: (id) => { try { rootBus?.publish?.(DASHBOARD_GO_TOPIC, { id, source: 'map', claim: () => {} }); } catch (err) { console.error('view: map go', err); } },
+        // A person hiding a panel by hand may be asked what its sound should do (hide = mute, ad7dc49).
+        hidePolicy: { personHid: (id) => ctx.hidePolicy?.personHid?.(id) },
+        onClose: () => { if (editor === ed) editor = null; },
+        onChange: () => changed(),
       });
-      const box = winHost || document.createElement('div');
-      if (!winHost) {
-        box.className = 'v-edit';
-        box.style.cssText = 'position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:8px;'
-          + 'max-height:calc(100% - 16px);overflow:auto;z-index:var(--z-menus,600);pointer-events:auto';
-        root.append(box);
-      }
-      const opened = {};
-      const close = () => {
-        if (!editor || editor.model !== model) return;
-        editor = null;
-        for (const w of Object.values(opened)) { try { w.destroy(); } catch { /* gone */ } }
-        try { unsub(); } catch { /* gone */ }
-        if (!winHost) box.remove();
-        changed();
-      };
-      // Closing any one window ends the editing (one way out, not a hunt for the last window).
-      const mounts = { transform: mountTransformWindow, layers: mountLayersWindow };
-      for (const k of windows) {
-        if (!mounts[k]) continue;
-        const h = document.createElement('div');
-        box.append(h);
-        // A person hiding a panel by hand (Layers' eye) may be asked what its sound should do (hide = mute,
-        // ad7dc49) -- the host's policy, `ctx.hidePolicy`; an automatic hide never asks.
-        opened[k] = mounts[k](h, model, {
-          onClose: close,
-          onShownToggle: (id, shown) => { if (!shown) { try { ctx.hidePolicy?.personHid?.(id); } catch { /* not load-bearing */ } } },
-        });
-      }
-      editor = { model, windows: opened, notes: () => notes.slice(), close };
+      editor = ed;
       changed();
       return editor;
     }
@@ -583,7 +556,7 @@ function dashboardFactory(ctx) {
       root.append(opener);
       // A switch: `select` on this panel arrives as `dashboard/open` (actions.js MODULE_VERBS.dashboard).
       const off = ctx.bus?.subscribe?.(NEST_OPEN_TOPIC, () => { openNested('scan'); });
-      if (typeof off === 'function') offs.push(off);
+      if (typeof off === 'function') fillOffs.push(off);
     }
     /** The card: a dashboard too deep to draw live, or none chosen. `rec` is its screen record (or null). */
     function drawCard(rec, sentence = null) {
@@ -699,15 +672,76 @@ function dashboardFactory(ctx) {
         if (nested) {
           root.classList.add('v-nested');
           root.dataset.nestDepth = String(depth);
-          const shows = (ctx.state?.get?.() || {}).shows;
-          viewId = typeof shows === 'string' && shows.trim() ? shows.trim() : null;
+          viewId = showsOf(ctx.state?.get?.());
           startPulse();
+          // *** WHAT IT SHOWS IS LIVE (the map editor's Shows: <dashboard>). *** Its own row changing --
+          // the edit window, another device, a script -- empties this frame and fills it again with the
+          // new dashboard. Only THIS panel: the screen around it, and the panel's box, stay as they are.
+          //   FOR this over a remount of the panel by its host: the host need not know what a frame is,
+          //   and a change from another device arrives the same way as one made here. AGAINST: a few lines
+          //   here that a remount would not need. (A remount reads the row from the server again, and
+          //   the change just written may not have reached it yet: the frame would show the OLD one.)
+          const off = ctx.state?.subscribe?.((s) => {
+            const n = showsOf(s);
+            if (!torn && n !== viewId) reshow(n).catch((err) => console.error('view: shows', err));
+          });
+          if (typeof off === 'function') offs.push(off);
+        }
+        const first = fill();
+        chain = first.catch(() => {});
+        await first;
+      },
+
+      onResize() {},
+      onHide() {},
+
+      destroy() {
+        torn = true;
+        clearInterval(pulseT); pulseT = null;          // row 2.38
+        try { editor?.close(); } catch { /* already gone */ }
+        editor = null;
+        offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+        fillOffs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+        listeners.clear();
+        for (const id of [...chromeRecs.keys()]) removeChrome(id);
+        try { arr?.destroy(); } catch { /* already gone */ }
+        // THE LEAK (step 6 plan): opened, set polling, and never closed. Closed here, last, after
+        // everything that might read it. (Not a LENT one -- Stage 4: that is the host's to close; this
+        // view's own subscriptions on it went with `offs` above.)
+        if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* already gone */ } }
+        settingsHandle = null;
+        settingsListeners.clear();
+        // *** BREAK THE DEAD TREE APART (found by the Stage 4 bench soak, 2026-10-01). *** A module that
+        // keeps one of its own elements alive after `destroy` (trivia and wordforge each held ~40 nodes
+        // per mount, on every path) keeps EVERY node still connected to it alive too -- and on a screen
+        // swap the whole dashboard is detached at once, so one such module held the entire old dashboard
+        // (~200-550 nodes per swap, measured, against ~40 when the same panel is swapped off a stage that
+        // stays in the page). Taking every element off its parent leaves a leaky module holding only
+        // what it holds itself. The modules are already destroyed; nothing here is drawn any more.
+        try {
+          if (root) for (const n of [...root.querySelectorAll('*')].reverse()) n.remove();
+        } catch { /* a tree that will not come apart is still going */ }
+        root?.remove(); root = null;
+        stageEl = mirrorEl = clockEl = ambientEl = null;
+        arrangement = null; arr = null;
+      },
+    };
+
+    // ---- FILLING IT: everything `init` did after drawing its four hosts (row 2.38 split it out, so a
+    // nested dashboard told to show something else can EMPTY itself and fill again). `gen` is which fill
+    // is current: one superseded mid-way (two quick changes) stops at its next await and leaves no trace.
+    let gen = 0;
+    const showsOf = (s) => { const v = s && s.shows; return typeof v === 'string' && v.trim() ? v.trim() : null; };
+    async function fill() {
+      const g = gen;
+      const stale = () => torn || g !== gen;
+      if (nested) {
           if (!viewId) { root.dataset.nest = 'empty'; drawCard(null, 'Nothing is chosen to show here yet.'); return; }
           if (nestMode(depth, liveLimit()) === 'card') {
             root.dataset.nest = 'card';
             let rec = null;
             try { rec = profiles ? await profiles.get(viewId) : null; } catch { rec = null; }
-            if (torn) return;
+            if (stale()) return;
             drawCard(rec);
             addOpener(rec?.name);
             return;
@@ -722,7 +756,7 @@ function dashboardFactory(ctx) {
           console.error('view: could not load', viewId, err);
           arrangement = null;
         }
-        if (torn) return;
+        if (stale()) return;
         if (!arrangement || !Array.isArray(arrangement.modules)) {
           // *** A VIEW THAT CANNOT LOAD SAYS SO RATHER THAN RENDERING NOTHING. *** A blank
           // region on a screen somebody is sitting at is indistinguishable from a crash.
@@ -741,7 +775,7 @@ function dashboardFactory(ctx) {
         // handle is used, never loaded again and never closed here: it is the host's.
         settingsHandle = borrowedSettings || childState('settings');
         if (!borrowedSettings) await settingsHandle?.load?.().catch(() => {});
-        if (torn) {
+        if (stale()) {
           if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* gone */ } }
           settingsHandle = null; return;
         }
@@ -769,7 +803,7 @@ function dashboardFactory(ctx) {
             // STAGE 4: whoever shows this dashboard's own settings (its theme, R3) hears they changed.
             for (const fn of settingsListeners) { try { fn(s || {}); } catch (err) { console.error('view: onSettings', err); } }
           });
-          if (typeof off === 'function') offs.push(off);
+          if (typeof off === 'function') fillOffs.push(off);
           settingsHandle.startPolling?.();
         }
 
@@ -783,19 +817,19 @@ function dashboardFactory(ctx) {
         arr.resolve(rawLayout);
         arr.partition();
         await arr.mountOverlays();
-        if (torn) return;
+        if (stale()) return;
         // STAGE 4: `ctx.startIndex` -- where a cold boot lands on a one-at-a-time stage (the kiosk's
         // restart record), clamped; mounting index 0 first and then moving would start a module for nothing.
         const start = Number.isInteger(hostStartIndex) && hostStartIndex > 0 && hostStartIndex < arr.stageDefs().length
           ? hostStartIndex : 0;
         if (arr.layout()) await arr.mountLayout(); else await arr.showPrimary(start);
-        if (torn) return;
+        if (stale()) return;
         // Links, once the modules exist -- and again whenever the settings change, exactly as the
         // kiosk does. The runner exists only while there are links, so a view with none costs nothing.
         if (arr.screenLinks) {
           arr.screenLinks.sync();
-          const off = settingsHandle?.subscribe?.(() => { if (!torn) arr.screenLinks.sync(); });
-          if (typeof off === 'function') offs.push(off);
+          const off = settingsHandle?.subscribe?.(() => { if (!torn) arr?.screenLinks?.sync(); });
+          if (typeof off === 'function') fillOffs.push(off);
         }
         // Stage R: a PLACEMENT change saved to this dashboard's own settings (another device, an edit
         // window) is applied in place. Not for a layout the host handed in: that one is the host's.
@@ -807,7 +841,7 @@ function dashboardFactory(ctx) {
               applyPlacedHere(next).catch((err) => console.error('view: placement', err));
             }
           });
-          if (typeof off === 'function') offs.push(off);
+          if (typeof off === 'function') fillOffs.push(off);
         }
         // The placed chrome, once there are panels for a bar to name. Started, not awaited: see
         // CHROME above. Every role it will carry is 'pending' from this moment.
@@ -815,41 +849,46 @@ function dashboardFactory(ctx) {
         for (const def of placed) mountChrome(def).catch((err) => console.error('view: chrome', err));
         changed();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
-      },
+    }
 
-      onResize() {},
-      onHide() {},
-
-      destroy() {
-        torn = true;
-        clearInterval(pulseT); pulseT = null;          // row 2.38
-        try { editor?.close(); } catch { /* already gone */ }
-        editor = null;
-        offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
-        listeners.clear();
-        for (const id of [...chromeRecs.keys()]) removeChrome(id);
-        try { arr?.destroy(); } catch { /* already gone */ }
-        // THE LEAK (step 6 plan): opened, set polling, and never closed. Closed here, last, after
-        // everything that might read it. (Not a LENT one -- Stage 4: that is the host's to close; this
-        // view's own subscriptions on it went with `offs` above.)
-        if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* already gone */ } }
-        settingsHandle = null;
-        settingsListeners.clear();
-        // *** BREAK THE DEAD TREE APART (found by the Stage 4 bench soak, 2026-10-01). *** A module that
-        // keeps one of its own elements alive after `destroy` (trivia and wordforge each held ~40 nodes
-        // per mount, on every path) keeps EVERY node still connected to it alive too -- and on a screen
-        // swap the whole dashboard is detached at once, so one such module held the entire old dashboard
-        // (~200-550 nodes per swap, measured, against ~40 when the same panel is swapped off a stage that
-        // stays in the page). Taking every element off its parent leaves a leaky module holding only
-        // what it holds itself. The modules are already destroyed; nothing here is drawn any more.
-        try {
-          if (root) for (const n of [...root.querySelectorAll('*')].reverse()) n.remove();
-        } catch { /* a tree that will not come apart is still going */ }
-        root?.remove(); root = null;
-        stageEl = mirrorEl = clockEl = ambientEl = null;
-        arrangement = null; arr = null;
-      },
-    };
+    // Row 2.38: EMPTY a nested dashboard so it can be filled with another one -- everything `fill` made,
+    // undone, and the four hosts left in place (the panel's box, its pulse and its row watch stay).
+    function empty() {
+      gen++;
+      try { editor?.close(); } catch { /* already gone */ }
+      editor = null;
+      fillOffs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
+      for (const id of [...chromeRecs.keys()]) removeChrome(id);
+      try { arr?.destroy(); } catch { /* already gone */ }
+      if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* already gone */ } }
+      settingsHandle = null; arr = null; arrangement = null; rawLayout = null; lastStage = null;
+      try { opener?.remove(); } catch { /* gone */ }
+      opener = null;
+      for (const el of [stageEl, mirrorEl, clockEl, ambientEl]) el?.replaceChildren();
+      if (stageEl) { stageEl.className = 'k-stage'; stageEl.removeAttribute('style'); }
+      if (mirrorEl) mirrorEl.hidden = true;
+      if (clockEl) clockEl.hidden = true;
+      if (ambientEl) ambientEl.hidden = true;
+      if (root) delete root.dataset.nest;
+      nestMode_ = nested ? null : 'screen';
+    }
+    // One refill at a time, in order, and only for the LATEST choice: two quick changes do one refill each
+    // at most, never two fills at once over the same hosts.
+    let chain = Promise.resolve();
+    let wantShows = null;
+    function reshow(n) {
+      wantShows = n;
+      chain = chain.then(async () => {
+        if (torn || wantShows === viewId) return;
+        viewId = wantShows;
+        empty();
+        await fill();
+        if (torn) return;
+        changed();
+        pulse();
+      }).catch((err) => console.error('view: refill', err));
+      return chain;
+    }
     return self;
 }
 

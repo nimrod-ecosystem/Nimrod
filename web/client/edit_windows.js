@@ -34,6 +34,8 @@ import {
   TRANSFORM_KEYS, PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EFFECTS, EFFECT_AMOUNT,
   normalizeFx, hasText, stepSize,
 } from './edit_model.js';
+// Row 2.38: the map of the person's dashboards (the Map window).
+import { mapSvg, mapListForm, MAP_DEFAULTS } from './dashboard_map.js';
 
 function ensureStyles(doc) {
   if (!doc || doc.querySelector('link[data-edit-windows-css]')) return;
@@ -45,6 +47,17 @@ function ensureStyles(doc) {
     doc.head.append(link);
   } catch { /* a page without a head still gets working, unstyled windows */ }
 }
+// Row 2.38: the Opens-and-shows choice lists and the map, in their own sheet (same rule: tokens only).
+function ensureMapStyles(doc) {
+  if (!doc || doc.querySelector('link[data-edit-map-css]')) return;
+  try {
+    const link = doc.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = new URL('./edit_map.css', import.meta.url).href;
+    link.setAttribute('data-edit-map-css', '');
+    doc.head.append(link);
+  } catch { /* unstyled still works */ }
+}
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -55,7 +68,7 @@ let uid = 0;
 // THE SHELL every window shares: header with the title and Close, a body the window draws,
 // clicks and typed commits routed to the window, Escape, the switch walk, and destroy.
 // ---------------------------------------------------------------------------------------
-function mountWindow(host, model, { kind, title, subtitle = () => '', body, onAction, onCommit, onClose }) {
+function mountWindow(host, model, { kind, title, subtitle = () => '', body, onAction, onCommit, onClose, onPaint, afterRender }) {
   if (!host) throw new Error(`edit_windows: a host element is required (${kind})`);
   if (!model || typeof model.subscribe !== 'function') throw new Error(`edit_windows: a model is required (${kind})`);
   const doc = host.ownerDocument || document;
@@ -97,6 +110,7 @@ function mountWindow(host, model, { kind, title, subtitle = () => '', body, onAc
         if (keep.input && keep.dirty) { try { n.setSelectionRange(keep.s, keep.e); } catch { /* not a text box */ } }
       }
     }
+    try { afterRender?.(el); } catch (err) { console.error('edit_windows: afterRender', err); }
     paintScan();
   }
 
@@ -118,8 +132,19 @@ function mountWindow(host, model, { kind, title, subtitle = () => '', body, onAc
     el.querySelectorAll('.is-scan').forEach((n) => n.classList.remove('is-scan'));
     const n = current();
     if (n) { n.classList.add('is-scan'); scanKey = n.dataset.ew; scanIdx = scanTargets().indexOf(n); }
+    try { onPaint?.(n, el); } catch (err) { console.error('edit_windows: onPaint', err); }
     return n;
   }
+  // Row 2.38: a GROUP of windows walked as one (`createWindowGroup`) puts the cursor on a given control,
+  // and takes it off this window entirely when the cursor is in another one.
+  function focusTarget(n) {
+    const list = scanTargets();
+    const i = list.indexOf(n);
+    if (i < 0) return null;
+    scanIdx = i; scanKey = n.dataset.ew;
+    return paintScan();
+  }
+  function blur() { scanIdx = -1; scanKey = null; paintScan(); }
   function focusStep(d) {
     const list = scanTargets();
     if (!list.length) return null;
@@ -183,7 +208,41 @@ function mountWindow(host, model, { kind, title, subtitle = () => '', body, onAc
   }
 
   render();
-  return { el, render, close, destroy, scanTargets, focusStep, select, current, isOpen: () => !destroyed };
+  return { el, kind, render, close, destroy, scanTargets, focusStep, focusTarget, blur, select, current, isOpen: () => !destroyed };
+}
+
+// ---------------------------------------------------------------------------------------
+// ROW 2.38: SEVERAL WINDOWS, ONE SWITCH WALK. The edit view opens three or four windows at once; a
+// switch walks them as ONE list -- each window's own stops, in order, Close of the first window first
+// (closing any one window ends the editing, so that Close is the way out the walk lands on first).
+// `windows()` is read on every step, so a window opened or closed meanwhile is simply in or out.
+// ---------------------------------------------------------------------------------------
+export function createWindowGroup(windows) {
+  const live = () => (typeof windows === 'function' ? windows() : windows || []).filter((w) => w && w.isOpen?.());
+  let at = null;                    // the window the cursor is in
+  const stops = () => live().flatMap((w) => w.scanTargets().map((el) => ({ w, el })));
+  function current() {
+    if (!at || !at.isOpen()) return null;
+    return at.current();
+  }
+  function step(d) {
+    const list = stops();
+    if (!list.length) { at = null; return null; }
+    const cur = current();
+    const i = cur ? list.findIndex((s) => s.el === cur) : -1;
+    const n = i < 0 ? (d > 0 ? 0 : list.length - 1) : (i + Math.sign(d || 1) + list.length) % list.length;
+    for (const w of live()) if (w !== list[n].w) w.blur();
+    at = list[n].w;
+    return at.focusTarget(list[n].el);
+  }
+  return {
+    stops: () => stops().map((s) => s.el),
+    current,
+    next: () => step(1),
+    prev: () => step(-1),
+    select() { const c = current(); if (!c) return false; return at.select(); },
+    reset() { for (const w of live()) w.blur(); at = null; },
+  };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -222,6 +281,8 @@ export function mountTransformWindow(host, model, { onClose } = {}) {
     body(uidp) {
       const it = model.selected();
       if (!it) return '<p class="ew-note">Nothing is selected. Choose something in the Layers window, or point at it.</p>';
+      // Row 2.38: a room's own object keeps the place the room gives it.
+      if (it.fixed) return '<p class="ew-note">This is part of the room, so it keeps the place the room gives it. What it opens is set in the Opens and shows window.</p>';
       const s = model.snap();
       const dis = it.locked;
       const rows = FIELDS.map(([k, label, unit]) => {
@@ -309,7 +370,8 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle } = {}) 
           + '</div>';
       }).join('');
       const it = model.selected();
-      const can = { undo: model.canUndo(), redo: model.canRedo(), duplicate: !!it, copy: !!it, paste: model.hasClipboard(), remove: !!(it && !it.locked) };
+      const own = !!(it && !it.fixed);          // row 2.38: a room's own object is not copied or deleted here
+      const can = { undo: model.canUndo(), redo: model.canRedo(), duplicate: own, copy: own, paste: model.hasClipboard(), remove: !!(own && !it.locked) };
       return (rows || '<p class="ew-note">Nothing here yet.</p>')
         + `<div class="ew-acts" role="group" aria-label="Edit">${ACTIONS.map(([a, l]) => btn(`act:${a}`, l, { disabled: !can[a] })).join('')}</div>`;
     },
@@ -377,4 +439,207 @@ export function mountTextEffectsWindow(host, model, { onClose } = {}) {
     },
     onClose,
   });
+}
+
+// ---------------------------------------------------------------------------------------
+// ROW 2.38: OPENS AND SHOWS -- "where does pressing this go, and what does this frame show".
+//
+// Design has not drawn this window; it follows the windows Design did draw (solid, Close first, nothing
+// needs a drag) and Design's edit bar ("Change: <thing>: previous / next thing"). For the selected thing:
+//
+//   Thing      ◀ Previous / Next ▶ -- every thing, the room's own objects included, so a switch can
+//              reach an object that is not in the Layers list (a room's desk has no layer)
+//   Opens: X   pressed, it unfolds the choices: Nothing, each of the person's dashboards, + New dashboard;
+//              picking one folds it again. Folded by default, so the walk is ~8 stops, not 2 per dashboard.
+//   Shows: X   the same, only for a frame / TV / billboard (a placed Dashboard module: `canShow`)
+//   Undo, Redo, and Map (the map of every dashboard, when the host offers it)
+//
+// Every change is ONE `setLink` on the model: Undo puts the old link back, and the host applies it in
+// place (a door appears or goes; a frame swaps what it draws) exactly as it applies a move.
+//
+// opts:
+//   dashboards()   [{ id, name }] the person's dashboards, or null while they load
+//   refresh()      a Promise that (re)loads them; the window redraws when it settles
+//   current        this dashboard's id (or a getter): marked "(this one)" in the choices
+//   onNew(key)     makes a new dashboard; resolves { id, name } (or null). Absent: "+ New" is disabled.
+//   onMap()        opens or closes the Map window; `mapOpen()` says which
+// ---------------------------------------------------------------------------------------
+const LINK_WORD = { opens: 'Opens', shows: 'Shows' };
+export function mountLinksWindow(host, model, { dashboards = () => [], refresh = null, current = null, onNew = null,
+  onMap = null, mapOpen = () => false, onClose } = {}) {
+  ensureMapStyles(host?.ownerDocument || document);
+  let open = null;                 // which choice list is unfolded: 'opens' | 'shows' | null
+  let making = null;               // the link a new dashboard is being made for
+  let note = '';                   // one sentence: a make that failed
+  let lastSel = model.selectedId();
+  const cur = () => (typeof current === 'function' ? current() : current);
+  const list = () => { try { return dashboards() || null; } catch { return null; } };
+  const nameOf = (id) => {
+    if (!id) return 'nothing';
+    const d = (list() || []).find((x) => x && x.id === id);
+    return d ? (d.name || 'Dashboard') : 'a dashboard that is gone';
+  };
+  let w = null;
+  const redraw = () => { if (w && w.isOpen()) w.render(); };
+  function choices(it, key) {
+    const ds = list();
+    const on = it[key] ?? null;
+    const rows = [btn(`pick:${key}:`, 'Nothing', { pressed: !on, cls: 'ew-choice' })];
+    if (!ds) rows.push('<p class="ew-note">Finding your dashboards…</p>');
+    else {
+      for (const d of ds) {
+        if (!d || !d.id) continue;
+        const label = `${d.name || 'Dashboard'}${d.id === cur() ? ' (this one)' : ''}`;
+        rows.push(btn(`pick:${key}:${d.id}`, label, { pressed: on === d.id, cls: 'ew-choice' }));
+      }
+    }
+    rows.push(btn(`new:${key}`, making === key ? 'Making a new dashboard…' : '+ New dashboard',
+      { disabled: !onNew || !!making, cls: 'ew-choice ew-new' }));
+    return `<div class="ew-choices" role="group" aria-label="${esc(LINK_WORD[key])}: choose a dashboard">${rows.join('')}</div>`;
+  }
+  function linkRow(it, key) {
+    const can = model.canLink(key);
+    const on = it[key] ?? null;
+    const head = btn(`menu:${key}`, `${LINK_WORD[key]}: ${nameOf(on)}`, { disabled: !can, cls: 'ew-linkhead' })
+      .replace('<button ', `<button aria-expanded="${open === key ? 'true' : 'false'}" `);
+    const gone = on && list() && !list().some((d) => d && d.id === on);
+    return `<div class="ew-link">${head}${open === key && can ? choices(it, key) : ''}`
+      + (gone ? `<p class="ew-warn" role="status" data-ew-warn="gone-${key}"><b>Warning:</b> ${key === 'opens'
+        ? 'it opens a dashboard that is not in your list any more, so pressing it does nothing.'
+        : 'it shows a dashboard that is not in your list any more, so it shows a card saying so.'}</p>` : '')
+      + '</div>';
+  }
+  function says(it) {
+    if (it.opens) return `Pressing it goes to ${nameOf(it.opens)}${it.canShow && it.shows ? ', not to what it shows' : ''}.`;
+    if (it.canShow && it.shows) return `It shows ${nameOf(it.shows)}, and pressing it goes there.`;
+    if (it.fixed) return 'Pressing it does what the room gives it to do.';
+    return 'Pressing it does what this module always does.';
+  }
+  w = mountWindow(host, model, {
+    kind: 'links',
+    title: 'Opens and shows',
+    subtitle: () => { const it = model.selected(); return it ? it.name : ''; },
+    body() {
+      const it = model.selected();
+      if (model.selectedId() !== lastSel) { lastSel = model.selectedId(); open = null; }
+      const n = model.things().length;
+      const thing = seg('Thing', [btn('thing:-1', '◀ Previous', { aria: 'Previous thing', disabled: n < 2 }),
+        btn('thing:1', 'Next ▶', { aria: 'Next thing', disabled: n < 2 })]);
+      const acts = `<div class="ew-acts" role="group" aria-label="Edit">${btn('act:undo', 'Undo', { disabled: !model.canUndo() })}`
+        + btn('act:redo', 'Redo', { disabled: !model.canRedo() })
+        + (onMap ? btn('act:map', mapOpen() ? 'Hide the map' : 'Map', { pressed: !!mapOpen() }) : '') + '</div>';
+      if (!it) return `${thing}<p class="ew-note">Nothing is selected. Choose a thing with Previous and Next.</p>${acts}`;
+      return thing
+        + `<p class="ew-thing">Changing: <b>${esc(it.name)}</b>${it.fixed ? ' <span class="ew-note">(part of the room)</span>' : ''}</p>`
+        + (it.locked ? '<p class="ew-note">Locked. Unlock it in the Layers window to change it.</p>' : '')
+        + linkRow(it, 'opens')
+        + (it.canShow ? linkRow(it, 'shows') : '')
+        + `<p class="ew-note" data-ew-says>${esc(says(it))}</p>`
+        + (note ? `<p class="ew-warn" role="status">${esc(note)}</p>` : '')
+        + acts;
+    },
+    onAction(k) {
+      const [a, b] = k.split(':');
+      const rest = k.split(':').slice(2).join(':');
+      if (a === 'thing') { open = null; model.selectStep(Number(b)); redraw(); }
+      else if (a === 'menu') { open = open === b ? null : b; note = ''; redraw(); }
+      else if (a === 'pick') { open = null; if (!model.setLink(b, rest || null)) redraw(); }
+      else if (a === 'new' && onNew && !making) {
+        making = b; note = ''; redraw();
+        const id = model.selectedId();
+        Promise.resolve().then(() => onNew(b)).then((d) => {
+          making = null; open = null;
+          if (d && d.id) model.setLink(b, d.id, { id });
+          else note = 'A new dashboard could not be made just now. Nothing changed.';
+          redraw();
+        }).catch(() => { making = null; note = 'A new dashboard could not be made just now. Nothing changed.'; redraw(); });
+      }
+      else if (a === 'act' && b === 'undo') model.undo();
+      else if (a === 'act' && b === 'redo') model.redo();
+      else if (a === 'act' && b === 'map') { try { onMap?.(); } catch (err) { console.error('edit_windows: map', err); } redraw(); }
+    },
+    onClose,
+  });
+  if (typeof refresh === 'function') {
+    Promise.resolve().then(() => refresh()).then(redraw, redraw);
+  }
+  return w;
+}
+
+// ---------------------------------------------------------------------------------------
+// ROW 2.38: THE MAP -- every dashboard a box, every door a solid arrow, every frame a dashed one,
+// cycles included (dashboard_map.js draws it). The SAME graph is a list underneath: one button per
+// dashboard, with a sentence saying what it opens, shows and is reached from. The list is what a screen
+// reader reads and what the switch walks (the picture is `aria-hidden`); the scan cursor on a list
+// button also outlines that dashboard's box in the picture. Pressing a dashboard -- its button or its
+// box -- goes there (`onGo(id)`). Where you are, and a dashboard that is gone, are not pressable.
+//
+// opts:
+//   load()     resolves `{ graph }` (dashboard_map.js `loadMapData`); called at mount and by `reload()`
+//   current    the dashboard showing now (or a getter)
+//   onGo(id)   go there (the host publishes `dashboard/go`)
+//   drawMax    above this many dashboards, the list alone (MAP_DEFAULTS.drawMax)
+// ---------------------------------------------------------------------------------------
+export function mountMapWindow(host, { load, current = null, onGo, onClose, drawMax = MAP_DEFAULTS.drawMax } = {}) {
+  ensureMapStyles(host?.ownerDocument || document);
+  const subs = new Set();
+  // A model of one: the shell redraws on its events. `refresh` is how the loaded graph reaches it.
+  const shell = { subscribe(fn) { subs.add(fn); return () => subs.delete(fn); } };
+  const changed = () => { for (const fn of [...subs]) { try { fn({ type: 'map' }); } catch { /* not load-bearing */ } } };
+  const cur = () => (typeof current === 'function' ? current() : current);
+  let state = { status: 'loading', graph: null };
+  const w = mountWindow(host, shell, {
+    kind: 'map',
+    title: 'Map',
+    subtitle: () => (state.graph ? `${state.graph.nodes.length} dashboard${state.graph.nodes.length === 1 ? '' : 's'}` : ''),
+    body() {
+      if (state.status === 'loading') return '<p class="ew-note">Drawing the map of your dashboards…</p>';
+      if (state.status === 'error' || !state.graph) return '<p class="ew-warn" role="status">The map could not be drawn just now. Nothing changed.</p>';
+      const g = state.graph;
+      if (!g.nodes.length) return '<p class="ew-note">There are no dashboards to map yet.</p>';
+      const here = cur();
+      const rows = mapListForm(g, { current: here }).map((e) => `<li class="ew-maprow${e.here ? ' is-here' : ''}${e.missing ? ' is-missing' : ''}">`
+        + btn(`go:${e.id}`, e.here ? `${e.name} (you are here)` : e.missing ? `${e.name}` : e.name,
+          { disabled: e.here || e.missing, aria: e.here ? `${e.name}, you are here` : `Go to ${e.name}`, cls: 'ew-mapgo' })
+        + `<span class="ew-mapsay">${esc(e.sentence)}</span></li>`).join('');
+      const picture = g.nodes.length <= drawMax
+        ? `<div class="ew-mappic">${mapSvg(g, { current: here })}</div>`
+          + '<p class="ew-note ew-legend">A solid arrow: pressing it goes there. A dashed arrow: it is shown inside.</p>'
+        : `<p class="ew-note">${g.nodes.length} dashboards are too many to draw clearly, so here they are as a list.</p>`;
+      return `${picture}<ol class="ew-maplist" aria-label="Your dashboards, as a list">${rows}</ol>`;
+    },
+    onAction(k) {
+      const i = k.indexOf(':');
+      if (k.slice(0, i) === 'go') { try { onGo?.(k.slice(i + 1)); } catch (err) { console.error('edit_windows: map go', err); } }
+    },
+    // The cursor on a list button outlines that dashboard's box too.
+    onPaint(n, el) {
+      el.querySelectorAll('[data-map-node].is-scan').forEach((g) => g.classList.remove('is-scan'));
+      const id = n && n.dataset.ew && n.dataset.ew.startsWith('go:') ? n.dataset.ew.slice(3) : null;
+      if (id) el.querySelector(`[data-map-node="${CSS.escape(id)}"]`)?.classList.add('is-scan');
+    },
+    onClose,
+  });
+  // Pressing a box in the picture is pressing its button (the pointer's way; the list is the switch's).
+  w.el.addEventListener('click', (e) => {
+    const g = e.target.closest?.('[data-map-node]');
+    if (!g || !w.el.contains(g)) return;
+    const b = w.el.querySelector(`button[data-ew="go:${CSS.escape(g.dataset.mapNode)}"]`);
+    if (b && !b.disabled) b.click();
+  });
+  async function reload() {
+    state = { status: 'loading', graph: state.graph };
+    changed();
+    try {
+      const got = await load();
+      state = { status: 'ready', graph: got && got.graph ? got.graph : null };
+    } catch (err) {
+      console.error('edit_windows: map load', err);
+      state = { status: 'error', graph: null };
+    }
+    if (w.isOpen()) changed();
+    return state;
+  }
+  const ready = reload();
+  return { ...w, reload, ready, graph: () => state.graph, status: () => state.status };
 }
