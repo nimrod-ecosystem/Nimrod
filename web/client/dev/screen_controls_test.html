@@ -330,6 +330,13 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const rowOf = (id) => kiosk.menu.items().find((i) => i.id === id);
       check('*** at "This device": the first tab is that level, its Colours follows the default ***',
         kiosk.menu.tabs()[0].label === 'This device' && /^Following: the default/.test(rowOf('level:device:theme')?.hint || ''), J(rowOf('level:device:theme')));
+      // 2026-10-02 (choice_picker.js): Follow + twelve themes is a LIST by default; Back leaves it unchanged.
+      kiosk.menu.focusRow('level:device:theme'); kiosk.menu.select();
+      check('*** at a level, Colours opens the theme list (point and click is the default) ***',
+        kiosk.menu.page() === '__choice' && kiosk.menu.pickerProbe()?.tiles > 12 && !kiosk.deviceRow().get().theme, J(kiosk.menu.pickerProbe()));
+      kiosk.menu.back();
+      // The one-press checks below are the "Step through (for a switch)" person's: every press steps.
+      kiosk.menu.setChooseMode('step');
       kiosk.menu.focusRow('level:device:theme'); kiosk.menu.select();
       const devTheme = kiosk.deviceRow().get().theme;
       await sleep(50);
@@ -367,6 +374,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.menu.focusRow('set:intervalMs:follow'); kiosk.menu.select();
       await sleep(30);
       check('...which hands it back to the kind', kiosk.stageState().intervalMs === kindVal, J(kiosk.stageState()));
+      kiosk.menu.setChooseMode(null);
       kiosk.menu.close();
       kiosk.destroy(); root.innerHTML = '';
     }

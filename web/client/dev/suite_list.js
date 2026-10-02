@@ -41,6 +41,8 @@ export const SUITES = [
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
   // 2026-10-02: the one picture picker (recent, add from this device, a folder's thumbnails).
   'picture_picker',
+  // 2026-10-02: a long choice (themes, fonts, scenes) opens a list; a short one, or a person stepping, steps.
+  'choice_picker',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function

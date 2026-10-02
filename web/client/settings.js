@@ -52,7 +52,8 @@
 import { VERBS, verbTopic, MENU_TAB_TOPIC } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
-import { normalizeField, fieldItems, fieldValue, displayValue } from './settings_fields.js';
+import { mountChoicePicker } from './choice_picker.js';
+import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER } from './settings_fields.js';
 
 // ---------------------------------------------------------------------------------
 // *** LEVELS: EDIT A SETTING AT WHATEVER LEVEL YOU ARE EDITING (2026-10-02). ***
@@ -484,10 +485,19 @@ export function mountSettings(root, {
   subjects = null,
   defaultSubject = null,
   onSubject = null,
+  // ---- HOW SOMEBODY CHOOSES (2026-10-02; settings_fields.js "HOW SOMEBODY CHOOSES"). ----
+  // `chooseMode`: 'point' (a long choice opens the choice picker) or 'step' (every press steps), or a
+  // function returning one, read at every press - the host answers from the PERSON's row, where "How
+  // you choose things" lives. Absent: 'point', so nobody steps through twelve themes unless they asked.
+  chooseMode = 'point',
+  // More options than this and a choice row opens the picker (in 'point'). Argued at PICKER_OVER.
+  pickerOver = PICKER_OVER,
   documentRef = (typeof document !== 'undefined' ? document : null),
 } = {}) {
   if (!root) throw new Error('mountSettings: a root element is required');
   const doc = documentRef;
+  // A host (or a suite walking the one-switch path) may also set the mode outright; null hands it back.
+  let modeOverride = null;
   const tabsOn = !!tabs;
   const SLOT_TABS = slotTabs || { who: 'people', subject: 'module', extras: 'screen', screen: 'display' };
   let tab = null;              // the tab showing, while tabs are on
@@ -499,8 +509,11 @@ export function mountSettings(root, {
   let page = null;             // the open page's id, or null for the list
   // THE ONE TEXT BOX that may be open, as `{ id, draft }`, or null. See "TEXT ROWS" below.
   let editing = null;
-  // THE PICTURE PICKER, while a picture row has it open (see "PICTURE ROWS" below), or null.
+  // THE PICKER, while a picture row or a long choice row has it open (see "PICTURE ROWS" and "CHOICE
+  // ROWS" below), or null. Either kind answers the same four moves.
   let picker = null;
+  // An open page's own moves, when its `render` handed some back (see openPage), or null.
+  let pageCtl = null;
   let items = [];
   let nav = createNav([]);
   let returnFocus = null;
@@ -542,6 +555,11 @@ export function mountSettings(root, {
   //     are showing. A tab left with nothing in it at a level is not offered at that level.
   // ---------------------------------------------------------------------------------
   const safeCall = (fn, dflt) => { try { const v = typeof fn === 'function' ? fn() : fn; return v == null ? dflt : v; } catch (err) { console.warn('settings: host read threw', err); return dflt; } };
+  // The mode in force, read at the moment of a press or a paint (never cached: the person can change it
+  // from this very menu, and the next press must already obey it).
+  const modeNow = () => chooseModeOf(modeOverride || safeCall(chooseMode, 'point'));
+  // Does a press on this row open the choice picker? Only a row `fieldItems` built for a choice.
+  const opensList = (it) => !!(it && it.choice && it.field && opensPicker(it.field, { mode: modeNow(), over: pickerOver }));
   function subjectList() { return subjects ? (safeCall(subjects, []) || []).filter((s) => s && s.id) : []; }
   function currentSubject() {
     const list = subjectList();
@@ -693,8 +711,11 @@ export function mountSettings(root, {
       // `data-id` is the row's stable name (`set:label`, `close`...). `data-n` is its position,
       // which moves whenever a row appears above it; a guide pointing at "the Words row" (the
       // cat, `game/cat_steps.js`) needs the name.
-      const row = `<button class="st-item${on ? ' on' : ''}" data-n="${n}" data-id="${esc(it.id)}" type="button"${dis}
-        aria-current="${on ? 'true' : 'false'}"${it.edit ? ` aria-expanded="${isEditing ? 'true' : 'false'}"` : ''}>
+      // A row that OPENS a list (a long choice, a picture) says so before it is pressed: the marker for the
+      // eye (settings.css `.st-opens`), `aria-haspopup` for a screen reader.
+      const opens = !it.disabled && (opensList(it) || !!it.picture);
+      const row = `<button class="st-item${on ? ' on' : ''}${opens ? ' st-opens' : ''}" data-n="${n}" data-id="${esc(it.id)}" type="button"${dis}
+        aria-current="${on ? 'true' : 'false'}"${it.edit ? ` aria-expanded="${isEditing ? 'true' : 'false'}"` : ''}${opens ? ' aria-haspopup="dialog"' : ''}>
         <span class="st-label">${esc(it.label)}</span>
         ${it.hint || chip ? `<span class="st-hint">${chip}${esc(it.hint || '')}</span>` : ''}
       </button>`;
@@ -817,16 +838,58 @@ export function mountSettings(root, {
     return item;
   }
 
+  // ---------------------------------------------------------------------------------
+  // CHOICE ROWS WITH MANY OPTIONS (2026-10-02; settings_fields.js "HOW SOMEBODY CHOOSES"). Mike: "Things
+  // like modules, pictures, themes where there are a lot of options shouldn't be set up to have to click
+  // through them all as default."
+  //
+  // A choice row `opensPicker` says yes to (past PICKER_OVER options, the person not stepping) opens the
+  // choice picker (`choice_picker.js`) where the picture picker opens: the same page slot, the same four
+  // moves driving it (rows by `next`/`prev`, into a row by `select`, out by `back`, and `back` from the
+  // rows - or "Keep …" - is back to this list with nothing changed). A choice commits through the row's
+  // `commit()` - the host's `onStep`, the one write path - and the list comes back on that row, showing it.
+  // A person who steps ('step') never sees it: `select` steps the row, as it always has.
+  // ---------------------------------------------------------------------------------
+  function openChoice(item) {
+    if (!item || !item.choice) return null;
+    if (editing) editing = null;
+    if (picker) closePage();
+    page = '__choice';
+    listEl.hidden = true;
+    pageEl.hidden = false;
+    pageEl.innerHTML = '<div data-page-body data-choice-page></div>';
+    const id = item.id;
+    // The row as it is NOW (a repaint may have rebuilt it since this one was drawn).
+    const fresh = items.find((x) => x.id === id) || item;
+    picker = mountChoicePicker(pageEl.querySelector('[data-page-body]'), {
+      ...fresh.choice,
+      onPick: (v) => {
+        const it = items.find((x) => x.id === id) || fresh;
+        let wrote = false;
+        try { wrote = !!it.commit?.(v); } catch (err) { console.warn('settings: commit threw', err); }
+        closePage();
+        if (wrote) onSelect?.(it);
+        if (open) { render(); focusRow(id); panel.focus?.(); }
+      },
+      onCancel: () => { closePage(); if (open) focusRow(id); panel.focus?.(); },
+    });
+    panel.focus?.();
+    return item;
+  }
+
   // --- the four moves. Everything else in the file exists to serve these. ---
   // While a page is open the only control is Back, so moving does nothing rather than
-  // scrolling a cursor nobody can see - except the picture picker, which is driven by them.
+  // scrolling a cursor nobody can see - except the pickers, which are driven by them, and a page whose
+  // `render` handed back moves of its own (see openPage).
   // A move while a box is open leaves the box first (see TEXT ROWS) - never a trap.
   function next() {
     if (open && picker) { picker.next(); return null; }
+    if (open && page && pageCtl?.next) { pageCtl.next(); return null; }
     if (!open || page) return null; if (editing) editing = null; const it = nav.next(); paint(); return it;
   }
   function prev() {
     if (open && picker) { picker.prev(); return null; }
+    if (open && page && pageCtl?.prev) { pageCtl.prev(); return null; }
     if (!open || page) return null; if (editing) editing = null; const it = nav.prev(); paint(); return it;
   }
 
@@ -838,6 +901,8 @@ export function mountSettings(root, {
     if (item.subjectPick) { stepSubject(1); render(); return item; }
     if (item.page) { openPage(item.page); return item; }
     if (item.picture) return openPicture(item);
+    // A long choice opens its list; a short one (or anybody stepping) falls through to `run()`, the step.
+    if (opensList(item)) return openChoice(item);
     // A text row opens its box. `onSelect` is not told yet: nothing has been chosen until the
     // box commits (and then it is, from `endEdit`).
     if (item.edit) return openEditor(item);
@@ -869,7 +934,8 @@ export function mountSettings(root, {
 
   function select() {
     if (!open) return null;
-    if (picker) { picker.select(); return { id: 'picture' }; }
+    if (picker) { picker.select(); return { id: page === '__choice' ? 'choice' : 'picture' }; }
+    if (page && pageCtl?.select) { pageCtl.select(); return { id: 'page' }; }
     if (page) { closePage(); return { id: 'page-back' }; }
     // Select while typing is "done": it saves, the same as Enter.
     if (editing) { const id = editing.id; saveEdit(); return { id, saved: true }; }
@@ -882,6 +948,14 @@ export function mountSettings(root, {
   function back() {
     if (!open) return;
     if (picker) { picker.back(); return; }
+    // A page with moves of its own comes out of whatever it is in first; `true` means it did.
+    // Otherwise the page closes (if its own back did not already close it) - and the menu stays open.
+    if (page && pageCtl?.back) {
+      let inner = false;
+      try { inner = pageCtl.back() === true; } catch { inner = false; }
+      if (!inner && page) closePage();
+      return;
+    }
     if (page) { closePage(); return; }
     if (editing) { cancelEdit(); return; }
     close();
@@ -890,6 +964,8 @@ export function mountSettings(root, {
   function openPage(id) {
     const def = pages[id];
     if (!def) return null;
+    // Whatever was open goes first, so its list cannot keep answering the moves under the new page.
+    if (picker || pageCtl) closePage();
     page = id;
     listEl.hidden = true;
     pageEl.hidden = false;
@@ -897,8 +973,14 @@ export function mountSettings(root, {
       <div data-page-body></div>
       <button class="st-item on" type="button" data-page-back>
         <span class="st-label">Back</span></button>`;
-    try { def.render(pageEl.querySelector('[data-page-body]')); }
-    catch (err) {
+    // A PAGE MAY HAND BACK MOVES OF ITS OWN (2026-10-02): `render` returning `{ next, prev, select, back }`
+    // (a list inside the page - the Settings module's themes) gets the four moves while it is open, so a
+    // switch reaches it like any other list. `back()` returning true means it only came out of a row;
+    // anything else and the page closes. A page that returns nothing is exactly what it always was.
+    try {
+      const ctl = def.render(pageEl.querySelector('[data-page-body]'));
+      pageCtl = ctl && typeof ctl === 'object' && ['next', 'prev', 'select', 'back'].some((k) => typeof ctl[k] === 'function') ? ctl : null;
+    } catch (err) {
       // A page that throws must not strand somebody inside a broken screen with no Back.
       pageEl.querySelector('[data-page-body]').textContent = String(err.message || err);
     }
@@ -908,6 +990,7 @@ export function mountSettings(root, {
 
   function closePage() {
     if (picker) { const p = picker; picker = null; try { p.destroy(); } catch { /* already gone */ } }
+    if (pageCtl) { const c = pageCtl; pageCtl = null; try { c.destroy?.(); } catch { /* already gone */ } }
     page = null;
     pageEl.hidden = true;
     pageEl.innerHTML = '';
@@ -1119,6 +1202,14 @@ export function mountSettings(root, {
     page: () => page,
     // The id of the row whose text box is open, or null.
     editing: () => editing?.id || null,
+    // ---- how somebody chooses (2026-10-02) ----
+    // The mode in force ('point' | 'step'), and an outright setting of it (null hands it back to the host).
+    chooseMode: () => modeNow(),
+    setChooseMode(m) { modeOverride = m == null ? null : chooseModeOf(m); if (open && !page) paint(); return modeNow(); },
+    // Would a press on row `id` open the choice picker right now?
+    opensList: (id) => opensList(items.find((it) => it.id === id) || allItems.find((it) => it.id === id)),
+    // The open picker's own probe (a choice or a picture picker), or null.
+    pickerProbe: () => (picker && typeof picker.__probe === 'function' ? picker.__probe() : null),
     // EVERY row (with tabs: every tab's, each tagged with its `tab`, after the rows above the tabs).
     // What the cursor walks right now is `visibleItems()`.
     items: () => (tabsOn

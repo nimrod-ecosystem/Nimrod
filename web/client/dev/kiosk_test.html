@@ -543,6 +543,15 @@ const toTab = (m, id) => {
       // A PRESS ON A SCREEN SETTING REACHES THE SCREEN'S OWN STORAGE, and the theme is the
       // one where you can see it land: `applyTheme` runs off the same subscription.
       check('the theme row is a stop too', walkTo('set:theme'));
+      // *** 2026-10-02 (choice_picker.js): twelve themes are a LIST by default, not a walk. *** Mike: "themes
+      // where there are a lot of options shouldn't be set up to have to click through them all as default."
+      kiosk.menu.select();
+      check('*** select on Colours OPENS the theme list (point and click is the default) ***',
+        kiosk.menu.page() === '__choice' && kiosk.menu.pickerProbe()?.tiles >= 12, JSON.stringify(kiosk.menu.pickerProbe()));
+      kiosk.menu.back();
+      check('...and back leaves it, unchanged, on the row', kiosk.menu.page() === null && kiosk.menu.focusId() === 'set:theme');
+      // The one-switch walk below is the "Step through (for a switch)" person's: every press steps.
+      kiosk.menu.setChooseMode('step');
       const wasTheme = kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint;
       kiosk.menu.select();
       check('stepping the theme changes the row',
@@ -580,6 +589,7 @@ const toTab = (m, id) => {
       for (let i = 0; i < 20 && kiosk.menu.items().find((r) => r.id === 'set:theme')?.hint !== wasCyber; i += 1) {
         kiosk.menu.select();
       }
+      kiosk.menu.setChooseMode(null);
 
       // 2.18 — BURN-IN PROTECTION, reachable from the bedside menu, off by default, and only
       // ever two real modes (no content-hiding screensaver — see kiosk.js's own comment).
@@ -2272,7 +2282,13 @@ const toTab = (m, id) => {
         && inkBefore !== want.hex && getComputedStyle(face()).color !== '', face().style.getPropertyValue('--nb-ink'));
 
       check('ArrowDown reaches the Font row', await walk('set:font'));
+      // 2026-10-02 (choice_picker.js): six fonts are a LIST by default. The keyboard drives it with the same
+      // keys: Enter opens it, Enter lights its first row (Keep), Down to the first row of fonts, Enter into
+      // it, Down to "Book (serif)", Enter takes it.
       await press('Enter', 30);
+      check('*** Enter on the Font row opens the list of fonts ***', bk.menu.page() === '__choice', String(bk.menu.page()));
+      for (const k of ['Enter', 'ArrowDown', 'Enter', 'ArrowDown', 'Enter']) await press(k, 20);
+      check('...the list closes on the choice, back on the Font row', bk.menu.page() === null && bk.menu.focusId() === 'set:font');
       check('Enter changes the font, stored as a name and drawn as a stack', bk.stageState().font === 'serif'
         && /Georgia/.test(face().style.getPropertyValue('--nb-font')), JSON.stringify(bk.stageState()));
       await press('Escape', 40);
@@ -2753,11 +2769,14 @@ const toTab = (m, id) => {
       const CYBER = 'Cyberpunk — a street at night';
       walkTo('set:theme');
       const wasTheme = item('set:theme')?.hint;
+      // Stepped, as a "Step through (for a switch)" person does (a press on twelve themes otherwise opens the list).
+      wk.menu.setChooseMode('step');
       stepTo('set:theme', CYBER, 25);
       const tid = listThemes().find((t) => t.label === CYBER)?.id;
       check('*** wiring, mixer: the screen’s scene follows the theme (for "sounds like: match the scene") ***',
         !!THEMES[tid]?.scene && wk.soundScene() === THEMES[tid].scene, `${tid} -> ${wk.soundScene()}`);
       stepTo('set:theme', wasTheme, 25);
+      wk.menu.setChooseMode(null);
       wk.menu.close();
 
       // ---- 3. THE LISTENING CUE (rows 2.28, 2.36) ----

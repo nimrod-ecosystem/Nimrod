@@ -230,6 +230,55 @@
 }
 .st-tab:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
 
+/* ---- 2026-10-02: A ROW THAT OPENS A LIST (a long choice, a picture) says so before it is pressed, with
+ * the "…" the menu already uses for "Layout: …" and "More…". Text, not colour, so it reads in every
+ * theme and to a screen reader (which also hears aria-haspopup). ---- */
+.st-opens .st-label::after { content: "\2026"; }
+
+/* ---- 2026-10-02: THE CHOICE PICKER (choice_picker.js) - every option at once, previews where they mean
+ * something. The picture picker's shape (picture_picker.css), so the two read as one family: rows of
+ * tiles, the switch cursor an outline AND a marker. Tokens with keyword fallbacks only; a preview's
+ * colours arrive as `--sw` from data (a theme, an option), never typed here. ---- */
+.chp { container-type: inline-size; display: flex; flex-direction: column; gap: 8px; min-width: 0;
+  color: var(--text, CanvasText); font-family: var(--font, system-ui, sans-serif); }
+.chp * { box-sizing: border-box; }
+.chp-head { margin: 0; font-weight: 700; font-size: clamp(15px, 3.6cqi, 24px); color: var(--text-strong, CanvasText); }
+.chp-note { margin: 0; font-size: clamp(12px, 2.8cqi, 18px); color: var(--text-muted, GrayText); }
+.chp-row { border-radius: 12px; padding: 3px; }
+.chp-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.chp-tiles { display: grid; grid-template-columns: repeat(var(--chp-cols, 3), minmax(0, 1fr)); gap: 6px; }
+.chp-grid { display: flex; flex-direction: column; gap: 2px; max-height: min(62vh, 560px); overflow: auto; overscroll-behavior: contain; }
+.chp-btn { min-height: 44px; padding: 0 14px; border: 2px solid var(--border, ButtonBorder); border-radius: 12px;
+  background: var(--surface, ButtonFace); color: var(--text, ButtonText); font: inherit; font-weight: 700;
+  font-size: clamp(13px, 3cqi, 18px); cursor: pointer; }
+.chp-tile { display: flex; flex-direction: column; align-items: stretch; gap: 4px; min-width: 0; min-height: 44px;
+  padding: 6px; border: 2px solid var(--border, ButtonBorder); border-radius: 12px;
+  background: var(--surface, ButtonFace); color: var(--text, ButtonText); font: inherit; cursor: pointer; text-align: center; }
+.chp-tile.chp-plain { justify-content: center; }
+.chp-tile[aria-pressed="true"] { border-color: var(--accent, Highlight); border-width: 3px; }
+.chp-tile[aria-pressed="true"] .chp-name::after { content: "\00a0\2713"; }
+.chp-name { display: block; overflow: hidden; text-overflow: ellipsis; font-weight: 700; font-size: clamp(12px, 2.8cqi, 17px); }
+.chp-hint { display: block; font-size: clamp(11px, 2.3cqi, 14px); color: var(--text-muted, GrayText); }
+.chp-swatches { display: flex; height: clamp(22px, 7cqi, 40px); border-radius: 8px; overflow: hidden;
+  border: 1px solid var(--border, currentColor); }
+.chp-chip { flex: 1 1 0; background: var(--sw); }
+.chp-font { display: block; font-size: clamp(20px, 6cqi, 34px); line-height: 1.1; }
+.chp-thumb { display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; background: var(--surface-alt, Canvas); }
+.chp-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.chp-search { display: flex; flex-direction: column; gap: 3px; font-size: clamp(12px, 2.8cqi, 16px); font-weight: 700; }
+.chp-search input { min-height: 40px; padding: 6px 10px; border: 2px solid var(--border, ButtonBorder); border-radius: 10px;
+  background: var(--surface, Field); color: var(--text, FieldText); font: inherit; }
+.chp-search input:focus { outline: 3px solid var(--accent, Highlight); outline-offset: 1px; }
+/* THE SWITCH CURSOR. A lit ROW gets a ring around the whole row; a lit thing inside it gets its own. */
+.chp [data-on="1"] { outline: 4px solid var(--link, Highlight); outline-offset: 2px; }
+.chp-row[data-on="1"] { background: var(--surface-alt, Canvas); }
+.chp-btn[data-on="1"]::before, .chp-tile[data-on="1"] .chp-name::before { content: "\25B8\00a0"; }
+/* THE DIALOG, for a host that draws its rows itself (openChoiceDialog). */
+.chp-dialog { position: fixed; inset: 0; z-index: var(--z-menus, 1000); display: flex; align-items: center; justify-content: center;
+  padding: 16px; background: color-mix(in srgb, var(--text, CanvasText) 35%, transparent); }
+.chp-dialog-box { width: min(760px, 100%); max-height: 100%; overflow: auto; padding: 16px; border-radius: 16px;
+  background: var(--surface, Canvas); border: 1px solid var(--border, CanvasText); }
+
 @media (prefers-reduced-motion: no-preference) {
   .st-item { transition: background 120ms ease, color 120ms ease; }
 }

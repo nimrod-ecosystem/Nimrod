@@ -33,6 +33,7 @@ import { createProfilesClient, resolveTheme } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import '../modules/comet.js';
 import '../modules/settings.js';
+import { listThemes } from '../theme.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('setmod-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -135,12 +136,20 @@ try {
     check('a Theme row exists', !!themeRow);
     themeRow?.click();
     await sleep(80);
-    const sel = host.querySelector('[data-theme-select]');
-    check('a real picker with every theme, same as the anonymous one this session built',
-      sel && sel.options.length >= 5, sel?.options?.length);
-    sel.value = 'dusk';
-    sel.dispatchEvent(new Event('change'));
+    // 2026-10-02: the theme page is the choice picker now (every theme at once, with its colours), not a
+    // <select>. Mike: "themes where there are a lot of options shouldn't be set up to have to click
+    // through them all as default."
+    const tiles = () => [...host.querySelectorAll('[data-theme-picker] [data-chp-pick]')];
+    check('*** a real picker with every theme as a tile (listThemes), not a dropdown ***',
+      tiles().length === listThemes().length && tiles().length >= 5 && !host.querySelector('select'), tiles().length);
+    check('*** each theme tile previews the theme’s own colours ***',
+      tiles().every((t) => t.querySelectorAll('.chp-chip').length >= 3), tiles()[0]?.innerHTML);
+    check('a "Back" stop is first, so a stray switch press changes nothing',
+      host.querySelector('[data-theme-picker] [data-chp-act="cancel"]')?.textContent.trim() === 'Back');
+    await sleep(200);   // the current theme arrives async
+    tiles().find((t) => t.dataset.chpPick === 'dusk')?.click();
     await sleep(300);
+    check('the chosen tile is marked as the one in force', tiles().find((t) => t.dataset.chpPick === 'dusk')?.getAttribute('aria-pressed') === 'true');
 
     // Read it back the way `resolveTheme` (used on every kiosk and pre-sign-in page) does --
     // proving this wrote the SAME record, not a module-local one.
