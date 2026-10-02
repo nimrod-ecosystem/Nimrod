@@ -22,19 +22,22 @@ time: "Is it 7?"), on a number pad, or aloud. Hints: how to count it (with dots)
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
 import { getManifest, listManifests } from '../module.js';
 import '../modules/simple_math.js';
 import '../modules/algebra.js';
 import { GAME, LINES, DEFAULTS, makeProblems, padBoard, FOLDED_INTO, mathBank, MATH_LEVELS } from '../modules/simple_math.js';
 import { BEGINNER, BEGINNER_DEFAULTS_FOR_MATH } from '../modules/algebra.js';
 import { LADDER_KEY } from '../adaptive_play.js';
-import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
+import { UNKNOWN, FLOW_LINES, numberWord } from '../quiz_flow.js';
 import { auditFields, walkCosts } from '../settings_audit.js';
 import { normalizeField } from '../settings_fields.js';
 
 const { check, section, finish } = harness();
-const R = (saved = {}, opts = {}) => rig('simple_math', { saved, ...opts });
+// The sections written before 2026-10-02 late test the yes / no shape ("Is it 7?"), so `R` pins it;
+// `ship` mounts the panel as it now ships (say it, tap it, or step through the numbers).
+const R = (saved = {}, opts = {}) => rig('simple_math', { saved: { answerBy: 'yesno', ...saved }, ...opts });
+const ship = (saved = {}, opts = {}) => rig('simple_math', { saved, ...opts });
 let seed = 7;
 const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
@@ -302,6 +305,29 @@ try {
     check('*** with only the rows that apply, no level\'s menu costs more than 12 presses to change one thing ***',
       Math.max(...worst, worstFixed) <= 12, `${worst.join(',')},${worstFixed}`);
     check('no row on Math says she / her', !/\b(she|her|hers|herself)\b/i.test(fields.map((x) => `${x.label} ${x.note || ''}`).join(' ')));
+  }
+
+  section('*** SAY THE NUMBER BY DEFAULT, NOT "IS IT 7?" (Mike\'s brain-games ruling, 2026-10-02 late, carried here) ***');
+  {
+    const m = getManifest(GAME);
+    const right = (r) => String(r.probe().item.answer);
+    answerByChecks({ check, mount: (s) => ship(s), type: GAME, name: 'plus and minus', saved: { ops: 'addsub' },
+      defaults: DEFAULTS, manifest: m, right, say: (r) => numberWord(r.probe().item.answer) });
+    answerByChecks({ check, mount: (s) => ship(s), type: GAME, name: 'counting', saved: { ops: 'count', maxNumber: 5 },
+      defaults: DEFAULTS, manifest: m, right, say: (r) => numberWord(r.probe().item.answer) });
+    const a = ship({});
+    a.inst.impl.hear({ text: numberWord(a.probe().item.answer + 7), confidence: 0.95 });
+    check('*** a number that is none of the three on screen is still heard, and is a miss ***', a.probe().misses === 1, a.last());
+    a.inst.destroy();
+    const fields = getManifest('algebra').settings.map(normalizeField).filter(Boolean);
+    const row = fields.find((x) => x.key === 'answerBy');
+    const applies = (v) => !row.appliesWhen || row.appliesWhen(v) !== false;
+    check('Math, at Beginner: the same Answering row, say-it by default', BEGINNER_DEFAULTS_FOR_MATH.answerBy === 'choices'
+      && row?.default === 'choices' && applies({ pool: BEGINNER }));
+    check('...hidden where it changes nothing: on the number pad, and away from Beginner',
+      !applies({ pool: BEGINNER, answerWith: 'pad' }) && !applies({ pool: 'mixed' }));
+    const own = getManifest(GAME).settings.map(normalizeField).filter(Boolean).find((x) => x.key === 'answerBy');
+    check('...and on the old panel, hidden on the number pad', own.appliesWhen({ answerWith: 'pad' }) === false && own.appliesWhen({}) !== false);
   }
 
   finish();

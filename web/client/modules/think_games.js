@@ -7,7 +7,8 @@
 // says were liked: short drills, one after another — our own, nothing copied).
 //
 // EVERYTHING A PERSON MEETS between the questions is `quiz_view.js` and `quiz_flow.js`, the same as
-// word games, spelling, simple math and name that: "Is it 3?", the hints, "Would you like to try
+// word games, spelling, simple math and name that: the answers to say, tap or step through ("Is it 3?"
+// is the `answerBy` option), the hints, "Would you like to try
 // again, or hear the answer?", the celebration. This file is the four adapters and the pictures.
 //
 // WHAT IS NEW HERE, and lives in shared files so the next game gets it for one line:
@@ -29,7 +30,7 @@
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
-import { flowSettings, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
+import { flowSettings, answerByField, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
 import { quizModule } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
 import { BANKS, GROUP_NAMES, GROUPS, shownOrder } from '../think_banks.js';
@@ -81,6 +82,13 @@ export const DEFAULTS = Object.freeze({
   game: 'mix',
   numbersAsk: 'smallest',
   thingsAsk: 'biggest',
+  // SAY THE ANSWER, NOT "IS IT 3?", BY DEFAULT (Mike's brain-games ruling, 2026-10-02 late, carried here:
+  // "You should be able to say the answer. Yes/no should be an option though."). FOR: these ARE speech
+  // exercises - naming the smallest number, the group, the end of the sentence is the therapy, and "Is it
+  // fruit?" hands over the word the person was meant to find. Every answer is in the open vocabulary (the
+  // three numbers or things, every group name, every listed ending). AGAINST: somebody whose only signals
+  // are a yes and a no; for them it is one row away, and two Yes / No switches get it whatever this says.
+  answerBy: 'choices',
   autostart: false,
   autostartAlone: 'same',
   ...ADAPTIVE_DEFAULTS,
@@ -93,6 +101,7 @@ const SETTINGS = [
     options: [{ value: 'mix', label: 'A mix of all four' }, { value: 'numbers', label: 'Smallest of three numbers' },
               { value: 'things', label: 'Biggest of three things' }, { value: 'groups', label: 'Name the group' },
               { value: 'finish', label: 'Finish the sentence' }] },
+  answerByField({ on: 'choices', example: 'Is it 3?' }),
   ownScoreField({ level: 'essential', note: 'How many are right (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
   // The exercise as given is "the smallest number" and "the biggest thing". The other way round is a
   // second exercise on the same questions, so it is a choice rather than a second game.

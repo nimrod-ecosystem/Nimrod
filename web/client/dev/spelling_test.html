@@ -253,6 +253,20 @@ try {
     check('destroyed: closed', r.lastGrammar().open === false);
   }
 
+  // 2026-10-02 late: every quiz game with answers to walk got `answerBy` (say it by default, yes / no as
+  // the option). Spelling has no offer to say yes or no to - the letters are said, tapped or scanned on the
+  // board - so it has no row: a row that changes nothing is a lie.
+  section('*** no "Answering" row: spelling already takes the answer, with nothing offered ***');
+  {
+    check('no answerBy row', !getManifest(GAME).settings.some((s) => s.key === 'answerBy'));
+    const r = R();
+    check('asked with nothing offered after it, and no Yes / No stops (the board is the switch path)',
+      r.probe().candLine === '' && r.eng.stops().length === 0 && !/Is it/.test(r.said[0]), r.said[0]);
+    const g = r.lastGrammar();
+    check('the open vocabulary is every letter name', g.open && ['a', 'see', 'tee'].every((w) => g.words.includes(w)));
+    r.inst.destroy();
+  }
+
   finish();
 } catch (err) { finish(err); }
 </script>

@@ -25,8 +25,9 @@
 //     to change), breaks every `simple_math/*` binding, and splits its score and points history;
 //   * deleting the type turns the panel into "no module registered" on somebody's screen.
 //
-// THREE WAYS TO ANSWER: one number offered at a time on a switch ("Is it 7?"), a number pad
-// (`answerWith`), or aloud ("seven", "it's seven", "7").
+// THREE WAYS TO ANSWER: aloud ("seven", "it's seven", "7"), three numbers to tap or step through on a
+// switch, or a number pad (`answerWith`). With the numbers, "Is it 7?" one at a time is the `answerBy`
+// option (2026-10-02 late; see DEFAULTS).
 //
 // HINTS, in order: HOW TO COUNT IT, with DOTS to count (with the hint, always, or never); then A RANGE
 // that never names the answer.
@@ -35,7 +36,7 @@
 // rules (Math's default); 'fixed' — the sums and the size set by hand (the old panel's default).
 
 import { ownScoreField } from './score_source.js';
-import { flowSettings, fill, esc, parseNumber, numberWords, shuffle } from './quiz_flow.js';
+import { flowSettings, answerByField, fill, esc, parseNumber, numberWords, shuffle } from './quiz_flow.js';
 import { quizModule } from './quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from './adaptive_play.js';
 
@@ -75,8 +76,18 @@ export const DEFAULTS = Object.freeze({
   // Mike's list. (Used when `mathLevel` is 'fixed'.)
   ops: 'addsub',
   maxNumber: 10,
-  // "Is it 7?" by default: it works on one switch, on touch and alongside a voice.
+  // A few numbers to choose from (not the pad) by default: it works on one switch, on touch and
+  // alongside a voice.
   answerWith: 'offer',
+  // ...AND THE NUMBER IS SAID, TAPPED OR STEPPED TO, NOT "IS IT 7?" (Mike's brain-games ruling, 2026-10-02
+  // late, carried here: "You should be able to say the answer. Yes/no should be an option though."). FOR:
+  // working the sum out and saying it is the exercise; "Is it 7?" turns it into checking somebody else's
+  // answer, and a voice player heard a possible answer before giving their own. Every number is in the open
+  // vocabulary. AGAINST: somebody whose only signals are a yes and a no - one row away, and two Yes / No
+  // switches get it whatever this says. An OLD Simple math panel changes too (the same DEFAULTS): nobody
+  // chose yes / no there - it was the only shape there was - unlike its sums, which somebody did choose.
+  // [A guess, on Mike's list.]
+  answerBy: 'choices',
   // The dots arrive WITH the hint, so a first try is a real try. (Counting always shows them: there
   // the dots ARE the question.)
   dots: 'hint',
@@ -261,8 +272,14 @@ export function beginnerSettings({ when = null, levelDefault = 'fixed', withScor
       options: [5, 10, 12, 20].map((v) => ({ value: v, label: String(v) })),
       note: 'Plus stays within this total; minus starts from no more than this; times multiplies numbers up to it.' }, fixed),
     w({ key: 'answerWith', label: 'Answer by', kind: 'choice', default: 'offer', level: 'standard',
-      options: [{ value: 'offer', label: 'Yes or no to one number at a time' },
+      options: [{ value: 'offer', label: 'A few numbers to choose from' },
                 { value: 'pad', label: 'A number pad' }] }),
+    // Only with the numbers: the pad has no offer to say yes or no to. ADVANCED here (standard in the other
+    // games), argued: Math's standard menu is held to the 12-press budget (simple_math_test) and this row
+    // made Beginner 13 - the same reason `askAnother` is advanced. The default is the ruling, and the
+    // standard "Switches" row (Select is Yes, Next is No) already gives two-switch users yes / no.
+    // [On Mike's list.]
+    w(answerByField({ on: 'choices', example: 'Is it 7?', level: 'advanced' }), (v) => on(v) && v?.answerWith !== 'pad'),
     w({ key: 'dots', label: 'Dots to count', kind: 'choice', default: 'hint', level: 'standard',
       options: [{ value: 'hint', label: 'With the hint' }, { value: 'always', label: 'Always' },
                 { value: 'never', label: 'Never' }] }),

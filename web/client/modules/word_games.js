@@ -11,9 +11,10 @@
 // SWITCH AND SCREEN FIRST, VOICE-READY
 // ---------------------------------------------------------------------------------------
 //
-// Every question is answerable with a yes/no switch and with the on-screen buttons TODAY. The
-// game offers one candidate at a time ("Is it COLD?"); Yes on the right one is right, No steps to
-// the next. Voice arrives through ONE seam, `hear(result)`, which takes
+// Every question is answerable with a switch and with the on-screen buttons. By default (`answerBy`
+// 'choices', 2026-10-02 late) nothing is offered: the three words are buttons, tapped or stepped through
+// with one switch. The 'yesno' option offers one candidate at a time ("Is it COLD?"); Yes on the right
+// one is right, No steps to the next. Voice arrives through ONE seam, `hear(result)`, which takes
 //
 //     { text, confidence, alternatives, reason }
 //
@@ -73,7 +74,7 @@ import {
 // changed: word_games_test and quiz_flow_test both check these are the same functions.
 import {
   ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, FLOW_LINE_LABELS, STOP_PHRASES, ANSWER_MS_FIELD, ASK_ANOTHER_FIELD,
-  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, isStop, reasonFor,
+  answerByField, normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, isStop, reasonFor,
   defaultChime as sharedChime, STARS, CAT_URL,
 } from '../quiz_flow.js';
 
@@ -147,6 +148,14 @@ export const DEFAULTS = Object.freeze({
   // 'scan': next moves the highlight, select presses it (one switch with a scan, or two).
   // 'yesno': select is Yes and next is No (two switches, one each).
   twoSwitch: 'scan',
+  // SAY THE WORD, NOT "IS IT COLD?", BY DEFAULT (Mike's brain-games ruling, 2026-10-02 late, carried here:
+  // "You should be able to say the answer. Yes/no should be an option though."). 'choices': the question
+  // is asked and nothing is offered; the word is said, tapped, or stepped to with one switch. FOR: finding
+  // the opposite or the rhyme IS the exercise, and "Is it COLD?" said after "the opposite of hot" gives it
+  // away to anybody listening. Every word is in the open vocabulary (every opposites word, the whole rhyme
+  // table). AGAINST: somebody who can only nod or shake - one row away, and two Yes / No switches get it
+  // whatever this says. The Yes or no QUIZ is yes / no either way: its answers are the two (no row there).
+  answerBy: 'choices',
   ...LINES,
 });
 
@@ -167,6 +176,8 @@ const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: DEFAULTS.game, level: 'essential',
     options: [{ value: 'opposites', label: 'Opposites' }, { value: 'rhyming', label: 'Rhyming' },
               { value: 'yesno', label: 'Yes or no' }] },
+  answerByField({ on: 'choices', example: 'Is it COLD?',
+    appliesWhen: (v) => ((v && v.game) || DEFAULTS.game) !== 'yesno' }),
   { key: 'showScore', label: 'Score', default: true, level: 'standard',
     onLabel: 'Show how many are right so far', offLabel: 'No score on screen' },
   { key: 'speak', label: 'Say the questions aloud', default: true, level: 'standard',
@@ -257,6 +268,15 @@ export function createEngine({
   const candidate = () => cands[ci] || null;
   const isRightCandidate = (w) => (game === 'opposites' ? item.accept.includes(w)
     : game === 'rhyming' ? rhymes(item.word, w) === true : false);
+  // The switch path's shape (`answerBy`, DEFAULTS; quiz_flow.js has the same two): 'choices' walks the
+  // words themselves, 'yesno' offers one ("Is it COLD?"). The yes/no QUIZ is always yes / no, and two
+  // switches that ARE yes and no have nothing to walk.
+  const offers = () => (game !== 'yesno' && c().answerBy === 'choices' && c().twoSwitch !== 'yesno' ? 'choices' : 'yesno');
+  // In the yes/no shape a spoken yes / no answers the offer - unless it is one of THIS question's own
+  // words ("the opposite of stop"), which is an answer, the same guard as the stop phrases.
+  const ownWord = (t) => (game === 'opposites' ? [item.word, ...item.accept, ...(item.wrong || [])].includes(t)
+    : game === 'rhyming' ? rhymes(item.word, t) === true : false);
+  const offerByVoice = () => !!item && game !== 'yesno' && offers() === 'yesno' && !!candidate();
 
   function askLine() {
     const k = c();
@@ -267,7 +287,7 @@ export function createEngine({
   function candLine() {
     const k = c();
     const cand = candidate();
-    if (!cand) return '';
+    if (!cand || offers() === 'choices') return '';
     if (game === 'opposites') return fill(k.candidateOpposites, { candidate: cand, word: item.word });
     if (game === 'rhyming') return fill(k.candidateRhyming, { candidate: cand, word: item.word });
     return '';
@@ -296,7 +316,7 @@ export function createEngine({
       else if (game === 'rhyming') add(Object.keys(PRONUNCIATIONS));
       else { add(YES_WORDS); add(NO_WORDS); }
     };
-    if (phase === 'asking') answers();
+    if (phase === 'asking') { answers(); if (offerByVoice()) { add(YES_WORDS); add(NO_WORDS); } }
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
     else if (phase === 'another') { add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]); }
@@ -539,6 +559,10 @@ export function createEngine({
       if (!ans) return confident ? note('yesNoOnly', fill(c().yesNoOnlyLine, { heard: text })) : notCaught();
       return confident ? judge(ans, 'voice') : toUnsure(ans, result);
     }
+    // "Is it COLD?" - "yes" (the yes/no shape): the offer is answered, not judged as the word "yes".
+    if (phase === 'asking' && offerByVoice() && yesNoOf(text) && !ownWord(text)) {
+      return confident ? press(yesNoOf(text)) : notCaught();
+    }
     const word = extract(text);
     return confident ? judge(word, 'voice') : toUnsure(word, result);
   }
@@ -591,7 +615,10 @@ export function createEngine({
 
   function stops() {
     switch (phase) {
-      case 'asking': return [{ act: 'yes', label: 'Yes' }, { act: 'no', label: 'No' }];
+      case 'asking':
+        // 'choices': the words themselves are the stops - next lights one, select answers it.
+        if (offers() === 'choices') return cands.map((v) => ({ act: 'pick', value: v, label: v }));
+        return [{ act: 'yes', label: 'Yes' }, { act: 'no', label: 'No' }];
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
@@ -601,9 +628,15 @@ export function createEngine({
     }
   }
 
-  function press(act) {
+  function press(act, stop = null) {
     if (dead || !item) return;
     switch (act) {
+      // A walked-to word ('choices'): judged like a heard one; wrong says the switch line, never "It
+      // sounded like you said".
+      case 'pick':
+        if (phase !== 'asking' || game === 'yesno' || !stop || !stop.value) return;
+        judge(stop.value, 'switch');
+        return;
       case 'yes':
         if (phase !== 'asking') return;
         if (game === 'yesno') { judge('yes', 'switch'); return; }
@@ -664,6 +697,10 @@ export function createEngine({
     if (c().twoSwitch === 'yesno' && delta > 0) { if (s[1]) press(s[1].act); else if (s[0]) press(s[0].act); return; }
     if (!s.length) return;
     highlight = ((highlight + delta) % s.length + s.length) % s.length;
+    // Walking the words: the lit one is said (with "Say the switch choice too"), so somebody who cannot
+    // see the buttons still knows where they are.
+    const lit = s[highlight];
+    if (phase === 'asking' && lit && lit.act === 'pick' && c().sayChoice) speak(lit.label);
     changed();
   }
   function select() {
@@ -672,12 +709,18 @@ export function createEngine({
     const s = stops();
     if (!s.length) return;
     const i = c().twoSwitch === 'yesno' ? 0 : Math.min(highlight, s.length - 1);
-    press(s[i].act);
+    press(s[i].act, s[i]);
+  }
+
+  /** A word chosen directly (a touched button), judged like a heard one but with the switch line. */
+  function answer(value, via = 'touch') {
+    if (dead || !item || phase !== 'asking' || game === 'yesno' || value == null || value === '') return;
+    judge(normalize(value), via);
   }
 
   return {
     start: () => setGame(c().game),
-    setGame, hear, press, stops, grammar, select,
+    setGame, hear, press, stops, grammar, select, answer,
     next: () => move(1),
     prev: () => move(-1),
     skip: () => { if (item && !dead) nextItem(); },
@@ -686,6 +729,9 @@ export function createEngine({
       feedback: feedback ? { ...feedback } : null, unsure: unsure ? { ...unsure } : null,
       revealed, pair: pair ? { ...pair } : null, rightCount, asked, serial, voiceSeen,
       askLine: item ? askLine() : '', candLine: item ? candLine() : '', timerPending: timer !== null,
+      offers: game ? offers() : 'yesno',
+      // The word the switch has lit, in the 'choices' shape (null otherwise).
+      lit: (() => { if (phase !== 'asking') return null; const s = stops()[highlight]; return s && s.act === 'pick' ? s.value : null; })(),
     }),
     destroy() { stopTimer(); dead = true; },
   };
@@ -805,11 +851,20 @@ registerModule(
               f.hint ? `<p class="wg-hint" data-hint>${fillHtml(cfg.hintLine, { hint: esc(f.hint) })}</p>` : ''}`
             : `<p class="wg-say" data-feedback="${esc(f.kind)}">${esc(f.text)}</p>`;
         mid = `${left}<div class="wg-st" aria-live="polite">${fb}</div>`;
-        const lead = s.voiceSeen ? 'Or press your switch.' : 'Press your switch, or tap.';
-        const offer = s.candidate
-          ? ` ${fillHtml(s.game === 'opposites' ? cfg.candidateOpposites : cfg.candidateRhyming,
-            { candidate: `<b>${esc(up(s.candidate))}</b>`, word: `<b>${esc(up(it.word))}</b>` })}` : '';
-        foot = `<div class="wg-foot"><span>${lead}${offer}</span>${btns(stops, s.highlight)}</div>`;
+        if (s.offers === 'choices') {
+          // The words are the stops (answerBy 'choices'): tapped, or lit by the switch. Capitals on screen,
+          // as every word here is; the value (and what is said) stays lower case.
+          const lead = s.voiceSeen ? 'Or step through them with your switch.' : 'Say it, tap it, or step through with your switch.';
+          const picks = stops.map((x, i) => `<button type="button" class="wg-btn" data-pick="${esc(x.value)}" data-stop="${i}"${
+            i === s.highlight ? ' data-on="1"' : ''}>${esc(up(x.label))}</button>`).join('');
+          foot = `<div class="wg-foot"><span>${lead}</span><div class="wg-btns">${picks}</div></div>`;
+        } else {
+          const lead = s.voiceSeen ? 'Or press your switch.' : 'Press your switch, or tap.';
+          const offer = s.candidate
+            ? ` ${fillHtml(s.game === 'opposites' ? cfg.candidateOpposites : cfg.candidateRhyming,
+              { candidate: `<b>${esc(up(s.candidate))}</b>`, word: `<b>${esc(up(it.word))}</b>` })}` : '';
+          foot = `<div class="wg-foot"><span>${lead}${offer}</span>${btns(stops, s.highlight)}</div>`;
+        }
       } else if (s.phase === 'unsure') {
         const line = s.unsure.reason
           ? fillHtml(cfg.unsureLine, { heard: q(s.unsure.heard), reason: esc(s.unsure.reason) })
@@ -878,7 +933,9 @@ registerModule(
         bus.subscribe(ANSWER_TOPIC, (r) => engine.hear(r));
         mount.addEventListener('click', (e) => {
           const t = e.target.closest?.('button[data-act]');
-          if (t) engine.press(t.dataset.act);
+          if (t) { engine.press(t.dataset.act); return; }
+          const p = e.target.closest?.('button[data-pick]');
+          if (p) engine.answer(p.dataset.pick, 'touch');
         });
         let started = false;
         if (state?.subscribe) {

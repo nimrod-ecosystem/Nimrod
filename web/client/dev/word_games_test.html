@@ -29,6 +29,7 @@ import '../modules/word_games.js';
 import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
          reasonFor, fill, normalize, createEngine } from '../modules/word_games.js';
 import { attachSpeech } from '../input_speech.js';
+import { answerByChecks } from './quiz_test_rig.js';
 import * as SP from '../input_speech.js';
 import { OPPOSITES, RHYMING, YES_NO, PRONUNCIATIONS, RHYME_OFFER_POOL, rhymes, rhymesFor,
          rhymePart, hasPicture } from '../word_games_words.js';
@@ -45,10 +46,15 @@ function check(name, cond, detail = '') {
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-function rig({ saved = {}, reducedMotion = false, rand = () => 0, store = {}, bus = null, output } = {}) {
+// The sections written before 2026-10-02 late test the yes / no shape ("Is it COLD?"), so the rig pins
+// it; `asShipped: true` mounts the game as it now ships (say it, tap it, or step through the words).
+function rig({ saved = {}, reducedMotion = false, rand = () => 0, store = {}, bus = null, output, asShipped = false } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   bus = bus || createBus();
+  if (!asShipped) saved = { answerBy: 'yesno', ...saved };
+  const grammars = [];
+  bus.subscribe(GRAMMAR_TOPIC, (g) => grammars.push(g));
   const said = [];
   const cancelled = [];
   const out = output === null ? null : {
@@ -85,6 +91,8 @@ function rig({ saved = {}, reducedMotion = false, rand = () => 0, store = {}, bu
     points: () => (store.points || []),
     setCfg: (p) => { stored = { ...stored, ...p }; sub?.(stored); },
     phase: () => probe().phase,
+    lastGrammar: () => grammars[grammars.length - 1] || null,
+    publish: (topic, payload) => bus.publish(topic, payload),
   };
 }
 const wrongFor = (it) => it.wrong[0];
@@ -747,6 +755,49 @@ try {
     e.destroy();
     e.press('yes');
     check('a destroyed engine ignores presses', e.snapshot().phase === 'asking' && e.snapshot().rightCount === 0);
+  }
+
+  // =====================================================================================
+  section('*** SAY THE WORD BY DEFAULT, NOT "IS IT COLD?" (Mike\'s brain-games ruling, 2026-10-02 late, carried here) ***');
+  {
+    const m = getManifest('word_games');
+    const mount = (saved) => rig({ saved, asShipped: true });
+    answerByChecks({ check, mount, type: 'word_games', name: 'opposites', saved: { game: 'opposites' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => r.probe().item.accept[0] });
+    answerByChecks({ check, mount, type: 'word_games', name: 'rhyming', saved: { game: 'rhyming' }, defaults: DEFAULTS, manifest: m,
+      right: (r) => r.probe().candidates.find((c) => rhymes(r.probe().item.word, c) === true) });
+    const o = mount({ game: 'opposites' });
+    const oi = o.probe().item;
+    const other = OPPOSITES.find((x) => x !== oi && !o.probe().candidates.includes(x.accept[0]) && !oi.accept.includes(x.accept[0])).accept[0];
+    o.inst.impl.hear({ text: other, confidence: 0.95 });
+    check('*** a word that is not one of the three on screen is still heard, and is a miss ***', o.probe().misses === 1, o.last());
+    o.inst.destroy();
+    const rh = mount({ game: 'rhyming' });
+    const any = rhymesFor(rh.probe().item.word).find((w) => !rh.probe().candidates.includes(w));
+    if (any) {
+      rh.inst.impl.hear({ text: any, confidence: 0.95 });
+      check(`rhyming: ANY rhyme said aloud is right, not only the three on screen (${any})`, rh.phase() === 'celebrate');
+    }
+    rh.inst.destroy();
+    // The yes / no QUIZ is yes / no whatever Answering says: its answers ARE the two.
+    const row = m.settings.find((s) => s.key === 'answerBy');
+    check('the Answering row is hidden on the Yes or no quiz (it changes nothing there)', row.appliesWhen({ game: 'yesno' }) === false
+      && row.appliesWhen({ game: 'opposites' }) !== false && row.appliesWhen({}) !== false);
+    const y = mount({ game: 'yesno' });
+    check('...and the quiz still offers Yes and No', y.probe().offers === 'yesno'
+      && y.eng.stops().map((s) => s.act).join() === 'yes,no');
+    y.inst.destroy();
+    // In the yes / no shape a spoken "no" answers the offer - unless "no" is THIS question's own word.
+    const yes = OPPOSITES.find((x) => x.word === 'yes' && x.accept.includes('no'));
+    check('the opposites list has "yes" (the case below needs it)', !!yes);
+    if (yes) {
+      const s = rig({ saved: { game: 'opposites' } });
+      let guard = 0;
+      while (s.probe().item !== yes && guard++ < 200) s.eng.skip();
+      s.eng.hear({ text: 'no', confidence: 0.95 });
+      check('*** yes / no shape: "no" to "the opposite of yes" is the ANSWER (right), not No to the offer ***', s.phase() === 'celebrate', s.last());
+      s.inst.destroy();
+    }
   }
 } catch (err) {
   check('the suite ran without throwing', false, String(err && err.stack || err));
