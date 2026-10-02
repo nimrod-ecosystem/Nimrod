@@ -114,7 +114,9 @@ const SETTINGS = [
   // 30 minutes: long enough for a deliberate pause during a visit or a call, short enough that a stray one
   // doesn't hold the pictures for a night. "Never" is there for anybody who wants a pause to mean pause.
   // Only a PAUSE times out -- a slideshow waiting for Start because autostart was set off waits as it was set.
-  { key: 'resumeAfterMs', label: 'After a pause, carry on by itself', kind: 'choice', default: 30 * 60 * 1000, level: 'standard',
+  // Level 'advanced': a safety default nobody needs to pass on every lap of the panel's menu (a switch user
+  // walks every 'standard' row of it).
+  { key: 'resumeAfterMs', label: 'After a pause, carry on by itself', kind: 'choice', default: 30 * 60 * 1000, level: 'advanced',
     options: [
       { value: 10 * 60 * 1000, label: 'after 10 minutes' },
       { value: 30 * 60 * 1000, label: 'after 30 minutes' },
