@@ -30,11 +30,21 @@
 // the screen must agree, and removing one panel must not lose the count. What is PER PANEL (this
 // instance's own `ctx.state`) is only how it is shown: the whole board, or one counter as an overlay.
 //
-// "SHOW AS OVERLAY" — HONEST ABOUT WHAT IT IS TODAY. The button turns this panel into one counter,
-// drawn large with no card around it, meant to sit over a scene or in a corner. A true overlay that
-// floats ABOVE other panels needs the host to mount a module in the `floating` layer
-// (`layers.js`), and the host files (`arrangement.js` / `kiosk.js`) have no such mount yet —
-// `mount: 'ambient'` exists, but that layer is BEHIND the panels. Flagged for Mike, not faked.
+// "SHOW AS OVERLAY" — A TRUE FLOATING OVERLAY NOW (Mike's list 09-30, Scoreboard item 5: "a true floating
+// overlay needs the dashboard to mount things in front"; free placement made that possible). The button
+// ASKS the dashboard to float this panel (`shell/place`, arrangement.js "A PANEL ASKS TO FLOAT"): it leaves
+// its grid slot, without a remount, for the overlay layer -- above every panel, below the bar and the menus.
+// The dashboard says where the panel now is (`panel/placed`), and while it floats it draws ONE counter, large,
+// on a solid backdrop of the theme's own surface (readable over a photo, a video, anything), with two
+// buttons: "Back into the dashboard", and whether it is a stop in the switch lap.
+//   * OUT OF THE SWITCH LAP UNLESS CHOSEN (`overlayScan: 'skip'` on the manifest; arrangement.js `scanOff`
+//     argues it): a number to glance at should not cost a one-switch user a press on every lap, nor take
+//     the lap's FIRST stop as an overlay otherwise would. "Switch scan: off" on it turns that round.
+//   * MOVED AND RESIZED like any placed thing: the edit view's Transform window (x/y, scale).
+//   * A page with no dashboard to float it (the modules page, a suite) nobody takes the request, and the
+//     button does what it always did: one big counter inside this panel's own box.
+// Placed as an overlay some other way (the edit view's Place: Overlay) with no counter chosen, it shows
+// every counter, compact.
 //
 // A SWITCH REACHES EVERY BUTTON. `next`/`prev` walk a highlight through every button in reading
 // order (wrapping — a highlight that stopped at the end would strand somebody there); `select`
@@ -68,6 +78,17 @@ export const BUILTIN_SOURCES = [
   { source: 'points:all', label: 'Points earned, all time', period: 'none' },
 ];
 const builtin = (id) => BUILTIN_SOURCES.find((b) => b.source === id) || null;
+
+// The dashboard's two topics for a floating panel (arrangement.js PLACE_REQUEST_TOPIC / PLACED_TOPIC),
+// written out so a module imports no host file; dev/scoreboard_test.html checks the two agree.
+export const PLACE_REQUEST_TOPIC = 'shell/place';
+export const PLACED_TOPIC = 'panel/placed';
+// WHERE IT FLOATS TO FIRST, in % of the dashboard (x/y the centre). A starting point, moved and resized in
+// the edit view from there -- so not a setting of its own. Argued: TOP LEFT, because the mirror's corner
+// defaults to top right and the clock's to bottom left (arrangement.js KDEF) and the bar is along the bottom;
+// 24 x 26 is big enough to read a number across a room and small enough not to hide the panel under it.
+// On Mike's list.
+export const FLOAT_DEFAULTS = Object.freeze({ x: 14, y: 16, w: 24, h: 26 });
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -182,6 +203,9 @@ registerModule(
     // `local`: counting works with no server at all (the counters simply are not saved). The
     // points sources need the platform; a card following one says so rather than showing a 0.
     dependsOn: 'local', importance: 'optional',
+    // Floating over the dashboard, it is not a stop in the switch lap unless somebody chooses it in
+    // (arrangement.js `scanOff` reads this; the header says why).
+    overlayScan: 'skip',
     description: 'Any count you want to keep, against a target you set — or a game’s score, followed from the same screen' },
   (ctx) => {
     const { mount, bus } = ctx;
@@ -197,6 +221,8 @@ registerModule(
     let confirmRemove = null;     // first press of Remove
     let lit = -1;                 // index into the walk, -1 = hidden until the first verb
     let claimed = new Set();      // sources this panel is SHOWING (score/shown)
+    // Where the DASHBOARD says this panel is (`panel/placed`): null until told (a grid slot, or no dashboard).
+    let host = { place: null, scan: true };
     let ticker = null;
     let torn = false;
 
@@ -301,6 +327,40 @@ registerModule(
         </div>`;
     }
 
+    // FLOATING over the dashboard: the chosen counter (or every one, compact), on its own backdrop, and the
+    // two things a floating panel needs -- the way back, and whether it is in the switch lap.
+    function floatHTML(list) {
+      const one = list.length === 1;
+      const cards = list.map((c) => {
+        const r = reading(c);
+        const d = describe(r.value, r.target, r.period);
+        return `
+          <div class="sb-fl-item" data-counter="${esc(c.id)}" aria-label="${esc(c.label)}">
+            <p class="sb-ov-figure" role="status" aria-live="polite"><span class="sb-value" data-value>${esc(d.value)}</span>
+              ${d.of ? `<span class="sb-of">${esc(d.of)}</span>` : ''}</p>
+            <p class="sb-ov-label">${esc(c.label)}${d.period ? ` · ${esc(d.period)}` : ''}</p>
+            ${d.reached ? '<p class="sb-reached" data-reached>Target reached</p>' : ''}
+          </div>`;
+      }).join('');
+      return `
+        <div class="sb-float${one ? ' sb-float-one' : ''}">
+          ${list.length ? cards : '<p class="sb-empty">Nothing counted yet.</p>'}
+          <div class="sb-btns sb-fl-btns">
+            ${btn('unfloat', null, 'Back into the dashboard')}
+            ${btn('scan', null, host.scan ? 'Switch scan: on' : 'Switch scan: off',
+              ` aria-pressed="${host.scan ? 'true' : 'false'}"`)}
+          </div>
+        </div>`;
+    }
+
+    // Ask the dashboard (arrangement.js "A PANEL ASKS TO FLOAT"). True if a dashboard took it.
+    function askHost(req) {
+      let taken = false;
+      try { bus.publish(PLACE_REQUEST_TOPIC, { ...req, id: me, claim: () => { taken = true; } }); }
+      catch (err) { console.error('scoreboard: asking the dashboard', err); }
+      return taken;
+    }
+
     function followHTML() {
       const followed = new Set(counters.map((c) => c.source).filter(Boolean));
       const games = [...sources.values()].filter((s) => !s.gone && !followed.has(s.source));
@@ -339,6 +399,17 @@ registerModule(
     }
     function renderOnce() {
       if (counters.some((c) => builtin(c.source))) ensureLedger();
+      if (host.place === 'overlay') {
+        const chosen = overlayCounter();
+        const list = chosen ? [chosen] : counters;
+        rootEl.dataset.mode = 'float';
+        addEl.hidden = true;
+        listEl.innerHTML = floatHTML(list);
+        followEl.innerHTML = '';
+        claim(new Set(list.map((c) => c.source).filter(Boolean)));
+        paintLit();
+        return;
+      }
       const ov = view.mode === 'overlay' ? overlayCounter() : null;
       rootEl.dataset.mode = ov ? 'overlay' : 'panel';
       addEl.hidden = !!ov;
@@ -407,8 +478,17 @@ registerModule(
         case 't+10': return update(id, (c) => stepTarget(c, 10));
         case 'tnone': return update(id, (c) => ({ ...c, target: null }));
         case 'period': return update(id, (c) => cyclePeriod(c, now()));
-        case 'overlay': editing = null; lit = -1; return saveView({ mode: 'overlay', focus: id });
+        case 'overlay':
+          editing = null; lit = -1;
+          // A dashboard floats it for real; with none to ask, the big counter in this panel's own box.
+          if (askHost({ place: 'overlay', ...FLOAT_DEFAULTS })) return saveView({ mode: 'panel', focus: id });
+          return saveView({ mode: 'overlay', focus: id });
         case 'panel': lit = -1; return saveView({ mode: 'panel' });
+        case 'unfloat':
+          lit = -1;
+          if (!askHost({ place: 'slot' })) { host = { ...host, place: null }; return render(); }
+          return undefined;
+        case 'scan': askHost({ scan: !host.scan }); return undefined;
         case 'remove':
           if (confirmRemove !== id) { confirmRemove = id; return render(); }
           confirmRemove = null;
@@ -435,7 +515,7 @@ registerModule(
     }
 
     return {
-      __probe: () => ({ counters: counters.map((c) => ({ ...c })), view: { ...view }, lit, editing,
+      __probe: () => ({ counters: counters.map((c) => ({ ...c })), view: { ...view }, host: { ...host }, lit, editing,
         claimed: [...claimed], sources: [...sources.keys()], ticking: ticker != null }),
       init() {
         // The stylesheet rides inside the mount (see scoreboard.css's header for why not <head>).
@@ -500,6 +580,14 @@ registerModule(
         // Points paid on this screen reach the ledger's own record first; fetch it now rather than
         // waiting for the next poll, so "points earned today" moves when the point is earned.
         bus.subscribe(POINTS_TOPIC, () => { if (ledger) Promise.resolve(ledger.load()).catch(() => {}); });
+
+        // Where the dashboard says this panel is. Sent on this instance's own topic only (`#<id>`), so a
+        // scoreboard elsewhere never hears another's.
+        bus.subscribe(PLACED_TOPIC, (p) => {
+          if (!p || typeof p !== 'object' || (p.id && p.id !== me)) return;
+          host = { place: typeof p.place === 'string' ? p.place : null, scan: p.scan !== false };
+          render();
+        });
 
         // Verbs.
         bus.subscribe('scoreboard/next', () => moveLit(1));

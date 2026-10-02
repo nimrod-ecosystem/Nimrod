@@ -51,7 +51,7 @@
 // of the room renderer (it is loaded only when a layout names a room), no change to any ring.
 
 import {
-  normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange,
+  normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange, normalizePlacedEntry,
 } from './layout.js';
 
 // Re-exported so the shell (kiosk.js already imports this file) can classify a change without a new
@@ -127,6 +127,12 @@ export const ROOM_PANEL_ID = 'scene:room';
 export const ROOM_PIECE_TYPE = 'room-piece';
 export const ROOM_PIECE_PRESS_TOPIC = 'room-piece/press';
 export const ROOM_PIECE_PREFIX = `${ROOM_PANEL_ID}/`;
+// A PANEL THAT FLOATS ON REQUEST (Mike's list 09-30, Scoreboard item 5; "A PANEL ASKS TO FLOAT" below).
+// `shell/place { id, place?: 'overlay' | 'slot', x?, y?, w?, h?, scan?, claim?, reply? }`: a panel asks this
+// dashboard to float it over the others, put it back, or put it in / take it out of the switch lap.
+// `panel/placed#<id> { id, place, scan }`: what this dashboard tells a panel about where it now is.
+export const PLACE_REQUEST_TOPIC = 'shell/place';
+export const PLACED_TOPIC = 'panel/placed';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -435,7 +441,8 @@ export function createArrangement({
     // (Stage R: the first stop of the RING, which is the first slot unless something is placed as an
     // overlay -- an overlay takes the scan first. With nothing placed, exactly `slotRecs[0]` as before.)
     // (2026-10-02: a dashboard whose every panel failed to start can still have a room: its first piece then.)
-    const first = panelRecs()[0] || roomStops()[0];
+    // (Scoreboard item 5: the first stop of the LAP -- a panel kept out of it is never where focus starts.)
+    const first = ringRecs()[0] || roomStops()[0];
     if (first) {
       try { runtime()?.router?.setFocus?.(first.id); } catch { /* focus is not load-bearing */ }
       paintFocus(first.id);
@@ -498,7 +505,7 @@ export function createArrangement({
     const all = panelRecs();
     if (!all.length) return null;
     const id = runtime()?.router?.focused?.()?.id;
-    return all.find((r) => r.id === id) || all[0];
+    return all.find((r) => r.id === id) || ringRecs()[0] || all[0];
   }
 
   /**
@@ -582,7 +589,9 @@ export function createArrangement({
   // A function so `showModule` (below) does exactly the same thing rather than a look-alike.
   function focusPlaced(id) {
     try { runtime()?.router?.setFocus?.(id); } catch { /* focus is not load-bearing */ }
-    paintFocus(id);
+    // A panel kept out of the lap cannot take the router's focus; the ring is painted where focus really is,
+    // so the ring and the switch never point at two different panels (the 09-05 rule).
+    paintFocus(scanOff(id) ? (ringFocusId() || id) : id);
     renderMods();
   }
 
@@ -652,11 +661,40 @@ export function createArrangement({
 
   // Every panel on a laid-out screen, in RING ORDER: overlays first (Design: an overlay "takes the scan
   // first"), then the slots, then flat-on-screen, then the scene. With nothing placed: `slotRecs`.
+  // (Scoreboard item 5: a placed panel kept OUT of the switch lap -- `scanOff` -- is still a panel: the bar, the
+  // menu's "Settings for" and edit mode reach it. It is listed LAST, after every panel the lap reaches.)
   function panelRecs() {
     if (!placedRecs.length) return slotRecs.slice();
     const by = (place) => placedOf().filter((e) => e.place === place)
       .map((e) => placedRecs.find((r) => r.id === e.id)).filter(Boolean);
-    return [...by('overlay'), ...slotRecs, ...by('screen'), ...by('scene')];
+    const all = [...by('overlay'), ...slotRecs, ...by('screen'), ...by('scene')];
+    return [...all.filter((r) => !scanOff(r.id)), ...all.filter((r) => scanOff(r.id))];
+  }
+  // The panels that are stops in the switch lap, in ring order.
+  const ringRecs = () => panelRecs().filter((r) => !scanOff(r.id));
+
+  // =================================================================================================
+  // *** IN THE SWITCH LAP, OR NOT (Mike's list 09-30, Scoreboard item 5: a floating scoreboard must not
+  // "steal the switch scan unless chosen"). *** A placed entry's `scan` (layout.js) is somebody's CHOICE:
+  // true = a stop in the lap, false = not. With no choice, the default for its place: every place is in the
+  // lap, and an overlay takes it FIRST (Design's rule, unchanged) -- unless the overlay's module declares
+  // `overlayScan: 'skip'` on its manifest. Argued:
+  //   FOR the module saying it: whether an overlay is something to PRESS (a door, a control) or something to
+  //   GLANCE AT (a score, a count) is a fact about the module, and the scoreboard is the second kind -- on a
+  //   one-switch lap, a stop nobody needs to press costs a press on every lap, and taking the FIRST stop means
+  //   the first press of the day lands on it.
+  //   AGAINST: two places decide (the manifest's default, the entry's choice). The entry always wins, and only
+  //   overlays read the manifest, so the default can be overridden in one line of the saved layout.
+  // A panel out of the lap is NOT out of reach: a pointer presses it directly, and its own buttons offer the
+  // choice back (the scoreboard's "Switch scan"). Nothing waits on it either way, so no screen can strand anyone.
+  // =================================================================================================
+  function scanOff(id) {
+    const e = placedMeta.get(id)?.entry;
+    if (!e || !placedRecs.some((r) => r.id === id)) return false;
+    if (typeof e.scan === 'boolean') return !e.scan;
+    if (e.place !== 'overlay') return false;
+    const def = profile?.modules?.find((m) => m.id === id);
+    try { return getManifest(def?.type)?.overlayScan === 'skip'; } catch { return false; }
   }
 
   function layerFor(place) {
@@ -782,9 +820,9 @@ export function createArrangement({
     s.transform = `translate(-50%, -50%)${turn}${g.scale !== 100 ? ` scale(${g.scale / 100})` : ''}`;
   }
 
-  async function mountPlacedOne(entry) {
-    const def = profile.modules.find((m) => m.id === entry.id);
-    if (!def) return null;
+  // A placed module's box, drawn where its entry says and recorded in `placedMeta`. (Its own function so a
+  // panel FLOATED out of its slot -- `floatFromSlot` -- gets exactly the box a mounted one does.)
+  function placedWrap(def, entry) {
     const wrap = document.createElement('div');
     // `mod-box` so the module sizes itself against this box, as a slot's cell does.
     wrap.className = 'k-pcell mod-box';
@@ -795,6 +833,13 @@ export function createArrangement({
     styleWrap(wrap, entry, where);
     el.append(wrap);
     placedMeta.set(def.id, { entry, wrap, where });
+    return wrap;
+  }
+
+  async function mountPlacedOne(entry) {
+    const def = profile.modules.find((m) => m.id === entry.id);
+    if (!def) return null;
+    const wrap = placedWrap(def, entry);
     const host = document.createElement('div'); host.className = 'k-mod';
     host.style.cssText = 'flex:1;min-width:0;min-height:0';
     wrap.append(host);
@@ -805,6 +850,7 @@ export function createArrangement({
       placedRecs.push(rec);
       // A panel SAVED hidden is told so as it mounts (hide = mute, ad7dc49): it was playing after a reload.
       if (entry.shown === false) { try { rec.instance?.onHide?.(); } catch { /* not load-bearing */ } }
+      tellPlace(def.id);
       return rec;
     } catch (err) {
       console.error(`kiosk: ${def.type} (placed) failed to start`, err);
@@ -1021,21 +1067,173 @@ export function createArrangement({
       try { rec?.instance?.onResize?.(); } catch { /* not load-bearing */ }
       meta.entry = entry; meta.where = where;
       syncDoor(entry.id);                   // row 2.38: `opens` added, changed or taken off
+      tellPlace(entry.id);                  // Scoreboard item 5: a panel that now floats (or no longer) is told
       out.moved.push(entry.id);
     }
     // ...and what is no longer placed goes back to its corner, now that its panel is gone.
     out.hud.raised = await raiseHud();
-    // Empty layers go, so a screen whose last overlay was removed has no empty overlay layer.
-    for (const k of Object.keys(placedLayers)) {
-      if (k === 'scene' && roomScene) continue;
-      if (!placedLayers[k].children.length) { placedLayers[k].remove(); delete placedLayers[k]; }
-    }
+    dropEmptyLayers();
     // The ring stays where focus is -- on a room piece too, not only a panel (THE ROOM'S PIECES).
     const fid = ringFocusId();
     if (fid) paintFocus(fid);
     renderMods();
     return out;
   }
+
+  // Empty layers go, so a screen whose last overlay was removed has no empty overlay layer.
+  function dropEmptyLayers() {
+    for (const k of Object.keys(placedLayers)) {
+      if (k === 'scene' && roomScene) continue;
+      if (!placedLayers[k].children.length) { placedLayers[k].remove(); delete placedLayers[k]; }
+    }
+  }
+
+  // =================================================================================================
+  // *** A PANEL ASKS TO FLOAT (Mike's list 09-30, Scoreboard item 5: "'Show as overlay' is one big counter
+  // for now -- a true floating overlay needs the dashboard to mount things in front"). ***
+  // `shell/place` (PLACE_REQUEST_TOPIC) from a panel of THIS dashboard (another dashboard's panel is not ours,
+  // and is not claimed): the dashboard does it, IN PLACE -- the same instance, never remounted, so a count, a
+  // game, a video carries on -- saves it where the edit view saves (`layoutStore`), and tells the panel where
+  // it now is (`panel/placed#<id>`, PLACED_TOPIC). Three requests:
+  //   place: 'overlay'  from a grid slot: out of the slot (left EMPTY -- "three panels and a gap" is a layout
+  //                     a person may mean, and filling it with something else would rewrite their grid) and
+  //                     into the overlay layer at x/y/w/h (the panel's own suggestion; the edit view moves and
+  //                     resizes it from there like any placed thing). Already placed: its place becomes overlay.
+  //   place: 'slot'     back into the grid: the first EMPTY slot (where it came from, when nothing else took
+  //                     it). No empty slot: flat on the screen in the same box -- never a full grid rewritten.
+  //   scan: true|false  in or out of the switch lap (`scanOff`), as somebody chose.
+  // `reply({ ok, place?, reason? })` says what happened; `claim()` that this dashboard took it.
+  // =================================================================================================
+  function tellPlace(id) {
+    if (!id || typeof bus?.publish !== 'function') return;
+    const e = placedMeta.get(id)?.entry;
+    const place = e && placedRecs.some((r) => r.id === id) ? e.place : slotRecs.some((r) => r.id === id) ? 'slot' : null;
+    if (!place) return;
+    const topic = bus.instanceTopic ? bus.instanceTopic(id, PLACED_TOPIC) : `${PLACED_TOPIC}#${id}`;
+    try { bus.publish(topic, { id, place, scan: !scanOff(id) }); } catch (err) { console.error('arrangement: telling a panel where it is', err); }
+  }
+  /** The layout as SAVED, when the host keeps one; else the one mounted. A copy, to change and save. */
+  function savedBase() {
+    let raw = null;
+    try { raw = layoutStore?.get?.() || null; } catch { raw = null; }
+    const b = raw && typeof raw === 'object' ? raw : layout;
+    return b ? JSON.parse(JSON.stringify(b)) : null;
+  }
+  function saveLayout(next) {
+    try { layoutStore?.save?.(next); } catch (err) { console.error('arrangement: saving a placement', err); }
+  }
+  function afterMove(id) {
+    try { recFor(id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+    tellPlace(id);
+    const fid = ringFocusId();
+    if (fid) paintFocus(fid);
+    renderMods();
+  }
+  function floatFromSlot(id, q, scan) {
+    const at = slotRecs.findIndex((r) => r.id === id);
+    const rec = slotRecs[at];
+    const cell = rec?.el?.closest?.('.k-cell');
+    const def = profile?.modules?.find((m) => m.id === id);
+    if (!rec || !cell || !def) return { ok: false, reason: 'not in a slot here' };
+    const entry = normalizePlacedEntry({ id, place: 'overlay', x: q.x, y: q.y, w: q.w, h: q.h,
+      ...(typeof scan === 'boolean' ? { scan } : {}) });
+    if (promoted === id) unmarkPromoted();
+    // Out of the slot: the cell is left empty, with nothing of this panel on it.
+    slotRecs.splice(at, 1);
+    cell.querySelectorAll(':scope > .k-promote, :scope > .k-editc').forEach((b) => b.remove());
+    cell.removeAttribute('data-kind');
+    delete cell.dataset.focused;
+    layout = { ...layout, slots: layout.slots.map((s) => (s === id ? null : s)), placed: [...(layout.placed || []), entry] };
+    // Into the overlay layer: the SAME host element, re-parented.
+    const wrap = placedWrap(def, entry);
+    rec.el.style.cssText = 'flex:1;min-width:0;min-height:0';
+    wrap.append(rec.el);
+    placedRecs.push(rec);
+    syncDoor(id);
+    const base = savedBase();
+    if (base) {
+      saveLayout({ ...base, slots: (Array.isArray(base.slots) ? base.slots : []).map((s) => (s === id ? null : s)),
+        placed: [...(Array.isArray(base.placed) ? base.placed : []).filter((e) => e && e.id !== id), entry] });
+    }
+    afterMove(id);
+    return { ok: true, place: 'overlay' };
+  }
+  async function movePlaced(id, entry) {
+    const base = savedBase();
+    if (!base) return { ok: false, reason: 'no layout' };
+    const list = Array.isArray(base.placed) ? base.placed : [];
+    const next = { ...base, placed: list.some((e) => e && e.id === id) ? list.map((e) => (e && e.id === id ? entry : e)) : [...list, entry] };
+    let r = null;
+    try { r = await applyPlaced(next); } catch (err) { console.error('arrangement: a placement', err); r = null; }
+    if (!r || !r.applied) return { ok: false, reason: r?.reason || 'not applied' };
+    saveLayout(next);
+    return { ok: true, place: entry.place };
+  }
+  async function backToGrid(id) {
+    const meta = placedMeta.get(id);
+    const rec = placedRecs.find((r) => r.id === id);
+    if (!meta || !rec) return { ok: false, reason: 'not placed here' };
+    const i = layout.slots.findIndex((s, n) => !s && stageEl.querySelector(`[data-slot="${n}"]`));
+    if (i < 0) return movePlaced(id, { ...meta.entry, place: 'screen' });
+    const cell = stageEl.querySelector(`[data-slot="${i}"]`);
+    if (promoted === id) unmarkPromoted();
+    placedRecs.splice(placedRecs.indexOf(rec), 1);
+    dropDoor(meta);
+    meta.door?.remove();
+    rec.el.removeAttribute('style');
+    cell.append(rec.el);
+    cell.setAttribute('data-kind', rec.type);
+    meta.wrap.remove();
+    placedMeta.delete(id);
+    const rest = (layout.placed || []).filter((e) => e.id !== id);
+    layout = { ...layout, slots: layout.slots.map((s, n) => (n === i ? id : s)) };
+    if (rest.length) layout.placed = rest; else delete layout.placed;
+    // The slots stay in slot order (the lap runs through them in that order).
+    const slotOf = (r) => Number(r.el?.closest?.('.k-cell')?.dataset.slot);
+    const after = slotRecs.findIndex((r) => slotOf(r) > i);
+    slotRecs.splice(after < 0 ? slotRecs.length : after, 0, rec);
+    dropEmptyLayers();
+    const base = savedBase();
+    if (base) {
+      const slots = Array.isArray(base.slots) ? [...base.slots] : [];
+      while (slots.length <= i) slots.push(null);
+      slots[i] = id;
+      const next = { ...base, slots };
+      const placed = (Array.isArray(base.placed) ? base.placed : []).filter((e) => e && e.id !== id);
+      if (placed.length) next.placed = placed; else delete next.placed;
+      saveLayout(next);
+    }
+    afterMove(id);
+    return { ok: true, place: 'slot', slot: i };
+  }
+  async function placePanel(id, q) {
+    const scan = typeof q.scan === 'boolean' ? q.scan : undefined;
+    const want = q.place;
+    if (want !== undefined && want !== 'overlay' && want !== 'slot') return { ok: false, reason: 'unknown place' };
+    if (slotRecs.some((r) => r.id === id)) {
+      if (want === 'overlay') return floatFromSlot(id, q, scan);
+      // A panel in a grid slot is always a stop in the lap; there is nothing else to change.
+      return want === 'slot' && scan === undefined ? { ok: true, place: 'slot' } : { ok: false, reason: 'in a slot' };
+    }
+    if (want === 'slot') return backToGrid(id);
+    const cur = placedMeta.get(id)?.entry;
+    if (!cur) return { ok: false, reason: 'not placed here' };
+    const entry = { ...cur };
+    if (want === 'overlay' && cur.place !== 'overlay') { entry.place = 'overlay'; delete entry.surface; delete entry.slot; }
+    if (scan !== undefined) entry.scan = scan;
+    return movePlaced(id, entry);
+  }
+  const offPlaceVerb = typeof bus?.subscribe === 'function' ? bus.subscribe(PLACE_REQUEST_TOPIC, (p) => {
+    const q = p && typeof p === 'object' ? p : null;
+    const id = q && typeof q.id === 'string' ? q.id : null;
+    if (!id || !layout) return;
+    if (!slotRecs.some((r) => r.id === id) && !placedRecs.some((r) => r.id === id)) return;   // not ours
+    try { q.claim?.(); } catch { /* nobody to tell */ }
+    Promise.resolve().then(() => placePanel(id, q)).catch((err) => {
+      console.error('arrangement: a panel asking to float', err);
+      return { ok: false, reason: 'error' };
+    }).then((r) => { try { q.reply?.(r); } catch { /* nobody to tell */ } });
+  }) : null;
 
   async function applyModules() {
     // Only the MODULES are torn down. Their state/events handles go with them, which is right:
@@ -1099,8 +1297,9 @@ export function createArrangement({
   // (Row 2.38: a placed module that is a DOOR is reported as type `opens`, so the router routes `select`
   // on it to the door -- see `syncDoor`. Nothing else reads the ring's types.)
   // (2026-10-02: and after the panels, the pieces of the dashboard's ROOM -- see "THE ROOM'S PIECES" below.)
+  // (Scoreboard item 5: only the panels IN the lap -- `ringRecs`, see `scanOff`.)
   const focusRing = () => (layout
-    ? [...panelRecs().map((r) => ({ id: r.id, type: doorOf(r.id) ? OPENS_TYPE : r.type })),
+    ? [...ringRecs().map((r) => ({ id: r.id, type: doorOf(r.id) ? OPENS_TYPE : r.type })),
        ...roomStops().map((s) => ({ id: s.id, type: ROOM_PIECE_TYPE }))]
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
@@ -1705,6 +1904,7 @@ export function createArrangement({
   // Every mounted record, and the links runner. The shell tears down everything else.
   function destroy() {
     try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
+    try { offPlaceVerb?.(); } catch { /* already gone */ }
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
     while (slotRecs.length) destroyRec(slotRecs.pop());

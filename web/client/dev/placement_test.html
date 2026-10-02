@@ -50,6 +50,9 @@ import { barModel, drawChips } from '../transport_bar.js';
 import { createVerbRouter } from '../input_router.js';
 import { MODULE_VERBS, verbTopic } from '../actions.js';
 import { ROOM_PIECE_TYPE, ROOM_PIECE_PRESS_TOPIC, ROOM_PIECE_PREFIX, ROOM_PANEL_ID } from '../arrangement.js';
+import { PLACE_REQUEST_TOPIC, PLACED_TOPIC } from '../arrangement.js';
+import { getManifest } from '../module.js';
+import '../modules/scoreboard.js';
 import { ROOM_TOPICS } from '../room_scene.js';
 
 const out = document.getElementById('results');
@@ -78,7 +81,7 @@ const M = {
 // The shell's hands, faked and recorded (the same shape arrangement_test uses).
 // `realRouter`: the input router itself (input_router.js) over the arrangement's ring, for the sections that
 // press through the switch's own path (verb/select -> the focused stop's topic).
-function make({ modules = [], failTypes = [], realRouter = false } = {}) {
+function make({ modules = [], failTypes = [], realRouter = false, layoutStore = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -114,6 +117,7 @@ function make({ modules = [], failTypes = [], realRouter = false } = {}) {
     watchRec: (rec) => { if (rec) log.watched.push(rec.id); return rec; },
     renderMods: () => { log.renders++; },
     runtime: () => ({ router }), health: () => ({ forget: (id) => log.forgot.push(id) }), profileId: () => 'scr',
+    ...(layoutStore ? { layoutStore } : {}),
   });
   arrRef = arr;
   arr.setProfile({ id: 'scr', modules });
@@ -713,6 +717,159 @@ try {
     ed.close();
     try { k.destroy(); } catch { /* gone */ }
     box.remove();
+  }
+
+  // =====================================================================================================
+  // Mike's list 09-30, Scoreboard item 5: "'Show as overlay' is one big counter for now -- a true floating
+  // overlay needs the dashboard to mount things in front." A panel can now ASK to float (`shell/place`): it
+  // leaves its slot without a remount, sits in the overlay layer, and -- when its module says so -- stays out of
+  // the switch lap until somebody chooses it in (`scan` on its placed entry).
+  section('9. *** a panel floats over the dashboard: placed, out of its slot, out of the switch lap unless chosen ***');
+  const SB = { id: 'sb1', type: 'scoreboard' };
+  {
+    check('scan is kept by layout.js as a yes/no; anything else is dropped',
+      normalizeLayout({ preset: 'full', slots: [], placed: [{ id: 't1', place: 'overlay', scan: false }, { id: 'w1', scan: 'yes' }] }, ['t1', 'w1'])
+        .placed.map((e) => J(e.scan)).join() === 'false,', J(normalizeLayout({ preset: 'full', slots: [], placed: [{ id: 't1', scan: false }, { id: 'w1', scan: 'yes' }] }, ['t1', 'w1'])));
+    const t = make({ modules: [M.p1, M.t1, M.w1, SB] });
+    await boot(t, { preset: 'side', slots: ['p1', 't1'], placed: [{ id: 'w1', place: 'overlay', x: 50, y: 10 }, { id: 'sb1', place: 'overlay', x: 14, y: 16 }] });
+    const ring = () => t.arr.focusRing().map((m) => m.id).join();
+    check('the scoreboard declares that, floating, it stays out of the lap', getManifest('scoreboard')?.overlayScan === 'skip');
+    check('*** a floating scoreboard is NOT a stop in the switch lap; another overlay still takes the scan first ***',
+      ring() === 'w1,p1,t1', ring());
+    check('...but it is still a panel of this dashboard (recFor, panelRecs: the bar and the menu reach it)',
+      t.arr.recFor('sb1')?.id === 'sb1' && t.arr.panelRecs().some((r) => r.id === 'sb1'));
+    check('...listed after the panels the lap does reach', t.arr.panelRecs().map((r) => r.id).join() === 'w1,p1,t1,sb1',
+      t.arr.panelRecs().map((r) => r.id).join());
+    check('focus starts on the first stop of the LAP', t.log.setFocus[0] === 'w1', t.log.setFocus.join());
+    t.focus(null);
+    check('focusedRec with nothing focused is the lap’s first, never the one out of it', t.arr.focusedRec()?.id === 'w1');
+
+    const t2 = make({ modules: [M.p1, SB] });
+    await boot(t2, { preset: 'full', slots: ['p1'], placed: [{ id: 'sb1', place: 'overlay', scan: true }] });
+    check('*** chosen into the scan (scan: true), it IS in the lap -- first, as any overlay is ***',
+      t2.arr.focusRing().map((m) => m.id).join() === 'sb1,p1', t2.arr.focusRing().map((m) => m.id).join());
+    const t3 = make({ modules: [M.p1, M.w1] });
+    await boot(t3, { preset: 'full', slots: ['p1'], placed: [{ id: 'w1', place: 'overlay', scan: false }] });
+    check('any overlay can be taken out of the lap (scan: false); with no say, an overlay is in it (Design’s rule, unchanged)',
+      t3.arr.focusRing().map((m) => m.id).join() === 'p1' && t3.log.setFocus[0] === 'p1');
+    const t4 = make({ modules: [SB] });
+    await boot(t4, { preset: 'full', slots: [null], placed: [{ id: 'sb1', place: 'overlay' }] });
+    check('a dashboard whose only panel is out of the lap focuses nothing, rather than it',
+      t4.arr.focusRing().length === 0 && !t4.log.setFocus.length, t4.log.setFocus.join());
+  }
+  {
+    let saved = { preset: 'side', slots: ['p1', 'sb1'] };
+    const saves = [];
+    const t = make({ modules: [M.p1, SB], layoutStore: { get: () => saved, save: (n) => { saved = n; saves.push(n); } } });
+    await boot(t, saved);
+    const told = [];
+    t.bus.subscribe(t.bus.instanceTopic('sb1', PLACED_TOPIC), (p) => told.push(p));
+    const ask = async (p) => {
+      let claimed = false, reply = null;
+      t.bus.publish(PLACE_REQUEST_TOPIC, { ...p, claim: () => { claimed = true; }, reply: (r) => { reply = r; } });
+      await settled(() => reply, 2000);
+      return { claimed, reply };
+    };
+    const rec = t.arr.recFor('sb1');
+    const mounts = t.log.mounts.length;
+    const cell = () => t.stageEl.querySelector('[data-slot="1"]');
+    const a = await ask({ id: 'sb1', place: 'overlay', x: 14, y: 16, w: 24, h: 26 });
+    check('*** the dashboard takes the request for its own panel ***', a.claimed && a.reply?.ok === true, J(a.reply));
+    check('*** floated IN PLACE: the same instance, nothing mounted, nothing destroyed ***',
+      t.arr.recFor('sb1') === rec && t.log.mounts.length === mounts && !t.log.destroyed.includes('sb1'));
+    check('it sits in the overlay layer', !!t.kioskEl.querySelector('.k-placed[data-place="overlay"]')?.contains(rec.el));
+    const w = wrapOf(t, 'sb1');
+    check('at the box it asked for (centre x/y, w/h, in % of the dashboard)',
+      w?.style.left === '14%' && w.style.top === '16%' && w.style.width === '24%' && w.style.height === '26%', w?.style.cssText);
+    check('*** it no longer takes a grid slot: the slot is empty, with nothing of it left behind ***',
+      t.arr.layout().slots.join() === 'p1,' && !cell().querySelector('.k-mod') && !cell().dataset.kind
+      && !cell().querySelector('.k-promote, .k-editc'), cell().outerHTML.slice(0, 200));
+    check('the arrangement lists it as placed', J(t.arr.placed()) === J([{ id: 'sb1', place: 'overlay', x: 14, y: 16, w: 24, h: 26 }]),
+      J(t.arr.placed()));
+    check('*** saved: the slot emptied, the panel placed ***', saves.length === 1 && saved.slots[1] === null
+      && saved.placed?.[0]?.id === 'sb1' && saved.placed[0].place === 'overlay', J(saved));
+    check('the panel is told where it is now', told.at(-1)?.place === 'overlay' && told.at(-1).scan === false, J(told.at(-1)));
+    check('*** out of the lap (the scoreboard’s say), the rest of the lap as it was ***',
+      t.arr.focusRing().map((m) => m.id).join() === 'p1', t.arr.focusRing().map((m) => m.id).join());
+
+    const s = await ask({ id: 'sb1', scan: true });
+    check('*** choosing the scan puts it in the lap, first ***', s.reply?.ok && t.arr.focusRing().map((m) => m.id).join() === 'sb1,p1');
+    check('...in place, saved, and told', t.arr.recFor('sb1') === rec && saved.placed?.[0]?.scan === true && told.at(-1)?.scan === true, J(saved));
+    // The edit view moves and scales a placed thing by applying a new placement (dashboard_editor.js keeps the
+    // keys it does not edit): the choice of scan rides along.
+    const mv = await t.arr.applyPlaced({ ...saved, placed: [{ ...saved.placed[0], x: 80, y: 70, scale: 150 }] });
+    check('*** moved and resized like any placed thing, in place, and still in the scan ***',
+      mv.applied && t.arr.recFor('sb1') === rec && wrapOf(t, 'sb1')?.style.left === '80%' && /scale\(1\.5\)/.test(wrapOf(t, 'sb1')?.style.transform)
+      && t.arr.placed()[0].scan === true, J(mv));
+    saved = { ...saved, placed: [{ ...saved.placed[0], x: 80, y: 70, scale: 150 }] };
+
+    const b = await ask({ id: 'sb1', place: 'slot' });
+    check('*** back: into the empty grid slot, the same instance ***',
+      b.reply?.ok && t.arr.recFor('sb1') === rec && cell().contains(rec.el) && cell().dataset.kind === 'scoreboard'
+      && t.log.mounts.length === mounts, J(b.reply));
+    check('...no longer placed; the overlay layer it left is gone', !t.arr.placed().length
+      && !t.kioskEl.querySelector('.k-placed[data-place="overlay"]'));
+    check('...the slots in their order, and in the lap again', t.arr.slotRecs.map((r) => r.id).join() === 'p1,sb1'
+      && t.arr.focusRing().map((m) => m.id).join() === 'p1,sb1');
+    check('...saved, and told', saved.slots[1] === 'sb1' && !(saved.placed || []).length && told.at(-1)?.place === 'slot', J(saved));
+    check('the cell has its corner again', !!cell().querySelector(':scope > .k-promote'));
+    const n = await ask({ id: 'nope', place: 'overlay' });
+    check('a panel that is not on this dashboard is not taken (another dashboard may own it)', !n.claimed);
+  }
+  {
+    const t = make({ modules: [M.p1, SB] });
+    await boot(t, { preset: 'full', slots: ['p1'], placed: [{ id: 'sb1', place: 'overlay', x: 20, y: 20 }] });
+    const rec = t.arr.recFor('sb1');
+    let reply = null;
+    t.bus.publish(PLACE_REQUEST_TOPIC, { id: 'sb1', place: 'slot', claim() {}, reply: (r) => { reply = r; } });
+    await settled(() => reply, 2000);
+    check('*** with no empty slot, "back" puts it flat on the screen, same box, same instance ***',
+      reply?.ok && t.arr.placed()[0]?.place === 'screen' && t.arr.recFor('sb1') === rec
+      && !!t.kioskEl.querySelector('.k-placed[data-place="screen"]')?.contains(rec.el), J(t.arr.placed()));
+  }
+  {
+    // End to end: a real scoreboard in a real dashboard (modules/view.js), pressed, floated, edited.
+    const store = new Map();
+    const mkState = (key) => ({ load: () => Promise.resolve(), get: () => store.get(key) || {},
+      set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); }, subscribe: () => () => {},
+      startPolling() {}, flush: () => Promise.resolve(), destroy() {} });
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:800px;height:450px';
+    document.getElementById('host').append(host);
+    const bus = createBus();
+    const inst = mountModule('view', {
+      mount: host, bus, rootBus: bus, viewId: 'dash9', arrangement: { id: 'dash9', modules: [M.p1, SB] }, user: 'u', personId: null,
+      makeState: (k) => mkState(`s:${k}`), makeEvents: () => ({ load: () => Promise.resolve(), get: () => ({ events: [] }), subscribe: () => () => {}, startPolling() {}, destroy() {} }),
+      storage: { getItem: () => null, setItem() {}, removeItem() {} }, state: mkState('dash'), embedded: true,
+      layoutOverride: { preset: 'side', slots: ['p1', 'sb1'] },
+    });
+    const v = inst.impl || inst;
+    await v.init();
+    const box = () => host.querySelector('[data-kind="scoreboard"], [data-placed="sb1"]');
+    const sb = () => host.querySelector('[data-sb]');
+    check('a real scoreboard is in the grid', !!sb() && !!host.querySelector('.k-cell[data-kind="scoreboard"] [data-sb]'));
+    sb().closest('.k-mod').querySelector('[data-act="add"]')?.click();
+    sb().closest('.k-mod').querySelector('[data-act="overlay"]')?.click();
+    const floated = await settled(() => host.querySelector('.k-placed[data-place="overlay"] [data-placed="sb1"] [data-sb][data-mode="float"]'), 3000);
+    check('*** pressing its "Show as overlay" floats it over the dashboard, drawn as the overlay ***', floated,
+      box()?.outerHTML.slice(0, 200));
+    check('...out of the grid, out of the lap', v.arrangement().layout().slots.join() === 'p1,'
+      && v.focusRing().map((m) => m.id).join() === 'p1', v.focusRing().map((m) => m.id).join());
+    const ed = v.edit();
+    check('*** the edit view lists it as a placed thing, as an overlay ***', ed.model.item('sb1')?.place === 'overlay', J(ed.model.items()));
+    const recSb = v.arrangement().recFor('sb1');
+    ed.model.select('sb1'); ed.model.set('x', 70); ed.model.set('scale', 140);
+    await sleep(0);
+    check('*** moved and resized in the edit view, in place ***', v.arrangement().recFor('sb1') === recSb
+      && host.querySelector('[data-placed="sb1"]')?.style.left === '70%' && /scale\(1\.4\)/.test(host.querySelector('[data-placed="sb1"]')?.style.transform || ''),
+      host.querySelector('[data-placed="sb1"]')?.style.cssText);
+    check('...and its lap choice is kept through the edit (still out)', v.focusRing().map((m) => m.id).join() === 'p1');
+    ed.close();
+    host.querySelector('[data-placed="sb1"] [data-act="unfloat"]')?.click();
+    check('*** its own "Back into the dashboard" puts it back in the grid as the whole board ***',
+      await settled(() => host.querySelector('.k-cell[data-kind="scoreboard"] [data-sb][data-mode="panel"]'), 3000));
+    v.destroy();
+    host.remove();
   }
 } catch (e) {
   check('the suite threw', false, String((e && e.stack) || e));
