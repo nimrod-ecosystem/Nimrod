@@ -1,8 +1,9 @@
 // automation_panel.js — THE SMALLEST EDITOR FOR automation.js: list what is driven, add, remove.
 //
-// Standalone on purpose. The edit windows (edit_model.js / edit_windows.js) belong to another piece
-// of work; this is a self-contained panel any page can mount, and the way it plugs into those
-// windows is one call (`mountAutomationPanel(el, {...})`) - see the report for row 2.41.
+// Standalone on purpose: a self-contained panel any page can mount (`mountAutomationPanel(el, {...})`).
+// The edit view reaches it as one of its windows (2026-10-02): edit_windows.js `mountAutomationWindow`
+// puts it in the same solid, Close-first shell, and dashboard_editor.js offers it as "Automation…" in
+// the Layers window whenever its host hands it the screen's engine.
 //
 // WHO IT IS FOR: the person SETTING UP a screen (a puzzle's author, a caregiver), with a keyboard
 // and a pointer. `settings_fields.js` draws that line itself: the one-switch rule binds what the
@@ -71,8 +72,10 @@ export function describeBinding(b, { panelTitle = null, settingLabel = null } = 
  *   panels   () => [{ id, title, manifest, instance? }] - the panels on this screen, read on every
  *            repaint so a panel added since is offered
  *   verbs    extra verb ids to suggest (a screen's custom verbs)
+ *   selected the panel id to start on (or a getter): the edit view passes the thing chosen in
+ *            Layers, so "Automation…" pressed with the sign chosen opens on the sign
  */
-export function mountAutomationPanel(root, { engine, panels = () => [], verbs = [] } = {}) {
+export function mountAutomationPanel(root, { engine, panels = () => [], verbs = [], selected = null } = {}) {
   if (!root || !engine) throw new Error('mountAutomationPanel: a root element and an engine are required');
   const verbIds = [...new Set([...VERBS, ...MEDIA_VERBS].map((v) => v.id).concat(verbs || []))];
   const listId = `auto-verbs-${Math.random().toString(36).slice(2, 8)}`;
@@ -141,6 +144,9 @@ export function mountAutomationPanel(root, { engine, panels = () => [], verbs = 
     kindSel.addEventListener('change', paintSource);
     curveSel.addEventListener('change', () => { peakBox.hidden = curveSel.value !== 'peak'; });
     peakBox.hidden = true;
+    let want = null;
+    try { want = typeof selected === 'function' ? selected() : selected; } catch { want = null; }
+    if (want && ps.some((p) => p.id === want)) panelSel.value = want;
     paintKeys();
     paintSource();
   }
@@ -221,6 +227,8 @@ export function mountAutomationPanel(root, { engine, panels = () => [], verbs = 
   return {
     /** Re-read the panels and the bindings (a panel was added, the list was loaded). */
     refresh() { const keep = panelSel?.value; paintForm(); if (keep && panelById(keep)) { panelSel.value = keep; paintKeys(); } paintList(); },
+    /** Put the form on one panel (the thing chosen elsewhere). False when it is not on this screen. */
+    select(id) { if (!id || !panelById(id)) return false; panelSel.value = id; paintKeys(); return true; },
     /** The form, for a test: fill it the way a person would and submit. */
     form,
     destroy() { root.innerHTML = ''; },

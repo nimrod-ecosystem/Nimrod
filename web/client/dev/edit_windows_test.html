@@ -718,6 +718,68 @@ section('row 2.38: the Map window, and several windows walked as one');
 }
 
 // =====================================================================
+section('row 2.41: Automation in the edit windows (the Layers window\'s way in, and the window itself)');
+{
+  const { createAutomation } = await import('../automation.js');
+  const { createBus } = await import('../bus.js');
+  const { mountAutomationWindow } = W;
+  check('mountAutomationWindow is exported', typeof mountAutomationWindow === 'function');
+  // Layers: offered only when the host can run it.
+  {
+    const m = fresh();
+    const w = mountLayersWindow(host, m);
+    check('*** no engine, no "Automation…" (nothing is offered that cannot work) ***', !q(w.el, 'more:automation'));
+    w.destroy();
+    let pressed = 0, open = false;
+    const w2 = mountLayersWindow(host, m, { onAutomation: () => { pressed++; open = !open; }, automationOpen: () => open });
+    const b = q(w2.el, 'more:automation');
+    check('*** with one: Layers has "Automation…", a button a switch reaches ***', !!b && /Automation/.test(b.textContent)
+      && w2.scanTargets().includes(b));
+    b.click();
+    check('pressing it asks the host to open it, and it shows pressed while open',
+      pressed === 1 && q(w2.el, 'more:automation').getAttribute('aria-pressed') === 'true');
+    w2.destroy();
+  }
+  // The window.
+  const bus = createBus();
+  const eng = createAutomation({ bus });
+  const LEVEL = { settings: [{ key: 'level', label: 'Level', kind: 'number', min: 0, max: 100, default: 50 },
+    { key: 'name', label: 'Name', kind: 'text', default: '' }] };
+  const base = { row: { level: 50 }, get() { return this.row; }, set(p) { this.row = { ...this.row, ...p }; return Promise.resolve(); }, subscribe: () => () => {} };
+  const st = eng.wrapState('lamp', base, { manifest: LEVEL });
+  const panels = () => [{ id: 'sign', title: 'The sign', manifest: LEVEL }, { id: 'lamp', title: 'The lamp', manifest: LEVEL }];
+  let threw = false;
+  try { mountAutomationWindow(host, {}); } catch { threw = true; }
+  check('an engine is required', threw);
+  let closes = 0;
+  const w = mountAutomationWindow(host, { engine: eng, panels, selected: () => 'lamp', onClose: () => closes++ });
+  const el = w.el;
+  check('*** a solid, NON-MODAL window titled Automation ***', el.getAttribute('role') === 'dialog'
+    && el.getAttribute('aria-modal') === 'false' && /Automation/.test(el.querySelector('h3').textContent));
+  check('the editor panel is inside it', !!el.querySelector('[data-automation-panel]'));
+  check('*** it opens on the thing chosen in Layers (the lamp) ***', el.querySelector('[data-a="panel"]').value === 'lamp');
+  check('Close is first in the walk', w.scanTargets()[0] === q(el, 'close'));
+  // Fill the form the way a person does, with Enter in the message box (the window must not eat it).
+  el.querySelector('[data-a="topic"]').value = 'room/light';
+  const enter = key('Enter', {}, el.querySelector('[data-a="topic"]'));
+  check('Enter in one of its boxes is not claimed by the window', !enter.defaultPrevented && host.contains(el));
+  w.panel.form.requestSubmit();
+  check('*** Add, inside the window, makes the binding on the engine ***',
+    eng.list().length === 1 && eng.list()[0].target.instance === 'lamp' && eng.list()[0].target.key === 'level', JSON.stringify(eng.list()));
+  bus.publish('room/light', 0.25);
+  check('...and it drives the setting', st.get().level === 25, String(st.get().level));
+  check('the window lists it', el.querySelectorAll('[data-binding]').length === 1);
+  const esc = key('Escape', {}, el.querySelector('[data-a="topic"]'));
+  check('*** Escape closes it, once, and is claimed ***', !host.contains(el) && esc.defaultPrevented && closes === 1);
+  check('closing the window does not remove the binding (it is the screen\'s)', eng.list().length === 1);
+  const w2 = mountAutomationWindow(host, { engine: eng, panels });
+  check('opened again, it lists what is driven', w2.el.querySelectorAll('[data-binding]').length === 1);
+  w2.destroy();
+  check('destroy takes it off the page', !host.querySelector('[data-automation-panel]'));
+  eng.destroy();
+}
+
+// =====================================================================
 section('destroy cleans up');
 {
   const m = fresh();

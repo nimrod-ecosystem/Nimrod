@@ -8,6 +8,7 @@
 //   mountSnapWindow(host, model, opts)         Snap to grid, Show grid, Snap to centre, Fine steps; grid size
 //   mountLayersWindow(host, model, opts)       top first; ▲ ▼ Shown/Hidden Lock per row; Undo … Delete
 //   mountTextEffectsWindow(host, model, opts)  Outline, Glow, Bevel, Emboss; the contrast line
+//   mountAutomationWindow(host, opts)          row 2.41: settings driven by something else (automation_panel.js)
 //
 // Each takes a model from `edit_model.js` and edits it ONLY through the model's methods, and
 // redraws when the model says something changed. So the thing being edited can be anything that
@@ -36,6 +37,8 @@ import {
 } from './edit_model.js';
 // Row 2.38: the map of the person's dashboards (the Map window).
 import { mapSvg, mapListForm, MAP_DEFAULTS } from './dashboard_map.js';
+// Row 2.41: the automation editor (the Automation window).
+import { mountAutomationPanel } from './automation_panel.js';
 
 function ensureStyles(doc) {
   if (!doc || doc.querySelector('link[data-edit-windows-css]')) return;
@@ -350,9 +353,13 @@ const ACTIONS = [['undo', 'Undo'], ['redo', 'Redo'], ['duplicate', 'Duplicate'],
 // place a hide is unmistakably somebody's own action, which is what the "mute it while hidden?"
 // question (hide_sound.js) waits for. Not called for undo/redo or for a change made through the model
 // directly: those are not a person pressing Hidden.
-export function mountLayersWindow(host, model, { onClose, onShownToggle } = {}) {
+// `onAutomation()` / `automationOpen()` (row 2.41): when the host can run automation it gets an
+// "Automation…" button here, below the edit actions -- Layers is the list of what is on the screen, and
+// the thing chosen in it is the one the Automation window opens on. Absent: no button.
+export function mountLayersWindow(host, model, { onClose, onShownToggle, onAutomation = null, automationOpen = () => false } = {}) {
   const afterColon = (k) => k.slice(k.indexOf(':') + 1);
-  return mountWindow(host, model, {
+  let w = null;
+  w = mountWindow(host, model, {
     kind: 'layers',
     title: 'Layers',
     subtitle: () => 'top first',
@@ -372,8 +379,14 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle } = {}) 
       const it = model.selected();
       const own = !!(it && !it.fixed);          // row 2.38: a room's own object is not copied or deleted here
       const can = { undo: model.canUndo(), redo: model.canRedo(), duplicate: own, copy: own, paste: model.hasClipboard(), remove: !!(own && !it.locked) };
+      let autoOpen = false;
+      try { autoOpen = !!automationOpen?.(); } catch { autoOpen = false; }
       return (rows || '<p class="ew-note">Nothing here yet.</p>')
-        + `<div class="ew-acts" role="group" aria-label="Edit">${ACTIONS.map(([a, l]) => btn(`act:${a}`, l, { disabled: !can[a] })).join('')}</div>`;
+        + `<div class="ew-acts" role="group" aria-label="Edit">${ACTIONS.map(([a, l]) => btn(`act:${a}`, l, { disabled: !can[a] })).join('')}</div>`
+        + (typeof onAutomation === 'function'
+          ? `<div class="ew-acts" role="group" aria-label="More">${btn('more:automation', 'Automation…', {
+            pressed: autoOpen, aria: 'Automation: settings driven by something else' })}</div>`
+          : '');
     },
     onAction(k) {
       const a = k.slice(0, k.indexOf(':'));
@@ -388,9 +401,57 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle } = {}) 
       }
       else if (a === 'lock') model.toggleLocked(id);
       else if (a === 'act' && ACTIONS.some(([x]) => x === id)) model[id]();
+      else if (a === 'more' && id === 'automation' && typeof onAutomation === 'function') {
+        try { onAutomation(); } catch (err) { console.error('edit_windows: automation', err); }
+        w?.render();
+      }
     },
     onClose,
   });
+  return w;
+}
+
+// ---------------------------------------------------------------------------------------
+// ROW 2.41: AUTOMATION -- "settings driven by something else" (automation.js), in the same shell as
+// every other window: solid, non-modal, Close first, Escape closes. Its inside is automation_panel.js,
+// unchanged: a form of native controls for the person SETTING UP a screen with a keyboard and a
+// pointer (that file argues why no switch walk is promised), so the walk's only stop here is Close --
+// the way out stays reachable by switch, which is the promise every window makes.
+//
+// It adds and removes BINDINGS through the engine and writes nothing itself: saving is the engine's
+// `onChange`, i.e. whatever the host that built the engine already does (the kiosk: the screen's
+// `automations` setting). So whoever could save a binding before this window existed can save one
+// here, and nobody else.
+//
+// opts:
+//   engine      the screen's createAutomation() (required)
+//   panels()    [{ id, title, manifest, instance? }] what is on the screen, read on every repaint
+//   selected    the panel id to open on (or a getter): the thing chosen in Layers
+//   verbs       extra verb ids to suggest
+// ---------------------------------------------------------------------------------------
+export function mountAutomationWindow(host, { engine, panels = () => [], selected = null, verbs = [], onClose } = {}) {
+  if (!engine) throw new Error('edit_windows: the Automation window needs the screen\'s automation engine');
+  // A model of one, as the Map's: the shell draws once, and the panel keeps its own form after that
+  // (a redraw would throw away what somebody is halfway through typing).
+  const shell = { subscribe() { return () => {}; } };
+  let panel = null;
+  const w = mountWindow(host, shell, {
+    kind: 'automation',
+    title: 'Automation',
+    subtitle: () => 'settings driven by something else',
+    body: () => '<div class="ew-auto" data-ew-auto></div>',
+    afterRender(el) {
+      try { panel?.destroy(); } catch { /* gone */ }
+      panel = mountAutomationPanel(el.querySelector('[data-ew-auto]'), { engine, panels, selected, verbs });
+    },
+    onClose,
+  });
+  // (The panel holds no subscription or timer of its own -- it reads the engine when it paints -- so the
+  // window's own destroy, which removes its element, is all the teardown it needs.)
+  Object.defineProperty(w, 'panel', { get: () => panel, enumerable: true });
+  /** Re-read the panels and the bindings (something was added to the screen meanwhile). */
+  w.refresh = () => { try { panel?.refresh(); } catch (err) { console.error('edit_windows: automation refresh', err); } };
+  return w;
 }
 
 // ---------------------------------------------------------------------------------------

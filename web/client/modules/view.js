@@ -575,6 +575,8 @@ function dashboardFactory(ctx) {
         hidePolicy: { personHid: (id) => ctx.hidePolicy?.personHid?.(id) },
         onClose: () => { if (editor === ed) editor = null; },
         onChange: () => changed(),
+        // The screen's automation engine, so Layers offers "Automation..." (edit_windows' automation window).
+        automation: typeof hostWrapState === 'function' ? (ctx.automation || null) : null,
       });
       editor = ed;
       changed();
