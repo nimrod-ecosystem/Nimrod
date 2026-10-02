@@ -26,7 +26,7 @@ import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
-  LISTING_WAIT_MS, SOURCE_RECHECK_MS,
+  LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { cacheGet, cacheSet } from '../cache.js';
@@ -392,7 +392,7 @@ registerModule(
       stallMs: videoStallMs,
       retries: 1,
       onRetry: () => { try { currentVideo?.play?.().catch(() => {}); } catch { /* gone */ } },
-      onGiveUp: () => { bus.publish('photos/next', undefined, OWN); },
+      onGiveUp: () => { if (countFailure()) return; bus.publish('photos/next', undefined, OWN); },
     });
 
     function clearAdvance() {
@@ -410,7 +410,90 @@ registerModule(
       // from a group-apply that has not been validated yet, must not turn the slideshow into
       // a strobe in front of somebody with a brain injury.
       const ms = Math.max(2000, Number(cfg.intervalMs) || DEFAULTS.intervalMs);
-      advanceTimer = setTimer(() => bus.publish('photos/next', undefined, OWN), ms);
+      advanceTimer = setTimer(() => { advanceTimer = null; if (stalled()) return; bus.publish('photos/next', undefined, OWN); }, ms);
+    }
+
+    // ---- a source that dies MID-SLIDESHOW (2026-10-02, the coordinator's follow-up to §3e) -------
+    // The listing in hand still names files, and every one of them fails: before this, the panel
+    // cycled broken images (or blank frames) for as long as nobody came by. Now:
+    //   * WHILE A PICTURE LOADS OR FAILS, THE LAST ONE THAT APPEARED STAYS UP over the gap (`render`),
+    //     so a broken picture is never what is on screen -- it is skipped, quietly, after one flash
+    //     period (failedItem).
+    //   * DOWN_AFTER_FAILURES (3) in a row -- pictures or clips erroring, or a picture still not there
+    //     when its turn is over and nothing has appeared for LISTING_WAIT_MS -- means the source is
+    //     down: it is set aside (`loadFailed`) and the panel lists again without it, which is exactly
+    //     what a source failing at load does: a stand-in, the last pictures kept, or the words.
+    //   * The 60 s recheck takes the chosen source back only when one of its pictures REALLY loads.
+    let loadFails = 0;
+    const loadFailed = new Set();   // sources whose files stopped loading; cleared by any ordinary reload
+    let shownSourceId = null;       // the source the pictures on screen came from (null: the last pictures)
+    let currentEl = null;           // the element for `currentId`
+    let lastGoodAt = Date.now();    // when a picture last really appeared
+    const downAfter = () => Number(ctx.downAfterFailures ?? DOWN_AFTER_FAILURES);
+
+    /** One more failure in a row. True when that makes the source down (and the panel has acted on it). */
+    function countFailure() {
+      loadFails += 1;
+      const n = downAfter();
+      if (!(n > 0) || loadFails < n) return false;
+      sourceDown();
+      return true;
+    }
+    function sourceDown() {
+      loadFails = 0;
+      clearAdvance();
+      if (shownSourceId) loadFailed.add(shownSourceId);
+      reload({ keepFailed: true });
+    }
+    // The picture whose turn just ended never arrived. Only counted once nothing at all has appeared for
+    // LISTING_WAIT_MS -- a slow picture over facility wifi is slow, not broken -- and then it is the
+    // same verdict as three errors: the source is not serving. (No timer of its own: the slideshow's
+    // own turn is the clock, so the held picture stays up meanwhile.)
+    function stalled() {
+      const el = currentEl;
+      if (!el || el.tagName !== 'IMG' || el.dataset.load !== 'loading') return false;
+      const wait = listingWaitMs();
+      if (!(wait > 0) || Date.now() - lastGoodAt < wait) return false;
+      if (keptMode) { keptFailed(currentId); return true; }
+      if (!(downAfter() > 0)) return false;
+      sourceDown();
+      return true;
+    }
+    function pictureAppeared(el, item) {
+      if (el !== currentEl) return;
+      el.dataset.load = 'good';
+      loadFails = 0; failStreak = 0;
+      lastGoodAt = Date.now();
+      dropHeld();
+      rememberSeen(item);
+    }
+    function pictureFailed(el, item) {
+      if (el !== currentEl) return;
+      el.dataset.load = 'bad';
+      if (keptMode) { keptFailed(item.id); return; }
+      if (countFailure()) return;
+      failedItem();
+    }
+    function dropHeld() { stage()?.querySelectorAll('[data-held]').forEach((n) => n.remove()); }
+    // The last picture that really appeared, to hold over the gap while the next one loads.
+    function goodPicture(st) {
+      return [...st.children].find((c) => c.tagName === 'IMG' && c.dataset.load === 'good') || null;
+    }
+    // Nothing more to show: keep a good picture that is up (frozen beats blank), drop anything else.
+    function keepOnlyGood() {
+      const st = stage();
+      if (!st) return;
+      clearAdvance();
+      const good = goodPicture(st);
+      st.innerHTML = '';
+      if (good) {
+        delete good.dataset.held; good.style.position = ''; good.style.inset = '';
+        st.append(good);
+        currentEl = good;
+      } else {
+        st.dataset.showing = '';
+        currentEl = null; currentId = null;
+      }
     }
 
     // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** A failed item used to move on
@@ -430,9 +513,13 @@ registerModule(
 
     function render(item) {
       lastShownAt = now();
-      if (item.kind !== 'video') failStreak = 0;   // a photo is shown for its interval: the run is over
+      // (A photo ends a failure run when it LOADS -- `pictureAppeared` -- not when it is asked for.)
       const st = stage();
       if (!st) return;
+      // THE LAST GOOD PICTURE STAYS UP WHILE THE NEXT ONE LOADS (see `stalled`): it is put back as the
+      // LATER child, laid over the stage, until a new picture appears (`dropHeld`). A picture that fails
+      // is therefore never what is on screen. The new element is still the stage's first child.
+      const held = item.kind === 'video' ? null : goodPicture(st);
       st.innerHTML = '';
       let el;
       if (item.kind === 'video') {
@@ -447,22 +534,24 @@ registerModule(
         // treated like an error - see failedItem. A one-second Live Photo still plays normally.
         const onEnded = () => {
           videoStall.disarm();
-          if (now() - shownAt >= failureFloorMs(flashLimit(ctx))) { failStreak = 0; bus.publish('photos/next', undefined, OWN); }
-          else failedItem();
+          if (now() - shownAt >= failureFloorMs(flashLimit(ctx))) { failStreak = 0; loadFails = 0; bus.publish('photos/next', undefined, OWN); }
+          else if (!countFailure()) failedItem();
         };
         // An explicit failure moves on after one flash period; a RUN of them backs off
-        // (flash_limit.js failureBackoffMs), so a folder of broken clips cannot spin.
-        const onError = () => { videoStall.disarm(); failedItem(); };
+        // (flash_limit.js failureBackoffMs), so a folder of broken clips cannot spin -- and
+        // DOWN_AFTER_FAILURES of them in a row is a source that has stopped serving (`countFailure`).
+        const onError = () => { videoStall.disarm(); if (!countFailure()) failedItem(); };
         const onBeat = () => videoStall.beat();
+        const onPlaying = () => { videoStall.beat(); loadFails = 0; lastGoodAt = Date.now(); };
         el.addEventListener('ended', onEnded);
         el.addEventListener('error', onError);
         el.addEventListener('timeupdate', onBeat);
-        el.addEventListener('playing', onBeat);
+        el.addEventListener('playing', onPlaying);
         videoEndOff = () => {
           el.removeEventListener('ended', onEnded);
           el.removeEventListener('error', onError);
           el.removeEventListener('timeupdate', onBeat);
-          el.removeEventListener('playing', onBeat);
+          el.removeEventListener('playing', onPlaying);
         };
         // Waiting for Start, or paused: the clip shows its first frame and waits (`carryOn` plays it).
         if (holding()) el.autoplay = false;
@@ -480,17 +569,26 @@ registerModule(
         // reader is noise. A plain category word is the honest thing to say about a picture
         // nobody has described.
         el.src = item.url; el.alt = item.name || 'Photo';
-        // A picture that really appeared is one the panel can fall back on (KEEP_LAST); one of those
-        // that no longer loads is dropped from the fallback and the slideshow moves on.
-        el.addEventListener('load', () => rememberSeen(item), { once: true });
-        el.addEventListener('error', () => keptFailed(item.id), { once: true });
+        // A picture that really appeared ends a failure run and is one the panel can fall back on
+        // (KEEP_LAST); one that fails is skipped quietly, and DOWN_AFTER_FAILURES in a row take the
+        // source down (`pictureFailed`).
+        el.dataset.load = 'loading';
+        const pic = el;
+        el.addEventListener('load', () => pictureAppeared(pic, item), { once: true });
+        el.addEventListener('error', () => pictureFailed(pic, item), { once: true });
       }
       el.style.objectFit = cfg.fit;
       el.className = 'shot';
       // Row 2.49: this device's colour grade (lut.js), OFF by default. With none chosen it does not
       // touch the element at all, so a photo shows exactly as it always has.
       applyGrade(el, item.kind === 'video' ? 'video' : 'photos');
+      currentEl = el;
       st.append(el);
+      if (held && held !== el) {
+        held.dataset.held = '1';
+        held.style.position = 'absolute'; held.style.inset = '0';
+        st.append(held);
+      }
       // Whether the panel has something to look at decides how a status message is drawn
       // — a corner chip over a photo, a full panel over nothing. See setStatus.
       st.dataset.showing = '1';
@@ -778,6 +876,12 @@ registerModule(
           const r = await listingWithin(resolveList, chosen, cfg.album,
             { accept: (l) => slideshowItems(l && l.items), waitMs: recheckMs(), setTimer, clearTimer });
           back = r.ok;
+          // A source whose FILES stopped loading is back only when one of them loads: its listing
+          // answering is what it was doing all along.
+          if (back && loadFailed.has(chosen.id)) {
+            const one = r.items.find((it) => it.kind === 'image') || r.items[0];
+            back = !!one && await (ctx.mediaLoads || mediaLoads)(one, { waitMs: recheckMs(), setTimer, clearTimer });
+          }
         }
       } catch { back = false; }
       if (seq !== loadSeq || !degraded || degraded.chosenId !== want) return;   // something else moved on
@@ -785,6 +889,9 @@ registerModule(
     }
     function applyListing(source, listing, album, fb = null) {
       keptMode = false;
+      shownSourceId = source.id;
+      loadFails = 0;
+      lastGoodAt = Date.now();
       useItems(slideshowItems(listing.items)   // songs in the same folder are not photos
         .map((it) => (it.sourceId ? it : { ...it, sourceId: source.id })));
       setLabel(`${source.label}${album ? ' · ' + album : ''} — ${items.length} item${items.length === 1 ? '' : 's'}`);
@@ -799,6 +906,9 @@ registerModule(
       const kept = keptPictures(sources);
       if (!kept.length) return false;
       keptMode = true;
+      shownSourceId = null;
+      loadFails = 0;
+      lastGoodAt = Date.now();
       useItems(kept);
       setLabel(`The last pictures seen — ${kept.length} item${kept.length === 1 ? '' : 's'}`);
       setStatus(null);
@@ -816,10 +926,7 @@ registerModule(
       seenDirty = true;
       if (!ids.length) {
         keptMode = false;
-        clearAdvance();
-        currentId = null;
-        const st = stage();
-        if (st) { st.innerHTML = ''; st.dataset.showing = ''; }
+        keepOnlyGood();
         if (lastFailure) sayFailure(lastFailure);
         return;
       }
@@ -886,8 +993,11 @@ registerModule(
       }
     }
 
-    async function reload() {
+    // `keepFailed`: a reload BECAUSE a source's files stopped loading keeps it set aside. Any other
+    // reload -- a Retry, a changed source or album, a person arriving, the recheck -- tries everything.
+    async function reload({ keepFailed = false } = {}) {
       const seq = ++loadSeq;
+      if (!keepFailed) loadFailed.clear();
       clearAdvance();
       clearRecheck();
       setStatus('Loading photos…');
@@ -910,7 +1020,7 @@ registerModule(
       const got = await listOrFallback({
         sources, chosen: source, chosenId, album: cfg.album, personId: personOf(ctx),
         resolve: resolveList, accept: (l) => slideshowItems(l && l.items),
-        waitMs: listingWaitMs(), setTimer, clearTimer,
+        waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
       });
       if (seq !== loadSeq) return;
       const cid = (source && source.id) || chosenId;
@@ -924,6 +1034,9 @@ registerModule(
       armRecheck();
       if (showKept(sources)) return;
       keptMode = false;
+      shownSourceId = null;
+      useItems([]);     // the failed source's files are not offered again by a "next"
+      keepOnlyGood();   // a picture that failed or never arrived does not stay up under the words
       await sayFailure(lastFailure);
     }
 
@@ -1068,7 +1181,8 @@ registerModule(
           help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
         return out;
       },
-      __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice() }),
+      __probe: () => ({ waiting, paused, currentId, degraded: !!degraded, keptMode, seen: seen.length, ids: ids.slice(),
+        loadFails, setAside: [...loadFailed], shownSourceId }),
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
       // a modules tab will want to read it off a module that is not even running - while the

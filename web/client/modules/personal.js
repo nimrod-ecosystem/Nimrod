@@ -58,7 +58,7 @@
 import { registerModule } from '../module.js';
 import {
   createMediaSourcesClient, resolveListing, listOrFallback, listingWithin, degradedLine, mayShowSource,
-  LISTING_WAIT_MS, SOURCE_RECHECK_MS,
+  LISTING_WAIT_MS, SOURCE_RECHECK_MS, DOWN_AFTER_FAILURES, mediaLoads,
 } from '../media_sources.js';
 import { personSources, personOf } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
@@ -174,6 +174,9 @@ registerModule(
     // chosen one every SOURCE_RECHECK_MS and goes back when it answers. Nothing is saved.
     let degraded = null;            // { chosenId, chosenLabel, err, shownLabel }
     let recheckTimer = null;
+    let clipFails = 0;               // clips in a row that failed (DOWN_AFTER_FAILURES; `countFailure`)
+    const loadFailed = new Set();    // sources whose clips stopped loading; cleared by any ordinary reload
+    let shownSourceId = null;
     const labels = {};
     const listingWaitMs = () => Number(ctx.listingWaitMs ?? LISTING_WAIT_MS);
     const recheckMs = () => Number(ctx.sourceRecheckMs ?? SOURCE_RECHECK_MS);
@@ -291,6 +294,7 @@ registerModule(
     // container that this segment is alive.
     function onPlaying() {
       failStreak = 0;               // a clip that plays ends a failure run (FAILURE BACKOFF)
+      clipFails = 0;                // ...and the "source is down" count
       stallReason = 'playing';
       setHeld(false);
       heartbeat();
@@ -330,9 +334,28 @@ registerModule(
       };
       // A clip that ENDS inside one flash period of appearing (zero-length, truncated) is a
       // failure, not a message: it takes the FAILURE BACKOFF. One that played is handled at once.
-      if (now() - shownAt < failureFloorMs(flashLimit(ctx))) { afterFailure(finish); return; }
+      if (now() - shownAt < failureFloorMs(flashLimit(ctx))) { if (!countFailure()) afterFailure(finish); return; }
       failStreak = 0;
+      clipFails = 0;
       finish();
+    }
+
+    // *** A SOURCE THAT DIES MID-RUN (2026-10-02, follow-up to §3e; photos.js has the long version). ***
+    // DOWN_AFTER_FAILURES clips in a row that error, stall out or end the instant they start means the
+    // source has stopped serving: it is set aside and the panel lists again without it -- a stand-in,
+    // or the words -- rather than handing the director broken clip after broken clip. A single broken
+    // clip is still skipped quietly. The recheck takes the chosen source back once a clip of it loads.
+    function countFailure() {
+      clipFails += 1;
+      const n = Number(ctx.downAfterFailures ?? DOWN_AFTER_FAILURES);
+      if (!(n > 0) || clipFails < n) return false;
+      clipFails = 0;
+      clearStall(); clearFailWait(); clearVideoEnd();
+      if (shownSourceId) loadFailed.add(shownSourceId);
+      // The director is told this segment is over, as any failed clip tells it; what plays next is its call.
+      bus.publish('segment/done', { provider: 'personal', reason: 'error' });
+      reload({ keepFailed: true });
+      return true;
     }
 
     // *** FAILURE BACKOFF (photosensitivity audit, 2026-09-30). *** An error handed back and
@@ -416,6 +439,7 @@ registerModule(
 
     function onClipError() {
       clearStall();
+      if (countFailure()) return;
       afterFailure(() => {
         bus.publish('segment/done', { provider: 'personal', reason: 'error' });
         if (cfg.autoAdvance && ids.length > 1) bus.publish('personal/next');
@@ -507,14 +531,20 @@ registerModule(
           const r = await listingWithin(ctx.resolveListing || resolveListing, chosen, cfg.album,
             { accept: videosOf, waitMs: recheckMs(), setTimer, clearTimer });
           back = r.ok;
+          // Set aside because its CLIPS stopped loading: back only when one of them loads for real.
+          if (back && loadFailed.has(chosen.id)) {
+            back = !!r.items[0] && await (ctx.mediaLoads || mediaLoads)(r.items[0], { waitMs: recheckMs(), setTimer, clearTimer });
+          }
         }
       } catch { back = false; }
       if (destroyed || seq !== loadSeq || !degraded || degraded.chosenId !== want) return;
       if (back) reload(); else armRecheck();
     }
 
-    async function reload() {
+    // `keepFailed`: only the reload a dead source triggers keeps it set aside (see photos.js).
+    async function reload({ keepFailed = false } = {}) {
       const seq = ++loadSeq;
+      if (!keepFailed) loadFailed.clear();
       clearVideoEnd();
       clearRecheck();
       setStatus('Loading messages…');
@@ -530,7 +560,7 @@ registerModule(
         const got = await listOrFallback({
           sources, chosen: chosenSource, chosenId, album: cfg.album, personId: personOf(ctx),
           resolve: ctx.resolveListing || resolveListing, accept: videosOf,
-          waitMs: listingWaitMs(), setTimer, clearTimer,
+          waitMs: listingWaitMs(), setTimer, clearTimer, skip: loadFailed,
         });
         if (seq !== loadSeq) return;
         const cid = (chosenSource && chosenSource.id) || chosenId;
@@ -545,6 +575,11 @@ registerModule(
           // (`shownLabel` null: nothing is standing in, so the caption claims nothing.)
           degraded = { chosenId: cid, chosenLabel: (chosenSource && chosenSource.label) || labels[cid] || null, err: got.failure, shownLabel: null };
           armRecheck();
+          // The failed source's clips are not offered again (a director's next gets "empty"), and
+          // no dead clip is left on the stage under the words.
+          items = ids = []; byId = {}; currentId = null; shownSourceId = null;
+          if (stage()) stage().innerHTML = '';
+          setName();
           if (chosenSource) { setStatus(`Source “${escapeHtml(chosenSource.label)}” unreachable`, true); return; }
           const mine = (sources || []).filter((x) => mayShowSource(x, personOf(ctx)));
           if (mine.length) {
@@ -578,6 +613,8 @@ registerModule(
         items = ids = []; byId = {}; return;
       }
       if (degraded) armRecheck(); else clearRecheck();
+      shownSourceId = source.id;
+      clipFails = 0;
       sourceLabel = source.label;
       // recorded PERSONAL videos: keep only video clips (audio-only messages are a later add)
       items = videosOf(listing);
@@ -644,6 +681,7 @@ registerModule(
           },
           onGiveUp: () => {
             setHeld(false);
+            if (countFailure()) return;   // the third clip in a row: the source is down, not the clip
             setStatus('That message wouldn\u2019t play. Moving on.');
             bus.publish('segment/done', { provider: 'personal', reason: 'timeout' });
             if (cfg.autoAdvance && ids.length > 1) bus.publish('personal/next');

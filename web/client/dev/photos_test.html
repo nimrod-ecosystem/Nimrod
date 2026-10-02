@@ -86,6 +86,11 @@ function check(name, cond, detail = '') {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const base = (u) => { try { return new URL(u).pathname.split('/').pop(); } catch { return u; } };
 const curSrc = () => { const el = document.querySelector('#host .stage')?.firstChild; return el ? el.src : null; };
+// A picture that REALLY LOADS. Rigs used `data:,x` as a stand-in picture, which the browser fails to
+// load -- harmless while a failed picture did nothing, but since 2026-10-02 a failed picture is skipped
+// and three in a row take the source down, so a rig that means "a working photo" must use one.
+const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
 
 (async () => {
   // *** FIRST, AND BEFORE ANY NETWORK CALL. ***
@@ -217,7 +222,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     const { GRADE_KEY, saveGrade, compileLut, parseCube, FILTER_ID } = await import('../lut.js');
     let saved = null;
     try { saved = localStorage.getItem(GRADE_KEY); localStorage.removeItem(GRADE_KEY); } catch { /* private */ }
-    const ITEMS = [1, 2, 3].map((i) => ({ id: 'g' + i, path: 'g' + i + '.jpg', name: 'g' + i, kind: 'image', url: 'data:,g' + i }));
+    const ITEMS = [1, 2, 3].map((i) => ({ id: 'g' + i, path: 'g' + i + '.jpg', name: 'g' + i, kind: 'image', url: OKPIC('g' + i) }));
     const host = document.createElement('div');
     host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
     document.body.append(host);
@@ -272,7 +277,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     section('two photos panels on one screen keep their own intervals');
     const bus = createBus();
     const ITEMS = [1, 2, 3, 4, 5, 6].map((i) => ({ id: 'p' + i, path: 'a/p' + i + '.jpg', name: 'p' + i,
-                                                 kind: 'image', url: 'data:,p' + i }));
+                                                 kind: 'image', url: OKPIC('p' + i) }));
     const source = { id: 'src-1', label: 'Test source', kind: 'agent', base_url: 'http://127.0.0.1:9' };
     function panel(id, intervalMs) {
       const host = document.createElement('div');
@@ -376,6 +381,9 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
         setTimer: (fn, ms) => { const t = { fn, ms, at: fakeNow + ms, live: true }; timers.push(t); return t; },
         clearTimer: (t) => { if (t) t.live = false; },
         videoStallMs: STALL, now: () => fakeNow,
+        // These checks are about the BACKOFF between failures, so "three in a row and the source is
+        // down" (DOWN_AFTER_FAILURES, its own section below) is turned off here.
+        downAfterFailures: 0,
         ...(limit !== undefined ? { flashLimitPerSecond: () => limit } : {}),
       });
       inst.init();
@@ -389,7 +397,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     // 1. PHOTOS: every photo gets exactly its interval, and nothing else is ever armed.
     section('photos: the slideshow\'s own timing is exactly what it was');
     {
-      const IMGS = [1, 2, 3, 4, 5].map((i) => ({ id: 'i' + i, path: 'i' + i + '.jpg', name: 'i' + i, kind: 'image', url: 'data:,i' + i }));
+      const IMGS = [1, 2, 3, 4, 5].map((i) => ({ id: 'i' + i, path: 'i' + i + '.jpg', name: 'i' + i, kind: 'image', url: OKPIC('i' + i) }));
       for (const L of [3, 1]) {
         const r = rigP(IMGS, { intervalMs: 8000, limit: L });
         await sleep(120);
@@ -461,7 +469,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
       fp.find((f) => f.key === 'autostart')?.default === true && fp.some((f) => f.key === 'autostartAlone'));
     check('...and Play / Pause are its verbs, so the bar’s one button and Space reach it',
       MODULE_VERBS.photos.play === 'photos/play' && MODULE_VERBS.photos.pause === 'photos/pause');
-    const IMGS = [1, 2, 3].map((i) => ({ id: 'w' + i, path: 'w' + i + '.jpg', name: 'w' + i, kind: 'image', url: 'data:,w' + i }));
+    const IMGS = [1, 2, 3].map((i) => ({ id: 'w' + i, path: 'w' + i + '.jpg', name: 'w' + i, kind: 'image', url: OKPIC('w' + i) }));
     const src = { id: 'src-1', label: 'Test source', kind: 'agent' };
     function rigS(seed = {}, extra = {}) {
       const bus = createBus();
@@ -566,7 +574,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
   {
     section('a mixed folder: the slideshow shows the photos and skips the songs');
     const names = ['a.jpg', 'song1.mp3', 'b.PNG', 'song2.m4a', 'c.webp', 'song3.flac', 'd.jpeg', 'voice.opus'];
-    const mixed = names.map((n) => ({ id: n, path: n, name: n, kind: kindOf(n), url: 'data:,' + n }));
+    const mixed = names.map((n) => ({ id: n, path: n, name: n, kind: kindOf(n), url: kindOf(n) === 'image' ? OKPIC(n) : 'data:,' + n }));
     check('PRECONDITION: the lister really does return the songs, as audio',
       mixed.filter((it) => it.kind === 'audio').length === 4, JSON.stringify(mixed.map((it) => it.kind)));
     const pure = slideshowItems([...mixed, { id: 'v', path: 'v.mp4', kind: 'video' }, { id: 'x', path: 'x' },
@@ -604,7 +612,8 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     const shown = () => p.host.querySelector('.stage')?.firstChild;
     for (let i = 0; i < 24; i++) {
       const el = shown();
-      if (el) seen.push(`${el.tagName.toLowerCase()}:${String(el.src).replace(/^data:,/, '')}`);
+      // A picture is named by its alt (its file name); anything else by what is left of its address.
+      if (el) seen.push(`${el.tagName.toLowerCase()}:${el.tagName === 'IMG' ? el.alt : String(el.src).replace(/^data:,/, '')}`);
       p.fire();
       await sleep(10);
     }
@@ -663,6 +672,9 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
       `<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${tag}</desc></svg>`);
     const itemsOf = (sid) => [1, 2, 3].map((i) => ({ id: `${sid}-${i}.jpg`, path: `${sid}-${i}.jpg`, name: `${sid} ${i}`,
       kind: 'image', url: pic(`${sid}-${i}`), sourceId: sid }));
+    const blobs = {};
+    const killFiles = (sid) => { for (const u of blobs[sid] || []) URL.revokeObjectURL(u); blobs[sid] = []; };
+    const streamUrls = [];
     function rigD({ sources, mode, seed = {}, personId = 'p1', instanceId = `ph-deg-${RUN}`, user = `${USER}-deg-${RUN}` }) {
       const host = document.createElement('div');
       host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
@@ -681,6 +693,22 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
           const m = mode[src.id] || 'up';
           if (m === 'hang') return new Promise(() => {});
           if (m === 'down') return Promise.reject(new Error(`${src.id} /list -> 502`));
+          // The listing answers, but the FILES are another matter (a source dying mid-slideshow):
+          //   'blob'      pictures that load until `killFiles` revokes them -- then every one fails;
+          //   'deadfiles' every file fails from the start;  'onebroken' one bad file among good ones;
+          //   'stream'    files that never finish arriving (an endless response: a hung agent).
+          if (m === 'blob' || m === 'deadfiles' || m === 'onebroken' || m === 'stream') {
+            const list = itemsOf(src.id).map((it, i) => {
+              let url = it.url;
+              if (m === 'blob') {
+                url = URL.createObjectURL(new Blob([decodeURIComponent(it.url.split(',')[1])], { type: 'image/svg+xml' }));
+                (blobs[src.id] ||= []).push(url);
+              } else if (m === 'deadfiles' || (m === 'onebroken' && i === 1)) url = `data:,dead-${src.id}-${i}`;
+              else if (m === 'stream') url = streamUrls.shift() || `data:,no-stream-${i}`;
+              return { ...it, url };
+            });
+            return Promise.resolve({ items: list, albums: [], album, count: 3 });
+          }
           return Promise.resolve({ items: itemsOf(src.id), albums: [], album, count: 3 });
         },
         setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
@@ -795,6 +823,126 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
         !nobody.probe().keptMode && !nobody.img(), JSON.stringify(nobody.probe()));
       nobody.done();
     }
+
+    // =========================== A SOURCE THAT DIES MID-SLIDESHOW ===========================
+    // (The coordinator, 2026-10-02: "a source that dies mid-slideshow, so broken images keep cycling.")
+    section('*** a source that dies mid-slideshow: no broken pictures, no cycle, a stand-in ***');
+    const next = (r) => r.host.querySelector('[data-next]').click();
+    const goodUp = (r) => !!r.host.querySelector('[data-stage] img[data-load="good"]');
+    const brokenOnTop = (r) => {
+      // What is SEEN is the last child laid over the stage (a held picture), else the first.
+      const st = r.host.querySelector('[data-stage]');
+      const top = st && (st.querySelector('[data-held]') || st.firstElementChild);
+      return !!top && top.tagName === 'IMG' && top.dataset.load !== 'good';
+    };
+    // 7. ONE BAD FILE: skipped quietly. The source is not taken down, nothing is said, and the bad
+    // picture is never what is on screen (the good one before it stays up over the gap).
+    {
+      const r = rigD({ sources: [S.mine, S.family], mode: { mine: 'onebroken' }, seed: { sourceId: 'mine' }, instanceId: `ph-one-${RUN}` });
+      await until(() => goodUp(r));
+      let sawBad = 0, badSeen = 0;
+      for (let k = 0; k < 14; k++) {
+        next(r);
+        await sleep(70);
+        if (r.probe().currentId === 'mine-2.jpg') { badSeen++; if (brokenOnTop(r)) sawBad++; }
+      }
+      check('PRECONDITION: the bad file came up', badSeen >= 1, String(badSeen));
+      check('*** ONE BAD FILE: never what is on screen -- the picture before it stays up ***', sawBad === 0, `${sawBad} of ${badSeen}`);
+      check('*** ...and it does not take the source down, or say anything ***',
+        !r.probe().degraded && r.probe().setAside.length === 0 && !r.status() && /Her albums —/.test(r.label()),
+        `${JSON.stringify(r.probe())} / ${r.status()} / ${r.label()}`);
+      r.done();
+    }
+    // 8. THE SOURCE DIES: its files stop loading. Three in a row: set aside, a stand-in, the chip.
+    {
+      const mode = { mine: 'blob' };
+      const r = rigD({ sources: [S.mine, S.family], mode, seed: { sourceId: 'mine' }, instanceId: `ph-die-${RUN}` });
+      check('PRECONDITION: the chosen source\'s pictures load', await until(() => goodUp(r) && /Her albums —/.test(r.label())), r.label());
+      killFiles('mine');
+      mode.mine = 'deadfiles';
+      let sawBad = 0;
+      for (let k = 0; k < 3; k++) { next(r); await sleep(90); if (brokenOnTop(r)) sawBad++; }
+      check('*** DIES: after three files in a row fail, the account\'s source stands in ***',
+        await until(() => /Family/.test(r.label())), `${r.label()} / ${JSON.stringify(r.probe())}`);
+      check('...the dead source is set aside', r.probe().setAside.includes('mine'), JSON.stringify(r.probe().setAside));
+      check('*** ...and it SAYS so, in the chip ***', /Showing “Family” — “Her albums” can’t be reached/.test(r.status()) && r.chip(), r.status());
+      check('*** ...no broken picture was ever on top while it worked that out ***', sawBad === 0, String(sawBad));
+      check('...the stand-in\'s pictures load', await until(() => goodUp(r)));
+      check('...nothing saved', savedSource(r).length === 0, JSON.stringify(r.sets));
+      // The recheck: the listing answers, but a file still does not load -- NOT back.
+      r.fire(RECHECK);
+      await sleep(150);
+      check('*** recheck while its files still fail: it is NOT taken back (a listing that answers proves nothing) ***',
+        /Family/.test(r.label()) && r.live(RECHECK) === 1, `${r.label()} / ${r.live(RECHECK)}`);
+      mode.mine = 'blob';
+      r.fire(RECHECK);
+      check('*** COMES BACK: once a picture of it really loads, the chosen source returns ***',
+        await until(() => /Her albums —/.test(r.label()) && !r.status()), `${r.label()} / ${r.status()}`);
+      check('...set-aside cleared, no more rechecks, nothing saved',
+        r.probe().setAside.length === 0 && r.live(RECHECK) === 0 && savedSource(r).length === 0);
+      r.done();
+    }
+    // 9. DIES, AND NOTHING CAN STAND IN: the last pictures kept (from an earlier run of this panel).
+    {
+      const inst = `ph-diekeep-${RUN}`;
+      const first = rigD({ sources: [S.mine], mode: { mine: 'up' }, seed: { sourceId: 'mine' }, instanceId: inst });
+      await until(() => first.probe().seen >= 1);
+      first.fire(8000); await until(() => first.probe().seen >= 2);
+      first.done();
+      const mode = { mine: 'blob' };
+      const r = rigD({ sources: [S.mine], mode, seed: { sourceId: 'mine' }, instanceId: inst });
+      await until(() => goodUp(r) && /Her albums —/.test(r.label()));
+      killFiles('mine'); mode.mine = 'deadfiles';
+      for (let k = 0; k < 3; k++) { next(r); await sleep(90); }
+      check('*** DIES, NO STAND-IN: the last pictures seen carry on, with the chip ***',
+        await until(() => r.probe().keptMode && goodUp(r)) && /Showing the last pictures — “Her albums”/.test(r.status()),
+        `${r.status()} / ${JSON.stringify(r.probe())}`);
+      check('...a slideshow over them (not a frozen frame), and it keeps asking after the source',
+        r.live(8000) >= 1 && r.live(RECHECK) === 1);
+      r.done();
+    }
+    // 10. DIES, NOTHING AT ALL: the words, the last good picture left up, and no cycle.
+    {
+      const mode = { mine: 'blob' };
+      const r = rigD({ sources: [S.mine], mode, seed: { sourceId: 'mine' }, instanceId: `ph-dienone-${RUN}` });
+      await until(() => goodUp(r));
+      killFiles('mine'); mode.mine = 'deadfiles';
+      for (let k = 0; k < 3; k++) { next(r); await sleep(90); }
+      check('*** DIES, NOTHING ELSE: it says the source is unreachable, with Retry ***',
+        await until(() => /unreachable/i.test(r.status())) && !!r.host.querySelector('[data-retry]'), r.status());
+      check('*** ...the last good picture stays up rather than a blank or a broken one ***', goodUp(r) && !brokenOnTop(r));
+      check('*** ...and NO CYCLE: no slideshow timer, nothing left to advance to ***',
+        r.live(8000) === 0 && r.probe().ids.length === 0, JSON.stringify({ t: r.live(8000), ids: r.probe().ids }));
+      next(r); await sleep(60);
+      check('...a press of next does not bring a dead file back', goodUp(r) && !brokenOnTop(r) && r.probe().ids.length === 0);
+      check('...and it keeps asking after the source', r.live(RECHECK) === 1);
+      r.done();
+    }
+    // 11. HUNG FILES: a picture that never finishes arriving, and nothing has appeared for the listing
+    // wait, is a source that is not serving. (Each file is an endless server response; needs the server.)
+    {
+      let ok = true;
+      try {
+        const { authHeaders } = await import('../auth.js');
+        for (let i = 0; i < 3; i++) {
+          const res = await fetch('/api/stream/ticket', { method: 'POST', headers: authHeaders(`${USER}-stream-${RUN}`) });
+          if (!res.ok) { ok = false; break; }
+          streamUrls.push(`/api/stream?t=${encodeURIComponent((await res.json()).ticket)}`);
+        }
+      } catch { ok = false; }
+      if (!ok) skip('a picture that never finishes arriving', 'no server to hold a response open');
+      else {
+        const r = rigD({ sources: [S.mine, S.family], mode: { mine: 'stream' }, seed: { sourceId: 'mine' }, instanceId: `ph-hung-${RUN}` });
+        await until(() => !!r.img());
+        await sleep(WAIT + 150);   // nothing has appeared for longer than the listing wait
+        check('PRECONDITION: the picture is still arriving', r.img()?.dataset.load === 'loading', r.img()?.dataset.load);
+        r.fire(8000);              // its turn is over
+        check('*** HUNG: a picture that never arrives (and nothing has for the wait) takes the source down: a stand-in ***',
+          await until(() => /Family/.test(r.label())) && r.probe().setAside.includes('mine'), `${r.label()} / ${JSON.stringify(r.probe())}`);
+        r.done();
+      }
+      streamUrls.length = 0;
+    }
   }
 
   // *** 15 SECONDS BY DEFAULT, AND A NEW PANEL STARTS FROM ONE ALREADY ON THE SCREEN. ***
@@ -874,7 +1022,7 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
       document.body.append(host);
       const live = createState({ url: profiles.stateURL(scr.id, a.id), user: USER, pollMs: 200 });
       await live.load();
-      const ITEMS = [1, 2, 3].map((i) => ({ id: 'd' + i, path: 'd' + i + '.jpg', name: 'd' + i, kind: 'image', url: 'data:,d' + i }));
+      const ITEMS = [1, 2, 3].map((i) => ({ id: 'd' + i, path: 'd' + i + '.jpg', name: 'd' + i, kind: 'image', url: OKPIC('d' + i) }));
       const inst = mountModule('photos', {
         mount: host, bus: createBus(), state: live, instanceId: a.id,
         events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },

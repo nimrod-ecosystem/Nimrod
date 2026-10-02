@@ -93,8 +93,10 @@ const registryAsks = () => asked.filter((u) => u.includes('/api/media-sources'))
 const unscoped = () => registryAsks().filter((u) => !u.includes('person_id='));
 const scopedTo = (pid) => registryAsks().filter((u) => u.includes(`person_id=${pid}`));
 // For the panels with a listing seam: no network, one image and one video per source.
+// Pictures that really load (a failed one is skipped since 2026-10-02, and three in a row take a source down).
 const fakeListing = async (src) => ({ album: '', albums: [],
-  items: ITEMS.filter((it) => it.kind !== 'audio').map((it) => ({ ...it, sourceId: src.id, url: `data:,${src.id}-${it.id}` })),
+  items: ITEMS.filter((it) => it.kind !== 'audio').map((it) => ({ ...it, sourceId: src.id,
+    url: it.kind === 'image' ? 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="4" height="3"><desc>${src.id}-${it.id}</desc></svg>`) : `data:,${src.id}-${it.id}` })),
   count: 2 });
 
 function mem(seed = {}) {
