@@ -2149,3 +2149,21 @@ says direction, not ruling.
     - At the easy end, step up at 90% right and step back at 75% wrong.
     - Harder levels get lower thresholds; Code proposes the curve.
     - All of them are settings with these defaults.
+
+## The landing is the dashboard itself, full screen; Profile replaces Photos; panels meet with no gaps -- 2026-10-02 (evening)
+
+Mike's rulings, logged by Code.
+
+1. **The site opens to the dashboard itself, filling the screen, not a dashboard drawn inside a web page.** *"It's
+   supposed to be a dashboard, not a dashboard on a webpage. The dashboard should be the whole screen."* Editing is
+   one press away. This supersedes the landing as built in 18bbc18, where "Start here" sat inside the Home page with
+   a heading and an edit toolbar.
+2. **Start here, clockwise from top left: Profile, Settings, Devices, Nimrod/AI.** *"I know I said photos before.
+   Changing it."* This supersedes Pictures in the top-left slot (2026-10-02, second set, item 3).
+3. **Panels take a full quarter each by default, with no gaps between them.** *"Why are there always gaps between
+   the modules? Can't they each take up a quarter?"* Space between panels becomes a setting whose default is none.
+4. **Direction:**
+   - Euphonia (a Whisper fine-tune on one's own voice) is offered as a link plus an easy hook-up, for Mike's own
+     use first.
+   - Furniture can be built from Nimrod bricks, with a merged version shown on dashboards that can be opened to
+     edit its bricks.
