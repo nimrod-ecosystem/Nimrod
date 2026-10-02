@@ -325,6 +325,30 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       ed.close();
       t.inst.destroy(); t.box.remove();
     }
+    // The last door taken off a room whose door was SAVED before this editing began (not undone within it):
+    // the editor itself must tidy the scene back to naming only its preset (room_doors.js tidyScene), or the
+    // room keeps a stale copy of the preset's recipe for ever and stops following the preset.
+    {
+      const pre = { kind: 'room', preset: 'study' };
+      const doored = withDoor(pre, 'desk', 'P');
+      const records = { RD: { id: 'RD', name: 'Study', modules: [{ id: 'dclk', type: 'clock' }] }, P: { id: 'P', name: 'Parlour', modules: [] } };
+      const seed = { RD: { settings: { kiosk: { layout: { preset: 'full', slots: [null], scene: doored,
+        placed: [{ id: 'dclk', place: 'scene', x: 66, y: 12, w: 12, h: 12 }] } } } } };
+      const host = sharedHost(records, seed);
+      const t = mountTop('RD', host);
+      await t.ready;
+      check('(setup) the study is drawn, its desk saved as a door', await settled(() => !!t.box.querySelector('.rs-item[data-id="desk"]'), 6000)
+        && J(sceneDoors(host.store.get('RD:settings').kiosk.layout.scene)) === '{"desk":"P"}');
+      const ed = t.v.edit();
+      check('(setup) the editor reads the saved door', ed.model.item('room:desk')?.opens === 'P', J(ed.model.item('room:desk')));
+      ed.model.select('room:desk');
+      ed.model.setLink('opens', null);
+      const saved = () => host.store.get('RD:settings')?.kiosk?.layout?.scene;
+      check('*** taking off the last SAVED door: the room is a preset room again (no stale recipe copy is saved) ***',
+        await settled(() => J(saved()) === J(pre), 3000), J(saved())?.slice(0, 160));
+      ed.close();
+      t.inst.destroy(); t.box.remove();
+    }
 
     // =================================================================================================
     section('5. the real screen: the edit view and the map BY SWITCH, both paths, nothing reloads');

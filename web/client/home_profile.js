@@ -337,6 +337,8 @@ export function cycleRoomRow(layout, key) {
 export function editBarModel({ live = false, thing = null, count = 0, canUndo = false, canRedo = false, tray = null } = {}) {
   const b = (act, label, extra = {}) => ({ act, label, ...extra });
   return [
+    // Its way out, FIRST and not dimmed (2026-10-02, the bar by switch): a stray select lands on it.
+    b('closebar', 'Close', { hint: 'put the edit bar away' }),
     b('scene', 'Scene', { expanded: tray === 'scene', disabled: !live, hint: 'the room or the scene behind everything' }),
     b('add', 'Add', { expanded: tray === 'add', disabled: !live, hint: 'put a module on' }),
     b('change', thing ? `Change: ${thing.title || thing.type}` : 'Choose a thing',
@@ -373,6 +375,53 @@ export function stepThing(things, id, dir) {
   const at = list.findIndex((t) => t.id === id);
   if (at < 0) return list[dir < 0 ? list.length - 1 : 0];
   return list[(at + dir + list.length) % list.length];
+}
+
+// =====================================================================================================
+// THE EDIT BAR BY SWITCH (2026-10-02). The bar and its trays are reachable by a SWITCH the way the settings
+// menu and the dashboards tray are: while the bar HOLDS THE SCAN (the kiosk's host seam, kiosk.js `host.scan`:
+// the panel router paused, one holder at a time) next / prev walk the stops that can act now, select presses
+// the one the cursor is on, and back leaves a tray, then the bar. Close is the first stop of the bar and of
+// each tray, so a stray select lands on the way out. A stop is an opaque key the page makes from a button;
+// this is only the walk, so it is checked without a page.
+// =====================================================================================================
+/** Which bar button a tray belongs to (the Switch tray is opened from Change). */
+export function trayOwner(tray) {
+  if (!tray) return null;
+  return tray === 'switch' ? 'change' : tray;
+}
+/** Where the cursor is in `list`: on `key`, else on the first stop (Close). */
+export function scanAt(list, key) {
+  const i = Array.isArray(list) ? list.indexOf(key) : -1;
+  return i < 0 ? 0 : i;
+}
+/**
+ * One switch verb on the edit bar. `state` { level: 'bar' | 'tray', key }; `view` { bar: [key], tray:
+ * [key] | null (no tray open), trayOf: key of the bar button whose tray is open }. Returns { state, press?,
+ * closeTray?, leave? }: `press` the key to press, `closeTray` put the tray away, `leave` leave the bar.
+ * Nothing that can act (a change running): the verb does nothing and the place is kept.
+ */
+export function editScanStep(state, verb, view = {}) {
+  const tray = Array.isArray(view.tray) && view.tray.length ? view.tray : null;
+  const bar = Array.isArray(view.bar) ? view.bar : [];
+  let level = state && state.level === 'tray' ? 'tray' : 'bar';
+  let key = state && state.key != null ? state.key : null;
+  // The tray went (its Close, a pointer, a finished change): the walk is back on its button on the bar.
+  if (level === 'tray' && !tray) { level = 'bar'; key = view.trayOf ?? null; }
+  const list = level === 'tray' ? tray : bar;
+  const s = { level, key };
+  if (verb === 'back') {
+    if (level === 'tray') return { state: { level: 'bar', key: view.trayOf ?? null }, closeTray: true };
+    return { state: s, leave: true };
+  }
+  if (!list.length) return { state: s };
+  const at = scanAt(list, key);
+  if (verb === 'next' || verb === 'prev') {
+    const n = list.length;
+    return { state: { level, key: list[(at + (verb === 'prev' ? -1 : 1) + n) % n] } };
+  }
+  if (verb === 'select') return { state: { level, key: list[at] }, press: list[at] };
+  return { state: s };
 }
 
 // =====================================================================================================

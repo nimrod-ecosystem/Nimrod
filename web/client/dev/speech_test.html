@@ -1323,6 +1323,17 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     feed('computer please close the menu');
     check('*** end to end: the cursor moves, clicks, the menu opens and closes, by voice ***',
       JSON.stringify(got) === JSON.stringify([['move', { dir: 'left', size: 'large' }], ['click'], ['settings'], ['close']]), JSON.stringify(got));
+    // Home's edit bar (2026-10-02): "edit bar" presses the SAME action a switch binds (shell/host/editbar),
+    // which the page answers by giving the bar the scan.
+    check('*** “edit bar” / “open the edit bar” / “edit my home” press Home’s edit bar action (the one a switch binds) ***',
+      ['edit bar', 'open the edit bar', 'show the edit bar', 'edit my home'].every((p) => routeAction(routeFor(p) || 'none') === 'shell/host/editbar')
+      && reg.has('shell/host/editbar'));
+    check('...and none of them is a verb (said in passing, it is not "select" or "back")',
+      ['edit bar', 'open the edit bar', 'edit my home'].every((p) => verbFor(p) === null));
+    const hosts = [];
+    bus.subscribe('shell/host', (p) => hosts.push(p?.act));
+    feed('computer please edit bar');
+    check('*** end to end: “computer please edit bar” says shell/host { act: editbar } ***', JSON.stringify(hosts) === '["editbar"]', JSON.stringify(hosts));
     sp.destroy(); input.destroy();
   }
 

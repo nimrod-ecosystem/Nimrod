@@ -2481,6 +2481,11 @@ const toTab = (m, id) => {
     const hp = await hProfiles.create('TEST-host-bar');
     await hProfiles.addModule(hp.id, 'photos');
     await hProfiles.addModule(hp.id, 'trivia');
+    {
+      // The edit view's wait (dashboard_nest.js EDIT_IDLE_KEY), short, so "nobody answering" is checked in time.
+      const st = createState({ url: hProfiles.stateURL(hp.id, 'settings'), user: hUser });
+      await st.load().catch(() => {}); st.set({ editIdleMs: 700 }); await st.flush(); st.destroy();
+    }
     const mem = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
     const presses = [];
     const subs = new Set();
@@ -2496,7 +2501,16 @@ const toTab = (m, id) => {
         { kind: 'item', id: 'home:save', label: 'Save', run: () => presses.push('menu-save') }],
       barHideMs: () => hideMs,
       subscribe(fn) { subs.add(fn); return () => { subs.delete(fn); }; },
+      // 2026-10-02: the page's own controls taking the switch (Home's edit bar).
+      scan: {
+        held: () => holding,
+        next: () => scanLog.push('next'), prev: () => scanLog.push('prev'), select: () => scanLog.push('select'),
+        back: () => { scanLog.push('back'); holding = false; },
+        release: () => { scanLog.push('release'); holding = false; },
+      },
     };
+    let holding = false;
+    const scanLog = [];
     const hb = document.createElement('div');
     hb.style.cssText = 'position:relative;width:680px;height:440px;margin:8px 0';
     document.body.append(hb);
@@ -2545,6 +2559,48 @@ const toTab = (m, id) => {
       check('the host is listened to by the bar and the menu', subs.size >= 2, String(subs.size));
       subs.forEach((fn) => fn());
       check('a host change redraws without throwing, the bar still carrying the host', !!hb.querySelector('.tb-bar .tb-host [data-host="save"]'));
+
+      // ---- the page's own controls HOLD THE SCAN (Home's edit bar, 2026-10-02) -------------------
+      // The tray's and the edit view's rule, for a page's controls: while they hold it, next / prev / select /
+      // back are theirs, the panel router is paused, and one thing holds the scan at a time.
+      {
+        const { verbTopic } = await import('../actions.js');
+        const held = () => hk.hostScanHeld?.() === true;
+        const paused = () => hk.runtime.router.isPaused();
+        hk.menu.open();
+        await settled(() => hk.menu.isOpen(), 1000);
+        holding = true; subs.forEach((fn) => fn());
+        check('*** the page takes the scan: the menu is put away (one holder at a time) and the panel router is paused ***',
+          await settled(() => !hk.menu.isOpen() && held() && paused(), 1500), `menu=${hk.menu.isOpen()} held=${held()} paused=${paused()}`);
+        hbus.publish(verbTopic('next')); hbus.publish(verbTopic('prev')); hbus.publish(verbTopic('select'));
+        check('*** next / prev / select go to the page’s controls, and nothing else answers them (the menu stays shut) ***',
+          scanLog.join() === 'next,prev,select' && !hk.menu.isOpen() && paused(), scanLog.join());
+        hbus.publish(verbTopic('back'));
+        check('*** back goes to the page too; when it lets go, the scan is given back to the panels ***',
+          scanLog.at(-1) === 'back' && await settled(() => !held() && !paused(), 1500), `${scanLog.join()} held=${held()} paused=${paused()}`);
+        hbus.publish(verbTopic('next'));
+        check('not holding: the page hears nothing', scanLog.length === 4, scanLog.join());
+        holding = true; subs.forEach((fn) => fn());
+        await settled(held, 1000);
+        hbus.publish(verbTopic('menu'));
+        check('*** the menu opening (the Menu verb) takes the scan back: the page is told to let go ***',
+          await settled(() => hk.menu.isOpen() && !held() && scanLog.at(-1) === 'release', 1500) && paused(), scanLog.join());
+        hk.menu.close();
+        await settled(() => !paused(), 1000);
+        holding = true; subs.forEach((fn) => fn());
+        await settled(held, 1000);
+        check('*** nobody answering: after the edit view’s own wait (editIdleMs, a setting) the page is told to let go, and the switch is the panels’ again ***',
+          await settled(() => !held() && scanLog.at(-1) === 'release' && !paused(), 4000), `${scanLog.join()} held=${held()} paused=${paused()}`);
+        holding = true; subs.forEach((fn) => fn());
+        await settled(held, 1000);
+        const n = scanLog.length;
+        hk.openEditView();
+        check('*** the edit windows opening take the scan from the page too ***',
+          await settled(() => !!hk.editView() && hk.editScanHeld() && !held() && scanLog.at(-1) === 'release', 1500), scanLog.slice(n).join());
+        hk.closeEditView();
+        await settled(() => !paused(), 1000);
+        holding = false;
+      }
 
       // ---- full screen: the placed bar tucks itself away, anything brings it back ----------------
       const tucked = () => bar.dataset.tucked === '1' && bar.style.visibility === 'hidden';

@@ -296,6 +296,12 @@ try {
     check('...showing its current value', m.find((i) => i.act === 'set:keepVersions').hint === '50 saved versions');
     check('...then Show the welcome again, and Nimrod’s walk (Show me how) — reachable by a switch, being menu rows',
       ids.includes('rewelcome') && ids.at(-1) === 'cat');
+    check('*** "Edit bar…" is a menu row: how a switch walking the menu gets to the edit bar (it then takes the scan) ***',
+      ids.includes('editbar') && ids.indexOf('editbar') === ids.indexOf('switch') + 1
+      && m.find((i) => i.act === 'editbar').disabled === true
+      && homeMenuModel({ target: { live: true, kind: 'home' }, canEdit: true }).find((i) => i.act === 'editbar').disabled === false
+      && homeMenuModel({ target: { live: true, kind: 'home' }, canEdit: true, busy: true }).find((i) => i.act === 'editbar').disabled === false,
+      ids.join());
     check('*** "Start from an example…" is a menu row too (the examples are up front on the page; this is how a switch gets back to them) ***',
       ids.includes('examples') && ids.indexOf('examples') > ids.indexOf('history'));
     check('an example not made yet says Save makes it', homeStatusText({ target: { live: false, kind: 'example' } }) === 'Not made yet — Save makes it');
