@@ -421,6 +421,13 @@ const toTab = (m, id) => {
         lapStops.length === 14 && oldStops.length === 34 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
+      // (2026-10-02, deliberately UNCHANGED: "Font on this device" / "Colour look" are rows of "Settings for:
+      // This device" (kiosk.js `deviceLookRows`), not of this panel's tab or any tab of the panel's menu, so the
+      // lap stays 14 and the old rows 34. "In the switch scan" is only on a PLACED panel; this stage's are not.
+      // Both are walked in their own section at the end of this suite.)
+      check('the device\'s font and look rows, and "In the switch scan", are not in the panel\'s menu (lap unchanged)',
+        !kiosk.menu.items().some((i) => /^uf:/.test(i.id) || i.id === 'scan-lap'),
+        kiosk.menu.items().filter((i) => /^uf:/.test(i.id) || i.id === 'scan-lap').map((i) => i.id).join());
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
       check('...and Home is 12 presses from where the menu opens (was 25)', homeAt === 12, String(homeAt));
@@ -3768,6 +3775,131 @@ const toTab = (m, id) => {
     proot.remove();
   } catch (e) {
     check('the room-piece / swapped-room section threw', false, String((e && e.stack) || e));
+  }
+
+  // *** 2026-10-02: TWO SWITCH-ACCESS GAPS, CLOSED. ***
+  // (1) A panel placed freely can be left OUT of the switch lap (c93a1ec: `scan: false`, or `overlayScan: 'skip'`
+  //     as the floating scoreboard declares). The only way back in was a button on the panel itself, which a
+  //     switch cannot reach while the panel is out of the lap. Now "Settings for" (which reaches every panel)
+  //     gives it a row: "In the switch scan: yes / no", written through `shell/place` like the panel's button.
+  // (2) "Font on this device" and "Colour look" (1392018 / b8d918e) lived only on the "Your own folders" page,
+  //     pointer and keyboard only. Now they are rows of "Settings for: This device", on the same storage and
+  //     write path; with nothing found, each row is dimmed and says why - never hidden.
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const writeSettings = async (screen, patch) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load(); st.set(patch); await st.flush(); st.destroy();
+    };
+    const readSettings = async (screen) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load().catch(() => {}); const v = { ...(st.get() || {}) }; st.destroy(); return v;
+    };
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    // In-memory folders (the user_folders suite's own fakes): no picker, no prompt, no files.
+    const isDir = (v) => v && typeof v === 'object' && !(v instanceof Uint8Array);
+    const fakeFile = (name, tree) => ({ kind: 'file', name, async getFile() { return new File([tree[name]], name, { lastModified: 1 }); } });
+    const fakeDir = (name, tree) => ({
+      kind: 'directory', name, tree,
+      async getDirectoryHandle(n) { if (!isDir(tree[n])) throw new DOMException('not found', 'NotFoundError'); return fakeDir(n, tree[n]); },
+      async getFileHandle(n) { if (!(n in tree) || isDir(tree[n])) throw new DOMException('not found', 'NotFoundError'); return fakeFile(n, tree); },
+      async *entries() { for (const k of Object.keys(tree)) yield [k, isDir(tree[k]) ? fakeDir(k, tree[k]) : fakeFile(k, tree)]; },
+      async queryPermission() { return 'granted'; }, async requestPermission() { return 'granted'; },
+    });
+    const memStore = () => { const m = new Map(); return { m, get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); return true; }, del: async (k) => m.delete(k) }; };
+    const memStorage = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+    class FakeFace { constructor(family) { this.family = family; } async load() { return this; } }
+    const fontSet = { add() {} };
+    const store = memStore();
+    const storage = memStorage();
+
+    const S = await profiles.create('TEST-switch-gaps');
+    const sPhotos = await profiles.addModule(S.id, 'photos');
+    const sb = await profiles.addModule(S.id, 'scoreboard');
+    await writeSettings(S, { kiosk: { layout: { preset: 'full', slots: [sPhotos.id],
+      placed: [{ id: sb.id, place: 'overlay', x: 14, y: 16, w: 24, h: 26 }] } } });
+    const groot = document.createElement('div');
+    groot.style.cssText = 'position:relative;width:900px;height:560px';
+    document.body.append(groot);
+    const gk = await mountKiosk(groot, { user: USER, profileId: S.id, profiles, bus: createBus(), reloadPage: () => {},
+      deviceLooks: { store, storage, fontSet, FontFaceImpl: FakeFace } });
+    await sleep(200);
+    const inRing = () => gk.focusRing().some((s) => s.id === sb.id);
+    const row = (id) => gk.menu.items().find((r) => r.id === id) || null;
+
+    // ---- (1) IN THE SWITCH SCAN ----
+    check('(setup) the floating scoreboard starts OUT of the switch lap (overlayScan skip)',
+      await settled(() => gk.focusRing().some((s) => s.id === sPhotos.id) && !inRing(), 4000), JSON.stringify(gk.focusRing()));
+    gk.menu.open();
+    check('*** "Settings for" reaches the out-of-lap panel ***', gk.menu.setSubject(sb.id) === sb.id, gk.menu.subjectId());
+    check('*** its tab has "In the switch scan: no" ***', row('scan-lap')?.label === 'In the switch scan: no'
+      && row('scan-lap')?.tab === 'module' && !row('scan-lap')?.disabled, JSON.stringify(row('scan-lap')));
+    gk.menu.showTab('module'); gk.menu.focusRow('tabs');
+    const walk = [];
+    for (let i = 0; i < 40; i += 1) { const id = gk.menu.focusId(); if (walk.includes(id)) break; walk.push(id); gk.menu.next(); }
+    check('*** ...and it is a stop on the one-switch walk of that tab ***', walk.includes('scan-lap'), walk.join(','));
+    gk.menu.focusRow('scan-lap'); gk.menu.select();
+    check('*** pressed: the panel is IN the lap now, and the row says yes ***',
+      await settled(() => inRing() && row('scan-lap')?.label === 'In the switch scan: yes', 4000),
+      `${inRing()} ${row('scan-lap')?.label} ${row('scan-lap')?.hint}`);
+    check('*** ...written to the layout entry, as the panel\'s own button writes it (shell/place) ***',
+      gk.slotLayout()?.placed?.find((e) => e.id === sb.id)?.scan === true, JSON.stringify(gk.slotLayout()?.placed));
+    check('...and saved to the screen', await pollAsync(async () => (await readSettings(S)).kiosk?.layout?.placed?.find((e) => e.id === sb.id)?.scan === true));
+    gk.menu.focusRow('scan-lap'); gk.menu.select();
+    check('pressed again: out of the lap, and the row says no', await settled(() => !inRing() && row('scan-lap')?.label === 'In the switch scan: no', 4000),
+      `${inRing()} ${row('scan-lap')?.label}`);
+    gk.menu.setSubject(sPhotos.id);
+    check('a panel in a grid slot has no such row (it is always in the lap)', !row('scan-lap'), JSON.stringify(row('scan-lap')));
+
+    // ---- (2) FONT AND COLOUR LOOK ON THIS DEVICE ----
+    gk.menu.setSubject('level:device');
+    check('(setup) "Settings for: This device"', gk.menu.tabs()[0]?.label === 'This device', JSON.stringify(gk.menu.tabs()[0]));
+    check('*** nothing on this device: "Font on this device" is shown DIMMED, saying why ***',
+      await settled(() => row('uf:font')?.disabled === true && /no fonts on this device yet/.test(row('uf:font')?.hint || ''), 4000),
+      JSON.stringify(row('uf:font')));
+    check('*** ...and "Colour look" too ***', row('uf:look')?.disabled === true && /no colour looks/.test(row('uf:look')?.hint || '')
+      && row('uf:look')?.label === 'Colour look', JSON.stringify(row('uf:look')));
+    // A Nimrod folder with fonts and looks appears; the menu reads the folders again when it next opens.
+    const lutTree = { 'Broken.cube': 'hello', 'Cool.cube': 'TITLE "Cool"\nLUT_1D_SIZE 2\n0 0 0.1\n0.9 1 1\n',
+      'Warm.cube': 'TITLE "Warm evening"\nLUT_1D_SIZE 2\n0.1 0 0\n1 0.9 0.8\n' };
+    const fontTree = {};
+    for (const f of ['Lexend-Regular.ttf', 'Atkinson-Hyperlegible-Regular.ttf', 'OpenDyslexic.otf', 'Inter.ttf', 'Comic-Neue.ttf', 'Merriweather.ttf']) fontTree[f] = new Uint8Array([1]);
+    await store.put('root', fakeDir('Nimrod', { fonts: fontTree, luts: lutTree }));
+    gk.menu.close();
+    gk.menu.open();
+    gk.menu.setSubject('level:device');
+    check('*** reopened: the font row is a live choice of the theme\'s own and six families ***',
+      await settled(() => row('uf:font') && !row('uf:font').disabled && row('uf:font').choice?.options?.length === 7, 4000),
+      JSON.stringify(row('uf:font') && { d: row('uf:font').disabled, n: row('uf:font').choice?.options?.length, h: row('uf:font').hint }));
+    check('the look row: None and three files', !row('uf:look')?.disabled && row('uf:look')?.choice?.options?.length === 4);
+    gk.menu.showTab('module'); gk.menu.focusRow('tabs');
+    const dwalk = [];
+    for (let i = 0; i < 40; i += 1) { const id = gk.menu.focusId(); if (dwalk.includes(id)) break; dwalk.push(id); gk.menu.next(); }
+    check('*** both are stops on the one-switch walk of This device ***', dwalk.includes('uf:font') && dwalk.includes('uf:look'), dwalk.join(','));
+    // Seven options: a press OPENS the choice picker (the person chooses by pointing, the default).
+    gk.menu.focusRow('uf:font'); gk.menu.select();
+    const tile = groot.querySelector('[data-choice-page] [data-chp-pick="Lexend"]');
+    check('*** a long list opens the choice picker, which a switch scans ***', !!tile, groot.querySelector('[data-choice-page]')?.innerHTML?.slice(0, 200));
+    tile?.click();
+    check('*** chosen: stored on this device by family name, the same key the folders page writes ***',
+      await settled(() => JSON.parse(storage.getItem('nimrod.userFont.device') || 'null')?.family === 'Lexend', 3000),
+      storage.getItem('nimrod.userFont.device'));
+    check('...and the row says so', await settled(() => /Lexend/.test(row('uf:font')?.hint || ''), 3000), row('uf:font')?.hint);
+    // Four options: a press STEPS -- past a file that cannot be read, to the next that can.
+    gk.menu.focusRow('uf:look'); gk.menu.select();
+    const grade = () => JSON.parse(storage.getItem('nimrod.colourGrade.device') || 'null');
+    check('*** "Colour look" stepped past Broken.cube to Cool.cube, and says which was skipped ***',
+      await settled(() => grade()?.file === 'Cool.cube' && /Broken\.cube/.test(row('uf:look')?.hint || ''), 4000),
+      `${JSON.stringify(grade() && grade().file)} ${row('uf:look')?.hint}`);
+    check('*** a look in force: its photos / videos / wallpaper switches are rows too ***',
+      ['uf:look:photos', 'uf:look:video', 'uf:look:wallpaper'].every((id) => row(id) && !row(id).disabled), gk.menu.items().map((r) => r.id).join());
+    gk.menu.focusRow('uf:look:video'); gk.menu.select();
+    check('a switch row writes the same grade', await settled(() => grade()?.targets?.video === true, 3000), JSON.stringify(grade()?.targets));
+    gk.menu.close();
+    gk.destroy();
+    groot.remove();
+  } catch (e) {
+    check('the switch-access gaps section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');

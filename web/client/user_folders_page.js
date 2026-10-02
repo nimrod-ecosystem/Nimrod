@@ -35,9 +35,11 @@
 //     on screen at once (`refreshGrade`); a look whose file is gone goes back to None, quietly.
 //   * Fonts load as soon as the page opens and after any folder change here - not at the next start.
 // These two rows are ordinary choices with no browser dialog behind them, so unlike the folder buttons
-// they COULD be walked by a switch; they are still on this pointer page because that is where the files
-// they choose from are shown. A long list opens the choice picker (more than five, settings_fields.js
-// `opensPicker`, with the person's "How you choose things"); a short one steps, as everywhere.
+// they CAN be walked by a switch - and they are, in the kiosk's menu (2026-10-02, `createDeviceLookRows`
+// below: "Settings for: This device"), on the same storage and the same write path. They stay on this
+// pointer page too because that is where the files they choose from are shown. A long list opens the
+// choice picker (more than five, settings_fields.js `opensPicker`, with the person's "How you choose
+// things"); a short one steps, as everywhere.
 //
 // Everything is injectable (`view` for the picker, `store` for remembered handles, `storage`/`fontSet`
 // for the choices), so the suite drives it against in-memory folders with no prompt.
@@ -180,6 +182,187 @@ export function choiceFields(c) {
 const choiceValues = (c) => ({ font: c.font.value, look: c.look.value,
   ...Object.fromEntries(GRADE_TARGETS.map((t) => [`look:${t}`, !!c.look.grade?.targets?.[t]])) });
 const choiceItems = (c) => fieldItems(choiceFields(c), { values: () => choiceValues(c), level: 'advanced', idPrefix: 'uf:' });
+
+// ---------------------------------------------------------------------------------------------
+// ONE WRITE PATH for the two choices, whether this page or the menu's rows (below) made it, and whether
+// a press stepped them or the list chose.
+// ---------------------------------------------------------------------------------------------
+// The looks folder's files by name, read when one is chosen (never prompts).
+async function lookHandlesIn({ store, names }) {
+  try {
+    const k = await kindFolder('luts', { store, names });
+    return new Map(k.dir ? (await listFiles(k.dir, ['cube'])).map((f) => [f.name, f.handle]) : []);
+  } catch { return new Map(); }
+}
+
+// A LOOK CHOSEN. A file that cannot be read leaves the look as it was and says why. STEPPING (a press,
+// not the list) moves on past such a file to the next one that can be read, so one broken file can
+// never be a wall a switch cannot get past; it stops where it started (`start`), or at None.
+// Resolves the sentence to show ('' when there is nothing to say).
+async function chooseLookValue(value, { storage, store, names, field = null, stepping = false, start = NO_LOOK }) {
+  const prev = readGrade(storage);
+  const handles = await lookHandlesIn({ store, names });
+  const targets = prev ? prev.targets : FIRST_LOOK_TARGETS;
+  const skipped = [];
+  let v = value;
+  const most = Math.max(1, field?.options?.length || 1);
+  for (let i = 0; i < most; i++) {
+    if (v === NO_LOOK) { clearGrade(storage); break; }
+    if (v === KEPT_LOOK || (prev && v === prev.file && !handles.has(v))) break;   // the kept one: nothing to read
+    const h = handles.get(v);
+    const r = h ? await gradeFromFile(h, storage, { targets }) : { ok: false, why: 'it is not in the folder any more' };
+    if (r.ok) break;
+    skipped.push({ name: v, why: r.why });
+    if (!stepping || !field) break;
+    v = stepValue(field, v, 1);
+    if (v === start) break;
+  }
+  refreshGrade({ storage });
+  if (!skipped.length) return '';
+  return skipped.map((x) => `${x.name} could not be read (${x.why})${stepping ? ', so it was skipped' : ''}.`).join(' ')
+    + (stepping ? '' : ' The colour look is as it was.');
+}
+
+/**
+ * Write one of the device's choices and apply it at once: `font` (a family, or THEME_FONT for the
+ * theme's own), `look` (a .cube file's name, or NO_LOOK) or `look:<target>` (true / false). Never throws.
+ * Resolves `{ action, kind, message }`: `action` is 'font' | 'look' | 'look-target' (null when nothing
+ * was written), `kind` the target, `message` a sentence to show ('' when there is nothing to say).
+ */
+export async function applyDeviceChoice(key, value, { storage, store = handleStore(), names = SUBFOLDERS, field = null,
+  stepping = false, start = NO_LOOK } = {}) {
+  try {
+    if (key === 'font') {
+      chooseUserFont(value || THEME_FONT, storage);
+      refreshUserFont({ storage });
+      return { action: 'font', kind: null, message: '' };
+    }
+    if (key === 'look') {
+      const message = await chooseLookValue(value, { storage, store, names, field, stepping, start });
+      return { action: 'look', kind: null, message };
+    }
+    if (typeof key === 'string' && key.startsWith('look:')) {
+      const t = key.slice(5);
+      setGradeTarget(t, !!value, storage);
+      refreshGrade({ storage });
+      return { action: 'look-target', kind: t, message: '' };
+    }
+  } catch (err) {
+    return { action: null, kind: null, message: `That did not work: ${String((err && err.message) || err)}` };
+  }
+  return { action: null, kind: null, message: '' };
+}
+
+// ---------------------------------------------------------------------------------------------
+// *** THE SAME TWO CHOICES AS ORDINARY MENU ROWS (2026-10-02, switch access). *** On this page they are
+// reached by a pointer or a keyboard only (the header says why the page hands the menu no moves), so a
+// person with one switch could never change their font or colour look. The kiosk now offers the same
+// rows in its menu ("Settings for: This device"), where a switch walks them like any other row: a short
+// list steps, a long one opens the choice picker (which a switch scans), the person's "How you choose
+// things" decides. Same storage, same write path (`applyDeviceChoice`), same options (`deviceChoices`).
+//
+// NEVER HIDDEN: with nothing found on this device the row is still there, DIMMED, and its hint says why
+// (no folder chosen, the browser's permission lapsed, the folder is empty...) - a row that appears only
+// sometimes is a row nobody knows to look for. The three "Look on ..." switches are the exception, and
+// only while no look is in force: they would switch nothing (the page does the same).
+//
+// Reading the folders is asynchronous and the menu draws synchronously, so: `read()` (never prompts,
+// never throws) looks at the folders - loading any fonts not in yet, and dropping a look whose file has
+// gone, exactly as this page does on opening - and `rows()` draws from the last reading ("Looking on
+// this device…", dimmed, before the first). The host calls `read()` when its menu opens and redraws when
+// it settles; `onChange` hears every write, so the host can redraw then too.
+// ---------------------------------------------------------------------------------------------
+export const DEVICE_LOOK_PREFIX = 'uf:';
+export const FONT_ROW_LABEL = 'Font on this device';
+export const LOOK_ROW_LABEL = 'Colour look';
+
+/** Why there is no font to choose, for a folder reading (`createDeviceLookRows` `read()`). Pure. */
+export function fontReason(f) {
+  if (!f || f.source === 'none') return 'no fonts on this device yet: choose a fonts folder in “Your own folders”';
+  if (f.permission !== 'granted') return 'no fonts loaded: the browser needs permission for the fonts folder again (“Your own folders”)';
+  if (f.missing) return 'no fonts: the fonts folder is not in your Nimrod folder any more (“Your own folders”)';
+  if (f.failed && f.failed.length) return 'no fonts loaded: the files in the fonts folder could not be read';
+  return 'no fonts in the fonts folder yet (.woff2, .woff, .ttf or .otf files)';
+}
+/** Why there is no colour look to choose. Pure. */
+export function lookReason(l) {
+  if (!l || l.source === 'none') return 'no colour looks on this device yet: choose a looks folder in “Your own folders”';
+  if (l.permission !== 'granted') return 'no colour looks: the browser needs permission for the looks folder again (“Your own folders”)';
+  if (l.missing) return 'no colour looks: the looks folder is not in your Nimrod folder any more (“Your own folders”)';
+  return 'no colour looks in the looks folder yet (.cube files)';
+}
+
+/**
+ * The device's font and colour look as settings-menu rows (settings_fields.js `fieldItems` shape).
+ * opts: `store`, `names`, `storage`, `fontSet`, `FontFaceImpl` (all default to this browser's own),
+ * `onChange({ action, kind, message })` after each write. Returns `{ read, rows, reading }`.
+ */
+export function createDeviceLookRows({ store = null, names = SUBFOLDERS, storage, fontSet, FontFaceImpl, onChange = null } = {}) {
+  let st = store;
+  const storeNow = () => st || (st = handleStore());     // made on first use: no IndexedDB opened for a menu never shown
+  let reading = null;
+  let message = '';
+  let stepping = false;
+  const choicesNow = () => deviceChoices({ storage, fontSet, lutFiles: reading?.luts?.files ?? null, fontsFailed: reading?.fonts?.failed || [] });
+
+  async function read() {
+    const folder = async (kind) => {
+      try {
+        const k = await kindFolder(kind, { store: storeNow(), names });
+        return { source: k.source, permission: k.permission, missing: !!k.missing };
+      } catch { return { source: 'none', permission: 'none', missing: false }; }
+    };
+    let fonts = { families: [], failed: [] };
+    try { fonts = await loadDeviceFonts({ store: storeNow(), FontFaceImpl, fontSet }); } catch { /* none loaded */ }
+    let looks = { read: false, files: [] };
+    try { looks = await checkDeviceLook({ store: storeNow(), storage, names }); } catch { /* the look stays as it was */ }
+    reading = {
+      fonts: { ...(await folder('fonts')), failed: fonts.failed || [], count: (fonts.families || []).length },
+      luts: { ...(await folder('luts')), files: looks.read ? looks.files : null },
+    };
+    return reading;
+  }
+
+  function write(key, value, field, isStep) {
+    message = '';
+    const start = choicesNow().look.value;
+    return applyDeviceChoice(key, value, { storage, store: storeNow(), names, field, stepping: isStep, start }).then((r) => {
+      message = r.message || '';
+      try { onChange?.({ action: r.action, kind: r.kind, message }); } catch { /* a listener's fault is its own */ }
+      return r;
+    });
+  }
+
+  const dim = (key, label, hint) => ({ kind: 'item', id: `${DEVICE_LOOK_PREFIX}${key}`, key, label, hint, disabled: true });
+  function rows() {
+    if (!reading) {
+      return [dim('font', FONT_ROW_LABEL, 'looking on this device…'), dim('look', LOOK_ROW_LABEL, 'looking on this device…')];
+    }
+    const items = fieldItems(choiceFields(choicesNow()), {
+      // A function, read at press time (fieldItems says why): the stored choice, never a snapshot.
+      values: () => choiceValues(choicesNow()),
+      level: 'advanced',
+      idPrefix: DEVICE_LOOK_PREFIX,
+      onStep: (key, value, f) => { write(key, value, f, stepping); },
+    });
+    // A press that STEPS (`run`) may skip a .cube that cannot be read; a value chosen from the list
+    // (`commit`) is that value or nothing. The same `onStep` hears both, so the step is marked here.
+    for (const it of items) {
+      const run = it.run;
+      it.run = () => { stepping = true; try { run(); } finally { stepping = false; } };
+    }
+    const font = items.find((it) => it.key === 'font');
+    const look = items.find((it) => it.key === 'look');
+    if (look && message) look.hint = [look.hint, message].filter(Boolean).join(' · ');
+    return [
+      font || dim('font', FONT_ROW_LABEL, fontReason(reading.fonts)),
+      look || dim('look', LOOK_ROW_LABEL, lookReason(reading.luts)),
+      ...items.filter((it) => it.key !== 'font' && it.key !== 'look'),
+    ];
+  }
+
+  return { read: () => read().catch(() => reading), rows, reading: () => reading };
+}
 
 /**
  * Everything the page shows, read without prompting:
@@ -329,61 +512,13 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
   };
   const tellHost = (action, kind = null) => { try { onChange?.({ action, kind }); } catch { /* a listener's fault is its own */ } };
 
-  // The looks folder's files by name, read when one is chosen (never prompts).
-  async function lookHandles() {
-    try {
-      const k = await kindFolder('luts', { store, names });
-      return new Map(k.dir ? (await listFiles(k.dir, ['cube'])).map((f) => [f.name, f.handle]) : []);
-    } catch { return new Map(); }
-  }
-
-  // A LOOK CHOSEN. A file that cannot be read leaves the look as it was and says why. STEPPING (a press,
-  // not the list) moves on past such a file to the next one that can be read, so one broken file can
-  // never be a wall a switch cannot get past; it stops where it started, or at None.
-  async function chooseLook(value, { field = null, stepping = false } = {}) {
-    const prev = readGrade(storage);
-    const start = last?.choices?.look?.value ?? NO_LOOK;
-    const handles = await lookHandles();
-    const targets = prev ? prev.targets : FIRST_LOOK_TARGETS;
-    const skipped = [];
-    let v = value;
-    const most = Math.max(1, field?.options?.length || 1);
-    for (let i = 0; i < most; i++) {
-      if (v === NO_LOOK) { clearGrade(storage); break; }
-      if (v === KEPT_LOOK || (prev && v === prev.file && !handles.has(v))) break;   // the kept one: nothing to read
-      const h = handles.get(v);
-      const r = h ? await gradeFromFile(h, storage, { targets }) : { ok: false, why: 'it is not in the folder any more' };
-      if (r.ok) break;
-      skipped.push({ name: v, why: r.why });
-      if (!stepping || !field) break;
-      v = stepValue(field, v, 1);
-      if (v === start) break;
-    }
-    refreshGrade({ storage });
-    if (skipped.length) {
-      message = skipped.map((x) => `${x.name} could not be read (${x.why})${stepping ? ', so it was skipped' : ''}.`).join(' ')
-        + (stepping ? '' : ' The colour look is as it was.');
-    }
-  }
-
-  // ONE WRITE PATH for the choices, whether a press stepped them or the list chose.
+  // ONE WRITE PATH for the choices (`applyDeviceChoice`, shared with the menu's rows), whether a press
+  // stepped them or the list chose.
   async function choose(key, value, { field = null, stepping = false } = {}) {
-    message = '';
-    try {
-      if (key === 'font') {
-        chooseUserFont(value || THEME_FONT, storage);
-        refreshUserFont({ storage });
-        tellHost('font');
-      } else if (key === 'look') {
-        await chooseLook(value, { field, stepping });
-        tellHost('look');
-      } else if (key.startsWith('look:')) {
-        const t = key.slice(5);
-        setGradeTarget(t, !!value, storage);
-        refreshGrade({ storage });
-        tellHost('look-target', t);
-      }
-    } catch (err) { message = `That did not work: ${String((err && err.message) || err)}`; }
+    const r = await applyDeviceChoice(key, value, { storage, store, names, field, stepping,
+      start: last?.choices?.look?.value ?? NO_LOOK });
+    message = r.message || '';
+    if (r.action) tellHost(r.action, r.kind);
     if (!torn) await draw({ load: false });
   }
 

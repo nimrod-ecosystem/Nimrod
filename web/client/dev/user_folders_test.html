@@ -30,7 +30,7 @@ import { createMixerFx } from '../mixer_fx.js';
 import { CHANNEL_IDS } from '../audio_bus.js';
 import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE } from '../user_folders.js';
 import { scanFolder, readUserFolders, userFoldersHtml, renderUserFolders, userFoldersPage, USER_FOLDER_ITEMS,
-  USER_FOLDERS_PAGE, permissionWords } from '../user_folders_page.js';
+  USER_FOLDERS_PAGE, permissionWords, createDeviceLookRows, applyDeviceChoice } from '../user_folders_page.js';
 // 2026-10-02, choosing: the device's font and colour look.
 import { loadedFamilies, userFontOptions, loadDeviceFonts, USER_FONTS_EVENT } from '../user_fonts.js';
 import { refreshGrade, reconcileGrade, FIRST_LOOK_TARGETS } from '../lut.js';
@@ -763,6 +763,72 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       await renderUserFolders(kept, { view: {}, store: store4, storage: st4, ...fakeFonts() }).ready;
       check('*** a look kept while its folder needs permission again: still in force, and named ***',
         !!readGrade(st4) && /Warm evening/.test(kept.querySelector('[data-key="look"]')?.textContent || ''), kept.textContent);
+    }
+
+    // 2026-10-02: the page is pointer and keyboard only, so a switch could never reach these two choices. The
+    // kiosk's menu now offers them as ordinary rows ("Settings for: This device"), built here.
+    section('*** the same two choices as MENU rows, for a switch (createDeviceLookRows) ***');
+    {
+      const settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 10)); };
+      const store = memStore();
+      const st = memStorage();
+      const ff = fakeFonts();
+      const heard = [];
+      const ctl = createDeviceLookRows({ store, storage: st, ...ff, onChange: (c) => heard.push(c) });
+      const by = (id) => ctl.rows().find((r) => r.id === id) || null;
+      const first = ctl.rows();
+      check('before the folders are read: both rows, dimmed, "looking"',
+        J(first.map((r) => r.id)) === J(['uf:font', 'uf:look']) && first.every((r) => r.disabled && /looking/.test(r.hint)), J(first));
+      await ctl.read();
+      check('*** no folder: each row still shown, DIMMED, saying why (never hidden) ***',
+        by('uf:font')?.disabled && /choose a fonts folder/.test(by('uf:font').hint) && by('uf:font').label === 'Font on this device'
+          && by('uf:look')?.disabled && /choose a looks folder/.test(by('uf:look').hint), J(ctl.rows()));
+      const perm = { state: 'prompt' };
+      await store.put(ROOT_KEY, withPerm(fakeDir('Nimrod', { fonts: {}, luts: {} }), perm));
+      await ctl.read();
+      check('*** the folder\'s permission lapsed: says so, and reading NEVER prompts ***',
+        /permission/.test(by('uf:font').hint) && /permission/.test(by('uf:look').hint) && !perm.requested, J(ctl.rows()));
+      await store.put(ROOT_KEY, fakeDir('Nimrod', { fonts: {}, luts: {} }));
+      await ctl.read();
+      check('empty folders: what to put in them', /\.woff2/.test(by('uf:font').hint) && /\.cube/.test(by('uf:look').hint), J(ctl.rows()));
+      const lutTree = { 'Warm.cube': warm, 'Cool.cube': cool, 'Broken.cube': 'hello' };
+      await store.put(ROOT_KEY, fakeDir('Nimrod', { fonts: familyTree(), luts: lutTree }));
+      await ctl.read();
+      check('*** found: the font row is a live choice (theme\'s own + six families), with the picker\'s options ***',
+        !by('uf:font').disabled && by('uf:font').choice?.options?.length === 7 && by('uf:font').choice.options[0].value === '', J(by('uf:font')));
+      check('...the look row too (None + three), and no switches while it is None',
+        !by('uf:look').disabled && by('uf:look').choice?.options?.length === 4 && !by('uf:look:photos'));
+      by('uf:look').run();
+      await settle();
+      check('*** a STEP (run) skips a file that cannot be read, lands on the next, and the row says which ***',
+        readGrade(st)?.file === 'Cool.cube' && /Broken\.cube/.test(by('uf:look').hint) && heard.some((c) => c.action === 'look'),
+        `${readGrade(st)?.file} ${by('uf:look').hint}`);
+      check('...and its switches are rows now', ['photos', 'video', 'wallpaper'].every((t) => by(`uf:look:${t}`) && !by(`uf:look:${t}`).disabled));
+      by('uf:look').commit('Broken.cube');
+      await settle();
+      check('*** a value picked from the LIST that cannot be read is not stepped past: the look is as it was, and says so ***',
+        readGrade(st)?.file === 'Cool.cube' && /as it was/.test(by('uf:look').hint), `${readGrade(st)?.file} ${by('uf:look').hint}`);
+      by('uf:look:video').run();
+      await settle();
+      check('a switch row writes the grade\'s target', readGrade(st)?.targets?.video === true && heard.some((c) => c.action === 'look-target' && c.kind === 'video'));
+      by('uf:font').commit('Lexend');
+      await settle();
+      check('*** a font picked from the list: stored by family on this device (the key the page reads) ***',
+        chosenUserFont(st) === 'Lexend' && /Lexend/.test(by('uf:font').hint) && heard.some((c) => c.action === 'font'));
+      // The page reads the same storage: what the menu chose is what the page shows.
+      const host = document.createElement('div');
+      const page = renderUserFolders(host, { view: {}, store, storage: st, ...ff });
+      await page.ready;
+      check('*** the folders page shows what the menu chose (one storage) ***',
+        /Lexend/.test(host.querySelector('[data-key="font"]')?.textContent || '') && /Cool/.test(host.querySelector('[data-key="look"]')?.textContent || ''),
+        host.textContent.slice(0, 300));
+      page.destroy();
+      delete lutTree['Cool.cube'];
+      await ctl.read();
+      check('*** read again after the look\'s file is deleted: back to None, quietly (as the page does) ***',
+        readGrade(st) === null && by('uf:look').value === '' && !by('uf:look:photos'), J(by('uf:look')));
+      const r = await applyDeviceChoice('nonsense', 1, { store, storage: st });
+      check('an unknown key writes nothing and does not throw', r.action === null && r.message === '');
     }
 
     check('*** over the whole suite: no request to anywhere but blob: URLs ***',

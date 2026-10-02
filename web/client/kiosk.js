@@ -36,7 +36,8 @@ import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
-import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX } from './arrangement.js';
+import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
+  PLACE_REQUEST_TOPIC } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
 } from './transport_bar.js';
@@ -111,7 +112,7 @@ import { createChoiceMemory } from './choice_card.js';
 // "Your own folders" page in the menu.
 import { checkDeviceLook } from './user_folders.js';
 import { loadDeviceFonts } from './user_fonts.js';
-import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE } from './user_folders_page.js';
+import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE, createDeviceLookRows } from './user_folders_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
@@ -337,6 +338,10 @@ export async function mountKiosk(root, {
   // How long the screen waits to learn whose it is before its panels carry on without the answer
   // (person_known.js argues the 10 s; 0 = wait however long). A seam for the suites.
   personWaitMs = PERSON_WAIT_MS,
+  // "Font on this device" and "Colour look" as menu rows (2026-10-02; user_folders_page.js
+  // `createDeviceLookRows`): where the folders, the choices and the fonts are. Absent: this browser's own
+  // (its remembered folders, its storage, `document.fonts`). A seam for the suites.
+  deviceLooks = null,
 } = {}) {
   // WHICH PATH. An embed: its option, as at Stage 3. A real screen: its own settings row (Stage 4) --
   // decided once the row has loaded, below (`settings.load()`), before anything reads this. Nothing
@@ -2988,7 +2993,73 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'level-head', label: `${levelTitle(lv)} — what it shows when nothing more particular has chosen` },
       ...rows,
       ...(layoutHere ? [layoutRow()] : []),
+      ...(lv === 'device' ? deviceLookRows() : []),
     ]);
+  }
+
+  // *** "FONT ON THIS DEVICE" AND "COLOUR LOOK", FOR A SWITCH (2026-10-02; 1392018 / b8d918e). *** They lived
+  // only on the "Your own folders" page, which a switch cannot walk (that page argues why: its folder
+  // buttons open dialogs the browser draws). Both are THIS DEVICE's choices (this browser's storage, like the
+  // device row), so they are rows of "Settings for: This device" -- the same rows, storage and write path as
+  // the page (user_folders_page.js `createDeviceLookRows`). A switch steps a short list; a long one opens
+  // the choice picker, which it scans. Nothing found here: each row is still shown, dimmed, saying why.
+  // WHY HERE AND NOT THE DISPLAY TAB (argued): Display's rows are the screen's and follow the screen to
+  // whoever opens it; these follow the DEVICE (a font file is on this computer, not on the account), and
+  // the device level is where the menu already says "this device". AGAINST: one more press to reach them
+  // ("Settings for" to This device). A font is set once, so the press is spent once.
+  // Read when the menu first draws them, once per opening (`onClose` forgets the reading), and the menu
+  // redraws when the reading or a write settles. Never prompts.
+  let deviceLookCtl = null;
+  let deviceLookRead = null;
+  const redrawMenu = () => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } };
+  function deviceLookRows() {
+    if (!deviceRow) return [];
+    if (!deviceLookCtl) {
+      try { deviceLookCtl = createDeviceLookRows({ ...(deviceLooks || {}), onChange: () => redrawMenu() }); }
+      catch (err) { console.error('kiosk: device font and look rows', err); return []; }
+    }
+    if (!deviceLookRead) deviceLookRead = Promise.resolve(deviceLookCtl.read()).then(() => redrawMenu(), () => redrawMenu());
+    let rows = [];
+    try { rows = deviceLookCtl.rows(); } catch (err) { console.error('kiosk: device font and look rows', err); rows = []; }
+    return [{ kind: 'heading', id: 'uf-head', label: 'Font and colour look on this device' }, ...rows];
+  }
+
+  // *** "IN THE SWITCH SCAN: YES / NO" FOR A PLACED PANEL (2026-10-02; c93a1ec). *** A panel placed freely
+  // can be left out of the switch lap (its layout entry's `scan: false`, or a module that declares
+  // `overlayScan: 'skip'`, as the floating scoreboard does). The only way back in was a button ON that
+  // panel - which a switch cannot reach while the panel is out of the lap. "Settings for" does reach every
+  // panel, in the lap or not (arrangement.js `panelRecs`), so the choice is a row of the panel's own tab,
+  // and it writes exactly what the panel's button writes: `shell/place { id, scan }`, which the dashboard
+  // showing it applies in place and saves (arrangement.js "A PANEL ASKS TO FLOAT").
+  //   Only on a PLACED panel: a panel in a grid slot is always in the lap (the arrangement refuses the change).
+  //   AT EVERY LEVEL OF "How much this menu shows", "Just the essentials" included, argued: it is the switch's
+  //   only way back to a panel it cannot reach, and that is what that level keeps (the ways out). AGAINST: one
+  //   more stop on the panel's tab - but only for a placed panel, and only while it is the menu's subject.
+  //   The row says what is true NOW (the lap as the dashboard has it: `focusRing`), not what was last asked.
+  let lapNote = null;                      // { id, text }: the last change nobody answered
+  const placedHere = (id) => { try { return (arr.placedRecs || []).some((r) => r && r.id === id); } catch { return false; } };
+  const inLapNow = (id) => { try { return (focusRing() || []).some((s) => s && s.id === id); } catch { return true; } };
+  function inLapRow(rec) {
+    if (!rec || !placedHere(rec.id)) return null;
+    const on = inLapNow(rec.id);
+    const note = lapNote && lapNote.id === rec.id ? lapNote.text : '';
+    return { kind: 'item', id: 'scan-lap', ...MENU_TAB.module(0),
+      label: `In the switch scan: ${on ? 'yes' : 'no'}`,
+      hint: note || (on ? `${panelName(rec)} is a stop on every lap; press to leave it out`
+        : `${panelName(rec)} is left out of the lap; press to put it back in`),
+      run: () => setInLap(rec.id, !on) };
+  }
+  function setInLap(id, on) {
+    let taken = false;
+    lapNote = null;
+    try {
+      bus.publish(PLACE_REQUEST_TOPIC, { id, scan: !!on, claim: () => { taken = true; },
+        reply: (r) => {
+          lapNote = r && r.ok === false ? { id, text: `that did not change (${r.reason || 'the dashboard said no'})` } : null;
+          redrawMenu();
+        } });
+    } catch (err) { console.error('kiosk: in the switch scan', err); }
+    if (!taken) { lapNote = { id, text: 'nothing on this screen answered, so nothing changed' }; redrawMenu(); }
   }
 
   // ---- THE LAYOUT, FROM THE MENU (2026-10-02). Mike: "an easy way to change the layout of any dashboard.
@@ -4024,7 +4095,8 @@ export async function mountKiosk(root, {
     // The who page's avatar subscription lets go with the menu (see the page). The menu gives the router
     // back as it closes (settings.js); with the Modules library standing in a panel's place, the library
     // still holds the scan, so it is taken again here (this hook runs after that).
-    onClose: () => { offWhoAvatars(); layoutOpen = false; if (libOpen && !torn) holdLibraryScan(true); },
+    // (2026-10-02: and the device's fonts and looks are read again next time -- a file added meanwhile shows.)
+    onClose: () => { offWhoAvatars(); layoutOpen = false; deviceLookRead = null; if (libOpen && !torn) holdLibraryScan(true); },
     // The menu's own Home row opens the same picker rather than navigating, so there are not
     // two controls with the same name doing different things. Leaving is the picker's last row.
     onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
@@ -4145,6 +4217,9 @@ export async function mountKiosk(root, {
           hint: top ? 'back to filling its dashboard' : filling ? 'fills its dashboard now — next, the screen' : 'fills its dashboard, then the screen',
           run: () => { try { menu.close(); } catch { /* already closed */ } promotePanel(rec.id); } });
       }
+      // IN THE SWITCH SCAN, OR NOT (2026-10-02; `inLapRow` argues it): on a panel placed freely.
+      const lap = inLapRow(rec);
+      if (lap) items.push(lap);
       return items;
     },
     // THE MENU'S OTHER CONTENT: things the shell should not know about, contributed by the
@@ -5394,6 +5469,9 @@ export async function mountKiosk(root, {
     // `layout:` key in this same object literal is silently shadowed by it — which is
     // exactly what happened first time. This one is the composed SLOT layout.
     slotLayout: () => (arr.layout() ? { ...arr.layout() } : null),
+    // The switch lap as the arrangement has it now (`focusRing`: a panel left out of it is not here) -- for
+    // the suites (2026-10-02, "In the switch scan").
+    focusRing: () => { try { return focusRing().map((s) => ({ ...s })); } catch { return []; } },
     slotCount: () => arr.slotRecs.length,
     slotTypes: () => arr.slotRecs.map((r) => r.type),
     // One row per link on this screen, carrying or not, each with `ok` and (if not) a `reason`.
