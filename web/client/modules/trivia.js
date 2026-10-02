@@ -419,6 +419,14 @@ registerModule(
     let contested = false;       // the question on screen was contested
     let contestFailed = false;   // ...but the row could not be saved
     const isHeldItem = (item, set) => !!item && set.has(contestKey(item.question, item.answer));
+    // *** SET BY destroy(), AND CHECKED BY EVERY CALLBACK THAT CAN LAND AFTER IT. *** (Stage 4
+    // bench soak, 2026-10-01: ~40 DOM nodes kept alive per destroyed Trivia.) The shared bank row
+    // and the lesson-routed row are handles THIS module opens with ctx.makeState, so the runtime
+    // never disposes them, and nothing here did either: each one kept polling (and holding a push
+    // subscription) forever, and its subscriber closure held this panel's mount. A load that
+    // resolves after destroy() would also call startPolling() and bring a destroyed handle back.
+    let dead = false;
+    let onClick = null;
 
     const el = (s) => mount.querySelector(s);
 
@@ -664,11 +672,12 @@ registerModule(
     const lessonItems = () => lessonQ?.get?.()?.items || [];
 
     async function readBank() {
+      if (dead) return;
       const gen = ++bankGen;
       if (cfg.contentSource === 'pack' && cfg.packId) {
         try {
           const pack = await loadPackCached(cfg.packId);
-          if (gen !== bankGen) return;         // superseded while the fetch was in flight
+          if (gen !== bankGen || dead) return; // superseded while the fetch was in flight
           applyBank([...packToTriviaBank(pack), ...lessonItems()]);
           return;
         } catch (err) {
@@ -681,7 +690,7 @@ registerModule(
       const text = own != null ? own : (share != null ? share : SEED);
       const next = Array.isArray(cfg.bank) ? cfg.bank
                  : triviaPool(text, { includeWords: cfg.includeWords !== false, choices: cfg.choices });
-      if (gen === bankGen) applyBank([...next, ...lessonItems()]);
+      if (gen === bankGen && !dead) applyBank([...next, ...lessonItems()]);
     }
 
     function applyBank(next) {
@@ -763,14 +772,17 @@ registerModule(
         bus.subscribe('trivia/select', () => (answered === null ? choose(highlight) : pressAfter()));
         bus.subscribe('trivia/skip', () => advance());
 
-        mount.addEventListener('click', (e) => {
+        // Named so destroy() can take it off again: the mount is the HOST's element, and a host
+        // that reuses it for the next module must not inherit a Trivia click handler.
+        onClick = (e) => {
           const t = e.target.closest('button');
           if (!t) return;
           if (t.dataset.opt != null) return choose(Number(t.dataset.opt));
           if (t.hasAttribute('data-next')) return advance();
           if (t.hasAttribute('data-contest')) return contest();
           return undefined;
-        });
+        };
+        mount.addEventListener('click', onClick);
 
         // THE SHARED ROW, opened by name — the same document the Questions module edits and
         // Word Forge reads. A game's own state still wins where somebody set it, so nothing
@@ -778,7 +790,7 @@ registerModule(
         try {
           sharedBank = ctx.makeState ? ctx.makeState(BANK_STATE) : null;
           if (sharedBank) {
-            sharedBank.load().catch(() => {}).then(() => { readBank(); sharedBank.startPolling?.(); });
+            sharedBank.load().catch(() => {}).then(() => { if (dead) return; readBank(); sharedBank.startPolling?.(); });
             sharedBank.subscribe?.(() => readBank());
           }
         } catch (err) { sharedBank = null; console.error('trivia: no shared bank', err); }
@@ -790,7 +802,7 @@ registerModule(
         try {
           lessonQ = ctx.makeState ? ctx.makeState(TRIVIA_LESSON_QUESTIONS) : null;
           if (lessonQ) {
-            lessonQ.load().catch(() => {}).then(() => { readBank(); lessonQ.startPolling?.(); });
+            lessonQ.load().catch(() => {}).then(() => { if (dead) return; readBank(); lessonQ.startPolling?.(); });
             lessonQ.subscribe?.(() => readBank());
           }
         } catch (err) { lessonQ = null; console.error('trivia: no lesson-routed questions', err); }
@@ -829,12 +841,14 @@ registerModule(
         try {
           lessons = createLessons({ makeEvents: ctx.makeEvents, bus });
           mode = ctx.makeState ? createQuestMode({ makeState: ctx.makeState }) : null;
+          // `if (!dead)` on each: a load that lands after destroy() must not restart a poll that
+          // destroy() already stopped (see `dead`).
           Promise.all([
-            lessons.load().then(() => lessons.startPolling()).catch(() => {}),
-            mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+            lessons.load().then(() => { if (!dead) lessons.startPolling(); }).catch(() => {}),
+            mode ? mode.load().then(() => { if (!dead) mode.startPolling(); }).catch(() => {}) : Promise.resolve(),
             // The contests log gates the deck the same way, so it joins the same wait.
-            contests ? contests.load().then(() => contests.startPolling()).catch(() => {}) : Promise.resolve(),
-          ]).then(() => { newRound(); });
+            contests ? contests.load().then(() => { if (!dead) contests.startPolling(); }).catch(() => {}) : Promise.resolve(),
+          ]).then(() => { if (!dead) newRound(); });
           // A lesson finished elsewhere — the new questions join the pool at the START of the
           // next round, not mid-question (same rule Word Forge follows for the same reason).
           bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
@@ -847,11 +861,19 @@ registerModule(
       onResize() {},
       onHide() { state?.flush?.(); },
       destroy() {
+        dead = true;
         recorder = null;
+        if (onClick) { mount.removeEventListener('click', onClick); onClick = null; }
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
         if (mode) { mode.destroy(); mode = null; }
+        // THE TWO THAT LEAKED (see `dead`): rows this module opened itself, polling until now.
+        if (sharedBank) { sharedBank.destroy?.(); sharedBank = null; }
+        if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
+        // And the two streams Word Forge already closed and Trivia never did.
+        if (ledger) { ledger.destroy?.(); ledger = null; }
+        if (telemetry) { telemetry.destroy?.(); telemetry = null; }
       },
     };
   },
