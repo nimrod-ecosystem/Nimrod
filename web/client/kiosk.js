@@ -49,6 +49,11 @@ import {
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature,
 } from './dashboards.js';
 import { createDashboardPicker } from './dashboard_picker.js';
+// Row 2.38: dashboards inside dashboards -- the live limit, the tray's wait, the trail and its breadcrumb.
+import {
+  SCREEN_HOME_TOPIC, NEST_LIVE_DEPTH_FIELD, nestLiveDepthFrom, TRAY_OPEN_FIELD, trayOpenMsFrom, BAR_HIDE_MS,
+  trailAfter, crumbName, createBreadcrumb,
+} from './dashboard_nest.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
@@ -168,6 +173,8 @@ import './modules/comet_ambient.js';
 export const SCREEN_SHOW = 'kiosk/show';
 export const SCREEN_BACK = 'kiosk/back';
 export const SCREEN_SHOWN = 'kiosk/shown';
+// Row 2.38: home -- the dashboard this screen started on, the trail cleared (dashboard_nest.js).
+export const SCREEN_HOME = SCREEN_HOME_TOPIC;
 
 // *** STEP 6 STAGE 4: IS A REAL SCREEN MOUNTED AS ONE DASHBOARD MODULE? *** Per screen, on its settings
 // row: `dashboardModule: true | false`; a row that never chose follows this default. OFF (today's
@@ -1149,6 +1156,16 @@ export async function mountKiosk(root, {
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
+    // *** ROW 2.38: A DASHBOARD PLACED ON THIS SCREEN SHOWS ANOTHER ONE (modules/view.js). *** It is one
+    // level deep (`nestDepth`; the screen's own dashboard is built with 0, `buildDashboard`), it opens ITS
+    // dashboard's rows with these UNSCOPED makers (`makeState` above is bound to the screen showing), and
+    // how many levels move live is the screen's setting (dashboard_nest.js argues the default). Arrows and
+    // a getter: `stateForProfile` and `settings` are declared further down.
+    nestDepth: 1,
+    profiles,                 // the screens client: a nested dashboard reads the record of the one it shows
+    nestMakeState: (key, opts, pid) => stateForProfile(key, opts, pid),
+    nestMakeEvents: (key, opts, pid) => eventsForProfile(key, opts, pid),
+    nestLiveDepth: () => { try { return nestLiveDepthFrom(settings.get() || {}); } catch { return undefined; } },
     // PER-PERSON state, distinct from `makeState`'s per-profile/instance scope (see
     // `profile.js`'s `stateURL` vs `personStateURL`). For a module that needs to read/write
     // something that must follow the PERSON across screens - e.g. a device module reading
@@ -1571,12 +1588,14 @@ export async function mountKiosk(root, {
     if (useDashboard && dash) return swapDashboard(nextId, { remember });
     swapping = true;
     const from = profileId;
+    const trailBefore = screenStack.slice();
     try {
       const next = makeState
         ? await profiles.get(nextId)
         : await cachedFetch(`profile:${user}:${nextId}`, () => profiles.get(nextId));
       if (!next || !Array.isArray(next.modules)) throw new Error('that screen has no modules');
-      if (remember) screenStack.push(from);
+      if (remember) rememberSwap(from, nextId);
+      nameScreen(nextId, next.name);
       profileId = nextId;
       arr.setProfile(next);
       // The incoming screen's own arrangement. A PREVIEW layout is a one-shot for the screen
@@ -1598,6 +1617,7 @@ export async function mountKiosk(root, {
       arr.resolve(sl);
       await applyModules();
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
+      drawCrumbs();
       return nextId;
     } catch (err) {
       // *** A FAILED SWAP MUST LEAVE HER LOOKING AT SOMETHING. *** Put the id back and leave
@@ -1605,7 +1625,8 @@ export async function mountKiosk(root, {
       // in a room she cannot leave is not.
       console.error('kiosk: could not show screen', nextId, err);
       profileId = from;
-      if (remember) screenStack.pop();
+      // (Row 2.38: the trail as it was -- a swap may have cut it as well as pushed onto it.)
+      screenStack.splice(0, screenStack.length, ...trailBefore);
       return null;
     } finally {
       swapping = false;
@@ -1616,8 +1637,70 @@ export async function mountKiosk(root, {
   async function showPreviousScreen() {
     const back = screenStack.pop();
     if (!back) return null;
-    return showScreen(back, { remember: false });
+    const got = await showScreen(back, { remember: false });
+    // Row 2.38: a back that did not happen leaves the trail as it was (the way back is still there).
+    if (!got) screenStack.push(back);
+    drawCrumbs();
+    return got;
   }
+
+  // ---------------------------------------------------------------------------------
+  // *** ROW 2.38: THE TRAIL, AND THE WAY BACK OUT OF ANYTHING. ***
+  //
+  // Once a room's desk, a placed picture or a billboard can OPEN another dashboard (`dashboard/go`), a
+  // person can be several dashboards deep -- and chat's note (room_as_home §7.3.4) is the rule: "A switch
+  // user must never be stranded three levels down." So the back stack is a TRAIL (`trailAfter`,
+  // dashboard_nest.js): going to a dashboard already on it goes back to it, which is what keeps a cycle
+  // (A's door to B, B's door to A) from growing it forever. The ways back, all to the same two functions:
+  //   pointer   the breadcrumb, top left, shown while the trail is longer than one ("⌂ Home › Room › Desk")
+  //   scan      the dashboards tray: Back and Home are its first stops after Close
+  //   switch    `kiosk/back` / `kiosk/home` (actions.js, bindable)
+  //   voice     "go back" (the `back` verb, when the panel in front has nothing to cancel -- below) and
+  //             "previous dashboard" / "go home" (dashboards.js NAV_ROUTES)
+  // HOME is the dashboard this screen started on (`bootProfileId`), and going there clears the trail.
+  const screenNames = new Map();
+  function nameScreen(id, name) {
+    if (id && typeof name === 'string' && name.trim()) screenNames.set(id, name.trim());
+  }
+  function rememberSwap(from, nextId) {
+    const next = trailAfter(screenStack, from, nextId);
+    screenStack.splice(0, screenStack.length, ...next);
+  }
+  const crumbsEl = embedded ? null : document.createElement('nav');
+  const crumbs = crumbsEl ? createBreadcrumb(crumbsEl, {
+    // A crumb `steps` levels up: straight there, the trail cut at it (`trailAfter` does the cutting).
+    onJump: (id) => { if (id === bootProfileId) goHomeScreen().catch(() => {}); else showScreen(id).catch(() => {}); },
+  }) : null;
+  if (crumbsEl) kioskEl.append(crumbsEl);
+  const trailNow = () => [...screenStack, profileId].map((id) => ({ id, name: crumbName(id, screenNames) }));
+  function drawCrumbs() {
+    try { crumbs?.draw(trailNow()); } catch (err) { console.error('kiosk: breadcrumb', err); }
+  }
+  /** Home: the dashboard this screen started on, and the trail cleared. */
+  async function goHomeScreen() {
+    if (profileId === bootProfileId) { screenStack.length = 0; drawCrumbs(); return profileId; }
+    const got = await showScreen(bootProfileId, { remember: false });
+    if (got) { screenStack.length = 0; drawCrumbs(); }
+    return got;
+  }
+  offsScreen.push(bus.subscribe(SCREEN_HOME, (p) => {
+    try { p?.claim?.(); } catch { /* a publisher's claim must not stop the press */ }
+    goHomeScreen().catch(() => {});
+  }));
+  // "Go back" is the `back` verb, and it already means "cancel" to whatever panel is in front (a quiz
+  // skips, a lifted room panel goes back, a call hangs up). Only when that panel has NOTHING for it --
+  // the router finds no target -- and there is somewhere to go back to, does it go back a dashboard.
+  // FOR: "go back" is what a person says, and a press that does nothing is the failure respondsToVerbs
+  // exists to prevent. AGAINST: the same switch means two things depending on the panel in front; but
+  // that is what every verb already is ("whatever is in front of you decides"), and the trail is empty
+  // -- so nothing changes -- on every screen nobody opened anything from.
+  function backUnhandled(info) {
+    if (!info || info.verb !== 'back' || torn || !screenStack.length) return null;
+    showPreviousScreen().catch(() => {});
+    return { topic: SCREEN_BACK, fallback: 'dashboard-back' };
+  }
+  nameScreen(profileId, arr.profile()?.name);
+  drawCrumbs();
 
   // *** THE STATE MACHINE'S HANDLE ON THIS. *** It needs no new engine primitive: a state's
   // `enter` already publishes a topic with a payload, so `{publish: 'kiosk/show', payload:
@@ -1775,6 +1858,9 @@ export async function mountKiosk(root, {
     onPick: async (id) => { toggleScreens(false); await showScreen(id); },
     onMake: (key) => { goToPrebuilt(key, { fromPicker: true }).catch(() => {}); },
     onLeave: goHome,
+    // Row 2.38: the way back along the trail, for a switch (the breadcrumb is the pointer's).
+    onBack: () => { toggleScreens(false); showPreviousScreen().catch(() => {}); },
+    onHome: () => { toggleScreens(false); goHomeScreen().catch(() => {}); },
   });
 
   async function listDashboards() {
@@ -1798,8 +1884,13 @@ export async function mountKiosk(root, {
       catch (err) { console.error('kiosk: ready-made dashboards', err); offers = []; }
     }
     if (!screensOpen || torn) return;
+    for (const d of list) nameScreen(d?.id, d?.name);
+    const prevId = screenStack[screenStack.length - 1];
     picker.draw({
       list, current: profileId, offers, making: pickerMaking, note: pickerNote,
+      // Row 2.38: inside something an object opened -- Back (one step) and Home (the start), first.
+      back: prevId ? { id: prevId, name: crumbName(prevId, screenNames) } : null,
+      home: screenStack.length ? { id: bootProfileId, name: crumbName(bootProfileId, screenNames) } : null,
       // Offline, signed out, or a demo kiosk with no account. Saying so beats an empty box, and the way
       // out is still on the row below.
       empty: list.length || offers.length ? null : 'No other dashboards to show from here.',
@@ -1822,6 +1913,11 @@ export async function mountKiosk(root, {
       try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ }
     } else if (!screensOpen && was) {
       try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+    }
+    // Row 2.38: opening gives the bar the tray's wait; closing gives it back its own (`armBarHide`). Not
+    // when the bar is already hidden -- that is the bar's own timer putting the tray away.
+    if (screensOpen !== was && !torn) {
+      try { if (!controlsEl.classList.contains('hidden')) armBarHide(); } catch { /* not up yet */ }
     }
     if (screensOpen) drawScreens();
   }
@@ -1867,6 +1963,9 @@ export async function mountKiosk(root, {
   if (!embedded) {
     offsScreen.push(bus.subscribe(DASHBOARD_GO_TOPIC, (p) => {
       if (!p || torn) return;
+      // Row 2.38: a room object, a placed door or a nested dashboard asks with `claim()` -- answered here,
+      // so it does not also say "nothing here answers that".
+      if (p.prebuilt || p.id) { try { p.claim?.(); } catch { /* a publisher's claim must not stop the press */ } }
       if (p.prebuilt) goToPrebuilt(p.prebuilt).catch(() => {});
       else if (p.id) showScreen(p.id).catch(() => {});
     }));
@@ -2088,6 +2187,10 @@ export async function mountKiosk(root, {
       kind: 'toggle', level: 'advanced', default: !!dashboardDefault, onLabel: 'Yes', offLabel: 'No' }] : []),
     // ROW 2.34: whether Home's picker offers the ready-made dashboards (dashboards.js argues the default).
     ...(!embedded ? [{ ...DASHBOARD_OFFERS_FIELD }] : []),
+    // ROW 2.38: how long the dashboards tray waits between presses, and how many levels of a dashboard
+    // shown inside a dashboard move live. Both argued in dashboard_nest.js; both the SCREEN's (the
+    // device pays for live levels; the tray belongs to this screen's bar).
+    ...(!embedded ? [{ ...TRAY_OPEN_FIELD }, { ...NEST_LIVE_DEPTH_FIELD }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -2760,6 +2863,8 @@ export async function mountKiosk(root, {
       ...SPEECH_BINDINGS,
     ],
     ignore: isKioskChrome,
+    // Row 2.38: an unanswered `back` goes back a dashboard when there is one to go back to (`backUnhandled`).
+    onUnhandled: (info) => backUnhandled(info),
     onFocus: (m) => {
       // *** ON A GRID, SHOW WHICH PANEL THE NEXT PRESS WILL ACT ON. ***
       //
@@ -2975,15 +3080,30 @@ export async function mountKiosk(root, {
   function poke() {
     controlsEl.classList.remove('hidden');
     try { syncHelp(); } catch { /* declared above; never a reason for the bar not to come up */ }
+    armBarHide();
+  }
+  // *** ROW 2.38: WHILE THE DASHBOARDS TRAY IS OPEN, THE BAR AND THE TRAY WAIT THE TRAY'S OWN TIME. ***
+  // The screen's setting (`dashboardTrayMs`, dashboard_nest.js argues 15 s from the scan's response time);
+  // every press on the tray pokes, so it is the gap between presses a person is given. 0 = until it is
+  // closed: nothing is armed while it is open (the tray is a strip, not a scrim -- the panels keep playing).
+  // Closed, the bar is back on its own 3 s.
+  function armBarHide() {
     clearTimeout(hideT);
+    hideT = null;
     if (barHeld) return;
+    let wait = BAR_HIDE_MS;
+    if (screensOpen) {
+      try { wait = trayOpenMsFrom(settings.get() || {}); } catch { wait = BAR_HIDE_MS; }
+      if (wait === 0) return;
+    }
     hideT = setTimeout(() => {
+      hideT = null;
       if (!embedded) controlsEl.classList.add('hidden');    // an embed's bar stays: see kiosk.css
       // The picker goes with the bar it hangs off. This is the "what if nobody answers"
       // answer for it: left alone, it puts itself away and the screen is back to what it was
       // doing, with nothing having been decided on anybody's behalf.
       toggleScreens(false);
-    }, 3000);
+    }, wait);
   }
 
   // *** MOUSEMOVE ONLY REVEALS THE BAR NEAR WHERE IT ACTUALLY LIVES. *** Mike, 2026-09-20:
@@ -3372,6 +3492,8 @@ export async function mountKiosk(root, {
       // (Registered as `dashboard` since row 2.34; `view` stays an alias -- modules/view.js.)
       d = mountModule('dashboard', extendCtx(childCtx({ id: `dashboard:${id}`, type: 'dashboard' }), {
         mount: host, state: null, events: null,
+        // Row 2.38: the screen's OWN dashboard is the top of any nesting (depth 0), never a nested one.
+        nestDepth: 0,
         viewId: id, profileId: id, arrangement: record,
         ...(layout !== undefined ? { layoutOverride: layout } : {}),
         router: runtime.router, health, storage, embedded: !!embedded,
@@ -3469,7 +3591,8 @@ export async function mountKiosk(root, {
       });
       if (torn) { try { built.d.destroy(); } catch { /* gone */ } built.host.remove(); return null; }
       // ---- it is up. Only now does anything about the screen change. ----
-      if (remember) screenStack.push(from);
+      if (remember) rememberSwap(from, nextId);
+      nameScreen(nextId, next.name);
       profileId = nextId;
       dash = built.d; dashHost = built.host;
       wireDashboard(dash);
@@ -3489,6 +3612,7 @@ export async function mountKiosk(root, {
       renderMods();
       syncPlainBar();
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
+      drawCrumbs();
       return nextId;
     } catch (err) {
       // *** THE OLD DASHBOARD NEVER LEFT. *** Nothing above the "it is up" line touched it.
@@ -3539,6 +3663,13 @@ export async function mountKiosk(root, {
     showScreen,
     showPreviousScreen,
     screenStack: () => [...screenStack],
+    // Row 2.38: home (the dashboard this screen started on), the trail with names (what the breadcrumb
+    // says), and the tray's state -- for the suites and a diagnostic page.
+    goHomeScreen,
+    trail: () => trailNow(),
+    crumbsEl: () => crumbsEl,
+    trayOpen: () => screensOpen,
+    picker: () => picker,
     stageCount: () => arr.stageDefs().length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is
@@ -3685,6 +3816,7 @@ export async function mountKiosk(root, {
       menu.destroy();
       try { personOff?.(); } catch { /* already gone */ }
       offsScreen.forEach((off) => { try { off(); } catch { /* already gone */ } });
+      try { crumbs?.destroy(); crumbsEl?.remove(); } catch { /* already gone */ }   // row 2.38
       // The recogniser first: no microphone left open, no miss-log schedule left pruning.
       onVoiceChange = null;
       stopSpeech();

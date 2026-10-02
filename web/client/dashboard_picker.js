@@ -13,7 +13,8 @@
 //
 // *** STILL A STRIP, NOT A SCRIM (the G11 safety argument, unchanged). *** Whatever is playing keeps
 // playing and stays visible; the tray covers a row above the bar. It puts itself away with the bar's own
-// auto-hide (the kiosk's "what if nobody answers"), by Close, by Back, by Escape and by Home again. Its
+// auto-hide (the kiosk's "what if nobody answers" -- since row 2.38 its own wait, a setting:
+// dashboard_nest.js TRAY_OPEN_FIELD), by Close, by Back, by Escape and by Home again. Its
 // way out is its FIRST stop (Design: "Lifted panels and dialogs take over the scan, and their way out
 // comes first"), so a stray select lands on Close.
 //
@@ -28,10 +29,18 @@ const CURSOR_OUTLINE = '3px solid var(--accent, #2c6e49)';
  *   onPick(id)           one of the person's dashboards
  *   onMake(key)          a ready-made one not made yet
  *   onLeave()            the way out to the composer (a navigation, which leaves full screen)
+ *   onBack()             row 2.38: back one dashboard along the trail
+ *   onHome()             row 2.38: home, the dashboard this screen started on
  * `draw(model)`:  { list: [{ id, name }], current, offers: [{ key, label, blurb }], making: key|null,
- *                   note: string|null, empty: string|null }
+ *                   note: string|null, empty: string|null,
+ *                   back: { id, name }|null, home: { id, name }|null }
+ *
+ * *** ROW 2.38: BACK AND HOME COME RIGHT AFTER CLOSE. *** Inside a dashboard an object opened, the tray is
+ * how a SWITCH gets back out (the breadcrumb on screen is for a pointer), so the way back is the first
+ * thing after the way out of the tray. Home is drawn only when it is not the same place as Back (one
+ * level deep, Back IS home: two stops that do one thing is a press a scanning person spends for nothing).
  */
-export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave } = {}) {
+export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave, onBack, onHome } = {}) {
   let cursor = 0;
   let model = null;
 
@@ -77,6 +86,14 @@ export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave } =
     el.innerHTML = '';
     // The way out, first.
     button('k-scr-close', '✕ Close', { pick: 'close', pickKey: 'close' }, 'put this away');
+    if (model.back && model.back.id) {
+      button('k-scr-back', `← Back to ${model.back.name || 'the last dashboard'}`,
+        { pick: 'back', id: model.back.id, pickKey: 'back' }, 'one dashboard back');
+    }
+    if (model.home && model.home.id && (!model.back || model.home.id !== model.back.id)) {
+      button('k-scr-home', `⌂ ${model.home.name || 'Home'}`, { pick: 'home', id: model.home.id, pickKey: 'home' },
+        'the dashboard this screen started on');
+    }
     if (model.empty) note(model.empty);
     for (const d of model.list || []) {
       const b = button(d.id === model.current ? 'on' : '', d.name || 'Dashboard',
@@ -107,6 +124,8 @@ export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave } =
     else if (kind === 'dashboard') onPick?.(b.dataset.id);
     else if (kind === 'prebuilt') onMake?.(b.dataset.key);
     else if (kind === 'leave') onLeave?.();
+    else if (kind === 'back') onBack?.();
+    else if (kind === 'home') onHome?.();
   }
 
   const onClick = (e) => {

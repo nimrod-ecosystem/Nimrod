@@ -109,6 +109,42 @@ import { layoutChange, placedGeometry } from '../layout.js';
 // Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below).
 import { createEditModel } from '../edit_model.js';
 import { mountTransformWindow, mountLayersWindow } from '../edit_windows.js';
+// Row 2.38: a dashboard placed INSIDE another one (recursion), its depth and its live limit.
+import { DASHBOARD_GO_TOPIC, NEST_OPEN_TOPIC, nestMode, nestLiveDepthFrom, NEST_LIVE_DEPTH_KEY } from '../dashboard_nest.js';
+
+// ---------------------------------------------------------------------------------------
+// *** ROW 2.38: A DASHBOARD INSIDE A DASHBOARD ("turtles all the way down"). ***
+// ---------------------------------------------------------------------------------------
+// Placed as an ordinary module (a billboard, a picture frame, a TV in a room), a `dashboard` shows ANOTHER
+// dashboard: the one its own setting `shows` names. Its host marks it NESTED by handing `ctx.nestDepth`
+// (1 = inside the screen's dashboard; this file hands depth + 1 to its own children, and kiosk.js hands 1
+// to the modules it mounts itself). A dashboard with no `nestDepth` is a screen's own, exactly as before.
+//
+// *** WHAT A NESTED ONE DOES NOT INHERIT. *** A child's ctx is its parent's, extended (module.js
+// `extendCtx`), so without this list a nested dashboard would quietly be its parent again: the parent's
+// `viewId`, its lent settings doc, its arrangement, its layout override, its placed bar and menu, its input
+// router, its health watch and its restart record. A nested one is a PICTURE of another dashboard: its own
+// doc, its own arrangement, no chrome, its own little focus (never the screen's router: a switch walks the
+// screen, and presses the billboard as one thing), no health watch, no links (`embedded`), and an
+// in-memory restart record.
+//
+// *** LIVE TO A DEPTH, THEN A CARD (dashboard_nest.js argues the default). *** At depth <= `nestLiveDepth`
+// (the screen's setting, handed down as `ctx.nestLiveDepth`) it mounts the dashboard for real; deeper, it
+// draws a CARD -- the dashboard's name and what is on it -- and mounts nothing. That is what makes a cycle
+// safe: a dashboard showing itself renders (limit + 1) times and stops.
+//   WHY A CARD AND NOT A PICTURE OF THE LAST RENDER: a browser has no way to photograph a piece of a page
+//   without a large library re-drawing the DOM into a canvas, which on a Pi costs more than the live level
+//   it would replace. A card costs one read of the screen record, says what is in there, and is
+//   honest that it is not live.
+//
+// *** PRESSING IT IS GOING IN. *** A clear button over the whole thing publishes `dashboard/go { id }` (the
+// kiosk's load-then-swap); a switch's `select` on it arrives as `dashboard/open` (actions.js MODULE_VERBS).
+// So nothing inside a nested dashboard takes a press: you press the billboard, and the billboard becomes
+// the screen.
+const memStorage = () => {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } };
+};
 
 // The same defaults the kiosk has always used, so a view mounted from an existing
 // arrangement looks exactly as it did before it became a module. (arrangement.js's own copy is the
@@ -151,15 +187,35 @@ const DASHBOARD_MANIFEST = {
 };
 
 function dashboardFactory(ctx) {
+    // Row 2.38: how deep this one is (0 = a screen's own dashboard), and so whether it is NESTED.
+    const depth = Number.isInteger(ctx.nestDepth) && ctx.nestDepth > 0 ? ctx.nestDepth : 0;
+    const nested = depth > 0;
     // `viewId` is which arrangement to show. It is a ctx value rather than a setting because
     // a view is mounted BY something that already knows which one it wants — a surface at
     // boot, or a state machine switching.
-    const viewId = ctx.viewId || ctx.profileId;
+    // (Row 2.38: a NESTED one is the exception -- what it shows is its own setting, `shows`, read at init.)
+    let viewId = nested ? null : (ctx.viewId || ctx.profileId);
     const { mount, user } = ctx;
     const rootBus = ctx.rootBus || ctx.bus;      // children mount here; mountModule re-scopes
     const profiles = ctx.profiles || null;
-    const makeState = ctx.makeState || null;
-    const makeEvents = ctx.makeEvents || null;
+    // A nested one takes the UNSCOPED makers its ancestors handed down (`nestMakeState`): the `makeState`
+    // in its own ctx is its parent's, already bound to the parent's dashboard id (`childMakes` below).
+    const makeState = (nested ? ctx.nestMakeState : ctx.makeState) || null;
+    const makeEvents = (nested ? ctx.nestMakeEvents : ctx.makeEvents) || null;
+    // The live limit: the screen's setting, as a number or a getter, read when it is needed.
+    const liveLimit = () => {
+      let v;
+      try { v = typeof ctx.nestLiveDepth === 'function' ? ctx.nestLiveDepth() : ctx.nestLiveDepth; } catch { v = undefined; }
+      return nestLiveDepthFrom({ [NEST_LIVE_DEPTH_KEY]: v });
+    };
+    // What a nested one never takes from its parent (see the header above).
+    const hostRouter = nested ? null : ctx.router;
+    const hostHealth = nested ? null : ctx.health;
+    const hostStorage = nested ? memStorage() : ctx.storage;
+    const hostEmbedded = nested ? true : ctx.embedded === true;
+    const hostChrome = nested ? [] : ctx.chrome;
+    const hostWrapState = nested ? null : ctx.wrapState;
+    const hostStartIndex = nested ? 0 : ctx.startIndex;
 
     let root = null, stageEl = null, mirrorEl = null, clockEl = null, ambientEl = null;
     let arrangement = null;
@@ -168,7 +224,8 @@ function dashboardFactory(ctx) {
     const offs = [];                             // every subscription this view made, undone on destroy
     const listeners = new Set();                 // onChange
     const settingsListeners = new Set();         // onSettings (Stage 4)
-    const borrowedSettings = ctx.settingsHandle || null;   // a doc the host lends (Stage 4), never closed here
+    // a doc the host lends (Stage 4), never closed here. (Never a nested one's: the lent doc is the screen's.)
+    const borrowedSettings = nested ? null : (ctx.settingsHandle || null);
     let torn = false;
 
     // Per-CHILD handles, keyed to this view's arrangement rather than to whatever the
@@ -211,8 +268,8 @@ function dashboardFactory(ctx) {
       // writing it). Absent, the panel gets its own handle exactly as before.
       const raw = childState(def.id);
       let state = raw;
-      if (raw && typeof ctx.wrapState === 'function') {
-        try { state = ctx.wrapState(def.id, raw, def.type) || raw; } catch (err) {
+      if (raw && typeof hostWrapState === 'function') {
+        try { state = hostWrapState(def.id, raw, def.type) || raw; } catch (err) {
           console.error('view: wrapState', err); state = raw;
         }
       }
@@ -222,6 +279,12 @@ function dashboardFactory(ctx) {
       const instance = mountModule(def.type, extendCtx(ctx, {
         ...childMakes, mount: host, bus: rootBus, state, events,
         profileId: viewId, instanceId: def.id,
+        // Row 2.38: a dashboard among the children is one level deeper, and finds the unscoped makers.
+        // (A host's own unscoped makers win -- the kiosk's `childCtx` hands them -- because a host's
+        // `makeState` may itself be bound to one screen; without one, this dashboard's own.)
+        nestDepth: depth + 1,
+        ...((ctx.nestMakeState || makeState) ? { nestMakeState: ctx.nestMakeState || makeState } : {}),
+        ...((ctx.nestMakeEvents || makeEvents) ? { nestMakeEvents: ctx.nestMakeEvents || makeEvents } : {}),
       }));
       await state?.load?.().catch(() => {});
       await events?.load?.().catch(() => {});
@@ -243,7 +306,7 @@ function dashboardFactory(ctx) {
     // THE HOST'S HEALTH WATCH, if it handed one in. A watch must never break a mount.
     function watchRec(rec) {
       if (!rec) return rec;
-      try { ctx.health?.watch?.(rec.id, rec.type); } catch { /* not load-bearing */ }
+      try { hostHealth?.watch?.(rec.id, rec.type); } catch { /* not load-bearing */ }
       return rec;
     }
 
@@ -257,7 +320,7 @@ function dashboardFactory(ctx) {
       focusNext() {},
       reachable: () => [],
     };
-    const router = ctx.router || localRouter;
+    const router = hostRouter || localRouter;
 
     let lastStage = null;
     function changed() {
@@ -375,7 +438,7 @@ function dashboardFactory(ctx) {
     // change is applied by the arrangement in place (`arr.applyPlaced`): the moved module moves, nothing
     // is remounted. A grid change does what a dashboard always did with one after boot: nothing, until
     // it is rebuilt (the kiosk reloads; Stage 4 is where a dashboard rebuilds itself).
-    const overridden = 'layoutOverride' in ctx;
+    const overridden = !nested && 'layoutOverride' in ctx;
     let rawLayout = null;
     let editor = null;                           // the open edit windows, if any
     async function applyPlacedHere(next) {
@@ -474,9 +537,94 @@ function dashboardFactory(ctx) {
       return editor;
     }
 
+    // ---- ROW 2.38: the nested one's card, and pressing it ------------------------------------------
+    // *** A NESTED ONE IS A PANEL, AND A PANEL THAT SAYS NOTHING IS JUDGED STALLED (health.js). *** A
+    // billboard publishes nothing of its own, so after 15 minutes the recovery ladder would swap it away.
+    // The right fix is a HEALTH_EXPECT row (`dashboard: { idle: true }`, and `view`) -- in health.js, which
+    // this change does not touch -- so until it lands, a nested dashboard says it is here: once as it
+    // comes up and every NEST_PULSE_MS after, tagged with its own panel id (health.js's owner rule).
+    // Not a setting (Rule 1, argued): it is a liveness signal far inside the watch's 15-minute bound and
+    // its 2-minute settle, not something a person tunes; remove it when the row lands.
+    const NEST_PULSE_MS = 5 * 60 * 1000;
+    let pulseT = null;
+    const pulse = () => {
+      try { rootBus?.publish?.('dashboard/state', { shows: viewId, depth, mode: nestMode_ }, { panel: ctx.instanceId || null }); }
+      catch { /* a pulse must never break a panel */ }
+    };
+    function startPulse() {
+      if (!nested || pulseT || torn) return;
+      pulse();
+      pulseT = setInterval(pulse, NEST_PULSE_MS);
+    }
+    let opener = null;
+    let nestMode_ = nested ? null : 'screen';
+    /** Going in: the screen shows the dashboard this one shows (the kiosk's load-then-swap). */
+    function openNested(source) {
+      if (!nested || !viewId || torn) return false;
+      let claimed = false;
+      try {
+        rootBus?.publish?.(DASHBOARD_GO_TOPIC, { id: viewId, source, instanceId: ctx.instanceId || null,
+          depth, claim: () => { claimed = true; } });
+      } catch (err) { console.error('view: open', err); }
+      return claimed;
+    }
+    function addOpener(name) {
+      if (!root || opener) return;
+      opener = document.createElement('button');
+      opener.type = 'button';
+      opener.className = 'v-nest-open';
+      const label = `open ${name || 'this dashboard'}`;
+      opener.setAttribute('aria-label', label);
+      opener.title = label;
+      // Above anything the nested dashboard draws (its root is its own stacking context: `.view` isolates).
+      opener.style.cssText = 'position:absolute;inset:0;z-index:calc(var(--z-menus, 600) + 10);margin:0;padding:0;border:0;'
+        + 'background:transparent;cursor:pointer';
+      opener.addEventListener('click', (e) => { e.stopPropagation(); openNested('pointer'); });
+      root.append(opener);
+      // A switch: `select` on this panel arrives as `dashboard/open` (actions.js MODULE_VERBS.dashboard).
+      const off = ctx.bus?.subscribe?.(NEST_OPEN_TOPIC, () => { openNested('scan'); });
+      if (typeof off === 'function') offs.push(off);
+    }
+    /** The card: a dashboard too deep to draw live, or none chosen. `rec` is its screen record (or null). */
+    function drawCard(rec, sentence = null) {
+      nestMode_ = sentence ? 'empty' : 'card';
+      if (!stageEl) return;
+      const card = document.createElement('div');
+      card.className = 'v-nest-card';
+      card.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;'
+        + 'justify-content:center;gap:.4em;padding:6%;text-align:center;overflow:hidden;'
+        + 'background:var(--surface, #fffdf3);color:var(--text, #0A3323);border:2px solid var(--border, #c8cfa8);'
+        + 'border-radius:10px;font:600 clamp(11px,2.4vmin,22px)/1.25 -apple-system,BlinkMacSystemFont,'
+        + 'Segoe UI,Roboto,sans-serif';
+      const title = document.createElement('div');
+      title.className = 'v-nest-name';
+      title.textContent = sentence || (rec && rec.name) || 'A dashboard';
+      card.append(title);
+      if (!sentence) {
+        const mods = (rec && Array.isArray(rec.modules) ? rec.modules : []).filter((m) => m && m.type)
+          .map((m) => getManifest(m.type)?.title || m.type);
+        if (mods.length) {
+          const what = document.createElement('div');
+          what.className = 'v-nest-what';
+          what.style.cssText = 'font-weight:400;opacity:.8;font-size:.8em';
+          what.textContent = mods.slice(0, 4).join(' · ') + (mods.length > 4 ? ` +${mods.length - 4}` : '');
+          card.append(what);
+        }
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-weight:400;opacity:.7;font-size:.75em';
+        hint.textContent = 'Press to go in';
+        card.append(hint);
+      }
+      stageEl.append(card);
+    }
+
     // Declared, not returned directly, so the chrome modules can be handed THIS object as their
     // container (`ctx.container`).
     const self = {
+      // Row 2.38: how this dashboard is drawn -- 'screen' (a screen's own), 'live' / 'card' (nested),
+      // 'empty' (nested, nothing chosen) -- with its depth and what it shows. For the suites and the map.
+      nest: () => ({ depth, mode: nestMode_, shows: nested ? viewId : null, limit: nested ? liveLimit() : null }),
+      open: () => openNested('call'),
       __probe: () => ({
         viewId, ready: !!arrangement, hasLayout: !!arr?.layout(), primary: arr ? arr.primary() : 0,
         stage: arr ? arr.stageDefs().map((d) => d.type) : [],
@@ -547,8 +695,29 @@ function dashboardFactory(ctx) {
         root.append(ambientEl, stageEl, mirrorEl, clockEl);
         mount.append(root);
 
+        // ---- Row 2.38: NESTED -- which dashboard, and live or a card ----
+        if (nested) {
+          root.classList.add('v-nested');
+          root.dataset.nestDepth = String(depth);
+          const shows = (ctx.state?.get?.() || {}).shows;
+          viewId = typeof shows === 'string' && shows.trim() ? shows.trim() : null;
+          startPulse();
+          if (!viewId) { root.dataset.nest = 'empty'; drawCard(null, 'Nothing is chosen to show here yet.'); return; }
+          if (nestMode(depth, liveLimit()) === 'card') {
+            root.dataset.nest = 'card';
+            let rec = null;
+            try { rec = profiles ? await profiles.get(viewId) : null; } catch { rec = null; }
+            if (torn) return;
+            drawCard(rec);
+            addOpener(rec?.name);
+            return;
+          }
+          root.dataset.nest = 'live';
+          nestMode_ = 'live';
+        }
+
         try {
-          arrangement = ctx.arrangement || (profiles ? await profiles.get(viewId) : null);
+          arrangement = (!nested && ctx.arrangement) || (profiles ? await profiles.get(viewId) : null);
         } catch (err) {
           console.error('view: could not load', viewId, err);
           arrangement = null;
@@ -558,8 +727,12 @@ function dashboardFactory(ctx) {
           // *** A VIEW THAT CANNOT LOAD SAYS SO RATHER THAN RENDERING NOTHING. *** A blank
           // region on a screen somebody is sitting at is indistinguishable from a crash.
           stageEl.innerHTML = '<p class="view-empty">This view could not be loaded.</p>';
+          // (Nested: still pressable -- going in is the screen's own load-then-swap, which says what it can.)
+          if (nested) addOpener(null);
           return;
         }
+        // A nested one that is live: pressing it (anywhere) is going in.
+        if (nested) addOpener(arrangement.name);
 
         // Its OWN settings — theme and chrome travel with the arrangement. KEPT, so `destroy()`
         // can close it: this handle used to be opened, set polling, and never closed.
@@ -578,11 +751,11 @@ function dashboardFactory(ctx) {
         };
 
         arr = createArrangement({
-          bus: rootBus, user, storage: ctx.storage, embedded: ctx.embedded === true, settings,
+          bus: rootBus, user, storage: hostStorage, embedded: hostEmbedded, settings,
           kioskEl: root, stageEl, mirrorEl, clockEl, ambientEl,
           mountInstance: mountChild, destroyRec, watchRec, renderMods: changed,
           runtime: () => ({ router }),
-          health: () => ctx.health || { forget() {} },
+          health: () => hostHealth || { forget() {} },
           profileId: () => viewId,
           // The host screen's flash limit (flash_limit.js), for this dashboard's room, read live.
           flashLimit: () => flashLimit(ctx),
@@ -613,8 +786,8 @@ function dashboardFactory(ctx) {
         if (torn) return;
         // STAGE 4: `ctx.startIndex` -- where a cold boot lands on a one-at-a-time stage (the kiosk's
         // restart record), clamped; mounting index 0 first and then moving would start a module for nothing.
-        const start = Number.isInteger(ctx.startIndex) && ctx.startIndex > 0 && ctx.startIndex < arr.stageDefs().length
-          ? ctx.startIndex : 0;
+        const start = Number.isInteger(hostStartIndex) && hostStartIndex > 0 && hostStartIndex < arr.stageDefs().length
+          ? hostStartIndex : 0;
         if (arr.layout()) await arr.mountLayout(); else await arr.showPrimary(start);
         if (torn) return;
         // Links, once the modules exist -- and again whenever the settings change, exactly as the
@@ -638,7 +811,7 @@ function dashboardFactory(ctx) {
         }
         // The placed chrome, once there are panels for a bar to name. Started, not awaited: see
         // CHROME above. Every role it will carry is 'pending' from this moment.
-        const placed = Array.isArray(ctx.chrome) ? ctx.chrome.filter((d) => d && d.id && d.type) : [];
+        const placed = Array.isArray(hostChrome) ? hostChrome.filter((d) => d && d.id && d.type) : [];
         for (const def of placed) mountChrome(def).catch((err) => console.error('view: chrome', err));
         changed();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
@@ -649,6 +822,7 @@ function dashboardFactory(ctx) {
 
       destroy() {
         torn = true;
+        clearInterval(pulseT); pulseT = null;          // row 2.38
         try { editor?.close(); } catch { /* already gone */ }
         editor = null;
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });

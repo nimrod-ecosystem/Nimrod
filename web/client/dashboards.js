@@ -38,6 +38,7 @@ import { STARTER_SCHEDULE } from './local_store.js';
 import { profileSetup } from './game/game.js';
 import { PHRASES, ROUTES, spokenTable, normalize, routeAction, phraseControl, SPEECH_DEVICE } from './input_speech.js';
 import { SYSTEM_TOPICS } from './actions.js';
+import { DASHBOARD_GO_TOPIC as NEST_GO_TOPIC, SCREEN_BACK_TOPIC, SCREEN_HOME_TOPIC } from './dashboard_nest.js';
 
 export const PANEL_SURFACES = Object.freeze(['solid', 'veil', 'clear']);
 
@@ -307,8 +308,10 @@ export function createDashboardMaker({ profiles, makeSettings, makeInstanceState
 // music favourites are (kiosk.js `applyDashboards`), never written into anybody's bindings.
 // =====================================================================================================
 
-/** Payload `{ id }` (a dashboard) or `{ prebuilt: '<key>' }` (a ready-made one: found, or made once). */
-export const DASHBOARD_GO_TOPIC = 'dashboard/go';
+/** Payload `{ id }` (a dashboard) or `{ prebuilt: '<key>' }` (a ready-made one: found, or made once).
+ *  Defined in dashboard_nest.js since row 2.38 (the room, the arrangement and the dashboard module publish
+ *  it too, and that file imports nothing); re-exported here, where it has always been imported from. */
+export const DASHBOARD_GO_TOPIC = NEST_GO_TOPIC;
 // "go to" / "open" + the dashboard's name. A setting would be the next step (music's are); argued: two
 // starters cover what people say, and a third ("show") collides with "show the menu"-shaped commands.
 export const DEFAULT_GO_STARTERS = Object.freeze(['go to', 'open']);
@@ -328,6 +331,20 @@ export const PREBUILT_ROUTES = Object.freeze({
     phrases: ['my dashboards', 'show my dashboards', 'choose a dashboard', 'change dashboard'] },
 });
 
+// *** ROW 2.38: THE WAY BACK, SPOKEN. *** Once an object can open another dashboard a person can be several
+// dashboards deep, and "the way back is always there" (chat's §7.3.4) has to include the voice.
+//   "go back" ALREADY EXISTS -- it is the `back` verb (input_speech.js PHRASES), and it is reused: kiosk.js
+//     sends an UNANSWERED `back` (the panel in front of you has nothing to cancel) back along the trail. So
+//     these are only the phrases that cannot mean anything else: "previous dashboard", "go home".
+//   "go home" is new: nothing else said it. Home = the dashboard this screen started on.
+// [unverified on the bench: "dashboard" in the small Vosk model, as for the routes above.]
+export const NAV_ROUTES = Object.freeze({
+  'dashboard-back': { topic: SCREEN_BACK_TOPIC, payload: {}, label: 'Back to the previous dashboard',
+    phrases: ['previous dashboard', 'last dashboard', 'back a dashboard', 'go back a dashboard'] },
+  'dashboard-home': { topic: SCREEN_HOME_TOPIC, payload: {}, label: 'Home: the dashboard this screen started on',
+    phrases: ['go home', 'go to home', 'take me home', 'home dashboard'] },
+});
+
 const ACTION_SAFE = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9._-]/g, '-').slice(0, 36);
 
 /**
@@ -342,7 +359,7 @@ const ACTION_SAFE = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9._-]/g
  * can duplicate one -- `duplicatePhrases` over the combined table stays empty.
  */
 export function dashboardSpeechRoutes(list, { starters = DEFAULT_GO_STARTERS, taken = spokenTable(PHRASES, ROUTES),
-                                              prebuilt = true } = {}) {
+                                              prebuilt = true, nav = true } = {}) {
   const used = new Map();
   for (const [id, phrases] of Object.entries(taken || {})) {
     for (const p of Array.isArray(phrases) ? phrases : []) { const k = normalize(p); if (k) used.set(k, `taken:${id}`); }
@@ -372,8 +389,9 @@ export function dashboardSpeechRoutes(list, { starters = DEFAULT_GO_STARTERS, ta
     }
     if (phrases.length) routes[rid] = { topic: DASHBOARD_GO_TOPIC, payload: { id: d.id, name: n }, label: `Go to ${n}`, phrases };
   }
-  if (prebuilt) {
-    for (const [rid, r] of Object.entries(PREBUILT_ROUTES)) {
+  const tables = [...(prebuilt ? [PREBUILT_ROUTES] : []), ...(nav ? [NAV_ROUTES] : [])];
+  for (const table of tables) {
+    for (const [rid, r] of Object.entries(table)) {
       const phrases = r.phrases.filter((p) => { const k = normalize(p); if (used.has(k)) return false; used.set(k, rid); return true; });
       if (phrases.length) routes[rid] = { ...r, payload: { ...r.payload }, phrases };
     }

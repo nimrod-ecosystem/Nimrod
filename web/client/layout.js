@@ -76,7 +76,7 @@ export function isArranged(layout) {
 // Beside the snapped grid, a layout may carry `placed`: modules placed freely, each with a PLACE --
 //
 //   { id, place: 'scene' | 'screen' | 'overlay', x, y, w?, h?, scale?, rot?, layer?, surface?, slot?,
-//     shown?, locked? }
+//     shown?, locked?, opens? }      (`opens`: another dashboard's id -- pressing this one shows it, row 2.38)
 //
 //   scene    in the dashboard's scene (the room): in one of the room's slots (`slot`, a recipe item's
 //            id), or at x/y on a surface (`surface`: back / left / right wall, floor).
@@ -129,8 +129,15 @@ export function normalizePlacedEntry(raw) {
   if (typeof raw.slot === 'string' && raw.slot) e.slot = raw.slot;
   if (raw.shown === false) e.shown = false;
   if (raw.locked === true) e.locked = true;
+  // ROW 2.38: a placed module can be a DOOR -- pressing it shows another dashboard (`opens`: its id).
+  // Kept as data on the placement, not on the module's own settings: what pressing a thing does HERE is
+  // the layout's, the way where it sits is (the map editor edits layouts).
+  const opens = typeof raw.opens === 'string' ? raw.opens.trim() : '';
+  if (opens && opens.length <= OPENS_MAX) e.opens = opens;
   return e;
 }
+// An id, not prose: long enough for any id the server makes, short enough that junk is dropped.
+export const OPENS_MAX = 200;
 
 /** The placed list, against the ids that exist; `taken` is the slots' ids (the slot wins). */
 export function normalizePlaced(list, validIds = null, taken = new Set()) {

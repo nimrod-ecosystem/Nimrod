@@ -60,6 +60,7 @@ export { layoutChange };
 import { getManifest } from './module.js';
 import { writePosition } from './restart.js';
 import { createScreenLinks } from './screen_links.js';
+import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -663,6 +664,7 @@ export function createArrangement({
     const host = document.createElement('div'); host.className = 'k-mod';
     host.style.cssText = 'flex:1;min-width:0;min-height:0';
     wrap.append(host);
+    syncDoor(def.id);
     // The same rule as a slot: one module that will not start is one broken box, not a broken screen.
     try {
       const rec = watchRec(await mountInstance(def, host));
@@ -694,15 +696,81 @@ export function createArrangement({
     for (const entry of placedOf()) await mountPlacedOne(entry);
   }
 
+  // =================================================================================================
+  // *** ROW 2.38: A PLACED MODULE CAN BE A DOOR (`opens` on its entry, layout.js). ***
+  // Pressing it shows that dashboard: `dashboard/go { id }`, the verb the kiosk already answers with its
+  // load-then-swap and back stack. Two ways to press it, the same two every panel has:
+  //   POINTER   a clear button over the whole box. While a module is a door, pressing it IS opening
+  //             it -- the module underneath is still drawn (a picture frame still shows its picture), it
+  //             just does not take the press as well. FOR: one press, one meaning, which is what a
+  //             switch user can predict. AGAINST: a door whose module had its own buttons loses them
+  //             here; the edit windows (or removing `opens`) are how it gets them back.
+  //   SCAN      the ring reports the door as type `opens` (focusRing), so `select` on it reaches
+  //             `opens/press` on that instance (actions.js MODULE_VERBS.opens) and this opens it. A door
+  //             is always reachable, even when its module answers no verb at all (a clock).
+  // The press carries `claim()` like a room object's: nobody claiming (an embed, a preview) is not an
+  // error, it is just a page with nowhere to go.
+  // =================================================================================================
+  const doorOf = (id) => {
+    const o = placedMeta.get(id)?.entry?.opens;
+    return typeof o === 'string' && o ? o : null;
+  };
+  function openDoor(id, source) {
+    const target = doorOf(id);
+    if (!target) return false;
+    let claimed = false;
+    try {
+      bus?.publish?.(DASHBOARD_GO_TOPIC, { id: target, source, moduleId: id, claim: () => { claimed = true; } });
+    } catch (err) { console.error('arrangement: open', err); }
+    return claimed;
+  }
+  function syncDoor(id) {
+    const meta = placedMeta.get(id);
+    if (!meta) return;
+    const target = doorOf(id);
+    if (!target) {
+      meta.door?.remove(); meta.door = null;
+      try { meta.doorOff?.(); } catch { /* gone */ }
+      meta.doorOff = null;
+      delete meta.wrap.dataset.opens;
+      return;
+    }
+    meta.wrap.dataset.opens = target;
+    if (!meta.door) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'k-door';
+      b.setAttribute('aria-label', 'open this');
+      b.title = 'open this';
+      // Above the module in its own box; clear, so what the module draws is what is seen.
+      b.style.cssText = 'position:absolute;inset:0;z-index:calc(var(--z-panel-contents, 300) + 10);margin:0;padding:0;border:0;'
+        + 'background:transparent;cursor:pointer';
+      b.addEventListener('click', (e) => { e.stopPropagation(); openDoor(id, 'placed'); });
+      meta.wrap.append(b);
+      meta.door = b;
+    }
+    if (!meta.doorOff && bus?.subscribe) {
+      const topic = bus.instanceTopic ? bus.instanceTopic(id, OPENS_PRESS_TOPIC) : `${OPENS_PRESS_TOPIC}#${id}`;
+      meta.doorOff = bus.subscribe(topic, () => { openDoor(id, 'scan'); });
+    }
+  }
+  function dropDoor(meta) {
+    if (!meta) return;
+    try { meta.doorOff?.(); } catch { /* gone */ }
+    meta.doorOff = null;
+  }
+
   function removePlaced(id) {
     const at = placedRecs.findIndex((r) => r.id === id);
     if (at >= 0) destroyRec(placedRecs.splice(at, 1)[0]);
+    dropDoor(placedMeta.get(id));
     placedMeta.get(id)?.wrap.remove();
     placedMeta.delete(id);
   }
 
   function teardownPlaced() {
     while (placedRecs.length) destroyRec(placedRecs.pop());
+    for (const m of placedMeta.values()) dropDoor(m);
     placedMeta.clear();
     try { roomScene?.destroy(); } catch { /* already gone */ }
     roomScene = null; roomFree = null;
@@ -768,6 +836,7 @@ export function createArrangement({
       }
       try { rec?.instance?.onResize?.(); } catch { /* not load-bearing */ }
       meta.entry = entry; meta.where = where;
+      syncDoor(entry.id);                   // row 2.38: `opens` added, changed or taken off
       out.moved.push(entry.id);
     }
     // Empty layers go, so a screen whose last overlay was removed has no empty overlay layer.
@@ -838,8 +907,10 @@ export function createArrangement({
   // screen everything is already visible, so focus merely moves.
   // (Stage R: on a laid-out screen the ring is every panel -- `panelRecs()`, overlays first. With
   // nothing placed it is the slots, exactly as it was.)
+  // (Row 2.38: a placed module that is a DOOR is reported as type `opens`, so the router routes `select`
+  // on it to the door -- see `syncDoor`. Nothing else reads the ring's types.)
   const focusRing = () => (layout
-    ? panelRecs().map((r) => ({ id: r.id, type: r.type }))
+    ? panelRecs().map((r) => ({ id: r.id, type: doorOf(r.id) ? OPENS_TYPE : r.type }))
     : stageDefs.map((d) => ({ id: d.id, type: d.type })));
 
   // ---- recovery's hands. The ladder that decides when to use them (kiosk.js `recoveryStep`) stays
@@ -905,6 +976,9 @@ export function createArrangement({
     slotRecs,                          // the live array: mutated in place, never replaced
     placedRecs,                        // Stage R: the same, for modules placed freely
     placed: () => placedOf().map((e) => ({ ...e })),
+    // Row 2.38: which dashboard a placed module opens (null: it is not a door), and pressing it.
+    opensOf: (id) => doorOf(id),
+    openDoor: (id) => openDoor(id, 'call'),
     panelRecs,                         // every panel on a laid-out screen, in ring order
     roomScene: () => roomScene,        // the room renderer, while the dashboard's scene is a room
     cameraRec: () => cameraRec,

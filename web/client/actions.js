@@ -75,6 +75,13 @@ export const SYSTEM_ACTIONS = [
   { id: 'dashboard/go/room', label: 'Go to the room dashboard', topic: 'dashboard/go', payload: { prebuilt: 'room' }, group: 'System' },
   { id: 'dashboard/go/basic', label: 'Go to the basic dashboard', topic: 'dashboard/go', payload: { prebuilt: 'basic' }, group: 'System' },
   { id: 'dashboard/go/classic', label: 'Go to the classic 2D dashboard', topic: 'dashboard/go', payload: { prebuilt: 'classic' }, group: 'System' },
+  // *** ROW 2.38: THE WAY BACK OUT, ON A SWITCH. *** Once an object can open another dashboard, a person can
+  // be three dashboards deep; these are Back (one step along the trail) and Home (the dashboard this screen
+  // started on), the same `kiosk/back` / `kiosk/home` the breadcrumb, the tray and "go back" / "go home"
+  // send (dashboard_nest.js, written out here so this file imports nothing). Nothing to go back to: nothing
+  // happens. Not on the remote-drive allowlist, for the reason the rest of this list is not.
+  { id: 'kiosk/back', label: 'Back to the previous dashboard', topic: 'kiosk/back', group: 'System' },
+  { id: 'kiosk/home', label: 'Home: the dashboard this screen started on', topic: 'kiosk/home', group: 'System' },
   { id: 'nimrod-cat/next', label: 'Nimrod the cat: next step', topic: 'nimrod-cat/next', group: 'System' },
   { id: 'nimrod-cat/prev', label: 'Nimrod the cat: back a step', topic: 'nimrod-cat/prev', group: 'System' },
 ];
@@ -384,6 +391,13 @@ export const MODULE_VERBS = {
   // lifted panel back (or closes the reactions editor) -- the four the module already subscribes to.
   // Holding on an animal is NOT here: see ROOM_HOLD_ACTION above.
   room:          { next: 'room/next', prev: 'room/prev', select: 'room/select', back: 'room/back' },
+  // ROW 2.38. A dashboard placed INSIDE another (a billboard, a TV) is one thing to a switch: `select` goes
+  // in (modules/view.js answers `dashboard/open`; the kiosk swaps the screen). `view` is its old name.
+  // And a placed module that is a DOOR (`opens` on its placement) is routed as type `opens`
+  // (arrangement.js `focusRing`), whose `select` opens it -- so even a clock that is a door is reachable.
+  dashboard:     { select: 'dashboard/open' },
+  view:          { select: 'dashboard/open' },
+  opens:         { select: 'opens/press' },
   // THE WORD GAMES (row 2.31). Also missing: `word_games.js` answers next / prev / select / skip and no
   // verb could reach them. `back` is skip, exactly as trivia's is. (The spoken routes --
   // SPEECH_ACTIONS / SPEECH_BINDINGS -- are the speech wiring's, not this table's.)
