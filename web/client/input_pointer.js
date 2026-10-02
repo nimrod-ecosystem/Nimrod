@@ -94,7 +94,13 @@ export function attachPointer(input, { target = window, device = null, aim = nul
   // press. Not a click-handler bug (`inputs.js`'s own device-chip handler runs correctly
   // whenever this adapter lets a click through unmolested) — the fix belongs here, at the
   // one place that actually knows which element a press landed on.
+  // *** A CLICK MADE BY A SPOKEN OR SWITCHED "CLICK" (cursor_drive.js) IS NOT A MOUSE BUTTON. ***
+  // It dispatches pointer events at the cursor so the thing under it is pressed, and marks them
+  // `nimrodCursor`. Without this skip, a person whose mouse button is bound (to select, say) would find
+  // "click" ALSO fired that binding - one command, two actions. The click already went through the
+  // input bus as its own action (`cursor/click`), with its own binding and log entry.
   const onDown = (e) => {
+    if (e?.nimrodCursor) return;
     if (ignore?.(e)) return;
     const dev = device || deviceFor(e.pointerType);
     const control = pointerControl(e.button);
@@ -104,6 +110,7 @@ export function attachPointer(input, { target = window, device = null, aim = nul
   };
 
   const onUp = (e) => {
+    if (e?.nimrodCursor) return;
     const dev = device || deviceFor(e.pointerType);
     const control = pointerControl(e.button);
     input.up(dev, control);

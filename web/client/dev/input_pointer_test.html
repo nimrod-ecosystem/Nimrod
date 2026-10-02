@@ -119,6 +119,21 @@ try {
   }
 
   // =====================================================================================
+  section('*** a spoken or switched "click" (cursor_drive.js) is not a mouse button ***');
+  {
+    const input = fakeInput({ bound: true });
+    const detach = attachPointer(input, { target: host });
+    const e = new PointerEvent('pointerdown', { button: 0, pointerType: 'mouse', bubbles: true, cancelable: true });
+    e.nimrodCursor = true;
+    empty.dispatchEvent(e);
+    check('*** a pointerdown marked as the cursor\'s never reaches the bus, though the button is bound ***',
+      input.downs.length === 0 && !e.defaultPrevented, JSON.stringify(input.downs));
+    firePointerDown(empty);
+    check('...while a real one still does', input.downs.length === 1);
+    detach();
+  }
+
+  // =====================================================================================
   section('*** an unbound, non-capturing press is still a no-op either way (unchanged) ***');
   {
     const input = fakeInput({ capturing: false, bound: false });

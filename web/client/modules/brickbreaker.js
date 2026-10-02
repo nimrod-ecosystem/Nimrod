@@ -39,15 +39,43 @@
 //
 // THE SCORE is bricks broken this game, on the score contract (`../score_source.js`); drawn here
 // only when no scoreboard shows it. A cleared wall pays NOTHING by default (see `wallPoints`).
+//
+// *** PAUSE, AND THE COMMANDS (Mike, 2026-10-02, off the live site): "I couldn't find a way to pause
+// it. I would suggest maybe space bar by default and having escape pause it and bring up its settings
+// menu. It would actually be good for voice control: right, left, stop (stops the paddle), launch,
+// pause (pauses and brings up settings), resume. It'd be good for color/hand/etc. tracking also." ***
+//   * PAUSED IS OBVIOUS AND STILL: a "Paused" sign on the field, the music and the sounds stop, the
+//     loop stops, and nothing (pointer, tracker, step) moves the paddle. A press, "resume", the pause
+//     key again or Back goes on. Opening the screen's settings menu pauses it too (`shell/state`).
+//   * KEYS, ONCE THE GAME HAS THE KEYBOARD (it takes it when clicked or touched): the pause key
+//     (`pauseKey`, SPACE by default, a setting) pauses and goes on; ESCAPE pauses and opens the screen's
+//     settings menu, which is about this panel (`pauseOpensMenu`, on by default). Handled on the game's
+//     own root, never the window - two games on one screen must not pause each other.
+//     THE LIMIT, stated: until the game is clicked, Space is still the screen's Next and Escape the
+//     screen's (input_keyboard.js) - keys are bound for the whole screen, and a panel cannot know it
+//     has the switch focus. The general fix is "keys while focused" in the input layer; on Mike's list.
+//   * VERBS (actions.js MODULE_VERBS, so each is a switch binding too): left / right a step, stop (the
+//     gliding paddle), launch, pause (and the menu, as Escape), play = resume. Spoken while this panel
+//     has focus through the manifest's `voice` (input_speech.js `moduleVoiceTable`): "stop" here is the
+//     paddle, where everywhere else it means pause.
+//   * A TRACKER CAN DRIVE THE PADDLE: `brickbreaker/aim { x: 0..1 }` (0 = the field's left edge, 1 =
+//     its right; the instance's own `brickbreaker/aim#<id>` too) puts the paddle there, exactly as a
+//     pointer over the field does. And the screen's AIM (aim.js `input/aim`) over the field from
+//     anything that is not a mouse or a finger (those already arrive as pointer events) does the same,
+//     so a colour or hand tracker that reports an aim needs nothing written for this game. Argued, not
+//     a setting: it is the pointer rule, for a pointer the operating system cannot see.
 
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
 import { createGameTones } from '../game_tones.js';
 import { createGameMusic } from '../game_music.js';
+import { SYSTEM_TOPICS } from '../actions.js';
+import { AIM_TOPIC, aimIn } from '../aim.js';
+import { SHELL_STATE } from '../shell_verbs.js';
 import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_H, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, SWEEP_SPEEDS, STEP_SIZES,
-  CONTROLS, newGame, launch, step, setPaddleX, nudgePaddle, landingX, togglePause, nextWall, aliveCount,
+  CONTROLS, newGame, launch, step, setPaddleX, nudgePaddle, landingX, togglePause, setPaused, nextWall, aliveCount,
 } from '../breakout.js';
 
 export const GAME = 'brickbreaker';
@@ -61,8 +89,25 @@ export const REST_MS = 3000;
 // not one: a single miss is ordinary play, and somebody thinking between presses must not have
 // the game stop under them. Argued, not a setting; on Mike's list.
 export const IDLE_BALLS = 3;
+// The topic a tracker publishes to put the paddle somewhere: `{ x: 0..1 }` across the field.
+export const AIM = `${GAME}/aim`;
+export const PAUSE_KEYS = Object.freeze({ space: ' ', p: 'p', off: null });
+// The spoken commands while this panel has focus (input_speech.js `moduleVoiceTable`). Only "stop" and
+// "stop the paddle" differ from the screen-wide table (where bare "stop" is pause); the rest are listed
+// so the game's whole vocabulary is in one place.
+export const VOICE = Object.freeze({
+  left: 'left', right: 'right', stop: 'stop', 'stop the paddle': 'stop', launch: 'launch',
+  pause: 'pause', resume: 'play',
+});
 
 export const DEFAULTS = Object.freeze({
+  // Mike: "space bar by default". FOR: the biggest key, and the one every game uses. AGAINST: a switch
+  // interface that types a space is Next everywhere else - so it only applies once the game has the
+  // keyboard (clicked or touched), and 'off' is one setting away.
+  pauseKey: 'space',
+  // Escape and the Pause command also open the settings menu (Mike: "pause (pauses and brings up
+  // settings)"). Off: they only pause.
+  pauseOpensMenu: true,
   control: 'sweep',
   ballSpeed: 'slow',
   paddleWidth: 'wide',
@@ -94,6 +139,11 @@ const SETTINGS = [
       { value: 'follow', label: 'It catches every ball; a press changes the angle' },
     ],
     note: 'A pointer can always move the paddle, and a click is a press.' },
+  { key: 'pauseKey', label: 'Key that pauses', kind: 'choice', default: 'space', level: 'standard',
+    options: [{ value: 'space', label: 'Space bar' }, { value: 'p', label: 'P' }, { value: 'off', label: 'None' }],
+    note: 'Once the game has been clicked or touched. Escape always pauses.' },
+  { key: 'pauseOpensMenu', label: 'Escape and the Pause command also open the settings', default: true,
+    level: 'standard', onLabel: 'Yes', offLabel: 'No, they only pause' },
   { key: 'ballSpeed', label: 'Ball speed', kind: 'choice', default: 'slow', level: 'essential',
     options: [
       { value: 'very-slow', label: 'Very slow' }, { value: 'slow', label: 'Slow' },
@@ -157,7 +207,7 @@ registerModule(
   { type: GAME, title: 'Brick breaker', core: 'new',
     description: 'Knock down a wall of bricks with a ball and a paddle. One switch can play: the paddle '
       + 'glides by itself and a press stops it. Slow by default, and a missed ball just comes back.',
-    dependsOn: 'local', importance: 'optional', settings: SETTINGS },
+    dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const audio = ctx.audio || null;
@@ -187,7 +237,8 @@ registerModule(
     let last = null;
     let dead = false;
     let hidden = false;
-    let rootEl = null, fieldEl = null, ballEl = null, paddleEl = null, sayEl = null, scoreEl = null, aimEl = null;
+    let rootEl = null, fieldEl = null, ballEl = null, paddleEl = null, sayEl = null, scoreEl = null, aimEl = null, pausedEl = null;
+    let menuAsks = 0;             // times this panel asked for the settings menu (the suite reads it)
     let brickEls = new Map();
     let drawnBricks = null;
     let lastSay = '', lastScore = '';
@@ -327,6 +378,79 @@ registerModule(
       if (g.phase === 'paused') stopLoop(); else ensureLoop();
     }
 
+    // ---- pause / resume / the commands (2026-10-02) ------------------------------------------
+    // Ask the screen for its settings menu. The kiosk answers `system/settings` by opening the one menu,
+    // which is about the focused panel; a host with no menu (a preview page) simply does not claim it,
+    // and the game is just paused - nothing here waits on an answer.
+    function openMenu() {
+      menuAsks++;
+      let claimed = false;
+      try { bus.publish(SYSTEM_TOPICS.settings, { from: GAME, claim() { claimed = true; } }); }
+      catch (err) { console.error('brickbreaker: settings menu', err); }
+      return claimed;
+    }
+    // IDEMPOTENT: pausing a paused game leaves it paused (a command heard twice, a menu opening twice).
+    function pauseGame({ menu = false } = {}) {
+      if (dead || !g) return;
+      if (setPaused(g, true)) stopLoop();
+      syncAudio(); render();
+      if (menu && cfg.pauseOpensMenu !== false) openMenu();
+    }
+    function resumeGame() {
+      if (dead || !g) return;
+      markInput();
+      setPaused(g, false);
+      syncAudio(); render(); ensureLoop();
+    }
+    // "Stop": the gliding paddle stops where it is. Nothing else changes - the ball keeps going.
+    function stopPaddle() {
+      if (dead || !g) return;
+      markInput();
+      if (g.phase === 'paused') return;
+      g.paddle.moving = false;
+      syncAudio(); render(); ensureLoop();
+    }
+    // "Launch": a resting ball goes (and, gliding, the paddle starts - the same as a launching press).
+    function launchBall() {
+      if (dead || !g) return;
+      markInput();
+      if (g.phase !== 'ready') return;
+      const o = opts();
+      launch(g, { speed: o.speed, rand, control: o.control });
+      if (o.control === 'sweep') g.paddle.moving = true;
+      syncAudio(); render(); ensureLoop();
+    }
+    // A tracker (or anything) putting the paddle at `x` (0..1 across the field). The pointer rule.
+    function aimAt(p) {
+      const x = Number(typeof p === 'number' ? p : p?.x);
+      if (!Number.isFinite(x) || dead || !g || cfg.control === 'follow' || g.phase === 'paused') return;
+      missesSinceInput = 0;
+      g.paddle.moving = false;
+      setPaddleX(g, Math.max(0, Math.min(1, x)) * FIELD_W);
+      render();
+    }
+    function onAim(a) {
+      if (!a || !fieldEl || a.device === 'pointer:mouse' || a.device === 'pointer:touch') return;
+      const at = aimIn(a, fieldEl);
+      if (!at) return;
+      const r = fieldEl.getBoundingClientRect();
+      if (r.width > 0) aimAt({ x: at.x / r.width });
+    }
+    // Keys, on the game's own root (see the header): the pause key, and Escape.
+    function onKey(e) {
+      if (dead || !g || e.repeat) return;
+      if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation();
+        pauseGame({ menu: true });
+        return;
+      }
+      const want = Object.prototype.hasOwnProperty.call(PAUSE_KEYS, cfg.pauseKey) ? PAUSE_KEYS[cfg.pauseKey] : PAUSE_KEYS.space;
+      if (want && String(e.key).toLowerCase() === want) {
+        e.preventDefault(); e.stopPropagation();
+        if (g.phase === 'paused') resumeGame(); else pauseGame();
+      }
+    }
+
     // ---- pointer ----------------------------------------------------------------------------------
     function fieldX(e) {
       if (!fieldEl) return null;
@@ -345,6 +469,8 @@ registerModule(
     }
     function onPointerDown(e) {
       if (dead || !(e.target instanceof Element) || !mount.contains(e.target)) return;
+      // The game takes the keyboard when it is clicked or touched, so the pause key and Escape reach it.
+      try { rootEl?.focus?.({ preventScroll: true }); } catch { /* not focusable here */ }
       if (cfg.control !== 'follow') { const x = fieldX(e); if (x != null && g.phase !== 'paused') setPaddleX(g, x); }
       select();
       // select() starts a sweep on launch; a pointer is holding the paddle, so it stays put.
@@ -357,11 +483,16 @@ registerModule(
       const bricks = g.bricks.map((b) => `<div class="bb-brick" data-id="${esc(b.id)}" data-row="${b.row % 4}"`
         + ` style="left:${pct(b.x, FIELD_W)};top:${pct(b.y, FIELD_H)};width:${pct(b.w, FIELD_W)};height:${pct(b.h, FIELD_H)}"></div>`).join('');
       fieldEl.innerHTML = `${bricks}<div class="bb-paddle" data-paddle><span class="bb-aim" data-aim aria-hidden="true"></span></div>`
-        + '<div class="bb-ball" data-ball></div>';
+        + '<div class="bb-ball" data-ball></div>'
+        // PAUSED, ON THE FIELD: a sign in the middle, the field dimmed. A sign and not a dialog - nothing
+        // here waits behind it but the game, and a press anywhere goes on.
+        + '<div class="bb-paused" data-paused hidden><span class="bb-paused-mark" aria-hidden="true">❚❚</span>'
+        + '<span class="bb-paused-word">Paused</span></div>';
       brickEls = new Map([...fieldEl.querySelectorAll('.bb-brick')].map((el) => [el.dataset.id, el]));
       ballEl = fieldEl.querySelector('[data-ball]');
       paddleEl = fieldEl.querySelector('[data-paddle]');
       aimEl = fieldEl.querySelector('[data-aim]');
+      pausedEl = fieldEl.querySelector('[data-paused]');
       drawnBricks = g.bricks;
     }
     function render() {
@@ -398,6 +529,7 @@ registerModule(
         ballEl.style.height = pct(BALL_R * 2, FIELD_H);
         ballEl.hidden = g.phase === 'cleared' || g.phase === 'again';
       }
+      if (pausedEl && pausedEl.hidden === (g.phase === 'paused')) pausedEl.hidden = g.phase !== 'paused';
       const line = statusFor(g, { control: cfg.control, idle, autoLaunch: Number(cfg.autoLaunch) || 0 });
       if (sayEl && line !== lastSay) { sayEl.textContent = line; lastSay = line; }
       const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
@@ -416,14 +548,14 @@ registerModule(
 
     return {
       __probe: () => ({ game: g, cfg: { ...cfg }, idle, armed, missesSinceInput, looping: loopHandle != null,
-        stats: { ...stats }, tones: tones?.state() || null, music: music?.state() || null }),
+        stats: { ...stats }, tones: tones?.state() || null, music: music?.state() || null, menuAsks }),
       // The suite's handle on time: advance the game by `dt` ms exactly as a frame would.
       __step: (dt) => (dead ? [] : advance(dt)),
       init() {
         let cssHref = '';
         try { cssHref = new URL('../brickbreaker.css', import.meta.url).href; } catch { /* unstyled, still works */ }
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-bb-css href="${esc(cssHref)}">` : ''}`
-          + '<div class="bb-wrap" data-bb-root><div class="bb" data-bb>'
+          + '<div class="bb-wrap" data-bb-root tabindex="0" aria-label="Brick breaker"><div class="bb" data-bb>'
           + '<div class="bb-stage"><div class="bb-field" data-field role="img" aria-label="A wall of bricks, a ball and a paddle"></div></div>'
           + '<div class="bb-bar"><p class="bb-say" role="status" aria-live="polite"></p><p class="bb-score" data-score hidden></p></div>'
           + '</div></div>';
@@ -433,6 +565,7 @@ registerModule(
         scoreEl = mount.querySelector('[data-score]');
         mount.addEventListener('pointermove', onPointerMove);
         mount.addEventListener('pointerdown', onPointerDown);
+        mount.addEventListener('keydown', onKey);
 
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
         catch (err) { ledger = null; console.error('brickbreaker: no points ledger', err); }
@@ -469,6 +602,19 @@ registerModule(
         bus.subscribe(`${GAME}/prev`, () => nudge(-1));
         bus.subscribe(`${GAME}/select`, () => select());
         bus.subscribe(`${GAME}/back`, () => back());
+        // 2026-10-02: the commands (actions.js MODULE_VERBS; spoken through the manifest's `voice`).
+        bus.subscribe(`${GAME}/left`, () => nudge(-1));
+        bus.subscribe(`${GAME}/right`, () => nudge(1));
+        bus.subscribe(`${GAME}/stop`, () => stopPaddle());
+        bus.subscribe(`${GAME}/launch`, () => launchBall());
+        bus.subscribe(`${GAME}/pause`, () => pauseGame({ menu: true }));
+        bus.subscribe(`${GAME}/resume`, () => resumeGame());
+        bus.subscribe(AIM, (p) => aimAt(p));
+        bus.subscribe(AIM_TOPIC, (a) => { try { onAim(a); } catch { /* an aim must never break the game */ } });
+        // The screen's settings menu opening (from anywhere) pauses a game in play: a ball nobody can see
+        // behind the menu is a ball lost. Closing it does NOT resume - the person may not be looking at the
+        // field yet; a press, "resume" or the pause key goes on.
+        bus.subscribe(SHELL_STATE, (p) => { if (p && p.menuOpen === true && g && g.phase !== 'paused') pauseGame(); });
         // A fresh game (the suite, or anything that wants to hand somebody a new wall).
         bus.subscribe(`${GAME}/new`, () => { fresh(); stopLoop(); syncAudio(); render(); });
 
@@ -487,6 +633,7 @@ registerModule(
         stopLoop();
         mount.removeEventListener('pointermove', onPointerMove);
         mount.removeEventListener('pointerdown', onPointerDown);
+        mount.removeEventListener('keydown', onKey);
         try { tones?.destroy(); } catch { /* gone */ }
         tones = null;
         try { music?.destroy(); } catch { /* gone */ }

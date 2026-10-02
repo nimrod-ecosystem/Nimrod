@@ -17,13 +17,22 @@
   --bb-ball: var(--game-ball, var(--text-strong, #1c1c1c));
   --bb-paddle: var(--game-paddle, var(--accent, #2c6e49));
   --bb-paddle-edge: var(--text-strong, #1c1c1c);
-  --bb-field: var(--surface, #fffdf7);
+  /* *** SEE-THROUGH, LIKE EVERY OTHER PANEL (Mike, 2026-10-02: "The backgrounds on brick breaker and
+     brain games aren't transparent when they should be"). *** The panel behind the game is the
+     kiosk's `.k-mod`, and its background IS the screen's "Panel backgrounds" setting (kiosk.css
+     `panelSurface`: solid / veil / clear). This used to paint the mortar colour over the whole panel
+     and the theme surface over the field, so no setting could ever show through. Now neither paints:
+     on a solid panel it looks the same as before (the panel's own surface shows), on veil and clear
+     the scene does. `--game-field` is the hook for a room that wants a field colour of its own. The
+     ball and the paddle carry an outline in the surface colour, so they read over a moving scene. */
+  --bb-field: var(--game-field, transparent);
   --bb-edge: var(--border, #c9c3ad);
-  width:100%;height:100%;min-height:0;color:var(--text);
+  width:100%;height:100%;min-height:0;color:var(--text);outline:none;
 }
+.bb-wrap:focus-visible{outline:3px solid var(--link, currentColor);outline-offset:-3px}
 .bb-wrap *{box-sizing:border-box}
 .bb{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.4rem;padding:.5rem;
-  background:var(--bb-mortar);font-family:var(--font)}
+  background:transparent;font-family:var(--font)}
 .bb [hidden]{display:none !important}
 
 /* The field keeps its 16:10 shape and is as big as the panel allows. */
@@ -40,9 +49,17 @@
 .bb-paddle{position:absolute;background:var(--bb-paddle);border:2px solid var(--bb-paddle-edge);border-radius:999px;
   display:grid;place-items:center}
 .bb-aim{position:absolute;bottom:130%;left:50%;transform:translateX(-50%);white-space:nowrap;
-  font-weight:700;font-size:clamp(12px, 3.2cqh, 26px);color:var(--text-strong);background:var(--bb-field);
+  font-weight:700;font-size:clamp(12px, 3.2cqh, 26px);color:var(--text-strong);background:var(--surface);
   padding:0 .35em;border-radius:4px}
-.bb-ball{position:absolute;background:var(--bb-ball);border-radius:50%}
+.bb-ball{position:absolute;background:var(--bb-ball);border-radius:50%;box-shadow:0 0 0 2px var(--surface)}
+.bb-paddle{box-shadow:0 0 0 2px var(--surface)}
+
+/* PAUSED: the field dims and a sign sits in the middle. Words AND a mark, not colour alone. */
+.bb-paused{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:.5em;
+  background:color-mix(in srgb, var(--surface) 55%, transparent);color:var(--text-strong);
+  font-weight:800;font-size:clamp(20px, 9cqh, 72px);pointer-events:none}
+.bb-paused-mark{letter-spacing:-.1em}
+.bb-paused-word{padding:.05em .4em;border-radius:.3em;background:var(--surface)}
 
 .bb-bar{display:flex;flex-wrap:wrap;gap:.2rem 1.2rem;align-items:baseline;justify-content:center;min-height:2.2em}
 .bb-say{margin:0;font-size:clamp(15px, 2.4vmin, 28px);font-weight:600;color:var(--text-strong)}

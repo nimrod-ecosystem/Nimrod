@@ -40,7 +40,7 @@ import { ANSWER_TOPIC as WG_ANSWER, GRAMMAR_TOPIC as WG_GRAMMAR, PLAY_TOPIC as W
   from '../modules/word_games.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
-import { VERBS, MEDIA_VERBS, verbTopic, createDefaultRegistry } from '../actions.js';
+import { VERBS, MEDIA_VERBS, ACTION_VERBS, verbTopic, createDefaultRegistry } from '../actions.js';
 import { createBus } from '../bus.js';
 import { createInputBus } from '../input.js';
 import { createVerbRouter } from '../input_router.js';
@@ -124,9 +124,9 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   check('...and the checker really catches one, even spelled differently',
     duplicatePhrases({ ...PHRASES, pause: [...PHRASES.pause, 'Next!'] }).length === 1,
     JSON.stringify(duplicatePhrases({ ...PHRASES, pause: [...PHRASES.pause, 'Next!'] })));
-  const spoken = [...VERBS, ...MEDIA_VERBS].map((v) => v.id);
+  const spoken = [...VERBS, ...MEDIA_VERBS, ...ACTION_VERBS].map((v) => v.id);
   const tableIds = Object.keys(PHRASES);
-  check('every verb in the vocabulary can be spoken — the nine and the media four',
+  check('every verb in the vocabulary can be spoken — the nine, the media four, and launch / stop / close',
     spoken.every((v) => tableIds.includes(v)),
     spoken.filter((v) => !tableIds.includes(v)).join(', ') || 'none missing');
   check('...and the table invents no verb the vocabulary does not have',
@@ -1223,9 +1223,11 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
   const { GAMES: BB_GAMES } = await import('../modules/brain_games.js');
   const gamesOf = { [WG_PLAY]: WG_GAMES, 'name_that/play': NT_GAMES, 'think_games/play': TG_GAMES,
     'word_builder/play': WB_GAMES, 'brain_games/play': BB_GAMES };
-  check('every route opens a game its module knows (the word games, "name that", or the thinking games)',
-    Object.values(ROUTES).every((r) => (gamesOf[r.topic] || []).includes(r.payload.game)),
-    JSON.stringify(Object.values(ROUTES).map((r) => [r.topic, r.payload])));
+  // (2026-10-02: routes may press an EXISTING action instead - the screen and the cursor, checked below.)
+  const gameRoutes = Object.values(ROUTES).filter((r) => !r.action);
+  check('every game route opens a game its module knows (the word games, "name that", or the thinking games)',
+    gameRoutes.every((r) => (gamesOf[r.topic] || []).includes(r.payload.game)),
+    JSON.stringify(gameRoutes.map((r) => [r.topic, r.payload])));
   check('*** “play name that animal / state / person” are routes to the name-that game ***',
     routeFor('play name that animal') === 'play-name-animal' && routeFor('name that state') === 'play-name-state'
       && routeFor('play name that person') === 'play-name-person'
@@ -1242,12 +1244,18 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('a route phrase cannot be a wake phrase either',
       JSON.stringify(usableWakePhrases(['computer please', 'play opposites'])) === '["computer please"]');
   }
-  check('each route is an action carrying its payload, for the host to register',
-    SPEECH_ACTIONS.length === Object.keys(ROUTES).length
+  check('each game route is an action carrying its payload, for the host to register',
+    SPEECH_ACTIONS.length === gameRoutes.length
       && SPEECH_ACTIONS.every((a) => a.id === routeAction(a.id.slice('speech/'.length)) && !!gamesOf[a.topic] && a.payload?.game),
     JSON.stringify(SPEECH_ACTIONS));
-  check('...with one ordinary binding each', ROUTE_BINDINGS.length === SPEECH_ACTIONS.length
-    && ROUTE_BINDINGS.every((b) => b.device === SPEECH_DEVICE && b.edge === 'press' && SPEECH_ACTIONS.some((a) => a.id === b.actionId)));
+  {
+    const reg = createDefaultRegistry();
+    check('...with one ordinary binding per route, every one pressing a registered action (its own, or one the screen already has)',
+      ROUTE_BINDINGS.length === Object.keys(ROUTES).length
+        && ROUTE_BINDINGS.every((b) => b.device === SPEECH_DEVICE && b.edge === 'press'
+          && (SPEECH_ACTIONS.some((a) => a.id === b.actionId) || reg.has(b.actionId))),
+      JSON.stringify(ROUTE_BINDINGS.filter((b) => !SPEECH_ACTIONS.some((a) => a.id === b.actionId) && !reg.has(b.actionId))));
+  }
   check('SPEECH_BINDINGS is the verbs, then the routes', SPEECH_BINDINGS.length === DEFAULT_BINDINGS.length + ROUTE_BINDINGS.length
     && new Set(SPEECH_BINDINGS.map((b) => b.id)).size === SPEECH_BINDINGS.length);
   {
@@ -1275,6 +1283,99 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     feed('play opposites');
     check('*** a route is behind the wake gate like everything else ***', plays.length === 3);
     sp.destroy(); input.destroy();
+  }
+
+  section('*** THE SCREEN BY VOICE: the menu and the cursor (Mike, 2026-10-02) ***');
+  {
+    // What existed, unchanged: the menu verb ("menu", "settings", "open the menu"), and next / previous /
+    // select / back, which walk an open menu.
+    check('already there: “open the menu” / “settings” / “menu” are the menu verb', ['open the menu', 'settings', 'menu'].every((p) => verbFor(p) === 'menu'));
+    check('added: “open settings” OPENS the menu (system/settings - never a toggle)', routeFor('open settings') === 'open-settings'
+      && routeAction('open-settings') === 'system/settings');
+    check('added: “close the menu” is the close verb (closes, never opens)', ['close the menu', 'close', 'close settings'].every((p) => verbFor(p) === 'close'));
+    check('added: “launch” and “stop moving” are verbs', verbFor('launch') === 'launch' && verbFor('stop moving') === 'stop');
+    check('*** bare “stop” is STILL pause everywhere (a video told “stop” must not end anything) ***', verbFor('stop') === 'pause');
+    const cur = { 'cursor left': 'cursor/left', 'move the cursor up': 'cursor/up', 'cursor right a bit': 'cursor/right', 'mouse down': 'cursor/down',
+      'cursor left a lot': 'cursor/left-far', 'cursor way down': 'cursor/down-far', click: 'cursor/click', 'click there': 'cursor/click',
+      'scroll up': 'cursor/scroll-up', 'page down': 'cursor/scroll-down' };
+    const wrong = Object.entries(cur).filter(([p, a]) => routeAction(routeFor(p) || 'none') !== a);
+    check('*** the cursor: left / right / up / down, a bit and a lot, click, scroll up and down ***', wrong.length === 0, JSON.stringify(wrong));
+    check('...and none of them is the panel verb “left” / “move left”', verbFor('move left') === 'left' && routeFor('move left') === null);
+    const reg = createDefaultRegistry();
+    const { CURSOR_ACTIONS, ACTION_VERBS } = await import('../actions.js');
+    check('*** every one is bindable to a switch too: the same registered action ***',
+      CURSOR_ACTIONS.every((a) => reg.has(a.id)) && ACTION_VERBS.every((v) => reg.has(verbTopic(v.id))) && reg.has('system/settings'));
+    // End to end: "computer please cursor left a lot" and "computer please click" press the cursor's actions.
+    const bus = createBus();
+    const input = createInputBus({ bus, actions: reg });
+    SPEECH_BINDINGS.forEach((b) => input.addBinding(b));
+    const got = [];
+    bus.subscribe('cursor/move', (p) => got.push(['move', p]));
+    bus.subscribe('cursor/click', () => got.push(['click']));
+    bus.subscribe('system/settings', () => got.push(['settings']));
+    bus.subscribe(verbTopic('close'), () => got.push(['close']));
+    let feed = null;
+    const sp = attachSpeech(input, { recognizer: { start(cb) { feed = cb; }, stop() {}, running: true }, confirm: 'off' });
+    sp.start();
+    feed('computer please cursor left a lot');
+    feed('computer please click');
+    feed('computer please open settings');
+    feed('computer please close the menu');
+    check('*** end to end: the cursor moves, clicks, the menu opens and closes, by voice ***',
+      JSON.stringify(got) === JSON.stringify([['move', { dir: 'left', size: 'large' }], ['click'], ['settings'], ['close']]), JSON.stringify(got));
+    sp.destroy(); input.destroy();
+  }
+
+  section('*** A MODULE’S OWN COMMANDS WHILE IT HAS FOCUS (brick breaker’s “stop” is the paddle) ***');
+  {
+    const t = SP.moduleVoiceTable({ 'Stop': 'stop', 'stop the paddle': 'stop', launch: 'launch', 'go away now please really': 'back',
+      teleport: 'teleport', resume: 'play', x: 'select', back: 'back' }, { verbs: ['stop', 'launch', 'play'] });
+    check('moduleVoiceTable keeps what can fire: a verb the module answers AND the speech layer can press',
+      JSON.stringify(t) === JSON.stringify({ 'stop the paddle': 'stop', launch: 'launch', resume: 'play' }), JSON.stringify(t));
+    check('...and drops the rest: not lowercase, five words, an unknown verb, one letter, a verb the module lacks', !('back' in t) && !('teleport' in t) && !('x' in t));
+    const bus = createBus();
+    const reg = createDefaultRegistry();
+    const input = createInputBus({ bus, actions: reg });
+    SPEECH_BINDINGS.forEach((b) => input.addBinding(b));
+    const verbs = [];
+    for (const v of ['stop', 'pause', 'launch', 'play', 'left']) bus.subscribe(verbTopic(v), () => verbs.push(v));
+    let focusedTable = null;
+    let feed = null;
+    const sp = attachSpeech(input, { recognizer: { start(cb) { feed = cb; }, stop() {}, running: true }, confirm: 'off',
+      scoped: () => focusedTable });
+    sp.start();
+    feed('computer please stop');
+    check('no module table: “stop” is pause, as everywhere', JSON.stringify(verbs) === '["pause"]', JSON.stringify(verbs));
+    const { VOICE } = await import('../modules/brickbreaker.js');
+    focusedTable = SP.moduleVoiceTable(VOICE, { verbs: ['next', 'prev', 'select', 'back', 'left', 'right', 'stop', 'launch', 'pause', 'play'] });
+    feed('computer please stop');
+    feed('computer please launch');
+    feed('computer please resume');
+    feed('computer please stop the paddle');
+    check('*** brick breaker focused: “stop” stops the paddle; launch, resume work; “stop the paddle” too ***',
+      JSON.stringify(verbs) === '["pause","stop","launch","play","stop"]', JSON.stringify(verbs));
+    feed('stop');
+    check('...still behind the wake phrase', verbs.length === 5);
+    focusedTable = null;
+    feed('computer please stop');
+    check('focus moves away: “stop” is pause again, with no restart', verbs[verbs.length - 1] === 'pause');
+    focusedTable = () => { throw new Error('boom'); };
+    const sp2 = attachSpeech(input, { recognizer: { start(cb) { feed = cb; }, stop() {}, running: true }, confirm: 'off',
+      scoped: () => { throw new Error('boom'); } });
+    sp2.start();
+    feed('computer please launch');
+    check('a scoped table that throws is no table, not a dead microphone', verbs[verbs.length - 1] === 'launch');
+    sp.destroy(); sp2.destroy(); input.destroy();
+    check('meansSomething knows a module phrase when the host passes the table',
+      !SP.meansSomething('computer please stop the paddle') && SP.meansSomething('computer please stop the paddle', undefined, undefined, undefined, { 'stop the paddle': 'stop' }));
+    // Every manifest's `voice` obeys the table's rules, so nothing a module declares is silently dropped.
+    const { listManifests } = await import('../module.js');
+    const { verbsFor } = await import('../actions.js');
+    const bad = listManifests().filter((m) => m.voice).flatMap((m) => {
+      const ok = SP.moduleVoiceTable(m.voice, { verbs: verbsFor(m.type) });
+      return Object.keys(m.voice).filter((p) => !(p in ok)).map((p) => `${m.type}:"${p}"`);
+    });
+    check('*** every module’s spoken commands can fire (no phrase in any manifest is dropped) ***', bad.length === 0, bad.join(', '));
   }
 
   section('*** the shipped bindings ***');

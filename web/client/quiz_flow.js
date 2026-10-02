@@ -22,7 +22,15 @@
 //   3. after `missesBeforeOffer` misses: "Would you like to try again, or hear the answer?"
 //      Trying again gives the NEXT hint, if the game has one (spelling: the first letter, then how
 //      many letters).
-//   4. after a right answer, or after hearing the answer: "Would you like to do another one?"
+//   4. after a right answer, or after hearing the answer: THE NEXT QUESTION, by itself.
+//      *** "WOULD YOU LIKE TO DO ANOTHER ONE?" IS GONE (Mike, 2026-10-02): "I don't think we should
+//      be asking if you want to do another one after each question. I think that was my original
+//      idea, but it ruins the flow of the game. They can just stop answering or ask the computer to
+//      stop." *** So a right answer celebrates for `celebrateMs` and the next question follows; a
+//      revealed answer stays up for `answerMs` and the next question follows; a press on either
+//      skips the wait. To stop: stop answering (the question simply waits - a game waiting for its
+//      input is the game, not a gate), or say a STOP_PHRASES phrase ("stop", "I'm done"), which ends
+//      the sitting with "Thanks for playing." and a Play again button.
 //   5. every question can be answered by voice OR a switch.
 //
 // *** AND ONE GAME MAY BE GENTLER, AS A SETTING. *** Name that person (row 2.45): missing a loved
@@ -48,8 +56,9 @@ export const ANSWER_TOPIC = 'speech/answer';
 export const GRAMMAR_TOPIC = 'speech/grammar';
 export const UNKNOWN = '[unk]';
 
-// *** MIKE'S WORDING. *** The five lines he gave (wrongLine, unsureLine, twoMissLine, anotherLine,
-// and the flow around them) are his, 2026-09-30; the rest is Design's copy from voice.html.
+// *** MIKE'S WORDING. *** The lines he gave (wrongLine, unsureLine, twoMissLine, and the flow around
+// them) are his, 2026-09-30; the rest is Design's copy from voice.html. His fourth, anotherLine
+// ("Would you like to do another one?"), he retired himself on 2026-10-02 - see THE FLOW, item 4.
 export const FLOW_LINES = Object.freeze({
   wrongLine: 'It sounded like you said {heard}. That is incorrect.',
   switchWrongLine: 'That is incorrect.',
@@ -63,7 +72,6 @@ export const FLOW_LINES = Object.freeze({
   twoMissLine: 'Would you like to try again, or hear the answer?',
   rightLine: 'Yes! {explain}',
   answerLine: 'Here is the answer. {explain}',
-  anotherLine: 'Would you like to do another one?',
   doneLine: 'Thanks for playing.',
   notCaughtLine: "I didn't catch that. Say it again, or press your switch.",
 });
@@ -74,8 +82,27 @@ export const FLOW_LINE_LABELS = Object.freeze({
   reasonQuiet: 'Reason: very quiet', reasonNoise: 'Reason: other noise', reasonCutoff: 'Reason: cut off',
   reasonAlternative: 'Reason: another word it could be', hintLine: 'The hint',
   twoMissLine: 'After the misses', rightLine: 'A right answer', answerLine: 'Hearing the answer',
-  anotherLine: 'Another one?', doneLine: 'Finished', notCaughtLine: "Didn't catch it",
+  doneLine: 'Finished', notCaughtLine: "Didn't catch it",
 });
+
+/**
+ * *** WHAT ENDS A SITTING, SAID ALOUD (2026-10-02). *** With "another one?" gone, "ask the computer
+ * to stop" (Mike) is how somebody playing by voice says they are finished. Whole utterances only,
+ * like every other spoken list: "stop" said ALONE ends it; "stop" inside a sentence does not.
+ *
+ * *** A STOP PHRASE THAT IS ONE OF THIS QUESTION'S OWN WORDS IS AN ANSWER, NOT A STOP. ***
+ * "What is the opposite of go?" - "stop". The engine checks the question's own vocabulary first, so
+ * the person answering is never told "Thanks for playing" for the right answer. "I'm done" and
+ * "stop playing" still end that game.
+ *
+ * Not a setting, argued: it is a list of the ways people say one thing, the same kind of table as
+ * input_speech.js PHRASES and YES_WORDS, and it grows by adding a row, not by a person tuning it.
+ * NOT "done": the letter and number boards use "done" to check what was entered.
+ */
+export const STOP_PHRASES = Object.freeze(['stop', 'stop it', 'stop playing', 'stop the game', "i'm done",
+  'im done', 'i am done', "i'm finished", 'im finished', 'i am finished', "that's enough", 'thats enough',
+  'enough', 'no more', 'quit', 'end the game']);
+export const isStop = (t) => STOP_PHRASES.includes(normalize(t));
 
 // The same numbers word_games ships, for the same reasons (its DEFAULTS say why each one is what
 // it is). Shared keys keep their word_games KIND too: `settings_audit` fails a key declared as two
@@ -85,6 +112,10 @@ export const FLOW_DEFAULTS = Object.freeze({
   missesBeforeOffer: 2,
   correctPoints: 1,
   celebrateMs: 3000,
+  // How long a revealed answer ("Here is the answer. COLD is the opposite of HOT.") stays before the
+  // next question comes by itself. Longer than the celebration: it is a sentence to hear and a pair
+  // to look at, not a chime. A press moves on sooner. A setting (below), 2-15 seconds.
+  answerMs: 5000,
   sound: true,
   speak: true,
   sayChoice: true,
@@ -92,6 +123,11 @@ export const FLOW_DEFAULTS = Object.freeze({
   ownScore: 'auto',
   ...FLOW_LINES,
 });
+
+/** The "how long the answer stays" row, shared with word_games.js (its own SETTINGS list). */
+export const ANSWER_MS_FIELD = Object.freeze({ key: 'answerMs', label: 'How long a shown answer stays before the next question',
+  kind: 'number', default: 5000, level: 'advanced', min: 2000, max: 15000, step: 1000, displayScale: 1000,
+  unit: 'seconds', unitOne: 'second', note: 'A press moves on sooner.' });
 
 /** The settings rows every answer game shares. `lines` adds a game's own spoken lines. */
 export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {}) {
@@ -119,6 +155,7 @@ export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {})
     { key: 'celebrateMs', label: 'How long the celebration stays', kind: 'number', default: 3000,
       level: 'advanced', min: 1000, max: 6000, step: 500, displayScale: 1000,
       unit: 'seconds', unitOne: 'second' },
+    { ...ANSWER_MS_FIELD },
     ...Object.keys(allLines).map((key) => ({ key, label: labels[key] || FLOW_LINE_LABELS[key] || key,
       kind: 'text', default: allLines[key], level: 'advanced' })),
   ];
@@ -365,8 +402,9 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 // ---------------------------------------------------------------------------------------
 //
 // Phases: 'idle', 'loading' (a game whose items are still arriving), 'empty' (nothing to ask —
-// the game says so plainly), 'asking', 'unsure', 'twoMiss', 'celebrate', 'gentle' (the gentle
-// miss: "That was X's message. Let's listen again?"), 'another', 'done'.
+// the game says so plainly), 'asking', 'unsure', 'twoMiss', 'celebrate', 'answer' (a revealed
+// answer on screen for `answerMs`, then the next question), 'gentle' (the gentle miss: "That was
+// X's message. Let's listen again?"), 'done' (somebody said stop). No 'another' (2026-10-02).
 //
 // AN ADAPTER (one per game) — only `items`, `ask`, `judge` and `answer` are required:
 //   items(cfg, rand)          the questions; null while still loading, [] when there are none
@@ -461,11 +499,11 @@ export function createQuizEngine({
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
     else if (phase === 'gentle') { add(YES_WORDS); add(NO_WORDS); add(['listen again', 'again']); }
-    else if (phase === 'another') {
-      add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]);
-      if (canReplay()) add(['listen again', 'again']);
-    } else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
+    else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
     else return [];
+    // The ways to say stop, in every phase that is waiting on somebody (a grammar-limited recogniser
+    // can only hear what is listed). Done excepted: it has already stopped.
+    if (phase !== 'done') add(STOP_PHRASES);
     // *** ALWAYS. *** Without it a grammar-limited recogniser snaps every sound to a listed word.
     words.add(UNKNOWN);
     return [...words];
@@ -570,17 +608,14 @@ export function createQuizEngine({
     speak(fill(c().rightLine, { explain: pair.explain }));
     try { chime(); } catch (err) { console.error('quiz: chime', err); }
     const ms = Math.max(0, Number(c().celebrateMs) || FLOW_DEFAULTS.celebrateMs);
-    timer = setTimer(() => { timer = null; toAnother(); }, ms);
+    timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }
 
-  function toAnother({ silent = false } = {}) {
+  // After a celebration, a shown answer or the gentle miss: THE NEXT QUESTION (no "another one?").
+  function onward() {
     stopTimer();
-    phase = 'another';
-    highlight = 0;
-    feedback = null;
-    if (!silent) speak(c().anotherLine);
-    changed();
+    nextItem();
   }
 
   function reveal() {
@@ -589,12 +624,39 @@ export function createQuizEngine({
     pair = { answer, explain: explainOf(answer) };
     report({ right: false });
     stopTimer();
-    phase = 'another';
+    phase = 'answer';
     highlight = 0;
     feedback = null;
-    speak(fill(c().answerLine, { explain: pair.explain }), c().anotherLine);
+    speak(fill(c().answerLine, { explain: pair.explain }));
+    const ms = Math.max(0, Number(c().answerMs) || FLOW_DEFAULTS.answerMs);
+    timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }
+
+  // Somebody said stop: "Thanks for playing." and a Play again button. A question that was being
+  // tried counts as skipped (it was hard), exactly as a skip after a miss does.
+  function finish() {
+    stopTimer();
+    if (item && (phase === 'asking' || phase === 'unsure' || phase === 'twoMiss') && misses > 0) report({ skipped: true });
+    phase = 'done';
+    highlight = 0;
+    feedback = null;
+    unsure = null;
+    speak(c().doneLine);
+    changed();
+  }
+
+  // The words that ANSWER this question (its vocabulary and the board's commands) - so a stop phrase
+  // that is one of them ("stop", the opposite of "go") is judged as an answer, not taken as stop.
+  function answerVocab() {
+    const words = new Set();
+    const add = (list) => (list || []).forEach((w) => w && words.add(normalize(w)));
+    if (item) add(call('vocab', item, c()));
+    if (entryMode()) add(['delete', 'back', 'start over', 'check', 'done', 'say it again']);
+    if (canReplay()) add(['listen again', 'play it again']);
+    return words;
+  }
+  const saidStop = (text) => isStop(text) && !answerVocab().has(normalize(text));
 
   function gentleMiss() {
     const answer = answerOf();
@@ -734,13 +796,16 @@ export function createQuizEngine({
   function hear(result = {}) {
     if (dead || !A || !result || typeof result !== 'object') return;
     voiceSeen = true;
-    if (phase === 'celebrate' || phase === 'idle' || phase === 'loading' || phase === 'empty') { changed(); return; }
+    if (phase === 'celebrate' || phase === 'answer' || phase === 'idle' || phase === 'loading' || phase === 'empty') { changed(); return; }
     const raw = String(result.text == null ? '' : result.text).trim();
     const text = normalize(raw);
     if (!raw || raw.toLowerCase() === UNKNOWN || (!text && !/\d/.test(raw)) || text === 'unk') return notCaught();
     const conf = Number(result.confidence);
     const confident = !result.nearMiss && result.confidence != null && Number.isFinite(conf)
       && conf >= Number(c().unsureBelow);
+    // "Stop" / "I'm done", said with confidence while a question waits: the sitting ends. Unsure,
+    // it is not caught (a stop is not worth a "did you mean" - saying it again costs nothing).
+    if (confident && phase !== 'done' && saidStop(text)) return finish();
     switch (phase) {
       case 'asking':
         if (confident && canReplay() && isListen(text)) return press('replay');
@@ -759,12 +824,6 @@ export function createQuizEngine({
         if (isYes(text) || isAgain(text) || isListen(text)) return press('replay');
         if (isNo(text) || isDone(text)) return press('onward');
         return notCaught();
-      case 'another':
-        if (!confident) return notCaught();
-        if (canReplay() && (isListen(text) || isAgain(text))) return press('replay');
-        if (isYes(text)) return press('more');
-        if (isNo(text) || isDone(text)) return press('finish');
-        return notCaught();
       case 'done':
         if (confident && (isYes(text) || isAgain(text))) return press('restart');
         return undefined;
@@ -781,10 +840,7 @@ export function createQuizEngine({
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
-      case 'gentle': return [{ act: 'replay', label: 'Listen again' }, { act: 'onward', label: 'Not now' }];
-      case 'another': return [{ act: 'more', label: 'Yes' },
-        ...(canReplay() ? [{ act: 'replay', label: 'Listen again' }] : []),
-        { act: 'finish', label: "No, I'm done" }];
+      case 'gentle': return [{ act: 'replay', label: 'Listen again' }, { act: 'onward', label: 'Next one' }];
       case 'done': return [{ act: 'restart', label: 'Play again' }];
       default: return [];
     }
@@ -836,28 +892,22 @@ export function createQuizEngine({
       case 'replay':
         if (!canReplay()) return;
         if (phase === 'asking') { try { onReplay(item); } catch (err) { console.error('quiz: replay', err); } speak(askLine(), c().sayChoice ? candLine() : ''); changed(); return; }
-        if (phase === 'gentle' || phase === 'another') {
-          try { onReplay(item); } catch (err) { console.error('quiz: replay', err); }
-          // After listening again: "Would you like to do another one?" (the host holds the line
-          // until the clip has finished, so it is never said over the person on screen).
-          toAnother();
-        }
+        // After the gentle miss: play it again and STAY on the gentle choice (Listen again / Next one),
+        // so the next question never starts over the person on screen.
+        if (phase === 'gentle') { try { onReplay(item); } catch (err) { console.error('quiz: replay', err); } changed(); }
         return;
       case 'onward':
-        if (phase === 'gentle') toAnother();
+        if (phase === 'gentle') onward();
         return;
+      // A press during the celebration or a shown answer: the next question now, not after the wait.
+      // `more` is the old "Yes, another" act, kept as the same thing for a host that still sends it.
       case 'continue':
-        if (phase === 'celebrate') toAnother();
-        return;
       case 'more':
-        if (phase === 'another') nextItem();
+        if (phase === 'celebrate' || phase === 'answer') onward();
         return;
       case 'finish':
-        if (phase !== 'another') return;
-        phase = 'done';
-        highlight = 0;
-        speak(c().doneLine);
-        changed();
+        if (phase === 'done' || phase === 'idle' || phase === 'loading' || phase === 'empty') return;
+        finish();
         return;
       case 'restart':
         if (phase === 'done') { rightCount = 0; asked = 0; nextItem(); }
@@ -874,7 +924,7 @@ export function createQuizEngine({
   // switches ARE the first and second stop.
   function move(delta) {
     if (dead) return;
-    if (phase === 'celebrate') { press('continue'); return; }
+    if (phase === 'celebrate' || phase === 'answer') { press('continue'); return; }
     const s = stops();
     if (c().twoSwitch === 'yesno' && delta > 0) { if (s[1]) press(s[1].act); else if (s[0]) press(s[0].act); return; }
     if (!s.length) return;
@@ -883,7 +933,7 @@ export function createQuizEngine({
   }
   function select() {
     if (dead) return;
-    if (phase === 'celebrate') { press('continue'); return; }
+    if (phase === 'celebrate' || phase === 'answer') { press('continue'); return; }
     const s = stops();
     if (!s.length) return;
     const i = c().twoSwitch === 'yesno' ? 0 : Math.min(highlight, s.length - 1);

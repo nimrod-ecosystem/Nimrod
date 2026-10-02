@@ -197,7 +197,57 @@ export const MEDIA_VERBS = [
 // (YouTube's "How loud the video is") stays a per-source level in that panel's settings.
 export const MASTER_VERBS = ['volume-up', 'volume-down'];
 
+// ---------------------------------------------------------------------------------------
+// THE ACTION VERBS (2026-10-02). Mike, playing brick breaker on the live site: *"It'd be good for
+// voice control: right, left, stop (stops the paddle), launch, pause (pauses and brings up settings),
+// resume."* Right and left were already verbs, pause is a media verb and resume is `play` ("carry on
+// with whatever is paused"). Three were missing, and each is a thing more than one module can mean:
+//   launch  start the thing that goes: the ball, a round. Not `select`: in a one-switch game select
+//           already means the ONE press (brick breaker: stop / start the gliding paddle), and a spoken
+//           "launch" that stopped the paddle instead would be a command that does something else.
+//   stop    stop what is MOVING, without pausing anything: the paddle. Not `pause`, which freezes the
+//           whole game. The spoken word "stop" still means pause everywhere (input_speech.js PHRASES,
+//           and the reason is there: said to a video it must not end anything) - except on a module
+//           that declares "stop" as its own command while it has focus (a manifest's `voice`).
+//   close   close the settings menu - IDEMPOTENT, unlike `menu`, which opens it when it is closed.
+//           "Close the menu" said twice must not open it again. When no menu is open it goes to the
+//           focused panel like any verb, and a panel with nothing for it is told nothing.
+// A SHIPPED LIST, LIKE MEDIA_VERBS and for MEDIA_VERBS' reason: the binder's everyday list stays the
+// nine plus focus plus media, and these are offered under their own heading (inputs.js); the router
+// routes them to the focused panel exactly like the nine; remote drive (drive.js) is untouched.
+export const ACTION_VERBS = [
+  { id: 'launch', label: 'Launch', hint: 'start the ball (or whatever goes)' },
+  { id: 'stop',   label: 'Stop moving', hint: 'stop what is moving, without pausing the game' },
+  { id: 'close',  label: 'Close the menu', hint: 'closes it; never opens it' },
+];
+
 export const verbTopic = (id) => `verb/${id}`;
+
+// ---------------------------------------------------------------------------------------
+// THE CURSOR, BY COMMAND (2026-10-02). Mike: *"the cursor should have voice commands kind of like I
+// just described for the brick breaker. Other general things like scroll up or down."* These are
+// SCREEN actions, not verbs: the cursor is not a panel, so nothing here goes through focus. A switch
+// can be bound to any of them (they are registered below and offered in the binder under "The
+// cursor"), and input_speech.js ROUTES speaks them ("cursor left", "click", "scroll down").
+// `cursor_drive.js` answers the topics: it moves the AIM (aim.js), so the big cursor (cursor.js)
+// draws it and anything that follows the aim follows it; a click lands on whatever is under it.
+// How far "a bit" and "a lot" go, and how far a scroll goes, are its settings (CURSOR_DRIVE_FIELDS).
+export const CURSOR_TOPICS = Object.freeze({ move: 'cursor/move', click: 'cursor/click', scroll: 'cursor/scroll' });
+const cursorMove = (dir, size, label) => ({ id: `cursor/${dir}${size === 'large' ? '-far' : ''}`, label,
+  topic: CURSOR_TOPICS.move, payload: { dir, size }, group: 'Cursor' });
+export const CURSOR_ACTIONS = [
+  cursorMove('left', 'small', 'Cursor: left a bit'),
+  cursorMove('right', 'small', 'Cursor: right a bit'),
+  cursorMove('up', 'small', 'Cursor: up a bit'),
+  cursorMove('down', 'small', 'Cursor: down a bit'),
+  cursorMove('left', 'large', 'Cursor: left a lot'),
+  cursorMove('right', 'large', 'Cursor: right a lot'),
+  cursorMove('up', 'large', 'Cursor: up a lot'),
+  cursorMove('down', 'large', 'Cursor: down a lot'),
+  { id: 'cursor/click', label: 'Cursor: click where it is', topic: CURSOR_TOPICS.click, group: 'Cursor' },
+  { id: 'cursor/scroll-up', label: 'Scroll up (where the cursor is)', topic: CURSOR_TOPICS.scroll, payload: { dir: 'up' }, group: 'Cursor' },
+  { id: 'cursor/scroll-down', label: 'Scroll down (where the cursor is)', topic: CURSOR_TOPICS.scroll, payload: { dir: 'down' }, group: 'Cursor' },
+];
 
 // ---------------------------------------------------------------------------------------
 // CUSTOM VERBS — Mike: *"a verb is just a variable. You bind something to verb X and then
@@ -237,7 +287,7 @@ export const verbTopic = (id) => `verb/${id}`;
 
 // A custom id may not shadow a built-in. `select` meaning something else on one screen is the
 // single worst thing this feature could do: every binding a person owns is keyed to that name.
-const BUILT_IN_IDS = new Set([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS].map((v) => v.id));
+const BUILT_IN_IDS = new Set([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS, ...ACTION_VERBS].map((v) => v.id));
 
 export function normalizeVerb(raw) {
   const id = String(raw?.id || '').trim();
@@ -430,7 +480,12 @@ export const MODULE_VERBS = {
   note:          { next: 'note/next', prev: 'note/prev', select: 'note/select', back: 'note/back' },
   // ROW 2.37 item 10. Brick breaker: next / prev move the paddle a step (follow mode: aim right / left), select launches,
   // stops or starts the gliding paddle (follow: changes the angle), back pauses. Rhythm: every press verb is a tap on the beat.
-  brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back' },
+  // 2026-10-02 (Mike: "right, left, stop, launch, pause, resume"): left / right move the paddle a step (as prev / next),
+  // stop stops the gliding paddle, launch sends a resting ball, pause pauses (and opens this panel's settings, a
+  // setting), play resumes. Every one of them is a switch binding as well as a spoken command.
+  brickbreaker:  { next: 'brickbreaker/next', prev: 'brickbreaker/prev', select: 'brickbreaker/select', back: 'brickbreaker/back',
+                   left: 'brickbreaker/left', right: 'brickbreaker/right', stop: 'brickbreaker/stop',
+                   launch: 'brickbreaker/launch', pause: 'brickbreaker/pause', play: 'brickbreaker/resume' },
   rhythm:        { next: 'rhythm/next', prev: 'rhythm/prev', select: 'rhythm/select', back: 'rhythm/back' },
   // Row 2.45: the thinking games. next / prev walk the offered answers, select answers, back skips.
   think_games:   { next: 'think_games/next', prev: 'think_games/prev', select: 'think_games/select', back: 'think_games/skip' },
@@ -473,6 +528,12 @@ export function createDefaultRegistry() {
   reg.registerAll(MEDIA_VERBS.map((v) => ({
     id: verbTopic(v.id), label: v.label, topic: verbTopic(v.id), group: 'Media',
   })));
+  // The action verbs (launch / stop / close) and the cursor's commands: registered so a switch binding
+  // or a spoken phrase bound to one fires (input.js refuses an unknown action).
+  reg.registerAll(ACTION_VERBS.map((v) => ({
+    id: verbTopic(v.id), label: v.label, topic: verbTopic(v.id), group: 'Games and menus',
+  })));
+  reg.registerAll(CURSOR_ACTIONS);
   reg.registerAll(SYSTEM_ACTIONS);
   reg.register(ROOM_HOLD_ACTION);
   return reg;

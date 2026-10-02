@@ -52,7 +52,7 @@
 
 import { createBus } from './bus.js';
 import { createDefaultRegistry, VERBS, FOCUS_VERBS, MEDIA_VERBS, MASTER_VERBS, verbTopic,
-         MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION } from './actions.js';
+         MODULE_VERBS, SYSTEM_ACTIONS, ROLE_CYCLE_ACTION, ROOM_HOLD_ACTION, ACTION_VERBS, CURSOR_ACTIONS } from './actions.js';
 import { SPEECH_ACTIONS, NEAR_MISS_ACTIONS } from './input_speech.js';
 import { SUBTITLE_ACTIONS } from './subtitles.js';
 import { createInputBus, normalizeBinding, GATES, ROLES, EDGES } from './input.js';
@@ -78,7 +78,7 @@ const GATE_LABEL = { both: 'Everyone', moderator: 'Moderator only', participant:
 const ROLE_LABEL = { universal: 'Anyone', moderator: 'Moderator', participant: 'Participant' };
 const EDGE_LABEL = { press: 'on press', release: 'on release' };
 
-const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS].map((v) => [v.id, v.label]));
+const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS, ...ACTION_VERBS].map((v) => [v.id, v.label]));
 const isFocusVerb = (verb) => FOCUS_VERBS.some((v) => v.id === verb);
 const isMasterVerb = (verb) => MASTER_VERBS.includes(verb);
 
@@ -121,6 +121,10 @@ const EXTRA_ACTION_GROUPS = [
   // Row 2.47: scroll the subtitles back and return to the latest line - a switch can read back too.
   { label: 'Subtitles', actions: SUBTITLE_ACTIONS },
   { label: 'Room', actions: [ROOM_HOLD_ACTION] },
+  // 2026-10-02 (Mike: brick breaker's "launch" and "stop", the menu's "close", the cursor by command):
+  // registered in createDefaultRegistry, offered here so a switch can be bound to each.
+  { label: 'Games and menus', actions: ACTION_VERBS.map((v) => ({ id: verbTopic(v.id), label: v.label })) },
+  { label: 'The cursor', actions: CURSOR_ACTIONS },
 ];
 export const EXTRA_ACTIONS = EXTRA_ACTION_GROUPS.flatMap((g) => g.actions);
 

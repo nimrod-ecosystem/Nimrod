@@ -687,6 +687,9 @@ export function mountSettings(root, {
       bus.subscribe(verbTopic('prev'), () => { if (open) prev(); }),
       bus.subscribe(verbTopic('select'), () => { if (open) select(); }),
       bus.subscribe(verbTopic('back'), () => { if (open) back(); }),
+      // "Close the menu" (actions.js ACTION_VERBS, 2026-10-02): closes it and never opens it, so a
+      // spoken close heard twice cannot put the menu back.
+      bus.subscribe(verbTopic('close'), () => { if (open) close(); }),
     ];
     busOffs.push(...off);
     return () => off.forEach((fn) => fn());
@@ -719,5 +722,5 @@ export function mountSettings(root, {
 }
 
 // Exported so a host can assert it wired every verb the menu understands.
-export const MENU_VERBS = ['menu', 'next', 'prev', 'select', 'back'];
+export const MENU_VERBS = ['menu', 'next', 'prev', 'select', 'back', 'close'];
 export const ALL_VERB_IDS = VERBS.map((v) => v.id);

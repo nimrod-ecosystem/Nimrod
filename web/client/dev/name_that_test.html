@@ -188,12 +188,12 @@ try {
     r.host.querySelector('[data-act="replay"]').click();
     await waitFor(() => m.played.length === 2);   // the clip's address is resolved first
     check('"Listen again" plays the clip again', m.played.length === 2);
-    check('...and holds "another one?" until it has finished', r.said.length === before && r.phase() === 'another');
+    check('...says nothing over it, and stays on the choice (no "another one?" since 2026-10-02)', r.said.length === before && r.phase() === 'gentle');
     m.end();
-    check('...then asks it', r.last() === FLOW_LINES.anotherLine, r.last());
+    check('...and still says nothing when it ends: the choice is on screen', r.said.length === before && r.phase() === 'gentle', r.last());
     await sleep(10);
     check('nothing paid for a miss', r.points().length === 0);
-    r.eng.press('more');
+    r.host.querySelector('[data-act="onward"]').click();
     await waitFor(() => m.played.length === 3);
     m.end();
     const it2 = r.probe().item;

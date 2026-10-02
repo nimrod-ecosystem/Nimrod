@@ -19,7 +19,7 @@
 
 // Every *_test.html in this folder that `run_all.html` runs.
 export const SUITES = [
-  'adulting', 'aim', 'algebra', 'calc', 'calculator', 'calculator_link', 'link_runner', 'ports', 'bank', 'board', 'board_editor', 'camera', 'clock', 'clock_hud_contrast', 'comet', 'layers', 'packs', 'composer', 'connections', 'controls_view', 'demo_strip',
+  'adulting', 'aim', 'cursor_drive', 'algebra', 'calc', 'calculator', 'calculator_link', 'link_runner', 'ports', 'bank', 'board', 'board_editor', 'camera', 'clock', 'clock_hud_contrast', 'comet', 'layers', 'packs', 'composer', 'connections', 'controls_view', 'demo_strip',
   'composer_reach', 'device_pick', 'director', 'drive',
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',

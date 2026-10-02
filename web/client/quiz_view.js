@@ -4,7 +4,7 @@
 // `word_games.js` (row 2.31) is the pattern, and this is that module's factory with the game taken
 // out: spelling, simple math and name-that each supply an ADAPTER (what to ask and how to judge it)
 // and a small VIEW (the picture, the board, the clip), and everything a person meets between them
-// — "Is it 7?", the unsure line, the celebration, "Would you like to do another one?" — is drawn
+// — "Is it 7?", the unsure line, the celebration, the shown answer, "Thanks for playing" — is drawn
 // by the same code, with the same `.wg` classes as word games, so four games look like one family.
 //
 // WHAT IT OWNS, each for the reason word_games gives beside the same code:
@@ -372,17 +372,16 @@ export function quizModule(spec) {
         st = `${wrong}<p class="wg-say" data-offer>${esc(cfg.twoMissLine)}</p>${btns(stops, s.highlight)}`;
       } else if (s.phase === 'celebrate') {
         ask = 'Yes!';
-        st = `<div class="wg-right"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p></div>`;
+        st = `<div class="wg-right"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p>${scoreHtml(s)}</div>`;
         extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
           + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
       } else if (s.phase === 'gentle') {
         ask = esc(s.feedback?.text || '');
         st = `<div class="wg-right" data-gentle>${pairHtml(s)}${btns(stops, s.highlight)}</div>`;
-      } else if (s.phase === 'another') {
-        ask = esc(cfg.anotherLine);
-        const shown = s.revealed && s.pair
-          ? `${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>` : '';
-        st = `<div class="wg-right">${shown}${btns(stops, s.highlight)}${scoreHtml(s)}</div>`;
+      } else if (s.phase === 'answer') {
+        // The revealed answer, up for `answerMs`; the next question follows by itself (no "another one?").
+        ask = view.askHtml ? view.askHtml(s, cfg) : esc(s.askLine);
+        st = `<div class="wg-right">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${scoreHtml(s)}</div>`;
       } else if (s.phase === 'done') {
         ask = esc(cfg.doneLine);
         st = `<div class="wg-right">${scoreHtml(s)}${btns(stops, s.highlight)}</div>`;

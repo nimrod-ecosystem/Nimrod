@@ -174,6 +174,17 @@ export function togglePause(g) {
   return true;
 }
 
+/**
+ * Pause (`on` true) or go on (`on` false), and NOTHING if it is already so. The spoken "pause" and
+ * "resume" use this, not the toggle: a command heard twice must leave the game the way it was asked
+ * for (input_speech.js: "a spoken command should be IDEMPOTENT"). Returns true when it changed.
+ */
+export function setPaused(g, on) {
+  if ((g.phase === 'paused') === !!on) return false;
+  togglePause(g);
+  return true;
+}
+
 function moveBall(g, dt, speed, events) {
   const b = g.ball;
   // Sub-steps no longer than half a ball radius, so a fast ball or a long frame cannot pass

@@ -40,7 +40,10 @@ import {
   FIELD_W, FIELD_H, BALL_R, PADDLE_Y, BALL_SPEEDS, PADDLE_WIDTHS, MIN_VX_FRAC, MIN_VY_FRAC,
   makeWall, newGame, launch, step, setPaddleX, landingX, togglePause, aliveCount,
 } from '../breakout.js';
-import { GAME, DEFAULTS, REST_MS, IDLE_BALLS, statusFor } from '../modules/brickbreaker.js';
+import { GAME, DEFAULTS, REST_MS, IDLE_BALLS, AIM, statusFor } from '../modules/brickbreaker.js';
+import { SYSTEM_TOPICS } from '../actions.js';
+import { SHELL_STATE } from '../shell_verbs.js';
+import { moduleVoiceTable } from '../input_speech.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -497,6 +500,165 @@ try {
     const tr = getComputedStyle(r.host.querySelector('.bb-brick')).transitionDuration;
     check('and nothing on it has a transition', tr.split(',').every((d) => parseFloat(d) === 0), tr);
     r.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** PAUSE (Mike, 2026-10-02: "I couldn\'t find a way to pause it") ***');
+  {
+    const bus = createBus();
+    const asks = [];
+    bus.subscribe(SYSTEM_TOPICS.settings, (p) => { asks.push(p); p?.claim?.(); });
+    const t = mount({ bus });
+    t.pub('select');
+    t.clock.run(1000);
+    t.pub('pause');
+    const g = t.probe().game;
+    check('"pause": paused', g.phase === 'paused');
+    check('*** ...and it asks the screen for its settings menu (Mike: "pauses and brings up settings") ***',
+      asks.length === 1 && asks[0].from === GAME && t.probe().menuAsks === 1, JSON.stringify(asks));
+    check('*** obvious: a "Paused" sign on the field ***', t.host.querySelector('[data-paused]')?.hidden === false
+      && /Paused/.test(t.host.querySelector('[data-paused]').textContent));
+    check('...and the words say so', /^Paused/.test(t.say()), t.say());
+    check('*** still: no loop is running ***', !t.clock.pending() && !t.probe().looping);
+    const at = { ...g.ball }, px = g.paddle.x;
+    t.clock.run(3000);
+    check('three seconds later the ball has not moved', g.ball.x === at.x && g.ball.y === at.y);
+    t.bus.publish(AIM, { x: 0.1 });
+    t.pub('left'); t.pub('right');
+    check('a tracker, left and right move nothing while paused', g.paddle.x === px);
+    t.pub('pause');
+    check('"pause" again: still paused (a command heard twice leaves it as asked); the menu is asked for again (it opens only if closed)',
+      g.phase === 'paused' && asks.length === 2);
+    t.pub('resume');
+    check('"resume": playing again, and the loop is back', g.phase === 'play' && t.clock.pending());
+    check('...the sign is gone', t.host.querySelector('[data-paused]')?.hidden === true);
+    t.pub('resume');
+    check('"resume" again: still playing (never a toggle)', g.phase === 'play');
+    t.pub('back');
+    check('back still pauses, as before (and does not open the menu)', g.phase === 'paused' && asks.length === 2);
+    t.pub('select');
+    check('a press goes on', g.phase === 'play');
+    bus.publish(SHELL_STATE, { menuOpen: true });
+    check('*** the screen\'s menu opening from anywhere pauses a game in play ***', g.phase === 'paused');
+    bus.publish(SHELL_STATE, { menuOpen: false });
+    check('...and closing it does not start it again under somebody not looking yet', g.phase === 'paused');
+    t.inst.destroy();
+    const q = mount({ saved: { pauseOpensMenu: false }, bus: (() => { const b = createBus(); b.subscribe(SYSTEM_TOPICS.settings, () => asks.push('no')); return b; })() });
+    q.pub('pause');
+    check('pauseOpensMenu off: "pause" only pauses', q.probe().game.phase === 'paused' && !asks.includes('no') && q.probe().menuAsks === 0);
+    q.inst.destroy();
+    const m = getManifest(GAME);
+    check('the pause key (space by default) and the menu are settings', m.settings.some((s) => s.key === 'pauseKey' && s.default === 'space')
+      && m.settings.some((s) => s.key === 'pauseOpensMenu' && s.default === true));
+  }
+
+  section('keys, once the game has the keyboard: the pause key, and Escape');
+  {
+    const bus = createBus();
+    const asks = [];
+    bus.subscribe(SYSTEM_TOPICS.settings, (p) => asks.push(p));
+    const host = scratch(960, 540);
+    const t = mount({ host, bus });
+    const root = host.querySelector('[data-bb-root]');
+    check('the game can take the keyboard (it is focusable)', root.tabIndex === 0);
+    const f = host.querySelector('.bb-field').getBoundingClientRect();
+    host.querySelector('.bb-field').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: f.left + 10, clientY: f.top + 10 }));
+    check('a click on it gives it the keyboard', document.activeElement === root);
+    let reachedWindow = 0;
+    const spy = () => { reachedWindow++; };
+    window.addEventListener('keydown', spy);
+    const key = (k) => root.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    key(' ');
+    check('*** Space pauses (the default) ***', t.probe().game.phase === 'paused');
+    check('*** ...and stops there: the screen\'s own Space (Next) never sees it ***', reachedWindow === 0);
+    key(' ');
+    check('Space again goes on', t.probe().game.phase === 'play');
+    key('Escape');
+    check('*** Escape pauses AND asks for the settings menu ***', t.probe().game.phase === 'paused' && asks.length === 1 && reachedWindow === 0);
+    key('x');
+    check('any other key is the screen\'s, untouched', reachedWindow === 1);
+    t.state.set({ pauseKey: 'p' });
+    key(' ');
+    check('pause key set to P: Space is the screen\'s again', reachedWindow === 2 && t.probe().game.phase === 'paused');
+    key('P');
+    check('...and P goes on', t.probe().game.phase === 'play');
+    t.state.set({ pauseKey: 'off' });
+    key('p');
+    check('pause key off: only Escape pauses', t.probe().game.phase === 'play' && reachedWindow === 3);
+    window.removeEventListener('keydown', spy);
+    t.inst.destroy();
+  }
+
+  section('the commands: left, right, stop, launch (voice and switch alike)');
+  {
+    const s = mount({ saved: { control: 'steps', stepSize: 'medium' } });
+    const x0 = s.probe().game.paddle.x;
+    s.pub('right');
+    check('right: one step right', Math.abs(s.probe().game.paddle.x - (x0 + 10)) < 1e-9);
+    s.pub('left'); s.pub('left');
+    check('left: one step left', Math.abs(s.probe().game.paddle.x - (x0 - 10)) < 1e-9);
+    s.pub('launch');
+    check('launch: a resting ball goes', s.probe().game.phase === 'play');
+    s.pub('launch');
+    check('launch while it is already going: nothing', s.probe().game.phase === 'play');
+    s.inst.destroy();
+    const w = mount();
+    w.pub('launch');
+    check('launch, gliding: the ball goes and the paddle glides (as a launching press)', w.probe().game.phase === 'play' && w.probe().game.paddle.moving);
+    w.pub('stop');
+    check('*** stop: the paddle stops where it is - and the ball keeps going (not a pause) ***',
+      !w.probe().game.paddle.moving && w.probe().game.phase === 'play');
+    w.pub('stop');
+    check('stop again: still stopped (not a toggle)', !w.probe().game.paddle.moving);
+    w.pub('select');
+    check('a press starts it gliding again', w.probe().game.paddle.moving);
+    w.inst.destroy();
+    const v = verbsFor(GAME);
+    check('every command is a verb on this panel, so a switch can be bound to it',
+      ['left', 'right', 'stop', 'launch', 'pause', 'play'].every((x) => v.includes(x)), v.join(','));
+    const table = moduleVoiceTable(getManifest(GAME).voice, { verbs: v });
+    check('*** spoken while it has focus: every phrase in its `voice` can fire (none dropped) ***',
+      Object.keys(table).length === Object.keys(getManifest(GAME).voice).length && table.stop === 'stop' && table.resume === 'play', JSON.stringify(table));
+  }
+
+  section('a tracker can drive the paddle');
+  {
+    const bus = createBus();
+    const host = scratch(960, 540);
+    const t = mount({ host, bus, saved: { control: 'steps' } });
+    await cssReady(host);
+    bus.publish(AIM, { x: 0.25 });
+    check(`${AIM} { x: 0.25 } puts the paddle a quarter of the way across`, Math.abs(t.probe().game.paddle.x - 25) < 1e-6, String(t.probe().game.paddle.x));
+    const own = bus.instanceTopic ? bus.instanceTopic(t.id, AIM) : `${AIM}#${t.id}`;
+    bus.publish(own, { x: 0.75 });
+    check('...and this panel\'s own address works too', Math.abs(t.probe().game.paddle.x - 75) < 1e-6);
+    bus.publish(AIM, { x: 5 });
+    check('a value off the field is held to its edge', Math.abs(t.probe().game.paddle.x - (FIELD_W - t.probe().game.paddle.w / 2)) < 1e-6);
+    const f = host.querySelector('.bb-field').getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    bus.publish('input/aim', { x: (f.left + f.width * 0.4) / vw, y: (f.top + f.height / 2) / vh, device: 'marker:green' });
+    check('*** the screen\'s aim from a tracker, over the field, moves the paddle there ***', Math.abs(t.probe().game.paddle.x - 40) < 1, String(t.probe().game.paddle.x));
+    bus.publish('input/aim', { x: (f.left + f.width * 0.9) / vw, y: (f.top + f.height / 2) / vh, device: 'pointer:mouse' });
+    check('...but not from the mouse (that already arrives as a pointer over the field)', Math.abs(t.probe().game.paddle.x - 40) < 1);
+    bus.publish('input/aim', { x: 0.001, y: 0.001, device: 'marker:green' });
+    check('...nor from a tracker pointing somewhere else on the screen', Math.abs(t.probe().game.paddle.x - 40) < 1);
+    t.inst.destroy();
+  }
+
+  section('*** see-through (Mike, 2026-10-02: "The backgrounds ... aren\'t transparent when they should be") ***');
+  {
+    const host = scratch(960, 540);
+    host.style.setProperty('--surface', 'rgb(4, 5, 6)');
+    host.style.setProperty('--surface-alt', 'rgb(7, 8, 9)');
+    const t = mount({ host });
+    await cssReady(host);
+    const bg = (sel) => getComputedStyle(host.querySelector(sel)).backgroundColor;
+    check('*** the game paints no panel background: the panel\'s own (solid / veil / clear) shows ***', bg('.bb') === 'rgba(0, 0, 0, 0)', bg('.bb'));
+    check('...nor a field background', bg('.bb-field') === 'rgba(0, 0, 0, 0)', bg('.bb-field'));
+    host.style.setProperty('--game-field', 'rgb(10, 11, 12)');
+    check('a room that wants a field colour sets --game-field', bg('.bb-field') === 'rgb(10, 11, 12)', bg('.bb-field'));
+    check('the ball carries an outline so it reads over a moving scene', getComputedStyle(host.querySelector('.bb-ball')).boxShadow !== 'none');
+    t.inst.destroy();
   }
 
   section('the words under the field');

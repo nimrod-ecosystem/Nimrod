@@ -146,9 +146,7 @@ try {
     check('Check: right, "Yes! CAT. 1 more to find."', r.phase() === 'celebrate' && r.last() === `Yes! ${w.toUpperCase()}. ${toFind(st).length} more to find.`, r.last());
     await sleep(10);
     check('one School point for the word', r.points().length === 1);
-    r.timers.flush();
-    r.eng.press('more');
-    const leftN = toFind(st).length;
+    r.timers.flush();    const leftN = toFind(st).length;
     check('the SAME letters again, "Make another word ... N to find."', r.set() === st
       && r.last().endsWith(`${leftN} ${leftN === 1 ? 'word' : 'words'} to find.`) && r.last().startsWith('Make another word from'), r.last());
     check('...and the found word is written in the list', r.host.querySelector(`[data-found] [data-word="${w}"]`)?.textContent === w.toUpperCase());
@@ -168,12 +166,10 @@ try {
       w2 = toFind(st)[0];
       typeWord(r, w2);
       key(r, 'Check').click();
-      if (toFind(st).length) { r.timers.flush(); r.eng.press('more'); }
+      if (toFind(st).length) r.timers.flush();
     }
     check('the last word: "That is all of them!"', r.phase() === 'celebrate' && new RegExp(`${w2.toUpperCase()}\\. That is all of them!$`).test(r.last()), r.last());
-    r.timers.flush();
-    r.eng.press('more');
-    check('then NEW letters', r.set() !== st && r.set().id !== st.id);
+    r.timers.flush();    check('then NEW letters', r.set() !== st && r.set().id !== st.id);
     r.inst.destroy();
   }
 
@@ -237,9 +233,7 @@ try {
     check('a quiet hearing: "It sounds like you might be saying ..." (not judged)', r.phase() === 'unsure');
     r.eng.hear({ text: 'yes', confidence: 0.95 });
     check('...yes: right', r.phase() === 'celebrate');
-    r.timers.flush();
-    r.eng.press('more');
-    r.eng.hear({ text: 'new letters', confidence: 0.95 });
+    r.timers.flush();    r.eng.hear({ text: 'new letters', confidence: 0.95 });
     check('"new letters": a different set', r.set().id !== st.id);
     const id2 = r.set().id;
     key(r, 'New letters').click();
@@ -262,9 +256,7 @@ try {
     key(r, 'Check').click();
     await sleep(10);
     check('Ann\'s word earns a point', r.points().length === 1);
-    r.timers.flush();
-    r.eng.press('more');
-    const bobSet = r.set();
+    r.timers.flush();    const bobSet = r.set();
     check('Bob\'s turn, with his own three letters', r.last().startsWith('Bob, your turn.') && bobSet !== annSet && bobSet.letters.length === 3);
     typeWord(r, bobSet.required[0]);
     key(r, 'Check').click();
@@ -272,9 +264,7 @@ try {
     check('*** Bob\'s word does NOT pay into the screen\'s points (a setting) ***', r.points().length === 1);
     const sc = r.scores[r.scores.length - 1];
     check('the published score names both: "Ann 1 · Bob 1"', sc && sc.detail === 'Ann 1 · Bob 1', JSON.stringify(sc));
-    r.timers.flush();
-    r.eng.press('more');
-    check('*** back to Ann: HER letters, with her word still found ***', r.set() === annSet && annSet.found.length === 1);
+    r.timers.flush();    check('*** back to Ann: HER letters, with her word still found ***', r.set() === annSet && annSet.found.length === 1);
     r.inst.destroy();
   }
 
@@ -283,10 +273,9 @@ try {
     const r = R({});
     typeWord(r, r.set().required[0]);
     key(r, 'Check').click();
-    r.timers.flush();
     const asked = r.probe().asked;
     r.publish(`${GAME}/play`);
-    check('at "another one?": the next word', r.phase() === 'asking' && r.probe().asked === asked + 1);
+    check('during the celebration: straight on to the next word', r.phase() === 'asking' && r.probe().asked === asked + 1);
     const n = r.said.length;
     r.publish(`${GAME}/play`);
     check('while asking: the letters are said again', r.phase() === 'asking' && r.said.length === n + 1 && r.probe().asked === asked + 1);

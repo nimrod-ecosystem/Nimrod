@@ -19,8 +19,21 @@
 // rather than two, so a second copy would add a game and no skill. It is one bank away if wanted.
 //
 // QUICK, NOT TIMED. A ROUND is a few questions (`roundSize`, 5 by default, per player); its score is
-// said at the end ("That is the end of the round: 4 of 5 right."). In "a mix", each round is one
-// kind and the next round the next kind. NOTHING ENDS A TURN ON A TIMER: the only clock is
+// said at the end ("That is the end of the round: 4 of 5 right.").
+//
+// *** "A MIX" CHANGES KIND EVERY QUESTION BY DEFAULT (2026-10-02). *** Mike, on the live site: "Brain
+// games is just which one is different as far as I can tell. I even have the which game set to mix."
+// The cause, found: nothing was broken in the dealing - a mix was ONE KIND PER ROUND, a round is five
+// questions, every mount started over on "which one is different", and the old "another one?" between
+// questions made five feel long. So somebody who played four or five questions, or came back to the
+// panel, never met a second kind. A mix nobody can see is mixed is the bug, whatever the code meant.
+// `mixBy` now picks: 'question' (DEFAULT: the next kind every question, starting on a kind chosen at
+// random when the panel starts, so a return visit does not always open on the same one) or 'round'
+// (the old shape: a round of each kind in turn, for somebody who likes to settle into one kind).
+//   FOR 'round' as the default: a round of one kind is a steadier exercise, and its score means one skill.
+//   AGAINST, and it wins: Mike chose "mix" to get variety and did not get it; a round of one kind is
+//   already one setting away (pick that kind, or 'round').
+// NOTHING ENDS A TURN ON A TIMER: the only clock is
 // `quickLookMs`, OFF by default, which hides the dots (or the things to remember) after a moment,
 // for somebody who wants the pressure. Hiding is one change per question, far below any flash limit,
 // and is held to the screen's limit anyway (`flash_limit.js`).
@@ -77,8 +90,10 @@ const LINE_LABELS = {
   studyFirstLine: 'Answered before saying ready',
 };
 
+export const MIX_BY = Object.freeze(['question', 'round']);
 export const DEFAULTS = Object.freeze({
   game: 'mix',
+  mixBy: 'question',
   roundSize: 5,
   quickLookMs: 0,
   boardScan: 'rows',
@@ -88,14 +103,17 @@ export const DEFAULTS = Object.freeze({
 
 // EACH DEFAULT, ARGUED:
 //   game mix        varied, and every kind turns up; one setting picks a single kind.
-//   roundSize 5     about a minute at the shared flow's pace (a question, a celebration, "another?"):
+//   roundSize 5     about a minute at the shared flow's pace (a question, then a celebration):
 //                   the "short" the request asks for. 3 to 10 is offered.
 //   quickLookMs 0   no time pressure unless somebody turns it on (the request: off by default).
 const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: 'mix', level: 'essential',
-    options: [{ value: 'mix', label: 'A mix, one kind each round' }, { value: 'odd', label: 'Which one is different' },
+    options: [{ value: 'mix', label: 'A mix of all four' }, { value: 'odd', label: 'Which one is different' },
               { value: 'order', label: 'Remember the order' }, { value: 'count', label: 'Quick count' },
               { value: 'next', label: 'What comes next' }] },
+  { key: 'mixBy', label: 'In a mix, change the kind', kind: 'choice', default: 'question', level: 'standard',
+    options: [{ value: 'question', label: 'Every question' }, { value: 'round', label: 'Every round' }],
+    note: 'Only when the game is a mix.' },
   ownScoreField({ level: 'essential', note: 'How many are right (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
   { key: 'roundSize', label: 'Questions in a round (for each player)', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 8, 10].map((v) => ({ value: v, label: String(v) })) },
@@ -224,6 +242,8 @@ registerModule(
     let roundNo = -1;
     let roundAsked = 0;
     let roundRight = 0;
+    let mixStart = 0;            // which kind a mix opens on (chosen when the game starts)
+    let mixAsked = 0;            // questions dealt in this mix, for 'every question'
     const store = typeof ctx.makeState === 'function' ? (() => { try { return ctx.makeState(LADDER_KEY); } catch { return null; } })() : null;
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
@@ -242,12 +262,19 @@ registerModule(
 
     function deal(gameId) {
       stopLook();
-      if (gameId !== lastGame) { lastGame = gameId; roundNo = -1; roundAsked = roundTotal(); }
+      if (gameId !== lastGame) {
+        lastGame = gameId; roundNo = -1; roundAsked = roundTotal();
+        mixAsked = 0;
+        mixStart = Math.floor((Number(rand()) || 0) * MIX_ORDER.length) % MIX_ORDER.length;
+      }
       if (roundAsked >= roundTotal()) { roundNo += 1; roundAsked = 0; roundRight = 0; }
-      const kind = gameId === 'mix' ? MIX_ORDER[roundNo % MIX_ORDER.length] : gameId;
+      const n = MIX_ORDER.length;
+      const kind = gameId !== 'mix' ? gameId
+        : MIX_ORDER[(mixStart + (cfgNow.mixBy === 'round' ? roundNo : mixAsked)) % n];
       const q = session.deal(ladderGame(kind));
       if (!q) { dealt = null; return []; }
       roundAsked += 1;
+      mixAsked += 1;
       studied = false;
       hidden = false;
       dealt = Object.freeze({ ...q });
