@@ -96,7 +96,8 @@ export async function mountIntercomPage(root, {
         <select data-person>${people.map((p) => `<option value="${esc(p.id)}"${pick && pick.id === p.id ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select>
       </label>
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Open the intercom</button>
-      <p class="pm-note">Only people the room has added can open it. Whoever looks after the screen adds people.</p>`
+      <p class="pm-note">Only people the room has added can open it. Whoever looks after the screen adds people.</p>
+      <p class="pm-note" data-call-link>To see each other as well, <a href="./call.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">place a call</a> instead.</p>`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 

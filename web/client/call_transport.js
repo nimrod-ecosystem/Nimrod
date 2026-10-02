@@ -259,6 +259,14 @@ export function createCallTransport({
   let destroyed = false;
   let attached = null;                // the <video> the module handed us
   let live = false;
+  // THE CALLER'S HALF (2026-10-02, the caller page `call_page.js`). What a driver re-offers with when its
+  // connection drops (the same tracks and name, the same session), and who hears its call being answered
+  // and its connection changing. Sets, like `liveCbs`: the page and a test may both listen.
+  let placed = null;                  // { tracks, from } of the call this driver placed
+  let answeredOnce = false;           // this driver's call has been answered at least once
+  const answeredCbs = new Set();
+  const connCbs = new Set();
+  const emit = (set, ...a) => { for (const cb of [...set]) { try { cb(...a); } catch (e) { log('listener threw', e); } } };
   // Who hears `live` change (the screen: voice recording holds for a call, an open intercom ends when
   // one goes live). A SET, unlike onIncoming/onEnded: those belong to the one call panel; these belong
   // to the screen, and more than one part of it listens.
@@ -289,7 +297,11 @@ export function createCallTransport({
   // before. Otherwise a RING or an ANSWER IN PROGRESS that ends is reported too (2026-10-02): the caller
   // giving up, another screen taking the call, an answer that failed. Before, only a live call was, so a
   // panel kept counting down a ring whose caller had gone, and "answered" it.
-  function finish(reason, { local = false } = {}) {
+  //
+  // `why` (2026-10-02): the far end's own reason when it hung up - a `bye`'s `reason` ('declined', 'busy',
+  // 'unanswered', 'hangup'...). Handed to `onEnded` as a second argument, `{ why }`, so a CALLER can say
+  // "on another call" rather than just "ended". The Call panel reads only the first argument, as before.
+  function finish(reason, { local = false, why = null } = {}) {
     clearStall();
     closePc();
     remoteStream = null;
@@ -303,8 +315,10 @@ export function createCallTransport({
     currentSession = null;
     answering = false;
     wonSession = null;
+    placed = null;
+    answeredOnce = false;
     if (was || (!local && (wasRinging || wasAnswering))) {
-      try { endedCb?.(reason); } catch (e) { log('onEnded threw', e); }
+      try { endedCb?.(reason, { why }); } catch (e) { log('onEnded threw', e); }
     }
   }
 
@@ -377,18 +391,55 @@ export function createCallTransport({
       if (attached && remoteStream) { try { attached.srcObject = remoteStream; } catch { /* gone */ } }
       log('remote track', e.track && e.track.kind);
     };
+    const mine = pc;
     pc.onconnectionstatechange = () => {
+      if (pc !== mine) return;                   // a replaced connection says nothing
       const st = pc?.connectionState;
       log('conn', st);
+      emit(connCbs, st);
       if (st === 'connected') clearStall();
       // A drop is NOT the end. The caller re-offers on its own, so the panel stays up and
       // waits — with a stall timer, so a caller gone for good still releases the screen.
-      else if (st === 'failed') armStall();
+      else if (st === 'failed') trouble();
     };
     pc.oniceconnectionstatechange = () => {
-      if (pc?.iceConnectionState === 'failed') armStall();
+      if (pc === mine && pc?.iceConnectionState === 'failed') trouble();
     };
     return pc;
+  }
+
+  // A connection that failed. The SCREEN waits for the caller's re-offer (the stall clock, as before).
+  // THE CALLER is the one that re-offers (2026-10-02): once per drop, on the same session, with the same
+  // tracks - and the stall clock is armed ONCE for that drop and not pushed back by a re-offer that fails
+  // too, or a caller on a network that cannot connect would retry for ever. A call that was never answered
+  // has nothing to re-offer to: the caller page's own give-up time covers that.
+  function trouble() {
+    if (role !== 'driver') { armStall(); return; }
+    if (stallTimer != null) return;
+    armStall();
+    if (answeredOnce) reoffer().catch((e) => log('re-offer failed', e));
+  }
+
+  // Offer the SAME call again (same session, same tracks, same name): the screen in it re-answers.
+  async function reoffer() {
+    if (destroyed || role !== 'driver' || !live || !currentSession || !placed) return false;
+    remoteStream = null;
+    return place({ ...placed, session: currentSession, again: true });
+  }
+
+  async function place({ tracks = [], from = null, session = null, remoteVideo, again = false } = {}) {
+    const s = okSession(session) ? session : newCallSession();
+    if (remoteVideo !== undefined) attached = remoteVideo || null;
+    const mine = makePc(tracks);
+    currentSession = s;
+    placed = { tracks: [...(tracks || [])], from };
+    if (!again) answeredOnce = false;
+    const o = await mine.createOffer();
+    await mine.setLocalDescription(o);
+    setLive(true);
+    await gatheringDone(mine, { setTimer });
+    if (destroyed || pc !== mine) return false;
+    return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s) });
   }
 
   // ---- inbound -------------------------------------------------------------------------
@@ -409,7 +460,7 @@ export function createCallTransport({
       // An untagged one ends whatever is here, as it always did.
       if (session && session !== currentSession && session !== pendingSession) return;
       log('peer hung up');
-      finish('remote');
+      finish('remote', { why: typeof sig.reason === 'string' ? sig.reason : null });
       return;
     }
     if (role === 'screen' && sig.kind === 'offer') {
@@ -458,7 +509,16 @@ export function createCallTransport({
     if (role === 'driver' && sig.kind === 'answer') {
       // An answer for ANOTHER caller's call is not this one's.
       if (session && session !== currentSession) return;
-      pc?.setRemoteDescription({ type: 'answer', sdp: sig.sdp })
+      const mine = pc;
+      if (!mine) return;
+      // ANSWERED is reported once the answer is applied - not before, so a caller never says "answered"
+      // for an answer its connection refused. A re-answer (after a re-offer) reports again; harmless.
+      mine.setRemoteDescription({ type: 'answer', sdp: sig.sdp })
+        .then(() => {
+          if (destroyed || pc !== mine) return;
+          answeredOnce = true;
+          emit(answeredCbs, { session: currentSession, by: typeof sig.by === 'string' ? sig.by : null });
+        })
         .catch((e) => log('setRemoteDescription(answer) failed', e));
     }
   }
@@ -537,21 +597,35 @@ export function createCallTransport({
     },
 
     /**
-     * Place a call. Not used by the bedside module — a screen never calls anybody. It is TAGGED
+     * Place a call. Used by the caller page (`call.html`, `call_page.js`), never by the bedside module —
+     * a screen never calls anybody. It is TAGGED
      * (`purpose: 'call'`, a session) so the server can pick one answering screen; `session` reuses an
      * id (a caller re-offering the same call), otherwise a fresh one is made.
      */
-    async call({ tracks = [], from = null, session = null } = {}) {
+    async call({ tracks = [], from = null, session = null, remoteVideo } = {}) {
       if (destroyed || role !== 'driver') return false;
-      const s = okSession(session) ? session : newCallSession();
-      const mine = makePc(tracks);
-      currentSession = s;
-      const o = await mine.createOffer();
-      await mine.setLocalDescription(o);
-      setLive(true);
-      await gatheringDone(mine, { setTimer });
-      if (destroyed || pc !== mine) return false;
-      return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s) });
+      // `remoteVideo`: the element the far end plays into (the caller page's <video>). Optional.
+      return place({ tracks, from, session, remoteVideo });
+    },
+
+    // ---- the caller's half (2026-10-02; `call_page.js`) ------------------------------------------------
+    /** `cb({ session, by })` when THIS driver's call is answered (the answer applied). Returns an unsubscribe. */
+    onAnswered(cb) { if (typeof cb !== 'function') return () => {}; answeredCbs.add(cb); return () => { answeredCbs.delete(cb); }; },
+    /** `cb(state)` on the peer connection's own state: 'connecting' | 'connected' | 'disconnected' | 'failed'... */
+    onConnection(cb) { if (typeof cb !== 'function') return () => {}; connCbs.add(cb); return () => { connCbs.delete(cb); }; },
+    /** A caller offers its call again (same session); also done by itself once per dropped connection. */
+    reconnect: () => reoffer(),
+    /**
+     * Swap the track being SENT of one kind (a phone switching between its cameras), without a new offer:
+     * the far end keeps the same picture slot. Resolves true when it was swapped.
+     */
+    async replaceTrack(kind, track) {
+      if (destroyed || !pc || !track) return false;
+      const sender = (pc.getSenders?.() || []).find((s) => s.track && s.track.kind === kind);
+      if (!sender || typeof sender.replaceTrack !== 'function') return false;
+      try { await sender.replaceTrack(track); } catch (e) { log('replaceTrack failed', e); return false; }
+      if (placed) placed.tracks = placed.tracks.map((t) => (t && t.kind === kind ? track : t));
+      return true;
     },
 
     hangup(reason = 'hangup') {
@@ -577,7 +651,8 @@ export function createCallTransport({
     // and be connecting, which is not the same as a call.
     __probe: () => ({ live, hasPc: !!pc, pendingOffer: !!pendingOffer,
                       ice: ice(), relay: hasRelay(config), stalling: stallTimer != null,
-                      session: currentSession || pendingSession, claiming: claims.size > 0 }),
+                      session: currentSession || pendingSession, claiming: claims.size > 0,
+                      answered: answeredOnce }),
 
     destroy() {
       destroyed = true;

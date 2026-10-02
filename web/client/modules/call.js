@@ -165,6 +165,14 @@ const SETTINGS = [
         + 'that has no mirror.' },
 ];
 
+// The longest this panel rings or counts down, read from the choices above. The caller page
+// (call_page.js CALLER_GIVE_UP_MS) must wait longer than either, or a caller gives up on a screen that is
+// still ringing; its suite checks that against these, so a longer choice added here shows up there.
+const choiceMax = (key) => Math.max(0, ...SETTINGS.find((s) => s.key === key).options
+  .map((o) => o.value).filter((v) => typeof v === 'number'));
+export const LONGEST_RING_S = choiceMax('ringSeconds');
+export const LONGEST_COUNTDOWN_S = choiceMax('declineSeconds');
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 

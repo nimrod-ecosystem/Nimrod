@@ -12,6 +12,7 @@ Disallow: /modules.html
 Disallow: /pair.html
 Disallow: /phone_mic.html
 Disallow: /intercom.html
+Disallow: /call.html
 Disallow: /spotify_callback.html
 Disallow: /dev/
 Disallow: /api/

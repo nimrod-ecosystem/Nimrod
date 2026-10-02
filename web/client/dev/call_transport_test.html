@@ -752,6 +752,66 @@ try {
   }
 
   // =====================================================================================
+  // THE CALLER'S HALF (2026-10-02, call_page.js): answered, the far end's reason, swapping a camera, and
+  // re-offering a dropped call once.
+  section('*** the caller hears answered, the screen\'s reason, and re-offers a dropped call once ***');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room);
+    const P = phoneOn(room);
+    const answeredLog = [], conn = [], why = [];
+    P.d.onAnswered((a) => answeredLog.push(a));
+    P.d.onConnection((s) => conn.push(s));
+    P.d.onEnded((r, info) => why.push([r, info?.why]));
+    const cam = { kind: 'video', id: 'cam1' }, mic = { kind: 'audio', id: 'mic1' };
+    await P.d.call({ tracks: [mic, cam], from: { name: 'Ann', video: true } });
+    const session = P.d.__probe().session;
+    check('nothing is "answered" while it only rings', answeredLog.length === 0 && P.d.__probe().answered === false);
+    await A.t.answer({ outgoing: { kind: 'video' } });
+    await sleep(5);
+    check('*** answered: reported once the screen\'s answer is applied, for this call ***',
+      answeredLog.length === 1 && answeredLog[0].session === session && P.d.__probe().answered === true, JSON.stringify(answeredLog));
+    P.last().fire('connected');
+    check('the connection\'s own state is reported', conn.at(-1) === 'connected');
+    const sender = { track: cam, replaceTrack: async (t) => { sender.track = t; } };
+    P.last().senders = [{ track: mic }, sender];
+    const back = { kind: 'video', id: 'cam2' };
+    check('*** a camera swapped in the same slot, no new offer ***',
+      (await P.d.replaceTrack('video', back)) === true && sender.track === back && P.link.sent.filter((s) => s.kind === 'offer').length === 1);
+    const first = P.last();
+    first.fire('failed');
+    await sleep(5);
+    const offers = P.link.sent.filter((s) => s.kind === 'offer');
+    check('*** a dropped call is offered again on the SAME session, with the swapped camera ***',
+      offers.length === 2 && offers[1].session === session && P.last() !== first && P.last().senders.some((s) => s.track === back), JSON.stringify(offers.map((o) => o.session)));
+    const heard = conn.length;
+    first.fire('connected');
+    check('an old connection\'s state is not reported once replaced', conn.length === heard, JSON.stringify(conn));
+    P.last().fire('failed');
+    await sleep(5);
+    check('...and a re-offer that fails too is not retried (once per drop)', P.link.sent.filter((s) => s.kind === 'offer').length === 2);
+    A.t.hangup('hangup');
+    check('*** the screen\'s own reason reaches the caller (`onEnded(reason, { why })`) ***',
+      why.length === 1 && why[0][0] === 'remote' && why[0][1] === 'hangup', JSON.stringify(why));
+    A.t.destroy(); P.d.destroy();
+  }
+  {
+    const room = fakeRoom();
+    const A = screenOn(room);
+    const P = phoneOn(room);
+    const why = [];
+    P.d.onEnded((r, info) => why.push(info?.why));
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    P.last().fire('failed');
+    await sleep(5);
+    check('a call never answered is not re-offered on a failure (nothing to re-offer to)',
+      P.link.sent.filter((s) => s.kind === 'offer').length === 1 && A.rings.length === 1);
+    A.t.hangup('declined');
+    check('a decline reaches the caller AS a decline', why.join() === 'declined', JSON.stringify(why));
+    A.t.destroy(); P.d.destroy();
+  }
+
+  // =====================================================================================
   section('*** a signal is not a verb, and can never become one ***');
   {
     // The whole reason signals may travel both ways on a socket where verbs may not.

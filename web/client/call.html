@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Call a screen from this phone or computer: video, or sound only. Every screen of that person rings, and whoever is there answers or declines.">
+<meta name="robots" content="noindex">
+<title>Call — Nimrod</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<link rel="stylesheet" href="./layers.css">
+<style>
+  /* The same page shape as intercom.html: theme variables only. A call in progress takes the theme's warm
+     accent pair for its status bar, so "in a call" reads on every theme and looks nothing like setup. */
+  html, body { margin:0; min-height:100%; background:var(--bg); color:var(--text);
+    font:17px/1.45 var(--font, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif); }
+  #app { min-height:100vh; box-sizing:border-box;
+    padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px); }
+  .cp { max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:14px; }
+  .cp h1 { font-size:1.35rem; margin:0; }
+  .cp-lead, .cp-note { margin:0; color:var(--text-soft); }
+  .cp-note a { color:var(--link); }
+  .cp-ended { margin:0; padding:10px 12px; border-radius:10px; background:var(--surface-alt); color:var(--text); font-weight:600; }
+  .cp-field { display:flex; flex-direction:column; gap:6px; font-weight:600; }
+  .cp-field select { min-height:48px; font:inherit; padding:0 12px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface); color:var(--text); }
+  .cp-btn { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:52px; padding:0 18px;
+    border-radius:14px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);
+    font:700 1rem/1.2 inherit; cursor:pointer; text-decoration:none; }
+  .cp-btn:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+  .cp-btn[disabled] { opacity:.55; cursor:default; }
+  .cp-primary { background:var(--accent); border-color:var(--accent); color:var(--on-accent); }
+  .cp-big { min-height:72px; font-size:1.15rem; width:100%; flex-wrap:wrap; }
+  .cp-sub { font-weight:600; font-size:.9rem; }
+
+  /* THE CALL */
+  .cp-call { display:flex; flex-direction:column; gap:10px; min-height:calc(100vh - 32px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px)); }
+  .cp-status { display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:10px 14px; border-radius:12px;
+    background:var(--surface-alt); color:var(--text); }
+  #app[data-live="1"] .cp-status { background:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
+  .cp-word { font-size:1.2rem; font-weight:800; }
+  .cp-who { font-size:1rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%; }
+  .cp-stage { position:relative; flex:1 1 auto; min-height:240px; border-radius:14px; overflow:hidden;
+    background:var(--letterbox, var(--surface)); display:flex; align-items:center; justify-content:center; }
+  .cp-remote { width:100%; height:100%; object-fit:contain; background:var(--letterbox, var(--surface)); }
+  .cp-remote[hidden], .cp-self[hidden], .cp-card[hidden] { display:none; }
+  .cp-card { display:flex; flex-direction:column; align-items:center; gap:12px; padding:24px; text-align:center; }
+  .cp-initial { width:clamp(96px, 30vw, 160px); aspect-ratio:1; border-radius:50%; display:flex; align-items:center;
+    justify-content:center; font-size:clamp(44px, 14vw, 76px); font-weight:800;
+    background:var(--accent); color:var(--on-accent); }
+  .cp-card-name { font-size:clamp(22px, 6vw, 34px); font-weight:800; overflow-wrap:anywhere; }
+  /* The self view: small, in a corner, mirrored like a mirror. */
+  .cp-self { position:absolute; right:10px; bottom:10px; width:min(30%, 180px); aspect-ratio:3/4; object-fit:cover;
+    border-radius:10px; border:2px solid var(--surface); transform:scaleX(-1); background:var(--surface); }
+  .cp-self[data-rear="1"] { transform:none; }   /* a camera facing away is shown as it sees, not mirrored */
+  .cp-callnote { margin:0; font-weight:600; color:var(--text-soft); }
+  .cp-controls { display:grid; grid-template-columns:repeat(auto-fit, minmax(120px, 1fr)); gap:10px; }
+  .cp-ctl[aria-pressed="true"] { background:var(--text); color:var(--bg); border-color:var(--text); }
+  .cp-hang { background:var(--accent-warm-deep); border-color:var(--accent-warm-deep); color:var(--on-accent-warm-deep); }
+</style>
+</head>
+<body>
+<div id="app" data-live="0"></div>
+<script type="module">
+  import { applyTheme, getStoredTheme, resolveThemeId } from './theme.js';
+  import { mountCallPage } from './call_page.js';
+  applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+  mountCallPage(document.getElementById('app'))
+    .then((page) => { window.__call = page; })
+    .catch((err) => { console.error('call: failed to start', err); });
+</script>
+</body>
+</html>
