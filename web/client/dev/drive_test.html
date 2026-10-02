@@ -142,6 +142,43 @@ section('driving');
 }
 
 // =====================================================================
+// Row 2.44 / Mike's list 2026-09-30 item 7: the server picks ONE screen to answer an intercom offer.
+section('a screen asks the server to be the one that answers (drive.py Answerers)');
+
+{
+  sockets.length = 0;
+  const link = connectDrive({ personId: 'p1', role: 'screen', fetchImpl: fakeFetch(), SocketImpl: FakeSocket });
+  await sleep(0);
+  const s = sockets[0];
+  check('CONTROL: no claim before the socket is open', link.claim({ purpose: 'intercom', session: 'ic-1' }) === false && s.sent.length === 0);
+  s.open();
+  check('a screen sends a claim to the SERVER: two fields, its own message type, never a signal',
+    link.claim({ purpose: 'intercom', session: 'ic-1' }) === true
+    && JSON.stringify(s.sent[0]) === '{"type":"claim","purpose":"intercom","session":"ic-1"}', JSON.stringify(s.sent));
+  check('a claim with no session is not sent', link.claim({ purpose: 'intercom' }) === false && s.sent.length === 1);
+  const got = [];
+  link.onSignal((sig) => got.push(sig));
+  s.deliver({ type: 'answerer', purpose: 'intercom', session: 'ic-1', you: true });
+  s.deliver({ type: 'answerer', purpose: 'intercom', session: 'ic-2', you: 'yes' });
+  check('the server’s pick reaches the signal subscribers as kind "answerer"; only a literal true is a yes',
+    got.length === 2 && got[0].kind === 'answerer' && got[0].you === true && got[1].you === false, JSON.stringify(got));
+  link.close();
+}
+{
+  sockets.length = 0;
+  const link = connectDrive({ personId: 'p1', role: 'driver', fetchImpl: fakeFetch(), SocketImpl: FakeSocket });
+  await sleep(0);
+  sockets[0].open();
+  const got = [];
+  link.onSignal((sig) => got.push(sig));
+  check('a DRIVER cannot claim (a phone cannot make itself the answering screen)',
+    link.claim({ purpose: 'intercom', session: 'ic-1' }) === false && sockets[0].sent.length === 0);
+  sockets[0].deliver({ type: 'answerer', purpose: 'intercom', session: 'ic-1', you: true });
+  check('...and a driver ignores an "answerer" message', got.length === 0);
+  link.close();
+}
+
+// =====================================================================
 section('receiving — a verb on the wire is a verb on this screen’s bus');
 
 {

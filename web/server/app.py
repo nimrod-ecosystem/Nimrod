@@ -29,7 +29,7 @@ from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
 
 from db import PAIR_CODE_LEN, PostgresStore, SQLiteStore, normalize_code, person_scope
-from drive import ROLES, Rooms, Tickets, parse_message, stamp_signal
+from drive import ROLES, Answerers, Rooms, Tickets, parse_message, stamp_signal
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
@@ -849,6 +849,7 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
 # and not WebRTC, and why the socket is opened with a ticket rather than a device key.
 _tickets = Tickets()
 _rooms = Rooms()
+_answerers = Answerers()        # one answering screen per intercom offer (drive.py, row 2.44)
 
 
 def _person_owner(person_id: str) -> str | None:
@@ -1025,6 +1026,19 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             room = _rooms.get(room_key, person_id)
             if not room:
                 continue
+            arb_key = (room_key, person_id)
+            if msg["type"] == "claim":
+                # A SCREEN asks to be the one that answers (drive.py Answerers). A driver cannot
+                # claim anything. The losers are told in the same turn as the winner, so a screen
+                # that somehow has a microphone open for this offer closes it on that one message.
+                if role != "screen":
+                    continue
+                won, newly = _answerers.claim(arb_key, msg["purpose"], msg["session"], ws)
+                if newly:
+                    await _tell([c for c in room.screens if c is not ws],
+                                {"type": "answerer", "purpose": msg["purpose"], "session": msg["session"], "you": False})
+                await ws.send_json({"type": "answerer", "purpose": msg["purpose"], "session": msg["session"], "you": won})
+                continue
             # A driver drives screens. A screen never drives anything - it only reports -
             # so there is no path by which one bedside screen could press another's buttons.
             #
@@ -1037,7 +1051,18 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
             if msg["type"] == "signal":
                 # `by` = the account this socket's ticket was issued to, stamped here so a room can
                 # trust who sent it (the intercom's approved list, row 2.44). drive.py stamp_signal.
-                await _tell(room.drivers if role == "screen" else room.screens, stamp_signal(msg, user))
+                sig = msg["signal"]
+                if role == "screen":
+                    # Only the chosen screen's signals reach the phone (drive.py Answerers).
+                    relay, newly = _answerers.screen_signal(arb_key, sig, ws)
+                    if newly:
+                        await _tell([c for c in room.screens if c is not ws],
+                                    {"type": "answerer", "purpose": sig.get("purpose"), "session": sig.get("session"), "you": False})
+                    if relay:
+                        await _tell(room.drivers, stamp_signal(msg, user))
+                else:
+                    _answerers.driver_signal(arb_key, sig)
+                    await _tell(room.screens, stamp_signal(msg, user))
             elif role == "driver":
                 await _tell(room.screens, msg)
     except WebSocketDisconnect:
@@ -1046,6 +1071,8 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
         log.info("drive socket ended: %s", exc)
     finally:
         _rooms.leave(room_key, person_id, role, ws)
+        if role == "screen":
+            _answerers.left((room_key, person_id), ws)
         await announce()
 
 

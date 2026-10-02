@@ -31,14 +31,16 @@ relay below is a fake of the server's fan-out that stamps <code>by</code> the wa
 import {
   createIntercomSender, createIntercomReceiver, mountIntercomNotice, intercomText, intercomOptionsFrom, normalizeAllowed,
   admits, isIntercomSignal, newSession, INTERCOM_PURPOSE, INTERCOM_TOPIC, INTERCOM_END_TOPIC, INTERCOM_ACTIONS,
-  INTERCOM_DEFAULTS, INTERCOM_FIELDS, INTERCOM_CONSTRAINTS, END_REASONS,
+  INTERCOM_DEFAULTS, INTERCOM_FIELDS, INTERCOM_CONSTRAINTS, END_REASONS, CLAIM_MS,
 } from '../intercom.js';
+import { connectDrive } from '../drive.js';
+import { createProfilesClient } from '../profile.js';
 import { mountIntercomApprovals, approvalCandidates } from '../intercom_approvals.js';
 import { mountIntercomPage } from '../intercom_page.js';
 import { createPhoneMicReceiver } from '../phone_mic.js';
 import { createCallTransport } from '../call_transport.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
-import { SIGNAL_KINDS } from '../drive.js';
+import { SIGNAL_KINDS } from '../drive.js';   // (connectDrive, above, for the LIVE section)
 import { createBus } from '../bus.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
@@ -78,28 +80,81 @@ function fakeClock() {
 
 // The server's relay, faked - INCLUDING the stamp: every relayed signal carries `by` = the account the
 // socket's ticket was issued to, overwriting whatever the sender wrote (drive.py stamp_signal).
-function fakeRoom({ stamp = true } = {}) {
+//
+// AND THE SERVER'S PICK of one answering screen per offer, mirrored from drive.py `Answerers` (the
+// real one is tested in test_drive.py and in the LIVE section at the bottom of this page):
+// `arbiter: false` is a server too old to answer a claim at all.
+function fakeRoom({ stamp = true, arbiter = true } = {}) {
   const screens = new Set(), drivers = new Set();
+  const recs = new Map();                        // session -> { answerer, declined }
+  const arb = (s) => !!s && s.purpose === INTERCOM_PURPOSE && typeof s.session === 'string';
+  const deliver = (l, sig) => { for (const cb of [...l.subs]) cb(sig); };
+  const order = () => (room.reverse ? [...screens].reverse() : [...screens]);
+  function tellOthers(me, session) {
+    for (const l of order()) {
+      if (l === me) continue;
+      l.notified.push({ session, at: performance.now() });
+      deliver(l, { kind: 'answerer', purpose: INTERCOM_PURPOSE, session, you: false });
+    }
+  }
   function join(role, account = 'owner@x') {
     const subs = new Set();
     const me = {
-      role, account, sent: [], subs,
+      role, account, sent: [], subs, claims: [], notified: [],
       sendSignal(s) {
         if (!SIGNAL_KINDS.includes(s.kind)) return false;
         me.sent.push(s);
         const copy = JSON.parse(JSON.stringify(s));
         if (stamp) copy.by = account; else delete copy.by;
-        for (const l of (role === 'screen' ? drivers : screens)) for (const cb of [...l.subs]) cb(copy);
+        if (arbiter && arb(s)) {
+          const rec = recs.get(s.session);
+          if (role === 'driver') {
+            if (s.kind === 'bye') recs.delete(s.session);
+            else if (s.kind === 'offer' && !(rec && rec.answerer)) recs.set(s.session, { answerer: null, declined: false });
+          } else if (!rec) {
+            if (s.kind !== 'bye') return true;               // dropped
+          } else if (rec.declined) {
+            return true;
+          } else if (!rec.answerer) {
+            if (s.kind === 'answer') { rec.answerer = me; tellOthers(me, s.session); }
+            else if (s.kind === 'bye') rec.declined = true;
+            else return true;
+          } else if (rec.answerer !== me) {
+            return true;
+          } else if (s.kind === 'bye') recs.delete(s.session);
+        }
+        const to = role === 'screen' ? [...drivers] : order();
+        for (const l of to) deliver(l, copy);
+        return true;
+      },
+      claim({ purpose, session }) {
+        if (role !== 'screen') return false;
+        me.claims.push(session);
+        if (!arbiter) return true;                            // sent, and never answered
+        const rec = recs.get(session);
+        let won = false;
+        if (rec && !rec.declined) {
+          if (!rec.answerer) { rec.answerer = me; won = true; tellOthers(me, session); }
+          else won = rec.answerer === me;
+        }
+        deliver(me, { kind: 'answerer', purpose, session, you: won });
         return true;
       },
       onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
       state: () => 'connected',
-      close() { (role === 'screen' ? screens : drivers).delete(me); subs.clear(); },
+      close() {
+        (role === 'screen' ? screens : drivers).delete(me); subs.clear();
+        for (const [k, r] of recs) if (r.answerer === me) recs.delete(k);
+      },
     };
     (role === 'screen' ? screens : drivers).add(me);
     return me;
   }
-  return { join };
+  // The server forgetting who answered (the answering screen's socket dropped): drive.py `left`.
+  const forget = (session) => recs.delete(session);
+  const answererOf = (session) => recs.get(session)?.answerer || null;
+  const room = { join, forget, answererOf, reverse: false };
+  return room;
 }
 
 const AUDIO_SDP = 'v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendrecv\r\n';
@@ -137,9 +192,9 @@ class FakeStream {
 }
 const track = (kind = 'audio') => ({ kind, stopped: false, stop() { this.stopped = true; } });
 function fakeMicOwner() {
-  const o = { acquired: [], released: [], held: new Set(),
+  const o = { acquired: [], released: [], held: new Set(), releasedAt: [],
     async acquire(id, profile) { o.acquired.push([id, profile]); o.held.add(id); return new FakeStream([track()]); },
-    release(id) { o.released.push(id); o.held.delete(id); } };
+    release(id) { o.released.push(id); o.held.delete(id); o.releasedAt.push(performance.now()); } };
   return o;
 }
 function fakeAudioBus() {
@@ -332,7 +387,7 @@ try {
     r.peers.last().fire('failed');
     r.clock.advance(30000); await flush();
     check('*** a phone that vanished does not leave "Intercom open" on the screen ***', r.recv.sessions().length === 0 && r.mic.held.size === 0);
-    // Answered but never connected (a second screen of the same person answered too, and lost).
+    // Answered but never connected (the phone vanished between the offer and the answer).
     const s6 = r.phone('mike@x');
     await s6.s.start(); await flush(); r.clock.advance(3000); await flush();
     s6.peers.last().fire('connected');          // the phone connected - to the OTHER screen
@@ -416,6 +471,127 @@ try {
     z.recv.destroy();
     check('destroy ends it and tells the phone', zp.s.reason() === 'room-ended' && z.mic.held.size === 0);
     r.recv.destroy();
+  }
+
+  // ======================================================================================
+  // Mike's list 2026-09-30 item 7: two screens of the same person both answered, and the loser's room
+  // microphone stayed open (notice showing) up to 30 s. Now the server picks ONE, before anything chimes.
+  section('*** two screens of the same person: the SERVER picks one, and only it opens a microphone ***');
+  function screenOf(room, clock, { row = { intercomAllowed: ALLOWED }, busy = () => false } = {}) {
+    const link = room.join('screen', 'owner@x');
+    const mic = fakeMicOwner(); const peers = fakePeers(); const chimes = []; const said = []; const changes = [];
+    const recv = createIntercomReceiver({ link, options: () => intercomOptionsFrom(row), micOwner: mic, audio: fakeAudioBus(), busy,
+      output: { alert: (t) => said.push(t) }, chime: () => chimes.push(clock.now()), PeerConnection: peers.PC, makeAudio: fakeAudioEl,
+      now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer, onChange: (x) => changes.push(x.length) });
+    return { link, mic, peers, chimes, said, changes, recv };
+  }
+  function phoneOf(room, clock, account = 'mike@x') {
+    const link = room.join('driver', account);
+    const pp = fakePeers();
+    const got = [];
+    link.onSignal((sig) => got.push(sig));
+    const s = createIntercomSender({ link, getUserMedia: async () => new FakeStream([track()]), PeerConnection: pp.PC, Stream: FakeStream,
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const answers = () => got.filter((g) => g.kind === 'answer' && g.session === s.session).length;
+    return { s, link, pp, got, answers };
+  }
+  {
+    const room = fakeRoom(); const clock = fakeClock();
+    const A = screenOf(room, clock), B = screenOf(room, clock);
+    const p = phoneOf(room, clock);
+    await p.s.start(); await flush();
+    check('both screens asked the server about the same offer', A.link.claims.join() === p.s.session && B.link.claims.join() === p.s.session,
+      JSON.stringify([A.link.claims, B.link.claims]));
+    check('*** ONE chime, ONE name said, ONE notice - on the screen the server picked ***',
+      A.chimes.length === 1 && A.said.length === 1 && A.recv.sessions().length === 1
+      && B.chimes.length === 0 && B.said.length === 0 && B.recv.sessions().length === 0);
+    check('the other room was told nothing at all (nothing published, nothing held)', B.changes.length === 0 && B.mic.acquired.length === 0);
+    clock.advance(3000); await flush();
+    check('*** after the warning ONLY the picked screen opens its microphone; the other NEVER does ***',
+      A.mic.acquired.length === 1 && B.mic.acquired.length === 0 && B.peers.made.length === 0);
+    check('*** the phone gets exactly one answer ***', p.answers() === 1, String(p.answers()));
+    check('the other screen sent the phone nothing (no answer, no bye)', B.link.sent.length === 0, JSON.stringify(B.link.sent));
+    await p.s.reconnect(); await flush();
+    check('a reconnect asks again and stays with the same screen; the other still does nothing',
+      A.link.claims.length === 2 && A.recv.open() && A.mic.held.size === 1 && A.chimes.length === 1
+      && B.mic.acquired.length === 0 && B.chimes.length === 0 && p.answers() === 2);
+
+    // *** THE ONE PATH WHERE A SCREEN WITH ITS MICROPHONE OPEN LOSES. *** A's socket drops, so the server
+    // forgets A answered (drive.py `left`); the phone re-offers; B hears it first and the server names B.
+    room.forget(p.s.session);
+    room.reverse = true;
+    const sentBefore = A.link.sent.length;
+    await p.s.reconnect();
+    // No flush here: everything below happened INSIDE the delivery of the server's "no" to A.
+    check('*** the server names B: A has ALREADY released the room\'s microphone - same task, no timer ***',
+      A.mic.held.size === 0 && A.recv.sessions().length === 0 && A.recv.open() === false);
+    const told = A.link.notified.at(-1)?.at, released = A.mic.releasedAt.at(-1);
+    check('*** measured: the server\'s "no" reaching A -> A\'s microphone released, under 50 ms (it is synchronous) ***',
+      told != null && released >= told && released - told < 50, `${released - told} ms`);
+    check('A told the phone nothing (the phone has its answerer)', A.link.sent.length === sentBefore, JSON.stringify(A.link.sent.slice(sentBefore)));
+    await flush();
+    check('B now warns its own room first (chime + name) - it is a new room being opened into',
+      B.chimes.length === 1 && B.recv.sessions()[0]?.phase === 'warning' && B.mic.acquired.length === 0);
+    clock.advance(3000); await flush();
+    check('...then opens; still exactly one microphone open across the two screens',
+      B.mic.held.size === 1 && A.mic.held.size === 0 && A.mic.acquired.length === 1);
+    A.recv.destroy(); B.recv.destroy();
+  }
+  {
+    // The first response decides, even a no: A is on a call and says so first.
+    const room = fakeRoom(); const clock = fakeClock();
+    const A = screenOf(room, clock, { busy: () => true }), B = screenOf(room, clock);
+    const p = phoneOf(room, clock);
+    await p.s.start(); await flush(); clock.advance(10000); await flush();
+    check('the first response is a no ("in a call"), and the phone hears it', p.s.reason() === 'in-a-call', p.s.reason());
+    check('*** ...the other screen, told no by the server, never chimes or opens a microphone for a phone that gave up ***',
+      B.link.claims.length === 1 && B.chimes.length === 0 && B.mic.acquired.length === 0 && B.recv.sessions().length === 0);
+    A.recv.destroy(); B.recv.destroy();
+  }
+  {
+    // An older page that answers without asking the server: its answer, first, counts as the claim.
+    const room = fakeRoom(); const clock = fakeClock();
+    const old = room.join('screen');
+    old.onSignal((sig) => {
+      if (sig.kind === 'offer' && sig.purpose === INTERCOM_PURPOSE) old.sendSignal({ kind: 'answer', purpose: INTERCOM_PURPOSE, session: sig.session, sdp: AUDIO_SDP });
+    });
+    const B = screenOf(room, clock);
+    const p = phoneOf(room, clock);
+    await p.s.start(); await flush(); clock.advance(3000); await flush();
+    check('an older page answering without asking is taken as the answer; the new screen does nothing',
+      p.answers() === 1 && B.mic.acquired.length === 0 && B.chimes.length === 0 && B.recv.sessions().length === 0);
+    B.recv.destroy();
+  }
+  {
+    // A server too old to answer a claim: FAILS CLOSED, quietly.
+    const room = fakeRoom({ arbiter: false }); const clock = fakeClock();
+    const A = screenOf(room, clock);
+    const p = phoneOf(room, clock);
+    await p.s.start(); await flush();
+    check('no reply from the server yet: nothing in the room', A.chimes.length === 0 && A.recv.sessions().length === 0 && A.mic.acquired.length === 0);
+    clock.advance(CLAIM_MS - 1); await flush();
+    check('...still nothing just before CLAIM_MS', A.chimes.length === 0 && A.mic.acquired.length === 0);
+    clock.advance(1); await flush();
+    check('*** at CLAIM_MS it gives up QUIETLY: no chime, no microphone, nothing said to the phone ***',
+      A.chimes.length === 0 && A.mic.acquired.length === 0 && A.link.sent.length === 0 && A.changes.length === 0 && p.s.state() === 'asking');
+    clock.advance(30000); await flush();
+    check('...and the phone says, by itself, that the screen did not answer', p.s.reason() === 'no-answer', p.s.reason());
+    check('CLAIM_MS is 5 s (argued in intercom.js)', CLAIM_MS === 5000);
+    A.recv.destroy();
+  }
+  {
+    // A link with no way to ask at all.
+    let deliver = null;
+    const sent = [];
+    const link = { sendSignal: (s) => { sent.push(s); return true; }, onSignal(cb) { deliver = cb; return () => {}; } };
+    const mic = fakeMicOwner(); const chimes = [];
+    const recv = createIntercomReceiver({ link, options: () => intercomOptionsFrom({ intercomAllowed: ALLOWED, intercomWarnMs: 0 }), micOwner: mic,
+      chime: () => chimes.push(1), PeerConnection: fakePeers().PC, makeAudio: fakeAudioEl });
+    deliver({ kind: 'offer', purpose: INTERCOM_PURPOSE, session: 'ic-x', sdp: AUDIO_SDP, by: 'mike@x' });
+    await flush();
+    check('*** a link that cannot ask the server opens nothing (it fails closed) ***',
+      mic.acquired.length === 0 && chimes.length === 0 && recv.sessions().length === 0 && sent.length === 0);
+    recv.destroy();
   }
 
   // ======================================================================================
@@ -549,6 +725,100 @@ try {
     await flush();
     check('*** Stop ends it at BOTH ends ***', page.state() === 'idle' && ic.sessions().length === 0 && els[0].srcObject === null);
     page.destroy(); ic.destroy();
+  }
+
+  // ======================================================================================
+  // THE BOUND, ARGUED (Mike's list 2026-09-30 item 7: "a losing screen must close its mic within about
+  // 1 s"). A screen that follows the protocol and loses NEVER opens its microphone: it asks the server
+  // before it chimes, and only `you: true` opens anything (bound: 0 - checked above and below). The one
+  // way a screen can hold an open microphone and then lose is if the server forgot it answered (its
+  // socket dropped and came back) and the phone's re-offer went to another screen. Then the server tells
+  // it "no" in the SAME turn as it names the winner, and the screen releases the microphone in the task
+  // that receives that message (measured above: synchronous). So the bound is ONE server-to-screen
+  // message on a live socket: measured below on this machine, and tens to a few hundred ms over wifi.
+  // 1 s is the check: generous for a working socket, and a socket too slow for it is one where nothing
+  // can reach the screen anyway - for that, the 30 s stall clock is the backstop, and the phone has
+  // already moved to the other screen, so the old microphone is sending to nobody.
+  section('*** LIVE, through the real server: two screens of one person, ONE answers ***');
+  try {
+    const USER = 'intercom-test-' + Math.floor(Math.random() * 1e9);
+    const person = (await createProfilesClient({ user: USER }).people())[0];
+    check('(setup) the account has a person', !!person);
+    const row = { intercomAllowed: [{ account: USER, name: 'Tester' }], intercomWarnMs: 0, intercomChime: false, intercomAnnounce: false };
+    const settled = async (fn, ms) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(40); } return !!fn(); };
+    // A screen's link that can drop its socket and come back (the server then forgets it answered).
+    function proxyLink() {
+      const subs = new Set(); const log = []; let cur = null;
+      const fan = (sig) => {
+        if (sig.kind === 'answerer') log.push({ you: sig.you, session: sig.session, at: performance.now() });
+        for (const f of [...subs]) f(sig);
+      };
+      const open = () => { cur = connectDrive({ personId: person.id, role: 'screen', user: USER, onSignal: fan }); };
+      open();
+      const me = {
+        log, slowMs: 0,
+        sendSignal: (s) => cur.sendSignal(s),
+        claim: (c) => { if (me.slowMs > 0) { const l = cur; setTimeout(() => l.claim(c), me.slowMs); return true; } return cur.claim(c); },
+        onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+        state: () => cur.state(),
+        drop() { cur.close(); open(); },
+        close() { cur.close(); subs.clear(); },
+      };
+      return me;
+    }
+    const mk = (link) => {
+      const mic = fakeMicOwner(); const peers = fakePeers(); const chimes = [];
+      const recv = createIntercomReceiver({ link, options: () => intercomOptionsFrom(row), micOwner: mic, PeerConnection: peers.PC,
+        makeAudio: fakeAudioEl, chime: () => chimes.push(1), audio: fakeAudioBus() });
+      return { link, mic, peers, recv, chimes };
+    };
+    const lA = proxyLink(), lB = proxyLink();
+    const phoneLink = connectDrive({ personId: person.id, role: 'driver', user: USER });
+    check('(setup) two screens and a phone connect to the real server',
+      await settled(() => lA.state() === 'connected' && lB.state() === 'connected' && phoneLink.state() === 'connected'
+        && phoneLink.presence().screens >= 2, 8000), JSON.stringify(phoneLink.presence()));
+    const A = mk(lA), B = mk(lB);
+    const got = [];
+    phoneLink.onSignal((sg) => got.push(sg));
+    const pp = fakePeers();
+    const phone = createIntercomSender({ link: phoneLink, getUserMedia: async () => new FakeStream([track()]), PeerConnection: pp.PC, Stream: FakeStream });
+    const answers = () => got.filter((g) => g.kind === 'answer' && g.session === phone.session).length;
+    await phone.start();
+    await settled(() => A.mic.acquired.length + B.mic.acquired.length >= 1 && answers() >= 1, 8000);
+    await sleep(700);               // room for a wrong second answer or microphone to show up, if there were one
+    const W = A.mic.acquired.length ? A : B, L = W === A ? B : A;
+    check('*** LIVE: exactly ONE screen opened its microphone; the other never did ***',
+      A.mic.acquired.length + B.mic.acquired.length === 1 && L.mic.acquired.length === 0 && L.recv.sessions().length === 0,
+      JSON.stringify([A.mic.acquired.length, B.mic.acquired.length]));
+    check('*** LIVE: the phone received exactly one answer ***', answers() === 1, String(answers()));
+    const yes = W.link.log.find((x) => x.you && x.session === phone.session);
+    const no = L.link.log.find((x) => !x.you && x.session === phone.session);
+    check('LIVE: the server told the winner yes and the other screen no', !!yes && !!no, JSON.stringify([W.link.log, L.link.log]));
+    check(`LIVE: the other screen heard "no" within 1 s of the winner hearing "yes" (measured ${no && yes ? (no.at - yes.at).toFixed(1) : '?'} ms)`,
+      !!yes && !!no && Math.abs(no.at - yes.at) < 1000, `${no && yes ? Math.round(no.at - yes.at) : '?'} ms`);
+
+    // The lose-while-open path, for real: W's socket drops and comes back (the server forgets it), its
+    // re-claim is slow, the phone re-offers, and L is named first.
+    W.link.slowMs = 400;
+    W.link.drop();
+    check('(setup) the winner\'s socket came back', await settled(() => W.link.state() === 'connected' && phoneLink.presence().screens >= 2, 8000));
+    check('(setup) ...and the winner still holds its open microphone', W.mic.held.size === 1 && W.recv.open());
+    const before = answers();
+    await phone.reconnect();
+    check('*** LIVE: the screen that lost its place released its microphone ***',
+      await settled(() => W.mic.held.size === 0 && L.mic.held.size === 1, 6000), JSON.stringify([W.mic.held.size, L.mic.held.size]));
+    const yes2 = L.link.log.filter((x) => x.you && x.session === phone.session).at(-1);
+    const rel = W.mic.releasedAt.at(-1);
+    check(`*** LIVE, MEASURED: from the server naming the other screen to this microphone released, under 1 s (${yes2 && rel != null ? (rel - yes2.at).toFixed(1) : '?'} ms) ***`,
+      !!yes2 && rel != null && rel - yes2.at < 1000, `${yes2 && rel != null ? Math.round(rel - yes2.at) : '?'} ms`);
+    await sleep(700);
+    check('LIVE: still exactly one microphone open, and the phone got exactly one new answer',
+      W.mic.held.size === 0 && L.mic.held.size === 1 && answers() === before + 1, `${answers() - before}`);
+    phone.stop();
+    check('LIVE: the phone hanging up ends it on the answering screen', await settled(() => L.mic.held.size === 0 && L.recv.sessions().length === 0, 6000));
+    A.recv.destroy(); B.recv.destroy(); lA.close(); lB.close(); phoneLink.close();
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
   }
 
   section('the phone page is not indexed');
