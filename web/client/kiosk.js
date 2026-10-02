@@ -1290,6 +1290,9 @@ export async function mountKiosk(root, {
     // "How you choose things" (6fd7575): 'point' or 'step', read when asked (a module mounted at boot, before
     // the menu below exists, gets the default rather than a ReferenceError).
     chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+    // A SCREEN, OR A PAGE SHOWING ONE (2026-10-02, profile.js): true on a real screen, false when this kiosk is
+    // embedded in another page (Home, the modules page). "A screen never places a call" reads this first.
+    isScreen: !embedded,
     // HOW MANY PANELS SHARE THIS PANEL'S DASHBOARD (game_start.js `panelAlone`: "when it is the only thing on
     // the dashboard"), or null when this panel is not one of the showing dashboard's (a nested one, a library).
     // A getter, read when asked; `this.instanceId` so a ctx extended for a dashboard's child asks about the child.
