@@ -415,7 +415,8 @@ try {
     const sources = [{ id: 'src1', kind: 'agent', label: 'Family pictures', base_url: 'https://media.invalid' }];
     const t = mount({ sources, names: { src1: [{ path: 'me.png', name: 'me.png', kind: 'image' }, { path: 'clip.mp4', name: 'clip.mp4', kind: 'video' }] } });
     t.press('[data-act="to-picture"]');
-    await sleep(40);
+    // Wait for the source's names to arrive and the grid to draw, not a fixed 40 ms (which flaked under load).
+    for (let i = 0; i < 100 && !t.q('[data-pp-group="grid"] [data-pp-pick]'); i++) await sleep(30);
     check('*** it opens the shared picker (picture_picker.js), not a list of names ***',
       !!t.q('[data-avatar-picker] [data-picture-picker]') && !t.q('[data-act="pick"]'));
     check('its pictures are thumbnails in the grid (videos left out)', !!t.q('[data-pp-group="grid"] [data-pp-pick][data-path="me.png"]') && !t.q('[data-path="clip.mp4"]'));
@@ -431,7 +432,7 @@ try {
     check('*** picking IS choosing: saved as a REFERENCE into the source, the same shape a card\'s picture is ***',
       kept.use === 'picture' && kept.picture.sourceId === 'src1' && kept.picture.path === 'me.png', JSON.stringify(kept));
     check('...and the picker is gone, the panel showing again', t.probe().view === 'show' && !t.q('[data-picture-picker]'));
-    await sleep(20);
+    for (let i = 0; i < 100 && !/me\.png/.test(t.q('[data-avatar-shown="picture"] img')?.getAttribute('src') || ''); i++) await sleep(30);
     const img = t.q('[data-avatar-shown="picture"] img');
     check('the panel shows it, through the card picture loader', img && /me\.png/.test(img.getAttribute('src') || ''), img?.getAttribute('src'));
     t.press('[data-act="no-avatar"]');
@@ -439,7 +440,7 @@ try {
     t.inst.destroy();
     const empty = mount();
     empty.press('[data-act="to-picture"]');
-    await sleep(40);
+    for (let i = 0; i < 100 && !empty.q('[data-pp-empty]'); i++) await sleep(30);
     check('no picture folders: it says so, and still offers a way in (add one from this device)', !!empty.q('[data-pp-empty]') && !!empty.q('[data-pp-act="upload"]'));
     empty.pub('back');
     check('...and back is Cancel: returns to showing', empty.probe().view === 'show' && !empty.q('[data-picture-picker]'));

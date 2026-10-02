@@ -27,7 +27,9 @@ parts page it was. Needs the server (<code>SUITE_BASE</code>).</p>
 import { createProfilesClient, ensureProfile } from '../profile.js';
 import { createState } from '../state.js';
 import { authHeaders } from '../auth.js';
-import { EXAMPLE_ORDER, PREBUILT_KEY } from '../dashboards.js';
+import { EXAMPLE_ORDER, PREBUILT_KEY, inKindOrder } from '../dashboards.js';
+import { sceneChoices } from '../home_profile.js';
+import { EDIT_PANEL_TOPIC } from '../edit_mode.js';
 import { createGame } from '../game/game.js';
 import { verbTopic } from '../actions.js';
 import { LANDING_INTRO } from '../nimrod_guide_data.js';
@@ -133,13 +135,14 @@ try {
   // the page says why (`data-home-error`).
   check('*** Home is on: its buttons are IN the real transport bar in the stage ***', await until(() => !!hb('save') && !!hb('picker'), 45000),
     `homeError=${doc.body.dataset.homeError || '-'} signedIn=${/My dashboards/.test($('.top nav a.solid')?.textContent || '')}`);
-  check('*** the bar: Modules, Save, Save as…, History, Switch module, then the status ***',
-    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === `Modules: ${pickName()}|Save|Save as…|History|Switch module`,
+  check('*** the bar: Modules, My Home (2026-10-02), Save, Save as…, History, Switch module, then the status ***',
+    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === `Modules: ${pickName()}|My Home|Save|Save as…|History|Switch module`,
     $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|'));
   check('the page’s own fallback bar is hidden (the real bar carries it)', await until(() => $('#stage-bar').hidden));
   check('the page is titled Home', doc.title.includes('Home'), doc.title);
   check('the parts-page header and legend are out of the way', win.getComputedStyle($('.legend')).display === 'none');
-  check('*** it opens on "Your Home" ***', await until(() => pickName() === 'Your Home'), pickName());
+  // 2026-10-02 (Mike: "that should be what you land on"): the LANDING dashboard, by its name.
+  check('*** it opens on the landing dashboard, "Start here" ***', await until(() => pickName() === 'Start here'), pickName());
   check('*** the starting points are UP FRONT, on the page (not hidden in the bar), and say it is optional ***',
     await until(() => !ex().hidden) && /optional/i.test(ex().textContent));
   const cards = $$('#ex-cards [data-example]');
@@ -152,8 +155,9 @@ try {
   check('Skip for now is the first button (optional, so the way past it comes first)', $('#examples button')?.textContent.trim() === 'Skip for now');
   check('*** the examples sit ABOVE the stage, never over it (nothing is blocked) ***',
     ex().getBoundingClientRect().bottom <= $('#stage').getBoundingClientRect().top + 1);
-  check('the picker’s first row is Your Home, marked Optional',
-    /Your Home/.test(doc.querySelector('#list .pickrow')?.textContent) && /Optional/.test(doc.querySelector('#list .pickrow')?.textContent));
+  check('the picker’s first two rows are Start here and Your Home (marked Optional)',
+    /Start here/.test($$('#list .pickrow')[0]?.textContent) && /Your Home/.test($$('#list .pickrow')[1]?.textContent)
+    && /Optional/.test($$('#list .pickrow')[1]?.textContent), $$('#list .pickrow').slice(0, 2).map((r) => r.textContent.trim()).join(' | '));
   check('*** the first example is on the stage, being TRIED (the card says so) ***',
     await until(() => card(EXAMPLE_ORDER[0]).getAttribute('aria-current') === 'true' && kiosks() === 1 && /Trying/.test($('#stagenote').textContent)));
   check('status says nothing is made yet', /not made yet/i.test(status()), status());
@@ -214,7 +218,10 @@ try {
   tray().querySelector('[data-edit-add="clock"]').click();
   check('*** a Clock is ON your Home (a real module on the screen) ***', await until(async () => (await modsOf(HID)).some((m) => m.type === 'clock'), 15000));
   const clockId = (await modsOf(HID)).find((m) => m.type === 'clock').id;
-  const clockEntry = (await layoutOf(HID)).placed.find((p) => p.id === clockId);
+  // The module is made a moment BEFORE the arrangement naming it is written (addModule, then the layout): on a
+  // loaded machine the read landed between the two (2026-10-02), so wait for the layout too.
+  let clockEntry = null;
+  await until(async () => { clockEntry = ((await layoutOf(HID))?.placed || []).find((p) => p.id === clockId) || null; return !!clockEntry; }, 10000);
   check('...hung on the room’s back wall (placed in the scene), not over the whole room', clockEntry?.place === 'scene' && clockEntry.surface === 'back', J(clockEntry));
   check('...and the stage is rebuilt with it: still one kiosk, its bar back, edit view kept',
     await until(() => editIdle() && kiosks() === 1 && !!hb('save') && menuShown(), 15000));
@@ -223,13 +230,20 @@ try {
 
   // ============================================================================================
   section('*** SWITCH MODULE: another module in exactly the same place, one press, from the BAR ***');
+  // 2026-10-02 (library.js): Switch module opens the Modules library IN THE CHOSEN PANEL'S PLACE, its way out
+  // ("Keep <panel>") first; one press shows a thing, "Put it here" puts it there -- through Home's own switch.
   hb('switch').click();
-  check('the bar’s Switch module opens the Switch tray for the chosen thing, Close first',
-    await until(() => !tray().hidden && /Switch .* for/.test(tray().textContent) && tray().querySelector('button')?.textContent === 'Close'), tray().textContent.slice(0, 80));
+  const lib = () => $('#stage [data-library-for]');
+  check('*** the bar’s Switch module opens the Modules library in the chosen thing’s place, Keep first ***',
+    await until(() => !!lib() && lib().dataset.libraryFor === clockId && /Switch .* to/.test(lib().textContent)
+      && /^Keep /.test(lib().querySelector('button')?.textContent || ''), 15000), (lib()?.textContent || 'no library').slice(0, 80));
   const before = clockEntry;
-  const choice = tray().querySelector('[data-edit-switch="photos"]');
-  check('...listing other modules (not the one already there)', !!choice && !tray().querySelector('[data-edit-switch="clock"]'));
-  choice.click();
+  const choice = lib()?.querySelector('.lib-card[data-lib-key="module:photos"]');
+  check('...listing other modules', !!choice);
+  choice?.click();
+  check('one press shows what it is, with “Put it here”', await until(() => !!lib()?.querySelector('[data-lib-act="place"]')));
+  lib()?.querySelector('[data-lib-act="place"]')?.click();
+  check('...and the library goes', await until(() => !lib(), 10000));
   check('*** ONE press: the clock is gone and Photos is on the screen ***', await until(async () => {
     const ms = await modsOf(HID); return !ms.some((m) => m.type === 'clock') && ms.some((m) => m.type === 'photos');
   }, 15000));
@@ -296,6 +310,10 @@ try {
     const barShown = () => !$('#home-edit').hidden;
     check('(setup) the page hands its kiosk out for diagnostics', !!K()?.bus);
     await until(editIdle, 15000);
+    // (2026-10-02: Switch module is the Modules library now, which never took the bar's scan the way the old
+    // Switch tray did; the Change tray a switch leaves open is closed here, so the walk starts on the bar.)
+    if (!tray().hidden) tray().querySelector('[data-edit="closetray"]')?.click();
+    await until(() => tray().hidden, 3000);
     await ensureMenu('editbar');
     check('*** "Edit bar…" is a row in the ⚙ menu (how a switch walking the menu gets to the bar) ***', !!hrow('editbar') && !hrow('editbar').disabled);
     hrow('editbar').click();
@@ -379,6 +397,11 @@ try {
       && !!tray().querySelector('[data-edit-room="light"]') && !!tray().querySelector('[data-edit-scene="room:living"]')
       && !!tray().querySelector('[data-edit-scene="theme:fall"]') && !!tray().querySelector('[data-edit-scene="theme:default"]')));
   check('the room showing is marked (pressed)', tray().querySelector('[data-edit-scene="room:fireside"]')?.getAttribute('aria-pressed') === 'true');
+  // 2026-10-02 (Mike): "The still themes like Nimrod light should come first: Still, live, rooms, 3d."
+  const sceneOrder = $$('#home-tray [data-edit-scene]').map((b) => b.dataset.editScene);
+  const kindOf = new Map(sceneChoices().map((c) => [c.id, c.kind]));
+  check('*** the Scene tray goes STILL (Nimrod light first), moving, rooms, 3D ***',
+    sceneOrder[0] === 'theme:default' && sceneOrder.length === kindOf.size && inKindOrder(sceneOrder.map((id) => kindOf.get(id))), J(sceneOrder));
   tray().querySelector('[data-edit-room="light"]').click();
   check('*** a Room row (Light) changes the room — its own copy of the recipe, saved ***',
     await until(async () => !!(await layoutOf(HID))?.scene?.recipe && (await layoutOf(HID)).scene.recipe.light !== 'night', 15000), J((await layoutOf(HID))?.scene));
@@ -402,6 +425,23 @@ try {
     await until(async () => (await layoutOf(HID))?.scene?.options?.drift === 'on', 15000), J((await layoutOf(HID))?.scene));
   check('...and the room on the stage drifts (this browser does not ask for reduced motion)',
     await until(() => matchMedia('(prefers-reduced-motion: reduce)').matches || doc.querySelector('#stage [data-room3d]')?.dataset.drift === 'on', 10000));
+  await until(editIdle, 15000);
+  // *** FLATTEN TO 2D (2026-10-02, room_flat.js): a Scene tray row on a 3D room; on the flat one, Re-bake (dimmed
+  // while it is up to date, never hidden) and Back to 3D. ***
+  if (tray().hidden) eb('scene').click();
+  const flatBtn = (k) => tray().querySelector(`[data-edit-flat="${k}"]`);
+  check('*** the 3D room offers Flatten to 2D ***', await until(() => !!flatBtn('flatten') && !flatBtn('flatten').disabled, 8000), tray().textContent.slice(0, 120));
+  flatBtn('flatten')?.click();
+  check('*** pressing it: the room is a flat 2D room that keeps its 3D source, saved ***', await until(async () => {
+    const L = await layoutOf(HID); return L?.scene?.kind === 'room' && !!L.scene.recipe?.flat?.source;
+  }, 15000), J((await layoutOf(HID))?.scene?.kind));
+  await until(editIdle, 15000);
+  if (tray().hidden) eb('scene').click();
+  check('...and the tray offers Re-bake (dimmed: up to date) and Back to 3D',
+    await until(() => !!flatBtn('rebake') && flatBtn('rebake').disabled && !!flatBtn('unflatten') && !flatBtn('unflatten').disabled, 8000));
+  flatBtn('unflatten')?.click();
+  check('*** Back to 3D: the 3D room again ***', await until(async () => (await layoutOf(HID))?.scene?.kind === 'room3d', 15000),
+    J((await layoutOf(HID))?.scene?.kind));
   await until(editIdle, 15000);
   if (tray().hidden) eb('scene').click();
   await until(() => !!tray().querySelector('[data-edit-scene="theme:fall"]'));
@@ -457,8 +497,27 @@ try {
   check('the gear opens the menu, with This page’s section in it', await ensureMenu('set:keepVersions'));
   hrow('set:keepVersions').click();
   check('"Keep the last" cycles and is saved on the person', await until(async () => (await personRow('home')).keepVersions === 50, 6000));
-  check('*** next visit: straight to your Home (the real one, not a preview), no examples ***',
-    await (async () => { await open(`user=${encodeURIComponent(USER)}`); return until(() => pickName() === 'Your Home' && kiosks() === 1 && /Your Home, live/.test($('#stagenote').textContent), 15000); })()
+  // *** 2026-10-02 (Mike: "The default home shouldn't be the one I had now ... that should be what you land on"). ***
+  // A person WITH a Home (the Fireside attic is this account's) lands on the landing dashboard, tried (they
+  // have not made it); their Home is one press away.
+  check('*** next visit, WITH a Home: the LANDING dashboard ("Start here", tried), not the Home they picked; no examples ***',
+    await (async () => { await open(`user=${encodeURIComponent(USER)}`); return until(() => pickName() === 'Start here' && kiosks() === 1
+      && /Trying “Start here”: this is where you land/.test($('#stagenote').textContent) && !!$('#stage [data-nimrod-guide]'), 20000); })()
+    && ex().hidden, `${pickName()} / ${$('#stagenote')?.textContent}`);
+  check('...it says the Home is one press away, and the bar’s button says My Home', /My Home, on the bar/.test($('#stagenote').textContent)
+    && hb('myhome')?.textContent === 'My Home' && !hb('myhome').disabled);
+  hb('myhome').click();
+  check('*** My Home: one press, your own Home, live ***', await until(() => pickName() === 'Your Home' && kiosks() === 1
+    && /Your Home, live/.test($('#stagenote').textContent), 20000), `${pickName()} / ${$('#stagenote')?.textContent}`);
+  check('...and the button now goes back: Start here', await until(() => hb('myhome')?.textContent === 'Start here', 4000));
+  hb('myhome').click();
+  check('Start here goes back to the landing', await until(() => pickName() === 'Start here', 15000));
+  // The setting: "Open on: My Home".
+  check('*** "Open on" is a row in the ⚙ menu ***', await ensureMenu('set:openOn') && /landing/i.test(hrow('set:openOn').textContent));
+  hrow('set:openOn').click();
+  check('...pressed, it says My Home, saved on the person', await until(async () => (await personRow('home')).openOn === 'home', 6000));
+  check('*** next visit with "Open on: My Home": straight to your Home (the real one, not a preview), no examples ***',
+    await (async () => { await open(`user=${encodeURIComponent(USER)}`); return until(() => pickName() === 'Your Home' && kiosks() === 1 && /Your Home, live/.test($('#stagenote').textContent), 20000); })()
     && ex().hidden, $('#stagenote')?.textContent);
 
   // ============================================================================================
@@ -501,7 +560,12 @@ try {
     const { profileId } = await game.makeProfile();
     await game.hangPicture(); await game.putUpSign();
     await open(`user=${encodeURIComponent(OLD)}`);
-    check('*** an account with an old profile and no Home picked: Home IS that profile, live ***',
+    // 2026-10-02: it lands on the landing dashboard like everybody; My Home is that old profile.
+    check('an account with an old profile lands on the landing dashboard too, no examples (it has a Home)',
+      await until(() => pickName() === 'Start here', 20000) && ex().hidden, pickName());
+    await until(() => !!hb('myhome'), 15000);
+    hb('myhome').click();
+    check('*** ...and My Home IS that old profile, live ***',
       await until(() => pickName() === 'Your Home' && /Your Home, live/.test($('#stagenote')?.textContent || ''), 15000), $('#stagenote')?.textContent);
     check('...its two panels are on the stage', await until(() => doc.querySelectorAll('#stage [data-nbtn]').length >= 2, 8000));
     check('...no examples pushed at somebody who has a Home', ex().hidden);
@@ -533,6 +597,34 @@ try {
     $('#stage [data-ng-back]').click();
     check('Back takes him back', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 4000));
     check('nothing was made by looking (only the default screen)', (await np.list()).length === 1);
+
+    // *** 2026-10-02: EDIT ANY PANEL IN PLACE, and THE BUILDER. ***
+    check('*** every panel on the landing has a ✎ corner ***', await until(() => $$('#stage .k-editc').length >= 4, 8000), String($$('#stage .k-editc').length));
+    await ensureMenu('editpanel');
+    check('"Edit the chosen panel" is a ⚙ menu row that can act here', !!hrow('editpanel') && !hrow('editpanel').disabled);
+    hrow('editpanel').click();
+    check('*** pressing it edits the chosen panel IN PLACE: marked, Done first, its options in a card in it (nobody else claims them) ***',
+      await until(() => !!$('#stage [data-editing] .em-bar .em-done') && !!$('#stage [data-editing] .em-card:not([hidden]) [data-em-opts]'), 6000));
+    doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape leaves it', await until(() => !$('#stage [data-editing]'), 3000));
+    await ensureMenu('builder');
+    hrow('builder').click();
+    check('*** the ⚙ menu’s "The builder…" tries the builder on the stage ***',
+      await until(() => /Trying “The builder”/.test($('#stagenote').textContent) && !!$('#stage [data-options]') && !!$('#stage [data-library-slot]'), 20000),
+      $('#stagenote').textContent);
+    check('*** it OPENS with its top left (your name sign) being edited, and the options panel top right says so ***',
+      await until(() => !!$('#stage [data-editing] [data-nbtn]') && /Button/.test($('#stage [data-options] [data-em-title]')?.textContent || ''), 10000),
+      $('#stage [data-options]')?.textContent.slice(0, 80));
+    $('#stage [data-editing] .ab-word')?.click();
+    check('*** pressing the words in it shows THEIR options in the options panel (and no card over the sign) ***',
+      await until(() => $('#stage [data-options] [data-em-title]')?.textContent === 'Button: The words', 4000)
+      && !!$('#stage [data-editing] .em-card[hidden]'), $('#stage [data-options] [data-em-title]')?.textContent);
+    check('the library’s place holds the Modules library (or, until that is registered, says where it will be)',
+      $('#stage [data-library-slot]')?.dataset.librarySlot === 'library' || /library/i.test($('#stage [data-library-slot]')?.textContent || ''),
+      $('#stage [data-library-slot]')?.dataset.librarySlot);
+    $('#stage [data-options] [data-em="done"]').click();
+    check('the options panel’s Done stops the editing', await until(() => !$('#stage [data-editing]'), 3000));
+    check('still nothing made by looking', (await np.list()).length === 1);
 
     await ensureMenu('tutorial');
     hrow('tutorial').click();

@@ -532,6 +532,17 @@ export const CATALOG = [
     needs: 'Nothing. The questions are built in.',
     why: 'Short rounds, each player at their own level. Nothing is timed unless that is turned on.',
   },
+  // 2026-10-02: name the suit, then put the card in order among the ones already done.
+  {
+    type: 'card_sort',
+    group: 'practice',
+    use: 'answer',
+    lead: 'Name the suit of a big playing card, then say whether it is higher or lower than cards already done.',
+    needs: 'Nothing. The deck is built in.',
+    why: 'It starts with the suit alone and works up to putting a card in order among several, each player at '
+      + 'their own level. Say the answer, touch it, or walk the choices on one switch. Every suit has its colour, '
+      + 'its symbol and its name, never a colour alone. It waits for Start.',
+  },
   // 2026-10-02 (Mike's landing Home): the guide, the devices list, and What's new.
   {
     type: 'nimrod',
@@ -551,6 +562,21 @@ export const CATALOG = [
     needs: 'Nothing.',
     why: 'Voice, tracking, keys and switches, phones and other screens, in one list, each one press from its settings.',
   },
+  // 2026-10-02 (Mike: "That could actually be the modules module"): the library of everything addable.
+  // `touch`: left alone it is a grid to look at, and nothing waits on anybody.
+  {
+    type: 'library',
+    title: 'Modules',
+    group: 'practice',
+    use: 'touch',
+    lead: 'Everything you can put on a screen, to look through: modules, scenes, furniture and 3D bricks.',
+    needs: 'Nothing.',
+    why: 'Sorted and filtered by what you are after (games, learning, something to look at, people), with a '
+      + 'search. One press shows what a thing is and what it needs; a second puts it where this panel is. '
+      + 'Switch module opens it in the place of the panel you chose, and puts that panel back if you change your mind.',
+    note: 'Nothing here costs money. In the Nimrod Game some things unlock as you play; sandbox, one choice away, '
+      + 'unlocks everything.',
+  },
   {
     type: 'whats_new',
     title: 'What’s new',
@@ -559,6 +585,26 @@ export const CATALOG = [
     lead: 'What changed lately, newest first, and where to find it.',
     needs: 'Nothing.',
     why: 'Patch notes in plain words, so a new thing is something you can go and use.',
+  },
+  // 2026-10-02 (ai_characters.js): a person or an AI character, as a card.
+  {
+    type: 'profile',
+    title: 'Profile',
+    group: 'record',
+    use: 'touch',
+    lead: 'A person or an AI character, as a card: their face, their name, and what you can do with them.',
+    needs: 'Nothing for the card. Talking to an AI needs one connected to this device (Ollama, free, or your own key).',
+    why: 'Talk to an AI character, or open its room: a math tutor’s room has the calculator. People on this '
+      + 'account show here too; friends on other accounts will once accounts can be linked.',
+  },
+  // 2026-10-02 (edit_mode.js): the panel editor's options, as a panel of their own.
+  {
+    type: 'options',
+    group: 'practice',
+    use: 'touch',
+    lead: 'The options of whatever you choose in a panel you are editing.',
+    needs: 'Nothing.',
+    why: 'Press ✎ on a panel, then press a thing in it: its words, its picture, the whole panel. Its options show here.',
   },
   {
     type: 'name_that',
@@ -718,6 +764,7 @@ export const NOT_FOR_CAREGIVERS = {
   interstitials: 'retired — replaced by Lineup',
   keyboard: 'a device module, not a software one — see this file’s own note just above',
   simple_math: 'folded into Math (its Beginner level) — kept so old screens do not break',
+  library_slot: 'the builder’s place for the Modules library',
 };
 
 /**

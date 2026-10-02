@@ -237,6 +237,18 @@ try {
     check(`only the last ${KEEP_TURNS} turns are sent (a small local model’s window is small)`,
       lastCall.length === 1 + KEEP_TURNS * 2 && lastCall.at(-1).content === `line ${KEEP_TURNS + 4}` && !lastCall.some((m) => m.content === 'line 0'), lastCall.length);
     check('nothing to say: nothing sent', !(await chat.send('   ')).ok && ai.calls.chat.length === 3);
+    // 2026-10-02 (an AI character, modules/profile.js): a caller's own system prompt replaces the guide's;
+    // one that returns nothing falls back to it.
+    const sysAI = fakeAI();
+    const seen = [];
+    const own = createGuideChat({ ai: sysAI, context: () => ({ node }), system: (o) => { seen.push(o); return 'You are Pip, a math tutor.'; } });
+    await own.send('hello');
+    check('*** `system`: a caller’s own system prompt is the one sent, handed the prefs, actions and context ***',
+      sysAI.calls.chat[0]?.msgs[0]?.content === 'You are Pip, a math tutor.' && !!seen[0]?.prefs && Array.isArray(seen[0]?.actions) && seen[0]?.context?.node === node,
+      J(sysAI.calls.chat[0]?.msgs[0]));
+    const fbAI = fakeAI();
+    await createGuideChat({ ai: fbAI, context: () => ({ node }), system: () => '' }).send('hello');
+    check('...and one that returns nothing falls back to the guide’s', /Your name is/.test(fbAI.calls.chat[0]?.msgs[0]?.content || ''), (fbAI.calls.chat[0]?.msgs[0]?.content || '').slice(0, 60));
     check('isYes / isNo: whole utterances only', isYes('Yes please') && isYes('do it') && !isYes('yes I think the blue one') && isNo('not now') && !isNo('no way that is great'));
   }
   {
