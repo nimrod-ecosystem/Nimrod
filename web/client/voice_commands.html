@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voice commands</title>
+<link rel="icon" href="/design-assets/nimrod-mark-favicon.svg" type="image/svg+xml">
+<style>
+  /* A plain reference page: the browser's own colours, nothing hard-coded. */
+  body { font: 1.05rem/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 60rem; padding: 1rem 1.25rem 3rem; }
+  h1 { font-size: 1.6rem; margin: .5rem 0 0; }
+  h2 { font-size: 1.2rem; margin: 2rem 0 .5rem; border-bottom: 1px solid currentColor; padding-bottom: .2rem; }
+  p.lead { margin: .25rem 0 1rem; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { text-align: left; vertical-align: top; padding: .35rem .5rem; border-bottom: 1px solid color-mix(in srgb, currentColor 20%, transparent); }
+  th { width: 14rem; font-weight: 600; }
+  q { quotes: '\201C' '\201D'; }
+  .muted { opacity: .75; font-size: .95rem; }
+</style>
+</head>
+<body>
+<h1>Voice commands</h1>
+<p class="lead">Every phrase the screen listens for, built from the same tables the screen uses, so this page is
+always current. Say the wake phrase first (unless it is turned off), then the command. Every command here can
+also be put on a switch.</p>
+<div id="out"><p>Loading…</p></div>
+
+<script type="module">
+// *** ONE SOURCE: the live tables. *** Nothing on this page is typed out by hand, so it cannot drift from
+// what the screen actually hears (Mike, 2026-10-02: "I'd like a running list of voice commands").
+import { PHRASES, ROUTES, SPEECH_DEFAULTS } from './input_speech.js';
+import { STOP_PHRASES as GAME_STOP } from './quiz_flow.js';
+import { STOP_PHRASES as MUSIC_STOP, DEFAULT_STARTERS as MUSIC_STARTERS } from './music_favourites.js';
+import { PREBUILT_ROUTES, NAV_ROUTES, DEFAULT_GO_STARTERS } from './dashboards.js';
+import { CATALOG } from './modules_catalog.js';
+import { getManifest } from './module.js';
+
+const VERB_NAMES = {
+  select: 'Select / press', back: 'Back / cancel', next: 'Next', prev: 'Previous', up: 'Up', down: 'Down',
+  left: 'Left', right: 'Right', menu: 'Open or close the menu', play: 'Play / resume', pause: 'Pause',
+  'volume-up': 'Louder', 'volume-down': 'Quieter', launch: 'Launch', stop: 'Stop moving',
+  close: 'Close the menu',
+};
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const quoted = (list) => (list || []).map((p) => `<q>${esc(p)}</q>`).join(', ');
+const table = (rows) => `<table>${rows.map(([name, phrases, note]) =>
+  `<tr><th>${esc(name)}</th><td>${phrases}${note ? `<div class="muted">${esc(note)}</div>` : ''}</td></tr>`).join('')}</table>`;
+const section = (title, body, lead = '') => `<h2>${esc(title)}</h2>${lead ? `<p class="muted">${esc(lead)}</p>` : ''}${body}`;
+
+const routeRows = (filter) => Object.values(ROUTES).filter(filter)
+  .map((r) => [r.label || r.topic, quoted(r.phrases)]);
+const isGame = (r) => /\/play$/.test(r.topic || '');
+
+async function moduleVoices() {
+  const rows = [];
+  for (const entry of CATALOG) {
+    try { await import(`./modules/${entry.type}.js`); } catch { continue; }
+    const voice = getManifest(entry.type)?.voice;
+    if (!voice || typeof voice !== 'object') continue;
+    const byVerb = {};
+    for (const [phrase, verb] of Object.entries(voice)) (byVerb[verb] ||= []).push(phrase);
+    const list = Object.entries(byVerb).map(([verb, ps]) => `${esc(VERB_NAMES[verb] || verb)}: ${quoted(ps)}`).join('<br>');
+    const name = entry.title || getManifest(entry.type)?.title || entry.lead || entry.type;
+    rows.push([name, list, 'Only while this module is the one in focus.']);
+  }
+  return rows;
+}
+
+async function render() {
+  const out = [];
+  out.push(section('Wake phrases', table([
+    ['Defaults', quoted(SPEECH_DEFAULTS.wake), 'A person can add their own wake phrase in their Voice settings.'],
+  ])));
+  out.push(section('Everywhere', table(Object.entries(PHRASES).map(([verb, ps]) => [VERB_NAMES[verb] || verb, quoted(ps)])),
+    'These work on whatever is in focus.'));
+  const other = routeRows((r) => !isGame(r));
+  if (other.length) out.push(section('The screen, the menu and the cursor', table(other)));
+  out.push(section('Dashboards', table([
+    ...Object.values(PREBUILT_ROUTES).map((r) => [r.label, quoted(r.phrases)]),
+    ...Object.values(NAV_ROUTES).map((r) => [r.label, quoted(r.phrases)]),
+    ['Any of your dashboards', DEFAULT_GO_STARTERS.map((s) => `<q>${esc(s)} &lt;its name&gt;</q>`).join(', ')],
+  ])));
+  out.push(section('Games', table([
+    ...routeRows(isGame),
+    ['Stop a game', quoted(GAME_STOP), 'Unless "stop" is an answer to the question being asked.'],
+  ])));
+  out.push(section('Music', table([
+    ['Play a favourite', MUSIC_STARTERS.map((s) => `<q>${esc(s)} &lt;its name&gt;</q>`).join(', '), 'Names come from the Music favourites list.'],
+    ['Stop the music', quoted(MUSIC_STOP)],
+  ])));
+  const mods = await moduleVoices();
+  if (mods.length) out.push(section('Inside a module', table(mods)));
+  document.getElementById('out').innerHTML = out.join('');
+}
+render().catch((err) => { document.getElementById('out').textContent = `Could not build the list: ${err.message}`; });
+</script>
+</body>
+</html>
