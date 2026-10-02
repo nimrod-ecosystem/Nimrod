@@ -64,6 +64,18 @@ import { getManifest } from './module.js';
 import { renderAvatar, normalizeRecord } from './avatar.js';
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
+import { renderBackdrop, normalizeBackdrop, quadMatrix } from './room_backdrop.js';
+
+// *** A FLATTENED 3D ROOM IS AN ORDINARY ROOM (2026-10-02, room_flat.js). *** Three small additions make it so,
+// each data on the recipe and each ignored by a recipe that does not use it:
+//   recipe.backdrop   a picture of the room drawn INSTEAD of the shell (room_backdrop.js: a plan of polygons
+//                     in theme tokens, or an image). The lighting veil, content and objects draw over it as ever.
+//   kind 'hotspot'    an object with no art: a place on the backdrop (`w` x `h` stage px at x/y, `poly` its
+//                     outline in % of that box) that takes a role like any object -- `opens` makes it a door.
+//                     Only its outline takes a press; the focus ring is its box.
+//   `quad` on a module mount  four corners (% of the stage, TL TR BR BL): the mount's `w` x `h` box is drawn
+//                     onto them with a matrix3d, so a module on a flattened side wall stays in perspective.
+// `recipe.flat` (where it came from, room_flat.js) rides along untouched.
 
 export const W = STAGE.w;
 export const H = STAGE.h;
@@ -154,8 +166,25 @@ export function contentSize(it) {
     case 'module': return { w: it.w || 200, h: it.h || 124 };
     case 'clock': return { w: it.size || 92, h: it.size || 92 };
     case 'calendar': { const w = it.width || 84; return { w, h: Math.round(w * 0.819 + 16) }; }
+    case 'hotspot': return { w: Number(it.w) > 0 ? Number(it.w) : 120, h: Number(it.h) > 0 ? Number(it.h) : 80 };
     default: return { w: 120, h: 40 };
   }
+}
+
+/** A module mount's `quad` as four stage-px corners, or null (not four finite points). */
+export function quadOf(it) {
+  const q = it && it.quad;
+  if (!Array.isArray(q) || q.length !== 4) return null;
+  const pts = q.map((p) => (Array.isArray(p) && p.length === 2 && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1]))
+    ? [(Number(p[0]) / 100) * W, (Number(p[1]) / 100) * H] : null));
+  return pts.every(Boolean) ? pts : null;
+}
+/** A hotspot's outline as a CSS clip-path, or '' (none: its whole box takes a press). */
+export function hotspotClip(it) {
+  const p = it && Array.isArray(it.poly) ? it.poly : null;
+  if (!p || p.length < 3 || p.length > 32) return '';
+  const ok = p.every((q) => Array.isArray(q) && q.length === 2 && Number.isFinite(Number(q[0])) && Number.isFinite(Number(q[1])));
+  return ok ? `polygon(${p.map(([x, y]) => `${Number(x)}% ${Number(y)}%`).join(', ')})` : '';
 }
 
 /**
@@ -163,6 +192,15 @@ export function contentSize(it) {
  * and its VISIBLE size — what a person sees after depth, scale and a side wall's squash.
  */
 export function itemBox(it, shell = ROOM_SHELLS.room) {
+  // A module on a quad (a flattened 3D wall): its own box, drawn onto the four corners.
+  const quad = it.kind === 'module' ? quadOf(it) : null;
+  const qt = quad ? quadMatrix(it.w || 200, it.h || 124, quad) : '';
+  if (qt) {
+    const xs = quad.map((p) => p[0]), ys = quad.map((p) => p[1]);
+    const left = Math.min(...xs), top = Math.min(...ys), vw = Math.max(...xs) - left, vh = Math.max(...ys) - top;
+    return { left: 0, top: 0, w: it.w || 200, h: it.h || 124, k: 1, transform: qt, origin: '0 0', floor: false, side: null,
+      quad, cx: left + vw / 2, anchorY: top + vh / 2, visible: { w: vw, h: vh, left, top } };
+  }
   const floor = isFloor(it);
   const def = it.kind === 'furniture' ? FURNITURE[it.part] : null;
   const sc = it.scale ?? 1;
@@ -505,6 +543,9 @@ export function normalizeRecipe(recipe = {}) {
     view: typeof r.view === 'string' && r.view ? r.view : 'auto',
     notify: Array.isArray(r.notify) ? r.notify : undefined,
     items,
+    // A flattened 3D room's picture and its record of where it came from (room_flat.js); absent otherwise.
+    ...(normalizeBackdrop(r.backdrop) ? { backdrop: normalizeBackdrop(r.backdrop) } : {}),
+    ...(r.flat && typeof r.flat === 'object' ? { flat: r.flat } : {}),
   };
 }
 
@@ -896,6 +937,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
   // ------------------------------------------------------------------ the room shell
   function drawShell() {
     roomL.replaceChildren();
+    // A backdrop (a flattened 3D room) IS the walls and the floor: drawn instead of the shell.
+    const bk = recipe.backdrop ? renderBackdrop(doc, recipe.backdrop) : null;
+    if (bk) { bk.dataset.bg = '1'; roomL.append(bk); return; }
     const b = shell.back;
     const wall = recipe.wall, floor = recipe.floor;
     const wf = WALL_FINISHES[wall.finish] || WALL_FINISHES.paint;
@@ -1080,6 +1124,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         const w = it.w || 200, h = it.h || 124;
         const m = doc.createElement('span');
         m.className = 'rs-mount';
+        if (quadOf(it) && quadMatrix(w, h, quadOf(it))) m.dataset.quad = '';
         applyStyle(m, { width: w, height: h });
         const slot = doc.createElement('div');
         slot.className = 'rs-slot';
@@ -1092,6 +1137,14 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         m.append(slot, card);
         rec.slotEl = slot;
         return m;
+      }
+      case 'hotspot': {
+        // No art: the backdrop already draws it. An empty box of its size, for the overlay to measure.
+        const s = doc.createElement('span');
+        s.className = 'rs-hotspot';
+        const c = contentSize(it);
+        applyStyle(s, { display: 'block', width: c.w, height: c.h });
+        return s;
       }
       default: return null;
     }
@@ -1137,11 +1190,23 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         press(it.id);
       });
       if (role.role === 'pet') wireStroke(btn, it.id);
+      // A hotspot takes a press only on its outline (a box's silhouette, not its bounding box): the button
+      // lets presses through and a clipped child takes them -- a click on the child is a click on the button.
+      // The button itself is not clipped, so its focus ring and its pressed flash stay whole.
+      const clip = it.kind === 'hotspot' ? hotspotClip(it) : '';
+      if (clip) {
+        btn.style.pointerEvents = 'none';
+        const hit = doc.createElement('span');
+        hit.className = 'rs-hit';
+        hit.style.clipPath = clip;
+        btn.append(hit);
+      }
       wrap.append(btn);
       rec.button = btn;
     }
     if (role.role === 'library') buildSpines(rec, wrap);
-    if (!NO_SLOT.has(role.role)) {
+    // A hotspot has no art to hold a module in (a flattened room's screens are its quads): no slot.
+    if (!NO_SLOT.has(role.role) && it.kind !== 'hotspot') {
       const [sx, sy, sw, sh] = role.slot;
       if (!rec.slotEl) {
         const slot = doc.createElement('div');

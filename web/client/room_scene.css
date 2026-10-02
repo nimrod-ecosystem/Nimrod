@@ -137,6 +137,17 @@
 .rs-mount > .rs-slot-card b{ display: block; font-size: 18px; color: var(--rs-card-ink); }
 .rs-mount > .rs-slot-card small{ display: block; font-size: 11px; font-weight: 400; color: var(--rs-card-sub); }
 
+/* ---------- A FLATTENED 3D ROOM (room_flat.js): its backdrop, its hotspots, its screens on quads. ----------
+   The backdrop's colours are painted by room_backdrop.js from the theme's tokens; nothing here is a colour.
+   A mount on a quad is a wall of the 3D room seen in perspective: square corners, and no "module slot" card
+   when empty (the 3D room shows nothing there either). */
+.rs-backdrop{ position: absolute; left: 0; top: 0; width: 960px; height: 540px; display: block; }
+img.rs-backdrop{ object-fit: fill; }
+.rs-hotspot{ pointer-events: none; }
+.rs-hit{ position: absolute; inset: 0; pointer-events: auto; }
+.rs-mount[data-quad]{ border-radius: 0; }
+.rs-mount[data-quad] > .rs-slot-card{ display: none; }
+
 /* ---------- REACTIONS: the lamp lights, the speaker pulses, the door opens a crack. ---------- */
 .rs-react-glow{ position: absolute; border-radius: 50%; mix-blend-mode: screen; pointer-events: none;
   background: radial-gradient(circle, var(--rs-react-glow), transparent 68%); }
