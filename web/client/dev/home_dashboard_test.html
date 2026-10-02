@@ -322,6 +322,13 @@ try {
     for (let i = 0; i < BAR_HIDE_CHOICES.length; i++) { s = cycleHomeSetting(s, 'barHideMs'); seen.push(s.barHideMs); }
     check('a press cycles it and wraps (one switch never stranded at the end)', seen.at(-1) === 6000 && seen.includes(0), J(seen));
     check('junk falls back to 6 s', readHomeSettings({ barHideMs: 7 }).barHideMs === 6000);
+    // 2026-10-02: "Hover over anything and Nimrod tells you what it does" -- the line along the bottom.
+    check('*** the info line is ON by default, a menu row that cycles, and Off is kept ***',
+      HOME_DEFAULTS.hoverLine === true && readHomeSettings(null).hoverLine === true
+      && ids.includes('set:hoverLine') && cycleHomeSetting(readHomeSettings(null), 'hoverLine').hoverLine === false
+      && readHomeSettings({ hoverLine: false }).hoverLine === false && readHomeSettings({ hoverLine: 'x' }).hoverLine === true);
+    check('*** "Nimrod’s tutorial" is a menu row (the way back to him when he has been switched away), just before Show me how ***',
+      ids.includes('tutorial') && ids.indexOf('tutorial') === ids.length - 2 && !m.find((i) => i.act === 'tutorial').disabled, ids.join());
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

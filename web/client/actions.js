@@ -88,6 +88,7 @@ export const SYSTEM_ACTIONS = [
   { id: 'dashboard/go/room', label: 'Go to the room dashboard', topic: 'dashboard/go', payload: { prebuilt: 'room' }, group: 'System' },
   { id: 'dashboard/go/basic', label: 'Go to the basic dashboard', topic: 'dashboard/go', payload: { prebuilt: 'basic' }, group: 'System' },
   { id: 'dashboard/go/classic', label: 'Go to the classic 2D dashboard', topic: 'dashboard/go', payload: { prebuilt: 'classic' }, group: 'System' },
+  { id: 'dashboard/go/tutorial', label: 'Go to the tutorial', topic: 'dashboard/go', payload: { prebuilt: 'tutorial' }, group: 'System' },
   // *** ROW 2.38: THE WAY BACK OUT, ON A SWITCH. *** Once an object can open another dashboard, a person can
   // be three dashboards deep; these are Back (one step along the trail) and Home (the dashboard this screen
   // started on), the same `kiosk/back` / `kiosk/home` the breadcrumb, the tray and "go back" / "go home"
@@ -437,6 +438,10 @@ export const MODULE_VERBS = {
   // so one verb: `select` presses it, exactly as a click does. No `next`/`prev`: there is nothing
   // inside it to walk, and a verb that does nothing is a press spent for no result.
   button:        { select: 'button/select' },
+  // 2026-10-02: the guide walks its choices; devices and What's new walk their lists.
+  nimrod:        { next: 'nimrod/next', prev: 'nimrod/prev', select: 'nimrod/select', back: 'nimrod/back' },
+  devices:       { next: 'devices/next', prev: 'devices/prev', select: 'devices/select' },
+  whats_new:     { next: 'whats_new/next', prev: 'whats_new/prev', select: 'whats_new/select' },
   sprint:        { select: { topic: 'sprint/control', payload: 'toggle' },
                    next:   { topic: 'sprint/control', payload: 'start' },
                    back:   { topic: 'sprint/control', payload: 'pause' } },

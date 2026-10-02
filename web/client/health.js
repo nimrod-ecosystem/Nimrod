@@ -125,6 +125,9 @@ export const HEALTH_EXPECT = {
   // (kiosk.js's partition() and recovery.js's fallback ranking both already exclude it), but a
   // false "stalled" judgement is worth avoiding regardless of whether anything could act on it.
   settings:      { idle: true },
+  nimrod:        { idle: true },
+  devices:       { idle: true },
+  whats_new:     { idle: true },
   ambient_drift: { idle: true },
   comet_ambient: { idle: true },
   quests:      { idle: true },

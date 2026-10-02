@@ -168,6 +168,9 @@ import './modules/pressgame.js';
 import './modules/call.js';
 import './modules/view.js';
 import './modules/settings.js';
+import './modules/nimrod.js';          // registers 'nimrod' (the guide, 2026-10-02)
+import './modules/devices.js';         // registers 'devices'
+import './modules/whats_new.js';       // registers 'whats_new' (patch notes)
 // Registered here (so the mechanism runs when a profile has one) but deliberately NOT wired
 // into home.html's "Add module" picker or modules_catalog.js yet — whether/how this should be
 // user-addable at all is a real product decision nobody has made; see MIKE_CHANGE_LIST.md

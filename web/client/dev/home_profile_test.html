@@ -41,6 +41,11 @@ import '../modules/clock.js';
 import '../modules/button.js';
 import '../modules/youtube.js';
 import '../modules/wordforge.js';
+// 2026-10-02: the landing Home (first example) and the tutorial hold these.
+import '../modules/settings.js';
+import '../modules/nimrod.js';
+import '../modules/devices.js';
+import { isLocked, unlockIn, LOCKED_HINT } from '../home_profile.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -61,8 +66,10 @@ try {
   section('*** the starting points: Mike’s list, in his order, every one a valid record ***');
   {
     const known = new Set(listManifests().map((m) => m.type));
-    check('*** static 2D (the Nimrod theme) first, then a live theme, then Design’s rooms, then the 3D room ***',
-      J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'live', 'room', 'room', 'room', 'room3d']), J(EXAMPLE_ORDER));
+    check('*** the landing Home first (Mike, second set: "the home dashboard that the site lands on"), then static 2D, a live theme, Design’s rooms, the 3D room ***',
+      EXAMPLE_ORDER[0] === 'start'
+      && J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'static', 'live', 'room', 'room', 'room', 'room3d']), J(EXAMPLE_ORDER));
+    check('...the tutorial is not a card (Nimrod, the ⚙ menu, the bar’s tray and "tutorial" reach it)', !EXAMPLE_ORDER.includes('tutorial'));
     {
       // 2026-10-02 (Mike: "3d if possible"): the CSS-3D room, appended after the rooms.
       const r3 = prebuiltRecord('room3d');
@@ -87,7 +94,8 @@ try {
     check('*** each card says what it is IN WORDS (its kind), with a title and a blurb ***',
       cards.length === EXAMPLE_ORDER.length && cards.every((c) => c.title && c.blurb && c.kindLabel === EXAMPLE_KINDS[c.kind]), J(cards));
     check('no card says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(cards)));
-    check('*** the bar’s tray still offers only its three (a scanning surface stays short) ***', J(PREBUILT_ORDER) === J(['room', 'basic', 'classic']));
+    check('*** the bar’s tray offers its three, and the tutorial last (a scanning surface stays short: the rooms are not added) ***',
+      J(PREBUILT_ORDER) === J(['room', 'basic', 'classic', 'tutorial']));
     const study = prebuiltRecord('study');
     const lay = layoutFor(study, { photos: 'P' });
     check('the study’s photos sit IN the room’s own module slot (Design drew a screen there)',
@@ -313,6 +321,17 @@ try {
     check('a thing in a grid cell: move and size dimmed (Transform still works), Switch and Remove not',
       tray.filter((b) => b.act === 'move' || b.act === 'size').every((b) => b.disabled) && !tray.find((b) => b.act === 'remove').disabled);
     check('placed: they all work', changeTrayModel({ thing: { id: 'a' }, placed: true, count: 1 }).every((b) => !b.disabled));
+    // 2026-10-02: the tutorial's LOCKS (Nimrod and the settings kept in the bottom two places).
+    const lockedTray = changeTrayModel({ thing: { id: 'n' }, placed: true, count: 4, locked: true });
+    const dim = (act) => lockedTray.filter((b) => b.act === act).every((b) => b.disabled && b.hint === LOCKED_HINT);
+    check('*** a LOCKED thing: Switch, Move, Size and Remove are DIMMED (never hidden), each saying why ***',
+      ['switch', 'move', 'size', 'remove'].every(dim), J(lockedTray.map((b) => [b.act, b.disabled])));
+    check('*** ...and Unlock is offered, last, one press (a lock with no way out would be a gate) ***',
+      lockedTray.at(-1).act === 'unlock' && !lockedTray.at(-1).disabled);
+    check('...Close and Previous / Next still work on a locked thing', ['close', 'prev', 'next'].every((a) => !lockedTray.find((b) => b.act === a).disabled));
+    check('an unlocked thing has no Unlock button', !changeTrayModel({ thing: { id: 'a' }, placed: true, count: 1 }).some((b) => b.act === 'unlock'));
+    check('isLocked / unlockIn', isLocked(['n', 's'], 's') && !isLocked(['n'], 's') && !isLocked(null, 'n') && !isLocked(['n'], null)
+      && J(unlockIn(['n', 's'], 'n')) === J(['s']) && J(unlockIn(undefined, 'n')) === '[]');
     const things = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
     check('previous / next step through the dashboard’s own ring and wrap',
       stepThing(things, 'c', 1).id === 'a' && stepThing(things, 'a', -1).id === 'c' && stepThing(things, null, 1).id === 'a' && stepThing([], 'a', 1) === null);

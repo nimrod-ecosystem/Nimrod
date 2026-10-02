@@ -495,22 +495,46 @@ export function editBarModel({ live = false, thing = null, count = 0, canUndo = 
   ];
 }
 
-/** The Change tray: Close first (its way out), then pick, then what can be done to the thing. */
-export function changeTrayModel({ thing = null, placed = false, count = 0 } = {}) {
+// =====================================================================================================
+// *** LOCKED IN PLACE (2026-10-02, the tutorial dashboard). *** Mike: "a special tutorial dashboard you can
+// always go to that has Nimrod and settings locked into the bottom two slots." A dashboard's settings doc
+// may carry `locked: [instance id]` (dashboards.js LOCKED_KEY; the tutorial's maker writes it). While on
+// that dashboard, a locked thing is not removed, switched for another, moved or resized from the edit bar:
+// those buttons are DIMMED with the reason (never hidden), and the Change tray offers Unlock.
+//   WHY A LOCK AT ALL: the tutorial is the place you can ALWAYS find Nimrod and the settings; a stray
+//   Remove (one press, by a switch, on the wrong thing) would quietly make that untrue.
+//   WHY IT HAS A KEY (Unlock, one press, in the same tray): the person who wants the opposite -- somebody who
+//   has learned the site and wants this dashboard for something else -- has a perfectly good reason. A lock
+//   with no way out is the undismissable-gate failure in a smaller coat (CLAUDE.md). So "locked" means
+//   "not by accident", not "never". Nothing here waits on anybody: a locked thing just stays where it is.
+//   NOT ENFORCED YET: the kiosk's own Switch list and its edit windows (kiosk.js, dashboard_editor.js) --
+//   the exact lines are with the coordinator. Undo and the composer do not consult it either.
+// =====================================================================================================
+export const LOCKED_HINT = 'kept here: this dashboard locks it (Unlock, below, if you mean to change it)';
+export const isLocked = (locked, id) => Array.isArray(locked) && !!id && locked.includes(id);
+/** The lock list without `id` (Unlock). */
+export const unlockIn = (locked, id) => (Array.isArray(locked) ? locked.filter((x) => x !== id) : []);
+
+/** The Change tray: Close first (its way out), then pick, then what can be done to the thing. A LOCKED
+ *  thing (above): switch, move, size and remove dimmed with the reason, and Unlock offered after them. */
+export function changeTrayModel({ thing = null, placed = false, count = 0, locked = false } = {}) {
   const b = (act, label, extra = {}) => ({ act, label, ...extra });
   const none = !thing;
+  const held = !none && !!locked;
+  const why = held ? { hint: LOCKED_HINT } : {};
   return [
     b('close', 'Close'),
     b('prev', '‹ Previous thing', { disabled: !count }),
     b('next', 'Next thing ›', { disabled: !count }),
-    b('switch', 'Switch module…', { disabled: none, hint: 'another module, in exactly this place' }),
-    b('move', 'Move left', { d: [-MOVE_STEP, 0], disabled: none || !placed }),
-    b('move', 'Move right', { d: [MOVE_STEP, 0], disabled: none || !placed }),
-    b('move', 'Move up', { d: [0, -MOVE_STEP], disabled: none || !placed }),
-    b('move', 'Move down', { d: [0, MOVE_STEP], disabled: none || !placed }),
-    b('size', 'Smaller', { d: -SIZE_STEP, disabled: none || !placed }),
-    b('size', 'Bigger', { d: SIZE_STEP, disabled: none || !placed }),
-    b('remove', 'Remove', { disabled: none, warn: true }),
+    b('switch', 'Switch module…', { disabled: none || held, hint: held ? LOCKED_HINT : 'another module, in exactly this place' }),
+    b('move', 'Move left', { d: [-MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
+    b('move', 'Move right', { d: [MOVE_STEP, 0], disabled: none || !placed || held, ...why }),
+    b('move', 'Move up', { d: [0, -MOVE_STEP], disabled: none || !placed || held, ...why }),
+    b('move', 'Move down', { d: [0, MOVE_STEP], disabled: none || !placed || held, ...why }),
+    b('size', 'Smaller', { d: -SIZE_STEP, disabled: none || !placed || held, ...why }),
+    b('size', 'Bigger', { d: SIZE_STEP, disabled: none || !placed || held, ...why }),
+    b('remove', 'Remove', { disabled: none || held, warn: true, ...why }),
+    ...(held ? [b('unlock', 'Unlock', { hint: 'let this one be changed or removed, like anything else' })] : []),
   ];
 }
 

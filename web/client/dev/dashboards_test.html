@@ -42,8 +42,12 @@ import { INPUTS_KEY } from '../input_runtime.js';
 import {
   PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor, createDashboardMaker,
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, NAV_ROUTES, DASHBOARD_GO_TOPIC,
-  PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY,
+  PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY, LOCKED_KEY, EXAMPLE_ORDER,
 } from '../dashboards.js';
+// 2026-10-02: the landing Home and the tutorial hold Nimrod and the devices panel (kiosk.js's import lines
+// for them are the coordinator's to add; registered here so this page's kiosks can mount them meanwhile).
+import '../modules/nimrod.js';
+import '../modules/devices.js';
 
 const STAMP = Math.floor(performance.now()) + '-' + Math.floor(Math.random() * 1e6);
 const out = document.getElementById('results');
@@ -83,9 +87,10 @@ function backend(user) {
     section('1. the three ready-made dashboards are DATA, and valid');
     {
       const known = new Set(listManifests().map((m) => m.type));
-      check('three, in the order the picker offers them: room, basic, classic', J(PREBUILT_ORDER) === J(['room', 'basic', 'classic'])
+      check('four, in the order the picker offers them: room, basic, classic, then the tutorial LAST (the three keep their places)',
+        J(PREBUILT_ORDER) === J(['room', 'basic', 'classic', 'tutorial'])
         && PREBUILT_ORDER.every((k) => PREBUILT_DASHBOARDS[k]?.key === k));
-      for (const k of PREBUILT_ORDER) {
+      for (const k of [...new Set([...PREBUILT_ORDER, ...EXAMPLE_ORDER])]) {
         const rec = prebuiltRecord(k, { personName: 'Ada' });
         const probs = recordProblems(rec, { knownTypes: known });
         check(`*** ${k}: a valid record (registered modules, a layout that keeps every one, a real theme and panel background) ***`,
@@ -113,6 +118,24 @@ function backend(user) {
         && classic.layout.preset === 'quad', J(classic));
       check('classic 2D: its YouTube starts with the starter schedule',
         J(classic.modules.find((m) => m.type === 'youtube').state.schedule) === J(STARTER_SCHEDULE));
+      // 2026-10-02: the landing Home, "clockwise from top left: pictures, settings (launches on themes tab),
+      // devices, Nimrod". A quad's slots are TL, TR, BL, BR.
+      const start = prebuiltRecord('start');
+      const slotType = (rec) => rec.layout.slots.map((r) => rec.modules.find((m) => m.ref === r)?.type);
+      const clockwise = (s) => [s[0], s[1], s[3], s[2]];    // TL, TR, BR, BL
+      check('*** the landing Home: four up, CLOCKWISE from the top left: pictures, settings, devices, Nimrod ***',
+        start.layout.preset === 'quad' && J(clockwise(slotType(start))) === J(['photos', 'settings', 'devices', 'nimrod']), J(slotType(start)));
+      check('...the settings panel opens on its Theme page; Nimrod says the landing hello',
+        start.modules.find((m) => m.type === 'settings').state.startPage === 'sc-theme'
+        && start.modules.find((m) => m.type === 'nimrod').state.intro === 'landing', J(start.modules));
+      check('...and it is the FIRST example (what a new person’s Home shows)', EXAMPLE_ORDER[0] === 'start');
+      check('...it locks nothing (it is your Home, to change)', start.locked === undefined);
+      const tut = prebuiltRecord('tutorial');
+      check('*** the tutorial: Nimrod and the settings in the BOTTOM two places, both LOCKED ***',
+        J(slotType(tut).slice(2)) === J(['nimrod', 'settings']) && J(tut.locked) === J(['nimrod', 'settings']), J(tut));
+      check('...Nimrod there says the tutorial hello', tut.modules.find((m) => m.type === 'nimrod').state.intro === 'tutorial');
+      const badLock = prebuiltRecord('tutorial'); badLock.locked = ['nimrod', 'ghost'];
+      check('the validator catches a lock on something that is not on the dashboard', recordProblems(badLock).some((p) => /ghost/.test(p)));
       // Negative controls: the validator is a real check, not a rubber stamp.
       const bad1 = { ...prebuiltRecord('basic'), settings: { theme: 'no-such-theme', panelSurface: 'solid' } };
       const bad2 = prebuiltRecord('basic'); bad2.layout.slots = ['photos', 'nobody'];
@@ -143,8 +166,8 @@ function backend(user) {
         makeInstanceState: B.makeInstanceState, personId: () => s0.person_id, personName: () => 'Ada' });
       const n0 = (await B.profiles.list()).length;
       const offered0 = await maker.offered(await B.profiles.list());
-      check('*** a person with none: all three are OFFERED, and asking made nothing ***',
-        J(offered0) === J(['room', 'basic', 'classic']) && (await B.profiles.list()).length === n0, J(offered0));
+      check('*** a person with none: all four are OFFERED, and asking made nothing ***',
+        J(offered0) === J(['room', 'basic', 'classic', 'tutorial']) && (await B.profiles.list()).length === n0, J(offered0));
       check('a screen that is merely NAMED "My room" is not taken for the room', offered0.includes('room'));
 
       const [r1, r2] = await Promise.all([maker.ensure('room'), maker.ensure('room')]);
@@ -168,7 +191,7 @@ function backend(user) {
         (await B.read(r1.id, signId)).label === 'Ada');
       check('it belongs to the person', roomScreen.person_id === s0.person_id);
       check('*** once made, it is no longer OFFERED (it is in their list like any dashboard) ***',
-        J(await maker.offered(await B.profiles.list())) === J(['basic', 'classic']));
+        J(await maker.offered(await B.profiles.list())) === J(['basic', 'classic', 'tutorial']));
 
       // A page that died half-way: stamped, one module made, not done. The next pick FINISHES it.
       const half = await B.profiles.create('Basic', s0.person_id);
@@ -194,7 +217,19 @@ function backend(user) {
         J(cMods.map((m) => m.type)) === J(STARTER_MODULES) && cDoc.kiosk?.layout?.preset === 'quad'
         && J(cDoc.kiosk.layout.slots) === J(cMods.map((m) => m.id)) && !!THEMES[cDoc.theme]?.scene && cDoc.panelSurface === 'veil'
         && J((await B.read(rc.id, tube.id)).schedule) === J(STARTER_SCHEDULE), J(cDoc));
-      check('all three made: nothing left to offer', (await maker.offered(await B.profiles.list())).length === 0);
+      // 2026-10-02: the tutorial, made by the same maker -- and its LOCKS written as the real instance ids.
+      const rt = await maker.ensure('tutorial');
+      const tDoc = await B.read(rt.id, 'settings');
+      const tMods = (await B.profiles.get(rt.id)).modules;
+      const idOf = (type) => tMods.find((m) => m.type === type)?.id;
+      check('*** the tutorial is made: photos, devices, Nimrod, settings, in a quad ***',
+        rt.created && J(tMods.map((m) => m.type)) === J(['photos', 'devices', 'nimrod', 'settings'])
+        && J(tDoc.kiosk?.layout?.slots) === J(tMods.map((m) => m.id)), J(tDoc.kiosk));
+      check('*** its lock is on the dashboard: Nimrod’s and the settings’ own instance ids ***',
+        J(tDoc[LOCKED_KEY]) === J([idOf('nimrod'), idOf('settings')]), J(tDoc[LOCKED_KEY]));
+      check('...and Nimrod’s own state says which hello (written before anything mounts him)',
+        (await B.read(rt.id, idOf('nimrod'))).intro === 'tutorial');
+      check('all four made: nothing left to offer', (await maker.offered(await B.profiles.list())).length === 0);
 
       // Per PERSON: somebody else on the same account gets their own.
       const bo = await B.profiles.addPerson('Bo');
@@ -234,6 +269,9 @@ function backend(user) {
       check('"open the menu" stays the menu: a dashboard called "Menu" does not get "open menu" if taken, and nothing collides',
         duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes })).length === 0, J(duplicatePhrases(spokenTable(PHRASES, { ...ROUTES, ...routes }))));
       const none = dashboardSpeechRoutes([]).routes;
+      check('*** 2026-10-02: "tutorial", said alone, goes to the tutorial (made the first time) ***',
+        none['dashboard-tutorial']?.phrases.includes('tutorial') && none['dashboard-tutorial'].payload.prebuilt === 'tutorial',
+        J(none['dashboard-tutorial']));
       check('*** with no dashboards at all, "go to my room" / basic / classic, the picker, back and home are still speakable ***',
         J(Object.keys(none).sort()) === J([...Object.keys(PREBUILT_ROUTES), ...Object.keys(NAV_ROUTES)].sort())
         && none['dashboard-room'].payload.prebuilt === 'room'
@@ -285,7 +323,7 @@ function backend(user) {
       home?.click();
       const texts = () => k.dashboardPicker().items.map((i) => i.text);
       check('*** pressing it opens the tray: Close first, your dashboards, then + Room, + Basic, + Classic 2D, then the way out ***',
-        await settled(() => J(texts()) === J(['✕ Close', 'Alpha screen', '+ Room', '+ Basic', '+ Classic 2D', 'Set up dashboards ↗']), 6000),
+        await settled(() => J(texts()) === J(['✕ Close', 'Alpha screen', '+ Room', '+ Basic', '+ Classic 2D', '+ Tutorial', 'Set up dashboards ↗']), 6000),
         J(texts()));
       check('the dashboard you are on is marked and not pressable', k.dashboardPicker().items[1].disabled === true
         && !!tray().querySelector('.k-scr.on[disabled][aria-current="true"]'));

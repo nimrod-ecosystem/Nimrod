@@ -70,9 +70,14 @@ export const BAR_HIDE_CHOICES = Object.freeze([0, 3000, 6000, 10000, 30000]);
 // `homeId` (2026-10-02): WHICH dashboard is this person's Home -- the one made when they picked a starting
 // point. null until they pick one (Home then shows the examples up front). Not a menu row: it changes by
 // picking ("Start from an example…" makes another and makes it Home; the old one stays in My dashboards).
+// `hoverLine` (2026-10-02, Mike: "Hover over anything and Nimrod tells you what it does"): the one-line
+// explanation along the bottom of the page (hover_info.js), shown while Nimrod himself is not on the stage
+// (when he is, his own box says it). ON: it is the feature asked for, and a line that takes no pointer
+// events and covers nothing costs nobody anything; OFF is one press for somebody who finds words changing
+// under the mouse busy.
 export const HOME_DEFAULTS = Object.freeze({
   openIn: 'edit', keepVersions: 20, warnOverwrite: true, chromeSurface: 'follow', welcomeDone: false,
-  barHideMs: 6000, homeId: null,
+  barHideMs: 6000, homeId: null, hoverLine: true,
 });
 // An id, not prose (layout.js OPENS_MAX's reasoning): long enough for any id the server makes.
 const HOME_ID_MAX = 200;
@@ -90,6 +95,8 @@ export const HOME_SETTINGS = Object.freeze([
     options: [['follow', 'Follow the screen'], ['solid', 'Solid'], ['veil', 'See-through'], ['clear', 'Fully clear']] },
   { key: 'barHideMs', label: 'In full screen, tuck the bar away after',
     options: BAR_HIDE_CHOICES.map((ms) => [ms, ms ? `${ms / 1000} seconds` : 'Never']) },
+  { key: 'hoverLine', label: 'Explain what the pointer is on (a line along the bottom)',
+    options: [[true, 'On'], [false, 'Off']] },
 ]);
 
 const clone = (o) => (o == null ? o : JSON.parse(JSON.stringify(o)));
@@ -202,6 +209,9 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     ...HOME_SETTINGS.map((r) => item(`set:${r.key}`, r.label, { hint: homeSettingLabel(s, r.key) })),
     // (Its id is the old welcome card's; since 2026-10-02 the starting points are what greets you.)
     item('rewelcome', 'Show the examples when I arrive', { hint: 'they open up front again, until you say not to' }),
+    // 2026-10-02: the tutorial dashboard, where Nimrod and the settings always are -- the way back to him
+    // when he has been switched away (Mike: "If it's closed suggest ... going to the tutorial dashboard").
+    item('tutorial', 'Nimrod’s tutorial', { hint: 'try the tutorial dashboard here: Nimrod and the settings, always in the bottom two places' }),
     item('cat', 'Show me how', { hint: 'Nimrod the cat walks you through this page', disabled: !catReady }),
   ];
 }

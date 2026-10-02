@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nimrod the guide — the decision tree, hover to explain, devices</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:520px;height:560px;margin-top:12px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>Nimrod the guide — the decision tree, hover to explain, devices</h1>
+<p>Mike, 2026-10-02: Nimrod is a module, "like a choose your own adventure": every choice gives information
+and choices, Back goes back any number of steps, a file-tree view is on by default, and "hover over anything
+and Nimrod tells you what it does". The tree is data (checked here), the walk is pure (checked here), and
+the module, the hover watcher, the info line, the devices panel and the settings panel's start page are
+mounted and pressed here. No server needed (a settings panel looking for its siblings just finds none).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest, listManifests } from '../module.js';
+import { MENU_TAB_TOPIC, SWITCH_MODULE_TOPIC, MENU_TAB_IDS } from '../actions.js';
+import { SHELL_HOST } from '../shell_verbs.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboards.js';
+import { CATALOG } from '../modules_catalog.js';
+import {
+  GUIDE_NODES, GUIDE_ROOT, GUIDE_TOPICS, GUIDE_VERB_TOPICS, LANDING_INTRO, INTROS, DEVICE_KINDS, treeProblems,
+  treeParents, treePath, treeRows, createGuideNav, wordsFor, actMessages, introFor,
+} from '../nimrod_guide_data.js';
+import { selectionAt, explainAt } from '../cat_help.js';
+import { watchHover, mountInfoLine, INFO_LINE_IDLE } from '../hover_info.js';
+import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
+import { GUIDE_SETTINGS, guidePrefs, INFO_IDLE } from '../modules/nimrod.js';
+import { DEVICES_VERB_TOPICS } from '../modules/devices.js';
+import '../modules/photos.js';
+import '../modules/whats_new.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+const J = (x) => JSON.stringify(x);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+function fakeState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  return {
+    load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {}, destroy() {}, data: () => ({ ...data }),
+  };
+}
+function fakeOutput() {
+  const said = [];
+  return { said, cancelled: [], say(t, o) { said.push({ t, o }); return said.length; }, cancel(id) { this.cancelled.push(id); } };
+}
+function listen(bus, topics) {
+  const got = [];
+  for (const t of topics) bus.subscribe(t, (p) => got.push({ topic: t, payload: p }));
+  return got;
+}
+function box(cls = 'box') {
+  const b = document.createElement('div'); b.className = cls; document.body.append(b); return b;
+}
+const over = (el) => el.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
+
+try {
+  // ============================================================================================
+  section('*** the tree is DATA, and valid: every choice leads somewhere, everything is reachable ***');
+  {
+    const known = new Set(listManifests().map((m) => m.type));
+    const probs = treeProblems(GUIDE_NODES, { knownTypes: known, menuTabs: MENU_TAB_IDS });
+    check('*** treeProblems finds nothing wrong with the shipped tree ***', probs.length === 0, probs.join('; '));
+    check('there is a real tree (more than a handful of nodes)', Object.keys(GUIDE_NODES).length >= 20, Object.keys(GUIDE_NODES).length);
+    check('*** every node gives information AND choices ***',
+      Object.values(GUIDE_NODES).every((n) => n.say.trim() && n.choices.length > 0));
+    check('every choice leads to a node that exists',
+      Object.values(GUIDE_NODES).every((n) => n.choices.every((c) => !!GUIDE_NODES[c.to])));
+    // Negative controls: the validator is a real check.
+    const bad = clone(GUIDE_NODES);
+    bad.mode.choices.push({ key: 'Z', label: 'Nowhere', to: 'nowhere' });
+    bad.ai.choices = [];
+    bad.orphan = { id: 'orphan', title: 'Orphan', say: 'Nobody reaches me.', choices: [{ key: 'A', label: 'Home', to: GUIDE_ROOT }] };
+    bad.theme.acts = [{ kind: 'menu-tab', tab: 'display', label: 'x', auto: true }];
+    bad.album.acts = [{ kind: 'settings-page', page: 'sc-nope', label: 'x' }];
+    bad.points.say = 'This is her screen.';
+    const bp = treeProblems(bad, { knownTypes: known, menuTabs: MENU_TAB_IDS });
+    check('...it catches a choice that leads nowhere', bp.some((p) => /nowhere/.test(p)), bp.join('; '));
+    check('...a node with no choices', bp.some((p) => /^ai: no choices/.test(p)));
+    check('...a node nobody can reach', bp.some((p) => /orphan cannot be reached/.test(p)));
+    check('*** ...the settings MENU opening by itself (it would take the switch scan) ***', bp.some((p) => /take the switch scan/.test(p)));
+    check('...a settings page that does not exist', bp.some((p) => /sc-nope/.test(p)));
+    check('...site copy saying "her screen"', bp.some((p) => /names a person/.test(p)));
+    check('no node anywhere says "her screen", Christine or Cici', !/\bher screen|christine|cici/i.test(J(GUIDE_NODES) + J(INTROS)));
+  }
+
+  // ============================================================================================
+  section('*** the top of the tree is Mike’s, in his order (game/learning moved to A) ***');
+  {
+    const root = GUIDE_NODES[GUIDE_ROOT];
+    check('*** the opening: A game or learning, B a device, C theme and settings, D a photo album, E other modules ***',
+      J(root.choices.map((c) => `${c.key}:${c.to}`)) === J(['A:mode', 'B:devices', 'C:theme', 'D:album', 'E:other']), J(root.choices));
+    check('*** Mike’s words, as he wrote them ***',
+      /Hi, I’m Nimrod\. I’m here to show you around and help out whenever you want\./.test(LANDING_INTRO)
+      && /This is your default home dashboard\. You will be able to modify it however you want\./.test(LANDING_INTRO)
+      && /It currently has four modules/.test(LANDING_INTRO)
+      && /feel free to mess around with anything you want as we go through\. Would you like to:/.test(LANDING_INTRO));
+    const order = ['pictures', 'settings', 'devices', 'Nimrod'].map((w) => LANDING_INTRO.indexOf(w, LANDING_INTRO.indexOf('four modules')));
+    check('...listing the four in the order he did: pictures, settings, devices, Nimrod',
+      order.every((i) => i > 0) && order.every((i, n) => n === 0 || i > order[n - 1]), J(order));
+    const other = GUIDE_NODES.other;
+    check('*** "other modules": game/learning first, then module, dashboard, scene (a collection of dashboards), editing a module, AI ***',
+      J(other.choices.slice(0, 6).map((c) => c.to)) === J(['mode', 'change-module', 'change-dashboard', 'change-scene', 'edit-module', 'ai'])
+      && /collection of dashboards/.test(other.choices[3].label), J(other.choices));
+    check('*** it suggests replacing the pictures, and says ANY module can be replaced, including him ***',
+      /replacing the pictures/.test(other.say) && /replace any module whenever you want, including me/.test(other.say)
+      && other.acts.some((a) => a.kind === 'switch' && a.type === 'photos'));
+    const mode = GUIDE_NODES.mode;
+    check('*** points: no real-world value, and no coins or microtransactions sold ***',
+      /no real-world value/.test(mode.say) && /do not sell coins or any other microtransactions/.test(mode.say)
+      && /no real-world value/.test(GUIDE_NODES.points.say) && /microtransactions/.test(GUIDE_NODES.points.say));
+    check('*** unlocks: only for the game’s sake, sandbox unlocks everything, and one at a time ***',
+      /only for the game’s sake/.test(mode.say) && /sandbox mode unlocks everything/.test(mode.say) && /one at a time/.test(mode.say));
+    check('...it opens the game settings in the settings panel by itself (Mike: "It would also open up ... in the settings menu window")',
+      mode.acts.some((a) => a.kind === 'settings-page' && a.page === 'sc-mode' && a.auto));
+    check('*** game mode is a STUB, honestly: a hook and the words "still being built" ***',
+      GUIDE_NODES['mode-game'].acts.some((a) => a.kind === 'game-mode' && a.mode === 'game') && /still being built/.test(GUIDE_NODES['mode-game'].say));
+    check('the devices branch has Mike’s five: voice, tracking, mouse/keyboard, phones, computers',
+      J(DEVICE_KINDS.map((d) => d.id)) === J(['voice', 'tracking', 'keys', 'phones', 'computers'])
+      && DEVICE_KINDS.every((d) => GUIDE_NODES.devices.choices.some((c) => c.to === `dev-${d.id}`)));
+    check('the AI choice is honest that it is not built', /not built yet/.test(GUIDE_NODES.ai.say));
+    check('the tutorial node goes there (both ways: a real screen and Home)',
+      J(actMessages(GUIDE_NODES.tutorial.acts[0]).map((m) => m.topic)) === J([DASHBOARD_GO_TOPIC, SHELL_HOST]));
+    check('intros: landing is Mike’s; the tutorial and the plain one are their own', introFor('landing') === LANDING_INTRO
+      && /tutorial dashboard/.test(introFor('tutorial')) && introFor('nothing') === INTROS.plain);
+  }
+
+  // ============================================================================================
+  section('*** the topics it says are their owners’ (written out, checked here) ***');
+  check('menu/tab is actions.js MENU_TAB_TOPIC', GUIDE_TOPICS.menuTab === MENU_TAB_TOPIC);
+  check('the switch list is actions.js SWITCH_MODULE_TOPIC', GUIDE_TOPICS.switchModule === SWITCH_MODULE_TOPIC);
+  check('Home’s buttons are shell_verbs.js SHELL_HOST', GUIDE_TOPICS.host === SHELL_HOST);
+  check('a ready-made dashboard is dashboards.js DASHBOARD_GO_TOPIC', GUIDE_TOPICS.dashboardGo === DASHBOARD_GO_TOPIC);
+  check('the settings panel’s page is modules/settings.js SETTINGS_OPEN_TOPIC', GUIDE_TOPICS.settingsPage === SETTINGS_OPEN_TOPIC);
+
+  // ============================================================================================
+  section('*** Back goes back ANY number of steps, the way you came ***');
+  {
+    const nav = createGuideNav();
+    check('starts at the root', nav.id() === GUIDE_ROOT && !nav.canBack());
+    nav.choose('E'); nav.choose('C'); nav.choose('B'); nav.choose(0); nav.choose('B');
+    const path = nav.history();
+    check('five choices deep', path.length === 6 && nav.depth() === 5, J(path));
+    const seen = [];
+    while (nav.canBack()) { nav.back(1); seen.push(nav.id()); }
+    check('*** Back, one at a time, retraces every step exactly, to the start ***',
+      J(seen) === J(path.slice(0, -1).reverse()), `${J(seen)} vs ${J(path)}`);
+    nav.choose('A'); nav.choose('D'); nav.choose('A');
+    check('back(2) goes back two at once', nav.back(2).id === 'mode' && nav.depth() === 1, nav.id());
+    check('back past the start stays at the start', nav.back(99).id === GUIDE_ROOT && !nav.canBack());
+    nav.go('ai'); nav.go('ai');
+    check('going to where you already are is not a step', nav.depth() === 1);
+    check('an unknown node is refused, and you stay', nav.go('nowhere') === null && nav.id() === 'ai');
+    check('a choice back to the start is a step you can go Back from', nav.choose('B').id === GUIDE_ROOT && nav.canBack() && nav.back().id === 'ai');
+    check('Start over is just the root again', nav.restart().id === GUIDE_ROOT && nav.history().length === 1);
+  }
+
+  // ============================================================================================
+  section('*** the tree view, like a file tree: open where you are ***');
+  {
+    const parent = treeParents();
+    check('each node has ONE place in the tree (first reached): game mode lives under the opening, not under "other"',
+      parent.mode === GUIDE_ROOT && parent['change-module'] === 'other' && parent[GUIDE_ROOT] === null);
+    check('treePath: root to here', J(treePath('dev-voice')) === J([GUIDE_ROOT, 'devices', 'dev-voice']));
+    const r0 = treeRows(GUIDE_ROOT);
+    check('at the start: the root, open, and its five children, closed',
+      r0[0].id === GUIDE_ROOT && r0[0].open && r0.length === 6 && r0.slice(1).every((r) => r.depth === 1 && !r.open), J(r0.map((r) => r.id)));
+    const r1 = treeRows('dev-voice');
+    const at = r1.findIndex((r) => r.current);
+    check('*** deeper: the branch you are in is open, the rest closed, and you are marked ***',
+      r1[at]?.id === 'dev-voice' && r1[at].depth === 2 && r1.find((r) => r.id === 'devices').open
+      && !r1.find((r) => r.id === 'theme').open && r1.filter((r) => r.current).length === 1, J(r1.map((r) => `${r.depth}${r.id}`)));
+  }
+
+  // ============================================================================================
+  section('*** the AI seam: words from a source when it answers, the tree’s own otherwise ***');
+  {
+    const n = GUIDE_NODES.theme;
+    check('no source: the tree’s words', (await wordsFor(n)) === n.say);
+    check('the root says the intro asked for', (await wordsFor(GUIDE_NODES[GUIDE_ROOT], { intro: 'tutorial' })) === INTROS.tutorial);
+    check('*** a source that answers replaces the words ***', (await wordsFor(n, { source: () => 'From the AI.' })) === 'From the AI.');
+    check('a source that throws falls back', (await wordsFor(n, { source: () => { throw new Error('down'); } })) === n.say);
+    check('a source that says nothing falls back', (await wordsFor(n, { source: async () => '   ' })) === n.say);
+    const t0 = Date.now();
+    const slow = await wordsFor(n, { source: () => new Promise((r) => setTimeout(() => r('too late'), 400)), waitMs: 60 });
+    check('*** a source that takes too long falls back, without waiting for it ***', slow === n.say && Date.now() - t0 < 350, `${Date.now() - t0}ms`);
+  }
+
+  // ============================================================================================
+  section('*** the module: mounted, pressed, driven by a switch ***');
+  {
+    const m = getManifest('nimrod');
+    check('registered as "nimrod", title Nimrod, on the new core, with its three settings', m?.title === 'Nimrod' && m.core === 'new'
+      && J(m.settings.map((s) => s.key)) === J(['tree', 'hover', 'speak']));
+    check('*** defaults: the map ON (Mike: "on by default"), explaining ON, reading aloud ON ***',
+      J(guidePrefs({})) === J({ tree: true, hover: true, speak: true }));
+    const kiosk = box('box kiosk');
+    const cell = document.createElement('div');
+    cell.className = 'k-cell'; cell.dataset.kind = 'photos'; cell.textContent = 'a photos panel';
+    const mount = document.createElement('div'); mount.style.cssText = 'width:100%;height:480px';
+    kiosk.append(cell, mount);
+    const bus = createBus();
+    const got = listen(bus, Object.values(GUIDE_TOPICS));
+    const state = fakeState({ intro: 'landing' });
+    const output = fakeOutput();
+    const inst = mountModule('nimrod', { mount, bus, state, events: null, output, user: null, profileId: 'p', personId: null, instanceId: 'g1' });
+    await inst.init();
+    const q = (s) => mount.querySelector(s);
+    const probe = () => inst.impl.__probe();
+    check('*** he opens with Mike’s words on the landing dashboard ***', q('[data-ng-say]')?.textContent === LANDING_INTRO);
+    check('...and does NOT talk over a screen that has just started (he speaks when spoken to)', output.said.length === 0);
+    check('the choices A to E are there', [...mount.querySelectorAll('[data-ng-choice]')].map((b) => b.textContent.trim().slice(0, 2)).join() === 'A.,B.,C.,D.,E.');
+    check('Back is there and dimmed at the start (dimmed, never hidden)', q('[data-ng-back]')?.disabled === true);
+    check('*** the map is on by default, open at the start ***', !!q('.ng-tree') && q('.ng-tree [aria-current="true"]')?.textContent.includes('Hi, I’m Nimrod'));
+    check('the info area says what it is for', q('[data-ng-info]')?.textContent.includes(INFO_IDLE));
+    check('every colour is a theme token (no hard colours in his style)', !/#[0-9a-f]{3,6}\b|rgba?\(/i.test(mount.querySelector('style').textContent));
+
+    q('[data-ng-choice="2"]').click();          // C. theme
+    check('*** C: he goes to the theme, says it, and READS IT ALOUD through the output bus ***', probe().id === 'theme'
+      && q('[data-ng-say]').textContent === GUIDE_NODES.theme.say && output.said.at(-1)?.t === GUIDE_NODES.theme.say
+      && output.said.at(-1)?.o?.source === 'nimrod-guide');
+    check('*** ...and SHOWS the theme page in the settings panel by itself (settings-module/open sc-theme) ***',
+      got.some((g) => g.topic === SETTINGS_OPEN_TOPIC && g.payload.page === 'sc-theme'));
+    check('...but does NOT open the settings MENU by itself (it would take the scan)', !got.some((g) => g.topic === MENU_TAB_TOPIC));
+    const actBtn = [...mount.querySelectorAll('[data-ng-act]')].find((b) => /Display/.test(b.textContent));
+    actBtn.click();
+    check('*** its button opens the settings menu on the Display tab ***', got.some((g) => g.topic === MENU_TAB_TOPIC && g.payload.tab === 'display'));
+    check('the map follows: the theme open, you marked in it', q('.ng-tree [aria-current="true"]')?.textContent.includes('Your theme'));
+    check('*** where he is is kept on his state (walk), not a setting ***', J(state.data().walk) === J([GUIDE_ROOT, 'theme']));
+
+    // A tree row is a way to go there too.
+    q('[data-ng-tree="devices"]').click();
+    check('pressing a row in the map goes there', probe().id === 'devices' && J(probe().history) === J([GUIDE_ROOT, 'theme', 'devices']));
+    q('[data-ng-back]').click();
+    check('*** Back: the way you came (theme), and Back is not a forward step (nothing reopened) ***', probe().id === 'theme'
+      && got.filter((g) => g.topic === SETTINGS_OPEN_TOPIC).length === 1, J(got.map((g) => g.topic)));
+
+    // A SWITCH: next / prev walk his buttons, select presses, back is Back.
+    const n0 = got.length;
+    bus.publish(GUIDE_VERB_TOPICS.select);
+    check('*** a switch: the cursor starts on the first stop (Back, the way out) and select presses it ***', probe().id === GUIDE_ROOT, probe().id);
+    bus.publish(GUIDE_VERB_TOPICS.next);
+    check('...at the start Back is dimmed (no stop), so the cursor began on A and next moves it to B', q('.is-scan')?.dataset.ngChoice === '1', q('.is-scan')?.outerHTML.slice(0, 80));
+    bus.publish(GUIDE_VERB_TOPICS.prev);
+    check('...prev goes back a stop', q('.is-scan')?.dataset.ngChoice === '0');
+    bus.publish(GUIDE_VERB_TOPICS.next); bus.publish(GUIDE_VERB_TOPICS.next); bus.publish(GUIDE_VERB_TOPICS.next);
+    bus.publish(GUIDE_VERB_TOPICS.select);       // D. album
+    check('*** select presses the stop it is on (D: the photo album) ***', probe().id === 'album', probe().id);
+    check('...which shows the pictures’ settings page in the panel by itself', got.slice(n0).some((g) => g.topic === SETTINGS_OPEN_TOPIC && g.payload.page === 'type:photos'));
+    bus.publish(GUIDE_VERB_TOPICS.back);
+    check('*** the back verb is Back ***', probe().id === GUIDE_ROOT);
+
+    // Hover to explain, in his own box: a panel, then one of his own choices, then the scan.
+    over(cell);
+    check('*** pointing at a panel: his info area says what the module does (the catalog’s lead) ***',
+      await until(() => q('[data-ng-info]').textContent.includes(CATALOG.find((c) => c.type === 'photos').lead)), q('[data-ng-info]').textContent);
+    over(q('[data-ng-choice="1"]'));
+    check('pointing at one of his choices: it says where it leads', await until(() => /Set up a device/.test(q('[data-ng-info]').textContent)), q('[data-ng-info]').textContent);
+    bus.publish(GUIDE_VERB_TOPICS.next); bus.publish(GUIDE_VERB_TOPICS.next);
+    check('*** the SCAN landing on a stop explains it (a switch user has no pointer) ***',
+      await until(() => /Your theme/.test(q('[data-ng-info]').textContent)), q('[data-ng-info]').textContent);
+
+    // The map off: a setting, written to his state, and the tree goes.
+    q('[data-ng-treetoggle]').click();
+    check('*** the Map toggle hides the tree and is saved as his setting ***', !q('.ng-tree') && state.data().tree === false);
+    state.set({ hover: false });
+    check('turning "Explain what the pointer is on" off hides the info area', q('[data-ng-info]')?.hidden === true);
+    inst.destroy();
+
+    // Back where you left him: a new mount resumes the walk, Back and all.
+    const state2 = fakeState({ walk: [GUIDE_ROOT, 'other', 'change-module'], intro: 'tutorial' });
+    const mount2 = box();
+    const inst2 = mountModule('nimrod', { mount: mount2, bus: createBus(), state: state2, events: null, output: fakeOutput(), user: null, profileId: 'p', personId: null, instanceId: 'g2' });
+    await inst2.init();
+    check('*** he is where you left him, and Back still goes the way you came ***', inst2.impl.__probe().id === 'change-module'
+      && (mount2.querySelector('[data-ng-back]').click(), inst2.impl.__probe().id === 'other'));
+    mount2.querySelector('[data-ng-restart]').click();
+    check('on the tutorial dashboard he says the tutorial hello', mount2.querySelector('[data-ng-say]').textContent === INTROS.tutorial);
+    const wild = fakeState({ walk: ['nowhere', 'nope'] });
+    const mount3 = box();
+    const inst3 = mountModule('nimrod', { mount: mount3, bus: createBus(), state: wild, events: null, output: fakeOutput(), user: null, profileId: 'p', personId: null, instanceId: 'g3' });
+    await inst3.init();
+    check('a saved walk that names nothing real starts at the beginning, with the plain hello', inst3.impl.__probe().id === GUIDE_ROOT
+      && mount3.querySelector('[data-ng-say]').textContent === INTROS.plain);
+    // The AI seam, through the module.
+    const mount4 = box();
+    const inst4 = mountModule('nimrod', { mount: mount4, bus: createBus(), state: fakeState(), events: null, output: fakeOutput(), user: null,
+      profileId: 'p', personId: null, instanceId: 'g4', guideText: (node) => (node.id === 'ai' ? 'An AI answered.' : null) });
+    await inst4.init();
+    inst4.impl.__probe();
+    mount4.querySelector('[data-ng-tree="other"]').click();
+    await sleep(10);
+    mount4.querySelector('[data-ng-tree="ai"]')?.click();
+    check('*** a host’s ctx.guideText replaces his words where it answers ***',
+      await until(() => mount4.querySelector('[data-ng-say]').textContent === 'An AI answered.'), mount4.querySelector('[data-ng-say]').textContent);
+    for (const i of [inst2, inst3, inst4]) i.destroy();
+    for (const b of [kiosk, mount2, mount3, mount4]) b.remove();
+  }
+
+  // ============================================================================================
+  section('*** hover to explain: each kind of target, with cat_help’s words (one source) ***');
+  {
+    const k = box('box kiosk');
+    k.innerHTML = `
+      <div class="k-cell" data-kind="photos" data-focused><span class="inner">photos</span></div>
+      <div class="tb-bar"><div class="tb-actions"><button data-act="hush" title="quiet everything for a while">Hush</button>
+        <button data-act="plain">Plainly</button></div></div>
+      <div data-scrim><div class="st-list"><button class="st-item" data-id="set:intervalMs"><span class="st-label">Change photo every</span><span class="st-hint">8 seconds</span></button></div></div>
+      <div class="rs-obj-wrap" data-id="lamp" data-role="button"><button class="rs-obj" aria-label="Lamp">.</button></div>
+      <div data-help="This field moves things left and right." aria-label="X position"><input></div>
+      <article class="ex-card"><span class="ex-kind">Flat and still</span><h3>Plain Nimrod</h3><p>The original look.</p></article>
+      <p class="prose">Just words.</p>
+      <div data-hover-ignore><button title="never explained">Hidden</button></div>`;
+    const sel = (s) => selectionAt(k.querySelector(s));
+    check('*** a bar button: its own name and what it does (its title) ***',
+      sel('[data-act="hush"]')?.kind === 'help' && explainAt(k.querySelector('[data-act="hush"]')).text === 'quiet everything for a while'
+      && explainAt(k.querySelector('[data-act="hush"]')).title === 'Hush');
+    check('*** a settings row: the field’s own words, looked up on the focused panel’s module ***',
+      sel('.st-item .st-label')?.kind === 'setting' && sel('.st-item')?.field?.key === 'intervalMs'
+      && /Change photo every: 8 seconds/.test(explainAt(k.querySelector('.st-item')).text), explainAt(k.querySelector('.st-item'))?.text);
+    check('*** a room object: what pressing it does ***', sel('.rs-obj')?.kind === 'object'
+      && /Press this lamp and it/.test(explainAt(k.querySelector('.rs-obj')).text), explainAt(k.querySelector('.rs-obj'))?.text);
+    check('*** a panel: its module, from the catalog ***', sel('.k-cell .inner')?.kind === 'module'
+      && explainAt(k.querySelector('.k-cell .inner')).text.startsWith(CATALOG.find((c) => c.type === 'photos').lead));
+    check('*** anything with data-help explains itself (an edit-window field) ***', explainAt(k.querySelector('[data-help] input'))?.text === 'This field moves things left and right.');
+    check('a starting-point card: its kind and blurb', /Flat and still: The original look/.test(explainAt(k.querySelector('.ex-card h3'))?.text || ''));
+    check('a bare button: its own words', /Plainly/.test(explainAt(k.querySelector('[data-act="plain"]'))?.text || ''));
+    check('*** nothing describable (prose): null, so the box keeps what it last said ***', selectionAt(k.querySelector('.prose')) === null);
+    check('data-hover-ignore (the info line itself): never explained', selectionAt(k.querySelector('[data-hover-ignore] button')) === null);
+
+    // The watcher: pointer, focus, scan; repeats dropped; off means off.
+    const heard = [];
+    let on = true;
+    const w = watchHover(k, { onInfo: (i) => heard.push(i), enabled: () => on });
+    over(k.querySelector('[data-act="hush"]'));
+    over(k.querySelector('[data-act="hush"]'));
+    check('*** the pointer arriving: one explanation (the same thing twice says nothing new) ***', heard.length === 1 && heard[0].via === 'pointer');
+    // (Dispatched, not .focus(): a headless page without the window's focus does not fire focus events.)
+    k.querySelector('[data-help] input').dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    check('the keyboard focus arriving explains too', heard.at(-1)?.via === 'focus' && /left and right/.test(heard.at(-1).text));
+    k.querySelector('.st-item').classList.add('on');
+    check('*** the SCAN cursor arriving (a settings row lit) explains it ***', await until(() => heard.at(-1)?.via === 'scan' && /Change photo every/.test(heard.at(-1).text)));
+    on = false;
+    const n = heard.length;
+    over(k.querySelector('.rs-obj'));
+    check('*** turned off: nothing ***', heard.length === n);
+    w.stop();
+    on = true;
+    over(k.querySelector('.k-cell .inner'));
+    check('stopped: nothing', heard.length === n);
+
+    // The info line: the bottom of the page, when Nimrod is not saying it himself.
+    let hide = false; let lineOn = true;
+    const line = mountInfoLine(document, { root: k, enabled: () => lineOn, hidden: () => hide });
+    check('*** the info line: along the bottom, saying what it is for, covering nothing (no pointer events) ***',
+      line.el.textContent === INFO_LINE_IDLE && getComputedStyle(line.el).pointerEvents === 'none' && getComputedStyle(line.el).position === 'fixed'
+      && document.body.classList.contains('has-infoline'));
+    over(k.querySelector('.rs-obj'));
+    check('it explains what the pointer is on', /lamp/i.test(line.el.textContent), line.el.textContent);
+    check('...in theme tokens, never a hard colour', /var\(--surface\)/.test(line.el.style.background) && /var\(--text\)/.test(line.el.style.color));
+    hide = true; line.sync();
+    check('*** hidden while Nimrod is on screen saying it himself ***', line.el.hidden === true && !document.body.classList.contains('has-infoline'));
+    hide = false; lineOn = false; line.sync();
+    check('the setting off: hidden', line.el.hidden === true);
+    line.destroy();
+    check('destroyed: gone, and the page’s padding with it', !document.querySelector('.nimrod-infoline') && !document.body.classList.contains('has-infoline'));
+    k.remove();
+  }
+
+  // ============================================================================================
+  section('*** the devices panel: every device, where each is set up ***');
+  {
+    const m = getManifest('devices');
+    check('registered as "devices", on the new core, editing nothing (no settings)', m?.title === 'Devices' && m.core === 'new' && m.settings.length === 0);
+    const mount = box();
+    const bus = createBus();
+    const got = listen(bus, [MENU_TAB_TOPIC]);
+    const inst = mountModule('devices', { mount, bus, state: null, events: null, user: null, profileId: 'p', personId: null, instanceId: 'd1' });
+    await inst.init();
+    check('*** one row per device, in the guide’s order, with the guide’s words ***',
+      J(inst.impl.__probe().rows) === J(DEVICE_KINDS.map((d) => d.id))
+      && DEVICE_KINDS.every((d) => mount.querySelector(`[data-dv="${d.id}"]`)?.dataset.help === d.say));
+    mount.querySelector('[data-dv="voice"] [data-dv-tab]').click();
+    check('*** Settings opens the settings menu on its Devices tab, on this screen ***', got.at(-1)?.payload.tab === 'devices');
+    check('*** every page opens in a NEW tab (a screen nobody is at never navigates away) ***',
+      [...mount.querySelectorAll('a')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)) && mount.querySelectorAll('a').length === DEVICE_KINDS.length);
+    bus.publish(DEVICES_VERB_TOPICS.next);
+    check('a switch walks its buttons', !!mount.querySelector('.is-scan'));
+    bus.publish(DEVICES_VERB_TOPICS.prev); bus.publish(DEVICES_VERB_TOPICS.select);
+    check('...and select presses the lit one (the first: Voice’s Settings)', got.length === 2 && got.at(-1).payload.tab === 'devices', J(got));
+    inst.destroy(); mount.remove();
+  }
+
+  // ============================================================================================
+  section('*** the settings panel: opens on a page, and shows the page Nimrod asks for ***');
+  {
+    const mount = box();
+    const bus = createBus();
+    const st = fakeState({ startPage: 'sc-theme' });
+    const before = document.createElement('button'); before.textContent = 'had focus'; document.body.append(before); before.focus();
+    const inst = mountModule('settings', { mount, bus, state: st, events: null, user: null, profileId: 'nobody', personId: null, instanceId: 's1' });
+    await inst.init();
+    check('*** it opens on its Theme page (the landing Home’s "launches on themes tab") ***', inst.impl.__probe().page === 'sc-theme', J(inst.impl.__probe()));
+    check('*** ...without taking the keyboard: focus is back where it was ***', document.activeElement === before, document.activeElement?.outerHTML?.slice(0, 60));
+    bus.publish(SETTINGS_OPEN_TOPIC, { page: 'sc-mode' });
+    check('*** asked (Nimrod): it shows the game / learning page ***', inst.impl.__probe().page === 'sc-mode');
+    check('...still without moving the keyboard', document.activeElement === before);
+    bus.publish(SETTINGS_OPEN_TOPIC, { page: 'type:photos' });
+    check('a sibling’s page it does not have (no pictures panel here): nothing changes', inst.impl.__probe().page === 'sc-mode');
+    inst.destroy(); mount.remove(); before.remove();
+    const mount2 = box();
+    const inst2 = mountModule('settings', { mount: mount2, bus: createBus(), state: fakeState(), events: null, user: null, profileId: 'nobody', personId: null, instanceId: 's2' });
+    await inst2.init();
+    check('no start page: the list, as it always was', inst2.impl.__probe().page === null && inst2.impl.__probe().open === true);
+    inst2.destroy(); mount2.remove();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

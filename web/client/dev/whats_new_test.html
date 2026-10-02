@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>What's new — the patch notes module</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:480px;height:520px;margin-top:12px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>What's new — the patch notes module</h1>
+<p>Mike, 2026-10-02: "What's new could be like a patch notes module." A dated changelog in plain words, newest
+first, each thing with where it is found. The data is checked, then the module is mounted and walked. No server.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { WHATS_NEW, newestFirst, recentEntries, whatsNewProblems } from '../whats_new_data.js';
+import { WHATS_NEW_VERB_TOPICS, WHATS_NEW_SETTINGS, dayLabel } from '../modules/whats_new.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+function fakeState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  return { load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, flush: async () => {}, destroy() {} };
+}
+
+try {
+  section('*** the changelog is valid data, newest first, every item saying where ***');
+  check('*** whatsNewProblems finds nothing wrong with the shipped changelog ***', whatsNewProblems().length === 0, whatsNewProblems().join('; '));
+  check('it is seeded with the last few days (at least three, ending 2026-10-02)', WHATS_NEW.length >= 3 && WHATS_NEW[0].date === '2026-10-02');
+  check('every item says what changed AND where it is', WHATS_NEW.every((e) => e.items.every((i) => i.text && i.where)));
+  check('no item says "her screen", Christine or Cici', !/\bher screen|christine|cici/i.test(J(WHATS_NEW)));
+  check('the guide and the landing Home are in it', /Nimrod is a module/.test(J(WHATS_NEW[0])) && /four up/.test(J(WHATS_NEW[0])));
+  const shuffled = [WHATS_NEW[2], WHATS_NEW[0], WHATS_NEW[1]];
+  check('newestFirst sorts whatever order it is handed', J(newestFirst(shuffled).map((e) => e.date)) === J(WHATS_NEW.slice(0, 3).map((e) => e.date)));
+  check('*** recentEntries(1): the newest day only; (0): everything ***', recentEntries(1).length === 1 && recentEntries(0).length === WHATS_NEW.length);
+  check('recentEntries(2): the newest two days', J(recentEntries(2).map((e) => e.date)) === J(WHATS_NEW.slice(0, 2).map((e) => e.date)));
+  // Negative controls.
+  const bad = [
+    { date: '2026-10-03', items: [{ text: 'A change in modules.js', where: 'row 2.3' }] },
+    { date: '2026-10-01', items: [{ text: 'No where' }] },
+    { date: '2026-10-02', items: [] },
+    { date: 'yesterday', items: [{ text: 'x', where: 'y' }] },
+    { date: '2026-10-01', items: [{ text: 'twice', where: 'here' }] },
+  ];
+  const bp = whatsNewProblems(bad);
+  check('...it catches engineering words', bp.some((p) => /engineering/.test(p)), bp.join('; '));
+  check('...an item that does not say where', bp.some((p) => /does not say where/.test(p)));
+  check('...a day with nothing in it', bp.some((p) => /nothing in it/.test(p)));
+  check('...a bad date', bp.some((p) => /bad date/.test(p)));
+  check('...a day twice', bp.some((p) => /twice/.test(p)));
+  check('...a file not newest first', bp.some((p) => /not newest first/.test(p)));
+
+  section('*** the module: newest first, the setting, a switch ***');
+  const m = getManifest('whats_new');
+  check('registered as "whats_new", titled What’s new, on the new core', m?.title === 'What’s new' && m.core === 'new');
+  check('*** one setting: how far back, a week by default (argued), Everything one choice away ***',
+    WHATS_NEW_SETTINGS.length === 1 && WHATS_NEW_SETTINGS[0].default === 7 && WHATS_NEW_SETTINGS[0].options.some((o) => o.value === 0));
+  check('a day reads as words', /October/.test(dayLabel('2026-10-02', 'en-GB')) && dayLabel('nope') === 'nope');
+  const mount = document.createElement('div'); mount.className = 'box'; document.body.append(mount);
+  const bus = createBus();
+  const said = [];
+  const state = fakeState({});
+  const inst = mountModule('whats_new', { mount, bus, state, events: null, user: null, profileId: 'p', personId: null, instanceId: 'w1',
+    output: { say: (t) => { said.push(t); return 1; } } });
+  await inst.init();
+  const days = () => [...mount.querySelectorAll('.wn-day')].map((h) => h.textContent);
+  check('*** newest day first ***', days()[0] === dayLabel(WHATS_NEW[0].date) && days().length === recentEntries(7).length, J(days()));
+  const first = mount.querySelector('.wn-item');
+  check('*** each thing says where it is found ***', /Where: /.test(first.textContent) && first.textContent.includes(WHATS_NEW[0].items[0].where));
+  check('...and explains itself to Nimrod’s info line (data-help)', first.dataset.help.includes(WHATS_NEW[0].items[0].text));
+  state.set({ days: 0 });
+  check('Everything: every day', days().length === WHATS_NEW.length);
+  state.set({ days: 3 });
+  check('3 days: no more than three days', days().length <= 3 && days().length >= 1);
+  bus.publish(WHATS_NEW_VERB_TOPICS.next);
+  check('*** a switch: next lights the first item ***', mount.querySelector('.wn-item.is-scan') === mount.querySelector('.wn-item'));
+  bus.publish(WHATS_NEW_VERB_TOPICS.prev);
+  check('prev from the first wraps to the last', mount.querySelector('.wn-item.is-scan') === [...mount.querySelectorAll('.wn-item')].at(-1));
+  bus.publish(WHATS_NEW_VERB_TOPICS.select);
+  check('*** select reads the lit one aloud, through the output bus ***', said.length === 1 && said[0].includes('Where:'));
+  inst.destroy(); mount.remove();
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
