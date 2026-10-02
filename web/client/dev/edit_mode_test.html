@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>edit mode — edit any module in place — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:fixed;left:0;top:0;width:900px;height:600px;visibility:hidden;pointer-events:none}
+  .cell{position:relative;width:420px;height:280px}
+</style>
+</head>
+<body>
+<h1>edit mode — edit any module in place (Mike, 2026-10-02)</h1>
+<p>"Every module should have an edit mode ... You wouldn't have to be in the edit dashboard to edit a module. So you
+could click on a button or piece of furniture or whatever else and have access to any options for it." A panel in
+edit mode takes presses on it as CHOICES (the words on a sign, its picture, the panel); the chosen thing's options
+show in the builder's options panel when there is one, or in a card in the panel. Done, Escape, the ✎ corner, the
+verb, or a while with no press leaves it. No server needed.</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { mountModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import {
+  createEditMode, targetsOf, selectionFor, DECLARED_TARGETS, EDIT_PANEL_TOPIC, EDIT_SELECTED_TOPIC, EDIT_ENDED_TOPIC,
+  EDIT_PANEL_KEY, EDIT_IDLE_KEY, EDIT_CORNER_KEY, EDIT_DEFAULTS, editSettingsFrom, optionRows,
+} from '../edit_mode.js';
+import { OPTIONS_IDLE } from '../modules/edit_options.js';
+import { LIBRARY_TYPES, LIBRARY_WAITING, libraryType } from '../modules/library_slot.js';
+import '../modules/view.js';
+import '../modules/button.js';
+import '../modules/clock.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+
+// A state handle in memory that tells its subscribers, as state.js does once loaded.
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => data,
+    set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, flush: () => Promise.resolve(),
+    startPolling() {}, destroy() {} };
+}
+const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
+  subscribe: () => () => {}, startPolling() {}, destroy() {} });
+
+/** One module in a cell, as an arrangement record. */
+function mountPanel(type, id, bus, seed = {}) {
+  const cell = document.createElement('div');
+  cell.className = 'cell';
+  const mount = document.createElement('div');
+  cell.append(mount);
+  document.getElementById('host').append(cell);
+  const state = memState(seed);
+  const said = [];
+  const instance = mountModule(type, { mount, bus, rootBus: bus, state, events: noEvents(), user: 'u', personId: null,
+    instanceId: id, profileId: 'p', output: { say: (t) => said.push(t) }, sources: { list: async () => [] } });
+  instance.init();
+  return { id, type, title: getManifest(type)?.title, instance, state, el: mount, cell, said };
+}
+
+try {
+  // ============================================================================================
+  section('the contract, and the defaults (Rule 1)');
+  {
+    const btn = getManifest('button');
+    const declared = new Set((btn.settings || []).map((s) => s.key));
+    check('*** the button is declared from outside (its file untouched): the words, the picture, the whole button ***',
+      J(DECLARED_TARGETS.button.map((t) => t.id)) === J(['words', 'picture', 'face']));
+    check('...and every key it names is one the button really declares (a stale key would show fewer rows, never a broken one)',
+      DECLARED_TARGETS.button.every((t) => t.keys.every((k) => declared.has(k))), J(DECLARED_TARGETS.button.map((t) => t.keys.filter((k) => !declared.has(k)))));
+    const d = editSettingsFrom({});
+    check('defaults: leaves by itself after 5 minutes with no press; the ✎ corner on; no panel opened in edit mode',
+      d.idleMs === 5 * 60 * 1000 && d.corner === true && d.panel === null && EDIT_DEFAULTS.level === 'standard');
+    check('the dashboard settings are read safely', editSettingsFrom({ [EDIT_IDLE_KEY]: 0, [EDIT_CORNER_KEY]: false, [EDIT_PANEL_KEY]: 'b1' }).idleMs === 0
+      && editSettingsFrom({ [EDIT_CORNER_KEY]: false }).corner === false && editSettingsFrom({ [EDIT_PANEL_KEY]: 'b1' }).panel === 'b1'
+      && editSettingsFrom({ [EDIT_IDLE_KEY]: 'x' }).idleMs === EDIT_DEFAULTS.idleMs);
+    check('module.js passes the contract through (null: no opinion)', typeof mountPanel('clock', 'c0', createBus()).instance.editTargets === 'function');
+  }
+
+  // ============================================================================================
+  section('*** a sign, in edit mode: a press CHOOSES, the options show, Escape leaves ***');
+  const bus = createBus();
+  const sign = mountPanel('button', 'b1', bus, { label: 'Ada', style: 'plate' });
+  await sleep(30);
+  const selected = []; const ended = [];
+  bus.subscribe(EDIT_SELECTED_TOPIC, (p) => selected.push(p));
+  bus.subscribe(EDIT_ENDED_TOPIC, (p) => ended.push(p));
+  const em = createEditMode({ bus, recs: () => [sign], boxOf: (id) => (id === 'b1' ? sign.cell : null), settings: () => ({}) });
+  check('(setup) the sign draws its words', !!sign.el.querySelector('.ab-word'));
+  check('*** entering it: the panel is marked, Done is there (first, never dimmed) ***',
+    em.enter('b1') && sign.cell.dataset.editing === '1' && sign.cell.querySelector('.em-bar .em-done')?.textContent === 'Done'
+    && !sign.cell.querySelector('.em-bar .em-done').disabled);
+  check('...the targets it offers are marked, nearest first', J(targetsOf(sign).map((t) => t.id)) === J(['words', 'face'])
+    && sign.el.querySelector('.ab-word').dataset.editTarget === 'words', J(targetsOf(sign).map((t) => t.id)));
+  check('...the WHOLE PANEL is chosen to begin with, and published', selected.at(-1)?.panelId === 'b1' && selected.at(-1).target === null);
+  const card = () => sign.cell.querySelector('.em-card');
+  check('*** nobody claimed it, so its options are drawn IN the panel (a card), Done first ***',
+    !card().hidden && card().querySelector('[data-em-title]')?.textContent === 'Button'
+    && card().querySelector('button')?.dataset.em === 'done' && !!card().querySelector('[data-em-row="label"]'));
+
+  sign.el.querySelector('.ab-word').click();
+  check('*** pressing the WORDS chooses the words: their options, not the whole button ***',
+    selected.at(-1)?.target?.id === 'words' && card().querySelector('[data-em-title]').textContent === 'Button: The words'
+    && !!card().querySelector('[data-em-row="label"]') && !!card().querySelector('[data-em-row="font"]')
+    && !card().querySelector('[data-em-row="whenPressed"]'), card().querySelector('[data-em-title]')?.textContent);
+  check('...the words are outlined as chosen, and say what they are (Nimrod reads it: cat_help)',
+    'editSelected' in sign.el.querySelector('.ab-word').dataset && /words/i.test(sign.el.querySelector('.ab-word').dataset.editHelp || ''));
+  check('*** ...and the press did NOT press the button (nothing said, no press flash) ***',
+    sign.said.length === 0 && !sign.el.querySelector('[data-face]').classList.contains('nbtn-press'));
+  const fontBefore = sign.state.get().font;
+  card().querySelector('[data-em-step="1"][data-em-key="font"]').click();
+  check('*** › on Font writes the next font to the panel’s own settings, and the row says the new one ***',
+    sign.state.get().font && sign.state.get().font !== fontBefore
+    && card().querySelector('[data-em-row="font"] [data-em-value]').textContent !== '', J(sign.state.get()));
+  const box = card().querySelector('[data-em-text="label"]');
+  box.value = 'Ada Lovelace';
+  card().querySelector('[data-em-keep="label"]').click();
+  check('the words themselves: typed, kept with ✓', sign.state.get().label === 'Ada Lovelace', J(sign.state.get()));
+  sign.el.querySelector('[data-face]').click();
+  check('pressing the button around the words chooses the whole button (its look and what pressing it does)',
+    selected.at(-1)?.target?.id === 'face' && !!card().querySelector('[data-em-row="whenPressed"]'));
+
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+  check('*** Escape leaves: nothing marked, no card, no Done, and it says so on the bus ***',
+    !sign.cell.dataset.editing && !card() && !sign.cell.querySelector('.em-bar') && !sign.el.querySelector('[data-edit-target]')
+    && ended.at(-1)?.id === 'b1' && em.active() === null);
+  sign.el.querySelector('[data-face]').click();
+  check('*** ...and the button presses again, as it always did ***', sign.el.querySelector('[data-face]').classList.contains('nbtn-press'));
+
+  // ============================================================================================
+  section('*** the options panel (the builder’s top right) CLAIMS the choice ***');
+  {
+    const ohost = document.createElement('div');
+    document.getElementById('host').append(ohost);
+    const opts = mountModule('options', { mount: ohost, bus, rootBus: bus, state: memState(), events: noEvents(), user: 'u', personId: null, instanceId: 'o1' });
+    opts.init();
+    check('nothing chosen: it says how to choose something, in words', ohost.textContent.includes(OPTIONS_IDLE.slice(0, 30)));
+    em.enter('b1');
+    sign.el.querySelector('.ab-word').click();
+    check('*** a press in the sign shows its options THERE, and the panel draws no card of its own ***',
+      ohost.querySelector('[data-em-title]')?.textContent === 'Button: The words' && card().hidden === true);
+    ohost.querySelector('[data-em-step="1"][data-em-key="font"]').click();
+    check('its rows write to the sign the same way', sign.state.get().font !== undefined);
+    // (Its Done goes through the verb, which an arrangement hears: checked on the real dashboard below.)
+    em.leave();
+    check('when the editing ends, it goes back to saying how', ohost.textContent.includes(OPTIONS_IDLE.slice(0, 30)));
+    opts.destroy();
+  }
+
+  // ============================================================================================
+  section('a module that has not opted in is still editable, as a whole');
+  {
+    const clock = mountPanel('clock', 'c1', bus);
+    const em2 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
+    em2.enter('c1');
+    clock.el.firstElementChild?.click?.();
+    const sel = em2.selection();
+    check('*** a press anywhere in it chooses the panel, and its options are its manifest’s settings ***',
+      sel && sel.target === null && sel.fields.length === (getManifest('clock').settings || []).length && optionRows(sel).length > 0, J(sel?.fields?.map((f) => f.key)));
+    check('...with Nimrod’s words for it', !!sel?.help);
+    em2.leave();
+  }
+
+  // ============================================================================================
+  section('nobody answers: it leaves by itself (never a gate)');
+  {
+    const em3 = createEditMode({ bus, recs: () => [sign], boxOf: () => sign.cell, settings: () => ({ [EDIT_IDLE_KEY]: 60 }) });
+    em3.enter('b1');
+    check('*** after the dashboard’s wait with no press, edit mode has left ***', await until(() => em3.active() === null && !sign.cell.dataset.editing, 2000));
+  }
+
+  // ============================================================================================
+  section('*** on a real dashboard: the ✎ corner, the verb, and a dashboard that OPENS editing a panel ***');
+  {
+    const vbus = createBus();
+    const stores = {};
+    const makeState = (key, opts, pid) => { const k = `${pid}:${key}`; return (stores[k] ||= memState(key === 'settings'
+      ? { kiosk: { layout: { preset: 'side', slots: ['b9', 'o9'] } }, [EDIT_PANEL_KEY]: 'b9' }
+      : key === 'b9' ? { label: 'Sign' } : {})); };
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: vbus, rootBus: vbus, viewId: 'V', user: 'u', personId: null,
+      arrangement: { id: 'V', name: 'Builder', modules: [{ id: 'b9', type: 'button', position: 0 }, { id: 'o9', type: 'options', position: 1 }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} },
+      state: memState(), instanceId: 'dash' });
+    await view.init();
+    const d = view.impl;
+    check('*** it opened with the sign being edited (its settings doc’s editPanel) ***', await until(() => d.editingPanel()?.id === 'b9', 3000), J(d.editingPanel()));
+    check('...and the options panel beside it claimed the choice', await until(() => /Button/.test(host.querySelector('[data-options] [data-em-title]')?.textContent || ''), 2000));
+    const corners = () => [...host.querySelectorAll('.k-editc')];
+    check('*** every panel has a ✎ corner beside ⤢, saying what it does (the one being edited says Stop) ***',
+      corners().length === 2 && corners().some((b) => b.dataset.for === 'b9' && /Stop editing/.test(b.title) && b.getAttribute('aria-pressed') === 'true')
+      && corners().some((b) => b.dataset.for === 'o9' && /^Edit /.test(b.title)), corners().map((b) => b.title).join(' | '));
+    host.querySelector('[data-options] [data-em="done"]')?.click();
+    check('*** the options panel’s Done stops the editing (through the verb) ***', d.editingPanel() === null && !host.querySelector('[data-editing]'));
+    d.editPanel('b9', true);
+    vbus.publish(EDIT_PANEL_TOPIC, { id: 'b9', on: false });
+    check('*** the verb (shell/edit-panel, on: false) stops it ***', d.editingPanel() === null && !host.querySelector('[data-editing]'));
+    [...host.querySelectorAll('.k-editc')].find((b) => b.dataset.for === 'o9')?.click();
+    check('*** the ✎ corner edits ITS panel (the options panel, edited as a whole) ***', d.editingPanel()?.id === 'o9');
+    vbus.publish(EDIT_PANEL_TOPIC, { id: 'o9' });
+    check('...pressed again (the verb with no `on`) it toggles off', d.editingPanel() === null);
+    vbus.publish(EDIT_PANEL_TOPIC, { id: 'not-here' });
+    check('another dashboard’s panel is not this one’s to edit', d.editingPanel() === null);
+    check('d.editPanel(id, true) does the same from code', d.editPanel('b9', true) && d.editingPanel()?.id === 'b9');
+    view.destroy();
+    check('destroying the dashboard leaves nothing listening', !host.querySelector('[data-editing]'));
+  }
+
+  // ============================================================================================
+  section('the library’s place (until the modules library is registered)');
+  {
+    check('it looks for the library under its names, and none is registered here', J(LIBRARY_TYPES) === J(['library', 'modules']) && libraryType() === null);
+    check('...a lookup that finds one names it', libraryType((t) => t === 'modules') === 'modules');
+    const lhost = document.createElement('div');
+    document.getElementById('host').append(lhost);
+    const slot = mountModule('library_slot', { mount: lhost, bus, rootBus: bus, state: memState(), events: noEvents(), user: 'u', personId: null, instanceId: 'l1' });
+    slot.init();
+    check('*** with none, it says where the library will be and what to do meanwhile, in words ***', lhost.textContent.includes(LIBRARY_WAITING.slice(0, 30)));
+    check('no copy says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(LIBRARY_WAITING + OPTIONS_IDLE));
+    slot.destroy();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+  console.error(err);
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

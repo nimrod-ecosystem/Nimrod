@@ -43,7 +43,13 @@ import {
   PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor, createDashboardMaker,
   dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, PREBUILT_ROUTES, NAV_ROUTES, DASHBOARD_GO_TOPIC,
   PREBUILT_KEY, PREBUILT_DONE_KEY, PREBUILT_REFS_KEY, DASHBOARD_OFFERS_KEY, LOCKED_KEY, EXAMPLE_ORDER,
+  inKindOrder, EDIT_PANEL_KEY, recordSettings, remapSettingsIds,
 } from '../dashboards.js';
+import { EDIT_PANEL_KEY as EDIT_MODE_PANEL_KEY } from '../edit_mode.js';
+// The builder's panels (registered by modules/view.js wherever a dashboard can mount; imported here too).
+import '../modules/button.js';
+import '../modules/edit_options.js';
+import '../modules/library_slot.js';
 // 2026-10-02: the landing Home and the tutorial hold Nimrod and the devices panel (kiosk.js's import lines
 // for them are the coordinator's to add; registered here so this page's kiosks can mount them meanwhile).
 import '../modules/nimrod.js';
@@ -87,10 +93,16 @@ function backend(user) {
     section('1. the three ready-made dashboards are DATA, and valid');
     {
       const known = new Set(listManifests().map((m) => m.type));
-      check('four, in the order the picker offers them: room, basic, classic, then the tutorial LAST (the three keep their places)',
-        J(PREBUILT_ORDER) === J(['room', 'basic', 'classic', 'tutorial'])
+      // 2026-10-02 (Mike: "Still, live, rooms, 3d"): Basic, Classic 2D, the room, then the tutorial LAST.
+      check('*** four, in the order the picker offers them: STILL (basic), LIVE (classic), the ROOM, then the tutorial LAST ***',
+        J(PREBUILT_ORDER) === J(['basic', 'classic', 'room', 'tutorial'])
         && PREBUILT_ORDER.every((k) => PREBUILT_DASHBOARDS[k]?.key === k));
-      for (const k of [...new Set([...PREBUILT_ORDER, ...EXAMPLE_ORDER])]) {
+      check('...the looks among them in kind order (still, live, rooms, 3D)',
+        inKindOrder(PREBUILT_ORDER.filter((k) => k !== 'tutorial').map((k) => PREBUILT_DASHBOARDS[k].kind)));
+      check('...and so are Home’s cards (the landing first, the 3D room last)',
+        inKindOrder(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) && EXAMPLE_ORDER[0] === 'start' && EXAMPLE_ORDER.at(-1) === 'room3d');
+      check('(the checker is a real check: a room before a still one is out of order)', !inKindOrder(['room', 'static']) && inKindOrder(['static', 'static', 'live']));
+      for (const k of [...new Set([...PREBUILT_ORDER, ...EXAMPLE_ORDER, 'builder'])]) {
         const rec = prebuiltRecord(k, { personName: 'Ada' });
         const probs = recordProblems(rec, { knownTypes: known });
         check(`*** ${k}: a valid record (registered modules, a layout that keeps every one, a real theme and panel background) ***`,
@@ -134,6 +146,24 @@ function backend(user) {
       check('*** the tutorial: Nimrod and the settings in the BOTTOM two places, both LOCKED ***',
         J(slotType(tut).slice(2)) === J(['nimrod', 'settings']) && J(tut.locked) === J(['nimrod', 'settings']), J(tut));
       check('...Nimrod there says the tutorial hello', tut.modules.find((m) => m.type === 'nimrod').state.intro === 'tutorial');
+      // 2026-10-02: THE BUILDER, "clockwise from top left: The module you're editing, settings, modules, Nimrod/AI".
+      const bld = prebuiltRecord('builder', { personName: 'Ada' });
+      check('*** the builder: four up, CLOCKWISE from the top left: the module being edited, its options, the modules library, Nimrod ***',
+        bld.layout.preset === 'quad' && J(clockwise(slotType(bld))) === J(['button', 'options', 'library_slot', 'nimrod']), J(slotType(bld)));
+      check('...it OPENS with the top left being edited (editPanel names it); nothing locked',
+        bld.editPanel === bld.layout.slots[0] && bld.locked === undefined);
+      check('...the top left starts as the name sign, with the person’s name on it',
+        bld.modules.find((m) => m.ref === 'editing').state?.label === 'Ada', J(bld.modules[0]));
+      check('...not a Home card, not in the bar’s tray (Home’s ⚙ menu and "open the builder" reach it)',
+        !EXAMPLE_ORDER.includes('builder') && !PREBUILT_ORDER.includes('builder') && PREBUILT_ROUTES['dashboard-builder']?.payload.prebuilt === 'builder'
+        && !PREBUILT_ROUTES['dashboard-builder'].phrases.includes('builder'));
+      const bset = recordSettings(bld, { editing: 'E1', options: 'O1', nimrod: 'N1', library: 'L1' });
+      check('*** made, its settings doc names the edited panel by INSTANCE id ***', bset[EDIT_PANEL_KEY] === 'E1' && EDIT_PANEL_KEY === EDIT_MODE_PANEL_KEY, J(bset));
+      check('...and a tried one’s ids become the made one’s (preview -> real)',
+        remapSettingsIds({ [EDIT_PANEL_KEY]: 'p-e', [LOCKED_KEY]: ['p-n'], theme: 'default' }, { 'p-e': 'E1', 'p-n': 'N1' })[EDIT_PANEL_KEY] === 'E1'
+        && J(remapSettingsIds({ [LOCKED_KEY]: ['p-n', 'x'] }, { 'p-n': 'N1' })[LOCKED_KEY]) === J(['N1', 'x']));
+      const badEdit = prebuiltRecord('builder'); badEdit.editPanel = 'ghost';
+      check('the validator catches an editPanel that is not on the dashboard', recordProblems(badEdit).some((p) => /editPanel/.test(p)));
       const badLock = prebuiltRecord('tutorial'); badLock.locked = ['nimrod', 'ghost'];
       check('the validator catches a lock on something that is not on the dashboard', recordProblems(badLock).some((p) => /ghost/.test(p)));
       // Negative controls: the validator is a real check, not a rubber stamp.
@@ -167,7 +197,7 @@ function backend(user) {
       const n0 = (await B.profiles.list()).length;
       const offered0 = await maker.offered(await B.profiles.list());
       check('*** a person with none: all four are OFFERED, and asking made nothing ***',
-        J(offered0) === J(['room', 'basic', 'classic', 'tutorial']) && (await B.profiles.list()).length === n0, J(offered0));
+        J(offered0) === J(['basic', 'classic', 'room', 'tutorial']) && (await B.profiles.list()).length === n0, J(offered0));
       check('a screen that is merely NAMED "My room" is not taken for the room', offered0.includes('room'));
 
       const [r1, r2] = await Promise.all([maker.ensure('room'), maker.ensure('room')]);
@@ -322,8 +352,8 @@ function backend(user) {
       check('*** the placed bar has the one button (Home) that opens it ***', !!home);
       home?.click();
       const texts = () => k.dashboardPicker().items.map((i) => i.text);
-      check('*** pressing it opens the tray: Close first, your dashboards, then + Room, + Basic, + Classic 2D, then the way out ***',
-        await settled(() => J(texts()) === J(['✕ Close', 'Alpha screen', '+ Room', '+ Basic', '+ Classic 2D', '+ Tutorial', 'Set up dashboards ↗']), 6000),
+      check('*** pressing it opens the tray: Close first, your dashboards, then + Basic, + Classic 2D, + Room (still, live, room), then the way out ***',
+        await settled(() => J(texts()) === J(['✕ Close', 'Alpha screen', '+ Basic', '+ Classic 2D', '+ Room', '+ Tutorial', 'Set up dashboards ↗']), 6000),
         J(texts()));
       check('the dashboard you are on is marked and not pressable', k.dashboardPicker().items[1].disabled === true
         && !!tray().querySelector('.k-scr.on[disabled][aria-current="true"]'));
@@ -335,9 +365,9 @@ function backend(user) {
       check('*** while it is open it takes the scan: the panel router is paused, the cursor is on Close (the way out first) ***',
         k.runtime.router.isPaused() === true && k.dashboardPicker().cursor?.kind === 'close');
       bus.publish(verbTopic('next'));
-      check('next moves the cursor past the dashboard you are on, to + Room', k.dashboardPicker().cursor?.key === 'room',
+      check('next moves the cursor past the dashboard you are on, to + Basic', k.dashboardPicker().cursor?.key === 'basic',
         J(k.dashboardPicker().cursor));
-      check('...and the cursor is drawn where the press will land', tray().querySelector('[data-cursor="1"]')?.dataset.key === 'room');
+      check('...and the cursor is drawn where the press will land', tray().querySelector('[data-cursor="1"]')?.dataset.key === 'basic');
       bus.publish(verbTopic('prev'));
       check('prev moves it back', k.dashboardPicker().cursor?.kind === 'close');
       bus.publish(verbTopic('back'));
@@ -355,7 +385,7 @@ function backend(user) {
       const dashBefore = k.dashboard();
       check('(setup) A shows its own theme and see-through panels', themeVar('--bg') === THEMES.dusk.vars['--bg']
         && box.querySelector('.kiosk').dataset.panelSurface === 'veil', `${themeVar('--bg')} ${box.querySelector('.kiosk').dataset.panelSurface}`);
-      bus.publish(verbTopic('next')); bus.publish(verbTopic('next'));
+      bus.publish(verbTopic('next'));
       check('(the cursor is on + Basic)', k.dashboardPicker().cursor?.key === 'basic', J(k.dashboardPicker().cursor));
       bus.publish(verbTopic('select'));
       check('*** select makes Basic and swaps to it in place ***',

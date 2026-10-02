@@ -30,7 +30,8 @@ import {
   ADD_SPOTS_ROOM3D, ADD_SIZE_ROOM3D, room3dSpot, ROOM3D_ROWS, ROOM3D_DEPTHS, SCENE_ROWS,
 } from '../home_profile.js';
 import { ROOM3D_PRESETS, ROOM3D_DEFAULTS, normalizeRoom3d, viewOf, slotSpot, faceBoxFor } from '../room3d.js';
-import { EXAMPLE_ORDER, EXAMPLE_KINDS, exampleCards, PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor } from '../dashboards.js';
+import { EXAMPLE_ORDER, EXAMPLE_KINDS, exampleCards, PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor,
+  inKindOrder, KIND_ORDER } from '../dashboards.js';
 import { normalizeLayout, isArranged } from '../layout.js';
 import { ROOM_PRESETS } from '../room_presets.js';
 import { THEMES, DEFAULT_THEME } from '../theme.js';
@@ -95,7 +96,10 @@ try {
       cards.length === EXAMPLE_ORDER.length && cards.every((c) => c.title && c.blurb && c.kindLabel === EXAMPLE_KINDS[c.kind]), J(cards));
     check('no card says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(cards)));
     check('*** the bar’s tray offers its three, and the tutorial last (a scanning surface stays short: the rooms are not added) ***',
-      J(PREBUILT_ORDER) === J(['room', 'basic', 'classic', 'tutorial']));
+      J(PREBUILT_ORDER) === J(['basic', 'classic', 'room', 'tutorial']));
+    check('*** Mike’s order everywhere (2026-10-02, "Still, live, rooms, 3d"): Home’s cards and the tray’s looks never go back a kind ***',
+      inKindOrder(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind))
+      && inKindOrder(PREBUILT_ORDER.filter((k) => k !== 'tutorial').map((k) => PREBUILT_DASHBOARDS[k].kind)));
     const study = prebuiltRecord('study');
     const lay = layoutFor(study, { photos: 'P' });
     check('the study’s photos sit IN the room’s own module slot (Design drew a screen there)',
@@ -177,8 +181,10 @@ try {
     const ch = sceneChoices();
     check('every one of Design’s rooms is there', Object.keys(ROOM_PRESETS).every((k) => ch.some((c) => c.id === `room:${k}`)));
     check('every theme is there, live ones marked live', Object.keys(THEMES).every((k) => ch.some((c) => c.id === `theme:${k}` && c.kind === (THEMES[k].scene ? 'live' : 'static'))));
-    check('rooms first, then moving scenes, then still (and each kind has words)', ch[0].kind === 'room' && ch.at(-1).kind === 'static'
-      && Object.keys(SCENE_KINDS).every((k) => SCENE_KINDS[k]));
+    // 2026-10-02 (Mike): "The still themes like Nimrod light should come first: Still, live, rooms, 3d."
+    check('*** STILL first (Nimrod light at the very top), then moving scenes, then rooms, then 3D (and each kind has words) ***',
+      ch[0].id === `theme:${DEFAULT_THEME}` && /Nimrod/.test(ch[0].label) && inKindOrder(ch.map((c) => c.kind))
+      && J(Object.keys(SCENE_KINDS)) === J(KIND_ORDER) && Object.keys(SCENE_KINDS).every((k) => SCENE_KINDS[k]), J(ch.map((c) => c.id)));
     const grid = { preset: 'quad', slots: ['a', 'b', 'c', 'd'] };
     check('a grid with a theme reads as that theme', currentScene(grid, 'fall') === 'theme:fall' && currentScene(null, 'nope') === `theme:${DEFAULT_THEME}`);
     const toRoom = applyScene(grid, 'room:living', { theme: 'fall' });

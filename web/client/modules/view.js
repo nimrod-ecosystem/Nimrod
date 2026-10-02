@@ -103,6 +103,11 @@ import { registerModule, mountModule, extendCtx, getManifest } from '../module.j
 // not something a caregiver picks from the modules page, they are what every dashboard starts with.
 import './transport_bar.js';
 import './settings_menu.js';
+// 2026-10-02, the builder dashboard (dashboards.js `builder`): the options of what is chosen in a panel being
+// edited, and the modules library's place. Registered here, with the dashboard that holds them, so every
+// page that can mount a dashboard can mount the builder (the kiosk's own module list is not this file's).
+import './edit_options.js';
+import './library_slot.js';
 import { createArrangement } from '../arrangement.js';
 import { flashLimit } from '../flash_limit.js';
 // Row 2.38: a change that only moves a room object's door is a placement change too (room_doors.js).
@@ -116,6 +121,8 @@ import { DASHBOARD_GO_TOPIC, NEST_OPEN_TOPIC, nestMode, nestLiveDepthFrom, NEST_
 // 2026-10-02: a panel's own sound (its volume, its room, a TV's things), and where the bar sits in a room.
 import { watchPanelSound } from '../panel_sound.js';
 import { barPlaceFrom, cabinetSlot, CABINET_STRIP_STYLE, fitBarInto, unfitBar } from '../room_bar.js';
+// 2026-10-02: which panel a dashboard opens with being edited (edit_mode.js `editPanel`).
+import { editSettingsFrom } from '../edit_mode.js';
 
 // ---------------------------------------------------------------------------------------
 // *** ROW 2.38: A DASHBOARD INSIDE A DASHBOARD ("turtles all the way down"). ***
@@ -718,6 +725,11 @@ function dashboardFactory(ctx) {
         return applyPlacedHere(nextLayout);
       },
       onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+      // 2026-10-02 -- EDIT ANY MODULE IN PLACE (edit_mode.js): edit panel `id` (on true), stop (false) or
+      // toggle; which one is being edited ({ id, target } | null); choose a thing in it (null: the panel).
+      editPanel: (id, on) => (arr ? arr.editPanel(id, on) : false),
+      editingPanel: () => (arr ? arr.editing() : null),
+      editSelect: (targetId = null) => (arr ? arr.editSelect(targetId) : null),
       // THIS DASHBOARD'S ARRANGEMENT (arrangement.js), read-only by convention. Read by the kiosk
       // shell (its plain bar, its menu, recovery's hands) and by the placed transport bar, so both
       // bars draw from the same functions rather than a reshaped copy. Null until `init` built it.
@@ -936,6 +948,12 @@ function dashboardFactory(ctx) {
         // CHROME above. Every role it will carry is 'pending' from this moment.
         const placed = Array.isArray(hostChrome) ? hostChrome.filter((d) => d && d.id && d.type) : [];
         for (const def of placed) mountChrome(def).catch((err) => console.error('view: chrome', err));
+        // 2026-10-02: a dashboard that OPENS with one of its panels being edited (its settings doc's
+        // `editPanel`, an instance id: the builder's top left). Not a nested one (it is pressed as one thing).
+        if (!nested) {
+          const ep = editSettingsFrom(settings.get()).panel;
+          if (ep) { try { arr.editPanel(ep, true); } catch (err) { console.error('view: edit panel', err); } }
+        }
         changed();
         rootBus.publish('view/ready', { viewId, modules: arrangement.modules.length });
     }

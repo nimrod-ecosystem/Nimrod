@@ -75,9 +75,20 @@ export const BAR_HIDE_CHOICES = Object.freeze([0, 3000, 6000, 10000, 30000]);
 // (when he is, his own box says it). ON: it is the feature asked for, and a line that takes no pointer
 // events and covers nothing costs nobody anything; OFF is one press for somebody who finds words changing
 // under the mouse busy.
+// `openOn` (Mike, 2026-10-02: "The default home shouldn't be the one I had now ... The home page is gone now
+// ... that should be what you land on. It should be the dashboard we discussed in the tutorial part."):
+// WHERE A SIGNED-IN PERSON LANDS. 'landing' -- the landing dashboard ("Start here": pictures, the settings on
+// its Theme page, the devices, Nimrod) -- for everybody, by default; 'home' -- the Home they made their own.
+//   WHY 'landing' EVEN FOR SOMEBODY WITH A HOME: Mike's own case. He had picked a room as his Home before the
+//   landing dashboard existed (`homeId`), so the page put that room in front of him and the landing dashboard
+//   he had just asked for was nowhere to be seen. The landing is where Nimrod, the settings and the devices
+//   are; somebody who wants their own Home first says so once (this row) and it sticks.
+//   AGAINST: a person who made a Home and returns every day presses My Home every day until they find this
+//   row -- one press, and one more to stop it ever again. The other way round strands nobody either.
+export const OPEN_ON_CHOICES = Object.freeze(['landing', 'home']);
 export const HOME_DEFAULTS = Object.freeze({
   openIn: 'edit', keepVersions: 20, warnOverwrite: true, chromeSurface: 'follow', welcomeDone: false,
-  barHideMs: 6000, homeId: null, hoverLine: true,
+  barHideMs: 6000, homeId: null, hoverLine: true, openOn: 'landing',
 });
 // An id, not prose (layout.js OPENS_MAX's reasoning): long enough for any id the server makes.
 const HOME_ID_MAX = 200;
@@ -85,6 +96,8 @@ const HOME_ID_MAX = 200;
 // What the page's settings panel shows, in order. Each row CYCLES on a press and wraps (Design, and
 // settings_fields.js's one-switch rule: a control that stops at its end strands somebody there).
 export const HOME_SETTINGS = Object.freeze([
+  { key: 'openOn', label: 'Open on',
+    options: [['landing', 'The landing dashboard (Start here)'], ['home', 'My Home']] },
   { key: 'openIn', label: 'Open my Home in',
     options: [['edit', 'Edit view'], ['live', 'Live view']] },
   { key: 'keepVersions', label: 'Keep the last',
@@ -159,11 +172,22 @@ export function homeStatusText({ target = null, dirty = false, docCurrent = null
 // for another in the same place (home_profile.js swapInLayout). It is a host item, so it is drawn by the
 // placed bar like Save, with no change to the bar itself. Dimmed where it cannot act (a module page, a Home
 // not made yet), never hidden. `canSwitch`: the page says whether a live Home is on the stage.
+// *** "MY HOME" / "START HERE" (2026-10-02, the landing). *** Everybody lands on the landing dashboard; their own
+// Home is ONE press away, and so is the way back: one button that says where it goes. `onHome`: the page's
+// own Home is what is on the stage (the button then goes to the landing). Never dimmed: with no Home made
+// yet, My Home opens the starting points (making one is how you get one).
+export function placeButton({ onHome = false, hasHome = false } = {}) {
+  return onHome
+    ? { act: 'myhome', label: 'Start here', title: 'the landing dashboard: your pictures, the settings, your devices and Nimrod' }
+    : { act: 'myhome', label: 'My Home', title: hasHome ? 'the Home you made your own' : 'you have not made a Home yet: this shows the starting points' };
+}
+
 export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
-  docCurrent = null, canSwitch = false, switchOpen = false } = {}) {
+  docCurrent = null, canSwitch = false, switchOpen = false, onHome = false, hasHome = false } = {}) {
   const t = target;
   return [
     { act: 'picker', label: `Modules: ${title || '…'}`, title: 'choose what you are looking at', expanded: !!pickerOpen },
+    placeButton({ onHome, hasHome }),
     { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy, primary: !!t && (dirty || !t.live) },
     { act: 'saveas', label: 'Save as…', title: 'keep a copy under a new name', disabled: !t || busy },
     { act: 'history', label: 'History', title: 'your last saves; restoring deletes nothing', disabled: !t || !t.live || busy },
@@ -188,13 +212,21 @@ export function homeShellLabel(act, { menuOpen = false, full = false } = {}) {
  * welcome and Nimrod's walk. Rows that cannot act are disabled (the menu's scan skips them).
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
-  settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false } = {}) {
+  settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false, onHome = false, hasHome = false,
+  canEditPanel = false } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
+  const place = placeButton({ onHome, hasHome });
   return [
     { kind: 'heading', id: 'home-head', label: 'This page (Home)' },
     item('picker', `Modules: ${title || '…'}`, { hint: 'choose what you are looking at' }),
+    item('myhome', place.label, { hint: place.title }),
+    // EDIT MODE (edit_mode.js): the chosen panel (the bar's Panel ▸), edited in place -- press a thing in it
+    // and its options show. The same as its ✎ corner. `canEditPanel`: a dashboard with panels is on the stage.
+    item('editpanel', 'Edit the chosen panel', { hint: 'press a thing in it to see its options; Done or Escape stops', disabled: !canEditPanel }),
+    // THE BUILDER (dashboards.js `builder`): what you edit, its options, the modules library and Nimrod.
+    item('builder', 'The builder…', { hint: 'edit one thing at a time: it top left, its options top right' }),
     item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
@@ -230,9 +262,28 @@ export function homeLanding({ signedIn = false, wanted = null, known = () => fal
     return { home: false, subject: wanted && known(wanted) ? wanted : null, view: 'live', welcome: false };
   }
   if (wanted && wanted !== PROFILE_SUBJECT && known(wanted)) {
-    return { home: true, subject: wanted, view: 'live', welcome: false };
+    return { home: true, subject: wanted, view: 'live', welcome: false, place: s.openOn };
   }
-  return { home: true, subject: PROFILE_SUBJECT, view: s.openIn, welcome: !s.welcomeDone };
+  // `place` (2026-10-02): which of the two the Home subject shows first -- the landing dashboard, or the
+  // person's own Home (`openOn`). `?m=profile` is a link to YOUR Home (the cat's "Open my profile").
+  const place = wanted === PROFILE_SUBJECT ? 'home' : s.openOn;
+  return { home: true, subject: PROFILE_SUBJECT, view: s.openIn, welcome: !s.welcomeDone, place };
+}
+
+/**
+ * WHAT THE HOME SUBJECT SHOWS (2026-10-02). `place` 'landing' | 'home'; `previewKey` an example being tried
+ * (wins); `homeId` the person's own Home; `landingId` the landing dashboard if they have made it.
+ *   -> { show: 'example', key, landing }   tried on the stage, nothing made
+ *   -> { show: 'live', id, landing }       a dashboard of theirs, live
+ * The landing is the made one when there is one, else the example tried. 'home' with no Home made yet is
+ * the landing (there is nothing else to show), and says so (`landing: true`).
+ */
+export function homeShows({ place = 'landing', previewKey = null, homeId = null, landingId = null, landingKey = 'start' } = {}) {
+  if (previewKey) return { show: 'example', key: previewKey, landing: false };
+  // (A Home that IS the made landing is shown as your Home here: which button was pressed decides the words.)
+  if (place === 'home' && homeId) return { show: 'live', id: homeId, landing: false };
+  if (landingId) return { show: 'live', id: landingId, landing: true };
+  return { show: 'example', key: landingKey, landing: true };
 }
 
 // ---------------------------------------------------------------------------------------------------

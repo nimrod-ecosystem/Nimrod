@@ -66,6 +66,9 @@ import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_n
 import { classifyLayoutChange, sceneDoorChanges } from './room_doors.js';
 export { classifyLayoutChange };
 import { SHELL_PROMOTE } from './shell_verbs.js';
+// 2026-10-02: EDIT ANY MODULE IN PLACE (edit_mode.js argues it). This file owns which panel is being edited
+// on this dashboard, the ✎ corner beside ⤢, and the `shell/edit-panel` verb.
+import { createEditMode, EDIT_PANEL_TOPIC, editSettingsFrom, ensureEditCss } from './edit_mode.js';
 
 // =====================================================================================================
 // *** MAKE A PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02). *** Mike: "something that pops up in the
@@ -149,6 +152,8 @@ export function createArrangement({
   // replaces what is in a cell): one place, so no path that changes a cell can leave one without it.
   function renderMods() {
     try { ensureCorners(); } catch (err) { console.error('arrangement: corners', err); }
+    // A panel being edited that was remounted, swapped or taken off: edit mode follows it, or ends.
+    try { editMode?.refresh(); } catch (err) { console.error('arrangement: edit mode', err); }
     renderModsHost();
   }
 
@@ -652,6 +657,8 @@ export function createArrangement({
     if (scene.kind === 'room3d') {
       try {
         const { mountRoom3d } = await import('./room3d.js');
+        // This device's "3D detail" (room_lod.js DETAIL_FIELD, a screen setting): loaded with the renderer.
+        const { lodOptionsFor } = await import('./room_lod.js');
         if (roomScene) return;                // a second call that raced this one already mounted it
         roomItemBox = null;
         const host = document.createElement('div');
@@ -659,7 +666,9 @@ export function createArrangement({
         host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
         layerFor('scene').append(host);
         // `bus`: a piece of its furniture that is a door publishes `dashboard/go` on it, as a 2D room's does.
-        roomScene = mountRoom3d(host, scene, { bus, ...(scene.options || {}) });
+        let detail = 'auto';
+        try { detail = (settings?.get?.() || {}).room3dDetail || 'auto'; } catch { detail = 'auto'; }
+        roomScene = mountRoom3d(host, scene, { bus, ...lodOptionsFor(detail), ...(scene.options || {}) });
       } catch (err) {
         console.error('arrangement: the 3D room could not be drawn', err);
         roomScene = null;
@@ -1236,11 +1245,63 @@ export function createArrangement({
       const say = top ? `Make ${t} smaller` : promoted === r.id ? `Make ${t} fill the screen` : `Make ${t} bigger`;
       b.setAttribute('aria-label', say);
       b.title = say;
+      // THE ✎ CORNER (2026-10-02, edit_mode.js): beside ⤢, shown when it is; pressing it edits this panel
+      // (or stops). It SAYS what was pressed on the bus, so the corner, a menu row and a switch are one press.
+      let e = pb.box.querySelector(':scope > .k-editc');
+      if (!editCornerOn()) { e?.remove(); continue; }
+      if (!e) {
+        ensureEditCss(document);
+        e = document.createElement('button');
+        e.type = 'button';
+        e.className = 'k-editc';
+        e.textContent = '✎';
+        e.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          try { bus?.publish?.(EDIT_PANEL_TOPIC, { id: e.dataset.for, from: 'corner' }); } catch (err) { console.error('arrangement: edit', err); }
+        });
+        pb.box.append(e);
+      }
+      e.dataset.for = r.id;
+      const editing = editMode?.active()?.id === r.id;
+      const sayE = editing ? `Stop editing ${t}` : `Edit ${t}: press a thing in it to see its options`;
+      e.setAttribute('aria-label', sayE);
+      e.setAttribute('aria-pressed', String(editing));
+      e.title = sayE;
     }
+  }
+
+  // ---- EDIT MODE (edit_mode.js) ----------------------------------------------------------------------
+  // One panel of this dashboard at a time. Built only where there is a page to draw on, and only for a
+  // dashboard that draws corners (a NESTED one is pressed as one thing: going in is how its panels are
+  // edited, as it is how they are reached).
+  const editCornerOn = () => { try { return editSettingsFrom(settings?.get?.() || {}).corner; } catch { return true; } };
+  const editPanels = () => (layout ? [...slotRecs, ...placedRecs] : [stageRec]).filter(Boolean);
+  const editMode = corners && typeof document !== 'undefined' ? createEditMode({
+    bus, doc: document,
+    recs: editPanels,
+    boxOf: (id) => promoteBox(id)?.box || recFor(id)?.el || null,
+    settings: () => { try { return settings?.get?.() || {}; } catch { return {}; } },
+    onChange: () => { try { ensureCorners(); } catch { /* not load-bearing */ } },
+  }) : null;
+  // `shell/edit-panel { id?, on? }`: a panel of THIS dashboard (another dashboard's id is not ours), or,
+  // with no id, the focused one. `on` absent toggles.
+  const offEditVerb = editMode && typeof bus?.subscribe === 'function' ? bus.subscribe(EDIT_PANEL_TOPIC, (p) => {
+    const q = p && typeof p === 'object' ? p : {};
+    const id = q.id || (q.on === false ? editMode.active()?.id : focusedRec()?.id) || null;
+    if (!id || !editPanels().some((r) => r.id === id)) return;
+    if (q.on === false) { if (editMode.active()?.id === id) editMode.leave('verb'); return; }
+    if (q.on === true) editMode.enter(id); else editMode.toggle(id);
+  }) : null;
+  /** Edit panel `id` (on true), stop (false), or toggle (undefined). True if `id` is a panel here. */
+  function editPanel(id, on) {
+    if (!editMode || !id || !editPanels().some((r) => r.id === id)) return false;
+    if (on === false) { if (editMode.active()?.id === id) editMode.leave('call'); return true; }
+    return on === true ? editMode.enter(id) : (editMode.toggle(id), true);
   }
 
   // Every mounted record, and the links runner. The shell tears down everything else.
   function destroy() {
+    try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
     while (slotRecs.length) destroyRec(slotRecs.pop());
@@ -1305,6 +1366,11 @@ export function createArrangement({
     demote,
     promotedId: () => promoted,
     setPromoteTop,
+    // ---- edit any module in place (2026-10-02; edit_mode.js) ----
+    editPanel,
+    editing: () => editMode?.active() || null,
+    editSelect: (targetId = null) => editMode?.select(targetId) || null,
+    editSelection: () => editMode?.selection() || null,
     // The room's slots (room_scene.js `slots()`), while the scene is a mounted room; an empty Map otherwise.
     roomSlots: () => { try { return roomScene?.slots?.() || new Map(); } catch { return new Map(); } },
     // ---- the mirror/clock corners ----

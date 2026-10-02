@@ -25,7 +25,7 @@ import {
   homeSettingLabel, chromeSurfaceFor, homeLanding, emptyHistory, readHistory, wouldOverwrite,
   saveDecision, commitVersion, versionSnapshot, suggestNames, settingKeysFor, isScreenSetting,
   createDraft, remapSnapshot, INSTANCE_SURFACE_KEY, cleanName,
-  homeBarItems, homeShellLabel, homeMenuModel, homeStatusText, BAR_HIDE_CHOICES,
+  homeBarItems, homeShellLabel, homeMenuModel, homeStatusText, BAR_HIDE_CHOICES, homeShows,
 } from '../home_dashboard.js';
 import { FULLSCREEN_BAR_HIDE_CHOICES_MS, FULLSCREEN_BAR_HIDE_DEFAULT_MS } from '../shell_verbs.js';
 
@@ -124,6 +124,25 @@ try {
     check('a link to one module (?m=trivia) opens it live, no welcome', link.subject === 'trivia' && link.view === 'live' && !link.welcome);
     check('?m=<nonsense> signed in falls back to the profile',
       homeLanding({ signedIn: true, wanted: 'nope', known, settings: {} }).subject === PROFILE_SUBJECT);
+
+    // 2026-10-02 (Mike): "The default home shouldn't be the one I had now ... that should be what you land on."
+    check('*** everybody lands on the LANDING dashboard by default (openOn), a person with a Home included ***',
+      HOME_DEFAULTS.openOn === 'landing' && first.place === 'landing'
+      && homeLanding({ signedIn: true, known, settings: { homeId: 'mine-1', welcomeDone: true } }).place === 'landing');
+    check('*** "Open on: My Home" is a row, and obeyed ***',
+      HOME_SETTINGS.some((r) => r.key === 'openOn' && r.options.map(([v]) => v).join() === 'landing,home')
+      && homeLanding({ signedIn: true, known, settings: { openOn: 'home' } }).place === 'home'
+      && readHomeSettings({ openOn: 'sideways' }).openOn === 'landing'
+      && homeSettingLabel(readHomeSettings({}), 'openOn') === 'The landing dashboard (Start here)');
+    check('a link to your Home (?m=profile) opens your Home', homeLanding({ signedIn: true, wanted: PROFILE_SUBJECT, known, settings: {} }).place === 'home');
+    const sh = (o) => J(homeShows({ landingKey: 'start', ...o }));
+    check('*** WHAT IT SHOWS: the landing TRIED (nothing made) for somebody who has not made it -- with or without a Home ***',
+      sh({}) === J({ show: 'example', key: 'start', landing: true })
+      && sh({ homeId: 'H' }) === J({ show: 'example', key: 'start', landing: true }));
+    check('...the landing LIVE once they have made it', sh({ landingId: 'L', homeId: 'H' }) === J({ show: 'live', id: 'L', landing: true }));
+    check('...their own Home when the place is Home', sh({ place: 'home', homeId: 'H', landingId: 'L' }) === J({ show: 'live', id: 'H', landing: false }));
+    check('...Home with no Home made is the landing (there is nothing else to show)', sh({ place: 'home' }) === J({ show: 'example', key: 'start', landing: true }));
+    check('...and an example being tried wins over both', sh({ place: 'home', homeId: 'H', previewKey: 'room' }) === J({ show: 'example', key: 'room', landing: false }));
   }
 
   // ============================================================================================
@@ -251,11 +270,15 @@ try {
     const preview = { live: false, kind: 'profile' };
     const acts = (items) => items.filter((i) => i.act).map((i) => i.act).join(',');
     const b0 = homeBarItems({ title: 'Your profile', target: null });
-    check('*** Design’s order on the bar: Modules, Save, Save as, History, then Switch module (2026-10-02), then the status ***',
-      acts(b0) === 'picker,save,saveas,history,switch' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
+    check('*** Design’s order on the bar: Modules, then My Home (2026-10-02, the landing), Save, Save as, History, Switch module, then the status ***',
+      acts(b0) === 'picker,myhome,save,saveas,history,switch' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
+    check('*** My Home on the landing, Start here on your Home: one press either way, NEVER dimmed (no Home yet: it shows the starting points) ***',
+      b0[1].label === 'My Home' && !b0[1].disabled && /not made a Home/.test(b0[1].title)
+      && homeBarItems({ onHome: true, hasHome: true })[1].label === 'Start here'
+      && /the Home you made/.test(homeBarItems({ hasHome: true })[1].title));
     check('Modules names what is being looked at', b0[0].label === 'Modules: Your profile', b0[0].label);
     check('*** nothing open: every button still THERE, the ones that cannot act DISABLED (dimmed, never hidden) ***',
-      b0.length === 6 && b0.find((i) => i.act === 'save').disabled && b0.find((i) => i.act === 'saveas').disabled
+      b0.length === 7 && b0.find((i) => i.act === 'save').disabled && b0.find((i) => i.act === 'saveas').disabled
       && b0.find((i) => i.act === 'history').disabled && !b0[0].disabled);
     check('*** Switch module is ON the bar, dimmed unless a live Home is on the stage ***',
       b0.find((i) => i.act === 'switch').disabled && b0.find((i) => i.act === 'switch').label === 'Switch module'
@@ -301,6 +324,11 @@ try {
       && m.find((i) => i.act === 'editbar').disabled === true
       && homeMenuModel({ target: { live: true, kind: 'home' }, canEdit: true }).find((i) => i.act === 'editbar').disabled === false
       && homeMenuModel({ target: { live: true, kind: 'home' }, canEdit: true, busy: true }).find((i) => i.act === 'editbar').disabled === false,
+      ids.join());
+    check('*** 2026-10-02: My Home, "Edit the chosen panel" and "The builder…" are menu rows (a switch reaches each) ***',
+      ids.includes('myhome') && ids.includes('builder') && ids.includes('editpanel')
+      && m.find((i) => i.act === 'editpanel').disabled === true
+      && homeMenuModel({ target: { live: true, kind: 'home' }, canEditPanel: true }).find((i) => i.act === 'editpanel').disabled === false,
       ids.join());
     check('*** "Start from an example…" is a menu row too (the examples are up front on the page; this is how a switch gets back to them) ***',
       ids.includes('examples') && ids.indexOf('examples') > ids.indexOf('history'));

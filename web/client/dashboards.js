@@ -52,6 +52,11 @@ export const PREBUILT_DONE_KEY = 'prebuiltDone';
 // settings doc. A record names them by ref (`locked: ['nimrod', 'settings']`); the maker writes the ids.
 // What "locked" means is home_profile.js's to say (`isLocked`, and the Change tray that honours it).
 export const LOCKED_KEY = 'locked';
+// The panel a dashboard OPENS with being edited (2026-10-02, the builder; edit_mode.js reads it): its
+// INSTANCE id, on the dashboard's settings doc. A record names it by ref (`editPanel: 'editing'`). The same
+// string as edit_mode.js's own (dashboards_test checks the two agree); not imported, because edit_mode.js
+// brings Nimrod's words (cat_help.js) and the settings reader with it, and every page reads this file.
+export const EDIT_PANEL_KEY = 'editPanel';
 
 // =====================================================================================================
 // THE THREE, AS DATA. Every value below is a starting point (Rule 1), argued, and on Mike's list:
@@ -108,6 +113,18 @@ export const EXAMPLE_KINDS = Object.freeze({
   room: 'A room',
   room3d: 'A room in 3D',
 });
+// *** THE ORDER EVERY LIST OF STARTING POINTS AND SCENES KEEPS (Mike, 2026-10-02): "The still themes like
+// Nimrod light should come first: Still, live, rooms, 3d." *** Home's cards (EXAMPLE_ORDER), the bar's tray
+// (PREBUILT_ORDER) and the Scene tray (home_profile.js sceneChoices / SCENE_KINDS) all follow it, and the
+// suites check each against it (`inKindOrder`).
+export const KIND_ORDER = Object.freeze(['static', 'live', 'room', 'room3d']);
+/** True when `kinds` never goes back a step in KIND_ORDER (still, then live, then rooms, then 3D). */
+export function inKindOrder(kinds) {
+  const at = (k) => KIND_ORDER.indexOf(k);
+  return (kinds || []).every((k, i, a) => at(k) >= 0 && (i === 0 || at(a[i - 1]) <= at(k)));
+}
+// The landing dashboard's key (2026-10-02): what everyone lands on (home_dashboard.js `openOn`).
+export const LANDING_KEY = 'start';
 
 export const ROOM_SPOTS = Object.freeze({
   picture: Object.freeze({ x: 28, y: 30, w: 16, h: 24 }),
@@ -263,18 +280,55 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     },
     settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
   }),
+  // ===================================================================================================
+  // *** THE BUILDER (Mike, 2026-10-02). *** "The profile/dashboard/module builder could all be one dashboard
+  // clockwise from top left: The module you're editing, settings, modules, Nimrod/AI." A quad's slots are
+  // TL, TR, BL, BR, so clockwise from the top left is TL editing, TR settings, BR modules, BL Nimrod:
+  // slots [editing, options, nimrod, library].
+  //   editing   the module being edited, OPENED IN EDIT MODE (`editPanel`): press a thing in it and its
+  //             options show top right. It starts as your name sign (the profile game's sign, with your
+  //             name) -- Code's pick: "your profile top left" is Mike's other sentence, and the sign is the
+  //             profile piece with the most to choose on it (words, font, colour, sign). Switch module puts
+  //             any other module there to edit it instead. On Mike's list.
+  //   options   modules/edit_options.js: the options of what is chosen (the settings panel's place, see
+  //             that file for why it is its own module this round).
+  //   library   modules/library_slot.js: the modules library, mounted inside it once it is registered.
+  //   Nimrod    the guide, as on the landing dashboard and the tutorial (`intro: 'tutorial'`: his tutorial
+  //             hello, the nearest of his two to "you are building something").
+  //   look      the plain Nimrod look, solid panels: options are read, and read best on solid.
+  // Nothing locked: it is a workbench, and everything on it is somebody's to change. Not a Home card (it is
+  // not a Home); reached from Home's ⚙ menu ("The builder…") and by voice ("open the builder").
+  // ===================================================================================================
+  builder: Object.freeze({
+    key: 'builder', label: 'Builder', name: 'Builder', kind: 'static', title: 'The builder',
+    blurb: 'Edit one thing at a time: what you are editing top left, its options top right, the modules library bottom right and Nimrod bottom left.',
+    modules: [
+      { ref: 'editing', type: 'button', start: 'sign' },
+      { ref: 'options', type: 'options' },
+      { ref: 'nimrod', type: 'nimrod', state: { intro: 'tutorial' } },
+      { ref: 'library', type: 'library_slot' },
+    ],
+    layout: { preset: 'quad', slots: ['editing', 'options', 'nimrod', 'library'] },
+    editPanel: 'editing',
+    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+  }),
 });
 
-// The order the bar's tray offers them in: the room first (row 2.34 names it first; it is the new thing).
-// The tray's three, unchanged (see the block above EXAMPLE_KINDS for why the rooms are not added here).
-// 2026-10-02: the tutorial joins them, LAST ("a special tutorial dashboard you can always go to").
-export const PREBUILT_ORDER = Object.freeze(['room', 'basic', 'classic', 'tutorial']);
+// The order the bar's tray offers them in. 2026-10-02 (Mike: "Still, live, rooms, 3d"): Basic (still),
+// Classic 2D (moving), the room -- then the tutorial, LAST ("a special tutorial dashboard you can always go
+// to"), which is a place to go rather than a look. It was the room first (row 2.34: "the new thing"); Mike's
+// order replaces that, so a switch user's habit of the room being the first stop changes once.
+// (Not the rooms or the builder: see the block above EXAMPLE_KINDS -- a tray is a scanning surface.)
+export const PREBUILT_ORDER = Object.freeze(['basic', 'classic', 'room', 'tutorial']);
 
 // The order HOME offers its starting points in: Mike's own list, in his order (static 2D, a live theme,
 // Design's rooms, then 3D). 3D is the CSS-3D room (room3d.js), appended after the rooms once the bench Pi
 // held it at 1080p with drift on (2026-10-02, the numbers on Mike's list). A WebGL room would need three.js
 // vendored (~650 KB) -- still Mike's call, and not what this card is.
 // 2026-10-02 (second set): the landing Home ('start') goes FIRST -- it is what the site lands on.
+// 2026-10-02 (third set): "Still, live, rooms, 3d" -- which this already is: the two still ones (the landing
+// and Plain Nimrod, both the Nimrod light theme), the moving one, Design's rooms, the 3D room. Checked by
+// `inKindOrder` in the suites so a new card cannot quietly land out of place.
 export const EXAMPLE_ORDER = Object.freeze(['start', 'basic', 'classic', 'room', 'study', 'fireside', 'room3d']);
 
 /** Home's cards: one per starting point, in EXAMPLE_ORDER, in words (`kindLabel`). */
@@ -322,6 +376,25 @@ export function lockedIds(rec, refs = {}) {
   return (Array.isArray(rec?.locked) ? rec.locked : []).map((r) => refs[r]).filter(Boolean);
 }
 
+/** The record's settings doc as made, with its refs turned into instance ids: the lock list and the panel
+ *  it opens with being edited. What the maker writes, and what a preview of it is seeded with. */
+export function recordSettings(rec, refs = {}) {
+  const out = { ...(rec?.settings || {}) };
+  if (Array.isArray(rec?.locked)) out[LOCKED_KEY] = lockedIds(rec, refs);
+  if (rec?.editPanel && refs[rec.editPanel]) out[EDIT_PANEL_KEY] = refs[rec.editPanel];
+  return out;
+}
+
+/** A settings row's instance ids renamed by `map` (oldId -> newId): what a preview's ids become when it is
+ *  made. Only the keys that hold ids (the lock list, the panel being edited); the rest is left as it is. */
+export function remapSettingsIds(row, map = {}) {
+  if (!row || typeof row !== 'object') return row;
+  const out = { ...row };
+  if (Array.isArray(out[LOCKED_KEY])) out[LOCKED_KEY] = out[LOCKED_KEY].map((id) => map[id] || id);
+  if (typeof out[EDIT_PANEL_KEY] === 'string' && map[out[EDIT_PANEL_KEY]]) out[EDIT_PANEL_KEY] = map[out[EDIT_PANEL_KEY]];
+  return out;
+}
+
 /**
  * WHAT IS WRONG WITH A RECORD, as sentences (empty = valid). The suite runs it over all three, so a
  * record that names a module nobody registered, a theme that is gone, a room that is not a room, or a
@@ -350,6 +423,10 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
   if (rec.locked !== undefined) {
     if (!Array.isArray(rec.locked)) out.push('locked is not a list');
     else for (const r of rec.locked) if (!usedRefs.includes(r)) out.push(`locked names ${r}, which is not on the dashboard`);
+  }
+  // The panel it opens with being edited is one of its own, ON the dashboard.
+  if (rec.editPanel !== undefined && !(typeof rec.editPanel === 'string' && usedRefs.includes(rec.editPanel))) {
+    out.push(`editPanel names ${rec.editPanel}, which is not on the dashboard`);
   }
   const lay = layoutFor(rec, refs);
   const kept = [...lay.slots.filter(Boolean), ...(lay.placed || []).map((p) => p.id)];
@@ -470,8 +547,7 @@ export function createDashboardMaker({ profiles, makeSettings, makeInstanceState
     const layout = layoutFor(rec, refs);
     // DONE LAST, with the arrangement and the look, in one write.
     await patchDoc(pid, (cur) => ({
-      ...rec.settings,
-      ...(Array.isArray(rec.locked) ? { [LOCKED_KEY]: lockedIds(rec, refs) } : {}),
+      ...recordSettings(rec, refs),
       kiosk: { ...(cur.kiosk || {}), layout },
       [PREBUILT_KEY]: key, [PREBUILT_REFS_KEY]: { ...refs }, [PREBUILT_DONE_KEY]: true,
     }));
@@ -520,6 +596,10 @@ export const PREBUILT_ROUTES = Object.freeze({
   // [unverified on the bench: "tutorial" in the small Vosk model.]
   'dashboard-tutorial': { topic: DASHBOARD_GO_TOPIC, payload: { prebuilt: 'tutorial' }, label: 'Go to the tutorial',
     phrases: ['tutorial', 'go to the tutorial', 'open the tutorial', 'show me the tutorial'] },
+  // 2026-10-02: the builder. Never the bare word "builder": "word builder" is a game, and a recogniser that
+  // hears half of it must not open the wrong thing. [unverified on the bench: "builder" in the small model.]
+  'dashboard-builder': { topic: DASHBOARD_GO_TOPIC, payload: { prebuilt: 'builder' }, label: 'Go to the builder',
+    phrases: ['open the builder', 'go to the builder', 'show me the builder', 'module builder'] },
   // The picker itself: the same `system/dashboards` a switch or a room's object sends.
   'dashboard-picker': { topic: SYSTEM_TOPICS.dashboards, payload: {}, label: 'Choose a dashboard',
     phrases: ['my dashboards', 'show my dashboards', 'choose a dashboard', 'change dashboard'] },
@@ -626,7 +706,7 @@ export function dashboardsSignature(routes) {
 // =====================================================================================================
 export const DASHBOARD_OFFERS_KEY = 'dashboardOffers';
 export const DASHBOARD_OFFERS_FIELD = Object.freeze({
-  key: DASHBOARD_OFFERS_KEY, label: 'Offer the ready-made dashboards (Room, Basic, Classic 2D, Tutorial) under Home',
+  key: DASHBOARD_OFFERS_KEY, label: 'Offer the ready-made dashboards (Basic, Classic 2D, Room, Tutorial) under Home',
   kind: 'toggle', level: 'advanced', default: true, onLabel: 'Yes', offLabel: 'No',
 });
 export const offersOn = (row) => !(row && row[DASHBOARD_OFFERS_KEY] === false);

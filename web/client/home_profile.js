@@ -282,14 +282,18 @@ export function withPlaced(base, placed) {
 // =====================================================================================================
 // 2026-10-02: the 3D room (room3d.js) is a choice of its own kind, listed after Design's rooms -- the order
 // Home's starting points put it in (dashboards.js EXAMPLE_ORDER).
-export const SCENE_KINDS = Object.freeze({ room: 'Rooms', room3d: 'Rooms in 3D', live: 'Moving scenes', static: 'Still' });
+// *** STILL, LIVE, ROOMS, 3D (Mike, 2026-10-02: "The still themes like Nimrod light should come first"). ***
+// The tray's groups go in that order (dashboards.js KIND_ORDER), and within Still the default theme --
+// "Nimrod (light)" -- comes first (theme.js lists it first, and it is put first here whatever that order).
+export const SCENE_KINDS = Object.freeze({ static: 'Still', live: 'Moving scenes', room: 'Rooms', room3d: 'Rooms in 3D' });
 const ROOM_KINDS = new Set(['room', 'room3d']);
 
 export function sceneChoices() {
   const rooms = Object.entries(ROOM_PRESETS).map(([k, p]) => ({ id: `room:${k}`, kind: 'room', key: k, label: p.label }));
   const rooms3d = Object.entries(ROOM3D_PRESETS).map(([k, p]) => ({ id: `room3d:${k}`, kind: 'room3d', key: k, label: p.label }));
   const themes = Object.entries(THEMES).map(([k, t]) => ({ id: `theme:${k}`, kind: t.scene ? 'live' : 'static', key: k, label: t.label || k }));
-  return [...rooms, ...rooms3d, ...themes.filter((t) => t.kind === 'live'), ...themes.filter((t) => t.kind === 'static')];
+  const still = themes.filter((t) => t.kind === 'static').sort((a, b) => (b.key === DEFAULT_THEME) - (a.key === DEFAULT_THEME));
+  return [...still, ...themes.filter((t) => t.kind === 'live'), ...rooms, ...rooms3d];
 }
 
 /** Which choice is showing now. A room edited in place still names the room it started from. */
