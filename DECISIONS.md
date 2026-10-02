@@ -2021,3 +2021,29 @@ Mike's rulings, 2026-10-01: items 1 and 3-8 were answered directly in Code's cha
 8. **A call arriving during an intercom rings by default** (built in `53d2504`). If it's answered, the
    intercom ends and the phone is told why; `busy` is a per-person setting. Mike asked for an explanation;
    this is not yet ratified.
+## Home is your profile; no "another one?" in games; hot-swappable modules -- 2026-10-02
+
+Mike's rulings after using the deployed site, 2026-10-02 (Code's chat). Logged by Code.
+
+1. **Home is your profile, and your profile is a dashboard you make your own.** *"The profiles are wrong.
+   That's what the rooms and stuff are for ... I'm expecting the home page to be your profile, and you add
+   whatever modules you want to make it your own. Maybe actually start with some premade example ones
+   that people can edit however they want."*
+   - The examples are shown on Home, not hidden in the transport bar: static 2D (the Nimrod theme), a live
+     theme like Fall, Design's editable rooms, and 3D if possible.
+   - The picture-frame-and-name-sign profile game is no longer the profile. Its pieces are modules anyone
+     can add. (Built: public `d135565`.)
+2. **Games don't ask "Would you like to do another one?" after each question.** *"it ruins the flow of the
+   game. They can just stop answering or ask the computer to stop."* This supersedes the earlier shared
+   quiz flow. (Built: `87bcd41`.)
+3. **Dashboards are container modules** (Mike asked and confirmed).
+4. **Modules on a dashboard should be as hot-swappable as possible.** A "Switch module" control acts on the
+   selected module.
+5. **A dashboard shown inside a TV plays its own sound** (*"I would think so"*). Its sound has to be
+   reachable through the transport bar and the settings menu. Room reverb on things in the room is an
+   option, not a default.
+6. **Picking a picture is upload or a folder, not stepping through every picture.** This reverses the board
+   editor's earlier "no upload path". The reason behind that rule stays: files never leave the device.
+   (Built: `4edeeae`.)
+7. **The settings menu is split into tabs:** what it's for at the top, then tabs (the active module, audio,
+   video, devices, users ...).
