@@ -76,15 +76,47 @@ export const PREBUILT_DONE_KEY = 'prebuiltDone';
 //   the first in Mike's own list ("fall, winter, castle..."). Guess.
 // =====================================================================================================
 
+// =====================================================================================================
+// *** THE STARTING POINTS FOR HOME (Mike, 2026-10-02). *** "I'm expecting the home page to be your profile,
+// and you add whatever modules you want to make it your own. Maybe actually start with some premade example
+// ones that people can edit however they want ... We want: Static 2D like Nimrod theme, live theme's like
+// fall, some of the editable rooms/scenes design built, 3d if possible." So the same records are the
+// examples Home offers up front (home_profile.js, modules.html): each is made ONCE, on the pick, as a plain
+// copy the person then edits -- the same maker, the same stamp, the same "offered, not forced" rule.
+//   `kind` says what sort of starting point it is, so Home can say it in words ('static' 2D, a 'live'
+//   2D scene, a 'room'). `title` is what Home's card calls it; `label` stays the bar tray's short name.
+//   Two more of Design's rooms (guide-and-rooms, 2026-09-29) join The room: the Study (its wall's own
+//   module slot holds your photos) and the Fireside attic (night, snow out of the window, your name over
+//   the fireplace). Code's picks of Design's five: three rooms that differ (the controls-in-furniture
+//   room, a day room with a module slot, a night room), not three of a kind. Living room and Bedroom are
+//   one Scene press away on Home. The positions are Code's, clear of each room's own furniture (checked
+//   by picture, `run_suite.py --shot`), and the editor moves anything.
+//   3D: not here -- see EXAMPLE_ORDER.
+// *** THE BAR'S TRAY STILL OFFERS THREE (PREBUILT_ORDER). *** A tray is a scanning surface: five more stops
+// is five more presses before "Close" comes round again for somebody with one switch. Home is where the
+// choosing happens; every one made is in the tray afterwards like any dashboard. Guess, on Mike's list.
+// =====================================================================================================
+export const EXAMPLE_KINDS = Object.freeze({
+  static: 'Flat and still',
+  live: 'Flat, with a moving scene',
+  room: 'A room',
+});
+
 export const ROOM_SPOTS = Object.freeze({
   picture: Object.freeze({ x: 28, y: 30, w: 16, h: 24 }),
   sign: Object.freeze({ x: 74, y: 12, w: 22, h: 10 }),
+});
+// The Fireside attic: the name over the fireplace (the room's own picture frame is below it at y 24),
+// your picture to its left, between the left wall (x 16) and that frame.
+export const FIRESIDE_SPOTS = Object.freeze({
+  picture: Object.freeze({ x: 27, y: 26, w: 13, h: 19 }),
+  sign: Object.freeze({ x: 50, y: 7, w: 22, h: 8 }),
 });
 export const CLASSIC_THEME = 'fall';
 
 export const PREBUILT_DASHBOARDS = Object.freeze({
   room: Object.freeze({
-    key: 'room', label: 'Room', name: 'My room',
+    key: 'room', label: 'Room', name: 'My room', kind: 'room', title: 'The room',
     blurb: 'A room to furnish. Your picture and your name sign hang on its wall.',
     modules: [
       { ref: 'picture', type: 'button', start: 'picture' },
@@ -101,7 +133,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
   }),
   basic: Object.freeze({
-    key: 'basic', label: 'Basic', name: 'Basic',
+    key: 'basic', label: 'Basic', name: 'Basic', kind: 'static', title: 'Plain Nimrod',
     blurb: 'The original Nimrod look: cream and green, solid panels, photos and a clock.',
     modules: [
       { ref: 'photos', type: 'photos' },
@@ -111,7 +143,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
   }),
   classic: Object.freeze({
-    key: 'classic', label: 'Classic 2D', name: 'Classic 2D',
+    key: 'classic', label: 'Classic 2D', name: 'Classic 2D', kind: 'live', title: 'Fall, moving',
     blurb: 'See-through panels over a moving background: photos, videos, a word game and a clock.',
     // STARTER_MODULES is [photos, youtube, wordforge, clock] -- the quad's TL, TR, BL, BR, as seeded.
     modules: STARTER_MODULES.map((type) => (type === 'youtube'
@@ -120,10 +152,55 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     layout: { preset: 'quad', slots: [...STARTER_MODULES] },
     settings: { theme: CLASSIC_THEME, panelSurface: 'veil' },
   }),
+  study: Object.freeze({
+    key: 'study', label: 'Study', name: 'My study', kind: 'room', title: 'Study',
+    blurb: 'Design’s study: brick walls, a desk and an autumn window. Your photos show on the screen on its wall.',
+    modules: [{ ref: 'photos', type: 'photos' }],
+    layout: {
+      preset: 'full', slots: [null],
+      scene: { kind: 'room', preset: 'study' },
+      // `slot`: the room's own module slot (room_presets.js, the study's `photos` item), so the photos sit
+      // exactly where Design drew the screen on the wall.
+      placed: [{ ref: 'photos', place: 'scene', slot: 'photos' }],
+    },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
+  }),
+  fireside: Object.freeze({
+    key: 'fireside', label: 'Fireside', name: 'Fireside attic', kind: 'room', title: 'Fireside attic',
+    blurb: 'Design’s attic at night: a fire, snow out of the window, your picture and your name on the wall.',
+    modules: [
+      { ref: 'picture', type: 'button', start: 'picture' },
+      { ref: 'sign', type: 'button', start: 'sign' },
+    ],
+    layout: {
+      preset: 'full', slots: [null],
+      scene: { kind: 'room', preset: 'fireside' },
+      placed: [
+        { ref: 'picture', place: 'scene', surface: 'back', ...FIRESIDE_SPOTS.picture },
+        { ref: 'sign', place: 'scene', surface: 'back', ...FIRESIDE_SPOTS.sign },
+      ],
+    },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
+  }),
 });
 
-// The order the picker offers them in: the room first (row 2.34 names it first; it is the new thing).
+// The order the bar's tray offers them in: the room first (row 2.34 names it first; it is the new thing).
+// The tray's three, unchanged (see the block above EXAMPLE_KINDS for why the rooms are not added here).
 export const PREBUILT_ORDER = Object.freeze(['room', 'basic', 'classic']);
+
+// The order HOME offers its starting points in: Mike's own list, in his order (static 2D, a live theme,
+// Design's rooms). 3D is NOT here: the site loads no library from anywhere but itself, and a 3D room
+// needs either three.js vendored (~650 KB, Mike's call) or a CSS-3D renderer plus a scene kind the
+// arrangement does not have yet -- the plan is on Mike's list (2026-10-02), not a half-built card.
+export const EXAMPLE_ORDER = Object.freeze(['basic', 'classic', 'room', 'study', 'fireside']);
+
+/** Home's cards: one per starting point, in EXAMPLE_ORDER, in words (`kindLabel`). */
+export function exampleCards(order = EXAMPLE_ORDER) {
+  return order.filter((k) => PREBUILT_DASHBOARDS[k]).map((k) => {
+    const r = PREBUILT_DASHBOARDS[k];
+    return { key: k, title: r.title || r.label, blurb: r.blurb, kind: r.kind, kindLabel: EXAMPLE_KINDS[r.kind] || '', name: r.name };
+  });
+}
 
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
@@ -167,7 +244,8 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
   const out = [];
   if (!rec || typeof rec !== 'object') return ['not a record'];
   if (!rec.key || !PREBUILT_DASHBOARDS[rec.key]) out.push(`unknown key ${rec.key}`);
-  for (const k of ['label', 'name', 'blurb']) if (typeof rec[k] !== 'string' || !rec[k].trim()) out.push(`no ${k}`);
+  for (const k of ['label', 'name', 'blurb', 'title']) if (typeof rec[k] !== 'string' || !rec[k].trim()) out.push(`no ${k}`);
+  if (!EXAMPLE_KINDS[rec.kind]) out.push(`kind ${rec.kind} is not one of ${Object.keys(EXAMPLE_KINDS).join('/')}`);
   const refs = {};
   const mods = Array.isArray(rec.modules) ? rec.modules : [];
   if (!mods.length) out.push('no modules');
@@ -187,7 +265,15 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
     if (L.scene.kind !== 'room') out.push(`scene ${L.scene.kind} is not a room`);
     else if (!ROOM_PRESETS[L.scene.preset]) out.push(`room ${L.scene.preset} does not exist`);
     if (!lay.scene) out.push('the scene does not survive normalizeLayout');
+    // A module placed IN one of the room's slots: that slot has to be an item of that room.
+    const items = ROOM_PRESETS[L.scene.preset]?.recipe?.items || [];
+    for (const p of L.placed || []) {
+      if (p.slot && !items.some((it) => it.id === p.slot)) out.push(`the room has no slot called ${p.slot}`);
+    }
+  } else if ((L.placed || []).some((p) => p.slot)) {
+    out.push('a module is placed in a room slot, but there is no room');
   }
+  if (rec.kind === 'room' && !(L.scene && L.scene.kind === 'room')) out.push('a room with no room scene');
   const s = rec.settings || {};
   if (!s.theme || !THEMES[s.theme]) out.push(`theme ${s.theme} does not exist`);
   if (!PANEL_SURFACES.includes(s.panelSurface)) out.push(`panel backgrounds ${s.panelSurface} is not one of ${PANEL_SURFACES.join('/')}`);

@@ -251,6 +251,36 @@
   .welcome p{margin:0 0 12px;color:var(--text-soft);max-width:70ch}
   .hbtns{display:flex;flex-wrap:wrap;gap:8px}
 
+  /* *** THE STARTING POINTS, UP FRONT (Mike, 2026-10-02: "this shouldn't be a hidden feature on the
+     transport bar"). *** One card per example, each saying what KIND it is in words, with Try it here and
+     Make this my Home. The card being shown on the stage is outlined (and says so), never colour alone. */
+  .ex-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin:12px 0 0}
+  .ex-card{display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--border);border-radius:14px;
+    background:var(--surface-alt)}
+  .ex-card[aria-current="true"]{outline:3px solid var(--link);outline-offset:1px}
+  .ex-card h3{margin:0;font-size:1.05rem}
+  .ex-card p{margin:0;color:var(--text-soft);font-size:.92rem;flex:1}
+  .ex-kind{font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)}
+  .ex-now{font-size:.8rem;font-weight:700;color:var(--link)}
+  .ex-now[hidden]{display:none}
+
+  /* *** DESIGN'S EDIT BAR, OVER THE REAL DASHBOARD (home-dashboard handoff, "The edit bar"). *** Scene, Add,
+     Change: <thing>, Transform…, Undo, Redo; each tray opens below it, its way out (Close) first. Shown on
+     your Home in edit view. Every button at least 44px; one that cannot act is dimmed, never hidden. */
+  .home-edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 10px;margin:0 0 8px;
+    background:var(--surface-alt);border:1px solid var(--border);border-radius:var(--radius)}
+  .home-edit[hidden],.home-tray[hidden]{display:none}
+  .home-edit .lbl{font-weight:800;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted)}
+  .home-edit .ed-note{margin-left:auto;font-size:.88rem;color:var(--text-soft)}
+  .home-tray{margin:0 0 8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);
+    border-radius:var(--radius);max-height:min(44vh,420px);overflow:auto}
+  .home-tray h3{margin:0;font-size:1rem}
+  .home-tray .tray-head{display:flex;align-items:center;gap:10px;margin:0 0 8px}
+  .home-tray .grp{margin:8px 0 4px;font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted)}
+  .home-tray .hbtns + .hbtns{margin-top:6px}
+  .hbtn.warn{color:var(--accent-warm-deep);border-color:var(--accent-warm-deep)}
+  .hbtn small{font-weight:500;color:var(--text-muted)}
+
   /* HOME'S ACTIONS, ON THE REAL BAR (2026-09-30 follow-up): the kiosk's placed transport bar draws them
      from the page's host as its first group (`.tb-host`, modules/transport_bar.js). Dimmed when they
      cannot act, never hidden; the status is words, lit amber while there is something unsaved. */
@@ -306,6 +336,10 @@
     text-shadow:0 0 2px #000,0 0 3px #000,0 0 5px #000,0 0 8px #000,0 1px 1px #000;color:#fff}
   .trystage[data-chrome="clear"] .tb-bar button,.trystage[data-chrome="clear"] .v-dock-left .st-item{
     outline:1.5px solid currentColor;outline-offset:-1.5px;color:#fff}
+  /* (2026-10-02) The rows kept their own light ground in Fully clear, so the haloed light words sat on a
+     light row and could not be read -- seen on the room examples, whose screens choose Fully clear. No
+     ground at all, as Design specifies: the halo and the outline carry it. */
+  .trystage[data-chrome="clear"] .v-dock-left .st-item{background:transparent}
 </style>
 </head>
 <body>
@@ -378,17 +412,20 @@
       <button type="button" class="hbtn" data-home="history">History</button>
       <span class="hb-status" id="hb-status" role="status" aria-live="polite"></span>
     </div>
-    <section class="welcome" id="welcome" aria-labelledby="welcome-h" hidden>
-      <h2 id="welcome-h">This is your profile. Setting it up is optional.</h2>
-      <p>It is a screen of your own: a room behind it, your picture on the wall and your name on a
-        sign. Change it if you like, or skip it and go straight to anything else. It is always here
-        under Modules, and nothing is made until you press Save.</p>
-      <div class="hbtns">
-        <button type="button" class="hbtn primary" data-home="skip">Skip for now</button>
-        <button type="button" class="hbtn" data-home="setup">Set up my profile</button>
+    <!-- YOUR HOME IS YOUR PROFILE (Mike, 2026-10-02). The starting points, UP FRONT: a card per example
+         (dashboards.js EXAMPLE_ORDER), each one press to try on the stage below and one press to make it
+         yours. Above the stage, never over it, so nothing waits on it; Skip comes first (it is optional). -->
+    <section class="welcome" id="examples" aria-labelledby="examples-h" hidden>
+      <h2 id="examples-h">Start your Home from an example. It is optional.</h2>
+      <p>Your Home is your profile: a dashboard you make your own. Pick a starting point and it is made
+        for you, then change anything on it — the scene, what is on it, where things sit. Or skip this
+        and look around first. Nothing is made until you choose one.</p>
+      <div class="hbtns" id="ex-top">
+        <button type="button" class="hbtn" data-home="skip">Skip for now</button>
         <button type="button" class="hbtn" data-home="cat">Show me how</button>
         <button type="button" class="hbtn" data-home="nomore">Don’t show this again</button>
       </div>
+      <div class="ex-cards" id="ex-cards"></div>
     </section>
     <aside class="pick">
       <label class="sr" for="q">Search the parts</label>
@@ -494,13 +531,18 @@ import './modules/bank.js';
 // Settings is a caregiver/admin tool, the same reason keyboard.js was pulled from this page
 // earlier this session; both stay registered and placeable from home.html's composer.
 import { authHeaders } from './auth.js';
-import { createProfilesClient, resolveTheme, ensureProfile } from './profile.js';
+import { createProfilesClient, ensureProfile } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
 import * as HD from './home_dashboard.js';
-import { createGame, profileSetup, kioskURL } from './game/game.js';
+// 2026-10-02: your Home is your profile -- started from an example (dashboards.js), edited with Design's
+// edit bar over the real dashboard (home_profile.js).
+import * as HP from './home_profile.js';
+import { EXAMPLE_ORDER, PREBUILT_DASHBOARDS, exampleCards, prebuiltRecord, layoutFor as exampleLayout,
+  createDashboardMaker } from './dashboards.js';
+import { createGame, kioskURL } from './game/game.js';
 import { CAT_STEPS, HOME_PAGE as CAT_HOME, CAT_BAR_SELECTOR, catGoThere, rememberCatProfile } from './game/cat_steps.js';
 
 // *** THE BRAND LINK WENT TO "/", NOT BACK TO YOUR OWN DASHBOARDS. *** Mike, live, 2026-09-08:
@@ -549,6 +591,17 @@ const signedIn = (async () => {
 // choice first (mountThemePicker below), not a bare hardcoded default -- a visitor who picked
 // a theme on landing.html sees it carried here too, until/unless a real signed-in profile
 // theme takes over.
+// ONE "make sure this account has its default screen" per page load, shared by the theme step and Home's
+// boot. Two independent calls race on a new account and each makes a screen (see the theme step).
+let defaultScreenP = null;
+function defaultScreen(profiles) {
+  if (!defaultScreenP) {
+    defaultScreenP = ensureProfile(profiles, currentUser);
+    defaultScreenP.catch(() => { defaultScreenP = null; });   // a failure (offline) may be retried
+  }
+  return defaultScreenP;
+}
+
 const themePick = document.getElementById('theme-pick');
 mountThemePicker(themePick);
 (async () => {
@@ -559,8 +612,14 @@ mountThemePicker(themePick);
   // the anonymous picker has nothing left to do once that's the source of truth.
   if (themePick) themePick.style.display = 'none';
   try {
-    const theme = await resolveTheme(createProfilesClient({ user: currentUser }), currentUser);
-    if (theme) applyTheme(document.documentElement, theme);
+    // The SAME default-screen promise Home's boot uses (`defaultScreen` above), not resolveTheme's own
+    // ensureProfile: on a brand-new account both ran at once, both saw no screens, and both made one --
+    // two "Bedside" screens from one first visit (found 2026-10-02 by home_page_test, timing-dependent).
+    const profiles = createProfilesClient({ user: currentUser });
+    const pid = await defaultScreen(profiles);
+    const s = createState({ url: profiles.stateURL(pid, 'settings'), user: currentUser });
+    try { await s.load(); const theme = (s.get() || {}).theme || null; if (theme) applyTheme(document.documentElement, theme); }
+    finally { s.destroy(); }
   } catch { /* offline or blocked -- the explicit default above already stands */ }
 })();
 
@@ -598,8 +657,19 @@ const HOME = {
   subject: null, target: null, draft: null, doc: null, docRow: null, restoredFrom: null,
   welcome: false, busy: false, dlg: null,
   profileMade: false, catStart: false,
+  // 2026-10-02: Home is your profile.
+  maker: null,            // dashboards.js createDashboardMaker, for this person
+  home: null,             // { id, legacy } -- the dashboard that is this person's Home, or null (none yet)
+  previewKey: null,       // an example being tried on the stage (not made); null = the Home itself
+  examplesOpen: false,    // the starting points, up front
+  editView: false,        // edit view: the ⚙ menu open AND Design's edit bar showing
+  tray: null,             // the edit bar's open tray: 'scene' | 'add' | 'change' | 'switch' | null
+  sel: null,              // the chosen thing on the Home (a module instance id)
+  undo: HP.createUndo(),
+  editBusy: false,
+  rebuilding: false,
 };
-const PROFILE_TITLE = 'Your profile';
+const PROFILE_TITLE = HD.HOME_TITLE;
 
 /** Free text over the words somebody would actually type. Includes the ACCESS label, so
  *  searching "switch" finds the things a switch can drive — the question the legend says
@@ -614,7 +684,7 @@ function renderList() {
   const hits = q ? ITEMS.filter((m) => haystack(m).includes(q)) : ITEMS;
   // HOME: the person's own profile comes first, and says it is optional (Design: "Your room is first
   // and marked Optional"; Mike: "It should be clear that you don't need to setup your profile").
-  const yours = HOME.on && HOME.game && (!q || 'your profile optional room picture name sign'.includes(q))
+  const yours = HOME.on && HOME.maker && (!q || 'your home profile optional room scene example dashboard'.includes(q))
     ? `<div class="pickgroup"><h3>Yours</h3>
         <button type="button" class="pickrow" data-pick="${HD.PROFILE_SUBJECT}" aria-current="${selected === HD.PROFILE_SUBJECT}">
           <span class="nm">${PROFILE_TITLE}</span><span class="vb opt">Optional</span></button></div>`
@@ -733,7 +803,8 @@ qEl.addEventListener('input', renderList);
 listEl.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pick]');
   if (!b) return;
-  if (HOME.on) requestSubject(b.dataset.pick); else select(b.dataset.pick);
+  if (HOME.on) requestSubject(b.dataset.pick, b.dataset.pick === HD.PROFILE_SUBJECT && HOME.home ? { previewKey: null } : {});
+  else select(b.dataset.pick);
 });
 
 renderList();
@@ -821,12 +892,15 @@ async function liveHost() {
 // WHAT IS BEING LOOKED AT (`HOME.target`), four ways:
 //   a module ON your screen        live: the real instance; its settings wait for Save (the draft)
 //   a module NOT on your screen    a preview; Save adds it to your screen with the settings chosen
-//   your profile, made             live: the whole "My profile" screen as a dashboard (home_embed.js)
-//   your profile, not made yet     a preview of exactly what game.js would make; Save makes it
+//   your Home (kind 'home')        live: the whole dashboard you made your own (home_embed.js), with
+//                                  Design's edit bar over it (2026-10-02)
+//   an example (kind 'example')    a preview of exactly what the maker would make (dashboards.js); Save,
+//                                  or "Make this my Home", makes it and makes it your Home
+// (An old profile from the profile game is a Home too: it keeps loading, untouched, until another is picked.)
 // So nothing is added to anybody's screen just by looking -- which used to happen on this page (a pick
 // added the module for real). With an explicit Save, adding is part of what Save does.
 //
-// *** NOTHING HERE CAN STRAND ANYBODY. *** The welcome card sits above the stage, never over it, and the
+// *** NOTHING HERE CAN STRAND ANYBODY. *** The starting points sit above the stage, never over it, and the
 // bar and the module work under it. Dialogs are the browser's own <dialog>: Escape and Cancel close
 // them, and Cancel is first. The "you have unsaved changes" question is asked only of a person
 // leaving this page at a computer; the real kiosk never loads any of this and saves as it always did.
@@ -853,9 +927,9 @@ for (const ev of ['pointerdown', 'keydown', 'click', 'input', 'change']) {
   }, true);
 }
 const isUserEdit = () => Date.now() - lastInputAt < HOME_EDIT_WINDOW_MS;
-const PREVIEW_PROFILE_ID = 'home-profile-preview';
-const PREVIEW_PICTURE = 'home-picture';
-const PREVIEW_SIGN = 'home-sign';
+// An example being tried on the stage: held in memory under ids no list shows (home_embed.js's preview).
+const PREVIEW_PROFILE_ID = 'home-example-preview';
+const previewIdFor = (ref) => `home-ex-${ref}`;
 
 const subjectTitle = (s) => (s === HD.PROFILE_SUBJECT
   ? PROFILE_TITLE
@@ -876,15 +950,16 @@ function toast(msg) {
 }
 
 function noteFor(t) {
-  if (t.kind === 'profile' && !t.live) {
-    return 'Your profile is optional, and it does not exist yet: nothing is made on your account until '
-      + 'you press Save on the bar below. The bar and its ⚙ menu work as they will on a real screen. Or '
-      + 'choose anything else from Modules.';
+  if (t.kind === 'example') {
+    const rec = PREBUILT_DASHBOARDS[t.key];
+    return `Trying “${esc(rec?.title || t.key)}”. Nothing is made on your account until you press `
+      + 'Make this my Home (or Save on the bar below). The bar and its ⚙ menu work as they will on a real '
+      + 'screen. Or choose anything else from Modules.';
   }
-  if (t.kind === 'profile') {
-    return `Your profile, live. The bar below and its ⚙ menu are the real ones, and settings you change `
-      + `wait for Save. <a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a> · move things around `
-      + `in <a href="/home.html">My dashboards</a>.`;
+  if (t.kind === 'home') {
+    return `Your Home, live. ⚙ Edit opens the editing tools above and the settings menu; what is on it and `
+      + `where saves as you change it (Undo takes it back), and settings wait for Save. `
+      + `<a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a>.`;
   }
   if (!t.live) {
     return 'Not on your screen yet. Try it here with the bar below and its ⚙ menu; Save, on the bar, adds '
@@ -900,11 +975,17 @@ function renderHomeDetail(subject, target) {
     ? '<span class="pill opt">Optional</span>'
     : m ? `<span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>` : '';
   const lead = subject === HD.PROFILE_SUBJECT
-    ? 'A screen of your own: a room behind it, your picture on the wall and your name on a sign.'
+    ? 'Your Home is your profile: a dashboard you make your own. Change the scene, add, switch and move what is on it.'
     : (m?.lead || '');
+  // Design's edit bar and its tray sit between the title and the stage (home-dashboard: "an edit bar when
+  // the module has one"), only for Your Home.
+  const edit = subject === HD.PROFILE_SUBJECT
+    ? '<div class="home-edit" id="home-edit" role="toolbar" aria-label="Change your Home" hidden></div><div class="home-tray" id="home-tray" hidden></div>'
+    : '';
   detailEl.innerHTML = `
     <h2>${esc(subjectTitle(subject))} ${pill}</h2>
     <p class="lead">${esc(lead)}</p>
+    ${edit}
     <div class="trystage mod-box" id="stage"></div>
     <p class="stagenote" id="stagenote">${noteFor(target)}</p>`;
   return $h('stage');
@@ -918,6 +999,10 @@ function wrapRow(draft, handle, key, typeOf) {
 }
 
 function applyView(v) {
+  // Edit view on your Home is the ⚙ menu open AND Design's edit bar showing (one switch between them).
+  HOME.editView = v === 'edit' && HOME.subject === HD.PROFILE_SUBJECT;
+  if (!HOME.editView) HOME.tray = null;
+  paintEdit();
   const menu = embed?.kiosk?.menu;
   if (!menu) return;
   try {
@@ -943,34 +1028,38 @@ async function openSubject(subject, { view = null } = {}) {
     let e = null;
     let target = null;
     if (subject === HD.PROFILE_SUBJECT) {
-      const st = await HOME.game.status();
       const { mountEmbeddedScreen } = await import('./home_embed.js');
       if (mine !== pickSeq) return;
-      HOME.profileMade = !!st.profileId;
-      rememberCatProfile(st.profileId);
-      if (st.profileId) {
-        const screen = await profiles.get(st.profileId);
+      const homeId = HOME.home?.id || null;
+      HOME.profileMade = !!homeId;
+      rememberCatProfile(homeId);
+      if (homeId && !HOME.previewKey) {
+        // YOUR HOME, LIVE: the whole dashboard, as arranged, editable.
+        const screen = await profiles.get(homeId);
         if (mine !== pickSeq) return;
+        // Kept on HOME so a module added from the edit bar is drafted like the rest (the embed rebuilds).
         const typeOf = new Map((screen.modules || []).map((x) => [x.id, x.type]));
-        target = { live: true, kind: 'profile', profileId: st.profileId,
-                   docPid: st.profileId, docKey: HD.PROFILE_HISTORY_KEY };
+        HOME.typeOf = typeOf;
+        target = { live: true, kind: 'home', profileId: homeId, docPid: homeId, docKey: HD.PROFILE_HISTORY_KEY };
         const stage = renderHomeDetail(subject, target);
-        e = await mountEmbeddedScreen({ stage, user, profileId: st.profileId, host: HOME_HOST,
+        e = await mountEmbeddedScreen({ stage, user, profileId: homeId, host: HOME_HOST,
           wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
       } else {
-        // EXACTLY what game.js would make (profileSetup), held in the draft as its starting point.
-        const setup = profileSetup(HOME.person?.name);
-        const record = { id: PREVIEW_PROFILE_ID, name: 'My profile', person_id: null, modules: [
-          { id: PREVIEW_PICTURE, type: 'button', position: 0 }, { id: PREVIEW_SIGN, type: 'button', position: 1 }] };
-        draft.seed('settings', setup.screen);
-        draft.seed(PREVIEW_PICTURE, setup.picture);
-        draft.seed(PREVIEW_SIGN, setup.sign);
+        // AN EXAMPLE, TRIED: EXACTLY what the maker would make (dashboards.js prebuiltRecord), in memory,
+        // its starting settings held in the draft -- so what you change while trying it is what Save keeps.
+        const key = PREBUILT_DASHBOARDS[HOME.previewKey] ? HOME.previewKey : EXAMPLE_ORDER[0];
+        HOME.previewKey = key;
+        const rec = prebuiltRecord(key, { personName: HOME.person?.name });
+        const refs = Object.fromEntries(rec.modules.map((m) => [m.ref, previewIdFor(m.ref)]));
+        const record = { id: PREVIEW_PROFILE_ID, name: rec.name, person_id: null,
+          modules: rec.modules.map((m, i) => ({ id: refs[m.ref], type: m.type, position: i })) };
+        draft.seed('settings', rec.settings);
+        for (const m of rec.modules) if (m.state) draft.seed(refs[m.ref], m.state);
         const typeOf = new Map(record.modules.map((x) => [x.id, x.type]));
-        target = { live: false, kind: 'profile' };
+        target = { live: false, kind: 'example', key, refs };
         const stage = renderHomeDetail(subject, target);
-        e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST,
-          layout: { preset: setup.preset, slots: [PREVIEW_PICTURE, PREVIEW_SIGN] },
-          wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
+        e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST, layout: exampleLayout(rec, refs),
+          wrapState: (h, k) => wrapRow(draft, h, k, typeOf) });
       }
     } else {
       const prof = await profiles.get(HOME.defaultId);
@@ -989,6 +1078,8 @@ async function openSubject(subject, { view = null } = {}) {
     if (mine !== pickSeq) { e?.destroy(); return; }
     embed = e;
     HOME.target = target;
+    HOME.tray = null;
+    if (target.kind === 'home') attachHomeEditing();
     if (target.live) {
       const row = createState({ url: profiles.stateURL(target.docPid, target.docKey), user });
       HOME.docRow = row;
@@ -1014,9 +1105,13 @@ async function openSubject(subject, { view = null } = {}) {
   else mountHomeCat();
 }
 
-/** Switching away from unsaved changes asks first (a page dialog, for a person at a computer). */
-function requestSubject(subject) {
-  if (HOME.draft?.dirty() && subject !== HOME.subject) return openDialog('leave', { next: subject });
+/** Switching away from unsaved changes asks first (a page dialog, for a person at a computer).
+ *  `previewKey` (Your Home only): undefined keeps what it shows, null shows the Home itself, a key tries
+ *  that example -- trying another example is leaving the one being tried, so it asks too. */
+function requestSubject(subject, { previewKey } = {}) {
+  const moving = subject !== HOME.subject || (previewKey !== undefined && previewKey !== HOME.previewKey);
+  if (HOME.draft?.dirty() && moving) return openDialog('leave', { next: subject, previewKey });
+  if (previewKey !== undefined) HOME.previewKey = previewKey;
   return openSubject(subject);
 }
 
@@ -1034,6 +1129,7 @@ function homeView() {
     title: subjectTitle(HOME.subject), target: HOME.target, dirty: !!HOME.draft?.dirty(), busy: HOME.busy,
     pickerOpen: document.body.classList.contains('pick-open'), docCurrent: HOME.doc?.current || null,
     settings: HOME.settings,
+    canSwitch: HOME.target?.kind === 'home' && !HOME.editBusy, switchOpen: HOME.tray === 'switch',
   };
 }
 const HOME_HOST = {
@@ -1062,10 +1158,11 @@ function homePress(act) {
     case 'view': applyView(menuOpen() ? 'live' : 'edit'); break;
     case 'rewelcome':
       saveHomeSettings({ welcomeDone: false });
-      HOME.welcome = true;
-      leaveFullScreen();                      // the card is above the stage, which full screen hides
-      if (HOME.subject !== HD.PROFILE_SUBJECT) requestSubject(HD.PROFILE_SUBJECT);
+      openExamples();
       break;
+    case 'examples': openExamples(); break;
+    // Switch module (the bar's, or the menu's): the Switch tray for the panel the bar's Panel ▸ chose.
+    case 'switch': openSwitch(); break;
     case 'cat': startWalk(); break;
     default:
       if (act.startsWith('set:')) {
@@ -1110,8 +1207,9 @@ function paintHome() {
     if (it.expanded != null) b.setAttribute('aria-expanded', String(!!it.expanded));
   }
   $h('hb-name').textContent = v.title;
-  $h('welcome').hidden = !(HOME.welcome && HOME.subject === HD.PROFILE_SUBJECT);
-  // What Nimrod's first step watches for: the profile exists (cat_steps.js PROFILE_MADE).
+  paintExamples();
+  paintEdit();
+  // What Nimrod's first step watches for: your Home exists (cat_steps.js PROFILE_MADE).
   document.body.dataset.homeProfile = HOME.profileMade ? 'made' : 'preview';
   const stage = $h('stage');
   if (stage) {
@@ -1129,6 +1227,537 @@ function saveHomeSettings(patch) {
   catch (err) { console.error('home: settings', err); }
   paintHome();
 }
+
+// =====================================================================================================
+// YOUR HOME IS YOUR PROFILE (Mike, 2026-10-02) -- the starting points up front, and Design's edit bar over
+// the real dashboard. The decisions are in home_profile.js's header; this is the page's half: reading and
+// writing the dashboard, and drawing the bar and its trays.
+// =====================================================================================================
+
+/** Which dashboard is this person's Home: the one they picked (settings.homeId) if it is still theirs;
+ *  else an old profile from the profile game (it keeps loading, untouched); else none yet. */
+async function resolveHome() {
+  const { profiles, person, settings } = HOME;
+  let list = [];
+  try { list = (await profiles.list()) || []; } catch { list = []; }
+  const mine = (s) => s && (!s.person_id || !person || s.person_id === person.id);
+  const picked = settings.homeId && list.find((s) => s.id === settings.homeId && mine(s));
+  if (picked) return { id: picked.id, legacy: false };
+  if (HOME.game) {
+    try { const st = await HOME.game.status(); if (st.profileId) return { id: st.profileId, legacy: true }; } catch { /* none */ }
+  }
+  return null;
+}
+
+/** Make example `key` this person's Home (once: picking it again finds the one already made). What was
+ *  changed while trying it (`snapshot`, under the preview's ids in `refs`) is written onto the new one. */
+async function makeHome(key, { name = null, snapshot = null, refs = null } = {}) {
+  const r = await HOME.maker.ensure(key);
+  if (r.created) {
+    const st = await HOME.maker.stampOf(r.id);
+    const map = { settings: 'settings' };
+    for (const [ref, previewId] of Object.entries(refs || {})) if (st?.refs?.[ref]) map[previewId] = st.refs[ref];
+    const rows = snapshot ? HD.remapSnapshot(snapshot, map) : {};
+    if (Object.keys(rows).length) await writeRows(r.id, rows);
+    await writeHistory(r.id, HD.PROFILE_HISTORY_KEY, (doc) => HD.commitVersion(doc, {
+      name: name || PREBUILT_DASHBOARDS[key].name, snapshot: rows, keep: HOME.settings.keepVersions }));
+  }
+  Object.assign(HOME, { home: { id: r.id, legacy: false }, previewKey: null, examplesOpen: false, sel: null, profileMade: true });
+  HOME.undo.clear();
+  saveHomeSettings({ homeId: r.id });
+  return r;
+}
+
+async function makeThisMyHome(key) {
+  if (HOME.busy || !PREBUILT_DASHBOARDS[key]) return;
+  const t = HOME.target;
+  // Trying THIS one: what was changed while trying it is kept (the same Save, without asking a name).
+  if (t?.kind === 'example' && t.key === key) { await commitSave(PREBUILT_DASHBOARDS[key].name); return; }
+  // Trying ANOTHER one, with changes: those would be lost -- ask first (the leave dialog).
+  if (HOME.draft?.dirty()) { openDialog('leave', { next: HD.PROFILE_SUBJECT, previewKey: key }); return; }
+  HOME.busy = true;
+  paintHome();
+  try {
+    const r = await makeHome(key);
+    HOME.busy = false;
+    await openSubject(HD.PROFILE_SUBJECT, { view: 'edit' });
+    toast(r.created ? `${PREBUILT_DASHBOARDS[key].title} is your Home now. Change anything on it.`
+      : 'You had made this one already: here it is, as you left it. It is your Home now.');
+  } catch (err) {
+    console.error('home: make', err);
+    toast('That did not make it — check your connection and press it again (that is safe).');
+  } finally { HOME.busy = false; paintHome(); }
+}
+
+function openExamples() {
+  leaveFullScreen();
+  HOME.examplesOpen = true;
+  if (HOME.subject !== HD.PROFILE_SUBJECT) requestSubject(HD.PROFILE_SUBJECT);
+  paintHome();
+  const sec = $h('examples');
+  try { sec?.scrollIntoView({ block: 'start' }); } catch { /* old browser */ }
+  sec?.querySelector('button:not([disabled])')?.focus();
+}
+
+function paintExamples() {
+  const sec = $h('examples');
+  if (!sec) return;
+  const show = HOME.on && !!HOME.maker && HOME.examplesOpen && HOME.subject === HD.PROFILE_SUBJECT;
+  sec.hidden = !show;
+  if (!show) return;
+  // The way out first: Close once there is a Home to go back to; before that, Skip for now.
+  const top = $h('ex-top');
+  const first = top.firstElementChild;
+  if (HOME.home && first?.dataset.home !== 'close-examples') {
+    const c = document.createElement('button');
+    c.type = 'button'; c.className = 'hbtn'; c.dataset.home = 'close-examples'; c.textContent = 'Close';
+    top.prepend(c);
+  } else if (!HOME.home && first?.dataset.home === 'close-examples') first.remove();
+  const showing = HOME.target?.kind === 'example' ? HOME.target.key : null;
+  const sig = `${showing}|${HOME.busy}|${!!HOME.home}`;
+  const cards = $h('ex-cards');
+  if (cards.dataset.sig === sig) return;          // unchanged: keep focus where it is
+  const had = document.activeElement?.closest?.('#ex-cards') ? document.activeElement.dataset : null;
+  cards.dataset.sig = sig;
+  cards.innerHTML = exampleCards().map((c) => `
+    <article class="ex-card" data-example="${esc(c.key)}" aria-current="${c.key === showing}">
+      <span class="ex-kind">${esc(c.kindLabel)}</span>
+      <h3>${esc(c.title)}</h3>
+      <p>${esc(c.blurb)}</p>
+      <span class="ex-now" ${c.key === showing ? '' : 'hidden'}>On the stage below now</span>
+      <div class="hbtns">
+        <button type="button" class="hbtn" data-ex-try="${esc(c.key)}" ${c.key === showing ? 'aria-pressed="true"' : ''}>Try it here</button>
+        <button type="button" class="hbtn primary" data-ex-make="${esc(c.key)}" ${HOME.busy ? 'disabled' : ''}>Make this my Home</button>
+      </div>
+    </article>`).join('');
+  if (had) cards.querySelector(had.exTry ? `[data-ex-try="${had.exTry}"]` : `[data-ex-make="${had.exMake}"]`)?.focus();
+}
+
+document.addEventListener('click', (e) => {
+  if (!HOME.on) return;
+  const b = e.target instanceof Element ? e.target.closest('[data-ex-try],[data-ex-make]') : null;
+  if (!b || b.disabled) return;
+  if (b.dataset.exTry) requestSubject(HD.PROFILE_SUBJECT, { previewKey: b.dataset.exTry });
+  else makeThisMyHome(b.dataset.exMake);
+});
+
+// ---- the edit bar: reading and writing YOUR HOME --------------------------------------------------------
+const dash = () => { try { return embed?.kiosk?.dashboard?.() || null; } catch { return null; } };
+const homeLive = () => HOME.target?.kind === 'home' && !!HOME.home?.id;
+const typeTitle = (type) => titleFor(ITEMS.find((m) => m.type === type) || { type }, manifests);
+const thingTitle = (t) => (t ? (t.title && t.title !== t.type ? t.title : typeTitle(t.type)) : '');
+function things() { try { return (dash()?.panels?.() || []).filter(Boolean); } catch { return []; } }
+function selThing() { return things().find((x) => x.id === HOME.sel) || null; }
+function themeNow() {
+  const d = HOME.draft?.snapshot?.()?.settings?.theme;
+  if (d) return d;
+  try { return dash()?.settings?.()?.theme || null; } catch { return null; }
+}
+
+async function readHomeLayout() {
+  const h = createState({ url: HOME.profiles.stateURL(HOME.home.id, 'settings'), user: HOME.user });
+  try { const s = await h.load(); return (s && s.kiosk && s.kiosk.layout) || null; }
+  catch { return HOME.layoutNow || null; }
+  finally { h.destroy(); }
+}
+async function writeHomeLayout(next) {
+  const h = createState({ url: HOME.profiles.stateURL(HOME.home.id, 'settings'), user: HOME.user });
+  try {
+    const cur = (await h.load().catch(() => ({}))) || {};
+    h.set({ kiosk: { ...(cur.kiosk || {}), layout: next } });
+    await h.flush();
+    HOME.layoutNow = next;
+  } finally { h.destroy(); }
+}
+
+/** A snapshot for Undo. `full`: every module's settings too (a Remove or a Switch takes one away, and
+ *  Undo brings it back as it was); otherwise only which modules there are and where. */
+async function captureHome({ full = true } = {}) {
+  const pid = HOME.home.id;
+  const screen = await HOME.profiles.get(pid);
+  const mods = [];
+  for (const m of screen.modules || []) {
+    let state = {};
+    if (full) {
+      const h = createState({ url: HOME.profiles.stateURL(pid, m.id), user: HOME.user });
+      try { state = (await h.load()) || {}; } catch { state = {}; } finally { h.destroy(); }
+    }
+    mods.push({ id: m.id, type: m.type, state });
+  }
+  return { layout: await readHomeLayout(), mods, theme: themeNow() };
+}
+
+async function restoreHome(snap) {
+  const pid = HOME.home.id;
+  const screen = await HOME.profiles.get(pid);
+  const plan = HP.restorePlan(screen.modules || [], snap);
+  const map = {};
+  for (const a of plan.add) {
+    const mod = await HOME.profiles.addModule(pid, a.type);
+    HOME.typeOf?.set(mod.id, a.type);
+    if (Object.keys(a.state || {}).length) await writeRows(pid, { [mod.id]: a.state });
+    map[a.fromId] = mod.id;
+  }
+  for (const id of plan.remove) { try { await HOME.profiles.removeModule(pid, id); } catch { /* already gone */ } }
+  await writeHomeLayout(snap.layout ? HP.remapLayoutIds(snap.layout, map) : null);
+  if (snap.theme && snap.theme !== themeNow()) HOME.draft?.restore({ settings: { theme: snap.theme } });
+  if (map[HOME.sel]) HOME.sel = map[HOME.sel];
+}
+
+/** The embedded Home, rebuilt from what is saved (what is on it, where, the scene). The draft is kept by
+ *  key, so unsaved settings survive it; edit view is put back (a rebuilt kiosk starts with its menu shut). */
+async function rebuildHome() {
+  if (!embed?.rebuild) return;
+  HOME.rebuilding = true;
+  try { await embed.rebuild(); } finally { HOME.rebuilding = false; }
+  const keep = HOME.editView;
+  applyView(keep ? 'edit' : 'live');
+  await attachHomeEditing();
+  mountHomeCat();
+  paintHome();
+}
+
+/** One change to the Home: one at a time, remembered for Undo first, rebuilt after. Nothing waits on it,
+ *  and a change that fails says so and leaves the rest as it was. */
+async function editOp(fn, { rebuild = true, full = false } = {}) {
+  if (HOME.editBusy || !homeLive()) return;
+  HOME.editBusy = true;
+  paintEdit(); hostChanged();
+  try {
+    HOME.undo.push(await captureHome({ full }));
+    const msg = await fn();
+    if (rebuild) await rebuildHome();
+    if (msg) toast(msg);
+  } catch (err) {
+    console.error('home: edit', err);
+    toast('That change did not go through. Nothing else was touched; press it again to retry.');
+  } finally { HOME.editBusy = false; paintEdit(); hostChanged(); }
+}
+
+const pieceOrType = (key) => {
+  const piece = HP.ADD_PIECES.find((p) => p.key === key);
+  return { piece, type: piece ? piece.type : key, label: piece ? piece.label : typeTitle(key) };
+};
+async function addModuleFor(key) {
+  const { piece, type } = pieceOrType(key);
+  const pid = HOME.home.id;
+  const mod = await HOME.profiles.addModule(pid, type);
+  const st = piece ? HP.pieceState(key, HOME.person?.name) : null;
+  if (st) await writeRows(pid, { [mod.id]: st });
+  HOME.typeOf?.set(mod.id, type);
+  return mod;
+}
+
+function addThing(key) {
+  const { label } = pieceOrType(key);
+  return editOp(async () => {
+    const mod = await addModuleFor(key);
+    const cur = await readHomeLayout();
+    const next = HP.addToLayout(cur, mod.id);
+    if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next);
+    HOME.sel = mod.id;
+    HOME.tray = 'change';
+    return `${label} is on your Home now.`;
+  });
+}
+
+/** *** SWITCH MODULE: the hot swap. *** A new module of `key`'s type takes the chosen one's place -- the
+ *  same cell, or the same placed spot with all its geometry (home_profile.js swapInLayout) -- and the old
+ *  one comes off. One press in the Switch tray. Undo brings the old one back with its settings. */
+function switchTo(key) {
+  const old = selThing();
+  if (!old) return Promise.resolve();
+  const { label } = pieceOrType(key);
+  return editOp(async () => {
+    const mod = await addModuleFor(key);
+    const cur = await readHomeLayout();
+    const next = HP.swapInLayout(cur, old.id, mod.id);
+    if (next) await writeHomeLayout(next);
+    await HOME.profiles.removeModule(HOME.home.id, old.id);
+    HOME.sel = mod.id;
+    HOME.tray = 'change';
+    return `${thingTitle(old)} is switched for ${label}, in the same place.`;
+  }, { full: true });
+}
+
+function removeThing() {
+  const t = selThing();
+  if (!t) return Promise.resolve();
+  const nextSel = HP.stepThing(things().filter((x) => x.id !== t.id), t.id, 1)?.id || null;
+  return editOp(async () => {
+    const cur = await readHomeLayout();
+    if (cur) await writeHomeLayout(HP.removeFromLayout(cur, t.id));
+    await HOME.profiles.removeModule(HOME.home.id, t.id);
+    HOME.sel = nextSel;
+    return `${thingTitle(t)} is off your Home. Undo puts it back.`;
+  }, { full: true });
+}
+
+/** Move or resize a thing placed freely: written, then applied IN PLACE (nothing remounts). */
+function placeThing(change) {
+  const t = selThing();
+  if (!t) return Promise.resolve();
+  return editOp(async () => {
+    const cur = await readHomeLayout();
+    const next = change(cur, t.id);
+    if (!next) return `${thingTitle(t)} sits in a grid cell: Transform… moves it.`;
+    await writeHomeLayout(next);
+    let r = null;
+    try { r = await dash()?.applyPlaced?.(next); } catch { r = null; }
+    if (!r || !r.applied) await rebuildHome();
+    return null;
+  }, { rebuild: false });
+}
+
+function sceneTo(id) {
+  const c = HP.sceneChoices().find((x) => x.id === id);
+  if (!c) return Promise.resolve();
+  return editOp(async () => {
+    const cur = await readHomeLayout();
+    const screen = await HOME.profiles.get(HOME.home.id);
+    const r = HP.applyScene(cur, id, { theme: themeNow(), ids: (screen.modules || []).map((m) => m.id) });
+    if (!r) return null;
+    await writeHomeLayout(r.layout);
+    if (r.theme !== undefined && r.theme !== themeNow()) HOME.draft?.restore({ settings: { theme: r.theme } });
+    return `The scene is ${c.label} now.${r.theme !== undefined ? ' Its colours wait for Save.' : ''}`;
+  });
+}
+
+function roomRow(key) {
+  return editOp(async () => {
+    const next = HP.cycleRoomRow(await readHomeLayout(), key);
+    if (next) await writeHomeLayout(next);
+    return null;
+  });
+}
+
+async function undoRedo(which) {
+  if (HOME.editBusy || !homeLive()) return;
+  HOME.editBusy = true;
+  paintEdit(); hostChanged();
+  try {
+    const now = await captureHome({ full: true });
+    const snap = which === 'undo' ? HOME.undo.undo(now) : HOME.undo.redo(now);
+    if (snap) { await restoreHome(snap); await rebuildHome(); }
+  } catch (err) {
+    console.error('home: undo', err);
+    toast('That did not go through. Press it again to retry.');
+  } finally { HOME.editBusy = false; paintEdit(); hostChanged(); }
+}
+
+async function openTransform() {
+  const d = dash();
+  if (!d?.edit || HOME.editBusy || !homeLive()) return;
+  try { HOME.undo.push(await captureHome({ full: false })); } catch { /* still open it */ }
+  HOME.layoutNow = await readHomeLayout();
+  const t = selThing();
+  if (t) { try { await d.focus?.(t.id); } catch { /* not focusable */ } }
+  try { d.edit(); } catch (err) { console.error('home: transform', err); }
+  paintEdit();
+}
+
+function chooseThing(id) {
+  HOME.sel = id;
+  try { dash()?.focus?.(id); } catch { /* not focusable */ }
+  paintEdit(); hostChanged();
+}
+
+function openSwitch() {
+  if (!homeLive()) return;
+  leaveFullScreen();
+  const f = (() => { try { return dash()?.focused?.(); } catch { return null; } })();
+  if (f && things().some((x) => x.id === f.id)) HOME.sel = f.id;
+  if (!selThing()) HOME.sel = things()[0]?.id || null;
+  HOME.tray = HOME.tray === 'switch' ? null : 'switch';
+  paintEdit(); hostChanged();
+  $h('home-tray')?.querySelector('button:not([disabled])')?.focus();
+}
+
+// The Transform windows on an embed keep their moves in memory (kiosk.js: an embed's edit view is never
+// saved); on Home they are the person's real Home, so what they leave is written back here -- the placed
+// entries only, over what is saved, so nothing else the arrangement holds is touched.
+let persistT = 0;
+async function persistTransform() {
+  const d = dash();
+  if (!d || !homeLive() || !HOME.layoutNow) return;
+  let placed = null;
+  try { placed = d.placed(); } catch { return; }
+  const next = HP.withPlaced(HOME.layoutNow, placed);
+  if (JSON.stringify(next.placed || null) === JSON.stringify(HOME.layoutNow.placed || null)) return;
+  try { await writeHomeLayout(next); } catch (err) { console.error('home: transform save', err); }
+}
+
+let offDash = null;
+let menuObs = null;
+async function attachHomeEditing() {
+  try { offDash?.(); } catch { /* gone */ }
+  offDash = null;
+  try { HOME.layoutNow = await readHomeLayout(); } catch { HOME.layoutNow = null; }
+  const d = dash();
+  if (!selThing()) HOME.sel = things()[0]?.id || null;
+  // The chosen thing and the dashboard's focus agree from the start (a rebuilt kiosk starts on its first
+  // panel; the thing just added or switched in is the one being changed).
+  if (HOME.sel) { try { await d?.focus?.(HOME.sel); } catch { /* not focusable */ } }
+  let lastFocus = (() => { try { return d?.focused?.()?.id || null; } catch { return null; } })();
+  if (d?.onChange) {
+    offDash = d.onChange(() => {
+      // The bar's Panel ▸ chooses a panel; when it MOVES, the edit bar follows it, so Switch module means
+      // the one outlined.
+      try {
+        const f = d.focused?.();
+        if (f && f.id !== lastFocus) { lastFocus = f.id; HOME.sel = f.id; }
+      } catch { /* not yet */ }
+      try { if (d.editing?.()) { clearTimeout(persistT); persistT = setTimeout(persistTransform, 400); } } catch { /* no editor */ }
+      paintEdit(); hostChanged();
+    });
+  }
+  // Edit view follows the ⚙ menu whichever way it was opened (the bar's gear, the M key, a switch).
+  menuObs?.disconnect();
+  const stage = $h('stage');
+  if (stage && typeof MutationObserver === 'function') {
+    menuObs = new MutationObserver(() => {
+      if (HOME.rebuilding || HOME.subject !== HD.PROFILE_SUBJECT) return;
+      const open = menuOpen();
+      if (open !== HOME.editView) { HOME.editView = open; if (!open && HOME.tray !== 'switch') HOME.tray = null; paintEdit(); }
+    });
+    menuObs.observe(stage, { subtree: true, attributes: true, attributeFilter: ['hidden'] });
+  }
+  paintEdit();
+}
+
+/** Replace `el`'s markup only when it changed, and keep focus on the same control (a keyboard user
+ *  pressing Move left four times must not lose their place after the first). */
+function setHTML(el, html) {
+  if (el.dataset.sig === html) return;
+  const a = document.activeElement;
+  const key = a && el.contains(a) ? ['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd']
+    .map((k) => a.dataset[k] || '').join('|') : null;
+  el.innerHTML = html;
+  el.dataset.sig = html;
+  if (key) {
+    for (const b of el.querySelectorAll('button')) {
+      if (['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd'].map((k) => b.dataset[k] || '').join('|') === key) { b.focus(); break; }
+    }
+  }
+}
+
+const ebtn = (attrs, label, { disabled = false, pressed = null, expanded = null, cls = '', hint = '' } = {}) =>
+  `<button type="button" class="hbtn${cls ? ` ${cls}` : ''}" ${attrs}${disabled ? ' disabled' : ''}`
+  + `${pressed != null ? ` aria-pressed="${!!pressed}"` : ''}${expanded != null ? ` aria-expanded="${!!expanded}"` : ''}`
+  + `${hint ? ` title="${esc(hint)}"` : ''}>${label}</button>`;
+
+function paintEdit() {
+  const bar = $h('home-edit');
+  const tray = $h('home-tray');
+  if (!bar || !tray) return;
+  const show = HOME.on && HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target && (HOME.editView || HOME.tray === 'switch');
+  bar.hidden = !show;
+  if (!show) { tray.hidden = true; return; }
+  const live = homeLive() && !HOME.editBusy;
+  const list = things();
+  const t = selThing();
+  const model = HP.editBarModel({ live, thing: t && { ...t, title: thingTitle(t) }, count: list.length,
+    canUndo: HOME.undo.canUndo(), canRedo: HOME.undo.canRedo(), tray: HOME.tray });
+  const note = !homeLive() ? 'Make this your Home first (Make this my Home, or Save): then you can change what is on it.'
+    : HOME.editBusy ? 'Changing…' : '';
+  setHTML(bar, '<span class="lbl">Edit</span>'
+    + model.map((b) => ebtn(`data-edit="${b.act}"`, esc(b.label), { disabled: b.disabled, expanded: b.expanded, hint: b.hint })).join('')
+    + `<span class="ed-note" role="status" aria-live="polite">${esc(note)}</span>`);
+  paintTray(live, list, t);
+}
+
+function trayHead(title) {
+  return `<div class="tray-head">${ebtn('data-edit="closetray"', 'Close')}<h3>${title}</h3></div>`;
+}
+function moduleButtons(attr, { except = null, disabled = false } = {}) {
+  const pieces = `<div class="grp">The old profile’s pieces</div><div class="hbtns">${HP.ADD_PIECES.map((p) =>
+    ebtn(`${attr}="${esc(p.key)}"`, esc(p.label), { disabled, hint: p.hint })).join('')}</div>`;
+  const groups = GROUPS.map((g) => {
+    const xs = ITEMS.filter((m) => m.group.id === g.id && m.type !== except);
+    if (!xs.length) return '';
+    return `<div class="grp">${esc(g.title)}</div><div class="hbtns">${xs.map((m) =>
+      ebtn(`${attr}="${esc(m.type)}"`, esc(titleFor(m, manifests)), { disabled })).join('')}</div>`;
+  }).join('');
+  return pieces + groups;
+}
+
+function paintTray(live, list, t) {
+  const tray = $h('home-tray');
+  const which = HOME.tray;
+  if (!which || !live) { tray.hidden = true; setHTML(tray, ''); return; }
+  tray.hidden = false;
+  if (which === 'scene') {
+    const cur = HP.currentScene(HOME.layoutNow, themeNow());
+    const choices = HP.sceneChoices();
+    const groups = Object.entries(HP.SCENE_KINDS).map(([k, title]) => {
+      const xs = choices.filter((c) => c.kind === k);
+      return `<div class="grp">${esc(title)}</div><div class="hbtns">${xs.map((c) =>
+        ebtn(`data-edit-scene="${esc(c.id)}"`, esc(c.label), { pressed: c.id === cur })).join('')}</div>`;
+    }).join('');
+    const rows = HP.roomRows(HOME.layoutNow);
+    const roomPart = rows.length
+      ? `<div class="grp">This room</div><div class="hbtns">${rows.map((r) =>
+        ebtn(`data-edit-room="${esc(r.key)}"`, `${esc(r.label)}: <small>${esc(r.valueLabel)}</small>`, { hint: 'press to change it' })).join('')}</div>`
+      : '';
+    setHTML(tray, trayHead('The scene') + roomPart + groups);
+    return;
+  }
+  if (which === 'add') {
+    setHTML(tray, trayHead('Add to your Home') + moduleButtons('data-edit-add'));
+    return;
+  }
+  if (which === 'switch') {
+    const title = t ? `Switch ${esc(thingTitle(t))} for…` : 'Choose a thing first';
+    setHTML(tray, trayHead(title) + (t
+      ? '<p class="stagenote">One press: the module you choose takes its place, exactly where it is. Undo puts it back.</p>'
+        + moduleButtons('data-edit-switch', { except: t.type })
+      : `<div class="hbtns">${ebtn('data-edit-change="next"', 'Next thing ›', { disabled: !list.length })}</div>`));
+    return;
+  }
+  // 'change'
+  const placed = !!(t && HP.whereIs(HOME.layoutNow, t.id)?.kind === 'placed');
+  const model = HP.changeTrayModel({ thing: t, placed, count: list.length });
+  const head = t ? `Change: ${esc(thingTitle(t))} <small>(${list.findIndex((x) => x.id === t.id) + 1} of ${list.length})</small>` : 'Choose a thing';
+  const btns = model.filter((b) => b.act !== 'close').map((b) => ebtn(
+    `data-edit-change="${b.act}"${b.d != null ? ` data-d="${esc(Array.isArray(b.d) ? b.d.join(',') : b.d)}"` : ''}`,
+    esc(b.label), { disabled: b.disabled, cls: b.warn ? 'warn' : '', hint: b.hint }));
+  setHTML(tray, trayHead(head) + `<div class="hbtns">${btns.slice(0, 3).join('')}</div><div class="hbtns">${btns.slice(3).join('')}</div>`
+    + (t && !placed ? '<p class="stagenote">This one sits in a grid cell: Transform… moves and sizes it.</p>' : ''));
+}
+
+document.addEventListener('click', (e) => {
+  if (!HOME.on) return;
+  const b = e.target instanceof Element ? e.target.closest('#home-edit button, #home-tray button') : null;
+  if (!b || b.disabled) return;
+  const ds = b.dataset;
+  if (ds.edit) {
+    switch (ds.edit) {
+      case 'scene': case 'add': HOME.tray = HOME.tray === ds.edit ? null : ds.edit; break;
+      case 'change': HOME.tray = HOME.tray === 'change' || HOME.tray === 'switch' ? null : 'change'; if (HOME.sel) chooseThing(HOME.sel); break;
+      case 'closetray': HOME.tray = null; break;
+      case 'transform': openTransform(); return;
+      case 'undo': case 'redo': undoRedo(ds.edit); return;
+      default: return;
+    }
+    paintEdit(); hostChanged();
+    return;
+  }
+  if (ds.editScene) { sceneTo(ds.editScene); return; }
+  if (ds.editRoom) { roomRow(ds.editRoom); return; }
+  if (ds.editAdd) { addThing(ds.editAdd); return; }
+  if (ds.editSwitch) { switchTo(ds.editSwitch); return; }
+  if (ds.editChange) {
+    const d = String(ds.d || '').split(',').map(Number);
+    switch (ds.editChange) {
+      case 'prev': case 'next': { const n = HP.stepThing(things(), HOME.sel, ds.editChange === 'prev' ? -1 : 1); if (n) chooseThing(n.id); break; }
+      case 'switch': HOME.tray = 'switch'; paintEdit(); hostChanged(); break;
+      case 'move': placeThing((L, id) => HP.nudgeInLayout(L, id, d[0], d[1])); break;
+      case 'size': placeThing((L, id) => HP.resizeInLayout(L, id, d[0])); break;
+      case 'remove': removeThing(); break;
+      default: break;
+    }
+  }
+});
 
 // ---- NIMROD THE CAT, walking Home (game/cat_steps.js) --------------------------------------------------
 // Only when asked: `mountCat` returns null unless a walk was started in this browser ("Show me how" in
@@ -1176,7 +1805,8 @@ document.addEventListener('click', (e) => {
 // ---- Save, Save as, the overwrite warning, history ----------------------------------------------------
 function defaultSaveName() {
   if (HOME.doc?.current) return `${HOME.doc.current} (copy)`;
-  return HOME.subject === HD.PROFILE_SUBJECT ? 'My profile' : subjectTitle(HOME.subject);
+  if (HOME.target?.kind === 'example') return PREBUILT_DASHBOARDS[HOME.target.key]?.name || 'My Home';
+  return HOME.subject === HD.PROFILE_SUBJECT ? 'My Home' : subjectTitle(HOME.subject);
 }
 
 async function doSave({ saveAs = false, name = null } = {}) {
@@ -1237,21 +1867,14 @@ async function commitSave(name) {
       await openSubject(t.type, { view });
       toast(`${subjectTitle(t.type)} is on your screen now, saved as “${name}”.`);
     } else {
-      // The profile, made for real: game.js's own steps (re-entrant: nothing is made twice), then
-      // whatever was changed in the preview on top.
-      const snapshot = draft.snapshot();
-      const made = await HOME.game.makeProfile();
-      const pic = await HOME.game.hangPicture();
-      const sign = await HOME.game.putUpSign();
-      const rows = HD.remapSnapshot(snapshot, { settings: 'settings', [PREVIEW_PICTURE]: pic.id, [PREVIEW_SIGN]: sign.id });
-      await writeRows(made.profileId, rows);
-      await writeHistory(made.profileId, HD.PROFILE_HISTORY_KEY,
-        (doc) => HD.commitVersion(doc, { name, snapshot: rows, keep }));
+      // AN EXAMPLE, MADE YOUR HOME: the maker (once -- a second pick finds the one already made), then
+      // whatever was changed while trying it, on top.
+      const r = await makeHome(t.key, { name, snapshot: draft.snapshot(), refs: t.refs });
       draft.reset();
-      const view = currentView();
       HOME.busy = false;
-      await openSubject(HD.PROFILE_SUBJECT, { view });
-      toast(`Your profile is made, and saved as “${name}”.`);
+      await openSubject(HD.PROFILE_SUBJECT, { view: 'edit' });
+      toast(r.created ? `Your Home is made, and saved as “${name}”. Change anything on it.`
+        : 'You had made this one already: here it is, as you left it. It is your Home now.');
     }
   } catch (err) {
     console.error('home: save failed', err);
@@ -1276,7 +1899,7 @@ function dialogHTML(d) {
     const names = HD.suggestNames(HOME.doc || HD.emptyHistory(), { base: d.name, day });
     return `<h2 id="home-dlg-h">Save as</h2>
       <p>Type a name, or choose one. A name that is already used asks before saving over it. This keeps a
-        copy under that name, with this ${HOME.subject === HD.PROFILE_SUBJECT ? 'profile' : 'module'}.</p>
+        copy under that name, with this ${HOME.subject === HD.PROFILE_SUBJECT ? 'Home' : 'module'}.</p>
       <input class="field" id="saveas-name" aria-label="Name" maxlength="60" value="${esc(d.name)}">
       <div class="hbtns">${names.map((n) => `<button type="button" class="hbtn" data-home-dlg="name" data-n="${esc(n)}">${esc(n)}${HOME.doc?.saved?.[n] ? ' <small>(saved)</small>' : ''}</button>`).join('')}</div>
       <div class="hbtns">${b('cancel', 'Cancel')}${b('dosaveas', 'Save with this name', ' primary')}</div>`;
@@ -1337,7 +1960,11 @@ hdlg().addEventListener('click', (e) => {
     case 'name': doSave({ saveAs: true, name: b.dataset.n }); break;
     case 'dosaveas': doSave({ saveAs: true, name: $h('saveas-name')?.value }); break;
     case 'restore': restoreVersion(Number(b.dataset.i)); break;
-    case 'leave': { const next = d.next; closeDialog(); HOME.draft?.discard(); openSubject(next); break; }
+    case 'leave': {
+      const next = d.next; closeDialog(); HOME.draft?.discard();
+      if (d.previewKey !== undefined) HOME.previewKey = d.previewKey;
+      openSubject(next); break;
+    }
     case 'save': closeDialog(); doSave(); break;
     default: break;
   }
@@ -1356,16 +1983,19 @@ document.addEventListener('click', (e) => {
   if (!b || b.disabled) return;
   switch (b.dataset.home) {
     case 'skip':
-      HOME.welcome = false;
+      HOME.examplesOpen = false;
       document.body.classList.add('pick-open');
       qEl.focus();
       break;
-    case 'setup': HOME.welcome = false; applyView('edit'); break;
+    case 'close-examples':
+      HOME.examplesOpen = false;
+      // Closing them while one is being tried goes back to your own Home (asking first if it was changed).
+      if (HOME.home && HOME.previewKey) { paintHome(); requestSubject(HD.PROFILE_SUBJECT, { previewKey: null }); return; }
+      break;
     case 'nomore':
-      HOME.welcome = false;
-      saveHomeSettings({ welcomeDone: true, openIn: 'live' });
-      applyView('live');
-      toast('Your profile will open in live view from now on. Change it in the ⚙ menu, under This page.');
+      HOME.examplesOpen = false;
+      saveHomeSettings({ welcomeDone: true });
+      toast('The examples will not open by themselves again. They are in the ⚙ menu: Start from an example…');
       break;
     default: homePress(b.dataset.home); return;
   }
@@ -1381,7 +2011,7 @@ window.addEventListener('beforeunload', (e) => {
 async function bootHome(wanted) {
   const user = currentUser;
   const profiles = createProfilesClient({ user });
-  const defaultId = await ensureProfile(profiles, user);
+  const defaultId = await defaultScreen(profiles);
   let person = null;
   try { person = pickCurrent(await profiles.people(), readLastPerson()); } catch { person = null; }
   let settingsRow = null;
@@ -1396,22 +2026,33 @@ async function bootHome(wanted) {
     defaultSurface = (await s.load()).panelSurface;
     s.destroy();
   } catch { defaultSurface = undefined; }
+  const makeSettings = (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user });
+  const makeInstanceState = (pid, id) => createState({ url: profiles.stateURL(pid, id), user });
+  // The profile GAME is kept only to find an old profile it made (it keeps loading as that person's
+  // Home); nothing here makes one any more.
   const game = person ? createGame({
-    profiles,
-    makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user }),
-    makeInstanceState: (pid, id) => createState({ url: profiles.stateURL(pid, id), user }),
+    profiles, makeSettings, makeInstanceState,
     makePersonState: (pid, key) => createState({ url: profiles.personStateURL(pid, key), user }),
     personId: person.id, personName: person.name,
   }) : null;
-  Object.assign(HOME, { on: true, user, profiles, defaultId, person, settings, settingsRow, defaultSurface, game });
+  const maker = person ? createDashboardMaker({ profiles, makeSettings, makeInstanceState,
+    personId: () => person.id, personName: () => person.name }) : null;
+  Object.assign(HOME, { on: true, user, profiles, defaultId, person, settings, settingsRow, defaultSurface, game, maker });
+  HOME.home = maker ? await resolveHome() : null;
+  HOME.profileMade = !!HOME.home;
   const land = HD.homeLanding({ signedIn: true, wanted, known: (t) => ITEMS.some((m) => m.type === t), settings });
-  const subject = land.subject === HD.PROFILE_SUBJECT && !game ? ITEMS[0]?.type : land.subject;
-  HOME.welcome = land.welcome && !!game;
+  const subject = land.subject === HD.PROFILE_SUBJECT && !maker ? ITEMS[0]?.type : land.subject;
+  // The starting points open up front for somebody with no Home yet (until they say not to).
+  HOME.examplesOpen = !!maker && !HOME.home && land.subject === HD.PROFILE_SUBJECT && !settings.welcomeDone;
+  // `?example=<key>`: a link that opens one starting point, tried on the stage (a link to share, and the
+  // address the pictures in the report are taken from).
+  const exParam = new URLSearchParams(location.search).get('example');
+  if (maker && PREBUILT_DASHBOARDS[exParam] && land.subject === HD.PROFILE_SUBJECT) {
+    HOME.previewKey = exParam;
+    HOME.examplesOpen = true;
+  }
   document.body.classList.add('is-home');
   document.title = 'Nimrod — Home';
-  if (game) {
-    try { HOME.profileMade = !!(await game.status()).profileId; } catch { HOME.profileMade = false; }
-  }
   await openSubject(subject, { view: land.view });
 }
 
@@ -1420,7 +2061,7 @@ function undoHome() {
   document.body.classList.remove('is-home', 'pick-open');
   delete document.body.dataset.homeProfile;
   $h('stage-bar').hidden = true;
-  $h('welcome').hidden = true;
+  $h('examples').hidden = true;
 }
 
 // ---- RUN THEM ALL --------------------------------------------------------------------
@@ -1520,6 +2161,8 @@ Promise.allSettled([
   if (currentUser && embeddingReady && !auditMode) {
     try { await bootHome(wanted); return; } catch (err) {
       console.error('home: could not start; showing the parts page instead', err);
+      // Said on the page too, so a suite (and anybody looking) can tell WHY Home is not there.
+      document.body.dataset.homeError = String(err?.message || err).slice(0, 200);
       undoHome();
     }
   }

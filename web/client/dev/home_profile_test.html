@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home profile (your Home, made your own) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>home profile (your Home, made your own) — test</h1>
+<p>Mike, 2026-10-02: Home is your profile, started from an example and made your own; Design's profile and
+scene editors over the real dashboard; modules hot-swappable in place. This is the pure half
+(<code>home_profile.js</code>, <code>dashboards.js</code>'s examples): the arrangement changes, the scene
+editor, the edit bar and its trays as data, and undo as a plan. No server. The page is
+<code>home_page_test.html</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  ADD_PIECES, pieceState, layoutIds, whereIs, swapInLayout, remapLayoutIds, removeFromLayout, addToLayout,
+  nudgeInLayout, resizeInLayout, withPlaced, sceneChoices, currentScene, applyScene, ROOM_ROWS, roomRows,
+  cycleRoomRow, roomRecipe, editBarModel, changeTrayModel, stepThing, restorePlan, createUndo,
+  MOVE_STEP, SIZE_RANGE, UNDO_LIMIT, ADD_SPOTS_ROOM, SCENE_KINDS,
+} from '../home_profile.js';
+import { EXAMPLE_ORDER, EXAMPLE_KINDS, exampleCards, PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor } from '../dashboards.js';
+import { normalizeLayout, isArranged } from '../layout.js';
+import { ROOM_PRESETS } from '../room_presets.js';
+import { THEMES, DEFAULT_THEME } from '../theme.js';
+import { profileSetup } from '../game/game.js';
+import { listManifests } from '../module.js';
+import '../modules/photos.js';
+import '../modules/clock.js';
+import '../modules/button.js';
+import '../modules/youtube.js';
+import '../modules/wordforge.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const J = (x) => JSON.stringify(x);
+
+try {
+  // ============================================================================================
+  section('*** the starting points: Mike’s list, in his order, every one a valid record ***');
+  {
+    const known = new Set(listManifests().map((m) => m.type));
+    check('*** static 2D (the Nimrod theme) first, then a live theme, then Design’s rooms ***',
+      J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'live', 'room', 'room', 'room']), J(EXAMPLE_ORDER));
+    check('the static one IS the Nimrod theme with no moving scene', PREBUILT_DASHBOARDS.basic.settings.theme === DEFAULT_THEME
+      && !THEMES[PREBUILT_DASHBOARDS.basic.settings.theme].scene);
+    check('the live one is Fall (Mike’s own example)', PREBUILT_DASHBOARDS.classic.settings.theme === 'fall' && !!THEMES.fall.scene);
+    check('*** three DIFFERENT rooms of Design’s: controls-in-furniture, the study, the fireside attic ***',
+      J(EXAMPLE_ORDER.filter((k) => PREBUILT_DASHBOARDS[k].kind === 'room').map((k) => PREBUILT_DASHBOARDS[k].layout.scene.preset))
+        === J(['theRoom', 'study', 'fireside']));
+    for (const k of EXAMPLE_ORDER) {
+      const probs = recordProblems(prebuiltRecord(k, { personName: 'Ada' }), { knownTypes: known });
+      check(`${k}: a valid record`, probs.length === 0, probs.join('; '));
+    }
+    const cards = exampleCards();
+    check('*** each card says what it is IN WORDS (its kind), with a title and a blurb ***',
+      cards.length === EXAMPLE_ORDER.length && cards.every((c) => c.title && c.blurb && c.kindLabel === EXAMPLE_KINDS[c.kind]), J(cards));
+    check('no card says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(cards)));
+    check('*** the bar’s tray still offers only its three (a scanning surface stays short) ***', J(PREBUILT_ORDER) === J(['room', 'basic', 'classic']));
+    const study = prebuiltRecord('study');
+    const lay = layoutFor(study, { photos: 'P' });
+    check('the study’s photos sit IN the room’s own module slot (Design drew a screen there)',
+      lay.placed?.[0]?.slot === 'photos' && ROOM_PRESETS.study.recipe.items.some((it) => it.id === 'photos' && it.kind === 'module'), J(lay));
+    const bad = prebuiltRecord('study'); bad.layout.placed[0].slot = 'nowhere';
+    check('...and the validator catches a slot the room does not have', recordProblems(bad).some((p) => /nowhere/.test(p)));
+    const fire = prebuiltRecord('fireside', { personName: 'Ada' });
+    check('the fireside attic: the profile’s picture and your name sign, hung on its back wall',
+      fire.modules.find((m) => m.ref === 'sign').state.label === 'Ada' && fire.layout.placed.every((p) => p.place === 'scene' && p.surface === 'back'));
+  }
+
+  // ============================================================================================
+  section('the profile’s old pieces are things anybody can add');
+  {
+    check('picture frame and name sign, both button modules', J(ADD_PIECES.map((p) => [p.key, p.type])) === J([['piece:picture', 'button'], ['piece:sign', 'button']]));
+    check('...starting exactly as the old profile’s did (game.js profileSetup)', J(pieceState('piece:picture')) === J(profileSetup().picture)
+      && pieceState('piece:sign', 'Robin').label === 'Robin' && pieceState('nope') === null);
+  }
+
+  // ============================================================================================
+  section('*** the hot swap, as data: the new module takes the old one’s place, geometry and all ***');
+  {
+    const grid = { preset: 'side', slots: ['a', 'b'] };
+    const s1 = swapInLayout(grid, 'b', 'c');
+    check('*** in a grid: the same cell ***', J(s1.slots) === J(['a', 'c']), J(s1));
+    const room = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' },
+      placed: [{ id: 'p', place: 'scene', surface: 'right', x: 12, y: 33, w: 10, h: 9, rot: 15, layer: 3, opens: 'dash-2' }, { id: 'q', place: 'screen', x: 1, y: 2 }] };
+    const s2 = swapInLayout(room, 'p', 'n');
+    const e = s2.placed[0];
+    check('*** placed: every bit of the place is kept (surface, x, y, w, h, turn, layer, even the door) ***',
+      e.id === 'n' && e.surface === 'right' && e.x === 12 && e.y === 33 && e.w === 10 && e.h === 9 && e.rot === 15 && e.layer === 3 && e.opens === 'dash-2', J(e));
+    check('nothing else moves', J(s2.placed[1]) === J(room.placed[1]) && J(s2.scene) === J(room.scene));
+    check('the original is not touched (a copy)', room.placed[0].id === 'p');
+    check('a module the layout does not place is not swapped (null, so the page can say so)', swapInLayout(grid, 'zzz', 'c') === null);
+    check('...and it survives normalizeLayout with the new id', J(normalizeLayout(s2, ['n', 'q']).placed.map((p) => p.id)) === J(['n', 'q']));
+    check('whereIs finds a cell or a placed entry', whereIs(grid, 'b').kind === 'slot' && whereIs(room, 'q').kind === 'placed' && whereIs(grid, 'x') === null);
+    check('remap renames ids everywhere (an undo bringing a module back under a new id)',
+      J(layoutIds(remapLayoutIds(room, { p: 'p2' }))) === J(['p2', 'q']) && J(remapLayoutIds(grid, { a: 'A' }).slots) === J(['A', 'b']));
+  }
+
+  section('adding and removing');
+  {
+    check('one-at-a-time stage (no layout): adding needs no entry', addToLayout(null, 'x') === null);
+    const g = addToLayout({ preset: 'side', slots: ['a', null] }, 'x');
+    check('a free grid cell is used first', J(g.slots) === J(['a', 'x']) && !g.placed);
+    const full = addToLayout({ preset: 'side', slots: ['a', 'b'] }, 'x');
+    check('no free cell: placed FLAT on the screen', full.placed?.[0]?.place === 'screen' && full.placed[0].id === 'x');
+    const r = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'living' } };
+    const r1 = addToLayout(r, 'x');
+    check('*** a room: never into its backdrop cell; ON its back wall ***', J(r1.slots) === '[null]' && r1.placed[0].place === 'scene' && r1.placed[0].surface === 'back', J(r1));
+    const r2 = addToLayout(r1, 'y');
+    check('a second one does not land on the first', `${r2.placed[0].x},${r2.placed[0].y}` !== `${r2.placed[1].x},${r2.placed[1].y}`);
+    check('every spot is on the back wall, above the floor line', ADD_SPOTS_ROOM.every(([x, y]) => x >= 16 && x <= 84 && y < 66));
+    check('adding twice adds once', addToLayout(r2, 'y').placed.length === 2);
+    check('isArranged after adding to a room', isArranged(r1));
+    const rm = removeFromLayout(r2, 'x');
+    check('removing takes it off, leaving the rest', J(layoutIds(rm)) === J(['y']));
+    check('...a grid cell is emptied, not shifted', J(removeFromLayout({ preset: 'side', slots: ['a', 'b'] }, 'a').slots) === J([null, 'b']));
+  }
+
+  section('moving and sizing by button (Design: nothing needs a drag)');
+  {
+    const L = { preset: 'full', slots: ['g'], placed: [{ id: 'p', place: 'screen', x: 50, y: 50, w: 20, h: 20 }] };
+    check('Move left moves by Design’s step', nudgeInLayout(L, 'p', -MOVE_STEP, 0).placed[0].x === 50 - MOVE_STEP);
+    check('it stops at the edge, never off it', nudgeInLayout({ ...L, placed: [{ id: 'p', x: 1, y: 99 }] }, 'p', -MOVE_STEP, MOVE_STEP).placed[0].x === 0);
+    check('a thing in a grid cell does not move by button (null)', nudgeInLayout(L, 'g', 3, 0) === null && resizeInLayout(L, 'g', 0.1) === null);
+    const big = resizeInLayout(L, 'p', 0.1).placed[0];
+    check('Bigger grows w and h together by 10%', big.w === 22 && big.h === 22, J(big));
+    let s = L;
+    for (let i = 0; i < 60; i++) s = resizeInLayout(s, 'p', -0.1);
+    check('Smaller stops at the smallest readable size', s.placed[0].w === SIZE_RANGE[0]);
+    check('withPlaced keeps the saved layout and takes Transform’s placement',
+      J(withPlaced({ preset: 'side', slots: ['a', null], scene: { kind: 'room' } }, [{ id: 'z', x: 3 }])) === J({ preset: 'side', slots: ['a', null], scene: { kind: 'room' }, placed: [{ id: 'z', x: 3 }] }));
+  }
+
+  // ============================================================================================
+  section('*** the scene editor: rooms, moving scenes and still ones, in one list ***');
+  {
+    const ch = sceneChoices();
+    check('every one of Design’s rooms is there', Object.keys(ROOM_PRESETS).every((k) => ch.some((c) => c.id === `room:${k}`)));
+    check('every theme is there, live ones marked live', Object.keys(THEMES).every((k) => ch.some((c) => c.id === `theme:${k}` && c.kind === (THEMES[k].scene ? 'live' : 'static'))));
+    check('rooms first, then moving scenes, then still (and each kind has words)', ch[0].kind === 'room' && ch.at(-1).kind === 'static'
+      && Object.keys(SCENE_KINDS).every((k) => SCENE_KINDS[k]));
+    const grid = { preset: 'quad', slots: ['a', 'b', 'c', 'd'] };
+    check('a grid with a theme reads as that theme', currentScene(grid, 'fall') === 'theme:fall' && currentScene(null, 'nope') === `theme:${DEFAULT_THEME}`);
+    const toRoom = applyScene(grid, 'room:living', { theme: 'fall' });
+    check('*** to a room: the grid’s modules move ONTO its back wall (a full grid would cover the room) ***',
+      toRoom.layout.scene.preset === 'living' && J(toRoom.layout.slots) === '[null]'
+      && J(toRoom.layout.placed.map((p) => p.id)) === J(['a', 'b', 'c', 'd']) && toRoom.layout.placed.every((p) => p.place === 'scene'), J(toRoom.layout));
+    check('...and a live theme behind a room goes back to the still default (nobody sees it; the Pi pays)', toRoom.theme === DEFAULT_THEME);
+    check('a still theme behind a room is left as it is', applyScene(grid, 'room:living', { theme: 'warm' }).theme === undefined);
+    check('it reads as the room now', currentScene(toRoom.layout, 'x') === 'room:living');
+    const toFall = applyScene(toRoom.layout, 'theme:fall');
+    check('*** back to a theme: the room goes, things on its walls stay where they were, flat ***',
+      !toFall.layout.scene && toFall.theme === 'fall' && toFall.layout.placed.every((p) => p.place === 'screen' && !p.surface)
+      && toFall.layout.placed[0].x === toRoom.layout.placed[0].x, J(toFall));
+    const study = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'study' }, placed: [{ id: 'ph', place: 'scene', slot: 'photos' }] };
+    const studyToFire = applyScene(study, 'room:fireside');
+    check('a thing in the old room’s slot hangs on the new room’s back wall (the slot meant nothing there)',
+      !studyToFire.layout.placed[0].slot && studyToFire.layout.placed[0].surface === 'back' && typeof studyToFire.layout.placed[0].x === 'number', J(studyToFire.layout));
+    const nothing = applyScene(null, 'room:bedroom', { ids: ['m1', 'm2'] });
+    check('no arrangement yet (one at a time): going to a room hangs EVERY module on its wall', J(layoutIds(nothing.layout)) === J(['m1', 'm2']));
+    check('...and a theme leaves it one at a time', applyScene(null, 'theme:dusk').layout === null);
+    check('an unknown choice is refused', applyScene(grid, 'room:nowhere') === null);
+  }
+
+  section('Design’s Room rows, on the room’s own copy of its recipe');
+  {
+    const L = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'living' } };
+    const rows = roomRows(L);
+    check('shape, walls, floor, light, out of the window', J(rows.map((r) => r.key)) === J(['shell', 'wall', 'floor', 'light', 'view']), J(rows));
+    check('values read in words', rows.find((r) => r.key === 'wall').valueLabel === 'Sprig paper' && rows.find((r) => r.key === 'light').valueLabel === 'The real time');
+    const n = cycleRoomRow(L, 'light');
+    check('a press steps to the next value', roomRecipe(n).light === 'day');
+    check('*** ...the room gets its OWN recipe (a plain copy) and keeps the name of the room it came from ***',
+      !!n.scene.recipe && n.scene.preset === 'living' && currentScene(n) === 'room:living' && !L.scene.recipe);
+    let w = L; const seen = [];
+    for (let i = 0; i < ROOM_ROWS.find((r) => r.key === 'light').options().length; i++) { w = cycleRoomRow(w, 'light'); seen.push(roomRecipe(w).light); }
+    check('it WRAPS (one switch travels one way)', seen.at(-1) === 'auto', J(seen));
+    check('walls change their finish AND its own colour', (() => { const x = roomRecipe(cycleRoomRow(L, 'wall')); return x.wall.finish !== 'sprig' && typeof x.wall.color === 'string'; })());
+    check('not a room: no rows, no cycling', roomRows({ preset: 'side', slots: [] }).length === 0 && cycleRoomRow(null, 'light') === null);
+    check('the window offers every moving scene', ROOM_ROWS.find((r) => r.key === 'view').options().length > 2);
+  }
+
+  // ============================================================================================
+  section('*** the edit bar and the Change tray, as data (dimmed, never hidden) ***');
+  {
+    const bar = editBarModel({ live: true, thing: { id: 'a', type: 'photos', title: 'Photos' }, count: 2, canUndo: true });
+    check('*** Design’s order: Scene, Add, Change: <thing>, then Transform…, Undo, Redo ***',
+      J(bar.map((b) => b.act)) === J(['scene', 'add', 'change', 'transform', 'undo', 'redo']) && bar[2].label === 'Change: Photos', J(bar.map((b) => b.label)));
+    check('Redo dimmed when nothing was undone', bar.find((b) => b.act === 'redo').disabled && !bar.find((b) => b.act === 'undo').disabled);
+    const pre = editBarModel({ live: false });
+    check('*** on a Home not made yet: every button THERE, all dimmed ***', pre.length === 6 && pre.every((b) => b.disabled));
+    check('nothing chosen: "Choose a thing"', editBarModel({ live: true, count: 1 })[2].label === 'Choose a thing');
+    const tray = changeTrayModel({ thing: { id: 'a' }, placed: false, count: 3 });
+    check('*** the Change tray: its way out (Close) FIRST, then pick, then Switch module ***',
+      tray[0].act === 'close' && tray[1].act === 'prev' && tray[2].act === 'next' && tray[3].act === 'switch' && !tray[3].disabled);
+    check('a thing in a grid cell: move and size dimmed (Transform still works), Switch and Remove not',
+      tray.filter((b) => b.act === 'move' || b.act === 'size').every((b) => b.disabled) && !tray.find((b) => b.act === 'remove').disabled);
+    check('placed: they all work', changeTrayModel({ thing: { id: 'a' }, placed: true, count: 1 }).every((b) => !b.disabled));
+    const things = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+    check('previous / next step through the dashboard’s own ring and wrap',
+      stepThing(things, 'c', 1).id === 'a' && stepThing(things, 'a', -1).id === 'c' && stepThing(things, null, 1).id === 'a' && stepThing([], 'a', 1) === null);
+    check('no label says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(bar) + J(tray)));
+  }
+
+  section('*** undo / redo over the real thing: a plan that brings a removed module BACK with its settings ***');
+  {
+    const before = { layout: { preset: 'side', slots: ['a', 'b'] }, mods: [{ id: 'a', type: 'photos', state: { album: 'x' } }, { id: 'b', type: 'clock', state: {} }] };
+    const nowMods = [{ id: 'a', type: 'photos' }, { id: 'n', type: 'trivia' }];   // b was swapped for a trivia
+    const plan = restorePlan(nowMods, before);
+    check('*** undoing a swap: the clock comes back, the trivia goes ***',
+      J(plan.add.map((x) => [x.fromId, x.type])) === J([['b', 'clock']]) && J(plan.remove) === J(['n']), J(plan));
+    const plan2 = restorePlan([{ id: 'a', type: 'photos' }], before);
+    check('undoing a remove brings it back WITH the settings it had', plan2.add[0].fromId === 'b' && J(plan2.add[0].state) === '{}'
+      && J(restorePlan([], before).add.find((x) => x.fromId === 'a').state) === J({ album: 'x' }));
+    check('nothing to do when nothing changed', J(restorePlan(before.mods, before)) === J({ add: [], remove: [] }));
+    const u = createUndo({ limit: 3 });
+    check('a new history can do nothing', !u.canUndo() && !u.canRedo() && u.undo({}) === null);
+    u.push({ n: 1 }); u.push({ n: 2 });
+    const back = u.undo({ n: 3 });
+    check('undo hands back the last snapshot, and redo becomes possible', back.n === 2 && u.canRedo());
+    check('redo hands back what was there before the undo', u.redo({ n: 2 }).n === 3);
+    u.undo({ n: 3 }); u.push({ n: 9 });
+    check('a new change forgets what was undone', !u.canRedo());
+    for (let i = 0; i < 10; i++) u.push({ n: i });
+    check('it keeps a limited number (default: Design’s 40)', u.sizes().back === 3 && UNDO_LIMIT === 40);
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

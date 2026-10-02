@@ -206,6 +206,16 @@ function backend(user) {
       check('...and picking it makes THEIRS, with their name on the sign', rBo.id !== r1.id && rBo.created
         && (await B.read(rBo.id, (await B.read(rBo.id, 'settings'))[PREBUILT_REFS_KEY].sign)).label === 'Bo');
       await maker.ensure('nothing').then(() => check('an unknown key is refused', false), () => check('an unknown key is refused', true));
+
+      // 2026-10-02: Home's starting points include two more of Design's rooms, made by the same maker.
+      const rs = await maker.ensure('study');
+      const sDoc = await B.read(rs.id, 'settings');
+      const sMods = (await B.profiles.get(rs.id)).modules;
+      check('*** Home’s Study: made by the same maker, its photos placed IN the room’s own module slot ***',
+        rs.created && J(sMods.map((m) => m.type)) === J(['photos']) && sDoc.kiosk?.layout?.scene?.preset === 'study'
+        && sDoc.kiosk.layout.placed?.[0]?.slot === 'photos' && sDoc.kiosk.layout.placed[0].id === sMods[0].id && sDoc[PREBUILT_DONE_KEY] === true, J(sDoc.kiosk));
+      check('...and making it does not add it to the bar’s tray offers (still the three, all made)',
+        (await maker.offered(await B.profiles.list())).length === 0);
     }
 
     // =================================================================================================
