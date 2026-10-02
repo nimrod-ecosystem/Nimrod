@@ -1,0 +1,597 @@
+{
+  "schema": "nimrod-bricks-public/1",
+  "about": "The basic Nimrod bricks: every brick is W x D x H in multiples of 40 mm, with a 10 mm socket at the centre of every 40 mm cell on every face. Generated from one build123d source; do not edit by hand.",
+  "generated": "2026-10-02",
+  "frame": "GLB: metres, +Y up. Origin at the part's minimum corner.",
+  "grid_mm": 40.0,
+  "objects": [
+    {
+      "id": "brick_40x40x40_v1",
+      "title": "Brick 40 x 40 x 40 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/brick_40x40x40_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 1488,
+      "bytes_glb": 48132,
+      "sockets": 6,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x40x80_v1",
+      "title": "Brick 40 x 40 x 80 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        40,
+        80
+      ],
+      "glb": "/design-assets/bricks/brick_40x40x80_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.08,
+          0.0
+        ]
+      },
+      "triangles": 2592,
+      "bytes_glb": 82980,
+      "sockets": 10,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x40x120_v1",
+      "title": "Brick 40 x 40 x 120 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        40,
+        120
+      ],
+      "glb": "/design-assets/bricks/brick_40x40x120_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.12,
+          0.0
+        ]
+      },
+      "triangles": 3696,
+      "bytes_glb": 117832,
+      "sockets": 14,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x40x160_v1",
+      "title": "Brick 40 x 40 x 160 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        40,
+        160
+      ],
+      "glb": "/design-assets/bricks/brick_40x40x160_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.16,
+          0.0
+        ]
+      },
+      "triangles": 4800,
+      "bytes_glb": 152680,
+      "sockets": 18,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x40x320_v1",
+      "title": "Brick 40 x 40 x 320 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        40,
+        320
+      ],
+      "glb": "/design-assets/bricks/brick_40x40x320_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.32,
+          0.0
+        ]
+      },
+      "triangles": 9216,
+      "bytes_glb": 292092,
+      "sockets": 34,
+      "fits_bed_256": false
+    },
+    {
+      "id": "brick_40x80x80_v1",
+      "title": "Brick 40 x 80 x 80 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        80,
+        80
+      ],
+      "glb": "/design-assets/bricks/brick_40x80x80_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.04,
+          0.08,
+          0.0
+        ]
+      },
+      "triangles": 4428,
+      "bytes_glb": 141056,
+      "sockets": 16,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x80x160_v1",
+      "title": "Brick 40 x 80 x 160 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        80,
+        160
+      ],
+      "glb": "/design-assets/bricks/brick_40x80x160_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.04,
+          0.16,
+          0.0
+        ]
+      },
+      "triangles": 8100,
+      "bytes_glb": 257172,
+      "sockets": 28,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x80x320_v1",
+      "title": "Brick 40 x 80 x 320 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        80,
+        320
+      ],
+      "glb": "/design-assets/bricks/brick_40x80x320_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.04,
+          0.32,
+          0.0
+        ]
+      },
+      "triangles": 15444,
+      "bytes_glb": 489396,
+      "sockets": 52,
+      "fits_bed_256": false
+    },
+    {
+      "id": "brick_40x160x160_v1",
+      "title": "Brick 40 x 160 x 160 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        160,
+        160
+      ],
+      "glb": "/design-assets/bricks/brick_40x160x160_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.16
+        ],
+        "max": [
+          0.04,
+          0.16,
+          0.0
+        ]
+      },
+      "triangles": 14700,
+      "bytes_glb": 466116,
+      "sockets": 48,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_40x320x320_v1",
+      "title": "Brick 40 x 320 x 320 mm",
+      "kind": "brick",
+      "dims_mm": [
+        40,
+        320,
+        320
+      ],
+      "glb": "/design-assets/bricks/brick_40x320x320_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.32
+        ],
+        "max": [
+          0.04,
+          0.32,
+          0.0
+        ]
+      },
+      "triangles": 52812,
+      "bytes_glb": 1673224,
+      "sockets": 160,
+      "fits_bed_256": false
+    },
+    {
+      "id": "brick_80x80x80_v1",
+      "title": "Brick 80 x 80 x 80 mm",
+      "kind": "brick",
+      "dims_mm": [
+        80,
+        80,
+        80
+      ],
+      "glb": "/design-assets/bricks/brick_80x80x80_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.08,
+          0.08,
+          0.0
+        ]
+      },
+      "triangles": 7356,
+      "bytes_glb": 233888,
+      "sockets": 24,
+      "fits_bed_256": true
+    },
+    {
+      "id": "brick_80x80x320_v1",
+      "title": "Brick 80 x 80 x 320 mm",
+      "kind": "brick",
+      "dims_mm": [
+        80,
+        80,
+        320
+      ],
+      "glb": "/design-assets/bricks/brick_80x80x320_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.08,
+          0.32,
+          0.0
+        ]
+      },
+      "triangles": 24924,
+      "bytes_glb": 790884,
+      "sockets": 72,
+      "fits_bed_256": false
+    },
+    {
+      "id": "bracket_L40x40x5_v1",
+      "title": "L-bracket, 40 mm",
+      "kind": "lbracket",
+      "dims_mm": [
+        40,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/bracket_L40x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 768,
+      "bytes_glb": 25400,
+      "sockets": 4,
+      "fits_bed_256": true
+    },
+    {
+      "id": "bracket_L80x40x5_v1",
+      "title": "L-bracket, 80 mm",
+      "kind": "lbracket",
+      "dims_mm": [
+        80,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/bracket_L80x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.08,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 1512,
+      "bytes_glb": 48688,
+      "sockets": 8,
+      "fits_bed_256": true
+    },
+    {
+      "id": "bracket_L120x40x5_v1",
+      "title": "L-bracket, 120 mm",
+      "kind": "lbracket",
+      "dims_mm": [
+        120,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/bracket_L120x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.12,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 2256,
+      "bytes_glb": 71968,
+      "sockets": 12,
+      "fits_bed_256": true
+    },
+    {
+      "id": "bracket_L160x40x5_v1",
+      "title": "L-bracket, 160 mm",
+      "kind": "lbracket",
+      "dims_mm": [
+        160,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/bracket_L160x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.16,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 3000,
+      "bytes_glb": 95248,
+      "sockets": 16,
+      "fits_bed_256": true
+    },
+    {
+      "id": "bracket_corner3_40_v1",
+      "title": "3-way corner bracket, 40 mm",
+      "kind": "corner3",
+      "dims_mm": [
+        40,
+        40,
+        40
+      ],
+      "glb": "/design-assets/bricks/bracket_corner3_40_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          -0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.04,
+          0.04,
+          0.0
+        ]
+      },
+      "triangles": 1152,
+      "bytes_glb": 37716,
+      "sockets": 6,
+      "fits_bed_256": true
+    },
+    {
+      "id": "plate_I80x40x5_v1",
+      "title": "Straight joiner plate, 80 x 40 mm",
+      "kind": "plate",
+      "dims_mm": [
+        80,
+        40,
+        5
+      ],
+      "glb": "/design-assets/bricks/plate_I80x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.08,
+          0.005,
+          0.0
+        ]
+      },
+      "triangles": 756,
+      "bytes_glb": 24880,
+      "sockets": 4,
+      "fits_bed_256": true
+    },
+    {
+      "id": "plate_L80x80x5_v1",
+      "title": "Flat corner plate, 80 x 80 mm",
+      "kind": "plate",
+      "dims_mm": [
+        80,
+        80,
+        5
+      ],
+      "glb": "/design-assets/bricks/plate_L80x80x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.08,
+          0.005,
+          0.0
+        ]
+      },
+      "triangles": 1136,
+      "bytes_glb": 36876,
+      "sockets": 6,
+      "fits_bed_256": true
+    },
+    {
+      "id": "plate_I120x40x5_v1",
+      "title": "Straight joiner plate, 120 x 40 mm",
+      "kind": "plate",
+      "dims_mm": [
+        120,
+        40,
+        5
+      ],
+      "glb": "/design-assets/bricks/plate_I120x40x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.04
+        ],
+        "max": [
+          0.12,
+          0.005,
+          0.0
+        ]
+      },
+      "triangles": 1128,
+      "bytes_glb": 36528,
+      "sockets": 6,
+      "fits_bed_256": true
+    },
+    {
+      "id": "plate_T120x80x5_v1",
+      "title": "T plate, 120 x 80 mm",
+      "kind": "plate",
+      "dims_mm": [
+        120,
+        80,
+        5
+      ],
+      "glb": "/design-assets/bricks/plate_T120x80x5_v1.glb",
+      "stl": null,
+      "bbox_web_m": {
+        "min": [
+          0.0,
+          0.0,
+          -0.08
+        ],
+        "max": [
+          0.12,
+          0.005,
+          0.0
+        ]
+      },
+      "triangles": 1516,
+      "bytes_glb": 48852,
+      "sockets": 8,
+      "fits_bed_256": true
+    }
+  ]
+}
