@@ -2047,3 +2047,40 @@ Mike's rulings after using the deployed site, 2026-10-02 (Code's chat). Logged b
    (Built: `4edeeae`.)
 7. **The settings menu is split into tabs:** what it's for at the top, then tabs (the active module, audio,
    video, devices, users ...).
+## Models are open; bricks in multiples of 40 mm; a landing Home with a Nimrod guide; pause belongs to the bar -- 2026-10-02 (second set)
+
+Mike's rulings, later on 2026-10-02 (Code's chat). Logged by Code.
+
+1. **3D models are open.** *"Any final versions of models can be public unless I say otherwise"*; *"Everything can be
+   open for now."* This supersedes the hold on publishing connector geometry for now (CONTEXT.md's IP note gets a
+   dated addition). The site's promise of four "designing" parts is removed: it belonged to a sample site for a job
+   that closed.
+2. **Basic bricks come in every multiple of 40 mm in every dimension** (40x40x40, 40x40x80, ...), plus brackets (a
+   3-way corner bracket 40 mm each way, and others). They aren't limited by plate size, since most will be virtual.
+   Furniture and scene objects are then built from bricks, eventually whole rooms and worlds, scalable from
+   millimetres to kilometres.
+3. **The landing Home is four up, clockwise from top left:** pictures, settings (opened on the theme tab), devices,
+   and Nimrod.
+   - Nimrod is a help/wiki guide with choose-your-own-adventure decision trees: Back any number of steps, and a
+     tree view on by default.
+   - "Hover over anything and Nimrod tells you what it does."
+   - A tutorial dashboard keeps Nimrod and settings in its bottom two slots.
+   - The Nimrod module is meant to become the AI module (wire up any AI).
+4. **Game/learning mode:**
+   - points for doing things;
+   - builder items locked for the game's sake, with sandbox mode and per-item unlocks;
+   - points have no real-world value, and no coins or microtransactions are sold.
+5. **Pause is universal, not per module.** It's a transport-bar control that sends the play/pause verbs to the
+   focused panel, and keeping playing stays the default when hidden. Any panel can be promoted one level (to fill
+   its dashboard, then the screen).
+6. **Settings can be edited at whatever level you're at:** a level dropdown at the top of the menu, beside how much it
+   shows.
+7. **Calls:** a hidden call panel may mute, and defaults to not muting. During a call the bar shows volume, mic and
+   speaker mute, and their/my video.
+8. **The press game's fixed 1500 ms wait follows the photosensitivity setting** like every other flash rule.
+   **"Another one?" is a setting, off by default.**
+9. **Other people's personal and animated avatars** can be shown, by a screen or user setting. It's on by default
+   unless a medical setting blocks it.
+10. **Accounts** (direction, not yet built):
+    - anyone an account allows can create a user on it;
+    - accounts link as friends and choose which profiles and permissions to share.
