@@ -171,8 +171,10 @@ try {
     await inst4.init();
     await sleep(400);
     const rows = () => [...host.querySelectorAll('[data-n]')];
-    const modeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Learning mode');
-    check('a Learning mode row exists', !!modeRow);
+    // Renamed 2026-10-02: "Learning mode" is the Nimrod Game's mode now; this page is the lesson topics' Quest/Sandbox.
+    const modeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Lesson topics');
+    check('a Lesson topics row exists (no second thing called "Learning mode")', !!modeRow
+      && !rows().some((b) => b.querySelector('.st-label')?.textContent === 'Learning mode'));
     modeRow?.click();
     await sleep(80);
     const sel = host.querySelector('[data-mode-select]');

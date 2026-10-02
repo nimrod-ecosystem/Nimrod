@@ -191,7 +191,7 @@ const NODES = [
     id: 'mode-learning', title: 'Learning mode',
     say: 'Learning mode is game mode with education points: the tour and the lessons pay School points, kept '
       + 'apart from the game’s Play points, and things to build with unlock the same way. Whether lesson topics '
-      + 'open as you go (Quest) or all at once is a separate setting, on the settings panel’s Learning mode page.',
+      + 'open as you go (Quest) or all at once is a separate setting, on the settings panel’s Lesson topics page.',
     choices: withKeys([
       { label: 'Game mode instead', to: 'mode-game' },
       { label: 'What are points for?', to: 'points' },
