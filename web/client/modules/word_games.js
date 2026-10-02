@@ -44,6 +44,9 @@
 //      just stop answering or ask the computer to stop") - the same change as quiz_flow.js, item 4:
 //      a celebration for `celebrateMs`, a shown answer for `answerMs`, then the next question; "stop"
 //      or "I'm done" (quiz_flow.js STOP_PHRASES, when it is not this question's own answer) ends it.
+//      Mike, the same day: "Yes. Skip asking as default." - so "another one?" is the `askAnother`
+//      setting (quiz_flow.js ASK_ANOTHER_FIELD), OFF; on, it is asked after the celebration and under
+//      a revealed answer, exactly as before 2026-10-02.
 //   5. every question can be answered by voice OR a switch yes/no.
 //
 // Every spoken line is an editable text setting whose default is Mike's wording. The number of
@@ -69,8 +72,8 @@ import {
 // (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
 // changed: word_games_test and quiz_flow_test both check these are the same functions.
 import {
-  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, STOP_PHRASES, ANSWER_MS_FIELD,
-  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isStop, reasonFor,
+  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, FLOW_LINE_LABELS, STOP_PHRASES, ANSWER_MS_FIELD, ASK_ANOTHER_FIELD,
+  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, isStop, reasonFor,
   defaultChime as sharedChime, STARS, CAT_URL,
 } from '../quiz_flow.js';
 
@@ -86,7 +89,7 @@ export const GAMES = ['opposites', 'rhyming', 'yesno'];
 export const PLAY_TOPIC = `${GAME}/play`;
 
 // *** THE SPOKEN LINES. *** Mike's wording where he gave it (wrongLine, unsureLine, twoMissLine;
-// his anotherLine is retired, see item 4 above), Design's copy for the rest (voice.html). `{placeholders}` are filled per question;
+// his anotherLine is said only with the askAnother setting on, see item 4 above), Design's copy for the rest (voice.html). `{placeholders}` are filled per question;
 // an unknown one is left empty rather than read out as a brace.
 // The shared lines are read from FLOW_LINES (one copy of Mike's wording); the order here is the
 // order the settings menu lists them in, unchanged.
@@ -111,6 +114,7 @@ export const LINES = Object.freeze({
   explainOpposites: '{answer} is the opposite of {word}.',
   explainRhyming: '{answer} rhymes with {word}.',
   answerLine: F.answerLine,
+  anotherLine: F.anotherLine,
   doneLine: F.doneLine,
   notCaughtLine: F.notCaughtLine,
   unknownWordLine: "I heard {heard}, but I don't know that word well enough to check it. Try another word.",
@@ -132,6 +136,8 @@ export const DEFAULTS = Object.freeze({
   celebrateMs: 3000,
   // How long a revealed answer stays before the next question comes by itself (quiz_flow.js argues it).
   answerMs: ANSWER_MS_FIELD.default,
+  // "Would you like to do another one?" between questions: off (item 4).
+  askAnother: ASK_ANOTHER_FIELD.default,
   sound: true,
   speak: true,
   // Say the switch candidate ("Is it COLD?") after the question. A voice player hears one
@@ -153,7 +159,7 @@ const LINE_LABELS = {
   reasonAlternative: 'Reason: another word it could be', hintLine: 'The hint', hintRhyming: 'Rhyming hint',
   twoMissLine: 'After the misses', rightLine: 'A right answer', explainOpposites: 'Opposites: the pair',
   explainRhyming: 'Rhyming: the pair', answerLine: 'Hearing the answer',
-  doneLine: 'Finished', notCaughtLine: "Didn't catch it", unknownWordLine: 'Rhyming: a word it does not know',
+  anotherLine: FLOW_LINE_LABELS.anotherLine, doneLine: 'Finished', notCaughtLine: "Didn't catch it", unknownWordLine: 'Rhyming: a word it does not know',
   yesNoOnlyLine: 'Yes/no quiz: not a yes or a no',
 };
 
@@ -170,6 +176,7 @@ const SETTINGS = [
     note: 'Somebody on a switch needs it; somebody answering aloud hears one possible answer.' },
   { key: 'sound', label: 'Chime for a right answer', default: true, level: 'standard',
     onLabel: 'On', offLabel: 'Off' },
+  { ...ASK_ANOTHER_FIELD },
   { key: 'twoSwitch', label: 'Switches', kind: 'choice', default: 'scan', level: 'standard',
     options: [{ value: 'scan', label: 'Next moves, Select chooses' },
               { value: 'yesno', label: 'Select is Yes, Next is No' }] },
@@ -201,7 +208,8 @@ const SETTINGS = [
 // ---------------------------------------------------------------------------------------
 //
 // Phases: 'asking' (question up; a wrong answer's feedback and hint shown here too), 'unsure',
-// 'twoMiss', 'celebrate', 'answer' (a revealed answer, then the next question), 'done' (said stop).
+// 'twoMiss', 'celebrate', 'answer' (a revealed answer, then the next question), 'another' ("another
+// one?" - only with `askAnother` on), 'done' (said stop).
 export function createEngine({
   cfg = () => DEFAULTS, rand = Math.random,
   say = () => {}, award = () => {}, chime = () => {}, onChange = () => {}, publishGrammar = () => {},
@@ -291,6 +299,7 @@ export function createEngine({
     if (phase === 'asking') answers();
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
+    else if (phase === 'another') { add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]); }
     else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
     else return [];
     // The ways to say stop, wherever a question waits (quiz_flow.js STOP_PHRASES).
@@ -377,10 +386,23 @@ export function createEngine({
     changed();
   }
 
-  // Item 4: after the celebration, or a shown answer, THE NEXT QUESTION (no "another one?").
+  // Item 4: after the celebration, or a shown answer, THE NEXT QUESTION - or "Would you like to do
+  // another one?" first, when the `askAnother` setting is on.
+  const asksAnother = () => c().askAnother === true;
   function onward() {
     stopTimer();
+    if (asksAnother() && phase !== 'another') { toAnother(); return; }
     nextItem();
+  }
+
+  function toAnother() {
+    stopTimer();
+    phase = 'another';
+    highlight = 0;
+    feedback = null;
+    unsure = null;
+    speak(c().anotherLine);
+    changed();
   }
 
   function reveal() {
@@ -388,6 +410,15 @@ export function createEngine({
     revealed = true;
     pair = { word: item.word || null, answer, explain: explain(answer) };
     stopTimer();
+    // Asking "another one?": the answer shown with the question under it, and no clock running.
+    if (asksAnother()) {
+      phase = 'another';
+      highlight = 0;
+      feedback = null;
+      speak(fill(c().answerLine, { explain: pair.explain }), c().anotherLine);
+      changed();
+      return;
+    }
     phase = 'answer';
     highlight = 0;
     feedback = null;
@@ -546,6 +577,11 @@ export function createEngine({
         if (isAgain(text)) return press('again');
         if (isReveal(text)) return press('reveal');
         return notCaught();
+      case 'another':
+        if (!confident) return notCaught();
+        if (isYes(text)) return press('more');
+        if (isNo(text) || isDone(text)) return press('finish');
+        return notCaught();
       case 'done':
         if (confident && (isYes(text) || isAgain(text))) return press('restart');
         return undefined;
@@ -559,6 +595,7 @@ export function createEngine({
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
+      case 'another': return [{ act: 'more', label: 'Yes' }, { act: 'finish', label: "No, I'm done" }];
       case 'done': return [{ act: 'restart', label: 'Play again' }];
       default: return [];
     }
@@ -600,10 +637,11 @@ export function createEngine({
       case 'reveal':
         if (phase === 'twoMiss') reveal();
         return;
-      // A press during the celebration or a shown answer: the next question now. `more` (the old
-      // "Yes, another") is kept as the same thing for anything that still sends it.
+      // A press during the celebration or a shown answer: on now (to the next question, or to
+      // "another one?" when that is asked). `more` is also "Yes" to "another one?".
       case 'continue':
       case 'more':
+        if (phase === 'another') { if (act === 'more') nextItem(); return; }
         if (phase === 'celebrate' || phase === 'answer') onward();
         return;
       case 'finish':
@@ -790,6 +828,13 @@ registerModule(
       } else if (s.phase === 'answer') {
         // The revealed answer, up for `answerMs`; the next question follows by itself (item 4).
         mid = `<div class="wg-st wg-right" aria-live="polite">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${score}</div>`;
+      } else if (s.phase === 'another') {
+        // "Would you like to do another one?" (the `askAnother` setting, off by default), with a
+        // revealed answer kept on screen above it.
+        ask = esc(cfg.anotherLine);
+        const shown = s.revealed && s.pair
+          ? `${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>` : '';
+        mid = `<div class="wg-st wg-right" aria-live="polite" data-another>${shown}${btns(stops, s.highlight)}${score}</div>`;
       } else if (s.phase === 'done') {
         ask = esc(cfg.doneLine);
         mid = `<div class="wg-st wg-right" aria-live="polite">${score}${btns(stops, s.highlight)}</div>`;

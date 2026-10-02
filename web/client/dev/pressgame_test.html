@@ -767,6 +767,78 @@ const rowsOf = (a, kind) => a.filter((x) => x.data?.kind === kind).map((x) => x.
       r.inst.destroy();
     }
 
+    // ================= photosensitivity: the shortest wait =================
+    section('*** the shortest wait follows the flash limit (Mike, 2026-10-02): no fixed 1500 ms floor ***');
+    {
+      const { minFlashPeriodMs, worstInAnySecond } = await import('../flash_limit.js');
+      const two = (L) => 2 * minFlashPeriodMs(L);
+      const ctxFor = (L) => (L === undefined ? {} : { flashLimitPerSecond: () => L });
+      // A stored minWaitMs of 0 (below the menu's choices) shows the flash floor on its own.
+      for (const [L, want] of [['none', 0], [3, two(3)], [1, two(1)]]) {
+        const r = rig({ minWaitMs: 0 }, null, ctxFor(L));
+        const f = r.impl.__probe().floorMs;
+        check(`limit ${L}: the floor is ${Math.round(want)} ms (two flash periods)`, Math.abs(f - want) < 0.01, String(f));
+        r.inst.destroy();
+      }
+      // The lowest menu choice: the setting stands unless the limit needs longer.
+      for (const [L, want] of [[undefined, 1000], ['none', 1000], [3, 1000], [1, two(1)]]) {
+        const r = rig({ minWaitMs: 1000 }, null, ctxFor(L));
+        const f = r.impl.__probe().floorMs;
+        check(`minWaitMs 1 s, limit ${L === undefined ? 'unset' : L}: floor ${Math.round(want)} ms${L === undefined || L === 'none' ? ' (the old fixed 1500 is gone)' : ''}`,
+          Math.abs(f - want) < 0.01, String(f));
+        r.inst.destroy();
+      }
+      // Played as fast as it can be: challenge, adaptive, a press the instant GO shows, no stillness
+      // wait. The wait shrinks to the floor; GO onsets in any one second stay within the limit.
+      const play = (L) => {
+        const r = rig({ challenge: true, adaptiveWait: true, waitMs: 4000, minWaitMs: 0, stopQuietMs: 0 }, null, ctxFor(L));
+        const goAt = [];
+        let last = r.impl.__probe().phase;
+        for (let t = 0; t < 60000; t += 16) {
+          r.impl.__step(16);
+          const p = r.impl.__probe();
+          if (p.phase === 'go' && last !== 'go') { goAt.push(p.simT); r.impl.__press('verb'); }
+          last = r.impl.__probe().phase;
+        }
+        const p = r.impl.__probe();
+        r.inst.destroy();
+        return { wait: Math.round(p.curWaitMs), worst: worstInAnySecond(goAt), n: goAt.length };
+      };
+      const free = play('none');
+      check('*** no limit: the wait adapts below the old 1500 ms - nothing holds it ***',
+        free.wait < 1500 && free.worst > 3, JSON.stringify(free));
+      for (const L of [3, 1]) {
+        const m = play(L);
+        check(`limit ${L}: the wait bottoms out at the floor (${Math.round(two(L))} ms), GO at most ${L} in any second`,
+          Math.abs(m.wait - Math.round(two(L))) <= 1 && m.worst <= L && m.n > 5, JSON.stringify(m));
+      }
+      // A limit set mid-game applies from the next wait.
+      {
+        let lim = 'none';
+        const r = rig({ challenge: true, adaptiveWait: true, waitMs: 4000, minWaitMs: 0, stopQuietMs: 0 }, null,
+          { flashLimitPerSecond: () => lim });
+        for (let i = 0; i < 40; i++) { r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb'); r.impl.__step(16); }
+        const before = r.impl.__probe().curWaitMs;
+        lim = 1;
+        r.impl.__step(5000); r.impl.__step(16); r.impl.__press('verb'); r.impl.__step(16);
+        check('a limit set mid-game holds the very next wait', before < two(1) && r.impl.__probe().curWaitMs >= two(1) - 0.01,
+          JSON.stringify({ before, after: r.impl.__probe().curWaitMs }));
+        r.inst.destroy();
+      }
+      // The cue guard is reachable now: a wait too short to say "Wait" over is not announced.
+      {
+        const said = [];
+        const r = rig({ challenge: true, adaptiveWait: true, waitMs: 4000, minWaitMs: 0, stopQuietMs: 0 },
+          { say: (t) => said.push(t) }, ctxFor('none'));
+        for (let i = 0; i < 30; i++) { r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb'); r.impl.__step(16); }
+        said.length = 0;
+        r.impl.__step(4000); r.impl.__step(16); r.impl.__press('verb'); r.impl.__step(16);
+        check('a wait under 1.2 s is not announced ("Wait" would still be being said when it ends)',
+          r.impl.__probe().curWaitMs < 1200 && !said.includes('Wait') && said.includes('Go'), JSON.stringify({ said, w: r.impl.__probe().curWaitMs }));
+        r.inst.destroy();
+      }
+    }
+
     // ================= teardown =================
     section('teardown');
     {

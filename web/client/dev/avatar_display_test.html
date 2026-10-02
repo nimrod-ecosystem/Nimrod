@@ -28,7 +28,7 @@ is taken down. Also: the maker announces a save.</p>
 <script type="module">
 import {
   avatarView, avatarHtml, createAvatarCache, AVATAR_CHANGED_EVENT, DISPLAY_DEFAULTS,
-  avatarMotion, avatarMotionContext, AVATAR_MOTION_FIELD,
+  avatarMotion, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS, isOtherPerson,
 } from '../avatar_display.js';
 import { surprise, normalizeRecord, renderAvatar } from '../avatar.js';
 import '../modules/avatar.js';
@@ -330,6 +330,61 @@ try {
     const b = document.createElement('div');
     b.innerHTML = avatarHtml(moves, { context: { screen: 'still' }, reducedMotion: false });
     check('the reason is on the face, for anybody debugging a still one', b.firstElementChild.dataset.motionWhy === 'screen-still');
+  }
+
+  section('*** other people\'s own avatars, per screen and per person (Mike, 2026-10-02): on unless set off ***');
+  {
+    const ctx = (o) => avatarMotionContext({ deviceReduced: false, ...o });
+    check('two rows, both on by default, offered for the screen and the person',
+      OTHERS_AVATAR_FIELDS.map((f) => `${f.key}:${f.default}`).join() === 'othersAvatars:true,othersAvatarsMove:true'
+      && !/Christine|Cici|her screen/i.test(JSON.stringify(OTHERS_AVATAR_FIELDS)));
+    check('nothing set anywhere: show and move', ctx({}).othersShow === true && ctx({}).othersMove === true);
+    check('the person\'s row decides when the screen chose nothing', ctx({ viewer: { othersAvatars: false } }).othersShow === false
+      && ctx({ viewer: { othersAvatarsMove: false } }).othersMove === false);
+    check('*** the screen\'s choice wins over the person\'s (screen > person) ***',
+      ctx({ screen: { othersAvatars: true }, viewer: { othersAvatars: false } }).othersShow === true
+      && ctx({ screen: { othersAvatarsMove: false }, viewer: { othersAvatarsMove: true } }).othersMove === false);
+    check('a value that is not true/false is not a choice', ctx({ screen: { othersAvatars: 'no' }, viewer: { othersAvatars: false } }).othersShow === false
+      && ctx({ screen: { othersAvatarsMove: 0 } }).othersMove === true);
+    check('the layer does not set it (no medical box hides a face, argued)', ctx({ layer: { othersAvatars: false, reduceMotion: true } }).othersShow === true);
+    // Who is "other".
+    check('isOtherPerson: everybody but the viewer; everybody on a screen for nobody',
+      isOtherPerson({ viewerId: 'me' }, 'you') && !isOtherPerson({ viewerId: 'me' }, 'me') && isOtherPerson({}, 'me') && isOtherPerson({ viewerId: null }, 'me'));
+
+    const html = (view, context, personId, animate = true) => {
+      const b = document.createElement('div');
+      b.innerHTML = avatarHtml(view, { animate, context, personId, reducedMotion: false });
+      return b;
+    };
+    const moves = avatarView({ use: 'drawn', drawn: REC, animate: true });
+    const pic = { show: 'picture', url: 'blob:face' };
+    // SHOW off: somebody else's face is the name only (rule 1: the empty string); the viewer's own stays.
+    const hide = ctx({ viewerId: 'me', screen: { othersAvatars: false } });
+    check('show off: somebody else\'s drawing is not drawn (the empty string, today\'s display)', avatarHtml(dv, { context: hide, personId: 'you' }) === '');
+    check('...nor their picture', avatarHtml(pic, { context: hide, personId: 'you' }) === '');
+    check('...but the viewer\'s own face still shows', !!html(dv, hide, 'me').querySelector('.nav-av'));
+    check('show off on a screen for nobody: every face is somebody else\'s', avatarHtml(dv, { context: ctx({ screen: { othersAvatars: false } }), personId: 'me' }) === '');
+    check('show on (the default): faces as before', !!html(dv, ctx({ viewerId: 'me' }), 'you').querySelector('.nav-av'));
+    // MOVE off.
+    const still = ctx({ viewerId: 'me', viewer: { othersAvatarsMove: false } });
+    const sv = html(moves, still, 'you');
+    check('move off: somebody else\'s face is still, even when they chose "always moves"',
+      sv.querySelector('svg').dataset.motion === 'off' && sv.firstElementChild.dataset.motionWhy === 'others-still');
+    check('...the viewer\'s own face follows their own choice', html(moves, still, 'me').querySelector('svg').dataset.motion === 'on');
+    check('move on (the default): a big face moves as before', html(dv, ctx({ viewerId: 'me' }), 'you').querySelector('svg').dataset.motion === 'on');
+    // MEDICAL first: "on" allows movement, it never forces it.
+    const med = ctx({ viewerId: 'me', screen: { othersAvatarsMove: true }, viewer: { reduceMotion: true } });
+    const mv = html(moves, med, 'you');
+    check('*** reduce motion beats "let them move" (medical > screen > person) ***',
+      mv.querySelector('svg').dataset.motion === 'off' && mv.firstElementChild.dataset.motionWhy === 'reduce-motion-setting');
+    check('...and the device\'s reduced motion too', avatarMotion({ context: { deviceReduced: true, othersMove: true }, person: true, big: true }).because === 'device-reduced-motion');
+    check('...and the layer\'s reduce motion (the "movement makes me unwell" box)',
+      avatarMotion({ context: ctx({ layer: { reduceMotion: true } }), person: true, big: true }).animate === false);
+    check('the screen\'s own "never" still reads as screen-still, before others-still',
+      avatarMotion({ context: { screen: 'still', othersMove: false }, person: true, big: true }).because === 'screen-still');
+    check('avatarMotion with no `other` given treats the face as somebody else\'s',
+      avatarMotion({ context: { othersMove: false }, person: true, big: true }).because === 'others-still'
+      && avatarMotion({ context: { othersMove: false }, person: true, big: true, other: false }).because === 'person-moves');
   }
 
   section('a brought-in drawing (.svg): read once, made safe, drawn inline so it can move');

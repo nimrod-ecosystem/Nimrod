@@ -382,6 +382,13 @@ export function quizModule(spec) {
         // The revealed answer, up for `answerMs`; the next question follows by itself (no "another one?").
         ask = view.askHtml ? view.askHtml(s, cfg) : esc(s.askLine);
         st = `<div class="wg-right">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${scoreHtml(s)}</div>`;
+      } else if (s.phase === 'another') {
+        // "Would you like to do another one?" - only with the `askAnother` setting on (off by default).
+        // A revealed answer stays on screen above it.
+        ask = esc(cfg.anotherLine);
+        const shown = s.revealed && s.pair
+          ? `${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>` : '';
+        st = `<div class="wg-right" data-another>${shown}${btns(stops, s.highlight)}${scoreHtml(s)}</div>`;
       } else if (s.phase === 'done') {
         ask = esc(cfg.doneLine);
         st = `<div class="wg-right">${scoreHtml(s)}${btns(stops, s.highlight)}</div>`;
