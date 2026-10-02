@@ -1641,7 +1641,7 @@ html[data-live-scene] body{background:transparent}
 /* WITH A PICTURE the face takes a picture's shape and the words become its caption. */
 .nbtn[data-has-img]{height:min(86cqh,120cqw);aspect-ratio:4/5;padding:3cqmin}
 .nbtn[data-has-img] .ab-word{flex:none;font-size:clamp(11px,5.5cqmin,48px);font-weight:600}
-.nbtn:focus-visible{outline:max(3px,.8cqmin) solid var(--highlight);outline-offset:max(3px,.8cqmin)}
+.nbtn:focus-visible{outline:max(3px,.8cqmin) solid var(--scan-ring, var(--highlight));outline-offset:max(3px,.8cqmin)}
 .nbtn.nbtn-press{transform:scale(.97)}
 
 /* DESIGNED SIGNS. THE WORDS ELEMENT IS THE SIGN: Design's SVG is its background, at the sign's own

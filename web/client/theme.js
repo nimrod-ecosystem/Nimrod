@@ -389,6 +389,36 @@ export function focusColor(vars) {
   return vars['--text'];
 }
 
+/**
+ * *** THE SWITCH-SCAN RING: THE THEME'S GOLD WHERE IT READS, ITS FOCUS RING WHERE IT DOES NOT. ***
+ *
+ * Five modules (nimrod guide, devices, profile, what's new, library) and the button face (`.nbtn`)
+ * drew the ring that says "the next press acts on THIS" in `--highlight`, a pale gold. On a dark
+ * theme it reads beautifully. On a light one it measured about 1.2:1 against the page, against AA's
+ * 3:1 for a focus indicator - the scan ring, of all the signals on the screen, was the one somebody
+ * driving it with a switch could not see.
+ *
+ * `--highlight` itself does NOT move: it is also the pressed transport button's fill, the word games'
+ * stars and the rhythm floor, all of which want the gold. The ring gets its own role, `--scan-ring`:
+ * the theme's own `--scan-ring` if it names one, else its `--highlight`, kept EXACTLY when it clears
+ * 3:1 on every surface (both visions, as `focusColor`) - and otherwise the theme's `--focus`.
+ *
+ * WHY `--focus` AND NOT THE GOLD DARKENED UNTIL IT PASSES. Walking #ffd36e toward a light theme's dark
+ * `--text` does reach 3:1, but only about half way, and the colour there is a khaki-olive that is no
+ * longer gold and was never in anybody's palette - the look is lost either way, so it may as well be
+ * lost to a colour a designer chose. `--focus` is that colour: the theme's accent, already proven at
+ * 3:1, and already the ring on every other focusable thing in that theme, so the scan and the keyboard
+ * draw the same ring. The cost, named: on a light theme the scan ring and the kiosk's focused-panel
+ * ring are the same colour. They sit at different scales (a panel vs a button inside it), and the scan
+ * ring is the inner one. A value that is not a hex colour is passed through untouched, as focusColor.
+ */
+export function scanRingColor(vars) {
+  const own = vars?.['--scan-ring'] || vars?.['--highlight'];
+  if (own && !parseHex(own)) return own;
+  if (own && worstContrast(own, vars) >= FOCUS_MIN) return own;
+  return focusColor(vars);
+}
+
 /** Whichever of light or dark text reads better on `bg`. Pure, so the suite can check it. */
 export function onColor(bg) {
   return contrast(ON_LIGHT, bg) >= contrast(ON_DARK, bg) ? ON_LIGHT : ON_DARK;
@@ -416,6 +446,8 @@ export function applyTheme(rootEl, id, { flashLimit } = {}) {
   // The focus ring, derived the same way (see focusColor). Set on EVERY apply, so switching themes
   // always overwrites it - the "every theme defines every key" guarantee, kept by computing it.
   rootEl.style.setProperty('--focus', focusColor(vars));
+  // The switch-scan ring (see scanRingColor), the same way and for the same reason.
+  rootEl.style.setProperty('--scan-ring', scanRingColor(vars));
   // *** `color-scheme`, NOT JUST OUR OWN CSS VARS. *** This is the one thing a theme controls
   // that our own stylesheet cannot override: the browser's OWN chrome for native form controls
   // (`<input type="time">`'s spinner and clock icon, scrollbars, and everything else this

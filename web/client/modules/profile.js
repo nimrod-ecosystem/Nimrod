@@ -102,7 +102,7 @@ const STYLE = `
   color:var(--text);font:inherit;cursor:pointer;text-align:left}
 .pf-btn[disabled]{opacity:.5;cursor:default}
 .pf-btn.is-warn{border-color:var(--highlight)}
-.pf-btn.is-scan,.pf-btn:focus-visible{outline:3px solid var(--highlight);outline-offset:2px}
+.pf-btn.is-scan,.pf-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .pf-btn[aria-pressed="true"]{background:var(--surface-alt);font-weight:700}
 .pf-list{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
 .pf-list .pf-btn{width:100%;display:flex;align-items:center;gap:10px}

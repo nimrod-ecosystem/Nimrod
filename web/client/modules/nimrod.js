@@ -130,7 +130,7 @@ const STYLE = `
 .ng-btn.ng-choice{flex:1 1 100%}
 .ng-btn.ng-act{background:var(--surface-alt)}
 .ng-btn[aria-pressed="true"]{background:var(--surface-alt);font-weight:700}
-.ng-btn.is-scan,.ng-btn:focus-visible{outline:3px solid var(--highlight);outline-offset:2px}
+.ng-btn.is-scan,.ng-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .ng-key{font-weight:700;margin-right:6px}
 .ng-tree{margin:0;padding:8px 0 0;list-style:none;border-top:1px solid var(--border)}
 .ng-tree li button{background:none;border:0;color:var(--text);font:inherit;cursor:pointer;padding:3px 0;text-align:left;min-height:32px}

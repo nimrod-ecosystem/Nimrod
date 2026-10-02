@@ -33,7 +33,7 @@ const STYLE = `
 .dv-btns{display:flex;flex-wrap:wrap;gap:8px}
 .dv-btn{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);
   color:var(--text);font:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
-.dv-btn.is-scan,.dv-btn:focus-visible{outline:3px solid var(--highlight);outline-offset:2px}
+.dv-btn.is-scan,.dv-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 `;
 
 registerModule(
