@@ -36,6 +36,10 @@ import { LIBRARY_TYPES, LIBRARY_WAITING, libraryType } from '../modules/library_
 import '../modules/view.js';
 import '../modules/button.js';
 import '../modules/clock.js';
+import '../modules/room.js';
+import { ROOM_PANEL_ID } from '../arrangement.js';
+import { topicForAction } from '../room_scene.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -168,17 +172,154 @@ try {
   }
 
   // ============================================================================================
-  section('a module that has not opted in is still editable, as a whole');
+  section('a press on none of a panel’s things chooses the panel, as a whole');
   {
     const clock = mountPanel('clock', 'c1', bus);
     const em2 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
     em2.enter('c1');
     clock.el.firstElementChild?.click?.();
     const sel = em2.selection();
-    check('*** a press anywhere in it chooses the panel, and its options are its manifest’s settings ***',
+    check('*** a press outside its parts chooses the panel, and its options are its manifest’s settings ***',
       sel && sel.target === null && sel.fields.length === (getManifest('clock').settings || []).length && optionRows(sel).length > 0, J(sel?.fields?.map((f) => f.key)));
     check('...with Nimrod’s words for it', !!sel?.help);
     em2.leave();
+  }
+
+  // ============================================================================================
+  section('*** the clock opts in: its time and its date (it is a digital clock: no face or hands) ***');
+  {
+    const clock = mountPanel('clock', 'c2', bus);
+    const em4 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
+    em4.enter('c2');
+    const ts = targetsOf(clock).map((t) => t.id);
+    check('its parts are things to choose: the date and the time (the timer only while one shows)',
+      ts.includes('time') && ts.includes('date') && !ts.includes('timer'), J(ts));
+    clock.el.querySelector('[data-time]').click();
+    const sel = em4.selection();
+    check('*** pressing the time shows the TIME’s rows (12/24 hours, seconds, size, zone), not the date’s ***',
+      sel?.target?.id === 'time' && J(sel.fields.map((f) => f.key)) === J(['hour12', 'seconds', 'size', 'tz']), J(sel?.fields?.map((f) => f.key)));
+    clock.cell.querySelector('.em-card [data-em-step="1"][data-em-key="hour12"]').click();
+    check('*** a row changed there is written to the clock’s own settings ***', clock.state.get().hour12 === false, J(clock.state.get()));
+    clock.el.querySelector('[data-date]').click();
+    check('the date: whether it shows, and its zone', J(em4.selection()?.fields?.map((f) => f.key)) === J(['showDate', 'tz']));
+    em4.leave();
+  }
+
+  // ============================================================================================
+  section('*** a ROOM panel: a piece of furniture is chosen, its rows show and save, its door never opens ***');
+  {
+    const room = mountPanel('room', 'r1', bus);
+    await sleep(60);
+    const scene = room.instance.impl.__scene();
+    const settingsTopic = topicForAction('settings.open');
+    const opened = [];
+    bus.subscribe(settingsTopic, (p) => { opened.push(p); p?.claim?.(); });
+    const em5 = createEditMode({ bus, recs: () => [room], boxOf: () => room.cell });
+    check('(setup) the room draws its door and its bookshelf', !!room.el.querySelector('.rs-obj[data-id="door"]') && !!room.el.querySelector('.rs-obj[data-id="shelf"]'));
+    em5.enter('r1');
+    const ids = targetsOf(room).map((t) => t.id);
+    check('every object in it is a thing to choose (the door, the shelf, the plant, the cat...)',
+      ['door', 'shelf', 'lamp', 'window', 'cat'].every((x) => ids.includes(x)), J(ids));
+    room.el.querySelector('.rs-obj[data-id="shelf"]').click();
+    const sel = em5.selection();
+    check('*** pressing the bookshelf shows the bookshelf’s rows (what it is, which books) ***',
+      sel?.target?.id === 'shelf' && sel.fields.some((f) => f.key === 'shelf') && sel.fields.some((f) => f.key === 'books')
+      && !sel.fields.some((f) => f.key === 'windowShows'), J(sel?.fields?.map((f) => f.key)));
+    const card = () => room.cell.querySelector('.em-card');
+    card().querySelector('[data-em-step="1"][data-em-key="shelf"]').click();
+    check('*** changing one persists: written to the room’s own settings row ***', room.state.get().shelf === 'recipe', J(room.state.get()));
+    const before = scene.lastPress();
+    room.el.querySelector('.rs-obj[data-id="door"]').click();
+    check('*** pressing the DOOR while editing chooses the door ... ***', em5.selection()?.target?.id === 'door');
+    check('*** ... and it does NOT open (no Settings asked for, no press recorded) ***', opened.length === 0 && scene.lastPress() === before);
+    room.el.querySelector('.rs-item[data-id="lamp"]').click();
+    check('a lamp (no role, normally takes no press) can be chosen too, and honestly has nothing to set',
+      em5.selection()?.target?.id === 'lamp' && em5.selection().fields.length === 0 && !!card().querySelector('[data-em-none]'));
+    room.el.querySelector('.rs-stage').click();
+    check('the walls or the floor: the whole room, every one of its rows',
+      em5.selection()?.target === null && em5.selection().fields.length === (getManifest('room').settings || []).length);
+    room.cell.querySelector('.em-bar .em-done').click();
+    check('*** Done leaves edit mode ***', em5.active() === null && !room.cell.dataset.editing && !room.el.querySelector('[data-edit-target]'));
+    room.el.querySelector('.rs-obj[data-id="door"]').click();
+    check('*** ...and the door works again ***', opened.length === 1 || scene.lastPress() !== before);
+  }
+
+  // ============================================================================================
+  section('*** a DASHBOARD’S room (2D and 3D): its furniture chosen, its door set and saved, never opened while editing ***');
+  for (const kind of ['room3d', 'room']) {
+    const scene0 = kind === 'room3d' ? { kind: 'room3d', preset: 'box' } : { kind: 'room', preset: 'theRoom' };
+    const objId = kind === 'room3d' ? 'cabinet' : 'lamp';
+    const objSel = kind === 'room3d' ? `.r3-box[data-object="${objId}"]` : `.rs-item[data-id="${objId}"]`;
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: [null], scene: scene0,
+      placed: [{ id: 'rc', place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const rbus = createBus();
+    const go = [];
+    rbus.subscribe(DASHBOARD_GO_TOPIC, (p) => { go.push(p); p?.claim?.(); });
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: rbus, rootBus: rbus, viewId: 'RM', user: 'u', personId: null,
+      arrangement: { id: 'RM', name: 'My room', modules: [{ id: 'rc', type: 'clock' }] },
+      profiles: { list: async () => [{ id: 'RM', name: 'My room' }, { id: 'P', name: 'Parlour' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} },
+      state: memState(), instanceId: `dash-${kind}` });
+    await view.init();
+    const d = view.impl;
+    const arr = () => d.arrangement();
+    check(`(${kind}) (setup) the room is drawn, with the clock placed in it`, await until(() => !!host.querySelector(objSel) && !!arr()?.recFor('rc'), 6000));
+    const corner = host.querySelector('.k-room > .k-editc');
+    check(`(${kind}) *** the room has its own ✎ corner, saying what it does ***`, !!corner && /Edit the room/.test(corner.title), corner?.title);
+    corner?.click();
+    check(`(${kind}) *** pressing it edits the ROOM (one more thing beside the panels) ***`, d.editingPanel()?.id === ROOM_PANEL_ID);
+    const sel = () => arr().editSelection();
+    const want = kind === 'room3d' ? ['drift', 'depth'] : ['shell', 'wall', 'floor', 'light', 'view'];
+    check(`(${kind}) to begin with, the room itself is chosen: Home's Room rows`,
+      await until(() => sel()?.target?.id === 'room' && J(sel().fields.map((f) => f.key)) === J(want), 3000), J(sel()?.fields?.map((f) => f.key)));
+    const objEl = host.querySelector(objSel);
+    objEl.click();
+    check(`(${kind}) *** pressing a piece of furniture chooses it, and shows what it opens ***`,
+      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(['opens']));
+    check(`(${kind}) ...its choices are Nothing and the person’s OTHER dashboards`,
+      await until(() => J(sel()?.fields?.[0]?.options?.map((o) => o.value)) === J(['', 'P']), 3000), J(sel()?.fields?.[0]?.options));
+    const card = () => host.querySelector('.k-room .em-card');
+    card().querySelector('[data-em-step="1"][data-em-key="opens"]').click();
+    const savedScene = () => store.get('settings')?.kiosk?.layout?.scene;
+    const doorOf = (s) => (kind === 'room3d' ? s?.recipe?.furniture : s?.recipe?.items)?.find((x) => x.id === objId)?.opens;
+    check(`(${kind}) *** changing it persists: saved on the dashboard's layout (the room's recipe) ***`,
+      await until(() => doorOf(savedScene()) === 'P', 3000), J(savedScene())?.slice(0, 200));
+    const doorEl = () => (kind === 'room3d' ? host.querySelector(`.r3-box[data-object="${objId}"][data-opens="P"]`) : host.querySelector(`.rs-obj[data-id="${objId}"]`));
+    check(`(${kind}) ...and the piece IS a door now, in place`, await until(() => !!doorEl(), 3000));
+    doorEl().click();
+    check(`(${kind}) *** pressing the door while editing chooses it and does NOT open it ***`, go.length === 0 && sel()?.target?.id === objId, J(go));
+    const clockWrap = host.querySelector('.k-pcell[data-placed="rc"]');
+    clockWrap?.querySelector('.k-mod')?.click();
+    check(`(${kind}) a module sitting in the room is not the room: a press on it is not taken`, sel()?.target?.id === objId);
+    host.querySelector('.k-room .em-bar .em-done').click();
+    check(`(${kind}) *** Done leaves edit mode ***`, d.editingPanel() === null && !host.querySelector('[data-editing]'));
+    doorEl().click();
+    check(`(${kind}) *** ...and now the door opens ***`, go.some((p) => p.id === 'P'));
+    // The room's own rows: a new room, drawn again, with the clock MOVED into it (not remounted).
+    const clockRec = arr().recFor('rc');
+    const oldRoom = arr().roomScene();
+    d.editPanel(ROOM_PANEL_ID, true);
+    await until(() => sel()?.fields?.length === want.length, 3000);
+    const rowKey = kind === 'room3d' ? 'depth' : 'light';
+    const before = sel().values()[rowKey];
+    host.querySelector(`.k-room .em-card [data-em-step="1"][data-em-key="${rowKey}"]`).click();
+    check(`(${kind}) *** a Room row changed there is saved, and the room drawn again ***`,
+      await until(() => arr().roomScene() && arr().roomScene() !== oldRoom && sel()?.values?.()[rowKey] !== before, 4000), `${before} -> ${sel()?.values?.()[rowKey]}`);
+    check(`(${kind}) ...the clock in it was moved, not remounted, and edit mode is still on the room`,
+      arr().recFor('rc') === clockRec && !!host.querySelector('.k-pcell[data-placed="rc"]')?.isConnected && d.editingPanel()?.id === ROOM_PANEL_ID);
+    d.editPanel(ROOM_PANEL_ID, false);
+    view.destroy();
+    host.remove();
   }
 
   // ============================================================================================

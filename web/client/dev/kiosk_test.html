@@ -411,14 +411,17 @@ const toTab = (m, id) => {
       // (2026-10-02, 6fd7575: "How you choose things" on the Devices tab makes the old rows 32. The lap is unchanged.)
       // (2026-10-02, edit_mode.js: "Edit this panel" -- the ✎ corner's row for a scan -- makes the lap TWELVE,
       // beside Switch module, and Home one press further: 10.)
+      // (2026-10-02, autostart for the slideshow: Photos' "When it opens" row, and "Pause Photos" -- a slideshow
+      // answers play / pause now -- make the lap FOURTEEN and the old rows 34, and Home two presses further: 12.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game'].includes(i.id));
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 12 stops (was every row: 32) ***',
-        lapStops.length === 12 && oldStops.length === 32 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel'),
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 34) ***',
+        lapStops.length === 14 && oldStops.length === 34 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+        && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
-      check('...and Home is 10 presses from where the menu opens (was 25)', homeAt === 10, String(homeAt));
+      check('...and Home is 12 presses from where the menu opens (was 25)', homeAt === 12, String(homeAt));
       kiosk.menu.showTab('module');
 
       // A PRESS IN THE MENU REACHES THE MODULE'S OWN STATE. The hint is re-read from the

@@ -1414,6 +1414,21 @@ export async function mountKiosk(root, {
     health: () => health,
     profileId: () => profileId,
     flashLimit: flashLimitNow,
+    // 2026-10-02, edit mode on the dashboard's room (arrangement.js ROOM_PANEL_ID): where a door or a Room
+    // row it changes is saved -- this screen's own layout, the doc the edit view saves to, and only for the
+    // screen it booted on (a swapped-in screen's room is edited in memory; its own doc is not open here).
+    // The 09-12 watch is TOLD first, so a room the arrangement redraws itself is never reloaded under the
+    // person editing it.
+    layoutStore: {
+      get: () => (profileId === bootProfileId ? ((settings.get() || {}).kiosk || {}).layout || null : null),
+      save: (next) => {
+        if (embedded || previewLayout || profileId !== bootProfileId) return;
+        const cur = (settings.get() || {}).kiosk || {};
+        expectLayoutSig = JSON.stringify(next ?? null);
+        settings.set({ kiosk: { ...cur, layout: next } });
+      },
+    },
+    listDashboards: () => listDashboards(),
   });
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
@@ -4922,7 +4937,12 @@ export async function mountKiosk(root, {
           makeState: stateForProfile, makeEvents: eventsForProfile,
           // (2026-10-02: layered by "every <module> panel" on this screen first -- `withTypeLayer`.)
           wrapState: (mid, st, type) => automation.wrapState(mid, withTypeLayer(st, type), { manifest: getManifest(type) }),
-          ...(id === bootProfileId ? { settingsHandle: settings } : {}),
+          ...(id === bootProfileId ? {
+            settingsHandle: settings,
+            // A layout the dashboard writes to this doc AND applies itself (edit mode redrawing its room):
+            // the 09-12 watch notes it rather than reloading under the person editing.
+            expectLayout: (l) => { expectLayoutSig = JSON.stringify(l ?? null); },
+          } : {}),
           startIndex,
         }),
         // Stage 3b: what it places besides its panels, and the shell's one menu to dock.

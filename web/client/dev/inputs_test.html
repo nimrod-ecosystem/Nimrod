@@ -273,12 +273,15 @@ const logText = (r) => r.q('[data-log]').textContent;
       const unhandled = [];
       const router = createVerbRouter({ bus, modules: () => SCREENS.p1.modules,
                                         onUnhandled: (u) => unhandled.push(u) });
+      // 2026-10-02: a SLIDESHOW answers pause now (it can wait for Start, and be paused: game_start.js's
+      // "When it opens" row on Photos). This used to be the example of a panel that ignores pause.
+      const slideshowPaused = [];
+      bus.subscribe(bus.instanceTopic('m-photos', 'photos/pause'), () => slideshowPaused.push('pause'));
       bus.publish(verbTopic('pause'));
-      check('*** a panel that does not answer pause ignores it — nothing is published ***',
-        fired.length === 0, JSON.stringify(fired));
-      check('...and it is reported as no-mapping, like any other verb',
-        unhandled.length === 1 && unhandled[0].reason === 'no-mapping' && unhandled[0].verb === 'pause',
-        JSON.stringify(unhandled));
+      check('*** pause with the slideshow focused reaches the slideshow, and nothing else ***',
+        fired.length === 0 && slideshowPaused.length === 1, JSON.stringify({ fired, slideshowPaused }));
+      check('...and it is not reported as something the panel has nothing for',
+        unhandled.length === 0, JSON.stringify(unhandled));
       router.setFocus('m-yt');
       bus.publish(verbTopic('pause'));
       bus.publish(verbTopic('volume-down'));
@@ -286,7 +289,7 @@ const logText = (r) => r.q('[data-log]').textContent;
         JSON.stringify(fired) === JSON.stringify([['m-yt', 'youtube/pause', null]]),
         JSON.stringify(fired));
       check('...without reporting "this panel has nothing for that" for a verb no panel is meant to answer',
-        unhandled.length === 1, JSON.stringify(unhandled));
+        unhandled.length === 0, JSON.stringify(unhandled));
       check('...and lists play and pause among what this panel answers, the volume not',
         ['play', 'pause'].every((v) => router.targets()[v])
           && !router.targets()['volume-up'] && !router.targets()['volume-down'],

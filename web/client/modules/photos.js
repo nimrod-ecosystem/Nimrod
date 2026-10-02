@@ -29,6 +29,9 @@ import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
 import { applyGrade } from '../lut.js';
+import {
+  autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
+} from '../game_start.js';
 
 // `fit: contain` — SHOW THE WHOLE PHOTO. It defaulted to `cover`, which crops to fill:
 // a 1200x800 photo in a 775x423 panel lost 18% of its height, off the top and bottom,
@@ -51,6 +54,7 @@ const DEFAULTS = { sourceId: '', album: '', intervalMs: 15000, fit: 'contain' };
 // nothing at all is a stall by any reading.
 const VIDEO_STALL_MS = 15000;
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
+const HOLD_PULSE_MS = 15 * 60 * 1000;   // a held slideshow's "still here" (see `pulseHold`)
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
 // WHAT THE SETTINGS MENU SHOWS.
@@ -100,7 +104,16 @@ const SETTINGS = [
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Album', kind: 'text', default: '', level: 'standard',
     placeholder: 'Everything', readOnly: true, note: 'set in Media / Sources' },
+  // *** WHEN IT OPENS (Mike, 2026-10-02: autostart "on for youtube/picture slideshow"). *** game_start.js's
+  // two rows, ON by default -- exactly what this panel did before the row existed. Off: the first picture
+  // shows and stays, with a Start button, until Play (the bar's button, Space, a switch) or a press on it.
+  ...autostartFields({ on: true }),
 ];
+// The words over a slideshow that is waiting, or that somebody paused. Site copy: no names.
+export const PHOTOS_START_LINES = Object.freeze({
+  waiting: 'Press Start for the slideshow.',
+  paused: 'Paused. Press Start to carry on.',
+});
 
 // THE DECLARATION IS THE TYPE, and this is the one place that decides it. `intervalSec` is
 // a number; `fit` is a string; a checkbox is a boolean. A DOM control cannot know that - a
@@ -220,6 +233,19 @@ registerModule(
     let failStreak = 0;             // items in a row that failed (FAILURE BACKOFF)
     let lastShownAt = 0;            // when the item on screen appeared
 
+    // *** WAITING FOR START, AND PAUSED (2026-10-02). *** `waiting`: autostart is off (game_start.js) and
+    // nobody has pressed Start yet -- decided once, as the first picture shows. `paused`: somebody pressed
+    // Pause (the bar's button, Space, a switch: `photos/pause`). Either way the picture on screen STAYS (no
+    // timer, a clip held at its first frame), and Next / Previous still move by hand. Play, Start, or a press
+    // on the picture carries on. The shell's Pause / Play follows (`PLAY_STATE_TOPIC`), so its next press is
+    // the right one. NOT A GATE: nothing that was running stops for it -- it is a slideshow that has not been
+    // started, or that somebody stopped on purpose.
+    let startDecided = false;
+    let waiting = false;
+    let paused = false;
+    const holding = () => waiting || paused;
+    const reportPlay = createPlayReporter(bus, ctx);
+
     // *** WHICH SLIDESHOW A "NEXT" CAME FROM. *** (Mike, 2026-09-29: "Setting photos to 30
     // seconds doesn't seem to work now.")
     //
@@ -321,6 +347,7 @@ registerModule(
 
     function scheduleAdvance(item) {
       clearAdvance();
+      if (holding()) return;               // waiting for Start, or paused: the picture stays
       if (item.kind === 'video') return;   // videos advance on 'ended' + the watchdog above
       // A FLOOR, not a clamp to the declared options: a value from before the migration, or
       // from a group-apply that has not been validated yet, must not turn the slideshow into
@@ -380,10 +407,14 @@ registerModule(
           el.removeEventListener('timeupdate', onBeat);
           el.removeEventListener('playing', onBeat);
         };
-        // Armed BEFORE play() is asked for, so a clip that never starts at all is covered
-        // by the same clock as one that stops halfway.
-        videoStall.arm(item.id);
-        el.play?.().catch(() => {});
+        // Waiting for Start, or paused: the clip shows its first frame and waits (`carryOn` plays it).
+        if (holding()) el.autoplay = false;
+        else {
+          // Armed BEFORE play() is asked for, so a clip that never starts at all is covered
+          // by the same clock as one that stops halfway.
+          videoStall.arm(item.id);
+          el.play?.().catch(() => {});
+        }
       } else {
         el = document.createElement('img');
         // 'Photo' rather than '' when a source supplies no caption, and rather than the
@@ -440,15 +471,81 @@ registerModule(
         // truncate any forward history (we branched) and append
         history = history.slice(0, histPos + 1);
         history.push(id); histPos = history.length - 1;
-        // durable, append-only play record; picker stats derive from these
-        events.append('play', { id, at: Date.now() }).catch((e) => console.error('photos: play log', e));
+        // durable, append-only play record; picker stats derive from these. A picture shown while the
+        // slideshow WAITS for Start is logged when it starts (`carryOn`), not before: it has not played.
+        if (!waiting) logPlay(id);
       }
+    }
+    function logPlay(id) {
+      events.append('play', { id, at: Date.now() }).catch((e) => console.error('photos: play log', e));
     }
 
     function advance() {
       if (!ids.length) return;
+      decideStart();
       const id = pick(ids, stats, { now: Date.now(), rand: Math.random, recent, channels });
       if (id) show(id, true);
+    }
+
+    // ---- waiting for Start, and Pause / Play (see `waiting` above) --------------------------------
+    // Decided ONCE, as the first picture is about to show: a setting changed later applies to the next
+    // time the panel opens, never by stopping a slideshow somebody is watching.
+    function decideStart() {
+      if (startDecided) return;
+      startDecided = true;
+      waiting = !shouldAutostart(cfg, { fallback: true, alone: panelAlone(ctx) });
+      // Only a slideshow that WAITS says so: one that starts by itself is what every panel always was.
+      if (waiting) syncHold();
+    }
+    function syncHold() {
+      const host = mount.querySelector('[data-start-host]');
+      if (host) {
+        if (holding()) {
+          host.innerHTML = startOverlayHtml({ label: 'Start', text: waiting ? PHOTOS_START_LINES.waiting : PHOTOS_START_LINES.paused });
+          host.hidden = false;
+        } else { host.innerHTML = ''; host.hidden = true; }
+      }
+      const root = mount.querySelector('.photos');
+      if (root) { if (waiting) root.dataset.waiting = '1'; else delete root.dataset.waiting; if (paused) root.dataset.paused = '1'; else delete root.dataset.paused; }
+      reportPlay(!holding());
+      pulseHold();
+    }
+    // *** A HELD SLIDESHOW SAYS IT IS HERE. *** health.js judges a photos panel silent after an hour with
+    // no `photos/next`, and a slideshow waiting for Start (or paused overnight) publishes none -- so the
+    // recovery ladder would remount it, which STARTS a paused one. So while it is held it says `photos/state`
+    // (a heartbeat health.js already counts, tagged as this panel's own) as it holds and every HOLD_PULSE_MS.
+    // 15 minutes: a quarter of health's photos bound, so two can be missed before it matters; not a setting,
+    // because nobody is served by tuning it (the reason youtube.js gives for PROGRESS_MS).
+    let holdTimer = null;
+    function pulseHold() {
+      if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; }
+      if (!holding()) return;
+      try { bus.publish('photos/state', { holding: true, waiting, paused }, OWN); } catch { /* not load-bearing */ }
+      holdTimer = setTimer(() => { holdTimer = null; pulseHold(); }, HOLD_PULSE_MS);
+    }
+    /** Start, or carry on after a pause: the picture on screen gets its full interval from now; a clip plays. */
+    function carryOn() {
+      if (!holding()) return false;
+      const wasWaiting = waiting;
+      waiting = false; paused = false;
+      syncHold();
+      const item = currentId ? byId[currentId] : null;
+      if (wasWaiting && item) logPlay(item.id);
+      if (!item) { if (!currentId && ids.length) advance(); return true; }
+      if (item.kind === 'video') {
+        if (currentVideo) { videoStall.arm(item.id); currentVideo.play?.()?.catch?.(() => {}); }
+        else render(item);
+      } else scheduleAdvance(item);
+      return true;
+    }
+    function pauseShow() {
+      if (paused) return false;
+      paused = true;
+      if (advanceTimer) { clearTimer(advanceTimer); advanceTimer = null; }
+      videoStall.disarm();
+      try { currentVideo?.pause?.(); } catch { /* gone */ }
+      syncHold();
+      return true;
     }
 
     function prev() {
@@ -610,6 +707,7 @@ registerModule(
         mount.innerHTML = `
           <div class="photos">
             <div class="stage" data-stage></div>
+            <div class="photos-start" data-start-host hidden></div>
             <div class="status" data-status hidden></div>
             <div class="nav">
               <button class="pbtn" data-prev aria-label="previous photo">‹</button>
@@ -639,6 +737,16 @@ registerModule(
         // ...but not a next another slideshow sent itself (see `ownTag` above).
         bus.subscribe('photos/next', (_p, _t, meta) => { if (isMine(meta)) advance(); });
         bus.subscribe('photos/prev', (_p, _t, meta) => { if (isMine(meta)) prev(); });
+        // PLAY AND PAUSE (2026-10-02, actions.js MODULE_VERBS.photos): the bar's one button, Space, a
+        // switch, "pause" said aloud. Play also starts a slideshow that is waiting for Start.
+        bus.subscribe('photos/play', () => { carryOn(); });
+        bus.subscribe('photos/pause', () => { pauseShow(); });
+        ensureStartStyle(mount.ownerDocument || document);
+        // The Start button, and a press on the picture itself, start (or carry on) a held slideshow.
+        mount.querySelector('[data-start-host]').addEventListener('click', (e) => {
+          if (e.target instanceof Element && e.target.closest('[data-start]')) carryOn();
+        });
+        mount.querySelector('[data-stage]').addEventListener('click', () => { if (holding()) carryOn(); });
 
         // its own buttons are just another source - ONE PER PANEL. Bindings live on the
         // screen's shared bus, so a source name two panels both bind fans a single press out
@@ -709,7 +817,22 @@ registerModule(
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
-      destroy() { loadSeq += 1; clearAdvance(); },
+      destroy() { loadSeq += 1; clearAdvance(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
+
+      // EDIT MODE (edit_mode.js, 2026-10-02). The picture on screen, and the line naming where the photos come
+      // from, each with the rows about it -- this panel's own declared settings, nothing new. A picture has no
+      // caption of its own here and the slideshow has no "leave this one out" yet, so neither is offered (a
+      // row that does nothing is a lie). The source line first: it is the smaller, inside the bar.
+      editTargets: () => {
+        const label = mount.querySelector('[data-source-label]');
+        const st = stage();
+        const out = [];
+        if (label) out.push({ id: 'source', label: 'Where the photos come from', el: label, keys: ['sourceId', 'album'] });
+        if (st) out.push({ id: 'picture', label: 'The picture', el: st, keys: ['fit', 'intervalMs', 'autostart', 'autostartAlone'],
+          help: 'The picture on screen: how it fits the panel, how long each one stays, and whether the slideshow starts by itself.' });
+        return out;
+      },
+      __probe: () => ({ waiting, paused, currentId }),
 
       // LIVE OPTIONS for a declared field. The manifest stays static - it is the contract, and
       // a modules tab will want to read it off a module that is not even running - while the

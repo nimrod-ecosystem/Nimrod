@@ -147,8 +147,9 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
     // =================================================================================================
     section('*** (2) PAUSE IS THE VERB: who can pause, and "pause it" while hidden ***');
     {
-      check('the modules that answer both verbs can pause', ['youtube', 'karaoke', 'music', 'brickbreaker'].every((t) => answersPause(t)));
-      check('...and the ones that answer neither cannot (dimmed, not hidden)', !answersPause('photos') && !answersPause('clock'));
+      // (2026-10-02: Photos answers both now -- a slideshow can wait for Start and be paused, game_start.js.)
+      check('the modules that answer both verbs can pause', ['youtube', 'karaoke', 'music', 'brickbreaker', 'photos'].every((t) => answersPause(t)));
+      check('...and the ones that answer neither cannot (dimmed, not hidden)', !answersPause('clock') && !answersPause('calculator'));
       const bus = createBus();
       const heard = [];
       const topicPause = bus.instanceTopic ? bus.instanceTopic('bb1', 'brickbreaker/pause') : 'brickbreaker/pause';
@@ -395,7 +396,10 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
         ppBtn() && ppBtn().previousElementSibling?.dataset.act === 'back' && ppBtn().nextElementSibling?.dataset.act === 'next');
       root.querySelector(`[data-mods] .k-dot[data-id="${ids[0]}"]`)?.click();
       await sleep(50);
-      check('*** Photos selected: Pause is DIMMED, and says why ***', kiosk.playPause().can === false && ppBtn().disabled && /nothing to pause/.test(ppBtn().title));
+      // 2026-10-02: a slideshow pauses (its "When it opens" row and the photos/play, photos/pause verbs), so
+      // with Photos selected the button is LIVE and reads Pause (it starts by itself, the default).
+      check('*** Photos selected: Pause / Play is live, and reads Pause (the slideshow is running) ***',
+        kiosk.playPause().can === true && !ppBtn().disabled && kiosk.playPause().paused === false && /Pause/.test(ppBtn().textContent), ppBtn().textContent);
       root.querySelector(`[data-mods] .k-dot[data-id="${ids[1]}"]`)?.click();
       await sleep(50);
       const heard = [];

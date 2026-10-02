@@ -595,6 +595,27 @@ registerModule(
       onResize() {},
       onHide() {},
       destroy() { clearTick(timer); timer = null; },
+      // EDIT MODE (edit_mode.js, 2026-10-02): the parts of the clock, each with the rows ABOUT it (its own
+      // declared settings, nothing new). It is a digital clock -- no face or hands -- so the parts are the
+      // time, the date line, and the timer when one is showing. A press anywhere else chooses the panel.
+      editTargets: () => {
+        const q = (s) => mount.querySelector(s);
+        const shown = (el) => !!el && !el.hidden;
+        const out = [];
+        if (shown(q('[data-date]')) || shown(q('[data-when]'))) {
+          out.push({ id: 'date', label: 'The date', el: shown(q('[data-date]')) ? q('[data-date]') : q('[data-when]'),
+            also: [q('[data-when]')].filter(shown), keys: ['showDate', 'tz'], help: 'The day and the date under the time.' });
+        }
+        if (shown(q('[data-time]'))) {
+          out.push({ id: 'time', label: 'The time', el: q('[data-time]'), keys: ['hour12', 'seconds', 'size', 'tz'],
+            help: 'The time itself: 12 or 24 hours, seconds, its size and its time zone.' });
+        }
+        if (shown(q('[data-cd]'))) {
+          out.push({ id: 'timer', label: 'The timer', el: q('[data-cd]'), keys: ['mode', 'timerMs', 'pomodoroWorkMs', 'pomodoroBreakMs'],
+            help: 'What this panel counts: a timer, a stopwatch or a Pomodoro, and for how long.' });
+        }
+        return out;
+      },
     };
   },
 );

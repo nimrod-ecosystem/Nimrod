@@ -53,7 +53,7 @@
 
 import { registerModule, listManifests } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
-import { mountRoomScene, RENDER_DEFAULTS, OBJECT_DEFAULTS, DEFAULT_BOOKS, MAX_BOOKS, moduleLabel } from '../room_scene.js';
+import { mountRoomScene, RENDER_DEFAULTS, OBJECT_DEFAULTS, DEFAULT_BOOKS, MAX_BOOKS, moduleLabel, CLOSEUP_PARTS } from '../room_scene.js';
 import { listPresets, presetRecipe, DEFAULT_PRESET } from '../room_presets.js';
 import { LISTENING_TOPIC } from '../input_speech.js';
 import { mountCatHelp } from '../cat_help.js';
@@ -240,6 +240,26 @@ export function configFrom(row = {}) {
   return cfg;
 }
 
+// *** EDIT MODE: WHICH OF THIS MODULE'S OWN ROWS BELONG TO WHICH OBJECT (edit_mode.js, 2026-10-02). ***
+// Mike: "click on a button or piece of furniture ... and have access to any options for it." The room
+// MODULE has no per-object storage (its objects come from a preset), so an object's options are the rows
+// above that are ABOUT it -- the same rows, written to the same state row, as the ⚙ menu's. Nothing new is
+// declared. An object none of them is about (a plant) honestly has nothing to set. A press on the walls or
+// the floor chooses the whole room, whose options are every row above.
+export function objectKeys(o = {}) {
+  const keys = [];
+  const add = (...ks) => { for (const k of ks) if (!keys.includes(k)) keys.push(k); };
+  if (o.part === 'bookshelf' || o.role === 'library') add('shelf', 'books', 'bookList');
+  if (o.window) add('windowShows', 'windowPress', 'aiVisits');
+  if (CLOSEUP_PARTS.includes(o.part)) add('closeups', 'closeupReturnMs');
+  if (o.animal) add('petSound');
+  if (o.kind === 'sign') add('signWords');
+  if (o.role === 'display') add('liftReturnMs', 'showSlots');
+  // Anything that takes a press carries a label and can grow under the cursor: those two rows are about it.
+  if (o.role && o.role !== 'pet') add('labels', 'zoom');
+  return keys;
+}
+
 /** The books the renderer is given: null = ask the screen (then a few common ones). */
 export function booksOption(cfg) {
   if (cfg.books === 'few') return DEFAULT_BOOKS.slice();
@@ -366,6 +386,13 @@ registerModule(
       __editor: () => editor,
       // The reactions editor, for a host that offers it (a settings row, an edit window).
       openReactions: () => openEditor(),
+      // EDIT MODE (edit_mode.js): each object, chosen by a press on it, with the rows about it (`objectKeys`).
+      // No `whole` target: a press on the walls or the floor chooses the panel, i.e. every row of the room's.
+      editTargets: () => {
+        let objs = [];
+        try { objs = scene?.objectEls?.() || []; } catch { objs = []; }
+        return objs.map((o) => ({ id: o.id, label: o.name, el: o.el, also: o.also || [], keys: objectKeys(o) }));
+      },
       init() {
         mount.innerHTML = '';
         host = document.createElement('div');
