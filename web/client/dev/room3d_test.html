@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room3d - a box room from CSS 3D transforms, with modules on its walls - test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* 960 x 540: the room's own stage, so the fit is 1 and drawn positions can be checked in px. */
+  #box{position:fixed;left:0;top:0;width:960px;height:540px;pointer-events:none;
+       --surface-alt: rgb(1, 2, 3); --surface: rgb(250, 250, 250); --text: rgb(10, 20, 30)}
+  #host{position:fixed;left:0;top:0;width:960px;height:540px;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>room3d</h1>
+<p>A box room built from page elements placed in 3D by the compositor: walls, floor, ceiling, box
+furniture, and slots on the walls where ordinary modules mount. Checks: the structure, the geometry
+(the back wall drawn where the perspective says), modules in its slots and placed freely on its walls
+through the real arrangement, the camera drift (off by default, off under reduced motion and 'still',
+transform-only), theme tokens only, and that destroy leaves nothing behind.</p>
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="box"></div>
+<div id="host"></div>
+
+<script type="module">
+import { mountRoom3d, ensureRoom3dCss, ROOM3D_DEFAULTS, ROOM3D_PRESETS, normalizeRoom3d, viewOf, faceTransforms,
+  faceBoxFor, driftFor, motionFor, CALM_STRETCH, W, H } from '../room3d.js';
+import { normalizeLayout, normalizeScene } from '../layout.js';
+import { createArrangement } from '../arrangement.js';
+import { createBus } from '../bus.js';
+import { ROOM_SHELLS } from '../room_parts.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.textContent = `note: ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const box = document.getElementById('box');
+const systemReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Properties whose animation forces layout every frame (dev/scene_motion_test.html's list).
+const LAYOUT = ['top', 'left', 'right', 'bottom', 'width', 'height', 'margin', 'marginTop',
+  'marginLeft', 'padding', 'inset', 'perspective', 'perspectiveOrigin'];
+const layoutProps = (anim) => {
+  const props = new Set();
+  for (const kf of anim.effect?.getKeyframes?.() || []) for (const k of Object.keys(kf)) if (LAYOUT.includes(k)) props.add(k);
+  return [...props];
+};
+
+// Project a point of the room (stage px) to the screen the way the stage's perspective does.
+function project(view, x, y, z) {
+  const ox = W / 2, oy = (view.eye / 100) * H, k = view.lens / (view.lens - z);
+  return { x: ox + (x - ox) * k, y: oy + (y - oy) * k };
+}
+
+(async () => {
+try {
+  await ensureRoom3dCss();
+
+  // =====================================================================================================
+  section('1. the numbers (pure)');
+  {
+    check('*** drift is OFF by default ***', ROOM3D_DEFAULTS.drift === 'off');
+    const v = viewOf({}, {});
+    check('the back wall is drawn at 0.6 of the screen (lens / (lens + depth))', near(v.scale, 0.6, 0.002), String(v.scale));
+    const b = ROOM_SHELLS.room.back;
+    check('...close to the 2D room\'s back wall, so free placement means about the same in both',
+      Math.abs((1 - v.scale) * 50 - b.l) < 6 && Math.abs(100 - (1 - v.scale) * 50 - b.r) < 6, `3D ${(1 - v.scale) * 50}..${100 - (1 - v.scale) * 50}, 2D ${b.l}..${b.r}`);
+    const foot = project(v, 0, H, -v.depth).y / H * 100;
+    check('the back wall\'s foot is near the 2D room\'s floor line (66%)', near(foot, 66, 3), foot.toFixed(1));
+    const ft = faceTransforms(v);
+    check('five faces: back, floor, ceiling, left, right', J(Object.keys(ft).sort()) === J(['back', 'ceiling', 'floor', 'left', 'right']));
+    const r = normalizeRoom3d({ recipe: { slots: [{ id: 'a', surface: 'nowhere', x: 500 }, { id: 'a' }, null],
+      furniture: [{ id: 'a' }, { id: 'f', x: -5, w: 1e9 }], depth: 99999 } });
+    check('a recipe is checked: unknown surface -> back, numbers clamped, duplicate ids dropped',
+      r.slots.length === 1 && r.slots[0].surface === 'back' && r.slots[0].x === 100
+      && r.furniture.length === 1 && r.furniture[0].id === 'f' && r.furniture[0].x === 0 && r.furniture[0].w === 2000
+      && r.depth === 2000, J(r));
+    check('no scene at all is the default preset', J(normalizeRoom3d()) === J(normalizeRoom3d({ preset: 'box' })));
+    check('an unknown preset is the default preset, not an empty room', normalizeRoom3d({ preset: 'nope' }).slots.length === ROOM3D_PRESETS.box.recipe.slots.length);
+    // Free placement: the module's centre is DRAWN where x/y say, at the size w/h say.
+    for (const [surface, g, z] of [['back', { x: 40, y: 35, w: 20, h: 20 }, null], ['back', { x: 70, y: 50, w: 10, h: 30 }, null]]) {
+      const fb = faceBoxFor(surface, g, v);
+      const cx = fb.left / 100 * W, cy = fb.top / 100 * H;
+      const p = project(v, cx, cy, -v.depth);
+      check(`faceBoxFor ${surface} (${g.x},${g.y}): the centre is drawn at x/y`,
+        near(p.x, g.x / 100 * W, 0.5) && near(p.y, g.y / 100 * H, 0.5), J({ p, fb }));
+      check(`...and its drawn width is w`, near(fb.width / 100 * W * v.scale, g.w / 100 * W, 0.5), J(fb));
+    }
+    const left = faceBoxFor('left', { x: 8, y: 40, w: 10, h: 20 }, v);
+    const dz = left.left / 100 * (v.depth + v.front) - v.front;
+    const pl = project(v, 0, left.top / 100 * H, -dz);
+    check('faceBoxFor left: on the left wall, the centre is drawn at x/y', near(pl.x, 0.08 * W, 0.5) && near(pl.y, 0.4 * H, 0.5), J({ pl, left }));
+    const held = faceBoxFor('left', { x: 70, y: 40, w: 10, h: 20 }, v);
+    check('a point the left wall cannot reach is held at its back corner, not thrown off the wall',
+      near(held.left, 100 * (v.front + v.depth) / (v.front + v.depth), 0.01), J(held));
+    const right = faceBoxFor('right', { x: 92, y: 40, w: 10, h: 20 }, v);
+    const dzr = v.depth - right.left / 100 * (v.depth + v.front);
+    const pr = project(v, W, right.top / 100 * H, -dzr);
+    check('faceBoxFor right: the centre is drawn at x/y', near(pr.x, 0.92 * W, 0.5) && near(pr.y, 0.4 * H, 0.5), J({ pr, right }));
+  }
+
+  section('1b. motion, as data');
+  {
+    check('drift off -> no drift', driftFor({ drift: 'off' }) === null && driftFor({}) === null);
+    const d = driftFor({ drift: 'on' });
+    check('drift on -> the default sway', d && d.deg === ROOM3D_DEFAULTS.driftDeg && d.seconds === ROOM3D_DEFAULTS.driftSeconds, J(d));
+    check('*** reduced motion (the host asks) -> no drift ***', driftFor({ drift: 'on', reducedMotion: true }) === null);
+    check('*** the system asks for reduced motion -> no drift ***', driftFor({ drift: 'on' }, true) === null);
+    check('*** motion "still" -> no drift ***', driftFor({ drift: 'on', motion: 'still' }) === null);
+    check('motion "calm" stretches it by the same factor as the live scenes',
+      driftFor({ drift: 'on', motion: 'calm' })?.seconds === Math.round(ROOM3D_DEFAULTS.driftSeconds * CALM_STRETCH * 10) / 10);
+    check('an unknown motion word is gentle; the machine only ever lowers it', motionFor({ motion: 'wild' }) === 'gentle' && motionFor({ motion: 'gentle' }, true) === 'still');
+    check('the sway is clamped (a typo cannot spin the room)', driftFor({ drift: 'on', driftDeg: 90 }).deg === 8);
+  }
+
+  // =====================================================================================================
+  section('2. the structure');
+  {
+    const room = mountRoom3d(box, { kind: 'room3d', preset: 'box' });
+    const root = box.querySelector('[data-room3d]');
+    check('it mounts one root in the host', root && box.querySelectorAll('[data-room3d]').length === 1);
+    const faces = [...root.querySelectorAll('.r3-cam > .r3-face')];
+    check('*** six faces at most: back, floor, ceiling, left, right ***', faces.length === 5 && faces.length <= 6,
+      faces.map((f) => f.dataset.surface).join());
+    const objs = root.querySelectorAll('.r3-box');
+    check('three pieces of furniture, each a box of four faces (front, top, two sides)',
+      objs.length === 3 && [...objs].every((o) => o.querySelectorAll(':scope > .r3-face').length === 4), String(objs.length));
+    check('objects() lists them for the map editor, none a door', J(room.objects().map((o) => o.opens)) === J([null, null, null])
+      && room.objects().map((o) => o.id).join() === 'cabinet,table,shelf');
+    check('setObjectOpens says no (doors are the 2D room\'s for now)', room.setObjectOpens('cabinet', 'x') === false);
+    const slots = room.slots();
+    check('*** slots(): one per wall in the default room ***', J([...slots.keys()]) === J(['back', 'left', 'right']));
+    check('each slot is an element ON its wall (inside that face)',
+      [...slots.values()].every((s) => s.el && room.surface(s.surface)?.contains(s.el)));
+    check('the camera keeps 3D for its faces (preserve-3d) and the stage has the perspective',
+      getComputedStyle(root.querySelector('.r3-cam')).transformStyle === 'preserve-3d'
+      && getComputedStyle(root.querySelector('.r3-stage')).perspective === '700px',
+      getComputedStyle(root.querySelector('.r3-stage')).perspective);
+    // Geometry, as drawn by the browser: the back wall where the maths says.
+    const v = room.view();
+    const r = room.surface('back').getBoundingClientRect(), hb = box.getBoundingClientRect();
+    const tl = project(v, 0, 0, -v.depth), br = project(v, W, H, -v.depth);
+    check('*** the back wall is drawn where the perspective puts it ***',
+      near(r.left - hb.left, tl.x, 2) && near(r.top - hb.top, tl.y, 2) && near(r.right - hb.left, br.x, 2) && near(r.bottom - hb.top, br.y, 2),
+      J({ r: [r.left - hb.left, r.top - hb.top, r.right - hb.left, r.bottom - hb.top], tl, br }));
+    const fl = room.surface('floor').getBoundingClientRect();
+    check('the floor runs from the back wall\'s foot to past the bottom of the screen',
+      near(fl.top - hb.top, br.y, 2) && fl.bottom - hb.top >= H - 1, J([fl.top - hb.top, fl.bottom - hb.top]));
+    const lw = room.surface('left').getBoundingClientRect();
+    check('the left wall runs from the screen\'s left edge (and past it) to the back wall',
+      lw.left - hb.left <= 1 && near(lw.right - hb.left, tl.x, 2), J([lw.left - hb.left, lw.right - hb.left]));
+    // Theme tokens only: the back wall IS the theme's --surface-alt (set on #box above).
+    check('*** the walls are the theme\'s colour (--surface-alt), not one picked here ***',
+      getComputedStyle(room.surface('back')).backgroundColor === 'rgb(1, 2, 3)', getComputedStyle(room.surface('back')).backgroundColor);
+    // No literal colour in the stylesheet: every colour comes from a var(), a system colour or `transparent`.
+    const css = await (await fetch('../room3d.css')).text();
+    const body = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    check('*** room3d.css holds no literal colour (no #hex, rgb(), hsl()) ***', !/#[0-9a-f]{3,8}\b|\brgba?\(|\bhsla?\(/i.test(body),
+      (body.match(/#[0-9a-f]{3,8}\b|\brgba?\([^)]*\)|\bhsla?\([^)]*\)/i) || [''])[0]);
+    room.destroy();
+    check('*** destroy removes everything it drew ***', !box.querySelector('[data-room3d]') && box.children.length === 0);
+    room.destroy();
+    check('destroy twice is harmless', room.destroyed() === true);
+  }
+
+  // =====================================================================================================
+  section('3. motion on the page');
+  {
+    const still = mountRoom3d(box, {});
+    check('*** by default nothing in the room is animated ***', still.drifting() === false && box.getAnimations({ subtree: true }).length === 0,
+      String(box.getAnimations({ subtree: true }).length));
+    still.destroy();
+    const reduced = mountRoom3d(box, {}, { drift: 'on', reducedMotion: true });
+    check('*** drift on, reduced motion asked: still, no animation ***', reduced.drifting() === false
+      && box.getAnimations({ subtree: true }).length === 0 && reduced.root.dataset.motion === 'still');
+    reduced.destroy();
+    const stillM = mountRoom3d(box, {}, { drift: 'on', motion: 'still' });
+    check('drift on, motion "still": no animation', stillM.drifting() === false && box.getAnimations({ subtree: true }).length === 0);
+    stillM.destroy();
+    const on = mountRoom3d(box, {}, { drift: 'on' });
+    if (systemReduced) {
+      check('this browser asks for reduced motion, so drift on draws still', on.drifting() === false && box.getAnimations({ subtree: true }).length === 0);
+      note('reduced motion is set here: the moving case is not measurable in this browser');
+    } else {
+      const anims = box.getAnimations({ subtree: true });
+      check('*** drift on: the camera is animated, and only the camera ***', on.drifting() === true && anims.length === 1
+        && anims[0].effect.target === on.root.querySelector('.r3-cam'), String(anims.length));
+      const bad = anims.filter((a) => layoutProps(a).length);
+      check('*** no running animation changes a layout property (transform only) ***', bad.length === 0,
+        bad.map((a) => layoutProps(a).join('/')).join('; '));
+      const kfs = anims[0]?.effect.getKeyframes() || [];
+      check('its keyframes are transform and nothing else', kfs.length >= 2 && kfs.every((k) => Object.keys(k).filter((x) => !['offset', 'easing', 'composite', 'computedOffset'].includes(x)).join() === 'transform'),
+        J(kfs));
+      check('it runs at the drift\'s pace', anims[0]?.effect.getComputedTiming().duration === ROOM3D_DEFAULTS.driftSeconds * 1000,
+        String(anims[0]?.effect.getComputedTiming().duration));
+      on.setOptions({ drift: 'off' });
+      check('turned off live (setOptions): no animation, no rebuild', on.drifting() === false && box.getAnimations({ subtree: true }).length === 0
+        && box.querySelectorAll('.r3-face').length > 0);
+      on.setOptions({ drift: 'on', motion: 'calm' });
+      check('calm: slower', box.getAnimations({ subtree: true })[0]?.effect.getComputedTiming().duration === ROOM3D_DEFAULTS.driftSeconds * CALM_STRETCH * 1000);
+    }
+    on.destroy();
+    check('destroy leaves no animation behind', box.getAnimations({ subtree: true }).length === 0 && !box.children.length);
+  }
+
+  // =====================================================================================================
+  section('4. layout.js keeps the scene');
+  {
+    check('a room3d scene survives normalizeScene', J(normalizeScene({ kind: 'room3d', preset: 'box', junk: 1 })) === J({ kind: 'room3d', preset: 'box' }));
+    check('drift "on" is kept; anything else in options is dropped (off is the default, not stored)',
+      J(normalizeScene({ kind: 'room3d', options: { drift: 'on', x: 1 } }).options) === J({ drift: 'on' })
+      && !('options' in normalizeScene({ kind: 'room3d', options: { drift: 'off' } })));
+    check('...and survives normalizeLayout', normalizeLayout({ preset: 'full', slots: [null], scene: { kind: 'room3d' } }, []).scene?.kind === 'room3d');
+  }
+
+  // =====================================================================================================
+  section('5. modules on its walls, through the real arrangement');
+  {
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
+    const kioskEl = el('kiosk'), stageEl = el('k-stage'), mirrorEl = el('k-mirror'), clockEl = el('k-clock'), ambientEl = el('k-ambient');
+    kioskEl.style.cssText = 'position:absolute;inset:0';
+    kioskEl.append(stageEl, mirrorEl, clockEl, ambientEl);
+    mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
+    const log = { mounts: [], destroyed: [] };
+    let data = {};
+    const arr = createArrangement({
+      bus: createBus(), user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true,
+      settings: { get: () => data, set: (p) => { data = { ...data, ...p }; } },
+      kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+      mountInstance: async (def, h) => {
+        log.mounts.push(def.id); h.textContent = def.id;
+        return { id: def.id, type: def.type, title: def.type, el: h,
+          instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {} },
+          state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
+      },
+      destroyRec: (rec) => { if (rec) rec.instance.destroy(); },
+      watchRec: (rec) => rec, renderMods() {},
+      runtime: () => ({ router: { focused: () => null, setFocus() {}, focusNext() {}, reachable: () => [] } }),
+      health: () => ({ forget() {} }), profileId: () => 'scr',
+    });
+    const mods = [{ id: 'p1', type: 'photos' }, { id: 'k1', type: 'clock' }, { id: 't1', type: 'trivia' }, { id: 'w1', type: 'wordforge' }];
+    arr.setProfile({ id: 'scr', modules: mods });
+    const saved = { preset: 'full', slots: [null], scene: { kind: 'room3d', preset: 'box' }, placed: [
+      { id: 'p1', place: 'scene', slot: 'back' },
+      { id: 'k1', place: 'scene', slot: 'left' },
+      { id: 't1', place: 'scene', surface: 'back', x: 30, y: 30, w: 12, h: 12 },
+      { id: 'w1', place: 'scene', surface: 'right', x: 92, y: 40, w: 8, h: 14 },
+    ] };
+    arr.resolve(saved); arr.partition(); await arr.mountOverlays();
+    await arr.mountLayout();
+    const room = arr.roomScene();
+    check('*** the dashboard\'s scene is the 3D room ***', room && room.kind === 'room3d' && kioskEl.querySelector('.k-placed[data-place="scene"] [data-room3d]'));
+    check('all four modules mounted', ['p1', 'k1', 't1', 'w1'].every((id) => log.mounts.includes(id)), log.mounts.join());
+    check('*** a module placed in a slot mounts IN that slot, on its wall ***',
+      room.slots().get('back').el.contains(arr.recFor('p1')?.el) && room.surface('left').contains(arr.recFor('k1')?.el));
+    check('roomSlots() hands the 3D room\'s slots to Home (the same call the 2D room answers)', J([...arr.roomSlots().keys()]) === J(['back', 'left', 'right']));
+    const wrap = (id) => kioskEl.querySelector(`[data-placed="${id}"]`);
+    check('a module placed freely goes ON the wall it names', room.surface('back').contains(wrap('t1')) && room.surface('right').contains(wrap('w1')));
+    const hb = host.getBoundingClientRect();
+    const c = (e) => { const r = e.getBoundingClientRect(); return { x: (r.left + r.right) / 2 - hb.left, y: (r.top + r.bottom) / 2 - hb.top, w: r.width }; };
+    const ct = c(wrap('t1'));
+    check('*** ...and is DRAWN with its centre where x/y put it, at the width w asked ***',
+      near(ct.x, 0.30 * W, 3) && near(ct.y, 0.30 * H, 3) && near(ct.w, 0.12 * W, 3), J(ct));
+    const cw = c(wrap('w1'));
+    check('on a side wall too (the centre; the wall foreshortens the width)', near(cw.x, 0.92 * W, 4) && near(cw.y, 0.40 * H, 4), J(cw));
+    check('the room\'s objects reach the map editor', arr.roomObjects().length === 3);
+    const before = log.mounts.length;
+    const res = await arr.applyPlaced({ ...saved, placed: [saved.placed[0], saved.placed[1],
+      { id: 't1', place: 'scene', surface: 'left', x: 8, y: 40, w: 8, h: 12 }, saved.placed[3]] });
+    check('*** moving a module to another wall is applied in place: re-parented, not remounted ***',
+      res?.applied && log.mounts.length === before && room.surface('left').contains(wrap('t1')), J(res));
+    arr.destroy();
+    check('*** destroy takes the 3D room and every module down ***', arr.roomScene() === null && !kioskEl.querySelector('[data-room3d]')
+      && ['p1', 'k1', 't1', 'w1'].every((id) => log.destroyed.includes(id)));
+  }
+} catch (err) {
+  check('the suite ran without throwing', false, err && (err.stack || err.message || String(err)));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
