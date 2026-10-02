@@ -54,6 +54,8 @@
 // `data-scene-host` (see below), so every existing call site is unaffected.
 import { liveThemes, BOARD_BASE } from './live_themes.js';
 import { syncScene } from './livescene.js';
+// User folders (867a7ff): a font the device's own folder supplies goes in front of the theme's stack.
+import { userFontStack } from './user_fonts.js';
 
 const SYSTEM_FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
@@ -309,13 +311,14 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 
 // `flashLimit` (a number or a getter, flash_limit.js): the host's flash limit for the live scene's own
 // flicker. A kiosk passes its `flashLimitNow`. OMITTED, it is not sent at all: a scene mounted fresh
-// gets flash_limit.js's default (3, the ceiling), and a scene already running KEEPS the limit its host
+// gets flash_limit.js's default (no limit, since 8a89e31), and a scene already running KEEPS the limit its host
 // gave it - so a settings panel re-applying the theme on the same page cannot loosen a stricter one.
 export function applyTheme(rootEl, id, { flashLimit } = {}) {
   const resolved = resolveThemeId(id);
   const theme = THEMES[resolved];
   const vars = theme.vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
+  rootEl.style.setProperty('--font', userFontStack(vars['--font']));
   // Derived AFTER the theme's own values, and from them, so a theme that overrides an accent
   // gets matching text with no extra bookkeeping.
   for (const accent of ACCENT_VARS) {

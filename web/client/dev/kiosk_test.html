@@ -530,7 +530,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
         burnLap.push(kiosk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
       }
       check('it cycles through all three and wraps home',
-        burnLap.join(',') === 'Dim after 10 minutes idle,Slowly shift the picture when idle,Off',
+        burnLap.join(',') === 'Dim after 10 minutes idle,Slowly shift the picture when idle (for OLED screens),Off',
         burnLap.join(' | '));
 
       // PANEL BACKGROUNDS (Mike, 2026-09-23: "I would make the backgrounds transparent/
@@ -1362,7 +1362,7 @@ const ds = () => root.querySelector('.kiosk').dataset;
     // not waiting for the next activity event to notice the setting changed.
     walkToB('set:burnIn');
     bk.menu.select();   // dim -> drift
-    check('set to drift', bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint === 'Slowly shift the picture when idle',
+    check('set to drift', bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint === 'Slowly shift the picture when idle (for OLED screens)',
       bk.menu.items().find((r) => r.id === 'set:burnIn')?.hint);
     check('*** idling past the wait drifts the screen instead of dimming it ***',
       await settled(() => kioskEl.classList.contains('burn-drift') && !kioskEl.classList.contains('burn-dim')),
