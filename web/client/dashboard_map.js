@@ -25,7 +25,7 @@
 // hundred nodes of DOM for ten dashboards. Past `MAP_DRAW_MAX` dashboards the picture would be unreadable
 // at 1920x1080, so the window shows the list alone and says so.
 
-import { recipeItemIds, sceneRecipe } from './room_doors.js';
+import { recipeItemIds, furnitureIds, sceneRecipe } from './room_doors.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -72,13 +72,22 @@ export function dashboardLinks({ record = null, layout = null, shows = {}, recip
     const to = target(e && e.opens);
     if (to && e.id) out.push({ kind: OPENS, to, via: { kind: 'module', id: e.id, name: modName(e.id) } });
   }
-  const r = recipe || (layout && layout.scene && layout.scene.kind === 'room' && layout.scene.recipe) || null;
+  const sceneKind = layout && layout.scene && layout.scene.kind;
+  const r = recipe || ((sceneKind === 'room' || sceneKind === 'room3d') && layout.scene.recipe) || null;
   if (r && Array.isArray(r.items)) {
     const ids = recipeItemIds(r);
     r.items.forEach((it, i) => {
       if (!it || it.kind === 'module') return;
       const to = target(it.opens);
       if (to) out.push({ kind: OPENS, to, via: { kind: 'object', id: ids[i], name: itemName(it) } });
+    });
+  }
+  // The 3D room's doors are its furniture (room3d.js, cb84c36): the same arrow, from the piece.
+  if (r && Array.isArray(r.furniture)) {
+    const ids = furnitureIds(r);
+    r.furniture.forEach((f, i) => {
+      const to = target(f && f.opens);
+      if (to && ids[i]) out.push({ kind: OPENS, to, via: { kind: 'object', id: ids[i], name: (f && f.name) || ids[i] } });
     });
   }
   for (const [mid, sid] of Object.entries(shows || {})) {

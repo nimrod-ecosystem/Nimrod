@@ -180,6 +180,14 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       check('*** a dashboard\'s arrows: a module\'s door, a room object\'s door, a frame (and only its own modules\' frames) ***',
         J(links.map((l) => [l.kind, l.to, l.via.kind, l.via.name])) === J([['opens', 'R', 'module', 'Clock'], ['opens', 'GONE', 'object', 'Desk'], ['shows', 'H', 'module', 'Dashboard']]),
         J(links));
+      const links3d = dashboardLinks({
+        record: { id: 'T', name: 'Three', modules: [] },
+        layout: { preset: 'full', slots: [null], scene: { kind: 'room3d', recipe: {
+          furniture: [{ id: 'cab', name: 'Cabinet', opens: 'H' }, { name: 'Table' }] } } },
+      });
+      check('*** the 3D room\'s furniture doors draw arrows too (only the pieces that open something) ***',
+        J(links3d.map((l) => [l.kind, l.to, l.via.kind, l.via.id, l.via.name])) === J([['opens', 'H', 'object', 'cab', 'Cabinet']]),
+        J(links3d));
       const g = buildMapGraph([
         { id: 'H', name: 'Home', links },
         { id: 'R', name: 'Living room', links: [{ kind: 'opens', to: 'H', via: { kind: 'object', id: 'door', name: 'Door' } }] },
