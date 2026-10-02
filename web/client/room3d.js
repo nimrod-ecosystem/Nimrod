@@ -38,9 +38,23 @@
 //      hands back empty elements (slots, and the faces for free placement). arrangement.js does the rest.
 //
 // *** WHAT IT DOES NOT DO (YET), SAID PLAINLY. *** No day/evening/night light, no window with a live view,
-// no objects that are buttons or doors (`objects()` lists the furniture; `setObjectOpens` says no), no
-// close-ups and no cat. Those are the 2D room's; whether they come here depends on the bench measurement
+// no close-ups and no cat. Those are the 2D room's; whether they come here depends on the bench measurement
 // and on Mike's three.js decision, not on this file.
+//
+// *** ITS FURNITURE CAN BE A DOOR (2026-10-02), the 2D room's row 2.38 on the same terms. *** A piece with
+// `opens: '<dashboard id>'` on its recipe entry is a BUTTON: pressing it publishes `dashboard/go { id, claim }`
+// (dashboard_nest.js) -- the verb the kiosk answers with its load-then-swap, the one a 2D room object sends --
+// and nobody claiming it (a preview, the modules page) reaches the host's `onUnclaimed`, as in room_scene.js.
+// It is LABELLED: its name is its accessible name and, by default, a chip on its front (`labels`, below).
+// A piece with no `opens` is NOT a button: in the 3D room furniture has no other role yet, and a button that
+// does nothing is a dead stop for somebody pressing a switch. `setObjectOpens` changes ONE piece in place
+// (its box is redrawn; the walls, their slots and the modules in them are not touched), which is what the
+// map editor's Opens window and the arrangement's `applyPlaced` call.
+
+import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
+
+export const OPENS_ACTION = 'dashboard.open';   // room_scene.js's name for the same press
+export const OPENS_MAX = 200;                    // layout.js OPENS_MAX: an id, not prose
 
 export const W = 960;
 export const H = 540;
@@ -62,6 +76,9 @@ export const H = 540;
 //                        watching a photo on the wall would notice it move within that photo's turn.
 //   motion 'gentle'      the ladder livescene.js and room_scene.js use ('gentle' | 'calm' | 'still');
 //                        'calm' stretches the drift by CALM_STRETCH, 'still' stops it.
+//   labels 'always'      a piece that is a door carries its name on a chip -- room_scene.js's default and
+//                        its reason (Design: "an object's meaning is never only its picture"; always is
+//                        the reading of that for someone who cannot hover). 'pointed': only on hover/focus.
 //
 // *** DRIFT: OFF BY DEFAULT, ARGUED. ***
 //   FOR off: the person in front of the screen may be there all day; a room that sways under her pictures
@@ -72,7 +89,7 @@ export const H = 540;
 //   So: off unless somebody turns it on, per dashboard (`layout.scene.options.drift`).
 export const ROOM3D_DEFAULTS = Object.freeze({
   lens: 700, depth: 467, eye: 15, front: 140,
-  drift: 'off', driftDeg: 2.5, driftSeconds: 40, motion: 'gentle', reducedMotion: false,
+  drift: 'off', driftDeg: 2.5, driftSeconds: 40, motion: 'gentle', reducedMotion: false, labels: 'always',
 });
 export const MOTIONS = Object.freeze(['gentle', 'calm', 'still']);
 export const CALM_STRETCH = 1.8;                 // the same factor livescene.js uses for 'calm'
@@ -81,7 +98,12 @@ const LIMITS = { lens: [200, 4000], depth: [100, 2000], eye: [0, 100], front: [0
   driftDeg: [0, 8], driftSeconds: [5, 600] };
 
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const num = (v, d, [lo, hi]) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? clamp(Number(v), lo, hi) : d);
+/** A door's target: a trimmed id, or null (room_scene.js `opensOf`, room_doors.js `doorTarget`: one rule). */
+export const opensOf = (it) => {
+  const t = it && typeof it.opens === 'string' ? it.opens.trim() : '';
+  return t && t.length <= OPENS_MAX ? t : null;
+};
+const num =(v, d, [lo, hi]) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? clamp(Number(v), lo, hi) : d);
 
 // *** THE PRESETS. *** One for now: a plain box room with a slot on each wall and three pieces of
 // furniture. Slot x/y/w/h are percent of THEIR FACE AS SEEN: on a side wall x runs left to right as the
@@ -126,8 +148,11 @@ export function normalizeRoom3d(scene = {}) {
     const id = typeof f.id === 'string' && f.id ? f.id : `thing${i + 1}`;
     if (ids.has(id)) return null;
     ids.add(id);
-    return { id, name: typeof f.name === 'string' && f.name ? f.name : id,
+    const out = { id, name: typeof f.name === 'string' && f.name ? f.name : id,
       x: pct(f.x, 50), z: pct(f.z, 50), w: num(f.w, 120, [4, 2000]), h: num(f.h, 80, [4, 2000]), d: num(f.d, 80, [4, 2000]) };
+    const opens = opensOf(f);
+    if (opens) out.opens = opens;
+    return out;
   }).filter(Boolean);
   const out = { slots, furniture };
   for (const k of ['lens', 'depth', 'eye', 'front']) if (base[k] !== undefined) out[k] = num(base[k], ROOM3D_DEFAULTS[k], LIMITS[k]);
@@ -197,6 +222,37 @@ export function faceBoxFor(surface, g, view) {
   const s = view.scale;                                         // the back wall
   return { left: ((ox + (sx - ox) / s) / W) * 100, top: ((oy + (sy - oy) / s) / H) * 100,
     width: (vw / s / W) * 100, height: (vh / s / H) * 100 };
+}
+
+/**
+ * *** faceBoxFor RUN FORWARDS: WHERE A SLOT IS DRAWN, AS A FREE PLACEMENT. *** A slot (`{ surface, x, y, w,
+ * h }` in % of its face) -> `{ surface, x, y, w, h }` in % of the dashboard, such that `faceBoxFor` of the
+ * result is the slot again. Home uses it to hang an added module where an EMPTY slot is, and to take a
+ * module out of its slot (to move it by button) without it jumping: the same place, now movable.
+ */
+export function slotSpot(slot, view) {
+  const ox = W / 2, oy = (view.eye / 100) * H, P = view.lens, D = view.depth, F = view.front;
+  const L = D + F;
+  const s0 = slot || {};
+  const surface = SURFACES.includes(s0.surface) ? s0.surface : 'back';
+  const fx = Number(s0.x) / 100, fy = Number(s0.y) / 100, fw = Number(s0.w) / 100, fh = Number(s0.h) / 100;
+  const k = (dz) => P / (P + dz);
+  const r1 = (v) => Math.round(v * 10) / 10;
+  const out = (sx, sy, vw, vh) => ({ surface, x: r1((sx / W) * 100), y: r1((sy / H) * 100), w: r1((vw / W) * 100), h: r1((vh / H) * 100) });
+  if (surface === 'left' || surface === 'right') {
+    const along = fx * L;
+    const dz = clamp(surface === 'left' ? along - F : D - along, 0, D);
+    const s = k(dz), X = surface === 'left' ? 0 : W;
+    return out(ox + (X - ox) * s, oy + (fy * H - oy) * s, fw * L * s, fh * H * s);
+  }
+  if (surface === 'floor' || surface === 'ceiling') {
+    const down = fy * L;
+    const dz = clamp(surface === 'floor' ? D - down : down - F, -F, D);
+    const s = k(dz), Y = surface === 'floor' ? H : 0;
+    return out(ox + (fx * W - ox) * s, oy + (Y - oy) * s, fw * W * s, fh * L * s);
+  }
+  const s = view.scale;
+  return out(ox + (fx * W - ox) * s, oy + (fy * H - oy) * s, fw * W * s, fh * H * s);
 }
 
 /** Where a furniture box stands: its foot-centre in stage px (x, the floor's y, z). */
@@ -279,13 +335,62 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
 
   const faces = {};           // surface -> element
   const slotEls = new Map();  // slot id -> { id, el, surface, slot }
-  const boxes = [];           // furniture elements
+  const boxes = new Map();    // furniture id -> its element
+  const publish = (topic, payload) => { try { o.bus?.publish?.(topic, payload); } catch (err) { console.error('room3d: publish', topic, err); } };
+
+  /** Press a piece of furniture, exactly as a click on it does. Returns what happened (null: not a door). */
+  function press(id) {
+    if (destroyed) return null;
+    const f = recipe.furniture.find((x) => x.id === id);
+    const target = f ? opensOf(f) : null;
+    if (!target) return null;
+    let claimed = false;
+    publish(DASHBOARD_GO_TOPIC, { id: target, source: 'room', objectId: id, claim: () => { claimed = true; } });
+    if (!claimed) { try { o.onUnclaimed?.(OPENS_ACTION, { id, topic: DASHBOARD_GO_TOPIC, opens: target, api }); } catch (err) { console.error('room3d: onUnclaimed', err); } }
+    return { did: 'action', action: OPENS_ACTION, topic: DASHBOARD_GO_TOPIC, opens: target, claimed };
+  }
+
+  // One piece of furniture: a box of four faces. A door's FRONT face is a real <button> (its name is the
+  // button's name, so a keyboard, a screen reader and Tab reach it); a press on ANY of its faces presses it.
+  function buildBox(f) {
+    const p = boxPlace(f, view);
+    const b = el('r3-box');
+    b.dataset.object = f.id;
+    b.title = f.name;
+    b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
+    const door = opensOf(f);
+    const face = (cls, w, h, t, tag = 'div') => {
+      const d = doc.createElement(tag);
+      d.className = `r3-face r3-bf ${cls}`;
+      b.append(d);
+      d.style.width = `${w}px`; d.style.height = `${h}px`;
+      d.style.left = `${-w / 2}px`; d.style.top = `${-h / 2}px`;
+      d.style.transform = t;
+      return d;
+    };
+    const front = face('r3-bf-front', f.w, f.h, `translate3d(0px, ${-f.h / 2}px, ${f.d / 2}px)`, door ? 'button' : 'div');
+    face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
+    face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
+    face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);
+    if (door) {
+      b.dataset.opens = door;
+      front.type = 'button';
+      front.dataset.scan = '';
+      front.setAttribute('aria-label', f.name);
+      const chip = doc.createElement('span');
+      chip.className = 'r3-chip';
+      chip.textContent = f.name;
+      front.append(chip);
+      b.addEventListener('click', (e) => { e.stopPropagation(); press(f.id); });
+    }
+    return b;
+  }
 
   function build() {
     cam.replaceChildren();
     for (const k of Object.keys(faces)) delete faces[k];
     slotEls.clear();
-    boxes.length = 0;
+    boxes.clear();
     stage.style.perspective = `${view.lens}px`;
     stage.style.perspectiveOrigin = `50% ${view.eye}%`;
     cam.style.transformOrigin = `50% ${view.eye}% ${-view.depth / 2}px`;
@@ -306,23 +411,9 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       slotEls.set(sl.id, { id: sl.id, el: s, surface: sl.surface, slot: { ...sl } });
     }
     for (const f of recipe.furniture) {
-      const p = boxPlace(f, view);
-      const b = el('r3-box', cam);
-      b.dataset.object = f.id;
-      b.title = f.name;
-      b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
-      const face = (cls, w, h, t) => {
-        const d = el(`r3-face r3-bf ${cls}`, b);
-        d.style.width = `${w}px`; d.style.height = `${h}px`;
-        d.style.left = `${-w / 2}px`; d.style.top = `${-h / 2}px`;
-        d.style.transform = t;
-        return d;
-      };
-      face('r3-bf-front', f.w, f.h, `translate3d(0px, ${-f.h / 2}px, ${f.d / 2}px)`);
-      face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
-      face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
-      face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);
-      boxes.push(b);
+      const b = buildBox(f);
+      cam.append(b);
+      boxes.set(f.id, b);
     }
   }
 
@@ -341,6 +432,7 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
 
   // ------------------------------------------------------------------ the drift
   function applyMotion() {
+    root.dataset.labels = o.labels === 'pointed' ? 'pointed' : 'always';
     const d = driftFor(o, systemReduced);
     root.dataset.motion = motionFor(o, systemReduced);
     root.dataset.drift = d ? 'on' : 'off';
@@ -378,10 +470,30 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       const name = SURFACES.includes(surface) ? surface : 'back';
       return { el: faces[name], surface: name, ...faceBoxFor(name, g, view) };
     },
-    /** The furniture, for the map editor: `{ id, name, opens }`. None is a door yet. */
-    objects: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, opens: null })),
-    /** Doors are the 2D room's for now: nothing here changes, and the caller is told so. */
-    setObjectOpens: () => false,
+    /** The furniture, for the map editor: `{ id, name, opens }`, in recipe order. */
+    objects: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, opens: opensOf(f) })),
+    /**
+     * Make piece `id` a door to dashboard `target` (null: no longer one) IN PLACE: only its box is redrawn,
+     * so the walls, their slots and every module in them stay mounted. True if anything changed.
+     */
+    setObjectOpens(id, target) {
+      if (destroyed) return false;
+      const t = opensOf({ opens: target });
+      const i = recipe.furniture.findIndex((f) => f.id === id);
+      if (i < 0 || opensOf(recipe.furniture[i]) === t) return false;
+      const next = { ...recipe.furniture[i] };
+      if (t) next.opens = t; else delete next.opens;
+      recipe = { ...recipe, furniture: recipe.furniture.map((f, j) => (j === i ? next : f)) };
+      const old = boxes.get(id);
+      const b = buildBox(next);
+      if (old && old.parentNode) old.replaceWith(b); else cam.append(b);
+      boxes.set(id, b);
+      return true;
+    },
+    /** Press a piece as a click on it does (a door publishes `dashboard/go`); null if it is not a door. */
+    press,
+    /** The doors' buttons, in recipe order: what a host walks with a switch. */
+    scanTargets: () => [...boxes.values()].map((b) => b.querySelector('button.r3-bf-front')).filter(Boolean),
     drifting: () => root.dataset.drift === 'on',
     motion: () => root.dataset.motion,
     setOptions(next = {}) {

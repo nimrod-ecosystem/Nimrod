@@ -124,9 +124,10 @@ export function openDashboardEditor(opts = {}) {
     const base = baseLayout() || arr.layout() || { preset: 'full', slots: [] };
     const next = { ...base, placed };
     // Room objects' doors, onto the scene's recipe.
+    // (2026-10-02: the 3D room's furniture too -- room_doors.js reads and writes either kind of room.)
     let scene = base.scene || null;
     const objs = model.items().filter((it) => it.fixed && it.objectId);
-    if (scene && scene.kind === 'room' && objs.length) {
+    if (scene && (scene.kind === 'room' || scene.kind === 'room3d') && objs.length) {
       const now = sceneDoors(scene);
       for (const it of objs) {
         if ((now[it.objectId] || null) !== (it.opens || null)) scene = withDoor(scene, it.objectId, it.opens) || scene;

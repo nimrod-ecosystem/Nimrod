@@ -601,7 +601,8 @@ export function createArrangement({
         host.className = 'k-room k-room3d';
         host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
         layerFor('scene').append(host);
-        roomScene = mountRoom3d(host, scene, { ...(scene.options || {}) });
+        // `bus`: a piece of its furniture that is a door publishes `dashboard/go` on it, as a 2D room's does.
+        roomScene = mountRoom3d(host, scene, { bus, ...(scene.options || {}) });
       } catch (err) {
         console.error('arrangement: the 3D room could not be drawn', err);
         roomScene = null;

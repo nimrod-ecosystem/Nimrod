@@ -31,11 +31,13 @@ transform-only), theme tokens only, and that destroy leaves nothing behind.</p>
 
 <script type="module">
 import { mountRoom3d, ensureRoom3dCss, ROOM3D_DEFAULTS, ROOM3D_PRESETS, normalizeRoom3d, viewOf, faceTransforms,
-  faceBoxFor, driftFor, motionFor, CALM_STRETCH, W, H } from '../room3d.js';
+  faceBoxFor, slotSpot, driftFor, motionFor, CALM_STRETCH, W, H, OPENS_ACTION } from '../room3d.js';
 import { normalizeLayout, normalizeScene } from '../layout.js';
 import { createArrangement } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { ROOM_SHELLS } from '../room_parts.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
+import { openDashboardEditor, OBJECT_PREFIX } from '../dashboard_editor.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -115,6 +117,30 @@ try {
     check('faceBoxFor right: the centre is drawn at x/y', near(pr.x, 0.92 * W, 0.5) && near(pr.y, 0.4 * H, 0.5), J({ pr, right }));
   }
 
+  section('1c. slotSpot: where a slot is drawn, as a free placement (Home hangs things there)');
+  {
+    const v = viewOf({}, {});
+    for (const sl of [...ROOM3D_PRESETS.box.recipe.slots, { id: 'f', surface: 'floor', x: 40, y: 70, w: 20, h: 10 },
+      { id: 'c', surface: 'ceiling', x: 50, y: 50, w: 10, h: 10 }]) {
+      const s = slotSpot(sl, v);
+      const fb = faceBoxFor(s.surface, s, v);
+      check(`*** ${sl.surface} slot ${sl.id}: faceBoxFor(slotSpot(slot)) is the slot again (same centre, same size) ***`,
+        s.surface === sl.surface && near(fb.left, sl.x, 0.6) && near(fb.top, sl.y, 0.6) && near(fb.width, sl.w, 0.6) && near(fb.height, sl.h, 0.6),
+        J({ s, fb, sl }));
+    }
+    const deep = viewOf({ depth: 700 }, {});
+    const sb = slotSpot(ROOM3D_PRESETS.box.recipe.slots[0], deep);
+    check('a deeper room draws the same slot smaller (the view is part of the answer)', sb.w < slotSpot(ROOM3D_PRESETS.box.recipe.slots[0], v).w, J(sb));
+    check('a slot naming no surface is on the back wall', slotSpot({ x: 50, y: 50, w: 10, h: 10 }, v).surface === 'back');
+  }
+
+  section('1d. doors, as data');
+  {
+    const r = normalizeRoom3d({ recipe: { furniture: [{ id: 'a', opens: '  D2 ' }, { id: 'b', opens: '' }, { id: 'c', opens: 7 }, { id: 'd', opens: 'x'.repeat(201) }] } });
+    check('*** a piece keeps `opens` as a trimmed id; empty, not a string, or too long is no door ***',
+      r.furniture[0].opens === 'D2' && r.furniture.slice(1).every((f) => !('opens' in f)), J(r.furniture));
+  }
+
   section('1b. motion, as data');
   {
     check('drift off -> no drift', driftFor({ drift: 'off' }) === null && driftFor({}) === null);
@@ -143,7 +169,8 @@ try {
       objs.length === 3 && [...objs].every((o) => o.querySelectorAll(':scope > .r3-face').length === 4), String(objs.length));
     check('objects() lists them for the map editor, none a door', J(room.objects().map((o) => o.opens)) === J([null, null, null])
       && room.objects().map((o) => o.id).join() === 'cabinet,table,shelf');
-    check('setObjectOpens says no (doors are the 2D room\'s for now)', room.setObjectOpens('cabinet', 'x') === false);
+    check('no piece is a button until it is a door (a button that does nothing is a dead stop for a switch)',
+      !root.querySelector('button') && room.scanTargets().length === 0 && room.press('cabinet') === null);
     const slots = room.slots();
     check('*** slots(): one per wall in the default room ***', J([...slots.keys()]) === J(['back', 'left', 'right']));
     check('each slot is an element ON its wall (inside that face)',
@@ -241,8 +268,9 @@ try {
     mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
     const log = { mounts: [], destroyed: [] };
     let data = {};
+    const busA = createBus();
     const arr = createArrangement({
-      bus: createBus(), user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true,
+      bus: busA, user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true,
       settings: { get: () => data, set: (p) => { data = { ...data, ...p }; } },
       kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
       mountInstance: async (def, h) => {
@@ -287,9 +315,84 @@ try {
       { id: 't1', place: 'scene', surface: 'left', x: 8, y: 40, w: 8, h: 12 }, saved.placed[3]] });
     check('*** moving a module to another wall is applied in place: re-parented, not remounted ***',
       res?.applied && log.mounts.length === before && room.surface('left').contains(wrap('t1')), J(res));
+    // *** A DOOR ON THE 3D ROOM'S FURNITURE, IN PLACE (row 2.38 on the 3D room). ***
+    const moved = { ...saved, placed: [saved.placed[0], saved.placed[1],
+      { id: 't1', place: 'scene', surface: 'left', x: 8, y: 40, w: 8, h: 12 }, saved.placed[3]] };
+    const doored = { ...moved, scene: { kind: 'room3d', preset: 'box', recipe: JSON.parse(J(ROOM3D_PRESETS.box.recipe)) } };
+    doored.scene.recipe.furniture[0].opens = 'D2';
+    const slotBefore = room.slots().get('back').el;
+    const r2 = await arr.applyPlaced(doored);
+    check('*** giving the cabinet a door is applied IN PLACE: no module remounts, the walls\' slots are the same elements ***',
+      r2?.applied && J(r2.doors) === '["cabinet"]' && log.mounts.length === before && arr.roomScene() === room
+      && room.slots().get('back').el === slotBefore && slotBefore.contains(arr.recFor('p1')?.el), J(r2));
+    check('...the arrangement\'s objects say so (the map editor reads these)', arr.roomObjects().find((o) => o.id === 'cabinet')?.opens === 'D2');
+    const heard = [];
+    const off = busA.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard.push(p); p.claim?.(); });
+    room.root.querySelector('[data-object="cabinet"] .r3-bf-top').click();
+    check('*** pressing it (any face) publishes dashboard/go on the dashboard\'s bus, as a 2D room object does ***',
+      heard.length === 1 && heard[0].id === 'D2' && heard[0].objectId === 'cabinet' && heard[0].source === 'room', J(heard));
+    off();
+    // The edit view's Opens window, over the same arrangement: an object's door goes onto the scene's recipe.
+    const saves = [];
+    const editor = openDashboardEditor({ arr, host: document.createElement('div'), baseLayout: () => doored, save: (l) => saves.push(l), windows: [] });
+    check('the editor lists the 3D room\'s furniture as things (fixed), with their doors',
+      J(editor.model.items().filter((it) => it.fixed).map((it) => [it.objectId, it.opens])) === J([['cabinet', 'D2'], ['table', null], ['shelf', null]]));
+    editor.model.setLink('opens', 'D3', { id: `${OBJECT_PREFIX}table` });
+    const last = saves.at(-1);
+    check('*** the editor writes a 3D object\'s door onto the scene\'s recipe (room_doors.js, either kind of room) ***',
+      last?.scene?.kind === 'room3d' && last.scene.recipe.furniture.find((f) => f.id === 'table')?.opens === 'D3'
+      && last.scene.recipe.furniture.find((f) => f.id === 'cabinet')?.opens === 'D2', J(last?.scene));
+    await new Promise((r) => setTimeout(r, 50));
+    check('...and it is applied in place: the table is a door now, nothing remounted',
+      room.objects().find((o) => o.id === 'table')?.opens === 'D3' && log.mounts.length === before && arr.roomScene() === room);
+    editor.close();
     arr.destroy();
     check('*** destroy takes the 3D room and every module down ***', arr.roomScene() === null && !kioskEl.querySelector('[data-room3d]')
       && ['p1', 'k1', 't1', 'w1'].every((id) => log.destroyed.includes(id)));
+  }
+  // =====================================================================================================
+  section('6. *** its furniture as doors: pressable, labelled, changed in place ***');
+  {
+    const bus = createBus();
+    const heard = [], unclaimed = [];
+    bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { heard.push(p); if (p.id !== 'nobody') p.claim(); });
+    const recipe = JSON.parse(J(ROOM3D_PRESETS.box.recipe));
+    recipe.furniture[0].opens = 'D2';
+    const room = mountRoom3d(box, { kind: 'room3d', recipe }, { bus, onUnclaimed: (action, info) => unclaimed.push([action, info.opens]) });
+    const cab = room.root.querySelector('[data-object="cabinet"]');
+    const btn = cab.querySelector('button.r3-bf-front');
+    check('*** a piece with `opens` is a real button (its front face), and only that piece ***',
+      !!btn && btn.type === 'button' && room.root.querySelectorAll('button').length === 1 && cab.dataset.opens === 'D2');
+    check('*** it is LABELLED: its name is the button\'s name, and a chip shows it (labels "always", the 2D room\'s default) ***',
+      btn.getAttribute('aria-label') === 'Cabinet' && btn.querySelector('.r3-chip')?.textContent === 'Cabinet'
+      && room.root.dataset.labels === 'always' && getComputedStyle(btn.querySelector('.r3-chip')).visibility === 'visible');
+    check('objects() reports the door; scanTargets() is the door\'s button', room.objects()[0].opens === 'D2' && room.scanTargets().length === 1 && room.scanTargets()[0] === btn);
+    btn.click();
+    check('*** pressing it publishes dashboard/go { id, claim } -- the verb the kiosk answers ***',
+      heard.length === 1 && heard[0].id === 'D2' && heard[0].objectId === 'cabinet' && typeof heard[0].claim === 'function', J(heard));
+    btn.focus();
+    check('it takes keyboard focus like any button', document.activeElement === btn);
+    const res = room.press('cabinet');
+    check('press() is the same press, and says it was claimed', res?.did === 'action' && res.action === OPENS_ACTION && res.claimed === true && heard.length === 2);
+    const slotEl = room.slots().get('back').el;
+    const tableBefore = room.root.querySelector('[data-object="table"]');
+    check('*** setObjectOpens makes another piece a door IN PLACE ***', room.setObjectOpens('table', ' nobody ') === true
+      && !!room.root.querySelector('[data-object="table"] button.r3-bf-front') && room.root.querySelector('[data-object="table"]') !== tableBefore);
+    check('...the walls are not rebuilt: the slot a module would sit in is the same element', room.slots().get('back').el === slotEl && room.surface('back').contains(slotEl));
+    check('...the same door again changes nothing (false); an unknown piece is refused (false)',
+      room.setObjectOpens('table', 'nobody') === false && room.setObjectOpens('nope', 'x') === false);
+    const r2 = room.press('table');
+    check('nobody claiming it (a preview) reaches the host\'s onUnclaimed, honestly', r2?.claimed === false && J(unclaimed) === J([[OPENS_ACTION, 'nobody']]), J(unclaimed));
+    check('*** taking a door off makes it plain furniture again: no button, no chip ***', room.setObjectOpens('cabinet', null) === true
+      && !room.root.querySelector('[data-object="cabinet"] button') && !room.root.querySelector('[data-object="cabinet"] .r3-chip') && room.press('cabinet') === null);
+    room.setOptions({ labels: 'pointed' });
+    const chip = room.root.querySelector('[data-object="table"] .r3-chip');
+    check('labels "pointed": the chip shows only on hover or focus', room.root.dataset.labels === 'pointed' && getComputedStyle(chip).visibility === 'hidden');
+    room.root.querySelector('[data-object="table"] button').focus();
+    check('...and on focus it shows', getComputedStyle(chip).visibility === 'visible');
+    check('nothing in the room is animated by any of this (no flash, no motion)', box.getAnimations({ subtree: true }).length === 0);
+    room.destroy();
+    check('destroy takes the doors down too', !box.children.length);
   }
 } catch (err) {
   check('the suite ran without throwing', false, err && (err.stack || err.message || String(err)));

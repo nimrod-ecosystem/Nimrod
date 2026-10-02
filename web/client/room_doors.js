@@ -22,11 +22,44 @@
 // the arrangement applies in place (`applyPlaced` -> room_scene.js `setObjectOpens`): the object becomes a
 // door, or stops being one, and nothing else on the screen is touched.
 
+//
+// *** THE 3D ROOM TOO (2026-10-02). *** A `room3d` scene (room3d.js) keeps its pieces in `recipe.furniture`,
+// not `recipe.items`, and names its ids by room3d.js `normalizeRoom3d`'s rule (its own `id`, else
+// `thing<n>`, a repeated id DROPPED rather than renamed). Every function below takes either kind; the copy-
+// the-preset-in trade-off above is the same for it. room3d.js is imported for its PRESETS only (it has no
+// side effects at import; its renderer runs only when `mountRoom3d` is called).
+
 import { presetRecipe } from './room_presets.js';
 import { layoutChange, isArranged } from './layout.js';
+import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET } from './room3d.js';
 
 const J = JSON.stringify;
 const clone = (v) => JSON.parse(J(v));
+const is3d = (scene) => !!scene && scene.kind === 'room3d';
+const isRoomKind = (scene) => !!scene && (scene.kind === 'room' || scene.kind === 'room3d');
+
+/** The ids room3d.js draws each furniture entry with: its own `id`, else `thing<n>`; a repeat is null
+ *  (normalizeRoom3d drops it). Slots share the id space, as there. */
+export function furnitureIds(recipe) {
+  const used = new Set();
+  for (const [i, s] of (Array.isArray(recipe?.slots) ? recipe.slots : []).entries()) {
+    if (!s || typeof s !== 'object') continue;
+    used.add(typeof s.id === 'string' && s.id ? s.id : `slot${i + 1}`);
+  }
+  return (Array.isArray(recipe?.furniture) ? recipe.furniture : []).map((f, i) => {
+    if (!f || typeof f !== 'object') return null;
+    const id = typeof f.id === 'string' && f.id ? f.id : `thing${i + 1}`;
+    if (used.has(id)) return null;
+    used.add(id);
+    return id;
+  });
+}
+
+// The pieces of a recipe that can be doors, by kind: the list's key, the ids, and which entries count.
+function doorList(scene, recipe) {
+  if (is3d(scene)) return { key: 'furniture', ids: furnitureIds(recipe), ok: (it) => !!it && typeof it === 'object' };
+  return { key: 'items', ids: recipeItemIds(recipe), ok: (it) => !!it && it.kind !== 'module' };
+}
 
 /** A door's target as data: a trimmed string, or null. (room_scene.js `opensOf`, the same rule.) */
 export function doorTarget(v) {
@@ -49,20 +82,27 @@ export function recipeItemIds(recipe) {
   });
 }
 
-/** The recipe a room scene draws: its own, else its preset's (a copy). Null for anything not a room. */
+/** A 3D room's preset recipe, as plain data (a copy). */
+function preset3d(name) {
+  return clone((ROOM3D_PRESETS[name] || ROOM3D_PRESETS[ROOM3D_DEFAULT_PRESET]).recipe);
+}
+
+/** The recipe a room scene draws: its own, else its preset's (a copy). Null for anything not a room
+ *  (a 2D room's `{ items }`, or a 3D room's `{ slots, furniture }`). */
 export function sceneRecipe(scene) {
-  if (!scene || scene.kind !== 'room') return null;
-  return scene.recipe && typeof scene.recipe === 'object' ? clone(scene.recipe) : presetRecipe(scene.preset);
+  if (!isRoomKind(scene)) return null;
+  if (scene.recipe && typeof scene.recipe === 'object') return clone(scene.recipe);
+  return is3d(scene) ? preset3d(scene.preset) : presetRecipe(scene.preset);
 }
 
 /** `{ objectId: target }` for every object in the scene that is a door. */
 export function sceneDoors(scene) {
   const r = sceneRecipe(scene);
   if (!r) return {};
-  const ids = recipeItemIds(r);
+  const { key, ids, ok } = doorList(scene, r);
   const out = {};
-  (r.items || []).forEach((it, i) => {
-    const t = it && it.kind !== 'module' ? doorTarget(it.opens) : null;
+  (r[key] || []).forEach((it, i) => {
+    const t = ok(it) ? doorTarget(it.opens) : null;
     if (t && ids[i]) out[ids[i]] = t;
   });
   return out;
@@ -75,13 +115,13 @@ export function sceneDoors(scene) {
 export function withDoor(scene, objectId, target) {
   const r = sceneRecipe(scene);
   if (!r) return null;
-  const ids = recipeItemIds(r);
-  const i = ids.indexOf(objectId);
-  if (i < 0) return null;
+  const { key, ids, ok } = doorList(scene, r);
+  const i = objectId ? ids.indexOf(objectId) : -1;
+  if (i < 0 || !ok(r[key][i])) return null;
   const t = doorTarget(target);
-  const item = { ...r.items[i] };
+  const item = { ...r[key][i] };
   if (t) item.opens = t; else delete item.opens;
-  r.items = r.items.map((it, j) => (j === i ? item : it));
+  r[key] = r[key].map((it, j) => (j === i ? item : it));
   return { ...clone(scene), recipe: r };
 }
 
@@ -89,15 +129,16 @@ export function withDoor(scene, objectId, target) {
  *  last door taken off, or undone): so trying a door and taking it back leaves the room following its
  *  preset, as it did. Anything else is returned as it is. */
 export function tidyScene(scene) {
-  if (!scene || scene.kind !== 'room' || !scene.recipe || typeof scene.preset !== 'string' || !scene.preset) return scene;
-  if (J(scene.recipe) !== J(presetRecipe(scene.preset))) return scene;
+  if (!isRoomKind(scene) || !scene.recipe || typeof scene.preset !== 'string' || !scene.preset) return scene;
+  if (is3d(scene) && !ROOM3D_PRESETS[scene.preset]) return scene;
+  if (J(scene.recipe) !== J(is3d(scene) ? preset3d(scene.preset) : presetRecipe(scene.preset))) return scene;
   const { recipe, ...rest } = scene;     // eslint-disable-line no-unused-vars
   return rest;
 }
 
-const stripDoors = (recipe) => ({
+const stripDoors = (recipe, key = 'items') => ({
   ...recipe,
-  items: (recipe.items || []).map((it) => {
+  [key]: (recipe[key] || []).map((it) => {
     if (!it || typeof it !== 'object') return it;
     const { opens, ...rest } = it;      // eslint-disable-line no-unused-vars
     return rest;
@@ -111,16 +152,20 @@ const stripDoors = (recipe) => ({
  */
 export function sceneDoorChanges(a, b) {
   if (!a && !b) return [];
-  if (!a || !b || a.kind !== 'room' || b.kind !== 'room') return J(a || null) === J(b || null) ? [] : null;
+  if (!a || !b || !isRoomKind(a) || a.kind !== b.kind) return J(a || null) === J(b || null) ? [] : null;
   if ((a.preset || null) !== (b.preset || null) && !(a.recipe && b.recipe)) return null;
+  // Anything beside the recipe (a 3D room's drift, in `options`) is not a door: a change there is a rebuild.
+  const { recipe: _ra, preset: _pa, ...oa } = a;      // eslint-disable-line no-unused-vars
+  const { recipe: _rb, preset: _pb, ...ob } = b;      // eslint-disable-line no-unused-vars
+  if (J(oa) !== J(ob)) return null;
   const ra = sceneRecipe(a), rb = sceneRecipe(b);
-  if (J(stripDoors(ra)) !== J(stripDoors(rb))) return null;
-  const ia = recipeItemIds(ra), ib = recipeItemIds(rb);
+  const la = doorList(a, ra), lb = doorList(b, rb);
+  if (J(stripDoors(ra, la.key)) !== J(stripDoors(rb, lb.key))) return null;
   const out = [];
-  ib.forEach((id, i) => {
+  lb.ids.forEach((id, i) => {
     if (!id) return;
-    const before = doorTarget(ra.items[ia.indexOf(id)]?.opens);
-    const after = doorTarget(rb.items[i]?.opens);
+    const before = doorTarget(ra[la.key][la.ids.indexOf(id)]?.opens);
+    const after = doorTarget(rb[lb.key][i]?.opens);
     if (before !== after) out.push({ id, opens: after });
   });
   return out;

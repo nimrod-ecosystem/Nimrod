@@ -93,6 +93,44 @@
 .r3-bf-top{ background: color-mix(in srgb, var(--r3-wood) 86%, var(--surface, Canvas)); }
 .r3-bf-left, .r3-bf-right{ background: color-mix(in srgb, var(--r3-wood) 78%, var(--r3-shade)); }
 
+/* A piece that is a DOOR (room3d.js: `opens` on its recipe entry). Its front face is a real <button>: the
+   browser's own button look is taken off (it is a face of a box), its name sits on a chip, and focus is
+   shown on every face of the box with the theme's accent (a system colour where the theme has none). */
+button.r3-bf-front{
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.r3-box[data-opens]{ cursor: pointer; }
+.r3-chip{
+  max-width: 90%;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font: 600 18px/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--surface, Canvas);
+  color: var(--text, CanvasText);
+  box-shadow: 0 0 0 1px var(--r3-line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.r3[data-labels="pointed"] .r3-chip{ visibility: hidden; }
+.r3[data-labels="pointed"] .r3-box[data-opens]:hover .r3-chip,
+.r3[data-labels="pointed"] .r3-box[data-opens]:focus-within .r3-chip{ visibility: visible; }
+.r3-box[data-opens]:focus-within > .r3-face,
+.r3-box[data-opens]:hover > .r3-face{
+  outline: 4px solid var(--accent, Highlight);
+  outline-offset: -4px;
+}
+
 @media (prefers-reduced-motion: no-preference){
   .r3[data-drift="on"] .r3-cam{
     animation: r3Drift var(--r3-drift-s) ease-in-out infinite alternate;

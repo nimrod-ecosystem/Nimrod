@@ -1742,7 +1742,11 @@ function paintTray(live, list, t) {
       return `<div class="grp">${esc(title)}</div><div class="hbtns">${xs.map((c) =>
         ebtn(`data-edit-scene="${esc(c.id)}"`, esc(c.label), { pressed: c.id === cur })).join('')}</div>`;
     }).join('');
-    const rows = HP.roomRows(HOME.layoutNow);
+    // The rows of the scene's OWN kind (home_profile.js SCENE_ROWS): a 2D room's shape/walls/floor/light/
+    // window, or the 3D room's camera drift and depth. The drift row says when this device holds it still.
+    let reducedMotion = false;
+    try { reducedMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches; } catch { reducedMotion = false; }
+    const rows = HP.roomRows(HOME.layoutNow, { reducedMotion });
     const roomPart = rows.length
       ? `<div class="grp">This room</div><div class="hbtns">${rows.map((r) =>
         ebtn(`data-edit-room="${esc(r.key)}"`, `${esc(r.label)}: <small>${esc(r.valueLabel)}</small>`, { hint: 'press to change it' })).join('')}</div>`

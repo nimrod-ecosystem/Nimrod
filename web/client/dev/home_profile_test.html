@@ -27,7 +27,9 @@ import {
   nudgeInLayout, resizeInLayout, withPlaced, sceneChoices, currentScene, applyScene, ROOM_ROWS, roomRows,
   cycleRoomRow, roomRecipe, editBarModel, changeTrayModel, stepThing, restorePlan, createUndo,
   MOVE_STEP, SIZE_RANGE, UNDO_LIMIT, ADD_SPOTS_ROOM, SCENE_KINDS, editScanStep, scanAt, trayOwner,
+  ADD_SPOTS_ROOM3D, ADD_SIZE_ROOM3D, room3dSpot, ROOM3D_ROWS, ROOM3D_DEPTHS, SCENE_ROWS,
 } from '../home_profile.js';
+import { ROOM3D_PRESETS, ROOM3D_DEFAULTS, normalizeRoom3d, viewOf, slotSpot, faceBoxFor } from '../room3d.js';
 import { EXAMPLE_ORDER, EXAMPLE_KINDS, exampleCards, PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor } from '../dashboards.js';
 import { normalizeLayout, isArranged } from '../layout.js';
 import { ROOM_PRESETS } from '../room_presets.js';
@@ -208,6 +210,89 @@ try {
     check('walls change their finish AND its own colour', (() => { const x = roomRecipe(cycleRoomRow(L, 'wall')); return x.wall.finish !== 'sprig' && typeof x.wall.color === 'string'; })());
     check('not a room: no rows, no cycling', roomRows({ preset: 'side', slots: [] }).length === 0 && cycleRoomRow(null, 'light') === null);
     check('the window offers every moving scene', ROOM_ROWS.find((r) => r.key === 'view').options().length > 2);
+  }
+
+  // ============================================================================================
+  section('*** the 3D room on Home (2026-10-02): Add puts things ON its walls, the Scene tray lists it, its own rows ***');
+  {
+    const r3 = { preset: 'full', slots: [null], scene: { kind: 'room3d', preset: 'box' },
+      placed: [{ id: 'P', place: 'scene', slot: 'back' }, { id: 'C', place: 'scene', slot: 'left' }] };
+    const v = viewOf(normalizeRoom3d(r3.scene), ROOM3D_DEFAULTS);
+    const a1 = addToLayout(r3, 'x');
+    const e1 = a1.placed.at(-1);
+    const right = ROOM3D_PRESETS.box.recipe.slots.find((s) => s.id === 'right');
+    check('*** Add on a 3D room: never into the backdrop cell, never flat -- ON a wall (place scene, a surface) ***',
+      J(a1.slots) === '[null]' && e1.place === 'scene' && !!e1.surface && !e1.slot, J(e1));
+    check('*** ...first where the room\'s EMPTY slot is (the right wall\'s), as a free placement at exactly its place ***',
+      e1.surface === 'right' && (() => { const fb = faceBoxFor('right', e1, v); return Math.abs(fb.left - right.x) < 0.6 && Math.abs(fb.top - right.y) < 0.6; })(), J(e1));
+    const a2 = addToLayout(a1, 'y'), e2 = a2.placed.at(-1);
+    check('the next one goes to the first back-wall spot (the empty slot is taken now)',
+      e2.surface === ADD_SPOTS_ROOM3D[0].surface && e2.x === ADD_SPOTS_ROOM3D[0].x && e2.y === ADD_SPOTS_ROOM3D[0].y && e2.w === ADD_SIZE_ROOM3D.w, J(e2));
+    let a = a2; for (const id of ['z1', 'z2', 'z3', 'z4']) a = addToLayout(a, id);
+    check('every added thing is on a wall, however many', a.placed.every((p) => p.place === 'scene' && (p.slot || p.surface)), J(a.placed));
+    const pv = viewOf({}, {});
+    check('every 3D spot sits inside the back wall as it is drawn (a face clips what overhangs it)',
+      ADD_SPOTS_ROOM3D.every((s) => { const fb = faceBoxFor(s.surface, { ...s, ...ADD_SIZE_ROOM3D }, pv);
+        return fb.left - fb.width / 2 >= 0 && fb.left + fb.width / 2 <= 100 && fb.top - fb.height / 2 >= 0 && fb.top + fb.height / 2 <= 100; }));
+    check('survives normalizeLayout', normalizeLayout(a1, ['P', 'C', 'x']).placed.length === 3);
+    check('room3dSpot on a room with nothing on it: the first empty slot\'s place', room3dSpot({ ...r3, placed: [] }).surface === 'back');
+    // Move / Bigger on a thing IN a 3D slot: out of the slot at the place it is seen, then moved.
+    const m = nudgeInLayout(r3, 'P', -MOVE_STEP, 0).placed[0];
+    const sp = slotSpot(ROOM3D_PRESETS.box.recipe.slots[0], v);
+    check('*** Move on a thing in a 3D slot takes it out of the slot AT THE SAME PLACE, then moves it ***',
+      !m.slot && m.surface === 'back' && m.x === Math.round((sp.x - MOVE_STEP) * 10) / 10 && m.y === sp.y && m.w === sp.w, J({ m, sp }));
+    const b = resizeInLayout(r3, 'C', 0.1).placed[1];
+    check('...Bigger too', !b.slot && b.surface === 'left' && Math.abs(b.w - Math.round(slotSpot(ROOM3D_PRESETS.box.recipe.slots[1], v).w * 1.1 * 10) / 10) < 0.2, J(b));
+    const r2d = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'study' }, placed: [{ id: 'ph', place: 'scene', slot: 'photos' }] };
+    check('a 2D room\'s slot is left as it was (where it is drawn is room_scene.js\'s to say)', nudgeInLayout(r2d, 'ph', 3, 0).placed[0].slot === 'photos');
+
+    // The Scene tray.
+    const ch = sceneChoices();
+    check('*** the Scene tray lists the 3D room, as its own kind, after Design\'s rooms ***',
+      Object.keys(ROOM3D_PRESETS).every((k) => ch.some((c) => c.id === `room3d:${k}` && c.kind === 'room3d'))
+      && ch.findIndex((c) => c.kind === 'room3d') > ch.findLastIndex((c) => c.kind === 'room') && !!SCENE_KINDS.room3d);
+    check('it reads as the 3D room', currentScene(r3, 'x') === 'room3d:box');
+    const grid = { preset: 'quad', slots: ['a', 'b', 'c', 'd'] };
+    const to3 = applyScene(grid, 'room3d:box', { theme: 'fall' });
+    check('*** to the 3D room: the grid\'s modules go ONTO its walls (the empty slots\' places first) ***',
+      to3.layout.scene.kind === 'room3d' && J(to3.layout.slots) === '[null]' && to3.layout.placed.length === 4
+      && to3.layout.placed.every((p) => p.place === 'scene' && p.surface) && to3.layout.placed[0].surface === 'back', J(to3.layout));
+    check('...and a live theme behind it goes back to the still default, as for a 2D room', to3.theme === DEFAULT_THEME);
+    const from2d = applyScene(r2d, 'room3d:box');
+    check('a thing in a 2D room\'s slot hangs on the 3D room\'s back wall', !from2d.layout.placed[0].slot && from2d.layout.placed[0].surface === 'back');
+    const to2d = applyScene(r3, 'room:study');
+    check('*** 3D -> 2D: a thing in a 3D slot comes out at the place it was seen, on the same wall ***',
+      to2d.layout.placed.every((p) => !p.slot) && to2d.layout.placed[0].surface === 'back' && to2d.layout.placed[0].x === sp.x, J(to2d.layout));
+    const flat = applyScene(r3, 'theme:fall');
+    check('3D -> a theme: off the walls, flat, where they were seen', !flat.layout.scene && flat.layout.placed.every((p) => p.place === 'screen' && !p.slot && !p.surface)
+      && flat.layout.placed[0].x === sp.x, J(flat.layout));
+    const drifting = { ...r3, scene: { ...r3.scene, options: { drift: 'on' } } };
+    const again = applyScene(drifting, 'room3d:box');
+    check('*** the same room pressed again is kept as it is: its slots, and its drift ***',
+      J(again.layout.scene) === J(drifting.scene) && again.layout.placed[0].slot === 'back', J(again.layout));
+
+    // The rows: the deliberate split.
+    check('*** the split: 2D rows for a 2D room, 3D rows for the 3D room, none shared yet ***',
+      J(SCENE_ROWS.room.map((r) => r.key)) === J(['shell', 'wall', 'floor', 'light', 'view'])
+      && J(SCENE_ROWS.room3d.map((r) => r.key)) === J(['drift', 'depth'])
+      && J(roomRows(r3).map((r) => r.key)) === J(['drift', 'depth']) && roomRecipe(r3) === null);
+    const rows = roomRows(r3);
+    check('*** camera drift starts OFF (motion is opt-in); depth starts Usual (room3d.js\'s own) ***',
+      rows[0].value === 'off' && rows[0].valueLabel === 'Off' && rows[1].value === 'usual');
+    const on = cycleRoomRow(r3, 'drift');
+    check('*** one press turns drift on, for THIS dashboard (layout.scene.options), and it survives normalizeLayout ***',
+      on.scene.options?.drift === 'on' && normalizeLayout(on, ['P', 'C']).scene.options?.drift === 'on' && !r3.scene.options);
+    check('reduced motion on this device: the row says it is held still (it always wins)',
+      /held still/.test(roomRows(on, { reducedMotion: true })[0].valueLabel) && roomRows(on)[0].valueLabel === 'On');
+    const off = cycleRoomRow(on, 'drift');
+    check('a second press turns it off, and nothing is left behind', !off.scene.options && J(off.scene) === J(r3.scene));
+    const deep = cycleRoomRow(r3, 'depth');
+    check('depth steps Usual -> Deep, on the room\'s own copy of its recipe', roomRows(deep)[1].value === 'deep' && deep.scene.recipe?.depth === ROOM3D_DEPTHS[2][2]);
+    const back = cycleRoomRow(cycleRoomRow(deep, 'depth'), 'depth');
+    check('...and round to Usual again: the room names only its preset again', roomRows(back)[1].value === 'usual' && !back.scene.recipe, J(back.scene));
+    check('a 2D row on a 3D room (or a 3D row on a 2D room) does nothing', cycleRoomRow(r3, 'light') === null && cycleRoomRow(r2d, 'drift') === null);
+    check('every depth is inside room3d.js\'s limits', ROOM3D_DEPTHS.every(([, , d]) => d >= 100 && d <= 2000));
+    check('no row label says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(rows) + J(ROOM3D_ROWS.map((r) => [r.label, r.options()]))));
   }
 
   // ============================================================================================

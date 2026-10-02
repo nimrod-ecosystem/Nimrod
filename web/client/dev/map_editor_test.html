@@ -40,7 +40,9 @@ import { presetRecipe, ROOM_PRESETS } from '../room_presets.js';
 import { normalizeRecipe, ROOM_ACTIONS } from '../room_scene.js';
 import {
   recipeItemIds, sceneRecipe, sceneDoors, withDoor, tidyScene, sceneDoorChanges, classifyLayoutChange, doorTarget,
+  furnitureIds,
 } from '../room_doors.js';
+import { ROOM3D_PRESETS, normalizeRoom3d } from '../room3d.js';
 import {
   dashboardLinks, buildMapGraph, mapListForm, mapLayout, mapSvg, loadMapData, inCycle, MAP_DEFAULTS,
 } from '../dashboard_map.js';
@@ -138,6 +140,31 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
         && classifyLayoutChange(L(withD), L({ ...withD, recipe: { ...withD.recipe, light: 'night' } })) === 'grid'
         && classifyLayoutChange(L(pre), L(pre)) === 'none' && classifyLayoutChange({ preset: 'side', slots: ['a', 'b'] }, { preset: 'quad', slots: [] }) === 'grid');
       check('a target is a trimmed string or null', doorTarget('  x ') === 'x' && doorTarget('') === null && doorTarget(3) === null);
+    }
+
+    section('1b. pure: the 3D room\'s furniture as doors (room_doors.js, 2026-10-02)');
+    {
+      const pre3 = { kind: 'room3d', preset: 'box' };
+      check('the ids match room3d.js normalizeRoom3d\'s rule (its own id, else thing<n>; a repeat, or a slot\'s id, dropped)',
+        J(furnitureIds({ slots: [{ id: 'a' }], furniture: [{ id: 'a' }, {}, { id: 'b' }, { id: 'b' }] }))
+          === J([null, 'thing2', 'b', null])
+        && J(furnitureIds(ROOM3D_PRESETS.box.recipe).filter(Boolean)) === J(normalizeRoom3d(pre3).furniture.map((f) => f.id)));
+      check('a preset 3D room has no doors, and its recipe is the preset\'s', J(sceneDoors(pre3)) === '{}' && J(sceneRecipe(pre3)) === J(ROOM3D_PRESETS.box.recipe));
+      const d3 = withDoor(pre3, 'cabinet', ' D1 ');
+      check('*** a door on a 3D piece copies the preset recipe in, with the door on that piece ***',
+        d3.kind === 'room3d' && d3.preset === 'box' && d3.recipe.furniture.find((f) => f.id === 'cabinet').opens === 'D1'
+        && J(sceneDoors(d3)) === '{"cabinet":"D1"}');
+      check('a slot is not a piece of furniture (no door on it); an unknown piece is null', withDoor(pre3, 'back', 'D1') === null && withDoor(pre3, 'nope', 'D1') === null);
+      const back3 = withDoor(d3, 'cabinet', null);
+      check('*** the last door off + tidy: it names only its preset again ***', J(tidyScene(back3)) === J(pre3));
+      check('a 3D room with another depth is kept as its own copy', !!tidyScene({ ...back3, recipe: { ...back3.recipe, depth: 700 } }).recipe);
+      check('a 3D door change is a door change; a 2D and a 3D room are never "only doors" apart',
+        J(sceneDoorChanges(pre3, d3)) === '[{"id":"cabinet","opens":"D1"}]' && sceneDoorChanges({ kind: 'room', preset: 'study' }, pre3) === null);
+      check('...the depth, or the camera drift, is not a door', sceneDoorChanges(d3, { ...d3, recipe: { ...d3.recipe, depth: 300 } }) === null
+        && sceneDoorChanges(pre3, { ...pre3, options: { drift: 'on' } }) === null);
+      const L = (scene) => ({ preset: 'full', slots: [null], scene });
+      check('*** classifyLayoutChange: a 3D door is "placement" (in place); the drift is "grid" ***',
+        classifyLayoutChange(L(pre3), L(d3)) === 'placement' && classifyLayoutChange(L(pre3), L({ ...pre3, options: { drift: 'on' } })) === 'grid');
     }
 
     // =================================================================================================
