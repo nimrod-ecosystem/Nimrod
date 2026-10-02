@@ -1888,6 +1888,16 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     list[focusIdx % list.length].click();
     return true;
   }
+  /** A HOST'S LAP (a dashboard's room: arrangement.js walks `scanTargets()` in its own ring): put the room's
+   *  scan on `el` -- drawn exactly as the room's own walk draws it -- or take it off (null, or an element that
+   *  is not one of the room's stops now). Returns the element, or null. */
+  function focusTarget(el) {
+    const at = el ? scanTargets().indexOf(el) : -1;
+    focusIdx = at;
+    if (at >= 0) { lifted?.arm?.(); onActivity(); }
+    paintScan();
+    return at >= 0 ? el : null;
+  }
 
   // ------------------------------------------------------------------ notifications
   function clearReactions() {
@@ -2052,7 +2062,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     focusNext: () => focusStep(1),
     focusPrev: () => focusStep(-1),
     focused: () => { const l = scanTargets(); return focusIdx < 0 || !l.length ? null : l[focusIdx % l.length]; },
-    select,
+    select, focusTarget,
     // Back, in the order a person would expect: a lifted panel first, then a close-up.
     back: () => (lifted ? putBack() : cam ? closeupExit() : false),
     describe, hold, catAway,

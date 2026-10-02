@@ -47,6 +47,10 @@ import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
 import { mountKiosk } from '../kiosk.js';
 import { barModel, drawChips } from '../transport_bar.js';
+import { createVerbRouter } from '../input_router.js';
+import { MODULE_VERBS, verbTopic } from '../actions.js';
+import { ROOM_PIECE_TYPE, ROOM_PIECE_PRESS_TOPIC, ROOM_PIECE_PREFIX } from '../arrangement.js';
+import { ROOM_TOPICS } from '../room_scene.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -72,7 +76,9 @@ const M = {
 };
 
 // The shell's hands, faked and recorded (the same shape arrangement_test uses).
-function make({ modules = [], failTypes = [] } = {}) {
+// `realRouter`: the input router itself (input_router.js) over the arrangement's ring, for the sections that
+// press through the switch's own path (verb/select -> the focused stop's topic).
+function make({ modules = [], failTypes = [], realRouter = false } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -83,11 +89,16 @@ function make({ modules = [], failTypes = [] } = {}) {
   mirrorEl.hidden = clockEl.hidden = ambientEl.hidden = true;
   const log = { mounts: [], destroyed: [], watched: [], renders: 0, setFocus: [], forgot: [] };
   let focused = null;
-  const router = { focused: () => focused, setFocus: (id) => { focused = { id }; log.setFocus.push(id); },
-                   focusNext() {}, reachable: () => [] };
+  const bus = createBus();
+  let arrRef = null;
+  let router = { focused: () => focused, setFocus: (id) => { focused = { id }; log.setFocus.push(id); },
+                 focusNext() {}, reachable: () => [] };
+  if (realRouter) {
+    const real = createVerbRouter({ bus, modules: () => (arrRef ? arrRef.focusRing() : []) });
+    router = { ...real, setFocus: (id) => { log.setFocus.push(id); return real.setFocus(id); } };
+  }
   let data = {};
   const settings = { get: () => data, set: (p) => { data = { ...data, ...p }; } };
-  const bus = createBus();
   const arr = createArrangement({
     bus, user: 'u', storage: { getItem: () => null, setItem() {}, removeItem() {} }, embedded: true, settings,
     kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
@@ -104,8 +115,9 @@ function make({ modules = [], failTypes = [] } = {}) {
     renderMods: () => { log.renders++; },
     runtime: () => ({ router }), health: () => ({ forget: (id) => log.forgot.push(id) }), profileId: () => 'scr',
   });
+  arrRef = arr;
   arr.setProfile({ id: 'scr', modules });
-  return { arr, log, kioskEl, stageEl, mirrorEl, bus, focus: (id) => { focused = id ? { id } : null; } };
+  return { arr, log, kioskEl, stageEl, mirrorEl, clockEl, bus, router, focus: (id) => { focused = id ? { id } : null; } };
 }
 async function boot(t, saved) {
   t.arr.resolve(saved); t.arr.partition(); await t.arr.mountOverlays();
@@ -347,6 +359,89 @@ try {
   }
 
   // =====================================================================================================
+  // Mike's list 2026-09-30 (the 3D room in Home's edit tools, item 5): "room objects (2D or 3D) aren't in a
+  // switch user's scan on a dashboard yet." The room renderers had a walk of their own (`scanTargets`), but the
+  // dashboard's lap (the router over `focusRing`) never read it, so a one-switch user could not reach a door.
+  section('4b. *** a dashboard\'s room: each pressable piece is a stop in the lap, after the panels; select = a click ***');
+  {
+    const t = make({ modules: [M.p1, M.t1], realRouter: true });
+    await boot(t, { preset: 'full', slots: ['p1'], scene: { kind: 'room', preset: 'theRoom' }, placed: [
+      { id: 't1', place: 'scene', slot: 'cab' },
+    ] });
+    const room = t.arr.roomScene();
+    const ring = t.arr.focusRing();
+    const pieces = ring.filter((m) => m.type === ROOM_PIECE_TYPE);
+    check('the verb map routes a piece\'s select to its press topic',
+      J(MODULE_VERBS[ROOM_PIECE_TYPE]) === J({ select: ROOM_PIECE_PRESS_TOPIC }), J(MODULE_VERBS[ROOM_PIECE_TYPE]));
+    check('*** the panels come first, then the room\'s pieces (the scene is the back of the lap) ***',
+      ring[0]?.id === 'p1' && ring[1]?.id === 't1' && pieces.length > 0
+      && ring.slice(2).every((m) => m.type === ROOM_PIECE_TYPE), J(ring));
+    const emptyDisplay = (b) => {
+      const w = b.closest('.rs-obj-wrap');
+      return w?.dataset.role === 'display' && !room.slots().get(w.dataset.id)?.el?.querySelector('.k-pcell');
+    };
+    const want = room.scanTargets().filter((b) => !emptyDisplay(b)).map((b) => `${ROOM_PIECE_PREFIX}o:${b.dataset.id}`);
+    check('*** one stop per pressable piece, in the room\'s own reading order ***', J(pieces.map((m) => m.id)) === J(want),
+      `${J(pieces.map((m) => m.id))} vs ${J(want)}`);
+    const ids = pieces.map((m) => m.id.slice(ROOM_PIECE_PREFIX.length));
+    check('the door, the window, the flower pot and the cat are stops', ['o:door', 'o:window', 'o:pot', 'o:cat'].every((k) => ids.includes(k)), ids.join());
+    check('the cabinet holding a module is a stop, and so is the shelf (a library: it lifts the list of books)',
+      ids.includes('o:cab') && ids.includes('o:shelf')
+      && room.root.querySelector('.rs-obj-wrap[data-id="shelf"]')?.dataset.role === 'library', ids.join());
+    check('a lamp (no role) is not a stop', !ids.includes('o:lamp') && !ids.includes('o:spk'));
+    check('the router walks them (reachable)', pieces.every((p) => t.router.reachable().some((m) => m.id === p.id)));
+    check('focus still starts on the first PANEL, not on a piece (a stray press opens nothing)', t.log.setFocus[0] === 'p1');
+
+    // Painting: the ring on a piece is the room's own scan look; on a panel, the room's is cleared.
+    const doorId = `${ROOM_PIECE_PREFIX}o:door`;
+    t.arr.paintFocus(doorId);
+    const doorWrap = room.root.querySelector('.rs-obj-wrap[data-id="door"]');
+    check('*** a focused piece is drawn as the room draws its own scan (is-scan) ***', doorWrap?.classList.contains('is-scan'));
+    t.arr.paintFocus('p1');
+    check('focus back on a panel clears it', !room.root.querySelector('.is-scan') && t.stageEl.querySelector('[data-focused="1"]'));
+
+    // SELECT, through the switch's own path: the router -> the piece's topic -> a click on it.
+    const pressed = [];
+    t.bus.subscribe(ROOM_TOPICS.pressed, (p) => pressed.push(p));
+    t.router.setFocus(doorId);
+    t.bus.publish(verbTopic('select'));
+    check('*** select on the door piece presses the door, exactly as a click ***', pressed.length === 1 && pressed[0].id === 'door', J(pressed));
+    t.router.setFocus(`${ROOM_PIECE_PREFIX}o:cab`);
+    t.bus.publish(verbTopic('select'));
+    check('select on the cabinet lifts it (what a click on it does)', room.lifted() === 'cab', room.lifted());
+    const lap = t.arr.focusRing().filter((m) => m.type === ROOM_PIECE_TYPE).map((m) => m.id);
+    check('*** a lifted panel takes over the room\'s stops, its way out first ***', lap[0] === `${ROOM_PIECE_PREFIX}back` && lap.length === 1, J(lap));
+    check('*** and focus moves to that way out, so the next select is "Put it back" ***', t.router.focused()?.id === `${ROOM_PIECE_PREFIX}back`,
+      t.router.focused()?.id);
+    t.bus.publish(verbTopic('select'));
+    check('select puts it back, and focus goes on from the room\'s first piece', room.lifted() === null
+      && t.router.focused()?.id === t.arr.focusRing().find((m) => m.type === ROOM_PIECE_TYPE)?.id, t.router.focused()?.id);
+    check('the ring still has the panels first', t.arr.focusRing()[0]?.id === 'p1');
+
+    // An EMPTY display: its module moved out of the cabinet's slot, so pressing the cabinet would lift nothing.
+    const out = await t.arr.applyPlaced({ preset: 'full', slots: ['p1'], scene: { kind: 'room', preset: 'theRoom' },
+      placed: [{ id: 't1', place: 'screen', x: 70 }] });
+    check('*** a display piece with nothing in its slot is NOT a stop (it would lift an empty box) ***',
+      out.applied && !t.arr.focusRing().some((m) => m.id === `${ROOM_PIECE_PREFIX}o:cab`), J(t.arr.focusRing().map((m) => m.id)));
+    await t.arr.applyPlaced({ preset: 'full', slots: ['p1'], scene: { kind: 'room', preset: 'theRoom' },
+      placed: [{ id: 't1', place: 'scene', slot: 'cab' }] });
+    check('...and is one again once a module sits in it', t.arr.focusRing().some((m) => m.id === `${ROOM_PIECE_PREFIX}o:cab`));
+
+    // Covered: a panel made to fill the dashboard hides the room, so its pieces leave the lap.
+    t.arr.promote('p1');
+    check('*** while a panel fills the dashboard, the room\'s pieces are not stops (they cannot be seen) ***',
+      t.arr.promotedId() === 'p1' && !t.arr.focusRing().some((m) => m.type === ROOM_PIECE_TYPE), J(t.arr.focusRing()));
+    t.arr.demote();
+    check('...and come back with it', t.arr.focusRing().some((m) => m.type === ROOM_PIECE_TYPE));
+
+    // A nested room's teardown leaves no stray subscription: a press on a stale piece after destroy does nothing.
+    t.arr.destroy();
+    const before = pressed.length;
+    t.bus.publish(t.bus.instanceTopic(doorId, ROOM_PIECE_PRESS_TOPIC));
+    check('after destroy, a piece\'s topic answers nothing', pressed.length === before && t.arr.focusRing().every((m) => m.type !== ROOM_PIECE_TYPE));
+  }
+
+  // =====================================================================================================
   section('5. a placement change is applied IN PLACE: only the moved module moves');
   {
     const t = make({ modules: [M.p1, M.t1, M.w1, M.k1] });
@@ -394,6 +489,43 @@ try {
     check('*** a placement change BEFORE the first mount mounts nothing early, and is what then mounts ***',
       early.applied && !g.log.mounts.length && (g.arr.partition(), await g.arr.mountLayout(), wrapOf(g, 't1')?.style.left === '90%'),
       wrapOf(g, 't1')?.style.left);
+  }
+
+  // =====================================================================================================
+  // Mike's list 2026-09-30, Stage R item 6: "a removed camera doesn't return to the corner until the next
+  // rebuild". An unplaced camera IS the corner mirror (`partition`), so taking its placement away must put
+  // it back in the corner at once -- and placing the corner camera must take it OUT of the corner, or the
+  // same instance is mounted twice (two camera owners for one camera).
+  section('5c. *** the HUD pair follow a placement change: a camera or clock placed leaves its corner, removed returns ***');
+  {
+    const t = make({ modules: [M.p1, M.c1, M.k1] });
+    const L = { preset: 'full', slots: ['p1'], placed: [{ id: 'c1', place: 'screen', x: 80 }] };
+    await boot(t, L);
+    check('placed at boot: the camera is a panel, the corner is empty',
+      t.arr.cameraRec() === null && t.arr.recFor('c1')?.type === 'camera' && t.mirrorEl.hidden, `mirror=${t.mirrorEl.hidden}`);
+    check('...and the unplaced clock IS the corner clock', t.arr.clockRec()?.id === 'k1');
+    const r = await t.arr.applyPlaced({ ...L, placed: [] });
+    check('*** its placement removed: it is back in the corner straight away, not at the next rebuild ***',
+      r.applied && t.arr.cameraRec()?.id === 'c1' && !t.mirrorEl.hidden && t.mirrorEl.querySelector('.k-mod')?.textContent === 'c1',
+      `applied=${r.applied} camera=${t.arr.cameraRec()?.id} hidden=${t.mirrorEl.hidden}`);
+    check('...it is no longer a panel', !t.arr.recFor('c1') && !t.arr.focusRing().some((m) => m.id === 'c1'));
+    check('the report says what came back to a corner', J(r.hud) === J({ dropped: [], raised: ['c1'] }), J(r.hud));
+    const mounts = t.log.mounts.length;
+    const r2 = await t.arr.applyPlaced({ ...L, placed: [{ id: 'c1', place: 'overlay', x: 20 }] });
+    check('*** placed again: the corner mirror is torn down BEFORE the panel mounts (never two at once) ***',
+      r2.applied && t.arr.cameraRec() === null && t.mirrorEl.hidden && !t.mirrorEl.querySelector('.k-mod')
+      && t.arr.recFor('c1')?.type === 'camera' && t.log.mounts.length === mounts + 1, J(r2.hud));
+    const at = t.log.destroyed.lastIndexOf('c1');
+    check('...the corner one was destroyed (once), the placed one is live', at >= 0 && t.log.destroyed.filter((x) => x === 'c1').length === 2,
+      t.log.destroyed.join());
+    check('the report says what left a corner', J(r2.hud) === J({ dropped: ['c1'], raised: [] }), J(r2.hud));
+    const k = await t.arr.applyPlaced({ ...L, placed: [{ id: 'c1', place: 'overlay', x: 20 }, { id: 'k1', place: 'screen', x: 10 }] });
+    check('the clock follows the same rule: placed, the corner clock goes',
+      k.applied && t.arr.clockRec() === null && t.arr.recFor('k1')?.type === 'clock', J(k.hud));
+    const k2 = await t.arr.applyPlaced({ ...L, placed: [{ id: 'c1', place: 'overlay', x: 20 }] });
+    check('...and removed, it is the corner clock again', k2.applied && t.arr.clockRec()?.id === 'k1' && !t.arr.recFor('k1'), J(k2.hud));
+    const moved = await t.arr.applyPlaced({ ...L, placed: [{ id: 'c1', place: 'overlay', x: 60 }] });
+    check('a plain move touches neither corner', moved.applied && J(moved.hud) === J({ dropped: [], raised: [] }) && t.arr.clockRec()?.id === 'k1');
   }
 
   // =====================================================================================================

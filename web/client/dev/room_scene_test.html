@@ -412,6 +412,14 @@ try {
     check('focusPrev wraps to the last', scene.focused()?.dataset.id === 'cat');
     scene.focusPrev(); scene.focusPrev();
     check('select presses whatever the scan is on', scene.focused()?.dataset.id === 'pot' && scene.select() === true);
+    // A HOST'S LAP (a dashboard's room, arrangement.js): the host walks the room's pieces itself and asks the
+    // room to draw its own scan look on the one it is on, and to clear it when it moves off the room.
+    const cab = scene.scanTargets().find((b) => b.dataset.id === 'cab');
+    check('*** focusTarget(el) draws the room\'s scan on that piece and makes it the room\'s own focus ***',
+      scene.focusTarget(cab) === cab && cab.closest('.rs-obj-wrap').classList.contains('is-scan') && scene.focused() === cab
+      && scene.root.querySelectorAll('.is-scan').length === 1);
+    check('focusTarget(null) clears it', scene.focusTarget(null) === null && !scene.root.querySelector('.is-scan') && scene.focused() === null);
+    check('a stale element (not a piece of this room) clears it too', scene.focusTarget(document.createElement('button')) === null && !scene.root.querySelector('.is-scan'));
     scene.destroy();
     host.remove();
   }

@@ -124,7 +124,10 @@ button.r3-bf-front{
 }
 .r3[data-labels="pointed"] .r3-chip{ visibility: hidden; }
 .r3[data-labels="pointed"] .r3-box[data-opens]:hover .r3-chip,
-.r3[data-labels="pointed"] .r3-box[data-opens]:focus-within .r3-chip{ visibility: visible; }
+.r3[data-labels="pointed"] .r3-box[data-opens]:focus-within .r3-chip,
+.r3[data-labels="pointed"] .r3-box[data-opens].is-scan .r3-chip{ visibility: visible; }
+/* `.is-scan`: a host's switch lap is on this piece (room3d.js `focusTarget`) -- drawn as keyboard focus is. */
+.r3-box[data-opens].is-scan > .r3-face,
 .r3-box[data-opens]:focus-within > .r3-face,
 .r3-box[data-opens]:hover > .r3-face{
   outline: 4px solid var(--accent, Highlight);

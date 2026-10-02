@@ -433,6 +433,7 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
   const slotEls = new Map();  // slot id -> { id, el, surface, slot }
   const boxes = new Map();    // furniture id -> its element
   let lod = null;             // room_lod.js chooseLod's last answer: which level each piece is drawn at
+  let scanId = null;          // the piece a host's scan is on (`focusTarget`), or null
   const levelOf = (id) => (lod && lod.levels.get(id)) || 'full';
   const planNow = () => lodPlan(recipe, view, scale, o);
   const publish = (topic, payload) => { try { o.bus?.publish?.(topic, payload); } catch (err) { console.error('room3d: publish', topic, err); } };
@@ -457,6 +458,8 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     const b = el('r3-box');
     b.dataset.object = f.id;
     b.dataset.lod = level;
+    // The host's scan mark (`focusTarget`) outlives a redraw of this piece -- only while it is still a door.
+    if (scanId === f.id && opensOf(f)) b.classList.add('is-scan');
     b.title = f.name;
     b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
     const door = opensOf(f);
@@ -616,8 +619,27 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     },
     /** Press a piece as a click on it does (a door publishes `dashboard/go`); null if it is not a door. */
     press,
-    /** The doors' buttons, in recipe order: what a host walks with a switch. */
-    scanTargets: () => [...boxes.values()].map((b) => b.querySelector('button.r3-bf-front')).filter(Boolean),
+    /** The doors' buttons, in READING ORDER: what a host walks with a switch (arrangement.js puts them in the
+     *  dashboard's lap). Left to right by where each piece is DRAWN (its projected box's middle), then top to
+     *  bottom, then recipe order. Argued: the furniture all stands on the one floor, so it reads as one row,
+     *  left to right; and it is the order a flattened copy of this room walks too (room_flat.js puts each
+     *  hotspot at that same drawn middle, and room_scene.js walks a row left to right), so the same room is
+     *  the same lap in 3D and flattened. Recipe order was the order somebody happened to add things in. */
+    scanTargets: () => recipe.furniture
+      .map((f, i) => { const r = boxRect(f, view); return { f, i, x: r.left + r.w / 2, y: r.top + r.h / 2 }; })
+      .sort((a, b) => (a.x - b.x) || (a.y - b.y) || (a.i - b.i))
+      .map(({ f }) => boxes.get(f.id)?.querySelector('button.r3-bf-front'))
+      .filter(Boolean),
+    /** A HOST'S LAP: mark the piece `el` belongs to as the one the scan is on (`is-scan`, room3d.css draws it
+     *  as its focus), or clear the mark (null, or anything not one of its doors). Kept through a redraw of
+     *  that piece. Returns the element, or null. */
+    focusTarget(el) {
+      const box = el && typeof el.closest === 'function' ? el.closest('.r3-box') : null;
+      const id = box && root.contains(box) && box.dataset.opens ? box.dataset.object : null;
+      scanId = id;
+      for (const b of boxes.values()) b.classList.toggle('is-scan', !!id && b.dataset.object === id);
+      return id ? el : null;
+    },
     drifting: () => root.dataset.drift === 'on',
     motion: () => root.dataset.motion,
     /** The levels the pieces are drawn at: `{ levels: { id: 'full' | 'proxy' }, cost, budget, far, dropped }`. */

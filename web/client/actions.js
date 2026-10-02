@@ -563,6 +563,12 @@ export const MODULE_VERBS = {
   dashboard:     { select: 'dashboard/open' },
   view:          { select: 'dashboard/open' },
   opens:         { select: 'opens/press' },
+  // A PIECE OF A DASHBOARD'S ROOM (2026-10-02, Mike's list 09-30): each pressable piece of the room the
+  // dashboard is drawn in -- a 2D room's objects, a 3D room's doors, a flattened room's door hotspots -- is
+  // one stop in the lap (arrangement.js `focusRing`, ROOM_PIECE_TYPE), and `select` on it is a click on it.
+  // Only select: `back` on a piece stays unanswered, so it still goes back a dashboard (kiosk `backUnhandled`);
+  // a close-up's or a lifted panel's own way back is a stop of its own, first.
+  'room-piece':  { select: 'room-piece/press' },
   // THE WORD GAMES (row 2.31). Also missing: `word_games.js` answers next / prev / select / skip and no
   // verb could reach them. `back` is skip, exactly as trivia's is. (The spoken routes --
   // SPEECH_ACTIONS / SPEECH_BINDINGS -- are the speech wiring's, not this table's.)
