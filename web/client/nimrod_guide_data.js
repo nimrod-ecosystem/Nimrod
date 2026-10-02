@@ -45,7 +45,7 @@ export const GUIDE_TOPICS = Object.freeze({
   switchModule: 'shell/switch-module',     // actions.js SWITCH_MODULE_TOPIC: the switch list
   host: 'shell/host',                      // shell_verbs.js SHELL_HOST: Home's own buttons (picker, examples...)
   dashboardGo: 'dashboard/go',             // dashboards.js DASHBOARD_GO_TOPIC: a ready-made dashboard
-  gameMode: 'nimrod/game-mode',            // THE STUB: nothing answers it yet (game mode is a later task)
+  gameMode: 'nimrod/game-mode',            // what a game-mode act says (unlocks.js's hook in modules/nimrod.js sets the mode)
   info: 'nimrod/info',                     // what the pointer or the scan is on, explained (hover_info.js)
 });
 // The verbs a switch drives him with (actions.js MODULE_VERBS line, given to the coordinator).
@@ -56,9 +56,14 @@ export const GUIDE_VERB_TOPICS = Object.freeze({
 // What an act may be. A closed set, so the suite can say an act is wrong rather than a press doing nothing.
 export const ACT_KINDS = Object.freeze(['menu-tab', 'settings-page', 'switch', 'host', 'tutorial', 'link', 'game-mode']);
 // The settings PANEL's own pages (modules/settings.js). `type:<module>` = that module's settings page.
-export const SETTINGS_PAGES = Object.freeze(['sc-theme', 'sc-mode', 'sc-device']);
-// The game-mode stub's values: what the later task will have to answer.
+// 'sc-game' is the "Nimrod Game" page (unlocks.js draws it; modules/settings.js lists it).
+export const SETTINGS_PAGES = Object.freeze(['sc-theme', 'sc-mode', 'sc-device', 'sc-game']);
+// The modes (unlocks.js reads this list: one list, two files).
 export const GAME_MODES = Object.freeze(['game', 'learning', 'sandbox']);
+// *** MIKE'S WORDS, KEPT EXACT IN MEANING: "When introducing points say that they have no real world value and
+// we do not sell any form of coins or other microtransactions." *** One sentence, said wherever points are
+// introduced (node A, the points node, the Nimrod Game page); the suites check it is present verbatim.
+export const POINTS_DISCLAIMER = 'Points have no real-world value, and we do not sell any form of coins or other microtransactions.';
 
 // ---------------------------------------------------------------------------------------------------
 // THE DEVICES, as data: shared by the guide's "Set up a device" branch and the devices module, so the two
@@ -140,15 +145,19 @@ const NODES = [
     ]),
   },
 
-  // ---- A. game or learning mode (the TEXT and a stub hook; the mechanics are a later task) ----------
+  // ---- A. game or learning mode. The mechanics are unlocks.js; modules/nimrod.js hands `game-mode` acts
+  // and every forward step to its hook (a new step pays, once, in game or learning mode). Every node here
+  // shows the "Nimrod Game" page in the settings PANEL by itself (a settings-page act, which takes nothing
+  // from anybody); if no panel answers, the hook suggests the settings menu or the tutorial — the two acts
+  // on `mode` below (Mike: "If it's closed suggest opening it again or going to the tutorial dashboard").
   {
     id: 'mode', title: 'Game or learning mode',
     say: 'You can use the site as a game, or for learning. Game mode puts a scoreboard on your dashboard and '
       + 'gives you points for doing things, starting with this tour. Learning mode keeps its own education '
-      + 'points, apart from the game’s. Points have no real-world value, and we do not sell coins or any other '
-      + 'microtransactions. In game mode, not everything you can build with is unlocked at the start. That is '
-      + 'only for the game’s sake: sandbox mode unlocks everything, and you can unlock things one at a time. '
-      + 'The game’s settings are open beside me.',
+      + `points, apart from the game’s. ${POINTS_DISCLAIMER} In game and learning mode, not everything you can `
+      + 'build with is unlocked at the start. That is only for the game’s sake: sandbox mode unlocks everything, '
+      + 'and you can unlock things one at a time, free or with your points. Nothing already on your screen is '
+      + 'ever locked away. The game’s settings open beside me.',
     choices: withKeys([
       { label: 'Game mode', to: 'mode-game' },
       { label: 'Learning mode', to: 'mode-learning' },
@@ -156,55 +165,62 @@ const NODES = [
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
-    acts: [{ kind: 'settings-page', page: 'sc-mode', label: 'Show the game settings', auto: true }],
+    acts: [
+      { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
+      { kind: 'menu-tab', tab: 'screen', label: 'Open the settings menu (This screen: Nimrod Game)' },
+      { kind: 'tutorial', label: 'Go to the tutorial dashboard' },
+    ],
   },
   {
     id: 'mode-game', title: 'Game mode',
-    say: 'In game mode a scoreboard joins your dashboard and you earn points for what you do here, this tour '
-      + 'included. The things you can build with unlock as you go: that is only for the game, and sandbox mode '
-      + 'or a single unlock opens anything sooner. Game mode is still being built, so pressing it now changes '
-      + 'nothing yet. It will start from here.',
+    say: 'In game mode you earn Play points for what you do here, this tour included: each new step pays once. '
+      + 'A “Nimrod Game” card on the scoreboard keeps the score. The things you can build with unlock as you go: '
+      + 'that is only for the game, and sandbox mode or a single unlock opens anything sooner. Press Start game '
+      + 'mode to begin.',
     choices: withKeys([
       { label: 'Sandbox instead', to: 'mode-sandbox' },
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
-    acts: [{ kind: 'game-mode', mode: 'game', label: 'Start game mode' }],
+    acts: [
+      { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
+      { kind: 'game-mode', mode: 'game', label: 'Start game mode' },
+    ],
   },
   {
     id: 'mode-learning', title: 'Learning mode',
-    say: 'Learning mode keeps education points, separate from the game’s, for the quizzes, the word games and '
-      + 'the lessons. Topics can open as you go, or all at once. Learning mode is still being built: for now '
-      + 'the settings beside me choose whether lesson topics open as you go (Quest) or all at once (Sandbox).',
+    say: 'Learning mode is game mode with education points: the tour and the lessons pay School points, kept '
+      + 'apart from the game’s Play points, and things to build with unlock the same way. Whether lesson topics '
+      + 'open as you go (Quest) or all at once is a separate setting, on the settings panel’s Learning mode page.',
     choices: withKeys([
       { label: 'Game mode instead', to: 'mode-game' },
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
     acts: [
-      { kind: 'settings-page', page: 'sc-mode', label: 'Show the learning settings', auto: true },
+      { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
       { kind: 'game-mode', mode: 'learning', label: 'Start learning mode' },
+      { kind: 'settings-page', page: 'sc-mode', label: 'Show the lesson-topic setting' },
     ],
   },
   {
     id: 'mode-sandbox', title: 'Sandbox',
-    say: 'Sandbox mode unlocks everything from the start. You still earn points, and nothing you have already '
-      + 'unlocked is lost if you switch back. The settings beside me have the switch.',
+    say: 'Sandbox mode unlocks everything you can build with. Games still pay points as they always have; the '
+      + 'tour pays only in game or learning mode. Nothing you have already unlocked is lost if you switch back.',
     choices: withKeys([
       { label: 'Game mode', to: 'mode-game' },
       BACK_TO_START,
     ]),
     acts: [
-      { kind: 'settings-page', page: 'sc-mode', label: 'Show the sandbox setting', auto: true },
+      { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
       { kind: 'game-mode', mode: 'sandbox', label: 'Use sandbox mode' },
     ],
   },
   {
     id: 'points', title: 'Points',
-    say: 'Points keep score of what you do: a game finished, a lesson watched, a step of this tour. They have no '
-      + 'real-world value. They cannot be bought, sold or cashed in, and we do not sell coins or any other '
-      + 'microtransactions. In game mode they unlock things to build with; in learning mode they show what has '
-      + 'been learned.',
+    say: `Points keep score of what you do: a game finished, a lesson watched, a step of this tour. ${POINTS_DISCLAIMER} `
+      + 'They cannot be bought, sold or cashed in. In game and learning mode they unlock things to build with, '
+      + 'and the scoreboard shows them; in learning mode they are education points, kept apart from the game’s.',
     choices: withKeys([
       { label: 'Game mode', to: 'mode-game' },
       { label: 'Learning mode', to: 'mode-learning' },
@@ -383,9 +399,10 @@ const NODES = [
   },
   {
     id: 'ai', title: 'Your own AI',
-    say: 'I am meant to become your AI. You will be able to wire up whichever one you like: one you already '
-      + 'use, a free one, or one that runs on your own computer. That connection is not built yet, so for now '
-      + 'I follow these pages. When it is, the words I say here can come from it.',
+    say: 'I can be your AI. Press “Talk to” at my bottom (it carries your AI’s name once you give it one) to talk '
+      + 'things over, typed or spoken. Connect whichever AI you like under “About”: one that runs free on your own '
+      + 'computer, a free online one, or your own key. It can walk this guide with you, and anything it wants to do '
+      + 'is a button you press first.',
     choices: withKeys([
       { label: 'Other modules', to: 'other' },
       BACK_TO_START,

@@ -52,6 +52,11 @@ import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { applyTheme, listThemes, resolveThemeId } from '../theme.js';
 import { MODE_KEY, MODES, modeFrom, PROFILE_SETTINGS_KEY } from '../lessons.js';
+// THE NIMROD GAME page (game / learning / sandbox, what is locked, the tour's points): drawn by unlocks.js.
+// SETTINGS_SHOWN_TOPIC is this panel's answer when asked to show a page, so Nimrod can tell a panel is here
+// (no answer = no panel on this dashboard, and he suggests the settings menu or the tutorial instead).
+import { gameSettingsPage, SETTINGS_SHOWN_TOPIC, GAME_SETTINGS_PAGE } from '../unlocks.js';
+import { createEvents } from '../events.js';
 
 // *** WHERE IT OPENS, AND BEING ASKED TO SHOW A PAGE (2026-10-02, the landing Home). *** Mike: the landing
 // Home's settings panel "launches on themes tab", and Nimrod's choices show the page they talk about ("It
@@ -200,6 +205,21 @@ registerModule(
       },
     };
 
+    // THE NIMROD GAME — this profile's game mode, its unlocks and its points (unlocks.js). The same
+    // reserved settings document as the two pages above; the unlock log and the points ledger are this
+    // profile's streams (the screen's own makeEvents when the host gives one).
+    pages[GAME_SETTINGS_PAGE] = {
+      title: 'Nimrod Game',
+      render(el) {
+        gameSettingsPage({
+          makeState: (key) => createState({ url: profiles.stateURL(ctx.profileId, key), user: ctx.user }),
+          makeEvents: (key, opts = {}) => (typeof ctx.makeEvents === 'function' ? ctx.makeEvents(key, opts)
+            : createEvents({ url: profiles.eventsURL(ctx.profileId, key), user: ctx.user, ...opts })),
+          bus: ctx.bus || null,
+        }).render(el);
+      },
+    };
+
     // DEVICE SCOPE — honest, not faked. See this file's own header for why a real editor is
     // not here yet.
     pages['sc-device'] = {
@@ -240,6 +260,7 @@ registerModule(
             })),
             { kind: 'item', id: 'sc-theme', label: 'Theme', page: 'sc-theme' },
             { kind: 'item', id: 'sc-mode', label: 'Learning mode', page: 'sc-mode' },
+            { kind: 'item', id: GAME_SETTINGS_PAGE, label: 'Nimrod Game', page: GAME_SETTINGS_PAGE },
             { kind: 'item', id: 'sc-device', label: 'This screen', page: 'sc-device' },
           ],
           pages,
@@ -262,7 +283,12 @@ registerModule(
           return true;
         };
         try {
-          const off = ctx.bus?.subscribe?.(SETTINGS_OPEN_TOPIC, (p) => { if (!torn) showPage(p?.page); });
+          // Answer every ask, shown or not: the answer means "a settings panel is here" (unlocks.js).
+          const off = ctx.bus?.subscribe?.(SETTINGS_OPEN_TOPIC, (p) => {
+            if (torn) return;
+            const shown = showPage(p?.page);
+            try { ctx.bus?.publish?.(SETTINGS_SHOWN_TOPIC, { page: p?.page || null, shown: !!shown }); } catch { /* no bus */ }
+          });
           if (typeof off === 'function') offs.push(off);
         } catch { /* no bus: nothing can ask */ }
         let start = null;

@@ -552,6 +552,10 @@ import * as HD from './home_dashboard.js';
 // 2026-10-02: your Home is your profile -- started from an example (dashboards.js), edited with Design's
 // edit bar over the real dashboard (home_profile.js).
 import * as HP from './home_profile.js';
+// THE NIMROD GAME (unlocks.js): in game or learning mode, Add and the add-in-place half of Switch ask before
+// ADDING a locked module. Nothing already on the Home is ever touched by it (unlocks.js decision 3).
+import { createUnlockGate, itemForAddKey, lockWords, poolLabel } from './unlocks.js';
+import { createEvents } from './events.js';
 import { EXAMPLE_ORDER, PREBUILT_DASHBOARDS, exampleCards, prebuiltRecord, layoutFor as exampleLayout,
   createDashboardMaker, LOCKED_KEY } from './dashboards.js';
 import { createGame, kioskURL } from './game/game.js';
@@ -676,6 +680,9 @@ const HOME = {
   examplesOpen: false,    // the starting points, up front
   editView: false,        // edit view: the ⚙ menu open AND Design's edit bar showing
   tray: null,             // the edit bar's open tray: 'scene' | 'add' | 'change' | 'switch' | null
+  gate: null, gatePid: null,       // unlocks.js createUnlockGate for the Home's dashboard (made on first use)
+  unlockAsk: null,        // { act: 'add'|'switch', key }: a locked thing was pressed; its unlock choices show
+  unlockArmed: false,     // the first press of "Use N points" (the second one spends them)
   sel: null,              // the chosen thing on the Home (a module instance id)
   locked: [],             // instance ids this Home keeps in place (the tutorial's; home_profile.js isLocked)
   undo: HP.createUndo(),
@@ -1713,7 +1720,7 @@ async function attachHomeEditing() {
  *  pressing Move left four times must not lose their place after the first). */
 // What one edit-bar or tray button IS, as a string: the same across redraws (the focus kept below, and the
 // switch's cursor, home_profile.js editScanStep, both find their button again by it).
-const EDIT_BTN_KEYS = ['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'd'];
+const EDIT_BTN_KEYS = ['edit', 'editScene', 'editRoom', 'editAdd', 'editSwitch', 'editChange', 'editUnlock', 'd'];
 const editBtnKey = (b) => EDIT_BTN_KEYS.map((k) => b.dataset[k] || '').join('|');
 function setHTML(el, html) {
   if (el.dataset.sig === html) return;
@@ -1758,14 +1765,89 @@ function paintEdit() {
 function trayHead(title) {
   return `<div class="tray-head">${ebtn('data-edit="closetray"', 'Close')}<h3>${title}</h3></div>`;
 }
+// ---- THE NIMROD GAME'S GATE ON ADDING (unlocks.js) ------------------------------------------------------
+// One gate per Home dashboard: its mode, its unlock log and its points ledger, read when a tray that adds is
+// opened. A locked thing stays a button (a switch must reach it, and a dimmed one could not say why): its
+// label says "locked", and pressing it shows why and every way to unlock it, then carries on with the add.
+// Until the gate has loaded, the default (sandbox) stands and nothing reads as locked.
+function homeGate() {
+  const pid = HOME.home?.id;
+  if (!pid || !HOME.profiles || !HOME.user) return null;
+  if (HOME.gate && HOME.gatePid === pid) return HOME.gate;
+  try { HOME.gate?.destroy(); } catch { /* gone */ }
+  HOME.gate = null; HOME.gatePid = null;
+  try {
+    HOME.gate = createUnlockGate({
+      makeState: (key) => createState({ url: HOME.profiles.stateURL(pid, key), user: HOME.user }),
+      makeEvents: (key, opts = {}) => createEvents({ url: HOME.profiles.eventsURL(pid, key), user: HOME.user, ...opts }),
+    });
+  } catch (err) { console.error('home: the game', err); return null; }
+  HOME.gatePid = pid;
+  HOME.gate.subscribe(() => { if (HOME.tray === 'add' || HOME.tray === 'switch') { paintEdit(); hostChanged(); } });
+  HOME.gate.load().catch(() => {});
+  return HOME.gate;
+}
+const gateCheck = (key) => { try { return homeGate()?.check(itemForAddKey(key)) || null; } catch { return null; } };
+/** Add or switch to `key` — or, when the game has it locked, show its unlock choices first. */
+function gatedDo(act, key) {
+  if (gateCheck(key)?.locked) {
+    HOME.unlockAsk = { act, key }; HOME.unlockArmed = false;
+    paintEdit(); hostChanged();
+    return Promise.resolve();
+  }
+  return act === 'add' ? addThing(key) : switchTo(key);
+}
+function unlockPanel() {
+  const ask = HOME.unlockAsk;
+  const gate = homeGate();
+  const st = ask && gate ? gateCheck(ask.key) : null;
+  if (!st?.locked) return '';
+  const { label } = pieceOrType(ask.key);
+  const mode = gate.mode();
+  const w = lockWords(st, label, mode);
+  const pts = poolLabel(mode);
+  const then = ask.act === 'add' ? 'and add it' : 'and switch to it';
+  return `<p class="stagenote" data-unlock-ask>${esc(w.why)} ${esc(w.how)}</p><div class="hbtns">`
+    + ebtn('data-edit-unlock="buy"', esc(HOME.unlockArmed ? `Press again: use ${st.cost} ${pts} ${then}` : `Use ${st.cost} ${pts} ${then}`),
+      { disabled: !st.canBuy, hint: st.canBuy ? 'two presses: the second one spends them' : 'not enough points yet' })
+    + (st.canFree ? ebtn('data-edit-unlock="free"', esc(`Unlock it free ${then}`), { hint: 'no points spent' }) : '')
+    + ebtn('data-edit-unlock="sandbox"', esc(`Sandbox: unlock everything ${then}`), { hint: 'switches this dashboard to sandbox mode' })
+    + ebtn('data-edit-unlock="cancel"', 'Not now', { hint: 'nothing changes' })
+    + '</div>';
+}
+async function unlockAnswer(how) {
+  const ask = HOME.unlockAsk;
+  const gate = homeGate();
+  if (!ask || !gate || how === 'cancel') { HOME.unlockAsk = null; HOME.unlockArmed = false; paintEdit(); hostChanged(); return; }
+  if (how === 'buy' && !HOME.unlockArmed) { HOME.unlockArmed = true; paintEdit(); hostChanged(); return; }
+  const item = itemForAddKey(ask.key);
+  let r = null;
+  try {
+    if (how === 'buy') r = await gate.buy(item, { label: pieceOrType(ask.key).label });
+    else if (how === 'free') r = await gate.unlockFree(item);
+    else if (how === 'sandbox') r = { ok: !!(await gate.setMode('sandbox')) };
+  } catch (err) { console.error('home: unlock', err); r = null; }
+  HOME.unlockAsk = null; HOME.unlockArmed = false;
+  if (!r?.ok) { toast('That did not unlock. Nothing was spent; press it again to retry.'); paintEdit(); hostChanged(); return; }
+  await (ask.act === 'add' ? addThing(ask.key) : switchTo(ask.key));
+}
+
 function moduleButtons(attr, { except = null, disabled = false } = {}) {
-  const pieces = `<div class="grp">The old profile’s pieces</div><div class="hbtns">${HP.ADD_PIECES.map((p) =>
-    ebtn(`${attr}="${esc(p.key)}"`, esc(p.label), { disabled, hint: p.hint })).join('')}</div>`;
+  // Only the trays that ADD ask the game; a locked thing is marked, never hidden or dimmed.
+  const gated = attr === 'data-edit-add' || attr === 'data-edit-switch';
+  const mark = (key, label) => (gated && gateCheck(key)?.locked
+    ? { label: `${label} · locked`, hint: 'locked in the game: press to see how to unlock it' } : { label, hint: '' });
+  const pieces = `<div class="grp">The old profile’s pieces</div><div class="hbtns">${HP.ADD_PIECES.map((p) => {
+    const m = mark(p.key, p.label);
+    return ebtn(`${attr}="${esc(p.key)}"`, esc(m.label), { disabled, hint: m.hint || p.hint });
+  }).join('')}</div>`;
   const groups = GROUPS.map((g) => {
     const xs = ITEMS.filter((m) => m.group.id === g.id && m.type !== except);
     if (!xs.length) return '';
-    return `<div class="grp">${esc(g.title)}</div><div class="hbtns">${xs.map((m) =>
-      ebtn(`${attr}="${esc(m.type)}"`, esc(titleFor(m, manifests)), { disabled })).join('')}</div>`;
+    return `<div class="grp">${esc(g.title)}</div><div class="hbtns">${xs.map((m) => {
+      const k = mark(m.type, titleFor(m, manifests));
+      return ebtn(`${attr}="${esc(m.type)}"`, esc(k.label), { disabled, hint: k.hint });
+    }).join('')}</div>`;
   }).join('');
   return pieces + groups;
 }
@@ -1795,8 +1877,10 @@ function paintTray(live, list, t) {
     setHTML(tray, trayHead('The scene') + roomPart + groups);
     return;
   }
+  // An unlock question belongs to the tray it was asked in; another tray drops it (nothing was changed).
+  if (HOME.unlockAsk && HOME.unlockAsk.act !== which) { HOME.unlockAsk = null; HOME.unlockArmed = false; }
   if (which === 'add') {
-    setHTML(tray, trayHead('Add to your Home') + moduleButtons('data-edit-add'));
+    setHTML(tray, trayHead('Add to your Home') + unlockPanel() + moduleButtons('data-edit-add'));
     return;
   }
   if (which === 'switch') {
@@ -1809,7 +1893,7 @@ function paintTray(live, list, t) {
     }
     setHTML(tray, trayHead(title) + (t
       ? '<p class="stagenote">One press: the module you choose takes its place, exactly where it is. Undo puts it back.</p>'
-        + moduleButtons('data-edit-switch', { except: t.type })
+        + unlockPanel() + moduleButtons('data-edit-switch', { except: t.type })
       : `<div class="hbtns">${ebtn('data-edit-change="next"', 'Next thing ›', { disabled: !list.length })}</div>`));
     return;
   }
@@ -1907,7 +1991,7 @@ document.addEventListener('click', (e) => {
   if (ds.edit) {
     switch (ds.edit) {
       case 'closebar': closeBar(); return;
-      case 'scene': case 'add': HOME.tray = HOME.tray === ds.edit ? null : ds.edit; break;
+      case 'scene': case 'add': HOME.tray = HOME.tray === ds.edit ? null : ds.edit; if (HOME.tray === 'add') homeGate()?.load().catch(() => {}); break;
       case 'change': HOME.tray = HOME.tray === 'change' || HOME.tray === 'switch' ? null : 'change'; if (HOME.sel) chooseThing(HOME.sel); break;
       case 'closetray': HOME.tray = null; break;
       case 'transform': openTransform(); return;
@@ -1919,13 +2003,14 @@ document.addEventListener('click', (e) => {
   }
   if (ds.editScene) { sceneTo(ds.editScene); return; }
   if (ds.editRoom) { roomRow(ds.editRoom); return; }
-  if (ds.editAdd) { addThing(ds.editAdd); return; }
-  if (ds.editSwitch) { switchTo(ds.editSwitch); return; }
+  if (ds.editAdd) { gatedDo('add', ds.editAdd); return; }
+  if (ds.editSwitch) { gatedDo('switch', ds.editSwitch); return; }
+  if (ds.editUnlock) { unlockAnswer(ds.editUnlock); return; }
   if (ds.editChange) {
     const d = String(ds.d || '').split(',').map(Number);
     switch (ds.editChange) {
       case 'prev': case 'next': { const n = HP.stepThing(things(), HOME.sel, ds.editChange === 'prev' ? -1 : 1); if (n) chooseThing(n.id); break; }
-      case 'switch': HOME.tray = 'switch'; paintEdit(); hostChanged(); break;
+      case 'switch': HOME.tray = 'switch'; homeGate()?.load().catch(() => {}); paintEdit(); hostChanged(); break;
       case 'move': placeThing((L, id) => HP.nudgeInLayout(L, id, d[0], d[1])); break;
       case 'size': placeThing((L, id) => HP.resizeInLayout(L, id, d[0])); break;
       case 'remove': removeThing(); break;

@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Nimrod as the AI module — talk, act only when pressed, notes, speech into the chat</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:520px;height:640px;margin-top:12px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>Nimrod as the AI module — talk, act only when pressed, notes, speech into the chat</h1>
+<p>Mike, 2026-10-02: "The Nimrod module should probably be the AI module. You wire up whatever AI you want."
+Everything here runs against a FAKE AI (no model server needed): the chat round trip, the name and persona from
+the person's own record, actions shown and run only on a press, notes, the no-AI state, and the speech path —
+a real <code>attachSpeech</code> with a fake recogniser — sending words to the chat only after "Talk" is pressed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { createAI } from '../ai.js';
+import { MENU_TAB_TOPIC } from '../actions.js';
+import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
+import { GUIDE_NODES, GUIDE_ROOT, GUIDE_VERB_TOPICS } from '../nimrod_guide_data.js';
+import { attachSpeech, SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC } from '../input_speech.js';
+import { DELIVERY_TOPIC as OUTPUT_DELIVERY } from '../output.js';
+import {
+  AI_DEFAULTS, AI_SOURCE, AI_STATE_KEY, SPEECH_TOPICS, DELIVERY_TOPIC, DEFAULT_PERSONA, LISTEN_CHOICES, MAX_ACTIONS,
+  aiPrefs, isLocalAddress, parseReply, systemPrompt, createActionQueue, createGuideChat, registerAIAction,
+  allowedActions, BUILTIN_ACTIONS, isYes, isNo, openAIStore, KEEP_TURNS,
+} from '../nimrod_ai.js';
+import {
+  stamp, fallbackNote, notePrompt, draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, NOTES_MAX,
+} from '../nimrod_notes.js';
+import { connectHelp } from '../modules/nimrod.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(15); } return false; };
+const J = (x) => JSON.stringify(x);
+const NAMES = /\bher screen|christine|cici/i;
+
+function fakeState(initial = {}) {
+  let data = JSON.parse(JSON.stringify(initial));
+  const subs = new Set();
+  return {
+    load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {}, destroy() {}, data: () => ({ ...data }),
+  };
+}
+function fakeOutput() {
+  const said = [];
+  return { said, cancelled: [], say(t, o) { said.push({ t, o }); return `out-${said.length}`; }, cancel(id) { this.cancelled.push(id); } };
+}
+// THE FAKE AI: ai.js's shape (settings, resolveModel, chat...), answering from a script of replies.
+function fakeAI({ replies = [], models = ['qwen2.5:3b'], baseUrl = 'http://127.0.0.1:11434/v1', model = '', fail = null } = {}) {
+  const calls = { chat: [], resolve: [] };
+  let s = { baseUrl, model };
+  let key = '';
+  return {
+    calls, replies,
+    settings: () => ({ ...s }), setSettings: (p) => { s = { ...s, ...p }; return { ...s }; },
+    hasKey: () => !!key, setKey: (k) => { key = String(k || '').trim(); return !!key; },
+    listModels: async () => (fail ? { ok: false, models: [], reason: fail } : { ok: true, models }),
+    resolveModel: async (pref) => {
+      calls.resolve.push(pref);
+      if (fail) return { ok: false, model: null, models: [], reason: fail };
+      return { ok: true, model: models.includes(pref) ? pref : models[0], models, fellBack: !!pref && !models.includes(pref) };
+    },
+    chat: async (msgs, opts) => {
+      calls.chat.push({ msgs, opts });
+      if (fail) return { ok: false, reason: fail };
+      const r = replies.length ? replies.shift() : 'Okay.';
+      return typeof r === 'string' ? { ok: true, text: r, model: models[0] } : r;
+    },
+  };
+}
+function box() { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; }
+function personStores() {
+  const made = {};
+  return { made, make: (pid, key, init = {}) => { made[`${pid}/${key}`] = made[`${pid}/${key}`] || fakeState(init); return made[`${pid}/${key}`]; } };
+}
+async function mountGuide({ ai, person = null, personInit = {}, output = fakeOutput(), bus = createBus(), state = fakeState(), id = 'n1', extra = {} } = {}) {
+  const mount = box();
+  const ps = personStores();
+  if (person) ps.make(person, AI_STATE_KEY, personInit);
+  const inst = mountModule('nimrod', { mount, bus, state, events: null, output, user: null, profileId: 'p', personId: person,
+    instanceId: id, ai, ...(person ? { makePersonState: (pid, key) => ps.make(pid, key) } : {}), ...extra });
+  await inst.init();
+  const q = (s) => mount.querySelector(s);
+  const doBtn = (what, n = 0) => mount.querySelectorAll(`[data-ng-do="${what}"]`)[n];
+  const probe = () => inst.impl.__probe();
+  const type = async (text) => { q('[data-ng-field="say"]').value = text; doBtn('send').click(); await inst.impl.__settled(); };
+  return { mount, inst, q, doBtn, probe, type, bus, output, ps, state, done: () => { inst.destroy(); mount.remove(); } };
+}
+
+try {
+  // ============================================================================================
+  section('*** the pieces agree with their owners ***');
+  check('the speech topics are input_speech.js’s', SPEECH_TOPICS.grammar === SPEECH_GRAMMAR_TOPIC
+    && SPEECH_TOPICS.answer === SPEECH_ANSWER_TOPIC && SPEECH_TOPICS.answering === ANSWERING_TOPIC);
+  check('the delivery topic is output.js’s', DELIVERY_TOPIC === OUTPUT_DELIVERY);
+
+  // ============================================================================================
+  section('*** the name and persona are the PERSON’S; the site names nobody’s AI ***');
+  check('*** defaults: named Nimrod, no persona, act ONLY when asked, listen 2 minutes ***',
+    J(aiPrefs({})) === J({ name: 'Nimrod', persona: '', actFreely: false, listenMs: 120000 }) && AI_DEFAULTS.name === 'Nimrod');
+  check('a blank name is Nimrod again; a long one is cut; a made-up listen time is the default',
+    aiPrefs({ name: '   ' }).name === 'Nimrod' && aiPrefs({ name: 'x'.repeat(99) }).name.length === 40 && aiPrefs({ listenMs: 7 }).listenMs === 120000);
+  check('"act without asking" is only ever on by an explicit true', aiPrefs({ actFreely: 'yes' }).actFreely === false && aiPrefs({ actFreely: true }).actFreely === true);
+  check('*** nothing the site ships names a person or says "her screen" (defaults, persona, prompt, help) ***',
+    !NAMES.test(J(AI_DEFAULTS) + DEFAULT_PERSONA + systemPrompt({}) + connectHelp('Nimrod', '')), '');
+  check('listen choices end at 5 minutes: "until I press it" is not one (what if nobody presses?)', Math.max(...LISTEN_CHOICES) === 300000);
+
+  // ============================================================================================
+  section('*** the reply: [[actions]] read from an ALLOW-LIST, the rest said ***');
+  {
+    const p = parseReply('Sure, the themes are this way.\n[[go theme]]');
+    check('*** a known action is read, labelled, and taken out of what is said ***',
+      p.say === 'Sure, the themes are this way.' && p.actions.length === 1 && p.actions[0].name === 'go' && p.actions[0].value === 'theme'
+      && /Your theme/.test(p.actions[0].label), J(p));
+    const bad = parseReply('Ok [[format-disk all]] [[go nowhere]] [[tab kitchen]] [[page sc-nope]]');
+    check('*** an unknown action, or a known one with a bad argument, is IGNORED (never run) ***',
+      bad.actions.length === 0 && bad.ignored.length === 4 && bad.say === 'Ok', J(bad));
+    check('a place can be named by its title too', parseReply('[[go Your theme]]').actions[0]?.value === 'theme');
+    check('tab words: "sound" is the audio tab', parseReply('[[tab sound]]').actions[0]?.value === 'audio');
+    const many = parseReply('[[back]] [[back]] [[back]] [[back]] [[back]]');
+    check(`at most ${MAX_ACTIONS} a reply`, many.actions.length === MAX_ACTIONS && many.ignored.length === 2);
+    check('the built-in set moves the guide and shows pages: nothing that changes or deletes',
+      J(BUILTIN_ACTIONS.map((a) => a.name)) === J(['go', 'back', 'tab', 'page', 'note']));
+  }
+
+  // ============================================================================================
+  section('*** the prompt: the persona, the name, and where the guide is ***');
+  {
+    const sp = systemPrompt({ prefs: { name: 'Ada', persona: 'You speak like a ship captain.' }, node: GUIDE_NODES.theme });
+    check('*** the name and the persona are in it ***', /Your name is Ada\. You speak like a ship captain\./.test(sp));
+    check('*** where the guide is, what it says there, and its choices ***', /"Your theme" \(theme\)/.test(sp)
+      && sp.includes(GUIDE_NODES.theme.say) && /-> settings-tabs/.test(sp));
+    check('every place in the guide is listed, so it can move anywhere', Object.keys(GUIDE_NODES).every((id) => sp.includes(`  ${id}: `)));
+    check('every allowed action is listed with its form', allowedActions().every((a) => sp.includes(`[[${a.name}`)));
+    check('it is told that nothing happens unless the person presses it', /presses it to allow it\. Nothing happens unless they do/.test(sp));
+    check('...and, when the person turned acting on, that they did', /chosen to let these happen straight away/.test(systemPrompt({ prefs: { actFreely: true } })));
+    check('no persona: the default one', systemPrompt({}).includes(DEFAULT_PERSONA));
+  }
+
+  // ============================================================================================
+  section('*** the queue: actions run ONLY on a press (unless the person turned that off) ***');
+  {
+    const ran = [];
+    const env = () => ({ nodes: GUIDE_NODES, go: (id) => ran.push(['go', id]), back: () => ran.push(['back']), publish: (t, p) => ran.push([t, p]) });
+    let free = false;
+    const q = createActionQueue({ env, actFreely: () => free });
+    const p = q.propose(parseReply('[[go theme]] [[tab display]]').actions);
+    check('*** proposed: shown as pending, NOTHING has run ***', p.pending.length === 2 && ran.length === 0);
+    check('*** confirmed: that one runs, and only that one ***', q.confirm(p.pending[1].id) === true && J(ran) === J([[MENU_TAB_TOPIC, { tab: 'display' }]]));
+    q.dismiss(p.pending[0].id);
+    check('dismissed: it is gone and never ran', q.pending().length === 0 && ran.length === 1);
+    q.propose(parseReply('[[go album]]').actions);
+    const stale = q.pending()[0].id;
+    q.propose(parseReply('[[back]]').actions);
+    check('*** WHAT IF NOBODY ANSWERS: a newer reply replaces the old request; it never runs later by surprise ***',
+      q.confirm(stale) === false && ran.length === 1 && q.pending().length === 1);
+    q.dismiss();
+    free = true;
+    const p2 = q.propose(parseReply('[[go points]]').actions);
+    check('*** "let it act without asking" ON: it runs at once, nothing waits ***', p2.ran.length === 1 && p2.pending.length === 0 && J(ran.at(-1)) === J(['go', 'points']));
+    free = false;
+    q.propose([{ name: 'go', value: 'nowhere', label: 'forged' }, { name: 'rm', value: 'x', label: 'forged' }]);
+    check('*** an action is checked AGAIN before it runs: a forged one does nothing even when pressed ***',
+      q.pending().every((a) => q.confirm(a.id) === false) && ran.length === 2);
+  }
+
+  // ============================================================================================
+  section('*** the hook for room building later: a module registers a SAFE action ***');
+  {
+    const placed = [];
+    const off = registerAIAction({ name: 'room-place', args: '<thing>', help: 'put a thing in the room',
+      check: (a) => (/^(desk|lamp)$/.test(String(a).trim()) ? String(a).trim() : null), describe: (t) => `Put a ${t} in the room`, run: (t) => placed.push(t) });
+    check('registered: it is in the allow-list and the prompt', allowedActions().some((a) => a.name === 'room-place') && systemPrompt({}).includes('[[room-place <thing>]]'));
+    const q = createActionQueue({});
+    q.propose(parseReply('[[room-place desk]] [[room-place piano]]').actions);
+    check('...read from a reply, its own check applied (a piano is not allowed), and confirmed like any other',
+      q.pending().length === 1 && placed.length === 0 && q.confirm(q.pending()[0].id) && J(placed) === J(['desk']));
+    off();
+    check('unregistered: gone again', !allowedActions().some((a) => a.name === 'room-place') && parseReply('[[room-place desk]]').actions.length === 0);
+    let threw = 0;
+    try { registerAIAction({ name: 'go', check() {}, describe() {}, run() {} }); } catch { threw++; }
+    try { registerAIAction({ name: 'x y', check() {}, describe() {}, run() {} }); } catch { threw++; }
+    try { registerAIAction({ name: 'nocheck', describe() {}, run() {} }); } catch { threw++; }
+    check('a built-in cannot be replaced; a bad name or a missing check is refused', threw === 3);
+  }
+
+  // ============================================================================================
+  section('*** the chat round trip (a fake AI) ***');
+  {
+    const ai = fakeAI({ replies: ['Hello! Want to see the themes?\n[[go theme]]', { ok: false, reason: 'The model took too long.' }, 'Back again.'] });
+    let node = GUIDE_NODES[GUIDE_ROOT];
+    const chat = createGuideChat({ ai, prefs: () => aiPrefs({ name: 'Ada', persona: 'Brief.' }), context: () => ({ node }), model: () => 'qwen2.5:3b' });
+    const r = await chat.send('hi there');
+    const c0 = ai.calls.chat[0];
+    check('*** one call: the system prompt first (name, persona, place), the person’s words last ***',
+      c0.msgs[0].role === 'system' && /Your name is Ada\. Brief\./.test(c0.msgs[0].content) && c0.msgs.at(-1).content === 'hi there' && c0.opts.model === 'qwen2.5:3b', J(c0.msgs.map((m) => m.role)));
+    check('*** the reply comes back said, with its action read out of it ***', r.ok && r.say === 'Hello! Want to see the themes?' && r.actions[0]?.value === 'theme', J(r));
+    node = GUIDE_NODES.theme;
+    const r2 = await chat.send('and then?');
+    check('a failure is a plain reason, never a throw', !r2.ok && /too long/.test(r2.reason));
+    const r3 = await chat.send('again');
+    const c2 = ai.calls.chat[2];
+    check('...and the chat goes on; the failed line is not sent again', r3.ok && !c2.msgs.some((m) => m.content === 'and then?') && c2.msgs.some((m) => m.content === 'hi there'));
+    check('the guide’s NEW place goes with each message (it tours with the tree)', /"Your theme" \(theme\)/.test(c2.msgs[0].content));
+    check('the assistant’s own [[action]] lines go back to it as it wrote them', c2.msgs.some((m) => m.role === 'assistant' && m.content.includes('[[go theme]]')));
+    const bigAI = fakeAI();
+    const big = createGuideChat({ ai: bigAI, context: () => ({ node }) });
+    for (let i = 0; i < KEEP_TURNS + 5; i++) await big.send(`line ${i}`);
+    const lastCall = bigAI.calls.chat.at(-1).msgs;
+    check(`only the last ${KEEP_TURNS} turns are sent (a small local model’s window is small)`,
+      lastCall.length === 1 + KEEP_TURNS * 2 && lastCall.at(-1).content === `line ${KEEP_TURNS + 4}` && !lastCall.some((m) => m.content === 'line 0'), lastCall.length);
+    check('nothing to say: nothing sent', !(await chat.send('   ')).ok && ai.calls.chat.length === 3);
+    check('isYes / isNo: whole utterances only', isYes('Yes please') && isYes('do it') && !isYes('yes I think the blue one') && isNo('not now') && !isNo('no way that is great'));
+  }
+  {
+    // The real adapter under it: one round trip through ai.js with a fake server.
+    const calls = [];
+    const fetchImpl = async (url, opts) => { calls.push({ url, body: opts.body ? JSON.parse(opts.body) : null });
+      return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'Real adapter. [[back]]' } }] }), text: async () => '' }; };
+    const mem = new Map();
+    const real = createAI({ fetchImpl, storage: { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) } });
+    const chat = createGuideChat({ ai: real, context: () => ({ node: GUIDE_NODES.theme }), model: () => 'qwen2.5:3b' });
+    const r = await chat.send('hello');
+    check('*** through the REAL ai.js: one POST to /chat/completions, and the reply parsed ***',
+      r.ok && r.say === 'Real adapter.' && r.actions[0]?.name === 'back' && calls.length === 1 && calls[0].url.endsWith('/v1/chat/completions')
+      && calls[0].body.max_tokens === 400, J(calls.map((c) => c.url)));
+  }
+  check('isLocalAddress: this computer and this house yes, the internet no',
+    isLocalAddress('http://127.0.0.1:11434/v1') && isLocalAddress('http://localhost:1234') && isLocalAddress('http://192.168.1.5:11434/v1')
+    && isLocalAddress('http://100.97.79.13:11434') && !isLocalAddress('https://api.example.com/v1') && !isLocalAddress('nonsense'));
+
+  // ============================================================================================
+  section('*** notes: reduced, dated, edited, kept, copied — sent nowhere by themselves ***');
+  {
+    const at = new Date(2026, 9, 2, 14, 3).getTime();
+    check('a date a person reads', stamp(at) === '2026-10-02 14:03');
+    const log = [{ role: 'user', text: 'the theme page should open first' }, { role: 'assistant', text: 'Got it.' }, { role: 'user', text: 'and make the map smaller' }];
+    check('no AI: the note is the person’s own words, as bullets', fallbackNote(log) === '- the theme page should open first\n- and make the map smaller');
+    const np = notePrompt(log, { name: 'Ada', where: 'Your theme' });
+    check('the reducing request carries the conversation and where they were', np[1].content.includes('PERSON: the theme page should open first')
+      && np[1].content.includes('ADA: Got it.') && np[1].content.includes('"Your theme"') && /Do not invent/.test(np[0].content));
+    const ai = fakeAI({ replies: ['```\n# Notes\n- Open the theme page first\n- Smaller map\n```'] });
+    const d = await draftNote(log, { ai, name: 'Ada' });
+    check('*** with an AI: its short version, tidied (no fences, no heading) ***', d.ok && d.fromAI && d.text === '- Open the theme page first\n- Smaller map', J(d));
+    const dfail = await draftNote(log, { ai: fakeAI({ fail: 'Could not reach the AI program.' }) });
+    check('*** the AI not answering: still a note, from their own words, and why ***', dfail.ok && !dfail.fromAI && dfail.text.startsWith('- the theme') && /Could not reach/.test(dfail.reason));
+    check('nothing said yet: no note', !(await draftNote([], { ai })).ok);
+    let list = [];
+    for (let i = 0; i < NOTES_MAX + 3; i++) list = addNote(list, makeNote(`note ${i}`, { at: at + i * 60000 }));
+    check(`kept up to ${NOTES_MAX}, the oldest going first`, list.length === NOTES_MAX && list[0].text === 'note 3');
+    check('an empty note is not a note', makeNote('   ') === null);
+    const txt = notesToText(list.slice(-2).map((n, i) => ({ ...n, where: i ? 'Your theme' : '' })), { at });
+    check('*** copied out as dated text, ready to paste ***', /^## Notes from the Nimrod guide \(copied 2026-10-02\)/.test(txt) && /### 2026-10-02 \d\d:\d\d \(at "Your theme"\)\nnote 42/.test(txt), txt);
+    check('delete one', removeNote(list, list[0].id).length === NOTES_MAX - 1);
+    check('garbage in storage is dropped, never a throw', cleanNotes([null, { text: 'x' }, 7, { id: 'a', at: 1, text: 'ok' }]).length === 1);
+  }
+
+  // ============================================================================================
+  section('*** the module: Talk beside the tree, the person’s name and persona ***');
+  {
+    const ai = fakeAI({ replies: ['Hi! The themes are here. [[go theme]]', 'Fine, staying put.', 'Going now. [[go theme]]'] });
+    const g = await mountGuide({ ai, person: 'per1', personInit: { name: 'Ada', persona: 'You are terse.' } });
+    check('*** nothing calls the AI on mount (ai.js’s rule): not a list, not a chat ***', ai.calls.resolve.length === 0 && ai.calls.chat.length === 0);
+    await until(() => g.doBtn('talk')?.textContent === 'Talk to Ada');
+    check('*** the button carries the PERSON’S name for their AI (from their person record) ***', g.doBtn('talk')?.textContent === 'Talk to Ada', g.doBtn('talk')?.textContent);
+    check('the guide is the guide: Talk is the LAST stop, so a switch’s first select is still Back/A', g.probe().stops.at(-1) === 'Talk to Ada');
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    check('*** opening it (a press) checks the connection once ***', g.probe().view === 'talk' && g.probe().status.model === 'qwen2.5:3b' && ai.calls.resolve.length === 1);
+    check('...and the record is the person’s (follows them to every screen)', g.probe().storeKind === 'person');
+    check('it says where the tour is', /On the tour at “Hi, I’m Nimrod”/.test(g.q('.ng-where').textContent));
+    await g.type('show me the themes');
+    check('*** typed: sent with the persona, answered in the chat ***', /You are terse\./.test(ai.calls.chat[0].msgs[0].content)
+      && g.probe().log.at(-1)?.text === 'Hi! The themes are here.' && g.mount.querySelector('[data-ng-log]').textContent.includes('Ada:Hi!'));
+    check('*** read aloud through the output bus, as the AI (its own source) ***', g.output.said.at(-1)?.t === 'Hi! The themes are here.' && g.output.said.at(-1)?.o?.source === AI_SOURCE);
+    check('*** its action is a BUTTON, and the guide has NOT moved ***', g.probe().pending.length === 1 && g.probe().id === GUIDE_ROOT
+      && /Do it: Go to “Your theme”/.test(g.doBtn('confirm')?.textContent || ''));
+    g.doBtn('dismiss').click();
+    check('"Not now": gone, and nothing happened', g.probe().pending.length === 0 && g.probe().id === GUIDE_ROOT);
+    await g.type('ok');
+    check('a reply with no action asks for nothing', g.probe().pending.length === 0);
+    const opened = []; g.bus.subscribe(SETTINGS_OPEN_TOPIC, (p) => opened.push(p));
+    await g.type('ok go');
+    g.doBtn('confirm').click();
+    check('*** pressed: the guide goes there, and that page’s own act runs (the themes beside it) ***',
+      g.probe().id === 'theme' && opened.some((p) => p.page === 'sc-theme') && g.probe().view === 'talk', J(g.probe().id));
+    // A switch in the chat: back is "back to the guide".
+    g.bus.publish(GUIDE_VERB_TOPICS.back);
+    check('*** a switch’s back leaves the chat for the guide ***', g.probe().view === 'guide' && g.probe().id === 'theme');
+    g.done();
+  }
+  {
+    const ai = fakeAI({ replies: ['Done. [[go album]]'] });
+    const g = await mountGuide({ ai, person: 'per2', personInit: { actFreely: true } });
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    await g.type('show me photos');
+    check('*** "let it act without asking" ON (the person’s choice): it ran, no button ***', g.probe().id === 'album' && g.probe().pending.length === 0);
+    g.done();
+  }
+  {
+    const g = await mountGuide({ ai: fakeAI() });
+    await until(() => g.doBtn('talk'));
+    check('*** no name set anywhere: "Talk to Nimrod" ***', g.doBtn('talk')?.textContent === 'Talk to Nimrod');
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    check('with no person, the panel’s own state keeps the settings (a preview, Home)', g.probe().storeKind === 'panel');
+    g.doBtn('setup').click();
+    g.q('[data-ng-field="name"]').value = 'Rex';
+    g.q('[data-ng-field="persona"]').value = 'Cheerful.';
+    g.doBtn('savesetup').click();
+    await until(() => g.probe().status.state === 'ok');
+    check('*** the name and persona are set in "About <name>" and kept ***', g.probe().ai.name === 'Rex' && g.state.data().ai?.persona === 'Cheerful.'
+      && g.q('.ng-head b').textContent === 'Rex');
+    check('"Let it act without asking" starts OFF and is one press', /without asking: off/.test(g.doBtn('actfreely').textContent)
+      && (g.doBtn('actfreely').click(), await until(() => g.probe().ai.actFreely === true)));
+    g.done();
+  }
+
+  // ============================================================================================
+  section('*** notes in the module: make, edit, save, copy ***');
+  {
+    const ai = fakeAI({ replies: ['Sure.', '- Theme page first\n- Map smaller'] });
+    const g = await mountGuide({ ai, person: 'per3' });
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    await g.type('the theme page should open first and the map is too big');
+    g.doBtn('makenote').click();
+    await until(() => g.q('[data-ng-field="draft"]'));
+    check('*** "Make a note": the AI’s short version, in a box to edit ***', g.q('[data-ng-field="draft"]').value === '- Theme page first\n- Map smaller');
+    g.q('[data-ng-field="draft"]').value += '\n- (mine) bigger buttons';
+    g.doBtn('savenote').click();
+    const rec = g.ps.made[`per3/${AI_STATE_KEY}`].data();
+    check('*** saved as EDITED, dated, where they were, on the person’s record ***', rec.notes?.length === 1 && /bigger buttons/.test(rec.notes[0].text)
+      && rec.notes[0].where === 'Hi, I’m Nimrod' && Number.isFinite(rec.notes[0].at), J(rec.notes));
+    let copied = null;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
+    g.doBtn('copynotes').click();
+    await until(() => copied);
+    check('*** "Copy all notes" puts them on the clipboard (a press), and shows them as text too ***',
+      /## Notes from the Nimrod guide/.test(copied) && /bigger buttons/.test(copied) && !!g.q('[data-ng-export]'));
+    check('nothing else was called: copying sent nothing to the AI', ai.calls.chat.length === 2);
+    g.doBtn('delnote').click();
+    check('delete', g.probe().notes.length === 0 && g.ps.made[`per3/${AI_STATE_KEY}`].data().notes.length === 0);
+    g.done();
+  }
+
+  // ============================================================================================
+  section('*** no AI connected: how to connect one, and the tree still works ***');
+  {
+    const ai = fakeAI({ fail: 'Could not reach the AI program at http://127.0.0.1:11434/v1.' });
+    const g = await mountGuide({ ai });
+    await until(() => g.doBtn('talk'));
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'none');
+    const help = g.q('[data-ng-help]')?.textContent || '';
+    check('*** it says so, and names the three ways: Ollama on this computer, a free service, your own key ***',
+      /No AI is answering/.test(g.q('[data-ng-status]').textContent) && /Ollama/.test(help) && /OLLAMA_ORIGINS/.test(help) && /own key/.test(help) && /free/.test(help), help);
+    await g.type('hello?');
+    check('typing anyway: nothing breaks, the chat is not called', ai.calls.chat.length === 0);
+    g.doBtn('guide').click();
+    g.q('[data-ng-choice="2"]').click();
+    check('*** and the tree works exactly as before ***', g.probe().id === 'theme' && g.probe().view === 'guide');
+    g.done();
+    const remote = fakeAI({ baseUrl: 'https://api.example.com/v1' });
+    const g2 = await mountGuide({ ai: remote });
+    await until(() => g2.doBtn('talk'));
+    g2.doBtn('talk').click();
+    await until(() => g2.probe().status.state === 'needs-model');
+    check('*** an online address with no model named: it ASKS, and picks nothing (a list may hold paid models) ***',
+      remote.calls.resolve.length === 0 && /Name the model/.test(g2.q('[data-ng-status]').textContent));
+    g2.done();
+  }
+
+  // ============================================================================================
+  section('*** speech: into the chat ONLY after "Talk"; the wake phrase still commands ***');
+  {
+    const bus = createBus();
+    const pressed = [];
+    const input = { down: (d, c) => pressed.push(c), up() {} };
+    const rec = { running: false, cb: null, modes: [], start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; }, setMode(m) { this.modes.push(m); } };
+    const speech = attachSpeech(input, { recognizer: rec, bus, tone: () => {}, recognition: 'grammar' });
+    speech.start();
+    const say = (t) => rec.cb(t, {});
+    const ai = fakeAI({ replies: ['A scene is a set of dashboards. [[go change-scene]]', 'Sure.'] });
+    const output = fakeOutput();
+    const g = await mountGuide({ ai, bus, output });
+    await until(() => g.doBtn('talk'));
+    say('what is a scene');
+    await sleep(20);
+    check('*** before Talk: bare words go NOWHERE (not to the chat, not a command) ***', ai.calls.chat.length === 0 && pressed.length === 0);
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    g.doBtn('listen').click();
+    check('*** Talk opens a dictation window on the speech layer (open recognition, not a grammar) ***',
+      g.probe().listening && speech.answerTarget()?.source === AI_SOURCE && speech.recognitionMode().mode === 'open' && speech.recognitionMode().why === 'answer');
+    await sleep(900);
+    check('...and the speech layer said it heard us open it, so no "not listening" hint', !g.probe().listenHint);
+    say('what is a scene');
+    await until(() => ai.calls.chat.length === 1);
+    await g.inst.impl.__settled();
+    check('*** now bare words go to the chat ***', ai.calls.chat[0]?.msgs.at(-1)?.content === 'what is a scene');
+    check('*** while the reply is read aloud the window is SHUT (the screen does not answer itself) ***',
+      g.probe().holding && speech.answerTarget() === null);
+    say('A scene is a set of dashboards');
+    await sleep(20);
+    check('...so its own voice heard back is not sent', ai.calls.chat.length === 1);
+    bus.publish(DELIVERY_TOPIC, { id: 'not-ours', delivered: true, source: 'clock' });
+    check('somebody else’s message finishing does not open it', g.probe().holding);
+    bus.publish(DELIVERY_TOPIC, { id: `out-${output.said.length}`, delivered: true, source: AI_SOURCE });
+    check('*** said: the window opens again ***', !g.probe().holding && speech.answerTarget()?.source === AI_SOURCE);
+    say('computer please next');
+    check('*** the wake phrase is still a COMMAND, never a chat message ***', pressed.length === 1 && ai.calls.chat.length === 1);
+    say('yes');
+    check('*** "yes" while an action waits confirms it ***', g.probe().id === 'change-scene' && ai.calls.chat.length === 1);
+    g.doBtn('listen').click();
+    say('are you there');
+    await sleep(20);
+    check('*** stopped: bare words go nowhere again ***', !g.probe().listening && speech.answerTarget() === null && ai.calls.chat.length === 1);
+    g.doBtn('listen').click();
+    g.done();
+    check('*** a panel taken away while listening shuts its window ***', speech.answerTarget() === null);
+    speech.destroy?.();
+  }
+  {
+    // No speech layer at all (voice commands off): the person is told, and can still type.
+    const g = await mountGuide({ ai: fakeAI() });
+    await until(() => g.doBtn('talk'));
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    g.doBtn('listen').click();
+    check('*** nobody heard it open: after a moment it says this screen is not listening, and typing still works ***',
+      await until(() => /not listening for voice/.test(g.probe().listenHint), 2000) && !!g.q('[data-ng-field="say"]'));
+    g.done();
+  }
+  {
+    // The window closes by itself after the person's listen time (fake: the shortest choice is still 30s,
+    // so this checks the timer is armed with the person's value rather than waiting it out).
+    check('the listen time is the person’s choice, cycled from the four', LISTEN_CHOICES.length === 4 && LISTEN_CHOICES.includes(AI_DEFAULTS.listenMs));
+    const st = await openAIStore({ personId: null, state: fakeState({ ai: { name: 'Q' } }) });
+    check('openAIStore: no person, the panel’s copy', st.kind === 'panel' && st.get().name === 'Q');
+    const st2 = await openAIStore({});
+    check('openAIStore: nothing at all, a memory stand-in (never a throw)', st2.kind === 'memory' && J(st2.get()) === '{}');
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
