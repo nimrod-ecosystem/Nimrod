@@ -349,6 +349,18 @@ export const ROUTES = {
     phrases: ['hide my video', 'stop my video', 'my video off', 'turn my camera off'] },
   'call-my-video-on': { action: 'call/my-video-on', label: 'Call: send my video again',
     phrases: ['show my video', 'start my video', 'my video on', 'turn my camera on'] },
+  // *** ANSWER, DECLINE, HANG UP (2026-10-02; actions.js CALL_RING_ACTIONS). *** The Call panel's hint has
+  // always said "Say decline to refuse this call" and there was no such phrase; the screen's incoming-call
+  // notice (call_notice.js) needs the same two. Bare "answer" and "decline" are here because they are what
+  // the screen tells people to say; a room says neither as a whole sentence about anything else, and with no
+  // call ringing nothing answers them. "Hang up" is not "hang on" (a pause phrase). Vocabulary [unverified
+  // on the bench]: "decline" is the word to check first in the small Vosk model.
+  'call-answer': { action: 'call/answer', label: 'Call: answer',
+    phrases: ['answer', 'answer it', 'answer the call'] },
+  'call-decline': { action: 'call/decline', label: 'Call: decline',
+    phrases: ['decline', 'decline it', 'decline the call'] },
+  'call-hang-up': { action: 'call/hang-up', label: 'Call: hang up',
+    phrases: ['hang up', 'end the call', 'end call'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

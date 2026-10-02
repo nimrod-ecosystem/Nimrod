@@ -625,7 +625,11 @@ registerModule(
     }
 
     async function answer() {
-      if (phase === 'idle' || claiming) return;
+      // ONLY A RINGING CALL IS ANSWERED (2026-10-02). It was `phase === 'idle'`, so a press of `select` on a
+      // call already in progress (the panel's verb map sends it to CALL_ANSWER), or "answer" said mid-call,
+      // ran the whole answer again: a second "answer" in the record, and every control reset to on - a
+      // microphone somebody had just muted, unmuted by a press that meant nothing.
+      if (phase !== 'ringing' || claiming) return;
       clearRing();
       // *** CAPTURED HERE, BEFORE THE CAMERA/MIC OPEN BELOW. *** What is being measured is
       // "how long from the ring to her pressing answer" — the camera and mic permission opens
@@ -678,6 +682,28 @@ registerModule(
       // The bars and the menu learn the call is live, and what it can control.
       applyControls();
       publishControls();
+    }
+
+    // *** A CALL THE SCREEN ALREADY RANG FOR, AND SOMEBODY ANSWERED (2026-10-02, call_notice.js). *** A
+    // screen with no Call panel shows a notice; its Answer claims the call (the server says this screen
+    // has it) and then mounts this module over the panels to HOST the call. So there is no ring here, no
+    // countdown and nothing to announce: it is the answer path and nothing else, through the same
+    // `answer()` - the claim is already won, so the transport says yes at once, and the camera and the
+    // microphone open exactly as they do for a panel's own answer. `ringStartedAt`: when the notice began
+    // ringing, so the answer's latency in the record is the person's, not this mount's.
+    async function takeCall(from, { ringStartedAt = null } = {}) {
+      if (phase !== 'idle') return false;
+      stopDemo();
+      clearRing();
+      who = from || {};
+      phase = 'ringing';
+      ringSeq += 1;
+      ringingAt = Number.isFinite(ringStartedAt) ? ringStartedAt : now();
+      render();
+      // The same pair of topics a panel's call publishes (`incoming`, then `ended` from `end()`).
+      bus.publish(CALL_INCOMING, { from: who });
+      await answer();
+      return phase === 'connected';
     }
 
     // Refusing before it connects. A separate path from hangup so the record can tell
@@ -777,6 +803,8 @@ registerModule(
       // The live call's controls, for the suites: where each one is, and press one.
       controls: () => controlsState(),
       control: (p) => onControl(p),
+      // The screen's incoming-call notice hands an answered call here (see `takeCall`).
+      takeCall: (from, opts) => takeCall(from, opts),
 
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };

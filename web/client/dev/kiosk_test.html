@@ -414,11 +414,13 @@ const toTab = (m, id) => {
       // beside Switch module, and Home one press further: 10.)
       // (2026-10-02, autostart for the slideshow: Photos' "When it opens" row, and "Pause Photos" -- a slideshow
       // answers play / pause now -- make the lap FOURTEEN and the old rows 34, and Home two presses further: 12.)
+      // (2026-10-02, call_notice.js: "Calls when there's no Call panel" on the This screen tab makes the old rows 35.
+      // The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders'].includes(i.id));
       // ('user-folders', 2026-10-02: "Your own folders" on the This screen tab, like 'game' -- outside the lap.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 34) ***',
-        lapStops.length === 14 && oldStops.length === 34 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 35) ***',
+        lapStops.length === 14 && oldStops.length === 35 && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       // (2026-10-02, deliberately UNCHANGED: "Font on this device" / "Colour look" are rows of "Settings for:

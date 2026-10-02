@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>a call to a screen with no Call panel — test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #root{position:relative;width:640px;height:400px;margin-top:12px;border:1px solid #ccc}
+  #root .kiosk{position:absolute}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>a call to a screen with no Call panel</h1>
+<div class="note">
+  Until now a screen with no Call panel stayed silent and the caller heard "No answer" after 135 s. This
+  proves the notice: it rings, Answer connects (the camera and microphone open only then, after the claim),
+  Decline ends the call for the caller, it clears when another screen answers, it times out by itself, the
+  screen setting turns it off, and a screen with a Call panel rings once, in the panel. The live sections run
+  through the real server, with the browser's fake camera and microphone and real peer connections.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import {
+  createCallNotice, CALL_NOTICE_FIELD, CALL_NOTICE_KEY, callNoticeModeOf, noticeText,
+  NOTICE_RING_MS, NOTICE_NOTE_MS, NOTICE_STOPS,
+} from '../call_notice.js';
+import { CALLER_GIVE_UP_MS } from '../call_page.js';
+import { LONGEST_RING_S } from '../modules/call.js';
+import { createCallTransport, CALL_PURPOSE } from '../call_transport.js';
+import { connectDrive } from '../drive.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { verbTopic, createDefaultRegistry, CALL_CONTROL_TOPIC } from '../actions.js';
+import { routeFor, ROUTES, duplicatePhrases } from '../input_speech.js';
+
+const out = document.getElementById('results');
+const root = document.getElementById('root');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 4000) => { const until = Date.now() + ms; while (Date.now() < until) { if (fn()) return true; await sleep(30); } return !!fn(); };
+const press = async (key, ms = 60) => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  window.dispatchEvent(new KeyboardEvent('keyup', { key }));
+  await sleep(ms);
+};
+
+function fakeClock() {
+  let t = 1000, seq = 0, armed = [];
+  return {
+    now: () => t,
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// A transport that only does what the notice asks of it. `claimWith(v)` sets what the next claim says;
+// `gate()` holds the next claim until released. A lost claim ends the ring here first ('elsewhere'), as the
+// real one does (call_transport.js `claim`).
+function fakeTransport() {
+  const subs = new Set();
+  const calls = [];
+  let result = true, gated = null;
+  const emit = (ev) => { for (const cb of [...subs]) cb(ev); };
+  return {
+    calls,
+    onRing(cb) { subs.add(cb); return () => subs.delete(cb); },
+    subs: () => subs.size,
+    ring(from = { name: 'Ann', video: true }, panel = false) { emit({ type: 'ring', from, session: 'call-1', panel }); },
+    end(reason, local = false) { emit({ type: 'end', reason, why: null, local }); },
+    claim() {
+      calls.push('claim');
+      if (gated) return gated.p;
+      if (result !== true) this.end('elsewhere');
+      return Promise.resolve(result === true);
+    },
+    claimWith(v) { result = v; },
+    gate() { let r; gated = { p: new Promise((x) => { r = x; }) }; return (v) => { gated = null; r(v); }; },
+    hangup(r) { calls.push(`hangup:${r}`); this.end(r, true); },
+  };
+}
+
+// A peer connection with no network, for the raw "other screen" transports (call_transport_test's shape).
+function fakePeer() {
+  const made = [];
+  class PC {
+    constructor(cfg) { this.cfg = cfg; this.senders = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; this.localDescription = null; made.push(this); }
+    addTrack(t, s) { this.senders.push({ track: t, stream: s }); return {}; }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async createOffer() { return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+  }
+  return { PC, made };
+}
+class FakeStream { constructor() { this.tracks = []; } addTrack(t) { this.tracks.push(t); } getTracks() { return this.tracks; } }
+function fakeLink() {
+  const sent = [], subs = new Set();
+  return { sent, sendSignal: (s) => { sent.push(s); return true; }, onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+    deliver(sig) { for (const cb of [...subs]) cb(sig); } };
+}
+
+// A notice on a fake transport, in a box of its own.
+function rig({ mode = 'notice', open = async () => true } = {}) {
+  const t = fakeTransport();
+  const clock = fakeClock();
+  const host = document.createElement('div');
+  document.body.append(host);
+  const bus = createBus();
+  const alerts = [];
+  const holds = [];
+  const opened = [];
+  let m = mode;
+  const n = createCallNotice({
+    transport: t, host, bus, mode: () => m,
+    output: { alert: (text) => alerts.push(text) },
+    holdScan: (on) => holds.push(on),
+    openCall: async (from, opts) => { t.calls.push('open'); opened.push({ from, opts }); return open(from, opts); },
+    now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+  });
+  const el = () => host.querySelector('[data-call-notice]');
+  const btn = (stop) => host.querySelector(`[data-cn-stop="${stop}"]`);
+  return { t, clock, host, bus, alerts, holds, opened, n, el, btn, setMode: (v) => { m = v; },
+    done() { n.destroy(); host.remove(); } };
+}
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the setting, the words, and the numbers, argued');
+  check('the setting is the screen\'s, "show a notice" by default, or "don\'t ring here"',
+    CALL_NOTICE_FIELD.key === CALL_NOTICE_KEY && CALL_NOTICE_FIELD.default === 'notice'
+    && JSON.stringify(CALL_NOTICE_FIELD.options.map((o) => o.value)) === '["notice","off"]' && CALL_NOTICE_FIELD.level === 'standard',
+    JSON.stringify(CALL_NOTICE_FIELD));
+  check('the row\'s mode: only "off" turns it off; nothing, or anything else, is the notice',
+    callNoticeModeOf({}) === 'notice' && callNoticeModeOf(null) === 'notice' && callNoticeModeOf({ callNotice: 'off' }) === 'off'
+    && callNoticeModeOf({ callNotice: 'banana' }) === 'notice');
+  check('*** it rings for exactly as long as the caller waits (the caller page\'s own number, imported) ***',
+    NOTICE_RING_MS === CALLER_GIVE_UP_MS, `${NOTICE_RING_MS} vs ${CALLER_GIVE_UP_MS}`);
+  check('...which is longer than any Call panel rings, so a screen with a panel never outlasts it', NOTICE_RING_MS > LONGEST_RING_S * 1000);
+  check('a short line after it goes lasts as long as the Call panel\'s own ending messages (8 s)', NOTICE_NOTE_MS === 8000);
+  check('*** Decline is the FIRST stop in the scan, Answer the second ***', JSON.stringify(NOTICE_STOPS) === '["decline","answer"]');
+  check('the words: who, video or audio, and what is announced',
+    noticeText({ name: 'Ann', video: true }).who === 'Ann is calling' && noticeText({ name: 'Ann', video: true }).kind === 'Video call'
+    && noticeText({ name: 'Bo' }).kind === 'Audio call' && noticeText({}).who === 'Someone is calling'
+    && noticeText({ name: 'Ann', video: true }).announce === 'Video call from Ann.');
+
+  // =====================================================================================
+  section('*** a ring with no Call panel: the notice ***');
+  {
+    const r = rig();
+    check('(setup) it listens to the transport\'s rings', r.t.subs() === 1);
+    check('nothing shows before a ring', r.el().hidden === true && !r.n.showing());
+    r.t.ring({ name: 'Ann', video: true });
+    check('*** a ring brings up the notice: who is calling, and that it is a video call ***',
+      r.n.showing() && !r.el().hidden && /Ann is calling/.test(r.el().textContent) && /Video call/.test(r.el().textContent), r.el().textContent);
+    check('Decline and Answer, in that order on the screen too', [...r.el().querySelectorAll('[data-cn-stop]')].map((b) => b.dataset.cnStop).join() === 'decline,answer');
+    check('it is announced once, through the person\'s own output routing', JSON.stringify(r.alerts) === '["Video call from Ann."]', JSON.stringify(r.alerts));
+    check('it takes the screen\'s scan while it shows', JSON.stringify(r.holds) === '[true]', JSON.stringify(r.holds));
+    check('*** NOTHING is lit, and nothing is claimed, opened or hung up by the ring itself (no auto-answer) ***',
+      r.n.lit() === null && r.t.calls.length === 0 && r.opened.length === 0, JSON.stringify(r.t.calls));
+    r.clock.advance(60000);
+    check('*** ...and a minute later it still has not answered by itself ***', r.n.phase() === 'ringing' && r.t.calls.length === 0);
+    r.done();
+    const a = rig();
+    a.t.ring({ name: 'Bo', video: false });
+    check('an audio call says so', /Audio call/.test(a.el().textContent));
+    a.done();
+  }
+
+  // =====================================================================================
+  section('*** a stray first press does not answer: the scan starts on nothing, Decline first ***');
+  {
+    const r = rig();
+    r.t.ring();
+    check('*** select with nothing lit does NOTHING (a hand already resting on the switch) ***',
+      r.n.verb('select') === true && r.n.phase() === 'ringing' && r.t.calls.length === 0);
+    r.n.verb('next');
+    check('the first next lights Decline', r.n.lit() === 'decline' && r.btn('decline').dataset.lit === '1' && !r.btn('answer').dataset.lit);
+    r.n.verb('next');
+    check('the second lights Answer', r.n.lit() === 'answer');
+    r.n.verb('next');
+    check('and it wraps back to Decline', r.n.lit() === 'decline');
+    r.done();
+    const p = rig();
+    p.t.ring();
+    p.n.verb('prev');
+    check('*** prev from nothing also lights Decline, never Answer ***', p.n.lit() === 'decline');
+    p.n.verb('prev');
+    check('...then Answer', p.n.lit() === 'answer');
+    check('other verbs are held while it shows (nothing reaches a panel underneath)', p.n.verb('up') === true && p.n.phase() === 'ringing');
+    p.done();
+    const i = rig();
+    check('with nothing showing, a verb is not the notice\'s', i.n.verb('next') === false && i.n.verb('select') === false);
+    i.done();
+  }
+
+  // =====================================================================================
+  section('*** Decline: a switch, the keyboard\'s back, a pointer, "decline" ***');
+  for (const [how, act] of [
+    ['a switch: next, select', (r) => { r.n.verb('next'); r.n.verb('select'); }],
+    ['back', (r) => { r.n.verb('back'); }],
+    ['a pointer on Decline', (r) => { r.btn('decline').click(); }],
+    ['"decline" said or switched (call/decline)', (r) => { r.bus.publish('call/decline'); }],
+  ]) {
+    const r = rig();
+    r.t.ring();
+    act(r);
+    check(`*** ${how}: the call is declined (the caller is told), the notice goes, the scan comes back ***`,
+      JSON.stringify(r.t.calls) === '["hangup:declined"]' && !r.n.showing() && r.el().hidden && JSON.stringify(r.holds) === '[true,false]',
+      `${JSON.stringify(r.t.calls)} ${JSON.stringify(r.holds)}`);
+    check(`...${how}: nothing was claimed or opened`, r.opened.length === 0);
+    r.done();
+  }
+
+  // =====================================================================================
+  section('*** Answer: the claim first, then the call is handed on ***');
+  for (const [how, act] of [
+    ['a switch: next, next, select', (r) => { r.n.verb('next'); r.n.verb('next'); r.n.verb('select'); }],
+    ['a pointer on Answer', (r) => { r.btn('answer').click(); }],
+    ['"answer" said or switched (call/answer)', (r) => { r.bus.publish('call/answer'); }],
+  ]) {
+    const r = rig();
+    r.t.ring({ name: 'Ann', video: true });
+    const at = r.clock.now();
+    r.clock.advance(4200);
+    act(r);
+    await settled(() => r.opened.length > 0, 1000);
+    check(`*** ${how}: it CLAIMS before anything opens, then hands the call on ***`,
+      JSON.stringify(r.t.calls) === '["claim","open"]', JSON.stringify(r.t.calls));
+    check(`...${how}: handed WHO it is and when it began ringing (the answer\'s latency is the person\'s)`,
+      r.opened[0]?.from?.name === 'Ann' && r.opened[0]?.opts?.ringStartedAt === at, JSON.stringify(r.opened[0]));
+    check(`...${how}: the notice goes`, !r.n.showing() && r.el().hidden);
+    r.done();
+  }
+  {
+    const r = rig();
+    r.t.claimWith(false);
+    r.t.ring();
+    r.btn('answer').click();
+    await sleep(20);
+    check('*** a claim another screen won: nothing opens, and it says "Handled on another screen." ***',
+      r.opened.length === 0 && !r.n.showing() && r.n.note() === 'Handled on another screen.', `${r.opened.length} ${r.n.note()}`);
+    r.clock.advance(NOTICE_NOTE_MS);
+    check('...and that line goes by itself', r.n.note() === null);
+    r.done();
+  }
+  {
+    const r = rig();
+    r.t.ring();
+    const release = r.t.gate();
+    r.btn('answer').click();
+    check('while the claim is asked, it says so and its buttons are off', r.n.phase() === 'answering'
+      && /Answering/.test(r.el().textContent) && r.btn('answer').disabled && r.btn('decline').disabled);
+    check('a press while it asks is swallowed', r.n.verb('select') === true && r.t.calls.join() === 'claim');
+    r.t.end('remote');                 // the caller gives up while the server is asked
+    release(true);
+    await sleep(20);
+    check('*** the ring ended while asking: even a "yes" opens nothing ***', r.opened.length === 0 && !r.n.showing(), JSON.stringify(r.t.calls));
+    r.done();
+  }
+  {
+    const r = rig({ open: async () => false });
+    r.t.ring();
+    r.btn('answer').click();
+    await sleep(20);
+    check('*** nothing could host the call: it is hung up as failed, never left "answered" by nobody ***',
+      r.t.calls.join() === 'claim,open,hangup:failed' && r.n.note() === 'The call could not connect.', `${r.t.calls} ${r.n.note()}`);
+    r.done();
+  }
+
+  // =====================================================================================
+  section('*** it goes by itself: another screen, the caller, the caller\'s whole wait ***');
+  {
+    const r = rig();
+    r.t.ring();
+    r.t.end('elsewhere');
+    check('*** another screen took it (or refused it first): gone at once, "Handled on another screen." ***',
+      !r.n.showing() && r.n.note() === 'Handled on another screen.' && JSON.stringify(r.holds) === '[true,false]');
+    check('...and this screen told the caller nothing', r.t.calls.length === 0);
+    r.done();
+  }
+  {
+    const r = rig();
+    r.t.ring({ name: 'Ann' });
+    r.t.end('remote');
+    check('the caller hung up or gave up: gone, "Missed call from Ann."', !r.n.showing() && r.n.note() === 'Missed call from Ann.');
+    r.done();
+  }
+  {
+    const r = rig();
+    r.t.ring({ name: 'Ann' });
+    r.clock.advance(NOTICE_RING_MS - 1);
+    check('a millisecond before the caller\'s wait is over, it is still ringing', r.n.phase() === 'ringing');
+    r.clock.advance(1);
+    check('*** THE NOTICE TIMES OUT BY ITSELF (never a gate only an input can leave) ***', !r.n.showing() && r.el().hidden);
+    check('...the caller is told "unanswered", as a Call panel\'s ring-out does', JSON.stringify(r.t.calls) === '["hangup:unanswered"]', JSON.stringify(r.t.calls));
+    check('...the scan comes back, and it leaves "Missed call from Ann."', JSON.stringify(r.holds) === '[true,false]' && r.n.note() === 'Missed call from Ann.');
+    r.done();
+  }
+  {
+    const r = rig();
+    r.t.ring({ name: 'Ann' });
+    r.clock.advance(60000);
+    r.t.ring({ name: 'Bo', video: true });
+    check('a caller ringing again over the last one: this caller, from the start', /Bo is calling/.test(r.el().textContent));
+    r.clock.advance(NOTICE_RING_MS - 1);
+    check('...with the whole wait again', r.n.phase() === 'ringing');
+    r.done();
+  }
+
+  // =====================================================================================
+  section('*** a Call panel, and "don\'t ring here" ***');
+  {
+    const r = rig();
+    r.t.ring({ name: 'Ann' }, true);
+    check('*** a Call panel rings for it: NO notice (one ring per screen, never two) ***',
+      !r.n.showing() && r.el().hidden && r.alerts.length === 0 && r.holds.length === 0);
+    r.t.end('remote');
+    check('...and its ending leaves nothing behind here', r.n.note() === null);
+    r.done();
+  }
+  {
+    const r = rig({ mode: 'off' });
+    r.t.ring();
+    check('*** "don\'t ring here": no notice, no sound, nothing claimed or refused (the caller rings the other screens) ***',
+      !r.n.showing() && r.alerts.length === 0 && r.t.calls.length === 0 && r.holds.length === 0);
+    r.setMode('notice');
+    r.t.ring();
+    check('the mode is read at every ring: set back, the next call shows', r.n.showing());
+    r.done();
+  }
+  {
+    const r = rig();
+    r.n.destroy();
+    check('destroyed: its elements go and it stops listening', !r.host.querySelector('[data-call-notice]') && r.t.subs() === 0);
+    r.t.ring();
+    check('...a ring after that shows nothing', !r.n.showing());
+    r.host.remove();
+  }
+
+  // =====================================================================================
+  section('the transport\'s rings (call_transport.js onRing): what the notice listens to');
+  {
+    const link = fakeLink();
+    const pe = fakePeer();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: pe.PC, Stream: FakeStream });
+    const ev = [];
+    const off = t.onRing((e) => ev.push(e));
+    link.deliver({ kind: 'offer', sdp: 'X', from: { name: 'Ann', video: true }, purpose: CALL_PURPOSE, session: 'call-a' });
+    check('*** an offer with no Call panel listening: a ring, panel: false, who and which call ***',
+      ev.length === 1 && ev[0].type === 'ring' && ev[0].panel === false && ev[0].from?.name === 'Ann' && ev[0].session === 'call-a', JSON.stringify(ev));
+    link.deliver({ kind: 'bye', purpose: CALL_PURPOSE, session: 'call-a', reason: 'hangup' });
+    check('the caller hangs up: an end, not local, with the caller\'s reason', ev[1]?.type === 'end' && ev[1].reason === 'remote' && ev[1].local === false && ev[1].why === 'hangup', JSON.stringify(ev[1]));
+    const rings = [];
+    const offPanel = t.onIncoming((f) => rings.push(f));
+    link.deliver({ kind: 'offer', sdp: 'Y', from: { name: 'Bo' }, purpose: CALL_PURPOSE, session: 'call-b' });
+    check('*** with a Call panel listening: the panel rings, and the screen is told panel: true ***', rings.length === 1 && ev[2]?.panel === true, JSON.stringify(ev[2]));
+    t.hangup('declined');
+    check('this end\'s own decline: an end, local', ev[3]?.type === 'end' && ev[3].reason === 'declined' && ev[3].local === true, JSON.stringify(ev[3]));
+    offPanel();
+    link.deliver({ kind: 'offer', sdp: 'Z', from: { name: 'Cy' }, purpose: CALL_PURPOSE, session: 'call-c' });
+    link.deliver({ kind: 'answerer', purpose: CALL_PURPOSE, session: 'call-c', you: false });
+    check('another screen took it: an end "elsewhere"', ev.at(-1)?.type === 'end' && ev.at(-1).reason === 'elsewhere', JSON.stringify(ev.at(-1)));
+    off();
+    link.deliver({ kind: 'offer', sdp: 'W', from: { name: 'Di' } });
+    check('unsubscribed: nothing more', ev.at(-1)?.from?.name !== 'Di');
+    t.destroy();
+  }
+
+  // =====================================================================================
+  section('"answer", "decline", "hang up": a phrase and a switch reach them');
+  {
+    const reg = createDefaultRegistry();
+    check('*** "answer", "decline" and "hang up" are spoken routes ***',
+      routeFor('answer') === 'call-answer' && routeFor('Decline.') === 'call-decline' && routeFor('hang up') === 'call-hang-up');
+    check('each presses a registered action a switch can be bound to, on the topics the notice and the Call panel hear',
+      ['call-answer', 'call-decline', 'call-hang-up'].every((id) => reg.has(ROUTES[id].action))
+      && reg.get?.('call/answer')?.topic === 'call/answer' && reg.get?.('call/decline')?.topic === 'call/decline'
+      && reg.get?.('call/hang-up')?.topic === 'call/hangup');
+    check('no phrase means two things (the whole spoken table)', duplicatePhrases().length === 0, JSON.stringify(duplicatePhrases()));
+    check('"hang up" is not "hang on" (a pause)', routeFor('hang on') === null);
+  }
+
+  // =====================================================================================
+  section('*** LIVE, through the real server: a real screen with no Call panel ***');
+  let k = null, k2 = null, sB = null, sC = null, ph = null, media = null, tB = null, tC = null, nC = null, d = null;
+  const hostC = document.createElement('div');
+  try {
+    const KUSER = 'call-notice-' + Math.floor(Math.random() * 1e9);
+    const profiles = createProfilesClient({ user: KUSER });
+    const person = (await profiles.people())[0];
+    check('(setup) the account has a person', !!person);
+    const p = await profiles.create('TEST-no-call-panel', person.id);
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'clock');
+    const kbus = createBus();
+    k = await mountKiosk(root, { user: KUSER, profileId: p.id, profiles, bus: kbus });
+    check('(setup) the screen attached its drive socket and built the notice', await settled(() => !!k.drive() && !!k.callNotice(), 12000));
+    check('*** the screen built its call transport ITSELF, with no Call panel asking for one ***',
+      !!k.callTransport() && !root.querySelector('.m-call'));
+    const notice = () => k.callNotice();
+    const noticeEl = () => root.querySelector('[data-call-notice]');
+    const callMedia = () => {
+      const mic = (k.micOwner()?.status?.().consumers || []).filter((c) => /^call:/.test(c));
+      const cam = (k.cameraOwner()?.consumers?.() || []).filter((c) => /^call:/.test(c));
+      return [...mic, ...cam];
+    };
+
+    // The other screen of the same person: stands in for a Call panel elsewhere in the house.
+    sB = connectDrive({ personId: person.id, role: 'screen', user: KUSER });
+    const B = { rings: [], ended: [] };
+    tB = createCallTransport({ link: sB, role: 'screen', PeerConnection: fakePeer().PC, Stream: FakeStream });
+    tB.onIncoming((f) => B.rings.push(f)); tB.onEnded((r) => B.ended.push(r));
+    ph = connectDrive({ personId: person.id, role: 'driver', user: KUSER });
+    check('(setup) the screen, a second screen and a caller are in the room',
+      await settled(() => ph.state() === 'connected' && sB.state() === 'connected' && ph.presence().screens >= 2, 12000),
+      `${ph.state()} ${JSON.stringify(ph.presence())}`);
+    try { media = await navigator.mediaDevices.getUserMedia({ audio: true, video: true }); } catch { media = null; }
+    check('(setup) the caller has the browser\'s fake camera and microphone', !!media);
+    // The caller: a real peer connection, so the screen's real one can answer it.
+    d = createCallTransport({ link: ph, role: 'driver' });
+    const dEnded = [], dAns = [];
+    d.onEnded((r, x) => dEnded.push((x && x.why) || r));
+    d.onAnswered((a) => dAns.push(a));
+    const callOnce = (from = { name: 'Tess', video: true }) => d.call({ tracks: media ? media.getTracks() : [], from });
+    const ringsNow = () => B.rings.length;
+
+    // ---- 1. DECLINE ----
+    await callOnce();
+    check('*** LIVE: a call to a screen with no Call panel brings up the notice ***',
+      await settled(() => notice().showing() && !noticeEl().hidden, 9000), noticeEl()?.textContent);
+    check('LIVE: it says who is calling, and that it is a video call', /Tess is calling/.test(noticeEl().textContent) && /Video call/.test(noticeEl().textContent));
+    check('LIVE: the other screen rings too (every screen rings)', await settled(() => ringsNow() === 1, 3000));
+    check('*** LIVE: nothing is open before Answer: no camera, no microphone for a call ***', callMedia().length === 0, JSON.stringify(callMedia()));
+    check('LIVE: the notice has the scan (the panels\' router is paused)', k.callScanHeld() === true);
+    await press('Enter');
+    check('*** LIVE: a stray first press (Enter, nothing lit) does not answer ***', notice().phase() === 'ringing' && dAns.length === 0);
+    noticeEl().querySelector('[data-cn-stop="decline"]').click();
+    check('*** LIVE: Decline ends the call for the caller: the caller hears "declined" ***',
+      await settled(() => dEnded.includes('declined'), 6000), JSON.stringify(dEnded));
+    check('LIVE: the notice goes, and gives the scan back', !notice().showing() && k.callScanHeld() === false);
+    check('LIVE: the other screen stops ringing too (a first "no" is everybody\'s)', await settled(() => B.ended.at(-1) === 'elsewhere', 4000), JSON.stringify(B.ended));
+
+    // ---- 2. ANOTHER SCREEN ANSWERS ----
+    await callOnce();
+    check('(setup) it rings both again', await settled(() => notice().showing() && ringsNow() === 2, 9000));
+    const won = await tB.answer({});
+    check('(setup) the other screen answered it', won === true);
+    check('*** LIVE: the notice clears the moment another screen takes the call ***', await settled(() => !notice().showing(), 4000));
+    check('LIVE: ...and says so for a moment', /Handled on another screen/.test(notice().note() || ''), notice().note());
+    check('LIVE: ...and nothing opened here', callMedia().length === 0 && !k.callView());
+    d.hangup('done');
+    await settled(() => !tB.isLive(), 4000);
+
+    // ---- 3. ANSWER, BY THE KEYBOARD (a switch's path: next, next, select) ----
+    const ans0 = dAns.length;
+    await callOnce();
+    check('(setup) it rings again', await settled(() => notice().showing() && ringsNow() === 3, 9000));
+    await press('ArrowDown');
+    check('LIVE: down lights Decline first', notice().lit() === 'decline');
+    await press('ArrowDown');
+    check('LIVE: down again lights Answer', notice().lit() === 'answer');
+    await press('Enter');
+    check('*** LIVE: Answer connects: the caller is answered ***', await settled(() => dAns.length > ans0, 15000), String(dAns.length));
+    const phaseNow = () => root.querySelector('[data-call-view] .m-call')?.dataset.phase;
+    check('*** LIVE: the call is hosted in a full call view over the panels ***',
+      await settled(() => !!k.callView() && phaseNow() === 'connected', 6000), `${!!k.callView()} ${phaseNow()}`);
+    check('LIVE: the screen\'s transport is live', k.callTransport().isLive() === true);
+    check('*** LIVE: the bar has the live call\'s controls ***', await settled(() => k.callControls()?.live === true, 3000), JSON.stringify(k.callControls()));
+    check('*** LIVE: the microphone opened only now, after the claim, for the call ***', await settled(() => callMedia().length > 0, 3000), JSON.stringify(callMedia()));
+    check('LIVE: the other screen was told another screen has it', await settled(() => B.ended.at(-1) === 'elsewhere', 3000), JSON.stringify(B.ended));
+    check('LIVE: the notice is gone; the call view has the scan', !notice().showing() && k.callScanHeld() === true);
+    check('LIVE: the panels are still there underneath (nothing swapped)', k.primaryType() === 'photos', k.primaryType());
+    kbus.publish(CALL_CONTROL_TOPIC, { mic: 'off' });
+    kbus.publish('call/answer');
+    await sleep(80);
+    check('*** LIVE: "answer" again mid-call changes nothing (the muted microphone stays muted) ***', k.callControls()?.mic === false, JSON.stringify(k.callControls()));
+    await press('ArrowDown');
+    check('LIVE: the call view\'s one stop, Hang up, lights on next', k.callView()?.lit === 0);
+    root.querySelector('[data-call-hangup]').click();
+    check('*** LIVE: Hang up: the caller hears it ***', await settled(() => dEnded.at(-1) === 'hangup', 6000), JSON.stringify(dEnded));
+    check('*** LIVE: the view goes and everything is as it was: the scan back, the photos, no call panel ***',
+      await settled(() => !k.callView() && !k.callScanHeld(), 4000) && k.primaryType() === 'photos' && !root.querySelector('.m-call'));
+    check('LIVE: the camera and microphone are let go', await settled(() => callMedia().length === 0, 4000), JSON.stringify(callMedia()));
+    check('LIVE: the bar\'s call controls are put away', await settled(() => !k.callControls(), 3000));
+
+    // ---- 4. "ANSWER" SAID; THE CALLER HANGS UP ----
+    const ans1 = dAns.length;
+    await callOnce({ name: 'Tess', video: false });
+    check('(setup) an audio call rings', await settled(() => notice().showing() && /Audio call/.test(noticeEl().textContent), 9000));
+    check('LIVE: "answer" is a phrase whose action this screen has registered', routeFor('answer') === 'call-answer' && k.runtime.actions.has('call/answer'));
+    kbus.publish('call/answer');        // what that action publishes
+    check('*** LIVE: "answer" answers it ***', await settled(() => dAns.length > ans1 && !!k.callView(), 15000));
+    d.hangup('done');
+    check('*** LIVE: the caller hanging up ends the hosted call: the view goes by itself ***',
+      await settled(() => !k.callView() && !k.callScanHeld(), 6000));
+
+    // ---- 5. "DON'T RING HERE" ----
+    k.menu.open();
+    try { k.menu.showTab?.('screen'); } catch { /* no tabs */ }
+    const row = () => k.menu.items().find((i) => i.id === `set:${CALL_NOTICE_KEY}`);
+    check('LIVE: the setting is a row on this screen\'s menu', !!row(), JSON.stringify(k.menu.items().filter((i) => i.tab === 'screen').map((i) => i.id)));
+    row()?.run();
+    k.menu.close();
+    await sleep(50);
+    const r5 = ringsNow();
+    await callOnce();
+    check('(setup) the call rings the other screen', await settled(() => ringsNow() === r5 + 1, 9000));
+    await sleep(800);
+    check('*** LIVE: "don\'t ring here": this screen shows nothing ***', !notice().showing() && noticeEl().hidden && callMedia().length === 0);
+    d.hangup('done');
+    await sleep(200);
+    k.menu.open();
+    try { k.menu.showTab?.('screen'); } catch { /* no tabs */ }
+    row()?.run();
+    k.menu.close();
+
+    // ---- 6. THE TIMEOUT, THROUGH THE REAL SERVER ----
+    // A third screen's notice on a clock the test turns: the caller's whole wait, in an instant.
+    sC = connectDrive({ personId: person.id, role: 'screen', user: KUSER });
+    tC = createCallTransport({ link: sC, role: 'screen', PeerConnection: fakePeer().PC, Stream: FakeStream });
+    const clk = fakeClock();
+    document.body.append(hostC);
+    nC = createCallNotice({ transport: tC, host: hostC, now: clk.now, setTimer: clk.setTimer, clearTimer: clk.clearTimer });
+    check('(setup) a third screen joins', await settled(() => sC.state() === 'connected' && ph.presence().screens >= 3, 9000));
+    await callOnce();
+    check('(setup) the call rings this screen and the third', await settled(() => notice().showing() && nC.showing(), 9000));
+    clk.advance(NOTICE_RING_MS);
+    check('*** LIVE: the notice times out by itself after the caller\'s whole wait ***', !nC.showing());
+    check('*** LIVE: ...and the caller is told "unanswered" ***', await settled(() => dEnded.at(-1) === 'unanswered', 6000), JSON.stringify(dEnded));
+    check('LIVE: ...and the other screens stop ringing (a first "no" is everybody\'s)', await settled(() => !notice().showing(), 4000));
+    try { nC.destroy(); } catch { /* gone */ }
+    try { tC.destroy(); } catch { /* gone */ }
+    try { sC.close(); } catch { /* gone */ }
+    sC = null;
+
+    // ---- 7. A SCREEN WITH A CALL PANEL: one ring, in the panel ----
+    k.destroy(); k = null;
+    root.innerHTML = '';
+    const p2 = await profiles.create('TEST-call-panel', person.id);
+    // The Call panel FIRST, so it is the one showing (a stage shows one module at a time, and a panel that is
+    // not showing is not mounted - a screen whose Call panel is not on show gets the notice, by design).
+    await profiles.addModule(p2.id, 'call');
+    await profiles.addModule(p2.id, 'photos');
+    k2 = await mountKiosk(root, { user: KUSER, profileId: p2.id, profiles, bus: createBus() });
+    check('(setup) a screen with a Call panel attached its socket', await settled(() => !!k2.drive() && !!k2.callNotice() && !!root.querySelector('.m-call'), 12000),
+      `${!!k2.drive()} ${!!k2.callNotice()} ${!!root.querySelector('.m-call')} ${k2.primaryType()}`);
+    await settled(() => ph.presence().screens >= 2, 6000);
+    await callOnce();
+    check('*** LIVE: a screen WITH a Call panel rings in the panel ***',
+      await settled(() => root.querySelector('.m-call')?.dataset.phase === 'ringing', 9000), root.querySelector('.m-call')?.dataset.phase);
+    await sleep(300);
+    check('*** LIVE: ...and NO notice: one ring per screen, never two ***',
+      !k2.callNotice().showing() && root.querySelector('[data-call-notice]').hidden && k2.callScanHeld() === false);
+    d.hangup('done');
+    check('LIVE: the caller hangs up: the panel stops ringing', await settled(() => root.querySelector('.m-call')?.dataset.phase === 'idle', 6000));
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
+  } finally {
+    try { k?.destroy(); } catch { /* gone */ }
+    try { k2?.destroy(); } catch { /* gone */ }
+    try { nC?.destroy(); } catch { /* gone */ }
+    try { tB?.destroy(); } catch { /* gone */ }
+    try { tC?.destroy(); } catch { /* gone */ }
+    try { d?.destroy(); } catch { /* gone */ }
+    for (const s of [sB, sC, ph]) { try { s?.close(); } catch { /* gone */ } }
+    try { media?.getTracks().forEach((t) => t.stop()); } catch { /* gone */ }
+    hostC.remove();
+  }
+
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

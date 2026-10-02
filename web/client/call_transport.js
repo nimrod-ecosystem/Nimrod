@@ -271,6 +271,13 @@ export function createCallTransport({
   // one goes live). A SET, unlike onIncoming/onEnded: those belong to the one call panel; these belong
   // to the screen, and more than one part of it listens.
   const liveCbs = new Set();
+  // *** WHO HEARS A RING THAT NO CALL PANEL HEARS (2026-10-02, call_notice.js). *** `onIncoming` / `onEnded`
+  // are ONE slot each, and belong to the Call panel. A screen with no Call panel on it heard nothing at all:
+  // the offer sat here and the caller got "No answer" after 135 s. These are a Set, like `liveCbs`, and
+  // they belong to the screen: `{ type: 'ring', from, session, panel }` when a new call starts ringing
+  // (`panel`: a Call panel is listening and rings for it, so the screen must not ring twice), and
+  // `{ type: 'end', reason, why, local }` when a ring, an answer or a live call ends, for any reason.
+  const ringCbs = new Set();
 
   const log = (...a) => { try { onLog?.(...a); } catch { /* a logger must not break a call */ } };
   function setLive(on) {
@@ -320,6 +327,9 @@ export function createCallTransport({
     if (was || (!local && (wasRinging || wasAnswering))) {
       try { endedCb?.(reason, { why }); } catch (e) { log('onEnded threw', e); }
     }
+    // The screen's watchers hear EVERY ending of something that was here, this end's own included: a
+    // notice that rang for it needs to know it is over however it ended.
+    if (was || wasRinging || wasAnswering) emit(ringCbs, { type: 'end', reason, why, local });
   }
 
   const isLost = (session) => !!session && lost.includes(session);
@@ -503,7 +513,10 @@ export function createCallTransport({
       }
       pendingOffer = sig.sdp;
       pendingSession = session;
+      // Read BEFORE the panel is told: whether a Call panel rings for this one (see `ringCbs`).
+      const panel = typeof incomingCb === 'function';
       try { incomingCb?.(sig.from || null); } catch (e) { log('onIncoming threw', e); }
+      emit(ringCbs, { type: 'ring', from: sig.from || null, session, panel });
       return;
     }
     if (role === 'driver' && sig.kind === 'answer') {
@@ -646,6 +659,8 @@ export function createCallTransport({
     isLive: () => live,
     /** `cb(true)` when a call goes live, `cb(false)` when it ends (not on ringing, not on a reconnect). */
     onLive(cb) { if (typeof cb !== 'function') return () => {}; liveCbs.add(cb); return () => { liveCbs.delete(cb); }; },
+    /** The screen's own view of its rings (see `ringCbs`): `cb({ type: 'ring' | 'end', ... })`. Returns an unsubscribe. */
+    onRing(cb) { if (typeof cb !== 'function') return () => {}; ringCbs.add(cb); return () => { ringCbs.delete(cb); }; },
 
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
