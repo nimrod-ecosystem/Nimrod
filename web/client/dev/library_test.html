@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the Modules library — everything addable, filtered, sorted, picked in place — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{width:640px;height:420px;position:relative;border:1px solid #ddd8b4;margin:8px 0}
+</style>
+</head>
+<body>
+<h1>the Modules library</h1>
+<p>Mike, 2026-10-02: <i>“That could actually be the modules module. Where you could pick anything to add to
+any other module. So there could be categories like games, learning, visual, furniture, 3d etc. And be able to
+sort and filter.”</i> And: Switch module opens it in the place of the panel, and a double click puts the pick
+there. This checks the library on its own (items, categories, the grid, its cursor, the game's locks, the AI's
+place / swap); <code>transport_test</code> checks it in a real kiosk.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { CATALOG, NOT_FOR_CAREGIVERS } from '../modules_catalog.js';
+import { FURNITURE } from '../room_parts.js';
+import { ROOM_PRESETS } from '../room_presets.js';
+import { listScenes } from '../livescene.js';
+import { MODULE_VERBS, PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC } from '../actions.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { isStarter } from '../unlocks.js';
+import { allowedActions, parseReply, createActionQueue, BUILTIN_ACTIONS } from '../nimrod_ai.js';
+import {
+  LIBRARY_TYPE, CATEGORIES, CATEGORY_IDS, MODULE_CATEGORIES, categoriesFor, moduleItems, sceneItems, furnitureItems,
+  brickItems, libraryItems, filterItems, sortItems, normName, resolveModuleName, resolvePanel, parsePlaceArg,
+  parseSwapArg, LIBRARY_AI_ACTIONS, LIBRARY_SETTINGS, LIBRARY_DEFAULTS, CARD_SIZES, mountLibrary,
+} from '../library.js';
+import '../modules/clock.js';
+import '../modules/calculator.js';
+import '../modules/photos.js';
+import '../modules/wordforge.js';
+import { LIBRARY_VERB_TOPICS, libraryPrefsFrom } from '../modules/library.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+function fakeState(initial = {}) {
+  let data = { ...initial };
+  const subs = new Set();
+  return { load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); }, flush: async () => {}, destroy() {} };
+}
+// Every catalog module, as if registered: the pure parts are checked against the whole catalog, not only
+// against the few modules this page imports.
+const ALL = [...CATALOG.map((c) => ({ type: c.type, title: c.title || c.type })), { type: 'room' }, { type: 'scene' }];
+const SAMPLE_BRICKS = { objects: [
+  { id: 'brick_40x40x40_v1', title: 'Brick 40 x 40 x 40 mm', dims_mm: [40, 40, 40], sockets: 6, glb: '/design-assets/bricks/brick_40x40x40_v1.glb', fits_bed_256: true },
+  { id: 'brick_40x40x320_v1', title: 'Brick 40 x 40 x 320 mm', dims_mm: [40, 40, 320], sockets: 34, glb: '/x.glb', fits_bed_256: false },
+  { title: 'no id: skipped' }, null,
+] };
+const items = () => libraryItems({ manifests: ALL, bricks: SAMPLE_BRICKS });
+
+try {
+  // ===================================================================================================
+  section('*** what is in it: every module the catalog offers, scenes, furniture, 3D bricks ***');
+  {
+    const its = items();
+    const offered = CATALOG.filter((c) => !NOT_FOR_CAREGIVERS[c.type]).map((c) => c.type);
+    const mods = its.filter((i) => i.kind === 'module').map((i) => i.type);
+    check('*** every module the catalog describes is in the library (and nothing it leaves out) ***',
+      offered.every((t) => mods.includes(t)) && mods.every((t) => offered.includes(t)), J(offered.filter((t) => !mods.includes(t))));
+    check('...including the library itself (it is a module like any other)', mods.includes(LIBRARY_TYPE));
+    check('only REGISTERED modules: a catalog entry with no module behind it is not offered',
+      !moduleItems({ manifests: [{ type: 'clock' }] }).some((i) => i.type !== 'clock'));
+    const scenes = its.filter((i) => i.kind === 'scene');
+    check('*** scenes: every room and every live scene, each a module with one choice made ***',
+      scenes.length === Object.keys(ROOM_PRESETS).length + listScenes().length
+      && scenes.every((s) => (s.type === 'room' && s.settings.preset) || (s.type === 'scene' && s.settings.scene)), String(scenes.length));
+    check('...and none without its module registered', sceneItems({ manifests: [] }).length === 0);
+    const furn = furnitureItems();
+    check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));
+    check('*** ...shown and explained, never put in a panel’s place (it says why) ***', furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));
+    const b = brickItems(SAMPLE_BRICKS);
+    check('*** 3D bricks from the published parts list; anything malformed skipped ***', b.length === 2 && b.every((x) => x.cats.includes('3d') && x.link),
+      J(b.map((x) => x.key)));
+    check('...with their size and sockets in words', /40 × 40 × 40 mm, 6 sockets/.test(b[0].lead) && /bigger than 256/.test(b[1].needs), b[0].lead);
+    check('...and a brick is not something for a panel', b.every((x) => !x.placeable && x.whyNot));
+    check('brickItems of nothing is nothing, not a crash', brickItems(null).length === 0 && brickItems({}).length === 0);
+    check('every item has a unique key', new Set(its.map((i) => i.key)).size === its.length);
+    const words = J(its) + J(CATEGORIES) + J(LIBRARY_SETTINGS);
+    check('*** no site copy says "her screen", Christine or Cici; no money words (shop, buy, price, coins) ***',
+      !/\bher screen|christine|cici/i.test(words) && !/\b(shop|price|coins?|purchase)\b/i.test(words));
+  }
+
+  section('*** categories are tags: several per thing, from the catalog’s groups unless the table says ***');
+  {
+    check('Everything first, then the kinds Mike named: games, learning, to look at, furniture, 3D',
+      CATEGORY_IDS[0] === 'all' && ['games', 'learning', 'visual', 'furniture', '3d', 'scenes'].every((c) => CATEGORY_IDS.includes(c)));
+    const bad = CATALOG.filter((c) => { const cs = categoriesFor(c); return !cs.length || cs.some((x) => !CATEGORY_IDS.includes(x) || x === 'all'); });
+    check('*** every catalog module lands in at least one real category ***', bad.length === 0, bad.map((c) => c.type).join(','));
+    const stale = Object.keys(MODULE_CATEGORIES).filter((t) => !CATALOG.some((c) => c.type === t));
+    check('the table names no module that is gone', stale.length === 0, stale.join(','));
+    check('a thing can be in two: Brain games is a game AND learning', J(categoriesFor({ type: 'brain_games' })) === J(['games', 'learning']));
+    check('*** a new module nobody filed lands by its group (practice -> Learning) ***', J(categoriesFor({ type: 'newthing', group: 'practice' })) === J(['learning']));
+  }
+
+  section('*** filter, search and sort ***');
+  {
+    const its = items();
+    const games = filterItems(its, { category: 'games' });
+    check('a category: only what is tagged with it', games.length > 3 && games.every((i) => i.cats.includes('games')));
+    check('"Everything": everything', filterItems(its, { category: 'all' }).length === its.length);
+    check('*** search reads the words, not only the name ("pomodoro" finds the focus timer) ***',
+      filterItems(its, { query: 'pomodoro' }).some((i) => i.type === 'sprint'));
+    check('...every word must appear, any order, any case', filterItems(its, { query: 'AAC board' }).some((i) => i.type === 'board')
+      && filterItems(its, { query: 'board AAC zzzz' }).length === 0);
+    check('...and a category name finds what is in it', filterItems(its, { query: 'furniture sofa' }).some((i) => i.key === 'furniture:sofa'));
+    check('the "asks of them" filter: Runs by itself', filterItems(its, { use: 'watch' }).every((i) => i.use === 'watch')
+      && filterItems(its, { use: 'watch' }).some((i) => i.type === 'photos'));
+    const three = its.filter((i) => ['clock', 'calculator', 'photos'].includes(i.type));
+    const usage = { recent: ['photos', 'calculator'], counts: { clock: 5, calculator: 2 } };
+    check('by name', J(sortItems(three, 'name', usage).map((i) => i.type)) === J(['calculator', 'clock', 'photos']));
+    check('*** recently used: newest first, the rest by name ***', J(sortItems(three, 'recent', usage).map((i) => i.type)) === J(['photos', 'calculator', 'clock']));
+    check('*** most used: the count, the rest by name ***', J(sortItems(three, 'most', usage).map((i) => i.type)) === J(['clock', 'calculator', 'photos']));
+  }
+
+  // ===================================================================================================
+  section('*** the AI: "put the calculator where the clock is" (place / swap), asked for and pressed ***');
+  {
+    check('names as people say them', normName('The Clock module, please') === 'clock' && normName('Word Forge') === 'word forge');
+    check('*** a module from its name, its title or its type ***', resolveModuleName('the word forge') === 'wordforge'
+      && resolveModuleName('Calculator') === 'calculator' && resolveModuleName('clocks') === 'clock' && resolveModuleName('a zebra') === null);
+    const panels = [{ id: 'p-clock', type: 'clock', title: 'Clock' }, { id: 'p-ph', type: 'photos', title: 'Photos' }];
+    check('a panel from its id, its title or what it is', resolvePanel('p-ph', panels)?.id === 'p-ph'
+      && resolvePanel('the clock', panels)?.id === 'p-clock' && resolvePanel('the clock module', panels)?.id === 'p-clock'
+      && resolvePanel('kitchen', panels) === null);
+    check('*** "X where Y is", "X | Y", "X instead of Y", "X in Y" ***',
+      J(parsePlaceArg('the calculator where the clock is now')) === J({ module: 'the calculator', where: 'the clock' })
+      && J(parsePlaceArg('calculator | clock')) === J({ module: 'calculator', where: 'clock' })
+      && J(parsePlaceArg('calculator instead of clock')) === J({ module: 'calculator', where: 'clock' })
+      && J(parsePlaceArg('calculator in the clock')) === J({ module: 'calculator', where: 'the clock' }) && parsePlaceArg('calculator') === null);
+    check('"X to Y", "X for Y"', J(parseSwapArg('the clock for the calculator')) === J({ from: 'the clock', to: 'the calculator' })
+      && J(parseSwapArg('clock to calculator')) === J({ from: 'clock', to: 'calculator' }));
+    const names = allowedActions().map((a) => a.name);
+    check('*** place and swap are on the AI’s allow-list (registered, not built in: they change the screen) ***',
+      names.includes('place') && names.includes('swap') && !BUILTIN_ACTIONS.some((a) => a.name === 'place'), names.join(','));
+    // A real bus with a fake screen answering which panels are here.
+    const bus = createBus();
+    const placed = [];
+    bus.subscribe(PANEL_LIST_TOPIC, (p) => p.reply(panels));
+    bus.subscribe(PLACE_MODULE_TOPIC, (p) => placed.push(p));
+    const env = { publish: (t, p) => bus.publish(t, p) };
+    const r = parseReply('Sure, I can do that. [[place calculator where the clock is]]', { env });
+    check('*** a reply asking for it: one action, its value naming the real panel ***',
+      r.actions.length === 1 && r.actions[0].value === 'calculator where p-clock' && /^Sure/.test(r.say), J(r));
+    check('*** ...described in words, for the button somebody presses ***', r.actions[0].label === 'Put Calculator where Clock is', r.actions[0].label);
+    check('nothing has happened yet (a press does it)', placed.length === 0);
+    const q = createActionQueue({ env: () => env });
+    q.propose(r.actions);
+    const id = q.pending()[0].id;
+    check('*** the press: the screen is told that panel becomes that module ***', q.confirm(id) === true
+      && J(placed) === J([{ id: 'p-clock', type: 'calculator', from: 'ai' }]), J(placed));
+    const s = parseReply('[[swap the photos to the clock]]', { env });
+    check('*** swap: the same move, named from the panel’s side ***', s.actions[0]?.value === 'p-ph to clock'
+      && s.actions[0].label === 'Switch Photos to Clock', J(s.actions));
+    const none = parseReply('[[place calculator where the kitchen is]] [[place zebra where clock]]', { env });
+    check('*** a panel that is not on this screen, or a module that does not exist: ignored, never offered ***',
+      none.actions.length === 0 && none.ignored.length === 2, J(none));
+    const noScreen = parseReply('[[place calculator where clock]]', { env: { publish: () => {} } });
+    check('...and with no screen answering (a preview page) it is ignored too', noScreen.actions.length === 0);
+    check('the help tells the AI which modules there are', /calculator/.test(LIBRARY_AI_ACTIONS[0].help) && !/counter/.test(LIBRARY_AI_ACTIONS[0].help));
+  }
+
+  // ===================================================================================================
+  section('*** the grid in a panel’s place: Keep first, recent, one press shows, a second puts it there ***');
+  const mkHost = (over = {}) => {
+    const log = { placed: [], cancels: [], bigger: 0 };
+    const host = { mode: 'switch', target: { id: 'p1', type: 'photos', title: 'Photos', base: 'clock' },
+      usage: () => ({ recent: ['calculator', 'photos', 'wordforge'], counts: { calculator: 3 } }),
+      place: async (it) => { log.placed.push(it.key); return true; }, cancel: (w) => log.cancels.push(w),
+      bigger: () => { log.bigger += 1; }, ...over };
+    return { host, log };
+  };
+  function mkGate(lockedKeys = []) {
+    const locked = new Set(lockedKeys);
+    const subs = new Set();
+    let mode = 'game';
+    const g = {
+      calls: [],
+      check: (k) => (mode !== 'sandbox' && locked.has(k) ? { item: k, locked: true, cost: 5, have: 2, short: 3, canBuy: false, canFree: true, currency: 'play' } : { item: k, locked: false }),
+      mode: () => mode,
+      setMode: async (m) => { g.calls.push(['mode', m]); mode = m; subs.forEach((f) => f()); return m; },
+      unlockFree: async (k) => { g.calls.push(['free', k]); locked.delete(k); subs.forEach((f) => f()); return { ok: true }; },
+      buy: async () => ({ ok: false, reason: 'short' }),
+      subscribe: (f) => { subs.add(f); return () => subs.delete(f); },
+    };
+    return g;
+  }
+  const box = () => { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; };
+  const timers = [];
+  const fakeTimer = { setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; }, clearTimer: (t) => { if (t) t.live = false; } };
+  {
+    const b = box();
+    const { host, log } = mkHost();
+    const gate = mkGate(['module:wordforge']);
+    const lib = mountLibrary(b, { items, host, gate, prefs: { idleMs: 60000 }, ...fakeTimer });
+    const head = [...b.querySelectorAll('[data-lib-head] button')];
+    check('*** the way out first: "Keep Photos" ***', head[0]?.textContent === 'Keep Photos' && head[0].dataset.libAct === 'cancel');
+    check('the title says what it is doing', b.querySelector('[data-lib-head] h3').textContent === 'Switch Photos to…');
+    const rec = lib.__probe().recent;
+    check('*** recent: what the panel WAS first, then the last few switched to (not what it is now) ***',
+      J(rec) === J([{ key: 'module:clock', hint: 'what this panel was' }, { key: 'module:calculator', hint: 'recent' }, { key: 'module:wordforge', hint: 'recent' }]), J(rec));
+    check('it is NOT a click-through list: everything is on the grid at once', b.querySelectorAll('.lib-card').length === items().length);
+    b.querySelector('[data-lib-cat="games"]').click();
+    check('*** a category chip filters the grid, and is remembered ***', lib.__probe().prefs.category === 'games'
+      && [...b.querySelectorAll('.lib-card')].every((c) => items().find((i) => i.key === c.dataset.libKey).cats.includes('games')));
+    b.querySelector('[data-lib-cat="all"]').click();
+    const q = b.querySelector('[data-lib-q]');
+    q.value = 'calcul'; q.dispatchEvent(new Event('input', { bubbles: true }));
+    const found = [...b.querySelectorAll('.lib-card')].map((c) => c.dataset.libKey);
+    check('*** search, as you type (the calculator, and Math, whose words mention one) ***',
+      found.includes('module:calculator') && found.length < 6 && found.length === lib.__probe().shown.length, J(found));
+    q.value = ''; q.dispatchEvent(new Event('input', { bubbles: true }));
+    const card = (k) => b.querySelector(`.lib-card[data-lib-key="${k}"]`);
+    card('module:calculator').click();
+    check('*** one press shows what it is (details), nothing is put anywhere yet ***', lib.__probe().detail === 'module:calculator' && log.placed.length === 0
+      && /What it needs/.test(b.querySelector('[data-lib-detail]').textContent));
+    const put = b.querySelector('[data-lib-detail] [data-lib-act="place"]');
+    check('...with "Put it here" as its first button', put && put.textContent === 'Put it here'
+      && b.querySelector('[data-lib-detail] .lib-acts > *') === put);
+    put.click(); await tick();
+    check('*** the second press puts it there ***', J(log.placed) === J(['module:calculator']));
+    card('module:clock').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
+    check('*** a double click puts it there in one go ***', J(log.placed) === J(['module:calculator', 'module:clock']));
+    card('scene:room:theRoom')?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
+    check('a scene is put there like a module', log.placed.at(-1) === 'scene:room:theRoom', J(log.placed));
+    card('furniture:sofa').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
+    check('*** furniture is not put in a panel’s place: its details say why instead ***', log.placed.at(-1) !== 'furniture:sofa'
+      && lib.__probe().detail === 'furniture:sofa' && !!b.querySelector('[data-lib-whynot]') && !b.querySelector('[data-lib-detail] [data-lib-act="place"]'));
+    b.querySelector('[data-lib-detail] [data-lib-act="close"]').click();
+    check('"Back to the list" closes the details', lib.__probe().detail === null && b.querySelector('[data-lib-detail]').hidden);
+
+    section('*** the Nimrod Game on it: locked things marked, every way to unlock, sandbox one choice away ***');
+    check('a locked thing is MARKED, never hidden', card('module:wordforge') && /locked/.test(card('module:wordforge').textContent));
+    card('module:wordforge').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
+    check('*** a double click on a locked thing shows how to unlock it, and puts nothing there ***',
+      !log.placed.includes('module:wordforge') && /locked in game mode/.test(b.querySelector('[data-lib-lock]')?.textContent || ''),
+      b.querySelector('[data-lib-detail]').textContent);
+    check('...every way: points (dimmed: not enough, saying so), free, sandbox',
+      b.querySelector('[data-lib-act="buy"]')?.disabled === true && !!b.querySelector('[data-lib-act="free"]') && !!b.querySelector('[data-lib-act="sandbox"]'));
+    b.querySelector('[data-lib-act="free"]').click(); await tick(); await tick();
+    check('*** "Unlock it free and put it here": unlocked, then put there ***', J(gate.calls[0]) === J(['free', 'module:wordforge'])
+      && log.placed.at(-1) === 'module:wordforge', J([gate.calls, log.placed]));
+    b.querySelector('[data-lib-act="more"]').click();
+    const modeSel = b.querySelector('[data-lib-mode]');
+    check('*** the game / sandbox toggle is on the library (behind Filters…) ***', !b.querySelector('[data-lib-more]').hidden && modeSel.value === 'game');
+    check('...with the points disclaimer beside it (no real-world value)', /no real/i.test(b.querySelector('[data-lib-disclaimer]').textContent));
+    modeSel.value = 'sandbox'; modeSel.dispatchEvent(new Event('change', { bubbles: true })); await tick();
+    check('*** choosing Sandbox sets the game’s mode ***', J(gate.calls.at(-1)) === J(['mode', 'sandbox']));
+
+    section('*** nobody answering: the panel comes back by itself ***');
+    const live = timers.filter((t) => t.live);
+    check('*** in a panel’s place, a wait is running (its setting, 1 minute here) ***', live.length === 1 && live[0].ms === 60000, J(timers.map((t) => [t.ms, t.live])));
+    live[0].fn();
+    check('*** ...and when it runs out the library puts the panel back ***', log.cancels.at(-1) === 'idle');
+    lib.destroy(); b.remove();
+  }
+  {
+    section('*** a switch: one stop at a time by default; rows-then-items is the option ***');
+    const b = box();
+    const { host, log } = mkHost();
+    const lib = mountLibrary(b, { items, host, prefs: { idleMs: 0 }, ...fakeTimer });
+    const lit = () => lib.__probe().cursor.lit;
+    lib.verb('select');
+    check('the first select only lights the first stop (Keep)', lit() === 'cancel' && log.cancels.length === 0);
+    lib.verb('next');
+    check('next: the next stop (Bigger)', lit() === 'bigger');
+    lib.verb('next');
+    check('...then the recent row, one at a time', lit() === 'module:clock');
+    lib.verb('select');
+    check('*** select on a thing shows it, the cursor on "Put it here" ***', lib.__probe().detail === 'module:clock' && lit() === 'place');
+    lib.verb('back');
+    check('back closes the details, the cursor back on the thing', lib.__probe().detail === null && lit() === 'module:clock');
+    lib.verb('select'); lib.verb('select'); await tick();
+    check('select, select: put there', log.placed.at(-1) === 'module:clock');
+    lib.verb('back');
+    check('*** back with nothing open: the panel back as it was (cancel) ***', log.cancels.at(-1) === 'back');
+    const sizeSel = b.querySelector('[data-lib-scan]');
+    sizeSel.value = 'rows'; sizeSel.dispatchEvent(new Event('change', { bubbles: true }));
+    check('the option is on the library itself (and saved): Switch scanning, rows', lib.__probe().prefs.scan === 'rows');
+    lib.verb('next');
+    check('*** rows: next lights a whole ROW (the head) ***', lib.__probe().cursor.row === 0 && lib.__probe().cursor.inRow === -1
+      && b.querySelectorAll('.is-row').length === 2);
+    lib.verb('next'); lib.verb('next');
+    check('...next, next: the categories row', lib.__probe().cursor.row === 2);
+    lib.verb('select');
+    check('select goes INTO the row', lib.__probe().cursor.inRow === 0 && lit() === 'all');
+    lib.verb('next'); lib.verb('select');
+    check('...walks it, and select presses (a category)', lib.__probe().prefs.category === CATEGORY_IDS[1], lib.__probe().prefs.category);
+    lib.verb('back');
+    check('back comes out of the row', lib.__probe().cursor.inRow === -1);
+    const rowsNow = lib.__probe().rows;
+    for (let i = 0; i < 40 && lib.__probe().cursor.row < 3; i++) lib.verb('next');
+    check('*** the grid is rows of cards: a lap is rows + one row, not every card ***', rowsNow >= 4 && lib.__probe().cursor.row === 3, String(rowsNow));
+    check('"Never" waits: no timer at all', !lib.__probe().idle);
+    lib.destroy(); b.remove();
+  }
+  {
+    section('*** the person’s "How you choose things" (6fd7575): step through = the library scans by rows ***');
+    let how = 'point';
+    const b = box();
+    const { host } = mkHost();
+    const lib = mountLibrary(b, { items, host, prefs: { idleMs: 0 }, chooseMode: () => how, ...fakeTimer });
+    check('point and click (everybody’s default): one stop at a time', lib.__probe().prefs.scan === 'follow' && lib.__probe().scanMode === 'off');
+    how = 'step';
+    lib.verb('next');
+    check('*** step through: the same library walks a row at a time, with nothing set on it ***', lib.__probe().scanMode === 'rows'
+      && lib.__probe().cursor.row === 0 && b.querySelectorAll('.is-row').length > 0);
+    lib.setPrefs({ scan: 'off' });
+    check('...and the library’s own "Off" still wins where somebody chose it', lib.__probe().scanMode === 'off');
+    check('a host that says nothing (or something odd) is point and click',
+      (() => { const b2 = box(); const l2 = mountLibrary(b2, { items, chooseMode: () => { throw new Error('x'); } }); const r = l2.__probe().scanMode; l2.destroy(); b2.remove(); return r; })() === 'off');
+    lib.destroy(); b.remove();
+  }
+  {
+    // Bigger, the panel’s own (the kiosk makes the panel bigger, and the library with it).
+    const b = box();
+    const { host, log } = mkHost();
+    const lib = mountLibrary(b, { items, host, ...fakeTimer });
+    b.querySelector('[data-lib-act="bigger"]').click();
+    check('"Bigger" asks the host for more room', log.bigger === 1);
+    b.querySelector('[data-lib-act="cancel"]').click();
+    check('"Keep Photos" puts it back', log.cancels.at(-1) === 'keep');
+    lib.destroy(); b.remove();
+  }
+  {
+    section('*** a panel of its own, and browse-only ***');
+    const b = box();
+    const { host, log } = mkHost({ mode: 'panel', target: { id: 'L', type: 'library', title: 'Modules', base: 'library' }, cancel: undefined, bigger: undefined });
+    const before = timers.filter((t) => t.live).length;
+    const lib = mountLibrary(b, { items, host, ...fakeTimer });
+    check('*** as a panel: titled Modules, no Keep (nothing to put back), and nothing waits on anybody ***',
+      b.querySelector('[data-lib-head] h3').textContent === 'Modules' && !b.querySelector('[data-lib-act="cancel"]')
+      && timers.filter((t) => t.live).length === before);
+    b.querySelector('.lib-card[data-lib-key="module:photos"]').click();
+    check('...its button says "Use it here" (this panel becomes it)', b.querySelector('[data-lib-act="place"]').textContent === 'Use it here');
+    lib.destroy(); b.remove();
+    const b2 = box();
+    const lib2 = mountLibrary(b2, { items, host: null, moreItems: async () => brickItems({ objects: [{ id: 'brick_x', title: 'Brick X', dims_mm: [40, 80, 40], glb: '/b.glb' }] }) });
+    b2.querySelector('.lib-card[data-lib-key="module:photos"]').click();
+    check('*** browse only (no host): no button that cannot work, and a sentence saying where to go ***',
+      !b2.querySelector('[data-lib-act="place"]') && /Open Modules on a dashboard/.test(b2.querySelector('[data-lib-detail]').textContent));
+    await tick(); await tick();
+    check('*** what arrives later (the bricks list) joins the grid ***', !!b2.querySelector('.lib-card[data-lib-key="brick:brick_x"]'));
+    b2.querySelector('.lib-card[data-lib-key="brick:brick_x"]').click();
+    check('...and a brick’s details open its 3D model', b2.querySelector('[data-lib-detail] a[data-lib-act="link"]')?.getAttribute('href') === '/b.glb');
+    const css = document.getElementById('library-css')?.textContent || '';
+    check('*** no hard-coded colours: every colour is a theme token ***', css.length > 200 && !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(css));
+    check('the card size is a setting, not a number in the CSS', CARD_SIZES[LIBRARY_DEFAULTS.cardSize] === 150 && /var\(--lib-card/.test(css));
+    // Keys on a page with no input runtime: arrows walk, and a key the page already took is left alone.
+    const first = b2.querySelector('.lib-card');
+    first.focus();
+    first.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+    check('arrow keys walk the grid where nothing else took them', lib2.__probe().cursor.cur >= 0);
+    const at = lib2.__probe().cursor.cur;
+    const ev = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true });
+    window.addEventListener('keydown', (e) => e.preventDefault(), { once: true, capture: true });
+    first.dispatchEvent(ev);
+    check('*** ...and a key the page’s own keyboard already took does not move it twice ***', lib2.__probe().cursor.cur === at);
+    lib2.destroy(); b2.remove();
+  }
+
+  // ===================================================================================================
+  section('*** the module: "Modules", registered everywhere a module must be ***');
+  {
+    const m = getManifest(LIBRARY_TYPE);
+    check('registered as "library", titled Modules, on the new core', m?.title === 'Modules' && m.core === 'new' && m.dependsOn === 'none');
+    check('its settings are data (Rule 1): order, switch scanning, card size, the wait', J(m.settings.map((f) => f.key)) === J(['sort', 'scan', 'cardSize', 'idleMs']));
+    check('*** defaults, each argued in library.js: by name, scanning FOLLOWS "How you choose things", medium, two minutes ***',
+      J(LIBRARY_DEFAULTS) === J({ sort: 'name', scan: 'follow', cardSize: 'medium', idleMs: 120000 }));
+    check('"Never" is a choice for the wait', LIBRARY_SETTINGS.find((f) => f.key === 'idleMs').options.some((o) => o.value === 0));
+    check('a switch reaches it (MODULE_VERBS)', MODULE_VERBS.library?.next === LIBRARY_VERB_TOPICS.next && MODULE_VERBS.library?.select === LIBRARY_VERB_TOPICS.select
+      && MODULE_VERBS.library?.back === LIBRARY_VERB_TOPICS.back);
+    check('its silence is not a fault (HEALTH_EXPECT)', HEALTH_EXPECT.library?.idle === true);
+    check('it is in the catalog, and never locked by the game (it is where things are unlocked)',
+      CATALOG.some((c) => c.type === 'library' && c.title === 'Modules') && isStarter('module:library'));
+    const pf = libraryPrefsFrom({ sort: 'zzz', category: 'nope', use: 'x', scan: 'rows' });
+    check('prefs from a row: junk falls back to the defaults', pf.sort === 'name' && pf.scan === 'rows' && pf.cardSize === 'medium'
+      && pf.idleMs === 120000 && pf.category === 'all' && pf.use === 'any', J(pf));
+    const mount = box();
+    const bus = createBus();
+    const state = fakeState({ category: 'tools' });
+    const { host, log } = mkHost({ focus: 'calculator', autoPlace: true });
+    const inst = mountModule(LIBRARY_TYPE, { mount, bus, state, events: null, user: null, profileId: 'p', personId: null, instanceId: 'L1',
+      libraryHost: (id) => (id === 'L1' ? host : null) });
+    await inst.init(); await tick();
+    check('*** mounted, it draws the grid from its row (the category it was left on) ***', !!mount.querySelector('.lib')
+      && inst.impl.__probe().prefs.category === 'tools');
+    check('*** a module asked for at open (an AI’s request, already pressed) is put there ***', log.placed.includes('module:calculator'), J(log.placed));
+    bus.publish(LIBRARY_VERB_TOPICS.select);
+    check('its verbs arrive on the bus', inst.impl.__probe().cursor.cur === 0);
+    mount.querySelector('[data-lib-sort]').value = 'most';
+    mount.querySelector('[data-lib-sort]').dispatchEvent(new Event('change', { bubbles: true }));
+    check('a change is saved to its row', state.get().sort === 'most');
+    inst.destroy();
+    check('destroy leaves nothing behind', mount.innerHTML === '');
+    mount.remove();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+const s = document.getElementById('summary');
+s.textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

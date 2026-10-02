@@ -61,7 +61,7 @@ const BUTTONS = [
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
   { act: 'panel', verb: SHELL_PANEL, label: 'Panel ▸', title: 'move to the next panel' },
   // "Switch module" (2026-10-02, Mike: "Maybe a switch module button on the transport bar for the
-  // selected module"): the selected panel's short list of other modules (kiosk.js `openSwitch`). Dimmed,
+  // selected module"): the Modules library in the selected panel's place (kiosk.js `openLibraryAt`). Dimmed,
   // never hidden, when there is no panel to switch (D16). Not drawn when the host page has its own
   // switch button (Home): ONE chooser, however it is reached.
   { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'switch the selected panel to another module' },

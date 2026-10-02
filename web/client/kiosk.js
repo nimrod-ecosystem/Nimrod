@@ -48,6 +48,7 @@ import {
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
+  PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC,
 } from './actions.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
@@ -68,7 +69,12 @@ import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { watchPanelSound, PANEL_VOLUME_FIELD, ROOM_SOUND_FIELD, NESTED_MUTED_KEY, nestedMutedFrom } from './panel_sound.js';
 import { BAR_PLACE_FIELD } from './room_bar.js';
-import { reconcile as reconcileCatalog } from './modules_catalog.js';
+// 2026-10-02: Switch module puts the Modules library in the panel's place (see `openLibraryAt`).
+import { LIBRARY_TYPE } from './library.js';
+// 2026-10-02: a game tells the shell whether it is playing, so the bar's Pause / Play follows it.
+import { PLAY_STATE_TOPIC } from './game_start.js';
+// 2026-10-02: "3D detail on this device", a screen row (arrangement.js hands it to the 3D room).
+import { DETAIL_FIELD } from './room_lod.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
@@ -106,7 +112,7 @@ import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
-import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
+import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
 import { mountPackLoader } from './pack_loader.js';
 import { gameSettingsPage } from './unlocks.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
@@ -176,6 +182,11 @@ import './modules/settings.js';
 import './modules/nimrod.js';          // registers 'nimrod' (the guide, 2026-10-02)
 import './modules/devices.js';         // registers 'devices'
 import './modules/whats_new.js';       // registers 'whats_new' (patch notes)
+import './modules/library.js';         // registers 'library' ("Modules": everything addable; Switch module opens it in place)
+import './modules/card_sort.js';       // registers 'card_sort' (sort the card onto its pile)
+import './modules/profile.js';         // registers 'profile' (a person or an AI character, as a card)
+import './modules/edit_options.js';    // registers 'options' (the panel editor's; './modules/view.js' imports it too)
+// 'library_slot' (the builder's place for the library) comes in through './modules/view.js'.
 // Registered here (so the mechanism runs when a profile has one) but deliberately NOT wired
 // into home.html's "Add module" picker or modules_catalog.js yet — whether/how this should be
 // user-addable at all is a real product decision nobody has made; see MIKE_CHANGE_LIST.md
@@ -375,10 +386,10 @@ export async function mountKiosk(root, {
                here (SyntaxError: Unexpected identifier 'prevInPrimary'). -->
           <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
           <button data-act="playpause" title="pause or play the selected panel" disabled>⏸ Pause</button>
-          <button data-act="next" title="next (→ / space)">Next ▸</button>
+          <button data-act="next" title="next (→ / ↓)">Next ▸</button>
           <!-- Only on an arranged screen; hidden below when there is no layout. See panelNext. -->
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
-          <!-- SWITCH MODULE (2026-10-02): the selected panel's short list of other modules - see openSwitch. -->
+          <!-- SWITCH MODULE (2026-10-02): the Modules library in the selected panel's place - see openLibraryAt. -->
           <button data-act="switch" title="switch the selected panel to another module">Switch module</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
           <!-- PLAY/PAUSE: the reason it was once left out is gone. NO BACKTICKS IN THIS COMMENT
@@ -1212,6 +1223,23 @@ export async function mountKiosk(root, {
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
+    // *** THE MODULES LIBRARY AS A PANEL OF ITS OWN (2026-10-02, modules/library.js). *** A function of the
+    // instance id, not a value bound to `mod`: a dashboard module hands its children THIS ctx (extended), so a
+    // library inside it asks with its own id. Picking there turns that panel into the pick, in its place.
+    libraryHost: (instanceId) => libraryHostFor(instanceId),
+    // "How you choose things" (6fd7575): 'point' or 'step', read when asked (a module mounted at boot, before
+    // the menu below exists, gets the default rather than a ReferenceError).
+    chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
+    // HOW MANY PANELS SHARE THIS PANEL'S DASHBOARD (game_start.js `panelAlone`: "when it is the only thing on
+    // the dashboard"), or null when this panel is not one of the showing dashboard's (a nested one, a library).
+    // A getter, read when asked; `this.instanceId` so a ctx extended for a dashboard's child asks about the child.
+    get panelCount() {
+      try {
+        const id = (this && this.instanceId) || mod.id;
+        const recs = menuPanelRecs();
+        return recs.some((r) => r && r.id === id) ? recs.length : null;
+      } catch { return null; }
+    },
     // *** ROW 2.38: A DASHBOARD PLACED ON THIS SCREEN SHOWS ANOTHER ONE (modules/view.js). *** It is one
     // level deep (`nestDepth`; the screen's own dashboard is built with 0, `buildDashboard`), it opens ITS
     // dashboard's rows with these UNSCOPED makers (`makeState` above is bound to the screen showing), and
@@ -1735,6 +1763,9 @@ export async function mountKiosk(root, {
     // Switch module: dimmed with no panel to switch (D16: never hidden).
     const sw = controlsEl?.querySelector?.('[data-act="switch"]');
     if (sw) { try { sw.disabled = !arr.focusedRec(); } catch { sw.disabled = true; } }
+    // The Modules library standing in a panel's place goes with that panel: a rebuilt arrangement (a swap,
+    // a new layout) has new boxes, and a library beside a box that is gone stands in for nothing.
+    try { if (libOpen && (!libOpen.host.isConnected || !libOpen.slot.isConnected)) closeLibrary('gone'); } catch { /* declared later */ }
     // Pause / Play follows the selected panel (2026-10-02). Declared further down; harmless before then.
     try { syncPlayPause(); } catch { /* not built yet */ }
   }
@@ -1882,6 +1913,10 @@ export async function mountKiosk(root, {
     // 2026-10-02: a panel made bigger comes back down first, one level -- the nearer "back".
     if (info && info.verb === 'back' && !torn) {
       try { if (promotedAny() && demotePanel()) return { topic: SHELL_DEMOTE, fallback: 'demote' }; } catch { /* declared later */ }
+      // 2026-10-02 (edit_mode.js): a panel being edited stops being edited -- the panel had nothing for it.
+      try {
+        if (arr.editing?.()) { bus.publish('shell/edit-panel', { on: false }); return { topic: 'shell/edit-panel', fallback: 'edit-leave' }; }
+      } catch { /* no arrangement yet */ }
     }
     if (!info || info.verb !== 'back' || torn || !screenStack.length) return null;
     showPreviousScreen().catch(() => {});
@@ -2019,6 +2054,8 @@ export async function mountKiosk(root, {
   let screensOpen = false;
   let editScanHeld = false;        // row 2.38: the edit windows or the map hold the scan (see openEditView)
   let hostScanHeld = false;        // 2026-10-02: the host page's own controls hold it (see syncHostScan)
+  let libOpen = null;              // 2026-10-02: the Modules library standing in a panel's place (openLibraryAt)
+  let libScanHeld = false;         // ...holding the scan while it does
   let hostScanT = null;            // ...and their "nobody answering" wait
   let hostScanFresh = false;       // ...taken during THIS verb: the verb that took it is not also theirs
 
@@ -2105,8 +2142,9 @@ export async function mountKiosk(root, {
       picker.reset();
       try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ }
     } else if (!screensOpen && was) {
-      // (Row 2.38: not while the edit windows or the map hold the scan -- they give it back themselves.)
-      try { if (!menu?.isOpen?.() && !editScanHeld && !hostScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+      // (Row 2.38: not while the edit windows or the map hold the scan -- they give it back themselves. Nor
+      // while the Modules library stands in a panel's place, 2026-10-02.)
+      try { if (!menu?.isOpen?.() && !editScanHeld && !hostScanHeld && !libScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
     }
     // Row 2.38: opening gives the bar the tray's wait; closing gives it back its own (`armBarHide`). Not
     // when the bar is already hidden -- that is the bar's own timer putting the tray away.
@@ -2199,7 +2237,7 @@ export async function mountKiosk(root, {
     if (want) releaseHostScan();
     try {
       if (want) runtime?.router?.setPaused?.(true);
-      else if (!screensOpen && !menu?.isOpen?.() && !hostScanHeld) runtime?.router?.setPaused?.(false);
+      else if (!screensOpen && !menu?.isOpen?.() && !hostScanHeld && !libScanHeld) runtime?.router?.setPaused?.(false);
     } catch { /* no router yet */ }
   }
   function armEditIdle() {
@@ -2382,7 +2420,7 @@ export async function mountKiosk(root, {
       clearTimeout(hostScanT); hostScanT = null;
       // Given back AFTER this verb has finished travelling, so the verb that let go is not also a panel's.
       queueMicrotask(() => {
-        if (torn || hostScanHeld || screensOpen || editScanHeld) return;
+        if (torn || hostScanHeld || screensOpen || editScanHeld || libScanHeld) return;
         try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
       });
     }
@@ -2876,6 +2914,9 @@ export async function mountKiosk(root, {
         { value: 'veil', label: 'See-through' },
         { value: 'clear', label: 'Fully clear' },
       ] },
+    // 2026-10-02 (room_lod.js): how much detail 3D rooms draw on THIS device -- measured, or chosen by somebody
+    // who knows better (a fast Pi 5, a slow laptop on battery). `advanced`, as room_lod.js declares it.
+    { ...DETAIL_FIELD },
     // HOW LONG TO HOLD A SWITCH FOR THE PLAIN BAR (Stage 3b; only where there is a plain bar -- the
     // dashboard path). Design's 1.5 s, settable 1-3 s (Rule 1: a setting, not a constant). `essential`:
     // like the complexity row, it is part of the way OUT, and a way out that a level can hide is not one.
@@ -3120,54 +3161,72 @@ export async function mountKiosk(root, {
     ];
   }
 
-  // ---- "SWITCH MODULE" (2026-10-02) ----------------------------------------------------------------
+  // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
   //
   // Mike: "modules on a dashboard should be as hot swappable as possible. Maybe a switch module button on
-  // the transport bar for the selected module." Reached four ways, one list: the bar's "Switch module"
-  // (both bars), the panel tab's "Switch <panel> to another module…", a bound switch (`menu/switch-module`)
-  // and "switch module" said aloud. The list is THE MENU'S PANEL TAB, swapped for a list while it is open,
-  // so the one-switch cursor, voice and Back all work on it with nothing new:
-  //   Keep <panel>            the way out, FIRST, and where the cursor starts (a stray press keeps it)
-  //   <what it was>           the panel's original module, when it has been switched away from it
-  //   the person's recent     the last few modules switched TO, newest first
-  //   More…                   every module this screen can show (the catalog), in place of the short list
-  // The switch itself is the arrangement's (`switchPanel`: same place, a fresh row for the new type, the
-  // old one kept, remembered on the dashboard). A host page with its OWN chooser (Home) gets the press
-  // instead: one chooser, however it is reached.
-  // HOW MANY RECENT: six (SWITCH_RECENT_MAX), argued - a short list is the point (one scan lap, no
-  // scrolling on a small screen), and the rest is one press away under More…. Kept on the PERSON's row
-  // when the screen has one (they are that person's habits, and follow them), else on the screen's.
+  // the transport bar for the selected module." And then, on the short list this used to open in the menu:
+  // "It should probably open the modules module in the place of the module you selected to switch. Then you
+  // could double click on the module you want in the modules module and it would replace the modules
+  // module." So, reached five ways — the bar's "Switch module" (both bars), the panel tab's "Switch <panel>
+  // to another module…", a bound switch (`menu/switch-module`), "switch module" said aloud, and the AI's
+  // place / swap (`PLACE_MODULE_TOPIC`) — one thing happens:
+  //   1. THE LIBRARY STANDS IN THE PANEL'S PLACE (`openLibraryAt`): the `library` module, mounted in a
+  //      box beside the panel's own, in the same cell / spot / stage, and the panel's box hidden (not torn
+  //      down: told `onHide`, so the hide policy mutes or pauses it as for any hidden panel). Its first
+  //      button is "Keep <panel>" — the way out, first. While it is open it holds the scan (the screens
+  //      tray's rule): the panel router is paused and next / prev / select / back walk the library.
+  //   2. ONE PRESS SHOWS A THING, A SECOND (or a double click) PUTS IT THERE: `switchPanel` (same id, same
+  //      place; a fresh row for the new type; the old one's row kept for switching back; remembered on the
+  //      dashboard), then the box is shown again, holding the new module, and the library goes.
+  //   3. "KEEP <PANEL>", BACK, OR NOBODY TOUCHING IT FOR ITS `idleMs` (library.js decision 5): the library
+  //      goes and the panel is shown exactly as it was (`onShow`).
+  // A host page with its OWN switch (Home) still gets the press (`hostSwitch`), and may open the same
+  // library itself with its own pick (`kiosk.openLibrary(id, { onPick })`): one chooser, however reached.
+  // RECENT: the last six modules switched to (SWITCH_RECENT_MAX, argued: one row, one scan lap), and how
+  // often each was (`switchCounts`, for "most used"), kept on the PERSON's row when the screen has one
+  // (they are that person's habits, and follow them), else on the screen's.
   const SWITCH_RECENT_MAX = 6;
   const SWITCH_RECENT_KEY = 'switchRecent';
-  let switchOpen = null;            // { id, all } while the list is showing, for panel `id`
+  const SWITCH_COUNTS_KEY = 'switchCounts';
+  // The tally keeps the sixty most-used types: more than the library has modules, so nothing real falls
+  // off; a bound only so a row cannot grow without end. A mechanism's limit, not a preference.
+  const SWITCH_COUNTS_MAX = 60;
+  // The library's own row when it stands in a panel's place (sort, category, scan, card size, its wait):
+  // one per screen, so it opens the way it was left wherever it opens.
+  const LIBRARY_ROW = 'library-switch';
+  // (`libOpen` / `libScanHeld` are declared with `screensOpen`, further up: the tray and the edit view read
+  // them, and a `let` read before its own line throws.)
   const switchRow = () => (personInputs && personRow ? (personInputs.get?.() || {}) : (settings.get() || {}));
   function switchRecent() {
     const v = switchRow()[SWITCH_RECENT_KEY];
     return Array.isArray(v) ? v.filter((t) => typeof t === 'string' && getManifest(t)) : [];
   }
+  function switchCounts() {
+    const v = switchRow()[SWITCH_COUNTS_KEY];
+    return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+  }
   function rememberSwitch(type) {
     const next = [type, ...switchRecent().filter((t) => t !== type)].slice(0, SWITCH_RECENT_MAX);
+    const counts = { ...switchCounts() };
+    counts[type] = (Number(counts[type]) || 0) + 1;
+    const keys = Object.keys(counts);
+    if (keys.length > SWITCH_COUNTS_MAX) {
+      keys.sort((a, b) => (Number(counts[a]) || 0) - (Number(counts[b]) || 0));
+      for (const k of keys.slice(0, keys.length - SWITCH_COUNTS_MAX)) if (k !== type) delete counts[k];
+    }
+    const patch = { [SWITCH_RECENT_KEY]: next, [SWITCH_COUNTS_KEY]: counts };
     try {
-      if (personInputs && personRow) personInputs.set?.({ [SWITCH_RECENT_KEY]: next });
-      else settings.set({ [SWITCH_RECENT_KEY]: next });
+      if (personInputs && personRow) personInputs.set?.(patch);
+      else settings.set(patch);
     } catch (err) { console.error('kiosk: switch recent', err); }
   }
-  // Every module this screen can show, by its catalog (what a caregiver is offered elsewhere), in the
-  // catalog's order. Not the chrome, the HUD-only types or what the panel already is.
-  function switchCatalog(rec) {
-    let described = [];
-    try { described = reconcileCatalog(listManifests()).described || []; } catch { described = []; }
-    return described.map((c) => c.type)
-      .filter((t) => t && t !== rec.type && !getManifest(t)?.chrome && getManifest(t)?.mount !== 'ambient');
-  }
-  const typeTitle = (t) => getManifest(t)?.title || t;
+  const libraryUsage = () => ({ recent: switchRecent(), counts: { ...switchCounts() } });
   function hostSwitch() {
     if (!hostPage || typeof hostPage.press !== 'function' || typeof hostPage.barItems !== 'function') return false;
     try { return (hostPage.barItems() || []).some((it) => it && it.act === 'switch'); } catch { return false; }
   }
-  /** Open the list for panel `id` (default: the focused one). */
-  // `p` (2026-10-02): what the press carried. A host page's chooser hears its `type` (Nimrod the guide's
-  // "Replace the pictures" names the photos panel on Home); the screen's own list ignores it.
+  /** Switch module for panel `id` (default: the focused one; or, when the press names a module `type`,
+   *  the first panel of that type -- Nimrod the guide's "Replace the pictures"). */
   function openSwitch(id = null, p = null) {
     if (torn) return false;
     if (hostSwitch()) {
@@ -3175,55 +3234,155 @@ export async function mountKiosk(root, {
       catch (err) { console.error('kiosk: host switch', err); }
       return true;
     }
-    const rec = id ? menuPanelRecs().find((r) => r.id === id) || null : focusedRec();
+    const recs = menuPanelRecs();
+    const rec = id ? recs.find((r) => r.id === id) || null
+      : (p && p.type ? recs.find((r) => r.type === p.type) : null) || focusedRec();
     if (!rec) { if (!menu.isOpen()) menu.open(); return false; }
-    switchOpen = { id: rec.id, all: false };
-    if (!menu.isOpen()) {
-      menu.open({ tab: 'module', focus: 'switch-keep' });
-      // The menu opens about the FOCUSED panel; a list asked for another one is about that one.
-      if (menu.subjectId() !== rec.id) { menu.setSubject(rec.id); switchOpen = { id: rec.id, all: false }; menu.focusRow('switch-keep'); }
-    } else {
-      if (menu.subjectId() !== rec.id) { menu.setSubject(rec.id); switchOpen = { id: rec.id, all: false }; }
-      menu.refresh();
-      menu.open({ tab: 'module', focus: 'switch-keep' });
-    }
+    openLibraryAt(rec.id).catch((err) => console.error('kiosk: switch module', err));
     return true;
   }
-  async function doSwitch(id, type) {
+  /** Hold the scan for the library (the router paused), or give it back when nothing else holds it. */
+  function holdLibraryScan(on) {
+    libScanHeld = !!on;
+    try {
+      if (on) runtime?.router?.setPaused?.(true);
+      else if (!screensOpen && !menu?.isOpen?.() && !editScanHeld && !hostScanHeld) runtime?.router?.setPaused?.(false);
+    } catch { /* no router yet */ }
+  }
+  /** Put the Modules library in panel `id`'s place. `onPick(item)`: a host page's own switch (Home) -- the
+   *  library goes and the host does the rest; without it a pick is this screen's `switchPanel`. `onCancel`:
+   *  told when it goes without a pick. `focus` / `autoPlace`: a module asked for by name (the AI). */
+  async function openLibraryAt(id, { onPick = null, onCancel = null, focus = null, autoPlace = false } = {}) {
+    if (torn || typeof document === 'undefined') return false;
+    const rec = menuPanelRecs().find((r) => r.id === id) || null;
+    const host = rec && rec.el;
+    if (!rec || !host || !host.parentNode) return false;
+    if (libOpen) {
+      if (libOpen.id === rec.id && !focus) return true;
+      closeLibrary('replaced');
+    }
+    try { if (menu.isOpen()) menu.close(); } catch { /* not up */ }
+    const slot = document.createElement('div');
+    slot.className = 'k-mod k-libslot';
+    slot.dataset.libraryFor = rec.id;
+    host.after(slot);
+    const lo = { id: rec.id, host, slot, hiddenStyle: host.style.display, onPick, onCancel, inst: null, state: null,
+      promoted: false, picking: false };
+    host.style.display = 'none';
+    try { rec.instance?.onHide?.({ by: 'auto' }); } catch (err) { console.error('kiosk: hiding a panel for the library', err); }
+    libOpen = lo;
+    holdLibraryScan(true);
+    const target = { id: rec.id, type: rec.type, title: rec.title || rec.type, base: arr.baseTypeOf?.(rec.id) || rec.type };
+    const libHost = {
+      mode: 'switch', target, focus, autoPlace,
+      usage: libraryUsage,
+      place: (item) => pickInPlace(lo, item),
+      cancel: (why) => { if (libOpen === lo) closeLibrary(why || 'keep'); },
+      bigger: () => { if (libOpen !== lo) return; lo.promoted = !!promotePanel(rec.id) || lo.promoted; },
+    };
+    try {
+      lo.state = withTypeLayer(stateFor(LIBRARY_ROW), LIBRARY_TYPE);
+      lo.inst = mountModule(LIBRARY_TYPE, extendCtx(childCtx({ id: `library:${rec.id}`, type: LIBRARY_TYPE }), {
+        mount: slot, state: lo.state, events: null, libraryHost: () => libHost,
+      }));
+      await lo.state.load().catch(() => {});
+      if (libOpen !== lo) return false;          // closed while its row loaded
+      await lo.inst.init();
+      if (libOpen !== lo) return true;           // already picked (an AI's request) or closed
+      lo.state.startPolling?.();
+    } catch (err) {
+      console.error('kiosk: the library would not open', err);
+      if (libOpen === lo) closeLibrary('failed');
+      return false;
+    }
+    renderMods();
+    return true;
+  }
+  /** What a Modules panel of its own is handed (`childCtx.libraryHost`): a pick turns THAT panel into the
+   *  pick, in its place (Mike: "it would replace the modules module"). On a host page with its own switch
+   *  (Home) the host is asked to do it, as for the AI's place. */
+  function libraryHostFor(instanceId) {
+    if (!instanceId) return null;
+    const rec = () => menuPanelRecs().find((x) => x.id === instanceId) || null;
+    return {
+      mode: 'panel',
+      get target() {
+        const r = rec();
+        return r ? { id: r.id, type: r.type, title: r.title || r.type, base: arr.baseTypeOf?.(r.id) || r.type } : null;
+      },
+      usage: libraryUsage,
+      place: async (item) => {
+        if (!item || !item.type || torn) return false;
+        if (hostSwitch()) {
+          try { hostPage.press('place', { id: instanceId, type: item.type, from: 'library' }); return true; }
+          catch (err) { console.error('kiosk: host place', err); return false; }
+        }
+        return doSwitch(instanceId, item.type, item.settings || null);
+      },
+    };
+  }
+  async function pickInPlace(lo, item) {
+    if (libOpen !== lo || lo.picking || !item || !item.type) return false;
+    lo.picking = true;
+    try {
+      if (lo.onPick) {
+        closeLibrary('picked-host');
+        return (await lo.onPick(item)) !== false;
+      }
+      const ok = await doSwitch(lo.id, item.type, item.settings || null);
+      // On success the box holds the new module: shown again, the library gone. On failure the arrangement
+      // put the old module back in the box; the library stays and says nothing changed.
+      if (ok && libOpen === lo) closeLibrary('picked');
+      return ok;
+    } catch (err) {
+      console.error('kiosk: switching from the library', err);
+      return false;
+    } finally { lo.picking = false; }
+  }
+  /** The library goes; the panel's box is shown again. Returns false when there was none. */
+  function closeLibrary(why = 'keep') {
+    const lo = libOpen;
+    if (!lo) return false;
+    libOpen = null;
+    if (lo.inst) { try { lo.inst.destroy(); } catch (err) { console.error('kiosk: closing the library', err); } }
+    else { try { lo.state?.destroy?.(); } catch { /* gone */ } }
+    try { lo.slot.remove(); } catch { /* gone */ }
+    try { lo.host.style.display = lo.hiddenStyle || ''; } catch { /* gone */ }
+    // The panel it stood in for, as it was. Not after a switch: that box holds a new module that never hid.
+    if (why !== 'picked' && why !== 'gone') {
+      try { menuPanelRecs().find((r) => r.id === lo.id)?.instance?.onShow?.({ by: 'auto' }); } catch (err) { console.error('kiosk: showing a panel again', err); }
+    }
+    if (lo.promoted) { try { demotePanel(); } catch { /* already smaller */ } }
+    if (!torn) holdLibraryScan(false);
+    if (why !== 'picked' && why !== 'picked-host' && typeof lo.onCancel === 'function') {
+      try { lo.onCancel(why); } catch (err) { console.error('kiosk: library cancel', err); }
+    }
+    if (!torn) renderMods();
+    return true;
+  }
+  async function doSwitch(id, type, apply = null) {
     let ok = false;
     try { ok = !!(await arr.switchPanel(id, type)); } catch (err) { console.error('kiosk: switch module', err); ok = false; }
-    if (ok) rememberSwitch(type);
-    switchOpen = null;
-    try {
-      if (menu.isOpen()) { menu.refresh(); menu.focusRow('switch-module'); }
-    } catch { /* the menu may be gone */ }
+    if (ok) {
+      rememberSwitch(type);
+      // A scene is a module with one choice made (library.js `sceneItems`): made on the panel's new row.
+      if (apply && typeof apply === 'object') {
+        try { menuPanelRecs().find((r) => r.id === id)?.state?.set?.(apply); } catch (err) { console.error('kiosk: a scene’s setting', err); }
+      }
+    }
+    try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
     renderMods();
     return ok;
   }
-  function switchRows(rec) {
-    const title = rec.title || rec.type;
-    const base = arr.baseTypeOf?.(rec.id) || rec.type;
-    const row = (t, hint = '') => ({ kind: 'item', id: `switch:${t}`, label: typeTitle(t), ...(hint ? { hint } : {}),
-      ...MENU_TAB.module(0), run: () => { doSwitch(rec.id, t); } });
-    const out = [
-      { kind: 'heading', id: 'switch-head', label: `Switch ${title} to`, ...MENU_TAB.module(0) },
-      { kind: 'item', id: 'switch-keep', label: `Keep ${title}`, hint: 'leave it as it is', ...MENU_TAB.module(0),
-        run: () => { switchOpen = null; menu.refresh(); menu.focusRow('switch-module'); } },
-    ];
-    if (switchOpen.all) {
-      for (const t of switchCatalog(rec)) out.push(row(t, t === base ? 'what this panel was' : ''));
-      return out;
-    }
-    const seen = new Set([rec.type]);
-    if (base !== rec.type && getManifest(base)) { out.push(row(base, 'what this panel was')); seen.add(base); }
-    for (const t of switchRecent()) {
-      if (seen.has(t)) continue;
-      seen.add(t);
-      out.push(row(t, 'recent'));
-    }
-    out.push({ kind: 'item', id: 'switch-more', label: 'More…', hint: 'every module this screen can show',
-      ...MENU_TAB.module(0), run: () => { switchOpen = { ...switchOpen, all: true }; menu.refresh(); menu.focusRow('switch-keep'); } });
-    return out;
+  // While the library stands in a place it takes the verbs (the router is paused): the same nine a panel
+  // would get, and the panel-step pair as next / prev, so the arrow keys and a two-switch setup walk it.
+  for (const [verb, as] of [['next', 'next'], ['prev', 'prev'], ['select', 'select'], ['back', 'back'], ['up', 'up'],
+    ['down', 'down'], ['left', 'left'], ['right', 'right'], ['focus-next', 'next'], ['focus-prev', 'prev']]) {
+    offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+      if (!libOpen || torn || screensOpen || editScanHeld) return;
+      try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
+      try { libOpen.inst?.impl?.verb?.(as); } catch (err) { console.error('kiosk: library verb', err); }
+    }));
   }
 
   // ---- A TV'S THINGS, ON THE SOUND TAB (2026-10-02; panel_sound.js) -----------------------------------
@@ -3420,7 +3579,23 @@ export async function mountKiosk(root, {
   // panel inside the mirror overlay, which comes EARLIER in document order, so a bare
   // `querySelector('[data-settings]')` mounted this menu inside it: open, but hidden by its
   // ancestor and 0x0 wide, on every screen that has a camera.
+  // "HOW YOU CHOOSE THINGS" (2026-10-02, 6fd7575; settings_fields.js CHOOSE_MODE_FIELD): point and click (long
+  // lists open as a list) or step through (for a switch). The person's row when the screen has one (it is
+  // how THEY choose, and follows them), else the screen's. On the Devices tab, after the voice rows.
+  const choiceRow = () => (personInputs && personRow && !embedded ? personInputs : settings);
+  const chooseModeNow = () => chooseModeOf((choiceRow().get?.() || {})[CHOOSE_MODE_KEY]);
+  function chooseModeItems() {
+    return fieldItems([normalizeField(CHOOSE_MODE_FIELD)], {
+      values: () => choiceRow().get?.() || {},
+      level: complexity(),
+      onStep: (k, v) => {
+        try { choiceRow().set?.({ [k]: v }); }
+        catch (err) { console.error('kiosk: choose mode', err); }
+      },
+    }).map((it) => ({ ...it, ...MENU_TAB.devices(0) }));
+  }
   const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), {
+    chooseMode: chooseModeNow,
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
     // to choose between, opens the picker. Then the person's Voice section (voiceItems, above).
@@ -3442,7 +3617,7 @@ export async function mountKiosk(root, {
           ? 'nobody yet — their bindings and voice come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
-    })()), ...voiceItems()],
+    })()), ...voiceItems(), ...chooseModeItems()],
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -3576,11 +3751,13 @@ export async function mountKiosk(root, {
     // (2026-10-02: the panels AND the levels -- `levelSubjects` argues the order.)
     subjects: () => levelSubjects(),
     defaultSubject: () => focusedRec()?.id || null,
-    // A different subject closes an open Switch list (it was about the other panel) and the Layout list.
-    onSubject: () => { switchOpen = null; layoutOpen = false; },
+    // A different subject closes the Layout list.
+    onSubject: () => { layoutOpen = false; },
     fullscreenTarget: root,
-    // The who page's avatar subscription lets go with the menu (see the page). An open Switch list closes.
-    onClose: () => { offWhoAvatars(); switchOpen = null; layoutOpen = false; },
+    // The who page's avatar subscription lets go with the menu (see the page). The menu gives the router
+    // back as it closes (settings.js); with the Modules library standing in a panel's place, the library
+    // still holds the scan, so it is taken again here (this hook runs after that).
+    onClose: () => { offWhoAvatars(); layoutOpen = false; if (libOpen && !torn) holdLibraryScan(true); },
     // The menu's own Home row opens the same picker rather than navigating, so there are not
     // two controls with the same name doing different things. Leaving is the picker's last row.
     onHome: () => { try { menu.close?.(); } catch { /* noop */ } toggleScreens(true); },
@@ -3602,8 +3779,6 @@ export async function mountKiosk(root, {
       if (lv !== 'instance') return layoutOpen && canChangeLayout() ? layoutRows() : levelRows(lv);
       const rec = menuSubjectRec();
       if (!rec) return [];
-      // (2026-10-02: the Switch list replaces the panel's own rows while it is open -- `switchRows`.)
-      if (switchOpen && switchOpen.id === rec.id) return switchRows(rec);
       // The instance-level override goes FIRST — "which panel is this" before "what does this
       // kind of panel let you change" — and through the same `fieldItems`/`onStep` call as the
       // module's own fields, so cycling, hints and disabling all work identically; it is only a
@@ -3673,11 +3848,20 @@ export async function mountKiosk(root, {
           hint: 'from a file, or paste JSON',
         });
       }
-      // "SWITCH MODULE" (2026-10-02): the way in to the short list, last on the panel's tab.
-      // Not at "Just the essentials" (that level is legibility and the ways out); the bar's button is there.
+      // "SWITCH MODULE" (2026-10-02): the Modules library in this panel's place (`openLibraryAt` closes the
+      // menu first: it would cover the library). Not at "Just the essentials" (that level is legibility and
+      // the ways out); the bar's button is there.
       if (complexity() !== 'essential') items.push({ kind: 'item', id: 'switch-module', ...MENU_TAB.module(0),
         label: `Switch ${rec.title || rec.type} to another module…`,
-        hint: 'its settings are kept for when you switch back', run: () => openSwitch(rec.id) });
+        hint: 'opens Modules in its place; its settings are kept for when you switch back', run: () => openSwitch(rec.id) });
+      // EDIT THIS PANEL IN PLACE (2026-10-02; edit_mode.js, the ✎ corner's press for a scan). The menu closes
+      // first: it would cover the panel being edited. Not at "Just the essentials", for Switch module's reason.
+      if (complexity() !== 'essential') items.push({ kind: 'item', id: 'edit-panel', ...MENU_TAB.module(0),
+        label: 'Edit this panel', hint: `${panelName(rec)}, in place: press a thing in it to see its options`,
+        run: () => {
+          try { menu.close(); } catch { /* already closed */ }
+          bus.publish('shell/edit-panel', { id: rec.id, on: true, from: 'menu' });
+        } });
       // MAKE IT BIGGER / SMALLER (2026-10-02; the corner's press, for a scan). Not at "Just the essentials"
       // (legibility and the ways out). It closes the menu first: the menu covers what it would show.
       if (complexity() !== 'essential') {
@@ -4593,6 +4777,22 @@ export async function mountKiosk(root, {
   // "Switch module" (2026-10-02): the bar's button (both bars), a bound switch and "switch module" said
   // aloud all arrive here (shell_verbs.js SHELL_SWITCH_MODULE is the same topic). Every path.
   offsScreen.push(bus.subscribe(SWITCH_MODULE_TOPIC, (p) => { claimed(p); openSwitch(null, p); }));
+  // THE AI'S place / swap (library.js LIBRARY_AI_ACTIONS): which panels are here, answered at once, and "that
+  // panel becomes that module" -- through the library in its place, so the game's lock is asked as for a
+  // press. A host page with its own switch (Home) is handed the request as `place`.
+  offsScreen.push(bus.subscribe(PANEL_LIST_TOPIC, (p) => {
+    try { p?.reply?.(menuPanelRecs().map((r) => ({ id: r.id, type: r.type, title: r.title || r.type }))); }
+    catch (err) { console.error('kiosk: panel list', err); }
+  }));
+  offsScreen.push(bus.subscribe(PLACE_MODULE_TOPIC, (p) => {
+    if (!p || typeof p.id !== 'string' || typeof p.type !== 'string' || torn) return;
+    claimed(p);
+    if (hostSwitch()) {
+      try { hostPage.press('place', { id: p.id, type: p.type, from: p.from || 'place' }); } catch (err) { console.error('kiosk: host place', err); }
+      return;
+    }
+    openLibraryAt(p.id, { focus: p.type, autoPlace: true }).catch((err) => console.error('kiosk: place', err));
+  }));
   // 2026-10-02: Pause / Play (both bars, a bound switch), and making a panel bigger / smaller (the corner,
   // the menu's row, a bound switch, "make it bigger" / "make it smaller"). Every path.
   offsScreen.push(bus.subscribe(SHELL_PLAY_PAUSE, (p) => { claimed(p); playPauseSelected(p && p.id ? p.id : null); }));
@@ -4609,6 +4809,13 @@ export async function mountKiosk(root, {
   };
   offsScreen.push(bus.subscribe(verbTopic('pause'), notePause('pause')));
   offsScreen.push(bus.subscribe(verbTopic('play'), notePause('play')));
+  // A game says whether it is playing (game_start.js: it waits for Start, the demo, its own pause): the
+  // button follows the game, not the last press.
+  offsScreen.push(bus.subscribe(PLAY_STATE_TOPIC, (p) => {
+    if (!p || !p.id) return;
+    if (p.playing) pausedPanels.delete(p.id); else pausedPanels.add(p.id);
+    syncPlayPause();
+  }));
   // A live call's controls, as the call panel reports them: the plain bar draws them, the menu offers them.
   offsScreen.push(bus.subscribe(CALL_CONTROLS_TOPIC, (s) => {
     callState = s && s.live ? { ...s } : null;
@@ -4972,9 +5179,16 @@ export async function mountKiosk(root, {
     // 2026-10-02: the cursor by command, the effects chain (null until something asked for it), the
     // menu's Switch list (which panel it is open for, or null) and the switch itself.
     cursorDrive: () => cursorDrive,
-    switchOpen: () => (switchOpen ? { ...switchOpen } : null),
+    // (The Switch list is the Modules library in the panel's place now: `switchOpen` says which panel it
+    // stands in for; `library()` is its state, for a suite; `openLibrary` is the way a host page -- Home --
+    // opens it with its own pick: `kiosk.openLibrary(id, { onPick(item), onCancel(why), focus, autoPlace })`.)
+    switchOpen: () => (libOpen ? { id: libOpen.id, library: true } : null),
     openSwitch: (id) => openSwitch(id),
     switchPanel: (id, type) => doSwitch(id, type),
+    openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
+    closeLibrary: () => closeLibrary('keep'),
+    library: () => (libOpen ? { id: libOpen.id, slot: libOpen.slot, probe: libOpen.inst?.impl?.__probe?.() || null } : null),
+    libraryUsage: () => libraryUsage(),
     // 2026-10-02, for the suites and a diagnostic page: Pause / Play (the selected panel's state, and the
     // press), making a panel bigger / smaller (and where it is: 'screen', the id filling its dashboard, or
     // null), a live call's controls as the bar draws them, the levels this screen has, their rows, the
@@ -5039,6 +5253,8 @@ export async function mountKiosk(root, {
     bus: () => bus,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      // The Modules library, if it stands in a panel's place: its row and its game handle let go.
+      try { closeLibrary('gone'); } catch { /* already gone */ }
       clearTimeout(plainSummonT); clearTimeout(barGraceT);
       try { longPress?.destroy(); } catch { /* already gone */ }
       offsShell.forEach((off) => { try { off(); } catch { /* already gone */ } });

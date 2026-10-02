@@ -464,52 +464,106 @@ function unreachableChips() {
     chips().find((c) => c.dataset.id === photosId)?.click();
     await sleep(60);
     check('(setup) photos is the selected panel', kiosk.panels().some((x) => x.id === photosId && x.type === 'photos'));
+    // *** 2026-10-02, AGAIN: THE MODULES LIBRARY IN THE PANEL'S PLACE (Mike: "It should probably open the
+    // modules module in the place of the module you selected to switch. Then you could double click on the
+    // module you want in the modules module and it would replace the modules module.") ***
+    const { verbTopic, PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC } = await import('../actions.js');
+    const slot = () => root.querySelector('.k-libslot');
+    const photosBox = () => [...root.querySelectorAll('.k-stage .k-mod')].find((m) => m.querySelector('.photos')) || null;
+    const lib = () => kiosk.library()?.probe || null;
+    const card = (k) => slot()?.querySelector(`[data-lib-key="${k}"]`) || null;
+    const dbl = (el) => el?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    const box0 = photosBox();
     swb.click();
+    await sleep(500);
+    check('*** pressing it puts the Modules library IN THE PANEL’S PLACE: beside its box, in the same cell ***',
+      kiosk.switchOpen()?.id === photosId && !!slot() && slot().dataset.libraryFor === photosId
+      && slot().previousElementSibling === box0 && slot().closest('.k-cell') === box0?.closest('.k-cell'),
+      JSON.stringify([kiosk.switchOpen(), !!slot(), !!box0]));
+    check('*** ...the panel’s box hidden, NOT torn down (its photos are still there behind it) ***',
+      box0?.style.display === 'none' && !!box0.querySelector('.photos') && kiosk.panels().find((x) => x.id === photosId)?.type === 'photos');
+    check('...not the menu: the library is the chooser now', !kiosk.menu.isOpen());
+    check('*** its first button is the way out: "Keep Photos" ***', slot()?.querySelector('[data-lib-head] button')?.textContent === 'Keep Photos');
+    check('it is every module, on a grid, not a click-through list', slot()?.querySelectorAll('.lib-card').length > 20
+      && !!card('module:calculator') && !card('module:transport_bar'));
+    // It holds the scan: the panel router is paused and the verbs walk the library.
+    check('*** it holds the scan (the panel router paused) ***', kiosk.runtime.router.isPaused() === true);
+    bus.publish(verbTopic('select'));
+    check('*** ...a switch’s select lights ITS first stop (Keep), not a panel’s ***', lib()?.cursor.lit === 'cancel', JSON.stringify(lib()?.cursor));
+    bus.publish(verbTopic('back'));
     await sleep(60);
-    check('*** pressing it opens the menu on the panel’s own tab, as the Switch list, cursor on "Keep" ***',
-      kiosk.menu.isOpen() && kiosk.menu.tab() === 'module' && kiosk.switchOpen()?.id === photosId && kiosk.menu.focusId() === 'switch-keep',
-      JSON.stringify([kiosk.menu.isOpen(), kiosk.menu.tab(), kiosk.switchOpen(), kiosk.menu.focusId()]));
-    const vis = () => kiosk.menu.visibleItems().map((i) => i.id);
-    check('...the way out ("Keep") first, "More…" last', vis().indexOf('switch-keep') >= 0 && vis().indexOf('switch-keep') < vis().indexOf('switch-more'), vis().join(','));
-    kiosk.menu.focusRow('switch-more'); kiosk.menu.select();
-    check('"More…" is every module this screen can show (the catalog), not the one it is', vis().includes('switch:calculator')
-      && !vis().includes('switch:photos') && !vis().includes('switch:transport_bar'), vis().join(','));
+    check('*** back: the library goes and the panel is shown exactly as it was ***', !slot() && kiosk.switchOpen() === null
+      && box0.style.display === '' && !!box0.querySelector('.photos') && kiosk.runtime.router.isPaused() === false);
     // Something of photos' own, so "kept" can be seen.
     const photosRow = createState({ url: profiles.stateURL(p.id, photosId), user: USER });
     await photosRow.load().catch(() => {});
     photosRow.set({ intervalMs: 30000 }); await photosRow.flush(); photosRow.destroy();
     await sleep(200);
-    kiosk.menu.focusRow('switch:calculator'); kiosk.menu.select();
-    await sleep(400);
+    kiosk.openSwitch(photosId);
+    await sleep(500);
+    card('module:calculator')?.click();
+    await sleep(40);
+    check('one press on a module shows what it is (nothing switched yet)', lib()?.detail === 'module:calculator'
+      && kiosk.panels().find((x) => x.id === photosId)?.type === 'photos');
+    dbl(card('module:calculator'));
+    await sleep(600);
     const after = kiosk.panels().find((x) => x.id === photosId);
-    check('*** select a module: the SAME panel (same id, same place) is now that module ***',
-      after?.type === 'calculator' && !!root.querySelector('.k-stage .k-cell .calc') && !root.querySelector('.k-stage .photos'),
-      JSON.stringify(after));
+    check('*** a double click: the SAME panel (same id, same place) is now that module, and the library is gone ***',
+      after?.type === 'calculator' && !!root.querySelector('.k-stage .k-cell .calc') && !root.querySelector('.k-stage .photos') && !slot()
+      && kiosk.switchOpen() === null, JSON.stringify(after));
+    check('...its box shown again, holding the new module', box0.style.display === '' && !!box0.querySelector('.calc'));
     check('...its chip says so, in the same place', chips().find((c) => c.dataset.id === photosId)?.textContent.trim() === after?.title,
       labels().join(','));
     check('*** ...and it reads ITS OWN row (settings for the new type start fresh) ***', after?.stateKey === `${photosId}--calculator`);
-    check('the list closed, the cursor back on "Switch … to another module"', !kiosk.switchOpen() && kiosk.menu.focusId() === 'switch-module',
-      String(kiosk.menu.focusId()));
+    check('the scan is the panels’ again', kiosk.runtime.router.isPaused() === false);
     const sset = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
     await sleep(300);
     await sset.load().catch(() => {});
     check('*** the switch is remembered on the dashboard (panelSwitches) ***', sset.get()?.panelSwitches?.[photosId] === 'calculator',
       JSON.stringify(sset.get()?.panelSwitches));
+    // (Kept on the person's row when the screen has one, else the screen's: read through the kiosk.)
+    check('*** ...and how often, for "most used" (switchCounts), with the recent list ***', (kiosk.libraryUsage().counts.calculator || 0) >= 1
+      && kiosk.libraryUsage().recent[0] === 'calculator', JSON.stringify(kiosk.libraryUsage()));
     sset.destroy();
-    // Back: the list now offers what it was, by name.
+    // Back: the library's top row offers what it was, by name.
     kiosk.openSwitch(photosId);
-    await sleep(60);
-    check('*** the list offers what the panel WAS, marked so ***',
-      kiosk.menu.visibleItems().find((i) => i.id === 'switch:photos')?.hint === 'what this panel was', vis().join(','));
-    kiosk.menu.focusRow('switch:photos'); kiosk.menu.select();
-    await sleep(400);
+    await sleep(500);
+    check('*** the recent row offers what the panel WAS, first, marked so ***',
+      lib()?.recent?.[0]?.key === 'module:photos' && lib().recent[0].hint === 'what this panel was', JSON.stringify(lib()?.recent));
+    dbl(slot()?.querySelector('[data-lib-recent-key="module:photos"]'));
+    await sleep(600);
     const back = kiosk.panels().find((x) => x.id === photosId);
+    kiosk.menu.open();
+    await sleep(40);
     check('*** switched back: photos again, on its OWN row - what it had is still there ***',
       back?.type === 'photos' && back?.stateKey === null && kiosk.menu.visibleItems().find((i) => i.id === 'set:intervalMs')?.hint === '30 seconds',
       JSON.stringify([back, kiosk.menu.visibleItems().find((i) => i.id === 'set:intervalMs')?.hint]));
-    check('the recent list remembers what it was switched to', kiosk.menu.isOpen() && (kiosk.openSwitch(photosId), true)
-      && kiosk.menu.visibleItems().find((i) => i.id === 'switch:calculator')?.hint === 'recent', vis().join(','));
-    kiosk.menu.close();
+    // The panel tab's row opens the same library (the menu closes: it would cover it).
+    kiosk.menu.focusRow('switch-module'); kiosk.menu.select();
+    await sleep(500);
+    check('*** the menu’s "Switch Photos to another module…" opens the same library in its place, the menu shut ***',
+      !kiosk.menu.isOpen() && kiosk.switchOpen()?.id === photosId && !!slot());
+    check('...and the menu closing did not give the scan back to the panels', kiosk.runtime.router.isPaused() === true);
+    // A scene: a module with one choice made.
+    const sceneKey = [...slot().querySelectorAll('.lib-card')].map((c) => c.dataset.libKey).find((k) => /^scene:live:/.test(k));
+    dbl(card(sceneKey));
+    await sleep(700);
+    check('*** a scene is put there as its module (a Live scene panel) ***', kiosk.panels().find((x) => x.id === photosId)?.type === 'scene' && !slot(),
+      JSON.stringify([sceneKey, kiosk.panels()]));
+    kiosk.closeLibrary();
+    await kiosk.switchPanel(photosId, 'photos');
+    await sleep(300);
+    // The AI's place: which panels are here, then "that panel becomes that module".
+    let listed = null;
+    bus.publish(PANEL_LIST_TOPIC, { reply: (l) => { listed = l; } });
+    check('*** the screen answers which panels are here, at once (what the AI’s place / swap check against) ***',
+      Array.isArray(listed) && listed.some((x) => x.id === photosId && x.type === 'photos' && x.title));
+    bus.publish(PLACE_MODULE_TOPIC, { id: photosId, type: 'clock', from: 'ai' });
+    await sleep(900);
+    check('*** the AI’s place (pressed): the panel becomes that module, through the library ***',
+      kiosk.panels().find((x) => x.id === photosId)?.type === 'clock' && !slot(), JSON.stringify(kiosk.panels()));
+    await kiosk.switchPanel(photosId, 'photos');
+    await sleep(300);
     // Remembered across a restart.
     await kiosk.switchPanel(photosId, 'calculator');
     await sleep(300);
@@ -527,12 +581,19 @@ function unreachableChips() {
     await sleep(400);
     chips().find((c) => c.dataset.id === photosId)?.click(); await sleep(40);
     bus2.publish(SWITCH_MODULE_TOPIC, {});
-    await sleep(40);
-    check('*** shell/switch-module on the bus (a switch, a phrase, a placed bar) opens the same list ***',
-      kiosk.menu.isOpen() && kiosk.switchOpen()?.id === photosId);
-    kiosk.menu.close();
-    check('closing the menu closes the list', kiosk.switchOpen() === null);
-    kiosk.destroy(); root.innerHTML = '';
+    await sleep(400);
+    check('*** shell/switch-module on the bus (a switch, a phrase, a placed bar) opens the same library, in the selected panel’s place ***',
+      kiosk.switchOpen()?.id === photosId && !!root.querySelector('.k-libslot'));
+    root.querySelector('.k-libslot [data-lib-act="cancel"]')?.click();
+    await sleep(60);
+    check('"Keep" puts the panel back', kiosk.switchOpen() === null && !root.querySelector('.k-libslot'));
+    bus2.publish(SWITCH_MODULE_TOPIC, { type: 'trivia' });
+    await sleep(400);
+    check('*** a press that names a module (Nimrod’s "Replace the pictures") opens it in THAT panel’s place ***',
+      kiosk.switchOpen()?.id === full.modules.find((m) => m.type === 'trivia').id, JSON.stringify(kiosk.switchOpen()));
+    kiosk.destroy();
+    check('a screen taken down with the library open leaves nothing behind', !root.querySelector('.k-libslot'));
+    root.innerHTML = '';
   }
 
   document.getElementById('summary').textContent = failed
