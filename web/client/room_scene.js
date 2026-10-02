@@ -65,6 +65,7 @@ import { renderAvatar, normalizeRecord } from './avatar.js';
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { renderBackdrop, normalizeBackdrop, quadMatrix } from './room_backdrop.js';
+import { moveKeeping } from './dom_move.js';
 
 // *** A FLATTENED 3D ROOM IS AN ORDINARY ROOM (2026-10-02, room_flat.js). *** Three small additions make it so,
 // each data on the recipe and each ignored by a recipe that does not use it:
@@ -1630,9 +1631,12 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     const home = rec.slotEl.parentNode;
     const next = rec.slotEl.nextSibling;
     rec.slotEl.dataset.empty = rec.role?.label || '';
-    body.append(rec.slotEl);
+    // The panel goes into the page FIRST, and the slot is then moved into it from where it was (`moveKeeping`,
+    // dom_move.js): never taken out of the page, so a video playing in the display carries on (2026-10-02; it
+    // used to be moved into a panel not yet in the page, and an iframe taken out of the page reloads).
     panel.append(head, body);
     liftL.append(panel);
+    moveKeeping(body, rec.slotEl);
     lifted = { id, panel, slotEl: rec.slotEl, home, next, idle: null };
     // THE INVARIANT'S WAY OUT: nobody touching it for liftReturnMs puts it back by itself.
     const arm = () => { cancel(lifted?.idle); if (lifted && o.liftReturnMs > 0) lifted.idle = later(() => putBack(), o.liftReturnMs); };
@@ -1711,7 +1715,8 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       return true;
     }
     delete slotEl.dataset.empty;
-    if (home) home.insertBefore(slotEl, next && next.parentNode === home ? next : null);
+    // Back where it was, moved from the panel (still in the page) before the panel goes: kept playing.
+    if (home) moveKeeping(home, slotEl, next && next.parentNode === home ? next : null);
     panel.remove();
     focusIdx = -1;
     publish(ROOM_TOPICS.lift, { id, module: recOf(id)?.role?.module || null, lifted: false });
