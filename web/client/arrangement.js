@@ -134,6 +134,36 @@ export const ROOM_PIECE_PREFIX = `${ROOM_PANEL_ID}/`;
 export const PLACE_REQUEST_TOPIC = 'shell/place';
 export const PLACED_TOPIC = 'panel/placed';
 
+// =================================================================================================
+// *** A MOVE THAT KEEPS WHAT IS PLAYING (2026-10-02; Mike's list 09-30, ~row 1325: "Changing a Room row
+// reloads a video sitting in the room"). ***
+// `append` on an element that is already in the page takes it OUT and puts it back, and that restarts what is
+// inside it: an iframe (a YouTube embed) loads again from the start, a <video> is paused. `Element.moveBefore()`
+// is the browser's own move that never takes it out, so a module moved into a redrawn room, onto another wall,
+// or out of a grid slot and back carries on. It needs both ends in the page and one document; anything else (or
+// a browser without it) gets the ordinary move -- what every one of these moves did before, so never worse.
+// Chromium has had it since 133 (2025); the bench Pi's is 147 (checked 2026-10-02).
+// Argued against the other way, keeping the module boxes where they are and swapping only the room beneath:
+//   FOR it: works in every browser, no fallback.
+//   AGAINST it: a module in a room is drawn BY the room -- inside its slot, at its stage's scale, under a 3D
+//   wall's transform -- so its box has to be inside the room's own elements. Outside them, every room's
+//   projection would have to be redone by hand beside it, and a 3D wall's transform cannot be borrowed by an
+//   element that is not inside that wall at all. The only way to "swap the room beneath" is for each renderer to
+//   keep its slots, stage and walls as the SAME elements across a redraw -- a promise every later change to
+//   room_scene.js and room3d.js would have to keep, for a shape change that adds and removes slots.
+// Returns true when the move kept the node (moveBefore), false when it was the ordinary move.
+// =================================================================================================
+export function moveKeeping(parent, node, before = null) {
+  if (!parent || !node) return false;
+  const ref = before && before.parentNode === parent ? before : null;
+  if (typeof parent.moveBefore === 'function' && node.isConnected && parent.isConnected
+      && node.ownerDocument === parent.ownerDocument) {
+    try { parent.moveBefore(node, ref); return true; } catch { /* the ordinary move, below */ }
+  }
+  parent.insertBefore(node, ref);
+  return false;
+}
+
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
 const KDEF = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
@@ -1056,7 +1086,7 @@ export function createArrangement({
       if (!meta) { await mountPlacedOne(entry); out.added.push(entry.id); continue; }
       if (JSON.stringify(meta.entry) === JSON.stringify(entry)) continue;
       const { el, where } = containerFor(entry);
-      if (meta.wrap.parentNode !== el) el.append(meta.wrap);          // re-parented, not remounted
+      if (meta.wrap.parentNode !== el) moveKeeping(el, meta.wrap);    // re-parented, not remounted (and kept playing)
       meta.wrap.dataset.place = entry.place;
       styleWrap(meta.wrap, entry, where);
       const rec = placedRecs.find((r) => r.id === entry.id);
@@ -1147,7 +1177,7 @@ export function createArrangement({
     // Into the overlay layer: the SAME host element, re-parented.
     const wrap = placedWrap(def, entry);
     rec.el.style.cssText = 'flex:1;min-width:0;min-height:0';
-    wrap.append(rec.el);
+    moveKeeping(wrap, rec.el);              // the wrap is already in the page, so a video in it carries on
     placedRecs.push(rec);
     syncDoor(id);
     const base = savedBase();
@@ -1181,7 +1211,7 @@ export function createArrangement({
     dropDoor(meta);
     meta.door?.remove();
     rec.el.removeAttribute('style');
-    cell.append(rec.el);
+    moveKeeping(cell, rec.el);
     cell.setAttribute('data-kind', rec.type);
     meta.wrap.remove();
     placedMeta.delete(id);
@@ -1787,27 +1817,37 @@ export function createArrangement({
   }
   /**
    * The room drawn again from a new scene (a Room row changed), and every module placed in it MOVED into the
-   * new one: their boxes are re-parented, never remounted, so nothing restarts but what a browser restarts on
-   * its own when moved (an embedded video reloads).
+   * new one: their boxes are re-parented, never remounted.
+   * (2026-10-02, Mike's list 09-30 ~row 1325: "Changing a Room row reloads a video sitting in the room.") The
+   * OLD room now stays in the page, its modules still in it, until the new one is drawn beside it; each box is
+   * then moved from one place in the page to the other (`moveKeeping`), never taken out, so an embedded video
+   * carries on. Only then does the old room go. (Before, the boxes were taken out first and put back after,
+   * and an iframe taken out of the page reloads.) The two rooms overlap for the one step between, in the same
+   * layer, the new one on top.
    */
   async function redrawRoom(nextRaw) {
     if (!layout || !profile) return false;
     const r = resolveLayout(nextRaw, profile.modules);
     if (!r || !isRoomScene(r.scene)) return false;
-    for (const m of placedMeta.values()) { if (m.where !== 'flat') m.wrap.remove(); }
+    const oldScene = roomScene, oldHost = roomHost;
     dropPieceSubs();
-    try { roomScene?.destroy(); } catch { /* already gone */ }
-    try { roomHost?.remove(); } catch { /* already gone */ }
     roomScene = null; roomFree = null; roomHost = null;
     layout = { ...layout, scene: r.scene };
-    await mountRoom();
-    for (const [id, m] of placedMeta) {
-      if (m.where === 'flat') continue;
-      const { el, where } = containerFor(m.entry);
-      el.append(m.wrap);
-      styleWrap(m.wrap, m.entry, where);
-      m.where = where;
-      try { placedRecs.find((x) => x.id === id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+    try {
+      await mountRoom();
+      for (const [id, m] of placedMeta) {
+        if (m.where === 'flat') continue;
+        // A new room that would not draw leaves `roomScene` null: the box goes flat on the scene layer, as at a boot.
+        const { el, where } = containerFor(m.entry);
+        moveKeeping(el, m.wrap);
+        styleWrap(m.wrap, m.entry, where);
+        m.where = where;
+        try { placedRecs.find((x) => x.id === id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+      }
+    } finally {
+      // The old room goes whatever happened above, so the screen is not left showing two rooms.
+      try { oldScene?.destroy(); } catch { /* already gone */ }
+      try { if (oldHost && oldHost !== roomHost) oldHost.remove(); } catch { /* already gone */ }
     }
     renderMods();
     return true;

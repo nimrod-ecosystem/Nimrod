@@ -32,7 +32,7 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { createArrangement } from '../arrangement.js';
+import { createArrangement, moveKeeping, ROOM_PANEL_ID, PLACE_REQUEST_TOPIC } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { readConfig } from '../restart.js';
 import '../modules/ambient_drift.js';     // a real `mount: 'ambient'` manifest for partition()
@@ -55,7 +55,8 @@ const M = {
 };
 
 // Everything the shell would hand over, faked and recorded.
-function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false } = {}) {
+// `content(def, host)`: what a fake module draws in its host, after its id (the move tests put a playing iframe there).
+function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -76,13 +77,15 @@ function make({ modules = [], failTypes = [], embedded = false, throwingGetters 
                     setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) };
   const ids = { profileId: 'scr-A' };
   const thrower = (what) => () => { throw new Error(`${what} read too early`); };
+  const bus = createBus();
   const arr = createArrangement({
-    bus: createBus(), user: 'u', storage, embedded, settings,
+    bus, user: 'u', storage, embedded, settings,
     kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
     mountInstance: async (def, h) => {
       if (failTypes.includes(def.type)) throw new Error(`${def.type} will not start`);
       log.mounts.push(def.id);
       h.textContent = def.id;
+      if (content) content(def, h);
       return { id: def.id, type: def.type, title: def.type.toUpperCase(), el: h,
                instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {} },
                state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
@@ -95,10 +98,81 @@ function make({ modules = [], failTypes = [], embedded = false, throwingGetters 
     profileId: throwingGetters ? thrower('profileId') : () => ids.profileId,
   });
   arr.setProfile({ id: 'scr-A', name: 'A', modules });
-  return { arr, log, kioskEl, stageEl, mirrorEl, clockEl, ambientEl, settings, storage, ids,
+  return { arr, log, bus, kioskEl, stageEl, mirrorEl, clockEl, ambientEl, settings, storage, ids,
            focus: (id) => { focused = id ? { id } : null; }, getData: () => data };
 }
 const cells = (stageEl) => [...stageEl.querySelectorAll('.k-cell')];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(20); } return false; };
+const settle = async () => { await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))); await sleep(150); };
+
+// ---- WHAT IS PLAYING IN A MODULE, AND WHETHER A MOVE RESTARTED IT (Mike's list 09-30, ~row 1325) ----
+// A node that counts how it was moved. `connectedMoveCallback` is the browser's own "moved, never taken out of
+// the page" (Element.moveBefore); a node taken out and put back gets disconnected + connected instead -- which,
+// for an iframe, is a reload.
+class MoveProbe extends HTMLElement {
+  constructor() { super(); this.connects = 0; this.disconnects = 0; this.moves = 0; }
+  connectedCallback() { this.connects++; }
+  disconnectedCallback() { this.disconnects++; }
+  connectedMoveCallback() { this.moves++; }
+}
+customElements.define('arr-move-probe', MoveProbe);
+// A fake module with an embedded page in it, as a YouTube panel is: the page marks itself once when it loads,
+// and the iframe counts its loads, so a reload shows as a second load AND a new mark.
+const playing = (def, h) => {
+  const f = document.createElement('iframe');
+  f.dataset.loads = '0';
+  f.addEventListener('load', () => { f.dataset.loads = String(Number(f.dataset.loads) + 1); });
+  f.srcdoc = '<script>window.mark = Math.random();<\/script>';
+  f.style.cssText = 'width:100%;height:100%;border:0';
+  h.append(document.createElement('arr-move-probe'), f);
+};
+/** Each module's iframe and probe as they are now, to compare after a move. */
+function snapshot(t, ids) {
+  return Object.fromEntries(ids.map((id) => {
+    const rec = t.arr.recFor(id);
+    const f = rec?.el?.querySelector('iframe') || null;
+    return [id, { rec, f, p: rec?.el?.querySelector('arr-move-probe') || null, win: f?.contentWindow || null, mark: f?.contentWindow?.mark }];
+  }));
+}
+const loaded = (snap) => Object.values(snap).every((s) => s.f && s.f.dataset.loads === '1' && typeof s.f.contentWindow?.mark === 'number');
+/** What differs from `before`: a module whose record, iframe, page or mark changed, that loaded again, or was taken out. */
+function restarted(t, before) {
+  const bad = [];
+  for (const [id, b] of Object.entries(before)) {
+    const rec = t.arr.recFor(id);
+    const f = rec?.el?.querySelector('iframe') || null;
+    const why = rec !== b.rec ? 'remounted' : f !== b.f ? 'another iframe' : !f.isConnected ? 'not in the page'
+      : f.dataset.loads !== '1' ? `loaded ${f.dataset.loads} times` : f.contentWindow !== b.win ? 'another page'
+      : f.contentWindow?.mark !== b.mark ? 'the page started again' : b.p.disconnects ? `taken out of the page ${b.p.disconnects} time(s)` : '';
+    if (why) bad.push(`${id}: ${why}`);
+  }
+  return bad;
+}
+/** Each placed box's place on the screen, relative to the screen: what "the room looks right" is measured by. */
+function boxes(t, ids) {
+  const k = t.kioskEl.getBoundingClientRect();
+  return Object.fromEntries(ids.map((id) => {
+    const r = t.kioskEl.querySelector(`[data-placed="${id}"]`)?.getBoundingClientRect();
+    return [id, r ? [r.left - k.left, r.top - k.top, r.width, r.height].map((n) => Math.round(n * 10) / 10) : null];
+  }));
+}
+const sameBoxes = (a, b, tol = 1.5) => Object.keys(a).every((id) => a[id] && b[id] && a[id].every((n, i) => Math.abs(n - b[id][i]) <= tol));
+/** One Room row changed the way edit mode changes it (the room chosen, the row set to another of its choices). */
+async function changeRoomRow(t, key) {
+  t.arr.editPanel(ROOM_PANEL_ID, true);
+  await until(() => t.arr.editSelection()?.target?.id === 'room' && t.arr.editSelection().fields.some((f) => f.key === key));
+  const sel = t.arr.editSelection();
+  const field = sel?.fields?.find((f) => f.key === key);
+  const from = sel?.values()?.[key];
+  const to = field?.options?.map((o) => o.value).find((v) => v !== from);
+  const old = t.arr.roomScene();
+  const oldHost = t.kioskEl.querySelector('.k-room');
+  sel?.set(key, to);
+  const ok = await until(() => t.arr.roomScene() && t.arr.roomScene() !== old && t.arr.editSelection()?.values()?.[key] === to);
+  return { ok, from, to, old, oldHost };
+}
 
 (async () => {
 try {
@@ -371,6 +445,138 @@ try {
     t.kioskEl.dataset.mirrorCorner = 'tl';
     t.arr.cycleMirrorCorner();
     check('cycleMirrorCorner wraps round', t.getData().kiosk.mirror.corner === 'tr');
+  }
+
+  // =====================================================================================================
+  // Mike's list 09-30 (~row 1325): "Changing a Room row reloads a video sitting in the room." A row change IS a new
+  // room, and the modules in it were taken out of the page and put into the new one -- which restarts an iframe.
+  section('*** moveKeeping: a move that keeps what is playing, and the ordinary move where it cannot ***');
+  {
+    const host = document.getElementById('host'); host.innerHTML = '';
+    const a = document.createElement('div'), b = document.createElement('div');
+    host.append(a, b);
+    const box = document.createElement('div');
+    a.append(box);
+    playing(null, box);
+    const f = box.querySelector('iframe'), p = box.querySelector('arr-move-probe');
+    await until(() => f.dataset.loads === '1' && typeof f.contentWindow?.mark === 'number');
+    const mark = f.contentWindow.mark;
+    check('(this browser has Element.moveBefore -- the bench Pi\'s Chromium 147 does too; it shipped in 133)',
+      typeof Element.prototype.moveBefore === 'function');
+    const kept = moveKeeping(b, box);
+    await sleep(150);
+    check('*** page to page: moved WITHOUT being taken out, and the embedded page did not start again ***',
+      kept === true && box.parentNode === b && p.disconnects === 0 && p.moves === 1 && f.dataset.loads === '1'
+      && f.contentWindow?.mark === mark, J({ kept, out: p.disconnects, moves: p.moves, loads: f.dataset.loads }));
+    const ref = document.createElement('i');
+    a.append(ref);
+    check('...before a given node, when one is given', moveKeeping(a, box, ref) === true && box.nextSibling === ref && p.disconnects === 0);
+    const loose = document.createElement('div');
+    check('*** into something NOT in the page: the ordinary move (it cannot be kept), never an error ***',
+      moveKeeping(loose, box) === false && box.parentNode === loose && p.disconnects === 1);
+    const c = document.createElement('div');
+    host.append(c);
+    Object.defineProperty(c, 'moveBefore', { value: undefined });
+    moveKeeping(a, box);
+    check('...and where the browser has no moveBefore: the ordinary move, as before this change',
+      moveKeeping(c, box) === false && box.parentNode === c);
+    check('nothing to move, or nowhere to: nothing happens', moveKeeping(null, box) === false && moveKeeping(c, null) === false && box.parentNode === c);
+  }
+
+  section('*** a Room row changed (2D and 3D): the room is drawn again, and what plays in it KEEPS PLAYING ***');
+  {
+    // Each room with a module in a slot, one freely on a side wall and one on the back wall: every way in.
+    const ROOMS = {
+      room: { scene: { kind: 'room', preset: 'theRoom' }, rows: ['light', 'shell'], placed: [
+        { id: 't1', place: 'scene', slot: 'cab' },
+        { id: 'w1', place: 'scene', x: 12, y: 40, surface: 'left', w: 20, h: 20 },
+        { id: 'p1', place: 'scene', x: 60, y: 45, surface: 'back', w: 16, h: 16 }] },
+      room3d: { scene: { kind: 'room3d', preset: 'box' }, rows: ['depth'], placed: [
+        { id: 't1', place: 'scene', slot: 'back' },
+        { id: 'w1', place: 'scene', surface: 'right', x: 92, y: 40, w: 8, h: 14 },
+        { id: 'p1', place: 'scene', surface: 'back', x: 30, y: 30, w: 12, h: 12 }] },
+    };
+    for (const [kind, R] of Object.entries(ROOMS)) {
+      const t = make({ modules: [M.p1, M.t1, M.w1], content: playing });
+      t.arr.resolve({ preset: 'full', slots: [null], scene: R.scene, placed: R.placed });
+      t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
+      const ids = R.placed.map((e) => e.id);
+      let snap = snapshot(t, ids);
+      check(`(${kind}) (setup) the room is drawn with three modules in it, each with an embedded page that has loaded`,
+        !!t.arr.roomScene() && await until(() => loaded(snap))
+        && ids.every((id) => t.kioskEl.querySelector('.k-room')?.contains(snap[id].f)), J(Object.keys(snap).map((id) => snap[id].f?.dataset.loads)));
+      for (const key of R.rows) {
+        snap = snapshot(t, ids);
+        const mountsBefore = t.log.mounts.length;
+        const ch = await changeRoomRow(t, key);
+        check(`(${kind}) [${key}] (setup) the row changed (${ch.from} -> ${ch.to}) and the room was drawn again`, ch.ok, J({ from: ch.from, to: ch.to }));
+        await sleep(200);                 // a reload, had there been one, has had time to happen
+        const bad = restarted(t, snap);
+        check(`(${kind}) [${key}] *** every module in the room is the SAME node, never taken out of the page: its embedded page did NOT reload ***`,
+          !bad.length && t.log.mounts.length === mountsBefore, bad.join('; '));
+        const host = t.kioskEl.querySelector('.k-room');
+        check(`(${kind}) [${key}] ...each is IN the new room, and the old room is gone (one room on the screen, not two)`,
+          t.kioskEl.querySelectorAll('.k-room').length === 1 && !ch.oldHost?.isConnected && host !== ch.oldHost
+          && ids.every((id) => host.contains(snap[id].f)));
+        check(`(${kind}) [${key}] ...edit mode is still on the room, and the new room has its ✎ corner`,
+          t.arr.editing()?.id === ROOM_PANEL_ID && !!host.querySelector(':scope > .k-editc'));
+      }
+      t.arr.editPanel(ROOM_PANEL_ID, false);
+      // THE ROOM LOOKS RIGHT: exactly what a fresh load of the layout as it now is draws -- every module's box in the
+      // same place at the same size, the same pieces of furniture.
+      const now = JSON.parse(J(t.arr.layout()));
+      await settle();
+      const got = boxes(t, ids);
+      const objs = J(t.arr.roomObjects().map((o) => o.id));
+      const roomBox = J([...t.kioskEl.querySelectorAll('.k-room')].map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height]; }));
+      t.arr.destroy();
+      const fresh = make({ modules: [M.p1, M.t1, M.w1], content: playing });
+      fresh.arr.resolve(now); fresh.arr.partition(); await fresh.arr.mountOverlays(); await fresh.arr.mountLayout();
+      await settle();
+      const want = boxes(fresh, ids);
+      check(`(${kind}) *** the redrawn room looks as a fresh load of it does: every module's box the same (to 1.5px) ***`,
+        sameBoxes(got, want), `redrawn ${J(got)} fresh ${J(want)}`);
+      check(`(${kind}) ...the same furniture, and the room the same size`,
+        objs === J(fresh.arr.roomObjects().map((o) => o.id)) && objs !== '[]'
+        && roomBox === J([...fresh.kioskEl.querySelectorAll('.k-room')].map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height]; })), objs);
+      fresh.arr.destroy();
+    }
+  }
+
+  section('*** the other moves keep it playing too: onto another wall, out of a grid slot to float, and back ***');
+  {
+    const t = make({ modules: [M.w1], content: playing });
+    const saved = { preset: 'full', slots: [null], scene: { kind: 'room3d', preset: 'box' },
+      placed: [{ id: 'w1', place: 'scene', surface: 'right', x: 92, y: 40, w: 8, h: 14 }] };
+    t.arr.resolve(saved); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
+    await until(() => loaded(snapshot(t, ['w1'])));
+    const snap = snapshot(t, ['w1']);         // taken once loaded, so its mark is the page's
+    const res = await t.arr.applyPlaced({ ...saved, placed: [{ id: 'w1', place: 'scene', surface: 'left', x: 8, y: 40, w: 8, h: 12 }] });
+    await sleep(200);
+    const bad = restarted(t, snap);
+    check('*** moved to another wall of the 3D room: the same page, never reloaded ***',
+      res?.applied && t.arr.roomScene()?.surface('left')?.contains(snap.w1.f) && !bad.length, `${J(res)} ${bad.join('; ')}`);
+    t.arr.destroy();
+  }
+  {
+    const t = make({ modules: [M.p1, M.t1], content: playing });
+    t.arr.resolve({ preset: 'side', slots: ['p1', 't1'] }); t.arr.partition(); await t.arr.mountOverlays(); await t.arr.mountLayout();
+    await until(() => loaded(snapshot(t, ['t1'])));
+    const snap = snapshot(t, ['t1']);
+    const replies = [];
+    t.bus.publish(PLACE_REQUEST_TOPIC, { id: 't1', place: 'overlay', x: 50, y: 50, w: 30, h: 30, reply: (r) => replies.push(r) });
+    await until(() => replies.length === 1);
+    await sleep(200);
+    let bad = restarted(t, snap);
+    check('*** a panel floated out of its grid slot: the same page, never reloaded ***',
+      replies[0]?.ok && !!t.kioskEl.querySelector('.k-placed-overlay')?.contains(snap.t1.f) && !bad.length, `${J(replies)} ${bad.join('; ')}`);
+    t.bus.publish(PLACE_REQUEST_TOPIC, { id: 't1', place: 'slot', reply: (r) => replies.push(r) });
+    await until(() => replies.length === 2);
+    await sleep(200);
+    bad = restarted(t, snap);
+    check('*** ...and put back into the grid: still the same page ***',
+      replies[1]?.ok && !!snap.t1.f.closest('.k-cell') && !bad.length, `${J(replies)} ${bad.join('; ')}`);
+    t.arr.destroy();
   }
 
   section("the screen's links, and destroy");
