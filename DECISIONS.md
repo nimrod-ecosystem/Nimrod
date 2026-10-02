@@ -2144,3 +2144,8 @@ says direction, not ruling.
     - a level-of-detail system.
 13. **Blender is approved** on Mike's desktop for organic models. Code scripts it headless; final models are public
     like the bricks.
+14. **Adaptive difficulty thresholds depend on the level.** Mike: *"For easier levels it should be like 90% (maybe
+    even higher) right or 75% wrong."*
+    - At the easy end, step up at 90% right and step back at 75% wrong.
+    - Harder levels get lower thresholds; Code proposes the curve.
+    - All of them are settings with these defaults.
