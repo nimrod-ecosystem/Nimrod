@@ -21,7 +21,7 @@
 // permission may need a press again (fs_sink.js); until then the chosen family is simply not
 // loaded and the fallback stack (the theme's own font) shows — `fontStack` always carries one.
 
-import { listFiles } from './user_folders.js';
+import { listFiles, kindFolder } from './user_folders.js';
 
 export const FONT_EXTS = Object.freeze(['woff2', 'woff', 'ttf', 'otf']);
 export const USER_FONT_KEY = 'nimrod.userFont.device';
@@ -75,14 +75,22 @@ export async function loadUserFonts(dir, { FontFaceImpl = globalThis.FontFace,
   const families = new Map();
   const failed = [];
   if (typeof FontFaceImpl !== 'function' || !fontSet) return { families: [], failed: [{ name: '', why: 'this browser cannot load fonts from files' }] };
+  const added = addedTo(fontSet);
   for (const { name, handle } of await listFiles(dir, FONT_EXTS)) {
     const { family, weight, style } = faceFromName(name);
     if (!family) { failed.push({ name, why: 'no name to call it by' }); continue; }
     try {
-      const bytes = await (await handle.getFile()).arrayBuffer();
-      const face = new FontFaceImpl(family, bytes, { weight: String(weight), style });
-      await face.load();
-      fontSet.add(face);
+      const file = await handle.getFile();
+      // ONCE PER FACE PER PAGE (2026-10-02): the folders page loads the fonts every time it opens, so
+      // the same file (same name, size and date) is not read or added again - the face is already in.
+      const key = [family, weight, style, name, file.size, file.lastModified].join('|');
+      if (!added.has(key)) {
+        const bytes = await file.arrayBuffer();
+        const face = new FontFaceImpl(family, bytes, { weight: String(weight), style });
+        await face.load();
+        fontSet.add(face);
+        added.set(key, family);
+      }
       families.set(family, (families.get(family) || 0) + 1);
     } catch (err) {
       failed.push({ name, why: `not a font this browser can read (${String((err && err.message) || err)})` });
@@ -90,6 +98,73 @@ export async function loadUserFonts(dir, { FontFaceImpl = globalThis.FontFace,
   }
   return { families: [...families].map(([family, faces]) => ({ family, faces })).sort((a, b) => a.family.localeCompare(b.family)),
     failed };
+}
+
+// What has been added to each font set by this file: face key -> family. Keyed by the set, so a suite's
+// fake set and the page's `document.fonts` never mix.
+const ADDED = new WeakMap();
+function addedTo(fontSet) {
+  let m = ADDED.get(fontSet);
+  if (!m) { m = new Map(); ADDED.set(fontSet, m); }
+  return m;
+}
+const docFonts = () => (typeof document !== 'undefined' ? document.fonts : null);
+
+/** The families this file has loaded into `fontSet` on this page: `[{ family, faces }]`, sorted. */
+export function loadedFamilies(fontSet = docFonts()) {
+  if (!fontSet || !ADDED.has(fontSet)) return [];
+  const n = new Map();
+  for (const family of ADDED.get(fontSet).values()) n.set(family, (n.get(family) || 0) + 1);
+  return [...n].map(([family, faces]) => ({ family, faces })).sort((a, b) => a.family.localeCompare(b.family));
+}
+
+// ---------------------------------------------------------------------------------------------
+// THE FONTS AS CHOICES (2026-10-02). Until today the fonts loaded and nothing could choose one:
+// `chooseUserFont` had no caller.
+// ---------------------------------------------------------------------------------------------
+
+/** Told on `document` when fonts arrive or the device's font changes, so text fitted to a box refits. */
+export const USER_FONTS_EVENT = 'nimrod:user-fonts';
+/** How a per-thing font setting (button.js) stores a user family: `user:<family name>`. */
+export const USER_FONT_PREFIX = 'user:';
+
+/**
+ * Options for a font choice, after whatever built-in ones the caller has: one per family loaded on
+ * this device, each previewed (`font`, choice_picker.js) as itself with `fallback` behind it.
+ * `current` - the family chosen now - is KEPT as an option when it is not loaded here (its folder is
+ * on another device, or the permission lapsed), says so, and previews the face that really shows:
+ * the fallback. A setting nobody can see the value of reads as a broken one.
+ */
+export function userFontOptions({ fontSet = docFonts(), current = '', fallback = 'var(--font)', prefix = '' } = {}) {
+  const fams = loadedFamilies(fontSet).map((f) => f.family);
+  const out = fams.map((family) => ({ value: `${prefix}${family}`, label: family, font: fontStack(family, fallback),
+    hint: 'from your fonts folder' }));
+  const cur = String(current || '');
+  if (cur && !fams.includes(cur)) {
+    out.push({ value: `${prefix}${cur}`, label: cur, font: fallback,
+      hint: 'not on this device now, so the usual font shows' });
+  }
+  return out;
+}
+
+/**
+ * Load this device's fonts from wherever its fonts folder is NOW (user_folders.kindFolder: a folder of
+ * its own, or the Nimrod folder's `fonts/`). NEVER PROMPTS: a folder whose permission has lapsed loads
+ * nothing until somebody presses "Allow it again". Tells the page (USER_FONTS_EVENT) when anything new
+ * arrived. Resolves `{ families, failed, source, permission }` - `families` is everything loaded so far.
+ * For the kiosk at boot and the folders page whenever it opens or a folder changes.
+ */
+export async function loadDeviceFonts({ store, FontFaceImpl, fontSet = docFonts(), doc = (typeof document !== 'undefined' ? document : null) } = {}) {
+  const k = await kindFolder('fonts', store ? { store } : {});
+  let failed = [];
+  if (k.dir) {
+    const before = fontSet && ADDED.has(fontSet) ? ADDED.get(fontSet).size : 0;
+    const r = await loadUserFonts(k.dir, { FontFaceImpl, fontSet });
+    failed = r.failed;
+    const after = fontSet && ADDED.has(fontSet) ? ADDED.get(fontSet).size : 0;
+    if (after > before) { try { doc?.dispatchEvent?.(new CustomEvent(USER_FONTS_EVENT)); } catch { /* nobody listening */ } }
+  }
+  return { families: loadedFamilies(fontSet), failed, source: k.source, permission: k.permission };
 }
 
 const defaultStorage = () => { try { return globalThis.localStorage || null; } catch { return null; } };

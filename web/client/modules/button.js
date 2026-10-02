@@ -21,7 +21,8 @@
 //                choosing meant walking every file in the folder by name. Mike: "isn't a good way
 //                to do it. There should be upload or a folder picker.")
 //   frame        none, or one of Claude Design's seven frames (the picture sits in its window)
-//   font         a short list of fonts every device already has — nothing is downloaded
+//   font         a short list of fonts every device already has — nothing is downloaded — then the
+//                families loaded from this device's own fonts folder (2026-10-02, see FONTS)
 //   style        plain, or one of Design's six signs (the words sit on it)
 //   color        the colour of the words (the menu's colour picker); until somebody picks one,
 //                the colour suggested for the look they sit on — see "THE WORDS' COLOUR" below
@@ -56,6 +57,8 @@ import { personSources } from '../person_known.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { DEFAULT_PALETTE, normalizeHex, contrast } from '../color_picker.js';
 import { speak as speakDefault } from '../voice.js';
+// THE PERSON'S OWN FONTS (row 2.49, 2026-10-02): families loaded from this device's fonts folder.
+import { userFontOptions, fontStack as familyStack, USER_FONT_PREFIX, USER_FONTS_EVENT } from '../user_fonts.js';
 
 // ---------------------------------------------------------------------------------------
 // THE FONTS. *** A DEFAULT LIST, NOT A RULE — Rule 1: say why each is here. ***
@@ -75,6 +78,24 @@ export const FONTS = Object.freeze([
   { value: 'type',    label: 'Typewriter',          stack: 'ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace' },
   { value: 'poster',  label: 'Poster (heavy)',      stack: 'Impact, "Arial Black", "Franklin Gothic Heavy", sans-serif' },
 ]);
+
+// *** AND THE PERSON'S OWN FONTS, AFTER THESE (2026-10-02). *** A family loaded from this device's fonts
+// folder (user_fonts.js) is offered after the six above, stored as `user:<family>` - by NAME, like every
+// other font here, never as a file - and rendered with "the screen's own" font behind it. So on a device
+// that does not have it (the folder is on another screen, or its permission lapsed) the words show in
+// the screen's own font: never blank, never a broken face. The family chosen here stays a listed option
+// even where it is not loaded, and says so (`userFontOptions`), so the row never names a dead value.
+// Every option carries its stack as `font`, so the choice picker shows "Aa" in each face.
+const USER_FALLBACK = FONTS[0].stack;    // 'var(--font)': the screen's own
+export const userFamilyOf = (id) => (typeof id === 'string' && id.startsWith(USER_FONT_PREFIX)
+  ? id.slice(USER_FONT_PREFIX.length).trim() : '');
+export const isFontId = (id) => FONTS.some((f) => f.value === id) || !!userFamilyOf(id);
+export function fontOptions(current = '') {
+  return [
+    ...FONTS.map(({ value, label, stack }) => ({ value, label, font: stack })),
+    ...userFontOptions({ current: userFamilyOf(current), fallback: USER_FALLBACK, prefix: USER_FONT_PREFIX }),
+  ];
+}
 
 // ---------------------------------------------------------------------------------------
 // THE DESIGNED LOOKS (Claude Design, delivered 2026-09-28; credited in ATTRIBUTIONS.md). The files
@@ -331,8 +352,10 @@ export const SETTINGS = [
     level: 'essential', emptyLabel: 'No picture' },
   { key: 'frame', label: 'Frame', kind: 'choice', default: DEFAULTS.frame, aliases: LEGACY_FRAMES,
     level: 'essential', options: FRAMES.map(({ value, label }) => ({ value, label })) },
+  // A GETTER, so the families loaded on this device are read whenever the menu builds the row (a live
+  // instance also hands over its own list, which keeps a chosen family that is not loaded here).
   { key: 'font', label: 'Font', kind: 'choice', default: DEFAULTS.font, level: 'essential',
-    options: FONTS.map(({ value, label }) => ({ value, label })) },
+    get options() { return fontOptions(); } },
   // `default` is what a reader with no row sees; `defaultFrom` is the colour in force for THIS
   // row while nobody has chosen one (see "THE WORDS' COLOUR" above). A mounted instance also
   // re-orders the walk for its look (`settingsChoices`); these declared options are the order for
@@ -368,7 +391,7 @@ export function configFrom(row = {}) {
   for (const f of Object.values(FIELDS)) cfg[f.key] = fieldValue(f, row || {});
   // The picture's source has no row of its own (the picker chooses it); it is read here.
   cfg.imageFrom = row?.imageFrom == null ? DEFAULTS.imageFrom : String(row.imageFrom);
-  if (!FONTS.some((x) => x.value === cfg.font)) cfg.font = DEFAULTS.font;
+  if (!isFontId(cfg.font)) cfg.font = DEFAULTS.font;
   if (!STYLES.some((x) => x.value === cfg.style)) cfg.style = DEFAULTS.style;
   if (!FRAMES.some((x) => x.value === cfg.frame)) cfg.frame = DEFAULTS.frame;
   if (cfg.whenPressed !== 'say') cfg.whenPressed = 'nothing';
@@ -378,7 +401,8 @@ export function configFrom(row = {}) {
   return cfg;
 }
 
-export const fontStack = (id) => (FONTS.find((f) => f.value === id) || FONTS[0]).stack;
+export const fontStack = (id) => (userFamilyOf(id) ? familyStack(userFamilyOf(id), USER_FALLBACK)
+  : (FONTS.find((f) => f.value === id) || FONTS[0]).stack);
 
 registerModule(
   { type: 'button', title: 'Button', core: 'new',
@@ -560,6 +584,8 @@ registerModule(
       if (!fits(lo)) w.style.overflowWrap = 'anywhere';
     }
 
+    const onUserFonts = () => { if (!torn) fitWords(); };
+
     function paint() {
       if (!faceEl) return;
       const src = effectiveSource();
@@ -662,11 +688,15 @@ registerModule(
           resizeObs.observe(mount.querySelector('[data-nbtn]'));
         }
         document.fonts?.ready?.then(() => { if (!torn) fitWords(); });
+        // ...and when the person's own fonts arrive, or the device's font changes (user_fonts.js): a
+        // face added from a folder fires none of the browser's own font events.
+        document.addEventListener(USER_FONTS_EVENT, onUserFonts);
       },
       onResize() { fitWords(); },
       onHide() {},
       destroy() {
         torn = true;
+        document.removeEventListener(USER_FONTS_EVENT, onUserFonts);
         scoped?.dispose();
         resizeObs?.disconnect(); resizeObs = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
@@ -681,6 +711,8 @@ registerModule(
       settingsChoices: () => ({
         image: { sources: sourcesClient() },
         color: inkOrder(cfg.style, cfg.background),
+        // The fonts, with this button's own family kept even where it is not loaded (see FONTS).
+        font: fontOptions(cfg.font),
       }),
     };
   },

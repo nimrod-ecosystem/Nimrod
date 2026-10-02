@@ -24,6 +24,8 @@
 // Everything takes its handle and IndexedDB as arguments, so the suite runs on fake folders.
 
 import { rememberFolder, recallFolder, forgetFolder } from './fs_sink.js';
+// Only for `checkDeviceLook` at the bottom (a look whose file is gone). lut.js imports nothing.
+import { reconcileGrade, refreshGrade } from './lut.js';
 
 export const ROOT_KEY = 'root';
 export const SUBFOLDERS = Object.freeze({ fonts: 'fonts', luts: 'luts', plugins: 'audio-plugins' });
@@ -226,3 +228,19 @@ export async function listFolders(dir) {
 }
 
 export { extOf };
+
+/**
+ * A COLOUR LOOK WHOSE FILE IS GONE FALLS BACK TO NONE (2026-10-02). Reads the looks folder (never
+ * prompts); if it can be read and the look in force came from a file no longer in it, the look is
+ * cleared, quietly, and anything already graded is put back. A folder that cannot be read right now
+ * keeps the look (lut.js stores it compiled for exactly that). For the kiosk at boot and the folders
+ * page. Resolves `{ cleared, read, files }` - `files` the .cube names found, when `read`.
+ */
+export async function checkDeviceLook({ store, storage, names } = {}) {
+  const k = await kindFolder('luts', { ...(store ? { store } : {}), ...(names ? { names } : {}) });
+  if (!k.dir) return { cleared: false, read: false, files: [] };
+  const files = (await listFiles(k.dir, ['cube'])).map((f) => f.name);
+  const cleared = reconcileGrade(files, storage);
+  if (cleared) refreshGrade({ storage });
+  return { cleared, read: true, files };
+}
