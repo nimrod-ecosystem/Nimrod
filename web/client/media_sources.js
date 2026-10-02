@@ -253,6 +253,47 @@ export const LISTING_WAIT_MS = 20000;
  */
 export const SOURCE_RECHECK_MS = 60000;
 
+/**
+ * HOW MANY PICTURES (OR CLIPS) IN A ROW MAY FAIL TO LOAD BEFORE THE SOURCE IS TREATED AS DOWN: 3.
+ * A source can die AFTER it listed (an agent stopped, a drive unplugged): the listing in hand still
+ * names files, and every one of them fails. Argued:
+ *   - One failure is a bad file: it is skipped quietly and the slideshow carries on.
+ *   - Two in a row can still be two bad files side by side in a folder.
+ *   - Three in a row from one source, with the flash-limit backoff between them (about 0.3 s, 2 s,
+ *     4 s), is a source that has stopped serving -- caught in seconds, and any one good file in
+ *     between resets the count, so a folder with scattered broken files never trips it.
+ *   - More only lengthens the stretch spent on failures before the panel does something about it.
+ * Then the panel does what a source that fails at load does: a stand-in, the last pictures, or says so.
+ * A seam (`ctx.downAfterFailures`); 0 turns it off (the backoff tests use that).
+ */
+export const DOWN_AFTER_FAILURES = 3;
+
+/**
+ * Does this item actually load? For the recheck of a source whose FILES stopped loading: its listing
+ * answering proves nothing, so one picture (or a clip's metadata) is fetched for real. Never rejects.
+ */
+export function mediaLoads(item, { waitMs = LISTING_WAIT_MS, setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id) => clearTimeout(id) } = {}) {
+  return new Promise((done) => {
+    if (!item || !item.url || typeof document === 'undefined') { done(false); return; }
+    const video = item.kind === 'video';
+    const el = document.createElement(video ? 'video' : 'img');
+    let finished = false;
+    let t = null;
+    const end = (ok) => {
+      if (finished) return;
+      finished = true;
+      if (t != null) clearTimer(t);
+      done(ok);
+    };
+    el.addEventListener(video ? 'loadedmetadata' : 'load', () => end(true), { once: true });
+    el.addEventListener('error', () => end(false), { once: true });
+    if (Number(waitMs) > 0) t = setTimer(() => end(false), Number(waitMs));
+    if (video) { el.muted = true; el.preload = 'metadata'; }
+    el.src = item.url;
+  });
+}
+
 const ownerOf = (s) => (s && s.person_id) || null;
 
 /**
@@ -329,11 +370,16 @@ export function listingWithin(resolve, source, album, { accept = (l) => (l && l.
  * chosen source -- the caller shows it and goes back when the chosen one returns.
  */
 export async function listOrFallback({ sources, chosen = null, chosenId = null, album = '', personId = null,
-  resolve, accept, waitMs = LISTING_WAIT_MS, setTimer, clearTimer } = {}) {
+  resolve, accept, waitMs = LISTING_WAIT_MS, setTimer, clearTimer, skip = null } = {}) {
   const opts = { accept, waitMs, ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}) };
   const cid = (chosen && chosen.id) || chosenId || null;
+  // `skip`: sources whose FILES stopped loading mid-slideshow (DOWN_AFTER_FAILURES). Their listing may
+  // well still answer, so they are not asked; they count as failed until a recheck loads one for real.
+  const skipped = (s) => !!(skip && s && (typeof skip.has === 'function' ? skip.has(s.id) : skip.includes?.(s.id)));
   let failure;
-  if (chosen) {
+  if (chosen && skipped(chosen)) {
+    failure = codedError('loading', `media source "${chosen.label}": its files stopped loading`);
+  } else if (chosen) {
     const r = await listingWithin(resolve, chosen, album, opts);
     if (r.ok) return { source: chosen, listing: r.listing, items: r.items, album, fellBack: false, failure: null };
     failure = r.err;
@@ -341,6 +387,7 @@ export async function listOrFallback({ sources, chosen = null, chosenId = null, 
     failure = codedError('gone', 'the chosen source is not in the list');
   }
   for (const s of fallbackSources(sources, { chosenId: cid, personId })) {
+    if (skipped(s)) continue;
     for (const a of (album ? [album, ''] : [''])) {
       const r = await listingWithin(resolve, s, a, opts);
       if (r.ok && r.items.length) return { source: s, listing: r.listing, items: r.items, album: a, fellBack: true, failure };

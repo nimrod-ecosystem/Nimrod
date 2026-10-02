@@ -123,6 +123,7 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
         setTimer: (fn, ms) => { const t = { fn, ms, at: fakeNow + ms, live: true }; timers.push(t); return t; },
         clearTimer: (t) => { if (t) t.live = false; },
         now: () => fakeNow, flashLimitPerSecond: () => L, progressMs: 1e9,
+        downAfterFailures: 0,   // about the backoff; "three in a row and the source is down" has its own checks
       });
       inst.init();
       await sleep(150);
@@ -162,7 +163,7 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
       other:  { id: 'other',  label: 'Next door',      kind: 'agent', person_id: 'p2' },
       family: { id: 'family', label: 'Family',         kind: 'agent', person_id: null },
     };
-    function rigV({ sources, mode, seed = {}, personId = 'p1' }) {
+    function rigV({ sources, mode, seed = {}, personId = 'p1', extra = {} }) {
       const host = document.createElement('div');
       document.body.append(host);
       const timers = [], sets = [], asked = [];
@@ -178,11 +179,15 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
           asked.push(src.id);
           const m = mode[src.id] || 'up';
           if (m === 'down') return Promise.reject(new Error(`${src.id} /list -> 502`));
-          return Promise.resolve({ album, albums: [], items: [1, 2].map((i) => ({ id: `${src.id}-${i}.mp4`, path: `${src.id}-${i}.mp4`, name: `${src.id} ${i}`, kind: 'video', url: `data:,${src.id}-${i}` })) });
+          return Promise.resolve({ album, albums: [], items: [1, 2].map((i) => ({ id: `${src.id}-${i}.mp4`, path: `${src.id}-${i}.mp4`, name: `${src.id} ${i}`, kind: 'video',
+            // A relative http address, never fetched (autoplay off, preload none), so the only `error`
+            // a clip sees is one a check dispatches -- a `data:` address fails by itself.
+            url: `clip/${src.id}-${i}.mp4` })) });
         },
         setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
         clearTimer: (t) => { if (t) t.live = false; },
         listingWaitMs: WAIT, sourceRecheckMs: RECHECK, progressMs: 1e9,
+        ...extra,
       });
       inst.init();
       return { host, inst, sets, asked,
@@ -199,7 +204,7 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     const mode = { mine: 'down' };
     const r = rigV({ sources: [S.other, S.mine, S.family], mode, seed: { sourceId: 'mine', subjectName: 'Mum' } });
     check('*** personal, UNREACHABLE: the account\'s source stands in and a clip plays from it ***',
-      await until(() => /^data:,family-/.test(r.src())), r.src() + ' / ' + r.status());
+      await until(() => /^clip\/family-/.test(r.src())), r.src() + ' / ' + r.status());
     check('*** ...and the caption says so, instead of putting "From Mum" on somebody else\'s clip ***',
       /Showing “Family” — “Her messages” can’t be reached/.test(r.caption()) && !/Mum/.test(r.caption()), r.caption());
     check('...next door\'s source was never asked', !r.asked.includes('other'), r.asked.join(' '));
@@ -208,12 +213,12 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     mode.mine = 'up';
     r.fire(RECHECK);
     check('*** COMES BACK: the chosen source plays again, captioned as before ***',
-      await until(() => /^data:,mine-/.test(r.src()) && /From Mum/.test(r.caption())), `${r.src()} / ${r.caption()}`);
+      await until(() => /^clip\/mine-/.test(r.src()) && /From Mum/.test(r.caption())), `${r.src()} / ${r.caption()}`);
     check('...no more rechecks, still nothing saved', r.live(RECHECK) === 0 && saved(r).length === 0);
     r.done();
 
     const g = rigV({ sources: [S.family], mode: {}, seed: { sourceId: 'gone-id' } });
-    check('personal, MISSING: another source stands in', await until(() => /^data:,family-/.test(g.src())), g.src());
+    check('personal, MISSING: another source stands in', await until(() => /^clip\/family-/.test(g.src())), g.src());
     check('*** ...and the choice is NOT overwritten with the only source left ***', saved(g).length === 0, JSON.stringify(g.sets));
     g.done();
 
@@ -225,8 +230,56 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     x.done();
     const n = rigV({ sources: [S.mine, S.other, S.family], mode: { mine: 'down' }, seed: { sourceId: 'mine' }, personId: null });
     check('*** personal, whose screen unknown: the account\'s source stands in, never next door\'s ***',
-      await until(() => /^data:,family-/.test(n.src())) && !n.asked.includes('other'), `${n.src()} / ${n.asked.join(' ')}`);
+      await until(() => /^clip\/family-/.test(n.src())) && !n.asked.includes('other'), `${n.src()} / ${n.asked.join(' ')}`);
     n.done();
+
+    // *** A SOURCE THAT DIES MID-RUN (2026-10-02). *** Clips fail by hand here (a real `error` event on the
+    // element, autoplay off so nothing loads by itself): one bad clip is skipped as it always was; three in
+    // a row set the source aside and a stand-in plays; the recheck takes it back only when a clip of it
+    // really loads (`ctx.mediaLoads`, the one seam, because no browser here can play a real clip).
+    const fail = (rr) => rr.host.querySelector('video')?.dispatchEvent(new Event('error'));
+    const play = (rr) => rr.host.querySelector('video')?.dispatchEvent(new Event('playing'));
+    const nextV = (rr) => rr.host.querySelector('[data-next]').click();
+    {
+      const one = rigV({ sources: [S.mine, S.family], mode: {}, seed: { sourceId: 'mine' } });
+      await until(() => /^clip\/mine-/.test(one.src()));
+      fail(one); nextV(one); await sleep(20);
+      play(one); nextV(one); await sleep(20);   // a clip that plays ends the run
+      fail(one); nextV(one); await sleep(20);
+      fail(one); nextV(one); await sleep(40);
+      check('*** personal, scattered bad clips (fail, play, fail, fail): skipped, the source is NOT taken down ***',
+        /^clip\/mine-/.test(one.src()) && !/Showing/.test(one.caption()), `${one.src()} / ${one.caption()}`);
+      one.done();
+    }
+    {
+      const probe = { ok: false };
+      const r2 = rigV({ sources: [S.mine, S.family], mode: {}, seed: { sourceId: 'mine', subjectName: 'Mum' },
+        extra: { mediaLoads: async () => probe.ok } });
+      await until(() => /^clip\/mine-/.test(r2.src()));
+      for (let k = 0; k < 3; k++) { fail(r2); if (k < 2) nextV(r2); await sleep(30); }
+      check('*** personal, DIES: three clips in a row fail -> the account\'s source stands in ***',
+        await until(() => /^clip\/family-/.test(r2.src())), r2.src());
+      check('...and the caption says so', /Showing “Family” — “Her messages” can’t be reached/.test(r2.caption()), r2.caption());
+      check('...nothing saved', saved(r2).length === 0, JSON.stringify(r2.sets));
+      r2.fire(RECHECK);
+      await sleep(80);
+      check('*** recheck while its clips still fail to load: NOT taken back ***', /^clip\/family-/.test(r2.src()) && r2.live(RECHECK) === 1,
+        `${r2.src()} / ${r2.live(RECHECK)}`);
+      probe.ok = true;
+      r2.fire(RECHECK);
+      check('*** COMES BACK once a clip of it loads: the chosen source plays again ***',
+        await until(() => /^clip\/mine-/.test(r2.src()) && /From Mum/.test(r2.caption())), `${r2.src()} / ${r2.caption()}`);
+      r2.done();
+      const r3 = rigV({ sources: [S.mine], mode: {}, seed: { sourceId: 'mine' } });
+      await until(() => /^clip\/mine-/.test(r3.src()));
+      for (let k = 0; k < 3; k++) { fail(r3); if (k < 2) nextV(r3); await sleep(30); }
+      check('*** personal, DIES with nothing to stand in: it says so (Retry), no dead clip left, no cycle ***',
+        await until(() => /unreachable/i.test(r3.status())) && !r3.src() && !!r3.host.querySelector('[data-retry]'),
+        `${r3.src()} / ${r3.status()}`);
+      nextV(r3); await sleep(30);
+      check('...a next brings no dead clip back', !r3.src());
+      r3.done();
+    }
   }
 
   // *** PREFLIGHT: the API half needs an agent, and "cannot run" must not print as "failed". ***
