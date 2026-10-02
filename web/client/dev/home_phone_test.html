@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>home on a phone (Home at 375 and 320 wide; unchanged at 1280) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>home on a phone — test</h1>
+<p>Home (<code>modules.html</code>, signed in) inside a phone-sized frame: 375×812, then 320×640. Nothing on the
+page is wider than the screen (no sideways page scroll), the page keeps a 16px side gutter, every control of
+Home's own (the top links, the starting points, the edit bar, its trays, the bar in the stage, the ⚙ menu) is
+at least 44px, the trays are bottom sheets that fit, the menu covers the dashboard rather than squeezing the
+bar, and a grid dashboard STACKS one panel per screenful. Then 1280×720 and 1920×1080: none of the phone rules
+apply, and the desktop layout reads as it did. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+const USER = new URLSearchParams(location.search).get('user') || ('home-phone-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+
+// THE PHONE BREAKPOINT, as the page states it. Read from the page rather than typed twice, so the test and
+// the page cannot drift apart: the page keeps its phone layout in its own `<style data-phone>`, and the
+// suite checks those rules match at 375 and 320 and NOT at kiosk sizes.
+let ifr = null, doc = null, win = null;
+async function open(query, w, h) {
+  ifr?.remove();
+  ifr = document.createElement('iframe');
+  // `?show=1` puts the frame on the page (top left) to watch it run; by default it is off to the side.
+  const left = new URLSearchParams(location.search).get('show') ? '0' : '-9999px';
+  ifr.style.cssText = `position:fixed;left:${left};top:0;width:${w}px;height:${h}px;border:0;z-index:1`;
+  document.body.append(ifr);
+  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+  doc = ifr.contentDocument; win = ifr.contentWindow;
+  const orig = win.console.error.bind(win.console);
+  win.console.error = (...a) => { pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };
+}
+const pageErrors = [];
+let lastOut = [];
+const $ = (s) => doc.querySelector(s);
+const $$ = (s) => [...doc.querySelectorAll(s)];
+const hb = (k) => (k === 'view' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')
+  : $(`#stage .tb-bar .tb-host [data-host="${k}"]`));
+const pickName = () => (hb('picker')?.textContent || '').replace(/^Modules: /, '');
+const menuShown = () => !!$('#stage [data-settings] .st-scrim:not([hidden])');
+const menuPanel = () => $('#stage [data-settings] .st-scrim:not([hidden]) .st-panel');
+const eb = (act) => $(`#home-edit [data-edit="${act}"]`);
+const tray = () => $('#home-tray');
+const editIdle = () => !!eb('scene') && !eb('scene').disabled && !/Changing/.test($('#home-edit .ed-note')?.textContent || '');
+const R = (el) => el.getBoundingClientRect();
+const vw = () => doc.documentElement.clientWidth;      // the layout width, less any classic scrollbar
+const vh = () => win.innerHeight;
+const css = (el) => win.getComputedStyle(el);
+const shown = (el) => { if (!el || el.closest('[hidden]')) return false; const r = R(el); const s = css(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
+const desc = (el) => `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${String(el.className).split(' ').filter(Boolean).slice(0, 2).join('.')}`
+  + `“${(el.textContent || '').trim().slice(0, 18)}”`;
+
+/** The horizontal part of `el` a person can actually see: its box, cut by every ancestor that clips
+ *  sideways (a strip that scrolls inside itself, a panel that hides its overflow). Null when none of it is. */
+function visibleX(el) {
+  const r = R(el);
+  let l = r.left, rr = r.right;
+  const fixed = css(el).position === 'fixed';
+  for (let a = el.parentElement; a && a !== doc.body && a !== doc.documentElement; a = a.parentElement) {
+    if (fixed) break;
+    const s = css(a);
+    if (s.overflowX !== 'visible') { const ar = R(a); l = Math.max(l, ar.left); rr = Math.min(rr, ar.right); }
+    if (s.position === 'fixed') break;
+  }
+  return rr - l > 0.5 ? [l, rr] : null;
+}
+/** Everything inside `root` that sticks out past the screen's edge where a person can see it. One walk down
+ *  the tree carrying the clip, so each element's style is read once (a page with the menu, the library and a
+ *  dashboard in it is thousands of elements, and reading every ancestor's style per element froze the run). */
+function sticksOut(root = doc.body) {
+  const w = vw();
+  const bad = [];
+  const start = visibleX(root) || [-Infinity, Infinity];
+  const walk = (el, l, r) => {
+    for (const c of el.children) {
+      const s = css(c);
+      if (s.display === 'none') continue;
+      let cl = l, cr = r;
+      if (s.position === 'fixed') { cl = -Infinity; cr = Infinity; }
+      const rc = R(c);
+      if (rc.width > 0 && rc.height > 0 && s.visibility !== 'hidden') {
+        const L = Math.max(rc.left, cl), RR = Math.min(rc.right, cr);
+        if (RR - L > 0.5 && (L < -0.5 || RR > w + 0.5) && bad.length < 8) bad.push(`${desc(c)} ${J([L, RR].map(Math.round))}`);
+      }
+      if (s.overflowX !== 'visible') { cl = Math.max(cl, rc.left); cr = Math.min(cr, rc.right); }
+      if (cr - cl > 0.5) walk(c, cl, cr);
+    }
+  };
+  walk(root, start[0], start[1]);
+  return bad;
+}
+// A press target: buttons, links, fields, menu rows. A link inside running text is exempt (WCAG 2.5.8's own
+// exception): the footer's sentences are text with links in them, not controls.
+const TARGET = 'button, a[href], select, input:not([type=hidden]), [role=button], .st-item';
+function smallTargets(root) {
+  if (!root) return ['(no such area)'];
+  const els = root.matches?.(TARGET) ? [root, ...root.querySelectorAll(TARGET)] : [...root.querySelectorAll(TARGET)];
+  return els.filter((el) => shown(el) && !el.closest('p, footer, .stagenote'))
+    .filter((el) => { const r = R(el); return r.width < 43.5 || r.height < 43.5; })
+    .slice(0, 8).map((el) => `${desc(el)} ${Math.round(R(el).width)}x${Math.round(R(el).height)}`);
+}
+/** Within the side gutter: the box starts at least 16px in from the left and ends 16px short of the right. */
+/** A box's content width: its client width less its own padding (a grid's cells fill that, not the padding). */
+const innerW = (el) => el.clientWidth - parseFloat(css(el).paddingLeft) - parseFloat(css(el).paddingRight);
+const inGutter =(el, g = 16) => { const r = R(el); return r.left >= g - 0.5 && r.right <= vw() - g + 0.5; };
+
+/** The page's phone layout: its own `<style data-phone>`. EVERY top-level rule in it must be a media rule
+ *  (anything else would reach the desktop and the kiosk), so this returns null when one is not. */
+function phoneRules() {
+  const el = doc.querySelector('style[data-phone]');
+  if (!el?.sheet) return [];
+  const rules = [...el.sheet.cssRules];
+  return rules.every((r) => r instanceof win.CSSMediaRule) ? rules : [];
+}
+
+async function homeUp(ms = 45000) {
+  return until(() => !!hb('save') && !!hb('picker') && !!$('#stage .tb-bar'), ms);
+}
+async function menuOpenNow(want) {
+  await until(() => !!hb('view'), 15000);
+  for (let i = 0; i < 3; i++) {
+    if (await until(() => menuShown() === want, 3000)) return true;
+    if (menuShown() !== want) hb('view')?.click();
+    if (await until(() => menuShown() === want, 4000)) return true;
+  }
+  return menuShown() === want;
+}
+
+async function phoneChecks(W, label) {
+  check(`[${label}] the page's phone layout (all of it behind a media query) applies at ${W} wide`,
+    phoneRules().length > 0 && phoneRules().every((r) => win.matchMedia(r.media.mediaText).matches),
+    phoneRules().map((r) => r.media.mediaText).join(' | ') || 'no <style data-phone>, or a rule in it outside a media query');
+  check(`[${label}] *** no sideways page scroll (page ${doc.documentElement.scrollWidth} ≤ ${vw()}) ***`, doc.documentElement.scrollWidth <= vw() + 0.5,
+    `${doc.documentElement.scrollWidth} > ${vw()}`);
+  const out0 = sticksOut();
+  check(`[${label}] *** nothing sticks out past the screen edge where it can be seen ***`, out0.length === 0, out0.join(' ; '));
+  check(`[${label}] a 16px side gutter: the page's column has 16px padding`,
+    css($('.top .wrap')).paddingLeft === '16px' && css($('section.browser').parentElement).paddingRight === '16px',
+    `${css($('.top .wrap')).paddingLeft} / ${css($('section.browser').parentElement).paddingRight}`);
+  check(`[${label}] ...and Home's boxes sit inside it`, inGutter($('#detail')) && (!shown($('#examples')) || inGutter($('#examples'))),
+    `${J(R($('#detail')))} ${J(R($('#examples')))}`);
+  check(`[${label}] *** the top links are 44px targets ***`, smallTargets($('.top')).length === 0, smallTargets($('.top')).join(' ; '));
+  check(`[${label}] *** the bar in the stage: every button at least 44px ***`, smallTargets($('#stage .tb-bar')).length === 0, smallTargets($('#stage .tb-bar')).join(' ; '));
+  const bar = $('#stage .tb-bar');
+  check(`[${label}] *** the bar is ONE row that scrolls sideways inside itself (not a tower of rows over the dashboard) ***`,
+    R(bar).height <= 80 && R(bar).left >= R($('#stage')).left - 0.5 && R(bar).right <= R($('#stage')).right + 0.5,
+    `bar ${J(R(bar))} stage ${J(R($('#stage')))}`);
+  check(`[${label}] *** the stage is most of the screen (≥ 80% of its height) ***`, R($('#stage')).height >= 0.8 * vh(), `${R($('#stage')).height} of ${vh()}`);
+}
+
+try {
+  // ============================================================================================
+  section('*** 375 × 812: first sign-in — the starting points, the edit bar, the menu ***');
+  await open(`user=${encodeURIComponent(USER)}`, 375, 812);
+  check('Home is up (its buttons in the bar in the stage)', await homeUp(), `homeError=${doc.body.dataset.homeError || '-'}`);
+  check('the starting points are showing', await until(() => !$('#examples').hidden, 15000));
+  check('in edit view: the menu is open and the edit bar is above the stage', await until(() => menuShown() && !$('#home-edit').hidden, 15000));
+  await sleep(600);
+  await phoneChecks(375, '375');
+  const strip = $('#ex-cards');
+  check('*** the starting points are ONE strip that scrolls sideways inside itself, the next card peeking ***',
+    css(strip).overflowX === 'auto' && strip.scrollWidth > strip.clientWidth + 10 && inGutter($('#examples'))
+    && R(strip.querySelector('.ex-card')).width < R(strip).width - 20,
+    `overflow=${css(strip).overflowX} scroll=${strip.scrollWidth} client=${strip.clientWidth} card=${R(strip.querySelector('.ex-card')).width}`);
+  check('...so the stage is reached within two screens, not after seven stacked cards', R($('#stage')).top + doc.documentElement.scrollTop < 2 * vh(),
+    `${R($('#stage')).top + doc.documentElement.scrollTop}`);
+  check('*** the starting points: every button at least 44px ***', smallTargets($('#examples')).length === 0, smallTargets($('#examples')).join(' ; '));
+  check('*** the edit bar: every button at least 44px, and it fits ***', smallTargets($('#home-edit')).length === 0 && inGutter($('#home-edit')),
+    smallTargets($('#home-edit')).join(' ; '));
+  const panel = menuPanel(), stage = $('#stage');
+  const barR = R($('#stage .tb-bar'));
+  check('*** the ⚙ menu takes the stage’s whole width (a drawer of 60% left a 120px column for the bar) ***',
+    panel && R(panel).width >= R(stage).width - 40, panel ? `${R(panel).width} of ${R(stage).width}` : 'no panel');
+  check('*** ...and stops above the bar: the bar is not squeezed or covered ***',
+    panel && R(panel).bottom <= barR.top + 1 && barR.width >= R(stage).width - 40, `panel ${J(R(panel))} bar ${J(barR)}`);
+  check('*** the menu: every row at least 44px ***', smallTargets(panel).length === 0, smallTargets(panel).join(' ; '));
+
+  // ---- live view: the landing dashboard, stacked --------------------------------------------
+  section('*** 375: live view — the "Start here" dashboard STACKS, one panel per screenful ***');
+  check('(setup) the menu closes', await menuOpenNow(false));
+  const grid = await until(() => !!$('#stage .k-stage.k-grid'), 10000) ? $('#stage .k-stage.k-grid') : null;
+  const cells = grid ? [...grid.children].filter((c) => c.classList.contains('k-cell') && shown(c)) : [];
+  check('(setup) the landing dashboard is a grid of four', pickName() === 'Start here' && cells.length === 4, `${pickName()} cells=${cells.length}`);
+  check('*** one column: every panel is the grid’s full width ***',
+    cells.length && cells.every((c) => Math.abs(R(c).width - innerW(grid)) <= 2 && Math.abs(R(c).left - R(cells[0]).left) <= 1),
+    cells.map((c) => Math.round(R(c).width)).join(',') + ' of ' + (grid && innerW(grid)));
+  check('*** each panel is one screenful of the stage (≥ 90% of the grid’s height), and the grid scrolls ***',
+    cells.length && cells.every((c) => R(c).height >= 0.9 * grid.clientHeight) && grid.scrollHeight > grid.clientHeight + 10
+    && css(grid).overflowY === 'auto', cells.map((c) => Math.round(R(c).height)).join(',') + ` grid=${grid?.clientHeight}/${grid?.scrollHeight}`);
+  const cut = cells.flatMap((c) => [...c.querySelectorAll('button, a[href]')].filter((b) => shown(b))
+    .filter((b) => R(b).left < R(c).left - 1 || R(b).right > R(c).right + 1).map((b) => desc(b)));
+  check('*** no control in a panel is cut off at its side (they were, two-up at 140px) ***', cut.length === 0, cut.slice(0, 6).join(' ; '));
+  const out1 = sticksOut();
+  check('[375 live] still no sideways page scroll, nothing sticking out', doc.documentElement.scrollWidth <= vw() + 0.5 && out1.length === 0, out1.join(' ; '));
+
+  // ---- make a Home, then the trays ------------------------------------------------------------
+  section('*** 375: the trays are bottom sheets that fit ***');
+  check('(setup) the menu opens again (edit view)', await menuOpenNow(true));
+  if ($('#examples').hidden) $('#stage .st-item[data-id="home:examples"]')?.click();
+  await until(() => !$('#examples').hidden, 8000);
+  $('#ex-cards [data-example="basic"] [data-ex-make]')?.click();
+  check('(setup) Plain Nimrod is made this account’s Home, and the edit bar is live', await until(() => editIdle() && !eb('add').disabled, 30000));
+  const sheetOK = (name) => {
+    const t = tray(); const r = R(t); const s = css(t);
+    const close = t.querySelector('button');
+    // The info line (hover_info.js) owns the bottom strip when it is on; the sheet stands on it, never under it.
+    const line = $('.nimrod-infoline');
+    const floor = line && shown(line) ? R(line).top : vh();
+    check(`*** ${name}: a bottom sheet — fixed, the full width, on the bottom edge (or on the info line), at most 75% of the height ***`,
+      // (On the line: never under it, and no more than a few pixels above -- the page reserves 2.6em for a line
+      // that draws a little shorter.)
+      s.position === 'fixed' && Math.abs(r.left) <= 0.5 && Math.abs(r.right - vw()) <= 0.5 && r.bottom <= floor + 0.5 && r.bottom >= floor - 16
+      && r.height <= 0.75 * vh() + 1,
+      `${s.position} ${J([r.left, r.top, r.right, r.bottom].map(Math.round))} vw=${vw()} vh=${vh()} floor=${Math.round(floor)}`);
+    check(`${name}: its way out (Close) comes first and is on the screen`,
+      close?.textContent === 'Close' && R(close).top >= R(t).top - 0.5 && R(close).bottom <= vh() + 0.5, close?.textContent);
+    const small = smallTargets(t), out2 = sticksOut(t);
+    check(`${name}: every button at least 44px, nothing sticking out`, small.length === 0 && out2.length === 0, [...small, ...out2].join(' ; '));
+    check(`${name}: the sheet keeps 16px inside its edges`, parseFloat(s.paddingLeft) >= 16 && parseFloat(s.paddingRight) >= 16, `${s.paddingLeft}/${s.paddingRight}`);
+  };
+  eb('add').click();
+  check('(setup) Add opens its tray', await until(() => !tray().hidden && /Add to your Home/.test(tray().textContent)));
+  sheetOK('Add');
+  tray().querySelector('[data-edit="closetray"]').click();
+  check('...Close puts the sheet away', await until(() => tray().hidden));
+  eb('scene').click();
+  check('(setup) Scene opens its tray', await until(() => !tray().hidden && /The scene/.test(tray().textContent)));
+  sheetOK('Scene');
+  tray().querySelector('[data-edit="closetray"]').click();
+  await until(() => tray().hidden);
+  eb('change').click();
+  check('(setup) Change opens its tray', await until(() => !tray().hidden && !!tray().querySelector('[data-edit-change]')));
+  sheetOK('Change');
+  tray().querySelector('[data-edit="closetray"]').click();
+  await until(() => tray().hidden);
+  check('*** the stacked Home: Plain Nimrod’s panels, one column ***', await until(() => {
+    const g = $('#stage .k-stage.k-grid'); if (!g) return false;
+    const cs = [...g.children].filter((c) => c.classList.contains('k-cell') && shown(c));
+    return cs.length >= 2 && cs.every((c) => Math.abs(R(c).width - innerW(g)) <= 2);
+  }, 10000));
+  // Switch module opens the Modules library in the chosen panel's place.
+  await until(() => hb('switch') && !hb('switch').disabled, 10000);
+  hb('switch')?.click();
+  const lib = () => $('#stage [data-library-for]');
+  if (await until(() => !!lib(), 15000)) {
+    await sleep(400);
+    check('*** Switch module: the library in the panel’s place fits the phone, nothing sticking out ***',
+      (lastOut = sticksOut()).length === 0 && doc.documentElement.scrollWidth <= vw() + 0.5, lastOut.join(' ; '));
+    check('...its way out (Keep …) and every other control in it are 44px targets', /^Keep /.test(lib().querySelector('button')?.textContent || '')
+      && smallTargets(lib()).length === 0, smallTargets(lib()).join(' ; '));
+    lib().querySelector('button')?.click();
+    await until(() => !lib(), 8000);
+  } else {
+    check('(setup) Switch module opened the library', false);
+  }
+  hb('saveas')?.click();
+  if (await until(() => $('#home-dlg')?.open, 5000)) {
+    const d = $('#home-dlg');
+    check('*** Save as… : the dialog keeps the 16px gutter and its buttons are 44px ***',
+      R(d).left >= 15.5 && R(d).right <= vw() - 15.5 && smallTargets(d).length === 0, `${J(R(d))} ${smallTargets(d).join(' ; ')}`);
+    d.querySelector('[data-home-dlg="cancel"]')?.click() || d.close();
+    await until(() => !$('#home-dlg').open, 3000);
+    if ($('#home-dlg').open) $('#home-dlg').close();
+  } else {
+    check('(setup) Save as… opened its dialog', false);
+  }
+
+  // ============================================================================================
+  section('*** 320 × 640: the smallest phone ***');
+  await open(`user=${encodeURIComponent(USER)}`, 320, 640);
+  check('Home is up', await homeUp());
+  await until(() => menuShown() || !!$('#stage .k-grid'), 10000);
+  await sleep(800);
+  await phoneChecks(320, '320');
+  hb('myhome')?.click();
+  check('(setup) My Home, in edit view', await until(() => pickName() === 'Your Home', 20000) && await menuOpenNow(true)
+    && await until(() => editIdle() && !eb('add').disabled, 15000));
+  check('[320] the edit bar fits, every button 44px', inGutter($('#home-edit')) && smallTargets($('#home-edit')).length === 0, smallTargets($('#home-edit')).join(' ; '));
+  const mSmall = smallTargets(menuPanel()), mOut = sticksOut(menuPanel());
+  check('[320] the menu: every row 44px, nothing sticking out', mSmall.length === 0 && mOut.length === 0, [...mSmall, ...mOut].join(' ; '));
+  eb('add').click();
+  check('(setup) Add opens', await until(() => !tray().hidden && /Add to your Home/.test(tray().textContent)));
+  sheetOK('[320] Add');
+  check('[320] with the sheet open: still no sideways page scroll', doc.documentElement.scrollWidth <= vw() + 0.5);
+
+  // ============================================================================================
+  section('*** 1280 × 720 and 1920 × 1080: the desktop and kiosk layout is untouched ***');
+  for (const [W, H] of [[1280, 720], [1920, 1080]]) {
+    await open(`user=${encodeURIComponent(USER)}`, W, H);
+    check(`[${W}] Home is up`, await homeUp());
+    await sleep(600);
+    const rules = phoneRules();
+    check(`[${W}] *** none of the phone rules apply (every one sits behind a media query that is false here) ***`,
+      rules.length > 0 && rules.every((r) => !win.matchMedia(r.media.mediaText).matches), rules.map((r) => r.media.mediaText).join(' | '));
+    check(`[${W}] the column keeps its desktop padding (22px)`, css($('.top .wrap')).paddingLeft === '22px', css($('.top .wrap')).paddingLeft);
+    check(`[${W}] the starting points are the card grid`, css($('#ex-cards')).display === 'grid' && css($('#ex-cards')).overflowX === 'visible');
+    check(`[${W}] the trays sit in the page above the stage (not sheets)`, css($('#home-tray') || doc.body).position !== 'fixed');
+    check(`[${W}] the bar wraps as before`, css($('#stage .tb-bar')).flexWrap === 'wrap');
+    check(`[${W}] the stage is its desktop height (100vh − 250px, at least 440px)`,
+      Math.abs(R($('#stage')).height - Math.max(440, H - 250)) <= 2, `${R($('#stage')).height}`);
+    if (!menuShown()) await menuOpenNow(true);
+    const p = menuPanel();
+    const dock = p?.closest('.v-dock-left, .v-dock-right');
+    check(`[${W}] the ⚙ menu is the side drawer (min(420px, 60%) wide), over the stage`,
+      dock && css(dock).position === 'absolute' && Math.abs(R(dock).width - Math.min(420, 0.6 * R(dock.parentElement).width)) <= 2,
+      dock ? `${css(dock).position} ${R(dock).width}` : 'no dock');
+    await menuOpenNow(false);
+    const g = $('#stage .k-stage.k-grid');
+    if (g) {
+      const cs = [...g.children].filter((c) => c.classList.contains('k-cell') && shown(c));
+      check(`[${W}] the grid dashboard is still a grid (two columns, nothing scrolls)`,
+        css(g).gridTemplateColumns.split(' ').length === 2 && new Set(cs.map((c) => Math.round(R(c).left))).size === 2 && css(g).overflowY !== 'auto',
+        css(g).gridTemplateColumns);
+    }
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+  console.error(err);
+}
+ifr?.remove();
+if (failed && pageErrors.length) {
+  section('(diagnostic) what the page logged as errors');
+  for (const e of pageErrors.slice(-10)) out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: `FAIL  (page logged) ${e}` }));
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
