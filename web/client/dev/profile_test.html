@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profile module — a person or an AI character as a card: Talk, Visit room, make your own</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:520px;height:560px;margin-top:12px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>Profile module — a person or an AI character as a card</h1>
+<p>Mike, 2026-10-02: "Your AI could be pulled into the dashboard as an avatar or a profile module." Mounted and
+pressed here with a fake AI, fake screens and fake records: the card for an AI and for a person, Talk carrying the
+character's persona, Visit room making and opening its room, a character made, changed and copied, nothing sent
+anywhere without a press, and what it says when no AI is connected. No server needed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
+import { AI_STATE_KEY } from '../nimrod_ai.js';
+import { HOME_STATE_KEY } from '../home_dashboard.js';
+import { AVATAR_KEY } from '../avatar.js';
+import { AI_CHARACTERS_KEY, seedById, NAMES_RE, AI_ROOM_DONE_KEY } from '../ai_characters.js';
+import { SUBJECT_KEY, DEFAULT_SUBJECT, PROFILE_VERB_TOPICS, CALL_NOT_BUILT, connectHelpFor, PROFILE_SETTINGS } from '../modules/profile.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(15); } return false; };
+const J = (x) => JSON.stringify(x);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+function fakeState(initial = {}) {
+  let data = clone(initial);
+  const subs = new Set();
+  return {
+    load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {}, destroy() {}, data: () => clone(data),
+  };
+}
+function fakeOutput() {
+  const said = [];
+  return { said, cancelled: [], say(t, o) { said.push({ t, o }); return `out-${said.length}`; }, cancel(id) { this.cancelled.push(id); } };
+}
+function fakeAI({ replies = [], models = ['qwen2.5:3b'], baseUrl = 'http://127.0.0.1:11434/v1', model = '', fail = null } = {}) {
+  const calls = { chat: [], resolve: [] };
+  let s = { baseUrl, model };
+  let key = '';
+  return {
+    calls,
+    settings: () => ({ ...s }), setSettings: (p) => { s = { ...s, ...p }; return { ...s }; },
+    hasKey: () => !!key, setKey: (k) => { key = String(k || '').trim(); return !!key; },
+    resolveModel: async (pref) => { calls.resolve.push(pref); if (fail) return { ok: false, model: null, models: [], reason: fail }; return { ok: true, model: models[0], models, fellBack: false }; },
+    chat: async (msgs, opts) => { calls.chat.push({ msgs, opts }); if (fail) return { ok: false, reason: fail }; const r = replies.length ? replies.shift() : 'Okay.'; return { ok: true, text: r, model: models[0] }; },
+  };
+}
+function fakeScreens({ people = [] } = {}) {
+  const screens = new Map();
+  let n = 0;
+  const calls = { create: [], addModule: [], people: 0 };
+  return {
+    calls, screens,
+    people: async () => { calls.people++; return people; },
+    list: async () => [...screens.values()].map((s) => ({ id: s.id, name: s.name, person_id: s.person_id })),
+    create: async (name, personId = '') => { const id = `s${++n}`; screens.set(id, { id, name, person_id: personId, modules: [] }); calls.create.push({ name, personId }); return { id, name }; },
+    get: async (pid) => { const s = screens.get(pid); return s ? { ...s, modules: [...s.modules] } : null; },
+    addModule: async (pid, type) => { const m = { id: `m${++n}`, type }; screens.get(pid).modules.push(m); calls.addModule.push({ pid, type }); return m; },
+  };
+}
+function bank() {
+  const made = {};
+  return { made, make: (pid, key, init) => { made[`${pid}/${key}`] = made[`${pid}/${key}`] || fakeState(init || {}); return made[`${pid}/${key}`]; } };
+}
+function box() { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; }
+
+async function mountCard({ subject = null, ai = fakeAI(), person = 'p1', personRows = {}, people = [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }],
+                           screens = fakeScreens({ people }), output = fakeOutput(), bus = createBus(), rooms = true, id = 'pf1' } = {}) {
+  const mount = box();
+  const persons = bank();
+  for (const [k, v] of Object.entries(personRows)) { const [pid, key] = k.split('/'); persons.make(pid, key, v); }
+  const states = bank();
+  const state = fakeState(subject ? { [SUBJECT_KEY]: subject } : {});
+  const goes = [];
+  bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { goes.push(p); p.claim?.(); });
+  const inst = mountModule('profile', { mount, bus, state, events: null, output, user: null, profileId: 'host', personId: person, instanceId: id, ai,
+    profiles: screens, makePersonState: (pid, key) => persons.make(pid, key),
+    ...(rooms ? { nestMakeState: (key, opts, pid) => states.make(pid, key) } : {}) });
+  await inst.init();
+  const q = (s) => mount.querySelector(s);
+  const doBtn = (what, n = 0) => mount.querySelectorAll(`[data-pf-do="${what}"]`)[n];
+  const probe = () => inst.impl.__probe();
+  const type = async (text) => { q('[data-pf-field="say"]').value = text; doBtn('send').click(); await inst.impl.__settled(); };
+  return { mount, inst, q, doBtn, probe, type, bus, output, ai, screens, persons, states, state, goes, done: () => { inst.destroy(); mount.remove(); } };
+}
+
+try {
+  // ============================================================================================
+  section('*** the module ***');
+  {
+    const m = getManifest('profile');
+    check('registered as "profile", on the new core', m && m.core === 'new' && m.title === 'Profile');
+    check('its one setting: read replies aloud, on', PROFILE_SETTINGS.length === 1 && PROFILE_SETTINGS[0].key === 'speak' && PROFILE_SETTINGS[0].default === true);
+    check('it starts on Nimrod (start with Nimrod)', J(DEFAULT_SUBJECT) === J({ kind: 'ai', id: 'nimrod' }));
+  }
+
+  // ============================================================================================
+  section('*** an AI character as a card, and NOTHING SENT ANYWHERE without a press ***');
+  {
+    const t = await mountCard();
+    check('*** Nimrod by default: his name, the cat, what he is good at ***',
+      t.q('[data-pf-name]').textContent === 'Nimrod' && !!t.q('[data-pf-portrait="cat"]') && t.q('[data-pf-line]').textContent === seedById('nimrod').goodAt);
+    check('Talk, Visit his room, Copy to make your own, Who…', /Talk to Nimrod/.test(t.doBtn('talk').textContent)
+      && /Visit Guide room/.test(t.doBtn('visit').textContent) && /Copy to make your own/.test(t.doBtn('copy').textContent) && !!t.doBtn('pick'));
+    check('a ready-made one has no Change and no Remove', !t.doBtn('edit') && !t.doBtn('remove'));
+    await sleep(60);
+    check('*** mounted: the AI was never asked anything ***', t.ai.calls.chat.length === 0 && t.ai.calls.resolve.length === 0, J(t.ai.calls));
+    check('*** ...nothing was made, nothing said, no dashboard opened ***',
+      t.screens.calls.create.length === 0 && t.screens.calls.addModule.length === 0 && t.output.said.length === 0 && t.goes.length === 0);
+    t.done();
+
+    const u = await mountCard({ subject: { kind: 'ai', id: 'tally' } });
+    check('*** Tally: name, line, a DRAWN avatar ***', u.q('[data-pf-name]').textContent === 'Tally'
+      && u.q('[data-pf-line]').textContent === seedById('tally').goodAt && !!u.q('[data-avatar-shown="drawn"] svg'));
+    check('her room is the maths room', /Visit Maths room/.test(u.doBtn('visit').textContent));
+    check('no names on the card', !NAMES_RE.test(u.mount.textContent));
+    u.done();
+
+    const r = await mountCard({ personRows: { [`p1/${AI_STATE_KEY}`]: { name: 'Ada', persona: 'Brisk.' } } });
+    check('*** "your AI": the Nimrod card carries the name the person gave their AI ***', r.q('[data-pf-name]').textContent === 'Ada' && /Talk to Ada/.test(r.doBtn('talk').textContent));
+    r.done();
+  }
+
+  // ============================================================================================
+  section('*** a person as a card ***');
+  {
+    const t = await mountCard({ subject: { kind: 'person', id: 'p2' }, personRows: { [`p2/${HOME_STATE_KEY}`]: { homeId: 'home-p2' } } });
+    await until(() => !t.doBtn('visit-home').disabled);
+    check('*** the person\'s name, "On this account", Person ***', t.q('[data-pf-name]').textContent === 'Lee' && t.q('[data-pf-line]').textContent === 'On this account');
+    check('*** Call is DIMMED, with the reason (a screen answers calls, it does not place them) ***',
+      t.doBtn('call').disabled && t.doBtn('call').title === CALL_NOT_BUILT);
+    check('their Home is offered once it is found', !t.doBtn('visit-home').disabled && /Visit their Home/.test(t.doBtn('visit-home').textContent));
+    check('nothing opened by looking', t.goes.length === 0);
+    t.doBtn('visit-home').click();
+    await until(() => t.goes.length > 0);
+    check('*** Visit their Home opens it ***', t.goes.length === 1 && t.goes[0].id === 'home-p2' && t.goes[0].source === 'profile');
+    t.done();
+
+    const me = await mountCard({ subject: { kind: 'person', id: 'p1' } });
+    await until(() => /Home/.test(me.doBtn('visit-home').title) && !/Looking/.test(me.doBtn('visit-home').title));
+    check('the viewer is "You"; with no Home made, Visit is dimmed and says so',
+      me.q('[data-pf-line]').textContent === 'You' && me.doBtn('visit-home').disabled && me.doBtn('visit-home').title === 'No Home made yet.');
+    me.done();
+  }
+
+  // ============================================================================================
+  section('*** the picker: people on this account, then the characters ***');
+  {
+    const t = await mountCard();
+    t.doBtn('pick').click();
+    await until(() => t.mount.querySelectorAll('[data-pf-do="choose"]').length >= 6);
+    const rows = [...t.mount.querySelectorAll('[data-pf-do="choose"]')].map((b) => b.dataset.pfId);
+    check('*** people first, then Nimrod and the others ***', J(rows) === J(['person:p1', 'person:p2', 'ai:nimrod', 'ai:tally', 'ai:quill', 'ai:buzzer']), J(rows));
+    check('it says friends come once accounts can be linked', /once accounts can be linked/.test(t.mount.textContent));
+    t.mount.querySelector('[data-pf-id="ai:buzzer"]').click();
+    check('choosing one shows it, and the panel keeps it', t.q('[data-pf-name]').textContent === 'Buzzer' && J(t.state.data()[SUBJECT_KEY]) === J({ kind: 'ai', id: 'buzzer' }));
+    t.done();
+  }
+
+  // ============================================================================================
+  section('*** Talk: through nimrod_ai.js, with the character\'s persona ***');
+  {
+    const ai = fakeAI({ replies: ['Two plus two is four. Shall we try three plus five?'] });
+    const t = await mountCard({ subject: { kind: 'ai', id: 'tally' }, ai });
+    t.doBtn('talk').click();
+    await until(() => t.probe().status.state === 'ok');
+    check('pressing Talk is what first asks the AI (is anything answering?)', ai.calls.resolve.length === 1 && ai.calls.chat.length === 0);
+    await t.type('What is two plus two?');
+    const sys = ai.calls.chat[0]?.msgs?.[0]?.content || '';
+    check('*** the persona is passed: the system prompt names Tally and carries her persona ***',
+      /Your name is Tally\./.test(sys) && sys.includes(seedById('tally').persona), sys.slice(0, 200));
+    check('the person\'s words follow it', ai.calls.chat[0].msgs.at(-1).content === 'What is two plus two?');
+    check('the reply is shown, from Tally', /Tally:/.test(t.q('[data-pf-log]').textContent) && /three plus five/.test(t.q('[data-pf-log]').textContent));
+    check('*** read aloud in her voice choice (calm: slower) ***', t.output.said.length === 1 && t.output.said[0].o.data.voice.rate < 1, J(t.output.said));
+    t.doBtn('back-card').click();
+    check('Back returns to the card', t.probe().view === 'card');
+    t.done();
+
+    const n = await mountCard({ ai: fakeAI() });
+    n.doBtn('talk').click();
+    await until(() => n.probe().status.state === 'ok');
+    await n.type('Hello');
+    check('Nimrod in the screen\'s own voice: no voice sent', n.output.said.length === 1 && !n.output.said[0].o.data);
+    n.done();
+
+    const quiet = await mountCard({ subject: { kind: 'ai', id: 'quill' }, ai: fakeAI() });
+    quiet.state.set({ speak: false });
+    quiet.doBtn('talk').click();
+    await until(() => quiet.probe().status.state === 'ok');
+    await quiet.type('A story please');
+    check('"read aloud" off: words only', quiet.output.said.length === 0 && quiet.probe().log.length === 2);
+    quiet.done();
+  }
+
+  // ============================================================================================
+  section('*** no AI connected: Talk says how to connect one ***');
+  {
+    const ai = fakeAI({ fail: 'Could not reach the AI program.' });
+    const t = await mountCard({ subject: { kind: 'ai', id: 'buzzer' }, ai });
+    t.doBtn('talk').click();
+    await until(() => t.probe().status.state === 'none');
+    const help = t.q('[data-pf-help]')?.textContent || '';
+    check('*** it says no AI is answering, and how to connect one (Ollama, or an online service with your key) ***',
+      /No AI is answering/.test(t.q('[data-pf-status]').textContent) && /Ollama/.test(help) && /your own key/.test(help) && help === connectHelpFor('Buzzer'));
+    check('...and that nothing is sent until you talk', /Nothing is sent anywhere until you talk/.test(help));
+    await t.type('Ask me a question');
+    check('a message with no AI is not sent anywhere', ai.calls.chat.length === 0);
+    t.doBtn('setup').click();
+    check('Connect an AI… offers the address, model and key fields', !!t.q('[data-pf-field="baseUrl"]') && !!t.q('[data-pf-field="model"]') && !!t.q('[data-pf-field="key"]'));
+    t.q('[data-pf-field="baseUrl"]').value = 'https://example.org/v1';
+    t.q('[data-pf-field="model"]').value = '';
+    t.doBtn('savesetup').click();
+    await until(() => t.probe().status.state === 'needs-model');
+    check('a remote address with no model asks for a model rather than picking one (it could cost money)', t.probe().status.state === 'needs-model' && ai.settings().baseUrl === 'https://example.org/v1');
+    t.done();
+  }
+
+  // ============================================================================================
+  section('*** Visit room: its room, made on the press, then opened ***');
+  {
+    const t = await mountCard({ subject: { kind: 'ai', id: 'tally' } });
+    check('nothing made by looking', t.screens.calls.create.length === 0);
+    t.doBtn('visit').click();
+    await until(() => t.goes.length > 0);
+    const s = [...t.screens.screens.values()][0];
+    check('*** one dashboard made, "Tally: Maths room", with the calculator in it ***',
+      t.screens.calls.create.length === 1 && s.name === 'Tally: Maths room' && J(s.modules.map((m) => m.type)) === J(['profile', 'calculator', 'algebra', 'scoreboard']));
+    check('*** and opened (dashboard/go with its id) ***', t.goes[0].id === s.id && t.goes[0].source === 'profile');
+    check('made for this person, finished', t.screens.calls.create[0].personId === 'p1' && t.states.made[`${s.id}/settings`].data()[AI_ROOM_DONE_KEY] === true);
+    const card = s.modules.find((m) => m.type === 'profile');
+    check('*** the room\'s own card shows Tally ***', J(t.states.made[`${s.id}/${card.id}`].data()[SUBJECT_KEY]) === J({ kind: 'ai', id: 'tally' }));
+    check('the person\'s record remembers the room', t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data().rooms['tally/maths'] === s.id);
+    await until(() => !t.doBtn('visit').disabled);
+    t.doBtn('visit').click();
+    await until(() => t.goes.length > 1);
+    check('*** the second visit opens the same one: nothing made twice ***', t.screens.calls.create.length === 1 && t.goes[1].id === s.id);
+    t.done();
+
+    const nowhere = await mountCard({ rooms: false });
+    check('a host with nowhere to make a room: Visit is dimmed, and says why', nowhere.doBtn('visit').disabled && /sign in/.test(nowhere.doBtn('visit').title));
+    nowhere.done();
+  }
+
+  // ============================================================================================
+  section('*** a character of your own: make, change, copy, remove ***');
+  {
+    const t = await mountCard({ personRows: { [`p1/${AVATAR_KEY}`]: { use: 'drawn', drawn: { face: 'long', skin: 's7', hair: 'buzz', hairColor: 'grey', eyes: 'dots', brows: 'thick',
+      mouth: 'smirk', glasses: 'square', facial: 'beard', extra: 'cap', top: 'teal', bg: 'sand' } } } });
+    t.doBtn('pick').click();
+    await until(() => !!t.doBtn('new'));
+    t.doBtn('new').click();
+    await until(() => !!t.q('[data-pf-field="name"]'));
+    check('the form: name, persona, good at, a face, a voice, a room', ['name', 'persona', 'goodAt'].every((k) => !!t.q(`[data-pf-field="${k}"]`))
+      && !!t.doBtn('face') && !!t.doBtn('voice') && !!t.doBtn('room') && !!t.doBtn('save-edit'));
+    check('*** "an avatar that looks like me": the person\'s own drawing can be used ***', !!t.doBtn('myface'));
+    t.q('[data-pf-field="name"]').value = 'Second self';
+    t.q('[data-pf-field="persona"]').value = 'You answer the way I would, briefly.';
+    t.doBtn('room').click();        // plain -> maths
+    t.doBtn('voice').click();       // own -> calm
+    check('typing survives a press elsewhere on the form', t.q('[data-pf-field="name"]').value === 'Second self');
+    t.doBtn('myface').click();
+    t.doBtn('save-edit').click();
+    await until(() => t.probe().view === 'card');
+    const row = t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data();
+    const mine = row.characters?.[0];
+    check('*** saved on the person\'s record: theirs, kind ai, voiceModel null ***', !!mine && mine.name === 'Second self' && mine.owner === 'p1'
+      && mine.kind === 'ai' && mine.voiceModel === null && mine.voice === 'calm' && mine.rooms[0].template === 'maths', J(mine));
+    check('with their own face', mine.avatar.drawn.facial === 'beard' && mine.avatar.drawn.extra === 'cap');
+    check('the card shows it, with Change and Remove', t.q('[data-pf-name]').textContent === 'Second self' && !!t.doBtn('edit') && !!t.doBtn('remove'));
+    t.doBtn('edit').click();
+    await until(() => !!t.q('[data-pf-field="name"]'));
+    t.q('[data-pf-field="name"]').value = 'Me, mostly';
+    t.doBtn('save-edit').click();
+    await until(() => t.probe().view === 'card');
+    const row2 = t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data();
+    check('*** changed in place (same id, still one) ***', row2.characters.length === 1 && row2.characters[0].id === mine.id && row2.characters[0].name === 'Me, mostly');
+    // Copy a seed.
+    t.state.set({ [SUBJECT_KEY]: { kind: 'ai', id: 'quill' } });
+    await until(() => t.q('[data-pf-name]')?.textContent === 'Quill');
+    t.doBtn('copy').click();
+    await until(() => (t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data().characters || []).length === 2);
+    const copy = t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data().characters[1];
+    check('*** a seed copied: the person\'s own, from Quill, shown ***', copy.copiedFrom === 'quill' && copy.owner === 'p1' && copy.name === 'Quill (copy)'
+      && t.q('[data-pf-name]').textContent === 'Quill (copy)');
+    check('the seed stays as it was', seedById('quill').name === 'Quill');
+    // Remove: two presses.
+    t.doBtn('remove').click();
+    check('one press of Remove only arms it', /Press again/.test(t.doBtn('remove').textContent)
+      && t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data().characters.length === 2);
+    t.doBtn('remove').click();
+    await until(() => t.persons.made[`p1/${AI_CHARACTERS_KEY}`].data().characters.length === 1);
+    check('*** the second press removes it, and the card goes back to Nimrod ***', t.q('[data-pf-name]').textContent === 'Nimrod');
+    check('nothing was sent to the AI in any of that', t.ai.calls.chat.length === 0 && t.ai.calls.resolve.length === 0);
+    t.done();
+  }
+
+  // ============================================================================================
+  section('a switch drives it: next / prev walk the buttons, select presses, back leaves');
+  {
+    const t = await mountCard({ subject: { kind: 'ai', id: 'buzzer' } });
+    const scanned = () => t.mount.querySelector('.is-scan')?.dataset.pfDo;
+    check('the cursor starts on Talk', scanned() === 'talk');
+    t.bus.publish(PROFILE_VERB_TOPICS.next, {});
+    check('next moves it', scanned() === 'visit');
+    t.bus.publish(PROFILE_VERB_TOPICS.prev, {});
+    t.bus.publish(PROFILE_VERB_TOPICS.select, {});
+    await until(() => t.probe().view === 'talk');
+    check('select presses (Talk)', t.probe().view === 'talk');
+    t.bus.publish(PROFILE_VERB_TOPICS.back, {});
+    check('back leaves the conversation', t.probe().view === 'card');
+    t.done();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
