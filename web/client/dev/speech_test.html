@@ -382,10 +382,11 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     DEFAULT_BINDINGS.forEach((b) => input.addBinding(b));
     const got = [];
     const modules = [{ id: 'yt-1', type: 'youtube', position: 0 },
-                     { id: 'ph-1', type: 'photos', position: 1 }];
+                     // A panel with nothing to pause. (Photos was this example until it gained Pause, ca64e17.)
+                     { id: 'ph-1', type: 'calculator', position: 1 }];
     for (const [id, t] of [['yt-1', 'youtube/pause'], ['yt-1', 'youtube/play'],
                            ['yt-1', 'youtube/volume'], ['yt-1', 'youtube/next'],
-                           ['ph-1', 'photos/next']]) {
+                           ['ph-1', 'calculator/next']]) {
       bus.subscribe(bus.instanceTopic(id, t), (p) => got.push([t, p]));
     }
     const unhandled = [];
