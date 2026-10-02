@@ -396,6 +396,57 @@ try {
   }
 
   // =====================================================================================
+  // Mike's list 09-30 (~row 1325, the same failure as a Room row change): a video playing in a display restarted
+  // when it was lifted and again when it was put back -- the slot was moved into a panel not yet in the page, and
+  // an iframe taken out of the page reloads. Now the panel goes in first and the slot is moved with
+  // `moveKeeping` (dom_move.js, Element.moveBefore).
+  section('*** a display lifted and put back: what plays in it KEEPS PLAYING (never taken out of the page) ***');
+  {
+    // A node that counts how it was moved: `connectedMoveCallback` is the browser's own "moved, never taken out";
+    // a node taken out and put back is disconnected + connected instead.
+    if (!customElements.get('rs-move-probe')) {
+      customElements.define('rs-move-probe', class extends HTMLElement {
+        constructor() { super(); this.disconnects = 0; this.moves = 0; }
+        disconnectedCallback() { this.disconnects++; }
+        connectedMoveCallback() { this.moves++; }
+      });
+    }
+    const host = makeHost();
+    const scene = mountRoomScene(host, presetRecipe('theRoom'), { liftReturnMs: 0 });
+    await sleep(30);
+    const cabSlot = scene.slots().get('cab').el;
+    const home = cabSlot.parentNode, next = cabSlot.nextSibling;
+    const mod = document.createElement('div');
+    const probe = document.createElement('rs-move-probe');
+    const f = document.createElement('iframe');
+    f.dataset.loads = '0';
+    f.addEventListener('load', () => { f.dataset.loads = String(Number(f.dataset.loads) + 1); });
+    f.srcdoc = '<script>window.mark = Math.random();<\/script>';
+    mod.append(probe, f);
+    cabSlot.append(mod);
+    const t0 = Date.now();
+    while (Date.now() - t0 < 4000 && !(f.dataset.loads === '1' && typeof f.contentWindow?.mark === 'number')) await sleep(20);
+    const win = f.contentWindow, mark = win?.mark;
+    check('(setup) a module with an embedded page that has loaded, in the cabinet\'s slot', f.dataset.loads === '1' && typeof mark === 'number');
+    const same = () => f.isConnected && cabSlot.contains(f) && f.dataset.loads === '1' && f.contentWindow === win
+      && f.contentWindow?.mark === mark && probe.disconnects === 0;
+    const state = () => JSON.stringify({ loads: f.dataset.loads, out: probe.disconnects, moves: probe.moves, sameWin: f.contentWindow === win });
+    scene.lift('cab');
+    await sleep(200);                     // a reload, had there been one, has had time to happen
+    const panel = scene.root.querySelector('.rs-lift');
+    check('*** lifted: the slot is in the panel, the SAME iframe, never taken out of the page, loaded ONCE ***',
+      scene.lifted() === 'cab' && !!panel?.contains(cabSlot) && same(), state());
+    scene.root.querySelector('.rs-lift-back').click();
+    await sleep(200);
+    check('*** put back: home in its own place again, still the same page, loaded once ***',
+      scene.lifted() === null && cabSlot.parentNode === home && cabSlot.nextSibling === next && same(), state());
+    check('...moved by the browser\'s own keeping move both ways (where it has one)',
+      typeof Element.prototype.moveBefore !== 'function' || probe.moves === 2, state());
+    scene.destroy();
+    host.remove();
+  }
+
+  // =====================================================================================
   section('scanning and the switch verbs');
   {
     const host = makeHost();

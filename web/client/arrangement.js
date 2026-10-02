@@ -69,6 +69,7 @@ import { SHELL_PROMOTE } from './shell_verbs.js';
 // 2026-10-02: EDIT ANY MODULE IN PLACE (edit_mode.js argues it). This file owns which panel is being edited
 // on this dashboard, the ✎ corner beside ⤢, and the `shell/edit-panel` verb.
 import { createEditMode, EDIT_PANEL_TOPIC, editSettingsFrom, ensureEditCss } from './edit_mode.js';
+import { moveKeeping } from './dom_move.js';
 
 // =====================================================================================================
 // *** MAKE A PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02). *** Mike: "something that pops up in the
@@ -136,13 +137,8 @@ export const PLACED_TOPIC = 'panel/placed';
 
 // =================================================================================================
 // *** A MOVE THAT KEEPS WHAT IS PLAYING (2026-10-02; Mike's list 09-30, ~row 1325: "Changing a Room row
-// reloads a video sitting in the room"). ***
-// `append` on an element that is already in the page takes it OUT and puts it back, and that restarts what is
-// inside it: an iframe (a YouTube embed) loads again from the start, a <video> is paused. `Element.moveBefore()`
-// is the browser's own move that never takes it out, so a module moved into a redrawn room, onto another wall,
-// or out of a grid slot and back carries on. It needs both ends in the page and one document; anything else (or
-// a browser without it) gets the ordinary move -- what every one of these moves did before, so never worse.
-// Chromium has had it since 133 (2025); the bench Pi's is 147 (checked 2026-10-02).
+// reloads a video sitting in the room"). *** `moveKeeping` (dom_move.js, re-exported here): every place this
+// file moves a module that is already in the page uses it, so an embedded video carries on.
 // Argued against the other way, keeping the module boxes where they are and swapping only the room beneath:
 //   FOR it: works in every browser, no fallback.
 //   AGAINST it: a module in a room is drawn BY the room -- inside its slot, at its stage's scale, under a 3D
@@ -151,18 +147,8 @@ export const PLACED_TOPIC = 'panel/placed';
 //   element that is not inside that wall at all. The only way to "swap the room beneath" is for each renderer to
 //   keep its slots, stage and walls as the SAME elements across a redraw -- a promise every later change to
 //   room_scene.js and room3d.js would have to keep, for a shape change that adds and removes slots.
-// Returns true when the move kept the node (moveBefore), false when it was the ordinary move.
 // =================================================================================================
-export function moveKeeping(parent, node, before = null) {
-  if (!parent || !node) return false;
-  const ref = before && before.parentNode === parent ? before : null;
-  if (typeof parent.moveBefore === 'function' && node.isConnected && parent.isConnected
-      && node.ownerDocument === parent.ownerDocument) {
-    try { parent.moveBefore(node, ref); return true; } catch { /* the ordinary move, below */ }
-  }
-  parent.insertBefore(node, ref);
-  return false;
-}
+export { moveKeeping };
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
