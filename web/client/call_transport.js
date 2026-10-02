@@ -94,6 +94,83 @@ export const STALL_MS = 30000;
 
 export const MODES = ['auto', 'direct'];
 
+// ---------------------------------------------------------------------------------------
+// *** ONE SCREEN ANSWERS A FAMILY CALL *** (2026-10-02; the intercom got the same in f087bfb)
+// ---------------------------------------------------------------------------------------
+//
+// A caller's offer reaches EVERY screen of the person. Two open screens both rang and BOTH ANSWERED:
+// the caller kept the first answer, and the other screen sat "in a call" with its camera and
+// microphone open, talking to nobody.
+//
+// Now a caller tags its offer `purpose: 'call'` and a `session`, and the server picks ONE answering
+// screen (drive.py `Answerers`):
+//   * EVERY SCREEN STILL RINGS. Unlike the intercom - which opens by itself, so it claims before it even
+//     chimes - a call is something a person picks up, wherever they happen to be. Ringing only the
+//     screen the server picked would mean picking before anybody has said where they are. So the claim
+//     is made at ANSWER, not at ring. Argued the other way: two rooms hear a ring for one call. That is
+//     what a house with two phones does, and it is what people expect of one.
+//   * THE SCREEN THAT ANSWERS ASKS FIRST (`claim()`), before the Call panel opens the camera or the
+//     microphone. That includes the panel's own countdown answering by itself (call.js
+//     `declineSeconds`, 10 s by default) - which ends at the same moment on both screens, so both
+//     ask at once and the server takes the first to arrive.
+//   * THE OTHERS ARE TOLD NO AND STOP RINGING AT ONCE (`onEnded('elsewhere')`), and say nothing to the
+//     caller. So are they when the first response is a refusal (a decline, a busy): the caller has
+//     already been told no, and a ring left going on another screen would answer into nothing.
+//   * A SCREEN TOLD NO WHILE IN THE CALL (its socket dropped, the server forgot it, and the re-offer
+//     went elsewhere) ends it in the same task - the connection closes before the handler returns.
+//
+// FALLBACKS - an older page must still work:
+//   * an OLDER CALLER (no purpose, no session): nothing to claim; it rings and answers as it always did,
+//     and the server does not arbitrate it either;
+//   * an OLDER SCREEN PAGE answering a tagged call without claiming: the server counts its answer as
+//     the claim (drive.py), and only an untagged answer gets past that - see "Known gap" below;
+//   * a link with no `claim` (an older drive.js): answers as before;
+//   * NO REPLY to a claim within CALL_CLAIM_MS: answers anyway. *** THE INTERCOM FAILS CLOSED HERE AND A
+//     CALL FAILS OPEN, ON PURPOSE. *** The intercom opens a room's microphone that nobody in the room
+//     chose; a family call is a person deciding to pick up (or the countdown the person's own settings
+//     chose), and call.js's header records Mike's ruling that a missed call from family costs more than
+//     an unwanted one. Failing open is exactly what calls did before this change, so the worst case is
+//     the old behaviour, never a call that cannot be answered. It also covers deploying the client
+//     before the server: a server that does not know a call can be claimed drops the claim, and the
+//     call still connects, CALL_CLAIM_MS late.
+//
+// Known gap: an older SCREEN page answers WITHOUT a session, which the server cannot tie to the call,
+// so during a mixed deploy an old page and a new page could both answer. It ends when the old page
+// reloads. Not worth server heuristics for a window that closes on the next page load.
+export const CALL_PURPOSE = 'call';
+
+// How long to wait for the server's reply to a claim before answering anyway. 3 s, argued: the reply
+// is one round trip (well under 1 s on a live socket - the intercom's live suite measures it), so this
+// only ever fires on a socket that is effectively gone or a server too old to know a call can be
+// claimed. It is time the caller spends waiting, so shorter than the intercom's 5 s (which fails
+// closed, where waiting longer costs nothing). Not a person's setting: nobody can judge it.
+export const CALL_CLAIM_MS = 3000;
+
+// The calls this screen was told belong to another screen, so a re-offer of one (the caller
+// reconnecting to whoever has it) does not ring here again. Bounded; oldest go first.
+const LOST_KEEP = 32;
+
+/** A fresh call id: "call-" + 16 hex, inside drive.py's session rules. */
+export function newCallSession(rand = null) {
+  let s = '';
+  if (!rand) {
+    try {
+      const b = new Uint8Array(8);
+      globalThis.crypto.getRandomValues(b);
+      for (const x of b) s += x.toString(16).padStart(2, '0');
+      return `call-${s}`;
+    } catch { s = ''; }
+  }
+  const r = rand || Math.random;
+  for (let i = 0; i < 4; i++) s += Math.floor(r() * 0x10000).toString(16).padStart(4, '0');
+  return `call-${s}`;
+}
+
+const okSession = (s) => typeof s === 'string' && s.length > 0;
+// What a signal for this call carries: the purpose and the session when the call has one; nothing
+// extra for an older caller's untagged call, so it looks exactly as it always did.
+const tagged = (session) => (session ? { purpose: CALL_PURPOSE, session } : {});
+
 /**
  * The ICE server list a call should use.
  *
@@ -163,12 +240,19 @@ export function createCallTransport({
   // reason 'busy' rather than ringing into nothing. A reconnect of a LIVE call is never refused, and a
   // check that throws is NOT busy - failing toward a family call ringing, not toward it vanishing.
   busy = () => false,
+  claimMs = CALL_CLAIM_MS,
 } = {}) {
   if (!link) throw new Error('createCallTransport: a drive link is required');
 
   let pc = null;
   let remoteStream = null;
   let pendingOffer = null;            // an offer that arrived before anybody answered
+  let pendingSession = null;          // ...and which call it is (null: an older caller's, untagged)
+  let currentSession = null;          // the call being answered or in progress (a caller: the one it placed)
+  let answering = false;              // between "this screen won" and the answer going out
+  let wonSession = null;              // the server named THIS screen for it
+  const claims = new Map();           // session -> a claim waiting for the server's reply
+  const lost = [];                    // sessions the server gave to another screen (LOST_KEEP)
   let incomingCb = null;
   let endedCb = null;
   let stallTimer = null;
@@ -201,15 +285,74 @@ export function createCallTransport({
     pc = null;
   }
 
-  function finish(reason) {
+  // `local`: this end chose it (hangup). The panel already knows, so only a LIVE call is reported, as
+  // before. Otherwise a RING or an ANSWER IN PROGRESS that ends is reported too (2026-10-02): the caller
+  // giving up, another screen taking the call, an answer that failed. Before, only a live call was, so a
+  // panel kept counting down a ring whose caller had gone, and "answered" it.
+  function finish(reason, { local = false } = {}) {
     clearStall();
     closePc();
     remoteStream = null;
     if (attached) { try { attached.srcObject = null; } catch { /* gone */ } attached = null; }
     const was = live;
+    const wasRinging = pendingOffer != null;
+    const wasAnswering = answering;
     setLive(false);
     pendingOffer = null;
-    if (was) { try { endedCb?.(reason); } catch (e) { log('onEnded threw', e); } }
+    pendingSession = null;
+    currentSession = null;
+    answering = false;
+    wonSession = null;
+    if (was || (!local && (wasRinging || wasAnswering))) {
+      try { endedCb?.(reason); } catch (e) { log('onEnded threw', e); }
+    }
+  }
+
+  const isLost = (session) => !!session && lost.includes(session);
+  function rememberLost(session) {
+    if (!session || lost.includes(session)) return;
+    lost.push(session);
+    while (lost.length > LOST_KEEP) lost.shift();
+  }
+
+  // Ask the server whether THIS screen answers `session` (drive.py Answerers). Resolves true on its
+  // "yes"; false on its "no". FAILS OPEN - true - when there is nothing to ask (an older caller's untagged
+  // call, a link with no `claim`, a socket that cannot send) or no reply comes within `claimMs`: see
+  // CALL_CLAIM_MS for why a call, unlike the intercom, answers anyway. One question in flight per call.
+  function ask(session) {
+    if (!session) return Promise.resolve(true);
+    if (wonSession === session) return Promise.resolve(true);
+    if (isLost(session)) return Promise.resolve(false);
+    const have = claims.get(session);
+    if (have) return have.promise;
+    if (typeof link.claim !== 'function') return Promise.resolve(true);
+    let done;
+    const entry = { promise: new Promise((r) => { done = r; }), timer: null };
+    entry.settle = (won) => {
+      if (claims.get(session) !== entry) return;
+      claims.delete(session);
+      if (entry.timer != null) { try { clearTimer(entry.timer); } catch { /* gone */ } entry.timer = null; }
+      if (won === true) wonSession = session;
+      done(won === true);
+    };
+    claims.set(session, entry);
+    entry.timer = setTimer(() => { entry.timer = null; log('no reply to the claim: answering anyway'); entry.settle(true); }, claimMs);
+    let asked = false;
+    try { asked = link.claim({ purpose: CALL_PURPOSE, session }) === true; } catch { asked = false; }
+    if (!asked) entry.settle(true);
+    return entry.promise;
+  }
+
+  // THE SERVER'S PICK (drive.js hands it on as a signal of kind 'answerer'; only a screen hears it).
+  function onAnswerer(sig) {
+    if (role !== 'screen' || sig.purpose !== CALL_PURPOSE || !okSession(sig.session)) return;
+    const session = sig.session;
+    if (sig.you === true) { claims.get(session)?.settle(true); return; }
+    rememberLost(session);
+    // In the call, answering it, or ringing for it: it stops NOW, in this task, and the caller is told
+    // nothing - another screen has it (or has already refused it).
+    if (currentSession === session || (pendingOffer != null && pendingSession === session)) finish('elsewhere');
+    claims.get(session)?.settle(false);
   }
 
   function makePc(tracks) {
@@ -248,41 +391,73 @@ export function createCallTransport({
     return pc;
   }
 
-  async function sendDescription(kind) {
-    await gatheringDone(pc, { setTimer });
-    if (destroyed || !pc) return false;
-    return link.sendSignal({ kind, sdp: pc.localDescription?.sdp });
-  }
-
   // ---- inbound -------------------------------------------------------------------------
   function onSignal(sig) {
-    if (destroyed || !sig || !SIGNAL_KINDS.includes(sig.kind)) return;
+    if (destroyed || !sig) return;
+    if (sig.kind === 'answerer') { onAnswerer(sig); return; }
+    if (!SIGNAL_KINDS.includes(sig.kind)) return;
     // *** A SIGNAL WITH ANOTHER PURPOSE IS NOT A CALL. *** (Row 2.42.) The same socket now also
     // carries a phone joining as a microphone (`phone_mic.js`, `purpose: 'phone-mic'`). Its offer
     // must never RING this screen, and its `bye` must never hang up a call that is running. A
     // signal with no purpose is a call, exactly as before; a named purpose other than 'call' is
     // somebody else's.
-    if (sig.purpose != null && sig.purpose !== 'call') return;
-    if (sig.kind === 'bye') { log('peer hung up'); finish('remote'); return; }
+    if (sig.purpose != null && sig.purpose !== CALL_PURPOSE) return;
+    const session = okSession(sig.session) ? sig.session : null;
+    if (sig.kind === 'bye') {
+      // A hang-up that names ANOTHER call is not this one's (the server relays a screen's signals to
+      // every caller of the person - a busy refusal for a second caller must not end the first call).
+      // An untagged one ends whatever is here, as it always did.
+      if (session && session !== currentSession && session !== pendingSession) return;
+      log('peer hung up');
+      finish('remote');
+      return;
+    }
     if (role === 'screen' && sig.kind === 'offer') {
+      // A call the server already gave to another screen (the caller reconnecting to it): not ours.
+      if (isLost(session)) { log('a re-offer of a call another screen has'); return; }
+      if (live) {
+        if (!session || session === currentSession) {
+          clearStall();
+          // An offer while a call is LIVE is a reconnect: the caller rebuilt and re-offered.
+          // Answer it with the media we already hold rather than treating it as a new call,
+          // or a blip would ring at her a second time.
+          const tracks = currentTracks();
+          if (!session) { answerWith(sig.sdp, tracks, null).catch((e) => log('re-answer failed', e)); return; }
+          // A tagged one asks the server again first: if this screen's socket dropped, the server
+          // forgot it answered, and the re-offer may already belong to another screen.
+          wonSession = null;
+          const sdp = sig.sdp;
+          ask(session).then((won) => {
+            if (destroyed || !live || currentSession !== session) return null;
+            if (!won) { finish('elsewhere'); return null; }
+            return answerWith(sdp, tracks, session);
+          }).catch((e) => log('re-answer failed', e));
+          return;
+        }
+        // A DIFFERENT call while one is live is not a reconnect - taking it as one would swap the
+        // person mid-call to whoever rang second. It is refused as busy, naming the call it refuses.
+        log('busy: a second call while one is live');
+        try { link.sendSignal({ kind: 'bye', reason: 'busy', ...tagged(session) }); } catch { /* socket gone */ }
+        return;
+      }
       clearStall();
-      // An offer while a call is LIVE is a reconnect: the caller rebuilt and re-offered.
-      // Answer it with the media we already hold rather than treating it as a new call,
-      // or a blip would ring at her a second time.
-      if (live) { answerWith(sig.sdp, currentTracks()).catch((e) => log('re-answer failed', e)); return; }
       let refuse = false;
       try { refuse = !!busy(); } catch (e) { log('busy check threw', e); refuse = false; }
       if (refuse) {
         log('busy: refused a new call');
         pendingOffer = null;
-        try { link.sendSignal({ kind: 'bye', reason: 'busy' }); } catch { /* socket gone */ }
+        pendingSession = null;
+        try { link.sendSignal({ kind: 'bye', reason: 'busy', ...tagged(session) }); } catch { /* socket gone */ }
         return;
       }
       pendingOffer = sig.sdp;
+      pendingSession = session;
       try { incomingCb?.(sig.from || null); } catch (e) { log('onIncoming threw', e); }
       return;
     }
     if (role === 'driver' && sig.kind === 'answer') {
+      // An answer for ANOTHER caller's call is not this one's.
+      if (session && session !== currentSession) return;
       pc?.setRemoteDescription({ type: 'answer', sdp: sig.sdp })
         .catch((e) => log('setRemoteDescription(answer) failed', e));
     }
@@ -293,12 +468,20 @@ export function createCallTransport({
     return pc.getSenders?.().map((s) => s.track).filter(Boolean) || [];
   }
 
-  async function answerWith(sdp, tracks) {
-    makePc(tracks);
-    await pc.setRemoteDescription({ type: 'offer', sdp });
-    const a = await pc.createAnswer();
-    await pc.setLocalDescription(a);
-    await sendDescription('answer');
+  async function answerWith(sdp, tracks, session) {
+    const mine = makePc(tracks);
+    // Anything that replaces or closes this connection while the answer is being made (the call ended,
+    // another screen was named) stops it here: nothing is sent and nothing goes live for a dead one.
+    const still = () => { if (destroyed || pc !== mine) throw new Error('call: superseded while answering'); };
+    await mine.setRemoteDescription({ type: 'offer', sdp });
+    still();
+    const a = await mine.createAnswer();
+    still();
+    await mine.setLocalDescription(a);
+    await gatheringDone(mine, { setTimer });
+    still();
+    link.sendSignal({ kind: 'answer', sdp: mine.localDescription?.sdp, ...tagged(session) });
+    currentSession = session;
     setLive(true);
     log('answer sent');
   }
@@ -318,34 +501,69 @@ export function createCallTransport({
      * acquired — the transport never touches the camera itself, because `camera_owner.js`
      * arbitrates that and a second opener is how two panels fight over one device.
      */
+    /**
+     * Ask the server whether THIS screen answers the call that is ringing (see CALL_PURPOSE above).
+     * The Call panel calls it BEFORE it opens the camera or the microphone. Resolves true when this
+     * screen is the one - or there is nothing to ask, or no reply came (it fails open, argued at
+     * CALL_CLAIM_MS); false when another screen has the call, or the ring went away meanwhile. On a
+     * false the ring has already been ended here (`onEnded('elsewhere')`) and the caller told nothing.
+     */
+    claim() {
+      if (destroyed || role !== 'screen' || pendingOffer == null) return Promise.resolve(false);
+      const sdp = pendingOffer, session = pendingSession;
+      return ask(session).then((won) => {
+        const same = pendingOffer === sdp && pendingSession === session;
+        if (!won && same) finish('elsewhere');
+        return won && same;
+      });
+    },
+
     async answer({ from = null, outgoing = null, remoteVideo = null, audio = null } = {}) {
       if (destroyed) return false;
       if (!pendingOffer) { log('answer with no offer waiting'); return false; }
+      const sdp = pendingOffer, session = pendingSession;
+      // ONE SCREEN ANSWERS. Nothing has been built yet; if the panel already claimed, this is instant.
+      const won = await ask(session);
+      if (destroyed || pendingOffer !== sdp || pendingSession !== session) return false;   // withdrawn meanwhile
+      if (!won) { finish('elsewhere'); return false; }
       attached = remoteVideo || null;
       const tracks = [outgoing, ...(audio ? [audio] : [])].filter(Boolean);
-      const sdp = pendingOffer;
       pendingOffer = null;
-      try { await answerWith(sdp, tracks); return true; }
+      pendingSession = null;
+      currentSession = session;
+      answering = true;
+      try { await answerWith(sdp, tracks, session); answering = false; return true; }
       catch (e) { log('answer failed', e); finish('failed'); return false; }
     },
 
-    /** Place a call. Not used by the bedside module — a screen never calls anybody. */
-    async call({ tracks = [], from = null } = {}) {
+    /**
+     * Place a call. Not used by the bedside module — a screen never calls anybody. It is TAGGED
+     * (`purpose: 'call'`, a session) so the server can pick one answering screen; `session` reuses an
+     * id (a caller re-offering the same call), otherwise a fresh one is made.
+     */
+    async call({ tracks = [], from = null, session = null } = {}) {
       if (destroyed || role !== 'driver') return false;
-      makePc(tracks);
-      const o = await pc.createOffer();
-      await pc.setLocalDescription(o);
+      const s = okSession(session) ? session : newCallSession();
+      const mine = makePc(tracks);
+      currentSession = s;
+      const o = await mine.createOffer();
+      await mine.setLocalDescription(o);
       setLive(true);
-      await gatheringDone(pc, { setTimer });
-      if (destroyed || !pc) return false;
-      return link.sendSignal({ kind: 'offer', sdp: pc.localDescription?.sdp, from });
+      await gatheringDone(mine, { setTimer });
+      if (destroyed || pc !== mine) return false;
+      return link.sendSignal({ kind: 'offer', sdp: mine.localDescription?.sdp, from, ...tagged(s) });
     },
 
     hangup(reason = 'hangup') {
       // Tell the other end BEFORE tearing down, or they sit watching a frozen frame until
       // their own stall timer fires — thirty seconds of looking at somebody who has gone.
-      try { link.sendSignal({ kind: 'bye', reason }); } catch { /* socket already gone */ }
-      finish(reason);
+      // ONLY WHEN THERE IS A CALL HERE TO END (2026-10-02): a screen whose ring was taken by another
+      // screen, or whose caller already hung up, has nothing to say - and a bye from it would reach the
+      // caller as a refusal of a call another screen is in.
+      const has = live || answering || pendingOffer != null || !!pc;
+      const session = currentSession || pendingSession;
+      if (has) { try { link.sendSignal({ kind: 'bye', reason, ...tagged(session) }); } catch { /* socket already gone */ } }
+      finish(reason, { local: true });
     },
 
     // Is a call ANSWERED and running? What the room's intercom asks before it opens (intercom.js
@@ -358,11 +576,13 @@ export function createCallTransport({
     // For the panel and for tests. `live` is the honest one: a peer connection can exist
     // and be connecting, which is not the same as a call.
     __probe: () => ({ live, hasPc: !!pc, pendingOffer: !!pendingOffer,
-                      ice: ice(), relay: hasRelay(config), stalling: stallTimer != null }),
+                      ice: ice(), relay: hasRelay(config), stalling: stallTimer != null,
+                      session: currentSession || pendingSession, claiming: claims.size > 0 }),
 
     destroy() {
       destroyed = true;
       try { off?.(); } catch { /* already gone */ }
+      for (const c of [...claims.values()]) c.settle(false);
       finish('destroyed');
     },
   };

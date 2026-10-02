@@ -41,9 +41,10 @@ that already exists rather than opening a second one.</p>
 <script type="module">
 import {
   createCallTransport, iceServers, gatheringDone, hasRelay,
-  DEFAULT_STUN, GATHER_TIMEOUT_MS, STALL_MS, MODES,
+  DEFAULT_STUN, GATHER_TIMEOUT_MS, STALL_MS, MODES, CALL_PURPOSE, CALL_CLAIM_MS, newCallSession,
 } from '../call_transport.js';
-import { SIGNAL_KINDS, DRIVE_VERBS } from '../drive.js';
+import { SIGNAL_KINDS, DRIVE_VERBS, connectDrive } from '../drive.js';
+import { createProfilesClient } from '../profile.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -120,6 +121,77 @@ class FakeStream {
   constructor() { this.tracks = []; }
   addTrack(t) { this.tracks.push(t); }
   getTracks() { return this.tracks; }
+}
+
+// The server's relay AND its pick of ONE answering screen per call, mirrored from drive.py `Answerers`
+// (the real one is tested in test_drive.py, and through the real server in the LIVE section below).
+// `arbiter: false` = a server too old to answer a claim for a call: the claim goes, nothing comes back.
+// `lag` = ms before the server's reply to a claim arrives (0 = in the same turn), so a race between two
+// screens answering at the same moment can be staged.
+function fakeRoom({ arbiter = true, lag = 0 } = {}) {
+  const screens = new Set(), drivers = new Set();
+  const recs = new Map();                       // session -> { answerer, declined }
+  const arb = (s) => !!s && s.purpose === CALL_PURPOSE && typeof s.session === 'string' && !!s.session;
+  const deliver = (l, sig) => { for (const cb of [...l.subs]) cb(sig); };
+  const later = (fn) => (lag > 0 ? setTimeout(fn, lag) : fn());
+  function tellOthers(me, session) {
+    for (const l of [...screens]) {
+      if (l === me) continue;
+      l.told.push(session);
+      deliver(l, { kind: 'answerer', purpose: CALL_PURPOSE, session, you: false });
+    }
+  }
+  function join(role) {
+    const subs = new Set();
+    const me = {
+      role, subs, sent: [], claims: [], told: [],
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        if (arbiter && arb(s)) {
+          const rec = recs.get(s.session);
+          if (role === 'driver') {
+            if (s.kind === 'bye') recs.delete(s.session);
+            else if (s.kind === 'offer' && !(rec && rec.answerer)) recs.set(s.session, { answerer: null, declined: false });
+          } else if (!rec) {
+            if (s.kind !== 'bye') return true;                  // dropped
+          } else if (rec.declined) {
+            return true;
+          } else if (!rec.answerer) {
+            if (s.kind === 'answer') { rec.answerer = me; tellOthers(me, s.session); }
+            else if (s.kind === 'bye') { rec.declined = true; tellOthers(me, s.session); }
+            else return true;
+          } else if (rec.answerer !== me) {
+            return true;
+          } else if (s.kind === 'bye') recs.delete(s.session);
+        }
+        for (const l of (role === 'screen' ? [...drivers] : [...screens])) deliver(l, copy);
+        return true;
+      },
+      claim({ purpose, session }) {
+        if (role !== 'screen') return false;
+        me.claims.push(session);
+        if (!arbiter) return true;                              // sent, and never answered
+        later(() => {
+          const rec = recs.get(session);
+          let won = false;
+          if (rec && !rec.declined) {
+            if (!rec.answerer) { rec.answerer = me; won = true; tellOthers(me, session); }
+            else won = rec.answerer === me;
+          }
+          deliver(me, { kind: 'answerer', purpose, session, you: won });
+        });
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+      // The server forgetting this screen answered (its socket dropped): drive.py `left`.
+      forget() { for (const [k, r] of recs) if (r.answerer === me) recs.delete(k); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join, recs };
 }
 
 (async () => {
@@ -436,6 +508,250 @@ try {
   }
 
   // =====================================================================================
+  // ONE SCREEN ANSWERS A FAMILY CALL (2026-10-02). Two screens of one person both rang AND both answered:
+  // the caller kept the first answer, and the other screen sat "in a call" with its camera and microphone
+  // open, talking to nobody. Now every screen still RINGS (the person picks up wherever they are), but the
+  // screen that answers asks the server first (`link.claim`, drive.py Answerers), and only the one the
+  // server names opens anything. The others are told no and stop ringing at once.
+  const screenOn = (room, extra = {}) => {
+    const peers = fakePeer();
+    const link = room.join('screen');
+    const rings = [], ended = [];
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: peers.PC, Stream: FakeStream, ...extra });
+    t.onIncoming((f) => rings.push(f));
+    t.onEnded((r) => ended.push(r));
+    return { t, link, rings, ended, made: peers.made, last: peers.last };
+  };
+  const phoneOn = (room) => {
+    const peers = fakePeer();
+    const link = room.join('driver');
+    const got = [];
+    link.onSignal((s) => got.push(s));
+    const d = createCallTransport({ link, role: 'driver', PeerConnection: peers.PC, Stream: FakeStream });
+    return { d, link, got, last: peers.last, answers: () => got.filter((g) => g.kind === 'answer') };
+  };
+
+  section('*** a family call carries a session, so the server can pick ONE screen ***');
+  {
+    const a = newCallSession(), b = newCallSession();
+    check('a session is "call-" and 16 hex digits, inside the server\'s session rules', /^call-[0-9a-f]{16}$/.test(a), a);
+    check('two calls never share one', a !== b);
+    const room = fakeRoom();
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const offer = P.link.sent[0];
+    check('*** the caller\'s offer says it is a call, and which one ***',
+      offer?.kind === 'offer' && offer.purpose === CALL_PURPOSE && /^call-/.test(offer.session || ''), JSON.stringify(offer));
+    check('the caller knows its own session', P.d.__probe().session === offer.session);
+    P.d.hangup('done');
+    check('the caller\'s hang-up names the same call', P.link.sent.at(-1)?.kind === 'bye'
+      && P.link.sent.at(-1).session === offer.session && P.link.sent.at(-1).purpose === CALL_PURPOSE, JSON.stringify(P.link.sent.at(-1)));
+    P.d.destroy();
+  }
+
+  section('*** two screens of one person: BOTH ring, ONE answers, the other stops at once ***');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const session = P.d.__probe().session;
+    check('*** both screens ring - the person picks up wherever they are ***',
+      A.rings.length === 1 && B.rings.length === 1, `${A.rings.length} ${B.rings.length}`);
+    check('ringing claims nothing and sends nothing', A.link.claims.length === 0 && B.link.claims.length === 0
+      && A.link.sent.length === 0 && B.link.sent.length === 0);
+    const won = await A.t.claim();
+    check('*** the screen that answers asks the server first, and is told yes ***',
+      won === true && A.link.claims.join() === session, JSON.stringify(A.link.claims));
+    check('*** the other screen is told no and STOPS RINGING at once ***',
+      B.ended.join() === 'elsewhere' && B.t.__probe().pendingOffer === false, JSON.stringify(B.ended));
+    check('...without a word to the caller (no bye: it was not this screen\'s call to refuse)', B.link.sent.length === 0, JSON.stringify(B.link.sent));
+    check('*** ...and it never built a connection ***', B.made.length === 0);
+    const ok = await A.t.answer({ outgoing: { kind: 'video' } });
+    check('the winner answers', ok === true && A.t.isLive() === true);
+    check('*** the caller gets exactly ONE answer, for its own call ***',
+      P.answers().length === 1 && P.answers()[0].session === session && P.answers()[0].purpose === CALL_PURPOSE,
+      JSON.stringify(P.answers()));
+    check('the caller\'s connection takes it', P.last().remote?.sdp === 'ANSWER-SDP');
+    check('*** the loser answering late opens nothing ***',
+      (await B.t.answer({ outgoing: { kind: 'video' } })) === false && B.made.length === 0 && B.t.isLive() === false);
+    B.t.hangup('hangup');
+    check('...and its hang-up tells the caller nothing (it had no call)', B.link.sent.length === 0, JSON.stringify(B.link.sent));
+    P.d.hangup('done');
+    check('the caller hanging up ends it on the answering screen', A.ended.join() === 'remote' && !A.t.isLive());
+    A.t.destroy(); B.t.destroy(); P.d.destroy();
+  }
+
+  section('*** the auto-answer race: both screens answer in the same instant ***');
+  {
+    // The Call panel's countdown (10 s by default) ends at the same moment on both screens, so both
+    // answer at once. The server takes the first claim to arrive; the reply is a round trip away.
+    const room = fakeRoom({ lag: 5 });
+    const A = screenOn(room), B = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const res = await Promise.all([A.t.answer({ outgoing: { kind: 'video' } }), B.t.answer({ outgoing: { kind: 'video' } })]);
+    await sleep(20);
+    const W = res[0] ? A : B, L = W === A ? B : A;
+    check('*** exactly ONE screen answered ***', res.filter(Boolean).length === 1, JSON.stringify(res));
+    check('*** exactly one is in the call, and the other never built a connection ***',
+      W.t.isLive() && !L.t.isLive() && L.made.length === 0 && W.made.length === 1, `${L.made.length} ${W.made.length}`);
+    check('the caller got exactly one answer', P.answers().length === 1, String(P.answers().length));
+    check('the other stopped, told why', L.ended.join() === 'elsewhere' && L.link.sent.length === 0, JSON.stringify([L.ended, L.link.sent]));
+    A.t.destroy(); B.t.destroy(); P.d.destroy();
+  }
+
+  section('*** a refusal on one screen stops the ring on the other ***');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const session = P.d.__probe().session;
+    A.t.hangup('declined');
+    const bye = P.got.find((g) => g.kind === 'bye');
+    check('the caller hears the decline, for its own call', !!bye && bye.reason === 'declined' && bye.session === session, JSON.stringify(P.got));
+    check('...and its call ends', P.d.isLive() === false);
+    check('*** the other screen stops ringing (it would otherwise ring on for a caller already gone) ***',
+      B.ended.join() === 'elsewhere' && B.t.__probe().pendingOffer === false, JSON.stringify(B.ended));
+    check('...and could not answer it now', (await B.t.claim()) === false && B.made.length === 0);
+    A.t.destroy(); B.t.destroy(); P.d.destroy();
+  }
+
+  section('*** the caller hanging up while it rings stops the ring on every screen ***');
+  {
+    // Found doing this: a `bye` that arrived while a call was only RINGING cleared the offer but told
+    // nobody, so the panel counted down and "answered" a call that was gone.
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    P.d.hangup('gave-up');
+    check('*** both screens stop ringing ***', A.ended.join() === 'remote' && B.ended.join() === 'remote'
+      && !A.t.__probe().pendingOffer && !B.t.__probe().pendingOffer, JSON.stringify([A.ended, B.ended]));
+    check('neither says anything back', A.link.sent.length === 0 && B.link.sent.length === 0);
+    A.t.destroy(); B.t.destroy(); P.d.destroy();
+  }
+
+  section('*** fallbacks: an older caller, an older link, a server that does not answer ***');
+  {
+    // An OLDER CALLER sends no purpose and no session: there is nothing to claim, so both screens ring and
+    // answer exactly as before (the server does not arbitrate it either - test_drive.py).
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const phone = room.join('driver');
+    phone.sendSignal({ kind: 'offer', sdp: 'O-OLD', from: 'Ann' });
+    check('an older caller\'s call rings both', A.rings.length === 1 && B.rings.length === 1);
+    const ok = await A.t.answer({ outgoing: { kind: 'video' } });
+    check('*** ...and answers WITHOUT a claim, as it always did ***', ok === true && A.link.claims.length === 0 && A.t.isLive());
+    const ans = A.link.sent.find((s) => s.kind === 'answer');
+    check('...with an answer shaped as it always was (no purpose, no session)', !!ans && ans.purpose === undefined && ans.session === undefined, JSON.stringify(ans));
+    A.t.destroy(); B.t.destroy();
+  }
+  {
+    // An older LINK (no `claim` at all): a tagged call still answers.
+    const { PC } = fakePeer();
+    const link = fakeLink();
+    const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream });
+    link.deliver({ kind: 'offer', purpose: CALL_PURPOSE, session: 'call-00000000000000aa', sdp: 'O' });
+    check('a link that cannot claim still answers a tagged call', (await t.answer({ outgoing: { kind: 'video' } })) === true
+      && link.sent[0]?.kind === 'answer' && link.sent[0].session === 'call-00000000000000aa', JSON.stringify(link.sent));
+    t.destroy();
+  }
+  {
+    // A SERVER THAT NEVER ANSWERS THE CLAIM (one too old to know a call can be claimed, or a socket that is
+    // effectively gone). The intercom fails CLOSED here - a room microphone nobody chose. A family call fails
+    // OPEN, after CALL_CLAIM_MS: it is what calls did before this change, and the Call panel's own ruling is
+    // that a missed call from family costs more than an unwanted one (modules/call.js header).
+    const clock = fakeClock();
+    const room = fakeRoom({ arbiter: false });
+    const A = screenOn(room, { setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    let done = null;
+    A.t.answer({ outgoing: { kind: 'video' } }).then((r) => { done = r; });
+    await sleep(5);
+    check('it asked, and waits for the reply', A.link.claims.length === 1 && done === null && A.made.length === 0);
+    clock.advance(CALL_CLAIM_MS - 1); await sleep(5);
+    check('...still waiting just before the limit', done === null && A.made.length === 0);
+    clock.advance(1); await sleep(5);
+    check('*** no reply: the call is answered anyway (fails OPEN, as calls always did) ***', done === true && A.t.isLive(), String(done));
+    check(`the wait is short: ${CALL_CLAIM_MS} ms (a reply is one round trip)`, CALL_CLAIM_MS > 0 && CALL_CLAIM_MS <= 5000);
+    A.t.destroy(); P.d.destroy();
+  }
+
+  section('*** a screen that loses its place mid-call closes at once ***');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const session = P.d.__probe().session;
+    await A.t.answer({ outgoing: { kind: 'video' } });
+    check('(setup) A is in the call, B stopped', A.t.isLive() && B.ended.join() === 'elsewhere');
+    // A's socket dropped and came back: the server forgot it answered. The caller re-offers the same call.
+    A.link.forget();
+    A.last().fire('failed');
+    P.link.sendSignal({ kind: 'offer', purpose: CALL_PURPOSE, session, sdp: 'O2' });
+    await sleep(5);
+    check('*** a re-offer of a call another screen took does NOT ring the screen that lost it ***', B.rings.length === 1 && B.made.length === 0);
+    check('*** the screen in the call asks again before re-answering (the server had forgotten it) ***',
+      A.link.claims.length === 2 && P.answers().length === 2 && A.t.isLive(), `${A.link.claims.length} ${P.answers().length}`);
+    // And if the server names somebody else while this screen is in the call:
+    const pc = A.last();
+    const sentBefore = A.link.sent.length;
+    A.link.subs.forEach((cb) => cb({ kind: 'answerer', purpose: CALL_PURPOSE, session, you: false }));
+    check('*** told no while in the call: it ends IN THE SAME TASK, connection closed ***',
+      !A.t.isLive() && pc.closed === true && A.ended.at(-1) === 'elsewhere', JSON.stringify(A.ended));
+    A.t.hangup('hangup');      // what the Call panel does when it hears the end
+    check('...and says nothing to the caller (somebody else has it)', A.link.sent.length === sentBefore, JSON.stringify(A.link.sent.slice(sentBefore)));
+    A.t.destroy(); B.t.destroy(); P.d.destroy();
+  }
+
+  section('*** busy and a second caller, by session ***');
+  {
+    const room = fakeRoom();
+    let busyNow = true;
+    const A = screenOn(room, { busy: () => busyNow });
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const s1 = P.link.sent[0]?.session;
+    const bye = A.link.sent.find((s) => s.kind === 'bye');
+    check('a busy refusal names the call it refuses', !!s1 && !!bye && bye.reason === 'busy' && bye.session === s1, JSON.stringify(bye));
+    busyNow = false;
+    const P2 = phoneOn(room);
+    await P2.d.call({ tracks: [], from: { name: 'Ann' } });
+    await A.t.answer({ outgoing: { kind: 'video' } });
+    const pc = A.last();
+    const P3 = phoneOn(room);
+    await P3.d.call({ tracks: [], from: { name: 'Sam' } });
+    await sleep(5);
+    check('*** a DIFFERENT call arriving mid-call is refused as busy, not taken for a reconnect ***',
+      A.rings.length === 1 && A.t.isLive() && A.last() === pc && !pc.closed
+      && P3.got.some((g) => g.kind === 'bye' && g.reason === 'busy' && g.session === P3.link.sent[0]?.session), JSON.stringify(P3.got));
+    check('*** ...and that refusal does not hang up the caller who IS in the call (it names another call) ***',
+      P2.d.isLive() === true && P2.last().closed === false);
+    A.t.destroy(); P.d.destroy(); P2.d.destroy(); P3.d.destroy();
+  }
+
+  section('the server\'s pick for something else is not a call\'s');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room);
+    const P = phoneOn(room);
+    await P.d.call({ tracks: [], from: { name: 'Ann' } });
+    const session = P.d.__probe().session;
+    A.link.subs.forEach((cb) => cb({ kind: 'answerer', purpose: 'intercom', session, you: false }));
+    check('an intercom "no" with the same session leaves the call ringing', A.ended.length === 0 && A.t.__probe().pendingOffer === true);
+    // The caller ignores an answer that is not for its call (delivered straight to it, past the server).
+    P.link.subs.forEach((cb) => cb({ kind: 'answer', purpose: CALL_PURPOSE, session: 'call-ffffffffffffffff', sdp: 'NOT-MINE' }));
+    check('the caller ignores an answer for another call', P.last().remote == null);
+    P.link.subs.forEach((cb) => cb({ kind: 'answer', purpose: CALL_PURPOSE, session, sdp: 'MINE' }));
+    check('...and takes one for its own', P.last().remote?.sdp === 'MINE');
+    A.t.destroy(); P.d.destroy();
+  }
+
+  // =====================================================================================
   section('*** a signal is not a verb, and can never become one ***');
   {
     // The whole reason signals may travel both ways on a socket where verbs may not.
@@ -450,6 +766,63 @@ try {
     check('the transport only ever sends known kinds',
       link.sent.every((s) => SIGNAL_KINDS.includes(s.kind)));
     t.destroy();
+  }
+
+  // =====================================================================================
+  section('*** LIVE, through the real server: two screens ring, ONE answers ***');
+  try {
+    const USER = 'call-test-' + Math.floor(Math.random() * 1e9);
+    const person = (await createProfilesClient({ user: USER }).people())[0];
+    check('(setup) the account has a person', !!person);
+    const settled = async (fn, ms) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(40); } return !!fn(); };
+    const sA = connectDrive({ personId: person.id, role: 'screen', user: USER });
+    const sB = connectDrive({ personId: person.id, role: 'screen', user: USER });
+    const ph = connectDrive({ personId: person.id, role: 'driver', user: USER });
+    check('(setup) two screens and a phone connect to the real server',
+      await settled(() => sA.state() === 'connected' && sB.state() === 'connected' && ph.state() === 'connected'
+        && ph.presence().screens >= 2, 8000), JSON.stringify(ph.presence()));
+    const mk = (link) => {
+      const peers = fakePeer(); const rings = [], ended = [];
+      const t = createCallTransport({ link, role: 'screen', PeerConnection: peers.PC, Stream: FakeStream });
+      t.onIncoming((f) => rings.push(f)); t.onEnded((r) => ended.push(r));
+      return { t, peers, rings, ended };
+    };
+    const A = mk(sA), B = mk(sB);
+    const got = [];
+    ph.onSignal((s) => got.push(s));
+    const dp = fakePeer();
+    const d = createCallTransport({ link: ph, role: 'driver', PeerConnection: dp.PC, Stream: FakeStream });
+    await d.call({ tracks: [], from: { name: 'Tester' } });
+    const s1 = d.__probe().session;
+    check('*** LIVE: both screens ring ***', await settled(() => A.rings.length === 1 && B.rings.length === 1, 6000),
+      `${A.rings.length} ${B.rings.length}`);
+    // Both panels' countdowns end in the same instant: both answer at once.
+    const res = await Promise.all([A.t.answer({ outgoing: { kind: 'video' } }), B.t.answer({ outgoing: { kind: 'video' } })]);
+    await sleep(700);               // room for a wrong second answer to show up, if there were one
+    const W = res[0] ? A : B, L = W === A ? B : A;
+    const answers = got.filter((g) => g.kind === 'answer' && g.session === s1).length;
+    check('*** LIVE: exactly ONE screen answered; the other never built a connection ***',
+      res.filter(Boolean).length === 1 && W.t.isLive() && !L.t.isLive() && L.peers.made.length === 0,
+      JSON.stringify([res, L.peers.made.length]));
+    check('*** LIVE: the caller received exactly one answer ***', answers === 1, String(answers));
+    check('LIVE: the other screen stopped ringing, told why', L.ended.join() === 'elsewhere', JSON.stringify(L.ended));
+    d.hangup('done');
+    check('LIVE: the caller hanging up ends it on the answering screen', await settled(() => !W.t.isLive() && W.ended.includes('remote'), 6000));
+
+    // A decline on one screen stops the ring on the other.
+    await d.call({ tracks: [], from: { name: 'Tester' } });
+    const s2 = d.__probe().session;
+    check('(setup) a second call rings both', await settled(() => A.rings.length === 2 && B.rings.length === 2, 6000));
+    const t0 = performance.now();
+    A.t.hangup('declined');
+    check('*** LIVE: a decline on one screen stops the other ringing ***',
+      await settled(() => B.ended.at(-1) === 'elsewhere' && !B.t.__probe().pendingOffer, 3000), JSON.stringify(B.ended));
+    check(`LIVE: ...within 1 s (measured ${(performance.now() - t0).toFixed(0)} ms)`, performance.now() - t0 < 1000);
+    check('LIVE: the caller heard the decline', await settled(() => got.some((g) => g.kind === 'bye' && g.session === s2 && g.reason === 'declined'), 3000));
+    A.t.destroy(); B.t.destroy(); d.destroy();
+    sA.close(); sB.close(); ph.close();
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
   }
 
 } catch (e) {

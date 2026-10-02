@@ -227,6 +227,10 @@ registerModule(
     // — there should not be one, but the check is cheap — never computes a latency against a
     // stale ring from a previous call.
     let ringingAt = null;
+    // Which ring this is (bumped on every incoming), and whether answer() is waiting on the server's
+    // pick (see `answer`): a ring that ended or was replaced while asking must open nothing.
+    let ringSeq = 0;
+    let claiming = false;
     let outgoing = null;         // the cloned track we send; NOT the one the PiP shows
     // *** ON-SCREEN, NOT JUST console.error. *** Found answering an open question: "does a
     // failed connection fail silently, or with a message?" It failed silently -- `end()` always
@@ -588,6 +592,7 @@ registerModule(
       stopDemo();
       who = from || {};
       phase = 'ringing';
+      ringSeq += 1;
       ringingAt = now();
       render();
       // *** THE STATE MACHINE HEARS THIS, NOT THIS MODULE. *** Publishing the topic is what
@@ -612,7 +617,7 @@ registerModule(
     }
 
     async function answer() {
-      if (phase === 'idle') return;
+      if (phase === 'idle' || claiming) return;
       clearRing();
       // *** CAPTURED HERE, BEFORE THE CAMERA/MIC OPEN BELOW. *** What is being measured is
       // "how long from the ring to her pressing answer" — the camera and mic permission opens
@@ -622,6 +627,24 @@ registerModule(
       // live ring to measure from (the same guard `board.js`'s own latency uses).
       const latencyMs = ringingAt != null ? Math.max(0, now() - ringingAt) : null;
       ringingAt = null;
+      // *** ONE SCREEN ANSWERS (2026-10-02). *** Every screen of the person rings; the one that answers
+      // asks first (call_transport.js `claim`, which asks the server), BEFORE the camera or the
+      // microphone opens - and that includes the countdown answering by itself, which ends at the same
+      // moment on every screen that rang. Told no: nothing opens, nothing is recorded as answered, and
+      // the panel goes back to no call ("Handled on another screen."). A transport with no `claim` (an
+      // older one) answers as it always did.
+      bindTransport();
+      if (phase === 'ringing' && typeof transport?.claim === 'function') {
+        const ring = ringSeq;
+        claiming = true;
+        let won = true;
+        try { won = await transport.claim(); }
+        catch (err) { console.error('call: claim', err); won = true; }   // fails open, as the transport does
+        finally { claiming = false; }
+        // Ended while asking (declined, the caller gave up, another screen took it): open nothing.
+        if (phase !== 'ringing' || ringSeq !== ring) return;
+        if (won !== true) { end('elsewhere'); return; }
+      }
       try {
         events?.append?.(ANSWER_KIND, {
           at: now(), ...(latencyMs != null ? { latencyMs } : {}),
@@ -671,6 +694,10 @@ registerModule(
       // ever, "say so honestly" when a direct connection can't be made — applies exactly as much
       // to a connection that dies mid-call as to one that never starts.
       'connection-lost': 'The connection was lost.',
+      // ADDED 2026-10-02: the ring stopped because another screen of the same person answered it - or
+      // refused it first (the server does not say which, so the words cover both). Without this the
+      // ring just vanishes mid-countdown, which reads as a fault.
+      elsewhere: 'Handled on another screen.',
     };
 
     function end(reason = 'ended') {
@@ -716,8 +743,11 @@ registerModule(
       // stalled/dropped connection was indistinguishable from an ordinary hangup. `'remote'`
       // (a real `bye`) and `'destroyed'` (this end tearing itself down) stay silent, same as
       // before; `'stalled'`/`'failed'` now say so.
+      // `'elsewhere'` (2026-10-02): another screen of the person took the call or refused it first; the
+      // ring stops at once and says so (END_MESSAGES). The transport has already told the caller nothing.
       const b = transport.onEnded?.((reason) =>
-        end(reason === 'stalled' || reason === 'failed' ? 'connection-lost' : 'remote'));
+        end(reason === 'stalled' || reason === 'failed' ? 'connection-lost'
+          : reason === 'elsewhere' ? 'elsewhere' : 'remote'));
       for (const off of [a, b]) if (typeof off === 'function') transportOffs.push(off);
     }
     function unbindTransport() {

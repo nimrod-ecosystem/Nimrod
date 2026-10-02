@@ -849,7 +849,7 @@ def attest_event(pid: str, stream: str, event_id: int, body: AttestPost = Attest
 # and not WebRTC, and why the socket is opened with a ticket rather than a device key.
 _tickets = Tickets()
 _rooms = Rooms()
-_answerers = Answerers()        # one answering screen per intercom offer (drive.py, row 2.44)
+_answerers = Answerers()        # one answering screen per intercom or family-call offer (drive.py, row 2.44)
 
 
 def _person_owner(person_id: str) -> str | None:
@@ -1053,7 +1053,9 @@ async def drive_socket(ws: WebSocket, person_id: str, t: str = "", role: str = "
                 # trust who sent it (the intercom's approved list, row 2.44). drive.py stamp_signal.
                 sig = msg["signal"]
                 if role == "screen":
-                    # Only the chosen screen's signals reach the phone (drive.py Answerers).
+                    # Only the chosen screen's signals reach the phone (drive.py Answerers). `newly`: this
+                    # signal decided the offer (an unclaimed answer, or a refusal first), so the other
+                    # screens are told no - a family call still ringing on them stops.
                     relay, newly = _answerers.screen_signal(arb_key, sig, ws)
                     if newly:
                         await _tell([c for c in room.screens if c is not ws],
