@@ -14,6 +14,10 @@
 //     functions its own plain bar calls. There is one Next, one Hush, one menu -- however many things
 //     can press them.
 //
+// BY SWITCH (2026-10-02): the shell walks THIS bar when it carries the bar (transport_bar.js
+// `createBarScan`: a group, then a button in it). Its groups are read from what is drawn here -- `.tb-host`,
+// `.tb-mods`, `[data-call-controls]`, the rest by `data-act` -- so a button added here joins a group by itself.
+//
 // Not a panel: the dashboard mounts it into a dock, not a slot, so it has no chip of its own, is never
 // focused, and is never offered as a recovery fallback. It declares no settings yet: what goes IN the
 // bar and in what order is Design's home-dashboard spec, and it follows the plain bar's until that
