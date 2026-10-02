@@ -25,7 +25,8 @@
 // THE SIX KINDS, and what `select` does to each
 //
 //   toggle   flips it
-//   choice   cycles to the next option, AND WRAPS
+//   choice   cycles to the next option, AND WRAPS -- or, past a few options and for anybody who
+//            has not asked to step, OPENS THE CHOICE PICKER (2026-10-02, "HOW SOMEBODY CHOOSES")
 //   number   steps by `step`, AND WRAPS at max back to min
 //   color    cycles to the next colour in its palette, AND WRAPS (see below)
 //   text     opens a TEXT BOX (see below). NOT cycleable, and honest about it.
@@ -239,6 +240,10 @@ function defaultFor(field, values) {
 
 // Accepts `['a', 'b']` or `[{ value, label }]`, because a module author will write both and
 // being fussy about it buys nothing.
+// An option may also carry what the choice PICKER previews it with (choice_picker.js, 2026-10-02):
+// `swatch` (a colour or a list of them), `font` (a CSS family), `thumb` (a picture URL), and a `hint`
+// (a few words under its name). Carried through untouched; nothing here reads them.
+const OPTION_EXTRAS = ['hint', 'swatch', 'font', 'thumb'];
 function normalizeOptions(raw) {
   const out = [];
   const seen = new Set();
@@ -250,9 +255,67 @@ function normalizeOptions(raw) {
     // second copy jumps backwards and the list appears to stick. First one wins.
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ value, label: String((o && typeof o === 'object' && o.label) || value) });
+    const opt = { value, label: String((o && typeof o === 'object' && o.label) || value) };
+    if (o && typeof o === 'object') {
+      for (const k of OPTION_EXTRAS) if (o[k] !== undefined && o[k] !== null && o[k] !== '') opt[k] = o[k];
+    }
+    out.push(opt);
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------------------
+// HOW SOMEBODY CHOOSES — A PRESS STEPS, OR A LONG LIST OPENS (2026-10-02).
+//
+// Mike: *"Things like modules, pictures, themes where there are a lot of options shouldn't be set up
+// to have to click through them all as default. That could be an option for switch users, but would
+// be very frustrating for most people."*
+//
+// So a `choice` with MORE THAN `PICKER_OVER` options opens the choice picker (choice_picker.js) on a
+// press, instead of stepping to the next option; a short one still steps. And a person can say they
+// choose by stepping — "How you choose things: Step through (for a switch)" — and then every choice
+// steps, however long, exactly as before: for a single switch the walk IS the way to choose, and the
+// picker, though it scans by rows, is one more thing to learn.
+//
+// *** THE THRESHOLD, 5, ARGUED (a default, and an option: `pickerOver` on the menu, `picker` on a
+// field). *** Opening a picker and choosing costs 2 presses, always. Stepping to a given option costs,
+// on average, half a lap: (n - 1) / 2. Those are equal at n = 5 (4 presses worst, 2 on average, and
+// every step shows its value in the row's hint as it goes), and from 6 the walk costs more on average
+// than the list. Below that the cycle is the quicker control AND applies each value as it goes, which
+// is what a 3-way "Panel backgrounds" wants. The short choices in the product today — on/off, the three
+// complexity levels, burn-in, panel backgrounds, the five switch-hold times — all stay quick rows; the
+// themes (twelve), a sign's fonts and frames, the wallpapers and scenes become lists.
+//
+// A FIELD MAY SAY: `picker: true` (always a list, e.g. four layouts with pictures) or `picker: false`
+// (always a step, e.g. a long list of numbers a person nudges). The person's "step through" beats both.
+// Colours are not affected: their row already draws every swatch for a pointer, beside the step.
+// ---------------------------------------------------------------------------------------
+export const PICKER_OVER = 5;
+export const CHOOSE_MODE_KEY = 'chooseMode';
+export const CHOOSE_MODES = Object.freeze(['point', 'step']);
+export const DEFAULT_CHOOSE_MODE = 'point';
+/** The field for the person's own choice. `essential`: it changes how every long list behaves, so no
+ *  level may hide it. Two options, so it is itself a quick row (a switch flips it in one press). */
+export const CHOOSE_MODE_FIELD = Object.freeze({
+  key: CHOOSE_MODE_KEY, label: 'How you choose things', kind: 'choice', level: 'essential',
+  default: DEFAULT_CHOOSE_MODE,
+  options: Object.freeze([
+    Object.freeze({ value: 'point', label: 'Point and click: long lists open as a list' }),
+    Object.freeze({ value: 'step', label: 'Step through (for a switch): each press moves to the next' }),
+  ]),
+});
+/** A stored value (or a host's answer) as one of CHOOSE_MODES; anything else is the default. */
+export function chooseModeOf(v) {
+  return CHOOSE_MODES.includes(v) ? v : DEFAULT_CHOOSE_MODE;
+}
+/** Does a press on this field open the choice picker (true) or step it (false)? Pure. */
+export function opensPicker(field, { mode = DEFAULT_CHOOSE_MODE, over = PICKER_OVER } = {}) {
+  if (!field || field.kind !== 'choice' || field.readOnly || !field.cycleable) return false;
+  if (chooseModeOf(mode) === 'step') return false;
+  if (field.picker === true) return true;
+  if (field.picker === false) return false;
+  const n = Number(over);
+  return (field.options || []).length > (Number.isFinite(n) && n >= 0 ? n : PICKER_OVER);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -324,6 +387,10 @@ export function normalizeField(raw = {}) {
     // Design's `plate`. Read-time only, like `legacy`: nothing is rewritten in storage, and the
     // row shows (and steps from) the new value, so a saved choice never reads as dead.
     f.aliases = normalizeAliases(raw.aliases, options);
+    // List or step (see HOW SOMEBODY CHOOSES above): the field's own say, or null for the threshold.
+    f.picker = raw.picker === true ? true : (raw.picker === false ? false : null);
+    // What the picker previews an option with when the option does not say ('theme': its colours).
+    f.preview = typeof raw.preview === 'string' && raw.preview ? raw.preview : null;
     if (options.length >= 2) f.cycleable = true;
     // NOT AN ERROR, AND NOT HIDDEN. "No photo source connected" is a state a real screen sits
     // in, and the row saying so is the only place a caregiver learns it.
@@ -697,6 +764,13 @@ export function fieldItems(fields = [], {
         } else if (f.kind === 'color' && f.options && f.options.length) {
           next = normalizeHex(raw);
           if (!next) return false;
+        } else if (f.kind === 'choice' && f.cycleable) {
+          // A CHOICE SET OUTRIGHT, from the choice picker (2026-10-02). Only one of its own options -
+          // matched loosely, written canonically, as `fieldValue` reads - never a value it does not offer.
+          const opts = f.options || [];
+          const hit = opts.find((o) => o.value === raw) || opts.find((o) => String(o.value) === String(raw));
+          if (!hit) return false;
+          next = hit.value;
         } else if (f.kind === 'picture') {
           // A REFERENCE, or null for "No picture". Anything else (a URL, a File, bytes) is refused:
           // see PICTURE in the header for why a picture never goes into a settings row.
@@ -726,6 +800,13 @@ export function fieldItems(fields = [], {
       item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength };
     }
     if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
+    // What the choice picker needs, on every steppable choice row: the options (with their previews),
+    // what is chosen now, and its title. Whether a press OPENS it is the host's call at press time
+    // (`opensPicker`, with the person's mode) - so `run()` stays the step it always was, for every host
+    // and suite that presses a row by calling it.
+    if (f.kind === 'choice' && f.cycleable && !f.readOnly) {
+      item.choice = { options: f.options, value, title: f.label, key: f.key, preview: f.preview };
+    }
     // What the picker needs to open on this row: what is chosen now, where to choose from, whether
     // "No picture" is offered, and its title (the row's own label, so it says what it is for).
     if (f.opens) {

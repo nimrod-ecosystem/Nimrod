@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>choice picker — a long list opens, a short one steps — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{width:640px;margin:8px 0;border:1px dashed #999;position:relative;min-height:60px}
+</style>
+</head>
+<body>
+<h1>choice picker — Mike, 2026-10-02: "shouldn't be set up to have to click through them all as default"</h1>
+<p>A <code>choice</code> row with more than a few options (<code>PICKER_OVER</code>, 5) opens the choice
+picker (<code>choice_picker.js</code>) on a press, instead of stepping to the next option; a short one still
+steps; and a person whose "How you choose things" is "Step through (for a switch)" steps every choice, as
+before. Asserted pure (the rule), then the picker on its own (a fake switch scanning rows), then the settings
+menu opening it, and last every registered module's choice field, each still reachable both ways.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import { mountChoicePicker, openChoiceDialog, previewOf, CHOICE_PICKER_DEFAULTS } from '../choice_picker.js';
+import {
+  normalizeField, fieldItems, fieldsFor, stepValue, fieldValue, opensPicker, chooseModeOf,
+  PICKER_OVER, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, CHOOSE_MODES, DEFAULT_CHOOSE_MODE,
+} from '../settings_fields.js';
+import { mountSettings, levelFieldItems } from '../settings.js';
+import { THEMES, listThemes } from '../theme.js';
+import { listManifests } from '../module.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function stage() { const d = document.createElement('div'); d.className = 'stage'; document.getElementById('stages').append(d); return d; }
+const opts = (n, p = 'o') => Array.from({ length: n }, (_, i) => ({ value: `${p}${i}`, label: `Option ${i}` }));
+const choice = (n, extra = {}) => normalizeField({ key: 'pick', label: 'Pick', kind: 'choice', options: opts(n), ...extra });
+
+try {
+  // ======================================================================================
+  section('THE RULE — pure: which choices open a list, and who steps instead');
+  {
+    check('the threshold is 5 (argued in settings_fields.js: a list is 2 presses, a lap averages (n-1)/2)', PICKER_OVER === 5);
+    check('5 options: still a quick row that steps', opensPicker(choice(5)) === false);
+    check('*** 6 options: opens the picker, by default ***', opensPicker(choice(6)) === true);
+    check('2 options (on/off-like): steps', opensPicker(choice(2)) === false);
+    check('*** a person who STEPS: even 30 options step ***', opensPicker(choice(30), { mode: 'step' }) === false);
+    check('a field may say picker:true (a short list that wants pictures)', opensPicker(choice(3, { picker: true })) === true);
+    check('a field may say picker:false (a long list a person nudges)', opensPicker(choice(12, { picker: false })) === false);
+    check('*** the person’s "step through" beats a field’s picker:true ***', opensPicker(choice(3, { picker: true }), { mode: 'step' }) === false);
+    check('the threshold is an option (pickerOver)', opensPicker(choice(3), { over: 2 }) === true && opensPicker(choice(8), { over: 10 }) === false);
+    check('a garbage threshold is the default', opensPicker(choice(6), { over: 'lots' }) === true && opensPicker(choice(5), { over: -1 }) === false);
+    check('a read-only choice never opens anything', opensPicker(choice(12, { readOnly: true })) === false);
+    check('a one-option choice (not cycleable) never opens', opensPicker(choice(1)) === false);
+    check('colours are untouched (their row already draws every swatch)', opensPicker(normalizeField({ key: 'c', kind: 'color' })) === false);
+    check('toggles and numbers are untouched', opensPicker(normalizeField({ key: 't', default: true })) === false
+      && opensPicker(normalizeField({ key: 'n', kind: 'number', min: 0, max: 100, step: 1 })) === false);
+    check('chooseModeOf: point / step, anything else the default (point)', chooseModeOf('step') === 'step' && chooseModeOf('point') === 'point'
+      && chooseModeOf('scan') === 'point' && chooseModeOf(undefined) === 'point' && DEFAULT_CHOOSE_MODE === 'point' && J(CHOOSE_MODES) === J(['point', 'step']));
+    const cm = normalizeField(CHOOSE_MODE_FIELD);
+    check('*** "How you choose things" is a real field: essential, two options, default point, a one-press row ***',
+      cm && cm.key === CHOOSE_MODE_KEY && cm.level === 'essential' && cm.default === 'point' && cm.options.length === 2
+      && cm.cycleable && !opensPicker(cm), J(cm));
+    check('its words say what each does, without naming any person',
+      /point and click/i.test(cm.options[0].label) && /step through/i.test(cm.options[1].label) && /switch/i.test(cm.options[1].label));
+
+    const f = normalizeField({ key: 'k', kind: 'choice', options: [
+      { value: 'a', label: 'A', swatch: '#112233', hint: 'first', junk: 1 },
+      { value: 'b', label: 'B', font: 'Georgia, serif' }, { value: 'c', label: 'C', thumb: 'x.png' }] });
+    check('an option keeps its preview data (swatch, font, thumb, hint) and nothing else',
+      f.options[0].swatch === '#112233' && f.options[0].hint === 'first' && !('junk' in f.options[0])
+      && f.options[1].font === 'Georgia, serif' && f.options[2].thumb === 'x.png', J(f.options));
+  }
+
+  section('fieldItems — a choice row carries what the picker needs; run() is STILL the step');
+  {
+    let row = { pick: 'o2' };
+    const writes = [];
+    const items = () => fieldItems([choice(8)], { values: () => row, onStep: (k, v) => { writes.push([k, v]); row = { ...row, [k]: v }; } });
+    const it = items()[0];
+    check('the row has `choice`: its options, the value now, its title', it.choice && it.choice.options.length === 8
+      && it.choice.value === 'o2' && it.choice.title === 'Pick', J(it.choice));
+    it.run();
+    check('*** run() still steps (every host and suite that presses by run() is unchanged) ***', J(writes.at(-1)) === J(['pick', 'o3']));
+    check('*** commit(value) sets an option outright ***', items()[0].commit('o7') === true && row.pick === 'o7');
+    check('commit of the value already in force writes nothing', items()[0].commit('o7') === false && writes.length === 2);
+    check('commit of something that is not an option is refused', items()[0].commit('nope') === false && row.pick === 'o7');
+    const nums = normalizeField({ key: 'ms', kind: 'choice', options: [1000, 1500, 2000, 2500, 3000, 4000].map((v) => ({ value: v, label: `${v}` })) });
+    let r2 = {};
+    const n0 = fieldItems([nums], { values: () => r2, onStep: (k, v) => { r2 = { ...r2, [k]: v }; } })[0];
+    check('commit matches loosely and writes the DECLARED value (a "2000" from a page is the number 2000)',
+      n0.commit('2000') === true && r2.ms === 2000, J(r2));
+    const ro = fieldItems([choice(8, { readOnly: true })], { values: {}, onStep: () => {} })[0];
+    check('a read-only choice row carries no picker and refuses commit', !ro.choice && ro.commit('o1') === false);
+  }
+
+  section('previews — a theme shows its own colours; an option may bring a swatch, a font, a picture');
+  {
+    const t = previewOf({ value: 'dusk' }, { key: 'theme' });
+    check('*** a theme (by its key) previews as its own ground/surface/accent/text ***', t && t.kind === 'swatch'
+      && t.colors.length >= 3 && t.colors[0] === THEMES.dusk.vars['--bg'].toLowerCase(), J(t));
+    check('...also by `preview: theme` on any key', previewOf({ value: 'warm' }, { key: 'look', preview: 'theme' })?.kind === 'swatch');
+    check('a theme id under a key that is not a theme is not guessed at', previewOf({ value: 'dusk' }, { key: 'scene' }) === null);
+    check('`preview: none` turns the theme guess off', previewOf({ value: 'dusk' }, { key: 'theme', preview: 'none' }) === null);
+    check('an option swatch (a bad colour dropped)', J(previewOf({ value: 'x', swatch: ['#abc', 'red', '#123456'] })) === J({ kind: 'swatch', colors: ['#aabbcc', '#123456'] }));
+    check('an option font', previewOf({ value: 'x', font: 'Georgia' })?.kind === 'font');
+    check('an option thumb wins over everything', previewOf({ value: 'dusk', thumb: 'a.png' }, { key: 'theme' })?.kind === 'thumb');
+    check('"Follow …" (a level row’s first option) has no preview, and does not throw', previewOf({ value: '__follow__' }, { key: 'theme' }) === null);
+  }
+
+  // ======================================================================================
+  section('THE PICKER — every option at once, one click to choose, Cancel to leave it');
+  {
+    const el = stage();
+    const got = [];
+    let cancelled = 0;
+    const p = mountChoicePicker(el, { title: 'Colours', options: opts(12), value: 'o4', onPick: (v) => got.push(v), onCancel: () => { cancelled += 1; } });
+    const pr = p.__probe();
+    check('12 options are 12 tiles', pr.tiles === 12 && pr.options === 12, J(pr));
+    check(`in rows of ${CHOICE_PICKER_DEFAULTS.columns} (four rows), after the Keep row`, J(pr.rows) === J(['actions', 'grid', 'grid', 'grid', 'grid']), J(pr.rows));
+    check('the value in force is marked (aria-pressed)', el.querySelector('[data-chp-pick="o4"]')?.getAttribute('aria-pressed') === 'true'
+      && el.querySelectorAll('[aria-pressed="true"]').length === 1);
+    check('the first stop says what keeping it means: "Keep Option 4"', el.querySelector('[data-chp-act="cancel"]')?.textContent.trim() === 'Keep Option 4');
+    check('no search box at 12 (they fit; looking is faster)', !pr.search);
+    el.querySelector('[data-chp-pick="o9"]').click();
+    check('*** one click chooses ***', J(got) === J(['o9']));
+    el.querySelector('[data-chp-act="cancel"]').click();
+    check('*** Keep / Cancel leaves it, choosing nothing ***', cancelled === 1 && got.length === 1);
+    p.destroy();
+    check('destroy empties it', el.innerHTML === '');
+  }
+  {
+    const el = stage();
+    const got = [];
+    let cancelled = 0;
+    const p = mountChoicePicker(el, { options: opts(12), value: 'o0', onPick: (v) => got.push(v), onCancel: () => { cancelled += 1; } });
+    // THE SWITCH: rows, then into a row.
+    p.select();
+    check('*** a switch: the first select only lights the first row (a stray press changes nothing) ***',
+      p.__probe().litGroup === 'actions' && p.__probe().lit.i === -1 && !got.length && !cancelled);
+    p.next();
+    check('next lights the next ROW', p.__probe().litGroup === 'grid' && p.__probe().lit.g === 1);
+    p.next();
+    p.select();
+    check('select goes INTO the row, on its first option', p.__probe().lit.i === 0 && /Option 3/.test(p.__probe().litText), J(p.__probe()));
+    p.next(); p.next(); p.next();
+    check('next walks the row and WRAPS inside it', /Option 3/.test(p.__probe().litText), p.__probe().litText);
+    check('*** back comes out of the row (and says so: true) ***', p.back() === true && p.__probe().lit.i === -1 && !cancelled);
+    p.select(); p.next();
+    p.select();
+    check('*** select takes the lit option ***', J(got) === J(['o4']), J(got));
+    check('after a choice the light stays where it was (back comes out of the row first)', p.back() === true && !cancelled);
+    check('back from the rows is Cancel (and says so: false)', p.back() === false && cancelled === 1);
+    // Worst case, every option: rows + columns, never a lap of 12.
+    let worst = 0;
+    for (let target = 0; target < 12; target += 1) {
+      const e2 = stage();
+      let hit = null;
+      const q = mountChoicePicker(e2, { options: opts(12), onPick: (v) => { hit = v; } });
+      let presses = 0;
+      const row = 1 + Math.floor(target / 3), col = target % 3;
+      q.select(); presses += 1;
+      for (let i = 0; i < row; i += 1) { q.next(); presses += 1; }
+      q.select(); presses += 1;
+      for (let i = 0; i < col; i += 1) { q.next(); presses += 1; }
+      q.select(); presses += 1;
+      if (hit !== `o${target}`) worst = Infinity; else worst = Math.max(worst, presses);
+      q.destroy(); e2.remove();
+    }
+    check(`*** every one of 12 options is reachable by a switch, at most ${worst} presses (a lap would be 11) ***`, Number.isFinite(worst) && worst <= 9, worst);
+    p.prev();
+    check('prev from the rows goes up, wrapping', p.__probe().litGroup != null);
+    p.destroy();
+  }
+  {
+    const el = stage();
+    const got = [];
+    const long = opts(20).map((o, i) => ({ ...o, label: i === 7 ? 'Dusk (dark, calm)' : o.label, hint: i === 3 ? 'dark corners' : '' }));
+    const p = mountChoicePicker(el, { options: long, onPick: (v) => got.push(v) });
+    check('*** past 12 there is a search box (and it is not a stop) ***', p.__probe().search && !el.querySelector('[data-chp-search]').hasAttribute('data-chp-stop'));
+    const box = el.querySelector('[data-chp-search]');
+    box.value = 'dark'; box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('search matches the name AND the hint', J(p.__probe().shown) === J(['o3', 'o7']), J(p.__probe().shown));
+    box.value = 'zzz'; box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('no match says so', !!el.querySelector('[data-chp-none]') && p.__probe().tiles === 0);
+    box.value = ''; box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('clearing it brings every option back', p.__probe().tiles === 20);
+    p.destroy();
+  }
+  {
+    const el = stage();
+    let cancelled = 0, got = null;
+    const p = mountChoicePicker(el, { options: opts(8), keys: true, onPick: (v) => { got = v; }, onCancel: () => { cancelled += 1; } });
+    const tile = el.querySelector('[data-chp-pick="o1"]');
+    tile.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('*** Escape leaves (Cancel), and is stopped there (the menu around it stays open) ***', cancelled === 1 && got === null);
+    el.querySelector('[data-chp-pick="o0"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    check('with keys on, an arrow moves the light', p.__probe().lit.g === 0);
+    p.destroy();
+    const fonts = mountChoicePicker(stage(), { options: [{ value: 'a', label: 'Serif', font: 'Georgia, serif' }, { value: 'b', label: 'Plain' }] });
+    const aa = document.querySelector('[data-chp-pick="a"] [data-chp-font]');
+    check('a font option shows "Aa" in its own face (set from script, not a style attribute)', aa && /Georgia/.test(aa.style.fontFamily), aa?.style?.fontFamily);
+    fonts.destroy();
+    const themes = mountChoicePicker(stage(), { key: 'theme', options: listThemes().map((t) => ({ value: t.id, label: t.label })) });
+    check('*** the themes: every one a tile with its colours ***', themes.__probe().tiles === listThemes().length
+      && [...document.querySelectorAll('.stage [data-chp-pick]')].filter((t) => THEMES[t.dataset.chpPick]).every((t) => t.querySelectorAll('.chp-chip').length >= 2));
+    themes.destroy();
+  }
+  {
+    let got = null, cancelled = 0;
+    const d = openChoiceDialog({ title: 'Pick one', options: opts(7), onPick: (v) => { got = v; }, onCancel: () => { cancelled += 1; } });
+    check('the dialog form opens over the page', !!document.querySelector('.chp-dialog [data-choice-picker]'));
+    document.querySelector('.chp-dialog [data-chp-pick="o5"]').click();
+    check('a click in it chooses and closes it', got === 'o5' && !document.querySelector('.chp-dialog'));
+    openChoiceDialog({ options: opts(7), onCancel: () => { cancelled += 1; } });
+    document.querySelector('.chp-dialog [data-chp-pick="o2"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape cancels and closes it', cancelled === 1 && !document.querySelector('.chp-dialog'));
+    const d3 = openChoiceDialog({ options: opts(7), onCancel: () => { cancelled += 1; } });
+    d3.element.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+    check('a click outside it cancels and closes it', cancelled === 2 && !document.querySelector('.chp-dialog'));
+    void d;
+  }
+
+  // ======================================================================================
+  section('THE MENU — a long choice opens the picker where the menu’s pages go; a short one steps');
+  const BIG = { key: 'big', label: 'Big', kind: 'choice', options: opts(8, 'b') };
+  const SMALL = { key: 'small', label: 'Small', kind: 'choice', options: opts(3, 's') };
+  function menuWith({ mode, over, fields = [BIG, SMALL], person = null } = {}) {
+    let row = { big: 'b0', small: 's0' };
+    const writes = [];
+    const host = stage();
+    const m = mountSettings(host, {
+      gated: false, inline: true,
+      subject: () => ({ type: 'x', title: 'X' }),
+      ...(mode !== undefined ? { chooseMode: mode } : {}),
+      ...(over !== undefined ? { pickerOver: over } : {}),
+      fields: () => fieldItems(fields.map(normalizeField).filter(Boolean), {
+        values: () => row, onStep: (k, v) => { writes.push([k, v]); row = { ...row, [k]: v }; },
+      }),
+      ...(person ? { whoItems: person } : {}),
+    });
+    m.open();
+    return { m, host, writes, row: () => row };
+  }
+  {
+    const { m, host, writes, row } = menuWith();
+    check('*** no mode given: point and click (nobody steps unless they asked) ***', m.chooseMode() === 'point');
+    check('the long row will open a list, the short one will not', m.opensList('set:big') === true && m.opensList('set:small') === false);
+    const bigBtn = host.querySelector('[data-id="set:big"]');
+    check('*** the long row says so before it is pressed: "…" and aria-haspopup ***', bigBtn.classList.contains('st-opens')
+      && bigBtn.getAttribute('aria-haspopup') === 'dialog' && !host.querySelector('[data-id="set:small"]').classList.contains('st-opens'));
+    m.focusRow('set:big'); m.select();
+    check('*** select on the long row OPENS the picker (no write) ***', m.page() === '__choice' && m.pickerProbe()?.tiles === 8 && !writes.length, J(m.pickerProbe()));
+    // Scan to the third option: light Keep, next to the first grid row, into it, two on, take it.
+    m.select(); m.next(); m.select(); m.next(); m.next(); m.select();
+    check('*** a switch scans it and takes one: written through the row’s own write path ***', J(writes) === J([['big', 'b2']]) && row().big === 'b2', J(writes));
+    check('the list comes back, on that row, showing it', m.page() === null && m.focusId() === 'set:big'
+      && m.items().find((i) => i.id === 'set:big')?.hint === 'Option 2');
+    m.select(); m.back();
+    check('*** back (from the rows) leaves the picker, writes nothing, and the menu stays open ***', m.page() === null && m.isOpen() && writes.length === 1 && m.focusId() === 'set:big');
+    m.select();
+    host.querySelector('[data-chp-pick="b6"]').click();
+    check('a click on a tile chooses', row().big === 'b6' && m.page() === null);
+    m.select();
+    host.querySelector('[data-chp-act="cancel"]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('*** Escape in the picker leaves the picker, NOT the whole menu ***', m.page() === null && m.isOpen() && row().big === 'b6');
+    m.focusRow('set:small'); m.select();
+    check('*** select on a short row steps it, as always ***', m.page() === null && row().small === 's1');
+    m.setChooseMode('step');
+    m.focusRow('set:big'); m.select();
+    check('*** in "step" the long row steps too (no list) ***', m.page() === null && row().big === 'b7' && m.chooseMode() === 'step');
+    check('...and no row is marked as opening a list', !host.querySelector('.st-opens'));
+    m.setChooseMode(null);
+    check('setChooseMode(null) hands the mode back to the host', m.chooseMode() === 'point');
+    m.destroy();
+  }
+  {
+    // THE PERSON'S SETTING, end to end: the "How you choose things" row writes the person's row, and the
+    // menu reads its mode from that row at every press.
+    let personRow = {};
+    const host = stage();
+    let row = { big: 'b0' };
+    const m = mountSettings(host, {
+      gated: false, inline: true, subject: () => ({ type: 'x', title: 'X' }),
+      chooseMode: () => personRow[CHOOSE_MODE_KEY],
+      whoItems: () => fieldItems([normalizeField(CHOOSE_MODE_FIELD)], { values: () => personRow, level: 'essential',
+        onStep: (k, v) => { personRow = { ...personRow, [k]: v }; } }),
+      fields: () => fieldItems([normalizeField(BIG)], { values: () => row, onStep: (k, v) => { row = { ...row, [k]: v }; } }),
+    });
+    m.open();
+    const cmRow = () => m.items().find((i) => i.id === `set:${CHOOSE_MODE_KEY}`);
+    check('the person’s row shows in the menu, saying Point and click', /point and click/i.test(cmRow()?.hint || ''), cmRow()?.hint);
+    m.focusRow('set:big'); m.select();
+    check('with nothing chosen: the long row opens a list', m.page() === '__choice');
+    m.back();
+    m.focusRow(`set:${CHOOSE_MODE_KEY}`); m.select();
+    check('*** one press on "How you choose things" sets Step through, on the person’s row ***', personRow[CHOOSE_MODE_KEY] === 'step' && m.page() === null);
+    m.focusRow('set:big'); m.select();
+    check('*** ...and the very next press on the long row steps (no reload, no remount) ***', m.page() === null && row.big === 'b1');
+    m.focusRow(`set:${CHOOSE_MODE_KEY}`); m.select();
+    m.focusRow('set:big'); m.select();
+    check('and back to Point and click: it opens again', personRow[CHOOSE_MODE_KEY] === 'point' && m.page() === '__choice');
+    m.destroy();
+  }
+  {
+    const { m, writes } = menuWith({ over: 2 });
+    m.focusRow('set:small'); m.select();
+    check('pickerOver is the menu’s option: at 2, a 3-way row opens a list', m.page() === '__choice' && !writes.length);
+    m.destroy();
+    const fixed = menuWith({ fields: [{ ...BIG, picker: false }] });
+    fixed.m.focusRow('set:big'); fixed.m.select();
+    check('a field that says picker:false steps however long it is', fixed.m.page() === null && fixed.row().big === 'b1');
+    fixed.m.destroy();
+  }
+  {
+    // A LEVEL ROW (settings.js levelFieldItems): "Follow …" first, then the real choices.
+    let layers = { screen: {}, device: { theme: 'warm' } };
+    const writes = [];
+    const host = stage();
+    const themeField = { key: 'theme', label: 'Colours', kind: 'choice', options: listThemes().map((t) => ({ value: t.id, label: t.label })) };
+    const m = mountSettings(host, {
+      gated: false, inline: true, subject: () => ({ type: 'x', title: 'X' }),
+      fields: () => levelFieldItems([themeField], { level: 'screen', order: ['screen', 'device'], layers: () => layers,
+        idPrefix: 'lv:', write: (k, v) => { writes.push([k, v]); layers = { ...layers, screen: { ...layers.screen, [k]: v } }; } }),
+    });
+    m.open();
+    m.focusRow('lv:theme'); m.select();
+    const pr = m.pickerProbe();
+    check('*** the Colours row at a level opens a list: Follow plus every theme ***', m.page() === '__choice' && pr.tiles === listThemes().length + 1, J(pr));
+    check('"Follow this device" is a tile, and is the one in force', /Follow this device/.test(host.querySelector('[data-chp-pick="__follow__"]')?.textContent || '')
+      && host.querySelector('[data-chp-pick="__follow__"]')?.getAttribute('aria-pressed') === 'true');
+    host.querySelector('[data-chp-pick="dusk"]').click();
+    check('choosing a theme writes it at this level', J(writes) === J([['theme', 'dusk']]));
+    m.select();
+    host.querySelector('[data-chp-pick="__follow__"]').click();
+    check('*** choosing "Follow" writes null (never a value), as the step did ***', J(writes.at(-1)) === J(['theme', null]), J(writes));
+    m.destroy();
+  }
+  {
+    // A TABBED menu: choosing in the picker keeps you on the tab you were on.
+    let row = { big: 'b0' };
+    const m = mountSettings(stage(), {
+      gated: false, inline: true, subject: () => ({ type: 'x', title: 'X' }),
+      tabs: [{ id: 'module', label: 'Panel' }, { id: 'display', label: 'Display' }],
+      fields: () => fieldItems([normalizeField(BIG)], { values: () => row, onStep: (k, v) => { row = { ...row, [k]: v }; } })
+        .map((it) => ({ ...it, tab: 'display' })),
+      screenItems: () => [{ kind: 'item', id: 'x', label: 'X', tab: 'module' }],
+    });
+    m.open({ tab: 'display', focus: 'set:big' });
+    m.select();
+    document.querySelector('.stage:last-child [data-chp-pick="b5"]').click();
+    check('in a tabbed menu the choice lands and the tab and row stay', row.big === 'b5' && m.tab() === 'display' && m.focusId() === 'set:big');
+    m.destroy();
+  }
+  {
+    // A PAGE WITH MOVES OF ITS OWN (the Settings module's themes): the menu routes the switch to it.
+    const host = stage();
+    let picked = null;
+    let m = null;
+    m = mountSettings(host, {
+      gated: false, inline: true, subject: () => ({ type: 'x', title: 'X' }),
+      extras: () => [{ kind: 'item', id: 'pg', label: 'Page', page: 'pg' }],
+      pages: { pg: { title: 'A list', render(el) {
+        const p = mountChoicePicker(el, { options: opts(6), cancelLabel: 'Back', onPick: (v) => { picked = v; }, onCancel: () => m.closePage() });
+        return p;
+      } } },
+    });
+    m.open(); m.focusRow('pg'); m.select();
+    check('the page is open', m.page() === 'pg');
+    m.select(); m.next(); m.select(); m.select();
+    check('*** a page that hands back moves is driven by them (a switch reaches its list) ***', picked === 'o0' && m.page() === 'pg');
+    m.select();
+    m.back();
+    check('back out of a row stays on the page', m.page() === 'pg');
+    m.back();
+    check('*** back from its rows closes the PAGE, never the whole menu ***', m.page() === null && m.isOpen());
+    m.destroy();
+  }
+
+  // ======================================================================================
+  section('EVERY EXISTING CHOICE — each registered module’s, and the screen’s themes — still reachable both ways');
+  {
+    // Every module the build has (the same list `imports` walks), so a choice added tomorrow is checked too.
+    let files = [];
+    try { const r = await fetch('/api/dev/client-modules'); if (r.ok) files = await r.json(); } catch { files = []; }
+    const mods = (Array.isArray(files) ? files : []).map((f) => String(f).replace(/\\/g, '/')).filter((f) => /^modules\/[^/]+\.js$/.test(f));
+    for (const f of mods) { try { await import(`../${f}`); } catch { /* imports suite owns parse failures */ } }
+    check('the module list was read (needs the server)', mods.length > 10, mods.length);
+    const choices = [];
+    for (const man of listManifests()) {
+      let fs = [];
+      try { fs = fieldsFor(man, null); } catch { fs = []; }
+      for (const fld of fs) if (fld.kind === 'choice' && fld.cycleable && !fld.readOnly) choices.push({ type: man.type, f: fld });
+    }
+    // The screen's own Colours row (kiosk SCREEN_FIELDS / LEVEL_LOOK_FIELDS), which is no manifest's.
+    choices.push({ type: '(screen)', f: normalizeField({ key: 'theme', label: 'Colours', kind: 'choice', options: listThemes().map((t) => ({ value: t.id, label: t.label })) }) });
+    const bad = [];
+    const lists = [];
+    for (const { type, f } of choices) {
+      // STEP: a lap from the first option visits every option, and comes back.
+      const seen = new Set();
+      let v = f.options[0].value;
+      for (let i = 0; i < f.options.length; i += 1) { seen.add(String(v)); v = stepValue(f, v, 1); }
+      if (seen.size !== f.options.length || String(v) !== String(f.options[0].value)) bad.push(`${type}.${f.key}: step lap`);
+      if (opensPicker(f, { mode: 'step' })) bad.push(`${type}.${f.key}: opens in step mode`);
+      // POINT: past the threshold it opens, and the picker has every option as a tile a switch can reach.
+      if (opensPicker(f)) {
+        lists.push(`${type}.${f.key} (${f.options.length})`);
+        // (At "Everything", so an advanced field still has its row; a field hidden by `appliesWhen` still has its list.)
+        const it = fieldItems([f], { values: {}, level: 'advanced', onStep: () => {} })[0];
+        const el = stage();
+        const p = mountChoicePicker(el, it ? { ...it.choice } : { options: f.options, key: f.key, preview: f.preview });
+        const vals = [...el.querySelectorAll('[data-chp-pick]')].map((t) => t.dataset.chpPick);
+        if (vals.length !== f.options.length || !f.options.every((o) => vals.includes(String(o.value)))) bad.push(`${type}.${f.key}: picker tiles`);
+        p.destroy(); el.remove();
+      } else if (f.options.length > PICKER_OVER && f.picker !== false) bad.push(`${type}.${f.key}: long but steps`);
+    }
+    check(`*** every choice (${choices.length}) steps a full lap in "step", and every long one is a complete list in "point" ***`, !bad.length, bad.join('; '));
+    check('the screen’s Colours (themes) is one of the lists', lists.some((l) => l.startsWith('(screen).theme')), lists.join(', '));
+    note(`opens a list by default: ${lists.join(', ') || '(none)'}`);
+  }
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+
+await sleep(0);
+const s = document.getElementById('summary');
+s.textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

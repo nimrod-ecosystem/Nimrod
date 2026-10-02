@@ -47,7 +47,8 @@
 
 import { registerModule, getManifest } from '../module.js';
 import { mountSettings } from '../settings.js';
-import { fieldsFor, fieldItems } from '../settings_fields.js';
+import { fieldsFor, fieldItems, opensPicker, chooseModeOf, DEFAULT_CHOOSE_MODE } from '../settings_fields.js';
+import { mountChoicePicker, openChoiceDialog } from '../choice_picker.js';
 import { createProfilesClient, resolveTheme } from '../profile.js';
 import { createState } from '../state.js';
 import { applyTheme, listThemes, resolveThemeId } from '../theme.js';
@@ -79,16 +80,26 @@ function esc(s) {
 // One field row, drawn exactly like `settings.js`'s own list rows (`.st-item`/`.st-label`/
 // `.st-hint`) so a page opened from this module reads as part of the same menu, not a
 // second, differently-styled one bolted on.
-function renderFieldRows(el, items) {
+//
+// A LONG CHOICE OPENS A LIST HERE TOO (2026-10-02; settings_fields.js "HOW SOMEBODY CHOOSES"): the same
+// `opensPicker` rule the menu uses, with the mode in force, and the same picker - as a dialog, because
+// these rows are drawn by this page rather than by the menu. `mode` is read at the click.
+function renderFieldRows(el, items, mode = () => DEFAULT_CHOOSE_MODE) {
+  const opens = (it) => !!(it && it.choice && it.field && !it.disabled && opensPicker(it.field, { mode: mode() }));
   el.innerHTML = items.length
     ? items.map((it, n) => `
-        <button class="st-item${it.disabled ? '' : ''}" type="button" data-n="${n}" ${it.disabled ? 'disabled' : ''}>
+        <button class="st-item${opens(it) || it.picture ? ' st-opens' : ''}" type="button" data-n="${n}" ${it.disabled ? 'disabled' : ''}
+          ${opens(it) || it.picture ? 'aria-haspopup="dialog"' : ''}>
           <span class="st-label">${esc(it.label)}</span>
           ${it.hint ? `<span class="st-hint">${esc(it.hint)}</span>` : ''}
         </button>`).join('')
     : '<p>Nothing to set here.</p>';
   el.querySelectorAll('[data-n]').forEach((btn) => {
-    btn.addEventListener('click', () => { items[Number(btn.dataset.n)]?.run?.(); });
+    btn.addEventListener('click', () => {
+      const it = items[Number(btn.dataset.n)];
+      if (opens(it)) { openChoiceDialog({ ...it.choice, onPick: (v) => { it.commit?.(v); } }); return; }
+      it?.run?.();
+    });
   });
 }
 
@@ -103,6 +114,12 @@ registerModule(
     let moduleRows = [];       // [{id, type, title}], filled in once, read by `extras()`
     let profiles = null;
     const offs = [];           // bus subscriptions (SETTINGS_OPEN_TOPIC)
+    // HOW THE PERSON CHOOSES (2026-10-02): the host's answer (`ctx.chooseMode`, a value or a function -
+    // the kiosk reads it off the person's row), else 'point'. Read at every press, never cached.
+    const modeNow = () => {
+      try { return chooseModeOf(typeof ctx.chooseMode === 'function' ? ctx.chooseMode() : ctx.chooseMode); }
+      catch { return DEFAULT_CHOOSE_MODE; }
+    };
 
     // MODULE SCOPE — one page per sibling instance, each a live read/write against that
     // instance's own saved state (never a copy of it).
@@ -126,7 +143,7 @@ registerModule(
               values: () => values,
               onStep: (key, value) => { values = { ...values, [key]: value }; st.set({ [key]: value }); draw(); },
             });
-            renderFieldRows(el, items);
+            renderFieldRows(el, items, modeNow);
           }
           el.innerHTML = '<p>Loading…</p>';
           if (loaded) { draw(); return; }
@@ -138,30 +155,50 @@ registerModule(
 
     // THEME SCOPE — the profile's real, saved theme (the same one `resolveTheme`/`applyTheme`
     // already carry to every kiosk and pre-sign-in page this session built), not a second copy.
+    // *** EVERY THEME AT ONCE, WITH ITS COLOURS (2026-10-02). *** This page was a <select>: one more list
+    // of names to read and no idea what "Forge" looks like until it was chosen. It is the choice picker
+    // now (choice_picker.js), each theme a tile showing its own ground, surface, accent and text, one click
+    // to choose, and a switch scans it by rows (the page hands its moves to the menu - settings.js
+    // openPage). Choosing applies at once and the list stays, so somebody can try a few; "Back" leaves.
     pages['sc-theme'] = {
       title: 'Theme',
       render(el) {
         el.innerHTML = `<p class="st-hint" style="display:block;margin:0 0 10px">Applies to every
-          screen on this account.</p>
-          <select data-theme-select style="width:100%;padding:10px;border-radius:10px;
-            border:1px solid var(--border);background:var(--surface);color:var(--text)"></select>`;
-        const sel = el.querySelector('[data-theme-select]');
-        for (const { id, label } of listThemes()) {
-          const opt = document.createElement('option');
-          opt.value = id; opt.textContent = label;
-          sel.append(opt);
-        }
-        resolveTheme(profiles, ctx.user).then((theme) => {
-          if (!el.isConnected) return;
-          sel.value = resolveThemeId(theme);
-        }).catch(() => {});
-        sel.addEventListener('change', async () => {
-          const id = resolveThemeId(sel.value);
+          screen on this account.</p><div data-theme-picker></div>`;
+        const box = el.querySelector('[data-theme-picker]');
+        let pick = null;
+        let current;
+        const save = async (id) => {
           applyTheme(document.documentElement, id);
           const settingsState = createState({ url: profiles.stateURL(ctx.profileId, PROFILE_SETTINGS_KEY), user: ctx.user });
           await settingsState.load().catch(() => {});
           settingsState.set({ theme: id });
-        });
+        };
+        const draw = () => {
+          if (!box.isConnected && pick) return;
+          try { pick?.destroy(); } catch { /* already gone */ }
+          pick = mountChoicePicker(box, {
+            title: null, key: 'theme', preview: 'theme', value: current,
+            options: listThemes().map(({ id, label }) => ({ value: id, label })),
+            cancelLabel: 'Back',
+            onPick: (v) => { current = resolveThemeId(v); draw(); save(current).catch(() => {}); },
+            onCancel: () => { try { menu?.closePage?.(); } catch { /* gone */ } },
+          });
+        };
+        draw();
+        resolveTheme(profiles, ctx.user).then((theme) => {
+          if (!el.isConnected) return;
+          current = resolveThemeId(theme);
+          draw();
+        }).catch(() => {});
+        // The page's moves, for the menu to route a switch to (settings.js openPage).
+        return {
+          next: () => pick?.next(),
+          prev: () => pick?.prev(),
+          select: () => pick?.select(),
+          back: () => (pick ? pick.back() : false),
+          destroy: () => { try { pick?.destroy(); } catch { /* gone */ } pick = null; },
+        };
       },
     };
 
@@ -252,6 +289,7 @@ registerModule(
         menu = mountSettings(mount.querySelector('[data-settings-root]'), {
           inline: true,
           includeHome: false,
+          chooseMode: modeNow,
           person: () => null,
           subject: () => ({ type: 'settings', title: 'Settings' }),
           extras: () => [
@@ -309,7 +347,11 @@ registerModule(
           menu.refresh();
           if (wanted && !menu.page?.()) showPage(wanted);
         } catch (err) {
-          console.error('settings: could not list this profile’s modules', err);
+          // A profile the server has never stored (a Home being TRIED, before Save - the landing's
+          // examples) has no siblings to list: that is an ordinary state, not a fault, so it is not
+          // logged as one. Anything else still is.
+          if (err && err.status === 404) console.info('settings: no saved profile here yet, so no other panels to list');
+          else console.error('settings: could not list this profile’s modules', err);
         }
       },
       onResize() {},
