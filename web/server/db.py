@@ -735,9 +735,17 @@ class _Store:
                             "when you make a screen"),
         "profile_modules": ("Which modules are on each screen, and in what order.", False,
                             "when you add a module to a screen"),
+        # The weather town (MIKE_LIST_20260930, Weather item 6): the Weather panel keeps the
+        # place in its own settings, here, so this row is where it is declared. Said in full
+        # because a town IS a location, and NEVER_STORED below used to say "your location" flat.
         "state":           ("Settings for those modules - a photo interval, a theme, a "
                             "layout. Small, and yours. Also the name you sign notes with, "
-                            "if you choose one.", False,
+                            "if you choose one. And if you set a place for Weather: the town "
+                            "you typed, the match you picked with its position rounded to "
+                            "about 11 km, and the last forecast, so the panel knows where to "
+                            "look and still has something to show without a connection. "
+                            "That place is also sent to Open-Meteo, a free weather service, "
+                            "to fetch the forecast.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
                             "when, a game result. It GROWS over time. Sensor readings, if you "
@@ -783,7 +791,8 @@ class _Store:
     NEVER_STORED = [
         "your photos, videos or recordings - they stay on your machine",
         "camera feeds - they never leave the device",
-        "your location",
+        "your location - the device is never asked where it is (a town you type for "
+        "Weather is a setting, listed above)",
         "browsing history",
         "advertising identifiers",
         "anything a module shows you that you did not save",

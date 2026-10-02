@@ -240,6 +240,25 @@ def main() -> None:
     check("with text that points at the source rather than pretending to explain",
           "source" in by2["secret_new_thing"]["what"], by2["secret_new_thing"]["what"])
 
+    # *** THE WEATHER TOWN (MIKE_LIST_20260930, Weather item 6). *** The Weather panel saves the
+    # place somebody typed, the match they picked with its position rounded to about 11 km, and
+    # the last forecast, all in that panel's settings (the `state` table). The page said none of
+    # that, and its "never stored" list said "your location" flat out. A town is a location, so
+    # the row has to say what is kept, where, and why, and the never-list must not contradict it.
+    state_what = by["state"]["what"]
+    check("*** the settings row names the weather town: what is kept ***",
+          "Weather" in state_what and "town" in state_what, state_what)
+    check("...that the position is rounded to about 11 km",
+          "11 km" in state_what, state_what)
+    check("...why it is kept (so the panel knows where to look)",
+          "where to look" in state_what, state_what)
+    check("...and that the place also goes to Open-Meteo, so nobody thinks it stays here",
+          "Open-Meteo" in state_what, state_what)
+    check("the never-stored list no longer says 'your location' with nothing after it",
+          "your location" not in d["never"], str(d["never"]))
+    check("...but still says the device is never asked where it is",
+          any("location" in n and "never asked" in n for n in d["never"]), str(d["never"]))
+
     # ------------------------------------------------------------------ the return trip
     # THE OPEN-REDIRECT CHECK behind `/auth/login?next=`. It exists because scanning a QR
     # code on a bedside screen sends somebody here mid-task: they arrive at /pair.html

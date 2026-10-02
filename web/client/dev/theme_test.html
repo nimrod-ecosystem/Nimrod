@@ -31,7 +31,9 @@ persistence of a theme setting through the live server's overwrite-state store
 <script type="module">
 import { applyTheme, resolveThemeId, listThemes, THEMES, DEFAULT_THEME,
          onColor, contrast, ACCENT_VARS, getStoredTheme, setStoredTheme,
-         mountThemePicker } from '../theme.js';
+         mountThemePicker, luminance, focusColor, worstContrast, FOCUS_MIN,
+         TEXT_MIN } from '../theme.js';
+import { ANSWER_MARKS, answerMarkHtml } from '../answer_mark.js';
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
 
@@ -397,6 +399,149 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       worstBorder >= 3, `worst = ${worstBorder.toFixed(2)} (${worstBorderWhere})`);
     check('*** every NEW theme’s text stays readable on its own right/wrong (ok/bad) washes ***',
       worstWash >= 4.5, `worst = ${worstWash.toFixed(2)} (${worstWashWhere})`);
+  }
+
+  // ── *** FOCUS RINGS AND MUTED TEXT: WCAG AA IN EVERY THEME, DEUTERANOPIA INCLUDED *** ──────
+  //
+  // MIKE_LIST_20260930 ("colour-blindness check of the five themes"): the default theme's focus
+  // ring (--accent on --bg) measured 2.83:1, Warm's dropped under 3:1 once deuteranopia was
+  // simulated, and Warm/Forge muted text measured 4.3-4.4. AA asks 3:1 of a focus indicator and
+  // 4.5:1 of text. Each is measured against the WORST of --bg, --surface and --surface-alt, with
+  // normal vision AND simulated deuteranopia, for EVERY theme in THEMES - so a theme written
+  // tomorrow is held to the same floor without anybody adding it to a list.
+  try {
+    // The simulation itself, pinned so a broken matrix cannot pass everything quietly.
+    check('deuteranopia simulation leaves white white (rows sum to 1)',
+      Math.abs(luminance('#ffffff', { deutan: true }) - 1) < 1e-3, String(luminance('#ffffff', { deutan: true })));
+    check('...and moves pure red (red and green collapse together)',
+      Math.abs(luminance('#ff0000', { deutan: true }) - luminance('#ff0000')) > 0.05,
+      `${luminance('#ff0000').toFixed(3)} -> ${luminance('#ff0000', { deutan: true }).toFixed(3)}`);
+
+    const scratchF = document.createElement('div');
+    const before = [];
+    for (const id of Object.keys(THEMES)) {
+      const v = THEMES[id].vars;
+      applyTheme(scratchF, id);
+      const ring = scratchF.style.getPropertyValue('--focus').trim();
+      const r = worstContrast(ring, v);
+      before.push(`${id} ${worstContrast(v['--accent'], v).toFixed(2)}->${r.toFixed(2)}`);
+      check(`${id}: the focus ring ${ring} clears ${FOCUS_MIN}:1 on every surface, deuteranopia included (${r.toFixed(2)}:1)`,
+        !!ring && r >= FOCUS_MIN, `--accent alone was ${worstContrast(v['--accent'], v).toFixed(2)}`);
+      const m = worstContrast(v['--text-muted'], v);
+      check(`${id}: muted text clears ${TEXT_MIN}:1 on every surface, deuteranopia included (${m.toFixed(2)}:1)`,
+        m >= TEXT_MIN, v['--text-muted']);
+    }
+    console.log('focus ring, accent -> ring (worst incl. deuteranopia):', before.join(' | '));
+
+    // The derivation, as a contract.
+    const dv = THEMES.dusk.vars;
+    check('a theme whose accent already clears it keeps its accent as the ring, unchanged',
+      focusColor(dv) === dv['--accent'], focusColor(dv));
+    const base = THEMES.default.vars;
+    check('a theme can name its own ring (--focus), and gets it when it passes',
+      focusColor({ ...base, '--focus': '#0A3323' }) === '#0A3323');
+    check('...and a named ring that fails is lifted rather than trusted',
+      worstContrast(focusColor({ ...base, '--focus': '#ffffff' }), base) >= FOCUS_MIN,
+      focusColor({ ...base, '--focus': '#ffffff' }));
+    check('a ring that is not a hex colour is passed through untouched, not mangled',
+      focusColor({ ...base, '--focus': 'Highlight' }) === 'Highlight');
+
+    // Drawn, not just declared: the kiosk's "which panel the next press acts on" ring, measured
+    // off the element in every theme.
+    const toHex = (c) => '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3)
+      .map((n) => Math.round(Number(n)).toString(16).padStart(2, '0')).join('');
+    for (const id of Object.keys(THEMES)) {
+      const box = document.createElement('div');
+      document.body.append(box);
+      applyTheme(box, id);
+      box.innerHTML = '<div class="k-stage k-grid"><div class="k-cell" data-focused><div class="k-mod">x</div></div></div>';
+      const ring = toHex(getComputedStyle(box.querySelector('.k-mod')).outlineColor);
+      const r = worstContrast(ring, THEMES[id].vars);
+      check(`${id}: the focused-panel ring, as drawn, is ${ring} at ${r.toFixed(2)}:1`, r >= FOCUS_MIN,
+        getComputedStyle(box.querySelector('.k-mod')).outlineColor);
+      box.remove();
+    }
+
+    // Every focus rule that used the accent now goes through --focus. Read from the sheets
+    // themselves, because a :focus-visible state cannot be produced in a hidden document.
+    const FOCUS_SHEETS = ['../kiosk.css', '../settings.css', '../color_picker.css', '../picture_picker.css',
+      '../starting_defaults.css', '../choice_card.css', '../learn/learn.css', '../home.html'];
+    for (const path of FOCUS_SHEETS) {
+      const text = await (await fetch(path, { cache: 'no-store' })).text();
+      const blocks = text.match(/[^{}]*:focus[^{}]*\{[^}]*\}/g) || [];
+      const bad = blocks.filter((b) => /outline[^;}]*var\(--accent/.test(b) && !/outline[^;}]*var\(--focus/.test(b));
+      check(`${path}: every :focus outline drawn in the accent goes through --focus (${blocks.length} focus rules)`,
+        bad.length === 0, bad.map((b) => b.trim().slice(0, 90)).join(' || '));
+    }
+  } catch (e) {
+    check('focus ring / muted text checks ran', false, String(e && e.stack || e));
+  }
+
+  // ── *** RIGHT AND WRONG ANSWERS: A SHAPE AND A WORD, NOT COLOUR ALONE *** ──────────────────
+  //
+  // Same MIKE_LIST row: under simulated deuteranopia the right/wrong washes cannot be told apart
+  // in any theme, and lessons marked a wrong answer by colour alone. answer_mark.js puts a ✓ or ✗
+  // beside the colour, with a word for a screen reader. Here: the mark itself, and that the text
+  // on every answered option stays readable in every theme (it was #eef6f0, hardcoded, under
+  // dusk's near-white text on trivia's right answer, and lessons' answered options sat at 45%
+  // opacity).
+  try {
+    check('right and wrong have DIFFERENT shapes', ANSWER_MARKS.right.glyph !== ANSWER_MARKS.wrong.glyph,
+      `${ANSWER_MARKS.right.glyph} ${ANSWER_MARKS.wrong.glyph}`);
+    for (const kind of ['right', 'wrong']) {
+      const host = document.createElement('div');
+      host.innerHTML = answerMarkHtml(kind);
+      const glyph = host.querySelector(`.ans-mark[data-mark="${kind}"]`);
+      const word = host.querySelector('.ans-mark-word');
+      check(`${kind}: a visible shape, hidden from a screen reader (it hears the word instead)`,
+        glyph && glyph.getAttribute('aria-hidden') === 'true' && glyph.textContent === ANSWER_MARKS[kind].glyph);
+      check(`${kind}: a word a screen reader reads`, word && word.textContent.includes(ANSWER_MARKS[kind].word),
+        word?.textContent);
+    }
+    check('an unknown kind draws nothing', answerMarkHtml('maybe') === '');
+
+    const ANSWERS = [
+      ['lessons', 'button', 'l-btn l-tq-opt', 'data-right', 'lessons: the right answer'],
+      ['lessons', 'button', 'l-btn l-tq-opt', 'data-wrong', 'lessons: the wrong pick'],
+      ['', 'button', 'tv-opt', 'data-right', 'trivia: the right answer'],
+      ['', 'button', 'tv-opt', 'data-wrong', 'trivia: a wrong pick'],
+      ['wordforge', 'button', 'wf-opt is-right', '', 'Word Forge: the right answer'],
+      ['wordforge', 'button', 'wf-opt is-wrong', '', 'Word Forge: the wrong pick'],
+    ];
+    for (const id of Object.keys(THEMES)) {
+      const box = document.createElement('div');
+      box.style.color = 'var(--text)';
+      document.body.append(box);
+      applyTheme(box, id);
+      for (const [parentCls, tag, cls, attr, what] of ANSWERS) {
+        const parent = document.createElement('div');
+        if (parentCls) parent.className = parentCls;
+        const el = document.createElement(tag);
+        el.className = cls;
+        el.disabled = true;                       // every answered option is disabled
+        if (attr) el.setAttribute(attr, '1');
+        el.innerHTML = `Sample${answerMarkHtml(/wrong/.test(attr + cls) ? 'wrong' : 'right')}`;
+        parent.append(el);
+        box.append(parent);
+        const cs = getComputedStyle(el);
+        const alpha = (cs.backgroundColor.match(/[\d.]+/g) || [])[3];
+        if (alpha !== undefined && Number(alpha) === 0) {
+          check(`${id}: ${what} has a background to measure`, false, cs.backgroundColor);
+          continue;
+        }
+        const r = worstContrast(toHexA(cs.color), { '--bg': toHexA(cs.backgroundColor) });
+        check(`${id}: ${what} is readable, colour-blind too (${r.toFixed(2)}:1)`, r >= TEXT_MIN,
+          `${cs.color} on ${cs.backgroundColor}`);
+        check(`${id}: ${what} is drawn at full opacity`, Number(cs.opacity) === 1, cs.opacity);
+      }
+      box.remove();
+    }
+    function toHexA(c) {
+      return '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3)
+        .map((n) => Math.round(Number(n)).toString(16).padStart(2, '0')).join('');
+    }
+  } catch (e) {
+    check('answer mark checks ran', false, String(e && e.stack || e));
   }
 
   // --- LIVE SCENES AND THE FLASH LIMIT (photosensitivity audit, 2026-09-30) -----------------

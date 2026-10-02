@@ -79,6 +79,7 @@ import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
+import { answerMarkHtml } from '../answer_mark.js';
 
 export const GAME = 'trivia';
 
@@ -486,7 +487,7 @@ registerModule(
                 <button type="button" class="tv-opt" data-opt="${i}"
                   ${i === highlight ? 'data-on="1"' : ''}
                   ${right ? 'data-right="1"' : ''}${wrong ? 'data-wrong="1"' : ''}
-                  ${done || wrong ? 'disabled' : ''}>${esc(o)}</button></li>`;
+                  ${done || wrong ? 'disabled' : ''}>${esc(o)}${answerMarkHtml(right ? 'right' : (wrong ? 'wrong' : ''))}</button></li>`;
             }).join('')}
           </ol>
           ${done

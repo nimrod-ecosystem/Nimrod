@@ -118,8 +118,10 @@
      every time focus moved, which on a bedside screen is the panels twitching under a hand.
      Only ever visible when there is more than one panel: on a single-panel screen "which one"
      is not a question anybody has. */
+  /* `--focus`, not `--accent` (2026-10-02, MIKE_LIST_20260930): the accent ring measured 2.83:1 in
+     the default theme. theme.js derives --focus from the accent, a shade deeper only where needed. */
   .k-stage.k-grid .k-cell[data-focused] .k-mod{
-    outline:3px solid var(--accent,#839958);outline-offset:2px}
+    outline:3px solid var(--focus,var(--accent,#839958));outline-offset:2px}
   /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
      `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
      instead of the moss — because a transition sits at its START value until the page

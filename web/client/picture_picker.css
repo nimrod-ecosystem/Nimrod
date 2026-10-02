@@ -41,7 +41,7 @@
 .pp-search{display:flex;flex-direction:column;gap:3px;font-size:clamp(12px, 2.8cqi, 16px);font-weight:700}
 .pp-search input{min-height:40px;padding:6px 10px;border:2px solid var(--border, ButtonBorder);border-radius:10px;
   background:var(--surface, Field);color:var(--text, FieldText);font:inherit}
-.pp-search input:focus{outline:3px solid var(--accent, Highlight);outline-offset:1px}
+.pp-search input:focus{outline:3px solid var(--focus, var(--accent, Highlight));outline-offset:1px}
 
 /* THE SWITCH CURSOR. A lit ROW gets a ring around the whole row; a lit thing inside it gets its own. */
 .pp [data-on="1"]{outline:4px solid var(--link, Highlight);outline-offset:2px}

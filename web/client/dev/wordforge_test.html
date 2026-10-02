@@ -346,6 +346,16 @@ a || b || c`);
     check('a wrong answer can be produced', wrongPicked || !!host.querySelector('.wf-opt.is-wrong'),
       `${seen.length} answers, all right`);
     check('the right answer is revealed', rightIdx() >= 0, String(rightIdx()));
+    // NOT COLOUR ALONE (MIKE_LIST_20260930): the right and wrong options were a green and a pink
+    // wash, which red-green colour blindness cannot tell apart. A shape and a word now go with them.
+    check('*** the right option carries a ✓ shape and the words "right answer" ***',
+      host.querySelector('.wf-opt.is-right .ans-mark[data-mark="right"]')?.textContent === '✓'
+        && /right answer/.test(host.querySelector('.wf-opt.is-right .ans-mark-word')?.textContent || ''),
+      host.querySelector('.wf-opt.is-right')?.innerHTML);
+    check('*** the wrong pick carries a ✗ shape and "not the answer" ***',
+      host.querySelector('.wf-opt.is-wrong .ans-mark[data-mark="wrong"]')?.textContent === '✗'
+        && /not the answer/.test(host.querySelector('.wf-opt.is-wrong .ans-mark-word')?.textContent || ''),
+      host.querySelector('.wf-opt.is-wrong')?.innerHTML);
     check('the miss is EXPLAINED, not just marked wrong',
       (txt('.wf-fb.is-wrong') || '').length > 30, txt('.wf-fb.is-wrong'));
     check('...and it offers the points for trying',

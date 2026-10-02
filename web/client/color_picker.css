@@ -43,7 +43,7 @@
   outline: 3px solid var(--link, currentColor);
   outline-offset: 1px;
 }
-.cp-swatch:focus-visible { outline: 3px solid var(--accent, currentColor); outline-offset: 2px; }
+.cp-swatch:focus-visible { outline: 3px solid var(--focus, var(--accent, currentColor)); outline-offset: 2px; }
 
 .cp-fine {
   display: inline-flex;

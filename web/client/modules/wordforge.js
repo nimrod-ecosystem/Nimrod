@@ -57,6 +57,7 @@ import { loadPack } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
+import { answerMarkHtml } from '../answer_mark.js';
 
 export const GAME = 'wordforge';
 
@@ -831,14 +832,17 @@ registerModule(
         // `misses` is only ever non-empty while `answered` is still null (see `answer()`), so
         // this and the `answered` branch below never both apply to the same render.
         const missed = !answered && misses.includes(i);
+        // A shape and a word beside the wash, not the wash alone (answer_mark.js).
+        let mark = '';
         if (answered) {
-          if (i === q.answer) cls += ' is-right';
-          else if (i === answered.picked) cls += ' is-wrong';
+          if (i === q.answer) mark = 'right';
+          else if (i === answered.picked) mark = 'wrong';
         } else if (missed) {
-          cls += ' is-wrong';
+          mark = 'wrong';
         }
+        if (mark) cls += ` is-${mark}`;
         const on = !answered && i === highlight ? ' data-on="1"' : '';
-        return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}</button>`;
+        return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}${answerMarkHtml(mark)}</button>`;
       }).join('');
 
       let feedback = '';

@@ -431,6 +431,13 @@ Why do writers avoid run-ons? | Clarity | Length | Rhyme | topic:roots
     check('the option that was guessed is marked wrong and taken out of play',
       spentBtn.disabled === true && spentBtn.dataset.wrong === '1',
       `disabled=${spentBtn.disabled} wrong=${spentBtn.dataset.wrong}`);
+    // NOT COLOUR ALONE (MIKE_LIST_20260930): the wrong pick had only a red border; the right answer
+    // had a CSS-drawn ✓ that no theme could recolour. Both are now a shape plus a word.
+    check('*** the spent option carries a ✗ shape, and a word for a screen reader ***',
+      spentBtn.querySelector('.ans-mark[data-mark="wrong"]')?.textContent === '✗'
+        && /not the answer/.test(spentBtn.querySelector('.ans-mark-word')?.textContent || ''), spentBtn.innerHTML);
+    check('...and no option is marked RIGHT while the question is still open',
+      !r.host.querySelector('.ans-mark[data-mark="right"]'));
     check('...and a scan does not stop on it',
       r.probe().highlight !== wrongIndex, String(r.probe().highlight));
 
@@ -447,6 +454,19 @@ Why do writers avoid run-ons? | Clarity | Length | Rhyme | topic:roots
     p = r.probe();
     check('getting there in the end still finishes the question', p.answered === q.correctIndex,
       String(p.answered));
+    {
+      const rightBtn = r.host.querySelectorAll('.tv-opt')[q.correctIndex];
+      check('*** the right answer carries a ✓ shape and the words "right answer" ***',
+        rightBtn.querySelector('.ans-mark[data-mark="right"]')?.textContent === '✓'
+          && /right answer/.test(rightBtn.querySelector('.ans-mark-word')?.textContent || ''), rightBtn.innerHTML);
+    }
+    // Read from the sheet: this page does not link modules.css, so a computed ::after would be empty
+    // whether or not the rule is there.
+    {
+      const css = await (await fetch('../modules.css', { cache: 'no-store' })).text();
+      check('...and the old CSS-only tick (hardcoded green) is gone, so it is not drawn twice',
+        !/\.tv-opt\[data-right="1"\]::after/.test(css));
+    }
     check('...and a run of clean answers is broken by the miss', p.streak === 0,
       String(p.streak));
 
