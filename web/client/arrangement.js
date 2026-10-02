@@ -63,7 +63,7 @@ import { createScreenLinks } from './screen_links.js';
 import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
 // Row 2.38, the map editor: a change that only moves a room object's door is applied in place too
 // (room_doors.js argues where a door is saved and why that is not a rebuild).
-import { classifyLayoutChange, sceneDoorChanges } from './room_doors.js';
+import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, tidyScene } from './room_doors.js';
 export { classifyLayoutChange };
 import { SHELL_PROMOTE } from './shell_verbs.js';
 // 2026-10-02: EDIT ANY MODULE IN PLACE (edit_mode.js argues it). This file owns which panel is being edited
@@ -119,6 +119,9 @@ function ensurePromoteCss() {
 
 // Where a dashboard remembers its panels switched to another module (`switchPanel`): { id: type }.
 export const PANEL_SWITCHES_KEY = 'panelSwitches';
+// The dashboard's ROOM, as one more thing edit mode can edit beside its panels (see "THE DASHBOARD'S ROOM,
+// EDITED IN PLACE" below). A fixed name, not a module instance's id.
+export const ROOM_PANEL_ID = 'scene:room';
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -143,6 +146,12 @@ export function createArrangement({
   // The corner "make it bigger" button on each panel (the header above PROMOTE_CSS_ID). A nested
   // dashboard passes false: its opener covers its panels, and going in is how they are reached.
   corners = true,
+  // EDIT MODE ON THE DASHBOARD'S ROOM (2026-10-02; see ROOM_PANEL_ID below). Both optional.
+  //   layoutStore  { get() -> the layout as SAVED, save(next) }: where a changed door or Room row is written.
+  //                Absent: the change is applied on the screen and kept in memory only (a preview page).
+  //   listDashboards() -> Promise<[{ id, name }]>: the choices for what a room object opens.
+  layoutStore = null,
+  listDashboards = null,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
@@ -379,6 +388,8 @@ export function createArrangement({
     // are all placed in the scene is not announced as empty -- and one whose placed modules all failed
     // names them, the same as failed slots.
     await mountPlaced();
+    // The room's ✎ corner: a room with nothing in it yet has no panel whose corners would draw it.
+    try { ensureRoomCorner(); } catch { /* not load-bearing */ }
     if (!slotRecs.length && !placedRecs.length) {
       const empty = document.createElement('div');
       empty.setAttribute('data-empty', '');
@@ -615,6 +626,7 @@ export function createArrangement({
   const placedMeta = new Map();             // id -> { entry, wrap, where }
   const placedLayers = {};                  // place -> the layer element
   let roomScene = null;                     // the room renderer's handle, while the scene is a room
+  let roomHost = null;                      // the element the room is drawn in (edit mode's box for it)
   let roomFree = null;                      // the layer on the room's stage for freely placed modules
   let placedMounted = false;                // mountPlaced ran for this arrangement (applyPlaced's guard)
   const LAYER_Z = {
@@ -665,6 +677,7 @@ export function createArrangement({
         host.className = 'k-room k-room3d';
         host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
         layerFor('scene').append(host);
+        roomHost = host;
         // `bus`: a piece of its furniture that is a door publishes `dashboard/go` on it, as a 2D room's does.
         let detail = 'auto';
         try { detail = (settings?.get?.() || {}).room3dDetail || 'auto'; } catch { detail = 'auto'; }
@@ -685,6 +698,7 @@ export function createArrangement({
       host.className = 'k-room';
       host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
       layerFor('scene').append(host);
+      roomHost = host;
       // Row 2.37: the same objects (library shelf, weather window, close-ups) as the room module turns on.
       roomScene = mountRoomScene(host, scene.recipe || presetRecipe(scene.preset),
         { bus, ...rs.OBJECT_DEFAULTS, ...(scene.options || {}), ...(flashLimit !== undefined ? { flashLimit } : {}) });
@@ -881,7 +895,7 @@ export function createArrangement({
     for (const m of placedMeta.values()) dropDoor(m);
     placedMeta.clear();
     try { roomScene?.destroy(); } catch { /* already gone */ }
-    roomScene = null; roomFree = null;
+    roomScene = null; roomFree = null; roomHost = null;
     for (const k of Object.keys(placedLayers)) { placedLayers[k].remove(); delete placedLayers[k]; }
     placedMounted = false;
   }
@@ -1218,8 +1232,34 @@ export function createArrangement({
   }
   /** The shell's level above this one: the panel it took up (its corner then reads "smaller"), or null. */
   function setPromoteTop(id) { promoteTop = id || null; try { ensureCorners(); } catch { /* not load-bearing */ } }
+  // The room's own ✎ corner (edit mode on the dashboard's room, ROOM_PANEL_ID): bottom right of the room,
+  // shown on hover or focus as a panel's is. Only while the scene is a mounted room.
+  function ensureRoomCorner() {
+    if (!corners || typeof document === 'undefined' || !roomHost) return;
+    let e = roomHost.querySelector(':scope > .k-editc');
+    if (!editCornerOn() || !roomEditRec()) { e?.remove(); return; }
+    if (!e) {
+      ensureEditCss(document);
+      e = document.createElement('button');
+      e.type = 'button';
+      e.className = 'k-editc';
+      e.textContent = '✎';
+      e.dataset.for = ROOM_PANEL_ID;
+      e.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        try { bus?.publish?.(EDIT_PANEL_TOPIC, { id: ROOM_PANEL_ID, from: 'corner' }); } catch (err) { console.error('arrangement: edit the room', err); }
+      });
+      roomHost.append(e);
+    }
+    const editing = editMode?.active()?.id === ROOM_PANEL_ID;
+    const say = editing ? 'Stop editing the room' : 'Edit the room: press a piece of furniture, or the walls, to see its options';
+    e.setAttribute('aria-label', say);
+    e.setAttribute('aria-pressed', String(editing));
+    e.title = say;
+  }
   function ensureCorners() {
     if (!corners || typeof document === 'undefined') return;
+    try { ensureRoomCorner(); } catch (err) { console.error('arrangement: the room corner', err); }
     const want = layout ? [...slotRecs, ...placedRecs] : [stageRec].filter(Boolean);
     if (!want.length) return;
     ensurePromoteCss();
@@ -1275,11 +1315,158 @@ export function createArrangement({
   // dashboard that draws corners (a NESTED one is pressed as one thing: going in is how its panels are
   // edited, as it is how they are reached).
   const editCornerOn = () => { try { return editSettingsFrom(settings?.get?.() || {}).corner; } catch { return true; } };
-  const editPanels = () => (layout ? [...slotRecs, ...placedRecs] : [stageRec]).filter(Boolean);
+  const editPanels = () => [...(layout ? [...slotRecs, ...placedRecs] : [stageRec]), roomEditRec()].filter(Boolean);
+
+  // ---- THE DASHBOARD'S ROOM, EDITED IN PLACE (2026-10-02) ---------------------------------------------
+  // Mike: "click on a button or piece of furniture or whatever else and have access to any options for it."
+  // A dashboard whose scene is a room (Design's 2D room, or room3d.js) offers the ROOM as one more thing to
+  // edit, beside its panels: `ROOM_PANEL_ID`, with its own ✎ corner (bottom right of the room, on hover) and
+  // the same verb (`shell/edit-panel { id: 'scene:room' }`). While it is being edited:
+  //   * a press on a piece of furniture CHOOSES it and never opens its door; its option is the one the map
+  //     editor's Opens window already edits -- which dashboard it opens (room_doors.js `withDoor`), applied
+  //     in place (`applyPlaced`, no rebuild) and saved where the editor saves it (`layoutStore`);
+  //   * a press on the walls or the floor chooses the room itself: Home's Room rows (home_profile.js
+  //     SCENE_ROWS -- shape, walls, floor, light, window; a 3D room's drift and depth), written the way
+  //     Home writes them (`setRoomRow`). A row change IS a new room, so the room is drawn again and the
+  //     modules in it are moved into the new one (re-parented, never remounted);
+  //   * a module sitting in the room is not the room: a press on it reaches it (`passThrough`).
+  // Its colours, sizes and places are NOT rows (nothing anywhere sets them yet), so none is offered here.
+  let roomRec = null;                      // { rec, scene }: rebuilt when the room is drawn again
+  let roomRowsLib = null;                   // home_profile.js, loaded the first time the room is edited
+  let roomRowsLoading = null;
+  let dashChoices = null;                   // [{ id, name }] for "Opens", fetched the first time
+  let dashLoading = null;
+  const clone = (v) => JSON.parse(JSON.stringify(v));
+  const is3dScene = (s) => !!s && s.kind === 'room3d';
+  /** The layout as SAVED when the host says, else the one mounted (both include the scene as drawn). */
+  function roomBase() {
+    let raw = null;
+    try { raw = layoutStore?.get?.() || null; } catch { raw = null; }
+    if (raw && raw.scene && layout && layout.scene && raw.scene.kind === layout.scene.kind) return clone(raw);
+    return layout ? clone(layout) : null;
+  }
+  const reselectRoom = () => {
+    const a = editMode?.active();
+    if (a && a.id === ROOM_PANEL_ID) { try { editMode.select(a.target); } catch { /* gone */ } }
+  };
+  function loadRoomRows() {
+    if (roomRowsLib || roomRowsLoading) return;
+    roomRowsLoading = import('./home_profile.js').then((m) => { roomRowsLib = m; reselectRoom(); })
+      .catch((err) => { console.error('arrangement: room rows', err); })
+      .finally(() => { roomRowsLoading = null; });
+  }
+  function loadDashChoices() {
+    if (dashChoices || dashLoading || typeof listDashboards !== 'function') return;
+    dashLoading = Promise.resolve().then(() => listDashboards()).then((list) => {
+      dashChoices = (Array.isArray(list) ? list : []).filter((d) => d && d.id).map((d) => ({ id: String(d.id), name: String(d.name || d.id) }));
+      reselectRoom();
+    }).catch(() => { dashChoices = null; }).finally(() => { dashLoading = null; });
+  }
+  /** What a room object opens, as a settings field: Nothing, or one of the person's other dashboards. */
+  function opensField(current) {
+    const here = (() => { try { return profileId() || null; } catch { return null; } })();
+    const opts = [{ value: '', label: 'Nothing' }];
+    for (const d of dashChoices || []) if (d.id !== here) opts.push({ value: d.id, label: d.name });
+    if (current && !opts.some((o) => o.value === current)) opts.push({ value: current, label: current });
+    return { key: 'opens', label: 'Opens', kind: 'choice', default: '', level: 'essential', options: opts };
+  }
+  /** A changed room scene, applied and saved. Doors move in place; anything else redraws the room. */
+  async function writeRoomScene(scene) {
+    const base = roomBase();
+    if (!base || !scene) return false;
+    const next = { ...base, scene };
+    let r = null;
+    try { r = await applyPlaced(next); } catch (err) { console.error('arrangement: room', err); r = null; }
+    if (!r || !r.applied) await redrawRoom(next);
+    try { layoutStore?.save?.(next); } catch (err) { console.error('arrangement: saving the room', err); }
+    reselectRoom();
+    return true;
+  }
+  /**
+   * The room drawn again from a new scene (a Room row changed), and every module placed in it MOVED into the
+   * new one: their boxes are re-parented, never remounted, so nothing restarts but what a browser restarts on
+   * its own when moved (an embedded video reloads).
+   */
+  async function redrawRoom(nextRaw) {
+    if (!layout || !profile) return false;
+    const r = resolveLayout(nextRaw, profile.modules);
+    if (!r || !isRoomScene(r.scene)) return false;
+    for (const m of placedMeta.values()) { if (m.where !== 'flat') m.wrap.remove(); }
+    try { roomScene?.destroy(); } catch { /* already gone */ }
+    try { roomHost?.remove(); } catch { /* already gone */ }
+    roomScene = null; roomFree = null; roomHost = null;
+    layout = { ...layout, scene: r.scene };
+    await mountRoom();
+    for (const [id, m] of placedMeta) {
+      if (m.where === 'flat') continue;
+      const { el, where } = containerFor(m.entry);
+      el.append(m.wrap);
+      styleWrap(m.wrap, m.entry, where);
+      m.where = where;
+      try { placedRecs.find((x) => x.id === id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+    }
+    renderMods();
+    return true;
+  }
+  function roomEditRec() {
+    if (!roomScene || !roomHost || !layout || !isRoomScene(layout.scene)) { roomRec = null; return null; }
+    if (roomRec && roomRec.scene === roomScene) return roomRec.rec;
+    const three = is3dScene(layout.scene);
+    const rec = {
+      id: ROOM_PANEL_ID, type: three ? 'room3d' : 'room-scene', title: three ? '3D room' : 'Room',
+      el: roomHost, passThrough: '.k-pcell',
+      instance: { editTargets: () => roomTargets() },
+      // No state row of its own: every target reads and writes the layout.
+      state: { get: () => ({}), set: () => {} },
+    };
+    roomRec = { rec, scene: roomScene };
+    return rec;
+  }
+  function roomTargets() {
+    if (!roomScene) return [];
+    loadRoomRows();
+    loadDashChoices();
+    let objs = [];
+    try { objs = roomScene.objectEls?.() || []; } catch { objs = []; }
+    const out = objs.filter((o) => o && o.el).map((o) => ({
+      id: o.id, label: o.name, el: o.el, also: o.also || [],
+      help: `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
+      fields: [opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
+      values: () => ({ opens: (sceneDoors(roomBase()?.scene || null) || {})[o.id] || '' }),
+      set: (patch) => {
+        if (!patch || !('opens' in patch)) return;
+        const base = roomBase();
+        const s = base && withDoor(base.scene, o.id, patch.opens || null);
+        if (s) writeRoomScene(tidyScene(s));
+      },
+    }));
+    // The walls and the floor: the room itself, last (it holds everything above).
+    const root = roomScene.root || roomHost;
+    const rows = () => { try { return roomRowsLib ? roomRowsLib.roomRows(roomBase()) : []; } catch { return []; } };
+    const three = is3dScene(layout?.scene);
+    const lib = roomRowsLib;
+    const fieldRows = lib ? (three ? lib.ROOM3D_ROWS : lib.ROOM_ROWS) : [];
+    out.push({
+      id: 'room', label: 'The room', el: root, whole: true,
+      help: three ? 'The room itself: whether the camera drifts, and how deep the room is.'
+        : 'The room itself: its shape, its walls and floor, its light, and what is out of the window.',
+      fields: fieldRows.map((row) => ({ key: row.key, label: row.label, kind: 'choice', level: 'essential',
+        default: row.options()[0]?.[0], options: row.options().map(([value, label]) => ({ value, label })) })),
+      values: () => Object.fromEntries(rows().map((x) => [x.key, x.value])),
+      set: (patch) => {
+        if (!lib || !patch) return;
+        let L = roomBase();
+        for (const [k, v] of Object.entries(patch)) { const n = L && lib.setRoomRow(L, k, v); if (n) L = n; }
+        if (L && L.scene) writeRoomScene(L.scene);
+      },
+    });
+    return out;
+  }
+
   const editMode = corners && typeof document !== 'undefined' ? createEditMode({
     bus, doc: document,
     recs: editPanels,
-    boxOf: (id) => promoteBox(id)?.box || recFor(id)?.el || null,
+    boxOf: (id) => (id === ROOM_PANEL_ID ? roomHost : null) || promoteBox(id)?.box || recFor(id)?.el || null,
     settings: () => { try { return settings?.get?.() || {}; } catch { return {}; } },
     onChange: () => { try { ensureCorners(); } catch { /* not load-bearing */ } },
   }) : null;

@@ -41,6 +41,7 @@ import { fieldsFor, displayValue } from '../settings_fields.js';
 import { pressControls, checkHiddenHides } from './press_controls.js';
 import { parseVideoId, parsePlaylistId, pickDaypart, searchVideos } from '../modules/youtube.js';   // registers 'youtube' + exports the parsers
 import { createPresetLibrary } from '../presets.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'youtube-test-user';
@@ -118,6 +119,79 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       check('*** the API key field is SECRET: masked in the menu, never put back into the page ***',
         key && key.secret === true && !displayValue(key, 'AIzaSyD-abcdef1234').includes('abcdef'),
         JSON.stringify(key));
+    }
+    // ---- WHEN IT OPENS (Mike, 2026-10-02: autostart "on for youtube/picture slideshow") -----------------
+    // No server: an in-memory row and a stub player that records what it was told to LOAD (play) and to CUE.
+    {
+      const fy = fieldsFor(getManifest('youtube'));
+      const as = fy.find((f) => f.key === 'autostart');
+      check('*** YouTube has game_start.js’s "When it opens" rows, ON by default ***',
+        as && as.default === true && fy.some((f) => f.key === 'autostartAlone'), JSON.stringify(as));
+      const mem = (seed) => {
+        let d = { ...seed }; const subs = new Set();
+        return { load: async () => d, get: () => d, set: (p) => { d = { ...d, ...p }; subs.forEach((f) => f(d)); return Promise.resolve(); },
+          subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+      };
+      const evs = () => ({ load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} });
+      const cueStub = () => {
+        let h = {};
+        const o = { loaded: [], cued: [], firePlaying: () => h.onPlaying?.(),
+          factory(_m, hh) { h = hh || {}; return { load: (id) => o.loaded.push(id), cue: (id) => o.cued.push(id), cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} }; } };
+        return o;
+      };
+      const mk = (seed, extra = {}) => {
+        const h = document.createElement('div'); document.getElementById('host').append(h);
+        const stub = cueStub(); const b = createBus(); const states = [];
+        b.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+        const inst = mountModule('youtube', { mount: h, bus: b, state: mem({ playlist: PLAYLIST.slice(0, 3), ...seed }), events: evs(),
+          user: USER, instanceId: 'yt-as', playerFactory: stub.factory, ...extra });
+        inst.init();
+        return { h, stub, b, inst, states, done() { inst.destroy(); h.remove(); } };
+      };
+      const on = mk({});
+      await sleep(30);
+      check('autostart on (the default): the first video is LOADED to play, exactly as before',
+        on.stub.loaded.length === 1 && on.stub.cued.length === 0 && !on.h.querySelector('[data-start]'));
+      on.done();
+      const off = mk({ autostart: false });
+      await sleep(30);
+      check('*** autostart OFF: the first video is cued (loaded, paused), not played, and a Start button shows ***',
+        off.stub.loaded.length === 0 && off.stub.cued.length === 1 && !!off.h.querySelector('[data-start]') && off.inst.impl.__probe().waiting === true,
+        JSON.stringify({ loaded: off.stub.loaded, cued: off.stub.cued }));
+      check('*** ...and the shell is told this panel is NOT playing, so the bar’s button says Play ***',
+        off.states.at(-1)?.id === 'yt-as' && off.states.at(-1)?.playing === false, JSON.stringify(off.states));
+      off.b.publish('youtube/next');
+      check('Next while waiting cues the next one; it still waits', off.stub.loaded.length === 0 && off.stub.cued.length === 2 && off.inst.impl.__probe().waiting === true);
+      off.b.publish('youtube/play');
+      check('*** Play (the bar’s button, Space, a switch) plays THAT video, and the shell hears it is playing ***',
+        off.stub.loaded.length === 1 && off.stub.loaded[0] === off.stub.cued.at(-1) && !off.h.querySelector('[data-start]')
+        && off.states.at(-1)?.playing === true, JSON.stringify({ loaded: off.stub.loaded, cued: off.stub.cued }));
+      off.done();
+      const off2 = mk({ autostart: false });
+      await sleep(30);
+      off2.h.querySelector('[data-start]').click();
+      check('*** a press on Start does the same ***', off2.stub.loaded.length === 1 && off2.inst.impl.__probe().waiting === false);
+      off2.done();
+      const off3 = mk({ autostart: false });
+      await sleep(30);
+      off3.stub.firePlaying();
+      check('pressing the player’s OWN play button counts as Start', off3.inst.impl.__probe().waiting === false
+        && !off3.h.querySelector('[data-start]') && off3.states.at(-1)?.playing === true);
+      off3.done();
+      const alone = mk({ autostartAlone: 'off' }, { panelCount: 1 });
+      await sleep(30);
+      check('"When it is the only thing on the dashboard: it waits" holds a panel that is alone', alone.inst.impl.__probe().waiting === true && alone.stub.loaded.length === 0);
+      alone.done();
+      const notAlone = mk({ autostartAlone: 'off' }, { panelCount: 3 });
+      await sleep(30);
+      check('...and not one that shares its dashboard', notAlone.inst.impl.__probe().waiting === false && notAlone.stub.loaded.length === 1);
+      notAlone.done();
+      const directed = mk({ autostart: false, directed: true });
+      await sleep(30);
+      directed.b.publish('youtube/next');
+      check('a panel the content director drives is the director’s to start: never held', directed.inst.impl.__probe().waiting === false
+        && directed.stub.loaded.length === 1 && !directed.h.querySelector('[data-start]'));
+      directed.done();
     }
     // --- unit: the id parser (pure) ------------------------------------------
     check('parseVideoId: bare 11-char id', parseVideoId('dQw4w9WgXcQ') === 'dQw4w9WgXcQ');

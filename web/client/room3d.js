@@ -593,6 +593,9 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     },
     /** The furniture, for the map editor: `{ id, name, opens }`, in recipe order. */
     objects: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, opens: opensOf(f) })),
+    /** EDIT MODE (edit_mode.js, 2026-10-02): each piece as drawn, `{ id, name, el }`, for choosing it by a
+     *  press (the box: a press on any of its faces is a press on it). In recipe order. */
+    objectEls: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, el: boxes.get(f.id) || null })).filter((x) => x.el),
     /**
      * Make piece `id` a door to dashboard `target` (null: no longer one) IN PLACE: only its box is redrawn,
      * so the walls, their slots and every module in them stay mounted. True if anything changed.

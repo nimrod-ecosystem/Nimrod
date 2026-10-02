@@ -2086,6 +2086,18 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       return { id: it.id, name: objectName(drawn), opens: opensOf(it) };
     }),
     /**
+     * EDIT MODE (edit_mode.js, 2026-10-02): every object as it is DRAWN, for choosing it by a press. `el` is
+     * the clear button over it when it has one (what takes a press), else its picture; `also` the picture
+     * too. A copy of what describes it -- `part`, `kind`, `role`, whether it is an animal or a window -- so a
+     * host can say which of its settings belong to it without reading the recipe again. Modules placed in
+     * the room are not objects and are not listed.
+     */
+    objectEls: () => recs.filter((r) => r.it.kind !== 'module').map((r) => ({
+      id: r.it.id, name: objectName(r.it), kind: r.it.kind, part: r.it.part || null,
+      role: r.role ? r.role.role : null, animal: isAnimal(r.it), window: !!FURNITURE[r.it.part]?.view,
+      el: r.wrap || r.el, also: r.wrap && r.el ? [r.el] : [],
+    })),
+    /**
      * Make object `id` a door to dashboard `target` (null: no longer a door), WITHOUT rebuilding the room.
      * `setRecipe` would rebuild every object, and with them every slot a placed module sits in (the
      * arrangement put those modules' boxes inside the slots), so only THIS object's overlay -- its button,

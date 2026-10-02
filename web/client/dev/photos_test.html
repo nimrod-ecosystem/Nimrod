@@ -449,6 +449,94 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
       && failureBackoffMs(3, 3) === 4000 && failureBackoffMs(6, 3) === 30000 && failureBackoffMs(60, 1) === 30000);
   }
 
+  // *** WHEN IT OPENS, AND PAUSE / PLAY (Mike, 2026-10-02: autostart "on for youtube/picture slideshow"). ***
+  // No agent: an in-memory row, a fixed listing and fake timers.
+  {
+    section('when it opens: a slideshow can wait for Start; Pause / Play reach it');
+    const { PLAY_STATE_TOPIC } = await import('../game_start.js');
+    const { fieldsFor } = await import('../settings_fields.js');
+    const { MODULE_VERBS } = await import('../actions.js');
+    const fp = fieldsFor(getManifest('photos'));
+    check('*** Photos has game_start.js’s "When it opens" rows, ON by default ***',
+      fp.find((f) => f.key === 'autostart')?.default === true && fp.some((f) => f.key === 'autostartAlone'));
+    check('...and Play / Pause are its verbs, so the bar’s one button and Space reach it',
+      MODULE_VERBS.photos.play === 'photos/play' && MODULE_VERBS.photos.pause === 'photos/pause');
+    const IMGS = [1, 2, 3].map((i) => ({ id: 'w' + i, path: 'w' + i + '.jpg', name: 'w' + i, kind: 'image', url: 'data:,w' + i }));
+    const src = { id: 'src-1', label: 'Test source', kind: 'agent' };
+    function rigS(seed = {}, extra = {}) {
+      const bus = createBus();
+      const host = document.createElement('div');
+      host.style.cssText = 'position:absolute;left:-9999px;width:300px;height:200px';
+      document.body.append(host);
+      const timers = [], states = [], shows = [];
+      bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+      let cfg = { sourceId: 'src-1', intervalMs: 8000, ...seed };
+      const subs = [];
+      const state = { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; subs.forEach((f) => f(cfg)); },
+        subscribe: (f) => { subs.push(f); f(cfg); return () => {}; }, flush() {} };
+      const inst = mountModule('photos', {
+        mount: host, bus, state, instanceId: 'ph-as', user: USER, profileId: 'p',
+        events: { append: (kind, d) => { if (kind === 'play') shows.push(d.id); return Promise.resolve(); }, subscribe() {}, load: () => Promise.resolve() },
+        sources: { list: async () => [src], add: async () => src, remove: async () => {} },
+        resolveListing: async () => ({ items: IMGS.map((it) => ({ ...it })), albums: [], album: '', count: IMGS.length }),
+        setTimer: (fn, ms) => { const t = { fn, ms, live: true }; timers.push(t); return t; },
+        clearTimer: (t) => { if (t) t.live = false; },
+        ...extra,
+      });
+      inst.init();
+      const advanceTimers = () => timers.filter((t) => t.live && t.ms === 8000);
+      return { host, inst, bus, timers, states, shows, advanceTimers, probe: () => inst.impl.__probe(),
+        fire() { const t = advanceTimers().pop(); if (t) { t.live = false; t.fn(); } return t; },
+        done() { inst.destroy(); host.remove(); } };
+    }
+    const on = rigS();
+    await sleep(80);
+    check('autostart on (the default): the first picture shows and its timer runs, exactly as before',
+      on.shows.length === 1 && on.advanceTimers().length === 1 && !on.host.querySelector('[data-start]'));
+    on.bus.publish('photos/pause');
+    check('*** Pause: the timer is gone, the picture stays, it says Paused, and the shell hears "not playing" ***',
+      on.advanceTimers().length === 0 && on.probe().paused === true && !!on.host.querySelector('[data-start]')
+      && on.states.at(-1)?.id === 'ph-as' && on.states.at(-1)?.playing === false, JSON.stringify(on.states));
+    on.bus.publish('photos/play');
+    check('*** Play: it carries on (a fresh interval for the picture on screen) ***',
+      on.advanceTimers().length === 1 && on.probe().paused === false && !on.host.querySelector('[data-start]') && on.states.at(-1)?.playing === true);
+    on.done();
+
+    const off = rigS({ autostart: false });
+    await sleep(80);
+    const first = off.probe().currentId;
+    check('*** autostart OFF: the first picture shows ... ***', !!first && !!off.host.querySelector('[data-stage] img'));
+    check('*** ... and does NOT advance: no timer, a Start button, the shell told it is not playing ***',
+      off.advanceTimers().length === 0 && !!off.host.querySelector('[data-start]') && off.probe().waiting === true
+      && off.states.at(-1)?.playing === false, JSON.stringify({ timers: off.timers.map((t) => t.ms), states: off.states }));
+    check('it is not counted as shown until it plays', off.shows.length === 0);
+    check('while it waits it says it is here (health.js would otherwise judge it silent)',
+      off.timers.some((t) => t.live && t.ms === 15 * 60 * 1000));
+    off.bus.publish('photos/play');
+    check('*** Play starts it: the SAME picture, now with its interval ***',
+      off.probe().currentId === first && off.advanceTimers().length === 1 && off.probe().waiting === false && off.states.at(-1)?.playing === true);
+    off.fire();
+    await sleep(10);
+    check('...and it advances as a slideshow does', off.probe().currentId !== first || off.shows.length >= 1);
+    off.done();
+
+    const off2 = rigS({ autostart: false });
+    await sleep(80);
+    off2.host.querySelector('[data-start]').click();
+    check('*** a press on Start does the same ***', off2.probe().waiting === false && off2.advanceTimers().length === 1);
+    off2.done();
+    const off3 = rigS({ autostart: false });
+    await sleep(80);
+    off3.host.querySelector('[data-stage]').click();
+    check('a press on the picture itself starts it too', off3.probe().waiting === false && off3.advanceTimers().length === 1);
+    off3.done();
+    const alone = rigS({ autostartAlone: 'off' }, { panelCount: 1 });
+    await sleep(80);
+    check('"When it is the only thing on the dashboard: it waits" holds a slideshow that is alone',
+      alone.probe().waiting === true && alone.advanceTimers().length === 0);
+    alone.done();
+  }
+
   // *** SONGS IN THE FOLDER ARE NOT PHOTOS (2026-09-30). ***
   //
   // The listers (folder_source.js, media_agent) learned `kind: 'audio'` so a music folder is not

@@ -28,6 +28,12 @@
 //     fields  settings_fields.js declarations of its own, with `values()` / `set(patch)` to read and write
 //             them (an element whose options are not on the panel's state row: a room object's door)
 //     help    a sentence saying what it is (else Nimrod's words for the panel, cat_help.js)
+//     also    more elements that choose the SAME thing (2026-10-02: a room object is drawn twice -- its
+//             picture, and the clear button over it that takes a press -- and either is "the desk")
+//     whole   this target IS the panel (a room's walls and floor): it is what is chosen to begin with,
+//             and what a press on nothing else chooses. List it LAST (it holds every other target).
+// A record may also say `passThrough` (a CSS selector): a press inside a matching element nested in the
+// panel is NOT taken -- a module sitting in a room's slot keeps working while the room is being edited.
 // A module that cannot be edited (yet) without changing its file can be DECLARED here instead
 // (`DECLARED_TARGETS`: a CSS selector per element and its keys). And a module that does neither is still
 // editable as a whole: pressing anywhere in it chooses the panel, and its options are its manifest's
@@ -113,7 +119,8 @@ export function targetsOf(rec) {
   } catch (err) { console.error(`edit mode: ${rec.type} editTargets`, err); raw = null; }
   if (Array.isArray(raw) && raw.length) {
     return raw.filter((t) => t && t.id && t.el && typeof t.el.contains === 'function')
-      .map((t) => ({ ...t, id: String(t.id), label: String(t.label || t.id) }));
+      .map((t) => ({ ...t, id: String(t.id), label: String(t.label || t.id),
+        also: (Array.isArray(t.also) ? t.also : []).filter((e) => e && typeof e.contains === 'function') }));
   }
   const decl = DECLARED_TARGETS[rec.type] || [];
   const root = rec.el;
@@ -129,7 +136,8 @@ export function targetsOf(rec) {
 /** Which target a press on `node` chose: the first (nearest-first) whose element holds it, else null. */
 export function targetAt(targets, node) {
   if (!node) return null;
-  return (targets || []).find((t) => t.el === node || t.el.contains(node)) || null;
+  const holds = (e) => !!e && (e === node || e.contains(node));
+  return (targets || []).find((t) => holds(t.el) || (t.also || []).some(holds)) || null;
 }
 
 /**
@@ -296,7 +304,9 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;transition:opacity .15s}
 .k-cell:hover>.k-editc,.k-cell:focus-within>.k-editc,.k-pcell:hover>.k-editc,.k-pcell:focus-within>.k-editc,
-.k-stage:hover>.k-editc,.k-stage:focus-within>.k-editc,.k-editc:focus-visible,[data-editing]>.k-editc{opacity:1}
+.k-stage:hover>.k-editc,.k-stage:focus-within>.k-editc,.k-room:hover>.k-editc,.k-room:focus-within>.k-editc,
+.k-editc:focus-visible,[data-editing]>.k-editc{opacity:1}
+.k-room>.k-editc{right:6px}
 @media (prefers-reduced-motion: reduce){.k-editc{transition:none}}`;
   (doc.head || doc.documentElement).append(s);
 }
@@ -319,11 +329,15 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     if (idleMs > 0) { const me = active; active.timer = setTimer(() => { if (active === me) leave('idle'); }, idleMs); }
   }
 
+  // A `whole` target is the panel itself: it is not outlined as a thing in it (the panel already is).
+  const elsOf = (t) => [t.el, ...(t.also || [])];
   function markTargets() {
-    for (const t of active.targets) t.el.dataset.editTarget = t.id;
+    for (const t of active.targets) if (!t.whole) for (const e of elsOf(t)) e.dataset.editTarget = t.id;
   }
   function unmark(a) {
-    for (const t of a.targets || []) { delete t.el.dataset.editTarget; delete t.el.dataset.editSelected; delete t.el.dataset.editHelp; delete t.el.dataset.editLabel; }
+    for (const t of a.targets || []) {
+      for (const e of elsOf(t)) { delete e.dataset.editTarget; delete e.dataset.editSelected; delete e.dataset.editHelp; delete e.dataset.editLabel; }
+    }
   }
 
   /** Choose `targetId` (null: the whole panel) and publish it; draw the in-panel card if nobody claims it. */
@@ -334,11 +348,15 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     unmark(active);
     active.targets = targetsOf(active.rec);
     markTargets();
-    const t = targetId ? active.targets.find((x) => x.id === targetId) || null : null;
+    // Nothing named: the panel's `whole` target if it has one (a room's walls and floor), else the panel.
+    const t = (targetId ? active.targets.find((x) => x.id === targetId) : active.targets.find((x) => x.whole)) || null;
     active.chosen = t ? t.id : null;
     const sel = selectionFor(active.rec, t, { pressed });
     active.sel = sel;
-    if (t) { t.el.dataset.editSelected = ''; t.el.dataset.editHelp = sel.help; t.el.dataset.editLabel = sel.label; }
+    if (t && !t.whole) {
+      t.el.dataset.editSelected = ''; t.el.dataset.editHelp = sel.help; t.el.dataset.editLabel = sel.label;
+      for (const e of t.also || []) e.dataset.editSelected = '';
+    }
     else if (active.box) { active.box.dataset.editHelp = sel.help; active.box.dataset.editLabel = sel.label; }
     let claimed = false;
     try { bus?.publish?.(EDIT_SELECTED_TOPIC, { ...sel, claim: () => { claimed = true; } }); } catch (err) { console.error('edit mode: publish', err); }
@@ -358,11 +376,16 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     const node = e.target instanceof Element ? e.target : null;
     // Its own controls, and the corners, work as themselves.
     if (!node || node.closest('.em-card, .em-bar, .k-promote, .k-editc')) { armIdle(); return; }
+    // A panel nested in this one (a module in a room's slot) works as itself (`passThrough`, above).
+    const pass = typeof active.rec?.passThrough === 'string' && active.rec.passThrough ? node.closest(active.rec.passThrough) : null;
+    if (pass && pass !== active.box && active.box.contains(pass)) { armIdle(); return; }
     e.preventDefault();
     e.stopPropagation();
     if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
     if (e.type !== 'click') return;
-    const t = targetAt(active.targets.length ? active.targets : targetsOf(active.rec), node);
+    // Found AGAIN for the press: a module that redrew since the last choice (a room rebuilt by a changed
+    // row) has new elements, and the old list would choose nothing.
+    const t = targetAt(targetsOf(active.rec), node);
     select(t ? t.id : null, node);
   }
   function onKey(e) {

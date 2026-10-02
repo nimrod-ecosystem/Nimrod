@@ -893,6 +893,22 @@ function dashboardFactory(ctx) {
           // 2026-10-02: the "make it bigger" corner on each panel -- not on a NESTED one's panels: its
           // opener covers them, and going in is how they are reached (arrangement.js says why).
           corners: !nested,
+          // 2026-10-02, edit mode on this dashboard's room (arrangement.js ROOM_PANEL_ID): a door or a Room
+          // row it changes is saved exactly where the edit view saves (see `openEdit`'s `save`), and the host
+          // is told first (`ctx.expectLayout`) so a room this dashboard redraws itself is not reloaded.
+          layoutStore: {
+            get: () => rawLayout || null,
+            save: (next) => {
+              rawLayout = next;
+              if ((overridden && ctx.saveLayout !== true) || !settingsHandle?.set) return;
+              try {
+                ctx.expectLayout?.(next);
+                const cur = settingsHandle.get?.()?.kiosk || {};
+                settingsHandle.set({ kiosk: { ...cur, layout: next } });
+              } catch (err) { console.error('view: saving the room', err); }
+            },
+          },
+          listDashboards: typeof profiles?.list === 'function' ? () => profiles.list() : null,
         });
 
         arr.applyLayout(settings.get());

@@ -456,23 +456,31 @@ export function roomRows(layout, { reducedMotion = false } = {}) {
 /** One press of a Room row: the next value, wrapping (one switch travels one way). The room keeps its
  *  preset's name and gets its own copy of the recipe -- a plain copy, as every made dashboard is. */
 export function cycleRoomRow(layout, key) {
+  const row = (isRoom3d(layout) ? ROOM3D_ROWS : ROOM_ROWS).find((x) => x.key === key);
+  const cur = roomRows(layout).find((x) => x.key === key);
+  if (!row || !cur) return null;
+  const opts = row.options();
+  const at = opts.findIndex(([k]) => k === cur.value);
+  return setRoomRow(layout, key, opts[(at + 1) % opts.length][0]);
+}
+
+/** One Room row set to `value` (one of its options): the layout with it, or null (not a room, no such row,
+ *  not one of the choices). The same write `cycleRoomRow` makes -- it is how that one is made -- so edit
+ *  mode (arrangement.js, a press on a room's walls) and Home's Room tray save a room the same way. */
+export function setRoomRow(layout, key, value) {
   if (isRoom3d(layout)) {
     const row = ROOM3D_ROWS.find((x) => x.key === key);
-    if (!row) return null;
+    if (!row || !row.options().some(([k]) => k === value)) return null;
     const scene = clone(layout.scene);
-    const opts = row.options();
-    const at = opts.findIndex(([k]) => k === row.get(scene));
-    row.set(scene, opts[(at + 1) % opts.length][0]);
+    row.set(scene, value);
     const L = clone(layout);
     L.scene = tidyScene(scene);
     return L;
   }
   const row = ROOM_ROWS.find((x) => x.key === key);
   const r = roomRecipe(layout);
-  if (!row || !r) return null;
-  const opts = row.options();
-  const at = opts.findIndex(([k]) => k === row.get(r));
-  row.set(r, opts[(at + 1) % opts.length][0]);
+  if (!row || !r || !row.options().some(([k]) => k === value)) return null;
+  row.set(r, value);
   const L = clone(layout);
   L.scene = { ...L.scene, recipe: r };
   return L;

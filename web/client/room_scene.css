@@ -59,6 +59,9 @@
 /* The veil, the glows and the interface layers never take a press; their children opt back in. */
 .rs-veil, .rs-glows, .rs-content, .rs-over{ pointer-events: none; }
 .rs-item{ position: absolute; }
+/* Edit mode (edit_mode.js): while the panel or the room is being edited, EVERY object can be pressed, so a
+   plant or a rug can be chosen too. Outside edit mode an object with no role still takes no press. */
+[data-editing] .rs-item{ pointer-events: auto; }
 .rs-item.is-zoomed, .rs-obj-wrap.is-zoomed{ scale: var(--rs-zoom, 1); }
 
 /* ---------- MOTION: all of it inside the guard (Design, rule 6). Durations are Design's. ---------- */

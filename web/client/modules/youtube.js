@@ -32,6 +32,9 @@ import { pick, statsFromEvents } from '../rng.js';
 import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
 import { flashLimit, failureBackoffMs } from '../flash_limit.js';
+import {
+  autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
+} from '../game_start.js';
 
 // `stallMs` is the STOPPED-VIDEO WATCHDOG (see the header). 20s is long enough that a
 // slow-but-working load on facility wifi isn't cut off, short enough that nobody sits in
@@ -77,6 +80,7 @@ const DEFAULTS = {
 // The quietest a "quieter" can make it. See the VOLUME note below for why it is not zero.
 export const VOLUME_MIN = 10;
 const RECENT_CAP = 12;          // in-memory anti-repeat window (picker also hard-excludes)
+const WAIT_PULSE_MS = 15 * 60 * 1000;   // a panel waiting for Start says it is here (see `pulseWait`)
 
 // How often a playing video is asked where it has got to. NOT a setting: nobody is served by
 // tuning it, and the only requirement is that it sits comfortably inside `stallMs` so a
@@ -168,6 +172,12 @@ export const SETTINGS = [
   // so a switch can walk it.
   { key: 'volume', label: 'How loud the video is', kind: 'number', default: 100,
     min: VOLUME_MIN, max: 100, step: 10, unit: '%', level: 'standard' },
+  // *** WHEN IT OPENS (Mike, 2026-10-02: autostart "on for youtube/picture slideshow"). *** game_start.js's
+  // two rows, ON by default -- what this panel always did. Off: the first video is LOADED, not played (its
+  // first frame, the player's own play button and a Start button), until Play (the bar's button, Space, a
+  // switch), Start, or the player's own play. A panel the content director drives is the director's to
+  // start, so these rows do not apply to it.
+  ...autostartFields({ on: true }),
   // *** HOW FAR ONE STEP OF THIS VIDEO'S OWN VOLUME GOES (a `youtube/volume` publish). The spoken
   // "louder" now steps the master, whose step is the screen's `masterStep` (master_volume.js),
   // same default for the same reason: *** A setting rather than a buried number (Rule 1). Default a
@@ -380,7 +390,7 @@ function loadIframeApi() {
 // Exported for the music panel (row 2.32), which plays a YouTube favourite in its own panel when no
 // YouTube panel is on the screen - the same player, not a second copy of it.
 export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, onPlaylist }) {
-  let player = null, ready = false, pending = null, pendingList = null, destroyed = false;
+  let player = null, ready = false, pending = null, pendingList = null, pendingCue = false, destroyed = false;
   const host = document.createElement('div');
   mountEl.append(host);
 
@@ -394,7 +404,7 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
         onReady: () => {
           ready = true;
           if (pendingList) { player.cuePlaylist({ list: pendingList, listType: 'playlist' }); pendingList = null; }
-          else if (pending) { player.loadVideoById(pending); pending = null; }
+          else if (pending) { if (pendingCue) player.cueVideoById(pending); else player.loadVideoById(pending); pending = null; pendingCue = false; }
         },
         onStateChange: (e) => {
           if (e.data === YT.PlayerState.ENDED) onEnded?.();
@@ -416,7 +426,10 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
   }).catch((err) => onError?.(err));
 
   return {
-    load(id) { if (destroyed) return; if (ready && player) player.loadVideoById(id); else { pending = id; pendingList = null; } },
+    load(id) { if (destroyed) return; if (ready && player) player.loadVideoById(id); else { pending = id; pendingList = null; pendingCue = false; } },
+    // LOADED, NOT PLAYED (2026-10-02, "When it opens: it waits for Start"): the video's first frame and the
+    // player's own play button, and nothing plays until somebody asks (`load` or `resume` then plays it).
+    cue(id) { if (destroyed) return; if (ready && player) player.cueVideoById(id); else { pending = id; pendingList = null; pendingCue = true; } },
     cueList(listId) {
       if (destroyed) return;
       if (ready && player) player.cuePlaylist({ list: listId, listType: 'playlist' });
@@ -658,6 +671,8 @@ registerModule(
       // game's music come back up. BUFFERING counts: a stalled video is silence.
       audio?.setActive?.(AUDIO_ID, false);
       if (!active || !currentId) return;
+      // A video waiting for Start is MEANT to be still: nothing to recover, nobody to tell.
+      if (waiting) return;
       // Already counting a STOP for this video — don't restart the clock, or a player that
       // flaps between BUFFERING and PAUSED could hold it open forever.
       //
@@ -729,6 +744,8 @@ registerModule(
     }
 
     function onPlaying() {
+      // Somebody pressed the player's OWN play button on a video waiting for Start: that is a start too.
+      if (waiting) { waiting = false; syncWait(); if (currentId) recordPlay(currentId); }
       failStreak = 0;                // a video that plays ends a failure run (FAILURE BACKOFF)
       audio?.setActive?.(AUDIO_ID, true);
       stallReason = 'playing';
@@ -832,21 +849,75 @@ registerModule(
       shownAt = now();
       currentId = id;
       active = true;                 // something asked for a video: this instance is on screen
+      // WAITING FOR START: the video is loaded, not played, and nothing is watching it (a cued video never
+      // reaches PLAYING, so the stall clock would "recover" it by playing it). It counts as a play only once
+      // it plays (`begin`, or the player's own play button: `onPlaying`).
+      if (waiting) {
+        clearStall();
+        try { player.cue?.(id); } catch (e) { console.error('youtube: cue', e); }
+        updateLabel();
+        return;
+      }
       player.load(id);
       lastTime = -1;                 // a new video starts its own clock; never compare across two
       armStall(id, 'loading');
       updateLabel();
-      if (record) {
-        recent.push(id);
-        if (recent.length > RECENT_CAP) recent.shift();
-        history = history.slice(0, histPos + 1);
-        history.push(id); histPos = history.length - 1;
-        events.append('play', { id, at: Date.now() }).catch((e) => console.error('youtube: play log', e));
+      if (record) recordPlay(id);
+    }
+    function recordPlay(id) {
+      recent.push(id);
+      if (recent.length > RECENT_CAP) recent.shift();
+      history = history.slice(0, histPos + 1);
+      history.push(id); histPos = history.length - 1;
+      events.append('play', { id, at: Date.now() }).catch((e) => console.error('youtube: play log', e));
+    }
+
+    // ---- WHEN IT OPENS (game_start.js; the rows on SETTINGS) ------------------------------------------
+    // Decided ONCE, as the first video is about to load: a setting changed later applies to the next time
+    // the panel opens, never by stopping a video somebody is watching. A directed panel is never held.
+    let startDecided = false;
+    let waiting = false;
+    const reportPlay = createPlayReporter(bus, ctx);
+    let waitTimer = null;
+    function decideStart() {
+      if (startDecided) return;
+      startDecided = true;
+      waiting = !cfg.directed && !shouldAutostart(cfg, { fallback: true, alone: panelAlone(ctx) });
+      if (waiting) syncWait();
+    }
+    function syncWait() {
+      const host = mount.querySelector('[data-start-host]');
+      if (host) {
+        host.innerHTML = waiting ? startOverlayHtml({ label: 'Start' }) : '';
+        host.hidden = !waiting;
       }
+      const root = mount.querySelector('.youtube');
+      if (root) { if (waiting) root.dataset.waiting = '1'; else delete root.dataset.waiting; }
+      reportPlay(!waiting);
+      pulseWait();
+    }
+    // A panel waiting for Start publishes nothing, and health.js judges a YouTube panel silent after 90
+    // minutes -- whose remount would only wait again. So while it waits it says `youtube/state` (a heartbeat
+    // health.js already counts, tagged as this panel's) now and every WAIT_PULSE_MS (15 minutes, the same
+    // reasoning as photos.js's HOLD_PULSE_MS: well inside the bound, and nobody is served by tuning it).
+    function pulseWait() {
+      if (waitTimer != null) { clearTimer(waitTimer); waitTimer = null; }
+      if (!waiting || destroyed) return;
+      try { bus.publish('youtube/state', { waiting: true }, { panel: ctx.instanceId || null }); } catch { /* not load-bearing */ }
+      waitTimer = setTimer(() => { waitTimer = null; pulseWait(); }, WAIT_PULSE_MS);
+    }
+    /** Start: the video loaded and waiting plays now (or, with none yet, the first one). */
+    function begin() {
+      if (!waiting) return false;
+      waiting = false;
+      syncWait();
+      if (currentId && byId[currentId]) show(currentId, true); else advance();
+      return true;
     }
 
     function advance() {
       if (!ids.length) return;
+      decideStart();
       // Shuffle is the default and is the whole reason a playlist is treated as a POOL:
       // the weighted picker spreads plays across channels, backs off things played
       // recently, and stops one long video from dominating. Straight playlist order is
@@ -1163,6 +1234,7 @@ registerModule(
         mount.innerHTML = `
           <div class="youtube">
             <div class="stage" data-stage></div>
+            <div class="yt-start" data-start-host hidden></div>
             <div class="held" data-held hidden>Paused</div>
             <div class="status" data-status hidden></div>
             <div class="nav">
@@ -1367,6 +1439,8 @@ registerModule(
         // than reloading; with nothing loaded yet it starts one, which is what "play" means to
         // somebody looking at an empty panel.
         bus.subscribe('youtube/play', () => {
+          // Waiting for Start: Play IS Start (the bar's button, Space, a switch, "play" said aloud).
+          if (waiting) { begin(); return; }
           if (!currentId) { advance(); return; }
           try { player?.resume?.(); } catch (e) { console.error('youtube: play', e); }
         });
@@ -1385,6 +1459,8 @@ registerModule(
         bus.subscribe('youtube/load', (p) => {
           const vid = parseVideoId((p && p.videoId) || '');
           const list = vid ? '' : parsePlaylistId((p && p.playlistId) || '');
+          // "Play this one" is somebody asking for it to play: a panel waiting for Start starts.
+          if ((vid || list) && waiting) { waiting = false; syncWait(); }
           if (vid) {
             if (!byId[vid]) { fromList = [...fromList, vid]; indexPlaylist(); }
             show(vid, true);
@@ -1401,6 +1477,11 @@ registerModule(
         bus.addBinding({ source: 'youtube-nav', signal: 'prev', topic: 'youtube/prev' });
         mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next'));
         mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev'));
+        // The Start button over a video waiting for Start (a press; Play and Space arrive as `youtube/play`).
+        ensureStartStyle(mount.ownerDocument || document);
+        mount.querySelector('[data-start-host]').addEventListener('click', (e) => {
+          if (e.target instanceof Element && e.target.closest('[data-start]')) begin();
+        });
 
         mount.querySelector('[data-gear]').addEventListener('click', () => {
           const s = mount.querySelector('[data-settings]');
@@ -1477,6 +1558,7 @@ registerModule(
         clearTimer(pollTimer); pollTimer = null;
         clearTimer(tickTimer); tickTimer = null;
         clearTimer(graceTimer); graceTimer = null;
+        if (waitTimer != null) { clearTimer(waitTimer); waitTimer = null; }
         clearFailWait();
         clearStall();
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
@@ -1485,6 +1567,9 @@ registerModule(
         heldSignal.release();
         try { presetsLib?.destroy(); } catch { /* already gone */ }
         try { player?.destroy(); } catch { /* noop */ } player = null; },
+
+      // For a suite: whether it is waiting for Start, and what is loaded.
+      __probe: () => ({ waiting, currentId }),
 
       // LIVE OPTIONS for the declared `presetId` field — this person's saved YouTube presets,
       // which are data and cannot be written into the manifest. Same pattern as photos.js's
