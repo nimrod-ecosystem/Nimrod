@@ -72,15 +72,67 @@ export const RATING_DEFAULTS = Object.freeze({
 });
 
 // Mike's numbers (and the two around them). See `adaptive_play.js`'s settings for the argument.
+//
+// *** THE THRESHOLDS DEPEND ON THE LEVEL (Mike, 2026-10-02): "The threshold for when to add harder or go
+// back to easier questions should probably have different defaults depending on your difficulty level.
+// For easier levels it should be like 90% (maybe even higher) right or 75% wrong." ***
+//   `moveUpAbove` / `moveDownBelow` are now 'auto' by default: the step-up and step-down come from the
+//   CURVE below, read at the player's level. A NUMBER there (a person who chose one, the old rows' values)
+//   still means what it always meant - one threshold at every level, "more than" / "less than" - so
+//   nobody's saved choice changes meaning.
+//   THE CURVE: straight lines from the easiest level to the hardest, by where the level sits between the
+//   bottom and the top of what the game has (so a three-level game and a seven-level game both run the
+//   whole curve):
+//     step UP   when the share RIGHT over the window is at least   upEasy 0.90  ->  upHard 0.70
+//     step DOWN when the share WRONG over the window is at least  downEasy 0.75 ->  downHard 0.50
+//   On five levels: 90/75, 85/69, 80/63, 75/56, 70/50 - Mike's easy end exactly, and the coordinator's
+//   "about 80/60 in the middle, 70/50 at the top". ARGUED:
+//     * HIGH AT THE BOTTOM, both ways. Up: an easy level is where somebody is relearning, and moving them
+//       on at 8 of 10 moves them onto questions they cannot yet do; 9 of 10 says it is really there.
+//       Down: there is nowhere much easier to go, and a bad day should not undo a week - it takes three in
+//       four wrong. Mike fixed both numbers.
+//     * LOWER AT THE TOP, both ways. Up: hard questions are hard for everybody, and 9 of 10 on them may
+//       never come - a player stuck under a ceiling they have earned stops playing. Down: missing half of
+//       the hardest questions already says they are too hard, and waiting for three in four is a long run
+//       of misses for somebody who is struggling.
+//     * A STRAIGHT LINE, not steps: no level is a cliff, and the four ends are the whole explanation.
+//       AGAINST: a caregiver cannot read the middle number off a row. It is said in the row's note.
+//   "At least" (>=), Mike's wording ("90% right"), not the old rows' "more than". The window is the same
+//   `judgeOver` answers; a hint-helped answer still counts as half right (and so half wrong).
+export const THRESHOLD_DEFAULTS = Object.freeze({ upEasy: 0.9, upHard: 0.7, downEasy: 0.75, downHard: 0.5 });
 export const LADDER_DEFAULTS = Object.freeze({
-  moveUpAbove: 0.8,
-  moveDownBelow: 0.5,
+  moveUpAbove: 'auto',
+  moveDownBelow: 'auto',
+  ...THRESHOLD_DEFAULTS,
   judgeOver: 10,
   levelsAtOnce: 2,
   target: 0.8,
   spread: 4,
   avoidRecent: 4,
 });
+const EPS = 1e-9;
+
+/**
+ * The step-up and step-down thresholds at `level` (1 is the easiest) of a game whose top level is
+ * `maxLevel`. Returns `{ up, down, upStrict, downStrict, rightBelow }`:
+ *   up         the share right that steps up (>= up, or > up when `upStrict` - a number from the old rows)
+ *   down       the share WRONG that steps down (>=), or null when stepping down is off
+ *   rightBelow the old row's number when one was chosen: steps down when the share right is BELOW it
+ * An unknown top (Infinity) reads every level as the easiest - the cautious end.
+ */
+export function thresholdsAt(level = 1, maxLevel = Infinity, o = {}) {
+  const c = { ...LADDER_DEFAULTS, ...(o || {}) };
+  const top = Number.isFinite(Number(maxLevel)) ? Math.max(1, Math.floor(Number(maxLevel))) : null;
+  const lv = Math.max(1, Math.floor(num(level, 1)));
+  const p = top && top > 1 ? Math.min(1, (Math.min(lv, top) - 1) / (top - 1)) : 0;
+  const lerp = (a, b) => num(a, 0) + (num(b, 0) - num(a, 0)) * p;
+  const out = { up: null, down: null, upStrict: false, rightBelow: null };
+  if (c.moveUpAbove === 'auto' || c.moveUpAbove == null) out.up = lerp(c.upEasy, c.upHard);
+  else { out.up = num(c.moveUpAbove, 0.8); out.upStrict = true; }
+  if (c.moveDownBelow === 'auto' || c.moveDownBelow == null) out.down = lerp(c.downEasy, c.downHard);
+  else if (num(c.moveDownBelow, 0) > 0) out.rightBelow = num(c.moveDownBelow, 0);
+  return out;
+}
 
 const num = (v, d) => (Number.isFinite(Number(v)) ? Number(v) : d);
 const opt = (o = {}) => ({ ...RATING_DEFAULTS, ...(o || {}) });
@@ -183,15 +235,18 @@ export function recentRate(recent = [], judgeOver = LADDER_DEFAULTS.judgeOver) {
 }
 
 /**
- * MIKE'S RULE. 'up' when the recent rate is ABOVE `moveUpAbove` (strictly: "> 80%", so 9 of 10),
- * 'down' when below `moveDownBelow` (0 turns moving down off), else null.
+ * MIKE'S RULE, AT THIS LEVEL (`o.level`, the player's floor; `o.maxLevel`, the game's top). 'up' when the
+ * share right over the window reaches the level's step-up, 'down' when the share wrong reaches its
+ * step-down (thresholdsAt), else null. A number in `moveUpAbove` / `moveDownBelow` is the old flat rule.
  */
 export function judgeWindow(recent = [], o = {}) {
   const c = { ...LADDER_DEFAULTS, ...(o || {}) };
   const rate = recentRate(recent, c.judgeOver);
   if (rate == null) return null;
-  if (rate > num(c.moveUpAbove, 0.8)) return 'up';
-  if (num(c.moveDownBelow, 0) > 0 && rate < num(c.moveDownBelow, 0)) return 'down';
+  const t = thresholdsAt(c.level ?? 1, c.maxLevel, c);
+  if (t.upStrict ? rate > t.up : rate >= t.up - EPS) return 'up';
+  if (t.down != null && t.down > 0 && 1 - rate >= t.down - EPS) return 'down';
+  if (t.rightBelow != null && rate < t.rightBelow) return 'down';
   return null;
 }
 
@@ -203,9 +258,9 @@ export function stepFloor({ floor = 1, recent = [] } = {}, score = 0, o = {}) {
   const c = { ...LADDER_DEFAULTS, ...(o || {}) };
   const keep = Math.max(1, Math.floor(num(c.judgeOver, 10)));
   const next = [...(recent || []), Math.max(0, Math.min(1, num(score, 0)))].slice(-keep);
-  const dir = judgeWindow(next, c);
   const top = Number.isFinite(c.maxLevel) ? Math.max(1, Math.floor(c.maxLevel)) : Infinity;
   const f = Math.max(1, Math.floor(num(floor, 1)));
+  const dir = judgeWindow(next, { ...c, level: f });
   if (dir === 'up' && f < top) return { floor: f + 1, recent: [], moved: 'up' };
   if (dir === 'down' && f > 1) return { floor: f - 1, recent: [], moved: 'down' };
   return { floor: f, recent: next, moved: null };

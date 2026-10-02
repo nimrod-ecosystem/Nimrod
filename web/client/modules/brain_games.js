@@ -38,13 +38,25 @@
 // for somebody who wants the pressure. Hiding is one change per question, far below any flash limit,
 // and is held to the screen's limit anyway (`flash_limit.js`).
 //
-// EVERYTHING between the questions is the shared miss flow (`quiz_flow.js`, `quiz_view.js`): one
-// switch walks "Is it the square?", touch answers a tile, voice answers anything. Each player at
-// their own level, turns, points and the scoreboard, exactly as in the thinking games.
+// EVERYTHING between the questions is the shared miss flow (`quiz_flow.js`, `quiz_view.js`): touch
+// answers a tile, voice answers anything, one switch walks the answers. Each player at their own level,
+// turns, points and the scoreboard, exactly as in the thinking games.
+//
+// *** SAY THE ANSWER, NOT YES / NO, BY DEFAULT (Mike, 2026-10-02 late): "Brain games shouldn't be yes/no
+// by default. You should be able to say the answer. Yes/no should be an option though. That could be
+// good to have yes/no head tracking for people that download head tracking." *** `answerBy` 'choices':
+// the question is asked and nothing is offered after it ("Is it the square?" is gone from the default);
+// the answer is said (a shape's name, a number, a word - any of them, the whole vocabulary is open),
+// tapped, or walked to with a switch. 'yesno' brings the offer back, for a nod and a shake.
+//
+// *** IT WAITS FOR START, SILENTLY, WITH THE COMPUTER PLAYING (Mike, same evening: "Brain games just
+// starts talking. It should preferably have a computer playing the game and a start button."). ***
+// quiz_view.js's start gate; the demo deals its own questions (`demo` below), never the ladder's.
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
-import { flowSettings, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
+import { flowSettings, answerByField, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
+import { autostartFields, attractFields, ATTRACT_DEFAULTS, START_VOICE } from '../game_start.js';
 import { quizModule } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
 import { BANKS, shapeSvg } from '../brain_banks.js';
@@ -97,9 +109,17 @@ export const DEFAULTS = Object.freeze({
   roundSize: 5,
   quickLookMs: 0,
   boardScan: 'rows',
+  answerBy: 'choices',
+  autostart: false,
+  autostartAlone: 'same',
+  ...ATTRACT_DEFAULTS,
   ...ADAPTIVE_DEFAULTS,
   ...LINES,
 });
+// The demo shows the three kinds whose answer is one tile (the order game is a sequence of presses, and
+// its "remember these" screen is not much to watch). Low levels: a demo is for seeing how it goes.
+export const DEMO_KINDS = Object.freeze(['odd', 'count', 'next']);
+export const DEMO_MAX_LEVEL = 2;
 
 // EACH DEFAULT, ARGUED:
 //   game mix        varied, and every kind turns up; one setting picks a single kind.
@@ -111,6 +131,9 @@ const SETTINGS = [
     options: [{ value: 'mix', label: 'A mix of all four' }, { value: 'odd', label: 'Which one is different' },
               { value: 'order', label: 'Remember the order' }, { value: 'count', label: 'Quick count' },
               { value: 'next', label: 'What comes next' }] },
+  answerByField({ on: 'choices' }),
+  ...autostartFields({ on: false }),
+  ...attractFields({ on: true }),
   { key: 'mixBy', label: 'In a mix, change the kind', kind: 'choice', default: 'question', level: 'standard',
     options: [{ value: 'question', label: 'Every question' }, { value: 'round', label: 'Every round' }],
     note: 'Only when the game is a mix.' },
@@ -229,7 +252,7 @@ registerModule(
   { type: GAME, title: 'Brain games', core: 'new',
     description: 'Quick rounds: which one is different, remember the order, how many dots, what comes '
       + 'next. Each player at their own level; nothing is timed unless that is turned on.',
-    dependsOn: 'local', importance: 'optional', settings: SETTINGS },
+    dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;
     let cfgNow = { ...DEFAULTS };
@@ -306,8 +329,18 @@ registerModule(
     const isRevealing = () => { try { return !!api?.engine.snapshot().revealed; } catch { return false; } };
     const pickedNames = (it, entry) => namesOf(it, entry);
 
+    // A demo question: straight from the banks, NEVER through the ladder (which would count it as asked,
+    // move "recent", and could even start the question writer).
+    function demoItem(gameId, r) {
+      const kinds = DEMO_KINDS.includes(gameId) ? [gameId] : DEMO_KINDS;
+      const kind = kinds[Math.floor((Number(r()) || 0) * kinds.length) % kinds.length];
+      const pool = (BANKS[kind] || []).filter((q) => (Number(q.level) || 1) <= DEMO_MAX_LEVEL);
+      return pool.length ? pool[Math.floor((Number(r()) || 0) * pool.length) % pool.length] : null;
+    }
+
     const adapterFor = (gameId) => ({
       items: () => deal(gameId),
+      demo: (r = rand) => demoItem(gameId, r),
       empty: () => 'There are no questions for this game yet.',
       entry: () => (dealt && dealt.kind === 'order' ? 'letters' : null),
       ask(it, c) {
@@ -459,7 +492,7 @@ registerModule(
     };
 
     const inner = quizModule({ type: GAME, title: 'Brain games', scoreLabel: 'Brain games: right answers',
-      games, defaults: DEFAULTS, gameKey: 'game', view })(ctx);
+      games, defaults: DEFAULTS, gameKey: 'game', view, startGate: true, autostart: DEFAULTS.autostart })(ctx);
     inner.__session = session;
     inner.__state = () => ({ studied, hidden, roundNo, roundAsked, roundRight, dealt });
     return inner;

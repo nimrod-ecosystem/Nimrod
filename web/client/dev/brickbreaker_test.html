@@ -44,6 +44,7 @@ import { GAME, DEFAULTS, REST_MS, IDLE_BALLS, AIM, statusFor } from '../modules/
 import { SYSTEM_TOPICS } from '../actions.js';
 import { SHELL_STATE } from '../shell_verbs.js';
 import { moduleVoiceTable } from '../input_speech.js';
+import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -98,12 +99,17 @@ function scratch(w = 960, h = 540) {
   return el;
 }
 let n = 0;
+// `started`: the sections written before 2026-10-02's Start button test the game in play, so they open it
+// with `autostart` on; `started: false` mounts it as it now ships (waiting for Start, the demo running).
 function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
-                 points = fakeStream(), rand = () => 0.3, clock = manualClock(), injectClock = true, contexts = [] } = {}) {
-  const state = fakeState(saved);
+                 points = fakeStream(), rand = () => 0.3, clock = manualClock(), injectClock = true, contexts = [],
+                 started = true, timers = null, extra = {} } = {}) {
+  const state = fakeState(started ? { autostart: true, ...saved } : saved);
   const inst = mountModule(GAME, {
     mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
     instanceId: `bb${++n}`, reducedMotion, rand, audio,
+    ...(timers ? { setTimer: timers.set, clearTimer: timers.clear } : {}),
+    ...extra,
     ...(injectClock ? { clock } : {}),
     makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; },
     makeEvents: (k) => (k === 'points' ? points : fakeStream()),
@@ -548,11 +554,24 @@ try {
     check('pauseOpensMenu off: "pause" only pauses', q.probe().game.phase === 'paused' && !asks.includes('no') && q.probe().menuAsks === 0);
     q.inst.destroy();
     const m = getManifest(GAME);
-    check('the pause key (space by default) and the menu are settings', m.settings.some((s) => s.key === 'pauseKey' && s.default === 'space')
+    check('the game\'s own pause key (off by default: Space is the screen\'s now) and the menu are settings',
+      m.settings.some((s) => s.key === 'pauseKey' && s.default === 'off' && !s.options.some((o) => o.value === 'space'))
       && m.settings.some((s) => s.key === 'pauseOpensMenu' && s.default === true));
+    // *** THE BAR'S PAUSE (and Space, which is that button) ONLY PAUSES: no settings menu. ***
+    const b2 = createBus();
+    const asks2 = [];
+    b2.subscribe(SYSTEM_TOPICS.settings, (p) => { asks2.push(p); p?.claim?.(); });
+    const tb = mount({ bus: b2 });
+    tb.pub('select'); tb.clock.run(500);
+    b2.publish(`${GAME}/pause`, undefined, { from: 'transport' });
+    check('*** a pause from the bar (meta.from "transport") pauses and does NOT open the settings ***',
+      tb.probe().game.phase === 'paused' && asks2.length === 0 && tb.probe().menuAsks === 0);
+    b2.publish(`${GAME}/resume`, undefined, { from: 'transport' });
+    check('...and the bar\'s Play goes on', tb.probe().game.phase === 'play');
+    tb.inst.destroy();
   }
 
-  section('keys, once the game has the keyboard: the pause key, and Escape');
+  section('keys, once the game has the keyboard: Escape, and P if chosen (Space is the screen\'s play / pause)');
   {
     const bus = createBus();
     const asks = [];
@@ -569,24 +588,127 @@ try {
     window.addEventListener('keydown', spy);
     const key = (k) => root.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
     key(' ');
-    check('*** Space pauses (the default) ***', t.probe().game.phase === 'paused');
-    check('*** ...and stops there: the screen\'s own Space (Next) never sees it ***', reachedWindow === 0);
-    key(' ');
-    check('Space again goes on', t.probe().game.phase === 'play');
+    check('*** Space is NOT the game\'s any more: it goes on to the screen (whose Space is play / pause) ***',
+      reachedWindow === 1 && t.probe().game.phase === 'play');
     key('Escape');
-    check('*** Escape pauses AND asks for the settings menu ***', t.probe().game.phase === 'paused' && asks.length === 1 && reachedWindow === 0);
-    key('x');
-    check('any other key is the screen\'s, untouched', reachedWindow === 1);
+    check('*** Escape pauses AND asks for the settings menu ***', t.probe().game.phase === 'paused' && asks.length === 1 && reachedWindow === 1);
+    t.pub('resume');
     t.state.set({ pauseKey: 'p' });
-    key(' ');
-    check('pause key set to P: Space is the screen\'s again', reachedWindow === 2 && t.probe().game.phase === 'paused');
     key('P');
-    check('...and P goes on', t.probe().game.phase === 'play');
-    t.state.set({ pauseKey: 'off' });
+    check('pause key set to P: P pauses, and stops there', t.probe().game.phase === 'paused' && reachedWindow === 1);
     key('p');
-    check('pause key off: only Escape pauses', t.probe().game.phase === 'play' && reachedWindow === 3);
+    check('...and P goes on', t.probe().game.phase === 'play');
+    t.state.set({ pauseKey: 'space' });
+    key(' ');
+    check('*** a SAVED "space" (the old default) reads as off: Space still goes to the screen ***',
+      t.probe().game.phase === 'play' && reachedWindow === 2);
     window.removeEventListener('keydown', spy);
     t.inst.destroy();
+  }
+
+  // =====================================================================
+  section('*** IT WAITS FOR START, AND THE COMPUTER PLAYS MEANWHILE (Mike, 2026-10-02 late) ***');
+  {
+    const bus = createBus();
+    const scores = [];
+    const states = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const points = fakeStream();
+    const t = mount({ bus, points, started: false });
+    const p = t.probe();
+    check('*** opens NOT started: autostart is off for a game ***', p.started === false && DEFAULTS.autostart === false);
+    check('a Start button is on the panel, lit for a switch', !!t.host.querySelector('[data-start][data-on="1"]'));
+    check('*** the demo is on (arcade default) and the computer is the player ***', p.demo === true && p.agent === 'computer'
+      && DEFAULTS.attract === true);
+    check('the words say the computer is playing', t.say() === START_LINES.demo, t.say());
+    check('*** the shell is told it is not playing (so Space / the bar\'s Play starts it) ***',
+      states.length && states[states.length - 1].playing === false && states[states.length - 1].id === t.id, JSON.stringify(states));
+    check('the demo asks for frames (it moves)', t.clock.pending());
+    // Ten simulated minutes, less a little: the computer launches and plays.
+    let launched = false, catches = 0;
+    for (let i = 0; i < 300 * 30; i++) { t.clock.tick(33); const g = t.probe().game; if (g.phase === 'play') launched = true; catches = g.catches; }
+    const g = t.probe().game;
+    check(`*** the computer launches and catches (${catches} catches, ${g.misses} misses, ${g.broken} bricks) ***`,
+      launched && catches > 3 && g.broken > 0, `${catches}/${g.misses}`);
+    check('*** ...and it is not perfect: it misses some ***', g.misses > 0 || catches < 400, `${g.misses}`);
+    check('*** THE DEMO NEVER SCORES: nothing published, nothing drawn, no stats, no points ***',
+      !scores.some((s) => s.source === GAME && s.value > 0) && t.host.querySelector('[data-score]').hidden
+      && !(t.state.get().stats?.walls) && points.peek().length === 0, JSON.stringify(scores.slice(-2)));
+    check('*** silent: no sound before anybody pressed ***', t.contexts.every((c) => c.made.oscillators.length === 0));
+    // Any press starts a real game.
+    t.pub('next');
+    const r = t.probe();
+    check('*** any press (here, next) starts a REAL game: a fresh wall, the ball resting, not launched ***',
+      r.started === true && r.demo === false && r.game.phase === 'ready' && r.game.broken === 0 && aliveCount(r.game) === r.game.bricks.length);
+    check('...the Start button is gone', !t.host.querySelector('[data-start]'));
+    check('...the shell is told it is playing', states[states.length - 1].playing === true);
+    check('*** and the ball does NOT go by itself (autoLaunch 0 by default) ***', DEFAULTS.autoLaunch === 0
+      && (t.clock.run(10000), t.probe().game.phase === 'ready'));
+    t.pub('select');
+    check('primary select launches', t.probe().game.phase === 'play');
+    t.inst.destroy();
+  }
+  {
+    // The demo rests after its time; the person's own game going quiet brings it back.
+    const timers = (() => { let id = 0; const m = new Map(); return { set: (f, ms) => { m.set(++id, { f, ms }); return id; },
+      clear: (h) => m.delete(h), flush: () => { for (const [h, x] of [...m]) { m.delete(h); x.f(); } }, size: () => m.size }; })();
+    const t = mount({ started: false, saved: { attractForMs: 120000 }, timers });
+    t.clock.run(2 * 60 * 1000 + 500, 100);
+    check('*** after "the demo plays for 2 minutes" it rests: the loop stops, Start stays ***',
+      t.probe().demoRested && !t.clock.pending() && !!t.host.querySelector('[data-start]'));
+    check('...and the words stop saying the computer is playing', t.say() === START_LINES.still, t.say());
+    t.pub('select');
+    check('a press still starts a real game', t.probe().started === true);
+    // A real game nobody is playing comes to rest, then back to the demo after `attractAfterMs`.
+    t.state.set({ control: 'steps', autoLaunch: 2 });
+    t.pub('select');
+    let tries = 0;
+    while (t.probe().game.misses < IDLE_BALLS && tries++ < 5000) {
+      t.clock.tick(33);
+      const g = t.probe().game; g.paddle.x = g.ball.x > 50 ? g.paddle.w / 2 : FIELD_W - g.paddle.w / 2;
+    }
+    t.clock.run(3000);
+    check('the game came to rest, and the demo is due to come back', t.probe().idle && t.probe().restPending);
+    timers.flush();
+    check('*** after "the demo comes back after a minute": the Start button and the demo again ***',
+      t.probe().started === false && t.probe().demo === true && !!t.host.querySelector('[data-start]'));
+    t.inst.destroy();
+    const n2 = mount({ started: false, saved: { attract: false } });
+    check('"While nobody is playing: it waits, still": no demo, no frames, Start is there',
+      n2.probe().demo === false && !n2.clock.pending() && !!n2.host.querySelector('[data-start]') && n2.say() === START_LINES.still);
+    n2.inst.destroy();
+    const rm = mount({ started: false, reducedMotion: true });
+    check('*** reduced motion: no demo, whatever the setting says ***', rm.probe().demo === false && !rm.clock.pending());
+    rm.inst.destroy();
+    const cl = mount({ started: false });
+    const f = cl.host.querySelector('[data-start]');
+    f.closest('[data-bb-root]').querySelector('.bb-field').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 1, clientY: 1 }));
+    check('a click on the field starts it too', cl.probe().started === true);
+    cl.inst.destroy();
+    const pv = mount({ started: false });
+    pv.pub('pause');
+    check('"pause" on a game waiting for Start does nothing (it is not going)', pv.probe().started === false && pv.probe().game.phase !== 'paused');
+    pv.pub('resume');
+    check('*** "play" / "resume" (the bar\'s Play, Space) starts it ***', pv.probe().started === true);
+    pv.inst.destroy();
+  }
+  {
+    // AUTOSTART: the setting, and "the only thing on the dashboard".
+    const a = mount({ started: false, saved: { autostart: true } });
+    check('autostart on: it opens started (no Start button, no demo)', a.probe().started === true && !a.host.querySelector('[data-start]'));
+    a.inst.destroy();
+    const alone = mount({ started: false, saved: { autostartAlone: 'on' }, extra: { panelCount: 1 } });
+    check('*** only thing on the dashboard + "starts by itself when alone": started ***', alone.probe().started === true);
+    alone.inst.destroy();
+    const notAlone = mount({ started: false, saved: { autostartAlone: 'on' }, extra: { panelCount: () => 3 } });
+    check('...with others beside it: the plain row decides (waits)', notAlone.probe().started === false);
+    notAlone.inst.destroy();
+    const dflt = mount({ started: false, extra: { panelCount: 1 } });
+    check('*** alone, default ("the same as above"): still waits for Start ***', dflt.probe().started === false);
+    dflt.inst.destroy();
+    const v = moduleVoiceTable(getManifest(GAME).voice, { verbs: verbsFor(GAME) });
+    check('*** "start" said aloud is play while it has focus (which starts it) ***', v.start === 'play' && v['start the game'] === 'play', JSON.stringify(v));
   }
 
   section('the commands: left, right, stop, launch (voice and switch alike)');

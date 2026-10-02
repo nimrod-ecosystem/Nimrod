@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>game start — autostart, the demo's players — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>game_start.js + game_agent.js (Mike, 2026-10-02 late)</h1>
+<p>Autostart is a setting per panel (on for media, off for games) with its own row for "the only thing on
+the dashboard"; the shell is told whether a panel is playing; the demo's players are agents - state in,
+action out - with the built-in computer for each kind and a hook for somebody's own AI.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { harness } from './quiz_test_rig.js';
+import {
+  autostartFields, attractFields, shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, demoReturnMs,
+  ATTRACT_DEFAULTS, START_VOICE, startOverlayHtml, PLAY_STATE_TOPIC,
+} from '../game_start.js';
+import {
+  registerGameAgent, gameAgentFor, listGameAgents, askAgent, validAction, COMPUTER_AGENTS, COMPUTER,
+} from '../game_agent.js';
+import { createBus } from '../bus.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+import { PHRASES, moduleVoiceTable } from '../input_speech.js';
+
+const { check, section, finish } = harness();
+
+try {
+  section('*** AUTOSTART: a setting per panel, and its own row for "the only thing on the dashboard" ***');
+  {
+    const g = autostartFields({ on: false }), m = autostartFields({ on: true });
+    check('a game\'s row defaults to off, a media panel\'s to on', g[0].key === 'autostart' && g[0].default === false && m[0].default === true);
+    check('"when it is the only thing on the dashboard": the same as above, by default', g[1].key === 'autostartAlone' && g[1].default === 'same');
+    check('off by default: waits', shouldAutostart({}, { fallback: false }) === false);
+    check('the module\'s default is the fallback', shouldAutostart({}, { fallback: true }) === true);
+    check('the panel\'s own setting wins over the default', shouldAutostart({ autostart: true }, { fallback: false }) === true
+      && shouldAutostart({ autostart: false }, { fallback: true }) === false);
+    check('*** alone + "starts by itself when alone": starts, even when the plain row says wait ***',
+      shouldAutostart({ autostart: false, autostartAlone: 'on' }, { alone: true }) === true);
+    check('*** alone + "waits when alone": waits, even when the plain row says start ***',
+      shouldAutostart({ autostart: true, autostartAlone: 'off' }, { alone: true }) === false);
+    check('not alone (or not known): the alone row is ignored', shouldAutostart({ autostart: false, autostartAlone: 'on' }, { alone: false }) === false
+      && shouldAutostart({ autostart: false, autostartAlone: 'on' }, { alone: null }) === false);
+    check('whether it is alone comes from the host (a number or a function), or is not known',
+      panelAlone({ panelCount: 1 }) === true && panelAlone({ panelCount: () => 4 }) === false && panelAlone({}) === null
+        && panelAlone({ panelCount: () => { throw new Error('x'); } }) === null);
+  }
+
+  section('the demo\'s settings');
+  {
+    const rows = [...attractFields({ on: true, sound: true }), ...autostartFields({ on: false })];
+    check('on by default for an arcade game, silent, rests after 10 minutes, back a minute after a game goes quiet',
+      ATTRACT_DEFAULTS.attract === true && ATTRACT_DEFAULTS.attractSound === false && ATTRACT_DEFAULTS.attractForMs === 600000
+        && ATTRACT_DEFAULTS.attractAfterMs === 60000);
+    check('durations stored in ms; "as long as it is open" and "never" are 0', demoLimitMs(0) === Infinity && demoLimitMs(120000) === 120000
+      && demoLimitMs('nonsense') === 600000 && demoReturnMs(0) === 0 && demoReturnMs(30000) === 30000);
+    const errs = auditFields(rows.map(normalizeField).filter(Boolean), { type: 'game_start' }).filter((x) => x.severity === 'error');
+    check('the settings audit finds no error in the rows', errs.length === 0, JSON.stringify(errs));
+    check('no row says she / her', !/\b(she|her|hers|herself)\b/i.test(rows.map((r) => `${r.label} ${r.note || ''}`).join(' ')));
+  }
+
+  section('telling the shell, and the Start button');
+  {
+    const bus = createBus();
+    const got = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => got.push(p));
+    const rep = createPlayReporter(bus, { instanceId: 'p1' });
+    rep(false); rep(false); rep(true);
+    check('*** { id, playing }, only when it changes ***', got.length === 2 && got[0].id === 'p1' && got[0].playing === false && got[1].playing === true);
+    const html = startOverlayHtml({ demo: true });
+    check('the Start button is a real button, lit for a switch, with the line under it', /<button[^>]*data-start[^>]*data-on="1"/.test(html)
+      && /computer is playing/.test(html));
+    check('no colour is written into it', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(html));
+    const v = moduleVoiceTable(START_VOICE, { verbs: ['play'] });
+    check('"start" / "start the game" said aloud press play (a verb the speech layer can press)', v.start === 'play'
+      && v['start the game'] === 'play' && Object.keys(PHRASES).includes('play'));
+    check('*** "start" is NOT in the screen-wide table (it is a sound away from "stop") ***', !Object.values(PHRASES).flat().includes('start'));
+  }
+
+  section('*** THE AGENT INTERFACE: state in, action out ***');
+  {
+    const obs = { game: 'x', kind: 'paddle', t: 0, actions: ['aim', 'launch'], state: { answer: 'secret' } };
+    check('an action not offered is dropped', validAction({ act: 'fire' }, obs) === null && validAction({ act: 'aim', x: 0.5 }, obs).x === 0.5);
+    check('a throwing agent is a null, not a crash', askAgent({ id: 'bad', decide() { throw new Error('no'); } }, obs) === null);
+    let seen = null;
+    askAgent({ id: 'peek', decide(o) { seen = o; return null; } }, obs);
+    check('*** an agent that does not ask for the answer key is not given it ***', seen && !('answer' in seen.state));
+    askAgent({ id: 'peek2', wantsAnswer: true, decide(o) { seen = o; return null; } }, obs);
+    check('...the built-in demo, which asks, is', seen.state.answer === 'secret');
+    // a slow (async) agent does not stall anything; its late answer is handed back
+    let late = null;
+    const now = askAgent({ id: 'slow', decide: async () => ({ act: 'launch' }) }, obs, {}, { onLate: (a) => { late = a; } });
+    await new Promise((r) => setTimeout(r, 10));
+    check('*** a slow agent returns nothing now, and its answer arrives later (still checked) ***', now === null && late?.act === 'launch');
+    check('the built-in computer plays every kind the games have', ['paddle', 'beat', 'quiz'].every((k) => COMPUTER_AGENTS[k]?.id === COMPUTER));
+    check('with nothing registered, the demo player is the computer', gameAgentFor('brickbreaker', 'paddle')?.id === COMPUTER);
+    // *** THE HOOK FOR SOMEBODY'S OWN AI ***
+    const off = registerGameAgent({ id: 'my-ai', label: 'My AI', games: ['brickbreaker'], decide: () => ({ act: 'launch' }) });
+    check('*** a registered player (somebody\'s AI) plays instead of the computer ***', gameAgentFor('brickbreaker', 'paddle')?.id === 'my-ai'
+      && listGameAgents('brickbreaker', 'paddle').map((a) => a.id).join() === 'my-ai,computer');
+    check('...only the games it says it plays', gameAgentFor('rhythm', 'beat')?.id === COMPUTER);
+    check('...and the computer can still be asked for by name', gameAgentFor('brickbreaker', 'paddle', { prefer: COMPUTER })?.id === COMPUTER);
+    off();
+    check('unregistered: the computer again', gameAgentFor('brickbreaker', 'paddle')?.id === COMPUTER);
+    let threw = false;
+    try { registerGameAgent({ id: 'computer', decide: () => null }); } catch { threw = true; }
+    check('nobody can register as "computer"', threw);
+  }
+
+  section('the built-in computer, each kind');
+  {
+    const P = COMPUTER_AGENTS.paddle;
+    const st = (o) => ({ actions: ['aim', 'launch'], state: { phase: 'play', ball: { x: 50, y: 20, vx: 5, vy: 10 }, paddle: { x: 20, w: 26 },
+      landingX: 60, fieldW: 100, fieldH: 62.5, readyMs: 0, ...o } });
+    check('it waits a moment, then launches', P.decide(st({ phase: 'ready', readyMs: 100 })) === null && P.decide(st({ phase: 'ready', readyMs: 1300 })).act === 'launch');
+    const mem = {};
+    const a = P.decide(st({}), { rand: () => 0.5, memory: mem });
+    check('it aims for where the ball will land (within its error)', a.act === 'aim' && Math.abs(a.x * 100 - 60) <= 26 * 0.8, String(a.x));
+    const B = COMPUTER_AGENTS.beat;
+    const bm = {};
+    const s1 = { actions: ['press'], state: { phase: 'play', beat: 7, msFromBeat: -200, pressed: false, lit: 2 } };
+    check('it does not press long before a beat', B.decide(s1, { rand: () => 0.5, memory: bm }) === null);
+    check('it presses near the beat, on the lit tile', B.decide({ ...s1, state: { ...s1.state, msFromBeat: 40 } }, { rand: () => 0.5, memory: bm })?.act === 'press');
+    check('it never presses twice on one beat', B.decide({ ...s1, state: { ...s1.state, msFromBeat: 60, pressed: true } }, { memory: bm }) === null);
+    const Q = COMPUTER_AGENTS.quiz;
+    const q = (h) => ({ actions: ['next', 'select', 'pick'], state: { phase: 'asking', choices: ['4', '5', '6'], highlight: h, answer: '5' } });
+    check('the quiz computer walks to the answer, then selects it (the switch path, shown)',
+      Q.decide(q(0)).act === 'next' && Q.decide(q(1)).act === 'select');
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

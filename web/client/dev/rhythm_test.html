@@ -44,6 +44,7 @@ import {
 import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs, markGapMs } from '../modules/rhythm.js';
 import { maxBpmFor } from '../rhythm_beat.js';
 import { worstInAnySecond, maxPerMinute, FRAME_MS } from '../flash_limit.js';
+import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -97,11 +98,15 @@ function scratch(w = 960, h = 540) {
 let n = 0;
 function mount({ host = scratch(), bus = createBus(), saved = {}, reducedMotion = false, audio = createAudioBus(),
                  points = fakeStream(), clock = manualClock(), injectClock = true, contexts = [],
-                 flashLimitPerSecond } = {}) {
-  const state = fakeState(saved);
+                 flashLimitPerSecond, demo = false, timers = null, extra = {}, rand = () => 0.42 } = {}) {
+  // The sections written before 2026-10-02's demo test a still game waiting for its first press, so they
+  // mount with the demo off; `demo: true` mounts it as it now ships (the computer tapping along).
+  const state = fakeState(demo ? saved : { attract: false, ...saved });
   const inst = mountModule(GAME, {
     mount: host, bus, state, events: null, user: 'u', profileId: 'p', personId: null,
-    instanceId: `rh${++n}`, reducedMotion, rand: () => 0.42, audio,
+    instanceId: `rh${++n}`, reducedMotion, rand, audio,
+    ...(timers ? { setTimer: timers.set, clearTimer: timers.clear } : {}),
+    ...extra,
     ...(injectClock ? { clock } : {}),
     ...(flashLimitPerSecond !== undefined ? { flashLimitPerSecond } : {}),
     makeAudioContext: () => { const c = createFakeAudioContext(); contexts.push(c); return c; },
@@ -193,8 +198,10 @@ try {
     const verbs = verbsFor(GAME);
     check('MODULE_VERBS: absent (row pending) or exactly next / prev / select / back', verbs.length === 0
       || (['next', 'prev', 'select', 'back'].every((v) => verbs.includes(v)) && verbTarget(GAME, 'select').topic === `${GAME}/select`), verbs.join(','));
-    check('defaults: 60 a minute, generous window, starts on a press, a round pays nothing', DEFAULTS.tempo === 60
-      && DEFAULTS.window === 'generous' && DEFAULTS.startOn === 'press' && DEFAULTS.roundPoints === 0);
+    check('defaults: 60 a minute, generous window, waits for Start, a round pays nothing', DEFAULTS.tempo === 60
+      && DEFAULTS.window === 'generous' && DEFAULTS.autostart === false && DEFAULTS.roundPoints === 0);
+    check('the old "the beat starts" row is gone (autostart replaced it)', !m.settings.some((r) => r.key === 'startOn')
+      && m.settings.some((r) => r.key === 'autostart' && r.default === false));
     check('every setting row is labelled', m.settings.every((r) => r.key && r.label));
     check('the tempo setting never offers a flash rate over the limit', m.settings.find((r) => r.key === 'tempo').options.every((o) => o.value <= MAX_BPM));
   }
@@ -202,7 +209,8 @@ try {
   section('at rest until somebody presses');
   {
     const t = mount();
-    check('it says press to start', t.say() === 'Press to start the beat.', t.say());
+    check('it says press Start (the demo off), and the Start button is there', t.say() === START_LINES.still
+      && !!t.host.querySelector('[data-start]'), t.say());
     check('*** nothing is lit, no loop is running ***', !t.host.querySelector('[data-lit="1"]') && !t.clock.pending());
     t.clock.run(10000);
     check('ten seconds later, still nothing, and no sound prepared', !t.probe().running && t.contexts.every((c) => c.made.oscillators.length === 0));
@@ -212,6 +220,75 @@ try {
     check('the count-in lights the first tile and says so', t.host.querySelector('[data-lit="1"]')?.dataset.tile === '0'
       && /Get ready: 4/.test(t.say()), t.say());
     t.inst.destroy();
+  }
+
+  section('*** IT WAITS FOR START, AND THE COMPUTER TAPS ALONG MEANWHILE (Mike, 2026-10-02 late) ***');
+  {
+    const bus = createBus();
+    const scores = [], states = [];
+    bus.subscribe('score/update', (p) => scores.push(p));
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+    const points = fakeStream();
+    const t = mount({ bus, points, demo: true, saved: { roundPoints: 5, goodRoundPct: 50 }, rand: (() => { let s = 7; return () => { s = (s * 16807) % 2147483647; return s / 2147483647; }; })() });
+    const p = t.probe();
+    check('*** opens NOT started, the demo running, the computer the player ***', p.started === false && p.demoRun === true
+      && p.agent === 'computer' && DEFAULTS.attract === true);
+    check('the Start button is up, and the words say the computer is playing', !!t.host.querySelector('[data-start]')
+      && t.say() === START_LINES.demo, t.say());
+    check('the shell is told it is not playing', states.length && states[states.length - 1].playing === false);
+    t.clock.run(60000);
+    const q = t.probe();
+    const hits = [...q.judged.values()].filter((v) => v === 'hit').length;
+    const others = [...q.judged.values()].filter((v) => v !== 'hit').length;
+    check(`*** a minute later the computer has been tapping: ${hits} hits, ${others} not (it is not perfect) ***`, hits > 10 && others > 0,
+      `${hits}/${others}`);
+    check('*** THE DEMO NEVER COUNTS: no score published, no stats, no points (even with round points on) ***',
+      !scores.some((s) => s.source === GAME && s.value > 0) && !(t.state.get().stats?.rounds) && points.peek().length === 0
+      && t.host.querySelector('[data-score]').hidden, JSON.stringify(t.state.get().stats));
+    check('*** silent: the demo schedules no click (attractSound off) ***', t.contexts.every((c) => c.made.oscillators.length === 0));
+    check('the words still only say the computer is playing (no verdicts of the demo\'s)', t.say() === START_LINES.demo, t.say());
+    t.pub('next');
+    const r = t.probe();
+    check('*** any press starts a REAL game: the beat starts, a fresh run, not the demo ***', r.started === true && r.running
+      && r.demoRun === false && r.judged.size === 0);
+    check('...Start is gone, and the shell is told it is playing', !t.host.querySelector('[data-start]') && states[states.length - 1].playing === true);
+    t.pub('pause');
+    t.clock.run(STATUS_GAP_MS + 50);     // the words change at most about three times a second
+    check('*** "pause" (the bar, Space) stops the beat, and says so ***', !t.probe().running && /Paused/.test(t.say())
+      && states[states.length - 1].playing === false, t.say());
+    t.pub('play');
+    check('"play" starts it again', t.probe().running);
+    t.inst.destroy();
+  }
+  {
+    const timers = (() => { let id = 0; const m = new Map(); return { set: (f, ms) => { m.set(++id, { f, ms }); return id; },
+      clear: (h) => m.delete(h), flush: () => { for (const [h, x] of [...m]) { m.delete(h); x.f(); } }, size: () => m.size }; })();
+    const t = mount({ demo: true, timers, saved: { attractForMs: 120000 } });
+    t.clock.run(2 * 60 * 1000 + 1000, 50);
+    check('*** after its 2 minutes the demo rests: the beat stops, nothing lit, Start stays ***',
+      t.probe().demoRested && !t.probe().running && !t.host.querySelector('[data-lit="1"]') && !!t.host.querySelector('[data-start]'));
+    t.pub('select');
+    check('a press starts a real game', t.probe().started && t.probe().running);
+    // Nobody presses: the round with no press stops the beat, and the demo comes back after a while.
+    t.clock.run(40000, 50);
+    check('the real beat stopped by itself (nobody pressing) and the demo is due back', !t.probe().running && t.probe().restPending);
+    timers.flush();
+    check('*** ...and back comes the Start button and the demo ***', t.probe().started === false && t.probe().demoRun === true);
+    t.inst.destroy();
+    const rm = mount({ demo: true, reducedMotion: true });
+    check('*** reduced motion: no demo (no tiles lighting by themselves) ***', rm.probe().demoRun === false && !rm.clock.pending());
+    rm.inst.destroy();
+    const auto = mount({ demo: true, saved: { autostart: true } });
+    check('autostart on: the beat starts at once, no Start button', auto.probe().started && auto.probe().running && !auto.host.querySelector('[data-start]'));
+    auto.inst.destroy();
+    const legacy = mount({ demo: true, saved: { startOn: 'open' } });
+    check('*** a saved "the beat starts as soon as it is on the screen" still means that (autostart) ***', legacy.probe().started && legacy.probe().running);
+    legacy.inst.destroy();
+    const alone = mount({ demo: true, saved: { autostartAlone: 'on' }, extra: { panelCount: 1 } });
+    check('the only thing on the dashboard, set to start by itself then: it does', alone.probe().started === true);
+    alone.inst.destroy();
+    check('"start" said aloud is in the manifest (it presses play once actions.js maps play here)',
+      getManifest(GAME).voice?.start === 'play');
   }
 
   section('*** one switch plays a whole round ***');

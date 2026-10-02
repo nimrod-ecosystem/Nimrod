@@ -102,11 +102,16 @@ try {
   section('*** MIKE\'S RULE: above 80% adds the harder level and retires the easiest ***');
   {
     check('nothing is judged before the window is full', R.judgeWindow([1, 1, 1, 1, 1, 1, 1, 1, 1], { judgeOver: 10 }) === null);
-    check('9 of 10: up (strictly above 80%)', R.judgeWindow([1, 1, 1, 1, 0, 1, 1, 1, 1, 1], { judgeOver: 10 }) === 'up');
-    check('*** exactly 8 of 10 is NOT above 80%: no move ***', R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10 }) === null);
-    check('4 of 10: down (below 50%)', R.judgeWindow([1, 0, 0, 1, 0, 1, 0, 0, 1, 0], { judgeOver: 10 }) === 'down');
+    check('9 of 10 at the easiest level: up (at least 90%)', R.judgeWindow([1, 1, 1, 1, 0, 1, 1, 1, 1, 1], { judgeOver: 10, level: 1, maxLevel: 5 }) === 'up');
+    check('*** exactly 8 of 10 at the easiest level: no move ***', R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10, level: 1, maxLevel: 5 }) === null);
+    check('*** 4 of 10 at the easiest end is NOT easier any more (it takes 75% wrong there) ***',
+      R.judgeWindow([1, 0, 0, 1, 0, 1, 0, 0, 1, 0], { judgeOver: 10, level: 1, maxLevel: 5 }) === null);
+    check('4 of 10 at the top level: down (50% wrong is enough there)', R.judgeWindow([1, 0, 0, 1, 0, 1, 0, 0, 1, 0], { judgeOver: 10, level: 5, maxLevel: 5 }) === 'down');
     check('"never easier" (0) turns moving down off', R.judgeWindow([0, 0, 0, 0, 0], { judgeOver: 5, moveDownBelow: 0 }) === null);
-    check('the threshold is a setting: 70% moves on 8 of 10', R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10, moveUpAbove: 0.7 }) === 'up');
+    check('the old flat rule is still a setting: "more than 70%" moves on 8 of 10 at any level',
+      R.judgeWindow([1, 1, 0, 1, 1, 0, 1, 1, 1, 1], { judgeOver: 10, moveUpAbove: 0.7, level: 1, maxLevel: 5 }) === 'up');
+    check('...and "less than 50% right" moves down on 4 of 10 at any level',
+      R.judgeWindow([1, 0, 0, 1, 0, 1, 0, 0, 1, 0], { judgeOver: 10, moveDownBelow: 0.5, level: 1, maxLevel: 5 }) === 'down');
     check('helped answers count half', R.recentRate([1, 0.5, 0.5, 1], 4) === 0.75);
     let st = { floor: 1, recent: [] };
     for (let i = 0; i < 9; i++) st = R.stepFloor(st, 1, { judgeOver: 10 });
@@ -120,6 +125,38 @@ try {
     check('...and level 1 questions went out', before.includes(1) && !after.includes(1));
     check('the top level is a ceiling', R.stepFloor({ floor: 5, recent: Array(9).fill(1) }, 1, { judgeOver: 10, maxLevel: 5 }).floor === 5);
     check('level 1 is a floor', R.stepFloor({ floor: 1, recent: Array(9).fill(0) }, 0, { judgeOver: 10 }).floor === 1);
+  }
+
+  section('*** THE THRESHOLDS DEPEND ON THE LEVEL (Mike, 2026-10-02: "For easier levels it should be like 90% ... right or 75% wrong") ***');
+  {
+    const t1 = R.thresholdsAt(1, 5), t3 = R.thresholdsAt(3, 5), t5 = R.thresholdsAt(5, 5);
+    check('the easiest level: up at 90% right, down at 75% wrong (Mike\'s numbers)', t1.up === 0.9 && t1.down === 0.75, JSON.stringify(t1));
+    check('the middle: 80% / 62.5%', Math.abs(t3.up - 0.8) < 1e-9 && Math.abs(t3.down - 0.625) < 1e-9, JSON.stringify(t3));
+    check('the hardest: 70% / 50%', Math.abs(t5.up - 0.7) < 1e-9 && Math.abs(t5.down - 0.5) < 1e-9, JSON.stringify(t5));
+    check('every step in between is no higher than the one below it (a straight line down)',
+      [1, 2, 3, 4, 5].map((l) => R.thresholdsAt(l, 5)).every((t, i, a) => i === 0 || (t.up <= a[i - 1].up && t.down <= a[i - 1].down)));
+    check('a three-level game runs the whole curve too', Math.abs(R.thresholdsAt(3, 3).up - 0.7) < 1e-9 && R.thresholdsAt(1, 3).up === 0.9);
+    check('an unknown top reads as the easiest (the cautious end)', R.thresholdsAt(4, Infinity).up === 0.9);
+    // The four checks the coordinator asked for.
+    const easy = { judgeOver: 10, maxLevel: 5 };
+    let s = { floor: 1, recent: [1, 1, 1, 1, 0, 1, 1, 1, 1] };
+    check('*** easy level: 9 of 10 right steps up ***', R.stepFloor(s, 1, easy).moved === 'up');
+    s = { floor: 1, recent: [1, 1, 0, 1, 1, 0, 1, 1, 1] };
+    check('*** easy level: 8 of 10 does not ***', R.stepFloor(s, 1, easy).moved === null);
+    const down = { judgeOver: 4, maxLevel: 6 };
+    check('*** easy level (2 of 6): 75% wrong steps down ***', R.stepFloor({ floor: 2, recent: [0, 1, 0] }, 0, down).moved === 'down');
+    check('...and 50% wrong there does not', R.stepFloor({ floor: 2, recent: [0, 1, 1] }, 0, down).moved === null);
+    const hard = { judgeOver: 10, maxLevel: 5 };
+    check('*** a harder level steps up at its lower threshold: 7 of 10 at the top band (level 4 of 5 needs 75%, level 5 70%) ***',
+      R.judgeWindow([1, 1, 1, 0, 1, 1, 0, 1, 0, 1], { ...hard, level: 5 }) === 'up'
+        && R.judgeWindow([1, 1, 1, 0, 1, 1, 0, 1, 0, 1], { ...hard, level: 1 }) === null);
+    check('8 of 10 steps up from level 3 (80% there), not from level 1',
+      R.stepFloor({ floor: 3, recent: [1, 1, 0, 1, 1, 0, 1, 1, 1] }, 1, hard).moved === 'up'
+        && R.stepFloor({ floor: 1, recent: [1, 1, 0, 1, 1, 0, 1, 1, 1] }, 1, hard).moved === null);
+    check('*** a person\'s own setting overrides the defaults: easiest step-up at 80% moves on 8 of 10 ***',
+      R.stepFloor({ floor: 1, recent: [1, 1, 0, 1, 1, 0, 1, 1, 1] }, 1, { ...hard, upEasy: 0.8 }).moved === 'up');
+    check('...and a flat "more than 85%" is one rule at every level', R.thresholdsAt(5, 5, { moveUpAbove: 0.85 }).up === 0.85
+      && R.thresholdsAt(5, 5, { moveUpAbove: 0.85 }).upStrict === true);
   }
 
   section('choosing inside the pool: nearest the target success rate, not repeating');
@@ -309,7 +346,10 @@ try {
     check('players, adapt, the threshold, the window, the levels, review, points, and the writer are all settings',
       ['players', 'adapt', 'startLevel', 'moveUpAbove', 'moveDownBelow', 'judgeOver', 'levelsAtOnce', 'review', 'showLevel',
         'pointsFor', 'aiWrite', 'aiWhenFewer', 'turnLine'].every((k) => keys.includes(k)), keys.join(','));
-    check('Mike\'s 80% is the default', rows.find((r) => r.key === 'moveUpAbove').default === 0.8);
+    check('the thresholds go by level by default (Mike, 2026-10-02)', rows.find((r) => r.key === 'moveUpAbove').default === 'auto'
+      && rows.find((r) => r.key === 'moveDownBelow').default === 'auto');
+    check('*** the curve\'s four ends are settings: 90% / 70% right, 75% / 50% wrong ***',
+      ['upEasy', 'upHard', 'downEasy', 'downHard'].map((k) => rows.find((r) => r.key === k)?.default).join() === '0.9,0.7,0.75,0.5');
     check('the writer is off by default', rows.find((r) => r.key === 'aiWrite').default === 'off');
     const errs = auditFields(rows, { type: 'adaptive' }).filter((f) => f.severity === 'error');
     check('no audit errors', errs.length === 0, JSON.stringify(errs));

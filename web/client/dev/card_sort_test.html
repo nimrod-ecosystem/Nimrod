@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>card sort — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:960px;height:540px}
+</style>
+</head>
+<body>
+<h1>card sort (Mike, 2026-10-02)</h1>
+<p>Name the suit of a card, then say where it goes among cards already done this hand: higher or lower
+than one, lower / middle / higher among two, and up to every card done. On the adaptive ladder, with the
+per-level thresholds. Say it, tap it, or walk it with one switch. Waits for Start.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig } from './quiz_test_rig.js';
+import { getManifest } from '../module.js';
+import {
+  GAME, GAMES, DEFAULTS, LINES, LEVEL_REFS, MAX_LEVEL, BANK, refsWanted, pickRefs, placeOk, rightPlace, suitFromText,
+  rankFromText, placeFromText, placeLabel, placeWords, judgeItem, rankValue,
+} from '../modules/card_sort.js';
+import { LADDER_KEY } from '../adaptive_play.js';
+import { ROUTES, routeFor } from '../input_speech.js';
+import { auditFields } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+const C = (r, s) => ({ r, s });
+function ladderStore(init = {}) {
+  let v = { ...init };
+  return { load: async () => {}, get: () => v, set: (p) => { v = { ...v, ...p }; }, destroy() {}, peek: () => v };
+}
+const R = (saved = {}, opts = {}) => {
+  const store = opts.store || ladderStore();
+  const s = opts.fresh ? saved : { autostart: true, ...saved };
+  const r = rig(GAME, { saved: s, rand: opts.rand || (() => 0.3), ...opts,
+    extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...(opts.extra || {}) } });
+  return Object.assign(r, { ladder: store, item: () => r.probe().item, st: () => r.inst.impl.__state(),
+    session: () => r.inst.impl.__session });
+};
+const tap = (r, v) => r.host.querySelector(`[data-pick="${CSS.escape(String(v))}"]`)?.click();
+
+try {
+  section('the levels (Mike: "start out with just one card ... work your way up to ... all the cards")');
+  {
+    check('level 1 is the suit only; 2 one card; 3 two; 4 three; 5 five; 6 every card done',
+      [1, 2, 3, 4, 5].map((l) => LEVEL_REFS[l]).join() === '0,1,2,3,5' && LEVEL_REFS[6] === 'all' && MAX_LEVEL === 6);
+    check('"all" is every card done this hand', refsWanted(6, 5) === 5 && refsWanted(6, 0) === 0 && refsWanted(3, 9) === 2);
+    check('the ladder has a few questions at every level', [1, 2, 3, 4, 5, 6].every((l) => BANK.filter((q) => q.level === l).length >= 3));
+  }
+
+  section('placing, pure');
+  {
+    const refs = [C(4, 'H'), C(9, 'S')];
+    check('lower / in the middle / higher among two', placeOk(C(2, 'C'), refs, 0) && placeOk(C(6, 'C'), refs, 1) && placeOk(C(12, 'C'), refs, 2)
+      && !placeOk(C(6, 'C'), refs, 0) && !placeOk(C(6, 'C'), refs, 2));
+    check('*** the same rank goes either side of it (both right) ***', placeOk(C(4, 'C'), refs, 0) && placeOk(C(4, 'C'), refs, 1));
+    check('the right place is found', rightPlace(C(6, 'C'), refs) === 1 && rightPlace(C(13, 'C'), refs) === 2);
+    check('aces low by default, high as a setting', rankValue(C(1, 'S')) === 1 && rankValue(C(1, 'S'), 'high') === 14
+      && rightPlace(C(1, 'S'), refs, 'high') === 2 && DEFAULTS.aces === 'low');
+    const sorted = pickRefs([C(9, 'S'), C(2, 'H'), C(13, 'D'), C(5, 'C')], 3, () => 0);
+    check('the cards it is placed among are shown in order, lowest first', sorted.every((c, i) => i === 0 || c.r >= sorted[i - 1].r) && sorted.length === 3);
+    check('suits said aloud: "hearts", "a heart", "it\'s spades"', suitFromText('hearts') === 'H' && suitFromText('a heart') === 'H'
+      && suitFromText("it's spades") === 'S' && suitFromText('banana') === null);
+    check('ranks said aloud: "seven", "7", "the jack", "ace"', rankFromText('seven') === 7 && rankFromText('7') === 7
+      && rankFromText('the jack') === 11 && rankFromText('ace') === 1);
+    const one = [C(5, 'H')];
+    check('one card: "higher" / "lower"', placeFromText('higher', one) === 1 && placeFromText('lower', one) === 0
+      && placeFromText('it is bigger', one) === 1);
+    check('two: "in the middle", "lower", "higher"', placeFromText('in the middle', refs) === 1 && placeFromText('lower', refs) === 0
+      && placeFromText('higher', refs) === 2);
+    const four = [C(2, 'H'), C(5, 'S'), C(9, 'D'), C(11, 'C')];
+    check('many: "between the five and the nine", "after the jack", "before the two", "first", "last"',
+      placeFromText('between the five and the nine', four) === 2 && placeFromText('after the jack', four) === 4
+        && placeFromText('before the two', four) === 0 && placeFromText('first', four) === 0 && placeFromText('last', four) === 4);
+    check('"higher than the five" / "lower than the nine"', placeFromText('higher than the five', four) === 2
+      && placeFromText('lower than the nine', four) === 2);
+    check('"between" two that are not next to each other cannot be told (not a guess)', placeFromText('between the two and the nine', four) === null);
+    check('nothing understood: null (never a miss)', placeFromText('banana', four) === null);
+    check('the places\' names: Lower / Higher; In the middle; Between 5♠ and 9♦', placeLabel(0, one) === 'Lower' && placeLabel(1, refs) === 'In the middle'
+      && placeLabel(2, four) === 'Between 5♠ and 9♦' && placeWords(2, four) === 'between the 5 and the 9');
+    const it = { kind: 'place', card: C(7, 'H'), refs: four };
+    check('judging: "s2" right, "s0" wrong, said "between the five and the nine" right', judgeItem(it, 's2') === true
+      && judgeItem(it, 's0') === false && judgeItem(it, 'between the five and the nine') === true && judgeItem(it, 'banana') === null);
+    const su = { kind: 'suit', card: C(7, 'H'), refs: [] };
+    check('the suit: "H", "hearts" right, "clubs" wrong', judgeItem(su, 'H') && judgeItem(su, 'hearts') && judgeItem(su, 'clubs') === false);
+  }
+
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'local');
+    check('waits for Start; says the answer by default; the suit every card; a hand of 8; aces low',
+      f('autostart').default === false && f('answerBy').default === 'choices' && f('askSuit').default === 'always'
+        && f('handSize').default === 8 && f('aces').default === 'low');
+    check('*** on the ladder, with the per-level thresholds as settings ***', f('moveUpAbove').default === 'auto' && f('upEasy').default === 0.9
+      && f('downEasy').default === 0.75 && f('startLevel'));
+    const errs = auditFields(m.settings.map(normalizeField).filter(Boolean), { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    check('no site copy names the person it was first built for, no she / her',
+      !/christine|cici|her screen|\b(she|her|hers|herself)\b/i.test(JSON.stringify(LINES) + m.description));
+    check('"play card sort" is a spoken route to it', routeFor('play card sort') === 'play-card-sort'
+      && ROUTES['play-card-sort'].topic === `${GAME}/play` && GAMES.includes(ROUTES['play-card-sort'].payload.game));
+    check('"start" said aloud presses play', m.voice?.start === 'play');
+  }
+
+  section('*** it waits for Start, silently ***');
+  {
+    const r = R({}, { fresh: true });
+    check('not started, nothing said, a Start button', r.inst.impl.__gate().begun === false && r.said.length === 0
+      && !!r.host.querySelector('[data-start]'));
+    r.publish(`${GAME}/play`, { game: GAME });
+    check('"play card sort" starts it, and the first question is asked', r.inst.impl.__gate().begun && r.said.length === 1 && !!r.item());
+    r.inst.destroy();
+  }
+
+  section('*** level 1: name the suit (colour AND symbol AND name) ***');
+  {
+    const r = R();
+    const it = r.item();
+    check('the first card asks its suit', it.kind === 'suit' && /What suit/.test(r.last()), r.last());
+    const tiles = [...r.host.querySelectorAll('.cs-suit')];
+    check('four suit tiles, each with its symbol AND its name AND its own colour class', tiles.length === 4
+      && tiles.every((t) => /[♠♥♦♣]/.test(t.textContent) && /(Spades|Hearts|Diamonds|Clubs)/.test(t.textContent) && t.dataset.suit));
+    check('the card itself: big, its rank and symbol, read out by name for a screen reader',
+      !!r.host.querySelector(`.cs-card[data-suit="${it.card.s}"][aria-label]`));
+    check('no colour is written into the markup', !/(#[0-9a-f]{3,8}\b|rgb\(|hsl\()/i.test(r.host.innerHTML));
+    r.inst.impl.hear({ text: { S: 'spades', H: 'hearts', D: 'diamonds', C: 'clubs' }[it.card.s], confidence: 0.95 });
+    check('*** saying the suit is answering it ***', r.phase() === 'celebrate', r.phase());
+    r.timers.flush();
+    check('the card joins the hand', r.st().done.length === 1);
+    // a switch walks the suits
+    const it2 = r.item();
+    let guard = 0;
+    while (r.probe().lit !== it2.card.s && guard++ < 6) r.publish(`${GAME}/next`);
+    r.publish(`${GAME}/select`);
+    check('*** a switch walks the suits and selects one ***', r.phase() === 'celebrate');
+    r.inst.destroy();
+  }
+
+  section('*** higher levels: the suit, then where it goes among the cards done ***');
+  {
+    const store = ladderStore();
+    const r = R({ startLevel: 3, adapt: false, levelsAtOnce: 1 }, { store });
+    // The first card of a hand has nothing to be placed among: the suit only, and it is not rated.
+    const first = r.item();
+    check('the first card of a hand: the suit only (nothing done yet)', first.kind === 'suit' && first.refs.length === 0 && first.rated === false);
+    tap(r, first.card.s); r.timers.flush();
+    const second = r.item();
+    check('the second: its suit, then placed against the ONE card done (not rated: fewer than its level asks)',
+      second.kind === 'suit' && second.refs.length === 1 && second.rated === false);
+    tap(r, second.card.s); r.timers.flush();
+    check('...then higher or lower than it', r.item().kind === 'place' && /higher or lower/i.test(r.last()), r.last());
+    tap(r, `s${rightPlace(r.item().card, r.item().refs)}`); r.timers.flush();
+    const third = r.item();
+    check('*** by the third card: its suit, and two done cards to place it among ***', third.kind === 'suit' && third.refs.length === 2
+      && third.rated === true, JSON.stringify({ k: third.kind, n: third.refs.length }));
+    tap(r, third.card.s); r.timers.flush();
+    const place = r.item();
+    check('*** then WHERE IT GOES, about the same card ***', place.kind === 'place' && place.card === third.card && /lower, in the middle, or higher/i.test(r.last()), r.last());
+    const slots = [...r.host.querySelectorAll('.cs-slot')];
+    check('three places to put it (lower / in the middle / higher), each a tile, the cards between them', slots.length === 3
+      && r.host.querySelectorAll('.cs-row .cs-card').length === 2);
+    const right = `s${rightPlace(place.card, place.refs)}`;
+    const wrong = ['s0', 's1', 's2'].find((v) => !placeOk(place.card, place.refs, Number(v.slice(1))));
+    if (wrong) { tap(r, wrong); check('a wrong place is a miss with the switch line, no "it sounded like"', r.probe().misses === 1 && !/sounded/.test(r.last())); }
+    tap(r, right);
+    check('*** the right place: right ***', r.phase() === 'celebrate');
+    r.timers.flush();
+    check('the card joins the hand (three done)', r.st().done.length === 3);
+    const lad = store.peek().ladder;
+    const pid = Object.keys(lad?.players || {})[0];
+    check('*** only the full question was rated on the ladder (one result, not the suits) ***',
+      pid && lad.players[pid].games[GAME].n === 1, JSON.stringify(lad?.players));
+    r.inst.destroy();
+  }
+
+  section('the top level: among EVERY card done this hand; a full hand starts again');
+  {
+    const r = R({ startLevel: 6, adapt: false, levelsAtOnce: 1, handSize: 4, askSuit: 'first' });
+    const counts = [];
+    const kinds = [];
+    for (let i = 0; i < 6; i++) {
+      const it = r.item();
+      counts.push(it.refs.length);
+      kinds.push(it.kind);
+      tap(r, it.kind === 'suit' ? it.card.s : `s${rightPlace(it.card, it.refs)}`);
+      r.timers.flush();
+    }
+    check(`*** placed among every card done: ${counts.join(',')} (a hand of 4 starts over) ***`, counts.join() === '0,1,2,3,0,1', counts.join());
+    check('"name the suit only at the first level": a card with cards to place among goes straight to its place',
+      kinds.join() === 'suit,place,place,place,suit,place', kinds.join());
+    r.inst.destroy();
+  }
+
+  section('*** the ladder moves it: 9 of 10 at the easiest steps up ***');
+  {
+    const store = ladderStore();
+    const r = R({ judgeOver: 10, levelsAtOnce: 1 }, { store });
+    for (let i = 0; i < 10; i++) {
+      const it = r.item();
+      check(`card ${i + 1}: level 1 (the suit)`, it.level === 1 && it.kind === 'suit');
+      if (i === 4) { const w = ['S', 'H', 'D', 'C'].find((s) => s !== it.card.s); tap(r, w); r.publish(`${GAME}/skip`); }
+      else tap(r, it.card.s);
+      r.timers.flush();
+    }
+    const row = r.session().playerRow(r.session().currentPlayer().id, GAME);
+    check('*** nine of ten right: up to level 2 ***', row.floor === 2, JSON.stringify(row));
+    r.inst.destroy();
+  }
+
+  finish();
+} catch (err) { finish(err); }
+</script>
+</body>
+</html>

@@ -28,6 +28,8 @@ import { createInputBus, ACTIVATION_TOPIC, EDGE_TOPIC, PHASES, deviceClass, REJE
 import { createAccessLog, toOutbound, toOutboundBatch, toOutboundEdge, summarize, byReason } from '../access.js';
 import { attachKeyboard, keyControl, DEFAULT_BINDINGS, KEYBOARD_DEVICE } from '../input_keyboard.js';
 import { createGamepads, gamepadKey, controlLabel } from '../input_gamepad.js';
+import { normalizeRecord, mountInputRuntime, RECORD_VERSION, INPUTS_KEY } from '../input_runtime.js';
+import { PLAY_PAUSE_TOPIC, createDefaultRegistry, verbTopic } from '../actions.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -114,7 +116,7 @@ const last = (a) => a[a.length - 1];
       // under the photo was dead.
       const bus = createBus();
       const got = [];
-      bus.subscribe('photos/next', (p) => got.push(p === undefined ? '<bare>' : p));
+      bus.subscribe('photos/next', (p) => got.push(p === undefined ? '<bare>' : p)); // bare-topic-ok: a binding publishes the bare topic here, no router
       bus.addBinding({ source: 'photos-nav', signal: 'next', topic: 'photos/next' });
       const nav = bus.createSource('photos-nav');
 
@@ -127,7 +129,7 @@ const last = (a) => a[a.length - 1];
 
       // the rule the guard actually exists for is untouched
       const dropped = [];
-      bus.subscribe('photos/prev', (p) => dropped.push(p));
+      bus.subscribe('photos/prev', (p) => dropped.push(p)); // bare-topic-ok: a binding publishes the bare topic here, no router
       bus.addBinding({ source: 'photos-nav', signal: 'prev', topic: 'photos/prev',
                        transform: () => undefined });
       nav.emit('prev', { real: 1 });
@@ -581,6 +583,47 @@ const last = (a) => a[a.length - 1];
       const payload = r.log.outbound();
       check('the live log exports its own opt-in payload', payload.length === 1 && payload[0].actionId === 'photos/next');
       check('and the local record it came from keeps everything', r.log.get()[0].control === 'a');
+    }
+
+    // ================= Space is play / pause (Mike, 2026-10-02 late) =================
+    section('*** SPACE IS PLAY / PAUSE BY DEFAULT; A SAVED SETUP KEEPS WHATEVER IT SAYS ***');
+    {
+      const space = DEFAULT_BINDINGS.filter((b) => b.control === 'key: ');
+      check('*** the shipped Space is the bar\'s Pause / Play (shell/play-pause), and only that ***',
+        space.length === 1 && space[0].actionId === PLAY_PAUSE_TOPIC && space[0].actionId === 'shell/play-pause', JSON.stringify(space));
+      check('...an action the screen\'s registry knows, so a press on it fires', createDefaultRegistry().has(PLAY_PAUSE_TOPIC));
+      check('Space is no longer Next (ArrowDown still is), and Enter is still primary select',
+        !DEFAULT_BINDINGS.some((b) => b.control === 'key: ' && b.actionId === verbTopic('next'))
+        && DEFAULT_BINDINGS.some((b) => b.control === 'key:arrowdown' && b.actionId === verbTopic('next'))
+        && DEFAULT_BINDINGS.some((b) => b.control === 'key:enter' && b.actionId === verbTopic('select')));
+      const fresh = normalizeRecord(null, DEFAULT_BINDINGS);
+      check('an account with nothing saved gets Space = play / pause', fresh.bindings.find((b) => b.control === 'key: ')?.actionId === PLAY_PAUSE_TOPIC);
+      // Somebody who saved before the change: their record still has the old Space = Next binding.
+      const old = { v: RECORD_VERSION, bindings: [
+        { id: 'default/next-space', actionId: verbTopic('next'), device: KEYBOARD_DEVICE, control: 'key: ' },
+        { id: 'mine', actionId: verbTopic('select'), device: 'switch:1', control: 'a' },
+      ] };
+      const kept = normalizeRecord(old, DEFAULT_BINDINGS);
+      check('*** a SAVED record keeps its own Space (Next), untouched ***', kept.bindings.length === 2
+        && kept.bindings.find((b) => b.control === 'key: ')?.actionId === verbTopic('next'));
+      const custom = normalizeRecord({ v: RECORD_VERSION, bindings: [
+        { id: 'sp', actionId: 'verb/menu', device: KEYBOARD_DEVICE, control: 'key: ' }] }, DEFAULT_BINDINGS);
+      check('...and one that rebound Space to something else keeps that', custom.bindings[0].actionId === 'verb/menu');
+      // On a live runtime: Space publishes shell/play-pause.
+      const bus = createBus();
+      const heard = [];
+      bus.subscribe(PLAY_PAUSE_TOPIC, (p) => heard.push(p));
+      const target = document.createElement('div');
+      const rt = mountInputRuntime({ bus, fallback: DEFAULT_BINDINGS, target, modules: () => [] });
+      target.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+      target.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+      check('*** pressing Space on a live screen asks the shell to pause / play the selected panel ***', heard.length === 1, String(heard.length));
+      const st = { load: async () => {}, get: () => ({ [INPUTS_KEY]: old }), subscribe: () => () => {}, destroy() {} };
+      await rt.useState(st);
+      target.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+      target.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', bubbles: true }));
+      check('*** ...but for the person whose saved record says Space is Next, it stays Next ***', heard.length === 1);
+      rt.destroy();
     }
 
     // ================= the keyboard adapter =================

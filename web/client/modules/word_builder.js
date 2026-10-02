@@ -39,6 +39,9 @@ import { flowSettings, fill, esc, normalize, parseLetters, LETTER_WORDS } from '
 import { quizModule, up } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
 import { PUZZLES, TIER, canMake } from '../word_builder_words.js';
+// 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
+// No demo yet, so no "While nobody is playing" row.
+import { autostartFields, START_VOICE } from '../game_start.js';
 
 export const GAME = 'word_builder';
 /** One game; listed so a spoken route's `{ game }` can be checked against it like the others. */
@@ -79,6 +82,8 @@ export const DEFAULTS = Object.freeze({
   // Words are different lengths, so there is no "full": a word is checked when Check is pressed (or
   // the whole word is said). Not offered as a setting for that reason.
   checkWhenFull: false,
+  autostart: false,
+  autostartAlone: 'same',
   ...ADAPTIVE_DEFAULTS,
   ...LINES,
 });
@@ -90,6 +95,7 @@ export const DEFAULTS = Object.freeze({
 //                  on one set. Five is a few minutes; the rest still count, as bonus words.
 //   showBlanks on  the length of each word still to find is the clue a grid gives for free.
 const SETTINGS = [
+  ...autostartFields({ on: false }),
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
   { key: 'maxLetters', label: 'Letters, at most', kind: 'choice', default: 5, level: 'essential',
     options: [3, 4, 5].map((v) => ({ value: v, label: `${v} letters` })),
@@ -212,7 +218,7 @@ registerModule(
   { type: GAME, title: 'Word builder', core: 'new',
     description: 'A few big letters: find the words they make. Read aloud; answer by voice, one switch '
       + 'or touch. More letters and harder words as the words come easily, for each player.',
-    dependsOn: 'local', importance: 'optional', settings: SETTINGS },
+    dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;
     let cfgNow = { ...DEFAULTS };
@@ -408,7 +414,9 @@ registerModule(
     };
 
     const inner = quizModule({ type: GAME, title: 'Word builder', scoreLabel: 'Word builder: words found',
-      games: { [GAME]: adapter }, defaults: DEFAULTS, view })(ctx);
+      // `gameKey`: so "play word builder" said aloud (input_speech.js ROUTES, `word_builder/play`) reaches it -
+      // one game, but asking for it by name is pressing Start (2026-10-02; before, nothing answered that topic).
+      games: { [GAME]: adapter }, defaults: DEFAULTS, gameKey: 'game', view, startGate: true, autostart: DEFAULTS.autostart })(ctx);
     inner.__session = session;
     inner.__sets = sets;
     inner.__current = () => current;

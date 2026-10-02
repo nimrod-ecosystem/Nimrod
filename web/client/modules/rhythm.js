@@ -45,6 +45,15 @@
 // for a press is ordinary; games are settled - CLAUDE.md). A round is a count-in, 16 beats to play,
 // then a short rest showing how it went; the next round starts by itself. A round with no press in it
 // at all stops the beat, so an empty room does not get a metronome ticking all night.
+//
+// *** A START BUTTON, AND THE COMPUTER PLAYING MEANWHILE (Mike, 2026-10-02 late). *** It opens waiting
+// for Start (`autostart`, off; game_start.js argues it, and it replaces the old `startOn` row - a saved
+// "as soon as it is on the screen" still reads as autostart on). Meanwhile the computer taps along
+// (game_agent.js), a little off the beat and missing one now and then, SILENT unless `attractSound`, and
+// never counted: no score, no points, no stats. Any press starts a real game, and the beat with it. A
+// beat that stopped because nobody was playing brings the demo back after `attractAfterMs`.
+// PAUSE / PLAY (the bar's button, Space, "pause"): `rhythm/pause` stops the beat; `rhythm/play` starts it
+// (or starts the game). The verb map entries are actions.js's (lines handed to its owner).
 
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
@@ -56,6 +65,11 @@ import {
   roundOf, createPattern, maxBpmFor,
 } from '../rhythm_beat.js';
 import { flashLimit, minFlashPeriodMs, normalizeFlashLimit } from '../flash_limit.js';
+import {
+  autostartFields, attractFields, shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, demoReturnMs,
+  ATTRACT_DEFAULTS, START_VOICE, START_LINES, ensureStartStyle, startOverlayHtml,
+} from '../game_start.js';
+import { gameAgentFor, askAgent } from '../game_agent.js';
 
 export const GAME = 'rhythm';
 export const SCORE_LABEL = 'Rhythm: on the beat';
@@ -94,7 +108,10 @@ export const DEFAULTS = Object.freeze({
   sound: 'click',         // a click is the clearest timing cue; 'notes' is more musical
   hitSound: true,
   beatFrom: 'own',
-  startOn: 'press',
+  // game_start.js argues these: it waits for Start, and the computer taps along meanwhile, silently.
+  autostart: false,
+  autostartAlone: 'same',
+  ...ATTRACT_DEFAULTS,
   stopWhenIdle: true,
   // *** A GOOD ROUND PAYS NOTHING BY DEFAULT. *** Both sides:
   //   FOR paying: a round on the beat is a real achievement, and points.js pays for achievement.
@@ -141,8 +158,8 @@ const SETTINGS = [
   { key: 'beatFrom', label: 'Where the beat comes from', kind: 'choice', default: 'own', level: 'advanced',
     options: [{ value: 'own', label: 'Its own metronome' }, { value: 'screen', label: 'A tempo on this screen, when there is one' }],
     note: 'A faster tempo than the limit lights every second (or fourth) beat.' },
-  { key: 'startOn', label: 'The beat starts', kind: 'choice', default: 'press', level: 'advanced',
-    options: [{ value: 'press', label: 'On the first press' }, { value: 'open', label: 'As soon as it is on the screen' }] },
+  ...autostartFields({ on: false }),
+  ...attractFields({ on: true, sound: true }),
   { key: 'stopWhenIdle', label: 'A round with no presses', default: true, level: 'advanced',
     onLabel: 'Stops the beat', offLabel: 'Keeps going' },
   { key: 'roundPoints', label: 'Play points for a good round', kind: 'number', default: 0, min: 0, max: 10, step: 1,
@@ -162,7 +179,7 @@ registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new',
     description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. '
       + 'Slow and forgiving by default, and keeps to the screen\'s flashing limit when one is set.',
-    dependsOn: 'local', importance: 'optional', settings: SETTINGS },
+    dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;
     const audio = ctx.audio || null;
@@ -201,6 +218,20 @@ registerModule(
     let markedK = null, lastMarkAt = -1e9;
     let rootEl = null, tilesEl = null, sayEl = null, scoreEl = null, tileEls = [];
     let score = null, ledger = null, tones = null;
+    // ---- waiting for Start, and the demo (game_start.js, game_agent.js) ----
+    let started = true;           // false: the Start button is up; a run, if any, is the demo's (`run.demo`)
+    let demo = false;             // the computer is tapping along
+    let demoAt = 0;               // when this demo began (the game's clock)
+    let demoRested = false;       // it ran its time: the tiles go still, Start stays
+    let demoMemory = {};
+    let agent = null;
+    let restTimer = null;
+    let overlayEl = null, lastOverlay = null;
+    const report = createPlayReporter(bus, ctx);
+    const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
+    const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
+    const demoRun = () => !!run && run.demo === true;
+    const startLine = () => (demo && !demoRested ? START_LINES.demo : START_LINES.still);
 
     const now = () => clock.now();
     const beatAt = (k) => run.origin + k * run.interval;
@@ -217,7 +248,8 @@ registerModule(
 
     // ---- the line under the tiles, never more than three changes a second ----------------------
     function wantStatus(text) {
-      statusWant = text;
+      // Waiting for Start, the words say so and nothing else: the demo's verdicts are not the person's.
+      statusWant = started ? text : startLine();
       flushStatus();
     }
     function flushStatus() {
@@ -231,6 +263,7 @@ registerModule(
     // ---- sound -------------------------------------------------------------------------------------
     function scheduleClicks(t) {
       if (!run || !armed || cfg.sound === 'off' || !tones) return;
+      if (run.demo && cfg.attractSound !== true) return;     // the demo is silent unless asked
       let k = Math.max(lastSounded + 1, run.k0);
       for (; beatAt(k) - t < LOOKAHEAD_MS; k++) {
         const rel = k - run.k0;
@@ -248,7 +281,7 @@ registerModule(
       restBeats: Number(cfg.restBeats) || 0 });
 
     // ---- start and stop ----------------------------------------------------------------------------
-    function start() {
+    function start({ demo: isDemo = false } = {}) {
       if (dead) return;
       const tp = tempoNow();
       const interval = 60000 / tp.bpm;
@@ -259,21 +292,74 @@ registerModule(
         origin = tp.origin; k0 = Math.floor((t - origin) / interval) + 1;
       } else { origin = t + interval; k0 = 0; }   // own beat: the first one a beat from now
       run = { origin, interval, k0, limit: tp.limit, meter: Math.max(1, Math.round(tp.meter / tp.every)) || 4,
-        tileOf: createPattern(cfg.pattern, cfg.tiles, Math.floor(rand() * 1e9) + 1) };
+        tileOf: createPattern(cfg.pattern, cfg.tiles, Math.floor(rand() * 1e9) + 1), demo: !!isDemo };
       lastSeen = k0 - 1; lastSounded = k0 - 1;
       judged = new Map(); round = null; lit = null; streak = 0; quietBeats = 0;
-      tones?.setActive(armed && cfg.sound !== 'off');
+      tones?.setActive(armed && cfg.sound !== 'off' && (!isDemo || cfg.attractSound === true));
+      if (!isDemo) { clearRest(); report(true); }
       render('start');
       ensureLoop();
     }
     function stop(reason = '') {
+      const real = !!run && !run.demo;
       run = null; lit = null; round = null;
       stopLoop();
       tones?.setActive(false);
+      if (real) report(false);
+      // A beat nobody was playing: the demo comes back after a while (`attractAfterMs`).
+      if (real && reason === 'idle') scheduleDemo();
       render(reason);
       ensureLoop();                  // only if the words under the tiles are still waiting their turn
     }
-    const restart = () => { if (run) { const a = armed; stop(); armed = a; start(); } };
+    const restart = () => { if (run) { const a = armed; const d = run.demo; stop(); armed = a; start({ demo: d }); } };
+
+    // ---- Start, and back to the Start screen ----------------------------------------------------------
+    function clearRest() { if (restTimer != null) { try { clearT(restTimer); } catch { /* gone */ } restTimer = null; } }
+    function scheduleDemo() {
+      const ms = demoReturnMs(cfg.attractAfterMs);
+      if (!(ms > 0) || restTimer != null || dead) return;
+      restTimer = setT(() => { restTimer = null; if (!dead && started && !run) toStartScreen(); }, ms);
+    }
+    const demoWanted = () => cfg.attract !== false && !reducedMotion();
+    function toStartScreen() {
+      if (dead) return;
+      clearRest();
+      if (run) stop();
+      started = false;
+      demo = demoWanted();
+      demoAt = now(); demoRested = false; demoMemory = {};
+      agent = demo ? gameAgentFor(GAME, 'beat') : null;
+      lastResult = null; streak = 0;
+      report(false);
+      status = ''; statusAt = -1e9;
+      if (demo && !hidden) start({ demo: true });
+      wantStatus(startLine());
+      render();
+    }
+    // ANY PRESS STARTS A REAL GAME, and the beat with it.
+    function startGame() {
+      if (dead || started) return false;
+      if (run) stop();
+      started = true; demo = false; agent = null; demoMemory = {};
+      if (!armed) { armed = true; tones?.resume(); }
+      status = ''; statusAt = -1e9;
+      start();
+      return true;
+    }
+    // The computer's turn, every frame of the demo: the beat's state in, maybe a press out.
+    function demoTick(t) {
+      if (!demoRun()) return;
+      if (t - demoAt >= demoLimitMs(cfg.attractForMs)) { demoRested = true; stop(); wantStatus(startLine()); return; }
+      const k = Math.round((t - run.origin) / run.interval);
+      if (k < run.k0) return;
+      const info = roundOf(k - run.k0, rounds());
+      const prior = judged.get(k);
+      const obs = { game: GAME, kind: 'beat', t: t - demoAt, actions: ['press'],
+        state: { phase: info.phase, beat: k, msFromBeat: t - beatAt(k), interval: run.interval,
+          pressed: !!prior && prior !== 'miss', tiles: tileEls.length, lit: run.tileOf(k - run.k0) } };
+      const a = askAgent(agent, obs, { rand, memory: demoMemory });
+      if (a && a.act === 'press' && demoRun()) judgePress(t, a.tile == null ? null : Number(a.tile));
+    }
 
     // ---- the loop ----------------------------------------------------------------------------------
     function ensureLoop() {
@@ -303,6 +389,7 @@ registerModule(
         for (let k = lastSeen + 1; k <= kNow && run; k++) onBeat(k, t);
         if (!run) { render(); return; }            // a round with nobody in it stopped the beat
         lastSeen = Math.max(lastSeen, kNow);
+        if (run.demo) { demoTick(t); if (!run) { render(); return; } }
         // beats whose window has closed with no press: a miss (no mark, no sound - just not a hit)
         for (let k = Math.max(run.k0, kNow - 2); k <= kNow; k++) {
           if (!run) break;
@@ -336,7 +423,7 @@ registerModule(
       else if (info.phase === 'play' && info.beat === 0 && !judged.has(k)) wantStatus('Go!');
       if (info.phase === 'play') {
         if (!round) round = { index: info.round, hits: 0, presses: 0, beats: Number(cfg.roundBeats) || 0 };
-        if (!(round.beats > 0)) {
+        if (!(round.beats > 0) && !run.demo) {
           quietBeats++;
           if (cfg.stopWhenIdle && quietBeats > IDLE_BEATS) { stop('idle'); return; }
         }
@@ -346,6 +433,8 @@ registerModule(
 
     function endRound() {
       const r = round;
+      // THE DEMO NEVER COUNTS: no stats, no points, no "how it went" - and it goes round again.
+      if (run?.demo) return;
       lastResult = { hits: r.hits, beats: r.beats };
       stats = { ...stats, rounds: (Number(stats.rounds) || 0) + 1, bestRound: Math.max(Number(stats.bestRound) || 0, r.hits) };
       try { state?.set?.({ stats }); } catch (err) { console.error('rhythm: save', err); }
@@ -361,12 +450,20 @@ registerModule(
     // ---- a press ------------------------------------------------------------------------------------
     function press(tile = null) {
       if (dead) return;
+      if (startGame()) return;       // waiting for Start: any press is Start, and the beat begins
       if (!armed) { armed = true; tones?.resume(); if (run) tones?.setActive(cfg.sound !== 'off'); }
       quietBeats = 0;
+      clearRest();
       if (!run) { start(); return; }
       const t = now();
       tick(t);                       // catch up first, so the press is judged against the beat as it is now
       if (!run) { start(); return; }
+      judgePress(t, tile);
+    }
+    // One press, judged against the beat. The person's presses and the demo's both come here; only the
+    // person's make a sound unless the demo was asked for its sounds, and only theirs are ever counted
+    // (endRound and render leave a demo run out).
+    function judgePress(t, tile) {
       const win = windowMs(cfg.window, run.interval);
       const j = judge(t, { origin: run.origin, interval: run.interval, window: win, offset: Number(cfg.pressOffset) || 0 });
       const info = roundOf(j.k - run.k0, rounds());
@@ -381,7 +478,7 @@ registerModule(
       if (verdict === 'hit') {
         streak++;
         if (round) round.hits++;
-        if (cfg.hitSound && tones) tones.tone(HIT_BLIP.f, HIT_BLIP.ms, { type: 'sine', level: 0.5 });
+        if (cfg.hitSound && tones && (!run.demo || cfg.attractSound === true)) tones.tone(HIT_BLIP.f, HIT_BLIP.ms, { type: 'sine', level: 0.5 });
       } else streak = 0;
       wantStatus(VERDICT_WORDS[verdict]);
       render();
@@ -403,6 +500,12 @@ registerModule(
       if (root) {
         root.dataset.motion = reducedMotion() ? 'reduce' : 'full';
         root.dataset.running = run ? '1' : '0';
+        root.dataset.started = started ? '1' : '0';
+        root.dataset.demo = demoRun() ? '1' : '0';
+      }
+      if (overlayEl) {
+        const html = started ? '' : startOverlayHtml({ demo: demo && !demoRested, note: false });
+        if (html !== lastOverlay) { overlayEl.innerHTML = html; lastOverlay = html; overlayEl.hidden = started; }
       }
       // The hit mark is itself a change on the screen, so under a flash limit it keeps the same rule as
       // the lights: at the fastest tempos a hit whose mark would come too soon after the last one is
@@ -422,13 +525,21 @@ registerModule(
         }
       });
       // the words
-      if (!run) {
+      if (!started) {
+        wantStatus(startLine());
+      } else if (!run) {
         if (reason || !status) {
           wantStatus(lastResult ? `${lastResult.hits} of ${lastResult.beats} on the beat. Press to play again.`
-            : (reason === 'back' ? 'Stopped. Press to start the beat again.' : 'Press to start the beat.'));
+            : (reason === 'back' ? 'Stopped. Press to start the beat again.'
+              : reason === 'paused' ? 'Paused. Press to go on.' : 'Press to start the beat.'));
         }
       } else if (lastSeen < run.k0 && reason === 'start') wantStatus('Get ready…');
       flushStatus();
+      // THE DEMO NEVER SCORES: nothing drawn, nothing published.
+      if (!started) {
+        if (scoreEl && scoreEl.textContent !== '') { scoreEl.textContent = ''; scoreEl.hidden = true; }
+        return;
+      }
       const own = showOwnScore(ownScoreMode({ ownScore: cfg.ownScore }), !!score?.shownElsewhere());
       const hits = round ? round.hits : (lastResult ? lastResult.hits : 0);
       const of = round?.beats || lastResult?.beats || 0;
@@ -448,17 +559,20 @@ registerModule(
     return {
       __probe: () => ({ cfg: { ...cfg }, running: !!run, run: run ? { ...run } : null, lit: lit ? { ...lit } : null,
         round: round ? { ...round } : null, lastResult, streak, armed, looping: loopHandle != null, status,
-        judged: new Map(judged), stats: { ...stats }, tones: tones?.state() || null }),
+        judged: new Map(judged), stats: { ...stats }, tones: tones?.state() || null,
+        started, demo, demoRun: demoRun(), demoRested, agent: agent?.id || null, restPending: restTimer != null }),
       __tick: () => { if (!dead) tick(now()); },
       init() {
         let cssHref = '';
         try { cssHref = new URL('../rhythm.css', import.meta.url).href; } catch { /* unstyled, still works */ }
+        ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-rh-css href="${esc(cssHref)}">` : ''}`
-          + '<div class="rh-wrap" data-rh-root><div class="rh" data-rh>'
+          + '<div class="rh-wrap gs-host" data-rh-root><div class="rh" data-rh>'
           + '<div class="rh-tiles" data-tiles></div>'
           + '<div class="rh-bar"><p class="rh-say" role="status" aria-live="polite"></p><p class="rh-score" data-score hidden></p></div>'
-          + '</div></div>';
+          + '</div><div data-start-host hidden></div></div>';
         rootEl = mount.querySelector('[data-rh-root]');
+        overlayEl = mount.querySelector('[data-start-host]');
         tilesEl = mount.querySelector('[data-tiles]');
         sayEl = mount.querySelector('.rh-say');
         scoreEl = mount.querySelector('[data-score]');
@@ -480,6 +594,8 @@ registerModule(
           next.pattern = oneOf(next.pattern, PATTERNS, DEFAULTS.pattern);
           if (!Object.prototype.hasOwnProperty.call(WINDOWS, next.window)) next.window = DEFAULTS.window;
           if (s.ownScore !== undefined) next.ownScore = s.ownScore;
+          // The old row: "The beat starts: as soon as it is on the screen" IS autostart on.
+          if (s.autostart === undefined && s.startOn === 'open') next.autostart = true;
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (tileEls.length && Number(next.tiles) !== tileEls.length) { tileEls = []; }
@@ -487,7 +603,13 @@ registerModule(
             .some((k) => next[k] !== was[k]);
         };
         applyCfg(state?.get?.());
-        state?.subscribe?.((s) => { if (applyCfg(s)) restart(); tones?.setActive(!!run && armed && cfg.sound !== 'off'); render(); });
+        state?.subscribe?.((s) => {
+          if (applyCfg(s)) restart();
+          // "While nobody is playing" changed while it waits for Start: the demo follows at once.
+          if (!started && demoWanted() !== demo) { toStartScreen(); return; }
+          tones?.setActive(!!run && armed && cfg.sound !== 'off' && (!run.demo || cfg.attractSound === true));
+          render();
+        });
 
         bus.subscribe(TEMPO_TOPIC, (raw) => {
           const t = normalizeTempo(raw);
@@ -501,16 +623,30 @@ registerModule(
         bus.subscribe(`${GAME}/next`, () => press());
         bus.subscribe(`${GAME}/prev`, () => press());
         // back stops the beat (a person stopping it, not a gate: nothing waits behind it).
-        bus.subscribe(`${GAME}/back`, () => { if (run) stop('back'); });
+        bus.subscribe(`${GAME}/back`, () => { if (run && !run.demo) stop('back'); });
+        // PAUSE / PLAY: the bar's button, Space, "pause" / "play" (once actions.js maps the verbs here).
+        // Pause stops the beat; play starts it - or, waiting for Start, starts the game.
+        bus.subscribe(`${GAME}/pause`, () => { if (started && run && !run.demo) stop('paused'); });
+        bus.subscribe(`${GAME}/play`, () => { if (startGame()) return; if (!run) { quietBeats = 0; clearRest(); start(); } });
+        // Back to the Start screen (and the demo).
+        bus.subscribe(`${GAME}/attract`, () => toStartScreen());
 
         render();
-        if (cfg.startOn === 'open') start();
+        // OPENS WAITING FOR START, unless this panel starts by itself (game_start.js).
+        if (shouldAutostart(cfg, { fallback: DEFAULTS.autostart, alone: panelAlone(ctx) })) { started = true; start(); }
+        else toStartScreen();
       },
       onResize() {},
-      onHide() { hidden = true; if (run) stop('hidden'); try { state?.flush?.(); } catch { /* nothing */ } },
-      onShow() { hidden = false; render(); },
+      onHide() {
+        hidden = true;
+        if (run) stop(run.demo ? '' : 'hidden');
+        try { state?.flush?.(); } catch { /* nothing */ }
+      },
+      // Back on screen, still waiting: the demo picks up again (unless it had already run its time).
+      onShow() { hidden = false; if (!started && demo && !demoRested && !run) start({ demo: true }); render(); },
       destroy() {
         dead = true;
+        clearRest();
         stopLoop();
         run = null;
         mount.removeEventListener('pointerdown', onPointerDown);

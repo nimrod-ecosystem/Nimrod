@@ -56,6 +56,18 @@
 //   voice    `hear({ text, confidence, alternatives, reason, nearMiss })`, the seam
 //            `input_speech.js` already sends `speech/answer` to.
 // All three end in `judgeValue`, so a right answer is right however it arrived, and paid once.
+//
+// *** THE SWITCH PATH HAS TWO SHAPES, AND A GAME PICKS ITS DEFAULT (`answerBy`, 2026-10-02 late). ***
+// Mike: "Brain games shouldn't be yes/no by default. You should be able to say the answer. Yes/no should
+// be an option though. That could be good to have yes/no head tracking for people that download head
+// tracking." The two:
+//   'yesno'    (FLOW_DEFAULTS, so every game that does not choose is unchanged) "Is it the square?" -
+//              said, and answered Yes / No. Two answers, whatever the question: the shape for somebody
+//              whose only signals are a yes and a no (a nod and a shake, two switches).
+//   'choices'  the question is asked and NOTHING is offered: say the answer, tap it, or walk the choices
+//              themselves with a switch (next / prev light one, select answers it). Brain games' default.
+// `twoSwitch: 'yesno'` (Select is Yes, Next is No) means the yes/no shape whatever `answerBy` says: two
+// switches that ARE yes and no have nothing to walk.
 
 import { YES_WORDS, NO_WORDS } from './word_games_words.js';
 
@@ -132,9 +144,21 @@ export const FLOW_DEFAULTS = Object.freeze({
   speak: true,
   sayChoice: true,
   twoSwitch: 'scan',
+  answerBy: 'yesno',
   ownScore: 'auto',
   ...FLOW_LINES,
 });
+
+/**
+ * The "how a switch answers" row, for a game that offers the choice (brain games). `on` is the game's
+ * default. The yes/no shape is the one a head tracker's nod and shake can drive.
+ */
+export function answerByField({ on = 'choices', level = 'standard' } = {}) {
+  return { key: 'answerBy', label: 'Answering', kind: 'choice', default: on, level,
+    options: [{ value: 'choices', label: 'Say it, tap it, or step through the answers' },
+              { value: 'yesno', label: 'Yes / no questions ("Is it the square?")' }],
+    note: 'Yes / no suits two switches, or a nod and a shake. Saying the answer works either way.' };
+}
 
 /** The "how long the answer stays" row, shared with word_games.js (its own SETTINGS list). */
 export const ANSWER_MS_FIELD = Object.freeze({ key: 'answerMs', label: 'How long a shown answer stays before the next question',
@@ -451,6 +475,10 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //   unknownLine(value, cfg)   what to say for a value `judge` could not judge
 //   command(cmd, item, cfg)   a spoken command `fromVoice` returned that the engine does not know:
 //                             'ask' (re-ask), another truthy value (handled), or falsy (not caught)
+//   choiceLabel(item, value, cfg)  how a candidate reads (and is said) when the switch walks the answers
+//                             ('choices', the header); absent: the value itself
+//   demo(rand)                (quiz_view.js, not the engine) a question for the computer's demo, dealt
+//                             WITHOUT touching the ladder or anything else the real game keeps
 //
 // `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
 // `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
@@ -496,10 +524,12 @@ export function createQuizEngine({
   const canReplay = () => !!(A && A.canReplay);
 
   const candidate = () => cands[ci] ?? null;
+  // The switch path's shape (`answerBy`, the header): 'choices' walks the answers; 'yesno' offers one.
+  const offers = () => (c().answerBy === 'choices' && c().twoSwitch !== 'yesno' ? 'choices' : 'yesno');
   function askLine() { return item ? String(call('ask', item, c()) || '') : ''; }
   function candLine() {
     const cand = candidate();
-    if (cand == null || entryMode()) return '';
+    if (cand == null || entryMode() || offers() === 'choices') return '';
     return String(call('offer', item, cand, c()) || '');
   }
   const answerOf = () => String(call('answer', item) ?? '');
@@ -891,6 +921,11 @@ export function createQuizEngine({
     switch (phase) {
       case 'asking':
         if (entryMode()) return [];
+        // 'choices': the answers themselves are the stops - next lights one, select answers it.
+        if (offers() === 'choices') {
+          return [...cands.map((v) => ({ act: 'pick', value: v, label: String(call('choiceLabel', item, v, c()) || v) })),
+            ...(canReplay() ? [{ act: 'replay', label: 'Listen again' }] : [])];
+        }
         return [{ act: 'yes', label: 'Yes' }, { act: 'no', label: 'No' },
           ...(canReplay() ? [{ act: 'replay', label: 'Listen again' }] : [])];
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
@@ -905,9 +940,18 @@ export function createQuizEngine({
     }
   }
 
-  function press(act) {
+  function press(act, stop = null) {
     if (dead || !item) return;
     switch (act) {
+      // A walked-to answer ('choices'): judged exactly like a heard or touched one; wrong says the
+      // switch line, never "It sounded like you said".
+      case 'pick': {
+        if (phase !== 'asking' || entryMode()) return;
+        const v = stop && stop.value != null ? stop.value : null;
+        if (v == null || v === '') return;
+        judgeValue(v, 'switch');
+        return;
+      }
       case 'yes': {
         if (phase !== 'asking' || entryMode()) return;
         const cand = candidate();
@@ -992,6 +1036,10 @@ export function createQuizEngine({
     if (c().twoSwitch === 'yesno' && delta > 0) { if (s[1]) press(s[1].act); else if (s[0]) press(s[0].act); return; }
     if (!s.length) return;
     highlight = ((highlight + delta) % s.length + s.length) % s.length;
+    // Walking the answers: the lit one is said (with "Say the switch choice too", the same row that says
+    // "Is it 7?" in the yes/no shape), so somebody who cannot see the tiles still knows where they are.
+    const lit = s[highlight];
+    if (phase === 'asking' && lit && lit.act === 'pick' && c().sayChoice) speak(lit.label);
     changed();
   }
   function select() {
@@ -1000,7 +1048,7 @@ export function createQuizEngine({
     const s = stops();
     if (!s.length) return;
     const i = c().twoSwitch === 'yesno' ? 0 : Math.min(highlight, s.length - 1);
-    press(s[i].act);
+    press(s[i].act, s[i]);
   }
 
   /**
@@ -1030,6 +1078,9 @@ export function createQuizEngine({
       entry, entryMode: entryMode(), hintsGiven,
       hints: Array.from({ length: hintsGiven }, (_, i) => hintAt(i + 1)),
       canReplay: canReplay(),
+      offers: offers(),
+      // The answer the switch has lit, in the 'choices' shape (null otherwise).
+      lit: (() => { if (phase !== 'asking') return null; const s = stops()[highlight]; return s && s.act === 'pick' ? s.value : null; })(),
     }),
     destroy() { stopTimer(); dead = true; },
   };
