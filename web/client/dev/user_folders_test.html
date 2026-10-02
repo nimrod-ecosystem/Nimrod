@@ -31,6 +31,11 @@ import { CHANNEL_IDS } from '../audio_bus.js';
 import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE } from '../user_folders.js';
 import { scanFolder, readUserFolders, userFoldersHtml, renderUserFolders, userFoldersPage, USER_FOLDER_ITEMS,
   USER_FOLDERS_PAGE, permissionWords } from '../user_folders_page.js';
+// 2026-10-02, choosing: the device's font and colour look.
+import { loadedFamilies, userFontOptions, loadDeviceFonts, USER_FONTS_EVENT } from '../user_fonts.js';
+import { refreshGrade, reconcileGrade, FIRST_LOOK_TARGETS } from '../lut.js';
+import { checkDeviceLook } from '../user_folders.js';
+import { applyTheme, listThemes, themeFont, refreshUserFont, THEMES } from '../theme.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -50,7 +55,8 @@ const notFound = () => new DOMException('not found', 'NotFoundError');
 function fakeFile(name, tree) {
   return {
     kind: 'file', name,
-    async getFile() { return new File([tree[name]], name); },
+    // A fixed date, as a real file on disk has: a fresh File() would be dated "now" on every read.
+    async getFile() { return new File([tree[name]], name, { lastModified: 1 }); },
     async createWritable() {
       let buf = '';
       return { write: async (d) => { buf += d; }, close: async () => { tree[name] = buf; } };
@@ -442,7 +448,8 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const host = document.createElement('div');
       document.body.append(host);
       const changes = [];
-      const page = renderUserFolders(host, { view, store, onChange: (c) => changes.push(c) });
+      // `storage`: the page's choices (2026-10-02) must not read or write this browser's real ones.
+      const page = renderUserFolders(host, { view, store, storage: memStorage(), onChange: (c) => changes.push(c) });
       await page.ready;
       const text = () => host.textContent.replace(/\s+/g, ' ');
       const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
@@ -498,7 +505,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       host.remove();
 
       const plain = document.createElement('div');
-      await renderUserFolders(plain, { view: {}, store: memStore() }).ready;
+      await renderUserFolders(plain, { view: {}, store: memStore(), storage: memStorage() }).ready;
       check('*** a browser with no folder picker is told so, and offered no button that cannot work ***',
         !!plain.querySelector('[data-uf-unavailable]') && !plain.querySelector('[data-act^="pick"]'), plain.textContent);
       const html = userFoldersHtml(await readUserFolders({ view, store: memStore() }));
@@ -508,6 +515,254 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('*** the menu row opens the page by id, the shape every host\'s extras take ***',
         USER_FOLDER_ITEMS.length === 1 && USER_FOLDER_ITEMS[0].page === USER_FOLDERS_PAGE && USER_FOLDER_ITEMS[0].kind === 'item'
           && userFoldersPage().title === 'Your own folders' && typeof userFoldersPage().render === 'function');
+    }
+
+    // =========================================================================================
+    // 2026-10-02: the fonts loaded, and the looks found, become CHOICES. Until now `chooseUserFont` had
+    // no caller and nothing set a .cube as the grade or turned on its switches.
+    section('*** fonts loaded once, listed as choices, each previewed in its own face ***');
+    const familyTree = () => ({
+      'Lexend-Regular.ttf': new Uint8Array([1]), 'Lexend-Bold.ttf': new Uint8Array([2]),
+      'Atkinson-Hyperlegible-Regular.ttf': new Uint8Array([3]), 'OpenDyslexic.otf': new Uint8Array([4]),
+      'Inter[wght].ttf': new Uint8Array([5]), 'Comic-Neue.ttf': new Uint8Array([6]), 'Merriweather.ttf': new Uint8Array([7]),
+    });
+    const fakeFonts = () => {
+      const added = [];
+      class Face { constructor(family, bytes, desc) { this.family = family; this.desc = desc; } async load() { return this; } }
+      return { added, FontFaceImpl: Face, fontSet: { add: (f) => added.push(f) } };
+    };
+    {
+      const ff = fakeFonts();
+      const dir = fakeDir('fonts', { 'Lexend-Regular.ttf': new Uint8Array([1]), 'Lexend-Bold.ttf': new Uint8Array([2]) });
+      await loadUserFonts(dir, ff);
+      const again = await loadUserFonts(dir, ff);
+      check('*** loading the same folder twice adds each face ONCE (a page re-opened does not pile up faces) ***',
+        ff.added.length === 2 && J(again.families) === J([{ family: 'Lexend', faces: 2 }]), J({ added: ff.added.length, again }));
+      check('the families loaded into a font set, by name', J(loadedFamilies(ff.fontSet)) === J([{ family: 'Lexend', faces: 2 }])
+        && loadedFamilies({ add() {} }).length === 0);
+      const opts = userFontOptions({ fontSet: ff.fontSet, fallback: 'Georgia, serif' });
+      check('*** each loaded family is an option previewed in its own face, the fallback behind it ***',
+        opts.length === 1 && opts[0].value === 'Lexend' && opts[0].font === '"Lexend", Georgia, serif', J(opts));
+      const kept = userFontOptions({ fontSet: ff.fontSet, fallback: 'Georgia, serif', current: 'Gone Font', prefix: 'user:' });
+      const gone = kept.find((o) => o.value === 'user:Gone Font');
+      check('*** a chosen family NOT loaded on this device stays a choice, says so, and previews the face that will really show ***',
+        kept[0].value === 'user:Lexend' && gone && /not on this device/.test(gone.hint) && gone.font === 'Georgia, serif', J(kept));
+    }
+
+    section('*** this device\'s fonts load from wherever its fonts folder is now, never prompting ***');
+    {
+      const store = memStore();
+      const rootTree = { fonts: familyTree() };
+      await store.put(ROOT_KEY, fakeDir('Nimrod', rootTree));
+      const ff = fakeFonts();
+      let heard = 0;
+      const onHeard = () => { heard++; };
+      document.addEventListener(USER_FONTS_EVENT, onHeard);
+      const r = await loadDeviceFonts({ store, ...ff });
+      check('*** the Nimrod folder\'s fonts/ loaded: six families ***', r.families.length === 6 && ff.added.length === 7, J(r.families));
+      check('...and the page is told, so anything that fits words to a box can refit', heard === 1);
+      await loadDeviceFonts({ store, ...ff });
+      check('loading again adds nothing and tells nobody', ff.added.length === 7 && heard === 1, `${ff.added.length} ${heard}`);
+      const perm = { state: 'prompt' };
+      await store.put(kindKey('fonts'), withPerm(fakeDir('My fonts', { 'Lexend-Regular.ttf': new Uint8Array([9]) }), perm));
+      const ff2 = fakeFonts();
+      const lapsed = await loadDeviceFonts({ store, ...ff2 });
+      check('*** a folder of its own whose permission lapsed: nothing loaded, and it NEVER prompts ***',
+        ff2.added.length === 0 && !perm.requested && lapsed.families.length === 0, J(lapsed));
+      perm.state = 'granted';
+      await loadDeviceFonts({ store, ...ff2 });
+      check('...allowed again: that folder\'s fonts load (a kind\'s own folder, not only the root\'s)', J(loadedFamilies(ff2.fontSet).map((f) => f.family)) === J(['Lexend']));
+      document.removeEventListener(USER_FONTS_EVENT, onHeard);
+      const nothing = await loadDeviceFonts({ store: memStore(), ...fakeFonts() });
+      check('no folder at all: nothing, no throw', nothing.families.length === 0);
+    }
+
+    section('*** the device font is put in front of the THEME\'s own font, live, with that font behind it ***');
+    {
+      let savedChoice = null;
+      try { savedChoice = localStorage.getItem(USER_FONT_KEY); localStorage.removeItem(USER_FONT_KEY); } catch { /* private */ }
+      const id = listThemes()[0].id;
+      const base = THEMES[id].vars['--font'];
+      const box = document.createElement('div');
+      document.body.append(box);
+      applyTheme(box, id);
+      check('the theme\'s own font is known for the element it was applied to', themeFont(box) === base && box.style.getPropertyValue('--font') === base, themeFont(box));
+      const st = memStorage();
+      chooseUserFont('Lexend', st);
+      refreshUserFont({ storage: st });
+      check('*** chosen: "--font" is the family, then the theme\'s own font, at once (no reload) ***',
+        box.style.getPropertyValue('--font') === `"Lexend", ${base}` && themeFont(box) === base, box.style.getPropertyValue('--font'));
+      chooseUserFont('', st);
+      refreshUserFont({ storage: st });
+      check('back to the theme\'s own', box.style.getPropertyValue('--font') === base);
+      box.remove();
+      check('an element that has gone is forgotten, not refreshed', refreshUserFont({ storage: st }) >= 0 && themeFont(box) === base);
+      try { if (savedChoice != null) localStorage.setItem(USER_FONT_KEY, savedChoice); } catch { /* private */ }
+    }
+
+    section('*** a colour look: its file remembered, a missing file is None, and a change shows at once ***');
+    const warm = 'TITLE "Warm evening"\nLUT_1D_SIZE 2\n0.1 0 0\n1 0.9 0.8\n';
+    const cool = cube3(5, (r, g, b) => [r * 0.9, g, Math.min(1, b * 1.1)]);
+    {
+      const st = memStorage();
+      const g = await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': warm }), st, { targets: FIRST_LOOK_TARGETS });
+      check('*** the grade remembers the FILE it came from (its title can be anything) ***',
+        g.ok && readGrade(st).file === 'Warm.cube' && readGrade(st).name === 'Warm evening', J(readGrade(st) && { file: readGrade(st).file, name: readGrade(st).name }));
+      check('*** chosen from None: photos and wallpaper on, video off (argued in lut.js) ***',
+        J(readGrade(st).targets) === J({ photos: true, video: false, wallpaper: true }) && FIRST_LOOK_TARGETS.video === false);
+      check('a file still in the folder: kept', reconcileGrade(['Cool.cube', 'Warm.cube'], st) === false && !!readGrade(st));
+      check('*** its file gone from a folder that CAN be read: back to None, quietly ***',
+        reconcileGrade(['Cool.cube'], st) === true && readGrade(st) === null);
+      saveGrade({ name: 'Old', compiled: compileLut(parseCube(warm).lut) }, st);
+      check('a grade saved before files were remembered is never cleared by a guess', reconcileGrade([], st) === false && !!readGrade(st));
+
+      // LIVE: an element the grade hook has already seen follows a change, both ways.
+      const st2 = memStorage();
+      const img = document.createElement('img');
+      document.body.append(img);
+      applyGrade(img, 'photos', { storage: st2 });
+      check('off: untouched, as before (no style attribute at all)', img.getAttribute('style') === null);
+      await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': warm }), st2, { targets: FIRST_LOOK_TARGETS });
+      const n = refreshGrade({ storage: st2 });
+      check('*** a look chosen: the picture ALREADY on screen is graded at once ***', n === 1 && img.style.filter.includes(FILTER_ID), img.getAttribute('style'));
+      setGradeTarget('photos', false, st2);
+      refreshGrade({ storage: st2 });
+      check('*** its switch turned off: the filter is taken off, and the element is exactly as it was ***', img.getAttribute('style') === null, img.getAttribute('style'));
+      setGradeTarget('photos', true, st2);
+      refreshGrade({ storage: st2 });
+      clearGrade(st2);
+      refreshGrade({ storage: st2 });
+      check('None: off again, untouched', img.getAttribute('style') === null);
+      img.style.objectFit = 'cover';
+      setGradeTarget('photos', true, st2);
+      await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': warm }), st2, { targets: { photos: true } });
+      refreshGrade({ storage: st2 });
+      clearGrade(st2);
+      refreshGrade({ storage: st2 });
+      check('a style the module set itself is kept when the grade comes off', img.getAttribute('style') === 'object-fit: cover;', img.getAttribute('style'));
+      img.remove();
+      check('a picture that has left the page is not graded', refreshGrade({ storage: st2 }) === 0);
+    }
+
+    section('*** on boot, a look whose file was deleted falls back to None; a lapsed folder keeps it ***');
+    {
+      const store = memStore();
+      const lutTree = { 'Warm.cube': warm };
+      await store.put(ROOT_KEY, fakeDir('Nimrod', { luts: lutTree }));
+      const st = memStorage();
+      await gradeFromFile(fakeFile('Warm.cube', lutTree), st, { targets: FIRST_LOOK_TARGETS });
+      check('file there: kept', (await checkDeviceLook({ store, storage: st })).cleared === false && !!readGrade(st));
+      delete lutTree['Warm.cube'];
+      check('*** file deleted: cleared ***', (await checkDeviceLook({ store, storage: st })).cleared === true && readGrade(st) === null);
+      await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': warm }), st, { targets: FIRST_LOOK_TARGETS });
+      const perm = { state: 'prompt' };
+      await store.put(kindKey('luts'), withPerm(fakeDir('Looks', {}), perm));
+      check('*** a folder that cannot be read right now: the look is KEPT (it is stored compiled), and nothing prompts ***',
+        (await checkDeviceLook({ store, storage: st })).cleared === false && !!readGrade(st) && !perm.requested);
+    }
+
+    section('*** the page: "Font on this device" and "Colour look", pressed like a person would ***');
+    {
+      const store = memStore();
+      const rootTree = { fonts: familyTree(), luts: { 'Warm.cube': warm, 'Cool.cube': cool, 'Broken.cube': 'hello' } };
+      await store.put(ROOT_KEY, fakeDir('Nimrod', rootTree));
+      const st = memStorage();
+      const ff = fakeFonts();
+      let mode = 'point';
+      const host = document.createElement('div');
+      document.body.append(host);
+      const id = listThemes()[0].id;
+      const base = THEMES[id].vars['--font'];
+      const themed = document.createElement('div');
+      document.body.append(themed);
+      applyTheme(themed, id);
+      const shot = document.createElement('img');
+      document.body.append(shot);
+      applyGrade(shot, 'photos', { storage: st });
+      const changes = [];
+      const page = renderUserFolders(host, { view: { showDirectoryPicker: async () => null }, store, storage: st, ...ff,
+        chooseMode: () => mode, onChange: (c) => changes.push(c) });
+      await page.ready;
+      const settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 10)); };
+      const row = (key) => host.querySelector(`[data-act="set"][data-key="${key}"]`);
+      const text = () => host.textContent.replace(/\s+/g, ' ');
+      check('*** opening the page loads the folder\'s fonts at once (no restart) ***', ff.added.length === 7 && loadedFamilies(ff.fontSet).length === 6, String(ff.added.length));
+      check('*** a "Font on this device" row, saying the theme\'s own is in force ***', row('font') && /The theme’s own/.test(row('font').textContent), host.innerHTML.slice(0, 200));
+      // Seven options (the theme's own + six families): more than five, so a press OPENS the list.
+      row('font').click();
+      await settle();
+      const dlg = document.querySelector('.chp-dialog');
+      const tiles = dlg ? [...dlg.querySelectorAll('[data-chp-pick]')] : [];
+      check('*** a long list opens the choice picker: the theme\'s own first, then every family ***',
+        tiles.length === 7 && tiles[0].dataset.chpPick === '' && J(tiles.slice(1).map((t) => t.dataset.chpPick))
+          === J(['Atkinson Hyperlegible', 'Comic Neue', 'Inter', 'Lexend', 'Merriweather', 'OpenDyslexic']), J(tiles.map((t) => t.dataset.chpPick)));
+      const aa = dlg && dlg.querySelector('[data-chp-pick="Lexend"] [data-chp-font]');
+      const aaTheme = dlg && dlg.querySelector('[data-chp-pick=""] [data-chp-font]');
+      check('*** each option shows "Aa" in its own face, with the theme\'s own font behind it ***',
+        aa && /Lexend/.test(aa.style.fontFamily) && aaTheme && !/Lexend/.test(aaTheme.style.fontFamily) && aaTheme.style.fontFamily !== '',
+        `${aa && aa.style.fontFamily} | ${aaTheme && aaTheme.style.fontFamily}`);
+      dlg.querySelector('[data-chp-pick="Lexend"]').click();
+      await settle();
+      check('*** chosen: stored by family name on this device, and the theme\'s font follows at once ***',
+        chosenUserFont(st) === 'Lexend' && themed.style.getPropertyValue('--font') === `"Lexend", ${base}` && /Lexend/.test(row('font').textContent),
+        `${chosenUserFont(st)} ${themed.style.getPropertyValue('--font')}`);
+      check('the dialog closed', !document.querySelector('.chp-dialog'));
+      mode = 'step';
+      row('font').click();
+      await settle();
+      check('*** for somebody who steps (a switch), a press steps to the next family instead ***', chosenUserFont(st) === 'Merriweather' && !document.querySelector('.chp-dialog'), chosenUserFont(st));
+      mode = 'point';
+
+      // The colour look: None, Broken, Cool, Warm - four, so a press STEPS.
+      check('*** a "Colour look" row, None by default, and no switches while it is None ***',
+        row('look') && /None/.test(row('look').textContent) && !row('look:photos'), text());
+      row('look').click();
+      await settle();
+      const g1 = readGrade(st);
+      check('*** a press past a file that cannot be read lands on the next one that can, and says which was skipped ***',
+        g1 && g1.file === 'Cool.cube' && /Broken\.cube/.test(text()) && /could not be read/.test(text()), J(g1 && g1.file) + text().slice(-300));
+      check('*** where it applies: three switches, photos and wallpaper on, video off ***',
+        /On/.test(row('look:photos').textContent) && /Off/.test(row('look:video').textContent) && /On/.test(row('look:wallpaper').textContent)
+          && J(g1.targets) === J(FIRST_LOOK_TARGETS));
+      check('*** the photo already on screen is graded at once ***', shot.style.filter.includes(FILTER_ID), shot.getAttribute('style'));
+      check('how close the look is, said', /Applied (exactly|closely|roughly)/.test(text()));
+      row('look:video').click();
+      await settle();
+      check('a switch turned on', readGrade(st).targets.video === true && /On/.test(row('look:video').textContent));
+      row('look').click();
+      await settle();
+      check('*** another look keeps the switches somebody set ***', readGrade(st).file === 'Warm.cube' && readGrade(st).targets.video === true, J(readGrade(st).targets));
+      row('look:photos').click();
+      await settle();
+      check('*** photos turned off: the photo on screen goes back to exactly as it was ***', shot.getAttribute('style') === null && readGrade(st).targets.photos === false);
+      row('look:photos').click();
+      await settle();
+      // The file is deleted while the look is in use: the next reading of the folder puts it back to None, quietly.
+      delete rootTree.luts['Warm.cube'];
+      await page.refresh();
+      check('*** a look whose file is gone falls back to None, quietly (no error on the page) ***',
+        readGrade(st) === null && /None/.test(row('look').textContent) && !/did not work/i.test(text()) && shot.getAttribute('style') === null, text().slice(-300));
+      check('every choice told the host', ['font', 'look', 'look-target'].every((a) => changes.some((c) => c.action === a)), J(changes));
+      page.destroy();
+      host.remove(); themed.remove(); shot.remove();
+
+      // No fonts anywhere: the row is not a dead control, it says what to do.
+      const empty = document.createElement('div');
+      const st3 = memStorage();
+      const store3 = memStore();
+      await store3.put(ROOT_KEY, fakeDir('Nimrod', { fonts: {}, luts: {} }));
+      await renderUserFolders(empty, { view: {}, store: store3, storage: st3, ...fakeFonts() }).ready;
+      check('*** nothing loaded: no font or look row, a sentence instead ***',
+        !empty.querySelector('[data-key="font"]') && !empty.querySelector('[data-key="look"]') && /theme’s own font is used/.test(empty.textContent), empty.textContent);
+      // A look kept from before while its folder cannot be read: shown as kept, never offered as a dead choice.
+      const st4 = memStorage();
+      await gradeFromFile(fakeFile('Warm.cube', { 'Warm.cube': warm }), st4, { targets: FIRST_LOOK_TARGETS });
+      const store4 = memStore();
+      await store4.put(ROOT_KEY, withPerm(fakeDir('Nimrod', { luts: { 'Warm.cube': warm } }), { state: 'prompt' }));
+      const kept = document.createElement('div');
+      await renderUserFolders(kept, { view: {}, store: store4, storage: st4, ...fakeFonts() }).ready;
+      check('*** a look kept while its folder needs permission again: still in force, and named ***',
+        !!readGrade(st4) && /Warm evening/.test(kept.querySelector('[data-key="look"]')?.textContent || ''), kept.textContent);
     }
 
     check('*** over the whole suite: no request to anywhere but blob: URLs ***',

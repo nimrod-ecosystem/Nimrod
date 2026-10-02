@@ -272,7 +272,8 @@ registerModule(
 
     // THIS DEVICE'S OWN FOLDERS (user_folders_page.js). Per device, like the folders themselves: the
     // handles live in this browser, so the page reads whichever device is showing this panel.
-    pages[USER_FOLDERS_PAGE] = userFoldersPage();
+    // Its font and colour-look rows follow the person's "How you choose things", like every list here.
+    pages[USER_FOLDERS_PAGE] = userFoldersPage({ chooseMode: modeNow });
 
     return {
       async init() {

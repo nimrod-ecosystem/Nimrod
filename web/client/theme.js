@@ -55,7 +55,7 @@
 import { liveThemes, BOARD_BASE } from './live_themes.js';
 import { syncScene } from './livescene.js';
 // User folders (867a7ff): a font the device's own folder supplies goes in front of the theme's stack.
-import { userFontStack } from './user_fonts.js';
+import { userFontStack, USER_FONTS_EVENT } from './user_fonts.js';
 
 const SYSTEM_FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
@@ -437,6 +437,7 @@ export function applyTheme(rootEl, id, { flashLimit } = {}) {
   const vars = theme.vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
   rootEl.style.setProperty('--font', userFontStack(vars['--font']));
+  rememberThemeFont(rootEl, vars['--font']);
   // Derived AFTER the theme's own values, and from them, so a theme that overrides an accent
   // gets matching text with no extra bookkeeping.
   for (const accent of ACCENT_VARS) {
@@ -460,6 +461,49 @@ export function applyTheme(rootEl, id, { flashLimit } = {}) {
   // every other call site: `syncScene` itself checks for that marker and no-ops otherwise.
   syncScene(rootEl, theme, flashLimit !== undefined ? { flashLimit } : {});
   return resolved;
+}
+
+// ---------------------------------------------------------------------------------------------
+// THE DEVICE'S OWN FONT, CHANGED WHILE THE PAGE IS UP (2026-10-02, user_folders_page.js). `--font` is
+// the theme's font with this device's chosen user font in front (`userFontStack`, set above). Choosing
+// a different one must not wait for the next theme change or a reload, so every element a theme was
+// applied to is remembered (weakly: a panel that goes away is not kept alive) with the theme's OWN
+// font, and `refreshUserFont` re-sets its `--font` from that. `themeFont` is the theme's own font,
+// without the user's in front: what the "the theme's own" option previews.
+// ---------------------------------------------------------------------------------------------
+const THEMED = [];   // [{ ref: WeakRef(rootEl), base }]
+const deref = (e) => { try { return e.ref.deref(); } catch { return undefined; } };
+function rememberThemeFont(rootEl, base) {
+  if (typeof WeakRef !== 'function' || !rootEl) return;
+  for (let i = THEMED.length - 1; i >= 0; i--) {
+    const el = deref(THEMED[i]);
+    if (!el || el === rootEl) THEMED.splice(i, 1);
+  }
+  THEMED.push({ ref: new WeakRef(rootEl), base: String(base || '') });
+}
+
+/** The theme's own font for `rootEl` (default: <html>, else the last element a theme was applied to), or ''. */
+export function themeFont(rootEl = null) {
+  const live = THEMED.filter((e) => deref(e));
+  const hit = rootEl ? live.find((e) => deref(e) === rootEl)
+    : (live.find((e) => typeof document !== 'undefined' && deref(e) === document.documentElement) || live[live.length - 1]);
+  return hit ? hit.base : '';
+}
+
+/**
+ * Re-set `--font` on every element a theme is applied to, from this device's choice now. Returns how
+ * many. Tells the page (USER_FONTS_EVENT) so words fitted to a box refit in the new face.
+ */
+export function refreshUserFont({ storage } = {}) {
+  let n = 0;
+  for (let i = THEMED.length - 1; i >= 0; i--) {
+    const el = deref(THEMED[i]);
+    if (!el || !el.isConnected) { if (!el) THEMED.splice(i, 1); continue; }
+    el.style.setProperty('--font', userFontStack(THEMED[i].base, storage));
+    n++;
+  }
+  try { if (typeof document !== 'undefined') document.dispatchEvent(new CustomEvent(USER_FONTS_EVENT)); } catch { /* nobody listening */ }
+  return n;
 }
 
 // [{id,label}] for building a picker.

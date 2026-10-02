@@ -274,6 +274,27 @@ try {
       && f.style.getPropertyValue('--nb-ink') === DEFAULT_INK);
     check('configFrom agrees', JSON.stringify(configFrom({ frame: 'x', whenPressed: 'shout' }).frame) === '"none"'
       && configFrom({ whenPressed: 'shout' }).whenPressed === 'nothing');
+
+    // 2026-10-02 (row 2.49): a family from this device's own fonts folder, after the built-in six.
+    st.set({ font: 'user:Not Here Font' });
+    await sleep(10);
+    check('*** a family from the fonts folder is stored by NAME and drawn with the screen\'s own font behind it ***',
+      configFrom({ font: 'user:Lexend' }).font === 'user:Lexend' && fontStack('user:Lexend') === '"Lexend", var(--font)'
+        && f.style.getPropertyValue('--nb-font') === '"Not Here Font", var(--font)', f.style.getPropertyValue('--nb-font'));
+    const wordEl = f.querySelector('.ab-word');
+    check('*** ...so on a device that does not have it, the words still show (never a blank face) ***',
+      S.word() === 'Robin' && wordEl && textRect(wordEl).width > 0 && getComputedStyle(f).fontFamily.trim() !== '', getComputedStyle(f).fontFamily);
+    check('"user:" with no name is garbage, and falls back', configFrom({ font: 'user:' }).font === 'theme' && configFrom({ font: 'user:  ' }).font === 'theme');
+    const liveFont = fieldsFor(getManifest('button'), S.inst).find((x) => x.key === 'font');
+    const builtIn = liveFont.options.slice(0, FONTS.length);
+    check('*** the font row: the six built-in fonts first, each carrying its face for the picker\'s "Aa" ***',
+      builtIn.map((o) => o.value).join() === FONTS.map((x) => x.value).join() && builtIn.every((o) => o.font === FONTS.find((x) => x.value === o.value).stack),
+      JSON.stringify(builtIn));
+    check('*** ...then the family in use, kept as a choice where it is not loaded, and saying so ***',
+      liveFont.options.length === FONTS.length + 1 && liveFont.options[FONTS.length].value === 'user:Not Here Font'
+        && /not on this device/.test(liveFont.options[FONTS.length].hint), JSON.stringify(liveFont.options.slice(FONTS.length)));
+    st.set({ font: 'nonsense' });
+    await sleep(10);
   }
 
   // =============================================================================================

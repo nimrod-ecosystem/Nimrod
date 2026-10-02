@@ -245,23 +245,36 @@ export function filterMarkup(compiled, id = FILTER_ID) {
 
 const defaultStorage = () => { try { return globalThis.localStorage || null; } catch { return null; } };
 
-/** `{ name, compiled, targets: { photos, video, wallpaper } }` or null (no grade — the default). */
+/**
+ * `{ name, file, compiled, targets: { photos, video, wallpaper } }` or null (no grade — the default).
+ * `file` is the .cube file's name in the folder ('' for a grade saved before it was kept, 2026-10-02).
+ */
 export function readGrade(storage = defaultStorage()) {
   try {
     const g = storage ? JSON.parse(storage.getItem(GRADE_KEY) || 'null') : null;
     if (!g || !g.compiled || !Array.isArray(g.compiled.tables) || g.compiled.tables.length !== 3) return null;
     const targets = {};
     for (const t of GRADE_TARGETS) targets[t] = g.targets?.[t] === true;
-    return { name: String(g.name || ''), compiled: g.compiled, targets };
+    return { name: String(g.name || ''), file: String(g.file || ''), compiled: g.compiled, targets };
   } catch { return null; }
 }
 
 /** Store a compiled grade, every target OFF unless `targets` turns one on. */
-export function saveGrade({ name, compiled, targets = {} }, storage = defaultStorage()) {
+export function saveGrade({ name, file = '', compiled, targets = {} }, storage = defaultStorage()) {
   const t = {}; for (const k of GRADE_TARGETS) t[k] = targets[k] === true;
-  try { storage?.setItem(GRADE_KEY, JSON.stringify({ name, compiled, targets: t })); } catch { /* private window */ }
+  try { storage?.setItem(GRADE_KEY, JSON.stringify({ name, file: String(file || ''), compiled, targets: t })); } catch { /* private window */ }
   return readGrade(storage);
 }
+
+// *** WHERE A LOOK APPLIES WHEN SOMEBODY FIRST CHOOSES ONE (from None), ARGUED (Rule 1). *** The
+// switches stay what they were when one look replaces another; this is only the first choice.
+//   ALL OFF (what `saveGrade` does on its own) was argued against: choosing a look and seeing nothing
+//   change reads as a broken control, and needs a second and third press somebody has to discover.
+//   PHOTOS AND WALLPAPER ON: still pictures, and the reason somebody chooses a look.
+//   VIDEO OFF: the SVG filter runs on every frame of a video, and on a Pi 400 that cost is UNMEASURED
+//   (see the header). Its switch is right under the look, one press away. (A wallpaper that is a
+//   video follows the wallpaper switch - the switches are by place, not by kind of file.)
+export const FIRST_LOOK_TARGETS = Object.freeze({ photos: true, video: false, wallpaper: true });
 
 export function setGradeTarget(target, on, storage = defaultStorage()) {
   const g = readGrade(storage);
@@ -274,14 +287,35 @@ export function clearGrade(storage = defaultStorage()) {
   return null;
 }
 
-/** Read a `.cube` file (from the `luts/` folder) and store it as this device's grade, targets off. */
-export async function gradeFromFile(fileHandle, storage = defaultStorage()) {
-  const file = await fileHandle.getFile();
+/**
+ * Read a `.cube` file (from the `luts/` folder) and store it as this device's grade, targets off
+ * unless `targets` says (the folders page passes the ones in force, or FIRST_LOOK_TARGETS). A file that
+ * cannot be read leaves the grade in force as it was.
+ */
+export async function gradeFromFile(fileHandle, storage = defaultStorage(), { targets = {} } = {}) {
+  let file;
+  try { file = await fileHandle.getFile(); } catch (err) { return { ok: false, why: `it could not be opened (${String((err && err.message) || err)})` }; }
   const p = parseCube(await file.text());
   if (!p.ok) return { ok: false, why: p.why };
   const compiled = compileLut(p.lut);
-  const g = saveGrade({ name: p.lut.title || file.name, compiled }, storage);
+  const g = saveGrade({ name: p.lut.title || file.name, file: file.name, compiled, targets }, storage);
   return { ok: true, grade: g, fit: describeFit(compiled) };
+}
+
+/**
+ * A MISSING FILE FALLS BACK TO NONE, QUIETLY (2026-10-02). `fileNames` are the .cube files in a folder
+ * that COULD be read just now. If the grade in force came from a file that is not among them (deleted,
+ * renamed), the grade is cleared and this returns true. Only a folder that was read may clear it: a
+ * folder whose permission lapsed after a restart says nothing about the file, and the grade is kept
+ * compiled precisely so it survives that. A grade with no `file` (saved before files were kept) is
+ * never cleared on a guess.
+ */
+export function reconcileGrade(fileNames, storage = defaultStorage()) {
+  const g = readGrade(storage);
+  if (!g || !g.file || !Array.isArray(fileNames)) return false;
+  if (fileNames.includes(g.file)) return false;
+  clearGrade(storage);
+  return true;
 }
 
 // The filter's markup is put in the page once per grade (keyed by its content), in a hidden <svg>.
@@ -309,10 +343,56 @@ function ensureFilter(doc, compiled) {
 export function applyGrade(el, target, { storage = defaultStorage(), doc = (typeof document !== 'undefined' ? document : null) } = {}) {
   try {
     if (!el || !doc) return false;
+    seen(el, target);
     const g = readGrade(storage);
     if (!g || !g.targets[target]) return false;
     ensureFilter(doc, g.compiled);
     el.style.filter = `url(#${FILTER_ID})`;
     return true;
   } catch { return false; }
+}
+
+// ---------------------------------------------------------------------------------------------
+// A CHANGE SHOWS AT ONCE (2026-10-02). Without this, turning a look off left the wallpaper graded until
+// a reload (a still wallpaper may never change), and a new look waited for the next photo.
+//
+// Every element the hook is handed is remembered WEAKLY, in this file only - a WeakRef in a set, never a
+// mark on the element - so "off means untouched" still holds byte for byte. `refreshGrade` then grades
+// the ones whose switch is on, and takes the filter off (and an emptied `style` attribute with it) where
+// it is off. Elements no longer in the page are dropped, and the set is pruned as it is added to, so it
+// holds what is on screen (a photo, the one behind it, two wallpaper layers), not a slideshow's history.
+// ---------------------------------------------------------------------------------------------
+const SEEN = new Set();   // { ref: WeakRef(el), target }
+const PRUNE_OVER = 16;    // not a setting: when to sweep the set, a bookkeeping number nobody would choose
+function seen(el, target) {
+  if (typeof WeakRef !== 'function') return;
+  if (SEEN.size > PRUNE_OVER) {
+    for (const e of SEEN) { const x = e.ref.deref(); if (!x || !x.isConnected || x === el) SEEN.delete(e); }
+  }
+  for (const e of SEEN) if (e.ref.deref() === el) SEEN.delete(e);
+  SEEN.add({ ref: new WeakRef(el), target });
+}
+
+/** Apply this device's grade, as it is now, to what is on the page now. Returns how many are graded. Never throws. */
+export function refreshGrade({ storage = defaultStorage(), doc = (typeof document !== 'undefined' ? document : null) } = {}) {
+  let n = 0;
+  try {
+    if (!doc) return 0;
+    const g = readGrade(storage);
+    for (const e of [...SEEN]) {
+      const el = e.ref.deref();
+      if (!el || !el.isConnected) { SEEN.delete(e); continue; }
+      if (g && g.targets[e.target]) {
+        ensureFilter(doc, g.compiled);
+        el.style.filter = `url(#${FILTER_ID})`;
+        n++;
+      } else if (String(el.style.filter || '').includes(FILTER_ID)) {
+        el.style.removeProperty('filter');
+        if (!el.getAttribute('style')) el.removeAttribute('style');
+      }
+    }
+    // A changed look reaches anything else already wearing it.
+    if (g && doc.getElementById(DEFS_ID)) ensureFilter(doc, g.compiled);
+  } catch { /* a grade is never worth breaking the page for */ }
+  return n;
 }
