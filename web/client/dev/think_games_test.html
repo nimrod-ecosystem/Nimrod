@@ -149,7 +149,7 @@ try {
     await sleep(10);
     check('...one School point', r.points().length === 1);
     r.timers.flush();
-    check('then "another one?"', r.phase() === 'another');
+    check('then the next question, by itself (no "another one?" since 2026-10-02)', r.phase() === 'asking' && r.probe().serial === 2);
     r.inst.destroy();
 
     const s = R({ game: 'numbers' });
@@ -264,8 +264,6 @@ try {
     await sleep(10);
     check('Ann\'s right answer earns a point', r.points().length === 1);
     r.timers.flush();
-    check('"another one?": the chip says Bob is next', r.phase() === 'another' && chip()?.hasAttribute('data-next') && /Next: Bob/.test(chip().textContent));
-    r.eng.press('more');
     const bobQ = r.item();
     check('Bob\'s turn, said first', chip()?.dataset.turn === 'name:bob' && r.last().startsWith('Bob, your turn.'));
     check('*** Bob gets a level 1-2 question (single digits) ***', bobQ.level <= 2 && bobQ.nums.every((n) => n <= 9), JSON.stringify(bobQ));
@@ -275,7 +273,6 @@ try {
     const sc = r.scores[r.scores.length - 1];
     check('the published score names both: "Ann 1 · Bob 1"', sc && sc.detail === 'Ann 1 · Bob 1', JSON.stringify(sc));
     r.timers.flush();
-    r.eng.press('more');
     check('and back to Ann', chip()?.dataset.turn === 'name:ann');
     const saved = store.peek().ladder;
     check('both players are on the saved ladder, each with their own numbers rating',

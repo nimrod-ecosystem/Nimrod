@@ -253,15 +253,65 @@ try {
     const r = R({ game: 'odd', roundSize: 3 });
     for (let i = 0; i < 3; i++) {
       tap(r, r.item().odd);
-      if (i < 2) { r.timers.flush(); r.eng.press('more'); }
+      if (i < 2) r.timers.flush();
     }
     check('the third of three: "That is the end of the round: 3 of 3 right."', /That is the end of the round: 3 of 3 right\.$/.test(r.last()), r.last());
     r.inst.destroy();
-    const m = R({ game: 'mix', roundSize: 2 });
+    const m = R({ game: 'mix', mixBy: 'round', roundSize: 2 });
     const kinds = [];
     for (let i = 0; i < 8; i++) { kinds.push(m.item().kind); m.eng.skip(); }
-    check('the mix: a round of each kind in turn', kinds.join(',') === MIX_ORDER.flatMap((k) => [k, k]).join(','), kinds.join(','));
+    check('mix by ROUND (the setting): a round of each kind in turn', kinds.join(',') === MIX_ORDER.flatMap((k) => [k, k]).join(','), kinds.join(','));
     m.inst.destroy();
+  }
+
+  section('*** THE MIX BUG (Mike, 2026-10-02: "Brain games is just which one is different as far as I can tell. I even have the which game set to mix") ***');
+  {
+    // Played the way a person plays it - answering, the celebration, the next question by itself -
+    // not by skipping. Four questions must already be four different kinds.
+    const answer = (r) => {
+      const it = r.item();
+      if (it.kind === 'odd') tap(r, it.odd);
+      else if (it.kind === 'count') tap(r, it.n);
+      else if (it.kind === 'next') tap(r, it.answer);
+      else { r.eng.hear({ text: 'ready', confidence: 0.95 }); r.eng.hear({ text: it.seq.join(' then '), confidence: 0.95 }); }
+      return it.kind;
+    };
+    const m = R({ game: 'mix' });
+    const kinds = [];
+    for (let i = 0; i < 8; i++) {
+      kinds.push(answer(m));
+      check(`question ${i + 1} (${kinds[i]}) answered right`, m.phase() === 'celebrate', `${m.phase()} ${m.last()}`);
+      m.timers.flush();
+    }
+    check('*** the default mix changes kind EVERY question: the first four are all four kinds ***',
+      new Set(kinds.slice(0, 4)).size === 4 && MIX_ORDER.every((k) => kinds.slice(0, 4).includes(k)), kinds.join(','));
+    check('...and keeps cycling (the next four are all four again)', new Set(kinds.slice(4, 8)).size === 4, kinds.join(','));
+    check('every question went straight on to the next, with no "another one?" between', m.phase() === 'asking' && m.probe().serial === 9);
+    m.inst.destroy();
+    // Where a mix starts is chosen when the panel starts, so coming back does not always open on the same kind.
+    const late = R({ game: 'mix' }, { rand: () => 0.6 });
+    check('a different start (rand 0.6): opens on the third kind, then carries on in order',
+      late.item().kind === MIX_ORDER[2], late.item().kind);
+    late.eng.skip();
+    check('...then the fourth', late.item().kind === MIX_ORDER[3], late.item().kind);
+    late.inst.destroy();
+    const f = getManifest(GAME).settings.find((s) => s.key === 'mixBy');
+    check('"In a mix, change the kind": every question (default) or every round', f && f.default === 'question'
+      && f.options.map((o) => o.value).join(',') === 'question,round' && DEFAULTS.mixBy === 'question');
+  }
+
+  section('*** see-through: the game draws no background of its own (the panel setting shows) ***');
+  {
+    const r = R({ game: 'odd' });
+    // A theme's colours, set where a kiosk sets them, so a game that painted `--bg` / `--surface` would show it.
+    r.host.style.setProperty('--bg', 'rgb(1, 2, 3)');
+    r.host.style.setProperty('--surface', 'rgb(4, 5, 6)');
+    const root = r.host.querySelector('[data-quiz-root]');
+    const bg = root && getComputedStyle(root).backgroundColor;
+    check('the game\'s root is transparent, so solid / veil / clear on the panel all show', bg === 'rgba(0, 0, 0, 0)', bg);
+    check('...and the image under it is none', root && getComputedStyle(root).backgroundImage === 'none');
+    r.host.style.removeProperty('--bg'); r.host.style.removeProperty('--surface');
+    r.inst.destroy();
   }
 
   section('*** TWO PLAYERS, EACH AT THEIR OWN LEVEL ***');
@@ -279,7 +329,6 @@ try {
     await sleep(10);
     check('Ann\'s right answer earns a point', r.points().length === 1);
     r.timers.flush();
-    r.eng.press('more');
     const bobQ = r.item();
     check('*** Bob, new, counts a few (level 1-2) ***', r.last().startsWith('Bob, your turn.') && bobQ.level <= 2 && bobQ.n <= 6, JSON.stringify(bobQ));
     tap(r, bobQ.n);

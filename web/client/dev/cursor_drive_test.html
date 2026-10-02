@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>cursor drive — the cursor by voice or switch — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{position:fixed;inset:0;pointer-events:none}
+  #stage > *{pointer-events:auto}
+</style>
+</head>
+<body>
+<h1>cursor drive (2026-10-02)</h1>
+<p>Mike: <i>"the cursor should have voice commands kind of like I just described for the brick breaker. Other
+general things like scroll up or down."</i> "Cursor left" (a bit), "cursor left a lot", "click", "scroll down" -
+spoken or on a switch - move the AIM, press what is under it, and scroll what is under it.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stage"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createAim } from '../aim.js';
+import { createInputBus } from '../input.js';
+import { attachPointer } from '../input_pointer.js';
+import { createDefaultRegistry, CURSOR_ACTIONS, CURSOR_TOPICS, verbTopic } from '../actions.js';
+import { attachCursorDrive, CURSOR_DEVICE, CURSOR_DRIVE_DEFAULTS, CURSOR_DRIVE_FIELDS, scrollableFrom } from '../cursor_drive.js';
+import { SYSTEM_DRAWN } from '../cursor.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
+const stage = document.getElementById('stage');
+
+try {
+  const W = window.innerWidth, H = window.innerHeight, S = Math.min(W, H);
+
+  section('moving: a bit, a lot, and held to the screen');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const seen = [];
+    bus.subscribe('input/aim', (a) => seen.push(a));
+    const d = attachCursorDrive({ bus, aim });
+    bus.publish(CURSOR_TOPICS.move, { dir: 'left', size: 'small' });
+    const a1 = aim.latest();
+    check('with no aim yet it starts from the middle of the screen, and a bit left is stepSmall % of the shorter side',
+      near(a1.x, 0.5 - (S * CURSOR_DRIVE_DEFAULTS.stepSmall / 100) / W) && near(a1.y, 0.5), JSON.stringify(a1));
+    check('*** it is the AIM that moves, as its own device - the big cursor draws it (it is not the mouse) ***',
+      a1.device === CURSOR_DEVICE && seen.length === 1 && !SYSTEM_DRAWN.includes(CURSOR_DEVICE));
+    bus.publish(CURSOR_TOPICS.move, { dir: 'down', size: 'large' });
+    const a2 = aim.latest();
+    check('a lot down is stepLarge %, and the same distance in pixels as across', near(a2.y, 0.5 + (S * CURSOR_DRIVE_DEFAULTS.stepLarge / 100) / H)
+      && near(a2.x, a1.x), JSON.stringify(a2));
+    aim.report('pointer:mouse', 0.9, 0.1);
+    bus.publish(CURSOR_TOPICS.move, { dir: 'up', size: 'small' });
+    check('it carries on from wherever the aim last was (the mouse moved it)', near(aim.latest().x, 0.9) && aim.latest().y < 0.1);
+    for (let i = 0; i < 20; i++) bus.publish(CURSOR_TOPICS.move, { dir: 'right', size: 'large' });
+    check('held to the edge of the screen', aim.latest().x === 1);
+    bus.publish(CURSOR_TOPICS.move, { dir: 'sideways' });
+    check('a direction it does not know moves nothing', aim.latest().x === 1);
+    d.destroy();
+    const n = seen.length;
+    bus.publish(CURSOR_TOPICS.move, { dir: 'left', size: 'small' });
+    check('destroyed: it stops listening', seen.length === n);
+    const k = attachCursorDrive({ bus, aim, settings: () => ({ stepSmall: 10 }) });
+    aim.report('pointer:mouse', 0.5, 0.5);
+    bus.publish(CURSOR_TOPICS.move, { dir: 'right', size: 'small' });
+    check('how far is a setting (stepSmall 10)', near(aim.latest().x, 0.5 + (S * 0.10) / W));
+    k.destroy();
+  }
+
+  section('click: presses what is under the cursor, once, and is not also a mouse button');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const btn = document.createElement('button');
+    btn.textContent = 'Press me';
+    btn.style.cssText = 'position:absolute;left:100px;top:100px;width:200px;height:80px';
+    stage.append(btn);
+    const clicks = []; const downs = [];
+    btn.addEventListener('click', (e) => clicks.push(e));
+    btn.addEventListener('pointerdown', (e) => downs.push(e));
+    // A person whose mouse button is bound to Select: a spoken "click" must not ALSO fire that.
+    const reg = createDefaultRegistry();
+    const input = createInputBus({ bus, actions: reg });
+    input.addBinding({ id: 'm', actionId: verbTopic('select'), device: 'pointer:mouse', control: 'button:0', edge: 'press', role: 'universal' });
+    const selects = [];
+    bus.subscribe(verbTopic('select'), () => selects.push(1));
+    const offPtr = attachPointer(input, { target: window });
+    const d = attachCursorDrive({ bus, aim });
+    aim.report(CURSOR_DEVICE, 200 / W, 140 / H);
+    bus.publish(CURSOR_TOPICS.click);
+    check('*** "click": the button under the cursor was clicked, once ***', clicks.length === 1, String(clicks.length));
+    check('...with a pointerdown first (a game that listens for presses gets one), at the cursor', downs.length === 1
+      && near(downs[0].clientX, 200, 1) && near(downs[0].clientY, 140, 1));
+    check('...marked as the cursor\'s, so the input layer can tell', downs[0].nimrodCursor === true && clicks[0].nimrodCursor === true);
+    check('*** and a bound mouse button did NOT also fire (one command, one action) ***', selects.length === 0);
+    check('a button gets keyboard focus, as a real click gives it', document.activeElement === btn);
+    aim.report(CURSOR_DEVICE, 0.99, 0.99);
+    bus.publish(CURSOR_TOPICS.click);
+    check('nothing pressable there: nothing breaks, the button is not pressed', clicks.length === 1);
+    // A real mouse press still drives the binding (the skip is only for the cursor's own events).
+    btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }));
+    btn.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0, pointerType: 'mouse' }));
+    check('a real mouse press still fires its binding', selects.length === 1);
+    offPtr(); d.destroy(); input.destroy?.(); btn.remove();
+  }
+
+  section('scroll: what is under the cursor, or the page');
+  {
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const box = document.createElement('div');
+    box.style.cssText = 'position:absolute;left:400px;top:100px;width:200px;height:150px;overflow:auto';
+    box.innerHTML = '<div style="height:2000px">tall</div>';
+    stage.append(box);
+    const d = attachCursorDrive({ bus, aim });
+    aim.report(CURSOR_DEVICE, 500 / W, 170 / H);
+    check('the scrollable thing under the cursor is found', scrollableFrom(document.elementFromPoint(500, 170)) === box);
+    bus.publish(CURSOR_TOPICS.scroll, { dir: 'down' });
+    check(`*** "scroll down": it scrolls by ${CURSOR_DRIVE_DEFAULTS.scrollPercent}% of its height ***`,
+      box.scrollTop === Math.round(150 * CURSOR_DRIVE_DEFAULTS.scrollPercent / 100), String(box.scrollTop));
+    bus.publish(CURSOR_TOPICS.scroll, { dir: 'up' });
+    check('"scroll up" goes back', box.scrollTop === 0);
+    bus.publish(CURSOR_TOPICS.scroll, { dir: 'up' });
+    check('...and stops at the top', box.scrollTop === 0);
+    check('over nothing that scrolls, it is the page', scrollableFrom(document.body) === (document.scrollingElement || document.documentElement));
+    d.destroy(); box.remove();
+  }
+
+  section('the actions a switch binds, and the settings');
+  {
+    const reg = createDefaultRegistry();
+    check('eleven cursor actions, all registered (a switch binding fires)', CURSOR_ACTIONS.length === 11 && CURSOR_ACTIONS.every((a) => reg.has(a.id)));
+    check('each one publishes the topic this answers', CURSOR_ACTIONS.every((a) => Object.values(CURSOR_TOPICS).includes(a.topic)));
+    const bus = createBus();
+    const aim = createAim({ bus });
+    const input = createInputBus({ bus, actions: reg });
+    input.addBinding({ id: 's', actionId: 'cursor/left-far', device: 'gamepad:0', control: 'button:3', edge: 'press', role: 'universal' });
+    const d = attachCursorDrive({ bus, aim });
+    aim.report('pointer:mouse', 0.5, 0.5);
+    input.down('gamepad:0', 'button:3'); input.up('gamepad:0', 'button:3');
+    check('*** a switch bound to "Cursor: left a lot" moves it a lot left ***', near(aim.latest().x, 0.5 - (S * CURSOR_DRIVE_DEFAULTS.stepLarge / 100) / W));
+    d.destroy(); input.destroy?.();
+    const bad = auditFields(CURSOR_DRIVE_FIELDS.map(normalizeField).filter(Boolean), { type: 'cursor' }).filter((f) => f.severity === 'error');
+    check('the how-far settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    check('...and their defaults are the module\'s defaults', CURSOR_DRIVE_FIELDS.every((f) => CURSOR_DRIVE_DEFAULTS[f.key] === f.default));
+  }
+} catch (err) {
+  check(`the suite ran to the end (${err && err.message})`, false, String(err && err.stack));
+}
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

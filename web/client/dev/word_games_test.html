@@ -144,7 +144,10 @@ try {
     check('wrong: Mike’s words', LINES.wrongLine === 'It sounded like you said {heard}. That is incorrect.');
     check('unsure: Mike’s words', LINES.unsureLine === "It sounds like you might be saying {heard}, but I'm not sure because {reason}.");
     check('after two misses: Mike’s words', LINES.twoMissLine === 'Would you like to try again, or hear the answer?');
-    check('another: Mike’s words', LINES.anotherLine === 'Would you like to do another one?');
+    // Mike, 2026-10-02: "I don't think we should be asking if you want to do another one after each
+    // question ... it ruins the flow of the game." The line, and the screen it was on, are gone.
+    check('*** "Would you like to do another one?" is gone (Mike, 2026-10-02) ***', !('anotherLine' in LINES) && !('anotherLine' in DEFAULTS));
+    check('how long a shown answer stays is a setting', getManifest('word_games').settings.some((s) => s.key === 'answerMs' && s.kind === 'number'));
     const m = getManifest('word_games');
     const keys = (m.settings || []).map((s) => s.key);
     const missing = Object.keys(LINES).filter((k) => {
@@ -193,12 +196,13 @@ try {
     check('...about six stars, and the happy cat', r.host.querySelectorAll('.wg-star').length === 6
       && !!r.host.querySelector('img.wg-cat[src*="happy"]'));
     check('...and no confetti', !r.host.querySelector('[class*="confetti"]'));
+    check('...and the running count', /1 right so far/.test(r.host.textContent), r.host.textContent.slice(0, 200));
     r.timers.flush();
-    check('another one?: Yes / No, I’m done, and the running count', r.phase() === 'another'
-      && !!r.host.querySelector('[data-act="more"]') && !!r.host.querySelector('[data-act="finish"]')
-      && /1 right so far/.test(r.host.textContent), r.host.textContent.slice(0, 200));
-    r.eng.press('finish');
-    check('done: says thanks and offers another go', r.phase() === 'done' && !!r.host.querySelector('[data-act="restart"]'));
+    check('*** after the celebration: the NEXT QUESTION, no "another one?" ***', r.phase() === 'asking'
+      && r.probe().serial === 2 && !r.host.querySelector('[data-act="more"]') && !/another one/i.test(r.host.textContent));
+    r.eng.hear({ text: "I'm done", confidence: 0.9 });
+    check('"I\'m done" said aloud: done, says thanks and offers another go', r.phase() === 'done'
+      && !!r.host.querySelector('[data-act="restart"]') && r.last() === LINES.doneLine, r.last());
     r.inst.destroy();
   }
 
@@ -230,14 +234,14 @@ try {
     check('a third miss offers again (never a dead end)', r.phase() === 'twoMiss');
     r.eng.hear({ text: 'hear the answer', confidence: 0.9 });
     s = r.last();
-    check('(4) hearing the answer says it, then "Would you like to do another one?"',
-      s.startsWith('Here is the answer.') && s.includes(`${it.accept[0]} is the opposite of ${it.word}.`)
-      && s.endsWith('Would you like to do another one?'), s);
-    check('...and shows the pair', r.phase() === 'another' && !!r.host.querySelector('[data-revealed]'));
+    check('(4) hearing the answer says it - and nothing after it (no "another one?")',
+      s === `Here is the answer. ${it.accept[0]} is the opposite of ${it.word}.`, s);
+    check('...and shows the pair', r.phase() === 'answer' && !!r.host.querySelector('[data-revealed]'));
+    check('...for a while, on a timer (answerMs), not until somebody answers a question', r.probe().timerPending);
     check('*** nothing was paid for any of it ***', r.points().length === 0, JSON.stringify(r.points()));
     const serial = r.probe().serial;
-    r.eng.hear({ text: 'yes', confidence: 0.9 });
-    check('"yes" to another one: a new question, misses back to zero', r.probe().serial === serial + 1
+    r.timers.flush();
+    check('the next question comes by itself, misses back to zero', r.probe().serial === serial + 1
       && r.probe().misses === 0 && r.phase() === 'asking');
     const it2 = r.probe().item;
     r.eng.hear({ text: `it's ${it2.accept[0]}`, confidence: 0.9 });
@@ -245,9 +249,9 @@ try {
     check('(4) the right answer says Yes! and the pair', r.last() === `Yes! ${it2.accept[0]} is the opposite of ${it2.word}.`, r.last());
     check('...plays the chime once, at the bus master volume (1 when there is no bus)', r.chimes.length === 1 && r.chimes[0] === 1);
     r.timers.flush();
-    check('(4) ...then "Would you like to do another one?"', r.last() === 'Would you like to do another one?' && r.phase() === 'another');
-    r.eng.hear({ text: 'no', confidence: 0.9 });
-    check('"no" ends it with the thanks line', r.phase() === 'done' && r.last() === LINES.doneLine);
+    check('(4) ...then straight on to the next question', r.phase() === 'asking' && r.probe().serial === serial + 2, r.last());
+    r.eng.hear({ text: 'stop playing', confidence: 0.9 });
+    check('"stop playing" ends it with the thanks line', r.phase() === 'done' && r.last() === LINES.doneLine);
     r.eng.hear({ text: 'yes', confidence: 0.9 });
     check('"yes" from done plays again', r.phase() === 'asking');
     r.inst.destroy();
@@ -386,9 +390,7 @@ try {
     check(`${game}: answered right with the switch alone`, r.phase() === 'celebrate', `${r.phase()} after ${presses}`);
     check(`${game}: with no miss on the way`, r.probe().misses === 0);
     pub('select');
-    check(`${game}: a press skips the celebration to "Another one?"`, r.phase() === 'another');
-    pub('select');
-    check(`${game}: Select on Yes deals the next question`, r.phase() === 'asking' && r.probe().serial === 2);
+    check(`${game}: a press skips the celebration to the next question`, r.phase() === 'asking' && r.probe().serial === 2);
     // End it: a wrong press first, to prove a switch miss follows the same flow.
     if (game !== 'yesno') {
       const s = r.probe();
@@ -415,10 +417,33 @@ try {
       r.bus.publish(it.accept.includes(r.probe().candidate) ? 'word_games/select' : 'word_games/next');
     }
     check('two switches (Select = Yes, Next = No): a right answer', r.phase() === 'celebrate' && r.probe().misses === 0);
-    r.bus.publish('word_games/select');
     r.bus.publish('word_games/next');
-    check('...and Next is "No, I’m done" on the Another-one screen', r.phase() === 'done');
+    check('...and either switch skips the celebration to the next question', r.phase() === 'asking' && r.probe().serial === 2);
     r.inst.destroy();
+  }
+  {
+    // *** "STOP" IS AN ANSWER WHERE IT IS ONE. *** "What is the opposite of go?" - "stop" is right, never
+    // "Thanks for playing". "I'm done" still ends it.
+    const go = OPPOSITES.find((o) => o.word === 'go' && o.accept.includes('stop'));
+    const r = rig({ saved: { game: 'opposites' } });
+    let guard = 0;
+    while (r.probe().item !== go && guard++ < 200) r.eng.skip();
+    r.eng.hear({ text: 'stop', confidence: 0.95 });
+    check('*** "stop" to "the opposite of go": RIGHT, not the end of the game ***', !!go && r.phase() === 'celebrate', r.phase());
+    r.timers.flush();
+    r.eng.hear({ text: "i'm done", confidence: 0.95 });
+    check('...and "I\'m done" still ends it', r.phase() === 'done');
+    r.inst.destroy();
+    const y = rig({ saved: { game: 'yesno' } });
+    y.eng.hear({ text: 'stop', confidence: 0.95 });
+    check('in the yes/no quiz, "stop" is not an answer: it ends the game', y.phase() === 'done');
+    y.eng.hear({ text: 'stop', confidence: 0.4 });
+    check('a low-confidence "stop" is not acted on', y.phase() === 'done');
+    y.inst.destroy();
+    const q = rig({ saved: { game: 'yesno' } });
+    q.eng.hear({ text: 'stop', confidence: 0.4 });
+    check('an unsure "stop" does not end a game', q.phase() !== 'done');
+    q.inst.destroy();
   }
   {
     const r = rig({ saved: { game: 'opposites' } });
@@ -524,7 +549,8 @@ try {
     check('...and a hearing now says nothing', r.said.length === n);
     r.timers.flush();
     const ga = grams[grams.length - 1].words;
-    check('"another one?" listens for yes / no / done', ga.includes('yes') && ga.includes('no') && ga.includes('done') && ga.includes(UNKNOWN));
+    check('the next question listens for its answers AND the ways to say stop', grams[grams.length - 1].open
+      && ga.includes("i'm done") && ga.includes('stop playing') && ga.includes(UNKNOWN));
     r.inst.destroy();
 
     const rb = createBus();

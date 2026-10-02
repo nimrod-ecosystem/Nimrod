@@ -231,22 +231,25 @@ try {
     await sleep(10);
     check('...and a School point, under Math\'s own identifier', (r.store.points || []).length === 1
       && (r.store.points[0].data.source || r.store.points[0].data?.source) === 'algebra', JSON.stringify(r.store.points));
-    r.timers.flush();
     const serial = probe().serial;
-    r.publish('algebra/submit');
-    check('*** the one verb Math has today (algebra/submit) answers as select: "Yes, another one" ***', probe().serial === serial + 1);
+    r.timers.flush();
+    check('*** after the celebration, the next question by itself (no "another one?") ***', probe().serial === serial + 1 && probe().phase === 'asking');
     r.publish('algebra/next');
     check('algebra/next walks the choices', probe().highlight === 1);
+    r.publish('algebra/prev');
+    r.publish('algebra/submit');
+    check('*** the one verb Math has today (algebra/submit) answers as select (Yes on the offer) ***',
+      probe().phase === 'celebrate' || probe().misses === 1, `${probe().phase} ${probe().misses}`);
+    r.timers.flush();
     for (let i = 0; i < 12; i++) {
       const q = probe().item;
       eng().hear({ text: String(q.answer), confidence: 0.95 });
       r.timers.flush();
-      eng().press('more');
     }
     const ops = new Set();
     for (let i = 0; i < 8; i++) {
       const q = probe().item; ops.add(q.op);
-      eng().hear({ text: String(q.answer), confidence: 0.95 }); r.timers.flush(); eng().press('more');
+      eng().hear({ text: String(q.answer), confidence: 0.95 }); r.timers.flush();
     }
     check('*** right after right, it moves on past counting by itself ***', !ops.has('count'), [...ops].join(','));
     check('the ladder is saved where every game on the screen can read it', !!store.peek().ladder?.players?.player?.games?.math);

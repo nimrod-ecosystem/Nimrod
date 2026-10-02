@@ -163,6 +163,17 @@ export const PHRASES = {
   'volume-down': ['quieter', 'volume down', 'turn it down', 'turn down', 'turn the volume down',
                   'turn down the volume', 'a bit quieter', 'a little quieter', 'make it quieter',
                   'less volume', 'too loud', 'softer'],
+  // *** THE ACTION VERBS (2026-10-02; ACTION_VERBS in actions.js). *** Mike, on brick breaker: "right,
+  // left, stop (stops the paddle), launch, pause (pauses and brings up settings), resume". Right, left,
+  // pause and resume ("resume" is a play phrase) were already here.
+  //   * BARE "stop" STAYS PAUSE, on purpose (see the note above this table: said to a video it must not
+  //     end anything). Brick breaker gets "stop" = stop the paddle through its manifest's `voice`, which
+  //     wins only while brick breaker has focus (`moduleVoiceTable`, `attachSpeech`'s `scoped`). Here
+  //     the stop verb gets phrases that cannot mean pause.
+  //   * "close" is the menu's way out, and only out (actions.js says why it is not `menu`).
+  launch: ['launch', 'launch it', 'launch the ball'],
+  stop:   ['stop moving', 'stay there', 'stay still'],
+  close:  ['close', 'close it', 'close the menu', 'close menu', 'close settings', 'close the settings'],
 };
 
 /**
@@ -222,6 +233,46 @@ export const ROUTES = {
     phrases: ['play quick count', 'quick count'] },
   'play-next': { topic: 'brain_games/play', payload: { game: 'next' }, label: 'Play What comes next',
     phrases: ['play what comes next'] },
+
+  // *** THE SCREEN BY VOICE (2026-10-02). *** Mike: "We should probably add voice commands for the menus
+  // and everything, if we don't already have them. Also, the cursor should have voice commands ... Other
+  // general things like scroll up or down." WHAT ALREADY EXISTED: "menu" / "settings" / "open the menu"
+  // (the menu verb, a toggle), and while the menu is open "next", "previous", "select", "back" walk it.
+  // ADDED: "open settings" (OPENS, never closes - `system/settings`, which the kiosk answers with open-if-
+  // closed), "close the menu" (the close verb, PHRASES above), and the cursor below. No "next tab": the
+  // menu has no tabs today; when it does, they are two verbs and two rows here.
+  //
+  // *** A ROUTE MAY NAME AN EXISTING ACTION (`action`) instead of a topic. *** These press actions that
+  // are already registered (actions.js SYSTEM_ACTIONS and CURSOR_ACTIONS), so a switch and a phrase
+  // reach the SAME action id - one thing to bind, one thing to log - and SPEECH_ACTIONS does not
+  // register a second copy of them.
+  'open-settings': { action: 'system/settings', label: 'Open the settings',
+    phrases: ['open settings', 'open the settings', 'show settings', 'show the settings'] },
+  // The cursor (cursor_drive.js). "A bit" is the plain phrase as well; "a lot" goes further. How far
+  // each goes is a setting there. Every phrase starts with "cursor" or "mouse" (or is "click" / "scroll"),
+  // so none can be heard as the panel verbs "left" / "move left".
+  'cursor-left':  { action: 'cursor/left', label: 'Cursor left a bit',
+    phrases: ['cursor left', 'move cursor left', 'move the cursor left', 'cursor left a bit', 'mouse left'] },
+  'cursor-right': { action: 'cursor/right', label: 'Cursor right a bit',
+    phrases: ['cursor right', 'move cursor right', 'move the cursor right', 'cursor right a bit', 'mouse right'] },
+  'cursor-up':    { action: 'cursor/up', label: 'Cursor up a bit',
+    phrases: ['cursor up', 'move cursor up', 'move the cursor up', 'cursor up a bit', 'mouse up'] },
+  'cursor-down':  { action: 'cursor/down', label: 'Cursor down a bit',
+    phrases: ['cursor down', 'move cursor down', 'move the cursor down', 'cursor down a bit', 'mouse down'] },
+  'cursor-left-far':  { action: 'cursor/left-far', label: 'Cursor left a lot',
+    phrases: ['cursor left a lot', 'cursor far left', 'mouse left a lot'] },
+  'cursor-right-far': { action: 'cursor/right-far', label: 'Cursor right a lot',
+    phrases: ['cursor right a lot', 'cursor far right', 'mouse right a lot'] },
+  'cursor-up-far':    { action: 'cursor/up-far', label: 'Cursor up a lot',
+    phrases: ['cursor up a lot', 'cursor way up', 'mouse up a lot'] },
+  'cursor-down-far':  { action: 'cursor/down-far', label: 'Cursor down a lot',
+    phrases: ['cursor down a lot', 'cursor way down', 'mouse down a lot'] },
+  'cursor-click': { action: 'cursor/click', label: 'Click where the cursor is',
+    phrases: ['click', 'click it', 'click there', 'click here', 'click that'] },
+  'scroll-up':    { action: 'cursor/scroll-up', label: 'Scroll up',
+    phrases: ['scroll up', 'page up', 'scroll back up'] },
+  'scroll-down':  { action: 'cursor/scroll-down', label: 'Scroll down',
+    phrases: ['scroll down', 'page down', 'scroll further down'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the
@@ -313,8 +364,14 @@ export const DEFAULT_BINDINGS = Object.keys(PHRASES).map((verb) => ({
   label: `Say “${PHRASES[verb][0]}”`,
 }));
 
-/** The action a spoken route presses. Stable, because bindings persist against it. */
-export const routeAction = (id) => `speech/${id}`;
+/**
+ * The action a spoken route presses. Stable, because bindings persist against it. A route that names
+ * an existing action (`action`, 2026-10-02) presses THAT one.
+ */
+export const routeAction = (id, routes = ROUTES) => {
+  const a = routes?.[id]?.action;
+  return typeof a === 'string' && a ? a : `speech/${id}`;
+};
 
 /**
  * THE ROUTES AS ACTIONS, for the host to register next to the verbs:
@@ -323,7 +380,7 @@ export const routeAction = (id) => `speech/${id}`;
  * An input bus refuses an unregistered action, so a host that adds `ROUTE_BINDINGS` without these
  * gets an `unknown-action` report per phrase, never a wrong action.
  */
-export const SPEECH_ACTIONS = Object.entries(ROUTES).map(([id, r]) => ({
+export const SPEECH_ACTIONS = Object.entries(ROUTES).filter(([, r]) => !r.action).map(([id, r]) => ({
   id: routeAction(id), label: r.label, topic: r.topic, payload: r.payload, group: 'Spoken',
 }));
 
@@ -341,6 +398,47 @@ export const ROUTE_BINDINGS = Object.entries(ROUTES).map(([id, r]) => ({
 
 /** Everything a host adds to the input bus for speech: the verbs, then the routes. */
 export const SPEECH_BINDINGS = [...DEFAULT_BINDINGS, ...ROUTE_BINDINGS];
+
+// ---------------------------------------------------------------------------------------
+// *** A MODULE'S OWN SPOKEN COMMANDS, WHILE IT HAS FOCUS (2026-10-02). ***
+// ---------------------------------------------------------------------------------------
+//
+// Mike, on brick breaker: "right, left, stop (stops the paddle), launch, pause (pauses and brings up
+// settings), resume". Every one of those is already a verb - except that bare "stop" means PAUSE in the
+// table above, deliberately, everywhere. A module therefore declares, in its manifest:
+//
+//     voice: { 'stop': 'stop', 'stop the paddle': 'stop', 'launch': 'launch', 'resume': 'play', ... }
+//
+// phrase -> one of its own verbs (MODULE_VERBS), and WHILE THAT MODULE HAS FOCUS its phrases are
+// looked up FIRST. Everywhere else nothing changes. The rules, each checked by `moduleVoiceTable`:
+//   * the verb must be one the module answers (`verbs`) AND one the speech layer can press (a key of
+//     PHRASES: its `phrase:<verb>` control is bound to `verb/<verb>` in DEFAULT_BINDINGS) - otherwise
+//     the phrase would fire nothing, and a command that does nothing is worse than no command;
+//   * the phrase is plain lowercase words, four at most, at least two letters - the table's own rules;
+//   * a phrase that is a wake phrase can never be one (usableWakePhrases refuses commands, and the
+//     host's wake list comes first).
+// It goes through the input bus as a press on `phrase:<verb>`, exactly like a table phrase, so the
+// gate, the log and a person's own rebinding all apply. The host hands `attachSpeech` a `scoped()`
+// that returns the focused module's table (kiosk.js: the router's focused type and its manifest).
+// Read at the moment something is heard, so focus moving needs no restart of the recogniser.
+
+const VOICE_WORDS_MAX = 4;
+/** A manifest's `voice` -> `{ normalised phrase: verb }`, with every row that could not work dropped. */
+export function moduleVoiceTable(voice, { verbs = null, table = PHRASES } = {}) {
+  const out = {};
+  if (!voice || typeof voice !== 'object') return out;
+  const speakable = new Set(Object.keys(table || {}));
+  const allowed = Array.isArray(verbs) ? new Set(verbs) : null;
+  for (const [raw, verb] of Object.entries(voice)) {
+    const p = normalize(raw);
+    if (!p || p !== String(raw) || p.split(' ').length > VOICE_WORDS_MAX) continue;
+    if (p.replace(/\s/g, '').length < 2) continue;
+    if (typeof verb !== 'string' || !speakable.has(verb)) continue;
+    if (allowed && !allowed.has(verb)) continue;
+    out[p] = verb;
+  }
+  return out;
+}
 
 // ---------------------------------------------------------------------------------------
 // WHAT A RECOGNISER MAY SAY BESIDES THE TEXT (row 2.31)
@@ -812,11 +910,14 @@ export function splitWake(text, wakes) {
  * at confidence 1.0 - waits for the better pass instead of acting, because acting on it could only
  * ever be a "did you mean" or nothing. Pure, and deliberately generous: it errs toward acting.
  */
-export function meansSomething(text, wakes = SPEECH_DEFAULTS.wake, table = PHRASES, routes = ROUTES) {
+export function meansSomething(text, wakes = SPEECH_DEFAULTS.wake, table = PHRASES, routes = ROUTES, scopedTable = null) {
   const w = splitWake(text, wakes);
   if (w.woke && !w.rest) return true;
   const rest = w.rest;
-  return !!(rest && (verbFor(rest, table) || routeFor(rest, routes)));
+  // `scopedTable`: the focused module's own phrases (`moduleVoiceTable`), when the host has them.
+  const own = scopedTable && typeof scopedTable === 'object' && rest
+    && Object.prototype.hasOwnProperty.call(scopedTable, normalize(rest));
+  return !!(rest && (own || verbFor(rest, table) || routeFor(rest, routes)));
 }
 
 // ---------------------------------------------------------------------------------------
@@ -943,6 +1044,10 @@ export function attachSpeech(input, {
   // the real one. Told ONLY the words that followed a wake phrase and matched no command; null
   // (the default) logs nothing. Which screens pass one is the host's setting, not this file's.
   misses = null,
+  // THE FOCUSED MODULE'S OWN COMMANDS (`moduleVoiceTable`): a function returning `{ phrase: verb }`
+  // (or null), asked each time something is heard, so focus moving needs no restart. Looked up BEFORE
+  // the table. Null (the default): no module phrases, exactly as before.
+  scoped = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -1150,26 +1255,32 @@ export function attachSpeech(input, {
   }
 
   // ---- how the recogniser should listen -------------------------------------------------
+  // The spoken table plus the focused module's own phrases, for a grammar (a grammar-limited engine can
+  // only hear what is listed). The key cannot collide with a verb or a route id (both are [a-z-]).
+  const spokenNow = () => {
+    const own = Object.keys(scopedTable());
+    return own.length ? { ...spoken, '#focused': own } : spoken;
+  };
   function recognitionMode() {
     if (pendingLive()) {
       return how === 'grammar'
-        ? { mode: 'grammar', grammar: confirmGrammar(wakes, spoken), why: 'confirm' }
+        ? { mode: 'grammar', grammar: confirmGrammar(wakes, spokenNow()), why: 'confirm' }
         : { mode: 'open', grammar: null, why: 'confirm' };
     }
     const armed = armedUntil !== null && now() <= armedUntil;
     if (armed) {
       return armedHow === 'grammar'
-        ? { mode: 'grammar', grammar: armedGrammar(wakes, spoken), why: 'armed' }
+        ? { mode: 'grammar', grammar: armedGrammar(wakes, spokenNow()), why: 'armed' }
         : { mode: 'open', grammar: null, why: 'armed' };
     }
     const g = currentGame();
     if (g) {
       return answerHow === 'grammar'
-        ? { mode: 'grammar', grammar: answerGrammar(g.words, wakes, spoken), why: 'answer' }
+        ? { mode: 'grammar', grammar: answerGrammar(g.words, wakes, spokenNow()), why: 'answer' }
         : { mode: 'open', grammar: null, why: 'answer' };
     }
     return how === 'grammar'
-      ? { mode: 'grammar', grammar: commandGrammar(wakes, spoken), why: 'command' }
+      ? { mode: 'grammar', grammar: commandGrammar(wakes, spokenNow()), why: 'command' }
       : { mode: 'open', grammar: null, why: 'command' };
   }
   function pushMode() {
@@ -1200,6 +1311,19 @@ export function attachSpeech(input, {
 
   function report(h) {
     try { onHeard?.(h); } catch (err) { console.error('speech: onHeard', err); }
+  }
+
+  // The focused module's table right now ({} when there is none, or it throws).
+  function scopedTable() {
+    if (typeof scoped !== 'function') return {};
+    try { const t = scoped(); return t && typeof t === 'object' ? t : {}; }
+    catch (err) { console.error('speech: scoped', err); return {}; }
+  }
+  function scopedVerb(rest) {
+    const said = normalize(rest);
+    if (!said) return null;
+    const v = scopedTable()[said];
+    return typeof v === 'string' && Object.prototype.hasOwnProperty.call(table || {}, v) ? v : null;
   }
 
   // A spoken phrase as a momentary press, and its confirmation.
@@ -1235,6 +1359,14 @@ export function attachSpeech(input, {
       // two-step path is turned off, when it opens nothing (and nothing is announced or ducked).
       if (twoStep) openWindow(Math.max(0, Number(wakeWindowMs) || 0));
       report({ text, verb: null, woke: true });
+      return;
+    }
+    // The focused module's own phrase first (brick breaker's "stop" is the paddle, not pause).
+    const own = scopedVerb(rest);
+    if (own) {
+      report({ text, verb: own, woke: w.woke, scoped: true });
+      closeWindow('command');
+      fire(own);
       return;
     }
     const verb = verbFor(rest, table);

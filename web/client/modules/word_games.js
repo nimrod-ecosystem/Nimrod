@@ -39,7 +39,11 @@
 //      unsure is not the person being wrong (the rule trivia.js wrote down before any recogniser
 //      existed). Yes confirms X, No or "Say it again" asks again.
 //   3. after the second miss: "Would you like to try again, or hear the answer?"
-//   4. after a right answer, or after hearing the answer: "Would you like to do another one?"
+//   4. after a right answer, or after hearing the answer: THE NEXT QUESTION, by itself. Mike retired
+//      "Would you like to do another one?" on 2026-10-02 ("it ruins the flow of the game. They can
+//      just stop answering or ask the computer to stop") - the same change as quiz_flow.js, item 4:
+//      a celebration for `celebrateMs`, a shown answer for `answerMs`, then the next question; "stop"
+//      or "I'm done" (quiz_flow.js STOP_PHRASES, when it is not this question's own answer) ends it.
 //   5. every question can be answered by voice OR a switch yes/no.
 //
 // Every spoken line is an editable text setting whose default is Mike's wording. The number of
@@ -65,8 +69,8 @@ import {
 // (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
 // changed: word_games_test and quiz_flow_test both check these are the same functions.
 import {
-  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES,
-  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, reasonFor,
+  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, STOP_PHRASES, ANSWER_MS_FIELD,
+  normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isStop, reasonFor,
   defaultChime as sharedChime, STARS, CAT_URL,
 } from '../quiz_flow.js';
 
@@ -81,8 +85,8 @@ export const GAMES = ['opposites', 'rhyming', 'yesno'];
 // "Computer please play opposites" lands here (input_speech.js ROUTES): `{ game }`.
 export const PLAY_TOPIC = `${GAME}/play`;
 
-// *** THE SPOKEN LINES. *** Mike's wording where he gave it (wrongLine, unsureLine, twoMissLine,
-// anotherLine), Design's copy for the rest (voice.html). `{placeholders}` are filled per question;
+// *** THE SPOKEN LINES. *** Mike's wording where he gave it (wrongLine, unsureLine, twoMissLine;
+// his anotherLine is retired, see item 4 above), Design's copy for the rest (voice.html). `{placeholders}` are filled per question;
 // an unknown one is left empty rather than read out as a brace.
 // The shared lines are read from FLOW_LINES (one copy of Mike's wording); the order here is the
 // order the settings menu lists them in, unchanged.
@@ -107,7 +111,6 @@ export const LINES = Object.freeze({
   explainOpposites: '{answer} is the opposite of {word}.',
   explainRhyming: '{answer} rhymes with {word}.',
   answerLine: F.answerLine,
-  anotherLine: F.anotherLine,
   doneLine: F.doneLine,
   notCaughtLine: F.notCaughtLine,
   unknownWordLine: "I heard {heard}, but I don't know that word well enough to check it. Try another word.",
@@ -127,6 +130,8 @@ export const DEFAULTS = Object.freeze({
   // question is less than that — the same one trivia pays for a first-guess answer.
   correctPoints: 1,
   celebrateMs: 3000,
+  // How long a revealed answer stays before the next question comes by itself (quiz_flow.js argues it).
+  answerMs: ANSWER_MS_FIELD.default,
   sound: true,
   speak: true,
   // Say the switch candidate ("Is it COLD?") after the question. A voice player hears one
@@ -147,7 +152,7 @@ const LINE_LABELS = {
   reasonQuiet: 'Reason: very quiet', reasonNoise: 'Reason: other noise', reasonCutoff: 'Reason: cut off',
   reasonAlternative: 'Reason: another word it could be', hintLine: 'The hint', hintRhyming: 'Rhyming hint',
   twoMissLine: 'After the misses', rightLine: 'A right answer', explainOpposites: 'Opposites: the pair',
-  explainRhyming: 'Rhyming: the pair', answerLine: 'Hearing the answer', anotherLine: 'Another one?',
+  explainRhyming: 'Rhyming: the pair', answerLine: 'Hearing the answer',
   doneLine: 'Finished', notCaughtLine: "Didn't catch it", unknownWordLine: 'Rhyming: a word it does not know',
   yesNoOnlyLine: 'Yes/no quiz: not a yes or a no',
 };
@@ -180,6 +185,7 @@ const SETTINGS = [
   { key: 'celebrateMs', label: 'How long the celebration stays', kind: 'number', default: 3000,
     level: 'advanced', min: 1000, max: 6000, step: 500, displayScale: 1000,
     unit: 'seconds', unitOne: 'second' },
+  { ...ANSWER_MS_FIELD },
   ...Object.keys(LINES).map((key) => ({ key, label: LINE_LABELS[key] || key, kind: 'text',
     default: LINES[key], level: 'advanced' })),
 ];
@@ -195,7 +201,7 @@ const SETTINGS = [
 // ---------------------------------------------------------------------------------------
 //
 // Phases: 'asking' (question up; a wrong answer's feedback and hint shown here too), 'unsure',
-// 'twoMiss', 'celebrate', 'another' (after a right answer or a revealed one), 'done'.
+// 'twoMiss', 'celebrate', 'answer' (a revealed answer, then the next question), 'done' (said stop).
 export function createEngine({
   cfg = () => DEFAULTS, rand = Math.random,
   say = () => {}, award = () => {}, chime = () => {}, onChange = () => {}, publishGrammar = () => {},
@@ -285,9 +291,10 @@ export function createEngine({
     if (phase === 'asking') answers();
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
-    else if (phase === 'another') { add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]); }
     else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
     else return [];
+    // The ways to say stop, wherever a question waits (quiz_flow.js STOP_PHRASES).
+    if (phase !== 'done') add(STOP_PHRASES);
     // *** ALWAYS. *** Without it a grammar-limited recogniser snaps every sound to a listed word.
     words.add(UNKNOWN);
     return [...words];
@@ -366,19 +373,14 @@ export function createEngine({
     speak(fill(c().rightLine, { explain: pair.explain }));
     try { chime(); } catch (err) { console.error('word_games: chime', err); }
     const ms = Math.max(0, Number(c().celebrateMs) || DEFAULTS.celebrateMs);
-    timer = setTimer(() => { timer = null; toAnother(); }, ms);
+    timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }
 
-  // Mike (4): after a right answer — once the celebration has had its moment — "Would you like
-  // to do another one?"
-  function toAnother() {
+  // Item 4: after the celebration, or a shown answer, THE NEXT QUESTION (no "another one?").
+  function onward() {
     stopTimer();
-    phase = 'another';
-    highlight = 0;
-    feedback = null;
-    speak(c().anotherLine);
-    changed();
+    nextItem();
   }
 
   function reveal() {
@@ -386,12 +388,34 @@ export function createEngine({
     revealed = true;
     pair = { word: item.word || null, answer, explain: explain(answer) };
     stopTimer();
-    phase = 'another';
+    phase = 'answer';
     highlight = 0;
     feedback = null;
-    speak(fill(c().answerLine, { explain: pair.explain }), c().anotherLine);
+    speak(fill(c().answerLine, { explain: pair.explain }));
+    const ms = Math.max(0, Number(c().answerMs) || DEFAULTS.answerMs);
+    timer = setTimer(() => { timer = null; onward(); }, ms);
     changed();
   }
+
+  // Somebody said stop: "Thanks for playing." and Play again.
+  function finish() {
+    stopTimer();
+    phase = 'done';
+    highlight = 0;
+    feedback = null;
+    unsure = null;
+    speak(c().doneLine);
+    changed();
+  }
+  // A stop phrase that is one of this game's own answers ("stop", the opposite of "go") is an answer.
+  function answerVocab() {
+    const words = new Set();
+    if (game === 'opposites') OPPOSITES.forEach((o) => [o.word, ...o.accept, ...(o.wrong || [])].forEach((w) => words.add(normalize(w))));
+    else if (game === 'rhyming') Object.keys(PRONUNCIATIONS).forEach((w) => words.add(normalize(w)));
+    else [...YES_WORDS, ...NO_WORDS].forEach((w) => words.add(normalize(w)));
+    return words;
+  }
+  const saidStop = (text) => isStop(text) && !answerVocab().has(normalize(text));
 
   function onMiss({ heard, via }) {
     const k = c();
@@ -500,7 +524,7 @@ export function createEngine({
     if (dead || !game || !result || typeof result !== 'object') return;
     voiceSeen = true;
     // Celebrating: not listening (the grammar is empty too), so nothing is said over the chime.
-    if (phase === 'celebrate' || phase === 'idle') { changed(); return; }
+    if (phase === 'celebrate' || phase === 'answer' || phase === 'idle') { changed(); return; }
     const raw = String(result.text == null ? '' : result.text).trim();
     const text = normalize(raw);
     if (!text || raw.toLowerCase() === UNKNOWN || text === 'unk') return notCaught();
@@ -509,6 +533,8 @@ export function createEngine({
     // input_speech.js sent the word it was near) is never sure, whatever the engine said.
     const confident = !result.nearMiss && result.confidence != null && Number.isFinite(conf)
       && conf >= Number(c().unsureBelow);
+    // "Stop" / "I'm done" with confidence, while a question waits: the sitting ends (item 4).
+    if (confident && phase !== 'done' && saidStop(text)) return finish();
     switch (phase) {
       case 'asking': return answerFrom(text, result, confident);
       case 'unsure':
@@ -519,11 +545,6 @@ export function createEngine({
         if (!confident) return notCaught();
         if (isAgain(text)) return press('again');
         if (isReveal(text)) return press('reveal');
-        return notCaught();
-      case 'another':
-        if (!confident) return notCaught();
-        if (isYes(text)) return press('more');
-        if (isNo(text) || isDone(text)) return press('finish');
         return notCaught();
       case 'done':
         if (confident && (isYes(text) || isAgain(text))) return press('restart');
@@ -538,7 +559,6 @@ export function createEngine({
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
-      case 'another': return [{ act: 'more', label: 'Yes' }, { act: 'finish', label: "No, I'm done" }];
       case 'done': return [{ act: 'restart', label: 'Play again' }];
       default: return [];
     }
@@ -580,18 +600,15 @@ export function createEngine({
       case 'reveal':
         if (phase === 'twoMiss') reveal();
         return;
+      // A press during the celebration or a shown answer: the next question now. `more` (the old
+      // "Yes, another") is kept as the same thing for anything that still sends it.
       case 'continue':
-        if (phase === 'celebrate') toAnother();
-        return;
       case 'more':
-        if (phase === 'another') nextItem();
+        if (phase === 'celebrate' || phase === 'answer') onward();
         return;
       case 'finish':
-        if (phase !== 'another') return;
-        phase = 'done';
-        highlight = 0;
-        speak(c().doneLine);
-        changed();
+        if (phase === 'done' || phase === 'idle') return;
+        finish();
         return;
       case 'restart':
         if (phase === 'done') { rightCount = 0; nextItem(); }
@@ -604,7 +621,7 @@ export function createEngine({
   // switches ARE the first and second stop.
   function move(delta) {
     if (dead) return;
-    if (phase === 'celebrate') { press('continue'); return; }
+    if (phase === 'celebrate' || phase === 'answer') { press('continue'); return; }
     const s = stops();
     if (c().twoSwitch === 'yesno' && delta > 0) { if (s[1]) press(s[1].act); else if (s[0]) press(s[0].act); return; }
     if (!s.length) return;
@@ -613,7 +630,7 @@ export function createEngine({
   }
   function select() {
     if (dead) return;
-    if (phase === 'celebrate') { press('continue'); return; }
+    if (phase === 'celebrate' || phase === 'answer') { press('continue'); return; }
     const s = stops();
     if (!s.length) return;
     const i = c().twoSwitch === 'yesno' ? 0 : Math.min(highlight, s.length - 1);
@@ -767,14 +784,12 @@ registerModule(
         mid = `${left}<div class="wg-st" aria-live="polite">${wrong}<p class="wg-say" data-offer>${esc(cfg.twoMissLine)}</p>${btns(stops, s.highlight)}</div>`;
       } else if (s.phase === 'celebrate') {
         ask = 'Yes!';
-        mid = `<div class="wg-st wg-right" aria-live="polite"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p></div>`;
+        mid = `<div class="wg-st wg-right" aria-live="polite"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p>${score}</div>`;
         extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
           + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
-      } else if (s.phase === 'another') {
-        ask = esc(cfg.anotherLine);
-        const shown = s.revealed && s.pair
-          ? `${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>` : '';
-        mid = `<div class="wg-st wg-right" aria-live="polite">${shown}${btns(stops, s.highlight)}${score}</div>`;
+      } else if (s.phase === 'answer') {
+        // The revealed answer, up for `answerMs`; the next question follows by itself (item 4).
+        mid = `<div class="wg-st wg-right" aria-live="polite">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${score}</div>`;
       } else if (s.phase === 'done') {
         ask = esc(cfg.doneLine);
         mid = `<div class="wg-st wg-right" aria-live="polite">${score}${btns(stops, s.highlight)}</div>`;

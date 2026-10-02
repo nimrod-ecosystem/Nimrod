@@ -13,7 +13,7 @@
 //     is Undo as well.
 //   * TOUCH: the same letters and stops, touched.
 // Each word found is one answer on the shared miss flow (`quiz_flow.js`): "Yes! CAT. 2 more to
-// find.", the chime, a point, "Would you like to do another one?". The same letters stay until every
+// find.", the chime, a point, then straight on to the next word (no "another one?" since 2026-10-02). The same letters stay until every
 // word they ask for is found, then new ones come.
 //
 // WHAT IS A MISS, AND WHAT IS NOT. Only an answer that CANNOT be made from these letters is a miss
@@ -394,7 +394,7 @@ registerModule(
         try {
           unsubPlay = a.bus.subscribe(`${GAME}/play`, () => {
             const ph = a.engine.snapshot().phase;
-            a.engine.press(ph === 'done' ? 'restart' : ph === 'another' ? 'more' : 'repeat');
+            a.engine.press(ph === 'done' ? 'restart' : (ph === 'celebrate' || ph === 'answer') ? 'continue' : 'repeat');
           });
         } catch { unsubPlay = null; }
       },

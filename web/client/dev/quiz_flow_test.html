@@ -74,11 +74,16 @@ try {
     check('normalize', WG.normalize === QF.normalize);
     check('reasonFor', WG.reasonFor === QF.reasonFor);
     check('shuffle', WG.shuffle === QF.shuffle);
-    check("Mike's five lines are word for word the same in both",
-      ['wrongLine', 'unsureLine', 'twoMissLine', 'anotherLine', 'unsureNoReasonLine', 'switchWrongLine']
+    check("Mike's lines are word for word the same in both",
+      ['wrongLine', 'unsureLine', 'twoMissLine', 'unsureNoReasonLine', 'switchWrongLine']
         .every((k) => WG.LINES[k] === FLOW_LINES[k]));
     check('wrong: Mike’s words', FLOW_LINES.wrongLine === 'It sounded like you said {heard}. That is incorrect.');
-    check('another: Mike’s words', FLOW_LINES.anotherLine === 'Would you like to do another one?');
+    // Mike, 2026-10-02: "I don't think we should be asking if you want to do another one after each
+    // question ... it ruins the flow of the game. They can just stop answering or ask the computer to stop."
+    check('*** "Would you like to do another one?" is gone, from the lines and the settings ***',
+      !('anotherLine' in FLOW_LINES) && !QF.flowSettings().some((f) => f.key === 'anotherLine'));
+    check('how long a shown answer stays is a setting (answerMs, 5 s)', QF.FLOW_DEFAULTS.answerMs === 5000
+      && QF.flowSettings().some((f) => f.key === 'answerMs' && f.kind === 'number'));
     check('no line says she / her (site copy rule)', !/\b(she|her|hers|herself)\b/i.test(Object.values(FLOW_LINES).join(' ')));
   }
 
@@ -162,10 +167,13 @@ try {
     check('...and the snapshot lists both hints given', t.e.snapshot().hints.join('|') === 'it is up above|it starts with b');
     t.e.hear({ text: 'red', confidence: 0.95 });
     t.e.hear({ text: 'answer', confidence: 0.9 });
-    check('(4) hear the answer, then "another one?"', t.phase() === 'another'
-      && t.last() === `Here is the answer. ${it.a} is right. Would you like to do another one?`, t.last());
+    check('(4) hear the answer - and nothing after it', t.phase() === 'answer'
+      && t.last() === `Here is the answer. ${it.a} is right.`, t.last());
+    check('...shown on a timer, not behind a question', t.e.snapshot().timerPending && t.e.stops().length === 0);
     check('*** nothing paid for any of it ***', t.paid.length === 0);
-    t.e.press('more');
+    const before = t.e.snapshot().serial;
+    t.flush();
+    check('*** then the NEXT QUESTION, by itself ***', t.phase() === 'asking' && t.e.snapshot().serial === before + 1);
     const it2 = t.e.snapshot().item;
     t.e.hear({ text: it2.a, confidence: 0.3 });
     check('(2) below the threshold: unsure, EVEN FOR THE RIGHT ANSWER', t.phase() === 'unsure');
@@ -175,8 +183,7 @@ try {
     t.e.hear({ text: it2.a, confidence: 1 });
     t.e.press('continue');
     check('paid once, whatever arrives twice', t.paid.length === 1);
-    check('the celebration hands on to "another one?"', t.phase() === 'another');
-    t.e.press('more');
+    check('a press during the celebration: straight to the next question', t.phase() === 'asking' && t.e.snapshot().serial === before + 2);
     const it3 = t.e.snapshot().item;
     t.e.hear({ text: it3.a, confidence: 0.99, nearMiss: true });
     check('a near miss is always asked about, never judged', t.phase() === 'unsure');
@@ -186,6 +193,34 @@ try {
     t.e.press('reject');
     t.e.hear({ text: UNKNOWN, confidence: 1 });
     check('"[unk]": not caught, not a miss', t.e.snapshot().misses === 0 && t.last() === FLOW_LINES.notCaughtLine);
+  }
+
+  section('*** stopping: "stop" or "I\'m done" ends it; not answering just waits ***');
+  {
+    const t = eng();
+    t.e.start('toy');
+    t.flush();
+    check('a question nobody answers simply waits: no timer, still asking', t.phase() === 'asking' && !t.e.snapshot().timerPending);
+    check('the grammar carries the ways to say stop', ['stop', "i'm done", 'stop playing'].every((w) => t.grams[t.grams.length - 1].words.includes(w)));
+    t.e.hear({ text: 'stop', confidence: 0.4 });
+    check('an unsure "stop" does not end it', t.phase() !== 'done');
+    t.e.press('reject');
+    t.e.hear({ text: 'Stop.', confidence: 0.9 });
+    check('"stop", sure: "Thanks for playing." and Play again', t.phase() === 'done' && t.last() === FLOW_LINES.doneLine
+      && t.e.stops().some((s) => s.act === 'restart'));
+    t.e.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes" from there plays again', t.phase() === 'asking');
+    t.e.hear({ text: 'red', confidence: 0.95 });
+    t.e.hear({ text: 'red', confidence: 0.95 });
+    t.e.hear({ text: "I'm done", confidence: 0.9 });
+    check('"I\'m done" ends it from the two-miss offer too', t.phase() === 'done');
+    check('isStop: whole utterances only', QF.isStop('stop') && QF.isStop("I'm done") && !QF.isStop('stop the car') && !QF.isStop('done'));
+    // A stop phrase that IS one of this question's words is an answer.
+    const STOPPY = { ...TOY, items: () => [{ q: 'What does a red light mean?', a: 'stop', wrong2: 'go', offers: ['go', 'stop', 'wait'] }] };
+    const s = eng({}, {}, { s: STOPPY });
+    s.e.start('s');
+    s.e.hear({ text: 'stop', confidence: 0.95 });
+    check('*** "stop" when stop is the answer: RIGHT, not the end ***', s.phase() === 'celebrate');
   }
 
   section('the switch path: one candidate at a time, like word games');
@@ -261,9 +296,11 @@ try {
     check('...and pays nothing', t.paid.length === 0);
     t.e.hear({ text: 'yes', confidence: 0.9 });
     check('"yes" plays it again', t.replays.length === 1);
-    check('...then asks "another one?"', t.phase() === 'another' && t.last() === FLOW_LINES.anotherLine);
+    check('...and stays on the choice, so the next question never starts over the clip', t.phase() === 'gentle');
     t.e.press('replay');
-    check('"Listen again" is on the another-one screen too', t.replays.length === 2);
+    check('"Listen again" can be pressed again', t.replays.length === 2);
+    t.e.press('onward');
+    check('"Next one" goes on to the next question (no "another one?")', t.phase() === 'asking' && t.e.snapshot().serial === 2);
     const t2 = eng({}, { personMiss: 'standard' }, { g: GENTLE });
     t2.e.start('g');
     t2.e.hear({ text: 'red', confidence: 0.95 });
@@ -272,7 +309,7 @@ try {
     t3.e.start('g');
     t3.e.press('yes');
     t3.e.press('onward');
-    check('"Not now" goes on to "another one?"', t3.phase() === 'another');
+    check('"Next one" deals the next question', t3.phase() === 'asking' && t3.e.snapshot().serial === 2);
   }
 
   section('nothing to ask: said plainly; still loading: waits; then asks');
@@ -313,12 +350,12 @@ try {
     check('*** a second hearing or touch cannot report it twice ***', results.length === 1);
     t.e.answer('blue', 'touch');
     check('answer() does nothing outside a question', t.phase() === 'celebrate');
-    t.flush(); t.e.press('more');
+    t.flush();
     const it2 = t.e.snapshot().item;
     t.e.hear({ text: it2.wrong2, confidence: 1 }); t.e.hear({ text: it2.wrong2, confidence: 1 });
     t.e.press('reveal');
     check('hearing the answer: a result, not right', results.length === 2 && results[1].right === false && results[1].revealed === true);
-    t.e.press('more');
+    t.flush();
     t.e.skip();
     check('a skip before any try: no result (nothing was attempted)', results.length === 2);
     t.e.hear({ text: t.e.snapshot().item.wrong2, confidence: 1 });

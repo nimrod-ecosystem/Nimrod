@@ -138,7 +138,8 @@ try {
     await sleep(10);
     check('...one School point', r.points().length === 1 && r.points()[0].data?.type === 'School', JSON.stringify(r.points()));
     r.timers.flush();
-    check('then "Would you like to do another one?"', r.phase() === 'another' && r.last() === FLOW_LINES.anotherLine);
+    check('then the next word, by itself (no "another one?" since 2026-10-02)', r.phase() === 'asking'
+      && r.probe().serial === 2 && /^Spell /.test(r.last()), r.last());
     r.inst.destroy();
   }
 
@@ -180,8 +181,8 @@ try {
     check('...a typed letter fills the first blank', r.host.querySelectorAll('[data-entry] .qz-blank').length === word.length - 1);
     for (const l of wrong.slice(1)) r.host.querySelector(`[data-letter="${l}"]`).click();
     r.host.querySelector('[data-act="reveal"]').click();
-    check('"Hear the answer": the word spelled out, then another one?',
-      r.last() === `Here is the answer. ${word} is spelled ${word.toUpperCase().split('').join(', ')}. ${FLOW_LINES.anotherLine}`, r.last());
+    check('"Hear the answer": the word spelled out, and nothing after it',
+      r.last() === `Here is the answer. ${word} is spelled ${word.toUpperCase().split('').join(', ')}.` && r.phase() === 'answer', r.last());
     await sleep(10);
     check('*** nothing paid for any of it ***', r.points().length === 0);
     r.inst.destroy();
@@ -230,8 +231,9 @@ try {
     r.eng.type(r.probe().item.word, 'switch');
     const sc = r.scores.filter((s) => s.source === 'spelling' && !s.gone).pop();
     check('published on score/update as "spelling"', sc?.value === 1, JSON.stringify(sc));
-    r.timers.flush();
+    // Drawn with the celebration (there is no "another one?" screen to carry it since 2026-10-02).
     check('drawn here when no scoreboard shows it', /1 right so far/.test(r.host.textContent));
+    r.timers.flush();
     r.inst.destroy();
     check('destroy says the score is gone', r.scores.some((s) => s.source === 'spelling' && s.gone));
   }

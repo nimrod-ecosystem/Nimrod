@@ -1698,9 +1698,15 @@ html[data-live-scene] body{background:transparent}
  * count 1, never infinite), opacity only ever rising; under reduced motion there is no animation
  * at all and the stars simply appear. dev/word_games_test.html reads this block to hold that.
  */
+/* TRANSPARENT, NOT `--bg` (Mike, 2026-10-02: "The backgrounds on brick breaker and brain games aren't
+   transparent when they should be"). Every answer game draws `.wg` (word games, and quiz_view.js's
+   spelling / math / name that / thinking / word builder / brain games), and `--bg` here covered the
+   panel's own background - which IS the screen's "Panel backgrounds" setting (kiosk.css `panelSurface`)
+   - so solid / veil / clear changed nothing on any of them. The photos fix (`.photos .stage`, above),
+   for the same reason: on a solid panel the panel's surface shows; on veil / clear, the scene. */
 .wg{position:absolute;inset:0;container-type:size;display:grid;grid-template-rows:auto 1fr auto;
   gap:2cqmin;padding:3cqmin 4cqmin;box-sizing:border-box;overflow:hidden;
-  background:var(--bg);color:var(--text);font-family:var(--font)}
+  background:transparent;color:var(--text);font-family:var(--font)}
 .wg-ask{margin:0;text-align:center;font-size:clamp(18px,7cqmin,84px);font-weight:800;line-height:1.1}
 .wg-ask em{font-style:normal;color:var(--accent-warm-deep)}
 .wg-mid{display:grid;grid-template-columns:auto 1fr;gap:4cqmin;align-items:center;min-height:0}

@@ -232,8 +232,9 @@ try {
     check('it is saved to the shared ladder', !!store.peek().ladder.players['name:bob'].games.g);
     const chip = y.s.turnHtml({ phase: 'asking' }, 'g');
     check('whose turn is on screen: a name and a coloured initial', /data-turn="name:ann"/.test(chip) && />A</.test(chip) && /Ann/.test(chip), chip);
-    const nextChip = y.s.turnHtml({ phase: 'another' }, 'g');
-    check('between questions it says who is next', /data-next/.test(nextChip) && /Next: Ann/.test(nextChip), nextChip);
+    // ('another' was the between-questions screen until 2026-10-02; 'done' is the one left that says who is next.)
+    const nextChip = y.s.turnHtml({ phase: 'done' }, 'g');
+    check('after the game it says who is next', /data-next/.test(nextChip) && /Next: Ann/.test(nextChip), nextChip);
     check('the question is said with the name first', y.s.askPrefix() === 'Ann, your turn. ');
     check('the score names both', /^Ann \d+ · Bob \d+$/.test(y.s.scoreDetail()), y.s.scoreDetail());
     const q = y.s.deal('g');

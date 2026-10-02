@@ -358,8 +358,8 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     /** The chip in front of the question: who is answering, who just answered, or who is next. */
     turnHtml(s = {}, game = null) {
       const ph = s.phase;
-      if (ph === 'celebrate' || ph === 'gentle') return chip(lastPlayer || currentPlayer(), { game });
-      if (ph === 'another' || ph === 'done') {
+      if (ph === 'celebrate' || ph === 'gentle' || ph === 'answer') return chip(lastPlayer || currentPlayer(), { game });
+      if (ph === 'done') {
         return players().length > 1 ? chip(currentPlayer(), { next: true, game }) : chip(lastPlayer, { game });
       }
       return chip(current?.player || currentPlayer(), { game });

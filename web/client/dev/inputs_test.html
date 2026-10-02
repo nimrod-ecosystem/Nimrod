@@ -210,6 +210,28 @@ const logText = (r) => r.q('[data-log]').textContent;
       check('a destroyed router stops listening', fired.length === 2);
     }
 
+    // ================= 2026-10-02: the action verbs =================
+    section('the action verbs — launch, stop, close (Mike: brick breaker by voice, and the menu)');
+    {
+      const { ACTION_VERBS } = await import('../actions.js');
+      check('three, with the ids the phrase table and the modules use',
+        JSON.stringify(ACTION_VERBS.map((v) => v.id)) === '["launch","stop","close"]');
+      check('not in the nine (the everyday list stays short)', ACTION_VERBS.every((a) => !VERBS.some((v) => v.id === a.id)));
+      const reg = createDefaultRegistry();
+      check('real actions, so a switch or a phrase bound to one fires', ACTION_VERBS.every((a) => reg.has(verbTopic(a.id))));
+      check('a custom verb cannot shadow one', normalizeVerb({ id: 'launch' }) === null && normalizeVerb({ id: 'stop' }) === null);
+      const bus = createBus();
+      const got = [];
+      // The router addresses the focused INSTANCE (`instanceTopic`), so listen where a mounted panel would.
+      for (const t of ['brickbreaker/launch', 'brickbreaker/stop', 'brickbreaker/resume', 'brickbreaker/left'])
+        bus.subscribe(bus.instanceTopic ? bus.instanceTopic('bb', t) : t, () => got.push(t));
+      const router = createVerbRouter({ bus, modules: () => [{ id: 'bb', type: 'brickbreaker' }] });
+      for (const v of ['launch', 'stop', 'play', 'left']) bus.publish(verbTopic(v));
+      check('*** the router takes them to the focused panel: launch, stop, resume (play), left ***',
+        JSON.stringify(got) === JSON.stringify(['brickbreaker/launch', 'brickbreaker/stop', 'brickbreaker/resume', 'brickbreaker/left']), JSON.stringify(got));
+      router.destroy();
+    }
+
     // ================= row 2.28: the media verbs =================
     section('the media verbs — play, pause, louder, quieter');
     {
@@ -392,8 +414,14 @@ const logText = (r) => r.q('[data-log]').textContent;
         const { SUBTITLE_ACTIONS } = await import('../subtitles.js');
         check('*** the subtitles’ scroll-back (earlier / back to the latest) is pickable ***',
           SUBTITLE_ACTIONS.length === 2 && SUBTITLE_ACTIONS.every((a) => vals(inGroup('Subtitles')).includes(a.id)));
+        // 2026-10-02: launch / stop / close and the cursor's commands, each pickable for a switch.
+        const { ACTION_VERBS, CURSOR_ACTIONS } = await import('../actions.js');
+        check('*** launch, stop and close (the action verbs) are pickable ***',
+          ACTION_VERBS.every((v) => vals(inGroup('Games and menus')).includes(verbTopic(v.id))), JSON.stringify(vals(inGroup('Games and menus'))));
+        check('*** the cursor by command (move a bit / a lot, click, scroll) is pickable ***',
+          CURSOR_ACTIONS.length === 11 && CURSOR_ACTIONS.every((a) => vals(inGroup('The cursor')).includes(a.id)));
         check('the groups come AFTER the everyday list, never before it',
-          groups.length === 5 && groups.every((g) => g.previousElementSibling !== null));
+          groups.length === 7 && groups.every((g) => g.previousElementSibling !== null));
         r.q('[data-new-action]').value = 'speech/near-miss-yes';
         r.q('[data-add]').click();
         r.press(XAC, 'button:5', 10);
