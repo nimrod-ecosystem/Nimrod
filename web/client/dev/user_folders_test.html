@@ -12,7 +12,7 @@
 </style>
 </head>
 <body>
-<h1>user folders — row 2.49</h1>
+<h1>user folders — row 2.49 (and its screen, user_folders_page.js)</h1>
 <p>The one storage root's <code>fonts/</code>, <code>luts/</code> and <code>audio-plugins/</code> subfolders,
 against FAKE folders (an in-memory directory handle — no picker, no prompt, no files). The colour grade is
 checked by actually drawing through the SVG filter; the plugin loader by actually importing modules and
@@ -28,6 +28,9 @@ import { parseCube, compileLut, filterMarkup, applyGrade, readGrade, saveGrade, 
 import { resolvePath, referencesOf, rewriteSource, folderToUrls, loadWam } from '../wam_loader.js';
 import { createMixerFx } from '../mixer_fx.js';
 import { CHANNEL_IDS } from '../audio_bus.js';
+import { FOLDER_KINDS, kindKey, kindFolder, pickKindFolder, useRootFor, forgetRoot, allowAgain, permissionOf, KIND_MODE } from '../user_folders.js';
+import { scanFolder, readUserFolders, userFoldersHtml, renderUserFolders, userFoldersPage, USER_FOLDER_ITEMS,
+  USER_FOLDERS_PAGE, permissionWords } from '../user_folders_page.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -351,6 +354,160 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
         !nosdk.ok && /wam-sdk/.test(nosdk.why) && /Nothing is downloaded/.test(nosdk.why), J(nosdk));
       const nochan = await fx2.addWamFromFolder('no-such-channel', null, pluginsDir);
       check('an unknown channel is refused before anything loads', !nochan.ok && /no such channel/.test(nochan.why));
+    }
+
+    // =========================================================================================
+    section('*** the screen (2026-10-02): a folder per kind, the root by default ***');
+    // A remembered-handle store backed by a Map: fake folders cannot go into IndexedDB.
+    const memStore = () => { const m = new Map(); return { m, get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); return true; }, del: async (k) => m.delete(k) }; };
+    // A fake folder whose permission is whatever `perm.state` says; requestPermission grants it (a press).
+    const withPerm = (dir, perm) => Object.assign(dir, {
+      async queryPermission(o) { perm.asked = o; return perm.state; },
+      async requestPermission(o) { perm.requested = o; perm.state = perm.answer || 'granted'; return perm.state; },
+    });
+    {
+      const store = memStore();
+      check('three kinds, the same names as the root\'s subfolders', FOLDER_KINDS.join() === 'fonts,luts,plugins' && kindKey('luts') === 'folder:luts');
+      const none = await kindFolder('fonts', { store });
+      check('nothing chosen: source none, no folder, no throw', none.source === 'none' && none.dir === null && none.permission === 'none', J(none));
+      const rootTree = {};
+      const root = fakeDir('Nimrod', rootTree);
+      const view = { showDirectoryPicker: async (o) => { view.opts = o; return view.next; } };
+      view.next = root;
+      await pickRoot({ view, store });
+      const fromRoot = await kindFolder('fonts', { store });
+      check('*** the root chosen: every kind reads its subfolder of it, by default ***',
+        fromRoot.source === 'root' && fromRoot.name === 'Nimrod/fonts' && !!fromRoot.dir && fromRoot.permission === 'granted', J({ ...fromRoot, dir: !!fromRoot.dir, holder: !!fromRoot.holder }));
+      const lutTree = { 'Warm.cube': 'LUT_1D_SIZE 2\n0 0 0\n1 1 1' };
+      view.next = fakeDir('Looks I already had', lutTree);
+      await pickKindFolder('luts', { view, store });
+      check('*** a different folder for ONE kind: asked READ-only, under its own picker id ***',
+        view.opts.mode === 'read' && view.opts.id === 'nimrod-luts' && KIND_MODE === 'read', J(view.opts));
+      const own = await kindFolder('luts', { store });
+      check('...that kind now reads its own folder; the others still read the root',
+        own.source === 'own' && own.name === 'Looks I already had' && (await kindFolder('fonts', { store })).source === 'root', J({ src: own.source, name: own.name }));
+      await useRootFor('luts', { store });
+      check('"use the one in my Nimrod folder" goes back to the root, and the other folder is not touched',
+        (await kindFolder('luts', { store })).source === 'root' && lutTree['Warm.cube'].startsWith('LUT_1D'));
+      let refused = '';
+      try { await pickKindFolder('videos', { view, store }); } catch (e) { refused = e.message; }
+      check('an unknown kind is refused before any prompt', /no such kind/.test(refused));
+      // Lapsed permission: the folder is remembered but cannot be read until a press lets it back in.
+      const perm = { state: 'prompt' };
+      view.next = withPerm(fakeDir('My fonts', { 'Lexend-Regular.ttf': new Uint8Array([1]) }), perm);
+      await pickKindFolder('fonts', { view, store });
+      const lapsed = await kindFolder('fonts', { store });
+      check('*** lapsed permission: remembered, NOT read, and it never prompts on its own ***',
+        lapsed.source === 'own' && lapsed.permission === 'prompt' && lapsed.dir === null && !perm.requested && perm.asked.mode === 'read', J({ p: lapsed.permission, requested: perm.requested }));
+      check('allow again asks the browser (read), and then it can be read',
+        (await allowAgain(lapsed.holder, lapsed.mode)) === 'granted' && perm.requested.mode === 'read' && !!(await kindFolder('fonts', { store })).dir);
+      check('permission of nothing is "none"; a handle that throws is "unknown"', (await permissionOf(null)) === 'none'
+        && (await permissionOf({ queryPermission() { throw new Error('x'); } })) === 'unknown');
+      await forgetRoot({ store });
+      check('stop using the root: kinds without their own folder have none; the files stay', (await kindFolder('luts', { store })).source === 'none'
+        && (await kindFolder('fonts', { store })).source === 'own' && 'fonts' in rootTree);
+    }
+
+    section('*** what the screen lists: names only, and a plugin is NEVER run ***');
+    {
+      const fonts = await scanFolder('fonts', fakeDir('f', { 'Lexend-Regular.ttf': new Uint8Array([1]), 'Lexend-Bold.ttf': new Uint8Array([1]),
+        'Atkinson-Hyperlegible-Bold.woff2': new Uint8Array([1]), 'README.txt': 'x' }));
+      check('*** fonts: one line per family, with its file count ***',
+        J(fonts.items) === J([{ name: 'Atkinson Hyperlegible', detail: '1 file' }, { name: 'Lexend', detail: '2 files' }]), J(fonts));
+      const luts = await scanFolder('luts', fakeDir('l', { 'Warm.cube': 'x', 'Cool.CUBE': 'x', 'README.txt': 'x' }));
+      check('colour looks: the .cube files (any case), sorted', J(luts.items.map((i) => i.name)) === J(['Cool.CUBE', 'Warm.cube']), J(luts));
+      globalThis.__pluginRan = 0;
+      const made = [];
+      const realCreate = URL.createObjectURL;
+      URL.createObjectURL = (b) => { made.push(b); return realCreate.call(URL, b); };
+      const fetchedBefore = fetched.length;
+      const plugins = await scanFolder('plugins', fakeDir('p', {
+        'wam-sdk': { 'index.js': 'globalThis.__pluginRan++;' },
+        Reverb: { 'index.js': 'globalThis.__pluginRan++; export default {};' }, 'README.txt': 'x' }));
+      URL.createObjectURL = realCreate;
+      check('*** plugins: the folder names, the host files\' folder not counted as a plugin, and whether it is there ***',
+        J(plugins.items.map((i) => i.name)) === J(['Reverb']) && plugins.sdk === true, J(plugins));
+      check('*** listing plugins runs NOTHING: no code ran, no blob: URL was made, nothing fetched ***',
+        globalThis.__pluginRan === 0 && made.length === 0 && fetched.length === fetchedBefore, J({ ran: globalThis.__pluginRan, made: made.length }));
+      check('no folder, or one that throws: an empty list, no throw', (await scanFolder('fonts', null)).items.length === 0
+        && (await scanFolder('luts', { entries() { throw new Error('gone'); } })).items.length === 0);
+    }
+
+    section('*** the page itself, pressed like a person would ***');
+    {
+      const store = memStore();
+      const rootTree = {};
+      const view = { picks: 0, showDirectoryPicker: async (o) => { view.picks++; view.opts = o; return view.next(); } };
+      view.next = () => fakeDir('Nimrod', rootTree);
+      const host = document.createElement('div');
+      document.body.append(host);
+      const changes = [];
+      const page = renderUserFolders(host, { view, store, onChange: (c) => changes.push(c) });
+      await page.ready;
+      const text = () => host.textContent.replace(/\s+/g, ' ');
+      const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
+      const settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 10)); };
+      check('*** every kind is shown, with where it would come from ***',
+        ['root', 'fonts', 'luts', 'plugins'].every((k) => host.querySelector(`[data-uf-section="${k}"]`)) && /No folder yet/.test(text()), text().slice(0, 300));
+      check('*** opening the page prompts for NOTHING ***', view.picks === 0);
+      check('a button to choose the root and one per kind', !!btn('pick-root') && FOLDER_KINDS.every((k) => btn('pick-kind', k)));
+      btn('pick-root').click();
+      await settle();
+      check('*** choosing the root: the browser\'s picker (read+write), the tree made, and the page says what it found ***',
+        view.picks === 1 && view.opts.mode === 'readwrite' && 'fonts' in rootTree && /Using “Nimrod”/.test(text())
+          && /Made fonts, luts, audio-plugins in it/.test(text()) && /No font files in it yet/.test(text()), text().slice(0, 600));
+      rootTree.fonts['Lexend-Regular.ttf'] = new Uint8Array([1]);
+      rootTree.luts['Film.cube'] = 'x';
+      rootTree['audio-plugins'].Chorus = { 'index.js': 'globalThis.__pluginRan++;' };
+      await page.refresh();
+      check('*** what is in each folder, by name ***', /Found: Lexend \(1 file\)/.test(text()) && /Found: Film\.cube/.test(text()) && /Found: Chorus/.test(text()), text());
+      check('*** the plugin line says the host files are missing, and that nothing here runs a plugin ***',
+        /WAM host files are missing/.test(text()) && /nothing on this page runs a plugin/.test(text()) && globalThis.__pluginRan === 0);
+      // A different folder for fonts, whose permission then lapses.
+      const perm = { state: 'granted' };
+      view.next = () => withPerm(fakeDir('Fonts I keep', { 'OpenDyslexic.otf': new Uint8Array([1]) }), perm);
+      btn('pick-kind', 'fonts').click();
+      await settle();
+      check('*** a different folder for fonts: read-only, named on the page, its fonts listed ***',
+        view.opts.mode === 'read' && /From its own folder, “Fonts I keep”/.test(text()) && /Found: OpenDyslexic/.test(text()), text());
+      perm.state = 'prompt';
+      await page.refresh();
+      check('*** lapsed: the page says so, lists nothing it cannot read, and offers "Allow it again" ***',
+        /needs your permission again/.test(text()) && /Allow the folder again to see what is in it/.test(text()) && !!btn('allow-kind', 'fonts') && !perm.requested, text());
+      btn('allow-kind', 'fonts').click();
+      await settle();
+      check('*** "Allow it again" asks the browser (a press), and the fonts are back ***',
+        perm.requested && perm.requested.mode === 'read' && /Found: OpenDyslexic/.test(text()) && !btn('allow-kind', 'fonts'), text());
+      perm.state = 'prompt'; perm.answer = 'denied';
+      await page.refresh();
+      btn('allow-kind', 'fonts').click();
+      await settle();
+      check('a refusal is said in words, not a crash', /refused permission/.test(text()), text());
+      btn('use-root', 'fonts').click();
+      await settle();
+      check('"Use the one in your Nimrod folder" goes back to the root', /From your Nimrod folder: “Nimrod\/fonts”/.test(text()) && /Found: Lexend/.test(text()), text());
+      view.showDirectoryPicker = async () => { throw new DOMException('cancelled', 'AbortError'); };
+      btn('pick-root').click();
+      await settle();
+      check('a cancelled picker changes nothing and says nothing', /Using “Nimrod”/.test(text()) && host.querySelector('[data-uf-msg]').textContent === '');
+      btn('forget-root').click();
+      await settle();
+      check('"Stop using it" forgets it on this device; the files stay', /Your Nimrod folder Not chosen/.test(text()) && 'Film.cube' in rootTree.luts, text().slice(0, 300));
+      check('every press told the host', J(changes.map((c) => c.action)) === J(['pick-root', 'pick-kind', 'allow-kind', 'allow-kind', 'use-root', 'forget-root']), J(changes));
+      page.destroy();
+      host.remove();
+
+      const plain = document.createElement('div');
+      await renderUserFolders(plain, { view: {}, store: memStore() }).ready;
+      check('*** a browser with no folder picker is told so, and offered no button that cannot work ***',
+        !!plain.querySelector('[data-uf-unavailable]') && !plain.querySelector('[data-act^="pick"]'), plain.textContent);
+      const html = userFoldersHtml(await readUserFolders({ view, store: memStore() }));
+      check('no colour is written into the page (the theme\'s classes only)', !/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i.test(html));
+      check('names on the page are escaped', !/<b>/.test(userFoldersHtml({ available: true, root: { chosen: true, name: '<b>x', permission: 'granted' }, kinds: [] })));
+      check('the words for each permission state', permissionWords('granted') === '' && /again/.test(permissionWords('prompt')) && /did not say/.test(permissionWords('weird')));
+      check('*** the menu row opens the page by id, the shape every host\'s extras take ***',
+        USER_FOLDER_ITEMS.length === 1 && USER_FOLDER_ITEMS[0].page === USER_FOLDERS_PAGE && USER_FOLDER_ITEMS[0].kind === 'item'
+          && userFoldersPage().title === 'Your own folders' && typeof userFoldersPage().render === 'function');
     }
 
     check('*** over the whole suite: no request to anywhere but blob: URLs ***',

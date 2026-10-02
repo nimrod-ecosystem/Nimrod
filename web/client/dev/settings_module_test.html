@@ -220,6 +220,30 @@ try {
     inst3.destroy();
   }
 
+  section('*** YOUR OWN FOLDERS — the row 2.49 screen is reachable from here ***');
+  {
+    host.innerHTML = '';
+    const st5 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
+    const inst5 = mountModule('settings', {
+      mount: host, bus: createBus(), state: st5,
+      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
+      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
+      makeState, makeEvents,
+    });
+    await inst5.init();
+    await sleep(400);
+    const row = [...host.querySelectorAll('[data-n]')].find((b) => b.querySelector('.st-label')?.textContent === 'Your own folders');
+    check('a "Your own folders" row exists', !!row);
+    row?.click();
+    await sleep(300);   // the page reads this device's remembered folders, async
+    const body = host.querySelector('[data-page-body]')?.textContent || '';
+    check('*** it opens the folders page: the Nimrod folder, then fonts, colour looks and audio plugins ***',
+      host.querySelector('[data-page] .st-head')?.textContent === 'Your own folders'
+        && ['root', 'fonts', 'luts', 'plugins'].every((k) => host.querySelector(`[data-page-body] [data-uf-section="${k}"]`)),
+      body.slice(0, 300));
+    inst5.destroy();
+  }
+
 } catch (err) {
   check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
 }

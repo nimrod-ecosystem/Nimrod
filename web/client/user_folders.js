@@ -23,7 +23,7 @@
 //
 // Everything takes its handle and IndexedDB as arguments, so the suite runs on fake folders.
 
-import { rememberFolder, recallFolder } from './fs_sink.js';
+import { rememberFolder, recallFolder, forgetFolder } from './fs_sink.js';
 
 export const ROOT_KEY = 'root';
 export const SUBFOLDERS = Object.freeze({ fonts: 'fonts', luts: 'luts', plugins: 'audio-plugins' });
@@ -79,10 +79,11 @@ export async function ensureTree(root, { names = SUBFOLDERS, readme = README } =
  * Ask for the root. A REAL PROMPT — only from something somebody pressed. Remembers it on this
  * device and makes the tree. Resolves `{ handle, made }`.
  */
-export async function pickRoot({ view = (typeof window !== 'undefined' ? window : null), idb, names } = {}) {
+export async function pickRoot({ view = (typeof window !== 'undefined' ? window : null), idb, names, store = null } = {}) {
   if (!available(view)) throw new Error('This browser cannot open a folder you choose.');
   const handle = await view.showDirectoryPicker({ id: 'nimrod-root', mode: 'readwrite' });
-  await rememberFolder(handle, { idb, key: ROOT_KEY });
+  if (store) await store.put(ROOT_KEY, handle);
+  else await rememberFolder(handle, { idb, key: ROOT_KEY });
   const { made } = await ensureTree(handle, { names });
   return { handle, made };
 }
@@ -96,6 +97,102 @@ export function recallRoot({ idb } = {}) {
 export async function subfolder(root, kind, { names = SUBFOLDERS } = {}) {
   const name = names[kind] || kind;
   return root ? dirIn(root, name, false) : null;
+}
+
+// ---------------------------------------------------------------------------------------------
+// A FOLDER OF ITS OWN FOR ONE KIND, AND THE SCREEN'S READING OF EACH (2026-10-02, the screen for
+// row 2.49 - `user_folders_page.js`).
+//
+// *** ONE ROOT STAYS THE DEFAULT; A KIND MAY POINT ELSEWHERE. Both sides, since this bends the
+// 2026-08-30 decision quoted at the top. *** For one root only: one prompt, one permission to
+// re-grant after a restart, one place to look. For a folder per kind: somebody who already keeps
+// fonts in a folder of their own, or colour looks where their editing software put them, should not
+// have to copy files to use them, and DECISIONS itself says everything else *defaults* to its own
+// folder inside the tree - a default, not a rule. So: nothing changes for anybody who never presses
+// "Choose a different folder"; whoever does gets that folder for that kind only, and its permission is
+// shown (and re-granted) on its own line. "Use the one in my Nimrod folder" undoes it.
+//
+// READ ONLY for a kind's own folder (`KIND_MODE`), argued: nothing here writes into it (the READMEs
+// are the root's), and asking for write access to somebody's fonts folder is asking for more than is
+// used. The root keeps read+write: it makes the subfolders.
+// ---------------------------------------------------------------------------------------------
+export const FOLDER_KINDS = Object.freeze(Object.keys(SUBFOLDERS));
+export const KIND_MODE = 'read';
+export const ROOT_MODE = 'readwrite';
+export const kindKey = (kind) => `folder:${kind}`;
+
+/**
+ * The handles this device remembers, behind one small door: `{ get(key), put(key, handle), del(key) }`.
+ * The default is fs_sink's IndexedDB store (the same database and store as the recordings folder,
+ * its own keys). A suite passes a Map-backed one: an in-memory fake folder cannot be stored in
+ * IndexedDB, which only takes real handles.
+ */
+export function handleStore({ idb = (typeof indexedDB !== 'undefined' ? indexedDB : null) } = {}) {
+  return {
+    async get(key) { const r = await recallFolder({ idb, key }); return r.handle || null; },
+    put: (key, handle) => rememberFolder(handle, { idb, key }),
+    del: (key) => forgetFolder({ idb, key }),
+  };
+}
+
+/** `granted`, `prompt`, `denied`, `unknown`, or `none` (no handle). Never prompts, never throws. */
+export async function permissionOf(handle, mode = KIND_MODE) {
+  if (!handle) return 'none';
+  try { return (await handle.queryPermission?.({ mode })) || 'unknown'; } catch { return 'unknown'; }
+}
+
+/**
+ * Ask the browser to let this page into a remembered folder again. *** ONLY FROM A PRESS *** - the
+ * browser refuses to prompt otherwise, and the refusal looks like a denial (fs_sink.ensurePermission).
+ */
+export async function allowAgain(handle, mode = KIND_MODE) {
+  if (!handle?.requestPermission) return 'unknown';
+  try {
+    if (await handle.queryPermission?.({ mode }) === 'granted') return 'granted';
+    return await handle.requestPermission({ mode });
+  } catch { return 'denied'; }
+}
+
+/** Ask for a folder for ONE kind (a real prompt: only from a press) and remember it for that kind. */
+export async function pickKindFolder(kind, { view = (typeof window !== 'undefined' ? window : null), store = handleStore() } = {}) {
+  if (!FOLDER_KINDS.includes(kind)) throw new Error(`no such kind of folder: ${kind}`);
+  if (!available(view)) throw new Error('This browser cannot open a folder you choose.');
+  const handle = await view.showDirectoryPicker({ id: `nimrod-${kind}`, mode: KIND_MODE });
+  await store.put(kindKey(kind), handle);
+  return { handle };
+}
+
+/** Back to the root's own subfolder for this kind. The folder and its files are not touched. */
+export async function useRootFor(kind, { store = handleStore() } = {}) {
+  return store.del(kindKey(kind));
+}
+
+/** Stop using the root on this device. The folder and its files are not touched. */
+export async function forgetRoot({ store = handleStore() } = {}) {
+  return store.del(ROOT_KEY);
+}
+
+/**
+ * WHERE ONE KIND'S FILES COME FROM ON THIS DEVICE, NOW. Never prompts. Resolves
+ *   { kind, source: 'own' | 'root' | 'none', permission, name, holder, mode, dir, missing }
+ * `dir` is a folder that can be read right now, or null; `holder` is the handle the permission is
+ * on (the kind's own folder, or the root) - what "Allow again" asks about; `missing` is a root whose
+ * subfolder for this kind is not there (deleted or renamed by hand).
+ */
+export async function kindFolder(kind, { store = handleStore(), names = SUBFOLDERS } = {}) {
+  const get = async (key) => { try { return await store.get(key); } catch { return null; } };
+  const own = await get(kindKey(kind));
+  if (own) {
+    const permission = await permissionOf(own, KIND_MODE);
+    return { kind, source: 'own', permission, name: String(own.name || ''), holder: own, mode: KIND_MODE,
+      dir: permission === 'granted' ? own : null, missing: false };
+  }
+  const root = await get(ROOT_KEY);
+  if (!root) return { kind, source: 'none', permission: 'none', name: '', holder: null, mode: ROOT_MODE, dir: null, missing: false };
+  const permission = await permissionOf(root, ROOT_MODE);
+  const sub = permission === 'granted' ? await subfolder(root, kind, { names }) : null;
+  return { kind, source: 'root', permission, name: `${root.name || ''}/${names[kind] || kind}`, holder: root, mode: ROOT_MODE,
+    dir: sub, missing: permission === 'granted' && !sub };
 }
 
 const extOf = (name) => {
