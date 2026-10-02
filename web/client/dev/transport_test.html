@@ -646,6 +646,208 @@ function unreachableChips() {
     }
   }
 
+  // =====================================================================================
+  // Mike's list 09-30 (~684): "Not built: Design's row/column switch scan of the bar." Design's home-dashboard
+  // spec: the scan lights a GROUP, select goes into it, then its buttons; two quiet rounds go back up a level.
+  // transport_bar.js `createBarScan`. First on a bar drawn here (every rule, no server), then on real kiosks.
+  section('*** the bar by switch: a group, then a button in it (row/column) ***');
+  {
+    const TB = await import('../transport_bar.js');
+    const A = await import('../actions.js');
+    const { createBarScan, barGroups, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_DEFAULTS } = TB;
+    const { verbTopic, BAR_SCAN_TOPIC, createDefaultRegistry } = A;
+    check('the entry is a registered action a switch can be bound to',
+      createDefaultRegistry().get(BAR_SCAN_TOPIC)?.topic === BAR_SCAN_TOPIC, String(BAR_SCAN_TOPIC));
+    check('*** the default follows "How you choose things": step through -> groups first; point and click -> one at a time ***',
+      barScanModeOf('follow', 'step') === 'rows' && barScanModeOf('follow', 'point') === 'one'
+      && barScanModeOf(undefined, 'step') === 'rows' && barScanModeOf('nonsense', 'point') === 'one');
+    check('...and a person who chose either keeps it, whatever their choosing mode',
+      barScanModeOf('one', 'step') === 'one' && barScanModeOf('rows', 'point') === 'rows');
+    check('it is a setting: follow (default), groups first, one at a time',
+      BAR_SCAN_FIELD.default === 'follow' && BAR_SCAN_FIELD.options.map((o) => o.value).join() === 'follow,rows,one');
+
+    // A bar shaped like the placed one on Home during a call: this page / panels / the call / the controls / the menu.
+    const fx = document.createElement('div');
+    fx.style.cssText = 'position:relative;width:900px';
+    fx.innerHTML = `<div class="tb-bar">
+      <div class="tb-actions tb-host"><button data-host="picker">Modules</button><button data-host="save">Save</button><button data-host="history" disabled>History</button></div>
+      <div class="tb-mods"><button class="k-dot on" data-id="m1">Photos</button><button class="k-dot" data-id="m2">Trivia</button></div>
+      <div class="tb-actions"><span data-call-controls style="display:contents"><button data-call="mic">Mute my mic</button><button data-call="their" disabled>Show their video</button><button data-call="louder">Call louder</button></span>
+        <button data-act="home">Home</button><button data-act="back">Back</button><button data-act="next">Next</button><button data-act="panel" hidden>Panel</button><button data-act="hush">Hush</button>
+        <button data-act="help">Nimrod</button><button data-act="settings">⚙</button><button data-act="fs">⛶</button></div></div>`;
+    document.body.append(fx);
+    const barEl = fx.querySelector('.tb-bar');
+    const pressed = [];
+    barEl.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) pressed.push(b.textContent.trim()); });
+    const gs = barGroups(barEl);
+    check('*** five groups, in the order the eye reads the bar: this page, panels, this call, the controls, the menu ***',
+      gs.map((g) => g.key).join() === 'page,panels,call,transport,menu', gs.map((g) => g.key).join());
+    check('...dimmed and hidden buttons are not stops (Design: dimmed, never hidden, and the scan skips them)',
+      gs.find((g) => g.key === 'page').stops.length === 2 && gs.find((g) => g.key === 'call').stops.length === 2
+      && !gs.find((g) => g.key === 'transport').stops.some((b) => b.dataset.act === 'panel'));
+
+    const bus = createBus();
+    let paused = false, shown = false, others = false;
+    let modeV = 'rows';
+    const timers = [];
+    const scan = createBarScan({
+      bus, barRoot: () => barEl, mode: () => modeV, othersHold: () => others,
+      pause: (on) => { paused = !!on; }, isPaused: () => paused, show: (on) => { shown = !!on; },
+      idleMs: () => 60000,
+      setTimer: (fn, ms) => { const t = { fn, ms }; timers.push(t); return t; },
+      clearTimer: (t) => { const i = timers.indexOf(t); if (i >= 0) timers.splice(i, 1); },
+    });
+    const V = (v) => bus.publish(verbTopic(v));
+    const lit = () => scan.probe();
+    const cursorText = () => barEl.querySelector('[data-cursor]')?.textContent.trim() || null;
+    const groupLit = () => [...barEl.querySelectorAll('[data-bar-scan="group"]')].map((b) => b.textContent.trim()).join(',');
+
+    V('next');
+    check('not held: a verb does nothing to the bar', !lit().held && !cursorText() && !groupLit() && !paused);
+    bus.publish(BAR_SCAN_TOPIC, {});
+    check('*** the action: the bar holds the scan (the panels’ router paused) and is kept on screen ***', lit().held && paused && shown);
+    check('*** ...and NOTHING is lit yet: the press that brought the scan here chose nothing ***', !cursorText() && !groupLit(), JSON.stringify(lit()));
+    V('select');
+    check('*** a stray select lights the FIRST GROUP, not a button ***', groupLit() === 'Modules,Save' && !cursorText() && pressed.length === 0,
+      `${groupLit()} | ${cursorText()} | ${pressed}`);
+    V('next'); V('next');
+    check('next walks the groups: the call is the third', groupLit() === 'Mute my mic,Call louder' && lit().group === 'call', groupLit());
+    V('select');
+    check('*** select goes INTO the group: its first button lit, nothing pressed ***', cursorText() === 'Mute my mic' && pressed.length === 0, cursorText());
+    check('...the rest of the group keeps a dashed outline (the scope)', groupLit() === 'Call louder', groupLit());
+    V('next');
+    check('next walks the group’s buttons, skipping the dimmed one', cursorText() === 'Call louder', cursorText());
+    V('select');
+    check('*** select presses the lit button ***', pressed.join() === 'Call louder', pressed.join());
+    check('...and the cursor stays where it was (Design: "Move left pressed four times moves four times")', cursorText() === 'Call louder');
+    V('back');
+    check('back comes out of the group, the group lit', !cursorText() && lit().group === 'call' && lit().level === 'groups');
+    V('next'); V('select');
+    check('the controls group: Home first', cursorText() === 'Home', cursorText());
+    // Two quiet rounds inside a group go back up (Design's rule; quietLaps, default 2).
+    for (let k = 0; k < 4 * BAR_SCAN_DEFAULTS.quietLaps; k++) V('next');
+    check(`*** ${BAR_SCAN_DEFAULTS.quietLaps} quiet rounds of a group go back up to the groups ***`, lit().level === 'groups' && lit().group === 'transport',
+      JSON.stringify(lit()));
+    // A redraw (the chips are re-made on every change) keeps the cursor on the same button.
+    V('prev'); V('prev'); V('select');
+    check('(setup) in the panels, on Photos', cursorText() === 'Photos', cursorText());
+    V('next');
+    const mods = barEl.querySelector('.tb-mods');
+    mods.innerHTML = '<button class="k-dot" data-id="m1">Photos</button><button class="k-dot on" data-id="m2">Trivia</button>';
+    await sleep(30);
+    check('*** a redraw of the chips keeps the cursor on the same chip ***', cursorText() === 'Trivia', cursorText());
+    // Another holder took the scan (the menu opened): the bar lets go and does NOT hand the panels the switch.
+    others = true;
+    V('next');
+    check('*** the menu took the scan: the bar lets go, nothing lit, the router left paused for the menu ***',
+      !lit().held && !cursorText() && !groupLit() && paused === true && !shown);
+    others = false; paused = false;
+    // Back from the groups: the bar lets go and the panels have the switch again.
+    bus.publish(BAR_SCAN_TOPIC, {});
+    V('next'); V('back');
+    check('*** back from the groups: the bar lets go, the panels have the switch again ***', !lit().held && paused === false && !groupLit());
+    // Somebody else gave the scan back to the panels while the bar held it: the bar lets go too.
+    bus.publish(BAR_SCAN_TOPIC, {});
+    paused = false;
+    V('next');
+    check('the router un-paused by somebody else: the bar lets go rather than walk under a panel', !lit().held);
+    // Two quiet rounds of the GROUPS: the bar gives the switch back.
+    bus.publish(BAR_SCAN_TOPIC, {});
+    for (let k = 0; k < 5 * BAR_SCAN_DEFAULTS.quietLaps + 1; k++) V('next');
+    check(`*** ${BAR_SCAN_DEFAULTS.quietLaps} quiet rounds of the groups: the bar lets go ***`, !lit().held && paused === false, JSON.stringify(lit()));
+    // Nobody pressing: it lets go after the wait.
+    bus.publish(BAR_SCAN_TOPIC, {});
+    const idle = timers.find((t) => t.ms === 60000);
+    check('nobody pressing: a wait is armed', !!idle);
+    idle?.fn();
+    check('*** ...and when it runs out the bar lets go (never a gate) ***', !lit().held && paused === false && !shown);
+    // The same action pressed again leaves.
+    bus.publish(BAR_SCAN_TOPIC, {}); bus.publish(BAR_SCAN_TOPIC, {});
+    check('the action pressed again: the bar lets go', !lit().held && paused === false);
+
+    // ONE AT A TIME: every button, in order; the first press only lights.
+    modeV = 'one';
+    pressed.length = 0;
+    bus.publish(BAR_SCAN_TOPIC, {});
+    V('select');
+    check('*** one at a time: a stray select only LIGHTS the first button ***', cursorText() === 'Modules' && pressed.length === 0, cursorText());
+    const walk = [cursorText()];
+    for (let k = 0; k < 13; k++) { V('next'); walk.push(cursorText()); }
+    check('...next walks every button that can act, in the bar’s order, and wraps',
+      walk.join(',') === 'Modules,Save,Photos,Trivia,Mute my mic,Call louder,Home,Back,Next,Hush,Nimrod,⚙,⛶,Modules', walk.join(','));
+    V('next'); V('select');
+    check('...select presses the lit one', pressed.join() === 'Save', pressed.join());
+    V('back');
+    check('...back lets go', !lit().held && paused === false);
+    scan.destroy();
+    fx.remove();
+    check('taken down: nothing painted left behind', !document.querySelector('[data-bar-scan],[data-cursor]'));
+  }
+
+  // On real kiosks: both bars (today's plain one, and the one a dashboard places).
+  section('*** the bar by switch, on a real screen: both bars ***');
+  {
+    const A = await import('../actions.js');
+    const { verbTopic, BAR_SCAN_TOPIC } = A;
+    const until = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+    for (const path of ['plain', 'placed']) {
+      const p = await profiles.create(`TB-scan-${path}`);
+      await profiles.addModule(p.id, 'photos');
+      await profiles.addModule(p.id, 'trivia');
+      const full = await profiles.get(p.id);
+      const ids = (full.modules || []).map((m) => m.id);
+      const trivia = full.modules.find((m) => m.type === 'trivia').id;
+      const st = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+      await st.load(); st.set({ kiosk: { layout: { preset: 'main', slots: [ids[0], ids[1], null] } } }); await st.flush(); st.destroy();
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...(path === 'placed' ? { dashboardDefault: true } : {}) });
+      const barEl = () => (path === 'placed' ? root.querySelector('.tb-bar') : root.querySelector('.k-controls'));
+      check(`(${path}) (setup) the bar is up, two panels`, await until(() => !!barEl() && barEl().querySelectorAll('.k-dot').length === 2, 8000));
+      const V = (v) => bus.publish(verbTopic(v));
+      const cursorText = () => barEl()?.querySelector('[data-cursor]')?.textContent.trim() || null;
+      const bs = () => kiosk.barScan().probe();
+      check(`(${path}) point and click (the default): the bar scans one button at a time`, bs().mode === 'one', JSON.stringify(bs()));
+      const row = (id) => kiosk.menu.items().find((r) => r.id === id);
+      check(`(${path}) *** the setting is in the menu, beside "How you choose things", following it by default ***`,
+        /As you choose things/.test(row('set:barScan')?.hint || '') && !!row('set:chooseMode'), JSON.stringify(row('set:barScan')));
+      kiosk.menu.open(); kiosk.menu.showTab('devices'); kiosk.menu.focusRow('set:chooseMode'); kiosk.menu.select();
+      kiosk.menu.close();
+      await sleep(60);
+      check(`(${path}) *** "step through" chosen: the bar scans a group, then a button in it ***`, bs().mode === 'rows', JSON.stringify(bs()));
+      bus.publish(BAR_SCAN_TOPIC, {});
+      check(`(${path}) *** the action: the bar holds the scan, the panels’ router paused, the bar on screen ***`,
+        bs().held && kiosk.runtime.router.isPaused() === true && !barEl().classList.contains('hidden') && bs().root === (path === 'placed' ? 'tb-bar' : 'k-controls'),
+        JSON.stringify(bs()));
+      const focusedBefore = kiosk.runtime.router.focused()?.id;
+      V('next');
+      check(`(${path}) next lights the panels group (the first)`, bs().group === 'panels' && !cursorText(), JSON.stringify(bs()));
+      V('select'); V('next');
+      check(`(${path}) into it: the second chip`, cursorText() === barEl().querySelector(`.k-dot[data-id="${trivia}"]`)?.textContent.trim(), cursorText());
+      check(`(${path}) ...and no panel heard those verbs (focus unchanged)`, kiosk.runtime.router.focused()?.id === focusedBefore);
+      V('select');
+      check(`(${path}) *** select presses that chip: the focus moves to that panel ***`, await until(() => kiosk.runtime.router.focused()?.id === trivia, 2000),
+        kiosk.runtime.router.focused()?.id);
+      check(`(${path}) ...and the bar still holds the scan, the cursor where it was`, bs().held && !!cursorText(), JSON.stringify(bs()));
+      // To the menu group, and ⚙: the menu takes the scan.
+      V('back');
+      for (let k = 0; k < 6 && bs().group !== 'menu'; k++) V('next');
+      V('select');
+      for (let k = 0; k < 4 && !/⚙/.test(cursorText() || ''); k++) V('next');
+      check(`(${path}) (setup) on ⚙`, /⚙/.test(cursorText() || ''), cursorText());
+      V('select');
+      check(`(${path}) *** ⚙ pressed: the menu opens and takes the scan; the bar lets go, the router stays paused ***`,
+        await until(() => kiosk.menu.isOpen(), 2000) && !bs().held && kiosk.runtime.router.isPaused() === true && !cursorText(),
+        JSON.stringify([kiosk.menu.isOpen(), bs(), kiosk.runtime.router.isPaused()]));
+      kiosk.menu.close();
+      await sleep(60);
+      check(`(${path}) menu closed: the panels have the switch again`, kiosk.runtime.router.isPaused() === false);
+      bus.publish(BAR_SCAN_TOPIC, {});
+      V('back');
+      check(`(${path}) back from the groups: the panels have the switch again`, !bs().held && kiosk.runtime.router.isPaused() === false);
+      kiosk.destroy(); root.innerHTML = '';
+    }
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;

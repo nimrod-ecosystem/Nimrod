@@ -48,6 +48,11 @@ export const PROMOTE_TOPIC = 'shell/promote';
 export const DEMOTE_TOPIC = 'shell/demote';
 // edit_mode.js EDIT_PANEL_TOPIC, the same string (written out so this file imports nothing).
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';
+// *** THE BAR BY SWITCH (2026-10-02; transport_bar.js `createBarScan`). *** Pressed, the transport bar takes
+// the switch: next / prev / select / back walk it (a group, then a button in it -- or one button at a time,
+// the person's setting) instead of the panels. Pressed again, or back from the top, and the panels have it
+// again. The way in for somebody who cannot point at the bar.
+export const BAR_SCAN_TOPIC = 'shell/bar-scan';
 
 // ---------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute my
@@ -166,6 +171,9 @@ export const SYSTEM_ACTIONS = [
   // 2026-10-02 (edit_mode.js): edit the chosen (focused) panel; pressed again, stop. `shell/edit-panel` with no
   // id means the focused panel and no `on` toggles (arrangement.js answers it).
   { id: 'shell/edit-panel', label: 'Edit the chosen panel', topic: EDIT_PANEL_TOPIC, payload: {}, group: 'System' },
+  // 2026-10-02: the transport bar takes the switch (pressed again, or back from the top, it lets go). Not on
+  // the remote-drive allowlist, for the reason the rest of this list is not.
+  { id: BAR_SCAN_TOPIC, label: 'Walk the transport bar with the switch (press again to leave)', topic: BAR_SCAN_TOPIC, group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***

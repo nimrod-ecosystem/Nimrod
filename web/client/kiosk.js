@@ -40,6 +40,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
 import { PRESETS as LAYOUT_PRESETS, withPreset } from './layout.js';
@@ -4106,7 +4107,8 @@ export async function mountKiosk(root, {
   const choiceRow = () => (personInputs && personRow && !embedded ? personInputs : settings);
   const chooseModeNow = () => chooseModeOf((choiceRow().get?.() || {})[CHOOSE_MODE_KEY]);
   function chooseModeItems() {
-    return fieldItems([normalizeField(CHOOSE_MODE_FIELD)], {
+    // (2026-10-02: and how a switch walks the transport bar, which follows it by default -- transport_bar.js.)
+    return fieldItems([normalizeField(CHOOSE_MODE_FIELD), normalizeField(BAR_SCAN_FIELD)], {
       values: () => choiceRow().get?.() || {},
       level: complexity(),
       onStep: (k, v) => {
@@ -5320,6 +5322,20 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.fullscreen, (p) => { claimed(p); toggleFs(); }));
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.settings, (p) => { claimed(p); if (!menu.isOpen()) menu.open(); }));
   offsScreen.push(bus.subscribe(SYSTEM_TOPICS.modules, (p) => { claimed(p); revealBar(); }));
+  // *** THE BAR BY SWITCH (2026-10-02; transport_bar.js `createBarScan` argues the groups and the default). ***
+  // `shell/bar-scan` hands THE bar (the placed one when it carries the bar, else this plain one) the switch.
+  // It is one more holder of the scan, and it lets go by itself the moment any of the others takes it.
+  const barScan = createBarScan({
+    bus,
+    barRoot: () => (useDashboard && plainBarState === 'off' ? kioskEl.querySelector('.tb-bar') : null) || controlsEl,
+    mode: () => barScanModeOf((choiceRow().get?.() || {})[BAR_SCAN_KEY], chooseModeNow()),
+    othersHold: () => torn || screensOpen || !!menu?.isOpen?.() || editScanHeld || hostScanHeld || libScanHeld || callScanHeld,
+    pause: (on) => { try { runtime?.router?.setPaused?.(!!on); } catch { /* no router yet */ } },
+    isPaused: () => { try { return runtime?.router ? !!runtime.router.isPaused() : true; } catch { return true; } },
+    show: (on) => { holdBar(!!on); },
+    idleMs: () => { try { return editIdleMsFrom(settings.get() || {}); } catch { return 0; } },
+  });
+  offsScreen.push(() => barScan.destroy());
   // "Switch module" (2026-10-02): the bar's button (both bars), a bound switch and "switch module" said
   // aloud all arrive here (shell_verbs.js SHELL_SWITCH_MODULE is the same topic). Every path.
   offsScreen.push(bus.subscribe(SWITCH_MODULE_TOPIC, (p) => { claimed(p); openSwitch(null, p); }));
@@ -5657,6 +5673,8 @@ export async function mountKiosk(root, {
     editScanHeld: () => editScanHeld,
     // 2026-10-02: whether the host page's own controls (Home's edit bar) hold the scan -- for the suites.
     hostScanHeld: () => hostScanHeld,
+    // 2026-10-02: the bar's own switch scan (transport_bar.js createBarScan) -- `.probe()` says where it is.
+    barScan: () => barScan,
     stageCount: () => arr.stageDefs().length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is

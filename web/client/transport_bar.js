@@ -20,6 +20,7 @@
 import { readCatPrefs } from './cat_guide.js';
 import { mountCatHelp, selectionFrom } from './cat_help.js';
 import { panelVolumeFrom, toggleMutePatch } from './panel_sound.js';
+import { verbTopic, BAR_SCAN_TOPIC } from './actions.js';
 
 export const HELP_ACT = 'help';
 
@@ -355,4 +356,400 @@ export function drawChips(modsEl, m) {
     b.addEventListener('click', () => showPrimary(j));
     modsEl.append(b);
   });
+}
+
+// ===================================================================================================
+// *** THE BAR BY SWITCH: A GROUP, THEN A BUTTON IN IT (2026-10-02; Mike's list 09-30 ~684, "Not built:
+// Design's row/column switch scan of the bar"; Design's home-dashboard spec, "Row-column scanning"). ***
+//
+// Until now a switch could not press this bar at all: its buttons answered a pointer, and a switch reached
+// the same things only through actions bound one by one. `BAR_SCAN_TOPIC` (actions.js; bindable) hands the
+// bar the switch: next / prev / select / back walk IT instead of the panels, and the panels' router is
+// paused meanwhile (the tray's, the menu's and the library's rule: one holder of the scan at a time).
+//
+// THE GROUPS, in the order the eye reads the bar (both bars draw them in this order, so DOM order IS it):
+//   page       a host page's own buttons (Home: Modules, Save, Save as, History) -- only on Home
+//   panels     the chips (and a TV's Sound, and a selected piece of the room)
+//   call       a live call's controls -- only while a call is live, and gone the moment it ends
+//   transport  Home, Back, Pause, Next, Panel, Switch module, Mirror, Hush: what acts on the content
+//   menu       Nimrod, ⚙ and ⛶ -- the screen's own, last, where the plain bar has always kept them
+// Argued: FOR five (Design drew "rows"; this bar is one row, so its rows are these runs of like buttons),
+// each contiguous on screen so the dashed scope reads as one thing, and none so long the walk inside it
+// is the old linear walk again. AGAINST splitting `transport` (8 stops) into "this panel" (Back, Pause,
+// Next, Panel, Switch) and "the screen" (Home, Mirror, Hush): Home sits first and Mirror/Hush last, so the
+// two halves would not be contiguous, and a group you cannot see as one block is worse than a longer one.
+// Measured on a busy bar (4 page + 6 chips + 6 call + 8 + 3 = 27 stops): one at a time is up to 26 presses
+// to the last, groups first at most 4 + 7 = 11.
+//
+// THE MODES -- a setting (`BAR_SCAN_FIELD`, on the person's row beside "How you choose things"):
+//   rows  a group, then a button in it. The first press lights a GROUP, never a button; select goes into
+//         it (its first button lit, nothing pressed); select presses; back comes out, and back from the
+//         groups gives the switch back to the panels. A group with one button is pressed by the select
+//         that would have gone into it (choice_picker.js's rule, so nobody learns two).
+//   one   every button that can act, in the bar's order, the first press only lighting the first.
+//   follow (the default) the person's "How you choose things": step through -> rows, point and click ->
+//         one. Argued: FOR rows always -- only switch users scan this bar, and rows is fewer presses.
+//         AGAINST, and it wins: the library already maps the same setting the same way (library.js
+//         `scanMode`: step -> rows), and one rule across the product is what lets somebody learn it once.
+//         The person who said "step through" is the person who said they use a switch; somebody who did
+//         not gets the walk with nothing to learn, which can never strand them.
+// A STRAY PRESS DOES NOTHING: the press that hands the bar the switch lights nothing; the next lights a
+// group (rows) or the first button (one); only a select on something already lit presses it. And nothing
+// on this bar is destructive anyway -- the call's Hang up is not on it, every toggle says which way it is.
+//
+// TWO QUIET ROUNDS GO BACK UP (Design: "After two quiet rounds the scan goes back up to rows"): two full
+// laps of a group with no select and the groups are lit again; two laps of the groups (or of every button,
+// one at a time) and the bar lets go. That last step is mine: on Design's page the bar WAS the screen; here
+// the panels need the switch too, and a person who has seen everything twice and chosen nothing is the
+// person least helped by staying. `quietLaps` (2, Design's number; 0 = never) is an option, not a menu row:
+// it is how a scan behaves rather than a preference anybody has asked to change.
+// NOBODY PRESSING: after `idleMs` (the kiosk passes the edit view's wait, which the host page's edit bar
+// already uses -- the same patience for the same job) it lets go. Holding the scan is never a gate: the
+// panels keep playing and a pointer works throughout.
+// ANOTHER HOLDER TAKING THE SCAN (the menu, the tray, the library, a ringing call) is noticed at the next
+// verb, before it is acted on, and once a second while held (`CHECK_MS`, below): the bar lets go WITHOUT
+// handing the panels the switch. Somebody giving the panels the switch back underneath it (the router
+// un-paused) is the same.
+// THE CURSOR (Design): a solid 4px outline and a 7px inset bar on the lit button -- a shape and a bar, not
+// colour alone -- and a dashed outline on the group being scanned and on the bar while it holds the scan.
+// Never animated. Colours are the theme's (`--scan-ring`, else `--focus`). The lit button carries
+// `data-cursor`, so "land the switch scan on it and Nimrod says what it does" (hover_info.js) reads it.
+// ===================================================================================================
+export const BAR_SCAN_KEY = 'barScan';
+export const BAR_SCAN_MODES = Object.freeze(['follow', 'rows', 'one']);
+export const BAR_SCAN_DEFAULTS = Object.freeze({ mode: 'follow', quietLaps: 2 });
+export const BAR_SCAN_FIELD = Object.freeze({
+  key: BAR_SCAN_KEY, label: 'Walking the bar with a switch', kind: 'choice', level: 'standard',
+  default: BAR_SCAN_DEFAULTS.mode,
+  options: Object.freeze([
+    Object.freeze({ value: 'follow', label: 'As you choose things' }),
+    Object.freeze({ value: 'rows', label: 'A group, then a button in it' }),
+    Object.freeze({ value: 'one', label: 'One button at a time' }),
+  ]),
+});
+/** The walk a person gets: their own choice, else what "How you choose things" implies. */
+export function barScanModeOf(v, chooseMode = 'point') {
+  if (v === 'rows' || v === 'one') return v;
+  return chooseMode === 'step' ? 'rows' : 'one';
+}
+// How often a held scan checks whether something else has taken it (see above). Not a UI number: it is
+// how long a stale outline may linger after the menu or a call took the scan. Every verb checks at once,
+// so a press is never sent to the wrong holder.
+const CHECK_MS = 1000;
+export const BAR_GROUP_NAMES = Object.freeze({
+  page: 'this page', panels: 'the panels', call: 'this call', transport: 'the controls', menu: 'help, settings and full screen',
+});
+
+/** Which group a bar button belongs to (both bars: the plain one and the placed module). */
+export function barGroupOf(el) {
+  if (!el || typeof el.closest !== 'function') return 'transport';
+  if (el.closest('[data-call-controls]')) return 'call';
+  if (el.closest('.tb-host')) return 'page';
+  if (el.closest('[data-mods], .tb-mods')) return 'panels';
+  const a = el.dataset?.act;
+  if (a === 'help' || a === 'settings' || a === 'fs') return 'menu';
+  return 'transport';
+}
+function isStop(el) {
+  if (!el || el.disabled || el.hidden) return false;
+  try {
+    if (!el.getClientRects().length) return false;            // display:none, or inside it
+    const v = el.ownerDocument?.defaultView?.getComputedStyle?.(el)?.visibility;
+    return v !== 'hidden';                                     // a tucked placed bar
+  } catch { return false; }
+}
+/** A button's identity across a redraw (the chips are re-made on every change). */
+function stopKey(el) {
+  const d = el?.dataset || {};
+  if (d.act) return `act:${d.act}`;
+  if (d.host) return `host:${d.host}`;
+  if (d.call) return `call:${d.call}`;
+  if (d.piece) return `piece:${d.piece}`;
+  if (d.soundFor) return `sound:${d.soundFor}`;
+  if (d.id) return `id:${d.id}`;
+  if (d.i != null) return `i:${d.i}`;
+  return `text:${(el?.textContent || '').trim()}`;
+}
+/** The bar's groups, in order, each with the buttons that can act now: [{ key, name, stops: [el] }]. */
+export function barGroups(root) {
+  if (!root || typeof root.querySelectorAll !== 'function') return [];
+  const out = [];
+  const byKey = new Map();
+  for (const el of root.querySelectorAll('button')) {
+    if (!isStop(el)) continue;
+    const key = barGroupOf(el);
+    let g = byKey.get(key);
+    if (!g) { g = { key, name: BAR_GROUP_NAMES[key] || key, stops: [] }; byKey.set(key, g); out.push(g); }
+    g.stops.push(el);
+  }
+  return out;
+}
+
+const RING = 'var(--scan-ring, var(--focus, currentColor))';
+const LOOKS = {
+  scope: { outline: `2px dashed ${RING}`, outlineOffset: '3px', boxShadow: null },
+  group: { outline: `3px dashed ${RING}`, outlineOffset: '2px', boxShadow: null },
+  item: { outline: `4px solid ${RING}`, outlineOffset: '2px', boxShadow: `inset 0 -7px 0 ${RING}` },
+};
+
+/**
+ * The bar's switch scan. Everything about the screen is handed in, so the shell decides who holds the
+ * scan and this only walks a bar:
+ *   bus         the screen's bus: the verbs, and BAR_SCAN_TOPIC (toggles)
+ *   barRoot()   THE bar now: the placed module's `.tb-bar`, or the shell's plain `.k-controls`
+ *   mode()      'rows' | 'one' (`barScanModeOf`)
+ *   othersHold() something else holds the scan (the menu, the tray, the edit view, the library, a call...)
+ *   pause(on)   the panels' router; isPaused() whether it still is
+ *   show(on)    keep the bar on screen while held (the kiosk's `holdBar`)
+ *   idleMs()    let go after this long with nobody pressing (0 = never)
+ * Returns { enter, leave, toggle, held, probe, destroy }.
+ */
+export function createBarScan({
+  bus = null,
+  barRoot = () => null,
+  mode = () => 'one',
+  othersHold = () => false,
+  pause = () => {},
+  isPaused = () => true,
+  show = () => {},
+  idleMs = () => 0,
+  quietLaps = BAR_SCAN_DEFAULTS.quietLaps,
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (t) => clearTimeout(t),
+} = {}) {
+  const safe = (fn, dflt) => { try { return fn(); } catch { return dflt; } };
+  const laps0 = Number.isInteger(quietLaps) && quietLaps >= 0 ? quietLaps : BAR_SCAN_DEFAULTS.quietLaps;
+  let held = false;
+  let level = null;               // null (nothing lit yet) | 'groups' | 'items'
+  let gk = null, gAt = 0;         // the lit group: its key, and where it was
+  let sk = null, sAt = 0;         // the lit button: its key, and where it was
+  let laps = 0;
+  let rootEl = null;
+  let mo = null;
+  let idleT = null, checkT = null;
+  const painted = new Map();      // el -> what it looked like before
+  const offs = [];
+
+  const modeNow = () => (safe(mode, 'one') === 'rows' ? 'rows' : 'one');
+  const rootNow = () => safe(barRoot, null) || null;
+
+  // Where the cursor is, read fresh against the bar as it is drawn now.
+  function where() {
+    const gs = barGroups(rootNow());
+    const rows = modeNow() === 'rows';
+    if (!gs.length || level === null) return { gs, rows, gi: -1, list: [], si: -1 };
+    let gi = -1;
+    if (rows) {
+      gi = gs.findIndex((g) => g.key === gk);
+      if (gi < 0) { gi = Math.min(gAt, gs.length - 1); if (level === 'items') { level = 'groups'; sk = null; } }
+      gk = gs[gi].key; gAt = gi;
+      if (level === 'groups') return { gs, rows, gi, list: [], si: -1 };
+    } else if (level === 'groups') {
+      level = 'items';
+    }
+    const list = rows ? gs[gi].stops : gs.flatMap((g) => g.stops);
+    let si = list.findIndex((el) => stopKey(el) === sk);
+    if (si < 0) si = Math.min(sAt, list.length - 1);
+    sk = stopKey(list[si]); sAt = si;
+    return { gs, rows, gi, list, si };
+  }
+
+  function unpaint() {
+    for (const [el, was] of painted) {
+      try {
+        el.style.outline = was.outline; el.style.outlineOffset = was.outlineOffset; el.style.boxShadow = was.boxShadow;
+        delete el.dataset.barScan;
+        delete el.dataset.cursor;
+        if (was.current == null) el.removeAttribute('aria-current'); else el.setAttribute('aria-current', was.current);
+      } catch { /* gone */ }
+    }
+    painted.clear();
+  }
+  function look(el, kind) {
+    if (!el) return;
+    if (!painted.has(el)) {
+      painted.set(el, { outline: el.style.outline, outlineOffset: el.style.outlineOffset, boxShadow: el.style.boxShadow,
+        current: el.getAttribute('aria-current') });
+    }
+    const l = LOOKS[kind];
+    el.style.outline = l.outline;
+    el.style.outlineOffset = l.outlineOffset;
+    if (l.boxShadow) el.style.boxShadow = l.boxShadow;
+    el.dataset.barScan = kind;
+    if (kind === 'item') { el.dataset.cursor = ''; el.setAttribute('aria-current', 'true'); }
+  }
+  function paint() {
+    unpaint();
+    if (!held) return;
+    const r = rootNow();
+    if (r) look(r, 'scope');
+    const w = where();
+    if (level === null || w.gi < 0 && !w.list.length) return;
+    if (w.rows) {
+      for (const el of w.gs[w.gi].stops) { if (level === 'groups' || el !== w.list[w.si]) look(el, 'group'); }
+    }
+    const lit = level === 'items' ? w.list[w.si] : null;
+    if (lit) {
+      look(lit, 'item');
+      try { lit.scrollIntoView?.({ block: 'nearest', inline: 'nearest' }); } catch { /* no layout */ }
+    }
+  }
+
+  function watch(on) {
+    try { mo?.disconnect(); } catch { /* gone */ }
+    mo = null;
+    rootEl = null;
+    if (!on) return;
+    rootEl = rootNow();
+    const MO = rootEl?.ownerDocument?.defaultView?.MutationObserver;
+    if (!rootEl || typeof MO !== 'function') return;
+    // A redraw (chips re-made, the call's controls coming and going, a button dimmed): paint again. Only
+    // what changes the stops is watched, so painting (style, data-*) never wakes it.
+    mo = new MO(() => { if (held) { if (!stillMine()) return; paint(); } });
+    mo.observe(rootEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
+  }
+  function armIdle() {
+    if (idleT != null) { clearTimer(idleT); idleT = null; }
+    if (!held) return;
+    const ms = Number(safe(idleMs, 0)) || 0;
+    if (ms > 0) idleT = setTimer(() => { idleT = null; leave(); }, ms);
+  }
+  function armCheck() {
+    if (checkT != null) { clearTimer(checkT); checkT = null; }
+    if (!held) return;
+    checkT = setTimer(() => { checkT = null; if (stillMine()) armCheck(); }, CHECK_MS);
+  }
+  function stopTimers() {
+    if (idleT != null) { clearTimer(idleT); idleT = null; }
+    if (checkT != null) { clearTimer(checkT); checkT = null; }
+  }
+
+  /** Still ours? Another holder took the scan, or the panels were given it back: let go, quietly. */
+  function stillMine() {
+    if (!held) return false;
+    if (safe(othersHold, false) || !safe(isPaused, true)) { drop(); return false; }
+    return true;
+  }
+  // Let go WITHOUT touching the router: whoever has the scan now is in charge of it.
+  function drop() {
+    if (!held) return;
+    held = false;
+    stopTimers();
+    watch(false);
+    unpaint();
+    safe(() => show(false));
+  }
+
+  function enter() {
+    if (held) return true;
+    if (safe(othersHold, false) || !rootNow()) return false;
+    held = true;
+    level = null; gk = null; gAt = 0; sk = null; sAt = 0; laps = 0;
+    safe(() => pause(true));
+    safe(() => show(true));
+    watch(true);
+    paint();
+    armIdle();
+    armCheck();
+    return true;
+  }
+  function leave() {
+    if (!held) return;
+    drop();
+    if (!safe(othersHold, false)) safe(() => pause(false));
+  }
+
+  function press(el) {
+    laps = 0;
+    try { el.click(); } catch (err) { console.error('transport bar: switch press', err); }
+  }
+
+  function step(v) {
+    const w = where();
+    if (!w.gs.length) { if (v === 'back') leave(); return; }
+    const d = v === 'prev' ? -1 : 1;
+    if (level === null) {
+      if (v === 'back') { leave(); return; }
+      // The first press only LIGHTS: a group (rows), or the first button (one at a time).
+      if (w.rows) { level = 'groups'; gAt = d < 0 && v !== 'select' ? w.gs.length - 1 : 0; gk = w.gs[gAt].key; }
+      else { level = 'items'; const all = w.gs.flatMap((g) => g.stops); sAt = d < 0 && v !== 'select' ? all.length - 1 : 0; sk = stopKey(all[sAt]); }
+      laps = 0;
+      paint();
+      return;
+    }
+    if (level === 'groups') {
+      if (v === 'back') { leave(); return; }
+      if (v === 'select') {
+        const g = w.gs[w.gi];
+        if (g.stops.length === 1) { press(g.stops[0]); if (stillMine()) paint(); return; }
+        level = 'items'; sAt = 0; sk = stopKey(g.stops[0]); laps = 0;
+        paint();
+        return;
+      }
+      const n = w.gs.length;
+      const to = ((w.gi + d) % n + n) % n;
+      if ((d > 0 && to === 0) || (d < 0 && to === n - 1)) laps += 1;
+      gAt = to; gk = w.gs[to].key;
+      if (laps0 && laps >= laps0) { leave(); return; }
+      paint();
+      return;
+    }
+    // level === 'items'
+    if (v === 'back') {
+      if (w.rows) { level = 'groups'; sk = null; laps = 0; paint(); } else leave();
+      return;
+    }
+    if (v === 'select') { press(w.list[w.si]); if (stillMine()) paint(); return; }
+    const n = w.list.length;
+    const to = ((w.si + d) % n + n) % n;
+    if ((d > 0 && to === 0) || (d < 0 && to === n - 1)) laps += 1;
+    sAt = to; sk = stopKey(w.list[to]);
+    if (laps0 && laps >= laps0) {
+      if (w.rows) { level = 'groups'; sk = null; laps = 0; paint(); } else leave();
+      return;
+    }
+    paint();
+  }
+
+  function onVerb(v) {
+    if (!held || !stillMine()) return;
+    step(v);
+    if (held) armIdle();
+  }
+  if (bus && typeof bus.subscribe === 'function') {
+    for (const [verb, as] of [['next', 'next'], ['prev', 'prev'], ['select', 'select'], ['back', 'back'],
+      ['focus-next', 'next'], ['focus-prev', 'prev']]) {
+      offs.push(bus.subscribe(verbTopic(verb), () => onVerb(as)));
+    }
+    // The menu key opens the menu (its own handler, subscribed first): it has the scan now.
+    for (const t of [verbTopic('menu'), 'shell/menu']) offs.push(bus.subscribe(t, () => { if (held) stillMine(); }));
+    offs.push(bus.subscribe(BAR_SCAN_TOPIC, (p) => {
+      try { p?.claim?.(); } catch { /* a publisher's claim must not stop the press */ }
+      if (held) leave(); else enter();
+    }));
+  }
+
+  return {
+    enter,
+    leave,
+    toggle: () => (held ? (leave(), false) : enter()),
+    held: () => held,
+    /** For a suite and a diagnostic page: where the scan is. */
+    probe() {
+      const r = rootNow();
+      const w = held ? where() : { gs: [], gi: -1, list: [], si: -1 };
+      const lit = held && level === 'items' ? w.list[w.si] : null;
+      return {
+        held, mode: modeNow(), level: held ? level : null,
+        group: held && w.gi >= 0 ? w.gs[w.gi].key : (held && lit ? barGroupOf(lit) : null),
+        cursor: lit ? (lit.textContent || '').trim() : null,
+        groups: w.gs.map((g) => g.key), laps,
+        root: r ? (r.classList?.contains('tb-bar') ? 'tb-bar' : r.classList?.contains('k-controls') ? 'k-controls' : r.tagName) : null,
+      };
+    },
+    destroy() {
+      leave();
+      offs.splice(0).forEach((off) => { try { off?.(); } catch { /* gone */ } });
+    },
+  };
 }
