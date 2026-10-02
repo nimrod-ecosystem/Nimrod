@@ -872,6 +872,140 @@ const last = (a) => a[a.length - 1];
       check('stop ends it', !gp.running() && queued === null);
     }
 
+    // ================= the poll only runs while a pad is connected =================
+    //
+    // It used to be a requestAnimationFrame loop that ran forever on every page, pad or no
+    // pad - 60 callbacks a second with nothing plugged in, each one forcing a rendering pass.
+    section('the gamepad poll — only while a pad is connected');
+    {
+      const PAD = 'Pad (Vendor: 1234 Product: 5678)';
+      const pads = [];
+      const nav = { getGamepads: () => pads };
+      const events = new EventTarget();
+      const mk = () => ({ id: PAD, mapping: 'standard', connected: true, buttons: [{ pressed: false }], axes: [] });
+      const r = rig();
+      r.input.setBindings([{ id: 'g', actionId: 'photos/next', device: 'gamepad:12345678', control: 'button:0' }]);
+      let queued = null, scheduled = 0, cancelled = 0, id = 0;
+      const gp = createGamepads({
+        input: r.input, nav, events,
+        schedule: (fn) => { scheduled++; queued = fn; return ++id; },
+        unschedule: () => { cancelled++; queued = null; },
+      });
+
+      check('start with no pad reports the API is there', gp.start() === true);
+      check('...and only LISTENS: nothing is scheduled with no pad connected',
+        gp.listening() && !gp.running() && scheduled === 0, `scheduled=${scheduled}`);
+
+      // Chrome reveals a pad on its first press, and fires the connect event on that press.
+      pads[0] = mk(); pads[0].buttons[0].pressed = true;
+      events.dispatchEvent(new Event('gamepadconnected'));
+      check('a connect event starts the loop', gp.running() && scheduled === 1, `scheduled=${scheduled}`);
+      check('and the press that revealed the pad lands AT ONCE, not a tick later',
+        r.fired.length === 1, `fired=${r.fired.length}`);
+
+      pads[0].buttons[0].pressed = false;
+      queued();
+      check('the release arrives on the next poll', r.input.heldControls().length === 0);
+      pads[0].buttons[0].pressed = true;
+      queued();
+      check('a press arrives within one poll', r.fired.length === 2, `fired=${r.fired.length}`);
+      check('and the loop keeps going while the pad is in', gp.running() && scheduled === 3, `scheduled=${scheduled}`);
+
+      // A second pad in, then out: the loop must survive the first disconnect.
+      pads[1] = mk();
+      events.dispatchEvent(new Event('gamepadconnected'));
+      check('a second connect does not schedule a second loop', scheduled === 3, `scheduled=${scheduled}`);
+      pads[1] = null;
+      events.dispatchEvent(new Event('gamepaddisconnected'));
+      check('one of two pads leaving keeps the loop for the other', gp.running() && gp.list().length === 1);
+
+      // Yanked while held: released as auto (the old rule), and the loop stops.
+      r.fired.length = 0;
+      pads[0] = null;
+      events.dispatchEvent(new Event('gamepaddisconnected'));
+      check('the last pad leaving stops the loop', !gp.running() && queued === null && cancelled === 1,
+        `running=${gp.running()} cancelled=${cancelled}`);
+      check('and what it held is released without firing a release edge',
+        r.input.heldControls().length === 0 && r.fired.length === 0 && gp.list().length === 0);
+      check('it is still listening for the next one', gp.listening());
+
+      pads[0] = mk();
+      events.dispatchEvent(new Event('gamepadconnected'));
+      check('a replug starts it again', gp.running());
+      gp.stop();
+      check('stop ends the loop AND the listening', !gp.running() && !gp.listening());
+      const before = scheduled;
+      events.dispatchEvent(new Event('gamepadconnected'));
+      check('after stop, a connect event does nothing', !gp.running() && scheduled === before);
+    }
+    {
+      // A pad already revealed earlier in this page's life never fires gamepadconnected
+      // again, so start() has to look once.
+      const pads = [{ id: 'Pad (Vendor: 1234 Product: 5678)', mapping: 'standard', connected: true, buttons: [], axes: [] }];
+      const r = rig();
+      let scheduled = 0;
+      const gp = createGamepads({
+        input: r.input, nav: { getGamepads: () => pads }, events: new EventTarget(),
+        schedule: () => ++scheduled, unschedule: () => {},
+      });
+      gp.start();
+      check('a pad already connected at start is polled without waiting for an event',
+        gp.running() && scheduled === 1);
+      gp.stop();
+      const bare = createGamepads({ input: r.input, nav: {}, events: new EventTarget() });
+      check('no Gamepad API: start says so and schedules nothing', bare.start() === false && !bare.running());
+    }
+    {
+      // The real defaults, measured. No pad: no rAF and no timer, at all.
+      const pads = [];
+      const events = new EventTarget();
+      let rafs = 0;
+      const realRaf = window.requestAnimationFrame;
+      window.requestAnimationFrame = (fn) => { rafs++; return realRaf.call(window, fn); };
+      const t0 = performance.now();
+      let downs = 0, ups = 0, pressedAt = 0;
+      const lat = [];
+      let onDown = null;
+      const sink = {
+        down() { downs++; lat.push(performance.now() - pressedAt); onDown?.(); },
+        up() { ups++; },
+      };
+      const gp = createGamepads({ input: sink, nav: { getGamepads: () => pads }, events });
+      try {
+        gp.start();
+        await new Promise((res) => setTimeout(res, 300));
+        check(`real defaults, no pad: 0 rAF requests and no loop over ${Math.round(performance.now() - t0)} ms`,
+          rafs === 0 && !gp.running(), `rafs=${rafs} running=${gp.running()}`);
+
+        // LATENCY, against the real timer. A press at a random moment must arrive within
+        // about one poll (GAMEPAD_POLL_MS = 16); the bound is loose for a loaded machine.
+        pads[0] = { id: 'Pad (Vendor: 1234 Product: 5678)', mapping: 'standard', connected: true,
+          buttons: [{ pressed: false }], axes: [] };
+        events.dispatchEvent(new Event('gamepadconnected'));
+        for (let i = 0; i < 20; i++) {
+          await new Promise((res) => setTimeout(res, 5 + Math.random() * 25));
+          const got = new Promise((res) => { onDown = res; });
+          pressedAt = performance.now();
+          pads[0].buttons[0].pressed = true;
+          await Promise.race([got, new Promise((res) => setTimeout(res, 1000))]);
+          pads[0].buttons[0].pressed = false;
+          await new Promise((res) => setTimeout(res, 40));
+        }
+        const s = [...lat].sort((a, b) => a - b);
+        const med = s[Math.floor(s.length / 2)] ?? Infinity, max = s[s.length - 1] ?? Infinity;
+        check(`press-to-input latency on the real timer: median ${med.toFixed(1)} ms, max ${max.toFixed(1)} ms over ${lat.length} presses`,
+          lat.length === 20 && med <= 2 * 16 + 4 && max < 250, `downs=${downs} ups=${ups} lat=${s.map((x) => x.toFixed(1))}`);
+        check('the timer loop asked for no animation frames', rafs === 0, `rafs=${rafs}`);
+
+        pads[0] = null;
+        events.dispatchEvent(new Event('gamepaddisconnected'));
+        check('and it stopped when the pad left', !gp.running());
+      } finally {
+        gp.stop();
+        window.requestAnimationFrame = realRaf;
+      }
+    }
+
     // ================= the measurement channel =================
     //
     // What the HAND did, as distinct from what the bus DECIDED. These two streams are

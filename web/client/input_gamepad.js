@@ -40,8 +40,34 @@
 // A DISCONNECT RELEASES AS `auto`. The controller being unplugged is not someone letting
 // go, so a release-edge binding must not fire; it is logged as the false activation it
 // would have been. Same reasoning as the max-hold watchdog and the window blur.
+//
+// THE POLL ONLY RUNS WHILE A PAD IS CONNECTED (2026-10-02). It used to be a
+// requestAnimationFrame loop that started on every page and never stopped, pad or no pad -
+// 60 callbacks a second on a screen with nothing plugged in. A pending rAF callback is not
+// free: it makes the browser run a rendering pass every frame, and on the Pi that pass
+// restyled every running animation and re-laid-out the cat's SVG each frame (the 2D-room
+// speed-up measured 0.2-0.55 of a core going to it). So now:
+//   - `start()` only LISTENS. It checks `getGamepads()` once (a pad already revealed this
+//     session would never fire `gamepadconnected` again) and otherwise waits for the event.
+//   - `gamepadconnected` polls AT ONCE - Chrome fires it on the very press that reveals the
+//     pad, and that press must not wait for a tick (point 3 above) - then starts the loop.
+//   - `gamepaddisconnected` polls once (so the yanked pad is released as `auto`, as before)
+//     and stops the loop when no pad is left.
+//   - The loop never stops ITSELF on an empty poll: if a browser fired the connect event a
+//     beat before `getGamepads()` showed the pad, that would strand the person's switch until
+//     a replug. A missed disconnect event costs a loop that keeps running - the old behaviour,
+//     not a lost press.
+// AND IT IS A TIMER, NOT rAF. Same latency - `pollMs` 16 is one 60 Hz frame, and on a Pi
+// compositing at 30 Hz rAF would be 33 ms - without forcing a rendering pass per tick; a
+// press that changes the page schedules its own frame. A timer also runs in a hidden document,
+// where rAF never fires, so the suites test the real loop. The one thing rAF gave for free,
+// pausing in a background tab, the browser does to timers too (throttled), and Chrome only
+// exposes gamepad input to a visible, focused page anyway. `pollMs` is a parameter with a
+// default, not a constant: the XAC user is exactly the one who has a pad in all day, so this
+// is the rate that costs them CPU, and it is theirs to trade against latency.
 
 export const GAMEPAD_PREFIX = 'gamepad';
+export const GAMEPAD_POLL_MS = 16;
 
 // The W3C standard mapping, in index order. Only meaningful when `mapping === 'standard'`,
 // which the XAC reports. Used for labels in the binder - "press A" beats "press button 0".
@@ -86,8 +112,11 @@ export function createGamepads({
   nav = typeof navigator !== 'undefined' ? navigator : null,
   enterAt = 0.5,          // an axis counts as pressed past this...
   exitAt = 0.35,          // ...and stays pressed until it falls below this
-  schedule = (fn) => requestAnimationFrame(fn),
-  unschedule = (id) => cancelAnimationFrame(id),
+  pollMs = GAMEPAD_POLL_MS,
+  schedule = (fn) => setTimeout(fn, pollMs),
+  unschedule = (id) => clearTimeout(id),
+  // Where `gamepadconnected` / `gamepaddisconnected` arrive. A test hands in its own target.
+  events = typeof window !== 'undefined' ? window : null,
   onConnect = null,
   onDisconnect = null,
 } = {}) {
@@ -96,8 +125,15 @@ export function createGamepads({
   const slots = new Map();   // gamepad index -> {device, id, mapping}
   const state = new Map();   // "device control" -> boolean
   let loop = null;
+  let listening = false;
 
   const supported = () => !!(nav && typeof nav.getGamepads === 'function');
+
+  function anyConnected() {
+    if (!supported()) return false;
+    for (const gp of nav.getGamepads() || []) if (gp && gp.connected !== false) return true;
+    return false;
+  }
 
   function claim(index, gp) {
     const existing = slots.get(index);
@@ -170,21 +206,52 @@ export function createGamepads({
     for (const index of [...slots.keys()]) if (!seen.has(index)) drop(index);
   }
 
-  function tick() { poll(); loop = schedule(tick); }
+  function tick() {
+    loop = null;
+    poll();
+    if (listening && loop == null) loop = schedule(tick);
+  }
+  function wake() { if (listening && loop == null) loop = schedule(tick); }
+  function halt() { if (loop != null) { unschedule(loop); loop = null; } }
+
+  function onConnected() {
+    if (!listening) return;
+    poll();          // the press that revealed the pad lands now, not one tick later
+    wake();
+  }
+  function onDisconnected() {
+    if (!listening) return;
+    poll();          // drops the slot and releases what it held, as `auto`
+    if (!anyConnected()) halt();
+  }
 
   function start() {
-    if (loop == null) loop = schedule(tick);
-    return supported();
+    if (!supported()) return false;
+    if (!listening) {
+      listening = true;
+      events?.addEventListener?.('gamepadconnected', onConnected);
+      events?.addEventListener?.('gamepaddisconnected', onDisconnected);
+    }
+    if (anyConnected()) wake();
+    return true;
   }
   function stop() {
-    if (loop != null) { unschedule(loop); loop = null; }
+    if (listening) {
+      listening = false;
+      events?.removeEventListener?.('gamepadconnected', onConnected);
+      events?.removeEventListener?.('gamepaddisconnected', onDisconnected);
+    }
+    halt();
   }
 
   return {
     start, stop, poll, supported,
     // For the binder: what is plugged in right now, with enough to render a control list.
     list: () => [...slots.values()].map((s) => ({ ...s })),
+    // `running` = the poll loop is scheduled (a pad is connected); `listening` = started and
+    // waiting for one.
     running: () => loop != null,
+    listening: () => listening,
     destroy() { stop(); for (const i of [...slots.keys()]) drop(i); state.clear(); },
   };
 }
