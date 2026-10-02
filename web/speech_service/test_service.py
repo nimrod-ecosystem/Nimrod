@@ -434,6 +434,77 @@ def wake_model_tests():
               (i.shape, y.shape, y))
 
 
+def model_folder_tests():
+    """A model trained on one person's voice (Google's Euphonia toolkit fine-tunes Whisper; converted with
+    ct2-transformers-converter) is a FOLDER handed to --model. A folder missing a file faster-whisper needs
+    must stop the service AT START, naming every missing file - not on the first thing somebody says, and
+    not (for tokenizer.json) by quietly fetching a stock tokenizer from the internet. Empty files stand in
+    for the real ones: nothing here loads a model."""
+    import contextlib
+    import io
+    import tempfile
+    from speech_service import __main__ as cli
+    from speech_service.backends import (
+        ModelFolderError, WhisperBackend, check_whisper_folder, is_model_folder, whisper_engine_name,
+        whisper_folder_missing)
+
+    def folder(root: Path, name: str, files):
+        p = root / name
+        p.mkdir()
+        for f in files:
+            (p / f).write_bytes(b'')
+        return p
+
+    with tempfile.TemporaryDirectory() as d:
+        root = Path(d)
+        full = folder(root, 'my-voice', ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json',
+                                         'vocabulary.json'])
+        check('a complete converted folder: nothing missing, nothing advised', whisper_folder_missing(str(full)) == ([], []),
+              whisper_folder_missing(str(full)))
+        old = folder(root, 'older', ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json',
+                                     'vocabulary.txt'])
+        check('vocabulary.txt (older converters) counts as the vocabulary', whisper_folder_missing(str(old))[0] == [])
+        half = folder(root, 'half', ['model.bin', 'config.json'])
+        missing, advised = whisper_folder_missing(str(half))
+        check('*** an incomplete folder: EVERY missing file is named ***',
+              missing == ['tokenizer.json', 'vocabulary.json (or vocabulary.txt)'], missing)
+        check('preprocessor_config.json missing is ADVICE, not a refusal (faster-whisper has defaults for it)',
+              advised == ['preprocessor_config.json'], advised)
+        msg = ''
+        try:
+            check_whisper_folder(str(half))
+        except ModelFolderError as err:
+            msg = str(err)
+        check('*** the refusal names the files and the fix (convert again with --copy_files) ***',
+              'tokenizer.json' in msg and 'vocabulary' in msg and '--copy_files' in msg, msg)
+        check('a complete folder passes the check (and hands back what is advised: nothing)',
+              check_whisper_folder(str(full)) == [])
+        gone = ''
+        try:
+            check_whisper_folder(str(root / 'nope' / 'model'))
+        except ModelFolderError as err:
+            gone = str(err)
+        check('a folder that is not there is refused, said plainly', 'does not exist' in gone, gone)
+        check('a model NAME (small.en) is not a folder and is not checked; a path is',
+              not is_model_folder('small.en') and is_model_folder(str(full)) and is_model_folder('models/x'))
+        check("the engine's name is the folder's own name, never its full path (paths name people)",
+              whisper_engine_name(str(full)) == 'whisper:my-voice' and whisper_engine_name('small.en') == 'whisper:small.en',
+              whisper_engine_name(str(full)))
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = cli.main(['--backend', 'whisper', '--model', str(half)])
+        check('*** the service will not start on an incomplete folder: exit 2, the missing files named ***',
+              code == 2 and 'tokenizer.json' in err.getvalue() and 'vocabulary' in err.getvalue(), (code, err.getvalue()))
+        loaded = 'faster_whisper' in sys.modules
+        try:
+            WhisperBackend(model=str(half))
+            refused = False
+        except ModelFolderError:
+            refused = True
+        check('*** WhisperBackend itself refuses too, BEFORE faster-whisper is even imported ***',
+              refused and ('faster_whisper' in sys.modules) == loaded)
+
+
 if __name__ == '__main__':
     if '--live' in sys.argv:
         # --live <ws url> <wav folder> [--grammar "a,b,c"]: no tests, just a running service measured.
@@ -445,6 +516,7 @@ if __name__ == '__main__':
     asyncio.run(session_tests())
     asyncio.run(wake_tests())
     wake_model_tests()
+    model_folder_tests()
     fastapi_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')

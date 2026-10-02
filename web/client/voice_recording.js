@@ -163,15 +163,22 @@ export function newPairId(at, rand = Math.random) {
  * from the first write - who it is for, when, which engine wrote the words and how sure it was, and
  * when it should be gone (recorder.js's argument: a field absent at write time cannot be supplied).
  * `meant` starts EMPTY: only a person may say what was meant. Nothing here guesses it.
+ *
+ * EXCEPT A PHRASE THE PERSON WAS SHOWN AND ASKED TO READ (`prompt`, 2026-10-02, voice_model.js): then what
+ * was meant is known before a word is said - it is the phrase on the screen - so `meant` is the phrase,
+ * `prompt` says which (its text, its place in the list, the list's name), and it counts as reviewed.
+ * [A guess: reviewed, so 100 read phrases do not land in "To review". "All" still shows them, to delete a
+ * cough.] Nothing else ever fills `meant` in.
  */
 export function buildPair({
   id, personId = null, at = 0, caption = null, clips = [], keepDays = VOICE_RECORDING_DEFAULTS.keepDays,
-  finalTranscript = true,
+  finalTranscript = true, prompt = null,
 } = {}) {
   const c = caption || {};
   const text = String(c.text || '').trim();
   const conf = Number(c.confidence);
   const kd = Math.max(0, Number(keepDays) || 0);
+  const pr = cleanPrompt(prompt);
   return {
     v: PAIR_VERSION,
     kind: 'voice-training-pair',
@@ -192,9 +199,10 @@ export function buildPair({
       words: Array.isArray(c.words) ? c.words.slice(0, 200) : [],
     },
     unclear: !text,
-    meant: '',
-    meantAt: null,
-    reviewed: false,
+    meant: pr ? pr.text : '',
+    meantAt: pr ? at : null,
+    reviewed: !!pr,
+    ...(pr ? { prompt: pr } : {}),
     clips: clips.map((k) => ({ ear: String(k.ear || 'room'), file: `${String(k.ear || 'room')}.wav`,
                                sampleRate: Number(k.sampleRate) || CLIP_RATE,
                                durationMs: Math.round(Number(k.durationMs) || 0),
@@ -202,6 +210,14 @@ export function buildPair({
     keepDays: kd,
     keepUntil: kd > 0 && at ? at + kd * 86400000 : null,
   };
+}
+
+/** A phrase to read: { text, index, list }, or null when there is no text. Pure. */
+export function cleanPrompt(p) {
+  const text = p && typeof p === 'object' ? String(p.text ?? '').trim().slice(0, 1000) : '';
+  if (!text) return null;
+  const i = Number(p.index);
+  return { text, index: p.index != null && Number.isFinite(i) ? Math.round(i) : null, list: p.list ? String(p.list) : null };
 }
 
 /** Past its own keep-until date? A pair with none is KEPT (the safe direction; fs_sink.js). Pure. */
@@ -412,10 +428,23 @@ export function createVoiceRecorder({
   const clips = new Map();          // uid -> { ear, group, frames: [], samples, t0, done, endT }
   const groups = new Map();         // gid -> { caption, final, firstT, uids: Set }
   const writes = new Set();
+  // *** READING PHRASES (2026-10-02, voice_model.js). *** `prompt(p)` arms a phrase the person is being
+  // shown. The FIRST utterance group to BEGIN while it is armed takes it (its pair's `meant` is the phrase);
+  // a second group begun under the same phrase is an ordinary recording, for review - one phrase, one pair.
+  // A group that is cancelled or dropped before it is saved gives the phrase back. Saved (or refused),
+  // `onPrompt` listeners hear `{ ok, pair, prompt, why }`, and the page shows the next phrase. Everything
+  // else - on/off, held, the ceiling - applies exactly as to any recording.
+  let prompt = null;
+  let promptGroup = null;           // the group holding the armed phrase, until it is saved or dropped
+  const promptSubs = new Set();
+  function notifyPrompt(ev) {
+    for (const fn of [...promptSubs]) { try { fn(ev); } catch (err) { console.error('voice recording onPrompt', err); } }
+  }
 
   const state = () => ({
     on: opts.on, attached: !!rec, listening, recording: opts.on && !!rec && listening && !paused && !holds.size,
     saved, paused, pending: groups.size, count, held: holds.size ? [...holds] : null,
+    prompt: prompt ? { ...prompt } : null,
   });
   let lastSig = '';
   function changed() {
@@ -427,7 +456,7 @@ export function createVoiceRecorder({
     try { bus?.publish?.(VOICE_RECORDING_TOPIC, s); } catch (err) { console.error('voice recording publish', err); }
   }
 
-  function dropAll() { clips.clear(); groups.clear(); }
+  function dropAll() { clips.clear(); groups.clear(); promptGroup = null; }
 
   function groupOf(gid, t) {
     let g = groups.get(gid);
@@ -441,8 +470,11 @@ export function createVoiceRecorder({
     if (holds.size) return;
     if (u.type === 'begin') {
       const gid = u.group || `solo:${u.uid}`;
+      const fresh = !groups.has(gid);
       clips.set(u.uid, { ear: u.ear || 'room', group: gid, frames: [], samples: 0, t0: Number(u.t) || now(), done: false, endT: null });
-      groupOf(gid, Number(u.t) || now()).uids.add(u.uid);
+      const g = groupOf(gid, Number(u.t) || now());
+      g.uids.add(u.uid);
+      if (fresh && prompt && promptGroup === null) { g.prompt = prompt; promptGroup = gid; }
       return;
     }
     const c = clips.get(u.uid);
@@ -458,6 +490,7 @@ export function createVoiceRecorder({
       clips.delete(u.uid);
       const g = groups.get(c.group);
       if (g) { g.uids.delete(u.uid); if (!g.uids.size) groups.delete(c.group); }
+      if (promptGroup === c.group && !groups.has(c.group)) promptGroup = null;   // a knock gives the phrase back
       return;
     }
     if (u.type === 'end') {
@@ -491,10 +524,12 @@ export function createVoiceRecorder({
     if (!force && (!g.final || members.some((m) => !m.done))) return;
     groups.delete(gid);
     for (const uid of g.uids) clips.delete(uid);
+    if (promptGroup === gid) promptGroup = null;
     const done = members.filter((m) => m.done && m.samples > 0);
-    if (!done.length) return;
+    if (!done.length) return;                  // no audio: a phrase it held is armed again for the next try
     const text = String(g.caption?.text || '').trim();
-    if (!text && !opts.keepUnclear) return;
+    // A READ PHRASE IS KEPT EVEN WHEN NOTHING WAS MADE OUT: the words are known (they were on the screen).
+    if (!text && !opts.keepUnclear && !g.prompt) return;
     save(g, done, !!g.final);
   }
 
@@ -513,6 +548,7 @@ export function createVoiceRecorder({
   function save(g, members, final) {
     if (count !== null && count >= opts.maxPairs) {
       if (paused !== 'full') { paused = 'full'; changed(); }
+      if (g.prompt) notifyPrompt({ ok: false, pair: null, prompt: { ...g.prompt }, why: 'full' });
       return;
     }
     const at = Math.min(...members.map((m) => m.t0));
@@ -531,7 +567,7 @@ export function createVoiceRecorder({
       wavs.push({ ear, wav: encodeWav16(flat, CLIP_RATE) });
     }
     const pair = buildPair({ id: newPairId(at, rand), personId, at, caption: g.caption, clips: pairClips,
-                             keepDays: opts.keepDays, finalTranscript: final });
+                             keepDays: opts.keepDays, finalTranscript: final, prompt: g.prompt || null });
     if (count !== null) count += 1;
     const w = Promise.resolve()
       .then(() => store.add(pair, wavs))
@@ -539,6 +575,7 @@ export function createVoiceRecorder({
         saved += 1;
         if (paused === 'failed') paused = null;
         try { onSaved?.(pair); } catch (err) { console.error('voice recording onSaved', err); }
+        if (pair.prompt) notifyPrompt({ ok: true, pair, prompt: { ...pair.prompt }, why: null });
         changed();
       })
       .catch((err) => {
@@ -546,6 +583,7 @@ export function createVoiceRecorder({
         if (count !== null) count -= 1;
         // SAID, not swallowed: the notice changes to "could not save" (a full disk, storage refused).
         paused = 'failed';
+        if (pair.prompt) notifyPrompt({ ok: false, pair: null, prompt: { ...pair.prompt }, why: 'failed' });
         changed();
       })
       .finally(() => writes.delete(w));
@@ -624,6 +662,22 @@ export function createVoiceRecorder({
       changed();
       return holds.size > 0;
     },
+    /**
+     * Arm a phrase being shown to the person ({ text, index, list }), or null for none. The next utterance
+     * to begin takes it. A new phrase lets go of the old one; a group already holding the old one keeps it
+     * (they were saying the old phrase).
+     */
+    prompt(p) {
+      prompt = cleanPrompt(p);
+      promptGroup = null;
+      changed();
+    },
+    /** fn({ ok, pair, prompt, why }) when a phrase's recording is saved (ok) or refused ('full' / 'failed'). */
+    onPrompt(fn) {
+      if (typeof fn !== 'function') return () => {};
+      promptSubs.add(fn);
+      return () => { promptSubs.delete(fn); };
+    },
     /** Whose recordings these are (the screen learns its person after it starts). */
     setPersonId(id) {
       if ((id || null) === personId) return;
@@ -636,7 +690,7 @@ export function createVoiceRecorder({
     sweep: sweepNow,
     /** Resolves when every write in flight has landed (tests; a page about to close). */
     settle: () => Promise.allSettled([...writes]),
-    destroy() { this.detach(); destroyed = true; dropAll(); },
+    destroy() { this.detach(); destroyed = true; dropAll(); prompt = null; promptSubs.clear(); },
   };
 }
 
@@ -722,4 +776,78 @@ export async function exportPairs(dir, store, { personId, onlyReviewed = false }
     } catch (err) { console.error('voice export', err); failed.push(p.id); }
   }
   return { written, failed };
+}
+
+// ---------------------------------------------------------------------------------------
+// EXPORT FOR EUPHONIA'S TRAINING NOTEBOOK (2026-10-02; the page is voice_model.js)
+// ---------------------------------------------------------------------------------------
+//
+// Google's Euphonia toolkit (github.com/google/project-euphonia-app, Apache-2.0) trains on what its app
+// uploads to a Firebase bucket: numbered folders, each holding `recording.wav` and `phrase.txt` (from its
+// README and notebook, read 2026-10-02 - private repo MIKE_LIST_20260930.md row 2.52). The notebook copies
+// `gs://<bucket>/data/` down; a person running it on their own computer points that cell at the `data`
+// folder written here instead.
+//
+//   <picked folder>/data/001/recording.wav   the pair's audio, 16 kHz mono 16-bit (the room's ear if two)
+//                       /001/phrase.txt      what was MEANT (the phrase read, or what a reviewer typed)
+//                   /nimrod-export.json      folder -> recording, written LAST, outside data/
+//
+// NOT KNOWN (not read line by line): whether the notebook wants the numbers padded (001) or bare (1),
+// whether it expects a level between data/ and the numbers (the app's user or session), and whether it
+// strips a trailing newline. So: padded (sorts the same everywhere), one level, no trailing newline -
+// and nimrod-export.json maps each folder back to its recording, so a bad sample can be found and deleted.
+// Only pairs with what was meant AND audio go in: a pair with no words is not a training sample.
+export const EUPHONIA_DATA = 'data';
+export const EUPHONIA_AUDIO = 'recording.wav';
+export const EUPHONIA_PHRASE = 'phrase.txt';
+export const EUPHONIA_INDEX = 'nimrod-export.json';
+
+/** The training samples among `pairs`, oldest first, numbered. which: 'meant' (default) | 'prompted'. Pure. */
+export function euphoniaSamples(pairs = [], { which = 'meant', ear = 'room' } = {}) {
+  const ok = (pairs || []).filter((p) => p && String(p.meant || '').trim() && (p.clips || []).length
+    && (which !== 'prompted' || p.prompt));
+  ok.sort((a, b) => ((Number(a.at) || 0) - (Number(b.at) || 0)) || String(a.id).localeCompare(String(b.id)));
+  const width = Math.max(3, String(ok.length).length);
+  return ok.map((p, i) => {
+    const clip = p.clips.find((c) => c.ear === ear) || p.clips[0];
+    return { folder: String(i + 1).padStart(width, '0'), pairId: p.id, ear: clip.ear, phrase: String(p.meant).trim(),
+             at: p.at, prompt: p.prompt || null };
+  });
+}
+
+async function writeFile(dir, name, data) {
+  const fh = await dir.getFileHandle(name, { create: true });
+  const w = await fh.createWritable();
+  try { await w.write(data); } finally { await w.close(); }
+}
+
+/**
+ * Write `personId`'s training samples into `dir` (a folder somebody picked) in Euphonia's layout. Per sample
+ * the audio first and phrase.txt second; the index last. Best into an EMPTY folder: an older export's
+ * higher-numbered folders are not removed.
+ */
+export async function exportEuphonia(dir, store, { personId, which = 'meant', ear = 'room' } = {}) {
+  if (!dir) throw new Error('exportEuphonia: no folder');
+  const samples = euphoniaSamples(await store.list({ personId }), { which, ear });
+  const data = await dir.getDirectoryHandle(EUPHONIA_DATA, { create: true });
+  const done = [];
+  const failed = [];
+  for (const s of samples) {
+    try {
+      const wav = await store.audio(s.pairId, s.ear);
+      if (!wav) throw new Error('the recording has no audio');
+      const sub = await data.getDirectoryHandle(s.folder, { create: true });
+      await writeFile(sub, EUPHONIA_AUDIO, wav);
+      await writeFile(sub, EUPHONIA_PHRASE, s.phrase);
+      done.push(s);
+    } catch (err) { console.error('voice export (Euphonia)', err); failed.push(s.pairId); }
+  }
+  await writeFile(dir, EUPHONIA_INDEX, JSON.stringify({
+    kind: 'nimrod-euphonia-export', v: 1,
+    layout: `${EUPHONIA_DATA}/<number>/${EUPHONIA_AUDIO} + ${EUPHONIA_PHRASE}`,
+    samples: done.map((s) => ({ folder: s.folder, pairId: s.pairId, ear: s.ear, at: s.at, phrase: s.phrase,
+                                promptIndex: s.prompt ? s.prompt.index : null })),
+    failed,
+  }, null, 2));
+  return { written: done.map((s) => s.pairId), failed, samples: done };
 }

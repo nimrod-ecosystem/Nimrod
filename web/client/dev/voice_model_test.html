@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>your own voice model - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>your own voice model (Euphonia)</h1>
+<p>2026-10-02. A speech model trained on ONE person's voice: Google's Project Euphonia toolkit fine-tunes Whisper
+on ~100 phrases. This page records the phrases with the screen's own recorder (a phrase shown, read, saved, the
+next), exports them in the folder layout Euphonia's notebook reads, and shows the commands that convert the
+result and start the speech service on it - for that one person.</p>
+<div class="note"><b>Not covered here:</b> training or converting a real model (nothing is downloaded or run), a
+real microphone, or a real speech service. The service's own folder check is in
+<code>web/speech_service/test_service.py</code>. Recognisers below are fakes that speak the recorder's events.</div>
+<div id="panel"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  EUPHONIA, BASE_MODEL, VOICE_MODEL_PORT, VOICE_MODEL_FIELDS, VOICE_MODEL_CSS, MODEL_FILES, voiceModelFrom, voiceModelUrl,
+  convertCommand, serviceCommand, parsePhrases, createPhrasePrompter, prompterBlocker, mountVoiceModel,
+} from '../voice_model.js';
+import {
+  createVoiceRecorder, createMemoryPairStore, buildPair, encodeWav16, exportEuphonia, euphoniaSamples,
+} from '../voice_recording.js';
+import { enginePlanFrom, LOCAL_URL } from '../speech_engines.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settle = async (n = 4) => { for (let i = 0; i < n; i++) await sleep(0); };
+
+// A recogniser as the recorder sees one: utterances (begin / audio / end / cancel) and captions.
+function fakeRecognizer() {
+  const u = new Set(), c = new Set(), s = new Set();
+  const on = (set) => (fn) => { set.add(fn); return () => set.delete(fn); };
+  // Now-ish, not a fixed past date: the recorder saves a group whose end is 30 s old by itself (PENDING_MS).
+  let t = Date.now();
+  const emit = (set, x) => { for (const f of [...set]) f(x); };
+  return {
+    onUtterance: on(u), onCaption: on(c), onStatus: on(s),
+    status: () => ({ state: 'listening' }),
+    begin(id, ear = 'room') { t += 1000; emit(u, { type: 'begin', uid: `${id}-${ear}`, group: id, ear, t }); },
+    audio(id, ear = 'room', n = 1600) { emit(u, { type: 'audio', uid: `${id}-${ear}`, pcm: new Int16Array(n).fill(700) }); },
+    end(id, ear = 'room') { t += 500; emit(u, { type: 'end', uid: `${id}-${ear}`, t }); },
+    cancel(id, ear = 'room') { emit(u, { type: 'cancel', uid: `${id}-${ear}` }); },
+    caption(id, text) { emit(c, { id, text, confidence: 0.8, final: true, engine: 'fake' }); },
+    say(id, text, ears = ['room']) {
+      for (const e of ears) this.begin(id, e);
+      for (const e of ears) { this.audio(id, e); this.end(id, e); }
+      this.caption(id, text);
+    },
+  };
+}
+
+// A folder somebody picked, as the File System Access API hands it over. Records every file written, in order.
+function fakeDir(path = '', files = []) {
+  return {
+    files,
+    async getDirectoryHandle(name) { return fakeDir(path ? `${path}/${name}` : name, files); },
+    async getFileHandle(f) {
+      const full = path ? `${path}/${f}` : f;
+      return { async createWritable() { let data = null; return { async write(d) { data = d; }, async close() { files.push({ path: full, data }); } }; } };
+    },
+  };
+}
+
+(async () => {
+try {
+  // ======================================================================================
+  section('what it is, where it lives, and the commands (exact)');
+  {
+    check('*** links: the Euphonia repo, its training notebook, its phrase list ***',
+      EUPHONIA.repo === 'https://github.com/google/project-euphonia-app'
+      && EUPHONIA.notebook === 'https://github.com/google/project-euphonia-app/blob/main/training_colabs/Project_Euphonia_Finetuning.ipynb'
+      && EUPHONIA.phrases === 'https://github.com/google/project-euphonia-app/blob/main/assets/phrases.txt'
+      && EUPHONIA.licence === 'Apache-2.0', JSON.stringify(EUPHONIA));
+    check('*** the base model matches the one the speech service runs (small.en) ***', BASE_MODEL === 'openai/whisper-small.en');
+    check('its own port, beside the shared service (8797)', VOICE_MODEL_PORT === 8796 && voiceModelUrl(8796) === 'ws://127.0.0.1:8796/speech'
+      && LOCAL_URL.includes(':8797/'));
+    check('*** the exact conversion command (Euphonia\'s own, with the tokenizer files copied) ***',
+      convertCommand({ checkpoint: 'C:\\train\\checkpoint-200', folder: 'C:\\models\\my-voice' })
+        === 'ct2-transformers-converter --model "C:\\train\\checkpoint-200" --output_dir "C:\\models\\my-voice" --quantization int8 --copy_files tokenizer.json preprocessor_config.json',
+      convertCommand({ checkpoint: 'C:\\train\\checkpoint-200', folder: 'C:\\models\\my-voice' }));
+    check('...placeholders when nothing is filled in', convertCommand({}) === 'ct2-transformers-converter --model "<checkpoint folder>" --output_dir "<model folder>" --quantization int8 --copy_files tokenizer.json preprocessor_config.json');
+    check('*** the exact command that starts the service on it ***',
+      serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 }) === 'py -3.13 -m speech_service --backend whisper --model "C:\\models\\my-voice" --port 8796',
+      serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 }));
+    const sneaky = serviceCommand({ folder: 'a" --host 0.0.0.0 "b', port: 8796 });
+    check('*** a quote in a folder cannot break out of the command (no --host slipped in) ***',
+      (sneaky.match(/"/g) || []).length === 2 && sneaky.endsWith('--port 8796'), sneaky);
+    check('the files a converted folder holds, as the service checks them',
+      ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json'].every((f) => MODEL_FILES.join(' ').includes(f)) && /vocabulary/.test(MODEL_FILES.join(' ')));
+    check('*** no hard-coded colours in its styles ***', !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(VOICE_MODEL_CSS));
+  }
+
+  // ======================================================================================
+  section('*** per person: only that person\'s row turns it on, and only their speech goes to it ***');
+  {
+    const o = voiceModelFrom({});
+    check('*** OFF when the row says nothing ***', o.on === false && o.port === 8796 && o.folder === '');
+    check('only a literal true turns it on', voiceModelFrom({ voiceModelOn: true }).on && !voiceModelFrom({ voiceModelOn: 'yes' }).on && !voiceModelFrom({ voiceModelOn: 1 }).on);
+    check('a nonsense port is the default', voiceModelFrom({ voiceModelPort: 'x' }).port === 8796 && voiceModelFrom({ voiceModelPort: 80 }).port === 8796
+      && voiceModelFrom({ voiceModelPort: 9001 }).port === 9001);
+    const mine = enginePlanFrom({ voiceModelOn: true });
+    check('*** ON: this person\'s "this screen" recogniser is their own model, on its own port ***',
+      mine.passes[0]?.url === 'ws://127.0.0.1:8796/speech' && mine.passes[0]?.slot === 'local' && /own voice/i.test(mine.passes[0]?.name), JSON.stringify(mine.passes));
+    const theirs = enginePlanFrom({});
+    check('*** anybody else\'s row: the shared recogniser, unchanged ***', theirs.passes[0]?.url === LOCAL_URL && theirs.passes[0]?.name === 'This screen');
+    check('it never reaches another computer: a remote pass keeps its own address',
+      enginePlanFrom({ voiceModelOn: true, speechEngine: 'remote1', speechRemote1Url: 'ws://100.64.0.2:8797/speech' }).passes[0]?.url === 'ws://100.64.0.2:8797/speech');
+    const bad = auditFields(VOICE_MODEL_FIELDS.map(normalizeField).filter(Boolean), { type: 'voice-model' }).filter((x) => x.severity === 'error');
+    check('its settings pass the settings audit', bad.length === 0, JSON.stringify(bad));
+    const on = VOICE_MODEL_FIELDS.find((f) => f.key === 'voiceModelOn');
+    check('the switch defaults OFF and says it is not on a Raspberry Pi', on && on.default === false && /Raspberry Pi/.test(on.note));
+    check('site copy never names the person it was first built for, nor "her screen"', !/Christine|Cici|her screen/i.test(JSON.stringify(VOICE_MODEL_FIELDS)));
+  }
+
+  // ======================================================================================
+  section('the phrase list: pasted or loaded, one per line');
+  {
+    const r = parsePhrases(' Good morning \n\n# a comment\nGood morning\nTurn on the lights\r\n' + 'x'.repeat(150));
+    check('one per line, trimmed, blank lines and # comments skipped, repeats dropped',
+      r.phrases.length === 3 && r.phrases[0] === 'Good morning' && r.phrases[1] === 'Turn on the lights' && r.dupes === 1, JSON.stringify(r));
+    check('a phrase over 140 characters is kept and flagged (Euphonia asks for under 140)', r.long.join() === '2');
+    check('a huge paste is capped, and says how many were left out', parsePhrases(Array.from({ length: 600 }, (_, i) => `p${i}`).join('\n')).phrases.length === 500
+      && parsePhrases(Array.from({ length: 600 }, (_, i) => `p${i}`).join('\n')).cut === 100);
+  }
+
+  // ======================================================================================
+  section('*** reading phrases: one shown, read, saved with it as what was meant, then the next ***');
+  {
+    const store = createMemoryPairStore();
+    const vr = createVoiceRecorder({ store, personId: 'mike' });
+    const rec = fakeRecognizer();
+    const P = ['Good morning', 'Turn on the lights', 'What time is it'];
+    const states = [];
+    const pr = createPhrasePrompter({ phrases: P, recorder: vr, store, list: 'mine', onChange: (s) => states.push(s) });
+    check('before the recorder is on: it says what to turn on (nothing is recorded)', /Record this person/.test(prompterBlocker(vr.state())));
+    vr.update({ voiceRecording: true });
+    vr.attach(rec);
+    check('on and listening: nothing in the way', prompterBlocker(vr.state()) === '', prompterBlocker(vr.state()));
+    pr.start();
+    check('*** started: phrase 1 of 3 is shown and armed in the recorder ***', pr.state().index === 0 && pr.state().phrase === 'Good morning'
+      && pr.state().total === 3 && vr.state().prompt?.text === 'Good morning', JSON.stringify(vr.state().prompt));
+    rec.say('g1', 'good morning');
+    await vr.settle(); await settle();
+    let pairs = await store.list({ personId: 'mike' });
+    check('*** one pair, "meant" = the phrase shown, marked with the phrase and its place ***',
+      pairs.length === 1 && pairs[0].meant === 'Good morning' && pairs[0].prompt?.index === 0 && pairs[0].prompt?.list === 'mine'
+      && pairs[0].reviewed === true && pairs[0].said.text === 'good morning', JSON.stringify(pairs[0]));
+    check('*** ...and the next phrase comes up by itself ***', pr.state().index === 1 && vr.state().prompt?.text === 'Turn on the lights');
+    check('what the recogniser heard is there to compare', pr.state().last?.heard === 'good morning' && pr.state().last?.index === 0);
+
+    // Two utterances begun under one phrase: the FIRST takes it, the second is an ordinary recording.
+    rec.begin('g2'); rec.begin('g3');
+    rec.audio('g2'); rec.end('g2'); rec.audio('g3'); rec.end('g3');
+    rec.caption('g2', 'turn on the'); rec.caption('g3', 'lights');
+    await vr.settle(); await settle();
+    pairs = await store.list({ personId: 'mike' });
+    const g2 = pairs.find((p) => p.said.text === 'turn on the'), g3 = pairs.find((p) => p.said.text === 'lights');
+    check('*** two utterances under one phrase: only the first carries it; the other waits for review ***',
+      g2?.prompt?.index === 1 && g2.meant === 'Turn on the lights' && g3 && !g3.prompt && g3.meant === '' && g3.reviewed === false, JSON.stringify(pairs.map((p) => [p.said.text, p.prompt?.index])));
+    await pr.again();
+    check('*** Again: the recording is gone and phrase 2 is armed again ***', !(await store.get(g2.id)) && pr.state().index === 1
+      && vr.state().prompt?.text === 'Turn on the lights');
+
+    // A knock (cancelled) does not use the phrase up.
+    rec.begin('k1'); rec.cancel('k1');
+    rec.say('g4', '');
+    await vr.settle(); await settle();
+    pairs = await store.list({ personId: 'mike' });
+    const g4 = pairs.find((p) => p.prompt?.index === 1);
+    check('*** a cancelled knock does not take the phrase; the next utterance does ***', !!g4, JSON.stringify(pairs.map((p) => p.prompt)));
+    check('*** nothing made out is STILL kept for a phrase (the words are known) ***', g4 && g4.unclear === true && g4.meant === 'Turn on the lights');
+
+    pr.next();
+    check('Skip: past the last one -> done, nothing armed', pr.state().done === true && vr.state().prompt === null && pr.state().phrase === null);
+    pr.back();
+    check('Back: the previous phrase again', pr.state().index === 2 && pr.state().done === false);
+    pr.start();
+    check('start again from there', vr.state().prompt?.text === 'What time is it');
+    pr.stop();
+    check('*** Stop: nothing armed; an utterance now is an ordinary recording ***', vr.state().prompt === null);
+    rec.say('g5', 'hello');
+    await vr.settle(); await settle();
+    check('...it carries no phrase', !(await store.list({})).find((p) => p.said.text === 'hello')?.prompt);
+    pr.destroy();
+    check('destroy disarms it', vr.state().prompt === null);
+
+    check('blocked words: held, full, failed, no screen', /intercom|call/i.test(prompterBlocker({ on: true, attached: true, listening: true, held: ['intercom'] }))
+      && /as many/.test(prompterBlocker({ on: true, attached: true, listening: true, paused: 'full' }))
+      && /could not be saved/.test(prompterBlocker({ on: true, attached: true, listening: true, paused: 'failed' }))
+      && /listening/.test(prompterBlocker({ on: true, attached: false, listening: false }))
+      && /screen/.test(prompterBlocker(null)));
+    vr.destroy();
+  }
+
+  // ======================================================================================
+  section('*** export for Euphonia\'s notebook: data/<n>/recording.wav + phrase.txt ***');
+  {
+    const store = createMemoryPairStore();
+    const wav = (n) => encodeWav16(new Int16Array(n).fill(3));
+    const add = async (p, clips) => store.add(p, clips);
+    const mk = (id, at, extra = {}) => buildPair({ id, personId: 'mike', at, caption: { text: 'x' }, clips: [{ ear: 'room', durationMs: 10 }], ...extra });
+    await add(mk('a', 300, { prompt: { text: 'Turn on the lights', index: 1 } }), [{ ear: 'room', wav: wav(4) }]);
+    await add(mk('b', 100, { prompt: { text: 'Good morning', index: 0 } }), [{ ear: 'room', wav: wav(2) }]);
+    await add({ ...mk('c', 200), meant: 'I want a drink', reviewed: true }, [{ ear: 'room', wav: wav(3) }]);
+    await add(mk('d', 400), [{ ear: 'room', wav: wav(5) }]);                                          // nothing meant: left out
+    await add({ ...buildPair({ id: 'e', personId: 'mike', at: 500, caption: { text: 'y' }, clips: [] }), meant: 'no audio', reviewed: true }, []);
+    const two = buildPair({ id: 'f', personId: 'mike', at: 600, caption: { text: 'z' }, prompt: { text: 'Two ears', index: 2 },
+      clips: [{ ear: 'phone1', durationMs: 10 }, { ear: 'room', durationMs: 10 }] });
+    await add(two, [{ ear: 'phone1', wav: wav(7) }, { ear: 'room', wav: wav(6) }]);
+    await add({ ...mk('o', 50, { prompt: { text: 'Somebody else', index: 0 } }), personId: 'other' }, [{ ear: 'room', wav: wav(1) }]);
+
+    const s = euphoniaSamples(await store.list({ personId: 'mike' }));
+    check('*** samples: everything with what was meant AND audio, oldest first, numbered 001.. ***',
+      s.map((x) => `${x.folder}:${x.pairId}`).join() === '001:b,002:c,003:a,004:f', JSON.stringify(s));
+    check('the room\'s microphone is preferred when there are two ears', s[3].ear === 'room');
+    check('"only read phrases" leaves out typed ones', euphoniaSamples(await store.list({ personId: 'mike' }), { which: 'prompted' }).map((x) => x.pairId).join() === 'b,a,f');
+
+    const dir = fakeDir();
+    const r = await exportEuphonia(dir, store, { personId: 'mike' });
+    const paths = dir.files.map((f) => f.path);
+    check('*** the layout: data/001/recording.wav, data/001/phrase.txt, ... ***',
+      paths.slice(0, 8).join() === 'data/001/recording.wav,data/001/phrase.txt,data/002/recording.wav,data/002/phrase.txt,data/003/recording.wav,data/003/phrase.txt,data/004/recording.wav,data/004/phrase.txt',
+      paths.join());
+    const file = (p) => dir.files.find((f) => f.path === p)?.data;
+    check('*** phrase.txt holds exactly what was meant ***', file('data/001/phrase.txt') === 'Good morning' && file('data/002/phrase.txt') === 'I want a drink'
+      && file('data/004/phrase.txt') === 'Two ears');
+    check('recording.wav is that pair\'s audio, byte for byte (16 kHz mono 16-bit WAV)', file('data/001/recording.wav')?.byteLength === 48
+      && file('data/004/recording.wav')?.byteLength === 56);
+    check('*** another person\'s recordings are never in it ***', !dir.files.some((f) => f.data === 'Somebody else'));
+    const index = JSON.parse(file('nimrod-export.json') || '{}');
+    check('*** a map back to the recordings, written LAST, beside data/ (not inside it) ***',
+      paths[paths.length - 1] === 'nimrod-export.json' && index.samples?.length === 4 && index.samples[0].folder === '001' && index.samples[0].pairId === 'b'
+      && /recording\.wav/.test(index.layout), JSON.stringify(index).slice(0, 300));
+    check('it reports what it wrote', r.written.join() === 'b,c,a,f' && r.failed.length === 0);
+  }
+
+  // ======================================================================================
+  section('the page: what it is, the three steps, the commands, the folder');
+  {
+    const root = document.getElementById('panel');
+    const store = createMemoryPairStore();
+    const saved = [];
+    let row = { voiceModelFolder: 'C:\\models\\my-voice', voiceModelPort: 8796 };
+    const mem = new Map();
+    const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
+    const vr = createVoiceRecorder({ store, personId: 'mike' });
+    vr.update({ voiceRecording: true }); vr.attach(fakeRecognizer());
+    const page = mountVoiceModel(root, { personId: 'mike', recorder: vr, store, storage,
+      values: () => row, save: (patch) => { saved.push(patch); row = { ...row, ...patch }; return true; } });
+    const text = root.textContent;
+    const hrefs = [...root.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
+    check('*** links to the Euphonia repo, its notebook and its phrase list ***', [EUPHONIA.repo, EUPHONIA.notebook, EUPHONIA.phrases].every((h) => hrefs.includes(h)), hrefs.join());
+    check('links open apart from the screen and pass nothing back', [...root.querySelectorAll('a[href^="https:"]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)));
+    check('*** says plainly what it is: ~100 phrases, a Whisper fine-tune, run yourself, nothing uploaded by us ***',
+      /100 (short )?phrases/.test(text) && /Whisper/.test(text) && /yourself/.test(text) && /Nothing you record here is uploaded/.test(text), text.slice(0, 400));
+    check('*** says who it is for: yours, nobody else\'s settings use it, and not on a Raspberry Pi ***',
+      /only your own speech settings/i.test(text) && /not run on a Raspberry Pi/.test(text));
+    check('*** the three steps: record, train (with the base model named), convert ***',
+      /Record/.test(text) && /Train/.test(text) && /Convert/.test(text) && text.includes('openai/whisper-small.en'));
+    const codes = [...root.querySelectorAll('code[data-cmd]')].map((c) => c.textContent);
+    check('*** the exact conversion command is shown, into the saved folder ***', codes.includes(convertCommand({ folder: 'C:\\models\\my-voice' })), codes.join(' | '));
+    check('*** the exact service command, with the saved folder and port ***', codes.includes(serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 })), codes.join(' | '));
+    const input = root.querySelector('[data-folder]');
+    check('a field for the trained model\'s folder, filled from this person\'s settings', input && input.value === 'C:\\models\\my-voice');
+    input.value = 'D:\\voice\\ct2';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    check('typing a folder updates both commands at once', root.querySelector('[data-cmd="serve"]').textContent.includes('D:\\voice\\ct2')
+      && root.querySelector('[data-cmd="convert"]').textContent.includes('D:\\voice\\ct2'));
+    root.querySelector('[data-save-folder]').click();
+    check('*** Save writes ONLY the folder, to this person\'s settings ***', saved.length === 1 && JSON.stringify(saved[0]) === JSON.stringify({ voiceModelFolder: 'D:\\voice\\ct2' }));
+    const use = root.querySelector('[data-use]');
+    check('the switch shows OFF', use && use.getAttribute('aria-pressed') === 'false' && /Off/.test(use.textContent));
+    use.click();
+    check('*** pressing it turns on THIS person\'s own model (and nothing else) ***', JSON.stringify(saved[1]) === JSON.stringify({ voiceModelOn: true })
+      && root.querySelector('[data-use]').getAttribute('aria-pressed') === 'true');
+
+    // Reading phrases from the page.
+    root.querySelector('[data-phrases]').value = 'Good morning\nWhat time is it';
+    root.querySelector('[data-use-phrases]').click();
+    check('pasted phrases are counted', /2 phrases/.test(root.querySelector('[data-phrase-summary]').textContent));
+    check('...and kept for this person on this screen', /Good morning/.test(mem.get('nimrod-voice-model:mike') || ''));
+    root.querySelector('[data-start]').click();
+    check('*** Start shows "Phrase 1 of 2" and the phrase, big ***', /Phrase 1 of 2/.test(root.querySelector('[data-progress]').textContent)
+      && root.querySelector('[data-phrase]').textContent === 'Good morning' && vr.state().prompt?.text === 'Good morning');
+    check('export is offered only where folders can be written', root.querySelector('[data-export]').hidden === true);
+    check('site copy never names the person it was first built for, nor "her screen"', !/Christine|Cici|her screen/i.test(root.textContent));
+    page.destroy();
+    check('*** leaving the page disarms the phrase (the recorder goes back to ordinary recording) ***', vr.state().prompt === null && root.innerHTML === '');
+    vr.destroy();
+
+    // On a page with no recorder (Home, the modules page): the steps and commands, and why it cannot record here.
+    const page2 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}) });
+    check('with no recorder: the steps are still there, and it says recording happens on a listening screen',
+      /Train/.test(root.textContent) && /screen/.test(root.querySelector('[data-status]').textContent)
+      && root.querySelector('[data-cmd="serve"]').textContent.includes('<model folder>'));
+    check('with no way to save: no Save button, the settings are named instead', !root.querySelector('[data-save-folder]') || root.querySelector('[data-save-folder]').hidden);
+    page2.destroy();
+  }
+
+  // ======================================================================================
+  section('where it is found: the Voice recordings panel');
+  {
+    await import('../modules/voice_review.js');
+    const store = createMemoryPairStore();
+    const box = document.createElement('div');
+    box.style.cssText = 'position:relative;width:640px;height:480px';
+    document.body.append(box);
+    const bus = createBus();
+    const vr = createVoiceRecorder({ store, personId: 'p9' });
+    const inst = mountModule('voice_review', { mount: box, bus, rootBus: bus, personId: 'p9', instanceId: 'vm1', voiceStore: store,
+      voiceRecorder: vr, personRow: () => ({}), state: null, events: null, makeState: () => null, makeEvents: () => null });
+    inst.init();
+    await settle(6);
+    const tab = box.querySelector('[data-tab="model"]');
+    check('*** the Voice recordings panel has a "Your own voice model" tab ***', tab && /own voice model/i.test(tab.textContent));
+    tab.click();
+    await settle(2);
+    check('...which shows the page', !!box.querySelector('[data-cmd="serve"]') && /Euphonia/.test(box.textContent));
+    box.querySelector('[data-tab="recordings"]').click();
+    check('...and back to the recordings', !box.querySelector('[data-model]') || box.querySelector('[data-model]').hidden);
+    inst.destroy();
+    check('destroy leaves nothing behind', box.innerHTML === '' && vr.state().prompt === null);
+    vr.destroy();
+    box.remove();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

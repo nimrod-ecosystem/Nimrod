@@ -7,10 +7,17 @@
 //
 // It makes no recording of its own, opens no microphone, and plays a clip only when somebody presses
 // Play. Settings: none - retention and the ceiling are the person's recording settings.
+//
+// *** "YOUR OWN VOICE MODEL" (2026-10-02, voice_model.js): a second tab. *** Where somebody making a speech
+// model of their own voice finds the steps: read phrases into this screen's recorder (`ctx.voiceRecorder`,
+// the screen's own - absent on a page that does not listen, which then says so), export them for Euphonia's
+// notebook, and the commands that convert the result and start it. `ctx.saveVoiceModel` writes only that
+// person's own voice-model settings; absent, the page names the settings instead.
 
 import { registerModule } from '../module.js';
 import { createIdbPairStore, createMemoryPairStore, voiceRecordingOptionsFrom } from '../voice_recording.js';
 import { mountVoiceReview } from '../voice_review.js';
+import { mountVoiceModel } from '../voice_model.js';
 import { available as fsAvailable, pickFolder } from '../fs_sink.js';
 
 const CSS = `
@@ -29,7 +36,8 @@ const CSS = `
 .m-voice-review .vr-meant{display:flex;flex-direction:column;gap:4px;font-weight:600}
 .m-voice-review .vr-meant input{min-height:44px;font:inherit;padding:0 10px;border-radius:10px;
   border:1px solid var(--border,#999);background:var(--surface,#fff);color:inherit}
-.m-voice-review .vr-play,.m-voice-review .vr-acts{display:flex;flex-wrap:wrap;gap:8px}`;
+.m-voice-review .vr-play,.m-voice-review .vr-acts{display:flex;flex-wrap:wrap;gap:8px}
+.m-voice-review .vr-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}`;
 
 registerModule(
   { type: 'voice_review', title: 'Voice recordings', core: 'new',
@@ -41,6 +49,7 @@ registerModule(
     const { mount } = ctx;
     let root = null;
     let panel = null;
+    let model = null;
     let store = null;
     return {
       init() {
@@ -48,11 +57,38 @@ registerModule(
         root.className = 'm-voice-review';
         const style = document.createElement('style');
         style.textContent = CSS;
+        const tabs = document.createElement('div');
+        tabs.className = 'vr-tabs';
+        tabs.innerHTML = '<button type="button" data-tab="recordings" aria-pressed="true">Recordings</button>'
+          + '<button type="button" data-tab="model" aria-pressed="false">Your own voice model</button>';
         const body = document.createElement('div');
-        root.append(style, body);
+        const modelBox = document.createElement('div');
+        modelBox.dataset.model = '';
+        modelBox.hidden = true;
+        root.append(style, tabs, body, modelBox);
         mount.appendChild(root);
         try { store = ctx.voiceStore || createIdbPairStore(); }
         catch (err) { console.error('voice review: no storage', err); store = createMemoryPairStore(); }
+        tabs.addEventListener('click', (e) => {
+          const b = e.target.closest('[data-tab]');
+          if (!b) return;
+          const showModel = b.dataset.tab === 'model';
+          for (const t of tabs.querySelectorAll('[data-tab]')) t.setAttribute('aria-pressed', String(t === b));
+          body.hidden = showModel;
+          modelBox.hidden = !showModel;
+          if (showModel && !model) {
+            // Built on first open, so a screen that never opens it never arms anything.
+            model = mountVoiceModel(modelBox, {
+              personId: ctx.personId || null,
+              values: () => { try { return ctx.personRow?.() || {}; } catch { return {}; } },
+              save: typeof ctx.saveVoiceModel === 'function' ? (patch) => ctx.saveVoiceModel(patch) : null,
+              recorder: ctx.voiceRecorder || null,
+              store,
+              fs: { available: () => fsAvailable(), pickFolder: () => pickFolder() },
+            });
+          } else if (showModel) model.refresh();
+          if (!showModel) panel?.refresh?.();      // phrases just read show up in "All"
+        });
         panel = mountVoiceReview(body, {
           store,
           personId: ctx.personId || null,
@@ -67,6 +103,8 @@ registerModule(
       destroy() {
         try { panel?.destroy(); } catch { /* gone */ }
         panel = null;
+        try { model?.destroy(); } catch { /* gone */ }
+        model = null;
         if (!ctx.voiceStore) { try { store?.close?.(); } catch { /* gone */ } }
         store = null;
         root?.remove(); root = null;

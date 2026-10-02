@@ -55,6 +55,73 @@ def default_threads() -> int:
     return max(1, (os.cpu_count() or 2) // 2)
 
 
+# ---------------------------------------------------------------------------------------------
+# A MODEL FOLDER: a Whisper fine-tuned on one person's voice (2026-10-02)
+# ---------------------------------------------------------------------------------------------
+# Google's Euphonia toolkit (github.com/google/project-euphonia-app, Apache-2.0) fine-tunes Whisper on
+# ~100 phrases read by one person. Its own api converts the checkpoint for faster-whisper with
+#     ct2-transformers-converter --model <checkpoint> --output_dir <folder> --quantization int8
+#         --copy_files tokenizer.json preprocessor_config.json
+# and `--model <folder>` loads that folder (faster-whisper takes a local directory as it is). The page
+# that walks a person through it is web/client/voice_model.js.
+#
+# WHAT A FOLDER MUST HOLD, checked at start-up so a broken one is said at once, file by file:
+#   model.bin, config.json  - the converted weights and their shape. Without them nothing loads.
+#   tokenizer.json          - REQUIRED although faster-whisper can do without it: missing, it fetches
+#                             a stock tokenizer from the internet at load (openai/whisper-tiny[.en])
+#                             [training knowledge, faster-whisper 1.x]. A fetch nobody asked for, so
+#                             a refusal instead.
+#   vocabulary.json / .txt  - the converter writes one or the other depending on its version.
+#   preprocessor_config.json - ADVISED, NOT REQUIRED (argued): missing, faster-whisper uses its own
+#                             defaults (80 mel bands), which are right for every model up to medium
+#                             and wrong for large-v3 (128). Refusing would refuse working folders
+#                             (stock converted folders often lack it), so it is a printed note.
+WHISPER_FOLDER_FILES = ('model.bin', 'config.json', 'tokenizer.json')
+WHISPER_VOCABULARY = ('vocabulary.json', 'vocabulary.txt')
+WHISPER_FOLDER_ADVISED = ('preprocessor_config.json',)
+CONVERT_HINT = ('Convert the checkpoint again with the tokenizer files copied: ct2-transformers-converter '
+                '--model <checkpoint> --output_dir <folder> --quantization int8 '
+                '--copy_files tokenizer.json preprocessor_config.json')
+
+
+class ModelFolderError(ValueError):
+    """A --model folder that cannot be loaded, with what is wrong said in words."""
+
+
+def is_model_folder(model) -> bool:
+    """A path (it has a separator, or names a directory that exists), not a model name like small.en.
+    The same test faster-whisper itself makes before it would look a name up."""
+    m = str(model or '')
+    return any(c in m for c in '/\\') or os.path.isdir(m)
+
+
+def whisper_folder_missing(path: str):
+    """(missing, advised): the files a loader needs that are not there, and the advised ones absent."""
+    has = lambda f: os.path.isfile(os.path.join(path, f))  # noqa: E731
+    missing = [f for f in WHISPER_FOLDER_FILES if not has(f)]
+    if not any(has(v) for v in WHISPER_VOCABULARY):
+        missing.append('vocabulary.json (or vocabulary.txt)')
+    return missing, [f for f in WHISPER_FOLDER_ADVISED if not has(f)]
+
+
+def check_whisper_folder(path: str):
+    """Raise ModelFolderError naming every missing file; return the advised files that are absent."""
+    if not os.path.isdir(path):
+        raise ModelFolderError(f'the model folder {path} does not exist (or is not a folder)')
+    missing, advised = whisper_folder_missing(path)
+    if missing:
+        raise ModelFolderError(f'the model folder {path} is missing: {", ".join(missing)}. '
+                               f'faster-whisper needs these to load it. {CONVERT_HINT}')
+    return advised
+
+
+def whisper_engine_name(model: str) -> str:
+    """'whisper:small.en', or 'whisper:<the folder's own name>' - never a full path: it is sent to every
+    screen in hello and /health, and a path usually names the person whose computer it is on."""
+    m = str(model)
+    return f'whisper:{os.path.basename(os.path.normpath(m))}' if is_model_folder(m) else f'whisper:{m}'
+
+
 class WhisperBackend:
     supports_grammar = False
     partials = False
@@ -67,9 +134,13 @@ class WhisperBackend:
         # 0 (caps the worst case at ~4 s instead of 8-10 s), NO command prompt (it pulled silence and
         # "pie" onto command words). `local_only` refuses to download: a model not already on the
         # machine is an error to report, not a fetch.
+        # A FOLDER (one person's own model) is checked before anything heavy is imported, so a broken
+        # one fails at once with its missing files named.
+        if is_model_folder(model):
+            check_whisper_folder(model)
         from faster_whisper import WhisperModel  # noqa: WPS433 (heavy import, on purpose here)
         self.model_name = model
-        self.name = f'whisper:{model}'
+        self.name = whisper_engine_name(model)
         self.beam_size = int(beam_size)
         self.word_confidence = bool(word_confidence)
         self._model = WhisperModel(model, device=device, compute_type=compute_type,
@@ -433,6 +504,7 @@ def make_wake(models, **kw):
         'threshold', 'refractory_s', 'vad_threshold', 'framework')})
 
 
-__all__ = ['SAMPLE_RATE', 'WhisperBackend', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
+__all__ = ['SAMPLE_RATE', 'WhisperBackend', 'ModelFolderError', 'is_model_folder', 'whisper_folder_missing',
+           'check_whisper_folder', 'whisper_engine_name', 'WHISPER_FOLDER_FILES','VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
            'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S',
            'WAKE_MODELS_DIR', 'resolve_wake_models']
