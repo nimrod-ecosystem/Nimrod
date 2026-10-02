@@ -77,6 +77,8 @@ export const SUITES = [
   'room', 'room_scene', 'scene_motion', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // Row 2.37, second pass: the window's weather, the library, petting, close-ups, zoom on focus.
   'room_objects',
+  // 2026-10-02: the 3D room (CSS 3D transforms): its walls, modules on them, the drift and its guards.
+  'room3d',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

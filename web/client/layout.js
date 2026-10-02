@@ -163,6 +163,16 @@ export function normalizeScene(scene) {
     if (scene.recipe && typeof scene.recipe === 'object') s.recipe = JSON.parse(JSON.stringify(scene.recipe));
     return s;
   }
+  // 2026-10-02: the 3D room (room3d.js), on the same terms as the room -- a preset or its own recipe --
+  // plus the one option it has that a person sets per dashboard: whether its camera drifts (off unless
+  // 'on'; room3d.js argues why). Nothing else rides along.
+  if (scene.kind === 'room3d') {
+    const s = { kind: 'room3d' };
+    if (typeof scene.preset === 'string' && scene.preset) s.preset = scene.preset;
+    if (scene.recipe && typeof scene.recipe === 'object') s.recipe = JSON.parse(JSON.stringify(scene.recipe));
+    if (scene.options && scene.options.drift === 'on') s.options = { drift: 'on' };
+    return s;
+  }
   if (scene.kind === 'plain') return { kind: 'plain' };
   if (scene.kind === 'ground') return typeof scene.theme === 'string' ? { kind: 'ground', theme: scene.theme } : { kind: 'ground' };
   return null;

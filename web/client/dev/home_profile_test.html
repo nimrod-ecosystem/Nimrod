@@ -26,7 +26,7 @@ import {
   ADD_PIECES, pieceState, layoutIds, whereIs, swapInLayout, remapLayoutIds, removeFromLayout, addToLayout,
   nudgeInLayout, resizeInLayout, withPlaced, sceneChoices, currentScene, applyScene, ROOM_ROWS, roomRows,
   cycleRoomRow, roomRecipe, editBarModel, changeTrayModel, stepThing, restorePlan, createUndo,
-  MOVE_STEP, SIZE_RANGE, UNDO_LIMIT, ADD_SPOTS_ROOM, SCENE_KINDS,
+  MOVE_STEP, SIZE_RANGE, UNDO_LIMIT, ADD_SPOTS_ROOM, SCENE_KINDS, editScanStep, scanAt, trayOwner,
 } from '../home_profile.js';
 import { EXAMPLE_ORDER, EXAMPLE_KINDS, exampleCards, PREBUILT_DASHBOARDS, PREBUILT_ORDER, prebuiltRecord, recordProblems, layoutFor } from '../dashboards.js';
 import { normalizeLayout, isArranged } from '../layout.js';
@@ -59,8 +59,18 @@ try {
   section('*** the starting points: Mike’s list, in his order, every one a valid record ***');
   {
     const known = new Set(listManifests().map((m) => m.type));
-    check('*** static 2D (the Nimrod theme) first, then a live theme, then Design’s rooms ***',
-      J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'live', 'room', 'room', 'room']), J(EXAMPLE_ORDER));
+    check('*** static 2D (the Nimrod theme) first, then a live theme, then Design’s rooms, then the 3D room ***',
+      J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'live', 'room', 'room', 'room', 'room3d']), J(EXAMPLE_ORDER));
+    {
+      // 2026-10-02 (Mike: "3d if possible"): the CSS-3D room, appended after the rooms.
+      const r3 = prebuiltRecord('room3d');
+      const lay3 = layoutFor(r3, { photos: 'P', clock: 'C' });
+      check('*** the 3D room: a room3d scene, photos in its back wall’s slot and a clock in its left wall’s ***',
+        lay3.scene?.kind === 'room3d' && J(lay3.placed?.map((p) => [p.id, p.place, p.slot])) === J([['P', 'scene', 'back'], ['C', 'scene', 'left']]), J(lay3));
+      check('the 3D room starts with its camera STILL (drift is opt-in)', !r3.layout.scene.options && !lay3.scene.options);
+      const bad3 = prebuiltRecord('room3d'); bad3.layout.placed[0].slot = 'nowhere';
+      check('...and the validator catches a slot the 3D room does not have', recordProblems(bad3).some((p) => /nowhere/.test(p)));
+    }
     check('the static one IS the Nimrod theme with no moving scene', PREBUILT_DASHBOARDS.basic.settings.theme === DEFAULT_THEME
       && !THEMES[PREBUILT_DASHBOARDS.basic.settings.theme].scene);
     check('the live one is Fall (Mike’s own example)', PREBUILT_DASHBOARDS.classic.settings.theme === 'fall' && !!THEMES.fall.scene);
@@ -204,12 +214,14 @@ try {
   section('*** the edit bar and the Change tray, as data (dimmed, never hidden) ***');
   {
     const bar = editBarModel({ live: true, thing: { id: 'a', type: 'photos', title: 'Photos' }, count: 2, canUndo: true });
-    check('*** Design’s order: Scene, Add, Change: <thing>, then Transform…, Undo, Redo ***',
-      J(bar.map((b) => b.act)) === J(['scene', 'add', 'change', 'transform', 'undo', 'redo']) && bar[2].label === 'Change: Photos', J(bar.map((b) => b.label)));
+    check('*** its way out (Close) FIRST, then Design’s order: Scene, Add, Change: <thing>, Transform…, Undo, Redo ***',
+      J(bar.map((b) => b.act)) === J(['closebar', 'scene', 'add', 'change', 'transform', 'undo', 'redo'])
+      && bar[0].label === 'Close' && bar.find((b) => b.act === 'change').label === 'Change: Photos', J(bar.map((b) => b.label)));
     check('Redo dimmed when nothing was undone', bar.find((b) => b.act === 'redo').disabled && !bar.find((b) => b.act === 'undo').disabled);
     const pre = editBarModel({ live: false });
-    check('*** on a Home not made yet: every button THERE, all dimmed ***', pre.length === 6 && pre.every((b) => b.disabled));
-    check('nothing chosen: "Choose a thing"', editBarModel({ live: true, count: 1 })[2].label === 'Choose a thing');
+    check('*** on a Home not made yet: every button THERE, all dimmed but the way out ***',
+      pre.length === 7 && pre.filter((b) => b.act !== 'closebar').every((b) => b.disabled) && !pre[0].disabled);
+    check('nothing chosen: "Choose a thing"', editBarModel({ live: true, count: 1 }).find((b) => b.act === 'change').label === 'Choose a thing');
     const tray = changeTrayModel({ thing: { id: 'a' }, placed: false, count: 3 });
     check('*** the Change tray: its way out (Close) FIRST, then pick, then Switch module ***',
       tray[0].act === 'close' && tray[1].act === 'prev' && tray[2].act === 'next' && tray[3].act === 'switch' && !tray[3].disabled);
@@ -220,6 +232,45 @@ try {
     check('previous / next step through the dashboard’s own ring and wrap',
       stepThing(things, 'c', 1).id === 'a' && stepThing(things, 'a', -1).id === 'c' && stepThing(things, null, 1).id === 'a' && stepThing([], 'a', 1) === null);
     check('no label says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(bar) + J(tray)));
+  }
+
+  // ============================================================================================
+  section('*** the edit bar BY SWITCH, as data: Close first, next / prev walk, select presses, back leaves a tray then the bar ***');
+  {
+    const view = { bar: ['close', 'scene', 'add', 'change'], tray: null, trayOf: null };
+    let r = editScanStep({ level: 'bar', key: null }, 'next', view);
+    check('*** from nowhere the cursor is on Close (the way out first), so next goes to the SECOND stop ***',
+      scanAt(view.bar, null) === 0 && r.state.level === 'bar' && r.state.key === 'scene', J(r));
+    r = editScanStep(r.state, 'prev', view);
+    check('prev goes back', r.state.key === 'close');
+    r = editScanStep(r.state, 'prev', view);
+    check('*** it wraps (one switch travels one way and is never stranded at an end) ***', r.state.key === 'change', J(r));
+    r = editScanStep({ level: 'bar', key: 'scene' }, 'select', view);
+    check('select presses the stop the cursor is on (and nothing else changes)', r.press === 'scene' && r.state.key === 'scene' && !r.leave && !r.closeTray, J(r));
+    r = editScanStep({ level: 'bar', key: null }, 'select', view);
+    check('*** a stray select with nothing chosen lands on Close ***', r.press === 'close', J(r));
+    r = editScanStep({ level: 'bar', key: 'add' }, 'back', view);
+    check('*** back on the bar leaves it ***', r.leave === true && !r.press, J(r));
+
+    const inTray = { bar: view.bar, tray: ['t:close', 't:a', 't:b'], trayOf: 'scene' };
+    r = editScanStep({ level: 'tray', key: null }, 'next', inTray);
+    check('in a tray the walk is the tray’s stops (its Close first)', r.state.level === 'tray' && r.state.key === 't:a', J(r));
+    r = editScanStep({ level: 'tray', key: 't:b' }, 'next', inTray);
+    check('...wrapping inside the tray', r.state.key === 't:close');
+    r = editScanStep({ level: 'tray', key: 't:b' }, 'back', inTray);
+    check('*** back in a tray leaves the TRAY, back onto the button that opened it ***',
+      r.closeTray === true && !r.leave && r.state.level === 'bar' && r.state.key === 'scene', J(r));
+    r = editScanStep({ level: 'tray', key: 't:a' }, 'next', { ...inTray, tray: null });
+    check('a tray that went away (closed by a pointer, or its Close) puts the walk back on the bar, on its button',
+      r.state.level === 'bar' && r.state.key === 'add', J(r));
+    r = editScanStep({ level: 'bar', key: 'scene' }, 'next', { bar: [], tray: null, trayOf: null });
+    check('*** nothing can act right now (a change is running): the verb does nothing, and the place is kept ***',
+      r.state.key === 'scene' && !r.press && !r.leave, J(r));
+    r = editScanStep({ level: 'bar', key: 'gone' }, 'next', view);
+    check('a stop that is not there any more: the walk starts again from Close', r.state.key === 'scene', J(r));
+    check('*** which bar button owns which tray (the Switch tray is Change’s) ***',
+      trayOwner('scene') === 'scene' && trayOwner('add') === 'add' && trayOwner('change') === 'change'
+      && trayOwner('switch') === 'change' && trayOwner(null) === null);
   }
 
   section('*** undo / redo over the real thing: a plan that brings a removed module BACK with its settings ***');

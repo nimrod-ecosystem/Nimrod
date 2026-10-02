@@ -1,0 +1,104 @@
+/* room3d.css — the 3D room's stylesheet (room3d.js). Loaded by the renderer itself, once per page.
+
+   *** EVERY COLOUR IS A THEME TOKEN. *** The room's own five are declared once on `.r3`, each from the
+   screen's theme (`--surface-alt`, `--surface`, `--accent`, `--text-soft`, `--text`, `--border`), and
+   the last fallback of each is a CSS SYSTEM colour (Canvas / CanvasText), not a number picked here. The
+   shading of a face is its token mixed toward the theme's text colour, so a dark theme shades the same way
+   a light one does. No literal colour appears in this file.
+
+   *** MOTION. *** The one animation is the camera's drift, and it sits inside the reduced-motion guard AND
+   behind `[data-drift="on"]`, which room3d.js sets only when drift is turned on and motion is allowed. It
+   animates `transform` only, so the compositor runs it without the main thread. */
+
+.r3{
+  --r3-wall: var(--surface-alt, var(--surface, Canvas));
+  --r3-floor: color-mix(in srgb, var(--text-soft, var(--text, CanvasText)) 26%, var(--surface-alt, var(--surface, Canvas)));
+  --r3-wood: color-mix(in srgb, var(--accent, CanvasText) 62%, var(--surface, Canvas));
+  --r3-shade: var(--text, CanvasText);
+  --r3-line: var(--border, CanvasText);
+  --r3-yaw: 0deg;
+  --r3-drift-s: 40s;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--r3-wall) 80%, var(--r3-shade));
+  contain: strict;
+}
+.r3-stage{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 960px;
+  height: 540px;
+  transform-origin: 0 0;
+}
+.r3-cam{
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+.r3-face{
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+.r3-back{
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--r3-line) 30%, transparent) 0 6px, transparent 6px),
+    var(--r3-wall);
+}
+.r3-left{
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--r3-line) 30%, transparent) 0 6px, transparent 6px),
+    linear-gradient(to right, color-mix(in srgb, var(--r3-shade) 14%, transparent), color-mix(in srgb, var(--r3-shade) 4%, transparent)),
+    var(--r3-wall);
+}
+.r3-right{
+  background:
+    linear-gradient(to top, color-mix(in srgb, var(--r3-line) 30%, transparent) 0 6px, transparent 6px),
+    linear-gradient(to left, color-mix(in srgb, var(--r3-shade) 16%, transparent), color-mix(in srgb, var(--r3-shade) 5%, transparent)),
+    var(--r3-wall);
+}
+.r3-ceiling{
+  background: color-mix(in srgb, var(--r3-wall) 84%, var(--r3-shade));
+}
+.r3-floor{
+  background:
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--r3-shade) 12%, transparent) 0 2px, transparent 2px 80px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--r3-shade) 16%, transparent), transparent 70%),
+    var(--r3-floor);
+}
+
+/* A slot on a wall: the host puts a module's box inside it (inset 0). */
+.r3-slot{
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: flex;
+}
+
+/* Furniture: boxes made of faces, each centred on the box's foot. */
+.r3-box{
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  transform-style: preserve-3d;
+}
+.r3-box > .r3-face{ transform-origin: 50% 50%; }
+.r3-bf-front{ background: var(--r3-wood); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--r3-shade) 22%, transparent); }
+.r3-bf-top{ background: color-mix(in srgb, var(--r3-wood) 86%, var(--surface, Canvas)); }
+.r3-bf-left, .r3-bf-right{ background: color-mix(in srgb, var(--r3-wood) 78%, var(--r3-shade)); }
+
+@media (prefers-reduced-motion: no-preference){
+  .r3[data-drift="on"] .r3-cam{
+    animation: r3Drift var(--r3-drift-s) ease-in-out infinite alternate;
+  }
+}
+@keyframes r3Drift{
+  from{ transform: rotateY(calc(var(--r3-yaw) * -1)); }
+  to{ transform: rotateY(var(--r3-yaw)); }
+}

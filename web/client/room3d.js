@@ -1,0 +1,407 @@
+// room3d.js — A ROOM IN THREE DIMENSIONS, BUILT FROM ORDINARY PAGE ELEMENTS WITH CSS 3D TRANSFORMS.
+//
+// Mike, 2026-10-02, on Home's starting points: "...some of the editable rooms/scenes design built, 3d if
+// possible." The site loads no library from anywhere but itself, so a WebGL room means vendoring three.js
+// (~650 KB) -- Mike's call, still open. This is the cheaper experiment Code recommended first: a box room
+// whose walls, floor, ceiling and furniture are plain <div>s placed in 3D by the browser's compositor.
+// The point of doing it this way is that A WALL IS A PAGE ELEMENT, so a module on a wall is an ordinary
+// module in an ordinary box -- every existing module works there, exactly as in the 2D room's slots.
+//
+//   const room = mountRoom3d(host, { preset: 'box' }, { drift: 'off' });
+//   room.slots()               Map slotId -> { id, el, surface }  (the host mounts a module in el)
+//   room.faceBox(surface, g)   where a FREELY placed module goes on a wall: { el, left, top, width, height }
+//   room.destroy()
+//
+// *** THE GEOMETRY. *** One stage of 960 x 540 (the 2D room's own, so free placement means the same
+// thing in both), scaled to fit the host the way room_scene.js fits its stage. `perspective` sits on
+// the stage; the camera (`.r3-cam`, preserve-3d) holds the faces. Coordinates are CSS's: x right, y
+// down, z toward the viewer. The screen plane is z = 0; the back wall is at z = -depth. Side walls,
+// floor and ceiling reach `front` px past the screen plane, so a drifting camera never shows the edge
+// of the box. Every face turns its front toward the inside of the room and hides its back
+// (`backface-visibility: hidden`), which is also how a box's far sides cost nothing.
+//
+// *** THE RULES IT KEEPS. ***
+//   1. NO LITERAL COLOUR. Every colour is a theme token (room3d.css), so the room follows the screen's
+//      theme and a dark theme makes a dark room. The shading of each face is the same token mixed toward
+//      the theme's own text colour, never a number picked here.
+//   2. MOTION IS OPT-IN AND OFF BY DEFAULT. The one thing that moves is the camera's slow drift, and it
+//      runs only when `drift: 'on'` AND the motion ladder is not 'still' AND the system does not ask for
+//      reduced motion -- and the CSS rule is itself inside `prefers-reduced-motion: no-preference`, so
+//      either guard alone stops it. It animates `transform` only (compositor work, never layout:
+//      dev/room3d_test.html checks the keyframes, as dev/scene_motion_test.html does for the scenes).
+//   3. NOTHING FLASHES. The drift changes no colour and no brightness, so the screen's flash limit
+//      (flash_limit.js) has nothing here to limit. If a reaction that lights something is ever added,
+//      it goes through `minFlashPeriodMs` the way room_scene.js's do.
+//   4. NO CONNECTOR GEOMETRY. The furniture is boxes. Nimrod's real brick/connector shapes are IP-gated
+//      and stay out of the public site.
+//   5. THE HOST MOUNTS THE MODULES. Like room_scene.js (rule 2 there), this never mounts a module: it
+//      hands back empty elements (slots, and the faces for free placement). arrangement.js does the rest.
+//
+// *** WHAT IT DOES NOT DO (YET), SAID PLAINLY. *** No day/evening/night light, no window with a live view,
+// no objects that are buttons or doors (`objects()` lists the furniture; `setObjectOpens` says no), no
+// close-ups and no cat. Those are the 2D room's; whether they come here depends on the bench measurement
+// and on Mike's three.js decision, not on this file.
+
+export const W = 960;
+export const H = 540;
+
+// *** THE NUMBERS, EACH A DEFAULT (Rule 1) AND EACH OVERRIDABLE BY THE RECIPE OR THE HOST. ***
+//   lens 700, depth 467  the back wall is drawn at lens/(lens+depth) = 0.6 of the screen: 20%..80% across.
+//                        The 2D room's back wall is 16%..84% (ROOM_SHELLS.room); 0.6 keeps the side walls
+//                        wide enough to hang a module on and still read as walls. Deeper and a module on
+//                        the back wall gets small on a TV across a room; shallower and the room is flat.
+//   eye 15               the eye height, % of the stage from the top: a camera a little above a standing
+//                        person, looking level. It puts the back wall's foot near 66% -- the 2D room's
+//                        floor line -- so the floor is big enough to stand furniture on.
+//   front 140            how far the side walls, floor and ceiling reach past the screen plane, in stage
+//                        px: enough that the drift below never shows a gap at the screen's edge.
+//   drift 'off'          see DRIFT below.
+//   driftDeg 2.5         how far the camera turns each way. Small: enough to show the walls are walls
+//                        (the near edges move against the far ones), not enough to feel like moving.
+//   driftSeconds 40      one way; it then comes back, so a whole sway is 80 s. Slow enough that nobody
+//                        watching a photo on the wall would notice it move within that photo's turn.
+//   motion 'gentle'      the ladder livescene.js and room_scene.js use ('gentle' | 'calm' | 'still');
+//                        'calm' stretches the drift by CALM_STRETCH, 'still' stops it.
+//
+// *** DRIFT: OFF BY DEFAULT, ARGUED. ***
+//   FOR off: the person in front of the screen may be there all day; a room that sways under her pictures
+//   is motion she did not ask for, and the project's rule is that motion is opt-in (livescene.js rule 2).
+//   It also costs the Pi a full-screen recomposite on every frame for as long as it runs -- the bench
+//   numbers for that are on Mike's list beside this.
+//   AGAINST: depth reads far more strongly when it moves; still, a CSS-3D room looks much like the 2D one.
+//   So: off unless somebody turns it on, per dashboard (`layout.scene.options.drift`).
+export const ROOM3D_DEFAULTS = Object.freeze({
+  lens: 700, depth: 467, eye: 15, front: 140,
+  drift: 'off', driftDeg: 2.5, driftSeconds: 40, motion: 'gentle', reducedMotion: false,
+});
+export const MOTIONS = Object.freeze(['gentle', 'calm', 'still']);
+export const CALM_STRETCH = 1.8;                 // the same factor livescene.js uses for 'calm'
+export const SURFACES = Object.freeze(['back', 'left', 'right', 'floor', 'ceiling']);
+const LIMITS = { lens: [200, 4000], depth: [100, 2000], eye: [0, 100], front: [0, 600],
+  driftDeg: [0, 8], driftSeconds: [5, 600] };
+
+export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const num = (v, d, [lo, hi]) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? clamp(Number(v), lo, hi) : d);
+
+// *** THE PRESETS. *** One for now: a plain box room with a slot on each wall and three pieces of
+// furniture. Slot x/y/w/h are percent of THEIR FACE AS SEEN: on a side wall x runs left to right as the
+// viewer sees it (the left wall's 0 is at the front, the right wall's 0 at the back). Furniture: x is %
+// across the room, z is % of the depth from the back wall (0) to the screen (100), w/h/d in stage px.
+export const ROOM3D_PRESETS = Object.freeze({
+  box: Object.freeze({
+    label: 'A 3D room',
+    recipe: Object.freeze({
+      slots: Object.freeze([
+        Object.freeze({ id: 'back', surface: 'back', x: 50, y: 40, w: 52, h: 46 }),
+        Object.freeze({ id: 'left', surface: 'left', x: 52, y: 42, w: 46, h: 34 }),
+        Object.freeze({ id: 'right', surface: 'right', x: 48, y: 42, w: 46, h: 34 }),
+      ]),
+      furniture: Object.freeze([
+        Object.freeze({ id: 'cabinet', name: 'Cabinet', x: 50, z: 10, w: 380, h: 92, d: 90 }),
+        Object.freeze({ id: 'table', name: 'Table', x: 24, z: 62, w: 170, h: 74, d: 120 }),
+        Object.freeze({ id: 'shelf', name: 'Bookshelf', x: 88, z: 34, w: 80, h: 300, d: 70 }),
+      ]),
+    }),
+  }),
+});
+export const ROOM3D_DEFAULT_PRESET = 'box';
+
+/** The recipe to draw: a scene's own recipe, else its preset's, with every slot/furniture entry checked. */
+export function normalizeRoom3d(scene = {}) {
+  const s = scene && typeof scene === 'object' ? scene : {};
+  const base = (s.recipe && typeof s.recipe === 'object') ? s.recipe
+    : (ROOM3D_PRESETS[s.preset] || ROOM3D_PRESETS[ROOM3D_DEFAULT_PRESET]).recipe;
+  const ids = new Set();
+  const pct = (v, d) => num(v, d, [0, 100]);
+  const slots = (Array.isArray(base.slots) ? base.slots : []).map((x, i) => {
+    if (!x || typeof x !== 'object') return null;
+    const id = typeof x.id === 'string' && x.id ? x.id : `slot${i + 1}`;
+    if (ids.has(id)) return null;
+    ids.add(id);
+    return { id, surface: SURFACES.includes(x.surface) ? x.surface : 'back',
+      x: pct(x.x, 50), y: pct(x.y, 50), w: num(x.w, 30, [1, 100]), h: num(x.h, 30, [1, 100]) };
+  }).filter(Boolean);
+  const furniture = (Array.isArray(base.furniture) ? base.furniture : []).map((f, i) => {
+    if (!f || typeof f !== 'object') return null;
+    const id = typeof f.id === 'string' && f.id ? f.id : `thing${i + 1}`;
+    if (ids.has(id)) return null;
+    ids.add(id);
+    return { id, name: typeof f.name === 'string' && f.name ? f.name : id,
+      x: pct(f.x, 50), z: pct(f.z, 50), w: num(f.w, 120, [4, 2000]), h: num(f.h, 80, [4, 2000]), d: num(f.d, 80, [4, 2000]) };
+  }).filter(Boolean);
+  const out = { slots, furniture };
+  for (const k of ['lens', 'depth', 'eye', 'front']) if (base[k] !== undefined) out[k] = num(base[k], ROOM3D_DEFAULTS[k], LIMITS[k]);
+  return out;
+}
+
+/** The view's numbers: the recipe's own, else the host's options, else the defaults. */
+export function viewOf(recipe = {}, opts = {}) {
+  const v = {};
+  for (const k of ['lens', 'depth', 'eye', 'front']) {
+    v[k] = num(recipe[k] ?? opts[k], ROOM3D_DEFAULTS[k], LIMITS[k]);
+  }
+  v.scale = v.lens / (v.lens + v.depth);       // how big the back wall is drawn, 0..1
+  return v;
+}
+
+/** Each face's size (stage px) and CSS transform, with the transform origin at its top-left corner. */
+export function faceTransforms(view) {
+  const { depth: D, front: F } = view;
+  const L = D + F;
+  return {
+    back: { w: W, h: H, transform: `translate3d(0px, 0px, ${-D}px)` },
+    floor: { w: W, h: L, transform: `translate3d(0px, ${H}px, ${-D}px) rotateX(90deg)` },
+    ceiling: { w: W, h: L, transform: `translate3d(0px, 0px, ${F}px) rotateX(-90deg)` },
+    left: { w: L, h: H, transform: `translate3d(0px, 0px, ${F}px) rotateY(90deg)` },
+    right: { w: L, h: H, transform: `translate3d(${W}px, 0px, ${-D}px) rotateY(-90deg)` },
+  };
+}
+
+/**
+ * *** FREE PLACEMENT ON A WALL: WHERE THE MODULE'S CENTRE LANDS IS WHERE THE PERSON PUT IT. ***
+ * A placed entry's x/y are the centre in % of the dashboard and w/h its size in % (layout.js), the same
+ * numbers the 2D room uses. Here they are run BACKWARDS through the perspective: the point on the chosen
+ * surface that is drawn at (x, y) is found, and the module is sized so its drawn size at that depth is the
+ * w/h asked for. Returns the box in % of the FACE (the face is the element it goes in). A point the
+ * surface cannot reach (x right of centre on the left wall) is held at that surface's nearest edge.
+ */
+export function faceBoxFor(surface, g, view) {
+  const ox = W / 2, oy = (view.eye / 100) * H, P = view.lens, D = view.depth, F = view.front;
+  const sx = (Number(g.x) / 100) * W, sy = (Number(g.y) / 100) * H;
+  const vw = (Number(g.w) / 100) * W, vh = (Number(g.h) / 100) * H;
+  // distance behind the screen plane (0 = the screen, D = the back wall) -> how much smaller it is drawn
+  const k = (dz) => P / (P + dz);
+  const L = D + F;
+  if (surface === 'left' || surface === 'right') {
+    const X = surface === 'left' ? 0 : W;
+    const dx = sx - ox;
+    // drawn x = ox + (X - ox) * k(dz)  ->  dz = P * (X - ox) / dx - P
+    let dz = Math.abs(dx) < 1e-6 || Math.sign(dx) !== Math.sign(X - ox) ? D : P * (X - ox) / dx - P;
+    dz = clamp(dz, 0, D);
+    const s = k(dz);
+    const along = surface === 'left' ? F + dz : D - dz;          // face px from the face's left edge
+    const fy = oy + (sy - oy) / s;
+    return { left: (along / L) * 100, top: (fy / H) * 100, width: ((vw / s) / L) * 100, height: ((vh / s) / H) * 100 };
+  }
+  if (surface === 'floor' || surface === 'ceiling') {
+    const Y = surface === 'floor' ? H : 0;
+    const dy = sy - oy;
+    let dz = Math.abs(dy) < 1e-6 || Math.sign(dy) !== Math.sign(Y - oy) ? D : P * (Y - oy) / dy - P;
+    dz = clamp(dz, -F, D);
+    const s = k(dz);
+    const fx = ox + (sx - ox) / s;
+    // floor: the face's top edge is at the back wall; ceiling: its top edge is at the front.
+    const down = surface === 'floor' ? D - dz : F + dz;
+    return { left: (fx / W) * 100, top: (down / L) * 100, width: ((vw / s) / W) * 100, height: ((vh / s) / L) * 100 };
+  }
+  const s = view.scale;                                         // the back wall
+  return { left: ((ox + (sx - ox) / s) / W) * 100, top: ((oy + (sy - oy) / s) / H) * 100,
+    width: (vw / s / W) * 100, height: (vh / s / H) * 100 };
+}
+
+/** Where a furniture box stands: its foot-centre in stage px (x, the floor's y, z). */
+export function boxPlace(f, view) {
+  const D = view.depth;
+  // z: 0 = against the back wall, 100 = at the screen plane -- held so the whole box stays in the room
+  const zc = -D + (f.z / 100) * D;
+  const z = clamp(zc, -D + f.d / 2, -f.d / 2);
+  const x = clamp((f.x / 100) * W, f.w / 2, W - f.w / 2);
+  return { x, y: H, z };
+}
+
+/** The motion actually used: the system's reduced-motion and the host's own ask can only lower it. */
+export function motionFor(opts = {}, systemReduced = false) {
+  if (opts.reducedMotion || systemReduced) return 'still';
+  return MOTIONS.includes(opts.motion) ? opts.motion : 'gentle';
+}
+/** Whether the camera drifts, and how: null when it does not. */
+export function driftFor(opts = {}, systemReduced = false) {
+  const m = motionFor(opts, systemReduced);
+  if (opts.drift !== 'on' || m === 'still') return null;
+  const deg = num(opts.driftDeg, ROOM3D_DEFAULTS.driftDeg, LIMITS.driftDeg);
+  if (!(deg > 0)) return null;
+  const secs = num(opts.driftSeconds, ROOM3D_DEFAULTS.driftSeconds, LIMITS.driftSeconds) * (m === 'calm' ? CALM_STRETCH : 1);
+  return { deg, seconds: Math.round(secs * 10) / 10 };
+}
+
+// ---------------------------------------------------------------------------------------------
+// THE STYLESHEET, loaded once per page by the renderer itself (as room_scene.js loads its own).
+// ---------------------------------------------------------------------------------------------
+let cssPromise = null;
+export function ensureRoom3dCss(doc = document) {
+  const existing = doc.querySelector('link[data-room3d-css]');
+  if (existing && cssPromise) return cssPromise;
+  cssPromise = new Promise((resolve) => {
+    let link = existing;
+    if (!link) {
+      link = doc.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = new URL('./room3d.css', import.meta.url).href;
+      link.setAttribute('data-room3d-css', '');
+      doc.head.append(link);
+    }
+    if (link.sheet) { resolve(true); return; }
+    link.addEventListener('load', () => resolve(true), { once: true });
+    link.addEventListener('error', () => resolve(false), { once: true });
+  });
+  return cssPromise;
+}
+
+// ---------------------------------------------------------------------------------------------
+// THE RENDERER
+// ---------------------------------------------------------------------------------------------
+/**
+ * Mount a 3D room into `host` (which should be positioned; the room fills it).
+ *   scene  the layout's scene: `{ kind: 'room3d', preset?, recipe?, options? }` (options are read from
+ *          `opts`; the arrangement spreads `scene.options` into them)
+ *   opts   ROOM3D_DEFAULTS' keys
+ */
+export function mountRoom3d(host, scene = {}, opts = {}) {
+  if (!host) throw new Error('mountRoom3d: a host element is required');
+  const doc = host.ownerDocument || document;
+  const win = doc.defaultView || window;
+  const o = { ...ROOM3D_DEFAULTS, ...opts };
+  ensureRoom3dCss(doc);
+
+  let recipe = normalizeRoom3d(scene);
+  let view = viewOf(recipe, o);
+  let destroyed = false;
+  const mq = win.matchMedia?.('(prefers-reduced-motion: reduce)');
+  let systemReduced = !!mq?.matches;
+
+  const el = (cls, parent) => { const d = doc.createElement('div'); d.className = cls; if (parent) parent.append(d); return d; };
+  const root = el('r3');
+  root.setAttribute('data-room3d', '');
+  root.setAttribute('aria-hidden', 'false');
+  const stage = el('r3-stage', root);
+  const cam = el('r3-cam', stage);
+  host.append(root);
+
+  const faces = {};           // surface -> element
+  const slotEls = new Map();  // slot id -> { id, el, surface, slot }
+  const boxes = [];           // furniture elements
+
+  function build() {
+    cam.replaceChildren();
+    for (const k of Object.keys(faces)) delete faces[k];
+    slotEls.clear();
+    boxes.length = 0;
+    stage.style.perspective = `${view.lens}px`;
+    stage.style.perspectiveOrigin = `50% ${view.eye}%`;
+    cam.style.transformOrigin = `50% ${view.eye}% ${-view.depth / 2}px`;
+    const ft = faceTransforms(view);
+    for (const name of ['back', 'floor', 'ceiling', 'left', 'right']) {
+      const f = el(`r3-face r3-${name}`, cam);
+      f.dataset.surface = name;
+      f.style.width = `${ft[name].w}px`;
+      f.style.height = `${ft[name].h}px`;
+      f.style.transform = ft[name].transform;
+      faces[name] = f;
+    }
+    for (const sl of recipe.slots) {
+      const s = el('r3-slot', faces[sl.surface]);
+      s.dataset.slot = sl.id;
+      s.style.left = `${sl.x}%`; s.style.top = `${sl.y}%`;
+      s.style.width = `${sl.w}%`; s.style.height = `${sl.h}%`;
+      slotEls.set(sl.id, { id: sl.id, el: s, surface: sl.surface, slot: { ...sl } });
+    }
+    for (const f of recipe.furniture) {
+      const p = boxPlace(f, view);
+      const b = el('r3-box', cam);
+      b.dataset.object = f.id;
+      b.title = f.name;
+      b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
+      const face = (cls, w, h, t) => {
+        const d = el(`r3-face r3-bf ${cls}`, b);
+        d.style.width = `${w}px`; d.style.height = `${h}px`;
+        d.style.left = `${-w / 2}px`; d.style.top = `${-h / 2}px`;
+        d.style.transform = t;
+        return d;
+      };
+      face('r3-bf-front', f.w, f.h, `translate3d(0px, ${-f.h / 2}px, ${f.d / 2}px)`);
+      face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
+      face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
+      face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);
+      boxes.push(b);
+    }
+  }
+
+  // ------------------------------------------------------------------ fitting the stage
+  let scale = 1;
+  function fit() {
+    const r = root.getBoundingClientRect();
+    const k = Math.min(r.width / W, r.height / H);
+    if (!(k > 0)) return scale;
+    scale = k;
+    stage.style.transform = `translate(${(r.width - W * k) / 2}px, ${(r.height - H * k) / 2}px) scale(${k})`;
+    return scale;
+  }
+  const ro = typeof win.ResizeObserver === 'function' ? new win.ResizeObserver(() => { if (!destroyed) fit(); }) : null;
+  ro?.observe(root);
+
+  // ------------------------------------------------------------------ the drift
+  function applyMotion() {
+    const d = driftFor(o, systemReduced);
+    root.dataset.motion = motionFor(o, systemReduced);
+    root.dataset.drift = d ? 'on' : 'off';
+    if (d) {
+      root.style.setProperty('--r3-yaw', `${d.deg}deg`);
+      root.style.setProperty('--r3-drift-s', `${d.seconds}s`);
+    } else {
+      root.style.removeProperty('--r3-yaw');
+      root.style.removeProperty('--r3-drift-s');
+    }
+  }
+  const onMq = (e) => { systemReduced = !!e.matches; applyMotion(); };
+  mq?.addEventListener?.('change', onMq);
+
+  build();
+  applyMotion();
+  fit();
+
+  const api = {
+    kind: 'room3d',
+    root, stage,
+    get scale() { return scale; },
+    recipe: () => JSON.parse(JSON.stringify(recipe)),
+    view: () => ({ ...view }),
+    /** Map slotId -> { id, el, surface, kind, item }: where the host mounts a module. */
+    slots() {
+      const m = new Map();
+      for (const [id, s] of slotEls) m.set(id, { id, el: s.el, surface: s.surface, kind: 'module', item: { ...s.slot }, layer: 'content' });
+      return m;
+    },
+    /** A face element (`back`, `left`, `right`, `floor`, `ceiling`), or null. */
+    surface: (name) => faces[name] || null,
+    /** Where a module placed freely on `surface` goes: the face element, and its box in % of that face. */
+    faceBox(surface, g) {
+      const name = SURFACES.includes(surface) ? surface : 'back';
+      return { el: faces[name], surface: name, ...faceBoxFor(name, g, view) };
+    },
+    /** The furniture, for the map editor: `{ id, name, opens }`. None is a door yet. */
+    objects: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, opens: null })),
+    /** Doors are the 2D room's for now: nothing here changes, and the caller is told so. */
+    setObjectOpens: () => false,
+    drifting: () => root.dataset.drift === 'on',
+    motion: () => root.dataset.motion,
+    setOptions(next = {}) {
+      if (destroyed) return;
+      const rebuild = ['lens', 'depth', 'eye', 'front'].some((k) => k in next && next[k] !== o[k]);
+      Object.assign(o, next);
+      if (rebuild) { view = viewOf(recipe, o); build(); }
+      applyMotion();
+    },
+    fit,
+    timers: () => 0,
+    destroy() {
+      if (destroyed) return;
+      destroyed = true;
+      mq?.removeEventListener?.('change', onMq);
+      ro?.disconnect();
+      slotEls.clear();
+      root.remove();
+    },
+    destroyed: () => destroyed,
+  };
+  return api;
+}

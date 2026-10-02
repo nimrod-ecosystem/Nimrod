@@ -33,6 +33,8 @@
 import { normalizeLayout } from './layout.js';
 import { THEMES, DEFAULT_THEME } from './theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET as ROOM_DEFAULT_PRESET } from './room_presets.js';
+// The 3D room's presets (data only; its renderer is loaded by the arrangement when a dashboard has one).
+import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET } from './room3d.js';
 import { STARTER_MODULES } from './modules_catalog.js';
 import { STARTER_SCHEDULE } from './local_store.js';
 import { profileSetup } from './game/game.js';
@@ -91,7 +93,7 @@ export const PREBUILT_DONE_KEY = 'prebuiltDone';
 //   room, a day room with a module slot, a night room), not three of a kind. Living room and Bedroom are
 //   one Scene press away on Home. The positions are Code's, clear of each room's own furniture (checked
 //   by picture, `run_suite.py --shot`), and the editor moves anything.
-//   3D: not here -- see EXAMPLE_ORDER.
+//   3D (2026-10-02): a CSS-3D room (room3d.js, scene kind 'room3d'), after the rooms -- see EXAMPLE_ORDER.
 // *** THE BAR'S TRAY STILL OFFERS THREE (PREBUILT_ORDER). *** A tray is a scanning surface: five more stops
 // is five more presses before "Close" comes round again for somebody with one switch. Home is where the
 // choosing happens; every one made is in the tray afterwards like any dashboard. Guess, on Mike's list.
@@ -100,6 +102,7 @@ export const EXAMPLE_KINDS = Object.freeze({
   static: 'Flat and still',
   live: 'Flat, with a moving scene',
   room: 'A room',
+  room3d: 'A room in 3D',
 });
 
 export const ROOM_SPOTS = Object.freeze({
@@ -182,6 +185,28 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     },
     settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
   }),
+  // THE 3D ROOM (2026-10-02, Mike's "3d if possible"). room3d.js's box room: CSS 3D transforms, no library.
+  // Photos in the back wall's slot and a clock in the left wall's -- the two things the bench Pi was measured
+  // with (photos + clock on its walls, 1080p, drift on and off: the table is on Mike's list). The camera
+  // drift is OFF here (room3d.js argues why); `layout.scene.options.drift: 'on'` turns it on. The theme
+  // is the default: every colour of the room is a theme token, so this one is cream and green.
+  room3d: Object.freeze({
+    key: 'room3d', label: '3D room', name: 'My 3D room', kind: 'room3d', title: 'A room in 3D',
+    blurb: 'A room drawn in 3D, in your colours. Your photos hang on its back wall and a clock on the side wall.',
+    modules: [
+      { ref: 'photos', type: 'photos' },
+      { ref: 'clock', type: 'clock' },
+    ],
+    layout: {
+      preset: 'full', slots: [null],
+      scene: { kind: 'room3d', preset: ROOM3D_DEFAULT_PRESET },
+      placed: [
+        { ref: 'photos', place: 'scene', slot: 'back' },
+        { ref: 'clock', place: 'scene', slot: 'left' },
+      ],
+    },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'clear' },
+  }),
 });
 
 // The order the bar's tray offers them in: the room first (row 2.34 names it first; it is the new thing).
@@ -189,10 +214,10 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
 export const PREBUILT_ORDER = Object.freeze(['room', 'basic', 'classic']);
 
 // The order HOME offers its starting points in: Mike's own list, in his order (static 2D, a live theme,
-// Design's rooms). 3D is NOT here: the site loads no library from anywhere but itself, and a 3D room
-// needs either three.js vendored (~650 KB, Mike's call) or a CSS-3D renderer plus a scene kind the
-// arrangement does not have yet -- the plan is on Mike's list (2026-10-02), not a half-built card.
-export const EXAMPLE_ORDER = Object.freeze(['basic', 'classic', 'room', 'study', 'fireside']);
+// Design's rooms, then 3D). 3D is the CSS-3D room (room3d.js), appended after the rooms once the bench Pi
+// held it at 1080p with drift on (2026-10-02, the numbers on Mike's list). A WebGL room would need three.js
+// vendored (~650 KB) -- still Mike's call, and not what this card is.
+export const EXAMPLE_ORDER = Object.freeze(['basic', 'classic', 'room', 'study', 'fireside', 'room3d']);
 
 /** Home's cards: one per starting point, in EXAMPLE_ORDER, in words (`kindLabel`). */
 export function exampleCards(order = EXAMPLE_ORDER) {
@@ -261,7 +286,15 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
   const lay = layoutFor(rec, refs);
   const kept = [...lay.slots.filter(Boolean), ...(lay.placed || []).map((p) => p.id)];
   if (kept.length !== usedRefs.length) out.push(`the layout keeps ${kept.length} of its ${usedRefs.length} modules`);
-  if (L.scene) {
+  if (L.scene && L.scene.kind === 'room3d') {
+    // The 3D room: a preset room3d.js has, a scene that survives normalizeLayout, slots it really has.
+    if (!ROOM3D_PRESETS[L.scene.preset]) out.push(`3D room ${L.scene.preset} does not exist`);
+    if (!lay.scene || lay.scene.kind !== 'room3d') out.push('the scene does not survive normalizeLayout');
+    const slots = ROOM3D_PRESETS[L.scene.preset]?.recipe?.slots || [];
+    for (const p of L.placed || []) {
+      if (p.slot && !slots.some((s) => s.id === p.slot)) out.push(`the 3D room has no slot called ${p.slot}`);
+    }
+  } else if (L.scene) {
     if (L.scene.kind !== 'room') out.push(`scene ${L.scene.kind} is not a room`);
     else if (!ROOM_PRESETS[L.scene.preset]) out.push(`room ${L.scene.preset} does not exist`);
     if (!lay.scene) out.push('the scene does not survive normalizeLayout');
@@ -274,6 +307,7 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
     out.push('a module is placed in a room slot, but there is no room');
   }
   if (rec.kind === 'room' && !(L.scene && L.scene.kind === 'room')) out.push('a room with no room scene');
+  if (rec.kind === 'room3d' && !(L.scene && L.scene.kind === 'room3d')) out.push('a 3D room with no 3D room scene');
   const s = rec.settings || {};
   if (!s.theme || !THEMES[s.theme]) out.push(`theme ${s.theme} does not exist`);
   if (!PANEL_SURFACES.includes(s.panelSurface)) out.push(`panel backgrounds ${s.panelSurface} is not one of ${PANEL_SURFACES.join('/')}`);

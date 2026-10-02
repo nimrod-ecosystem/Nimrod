@@ -561,6 +561,8 @@ export function createArrangement({
     overlay: 'var(--z-floating, 400)',
   };
   const placedOf = () => (layout && layout.placed) || [];
+  // The scene kinds that are drawn as a room the modules can sit in: Design's 2D room, and room3d.js.
+  const isRoomScene = (scene) => !!scene && (scene.kind === 'room' || scene.kind === 'room3d');
 
   // Every panel on a laid-out screen, in RING ORDER: overlays first (Design: an overlay "takes the scan
   // first"), then the slots, then flat-on-screen, then the scene. With nothing placed: `slotRecs`.
@@ -586,7 +588,26 @@ export function createArrangement({
   // the renderer (its art, its live window) at all.
   async function mountRoom() {
     const scene = layout && layout.scene;
-    if (!scene || scene.kind !== 'room' || roomScene) return;
+    if (!isRoomScene(scene) || roomScene) return;
+    // 2026-10-02: a ROOM3D scene (room3d.js: the same idea built from CSS 3D transforms) mounts here too,
+    // lazily, with the same handle shape -- `slots()` for modules in its slots, `stage`, `objects()`,
+    // `destroy()` -- plus `faceBox()` for a module placed freely on one of its walls (`styleWrap`).
+    if (scene.kind === 'room3d') {
+      try {
+        const { mountRoom3d } = await import('./room3d.js');
+        if (roomScene) return;                // a second call that raced this one already mounted it
+        roomItemBox = null;
+        const host = document.createElement('div');
+        host.className = 'k-room k-room3d';
+        host.style.cssText = 'position:absolute;inset:0;pointer-events:auto';
+        layerFor('scene').append(host);
+        roomScene = mountRoom3d(host, scene, { ...(scene.options || {}) });
+      } catch (err) {
+        console.error('arrangement: the 3D room could not be drawn', err);
+        roomScene = null;
+      }
+      return;
+    }
     try {
       const [rs, { presetRecipe }, { ROOM_SHELLS }] = await Promise.all([
         import('./room_scene.js'), import('./room_presets.js'), import('./room_parts.js')]);
@@ -612,6 +633,11 @@ export function createArrangement({
     if (entry.place === 'scene' && roomScene) {
       const slot = entry.slot ? roomScene.slots().get(entry.slot) : null;
       if (slot && slot.el) return { el: slot.el, where: 'slot' };
+      // A 3D room: freely placed on one of its faces (the face is the element; `styleWrap` sizes it).
+      if (typeof roomScene.faceBox === 'function') {
+        const fb = roomScene.faceBox(entry.surface, placedGeometry(entry));
+        if (fb && fb.el) return { el: fb.el, where: 'face' };
+      }
       if (!roomFree) {
         roomFree = document.createElement('div');
         roomFree.className = 'k-placed-room';
@@ -638,6 +664,14 @@ export function createArrangement({
     if (where === 'slot') {
       s.inset = '0';
       if (turn) s.transform = turn.trim();
+      return;
+    }
+    if (where === 'face' && typeof roomScene?.faceBox === 'function') {
+      // x/y/w/h stay the dashboard's percent; room3d.js turns them into a box on the face such that the
+      // module's centre is drawn at x/y and its drawn size is w/h (the perspective run backwards).
+      const b = roomScene.faceBox(entry.surface, g);
+      s.left = `${b.left}%`; s.top = `${b.top}%`; s.width = `${b.width}%`; s.height = `${b.height}%`;
+      s.transform = `translate(-50%, -50%)${turn}${g.scale !== 100 ? ` scale(${g.scale / 100})` : ''}`;
       return;
     }
     if (where === 'room' && roomItemBox) {
@@ -698,7 +732,7 @@ export function createArrangement({
   async function mountPlaced() {
     placedMounted = true;
     if (!layout) return;
-    if (!placedOf().length && !(layout.scene && layout.scene.kind === 'room')) return;
+    if (!placedOf().length && !isRoomScene(layout.scene)) return;
     await mountRoom();
     for (const entry of placedOf()) await mountPlacedOne(entry);
   }
@@ -832,7 +866,7 @@ export function createArrangement({
     for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
     layout = l;
     for (const d of doors) { try { roomScene?.setObjectOpens?.(d.id, d.opens); } catch (err) { console.error('arrangement: door', err); } }
-    if (after.length || (l.scene && l.scene.kind === 'room')) await mountRoom();
+    if (after.length || isRoomScene(l.scene)) await mountRoom();
     for (const entry of after) {
       const meta = placedMeta.get(entry.id);
       if (!meta) { await mountPlacedOne(entry); out.added.push(entry.id); continue; }
