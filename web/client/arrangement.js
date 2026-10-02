@@ -1195,6 +1195,57 @@ export function createArrangement({
     return focusedRec()?.id || null;
   }
 
+  // =================================================================================================
+  // *** WHAT THE BAR AND THE MENU ARE ABOUT WHEN THE SCAN IS ON A PIECE OF THE ROOM (2026-10-02; Mike's
+  // list 09-30, "with focus on a piece, the bar and the menu still describe the first panel"). ***
+  // `focusedTarget()` is the RING STOP focus is on, described: a panel (`kind: 'panel'`, its record), or a
+  // piece of the dashboard's room (`kind: 'piece'`): its words, the element, and its OPTIONS -- the very
+  // target edit mode shows for it (`roomTargets`, ca64e17: a piece's "Opens"), or, for a stop that is not
+  // an object of its own (a book on the shelf, a close-up's or a lifted panel's way back), the room itself
+  // (`whole`: Home's Room rows). One description, so the bar, the menu and edit mode cannot disagree.
+  //
+  // WHY A SECOND FUNCTION AND NOT A CHANGE TO `focusedRec()`. Argued (the coordinator asked):
+  //   FOR changing it: one answer to "what is selected", which is the 09-05 rule.
+  //   AGAINST, and it wins: `focusedRec()` answers "WHICH PANEL", and over twenty callers ask exactly that
+  //   to ACT on a panel -- Next, Back, Pause, Switch module, bigger, the unplaced swap (`showUnplaced`
+  //   needs a slot), the cat, view.js's brief, the placed bar's Switch button (files other agents hold).
+  //   A piece is not a panel: it has no state row, no instance, no `<type>/next`. Returning it from
+  //   `focusedRec()` would hand all of them a record they would half-understand; returning null would
+  //   silently change each of them at once, in files this change does not own. So `focusedRec()` keeps
+  //   meaning "the panel", and the places that DESCRIBE the selection (the bar's lit chip, the menu's
+  //   subject) or must not act on a panel while a piece is selected read this instead (kiosk.js).
+  // =================================================================================================
+  function pieceTarget(id) {
+    if (!isPieceId(id)) return null;
+    const stop = roomStops().find((s) => s.id === id);
+    if (!stop) return null;
+    const key = id.slice(ROOM_PIECE_PREFIX.length);
+    let targets = [];
+    try { targets = roomTargets() || []; } catch (err) { console.error('arrangement: a piece\'s options', err); targets = []; }
+    const objId = key.startsWith('o:') ? key.slice(2).replace(/~\d+$/, '') : null;
+    const own = objId ? targets.find((t) => !t.whole && t.id === objId) || null : null;
+    const room = targets.find((t) => t.whole) || null;
+    // A stop that is not an object (a book, a way back) is named by its own words, as the room draws them.
+    const said = (el) => String(el?.getAttribute?.('aria-label') || el?.title || el?.textContent || '').trim();
+    const label = own ? String(own.label || own.id) : (said(stop.el) || (room ? room.label : 'The room'));
+    return {
+      kind: 'piece', id, label, el: stop.el, rec: roomEditRec(),
+      target: own || room, whole: !own, objectId: own ? own.id : null,
+    };
+  }
+  function focusedTarget() {
+    const piece = pieceTarget(ringFocusId());
+    if (piece) return piece;
+    const rec = focusedRec();
+    return rec ? { kind: 'panel', id: rec.id, label: rec.title || rec.type, el: rec.el || null, rec } : null;
+  }
+  /** While the room's own options are still loading (Home's Room rows, the dashboards a piece can open):
+   *  a promise that settles when they are in; null when there is nothing to wait for. */
+  function roomTargetsPending() {
+    const waits = [roomRowsLoading, dashLoading].filter(Boolean);
+    return waits.length ? Promise.allSettled(waits).then(() => true) : null;
+  }
+
   // ---- recovery's hands. The ladder that decides when to use them (kiosk.js `recoveryStep`) stays
   // in the shell: it cannot live inside the thing it may have to replace.
   const swappedBack = new Map();          // module id -> the def it replaced
@@ -1626,12 +1677,23 @@ export function createArrangement({
   }) : null;
   // `shell/edit-panel { id?, on? }`: a panel of THIS dashboard (another dashboard's id is not ours), or,
   // with no id, the focused one. `on` absent toggles.
+  // (2026-10-02: with the scan on a piece of the room and no id, it is the ROOM that is edited, that piece
+  // chosen -- `focusedTarget`, so "Edit" means what the bar and the menu say is selected. `target`: the
+  // thing to choose once editing, as a piece's own menu row asks.)
   const offEditVerb = editMode && typeof bus?.subscribe === 'function' ? bus.subscribe(EDIT_PANEL_TOPIC, (p) => {
     const q = p && typeof p === 'object' ? p : {};
-    const id = q.id || (q.on === false ? editMode.active()?.id : focusedRec()?.id) || null;
+    let id = q.id || null;
+    let pick = typeof q.target === 'string' ? q.target : null;
+    if (!id && q.on !== false) {
+      let t = null;
+      try { t = focusedTarget(); } catch { t = null; }
+      if (t && t.kind === 'piece' && t.rec) { id = ROOM_PANEL_ID; pick = pick || t.objectId; }
+    }
+    if (!id) id = (q.on === false ? editMode.active()?.id : focusedRec()?.id) || null;
     if (!id || !editPanels().some((r) => r.id === id)) return;
     if (q.on === false) { if (editMode.active()?.id === id) editMode.leave('verb'); return; }
     if (q.on === true) editMode.enter(id); else editMode.toggle(id);
+    if (pick && editMode.active()?.id === id) { try { editMode.select(pick); } catch { /* not one of its things */ } }
   }) : null;
   /** Edit panel `id` (on true), stop (false), or toggle (undefined). True if `id` is a panel here. */
   function editPanel(id, on) {
@@ -1687,6 +1749,10 @@ export function createArrangement({
     applyModules,
     // ---- focus: which panel the bar, the ring and the menu are about ----
     focusedRec,
+    // (2026-10-02: the stop focus is on, panel OR piece of the room -- see "WHAT THE BAR AND THE MENU ARE ABOUT".)
+    focusedTarget,
+    pieceTarget,
+    roomTargetsPending,
     focusPlaced,
     focusRing,
     paintFocus,

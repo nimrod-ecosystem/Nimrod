@@ -37,6 +37,7 @@ import { createState } from '../state.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 import { registerModule } from '../module.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
+import { sceneDoors } from '../room_doors.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -3679,6 +3680,93 @@ const toTab = (m, id) => {
       (code.match(/^.*\bawait\b.*$/m) || [''])[0].trim());
   } catch (e) {
     check('the 09-15 structural section threw', false, String((e && e.stack) || e));
+  }
+
+  // *** 2026-10-02 (Mike's list 09-30 ~1341 and ~1324): A PIECE OF THE ROOM, SELECTED -- AND A SWAPPED-IN
+  // SCREEN'S ROOM EDITS, SAVED. *** With the switch scan on a piece of a dashboard's room, the bar lit the
+  // first panel's chip and the menu's "Settings for" named that panel. And on a screen swapped in on this
+  // path, a change to its room applied but was written nowhere (its settings doc was closed after the swap).
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const writeSettings = async (screen, patch) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load(); st.set(patch); await st.flush(); st.destroy();
+    };
+    const readSettings = async (screen) => {
+      const st = createState({ url: profiles.stateURL(screen.id, 'settings'), user: USER });
+      await st.load().catch(() => {}); const v = { ...(st.get() || {}) }; st.destroy(); return v;
+    };
+    const A = await profiles.create('TEST-piece-plain');
+    await profiles.addModule(A.id, 'photos');
+    const B = await profiles.create('TEST-piece-room');
+    const bPhotos = await profiles.addModule(B.id, 'photos');
+    await writeSettings(B, { kiosk: { layout: { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' },
+      placed: [{ id: bPhotos.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } });
+    const proot = document.createElement('div');
+    proot.style.cssText = 'position:relative;width:900px;height:560px';
+    document.body.append(proot);
+    const pk = await mountKiosk(proot, { user: USER, profileId: A.id, profiles, bus: createBus(), reloadPage: () => {} });
+    await sleep(200);
+    check('(setup) booted on the plain screen', pk.screenId() === A.id && !proot.querySelector('.rs-obj-wrap'));
+    await pk.showScreen(B.id);
+    check('(setup) swapped to the room screen: its room is drawn', await settled(() => !!proot.querySelector('.rs-obj-wrap[data-id="door"]'), 6000));
+    const doorId = 'scene:room/o:door';
+    pk.runtime.router.setFocus(doorId);
+    await sleep(60);
+    const ft = pk.focusedTarget();
+    check('*** the scan on the door: the selected thing IS the door (not the first panel) ***',
+      ft?.kind === 'piece' && ft.id === doorId && !!ft.label && ft.label !== 'Photos', JSON.stringify(ft && { kind: ft.kind, id: ft.id, label: ft.label }));
+    const chip = proot.querySelector('[data-mods] [data-piece]');
+    check('*** the bar: a lit chip with the door\'s own name ***',
+      !!chip && chip.classList.contains('on') && chip.textContent === ft?.label, chip?.outerHTML?.slice(0, 160));
+    check('*** ...and no panel\'s chip is lit ***', !proot.querySelector('[data-mods] .k-dot.on:not([data-piece])'));
+    const sw = proot.querySelector('[data-act="switch"]');
+    check('Switch module is dimmed while a piece is selected, and its title says why', sw.disabled && /part of the room/.test(sw.title), sw.title);
+    check('Pause / Play is about no panel while a piece is selected', pk.playPause().id === null && pk.playPause().can === false, JSON.stringify(pk.playPause()));
+    pk.menu.open();
+    check('*** the menu: "Settings for" starts on the door ***', pk.menu.subjectId() === doorId, pk.menu.subjectId());
+    check('...its first tab is named for the door', pk.menu.tabs()[0]?.label === ft?.label, JSON.stringify(pk.menu.tabs()[0]));
+    const rowsNow = () => pk.menu.items().filter((r) => r.tab === 'module').map((r) => r.id);
+    check('*** ...and that tab is the door\'s own options (Opens), not the photos panel\'s ***',
+      await settled(() => rowsNow().includes('piece-head') && rowsNow().includes('set:opens') && !rowsNow().includes('switch-module'), 4000),
+      JSON.stringify(rowsNow()));
+    check('"Settings for" still steps to the panel', pk.menu.items().length > 0 && pk.menu.setSubject(bPhotos.id) === bPhotos.id
+      && pk.menu.items().some((r) => r.id === 'switch-module'));
+    pk.menu.close();
+    // SAVED: the door's Opens, written through the same target edit mode and the menu write through.
+    pk.runtime.router.setFocus(doorId);
+    pk.focusedTarget().target.set({ opens: A.id });
+    // (`settled` above takes a SYNC test: a promise is always truthy. This one awaits.)
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const doorOnServer = async () => (sceneDoors((await readSettings(B)).kiosk?.layout?.scene || null) || {}).door;
+    check('*** a swapped-in screen\'s room edit is SAVED to that screen\'s own layout ***',
+      await pollAsync(async () => (await doorOnServer()) === A.id), String(await doorOnServer()));
+    check('...and not onto the screen this kiosk booted on', !(await readSettings(A)).kiosk?.layout?.scene);
+    // At once, inside the doc's write debounce: closing the swapped-in doc must not drop that write (state.js
+    // `destroy()` cancels one still waiting) -- the swap flushes it first.
+    pk.runtime.router.setFocus(doorId);
+    pk.focusedTarget().target.set({ opens: '' });
+    await pk.showScreen(A.id);
+    check('*** an edit made just before swapping away is still saved (flushed, not dropped) ***',
+      await pollAsync(async () => (await doorOnServer()) === undefined, 4000), String(await doorOnServer()));
+    await pk.showScreen(B.id);
+    pk.runtime.router.setFocus(doorId);
+    pk.focusedTarget().target.set({ opens: A.id });
+    await pk.showScreen(A.id);
+    await pk.showScreen(B.id);
+    // (Swapped away at once again: the swap flushes the doc it leaves before it reads the one it comes to.)
+    check('*** swapped away and back at once: the room is mounted with the door, and its option reads it ***',
+      await settled(() => pk.screenId() === B.id && (sceneDoors(pk.slotLayout()?.scene || null) || {}).door === A.id
+        && (() => { pk.runtime.router.setFocus(doorId); return pk.focusedTarget()?.target?.values?.().opens === A.id; })(), 6000),
+      `${JSON.stringify(pk.focusedTarget()?.target?.values?.())} mounted=${JSON.stringify(sceneDoors(pk.slotLayout()?.scene || null))}`);
+    pk.runtime.router.setFocus(bPhotos.id);
+    await sleep(60);
+    check('focus back on the panel: its chip is lit and the piece\'s chip is gone',
+      !proot.querySelector('[data-mods] [data-piece]') && !!proot.querySelector(`[data-mods] .k-dot.on[data-id="${bPhotos.id}"]`));
+    pk.destroy();
+    proot.remove();
+  } catch (e) {
+    check('the room-piece / swapped-room section threw', false, String((e && e.stack) || e));
   }
 
   const sum = document.getElementById('summary');
