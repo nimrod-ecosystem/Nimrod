@@ -25,8 +25,9 @@
 
 import { createEditModel } from './edit_model.js';
 import {
-  mountTransformWindow, mountLayersWindow, mountLinksWindow, mountMapWindow, createWindowGroup,
+  mountTransformWindow, mountLayersWindow, mountLinksWindow, mountMapWindow, mountAutomationWindow, createWindowGroup,
 } from './edit_windows.js';
+import { getManifest } from './module.js';
 import { placedGeometry } from './layout.js';
 import { sceneDoors, withDoor, tidyScene } from './room_doors.js';
 import { SHOWING_TYPES } from './dashboard_map.js';
@@ -65,12 +66,18 @@ export function newDashboardName(list = [], base = NEW_DASHBOARD_NAME) {
  *   hidePolicy       hide = mute's question (ad7dc49), asked when a person hides a panel by hand
  *   onClose()        after the editing ended (any way)
  *   onChange()       after it opened, closed or applied something (a host redraws its bar)
+ *   automation       row 2.41: the screen's automation engine (automation.js), whose `wrapState` layers
+ *                    THESE panels' states. Given, Layers offers "Automation…" (the Automation window,
+ *                    `windows.automation`, put away by its own Close like the map). Absent: not offered.
+ *                    The window saves nothing itself: a binding is saved by the engine's own `onChange`,
+ *                    exactly as before -- so this adds a way IN, not a new permission.
  */
 export function openDashboardEditor(opts = {}) {
   const {
     arr, mountIn = null, host = null, baseLayout = () => arr.layout(), apply = (l) => arr.applyPlaced(l),
     save = null, windows = EDIT_WINDOWS_DEFAULT, listDashboards = null, createDashboard = null,
     currentId = () => null, loadMap = null, onGo = null, hidePolicy = null, onClose = null, onChange = null,
+    automation = null,
   } = opts;
   if (!arr) throw new Error('openDashboardEditor: an arrangement is required');
   const doc = (host || mountIn)?.ownerDocument || document;
@@ -175,6 +182,15 @@ export function openDashboardEditor(opts = {}) {
   }
   const opened = {};
   const group = createWindowGroup(() => Object.values(opened));
+  // Windows whose own Close puts only THEM away (the editing goes on); Close on any other ends the editing.
+  const SIDE = new Set(['map', 'automation']);
+  // Row 2.41: what is on this dashboard, for the Automation window -- every module, slotted or placed.
+  const autoPanels = () => (((arr.profile && arr.profile()) || { modules: [] }).modules || []).filter((m) => m && m.id).map((m) => {
+    const rec = arr.recFor?.(m.id) || null;
+    const manifest = getManifest(m.type) || null;
+    return { id: m.id, title: rec?.title || manifest?.title || m.type || m.id, manifest, instance: rec?.instance || null };
+  });
+  const chosenPanel = () => { const it = model.selected(); return it && !it.fixed ? it.id : null; };
   function close() {
     if (closed) return;
     closed = true;
@@ -196,6 +212,8 @@ export function openDashboardEditor(opts = {}) {
         onClose: close,
         // A person hiding a panel by hand (Layers' Shown/Hidden) may be asked what its sound should do.
         onShownToggle: (id, shown) => { if (!shown) { try { hidePolicy?.personHid?.(id); } catch { /* not load-bearing */ } } },
+        onAutomation: automation ? () => toggle('automation') : null,
+        automationOpen: () => !!opened.automation,
       });
     } else if (kind === 'links') {
       opened[kind] = mountLinksWindow(h, model, {
@@ -211,6 +229,12 @@ export function openDashboardEditor(opts = {}) {
         onGo: (id) => { try { onGo?.(id); } catch (err) { console.error('dashboard_editor: go', err); } },
         onClose: () => { delete opened.map; h.remove(); opened.links?.render?.(); },
       });
+    } else if (kind === 'automation' && automation) {
+      // Row 2.41. Its own Close puts it away; the editing goes on (as the map).
+      opened[kind] = mountAutomationWindow(h, {
+        engine: automation, panels: autoPanels, selected: chosenPanel,
+        onClose: () => { delete opened.automation; h.remove(); opened.layers?.render?.(); tell(); },
+      });
     } else { h.remove(); return null; }
     return opened[kind];
   }
@@ -218,11 +242,13 @@ export function openDashboardEditor(opts = {}) {
     if (closed) return false;
     if (opened[kind]) {
       try { opened[kind].close(); } catch { /* gone */ }
-      if (kind !== 'map') return false;            // (closing any window but the map ends the editing)
+      if (!SIDE.has(kind)) return false;           // (closing any window but the map or Automation ends the editing)
       delete opened[kind];
       return false;
     }
-    return !!mountOne(kind);
+    const ok = !!mountOne(kind);
+    if (ok && kind === 'automation') tell();
+    return ok;
   }
   for (const k of windows) mountOne(k);
   tell();

@@ -46,7 +46,8 @@ import { ROOM3D_PRESETS, normalizeRoom3d } from '../room3d.js';
 import {
   dashboardLinks, buildMapGraph, mapListForm, mapLayout, mapSvg, loadMapData, inCycle, MAP_DEFAULTS,
 } from '../dashboard_map.js';
-import { newDashboardName, EDIT_WINDOWS_DEFAULT } from '../dashboard_editor.js';
+import { newDashboardName, EDIT_WINDOWS_DEFAULT, openDashboardEditor } from '../dashboard_editor.js';
+import { createAutomation } from '../automation.js';
 import { DASHBOARD_GO_TOPIC, EDIT_IDLE_KEY, EDIT_IDLE_DEFAULT_MS, EDIT_IDLE_FIELD, editIdleMsFrom } from '../dashboard_nest.js';
 
 const out = document.getElementById('results');
@@ -511,6 +512,118 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       check('back closes it, the scan given back', await settled(() => !k.editView() && !k.editScanHeld() && !k.runtime.router.isPaused(), 2000));
       k.destroy(); box.remove();
       check('destroy leaves no edit window behind', !document.querySelector('.box .ew-win'));
+    }
+
+    // =================================================================================================
+    section('6. row 2.41: Automation, from the edit view -- what is saved there is what the screen runs');
+    {
+      // 6a. The editor itself: offered only with an engine; opens on the thing chosen; its Close keeps the editing.
+      const records = { AU: { id: 'AU', name: 'Puzzle', modules: [{ id: 'sign', type: 'button' }, { id: 'aclk', type: 'clock' }] } };
+      const seed = { AU: { settings: { kiosk: { layout: { preset: 'full', slots: ['aclk'], placed: [
+        { id: 'sign', place: 'screen', x: 50, y: 50, w: 30, h: 20 }] } } } } };
+      const host = sharedHost(records, seed);
+      const t = mountTop('AU', host);
+      await t.ready;
+      check('(setup) the sign is on the dashboard', await settled(() => !!t.v.arrangement().recFor('sign'), 6000));
+      const plain = openDashboardEditor({ arr: t.v.arrangement(), mountIn: t.box });
+      check('*** no engine from the host: Layers offers no Automation (nothing that cannot work) ***',
+        !!plain.windows.layers && !plain.windows.layers.el.querySelector('[data-ew="more:automation"]'));
+      plain.close();
+      const eng = createAutomation({ bus: t.bus });
+      const ed = openDashboardEditor({ arr: t.v.arrangement(), mountIn: t.box, automation: eng });
+      const more = () => ed.windows.layers.el.querySelector('[data-ew="more:automation"]');
+      check('*** with the screen\'s engine: Layers has "Automation…", in the switch walk ***', !!more() && ed.scan.stops().includes(more()));
+      ed.model.select('sign');
+      more().click();
+      const aw = ed.windows.automation;
+      check('*** pressing it opens the Automation window inside the edit view ***', !!aw?.isOpen() && ed.el.contains(aw.el)
+        && more().getAttribute('aria-pressed') === 'true');
+      const opts = [...aw.el.querySelectorAll('[data-a="panel"] option')].map((o) => o.value);
+      check('it lists every module on the dashboard, slotted or placed', opts.includes('sign') && opts.includes('aclk'), J(opts));
+      check('*** it opens on the thing chosen in Layers (the sign) ***', aw.el.querySelector('[data-a="panel"]').value === 'sign');
+      check('its Close is a stop in the one walk', ed.scan.stops().includes(aw.el.querySelector('[data-ew="close"]')));
+      aw.close();
+      check('*** its own Close puts it away; the editing goes on ***', !ed.windows.automation && ed.isOpen() && !!ed.windows.layers?.isOpen());
+      check('...and Layers shows it closed', more().getAttribute('aria-pressed') === 'false');
+      ed.toggle('automation');
+      check('toggle opens it, and closing the editor takes it with it', !!ed.windows.automation && (ed.close(), !t.box.querySelector('[data-automation-panel]')));
+      eng.destroy();
+      t.inst.destroy(); t.box.remove();
+    }
+    {
+      // 6b. The real screen, on the dashboard path, against the real server.
+      const AP = await real.create('Automation puzzle');
+      const sign = await real.addModule(AP.id, 'button');
+      await setRow(AP.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [null],
+        placed: [{ id: sign.id, place: 'screen', x: 50, y: 50, w: 40, h: 30 }] } } });
+      const TOPIC = `puzzle/dial-${Math.floor(Math.random() * 1e6)}`;
+      // The same rule whatever order a store hands its keys back in.
+      const canon = (v) => (Array.isArray(v) ? v.map(canon) : v && typeof v === 'object'
+        ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v);
+      const C = (v) => J(canon(v ?? null));
+      const mount = async () => {
+        const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+        const bus = createBus();
+        const k = await mountKiosk(box, { user: USER, profileId: AP.id, profiles: real, bus,
+          storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+        return { box, bus, k };
+      };
+      const A = await mount();
+      check('(setup) the dashboard path, the sign mounted', A.k.dashboardPath()
+        && await settled(() => !!A.k.dashboard()?.arrangement?.()?.recFor?.(sign.id), 8000));
+      // THE ENTRY POINT: the screen's own edit view (system/edit, the menu's Edit, Home's Transform…).
+      const view = A.k.openEditView();
+      const offered = !!view?.windows?.layers?.el?.querySelector('[data-ew="more:automation"]');
+      check('*** the screen\'s edit view offers "Automation…" (the host hands the editor its engine) ***', offered);
+      let ed = view;
+      if (!offered) {
+        // Until the host passes its engine, the rest is proven on the same editor over the same screen's
+        // arrangement and engine, so the save-and-run chain is still checked.
+        A.k.closeEditView();
+        ed = openDashboardEditor({ arr: A.k.dashboard().arrangement(), mountIn: A.box, automation: A.k.automation() });
+      }
+      ed.model.select(sign.id);
+      ed.windows.layers.el.querySelector('[data-ew="more:automation"]').click();
+      const aw = ed.windows.automation;
+      check('the Automation window opens on the sign', !!aw && aw.el.querySelector('[data-a="panel"]').value === sign.id);
+      const f = (n) => aw.el.querySelector(`[data-a="${n}"]`);
+      f('key').value = 'inkLightness'; f('key').dispatchEvent(new Event('change'));
+      f('topic').value = TOPIC;
+      aw.panel.form.requestSubmit();
+      const eng = A.k.automation();
+      check('*** a rule added in the window is on the screen\'s engine, running ***',
+        eng.list().length === 1 && eng.list()[0].target.instance === sign.id && eng.list()[0].target.key === 'inkLightness'
+        && eng.status(eng.list()[0].id) === 'running', J(eng.list()));
+      A.bus.publish(TOPIC, 1);
+      check('...and it drives the sign', await settled(() => eng.overlay(sign.id).inkLightness === 100, 2000), J(eng.overlay(sign.id)));
+      const saved = eng.list();
+      let savedOk = false;
+      for (const until = Date.now() + 6000; !savedOk && Date.now() < until; await sleep(200)) {
+        savedOk = C((await getRow(AP.id, 'settings')).automations) === C(saved);
+      }
+      check('*** it is saved with the screen (its own `automations` setting), the same rule ***',
+        savedOk, J((await getRow(AP.id, 'settings')).automations));
+      try { ed.close(); } catch { /* gone */ }
+      A.k.destroy(); A.box.remove();
+      // A fresh screen on the same row runs exactly that rule.
+      const B = await mount();
+      const eng2 = B.k.automation();
+      check('*** a fresh screen on that row loads THE SAME rule ***',
+        await settled(() => C(eng2.list()) === C(saved), 8000), J(eng2.list()));
+      check('...and runs it, once its panel is there', await settled(() => eng2.status(saved[0].id) === 'running', 8000), eng2.status(saved[0].id));
+      B.bus.publish(TOPIC, 0);
+      check('*** ...driving the same setting from the same message ***', await settled(() => eng2.overlay(sign.id).inkLightness === -100, 2000),
+        J(eng2.overlay(sign.id)));
+      B.k.destroy(); B.box.remove();
+      // SOMEBODY WITHOUT PERMISSION. Saving a rule is writing this screen's settings row, and the server lets
+      // only the account that owns the screen do that (owned_profile, app.py) -- the same gate as before.
+      const OTHER = `${USER}-other`;
+      const put = await fetch(`/api/profiles/${AP.id}/state/settings`, { method: 'PUT',
+        headers: { 'X-Dev-User': OTHER, 'Content-Type': 'application/json' },
+        body: J({ data: { automations: [{ id: 'intruder', target: { instance: sign.id, key: 'inkHue' }, source: { kind: 'bus', topic: 'x' } }] }, base_version: 0 }) });
+      check('*** another account cannot save a rule on this screen (refused, as not found) ***', put.status === 404, String(put.status));
+      const after = await getRow(AP.id, 'settings');
+      check('*** ...and the screen\'s rules are unchanged ***', C(after.automations) === C(saved), J(after.automations));
     }
   } catch (e) {
     check('suite threw', false, String(e && e.stack || e));

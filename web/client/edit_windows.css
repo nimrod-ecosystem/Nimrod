@@ -65,6 +65,17 @@
 /* Text effects. (Not `.ew-fx`: that is the window's own kind class, `ew-win ew-fx`.) */
 .ew-fxrow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:8px;align-items:center}
 
+/* Row 2.41: the Automation window -- automation_panel.js's form, in the window's own tokens. */
+.ew-auto .auto-panel h3{margin:0 0 6px;font-size:.9rem}
+.ew-auto .auto-list{margin:0 0 8px;padding-left:18px}
+.ew-auto .auto-add,.ew-auto .auto-src,.ew-auto .auto-peak{display:grid;gap:6px}
+.ew-auto .auto-field{display:grid;gap:2px;font-weight:700}
+.ew-auto :is(select,input){min-height:44px;min-width:0;width:100%;padding:0 8px;
+  border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:inherit;font-weight:400}
+.ew-auto .auto-status{margin:0;color:var(--text-soft);font-size:.8rem}
+.ew-auto [hidden]{display:none}
+.ew-win :is(select):focus-visible{outline:4px solid var(--link);outline-offset:2px}
+
 .ew-note{margin:0;color:var(--text-soft);font-size:.8rem}
 .ew-warn{margin:0;padding:6px 8px;border-radius:8px;font-size:.8rem;font-weight:600;
   background:var(--bad-surface);color:var(--text);border-left:4px solid var(--accent-warm-deep)}
