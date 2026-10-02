@@ -45,7 +45,7 @@ import {
   SYSTEM_ACTIONS, createDefaultRegistry, verbTarget,
 } from '../actions.js';
 import { SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE } from '../shell_verbs.js';
-import { ROUTES, routeAction, duplicatePhrases, spokenTable, normalize } from '../input_speech.js';
+import { ROUTES, routeAction, routeFor, duplicatePhrases, spokenTable, normalize } from '../input_speech.js';
 import { paintPlayPause, drawCallControls } from '../transport_bar.js';
 import { createBus } from '../bus.js';
 import { createAudioBus } from '../audio_bus.js';
@@ -211,6 +211,12 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('...and no phrase means two things', duplicatePhrases(spokenTable()).length === 0, duplicatePhrases(spokenTable()).join(' | '));
       check('"mute my mic" and "hide my video" are what Mike said', ROUTES['call-mic-off'].phrases.includes('mute my mic')
         && ROUTES['call-my-video-off'].phrases.includes('hide my video'));
+      // 2026-10-02: the bench's small Vosk model has no "unmute" -- it hears "un mute". Whole-utterance match
+      // keeps the two-word form from ever being taken for the "mute ..." phrase inside it.
+      check('*** "un mute my mic" UNMUTES (the small model has no "unmute"), never mutes ***',
+        routeFor('un mute my mic') === 'call-mic-on' && routeFor('mute my mic') === 'call-mic-off'
+        && routeFor('un mute the speaker') === 'call-speaker-on' && routeFor('Unmute the call') === 'call-speaker-on',
+        [routeFor('un mute my mic'), routeFor('un mute the speaker')].join(','));
     }
 
     // =================================================================================================

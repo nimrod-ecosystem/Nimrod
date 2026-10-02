@@ -329,16 +329,18 @@ export const ROUTES = {
   // ("my", "their", "the speaker", "the call"), so none is a panel verb and none of them can be heard as the
   // other: "mute my mic" never touches the speaker, "hide my video" never hides theirs. On and off, never a
   // toggle, for MEDIA_VERBS' reason (said twice, it must stay muted). Nothing happens with no call live.
-  // Vocabulary [unverified on the bench]: "mic" and "unmute" are the words to check in the small model
-  // first ("unpause" was not in it) -- "microphone" and "turn ... on" phrasings are the fallbacks.
+  // Vocabulary, CHECKED on the bench 2026-10-02 (vosk-model-small-en-us-0.15): "mic", "mike" and "microphone"
+  // are in it; "unmute" is NOT ("unpause" was not either). So every "unmute" phrase has a two-word "un mute"
+  // twin -- both words are in the model, and a small model hears the one word that way. The "unmute" spellings
+  // stay for the bigger models and typed commands.
   'call-mic-off': { action: 'call/mic-off', label: 'Call: mute my microphone',
     phrases: ['mute my mic', 'mute my microphone', 'turn my mic off', 'my microphone off'] },
   'call-mic-on': { action: 'call/mic-on', label: 'Call: unmute my microphone',
-    phrases: ['unmute my mic', 'unmute my microphone', 'turn my mic on', 'my microphone on'] },
+    phrases: ['unmute my mic', 'unmute my microphone', 'un mute my mic', 'un mute my microphone', 'turn my mic on', 'my microphone on'] },
   'call-speaker-off': { action: 'call/speaker-off', label: 'Call: mute the speaker',
     phrases: ['mute the speaker', 'mute the call', 'speaker off', 'turn the speaker off'] },
   'call-speaker-on': { action: 'call/speaker-on', label: 'Call: unmute the speaker',
-    phrases: ['unmute the speaker', 'unmute the call', 'speaker on', 'turn the speaker on'] },
+    phrases: ['unmute the speaker', 'unmute the call', 'un mute the speaker', 'un mute the call', 'speaker on', 'turn the speaker on'] },
   'call-their-video-off': { action: 'call/their-video-off', label: 'Call: hide their video',
     phrases: ['hide their video', 'hide the caller', 'their video off'] },
   'call-their-video-on': { action: 'call/their-video-on', label: 'Call: show their video',
