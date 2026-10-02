@@ -34,7 +34,9 @@ import { createAudioBus } from './audio_bus.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
-import { createArrangement, layoutChange } from './arrangement.js';
+// (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
+// room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
+import { createArrangement, classifyLayoutChange as layoutChange } from './arrangement.js';
 import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn } from './transport_bar.js';
 import { createLongPress } from './input_longpress.js';
 import {
@@ -52,8 +54,12 @@ import { createDashboardPicker } from './dashboard_picker.js';
 // Row 2.38: dashboards inside dashboards -- the live limit, the tray's wait, the trail and its breadcrumb.
 import {
   SCREEN_HOME_TOPIC, NEST_LIVE_DEPTH_FIELD, nestLiveDepthFrom, TRAY_OPEN_FIELD, trayOpenMsFrom, BAR_HIDE_MS,
-  trailAfter, crumbName, createBreadcrumb,
+  trailAfter, crumbName, createBreadcrumb, EDIT_IDLE_FIELD, editIdleMsFrom,
 } from './dashboard_nest.js';
+// Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
+import { openDashboardEditor } from './dashboard_editor.js';
+import { mountMapWindow } from './edit_windows.js';
+import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { attachMixer, MIXER_FIELDS } from './mixer.js';
@@ -1829,6 +1835,7 @@ export async function mountKiosk(root, {
   screensEl.setAttribute('aria-label', 'your dashboards');
   const goHome = () => { location.href = '/home.html'; };
   let screensOpen = false;
+  let editScanHeld = false;        // row 2.38: the edit windows or the map hold the scan (see openEditView)
 
   // *** ROW 2.34: THE STRIP IS THE DASHBOARD PICKER NOW (dashboard_picker.js). *** The person's dashboards,
   // then the ready-made ones they have not made yet ("+ Room", "+ Basic", "+ Classic 2D" -- dashboards.js),
@@ -1912,7 +1919,8 @@ export async function mountKiosk(root, {
       picker.reset();
       try { runtime?.router?.setPaused?.(true); } catch { /* no router yet */ }
     } else if (!screensOpen && was) {
-      try { if (!menu?.isOpen?.()) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
+      // (Row 2.38: not while the edit windows or the map hold the scan -- they give it back themselves.)
+      try { if (!menu?.isOpen?.() && !editScanHeld) runtime?.router?.setPaused?.(false); } catch { /* gone */ }
     }
     // Row 2.38: opening gives the bar the tray's wait; closing gives it back its own (`armBarHide`). Not
     // when the bar is already hidden -- that is the bar's own timer putting the tray away.
@@ -1970,6 +1978,199 @@ export async function mountKiosk(root, {
       else if (p.id) showScreen(p.id).catch(() => {});
     }));
   }
+
+  // ---------------------------------------------------------------------------------
+  // *** ROW 2.38: THE EDIT VIEW AND THE MAP, BY SWITCH (Stage R left the way in unbuilt). ***
+  //
+  // `system/edit` (actions.js; bindable, and a room object's `edit.open`) opens THIS dashboard's edit
+  // windows -- Transform, Layers, Opens and shows -- and, pressed again, closes them. `system/map` opens the
+  // map of the person's dashboards; choosing one goes there. Pointer users reach both from the menu.
+  //   * WHERE THE EDITOR COMES FROM: on the dashboard path, the dashboard module's own (`edit()`); on
+  //     today's path, the same editor (dashboard_editor.js) over this file's own arrangement, saving into
+  //     the SHOWING screen's settings doc (the boot screen's handle when it is the boot screen, so the
+  //     09-12 watch and the editor never write the layout from two copies).
+  //   * WHILE EITHER IS OPEN IT HOLDS THE SCAN (the tray's rule): the panel router is paused, and next /
+  //     prev / select walk the windows (Close of the first window first -- the way out), back closes.
+  //     One thing holds the scan at a time: the menu or the tray opening puts them away first.
+  //   * NOBODY ANSWERING: each puts itself away after its wait (`editIdleMs`, argued in dashboard_nest.js;
+  //     the map keeps the tray's), which hands the switch back to the panels. Nothing is lost: every edit
+  //     is applied and saved as it is made.
+  let kEditor = null;              // today's path: this file's own editor
+  let kEditorDoc = null;           // ...and the settings handle it saves through, when not the boot one
+  let editIdleT = null;
+  let mapWin = null, mapHost = null, mapIdleT = null;
+  const editorNow = () => {
+    let e = null;
+    try { e = dash?.impl?.editing?.() || null; } catch { e = null; }
+    if (e && e.isOpen?.() !== false) return e;
+    return kEditor && kEditor.isOpen() ? kEditor : null;
+  };
+  function syncEditScan() {
+    const want = !torn && (!!editorNow() || !!mapWin);
+    if (want === editScanHeld) return;
+    editScanHeld = want;
+    try {
+      if (want) runtime?.router?.setPaused?.(true);
+      else if (!screensOpen && !menu?.isOpen?.()) runtime?.router?.setPaused?.(false);
+    } catch { /* no router yet */ }
+  }
+  function armEditIdle() {
+    clearTimeout(editIdleT); editIdleT = null;
+    if (!editorNow() || torn) return;
+    let wait = 0;
+    try { wait = editIdleMsFrom(settings.get() || {}); } catch { wait = 0; }
+    if (!wait) return;
+    editIdleT = setTimeout(() => { editIdleT = null; closeEditView(); }, wait);
+  }
+  const mapLoad = () => mapLoader({
+    profiles,
+    makeRow: (pid, key) => stateForProfile(key, { cacheKey: null }, pid),
+    title: (t) => getManifest(t)?.title || t,
+  })();
+  function openEditView() {
+    if (torn) return null;
+    const have = editorNow();
+    if (have) { syncEditScan(); armEditIdle(); return have; }
+    try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
+    if (screensOpen) toggleScreens(false);
+    closeMap();
+    let ed = null;
+    try {
+      if (dash?.impl?.edit) ed = dash.impl.edit();
+      else {
+        const own = profileId === bootProfileId;
+        const doc = own ? settings : stateForProfile('settings', { cacheKey: null }, profileId);
+        if (!own) { kEditorDoc = doc; doc.load?.().catch?.(() => {}); }
+        const savable = !embedded && !previewLayout;
+        ed = kEditor = openDashboardEditor({
+          arr, mountIn: kioskEl,
+          baseLayout: () => ((doc.get?.() || {}).kiosk || {}).layout || arr.layout(),
+          save: savable ? (next) => { const cur = (doc.get?.() || {}).kiosk || {}; doc.set({ kiosk: { ...cur, layout: next } }); } : null,
+          listDashboards: async () => (await listDashboards()) || [],
+          createDashboard: !embedded && typeof profiles?.create === 'function'
+            ? (name) => profiles.create(name, personId || arr.profile()?.person_id || '') : null,
+          currentId: () => profileId,
+          loadMap: !embedded && typeof profiles?.list === 'function' ? mapLoad : null,
+          onGo: (id) => { closeEditView(); showScreen(id).catch(() => {}); },
+          hidePolicy: { personHid: (id) => { try { hideSound?.personHid?.(id); } catch { /* not load-bearing */ } } },
+          onClose: () => {
+            kEditor = null;
+            if (kEditorDoc) { try { kEditorDoc.flush?.()?.finally?.(() => {}); } catch { /* gone */ } try { kEditorDoc.destroy?.(); } catch { /* gone */ } kEditorDoc = null; }
+            syncEditScan();
+          },
+          onChange: () => { renderMods(); },
+        });
+      }
+    } catch (err) {
+      console.error('kiosk: the edit view', err);
+      ed = null;
+    }
+    if (!ed) return null;
+    watchMenu();
+    // Any press, key or pointer inside the windows is somebody using them: the wait starts again.
+    for (const ev of ['pointerdown', 'keydown', 'input']) ed.el?.addEventListener?.(ev, () => armEditIdle());
+    ed.scan?.reset?.();
+    syncEditScan();
+    armEditIdle();
+    return ed;
+  }
+  function closeEditView() {
+    clearTimeout(editIdleT); editIdleT = null;
+    const ed = editorNow();
+    if (ed) { try { ed.close(); } catch (err) { console.error('kiosk: closing the edit view', err); } }
+    syncEditScan();
+  }
+  function toggleEditView() { if (editorNow()) closeEditView(); else openEditView(); }
+
+  function armMapIdle() {
+    clearTimeout(mapIdleT); mapIdleT = null;
+    if (!mapWin || torn) return;
+    let wait = 0;
+    try { wait = trayOpenMsFrom(settings.get() || {}); } catch { wait = 0; }
+    if (!wait) return;
+    mapIdleT = setTimeout(() => { mapIdleT = null; closeMap(); }, wait);
+  }
+  function openMap() {
+    if (torn || embedded || typeof profiles?.list !== 'function') return null;
+    if (mapWin) { armMapIdle(); return mapWin; }
+    try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
+    if (screensOpen) toggleScreens(false);
+    closeEditView();
+    mapHost = document.createElement('div');
+    mapHost.className = 'k-map';
+    mapHost.style.cssText = 'position:absolute;left:50%;top:8px;transform:translateX(-50%);width:min(760px,calc(100% - 16px));'
+      + 'max-height:calc(100% - 16px);overflow:auto;z-index:var(--z-menus,600);pointer-events:auto';
+    kioskEl.append(mapHost);
+    mapWin = mountMapWindow(mapHost, {
+      load: mapLoad, current: () => profileId,
+      onGo: (id) => { closeMap(); showScreen(id).catch(() => {}); },
+      onClose: () => closeMap(),
+    });
+    for (const ev of ['pointerdown', 'keydown']) mapHost.addEventListener(ev, () => armMapIdle());
+    watchMenu();
+    syncEditScan();
+    armMapIdle();
+    return mapWin;
+  }
+  function closeMap() {
+    clearTimeout(mapIdleT); mapIdleT = null;
+    if (!mapWin) return;
+    const w = mapWin;
+    mapWin = null;
+    try { w.destroy(); } catch { /* gone */ }
+    mapHost?.remove(); mapHost = null;
+    syncEditScan();
+  }
+
+  // The switch, while they hold the scan. (Not while the menu or the tray has it: one holder at a time.)
+  for (const verb of ['next', 'prev', 'select', 'back']) {
+    offsScreen.push(bus.subscribe(verbTopic(verb), () => {
+      if (torn || screensOpen) return;
+      try { if (menu?.isOpen?.()) return; } catch { /* not up yet */ }
+      if (mapWin) {
+        if (verb === 'back') closeMap();
+        else if (verb === 'select') mapWin.select();
+        else mapWin.focusStep(verb === 'next' ? 1 : -1);
+        armMapIdle();
+        return;
+      }
+      const ed = editorNow();
+      if (!ed || !editScanHeld) return;
+      if (verb === 'back') { closeEditView(); return; }
+      if (verb === 'select') ed.scan?.select?.();
+      else if (verb === 'next') ed.scan?.next?.();
+      else ed.scan?.prev?.();
+      syncEditScan();
+      armEditIdle();
+    }));
+  }
+  // The menu opening puts them away (the tray's rule: one thing holds the scan at a time).
+  for (const t of [verbTopic('menu'), SHELL_MENU]) {
+    offsScreen.push(bus.subscribe(t, () => { closeMap(); closeEditView(); }));
+  }
+  // Another screen came in: today's editor was about the screen that left; a dashboard's went with it.
+  offsScreen.push(bus.subscribe(SCREEN_SHOWN, () => {
+    if (kEditor) closeEditView();
+    closeMap();
+    syncEditScan();
+  }));
+  // The menu opening by ANY way (the gear, M, a door, the host) puts them away too: watched on its one
+  // `hidden` attribute, as the dashboard path's SHELL_STATE watch does. Made on first use.
+  let menuWatch = null;
+  function watchMenu() {
+    if (menuWatch || typeof MutationObserver === 'undefined') return;
+    const scrim = kioskEl.querySelector('[data-settings] [data-scrim]');
+    if (!scrim) return;
+    menuWatch = new MutationObserver(() => { if (!scrim.hidden) { closeMap(); closeEditView(); } });
+    menuWatch.observe(scrim, { attributes: true, attributeFilter: ['hidden'] });
+  }
+  offsScreen.push(() => {
+    try { menuWatch?.disconnect(); } catch { /* gone */ }
+    clearTimeout(editIdleT); clearTimeout(mapIdleT);
+    try { kEditor?.close(); } catch { /* gone */ }
+    try { mapWin?.destroy(); } catch { /* gone */ }
+    mapWin = null;
+  });
 
   controlsEl.querySelector('[data-act="home"]').addEventListener('click', () => toggleScreens());
   controlsEl.querySelector('[data-act="back"]').addEventListener('click', prevInPrimary);
@@ -2191,6 +2392,8 @@ export async function mountKiosk(root, {
     // shown inside a dashboard move live. Both argued in dashboard_nest.js; both the SCREEN's (the
     // device pays for live levels; the tray belongs to this screen's bar).
     ...(!embedded ? [{ ...TRAY_OPEN_FIELD }, { ...NEST_LIVE_DEPTH_FIELD }] : []),
+    // ROW 2.38, the map editor: how long the edit windows wait with nobody pressing (dashboard_nest.js).
+    { ...EDIT_IDLE_FIELD },
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -2449,6 +2652,17 @@ export async function mountKiosk(root, {
       // while a room is on the screen -- a row that opens nothing is a row that lies.
       ...(roomRec() ? [{ kind: 'item', id: 'room-reactions', label: 'Room reactions…',
           hint: 'what the room’s things do when something happens', run: () => openRoomReactions() }] : []),
+      // ROW 2.38, the map editor: the edit view and the map, for a pointer (a switch binds `system/edit` /
+      // `system/map`). Every row here is a stop on the one-switch walk ahead of Home, so: ONE row at "The
+      // usual" (Edit -- the map is one press inside it, the Opens-and-shows window's Map), the Map's own row
+      // only at "Everything", and neither at "Just the essentials" (the way out and legibility, nothing
+      // else). The map not on an embed (nowhere to go).
+      ...(complexity() !== 'essential' ? [
+        { kind: 'item', id: 'edit-view', label: 'Edit this dashboard…',
+          hint: 'move things, and choose what each one opens or shows', run: () => openEditView() },
+      ] : []),
+      ...(complexity() === 'advanced' && !embedded ? [{ kind: 'item', id: 'dashboard-map', label: 'Map of your dashboards…',
+        hint: 'every dashboard, and what opens or shows which', run: () => openMap() }] : []),
       // *** AN AMBIENT MODULE'S OWN SETTINGS, FOUND MISSING ENTIRELY 2026-09-27. ***
       //
       // `mount:'ambient'` content is never `focusedRec()` — it has no stage slot, so it never
@@ -3414,6 +3628,12 @@ export async function mountKiosk(root, {
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
   }
+  // Row 2.38: the edit view (open / close) and the map (open / close) -- see openEditView above. The map
+  // is not offered on an embed: it has no other dashboards to show or go to.
+  offsScreen.push(bus.subscribe(SYSTEM_TOPICS.edit, (p) => { claimed(p); toggleEditView(); }));
+  if (!embedded) {
+    offsScreen.push(bus.subscribe(SYSTEM_TOPICS.map, (p) => { claimed(p); if (mapWin) closeMap(); else openMap(); }));
+  }
   // Row 2.37: a room's book or window opens ONE module by type (room_scene.js MODULE_TOPIC) -- claimed only
   // when this screen has it, so an unclaimed press lets the room say so instead of doing nothing.
   offsScreen.push(bus.subscribe('system/module', (p) => {
@@ -3496,6 +3716,9 @@ export async function mountKiosk(root, {
         nestDepth: 0,
         viewId: id, profileId: id, arrangement: record,
         ...(layout !== undefined ? { layoutOverride: layout } : {}),
+        // Row 2.38: the edit view on a real screen saves what it changes to this dashboard's row (never a
+        // preview's one-shot layout, never an embed's).
+        saveLayout: !embedded && !previewLayout,
         router: runtime.router, health, storage, embedded: !!embedded,
         ...(embedded ? {} : {
           makeState: stateForProfile, makeEvents: eventsForProfile,
@@ -3527,7 +3750,8 @@ export async function mountKiosk(root, {
   }
   // What the shell hears from the dashboard that is showing (and only while it is).
   function wireDashboard(d) {
-    d.impl.onChange?.(() => { if (dash === d) { renderMods(); syncPlainBar(); } });
+    // (Row 2.38: the dashboard's edit windows opening or closing -- by their own Close, too -- moves the scan.)
+    d.impl.onChange?.(() => { if (dash === d) { renderMods(); syncPlainBar(); syncEditScan(); } });
     d.impl.onSettings?.(() => { if (dash === d) syncShownTheme(); });
   }
   // Every mounted record a dashboard holds, by id (the health watch is keyed by them).
@@ -3670,6 +3894,15 @@ export async function mountKiosk(root, {
     crumbsEl: () => crumbsEl,
     trayOpen: () => screensOpen,
     picker: () => picker,
+    // Row 2.38, the map editor: the edit view (whichever editor is open: the dashboard's or this file's
+    // own), the map window, and whether either holds the scan -- for the suites and a diagnostic page.
+    editView: () => editorNow(),
+    openEditView,
+    closeEditView,
+    mapWindow: () => mapWin,
+    openMap,
+    closeMap,
+    editScanHeld: () => editScanHeld,
     stageCount: () => arr.stageDefs().length,
     // NOTE: `layout()` was already taken by the mirror/clock HUD positions below. A second
     // `layout:` key in this same object literal is silently shadowed by it — which is

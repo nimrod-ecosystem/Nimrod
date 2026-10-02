@@ -68,6 +68,7 @@ const key = (k, extra = {}, target = document.body) => {
   return e;
 };
 const q = (el, k) => el.querySelector(`[data-ew="${k}"]`);
+const J = JSON.stringify;
 
 // =====================================================================
 section('defaults are data, and Design\'s numbers');
@@ -528,6 +529,192 @@ section('the Text effects window');
   const t = w.scanTargets();
   check('Close first; then each effect\'s toggle, −, + (4 × 3)', t[0] === q(el, 'close') && t.length === 1 + 4 * 3, t.length);
   w.destroy();
+}
+
+// =====================================================================
+section('row 2.38: what a thing opens and what a frame shows, in the model');
+{
+  const { LINK_KEYS, linkTarget } = M;
+  const mk = () => createEditModel({ items: [
+    { id: 'clock', name: 'Clock', x: 20, y: 20, layer: 2, place: 'screen', opens: null },
+    { id: 'board', name: 'Billboard', x: 70, y: 50, layer: 1, place: 'screen', opens: null, canShow: true, shows: 'D2' },
+    { id: 'room:desk', objectId: 'desk', name: 'Desk', fixed: true, opens: 'D1' },
+    { id: 'room:lamp', objectId: 'lamp', name: 'Lamp', fixed: true },
+  ] });
+  const m = mk();
+  check('the links are opens and shows; a target is a trimmed string or null',
+    J(LINK_KEYS) === '["opens","shows"]' && linkTarget('  D9 ') === 'D9' && linkTarget('') === null && linkTarget(5) === null
+    && linkTarget('x'.repeat(201)) === null);
+  check('an item that never had a link keeps its shape (no opens / shows keys added)',
+    !('opens' in createEditModel({ items: ITEMS() }).item('pic')) && !('shows' in createEditModel({ items: ITEMS() }).item('pic')));
+  check('the default selection is a layered thing, not a room object', m.selectedId() === 'clock');
+  check('*** a room object (`fixed`) has no layer: not in order(), so not in the Layers window ***',
+    J(m.order()) === '["clock","board"]');
+  check('things(): the layered ones top first, then the room\'s own objects in the room\'s order',
+    J(m.things()) === '["clock","board","room:desk","room:lamp"]');
+  m.select('room:lamp');
+  check('selectStep wraps round every thing', m.selectStep(1) && m.selectedId() === 'clock' && m.selectStep(-1) && m.selectedId() === 'room:lamp');
+  m.select('clock');
+  check('*** setLink: a module opens a dashboard ***', m.setLink('opens', 'D1') && m.item('clock').opens === 'D1');
+  check('setting the same link again changes nothing (no undo step)', !m.setLink('opens', ' D1 '));
+  check('*** undo takes the door away, redo puts it back ***',
+    m.undo() && m.item('clock').opens === null && m.redo() && m.item('clock').opens === 'D1');
+  check('shows: only on a thing that can show (a frame / billboard)',
+    !m.canLink('shows') && !m.setLink('shows', 'D3') && m.canLink('shows', { id: 'board' }));
+  let evt = null;
+  const off = m.subscribe((e) => { evt = e; });
+  check('*** a frame shows another dashboard; the event says which link ***',
+    m.setLink('shows', 'D3', { id: 'board' }) && m.item('board').shows === 'D3' && evt?.change === 'shows' && J(evt.ids) === '["board"]');
+  off();
+  check('...and undo puts the old one back', m.undo() && m.item('board').shows === 'D2');
+  m.select('room:desk');
+  check('*** a room object can be given a door (or have it taken off) ***', m.setLink('opens', null) && m.item('room:desk').opens === null
+    && m.undo() && m.item('room:desk').opens === 'D1');
+  check('...but its place is the room\'s: no move, no step, no place, no layer, no hide, no lock',
+    !m.set('x', 10) && !m.step('x', 1) && !m.setPlace('overlay') && !m.moveLayer('room:desk', 1)
+    && !m.toggleShown() && !m.toggleLocked() && m.item('room:desk').shown !== false);
+  check('...and it is not copied, duplicated or deleted here', !m.copy() && !m.duplicate() && !m.remove() && m.items().length === 4);
+  m.select('clock');
+  m.toggleLocked();
+  check('a locked thing\'s links do not change either (unlock it first)', !m.setLink('opens', 'D7') && m.item('clock').opens === 'D1');
+  m.toggleLocked();
+  check('a layer move among the layered things never makes a room object a neighbour',
+    m.moveLayer('board', 1) && J(m.order()) === '["board","clock"]' && m.items().filter((i) => i.fixed).length === 2);
+  check('a duplicate lands on top of the LAYERED things, and is no room object', m.duplicate('clock')
+    && !m.selected().fixed && m.selected().layer === Math.max(...m.items().filter((i) => !i.fixed).map((i) => i.layer)));
+}
+
+// =====================================================================
+section('row 2.38: the Opens and shows window');
+{
+  const { mountLinksWindow } = W;
+  const m = createEditModel({ items: [
+    { id: 'clock', name: 'Clock', x: 20, y: 20, layer: 2, place: 'screen', opens: null },
+    { id: 'board', name: 'Billboard', x: 70, y: 50, layer: 1, place: 'screen', opens: null, canShow: true, shows: null },
+    { id: 'room:desk', objectId: 'desk', name: 'Desk', fixed: true, opens: null },
+  ], selectedId: 'clock' });
+  let list = null;
+  const made = [];
+  let mapToggles = 0;
+  const w = mountLinksWindow(host, m, {
+    dashboards: () => list,
+    refresh: async () => { list = [{ id: 'H', name: 'Home' }, { id: 'R', name: 'Living room' }, { id: 'D', name: 'Desk' }]; },
+    current: 'H',
+    onNew: async () => { const d = { id: 'N1', name: 'New dashboard' }; made.push(d); list = [...list, d]; return d; },
+    onMap: () => { mapToggles++; },
+  });
+  const el = w.el;
+  await new Promise((r) => setTimeout(r, 0));
+  check('a solid, non-modal window titled Opens and shows', el.getAttribute('role') === 'dialog' && el.getAttribute('aria-modal') === 'false'
+    && /Opens and shows/i.test(el.querySelector('h3').textContent));
+  check('it names the thing being changed, and what pressing it does now',
+    /Changing: Clock/.test(el.textContent) && /always does/.test(el.querySelector('[data-ew-says]').textContent));
+  const head = () => q(el, 'menu:opens');
+  check('Opens is ONE folded button ("Opens: nothing"), so the walk stays short', /Opens: nothing/.test(head().textContent)
+    && head().getAttribute('aria-expanded') === 'false' && !q(el, 'pick:opens:R'));
+  check('no Shows row on a thing that cannot show', !q(el, 'menu:shows'));
+  head().click();
+  check('*** pressed, it unfolds: Nothing, each dashboard ("(this one)" marked), + New dashboard ***',
+    head().getAttribute('aria-expanded') === 'true' && q(el, 'pick:opens:') && q(el, 'pick:opens:R')
+    && /Home \(this one\)/.test(q(el, 'pick:opens:H').textContent) && q(el, 'new:opens'));
+  q(el, 'pick:opens:R').click();
+  check('*** picking one sets it (through the model) and folds the list ***',
+    m.item('clock').opens === 'R' && /Opens: Living room/.test(head().textContent) && !q(el, 'pick:opens:R')
+    && /goes to Living room/.test(el.querySelector('[data-ew-says]').textContent));
+  q(el, 'act:undo').click();
+  check('*** the window\'s own Undo takes it back ***', m.item('clock').opens === null && /Opens: nothing/.test(head().textContent));
+  q(el, 'act:redo').click();
+  check('...and Redo', m.item('clock').opens === 'R');
+  // + New dashboard
+  head().click();
+  q(el, 'new:opens').click();
+  await new Promise((r) => setTimeout(r, 10));
+  check('*** + New dashboard makes one and points the door at it ***', made.length === 1 && m.item('clock').opens === 'N1'
+    && /Opens: New dashboard/.test(head().textContent), m.item('clock').opens);
+  // A door to a dashboard that is gone
+  m.setLink('opens', 'GONE');
+  check('a door to a dashboard not in the list says so (a warning, nothing refused)',
+    !!el.querySelector('[data-ew-warn="gone-opens"]') && m.item('clock').opens === 'GONE');
+  // The frame
+  q(el, 'thing:1').click();
+  check('Next ▶ moves to the next thing', m.selectedId() === 'board' && /Changing: Billboard/.test(el.textContent));
+  check('a frame has a Shows row', /Shows: nothing/.test(q(el, 'menu:shows')?.textContent || ''));
+  q(el, 'menu:shows').click();
+  q(el, 'pick:shows:D').click();
+  check('*** Shows: Desk sets what the frame shows ***', m.item('board').shows === 'D' && /Shows: Desk/.test(q(el, 'menu:shows').textContent)
+    && /It shows Desk/.test(el.querySelector('[data-ew-says]').textContent));
+  q(el, 'thing:1').click();
+  check('Next ▶ reaches a room object, which the Layers list does not hold', m.selectedId() === 'room:desk'
+    && /part of the room/.test(el.textContent) && /what the room gives it/.test(el.querySelector('[data-ew-says]').textContent));
+  const t = w.scanTargets();
+  check('*** the switch walk: Close first, then Previous, Next, Opens, Undo, Map (Redo has nothing: skipped) -- folded, 6 stops ***',
+    t[0] === q(el, 'close') && t.length === 6 && t.map((b) => b.dataset.ew).join() === 'close,thing:-1,thing:1,menu:opens,act:undo,act:map',
+    t.map((b) => b.dataset.ew).join());
+  check('the typed boxes and disabled buttons are not stops', t.every((b) => b.tagName === 'BUTTON' && !b.disabled));
+  q(el, 'act:map').click();
+  check('Map asks the host to open the map', mapToggles === 1);
+  w.destroy();
+}
+
+// =====================================================================
+section('row 2.38: the Map window, and several windows walked as one');
+{
+  const { mountMapWindow, createWindowGroup } = W;
+  const D = await import('../dashboard_map.js');
+  const graph = D.buildMapGraph([
+    { id: 'H', name: 'Home', links: [{ kind: 'opens', to: 'R', via: { kind: 'module', id: 'c', name: 'Clock' } }] },
+    { id: 'R', name: 'Living room', links: [{ kind: 'opens', to: 'H', via: { kind: 'object', id: 'door', name: 'Door' } },
+      { kind: 'shows', to: 'R', via: { kind: 'module', id: 'b', name: 'Billboard' } }] },
+    { id: 'X', name: 'Spare', links: [] },
+  ]);
+  const gone = [];
+  const w = mountMapWindow(host, { load: async () => ({ graph }), current: 'H', onGo: (id) => gone.push(id) });
+  await w.ready;
+  const el = w.el;
+  check('the map draws a picture (hidden from a screen reader) and the list it is a picture of',
+    el.querySelector('svg.dm-svg[aria-hidden="true"]') && el.querySelectorAll('.ew-maplist > li').length === 3);
+  check('*** the list says each dashboard\'s arrows in words, the cycle included ***',
+    /Opens Living room \(by its clock\)/.test(el.textContent) && /Opens Home \(by its door\)/.test(el.textContent)
+    && /Shows itself/.test(el.textContent) && /Reached from Home/.test(el.textContent), el.querySelector('.ew-maplist').textContent);
+  check('where you are is marked, and is not a stop', /you are here/.test(q(el, 'go:H').textContent) && q(el, 'go:H').disabled);
+  q(el, 'go:R').click();
+  check('*** pressing a dashboard goes there ***', J(gone) === '["R"]');
+  el.querySelector('[data-map-node="X"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  check('...and so does pressing its box in the picture', J(gone) === '["R","X"]');
+  w.focusStep(1); w.focusStep(1);
+  check('the cursor on a list button outlines that dashboard\'s box too',
+    w.current() === q(el, 'go:R') && el.querySelector('[data-map-node="R"]')?.classList.contains('is-scan'));
+  // Two windows, one walk.
+  const m = fresh();
+  const tw = mountTransformWindow(host, m);
+  const g = createWindowGroup(() => [tw, w]);
+  const all = g.stops();
+  check('*** a group walks every window\'s stops in order, the first window\'s Close first ***',
+    all[0] === q(tw.el, 'close') && all.includes(q(el, 'go:R')) && all.length === tw.scanTargets().length + w.scanTargets().length);
+  g.next();
+  check('the first step lands on the first Close', g.current() === q(tw.el, 'close'));
+  for (let i = 0; i < tw.scanTargets().length; i++) g.next();
+  check('stepping past the last stop of one window goes into the next, and the first window lets go of its cursor',
+    g.current() === q(el, 'close') && !tw.el.querySelector('.is-scan'));
+  g.prev();
+  check('prev comes back', tw.el.contains(g.current()) && !el.querySelector('button.is-scan'));
+  for (let i = 0; i < 3; i++) g.next();
+  const before = gone.length;
+  g.select();
+  check('select presses where the cursor is (here: a dashboard on the map)', gone.length === before + 1, J(gone));
+  g.reset();
+  check('reset takes the cursor off every window', !host.querySelector('.is-scan'));
+  tw.destroy(); w.destroy();
+  const many = D.buildMapGraph(Array.from({ length: 20 }, (_, i) => ({ id: `d${i}`, name: `Dash ${i}`, links: [] })));
+  const w2 = mountMapWindow(host, { load: async () => ({ graph: many }), drawMax: 16 });
+  await w2.ready;
+  check('too many to draw clearly: the list alone, and it says so', !w2.el.querySelector('svg') && /too many to draw/.test(w2.el.textContent)
+    && w2.el.querySelectorAll('.ew-maplist > li').length === 20);
+  w2.destroy();
+  const w3 = mountMapWindow(host, { load: async () => { throw new Error('offline'); } });
+  await w3.ready;
+  check('a map that cannot load says so, and Close still works', /could not be drawn/.test(w3.el.textContent) && w3.scanTargets()[0] === q(w3.el, 'close'));
+  w3.destroy();
 }
 
 // =====================================================================

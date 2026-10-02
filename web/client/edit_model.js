@@ -248,8 +248,36 @@ export function measureText({ ink, ground, fx } = {}, config) {
 // THE MODEL
 // ---------------------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------------------
+// ROW 2.38: WHAT A THING OPENS, AND WHAT A FRAME SHOWS (the map editor).
+//
+//   opens   another dashboard's id: pressing this thing goes there. Any item may carry it.
+//   shows   another dashboard's id: this thing DRAWS that dashboard inside itself (a picture frame, a
+//           TV, a billboard -- a placed `dashboard` module). Only an item with `canShow: true` has it.
+//   fixed   the item's PLACE is not this model's to change: a room's own object (its desk, its lamp),
+//           whose position belongs to the room. It can still be given a door; it is never moved,
+//           layered, hidden, copied or deleted here, and the Layers window does not list it.
+//
+// Both links are data, edited through `setLink` -- one commit, so Undo puts the old one back -- and the
+// host applies what changed, exactly as it does a move.
+// ---------------------------------------------------------------------------------------
+export const LINK_KEYS = Object.freeze(['opens', 'shows']);
+// layout.js OPENS_MAX: a longer id is not one this system made.
+export const LINK_MAX = 200;
+/** A link target as data: a trimmed string (<= LINK_MAX), or null. */
+export function linkTarget(v) {
+  if (typeof v !== 'string') return null;
+  const t = v.trim();
+  return t && t.length <= LINK_MAX ? t : null;
+}
+
 export function normalizeItem(raw, i = 0) {
   const it = { ...(raw || {}) };
+  // Row 2.38: the links and `fixed`, kept only where the host gave them, so an item that never had a
+  // link keeps exactly the shape it always had.
+  if ('opens' in it) it.opens = linkTarget(it.opens);
+  if (it.canShow === true) it.shows = linkTarget(it.shows); else { delete it.canShow; delete it.shows; }
+  if (it.fixed === true) it.fixed = true; else delete it.fixed;
   it.id = String(it.id ?? `item-${i + 1}`);
   it.name = String(it.name ?? it.id);
   it.x = clampValue('x', it.x ?? 50) ?? 50;
@@ -282,7 +310,11 @@ export const hasText = (it) => !!(it && (typeof it.text === 'string' || it.fx));
 export function createEditModel({ items = [], selectedId, snap, config, clipboard, newId } = {}) {
   const cfg = cfgOf(config);
   let list = items.map(normalizeItem);
-  let sel = selectedId !== undefined ? selectedId : (list.length ? layerOrder(list)[0].id : null);
+  // Row 2.38: a `fixed` thing (a room's own object) has no place in the layer order.
+  const layered = () => list.filter((o) => !o.fixed);
+  const fixedOnes = () => list.filter((o) => o.fixed);
+  let sel = selectedId !== undefined ? selectedId
+    : (layered().length ? layerOrder(layered())[0].id : (list[0]?.id ?? null));
   let snapState = { ...SNAP_DEFAULTS, ...(snap || {}) };
   if (!cfg.gridSizes.includes(snapState.gridSize)) snapState.gridSize = SNAP_DEFAULTS.gridSize;
   const undoStack = [];
@@ -318,7 +350,11 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     config: () => ({ ...cfg }),
     items: () => clone(list),
     item: (id) => clone(get(id)),
-    order: () => layerOrder(list).map((it) => it.id),
+    // The layer order, top first -- the things that HAVE a layer (never a `fixed` room object).
+    order: () => layerOrder(layered()).map((it) => it.id),
+    // Row 2.38: every thing, in the order "previous / next thing" walks them: the layered ones top
+    // first, then the room's own objects in the room's order.
+    things: () => [...layerOrder(layered()), ...fixedOnes()].map((it) => it.id),
     selectedId: () => sel,
     selected: () => clone(get(sel)),
     snap: () => ({ ...snapState }),
@@ -335,6 +371,30 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
       emit({ type: 'select', id });
       return true;
     },
+    /** Row 2.38: "previous / next thing" (Design's Change: <thing> row), wrapping, over `things()`. */
+    selectStep(dir) {
+      const ids = model.things();
+      if (!ids.length) return false;
+      const at = ids.indexOf(sel);
+      const next = ids[at < 0 ? 0 : (at + Math.sign(dir || 1) + ids.length) % ids.length];
+      return model.select(next);
+    },
+
+    // ---- row 2.38: what a thing opens, what a frame shows -------------------------------
+    /** Can this thing carry `key`? `opens`: anything; `shows`: only an item marked `canShow`. */
+    canLink(key, { id = sel } = {}) {
+      const it = get(id);
+      if (!it || it.locked || !LINK_KEYS.includes(key)) return false;
+      return key === 'opens' || it.canShow === true;
+    },
+    /** Set (a dashboard id) or clear (null) a link. One undoable step. The event says which link. */
+    setLink(key, value, { id = sel } = {}) {
+      if (!model.canLink(key, { id })) return false;
+      const it = get(id);
+      const v = linkTarget(value);
+      if (v === (it[key] ?? null)) return false;
+      return commit(patch(id, { [key]: v }), [id], sel, { change: key });
+    },
 
     setSnap(p) {
       const next = { ...snapState, ...p };
@@ -349,7 +409,7 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     /** A typed (or dragged) value. Returns true if it changed something. */
     set(key, value, { via = 'type', id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !TRANSFORM_KEYS.includes(key)) return false;
+      if (!it || it.locked || it.fixed || !TRANSFORM_KEYS.includes(key)) return false;
       const v = clampValue(key, resolveValue(key, { value, via, snap: snapState, config: cfg }), cfg);
       if (v === null || v === it[key]) return false;
       return commit(patch(id, { [key]: v }), [id]);
@@ -358,7 +418,7 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     /** A − (dir -1) or + (dir +1) press. */
     step(key, dir, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !TRANSFORM_KEYS.includes(key)) return false;
+      if (!it || it.locked || it.fixed || !TRANSFORM_KEYS.includes(key)) return false;
       const v = clampValue(key, resolveValue(key, { from: it[key], dir: Math.sign(dir), via: 'step', snap: snapState, config: cfg }), cfg);
       if (v === null || v === it[key]) return false;
       return commit(patch(id, { [key]: v }), [id]);
@@ -372,45 +432,46 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
 
     setPlace(place, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !PLACES.includes(place) || it.place === place) return false;
+      if (!it || it.locked || it.fixed || !PLACES.includes(place) || it.place === place) return false;
       return commit(patch(id, { place }), [id]);
     },
     setSurface(surface, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !SURFACES.includes(surface) || it.surface === surface) return false;
+      if (!it || it.locked || it.fixed || !SURFACES.includes(surface) || it.surface === surface) return false;
       return commit(patch(id, { surface }), [id]);
     },
 
     // ---- layers ---------------------------------------------------------------------
+    // (Row 2.38: over the LAYERED things only; a `fixed` room object is never a neighbour.)
     /** ▲ (+1) / ▼ (-1). A locked thing does not move; others may move past it. */
     moveLayer(id, dir) {
       const it = get(id);
-      if (!it || it.locked) return false;
-      const next = moveLayer(list, id, dir);
+      if (!it || it.locked || it.fixed) return false;
+      const next = moveLayer(layered(), id, dir);
       if (!next) return false;
-      return commit(next, [id]);
+      return commit([...next, ...fixedOnes()], [id]);
     },
     /** Send to front (+1) / back (-1) — room_as_home §3.3 item 5. */
     sendLayer(id, dir) {
       const it = get(id);
-      if (!it || it.locked) return false;
-      const next = sendLayer(list, id, dir);
+      if (!it || it.locked || it.fixed) return false;
+      const next = sendLayer(layered(), id, dir);
       if (!next) return false;
-      return commit(next, [id]);
+      return commit([...next, ...fixedOnes()], [id]);
     },
-    canMoveLayer(id, dir) { const it = get(id); return !!(it && !it.locked && moveLayer(list, id, dir)); },
+    canMoveLayer(id, dir) { const it = get(id); return !!(it && !it.locked && !it.fixed && moveLayer(layered(), id, dir)); },
     /** Shown / Hidden and Lock work on a locked thing — otherwise nothing could unlock it.
      *  The event says `change: 'shown', shown` so a host can tell a hide from a move (hide_sound.js). */
     toggleShown(id = sel) {
       const it = get(id);
-      return it ? commit(patch(id, { shown: !it.shown }), [id], sel, { change: 'shown', shown: !it.shown }) : false;
+      return it && !it.fixed ? commit(patch(id, { shown: !it.shown }), [id], sel, { change: 'shown', shown: !it.shown }) : false;
     },
-    toggleLocked(id = sel) { const it = get(id); return it ? commit(patch(id, { locked: !it.locked }), [id]) : false; },
+    toggleLocked(id = sel) { const it = get(id); return it && !it.fixed ? commit(patch(id, { locked: !it.locked }), [id]) : false; },
 
     // ---- text effects ---------------------------------------------------------------
     toggleEffect(name, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !hasText(it) || !EFFECTS.includes(name)) return false;
+      if (!it || it.locked || it.fixed || !hasText(it) || !EFFECTS.includes(name)) return false;
       const fx = normalizeFx(it.fx);
       fx[name].on = !fx[name].on;
       return commit(patch(id, { fx }), [id]);
@@ -418,7 +479,7 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     /** Set an effect's amount; setting it turns the effect on (Design's prototype does the same). */
     setEffect(name, amount, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !hasText(it) || !EFFECTS.includes(name)) return false;
+      if (!it || it.locked || it.fixed || !hasText(it) || !EFFECTS.includes(name)) return false;
       const n = Number(amount);
       if (!Number.isFinite(n)) return false;
       const fx = normalizeFx(it.fx);
@@ -436,7 +497,7 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     /** Change the text's own colour or its ground. Accepted whatever the contrast — see measureText. */
     setTextColors({ ink, ground } = {}, { id = sel } = {}) {
       const it = get(id);
-      if (!it || it.locked || !hasText(it)) return false;
+      if (!it || it.locked || it.fixed || !hasText(it)) return false;
       const p = {};
       if (ink !== undefined) p.ink = ink;
       if (ground !== undefined) p.ground = ground;
@@ -445,14 +506,15 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     measure(id = sel) { const it = get(id); return it && hasText(it) ? measureText(it, cfg) : null; },
 
     // ---- copy / paste / duplicate / delete ------------------------------------------
-    copy(id = sel) { const it = get(id); if (!it) return false; clip.set(clone(it)); return true; },
+    // (Row 2.38: a `fixed` room object is the room's, not this model's to copy or delete.)
+    copy(id = sel) { const it = get(id); if (!it || it.fixed) return false; clip.set(clone(it)); return true; },
     paste() { const src = clip.get(); return src ? addCopy(src) : false; },
-    duplicate(id = sel) { const it = get(id); return it ? addCopy(it) : false; },
+    duplicate(id = sel) { const it = get(id); return it && !it.fixed ? addCopy(it) : false; },
     /** Delete. A locked thing is not deleted. Undo puts it back. */
     remove(id = sel) {
       const it = get(id);
-      if (!it || it.locked) return false;
-      const order = layerOrder(list);
+      if (!it || it.locked || it.fixed) return false;
+      const order = layerOrder(layered());
       const pos = order.findIndex((o) => o.id === id);
       const nextSel = id === sel ? (order[pos + 1] || order[pos - 1] || null)?.id ?? null : sel;
       return commit(list.filter((o) => o.id !== id), [id], nextSel);
@@ -482,9 +544,9 @@ export function createEditModel({ items = [], selectedId, snap, config, clipboar
     const taken = new Set(list.map((o) => o.id));
     const base = String(src.id).replace(/-\d+$/, '');
     const id = mkId(base, taken);
-    const top = list.length ? Math.max(...list.map((o) => o.layer)) : -1;
+    const top = layered().length ? Math.max(...layered().map((o) => o.layer)) : -1;
     const copy = normalizeItem({
-      ...clone(src), id, name: `${src.name} copy`,
+      ...clone(src), fixed: false, id, name: `${src.name} copy`,
       x: Math.min(100, src.x + cfg.pasteOffset), y: Math.min(100, src.y + cfg.pasteOffset),
       layer: Math.min(cfg.limits.layer[1], top + 1), shown: true, locked: false,
     });

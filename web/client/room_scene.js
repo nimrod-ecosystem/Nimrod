@@ -214,6 +214,10 @@ export const ROOM_ACTIONS = Object.freeze({
   'settings.open': { topic: 'system/settings', label: 'Settings' },
   'modules.open': { topic: 'system/modules', label: 'Modules' },
   'dashboards.open': { topic: 'system/dashboards', label: 'Dashboards' },
+  // Row 2.38: the edit view and the map -- so an object can carry them too (Design's bookshelf holds the
+  // edit menus), the same topics a switch bound to them sends (actions.js).
+  'edit.open': { topic: 'system/edit', label: 'Edit' },
+  'map.open': { topic: 'system/map', label: 'Map' },
 });
 
 // *** OPEN ONE MODULE, BY TYPE: action `module.open`, topic `system/module` { module, claim }. *** A book,
@@ -415,6 +419,17 @@ export function normalizeRole(it) {
     petSound: role === 'pet' ? (typeof petRaw.sound === 'string' ? petRaw.sound || null : it.kind === 'cat' ? 'purr' : null) : null,
     books: role === 'library' ? normalizeBooks(it.books) : null,
   };
+}
+
+/** What an object is called, for an edit window or the map: its role's label, else its part's, else its
+ *  kind's, else its id (row 2.38). Never empty. */
+export function objectName(it) {
+  if (!it) return 'Object';
+  const r = normalizeRole(it);
+  if (r && r.label) return r.label;
+  if (typeof it.label === 'string' && it.label.trim()) return it.label.trim();
+  const def = it.kind === 'furniture' ? FURNITURE[it.part] : null;
+  return def?.label || MOUNT_KINDS[it.kind]?.label || (it.kind === 'cat' ? 'Nimrod' : '') || String(it.id || it.kind || 'Object');
 }
 
 // *** NOTIFICATIONS THROUGH OBJECTS (room-add-ons §6; room-is-the-screen §4). *** Rules are
@@ -968,6 +983,24 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       applyStyle(badge, { left: box.visible.left + box.visible.w / 2, top: Math.min(H - 40, box.visible.top + box.visible.h * (role.slot[1] + role.slot[3] / 2)) });
       overL.append(badge);
     }
+  }
+
+  // Row 2.38: ONE object's overlay rebuilt for a new role (`setObjectOpens`), the rest of the room left
+  // alone. Its art and its place (`rec.el`, `rec.box`) are kept; its slot element is KEPT TOO and moved
+  // into the new overlay -- a module the arrangement placed in that slot lives inside it.
+  function rebuildOverlay(rec, it) {
+    if (lifted && lifted.id === rec.it.id) putBack();
+    if (cam && cam.id === rec.it.id) closeupExit();
+    const slot = rec.slotEl || null;
+    rec.wrap?.remove();
+    rec.chip?.remove();
+    overL.querySelectorAll(`[data-badge-for="${CSS.escape(rec.it.id)}"]`).forEach((n) => n.remove());
+    rec.wrap = null; rec.chip = null; rec.button = null; rec.zoomOn = null; rec.zoomOff = null;
+    rec.it = it;
+    rec.role = normalizeRole(it);
+    buildOverlay(rec);
+    if (slot && rec.wrap && rec.role && !NO_SLOT.has(rec.role.role) && !slot.isConnected) rec.wrap.append(slot);
+    if (pickedId === rec.it.id && !rec.role) pickedId = null;
   }
 
   // ------------------------------------------------------------------ the library's books
@@ -1754,6 +1787,35 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     setWeather, weather: () => (weatherNow ? { ...weatherNow } : null),
     visit, visiting: () => !!visitNow && visitAllowed(),
     setRecipe(next) { baseRecipe = normalizeRecipe(next); recipe = derive(); shell = ROOM_SHELLS[recipe.shell]; build(); listen(); scheduleTick(); },
+    // ---- Row 2.38, the map editor: which dashboard each object opens, read and changed IN PLACE ----
+    /** The recipe as given (defaults filled, ids given), not as drawn. A copy. */
+    baseRecipe: () => JSON.parse(JSON.stringify(baseRecipe)),
+    /** Every object in the room (not the modules placed in it): `{ id, name, opens }`, in recipe order. */
+    objects: () => baseRecipe.items.filter((it) => it.kind !== 'module').map((it) => {
+      const drawn = recipe.items.find((d) => d.id === it.id) || it;
+      return { id: it.id, name: objectName(drawn), opens: opensOf(it) };
+    }),
+    /**
+     * Make object `id` a door to dashboard `target` (null: no longer a door), WITHOUT rebuilding the room.
+     * `setRecipe` would rebuild every object, and with them every slot a placed module sits in (the
+     * arrangement put those modules' boxes inside the slots), so only THIS object's overlay -- its button,
+     * its chip, its badge -- is rebuilt; its art, its place and its slot (and whatever is in the slot) stay.
+     * Returns true if anything changed.
+     */
+    setObjectOpens(id, target) {
+      if (destroyed) return false;
+      const t = typeof target === 'string' && target.trim() ? target.trim() : null;
+      const bi = baseRecipe.items.findIndex((it) => it.id === id);
+      if (bi < 0 || baseRecipe.items[bi].kind === 'module') return false;
+      if (opensOf(baseRecipe.items[bi]) === t) return false;
+      const next = { ...baseRecipe.items[bi] };
+      if (t) next.opens = t; else delete next.opens;
+      baseRecipe = { ...baseRecipe, items: baseRecipe.items.map((it, i) => (i === bi ? next : it)) };
+      recipe = derive();
+      const rec = recOf(id);
+      if (rec) rebuildOverlay(rec, recipe.items.find((it) => it.id === id) || next);
+      return true;
+    },
     setOptions(next = {}) {
       const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase', 'books', ...OPTION_KEYS].some((k) => k in next && JSON.stringify(next[k]) !== JSON.stringify(o[k]));
       Object.assign(o, next);

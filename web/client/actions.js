@@ -46,6 +46,9 @@ export const SYSTEM_TOPICS = Object.freeze({
   settings: 'system/settings',
   modules: 'system/modules',
   dashboards: 'system/dashboards',
+  // Row 2.38: the edit view (open it; pressed again, close it) and the map of the person's dashboards.
+  edit: 'system/edit',
+  map: 'system/map',
 });
 
 export const SYSTEM_ACTIONS = [
@@ -59,6 +62,13 @@ export const SYSTEM_ACTIONS = [
   { id: SYSTEM_TOPICS.settings, label: 'Open the settings menu', topic: SYSTEM_TOPICS.settings, group: 'System' },
   { id: SYSTEM_TOPICS.modules, label: 'Show the panels on this screen (the bar)', topic: SYSTEM_TOPICS.modules, group: 'System' },
   { id: SYSTEM_TOPICS.dashboards, label: 'Choose a screen (Home)', topic: SYSTEM_TOPICS.dashboards, group: 'System' },
+  // *** ROW 2.38: THE EDIT VIEW AND THE MAP, ON A SWITCH (Stage R left the way in unbuilt). *** `system/edit`
+  // opens this dashboard's edit windows and, pressed again, closes them; while they are open they take the
+  // scan (next / prev / select walk them, Close first; back closes). `system/map` opens the map of the
+  // person's dashboards the same way; selecting a dashboard on it goes there. Not on the remote-drive
+  // allowlist, for the reason the rest of this list is not.
+  { id: SYSTEM_TOPICS.edit, label: 'Edit this dashboard (open or close the edit windows)', topic: SYSTEM_TOPICS.edit, group: 'System' },
+  { id: SYSTEM_TOPICS.map, label: 'Map of your dashboards (open or close it)', topic: SYSTEM_TOPICS.map, group: 'System' },
   // *** HOME'S OWN BUTTONS, ON A SWITCH (Mike, 2026-10-01: "Is there some reason it shouldn't be able to?"
   // -- there wasn't one). *** The same `shell/host` press the bar, the ⚙ menu rows and the fallback bar
   // send (shell_verbs.js SHELL_HOST, written out here so this file imports nothing), so Save is one thing

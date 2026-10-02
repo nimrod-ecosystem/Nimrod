@@ -346,8 +346,9 @@ const ds = () => root.querySelector('.kiosk').dataset;
       // 24 (2026-09-30, row 2.44 wiring): "Record this person's voice for training" (the switch is always
       // shown, off) in the Voice section, and "Movement and flashing" - zoom on focus and the flash limit -
       // in the screen's rows (kiosk.js MOTION_FIELDS argues both).
+      // 25 (2026-10-01, row 2.38): "Edit this dashboard…" (kiosk.js argues one row at The usual, not two).
       const stops = new Set();
-      for (let i = 0; i < 24; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
+      for (let i = 0; i < 25; i += 1) { stops.add(kiosk.menu.focusId()); kiosk.menu.next(); }
       check('the cycleable field rows are stops on the one-button walk',
         stops.has('set:intervalMs') && stops.has('set:fit'), [...stops].join(','));
       check('the disabled ones are NOT stops',

@@ -1,0 +1,39 @@
+/* edit_map.css — row 2.38: the Opens-and-shows window's choices and the Map window (edit_windows.js),
+   drawn by dashboard_map.js. Loaded by the component itself, once per page.
+
+   NO LITERAL COLOURS, the same rule as edit_windows.css: every colour is a theme token. Opens and shows
+   differ by LINE (solid / dashed) and by the legend's words, never by colour alone; "you are here" by a
+   thicker edge AND the words; a removed dashboard by a dashed box AND "(removed)". */
+
+/* Opens / Shows: the folded head, and the choices it unfolds into. */
+.ew-link{display:grid;gap:6px}
+.ew-win .ew-linkhead{text-align:left;padding:0 12px}
+.ew-win .ew-linkhead[aria-expanded="true"]{border-color:var(--link);border-width:2px}
+.ew-choices{display:grid;gap:4px;padding:6px;border:1px dashed var(--border);border-radius:10px}
+.ew-win .ew-choice{text-align:left;padding:0 12px;font-weight:600}
+.ew-win .ew-choice[aria-pressed="true"]{background:var(--link);border-color:var(--link);color:var(--on-link)}
+.ew-win .ew-new{font-style:italic}
+.ew-thing{margin:0}
+
+/* The map window is wider than the others: it holds a picture. */
+.ew-win.ew-map{max-width:760px}
+.ew-mappic{width:100%;aspect-ratio:1000 / 640;border:1px solid var(--border);border-radius:10px;
+  background:var(--surface-alt);overflow:hidden}
+.dm-svg{display:block;width:100%;height:100%}
+.dm-edge{fill:none;stroke:var(--text);stroke-width:3}
+.dm-edge.dm-shows{stroke-dasharray:10 7}
+.dm-head{fill:var(--text)}
+.dm-node{cursor:pointer}
+.dm-node rect{fill:var(--surface);stroke:var(--text);stroke-width:2}
+.dm-node.is-here rect{stroke-width:6}
+.dm-node.is-missing rect{stroke-dasharray:8 6;fill:var(--surface-alt)}
+.dm-node.is-scan rect{stroke:var(--link);stroke-width:8}
+.dm-name{fill:var(--text);font:700 22px var(--font, system-ui, sans-serif)}
+.dm-sub{fill:var(--text-soft);font:600 16px var(--font, system-ui, sans-serif)}
+
+.ew-maplist{margin:0;padding:0;list-style:none;display:grid;gap:6px;max-height:40vh;overflow:auto}
+.ew-maprow{display:grid;grid-template-columns:minmax(120px,max-content) minmax(0,1fr);gap:8px;align-items:center}
+.ew-win .ew-mapgo{text-align:left}
+.ew-maprow.is-here .ew-mapgo{border-width:3px;border-color:var(--text)}
+.ew-mapsay{font-size:.82rem;color:var(--text-soft)}
+.ew-legend{margin-top:-2px}

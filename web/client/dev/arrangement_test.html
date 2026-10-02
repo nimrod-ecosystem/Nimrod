@@ -128,7 +128,9 @@ try {
       // Stage R (2026-09-30): free placement -- placement_test.html drives these.
       'placedRecs', 'placed', 'panelRecs', 'roomScene', 'mountPlaced', 'applyPlaced',
       // Row 2.38 (2026-10-01): a placed module that is a door -- dashboard_nest_test.html drives these.
-      'opensOf', 'openDoor'];
+      'opensOf', 'openDoor',
+      // Row 2.38, the map editor: the room's own objects and their doors -- map_editor_test.html drives it.
+      'roomObjects'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),

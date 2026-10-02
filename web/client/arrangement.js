@@ -61,6 +61,10 @@ import { getManifest } from './module.js';
 import { writePosition } from './restart.js';
 import { createScreenLinks } from './screen_links.js';
 import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
+// Row 2.38, the map editor: a change that only moves a room object's door is applied in place too
+// (room_doors.js argues where a door is saved and why that is not a rebuild).
+import { classifyLayoutChange, sceneDoorChanges } from './room_doors.js';
+export { classifyLayoutChange };
 
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
@@ -803,23 +807,28 @@ export function createArrangement({
     // slots are not compared: the caller classified the saved values already (`layoutChange`), and the
     // mounted slots may differ from the saved ones on purpose -- the unplaced swap is "what the screen
     // shows NOW" and is never saved -- so a move must not undo it, or be refused because of it.
-    if (!r || !cur || r.preset !== cur.preset || JSON.stringify(r.scene || null) !== JSON.stringify(cur.scene || null)) {
-      return { ...none, reason: 'grid' };
-    }
+    if (!r || !cur || r.preset !== cur.preset) return { ...none, reason: 'grid' };
+    // Row 2.38: scenes that differ ONLY in which dashboard the room's objects open are not a rebuild --
+    // each changed object becomes (or stops being) a door, in place (room_scene.js `setObjectOpens`).
+    const doors = JSON.stringify(r.scene || null) === JSON.stringify(cur.scene || null) ? []
+      : sceneDoorChanges(cur.scene || null, r.scene || null);
+    if (!doors) return { ...none, reason: 'grid' };
     // The mounted slots, with the new placement (one place per instance: a placed id in a slot is dropped).
     const inSlots = new Set(cur.slots.filter(Boolean));
     const nextPlaced = (r.placed || []).filter((e) => !inSlots.has(e.id));
     const l = { ...cur };
     delete l.placed;
     if (nextPlaced.length) l.placed = nextPlaced;
+    if (doors.length) l.scene = r.scene;      // row 2.38: the scene as saved, its doors moved
     if (!isArranged(l)) return { ...none, reason: 'grid' };
     if (!placedMounted) { layout = l; return { ...none, applied: true, deferred: true }; }
     const before = new Map(placedOf().map((e) => [e.id, e]));
     const after = l.placed || [];
     const keep = new Set(after.map((e) => e.id));
-    const out = { applied: true, moved: [], added: [], removed: [] };
+    const out = { applied: true, moved: [], added: [], removed: [], doors: doors.map((d) => d.id) };
     for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
     layout = l;
+    for (const d of doors) { try { roomScene?.setObjectOpens?.(d.id, d.opens); } catch (err) { console.error('arrangement: door', err); } }
     if (after.length || (l.scene && l.scene.kind === 'room')) await mountRoom();
     for (const entry of after) {
       const meta = placedMeta.get(entry.id);
@@ -979,6 +988,9 @@ export function createArrangement({
     // Row 2.38: which dashboard a placed module opens (null: it is not a door), and pressing it.
     opensOf: (id) => doorOf(id),
     openDoor: (id) => openDoor(id, 'call'),
+    // Row 2.38, the map editor: the room's objects (not the modules in it) and the door each one is,
+    // while this dashboard's scene is a mounted room; [] otherwise.
+    roomObjects: () => { try { return roomScene?.objects?.() || []; } catch { return []; } },
     panelRecs,                         // every panel on a laid-out screen, in ring order
     roomScene: () => roomScene,        // the room renderer, while the dashboard's scene is a room
     cameraRec: () => cameraRec,

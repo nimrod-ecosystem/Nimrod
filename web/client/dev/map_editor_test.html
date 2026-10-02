@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>row 2.38 — the map editor: opens and shows in the edit windows, the map, the edit view by switch</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}.info{color:#555}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:960px;height:540px;margin-top:12px;border:1px solid #ccc}
+  .box .kiosk{position:absolute}
+  .vbox{position:relative;width:960px;height:540px;margin-top:12px}
+</style>
+</head>
+<body>
+<h1>row 2.38 — the map editor</h1>
+<p>Proves: what a placed module or a room object OPENS, and what a frame SHOWS, are edited in the edit windows
+and applied in place (no reload, no remount of anything else), with Undo; a room object's door is saved on the
+room's recipe and a preset room goes back to its preset when the last door is taken off; the map is built from
+the saved data, cycles included, and read as a list; selecting a dashboard on the map goes there; and a switch
+opens and leaves the edit view (<code>system/edit</code>) and the map (<code>system/map</code>), on both paths,
+with Close first and the scan given back.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/view.js';
+import '../modules/clock.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk, DASHBOARD_MODULE_KEY } from '../kiosk.js';
+import { createState } from '../state.js';
+import { verbTopic, SYSTEM_TOPICS, SYSTEM_ACTIONS } from '../actions.js';
+import { presetRecipe, ROOM_PRESETS } from '../room_presets.js';
+import { normalizeRecipe, ROOM_ACTIONS } from '../room_scene.js';
+import {
+  recipeItemIds, sceneRecipe, sceneDoors, withDoor, tidyScene, sceneDoorChanges, classifyLayoutChange, doorTarget,
+} from '../room_doors.js';
+import {
+  dashboardLinks, buildMapGraph, mapListForm, mapLayout, mapSvg, loadMapData, inCycle, MAP_DEFAULTS,
+} from '../dashboard_map.js';
+import { newDashboardName, EDIT_WINDOWS_DEFAULT } from '../dashboard_editor.js';
+import { DASHBOARD_GO_TOPIC, EDIT_IDLE_KEY, EDIT_IDLE_DEFAULT_MS, EDIT_IDLE_FIELD, editIdleMsFrom } from '../dashboard_nest.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = JSON.stringify;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 6000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(25); }
+  return false;
+};
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+
+// A host with no server, whose rows are SHARED (one store per pid:key), so what the editor writes is what
+// the next handle reads -- the way the server behaves.
+function sharedHost(records, seed) {
+  const store = new Map();
+  for (const [pid, rows] of Object.entries(seed)) for (const [k, v] of Object.entries(rows)) store.set(`${pid}:${k}`, JSON.parse(J(v)));
+  const subs = new Map();
+  const makeState = (key, _opts, pid) => {
+    const id = `${pid}:${key}`;
+    const mine = new Set();
+    if (!subs.has(id)) subs.set(id, new Set());
+    return {
+      load: () => Promise.resolve(), get: () => store.get(id) || {},
+      set: (p) => { store.set(id, { ...(store.get(id) || {}), ...p }); for (const f of subs.get(id)) f(store.get(id)); return Promise.resolve(); },
+      subscribe: (f) => { mine.add(f); subs.get(id).add(f); f(store.get(id) || {}); return () => { mine.delete(f); subs.get(id).delete(f); }; },
+      startPolling() {}, flush: () => Promise.resolve(), destroy() { for (const f of mine) subs.get(id).delete(f); },
+    };
+  };
+  const makeEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }),
+    append: () => Promise.resolve(), subscribe: () => () => {}, startPolling() {}, destroy() {} });
+  const made = [];
+  const profiles = {
+    list: async () => Object.values(records).map((r) => ({ id: r.id, name: r.name })),
+    get: async (id) => (records[id] ? JSON.parse(J(records[id])) : null),
+    create: async (name) => { const id = `NEW${made.length + 1}`; records[id] = { id, name, modules: [] }; made.push(id); return { id, name }; },
+  };
+  return { makeState, makeEvents, profiles, store, made };
+}
+function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
+  const box = document.createElement('div'); box.className = 'vbox'; document.body.append(box);
+  const inst = mountModule('dashboard', {
+    mount: box, bus, rootBus: bus, viewId, user: 'u', personId: null,
+    makeState: host.makeState, makeEvents: host.makeEvents, profiles: host.profiles,
+    storage: memStore(), nestLiveDepth: () => limit,
+    state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {}, load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+  });
+  const v = inst.impl || inst;
+  const ready = v.init();
+  return { box, inst, v, bus, ready };
+}
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('1. pure: a room object\'s door, as data (room_doors.js)');
+    {
+      check('the ids an object is drawn with match the renderer\'s own rule, on every preset room',
+        Object.keys(ROOM_PRESETS).every((k) => J(recipeItemIds(presetRecipe(k))) === J(normalizeRecipe(presetRecipe(k)).items.map((it) => it.id))));
+      check('...and on a recipe whose items have no ids, or the same id twice',
+        J(recipeItemIds({ items: [{ kind: 'plant' }, { kind: 'plant' }, { id: 'a' }, { id: 'a' }] }))
+          === J(normalizeRecipe({ items: [{ kind: 'plant' }, { kind: 'plant' }, { id: 'a' }, { id: 'a' }] }).items.map((i) => i.id)));
+      const pre = { kind: 'room', preset: 'study' };
+      check('a preset room has no doors', J(sceneDoors(pre)) === '{}' && J(sceneRecipe(pre)) === J(presetRecipe('study')));
+      const withD = withDoor(pre, 'desk', ' D1 ');
+      check('*** giving an object a door copies the preset\'s recipe in, with the door on that one item ***',
+        withD.preset === 'study' && withD.recipe.items.find((i) => i.id === 'desk').opens === 'D1' && J(sceneDoors(withD)) === '{"desk":"D1"}');
+      check('no such object, or not a room: nothing', withDoor(pre, 'nope', 'D1') === null && withDoor({ kind: 'plain' }, 'desk', 'D1') === null);
+      const back = withDoor(withD, 'desk', null);
+      check('*** taking the last door off and tidying: the room names only its preset again (it follows the preset, as it did) ***',
+        J(tidyScene(back)) === J(pre));
+      check('a copied recipe that differs in anything else is kept', !!tidyScene({ ...back, recipe: { ...back.recipe, light: 'night' } }).recipe);
+      check('a door change is a door change', J(sceneDoorChanges(pre, withD)) === '[{"id":"desk","opens":"D1"}]'
+        && J(sceneDoorChanges(withD, back)) === '[{"id":"desk","opens":null}]' && J(sceneDoorChanges(pre, pre)) === '[]');
+      check('...a wall colour is not', sceneDoorChanges(withD, { ...withD, recipe: { ...withD.recipe, wall: { color: 'blue' } } }) === null);
+      const L = (scene, placed = []) => ({ preset: 'full', slots: [null], scene, placed });
+      check('*** classifyLayoutChange: a door (or a door + a move) is "placement" -- applied in place, never a reload ***',
+        classifyLayoutChange(L(pre), L(withD)) === 'placement'
+        && classifyLayoutChange(L(pre, [{ id: 'm', place: 'screen', x: 1 }]), L(withD, [{ id: 'm', place: 'screen', x: 9 }])) === 'placement');
+      check('...a room change or another preset is still "grid"; nothing is "none"',
+        classifyLayoutChange(L(pre), L({ kind: 'room', preset: 'living' })) === 'grid'
+        && classifyLayoutChange(L(withD), L({ ...withD, recipe: { ...withD.recipe, light: 'night' } })) === 'grid'
+        && classifyLayoutChange(L(pre), L(pre)) === 'none' && classifyLayoutChange({ preset: 'side', slots: ['a', 'b'] }, { preset: 'quad', slots: [] }) === 'grid');
+      check('a target is a trimmed string or null', doorTarget('  x ') === 'x' && doorTarget('') === null && doorTarget(3) === null);
+    }
+
+    // =================================================================================================
+    section('2. pure: the map, from data -- a cycle, a dashboard showing itself, a door to one that is gone');
+    {
+      const H = { id: 'H', name: 'Home', modules: [{ id: 'clk', type: 'clock' }, { id: 'fr', type: 'dashboard' }] };
+      const links = dashboardLinks({
+        record: H, title: (t) => ({ clock: 'Clock', dashboard: 'Dashboard' }[t] || t),
+        layout: { preset: 'full', slots: [null], placed: [{ id: 'clk', place: 'screen', opens: 'R' }],
+          scene: { kind: 'room', recipe: { items: [{ id: 'desk', kind: 'furniture', part: 'desk', opens: 'GONE' }, { kind: 'module', module: 'x', opens: 'R' }] } } },
+        shows: { fr: 'H', nope: 'R' },
+      });
+      check('*** a dashboard\'s arrows: a module\'s door, a room object\'s door, a frame (and only its own modules\' frames) ***',
+        J(links.map((l) => [l.kind, l.to, l.via.kind, l.via.name])) === J([['opens', 'R', 'module', 'Clock'], ['opens', 'GONE', 'object', 'Desk'], ['shows', 'H', 'module', 'Dashboard']]),
+        J(links));
+      const g = buildMapGraph([
+        { id: 'H', name: 'Home', links },
+        { id: 'R', name: 'Living room', links: [{ kind: 'opens', to: 'H', via: { kind: 'object', id: 'door', name: 'Door' } }] },
+        { id: 'S', name: 'Spare', links: [] },
+      ]);
+      check('every dashboard is a node, in order, and a target not in the list is a node marked gone',
+        J(g.nodes.map((n) => [n.id, n.missing])) === J([['H', false], ['R', false], ['S', false], ['GONE', true]]));
+      check('*** the cycle is kept: H -> R and R -> H are both edges; H shows itself ***',
+        g.edges.some((e) => e.from === 'H' && e.to === 'R') && g.edges.some((e) => e.from === 'R' && e.to === 'H')
+        && g.edges.some((e) => e.from === 'H' && e.to === 'H' && e.kind === 'shows') && inCycle(g, 'R') && !inCycle(g, 'S'));
+      const list = mapListForm(g, { current: 'R' });
+      check('*** the list form: one entry per dashboard, a sentence each, "you are here" marked ***',
+        list.length === 4 && list[1].here && /Opens Living room \(by its clock\)/.test(list[0].sentence)
+        && /Shows itself \(in its dashboard\)/.test(list[0].sentence) && /Reached from Living room/.test(list[0].sentence)
+        && /Opens Home \(by its door\)/.test(list[1].sentence) && /Reached from Home/.test(list[1].sentence)
+        && /Nothing opens it/.test(list[2].sentence) && /Removed/.test(list[3].sentence), J(list.map((e) => e.sentence)));
+      const pos = mapLayout(g);
+      const pts = Object.values(pos);
+      check('the layout: every node a distinct place inside the drawing, the first at the top',
+        new Set(pts.map((p) => `${p.x},${p.y}`)).size === 4 && pts.every((p) => p.x > 0 && p.x < MAP_DEFAULTS.width && p.y > 0 && p.y < MAP_DEFAULTS.height)
+        && pos.H.y === Math.min(...pts.map((p) => p.y)), J(pos));
+      const svg = mapSvg(g, { current: 'R' });
+      check('*** the picture: solid opens, dashed shows, a loop for "shows itself", you are here and removed in WORDS ***',
+        /class="dm-edge dm-opens"/.test(svg) && /class="dm-edge dm-shows"/.test(svg) && /You are here/.test(svg) && /\(removed\)/.test(svg)
+        && /aria-hidden="true"/.test(svg) && /marker-end/.test(svg) && !/#[0-9a-f]{3,6}\b/i.test(svg));
+      const two = buildMapGraph([{ id: 'A', name: 'A', links: [{ kind: 'opens', to: 'B' }] }, { id: 'B', name: 'B', links: [{ kind: 'opens', to: 'A' }] }]);
+      const d = [...new DOMParser().parseFromString(mapSvg(two), 'image/svg+xml').querySelectorAll('path.dm-edge')].map((p) => p.getAttribute('d'));
+      check('A -> B and B -> A bow to opposite sides (two arrows, not one line drawn twice)', d.length === 2 && d[0] !== d[1]);
+      // Loading it all through whatever handles the host has.
+      const rows = { 'H:settings': { kiosk: { layout: { preset: 'full', slots: [null], placed: [{ id: 'clk', place: 'screen', opens: 'R' }] } } }, 'H:fr': { shows: 'R' } };
+      const got = await loadMapData({
+        list: async () => [{ id: 'H', name: 'Home' }, { id: 'R', name: 'Room' }, { id: 'Z', name: 'Broken' }],
+        get: async (id) => (id === 'Z' ? Promise.reject(new Error('x')) : { id, modules: id === 'H' ? [{ id: 'clk', type: 'clock' }, { id: 'fr', type: 'dashboard' }] : [] }),
+        readRow: async (pid, key) => rows[`${pid}:${key}`] || {},
+      });
+      check('*** loadMapData reads every dashboard\'s doors and frames; one that will not load is still a node ***',
+        got.graph.nodes.length === 3 && got.graph.edges.length === 2 && got.graph.edges.every((e) => e.from === 'H' && e.to === 'R'),
+        J(got.graph));
+      check('a new dashboard is named for you, never a name already taken',
+        newDashboardName([]) === 'New dashboard' && newDashboardName([{ name: 'New dashboard' }, { name: 'new dashboard 2' }]) === 'New dashboard 3');
+      check('the edit view opens Transform, Layers and Opens-and-shows by default', J(EDIT_WINDOWS_DEFAULT) === '["transform","layers","links"]');
+      check('the edit view\'s wait is a setting: 60 s by default, "until closed" one choice away',
+        editIdleMsFrom({}) === EDIT_IDLE_DEFAULT_MS && EDIT_IDLE_DEFAULT_MS === 60000 && editIdleMsFrom({ [EDIT_IDLE_KEY]: 0 }) === 0
+        && EDIT_IDLE_FIELD.options.some((o) => o.value === EDIT_IDLE_FIELD.default) && EDIT_IDLE_FIELD.options.some((o) => o.value === 0));
+      check('*** the edit view and the map are bindable actions (a switch), and a room object can carry them ***',
+        SYSTEM_ACTIONS.some((a) => a.topic === SYSTEM_TOPICS.edit) && SYSTEM_ACTIONS.some((a) => a.topic === SYSTEM_TOPICS.map)
+        && ROOM_ACTIONS['edit.open']?.topic === SYSTEM_TOPICS.edit && ROOM_ACTIONS['map.open']?.topic === SYSTEM_TOPICS.map);
+    }
+
+    // =================================================================================================
+    section('3. the dashboard module: Opens and Shows edited in place, with Undo');
+    {
+      const records = {
+        P: { id: 'P', name: 'Parlour', modules: [{ id: 'clk', type: 'clock' }, { id: 'fr', type: 'dashboard' }] },
+        Q: { id: 'Q', name: 'Quiet room', modules: [{ id: 'qc', type: 'clock' }] },
+        S: { id: 'S', name: 'Sun room', modules: [{ id: 'sc', type: 'clock' }] },
+      };
+      const seed = {
+        P: { settings: { kiosk: { layout: { preset: 'full', slots: [null], placed: [
+          { id: 'clk', place: 'screen', x: 25, y: 50, w: 25, h: 30 }, { id: 'fr', place: 'screen', x: 70, y: 50, w: 45, h: 60 }] } } },
+          fr: { shows: 'Q' } },
+        Q: { settings: { kiosk: { layout: { preset: 'full', slots: ['qc'] } } } },
+        S: { settings: { kiosk: { layout: { preset: 'full', slots: ['sc'] } } } },
+      };
+      const host = sharedHost(records, seed);
+      const t = mountTop('P', host);
+      await t.ready;
+      const frRec = () => t.v.arrangement().recFor('fr');
+      const nestOf = () => { const i = frRec()?.instance; return (i?.impl || i)?.nest?.() || null; };
+      check('(setup) the frame shows Q, live', await settled(() => nestOf()?.shows === 'Q' && !!t.box.querySelector('.view[data-nest="live"]'), 6000));
+      const go = [];
+      t.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { go.push(p); p?.claim?.(); });
+      const ed = t.v.edit();
+      check('*** edit() opens Transform, Layers and Opens-and-shows over this dashboard ***',
+        !!ed && ['transform', 'layers', 'links'].every((k) => ed.windows[k]?.isOpen()) && t.box.querySelectorAll('[role="dialog"]').length === 3);
+      check('the frame is a thing that can show, and shows Q', ed.model.item('fr').canShow === true && ed.model.item('fr').shows === 'Q'
+        && ed.model.item('clk').opens === null && !ed.model.item('clk').canShow);
+      const clkInst = t.v.arrangement().recFor('clk');
+      const frInst = frRec();
+      ed.model.select('clk');
+      ed.model.setLink('opens', 'S');
+      check('*** Opens: Sun room -- the clock becomes a door IN PLACE (same instance, a door button over it) ***',
+        await settled(() => t.v.arrangement().opensOf('clk') === 'S' && !!t.box.querySelector('[data-placed="clk"] > .k-door'), 3000)
+        && t.v.arrangement().recFor('clk') === clkInst);
+      check('...and it is saved on the dashboard\'s layout', (host.store.get('P:settings')?.kiosk?.layout?.placed || []).find((e) => e.id === 'clk')?.opens === 'S');
+      t.box.querySelector('[data-placed="clk"] > .k-door')?.click();
+      check('...and pressing it goes there', go.some((p) => p.id === 'S'));
+      ed.model.setLink('shows', 'S', { id: 'fr' });
+      check('*** Shows: Sun room -- the frame redraws with S, LIVE, and the panel itself is not remounted ***',
+        await settled(() => nestOf()?.shows === 'S' && !!t.box.querySelector('.view[data-nest="live"]'), 6000)
+        && frRec() === frInst, J(nestOf()));
+      check('...and its own row says S (where 1c97dc5 reads it)', host.store.get('P:fr')?.shows === 'S');
+      check('only ONE nested dashboard on screen (the old one was emptied, not left behind)',
+        t.box.querySelectorAll('.view[data-nest]').length === 1, t.box.querySelectorAll('.view[data-nest]').length);
+      ed.model.undo();
+      check('*** Undo: the frame shows Q again ***', await settled(() => nestOf()?.shows === 'Q', 6000) && host.store.get('P:fr')?.shows === 'Q');
+      ed.model.undo();
+      check('*** Undo again: the clock is not a door any more ***',
+        await settled(() => !t.v.arrangement().opensOf('clk') && !t.box.querySelector('[data-placed="clk"] > .k-door'), 3000)
+        && !('opens' in ((host.store.get('P:settings')?.kiosk?.layout?.placed || []).find((e) => e.id === 'clk') || {})));
+      ed.model.setLink('shows', null, { id: 'fr' });
+      check('Shows: nothing -- the frame says nothing is chosen', await settled(() => /Nothing is chosen/.test(t.box.textContent), 3000));
+      ed.model.undo();
+      await settled(() => nestOf()?.shows === 'Q', 6000);
+      // + New dashboard, from the window.
+      const links = ed.windows.links;
+      await settled(() => !!links.el.querySelector('[data-ew="menu:opens"]'), 2000);
+      ed.model.select('clk');
+      links.el.querySelector('[data-ew="menu:opens"]').click();
+      await settled(() => !!links.el.querySelector('[data-ew="pick:opens:S"]'), 2000);
+      check('the choices are the person\'s dashboards (from the screens client)', !!links.el.querySelector('[data-ew="pick:opens:Q"]'));
+      links.el.querySelector('[data-ew="new:opens"]').click();
+      check('*** + New dashboard makes one ("New dashboard") and the clock opens it ***',
+        await settled(() => host.made.length === 1 && ed.model.item('clk').opens === host.made[0], 3000)
+        && records[host.made[0]].name === 'New dashboard');
+      // The map, from inside the edit view.
+      check('the window offers the Map', !!links.el.querySelector('[data-ew="act:map"]'));
+      links.el.querySelector('[data-ew="act:map"]').click();
+      check('*** Map opens inside the edit view, and draws every dashboard with the new door ***',
+        await settled(() => ed.windows.map?.status?.() === 'ready', 4000)
+        && ed.windows.map.graph().nodes.length === 4 && ed.windows.map.graph().edges.some((e) => e.from === 'P' && e.to === host.made[0] && e.kind === 'opens'),
+        J(ed.windows.map?.graph?.()));
+      check('...the frame\'s arrow too (P shows Q)', ed.windows.map.graph().edges.some((e) => e.from === 'P' && e.to === 'Q' && e.kind === 'shows'));
+      check('*** one switch walk over all four windows, Close of the first (Transform) first ***',
+        ed.scan.stops()[0] === ed.windows.transform.el.querySelector('[data-ew="close"]')
+        && ed.scan.stops().some((b) => ed.windows.map.el.contains(b)));
+      ed.windows.map.close();
+      check('the map\'s own Close puts the map away, and the editing goes on', !ed.windows.map && ed.isOpen() && t.v.editing() === ed);
+      ed.close();
+      check('closing ends the editing; nothing listens to the model', t.v.editing() === null && ed.model.listenerCount() === 0);
+      t.inst.destroy(); t.box.remove();
+    }
+
+    // =================================================================================================
+    section('4. a room object\'s door, edited in place (the room is not rebuilt)');
+    {
+      const records = { RM: { id: 'RM', name: 'Study', modules: [{ id: 'rclk', type: 'clock' }] }, P: { id: 'P', name: 'Parlour', modules: [] } };
+      const seed = { RM: { settings: { kiosk: { layout: { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'study' },
+        placed: [{ id: 'rclk', place: 'scene', x: 66, y: 12, w: 12, h: 12 }] } } } } };
+      const host = sharedHost(records, seed);
+      const t = mountTop('RM', host);
+      await t.ready;
+      check('(setup) the study is drawn', await settled(() => !!t.box.querySelector('.rs-item[data-id="desk"]'), 6000));
+      const go = [];
+      t.bus.subscribe(DASHBOARD_GO_TOPIC, (p) => { go.push(p); p?.claim?.(); });
+      const ed = t.v.edit();
+      const ids = ed.model.things();
+      check('*** the room\'s own objects are things in the editor (not in the Layers list) ***',
+        ids.includes('room:desk') && !ed.model.order().includes('room:desk') && ed.model.item('room:desk').fixed === true
+        && !ed.windows.layers.el.querySelector('[data-ew="pick:room:desk"]'), J(ids));
+      const art = t.box.querySelector('.rs-item[data-id="desk"]');
+      const clockRec = t.v.arrangement().recFor('rclk');
+      const deskLabel = () => t.box.querySelector('.rs-obj[data-id="desk"]')?.getAttribute('aria-label') || null;
+      const before = deskLabel();
+      ed.model.select('room:desk');
+      ed.model.setLink('opens', 'P');
+      check('*** the desk becomes a door, in place: same art, the clock in the room not remounted ***',
+        await settled(() => deskLabel() === 'Desk', 3000)
+        && t.box.querySelector('.rs-item[data-id="desk"]') === art && t.v.arrangement().recFor('rclk') === clockRec, `${before} -> ${deskLabel()}`);
+      const saved = () => host.store.get('RM:settings')?.kiosk?.layout?.scene;
+      check('*** saved on the room\'s recipe (the preset copied in, the door on the desk) ***',
+        saved()?.preset === 'study' && saved()?.recipe?.items?.find((i) => i.id === 'desk')?.opens === 'P', J(saved())?.slice(0, 160));
+      t.box.querySelector('.rs-obj[data-id="desk"]')?.click();
+      check('pressing the desk goes there', go.some((p) => p.id === 'P' && p.source === 'room'));
+      ed.model.undo();
+      check('*** Undo: back to what the room gives it (here: a close-up), and the room is a preset room again ***',
+        await settled(() => deskLabel() === before, 3000)
+        && J(saved()) === J({ kind: 'room', preset: 'study' }), `${deskLabel()} ${J(saved())?.slice(0, 120)}`);
+      check('the desk art is still the same element (nothing rebuilt)', t.box.querySelector('.rs-item[data-id="desk"]') === art);
+      ed.close();
+      t.inst.destroy(); t.box.remove();
+    }
+
+    // =================================================================================================
+    section('5. the real screen: the edit view and the map BY SWITCH, both paths, nothing reloads');
+    const USER = 'map-editor-test-' + Math.floor(performance.now()) + '-' + Math.floor(Math.random() * 1e6);
+    const real = createProfilesClient({ user: USER });
+    const setRow = async (id, key, patch) => {
+      const st = createState({ url: real.stateURL(id, key), user: USER });
+      await st.load().catch(() => {}); st.set(patch); await st.flush(); st.destroy();
+    };
+    const getRow = async (id, key) => {
+      const st = createState({ url: real.stateURL(id, key), user: USER });
+      await st.load().catch(() => {}); const v = st.get(); st.destroy(); return v;
+    };
+    const H = await real.create('Map home');
+    const R = await real.create('Map room');
+    const hClk = await real.addModule(H.id, 'clock');
+    const rClk = await real.addModule(R.id, 'clock');
+    await setRow(H.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [null],
+      scene: { kind: 'room', preset: 'study' }, placed: [{ id: hClk.id, place: 'screen', x: 20, y: 20, w: 20, h: 20 }] } } });
+    await setRow(R.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [null], placed: [{ id: rClk.id, place: 'screen', x: 50, y: 50, w: 30, h: 30 }] } } });
+    {
+      const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+      const bus = createBus();
+      let reloads = 0;
+      const k = await mountKiosk(box, { user: USER, profileId: H.id, profiles: real, bus,
+        storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => { reloads++; } });
+      check('(setup) the dashboard path, on H, the room drawn', k.dashboardPath() && k.screenId() === H.id
+        && await settled(() => !!box.querySelector('.rs-item[data-id="desk"]'), 8000));
+      let claimed = false;
+      bus.publish(SYSTEM_TOPICS.edit, { claim: () => { claimed = true; } });
+      check('*** system/edit (a switch) opens the edit view, and the screen claims it ***',
+        claimed && await settled(() => !!k.editView(), 3000) && k.editView() === k.dashboard().editing());
+      check('*** ...and it holds the scan: the panel router is paused ***', k.editScanHeld() && k.runtime.router.isPaused());
+      bus.publish(verbTopic('next'));
+      const firstStop = k.editView().scan.current();
+      check('*** the first stop is a Close (the way out first) ***', firstStop?.dataset.ew === 'close', firstStop?.outerHTML?.slice(0, 80));
+      bus.publish(verbTopic('next'));
+      check('next moves on', k.editView().scan.current() !== firstStop);
+      bus.publish(verbTopic('back'));
+      check('*** back closes it, and the scan goes back to the panels ***',
+        await settled(() => !k.editView(), 2000) && !k.editScanHeld() && !k.runtime.router.isPaused());
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      await settled(() => !!k.editView(), 3000);
+      bus.publish(verbTopic('next'));
+      bus.publish(verbTopic('select'));
+      check('*** next, select on Close: closed by the switch alone ***', await settled(() => !k.editView(), 2000) && !k.editScanHeld());
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      await settled(() => !!k.editView(), 3000);
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      check('system/edit again closes it (a toggle)', await settled(() => !k.editView(), 2000));
+      // A door on a module and on a room object, saved, no reload.
+      const ed = k.openEditView();
+      ed.model.select(hClk.id);
+      ed.model.setLink('opens', R.id);
+      ed.model.select('room:desk');
+      ed.model.setLink('opens', R.id);
+      check('*** both doors are on screen at once (module and object), in place ***',
+        await settled(() => !!box.querySelector(`[data-placed="${hClk.id}"] > .k-door`)
+          && box.querySelector('.rs-obj[data-id="desk"]')?.getAttribute('aria-label') === 'Desk', 3000));
+      await sleep(1200);
+      const row = await getRow(H.id, 'settings');
+      check('*** both are saved to the dashboard\'s own row ***',
+        (row.kiosk?.layout?.placed || []).find((e) => e.id === hClk.id)?.opens === R.id
+        && row.kiosk?.layout?.scene?.recipe?.items?.find((i) => i.id === 'desk')?.opens === R.id, J(row.kiosk?.layout)?.slice(0, 200));
+      check('*** ...and the screen did NOT reload for either (a door is a placement change) ***', reloads === 0, `reloads=${reloads}`);
+      k.closeEditView();
+      box.querySelector('.rs-obj[data-id="desk"]')?.click();
+      check('pressing the desk swaps to R', await settled(() => k.screenId() === R.id, 8000));
+      // The map, by switch.
+      claimed = false;
+      bus.publish(SYSTEM_TOPICS.map, { claim: () => { claimed = true; } });
+      check('*** system/map opens the map, claimed, holding the scan ***',
+        claimed && await settled(() => k.mapWindow()?.status?.() === 'ready', 6000) && k.editScanHeld() && k.runtime.router.isPaused());
+      const mw = k.mapWindow();
+      check('...it maps H and R, the doors as arrows', mw.graph().edges.filter((e) => e.from === H.id && e.to === R.id).length === 2,
+        J(mw.graph().edges));
+      check('the map is read as a list (a screen reader): each dashboard a button with its sentence',
+        /Opens Map room/.test(mw.el.querySelector('.ew-maplist').textContent));
+      bus.publish(verbTopic('next'));
+      check('the first stop is Close', mw.current()?.dataset.ew === 'close');
+      // Walk to H (R is where you are, so it is skipped) and choose it.
+      let guard = 0;
+      while (mw.current()?.dataset.ew !== `go:${H.id}` && guard++ < 20) bus.publish(verbTopic('next'));
+      bus.publish(verbTopic('select'));
+      check('*** selecting H on the map goes there, and the map goes away, the scan given back ***',
+        await settled(() => k.screenId() === H.id, 8000) && !k.mapWindow() && !k.editScanHeld());
+      // Nobody answering: the edit view puts itself away.
+      await k.dashboard().settingsDoc().set({ [EDIT_IDLE_KEY]: 600 });
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      await settled(() => !!k.editView(), 3000);
+      check('*** with nobody pressing, the edit view puts itself away after its wait (scan given back) ***',
+        await settled(() => !k.editView() && !k.editScanHeld(), 4000));
+      await k.dashboard().settingsDoc().set({ [EDIT_IDLE_KEY]: null });
+      // The menu takes the scan: the edit view goes.
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      await settled(() => !!k.editView(), 3000);
+      k.menu.open();
+      check('the menu opening puts the edit view away (one thing holds the scan)', await settled(() => !k.editView(), 2000));
+      k.menu.close();
+      k.destroy(); box.remove();
+    }
+    {
+      // TODAY'S PATH (no dashboard module): the same editor, over the kiosk's own arrangement.
+      const P2 = await real.create('Map plain');
+      const pClk = await real.addModule(P2.id, 'clock');
+      await setRow(P2.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [null], placed: [{ id: pClk.id, place: 'screen', x: 50, y: 50, w: 30, h: 30 }] } } });
+      const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+      const bus = createBus();
+      let reloads = 0;
+      const k = await mountKiosk(box, { user: USER, profileId: P2.id, profiles: real, bus,
+        storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => { reloads++; } });
+      check('(setup) today\'s path', !k.dashboardPath() && !k.dashboard());
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      check('*** system/edit opens the edit view on today\'s path too ***', await settled(() => !!k.editView(), 3000)
+        && k.editScanHeld() && !!box.querySelector('.ew-win'));
+      const ed = k.editView();
+      ed.model.select(pClk.id);
+      ed.model.setLink('opens', R.id);
+      check('a door, in place', await settled(() => !!box.querySelector(`[data-placed="${pClk.id}"] > .k-door`), 3000));
+      await sleep(1200);
+      const row = await getRow(P2.id, 'settings');
+      check('*** saved to this screen\'s row, and no reload ***', (row.kiosk?.layout?.placed || [])[0]?.opens === R.id && reloads === 0,
+        `reloads=${reloads} ${J(row.kiosk?.layout)}`);
+      bus.publish(verbTopic('back'));
+      check('back closes it, the scan given back', await settled(() => !k.editView() && !k.editScanHeld() && !k.runtime.router.isPaused(), 2000));
+      k.destroy(); box.remove();
+      check('destroy leaves no edit window behind', !document.querySelector('.box .ew-win'));
+    }
+  } catch (e) {
+    check('suite threw', false, String(e && e.stack || e));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = `${passed} passed, ${failed} failed`;
+  s.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
