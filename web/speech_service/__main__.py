@@ -6,6 +6,7 @@ From `web/`:
     python3 -m speech_service --backend vosk --model ~/vosk-bench/models/vosk-model-small-en-us-0.15
     py -3.13 -m speech_service --backend fake                    # the protocol with no model
     python3 -m speech_service --backend none --wake hey_jarvis   # wake events only (openWakeWord)
+    python3 -m speech_service --backend none --wake computer_please,nimrod_please   # our own (models/)
 
 It binds 127.0.0.1:8797 by default: the room's sound stays on the machine that heard it, and only a
 screen on that same machine can reach it. The screen's "this screen" recogniser looks there.
@@ -38,8 +39,10 @@ def parse(argv=None):
     p.add_argument('--backend', choices=['whisper', 'vosk', 'fake', 'none'], default='whisper',
                    help="'none': no transcription - a wake-word-only service (needs --wake)")
     p.add_argument('--wake', default=None,
-                   help="wake-word models, comma-separated: openWakeWord pre-trained names (hey_jarvis) "
-                        "or paths to a custom .onnx; 'fake' for tests. Off when not given.")
+                   help="wake-word models, comma-separated: this project's own by bare name (e.g. "
+                        "computer_please - any <name>.onnx in speech_service/models/), openWakeWord "
+                        "pre-trained names (hey_jarvis) or paths to a custom .onnx; 'fake' for tests. "
+                        "Off when not given.")
     p.add_argument('--wake-threshold', type=float, default=WAKE_THRESHOLD,
                    help=f'score that counts as the wake phrase (default {WAKE_THRESHOLD}, openWakeWord\'s own)')
     p.add_argument('--wake-refractory-s', type=float, default=WAKE_REFRACTORY_S,

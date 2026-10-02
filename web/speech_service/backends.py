@@ -280,6 +280,23 @@ WAKE_THRESHOLD = 0.5      # openWakeWord's own documented default; a flag (--wak
 WAKE_REFRACTORY_S = 2.0   # nobody says the wake phrase twice inside 2 s; a flag (--wake-refractory-s)
 _OWW_CHUNK = 1280         # 80 ms at 16 kHz: the frame openWakeWord's models step by
 
+# The project's own trained phrases (2026-10-02, trained on the desktop; how, and how they measured:
+# wakeword_training_20261002.md in the private repo, and models/README.md here). `--wake
+# computer_please` means models/computer_please.onnx; the event's `word` is that same name.
+WAKE_MODELS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+
+
+def resolve_wake_models(names, models_dir: str = WAKE_MODELS_DIR):
+    """A bare name with a file in models/ becomes that file's path. Anything else - a path, or one of
+    openWakeWord's pre-trained names such as hey_jarvis - passes through unchanged."""
+    out = []
+    for n in names:
+        n = str(n)
+        bare = not any(c in n for c in '/\\') and not n.endswith(('.onnx', '.tflite'))
+        p = os.path.join(models_dir, n + '.onnx')
+        out.append(p if bare and os.path.isfile(p) else n)
+    return out
+
 
 class _Edge:
     """The one-fire-per-crossing rule, shared by the real detector and the fake."""
@@ -315,7 +332,7 @@ class OpenWakeWordDetector:
         # onnxruntime is what openWakeWord uses on Windows anyway - one framework everywhere.
         import openwakeword  # noqa: WPS433 (heavy import, on purpose here)
         self._oww = openwakeword
-        self.models = [str(m) for m in models]
+        self.models = resolve_wake_models(models)
         self.threshold = float(threshold)
         self.refractory_s = float(refractory_s)
         self.vad_threshold = float(vad_threshold)
@@ -417,4 +434,5 @@ def make_wake(models, **kw):
 
 
 __all__ = ['SAMPLE_RATE', 'WhisperBackend', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
-           'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S']
+           'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S',
+           'WAKE_MODELS_DIR', 'resolve_wake_models']

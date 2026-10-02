@@ -396,6 +396,44 @@ def real_whisper(folder: str):
         print(f'  median {walls[len(walls) // 2]:.2f} s, max {walls[-1]:.2f} s')
 
 
+def wake_model_tests():
+    """The project's own wake models (models/*.onnx, trained 2026-10-02): `--wake computer_please` must
+    find them, and they must stay small enough to live in the repo."""
+    import tempfile
+    from speech_service.backends import WAKE_MODELS_DIR, resolve_wake_models
+    # Which trained models ship is Mike's call (licences; see the training report), so these checks cover
+    # whichever ARE in models/ -- none, today -- and the resolver is proven on a temporary folder below.
+    present = sorted(Path(WAKE_MODELS_DIR).glob('*.onnx')) if Path(WAKE_MODELS_DIR).is_dir() else []
+    files = present
+    sizes = {f.name: f.stat().st_size for f in present}
+    check('*** each shipped wake model is under 1 MB (a big one belongs elsewhere) ***',
+          all(s < 1_000_000 for s in sizes.values()), sizes)
+    got = resolve_wake_models([f.stem for f in present])
+    check('each shipped model resolves from its bare name', [Path(g) for g in got] == present, got)
+    check("openWakeWord's own pre-trained names and explicit paths pass through untouched",
+          resolve_wake_models(['hey_jarvis', 'x/y.onnx', 'computer_please.onnx']) == ['hey_jarvis', 'x/y.onnx',
+                                                                                    'computer_please.onnx'])
+    with tempfile.TemporaryDirectory() as d:
+        (Path(d) / 'foo.onnx').write_bytes(b'')
+        check('a bare name resolves only when that file exists', resolve_wake_models(['foo', 'bar'], d) ==
+              [str(Path(d) / 'foo.onnx'), 'bar'])
+    try:
+        import numpy as np
+        import onnxruntime as ort
+    except ImportError:
+        print('SKIP  wake models not run (no onnxruntime here)')
+        return
+    for f in files:
+        if not f.is_file():
+            continue
+        s = ort.InferenceSession(str(f), providers=['CPUExecutionProvider'])
+        i = s.get_inputs()[0]
+        y = s.run(None, {i.name: np.zeros((1, 16, 96), np.float32)})[0]
+        check(f'{f.name}: takes 16 frames of 96 features, gives one score in 0..1',
+              list(i.shape)[1:] == [16, 96] and y.shape == (1, 1) and 0 <= float(y[0, 0]) <= 1,
+              (i.shape, y.shape, y))
+
+
 if __name__ == '__main__':
     if '--live' in sys.argv:
         # --live <ws url> <wav folder> [--grammar "a,b,c"]: no tests, just a running service measured.
@@ -406,6 +444,7 @@ if __name__ == '__main__':
         sys.exit(0)
     asyncio.run(session_tests())
     asyncio.run(wake_tests())
+    wake_model_tests()
     fastapi_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')
