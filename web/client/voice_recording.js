@@ -272,9 +272,23 @@ function req(r) { return new Promise((res, rej) => { r.onsuccess = () => res(r.r
  * half-deleted pair (a transcript with its audio gone, or audio nobody can find) is worse than either
  * (fs_sink.js: "a session is deleted whole").
  */
-export function createIdbPairStore({ idb = (typeof indexedDB !== 'undefined' ? indexedDB : null), name = IDB_NAME } = {}) {
+export function createIdbPairStore({ idb = (typeof indexedDB !== 'undefined' ? indexedDB : null), name = IDB_NAME,
+  storage = (typeof navigator !== 'undefined' ? navigator.storage : null) } = {}) {
   if (!idb) throw new Error('createIdbPairStore: this browser has no IndexedDB');
   let dbp = null;
+  // *** ASK THE BROWSER TO KEEP THIS DATA (2026-10-02). *** Checked on the bench: the kiosk's profile is on the
+  // SD card and recordings survive a reboot. But without `persist()` the browser counts them as data it may
+  // evict under disk pressure. So before the FIRST save, ask once. The answer (true/false/null when the browser
+  // has no such call) is kept for `persisted()`. A refusal saves anyway: "Export to a folder" stays the backup.
+  let persistAsk = null;
+  const askPersist = () => {
+    if (!persistAsk) {
+      persistAsk = Promise.resolve()
+        .then(() => (typeof storage?.persist === 'function' ? storage.persist() : null))
+        .then((v) => (v == null ? null : !!v), () => false);
+    }
+    return persistAsk;
+  };
   const open = () => {
     if (dbp) return dbp;
     dbp = new Promise((res, rej) => {
@@ -304,7 +318,10 @@ export function createIdbPairStore({ idb = (typeof indexedDB !== 'undefined' ? i
   const mine = (p, personId) => personId === undefined || p.personId === (personId || null);
   const api = {
     kind: 'indexeddb',
-    add(pair, clips = []) {
+    /** Whether the browser agreed to keep this data: true / false / null (no such call), or undefined before any save. */
+    persisted() { return persistAsk ? persistAsk : Promise.resolve(undefined); },
+    async add(pair, clips = []) {
+      await askPersist();
       return tx(['pairs', 'audio'], 'readwrite', (t) => {
         const a = t.objectStore('audio');
         for (const c of clips) a.put(c.wav, `${pair.id}|${c.ear}`);

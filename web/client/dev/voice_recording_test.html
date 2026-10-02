@@ -368,6 +368,24 @@ try {
     check('deleting twice is not an error', (await st.remove('b')) === false);
     st.close();
     await new Promise((r) => { const q = indexedDB.deleteDatabase(name); q.onsuccess = q.onerror = q.onblocked = () => r(); });
+
+    // 2026-10-02: ask the browser to keep this data, once, before the first save; a refusal still saves.
+    let asks = 0;
+    const name2 = `nimrod-voice-test-p-${Date.now()}`;
+    const st2 = createIdbPairStore({ name: name2, storage: { persist: async () => { asks += 1; return false; } } });
+    check('nothing is asked before anything is saved', asks === 0 && (await st2.persisted()) === undefined);
+    await st2.add(buildPair({ id: 'p', personId: 'p1', at: 1, keepDays: 0, caption: { text: 'k' }, clips: [] }), []);
+    await st2.add(buildPair({ id: 'q', personId: 'p1', at: 2, keepDays: 0, caption: { text: 'k2' }, clips: [] }), []);
+    check('*** the first save asks the browser to keep the data, ONCE ***', asks === 1, String(asks));
+    check('*** a refusal is remembered, and the recordings are saved anyway ***',
+      (await st2.persisted()) === false && (await st2.count({ personId: 'p1' })) === 2);
+    st2.close();
+    await new Promise((r) => { const q = indexedDB.deleteDatabase(name2); q.onsuccess = q.onerror = q.onblocked = () => r(); });
+    const st3 = createIdbPairStore({ name: `${name2}-n`, storage: null });
+    await st3.add(buildPair({ id: 'r', personId: 'p1', at: 3, keepDays: 0, caption: { text: 'k3' }, clips: [] }), []);
+    check('a browser with no persist() still saves, and says null', (await st3.persisted()) === null);
+    st3.close();
+    await new Promise((r) => { const q = indexedDB.deleteDatabase(`${name2}-n`); q.onsuccess = q.onerror = q.onblocked = () => r(); });
   }
 
   // ======================================================================================
