@@ -49,7 +49,7 @@ import { mountKiosk } from '../kiosk.js';
 import { barModel, drawChips } from '../transport_bar.js';
 import { createVerbRouter } from '../input_router.js';
 import { MODULE_VERBS, verbTopic } from '../actions.js';
-import { ROOM_PIECE_TYPE, ROOM_PIECE_PRESS_TOPIC, ROOM_PIECE_PREFIX } from '../arrangement.js';
+import { ROOM_PIECE_TYPE, ROOM_PIECE_PRESS_TOPIC, ROOM_PIECE_PREFIX, ROOM_PANEL_ID } from '../arrangement.js';
 import { ROOM_TOPICS } from '../room_scene.js';
 
 const out = document.getElementById('results');
@@ -439,6 +439,56 @@ try {
     const before = pressed.length;
     t.bus.publish(t.bus.instanceTopic(doorId, ROOM_PIECE_PRESS_TOPIC));
     check('after destroy, a piece\'s topic answers nothing', pressed.length === before && t.arr.focusRing().every((m) => m.type !== ROOM_PIECE_TYPE));
+  }
+
+  // =====================================================================================================
+  // Mike's list 09-30 (~1341): "with focus on a piece, the bar and the menu still describe the first panel."
+  // `focusedTarget()` describes the stop the scan is on -- a piece included, with edit mode's own options for
+  // it -- while `focusedRec()` keeps meaning "the panel" for everything that acts on one.
+  section('4c. *** focusedTarget(): a piece of the room is described as itself, with its options; focusedRec() is unchanged ***');
+  {
+    const t = make({ modules: [M.p1, M.t1], realRouter: true });
+    await boot(t, { preset: 'full', slots: ['p1'], scene: { kind: 'room', preset: 'theRoom' }, placed: [
+      { id: 't1', place: 'scene', slot: 'cab' },
+    ] });
+    const room = t.arr.roomScene();
+    const ft0 = t.arr.focusedTarget();
+    check('on a panel: it is that panel (kind panel, its record, its title)',
+      ft0?.kind === 'panel' && ft0.id === 'p1' && ft0.rec === t.arr.recFor('p1') && ft0.label === 'PHOTOS', J(ft0 && { ...ft0, rec: 0, el: 0 }));
+    const doorId = `${ROOM_PIECE_PREFIX}o:door`;
+    t.router.setFocus(doorId);
+    const ft = t.arr.focusedTarget();
+    const doorName = room.objectEls().find((o) => o.id === 'door')?.name;
+    check('*** on the door: the PIECE, named as the room names it ***',
+      ft?.kind === 'piece' && ft.id === doorId && !!doorName && ft.label === doorName, J(ft && { ...ft, rec: 0, el: 0, target: 0 }));
+    check('*** its options are edit mode\'s for that piece (the target: "Opens"), not the room\'s or a panel\'s ***',
+      ft?.target?.id === 'door' && J(ft.target.fields.map((f) => f.key)) === J(['opens']) && ft.whole === false && ft.objectId === 'door');
+    check('the record it belongs to is the room\'s (what edit mode edits)', ft?.rec?.id === ROOM_PANEL_ID);
+    check('*** focusedRec() still names the PANEL (everything that acts on a panel is unchanged) ***', t.arr.focusedRec()?.id === 'p1');
+    // Its option, written through the target: applied in place (no layout store here: in memory).
+    ft.target.set({ opens: 'ELSEWHERE' });
+    check('*** setting "Opens" through it makes the door open there (the same write edit mode makes) ***',
+      await settled(() => ft.target.values().opens === 'ELSEWHERE'), J(ft.target.values()));
+    // A stop that is not an object of its own: a lifted panel's way back. The room's own rows, by its words.
+    t.router.setFocus(`${ROOM_PIECE_PREFIX}o:cab`);
+    t.bus.publish(verbTopic('select'));
+    const back = t.arr.focusedTarget();
+    check('*** a way back is described by its own words, with the ROOM\'s rows (whole) ***',
+      back?.kind === 'piece' && back.id === `${ROOM_PIECE_PREFIX}back` && back.whole === true && back.target?.id === 'room' && !!back.label,
+      J(back && { ...back, rec: 0, el: 0, target: back.target?.id }));
+    t.bus.publish(verbTopic('select'));                     // put it back
+    // "Edit" with no panel named, on a piece: the ROOM is edited, that piece chosen (the verb's own rule).
+    t.router.setFocus(doorId);
+    t.bus.publish('shell/edit-panel', { on: true });
+    check('*** the edit verb with no id, on a piece: the room is edited with that piece chosen ***',
+      t.arr.editing()?.id === ROOM_PANEL_ID && t.arr.editSelection()?.target?.id === 'door', J(t.arr.editSelection()?.target?.id));
+    t.bus.publish('shell/edit-panel', { on: false });
+    check('...and the verb off stops it', !t.arr.editing());
+    t.router.setFocus('p1');
+    t.bus.publish('shell/edit-panel', { on: true });
+    check('on a panel, the same verb edits that panel, as before', t.arr.editing()?.id === 'p1');
+    t.bus.publish('shell/edit-panel', { on: false });
+    t.arr.destroy();
   }
 
   // =====================================================================================================

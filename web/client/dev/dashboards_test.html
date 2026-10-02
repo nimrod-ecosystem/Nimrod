@@ -36,7 +36,7 @@ import { STARTER_MODULES } from '../modules_catalog.js';
 import { STARTER_SCHEDULE } from '../local_store.js';
 import { profileSetup } from '../game/game.js';
 import { ROOM_PRESETS } from '../room_presets.js';
-import { SYSTEM_TOPICS, verbTopic } from '../actions.js';
+import { SYSTEM_TOPICS, verbTopic, PLACE_MODULE_TOPIC, SWITCH_MODULE_TOPIC } from '../actions.js';
 import { PHRASES, ROUTES, spokenTable, duplicatePhrases, normalize } from '../input_speech.js';
 import { INPUTS_KEY } from '../input_runtime.js';
 import {
@@ -504,6 +504,96 @@ function backend(user) {
       check('*** with it off, the tray offers none of them (the made ones are still listed) ***',
         !k3.dashboardPicker().items.some((i) => i.kind === 'prebuilt') && k3.dashboardPicker().items.some((i) => i.text === 'Basic'),
         J(k3.dashboardPicker().items.map((i) => i.text)));
+      k3.destroy(); box3.remove();
+    }
+
+    // =================================================================================================
+    // Mike's list 09-30 (~1060): "The tutorial's bottom two slots are locked 'against accidents' ... The kiosk's
+    // own Switch list doesn't enforce the lock yet." Home's edit bar asked `lockedNow`; the kiosk's Switch
+    // module, the AI's place / swap and a pick from the library did not.
+    section('6. *** the tutorial\'s locks hold on the kiosk: the bar, a bound switch, the AI, a pick -- and say where Unlock is ***');
+    {
+      const USER = `dash-lock-${STAMP}`;
+      const B = backend(USER);
+      const S0 = await B.profiles.create('Lock home');
+      await B.profiles.addModule(S0.id, 'photos');
+      const s0 = await B.profiles.get(S0.id);
+      const maker = createDashboardMaker({ profiles: B.profiles, makeSettings: B.makeSettings,
+        makeInstanceState: B.makeInstanceState, personId: () => s0.person_id, personName: () => 'Ada' });
+      const rt = await maker.ensure('tutorial');
+      const tMods = (await B.profiles.get(rt.id)).modules;
+      const idOf = (type) => tMods.find((m) => m.type === type)?.id;
+      const NIM = idOf('nimrod'), SET = idOf('settings'), PHO = idOf('photos');
+      const four = J(['photos', 'devices', 'nimrod', 'settings']);
+
+      // (a) BOOTED on the tutorial (today's path).
+      const box = mkBox();
+      const bus = createBus();
+      const k = await mountKiosk(box, { user: USER, profileId: rt.id, profiles: B.profiles, bus, ...seams() });
+      check('(setup) the tutorial is up, its four panels in their places', await settled(() => J(k.slotTypes()) === four, 8000), J(k.slotTypes()));
+      check('the kiosk reads the tutorial\'s lock list (Nimrod and the settings)', J(k.lockedIds()) === J([NIM, SET]), J(k.lockedIds()));
+      k.runtime.router.setFocus(NIM);
+      await sleep(60);
+      const sw = box.querySelector('.k-controls [data-act="switch"]');
+      check('the bar\'s Switch module stays pressable on a locked panel, and its title says it is locked',
+        !sw.disabled && /locked on this dashboard/.test(sw.title), `${sw.disabled} ${sw.title}`);
+      sw.click();
+      await sleep(80);
+      check('*** pressed: the library does NOT open in its place ***', k.switchOpen() === null, J(k.switchOpen()));
+      check('*** ...and a notice says why, and where the key is (Home: Change, then Unlock) ***',
+        /locked on this dashboard/.test(k.lockNote() || '') && /Change, then Unlock/.test(k.lockNote() || '')
+        && !!box.querySelector('[data-lock-note][role="status"]'), k.lockNote());
+      check('the notice has no words about whose screen it is', !/her screen|Christine|Cici/i.test(k.lockNote() || ''));
+      bus.publish(SWITCH_MODULE_TOPIC, {});
+      await sleep(80);
+      check('a bound switch / "switch module" said aloud: refused the same way', k.switchOpen() === null);
+      bus.publish(PLACE_MODULE_TOPIC, { id: SET, type: 'clock', from: 'ai' });
+      await sleep(150);
+      check('*** the AI\'s place on the locked settings panel: refused, nothing switched ***',
+        k.switchOpen() === null && J(k.slotTypes()) === four, J(k.slotTypes()));
+      check('*** a pick straight to the switch (a library\'s or a Modules panel\'s): refused ***',
+        (await k.switchPanel(NIM, 'clock')) === false && J(k.slotTypes()) === four, J(k.slotTypes()));
+      k.menu.open();
+      const swRow = () => k.menu.items().find((r) => r.id === 'switch-module');
+      check('the menu\'s "Switch Nimrod…" row is still there, and says it is locked',
+        k.menu.subjectId() === NIM && /locked on this dashboard/.test(swRow()?.hint || ''), J(swRow()));
+      k.menu.close();
+      k.openSwitch(PHO);
+      check('*** an UNLOCKED panel still switches: the library opens in the photos\' place ***',
+        await settled(() => k.switchOpen()?.id === PHO, 4000), J(k.switchOpen()));
+      k.closeLibrary();
+      // Unlock (Home's Change tray writes the list without the id): honoured at the next press, nothing cached.
+      await B.write(rt.id, 'settings', { [LOCKED_KEY]: [SET] });
+      k.destroy(); box.remove();
+      const boxU = mkBox();
+      const kU = await mountKiosk(boxU, { user: USER, profileId: rt.id, profiles: B.profiles, bus: createBus(), ...seams() });
+      await settled(() => J(kU.slotTypes()) === four, 8000);
+      kU.openSwitch(NIM);
+      check('*** unlocked on the doc: Nimrod\'s place opens the library like any panel\'s ***',
+        await settled(() => kU.switchOpen()?.id === NIM, 4000), J(kU.switchOpen()));
+      kU.closeLibrary();
+      kU.destroy(); boxU.remove();
+      await B.write(rt.id, 'settings', { [LOCKED_KEY]: [NIM, SET] });
+
+      // (b) SWAPPED IN on today's path: the swapped-in screen's own doc is read.
+      const box2 = mkBox();
+      const k2 = await mountKiosk(box2, { user: USER, profileId: S0.id, profiles: B.profiles, bus: createBus(), ...seams() });
+      check('(setup) booted on a screen with nothing locked', await settled(() => k2.slotTypes().length >= 0, 2000) && k2.lockedIds().length === 0);
+      await k2.showScreen(rt.id);
+      await settled(() => J(k2.slotTypes()) === four, 8000);
+      check('*** swapped in: the tutorial\'s locks hold there too ***',
+        J(k2.lockedIds()) === J([NIM, SET]) && (await k2.switchPanel(SET, 'clock')) === false && J(k2.slotTypes()) === four, J(k2.lockedIds()));
+      await k2.showScreen(S0.id);
+      check('back on the screen it booted on: nothing there is locked', k2.screenId() === S0.id && k2.lockedIds().length === 0, J(k2.lockedIds()));
+      k2.destroy(); box2.remove();
+
+      // (c) THE DASHBOARD PATH (the showing dashboard's own doc).
+      const box3 = mkBox();
+      const k3 = await mountKiosk(box3, { user: USER, profileId: rt.id, profiles: B.profiles, bus: createBus(), dashboardDefault: true, ...seams() });
+      check('(setup) the dashboard path', await settled(() => k3.dashboardPath() && !!k3.dashboard(), 6000));
+      await settled(() => (k3.dashboard()?.arrangement?.()?.slotRecs || []).length === 4, 8000);
+      check('*** on the dashboard path the locks hold as well ***',
+        J(k3.lockedIds()) === J([NIM, SET]) && (await k3.switchPanel(NIM, 'clock')) === false, J(k3.lockedIds()));
       k3.destroy(); box3.remove();
     }
 

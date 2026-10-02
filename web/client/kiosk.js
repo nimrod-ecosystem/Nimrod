@@ -36,7 +36,7 @@ import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
-import { createArrangement, classifyLayoutChange as layoutChange } from './arrangement.js';
+import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX } from './arrangement.js';
 import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
 import { PRESETS as LAYOUT_PRESETS, withPreset } from './layout.js';
@@ -53,7 +53,7 @@ import {
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
-  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature,
+  dashboardSpeechRoutes, dashboardSpeechActions, dashboardSpeechBindings, dashboardsSignature, LOCKED_KEY,
 } from './dashboards.js';
 import { createDashboardPicker } from './dashboard_picker.js';
 // Row 2.38: dashboards inside dashboards -- the live limit, the tray's wait, the trail and its breadcrumb.
@@ -1431,6 +1431,24 @@ export async function mountKiosk(root, {
   // over as a getter -- the input runtime, the health watch, the screen id a swap changes -- the same
   // reason `childCtx` uses getters. (`health` is a `const` further down: its getter is only called by
   // `swapPanel`, which only recovery calls, long after it exists.)
+  // *** THE SWAPPED-IN SCREEN'S OWN SETTINGS DOC (2026-10-02; Mike's list 09-30 ~1324: "room edits on a
+  // swapped-in screen apply but aren't saved"). *** On this file's own path (`showScreen`, not the dashboard
+  // module's), a swap used to read the incoming screen's layout and close its doc at once, so an edit to that
+  // screen's room had nowhere to be written. The doc is now KEPT OPEN while that screen shows -- `{ id, doc }`,
+  // closed by the next swap, by going home, and on teardown -- and the room's edits are saved to it, the
+  // same way the boot screen's are saved to `settings`. Its lock list (`lockedIdsNow`) is read from it too.
+  // NOT polled: nothing on the boot path watches it either way, and a swap is usually a short visit.
+  // CLOSED ONLY AFTER ITS LAST WRITE HAS GONE: state.js `destroy()` cancels a write still waiting out its
+  // debounce, so a room edit made just before swapping away would otherwise be lost (found by kiosk_test).
+  let swapDoc = null;
+  const swapDocNow = () => (swapDoc && swapDoc.id === profileId ? swapDoc.doc : null);
+  function closeSwapDoc(doc) {
+    if (!doc) return;
+    let p = null;
+    try { p = doc.flush?.(); } catch { p = null; }
+    Promise.resolve(p).catch(() => { /* offline: nothing more to do */ })
+      .finally(() => { try { doc.destroy(); } catch { /* already gone */ } });
+  }
   const ownArr = createArrangement({
     bus, user, storage, embedded, settings,
     kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
@@ -1440,14 +1458,27 @@ export async function mountKiosk(root, {
     profileId: () => profileId,
     flashLimit: flashLimitNow,
     // 2026-10-02, edit mode on the dashboard's room (arrangement.js ROOM_PANEL_ID): where a door or a Room
-    // row it changes is saved -- this screen's own layout, the doc the edit view saves to, and only for the
-    // screen it booted on (a swapped-in screen's room is edited in memory; its own doc is not open here).
+    // row it changes is saved -- this screen's own layout, the doc the edit view saves to.
     // The 09-12 watch is TOLD first, so a room the arrangement redraws itself is never reloaded under the
-    // person editing it.
+    // person editing it. (2026-10-02, later: on a SWAPPED-IN screen, that screen's own doc -- `swapDoc`
+    // above. A preview layout belongs to the screen it was handed to and never follows a swap, so it only
+    // stops the boot screen's save. Nothing watches the swapped doc, so there is no watch to tell.)
     layoutStore: {
-      get: () => (profileId === bootProfileId ? ((settings.get() || {}).kiosk || {}).layout || null : null),
+      get: () => {
+        if (profileId === bootProfileId) return ((settings.get() || {}).kiosk || {}).layout || null;
+        const d = swapDocNow();
+        return d ? ((d.get() || {}).kiosk || {}).layout || null : null;
+      },
       save: (next) => {
-        if (embedded || previewLayout || profileId !== bootProfileId) return;
+        if (embedded) return;
+        if (profileId !== bootProfileId) {
+          const d = swapDocNow();
+          if (!d) return;
+          const was = (d.get() || {}).kiosk || {};
+          d.set({ kiosk: { ...was, layout: next } });
+          return;
+        }
+        if (previewLayout) return;
         const cur = (settings.get() || {}).kiosk || {};
         expectLayoutSig = JSON.stringify(next ?? null);
         settings.set({ kiosk: { ...cur, layout: next } });
@@ -1804,15 +1835,65 @@ export async function mountKiosk(root, {
     try { syncPanelBtn?.(); } catch { /* declared later; harmless before first render */ }
     // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
     // fresh on every draw, because a swap replaces all of it.
-    drawChips(modsEl, barModel(arr, runtime, { audio }));
-    // Switch module: dimmed with no panel to switch (D16: never hidden).
+    // (2026-10-02: with the scan on a PIECE of the room, no panel's chip is lit -- the piece has one of its
+    // own, lit, saying its name: `drawPieceChip`. The bar and the ring describe one thing.)
+    const piece = focusedPiece();
+    const model = barModel(arr, runtime, { audio });
+    drawChips(modsEl, piece && model ? { ...model, focusId: piece.id } : model);
+    if (piece) drawPieceChip(piece);
+    // Switch module: dimmed with no panel to switch (D16: never hidden) -- and while a piece of the room is
+    // selected, since a piece is not a panel; its title says which. A LOCKED panel's stays pressable and
+    // says so (`lockedNow`: the press explains where the key is).
     const sw = controlsEl?.querySelector?.('[data-act="switch"]');
-    if (sw) { try { sw.disabled = !arr.focusedRec(); } catch { sw.disabled = true; } }
+    if (sw) {
+      let rec = null;
+      try { rec = arr.focusedRec(); } catch { rec = null; }
+      sw.disabled = !rec || !!piece;
+      let locked = false;
+      try { locked = !piece && !!rec && lockedNow(rec.id); } catch { locked = false; }
+      sw.title = piece ? `${piece.label} is part of the room, not a panel: Switch module is for panels`
+        : locked ? `${rec.title || rec.type} is locked on this dashboard (Unlock is on Home, under Change)`
+          : 'switch the selected panel to another module';      // the markup's own title
+    }
     // The Modules library standing in a panel's place goes with that panel: a rebuilt arrangement (a swap,
     // a new layout) has new boxes, and a library beside a box that is gone stands in for nothing.
     try { if (libOpen && (!libOpen.host.isConnected || !libOpen.slot.isConnected)) closeLibrary('gone'); } catch { /* declared later */ }
     // Pause / Play follows the selected panel (2026-10-02). Declared further down; harmless before then.
     try { syncPlayPause(); } catch { /* not built yet */ }
+  }
+
+  // *** WHAT IS SELECTED, WHEN IT MAY BE A PIECE OF THE ROOM (2026-10-02; Mike's list 09-30 ~1341). ***
+  // arrangement.js `focusedTarget()` describes the stop the scan is on -- a panel, or a piece of the
+  // dashboard's room -- and argues why `focusedRec()` keeps meaning "the panel" rather than changing. Here:
+  //   DESCRIBING the selection (the bar's lit chip, the menu's "Settings for", the cat, the controls page)
+  //   reads `focusedTargetNow()`, so a piece is named as itself;
+  //   ACTING on "the selected panel" (Next, Back, Pause, bigger, Switch module with no panel named) reads
+  //   `panelSubject()`: the focused panel, or NONE while a piece is selected. A piece has no next photo, and
+  //   acting on the first panel while the bar names a door is the 09-05 failure ("a bar pointing at one panel
+  //   while the switch drives another is worse than no bar"). Those buttons dim, as they do with no panel.
+  function focusedTargetNow() {
+    try { return arr.focusedTarget?.() || null; } catch { return null; }
+  }
+  function focusedPiece() {
+    const t = focusedTargetNow();
+    return t && t.kind === 'piece' ? t : null;
+  }
+  function panelSubject() {
+    return focusedPiece() ? null : focusedRec();
+  }
+  /** The selected piece's chip on the plain bar: lit, its name, pressed = keep it selected (as a panel's). */
+  function drawPieceChip(piece) {
+    if (!modsEl || !piece || typeof document === 'undefined') return;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'k-dot on k-piece';
+    b.dataset.piece = piece.id;
+    b.textContent = piece.label;
+    b.setAttribute('aria-current', 'true');
+    b.setAttribute('aria-label', `In the room: ${piece.label}, selected`);
+    b.title = 'a piece of the room is selected: select presses it, and the ⚙ menu shows its options';
+    b.addEventListener('click', () => { try { arr.focusPlaced(piece.id); } catch { /* it has gone */ } });
+    modsEl.append(b);
   }
 
   // ---------------------------------------------------------------------------------
@@ -1849,6 +1930,8 @@ export async function mountKiosk(root, {
     swapping = true;
     const from = profileId;
     const trailBefore = screenStack.slice();
+    let incoming = null;                 // the incoming screen's settings doc (kept while it shows: `swapDoc`)
+    let adopted = false;
     try {
       const next = makeState
         ? await profiles.get(nextId)
@@ -1869,13 +1952,24 @@ export async function mountKiosk(root, {
       // `stateFor` reads `profileId` when it is CALLED, and it has just been set to `nextId`.
       // Everything else on the boot handle -- theme, the panel fields in the menu -- deliberately stays
       // as it was: only the arrangement is documented as belonging to the incoming screen.
-      const incoming = stateFor('settings');
+      // (2026-10-02: and the doc stays OPEN while that screen shows -- `swapDoc` -- so an edit to its room is
+      // saved where it belongs, and its lock list is read. Going back to the boot screen needs none: that is
+      // `settings`.)
+      // The screen being left: its last room edit goes to the server FIRST, so coming straight back to it
+      // reads that edit rather than the copy from before it.
+      if (swapDoc) { try { await swapDoc.doc.flush?.(); } catch { /* offline: it stays pending */ } }
+      incoming = stateFor('settings');
       let sl;
-      try { await incoming.load(); sl = (incoming.get().kiosk || {}).layout; }
+      let readable = false;
+      try { await incoming.load(); sl = (incoming.get().kiosk || {}).layout; readable = true; }
       catch { sl = undefined; }      // unreadable: no arrangement, not the previous screen's
-      finally { try { incoming.destroy(); } catch { /* already gone */ } }
       arr.resolve(sl);
       await applyModules();
+      // Up: the incoming doc replaces the last swapped-in one (a swap that failed above keeps the old one).
+      const before = swapDoc;
+      swapDoc = readable && nextId !== bootProfileId ? { id: nextId, doc: incoming } : null;
+      adopted = !!swapDoc;
+      if (before) closeSwapDoc(before.doc);
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
       drawCrumbs();
       return nextId;
@@ -1890,6 +1984,8 @@ export async function mountKiosk(root, {
       return null;
     } finally {
       swapping = false;
+      // A doc that is not kept (the boot screen, an unreadable one, a failed swap) is closed, as it always was.
+      if (incoming && !adopted) { try { incoming.destroy(); } catch { /* already gone */ } }
     }
   }
 
@@ -1993,7 +2089,8 @@ export async function mountKiosk(root, {
   // Next skipped the FIRST panel's photo. The button and the ring described different screens,
   // which is the one thing `paintFocus` exists to prevent.
   function nextInPrimary() {
-    const rec = arr.layout() ? focusedRec() : arr.stageRec();
+    // (2026-10-02: none while a piece of the room is selected -- `panelSubject`.)
+    const rec = arr.layout() ? panelSubject() : arr.stageRec();
     if (!rec) return;
     if (rec.type === 'director') bus.publish('segment/done', { reason: 'skipped' });
     else bus.publish(`${rec.type}/next`);
@@ -2022,7 +2119,7 @@ export async function mountKiosk(root, {
   // prevent elsewhere in the product — the way to honor that here, without touching
   // director.js, is to not make the press at all.
   function prevInPrimary() {
-    const rec = arr.layout() ? focusedRec() : arr.stageRec();
+    const rec = arr.layout() ? panelSubject() : arr.stageRec();
     if (!rec || rec.type === 'director') return;
     bus.publish(`${rec.type}/prev`);
   }
@@ -2043,7 +2140,9 @@ export async function mountKiosk(root, {
   function panelNext() {
     if (!arr.layout()) return;
     try { runtime?.router?.focusNext?.(); } catch { /* focus is not load-bearing */ }
-    const id = focusedRec()?.id;
+    // (2026-10-02: the stop focus landed on, a piece of the room included -- painting the first PANEL here
+    // took the ring off a piece the moment the button reached one.)
+    const id = focusedTargetNow()?.id;
     if (id) paintFocus(id);
     renderMods();
   }
@@ -2330,6 +2429,7 @@ export async function mountKiosk(root, {
             syncEditScan();
           },
           onChange: () => { renderMods(); },
+          automation,
         });
       }
     } catch (err) {
@@ -2555,7 +2655,11 @@ export async function mountKiosk(root, {
   // cat for the screen (`mountBarHelp`, transport_bar.js): the plain bar calls it, a placed bar says
   // SHELL_HELP and this answers. With "Cat help" off there is no button at all -- re-read whenever the
   // bar is brought up, since the setting lives with the cat's other preferences on this device.
-  const barHelp = mountBarHelp(kioskEl, { output: () => output, storage, focused: () => focusedRec() });
+  // (2026-10-02: a selected piece of the room is explained as the room's, standing on that piece.)
+  const barHelp = mountBarHelp(kioskEl, { output: () => output, storage, focused: () => {
+    const p = focusedPiece();
+    return p ? { type: 'room', el: p.el || null } : focusedRec();
+  } });
   const helpBtn = drawHelpButton(controlsEl.querySelector('.k-actions'), {
     before: controlsEl.querySelector('[data-act="settings"]'),
     onPress: () => { explainHelp(); },
@@ -2618,7 +2722,8 @@ export async function mountKiosk(root, {
   // That one change closes what four rows were waiting on: the bar could not name a panel (G4),
   // the menu could not show one's settings, a tab model had nothing to call "current" (F15),
   // and a remote had nothing to aim at (F16).
-  const subjectName = () => { const r = focusedRec(); return r ? (r.title || r.type) : ''; };
+  // (2026-10-02: or the piece of the room that is selected, by its own name -- `focusedTargetNow`.)
+  const subjectName = () => { const t = focusedTargetNow(); return t ? t.label : ''; };
 
   // ---- the two UNIVERSAL sections, which used to be a frame with nothing in it ----------
   //
@@ -2694,6 +2799,8 @@ export async function mountKiosk(root, {
     { id: 'module', label: (() => {
       const lv = menuLevel();
       if (lv !== 'instance') return levelTitle(lv);
+      const pc = menuPiece();
+      if (pc) return pc.label;
       const r = menuSubjectRec(); return r ? (r.title || r.type) : 'This panel';
     })() },
     { id: 'audio', label: 'Sound' },
@@ -2720,8 +2827,59 @@ export async function mountKiosk(root, {
   function menuSubjectRec() {
     let id = null;
     try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    // (2026-10-02: a piece of the room is not a panel: no panel rows -- `menuPiece` has its own.)
+    if (isPieceSubject(id)) return null;
     if (id) { const r = menuPanelRecs().find((x) => x.id === id); if (r) return r; }
-    return focusedRec();
+    return panelSubject();
+  }
+  // *** A PIECE OF THE ROOM AS THE MENU'S SUBJECT (2026-10-02; Mike's list 09-30 ~1341). *** With the scan on
+  // a piece, "Settings for" starts on THAT piece (`levelSubjects`, `defaultSubject`) and the first tab is its
+  // options: exactly the rows edit mode shows when the piece is pressed with ✎ (arrangement.js `roomTargets`,
+  // ca64e17 -- "Opens" for a piece; for a stop that is not an object of its own, a book or a way back, the
+  // room's own rows), written where edit mode writes them. One set of rows, reached two ways.
+  const isPieceSubject = (id) => typeof id === 'string' && id.startsWith(ROOM_PIECE_PREFIX);
+  function menuPiece() {
+    let id = null;
+    try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    if (!isPieceSubject(id)) return null;
+    try { return arr.pieceTarget?.(id) || null; } catch { return null; }
+  }
+  const pieceSubject = (p) => ({ id: p.id, label: p.whole ? `${p.label} (the room)` : p.label });
+  let pieceWaitFor = null;                 // the piece whose rows the menu is waiting on (`pieceRows`)
+  function pieceRows(p) {
+    const t = MENU_TAB.module(0);
+    const tg = p.target;
+    const head = { kind: 'heading', id: 'piece-head', ...t,
+      label: p.whole ? `${p.label} is part of the room: the room’s own settings` : `${p.label}, in the room` };
+    let rows = [];
+    if (tg && Array.isArray(tg.fields)) {
+      rows = fieldItems(tg.fields.map(normalizeField).filter(Boolean), {
+        values: () => { try { return tg.values?.() || {}; } catch { return {}; } },
+        level: complexity(),
+        onStep: (key, value) => { try { tg.set?.({ [key]: value }); } catch (err) { console.error('kiosk: a piece of the room', err); } },
+      }).map((it) => ({ ...it, ...t }));
+    }
+    // The room's own rows load on first use (arrangement.js): the menu draws again when they are in -- ONCE
+    // per piece, so a load that keeps failing (offline) cannot turn into a redraw that asks again forever.
+    let waiting = null;
+    try { waiting = arr.roomTargetsPending?.() || null; } catch { waiting = null; }
+    if (waiting && pieceWaitFor !== p.id) {
+      pieceWaitFor = p.id;
+      waiting.then(() => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } });
+    }
+    if (!rows.length) {
+      rows = [{ kind: 'item', id: 'piece-none', disabled: true, ...t,
+        label: waiting ? 'Loading its settings…' : `Nothing to set for ${p.label}` }];
+    }
+    // The same piece, chosen in edit mode in place (the ✎ corner's press, for a scan). Not at "Just the
+    // essentials", for "Edit this panel"'s reason. The menu closes first: it would cover the room.
+    const edit = complexity() !== 'essential' && p.rec ? [{ kind: 'item', id: 'piece-edit', ...t,
+      label: 'Edit the room', hint: `${p.whole ? 'the room' : p.label}, in place: press a piece to see its options`,
+      run: () => {
+        try { menu.close(); } catch { /* already closed */ }
+        bus.publish('shell/edit-panel', { id: ROOM_PANEL_ID, on: true, target: p.objectId || null, from: 'menu' });
+      } }] : [];
+    return [head, ...rows, ...edit];
   }
 
   // ---- "SETTINGS FOR" CHOOSES THE LEVEL (2026-10-02; settings.js "LEVELS" is the rule) ----------------
@@ -2770,9 +2928,13 @@ export async function mountKiosk(root, {
   function levelSubjects() {
     const recs = menuPanelRecs();
     const panel = (r) => ({ id: r.id, label: r.title || r.type });
-    if (complexity() === 'essential') return recs.map(panel);
-    const f = focusedRec();
+    // (2026-10-02: with the scan on a piece of the room, THAT piece comes first -- the selected thing -- and
+    // then every panel; "Every <module> panel" is a panel's level, so it is not offered for a piece.)
+    const pc = focusedPiece();
+    if (complexity() === 'essential') return [...(pc ? [pieceSubject(pc)] : []), ...recs.map(panel)];
+    const f = pc ? null : focusedRec();
     const out = [];
+    if (pc) out.push(pieceSubject(pc));
     if (f) out.push(panel(f), { id: `${LEVEL_PREFIX}module`, label: levelTitle('module') });
     for (const lv of levelsHere()) out.push({ id: `${LEVEL_PREFIX}${lv}`, label: levelTitle(lv) });
     for (const r of recs) if (!f || r.id !== f.id) out.push(panel(r));
@@ -3266,6 +3428,71 @@ export async function mountKiosk(root, {
     } catch (err) { console.error('kiosk: switch recent', err); }
   }
   const libraryUsage = () => ({ recent: switchRecent(), counts: { ...switchCounts() } });
+
+  // ---- A LOCKED PANEL STAYS WHERE IT IS (2026-10-02; Mike's list 09-30 ~1060) ---------------------------
+  // The tutorial dashboard locks Nimrod and the settings into its bottom two places "against accidents"
+  // (dashboards.js LOCKED_KEY: instance ids on the dashboard's settings doc; home_profile.js says what a lock
+  // means and why it has a key). Home's edit bar honoured it; this file's Switch module did not. Now every way
+  // this file switches a panel asks `lockedNow` first -- the same check as Home's own -- and a locked panel
+  // stays, with a notice saying why and where the key is (Home's Change tray, Unlock):
+  //   the bar's Switch module (both bars), the menu's "Switch <panel>…", a bound switch, "switch module" said
+  //   aloud, the AI's place / swap (`openLibraryAt`), and a pick that would put another module there
+  //   (`doSwitch`: the library's pick, a Modules panel's own pick, `kiosk.switchPanel`).
+  // WHICH LIST: the SHOWING dashboard's -- on the dashboard path its own doc (`themeDoc`); on this file's path
+  // the swapped-in screen's (`swapDoc`), or `settings` on the screen it booted on. Read at the press, never
+  // cached, so an Unlock is honoured as soon as this screen's copy of the doc has it.
+  // NOT ASKED: recovery's swap (arrangement.js `swapPanel` replaces a panel that FAILED; the lock is against
+  // accidents, not against keeping a screen alive), and a host page's own pick (Home asks its own `lockedNow`
+  // before it opens the library, `onPick`).
+  // THE BAR'S BUTTON STAYS PRESSABLE on a locked panel and its title says why: a press then SAYS why, where a
+  // dimmed button would give a switch user nothing at all for the press (Home's tray dims, because Unlock is
+  // the next button along there; here the key is on another page). On Mike's list.
+  function lockedIdsNow() {
+    let row = null;
+    try {
+      if (useDashboard && dash) row = themeDoc().get?.() || null;
+      else if (profileId !== bootProfileId) row = swapDocNow()?.get?.() || null;
+      else row = settings.get() || null;
+    } catch { row = null; }
+    const v = row && row[LOCKED_KEY];
+    return Array.isArray(v) ? v : [];
+  }
+  // (A declaration, not a const: the bar asks it on its first draw, long before this line runs.)
+  function lockedNow(id) { return !!id && lockedIdsNow().includes(id); }
+  const lockedWords = (rec) => `${rec ? (rec.title || rec.type) : 'This panel'} is locked on this dashboard, so it stays `
+    + 'where it is. To unlock it: on Home, choose it, press Change, then Unlock.';
+  // THE NOTICE: a line over the screen, read out to a screen reader (role=status), gone by itself -- never a
+  // thing anybody has to dismiss. HOW LONG, argued: long enough to read it SLOWLY. LOCK_NOTE_WPM is a slow
+  // reader's pace (a hundred words a minute is about half an adult's ordinary silent reading speed), with a
+  // floor (LOCK_NOTE_MIN_MS) so a short title still leaves time to look up. The sentence above is ~25 words:
+  // about 15 s. Guesses, on Mike's list. Drawn in the theme's own tokens; above the menu (`menus + 1`), since
+  // the menu's own "Switch <panel>…" row is one of the presses that shows it.
+  const LOCK_NOTE_WPM = 100;
+  const LOCK_NOTE_MIN_MS = 6000;
+  let lockNoteEl = null;
+  let lockNoteT = null;
+  function sayLocked(rec) {
+    const text = lockedWords(rec);
+    if (torn || typeof document === 'undefined') return text;
+    if (!lockNoteEl) {
+      lockNoteEl = document.createElement('div');
+      lockNoteEl.setAttribute('role', 'status');
+      lockNoteEl.setAttribute('aria-live', 'polite');
+      lockNoteEl.dataset.lockNote = '';
+      lockNoteEl.style.cssText = 'position:absolute;left:50%;bottom:14%;transform:translateX(-50%);'
+        + `z-index:${LAYERS.menus + 1};max-width:min(80%,640px);padding:12px 18px;border-radius:12px;`
+        + 'pointer-events:none;text-align:center;font:600 clamp(15px,2.1vmin,22px)/1.4 system-ui,-apple-system,Segoe UI,sans-serif;'
+        + 'background:var(--surface);color:var(--text);border:2px solid var(--focus)';
+      kioskEl.append(lockNoteEl);
+    }
+    lockNoteEl.textContent = text;
+    lockNoteEl.hidden = false;
+    clearTimeout(lockNoteT);
+    const words = text.split(/\s+/).filter(Boolean).length;
+    const ms = Math.max(LOCK_NOTE_MIN_MS, Math.round((words * 60000) / LOCK_NOTE_WPM));
+    lockNoteT = setTimeout(() => { if (lockNoteEl) lockNoteEl.hidden = true; }, ms);
+    return text;
+  }
   function hostSwitch() {
     if (!hostPage || typeof hostPage.press !== 'function' || typeof hostPage.barItems !== 'function') return false;
     try { return (hostPage.barItems() || []).some((it) => it && it.act === 'switch'); } catch { return false; }
@@ -3281,7 +3508,7 @@ export async function mountKiosk(root, {
     }
     const recs = menuPanelRecs();
     const rec = id ? recs.find((r) => r.id === id) || null
-      : (p && p.type ? recs.find((r) => r.type === p.type) : null) || focusedRec();
+      : (p && p.type ? recs.find((r) => r.type === p.type) : null) || panelSubject();
     if (!rec) { if (!menu.isOpen()) menu.open(); return false; }
     openLibraryAt(rec.id).catch((err) => console.error('kiosk: switch module', err));
     return true;
@@ -3302,6 +3529,8 @@ export async function mountKiosk(root, {
     const rec = menuPanelRecs().find((r) => r.id === id) || null;
     const host = rec && rec.el;
     if (!rec || !host || !host.parentNode) return false;
+    // A locked panel stays where it is (see `lockedNow`). A host page's own pick asked its own lock first.
+    if (!onPick && lockedNow(rec.id)) { sayLocked(rec); return false; }
     if (libOpen) {
       if (libOpen.id === rec.id && !focus) return true;
       closeLibrary('replaced');
@@ -3406,6 +3635,8 @@ export async function mountKiosk(root, {
     return true;
   }
   async function doSwitch(id, type, apply = null) {
+    // A locked panel is not switched, however the pick arrived (see `lockedNow`).
+    if (lockedNow(id)) { sayLocked(menuPanelRecs().find((r) => r.id === id) || null); return false; }
     let ok = false;
     try { ok = !!(await arr.switchPanel(id, type)); } catch (err) { console.error('kiosk: switch module', err); ok = false; }
     if (ok) {
@@ -3496,7 +3727,7 @@ export async function mountKiosk(root, {
   };
   function playPauseState() {
     let rec = null;
-    try { rec = focusedRec(); } catch { rec = null; }
+    try { rec = panelSubject(); } catch { rec = null; }      // (none while a piece of the room is selected)
     return { can: canPausePanel(rec), paused: !!rec && pausedPanels.has(rec.id), name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
   }
   function sendPanelVerb(rec, verb) {
@@ -3509,7 +3740,7 @@ export async function mountKiosk(root, {
   function playPauseSelected(id = null) {
     if (torn) return null;
     let rec = null;
-    try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : focusedRec(); } catch { rec = null; }
+    try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : panelSubject(); } catch { rec = null; }
     if (!canPausePanel(rec)) return null;
     const verb = pausedPanels.has(rec.id) ? 'play' : 'pause';
     sendPanelVerb(rec, verb);
@@ -3543,7 +3774,7 @@ export async function mountKiosk(root, {
   function promotePanel(id = null) {
     if (torn) return null;
     let rec = null;
-    try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : focusedRec(); } catch { rec = null; }
+    try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : panelSubject(); } catch { rec = null; }
     if (!rec) return null;
     // The corner of a panel already at the top reads "smaller": the same press goes back down.
     if (promotedScreen === rec.id) return demotePanel();
@@ -3738,7 +3969,7 @@ export async function mountKiosk(root, {
       // else). The map not on an embed (nowhere to go).
       ...(complexity() !== 'essential' ? [
         { kind: 'item', id: 'edit-view', label: 'Edit this dashboard…', ...MENU_TAB.screen(1),
-          hint: 'move things, and choose what each one opens or shows', run: () => openEditView() },
+          hint: 'move things, choose what each one opens or shows, and what drives its settings', run: () => openEditView() },
       ] : []),
       ...(complexity() === 'advanced' && !embedded ? [{ kind: 'item', id: 'dashboard-map', label: 'Map of your dashboards…',
         ...MENU_TAB.screen(1), hint: 'every dashboard, and what opens or shows which', run: () => openMap() }] : []),
@@ -3779,6 +4010,9 @@ export async function mountKiosk(root, {
       // (2026-10-02: a LEVEL names itself -- "Every Photos panel", "This screen".)
       const lv = menuLevel();
       if (lv !== 'instance') return { type: 'level', title: levelTitle(lv), heading: levelTitle(lv) };
+      // (2026-10-02: a piece of the room names itself -- `menuPiece`.)
+      const pc = menuPiece();
+      if (pc) return { type: 'room-piece', title: pc.label };
       const r = menuSubjectRec();
       return r ? { type: r.type, title: r.title || r.type } : null;
     },
@@ -3795,7 +4029,8 @@ export async function mountKiosk(root, {
     topIds: ['set:complexity'],
     // (2026-10-02: the panels AND the levels -- `levelSubjects` argues the order.)
     subjects: () => levelSubjects(),
-    defaultSubject: () => focusedRec()?.id || null,
+    // (2026-10-02: the selected STOP -- a piece of the room included, `focusedTargetNow`.)
+    defaultSubject: () => focusedTargetNow()?.id || null,
     // A different subject closes the Layout list.
     onSubject: () => { layoutOpen = false; },
     fullscreenTarget: root,
@@ -3822,6 +4057,9 @@ export async function mountKiosk(root, {
       // (2026-10-02: a LEVEL chosen in "Settings for" -- that level's rows, and its Layout list while open.)
       const lv = menuLevel();
       if (lv !== 'instance') return layoutOpen && canChangeLayout() ? layoutRows() : levelRows(lv);
+      // (2026-10-02: a piece of the room chosen in "Settings for" -- its own options, `pieceRows`.)
+      const pc = menuPiece();
+      if (pc) return pieceRows(pc);
       const rec = menuSubjectRec();
       if (!rec) return [];
       // The instance-level override goes FIRST — "which panel is this" before "what does this
@@ -3896,9 +4134,12 @@ export async function mountKiosk(root, {
       // "SWITCH MODULE" (2026-10-02): the Modules library in this panel's place (`openLibraryAt` closes the
       // menu first: it would cover the library). Not at "Just the essentials" (that level is legibility and
       // the ways out); the bar's button is there.
+      // (2026-10-02: a LOCKED panel's row stays, and says so; pressing it says how to unlock -- `lockedNow`.)
       if (complexity() !== 'essential') items.push({ kind: 'item', id: 'switch-module', ...MENU_TAB.module(0),
         label: `Switch ${rec.title || rec.type} to another module…`,
-        hint: 'opens Modules in its place; its settings are kept for when you switch back', run: () => openSwitch(rec.id) });
+        hint: lockedNow(rec.id) ? 'locked on this dashboard: Unlock is on Home, under Change'
+          : 'opens Modules in its place; its settings are kept for when you switch back',
+        run: () => openSwitch(rec.id) });
       // EDIT THIS PANEL IN PLACE (2026-10-02; edit_mode.js, the ✎ corner's press for a scan). The menu closes
       // first: it would cover the panel being edited. Not at "Just the essentials", for Switch module's reason.
       if (complexity() !== 'essential') items.push({ kind: 'item', id: 'edit-panel', ...MENU_TAB.module(0),
@@ -4849,7 +5090,7 @@ export async function mountKiosk(root, {
   const notePause = (verb) => () => {
     // Only when the verb went to the PANEL: with the menu open when it arrived, the router held it.
     if (menuOpenAtVerb) return;
-    const rec = focusedRec();
+    const rec = panelSubject();
     if (!canPausePanel(rec)) return;
     if (verb === 'pause') pausedPanels.add(rec.id); else pausedPanels.delete(rec.id);
     syncPlayPause();
@@ -5084,7 +5325,7 @@ export async function mountKiosk(root, {
       clearTimeout(barGraceT); barGraceT = null; barGraceOver = false;
       applyLayout(settings.get());
       syncShownTheme();
-      const f = focusedRec();
+      const f = focusedTargetNow();
       if (f) paintFocus(f.id);
       renderMods();
       syncPlainBar();
@@ -5235,6 +5476,11 @@ export async function mountKiosk(root, {
     // stands in for; `library()` is its state, for a suite; `openLibrary` is the way a host page -- Home --
     // opens it with its own pick: `kiosk.openLibrary(id, { onPick(item), onCancel(why), focus, autoPlace })`.)
     switchOpen: () => (libOpen ? { id: libOpen.id, library: true } : null),
+    // 2026-10-02, for the suites: what is selected (a panel, or a piece of the room: arrangement.js
+    // `focusedTarget`), the lock list being honoured now and the lock notice while it shows (else null).
+    focusedTarget: () => focusedTargetNow(),
+    lockedIds: () => [...lockedIdsNow()],
+    lockNote: () => (lockNoteEl && !lockNoteEl.hidden ? lockNoteEl.textContent : null),
     openSwitch: (id) => openSwitch(id),
     switchPanel: (id, type) => doSwitch(id, type),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
@@ -5311,6 +5557,10 @@ export async function mountKiosk(root, {
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
       // The Modules library, if it stands in a panel's place: its row and its game handle let go.
       try { closeLibrary('gone'); } catch { /* already gone */ }
+      // A swapped-in screen's settings doc (kept open while it showed), and the lock notice's timer.
+      closeSwapDoc(swapDoc?.doc);
+      swapDoc = null;
+      clearTimeout(lockNoteT);
       clearTimeout(plainSummonT); clearTimeout(barGraceT);
       try { longPress?.destroy(); } catch { /* already gone */ }
       offsShell.forEach((off) => { try { off(); } catch { /* already gone */ } });
