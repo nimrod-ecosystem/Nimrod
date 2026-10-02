@@ -65,6 +65,54 @@ import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_n
 // (room_doors.js argues where a door is saved and why that is not a rebuild).
 import { classifyLayoutChange, sceneDoorChanges } from './room_doors.js';
 export { classifyLayoutChange };
+import { SHELL_PROMOTE } from './shell_verbs.js';
+
+// =====================================================================================================
+// *** MAKE A PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02). *** Mike: "something that pops up in the
+// bottom right corner of each module to make that module full screen in the dashboard and then fullscreen
+// on the screen. I guess that would just keep going all the way up and down with nested things. You're
+// pretty much just promoting it to one level higher."
+//
+// THIS FILE OWNS ONE LEVEL: a panel FILLS ITS DASHBOARD (`promote(id)`) -- a slot's cell takes the whole
+// grid, a module placed flat on the screen takes the whole dashboard, and every other panel is hidden
+// (visibility, never unmounted: they keep playing, as a hidden panel does by default, and come back exactly
+// as they were). Pressed again it answers `{ level: 'top' }` and the SHELL takes the next level up (kiosk.js:
+// the screen). A nested dashboard (a TV) is one panel of the dashboard it sits in, so it promotes the same
+// way, one level at a time; its own panels are reached by going IN (its opener covers them), where they are
+// this file's panels again. `demote()` is one level down.
+//
+// NOT HERE: a module drawn INSIDE A ROOM (in a room's slot, or on one of its walls) has the room's own
+// perspective around it; lifting it out to fill the dashboard is the room's close-up's job (room_objects),
+// so it gets no corner and promoting it answers `{ level: 'top' }` (the shell's level: the screen).
+//
+// THE CORNER BUTTON: on every panel this file draws (`corners`, on by default; a nested dashboard passes
+// false -- its opener is over it), bottom right, shown on hover or keyboard focus and while promoted. It
+// SAYS what was pressed (SHELL_PROMOTE { id }) and the shell decides, so the corner, the menu row, a switch
+// and "make it bigger" are one press. 44px: the WCAG 2.5.5 touch-target size, the same floor every other
+// control here keeps -- a fixed number on purpose, not a preference (a smaller corner is a missed press).
+// =====================================================================================================
+const PROMOTE_CSS_ID = 'k-promote-css';
+const PROMOTE_PX = 44;
+function ensurePromoteCss() {
+  if (typeof document === 'undefined' || document.getElementById(PROMOTE_CSS_ID)) return;
+  const s = document.createElement('style');
+  s.id = PROMOTE_CSS_ID;
+  s.textContent = `
+.k-promote{position:absolute;right:6px;bottom:6px;z-index:calc(var(--z-panel-contents,300) + 20);
+  width:${PROMOTE_PX}px;height:${PROMOTE_PX}px;margin:0;padding:0;border-radius:10px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.4);background:rgba(10,20,15,.6);color:#fff;
+  font:600 22px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;transition:opacity .15s}
+.k-cell:hover>.k-promote,.k-cell:focus-within>.k-promote,.k-pcell:hover>.k-promote,.k-pcell:focus-within>.k-promote,
+.k-stage:hover>.k-promote,.k-stage:focus-within>.k-promote,.k-promote:focus-visible,[data-promoted]>.k-promote{opacity:1}
+@media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
+[data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
+[data-promoted-panel]>.k-placed>.k-pcell:not([data-promoted]){visibility:hidden}
+[data-promoted-panel]>.k-stage>.k-cell[data-promoted]{grid-area:1/1/-1/-1!important;z-index:5}
+[data-promoted-panel]>.k-placed>.k-pcell[data-promoted]{inset:0!important;left:0!important;top:0!important;
+  width:100%!important;height:100%!important;transform:none!important;display:flex!important;z-index:99!important}
+.kiosk[data-promoted="screen"] .k-mirror,.kiosk[data-promoted="screen"] .k-clock{visibility:hidden}`;
+  document.head.append(s);
+}
 
 // Where a dashboard remembers its panels switched to another module (`switchPanel`): { id: type }.
 export const PANEL_SWITCHES_KEY = 'panelSwitches';
@@ -81,7 +129,7 @@ export function createArrangement({
   // The shell's hands: how a module instance is mounted, torn down and watched (they hold the
   // per-instance state handles and the health watch, which stay in the shell), and how the bar is
   // redrawn once the arrangement has changed what it lists.
-  mountInstance, destroyRec, watchRec = (rec) => rec, renderMods = () => {},
+  mountInstance, destroyRec, watchRec = (rec) => rec, renderMods: renderModsHost = () => {},
   // GETTERS, NOT VALUES. Each is built or changed by the shell AFTER this factory exists -- the input
   // runtime, the health watch, the screen id a swap changes -- so a value captured here would be null
   // (or the boot screen's) forever. The same reason kiosk.js's `childCtx` hands modules getters.
@@ -89,11 +137,20 @@ export function createArrangement({
   // The screen's flash limit (flash_limit.js), a getter, for the dashboard's room. Absent: the room uses flash_limit.js's
   // default (no limit, since 8a89e31).
   flashLimit = undefined,
+  // The corner "make it bigger" button on each panel (the header above PROMOTE_CSS_ID). A nested
+  // dashboard passes false: its opener covers its panels, and going in is how they are reached.
+  corners = true,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
   let profile = null;
   let layout = null;
+  // Every redraw of the bar is also when a panel's corner may need drawing (a remount, a swap, a switch
+  // replaces what is in a cell): one place, so no path that changes a cell can leave one without it.
+  function renderMods() {
+    try { ensureCorners(); } catch (err) { console.error('arrangement: corners', err); }
+    renderModsHost();
+  }
 
   // ---- the mirror/clock corners: what kiosk.js's header calls the kiosk LAYOUT, in `settings.kiosk`
   function applyLayout(s) {
@@ -900,6 +957,8 @@ export function createArrangement({
   async function applyModules() {
     // Only the MODULES are torn down. Their state/events handles go with them, which is right:
     // those are per-instance and the incoming screen has its own.
+    // (A panel made bigger is made ordinary first: what fills the dashboard next is a new arrangement.)
+    if (promoted) { delete kioskEl.dataset.promotedPanel; promoted = null; }
     destroyRec(stageRec); stageRec = null;
     destroyRec(cameraRec); cameraRec = null;
     destroyRec(clockRec); clockRec = null;
@@ -1105,6 +1164,81 @@ export function createArrangement({
     return true;
   }
 
+  // ---- MAKE A PANEL BIGGER (the header above PROMOTE_CSS_ID) ---------------------------------------
+  let promoted = null;                      // the id filling this dashboard, or null
+  let promoteTop = null;                    // the id the SHELL has taken further up (its corner says "smaller")
+  // The box a panel's corner sits on, and whether it can fill the dashboard in place.
+  function promoteBox(id) {
+    if (!layout) return stageRec && stageRec.id === id ? { box: stageEl, fills: false } : null;
+    const s = slotRecs.find((r) => r.id === id);
+    if (s) { const cell = s.el?.closest?.('.k-cell'); return cell ? { box: cell, fills: true } : null; }
+    const m = placedMeta.get(id);
+    if (m && placedRecs.some((r) => r.id === id)) return { box: m.wrap, fills: m.where === 'flat' };
+    return null;
+  }
+  function unmarkPromoted() {
+    if (!promoted) return;
+    const pb = promoteBox(promoted);
+    if (pb) delete pb.box.dataset.promoted;
+    delete kioskEl.dataset.promotedPanel;
+    const rec = recFor(promoted);
+    promoted = null;
+    try { rec?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+  }
+  /** Fill this dashboard with panel `id`. `{ level: 'dashboard' }` if it now does; `{ level: 'top' }` when
+   *  it already fills it (or cannot in place -- a room's module), so the shell takes the next level up;
+   *  null when `id` is not a panel here. */
+  function promote(id) {
+    const pb = promoteBox(id);
+    if (!pb) return null;
+    if (!pb.fills || promoted === id) return { level: 'top', id };
+    unmarkPromoted();
+    promoted = id;
+    pb.box.dataset.promoted = '1';
+    kioskEl.dataset.promotedPanel = id;
+    try { recFor(id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
+    renderMods();
+    return { level: 'dashboard', id };
+  }
+  /** One level down, at this dashboard: true if a panel stopped filling it. */
+  function demote() {
+    if (!promoted) return false;
+    unmarkPromoted();
+    renderMods();
+    return true;
+  }
+  /** The shell's level above this one: the panel it took up (its corner then reads "smaller"), or null. */
+  function setPromoteTop(id) { promoteTop = id || null; try { ensureCorners(); } catch { /* not load-bearing */ } }
+  function ensureCorners() {
+    if (!corners || typeof document === 'undefined') return;
+    const want = layout ? [...slotRecs, ...placedRecs] : [stageRec].filter(Boolean);
+    if (!want.length) return;
+    ensurePromoteCss();
+    for (const r of want) {
+      const pb = promoteBox(r.id);
+      // A module in a room keeps the room's own close-up (see the header): no corner.
+      if (!pb || (layout && !pb.fills)) continue;
+      let b = pb.box.querySelector(':scope > .k-promote');
+      if (!b) {
+        b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'k-promote';
+        b.addEventListener('click', (e) => {
+          e.stopPropagation();
+          try { bus?.publish?.(SHELL_PROMOTE, { id: b.dataset.for, from: 'corner' }); } catch (err) { console.error('arrangement: promote', err); }
+        });
+        pb.box.append(b);
+      }
+      const top = promoteTop === r.id;
+      const t = r.title || r.type;
+      b.dataset.for = r.id;
+      b.textContent = top ? '⤡' : '⤢';
+      const say = top ? `Make ${t} smaller` : promoted === r.id ? `Make ${t} fill the screen` : `Make ${t} bigger`;
+      b.setAttribute('aria-label', say);
+      b.title = say;
+    }
+  }
+
   // Every mounted record, and the links runner. The shell tears down everything else.
   function destroy() {
     screenLinks?.destroy();
@@ -1166,6 +1300,11 @@ export function createArrangement({
     switchPanel,
     baseTypeOf,
     replaceSlot,
+    // ---- make a panel bigger (2026-10-02; the header above PROMOTE_CSS_ID) ----
+    promote,
+    demote,
+    promotedId: () => promoted,
+    setPromoteTop,
     // The room's slots (room_scene.js `slots()`), while the scene is a mounted room; an empty Map otherwise.
     roomSlots: () => { try { return roomScene?.slots?.() || new Map(); } catch { return new Map(); } },
     // ---- the mirror/clock corners ----

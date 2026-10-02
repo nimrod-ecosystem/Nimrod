@@ -41,6 +41,42 @@ export const ROLE_CYCLE_TOPIC  = 'system/role-cycle';
 // too -- a decoration that is a control is an input device (room doc §3.1), and so is a switch.
 // NOT on the remote-drive allowlist (drive.js stays frozen at eleven): "open this screen's menu" is not
 // something a person at the far end of a socket gets by accident.
+// The bar's Pause / Play, and promoting a panel (shell_verbs.js SHELL_PLAY_PAUSE / SHELL_PROMOTE /
+// SHELL_DEMOTE, the same strings).
+export const PLAY_PAUSE_TOPIC = 'shell/play-pause';
+export const PROMOTE_TOPIC = 'shell/promote';
+export const DEMOTE_TOPIC = 'shell/demote';
+
+// ---------------------------------------------------------------------------------------
+// *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute my
+// microphone, mute the speaker, show/hide their video, show/hide my video", reachable by scan, switch and
+// voice. modules/call.js answers CALL_CONTROL_TOPIC (only while a call is live) and says what it is set to
+// on CALL_CONTROLS_TOPIC, which both bars and the menu draw from.
+//   payload: { mic | speaker | theirVideo | myVideo: 'on' | 'off' | 'toggle' } or { volume: 1 | -1 }
+// EACH THING HAS AN ON, AN OFF AND A TOGGLE, argued: "mute my mic" said twice must leave it muted (MEDIA_VERBS'
+// rule: a spoken command is idempotent), so voice presses on/off; a single switch has one press, so it
+// binds the toggle; the bar's button is a toggle that says which way it is.
+// ---------------------------------------------------------------------------------------
+export const CALL_CONTROL_TOPIC = 'call/control';
+export const CALL_CONTROLS_TOPIC = 'call/controls';
+const callAct = (id, label, payload) => ({ id: `call/${id}`, label, topic: CALL_CONTROL_TOPIC, payload, group: 'Calls' });
+export const CALL_ACTIONS = [
+  callAct('mic-off', 'Call: mute my microphone', { mic: 'off' }),
+  callAct('mic-on', 'Call: unmute my microphone', { mic: 'on' }),
+  callAct('mic-toggle', 'Call: my microphone on or off', { mic: 'toggle' }),
+  callAct('speaker-off', 'Call: mute the speaker', { speaker: 'off' }),
+  callAct('speaker-on', 'Call: unmute the speaker', { speaker: 'on' }),
+  callAct('speaker-toggle', 'Call: the speaker on or off', { speaker: 'toggle' }),
+  callAct('their-video-off', 'Call: hide their video', { theirVideo: 'off' }),
+  callAct('their-video-on', 'Call: show their video', { theirVideo: 'on' }),
+  callAct('their-video-toggle', 'Call: their video shown or hidden', { theirVideo: 'toggle' }),
+  callAct('my-video-off', 'Call: stop sending my video', { myVideo: 'off' }),
+  callAct('my-video-on', 'Call: send my video again', { myVideo: 'on' }),
+  callAct('my-video-toggle', 'Call: my video on or off', { myVideo: 'toggle' }),
+  callAct('louder', 'Call: louder', { volume: 1 }),
+  callAct('quieter', 'Call: quieter', { volume: -1 }),
+];
+
 export const SYSTEM_TOPICS = Object.freeze({
   fullscreen: 'system/fullscreen',
   settings: 'system/settings',
@@ -98,6 +134,15 @@ export const SYSTEM_ACTIONS = [
   { id: 'kiosk/home', label: 'Home: the dashboard this screen started on', topic: 'kiosk/home', group: 'System' },
   { id: 'nimrod-cat/next', label: 'Nimrod the cat: next step', topic: 'nimrod-cat/next', group: 'System' },
   { id: 'nimrod-cat/prev', label: 'Nimrod the cat: back a step', topic: 'nimrod-cat/prev', group: 'System' },
+  // *** 2026-10-02: THE BAR'S PAUSE / PLAY AND "MAKE IT BIGGER", ON A SWITCH. *** The same topics the bar's
+  // button, the panel's corner button and the menu's rows say (shell_verbs.js; written out here so this file
+  // imports nothing -- transport_test checks the two agree). Pause / Play toggles the SELECTED panel: the one
+  // shape a single switch can use (the spoken "pause" and "play" stay the idempotent verbs above, for the
+  // reason MEDIA_VERBS gives). Bigger fills the dashboard, then the screen; Smaller goes back one level.
+  // Not on the remote-drive allowlist, for the reason the rest of this list is not.
+  { id: 'shell/play-pause', label: 'Pause or play the selected panel', topic: PLAY_PAUSE_TOPIC, group: 'System' },
+  { id: 'shell/promote', label: 'Make the selected panel bigger (its dashboard, then the screen)', topic: PROMOTE_TOPIC, group: 'System' },
+  { id: 'shell/demote', label: 'Make it smaller again (one level)', topic: DEMOTE_TOPIC, group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
@@ -572,6 +617,7 @@ export function createDefaultRegistry() {
   reg.registerAll(CURSOR_ACTIONS);
   reg.registerAll(MENU_ACTIONS);
   reg.registerAll(SYSTEM_ACTIONS);
+  reg.registerAll(CALL_ACTIONS);
   reg.register(ROOM_HOLD_ACTION);
   return reg;
 }

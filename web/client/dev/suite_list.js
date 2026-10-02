@@ -97,6 +97,9 @@ export const SUITES = [
   'unlocks',
   // 2026-10-02: the Nimrod guide as the AI module (talk to your own AI; actions only on a press; notes).
   'nimrod_ai',
+  // 2026-10-02: settings at every level, Pause / Play on the bar, a panel made bigger, a call's controls,
+  // more layouts. Mounts real kiosks (needs the server).
+  'screen_controls',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

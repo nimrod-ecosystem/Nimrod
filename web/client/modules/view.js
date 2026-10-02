@@ -878,6 +878,9 @@ function dashboardFactory(ctx) {
           profileId: () => viewId,
           // The host screen's flash limit (flash_limit.js), for this dashboard's room, read live.
           flashLimit: () => flashLimit(ctx),
+          // 2026-10-02: the "make it bigger" corner on each panel -- not on a NESTED one's panels: its
+          // opener covers them, and going in is how they are reached (arrangement.js says why).
+          corners: !nested,
         });
 
         arr.applyLayout(settings.get());

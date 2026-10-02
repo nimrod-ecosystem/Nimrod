@@ -84,6 +84,70 @@ export function mountBarHelp(host, { output = () => null, storage, focused = () 
   };
 }
 
+// ---------------------------------------------------------------------------------------------------
+// *** PAUSE / PLAY, ONE BUTTON FOR WHATEVER PANEL IS SELECTED (2026-10-02). *** Drawn the same on both
+// bars from the shell's state ({ can, paused, name }); the shell does the pausing (kiosk.js argues it).
+// DIMMED, NEVER HIDDEN, when the selected panel has nothing to pause (D16: a button that vanishes costs a
+// switch user a press to learn it went), and it says so in its title. A FIXED WIDTH, so "Pause" turning
+// into "Play" never moves a button after it (PRIORITY.md #3's same-position rule).
+export const PLAY_PAUSE_ACT = 'playpause';
+export function paintPlayPause(btn, s = {}) {
+  if (!btn) return;
+  const can = !!(s && s.can);
+  const paused = !!(s && s.paused);
+  const name = (s && s.name) || 'the selected panel';
+  btn.disabled = !can;
+  btn.textContent = paused ? '▶ Play' : '⏸ Pause';
+  btn.setAttribute('aria-pressed', paused ? 'true' : 'false');
+  btn.style.minWidth = '6.2em';
+  btn.title = !can ? `${name} has nothing to pause` : paused ? `play ${name} again` : `pause ${name}`;
+}
+
+// ---------------------------------------------------------------------------------------------------
+// *** A LIVE CALL'S CONTROLS ON THE BAR (2026-10-02). *** From the call panel's own report
+// (actions.js CALL_CONTROLS_TOPIC; modules/call.js): shown only while a call is live, gone the moment it
+// ends. Each button says what pressing it DOES ("Mute my mic", then "Unmute my mic") and is lit while the
+// thing is off, so somebody walking in can see why nobody hears them. A video control on an audio-only
+// call is DIMMED rather than missing (D16). `send(payload)` is the bar's way to say CALL_CONTROL_TOPIC.
+// The group is `display:contents` inside the bar's own row of buttons, so it wraps with them.
+export function drawCallControls(el, s, send) {
+  if (!el) return;
+  el.innerHTML = '';
+  const live = !!(s && s.live);
+  el.hidden = !live;
+  el.style.display = live ? 'contents' : 'none';
+  if (!live) return;
+  el.setAttribute('role', 'group');
+  el.setAttribute('aria-label', 'this call');
+  const pct = Math.round((Number(s.volume) || 0) * 100);
+  const b = (act, label, off, title, payload, disabled = false) => {
+    const btn = el.ownerDocument.createElement('button');
+    btn.type = 'button';
+    btn.dataset.call = act;
+    btn.textContent = label;
+    btn.title = title;
+    btn.style.minWidth = '7.4em';
+    btn.disabled = !!disabled;
+    if (off) btn.dataset.on = '1';
+    btn.setAttribute('aria-pressed', off ? 'true' : 'false');
+    btn.addEventListener('click', () => { if (!btn.disabled) { try { send?.(payload); } catch (err) { console.error('transport bar: call', err); } } });
+    el.append(btn);
+  };
+  b('mic', s.mic ? 'Mute my mic' : 'Unmute my mic', !s.mic,
+    s.mic ? 'they can hear this room — press to mute your microphone' : 'your microphone is muted — they cannot hear you',
+    { mic: 'toggle' }, s.hasMic === false);
+  b('speaker', s.speaker ? 'Mute speaker' : 'Unmute speaker', !s.speaker,
+    s.speaker ? 'press to stop hearing them in this room' : 'their sound is muted in this room', { speaker: 'toggle' });
+  b('their', s.theirVideo ? 'Hide their video' : 'Show their video', !s.theirVideo,
+    !s.video ? 'this is an audio call: there is no video of them' : s.theirVideo ? 'show their name instead of their picture' : 'their picture is hidden',
+    { theirVideo: 'toggle' }, !s.video);
+  b('mine', s.myVideo ? 'Hide my video' : 'Show my video', !s.myVideo,
+    !s.sending ? 'no camera is being sent on this call' : s.myVideo ? 'stop sending your camera — they will not see you' : 'they cannot see you — press to send your camera again',
+    { myVideo: 'toggle' }, !s.sending);
+  b('quieter', 'Call quieter', false, `the call is at ${pct}%`, { volume: -1 });
+  b('louder', 'Call louder', false, `the call is at ${pct}%`, { volume: 1 });
+}
+
 /**
  * The model both bars draw from, read fresh from an arrangement (`arrangement.js`) and an input
  * runtime-like object (`{ router }`). Pure reads; nothing is kept.

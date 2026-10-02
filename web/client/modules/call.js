@@ -67,6 +67,29 @@ import { MUSIC_GROUP } from '../audio_bus.js';
 import { PROFILES as MIC_PROFILES } from '../mic_owner.js';
 import { CALL_TRANSPORT_READY } from '../call_transport.js';
 import { createAvatarCache, avatarHtml } from '../avatar_display.js';
+import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
+import { PANEL_VOLUME_FIELD, PANEL_VOLUME_KEY, panelVolumeFrom } from '../panel_sound.js';
+
+// ---------------------------------------------------------------------------------------
+// *** A LIVE CALL'S CONTROLS (2026-10-02). *** Mike: during a call the transport bar shows "volume, mute
+// my microphone, mute the speaker, show/hide their video, show/hide my video". This panel holds every
+// piece of media they act on, so it answers them (CALL_CONTROL_TOPIC, actions.js) and says where each one
+// is (CALL_CONTROLS_TOPIC), and the bars and the menu draw from that:
+//   mic         my microphone's track enabled or not: they hear the room, or they do not. The microphone
+//               stays OPEN (the arbiter's claim is kept), so unmuting is instant and nothing else grabs it.
+//   speaker     the far end's sound in this room: the element playing them, muted or not.
+//   theirVideo  their picture shown, or their name card instead; their SOUND carries on either way.
+//   myVideo     my camera's track enabled or not: they see this room, or a still frame / black. The camera
+//               stays held (the mirror never blinks, the module header's promise).
+//   volume      this panel's own volume (panel_sound.js), one step at a time, never wrapping -- a press
+//               of "louder" at the top must not make it quiet. The Calls minimum (audio_bus.js) still
+//               holds while a call sounds, so "quieter" stops at that floor by design.
+// EVERYTHING STARTS ON at each answer, and a new call never inherits the last one's mutes: a muted
+// microphone the person did not mute on THIS call is a call where nobody can hear them and nothing says why.
+// Nothing here does anything while no call is live.
+const CALL_CONTROL_KEYS = Object.freeze(['mic', 'speaker', 'theirVideo', 'myVideo']);
+const VOLUME_STEPS = Object.freeze([...new Set(PANEL_VOLUME_FIELD.options.map((o) => Number(o.value)))]
+  .filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b));
 
 // What a CALL wants from the microphone, as opposed to what a recognizer wants. Named here so
 // the intent is readable at the acquire site rather than being three booleans.
@@ -163,7 +186,10 @@ registerModule(
   { type: 'call', title: 'Call',
     description: 'Shows whoever is calling, full screen, while the picture-in-picture keeps '
                + 'showing this room',
-    importance: 'critical', dependsOn: 'network', settings: SETTINGS },
+    importance: 'critical', dependsOn: 'network', settings: SETTINGS,
+    // Hidden, a call KEEPS PLAYING by default (hide_sound.js `whenHiddenDefault`): the panel may be set
+    // to mute when hidden, but hiding it to look at something else must not silence the person on it.
+    whenHidden: 'keep' },
   (ctx) => {
     const {
       mount, bus, state, events = null, audio = null, cameraOwner = null, micOwner = null,
@@ -248,7 +274,10 @@ registerModule(
     function avatarCache() {
       if (avatars || typeof ctx.makePersonState !== 'function') return avatars;
       try {
-        avatars = createAvatarCache({ makePersonState: ctx.makePersonState, user: ctx.user || null });
+        // The host's context (kiosk.js `ctx.avatarContext`): faces moving, the flash limit, and whether
+        // other people's own avatars are shown here. Absent (another host): the cache's own defaults.
+        avatars = createAvatarCache({ makePersonState: ctx.makePersonState, user: ctx.user || null,
+          ...(typeof ctx.avatarContext === 'function' ? { context: () => ctx.avatarContext() } : {}) });
         offAvatars = avatars.subscribe((pid) => { if (pid && pid === callerId()) paintFace(); });
       } catch (err) { console.error('call: avatars', err); avatars = null; }
       return avatars;
@@ -327,6 +356,68 @@ registerModule(
       const n = callLevel === null || callLevel === undefined ? NaN : Number(callLevel);
       const v = Number.isFinite(n) ? Math.max(0, Math.min(1, n)) : 1;
       try { el.volume = v; } catch { /* a media element with no volume: it plays as it is */ }
+      applyControls();
+    }
+
+    // ---- THE LIVE CALL'S CONTROLS (see CALL_CONTROL_KEYS above) -------------------------------------
+    let ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
+    const tracksOf = (stream, kind) => { try { return (kind === 'audio' ? stream?.getAudioTracks?.() : stream?.getVideoTracks?.()) || []; } catch { return []; } };
+    function applyControls() {
+      if (!root) return;
+      // My microphone and my camera: the tracks going OUT, enabled or not (the devices stay held).
+      for (const t of tracksOf(micStream, 'audio')) { try { t.enabled = !!ctl.mic; } catch { /* a stopped track */ } }
+      if (outgoing) { try { outgoing.enabled = !!ctl.myVideo; } catch { /* a stopped track */ } }
+      // The far end in this room: the element that plays them.
+      const remote = root.querySelector('.call-remote');
+      if (remote) { try { remote.muted = !ctl.speaker; } catch { /* nothing to mute */ } }
+      // Their picture, or their name card in its place (only a VIDEO call has a picture to hide).
+      const hide = phase === 'connected' && !!who?.video && !ctl.theirVideo;
+      root.classList.toggle('call-their-hidden', hide);
+      const stage = el('[data-stage]');
+      const card = stage?.querySelector('[data-their-card]');
+      if (hide && stage && !card) {
+        stage.insertAdjacentHTML('beforeend', `<div class="call-their-card" data-their-card>${
+          personCard({ ...who, note: 'Their video is hidden' }, face())}</div>`);
+      } else if (!hide && card) card.remove();
+    }
+    function controlsState() {
+      const live = phase === 'connected';
+      return {
+        live, instanceId: ctx.instanceId || null,
+        video: live && !!who?.video, sending: live && !!outgoing, hasMic: live && tracksOf(micStream, 'audio').length > 0,
+        ...ctl, volume: panelVolumeFrom(state?.get?.() || {}),
+      };
+    }
+    let lastControls = null;
+    function publishControls() {
+      const s = controlsState();
+      const sig = JSON.stringify(s);
+      if (sig === lastControls) return;
+      lastControls = sig;
+      try { bus.publish(CALL_CONTROLS_TOPIC, s); } catch (err) { console.error('call: controls', err); }
+    }
+    function stepVolume(dir) {
+      const cur = panelVolumeFrom(state?.get?.() || {});
+      const up = Number(dir) > 0;
+      const next = up ? VOLUME_STEPS.find((v) => v > cur + 1e-9) : [...VOLUME_STEPS].reverse().find((v) => v < cur - 1e-9);
+      if (next === undefined) return cur;            // at the end: stays there, never wraps
+      try { state?.set?.({ [PANEL_VOLUME_KEY]: next }); } catch (err) { console.error('call: volume', err); }
+      return next;
+    }
+    /** Answer a control. `p`: { mic|speaker|theirVideo|myVideo: 'on'|'off'|'toggle'|true|false } or { volume: ±1 }. */
+    function onControl(p) {
+      if (phase !== 'connected' || !p || typeof p !== 'object') return false;
+      let changed = false;
+      for (const k of CALL_CONTROL_KEYS) {
+        if (!(k in p)) continue;
+        const v = p[k];
+        const next = v === 'toggle' ? !ctl[k] : (v === 'on' || v === true) ? true : (v === 'off' || v === false) ? false : ctl[k];
+        if (next !== ctl[k]) { ctl = { ...ctl, [k]: next }; changed = true; }
+      }
+      if ('volume' in p) { stepVolume(p.volume); changed = true; }
+      applyControls();
+      publishControls();
+      return changed;
     }
 
     // ------------------------------------------------------------------------------------
@@ -537,6 +628,8 @@ registerModule(
         })?.catch?.((err) => console.error('call: log', err));
       } catch (err) { console.error('call: log', err); }
       phase = 'connected';
+      // Every control starts ON for every call (see CALL_CONTROL_KEYS): nothing muted carries over.
+      ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
       takeSpeaker(true);
       // BOTH, and in parallel: two sequential permission-gated opens is two round trips
       // before anybody can speak, on a screen where the caller is already waiting.
@@ -551,6 +644,9 @@ registerModule(
       bindTransport();              // a ring can arrive by the bus before any "ready"; look once more
       try { await transport?.answer?.({ from: who, outgoing: track, remoteVideo: v, ...(micTrack ? { audio: micTrack } : {}) }); }
       catch (err) { console.error('call: transport failed to answer', err); end('failed'); }
+      // The bars and the menu learn the call is live, and what it can control.
+      applyControls();
+      publishControls();
     }
 
     // Refusing before it connects. A separate path from hangup so the record can tell
@@ -595,7 +691,11 @@ registerModule(
         lastEndTimer = setTimer(() => { lastEndReason = null; lastEndTimer = null; render(); },
           8000);
       }
+      ctl = { mic: true, speaker: true, theirVideo: true, myVideo: true };
       render();
+      // The bars put the call's controls away.
+      applyControls();
+      publishControls();
       try { transport?.hangup?.(reason); } catch { /* already down */ }
       // Published on EVERY exit, including the ones nobody chose - unanswered, failed. The
       // state machine's `$back` is what returns the screen, and it only fires on this topic,
@@ -636,6 +736,9 @@ registerModule(
       __incoming: (from) => incoming(from),
       __answer: () => answer(),
       __end: (r) => end(r),
+      // The live call's controls, for the suites: where each one is, and press one.
+      controls: () => controlsState(),
+      control: (p) => onControl(p),
 
       init() {
         cfg = { ...DEFAULTS, ...(state?.get?.() || {}) };
@@ -704,7 +807,11 @@ registerModule(
           + '.m-call .call-demo-btn:hover{border-color:#e8f0ea}'
           + '.m-call .call-demo-stop{padding:1.2cqmin 2.4cqmin;'
           + 'min-height:44px;border-radius:2cqmin;cursor:pointer;background:#fff3d9;'
-          + 'color:#12181c;border:0;font:600 2.1cqmin system-ui,sans-serif}';
+          + 'color:#12181c;border:0;font:600 2.1cqmin system-ui,sans-serif}'
+          // Their video hidden (the call's controls): the picture goes, their name card shows in its
+          // place, and the element keeps PLAYING their sound (visibility, not display or removal).
+          + '.m-call.call-their-hidden .call-remote{visibility:hidden}'
+          + '.m-call .call-their-card{position:relative;z-index:1}';
         root.appendChild(style);
         const stage = document.createElement('div');
         stage.setAttribute('data-stage', '');
@@ -751,6 +858,10 @@ registerModule(
         offs.push(bus.subscribe(CALL_ANSWER, () => answer()));
         offs.push(bus.subscribe(CALL_HANGUP, () => end('hangup')));
         offs.push(bus.subscribe(CALL_DECLINE, () => decline()));
+        // A live call's controls (the bar, the menu, a switch, a spoken "mute my mic").
+        offs.push(bus.subscribe(CALL_CONTROL_TOPIC, (p) => { onControl(p); }));
+        // The panel's volume changed (the bar's Call − / +, the menu, another device): the bars show it.
+        offs.push(state?.subscribe?.(() => { if (phase === 'connected') publishControls(); }) || (() => {}));
         bindTransport();
         offs.push(bus.subscribe(CALL_TRANSPORT_READY, () => bindTransport()));
       },
@@ -773,6 +884,8 @@ registerModule(
         takeSpeaker(false);
         try { audio?.unregister?.(AUDIO_ID); } catch { /* already gone */ }
         if (live) { try { transport?.hangup?.('destroyed'); } catch { /* already down */ } }
+        // A live call's controls go from the bars with the panel (nothing is left to press them for).
+        if (live) { phase = 'idle'; publishControls(); }
         unbindTransport();
         transport = null;
         offs.forEach((off) => { try { off(); } catch { /* already gone */ } });

@@ -401,15 +401,21 @@ const toTab = (m, id) => {
       kiosk.menu.focusRow('tabs');
       const lapStops = [];
       for (let i = 0; i < 40; i += 1) { const id = kiosk.menu.focusId(); if (lapStops.includes(id)) break; lapStops.push(id); kiosk.menu.next(); }
-      // (The old walk's rows: everything but the tab row, "Settings for" and "Switch module", which are new.)
+      // (The old walk's rows: everything but the tab row, "Settings for", "Switch module" and "Make it bigger",
+      // which are new.)
+      // 2026-10-02, deliberately again: the lap is ELEVEN. "Settings for" is a stop now even with one panel
+      // (it steps through the LEVELS: this panel, every Photos panel, this screen, this device -- kiosk.js
+      // `levelSubjects`), and "Make Photos bigger" is the corner button's row for a scan. The old rows grew by
+      // four (31): "Show other people's own avatars" and "...move", on the screen's Display tab and the
+      // person's People tab (OTHERS_AVATAR_FIELDS). Home is two presses further: 9.
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
-        && !['tabs', 'subject-pick', 'switch-module'].includes(i.id));
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 9 stops (was every row: 27) ***',
-        lapStops.length === 9 && oldStops.length === 27,
+        && !['tabs', 'subject-pick', 'switch-module', 'promote', 'game'].includes(i.id));
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 11 stops (was every row: 31) ***',
+        lapStops.length === 11 && oldStops.length === 31 && lapStops.includes('subject-pick') && lapStops.includes('promote'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
-      check('...and Home is 7 presses from where the menu opens (was 25)', homeAt === 7, String(homeAt));
+      check('...and Home is 9 presses from where the menu opens (was 25)', homeAt === 9, String(homeAt));
       kiosk.menu.showTab('module');
 
       // A PRESS IN THE MENU REACHES THE MODULE'S OWN STATE. The hint is re-read from the

@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>screen controls — settings at every level, Pause on the bar, bigger panels, a call's controls, layouts</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:14px 0;padding:12px 14px;border-left:4px solid #839958;background:#fff;max-width:80ch}
+  #root{position:relative;width:900px;height:560px;margin-top:16px;border:1px solid #ddd8b4;overflow:hidden}
+  #root .kiosk{position:absolute}
+  #host{position:fixed;left:0;top:0;width:640px;height:400px;visibility:hidden;pointer-events:none}
+</style>
+</head>
+<body>
+<h1>screen controls (2026-10-02)</h1>
+<div class="note">
+  Mike's five, in one suite: <b>(1)</b> "edit something at whatever level you're editing" -- the menu's
+  "Settings for" chooses the level, each row shows the value AT that level and says what it follows;
+  <b>(2)</b> pause is universal -- one Pause / Play on the bar, the verbs every module already answers, and
+  "pause it while hidden" uses them; <b>(3)</b> a panel made bigger one level at a time (its dashboard,
+  then the screen) and back; <b>(4)</b> a live call's controls on the bar, the menu, a switch and voice, and a
+  hidden call keeps playing by default; <b>(5)</b> more layouts, and a Layout list in the menu. Needs the server.
+</div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+<div id="host"></div>
+
+<script type="module">
+import {
+  resolveLevel, levelAbove, levelFieldItems, createLocalRow, FOLLOW, LEVEL_ORDER, buildItems,
+} from '../settings.js';
+import { PRESETS, preset, withPreset, normalizeLayout, resolveLayout, gridStyle, slotStyle } from '../layout.js';
+import {
+  createHideSound, whenHiddenDefault, answersPause, WHEN_HIDDEN_KEY,
+} from '../hide_sound.js';
+import {
+  PLAY_PAUSE_TOPIC, PROMOTE_TOPIC, DEMOTE_TOPIC, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_ACTIONS,
+  SYSTEM_ACTIONS, createDefaultRegistry, verbTarget,
+} from '../actions.js';
+import { SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE } from '../shell_verbs.js';
+import { ROUTES, routeAction, duplicatePhrases, spokenTable, normalize } from '../input_speech.js';
+import { paintPlayPause, drawCallControls } from '../transport_bar.js';
+import { createBus } from '../bus.js';
+import { createAudioBus } from '../audio_bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { stashPreviewLayout } from '../preview.js';
+import '../modules/call.js';
+
+const out = document.getElementById('results');
+const root = document.getElementById('root');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (x) => JSON.stringify(x);
+async function settled(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; }
+function fakeStorage() {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); }, key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, clear: () => m.clear() };
+}
+
+const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
+
+(async () => {
+  try {
+    // =================================================================================================
+    section('*** (1) LEVELS, PURE: the nearest level that set it wins ***');
+    {
+      const layers = { instance: {}, module: { a: 1 }, screen: { a: 2, b: 'x' }, device: { b: 'y', c: true }, person: { c: false } };
+      check('the nearest level at or above "from" that SET the key', J(resolveLevel('a', layers)) === J({ value: 1, at: 'module' }));
+      check('...from a higher level, the next one up', J(resolveLevel('a', layers, { from: 'screen' })) === J({ value: 2, at: 'screen' }));
+      check('...a value set lower down is NOT seen from above it', resolveLevel('a', layers, { from: 'device' }).at === null);
+      check('false is a choice, not "unset" (a person who chose Off has chosen)', J(resolveLevel('c', { person: { c: false } }, { from: 'device' })) === J({ value: false, at: 'person' }));
+      check('null is "follow" (never a value)', resolveLevel('b', { screen: { b: null }, device: { b: 'y' } }, { from: 'screen' }).at === 'device');
+      check('the order is the DECISIONS.md chain', LEVEL_ORDER.join() === 'instance,module,dashboard,screen,device,person,account');
+      check('what each level follows', levelAbove('screen') === 'device' && levelAbove('account') === null
+        && levelAbove('screen', ['screen', 'person']) === 'person');
+    }
+
+    section('*** (1) a level\'s rows: the value AT that level, and what it follows ***');
+    {
+      const store = { screen: {}, device: { theme: 'calm' } };
+      const writes = [];
+      const rows = () => levelFieldItems([
+        { key: 'theme', label: 'Colours', kind: 'choice', options: [{ value: 'calm', label: 'Calm' }, { value: 'dark', label: 'Dark' }] },
+        { key: 'big', label: 'Big', default: false, onLabel: 'Yes', offLabel: 'No' },
+        { key: 'n', label: 'How many', kind: 'number', min: 1, max: 3, step: 1, default: 1 },
+      ], { level: 'screen', order: ['screen', 'device'], layers: () => store, labels: { device: 'this device' },
+           write: (k, v) => { writes.push([k, v]); store.screen = { ...store.screen, [k]: v }; }, idPrefix: 'lv:' });
+      let r = rows();
+      const theme = r.find((x) => x.id === 'lv:theme');
+      check('*** a row the level has not set says what it follows, and from where ***',
+        theme.following === true && theme.hint === 'Following: this device — Calm', theme.hint);
+      check('...its first choice is "Follow <the level above>"', theme.field.options[0].value === FOLLOW
+        && theme.field.options[0].label === 'Follow this device', J(theme.field.options[0]));
+      theme.run();
+      r = rows();
+      check('*** one press chooses at THIS level, written at this level ***', J(writes.at(-1)) === J(['theme', 'calm'])
+        && r.find((x) => x.id === 'lv:theme').following === false);
+      r.find((x) => x.id === 'lv:theme').run();       // calm -> dark
+      r = rows(); r.find((x) => x.id === 'lv:theme').run();   // dark -> follow
+      check('*** ...and the lap comes back to following, written as null (never a value) ***', J(writes.at(-1)) === J(['theme', null])
+        && rows().find((x) => x.id === 'lv:theme').following === true, J(writes));
+      const big = rows().find((x) => x.id === 'lv:big');
+      check('a toggle at a level is three: Follow, Yes, No', big.field.kind === 'choice' && big.field.options.length === 3
+        && big.hint === 'Following: the default — No', J(big.field.options) + ' ' + big.hint);
+      const n = rows().find((x) => x.id === 'lv:n');
+      check('a number has no "Follow" choice; it says it follows', n.following === true && /^Following: the default/.test(n.hint));
+      n.run();
+      check('...and once set, a second row puts it back to following', rows().some((x) => x.id === 'lv:n:follow'));
+      rows().find((x) => x.id === 'lv:n:follow').run();
+      check('...which writes null', J(writes.at(-1)) === J(['n', null]));
+      check('a subject that is a level names itself in the heading', buildItems({ subject: { type: 'level', title: 'This screen', heading: 'This screen' } })
+        .find((i) => i.id === 'subject').label === 'This screen');
+    }
+
+    section('*** (1) the device level: this browser\'s own row ***');
+    {
+      const st = fakeStorage();
+      const row = createLocalRow({ storage: st });
+      let told = 0; row.subscribe(() => { told += 1; });
+      row.set({ theme: 'dark', x: 1 });
+      check('it keeps what is set, in this browser\'s storage', row.get().theme === 'dark' && JSON.parse(st.getItem('nimrod:device-settings')).x === 1 && told === 1);
+      row.set({ x: null });
+      check('null takes a key off (follow)', !('x' in row.get()) && createLocalRow({ storage: st }).get().theme === 'dark');
+      const none = createLocalRow({ storage: null });
+      none.set({ a: 1 });
+      check('no storage: an empty row that keeps nothing past the page, and says so', none.persisted === false);
+    }
+
+    // =================================================================================================
+    section('*** (2) PAUSE IS THE VERB: who can pause, and "pause it" while hidden ***');
+    {
+      check('the modules that answer both verbs can pause', ['youtube', 'karaoke', 'music', 'brickbreaker'].every((t) => answersPause(t)));
+      check('...and the ones that answer neither cannot (dimmed, not hidden)', !answersPause('photos') && !answersPause('clock'));
+      const bus = createBus();
+      const heard = [];
+      const topicPause = bus.instanceTopic ? bus.instanceTopic('bb1', 'brickbreaker/pause') : 'brickbreaker/pause';
+      const topicPlay = bus.instanceTopic ? bus.instanceTopic('bb1', 'brickbreaker/resume') : 'brickbreaker/resume';
+      bus.subscribe(topicPause, () => heard.push('pause'));
+      bus.subscribe(topicPlay, () => heard.push('play'));
+      const policy = createHideSound({ bus, host: () => null });
+      const state = { get: () => ({ [WHEN_HIDDEN_KEY]: 'pause' }), set() {} };
+      const audio = createAudioBus();
+      policy.hidden({ instanceId: 'bb1', type: 'brickbreaker', manifest: getManifest('brickbreaker'), audio, impl: {}, state });
+      check('*** "pause it while hidden" pauses a module that answers the verb -- not a mute ***',
+        J(heard) === J(['pause']) && policy.probe().paused.includes('bb1') && !policy.probe().muted.includes('bb1'), J(policy.probe()));
+      policy.shown({ instanceId: 'bb1', type: 'brickbreaker', audio, state });
+      check('...and shown again, it is played again, to THAT panel', J(heard) === J(['pause', 'play']));
+      const noBus = createHideSound({ host: () => null });
+      noBus.hidden({ instanceId: 'bb2', type: 'brickbreaker', manifest: getManifest('brickbreaker'), audio, impl: {}, state });
+      check('a host with no bus: the old rule (no own pause() -> mute)', noBus.probe().muted.includes('bb2'));
+      check('per-module default: what a manifest declares, else keep playing',
+        whenHiddenDefault({ whenHidden: 'mute' }) === 'mute' && whenHiddenDefault({ whenHidden: 'loud' }) === 'keep' && whenHiddenDefault(null) === 'keep');
+      check('*** a call panel declares "keep playing" when hidden (it MAY be set to mute) ***', getManifest('call')?.whenHidden === 'keep'
+        && policy.modeOf({ get: () => ({}) }, getManifest('call')) === 'keep');
+    }
+
+    section('*** the bar\'s new buttons: one implementation, both bars ***');
+    {
+      check('the topics agree (shell_verbs.js = actions.js)', SHELL_PLAY_PAUSE === PLAY_PAUSE_TOPIC && SHELL_PROMOTE === PROMOTE_TOPIC && SHELL_DEMOTE === DEMOTE_TOPIC);
+      const reg = createDefaultRegistry();
+      check('Pause / Play, bigger, smaller and every call control are bindable actions',
+        ['shell/play-pause', 'shell/promote', 'shell/demote', ...CALL_ACTIONS.map((a) => a.id)].every((id) => reg.has(id)));
+      const b = document.createElement('button');
+      paintPlayPause(b, { can: false, name: 'Photos' });
+      check('nothing to pause: dimmed, and says so', b.disabled && /nothing to pause/.test(b.title));
+      paintPlayPause(b, { can: true, paused: true, name: 'Music' });
+      check('paused: "Play", pressed', !b.disabled && b.textContent === '▶ Play' && b.getAttribute('aria-pressed') === 'true');
+      const w1 = b.style.minWidth; paintPlayPause(b, { can: true, paused: false });
+      check('a fixed width, so Pause / Play never moves a button after it', w1 && w1 === b.style.minWidth);
+      const span = document.createElement('span');
+      const sent = [];
+      drawCallControls(span, { live: false }, (p) => sent.push(p));
+      check('no call: no call controls', span.hidden && !span.children.length);
+      drawCallControls(span, { live: true, mic: true, speaker: true, theirVideo: true, myVideo: true, video: false, sending: true, hasMic: true, volume: 1 }, (p) => sent.push(p));
+      const btn = (k) => span.querySelector(`[data-call="${k}"]`);
+      check('*** a live call: mic, speaker, their video, my video, quieter, louder ***',
+        ['mic', 'speaker', 'their', 'mine', 'quieter', 'louder'].every((k) => btn(k)) && !span.hidden);
+      check('...their video is DIMMED on an audio call, never missing', btn('their').disabled === true);
+      btn('mic').click();
+      check('a press says the toggle', J(sent.at(-1)) === J({ mic: 'toggle' }));
+    }
+
+    section('*** voice: the new phrases (four words at most, no clashes, each presses a real action) ***');
+    {
+      const ids = ['promote', 'demote', 'call-mic-off', 'call-mic-on', 'call-speaker-off', 'call-speaker-on',
+        'call-their-video-off', 'call-their-video-on', 'call-my-video-off', 'call-my-video-on'];
+      const reg = createDefaultRegistry();
+      check('every new route presses a registered action', ids.every((id) => ROUTES[id] && reg.has(routeAction(id))),
+        ids.filter((id) => !ROUTES[id] || !reg.has(routeAction(id))).join(','));
+      const long = ids.flatMap((id) => ROUTES[id].phrases).filter((p) => p !== normalize(p) || p.split(' ').length > 4);
+      check('...each phrase four words or fewer, already normalised', long.length === 0, long.join(' | '));
+      check('...and no phrase means two things', duplicatePhrases(spokenTable()).length === 0, duplicatePhrases(spokenTable()).join(' | '));
+      check('"mute my mic" and "hide my video" are what Mike said', ROUTES['call-mic-off'].phrases.includes('mute my mic')
+        && ROUTES['call-my-video-off'].phrases.includes('hide my video'));
+    }
+
+    // =================================================================================================
+    section('*** (4) a live call\'s controls, in the call panel ***');
+    {
+      const host = document.createElement('div');
+      document.getElementById('host').append(host);
+      const bus = createBus();
+      const micTrack = { enabled: true, kind: 'audio' };
+      const vidTrack = { enabled: true, kind: 'video', stop() {} };
+      let row = {};
+      const reports = [];
+      bus.subscribe(CALL_CONTROLS_TOPIC, (s) => reports.push(s));
+      const inst = mountModule('call', {
+        mount: host, bus, audio: createAudioBus(), instanceId: 'c1',
+        cameraOwner: { acquireTrack: () => Promise.resolve(vidTrack), release() {}, acquire: () => Promise.resolve({}) },
+        micOwner: { acquire: () => Promise.resolve({ getAudioTracks: () => [micTrack] }), release() {}, status: () => ({ mismatch: [] }) },
+        output: { alert() {}, say() {} },
+        callIO: { setTimer: () => 1, clearTimer() {}, setTick: () => 1, clearTick() {} },
+        state: { get: () => row, set: (p) => { row = { ...row, ...p }; }, subscribe: () => () => {}, load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+      });
+      inst.init();
+      const impl = inst.impl || inst;
+      check('no call: the controls do nothing', impl.control({ mic: 'off' }) === false && micTrack.enabled === true);
+      await impl.__incoming({ name: 'Alex', video: true });
+      row = { ...row, declineSeconds: 0 };
+      await impl.__answer();
+      await sleep(30);
+      check('*** answered: the bars are told it is live, everything ON ***', reports.at(-1)?.live === true
+        && reports.at(-1).mic && reports.at(-1).speaker && reports.at(-1).theirVideo && reports.at(-1).myVideo && reports.at(-1).video, J(reports.at(-1)));
+      bus.publish(CALL_CONTROL_TOPIC, { mic: 'off' });
+      check('*** "mute my mic": the outgoing microphone track is off, the bars are told ***', micTrack.enabled === false && reports.at(-1).mic === false);
+      bus.publish(CALL_CONTROL_TOPIC, { mic: 'off' });
+      check('...said twice it STAYS muted (on/off are idempotent)', micTrack.enabled === false);
+      bus.publish(CALL_CONTROL_TOPIC, { myVideo: 'toggle' });
+      check('"hide my video": the camera track going out is off (the camera stays held)', vidTrack.enabled === false && reports.at(-1).myVideo === false);
+      bus.publish(CALL_CONTROL_TOPIC, { speaker: 'off' });
+      const remote = host.querySelector('.call-remote');
+      check('"mute the speaker": the element playing them is muted', remote && remote.muted === true && reports.at(-1).speaker === false);
+      bus.publish(CALL_CONTROL_TOPIC, { theirVideo: 'off' });
+      check('"hide their video": their name card shows, their picture is hidden (their sound carries on)',
+        host.querySelector('.m-call').classList.contains('call-their-hidden') && !!host.querySelector('[data-their-card]'));
+      bus.publish(CALL_CONTROL_TOPIC, { volume: -1 });
+      check('"call quieter": one step down on the panel\'s own volume', row.panelVolume === 0.75, J(row));
+      bus.publish(CALL_CONTROL_TOPIC, { volume: 1 }); bus.publish(CALL_CONTROL_TOPIC, { volume: 1 });
+      check('...and "louder" stops at the top, never wraps to quiet', row.panelVolume === 1, J(row));
+      impl.__end('hangup');
+      check('*** the call ends: the controls go from the bars, and the next call starts with everything on ***',
+        reports.at(-1).live === false && !host.querySelector('.m-call').classList.contains('call-their-hidden'));
+      inst.destroy?.();
+      host.remove();
+    }
+
+    // =================================================================================================
+    section('*** (5) LAYOUTS: four more, each a real grid ***');
+    {
+      const ids = PRESETS.map((p) => p.id);
+      check('the four Mike named are there (three across, 2+1, 1+3, big + side strip)',
+        ['three', 'twoone', 'onethree', 'strip'].every((id) => ids.includes(id)) && ids.length === 9, ids.join());
+      const bad = [];
+      for (const p of PRESETS) {
+        const cols = p.cols.split(' ').length, rows = p.rows.split(' ').length;
+        if (p.areas) {
+          if (p.areas.length !== p.slots) bad.push(`${p.id}: ${p.areas.length} areas for ${p.slots} slots`);
+          for (const a of p.areas) {
+            const [r0, c0, r1, c1] = a.split('/').map((s) => Number(s.trim()));
+            if (!(r0 >= 1 && c0 >= 1 && r1 <= rows + 1 && c1 <= cols + 1 && r1 > r0 && c1 > c0)) bad.push(`${p.id}: ${a}`);
+          }
+        } else if (cols * rows !== p.slots) bad.push(`${p.id}: ${cols}x${rows} for ${p.slots}`);
+      }
+      check('every preset\'s areas fit its grid, one per slot', bad.length === 0, bad.join(' | '));
+      const mods = [{ id: 'a', type: 'photos' }, { id: 'b', type: 'trivia' }, { id: 'c', type: 'clock' }, { id: 'd', type: 'music' }, { id: 'e', type: 'camera' }];
+      const quad = withPreset(null, 'quad', mods);
+      check('*** a screen with no arrangement gets one: the panels fill it in order, never the camera or the clock ***',
+        quad.preset === 'quad' && J(quad.slots) === J(['a', 'b', 'd', null]), J(quad));
+      const side = withPreset({ preset: 'quad', slots: ['a', 'b', 'd', null] }, 'side', mods);
+      check('fewer slots: the panels keep their places, the rest are KEPT for later', side.preset === 'side' && J(side.slots) === J(['a', 'b', 'd']), J(side));
+      check('...and render nowhere until then (normalized to the preset)', J(normalizeLayout(side, mods.map((m) => m.id)).slots) === J(['a', 'b']));
+      const back = withPreset(side, 'onethree', mods);
+      check('*** back to a bigger one: everybody where they were ***', J(back.slots) === J(['a', 'b', 'd', null]), J(back));
+      const amb = withPreset(null, 'three', [...mods, { id: 'z', type: 'comet_ambient' }], { spareOk: (m) => m.type !== 'comet_ambient' });
+      check('a host can keep scenery out of a slot', !amb.slots.includes('z'), J(amb));
+      check('anything placed freely is left alone', J(withPreset({ preset: 'side', slots: ['a'], placed: [{ id: 'b', place: 'screen' }] }, 'quad', mods).placed) === J([{ id: 'b', place: 'screen' }]));
+      check('an unknown preset is the default, never a blank screen', withPreset(null, 'nope', mods).preset === 'full');
+    }
+
+    // =================================================================================================
+    // THE REAL SCREEN. One kiosk per section, each with its own storage (the device level writes there).
+    const profiles = createProfilesClient({ user: USER });
+    let kiosk = null;
+    const reloads = [];
+    const seams = (storage) => ({ storage, session: fakeStorage(), navigate: () => {}, reloadPage: () => reloads.push(1), recoveryTick: 0 });
+
+    section('*** (1) on the real screen: "Settings for" steps the levels ***');
+    {
+      const p = await profiles.create('SC-levels');
+      await profiles.addModule(p.id, 'photos');
+      const storage = fakeStorage();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), ...seams(storage) });
+      await sleep(400);
+      // The person this screen is for arrives in the background (the server gives every account one).
+      await settled(() => kiosk.levels().includes('person'), 4000);
+      const lv = kiosk.levels();
+      check('this screen has: the screen, this device and the person (no account level: nothing stores one)',
+        lv[0] === 'screen' && lv[1] === 'device' && lv.length <= 3 && !lv.includes('account'), lv.join());
+      kiosk.menu.open();
+      const subj = () => kiosk.menu.visibleItems()[0];
+      const n = lv.length + 2;
+      check('*** the row above the tabs is a stop now, with the levels after the panel ***',
+        subj().id === 'subject-pick' && !subj().disabled && new RegExp(`1 of ${n}`).test(subj().hint || ''), J(subj()));
+      const steps = [];
+      for (let i = 0; i < n; i += 1) { steps.push(kiosk.menu.subjectId()); kiosk.menu.focusRow('subject-pick'); kiosk.menu.select(); }
+      check('...this panel, every Photos panel, then each level outward', steps.slice(1).join() === ['module', ...lv].map((x) => `level:${x}`).join(), steps.join());
+      check('...and round again to the panel', kiosk.menu.subjectId() === steps[0]);
+
+      kiosk.menu.setSubject('level:device');
+      kiosk.menu.showTab('module');
+      const rowOf = (id) => kiosk.menu.items().find((i) => i.id === id);
+      check('*** at "This device": the first tab is that level, its Colours follows the default ***',
+        kiosk.menu.tabs()[0].label === 'This device' && /^Following: the default/.test(rowOf('level:device:theme')?.hint || ''), J(rowOf('level:device:theme')));
+      kiosk.menu.focusRow('level:device:theme'); kiosk.menu.select();
+      const devTheme = kiosk.deviceRow().get().theme;
+      await sleep(50);
+      check('*** one press sets the DEVICE\'s colours -- in this browser, and the screen shows them ***',
+        !!devTheme && kiosk.shownTheme() === devTheme && JSON.parse(storage.getItem('nimrod:device-settings')).theme === devTheme, `${devTheme} / ${kiosk.shownTheme()}`);
+      kiosk.menu.setSubject('level:screen');
+      check('*** at "This screen", the same row says it is following this device ***',
+        /^Following: this device — /.test(rowOf('level:screen:theme')?.hint || ''), rowOf('level:screen:theme')?.hint);
+      kiosk.menu.focusRow('level:screen:theme'); kiosk.menu.select(); kiosk.menu.select();
+      const scrTheme = kiosk.levelLayers().screen.theme;
+      check('*** a value set at the screen wins over the device below it ***', !!scrTheme && kiosk.shownTheme() === scrTheme && scrTheme !== devTheme,
+        `${scrTheme} / ${devTheme} / ${kiosk.shownTheme()}`);
+      // Lap the screen's row back round to Follow.
+      for (let i = 0; i < 40 && !rowOf('level:screen:theme')?.following; i += 1) kiosk.menu.select();
+      check('...and put back to following, the device\'s shows again', kiosk.levelLayers().screen.theme == null && kiosk.shownTheme() === devTheme,
+        `${kiosk.levelLayers().screen.theme} / ${kiosk.shownTheme()}`);
+
+      // THE MODULE LEVEL: every Photos panel on this screen.
+      kiosk.menu.setSubject('level:module');
+      const iv = rowOf('level:module:intervalMs');
+      check('*** at "Every Photos panel": the module\'s own settings, following its own default ***', !!iv && /^Following: Photos’s own default/.test(iv.hint), J(iv));
+      kiosk.menu.focusRow('level:module:intervalMs'); kiosk.menu.select();
+      const kindVal = kiosk.typeDefaults('photos').intervalMs;
+      await sleep(50);
+      check('*** set for every Photos panel: the panel reads it, without setting it itself ***',
+        kindVal != null && kiosk.stageState().intervalMs === kindVal, `${kindVal} / ${J(kiosk.stageState())}`);
+      kiosk.menu.setSubject(kiosk.panels()[0].id);
+      const own = rowOf('set:intervalMs');
+      check('*** and on the panel\'s own tab the row says "Following: every Photos panel" ***', /^Following: every Photos panel — /.test(own?.hint || ''), own?.hint);
+      kiosk.menu.focusRow('set:intervalMs'); kiosk.menu.select();
+      await sleep(30);
+      const mine = kiosk.stageState().intervalMs;
+      check('...the panel\'s own value wins once it sets one, and a row offers to follow again',
+        mine !== kindVal && !!rowOf('set:intervalMs:follow'), `${mine} / ${kindVal}`);
+      kiosk.menu.focusRow('set:intervalMs:follow'); kiosk.menu.select();
+      await sleep(30);
+      check('...which hands it back to the kind', kiosk.stageState().intervalMs === kindVal, J(kiosk.stageState()));
+      kiosk.menu.close();
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
+    section('*** (2) Pause / Play on the bar, (3) bigger and smaller, on a grid ***');
+    {
+      const p = await profiles.create('SC-grid');
+      await profiles.addModule(p.id, 'photos');
+      await profiles.addModule(p.id, 'brickbreaker');
+      const full = await profiles.get(p.id);
+      const ids = full.modules.map((m) => m.id);
+      stashPreviewLayout(p.id, { preset: 'side', slots: [ids[0], ids[1]] });
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams(fakeStorage()) });
+      await sleep(500);
+      const ppBtn = () => root.querySelector('.k-actions [data-act="playpause"]');
+      check('the plain bar has Pause / Play between Back and Next',
+        ppBtn() && ppBtn().previousElementSibling?.dataset.act === 'back' && ppBtn().nextElementSibling?.dataset.act === 'next');
+      root.querySelector(`[data-mods] .k-dot[data-id="${ids[0]}"]`)?.click();
+      await sleep(50);
+      check('*** Photos selected: Pause is DIMMED, and says why ***', kiosk.playPause().can === false && ppBtn().disabled && /nothing to pause/.test(ppBtn().title));
+      root.querySelector(`[data-mods] .k-dot[data-id="${ids[1]}"]`)?.click();
+      await sleep(50);
+      const heard = [];
+      const t = (topic) => (bus.instanceTopic ? bus.instanceTopic(ids[1], topic) : topic);
+      bus.subscribe(t('brickbreaker/pause'), () => heard.push('pause'));
+      bus.subscribe(t('brickbreaker/resume'), () => heard.push('play'));
+      check('Brick breaker selected: Pause is live', kiosk.playPause().can === true && !ppBtn().disabled);
+      ppBtn().click();
+      check('*** pressing it sends the pause VERB to that panel, and it reads Play ***', J(heard) === J(['pause']) && ppBtn().textContent === '▶ Play', J(heard));
+      bus.publish(PLAY_PAUSE_TOPIC, {});
+      check('...a bound switch (the same topic) plays it again', J(heard) === J(['pause', 'play']) && kiosk.playPause().paused === false);
+      // (Brick breaker's own pause opens the screen's menu about itself -- its `pauseOpensMenu`, on by
+      // default -- and a verb said with the menu open goes to the menu, not the panel. Closed first.)
+      kiosk.menu.close();
+      await sleep(20);
+      bus.publish('verb/pause');
+      await sleep(20);
+      check('a spoken "pause" reaching it through the router: the button follows', kiosk.playPause().paused === true);
+      kiosk.menu.open(); kiosk.menu.showTab('module');
+      check('*** the menu has the same press, for a scan ***', kiosk.menu.items().some((i) => i.id === 'play-pause' && /^Play /.test(i.label)));
+      kiosk.menu.close();
+
+      // BIGGER, one level at a time.
+      const cells = [...root.querySelectorAll('.k-stage > .k-cell')];
+      check('*** every panel has its corner button (bottom right) ***', cells.length === 2 && cells.every((c) => c.querySelector(':scope > .k-promote')));
+      root.querySelector(`[data-mods] .k-dot[data-id="${ids[0]}"]`)?.click();
+      await sleep(30);
+      cells[0].querySelector('.k-promote').click();
+      await sleep(30);
+      const vis = (el) => getComputedStyle(el).visibility;
+      check('*** the corner: Photos fills its dashboard, the other panel steps aside (still mounted) ***',
+        kiosk.promoted().dashboard === ids[0] && cells[0].dataset.promoted === '1' && vis(cells[1]) === 'hidden' && kiosk.slotCount() === 2, J(kiosk.promoted()));
+      check('...its corner now says it fills the screen next', /fill the screen/.test(cells[0].querySelector('.k-promote').getAttribute('aria-label')));
+      cells[0].querySelector('.k-promote').click();
+      await sleep(30);
+      check('*** pressed again: the screen (the mirror and clock step aside), and the corner reads "smaller" ***',
+        kiosk.promoted().screen === ids[0] && root.querySelector('.kiosk').dataset.promoted === 'screen'
+        && /smaller/.test(cells[0].querySelector('.k-promote').getAttribute('aria-label')), J(kiosk.promoted()));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      await sleep(30);
+      check('*** Escape: one level down (the screen), and the menu did NOT open ***', !kiosk.promoted().screen && kiosk.promoted().dashboard === ids[0] && !kiosk.menu.isOpen(), J(kiosk.promoted()));
+      bus.publish('verb/back');
+      await sleep(30);
+      check('*** Back, where the panel has nothing for Back (Photos): the last level down ***', !kiosk.promoted().dashboard && vis(cells[1]) === 'visible', J(kiosk.promoted()));
+      bus.publish(PROMOTE_TOPIC, {});
+      check('a bound switch / "make it bigger": the selected panel', kiosk.promoted().dashboard === ids[0]);
+      bus.publish(DEMOTE_TOPIC, {});
+      check('...and "make it smaller"', !kiosk.promoted().dashboard);
+      kiosk.menu.open(); kiosk.menu.showTab('module');
+      const prow = kiosk.menu.items().find((i) => i.id === 'promote');
+      check('the menu offers it on the panel\'s tab', !!prow && /bigger/.test(prow.label));
+      kiosk.menu.focusRow('promote'); kiosk.menu.select();
+      check('...which closes the menu and makes it bigger', !kiosk.menu.isOpen() && kiosk.promoted().dashboard === ids[0]);
+      kiosk.demote();
+
+      // (4) A LIVE CALL'S CONTROLS ON THE PLAIN BAR, from the call panel's report.
+      const sent = [];
+      bus.subscribe(CALL_CONTROL_TOPIC, (pl) => sent.push(pl));
+      bus.publish(CALL_CONTROLS_TOPIC, { live: true, mic: true, speaker: true, theirVideo: true, myVideo: true, video: true, sending: true, hasMic: true, volume: 1 });
+      await sleep(20);
+      const group = root.querySelector('.k-actions [data-call-controls]');
+      check('*** a live call: the plain bar shows its controls, first ***', group && !group.hidden && group.querySelectorAll('button').length === 6
+        && group === root.querySelector('.k-actions').firstElementChild);
+      group.querySelector('[data-call="mic"]').click();
+      check('...a press says CALL_CONTROL_TOPIC', sent.at(-1)?.mic === 'toggle');
+      kiosk.menu.open(); kiosk.menu.showTab('module');
+      const first = kiosk.menu.visibleItems().filter((i) => i.kind === 'item' && !i.tabStrip && i.id !== 'subject-pick' && i.id !== 'set:complexity')[0];
+      check('*** ...and the menu\'s first tab starts with them, for a scan ***', first?.id === 'call-ctl:mic', J(first));
+      kiosk.menu.close();
+      bus.publish(CALL_CONTROLS_TOPIC, { live: false });
+      await sleep(20);
+      check('the call ends: they go', group.hidden && !group.children.length);
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
+    section('*** (5) the Layout list: a new arrangement, in place, no reload ***');
+    {
+      const p = await profiles.create('SC-layout');
+      for (const t of ['photos', 'trivia', 'wordforge']) await profiles.addModule(p.id, t);
+      const storage = fakeStorage();
+      reloads.length = 0;
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), ...seams(storage) });
+      await sleep(400);
+      check('starts one at a time (no arrangement)', kiosk.slotLayout() === null);
+      kiosk.menu.open();
+      kiosk.menu.setSubject('level:screen');
+      kiosk.menu.showTab('module');
+      const lp = kiosk.menu.items().find((i) => i.id === 'layout-pick');
+      check('*** "This screen" offers "Layout: One at a time…" ***', !!lp && /One at a time/.test(lp.label), J(lp));
+      kiosk.menu.focusRow('layout-pick'); kiosk.menu.select();
+      check('...which opens the list, Keep first and the cursor on it', kiosk.menu.focusId() === 'layout-keep'
+        && kiosk.menu.items().filter((i) => /^layout:/.test(i.id)).length === PRESETS.length);
+      kiosk.menu.focusRow('layout:three'); kiosk.menu.select();
+      await settled(() => kiosk.slotLayout()?.preset === 'three' && kiosk.slotCount() === 3, 6000);
+      await sleep(200);
+      check('*** "Three across": three panels side by side, in place, and NO reload ***',
+        kiosk.slotLayout()?.preset === 'three' && kiosk.slotCount() === 3 && reloads.length === 0, `${J(kiosk.slotLayout())} reloads ${reloads.length}`);
+      await kiosk.pickLayout('side');
+      await sleep(200);
+      check('a smaller one: two shown, the third kept for later (it is still on the bar)', kiosk.slotCount() === 2
+        && root.querySelectorAll('[data-mods] .k-dot').length === 3 && reloads.length === 0,
+        `${kiosk.slotCount()} slots, ${root.querySelectorAll('[data-mods] .k-dot').length} chips, ${reloads.length} reloads`);
+      await kiosk.pickLayout('strip');
+      await sleep(200);
+      check('a bigger one again: all three back where they were', kiosk.slotCount() === 3 && kiosk.slotLayout()?.preset === 'strip'
+        && J(kiosk.slotTypes()) === J(['photos', 'trivia', 'wordforge']), J(kiosk.slotTypes()));
+      kiosk.menu.close();
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
+    section('*** the same on the DASHBOARD path (a real screen mounted as one dashboard module) ***');
+    {
+      const p = await profiles.create('SC-dash');
+      for (const t of ['photos', 'brickbreaker']) await profiles.addModule(p.id, t);
+      reloads.length = 0;
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, dashboardDefault: true, ...seams(fakeStorage()) });
+      await sleep(600);
+      check('it is on the dashboard path', kiosk.dashboardPath() && !!kiosk.dashboard());
+      check('the placed bar has Pause / Play too', !!root.querySelector('.tb-bar [data-act="playpause"]'));
+      await kiosk.pickLayout('side');
+      await settled(() => kiosk.dashboard()?.arrangement?.()?.slotRecs?.length === 2, 6000);
+      const a = kiosk.dashboard()?.arrangement?.();
+      check('*** Layout: the dashboard is rebuilt in place with the new arrangement, NO reload ***',
+        a?.layout?.()?.preset === 'side' && a.slotRecs.length === 2 && reloads.length === 0, `${J(a?.layout?.())} reloads ${reloads.length}`);
+      const cells = [...root.querySelectorAll('.view .k-stage > .k-cell')];
+      check('every panel of the dashboard has its corner', cells.length === 2 && cells.every((c) => c.querySelector(':scope > .k-promote')));
+      cells[0].querySelector('.k-promote').click();
+      await sleep(30);
+      check('*** the corner makes it fill the dashboard, there too ***', kiosk.promoted().dashboard === a.slotRecs[0].id && cells[0].dataset.promoted === '1');
+      kiosk.demote();
+      check('...and back', !kiosk.promoted().dashboard);
+      kiosk.destroy(); root.innerHTML = '';
+    }
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  const s = document.getElementById('summary');
+  s.textContent = failed ? `${passed} passed, ${failed} failed` : `ALL PASS — ${passed} checks`;
+  s.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

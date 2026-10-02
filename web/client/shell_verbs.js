@@ -29,10 +29,28 @@ export const SHELL_HELP = 'shell/help';
 // checks the two agree), so the bar, a bound switch and "switch module" said aloud are one press.
 export const SHELL_SWITCH_MODULE = 'shell/switch-module';
 
+// *** PAUSE / PLAY, ON THE BAR, FOR WHATEVER PANEL IS SELECTED (2026-10-02). *** Mike: "Modules shouldn't
+// really have a pause. That's a universal function ... maybe belong to the transport bar?" The bar's one
+// button says this; the shell sends the focused panel the `pause` or `play` verb (actions.js MEDIA_VERBS),
+// so a video, a song and a game all pause the same way. kiosk.js argues it. The same topic is the action
+// a switch binds (actions.js SYSTEM_ACTIONS, written out there so that file imports nothing).
+export const SHELL_PLAY_PAUSE = 'shell/play-pause';
+
+// *** MAKE A PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02). *** Mike: "something that pops up in the
+// bottom right corner of each module to make that module full screen in the dashboard and then fullscreen
+// on the screen ... You're pretty much just promoting it to one level higher." PROMOTE `{ id? }` (absent:
+// the selected panel): a panel fills its dashboard, then the screen. DEMOTE: one level back down. The
+// corner button on each panel (arrangement.js), the menu's row, a bound switch and "make it bigger" /
+// "make it smaller" said aloud all say these; kiosk.js answers.
+export const SHELL_PROMOTE = 'shell/promote';
+export const SHELL_DEMOTE = 'shell/demote';
+
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
 // plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
 // button is offered: the person's "Cat help" setting, read by the shell) and/or { barHeld } (something
-// above the modules -- Nimrod the cat -- is pointing at the bar, so a placed bar must not tuck away).
+// above the modules -- Nimrod the cat -- is pointing at the bar, so a placed bar must not tuck away)
+// and/or { playPause: { can, paused, title } } (2026-10-02: whether the selected panel can pause, and
+// whether the shell last paused it -- the bar's Pause / Play button shows it).
 export const SHELL_STATE = 'shell/state';
 
 // *** A HOST PAGE'S OWN ACTIONS, ON THE ONE BAR (Home, rows 2.29/2.30 follow-up, 2026-09-30). ***
