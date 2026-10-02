@@ -425,10 +425,8 @@
       grid-template-rows:none!important;grid-auto-rows:100%!important;overflow-y:auto}
     .trystage :not([data-promoted-panel]) > .k-stage.k-grid > .k-cell{grid-area:auto!important}
 
-    /* Two panels' own controls, at a phone's width only. The Devices panel's rows are a column of their own
-       (modules.css's microphone list also says `.dv-row{display:flex}`, which put its name, words and buttons
-       side by side and cut the buttons off); the Modules library's buttons get the 44px floor. */
-    .trystage .dv-root .dv-row{display:block}
+    /* The Modules library's buttons get the 44px floor at a phone's width. (The Devices panel's rows used to need
+       a fix here too; its class clash with modules.css's microphone list is gone: it is .dvm-row now.) */
     .trystage .lib-btn,.trystage .lib-chip,.trystage .lib-tools input,.trystage .lib-tools select{min-height:44px}
   }
 </style>

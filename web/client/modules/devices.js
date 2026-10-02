@@ -27,8 +27,10 @@ const STYLE = `
 .dv-root{box-sizing:border-box;height:100%;overflow:auto;padding:12px 14px;color:var(--text);font:inherit}
 .dv-root h3{margin:0 0 8px;font-size:1.05rem}
 .dv-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-.dv-row{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
-.dv-row b{display:block}
+/* .dvm-row, not .dv-row: modules.css's microphone list (device_panel.js) owns .dv-row{display:flex}, which put
+   this panel's name, words and buttons side by side and cut the buttons off (found 2026-10-02 at phone width). */
+.dvm-row{padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.dvm-row b{display:block}
 .dv-lead{color:var(--text-muted);margin:2px 0 6px}
 .dv-btns{display:flex;flex-wrap:wrap;gap:8px}
 .dv-btn{min-height:44px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);
@@ -70,7 +72,7 @@ registerModule(
         root = doc.createElement('div');
         root.className = 'dv-root';
         root.innerHTML = `<h3>Devices</h3><ul class="dv-list">${DEVICE_KINDS.map((d) => `
-          <li class="dv-row" data-dv="${esc(d.id)}" data-help="${esc(d.say)}" data-help-title="${esc(d.label)}">
+          <li class="dvm-row" data-dv="${esc(d.id)}" data-help="${esc(d.say)}" data-help-title="${esc(d.label)}">
             <b>${esc(d.label)}</b><p class="dv-lead">${esc(d.lead)}</p>
             <div class="dv-btns">
               ${d.tab ? `<button type="button" class="dv-btn" data-dv-stop data-dv-tab="${esc(d.tab)}"
