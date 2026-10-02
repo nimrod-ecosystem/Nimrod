@@ -903,6 +903,115 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
       m.inst.destroy();
     }
 
+    // =====================================================================================
+    // *** 2026-10-02: ONE SCREEN ANSWERS. *** Two screens of one person both rang AND both answered a
+    // family call, and the one the caller did not keep sat in a call with its camera and microphone open.
+    // Both still ring; the panel now asks the transport (`claim()`, which asks the server) BEFORE it opens
+    // the camera or the microphone - including when its own countdown answers by itself.
+    const claimT = (log) => {
+      let inc = null, endCb = null, settle = null;
+      return {
+        onIncoming(cb) { inc = cb; return () => { if (inc === cb) inc = null; }; },
+        onEnded(cb) { endCb = cb; return () => { if (endCb === cb) endCb = null; }; },
+        claim: () => { log.push('claim'); return new Promise((r) => { settle = r; }); },
+        answer: async () => { log.push('answer'); return true; },
+        hangup(r) { log.push(`hangup:${r}`); },
+        ring: (from) => inc?.(from),
+        end: (r) => endCb?.(r),
+        reply: (won) => settle?.(won),
+      };
+    };
+    section('*** one screen answers: the panel asks BEFORE it opens the camera or the microphone ***');
+    {
+      const log = [];
+      const t = claimT(log);
+      const r = rig({ declineSeconds: 0 }, { callTransport: t });
+      r.impl.__incoming({ name: 'Mike' });          // straight through: it answers by itself
+      await sleep(10);
+      check('*** answering by itself, it asks first ***', log.join() === 'claim', JSON.stringify(log));
+      check('*** ...and opens NOTHING while it waits for the reply ***',
+        !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire'),
+        JSON.stringify([r.camLog, r.micLog]));
+      check('nothing is recorded as answered yet', r.events.rows.length === 0);
+      r.impl.__answer();                             // a second press, or the bar's Answer, meanwhile
+      await sleep(5);
+      check('a second answer while it waits does not ask twice', log.filter((x) => x === 'claim').length === 1, JSON.stringify(log));
+      t.reply(true);
+      await sleep(20);
+      check('*** told yes: the camera and the microphone open, and the call is answered ***',
+        r.camLog.some((c) => c[0] === 'acquireTrack') && r.micLog.some((c) => c[0] === 'acquire')
+        && log.join() === 'claim,answer' && r.impl.__probe().phase === 'connected', JSON.stringify([log, r.camLog]));
+      check('...and recorded as answered, once', r.events.rows.length === 1, JSON.stringify(r.events.rows));
+      r.impl.__end('hangup');
+      r.inst.destroy();
+    }
+    {
+      const log = [];
+      const t = claimT(log);
+      const r = rig({ declineSeconds: 0 }, { callTransport: t });
+      r.impl.__incoming({ name: 'Mike' });
+      await sleep(5);
+      t.reply(false);
+      await sleep(20);
+      check('*** told no: the camera and the microphone NEVER open ***',
+        !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire'),
+        JSON.stringify([r.camLog, r.micLog]));
+      check('*** ...it never answers, and the panel goes back to no call ***',
+        !log.includes('answer') && r.impl.__probe().phase === 'idle', JSON.stringify(log));
+      check('the screen hears the call ended, and why (so it switches back)',
+        r.published.some(([tp, p]) => tp === CALL_ENDED && p.reason === 'elsewhere'), JSON.stringify(r.published));
+      check('it says so on screen, briefly', /another screen/i.test(r.host.textContent), r.host.textContent.slice(0, 160));
+      check('nothing is recorded as answered', r.events.rows.length === 0);
+      r.inst.destroy();
+    }
+    {
+      // Ringing and waiting for somebody (no countdown): another screen takes it. It stops AT ONCE.
+      const log = [];
+      const t = claimT(log);
+      const r = rig({ declineSeconds: 10 }, { callTransport: t });
+      t.ring({ name: 'Mike' });
+      await sleep(5);
+      check('(setup) ringing, counting down', r.impl.__probe().phase === 'ringing' && r.impl.__probe().counting);
+      t.end('elsewhere');
+      check('*** another screen took the call: this one stops ringing at once ***',
+        r.impl.__probe().phase === 'idle' && !r.impl.__probe().counting && !r.impl.__probe().ringArmed);
+      check('...without ever asking or opening anything',
+        !log.includes('claim') && !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire'));
+      check('...and the screen switches back', r.published.some(([tp, p]) => tp === CALL_ENDED && p.reason === 'elsewhere'));
+      r.clock.tick(15);
+      check('the countdown does not come back and answer it', !log.includes('claim') && r.impl.__probe().phase === 'idle');
+      r.inst.destroy();
+    }
+    {
+      // The caller hangs up while it rings: it stops, rather than counting down and "answering" nobody.
+      const log = [];
+      const t = claimT(log);
+      const r = rig({ declineSeconds: 10 }, { callTransport: t });
+      t.ring({ name: 'Mike' });
+      await sleep(5);
+      t.end('remote');
+      r.clock.tick(15);
+      await sleep(5);
+      check('*** the caller giving up stops the ring, and nothing answers it ***',
+        r.impl.__probe().phase === 'idle' && !log.includes('claim') && !r.camLog.some((c) => c[0] === 'acquireTrack'), JSON.stringify(log));
+      r.inst.destroy();
+    }
+    {
+      // Declined while the claim is in flight: a late "yes" must open nothing.
+      const log = [];
+      const t = claimT(log);
+      const r = rig({ declineSeconds: 0 }, { callTransport: t });
+      r.impl.__incoming({ name: 'Mike' });
+      await sleep(5);
+      r.impl.__end('declined');
+      t.reply(true);
+      await sleep(20);
+      check('*** a call ended while asking opens nothing when the "yes" arrives late ***',
+        !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire')
+        && !log.includes('answer') && r.impl.__probe().phase === 'idle', JSON.stringify([log, r.camLog]));
+      r.inst.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

@@ -271,10 +271,17 @@ def stamp_signal(msg: dict, user: str) -> dict:
 # screen - needs to know how many screens will answer, and one silent screen (an older page, a
 # broken one) would then hold every refusal until the phone's own 30-second timeout. Mike's list.
 #
-# ONLY THE PURPOSES NAMED HERE. A family CALL (no purpose) is untouched: call_transport.js does not
-# claim yet, and arbitrating it would drop the second screen's answer with nothing telling it why.
-# Adding "call" here is one word once that file learns the `answerer` message.
-ARBITRATED_PURPOSES = frozenset({"intercom"})
+# ONLY THE PURPOSES NAMED HERE. A FAMILY CALL joined on 2026-10-02 (call_transport.js): its caller now
+# tags the offer `purpose: 'call'` and a session, every screen of the person RINGS, and the screen
+# that answers claims first - the others are told no and stop ringing. Unlike the intercom, which
+# claims before it chimes, a call claims at ANSWER, not at ring: the person picks up wherever they
+# are, so ringing everywhere until somebody does is the point. A call with NO purpose or no session (an
+# older caller page) is not arbitrated at all - it rings and answers exactly as it always did.
+#
+# A REFUSAL TELLS THE OTHERS TOO (2026-10-02). When the first response is a no (a decline, a busy), the
+# other screens are told `you: false` in the same turn - otherwise a second screen keeps ringing (up to
+# two minutes, for a call) for a caller who has already been told no, and then answers into nothing.
+ARBITRATED_PURPOSES = frozenset({"intercom", "call"})
 _SESSION_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
 MAX_SESSION_LEN = 64            # an intercom session is "ic-" + 16 hex; 64 is room to spare, not a limit anyone meets
 
@@ -283,6 +290,13 @@ MAX_SESSION_LEN = 64            # an intercom session is "ic-" + 16 hex; 64 is r
 # that is never in the way of a real offer; a record WITH an answerer is never swept while that
 # screen is connected - it goes when the answerer or the phone says bye, or the answerer leaves.
 ANSWERER_IDLE_S = 120
+# A CALL RINGS LONGER. The Call panel's longest "Ring for" choice is 120 s (modules/call.js SETTINGS,
+# "A long time"); with the intercom's 120 s window a call answered at the very end of a long ring
+# could find its record swept and be told no. So a call's window is the longest ring TWICE over -
+# room for a slow claim, and still minutes, not hours, for a record nobody answered. If call.js ever
+# offers a longer ring, raise CALL_RING_MAX_S with it (test_drive.py checks the ratio, not the value).
+CALL_RING_MAX_S = 120
+ANSWERER_IDLE_BY_PURPOSE = {"call": 2 * CALL_RING_MAX_S + 60}
 # A bound, so a driver looping fresh offers cannot grow this without limit (the same reason
 # Tickets has MAX_TICKETS). Oldest first.
 MAX_ANSWERER_RECORDS = 2000
@@ -319,15 +333,18 @@ class Answerers:
     """
 
     def __init__(self, idle_s: float = ANSWERER_IDLE_S, now=time.monotonic,
-                 max_records: int = MAX_ANSWERER_RECORDS):
+                 max_records: int = MAX_ANSWERER_RECORDS, idle_by_purpose: dict | None = None):
         self._recs: dict[tuple, _Offer] = {}
         self._idle = idle_s
+        self._idle_by = dict(ANSWERER_IDLE_BY_PURPOSE if idle_by_purpose is None else idle_by_purpose)
         self._now = now
         self._max = max_records
 
     def _sweep(self) -> None:
-        cut = self._now() - self._idle
-        for k in [k for k, r in self._recs.items() if r.answerer is None and r.touched < cut]:
+        now = self._now()
+        # A key is (room, purpose, session); each purpose has its own window (a call rings longer).
+        for k in [k for k, r in self._recs.items()
+                  if r.answerer is None and r.touched < now - self._idle_by.get(k[1], self._idle)]:
             self._recs.pop(k, None)
         if len(self._recs) >= self._max:
             for k in sorted(self._recs, key=lambda k: self._recs[k].touched)[:max(1, self._max // 10)]:
@@ -370,8 +387,8 @@ class Answerers:
     def screen_signal(self, room, sig, conn) -> tuple[bool, bool]:
         """(relay, newly) for a screen's signal on its way to the phone.
 
-        `newly`: this signal (an answer sent without a claim) just made `conn` the answerer, so the
-        other screens must be told `you: false`.
+        `newly`: this signal just DECIDED the offer - an answer sent without a claim made `conn` the
+        answerer, or a refusal came first - so the other screens must be told `you: false`.
         """
         ps = _arbitrated(sig)
         if ps is None:
@@ -391,8 +408,10 @@ class Answerers:
                 rec.answerer = conn             # an older page, answering without claiming
                 return True, True
             if kind == "bye":
-                rec.declined = True             # the first response was a no: the phone hears it
-                return True, False
+                # The first response was a no: the phone hears it, and so do the other screens - a
+                # call still ringing elsewhere stops, rather than ringing on for a caller already gone.
+                rec.declined = True
+                return True, True
             return False, False
         if rec.answerer is not conn:
             return False, False                 # a loser: nothing of it reaches the phone
