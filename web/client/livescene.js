@@ -119,7 +119,7 @@ function __lsh(tag, props, ...kids) {
  */
 
 const CSS = `
-.ng{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.ng{position:absolute;inset:0;overflow:hidden;pointer-events:none;container-type:size}
 .ng>*{position:absolute}
 
 /* depth structure */
@@ -163,10 +163,23 @@ const CSS = `
 @media (prefers-reduced-motion: no-preference){
   /* A TRAVELLING ELEMENT ANIMATES \`top\`, NOT \`translateY(%)\`: a percentage translate resolves
      against the ELEMENT's own height, so a 20px leaf told to move 120% moved 24px and vanished a
-     fifth of the way down. A percentage \`top\` resolves against the container. */
-  .ng-leaf,.ng-seed{animation:ngFall linear infinite}
-  .ng-rain{animation:ngStreak linear infinite}
-  .ng-fish{animation:ngSwim linear infinite}
+     fifth of the way down. A percentage \`top\` resolves against the container.
+     *** AND THEN \`top\` COST A WHOLE CPU CORE (Stage 4 bench soak, 2026-10-01). *** Animating
+     \`top\`/\`left\` is main-thread work: a style recalc, a layout and a repaint every frame, 57 a
+     second, for as long as the theme is on. The bench Pi on Fall + a veiled board ran its renderer's
+     main thread at ~76% and its GPU process at ~91%, constantly; on a desktop the same scene measured
+     ~105 ms of main-thread work per second against ~1 ms with this change. So the travel is now the
+     \`translate\` PROPERTY (compositor-animated) in CONTAINER units: \`.ng\` is a size container, and
+     \`cqh\`/\`cqw\` resolve against it — the container-relative distance the note above wanted, with
+     none of the per-frame layout. The start position moves out of the keyframe into the rule
+     (\`!important\` so it outranks the placed inline position, which still applies with motion off),
+     and \`translate\` composes with each element's own \`transform\` instead of replacing it.
+     dev/scene_motion_test.html checks every mover's keyframes and that a leaf still crosses the whole
+     frame. Distances are the old ones: -14% -> 112% is 126cqh, -18% -> 118% is 136cqh, -16% -> 116%
+     is 132cqw. (ufo, balloon, butterfly still animate left/top: one element each, opt-in overlays.) */
+  .ng-leaf,.ng-seed{animation:ngFall linear infinite;top:-14% !important}
+  .ng-rain{animation:ngStreak linear infinite;top:-18% !important}
+  .ng-fish{animation:ngSwim linear infinite;left:-16% !important}
   .ng-ufo{animation:ngUfo 40s linear infinite}
   .ng-balloon{animation:ngBalloon 160s linear infinite}
   .ng-shoot{animation:ngShoot 70s linear infinite}
@@ -187,9 +200,9 @@ const CSS = `
   .ng-breath{animation:ngBreath 4.2s ease-in-out infinite alternate}
   .ng-wing{animation:ngFlap 1.4s ease-in-out infinite alternate}
 }
-@keyframes ngFall{from{top:-14%;transform:translateX(0) rotate(0deg) scale(var(--s,1))}to{top:112%;transform:translateX(var(--sway,18px)) rotate(var(--spin,420deg)) scale(var(--s,1))}}
-@keyframes ngStreak{from{top:-18%}to{top:118%}}
-@keyframes ngSwim{from{left:-16%}to{left:116%}}
+@keyframes ngFall{from{translate:0 0;transform:translateX(0) rotate(0deg) scale(var(--s,1))}to{translate:0 126cqh;transform:translateX(var(--sway,18px)) rotate(var(--spin,420deg)) scale(var(--s,1))}}
+@keyframes ngStreak{from{translate:0 0}to{translate:0 136cqh}}
+@keyframes ngSwim{from{translate:0 0}to{translate:132cqw 0}}
 /* THE UFO IS OFFSCREEN FOR 82% OF ITS CYCLE. "Every once in a while" in an endless loop means the
    element spends most of the loop out of frame and crosses briefly; a continuous drift would make
    it furniture, and furniture is not an event. */
