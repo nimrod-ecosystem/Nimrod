@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>live scene motion - movers stay off the main thread - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #box{position:relative;width:800px;height:450px;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>live scene motion</h1>
+
+<p>The Stage 4 bench soak (2026-10-01) found the deployed kiosk burning about 2.4 of the bench Pi's
+four cores, constantly, on the Fall theme. The scene's falling leaves animated <code>top</code>, and
+the rain and fish animated <code>top</code> and <code>left</code>: layout properties, so the page
+did a style recalc, a layout and a repaint 57 times a second for as long as the theme was on. They
+now travel with the <code>translate</code> property in container units, which the compositor can run
+on its own. This mounts every scene and checks (1) no animation running in it changes a layout
+property, and (2) a falling leaf still crosses the WHOLE frame, top to bottom — the reason the
+scene used <code>top</code> in the first place was that a percentage translate only moves an
+element by its own height.</p>
+
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="box"></div>
+
+<script type="module">
+import { mountScene, SCENES, listOverlays } from '../livescene.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+
+// Properties whose animation forces layout every frame. `transform`, `translate`, `rotate`,
+// `scale`, `opacity` and `filter` are the ones a compositor can run without the main thread.
+const LAYOUT = ['top', 'left', 'right', 'bottom', 'width', 'height', 'margin', 'marginTop',
+  'marginLeft', 'padding', 'inset'];
+const layoutProps = (anim) => {
+  const props = new Set();
+  for (const kf of anim.effect?.getKeyframes?.() || []) {
+    for (const k of Object.keys(kf)) if (LAYOUT.includes(k)) props.add(k);
+  }
+  return [...props];
+};
+const box = document.getElementById('box');
+const motionOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+section('the meter can see a layout animation');
+{
+  const el = document.createElement('div');
+  el.style.position = 'absolute';
+  box.append(el);
+  const a = el.animate([{ top: '0%' }, { top: '100%' }], { duration: 1000, iterations: Infinity });
+  check('an element animating `top` is reported', layoutProps(a).includes('top'));
+  a.cancel(); el.remove();
+}
+
+if (!motionOn) {
+  check('this browser has motion on (the scene only animates under prefers-reduced-motion: no-preference)', false,
+    'reduced motion is set; nothing to measure');
+} else {
+  for (const id of Object.keys(SCENES)) {
+    section(`scene: ${id}`);
+    const s = mountScene(box, { scene: id, overlays: [] });
+    await nextFrame();
+    const anims = box.getAnimations({ subtree: true });
+    const bad = anims.map((a) => ({ a, p: layoutProps(a) })).filter((x) => x.p.length);
+    check(`${id}: no running animation changes a layout property`, bad.length === 0,
+      bad.slice(0, 4).map((x) => `${x.a.effect.target.className}: ${x.p.join('/')} (${x.a.animationName})`).join('; ')
+      + (bad.length > 4 ? ` ...and ${bad.length - 4} more` : ''));
+    s.destroy();
+  }
+
+  section('a falling leaf still crosses the whole frame');
+  {
+    const s = mountScene(box, { scene: 'fall', overlays: [] });
+    await nextFrame();
+    const frame = box.getBoundingClientRect();
+    const leaf = box.querySelector('.ng-leaf');
+    const a = leaf.getAnimations()[0];
+    check('the leaf is animated', !!a);
+    if (a) {
+      a.pause();
+      const dur = a.effect.getComputedTiming().duration;
+      a.currentTime = 0;
+      const top0 = leaf.getBoundingClientRect().top - frame.top;
+      a.currentTime = dur * 0.999;
+      const top1 = leaf.getBoundingClientRect().top - frame.top;
+      // The old keyframe went from top:-14% to top:112% of the frame. A leaf is ~10-30px across and
+      // turns as it falls, so its box varies a little; the travel is what matters.
+      check('it starts above the frame', top0 < 0, `top ${top0.toFixed(1)}px`);
+      check('it ends below the frame', top1 > frame.height, `top ${top1.toFixed(1)}px of ${frame.height}`);
+      const travel = top1 - top0;
+      check('it travels about 126% of the FRAME height (not of its own height)',
+        Math.abs(travel - 1.26 * frame.height) < 0.06 * frame.height,
+        `${travel.toFixed(1)}px vs ${(1.26 * frame.height).toFixed(1)}px`);
+    }
+    s.destroy();
+  }
+
+  section('rain and fish travel the frame too');
+  for (const [scene, sel, axis, share] of [['cyberpunk', '.ng-rain', 'y', 1.36], ['ocean', '.ng-fish', 'x', 1.32]]) {
+    const s = mountScene(box, { scene, overlays: [] });
+    await nextFrame();
+    const el = box.querySelector(sel);
+    const a = el?.getAnimations()[0];
+    if (!el || !a) { check(`${scene}: ${sel} is animated`, false); s.destroy(); continue; }
+    const frame = box.getBoundingClientRect();
+    a.pause();
+    const dur = a.effect.getComputedTiming().duration;
+    const at = (t) => { a.currentTime = t; const r = el.getBoundingClientRect(); return axis === 'y' ? r.top - frame.top : r.left - frame.left; };
+    const p0 = at(0), p1 = at(dur * 0.999);
+    const size = axis === 'y' ? frame.height : frame.width;
+    check(`${scene}: ${sel} travels ~${Math.round(share * 100)}% of the frame`,
+      Math.abs((p1 - p0) - share * size) < 0.06 * size, `${(p1 - p0).toFixed(1)}px vs ${(share * size).toFixed(1)}px`);
+    s.destroy();
+  }
+
+  section('motion off still leaves a composed picture');
+  {
+    // `still` pauses every animation; the movers must not all pile up at the start line.
+    const s = mountScene(box, { scene: 'fall', overlays: [], motion: 'still' });
+    await nextFrame();
+    const frame = box.getBoundingClientRect();
+    const tops = [...box.querySelectorAll('.ng-leaf')].map((l) => l.getBoundingClientRect().top - frame.top);
+    const inside = tops.filter((t) => t >= 0 && t <= frame.height).length;
+    check('with motion "still", most leaves are somewhere inside the frame', inside >= tops.length / 2,
+      `${inside} of ${tops.length}`);
+    s.destroy();
+  }
+}
+
+// Overlays are opt-in and listed for completeness: the rare crossings (one element each) still
+// animate left/top. Reported, not failed.
+{
+  const s = mountScene(box, { scene: 'nimrod', overlays: listOverlays().map((o) => o.value) });
+  await nextFrame();
+  const bad = box.getAnimations({ subtree: true }).filter((a) => layoutProps(a).length);
+  const d = document.createElement('div');
+  d.textContent = `note: with every overlay on, ${bad.length} element(s) still animate a layout property: `
+    + [...new Set(bad.map((a) => a.animationName))].join(', ');
+  out.append(d);
+  s.destroy();
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
