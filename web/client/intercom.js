@@ -17,7 +17,8 @@
 //   2. THE ROOM IS TOLD FIRST. Before any microphone opens, the room hears a chime and (by default) the
 //      caller's name is said, and the screen shows "Intercom opening: <name>" for `warnMs`. Only
 //      then is the room's microphone opened. The name shown is the one on the APPROVED LIST, not one the
-//      phone chose.
+//      phone chose. And ONLY ON ONE SCREEN: the server picks which of the person's screens answers,
+//      before anything chimes (CLAIM_MS, drive.py Answerers); the others do nothing.
 //   3. IT SHOWS FOR THE WHOLE TIME. "Intercom open: <name>" stays on the screen while it is open, in the
 //      screen's notice column (live_notices.js). NO SETTING HIDES IT.
 //   4. THE ROOM CAN END IT WITH ONE PRESS. The notice carries an End button, and `intercom/end` is an
@@ -337,6 +338,30 @@ export function createIntercomSender({
 const MIC_ID = 'intercom';
 const AUDIO_ID = 'intercom';
 
+// ONE SCREEN ANSWERS (Mike's list 2026-09-30 item 7). The phone's offer reaches EVERY screen of the
+// person. Before this, two open screens both answered, and the one the phone did not keep sat "open"
+// with its room's microphone on for up to 30 s. Now a screen ASKS THE SERVER FIRST (`link.claim`,
+// drive.py Answerers): only the screen the server names (`answerer`, you: true) chimes, warns and
+// opens its microphone; every other screen does nothing at all - no chime, no notice, no microphone.
+//
+// WHY BEFORE THE CHIME, not just before the microphone: a loser that chimed "Intercom from Mike" and
+// then went quiet would tell a room somebody was coming who never does. The cost is one round trip to
+// the server before the chime (tens to a few hundred ms on facility wifi) - inside the 3 s warning it
+// changes nothing anybody hears, and at "open straight after the chime" it is smaller than the
+// connection setup that follows it anyway.
+//
+// A SCREEN TOLD `you: false` WHILE IT HOLDS THE SESSION closes it IN THE SAME TASK: the microphone is
+// released before the handler returns. That can only happen to a screen that had won and then lost its
+// place (its socket dropped, so the server forgot it, and the phone's re-offer went to another screen) -
+// see the bound argued in intercom_test.html.
+//
+// How long to wait for the server's reply before giving up QUIETLY (no chime, nothing opened, the phone
+// is not told: it gives up by itself at its 30 s `answerMs`). 5 s, argued: the reply is one round trip
+// (well under 1 s on a live socket), so 5 s only ever fires on a socket that is effectively gone - or a
+// server too old to know `claim` - and failing closed there is the privacy-safe side. Shorter would turn
+// away an intercom on a bad-wifi moment; longer only delays the same "no".
+export const CLAIM_MS = 5000;
+
 export function createIntercomReceiver({
   link,
   config = {},
@@ -351,17 +376,22 @@ export function createIntercomReceiver({
   PeerConnection = (typeof RTCPeerConnection !== 'undefined' ? RTCPeerConnection : null),
   makeAudio = () => (typeof Audio !== 'undefined' ? new Audio() : null),
   stallMs = STALL_MS,
+  claimMs = CLAIM_MS,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   onChange = null,
 } = {}) {
   if (!link) throw new Error('createIntercomReceiver: a drive link is required');
-  let s = null;             // the one session: { session, by, name, phase: 'warning'|'open', since, pc, mic, el, timers }
+  // The one session: { session, by, name, phase: 'claiming'|'warning'|'open', since, pc, mic, el, timers }.
+  // 'claiming' = asking the server whether this screen is the one; nothing has happened in the room,
+  // so it is not shown, not listed, and holds nothing.
+  let s = null;
   let destroyed = false;
   const offs = [];
+  const claims = new Map();   // session -> a claim waiting for the server's answer
 
-  const list = () => (s ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since }] : []);
+  const list = () => (s && s.phase !== 'claiming' ? [{ session: s.session, name: s.name, phase: s.phase, since: s.since }] : []);
   function changed() {
     const sessions = list();
     try { onChange?.(sessions); } catch (err) { console.error('intercom onChange', err); }
@@ -376,15 +406,43 @@ export function createIntercomReceiver({
     if (!s) return false;
     const was = s;
     for (const k of ['warn', 'stall', 'limit']) clearT(k);
-    try { was.pc?.close(); } catch { /* closed */ }
-    if (was.el) { try { was.el.pause?.(); was.el.srcObject = null; } catch { /* gone */ } }
+    // The microphone FIRST: whatever else fails below, the room stops being heard.
     if (was.micHeld) { try { micOwner?.release?.(MIC_ID); } catch { /* gone */ } }
     else if (was.mic) { for (const t of was.mic.getTracks?.() || []) { try { t.stop(); } catch { /* stopped */ } } }
+    was.mic = null; was.micHeld = false;
+    try { was.pc?.close(); } catch { /* closed */ }
+    if (was.el) { try { was.el.pause?.(); was.el.srcObject = null; } catch { /* gone */ } }
     try { audio?.setActive?.(AUDIO_ID, false); } catch { /* gone */ }
     s = null;
+    // Still only asking the server: nothing was promised to anybody, nothing showed. Say nothing -
+    // a "no" from here would reach the phone as THE answer while another screen may be taking it.
+    if (was.phase === 'claiming') return true;
     if (tell) send(was.session, 'bye', { reason });
     changed();
     return true;
+  }
+
+  // Ask the server whether this screen is the one that answers `session`. Resolves true only on the
+  // server's `you: true`; false on its "no", on no reply within `claimMs`, or with no way to ask (a
+  // link without `claim`) - IT FAILS CLOSED. One question in flight per session.
+  function askServer(session) {
+    const have = claims.get(session);
+    if (have) return have.promise;
+    let done;
+    const entry = { promise: new Promise((r) => { done = r; }), timer: null };
+    entry.settle = (won) => {
+      if (claims.get(session) !== entry) return;
+      claims.delete(session);
+      if (entry.timer != null) { try { clearTimer(entry.timer); } catch { /* gone */ } entry.timer = null; }
+      done(won === true);
+    };
+    claims.set(session, entry);
+    entry.timer = setTimer(() => { entry.timer = null; entry.settle(false); }, claimMs);
+    let asked = false;
+    try { asked = typeof link.claim === 'function' && link.claim({ purpose: INTERCOM_PURPOSE, session }) === true; }
+    catch { asked = false; }
+    if (!asked) entry.settle(false);
+    return entry.promise;
   }
 
   function playChime(o) {
@@ -441,10 +499,10 @@ export function createIntercomReceiver({
     await gatheringDone(pc, { setTimer });
     if (destroyed || s !== sess || sess.pc !== pc) return false;
     send(sess.session, 'answer', { sdp: pc.localDescription?.sdp });
-    // AN ANSWER THAT NEVER CONNECTS ENDS. The server fans an offer out to EVERY screen of the person
-    // (phone_mic.js's known limit): with two open, both answer, the phone keeps the first, and the
-    // other would sit "open" with its microphone on and nobody there. So until 'connected', the stall
-    // clock runs - and the notice says "open" the whole time, which errs toward telling the room.
+    // AN ANSWER THAT NEVER CONNECTS ENDS. Two screens no longer both answer (the server picks one,
+    // CLAIM_MS above), so this is the backstop for the rest: a phone that vanished between offer and
+    // answer, a network that never connects. Until 'connected', the stall clock runs - and the notice
+    // says "open" the whole time, which errs toward telling the room.
     if (pc.connectionState !== 'connected') {
       clearT('stall');
       sess.stall = setTimer(() => { if (s === sess && sess.pc === pc) { sess.stall = null; end('stalled'); } }, stallMs);
@@ -468,6 +526,14 @@ export function createIntercomReceiver({
     if (destroyed || !isIntercomSignal(sig)) return;
     const session = typeof sig.session === 'string' ? sig.session : '';
     if (!session) return;
+    if (sig.kind === 'answerer') {
+      // THE SERVER'S PICK. A "no" for the session this screen holds closes it NOW, in this task -
+      // the microphone is released before this returns - and tells the phone nothing (it has its
+      // answerer). A "yes" or "no" for a claim in flight settles it.
+      if (sig.you !== true && s && s.session === session) end('answered-elsewhere', { tell: false });
+      claims.get(session)?.settle(sig.you === true);
+      return;
+    }
     if (sig.kind === 'bye') { if (s && s.session === session) end('phone', { tell: false }); return; }
     if (sig.kind !== 'offer') return;
     const check = offerIsAudioOnly(sig.sdp);
@@ -484,27 +550,43 @@ export function createIntercomReceiver({
     if (s && s.session === session) {
       if (s.by !== sig.by) { send(session, 'bye', { reason: 'not-approved' }); return; }
       // A reconnect: the same person, the same session. The room was already told; no second chime.
+      // An OPEN one asks the server again before re-answering: if this screen's socket dropped, the
+      // server forgot it, and the phone's re-offer may already belong to another screen.
       clearT('stall');
-      if (s.phase === 'open') answer(s, sig.sdp).catch((err) => { console.error('intercom: re-answer', err); end('failed'); });
-      else s.sdp = sig.sdp;
+      if (s.phase === 'open') {
+        const sess = s;
+        const sdp = sig.sdp;
+        askServer(session).then((won) => {
+          if (destroyed || s !== sess) return null;
+          if (!won) { end('answered-elsewhere', { tell: false }); return null; }
+          return answer(sess, sdp);
+        }).catch((err) => { console.error('intercom: re-answer', err); if (s === sess) end('failed'); });
+      } else s.sdp = sig.sdp;            // still asking or still warning: the newest offer is the one used
       return;
     }
     // Two different "no"s, so the phone says the true one: another intercom is open, or the room is on a call.
     if (s) { send(session, 'bye', { reason: 'busy' }); return; }
     if (busy()) { send(session, 'bye', { reason: 'in-a-call' }); return; }
-    const sess = { session, by: sig.by, name: entry.name, phase: 'warning', since: now(), sdp: sig.sdp,
+    const sess = { session, by: sig.by, name: entry.name, phase: 'claiming', since: now(), sdp: sig.sdp,
                    pc: null, mic: null, micHeld: false, el: null, warn: null, stall: null, limit: null };
     s = sess;
-    changed();
-    playChime(o);
-    if (o.announce) { try { output?.alert?.(`Intercom from ${entry.name}`, { source: 'intercom' }); } catch { /* optional */ } }
-    const go = () => {
-      if (s !== sess) return;
-      sess.warn = null;
-      answer(sess, sess.sdp).catch((err) => { console.error('intercom: answer', err); if (s === sess) end('failed'); });
-    };
-    if (o.warnMs > 0) sess.warn = setTimer(go, o.warnMs);
-    else go();
+    // NOTHING happens in the room until the server says this screen is the one (CLAIM_MS above).
+    askServer(session).then((won) => {
+      if (destroyed || s !== sess) return;
+      if (!won) { end('answered-elsewhere', { tell: false }); return; }
+      sess.phase = 'warning';
+      sess.since = now();
+      changed();
+      playChime(o);
+      if (o.announce) { try { output?.alert?.(`Intercom from ${entry.name}`, { source: 'intercom' }); } catch { /* optional */ } }
+      const go = () => {
+        if (s !== sess) return;
+        sess.warn = null;
+        answer(sess, sess.sdp).catch((err) => { console.error('intercom: answer', err); if (s === sess) end('failed'); });
+      };
+      if (o.warnMs > 0) sess.warn = setTimer(go, o.warnMs);
+      else go();
+    }).catch((err) => { console.error('intercom: claim', err); if (s === sess) end('failed', { tell: false }); });
   }
   offs.push(link.onSignal ? link.onSignal(onSignal) : null);
   if (bus && typeof bus.subscribe === 'function') {
@@ -524,6 +606,7 @@ export function createIntercomReceiver({
     destroy() {
       end('room-ended');
       destroyed = true;
+      for (const c of [...claims.values()]) c.settle(false);
       for (const off of offs) { try { off?.(); } catch { /* gone */ } }
       try { audio?.unregister?.(AUDIO_ID); } catch { /* gone */ }
     },

@@ -164,6 +164,12 @@ export function connectDrive({
       if (msg.type === 'signal' && msg.signal && SIGNAL_KINDS.includes(msg.signal.kind)) {
         fanSignal(msg.signal);
       }
+      // THE SERVER'S PICK of which screen answers an offer (drive.py Answerers, row 2.44). It comes
+      // FROM THE SERVER, never relayed from a peer, and only a screen hears it. Handed to the same
+      // subscribers as a signal of kind 'answerer'; a transport that does not know the kind ignores it.
+      if (msg.type === 'answerer' && role === 'screen' && typeof msg.session === 'string') {
+        fanSignal({ kind: 'answerer', purpose: msg.purpose, session: msg.session, you: msg.you === true });
+      }
     };
     sock.onclose = () => {
       sock = null;
@@ -191,11 +197,20 @@ export function connectDrive({
     try { sock.send(JSON.stringify({ type: 'signal', signal })); return true; } catch { return false; }
   }
 
+  // A SCREEN asks the server to be the one that answers an offer (drive.py Answerers). The reply
+  // arrives as an 'answerer' signal. Goes to the server only; it is never relayed to anybody.
+  function claim({ purpose, session } = {}) {
+    if (role !== 'screen' || typeof purpose !== 'string' || typeof session !== 'string' || !session) return false;
+    if (!sock || state !== 'connected') return false;
+    try { sock.send(JSON.stringify({ type: 'claim', purpose, session })); return true; } catch { return false; }
+  }
+
   open();
 
   return {
     send,
     sendSignal,
+    claim,
     /** Listen for call signals. Returns an unsubscribe, like every other listener here. */
     onSignal(cb) {
       if (typeof cb !== 'function') return () => {};

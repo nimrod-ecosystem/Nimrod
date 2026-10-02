@@ -215,6 +215,13 @@ def parse_message(raw: dict) -> dict | None:
         if size > MAX_SIGNAL_BYTES:
             return None
         return {"type": "signal", "signal": sig}
+    if kind == "claim":
+        # A screen asking to be THE ONE that answers an offer (row 2.44 - see Answerers below).
+        # Only the two fields, both checked; anything else on the message is dropped.
+        purpose, session = raw.get("purpose"), raw.get("session")
+        if purpose not in ARBITRATED_PURPOSES or not _session_ok(session):
+            return None
+        return {"type": "claim", "purpose": purpose, "session": session}
     if kind == "ping":
         return {"type": "pong"}
     return None
@@ -234,3 +241,173 @@ def stamp_signal(msg: dict, user: str) -> dict:
     sig = dict(msg["signal"])
     sig["by"] = user
     return {"type": "signal", "signal": sig}
+
+
+# ---------------------------------------------------------------------------------------
+# ONE ANSWERING SCREEN PER OFFER - added 2026-10-02 (row 2.44, the intercom; Mike's list
+# 2026-09-30 item 7).
+#
+# A phone's offer is fanned out to EVERY screen of the person. Before this, two open screens
+# both answered an intercom: the phone kept the first answer, and the other screen sat "open"
+# with ITS ROOM'S MICROPHONE ON, talking to nobody, until its 30-second stall clock ran out.
+# That is a listening device left on in a room, which is a privacy failure, not a glitch.
+#
+# THE RULE: the server picks, and the FIRST RESPONSE WINS - whether it is a yes or a no.
+#   * A screen that wants to answer sends {type: "claim", purpose, session} BEFORE it chimes,
+#     warns or opens anything. The first claim on an offer wins; the server tells the winner
+#     {type: "answerer", you: true} and, in the same breath, every other screen of the person
+#     `you: false`. A later claim is told `you: false`. A screen opens no microphone without
+#     `you: true` (intercom.js).
+#   * A screen that says NO first (a `bye`: not on the list, already busy, on a call) decides it
+#     too: the phone is told, and a later claim on that offer is told `you: false` - otherwise a
+#     second screen could chime and open its microphone for a phone that has already given up.
+#   * Once there is an answerer, only ITS signals for that offer reach the phone. Anything from
+#     another screen (an older page that answers without claiming, say) is dropped, and an answer
+#     sent WITHOUT a claim counts as the claim if it is first (so an older page still works, and
+#     the others are still told to close).
+#
+# ARGUED, not absolute: "first response wins, even a no" means a screen on a call can turn a phone
+# away that another screen of the same person would have taken. The alternative - wait for every
+# screen - needs to know how many screens will answer, and one silent screen (an older page, a
+# broken one) would then hold every refusal until the phone's own 30-second timeout. Mike's list.
+#
+# ONLY THE PURPOSES NAMED HERE. A family CALL (no purpose) is untouched: call_transport.js does not
+# claim yet, and arbitrating it would drop the second screen's answer with nothing telling it why.
+# Adding "call" here is one word once that file learns the `answerer` message.
+ARBITRATED_PURPOSES = frozenset({"intercom"})
+_SESSION_CHARS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")
+MAX_SESSION_LEN = 64            # an intercom session is "ic-" + 16 hex; 64 is room to spare, not a limit anyone meets
+
+# A record with NO answerer yet (nobody has responded, or the answer was a no) is forgotten after
+# this. 120 s, argued: the phone gives up on its own after 30 s (intercom.js answerMs), so four times
+# that is never in the way of a real offer; a record WITH an answerer is never swept while that
+# screen is connected - it goes when the answerer or the phone says bye, or the answerer leaves.
+ANSWERER_IDLE_S = 120
+# A bound, so a driver looping fresh offers cannot grow this without limit (the same reason
+# Tickets has MAX_TICKETS). Oldest first.
+MAX_ANSWERER_RECORDS = 2000
+
+
+def _session_ok(session) -> bool:
+    return (isinstance(session, str) and 0 < len(session) <= MAX_SESSION_LEN
+            and all(c in _SESSION_CHARS for c in session))
+
+
+def _arbitrated(sig) -> tuple[str, str] | None:
+    """(purpose, session) when this signal belongs to an arbitrated offer, else None."""
+    if not isinstance(sig, dict):
+        return None
+    purpose, session = sig.get("purpose"), sig.get("session")
+    if purpose in ARBITRATED_PURPOSES and _session_ok(session):
+        return purpose, session
+    return None
+
+
+@dataclass
+class _Offer:
+    answerer: object = None      # the winning screen's connection, once there is one
+    declined: bool = False       # the first response was a no
+    touched: float = 0.0
+
+
+class Answerers:
+    """Which ONE screen answers each arbitrated offer. Keyed by (room, purpose, session).
+
+    No I/O: the caller (app.py) does the sending, so every rule here is testable without a socket.
+    `room` is any hashable key (app.py uses (owner, person_id)); `conn` is any object - only its
+    identity is used.
+    """
+
+    def __init__(self, idle_s: float = ANSWERER_IDLE_S, now=time.monotonic,
+                 max_records: int = MAX_ANSWERER_RECORDS):
+        self._recs: dict[tuple, _Offer] = {}
+        self._idle = idle_s
+        self._now = now
+        self._max = max_records
+
+    def _sweep(self) -> None:
+        cut = self._now() - self._idle
+        for k in [k for k, r in self._recs.items() if r.answerer is None and r.touched < cut]:
+            self._recs.pop(k, None)
+        if len(self._recs) >= self._max:
+            for k in sorted(self._recs, key=lambda k: self._recs[k].touched)[:max(1, self._max // 10)]:
+                self._recs.pop(k, None)
+
+    def driver_signal(self, room, sig) -> None:
+        """A phone's signal, on its way to the screens. An offer opens (or keeps) a record."""
+        ps = _arbitrated(sig)
+        if ps is None:
+            return
+        key = (room, *ps)
+        kind = sig.get("kind")
+        if kind == "bye":
+            self._recs.pop(key, None)
+            return
+        if kind != "offer":
+            return
+        self._sweep()
+        rec = self._recs.get(key)
+        if rec is not None and rec.answerer is not None:
+            rec.touched = self._now()           # a reconnect: the same screen keeps it
+            return
+        self._recs[key] = _Offer(touched=self._now())   # new, or a fresh try after a no
+
+    def claim(self, room, purpose: str, session: str, conn) -> tuple[bool, bool]:
+        """(won, newly) - `newly` means the caller must now tell every OTHER screen `you: false`.
+
+        No record (the server never relayed that offer, or it was forgotten) is a no: there is
+        nothing to answer. Fails closed.
+        """
+        rec = self._recs.get((room, purpose, session))
+        if rec is None or rec.declined:
+            return False, False
+        rec.touched = self._now()
+        if rec.answerer is None:
+            rec.answerer = conn
+            return True, True
+        return rec.answerer is conn, False
+
+    def screen_signal(self, room, sig, conn) -> tuple[bool, bool]:
+        """(relay, newly) for a screen's signal on its way to the phone.
+
+        `newly`: this signal (an answer sent without a claim) just made `conn` the answerer, so the
+        other screens must be told `you: false`.
+        """
+        ps = _arbitrated(sig)
+        if ps is None:
+            return True, False                  # not arbitrated: exactly as before
+        key = (room, *ps)
+        kind = sig.get("kind")
+        rec = self._recs.get(key)
+        if rec is None:
+            # A late hang-up from a screen whose record went with its old socket is still carried
+            # (it can only END something); anything else for an offer the server never saw is not.
+            return kind == "bye", False
+        rec.touched = self._now()
+        if rec.declined:
+            return False, False                 # already answered "no" by somebody
+        if rec.answerer is None:
+            if kind == "answer":
+                rec.answerer = conn             # an older page, answering without claiming
+                return True, True
+            if kind == "bye":
+                rec.declined = True             # the first response was a no: the phone hears it
+                return True, False
+            return False, False
+        if rec.answerer is not conn:
+            return False, False                 # a loser: nothing of it reaches the phone
+        if kind == "bye":
+            self._recs.pop(key, None)
+        return True, False
+
+    def left(self, room, conn) -> None:
+        """A screen's socket closed: the offers it was answering have no answerer any more."""
+        for k in [k for k, r in self._recs.items() if k[0] == room and r.answerer is conn]:
+            self._recs.pop(k, None)
+
+    def answerer(self, room, purpose: str, session: str):
+        rec = self._recs.get((room, purpose, session))
+        return rec.answerer if rec else None
+
+    def __len__(self) -> int:
+        return len(self._recs)

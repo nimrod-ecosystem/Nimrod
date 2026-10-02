@@ -8,8 +8,8 @@ standing anything up.
 """
 import sys
 
-from drive import (DRIVE_VERBS, MAX_SIGNAL_BYTES, ROLES, SIGNAL_KINDS, Rooms,
-                   Tickets, parse_message, stamp_signal)
+from drive import (ANSWERER_IDLE_S, ARBITRATED_PURPOSES, DRIVE_VERBS, MAX_SIGNAL_BYTES,
+                   ROLES, SIGNAL_KINDS, Answerers, Rooms, Tickets, parse_message, stamp_signal)
 
 passed = failed = 0
 
@@ -207,6 +207,106 @@ check("the original message is not mutated (the stamp is a copy)", forged["signa
 check("a verb passes through untouched (nothing but signals is stamped)",
       stamp_signal({"type": "verb", "verb": "select"}, "alice") == {"type": "verb", "verb": "select"})
 check("a pong passes through untouched", stamp_signal({"type": "pong"}, "alice") == {"type": "pong"})
+
+# ---------------------------------------------------------------------------------------
+# ONE ANSWERING SCREEN PER OFFER (row 2.44; Mike's list 2026-09-30 item 7). Two screens of one
+# person both answered an intercom, and the loser's room microphone stayed open up to 30 s.
+section("a claim: the one message a screen sends to the SERVER rather than through it")
+check("a claim for an intercom offer is accepted, and only its two fields are kept",
+      parse_message({"type": "claim", "purpose": "intercom", "session": "ic-0123456789abcdef", "x": 1})
+      == {"type": "claim", "purpose": "intercom", "session": "ic-0123456789abcdef"})
+check("*** a claim for a purpose that is not arbitrated (a call) is dropped ***",
+      parse_message({"type": "claim", "purpose": "call", "session": "s1"}) is None
+      and parse_message({"type": "claim", "session": "s1"}) is None)
+check("a claim with no session, an empty one, a huge one or odd characters is dropped",
+      all(parse_message({"type": "claim", "purpose": "intercom", "session": s}) is None
+          for s in (None, "", "x" * 65, "ic 1", "ic/../1", 7)))
+check("the intercom is the only arbitrated purpose (calls are untouched)", ARBITRATED_PURPOSES == {"intercom"})
+
+section("*** the first screen to claim answers; every other screen is told no ***")
+clk = Clock()
+arb = Answerers(now=clk)
+R = ("owner", "p1")
+A, B, C = object(), object(), object()
+OFFER = {"kind": "offer", "purpose": "intercom", "session": "ic-1", "sdp": "v=0"}
+ANS = {"kind": "answer", "purpose": "intercom", "session": "ic-1", "sdp": "v=0"}
+BYE = {"kind": "bye", "purpose": "intercom", "session": "ic-1"}
+check("CONTROL: a claim on an offer the server never relayed is refused (fails closed)",
+      arb.claim(R, "intercom", "ic-1", A) == (False, False))
+arb.driver_signal(R, OFFER)
+check("*** the first claim wins, and the server must now tell the others ***",
+      arb.claim(R, "intercom", "ic-1", A) == (True, True))
+check("*** the second claim loses ***", arb.claim(R, "intercom", "ic-1", B) == (False, False))
+check("the winner claiming again is still the winner (a reconnect re-claims)",
+      arb.claim(R, "intercom", "ic-1", A) == (True, False))
+check("*** only the winner's answer reaches the phone ***",
+      arb.screen_signal(R, ANS, A) == (True, False) and arb.screen_signal(R, ANS, B) == (False, False))
+check("a loser's hang-up does not end the phone either", arb.screen_signal(R, BYE, B) == (False, False))
+check("the same session in ANOTHER room is a different offer",
+      arb.claim(("owner", "p2"), "intercom", "ic-1", C) == (False, False))
+arb.driver_signal(R, OFFER)
+check("a re-offer on the same session (the phone reconnecting) keeps the same answerer",
+      arb.answerer(R, "intercom", "ic-1") is A and arb.claim(R, "intercom", "ic-1", B) == (False, False))
+check("the winner's hang-up reaches the phone and the record goes",
+      arb.screen_signal(R, BYE, A) == (True, False) and arb.answerer(R, "intercom", "ic-1") is None and len(arb) == 0)
+
+section("*** the first response decides, even when it is a no ***")
+arb = Answerers(now=clk)
+arb.driver_signal(R, OFFER)
+check("a screen's refusal (a bye) before anybody claims reaches the phone", arb.screen_signal(R, BYE, A) == (True, False))
+check("*** ...and a later claim is told no: nobody opens a microphone for a phone that gave up ***",
+      arb.claim(R, "intercom", "ic-1", B) == (False, False))
+check("...nor is a later answer relayed", arb.screen_signal(R, ANS, B) == (False, False))
+check("...nor a second refusal (the phone already has one)", arb.screen_signal(R, BYE, B) == (False, False))
+
+section("an older page that answers without claiming")
+arb = Answerers(now=clk)
+arb.driver_signal(R, OFFER)
+check("*** an answer with no claim, first, counts as the claim - and the others must be told ***",
+      arb.screen_signal(R, ANS, A) == (True, True) and arb.answerer(R, "intercom", "ic-1") is A)
+check("a claim after it loses", arb.claim(R, "intercom", "ic-1", B) == (False, False))
+check("ICE (or anything else) from nobody-yet is not relayed",
+      Answerers(now=clk).screen_signal(R, {"kind": "ice", "purpose": "intercom", "session": "ic-9"}, A) == (False, False))
+check("a hang-up for an offer the server holds no record of is still carried (it can only end something)",
+      Answerers(now=clk).screen_signal(R, {"kind": "bye", "purpose": "intercom", "session": "ic-9"}, A) == (True, False))
+check("an answer for an offer the server never saw is not",
+      Answerers(now=clk).screen_signal(R, {"kind": "answer", "purpose": "intercom", "session": "ic-9"}, A) == (False, False))
+
+section("calls, phone microphones and verbs are untouched")
+arb = Answerers(now=clk)
+check("a call's answer (no purpose) is relayed exactly as before, by anybody",
+      arb.screen_signal(R, {"kind": "answer", "sdp": "v=0"}, A) == (True, False)
+      and arb.screen_signal(R, {"kind": "answer", "sdp": "v=0"}, B) == (True, False))
+check("a phone-microphone answer too", arb.screen_signal(R, {"kind": "answer", "purpose": "phone-mic", "session": "pm-1"}, B) == (True, False))
+arb.driver_signal(R, {"kind": "offer", "sdp": "v=0"})
+check("and a call's offer opens no record", len(arb) == 0)
+
+section("the records end")
+arb = Answerers(now=clk)
+arb.driver_signal(R, OFFER)
+arb.claim(R, "intercom", "ic-1", A)
+arb.left(R, B)
+check("a LOSER leaving changes nothing", arb.answerer(R, "intercom", "ic-1") is A)
+arb.left(R, A)
+check("*** the answerer's socket closing frees the offer (its next re-offer starts fresh) ***",
+      arb.answerer(R, "intercom", "ic-1") is None and len(arb) == 0)
+arb.driver_signal(R, OFFER)
+arb.driver_signal(R, BYE)
+check("the phone hanging up drops the record", len(arb) == 0)
+arb.driver_signal(R, OFFER)
+clk.advance(ANSWERER_IDLE_S + 1)
+arb.driver_signal(R, {**OFFER, "session": "ic-2"})
+check("an offer nobody answered is forgotten after the idle window", arb.claim(R, "intercom", "ic-1", A) == (False, False)
+      and ANSWERER_IDLE_S >= 4 * 30, str(ANSWERER_IDLE_S))
+arb.claim(R, "intercom", "ic-2", A)
+clk.advance(10 * ANSWERER_IDLE_S)
+arb.driver_signal(R, {**OFFER, "session": "ic-3"})
+check("...but one WITH an answerer is kept while that screen is connected (an hour-long intercom)",
+      arb.answerer(R, "intercom", "ic-2") is A)
+small = Answerers(now=clk, max_records=10)
+for i in range(50):
+    small.driver_signal(R, {**OFFER, "session": f"ic-{i}"})
+check("a flood of fresh offers cannot grow the records without bound", len(small) <= 10, str(len(small)))
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)
