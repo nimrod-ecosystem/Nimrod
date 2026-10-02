@@ -407,21 +407,30 @@ try {
     t.inst.destroy();
   }
 
-  section('use a picture instead: the person\'s own Media, nothing uploaded');
+  section('use a picture instead: the SHARED picture picker (2026-10-02), nothing sent anywhere');
   {
+    // The picker's recent list lives in this browser's storage; start and finish with it empty, so a
+    // re-run (or another suite on this origin) cannot add a row this section does not expect.
+    try { localStorage.removeItem('nimrod:recentPictures'); } catch { /* none */ }
     const sources = [{ id: 'src1', kind: 'agent', label: 'Family pictures', base_url: 'https://media.invalid' }];
     const t = mount({ sources, names: { src1: [{ path: 'me.png', name: 'me.png', kind: 'image' }, { path: 'clip.mp4', name: 'clip.mp4', kind: 'video' }] } });
     t.press('[data-act="to-picture"]');
-    await tick(); await tick();
-    check('it lists the pictures in the person\'s sources, by name (videos left out)', t.q('[data-act="pick"][data-path="me.png"]') && !t.q('[data-path="clip.mp4"]'));
-    t.press('[data-act="save-picture"]');
-    check('Use this picture with nothing chosen asks for one first, and saves nothing', /Choose a picture first/.test(t.host.textContent) && saves(t).length === 0);
-    t.press('[data-act="pick"][data-path="me.png"]');
-    check('choosing one shows it', t.q('[data-picture-preview] [data-avatar-picture][data-path="me.png"]'));
-    t.press('[data-act="save-picture"]');
+    await sleep(40);
+    check('*** it opens the shared picker (picture_picker.js), not a list of names ***',
+      !!t.q('[data-avatar-picker] [data-picture-picker]') && !t.q('[data-act="pick"]'));
+    check('its pictures are thumbnails in the grid (videos left out)', !!t.q('[data-pp-group="grid"] [data-pp-pick][data-path="me.png"]') && !t.q('[data-path="clip.mp4"]'));
+    check('it offers adding one from this device, and Cancel', !!t.q('[data-pp-act="upload"]') && !!t.q('[data-pp-act="cancel"]'));
+    check('...and no "No picture" (that is the "No avatar" button\'s job)', !t.q('[data-pp-act="none"]'));
+    check('nothing is saved just by opening it', saves(t).length === 0);
+    // ONE SWITCH, through the avatar's own verbs: rows (actions, the grid line), into the line, take it.
+    t.pub('select');
+    check('the avatar\'s select drives the picker: the first lights the first row', t.probe().picker?.litGroup === 'actions', JSON.stringify(t.probe().picker));
+    // The grid's one line holds one picture, so the select that would enter it takes it.
+    t.pub('next'); t.pub('select');
     const kept = t.personStates[0].get();
-    check('saved as a REFERENCE into the source, the same shape a card\'s picture is',
+    check('*** picking IS choosing: saved as a REFERENCE into the source, the same shape a card\'s picture is ***',
       kept.use === 'picture' && kept.picture.sourceId === 'src1' && kept.picture.path === 'me.png', JSON.stringify(kept));
+    check('...and the picker is gone, the panel showing again', t.probe().view === 'show' && !t.q('[data-picture-picker]'));
     await sleep(20);
     const img = t.q('[data-avatar-shown="picture"] img');
     check('the panel shows it, through the card picture loader', img && /me\.png/.test(img.getAttribute('src') || ''), img?.getAttribute('src'));
@@ -430,11 +439,19 @@ try {
     t.inst.destroy();
     const empty = mount();
     empty.press('[data-act="to-picture"]');
-    await tick(); await tick();
-    check('no picture folders: it says where to add one', empty.q('[data-no-sources]'));
-    empty.pub('select'); empty.pub('prev'); empty.pub('select');
-    check('...and back/Cancel returns to showing', empty.probe().view === 'show');
+    await sleep(40);
+    check('no picture folders: it says so, and still offers a way in (add one from this device)', !!empty.q('[data-pp-empty]') && !!empty.q('[data-pp-act="upload"]'));
+    empty.pub('back');
+    check('...and back is Cancel: returns to showing', empty.probe().view === 'show' && !empty.q('[data-picture-picker]'));
     empty.inst.destroy();
+    // From the maker, Cancel in the picker goes back to the avatar being made, not out of it.
+    const mk = mount({ sources, names: { src1: [{ path: 'me.png', name: 'me.png', kind: 'image' }] } });
+    mk.press('[data-act="make"]'); mk.press('[data-act="to-picture"]');
+    await sleep(40);
+    mk.press('[data-pp-act="cancel"]');
+    check('Cancel from the maker\'s picture path is back to the maker', mk.probe().view === 'make' && !!mk.probe().draft);
+    mk.inst.destroy();
+    try { localStorage.removeItem('nimrod:recentPictures'); } catch { /* none */ }
   }
 
   section('make your own: the prompts, with a Copy button each');

@@ -12,8 +12,11 @@
 //
 // THREE WAYS TO HAVE ONE, one press each from the panel:
 //   * MAKE ONE HERE: a part at a time, with a live picture. "Surprise me" deals a whole face.
-//   * USE A PICTURE INSTEAD: any picture in the person's own Media — the same folders a button's or an
-//     AAC card's picture comes from (`card_face.js`). Nothing is uploaded; nothing new is built for it.
+//   * USE A PICTURE INSTEAD: the shared picture picker (`picture_picker.js`, 2026-10-02) — recent
+//     pictures first, "add one from this device", or a folder's thumbnails in a grid — the same one a
+//     button's and an AAC card's picture are chosen with. Until then this view listed every file in
+//     every folder as a button of its own, which Mike ruled out ("isn't a good way to do it").
+//     Nothing is sent anywhere: a picture added from this device stays in this browser.
 //   * MAKE YOUR OWN: the two prompts (a photo, or a description) with a Copy button each, and the
 //     warning that a photo sent to an online AI leaves the computer. What comes back is a picture,
 //     which goes in a picture folder and is chosen with "use a picture instead".
@@ -42,7 +45,8 @@ import {
 import { AVATAR_CHANGED_EVENT, avatarMotion } from '../avatar_display.js';
 import { flashLimit } from '../flash_limit.js';
 import { createCardImages } from '../card_face.js';
-import { createMediaSourcesClient, listItemNames } from '../media_sources.js';
+import { createMediaSourcesClient } from '../media_sources.js';
+import { mountPicturePicker } from '../picture_picker.js';
 import { normalizeHex } from '../color_picker.js';
 
 // *** THE MAKE-YOUR-OWN PROMPTS — chat's draft (room-as-home notes §7.4), unchanged in substance. ***
@@ -117,9 +121,7 @@ registerModule(
     let msg = '';
     let dead = false;
     let rootEl = null;
-    let pickedPicture = null;     // { sourceId, path } chosen in the picture view, not yet saved
-    let sourcesList = null;       // null = not listed yet
-    const namesBySource = new Map();
+    let picker = null;            // the shared picture picker, while the picture view is open
 
     const reducedMotion = () => {
       if (typeof ctx.reducedMotion === 'boolean') return ctx.reducedMotion;
@@ -194,18 +196,24 @@ registerModule(
     let client = null;
     const sourcesClient = () => client || (client = ctx.sources || ctx.mediaSources
       || createMediaSourcesClient({ user: ctx.user, cache: true, personId: personIdNow() }));
-    const listNames = ctx.listItemNames || listItemNames;
     const images = createCardImages({ sources: { list: () => sourcesClient().list() }, alive: () => !dead });
-    async function listPictures() {
-      try { sourcesList = (await sourcesClient().list()) || []; } catch (e) { console.warn('avatar: media sources', e); sourcesList = []; }
-      if (dead) return;
-      images.useSources(sourcesList);
-      await Promise.all(sourcesList.map(async (s) => {
-        if (namesBySource.has(s.id)) return;
-        try { namesBySource.set(s.id, ((await listNames(s, '')) || []).filter((n) => n.kind === 'image')); }
-        catch (e) { console.warn('avatar: could not list pictures', e); namesBySource.set(s.id, []); }
-      }));
-      if (!dead && view === 'picture') render();
+    function openPicker(host) {
+      closePicker();
+      picker = mountPicturePicker(host, {
+        sources: sourcesClient(),
+        // The suite's seam for the listing (and anybody else's); the picker's own default otherwise.
+        listEntries: ctx.listItemNames || undefined,
+        resolveUrl: ctx.resolveItemUrl || undefined,
+        value: saved().picture,
+        title: 'Use a picture instead',
+        onPick: (ref) => { if (ref) savePicture(ref); },
+        onCancel: () => leavePicture(),
+      });
+    }
+    function closePicker() {
+      const p = picker;
+      picker = null;
+      try { p?.destroy(); } catch { /* gone */ }
     }
 
     // ---- actions ---------------------------------------------------------------------------
@@ -217,7 +225,7 @@ registerModule(
       lit = lit >= 0 ? 0 : -1;
       render();
     }
-    function toShow() { view = 'show'; openPart = null; draft = null; pickedPicture = null; msg = ''; if (lit >= 0) lit = 0; render(); }
+    function toShow() { view = 'show'; openPart = null; draft = null; msg = ''; if (lit >= 0) lit = 0; render(); }
     function save() {
       if (!draft) return;
       writeRow({ use: 'drawn', drawn: normalizeRecord(draft) });
@@ -260,15 +268,18 @@ registerModule(
       render();
     }
     function toPicture() {
-      pickedPicture = saved().picture;
       view = 'picture'; openPart = null; msg = '';
       if (lit >= 0) lit = 0;
       render();
-      listPictures();
     }
-    function savePicture() {
-      if (!pickedPicture) { msg = 'Choose a picture first.'; render(); return; }
-      writeRow({ use: 'picture', picture: { ...pickedPicture } });
+    // Choosing a picture in the picker IS the choice: one select, not a pick and then a Save.
+    function savePicture(ref) {
+      writeRow({ use: 'picture', picture: { sourceId: ref.sourceId, path: ref.path } });
+      toShow();
+    }
+    // Cancel in the picker: back to the avatar being made, if one is, or to showing.
+    function leavePicture() {
+      if (draft) { view = 'make'; msg = ''; if (lit >= 0) lit = 0; render(); return; }
       toShow();
     }
     function noAvatar() { writeRow({ use: 'none' }); toShow(); }
@@ -324,8 +335,6 @@ registerModule(
         case 'surprise': doSurprise(); return;
         case 'cancel': toShow(); return;
         case 'save': save(); return;
-        case 'pick': pickedPicture = { sourceId: el.dataset.source, path: el.dataset.path }; msg = ''; render(); return;
-        case 'save-picture': savePicture(); return;
         case 'back': back(); return;
         case 'copy': copy(el.dataset.which); return;
         default:
@@ -398,28 +407,6 @@ registerModule(
       </div>`;
     }
 
-    function pictureHtml() {
-      let body;
-      if (sourcesList === null) body = '<p class="av-hint">Looking for your pictures…</p>';
-      else if (!sourcesList.length) {
-        body = '<p class="av-hint" data-no-sources>No picture folders are connected yet. Add one under Media on the Home page, then come back here.</p>';
-      } else {
-        body = sourcesList.map((s) => {
-          const names = namesBySource.get(s.id) || [];
-          const items = names.length
-            ? names.map((n) => btn('pick', esc(n.name || n.path), ` data-source="${esc(s.id)}" data-path="${esc(n.path)}" aria-pressed="${!!pickedPicture && pickedPicture.sourceId === s.id && pickedPicture.path === n.path}"`)).join('')
-            : '<p class="av-hint">No pictures in this one.</p>';
-          return `<div class="av-source"><p class="av-head">${esc(s.label || s.id)}</p><div class="av-choices">${items}</div></div>`;
-        }).join('');
-      }
-      const chosen = pickedPicture ? `<div class="av-face" data-picture-preview>${pictureSlot(pickedPicture)}</div>` : '';
-      return `<div class="av-picture"><p class="av-head">Use a picture instead</p>
-        <p class="av-hint">Any picture in your Media folders. It stays where it is; nothing is uploaded.</p>
-        ${chosen}${body}
-        ${msg ? `<p class="av-msg" role="status" data-avatar-msg>${esc(msg)}</p>` : ''}
-        <div class="av-btns">${btn('save-picture', 'Use this picture')}${btn('back', 'Cancel')}</div></div>`;
-    }
-
     function ownHtml() {
       return `<div class="av-own">
         <p class="av-head">Make your own avatar with an AI</p>
@@ -445,8 +432,18 @@ registerModule(
     function render() {
       if (dead || !rootEl) return;
       if (!cfg.allowChange && view !== 'show') { view = 'show'; draft = null; openPart = null; }
+      // THE PICTURE VIEW IS THE SHARED PICKER, mounted once and left alone while it is open: a
+      // redraw here would throw away where somebody had got to in it.
+      if (view === 'picture') {
+        if (picker && rootEl.querySelector('[data-avatar-picker]')) return;
+        images.releaseAll();
+        rootEl.innerHTML = '<div class="av" data-avatar-maker data-view="picture"><div class="av-picture" data-avatar-picker></div></div>';
+        openPicker(rootEl.querySelector('[data-avatar-picker]'));
+        return;
+      }
+      closePicker();
       images.releaseAll();
-      const html = view === 'make' && draft ? makeHtml() : view === 'picture' ? pictureHtml() : view === 'own' ? ownHtml() : showHtml();
+      const html = view === 'make' && draft ? makeHtml() : view === 'own' ? ownHtml() : showHtml();
       rootEl.innerHTML = `<div class="av" data-avatar-maker data-view="${view}">${html}</div>`;
       loadPictures();
       paintLit();
@@ -468,6 +465,7 @@ registerModule(
       if (lit >= 0) { try { list[lit]?.scrollIntoView?.({ block: 'nearest' }); } catch { /* no layout */ } }
     }
     function moveLit(d) {
+      if (view === 'picture' && picker) { if (d > 0) picker.next(); else picker.prev(); return; }
       if (view === 'make' && openPart) { if (lit < 0) lit = 0; stepOpen(d); return; }
       const n = walk().length;
       if (!n) return;
@@ -475,6 +473,7 @@ registerModule(
       paintLit();
     }
     function selectLit() {
+      if (view === 'picture' && picker) { picker.select(); return; }
       if (view === 'make' && openPart) {
         if (lit < 0) { lit = Math.max(0, partOf(openPart).options.findIndex((o) => o.id === draft?.[openPart])); paintLit(); return; }
         closePart(true); return;
@@ -485,10 +484,12 @@ registerModule(
       act(list[lit]);
     }
     function back() {
+      // In the picker, `back` is the picker's: out of a row of pictures, then (from its rows) Cancel.
+      if (view === 'picture' && picker) { picker.back(); return; }
       if (view === 'make' && openPart) { closePart(false); return; }
       if (view === 'make') { toShow(); return; }
       // From the picture or the prompts, back to the avatar being made, if one is.
-      if ((view === 'own' || view === 'picture') && draft) { view = 'make'; msg = ''; pickedPicture = null; if (lit >= 0) lit = 0; render(); return; }
+      if ((view === 'own' || view === 'picture') && draft) { view = 'make'; msg = ''; if (lit >= 0) lit = 0; render(); return; }
       if (view !== 'show') toShow();
     }
 
@@ -523,7 +524,7 @@ registerModule(
       __probe: () => ({ view, lit, openPart, draft: draft ? { ...draft } : null, saved: saved(), cfg: { ...cfg },
         moving: moving(), motionWhy: motionNow().because, personChoice: personChoice(), litAct: lit >= 0 ? walk()[lit]?.dataset.act : null,
         litLabel: lit >= 0 ? walk()[lit]?.textContent.trim().replace(/\s+/g, ' ') : null,
-        stored: personStore ? 'person' : 'panel', pickedPicture }),
+        stored: personStore ? 'person' : 'panel', picker: picker ? picker.__probe() : null }),
       init() {
         let cssHref = '';
         try { cssHref = new URL('../avatar.css', import.meta.url).href; } catch { /* unstyled, still works */ }
@@ -548,6 +549,7 @@ registerModule(
         mount.removeEventListener('click', onClick);
         mount.removeEventListener('keydown', onKey);
         mount.removeEventListener('input', onInput);
+        closePicker();
         images.releaseAll();
         closeStore();
         // The drawing goes with the panel, so its CSS movement stops with it.

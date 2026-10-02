@@ -23,6 +23,7 @@ export const SUITES = [
   'composer_reach', 'device_pick', 'director', 'drive',
   'educational', 'events', 'fs_sink', 'health', 'home', 'input', 'input_runtime', 'inputs', 'interstitials',
   'input_dwell', 'input_scan', 'longpress',
+  'picture_picker',
   'kiosk', 'arrangement', 'placement', 'dashboard_stage4', 'dashboards', 'dashboard_nest', 'map_editor', 'lessons', 'live_settings', 'local_store', 'media', 'media_sources', 'media_stall',
   'marker', 'mic_owner', 'modules_catalog', 'output',
   'output_panel',

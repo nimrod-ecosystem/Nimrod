@@ -29,7 +29,7 @@
 </div>
 
 <div class="note">
-  <b>Nothing is uploaded, and this asserts it rather than saying it.</b> A picture is a
+  <b>Nothing is sent anywhere, and this asserts it rather than saying it.</b> A picture is a
   <code>{sourceId, path}</code> reference to a file on the person’s own machine. The suite
   checks that what gets saved is that reference and not the URL the picker displayed — a folder
   listing revokes its own object URLs, so a stored URL would go blank later with no error
@@ -90,6 +90,15 @@ const FAKE_ITEMS = [
 ];
 const fakeSources = (list) => ({ list: async () => list });
 const fakeResolve = async () => ({ album: '', albums: ['trip'], items: FAKE_ITEMS, count: 3 });
+// THE SHARED PICKER'S SEAMS (2026-10-02: the editor's own picker became `picture_picker.js`). The
+// listing is names only - no URL in it - and each thumbnail asks for a URL of its own.
+const fakeEntries = async (src, album) => (album === 'trip'
+  ? { items: [{ path: 'trip/boat.jpg', name: 'boat.jpg', kind: 'image' }], albums: [] }
+  : { items: FAKE_ITEMS.map(({ path, name, kind }) => ({ path, name, kind })), albums: ['trip'] });
+const fakeUrl = async () => ({ url: FAKE_ITEMS[0].url, release() {} });
+const memStorage = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)) }; };
+const noDevice = { add: async () => { throw new Error('not here'); }, list: async () => [], url: async () => null };
+const PICK = () => ({ listEntries: fakeEntries, resolveUrl: fakeUrl, device: noDevice, storage: memStorage() });
 
 const host = document.getElementById('host');
 const q = (s) => host.querySelector(s);
@@ -319,7 +328,7 @@ try {
   }
 
   // =====================================================================================
-  section('*** a picture, from a folder — and no upload path anywhere ***');
+  section('*** a picture: the SHARED picker, from a folder or from this device — nothing sent anywhere ***');
   {
     const clock = fakeClock();
     let saved = null;
@@ -327,27 +336,32 @@ try {
     const ed = mountBoardEditor(host, {
       board: normalizeBoard({ id: 'b', name: 'Mine', cols: 2, rows: 1, cells: [{ word: 'Kitchen' }] }),
       sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
-      resolve: fakeResolve,
+      picker: PICK(),
       folders: { isSupported: () => true,
                  pick: async () => { picked++; return { id: 's2', label: 'New', kind: 'folder' }; } },
       setTimer: clock.setTimer, clearTimer: clock.clearTimer, onSave: (b) => { saved = b; },
     });
     q('[data-slot="0"]').click();
     q('[data-pic]').click();
-    await sleep(20);
+    await sleep(30);
+    check('*** it opens the shared picker (picture_picker.js) inside the editor ***', !!q('.bedit [data-picture-picker]'));
     // ONE SOURCE IS NOT A CHOICE. A picker whose first screen lists one folder is a step that
     // exists only because the code has a step.
     check('*** with one folder connected it goes straight to the pictures ***',
       ed.__probe().picking && ed.__probe().picking.sourceId === 's1',
       JSON.stringify(ed.__probe().picking));
-    check('...showing the images', host.querySelectorAll('.be-pic').length === 2,
-      String(host.querySelectorAll('.be-pic').length));
+    check('...showing the images, as thumbnails', host.querySelectorAll('[data-pp-group="grid"] [data-pp-pick]').length === 2,
+      String(host.querySelectorAll('[data-pp-group="grid"] [data-pp-pick]').length));
     check('*** ...and NOT the video — a card is a picture ***',
-      ![...host.querySelectorAll('.be-pic')].some((b) => /mp4/.test(b.dataset.path)));
+      ![...host.querySelectorAll('[data-pp-pick]')].some((b) => /mp4/.test(b.dataset.path)));
     check('the folders it can read are offered as folders',
-      host.querySelectorAll('[data-album]').length === 1);
+      host.querySelectorAll('[data-pp-album="trip"]').length === 1);
+    // THE IDLE WARNING REDRAWS THE FORM; the picker must survive it, where somebody had got to.
+    clock.advance(IDLE_MS - WARN_MS + 10);
+    check('the idle warning redraws the editor, and the picker is still there, still on its folder',
+      ed.__probe().warning && !!q('.bedit [data-picture-picker]') && ed.__probe().picking?.sourceId === 's1');
 
-    host.querySelector('[data-path="rooms/dog.jpg"]').click();
+    host.querySelector('[data-pp-pick][data-path="rooms/dog.jpg"]').click();
     await sleep(10);
     check('choosing one puts it on the card', !!ed.draft().cells[0].image);
     // *** THE SAVED THING IS A REFERENCE, NOT THE URL THE PICKER SHOWED. ***
@@ -370,13 +384,15 @@ try {
     ed.destroy();
   }
   {
-    // NO FOLDERS AT ALL — the state everybody starts in. It has to offer the way in, and the
-    // only way in is the browser's own folder picker. There is no upload control to find.
+    // NO FOLDERS AT ALL — the state everybody starts in. It has to offer the ways in: the browser's
+    // own folder picker, and (Mike, 2026-10-02: "There should be upload or a folder picker") adding
+    // a picture from this device, which keeps it in this browser and sends it nowhere
+    // (picture_picker_test counts the network requests while one is added: none).
     const clock = fakeClock();
     let picks = 0;
     const ed = mountBoardEditor(host, {
       board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
-      sources: fakeSources([]), resolve: fakeResolve,
+      sources: fakeSources([]), picker: PICK(),
       folders: { isSupported: () => true,
                  pick: async () => { picks++; return { id: 'f1', label: 'Pics', kind: 'folder' }; } },
       setTimer: clock.setTimer, clearTimer: clock.clearTimer,
@@ -384,11 +400,14 @@ try {
     q('[data-slot="0"]').click();
     q('[data-pic]').click();
     await sleep(20);
-    check('with no folders connected it offers to connect one', !!q('[data-connect]'));
-    check('*** and there is no upload control anywhere in it ***',
-      host.querySelectorAll('input[type=file]').length === 0
-        && !/upload/i.test(host.textContent), host.textContent.slice(0, 120));
-    q('[data-connect]').click();
+    check('with no folders connected it offers to connect one', !!q('[data-pp-act="folder"]'));
+    check('*** ...and to add a picture from this device, saying nothing is sent anywhere ***',
+      !!q('[data-pp-act="upload"]') && !!q('input[type=file][data-pp-file]') && /Nothing is sent anywhere/.test(host.textContent));
+    check('there is no FormData, fetch or upload URL in the editor or the picker', await (async () => {
+      const src = await Promise.all(['../board_editor.js', '../picture_picker.js', '../device_pictures.js'].map(async (p) => (await fetch(p)).text()));
+      return src.every((s) => !/new FormData|\bfetch\(|new XMLHttpRequest|sendBeacon\(/.test(s));
+    })());
+    q('[data-pp-act="folder"]').click();
     await sleep(20);
     check('connecting one goes to its pictures', picks === 1
       && ed.__probe().picking && ed.__probe().picking.sourceId === 'f1',
@@ -396,39 +415,42 @@ try {
     ed.destroy();
   }
   {
-    // A BROWSER THAT CANNOT OPEN A FOLDER. Safari and Firefox, which is most phones — it has
-    // to say what to do instead rather than showing a button that does nothing.
+    // A BROWSER THAT CANNOT OPEN A FOLDER. Safari and Firefox, which is most phones. The folder
+    // button is not shown; adding a picture from this device still works there.
     const clock = fakeClock();
     const ed = mountBoardEditor(host, {
       board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
-      sources: fakeSources([]), resolve: fakeResolve,
+      sources: fakeSources([]), picker: PICK(),
       folders: { isSupported: () => false, pick: async () => { throw new Error('never'); } },
       setTimer: clock.setTimer, clearTimer: clock.clearTimer,
     });
     q('[data-slot="0"]').click();
     q('[data-pic]').click();
     await sleep(20);
-    check('a browser that cannot open a folder is not shown the button', !q('[data-connect]'));
-    check('...and is told what will work instead', /Chrome|Edge/.test(host.textContent));
+    check('a browser that cannot open a folder is not shown the button', !q('[data-pp-act="folder"]'));
+    check('...and still has a way to a picture: adding one from this device', !!q('[data-pp-act="upload"]'));
     ed.destroy();
   }
   {
     // A FOLDER WHOSE PERMISSION LAPSED. One click fixes it, and saying "unreachable" instead
     // sends somebody to check their wifi.
     const clock = fakeClock();
+    let cancelled = 0;
     const err = Object.assign(new Error('permission is "prompt"'), { code: 'permission' });
     const ed = mountBoardEditor(host, {
       board: normalizeBoard({ id: 'b', name: 'M', cols: 1, rows: 1, cells: [{ word: 'A' }] }),
       sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
-      resolve: async () => { throw err; },
-      setTimer: clock.setTimer, clearTimer: clock.clearTimer,
+      picker: { ...PICK(), listEntries: async () => { throw err; } },
+      setTimer: clock.setTimer, clearTimer: clock.clearTimer, onCancel: () => { cancelled++; },
     });
     q('[data-slot="0"]').click();
     q('[data-pic]').click();
     await sleep(20);
     check('*** a lapsed folder permission is reported as a permission ***',
-      /permission/i.test(host.textContent), host.textContent.slice(0, 160));
-    check('...and there is a way back out of it', !!q('[data-pic-back]'));
+      /permission/i.test(host.textContent) && !!q('[data-pp-act="allow"]'), host.textContent.slice(0, 160));
+    check('...and there is a way back out of it', !!q('[data-pp-act="cancel"]'));
+    q('[data-picture-picker]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    check('Escape in the picker leaves the PICKER, not the whole editor', !q('[data-picture-picker]') && !!q('.bedit') && cancelled === 0);
     ed.destroy();
   }
 
@@ -475,7 +497,7 @@ try {
         cells: [{ word: 'Yes' }, { word: 'No' }, null,
                 { word: 'Water', image: { sourceId: 's1', path: 'kitchen.jpg' } }] }),
       sources: fakeSources([{ id: 's1', label: 'Photos', kind: 'folder' }]),
-      resolve: fakeResolve,
+      picker: PICK(),
       idleMs: 0,                    // never closes on the look-at page
     });
     document.querySelector('#look [data-slot="3"]').click();

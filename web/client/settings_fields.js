@@ -22,13 +22,14 @@
 // nobody applies the wrong one.
 //
 // ---------------------------------------------------------------------------------------
-// THE FIVE KINDS, and what `select` does to each
+// THE SIX KINDS, and what `select` does to each
 //
 //   toggle   flips it
 //   choice   cycles to the next option, AND WRAPS
 //   number   steps by `step`, AND WRAPS at max back to min
 //   color    cycles to the next colour in its palette, AND WRAPS (see below)
 //   text     opens a TEXT BOX (see below). NOT cycleable, and honest about it.
+//   picture  opens the PICTURE PICKER (see below; added 2026-10-02). Not cycleable either.
 //
 // WHY WRAPPING IS THE WHOLE CONTRACT: with one switch you can only travel ONE WAY. A control
 // that stops at its maximum strands the person there with no way back. Same rule the menu
@@ -80,6 +81,30 @@
 // kind for it would be a second engine for the same walk.
 //
 // ---------------------------------------------------------------------------------------
+// PICTURE — ADDED 2026-10-02 (Mike: *"Having the pictures scroll through all your pictures in the
+// settings menu isn't a good way to do it. There should be upload or a folder picker."*).
+//
+// Until today a picture was a `choice` whose options were every file in a folder, so choosing one
+// was a walk past every other one, one press each. A picture is now its own kind, and `select` does
+// not step it: it OPENS the shared picker (`picture_picker.js`) — recent pictures first, "add one
+// from this device", and a folder's thumbnails in a grid a switch scans by rows. So the row is a real
+// stop (`opens`), not disabled and not cycleable, and nothing here walks a list of files.
+//
+// WHAT IS STORED is a reference, never the picture: with `sourceKey` (the button's `imageFrom`), the
+// path at `key` and the source id at `sourceKey` - the two keys the button already stored, so no saved
+// row moves; without it, `{ sourceId, path }` at `key`. The row's `commit(ref)` writes them through
+// the same `onStep` as every other row (`null` is "No picture", where `allowNone` is not false).
+// THE BYTES ARE NEVER IN A SETTINGS ROW, argued: a settings row is synced to the platform and
+// read on every screen; a photo is megabytes, and putting it there would send somebody's picture to
+// the server this project promises never sees media. Even a "tiny" one: there is no size at which a
+// person's photo stops being their photo, and a reference costs nothing.
+//
+// THE MENU OPENS IT, and this file still does not touch the page: the row carries `picture` (what
+// is chosen now, and the sources to choose from), and `settings.js` mounts the picker where its pages
+// go. A host that renders rows itself and only calls `run()` gets the picker as a dialog over the
+// page, loaded only when the row is pressed.
+//
+// ---------------------------------------------------------------------------------------
 // WHAT THIS FILE MUST NEVER DO: WRITE.
 //
 // Nothing here calls `state.set()`. `stepValue` computes the next value and `fieldItems`
@@ -120,7 +145,23 @@
 import { DEFAULT_PALETTE, normalizeHex, normalizePalette, nearestColor, describeColor } from './color_picker.js';
 
 export const LEVELS = ['essential', 'standard', 'advanced'];
-export const KINDS = ['toggle', 'choice', 'number', 'text', 'color'];
+export const KINDS = ['toggle', 'choice', 'number', 'text', 'color', 'picture'];
+
+// A picture reference, or null. Shared by the reading below and the row's `commit`.
+const refOf = (x) => (x && typeof x === 'object' && x.sourceId && x.path
+  ? { sourceId: String(x.sourceId), path: String(x.path) } : null);
+
+/** The picture a `picture` field has in force: `{ sourceId, path }`, or null for none. */
+export function pictureRef(field, values = {}) {
+  if (!field || field.kind !== 'picture') return null;
+  const v = values || {};
+  if (field.sourceKey) {
+    const path = fieldValue(field, v);
+    const src = v[field.sourceKey];
+    return path && src ? { sourceId: String(src), path: String(path) } : null;
+  }
+  return refOf(readWithLegacy(v, field.key, field.legacy));
+}
 
 const isNum = (v) => typeof v === 'number' && Number.isFinite(v);
 
@@ -333,6 +374,17 @@ export function normalizeField(raw = {}) {
     f.default = normalizeHex(raw.default) || f.options[0]?.value || '';
     if (f.options.length >= 2) f.cycleable = true;
     else f.why = f.options.length ? 'only one to choose from' : 'nothing to choose from yet';
+  } else if (kind === 'picture') {
+    // See PICTURE in the header. Not cycleable (nothing here steps through files) and not a text
+    // box; a stop that OPENS the picker. Only ever this kind when declared - never inferred.
+    f.sourceKey = typeof raw.sourceKey === 'string' && raw.sourceKey.trim() ? raw.sourceKey.trim() : null;
+    f.default = f.sourceKey ? (raw.default == null ? '' : String(raw.default)) : (refOf(raw.default) || null);
+    f.emptyLabel = String(raw.emptyLabel || 'No picture');
+    f.allowNone = raw.allowNone !== false;
+    // The sources to choose from, when a mounted instance hands its own client over (through
+    // `settingsChoices`); otherwise the picker asks the registry itself.
+    f.sources = raw.sources && typeof raw.sources.list === 'function' ? raw.sources : null;
+    f.opens = true;
   } else {
     f.default = raw.default === undefined ? '' : String(raw.default);
     // `secret: true` -- a key or token. Mike, 2026-09-28: "mask it". Anyone at a shared or bedside
@@ -366,6 +418,7 @@ export function normalizeField(raw = {}) {
   if (raw.readOnly) {
     f.cycleable = false;
     f.editable = false;
+    f.opens = false;
     f.readOnly = true;
     f.why = f.why || 'changed where it lives';
   }
@@ -426,6 +479,12 @@ export function fieldValue(field, values = {}) {
     // Canonical on read, so "#D32F2F" from one surface and "#d32f2f" from another are the same
     // colour to everything downstream. Garbage is not in force; the default is.
     return normalizeHex(raw) || normalizeHex(defaultFor(field, values)) || field.default;
+  }
+  if (field.kind === 'picture') {
+    // With a `sourceKey` the value is the PATH (a string, as the button always stored it); without
+    // one it is the whole reference, or null.
+    if (field.sourceKey) return raw === undefined || raw === null ? '' : String(raw);
+    return refOf(raw);
   }
   return raw === undefined ? '' : String(raw);
 }
@@ -530,6 +589,12 @@ export function displayValue(field, value) {
     // hex, honest that it is not exactly that colour.
     return describeColor(value, field.palette) || field.default;
   }
+  if (field.kind === 'picture') {
+    // The picture's file name, without its folders - what somebody would recognise it by.
+    const path = value && typeof value === 'object' ? value.path : value;
+    const name = String(path || '').split('/').pop();
+    return name || field.emptyLabel;
+  }
   return value === '' || value === undefined || value === null ? field.placeholder : String(value);
 }
 
@@ -583,6 +648,7 @@ export function fieldItems(fields = [], {
     // story, but now the row is usable by some people and not others and has to say both.
     const says = f.cycleable ? [shown]
       : f.editable ? [shown, 'needs a keyboard', f.note]
+      : f.opens ? [shown, f.note]
       : [shown, f.why];
     const item = {
       kind: 'item',
@@ -595,12 +661,21 @@ export function fieldItems(fields = [], {
       // than only when it fails.
       hint: [...says, f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]
         .filter(Boolean).join(' · '),
-      // An editable text row is a real stop: a keyboard user reaches it with the same arrows.
-      disabled: !f.cycleable && !f.editable,
+      // An editable text row is a real stop: a keyboard user reaches it with the same arrows. So is
+      // a picture row: `select` opens the picker.
+      disabled: !f.cycleable && !f.editable && !f.opens,
       key: f.key,
       field: f,
       value,
       run: () => {
+        if (f.opens && onStep) {
+          // A host that renders rows itself (and is not `settings.js`, which opens the picker in its
+          // own pages) gets it as a dialog. Imported only now, so this file stays free of the page.
+          import('./picture_picker.js').then((m) => m.openPictureDialog({
+            ...item.picture, onPick: (ref) => { item.commit(ref); },
+          })).catch((err) => console.warn('settings: could not open the picture picker', err));
+          return;
+        }
         if (!f.cycleable || !onStep) return;
         const now = fieldValue(f, read() || {});
         onStep(f.key, stepValue(f, now, dir), f);
@@ -622,6 +697,23 @@ export function fieldItems(fields = [], {
         } else if (f.kind === 'color' && f.options && f.options.length) {
           next = normalizeHex(raw);
           if (!next) return false;
+        } else if (f.kind === 'picture') {
+          // A REFERENCE, or null for "No picture". Anything else (a URL, a File, bytes) is refused:
+          // see PICTURE in the header for why a picture never goes into a settings row.
+          const ref = refOf(raw);
+          if (!ref && raw != null) return false;
+          if (!ref && !f.allowNone) return false;
+          const now = pictureRef(f, read() || {});
+          if ((!ref && !now) || (ref && now && ref.sourceId === now.sourceId && ref.path === now.path)) return false;
+          if (f.sourceKey) {
+            // The source first, then the path: the two keys the button has always stored. "No
+            // picture" clears only the path, so the folder somebody was choosing from is kept.
+            if (ref) onStep(f.sourceKey, ref.sourceId, f);
+            onStep(f.key, ref ? ref.path : '', f);
+          } else {
+            onStep(f.key, ref, f);
+          }
+          return true;
         } else {
           return false;
         }
@@ -634,6 +726,11 @@ export function fieldItems(fields = [], {
       item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength };
     }
     if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
+    // What the picker needs to open on this row: what is chosen now, where to choose from, whether
+    // "No picture" is offered, and its title (the row's own label, so it says what it is for).
+    if (f.opens) {
+      item.picture = { value: pictureRef(f, read() || {}), sources: f.sources, allowNone: f.allowNone, title: f.label };
+    }
     out.push(item);
   }
   return out;
@@ -671,9 +768,15 @@ export function fieldsFor(manifest = null, instance = null) {
   const out = [];
   for (const d of decls) {
     if (!d || typeof d.key !== 'string') continue;
-    const f = normalizeField(
-      Object.prototype.hasOwnProperty.call(live, d.key) ? { ...d, options: live[d.key] } : d,
-    );
+    // A live entry is OPTIONS (an array) for every kind but one: a picture row's live entry is an
+    // object, `{ sources }` - the instance's own media client, so the picker lists what it lists.
+    let merged = d;
+    if (Object.prototype.hasOwnProperty.call(live, d.key)) {
+      const v = live[d.key];
+      merged = v && !Array.isArray(v) && typeof v === 'object' && v.sources
+        ? { ...d, sources: v.sources } : { ...d, options: v };
+    }
+    const f = normalizeField(merged);
     if (f) out.push(f);
   }
   return out;

@@ -221,9 +221,17 @@ export async function folderFileUrl(sourceId, path) {
   if (perm !== 'granted') {
     throw folderError('permission', `that folder's permission is "${perm}"`, sourceId);
   }
+  return fileUrlIn(row.handle, path, sourceId);
+}
+
+/**
+ * The half of `folderFileUrl` that only needs a directory handle — split out (2026-10-02) so the
+ * shared picture picker can be tested against an in-memory folder, with no IndexedDB row behind it.
+ */
+export async function fileUrlIn(root, path, sourceId = '') {
   const parts = String(path || '').split('/').filter(Boolean);
   const name = parts.pop();
-  let dir = row.handle;
+  let dir = root;
   for (const part of parts) {
     try { dir = await dir.getDirectoryHandle(part); }
     catch { throw folderError('album', `no folder "${part}"`, sourceId); }
@@ -247,6 +255,15 @@ export async function folderFileUrl(sourceId, path) {
  * Returns `[{ path, name, kind }]`, sorted by name, same `album` rules and same coded failures.
  */
 export async function listFolderNames(source, album = '') {
+  return (await listFolderEntries(source, album)).items;
+}
+
+/**
+ * The same reading, plus the SUB-FOLDERS at that level (2026-10-02, for the shared picture picker,
+ * which lets somebody open a sub-folder the way the board editor's picker always did). Returns
+ * `{ items: [{ path, name, kind }], albums: [name] }`; same coded failures.
+ */
+export async function listFolderEntries(source, album = '') {
   const row = await getRow(source.id);
   if (!row || !row.handle) {
     throw folderError('missing', `folder source "${source.label}": no longer stored`, source.id);
@@ -256,20 +273,28 @@ export async function listFolderNames(source, album = '') {
     throw folderError('permission',
       `folder source "${source.label}": permission is "${perm}"`, source.id);
   }
-  let dir = row.handle;
+  return entriesIn(row.handle, album, source);
+}
+
+/** The directory walk on its own, over any handle — what the picker's suite runs on a fake folder. */
+export async function entriesIn(root, album = '', source = { id: '', label: '' }) {
+  let dir = root;
   for (const part of String(album || '').split('/').filter(Boolean)) {
     try { dir = await dir.getDirectoryHandle(part); }
     catch { throw folderError('album', `folder source "${source.label}": no album "${album}"`, source.id); }
   }
-  const out = [];
+  const items = [];
+  const albums = [];
   for await (const [name, entry] of dir.entries()) {
-    if (name.startsWith('.') || entry.kind === 'directory') continue;
+    if (name.startsWith('.')) continue;
+    if (entry.kind === 'directory') { albums.push(album ? `${album}/${name}` : name); continue; }
     const k = kindOf(name);
     if (!k) continue;
-    out.push({ path: album ? `${album}/${name}` : name, name, kind: k });
+    items.push({ path: album ? `${album}/${name}` : name, name, kind: k });
   }
-  out.sort((a, b) => a.name.localeCompare(b.name));
-  return out;
+  items.sort((a, b) => a.name.localeCompare(b.name));
+  albums.sort();
+  return { items, albums };
 }
 
 export async function resolveFolderListing(source, album = '') {
