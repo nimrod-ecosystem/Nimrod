@@ -31,6 +31,13 @@
 //      skips the wait. To stop: stop answering (the question simply waits - a game waiting for its
 //      input is the game, not a gate), or say a STOP_PHRASES phrase ("stop", "I'm done"), which ends
 //      the sitting with "Thanks for playing." and a Play again button.
+//      *** AND "ANOTHER ONE?" IS BACK AS A SETTING, OFF (Mike, 2026-10-02, the same day): "Yes. Skip
+//      asking as default." *** `askAnother` (per game, off): on, a right answer celebrates and then
+//      asks "Would you like to do another one?" (`anotherLine`), and a revealed answer is shown
+//      with that question under it - Yes / No, I'm done (and Listen again for a clip). Somebody
+//      who likes a breath between questions, or a caregiver pacing a session, turns it on; the
+//      default is Mike's "it ruins the flow". Nobody answering leaves the question waiting, as
+//      any question does - the input is the game, not a gate on something already running.
 //   5. every question can be answered by voice OR a switch.
 //
 // *** AND ONE GAME MAY BE GENTLER, AS A SETTING. *** Name that person (row 2.45): missing a loved
@@ -58,7 +65,8 @@ export const UNKNOWN = '[unk]';
 
 // *** MIKE'S WORDING. *** The lines he gave (wrongLine, unsureLine, twoMissLine, and the flow around
 // them) are his, 2026-09-30; the rest is Design's copy from voice.html. His fourth, anotherLine
-// ("Would you like to do another one?"), he retired himself on 2026-10-02 - see THE FLOW, item 4.
+// ("Would you like to do another one?"), he retired as the default on 2026-10-02 and kept as the
+// `askAnother` setting (off) - see THE FLOW, item 4. Said only when that setting is on.
 export const FLOW_LINES = Object.freeze({
   wrongLine: 'It sounded like you said {heard}. That is incorrect.',
   switchWrongLine: 'That is incorrect.',
@@ -72,6 +80,7 @@ export const FLOW_LINES = Object.freeze({
   twoMissLine: 'Would you like to try again, or hear the answer?',
   rightLine: 'Yes! {explain}',
   answerLine: 'Here is the answer. {explain}',
+  anotherLine: 'Would you like to do another one?',
   doneLine: 'Thanks for playing.',
   notCaughtLine: "I didn't catch that. Say it again, or press your switch.",
 });
@@ -82,7 +91,7 @@ export const FLOW_LINE_LABELS = Object.freeze({
   reasonQuiet: 'Reason: very quiet', reasonNoise: 'Reason: other noise', reasonCutoff: 'Reason: cut off',
   reasonAlternative: 'Reason: another word it could be', hintLine: 'The hint',
   twoMissLine: 'After the misses', rightLine: 'A right answer', answerLine: 'Hearing the answer',
-  doneLine: 'Finished', notCaughtLine: "Didn't catch it",
+  anotherLine: 'Another one? (when it asks)', doneLine: 'Finished', notCaughtLine: "Didn't catch it",
 });
 
 /**
@@ -116,6 +125,9 @@ export const FLOW_DEFAULTS = Object.freeze({
   // next question comes by itself. Longer than the celebration: it is a sentence to hear and a pair
   // to look at, not a chime. A press moves on sooner. A setting (below), 2-15 seconds.
   answerMs: 5000,
+  // Ask "Would you like to do another one?" between questions. OFF (Mike, 2026-10-02: "Skip asking
+  // as default"); THE FLOW, item 4.
+  askAnother: false,
   sound: true,
   speak: true,
   sayChoice: true,
@@ -129,6 +141,17 @@ export const ANSWER_MS_FIELD = Object.freeze({ key: 'answerMs', label: 'How long
   kind: 'number', default: 5000, level: 'advanced', min: 2000, max: 15000, step: 1000, displayScale: 1000,
   unit: 'seconds', unitOne: 'second', note: 'A press moves on sooner.' });
 
+/**
+ * The "another one?" row, shared with word_games.js. ADVANCED, argued. FOR standard: it changes the
+ * shape of a whole sitting, which a caregiver setting up the game should meet without digging. AGAINST,
+ * and it wins: the standard menus are held to a press budget (simple_math_test: 12 presses to change
+ * any one thing), Math's standard menu was at 12 and this row made it 13, and the default is Mike's own
+ * ruling - the row is for the fewer people who want the pause back. [On Mike's list.]
+ */
+export const ASK_ANOTHER_FIELD = Object.freeze({ key: 'askAnother', label: 'Between questions', default: false,
+  level: 'advanced', onLabel: 'Ask "Would you like to do another one?"', offLabel: 'Go straight on to the next one',
+  note: 'Off: the next question comes by itself; saying "stop" or "I\'m done" ends the game.' });
+
 /** The settings rows every answer game shares. `lines` adds a game's own spoken lines. */
 export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {}) {
   const allLines = { ...FLOW_LINES, ...lines };
@@ -140,6 +163,7 @@ export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {})
       note: 'Somebody on a switch needs it; somebody answering aloud hears one possible answer.' }] : []),
     { key: 'sound', label: 'Chime for a right answer', default: true, level: 'standard',
       onLabel: 'On', offLabel: 'Off' },
+    { ...ASK_ANOTHER_FIELD },
     { key: 'twoSwitch', label: 'Switches', kind: 'choice', default: 'scan', level: 'standard',
       options: [{ value: 'scan', label: 'Next moves, Select chooses' },
                 { value: 'yesno', label: 'Select is Yes, Next is No' }] },
@@ -404,7 +428,8 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 // Phases: 'idle', 'loading' (a game whose items are still arriving), 'empty' (nothing to ask —
 // the game says so plainly), 'asking', 'unsure', 'twoMiss', 'celebrate', 'answer' (a revealed
 // answer on screen for `answerMs`, then the next question), 'gentle' (the gentle miss: "That was
-// X's message. Let's listen again?"), 'done' (somebody said stop). No 'another' (2026-10-02).
+// X's message. Let's listen again?"), 'another' ("Would you like to do another one?" - only when
+// the `askAnother` setting is on, off by default since 2026-10-02), 'done' (somebody said stop).
 //
 // AN ADAPTER (one per game) — only `items`, `ask`, `judge` and `answer` are required:
 //   items(cfg, rand)          the questions; null while still loading, [] when there are none
@@ -499,7 +524,10 @@ export function createQuizEngine({
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
     else if (phase === 'gentle') { add(YES_WORDS); add(NO_WORDS); add(['listen again', 'again']); }
-    else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
+    else if (phase === 'another') {
+      add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]);
+      if (canReplay()) add(['listen again', 'again']);
+    } else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
     else return [];
     // The ways to say stop, in every phase that is waiting on somebody (a grammar-limited recogniser
     // can only hear what is listed). Done excepted: it has already stopped.
@@ -612,10 +640,23 @@ export function createQuizEngine({
     changed();
   }
 
-  // After a celebration, a shown answer or the gentle miss: THE NEXT QUESTION (no "another one?").
+  // After a celebration, a shown answer or the gentle miss: THE NEXT QUESTION - or, with the
+  // `askAnother` setting on, "Would you like to do another one?" first.
+  const asksAnother = () => c().askAnother === true;
   function onward() {
     stopTimer();
+    if (asksAnother() && phase !== 'another') { toAnother(); return; }
     nextItem();
+  }
+
+  function toAnother() {
+    stopTimer();
+    phase = 'another';
+    highlight = 0;
+    feedback = null;
+    unsure = null;
+    speak(c().anotherLine);
+    changed();
   }
 
   function reveal() {
@@ -624,6 +665,15 @@ export function createQuizEngine({
     pair = { answer, explain: explainOf(answer) };
     report({ right: false });
     stopTimer();
+    // Asking "another one?": the answer is shown with the question under it, and no clock runs.
+    if (asksAnother()) {
+      phase = 'another';
+      highlight = 0;
+      feedback = null;
+      speak(fill(c().answerLine, { explain: pair.explain }), c().anotherLine);
+      changed();
+      return;
+    }
     phase = 'answer';
     highlight = 0;
     feedback = null;
@@ -824,6 +874,12 @@ export function createQuizEngine({
         if (isYes(text) || isAgain(text) || isListen(text)) return press('replay');
         if (isNo(text) || isDone(text)) return press('onward');
         return notCaught();
+      case 'another':
+        if (!confident) return notCaught();
+        if (canReplay() && (isListen(text) || isAgain(text))) return press('replay');
+        if (isYes(text)) return press('more');
+        if (isNo(text) || isDone(text)) return press('finish');
+        return notCaught();
       case 'done':
         if (confident && (isYes(text) || isAgain(text))) return press('restart');
         return undefined;
@@ -841,6 +897,9 @@ export function createQuizEngine({
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
       case 'gentle': return [{ act: 'replay', label: 'Listen again' }, { act: 'onward', label: 'Next one' }];
+      case 'another': return [{ act: 'more', label: 'Yes' },
+        ...(canReplay() ? [{ act: 'replay', label: 'Listen again' }] : []),
+        { act: 'finish', label: "No, I'm done" }];
       case 'done': return [{ act: 'restart', label: 'Play again' }];
       default: return [];
     }
@@ -895,14 +954,18 @@ export function createQuizEngine({
         // After the gentle miss: play it again and STAY on the gentle choice (Listen again / Next one),
         // so the next question never starts over the person on screen.
         if (phase === 'gentle') { try { onReplay(item); } catch (err) { console.error('quiz: replay', err); } changed(); }
+        // On "another one?": play it again, then ask again (the host holds the line until the clip
+        // has finished, so it is never said over the person on screen).
+        if (phase === 'another') { try { onReplay(item); } catch (err) { console.error('quiz: replay', err); } toAnother(); }
         return;
       case 'onward':
         if (phase === 'gentle') onward();
         return;
-      // A press during the celebration or a shown answer: the next question now, not after the wait.
-      // `more` is the old "Yes, another" act, kept as the same thing for a host that still sends it.
+      // A press during the celebration or a shown answer: on now, not after the wait (to the next
+      // question, or to "another one?" when that is asked). `more` is also "Yes" to "another one?".
       case 'continue':
       case 'more':
+        if (phase === 'another') { if (act === 'more') nextItem(); return; }
         if (phase === 'celebrate' || phase === 'answer') onward();
         return;
       case 'finish':

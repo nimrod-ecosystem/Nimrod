@@ -104,7 +104,7 @@ const DEFAULTS = {
   // *** MOTION DEFAULTS TO CALM (chat, 2026-09-06). ***
   //
   // The sparks and the celebration are the fun of this game and they are also the part with a
-  // photosensitivity note attached (see SAFETY_FLOOR_MS). The person most likely to meet this
+  // photosensitivity note attached (see FLASHES_PER_ROUND). The person most likely to meet this
   // module first is somebody at a bedside screen, and for them the quieter version is the one
   // that is safe to be wrong about. It is a DEFAULT, not a rule -- anybody who wants the full
   // motion turns it on, and nobody who already chose either way is moved.
@@ -167,7 +167,31 @@ const REMINDERS = [
 const REMINDER_MIN_MS = 2500;
 
 const WAIT_SPEED = 0.85;      // a clean wait shortens by ~15%; a press lengthens by the same
-const SAFETY_FLOOR_MS = 1500; // photosensitivity: full-screen cycling stays well under flash rates
+
+// *** THE SHORTEST WAIT FOLLOWS THE SCREEN'S FLASH LIMIT, NOT A FIXED 1500 ms (Mike, 2026-10-02). ***
+// There used to be `SAFETY_FLOOR_MS = 1500` under every wait, for everybody, with no recorded source:
+// it came over from the old dashboard's `safetyFloorMs`, which an operator could unlock after a
+// warning. Code recommended making it follow flash_limit.js like everything else; Mike: "Agreed." So:
+// NO FLOOR BY DEFAULT (a screen with no flash limit gets only the `minWaitMs` setting below), and the
+// photosensitivity limit sets one - and only ever RAISES the wait, never lowers `minWaitMs`.
+//
+// THE MAPPING, ARGUED. A round is wait -> go -> (press) stop -> wait, and the wait is the only part of
+// it this floor controls (a press can come the instant GO shows; "after a win, wait for stillness" can
+// be 0). The full-field changes in a round, counted generously:
+//   1. GO: the field turns gold at the charge it built (a brighten), and drops back at the press or
+//      the omission (a dim) - one WCAG flash, a pair of opposing changes.
+//   2. THE WIN: with motion on, a beige wash covers the field at the press and fades; through a
+//      stillness wait the field re-brightens and drops again at the next wait - a second pair.
+// So FLASHES_PER_ROUND = 2, and a floor of 2 x minFlashPeriodMs(limit) keeps a round that is ALL wait
+// inside the limit: 0 with no limit, about 678 ms at 3 a second, 1017 at 2, 2033 at 1.
+//   FOR one period (339 ms at 3): with a stillness wait of 0 (the only way a round gets this short)
+//   the wash is never drawn and the round really has one flash; with a stillness wait the round is
+//   3 s or more anyway. So one period is enough in practice. AGAINST, and it wins for now: counting
+//   both pairs is the reading that cannot be wrong for somebody who set a flash limit, and it costs
+//   little - at 3 a second the floor is still under the 1000 ms lowest `minWaitMs` choice, so it only
+//   shows at 1 or 2 a second (or a stored minWaitMs below the menu's choices). A guess on Mike's list.
+// The spark bloom has its own limit (bloom(), below); this is the field's.
+const FLASHES_PER_ROUND = 2;
 const CELEBRATION_MS = 1500;
 const MAX_SPARKS = 260;
 
@@ -249,7 +273,7 @@ const SETTINGS = [
   // none of them means anything until the setting above it is on.
   { key: 'minWaitMs', label: 'Never wait less than', kind: 'choice', default: 2500,
     level: 'advanced',
-    note: 'the floor the adaptive wait may never go below',
+    note: 'the floor the adaptive wait may never go below; a flashing limit on the screen can hold it longer',
     options: [
       { value: 1000, label: '1 second' },
       { value: 2500, label: '2.5 seconds' },
@@ -557,12 +581,10 @@ registerModule(
     //
     // `say` rather than `alert`: this is the content, not an interruption, and giving a game
     // cue alert priority would let it preempt something that actually mattered.
-    // NOTE: the minPhaseMs guard is currently UNREACHABLE for the wait, because the
-    // photosensitivity floor (2500ms) is already above CUE_MIN_MS - no wait can be too short
-    // to announce. It is kept because the floor is a setting away from moving and a silently
-    // missing guard is worse than an idle one, but nothing tests it, and a guard no test can
-    // reach is a guard nobody knows still works. Say so rather than writing a test that
-    // cannot fail.
+    // The minPhaseMs guard: a wait shorter than CUE_MIN_MS is not announced. Reachable since
+    // 2026-10-02 (the fixed 1500 ms floor went; see FLASHES_PER_ROUND) - a stored `minWaitMs`
+    // under the menu's choices, with no flash limit, can now adapt a wait below it, and
+    // pressgame_test checks that "Wait" is then not said.
     function cue(text, { minPhaseMs = 0 } = {}) {
       if (!cfg.speak || !text || !output) return;
       if (minPhaseMs && minPhaseMs < CUE_MIN_MS) return;
@@ -593,7 +615,10 @@ registerModule(
     // ---- phases -----------------------------------------------------------------------
     const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
     const elapsed = () => simT - phaseStart;
-    const floorMs = () => Math.max(SAFETY_FLOOR_MS, cfg.minWaitMs || 0);
+    // The shortest wait: the `minWaitMs` setting, raised (never lowered) by the screen's flash limit
+    // - read live, so a limit changed mid-game applies at the next wait. See FLASHES_PER_ROUND.
+    const flashFloorMs = () => FLASHES_PER_ROUND * minFlashPeriodMs(flashLimit(ctx));
+    const floorMs = () => Math.max(flashFloorMs(), Number(cfg.minWaitMs) || 0);
     const waitAdapts = () => cfg.adaptiveWait && cfg.challenge;
     // 0 → 1 across the wait. This is the charge she is holding off to build.
     const liveCharge = () => clamp(elapsed() / Math.max(1, curWaitMs), 0, 1);
@@ -680,6 +705,8 @@ registerModule(
       phase = 'wait'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null; frameMaxMs = 0; frameCount = 0; frameSumMs = 0;
       saidStop = false;                 // "you can stop" is once per ROUND, not once per session
+      // A flash limit set (or made stricter) since the last round applies from this wait on.
+      curWaitMs = Math.max(floorMs(), curWaitMs);
       setText('Wait', '');
       // Only if the wait is long enough that the word is still true when it finishes.
       cue('Wait', { minPhaseMs: curWaitMs });
@@ -770,7 +797,7 @@ registerModule(
           mode: mode(), src: source,
         });
         phaseStart = simT;                              // a press restarts the wait
-        if (waitAdapts()) curWaitMs = Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED);
+        if (waitAdapts()) curWaitMs = Math.max(floorMs(), Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED));
         return;
       }
       if (phase === 'go' && !payoffDone) {
@@ -901,7 +928,7 @@ registerModule(
             charge: +frozenCharge.toFixed(3), mode: mode(), windowMs: Math.round(curWaitMs),
             machine: machine(),
           });
-          if (waitAdapts()) curWaitMs = Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED);
+          if (waitAdapts()) curWaitMs = Math.max(floorMs(), Math.min(cfg.waitMs, curWaitMs / WAIT_SPEED));
           enterWait();
         }
       } else if (phase === 'stop') {
@@ -986,7 +1013,7 @@ registerModule(
         phase, simT, charge: phase === 'wait' ? liveCharge() : frozenCharge,
         payoffDone, echoes, curWaitMs, sparks: sparks.length, running,
         blooms: bloomTimes.slice(), pendingBloom,
-        rows: sessionRows.length, sessionId, calm: calm(), cfg: { ...cfg },
+        rows: sessionRows.length, sessionId, calm: calm(), cfg: { ...cfg }, floorMs: floorMs(),
         askingExit,
         goPaintedAt, machine: machine(),
         music: music ? music.state() : null,

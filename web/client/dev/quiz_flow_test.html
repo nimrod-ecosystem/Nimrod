@@ -80,8 +80,12 @@ try {
     check('wrong: Mike’s words', FLOW_LINES.wrongLine === 'It sounded like you said {heard}. That is incorrect.');
     // Mike, 2026-10-02: "I don't think we should be asking if you want to do another one after each
     // question ... it ruins the flow of the game. They can just stop answering or ask the computer to stop."
-    check('*** "Would you like to do another one?" is gone, from the lines and the settings ***',
-      !('anotherLine' in FLOW_LINES) && !QF.flowSettings().some((f) => f.key === 'anotherLine'));
+    // ...and the same day: "Yes. Skip asking as default." - a setting, off.
+    check('*** "Would you like to do another one?" is a setting (askAnother), OFF by default ***',
+      QF.FLOW_DEFAULTS.askAnother === false
+      && QF.flowSettings().some((f) => f.key === 'askAnother' && f.default === false)
+      && FLOW_LINES.anotherLine === 'Would you like to do another one?'
+      && QF.flowSettings().some((f) => f.key === 'anotherLine' && f.kind === 'text'));
     check('how long a shown answer stays is a setting (answerMs, 5 s)', QF.FLOW_DEFAULTS.answerMs === 5000
       && QF.flowSettings().some((f) => f.key === 'answerMs' && f.kind === 'number'));
     check('no line says she / her (site copy rule)', !/\b(she|her|hers|herself)\b/i.test(Object.values(FLOW_LINES).join(' ')));
@@ -221,6 +225,62 @@ try {
     s.e.start('s');
     s.e.hear({ text: 'stop', confidence: 0.95 });
     check('*** "stop" when stop is the answer: RIGHT, not the end ***', s.phase() === 'celebrate');
+  }
+
+  section('*** askAnother (Mike, 2026-10-02: "Skip asking as default"): off goes straight on; on asks ***');
+  {
+    // OFF (the default): nothing between questions.
+    const off = eng();
+    off.e.start('toy');
+    off.e.answer(off.e.snapshot().item.a);
+    off.flush();
+    check('off: after the celebration, the next question - never "another one?"',
+      off.phase() === 'asking' && off.e.snapshot().serial === 2 && !off.said.some((l) => /another one/i.test(l)));
+    // ON: after the celebration.
+    const on = eng({}, { askAnother: true });
+    on.e.start('toy');
+    on.e.answer(on.e.snapshot().item.a);
+    on.flush();
+    check('on: after the celebration, "Would you like to do another one?"',
+      on.phase() === 'another' && on.last() === FLOW_LINES.anotherLine, on.last());
+    check('...with Yes and "No, I\'m done", and no clock running',
+      on.e.stops().map((s) => s.act).join(',') === 'more,finish' && !on.e.snapshot().timerPending);
+    check('...the grammar is open for yes / no / stop', ['yes', 'no', 'stop'].every((w) => on.grams[on.grams.length - 1].words.includes(w)));
+    on.e.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes": the next question', on.phase() === 'asking' && on.e.snapshot().serial === 2);
+    on.e.answer(on.e.snapshot().item.a);
+    on.e.press('continue');
+    check('a press during the celebration goes to the question, not past it', on.phase() === 'another');
+    on.e.hear({ text: 'yes', confidence: 0.3 });
+    check('an unsure "yes" is not caught', on.phase() === 'another' && on.last() === FLOW_LINES.notCaughtLine);
+    on.e.hear({ text: 'no', confidence: 0.9 });
+    check('"no": "Thanks for playing." and Play again', on.phase() === 'done' && on.last() === FLOW_LINES.doneLine);
+    // ON: a revealed answer is shown with the question under it.
+    const rv = eng({}, { askAnother: true });
+    rv.e.start('toy');
+    const it = rv.e.snapshot().item;
+    rv.e.hear({ text: 'red', confidence: 0.95 }); rv.e.hear({ text: it.wrong2, confidence: 0.95 });
+    rv.e.press('reveal');
+    check('on: hearing the answer says it, then asks', rv.phase() === 'another' && rv.e.snapshot().revealed
+      && rv.last() === `Here is the answer. ${it.a} is right. ${FLOW_LINES.anotherLine}`, rv.last());
+    rv.e.select();
+    check('one switch: Select on the first stop is Yes', rv.phase() === 'asking' && rv.e.snapshot().serial === 2);
+    // ON, with a clip: Listen again is offered too, and asks again after it.
+    const GENT = { ...TOY, canReplay: true };
+    const cl = eng({}, { askAnother: true }, { g: GENT });
+    cl.e.start('g');
+    cl.e.answer(cl.e.snapshot().item.a);
+    cl.flush();
+    check('on, with a clip: Yes / Listen again / No', cl.e.stops().map((s) => s.act).join(',') === 'more,replay,finish');
+    cl.e.press('replay');
+    check('...Listen again plays it and asks again', cl.replays.length === 1 && cl.phase() === 'another');
+    // Turned on mid-sitting: read live.
+    const live = eng();
+    live.e.start('toy');
+    live.set({ askAnother: true });
+    live.e.answer(live.e.snapshot().item.a);
+    live.flush();
+    check('the setting is read live (turned on mid-game, asked at the next one)', live.phase() === 'another');
   }
 
   section('the switch path: one candidate at a time, like word games');

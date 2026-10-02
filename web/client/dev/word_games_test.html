@@ -145,8 +145,10 @@ try {
     check('unsure: Mike’s words', LINES.unsureLine === "It sounds like you might be saying {heard}, but I'm not sure because {reason}.");
     check('after two misses: Mike’s words', LINES.twoMissLine === 'Would you like to try again, or hear the answer?');
     // Mike, 2026-10-02: "I don't think we should be asking if you want to do another one after each
-    // question ... it ruins the flow of the game." The line, and the screen it was on, are gone.
-    check('*** "Would you like to do another one?" is gone (Mike, 2026-10-02) ***', !('anotherLine' in LINES) && !('anotherLine' in DEFAULTS));
+    // question ... it ruins the flow of the game." Then: "Yes. Skip asking as default." A setting, off.
+    check('*** "Would you like to do another one?" is the askAnother setting, OFF by default (Mike, 2026-10-02) ***',
+      DEFAULTS.askAnother === false && LINES.anotherLine === 'Would you like to do another one?'
+      && getManifest('word_games').settings.some((s) => s.key === 'askAnother' && s.default === false));
     check('how long a shown answer stays is a setting', getManifest('word_games').settings.some((s) => s.key === 'answerMs' && s.kind === 'number'));
     const m = getManifest('word_games');
     const keys = (m.settings || []).map((s) => s.key);
@@ -260,6 +262,49 @@ try {
     one.eng.hear({ text: wrongFor(one.probe().item), confidence: 0.95 });
     check('misses-before-offer is a setting: at 1, the first miss offers the answer', one.phase() === 'twoMiss');
     one.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** askAnother ON: "Would you like to do another one?" comes back (off is above) ***');
+  {
+    const r = rig({ saved: { game: 'opposites', askAnother: true } });
+    const it = r.probe().item;
+    r.eng.hear({ text: it.accept[0], confidence: 0.95 });
+    r.timers.flush();
+    check('after the celebration: "Would you like to do another one?", drawn with Yes / No, I\'m done',
+      r.phase() === 'another' && r.last() === LINES.anotherLine
+      && !!r.host.querySelector('[data-another] [data-act="more"]') && !!r.host.querySelector('[data-act="finish"]')
+      && r.host.querySelector('.wg-ask')?.textContent === LINES.anotherLine, r.host.textContent.slice(0, 200));
+    check('...and no clock: it waits for the answer', r.timers.count() === 0);
+    const serial = r.probe().serial;
+    r.eng.hear({ text: 'yes', confidence: 0.9 });
+    check('"yes": the next question', r.phase() === 'asking' && r.probe().serial === serial + 1);
+    const it2 = r.probe().item;
+    r.eng.hear({ text: wrongFor(it2), confidence: 0.95 }); r.eng.hear({ text: wrongFor(it2), confidence: 0.95 });
+    r.eng.hear({ text: 'hear the answer', confidence: 0.9 });
+    check('hearing the answer: said, then asked', r.phase() === 'another'
+      && r.last() === `Here is the answer. ${it2.accept[0]} is the opposite of ${it2.word}. ${LINES.anotherLine}`, r.last());
+    check('...with the pair still on screen', !!r.host.querySelector('[data-revealed]') && !!r.host.querySelector('[data-pair]'));
+    r.eng.select();
+    check('one switch: Select on the first stop is Yes', r.phase() === 'asking' && r.probe().serial === serial + 2);
+    r.eng.hear({ text: r.probe().item.accept[0], confidence: 0.95 });
+    r.eng.select();
+    check('a press during the celebration goes to the question, not past it', r.phase() === 'another');
+    r.eng.hear({ text: 'no', confidence: 0.9 });
+    check('"no": "Thanks for playing."', r.phase() === 'done' && r.last() === LINES.doneLine);
+    r.inst.destroy();
+
+    const off = rig({ saved: { game: 'opposites' } });
+    off.setCfg({ askAnother: true });
+    off.eng.hear({ text: off.probe().item.accept[0], confidence: 0.95 });
+    off.timers.flush();
+    check('the setting is read live (turned on mid-game, asked at the next one)', off.phase() === 'another');
+    off.setCfg({ askAnother: false });
+    off.eng.press('more');
+    off.eng.hear({ text: off.probe().item.accept[0], confidence: 0.95 });
+    off.timers.flush();
+    check('...and turned off again, straight on', off.phase() === 'asking');
+    off.inst.destroy();
   }
 
   // =====================================================================================

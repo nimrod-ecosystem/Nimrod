@@ -34,6 +34,9 @@
 //   5. WHETHER A FACE MOVES FOLLOWS THE PERSON — inside what the viewer's health and the screen allow
 //      (Mike, 2026-10-01: "unless it conflicts with the screen's capabilities or someone's settings for
 //      medical things"). `avatarMotion` is the one place that decides; its table is below.
+//
+//   6. WHETHER OTHER PEOPLE'S OWN FACES SHOW, AND MOVE, IS A SETTING ON THE SCREEN AND ON THE PERSON
+//      (Mike, 2026-10-02), on by default. OTHERS_AVATAR_FIELDS, below.
 
 import { readAvatar, renderAvatar, AVATAR_KEY } from './avatar.js';
 import { createMediaSourcesClient, resolveItemUrl, sourceById } from './media_sources.js';
@@ -88,6 +91,8 @@ function systemReduced(win) {
 //   2. screen    the screen's `avatarMotion` is 'still', or the host says it is a
 //                low-power screen                                                  -> still
 //                the screen's `avatarMotion` is 'big' and this face is small       -> still
+//                somebody else's face, and `othersAvatarsMove` is off (the screen's
+//                row, else the viewer's - OTHERS_AVATAR_FIELDS, 2026-10-02)         -> still
 //   3. person    the person chose still                                            -> still
 //                the person chose "always moves"                                   -> moves
 //   4. default   a large face (a call, the room's window) moves; a small chip stays still
@@ -132,6 +137,51 @@ export const AVATAR_MOTION_FIELD = Object.freeze({
   automatable: false,
 });
 const screenMotion = (v) => (AVATAR_MOTION_VALUES.includes(v) ? v : 'follow');
+
+// ---------------------------------------------------------------------------------------
+// *** OTHER PEOPLE'S OWN AVATARS, PER SCREEN AND PER PERSON (Mike, 2026-10-02). ***
+// "There should be a setting for screens/users/etc. that allows other users to have personal and or
+// animated avatars. I'd leave it on by default unless medical blocks it."
+//
+//   othersAvatars       Show other people's own avatars      on   off: their name only (rule 1's display)
+//   othersAvatarsMove   ...and let them move                 on   off: their faces are still
+//
+// "OTHER PEOPLE" is everybody but the person this screen is for (`viewerId` in the context). A screen
+// that is for nobody (a room screen) counts every face as somebody else's. The viewer's own face
+// follows only the rules above - these two rows are about what OTHER people bring onto this screen.
+//
+// THE PRECEDENCE, the one faces moving already has: medical > screen > person > default.
+//   medical  MOVEMENT: the device's reduced motion and `reduceMotion` (avatarMotion step 1) still every
+//            face, and "on" here never turns one back on - "on" ALLOWS movement, it does not force it.
+//            SHOWING: no medical setting hides a face, argued. FOR one doing so: some people are upset
+//            by faces they do not recognise. AGAINST, and it wins: none of the published boxes
+//            (starting_defaults.js: flashing, colour, movement, low vision, tremor, hearing) is about
+//            seeing a face; a still picture cannot flash, and a moving one is already under reduced
+//            motion and the flash limit; tying it to "Memory loss" or "Brain injury" (both
+//            to-be-filled, setting nothing) would be the unsourced clinical claim that file refuses
+//            to make. So only movement has a medical override. [On Mike's list.]
+//   screen   the screen's row, where it CHOSE (true or false), wins - a screen in a room is the place's.
+//   person   the viewer's row, where the screen chose nothing.
+//   default  on, both.
+// "Off" for movement sits ABOVE the other person's own "always moves": what moves on a screen is the
+// viewer's to say, and that person's face still moves on their own screen.
+// A value that is not true or false is not a choice (garbage never decides), as in flash_limit.js.
+// ---------------------------------------------------------------------------------------
+export const OTHERS_AVATARS_KEY = 'othersAvatars';
+export const OTHERS_AVATARS_MOVE_KEY = 'othersAvatarsMove';
+/** The two rows, for the screen's menu AND the person's (the same keys on both rows). */
+export const OTHERS_AVATAR_FIELDS = Object.freeze([
+  Object.freeze({ key: OTHERS_AVATARS_KEY, label: 'Show other people\'s own avatars', default: true,
+    level: 'standard', onLabel: 'Yes - their own drawing or picture', offLabel: 'No - just their name',
+    note: 'Your own avatar is not affected. A screen\'s choice here wins over a person\'s.' }),
+  Object.freeze({ key: OTHERS_AVATARS_MOVE_KEY, label: 'Let other people\'s avatars move', default: true,
+    level: 'standard', onLabel: 'Yes, as each person chose', offLabel: 'No - keep them still',
+    note: 'Movement turned off for health reasons always wins.', automatable: false }),
+]);
+function othersChoice(screen, viewer, key) {
+  for (const r of [screen, viewer]) if (r && typeof r === 'object' && typeof r[key] === 'boolean') return r[key];
+  return true;
+}
 // The drawn blink's cycle and its keyframe stops (avatar.js MOTION_CSS: navBlink, 9 s, five stops), the
 // slowest-to-honour movement a face has, so the one the flash limit is checked against.
 const BLINK_CYCLE_MS = 9000;
@@ -143,11 +193,12 @@ const BLINK_STOPS = 5;
  *   layer   the starting-defaults layer on this device (fills only what neither row chose)
  *   lowPower  true when the host KNOWS this is a slow screen (never guessed, argued above)
  *   flashLimit  a number or a getter, when the host already has one (else read from the rows)
+ *   viewerId  the id of the person this screen is for (null: nobody - every face is somebody else's)
  * `reduceMotion`, like the flash limit (flash_limit.js `flashLimitFrom`): where either row CHOSE, the
- * stricter (on) wins; where neither did, the layer's.
+ * stricter (on) wins; where neither did, the layer's. `othersShow` / `othersMove`: OTHERS_AVATAR_FIELDS.
  */
 export function avatarMotionContext({ screen = {}, viewer = {}, layer = {}, lowPower = false,
-  flashLimit = null, win = globalThis, deviceReduced = null } = {}) {
+  flashLimit = null, win = globalThis, deviceReduced = null, viewerId = null } = {}) {
   const rows = [screen, viewer].filter((r) => r && typeof r === 'object');
   const chosen = rows.filter((r) => isChosen(r, 'reduceMotion')).map((r) => r.reduceMotion === true);
   const reduceMotion = chosen.length ? chosen.some(Boolean) : (layer || {}).reduceMotion === true;
@@ -160,15 +211,25 @@ export function avatarMotionContext({ screen = {}, viewer = {}, layer = {}, lowP
     screen: screenMotion((screen || {})[AVATAR_MOTION_KEY]),
     lowPower: !!lowPower,
     flashLimit: normalizeFlashLimit(fl),
+    viewerId: viewerId == null || viewerId === '' ? null : String(viewerId),
+    othersShow: othersChoice(screen, viewer, OTHERS_AVATARS_KEY),
+    othersMove: othersChoice(screen, viewer, OTHERS_AVATARS_MOVE_KEY),
   };
+}
+
+/** Is `personId`'s face somebody else's on this screen? Everybody is, on a screen for nobody. */
+export function isOtherPerson(context = {}, personId = '') {
+  const v = context && context.viewerId;
+  return !v || String(personId || '') !== String(v);
 }
 
 /**
  * THE DECISION. `context` from `avatarMotionContext` (or any part of it), `person` the person's own
- * choice (true / false / null for none), `big` whether this face is shown large.
+ * choice (true / false / null for none), `big` whether this face is shown large, `other` whether it is
+ * somebody other than the person this screen is for (OTHERS_AVATAR_FIELDS; default true).
  * Returns { animate, because, flashLimit }.  PURE.
  */
-export function avatarMotion({ context = {}, person = null, big = false } = {}) {
+export function avatarMotion({ context = {}, person = null, big = false, other = true } = {}) {
   const c = context || {};
   const flashLimit = normalizeFlashLimit(c.flashLimit);
   const still = (because) => ({ animate: false, because, flashLimit });
@@ -178,6 +239,9 @@ export function avatarMotion({ context = {}, person = null, big = false } = {}) 
   if (c.screen === 'still') return still('screen-still');
   if (c.lowPower) return still('low-power-screen');
   if (c.screen === 'big' && !big) return still('screen-large-only');
+  // Other people's faces, kept still by the screen's or the viewer's row (screen first; resolved in
+  // avatarMotionContext). Above the other person's own "always moves".
+  if (other && c.othersMove === false) return still('others-still');
   if (person === false) return still('person-still');
   if (person === true) return { animate: true, because: 'person-moves', flashLimit };
   return big ? { animate: true, because: 'default-large', flashLimit } : still('default-small');
@@ -225,14 +289,18 @@ export function avatarView(row, { picture = null } = {}) {
 export function avatarHtml(view, { size = DISPLAY_DEFAULTS.size, animate = DISPLAY_DEFAULTS.animate,
   round = DISPLAY_DEFAULTS.round, personId = '', reducedMotion = null, win = globalThis, context = null } = {}) {
   if (!view || (view.show !== 'drawn' && view.show !== 'picture')) return '';
+  const ctx = { ...(context || view.context || {}) };
+  const other = isOtherPerson(ctx, personId);
+  // Somebody else's own avatar, on a screen (or for a viewer) that chose not to show them: their name
+  // only - exactly the display of a person with no avatar (rule 1).
+  if (other && ctx.othersShow === false) return '';
   const s = cssSize(size);
   const style = `display:inline-block;width:${s};height:${s};vertical-align:middle;overflow:hidden;`
     + `flex:none;line-height:0;margin-inline-end:.4em;border-radius:${round ? '50%' : '.2em'}`;
-  const ctx = { ...(context || view.context || {}) };
   if (reducedMotion != null) ctx.deviceReduced = !!reducedMotion;
   else if (ctx.deviceReduced == null) ctx.deviceReduced = systemReduced(win);
   const person = view.still ? false : view.moves ? true : null;
-  const m = avatarMotion({ context: ctx, person, big: !!animate });
+  const m = avatarMotion({ context: ctx, person, big: !!animate, other });
   if (view.show === 'picture') {
     if (view.svg) {
       // Drawn inline, from the sanitized description only — never from the file's own text.
