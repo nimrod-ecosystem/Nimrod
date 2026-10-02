@@ -394,7 +394,8 @@ registerModule(
         try {
           unsubPlay = a.bus.subscribe(`${GAME}/play`, () => {
             const ph = a.engine.snapshot().phase;
-            a.engine.press(ph === 'done' ? 'restart' : (ph === 'celebrate' || ph === 'answer') ? 'continue' : 'repeat');
+            a.engine.press(ph === 'done' ? 'restart' : ph === 'another' ? 'more'
+              : (ph === 'celebrate' || ph === 'answer') ? 'continue' : 'repeat');
           });
         } catch { unsubPlay = null; }
       },
