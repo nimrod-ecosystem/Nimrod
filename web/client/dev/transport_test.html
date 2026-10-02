@@ -44,6 +44,7 @@ import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
 import { mountKiosk } from '../kiosk.js';
 import { stashPreviewLayout } from '../preview.js';
+import { createState } from '../state.js';
 
 const USER = 'transport-' + Math.floor(Math.random() * 1e6);
 const root = document.getElementById('root');
@@ -594,6 +595,55 @@ function unreachableChips() {
     kiosk.destroy();
     check('a screen taken down with the library open leaves nothing behind', !root.querySelector('.k-libslot'));
     root.innerHTML = '';
+  }
+
+  // =====================================================================================
+  // Mike's list 09-30 (~1341): with the switch scan on a piece of a dashboard's room, the bar still lit the
+  // first panel. Both bars -- the plain one (today's path) and the one a dashboard places (the dashboard
+  // path) -- now light the piece's own chip and dim what only a panel can do: Switch module, Back, Next,
+  // Pause. One implementation (transport_bar.js "A PIECE OF THE ROOM, SELECTED").
+  section('*** a piece of the room selected: both bars light ITS chip; Switch, Back, Next and Pause dim, saying why ***');
+  {
+    const until = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+    const writeLayout = async (pid, layout) => {
+      const st = createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+      await st.load(); st.set({ kiosk: { layout } }); await st.flush(); st.destroy();
+    };
+    for (const path of ['plain', 'placed']) {
+      const p = await profiles.create(`TB-piece-${path}`);
+      const ph = await profiles.addModule(p.id, 'photos');
+      await writeLayout(p.id, { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' },
+        placed: [{ id: ph.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] });
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(),
+        ...(path === 'placed' ? { dashboardDefault: true } : {}) });
+      const barEl = () => (path === 'placed' ? root.querySelector('.view .tb-bar') : root.querySelector('.k-controls'));
+      const act = (a) => barEl()?.querySelector(`[data-act="${a}"]`);
+      check(`(${path}) (setup) the room and the bar are up, on the ${path === 'placed' ? 'dashboard' : 'today\'s'} path`,
+        await until(() => !!root.querySelector('.rs-obj-wrap[data-id="door"]') && !!barEl(), 8000)
+        && kiosk.dashboardPath() === (path === 'placed'));
+      const doorId = 'scene:room/o:door';
+      kiosk.runtime.router.setFocus(doorId);
+      const label = () => kiosk.focusedTarget()?.label;
+      check(`(${path}) *** the piece's own chip, lit, with its own name ***`,
+        await until(() => { const c = barEl().querySelector('[data-piece]'); return !!c && c.classList.contains('on') && !!label() && c.textContent === label(); }),
+        barEl()?.querySelector('[data-mods], .tb-mods')?.innerHTML?.slice(0, 200));
+      check(`(${path}) ...and no panel's chip is lit`, !barEl().querySelector('.k-dot.on:not([data-piece])'));
+      check(`(${path}) *** Switch module is dimmed, its title saying a piece is not a panel ***`,
+        act('switch')?.disabled === true && /part of the room, not a panel/.test(act('switch').title), act('switch')?.title);
+      check(`(${path}) *** Back and Next are dimmed, saying why ***`,
+        ['back', 'next'].every((a) => act(a)?.disabled === true && /is for panels/.test(act(a).title)),
+        ['back', 'next'].map((a) => `${act(a)?.disabled} ${act(a)?.title}`).join(' | '));
+      check(`(${path}) Pause is dimmed (the shell says it can't, for a piece)`, await until(() => act('playpause')?.disabled === true, 3000));
+      barEl().querySelector('[data-piece]').click();
+      check(`(${path}) pressing the piece's chip keeps it selected`, kiosk.focusedTarget()?.id === doorId);
+      kiosk.runtime.router.setFocus(ph.id);
+      check(`(${path}) *** focus back on the panel: its chip is lit, the piece's is gone, Back / Next / Switch are back ***`,
+        await until(() => !barEl().querySelector('[data-piece]') && !!barEl().querySelector(`.k-dot.on[data-id="${ph.id}"]`)
+          && ['back', 'next', 'switch'].every((a) => act(a)?.disabled === false)),
+        ['back', 'next', 'switch'].map((a) => `${a}:${act(a)?.disabled}`).join(' '));
+      check(`(${path}) ...and their own titles again`, !/is for panels|part of the room/.test(['back', 'next', 'switch'].map((a) => act(a)?.title).join(' ')));
+      kiosk.destroy(); root.innerHTML = '';
+    }
   }
 
   document.getElementById('summary').textContent = failed

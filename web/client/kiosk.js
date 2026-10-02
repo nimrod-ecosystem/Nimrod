@@ -37,7 +37,9 @@ import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX } from './arrangement.js';
-import { barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls } from './transport_bar.js';
+import {
+  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+} from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
 import { PRESETS as LAYOUT_PRESETS, withPreset } from './layout.js';
 import { createLongPress } from './input_longpress.js';
@@ -1836,11 +1838,10 @@ export async function mountKiosk(root, {
     // What the bar lists is the arrangement's (arrangement.js); the bar itself is the shell's. Read
     // fresh on every draw, because a swap replaces all of it.
     // (2026-10-02: with the scan on a PIECE of the room, no panel's chip is lit -- the piece has one of its
-    // own, lit, saying its name: `drawPieceChip`. The bar and the ring describe one thing.)
+    // own, lit, saying its name, and Back / Next dim. transport_bar.js does both, for both bars.)
     const piece = focusedPiece();
-    const model = barModel(arr, runtime, { audio });
-    drawChips(modsEl, piece && model ? { ...model, focusId: piece.id } : model);
-    if (piece) drawPieceChip(piece);
+    drawChips(modsEl, barModel(arr, runtime, { audio }));
+    try { paintPieceInert(controlsEl, piece); } catch { /* not drawn yet */ }
     // Switch module: dimmed with no panel to switch (D16: never hidden) -- and while a piece of the room is
     // selected, since a piece is not a panel; its title says which. A LOCKED panel's stays pressable and
     // says so (`lockedNow`: the press explains where the key is).
@@ -1851,7 +1852,7 @@ export async function mountKiosk(root, {
       sw.disabled = !rec || !!piece;
       let locked = false;
       try { locked = !piece && !!rec && lockedNow(rec.id); } catch { locked = false; }
-      sw.title = piece ? `${piece.label} is part of the room, not a panel: Switch module is for panels`
+      sw.title = piece ? PIECE_SWITCH_TITLE(piece.label)
         : locked ? `${rec.title || rec.type} is locked on this dashboard (Unlock is on Home, under Change)`
           : 'switch the selected panel to another module';      // the markup's own title
     }
@@ -1880,20 +1881,6 @@ export async function mountKiosk(root, {
   }
   function panelSubject() {
     return focusedPiece() ? null : focusedRec();
-  }
-  /** The selected piece's chip on the plain bar: lit, its name, pressed = keep it selected (as a panel's). */
-  function drawPieceChip(piece) {
-    if (!modsEl || !piece || typeof document === 'undefined') return;
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'k-dot on k-piece';
-    b.dataset.piece = piece.id;
-    b.textContent = piece.label;
-    b.setAttribute('aria-current', 'true');
-    b.setAttribute('aria-label', `In the room: ${piece.label}, selected`);
-    b.title = 'a piece of the room is selected: select presses it, and the ⚙ menu shows its options';
-    b.addEventListener('click', () => { try { arr.focusPlaced(piece.id); } catch { /* it has gone */ } });
-    modsEl.append(b);
   }
 
   // ---------------------------------------------------------------------------------
