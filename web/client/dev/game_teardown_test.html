@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>game teardown - trivia and word forge release what they open - test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>game teardown</h1>
+
+<p>The Stage 4 bench soak (2026-10-01) found Trivia and Word Forge each keeping about forty DOM
+nodes alive after every destroy, on both screen paths. The cause: each opens two state rows of its
+own with <code>ctx.makeState</code> (the shared question bank, and the lesson-routed questions),
+starts them polling, and never destroyed them. The runtime only disposes the handles IT made, so
+those kept polling every 1.5 s for the life of the page, and their subscriber closures held the
+destroyed panel's mount. A load that resolved after destroy could also call
+<code>startPolling()</code> and bring a destroyed handle back.</p>
+
+<p>This mounts and destroys each game N times, twice over: once with every load already settled,
+and once destroying BEFORE the loads land and resolving them afterwards. After each, it counts
+what is still live: bus subscriptions, state/events handles still polling or never destroyed,
+<code>setInterval</code>s, and listeners on the mount, <code>document</code> and
+<code>window</code>. Every count must come back to where it started.</p>
+
+<div id="results"></div>
+<div id="summary">running...</div>
+<div id="host"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/trivia.js';
+import '../modules/wordforge.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// ---- a bus that counts live subscriptions, scoped ones included ----
+function countingBus() {
+  const real = createBus();
+  let live = 0;
+  const sub = (topic, handler) => {
+    live++;
+    const off = real.subscribe(topic, handler);
+    let done = false;
+    return () => { if (!done) { done = true; live--; off(); } };
+  };
+  // The same shape as bus.js's own scope(), built on the counting subscribe.
+  const scope = (instanceId = null) => {
+    const offs = [];
+    return {
+      subscribe: (topic, handler) => {
+        const un = [sub(topic, handler)];
+        if (instanceId) un.push(sub(real.instanceTopic(instanceId, topic), handler));
+        offs.push(...un);
+        return () => un.forEach((o) => o());
+      },
+      addBinding: (b) => { const off = real.addBinding(b); offs.push(off); return off; },
+      createSource: real.createSource,
+      publish: real.publish,
+      instanceId,
+      dispose: () => { while (offs.length) offs.pop()(); },
+    };
+  };
+  return { ...real, subscribe: sub, scope, live: () => live };
+}
+
+// ---- state/events handles that record their own lifecycle ----
+// `startPolling` after `destroy` RESTARTS the poll, exactly as state.js / events.js do (both reset
+// `pollStopped` on start) -- so a late load that calls it after destroy is caught, not hidden.
+const handles = [];
+let gate = null;               // null = loads resolve at once; else loads wait on gate.promise
+function deferred() { let resolve; const promise = new Promise((r) => { resolve = r; }); return { promise, resolve }; }
+function loadNow() { return gate ? gate.promise : Promise.resolve(); }
+function makeHandle(kind, key, data) {
+  const h = { kind, key, polling: false, destroyed: false, subs: new Set() };
+  const snap = () => data;
+  Object.assign(h, {
+    load: () => loadNow().then(() => { for (const f of [...h.subs]) { try { f(snap()); } catch (e) { console.error(e); } } return snap(); }),
+    get: snap,
+    set: (p) => { Object.assign(data, p); },
+    flush: () => Promise.resolve(),
+    subscribe: (f) => { h.subs.add(f); return () => h.subs.delete(f); },
+    startPolling: () => { h.polling = true; },
+    append: async () => ({}),
+    destroy: () => { h.polling = false; h.destroyed = true; },
+  });
+  handles.push(h);
+  return h;
+}
+const makeState = (key) => makeHandle('state', key, {});
+const makeEvents = (key) => makeHandle('events', key, { events: [] });
+
+// ---- timers and listeners ----
+let liveIntervals = 0;
+const realSetInterval = window.setInterval.bind(window), realClearInterval = window.clearInterval.bind(window);
+const ivs = new Set();
+window.setInterval = (...a) => { const id = realSetInterval(...a); ivs.add(id); liveIntervals = ivs.size; return id; };
+window.clearInterval = (id) => { ivs.delete(id); liveIntervals = ivs.size; return realClearInterval(id); };
+function countListeners(target) {
+  let n = 0;
+  const add = target.addEventListener.bind(target), rem = target.removeEventListener.bind(target);
+  const seen = new Set();
+  target.addEventListener = (type, fn, opts) => { if (fn && !seen.has(fn)) { seen.add(fn); n++; } return add(type, fn, opts); };
+  target.removeEventListener = (type, fn, opts) => { if (fn && seen.has(fn)) { seen.delete(fn); n--; } return rem(type, fn, opts); };
+  return () => n;
+}
+const docListeners = countListeners(document);
+const winListeners = countListeners(window);
+
+const host = document.getElementById('host');
+
+async function cycle(type, bus, { late }) {
+  gate = late ? deferred() : null;
+  const mount = document.createElement('div');
+  const mountListeners = countListeners(mount);
+  host.append(mount);
+  const state = makeHandle('state', 'own', {});
+  const events = makeHandle('events', 'own', { events: [] });
+  const m = mountModule(type, { mount, bus, state, events, makeState, makeEvents,
+    instanceId: `${type}-${Math.random().toString(36).slice(2, 8)}`, rand: () => 0.3 });
+  m.init();
+  if (!late) await sleep(60);            // let every load, the pack fetch and the first round land
+  m.destroy();
+  mount.remove();
+  if (late) { gate.resolve(); await sleep(60); }   // the loads land AFTER destroy
+  gate = null;
+  return { mountListeners: mountListeners() };
+}
+
+async function run(type) {
+  const N = 5;
+  for (const late of [false, true]) {
+    section(`${type}: ${N} mount/destroy cycles, loads ${late ? 'resolving AFTER destroy' : 'settled before destroy'}`);
+    const bus = countingBus();
+    handles.length = 0;
+    const base = { bus: bus.live(), iv: liveIntervals, doc: docListeners(), win: winListeners() };
+    let mountLeft = 0;
+    for (let i = 0; i < N; i++) mountLeft += (await cycle(type, bus, { late })).mountListeners;
+    const polling = handles.filter((h) => h.polling);
+    const open = handles.filter((h) => !h.destroyed);
+    check(`${type}: every bus subscription released`, bus.live() === base.bus,
+      `${bus.live() - base.bus} left after ${N} cycles`);
+    check(`${type}: no state/events handle still polling`, polling.length === 0,
+      polling.map((h) => `${h.kind}:${h.key}`).join(', '));
+    check(`${type}: every state/events handle it opened is destroyed`, open.length === 0,
+      open.map((h) => `${h.kind}:${h.key}`).join(', '));
+    check(`${type}: no setInterval left running`, liveIntervals === base.iv, `${liveIntervals - base.iv} left`);
+    check(`${type}: no listener left on the mount`, mountLeft === 0, `${mountLeft} left over ${N} mounts`);
+    check(`${type}: no document/window listener left`,
+      docListeners() === base.doc && winListeners() === base.win,
+      `document +${docListeners() - base.doc}, window +${winListeners() - base.win}`);
+  }
+}
+
+// A positive control, so a counter that can never move cannot pass for a clean module: an extra
+// makeState handle started and never destroyed MUST show up as polling.
+section('the meter can see a leak');
+{
+  handles.length = 0;
+  const h = makeState('control');
+  h.startPolling();
+  check('a handle started and never destroyed is counted as polling', handles.filter((x) => x.polling).length === 1);
+  h.destroy();
+  const b = countingBus();
+  const s = b.scope('ctl'); s.subscribe('x', () => {});
+  check('a scoped subscription not yet disposed is counted', b.live() === 2);
+  s.dispose();
+  check('...and disposing it brings the count back to zero', b.live() === 0);
+}
+
+try {
+  await run('trivia');
+  await run('wordforge');
+} catch (e) {
+  check('suite ran without throwing', false, String(e && e.stack || e));
+}
+
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

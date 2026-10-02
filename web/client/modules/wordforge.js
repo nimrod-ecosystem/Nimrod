@@ -593,10 +593,18 @@ registerModule(
     let contestFailed = false;
     const heldSet = () => (contests ? contests.held() : new Set());
     let score = null;         // the score contract (row 2.40), made in init()
+    // *** SET BY destroy(), CHECKED BY EVERY CALLBACK THAT CAN LAND AFTER IT. *** Stage 4 bench
+    // soak, 2026-10-01: ~40 DOM nodes kept alive per destroyed Word Forge — trivia.js had the
+    // identical leak, see its `dead`. `sharedRow` and `lessonQ` are handles this module opens with
+    // ctx.makeState, which the runtime does not dispose, and destroy() never did: both kept polling
+    // forever with a subscriber that held this panel's mount. A load landing after destroy() would
+    // also have restarted a poll destroy() had stopped.
+    let dead = false;
 
     const el = (sel) => mount.querySelector(sel);
 
     function newRound() {
+      if (dead) return;
       // Only what's unlocked goes in the deck. Pairs are ungated for now — they carry no
       // topic — so `gate` passes them straight through.
       // SANDBOX hands gate() a stand-in that says everything is unlocked, rather than reading
@@ -702,6 +710,7 @@ registerModule(
     // Pay, unless today's cap for this game is already spent. The trial was logged either
     // way — capping the currency must not cap the measurement.
     async function bank(award, concept, note) {
+      if (dead || !ledger) return;
       const spentToday = ledger.todayFrom(GAME);
       const room = cfg.dailyCap > 0 ? Math.max(0, cfg.dailyCap - spentToday) : award.total;
       const pay = Math.min(award.total, room);
@@ -773,6 +782,7 @@ registerModule(
 
     // ---------- render ----------
     function render() {
+      if (dead) return;
       const host = el('[data-body]');
       if (!host) return;
       // Row 2.40: the score goes out on the contract first; the panel draws it only when asked.
@@ -936,12 +946,12 @@ registerModule(
         try {
           sharedRow = ctx.makeState ? ctx.makeState(BANK_STATE) : null;
           if (sharedRow) {
-            sharedRow.load().catch(() => {}).then(() => sharedRow.startPolling?.());
-            sharedRow.subscribe?.(() => state?.get && applyState(state.get()));
+            sharedRow.load().catch(() => {}).then(() => { if (!dead) sharedRow.startPolling?.(); });
+            sharedRow.subscribe?.(() => !dead && state?.get && applyState(state.get()));
           }
         } catch (err) { sharedRow = null; console.error('wordforge: no shared bank', err); }
         bus.subscribe(BANK_TOPIC, () => {
-          sharedRow?.load?.().catch(() => {}).then(() => state?.get && applyState(state.get()));
+          sharedRow?.load?.().catch(() => {}).then(() => !dead && state?.get && applyState(state.get()));
         });
         ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus });
         tel = createTelemetry({ makeEvents: ctx.makeEvents, bus });
@@ -955,7 +965,7 @@ registerModule(
         try {
           lessonQ = ctx.makeState ? ctx.makeState(WORDFORGE_LESSON_QUESTIONS) : null;
           if (lessonQ) {
-            lessonQ.load().catch(() => {}).then(() => { newRound(); lessonQ.startPolling?.(); });
+            lessonQ.load().catch(() => {}).then(() => { if (dead) return; newRound(); lessonQ.startPolling?.(); });
             lessonQ.subscribe?.(() => newRound());
           }
         } catch (err) { lessonQ = null; console.error('wordforge: no lesson-routed questions', err); }
@@ -980,11 +990,12 @@ registerModule(
         // `mode`'s default (sandbox) is the opposite risk from `lessons`'s (quest-strict) — a
         // round dealt before `mode.load()` resolves would gate as quest even for a profile that
         // has actually chosen sandbox. Both loads gate the one unconditional rebuild.
+        // `if (!dead)` on each: a load landing after destroy() must not restart a stopped poll.
         Promise.all([
-          lessons.load().then(() => lessons.startPolling()).catch(() => {}),
-          mode ? mode.load().then(() => mode.startPolling()).catch(() => {}) : Promise.resolve(),
+          lessons.load().then(() => { if (!dead) lessons.startPolling(); }).catch(() => {}),
+          mode ? mode.load().then(() => { if (!dead) mode.startPolling(); }).catch(() => {}) : Promise.resolve(),
           // The contests log gates the deck too, so the rebuild waits for it as well.
-          contests ? contests.load().then(() => contests.startPolling()).catch(() => {}) : Promise.resolve(),
+          contests ? contests.load().then(() => { if (!dead) contests.startPolling(); }).catch(() => {}) : Promise.resolve(),
         ]).then(() => { newRound(); });
         // A lesson finished elsewhere (the Lessons module, another device) — the new words
         // join the pool at the START of the next round, not mid-question.
@@ -1037,7 +1048,7 @@ registerModule(
           if (cfg.contentSource === 'pack' && cfg.packId) {
             try {
               const pack = await loadPackCached(cfg.packId);
-              if (gen !== wordGen) return;         // superseded while the fetch was in flight
+              if (gen !== wordGen || dead) return; // superseded while the fetch was in flight
               const fromPack = packToWordBank(pack);
               const next = fromPack.length >= 4 ? fromPack : DEFAULT_WORDS;
               // LENGTH, not reference — `resolveNonPackWords` below builds a fresh array on
@@ -1065,6 +1076,7 @@ registerModule(
           if (changed) newRound();
         }
         applyState = (s) => {
+          if (dead) return;
           const snap = s || {};
           const p = Array.isArray(snap.pairs) ? snap.pairs : (snap.pairsText ? parsePairs(snap.pairsText) : null);
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
@@ -1107,12 +1119,16 @@ registerModule(
       onResize() {},
       onHide() { state.flush(); },
       destroy() {
+        dead = true;
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }
         if (tel) { tel.destroy(); tel = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
         if (mode) { mode.destroy(); mode = null; }
+        // THE TWO THAT LEAKED (see `dead`): rows this module opened itself, polling until now.
+        if (sharedRow) { sharedRow.destroy?.(); sharedRow = null; }
+        if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
       },
     };
   },
