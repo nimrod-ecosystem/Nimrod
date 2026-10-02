@@ -500,7 +500,27 @@ const curSrc = () => { const el = document.querySelector('#host .stage')?.firstC
     on.bus.publish('photos/play');
     check('*** Play: it carries on (a fresh interval for the picture on screen) ***',
       on.advanceTimers().length === 1 && on.probe().paused === false && !on.host.querySelector('[data-start]') && on.states.at(-1)?.playing === true);
+    check('...and Play cancels the carry-on timer', !on.timers.some((t) => t.live && t.ms === 30 * 60 * 1000));
+    // *** A PAUSE CARRIES ON BY ITSELF (2026-10-02; CLAUDE.md: never a state only an input can leave, when the
+    // person there cannot give it). Default 30 minutes; "never" is a choice. ***
+    on.bus.publish('photos/pause');
+    const resume = on.timers.find((t) => t.live && t.ms === 30 * 60 * 1000);
+    check('*** a pause sets a 30-minute carry-on by default ***', !!resume, JSON.stringify(on.timers.filter((t) => t.live).map((t) => t.ms)));
+    if (resume) { resume.live = false; resume.fn(); }
+    check('*** ...and when it fires, the slideshow carries on and the shell hears "playing" ***',
+      on.probe().paused === false && on.advanceTimers().length === 1 && on.states.at(-1)?.playing === true);
     on.done();
+    const never = rigS({ resumeAfterMs: 0 });
+    await sleep(80);
+    never.bus.publish('photos/pause');
+    check('*** "never": a pause sets no carry-on timer and stays paused ***',
+      never.probe().paused === true && !never.timers.some((t) => t.live && t.ms !== 15 * 60 * 1000));
+    never.done();
+    const waitNoResume = rigS({ autostart: false });
+    await sleep(80);
+    check('a slideshow WAITING for Start (autostart off) is not timed out: only a pause is',
+      waitNoResume.probe().waiting === true && !waitNoResume.timers.some((t) => t.live && t.ms === 30 * 60 * 1000));
+    waitNoResume.done();
 
     const off = rigS({ autostart: false });
     await sleep(80);
