@@ -920,6 +920,23 @@ Knowing a root lets you guess a new word.`;
     check('*** a wrong answer shows the right one AND the transcript line it came from ***',
       /not quite/i.test(tqText('[data-tq-feedback]')) && tqText('[data-tq-feedback]').includes(answerOf(firstQ))
         && tqText('[data-tq-source]').includes(src1), `${tqText('[data-tq-feedback]')} | ${tqText('[data-tq-source]')}`);
+    // *** NOT COLOUR ALONE (MIKE_LIST_20260930, colour-blindness check). *** The answered options
+    // were told apart only by a green or pink wash, which a red-green colour-blind person cannot
+    // see. Each now carries a shape, and a word for a screen reader.
+    {
+      const rightOpt = xhost.querySelector('.l-tq-opt[data-right="1"]');
+      const wrongOpt = xhost.querySelector('.l-tq-opt[data-wrong="1"]');
+      check('*** the right answer carries a ✓ shape, not just a green wash ***',
+        rightOpt?.querySelector('.ans-mark[data-mark="right"]')?.textContent === '✓', rightOpt?.innerHTML);
+      check('*** the wrong pick carries a ✗ shape, not just a pink wash ***',
+        wrongOpt?.querySelector('.ans-mark[data-mark="wrong"]')?.textContent === '✗', wrongOpt?.innerHTML);
+      check('...and each says so in words for a screen reader',
+        /right answer/.test(rightOpt?.querySelector('.ans-mark-word')?.textContent || '')
+          && /not the answer/.test(wrongOpt?.querySelector('.ans-mark-word')?.textContent || ''),
+        `${rightOpt?.textContent} | ${wrongOpt?.textContent}`);
+      check('...and the options nobody picked carry no mark',
+        [...xhost.querySelectorAll('.l-tq-opt')].filter((b) => b.querySelector('.ans-mark')).length === 2);
+    }
     check('progress did not move', tqText('[data-tq-progress]').startsWith('0 of 3'));
     check('"I think this question is wrong" is offered to the player (the contest, contests.js)',
       /I think this question is wrong/.test(xhost.querySelector('[data-tq-contest]')?.textContent || ''));

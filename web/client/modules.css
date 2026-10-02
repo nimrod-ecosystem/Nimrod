@@ -991,6 +991,16 @@
 .lessons .l-tq-opt{width:100%;text-align:left;white-space:normal}
 .lessons .l-tq-opt[data-right="1"]{background:var(--ok-surface);border-color:var(--accent)}
 .lessons .l-tq-opt[data-wrong="1"]{background:var(--bad-surface)}
+/* The answered options are disabled (so they cannot be pressed again), and `.l-btn:disabled` dims to
+   45%. That dimmed the RIGHT ANSWER the moment it was shown. The two marked ones stay at full
+   strength; the options nobody picked can stay dimmed. */
+.lessons .l-tq-opt[data-right="1"]:disabled,.lessons .l-tq-opt[data-wrong="1"]:disabled{opacity:1;cursor:default}
+/* ✓ / ✗ beside the colour (answer_mark.js). Drawn in the option's own text colour, which the theme
+   suite holds to 4.5:1 on both washes, so the shape never depends on a colour of its own. A
+   placeholder look: NOTES_FOR_DESIGN item 30. The word is for a screen reader only. Shared by
+   lessons, trivia and Word Forge. */
+.ans-mark{display:inline-block;margin-inline-start:.45em;font-weight:800;line-height:1}
+.ans-mark-word{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 .lessons .l-tq-said{margin:10px 0 4px;font-weight:600}
 .lessons .l-tq-src,.lessons .l-rq-src{margin:4px 0;padding:6px 10px;border-left:3px solid var(--accent);
   background:var(--surface);font-size:.84rem;color:var(--text-soft)}
@@ -1453,9 +1463,13 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
    also what makes it visible to somebody scanning from across a room. */
 .tv-opt[data-on="1"] { border-color: var(--link, #105666); box-shadow: 0 0 0 3px rgba(16,86,102,.18); }
 .tv-opt[data-on="1"]::before { content: "\25B8\00a0"; }
-.tv-opt[data-right="1"] { border-color: #2c6e49; background: #eef6f0; }
-.tv-opt[data-right="1"]::after { content: "\00a0\2713"; color: #2c6e49; font-weight: 700; }
-.tv-opt[data-wrong="1"] { border-color: #a4243b; background: var(--bad-surface); }
+/* RIGHT AND WRONG, themed, and not by colour alone (MIKE_LIST_20260930). These were a hardcoded
+   green border on a hardcoded pale wash (#eef6f0) with a CSS-drawn tick, and a hardcoded red border
+   on the wrong one. In dusk the pale wash sat under near-white text. Now the theme's own washes,
+   the same pair lessons and Word Forge use, and the ✓/✗ is markup (answer_mark.js, `.ans-mark`
+   below) so it has a word for a screen reader too. */
+.tv-opt[data-right="1"] { border-color: var(--accent); background: var(--ok-surface); }
+.tv-opt[data-wrong="1"] { border-color: var(--accent-warm-deep); background: var(--bad-surface); }
 .tv-opt:disabled { cursor: default; }
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
 /* a transcript-lesson question's source line, shown with the answer (row 2.24 / §0h) */

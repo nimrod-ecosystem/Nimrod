@@ -19,7 +19,7 @@
 }
 .sd-btn:disabled { opacity: .6; cursor: default; }
 .sd-btn.is-on { border-color: var(--accent, #2c6e49); font-weight: 600; }
-.sd-btn.is-cursor, .sd-btn:focus-visible { outline: 3px solid var(--accent, #2c6e49); outline-offset: 2px; }
+.sd-btn.is-cursor, .sd-btn:focus-visible { outline: 3px solid var(--focus, var(--accent, #2c6e49)); outline-offset: 2px; }
 .sd-box-mark { font-family: ui-monospace, Menlo, Consolas, monospace; }
 .sd-box-aka, .sd-box-tbf { color: var(--text-soft, #333); font-weight: 400; }
 

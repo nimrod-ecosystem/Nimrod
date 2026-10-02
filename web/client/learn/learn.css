@@ -32,7 +32,7 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 var(--font);
 a{color:var(--link)}
 a:hover{color:var(--accent-warm-deep)}
 a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible{
-  outline:3px solid var(--accent);outline-offset:3px;border-radius:4px}
+  outline:3px solid var(--focus, var(--accent));outline-offset:3px;border-radius:4px}
 :target,section[id],main{scroll-margin-top:76px}
 .skip{position:absolute;left:-9999px;top:0;z-index:500;background:var(--text-strong);
   color:#fff;padding:12px 18px;border-radius:0 0 8px 0;font-weight:700;text-decoration:none}

@@ -47,6 +47,7 @@ import {
   factCheck, FACT, parsePieceSummary, contextFor, videoPass, SCOPE,
 } from '../transcript_quiz.js';
 import { createContests, contestKey, CONTEST_STATUS, CONTEST_TOPIC } from '../contests.js';
+import { answerMarkHtml } from '../answer_mark.js';
 
 // `minWatchMs` is milliseconds - the house rule for every stored duration. It was
 // `minWatchSec`; the key changed rather than the meaning of the old one. The countdown a
@@ -790,8 +791,12 @@ registerModule(
           const contestedNow = s.contested && s.contested.has(a.id);
           body = `${head}
             <p class="l-tq-q">${esc(a.question)}</p>
-            <ol class="l-tq-opts">${shown.options.map((o) => `<li><button type="button" class="l-btn l-tq-opt" disabled
-              ${o === a.correctAnswer ? 'data-right="1"' : ''}${o === a.chosen && !a.correct ? 'data-wrong="1"' : ''}>${esc(o)}</button></li>`).join('')}</ol>
+            <ol class="l-tq-opts">${shown.options.map((o) => {
+              // A shape and a word beside the wash, not the wash alone (answer_mark.js).
+              const mark = o === a.correctAnswer ? 'right' : (o === a.chosen && !a.correct ? 'wrong' : '');
+              return `<li><button type="button" class="l-btn l-tq-opt" disabled
+              ${mark ? `data-${mark}="1"` : ''}>${esc(o)}${answerMarkHtml(mark)}</button></li>`;
+            }).join('')}</ol>
             <p class="l-tq-said ${a.correct ? 'is-right' : 'is-wrong'}" data-tq-feedback>${a.correct
               ? 'Right!'
               : `Not quite. The answer is <b>${esc(a.correctAnswer)}</b>. This one will come back later.`}</p>

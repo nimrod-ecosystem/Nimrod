@@ -208,7 +208,10 @@ export const THEMES = {
       '--bg': '#fbf1e4',
       '--text': '#3a2417',
       '--text-soft': '#5c4130',
-      '--text-muted': '#8a6c56',
+      // Was #8a6c56: 4.31:1 on its own --bg, 4.20 at worst with deuteranopia, under AA's 4.5
+      // (MIKE_LIST_20260930). Moved 10% toward --text, the smallest step that clears it with room:
+      // 4.66 at worst. Same brown, a shade deeper.
+      '--text-muted': '#826550',
       '--border': '#ecd9c4',
       '--surface': '#fffaf3',
       '--surface-alt': '#fff3e4',
@@ -231,7 +234,9 @@ export const THEMES = {
       '--bg': '#f2f6f6',
       '--text': '#0d2f34',
       '--text-soft': '#274a50',
-      '--text-muted': '#5c777c',
+      // Was #5c777c: 4.17:1 at worst (on --surface-alt), under AA's 4.5 (MIKE_LIST_20260930).
+      // Moved 10% toward --text, as warm's was: 4.63 at worst. Same teal-grey, a shade deeper.
+      '--text-muted': '#547075',
       '--border': '#cfe0e1',
       '--surface': '#ffffff',
       '--surface-alt': '#e8f1f1',
@@ -285,20 +290,103 @@ const ON_LIGHT = '#ffffff';
 // Not an invented colour: this is dusk's own `--bg`, already in the palette.
 const ON_DARK = '#12181c';
 
-/** Relative luminance, WCAG's definition. Accepts #rgb and #rrggbb. */
-export function luminance(hex) {
+// *** DEUTERANOPIA, SIMULATED, so the floors below hold for red-green colour blindness too. ***
+// Machado, Oliveira & Fernandes (2009), deuteranopia at severity 1.0, applied to linear RGB. The
+// MIKE_LIST_20260930 check found Warm's focus ring passing 3:1 with normal vision (3.09) and failing
+// it once simulated (2.88), so a floor that only checks normal vision misses exactly the people
+// that check was for. Each row sums to 1, so greys (and white and black) are left alone.
+const DEUTAN = [
+  [0.367322, 0.860646, -0.227968],
+  [0.280085, 0.672501, 0.047413],
+  [-0.011820, 0.042940, 0.968881],
+];
+
+/** #rgb / #rrggbb (/ #rrggbbaa, alpha ignored, as before) -> [r, g, b] in 0..1, or null for
+ *  anything else (a keyword, rgba(), a typo). */
+function parseHex(hex) {
   let h = String(hex || '').trim().replace('#', '');
   if (h.length === 3) h = h.split('').map((c) => c + c).join('');
-  if (h.length < 6) return 0;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
-  const f = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
+  if (!/^[0-9a-f]{6}([0-9a-f]{2})?$/i.test(h)) return null;
+  return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
 }
 
-/** Contrast ratio between two colours, 1..21. */
-export function contrast(a, b) {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+/**
+ * Relative luminance, WCAG's definition. Accepts #rgb and #rrggbb.
+ * `{ deutan: true }`: as somebody with deuteranopia sees it (the simulation above).
+ */
+export function luminance(hex, { deutan = false } = {}) {
+  const rgb = parseHex(hex);
+  if (!rgb) return 0;
+  const f = (c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  let [r, g, b] = rgb.map(f);
+  if (deutan) {
+    [r, g, b] = DEUTAN.map(([x, y, z]) => Math.min(1, Math.max(0, x * r + y * g + z * b)));
+  }
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Contrast ratio between two colours, 1..21. `opts` as luminance's. */
+export function contrast(a, b, opts) {
+  const [hi, lo] = [luminance(a, opts), luminance(b, opts)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);
+}
+
+// *** THE AA FLOORS, as numbers the suite reads rather than retypes. *** WCAG 2.x AA: 4.5:1 for
+// body text (1.4.3), 3:1 for a focus indicator or any other non-text signal (1.4.11). Floors, not
+// targets: a theme is free to go higher, and nothing here caps it.
+export const TEXT_MIN = 4.5;
+export const FOCUS_MIN = 3;
+
+// The surfaces a ring or a muted line can sit on. The worst of the three is what counts.
+const SURFACE_VARS = ['--bg', '--surface', '--surface-alt'];
+
+/**
+ * The WORST contrast `fg` makes against a theme's surfaces, with normal vision AND simulated
+ * deuteranopia. `vars` is a theme's map (or any object with some of `--bg`/`--surface`/
+ * `--surface-alt`; a missing one is skipped). Infinity when there is nothing to measure against.
+ */
+export function worstContrast(fg, vars) {
+  let worst = Infinity;
+  for (const k of SURFACE_VARS) {
+    const bg = vars?.[k];
+    if (!parseHex(bg)) continue;
+    worst = Math.min(worst, contrast(fg, bg), contrast(fg, bg, { deutan: true }));
+  }
+  return worst;
+}
+
+const toHex = (rgb) => `#${rgb.map((c) => Math.round(c * 255).toString(16).padStart(2, '0')).join('')}`;
+
+/**
+ * *** THE FOCUS RING IS DERIVED FROM THE THEME, LIKE THE TEXT ON AN ACCENT. ***
+ *
+ * MIKE_LIST_20260930: the rings drawn in `--accent` measured 2.83:1 in default (on its own --bg)
+ * and 2.88:1 in warm once deuteranopia was simulated, against AA's 3:1 for a focus indicator.
+ *
+ * The accents themselves are NOT moved: they are also the buttons, the ON tabs and the dots, and
+ * which green this product wears is Design's (the reasoning at `onColor` below). So the ring gets
+ * its own role, `--focus`: the theme's own `--focus` if it names one, else its `--accent`, kept
+ * EXACTLY as it is when it already clears 3:1 on every surface (both visions) - which is ten of the
+ * twelve themes today - and otherwise stepped toward the theme's own `--text` until it does. Default
+ * moves #839958 -> #7c9355, warm #c07a3e -> #bb773c: the same hue, a shade deeper.
+ *
+ * Toward `--text` because that is the one colour every theme already guarantees reads on its own
+ * surfaces, so the walk always lands, in light themes and dark ones alike. A value that is not a
+ * hex colour (a keyword like Highlight) is passed through untouched: it cannot be measured, and
+ * guessing at it would be worse.
+ */
+export function focusColor(vars) {
+  const start = vars?.['--focus'] || vars?.['--accent'];
+  const from = parseHex(start);
+  const to = parseHex(vars?.['--text']);
+  if (!from || !to) return start;
+  if (worstContrast(start, vars) >= FOCUS_MIN) return start;
+  for (let i = 1; i <= 50; i++) {
+    const t = i / 50;
+    const c = toHex(from.map((x, k) => x + (to[k] - x) * t));
+    if (worstContrast(c, vars) >= FOCUS_MIN) return c;
+  }
+  return vars['--text'];
 }
 
 /** Whichever of light or dark text reads better on `bg`. Pure, so the suite can check it. */
@@ -325,6 +413,9 @@ export function applyTheme(rootEl, id, { flashLimit } = {}) {
     const value = vars[accent];
     if (value) rootEl.style.setProperty(`--on${accent.slice(1)}`, onColor(value));
   }
+  // The focus ring, derived the same way (see focusColor). Set on EVERY apply, so switching themes
+  // always overwrites it - the "every theme defines every key" guarantee, kept by computing it.
+  rootEl.style.setProperty('--focus', focusColor(vars));
   // *** `color-scheme`, NOT JUST OUR OWN CSS VARS. *** This is the one thing a theme controls
   // that our own stylesheet cannot override: the browser's OWN chrome for native form controls
   // (`<input type="time">`'s spinner and clock icon, scrollbars, and everything else this
