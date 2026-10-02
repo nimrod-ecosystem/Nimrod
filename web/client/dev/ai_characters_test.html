@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AI characters — the seeds, a person's own, and their rooms as dashboards</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>AI characters — the seeds, a person's own, and their rooms as dashboards</h1>
+<p>Mike, 2026-10-02: AI profiles, "start with Nimrod and a few others. Each could have rooms too ... a math tutor
+having a calculator in their room." The seeds are checked as data (every avatar part on its list, every room's
+modules real), a person's own characters are made, changed and copied as pure functions, and a room is made into
+a dashboard by the maker over fake screens: once, re-entrant, and never twice. No server needed.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { listManifests } from '../module.js';
+import { avatarWarnings, PARTS } from '../avatar.js';
+import { CATALOG } from '../modules_catalog.js';
+import { DEFAULT_PERSONA } from '../nimrod_ai.js';
+import {
+  SEED_CHARACTERS, ROOM_TEMPLATES, ROOM_TEMPLATE_ORDER, VOICE_CHOICES, PROFILE_TYPE, OWN_MAX, ROOMS_MAX, NAMES_RE,
+  AI_CHARACTERS_KEY, AI_ROOM_KEY, AI_ROOM_REFS_KEY, AI_ROOM_DONE_KEY, SEED_EDIT_REASON,
+  characterProblems, roomProblems, roomTypes, avatarPartProblems, normalizeCharacter, createCharacter, editCharacter,
+  copyCharacter, readCharacterRow, withCharacter, withoutCharacter, allCharacters, findCharacter, seedById, voiceData,
+  roomRecord, roomKey, createRoomMaker, characterSystemPrompt, profileEntries, readSubject, roomFromTemplate,
+  openCharacterStore, PANEL_ROW_KEY,
+} from '../ai_characters.js';
+// Every module type a room names, registered, so "the room's modules exist" is checked against the registry too.
+import '../modules/nimrod.js';
+import '../modules/whats_new.js';
+import '../modules/devices.js';
+import '../modules/library.js';
+import '../modules/calculator.js';
+import '../modules/algebra.js';
+import '../modules/scoreboard.js';
+import '../modules/photos.js';
+import '../modules/reading_log.js';
+import '../modules/word_games.js';
+import '../modules/trivia.js';
+import '../modules/brain_games.js';
+import '../modules/profile.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const J = (x) => JSON.stringify(x);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+function fakeState(initial = {}) {
+  let data = clone(initial);
+  const subs = new Set();
+  return {
+    load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {}, destroy() {}, data: () => clone(data),
+  };
+}
+function fakeScreens() {
+  const screens = new Map();
+  let n = 0;
+  const calls = { create: [], addModule: [], list: 0 };
+  return {
+    calls, screens,
+    list: async () => { calls.list++; return [...screens.values()].map((s) => ({ id: s.id, name: s.name, person_id: s.person_id })); },
+    create: async (name, personId = '') => { const id = `s${++n}`; screens.set(id, { id, name, person_id: personId, modules: [] }); calls.create.push({ name, personId }); return { id, name }; },
+    get: async (pid) => { const s = screens.get(pid); return s ? { ...s, modules: [...s.modules] } : null; },
+    addModule: async (pid, type) => { const m = { id: `m${++n}`, type }; screens.get(pid).modules.push(m); calls.addModule.push({ pid, type }); return m; },
+  };
+}
+function stateBank() {
+  const made = {};
+  return { made, make: (pid, key) => { made[`${pid}/${key}`] = made[`${pid}/${key}`] || fakeState(); return made[`${pid}/${key}`]; } };
+}
+
+try {
+  const known = new Set(listManifests().map((m) => m.type));
+  const catalogTypes = new Set(CATALOG.map((c) => c.type));
+
+  // ============================================================================================
+  section('*** the seeds are valid: Nimrod and three others ***');
+  {
+    check('four seeds, Nimrod first', SEED_CHARACTERS.length === 4 && SEED_CHARACTERS[0].id === 'nimrod', SEED_CHARACTERS.map((c) => c.id).join(','));
+    for (const c of SEED_CHARACTERS) {
+      const p = characterProblems(c, { knownTypes: known });
+      check(`*** ${c.name}: no problems (kind ai, persona, avatar, voice, rooms) ***`, p.length === 0, p.join('; '));
+    }
+    check('*** every seed avatar part id exists on its avatar.js list ***',
+      SEED_CHARACTERS.every((c) => avatarPartProblems(c.avatar.drawn).length === 0 && PARTS.every((p) => p.key in c.avatar.drawn)));
+    check('every seed face reads against its own background (no contrast warning)',
+      SEED_CHARACTERS.every((c) => avatarWarnings(c.avatar.drawn).length === 0),
+      J(SEED_CHARACTERS.map((c) => [c.id, avatarWarnings(c.avatar.drawn).map((w) => w.part)])));
+    check('*** every room module type is one the catalog describes (or the character\'s own card) ***',
+      SEED_CHARACTERS.every((c) => c.rooms.every((r) => r.modules.every((m) => catalogTypes.has(m.type) || m.type === PROFILE_TYPE))));
+    check('...and every one is registered', SEED_CHARACTERS.every((c) => c.rooms.every((r) => r.modules.every((m) => known.has(m.type)))));
+    check('*** the maths tutor has the calculator in its room (Mike\'s own example) ***',
+      seedById('tally').rooms[0].modules.some((m) => m.type === 'calculator'));
+    check('the story reader has pictures; the quiz host has trivia and brain games',
+      seedById('quill').rooms[0].modules.some((m) => m.type === 'photos')
+      && ['trivia', 'brain_games'].every((t) => seedById('buzzer').rooms[0].modules.some((m) => m.type === t)));
+    check('every seed is ready-made: seed, no owner, nothing shared, voiceModel null',
+      SEED_CHARACTERS.every((c) => c.seed === true && c.owner === null && c.sharedWith.length === 0 && c.voiceModel === null));
+    check('*** no seed names a person or says "her screen", and no seed is anybody\'s second self ***',
+      !NAMES_RE.test(J(SEED_CHARACTERS)) && !/\bmike\b/i.test(J(SEED_CHARACTERS)));
+    check('Nimrod is the cat (a site portrait), with the guide\'s own persona', seedById('nimrod').portrait === 'cat' && seedById('nimrod').persona === DEFAULT_PERSONA);
+    check('each seed\'s voice is a choice, and the seeds are not all one voice',
+      SEED_CHARACTERS.every((c) => VOICE_CHOICES.some((v) => v.id === c.voice)) && new Set(SEED_CHARACTERS.map((c) => c.voice)).size >= 3);
+  }
+
+  // ============================================================================================
+  section('...and the checks are real (negative controls)');
+  {
+    const bad = clone(seedById('tally'));
+    bad.avatar.drawn.hair = 'beehive';
+    bad.rooms[0].modules.push({ ref: 'x', type: 'teleporter' });
+    bad.rooms[0].layout.preset = 'nine-up';
+    bad.voice = 'robot';
+    bad.voiceModel = 'my-voice.onnx';
+    bad.persona = 'This is her screen.';
+    const p = characterProblems(bad, { knownTypes: known });
+    check('an avatar part that is not on its list', p.some((x) => /hair: beehive/.test(x)), p.join('; '));
+    check('a module type nobody describes', p.some((x) => /teleporter is not a module the catalog describes/.test(x)));
+    check('...or that is not registered', p.some((x) => /teleporter is not a registered module/.test(x)));
+    check('a layout that does not exist', p.some((x) => /nine-up does not exist/.test(x)));
+    check('a voice that is not a choice', p.some((x) => /voice robot/.test(x)));
+    check('*** a voice model (nothing trains or loads one yet) ***', p.some((x) => /voiceModel must be null/.test(x)));
+    check('site copy saying "her screen"', p.some((x) => /her screen/.test(x)));
+    const r2 = clone(ROOM_TEMPLATES.maths);
+    r2.id = 'm'; r2.layout.slots = ['me', 'calculator', 'maths'];
+    check('a room whose layout fills fewer places than it has', roomProblems(r2).some((x) => /quad has 4 places/.test(x)) && roomProblems(r2).some((x) => /score is not placed/.test(x)));
+  }
+
+  // ============================================================================================
+  section('*** the room templates ***');
+  {
+    for (const k of Object.keys(ROOM_TEMPLATES)) {
+      const p = roomProblems(roomFromTemplate(k), { knownTypes: known });
+      check(`template ${k} is a valid room`, p.length === 0, p.join('; '));
+    }
+    check('every template is in the order a person steps through', Object.keys(ROOM_TEMPLATES).every((k) => ROOM_TEMPLATE_ORDER.includes(k)));
+    check('roomTypes is the catalog plus the profile card', roomTypes().has(PROFILE_TYPE) && CATALOG.every((c) => roomTypes().has(c.type)));
+    const rec = roomRecord(seedById('tally'), 'maths');
+    const me = rec.modules.find((m) => m.type === PROFILE_TYPE);
+    check('*** a room record points its own card at the character ***', J(me.state.subject) === J({ kind: 'ai', id: 'tally' }), J(me));
+    check('...is named for the character and the room', rec.name === 'Tally: Maths room' && rec.key === roomKey('tally', 'maths'));
+  }
+
+  // ============================================================================================
+  section('*** a person makes their own, changes it, copies a seed ***');
+  {
+    const c = createCharacter({ name: '  Second   self ', persona: 'You talk like me.', goodAt: 'Being me.', voice: 'deep', room: 'maths' },
+      { owner: 'person-1', id: 'c-1', now: 1000 });
+    check('*** created: kind ai, owned, not a seed, voiceModel null, valid ***',
+      c.kind === 'ai' && c.owner === 'person-1' && c.seed === false && c.voiceModel === null && characterProblems(c, { knownTypes: known }).length === 0,
+      characterProblems(c).join('; '));
+    check('the name is tidied, the room is the template asked for', c.name === 'Second self' && c.rooms[0].template === 'maths' && c.voice === 'deep');
+    check('a character made with no face gets a valid drawn one', avatarPartProblems(c.avatar.drawn).length === 0);
+    const blank = createCharacter({}, { id: 'c-2' });
+    check('a blank one is still a whole, valid character', characterProblems(blank, { knownTypes: known }).length === 0, characterProblems(blank).join('; '));
+
+    const e = editCharacter(c, { name: 'Me, again', persona: 'Short answers.', voice: 'bright', room: 'quiz' }, { now: 2000 });
+    check('*** edited: name, persona, voice and room changed; the id and the room\'s id kept ***',
+      e.ok && e.rec.id === 'c-1' && e.rec.name === 'Me, again' && e.rec.persona === 'Short answers.' && e.rec.voice === 'bright'
+      && e.rec.rooms[0].template === 'quiz' && e.rec.rooms[0].id === c.rooms[0].id && e.rec.at === 2000, J(e));
+    const s = editCharacter(seedById('tally'), { name: 'Not Tally' });
+    check('*** a seed is never changed in place: "copy it, and change the copy" ***', !s.ok && s.reason === SEED_EDIT_REASON);
+    check('...and the seed itself is untouched', seedById('tally').name === 'Tally');
+
+    const k = copyCharacter(seedById('nimrod'), { owner: 'person-1', id: 'c-3', now: 3000 });
+    check('*** copied: a new id, the person\'s own, from the seed, rooms kept ***',
+      k.id === 'c-3' && k.seed === false && k.owner === 'person-1' && k.copiedFrom === 'nimrod' && k.name === 'Nimrod (copy)'
+      && J(k.rooms) === J(seedById('nimrod').rooms) && k.persona === seedById('nimrod').persona && characterProblems(k, { knownTypes: known }).length === 0);
+    check('a copy of Nimrod is still the cat; giving it a face makes it that face', k.portrait === 'cat'
+      && !('portrait' in editCharacter(k, { drawn: c.avatar.drawn }).rec));
+    check('a copy can be changed', editCharacter(k, { name: 'My guide' }).rec.name === 'My guide');
+  }
+
+  // ============================================================================================
+  section('*** the person\'s row: kept, capped, read back ***');
+  {
+    const a = createCharacter({ name: 'A' }, { id: 'c-a', owner: 'p' });
+    const b = createCharacter({ name: 'B' }, { id: 'c-b', owner: 'p' });
+    let row = withCharacter({}, a).row;
+    row = withCharacter(row, b).row;
+    row = withCharacter(row, { ...a, name: 'A2' }).row;
+    check('put in, and put in again replaces (by id)', J(readCharacterRow(row).characters.map((c) => c.name)) === J(['A2', 'B']));
+    check('removed', J(withoutCharacter(row, 'c-a').characters.map((c) => c.id)) === J(['c-b']));
+    let full = {};
+    for (let i = 0; i < OWN_MAX; i++) full = withCharacter(full, createCharacter({ name: `N${i}` }, { id: `c-${i}` })).row;
+    check(`at ${OWN_MAX} a new one is refused with a reason (an existing one can still be changed)`,
+      !!withCharacter(full, createCharacter({}, { id: 'c-new' })).error && !withCharacter(full, createCharacter({ name: 'x' }, { id: 'c-0' })).error);
+    check('a stored record claiming a seed\'s id is not read as one\'s own', readCharacterRow({ characters: [{ id: 'nimrod', name: 'Fake' }] }).characters.length === 0);
+    check('*** a stored voiceModel is not kept; a stored share is cleaned ***',
+      readCharacterRow({ characters: [{ id: 'c-z', name: 'Z', voiceModel: 'x', sharedWith: [{ kind: 'account', id: 'acct-2', at: 5 }, { kind: 'group', id: 'g' }, 'junk'] }] })
+        .characters.every((c) => c.voiceModel === null && J(c.sharedWith) === J([{ kind: 'account', id: 'acct-2', at: 5 }])));
+    check('every character: the seeds, then the person\'s own', J(allCharacters(row).map((c) => c.id)) === J(['nimrod', 'tally', 'quill', 'buzzer', 'c-a', 'c-b']));
+    const renamed = findCharacter(row, 'nimrod', { aiRow: { name: 'Ada', persona: 'Brisk and kind.' } });
+    check('*** "your AI": the Nimrod card takes the name and persona the person gave their AI ***', renamed.name === 'Ada' && renamed.persona === 'Brisk and kind.');
+    check('...and with none given, he is Nimrod', findCharacter(row, 'nimrod', { aiRow: {} }).name === 'Nimrod');
+    check('rows of more rooms than a card holds are cut to ROOMS_MAX', normalizeCharacter({ id: 'r', rooms: [1, 2, 3, 4, 5].map((i) => roomFromTemplate('plain', { id: `r${i}` })) }).rooms.length === ROOMS_MAX);
+    check('a stored room that is broken comes back as its template, not as a broken dashboard',
+      characterProblems(normalizeCharacter({ id: 'q', name: 'Q', rooms: [{ id: 'r', template: 'quiz', modules: [{ ref: 'x', type: 'nope' }] }] })).length === 0);
+  }
+
+  // ============================================================================================
+  section('the voice, the prompt, the picker');
+  {
+    check('the screen\'s own voice sends no voice; another choice sends rate and pitch',
+      voiceData(seedById('nimrod')) === null && voiceData(seedById('buzzer')).voice.pitch > 1);
+    const sp = characterSystemPrompt(seedById('tally'));
+    check('a character\'s prompt carries its name, persona and what it is good at', /Your name is Tally\./.test(sp) && sp.includes(seedById('tally').persona) && sp.includes(seedById('tally').goodAt));
+    check('...and names nobody', !NAMES_RE.test(sp));
+    const list = profileEntries({ people: [{ id: 'p1', name: 'Sam' }, { id: 'p2', name: 'Lee' }], characters: allCharacters({}), viewerId: 'p1' });
+    check('the picker: people first ("You" for the viewer), then the characters',
+      list[0].kind === 'person' && list[0].line === 'You' && list[1].line === 'On this account' && list[2].kind === 'ai' && list.length === 6);
+    check('a subject is read only when it is whole', J(readSubject({ kind: 'ai', id: 'x' })) === J({ kind: 'ai', id: 'x' }) && readSubject({ kind: 'robot', id: 'x' }) === null && readSubject(null) === null);
+  }
+
+  // ============================================================================================
+  section('*** where they are kept: the person\'s record, else the panel ***');
+  {
+    const bank = stateBank();
+    const st = await openCharacterStore({ personId: 'p1', makePersonState: (pid, key) => bank.make(pid, key), state: fakeState() });
+    st.set({ characters: [1] });
+    check('with a person: their record, under ai-characters', st.kind === 'person' && J(bank.made[`p1/${AI_CHARACTERS_KEY}`].data()) === J({ characters: [1] }));
+    const panel = fakeState();
+    const st2 = await openCharacterStore({ personId: null, state: panel });
+    st2.set({ characters: [2] });
+    check('with nobody: the panel\'s own state', st2.kind === 'panel' && J(panel.data()[PANEL_ROW_KEY]) === J({ characters: [2] }));
+  }
+
+  // ============================================================================================
+  section('*** a room becomes a dashboard: made once, on the press, re-entrant ***');
+  {
+    const screens = fakeScreens();
+    const bank = stateBank();
+    const store = fakeState();
+    const maker = createRoomMaker({ profiles: screens, store, personId: () => 'p1',
+      makeSettings: (pid) => bank.make(pid, 'settings'), makeInstanceState: (pid, mid) => bank.make(pid, mid) });
+    const tally = seedById('tally');
+    check('nothing is made by making the maker', screens.calls.create.length === 0);
+    const got = await maker.ensure(tally, 'maths');
+    const scr = screens.screens.get(got.id);
+    check('*** made: one dashboard, for the person, named for the room ***', got.created && screens.calls.create.length === 1
+      && screens.calls.create[0].name === 'Tally: Maths room' && screens.calls.create[0].personId === 'p1');
+    check('*** with exactly the room\'s modules ***', J(scr.modules.map((m) => m.type)) === J(['profile', 'calculator', 'algebra', 'scoreboard']));
+    const doc = bank.made[`${got.id}/settings`].data();
+    check('arranged four up, in the room\'s order', doc.kiosk.layout.preset === 'quad' && J(doc.kiosk.layout.slots) === J(scr.modules.map((m) => m.id)), J(doc.kiosk));
+    check('stamped done, with its refs, and the room\'s look', doc[AI_ROOM_KEY] === 'tally/maths' && doc[AI_ROOM_DONE_KEY] === true
+      && Object.keys(doc[AI_ROOM_REFS_KEY]).length === 4 && doc.theme && doc.panelSurface === 'solid');
+    const card = scr.modules.find((m) => m.type === 'profile');
+    check('*** the room\'s own card shows Tally (the avatar, in her room) ***', J(bank.made[`${got.id}/${card.id}`].data().subject) === J({ kind: 'ai', id: 'tally' }));
+    check('the person\'s row remembers it', store.data().rooms['tally/maths'] === got.id);
+    const again = await maker.ensure(tally, 'maths');
+    check('*** a second visit opens the same one: nothing made twice ***', again.id === got.id && !again.created && screens.calls.create.length === 1 && screens.calls.addModule.length === 4);
+    const [x, y] = await Promise.all([maker.ensure(seedById('buzzer'), 'quiz'), maker.ensure(seedById('buzzer'), 'quiz')]);
+    check('two presses at once make one', x.id === y.id && screens.calls.create.length === 2);
+    screens.screens.delete(got.id);
+    const back = await maker.ensure(tally, 'maths');
+    check('deleted since: the next visit makes it again', back.created && back.id !== got.id && screens.calls.create.length === 3);
+    // A page that died half-way: stamped and remembered, one module added, not done.
+    const half = await screens.create('Quill: Story room', 'p1');
+    bank.make(half.id, 'settings').set({ [AI_ROOM_KEY]: 'quill/stories', [AI_ROOM_REFS_KEY]: {} });
+    store.set({ rooms: { ...store.data().rooms, 'quill/stories': half.id } });
+    const m0 = await screens.addModule(half.id, 'profile');
+    bank.make(half.id, 'settings').set({ [AI_ROOM_REFS_KEY]: { me: m0.id } });
+    const done = await maker.ensure(seedById('quill'), 'stories');
+    check('*** a half-made room is FINISHED, not made a second time ***', done.id === half.id && !done.created
+      && J(screens.screens.get(half.id).modules.map((m) => m.type)) === J(['profile', 'photos', 'reading_log', 'word_games'])
+      && bank.made[`${half.id}/settings`].data()[AI_ROOM_DONE_KEY] === true);
+    let threw = false;
+    try { createRoomMaker({ profiles: {} }); } catch { threw = true; }
+    check('a maker with no screens to make on refuses to be made', threw);
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
