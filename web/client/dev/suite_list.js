@@ -96,6 +96,8 @@ export const SUITES = [
   'phone_mic_show',
   // Row 2.44: voice recording for training, and the two-way phone intercom limited to an approved list.
   'voice_recording', 'intercom',
+  // 2026-10-02: the caller page - a family member calls a screen (call.html), gated on the drive grant.
+  'call_page',
   // Rows 2.29 / 2.30: Home is the modules page (save, save as, history, the first sign-in).
   'home_dashboard', 'home_page',
   // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, hot swap).

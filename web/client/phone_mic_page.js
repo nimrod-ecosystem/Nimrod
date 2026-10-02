@@ -144,7 +144,7 @@ export async function mountPhoneMic(root, {
       </label>
       <button type="button" class="pm-btn pm-primary pm-big" data-start>Turn the microphone on</button>
       <details class="pm-help" data-help><summary>Keeping a phone on as a microphone</summary>${KEEP_ON_HELP}</details>
-      <p class="pm-note" data-intercom-link>To talk to the room and hear it back, <a href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead.</p>`
+      <p class="pm-note" data-intercom-link>To talk to the room and hear it back, <a href="./intercom.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">open the intercom</a> instead, or <a data-call-link href="./call.html${pick ? `?person=${encodeURIComponent(pick.id)}` : ''}">place a call</a>.</p>`
       : '<p>This account has no screens it may use. The screen’s owner can share one from the Remote tab.</p>'}`;
   }
 

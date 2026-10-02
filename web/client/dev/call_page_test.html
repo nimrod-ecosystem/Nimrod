@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>the caller page — a family member calls a screen — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #page{position:absolute;left:-9999px;top:0;width:400px}
+</style>
+</head>
+<body>
+<h1>the caller page (call.html)</h1>
+<div class="note">
+  Nothing on the site placed a family call: the screen's Call panel only answers. This is the page a family
+  member opens to call. Checked here: nothing opens before a press; who may call is exactly who may use the
+  screen (the drive grant) and nobody else; ringing, answered, the screen's "no" in words, and ended; the
+  controls; the camera and microphone let go on every end. The camera and microphone are fakes, as in every
+  other call suite, and so are the peer connections. The LIVE section uses the real server and real sockets.
+</div>
+<div id="page"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
+} from '../call_page.js';
+import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS } from '../call_transport.js';
+import { SIGNAL_KINDS, connectDrive } from '../drive.js';
+import { createProfilesClient } from '../profile.js';
+import { LONGEST_RING_S, LONGEST_COUNTDOWN_S } from '../modules/call.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 2000) => { const t0 = performance.now(); while (performance.now() - t0 < ms) { if (fn()) return true; await sleep(10); } return !!fn(); };
+
+function fakeClock() {
+  let t = 0, seq = 0, armed = [];
+  return {
+    setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+    clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+    advance(ms) {
+      const target = t + ms;
+      for (let g = 0; g < 10000; g++) {
+        const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+        if (!due) break;
+        armed = armed.filter((x) => x !== due);
+        t = due.at; due.fn();
+      }
+      t = target;
+    },
+  };
+}
+
+// ---- fake media -------------------------------------------------------------------------------
+let trackSeq = 0;
+function track(kind, deviceId = `${kind}-0`, facingMode = 'user') {
+  return { id: `t${++trackSeq}`, kind, enabled: true, stopped: false, stop() { this.stopped = true; },
+    getSettings: () => ({ deviceId, facingMode }) };
+}
+class FakeStream {
+  constructor(tracks = []) { this.tracks = [...tracks]; }
+  addTrack(t) { if (!this.tracks.includes(t)) this.tracks.push(t); }
+  removeTrack(t) { this.tracks = this.tracks.filter((x) => x !== t); }
+  getTracks() { return [...this.tracks]; }
+  getAudioTracks() { return this.tracks.filter((t) => t.kind === 'audio'); }
+  getVideoTracks() { return this.tracks.filter((t) => t.kind === 'video'); }
+}
+// A browser's getUserMedia: records every ask; `deny` refuses a kind ('video' = no camera, 'audio' = nothing).
+function fakeMedia({ deny = null } = {}) {
+  const asked = [], streams = [];
+  const fn = async (c) => {
+    asked.push(JSON.parse(JSON.stringify(c)));
+    if (deny === 'audio' || (deny === 'video' && c.video)) { const e = new Error('denied'); e.name = 'NotAllowedError'; throw e; }
+    const ts = [];
+    if (c.audio) ts.push(track('audio'));
+    if (c.video) ts.push(track('video', c.video?.deviceId?.exact || 'cam-front', c.video?.deviceId?.exact === 'cam-back' ? 'environment' : 'user'));
+    const s = new FakeStream(ts); streams.push(s); return s;
+  };
+  fn.asked = asked; fn.streams = streams;
+  fn.allTracks = () => streams.flatMap((s) => s.tracks.concat([]));
+  return fn;
+}
+const twoCams = async () => [{ kind: 'videoinput', deviceId: 'cam-front' }, { kind: 'videoinput', deviceId: 'cam-back' }, { kind: 'audioinput', deviceId: 'mic' }];
+
+function fakePeer() {
+  const made = [];
+  class PC {
+    constructor(cfg) {
+      this.cfg = cfg; this.senders = []; this.closed = false;
+      this.iceGatheringState = 'complete'; this.connectionState = 'new';
+      this.localDescription = null; this.remote = null; made.push(this);
+    }
+    addTrack(t, stream) {
+      const s = { track: t, stream, replaced: [], async replaceTrack(n) { this.replaced.push(n); this.track = n; } };
+      this.senders.push(s); return s;
+    }
+    getSenders() { return this.senders; }
+    addEventListener() {}
+    async setRemoteDescription(d) { this.remote = d; }
+    async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async createOffer() { return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    close() { this.closed = true; }
+    fire(state) { this.connectionState = state; this.onconnectionstatechange?.(); }
+  }
+  return { PC, made, last: () => made[made.length - 1] };
+}
+
+// The server's relay and its pick of ONE answering screen, mirrored from drive.py (as call_transport_test does).
+function fakeRoom() {
+  const screens = new Set(), drivers = new Set();
+  const recs = new Map();
+  const arb = (s) => !!s && s.purpose === CALL_PURPOSE && typeof s.session === 'string' && !!s.session;
+  const deliver = (l, sig) => { for (const cb of [...l.subs]) cb(sig); };
+  function tellOthers(me, session) { for (const l of [...screens]) if (l !== me) deliver(l, { kind: 'answerer', purpose: CALL_PURPOSE, session, you: false }); }
+  function join(role) {
+    const subs = new Set();
+    const me = {
+      role, subs, sent: [],
+      sendSignal(s) {
+        if (!SIGNAL_KINDS.includes(s.kind)) return false;
+        me.sent.push(s);
+        const copy = JSON.parse(JSON.stringify(s));
+        if (arb(s)) {
+          const rec = recs.get(s.session);
+          if (role === 'driver') {
+            if (s.kind === 'bye') recs.delete(s.session);
+            else if (s.kind === 'offer' && !(rec && rec.answerer)) recs.set(s.session, { answerer: null, declined: false });
+          } else if (!rec) { if (s.kind !== 'bye') return true; }
+          else if (rec.declined) return true;
+          else if (!rec.answerer) {
+            if (s.kind === 'answer') { rec.answerer = me; tellOthers(me, s.session); }
+            else if (s.kind === 'bye') { rec.declined = true; tellOthers(me, s.session); }
+            else return true;
+          } else if (rec.answerer !== me) return true;
+          else if (s.kind === 'bye') recs.delete(s.session);
+        }
+        for (const l of (role === 'screen' ? [...drivers] : [...screens])) deliver(l, copy);
+        return true;
+      },
+      claim({ purpose, session }) {
+        if (role !== 'screen') return false;
+        const rec = recs.get(session);
+        let won = false;
+        if (rec && !rec.declined) {
+          if (!rec.answerer) { rec.answerer = me; won = true; tellOthers(me, session); } else won = rec.answerer === me;
+        }
+        deliver(me, { kind: 'answerer', purpose, session, you: won });
+        return true;
+      },
+      onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+    };
+    (role === 'screen' ? screens : drivers).add(me);
+    return me;
+  }
+  return { join, screens, drivers };
+}
+// What the page's `connect` gets: a driver socket on the fake room, connected at once, with a presence count.
+function pageConnect(room, { screens = 1 } = {}) {
+  const made = [];
+  const fn = ({ onState, onPresence } = {}) => {
+    const l = room.join('driver');
+    let st = 'connected';
+    l.state = () => st;
+    l.presence = () => ({ screens, drivers: 1 });
+    l.closed = false;
+    l.close = () => { l.closed = true; st = 'offline'; l.subs.clear(); room.drivers.delete(l); };
+    l.drop = () => { st = 'offline'; onState?.('offline'); };
+    l.up = () => { st = 'connected'; onState?.('connected'); };
+    queueMicrotask(() => { onState?.('connected'); onPresence?.({ screens, drivers: 1 }); });
+    made.push(l);
+    return l;
+  };
+  fn.made = made;
+  return fn;
+}
+const screenOn = (room, extra = {}) => {
+  const peers = fakePeer();
+  const link = room.join('screen');
+  const rings = [], ended = [];
+  const t = createCallTransport({ link, role: 'screen', PeerConnection: peers.PC, Stream: FakeStream, ...extra });
+  t.onIncoming((f) => rings.push(f));
+  t.onEnded((r) => ended.push(r));
+  return { t, link, rings, ended, peers };
+};
+const PEOPLE = { people: [{ id: 'p1', name: 'Alex' }] };
+function fakeFetch({ people = PEOPLE, shared = { people: [] }, ticket = 200, me = { user: 'ann@x', display_name: 'Ann' } } = {}) {
+  const calls = [];
+  const fn = async (url, opts = {}) => {
+    calls.push({ url, method: opts.method || 'GET' });
+    const ok = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
+    if (/\/api\/drive\/ticket\//.test(url)) return ok({ ticket: 'T', expires_in: 30 }, ticket);
+    if (/\/api\/people$/.test(url)) return ok(people);
+    if (/\/api\/drive\/shared$/.test(url)) return ok(shared);
+    if (/\/api\/me$/.test(url)) return ok(me);
+    return ok({}, 404);
+  };
+  fn.calls = calls;
+  return fn;
+}
+const root = document.getElementById('page');
+// A seam the page plays streams through; a real <video> refuses a fake stream.
+function fakeAttach() { const log = []; const fn = (el, s) => { log.push({ el: el?.dataset ? Object.keys(el.dataset)[0] : null, s }); }; fn.log = log; return fn; }
+function fakeWin() { const ls = {}; return { addEventListener: (k, fn, o) => { (ls[k] = ls[k] || []).push(fn); o?.signal?.addEventListener?.('abort', () => { ls[k] = (ls[k] || []).filter((f) => f !== fn); }); }, fire: (k) => (ls[k] || []).forEach((f) => f({})) }; }
+
+async function mount(o = {}) {
+  const room = o.room || fakeRoom();
+  const connect = o.connect || pageConnect(room, { screens: o.screens ?? 1 });
+  const peers = fakePeer();
+  const media = o.media || fakeMedia();
+  const fetchImpl = o.fetchImpl || fakeFetch(o.fetchOpts || {});
+  const attach = fakeAttach();
+  const win = fakeWin();
+  const page = await mountCallPage(root, {
+    fetchImpl, connect, getUserMedia: media, attach, win, storage: null, search: o.search ?? '', nav: {},
+    enumerateDevices: o.enumerateDevices || (async () => []),
+    makeTransport: (x) => createCallTransport({ ...x, PeerConnection: peers.PC, Stream: FakeStream }),
+    ...(o.clock ? { setTimer: o.clock.setTimer, clearTimer: o.clock.clearTimer } : {}),
+    ...(o.extra || {}),
+  });
+  return { page, room, connect, peers, media, fetchImpl, attach, win };
+}
+const press = (sel) => { const b = root.querySelector(sel); if (!b) throw new Error(`no ${sel}`); b.click(); };
+const text = () => root.textContent;
+
+(async () => {
+try {
+  // =====================================================================================
+  section('the words, and the one waiting time, argued');
+  check('the two kinds of call', CALL_MODES.join() === 'video,audio');
+  check('*** a screen\'s "busy" reads as "on another call" ***', /another call/i.test(endText('remote', 'busy')));
+  check('a decline says so', endText('remote', 'declined') === CALLER_END_TEXT.declined);
+  check('a ring the screen gave up on says "no answer"', endText('remote', 'unanswered') === 'No answer.');
+  check('the far end hanging up after answering: "the call ended"', endText('remote', 'hangup', { answered: true }) === 'The call ended.');
+  check('an unknown reason before answering: ended before it was answered', /before it was answered/.test(endText('remote', 'something', { answered: false })));
+  check('a connection that never came up says it could not connect, honestly', /could not connect/.test(endText('stalled', null, { connected: false })));
+  check('...and one that dropped says it was lost', endText('stalled', null, { connected: true }) === 'The connection was lost.');
+  const longest = LONGEST_RING_S * 1000 + CALL_CLAIM_MS + GATHER_TIMEOUT_MS;
+  check(`*** the caller waits longer than the screen can ring (${CALLER_GIVE_UP_MS} ms > ${LONGEST_RING_S} s ring + claim + gathering) ***`,
+    LONGEST_RING_S > 0 && CALLER_GIVE_UP_MS > longest, `${CALLER_GIVE_UP_MS} vs ${longest}`);
+  check('...and longer than the longest countdown before a screen answers by itself',
+    CALLER_GIVE_UP_MS > LONGEST_COUNTDOWN_S * 1000 + CALL_CLAIM_MS + GATHER_TIMEOUT_MS && LONGEST_COUNTDOWN_S > 0);
+  check('...but minutes, not forever (a caller is not left with a ring nobody hears)', CALLER_GIVE_UP_MS <= 3 * 60 * 1000);
+  check('connect and presence waits are short and positive', CONNECT_MS > 0 && CONNECT_MS <= 30000 && PRESENCE_MS > 0 && PRESENCE_MS < CONNECT_MS);
+
+  // =====================================================================================
+  section('*** nothing opens before a press ***');
+  {
+    const M = await mount({ search: '?person=p1' });
+    check('the page offers the person and two buttons: video, and audio only',
+      !!root.querySelector('[data-person] option[value="p1"]') && !!root.querySelector('[data-start="video"]') && !!root.querySelector('[data-start="audio"]'));
+    check('*** no camera, no microphone, no socket, no ticket on load ***',
+      M.media.asked.length === 0 && M.page.opened().media === 0 && M.page.opened().sockets === 0
+      && !M.fetchImpl.calls.some((c) => /ticket/.test(c.url)), JSON.stringify(M.fetchImpl.calls));
+    check('it says the name the screen will show', /from “Ann”/.test(root.querySelector('[data-shown-as]')?.textContent || ''));
+    check('the intercom is one link away, for the same person', /intercom\.html\?person=p1/.test(root.querySelector('[data-intercom-link]')?.getAttribute('href') || ''));
+    check('site copy never says "her screen", "Christine" or "Cici"', !/her screen|Christine|Cici/i.test(text()));
+    M.page.destroy();
+  }
+  {
+    const M = await mount({ fetchOpts: { me: { user: 'x', display_name: '' } } });
+    check('no name set: it says the screen will show "Someone", and why', /“Someone”/.test(text()) && /not set/.test(text()));
+    M.page.destroy();
+  }
+
+  // =====================================================================================
+  section('*** who may call: exactly who may use the screen (the drive grant), and nobody else ***');
+  {
+    const M = await mount({ fetchOpts: { ticket: 403 } });
+    press('[data-start="video"]');
+    await settled(() => M.page.state() === 'idle' && !!M.page.ended());
+    check('*** an account the site refuses is told so in plain words ***', /not allowed to call that screen/.test(M.page.ended() || ''), M.page.ended());
+    check('*** ...and NOTHING was opened for it: no camera, no microphone, no socket ***',
+      M.media.asked.length === 0 && M.page.opened().sockets === 0 && M.connect.made.length === 0);
+    check('it asked the same ticket the socket needs (the intercom\'s gate)', M.fetchImpl.calls.some((c) => /\/api\/drive\/ticket\/p1$/.test(c.url) && c.method === 'POST'));
+    M.page.destroy();
+  }
+  {
+    // A person this account cannot see is not on the list, so it cannot be picked - even named in the link.
+    const M = await mount({ search: '?person=somebody-else' });
+    const opts = [...root.querySelectorAll('[data-person] option')].map((o) => o.value);
+    check('a person id in the link that this account may not use is not offered', !opts.includes('somebody-else') && opts.join() === 'p1', opts.join());
+    M.page.destroy();
+  }
+  {
+    const fetchImpl = async () => ({ ok: false, status: 401, json: async () => ({}) });
+    const page = await mountCallPage(root, { fetchImpl, storage: null, search: '', nav: {}, win: fakeWin(), getUserMedia: fakeMedia() });
+    check('signed out: it asks to sign in, and comes back here after', /Sign in/.test(text()) && /next=%2Fcall\.html/.test(root.querySelector('a')?.getAttribute('href') || ''));
+    page.destroy();
+  }
+
+  // =====================================================================================
+  section('*** a video call: ringing, answered, in a call, the controls, hang up ***');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, enumerateDevices: twoCams });
+    press('[data-start="video"]');
+    await settled(() => M.page.state() === 'ringing' && S.rings.length === 1);
+    check('*** the screen rings ***', S.rings.length === 1, String(S.rings.length));
+    check('*** it rings as a VIDEO call, from the caller\'s name ***', S.rings[0]?.name === 'Ann' && S.rings[0]?.video === true, JSON.stringify(S.rings[0]));
+    const offer = M.connect.made[0]?.sent.find((s) => s.kind === 'offer');
+    check('*** tagged: purpose "call" and a session (every screen rings, one answers) ***',
+      offer?.purpose === CALL_PURPOSE && /^call-[0-9a-f]{16}$/.test(offer?.session || ''), JSON.stringify(offer));
+    check('the page says it is ringing, and who', root.querySelector('[data-word]')?.textContent === 'Ringing…' && /Alex/.test(root.querySelector('[data-who]')?.textContent || ''));
+    check('the camera and microphone opened only now, once, both', M.media.asked.length === 1 && !!M.media.asked[0].video && !!M.media.asked[0].audio);
+    const sent = M.peers.last().senders.map((s) => s.track.kind).sort().join();
+    check('both are sent', sent === 'audio,video', sent);
+    check('this device sees itself in a corner', !root.querySelector('[data-self]').hidden);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    await settled(() => M.page.state() === 'answered');
+    check('*** answered: the page says so ***', M.page.state() === 'answered' && /Answered/.test(root.querySelector('[data-word]').textContent));
+    M.peers.last().fire('connected');
+    check('*** connected: "In a call", and the room\'s picture takes the stage ***',
+      M.page.state() === 'in-call' && root.querySelector('[data-word]').textContent === 'In a call' && !root.querySelector('[data-remote]').hidden && root.dataset.live === '1');
+    const [mic] = M.media.streams[0].getAudioTracks();
+    const [cam] = M.media.streams[0].getVideoTracks();
+    press('[data-mute]');
+    check('*** Mute: the microphone track stops sending, the button says so ***', mic.enabled === false && root.querySelector('[data-mute]').getAttribute('aria-pressed') === 'true' && root.querySelector('[data-mute]').textContent === 'Unmute');
+    press('[data-mute]');
+    check('...and back', mic.enabled === true);
+    press('[data-cam]');
+    check('*** Camera off: the camera track stops sending ***', cam.enabled === false && root.querySelector('[data-cam]').textContent === 'Camera on');
+    check('switch camera is offered (this device has two)', !root.querySelector('[data-flip]').hidden);
+    press('[data-flip]');
+    await settled(() => M.media.asked.length === 2 && M.peers.last().senders.find((s) => s.track.kind === 'video')?.replaced.length === 1);
+    const vs = M.peers.last().senders.find((s) => s.track.kind === 'video');
+    check('*** switch camera: the other camera is SENT in the same slot (no new call) ***',
+      vs.replaced.length === 1 && vs.track.getSettings().deviceId === 'cam-back' && M.media.asked[1].video?.deviceId?.exact === 'cam-back', JSON.stringify(M.media.asked[1]));
+    check('...the old camera is let go, and the new one stays off (camera off carries over)', cam.stopped === true && vs.track.enabled === false);
+    check('...and the self view is not mirrored for a camera facing away', root.querySelector('[data-self]').dataset.rear === '1');
+    check('the screen\'s call is live', S.t.isLive());
+    press('[data-hangup]');
+    check('*** Hang up: the screen\'s call ends ***', !S.t.isLive() && S.ended.join() === 'remote', JSON.stringify(S.ended));
+    check('*** ...and every camera and microphone track this page opened is stopped ***',
+      M.media.allTracks().every((t) => t.stopped), JSON.stringify(M.media.allTracks().map((t) => [t.kind, t.stopped])));
+    check('...the socket is closed, and the page is back at the start saying the call ended',
+      M.connect.made[0].closed && M.page.state() === 'idle' && !M.page.media() && /The call ended/.test(text()));
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('an audio-only call');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, enumerateDevices: twoCams });
+    press('[data-start="audio"]');
+    await settled(() => S.rings.length === 1);
+    check('*** only the microphone is asked for ***', M.media.asked.length === 1 && !M.media.asked[0].video && !!M.media.asked[0].audio, JSON.stringify(M.media.asked));
+    check('the screen rings as an AUDIO call (it shows the caller\'s name, not a black picture)', S.rings[0]?.video === false);
+    check('no camera controls', root.querySelector('[data-cam]').hidden && root.querySelector('[data-flip]').hidden && root.querySelector('[data-self]').hidden);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    M.peers.last().fire('connected');
+    check('in a call, the stage shows their name, not a picture', M.page.state() === 'in-call' && root.querySelector('[data-remote]').hidden && !root.querySelector('[data-card]').hidden);
+    M.page.hangup();
+    check('the microphone is let go', M.media.allTracks().every((t) => t.stopped));
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('a camera or microphone that is refused');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, media: fakeMedia({ deny: 'video' }) });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    check('*** no camera: it falls back to an audio call and says so ***',
+      M.page.mode() === 'audio' && S.rings[0]?.video === false && /audio call/.test(root.querySelector('[data-note]').textContent), root.querySelector('[data-note]')?.textContent);
+    M.page.destroy(); S.t.destroy();
+  }
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, media: fakeMedia({ deny: 'audio' }) });
+    press('[data-start="audio"]');
+    await settled(() => M.page.state() === 'idle' && !!M.page.ended());
+    check('*** no microphone: it cannot call, says why, and nothing rang ***', /microphone/.test(M.page.ended() || '') && S.rings.length === 0, M.page.ended());
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('*** nobody to ring ***');
+  {
+    const room = fakeRoom();
+    const M = await mount({ room, screens: 0 });
+    press('[data-start="video"]');
+    await settled(() => M.page.state() === 'idle' && !!M.page.ended());
+    check('*** none of the person\'s screens connected: it says so, and never opens the camera ***',
+      /screens are connected right now/.test(M.page.ended() || '') && M.media.asked.length === 0, M.page.ended());
+    M.page.destroy();
+  }
+
+  // =====================================================================================
+  section('*** the screen\'s "no", in words ***');
+  for (const [why, want] of [['declined', /declined/], ['busy', /another call/], ['unanswered', /No answer/]]) {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    S.t.hangup(why);           // what the Call panel sends for a decline / a ring it gave up on; busy is the transport's own
+    await settled(() => M.page.state() === 'idle');
+    check(`*** ${why}: "${M.page.ended()}" ***`, want.test(M.page.ended() || ''), M.page.ended());
+    check(`${why}: the camera and microphone are let go`, M.media.allTracks().length > 0 && M.media.allTracks().every((t) => t.stopped));
+    M.page.destroy(); S.t.destroy();
+  }
+  {
+    // The transport's own busy: a screen with an intercom open, set to "busy".
+    const room = fakeRoom();
+    const S = screenOn(room, { busy: () => true });
+    const M = await mount({ room });
+    press('[data-start="audio"]');
+    await settled(() => M.page.state() === 'idle');
+    check('*** a screen busy with something else: "on another call" ***', /another call/.test(M.page.ended() || ''), M.page.ended());
+    M.page.destroy(); S.t.destroy();
+  }
+  {
+    // The screen hanging up after answering.
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    M.peers.last().fire('connected');
+    S.t.hangup('hangup');
+    await settled(() => M.page.state() === 'idle');
+    check('the room hanging up: "the call ended"', M.page.ended() === 'The call ended.', M.page.ended());
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('*** two screens: both ring, one answers, the caller sees ONE call ***');
+  {
+    const room = fakeRoom();
+    const A = screenOn(room), B = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => A.rings.length === 1 && B.rings.length === 1);
+    check('both screens ring', A.rings.length === 1 && B.rings.length === 1);
+    await A.t.answer({ outgoing: { kind: 'video' } });
+    await settled(() => M.page.state() === 'answered');
+    check('*** the other stopped ("handled on another screen" is the screens\' business), the caller is simply answered ***',
+      B.ended.join() === 'elsewhere' && M.page.state() === 'answered' && !/another screen/i.test(text()), JSON.stringify(B.ended));
+    M.page.destroy(); A.t.destroy(); B.t.destroy();
+  }
+
+  section('*** nothing replies at all: it gives up, says so, and tells the screens ***');
+  {
+    const clock = fakeClock();
+    const room = fakeRoom();
+    const deaf = room.join('screen');           // connected, but no Call panel: it never answers
+    const got = []; deaf.onSignal((s) => got.push(s));
+    const M = await mount({ room, clock });
+    press('[data-start="video"]');
+    await settled(() => M.page.state() === 'ringing');
+    clock.advance(CALLER_GIVE_UP_MS - 1); await sleep(5);
+    check('still ringing just before the limit', M.page.state() === 'ringing');
+    clock.advance(1); await sleep(5);
+    check('*** at the limit: "No answer.", and the camera and microphone are let go ***',
+      M.page.state() === 'idle' && M.page.ended() === 'No answer.' && M.media.allTracks().every((t) => t.stopped), M.page.ended());
+    check('...and the screens are told it is over (a ring left going would answer into nothing)', got.some((s) => s.kind === 'bye' && s.reason === 'unanswered'), JSON.stringify(got.map((s) => s.kind)));
+    M.page.destroy();
+  }
+
+  section('*** the page going away hangs up and lets go ***');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    M.peers.last().fire('connected');
+    M.win.fire('pagehide');
+    check('*** pagehide: the call ends at the screen, and the camera and microphone are let go ***',
+      !S.t.isLive() && M.media.allTracks().every((t) => t.stopped) && M.page.state() === 'idle');
+    M.page.destroy(); S.t.destroy();
+  }
+
+  section('a connection that drops mid-call is offered again, on the same call');
+  {
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    await settled(() => M.page.state() === 'answered');
+    const first = M.peers.last();
+    first.fire('connected');
+    const session = M.connect.made[0].sent.find((s) => s.kind === 'offer').session;
+    first.fire('failed');
+    check('the page says it is reconnecting', M.page.state() === 'reconnecting');
+    await settled(() => M.connect.made[0].sent.filter((s) => s.kind === 'offer').length === 2);
+    const offers = M.connect.made[0].sent.filter((s) => s.kind === 'offer');
+    check('*** the caller offers again, on the SAME session, with the same tracks ***',
+      offers.length === 2 && offers[1].session === session && M.peers.last() !== first
+      && M.peers.last().senders.map((s) => s.track.kind).sort().join() === 'audio,video', JSON.stringify(offers.map((o) => o.session)));
+    await settled(() => S.peers.made.length === 2);
+    check('*** the screen in the call re-answers it without ringing again ***', S.rings.length === 1 && S.t.isLive() && S.peers.made.length === 2);
+    M.peers.last().fire('connected');
+    check('...and the page is back in the call', M.page.state() === 'in-call');
+    // A second drop: one re-offer again - and when THAT connection fails too, no third, fourth...
+    M.peers.last().fire('failed');
+    await settled(() => M.connect.made[0].sent.filter((s) => s.kind === 'offer').length === 3);
+    M.peers.last().fire('failed');
+    await sleep(30);
+    const n = M.connect.made[0].sent.filter((s) => s.kind === 'offer').length;
+    check('a re-offer that fails too is not retried for ever (once per drop; the stall clock ends it)', n === 3, String(n));
+    M.page.destroy(); S.t.destroy();
+  }
+
+  // =====================================================================================
+  section('*** LIVE, through the real server: a granted account calls; an ungranted one cannot ***');
+  try {
+    const OWNER = 'callpage-owner-' + Math.floor(Math.random() * 1e9);
+    const CALLER = 'callpage-caller-' + Math.floor(Math.random() * 1e9);
+    const person = (await createProfilesClient({ user: OWNER }).people())[0];
+    check('(setup) the owner has a person', !!person);
+    const api = (who, path, opts = {}) => fetch(path, { ...opts, headers: { 'X-Dev-User': who, 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+    await api(CALLER, '/api/me/display-name', { method: 'PUT', body: JSON.stringify({ name: 'Tester Two' }) });
+    // The screen: the owner's kiosk socket and a call transport (fake peer connection), as the kiosk builds it.
+    const sLink = connectDrive({ personId: person.id, role: 'screen', user: OWNER });
+    const raw = []; sLink.onSignal((s) => raw.push(s));
+    const sp = fakePeer(); const rings = [], ended = [];
+    const S = createCallTransport({ link: sLink, role: 'screen', PeerConnection: sp.PC, Stream: FakeStream });
+    S.onIncoming((f) => rings.push(f)); S.onEnded((r) => ended.push(r));
+    check('(setup) the screen connected to the real server', await settled(() => sLink.state() === 'connected', 8000));
+
+    // 1. NO GRANT. The caller's own list does not offer the person, and the server refuses the ticket.
+    const t1 = await api(CALLER, `/api/drive/ticket/${person.id}`, { method: 'POST' });
+    check('*** LIVE: without a grant the server refuses the caller a ticket (403) ***', t1.status === 403, String(t1.status));
+    const mk = async () => {
+      const peers = fakePeer(); const media = fakeMedia();
+      const page = await mountCallPage(root, { user: CALLER, storage: null, search: `?person=${person.id}`, nav: {}, win: fakeWin(),
+        getUserMedia: media, attach: () => {}, enumerateDevices: async () => [],
+        makeTransport: (x) => createCallTransport({ ...x, PeerConnection: peers.PC, Stream: FakeStream }) });
+      return { page, peers, media };
+    };
+    const P0 = await mk();
+    check('*** LIVE: without a grant the person is not on the caller\'s list ***', !P0.page.people().some((p) => p.id === person.id), JSON.stringify(P0.page.people()));
+    P0.page.destroy();
+    const sneak = connectDrive({ personId: person.id, role: 'driver', user: CALLER });
+    await sleep(1500);
+    check('*** LIVE: ...and a socket opened anyway never connects, so nothing can ring ***', sneak.state() !== 'connected' && rings.length === 0, sneak.state());
+    sneak.close();
+
+    // 2. THE OWNER GRANTS. Now the caller's page lists the person and the call goes through.
+    const g = await (await api(OWNER, `/api/people/${person.id}/drive-grants`, { method: 'POST', body: JSON.stringify({ subject_id: CALLER, label: 'test' }) })).json();
+    check('(setup) the owner granted the caller', !!g?.id, JSON.stringify(g));
+    const P = await mk();
+    check('LIVE: with the grant, the person is on the caller\'s list', P.page.people().some((p) => p.id === person.id));
+    check('LIVE: and it shows the caller\'s own name', /“Tester Two”/.test(text()));
+    root.querySelector('[data-person]').value = person.id;
+    press('[data-start="video"]');
+    check('*** LIVE: the screen rings, as a video call from the caller\'s name ***',
+      await settled(() => rings.length === 1, 10000) && rings[0]?.name === 'Tester Two' && rings[0]?.video === true, JSON.stringify(rings));
+    const offer = raw.find((s) => s.kind === 'offer');
+    check('*** LIVE: the server stamped WHO called (by = the caller\'s account; it cannot be forged) ***',
+      offer?.by === CALLER && offer?.purpose === CALL_PURPOSE, JSON.stringify(offer && { by: offer.by, purpose: offer.purpose }));
+    check('LIVE: the page says ringing', P.page.state() === 'ringing');
+    await S.answer({ outgoing: { kind: 'video' } });
+    check('*** LIVE: answered on the screen -> the caller\'s page says answered ***', await settled(() => P.page.state() === 'answered', 6000), P.page.state());
+    P.peers.last().fire('connected');
+    check('LIVE: in a call', P.page.state() === 'in-call');
+    press('[data-hangup]');
+    check('*** LIVE: the caller hangs up -> the screen\'s call ends ***', await settled(() => !S.isLive() && ended.includes('remote'), 6000), JSON.stringify(ended));
+    check('LIVE: the caller\'s camera and microphone are let go', P.media.allTracks().every((t) => t.stopped));
+
+    // 3. A decline, for real.
+    press('[data-start="audio"]');
+    await settled(() => rings.length === 2, 10000);
+    S.hangup('declined');
+    check('*** LIVE: declined on the screen -> the caller is told ***', await settled(() => /declined/.test(P.page.ended() || ''), 6000), P.page.ended());
+
+    // 4. THE GRANT IS TAKEN BACK while the page is open: the next press is refused, and nothing opens.
+    await api(OWNER, `/api/people/${person.id}/drive-grants/${g.id}`, { method: 'DELETE' });
+    const askedBefore = P.media.asked.length;
+    press('[data-start="video"]');
+    check('*** LIVE: grant revoked -> the press is refused in plain words ***', await settled(() => /not allowed to call/.test(P.page.ended() || ''), 6000), P.page.ended());
+    await sleep(500);
+    check('*** LIVE: ...no camera or microphone was opened, and the screen did not ring ***', P.media.asked.length === askedBefore && rings.length === 2, `${P.media.asked.length - askedBefore} ${rings.length}`);
+    P.page.destroy();
+    S.destroy(); sLink.close();
+  } catch (e) {
+    check('live section ran', false, String((e && e.stack) || e));
+  }
+
+  section('the caller page is not indexed, and is reached from the intercom and the phone microphone pages');
+  {
+    const txt = await fetch('../robots.txt', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : '')).catch(() => '');
+    check('robots.txt disallows /call.html', /^Disallow:\s*\/call\.html\s*$/m.test(txt), txt.slice(0, 400));
+    const ic = await fetch('../intercom_page.js', { cache: 'no-store' }).then((r) => r.text());
+    const pm = await fetch('../phone_mic_page.js', { cache: 'no-store' }).then((r) => r.text());
+    check('the intercom page links to it, for the same person', /call\.html\$\{pick \?/.test(ic));
+    check('the phone microphone page links to it, for the same person', /call\.html\$\{pick \?/.test(pm));
+    const html = await fetch('../call.html', { cache: 'no-store' }).then((r) => r.text());
+    check('the page itself sets no colour of its own (theme variables only)', !/#[0-9a-fA-F]{3,8}\b|rgba?\(/.test(html.replace(/<script[\s\S]*?<\/script>/g, '')));
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
