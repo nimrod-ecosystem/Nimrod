@@ -14,9 +14,15 @@
 // a private window or blocked storage reads as the defaults, never a throw. `model: ''` means
 // "choose automatically from what this server has" (`pickModel`).
 //
-// NO API KEY IN THIS PASS. A bring-your-own-key endpoint needs somewhere safe to keep the key and
-// a decision about whether it may ever leave the device; that is later work, not an empty field
-// here. No Authorization header is sent.
+// BRING YOUR OWN KEY (2026-10-02, the Nimrod guide's "Talk to" mode). The project rule is that for
+// anybody but Mike the AI must cost Mike nothing: a local model, a free endpoint, or the person's OWN
+// key. A key is kept ONLY in this browser, under its own storage key (`AI_KEY_KEY`, apart from
+// `{ baseUrl, model }` so the settings object can be shown or logged without it), and it is sent
+// ONLY to the address this device was given, as `Authorization: Bearer <key>`. It never goes to
+// the Nimrod server. No key saved = no header, exactly as before (Ollama needs none).
+//   Argued: FOR keeping it on the server (follows the person to every screen) - it would then sit
+//   in our database, and a leak would be somebody's paid account. FOR the browser (chosen): the
+//   key never leaves the device that typed it; the cost is typing it once per device.
 //
 // ERRORS ARE A PLAIN REASON STRING, never a throw into a module: every call resolves to
 // `{ ok: true, ... }` or `{ ok: false, reason, cancelled?, timedOut? }`, the reason in words a
@@ -28,6 +34,7 @@
 // could put a permission prompt on a screen nobody is there to answer.
 
 export const AI_SETTINGS_KEY = 'nimrod.ai.device';
+export const AI_KEY_KEY = 'nimrod.ai.key';            // the person's own API key, this browser only
 export const DEFAULT_BASE_URL = 'http://127.0.0.1:11434/v1';     // Ollama's OpenAI-compatible API
 // A 7B model on a CPU-only desktop can take minutes to write a set of questions, so the default
 // is generous; every call can pass its own (`modules/lessons.js` exposes it as a setting).
@@ -61,6 +68,25 @@ export function writeAISettings(patch = {}, storage = defaultStorage()) {
   if ('model' in patch) next.model = typeof patch.model === 'string' ? patch.model.trim() : '';
   try { storage?.setItem(AI_SETTINGS_KEY, JSON.stringify(next)); } catch { /* read-only storage: keep defaults */ }
   return next;
+}
+
+/** The saved key, or '' (none, unreadable storage, or garbage). */
+export function readAIKey(storage = defaultStorage()) {
+  try {
+    const v = storage ? storage.getItem(AI_KEY_KEY) : null;
+    return typeof v === 'string' && /^[\x21-\x7e]{1,400}$/.test(v.trim()) ? v.trim() : '';
+  } catch { return ''; }
+}
+
+/** Save a key ('' or anything blank forgets it). Returns whether one is now saved. */
+export function writeAIKey(key, storage = defaultStorage()) {
+  const k = typeof key === 'string' ? key.trim() : '';
+  try {
+    if (k && /^[\x21-\x7e]{1,400}$/.test(k)) storage?.setItem(AI_KEY_KEY, k);
+    else if (typeof storage?.removeItem === 'function') storage.removeItem(AI_KEY_KEY);
+    else storage?.setItem(AI_KEY_KEY, '');
+  } catch { /* read-only storage */ }
+  return !!readAIKey(storage);
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -195,7 +221,10 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
     try {
       // credentials 'omit': the server address comes from this device's storage, so never send the
       // site's cookies with it, even if it points somewhere unexpected.
-      const res = await fetchImpl(url, { ...init, credentials: 'omit', signal: ctl.signal });
+      // The person's own key, if this device has one: to the configured address only (see the top).
+      const key = readAIKey(storage);
+      const headers = key ? { ...(init.headers || {}), Authorization: `Bearer ${key}` } : init.headers;
+      const res = await fetchImpl(url, { ...init, ...(headers ? { headers } : {}), credentials: 'omit', signal: ctl.signal });
       if (res.status === 403) {
         return { ok: false, status: 403, reason: explainFailure({ kind: 'forbidden', baseUrl: base, pageOrigin }) };
       }
@@ -311,6 +340,8 @@ export function createAI({ fetchImpl = (...a) => fetch(...a), storage = defaultS
   return {
     settings,
     setSettings: (patch) => writeAISettings(patch, storage),
+    hasKey: () => !!readAIKey(storage),
+    setKey: (key) => writeAIKey(key, storage),
     listModels,
     resolveModel,
     chat,

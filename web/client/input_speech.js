@@ -89,6 +89,10 @@ export const LISTENING_TOPIC = 'speech/listening';
 // and the suite checks they agree.
 //   speech/grammar   a game says what it can accept right now:
 //                    { source, instanceId, open, words, phase }
+//                    `dictation: true` (2026-10-02, the Nimrod guide's "Talk to" chat): ANY words,
+//                    not a list - open recognition, and whatever is said without the wake phrase
+//                    goes to it as `speech/answer` { text, dictation: true }. A wake phrase still
+//                    means a command, exactly as for a game, so no ordinary command is taken.
 //   speech/answer    what was heard, sent to that game (to `speech/answer#<instanceId>` when the
 //                    game said which instance it is): { text, confidence?, alternatives?, reason? }
 export const SPEECH_GRAMMAR_TOPIC = 'speech/grammar';
@@ -1240,11 +1244,12 @@ export function attachSpeech(input, {
     if (!p || typeof p !== 'object') return;
     const key = p.instanceId ? `#${p.instanceId}` : `@${p.source || ''}`;
     const words = Array.isArray(p.words) ? p.words.filter((w) => typeof w === 'string' && w) : [];
-    const isOpen = p.open !== false && words.length > 0;
+    const dictation = p.dictation === true;
+    const isOpen = p.open !== false && (words.length > 0 || dictation);
     if (isOpen) {
       const had = games.get(key);
       // A game re-announcing (a new phase) keeps its place; a newly opened one goes to the front.
-      games.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, words,
+      games.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, words, dictation,
                        phase: p.phase || null, seq: had ? had.seq : ++gameSeq });
     } else games.delete(key);
     syncAnswering();
@@ -1254,6 +1259,14 @@ export function attachSpeech(input, {
     ? bus.subscribe(SPEECH_GRAMMAR_TOPIC, onGrammar) : () => {};
 
   function answer(g, text, detail) {
+    // DICTATION (a chat): the words themselves, whatever they are; nothing to match, nothing to ask.
+    if (g.dictation) {
+      const t = String(text || '').trim();
+      const sent = !!t && t.toLowerCase() !== UNKNOWN_WORD;
+      report({ text, verb: null, woke: false, answer: true, sent, dictation: true });
+      if (sent) publish(answerTopic(g), { ...detail, text: t, dictation: true });
+      return;
+    }
     const said = normalize(text);
     const unk = String(text || '').trim().toLowerCase() === UNKNOWN_WORD;
     const known = unk || g.words.some((w) => (w === UNKNOWN_WORD ? false : normalize(w) === said));
@@ -1302,6 +1315,8 @@ export function attachSpeech(input, {
     }
     const g = currentGame();
     if (g) {
+      // Dictation cannot be a grammar: a grammar-limited engine can only hear what is listed.
+      if (g.dictation) return { mode: 'open', grammar: null, why: 'answer' };
       return answerHow === 'grammar'
         ? { mode: 'grammar', grammar: answerGrammar(g.words, wakes, spokenNow()), why: 'answer' }
         : { mode: 'open', grammar: null, why: 'answer' };

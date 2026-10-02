@@ -22,7 +22,7 @@ otherwise records a SKIP rather than a pass.</p>
 <script type="module">
 import {
   createAI, pickModel, modelSize, readAISettings, writeAISettings, explainFailure,
-  AI_SETTINGS_KEY, DEFAULT_BASE_URL,
+  AI_SETTINGS_KEY, DEFAULT_BASE_URL, AI_KEY_KEY, readAIKey, writeAIKey,
 } from '../ai.js';
 import { buildPrompt, parseQuestions, checkQuestions, videoMinutes } from '../transcript_quiz.js';
 
@@ -100,6 +100,29 @@ const MODELS = { object: 'list', data: [{ id: 'qwen2.5:7b' }, { id: 'nomic-embed
     check('garbage in storage reads as defaults', readAISettings(memStorage({ [AI_SETTINGS_KEY]: '{not json' })).baseUrl === DEFAULT_BASE_URL);
     check('a non-http base URL is refused and the default used',
       readAISettings(memStorage({ [AI_SETTINGS_KEY]: J({ baseUrl: 'javascript:alert(1)' }) })).baseUrl === DEFAULT_BASE_URL);
+
+    // ================= bring your own key =================
+    section('*** your own key: this browser only, sent only to the address it was given ***');
+    {
+      const ks = memStorage();
+      check('no key saved: none read', readAIKey(ks) === '' && createAI({ storage: ks }).hasKey() === false);
+      check('a key is saved under its OWN storage key, apart from the settings object',
+        writeAIKey('  sk-test-123  ', ks) === true && ks._m.get(AI_KEY_KEY) === 'sk-test-123' && !('key' in readAISettings(ks)) && !('apiKey' in readAISettings(ks)));
+      const f = fakeFetch((url) => (url.endsWith('/models') ? resp(200, MODELS) : resp(200, { choices: [{ message: { content: 'hi' } }] })));
+      const ai = createAI({ fetchImpl: f, storage: ks });
+      await ai.chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      await ai.listModels();
+      check('*** with a key: every request carries Authorization: Bearer <key> ***',
+        f.calls.length === 2 && f.calls.every((c) => c.opts.headers?.Authorization === 'Bearer sk-test-123'), J(f.calls.map((c) => c.opts.headers)));
+      check('...and still never the site’s cookies', f.calls.every((c) => c.opts.credentials === 'omit'));
+      check('a key with spaces or control characters inside is refused', writeAIKey('two words', ks) === false && readAIKey(ks) === '');
+      writeAIKey('sk-again', ks);
+      check('blank forgets it', ai.setKey('') === false && !ai.hasKey());
+      const f2 = fakeFetch(() => resp(200, { choices: [{ message: { content: 'hi' } }] }));
+      await createAI({ fetchImpl: f2, storage: memStorage() }).chat([{ role: 'user', content: 'x' }], { model: 'm' });
+      check('*** no key: no Authorization header at all (Ollama, exactly as before) ***', !f2.calls[0].opts.headers?.Authorization);
+      check('storage that throws: no key, never a throw', readAIKey(throwingStorage) === '' && writeAIKey('k', throwingStorage) === false);
+    }
 
     // ================= listing =================
     section('listModels / resolveModel over a fake server');

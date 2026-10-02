@@ -527,8 +527,8 @@ try {
     check('*** the info line along the bottom is put away while Nimrod is there saying it himself ***',
       await until(() => $('.nimrod-infoline')?.hidden === true, 4000));
     $('#stage [data-ng-choice="0"]').click();               // A. game or learning
-    check('*** his choice A shows the game settings in the settings panel (Learning mode) ***',
-      await until(() => /Learning mode/.test($('#stage [data-settings-root] [data-page] .st-head')?.textContent || ''), 6000)
+    check('*** his choice A shows the game settings in the settings panel (Nimrod Game) ***',
+      await until(() => /Nimrod Game/.test($('#stage [data-settings-root] [data-page] .st-head')?.textContent || ''), 6000)
       && /no real-world value/.test($('#stage [data-ng-say]').textContent));
     $('#stage [data-ng-back]').click();
     check('Back takes him back', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 4000));

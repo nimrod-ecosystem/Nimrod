@@ -32,7 +32,7 @@ import { DASHBOARD_GO_TOPIC } from '../dashboards.js';
 import { CATALOG } from '../modules_catalog.js';
 import {
   GUIDE_NODES, GUIDE_ROOT, GUIDE_TOPICS, GUIDE_VERB_TOPICS, LANDING_INTRO, INTROS, DEVICE_KINDS, treeProblems,
-  treeParents, treePath, treeRows, createGuideNav, wordsFor, actMessages, introFor,
+  treeParents, treePath, treeRows, createGuideNav, wordsFor, actMessages, introFor, POINTS_DISCLAIMER,
 } from '../nimrod_guide_data.js';
 import { selectionAt, explainAt } from '../cat_help.js';
 import { watchHover, mountInfoLine, INFO_LINE_IDLE } from '../hover_info.js';
@@ -135,19 +135,19 @@ try {
       /replacing the pictures/.test(other.say) && /replace any module whenever you want, including me/.test(other.say)
       && other.acts.some((a) => a.kind === 'switch' && a.type === 'photos'));
     const mode = GUIDE_NODES.mode;
-    check('*** points: no real-world value, and no coins or microtransactions sold ***',
-      /no real-world value/.test(mode.say) && /do not sell coins or any other microtransactions/.test(mode.say)
-      && /no real-world value/.test(GUIDE_NODES.points.say) && /microtransactions/.test(GUIDE_NODES.points.say));
+    check('*** points: no real-world value, and no coins or microtransactions sold (Mike’s sentence, verbatim) ***',
+      mode.say.includes(POINTS_DISCLAIMER) && GUIDE_NODES.points.say.includes(POINTS_DISCLAIMER)
+      && /no real-world value/.test(POINTS_DISCLAIMER) && /do not sell any form of coins or other microtransactions/.test(POINTS_DISCLAIMER));
     check('*** unlocks: only for the game’s sake, sandbox unlocks everything, and one at a time ***',
       /only for the game’s sake/.test(mode.say) && /sandbox mode unlocks everything/.test(mode.say) && /one at a time/.test(mode.say));
-    check('...it opens the game settings in the settings panel by itself (Mike: "It would also open up ... in the settings menu window")',
-      mode.acts.some((a) => a.kind === 'settings-page' && a.page === 'sc-mode' && a.auto));
-    check('*** game mode is a STUB, honestly: a hook and the words "still being built" ***',
-      GUIDE_NODES['mode-game'].acts.some((a) => a.kind === 'game-mode' && a.mode === 'game') && /still being built/.test(GUIDE_NODES['mode-game'].say));
+    check('...it opens the Nimrod Game settings in the settings panel by itself (Mike: "It would also open up ... in the settings menu window")',
+      mode.acts.some((a) => a.kind === 'settings-page' && a.page === 'sc-game' && a.auto));
+    check('*** game mode is BUILT now (unlocks.js): the act that sets it, and no "still being built" ***',
+      GUIDE_NODES['mode-game'].acts.some((a) => a.kind === 'game-mode' && a.mode === 'game') && !/still being built/.test(GUIDE_NODES['mode-game'].say));
     check('the devices branch has Mike’s five: voice, tracking, mouse/keyboard, phones, computers',
       J(DEVICE_KINDS.map((d) => d.id)) === J(['voice', 'tracking', 'keys', 'phones', 'computers'])
       && DEVICE_KINDS.every((d) => GUIDE_NODES.devices.choices.some((c) => c.to === `dev-${d.id}`)));
-    check('the AI choice is honest that it is not built', /not built yet/.test(GUIDE_NODES.ai.say));
+    check('the AI choice says how to talk to it', /Talk to/.test(GUIDE_NODES.ai.say));
     check('the tutorial node goes there (both ways: a real screen and Home)',
       J(actMessages(GUIDE_NODES.tutorial.acts[0]).map((m) => m.topic)) === J([DASHBOARD_GO_TOPIC, SHELL_HOST]));
     check('intros: landing is Mike’s; the tutorial and the plain one are their own', introFor('landing') === LANDING_INTRO

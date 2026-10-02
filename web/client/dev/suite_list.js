@@ -93,6 +93,10 @@ export const SUITES = [
   // 2026-10-02: Home is your profile (started from an example, made your own; the edit bar, hot swap).
   'home_profile',
   'nimrod_guide', 'whats_new',
+  // 2026-10-02: the Nimrod Game - game / learning / sandbox, unlocks gating Add, the tour's points.
+  'unlocks',
+  // 2026-10-02: the Nimrod guide as the AI module (talk to your own AI; actions only on a press; notes).
+  'nimrod_ai',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];
