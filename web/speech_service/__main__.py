@@ -7,6 +7,14 @@ From `web/`:
     py -3.13 -m speech_service --backend fake                    # the protocol with no model
     python3 -m speech_service --backend none --wake hey_jarvis   # wake events only (openWakeWord)
     python3 -m speech_service --backend none --wake computer_please,nimrod_please   # our own (models/)
+    py -3.13 -m speech_service --backend whisper --model "C:\\models\\my-voice" --port 8796
+                                                                 # ONE PERSON'S OWN voice model (a folder)
+
+A model trained on one person's voice (Google's Euphonia toolkit; the page is web/client/voice_model.js)
+is a FOLDER given to --model. It is checked at start-up: a folder missing a file faster-whisper needs is
+refused here, every missing file named. It runs as its OWN service on its own port (8796 by default, a
+setting on that person's row), so only the person whose speech settings point at it is ever heard by it;
+the shared service on 8797 keeps the stock model for everybody else.
 
 It binds 127.0.0.1:8797 by default: the room's sound stays on the machine that heard it, and only a
 screen on that same machine can reach it. The screen's "this screen" recogniser looks there.
@@ -27,7 +35,8 @@ import asyncio
 import os
 import sys
 
-from .backends import WAKE_REFRACTORY_S, WAKE_THRESHOLD, default_threads, make_backend, make_wake
+from .backends import (WAKE_REFRACTORY_S, WAKE_THRESHOLD, ModelFolderError, check_whisper_folder, default_threads,
+                       is_model_folder, make_backend, make_wake)
 from .service import MAX_UTTERANCE_S
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
@@ -50,7 +59,8 @@ def parse(argv=None):
     p.add_argument('--wake-vad', type=float, default=0.0,
                    help="openWakeWord's Silero VAD gate, 0..1 (default 0 = off)")
     p.add_argument('--model', default=None,
-                   help="whisper: a model name in the local cache (default small.en); vosk: the model folder")
+                   help="whisper: a model name in the local cache (default small.en) or a converted model "
+                        "FOLDER (checked at start-up); vosk: the model folder")
     p.add_argument('--threads', type=int, default=None,
                    help=f'whisper CPU threads (default: physical cores, guessed {default_threads()} here)')
     p.add_argument('--compute-type', default='int8', help='whisper: int8 (default, measured fastest) or float32')
@@ -80,7 +90,18 @@ def main(argv=None):
     kw = {'device': a.device, 'compute_type': a.compute_type, 'threads': a.threads,
           'word_confidence': not a.no_word_confidence}
     if a.backend == 'whisper':
-        kw['model'] = a.model or 'small.en'
+        model = os.path.expanduser(a.model) if a.model else 'small.en'
+        if is_model_folder(model):
+            # Before the model loads (seconds, and a traceback if it cannot): every missing file, by name.
+            try:
+                advised = check_whisper_folder(model)
+            except ModelFolderError as err:
+                print(f'speech service: {err}', file=sys.stderr)
+                return 2
+            for f in advised:
+                print(f'speech service: note: the model folder has no {f}; faster-whisper uses its own defaults '
+                      '(right for models up to medium, wrong for large-v3)', file=sys.stderr)
+        kw['model'] = model
     elif a.backend == 'vosk':
         if not a.model:
             print('--model is required for vosk (the model folder)', file=sys.stderr)

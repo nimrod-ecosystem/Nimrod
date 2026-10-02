@@ -70,6 +70,7 @@
 // the next step if the two-line captions turn out to be noisy.
 
 import { CAPTURE_RATE, FRAME_MS } from './speech_capture.js';
+import { voiceModelFrom } from './voice_model.js';
 
 // Port 8797, not the more obvious 8765: 8765 is already the Cici session receiver on Mike's desktop
 // (cici_receiver.py, bound 0.0.0.0), 8770-8773 the media agents, 8791 corpus_desk (all checked
@@ -220,7 +221,15 @@ export function enginePlanFrom(values = {}) {
   const first = typeof v.speechEngine === 'string' ? v.speechEngine : 'local';
   if (first === 'browser') return { browser: true, passes: [], skipped: [], ...common };
   const text = (x, d = '') => (typeof x === 'string' ? x.trim() : d);
+  // *** THIS PERSON'S OWN VOICE MODEL (2026-10-02, voice_model.js). *** When their row turns it on, their
+  // "this screen" recogniser is the service running their own model on its own port - this row only, so
+  // nobody else's speech goes to it. Nothing answering there: "no recogniser on this screen is answering",
+  // the same honest state as any local recogniser that is not running. Other computers are untouched.
+  const own = voiceModelFrom(v);
   const slotInfo = (slot) => {
+    if (slot === 'local' && own.on) {
+      return { slot, name: 'Your own voice model', url: own.url, key: '', remote: false, own: true };
+    }
     if (slot === 'local') {
       return { slot, name: 'This screen', url: text(v.speechLocalUrl) || LOCAL_URL, key: '', remote: false };
     }
