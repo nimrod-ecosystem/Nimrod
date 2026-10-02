@@ -219,8 +219,10 @@ registerModule(
     // moderator/participant, govern who may DRIVE a screen, not who may change a setting). If
     // that lock is built later, this is the control it would need to disable — named here so
     // whoever builds it does not have to go hunting for where "mode" actually lives.
+    // Named "Lesson topics" (2026-10-02): "Learning mode" is now the Nimrod Game's mode (unlocks.js), and two
+    // different things under one name was MIKE_LIST's row 6. The page id stays 'sc-mode' so nothing saved moves.
     pages['sc-mode'] = {
-      title: 'Learning mode',
+      title: 'Lesson topics',
       render(el) {
         el.innerHTML = `<p class="st-hint" style="display:block;margin:0 0 10px">Quest keeps
           lesson topics locked until they’re watched. Sandbox opens everything right away.
@@ -304,7 +306,7 @@ registerModule(
               kind: 'item', id: `mod-${row.id}`, label: row.title, page: `mod-${row.id}`,
             })),
             { kind: 'item', id: 'sc-theme', label: 'Theme', page: 'sc-theme' },
-            { kind: 'item', id: 'sc-mode', label: 'Learning mode', page: 'sc-mode' },
+            { kind: 'item', id: 'sc-mode', label: 'Lesson topics', page: 'sc-mode' },
             { kind: 'item', id: GAME_SETTINGS_PAGE, label: 'Nimrod Game', page: GAME_SETTINGS_PAGE },
             { kind: 'item', id: 'sc-device', label: 'This screen', page: 'sc-device' },
             ...USER_FOLDER_ITEMS,
