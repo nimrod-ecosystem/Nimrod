@@ -587,7 +587,19 @@ section('*** THE STEPS POINT AT HOME’S REAL CONTROLS ***');
     const unresolved = WALK.filter((s) => s.target && !findTarget(document, s.target)).map((s) => s.id);
     check('*** menu closed: every step points at something real on Home’s stage ***', unresolved.length === 0, unresolved.join());
     const at = (id) => findTarget(document, stepById(id).target);
-    check('making the profile rings Home’s Save, ON the transport bar', at('cat-profile')?.matches('.tb-bar .tb-host [data-host="save"]'));
+    check('with the examples shut, making your Home rings Home’s Save, ON the transport bar', at('cat-profile')?.matches('.tb-bar .tb-host [data-host="save"]'));
+    check('*** Switch module (the hot swap) rings Switch module, ON the transport bar ***', at('cat-switch')?.matches('.tb-bar .tb-host [data-host="switch"]'),
+      at('cat-switch')?.outerHTML?.slice(0, 80));
+    // The starting points, up front: with them on the page, the first step rings "Make this my Home".
+    const exSec = document.createElement('section');
+    exSec.id = 'examples';
+    exSec.innerHTML = '<button type="button" data-ex-make="basic">Make this my Home</button>';
+    document.body.append(exSec);
+    check('*** with the examples up front, making your Home rings the first "Make this my Home" ***',
+      at('cat-profile')?.matches('[data-ex-make="basic"]'), at('cat-profile')?.outerHTML?.slice(0, 80));
+    exSec.hidden = true;
+    check('...and the examples closed: back to Save', at('cat-profile')?.matches('[data-host="save"]'));
+    exSec.remove();
     check('the bar step rings the placed transport bar', at('cat-bar')?.matches('.tb-bar'));
     check('Modules rings Modules, on the bar', at('cat-modules')?.matches('.tb-bar [data-host="picker"]'));
     check('the panel step rings Panel ▸', at('cat-panel')?.matches('.tb-bar [data-act="panel"]'));
@@ -606,27 +618,32 @@ section('*** THE STEPS POINT AT HOME’S REAL CONTROLS ***');
     await settled(() => k.menu.isOpen(), 1500);
     check('the gear opens the one menu, docked beside the stage', k.menu.isOpen() && !!kroot.querySelector('.sm-dock [data-settings] [data-scrim]:not([hidden])'));
     check('*** the gear step’s "done" matches the docked menu being open ***', !!document.querySelector(gear.doneWhen));
-    check('Words: the real "Words" row', at('cat-words')?.matches('.st-item[data-id="set:label"]'), at('cat-words')?.outerHTML?.slice(0, 80));
-    check('Colours: the real "Colours" row', at('cat-room')?.matches('.st-item[data-id="set:theme"]'));
-    check('Picture: the real "Picture" or "Picture from" row',
-      at('cat-picture-rows')?.matches('.st-item[data-id="set:image"], .st-item[data-id="set:imageFrom"]'),
-      at('cat-picture-rows')?.outerHTML?.slice(0, 80));
-    check('the labels he names are the labels on those rows',
-      /Words/.test(at('cat-words')?.textContent) && /Colours/.test(at('cat-room')?.textContent));
+    check('the menu step rings the open menu itself', at('cat-settings')?.matches('[data-panel]'), at('cat-settings')?.outerHTML?.slice(0, 80));
+    check('*** Scene and Add, with no edit bar on the page, ring ⚙ (the press that opens it) ***',
+      at('cat-scene')?.matches('.tb-bar [data-act="settings"]') && at('cat-add')?.matches('.tb-bar [data-act="settings"]'));
+    const eb = document.createElement('div');
+    eb.id = 'home-edit';
+    eb.innerHTML = '<button type="button" data-edit="scene">Scene</button><button type="button" data-edit="add">Add</button>';
+    document.body.append(eb);
+    check('*** with Design’s edit bar up: Scene rings Scene, Add rings Add ***',
+      at('cat-scene')?.matches('#home-edit [data-edit="scene"]') && at('cat-add')?.matches('#home-edit [data-edit="add"]'));
+    eb.hidden = true;
+    check('...a hidden edit bar is not pointed at', at('cat-scene')?.matches('.tb-bar [data-act="settings"]'));
+    eb.remove();
     check('*** "Show me how" is a row of the one ⚙ menu (reachable by a switch, like every row) ***',
       !!kroot.querySelector('.st-item[data-id="home:cat"]'));
 
     // The cat on Home, speaking through the kiosk's own bus.
     check('the kiosk hands out its output bus and its bus', typeof k.output?.()?.say === 'function' && typeof k.bus?.()?.publish === 'function');
-    cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-words' }),
+    cat = mountCat(document.body, { steps: CAT_STEPS, storage: fakeStore({ [CAT_KEYS.pos]: 'cat-settings' }),
       path: HOME_PAGE, reducedMotion: true, output: k.output(), bus: k.bus(), barSelector: CAT_BAR_SELECTOR });
     check('on Home he shows the step, with the menu still open underneath', cat.shown() && k.menu.isOpen());
     check('...his words went to the kiosk’s bus (it gave back an id)', typeof cat.lastSaid() === 'string', String(cat.lastSaid()));
-    if (innerHeight > 200) check('...and the ring is on the Words row', !cat.el.querySelector('[data-tour-ring]').hidden);
+    if (innerHeight > 200) check('...and the ring is on the menu', !cat.el.querySelector('[data-tour-ring]').hidden);
     k.bus().publish('nimrod-cat/next', {});
-    check('*** a switch saying nimrod-cat/next on the screen’s bus moves him on ***', cat.step().id === 'cat-room', cat.step().id);
+    check('*** a switch saying nimrod-cat/next on the screen’s bus moves him on ***', cat.step().id === 'cat-scene', cat.step().id);
     k.bus().publish('nimrod-cat/prev', {});
-    check('...and nimrod-cat/prev back', cat.step().id === 'cat-words');
+    check('...and nimrod-cat/prev back', cat.step().id === 'cat-settings');
     const inMenu = kroot.querySelector('[data-settings] [data-panel]');
     inMenu.focus();
     inMenu.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
@@ -673,7 +690,11 @@ section('*** THE STEPS POINT AT HOME’S REAL CONTROLS ***');
 // =====================================================================================
 section('*** NO OPENING SLIDE; NOTHING SAID WHERE IT IS NOT TRUE ***');
 {
-  check('the walk starts at making the profile, on Save', WALK[0].id === 'cat-profile' && /data-host="save"/.test(WALK[0].target), WALK[0].id);
+  check('the walk starts at making your Home: the examples’ "Make this my Home", else Save', WALK[0].id === 'cat-profile'
+    && /data-ex-make/.test(String(WALK[0].target)) && /data-host="save"/.test(String(WALK[0].target)), WALK[0].id);
+  check('*** the profile game’s steps are gone (no picture rows, sign, words); Scene, Add and Switch module are in ***',
+    !WALK.some((s) => ['cat-picture-rows', 'cat-sign', 'cat-words', 'cat-room'].includes(s.id))
+    && ['cat-scene', 'cat-add', 'cat-switch'].every((id) => WALK.some((s) => s.id === id)), WALK.map((s) => s.id).join());
   check('there is no hello slide', !WALK.some((s) => s.id === 'cat-hello'));
   check('no step lives on the game page any more', !WALK.some((s) => s.page === GAME_PAGE));
   const all = (s) => ['brief', 'say', 'more'].map((k) => s[k] || '').join(' ');

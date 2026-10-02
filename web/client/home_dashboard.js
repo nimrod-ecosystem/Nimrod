@@ -47,7 +47,13 @@
 import { fieldsFor } from './settings_fields.js';
 
 export const HOME_STATE_KEY = 'home';            // per-PERSON state key for the settings below
-export const PROFILE_SUBJECT = 'profile';        // the picker's "Your profile" row
+// *** YOUR HOME IS YOUR PROFILE (Mike, 2026-10-02): "The profiles are wrong. That's what the rooms and stuff
+// are for ... I'm expecting the home page to be your profile, and you add whatever modules you want to make
+// it your own." *** The picker's first row is the person's Home: a dashboard they started from one of the
+// examples (dashboards.js EXAMPLE_ORDER) and then made their own. The subject keeps the id 'profile' -- it
+// is in links (`?m=profile`), the cat's "Open my profile" and saved walks -- and its title is Your Home.
+export const PROFILE_SUBJECT = 'profile';        // the picker's "Your Home" row
+export const HOME_TITLE = 'Your Home';
 export const HISTORY_PREFIX = 'history-';        // + an instance id, on the screen it lives on
 export const PROFILE_HISTORY_KEY = 'history';    // on the profile's own screen
 export const KEEP_CHOICES = Object.freeze([5, 10, 20, 50]);
@@ -61,15 +67,20 @@ export const SCREEN_ROW_NOT_SETTINGS = Object.freeze(['kiosk', 'links', 'game'])
 // Full screen's bar delay: the choices, in ms (0 = never tuck). Kept in step with shell_verbs.js's.
 export const BAR_HIDE_CHOICES = Object.freeze([0, 3000, 6000, 10000, 30000]);
 
+// `homeId` (2026-10-02): WHICH dashboard is this person's Home -- the one made when they picked a starting
+// point. null until they pick one (Home then shows the examples up front). Not a menu row: it changes by
+// picking ("Start from an example…" makes another and makes it Home; the old one stays in My dashboards).
 export const HOME_DEFAULTS = Object.freeze({
   openIn: 'edit', keepVersions: 20, warnOverwrite: true, chromeSurface: 'follow', welcomeDone: false,
-  barHideMs: 6000,
+  barHideMs: 6000, homeId: null,
 });
+// An id, not prose (layout.js OPENS_MAX's reasoning): long enough for any id the server makes.
+const HOME_ID_MAX = 200;
 
 // What the page's settings panel shows, in order. Each row CYCLES on a press and wraps (Design, and
 // settings_fields.js's one-switch rule: a control that stops at its end strands somebody there).
 export const HOME_SETTINGS = Object.freeze([
-  { key: 'openIn', label: 'Open my profile in',
+  { key: 'openIn', label: 'Open my Home in',
     options: [['edit', 'Edit view'], ['live', 'Live view']] },
   { key: 'keepVersions', label: 'Keep the last',
     options: KEEP_CHOICES.map((n) => [n, `${n} saved versions`]) },
@@ -91,6 +102,7 @@ export function readHomeSettings(raw) {
     if (row.options.some(([v]) => v === r[row.key])) out[row.key] = r[row.key];
   }
   out.welcomeDone = r.welcomeDone === true;
+  out.homeId = typeof r.homeId === 'string' && r.homeId.trim() && r.homeId.length <= HOME_ID_MAX ? r.homeId : null;
   return out;
 }
 
@@ -125,7 +137,7 @@ export function chromeSurfaceFor(settings, screenPanelSurface) {
 /** The status, in words (Design: "what state the module is in, in words"). */
 export function homeStatusText({ target = null, dirty = false, docCurrent = null } = {}) {
   if (!target) return '';
-  if (!target.live) return target.kind === 'profile' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it';
+  if (!target.live) return target.kind !== 'module' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it';
   if (dirty) return 'Unsaved changes';
   return docCurrent ? `Saved as “${docCurrent}”` : 'Not saved under a name yet';
 }
@@ -135,14 +147,21 @@ export function homeStatusText({ target = null, dirty = false, docCurrent = null
  * DISABLED (dimmed), never left out. Save is the primary button while there is something to save.
  * Edit / Done editing and Full screen are NOT here: they are the bar's own ⚙ and ⛶ (`homeShellLabel`).
  */
+// *** "SWITCH MODULE", ON THE REAL BAR (Mike, 2026-10-02: "modules on a dashboard should be as hot swappable
+// as possible"). *** On your Home, the bar's Panel ▸ already chooses a panel; Switch module swaps THAT one
+// for another in the same place (home_profile.js swapInLayout). It is a host item, so it is drawn by the
+// placed bar like Save, with no change to the bar itself. Dimmed where it cannot act (a module page, a Home
+// not made yet), never hidden. `canSwitch`: the page says whether a live Home is on the stage.
 export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
-  docCurrent = null } = {}) {
+  docCurrent = null, canSwitch = false, switchOpen = false } = {}) {
   const t = target;
   return [
     { act: 'picker', label: `Modules: ${title || '…'}`, title: 'choose what you are looking at', expanded: !!pickerOpen },
     { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy, primary: !!t && (dirty || !t.live) },
     { act: 'saveas', label: 'Save as…', title: 'keep a copy under a new name', disabled: !t || busy },
     { act: 'history', label: 'History', title: 'your last saves; restoring deletes nothing', disabled: !t || !t.live || busy },
+    { act: 'switch', label: 'Switch module', title: 'another module in the place of the one Panel ▸ chose',
+      disabled: !canSwitch || busy, expanded: !!switchOpen },
     { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent }), dirty: !!dirty },
   ];
 }
@@ -162,7 +181,7 @@ export function homeShellLabel(act, { menuOpen = false, full = false } = {}) {
  * welcome and Nimrod's walk. Rows that cannot act are disabled (the menu's scan skips them).
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
-  settings = HOME_DEFAULTS, catReady = true } = {}) {
+  settings = HOME_DEFAULTS, catReady = true, canSwitch = false } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
@@ -172,8 +191,13 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
+    item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),
+    // The starting points are up front on the page; this row is how a switch (or the plain bar's ⚙) gets
+    // back to them once a Home exists.
+    item('examples', 'Start from an example…', { hint: 'ready-made Homes to begin from' }),
     ...HOME_SETTINGS.map((r) => item(`set:${r.key}`, r.label, { hint: homeSettingLabel(s, r.key) })),
-    item('rewelcome', 'Show the welcome again'),
+    // (Its id is the old welcome card's; since 2026-10-02 the starting points are what greets you.)
+    item('rewelcome', 'Show the examples when I arrive', { hint: 'they open up front again, until you say not to' }),
     item('cat', 'Show me how', { hint: 'Nimrod the cat walks you through this page', disabled: !catReady }),
   ];
 }

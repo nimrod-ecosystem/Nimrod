@@ -40,22 +40,22 @@
 <body>
 <main class="g" id="game">
   <p class="g-kicker">The Nimrod game</p>
-  <h1>Step 1: your profile</h1>
-  <p class="g-lead">Your profile is your first dashboard: a screen that is yours, with a room behind it,
-    your picture on the wall and your name on a sign. It lives on Home: it opens there as a preview, you
-    change it there, and Save makes it. Saving again never makes a second one.</p>
+  <h1>Step 1: your Home</h1>
+  <p class="g-lead">Your Home is your profile: a dashboard you make your own. On Home you pick a starting
+    point — plain Nimrod, a moving scene like Fall, or one of the rooms — and then change anything on it:
+    the scene, what is on it, where things sit. Picking one again never makes a second copy.</p>
   <!-- Rows 2.29/2.30 follow-up (2026-09-30): THE FOUR BUTTONS THAT WERE HERE ARE GONE. Make it, Hang it,
        Put it up and Open it built the same profile Home's Save builds (the same game.js), so they were a
        second way to do one thing, and Nimrod's walk now points at Home's real controls instead
        (cat_steps.js). This page keeps what is still its own: what the game is, and the cat's settings. -->
-  <p class="g-open"><a class="g-btn g-go" href="/modules.html?m=profile" data-home-link>Open my profile on Home</a></p>
+  <p class="g-open"><a class="g-btn g-go" href="/modules.html?m=profile" data-home-link>Open my Home</a></p>
   <div id="note"></div>
   <!-- NIMROD THE CAT. He appears only when this is pressed (or a later quest step asks for him),
        never on his own; see cat_guide.js. His walk is on Home, so here he offers the way there. -->
   <section class="g-cat" aria-label="Nimrod the cat">
     <img src="../design-assets/nimrod-cat/idle.svg" alt="" width="56" height="56">
-    <p><b>Nimrod the cat</b> can walk you through your profile on Home: making it, the bar, and the
-      settings menu. It is also under Show me how in the ⚙ menu there.</p>
+    <p><b>Nimrod the cat</b> can walk you through your Home: picking a starting point, the bar, the
+      settings menu and the editing tools. It is also under Show me how in the ⚙ menu there.</p>
     <button type="button" class="g-btn" data-cat-ask>Show me how</button>
   </section>
   <details class="g-cat-set">

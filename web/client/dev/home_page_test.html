@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>home page (the modules page as a dashboard) — test</title>
+<title>home page (your Home, made your own) — test</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -12,19 +12,23 @@
 </style>
 </head>
 <body>
-<h1>home page (the modules page as a dashboard) — test</h1>
-<p>Rows 2.29 and 2.30, end to end against the dev server: a FRESH account signs in and lands on its
-profile (a preview, nothing made) in edit view with the welcome card; Save makes it; a setting changed
-waits for Save; Save over warns; History restores without deleting; leaving with unsaved changes asks;
-a module not on the screen is added only by Save; the page's own settings persist; signed out, the page
-is the parts page it was. Needs the server (<code>SUITE_BASE</code>).</p>
+<h1>home page (your Home, made your own) — test</h1>
+<p>End to end against the dev server. Mike, 2026-10-02: Home is your profile. A FRESH account signs in and
+sees the starting points up front (nothing made by looking), tries one on the stage, makes it its Home;
+Design's edit bar then changes the real dashboard: Add, Switch module (in place, one press, from the bar
+too), Move, Remove, Scene and the room's rows, Undo and Redo; settings still wait for Save, Save over
+warns, History restores without deleting; leaving with unsaved changes asks; a module not on the screen is
+added only by Save; an OLD profile from the profile game keeps loading as Home; signed out, the page is the
+parts page it was. Needs the server (<code>SUITE_BASE</code>).</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
 <script type="module">
-import { createProfilesClient } from '../profile.js';
+import { createProfilesClient, ensureProfile } from '../profile.js';
 import { createState } from '../state.js';
 import { authHeaders } from '../auth.js';
+import { EXAMPLE_ORDER, PREBUILT_KEY } from '../dashboards.js';
+import { createGame } from '../game/game.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('home-page-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -40,11 +44,13 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
   { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(60); } return false; };
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
 
 const profiles = createProfilesClient({ user: USER });
-async function row(pid, key) {
-  const h = createState({ url: profiles.stateURL(pid, key), user: USER });
+async function row(pid, key, user = USER) {
+  const p = user === USER ? profiles : createProfilesClient({ user });
+  const h = createState({ url: p.stateURL(pid, key), user });
   try { return await h.load(); } finally { h.destroy(); }
 }
 async function personRow(key) {
@@ -52,7 +58,9 @@ async function personRow(key) {
   const h = createState({ url: profiles.personStateURL(people[0].id, key), user: USER });
   try { return await h.load(); } finally { h.destroy(); }
 }
-const profileScreens = async () => (await profiles.list()).filter((p) => p.name === 'My profile');
+const homeId = async () => (await personRow('home')).homeId || null;
+const layoutOf = async (pid) => ((await row(pid, 'settings')).kiosk || {}).layout || null;
+const modsOf = async (pid) => (await profiles.get(pid)).modules || [];
 
 let ifr = null, doc = null, win = null;
 async function open(query) {
@@ -62,10 +70,18 @@ async function open(query) {
   document.body.append(ifr);
   await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
   doc = ifr.contentDocument; win = ifr.contentWindow;
+  // What the page logs as an error, kept so a failing run says what went wrong inside it.
+  const orig = win.console.error.bind(win.console);
+  win.console.error = (...a) => {
+    pageErrors.push(`[${query.slice(0, 30)}] ` + a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 400));
+    orig(...a);
+  };
 }
+const pageErrors = [];
 const $ = (s) => doc.querySelector(s);
-// Home's buttons are ON THE REAL TRANSPORT BAR in the stage since the 2026-09-30 follow-up (the kiosk's
-// placed bar, drawn from the page's host); Edit is that bar's own gear.
+const $$ = (s) => [...doc.querySelectorAll(s)];
+// Home's buttons are ON THE REAL TRANSPORT BAR in the stage (the kiosk's placed bar, drawn from the page's
+// host); Edit is that bar's own gear.
 const hb = (k) => (k === 'view' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')
   : k === 'fs' ? $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="fs"]')
   : $(`#stage .tb-bar .tb-host [data-host="${k}"]`));
@@ -73,223 +89,330 @@ const status = () => $('#stage .tb-bar [data-host-status]')?.textContent || '';
 const pickName = () => (hb('picker')?.textContent || '').replace(/^Modules: /, '');
 const hrow = (act) => $(`#stage .st-item[data-id="home:${act}"]`);
 const dlgOpen = () => $('#home-dlg')?.open;
-const dlgBtns = () => [...doc.querySelectorAll('#home-dlg [data-home-dlg]')].map((b) => b.textContent.trim());
+const dlgBtns = () => $$('#home-dlg [data-home-dlg]').map((b) => b.textContent.trim());
 const dlgBtn = (act) => $(`#home-dlg [data-home-dlg="${act}"]`);
 const menuShown = () => !!$('#stage [data-settings] .st-scrim:not([hidden])');
-const menuRow = (label) => [...doc.querySelectorAll('#stage .st-item')].find((b) => b.textContent.includes(label));
+const menuRow = (label) => $$('#stage .st-item').find((b) => b.textContent.includes(label));
 const kiosks = () => doc.querySelectorAll('.kiosk').length;
+const ex = () => $('#examples');
+const card = (k) => $(`#ex-cards [data-example="${k}"]`);
+const eb = (act) => $(`#home-edit [data-edit="${act}"]`);
+const tray = () => $('#home-tray');
+const edNote = () => $('#home-edit .ed-note')?.textContent || '';
+// An edit is done when the bar is not busy any more (its note no longer says Changing…).
+const editIdle = () => !!eb('scene') && !eb('scene').disabled && !/Changing/.test(edNote());
+const toastText = () => $('#home-toast')?.textContent || '';
+// THE ⚙ MENU OPEN, WITHOUT RACING THE PAGE. The gear TOGGLES, and a Home opens in edit view by itself a
+// moment after its kiosk comes up; pressing the gear in that moment closes what was about to open (a
+// timing-dependent failure on a loaded machine, 2026-10-02). So: give the page's own open a chance first,
+// and press only if the menu is still shut, then wait for it -- up to three tries.
+async function ensureMenu(rowAct = null) {
+  const ready = () => menuShown() && (!rowAct || !!hrow(rowAct));
+  await until(() => !!hb('view'), 15000);
+  for (let i = 0; i < 3; i++) {
+    if (await until(ready, 3000)) return true;
+    if (!menuShown()) hb('view')?.click();
+    if (await until(ready, 4000)) return true;
+  }
+  if (!ready()) {
+    pageErrors.push(`(menu diag for ${rowAct}) gear="${hb('view')?.textContent}" pressed=${hb('view')?.getAttribute('aria-pressed')} `
+      + `settings=${$$('#stage [data-settings]').length} scrims=${$$('#stage [data-settings] .st-scrim').map((s) => (s.hidden ? 'h' : 'v')).join('')} `
+      + `kiosks=${kiosks()} plain=${$$('#stage .k-plain').length} rows=${$$('#stage .st-item').slice(0, 40).map((b) => b.dataset.id).join(',')}`);
+  }
+  return ready();
+}
 
 try {
   // ============================================================================================
-  section('*** first sign-in: Home, on the profile, in edit view, and it says the profile is optional ***');
+  section('*** first sign-in: Home, with the starting points UP FRONT, and nothing made by looking ***');
   await open(`user=${encodeURIComponent(USER)}`);
-  check('*** Home is on: its buttons are IN the real transport bar in the stage ***', await until(() => !!hb('save') && !!hb('picker')));
-  check('Design’s order on that bar: Modules, Save, Save as…, History, then the status',
-    [...doc.querySelectorAll('#stage .tb-bar .tb-host button')].map((b) => b.textContent).join('|') === `Modules: ${pickName()}|Save|Save as…|History`,
-    [...doc.querySelectorAll('#stage .tb-bar .tb-host button')].map((b) => b.textContent).join('|'));
-  check('*** ...and the page’s own bar above the stage is gone (a fallback only) ***', await until(() => $('#stage-bar').hidden));
+  // A brand-new account's first Home makes its default screen and boots a whole kiosk: on a loaded machine
+  // that took longer than 10 s (2026-10-02), so the first wait is generous. If Home did not start at all,
+  // the page says why (`data-home-error`).
+  check('*** Home is on: its buttons are IN the real transport bar in the stage ***', await until(() => !!hb('save') && !!hb('picker'), 45000),
+    `homeError=${doc.body.dataset.homeError || '-'} signedIn=${/My dashboards/.test($('.top nav a.solid')?.textContent || '')}`);
+  check('*** the bar: Modules, Save, Save as…, History, Switch module, then the status ***',
+    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === `Modules: ${pickName()}|Save|Save as…|History|Switch module`,
+    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|'));
+  check('the page’s own fallback bar is hidden (the real bar carries it)', await until(() => $('#stage-bar').hidden));
   check('the page is titled Home', doc.title.includes('Home'), doc.title);
   check('the parts-page header and legend are out of the way', win.getComputedStyle($('.legend')).display === 'none');
-  check('*** it opens on "Your profile" ***', await until(() => pickName() === 'Your profile'), pickName());
-  check('*** the real kiosk is in the stage, the whole profile: two panels (picture and sign) ***',
-    await until(() => kiosks() === 1 && doc.querySelectorAll('#stage [data-nbtn]').length >= 2), `kiosks=${kiosks()}`);
-  check('*** in EDIT view: its settings menu is open ***', await until(menuShown));
-  check('*** Edit IS the bar’s gear, and it says how to leave edit view ***',
-    await until(() => hb('view')?.textContent === '⚙ Done editing') && hb('view').getAttribute('aria-pressed') === 'true', hb('view')?.textContent);
-  check('Full screen IS the bar’s ⛶, in words', hb('fs')?.textContent === '⛶ Full screen', hb('fs')?.textContent);
-  check('*** the page settings are a section of the one ⚙ menu (no separate page dialog) ***',
-    !!hrow('set:keepVersions') && !!hrow('set:barHideMs') && !$('#home-settings')
-    && [...doc.querySelectorAll('#stage .st-head')].some((h) => /This page/.test(h.textContent)));
-  const w = $('#welcome');
-  check('*** the welcome card is up and says the profile is OPTIONAL ***', !w.hidden && /optional/i.test(w.textContent));
-  const wb = [...w.querySelectorAll('button')].map((b) => b.textContent.trim());
-  check('its buttons: Skip for now (first, and primary), Set up my profile, Don’t show this again',
-    wb[0] === 'Skip for now' && w.querySelector('button').classList.contains('primary') && wb.includes('Set up my profile') && wb.some((t) => /show this again/.test(t)), wb.join(' | '));
-  check('the welcome sits ABOVE the stage, never over it (nothing is blocked)',
-    w.getBoundingClientRect().bottom <= $('#stage').getBoundingClientRect().top + 1);
-  check('the picker’s first row is Your profile, marked Optional',
-    /Your profile/.test(doc.querySelector('#list .pickrow')?.textContent) && /Optional/.test(doc.querySelector('#list .pickrow')?.textContent));
+  check('*** it opens on "Your Home" ***', await until(() => pickName() === 'Your Home'), pickName());
+  check('*** the starting points are UP FRONT, on the page (not hidden in the bar), and say it is optional ***',
+    await until(() => !ex().hidden) && /optional/i.test(ex().textContent));
+  const cards = $$('#ex-cards [data-example]');
+  check('*** one card per starting point, in Mike’s order: still 2D, a moving scene, Design’s rooms ***',
+    J(cards.map((c) => c.dataset.example)) === J(EXAMPLE_ORDER), J(cards.map((c) => c.dataset.example)));
+  check('each card says what KIND it is in words, and has Try it here and Make this my Home',
+    cards.every((c) => c.querySelector('.ex-kind')?.textContent.trim() && c.querySelector('[data-ex-try]') && c.querySelector('[data-ex-make]')));
+  check('their kinds read: Flat and still, Flat with a moving scene, A room ×3',
+    /still/i.test(card('basic').textContent) && /moving/i.test(card('classic').textContent) && /room/i.test(card('fireside').querySelector('.ex-kind').textContent));
+  check('Skip for now is the first button (optional, so the way past it comes first)', $('#examples button')?.textContent.trim() === 'Skip for now');
+  check('*** the examples sit ABOVE the stage, never over it (nothing is blocked) ***',
+    ex().getBoundingClientRect().bottom <= $('#stage').getBoundingClientRect().top + 1);
+  check('the picker’s first row is Your Home, marked Optional',
+    /Your Home/.test(doc.querySelector('#list .pickrow')?.textContent) && /Optional/.test(doc.querySelector('#list .pickrow')?.textContent));
+  check('*** the first example is on the stage, being TRIED (the card says so) ***',
+    await until(() => card(EXAMPLE_ORDER[0]).getAttribute('aria-current') === 'true' && kiosks() === 1 && /Trying/.test($('#stagenote').textContent)));
   check('status says nothing is made yet', /not made yet/i.test(status()), status());
-  check('*** nothing was made on the account by looking ***', (await profileScreens()).length === 0);
+  const list0 = await profiles.list();
+  const screens0 = list0.length;
+  check('*** nothing was made on the account by looking (only the default screen) ***', screens0 === 1,
+    J(list0.map((s) => [s.name, s.person_id, s.created_at || ''])));
   check('History is DIMMED (nothing saved), not hidden', hb('history').disabled && !hb('history').hidden);
-  check('the menu and bar are see-through: following a new profile, whose panels are see-through',
-    $('#stage').dataset.chrome === 'veil', $('#stage').dataset.chrome);
+  check('*** Switch module is on the bar, DIMMED until there is a Home to switch things on ***', hb('switch')?.disabled === true);
+  check('*** in EDIT view: the menu is open AND Design’s edit bar is above the stage ***',
+    await until(() => menuShown() && !$('#home-edit').hidden));
+  check('the edit bar: Scene, Add, Choose a thing, Transform…, Undo, Redo — all there, all DIMMED before the Home exists',
+    $$('#home-edit button').map((b) => b.dataset.edit).join() === 'scene,add,change,transform,undo,redo'
+    && $$('#home-edit button').every((b) => b.disabled), $$('#home-edit button').map((b) => b.dataset.edit).join());
+  check('...and it says why, in words', /Make this my Home/.test(edNote()), edNote());
 
-  // Skip for now opens the picker; Set up my profile keeps edit view
-  $('#welcome [data-home="skip"]').click();
-  check('Skip for now opens the module picker and closes the card', await until(() => doc.body.classList.contains('pick-open') && $('#welcome').hidden));
+  card('fireside').querySelector('[data-ex-try]').click();
+  check('*** Try it here puts that one on the stage instead (a room) ***',
+    await until(() => card('fireside').getAttribute('aria-current') === 'true' && /Fireside/.test($('#stagenote').textContent)
+      && !!$('#stage [data-slot], #stage .rs-room, #stage [class*="rs-"]'), 15000), $('#stagenote').textContent);
+  check('...still nothing made', (await profiles.list()).length === screens0);
+
+  $('#examples [data-home="skip"]').click();
+  check('Skip for now opens the module picker and puts the examples away', await until(() => doc.body.classList.contains('pick-open') && ex().hidden));
   hb('picker').click();
   check('the Modules button closes it again', await until(() => !doc.body.classList.contains('pick-open')));
+  await ensureMenu('examples');
+  hrow('examples')?.click();
+  check('*** "Start from an example…" (a ⚙ menu row, so a switch reaches it) brings them back ***', await until(() => !ex().hidden));
 
   // ============================================================================================
-  section('*** Save on the preview makes the profile for real ***');
-  hb('save').click();
-  check('Save with no name yet asks for one (Save as)', await until(() => dlgOpen() && /Save as/.test($('#home-dlg h2').textContent)));
-  check('Cancel is the first button in the dialog', dlgBtns().filter((t) => ['Cancel', 'Save with this name'].includes(t))[0] === 'Cancel', dlgBtns().join(' | '));
-  check('the name is filled in already ("My profile")', $('#saveas-name').value === 'My profile');
-  check('ready-made names are offered (one press instead of typing)', doc.querySelectorAll('#home-dlg [data-home-dlg="name"]').length >= 2);
-  dlgBtn('dosaveas').click();
-  check('*** the profile now exists: one "My profile" screen ***', await until(() => /Saved as/.test(status()), 15000) && (await profileScreens()).length === 1, status());
-  const prof = (await profileScreens())[0];
-  const full = await profiles.get(prof.id);
-  check('...with the picture and the sign on it', full.modules.filter((m) => m.type === 'button').length === 2);
-  const pset = await row(prof.id, 'settings');
-  check('*** its panels are SEE-THROUGH (Mike: the default, for new profiles) ***', pset.panelSurface === 'veil', JSON.stringify(pset));
-  const hist1 = await row(prof.id, 'history');
-  check('*** the history has one version, named "My profile" ***', hist1.versions?.length === 1 && hist1.current === 'My profile', JSON.stringify(hist1).slice(0, 200));
-  check('the stage is now the LIVE profile (one kiosk, the same two panels)',
-    await until(() => kiosks() === 1 && doc.querySelectorAll('#stage [data-nbtn]').length >= 2 && /live/i.test($('#stagenote').textContent)));
-  check('History is available now', await until(() => !hb('history').disabled));
+  section('*** Make this my Home: made once, and it IS your Home ***');
+  card('fireside').querySelector('[data-ex-make]').click();
+  check('*** the Fireside attic is made, and it is your Home (homeId on the person) ***', await until(async () => !!(await homeId()), 20000));
+  const HID = await homeId();
+  const hscreen = await profiles.get(HID);
+  check('...a real screen, named for the example, two modules (picture and sign) on it', hscreen.name === 'Fireside attic'
+    && J((hscreen.modules || []).map((m) => m.type)) === J(['button', 'button']), J(hscreen));
+  check('...stamped as the ready-made one (so picking it again finds it)', (await row(HID, 'settings'))[PREBUILT_KEY] === 'fireside');
+  check('...its arrangement is the room with both hung on its back wall', (await layoutOf(HID))?.scene?.preset === 'fireside'
+    && (await layoutOf(HID)).placed.length === 2);
+  check('*** the history has one version, named after it ***', (await row(HID, 'history')).versions?.length === 1
+    && (await row(HID, 'history')).current === 'Fireside attic');
+  check('*** the stage is now your LIVE Home, in edit view, and the examples are put away ***',
+    await until(() => /Your Home, live/.test($('#stagenote').textContent) && ex().hidden && menuShown(), 15000), $('#stagenote').textContent);
+  check('the edit bar is LIVE now (Scene and Add can act)', await until(() => editIdle() && !eb('add').disabled));
+  check('the page tells Nimrod the Home exists', doc.body.dataset.homeProfile === 'made');
+  check('*** Switch module on the bar can act now ***', await until(() => hb('switch') && !hb('switch').disabled));
+  check('History is available', await until(() => !hb('history').disabled));
 
   // ============================================================================================
-  section('*** a setting changed waits for Save; Save over warns; History restores and deletes nothing ***');
-  if (!menuShown()) hb('view').click();
-  await until(menuShown);
-  check('the gear still reads "Done editing" after the profile was made', await until(() => hb('view')?.textContent === '⚙ Done editing'));
-  const panelRow = () => menuRow('Panel backgrounds');
-  check('(setup) the screen’s "Panel backgrounds" row is in the menu', await until(() => !!panelRow()));
-  panelRow()?.click();
-  check('*** the change shows at once: status says Unsaved changes ***', await until(() => /unsaved/i.test(status())), status());
-  check('...and the menu and bar FOLLOW it (their background changed with the screen’s)',
-    await until(() => $('#stage').dataset.chrome !== 'veil'), $('#stage').dataset.chrome);
-  const changedTo = $('#stage').dataset.chrome;
-  await sleep(600);
-  check('*** ...but the server still has the saved value (it is a draft) ***', (await row(prof.id, 'settings')).panelSurface === 'veil');
-  const ev = new win.Event('beforeunload', { cancelable: true });
-  win.dispatchEvent(ev);
-  check('leaving the page now would ask first (beforeunload is refused)', ev.defaultPrevented === true);
-  // *** THE MENU'S Save IS THE BAR'S Save: the same question, from either. ***
-  hrow('save')?.click();
-  check('*** the ⚙ menu’s Save row asks exactly what the bar’s Save asks ***', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
-  dlgBtn('cancel').click();
-  await until(() => !dlgOpen());
+  section('*** Design’s edit bar, on the real dashboard: Add ***');
+  eb('add').click();
+  check('Add opens its tray, its way out (Close) FIRST', await until(() => !tray().hidden && tray().querySelector('button')?.textContent === 'Close'));
+  check('...offering the catalog’s modules AND the old profile’s pieces (picture frame, name sign)',
+    !!tray().querySelector('[data-edit-add="clock"]') && !!tray().querySelector('[data-edit-add="piece:picture"]') && !!tray().querySelector('[data-edit-add="piece:sign"]'));
+  tray().querySelector('[data-edit-add="clock"]').click();
+  check('*** a Clock is ON your Home (a real module on the screen) ***', await until(async () => (await modsOf(HID)).some((m) => m.type === 'clock'), 15000));
+  const clockId = (await modsOf(HID)).find((m) => m.type === 'clock').id;
+  const clockEntry = (await layoutOf(HID)).placed.find((p) => p.id === clockId);
+  check('...hung on the room’s back wall (placed in the scene), not over the whole room', clockEntry?.place === 'scene' && clockEntry.surface === 'back', J(clockEntry));
+  check('...and the stage is rebuilt with it: still one kiosk, its bar back, edit view kept',
+    await until(() => editIdle() && kiosks() === 1 && !!hb('save') && menuShown(), 15000));
+  check('the edit bar now says Change: Clock (the thing added is the thing chosen)', await until(() => /Change: Clock/.test(eb('change')?.textContent || '')), eb('change')?.textContent);
+  check('*** Undo is available ***', !eb('undo').disabled);
+
+  // ============================================================================================
+  section('*** SWITCH MODULE: another module in exactly the same place, one press, from the BAR ***');
+  hb('switch').click();
+  check('the bar’s Switch module opens the Switch tray for the chosen thing, Close first',
+    await until(() => !tray().hidden && /Switch .* for/.test(tray().textContent) && tray().querySelector('button')?.textContent === 'Close'), tray().textContent.slice(0, 80));
+  const before = clockEntry;
+  const choice = tray().querySelector('[data-edit-switch="photos"]');
+  check('...listing other modules (not the one already there)', !!choice && !tray().querySelector('[data-edit-switch="clock"]'));
+  choice.click();
+  check('*** ONE press: the clock is gone and Photos is on the screen ***', await until(async () => {
+    const ms = await modsOf(HID); return !ms.some((m) => m.type === 'clock') && ms.some((m) => m.type === 'photos');
+  }, 15000));
+  const photosId = (await modsOf(HID)).find((m) => m.type === 'photos').id;
+  const after = (await layoutOf(HID)).placed.find((p) => p.id === photosId);
+  check('*** ...in EXACTLY the clock’s place (surface, x, y, w, h) ***',
+    after && ['place', 'surface', 'x', 'y', 'w', 'h'].every((k) => after[k] === before[k]), `${J(before)} -> ${J(after)}`);
+  check('...and nothing else on the Home moved', (await layoutOf(HID)).placed.length === 3);
+  check('it says so', await until(() => /switched for Photos/i.test(toastText())), toastText());
+  await until(editIdle, 15000);
+  eb('undo').click();
+  check('*** Undo: the clock comes BACK, in the same place, and Photos goes ***', await until(async () => {
+    const ms = await modsOf(HID); return ms.some((m) => m.type === 'clock') && !ms.some((m) => m.type === 'photos');
+  }, 15000));
+  const clockBack = (await modsOf(HID)).find((m) => m.type === 'clock');
+  const back = (await layoutOf(HID)).placed.find((p) => p.id === clockBack?.id);
+  check('...at its old x and y', back && back.x === before.x && back.y === before.y, J(back));
+  await until(editIdle, 15000);
+  check('Redo is available after an Undo', !eb('redo').disabled);
+  eb('redo').click();
+  check('*** Redo: Photos again ***', await until(async () => (await modsOf(HID)).some((m) => m.type === 'photos') && !(await modsOf(HID)).some((m) => m.type === 'clock'), 15000));
+  await until(editIdle, 15000);
+
+  // ============================================================================================
+  section('Change: move, size and remove by button (nothing needs a drag)');
+  if (tray().hidden || !/Change/.test(tray().textContent)) eb('change').click();
+  await until(() => !tray().hidden && !!tray().querySelector('[data-edit-change="move"]'));
+  const pid2 = (await modsOf(HID)).find((m) => m.type === 'photos').id;
+  const x0 = (await layoutOf(HID)).placed.find((p) => p.id === pid2).x;
+  // The chosen thing may not be the photos after a redo; step until it is.
+  for (let i = 0; i < 4 && !/Photos/.test(eb('change').textContent); i++) { tray().querySelector('[data-edit-change="next"]').click(); await sleep(150); }
+  check('(setup) Photos is the chosen thing', /Photos/.test(eb('change').textContent), eb('change').textContent);
+  const moveRight = $$('#home-tray [data-edit-change="move"]').find((b) => b.textContent === 'Move right');
+  moveRight.click();
+  check('*** Move right moves it 3% (saved), in place ***', await until(async () => (await layoutOf(HID)).placed.find((p) => p.id === pid2).x === x0 + 3, 10000));
+  await until(editIdle, 10000);
+  $$('#home-tray [data-edit-change="size"]').find((b) => b.textContent === 'Bigger').click();
+  check('Bigger makes it 10% bigger', await until(async () => {
+    const e = (await layoutOf(HID)).placed.find((p) => p.id === pid2); return e.w > (after?.w || 0);
+  }, 10000));
+  await until(editIdle, 10000);
+  tray().querySelector('[data-edit-change="remove"]').click();
+  check('*** Remove takes it off the Home (off the screen too) ***', await until(async () => !(await modsOf(HID)).some((m) => m.type === 'photos'), 15000));
+  await until(editIdle, 15000);
+  eb('undo').click();
+  check('*** ...and Undo puts it back ***', await until(async () => (await modsOf(HID)).some((m) => m.type === 'photos'), 15000));
+  await until(editIdle, 15000);
+  eb('transform').click();
+  check('*** Transform… opens the site’s OWN Transform windows on the dashboard (not a second copy) ***',
+    await until(() => !!$('#stage [data-ew="close"]'), 8000));
+  $$('#stage [data-ew="close"]').forEach((b) => b.click());
+  check('...and they close with their own Close', await until(() => !$('#stage [data-ew="close"]'), 5000));
+
+  // ============================================================================================
+  section('*** the scene editor: rooms, moving scenes, still ones; and the room’s own rows ***');
+  eb('scene').click();
+  check('Scene opens its tray: Close first, then this room’s rows, then every room, moving scene and still one',
+    await until(() => !tray().hidden && tray().querySelector('button')?.textContent === 'Close'
+      && !!tray().querySelector('[data-edit-room="light"]') && !!tray().querySelector('[data-edit-scene="room:living"]')
+      && !!tray().querySelector('[data-edit-scene="theme:fall"]') && !!tray().querySelector('[data-edit-scene="theme:default"]')));
+  check('the room showing is marked (pressed)', tray().querySelector('[data-edit-scene="room:fireside"]')?.getAttribute('aria-pressed') === 'true');
+  tray().querySelector('[data-edit-room="light"]').click();
+  check('*** a Room row (Light) changes the room — its own copy of the recipe, saved ***',
+    await until(async () => !!(await layoutOf(HID))?.scene?.recipe && (await layoutOf(HID)).scene.recipe.light !== 'night', 15000), J((await layoutOf(HID))?.scene));
+  await until(editIdle, 15000);
+  if (tray().hidden) eb('scene').click();
+  await until(() => !!tray().querySelector('[data-edit-scene="theme:fall"]'));
+  tray().querySelector('[data-edit-scene="theme:fall"]').click();
+  check('*** a moving scene (Fall): the room goes, the things on its wall stay, flat on the screen ***', await until(async () => {
+    const L = await layoutOf(HID); return L && !L.scene && L.placed.every((p) => p.place === 'screen');
+  }, 15000), J(await layoutOf(HID)));
+  check('*** ...and its colours are a SETTING: they wait for Save ***', await until(() => /unsaved/i.test(status()), 8000), status());
+  check('...the server still has the old theme', (await row(HID, 'settings')).theme !== 'fall');
+  await until(editIdle, 15000);
   hb('save').click();
-  check('*** Save over a saved name WARNS: "Save over “My profile”?" ***', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
+  check('Save over asks first (the Home has a saved name)', await until(() => dlgOpen() && /Save over/.test($('#home-dlg h2').textContent)));
   check('its buttons in order: Cancel, Save as a new name, Save over it', dlgBtns().join('|') === 'Cancel|Save as a new name|Save over it', dlgBtns().join('|'));
-  check('it says the replaced one stays in History', /History/.test($('#home-dlg p').textContent));
-  dlgBtn('cancel').click();
-  check('Cancel changes nothing', !dlgOpen() && /unsaved/i.test(status()) && (await row(prof.id, 'settings')).panelSurface === 'veil');
-  hb('save').click();
-  await until(() => dlgOpen());
   dlgBtn('over').click();
-  check('*** Save over it: written to the real screen ***', await (async () => {
-    const t = Date.now() + 8000;
-    while (Date.now() < t) { if ((await row(prof.id, 'settings')).panelSurface === changedTo) return true; await sleep(150); }
-    return false;
-  })(), changedTo);
-  const hist2 = await row(prof.id, 'history');
-  check('...and a second version is in the history', hist2.versions?.length === 2);
-  check('the status is clean again', await until(() => /Saved as “My profile”/.test(status())), status());
+  check('*** Save over it: the theme is Fall on the real screen ***', await until(async () => (await row(HID, 'settings')).theme === 'fall', 10000));
+  check('...and a second version is in the history', await until(async () => (await row(HID, 'history')).versions?.length === 2));
 
+  // ============================================================================================
+  section('History restores and deletes nothing');
+  await until(() => !hb('history').disabled);
   hb('history').click();
   check('History lists both, newest first', await until(() => dlgOpen() && doc.querySelectorAll('#home-dlg .ver').length === 2));
-  check('Close is offered', !!dlgBtn('close'));
-  doc.querySelectorAll('#home-dlg [data-home-dlg="restore"]')[1].click();   // the older one
+  doc.querySelectorAll('#home-dlg [data-home-dlg="restore"]')[1].click();
   check('*** restore opens the older version AS UNSAVED CHANGES ***', await until(() => !dlgOpen() && /unsaved/i.test(status())), status());
-  check('...and shows it (the menu and bar are see-through again)', await until(() => $('#stage').dataset.chrome === 'veil'));
-  check('*** ...and deleted nothing: the server history still has 2 ***', (await row(prof.id, 'history')).versions.length === 2);
-  hb('save').click();
-  await until(() => dlgOpen());
-  dlgBtn('over').click();
-  const hist3 = await (async () => { const t = Date.now() + 8000; let h; while (Date.now() < t) { h = await row(prof.id, 'history'); if (h.versions?.length === 3) break; await sleep(150); } return h; })();
-  check('*** saving the restored one ADDS a third version, marked as restored ***',
-    hist3.versions.length === 3 && !!hist3.versions[0].restoredFrom
-    && JSON.stringify(hist3.versions.slice(1)) === JSON.stringify(hist2.versions), JSON.stringify(hist3.versions?.map((v) => v.restoredFrom || '-')));
-  check('the server has the restored value', (await row(prof.id, 'settings')).panelSurface === 'veil');
+  check('*** ...and deleted nothing: the server history still has 2 ***', (await row(HID, 'history')).versions.length === 2);
 
   // ============================================================================================
   section('*** leaving unsaved changes asks; a module not on the screen is added only by Save ***');
-  await until(() => !!panelRow());
-  panelRow()?.click();
-  await until(() => /unsaved/i.test(status()));
   doc.querySelector('[data-pick="trivia"]').click();
   check('*** switching modules with unsaved changes asks first ***', await until(() => dlgOpen() && /Unsaved/.test($('#home-dlg h2').textContent)));
   check('Cancel first', dlgBtns()[0] === 'Cancel', dlgBtns().join('|'));
   dlgBtn('cancel').click();
-  check('Cancel keeps you where you were, changes intact', pickName() === 'Your profile' && /unsaved/i.test(status()));
+  check('Cancel keeps you where you were, changes intact', pickName() === 'Your Home' && /unsaved/i.test(status()));
   doc.querySelector('[data-pick="trivia"]').click();
   await until(() => dlgOpen());
   dlgBtn('leave').click();
-  check('Leave without saving goes to Trivia', await until(() => pickName() === 'Trivia' && !!$('#stage .tb-bar .tb-mods .k-dot')), pickName());
-  check('...and the profile’s change was dropped, not saved', (await row(prof.id, 'settings')).panelSurface === 'veil');
-  const defaultId = (await profiles.list()).find((p) => p.name !== 'My profile').id;
+  check('Leave without saving goes to Trivia', await until(() => pickName() === 'Trivia' && !!$('#stage .tb-bar .tb-mods .k-dot'), 15000), pickName());
+  check('...and the Home’s restored change was dropped, not saved', (await row(HID, 'settings')).theme === 'fall');
+  check('no edit bar on a single module', !$('#home-edit'));
+  check('Switch module is dimmed on a single module (dimmed, never hidden)', hb('switch')?.disabled === true);
+  const defaultId = (await profiles.list()).find((p) => p.id !== HID).id;
   const countTrivia = async () => (await profiles.get(defaultId)).modules.filter((m) => m.type === 'trivia').length;
   check('*** Trivia is NOT added to your screen by looking at it ***', (await countTrivia()) === 0);
   check('the status says Save adds it', /not on your screen/i.test(status()), status());
-  check('a module opens in LIVE view (menu closed)', !menuShown() && hb('view')?.textContent === '⚙ Edit', hb('view')?.textContent);
-  check('no welcome card on a module', $('#welcome').hidden);
   hb('save').click();
   await until(() => dlgOpen());
   check('Save asks for a name, filled with the module’s', $('#saveas-name').value === 'Trivia', $('#saveas-name').value);
   dlgBtn('dosaveas').click();
-  check('*** Save added Trivia to your screen, once ***', await (async () => { const t = Date.now() + 10000; while (Date.now() < t) { if ((await countTrivia()) === 1) return true; await sleep(150); } return false; })());
-  const tid = (await profiles.get(defaultId)).modules.find((m) => m.type === 'trivia').id;
-  check('...with a history of its own', (await row(defaultId, `history-${tid}`)).versions?.length === 1);
-  check('...and the stage is now the live one', await until(() => /Saved as “Trivia”/.test(status()) && /live/i.test($('#stagenote').textContent)), status());
+  check('*** Save added Trivia to your screen, once ***', await until(async () => (await countTrivia()) === 1, 10000));
 
   // ============================================================================================
-  section('the page’s own settings, in the ⚙ menu, persist; the welcome can be turned off and back on');
-  hb('view').click();
-  check('the gear opens the menu, with This page’s section in it', await until(() => menuShown() && !!hrow('set:keepVersions')));
-  const keepRow = () => hrow('set:keepVersions');
-  check('"Keep the last" shows 20 by default', /20/.test(keepRow()?.textContent), keepRow()?.textContent);
-  keepRow().click();
-  check('a press cycles it to 50', await until(() => /50/.test(keepRow()?.textContent)));
-  check('...and it is saved on the person', await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { if ((await personRow('home')).keepVersions === 50) return true; await sleep(150); } return false; })());
-  const hideRow = () => hrow('set:barHideMs');
-  check('*** "In full screen, tuck the bar away after": 6 seconds by default ***', /6 seconds/.test(hideRow()?.textContent), hideRow()?.textContent);
-  hideRow().click();
-  check('a press cycles it (to 10 seconds), saved on the person', await until(() => /10 seconds/.test(hideRow()?.textContent))
-    && await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { if ((await personRow('home')).barHideMs === 10000) return true; await sleep(150); } return false; })());
-  check('History’s row says how many are kept now', /50/.test(hrow('history')?.textContent), hrow('history')?.textContent);
-  hb('view').click();
-  await until(() => !menuShown());
-  doc.querySelector('[data-pick="profile"]').click();
-  await until(() => pickName() === 'Your profile' && !$('#welcome').hidden);
-  $('#welcome [data-home="nomore"]').click();
-  check('*** "Don’t show this again" hides the card and switches the profile to LIVE view ***',
-    await until(() => $('#welcome').hidden && !menuShown()));
-  check('...saved on the person: welcomeDone, openIn live', await (async () => { const t = Date.now() + 6000; while (Date.now() < t) { const r = await personRow('home'); if (r.welcomeDone === true && r.openIn === 'live') return true; await sleep(150); } return false; })());
-
-  await open(`user=${encodeURIComponent(USER)}`);
-  check('*** next visit: the profile, in LIVE view, no welcome ***',
-    await until(() => pickName() === 'Your profile' && kiosks() === 1 && /Saved as/.test(status())) && $('#welcome').hidden && !menuShown());
-  hb('view').click();
-  await until(() => !!hrow('rewelcome'));
-  hrow('rewelcome').click();
-  check('"Show the welcome again" (a ⚙ menu row) brings it back', await until(() => !$('#welcome').hidden));
+  section('the page’s own settings persist; the examples can stop opening by themselves');
+  check('the gear opens the menu, with This page’s section in it', await ensureMenu('set:keepVersions'));
+  hrow('set:keepVersions').click();
+  check('"Keep the last" cycles and is saved on the person', await until(async () => (await personRow('home')).keepVersions === 50, 6000));
+  check('*** next visit: straight to your Home (the real one, not a preview), no examples ***',
+    await (async () => { await open(`user=${encodeURIComponent(USER)}`); return until(() => pickName() === 'Your Home' && kiosks() === 1 && /Your Home, live/.test($('#stagenote').textContent), 15000); })()
+    && ex().hidden, $('#stagenote')?.textContent);
 
   // ============================================================================================
-  section('*** Nimrod the cat walks Home’s real controls, started from the ⚙ menu ***');
-  check('the welcome card offers Show me how too', !!$('#welcome [data-home="cat"]'));
-  await until(() => !!hrow('cat'));
+  section('with a Home: the examples again, trying one, and back');
+  await ensureMenu('examples');
+  hrow('examples').click();
+  check('"Start from an example…" opens them over your Home, with Close FIRST (there is a Home to go back to)',
+    await until(() => !ex().hidden && $('#examples button')?.textContent.trim() === 'Close'));
+  card('basic').querySelector('[data-ex-try]').click();
+  check('trying one shows it on the stage (your Home is untouched)', await until(() => /Trying “Plain Nimrod”/.test($('#stagenote').textContent), 15000));
+  $('#examples [data-home="close-examples"]').click();
+  check('*** Close goes back to your own Home ***', await until(() => ex().hidden && /Your Home, live/.test($('#stagenote').textContent), 15000), $('#stagenote').textContent);
+  check('...which is still your Home (nothing was made by trying)', (await homeId()) === HID && (await profiles.list()).length === 2, J((await profiles.list()).map((s) => s.name)));
+
+  // ============================================================================================
+  section('*** Nimrod the cat walks the new flow, started from the ⚙ menu ***');
+  // The Home has just been put back on the stage: let its kiosk come up (it opens in edit view, menu open)
+  // before deciding whether the gear needs a press -- pressing it mid-boot would close what it opens.
+  await until(() => !!hb('view') && editIdle(), 10000);
+  await ensureMenu('cat');
   hrow('cat').click();
-  check('*** Show me how (a menu row, so a switch reaches it) starts him ***', await until(() => !!$('[data-cat]')));
-  check('*** the profile already exists, so he skips "make it" and starts at the bar, ringing it ***',
-    await until(() => /This is the bar/.test($('[data-tour-say]')?.textContent || '')) && !$('[data-tour-ring]')?.hidden,
-    $('[data-tour-say]')?.textContent);
-  $('[data-cat] [data-tour-next]').click();
-  check('Next: Modules, on the same bar', await until(() => /Modules/.test($('[data-tour-say]')?.textContent || '')));
+  check('*** Show me how starts him ***', await until(() => !!$('[data-cat]')));
+  check('*** a Home exists, so he skips "pick an example" and starts at the bar ***',
+    await until(() => /This is the bar/.test($('[data-tour-say]')?.textContent || '')), $('[data-tour-say]')?.textContent);
   $('[data-cat] [data-tour-skip]').click();
   check('Close ends him', await until(() => !$('[data-cat]')));
 
   // ============================================================================================
-  section('a link to one module, and signed out');
+  section('*** an OLD profile (the profile game’s picture and sign) keeps loading, as Home ***');
+  {
+    const OLD = `${USER}-old`;
+    const op = createProfilesClient({ user: OLD });
+    await ensureProfile(op, OLD);                        // the account, its default screen and first person
+    const people = await op.people();
+    const game = createGame({ profiles: op,
+      makeSettings: (pid) => createState({ url: op.stateURL(pid, 'settings'), user: OLD }),
+      makeInstanceState: (pid, id) => createState({ url: op.stateURL(pid, id), user: OLD }),
+      makePersonState: (pid, key) => createState({ url: op.personStateURL(pid, key), user: OLD }),
+      personId: people[0].id, personName: 'Robin' });
+    const { profileId } = await game.makeProfile();
+    await game.hangPicture(); await game.putUpSign();
+    await open(`user=${encodeURIComponent(OLD)}`);
+    check('*** an account with an old profile and no Home picked: Home IS that profile, live ***',
+      await until(() => pickName() === 'Your Home' && /Your Home, live/.test($('#stagenote')?.textContent || ''), 15000), $('#stagenote')?.textContent);
+    check('...its two panels are on the stage', await until(() => doc.querySelectorAll('#stage [data-nbtn]').length >= 2, 8000));
+    check('...no examples pushed at somebody who has a Home', ex().hidden);
+    check('...and nothing was changed or made', (await op.list()).length === 2 && (await op.get(profileId)).modules.length === 2);
+  }
+
+  // ============================================================================================
+  section('a link to one module, a link to an example, and signed out');
   await open(`user=${encodeURIComponent(USER)}&m=photos`);
-  check('?m=photos opens Photos, live view, no welcome',
-    await until(() => pickName() === 'Photos' && kiosks() === 1) && $('#welcome').hidden && !menuShown());
+  check('?m=photos opens Photos, live view, no examples', await until(() => pickName() === 'Photos' && kiosks() === 1) && ex().hidden && !menuShown());
   await sleep(2500);
-  // Photos picks its only source by itself as it starts (a setting, written with nobody touching
-  // anything). That is the module setting itself up, not an edit: no "Unsaved changes", no question.
   check('*** a module setting itself up is not "Unsaved changes" ***', !/unsaved/i.test(status()), status());
+  await open(`user=${encodeURIComponent(USER)}-ex&example=study`);
+  check('*** ?example=study opens the examples with the Study on the stage ***',
+    await until(() => !ex().hidden && card('study')?.getAttribute('aria-current') === 'true' && /Study/.test($('#stagenote').textContent), 15000));
   const r = await fetch(`/?user=${encodeURIComponent(USER)}`, { headers: authHeaders(USER) });
   check('*** / sends a signed-in visitor to the modules page (Home) ***', new URL(r.url).pathname === '/modules.html', r.url);
-
   const anon = await fetch('/api/me');
   if (anon.status === 401) {
     await open('m=photos');
-    check('*** signed OUT: no Home bar; the parts page as it was ***',
-      await until(() => kiosks() === 1) && $('#stage-bar').hidden && !doc.body.classList.contains('is-home')
+    check('*** signed OUT: no Home bar, no examples; the parts page as it was ***',
+      await until(() => kiosks() === 1) && $('#stage-bar').hidden && ex().hidden && !doc.body.classList.contains('is-home')
       && win.getComputedStyle($('.legend')).display !== 'none');
   } else {
     check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
@@ -299,6 +422,11 @@ try {
   console.error(err);
 }
 ifr?.remove();
+if (failed && pageErrors.length) {
+  section('(diagnostic) what the page logged as errors');
+  // Shown like a failure line (so run_suite.py prints it beside the failures), not counted as one.
+  for (const e of pageErrors.slice(-12)) out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: `FAIL  (page logged) ${e}` }));
+}
 
 document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
 document.getElementById('summary').className = failed ? 'fail' : 'pass';

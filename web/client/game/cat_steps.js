@@ -27,9 +27,15 @@
 // A `target` may be a LIST: the first selector that is on the page with a size wins, so a step points
 // at a row inside the settings menu while the menu is open and at the gear while it is not.
 //
-// HOW MANY STEPS (11) IS A DEFAULT, NOT A RULE: making the profile (Save), then the bar, Modules, Panel,
-// the gear, the picture's rows, choosing the sign, its words, the room, Save again, goodbye. Each
-// teaches one move. Fewer would put two moves in one sentence; the "lots" level is where extra words go.
+// *** THE NEW FLOW (Mike, 2026-10-02: "The profiles are wrong ... I'm expecting the home page to be your
+// profile, and you add whatever modules you want to make it your own"). *** The walk no longer dresses a
+// picture frame and a name sign. It starts at the starting points (pick one: Make this my Home), then the
+// bar, Modules, Panel ▸, ⚙ Edit, what the menu changes, and Design's edit bar: Scene, Add, and Switch
+// module (the hot swap). The step ids that stayed keep their ids, so a walk saved half-way resumes.
+//
+// HOW MANY STEPS (11) IS A DEFAULT, NOT A RULE: make your Home, the bar, Modules, Panel, the gear, the
+// menu, Scene, Add, Switch module, Save, goodbye. Each teaches one move. Fewer would put two moves in one
+// sentence; the "lots" level is where extra words go.
 //
 // *** WHAT MIKE ASKED OF THE WALK, AND WHERE IT IS KEPT: *** no hello slide -- it opens on making the
 // profile (2026-09-29: "That first slide is kind of unnecessary. Start with the make my profile");
@@ -64,78 +70,85 @@ const MENU_ROOTS = [`${IN} .sm-dock > [data-settings] > [data-scrim]:not([hidden
   `${IN} .kiosk > [data-settings] > [data-scrim]:not([hidden])`];
 const MENU_OPEN = MENU_ROOTS.join(', ');
 const MENU_PANEL = MENU_ROOTS.map((m) => `${m} [data-panel]`).join(', ');
-const row = (id) => MENU_ROOTS.map((m) => `${m} .st-item[data-id="${id}"]`).join(', ');
-// The page says whether the profile exists yet (modules.html paints it on <body>).
+// The page says whether your Home exists yet (modules.html paints it on <body>).
 export const PROFILE_MADE = '[data-home-profile="made"]';
+// Home's starting points (up front on the page) and Design's edit bar (above the stage, in edit view).
+const EXAMPLE_MAKE = '#examples:not([hidden]) [data-ex-make]';
+const EDIT = (act) => `#home-edit:not([hidden]) [data-edit="${act}"]`;
 
 export const CAT_STEPS = [
-  { id: 'cat-profile', page: HOME_PAGE, target: HOST('save'), action: 'click', doneWhen: PROFILE_MADE,
-    brief: 'Press Save.',
-    say: 'First, your profile. What you see is a preview: nothing is made yet. Press Save on the bar '
-       + 'and choose a name, and it is made for real, with a picture frame and your name sign.',
-    more: 'Saving again never makes a second profile. You can close me any time with Close or the '
-        + 'Escape key.',
-    note: 'The first step (no hello slide). Done as soon as the profile exists, so it is skipped for '
-        + 'somebody who made theirs already.' },
+  { id: 'cat-profile', page: HOME_PAGE, target: [EXAMPLE_MAKE, HOST('save')], action: 'click', doneWhen: PROFILE_MADE,
+    brief: 'Pick an example: Make this my Home.',
+    say: 'First, your Home. It is your profile: a dashboard you make your own. Pick one of the examples '
+       + 'and press Make this my Home. Try it here shows one on the stage first.',
+    more: 'Picking one again never makes a second copy. If the examples are closed, Save on the bar makes '
+        + 'the one on the stage. You can close me any time with Close or the Escape key.',
+    note: 'The first step (no hello slide). Done as soon as a Home exists, so it is skipped for somebody '
+        + 'who has one already. Points at the first "Make this my Home", or at Save when the examples are shut.' },
 
   { id: 'cat-bar', page: HOME_PAGE, target: BAR, action: 'none',
     brief: 'This is the bar.',
     say: 'This is the bar. Every screen has one, with the same buttons in the same places. On Home it '
-       + 'also carries Modules, Save, Save as and History.',
+       + 'also carries Modules, Save, Save as, History and Switch module.',
     more: 'In full screen it tucks itself away after a few seconds. Touch the screen, press a key or '
         + 'press a switch to bring it back.',
     note: 'The kiosk keeps the bar showing while he points at it (`holdBar`), placed bar included.' },
 
   { id: 'cat-modules', page: HOME_PAGE, target: HOST('picker'), action: 'none',
     brief: 'Modules chooses what you look at.',
-    say: 'Modules, at the start of the bar, chooses what you are looking at: your profile, or any other '
-       + 'part. Your profile is always first.',
+    say: 'Modules, at the start of the bar, chooses what you are looking at: your Home, or any other '
+       + 'part on its own. Your Home is always first.',
     more: 'Looking at a part never adds it to anything. Save does.' },
 
   { id: 'cat-panel', page: HOME_PAGE, target: SHELL('panel'), action: 'click',
-    brief: 'Press Panel until your picture is outlined.',
-    say: 'Press Panel ▸ until your picture has the outline around it. That chooses which thing the '
-       + 'other buttons work on.',
-    more: 'Each press moves the outline on to the next thing on the screen.' },
+    brief: 'Press Panel to outline a thing.',
+    say: 'Press Panel ▸ to move the outline from one thing on your Home to the next. That chooses which '
+       + 'thing the other buttons work on.',
+    more: 'Each press moves the outline on to the next thing on the screen, and round again.' },
 
   { id: 'cat-gear', page: HOME_PAGE, target: SHELL('settings'), action: 'click', doneWhen: MENU_OPEN,
     brief: 'Press ⚙ Edit.',
-    say: 'Now press ⚙ Edit. That is the settings menu, and it changes whatever is outlined.',
+    say: 'Now press ⚙ Edit. It opens the settings menu, and the editing tools above your Home.',
     more: 'The M key opens it too. When it is already open, I skip this.' },
 
-  { id: 'cat-picture-rows', page: HOME_PAGE, action: 'none',
-    target: [row('set:image'), row('set:imageFrom'), MENU_PANEL, SHELL('settings')],
-    brief: 'Choose Picture, then Frame.',
-    say: 'In the menu, Picture from says where your photos are, and Picture picks one. Frame hangs '
-       + 'it in a picture frame, on a TV or on a monitor.',
-    more: 'Each press of a row steps to its next choice, so you can go round until you like it.' },
+  { id: 'cat-settings', page: HOME_PAGE, action: 'none', target: [MENU_PANEL, SHELL('settings')],
+    brief: 'The menu changes what is outlined.',
+    say: 'The menu changes whatever is outlined. On a picture, Picture opens your pictures: the ones you used '
+       + 'last, one from this device, or a folder; Frame hangs it in a picture frame, on a TV or on a monitor. '
+       + 'On a sign, Words changes what it says.',
+    more: 'Each press of a row steps to its next choice. What you change here waits for Save, so trying '
+        + 'things costs nothing.' },
 
-  { id: 'cat-sign', page: HOME_PAGE, action: 'none', target: SHELL('panel'),
-    brief: 'Press Panel until your sign is outlined.',
-    say: 'Now press Panel ▸ until your sign has the outline. The menu follows: it always shows what '
-       + 'is outlined.',
-    more: 'What you chose for the picture is waiting for Save, so moving on loses nothing.' },
+  { id: 'cat-scene', page: HOME_PAGE, action: 'none', target: [EDIT('scene'), SHELL('settings')],
+    brief: 'Scene changes what is behind everything.',
+    say: 'Scene changes what is behind everything: one of the rooms, a moving scene like Fall, or a still '
+       + 'one. A room has its own walls, floor and light to change.',
+    more: 'Things on the screen come along: going to a room hangs them on its wall.' },
 
-  { id: 'cat-words', page: HOME_PAGE, action: 'none', target: [row('set:label'), SHELL('settings')],
-    brief: 'Choose Words.',
-    say: 'Choose Words in the menu. Type your name and press Enter.',
-    more: 'Font, Colour of the words and Sign style are just below it, if you want to dress it up.' },
+  { id: 'cat-add', page: HOME_PAGE, action: 'none', target: [EDIT('add'), SHELL('settings')],
+    brief: 'Add puts a module on.',
+    say: 'Add puts a module on your Home: photos, a clock, a game, a picture frame or a name sign. That is '
+       + 'how it becomes yours.',
+    more: 'Change, next to it, moves a thing, makes it bigger or smaller, or takes it off. Transform types '
+        + 'the numbers.' },
 
-  { id: 'cat-room', page: HOME_PAGE, action: 'none', target: [row('set:theme'), SHELL('settings')],
-    brief: 'Colours changes the room.',
-    say: 'One more thing in that menu: Colours changes the room behind everything. Some of them move.',
-    more: 'That one belongs to the whole screen, so it is there whichever thing is outlined.' },
+  { id: 'cat-switch', page: HOME_PAGE, action: 'none', target: [HOST('switch'), EDIT('change')],
+    brief: 'Switch module swaps the outlined thing.',
+    say: 'Switch module, on the bar, swaps the outlined thing for another module in exactly the same place. '
+       + 'Choose the new one, and it is done.',
+    more: 'Undo puts the old one back, with its settings.' },
 
   { id: 'cat-save', page: HOME_PAGE, action: 'none', target: HOST('save'),
-    brief: 'Press Save to keep it.',
-    say: 'Your changes wait for Save. Press Save to keep them, or Save as… to keep a copy under a new '
-       + 'name. History has your last saves.',
+    brief: 'Press Save to keep settings.',
+    say: 'What is on your Home, and where, keeps as you change it. Settings wait for Save: press Save to '
+       + 'keep them, or Save as… for a copy under a new name. History has your last saves.',
     more: 'Restoring an old save deletes nothing: it opens as unsaved changes, and saving it adds a new '
         + 'one on top.' },
 
   { id: 'cat-done', page: HOME_PAGE, target: null, action: 'none', pose: 'happy',
     brief: 'That’s it. Ask me again any time.',
-    say: 'That’s it. Modules chooses what, the bar moves between things, ⚙ changes how, and Save keeps it.',
+    say: 'That’s it. Modules chooses what, the bar moves between things, ⚙ Edit changes how, and Switch '
+       + 'module swaps one thing for another.',
     more: 'If you want me again, it is Show me how in the ⚙ menu, under This page.' },
 ];
 
@@ -146,8 +159,8 @@ export const CAT_STEPS = [
 export function catGoThere(storage = null) { // eslint-disable-line no-unused-vars
   return (page) => {
     if (page === HOME_PAGE || page === PROFILE_PAGE) {
-      return { say: 'I show you around on Home, on your profile. Open it and I’ll carry on there.',
-        label: 'Open my profile', href: HOME_PROFILE_URL };
+      return { say: 'I show you around on Home, on your own Home. Open it and I’ll carry on there.',
+        label: 'Open my Home', href: HOME_PROFILE_URL };
     }
     if (page === GAME_PAGE) return { say: 'This part is on the game page.', label: 'The game', href: GAME_PAGE };
     return null;
