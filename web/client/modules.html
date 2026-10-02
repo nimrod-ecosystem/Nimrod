@@ -1476,8 +1476,13 @@ function switchTo(key) {
     await HOME.profiles.removeModule(HOME.home.id, old.id);
     HOME.sel = mod.id;
     HOME.tray = 'change';
+    // In place when the dashboard can (view.js replace, dd9299f): the old one goes and the new one mounts
+    // in its cell or spot, nothing else remounts. Anything it can't do falls back to the rebuild.
+    let r = null;
+    try { r = await dash()?.replace?.(old.id, { id: mod.id, type: mod.type }, next); } catch { r = null; }
+    if (!r || !r.applied) await rebuildHome();
     return `${thingTitle(old)} is switched for ${label}, in the same place.`;
-  }, { full: true });
+  }, { full: true, rebuild: false });
 }
 
 function removeThing() {
