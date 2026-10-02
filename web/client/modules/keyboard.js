@@ -20,6 +20,7 @@ import { registerModule } from '../module.js';
 import { normalizeRecord, INPUTS_KEY } from '../input_runtime.js';
 import { KEYBOARD_DEVICE, DEFAULT_BINDINGS } from '../input_keyboard.js';
 import { VERBS, FOCUS_VERBS, MEDIA_VERBS, SYSTEM_ACTIONS } from '../actions.js';
+import { followPerson } from '../person_known.js';
 
 const VERB_LABEL = Object.fromEntries([...VERBS, ...FOCUS_VERBS, ...MEDIA_VERBS].map((v) => [v.id, v.label]));
 // The screen's own actions by their own labels (Space is "Pause or play the selected panel" since 2026-10-02).
@@ -57,6 +58,7 @@ registerModule(
     const { mount } = ctx;
     let personState = null;
     let unsubscribe = null;
+    let offPerson = null;
     let torn = false;
 
     function render(record) {
@@ -106,21 +108,39 @@ registerModule(
         // means arrives unconfigured" promise `input_runtime.js` already makes elsewhere.
         render(normalizeRecord(null, DEFAULT_BINDINGS));
 
-        const pid = ctx.personId;
-        if (!pid || !ctx.makePersonState) return;   // no person on this screen - defaults stand
-        personState = await ctx.makePersonState(pid, INPUTS_KEY);
-        if (torn || !personState) return;
-        try { await personState.load?.(); } catch { /* offline - defaults already shown */ }
-        if (torn) return;
-        render(normalizeRecord(personState.get?.(), DEFAULT_BINDINGS));
-        unsubscribe = personState.subscribe?.((saved) => {
-          if (!torn) render(normalizeRecord(saved, DEFAULT_BINDINGS));
-        });
+        // *** THE PERSON MAY ARRIVE AFTER THIS PANEL DOES (person_known.js, 2026-10-02). *** It used
+        // to read `ctx.personId` once, here -- and on a slow boot that was null, so the panel showed the
+        // shipped defaults for good while the screen ran on the person's own. Now it follows the screen's
+        // answer: the defaults stand until the person is known, then their record replaces them. `init`
+        // still resolves after the first load when the person is already known (the suites rely on it).
+        let gen = 0;
+        const usePerson = async (pid) => {
+          const mine = ++gen;
+          try { unsubscribe?.(); } catch { /* already gone */ }
+          unsubscribe = null; personState = null;
+          if (!pid || !ctx.makePersonState) {          // no person on this screen - defaults stand
+            render(normalizeRecord(null, DEFAULT_BINDINGS));
+            return;
+          }
+          const st = await ctx.makePersonState(pid, INPUTS_KEY);
+          if (torn || !st || mine !== gen) return;
+          personState = st;
+          try { await st.load?.(); } catch { /* offline - defaults already shown */ }
+          if (torn || mine !== gen) return;
+          render(normalizeRecord(st.get?.(), DEFAULT_BINDINGS));
+          unsubscribe = st.subscribe?.((saved) => {
+            if (!torn && mine === gen) render(normalizeRecord(saved, DEFAULT_BINDINGS));
+          });
+        };
+        let first = null;
+        offPerson = followPerson(ctx, (pid) => { const p = usePerson(pid); if (!first) first = p; });
+        await first;
       },
       onResize() {},
       onHide() {},
       destroy() {
         torn = true;
+        try { offPerson?.(); } catch { /* already gone */ }
         try { unsubscribe?.(); } catch { /* already gone */ }
       },
     };

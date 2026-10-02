@@ -57,6 +57,7 @@
 
 import { registerModule } from '../module.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
 import { pick, statsFromEvents } from '../rng.js';
@@ -132,8 +133,12 @@ registerModule(
     // a registry was ignored and the panel reported "No personal-video source connected" while
     // holding a perfectly good source - which is also why its Retry button had never been
     // pressed by any test.
-    const client = ctx.sources
-      || createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
+    // WHOSE SCREEN may not be known yet at mount: `personSources` lists for whoever it is once the
+    // screen knows (bounded wait), and re-lists if that changes. See photos.js / person_known.js.
+    const scoped = ctx.sources ? null : personSources(ctx,
+      (pid) => createMediaSourcesClient({ user, cache: true, personId: pid }),
+      { onChange: () => { if (!destroyed) reload(); } });
+    const client = ctx.sources || scoped;
 
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {};
@@ -451,7 +456,11 @@ registerModule(
         state.set({ sourceId: src.id, album: qp.get('personalAlbum') || cfg.album, subjectName: qp.get('personalSubject') || cfg.subjectName });
         return src;
       }
-      if (sources.length === 1) { state.set({ sourceId: sources[0].id }); return sources[0]; }
+      // Not saved from a list made after the person lookup timed out (person_known.js `trusted`; photos.js).
+      if (sources.length === 1) {
+        if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
+        return sources[0];
+      }
       return null;
     }
 
@@ -601,6 +610,7 @@ registerModule(
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
         destroyed = true;
+        scoped?.dispose();
         clearTimer(pollTimer); pollTimer = null;
         clearFailWait();
         active = false; clearStall(); clearVideoEnd(); currentVideo = null;

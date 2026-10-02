@@ -46,6 +46,10 @@
 //                   not a plain value)
 //   ctx.instanceId  REQUIRED and must be a real, non-empty value - every module is an instance of
 //                   something, and per-instance state/events keying depends on this existing
+//
+//   ctx.personKnown OPTIONAL (2026-10-02, person_known.js): whether the screen knows whose it is yet,
+//                   retained. Absent, `ctx.personId` is taken as settled - which every host but the
+//                   kiosk does. Use person_known.js's helpers rather than reading it by hand.
 
 import { readWithLegacy } from './settings_fields.js';
 

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>person_known — panels end up with the person, however late the person arrives</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:960px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host > div{position:relative;width:420px;height:300px;border:1px solid #ddd;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>person_known</h1>
+<p>Mike's list 2026-09-30, Calls item 2: panels that read the person ONCE, at mount, started without
+the person on a slow boot. This suite mounts each of them before the screen knows whose it is, then
+lets the person arrive, and checks each ends up with the person's own values. It also checks that a
+person who NEVER arrives does not hold a panel up: it draws at once and, after the wait, carries on as
+nobody's. The last section mounts the real kiosk (needs the server).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { mountModule, registerModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { KEYBOARD_DEVICE } from '../input_keyboard.js';
+import { createPersonKnown, followPerson, personSources, whenPersonKnown, PERSON_KNOWN, PERSON_WAIT_MS }
+  from '../person_known.js';
+import '../modules/photos.js';
+import '../modules/personal.js';
+import '../modules/wallpaper.js';
+import '../modules/button.js';
+import '../modules/board.js';
+import '../modules/pressgame.js';
+import '../modules/youtube.js';
+import '../modules/keyboard.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function settled(fn, ms = 3000) {
+  const end = Date.now() + ms;
+  while (Date.now() < end) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(25); }
+  try { return !!fn(); } catch { return false; }
+}
+const RUN = Date.now().toString(36);
+
+// ---- the world the panels ask -----------------------------------------------------------------
+// The media registry, answered here: with a person, that person's sources; with none, the account's
+// whole list (the management view), which on this account is TWO residents' -- so a panel that asked
+// without the person sees the wrong thing, and these checks can tell. A media agent's /list too.
+const SRC = {
+  p1: { id: 'src-p1', label: 'P1 albums', kind: 'agent', base_url: 'http://agent-p1.test', person_id: 'p1' },
+  p2: { id: 'src-p2', label: 'P2 albums', kind: 'agent', base_url: 'http://agent-p2.test', person_id: 'p2' },
+};
+const ITEMS = [{ id: 'a.jpg', path: 'a.jpg', name: 'a.jpg', kind: 'image' },
+               { id: 'b.mp4', path: 'b.mp4', name: 'b.mp4', kind: 'video' },
+               { id: 'c.mp3', path: 'c.mp3', name: 'c.mp3', kind: 'audio' }];
+const asked = [];   // every registry / agent request, in order
+// When set, the account's whole list (asked with no person) is exactly this -- e.g. ONE other
+// resident's source, the case where "the only source, so save it" would save the wrong one.
+let accountList = null;
+const realFetch = window.fetch.bind(window);
+const json = (body) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
+window.fetch = async (input, init) => {
+  const url = typeof input === 'string' ? input : input.url;
+  if (url.includes('/api/media-sources') && (!init || !init.method || init.method === 'GET')) {
+    asked.push(url);
+    const pid = new URL(url, location.href).searchParams.get('person_id');
+    return json({ sources: pid === 'p1' ? [SRC.p1] : pid === 'p2' ? [SRC.p2] : (accountList || [SRC.p1, SRC.p2]) });
+  }
+  if (/^http:\/\/agent-p[12]\.test\/list/.test(url)) {
+    asked.push(url);
+    return json({ album: '', albums: [], items: ITEMS });
+  }
+  return realFetch(input, init);
+};
+const registryAsks = () => asked.filter((u) => u.includes('/api/media-sources'));
+const unscoped = () => registryAsks().filter((u) => !u.includes('person_id='));
+const scopedTo = (pid) => registryAsks().filter((u) => u.includes(`person_id=${pid}`));
+// For the panels with a listing seam: no network, one image and one video per source.
+const fakeListing = async (src) => ({ album: '', albums: [],
+  items: ITEMS.filter((it) => it.kind !== 'audio').map((it) => ({ ...it, sourceId: src.id, url: `data:,${src.id}-${it.id}` })),
+  count: 2 });
+
+function mem(seed = {}) {
+  let d = { ...seed }; const subs = new Set();
+  return {
+    load: async () => d, get: () => d,
+    set: (p) => { d = { ...d, ...p }; [...subs].forEach((f) => f(d)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); f(d); return () => subs.delete(f); },
+    flush: () => Promise.resolve(), startPolling() {}, destroy() {},
+  };
+}
+const evs = () => ({ load: async () => {}, get: () => ({ events: [], total: 0 }), append: async () => {},
+  subscribe: () => () => {}, startPolling() {}, destroy() {} });
+function box() {
+  const h = document.createElement('div');
+  document.getElementById('host').append(h);
+  return h;
+}
+// The ctx a screen hands a panel: `personId` is a getter on the screen's answer, as kiosk.js does it.
+function screenCtx(pk, extra = {}) {
+  const c = { personKnown: pk, ...extra };
+  Object.defineProperty(c, 'personId', { get: () => pk.get().personId, enumerable: true, configurable: true });
+  return c;
+}
+
+(async () => {
+try {
+  // =============================================================================================
+  section('the signal itself');
+  {
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    check('starts unsettled ("still looking" is not "nobody")', pk.get().settled === false && pk.get().personId === null);
+    const seen = [];
+    pk.subscribe((v) => seen.push(v.personId));
+    check('a subscriber before the answer hears nothing yet', seen.length === 0);
+    const firstP = pk.whenSettled();
+    pk.settle('p1', 'found');
+    check('the answer reaches an early subscriber', seen.join() === 'p1', seen.join());
+    check('whenSettled resolves with it', (await firstP).personId === 'p1');
+    const late = [];
+    pk.subscribe((v) => late.push(v.personId));
+    check('*** RETAINED: a subscriber AFTER the answer is told at once ***', late.join() === 'p1', late.join());
+    check('...and whenSettled after the fact resolves at once', (await pk.whenSettled()).personId === 'p1');
+    pk.settle('p1', 'found');
+    check('the same answer again tells nobody anything', seen.length === 1 && late.length === 1);
+    pk.settle('p2', 'found');
+    check('a DIFFERENT answer is told to everybody', seen.join() === 'p1,p2' && late.join() === 'p1,p2', `${seen} / ${late}`);
+    pk.settle(null, 'none');
+    check('"nobody\'s screen" is an answer too, and is told', seen.at(-1) === null && pk.get().settled);
+    pk.destroy();
+    pk.settle('p3');
+    check('after destroy nothing moves', pk.get().personId === null && seen.length === 3);
+  }
+  {
+    const pk = createPersonKnown({ timeoutMs: 120 });
+    await sleep(60);
+    check('before the wait runs out it is still looking', pk.get().settled === false);
+    await sleep(160);
+    check('*** a person who never arrives: after the wait it settles as NOBODY ***',
+      pk.get().settled && pk.get().personId === null && pk.get().reason === 'timeout', JSON.stringify(pk.get()));
+    const heard = [];
+    pk.subscribe((v) => heard.push(v.personId));
+    pk.settle('p1', 'found');
+    check('...and a LATE answer still lands, and is told', pk.get().personId === 'p1' && heard.join() === ',p1', heard.join());
+    pk.destroy();
+  }
+  {
+    const pk = createPersonKnown({ timeoutMs: 100, fallback: () => 'remembered' });
+    await sleep(200);
+    check('a fallback, if given, is who it carries on as', pk.get().personId === 'remembered' && pk.get().reason === 'timeout');
+    pk.destroy();
+    const never = createPersonKnown({ timeoutMs: 0 });
+    await sleep(150);
+    check('0 means wait however long (no timeout)', never.get().settled === false);
+    never.destroy();
+  }
+  check('the default wait is the argued 10 s', PERSON_WAIT_MS === 10000, String(PERSON_WAIT_MS));
+  check('the bus topic is named', PERSON_KNOWN === 'person/known');
+  {
+    // Hosts with no signal (home.js, module_try.js, every other suite): settled already, exactly as before.
+    const seen = [];
+    const off = followPerson({ personId: 'h1' }, (p) => seen.push(p));
+    check('no signal: followPerson runs once with ctx.personId and never again', seen.join() === 'h1');
+    off();
+    check('no signal: whenPersonKnown does not wait', (await Promise.race([whenPersonKnown({}).then(() => 'ok'), sleep(50).then(() => 'hung')])) === 'ok');
+    const made = [];
+    const s = personSources({ personId: 'h1' }, (pid) => { made.push(pid); return { list: async () => [pid] }; });
+    check('no signal: personSources lists for ctx.personId at once', (await s.list()).join() === 'h1' && made.join() === 'h1');
+  }
+  {
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const ctx = screenCtx(pk);
+    const made = []; const changes = [];
+    const s = personSources(ctx, (pid) => { made.push(pid); return { list: async () => [pid] }; },
+      { onChange: (p) => changes.push(p) });
+    let got = null;
+    s.list().then((r) => { got = r; });
+    await sleep(60);
+    check('personSources: a list asked before the answer WAITS for it (nothing made yet)', got === null && made.length === 0);
+    pk.settle('p1');
+    await sleep(20);
+    check('...and is made for the person once known', got && got.join() === 'p1' && made.join() === 'p1', JSON.stringify({ got, made }));
+    check('...without calling onChange for the first answer', changes.length === 0);
+    pk.settle('p2');
+    check('a changed person after a list: onChange', changes.join() === 'p2');
+    check('...and the next list is made for the new person', (await s.list()).join() === 'p2' && made.join() === 'p1,p2');
+    s.dispose();
+    pk.settle('p3');
+    check('after dispose: no more onChange', changes.join() === 'p2');
+  }
+
+  // =============================================================================================
+  // EACH PANEL: SLOW (mounted before the answer, which then arrives) and NEVER (it never arrives).
+  // =============================================================================================
+  section('photos');
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box(); const state = mem({ intervalMs: 3600000 });
+    const inst = mountModule('photos', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+      user: `pk-photos-${RUN}`, instanceId: 'ph-slow', resolveListing: fakeListing }));
+    inst.init();
+    await sleep(150);
+    const status = () => (h.querySelector('[data-status]')?.textContent || '');
+    check('SLOW: the panel DRAWS before the person is known (its controls are there)', !!h.querySelector('[data-next]') && !!h.querySelector('[data-stage]'));
+    check('...and says it is loading, not that nothing is connected', /Loading/.test(status()), status());
+    check('...and has NOT asked for the account\'s whole list meanwhile', registryAsks().length === 0, registryAsks().join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, photos lists THEIR sources ***',
+      await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+    check('...and shows them', await settled(() => /P1 albums/.test(h.querySelector('[data-source-label]')?.textContent || '')),
+      h.querySelector('[data-source-label]')?.textContent);
+    check('...and never asked without the person', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box(); const state = mem({ intervalMs: 3600000 });
+    const inst = mountModule('photos', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+      user: `pk-photos-n-${RUN}`, instanceId: 'ph-never', resolveListing: fakeListing }));
+    inst.init();
+    await sleep(40);
+    check('NEVER: the panel draws at once', !!h.querySelector('[data-stage]'));
+    check('*** NEVER: after the wait it carries on as nobody\'s (the account\'s list) ***',
+      await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+    const st = () => h.querySelector('[data-status]')?.textContent || '';
+    check('...and says what it found, not "Loading" forever', await settled(() => /More than one photo source/.test(st())), st());
+    pk.settle('p1');
+    check('a person arriving AFTER the wait is still picked up', await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+    inst.destroy(); h.remove();
+  }
+
+  section('personal videos');
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box(); const state = mem({});
+    const inst = mountModule('personal', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+      user: `pk-personal-${RUN}`, instanceId: 'pv-slow', resolveListing: fakeListing }));
+    inst.init();
+    await sleep(150);
+    const status = () => (h.querySelector('[data-status]')?.textContent || '');
+    check('SLOW: the panel draws and says it is loading', /Loading/.test(status()), status());
+    check('...and has not asked without the person', registryAsks().length === 0, registryAsks().join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, personal videos use THEIR source ***',
+      await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+    check('...asked with the person only', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box(); const state = mem({});
+    const inst = mountModule('personal', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+      user: `pk-personal-n-${RUN}`, instanceId: 'pv-never', resolveListing: fakeListing }));
+    inst.init();
+    check('NEVER: after the wait it carries on as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+    const st = () => h.querySelector('[data-status]')?.textContent || '';
+    check('...and stops saying "Loading"', await settled(() => st() && !/Loading/.test(st())), st());
+    pk.settle('p1');
+    check('a late person is still picked up', await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+    inst.destroy(); h.remove();
+  }
+
+  section('wallpaper');
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box(); const state = mem({ sourceId: 'src-p1', motion: 'still' });
+    const inst = mountModule('wallpaper', screenCtx(pk, { mount: h, bus: createBus(), state,
+      user: `pk-wp-${RUN}`, instanceId: 'wp-slow' }));
+    inst.init();
+    await sleep(150);
+    const probe = () => inst.impl.__probe();
+    check('SLOW: the ambient draws at once', !!h.querySelector('[data-ambient]') && probe().css !== '', probe().css);
+    check('...its pictures wait, with no request made', probe().items === 0 && asked.length === 0, asked.join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, the wallpaper plays THEIR folder ***',
+      await settled(() => probe().items > 0), JSON.stringify(probe()));
+    check('...asked with the person only', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box(); const state = mem({ sourceId: 'src-p1', motion: 'still' });
+    const inst = mountModule('wallpaper', screenCtx(pk, { mount: h, bus: createBus(), state,
+      user: `pk-wp-n-${RUN}`, instanceId: 'wp-never' }));
+    inst.init();
+    check('NEVER: the ambient draws at once', !!h.querySelector('[data-ambient]'));
+    check('...and after the wait it carries on as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+
+  section('button');
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box(); const state = mem({ label: 'Hello' });
+    const inst = mountModule('button', screenCtx(pk, { mount: h, bus: createBus(), state,
+      user: `pk-btn-${RUN}`, instanceId: 'btn-slow', speak: () => {} }));
+    inst.init();
+    await sleep(150);
+    check('SLOW: the button draws at once, with its words', !!h.querySelector('[data-face]') && /Hello/.test(h.textContent), h.textContent);
+    check('...and has not listed media without the person', registryAsks().length === 0, registryAsks().join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, the button takes THEIR one source ***',
+      await settled(() => state.get().imageFrom === 'src-p1'), JSON.stringify(state.get()));
+    check('...asked with the person only', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box(); const state = mem({ label: 'Hello' });
+    const inst = mountModule('button', screenCtx(pk, { mount: h, bus: createBus(), state,
+      user: `pk-btn-n-${RUN}`, instanceId: 'btn-never', speak: () => {} }));
+    inst.init();
+    check('NEVER: the button draws at once', /Hello/.test(h.textContent));
+    check('...and after the wait it carries on as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+    check('...where two residents\' sources mean it adopts neither', !state.get().imageFrom, JSON.stringify(state.get()));
+    pk.settle('p1');
+    check('a late person is still picked up', await settled(() => state.get().imageFrom === 'src-p1'), JSON.stringify(state.get()));
+    inst.destroy(); h.remove();
+  }
+
+  section('board');
+  const BOARD = { id: 'mine', name: 'My board', cols: 2, rows: 1,
+    cells: [{ word: 'Kitchen', image: { sourceId: 'src-p1', path: 'a.jpg' } }, { word: 'Plain' }] };
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box();
+    const inst = mountModule('board', screenCtx(pk, { mount: h, bus: createBus(), state: mem({ board: BOARD }),
+      events: evs(), output: { say: () => {} }, user: `pk-board-${RUN}`, instanceId: 'board-slow' }));
+    inst.init();
+    await sleep(150);
+    const img = () => h.querySelector('.ab-card .ab-img img');
+    check('SLOW: the board draws its words at once', /Kitchen/.test(h.textContent) && /Plain/.test(h.textContent), h.textContent);
+    check('...the picture waits, with nothing asked', !img() && registryAsks().length === 0, registryAsks().join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, the card shows THEIR picture ***',
+      await settled(() => img()?.src === 'http://agent-p1.test/files/a.jpg'), img()?.src);
+    check('...asked with the person only', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box();
+    const inst = mountModule('board', screenCtx(pk, { mount: h, bus: createBus(), state: mem({ board: BOARD }),
+      events: evs(), output: { say: () => {} }, user: `pk-board-n-${RUN}`, instanceId: 'board-never' }));
+    inst.init();
+    check('NEVER: the words draw at once', /Kitchen/.test(h.textContent));
+    check('...and after the wait the picture still comes (from the account\'s list)',
+      await settled(() => !!h.querySelector('.ab-card .ab-img img'), 1500) && unscoped().length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+
+  section('Wait and Go (pressgame) music');
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box();
+    const inst = mountModule('pressgame', screenCtx(pk, { mount: h, bus: createBus(), events: evs(),
+      state: mem({ openToMenu: false, music: 'folder', musicSourceId: 'src-p1' }),
+      user: `pk-pg-${RUN}`, profileId: 'p', instanceId: 'pg-slow' }));
+    inst.init();
+    await sleep(150);
+    check('SLOW: the game draws at once', !!h.querySelector('canvas'));
+    check('...its music folder waits, with nothing asked', asked.length === 0, asked.join(' '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, the music comes from THEIR folder ***',
+      await settled(() => asked.some((u) => u.startsWith('http://agent-p1.test/list'))), asked.join(' '));
+    check('...asked with the person only', unscoped().length === 0 && scopedTo('p1').length >= 1, registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+  {
+    asked.length = 0;
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box();
+    const inst = mountModule('pressgame', screenCtx(pk, { mount: h, bus: createBus(), events: evs(),
+      state: mem({ openToMenu: false, music: 'folder', musicSourceId: 'src-p1' }),
+      user: `pk-pg-n-${RUN}`, profileId: 'p', instanceId: 'pg-never' }));
+    inst.init();
+    check('NEVER: the game draws at once', !!h.querySelector('canvas'));
+    check('...and after the wait the folder is looked up as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+    inst.destroy(); h.remove();
+  }
+
+  section('YouTube presets');
+  const presetsOf = { p1: [{ id: 'pre-1', type: 'youtube', name: 'Their preset' }] };
+  const presetState = (pid) => mem({ presets: presetsOf[pid] || [] });
+  const ytFactory = () => ({ load() {}, cue() {}, cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} });
+  {
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box();
+    const asks = [];
+    const inst = mountModule('youtube', screenCtx(pk, { mount: h, bus: createBus(), events: evs(),
+      state: mem({ playlist: [{ id: 'vidA000001', channel: 'A', title: 'A-1', durationSec: 60 }] }),
+      user: `pk-yt-${RUN}`, instanceId: 'yt-slow', playerFactory: ytFactory,
+      makePersonState: (pid, key) => { asks.push(`${pid}:${key}`); return presetState(pid); } }));
+    inst.init();
+    await sleep(120);
+    const presets = () => (inst.impl.settingsChoices().presetId || []).map((o) => o.label);
+    check('SLOW: the panel draws at once', !!h.querySelector('[data-next]'));
+    check('...with no presets yet, and nothing asked for a person', presets().length === 0 && asks.length === 0, asks.join());
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, THEIR presets are offered ***',
+      await settled(() => presets().includes('Their preset')), presets().join());
+    check('...read from their own record', asks.join() === 'p1:presets', asks.join());
+    inst.destroy(); h.remove();
+  }
+  {
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box();
+    const inst = mountModule('youtube', screenCtx(pk, { mount: h, bus: createBus(), events: evs(),
+      state: mem({ playlist: [{ id: 'vidA000001', channel: 'A', title: 'A-1', durationSec: 60 }] }),
+      user: `pk-yt-n-${RUN}`, instanceId: 'yt-never', playerFactory: ytFactory,
+      makePersonState: (pid) => presetState(pid) }));
+    inst.init();
+    await sleep(300);
+    const presets = () => (inst.impl.settingsChoices().presetId || []).map((o) => o.label);
+    check('NEVER: the panel drew and runs with no presets', !!h.querySelector('[data-next]') && presets().length === 0);
+    pk.settle('p1');
+    check('a late person\'s presets still arrive', await settled(() => presets().includes('Their preset')), presets().join());
+    inst.destroy(); h.remove();
+  }
+
+  section('keyboard bindings');
+  const SAVED = { v: 2, gate: 'both', speak: false, devices: [],
+    bindings: [{ id: 'b1', actionId: 'verb/select', device: KEYBOARD_DEVICE, control: 'key:x',
+      edge: 'press', role: 'universal', holdMs: null, debounceMs: null, lockoutMs: null }] };
+  const rows = (h) => [...h.querySelectorAll('[data-kb-rows] .kb-row')].map((r) => r.textContent.replace(/\s+/g, ' ').trim());
+  {
+    const pk = createPersonKnown({ timeoutMs: 0 });
+    const h = box();
+    const asks = [];
+    const inst = mountModule('keyboard', screenCtx(pk, { mount: h, bus: createBus(), instanceId: 'kb-slow',
+      makePersonState: async (pid, key) => { asks.push(`${pid}:${key}`); return mem(pid === 'p1' ? SAVED : {}); } }));
+    await inst.init();
+    await sleep(30);
+    check('SLOW: the shipped defaults draw at once', rows(h).some((r) => /Arrow Down/.test(r)), rows(h).join(' | '));
+    pk.settle('p1');
+    check('*** SLOW: once the person arrives, THEIR bindings replace the defaults ***',
+      await settled(() => rows(h).length === 1 && /^X/.test(rows(h)[0])), rows(h).join(' | '));
+    check('...read from their own record', asks.length === 1 && asks[0].startsWith('p1:'), asks.join());
+    inst.destroy(); h.remove();
+  }
+  {
+    const pk = createPersonKnown({ timeoutMs: 150 });
+    const h = box();
+    const inst = mountModule('keyboard', screenCtx(pk, { mount: h, bus: createBus(), instanceId: 'kb-never',
+      makePersonState: async (pid) => mem(pid === 'p1' ? SAVED : {}) }));
+    const r = await Promise.race([inst.init().then(() => 'done'), sleep(100).then(() => 'hung')]);
+    check('NEVER: init does not wait for a person', r === 'done', r);
+    await sleep(250);
+    check('...and the defaults stand', rows(h).some((x) => /Arrow Down/.test(x)), rows(h).join(' | '));
+    pk.settle('p1');
+    check('a late person\'s bindings still arrive', await settled(() => rows(h).length === 1 && /^X/.test(rows(h)[0])), rows(h).join(' | '));
+    inst.destroy(); h.remove();
+  }
+
+  // =============================================================================================
+  // *** A TIMEOUT NEVER SAVES A SOURCE (coordinator, 2026-10-02). *** After the wait runs out the list
+  // is the whole account's; when that is exactly ONE source -- here another resident's -- the old
+  // "only one, so save it" would write a wrong fact that outlives the timeout. Shown: yes. Saved: no.
+  // A person landing late re-lists, and THEN the panel saves from their own list.
+  section('a timeout never saves a source; a late person does');
+  {
+    const s = personSources(screenCtx(createPersonKnown({ timeoutMs: 0 })), () => ({ list: async () => [] }));
+    check('personSources.trusted: no list yet counts as trusted (nothing to save from)', s.trusted() === true);
+    s.dispose();
+    const pkN = createPersonKnown({ timeoutMs: 0 });
+    pkN.settle(null, 'none');
+    const sN = personSources(screenCtx(pkN), () => ({ list: async () => [] }));
+    await sN.list();
+    check('...a list made when the screen is KNOWN to be nobody\'s is trusted', sN.trusted() === true);
+    sN.dispose();
+    const pkT = createPersonKnown({ timeoutMs: 50 });
+    const sT = personSources(screenCtx(pkT), () => ({ list: async () => [] }));
+    await sT.list();
+    check('...a list made after a TIMEOUT is not', sT.trusted() === false && pkT.get().reason === 'timeout');
+    pkT.settle('p1', 'found');
+    await sT.list();
+    check('...and once the person lands, the next list is', sT.trusted() === true);
+    sT.dispose();
+    check('a host with no signal is trusted', personSources({ personId: 'h' }, () => ({ list: async () => [] })).trusted() === true);
+  }
+  accountList = [SRC.p2];
+  try {
+    {
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 150 });
+      const h = box(); const state = mem({ intervalMs: 3600000 });
+      const inst = mountModule('photos', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+        user: `pk-photos-t-${RUN}`, instanceId: 'ph-timeout', resolveListing: fakeListing }));
+      inst.init();
+      const label = () => h.querySelector('[data-source-label]')?.textContent || '';
+      check('photos, timeout: the account\'s one source is SHOWN', await settled(() => /P2 albums/.test(label()), 1500), label());
+      await sleep(100);
+      check('*** photos, timeout: ...but NOT SAVED ***', !state.get().sourceId, JSON.stringify(state.get()));
+      pk.settle('p1', 'found');
+      check('photos: the late person\'s own source IS saved', await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+      check('...and shown', await settled(() => /P1 albums/.test(label())), label());
+      inst.destroy(); h.remove();
+    }
+    {
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 150 });
+      const h = box(); const state = mem({});
+      const inst = mountModule('personal', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+        user: `pk-personal-t-${RUN}`, instanceId: 'pv-timeout', resolveListing: fakeListing }));
+      inst.init();
+      check('personal, timeout: listed as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+      await sleep(200);
+      check('*** personal, timeout: the account\'s one source is NOT SAVED ***', !state.get().sourceId, JSON.stringify(state.get()));
+      pk.settle('p1', 'found');
+      check('personal: the late person\'s own source IS saved', await settled(() => state.get().sourceId === 'src-p1'), JSON.stringify(state.get()));
+      inst.destroy(); h.remove();
+    }
+    {
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 150 });
+      const h = box(); const state = mem({ label: 'Hello' });
+      const inst = mountModule('button', screenCtx(pk, { mount: h, bus: createBus(), state,
+        user: `pk-btn-t-${RUN}`, instanceId: 'btn-timeout', speak: () => {} }));
+      inst.init();
+      check('button, timeout: listed as nobody\'s', await settled(() => unscoped().length >= 1, 1500), registryAsks().join(' '));
+      await sleep(200);
+      check('*** button, timeout: the account\'s one source is NOT SAVED ***', !state.get().imageFrom, JSON.stringify(state.get()));
+      pk.settle('p1', 'found');
+      check('button: the late person\'s own source IS saved', await settled(() => state.get().imageFrom === 'src-p1'), JSON.stringify(state.get()));
+      inst.destroy(); h.remove();
+    }
+    {
+      // CONTROL: a screen KNOWN to be nobody's ('none') is an answer, so saving the one source stands.
+      asked.length = 0;
+      const pk = createPersonKnown({ timeoutMs: 0 });
+      pk.settle(null, 'none');
+      const h = box(); const state = mem({ intervalMs: 3600000 });
+      const inst = mountModule('photos', screenCtx(pk, { mount: h, bus: createBus(), state, events: evs(),
+        user: `pk-photos-none-${RUN}`, instanceId: 'ph-none', resolveListing: fakeListing }));
+      inst.init();
+      check('CONTROL: on a screen known to be nobody\'s, photos still saves the one source',
+        await settled(() => state.get().sourceId === 'src-p2'), JSON.stringify(state.get()));
+      inst.destroy(); h.remove();
+    }
+  } finally { accountList = null; }
+
+  // =============================================================================================
+  section('the real kiosk (needs the server)');
+  // A test-only panel that records what it saw at mount and what it was told afterwards.
+  const seen = [];
+  registerModule({ type: 'personknownprobe', title: 'Person probe', description: 'test only', settings: [] },
+    (ctx) => {
+      let off = null;
+      return {
+        init() {
+          ctx.mount.innerHTML = '<div class="pk-probe">probe</div>';
+          seen.push({ atMount: ctx.personId || null, known: ctx.personKnown?.get?.() || null });
+          off = followPerson(ctx, (p) => seen.push({ followed: p }));
+        },
+        destroy() { try { off?.(); } catch { /* gone */ } ctx.mount.innerHTML = ''; },
+      };
+    });
+  const seams = { storage: { getItem: () => null, setItem() {}, removeItem() {} },
+    session: { getItem: () => null, setItem() {}, removeItem() {} }, navigate: () => {}, reloadPage: () => {} };
+  const kUser = `pk-kiosk-${RUN}`;
+  const real = createProfilesClient({ user: kUser });
+  let person = null, screen = null;
+  try {
+    person = await real.addPerson('TEST person known');
+    screen = await real.create('TEST-person-known', person.id);
+    await real.addModule(screen.id, 'personknownprobe');
+  } catch (e) {
+    check('(setup) the server made a person and a screen', false, String(e));
+  }
+  if (person && screen) {
+    // 1. AN ORDINARY BOOT: the screen's row names the person before any panel mounts.
+    {
+      seen.length = 0;
+      const kb = box();
+      let k = null;
+      try {
+        k = await mountKiosk(kb, { user: kUser, profileId: screen.id, profiles: real, bus: createBus(), ...seams });
+        await settled(() => !!kb.querySelector('.pk-probe'));
+        check('(setup) the probe panel mounted', seen.length >= 1, JSON.stringify(seen));
+        check('*** A PANEL MOUNTED AT BOOT ALREADY KNOWS WHOSE SCREEN IT IS ***',
+          seen[0]?.atMount === person.id, `${seen[0]?.atMount} vs ${person.id}`);
+        check('...and the screen says the answer is settled', seen[0]?.known?.settled === true && seen[0]?.known?.personId === person.id,
+          JSON.stringify(seen[0]?.known));
+        check('...and the live lookup agreeing changes nothing for the panel',
+          await settled(() => k.personKnown().get().reason === 'found', 4000) && seen.filter((s) => 'followed' in s).length === 1,
+          JSON.stringify(seen));
+      } catch (e) { check('the ordinary-boot section threw', false, String((e && e.stack) || e)); }
+      finally { try { k?.destroy(); } catch { /* gone */ } kb.remove(); }
+    }
+    // 2. THE PERSON ARRIVES LATE: the row the screen booted from has no person (handed over since),
+    //    and the live lookup, held back, names them after the panels are up.
+    {
+      seen.length = 0;
+      const kb = box();
+      let k = null;
+      let release = () => {};
+      const gate = new Promise((r) => { release = r; });
+      let gets = 0;
+      const slow = Object.create(real);
+      slow.get = async (id) => {
+        gets += 1;
+        const row = await real.get(id);
+        if (gets === 1) return { ...row, person_id: null };
+        await gate;
+        return row;
+      };
+      try {
+        k = await mountKiosk(kb, { user: kUser + '-late', profileId: screen.id, profiles: slow, bus: createBus(), ...seams });
+        await settled(() => !!kb.querySelector('.pk-probe'));
+        check('(setup) the probe mounted while the person was not known', seen[0]?.atMount === null, JSON.stringify(seen));
+        release();
+        check('*** THE PERSON ARRIVING LATE REACHES A PANEL MOUNTED BEFORE IT ***',
+          await settled(() => seen.some((s) => s.followed === person.id), 5000), JSON.stringify(seen));
+        check('...and the screen\'s answer is the live one', k.personKnown().get().personId === person.id
+          && k.personKnown().get().reason === 'found', JSON.stringify(k.personKnown().get()));
+      } catch (e) { check('the late-person section threw', false, String((e && e.stack) || e)); }
+      finally { release(); try { k?.destroy(); } catch { /* gone */ } kb.remove(); }
+    }
+    // 3. THE PERSON NEVER ARRIVES: the live lookup hangs for good. Nothing waits on it.
+    {
+      seen.length = 0;
+      const kb = box();
+      let k = null;
+      let gets = 0;
+      const hung = Object.create(real);
+      hung.get = async (id) => {
+        gets += 1;
+        if (gets === 1) return { ...(await real.get(id)), person_id: null };
+        return new Promise(() => {});
+      };
+      try {
+        k = await mountKiosk(kb, { user: kUser + '-never', profileId: screen.id, profiles: hung, bus: createBus(),
+          personWaitMs: 200, ...seams });
+        check('*** NEVER: the screen and its panel come up anyway ***', await settled(() => !!kb.querySelector('.pk-probe')));
+        await sleep(300);
+        check('...as nobody\'s screen, settled (not "still looking")',
+          k.personKnown().get().settled === true && k.personKnown().get().personId === null, JSON.stringify(k.personKnown().get()));
+      } catch (e) { check('the never section threw', false, String((e && e.stack) || e)); }
+      finally { try { k?.destroy(); } catch { /* gone */ } kb.remove(); }
+    }
+  }
+} catch (e) {
+  check('the suite threw', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed === 0 ? 'pass' : 'fail';
+sum.dataset.done = 'true';
+})();
+</script>
+</body>
+</html>

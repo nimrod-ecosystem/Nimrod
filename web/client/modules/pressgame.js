@@ -74,6 +74,7 @@ import { fieldItems, fieldsFor } from '../settings_fields.js';
 import { EDGE_TOPIC } from '../input.js';
 import { createGameMusic } from '../game_music.js';
 import { createMediaSourcesClient } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 
 // *** BUMP THIS WHENEVER A RECORDED FIELD IS ADDED OR CHANGES MEANING. ***
@@ -1174,9 +1175,17 @@ registerModule(
 
         // THE BED. Built even when set to 'off' so the setting can be changed without a
         // remount; `off()` simply keeps it quiet.
+        // WHOSE MUSIC FOLDERS: whoever the screen is for, once it knows (person_known.js, 2026-10-02) --
+        // read once here, a game mounted before the screen's person lookup landed looked its folder up in
+        // the wrong list for good. The game plays at once (ambient meanwhile); the folder follows.
+        const scopedMusic = (!ctx.sources && ctx.user) ? personSources(ctx,
+          (pid) => createMediaSourcesClient({ user: ctx.user, personId: pid }),
+          { onChange: () => {
+            if (cfg.music === 'folder') music?.useFolder(cfg.musicSourceId, cfg.musicAlbum).catch(() => {});
+          } }) : null;
+        if (scopedMusic) offs.push(() => scopedMusic.dispose());
         music = createGameMusic({
-          sources: ctx.sources
-            || (ctx.user ? createMediaSourcesClient({ user: ctx.user, personId: ctx.personId }) : null),
+          sources: ctx.sources || scopedMusic,
           volume: cfg.musicVolume,
           // THE ARBITER. Without it this bed plays over a spoken cue and alongside a video.
           // The id carries the instance so two pressgames are two sources, and the newest

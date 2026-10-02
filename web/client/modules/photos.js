@@ -25,6 +25,7 @@
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createMediaSourcesClient, resolveListing } from '../media_sources.js';
+import { personSources } from '../person_known.js';
 import { createWatchdog } from '../watchdog.js';
 import { pick, statsFromEvents } from '../rng.js';
 import { flashLimit, failureFloorMs, failureBackoffMs } from '../flash_limit.js';
@@ -213,8 +214,16 @@ registerModule(
     // account-wide ones, and never another resident's. Undefined on any host that has not
     // wired it - the dev harness, a signed-out demo - which keeps the account-wide view
     // those surfaces already had.
-    const client = ctx.sources
-      || createMediaSourcesClient({ user, cache: true, personId: ctx.personId || null });
+    //
+    // *** AND WHOSE SCREEN IT IS MAY NOT BE KNOWN YET (person_known.js, 2026-10-02). *** Read once here,
+    // a panel mounted before the screen's person lookup landed listed EVERY resident's sources for
+    // good. `personSources` lists for whoever the screen is for -- it waits for that answer (bounded:
+    // the screen carries on without it after PERSON_WAIT_MS) while the panel draws and says
+    // "Loading photos…", and re-lists (`reload`) if the answer changes after a list was made.
+    const scoped = ctx.sources ? null : personSources(ctx,
+      (pid) => createMediaSourcesClient({ user, cache: true, personId: pid }),
+      { onChange: () => reload() });
+    const client = ctx.sources || scoped;
 
     // *** A SEAM BESIDE `ctx.sources`, AND IT EARNED ITS PLACE. ***
     //
@@ -598,7 +607,12 @@ registerModule(
         state.set({ sourceId: src.id, album: qp.get('photoAlbum') || cfg.album });
         return src;
       }
-      if (sources.length === 1) { state.set({ sourceId: sources[0].id }); return sources[0]; }
+      // Saved only when the screen KNOWS whose it is: a list made after the person lookup timed out is
+      // shown, never saved from (person_known.js `trusted`) -- a late person re-lists and saves then.
+      if (sources.length === 1) {
+        if (client.trusted?.() !== false) state.set({ sourceId: sources[0].id });
+        return sources[0];
+      }
       // *** MORE THAN ONE SOURCE USED TO BE A DEAD END, AND IT WAS A LOUD ONE. ***
       //
       // This returned null the moment a second source existed, and the panel then said
@@ -839,7 +853,7 @@ registerModule(
       // `loadSeq` moves on so a listing still in flight lands on nothing: without it a panel
       // destroyed mid-load (a remount, a screen swapped in place) went on to show a photo and
       // arm a timer after it was gone.
-      destroy() { loadSeq += 1; clearAdvance(); clearResume(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
+      destroy() { loadSeq += 1; clearAdvance(); clearResume(); scoped?.dispose(); if (holdTimer != null) { clearTimer(holdTimer); holdTimer = null; } },
 
       // EDIT MODE (edit_mode.js, 2026-10-02). The picture on screen, and the line naming where the photos come
       // from, each with the rows about it -- this panel's own declared settings, nothing new. A picture has no
