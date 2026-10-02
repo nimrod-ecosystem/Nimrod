@@ -78,7 +78,8 @@ export function createArrangement({
   // runtime, the health watch, the screen id a swap changes -- so a value captured here would be null
   // (or the boot screen's) forever. The same reason kiosk.js's `childCtx` hands modules getters.
   runtime = () => null, health = () => null, profileId = () => null,
-  // The screen's flash limit (flash_limit.js), a getter, for the dashboard's room. Absent: the room uses 3.
+  // The screen's flash limit (flash_limit.js), a getter, for the dashboard's room. Absent: the room uses flash_limit.js's
+  // default (no limit, since 8a89e31).
   flashLimit = undefined,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
@@ -666,6 +667,8 @@ export function createArrangement({
     try {
       const rec = watchRec(await mountInstance(def, host));
       placedRecs.push(rec);
+      // A panel SAVED hidden is told so as it mounts (hide = mute, ad7dc49): it was playing after a reload.
+      if (entry.shown === false) { try { rec.instance?.onHide?.(); } catch { /* not load-bearing */ } }
       return rec;
     } catch (err) {
       console.error(`kiosk: ${def.type} (placed) failed to start`, err);

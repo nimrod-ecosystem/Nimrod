@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>step 6 stage 4 — the real screen as one dashboard module</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:640px;height:360px;margin-top:12px;border:1px solid #ccc}
+  .box .kiosk{position:absolute}
+</style>
+</head>
+<body>
+<h1>step 6 stage 4 — the real screen as one dashboard module</h1>
+<p>Mounts the real <code>mountKiosk</code> (NOT embedded) against the server on seeded screens whose
+settings row turns the dashboard path on (<code>dashboardModule: true</code>). Proves: the path is chosen
+per screen (and by the default seam), a swap loads and mounts the new dashboard before destroying the old
+(a failing one leaves the old exactly as it was), the theme and the mirror/clock corners follow the
+dashboard that is showing, a swapped-in dashboard's panels read their own rows, the old panels stop being
+health-watched, nothing piles up over many swaps, and the plain bar comes up by itself when the placed
+bar fails or goes.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk, SCREEN_SHOW, SCREEN_BACK, SCREEN_SHOWN, dashboardPathFor, DASHBOARD_MODULE_DEFAULT,
+  DASHBOARD_MODULE_KEY } from '../kiosk.js';
+import { createState } from '../state.js';
+import { registerModule } from '../module.js';
+import { THEMES } from '../theme.js';
+
+const USER = 'stage4-test-user-' + Math.floor(performance.now()) + '-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settled = async (fn, ms = 4000) => {
+  const until = Date.now() + ms;
+  while (Date.now() < until) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(25); }
+  return false;
+};
+const mkBox = () => { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; };
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+const seams = (reloads = []) => ({ storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => { reloads.push(1); } });
+const themeVar = (name) => document.documentElement.style.getPropertyValue(name).trim();
+
+// A PLACED BAR THAT WILL NOT START (the plain bar's reason to exist).
+registerModule({ type: 'test_bad_bar', title: 'Broken bar', chrome: 'bar', importance: 'normal', dependsOn: 'none', settings: [] },
+  () => ({ init() { throw new Error('test_bad_bar: refuses to start, on purpose'); }, onResize() {}, onHide() {}, destroy() {} }));
+
+// A PANEL THAT MAKES SOUND (hide = mute): one source on the audio bus, owned by its instance (module.js).
+registerModule({ type: 'test_noisy', title: 'Noisy', sound: true, importance: 'normal', dependsOn: 'none', settings: [] },
+  (ctx) => ({ init() { ctx.audio?.play?.(`s4-noisy-${ctx.instanceId}`, { tier: 'media' }); },
+    onResize() {}, onHide() {}, onShow() {}, destroy() { try { ctx.audio?.stop?.(`s4-noisy-${ctx.instanceId}`); } catch { /* gone */ } } }));
+
+(async () => {
+  try {
+    // ---- pure: the path a row chooses ----
+    check('pure: a row that never chose follows the default (OFF today)',
+      dashboardPathFor({}) === DASHBOARD_MODULE_DEFAULT && DASHBOARD_MODULE_DEFAULT === false);
+    check('pure: true / false on the row win over either default',
+      dashboardPathFor({ [DASHBOARD_MODULE_KEY]: true }, false) === true
+      && dashboardPathFor({ [DASHBOARD_MODULE_KEY]: false }, true) === false);
+    check('pure: anything that is not a boolean is "never chose"',
+      dashboardPathFor({ [DASHBOARD_MODULE_KEY]: 'yes' }, false) === false
+      && dashboardPathFor({ [DASHBOARD_MODULE_KEY]: 1 }, true) === true && dashboardPathFor(null, true) === true);
+
+    const real = createProfilesClient({ user: USER });
+    // A wrapper that can hand back a BROKEN screen record (a module entry that is not one), so a swap's
+    // NEW dashboard throws inside its own init -- after it has started mounting, not before.
+    const BROKEN = 'TEST-broken-record';
+    const profiles = { ...real, get: async (id) => (id === BROKEN ? { id, name: 'broken', modules: [null] } : real.get(id)) };
+    const setRow = async (id, patch) => {
+      const st = createState({ url: real.stateURL(id, 'settings'), user: USER });
+      await st.load().catch(() => {});
+      st.set(patch);
+      await st.flush();
+      st.destroy();
+    };
+    const setPanel = async (screenId, modId, patch) => {
+      const st = createState({ url: real.stateURL(screenId, modId), user: USER });
+      await st.load().catch(() => {});
+      st.set(patch);
+      await st.flush();
+      st.destroy();
+    };
+
+    // Screen A (boots here): a grid of trivia + clock, a camera HUD, its own theme and corners.
+    const A = await real.create('TEST-s4-A');
+    const aTrivia = await real.addModule(A.id, 'trivia');
+    const aClock = await real.addModule(A.id, 'clock');
+    await real.addModule(A.id, 'camera');
+    // Screen B: one-at-a-time (no layout), photos then trivia, a camera and a clock HUD, other theme/corners.
+    const B = await real.create('TEST-s4-B');
+    const bPhotos = await real.addModule(B.id, 'photos');
+    await real.addModule(B.id, 'trivia');
+    await real.addModule(B.id, 'camera');
+    await real.addModule(B.id, 'clock');
+    // Screen C: no theme of its own.
+    const C = await real.create('TEST-s4-C');
+    await real.addModule(C.id, 'clock');
+    await real.addModule(C.id, 'trivia');
+
+    const THEME_A = 'dusk', THEME_B = 'contrast';
+    const probe = Object.keys(THEMES[THEME_A].vars).find((k) => THEMES[THEME_A].vars[k] !== THEMES[THEME_B].vars[k]
+      && THEMES[THEME_B].vars[k]) || '--surface';
+    await setRow(A.id, { [DASHBOARD_MODULE_KEY]: true, theme: THEME_A,
+      kiosk: { mirror: { size: 'sm', corner: 'tl' }, clock: { corner: 'br' },
+               layout: { preset: 'quad', slots: [aTrivia.id, aClock.id, null, null] } } });
+    await setRow(B.id, { theme: THEME_B, kiosk: { mirror: { size: 'md', corner: 'br' }, clock: { corner: 'tr' } } });
+    await setPanel(B.id, bPhotos.id, { stage4Marker: 'B-photos-row' });
+
+    // ================= THE PATH IS PER SCREEN =================
+    {
+      // A screen whose row never chose: today's arrangement, exactly (the default is OFF).
+      const P = await real.create('TEST-s4-plain');
+      await real.addModule(P.id, 'clock');
+      const box = mkBox();
+      const k = await mountKiosk(box, { user: USER, profileId: P.id, profiles, bus: createBus(), ...seams() });
+      check('*** a screen whose row never chose stays on the usual path: no dashboard module ***',
+        !k.dashboardPath() && !box.querySelector('.k-dash') && !box.querySelector('.view') && !k.dashboard());
+      k.destroy(); box.remove();
+      // ...and the default seam turned ON takes the same screen onto the dashboard path.
+      const box2 = mkBox();
+      const k2 = await mountKiosk(box2, { user: USER, profileId: P.id, profiles, bus: createBus(), dashboardDefault: true, ...seams() });
+      check('the default seam ON: the same unchosen screen boots as one dashboard module',
+        k2.dashboardPath() && !!box2.querySelector('.kiosk > .k-dash .view') && !!k2.dashboard());
+      k2.destroy(); box2.remove();
+      // A row that said NO wins over a default of yes. (A screen never mounted before, so no cached copy
+      // of its row exists in this browser.)
+      const Q = await real.create('TEST-s4-said-no');
+      await real.addModule(Q.id, 'clock');
+      await setRow(Q.id, { [DASHBOARD_MODULE_KEY]: false });
+      const box3 = mkBox();
+      const k3 = await mountKiosk(box3, { user: USER, profileId: Q.id, profiles, bus: createBus(), dashboardDefault: true, ...seams() });
+      check('a row that said no stays on the usual path even when the default is yes',
+        !k3.dashboardPath() && !box3.querySelector('.k-dash'));
+      k3.destroy(); box3.remove();
+      // *** A STALE CACHED ROW IS CORRECTED BY ONE RELOAD. *** A signed-in screen paints from its cached
+      // row and corrects in the background (state.js). P's cached row predates the "no" written now, so it
+      // boots on the path the cache says -- and the correction restarts it onto the right one, once.
+      await setRow(P.id, { [DASHBOARD_MODULE_KEY]: false });
+      const r4 = [];
+      const box4 = mkBox();
+      const k4 = await mountKiosk(box4, { user: USER, profileId: P.id, profiles, bus: createBus(), dashboardDefault: true, ...seams(r4) });
+      check('a stale cached row: either already right, or corrected by exactly one reload',
+        !k4.dashboardPath() || (await settled(() => r4.length === 1, 4000) && (await sleep(300), r4.length === 1)),
+        `path=${k4.dashboardPath()} reloads=${r4.length}`);
+      k4.destroy(); box4.remove();
+    }
+
+    // ================= BOOT ON THE DASHBOARD PATH =================
+    const box = mkBox();
+    const bus = createBus();
+    const reloads = [];
+    const k = await mountKiosk(box, { user: USER, profileId: A.id, profiles, bus, ...seams(reloads) });
+    const kioskEl = box.querySelector('.kiosk');
+    const dashHosts = () => [...box.querySelectorAll('.kiosk > .k-dash')];
+    check('*** booted from its row: one dashboard module, the shell stage hidden ***',
+      k.dashboardPath() && dashHosts().length === 1 && !!dashHosts()[0].querySelector('.view')
+      && box.querySelector('.kiosk > .k-stage').style.display === 'none');
+    check('not an embed: no k-embed class, the shell is the whole screen',
+      !kioskEl.classList.contains('k-embed') && getComputedStyle(kioskEl).position === 'absolute');
+    check('its own arrangement: A\'s grid (trivia, clock)', JSON.stringify(k.slotTypes()) === '["trivia","clock"]',
+      JSON.stringify(k.slotTypes()));
+    check('the camera is the dashboard\'s HUD mirror (unplaced), not a panel', k.hasCamera());
+    check('*** the theme is A\'s ***', themeVar(probe) === THEMES[THEME_A].vars[probe], `${probe}=${themeVar(probe)}`);
+    const viewA = () => dashHosts()[0]?.querySelector('.view');
+    check('*** the corners are on the dashboard\'s root (A: mirror tl, sm; clock br) ***',
+      viewA()?.dataset.mirrorCorner === 'tl' && viewA()?.dataset.mirrorSize === 'sm' && viewA()?.dataset.clockCorner === 'br',
+      JSON.stringify({ ...viewA()?.dataset }));
+    check('...and NOT on .kiosk as well (two roots, two corners = a stretched mirror)',
+      !('mirrorCorner' in kioskEl.dataset) && !('clockCorner' in kioskEl.dataset) && !('mirrorSize' in kioskEl.dataset),
+      JSON.stringify({ ...kioskEl.dataset }));
+    check('the handle\'s layout() reports where the corners are', k.layout().mirrorCorner === 'tl' && k.layout().clockCorner === 'br',
+      JSON.stringify(k.layout()));
+    check('the placed bar carries the bar: the plain bar is off',
+      await settled(() => k.plainBar() === 'off', 4000), k.plainBar());
+    check('the placed bar sits OVER the stage edge (a real screen), not in a row of its own',
+      !!box.querySelector('.view .v-dock-bottom[data-over="1"] .tb-bar'));
+    check('the one menu is docked in this dashboard', !!box.querySelector('.view .v-dock-left [data-settings]'));
+    check('the boot screen\'s settings doc is LENT, not opened twice: the dashboard reads the same values',
+      k.dashboard().settings().theme === THEME_A);
+    check('no reload asked for at boot', reloads.length === 0, `reloads=${reloads.length}`);
+    // The corner keys move the SHOWING dashboard's corner (and write its doc).
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '\\' }));
+    check('the corner key moves the dashboard\'s mirror (tl -> tr), and .kiosk still carries none',
+      await settled(() => viewA()?.dataset.mirrorCorner === 'tr', 3000) && !('mirrorCorner' in kioskEl.dataset),
+      JSON.stringify({ ...viewA()?.dataset }));
+
+    const aDash = k.dashboard();
+    const aIds = [aTrivia.id, aClock.id];
+    check('A\'s panels are health-watched', aIds.every((id) => k.health.has(id)));
+
+    // ================= A SWAP THAT FAILS LEAVES THE OLD ONE EXACTLY AS IT WAS =================
+    const aCell = box.querySelector('.view .k-cell .k-mod');
+    const themeBefore = themeVar(probe);
+    let got = await k.showScreen('no-such-screen');
+    check('a swap to a screen that does not exist returns null', got === null);
+    check('*** ...and the old dashboard is untouched: same module, same panel node, same screen ***',
+      k.dashboard() === aDash && box.querySelector('.view .k-cell .k-mod') === aCell && k.screenId() === A.id
+      && dashHosts().length === 1);
+    got = await k.showScreen(BROKEN);
+    check('*** a NEW dashboard that throws inside its own init returns null ***', got === null);
+    check('*** ...the old one never left: same module, same panel node, still visible ***',
+      k.dashboard() === aDash && box.querySelector('.view .k-cell .k-mod') === aCell
+      && dashHosts().length === 1 && dashHosts()[0].style.visibility !== 'hidden');
+    check('...nothing of the failed one is left behind (no second host, no second view)',
+      box.querySelectorAll('.k-dash').length === 1 && box.querySelectorAll('.view').length === 1);
+    check('...the theme did not move', themeVar(probe) === themeBefore);
+    check('...nothing was pushed on the back stack', k.screenStack().length === 0, JSON.stringify(k.screenStack()));
+    check('...the one menu is back in the OLD dashboard\'s dock (the dock stack)',
+      !!dashHosts()[0].querySelector('.v-dock-left [data-settings]'));
+    check('...and its panels are still watched', aIds.every((id) => k.health.has(id)));
+
+    // ================= A SWAP THAT WORKS: NEW FIRST, OLD ONLY AFTER =================
+    const shown = [];
+    bus.subscribe(SCREEN_SHOWN, (info) => shown.push(info));
+    // Watched with a MutationObserver (not a poll): the moment the second host is added, before its
+    // dashboard has finished starting, the new one must be hidden and the old one still showing.
+    let sawTwo = false, newWasHidden = false, oldWasVisible = false;
+    const oldView = viewA();
+    const mo = new MutationObserver(() => {
+      const hs = dashHosts();
+      if (hs.length === 2 && !sawTwo) {
+        sawTwo = true;
+        newWasHidden = hs[1].style.visibility === 'hidden';
+        oldWasVisible = hs[0].style.visibility !== 'hidden' && hs[0].querySelector('.view') === oldView;
+      }
+    });
+    mo.observe(kioskEl, { childList: true });
+    got = await k.showScreen(B.id);
+    mo.disconnect();
+    check('*** mid-swap: the new dashboard mounts HIDDEN beside the old, which stays on screen ***',
+      sawTwo && newWasHidden && oldWasVisible, JSON.stringify({ sawTwo, newWasHidden, oldWasVisible }));
+    check('the swap resolves to B', got === B.id && k.screenId() === B.id, `${got} ${k.screenId()}`);
+    check('*** after: ONE dashboard, B\'s, visible; A\'s destroyed ***',
+      dashHosts().length === 1 && dashHosts()[0].style.visibility === '' && k.dashboard() !== aDash
+      && aDash.arrangement() === null);
+    // The bench soak's leak (2026-10-01): a module that keeps one of its elements alive must not keep the
+    // whole old dashboard alive with it. A node held from before the swap must be off its parent now.
+    check('*** the old dashboard\'s tree was taken apart (a node still held is attached to nothing) ***',
+      aCell.parentNode === null && aCell.children.length === 0, `parent=${aCell.parentNode?.className}`);
+    check('B\'s own arrangement: one at a time, photos first', k.slotLayout() === null && k.primaryType() === 'photos',
+      `${JSON.stringify(k.slotLayout())} ${k.primaryType()}`);
+    check('*** a swapped-in dashboard\'s panel reads ITS OWN row (B\'s photos), not the boot screen\'s ***',
+      await settled(() => k.stageState().stage4Marker === 'B-photos-row', 3000), JSON.stringify(k.stageState()));
+    check('*** the theme followed: B\'s ***', themeVar(probe) === THEMES[THEME_B].vars[probe], `${probe}=${themeVar(probe)}`);
+    const viewB = () => dashHosts()[0]?.querySelector('.view');
+    check('*** the corners followed: B\'s (mirror br, md; clock tr) ***',
+      viewB()?.dataset.mirrorCorner === 'br' && viewB()?.dataset.mirrorSize === 'md' && viewB()?.dataset.clockCorner === 'tr'
+      && k.layout().mirrorCorner === 'br', JSON.stringify({ ...viewB()?.dataset }));
+    check('...and .kiosk still carries none', !('mirrorCorner' in kioskEl.dataset) && !('clockCorner' in kioskEl.dataset));
+    // Laid out for real (headless renders): the clock sits top-right of B and is not stretched.
+    const kr = kioskEl.getBoundingClientRect();
+    const clockEl = viewB()?.querySelector('.k-clock');
+    const cr = clockEl && !clockEl.hidden ? clockEl.getBoundingClientRect() : null;
+    check('B\'s corner clock is drawn in the top-right, a corner-sized box',
+      cr && cr.left > kr.left + kr.width / 2 && cr.top < kr.top + kr.height / 2 && cr.height < kr.height * 0.8,
+      cr ? JSON.stringify({ l: cr.left - kr.left, t: cr.top - kr.top, h: cr.height, H: kr.height }) : 'no clock');
+    check('SCREEN_SHOWN said which screen and from where',
+      shown.length === 1 && shown[0].profileId === B.id && shown[0].from === A.id, JSON.stringify(shown));
+    check('*** A\'s panels are no longer health-watched (a destroyed panel would read as stalled) ***',
+      aIds.every((id) => !k.health.has(id)));
+    check('B\'s placed bar carries the bar again: the plain bar is off',
+      await settled(() => k.plainBar() === 'off', 4000), k.plainBar());
+    check('the one menu moved into B\'s dock', !!viewB()?.querySelector('.v-dock-left [data-settings]'));
+    check('the back stack remembers A', JSON.stringify(k.screenStack()) === JSON.stringify([A.id]));
+
+    // The menu's Colours row writes the SHOWING dashboard's doc.
+    k.dashboard().settingsDoc().set({ theme: 'warm' });
+    check('a theme set on the showing dashboard\'s doc is applied at once',
+      await settled(() => themeVar(probe) === THEMES.warm.vars[probe] || themeVar('--surface') === THEMES.warm.vars['--surface'], 2000));
+    k.dashboard().settingsDoc().set({ theme: THEME_B });
+    await settled(() => themeVar(probe) === THEMES[THEME_B].vars[probe], 2000);
+
+    // ================= BACK TO THE BOOT SCREEN =================
+    bus.publish(SCREEN_BACK);
+    check('back to A by kiosk/back', await settled(() => k.screenId() === A.id && dashHosts().length === 1, 4000), k.screenId());
+    await sleep(200);
+    check('A\'s grid again', JSON.stringify(k.slotTypes()) === '["trivia","clock"]', JSON.stringify(k.slotTypes()));
+    check('*** A\'s theme again ***', themeVar(probe) === THEMES[THEME_A].vars[probe]);
+    check('A\'s corners again (the moved mirror: tr)', viewA()?.dataset.mirrorCorner === 'tr' && viewA()?.dataset.clockCorner === 'br',
+      JSON.stringify({ ...viewA()?.dataset }));
+    check('the boot doc is lent again (theme read through the dashboard)', k.dashboard().settings().theme === THEME_A);
+    check('the back stack is empty again', k.screenStack().length === 0);
+
+    // ================= A DASHBOARD WITH NO THEME KEEPS THE SCREEN'S =================
+    await k.showScreen(C.id);
+    check('swapped to C (no theme of its own)', k.screenId() === C.id);
+    check('C keeps the boot screen\'s theme rather than dropping to the default (Mike\'s list)',
+      themeVar(probe) === THEMES[THEME_A].vars[probe]);
+    await k.showPreviousScreen();
+
+    // ================= MANY SWAPS: NOTHING PILES UP =================
+    const count = () => box.querySelectorAll('*').length;
+    await k.showScreen(B.id); await k.showPreviousScreen();
+    await sleep(300);
+    const n0 = count();
+    const watched0 = k.health.panels().length;
+    for (let i = 0; i < 8; i++) { await k.showScreen(B.id); await k.showPreviousScreen(); }
+    await sleep(500);
+    const n1 = count();
+    check('*** eight more round trips: the DOM under the kiosk is the same size ***', Math.abs(n1 - n0) <= 2, `${n0} -> ${n1}`);
+    check('...one dashboard host, one view', dashHosts().length === 1 && box.querySelectorAll('.view').length === 1);
+    check('...and the health watch holds the same number of panels', k.health.panels().length === watched0,
+      `${watched0} -> ${k.health.panels().length}`);
+    check('...and the menu docks did not stack up (it is in the showing dashboard)',
+      !!viewA()?.querySelector('.v-dock-left [data-settings]'));
+
+    // ================= THE PATH CHANGED ON THE ROW: ONE RELOAD =================
+    const r0 = reloads.length;
+    k.dashboard().settingsDoc().set({ [DASHBOARD_MODULE_KEY]: false });
+    check('*** turning the row off restarts the screen (one reload) ***', await settled(() => reloads.length === r0 + 1, 2000),
+      `reloads ${r0} -> ${reloads.length}`);
+    k.dashboard().settingsDoc().set({ [DASHBOARD_MODULE_KEY]: true });
+    await sleep(200);
+    check('...and only once (latched)', reloads.length === r0 + 1, `reloads=${reloads.length}`);
+
+    // ================= THE PLAIN BAR WHEN THE PLACED BAR FAILS OR GOES =================
+    {
+      const pb = mkBox();
+      const kb = await mountKiosk(pb, { user: USER, profileId: A.id, profiles, bus: createBus(), ...seams(),
+        dashboardChrome: [{ id: 'bad', type: 'test_bad_bar', dock: 'bottom', over: true }] });
+      check('*** a placed bar that will not start: the plain bar comes up by itself ***',
+        await settled(() => kb.plainBar() === 'auto', 3000), kb.plainBar());
+      const ctl = pb.querySelector('.kiosk > .k-controls');
+      check('...and it is the plain one, showing (not display:none)',
+        ctl.classList.contains('k-plain') && !ctl.classList.contains('k-plain-off') && getComputedStyle(ctl).display !== 'none');
+      check('...while the dashboard itself is fine (its panels are up)', JSON.stringify(kb.slotTypes()) === '["trivia","clock"]');
+      kb.destroy(); pb.remove();
+    }
+    check('the default placed bar, removed: the plain bar comes up by itself',
+      (k.dashboard().removeChrome('chrome-bar'), await settled(() => k.plainBar() === 'auto', 2000)), k.plainBar());
+
+    k.destroy();
+    check('destroy: the dashboard and its host are gone', !box.querySelector('.k-dash') && !box.querySelector('.view'));
+
+    // ================= HIDE = MUTE, THROUGH THE REAL KIOSK (ad7dc49) =================
+    // A person pressing Hidden in the Layers window is asked once; a panel whose setting is "mute" goes
+    // silent while hidden and is heard again when shown. Only a dashboard has the edit windows on a real
+    // screen, so it is proven here.
+    {
+      const N = await real.create('TEST-s4-hide');
+      const n1 = await real.addModule(N.id, 'test_noisy');
+      const n2 = await real.addModule(N.id, 'test_noisy');
+      const nClock = await real.addModule(N.id, 'clock');
+      await setRow(N.id, { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [nClock.id],
+        placed: [{ id: n1.id, place: 'screen', x: 10, y: 10 }, { id: n2.id, place: 'screen', x: 55, y: 55 }] } } });
+      await setPanel(N.id, n2.id, { instanceWhenHidden: 'mute' });
+      const hb = mkBox();
+      const kh = await mountKiosk(hb, { user: USER, profileId: N.id, profiles, bus: createBus(), ...seams() });
+      const au = kh.audio();
+      check('(setup) both noisy panels are placed and registered a source',
+        await settled(() => (au.sourcesOf(n1.id) || []).length === 1 && (au.sourcesOf(n2.id) || []).length === 1, 3000),
+        JSON.stringify([au.sourcesOf(n1.id), au.sourcesOf(n2.id)]));
+      const ed = kh.dashboard().edit();
+      check('(setup) the dashboard opened its edit windows', !!ed && !!hb.querySelector(`button[data-ew="shown:${n1.id}"]`));
+      hb.querySelector(`button[data-ew="shown:${n1.id}"]`)?.click();
+      check('*** a person pressing Hidden on a sound-making panel is asked (the choice card) ***',
+        await settled(() => !!hb.querySelector('.choice-card'), 3000));
+      check('...and, unanswered, it keeps playing (nothing muted)', !au.isOwnerMuted(n1.id));
+      hb.querySelector('.choice-card')?.querySelector('[data-cc-close]')?.click();
+      await settled(() => !hb.querySelector('.choice-card'), 1000);
+      hb.querySelector(`button[data-ew="shown:${n2.id}"]`)?.click();
+      check('*** a panel whose setting is "mute": hidden -> its source is silent ***',
+        await settled(() => au.isOwnerMuted(n2.id) && au.levelOf((au.sourcesOf(n2.id) || [])[0]) === 0, 3000),
+        JSON.stringify({ muted: au.isOwnerMuted(n2.id), level: au.levelOf((au.sourcesOf(n2.id) || [])[0]) }));
+      hb.querySelector(`button[data-ew="shown:${n2.id}"]`)?.click();
+      check('...and shown again -> heard again', await settled(() => !au.isOwnerMuted(n2.id), 3000));
+      kh.destroy(); hb.remove();
+    }
+    box.remove();
+  } catch (e) {
+    check('suite threw', false, String(e && e.stack || e));
+  }
+  document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+  document.getElementById('summary').className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>

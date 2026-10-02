@@ -69,9 +69,15 @@ import {
   createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
 } from './intercom.js';
 import { createDeviceStore } from './starting_defaults.js';
-import { flashLimitFrom, FLASH_LIMIT_DEFAULT, FLASH_LIMIT_FIELD } from './flash_limit.js';
+import { flashLimitFrom, FLASH_LIMIT_DEFAULT, flashLimitFieldWith } from './flash_limit.js';
+// Hiding a panel can mute or pause it (ad7dc49): a per-panel setting, asked once when a person hides one.
+import { createHideSound, WHEN_HIDDEN_FIELD, HIDE_ASK_TIMEOUT_FIELD, makesSound } from './hide_sound.js';
+import { createChoiceMemory } from './choice_card.js';
+// User folders (867a7ff): fonts from the device's own folder, never prompting.
+import { recallRoot, subfolder } from './user_folders.js';
+import { loadUserFonts } from './user_fonts.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
-import { createAvatarCache, avatarHtml } from './avatar_display.js';
+import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD } from './avatar_display.js';
 import { mountSettings } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField } from './settings_fields.js';
@@ -157,6 +163,17 @@ export const SCREEN_SHOW = 'kiosk/show';
 export const SCREEN_BACK = 'kiosk/back';
 export const SCREEN_SHOWN = 'kiosk/shown';
 
+// *** STEP 6 STAGE 4: IS A REAL SCREEN MOUNTED AS ONE DASHBOARD MODULE? *** Per screen, on its settings
+// row: `dashboardModule: true | false`; a row that never chose follows this default. OFF (today's
+// arrangement in this file) until the bench soak passes and Mike says the default flips -- one line.
+export const DASHBOARD_MODULE_DEFAULT = false;
+export const DASHBOARD_MODULE_KEY = 'dashboardModule';
+/** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
+export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
+  const v = row && row[DASHBOARD_MODULE_KEY];
+  return typeof v === 'boolean' ? v : !!fallback;
+}
+
 // Mount a kiosk for one profile into `root`. Returns a small control handle
 // (also used by the dev test). `profiles`/`bus` are injectable.
 // `makeState` / `makeEvents` / `sources` are injectable for the same reason home.html needs
@@ -221,6 +238,13 @@ export async function mountKiosk(root, {
   // `modules.html` turns it on (module_try.js), so it is proven on a public page before any screen
   // anybody sits at. Stage 4 makes it the default on a real screen; until then nothing else changes.
   dashboardModule = false,
+  // *** STEP 6 STAGE 4 (2026-10-01): THE REAL SCREEN ON THE DASHBOARD PATH, PER SCREEN. *** A real
+  // (not embedded) kiosk reads its screen row's `dashboardModule` (true / false) at boot -- the option
+  // above stays embedded-only, so no caller can switch a real screen by passing it. A row that never
+  // chose follows `dashboardDefault`, which is `DASHBOARD_MODULE_DEFAULT` (exported, below): OFF until
+  // the bench soak says otherwise, so a deploy changes no screen that has not opted in. A seam, so a
+  // suite can prove the default-ON world without writing a row.
+  dashboardDefault = DASHBOARD_MODULE_DEFAULT,
   // STEP 6 STAGE 3b -- both read only on the dashboard path (`embedded` + `dashboardModule`).
   // `dashboardChrome`: what the dashboard PLACES besides its panels -- by default the transport bar
   // along the bottom and the settings menu down the side (Mike, 2.33: the default dashboard "will
@@ -251,17 +275,20 @@ export async function mountKiosk(root, {
   // the RANKED list (rows 2.46/2.47, speech_engines.js): a service on this machine ('local'), then the
   // other computers the person chose - it opens no microphone until one of them answers, and until then
   // the screen says "no recogniser on this screen". A seam for the suites, too.
-  makeRecognizer = ({ engine, lang, values, micOwner: mo, phoneStreams, actsOn } = {}) => (engine === 'browser'
+  makeRecognizer = ({ engine, lang, values, micOwner: mo, phoneStreams, actsOn, wakeSays } = {}) => (engine === 'browser'
     ? browserRecognizer({ lang })
     : rankedRecognizer({ plan: enginePlanFrom({ ...(values || {}), speechEngine: engine }), micOwner: mo,
-                         phoneStreams, actsOn })),
+                         phoneStreams, actsOn, wakeSays })),
   // Subtitles' ONLINE route (row 2.47, NOT approved - Mike said "maybe"): made only when a person's row
   // sets `subtitlesRoute: 'online'`, and it only ever writes lines. Off by default.
   makeOnlineCaptioner = ({ lang } = {}) => browserRecognizer({ lang }),
 } = {}) {
-  const useDashboard = !!embedded && !!dashboardModule;
-  // The host page's actions (see the option): only on the dashboard path, only if it is an object.
-  const hostPage = useDashboard && host && typeof host === 'object' ? host : null;
+  // WHICH PATH. An embed: its option, as at Stage 3. A real screen: its own settings row (Stage 4) --
+  // decided once the row has loaded, below (`settings.load()`), before anything reads this. Nothing
+  // between here and there does: every reader is a function called later, or code further down.
+  let useDashboard = !!embedded && !!dashboardModule;
+  // The host page's actions (see the option): only on the EMBEDDED dashboard path, only if it is an object.
+  const hostPage = !!embedded && !!dashboardModule && host && typeof host === 'object' ? host : null;
   bus = bus || createBus();
   // Read before anything else renders: if this screen is not where the device is meant to
   // come back to, the cheapest possible outcome is to leave before mounting a whole kiosk.
@@ -389,8 +416,12 @@ export async function mountKiosk(root, {
   function applyKioskTheme(id) {
     // An embed lives on somebody's page, which already has a theme (its own picker, or the
     // signed-in profile's). A screen that has never picked one must not reset that to default.
+    lastShownTheme = id;                     // Stage 4: what `syncShownTheme` compares against
     if (embedded && !id) return null;
     const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow });
+    // Subtitles follow the theme's subtitle style (theme.js `--subtitles-style`). In a try: `subtitles`
+    // is a later `let`, and the first theme is applied before it exists.
+    try { subtitles?.restyle(); } catch (err) { console.error('kiosk: subtitles', err); }
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
     syncScene(kioskEl, THEMES[resolved], { flashLimit: flashLimitNow });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
@@ -503,6 +534,8 @@ export async function mountKiosk(root, {
   let master = null;             // master_volume.js: "louder"/"quieter" and the Volume row
   let mixer = null;              // mixer.js: faders and minimums on the bus, compressor/reverb on the effects
   let soundScene = null;         // the theme's live scene id, which "sounds like: match the scene" follows
+  let lastShownTheme;            // the theme id last applied (Stage 4: a swap re-applies only on a change)
+  const bootProfileId = profileId;   // the screen this kiosk booted on (Stage 4: its doc is the one held open)
   let listening = null;          // listening_cue.js: the cue, the tone, the duck, the voice-game pause
   let listenSig = null;
   let offListenPerson = null;
@@ -526,6 +559,8 @@ export async function mountKiosk(root, {
     setReverb: (ch, v) => fxReal?.setReverb(ch, v),
     setScene: (id) => fxReal?.setScene(id),
     state: () => (fxReal ? fxReal.state() : null),
+    // User folders (867a7ff): an audio plugin (WAM) from the device's own folder.
+    addWamFromFolder: (...a) => effects()?.addWamFromFolder(...a),
   };
   // HOW A MODULE REACHES THE EFFECTS: through the audio bus handle it is already given (`ctx.audio`),
   // so game_music.js needs one optional read and no module had to change what it passes. A missing or
@@ -614,7 +649,8 @@ export async function mountKiosk(root, {
   // device filling only what nobody chose. A module reads it as `ctx.flashLimitPerSecond` (a getter, so a
   // changed setting is followed); automation's slow wave and the live scene read it every tick.
   // `screenRowNow` is a stand-in until the screen's settings row exists (it is built further down): a
-  // reader that runs before then gets 3, the ceiling - never a ReferenceError from a `const` not reached.
+  // reader that runs before then gets the default (no limit, unless the starting-defaults layer set one;
+  // flash_limit.js, 8a89e31) - never a ReferenceError from a `const` not reached.
   let screenRowNow = () => ({});
   // The starting-defaults layer, read ONCE, on first use (flashLimitNow can run every frame; this parses
   // a record out of storage). A layer applied on another page of this device lands at the next boot.
@@ -681,7 +717,10 @@ export async function mountKiosk(root, {
       rec = makeRecognizer({ engine: sw.engine, lang: 'en-US', values: r, micOwner,
                              phoneStreams: () => phoneRx?.streams?.() || [],
                              // Subtitles-only has no commands, so every sure guess is as good as any.
-                             actsOn: sw.on ? (t) => meansSomething(t, wakes, PHRASES, routes) : null });
+                             actsOn: sw.on ? (t) => meansSomething(t, wakes, PHRASES, routes) : null,
+                             // A wake-phrase detector (speechWakeUrl, 82d97a4) opens the listening window
+                             // the moment it hears the phrase.
+                             wakeSays: sw.on ? (wakes[0] || null) : null });
     } catch (err) { console.error('kiosk: recogniser', err); rec = null; }
     if (!rec) { speechStatus = sw.engine === 'browser' ? 'no-browser' : 'no-local'; onVoiceChange?.(); return; }
     speechRec = rec;
@@ -1046,6 +1085,9 @@ export async function mountKiosk(root, {
     // The arbiter itself, for a module that MAKES continuous sound - a music bed, a video.
     // A module that only speaks wants `output`; this is for the things that keep playing.
     audio,
+    // What hiding a panel does to its sound (hide_sound.js, ad7dc49). A getter: it is built just after the
+    // screen's settings row (a later `const`), and a read before then is null, not a ReferenceError.
+    get hidePolicy() { try { return hideSound; } catch { return null; } },
     micOwner,
     // WHERE SOMEBODY IS POINTING, for a module that wants a position rather than a verb -
     // `comet.js` is the reason it exists. A getter for the same reason `output` is: the input
@@ -1056,7 +1098,8 @@ export async function mountKiosk(root, {
     cameraOwner,
     automation,
     // THE SCREEN'S FLASH LIMIT (flash_limit.js `flashLimit(ctx)`): a getter, so a module that reads it
-    // when it needs it follows a changed setting. 3 unless somebody chose lower.
+    // when it needs it follows a changed setting. No limit unless somebody (or the starting-defaults
+    // layer) chose one (8a89e31).
     get flashLimitPerSecond() { return flashLimitNow(); },
     // The voice recordings this screen keeps (modules/voice_review.js): the recorder's own store, so the
     // review panel sees what was just kept, and the person's row for its retention wording.
@@ -1121,6 +1164,16 @@ export async function mountKiosk(root, {
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
   const settings = stateFor('settings');
+  // HIDE = MUTE (ad7dc49): what hiding a sound-making panel does, asked once and remembered (choices row).
+  // (The choices row is loaded in the background and closed on teardown: a handle never loaded reads
+  // empty forever and writes against version 0.)
+  const choicesState = stateFor('choices');
+  choicesState.load().catch(() => {});
+  const hideSound = createHideSound({
+    memory: createChoiceMemory(choicesState),
+    host: () => root,
+    askTimeoutMs: () => (settings.get() || {}).hideAskTimeoutMs,
+  });
   // The flash limit reads the screen's row from here on (see `flashLimitNow`).
   screenRowNow = () => settings.get() || {};
   settings.subscribe((s) => { try { automation.load(s?.automations || []); } catch (err) { console.error('kiosk: automations', err); } });
@@ -1149,16 +1202,32 @@ export async function mountKiosk(root, {
   // the menu, focus and recovery's hands must all be about ITS panels -- so every read below goes
   // through `arr`, which forwards to the dashboard's arrangement once it exists and to this file's own
   // otherwise. Same functions (arrangement.js) either way: nothing is reshaped between the two.
-  // The mirror/clock corner functions are NOT forwarded: they are screen settings applied to `.kiosk`,
-  // and the dashboard applies the same settings doc to its own root itself.
+  // On an embed the mirror/clock corner functions are NOT forwarded: they are screen settings applied to
+  // `.kiosk`, and the dashboard applies the same settings doc to its own root itself.
+  //
+  // *** STAGE 4: ON A REAL SCREEN THE CORNERS FOLLOW THE DASHBOARD (the plan's Q2, recommended). *** A
+  // swap brings in another screen's settings doc, and its own mirror/clock corners with it. So there,
+  // the corner keys ([ ] \) move the SHOWING dashboard's (they write its doc, through its arrangement),
+  // and `.kiosk` carries no corner of its own: both roots carrying different corners puts top AND bottom
+  // on one mirror (the `.kiosk[...]` and `.view[...]` rules in kiosk.css are equally specific), which
+  // stretches it down the screen. If the dashboard failed and this file's own arrangement is showing the
+  // panels, `.kiosk` is where they are, and it carries them exactly as it always did.
   let dash = null;                         // the mounted dashboard module, when there is one
   let dashHost = null;                     // ...and the element it is mounted into
   const arrNow = () => dash?.impl?.arrangement?.() || ownArr;
-  const OWN_ONLY = new Set(['applyLayout', 'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner']);
+  const CORNER_KEYS = ['mirrorSize', 'mirrorCorner', 'clockCorner'];
+  const cornersFollowDash = () => useDashboard && !embedded && !!dash;
+  function applyCorners(s) {
+    if (cornersFollowDash()) { for (const k of CORNER_KEYS) delete kioskEl.dataset[k]; return; }
+    ownArr.applyLayout(s);
+  }
+  const CORNER_FNS = new Set(['patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner']);
   const arr = {};
   for (const k of Object.keys(ownArr)) {
     if (typeof ownArr[k] === 'function') {
-      arr[k] = OWN_ONLY.has(k) ? ownArr[k] : (...a) => arrNow()[k](...a);
+      arr[k] = k === 'applyLayout' ? applyCorners
+        : CORNER_FNS.has(k) ? (...a) => (cornersFollowDash() ? arrNow() : ownArr)[k](...a)
+          : (...a) => arrNow()[k](...a);
     } else {
       Object.defineProperty(arr, k, { enumerable: true, get: () => arrNow()[k] });
     }
@@ -1199,7 +1268,46 @@ export async function mountKiosk(root, {
     const v = s && s.panelSurface;
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
   }
+  // *** STAGE 4: THE THEME IS THE SHOWING DASHBOARD'S (row 2.34, ruled; the plan's R3). *** On a real
+  // screen on the dashboard path, a swap brings in another dashboard and its own Colours; going back
+  // brings the first one's back. A dashboard that never picked any keeps the screen's own (the boot
+  // row's) rather than dropping to the default mid-swap -- a guess, on Mike's list: FOR, a call screen
+  // nobody themed does not flash to another palette; AGAINST, "per dashboard" then means "per dashboard,
+  // unless unset". Everywhere else (an embed, the classic path, a failed dashboard) it is the screen's
+  // row, exactly as before. The menu's Colours row writes where this reads (`themeDoc`).
+  function shownTheme() {
+    const own = (settings.get() || {}).theme;
+    if (!useDashboard || embedded || !dash) return own;
+    let t;
+    try { t = dash.impl.settings?.()?.theme; } catch { t = undefined; }
+    return t || own;
+  }
+  function themeDoc() {
+    if (!useDashboard || embedded || !dash) return settings;
+    try { return dash.impl.settingsDoc?.() || settings; } catch { return settings; }
+  }
+  function syncShownTheme() {
+    const id = shownTheme();
+    if (id === lastShownTheme) return;
+    lastShownTheme = id;
+    applyKioskTheme(id);
+  }
   await settings.load().catch(() => {});
+  // USER FOLDERS (867a7ff): fonts from this device's own folder, if somebody already chose one and the
+  // browser still grants it. NEVER PROMPTS, and fire-and-forget: it must not delay or break the boot.
+  (async () => {
+    try {
+      const { handle, permission } = (await recallRoot()) || {};
+      if (handle && permission === 'granted') {
+        const d = await subfolder(handle, 'fonts');
+        if (d && !torn) await loadUserFonts(d);
+      }
+    } catch (err) { console.error('kiosk: user fonts', err); }
+  })();
+  // STAGE 4: a real screen's path, from its own row (see `dashboardPathFor`). Read once, at boot: the
+  // two paths build different things, so a change to the row is applied by a reload (the watch below).
+  const bootDashboardPath = embedded ? null : dashboardPathFor(settings.get(), dashboardDefault);
+  if (!embedded) useDashboard = bootDashboardPath;
   // THE MASTER AND THE MIXER, on the screen's settings row. Attached before the first theme is applied
   // so the scene reaches the mixer, and before the subscribe below so its first replay syncs them.
   // Each is guarded: a sound control that throws must never stop the screen coming up.
@@ -1209,7 +1317,7 @@ export async function mountKiosk(root, {
   catch (err) { console.error('kiosk: master volume', err); master = null; }
   try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
   catch (err) { console.error('kiosk: mixer', err); mixer = null; }
-  applyKioskTheme(settings.get().theme);
+  applyKioskTheme(shownTheme());
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
   // ZOOM ON FOCUS (row 2.37 item 6): the focused panel grows a little. Off unless the screen's row says.
@@ -1218,7 +1326,7 @@ export async function mountKiosk(root, {
   // row replaces them once whoever this screen is for has been resolved (below).
   attachListen({});
   settings.subscribe((s) => {
-    applyKioskTheme(s.theme);
+    applyKioskTheme(shownTheme());
     applyLayout(s);
     applyPanelSurface(s);
     try { applyZoomFocus(kioskEl, s?.zoomFocus); } catch (err) { console.error('kiosk: zoom on focus', err); }
@@ -1304,6 +1412,11 @@ export async function mountKiosk(root, {
       const now = (s.kiosk || {}).layout || null;
       const change = layoutChange(mountedLayout, now);
       if (change === 'none') return;
+      // STAGE 4: on the dashboard path, while ANOTHER dashboard is showing (a swap), the boot screen's
+      // arrangement is not on screen to correct -- and coming back mounts it fresh from this very doc
+      // (`showScreen`). So the change is only noted, never applied to whatever IS showing, and never a
+      // reload under somebody's call.
+      if (useDashboard && profileId !== bootProfileId) { mountedLayout = now; return; }
       if (change === 'placement') {
         mountedLayout = now;
         Promise.resolve(arr.applyPlaced(now)).then((r) => {
@@ -1312,6 +1425,17 @@ export async function mountKiosk(root, {
         return;
       }
       reloadedForLayout = true; reloadPage();
+    });
+  }
+  // STAGE 4: THE PATH ITSELF CHANGED on this screen's row (the menu's row, another device, a script):
+  // the two paths build different things, so it is applied the way a corrected arrangement is -- one
+  // reload, latched. The subscribe's immediate replay is the boot value, so it never fires at boot.
+  if (!embedded) {
+    let reloadedForPath = false;
+    settings.subscribe((s) => {
+      if (reloadedForPath || torn) return;
+      if (dashboardPathFor(s, dashboardDefault) === bootDashboardPath) return;
+      reloadedForPath = true; reloadPage();
     });
   }
 
@@ -1384,10 +1508,11 @@ export async function mountKiosk(root, {
    *  `remember: false` on the return leg, so going back does not stack up forever. */
   async function showScreen(nextId, { remember = true } = {}) {
     if (!nextId || nextId === profileId || swapping) return null;
-    // A dashboard module (Stage 3, embedded only) is not swapped in place: the swap that loads and
-    // mounts the NEW dashboard before destroying the old is Stage 4's. An embed has no other screens
-    // to go to (its `list()` is empty), so this refuses rather than half-swapping inside the module.
-    if (useDashboard) return null;
+    // An embed's dashboard (Stage 3) is not swapped: an embed has no other screens to go to (its
+    // `list()` is empty), so this refuses rather than half-swapping inside the module.
+    if (useDashboard && embedded) return null;
+    // A real screen's dashboard (Stage 4): load and mount the new one, destroy the old only on success.
+    if (useDashboard && dash) return swapDashboard(nextId, { remember });
     swapping = true;
     const from = profileId;
     try {
@@ -1731,7 +1856,14 @@ export async function mountKiosk(root, {
     if (avatars || torn) return avatars;
     try {
       const mps = childCtx({ id: 'avatars' }).makePersonState;
-      if (profiles.personStateURL) avatars = createAvatarCache({ makePersonState: mps, user });
+      // Faces moving (ba4d79d): what this screen, the person looking and the starting-defaults layer allow,
+      // read fresh at every draw.
+      if (profiles.personStateURL) {
+        avatars = createAvatarCache({
+          makePersonState: mps, user,
+          context: () => avatarMotionContext({ screen: settings.get() || {}, viewer: personRow || {}, layer: startingLayer() }),
+        });
+      }
     } catch (err) { console.error('kiosk: avatars', err); avatars = null; }
     return avatars;
   }
@@ -1784,7 +1916,7 @@ export async function mountKiosk(root, {
       options: [
         { value: 'off', label: 'Off' },
         { value: 'dim', label: 'Dim after 10 minutes idle' },
-        { value: 'drift', label: 'Slowly shift the picture when idle' },
+        { value: 'drift', label: 'Slowly shift the picture when idle (for OLED screens)' },
       ] },
     // Mike, 2026-09-23: "I would make the backgrounds transparent/translucent wherever
     // possible." `standard`, not `essential`, matching `burnIn` above -- a preference, not a
@@ -1803,6 +1935,14 @@ export async function mountKiosk(root, {
     ...(useDashboard ? [{ key: 'plainBarHoldMs', label: 'Hold a switch this long for the plain bar',
       kind: 'choice', level: 'essential', default: PLAIN_BAR_HOLD_DEFAULT_MS,
       options: [1000, 1500, 2000, 2500, 3000].map((ms) => ({ value: ms, label: `${ms / 1000} seconds` })) }] : []),
+    // Hide = mute (ad7dc49): how long the "hidden panel: keep playing / mute / pause?" card waits.
+    HIDE_ASK_TIMEOUT_FIELD,
+    // STEP 6 STAGE 4: which way a real screen is put together (`dashboardPathFor`). `advanced`: it is a
+    // switch for whoever is testing the change, not something a person sets up a screen with. Picking
+    // the other one restarts the screen (the path watch), because the two build different things.
+    ...(!embedded ? [{ key: DASHBOARD_MODULE_KEY,
+      label: 'Put this screen together as one dashboard (new, being tested; restarts the screen)',
+      kind: 'toggle', level: 'advanced', default: !!dashboardDefault, onLabel: 'Yes', offLabel: 'No' }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -1827,9 +1967,11 @@ export async function mountKiosk(root, {
   //     two wins - a person's own lower choice still protects them on any screen). AGAINST: somebody
   //     who needs 1 a second has to set it on each screen they use. On Mike's list.
   //   * WHY `standard` (as both files declare it), not `essential`: neither is a way out or a legibility
-  //     control, and "Just the essentials" is kept to those. The flash limit's default IS the safe
-  //     published limit, so a screen nobody set up is already protected.
-  const MOTION_FIELDS = () => [ZOOM_FOCUS_FIELD, FLASH_LIMIT_FIELD];
+  //     control, and "Just the essentials" is kept to those. (8a89e31: the flash limit defaults to NO
+  //     limit; the row shows what the starting-defaults layer set -- a screen whose photosensitivity box
+  //     set 3 reads 3 here -- via `flashLimitFieldWith`.)
+  //   * Faces moving (ba4d79d) sits with them: it is the same question, what moves on this screen.
+  const MOTION_FIELDS = () => [ZOOM_FOCUS_FIELD, flashLimitFieldWith(startingLayer()), AVATAR_MOTION_FIELD];
 
   // THE ROOM ON THIS SCREEN, if any: the focused panel when it is a room, else the first room mounted.
   // Only a MOUNTED room -- its reactions editor opens inside it, so a room that is not on the screen
@@ -1964,7 +2106,7 @@ export async function mountKiosk(root, {
       ...(sw.on || subsOn ? SPEECH_ON_FIELDS.filter((f) => f.key !== 'speechOn') : []),
       ...(sw.on || subsOn ? SPEECH_PASS_FIELDS.filter(keep) : []),
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
-      ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || subsOn),
+      ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || (subsOn && (!/^subtitles(Shrink|SmallestPx)$/.test(f.key) || r.subtitlesStyle === 'eyechart' || subtitles?.style?.() === 'eyechart'))),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
       // VOICE RECORDING (row 2.44): the switch always (so anybody can SEE it is off, and a guardian
       // can find it); its retention rows only while it is on - the same rule as every mode above.
@@ -2017,13 +2159,16 @@ export async function mountKiosk(root, {
       ...(arr.profile()?.name ? [{ kind: 'item', id: 'screen-name', disabled: true,
           label: `This screen: ${arr.profile().name}`, hint: 'renamed in Dashboards, on the home page' }] : []),
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
-        values: () => settings.get() || {},
+        // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
+        // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
+        values: () => ({ ...(settings.get() || {}), theme: shownTheme() }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
         level: complexity(),
         onStep: (key, value) => {
-          settings.set({ [key]: value });
+          if (key === 'theme') themeDoc().set({ theme: value });
+          else settings.set({ [key]: value });
           // A THEME PICKED HERE, BY SOMEBODY AT THIS SCREEN. Published after the set (which
           // applies the theme synchronously), so a listener sees the new theme already on screen.
           // It is how the AAC board knows it may offer its symbol-set choice card: a theme that
@@ -2111,6 +2256,8 @@ export async function mountKiosk(root, {
       // different SOURCE array, not a different mechanism.
       const items = fieldItems([
         ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
+        // Hide = mute (ad7dc49): "when this panel is hidden", only on a panel that makes sound.
+        ...(makesSound({ instanceId: rec.id, audio, manifest: rec.instance.manifest }) ? [normalizeField(WHEN_HIDDEN_FIELD)] : []),
         ...fieldsFor(rec.instance.manifest, rec.instance),
       ], {
         // A FUNCTION, not a snapshot: two presses without a repaint in between would
@@ -2785,7 +2932,10 @@ export async function mountKiosk(root, {
     // From anywhere means with the menu open too: it closes the menu on the way (the menu's own panel
     // closes itself on Escape when it has the keyboard, and never lets the key reach here). Not while
     // typing, and on an embed not for a key that landed outside the box -- the same two rules below.
-    if (useDashboard && e.key === 'Escape' && (e.target instanceof Node && root.contains(e.target))
+    // (A real screen -- Stage 4 -- owns the whole page, so a key with nothing focused, landing on the
+    // body, is ours too; only an embed needs the key to have landed inside its box.)
+    if (useDashboard && e.key === 'Escape'
+        && (!embedded || (e.target instanceof Node && root.contains(e.target)))
         && !isTyping(e.target)) {
       if (menu.isOpen()) menu.close();
       summonPlainBar();
@@ -2893,14 +3043,31 @@ export async function mountKiosk(root, {
   // its box and scoped to it (settings.js inline mode), and handed back to the shell when the module
   // goes. One menu -- one cursor, one bus attachment -- wherever it is drawn.
   const menuHostEl = kioskEl.querySelector(':scope > [data-settings]');
+  // STAGE 4: A STACK OF DOCKS, not one. A screen swap mounts the new dashboard (and its menu module)
+  // BEFORE the old one goes, so for a moment two menu modules each hold a dock. The menu lives in the
+  // newest; when one lets go it returns to the one before (a swap that failed: back into the old
+  // dashboard, still on screen) or, with none left, to the shell.
+  const menuDocks = [];
+  function placeMenu() {
+    const el = menuDocks[menuDocks.length - 1];
+    const scrim = menuHostEl.querySelector('[data-scrim]');
+    if (el) {
+      if (menuHostEl.parentNode !== el) el.append(menuHostEl);
+      scrim?.classList.add('st-inline');
+    } else {
+      scrim?.classList.remove('st-inline');
+      if (!torn && menuHostEl.parentNode !== kioskEl) kioskEl.append(menuHostEl);
+    }
+  }
   function dockMenu(el) {
     if (!el || torn) return () => {};
-    el.append(menuHostEl);
-    menuHostEl.querySelector('[data-scrim]')?.classList.add('st-inline');
+    menuDocks.push(el);
+    placeMenu();
     return () => {
-      if (menuHostEl.parentNode !== el) return;
-      menuHostEl.querySelector('[data-scrim]')?.classList.remove('st-inline');
-      if (!torn) kioskEl.append(menuHostEl);
+      const i = menuDocks.lastIndexOf(el);
+      if (i < 0) return;
+      menuDocks.splice(i, 1);
+      placeMenu();
     };
   }
   // WHAT A PLACED BAR'S BUTTONS SAY (shell_verbs.js), done with the plain bar's own functions.
@@ -2914,7 +3081,9 @@ export async function mountKiosk(root, {
     on(SHELL_HUSH, () => { audio?.hush?.(!audio.isHushed()); renderHush(); });
     on(SHELL_MENU, () => { menu.toggle(); });
     on(SHELL_FULLSCREEN, () => { toggleFs(); });
-    on(SHELL_HOME, () => { toggleScreens(); });
+    // (On a real screen the picker gets the plain bar's own "what if nobody answers": it puts itself
+    // away with the bar's auto-hide unless somebody keeps touching the screen. An embed's bar stays.)
+    on(SHELL_HOME, () => { toggleScreens(); if (!embedded && screensOpen) poke(); });
     on(SHELL_MIRROR, () => { toggleMirrorFull(); });
     on(SHELL_HELP, () => { explainHelp(); });
     on(PLAIN_BAR_SHOW, () => { summonPlainBar(); });
@@ -3009,37 +3178,170 @@ export async function mountKiosk(root, {
   // kiosk's storage seam (the preview's in-memory one -- never the device's restart record).
   // *** A DASHBOARD THAT WILL NOT START MUST STILL LEAVE SOMETHING ON SCREEN. *** If it throws, it is
   // taken down and this file's own arrangement mounts the panels exactly as it would have without it.
-  async function mountDashboard() {
-    dashHost = document.createElement('div');
-    dashHost.className = 'k-dash';
-    stageEl.style.display = 'none';
-    stageEl.after(dashHost);
+  //
+  // *** STAGE 4 (2026-10-01): THE REAL SCREEN, WHEN ITS ROW SAYS SO (`dashboardPathFor`). *** The same
+  // module, and three differences from an embed, each because a real screen IS a screen:
+  //   * its panels' state is the screen's own (`stateForProfile`, scoped to the dashboard's id -- a
+  //     swapped-in dashboard's panels must find THEIR rows, not the boot screen's), layered by the
+  //     automation exactly as `mountInstance`'s are; and it runs its links (`embedded: false`);
+  //   * the boot screen's settings doc is LENT to it (`settingsHandle`), not opened twice, and the
+  //     arrangement it boots with is the one this file read (`savedLayout`, a preview included), so the
+  //     09-12 watch above stays the one thing that corrects it;
+  //   * its transport bar docks OVER the stage's bottom edge (`over`), and the kiosk counts as full
+  //     screen for it (the kiosk IS the whole screen), so it tucks itself away after its delay and
+  //     comes back on a touch, a key, a switch or the pointer near it -- the bar a bedside screen has
+  //     always had, rather than a permanent row taken off the panels.
+  const REAL_DASHBOARD_CHROME = [
+    { id: 'chrome-bar', type: 'transport_bar', dock: 'bottom', over: true },
+    { id: 'chrome-menu', type: 'settings_menu', dock: 'left' },
+  ];
+  const chromeFor = () => (Array.isArray(dashboardChrome) ? dashboardChrome
+    : embedded ? DEFAULT_DASHBOARD_CHROME : REAL_DASHBOARD_CHROME);
+  // State scoped to ANY dashboard id (`stateFor` reads the current `profileId`, and a dashboard being
+  // mounted for a swap is not current yet). The same handles `stateFor`/`eventsFor` make, for `pid`.
+  const stateForProfile = (key, opts = {}, pid = profileId) => (makeState
+    ? makeState(key, opts, pid)
+    : createState({ url: profiles.stateURL(pid, key), user, cacheKey: `${user}:${pid}:${key}`, push, ...opts }));
+  const eventsForProfile = (key, opts = {}, pid = profileId) => (makeEvents
+    ? makeEvents(key, opts, pid)
+    : createEvents({ url: profiles.eventsURL(pid, key), user, push, ...opts }));
+
+  /** Mount ONE dashboard module for screen `id` into a fresh host beside the current one. Resolves
+   *  `{ d, host }` once it is up; throws (with nothing left behind) if it would not start. `hidden`:
+   *  mounted invisible, so the one on screen stays what is seen until this one has succeeded. */
+  async function buildDashboard(id, record, { layout = undefined, hidden = false, startIndex = 0 } = {}) {
+    const host = document.createElement('div');
+    host.className = 'k-dash';
+    if (hidden) { host.style.visibility = 'hidden'; host.setAttribute('aria-hidden', 'true'); }
+    (dashHost || stageEl).after(host);
+    let d = null;
     try {
-      dash = mountModule('view', extendCtx(childCtx({ id: `dashboard:${profileId}`, type: 'view' }), {
-        mount: dashHost, state: null, events: null,
-        viewId: profileId, arrangement: ownArr.profile(), layoutOverride: savedLayout || null,
-        router: runtime.router, health, storage, embedded: true,
+      d = mountModule('view', extendCtx(childCtx({ id: `dashboard:${id}`, type: 'view' }), {
+        mount: host, state: null, events: null,
+        viewId: id, profileId: id, arrangement: record,
+        ...(layout !== undefined ? { layoutOverride: layout } : {}),
+        router: runtime.router, health, storage, embedded: !!embedded,
+        ...(embedded ? {} : {
+          makeState: stateForProfile, makeEvents: eventsForProfile,
+          wrapState: (mid, st, type) => automation.wrapState(mid, st, { manifest: getManifest(type) }),
+          ...(id === bootProfileId ? { settingsHandle: settings } : {}),
+          startIndex,
+        }),
         // Stage 3b: what it places besides its panels, and the shell's one menu to dock.
-        chrome: Array.isArray(dashboardChrome) ? dashboardChrome : DEFAULT_DASHBOARD_CHROME,
+        chrome: chromeFor(),
         shell: {
           dockMenu, helpOn: () => helpOn(storage),
           // Home (2026-09-30): the host page's actions for the placed bar, and what its words need.
           host: hostPage, menuOpen: () => !!menu.isOpen(), barHeld: () => barHeld,
-          fullscreenElement: () => { try { return fullscreenElement(); } catch { return null; } },
+          fullscreenElement: () => {
+            let f = null;
+            try { f = fullscreenElement(); } catch { f = null; }
+            return f || (embedded ? null : kioskEl);
+          },
         },
       }));
-      dash.impl.onChange?.(() => { renderMods(); syncPlainBar(); });
-      await dash.init();
-      if (!dash.impl.arrangement?.()) throw new Error('the dashboard module did not build an arrangement');
+      await d.init();
+      if (!d.impl.arrangement?.()) throw new Error('the dashboard module did not build an arrangement');
+      return { d, host };
+    } catch (err) {
+      try { d?.destroy(); } catch { /* already gone */ }
+      host.remove();
+      throw err;
+    }
+  }
+  // What the shell hears from the dashboard that is showing (and only while it is).
+  function wireDashboard(d) {
+    d.impl.onChange?.(() => { if (dash === d) { renderMods(); syncPlainBar(); } });
+    d.impl.onSettings?.(() => { if (dash === d) syncShownTheme(); });
+  }
+  // Every mounted record a dashboard holds, by id (the health watch is keyed by them).
+  function dashRecIds(d) {
+    const a = d?.impl?.arrangement?.();
+    if (!a) return [];
+    return [a.stageRec?.(), ...(a.slotRecs || []), ...(a.placedRecs || []),
+      a.cameraRec?.(), a.clockRec?.(), a.ambientRec?.()].filter(Boolean).map((r) => r.id);
+  }
+
+  async function mountDashboard() {
+    stageEl.style.display = 'none';
+    try {
+      // An embed: the arrangement it was handed (Stage 3). A real screen: the one this file read --
+      // a preview's, else the doc's as it is NOW (a placement saved in the boot gap included).
+      const layout = embedded ? (savedLayout || null)
+        : (previewLayout || (settings.get().kiosk || {}).layout || null);
+      const built = await buildDashboard(profileId, ownArr.profile(), {
+        layout, startIndex: embedded ? 0 : plan.stageIndex,
+      });
+      dash = built.d; dashHost = built.host;
+      wireDashboard(dash);
+      applyLayout(settings.get());          // `.kiosk` stops carrying corners (see `applyCorners`)
+      syncShownTheme();
       renderMods();
       syncPlainBar();
     } catch (err) {
       console.error('kiosk: the dashboard module failed; showing the panels directly', err);
-      try { dash?.destroy(); } catch { /* already gone */ }
-      dash = null; dashHost?.remove(); dashHost = null;
+      dash = null; dashHost = null;
       stageEl.style.display = '';
-      if (arr.layout()) await mountLayout(); else await showPrimary(0);
+      // The HUD too (the mirror, the corner clock, the ambient layer): this file's own, as it would
+      // have mounted them with no dashboard at all.
+      try { await ownArr.mountOverlays(); } catch (e2) { console.error('kiosk: overlays', e2); }
+      if (arr.layout()) await mountLayout(); else await showPrimary(embedded ? 0 : plan.stageIndex);
       syncPlainBar();                       // no dashboard, so the plain bar is THE bar
+    }
+  }
+
+  /** STAGE 4: a screen swap on the dashboard path. LOAD AND MOUNT THE NEW DASHBOARD FIRST, invisibly,
+   *  and destroy the old one ONLY once the new one is up (the plan's showScreen rule, kiosk.js's own
+   *  "A FAILED SWAP MUST LEAVE HER LOOKING AT SOMETHING", now by construction): a screen record that
+   *  will not load, or a dashboard that throws, leaves the old one exactly where it was -- same panels,
+   *  same instances, same focus, same theme -- and returns null. The incoming dashboard reads its OWN
+   *  settings doc (its arrangement, its corners, its theme), which also retires the
+   *  §showscreen-inherits-layout class: there is no boot handle for it to read by mistake. */
+  async function swapDashboard(nextId, { remember = true } = {}) {
+    swapping = true;
+    const from = profileId;
+    const old = dash, oldHost = dashHost;
+    const oldIds = dashRecIds(old);
+    try {
+      const next = makeState
+        ? await profiles.get(nextId)
+        : await cachedFetch(`profile:${user}:${nextId}`, () => profiles.get(nextId));
+      if (!next || !Array.isArray(next.modules)) throw new Error('that screen has no modules');
+      // Back to the screen this kiosk booted on: its doc is the one held open (lent again), and its
+      // arrangement is the doc's as it is NOW (the 09-12 watch only noted changes while it was away).
+      const built = await buildDashboard(nextId, next, {
+        hidden: true,
+        ...(nextId === bootProfileId ? { layout: (settings.get().kiosk || {}).layout || null } : {}),
+      });
+      if (torn) { try { built.d.destroy(); } catch { /* gone */ } built.host.remove(); return null; }
+      // ---- it is up. Only now does anything about the screen change. ----
+      if (remember) screenStack.push(from);
+      profileId = nextId;
+      dash = built.d; dashHost = built.host;
+      wireDashboard(dash);
+      built.host.style.visibility = ''; built.host.removeAttribute('aria-hidden');
+      try { old?.destroy(); } catch (err) { console.error('kiosk: the old dashboard did not go quietly', err); }
+      oldHost?.remove();
+      // The old panels stop being watched (a destroyed panel publishes nothing, and a watch on it would
+      // call it stalled); any id the new dashboard also has was just watched again by its own mount.
+      const keep = new Set(dashRecIds(dash));
+      for (const id of oldIds) if (!keep.has(id)) { try { health.forget(id); } catch { /* not load-bearing */ } }
+      // A new dashboard's bar gets its own 2 s to mount before the plain bar steps in for it.
+      clearTimeout(barGraceT); barGraceT = null; barGraceOver = false;
+      applyLayout(settings.get());
+      syncShownTheme();
+      const f = focusedRec();
+      if (f) paintFocus(f.id);
+      renderMods();
+      syncPlainBar();
+      bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
+      return nextId;
+    } catch (err) {
+      // *** THE OLD DASHBOARD NEVER LEFT. *** Nothing above the "it is up" line touched it.
+      console.error('kiosk: could not show screen', nextId, err);
+      return null;
+    } finally {
+      swapping = false;
     }
   }
   if (useDashboard) await mountDashboard();
@@ -3049,8 +3351,10 @@ export async function mountKiosk(root, {
   // written after boot are picked up without a reload, since they are not part of the layout). The
   // subscribe replays at once if settings are loaded, so the explicit sync only matters when they
   // are not; it is idempotent either way.
+  // (Stage 4: a real screen's dashboard runs its OWN links, from its own doc; this file's runner is
+  // only for when this file's arrangement is the one showing the panels.)
   let offLinks = null;
-  if (screenLinks) {
+  if (screenLinks && !dash) {
     screenLinks.sync();
     offLinks = settings.subscribe(() => { if (!torn) screenLinks.sync(); });
   }
@@ -3090,7 +3394,8 @@ export async function mountKiosk(root, {
     slotTypes: () => arr.slotRecs.map((r) => r.type),
     // One row per link on this screen, carrying or not, each with `ok` and (if not) a `reason`.
     // NULL means no runner exists: the screen has no links, or this is an embed. See screen_links.js.
-    linkStatus: () => (screenLinks ? screenLinks.status() : null),
+    // (Stage 4: on a real screen's dashboard path, the SHOWING dashboard's runner.)
+    linkStatus: () => { const sl = dash ? arr.screenLinks : screenLinks; return sl ? sl.status() : null; },
     hasCamera: () => !!arr.cameraRec(),
     hasClock: () => !!arr.clockRec(),
     hasAmbient: () => !!arr.ambientRec(),
@@ -3109,7 +3414,14 @@ export async function mountKiosk(root, {
     // tries to compare or group settings across panels.
     stageState: () => ({ ...(arr.stageRec()?.state.get() || {}) }),
     mirrorFull: () => mirrorFull,
-    layout: () => ({ mirrorSize: kioskEl.dataset.mirrorSize, mirrorCorner: kioskEl.dataset.mirrorCorner, clockCorner: kioskEl.dataset.clockCorner }),
+    // (Stage 4: where the corners ARE -- the showing dashboard's root on a real screen's dashboard path.)
+    layout: () => {
+      const d = (cornersFollowDash() && dash?.impl?.rootEl?.()) || kioskEl;
+      return { mirrorSize: d.dataset.mirrorSize, mirrorCorner: d.dataset.mirrorCorner, clockCorner: d.dataset.clockCorner };
+    },
+    // Stage 4: which path this screen booted on (true = one dashboard module) -- for a suite, a
+    // diagnostic page and the bench soak. (`dashboard()` below says whether the module is mounted.)
+    dashboardPath: () => !!useDashboard,
     showPrimary,
     showModule,
     menu,
@@ -3240,6 +3552,9 @@ export async function mountKiosk(root, {
       try { master?.destroy(); } catch { /* already gone */ } master = null;
       try { mixer?.destroy(); } catch { /* already gone */ } mixer = null;
       try { fxReal?.destroy(); } catch { /* already gone */ } fxReal = null;
+      // Hide = mute: its open question card, and the choices row it remembers answers in.
+      try { hideSound?.destroy(); } catch { /* already gone */ }
+      try { choicesState?.destroy?.(); } catch { /* already gone */ }
       try { barHelp.destroy(); } catch { /* already gone */ }
       // Silences anything mid-sentence as well as clearing the queue. A screen that is being
       // torn down must not keep talking.

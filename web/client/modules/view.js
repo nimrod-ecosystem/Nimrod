@@ -91,6 +91,11 @@
 // position -- a preview host MUST pass its own, or the real device's restart record is written),
 // `ctx.embedded` (true: no links runner -- a preview is not a screen), `ctx.layoutOverride` (use this
 // arrangement, `null` included, instead of the one saved in the view's settings).
+// STAGE 4 (the real kiosk mounts this): `ctx.settingsHandle` (the host already holds this dashboard's
+// settings doc open: use it, never reload or close it), `ctx.wrapState(id, state, type)` (a layer over
+// each panel's own state -- the kiosk's automation), `ctx.startIndex` (where a one-at-a-time stage
+// starts), and a chrome def's `over: true` (dock it over the stage's edge, not as a row). Read back:
+// `settings()`, `settingsDoc()`, `onSettings(fn)` (the theme is the dashboard's own, R3) and `rootEl()`.
 
 import { registerModule, mountModule, extendCtx, getManifest } from '../module.js';
 // The chrome a dashboard can place (Stage 3b): registered here, with the thing that places them, so a
@@ -152,6 +157,8 @@ registerModule(
     let settingsHandle = null;
     const offs = [];                             // every subscription this view made, undone on destroy
     const listeners = new Set();                 // onChange
+    const settingsListeners = new Set();         // onSettings (Stage 4)
+    const borrowedSettings = ctx.settingsHandle || null;   // a doc the host lends (Stage 4), never closed here
     let torn = false;
 
     // Per-CHILD handles, keyed to this view's arrangement rather than to whatever the
@@ -189,7 +196,16 @@ registerModule(
     // Returns the record shape the kiosk's `mountInstance` returns, so the arrangement cannot tell the
     // two hosts apart.
     async function mountChild(def, host) {
-      const state = childState(def.id);
+      // STAGE 4: a host that layers something over each panel's own state hands in `ctx.wrapState`
+      // (the kiosk's automation layer, row 2.41: a bound input drives a panel's number setting without
+      // writing it). Absent, the panel gets its own handle exactly as before.
+      const raw = childState(def.id);
+      let state = raw;
+      if (raw && typeof ctx.wrapState === 'function') {
+        try { state = ctx.wrapState(def.id, raw, def.type) || raw; } catch (err) {
+          console.error('view: wrapState', err); state = raw;
+        }
+      }
       const events = childEvents(def.id);
       // `extendCtx`, not a spread: the host's getters (`personId`, `callTransport`, `aim`...) stay
       // getters for the child, so a child mounted before a value arrives still sees it. 2026-09-30.
@@ -296,7 +312,20 @@ registerModule(
       const host = document.createElement('div');
       host.className = 'v-chrome';
       host.dataset.chrome = role || '';
-      dockFor(def.dock).append(host);
+      const dock = dockFor(def.dock);
+      // STAGE 4: `over: true` docks it OVER the stage's edge instead of as a row of the dashboard, so a
+      // real screen's panels keep the whole screen and the bar sits over them when it shows (the plain
+      // bar always did). Inline, on the dock, so it needs nothing from a stylesheet.
+      if (def.over === true) {
+        dock.dataset.over = '1';
+        dock.style.position = 'absolute';
+        dock.style.left = '0'; dock.style.right = '0';
+        if ((def.dock || 'bottom') === 'top') dock.style.top = '0'; else dock.style.bottom = '0';
+        dock.style.pointerEvents = 'none';
+        host.style.pointerEvents = 'auto';
+        host.style.height = 'auto';
+      }
+      dock.append(host);
       const rec = { def, role, status: 'pending', instance: null, host };
       chromeRecs.set(def.id, rec);
       try {
@@ -423,7 +452,12 @@ registerModule(
         if (!mounts[k]) continue;
         const h = document.createElement('div');
         box.append(h);
-        opened[k] = mounts[k](h, model, { onClose: close });
+        // A person hiding a panel by hand (Layers' eye) may be asked what its sound should do (hide = mute,
+        // ad7dc49) -- the host's policy, `ctx.hidePolicy`; an automatic hide never asks.
+        opened[k] = mounts[k](h, model, {
+          onClose: close,
+          onShownToggle: (id, shown) => { if (!shown) { try { ctx.hidePolicy?.personHid?.(id); } catch { /* not load-bearing */ } } },
+        });
       }
       editor = { model, windows: opened, notes: () => notes.slice(), close };
       changed();
@@ -479,6 +513,16 @@ registerModule(
       // ---- chrome (Stage 3b; see above) ----
       chrome: () => chromeStatus(),
       removeChrome,
+      // ---- STAGE 4: THIS DASHBOARD'S OWN SETTINGS, for the shell that shows it ----
+      // Per-dashboard themes (row 2.34, ruled; the step 6 plan's R3): the theme is part of what a
+      // dashboard IS, so the shell reads it here when this dashboard is the one showing, and the menu's
+      // Colours row writes it back here. `settings()` is a plain read ({} before init / unloadable);
+      // `settingsDoc()` the handle itself (null until init); `onSettings(fn)` fires on every change.
+      settings: () => (settingsHandle?.get?.() || {}),
+      settingsDoc: () => settingsHandle,
+      onSettings(fn) { settingsListeners.add(fn); return () => settingsListeners.delete(fn); },
+      // The element this dashboard draws into (its corners are on it), for the shell and the suites.
+      rootEl: () => root,
 
       async init() {
         root = document.createElement('div');
@@ -509,9 +553,15 @@ registerModule(
 
         // Its OWN settings — theme and chrome travel with the arrangement. KEPT, so `destroy()`
         // can close it: this handle used to be opened, set polling, and never closed.
-        settingsHandle = childState('settings');
-        await settingsHandle?.load?.().catch(() => {});
-        if (torn) { try { settingsHandle?.destroy?.(); } catch { /* gone */ } settingsHandle = null; return; }
+        // STAGE 4: a host that already holds THIS dashboard's settings doc open (the kiosk, for the
+        // screen it booted on) lends it (`ctx.settingsHandle`), so one doc is not polled twice. A lent
+        // handle is used, never loaded again and never closed here: it is the host's.
+        settingsHandle = borrowedSettings || childState('settings');
+        if (!borrowedSettings) await settingsHandle?.load?.().catch(() => {});
+        if (torn) {
+          if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* gone */ } }
+          settingsHandle = null; return;
+        }
         const settings = {
           get: () => settingsHandle?.get?.() || {},
           set: (p) => settingsHandle?.set?.(p),
@@ -530,7 +580,12 @@ registerModule(
 
         arr.applyLayout(settings.get());
         if (settingsHandle?.subscribe) {
-          const off = settingsHandle.subscribe((s) => { if (!torn) arr.applyLayout(s || {}); });
+          const off = settingsHandle.subscribe((s) => {
+            if (torn) return;
+            arr.applyLayout(s || {});
+            // STAGE 4: whoever shows this dashboard's own settings (its theme, R3) hears they changed.
+            for (const fn of settingsListeners) { try { fn(s || {}); } catch (err) { console.error('view: onSettings', err); } }
+          });
           if (typeof off === 'function') offs.push(off);
           settingsHandle.startPolling?.();
         }
@@ -546,7 +601,11 @@ registerModule(
         arr.partition();
         await arr.mountOverlays();
         if (torn) return;
-        if (arr.layout()) await arr.mountLayout(); else await arr.showPrimary(0);
+        // STAGE 4: `ctx.startIndex` -- where a cold boot lands on a one-at-a-time stage (the kiosk's
+        // restart record), clamped; mounting index 0 first and then moving would start a module for nothing.
+        const start = Number.isInteger(ctx.startIndex) && ctx.startIndex > 0 && ctx.startIndex < arr.stageDefs().length
+          ? ctx.startIndex : 0;
+        if (arr.layout()) await arr.mountLayout(); else await arr.showPrimary(start);
         if (torn) return;
         // Links, once the modules exist -- and again whenever the settings change, exactly as the
         // kiosk does. The runner exists only while there are links, so a view with none costs nothing.
@@ -587,9 +646,21 @@ registerModule(
         for (const id of [...chromeRecs.keys()]) removeChrome(id);
         try { arr?.destroy(); } catch { /* already gone */ }
         // THE LEAK (step 6 plan): opened, set polling, and never closed. Closed here, last, after
-        // everything that might read it.
-        try { settingsHandle?.destroy?.(); } catch { /* already gone */ }
+        // everything that might read it. (Not a LENT one -- Stage 4: that is the host's to close; this
+        // view's own subscriptions on it went with `offs` above.)
+        if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* already gone */ } }
         settingsHandle = null;
+        settingsListeners.clear();
+        // *** BREAK THE DEAD TREE APART (found by the Stage 4 bench soak, 2026-10-01). *** A module that
+        // keeps one of its own elements alive after `destroy` (trivia and wordforge each held ~40 nodes
+        // per mount, on every path) keeps EVERY node still connected to it alive too -- and on a screen
+        // swap the whole dashboard is detached at once, so one such module held the entire old dashboard
+        // (~200-550 nodes per swap, measured, against ~40 when the same panel is swapped off a stage that
+        // stays in the page). Taking every element off its parent leaves a leaky module holding only
+        // what it holds itself. The modules are already destroyed; nothing here is drawn any more.
+        try {
+          if (root) for (const n of [...root.querySelectorAll('*')].reverse()) n.remove();
+        } catch { /* a tree that will not come apart is still going */ }
         root?.remove(); root = null;
         stageEl = mirrorEl = clockEl = ambientEl = null;
         arrangement = null; arr = null;
