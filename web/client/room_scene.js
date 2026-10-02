@@ -540,9 +540,10 @@ export const assetBase = () => new URL('./design-assets/', import.meta.url).href
 // animations: the window's live view (46 stars at night, 29 falling leaves in the evening), the
 // curtains, the plant, the lamp's glow and the sleeping cat. Each one is compositor-friendly
 // (transform/opacity) on its own, but a running animation makes the screen draw EVERY frame, and the
-// page's gamepad poll (input_gamepad.js, a requestAnimationFrame loop) gives every frame a main-thread
+// page's gamepad poll (input_gamepad.js, then a requestAnimationFrame loop) gave every frame a main-thread
 // pass too, in which each running animation's style is recalculated and the cat's inline SVG is laid
-// out and repainted. Result: ~1.7 cores and ~50 fps for a room that is meant to be scenery.
+// out and repainted. Result: ~1.7 cores and ~50 fps for a room that is meant to be scenery. (That poll
+// now runs only while a pad is connected, on a 16 ms timer - but the room no longer depends on it.)
 //
 // *** WHAT IT DOES. *** It pauses the room's INFINITE decorative animations and moves them on from one
 // timer, each to exactly where it would have been (the timeline's time minus its own start, so phase,
