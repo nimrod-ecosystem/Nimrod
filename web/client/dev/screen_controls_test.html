@@ -67,6 +67,34 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// *** A PRESS THE WAY THE BROWSER DELIVERS ONE (2026-10-02 evening). *** Mike, on the bench: "clicking on
+// it doesn't grow any of the modules. It seems to pull up the transport bar." Every check below used
+// `button.click()`, which hands the event straight to the button -- it skips hit-testing, so it cannot see
+// a button that `pointer-events`, stacking or something drawn over it keeps the press from. This does what
+// the browser does: each event goes to whatever is AT the point when it happens (`elementFromPoint`); a
+// mouse's release is hit-tested again and its click goes to what the press and the release share; a touch
+// is captured where it went down, and its tap is hit-tested again at the point.
+const commonAncestor = (a, b) => { for (let e = a; e; e = e.parentElement) if (e.contains(b)) return e; return null; };
+function centre(el) { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
+async function realPress(x, y, pointerType = 'mouse') {
+  const opt = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerType, isPrimary: true,
+    pointerId: pointerType === 'mouse' ? 1 : 7, button: 0, buttons: 1 };
+  const down = document.elementFromPoint(x, y);
+  if (!down) return { down: null, up: null, click: null };
+  down.dispatchEvent(new PointerEvent('pointerdown', opt));
+  if (pointerType === 'mouse') down.dispatchEvent(new MouseEvent('mousedown', opt));
+  await sleep(0);
+  const up = pointerType === 'mouse' ? document.elementFromPoint(x, y) : down;
+  const off = { ...opt, buttons: 0 };
+  up.dispatchEvent(new PointerEvent('pointerup', off));
+  if (pointerType === 'mouse') up.dispatchEvent(new MouseEvent('mouseup', off));
+  await sleep(0);
+  const click = pointerType === 'mouse' ? commonAncestor(down, up) : document.elementFromPoint(x, y);
+  click?.dispatchEvent(new MouseEvent('click', { ...off, detail: 1 }));
+  await sleep(0);
+  return { down, up, click };
+}
+const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); const [x, y] = centre(el); return realPress(x, y, type); };
 const J = (x) => JSON.stringify(x);
 async function settled(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; }
 function fakeStorage() {
@@ -489,6 +517,79 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.destroy(); root.innerHTML = '';
     }
 
+    section('*** (3) a REAL press reaches the corner -- touch and mouse, on a 2x2 -- and the bar has its own Bigger ***');
+    {
+      const p = await profiles.create('SC-quad');
+      for (const t of ['photos', 'trivia', 'calculator', 'wordforge']) await profiles.addModule(p.id, t);
+      const ids = (await profiles.get(p.id)).modules.map((m) => m.id);
+      stashPreviewLayout(p.id, { preset: 'quad', slots: ids });
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams(fakeStorage()) });
+      await sleep(600);
+      const kEl = root.querySelector('.kiosk');
+      const cells = [...root.querySelectorAll('.k-stage > .k-cell')];
+      const corner = (i) => cells[i].querySelector(':scope > .k-promote');
+      check('a 2x2: four panels, each with its corner', cells.length === 4 && cells.every((c, i) => !!corner(i)), String(cells.length));
+      root.scrollIntoView({ block: 'nearest' });
+      // Nothing pressed yet: the corners are not shown, and one that is not shown takes no press.
+      const [cx, cy] = centre(corner(0));
+      check('*** an unseen corner takes no press: what is at its spot is the panel ***',
+        getComputedStyle(corner(0)).opacity === '0' && document.elementFromPoint(cx, cy) !== corner(0)
+        && !!document.elementFromPoint(cx, cy)?.closest('.k-mod'), String(document.elementFromPoint(cx, cy)?.className));
+      // A tap in the middle of a panel: the bar comes up (that is right), and so do the corners.
+      const mid = await pressAt(cells[1].querySelector('.k-mod'), 'touch');
+      check('a tap on a panel lands on the panel', cells[1].contains(mid.down) && kiosk.promoted().dashboard === null, String(mid.down?.className));
+      check('...the bar comes up with it', !root.querySelector('.k-controls').classList.contains('hidden'));
+      // A finger is not a hover: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
+      // the hover rule must stand down after a touch, or a hidden corner wakes in time to take the tap.
+      const hoverRules = [...document.styleSheets].flatMap((s) => { try { return [...s.cssRules]; } catch { return []; } })
+        .filter((r) => /:hover\s*>\s*\.k-(promote|editc)/.test(r.selectorText || ''));
+      check('*** a touch press marks the page, and every corner hover rule stands down for it ***',
+        document.documentElement.dataset.press === 'touch' && hoverRules.length >= 2
+        && hoverRules.every((r) => r.selectorText.split(',').filter((s) => /:hover/.test(s)).every((s) => /:root:not\(\[data-press="touch"\]\)/.test(s))),
+        `${document.documentElement.dataset.press} ${hoverRules.map((r) => r.selectorText).join(' | ')}`);
+      await sleep(300);                 // (their fade is .15s)
+      check('*** ...and so do the corners, for a screen with no hover ***', kEl.dataset.corners === 'up'
+        && cells.every((c, i) => getComputedStyle(corner(i)).opacity === '1' && getComputedStyle(corner(i)).pointerEvents === 'auto'),
+        `${kEl.dataset.corners} ${cells.map((c, i) => getComputedStyle(corner(i)).opacity).join()}`);
+      // THE BUG: a tap on the corner went to the panel underneath and only summoned the bar.
+      const t = await pressAt(corner(0), 'touch');
+      check('*** a TOUCH on the corner reaches the corner (not the panel under it) ***', t.down === corner(0) && t.click === corner(0),
+        `${t.down?.className} / ${t.click?.className}`);
+      check('*** ...and the panel fills its dashboard ***', kiosk.promoted().dashboard === ids[0] && getComputedStyle(cells[1]).visibility === 'hidden', J(kiosk.promoted()));
+      const m = await pressAt(corner(0), 'mouse');
+      check('*** a MOUSE press on the corner: up one more level, the screen ***', m.click === corner(0) && kiosk.promoted().screen === ids[0], J(kiosk.promoted()));
+      check('...and a mouse press gives hover back', document.documentElement.dataset.press === 'mouse');
+      kiosk.demote(); kiosk.demote();
+      check('...back down', !kiosk.promoted().screen && !kiosk.promoted().dashboard);
+      // Once the corners have gone again, a press where one sits is the panel's -- the corner never
+      // swallows a press it was not showing for (nor does it appear under the press and take its release).
+      const gone = await settled(() => !kEl.dataset.corners, 6000);
+      await sleep(300);
+      check('the corners go again with the bar\'s own time', gone && getComputedStyle(corner(1)).opacity === '0'
+        && getComputedStyle(corner(1)).pointerEvents === 'none', `${gone} ${getComputedStyle(corner(1)).opacity}`);
+      const under = await pressAt(corner(1), 'mouse');
+      check('*** a press where an unseen corner sits is the PANEL\'s (down, up and click) ***', cells[1].contains(under.down)
+        && cells[1].contains(under.click) && under.click !== corner(1) && !kiosk.promoted().dashboard, `${under.down?.className} / ${under.click?.className}`);
+      // THE BAR'S OWN BIGGER: the selected panel, one level at a time -- a switch's or a finger's way that
+      // needs no corner at all.
+      const big = () => root.querySelector('.k-actions [data-act="bigger"]');
+      check('*** the plain bar has a Bigger button ***', !!big() && !big().disabled && /Bigger/.test(big().textContent), big()?.outerHTML);
+      root.querySelector(`[data-mods] .k-dot[data-id="${ids[3]}"]`)?.click();
+      await sleep(30);
+      kiosk.holdBar(true);              // the bar up (as a press brings it), for as long as this takes
+      await sleep(30);
+      await pressAt(big(), 'touch');
+      check('*** ...pressed: the SELECTED panel fills its dashboard ***', kiosk.promoted().dashboard === ids[3], J(kiosk.promoted()));
+      await pressAt(big(), 'mouse');
+      check('...again: the screen, and the button now says Smaller', kiosk.promoted().screen === ids[3] && /Smaller/.test(big().textContent), big().textContent);
+      await pressAt(big(), 'mouse');
+      check('...which goes one level back down', !kiosk.promoted().screen && kiosk.promoted().dashboard === ids[3] && /Bigger/.test(big().textContent), J(kiosk.promoted()));
+      kiosk.demote();
+      kiosk.holdBar(false);
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
     section('*** (5) the Layout list: a new arrangement, in place, no reload ***');
     {
       const p = await profiles.create('SC-layout');
@@ -546,6 +647,30 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** the corner makes it fill the dashboard, there too ***', kiosk.promoted().dashboard === a.slotRecs[0].id && cells[0].dataset.promoted === '1');
       kiosk.demote();
       check('...and back', !kiosk.promoted().dashboard);
+      // The bench's case: a real screen is the dashboard path. A REAL tap, then a real tap on the corner.
+      root.scrollIntoView({ block: 'nearest' });
+      const dtap = await pressAt(cells[1].querySelector('.k-mod'), 'touch');
+      await sleep(300);
+      check('*** dashboard path: a tap brings the corners up too ***', root.querySelector('.kiosk').dataset.corners === 'up'
+        && getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents === 'auto',
+        `${root.querySelector('.kiosk').dataset.corners} down=${dtap.down?.className} click=${dtap.click?.className} ${getComputedStyle(cells[0].querySelector('.k-promote')).pointerEvents}`);
+      // NEVER UNDER THE BAR: on 'side' this corner sits at the bottom middle, where the placed bar is.
+      const overlaps = (a, b) => a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
+      const barR = root.querySelector('.tb-bar')?.getBoundingClientRect();
+      const cornerR = cells[0].querySelector('.k-promote').getBoundingClientRect();
+      check('*** dashboard path: a corner the bar would cover is lifted above it ***', !!barR && !overlaps(cornerR, barR)
+        && document.elementFromPoint(...centre(cells[0].querySelector('.k-promote'))) === cells[0].querySelector('.k-promote'),
+        `corner ${J([cornerR.left, cornerR.top, cornerR.bottom])} bar ${J(barR && [barR.left, barR.top, barR.right])}`);
+      const dt = await pressAt(cells[0].querySelector('.k-promote'), 'touch');
+      check('*** dashboard path: a TOUCH on the corner reaches it, and the panel fills the dashboard ***',
+        dt.click === cells[0].querySelector('.k-promote') && kiosk.promoted().dashboard === a.slotRecs[0].id, `${dt.click?.className} ${J(kiosk.promoted())}`);
+      kiosk.demote();
+      const pbig = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="bigger"]');
+      check('*** the placed bar has Bigger too ***', !!pbig() && !pbig().disabled, pbig()?.outerHTML);
+      pbig()?.click();
+      await sleep(30);
+      check('...which makes the selected panel bigger', !!kiosk.promoted().dashboard, J(kiosk.promoted()));
+      kiosk.demote();
       kiosk.destroy(); root.innerHTML = '';
     }
   } catch (err) {

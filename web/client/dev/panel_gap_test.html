@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>space between panels — four up is four quarters</title>
+<link rel="stylesheet" href="../modules.css">
+<!-- The kiosk's own stylesheet: the gap, the padding and the corners measured below are kiosk.css's. -->
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* A box the size of the screen being checked. The kiosk is normally fixed to the window; pinned to this box
+     instead (transport_test's way), so the numbers are about a 1280x720 or 1920x1080 screen whatever window
+     the suite runs in. */
+  /* Pinned to the page's top left (absolute, not in the flow), so the results growing above it never move it
+     between one measurement and the next. */
+  .box{position:absolute;left:0;top:0;overflow:hidden;border:0}
+  .box .kiosk{position:absolute}
+</style>
+</head>
+<body>
+<h1>space between panels — four up is four quarters</h1>
+<p>Mike, 2026-10-02 evening: <i>“Why are there always gaps between the modules? Can't they each take up a
+quarter?”</i> A real kiosk (the one a Pi runs), four up, at 1280×720 and 1920×1080, on today's path and on the
+dashboard path: with nothing chosen there is no space between panels and each panel is exactly a quarter of the
+screen (the bar floats over a screen, so the whole screen); “Space between panels” is a screen setting, and
+changing it changes the screen at once. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk, PANEL_GAPS, PANEL_GAP_DEFAULT, PANEL_GAP_FIELD } from '../kiosk.js';
+
+const USER = 'panel-gap-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(50); } return false; };
+const J = (x) => JSON.stringify(x);
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+const R = (el) => el.getBoundingClientRect();
+const near = (a, b, tol = 0.75) => Math.abs(a - b) <= tol;
+
+const profiles = createProfilesClient({ user: USER });
+async function writeRow(pid, key, patch) {
+  const h = createState({ url: profiles.stateURL(pid, key), user: USER });
+  try { await h.load().catch(() => {}); h.set(patch); await h.flush(); } finally { h.destroy(); }
+}
+
+// A four-up screen of ordinary panels, arranged quad (TL, TR, BL, BR).
+async function quadScreen(name, extra = {}) {
+  const p = await profiles.create(name);
+  const ids = [];
+  for (const t of ['clock', 'trivia', 'wordforge', 'calculator']) ids.push((await profiles.addModule(p.id, t)).id);
+  await writeRow(p.id, 'settings', { kiosk: { layout: { preset: 'quad', slots: ids } }, ...extra });
+  return p;
+}
+
+/** Mount a real kiosk for `pid` in a W x H box. `rows` collects the settings handles it makes for itself, so a
+ *  change can be made through the screen's own row, exactly where the ⚙ menu's row writes. */
+async function mountAt(pid, W, H, { dashboardDefault = false } = {}) {
+  const box = document.createElement('div');
+  box.className = 'box';
+  box.style.width = `${W}px`; box.style.height = `${H}px`;
+  document.body.append(box);
+  const rows = [];
+  const makeState = (key, opts = {}, forPid = pid) => {
+    const h = createState({ url: profiles.stateURL(forPid, key), user: USER, ...opts });
+    if (key === 'settings' && forPid === pid) rows.push(h);
+    return h;
+  };
+  const kiosk = await mountKiosk(box, { user: USER, profileId: pid, profiles, bus: createBus(), makeState,
+    storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {}, dashboardDefault });
+  const grid = () => box.querySelector('.k-stage.k-grid');
+  const cells = () => (grid() ? [...grid().children].filter((c) => c.classList.contains('k-cell')) : []);
+  await until(() => cells().length === 4 && cells().every((c) => !!c.querySelector('.k-mod')), 15000);
+  return { box, kiosk, rows, grid, cells, kioskEl: box.querySelector('.kiosk'),
+    done() { try { kiosk.destroy(); } catch { /* gone */ } box.remove(); } };
+}
+
+/** Each cell exactly its quarter of `area` (a rect), tiled TL, TR, BL, BR. */
+function quarters(cells, area) {
+  const w = area.width / 2, h = area.height / 2;
+  const want = [[0, 0], [w, 0], [0, h], [w, h]];
+  return cells.length === 4 && cells.every((c, i) => {
+    const r = R(c);
+    return near(r.width, w) && near(r.height, h) && near(r.left - area.left, want[i][0]) && near(r.top - area.top, want[i][1]);
+  });
+}
+const rects = (cells) => cells.map((c) => { const r = R(c); return [r.left, r.top, r.width, r.height].map((n) => Math.round(n * 10) / 10); });
+
+try {
+  section('*** the setting itself ***');
+  check('three choices, none / thin / roomy; NONE by default', J(PANEL_GAPS) === J(['none', 'thin', 'roomy']) && PANEL_GAP_DEFAULT === 'none');
+  check('a screen setting with words, on the Display tab’s level (standard)', PANEL_GAP_FIELD.key === 'panelGap'
+    && PANEL_GAP_FIELD.label === 'Space between panels' && PANEL_GAP_FIELD.default === 'none'
+    && J(PANEL_GAP_FIELD.options.map((o) => o.value)) === J(PANEL_GAPS));
+
+  for (const [W, H] of [[1280, 720], [1920, 1080]]) {
+    for (const dash of [false, true]) {
+      const path = dash ? 'the dashboard path' : 'today’s path';
+      section(`*** ${W} × ${H}, ${path}: nothing chosen ***`);
+      const p = await quadScreen(`gap-${W}-${dash ? 'dash' : 'classic'}`);
+      const k = await mountAt(p.id, W, H, { dashboardDefault: dash });
+      check(`[${W} ${path}] the screen is four up`, k.cells().length === 4 && k.kiosk.dashboardPath() === dash, `${k.cells().length} cells`);
+      check(`[${W} ${path}] *** no space between panels by default (data-panel-gap none, grid gap 0, no padding) ***`,
+        k.kioskEl.dataset.panelGap === 'none' && getComputedStyle(k.grid()).rowGap === '0px' && getComputedStyle(k.grid()).columnGap === '0px'
+        && getComputedStyle(k.grid()).paddingLeft === '0px' && getComputedStyle(k.grid()).paddingTop === '0px',
+        `${k.kioskEl.dataset.panelGap} gap=${getComputedStyle(k.grid()).gap} pad=${getComputedStyle(k.grid()).padding}`);
+      // The bar floats OVER a screen (it hides itself), on both paths, so the panels share the whole screen.
+      const screen = R(k.kioskEl);
+      check(`[${W} ${path}] the stage is the whole screen (the bar floats over it)`,
+        near(R(k.grid()).width, W) && near(R(k.grid()).height, H) && near(screen.width, W) && near(screen.height, H),
+        `${J(R(k.grid()))} in ${W}x${H}`);
+      check(`[${W} ${path}] *** each panel is EXACTLY a quarter of the screen: ${W / 2} × ${H / 2}, tiled ***`,
+        quarters(k.cells(), screen), J(rects(k.cells())));
+      const mod = k.cells()[0].querySelector('.k-mod');
+      check(`[${W} ${path}] square corners where panels meet`, getComputedStyle(mod).borderTopLeftRadius === '0px', getComputedStyle(mod).borderTopLeftRadius);
+      const c0 = getComputedStyle(k.cells()[0]);
+      // The theme's --border, resolved the same way: a probe coloured with it, beside the cell.
+      const probe = document.createElement('i'); probe.style.color = 'var(--border)'; k.grid().append(probe);
+      const borderColour = getComputedStyle(probe).color; probe.remove();
+      check(`[${W} ${path}] *** a hairline between them, in the theme’s own --border, inside each panel’s quarter ***`,
+        c0.borderRightWidth === '1px' && c0.borderBottomWidth === '1px' && c0.borderLeftWidth === '0px' && c0.borderRightStyle === 'solid'
+        && c0.borderRightColor === borderColour && c0.boxSizing === 'border-box',
+        `${c0.borderRightWidth} ${c0.borderRightStyle} ${c0.borderRightColor} vs ${borderColour} ${c0.boxSizing}`);
+
+      section(`*** ${W} × ${H}, ${path}: the setting changes it, at once ***`);
+      // Written through every handle the screen made on its own row (the kiosk's, and the dashboard's on that
+      // path), as the ⚙ menu's row writes it -- so each one hears it now, not at the next poll.
+      const row = k.rows.length ? { set: (p) => { for (const h of k.rows) h.set(p); } } : null;
+      check('(setup) the screen’s own settings row', !!row, String(k.rows.length));
+      row?.set({ panelGap: 'roomy' });
+      check(`[${W} ${path}] *** "Roomy": the attribute changes without a reload ***`, await until(() => k.kioskEl.dataset.panelGap === 'roomy', 4000), k.kioskEl.dataset.panelGap);
+      // (Read once into numbers: a computed style is LIVE, and the next change would rewrite it under us.)
+      const gs = getComputedStyle(k.grid());
+      const roomyGap = parseFloat(gs.columnGap), roomyPad = parseFloat(gs.paddingLeft);
+      check(`[${W} ${path}] ...space between and round the edge, rounded corners, no hairline`,
+        roomyGap > 4 && roomyPad > 4 && parseFloat(getComputedStyle(mod).borderTopLeftRadius) >= 10
+        && getComputedStyle(k.cells()[0]).borderRightWidth === '0px', `gap=${roomyGap} pad=${roomyPad}`);
+      check(`[${W} ${path}] ...so the panels are smaller than a quarter now`, R(k.cells()[0]).width < W / 2 - 4 && R(k.cells()[0]).height < H / 2 - 4,
+        J(rects(k.cells())));
+      row?.set({ panelGap: 'thin' });
+      check(`[${W} ${path}] "Thin": a little space, smaller corners`, await until(() => k.kioskEl.dataset.panelGap === 'thin', 4000)
+        && parseFloat(getComputedStyle(k.grid()).columnGap) > 0 && parseFloat(getComputedStyle(k.grid()).columnGap) < roomyGap,
+        `${getComputedStyle(k.grid()).columnGap} vs roomy ${roomyGap}`);
+      row?.set({ panelGap: 'none' });
+      check(`[${W} ${path}] back to "None": quarters again`, await until(() => k.kioskEl.dataset.panelGap === 'none', 4000) && quarters(k.cells(), R(k.kioskEl)),
+        J(rects(k.cells())));
+      row?.set({ panelGap: 'sideways' });
+      check(`[${W} ${path}] a value that is not a choice is the default, not junk`, await until(() => k.kioskEl.dataset.panelGap === 'none', 4000));
+      k.done();
+    }
+  }
+
+  section('*** a screen that already chose keeps its choice ***');
+  {
+    const p = await quadScreen('gap-roomy', { panelGap: 'roomy' });
+    const k = await mountAt(p.id, 1280, 720);
+    check('a screen whose row says roomy boots roomy', k.kioskEl.dataset.panelGap === 'roomy' && parseFloat(getComputedStyle(k.grid()).columnGap) > 4);
+    k.done();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

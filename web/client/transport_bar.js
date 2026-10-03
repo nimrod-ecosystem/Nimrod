@@ -105,6 +105,26 @@ export function paintPlayPause(btn, s = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// *** BIGGER / SMALLER, FOR THE SELECTED PANEL (2026-10-02 evening). *** The panel corner's press
+// (arrangement.js `promote`, kiosk.js `promotePanel`), on both bars: one level at a time, and at the top
+// (the panel fills the screen) the same press goes back down, as the corner does. It is here because a
+// corner is a small target in a panel's corner, and the bar is where a finger or a switch already goes.
+// Drawn from the shell's state ({ can, smaller, name }); dimmed with no panel selected (D16). Fixed width,
+// like Pause / Play, so the words changing never moves a button after it.
+export const BIGGER_ACT = 'bigger';
+export function paintBigger(btn, s = {}) {
+  if (!btn) return;
+  const can = !!(s && s.can);
+  const smaller = !!(s && s.smaller);
+  const name = (s && s.name) || 'the selected panel';
+  btn.disabled = !can;
+  btn.textContent = smaller ? '⤡ Smaller' : '⤢ Bigger';
+  btn.setAttribute('aria-pressed', smaller ? 'true' : 'false');
+  btn.style.minWidth = '6.2em';
+  btn.title = !can ? 'no panel is selected' : smaller ? `make ${name} smaller` : `make ${name} bigger, one step at a time`;
+}
+
+// ---------------------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS ON THE BAR (2026-10-02). *** From the call panel's own report
 // (actions.js CALL_CONTROLS_TOPIC; modules/call.js): shown only while a call is live, gone the moment it
 // ends. Each button says what pressing it DOES ("Mute my mic", then "Unmute my mic") and is lit while the

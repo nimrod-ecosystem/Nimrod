@@ -40,12 +40,12 @@
 
 import { registerModule } from '../module.js';
 import {
-  barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
+  barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
-  SHELL_PLAY_PAUSE,
+  SHELL_PLAY_PAUSE, SHELL_PROMOTE,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -71,6 +71,8 @@ const BUTTONS = [
   // never hidden, when there is no panel to switch (D16). Not drawn when the host page has its own
   // switch button (Home): ONE chooser, however it is reached.
   { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'switch the selected panel to another module' },
+  // Bigger / Smaller (2026-10-02 evening): the panel corner's press, for the selected panel (paintBigger).
+  { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the selected panel bigger, one step at a time' },
   { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false },
   { act: 'hush', verb: SHELL_HUSH, label: 'Hush',
     title: 'pause the music and video so you can talk (voices and speech are still heard)' },
@@ -97,6 +99,8 @@ registerModule(
     let hostEl = null;
     // Pause / Play: the shell's word on the selected panel (its getter at mount, then SHELL_STATE).
     let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
+    // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
+    let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
     // A live call's controls (actions.js CALL_CONTROLS_TOPIC), drawn while a call is live.
     let callState = (() => { try { const s = ctx.shell?.callControls?.(); return s && s.live ? { ...s } : null; } catch { return null; } })();
     let callEl = null;
@@ -242,6 +246,7 @@ registerModule(
       }
       if (helpEl) helpEl.hidden = !helpShown;
       paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
+      paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }));
       drawHost();
       wordShell();
@@ -296,7 +301,8 @@ registerModule(
           if ('hushed' in s) hushed = !!s.hushed;
           if ('help' in s) helpShown = !!s.help;
           if ('playPause' in s) playPause = s.playPause || null;
-          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s) draw();
+          if ('bigger' in s) bigger = s.bigger || null;
+          if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
         });
         if (typeof off2 === 'function') offs.push(off2);

@@ -39,7 +39,7 @@ import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
   PLACE_REQUEST_TOPIC } from './arrangement.js';
 import {
-  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
@@ -105,6 +105,7 @@ import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from '
 import {
   createVoiceRecorder, createIdbPairStore, createMemoryPairStore, mountRecordingIndicator, VOICE_RECORDING_FIELDS,
 } from './voice_recording.js';
+import { VOICE_MODEL_FIELDS } from './voice_model.js';
 import {
   createIntercomReceiver, mountIntercomNotice, intercomOptionsFrom, normalizeAllowed, INTERCOM_ACTIONS, INTERCOM_FIELDS,
 } from './intercom.js';
@@ -222,6 +223,14 @@ export const SCREEN_HOME = SCREEN_HOME_TOPIC;
 // arrangement in this file) until the bench soak passes and Mike says the default flips -- one line.
 export const DASHBOARD_MODULE_DEFAULT = false;
 export const DASHBOARD_MODULE_KEY = 'dashboardModule';
+// "Space between panels" (`panelGap`, the screen's Display tab; argued at `shownPanelGap` and in kiosk.css).
+// Exported for the suites and for any page that offers the same choice.
+export const PANEL_GAPS = Object.freeze(['none', 'thin', 'roomy']);
+export const PANEL_GAP_DEFAULT = 'none';
+export const PANEL_GAP_FIELD = Object.freeze({ key: 'panelGap', label: 'Space between panels', kind: 'choice',
+  level: 'standard', default: PANEL_GAP_DEFAULT,
+  options: [{ value: 'none', label: 'None: each panel takes its full share' }, { value: 'thin', label: 'Thin' },
+    { value: 'roomy', label: 'Roomy' }] });
 /** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
 export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
   const v = row && row[DASHBOARD_MODULE_KEY];
@@ -409,6 +418,8 @@ export async function mountKiosk(root, {
           <button data-act="panel" title="move to the next panel" hidden>Panel ▸</button>
           <!-- SWITCH MODULE (2026-10-02): the Modules library in the selected panel's place - see openLibraryAt. -->
           <button data-act="switch" title="switch the selected panel to another module">Switch module</button>
+          <!-- BIGGER (2026-10-02 evening): the panel corner's press for the selected panel - see promotePanel. -->
+          <button data-act="bigger" title="make the selected panel bigger, one step at a time">⤢ Bigger</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
           <!-- PLAY/PAUSE: the reason it was once left out is gone. NO BACKTICKS IN THIS COMMENT
                (it is inside the root.innerHTML template literal; see the BACK comment above).
@@ -814,8 +825,10 @@ export async function mountKiosk(root, {
   let lastDashList = [];
   const SILENT_INPUT = { down() {}, up() {} };   // subtitles-only: the room is heard, nothing is pressed
   // `subtitlesRoute` is here too: the online captioner starts and stops with the recogniser.
+  // The person's own voice model (voice_model.js): its switch and port change where "this screen" listens;
+  // its folder only changes a command shown on a page, so it restarts nothing.
   const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS]
-    .map((f) => f.key).concat('subtitlesRoute');
+    .map((f) => f.key).concat('subtitlesRoute', 'voiceModelOn', 'voiceModelPort');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
   const SUBS_KEYS = SUBTITLES_FIELDS.map((f) => f.key);
   // The keys whose change adds or removes rows in the Voice section without restarting speech.
@@ -1280,6 +1293,16 @@ export async function mountKiosk(root, {
     // review panel sees what was just kept, and the person's row for its retention wording.
     get voiceStore() { return voiceStore; },
     personRow: () => personRow,
+    // "Your own voice model" (voice_model.js, the Voice recordings panel's second tab): the screen's recorder,
+    // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
+    // save the model's folder and flip "Use my own voice model", and nothing else on the row.
+    get voiceRecorder() { return voiceRec; },
+    saveVoiceModel: (patch) => {
+      const keys = new Set(VOICE_MODEL_FIELDS.map((f) => f.key));
+      const clean = Object.fromEntries(Object.entries(patch || {}).filter(([k]) => keys.has(k)));
+      if (!personInputs?.set || !Object.keys(clean).length) return false;
+      try { personInputs.set(clean); return true; } catch (err) { console.error('kiosk: voice model setting', err); return false; }
+    },
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
@@ -1621,6 +1644,24 @@ export async function mountKiosk(root, {
   function applyPanelSurface(s) {
     const v = shownPanelSurface(s);
     kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
+    // The space between panels rides with the backgrounds: the same chain, the same callers (every place
+    // that re-applies the look after a swap or a change calls this).
+    const g = shownPanelGap(s);
+    kioskEl.dataset.panelGap = PANEL_GAPS.includes(g) ? g : PANEL_GAP_DEFAULT;
+  }
+  // *** SPACE BETWEEN PANELS (Mike, 2026-10-02 evening: "Why are there always gaps between the modules? Can't
+  // they each take up a quarter?"). *** `panelGap`: 'none' (the default: the panels meet, each exactly its share
+  // of the stage, a hairline between), 'thin', 'roomy' (the look before this). kiosk.css draws all three and
+  // argues them. Resolved like the panel backgrounds -- the showing dashboard, the screen, this device, the
+  // person -- because it is the same kind of thing: how the panels sit on this screen.
+  function shownPanelGap(s) {
+    const L = levelLayers();
+    if (s && typeof s === 'object') L.screen = s;
+    for (const lv of ['dashboard', 'screen', 'device', 'person']) {
+      const v = L[lv] && L[lv].panelGap;
+      if (PANEL_GAPS.includes(v)) return v;
+    }
+    return PANEL_GAP_DEFAULT;
   }
   // *** STAGE 4: THE THEME IS THE SHOWING DASHBOARD'S (row 2.34, ruled; the plan's R3). *** On a real
   // screen on the dashboard path, a swap brings in another dashboard and its own Colours; going back
@@ -2669,6 +2710,7 @@ export async function mountKiosk(root, {
   renderHush();
   // Pause / Play (2026-10-02; `playPauseSelected` argues it): the selected panel's.
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
+  controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
   // *** NIMROD, ON THE BAR (row 2.37, 2026-09-30). *** Press him and the cat explains whatever is
@@ -2833,7 +2875,7 @@ export async function mountKiosk(root, {
   ];
   // Which tab (and section) each of the screen's own rows is on.
   const SCREEN_FIELD_TABS = {
-    theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0],
+    theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
@@ -3208,6 +3250,8 @@ export async function mountKiosk(root, {
         { value: 'veil', label: 'See-through' },
         { value: 'clear', label: 'Fully clear' },
       ] },
+    // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
+    { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
     // 2026-10-02 (room_lod.js): how much detail 3D rooms draw on THIS device -- measured, or chosen by somebody
     // who knows better (a fast Pi 5, a slow laptop on battery). `advanced`, as room_lod.js declares it.
     { ...DETAIL_FIELD },
@@ -3409,6 +3453,8 @@ export async function mountKiosk(root, {
       ...SPEECH_ON_FIELDS.filter((f) => f.key === 'speechOn'),
       ...(sw.on || subsOn ? SPEECH_ON_FIELDS.filter((f) => f.key !== 'speechOn') : []),
       ...(sw.on || subsOn ? SPEECH_PASS_FIELDS.filter(keep) : []),
+      // THIS PERSON'S OWN VOICE MODEL (voice_model.js): with the other "what listens" rows, while anything listens.
+      ...(sw.on || subsOn ? VOICE_MODEL_FIELDS : []),
       ...(sw.on ? [...SPEECH_FIELDS, ...LISTENING_FIELDS, ...MISS_FIELDS].filter(keep) : []),
       ...SUBTITLES_FIELDS.filter((f) => f.key === 'subtitlesOn' || (subsOn && (!/^subtitles(Shrink|SmallestPx)$/.test(f.key) || r.subtitlesStyle === 'eyechart' || subtitles?.style?.() === 'eyechart'))),
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
@@ -3844,8 +3890,18 @@ export async function mountKiosk(root, {
   function syncPlayPause() {
     const s = playPauseState();
     try { paintPlayPause(controlsEl.querySelector('[data-act="playpause"]'), s); } catch { /* not drawn yet */ }
-    if (useDashboard) { try { bus.publish(SHELL_STATE, { playPause: s }); } catch { /* not load-bearing */ } }
+    // Bigger / Smaller follows the same selection (2026-10-02 evening; transport_bar.js paintBigger).
+    let b = null;
+    try { b = biggerState(); paintBigger(controlsEl.querySelector('[data-act="bigger"]'), b); } catch { b = null; /* not built yet */ }
+    if (useDashboard) { try { bus.publish(SHELL_STATE, b ? { playPause: s, bigger: b } : { playPause: s }); } catch { /* not load-bearing */ } }
     return s;
+  }
+  // What the bar's Bigger says: the selected panel, and whether it is already at the top (the screen),
+  // where the same press goes back down -- the corner's own rule (`promotePanel`).
+  function biggerState() {
+    let rec = null;
+    try { rec = panelSubject(); } catch { rec = null; }
+    return { can: !!rec, smaller: !!rec && promotedScreen === rec.id, name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
   }
 
   // ---- MAKE THE SELECTED PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02; arrangement.js has its half) ----
@@ -3863,6 +3919,8 @@ export async function mountKiosk(root, {
     if (promotedScreen) kioskEl.dataset.promoted = 'screen'; else delete kioskEl.dataset.promoted;
     try { arr.setPromoteTop?.(promotedScreen); } catch { /* not load-bearing */ }
     try { if (menu?.isOpen?.()) menu.refresh(); } catch { /* not up */ }
+    try { syncPlayPause(); } catch { /* the bars' Bigger / Smaller; not load-bearing */ }
+    try { liftCorners(); } catch { /* the corners moved with the panel; not load-bearing */ }
   }
   function promotePanel(id = null) {
     if (torn) return null;
@@ -3916,6 +3974,77 @@ export async function mountKiosk(root, {
     demotePanel();
   };
   window.addEventListener('keydown', onEscDemote, true);
+  // *** THE CORNERS COME UP WITH A PRESS (2026-10-02 evening; arrangement.js's corner header has the bug). ***
+  // The corners showed on hover or focus only, so a screen with no hover (touch) never showed one. Now a
+  // press anywhere brings them up for the bar's own time (BAR_HIDE_MS) -- the same press that brings the
+  // bar up -- and the next press, on a corner, takes it. Set AFTER the click, never on pointerdown: a corner
+  // appearing under a press already under way would take its release (a mouse's click goes to what the
+  // press and the release share) or its tap (a touch's is hit-tested again), and the press meant for the
+  // panel would be lost. Only for a pointer's click (`detail` > 0): a key or a switch activating a button
+  // clicks with detail 0, and a switch user's every select is no reason to flash the corners.
+  let cornersT = null;
+  function revealCorners() {
+    if (torn) return;
+    kioskEl.dataset.corners = 'up';
+    liftCorners();
+    clearTimeout(cornersT);
+    cornersT = setTimeout(() => { cornersT = null; delete kioskEl.dataset.corners; }, BAR_HIDE_MS);
+  }
+  const onClickForCorners = (e) => { if (e && e.detail > 0) setTimeout(revealCorners, 0); };
+  root.addEventListener('click', onClickForCorners, { capture: true, passive: true });
+  // A FINGER IS NOT A HOVER. Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
+  // the corner's hover rule woke a hidden corner just in time to take a tap meant for the panel under it
+  // (measured, real touch input). The hover rules (arrangement.js, edit_mode.js) stand down while the last
+  // press was a finger or a pen; a mouse's press brings them back. Capture, so it is set before the tap.
+  const onPressKind = (e) => {
+    try { document.documentElement.dataset.press = e.pointerType === 'touch' || e.pointerType === 'pen' ? 'touch' : 'mouse'; }
+    catch { /* no document */ }
+  };
+  root.addEventListener('pointerdown', onPressKind, { capture: true, passive: true });
+  // NEVER UNDER THE BAR. A bottom-row corner can sit under the transport bar (a 2x2's lower-left one, under
+  // the placed bar: measured at 1920x1080). Any corner (⤢ or ✎) that overlaps a bar that is showing is
+  // lifted just above it, through `--k-corner-lift` on that button; every other one is 0. Run whenever a
+  // bar or the corners come up or go, a panel is made bigger, and when a pointer comes onto a panel (a
+  // mouse's hover shows a corner without any press).
+  const CORNER_GAP_PX = 6;            // the corner's own inset (arrangement.js `right:6px`), kept above the bar too
+  function shownBarRects() {
+    const out = [];
+    const bars = [controlsEl, ...kioskEl.querySelectorAll('.tb-bar')];
+    for (const b of bars) {
+      if (!b || !b.isConnected) continue;
+      if (b === controlsEl && (b.classList.contains('hidden') || b.classList.contains('k-plain-off'))) continue;
+      const cs = getComputedStyle(b);
+      if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) continue;
+      const r = b.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) out.push(r);
+    }
+    return out;
+  }
+  function liftCorners() {
+    if (torn || typeof document === 'undefined') return;
+    let bars = [];
+    try { bars = shownBarRects(); } catch { bars = []; }
+    for (const btn of kioskEl.querySelectorAll('.k-promote, .k-editc')) {
+      const had = parseFloat(btn.style.getPropertyValue('--k-corner-lift')) || 0;
+      let lift = 0;
+      if (bars.length) {
+        // Where it would sit unlifted: its box now, moved back down by the lift it has.
+        const r = btn.getBoundingClientRect();
+        const top = r.top + had, bottom = r.bottom + had;
+        for (const b of bars) {
+          if (r.right > b.left && r.left < b.right && bottom > b.top && top < b.bottom) lift = Math.max(lift, Math.ceil(bottom - b.top + CORNER_GAP_PX));
+        }
+      }
+      if (lift === had) continue;
+      if (lift > 0) btn.style.setProperty('--k-corner-lift', `${lift}px`);
+      else btn.style.removeProperty('--k-corner-lift');
+    }
+  }
+  const onPointerOverForCorners = (e) => {
+    const t = e.target;
+    if (t instanceof Element && t.closest('.k-cell, .k-pcell, .k-stage')) liftCorners();
+  };
+  root.addEventListener('pointerover', onPointerOverForCorners, { capture: true, passive: true });
 
   // ---- A LIVE CALL'S CONTROLS (2026-10-02; modules/call.js answers, actions.js CALL_ACTIONS) ------------
   // Drawn on the plain bar here and on a placed bar by itself, from the call panel's own report; offered as
@@ -4159,7 +4288,8 @@ export async function mountKiosk(root, {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
         // (Row 2.34: "Panel backgrounds" likewise -- the showing dashboard's, `shownPanelSurface`.)
-        values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()) }),
+        values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()),
+          panelGap: shownPanelGap(settings.get()) }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
@@ -4167,6 +4297,7 @@ export async function mountKiosk(root, {
         onStep: (key, value) => {
           if (key === 'theme') themeDoc().set({ theme: value });
           else if (key === 'panelSurface') themeDoc().set({ panelSurface: value });
+          else if (key === 'panelGap') themeDoc().set({ panelGap: value });
           else settings.set({ [key]: value });
           // A THEME PICKED HERE, BY SOMEBODY AT THIS SCREEN. Published after the set (which
           // applies the theme synchronously), so a listener sees the new theme already on screen.
@@ -4989,6 +5120,7 @@ export async function mountKiosk(root, {
   function poke() {
     controlsEl.classList.remove('hidden');
     try { syncHelp(); } catch { /* declared above; never a reason for the bar not to come up */ }
+    try { liftCorners(); } catch { /* a panel's corner above the bar; not load-bearing */ }
     armBarHide();
   }
   // *** ROW 2.38: WHILE THE DASHBOARDS TRAY IS OPEN, THE BAR AND THE TRAY WAIT THE TRAY'S OWN TIME. ***
@@ -5008,6 +5140,7 @@ export async function mountKiosk(root, {
     hideT = setTimeout(() => {
       hideT = null;
       if (!embedded) controlsEl.classList.add('hidden');    // an embed's bar stays: see kiosk.css
+      try { liftCorners(); } catch { /* the corners come back down with it; not load-bearing */ }
       // The picker goes with the bar it hangs off. This is the "what if nobody answers"
       // answer for it: left alone, it puts itself away and the screen is back to what it was
       // doing, with nothing having been decided on anybody's behalf.
@@ -5503,6 +5636,7 @@ export async function mountKiosk(root, {
           host: hostPage, menuOpen: () => !!menu.isOpen(), barHeld: () => barHeld,
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
+          bigger: () => biggerState(),
           fullscreenElement: () => {
             let f = null;
             try { f = fullscreenElement(); } catch { f = null; }
@@ -5855,6 +5989,10 @@ export async function mountKiosk(root, {
       window.removeEventListener('keydown', onKey);
       // 2026-10-02: Escape-to-smaller, full screen left, and the device level's listener.
       window.removeEventListener('keydown', onEscDemote, true);
+      root.removeEventListener('click', onClickForCorners, true);
+      root.removeEventListener('pointerdown', onPressKind, true);
+      root.removeEventListener('pointerover', onPointerOverForCorners, true);
+      clearTimeout(cornersT);
       try { document.removeEventListener('fullscreenchange', onFsChange); } catch { /* no document */ }
       try { offDeviceRow?.(); } catch { /* already gone */ }
       for (const off of offVerbSnap) { try { off?.(); } catch { /* already gone */ } }

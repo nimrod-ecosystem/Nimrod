@@ -94,6 +94,24 @@ import { moveKeeping } from './dom_move.js';
 // SAYS what was pressed (SHELL_PROMOTE { id }) and the shell decides, so the corner, the menu row, a switch
 // and "make it bigger" are one press. 44px: the WCAG 2.5.5 touch-target size, the same floor every other
 // control here keeps -- a fixed number on purpose, not a preference (a smaller corner is a missed press).
+//
+// *** IT TAKES ITS OWN PRESSES, AND ONLY WHILE IT IS SHOWN (2026-10-02 evening). *** Mike, on the bench, a
+// 2x2: "clicking on it doesn't grow any of the modules. It seems to pull up the transport bar." The corner
+// sits in `.k-cell`/`.k-stage`, which pass presses through (`pointer-events:none`, kiosk.css: the ambient
+// layer behind the gaps must stay reachable; `.k-mod` takes them back). The corner INHERITED that, so every
+// press on it -- mouse or touch -- fell through to the module underneath, whose pointerdown brought the bar
+// up. The suites pressed it with `button.click()`, which skips hit-testing, so they never saw it
+// (screen_controls_test now presses where the browser would). So the corner says `pointer-events:auto`
+// itself -- but only while it is SHOWN: an invisible 44px button would quietly eat a press meant for the
+// panel (a calculator's "=" sits right there). Shown = hovered, focused, promoted, or `data-corners="up"`
+// on the kiosk, which kiosk.js sets for the bar's time after any press, so a screen with no hover (touch)
+// gets them too: tap once, the bar AND the corners come up; tap a corner.
+//   NOT HOVER AFTER A TOUCH: Chrome gives the spot under a finger `:hover` before it hit-tests the tap, so
+// the hover rule woke a hidden corner in time to take a tap meant for the panel (measured with real touch
+// input). kiosk.js marks `<html data-press="touch">` on a touch/pen press and clears it on a mouse's.
+//   NEVER UNDER THE BAR: a bottom-row corner can sit under the transport bar (a 2x2's lower-left one, under
+// the placed bar, measured). kiosk.js lifts any corner that overlaps a bar that is showing, through
+// `--k-corner-lift` on the button; 0 everywhere else.
 // =====================================================================================================
 const PROMOTE_CSS_ID = 'k-promote-css';
 const PROMOTE_PX = 44;
@@ -102,12 +120,15 @@ function ensurePromoteCss() {
   const s = document.createElement('style');
   s.id = PROMOTE_CSS_ID;
   s.textContent = `
-.k-promote{position:absolute;right:6px;bottom:6px;z-index:calc(var(--z-panel-contents,300) + 20);
+.k-promote{position:absolute;right:6px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);
   width:${PROMOTE_PX}px;height:${PROMOTE_PX}px;margin:0;padding:0;border-radius:10px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.4);background:rgba(10,20,15,.6);color:#fff;
-  font:600 22px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;transition:opacity .15s}
-.k-cell:hover>.k-promote,.k-cell:focus-within>.k-promote,.k-pcell:hover>.k-promote,.k-pcell:focus-within>.k-promote,
-.k-stage:hover>.k-promote,.k-stage:focus-within>.k-promote,.k-promote:focus-visible,[data-promoted]>.k-promote{opacity:1}
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font:600 22px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
+:root:not([data-press="touch"]) .k-cell:hover>.k-promote,:root:not([data-press="touch"]) .k-pcell:hover>.k-promote,
+:root:not([data-press="touch"]) .k-stage:hover>.k-promote,
+.k-cell:focus-within>.k-promote,.k-pcell:focus-within>.k-promote,.k-stage:focus-within>.k-promote,
+.k-promote:focus-visible,[data-promoted]>.k-promote,
+.kiosk[data-corners="up"] .k-promote{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
 [data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
 [data-promoted-panel]>.k-placed>.k-pcell:not([data-promoted]){visibility:hidden}

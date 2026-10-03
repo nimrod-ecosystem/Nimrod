@@ -30,7 +30,7 @@ import { AI_STATE_KEY } from '../nimrod_ai.js';
 import { HOME_STATE_KEY } from '../home_dashboard.js';
 import { AVATAR_KEY } from '../avatar.js';
 import { AI_CHARACTERS_KEY, seedById, NAMES_RE, AI_ROOM_DONE_KEY } from '../ai_characters.js';
-import { SUBJECT_KEY, DEFAULT_SUBJECT, PROFILE_VERB_TOPICS, connectHelpFor, PROFILE_SETTINGS,
+import { SUBJECT_KEY, DEFAULT_SUBJECT, defaultSubject, PROFILE_VERB_TOPICS, connectHelpFor, PROFILE_SETTINGS,
   CALL_ON_SCREEN, CALL_NOT_ALLOWED, CALL_HELP, callURL, mayCall, onScreen } from '../modules/profile.js';
 
 const out = document.getElementById('results');
@@ -135,13 +135,25 @@ try {
     const m = getManifest('profile');
     check('registered as "profile", on the new core', m && m.core === 'new' && m.title === 'Profile');
     check('its one setting: read replies aloud, on', PROFILE_SETTINGS.length === 1 && PROFILE_SETTINGS[0].key === 'speak' && PROFILE_SETTINGS[0].default === true);
-    check('it starts on Nimrod (start with Nimrod)', J(DEFAULT_SUBJECT) === J({ kind: 'ai', id: 'nimrod' }));
+    // 2026-10-02 evening (Mike: the landing's top left is "Profile", your own): with nothing stored, the viewer.
+    check('*** with nothing stored it shows WHOEVER IS LOOKING; Nimrod only when there is nobody ***',
+      J(defaultSubject('p1')) === J({ kind: 'person', id: 'p1' }) && J(defaultSubject(null)) === J(DEFAULT_SUBJECT)
+      && J(defaultSubject('')) === J({ kind: 'ai', id: 'nimrod' }));
+    const own = await mountCard();
+    check('*** mounted with no subject, signed in as Sam: Sam’s own card, "You" ***',
+      own.q('[data-pf-name]')?.textContent === 'Sam' && own.q('[data-pf-line]')?.textContent === 'You' && own.probe().subject.kind === 'person',
+      own.mount.textContent.slice(0, 120));
+    check('...and nothing is written by looking (the default is not stored)', own.state.data()[SUBJECT_KEY] === undefined);
+    own.done();
+    const nobody = await mountCard({ person: null });
+    check('*** no subject and nobody to show (signed out, a preview): Nimrod ***', nobody.q('[data-pf-name]')?.textContent === 'Nimrod');
+    nobody.done();
   }
 
   // ============================================================================================
   section('*** an AI character as a card, and NOTHING SENT ANYWHERE without a press ***');
   {
-    const t = await mountCard();
+    const t = await mountCard({ subject: { kind: 'ai', id: 'nimrod' } });
     check('*** Nimrod by default: his name, the cat, what he is good at ***',
       t.q('[data-pf-name]').textContent === 'Nimrod' && !!t.q('[data-pf-portrait="cat"]') && t.q('[data-pf-line]').textContent === seedById('nimrod').goodAt);
     check('Talk, Visit his room, Copy to make your own, Who…', /Talk to Nimrod/.test(t.doBtn('talk').textContent)
@@ -160,7 +172,7 @@ try {
     check('no names on the card', !NAMES_RE.test(u.mount.textContent));
     u.done();
 
-    const r = await mountCard({ personRows: { [`p1/${AI_STATE_KEY}`]: { name: 'Ada', persona: 'Brisk.' } } });
+    const r = await mountCard({ subject: { kind: 'ai', id: 'nimrod' }, personRows: { [`p1/${AI_STATE_KEY}`]: { name: 'Ada', persona: 'Brisk.' } } });
     check('*** "your AI": the Nimrod card carries the name the person gave their AI ***', r.q('[data-pf-name]').textContent === 'Ada' && /Talk to Ada/.test(r.doBtn('talk').textContent));
     r.done();
   }
@@ -299,7 +311,7 @@ try {
     check('Back returns to the card', t.probe().view === 'card');
     t.done();
 
-    const n = await mountCard({ ai: fakeAI() });
+    const n = await mountCard({ subject: { kind: 'ai', id: 'nimrod' }, ai: fakeAI() });
     n.doBtn('talk').click();
     await until(() => n.probe().status.state === 'ok');
     await n.type('Hello');
@@ -359,7 +371,7 @@ try {
     check('*** the second visit opens the same one: nothing made twice ***', t.screens.calls.create.length === 1 && t.goes[1].id === s.id);
     t.done();
 
-    const nowhere = await mountCard({ rooms: false });
+    const nowhere = await mountCard({ subject: { kind: 'ai', id: 'nimrod' }, rooms: false });
     check('a host with nowhere to make a room: Visit is dimmed, and says why', nowhere.doBtn('visit').disabled && /sign in/.test(nowhere.doBtn('visit').title));
     nowhere.done();
   }

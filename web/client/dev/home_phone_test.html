@@ -51,7 +51,9 @@ async function open(query, w, h) {
   const left = new URLSearchParams(location.search).get('show') ? '0' : '-9999px';
   ifr.style.cssText = `position:fixed;left:${left};top:0;width:${w}px;height:${h}px;border:0;z-index:1`;
   document.body.append(ifr);
-  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+  // `edit=1`: this suite is about the editing page (2026-10-02 evening: a plain arrival is the dashboard filling
+  // the window, which home_page_test checks; the editor is one press from it, and this is that page).
+  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}&edit=1`; });
   doc = ifr.contentDocument; win = ifr.contentWindow;
   const orig = win.console.error.bind(win.console);
   win.console.error = (...a) => { pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };

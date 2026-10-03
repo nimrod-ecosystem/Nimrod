@@ -143,7 +143,7 @@ export const CLASSIC_THEME = 'fall';
 // "The home dashboard that the site lands on clockwise from top left: pictures, settings (launches on
 // themes tab), devices, Nimrod." A quad's slots are TL, TR, BL, BR (STARTER_MODULES' order), so clockwise
 // from the top left is TL photos, TR settings, BR devices, BL Nimrod: slots [photos, settings, nimrod,
-// devices]. It is the FIRST example (EXAMPLE_ORDER), so it is what a new person's Home shows on the stage,
+// devices]. (2026-10-02 evening: the PROFILE replaces the pictures top left -- see the record.) It is the FIRST example (EXAMPLE_ORDER), so it is what a new person's Home shows on the stage,
 // TRIED, not made -- "offered, not forced" stands: nothing is made on an account by looking, and one press
 // (Make this my Home, or Save on the bar) makes it. Code's guess, on Mike's list:
 // the other reading, making it at first sign-in, would put a dashboard on every account that signs in once.
@@ -166,16 +166,21 @@ export const CLASSIC_THEME = 'fall';
 //   user's habits) and spoken as "tutorial"; it is not one of Home's cards (Nimrod and the ⚙ menu reach it).
 // =====================================================================================================
 export const PREBUILT_DASHBOARDS = Object.freeze({
+  // *** PROFILE, NOT PICTURES, TOP LEFT (Mike, 2026-10-02 evening: "Four modules clockwise from top left:
+  // Profile (I know I said photos before. Changing it.), settings, Devices, Nimrod/AI.") *** Clockwise from the
+  // top left is TL profile, TR settings, BR devices, BL Nimrod: slots [profile, settings, nimrod, devices].
+  // The profile panel is stored with NO subject on purpose: modules/profile.js then shows whoever is looking
+  // (`defaultSubject`), so the one record serves every person rather than naming one.
   start: Object.freeze({
     key: 'start', label: 'Start', name: 'My Home', kind: 'static', title: 'Start here',
-    blurb: 'Four to begin with: your pictures, the settings, your devices, and Nimrod, who shows you around.',
+    blurb: 'Four to begin with: your profile, the settings, your devices, and Nimrod, who shows you around.',
     modules: [
-      { ref: 'photos', type: 'photos' },
+      { ref: 'profile', type: 'profile' },
       { ref: 'settings', type: 'settings', state: { startPage: 'sc-theme' } },
       { ref: 'nimrod', type: 'nimrod', state: { intro: 'landing' } },
       { ref: 'devices', type: 'devices' },
     ],
-    layout: { preset: 'quad', slots: ['photos', 'settings', 'nimrod', 'devices'] },
+    layout: { preset: 'quad', slots: ['profile', 'settings', 'nimrod', 'devices'] },
     settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
   }),
   tutorial: Object.freeze({
