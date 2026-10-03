@@ -28,6 +28,17 @@
 // module, AI, then game/learning mode. "Moved up to A" is read here BOTH ways, since both are cheap and
 // either could be what he meant: game/learning is A in the opening AND A in the "other modules" list.
 //
+// *** 2026-10-03: THE PHOTO ALBUM LEAVES THE OPENING; SETTING UP YOUR AI TAKES ITS PLACE. *** Mike: "Now that
+// photos aren't on the first dashboard. Setting that up shouldn't be one of the initial options. It should
+// change to setting up your guide/AI." So D is "Set up your guide / AI" (a short flow: name, how it talks,
+// connect it, say hello, you're set), and E is the thing he wants to do now, "Walk the site with your AI and
+// take notes". WHERE THE ALBUM WENT, argued: FOR a "Pictures" entry under Devices or a new "Add things" node --
+// neither exists, and a new node only to hold one choice is a level nobody needed. FOR "See some other
+// modules" (chosen): it already says "pictures" first among the modules there, it is where somebody looking
+// for something not on the first dashboard goes, and the album keeps its two children unchanged.
+// WHY THE NOTES WALK IS IN THE OPENING AND NOT ONLY UNDER THE AI: it is the reason he is setting the AI up,
+// and anybody trying the site out (a tester, a relative) has notes to give. Against: six choices, not five.
+//
 // *** THE AI SEAM (Mike: "The Nimrod module should probably be the AI module. You wire up whatever AI you
 // want"). *** Not built. What IS built is the place it goes: `wordsFor(node, { source })` asks `source`
 // first and falls back to the node's own words, so an AI that answers later replaces the words without
@@ -47,6 +58,9 @@ export const GUIDE_TOPICS = Object.freeze({
   dashboardGo: 'dashboard/go',             // dashboards.js DASHBOARD_GO_TOPIC: a ready-made dashboard
   gameMode: 'nimrod/game-mode',            // what a game-mode act says (unlocks.js's hook in modules/nimrod.js sets the mode)
   info: 'nimrod/info',                     // what the pointer or the scan is on, explained (hover_info.js)
+  // HEARD, not said: "open your notes" from anywhere on the screen (a host's hotkey or bar button publishes
+  // it; modules/nimrod.js opens its notes view). Payload: { open?: true, via?: 'key'|'bar'|... }.
+  notes: 'nimrod/notes',
 });
 // The verbs a switch drives him with (actions.js MODULE_VERBS line, given to the coordinator).
 export const GUIDE_VERB_TOPICS = Object.freeze({
@@ -54,12 +68,19 @@ export const GUIDE_VERB_TOPICS = Object.freeze({
 });
 
 // What an act may be. A closed set, so the suite can say an act is wrong rather than a press doing nothing.
-export const ACT_KINDS = Object.freeze(['menu-tab', 'settings-page', 'switch', 'host', 'tutorial', 'link', 'game-mode']);
+export const ACT_KINDS = Object.freeze(['menu-tab', 'settings-page', 'switch', 'host', 'tutorial', 'link', 'game-mode', 'guide']);
+// A `guide` act is one of his OWN views, not a message on the bus: `do` says which (modules/nimrod.js).
+export const GUIDE_DOS = Object.freeze(['talk', 'notes']);
+// *** A NODE MAY CARRY A FORM (2026-10-03, "Set up your guide / AI"). *** `form` names what modules/nimrod.js
+// draws between his words and the choices. A choice with `keep: true` keeps what is in the form as it goes on
+// ("Next"); a choice without it ("Skip this step") goes on and keeps nothing. Every step can be skipped, and
+// a form sends nothing anywhere by being shown: only its own buttons (Look for Ollama, Say hello) do.
+export const FORM_KINDS = Object.freeze(['ai-name', 'ai-persona', 'ai-connect', 'ai-origins', 'ai-hello']);
 // The settings PANEL's own pages (modules/settings.js). `type:<module>` = that module's settings page.
 // 'sc-game' is the "Nimrod Game" page (unlocks.js draws it; modules/settings.js lists it).
 export const SETTINGS_PAGES = Object.freeze(['sc-theme', 'sc-mode', 'sc-device', 'sc-game']);
 // The modes (unlocks.js reads this list: one list, two files).
-export const GAME_MODES = Object.freeze(['game', 'learning', 'sandbox']);
+export const GAME_MODES = Object.freeze(['game', 'sandbox', 'learning', 'learning-off']);  // What a game-mode act sets: game on / off (sandbox), learning on / off (unlocks.js GAME_ACTS).
 // *** MIKE'S WORDS, KEPT EXACT IN MEANING: "When introducing points say that they have no real world value and
 // we do not sell any form of coins or other microtransactions." *** One sentence, said wherever points are
 // introduced (node A, the points node, the Nimrod Game page); the suites check it is present verbatim.
@@ -138,10 +159,11 @@ const NODES = [
   {
     id: GUIDE_ROOT, title: 'Hi, I’m Nimrod', say: LANDING_INTRO,
     choices: withKeys([
-      { label: 'Play it as a game, or learn with it', to: 'mode' },
+      { label: 'Play it as a game, learn with it, or both', to: 'mode' },
       { label: 'Set up a device', to: 'devices' },
       { label: 'Set your theme, and learn about the settings', to: 'theme' },
-      { label: 'Choose a photo album', to: 'album' },
+      { label: 'Set up your guide / AI', to: 'ai-setup' },
+      { label: 'Walk the site with your AI and take notes', to: 'notes-walk' },
       { label: 'See some other modules', to: 'other' },
     ]),
   },
@@ -152,17 +174,18 @@ const NODES = [
   // from anybody); if no panel answers, the hook suggests the settings menu or the tutorial — the two acts
   // on `mode` below (Mike: "If it's closed suggest opening it again or going to the tutorial dashboard").
   {
-    id: 'mode', title: 'Game or learning mode',
-    say: 'You can use the site as a game, or for learning. Game mode puts a scoreboard on your dashboard and '
-      + 'gives you points for doing things, starting with this tour. Learning mode keeps its own education '
-      + `points, apart from the game’s. ${POINTS_DISCLAIMER} In game and learning mode, not everything you can `
-      + 'build with is unlocked at the start. That is only for the game’s sake: sandbox mode unlocks everything, '
-      + 'and you can unlock things one at a time, free or with your points. Nothing already on your screen is '
-      + 'ever locked away. The game’s settings open beside me.',
+    id: 'mode', title: 'Game and learning',
+    say: 'You can use the site as a game, for learning, or both: they are two switches, each on or off. The game '
+      + 'puts a scoreboard on your dashboard and gives you points for doing things, starting with this tour. '
+      + 'Learning adds a second kind of points, School points, for the tour and your lessons, kept apart from '
+      + `the game’s. ${POINTS_DISCLAIMER} With the game on, not everything you can build with is unlocked at the `
+      + 'start. That is only for the game’s sake: turning the game off is sandbox mode, and sandbox mode unlocks '
+      + 'everything; you can also unlock things one at a time, free or with your points. Nothing already on your '
+      + 'screen is ever locked away. The game’s settings open beside me.',
     choices: withKeys([
-      { label: 'Game mode', to: 'mode-game' },
-      { label: 'Learning mode', to: 'mode-learning' },
-      { label: 'Sandbox: everything unlocked', to: 'mode-sandbox' },
+      { label: 'Turn the game on', to: 'mode-game' },
+      { label: 'Turn learning on', to: 'mode-learning' },
+      { label: 'Sandbox: game off, everything unlocked', to: 'mode-sandbox' },
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
@@ -173,58 +196,63 @@ const NODES = [
     ],
   },
   {
-    id: 'mode-game', title: 'Game mode',
-    say: 'In game mode you earn Play points for what you do here, this tour included: each new step pays once. '
+    id: 'mode-game', title: 'The game',
+    say: 'With the game on you earn game points for what you do here, this tour included: each new step pays once. '
       + 'A “Nimrod Game” card on the scoreboard keeps the score. The things you can build with unlock as you go: '
-      + 'that is only for the game, and sandbox mode or a single unlock opens anything sooner. Press Start game '
-      + 'mode to begin.',
+      + 'that is only for the game, and sandbox mode or a single unlock opens anything sooner. With learning off, '
+      + 'every point you earn is a game point. Press Turn the game on to begin.',
     choices: withKeys([
+      { label: 'Learning too', to: 'mode-learning' },
       { label: 'Sandbox instead', to: 'mode-sandbox' },
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
     acts: [
       { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
-      { kind: 'game-mode', mode: 'game', label: 'Start game mode' },
+      { kind: 'game-mode', mode: 'game', label: 'Turn the game on' },
     ],
   },
   {
-    id: 'mode-learning', title: 'Learning mode',
-    say: 'Learning mode is game mode with education points: the tour and the lessons pay School points, kept '
-      + 'apart from the game’s Play points, and things to build with unlock the same way. Whether lesson topics '
-      + 'open as you go (Quest) or all at once is a separate setting, on the settings panel’s Lesson topics page.',
+    id: 'mode-learning', title: 'Learning',
+    say: 'Learning adds a second kind of points. With it on, the tour and the lessons pay School points, kept apart '
+      + 'from the game points, and the scoreboard shows both. It works with the game on or off: in sandbox you '
+      + 'still earn School points, and nothing is locked. Whether lesson topics open as you go (Quest) or all at '
+      + 'once is a separate setting, on the settings panel’s Lesson topics page.',
     choices: withKeys([
-      { label: 'Game mode instead', to: 'mode-game' },
+      { label: 'The game too', to: 'mode-game' },
       { label: 'What are points for?', to: 'points' },
       BACK_TO_START,
     ]),
     acts: [
       { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
-      { kind: 'game-mode', mode: 'learning', label: 'Start learning mode' },
+      { kind: 'game-mode', mode: 'learning', label: 'Turn learning on' },
+      { kind: 'game-mode', mode: 'learning-off', label: 'Turn learning off' },
       { kind: 'settings-page', page: 'sc-mode', label: 'Show the lesson-topic setting' },
     ],
   },
   {
     id: 'mode-sandbox', title: 'Sandbox',
-    say: 'Sandbox mode unlocks everything you can build with. Games still pay points as they always have; the '
-      + 'tour pays only in game or learning mode. Nothing you have already unlocked is lost if you switch back.',
+    say: 'Sandbox is the game turned off: everything you can build with is unlocked. Games still pay points as '
+      + 'they always have; the tour pays only when the game or learning is on. If learning is on it keeps working '
+      + 'in sandbox. Nothing you have already unlocked is lost if you turn the game back on.',
     choices: withKeys([
-      { label: 'Game mode', to: 'mode-game' },
+      { label: 'Turn the game on', to: 'mode-game' },
       BACK_TO_START,
     ]),
     acts: [
       { kind: 'settings-page', page: 'sc-game', label: 'Show the game settings', auto: true },
-      { kind: 'game-mode', mode: 'sandbox', label: 'Use sandbox mode' },
+      { kind: 'game-mode', mode: 'sandbox', label: 'Turn the game off (sandbox)' },
     ],
   },
   {
     id: 'points', title: 'Points',
     say: `Points keep score of what you do: a game finished, a lesson watched, a step of this tour. ${POINTS_DISCLAIMER} `
-      + 'They cannot be bought, sold or cashed in. In game and learning mode they unlock things to build with, '
-      + 'and the scoreboard shows them; in learning mode they are education points, kept apart from the game’s.',
+      + 'They cannot be bought, sold or cashed in. With the game on they unlock things to build with, and the '
+      + 'scoreboard shows them. With learning on, the tour and lessons pay School points, a second kind kept apart '
+      + 'from the game points; with learning off, every point is a game point.',
     choices: withKeys([
-      { label: 'Game mode', to: 'mode-game' },
-      { label: 'Learning mode', to: 'mode-learning' },
+      { label: 'The game', to: 'mode-game' },
+      { label: 'Learning', to: 'mode-learning' },
       BACK_TO_START,
     ]),
   },
@@ -302,7 +330,103 @@ const NODES = [
     acts: [{ kind: 'menu-tab', tab: 'display', label: 'Open the Display tab' }],
   },
 
-  // ---- D. a photo album ---------------------------------------------------------------------------
+  // ---- D. set up your guide / AI (2026-10-03): name, how it talks, connect, hello, set ----------------
+  // Each step is a node with a form (FORM_KINDS); "Next" keeps what is in it, "Skip this step" keeps nothing.
+  // Nothing is sent anywhere by arriving: only "Look for Ollama on this computer" and "Say hello" call out.
+  {
+    id: 'ai-setup', title: 'Set up your guide / AI',
+    say: 'Let’s set up your AI: the guide you can talk to, typed or spoken. Four short steps: its name, how it '
+      + 'talks, which AI answers, and a hello to check it works. Every step can be skipped, and nothing is sent '
+      + 'anywhere until you press a button that says so.',
+    choices: withKeys([
+      { label: 'Start: give it a name', to: 'ai-name' },
+      { label: 'Skip to connecting it', to: 'ai-connect' },
+      BACK_TO_START,
+    ]),
+  },
+  {
+    id: 'ai-name', title: 'Its name', form: 'ai-name',
+    say: 'What would you like to call your AI? Nimrod is fine, and any other name is yours to choose. It is kept '
+      + 'with you, so it follows you to every screen.',
+    choices: withKeys([
+      { label: 'Next: how it talks', to: 'ai-persona', keep: true },
+      { label: 'Skip this step', to: 'ai-persona' },
+      BACK_TO_START,
+    ]),
+  },
+  {
+    id: 'ai-persona', title: 'How it talks', form: 'ai-persona',
+    say: 'If you like, describe how it should talk, in your own words: “cheerful and brief”, or “like a ship’s '
+      + 'captain”. Leave it empty and it is a patient, cheerful guide.',
+    choices: withKeys([
+      { label: 'Next: connect it', to: 'ai-connect', keep: true },
+      { label: 'Skip this step', to: 'ai-connect' },
+      BACK_TO_START,
+    ]),
+  },
+  {
+    id: 'ai-connect', title: 'Connect it', form: 'ai-connect',
+    say: 'Which AI answers? The free way is Ollama, a program that runs AI models on your own computer. Press '
+      + '“Look for Ollama on this computer” and I will check, once. Or use an online AI that speaks the OpenAI '
+      + 'API, free or with your own key; a key stays in this browser and goes only to that address.',
+    choices: withKeys([
+      { label: 'Next: say hello', to: 'ai-hello', keep: true },
+      { label: 'Skip this step', to: 'ai-hello' },
+      { label: 'Why can’t the website reach it?', to: 'ai-blocked' },
+      BACK_TO_START,
+    ]),
+  },
+  {
+    id: 'ai-blocked', title: 'When the website cannot reach it', form: 'ai-origins',
+    say: 'Ollama only answers the websites it has been told to. A page from this computer itself (an address '
+      + 'starting http://127.0.0.1 or http://localhost) is allowed already. For a website, add its address to '
+      + 'Ollama’s OLLAMA_ORIGINS setting and restart Ollama: the exact lines are below. Some browsers, Chrome '
+      + 'among them, also ask once whether this website may reach devices on your network; choose Allow.',
+    choices: withKeys([
+      { label: 'Back to connecting it', to: 'ai-connect' },
+      BACK_TO_START,
+    ]),
+  },
+  {
+    id: 'ai-hello', title: 'Say hello', form: 'ai-hello',
+    say: 'Press “Say hello” and your AI answers, so you know it works. That is the first thing sent to it.',
+    choices: withKeys([
+      { label: 'Next: you’re set', to: 'ai-done' },
+      { label: 'Skip this step', to: 'ai-done' },
+      { label: 'Back to connecting it', to: 'ai-connect' },
+    ]),
+  },
+  {
+    id: 'ai-done', title: 'You’re set',
+    say: 'You’re set. Press “Talk to” at my bottom whenever you want to talk, typed or spoken; anything it '
+      + 'wants to do is a button you press first. You can change all of this later, under “About” when you '
+      + 'talk. Would you like to walk the site with it and take notes?',
+    choices: withKeys([
+      { label: 'Walk the site with your AI and take notes', to: 'notes-walk' },
+      BACK_TO_START,
+    ]),
+    acts: [{ kind: 'guide', do: 'talk', label: 'Talk to it now' }],
+  },
+
+  // ---- E. walk the site with your AI and take notes (2026-10-03). THE HOW-TO, short on purpose. ---------
+  {
+    id: 'notes-walk', title: 'Going through the site with your AI',
+    say: 'Go anywhere on the site and say what you think. Press Talk and tell your AI, typed or spoken. Press '
+      + 'Make a note: it turns what you said into a few short lines to fix and save. Or write one yourself under '
+      + 'Notes. Each note keeps the time, the dashboard, the panel you had picked and the page. Notes opens from '
+      + 'my bottom, or with the N key. Copy all notes, or save them as a file, to paste anywhere. Nothing is sent '
+      + 'anywhere by itself.',
+    choices: withKeys([
+      { label: 'Set up your AI first', to: 'ai-setup' },
+      BACK_TO_START,
+    ]),
+    acts: [
+      { kind: 'guide', do: 'notes', label: 'Open my notes' },
+      { kind: 'guide', do: 'talk', label: 'Talk to my AI' },
+    ],
+  },
+
+  // ---- a photo album (under "other modules" since 2026-10-03: photos are not on the first dashboard) ----
   {
     id: 'album', title: 'A photo album',
     say: 'Your pictures come from a folder: on this computer, on a drive plugged into it, or from your media '
@@ -311,6 +435,7 @@ const NODES = [
     choices: withKeys([
       { label: 'How do I connect a folder?', to: 'album-connect' },
       { label: 'How fast the pictures change', to: 'album-speed' },
+      { label: 'Other modules', to: 'other' },
       BACK_TO_START,
     ]),
     acts: [{ kind: 'settings-page', page: 'type:photos', label: 'Show the pictures’ settings', auto: true }],
@@ -337,12 +462,13 @@ const NODES = [
       + 'Try replacing your profile with something else: pick it, then press Switch module. You can replace any '
       + 'module whenever you want, including me. Do you want to change:',
     choices: withKeys([
-      { label: 'Play it as a game, or learn with it', to: 'mode' },
+      { label: 'Play it as a game, learn with it, or both', to: 'mode' },
       { label: 'A module', to: 'change-module' },
       { label: 'A dashboard', to: 'change-dashboard' },
       { label: 'A scene (a collection of dashboards)', to: 'change-scene' },
       { label: 'How a module works (editing a module)', to: 'edit-module' },
       { label: 'Connect the AI of your choice', to: 'ai' },
+      { label: 'Pictures: choose a photo album', to: 'album' },
       BACK_TO_START,
     ]),
     acts: [
@@ -403,10 +529,12 @@ const NODES = [
   {
     id: 'ai', title: 'Your own AI',
     say: 'I can be your AI. Press “Talk to” at my bottom (it carries your AI’s name once you give it one) to talk '
-      + 'things over, typed or spoken. Connect whichever AI you like under “About”: one that runs free on your own '
-      + 'computer, a free online one, or your own key. It can walk this guide with you, and anything it wants to do '
-      + 'is a button you press first.',
+      + 'things over, typed or spoken. Connect whichever AI you like: one that runs free on your own computer, a '
+      + 'free online one, or your own key. It can walk this guide with you, and anything it wants to do is a '
+      + 'button you press first.',
     choices: withKeys([
+      { label: 'Set it up, step by step', to: 'ai-setup' },
+      { label: 'Walk the site with it and take notes', to: 'notes-walk' },
       { label: 'Other modules', to: 'other' },
       BACK_TO_START,
     ]),
@@ -447,7 +575,9 @@ export function treeProblems(nodes = GUIDE_NODES, { root = GUIDE_ROOT, knownType
       if (!c || typeof c.label !== 'string' || !c.label.trim()) out.push(`${id}: a choice with no label`);
       if (!c || !nodes[c.to]) out.push(`${id}: choice "${c?.label}" leads to ${c?.to}, which is not a node`);
       if (c?.key) { if (keys.has(c.key)) out.push(`${id}: key ${c.key} twice`); keys.add(c.key); }
+      if (c?.keep && !n.form) out.push(`${id}: choice "${c.label}" keeps a form, but there is no form here`);
     }
+    if (n.form != null && !FORM_KINDS.includes(n.form)) out.push(`${id}: form ${n.form} is not one of ${FORM_KINDS.join('/')}`);
     for (const a of Array.isArray(n.acts) ? n.acts : []) {
       if (!a || !ACT_KINDS.includes(a.kind)) { out.push(`${id}: an act of unknown kind ${a?.kind}`); continue; }
       if (typeof a.label !== 'string' || !a.label.trim()) out.push(`${id}: a ${a.kind} act with no label`);
@@ -461,6 +591,7 @@ export function treeProblems(nodes = GUIDE_NODES, { root = GUIDE_ROOT, knownType
       if (a.kind === 'switch' && knownTypes && a.type && !knownTypes.has(a.type)) out.push(`${id}: switch names ${a.type}, not a module`);
       if (a.kind === 'link' && !/^\/[a-z0-9_./-]*$/i.test(String(a.href || ''))) out.push(`${id}: link ${a.href} is not a page on this site`);
       if (a.kind === 'game-mode' && !GAME_MODES.includes(a.mode)) out.push(`${id}: game mode ${a.mode} is not one of ${GAME_MODES.join('/')}`);
+      if (a.kind === 'guide' && !GUIDE_DOS.includes(a.do)) out.push(`${id}: guide act ${a.do} is not one of ${GUIDE_DOS.join('/')}`);
       if (a.auto && a.kind !== 'settings-page') out.push(`${id}: only a settings-page act may run by itself`);
     }
   }

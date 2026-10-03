@@ -33,6 +33,7 @@
 // costs nothing but the action.
 
 import { MENU_TAB_IDS } from './actions.js';
+import { isChatModel, DEFAULT_BASE_URL } from './ai.js';
 import { GUIDE_NODES, GUIDE_TOPICS, SETTINGS_PAGES, GUIDE_ROOT, introFor } from './nimrod_guide_data.js';
 
 export const AI_SOURCE = 'nimrod-ai';           // `source` on what the AI says, for the output log
@@ -76,6 +77,59 @@ export function isLocalAddress(url) {
   h = h.replace(/^\[|\]$/g, '');
   return h === 'localhost' || h.endsWith('.local') || h === '::1' || /^127\./.test(h) || /^10\./.test(h)
     || /^192\.168\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h) || /^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(h);
+}
+
+// ---------------------------------------------------------------------------------------------------
+// *** SETTING IT UP (2026-10-03, the guide's "Set up your guide / AI"). *** The pure parts of the flow.
+// ---------------------------------------------------------------------------------------------------
+// Where "Look for Ollama on this computer" looks: Ollama's own default, the same as ai.js DEFAULT_BASE_URL.
+// Not a setting here because it IS the setting's default: somebody whose AI is elsewhere types its address
+// under "Use an online AI, or another address" instead.
+export const OLLAMA_URL = DEFAULT_BASE_URL;
+
+/**
+ * The model to offer first from a server's list: THE FIRST CHAT MODEL, in the server's own order. Argued
+ * against ai.js `pickModel` (the LARGEST), which suits writing a quiz: a guide is a conversation, where a
+ * reply that takes a minute is worse than a slightly plainer one, and Ollama lists the model pulled most
+ * recently first, which is usually the one the person just installed for this. Either way it is only the one
+ * pressed in for them: every model is a button. Embedding and speech models are never offered.
+ */
+export function firstChatModel(ids) {
+  return (Array.isArray(ids) ? ids : []).find((id) => isChatModel(id)) || null;
+}
+
+/** The hello test: a short system line (name + persona) and one question. Short, so a CPU model is quick. */
+export const HELLO_TEXT = 'Hello! Please say hello back in one short sentence, and tell me your name.';
+export const HELLO_TOKENS = 80;
+export function helloMessages(prefs = {}) {
+  const p = aiPrefs(prefs);
+  return [
+    { role: 'system', content: `Your name is ${p.name}. ${p.persona || DEFAULT_PERSONA} Keep replies to one or two short sentences.` },
+    { role: 'user', content: HELLO_TEXT },
+  ];
+}
+
+// Ollama's OWN default allow-list (its OLLAMA_ORIGINS defaults, as of 0.35.1 on this desktop, 2026-10-03):
+// pages from this computer, any port. Anything else must be added. Measured with curl, not assumed: an
+// Origin of http://127.0.0.1:8270 was answered; https://example.org got 403 Forbidden.
+const DEFAULT_ALLOWED = /^(https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?|app:\/\/.*|file:\/\/.*|tauri:\/\/.*|vscode-webview:\/\/.*)$/i;
+/** Does Ollama, as shipped, already accept a page from this origin? */
+export const ollamaAllowsByDefault = (origin) => DEFAULT_ALLOWED.test(String(origin || '').replace(/\/+$/, ''));
+
+/**
+ * What to do so Ollama accepts `origin`: plain lines per system, or null when it already does. The setting
+ * REPLACES Ollama's list, so somebody who already set it adds this address after a comma.
+ * "Then quit Ollama and start it again" on each: a running Ollama does not read the setting again.
+ */
+export function ollamaOriginLines(origin) {
+  const o = String(origin || '').replace(/\/+$/, '');
+  if (!/^https?:\/\/[^\s/]+$/i.test(o) || ollamaAllowsByDefault(o)) return null;
+  return [
+    { os: 'Windows', how: `In a Command Prompt: setx OLLAMA_ORIGINS "${o}"  — then quit Ollama from the tray and start it again.` },
+    { os: 'Mac', how: `In Terminal: launchctl setenv OLLAMA_ORIGINS "${o}"  — then quit Ollama and start it again.` },
+    { os: 'Linux', how: `sudo systemctl edit ollama.service, add the two lines [Service] and Environment="OLLAMA_ORIGINS=${o}", then sudo systemctl restart ollama.` },
+    { os: 'Already set?', how: `If OLLAMA_ORIGINS already lists other addresses, add this one after a comma: ...,${o}` },
+  ];
 }
 
 // ---------------------------------------------------------------------------------------------------

@@ -28,18 +28,21 @@ import { mountModule } from '../module.js';
 import { createAI } from '../ai.js';
 import { MENU_TAB_TOPIC } from '../actions.js';
 import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
-import { GUIDE_NODES, GUIDE_ROOT, GUIDE_VERB_TOPICS } from '../nimrod_guide_data.js';
+import { GUIDE_NODES, GUIDE_ROOT, GUIDE_VERB_TOPICS, GUIDE_TOPICS } from '../nimrod_guide_data.js';
 import { attachSpeech, SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC } from '../input_speech.js';
 import { DELIVERY_TOPIC as OUTPUT_DELIVERY } from '../output.js';
 import {
   AI_DEFAULTS, AI_SOURCE, AI_STATE_KEY, SPEECH_TOPICS, DELIVERY_TOPIC, DEFAULT_PERSONA, LISTEN_CHOICES, MAX_ACTIONS,
   aiPrefs, isLocalAddress, parseReply, systemPrompt, createActionQueue, createGuideChat, registerAIAction,
   allowedActions, BUILTIN_ACTIONS, isYes, isNo, openAIStore, KEEP_TURNS,
+  OLLAMA_URL, firstChatModel, helloMessages, HELLO_TEXT, ollamaAllowsByDefault, ollamaOriginLines,
 } from '../nimrod_ai.js';
 import {
   stamp, fallbackNote, notePrompt, draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, NOTES_MAX,
+  NOTES_WARN_AT, noteContextFrom, contextLine, notesFileName, nearlyFull,
 } from '../nimrod_notes.js';
 import { connectHelp } from '../modules/nimrod.js';
+import { DEFAULT_BASE_URL } from '../ai.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -289,7 +292,7 @@ try {
     check(`kept up to ${NOTES_MAX}, the oldest going first`, list.length === NOTES_MAX && list[0].text === 'note 3');
     check('an empty note is not a note', makeNote('   ') === null);
     const txt = notesToText(list.slice(-2).map((n, i) => ({ ...n, where: i ? 'Your theme' : '' })), { at });
-    check('*** copied out as dated text, ready to paste ***', /^## Notes from the Nimrod guide \(copied 2026-10-02\)/.test(txt) && /### 2026-10-02 \d\d:\d\d \(at "Your theme"\)\nnote 42/.test(txt), txt);
+    check('*** copied out as dated text, ready to paste ***', /^## Notes from the Nimrod guide \(copied 2026-10-02\)/.test(txt) && new RegExp(`### 2026-10-02 \\d\\d:\\d\\d \\(at "Your theme"\\)\\nnote ${NOTES_MAX + 2}`).test(txt), txt);
     check('delete one', removeNote(list, list[0].id).length === NOTES_MAX - 1);
     check('garbage in storage is dropped, never a throw', cleanNotes([null, { text: 'x' }, 7, { id: 'a', at: 1, text: 'ok' }]).length === 1);
   }
@@ -372,6 +375,8 @@ try {
     const rec = g.ps.made[`per3/${AI_STATE_KEY}`].data();
     check('*** saved as EDITED, dated, where they were, on the person’s record ***', rec.notes?.length === 1 && /bigger buttons/.test(rec.notes[0].text)
       && rec.notes[0].where === 'Hi, I’m Nimrod' && Number.isFinite(rec.notes[0].at), J(rec.notes));
+    check('*** ...and a note made from the talk carries where it was made too (the page, its path only) ***',
+      rec.notes[0].context?.page === location.pathname && !/\?/.test(rec.notes[0].context?.page || '?'), J(rec.notes[0].context));
     let copied = null;
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
     g.doBtn('copynotes').click();
@@ -480,6 +485,254 @@ try {
     check('openAIStore: no person, the panel’s copy', st.kind === 'panel' && st.get().name === 'Q');
     const st2 = await openAIStore({});
     check('openAIStore: nothing at all, a memory stand-in (never a throw)', st2.kind === 'memory' && J(st2.get()) === '{}');
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-03: setting the AI up — the pure parts ***');
+  {
+    check('*** the first CHAT model is offered first: an embedding model is never offered ***',
+      firstChatModel(['nomic-embed-text:latest', 'qwen2.5:7b', 'qwen2.5:3b']) === 'qwen2.5:7b' && firstChatModel(['bge-m3', 'all-minilm']) === null && firstChatModel(null) === null);
+    check('it looks where Ollama listens by default (ai.js’s default address, not a second copy)', OLLAMA_URL === DEFAULT_BASE_URL && OLLAMA_URL === 'http://127.0.0.1:11434/v1');
+    check('*** Ollama as shipped allows pages from this computer, any port; not a website (measured with curl) ***',
+      ollamaAllowsByDefault('http://127.0.0.1:8270') && ollamaAllowsByDefault('http://localhost:3000') && ollamaAllowsByDefault('https://localhost')
+      && !ollamaAllowsByDefault('https://nimrodecosystem.com') && !ollamaAllowsByDefault('https://nimrod.onrender.com'));
+    const lines = ollamaOriginLines('https://nimrodecosystem.com');
+    check('*** the fix for a website: OLLAMA_ORIGINS with exactly its address, per system, and restart ***',
+      lines && J(lines.map((l) => l.os)) === J(['Windows', 'Mac', 'Linux', 'Already set?'])
+      && lines.every((l) => l.how.includes('https://nimrodecosystem.com')) && /setx OLLAMA_ORIGINS/.test(lines[0].how) && /start it again/.test(lines[0].how)
+      && /after a comma/.test(lines[3].how), J(lines));
+    check('...and nothing to fix for a page on this computer, or for nonsense', ollamaOriginLines('http://127.0.0.1:8270') === null && ollamaOriginLines('not a url') === null);
+    const hm = helloMessages({ name: 'Ada', persona: 'You are terse.' });
+    check('*** the hello: the name and persona, and one short question (a CPU model is quick on it) ***',
+      hm.length === 2 && /^Your name is Ada\. You are terse\./.test(hm[0].content) && hm[1].content === HELLO_TEXT);
+    check('no site copy names a person or says "her screen"', !NAMES.test(J(lines) + J(hm) + J(Object.values(GUIDE_NODES).filter((n) => /^ai-|notes-walk/.test(n.id)))));
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-03: a note carries where it was made ***');
+  {
+    const k = document.createElement('div');
+    k.className = 'kiosk';
+    k.innerHTML = '<div class="k-cell" data-kind="settings" data-focused="1"></div><div class="k-cell" data-kind="nimrod"><div id="own"></div></div>';
+    const titleOf = (t) => ({ settings: 'Settings', nimrod: 'Nimrod' }[t] || '');
+    const c1 = noteContextFrom({ scope: k, own: k.querySelector('#own'), path: '/kiosk.html', host: { dashboard: 'Start here' }, titleOf });
+    check('*** the dashboard (the host’s name for it), the panel picked, the page ***',
+      J(c1) === J({ dashboard: 'Start here', panel: 'Settings (settings)', page: '/kiosk.html' }), J(c1));
+    const c2 = noteContextFrom({ scope: k, path: '/kiosk.html?key=SECRET-DEVICE-KEY#x', intro: 'landing' });
+    check('*** NEVER the query string: a screen’s address carries its device key ***', c2.page === '/kiosk.html' && !J(c2).includes('SECRET'), J(c2));
+    check('no host name: the guide’s own (the landing), else the dashboard’s id', /landing/.test(c2.dashboard)
+      && noteContextFrom({ dashboardId: 'abc123' }).dashboard === 'dashboard abc123' && noteContextFrom({}).dashboard === '');
+    k.querySelector('[data-kind="settings"]').removeAttribute('data-focused');
+    k.querySelector('[data-kind="nimrod"]').dataset.focused = '1';
+    const c3 = noteContextFrom({ scope: k, own: k.querySelector('#own'), lastOther: { type: 'photos', title: 'Photos' }, titleOf });
+    check('*** Nimrod himself picked (a press inside him): the panel picked BEFORE him ***', c3.panel === 'Photos (photos)', J(c3));
+    const at = new Date(2026, 9, 3, 14, 5).getTime();
+    const n = makeNote('- the theme page is slow', { at, where: 'Your theme', context: { ...c1, page: '/kiosk.html?key=SECRET' } });
+    check('*** kept on the note, the query cut again on the way in ***', n.context.page === '/kiosk.html' && n.context.panel === 'Settings (settings)');
+    check('cleanNotes keeps the context; a note with none has none', cleanNotes([n])[0].context?.dashboard === 'Start here' && !('context' in makeNote('x', { at })));
+    const txt = notesToText([n], { at });
+    check('*** copied out: the context on its own line under the date, then the note ***',
+      txt.includes('### 2026-10-03 14:05 (at "Your theme")\n_dashboard: Start here; panel picked: Settings (settings); page: /kiosk.html_\n- the theme page is slow'), txt);
+    check('the file is Markdown, named by the minute', notesFileName(at) === 'nimrod-notes-2026-10-03-1405.md');
+    check(`*** ${NOTES_MAX} are kept now (a walk through the whole site is more than 40), and it warns before the oldest goes ***`,
+      NOTES_MAX === 200 && NOTES_WARN_AT === 190 && nearlyFull(Array.from({ length: 190 }, (_, i) => makeNote(`n${i}`, { at: at + i }))) && !nearlyFull([n]));
+    check('contextLine of nothing is nothing', contextLine(null) === '' && contextLine({}) === '');
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-03: "Set up your guide / AI" in the module — a fake Ollama, a fake AI ***');
+  {
+    // A fake Ollama behind the REAL ai.js: what the "Look" button reaches. Records every request.
+    const reqs = [];
+    let serverUp = true;
+    const aiFetch = async (url, opts = {}) => {
+      reqs.push({ url, method: opts.method, auth: (opts.headers || {}).Authorization || null });
+      if (!serverUp) throw new TypeError('Failed to fetch');
+      return { ok: true, status: 200, json: async () => ({ data: [{ id: 'nomic-embed-text:latest' }, { id: 'qwen2.5:7b' }, { id: 'qwen2.5:3b' }] }), text: async () => '' };
+    };
+    const ai = fakeAI({ replies: ['Hello, I am Ada! [[go theme]]'], models: ['qwen2.5:7b', 'qwen2.5:3b'] });
+    ai.setKey('sk-test-not-real');   // a key saved on this device: the look at Ollama must never carry it
+    const g = await mountGuide({ ai, person: 'set1', extra: { aiFetch } });
+    const choose = (label) => { const b = [...g.mount.querySelectorAll('[data-ng-choice]')].find((x) => x.textContent.includes(label)); b?.click(); return !!b; };
+    const calls = () => reqs.length + ai.calls.chat.length + ai.calls.resolve.length;
+    check('*** D on the opening is "Set up your guide / AI" ***', choose('Set up your guide / AI') && g.probe().id === 'ai-setup');
+    check('arriving sends nothing', calls() === 0);
+    choose('Start: give it a name');
+    check('*** step 1, its name: a field holding the current name (Nimrod by default) ***', g.probe().id === 'ai-name' && g.q('[data-ng-field="fname"]')?.value === 'Nimrod');
+    g.q('[data-ng-field="fname"]').value = 'Ada';
+    choose('Next: how it talks');
+    await until(() => g.ps.made[`set1/${AI_STATE_KEY}`]?.data().name === 'Ada');
+    check('*** "Next" KEEPS it: on the person’s record, and the Talk button says it ***', g.probe().ai.name === 'Ada'
+      && g.ps.made[`set1/${AI_STATE_KEY}`].data().name === 'Ada' && g.probe().id === 'ai-persona');
+    g.q('[data-ng-field="fpersona"]').value = 'You speak like a pirate.';
+    choose('Skip this step');
+    await sleep(30);
+    check('*** "Skip this step" keeps NOTHING (what was typed is dropped) and goes on ***', g.probe().id === 'ai-connect'
+      && g.probe().ai.persona === '' && !g.ps.made[`set1/${AI_STATE_KEY}`].data().persona);
+    check('*** arriving at "Connect it" sends nothing: the look is a press ***', calls() === 0 && !!g.doBtn('detect'));
+    g.doBtn('detect').click();
+    await until(() => g.probe().detect?.ok);
+    check('*** "Look for Ollama on this computer": ONE GET of its model list, at 127.0.0.1:11434 ***',
+      reqs.length === 1 && reqs[0].url === 'http://127.0.0.1:11434/v1/models' && reqs[0].method === 'GET', J(reqs));
+    check('*** ...WITHOUT the person’s key (a look at Ollama is not a place to send it) ***', reqs[0].auth === null && ai.hasKey());
+    check('*** found: its chat models listed, the first one pressed in; the embedding model not offered ***',
+      J(g.probe().detect.models) === J(['qwen2.5:7b', 'qwen2.5:3b']) && g.probe().detect.chosen === 'qwen2.5:7b' && g.probe().detect.others === 1
+      && g.doBtn('usemodel', 0)?.getAttribute('aria-pressed') === 'true' && /that cannot, not shown/.test(g.q('[data-ng-detect]').textContent));
+    check('looking saved nothing on this device', ai.settings().model === '');
+    g.doBtn('usemodel', 1).click();
+    check('*** pressing a model chooses it: kept on THIS device (ai.js settings), Ollama’s address ***',
+      ai.settings().model === 'qwen2.5:3b' && ai.settings().baseUrl === OLLAMA_URL && g.doBtn('usemodel', 1).getAttribute('aria-pressed') === 'true');
+    choose('Next: say hello');
+    check('*** arriving at "Say hello" sends nothing ***', g.probe().id === 'ai-hello' && ai.calls.chat.length === 0 && !!g.doBtn('hello'));
+    g.doBtn('hello').click();
+    await until(() => g.probe().hello?.ok);
+    const hc = ai.calls.chat[0];
+    check('*** "Say hello": one chat, with the name, short, on the chosen model ***', ai.calls.chat.length === 1
+      && /^Your name is Ada\./.test(hc.msgs[0].content) && hc.msgs[1].content === HELLO_TEXT && hc.opts.model === 'qwen2.5:3b' && hc.opts.maxTokens === 80, J(hc?.opts));
+    check('*** ...and the reply is SHOWN (an [[action]] in it is not run, and not shown) ***',
+      /Ada:Hello, I am Ada!$/.test(g.q('[data-ng-hello]').textContent.trim()) && g.probe().id === 'ai-hello' && g.probe().pending.length === 0, g.q('[data-ng-hello]')?.textContent);
+    choose('Next: you’re set');
+    check('*** "You’re set" ***', g.probe().id === 'ai-done' && /You’re set/.test(g.q('[data-ng-say]').textContent));
+    [...g.mount.querySelectorAll('[data-ng-act]')].find((b) => /Talk to it now/.test(b.textContent)).click();
+    check('...and "Talk to it now" opens the talk', g.probe().view === 'talk');
+    g.done();
+
+    // Nobody there: Ollama not running (or refusing this website).
+    serverUp = false;
+    const ai2 = fakeAI();
+    const g2 = await mountGuide({ ai: ai2, extra: { aiFetch }, state: fakeState({ walk: [GUIDE_ROOT, 'ai-setup', 'ai-connect'] }) });
+    g2.doBtn('detect').click();
+    await until(() => g2.probe().detect && !g2.probe().detect.busy);
+    check('*** not found: says so plainly, and what to do (this page is on this computer, so it may not be running) ***',
+      g2.probe().detect.ok === false && /Could not reach the AI program/.test(g2.q('[data-ng-detect]').textContent)
+      && (ollamaAllowsByDefault(location.origin) ? /may simply not be running/ : /may not allow this website/).test(g2.q('[data-ng-form]').textContent), g2.q('[data-ng-form]')?.textContent);
+    [...g2.mount.querySelectorAll('[data-ng-choice]')].find((b) => /Why can’t/.test(b.textContent)).click();
+    check('*** "Why can’t the website reach it?": this page’s address, and whether it needs adding ***', g2.probe().id === 'ai-blocked'
+      && g2.q('[data-ng-origin]')?.textContent === location.origin
+      && (ollamaAllowsByDefault(location.origin) ? /allows it already/ : /OLLAMA_ORIGINS/).test(g2.q('[data-ng-form]').textContent));
+    g2.q('[data-ng-back]').click();
+    // The other ways: a free online AI, or your own key.
+    g2.doBtn('other').click();
+    g2.q('[data-ng-field="furl"]').value = 'https://api.example.com/v1';
+    g2.q('[data-ng-field="fmodel"]').value = 'free-model-1';
+    g2.q('[data-ng-field="fkey"]').value = 'sk-test-not-real';
+    g2.doBtn('saveother').click();
+    const s2 = ai2.settings();
+    check('*** "Use an online AI": its address, model and key kept on this device; the key field is emptied ***',
+      s2.baseUrl === 'https://api.example.com/v1' && s2.model === 'free-model-1' && ai2.hasKey()
+      && g2.q('[data-ng-field="fkey"]').value === '' && /Saved/.test(g2.probe().notice), J(s2));
+    g2.done();
+
+    // Skip everything: nothing is kept, nothing is sent.
+    const ai3 = fakeAI();
+    const reqs3 = reqs.length;
+    const g3 = await mountGuide({ ai: ai3, person: 'set3', extra: { aiFetch } });
+    const pick = (label) => [...g3.mount.querySelectorAll('[data-ng-choice]')].find((x) => x.textContent.includes(label))?.click();
+    pick('Set up your guide / AI'); pick('Start: give it a name');
+    g3.q('[data-ng-field="fname"]').value = 'Nobody';
+    pick('Skip this step'); pick('Skip this step'); pick('Skip this step'); pick('Skip this step');
+    await sleep(30);
+    check('*** every step skipped: at "You’re set", nothing kept, nothing sent ***', g3.probe().id === 'ai-done' && g3.probe().ai.name === 'Nimrod'
+      && !g3.ps.made[`set3/${AI_STATE_KEY}`]?.data().name && reqs.length === reqs3 && ai3.calls.chat.length === 0 && ai3.calls.resolve.length === 0);
+    g3.done();
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-03: notes from anywhere — the N key, the context, copy, a file ***');
+  {
+    // A screen: a Settings panel picked, Nimrod in another panel.
+    const k = document.createElement('div');
+    k.className = 'kiosk box';
+    k.innerHTML = '<div class="k-cell" data-kind="settings" data-focused="1">settings</div><div class="k-cell" data-kind="nimrod"></div><input id="other-input">';
+    document.body.append(k);
+    const mount = document.createElement('div');
+    mount.style.cssText = 'width:100%;height:600px';
+    k.querySelector('[data-kind="nimrod"]').append(mount);
+    const ps = personStores();
+    ps.make('note1', AI_STATE_KEY, {});
+    const saved = [];
+    const bus = createBus();
+    const state = fakeState();
+    const inst = mountModule('nimrod', { mount, bus, state, events: null, output: fakeOutput(), user: null, profileId: 'dash-1', personId: 'note1',
+      instanceId: 'nn1', ai: fakeAI(), makePersonState: (pid, key) => ps.make(pid, key),
+      noteContext: () => ({ dashboard: 'Start here' }), saveFile: (name, text, type) => saved.push({ name, text, type }) });
+    await inst.init();
+    const probe = () => inst.impl.__probe();
+    const q = (s) => mount.querySelector(s);
+    const doBtn = (w, i = 0) => mount.querySelectorAll(`[data-ng-do="${w}"]`)[i];
+    const key = (target, init = {}) => target.dispatchEvent(new KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true, ...init }));
+    await until(() => doBtn('notes'));
+    check('*** the guide’s bottom row has Notes (before Talk, which stays last) ***', !!doBtn('notes') && probe().stops.at(-1).startsWith('Talk to'));
+    key(document.querySelector('#other-input'));
+    check('N typed into a text box: nothing (typing is not a command)', probe().view === 'guide');
+    key(document.body, { ctrlKey: true });
+    check('Ctrl+N (the browser’s): nothing', probe().view === 'guide');
+    const ev = new KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true });
+    document.body.dispatchEvent(ev);
+    check('*** N anywhere on the screen: the notes view, ready to write (the box has the keyboard, the N did not land in it) ***',
+      probe().view === 'notes' && document.activeElement === q('[data-ng-field="quick"]') && q('[data-ng-field="quick"]').value === '' && ev.defaultPrevented);
+    check('*** it says what the note will carry: the dashboard, the panel picked, the page ***',
+      /Start here/.test(q('[data-ng-context]').textContent) && /Settings \(settings\)/.test(q('[data-ng-context]').textContent)
+      && q('[data-ng-context]').textContent.includes(location.pathname));
+    // The person clicks into Nimrod to type: Nimrod is the picked panel now. The note is still about Settings.
+    k.querySelector('[data-kind="settings"]').removeAttribute('data-focused');
+    k.querySelector('[data-kind="nimrod"]').dataset.focused = '1';
+    await sleep(20);
+    q('[data-ng-field="quick"]').value = 'The settings panel should open on Sound for me.';
+    doBtn('savequick').click();
+    const rec = ps.made[`note1/${AI_STATE_KEY}`].data();
+    const n0 = rec.notes?.[0];
+    check('*** saved on the PERSON’S record, with the time and where: dashboard, the panel picked BEFORE Nimrod, the page path ***',
+      rec.notes?.length === 1 && n0.text === 'The settings panel should open on Sound for me.' && Number.isFinite(n0.at)
+      && J(n0.context) === J({ dashboard: 'Start here', panel: 'Settings (settings)', page: location.pathname }), J(n0));
+    check('the box is emptied for the next one, and it says where they are kept', q('[data-ng-field="quick"]').value === ''
+      && /Kept on your account/.test(q('[data-ng-kept]').textContent) && /Note saved/.test(q('[data-ng-notice]').textContent));
+    check('an empty note is not saved', (doBtn('savequick').click(), ps.made[`note1/${AI_STATE_KEY}`].data().notes.length === 1) && /empty/.test(probe().notice));
+    let copied = null;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
+    doBtn('copynotes').click();
+    await until(() => copied);
+    check('*** "Copy all notes": dated, WITH the context line, ready to paste to chat or Code ***',
+      /## Notes from the Nimrod guide/.test(copied) && copied.includes('_dashboard: Start here; panel picked: Settings (settings); page: ')
+      && copied.includes('The settings panel should open on Sound for me.'), copied);
+    doBtn('exportfile').click();
+    check('*** "Save as a file": a .md file, the same text as Copy ***', saved.length === 1 && /^nimrod-notes-\d{4}-\d\d-\d\d-\d{4}\.md$/.test(saved[0].name)
+      && saved[0].type === 'text/markdown' && saved[0].text === copied, J(saved.map((s) => s.name)));
+    bus.publish(GUIDE_VERB_TOPICS.back);
+    check('a switch’s back leaves the notes for the guide', probe().view === 'guide');
+    bus.publish(GUIDE_TOPICS.notes, { open: true });
+    check('*** a host’s "open your notes" (GUIDE_TOPICS.notes) opens them too ***', probe().view === 'notes');
+    doBtn('guide').click();
+    state.set({ notesKey: false });
+    key(document.body);
+    check('*** the setting off: N does nothing (somebody playing a letter game) ***', probe().view === 'guide');
+    state.set({ notesKey: true });
+    // A second Nimrod on the same screen: only the first answers N.
+    const m2 = document.createElement('div');
+    k.append(m2);
+    const inst2 = mountModule('nimrod', { mount: m2, bus: createBus(), state: fakeState(), events: null, output: fakeOutput(), user: null, profileId: 'dash-1', personId: null, instanceId: 'nn2', ai: fakeAI() });
+    await inst2.init();
+    key(document.body);
+    check('*** two Nimrods on one screen: only the first opens its notes ***', probe().view === 'notes' && inst2.impl.__probe().view === 'guide');
+    inst2.destroy();
+    // Close to the most kept: it warns.
+    doBtn('guide').click();
+    inst.destroy();
+    const many = Array.from({ length: NOTES_WARN_AT }, (_, i) => makeNote(`note ${i}`, { at: 1e12 + i }));
+    const ps2 = personStores();
+    ps2.make('note2', AI_STATE_KEY, { notes: many });
+    const m3 = document.createElement('div'); k.append(m3);
+    const inst3 = mountModule('nimrod', { mount: m3, bus: createBus(), state: fakeState(), events: null, output: fakeOutput(), user: null, profileId: 'p', personId: 'note2',
+      instanceId: 'nn3', ai: fakeAI(), makePersonState: (pid, kk) => ps2.make(pid, kk) });
+    await inst3.init();
+    m3.querySelector('[data-ng-do="notes"]').click();
+    check(`*** ${NOTES_WARN_AT} kept: it warns before the oldest goes, so they can be copied first ***`,
+      await until(() => /the oldest goes/.test(m3.querySelector('[data-ng-full]')?.textContent || '')), m3.querySelector('[data-ng-where], .ng-where')?.textContent);
+    inst3.destroy();
+    k.remove();
+    const after = new KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true });
+    document.body.dispatchEvent(after);
+    check('taken away: N is not heard any more', !after.defaultPrevented);
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));
