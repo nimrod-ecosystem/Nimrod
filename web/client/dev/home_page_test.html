@@ -762,8 +762,11 @@ try {
       `${$('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent} / ${$('#stage .k-cell[data-kind="profile"] [data-pf-line]')?.textContent} (want ${nper?.name})`);
     check('*** Nimrod says Mike’s words ***', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 8000),
       $('#stage [data-ng-say]')?.textContent);
-    check('*** the settings panel opened on its Theme page ***',
-      await until(() => /Theme/.test($('#stage [data-settings-root] [data-page] .st-head')?.textContent || ''), 8000));
+    // (2026-10-03: the settings panel IS the ⚙ menu now; its "Theme page" is the Colours row's own list, every
+    // theme a tile in its colours.)
+    check('*** the settings panel opened on its themes (the Colours list, a tile per theme) ***',
+      await until(() => /Colours/.test($('#stage [data-settings-root] [data-page] .chp-head')?.textContent || '')
+        && $$('#stage [data-settings-root] [data-page] [data-chp-pick] .chp-chip').length >= 3, 8000));
     check('*** the info line along the bottom is put away while Nimrod is there saying it himself ***',
       await until(() => $('.nimrod-infoline')?.hidden === true, 4000));
     $('#stage [data-ng-choice="0"]').click();               // A. game or learning

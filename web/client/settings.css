@@ -73,6 +73,24 @@
   width: min(560px, 100%);
 }
 
+/* THE MENU AS A PANEL (2026-10-03; settings.js `asPanel`, modules/settings.js). It is not in front of
+ * anything, so there is no darkened scrim and no shadow lifting it off the page: it IS the panel, filling
+ * its box and scrolling inside it. Its colours are the menu's own (the theme's surface and text). */
+.st-scrim.st-aspanel {
+  background: transparent;
+  padding: 0;
+  z-index: auto;
+  align-items: stretch;
+  justify-content: stretch;
+}
+.st-scrim.st-aspanel .st-panel {
+  width: 100%;
+  max-height: 100%;
+  box-shadow: none;
+  border-radius: 0;
+  border: 0;
+}
+
 .st-panel {
   width: min(560px, 92vw);
   max-height: min(84vh, 780px);

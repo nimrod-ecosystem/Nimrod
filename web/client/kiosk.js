@@ -126,7 +126,10 @@ import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORD
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
 import { mountPackLoader } from './pack_loader.js';
-import { gameSettingsPage } from './unlocks.js';
+import { gameSettingsPage, GAME_SETTINGS_PAGE } from './unlocks.js';
+// "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
+import { MODE_KEY, MODES, modeFrom } from './lessons.js';
+import { mountChoicePicker } from './choice_picker.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
 import { createHealthWatch } from './health.js';
@@ -1234,8 +1237,23 @@ export async function mountKiosk(root, {
     onChange: (list) => { try { settings.set({ automations: list }); } catch (err) { console.error('kiosk: automations save', err); } },
   });
 
+  // THE SETTINGS PANEL IS THE ⚙ MENU (2026-10-03; `settingsMenuFor`, beside the menu). Panels mount before the
+  // menu exists, so a panel asking for it waits on this; it settles the moment the menu is built.
+  let menuBuilt = null;
+  const menuReady = new Promise((resolve) => { menuBuilt = resolve; });
+  // The view whose rows are being built or pressed right now: the ⚙ menu (null) or a Settings panel's. Each has
+  // its own "Settings for" and tab; `menuView()` is how the row builders below ask whose.
+  let viewNow = null;
+  // The Settings panels' views of the menu, as { view, instanceId }, and whether a repaint of them is queued.
+  const menuViews = new Set();
+  let viewSyncQueued = false;
+
   const childCtx = (mod) => ({
     bus, user, profileId,
+    // *** THE SETTINGS PANEL (modules/settings.js) MOUNTS THIS SCREEN'S OWN MENU (2026-10-03). *** Mike: "The
+    // settings module should be the same as the settings menu. There shouldn't be 2 different things." A promise
+    // of the menu's handle drawn into `host` (`settingsMenuFor`): the same rows, tabs, levels and pages as ⚙.
+    settingsMenu: (host, opts = {}) => menuReady.then(() => settingsMenuFor(host, opts || {})),
     // WHOSE SCREEN THIS IS. Resolved in the background below, so it is a FUNCTION rather
     // than a value - a module mounted before the lookup returns would otherwise capture
     // null forever. Bindings have been per-person since the input runtime landed; this is
@@ -1248,6 +1266,8 @@ export async function mountKiosk(root, {
     // first follows it. Hosts without it (home.js, the suites' own ctx) are treated as already settled.
     personKnown,
     rootBus: bus, instanceId: mod.id,
+    // What a note made in Nimrod's notes says about where it was made (modules/nimrod.js noteContext).
+    noteContext: () => ({ dashboard: arr.profile()?.name || null }),
     // *** THE OUTPUT BUS, WHICH THE KIOSK DID NOT HAVE. *** Exactly the gap input_runtime.js
     // closed on the other side: the whole output layer was constructed inside the Output TAB,
     // so "how you want to be told things" was configurable where a clinician sets up and
@@ -2887,6 +2907,9 @@ export async function mountKiosk(root, {
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
   // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
   // stepped to another; a panel that has gone since is the focused one again.
+  // (2026-10-03: "the menu" is whichever VIEW of it is being drawn or pressed -- the ⚙ menu, or a Settings
+  // panel's, each with its own "Settings for" (`settingsMenuFor`).)
+  const menuView = () => viewNow || menu;
   function menuPanelRecs() {
     try {
       if (arr.layout()) return arr.panelRecs();
@@ -2895,7 +2918,7 @@ export async function mountKiosk(root, {
   }
   function menuSubjectRec() {
     let id = null;
-    try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    try { id = menuView()?.subjectId?.() || null; } catch { id = null; }
     // (2026-10-02: a piece of the room is not a panel: no panel rows -- `menuPiece` has its own.)
     if (isPieceSubject(id)) return null;
     if (id) { const r = menuPanelRecs().find((x) => x.id === id); if (r) return r; }
@@ -2909,7 +2932,7 @@ export async function mountKiosk(root, {
   const isPieceSubject = (id) => typeof id === 'string' && id.startsWith(ROOM_PIECE_PREFIX);
   function menuPiece() {
     let id = null;
-    try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    try { id = menuView()?.subjectId?.() || null; } catch { id = null; }
     if (!isPieceSubject(id)) return null;
     try { return arr.pieceTarget?.(id) || null; } catch { return null; }
   }
@@ -2934,7 +2957,7 @@ export async function mountKiosk(root, {
     try { waiting = arr.roomTargetsPending?.() || null; } catch { waiting = null; }
     if (waiting && pieceWaitFor !== p.id) {
       pieceWaitFor = p.id;
-      waiting.then(() => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } });
+      waiting.then(() => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } if (!torn) refreshViews(); });
     }
     if (!rows.length) {
       rows = [{ kind: 'item', id: 'piece-none', disabled: true, ...t,
@@ -2981,7 +3004,7 @@ export async function mountKiosk(root, {
   const LEVEL_PREFIX = 'level:';
   function menuLevel() {
     let id = null;
-    try { id = menu?.subjectId?.() || null; } catch { id = null; }
+    try { id = menuView()?.subjectId?.() || null; } catch { id = null; }
     return typeof id === 'string' && id.startsWith(LEVEL_PREFIX) ? id.slice(LEVEL_PREFIX.length) : 'instance';
   }
   const panelName = (r) => (r ? (r.title || r.type) : 'this panel');
@@ -3088,7 +3111,7 @@ export async function mountKiosk(root, {
   // redraws when the reading or a write settles. Never prompts.
   let deviceLookCtl = null;
   let deviceLookRead = null;
-  const redrawMenu = () => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } };
+  const redrawMenu = () => { try { if (!torn && menu?.isOpen?.()) menu.refresh(); } catch { /* gone */ } if (!torn) refreshViews(); };
   function deviceLookRows() {
     if (!deviceRow) return [];
     if (!deviceLookCtl) {
@@ -3163,7 +3186,7 @@ export async function mountKiosk(root, {
   function layoutRow() {
     const p = currentPreset();
     return { kind: 'item', id: 'layout-pick', label: `Layout: ${p ? p.label : 'One at a time'}…`,
-      hint: 'more ways to arrange the panels', run: () => { layoutOpen = true; menu.refresh(); menu.focusRow('layout-keep'); } };
+      hint: 'more ways to arrange the panels', run: () => { layoutOpen = true; const v = menuView(); v.refresh(); v.focusRow('layout-keep'); } };
   }
   function layoutRows() {
     const cur = currentPreset();
@@ -3171,7 +3194,7 @@ export async function mountKiosk(root, {
     return [
       { kind: 'heading', id: 'layout-head', label: 'Arrange the panels as', ...t },
       { kind: 'item', id: 'layout-keep', label: `Keep ${cur ? cur.label : 'one at a time'}`, hint: 'leave it as it is', ...t,
-        run: () => { layoutOpen = false; menu.refresh(); menu.focusRow('layout-pick'); } },
+        run: () => { layoutOpen = false; const v = menuView(); v.refresh(); v.focusRow('layout-pick'); } },
       ...LAYOUT_PRESETS.map((p) => ({ kind: 'item', id: `layout:${p.id}`, label: p.label, ...t,
         hint: `${p.slots} panel${p.slots === 1 ? '' : 's'}${cur && cur.id === p.id ? ' · now' : ''}`,
         run: () => { applyLayoutPreset(p.id).catch((err) => console.error('kiosk: layout', err)); } })),
@@ -3198,6 +3221,7 @@ export async function mountKiosk(root, {
       }
     } catch (err) { console.error('kiosk: rearranging', err); }
     try { if (menu.isOpen()) { menu.refresh(); menu.focusRow('layout-pick'); } } catch { /* the menu may be gone */ }
+    refreshViews();
     renderMods();
     return true;
   }
@@ -3208,6 +3232,8 @@ export async function mountKiosk(root, {
     // `essential`, because on a bedside screen this is a legibility control, not decoration:
     // it is the row somebody reaches for when the person in front of it cannot read what is
     // there.
+    // (2026-10-03: its list -- every theme a tile in its own colours, choice_picker.js -- is what the Settings
+    // panel's old Theme page drew, so that page is now this row's own list: the guide's 'sc-theme' opens it.)
     { key: 'theme', label: 'Colours', kind: 'choice', level: 'essential',
       default: DEFAULT_THEME,
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
@@ -3791,6 +3817,7 @@ export async function mountKiosk(root, {
       }
     }
     try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
+    refreshViews();
     renderMods();
     return ok;
   }
@@ -3934,6 +3961,7 @@ export async function mountKiosk(root, {
     if (promotedScreen) kioskEl.dataset.promoted = 'screen'; else delete kioskEl.dataset.promoted;
     try { arr.setPromoteTop?.(promotedScreen); } catch { /* not load-bearing */ }
     try { if (menu?.isOpen?.()) menu.refresh(); } catch { /* not up */ }
+    refreshViews();
     try { syncPlayPause(); } catch { /* the bars' Bigger / Smaller; not load-bearing */ }
     try { liftCorners(); } catch { /* the corners moved with the panel; not load-bearing */ }
   }
@@ -4275,7 +4303,10 @@ export async function mountKiosk(root, {
       },
     }).map((it) => ({ ...it, ...MENU_TAB.devices(0) }));
   }
-  const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), {
+  // *** ONE MENU, TWO PLACES (2026-10-03). *** These options ARE the screen's settings: the ⚙ menu is
+  // `mountSettings` over them, and so is every Settings panel on this screen (`settingsMenuFor`, below). There
+  // is no second list anywhere; a row added here is in both.
+  const menuOptions = {
     chooseMode: chooseModeNow,
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
@@ -4592,12 +4623,17 @@ export async function mountKiosk(root, {
     pages: {
       get controls() { return runtime ? controlPages({ runtime, subjectName }).controls : undefined; },
       get activity() { return runtime ? controlPages({ runtime, subjectName }).activity : undefined; },
-      // "Your own folders" (15eb6b3): fonts, colour looks, plugins on this device.
-      get [USER_FOLDERS_PAGE]() { return userFoldersPage(); },
-      // THE NIMROD GAME (unlocks.js, 2026-10-02): its settings page, on this screen's own rows and bus.
-      get game() {
+      // "Your own folders" (15eb6b3): fonts, colour looks, plugins on this device. (2026-10-03, from the
+      // Settings panel's copy: its font and colour-look rows follow "How you choose things", like every list.)
+      get [USER_FOLDERS_PAGE]() { return userFoldersPage({ chooseMode: chooseModeNow }); },
+      // THE NIMROD GAME (unlocks.js, 2026-10-02): its settings page, on this screen's own rows and bus. Its id is
+      // unlocks.js's GAME_SETTINGS_PAGE ('sc-game'), the id the guide asks for, since 2026-10-03 ('game' before).
+      get [GAME_SETTINGS_PAGE]() {
         return gameSettingsPage({ makeState: (k, o) => stateFor(k, o), makeEvents: (k, o) => eventsFor(k, o), bus });
       },
+      // LESSON TOPICS (moved here from the Settings panel's own list, 2026-10-03; its id 'sc-mode' kept, so the
+      // guide's "Show the lesson-topic setting" still finds it). `lessonTopicsPage` argues it.
+      get 'sc-mode'() { return lessonTopicsPage(); },
       // WHAT ELSE THIS CAN TALK TO. Always present, at every complexity level, because a page
       // that is itself hidden until you are advanced enough defeats its own purpose - it
       // exists so that everything ELSE can hide without becoming a secret.
@@ -4712,8 +4748,12 @@ export async function mountKiosk(root, {
       })(),
       // (Tabs: "what can I press" and "what else this talks to" are Devices.)
       ...tagged(runtime ? CONTROL_ITEMS : [], 'devices', 2),
-      // The Nimrod Game's page (unlocks.js), on the This screen tab.
-      ...tagged([{ kind: 'item', id: 'game', label: 'Nimrod Game', page: 'game' }], 'screen', 2),
+      // The Nimrod Game's page (unlocks.js), on the This screen tab -- and beside it "Lesson topics" (quest or
+      // sandbox; moved here from the Settings panel's own list 2026-10-03), the other thing that decides what
+      // the lessons and games let somebody open.
+      ...tagged([{ kind: 'item', id: 'game', label: 'Nimrod Game', page: GAME_SETTINGS_PAGE },
+        { kind: 'item', id: 'lesson-topics', label: 'Lesson topics', page: 'sc-mode',
+          hint: `now: ${modeFrom(settings.get() || {}) === 'quest' ? 'Quest' : 'Sandbox'}` }], 'screen', 2),
       ...tagged(CONNECTION_ITEMS, 'devices', 3),
       ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
@@ -4745,7 +4785,182 @@ export async function mountKiosk(root, {
     // that mapping would be guessing at semantics nobody has decided. Open, and recorded as
     // open rather than papered over with a plausible-looking default.
     gated: false,
-  });
+    // A press in the ⚙ menu shows in every Settings panel at once (`refreshViews`).
+    onSelect: () => refreshViews(),
+  };
+  const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), menuOptions);
+  // Every repaint the screen asks of the ⚙ menu (a name arriving, a voice changing...) reaches the panels too.
+  {
+    const ownRefresh = menu.refresh;
+    menu.refresh = (...a) => { const r = ownRefresh(...a); refreshViews(); return r; };
+  }
+  // ...and a change to the screen's row from anywhere (another device, a page that writes it itself).
+  {
+    const offViewSync = settings.subscribe?.(() => refreshViews());
+    if (typeof offViewSync === 'function') offsScreen.push(offViewSync);
+  }
+  menuBuilt?.();
+
+  // ---- THE SETTINGS PANEL IS THIS MENU (2026-10-03) ------------------------------------------------------
+  //
+  // Mike: "The settings module should be the same as the settings menu. There shouldn't be 2 different things."
+  // Until now the Settings panel (modules/settings.js) built its own list - other panels' settings, a Theme page,
+  // Lesson topics, the Nimrod Game, Your own folders, and a note that the screen's own settings were "not
+  // reachable from here yet". That was a second list to keep in step, and it had already fallen behind (no tabs,
+  // no levels, no "How much this menu shows", none of the screen's rows).
+  //
+  // HOW THE PANEL GETS THE MENU, argued. The panel asks `ctx.settingsMenu(host)` and gets THIS menu - the same
+  // `menuOptions`, mounted by the same `mountSettings` into its own box with `asPanel` (no open/close chrome).
+  //   FOR: one list of rows, one write path per row, by construction. A row added above is in the panel the
+  //   same day, with no second place to remember; the panel can never show a setting the menu does not.
+  //   AGAINST: the panel needs a host that has a menu. A bare module page has none, and there the panel says so
+  //   (modules/settings.js argues that over showing a subset).
+  //   AGAINST, the other shape considered: one menu INSTANCE moved between the ⚙ scrim and the panel. Rejected:
+  //   both are wanted on screen at once (Mike: both open, in step), and the ⚙ menu resets to the selected panel
+  //   at every open, which would yank the panel's place out from under somebody using it.
+  // WHAT IS SHARED AND WHAT IS NOT: every VALUE is shared (the rows read and write the same records), so a change
+  // in either shows in the other (`refreshViews` on every press, and when the screen's row changes). The VIEW is
+  // each one's own - "Settings for", the tab, the cursor, an open page - so somebody at the panel and somebody at
+  // ⚙ do not move each other's place. A panel starts on the selected panel, never on itself.
+  // SWITCH SCANNING: the panel answers the menu's own four moves (actions.js MODULE_VERBS `settings`); while the
+  // ⚙ menu is open it is in front and has the presses, exactly as with any other panel.
+  function refreshViews() {
+    if (viewSyncQueued || !menuViews.size) return;
+    viewSyncQueued = true;
+    Promise.resolve().then(() => {
+      viewSyncQueued = false;
+      if (torn) return;
+      for (const e of [...menuViews]) { try { e.view.refresh(); } catch (err) { console.error('kiosk: settings panel', err); } }
+    });
+  }
+  /** A press in one panel: the ⚙ menu (if open) and every other panel show it. */
+  function syncFrom() {
+    // (`menu.refresh` repaints the panels as well; closed, only they need it.)
+    try { if (menu.isOpen()) menu.refresh(); else refreshViews(); } catch { refreshViews(); }
+  }
+  function inView(view, fn) {
+    const was = viewNow;
+    viewNow = view;
+    try { return fn(); } finally { viewNow = was; }
+  }
+  /** Rows built for `view`: a press on one (its `run` / `commit`) is answered as that view's. */
+  function rowsFor(view, rows) {
+    return (rows || []).map((it) => {
+      if (!it || (typeof it.run !== 'function' && typeof it.commit !== 'function')) return it;
+      const out = { ...it };
+      if (typeof it.run === 'function') out.run = (...a) => inView(view, () => it.run(...a));
+      if (typeof it.commit === 'function') out.commit = (...a) => inView(view, () => it.commit(...a));
+      return out;
+    });
+  }
+  /** The ⚙ menu, drawn into `host` as a panel (modules/settings.js). Null once the screen is gone. */
+  function settingsMenuFor(host, { instanceId = null } = {}) {
+    if (torn || !host) return null;
+    let view = null;
+    const o = menuOptions;
+    const as = (f) => (typeof f === 'function' ? (...a) => inView(view, () => f(...a)) : f);
+    const rows = (f) => (...a) => inView(view, () => rowsFor(view, f(...a)));
+    const pages = {};
+    for (const k of Object.keys(Object.getOwnPropertyDescriptors(o.pages))) {
+      Object.defineProperty(pages, k, {
+        enumerable: true,
+        get: () => {
+          const def = inView(view, () => o.pages[k]);
+          if (!def || typeof def.render !== 'function') return def;
+          return { ...def, render: (el) => inView(view, () => def.render(el)) };
+        },
+      });
+    }
+    view = mountSettings(host, {
+      ...o,
+      person: as(o.person), subject: as(o.subject), tabs: as(o.tabs), startTab: as(o.startTab),
+      subjects: as(o.subjects), onSubject: as(o.onSubject),
+      whoItems: rows(o.whoItems), screenItems: rows(o.screenItems), fields: rows(o.fields), extras: rows(o.extras),
+      // It starts on the selected panel, as ⚙ does - but never on ITSELF (a Settings panel's own rows are the
+      // panel's box and background, not what somebody opened it for): the next subject instead.
+      defaultSubject: () => inView(view, () => {
+        const want = o.defaultSubject?.() || null;
+        if (want && want !== instanceId) return want;
+        const list = (o.subjects?.() || []).filter((s) => s && s.id && s.id !== instanceId);
+        return list[0]?.id || null;
+      }),
+      pages,
+      asPanel: true, inline: true, includeHome: false, fullscreenTarget: null,
+      onHome: null, onClose: null,
+      onSelect: () => syncFrom(),
+    });
+    const entry = { view, instanceId };
+    menuViews.add(entry);
+    view.open();
+    return {
+      ...view,
+      /** Show what a page id names (modules/settings.js maps its own ids to these): a page of the menu, a row
+       *  ('row:<id>' -- its list, never a step), a tab ('tab:<id>'), or a panel's own settings ('type:<module>',
+       *  the first panel of that type here). False, and nothing changes, when this screen has no such thing. */
+      show(what) {
+        const s = String(what || '');
+        if (!s || torn) return false;
+        if (s.startsWith('type:')) {
+          const rec = menuPanelRecs().find((r) => r.type === s.slice(5) && r.id !== instanceId);
+          if (!rec) return false;
+          if (view.page()) view.closePage();
+          view.setSubject(rec.id);
+          view.showTab('module');
+          return true;
+        }
+        if (s.startsWith('tab:')) {
+          if (view.page()) view.closePage();
+          return !!view.showTab(s.slice(4));
+        }
+        if (s.startsWith('row:')) return !!view.openRow(s.slice(4));
+        return !!view.openPage(s);
+      },
+      destroy() {
+        menuViews.delete(entry);
+        try { view.destroy(); } catch { /* already gone */ }
+      },
+    };
+  }
+
+  // *** LESSON TOPICS, A PAGE OF THIS MENU (2026-10-03; moved from the Settings panel's own list). ***
+  // Quest keeps lesson topics locked until they are watched; Sandbox opens everything (lessons.js MODE_KEY on the
+  // screen's row, the record Trivia, Word Forge and the algebra game read). A PAGE, not a two-way row, argued: it
+  // carries a paragraph saying what the two mean and that nothing unlocked is lost by switching, which a hint
+  // cannot hold, and it is set rarely. AGAINST: two presses (in, choose) where a row would be one. Its list is the
+  // choice picker, so a switch walks it by the page's own moves (settings.js openPage). Choosing applies at once.
+  function lessonTopicsPage() {
+    const owner = menuView();
+    return {
+      title: 'Lesson topics',
+      render(el) {
+        el.innerHTML = `<p class="st-hint" style="display:block;margin:0 0 10px">Quest keeps lesson topics locked
+          until they’re watched. Sandbox opens everything right away. Points are earned either way, and nothing
+          already unlocked is ever lost by switching.</p><div data-lesson-topics></div>`;
+        const box = el.querySelector('[data-lesson-topics]');
+        let pick = null;
+        const draw = () => {
+          try { pick?.destroy(); } catch { /* already gone */ }
+          pick = mountChoicePicker(box, {
+            title: null, key: MODE_KEY, value: modeFrom(settings.get() || {}),
+            options: [{ value: 'sandbox', label: 'Sandbox — everything open' }, { value: 'quest', label: 'Quest — topics unlock as you go' }],
+            cancelLabel: 'Back',
+            onPick: (v) => {
+              settings.set({ [MODE_KEY]: MODES.includes(v) ? v : 'sandbox' });
+              if (box.isConnected) draw();
+              refreshViews();
+            },
+            onCancel: () => { try { owner?.closePage?.(); } catch { /* gone */ } },
+          });
+        };
+        draw();
+        return {
+          next: () => pick?.next(), prev: () => pick?.prev(), select: () => pick?.select(),
+          back: () => (pick ? pick.back() : false),
+          destroy: () => { try { pick?.destroy(); } catch { /* gone */ } pick = null; },
+        };
+      },
+    };
+  }
   controlsEl.querySelector('[data-act="settings"]').addEventListener('click', () => menu.toggle());
   controlsEl.querySelector('[data-act="switch"]')?.addEventListener('click', () => openSwitch());
   // WHO THIS SCREEN IS FOR, resolved in the background and never blocking the boot. It
@@ -5565,6 +5780,7 @@ export async function mountKiosk(root, {
     drawPlainCallControls();
     if (callState) poke();
     try { if (menu.isOpen()) menu.refresh(); } catch { /* not up */ }
+    refreshViews();
   }));
   if (!embedded) {
     offsScreen.push(bus.subscribe(SYSTEM_TOPICS.dashboards, (p) => { claimed(p); poke(); toggleScreens(true); }));
@@ -5966,6 +6182,9 @@ export async function mountKiosk(root, {
     pickLayout: (id) => applyLayoutPreset(id),
     // Every panel on the screen as { id, type, title, stateKey } (what the menu's "Settings for" steps through).
     panels: () => menuPanelRecs().map((r) => ({ id: r.id, type: r.type, title: r.title, stateKey: r.stateKey || null })),
+    // 2026-10-03, for the suites: each Settings panel's view of this menu ({ instanceId, view }: the view is the
+    // same `mountSettings` handle as `menu`, drawn as a panel).
+    settingsViews: () => [...menuViews].map((e) => ({ instanceId: e.instanceId, view: e.view })),
     effects: () => fxReal,
     soundScene: () => soundScene,
     listening: () => listening,
@@ -6021,6 +6240,9 @@ export async function mountKiosk(root, {
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
+      // The Settings panels' views of the menu go with the panels (their `destroy`); any left are let go here.
+      for (const e of [...menuViews]) { try { e.view.destroy(); } catch { /* already gone */ } }
+      menuViews.clear();
       // The Modules library, if it stands in a panel's place: its row and its game handle let go.
       try { closeLibrary('gone'); } catch { /* already gone */ }
       // A swapped-in screen's settings doc (kept open while it showed), and the lock notice's timer.

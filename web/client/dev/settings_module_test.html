@@ -2,38 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>modules/settings — settings as a module, not only a gear icon</title>
+<title>modules/settings — the Settings panel IS the ⚙ menu</title>
 <link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
   .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
-  #host{margin-top:12px;width:420px;height:520px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;padding:0;overflow:auto}
+  #root,#root2{position:relative;width:1000px;height:620px;margin-top:16px;border:1px solid #ddd8b4;overflow:hidden}
+  #root .kiosk,#root2 .kiosk{position:absolute}
+  #bare{margin-top:12px;width:420px;height:300px;background:#fff;border:1px solid #e4e0c2;border-radius:16px;position:relative}
 </style>
 </head>
 <body>
-<h1>modules/settings — settings as a module, not only a gear icon</h1>
-<p>Mike, 2026-09-22: "Make settings a module and then a tab... You're supposed to pick what the
-settings are for — account, user, device, module, etc." Proves the MODULE and THEME scopes are
-real read/write against the same records everything else uses (not a copy of them), that the
-module never offers to edit itself, and that the DEVICE scope is honest about not being reachable
-yet rather than faking it.
-Run the server first: <code>web/server/.venv/Scripts/python -m uvicorn app:app --port 8000</code>.</p>
+<h1>modules/settings — the Settings panel IS the ⚙ menu</h1>
+<p>Mike, 2026-10-03: "The settings module should be the same as the settings menu. There shouldn't be 2
+different things." The panel mounts the screen's own menu (kiosk.js <code>ctx.settingsMenu</code>): the same
+rows, tabs, levels and pages, drawn in a panel without the menu's open/close chrome. This suite proves the two
+show the same rows, stay in step, that a switch walks the panel with the menu's own moves, that every page the
+old panel had is a page of the ⚙ menu now, and that a bare module page (no screen) says so. Needs the server.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
-<div id="host"></div>
+<div id="bare"></div>
+<div id="root"></div>
+<div id="root2"></div>
 
 <script type="module">
 import { createBus } from '../bus.js';
 import { createState } from '../state.js';
-import { createEvents } from '../events.js';
-import { createProfilesClient, resolveTheme } from '../profile.js';
+import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
-import '../modules/comet.js';
-import '../modules/settings.js';
+import { mountKiosk } from '../kiosk.js';
+import { stashPreviewLayout } from '../preview.js';
+import { verbTarget, verbTopic } from '../actions.js';
 import { listThemes } from '../theme.js';
+import { SETTINGS_OPEN_TOPIC, START_PAGE_KEY, SETTINGS_PANEL_VERBS } from '../modules/settings.js';
+import { SETTINGS_SHOWN_TOPIC, GAME_SETTINGS_PAGE } from '../unlocks.js';
+import { USER_FOLDERS_PAGE } from '../user_folders_page.js';
+import { PROFILE_SETTINGS_KEY, MODE_KEY } from '../lessons.js';
 
 const USER = new URLSearchParams(location.search).get('user') || ('setmod-' + Math.floor(Math.random() * 1e6));
 const out = document.getElementById('results');
@@ -47,208 +55,253 @@ function check(name, cond, detail = '') {
 }
 function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (x) => JSON.stringify(x);
+async function settled(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; }
+function fakeStorage() {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); }, key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, clear: () => m.clear() };
+}
+const seams = () => ({ storage: fakeStorage(), session: fakeStorage(), navigate: () => {}, reloadPage: () => {}, recoveryTick: 0 });
+const fakeState = (v = {}) => { let s = { ...v }; return { get: () => s, set: (p) => { s = { ...s, ...p }; }, subscribe: () => () => {}, load: async () => s, flush: async () => {} }; };
+// A row as both surfaces describe it: everything that would show, and which tab it is on.
+const sig = (it) => [it.id, it.kind, it.label, it.hint || '', it.tab || '', it.disabled ? 'off' : 'on'].join(' | ');
+// The panel has no ways OUT of itself (full screen, Home, Close menu): it is not something that opens.
+const WAYS_OUT = ['fullscreen', 'home', 'close'];
+const rowsOf = (m) => m.items().filter((it) => !WAYS_OUT.includes(it.id)).map(sig);
 
 (async () => {
+let kiosk = null;
+let kiosk2 = null;
 try {
-  section('*** the manifest, and the contract it declares ***');
+  section('*** the manifest, and the switch lap ***');
   {
     const m = getManifest('settings');
-    check('registered', !!m, JSON.stringify(m));
-    check('opts into the new core (it needs ctx.profileId to list siblings)', m.core === 'new');
-    check('has a title', m.title === 'Settings');
+    check('registered, titled Settings, on the new core', !!m && m.title === 'Settings' && m.core === 'new', J(m));
+    check('*** a switch can reach it: the panel answers the menu’s own four moves (actions.js MODULE_VERBS) ***',
+      ['next', 'prev', 'select', 'back'].every((v) => verbTarget('settings', v)?.topic === SETTINGS_PANEL_VERBS[v]),
+      J(['next', 'prev', 'select', 'back'].map((v) => verbTarget('settings', v))));
   }
 
-  section('*** a real profile: this module, a comet instance, and nothing else ***');
+  section('*** a bare module page (no screen hosting it): it says so, and offers nothing it cannot do ***');
+  {
+    const mount = document.getElementById('bare');
+    const bus = createBus();
+    const answers = [];
+    bus.subscribe(SETTINGS_SHOWN_TOPIC, (p) => answers.push(p));
+    const before = document.createElement('button'); before.textContent = 'had focus'; document.body.append(before); before.focus();
+    const inst = mountModule('settings', { mount, bus, state: fakeState({ [START_PAGE_KEY]: 'sc-theme' }), events: null,
+      user: null, profileId: 'nobody', personId: null, instanceId: 'bare-1' });
+    await inst.init();
+    check('*** it says it is the screen’s settings menu, and where it works ***',
+      /settings menu/i.test(mount.textContent) && /dashboard/i.test(mount.textContent), mount.textContent.trim().slice(0, 200));
+    check('...with no rows of its own: there is no second list of settings to keep in step',
+      !mount.querySelector('.st-item') && inst.impl.__probe().hosted === false, J(inst.impl.__probe()));
+    bus.publish(SETTINGS_OPEN_TOPIC, { page: 'sc-theme' });
+    check('asked to show a page, it does not claim to be a panel that can (unlocks.js reads the answer)', answers.length === 0, J(answers));
+    check('it took nobody’s keyboard', document.activeElement === before);
+    inst.destroy(); before.remove();
+  }
+
+  section('*** a real screen: Photos and the Settings panel, side by side ***');
   const profiles = createProfilesClient({ user: USER });
-  const profile = await profiles.create('TEST-settings-module');
-  const makeState = (k, o) => createState({ url: profiles.stateURL(profile.id, k), user: USER, ...o });
-  const makeEvents = (k, o) => createEvents({ url: profiles.eventsURL(profile.id, k), user: USER, ...o });
-
-  const cometMod = await profiles.addModule(profile.id, 'comet');
-  const settingsMod = await profiles.addModule(profile.id, 'settings');
-
-  const host = document.getElementById('host');
+  const p = await profiles.create('TEST-settings-panel');
+  const photos = await profiles.addModule(p.id, 'photos');
+  const setMod = await profiles.addModule(p.id, 'settings');
+  // Where it first opens is the dashboard's choice (dashboards.js: the landing's opens on the themes).
+  {
+    const st = createState({ url: profiles.stateURL(p.id, setMod.id), user: USER });
+    await st.load(); st.set({ [START_PAGE_KEY]: 'sc-theme' }); await st.flush();
+  }
+  stashPreviewLayout(p.id, { preset: 'side', slots: [photos.id, setMod.id] });
+  const root = document.getElementById('root');
   const bus = createBus();
-  const st = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
-  const inst = mountModule('settings', {
-    mount: host, bus, state: st,
-    events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
-    user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
-    makeState, makeEvents,
-  });
-  await inst.init();
-  await sleep(500);   // the module list is fetched async, after init() returns
+  const outside = document.createElement('button'); outside.textContent = 'outside'; document.body.append(outside); outside.focus();
+  kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams() });
+  const viewOf = (k) => (k.settingsViews?.() || [])[0]?.view || null;
+  check('*** the Settings panel mounted the screen’s own menu (one view, for this panel) ***',
+    await settled(() => viewOf(kiosk) && kiosk.settingsViews()[0].instanceId === setMod.id, 6000),
+    J((kiosk.settingsViews?.() || []).map((v) => v.instanceId)));
+  const pv = viewOf(kiosk);
+  const panelEl = () => root.querySelector('[data-settings-root]');
+  if (!pv) throw new Error('no panel view: nothing else can be checked');
 
   {
-    const probe = inst.impl.__probe();
-    check('*** the panel opens itself — no separate gear/trigger needed ***', probe.open === true);
-    check('*** the comet instance is offered as a scope ***',
-      probe.moduleRows.some((r) => r.type === 'comet'), JSON.stringify(probe.moduleRows));
-    check('*** the module never offers to edit ITSELF ***',
-      !probe.moduleRows.some((r) => r.id === settingsMod.id), JSON.stringify(probe.moduleRows));
+    check('*** it opened on the page the dashboard chose: the Colours list, every theme a tile ***',
+      await settled(() => pv.page() === '__choice' && (pv.pickerProbe()?.tiles || 0) === listThemes().length, 4000),
+      `${pv.page()} ${J(pv.pickerProbe())}`);
+    check('...each tile previews the theme’s own colours',
+      [...panelEl().querySelectorAll('[data-chp-pick]')].every((t) => t.querySelectorAll('.chp-chip').length >= 3));
+    check('...and arriving took nobody’s keyboard', document.activeElement === outside, document.activeElement?.outerHTML?.slice(0, 80));
+    pv.closePage();
+    check('it is always open, and has no way out of itself (no Close menu, no Home, no Full screen)',
+      pv.isOpen() && !pv.items().some((it) => WAYS_OUT.includes(it.id)), J(pv.items().filter((it) => WAYS_OUT.includes(it.id))));
+    check('*** it starts on another panel, never on itself ***', pv.subjectId() && pv.subjectId() !== setMod.id, String(pv.subjectId()));
   }
 
-  section('*** MODULE scope — a real read/write against the sibling\'s own saved state ***');
+  section('*** the same rows, the same tabs, the same levels ***');
   {
-    const rows = () => [...host.querySelectorAll('[data-n]')];
-    const byLabel = (label) => rows().find((b) => b.querySelector('.st-label')?.textContent === label);
-    const cometRow = byLabel('Comet');
-    check('the comet row is a real, clickable item in the list', !!cometRow, host.innerHTML.slice(0, 400));
-    cometRow?.click();
-    await sleep(80);
-    // `.st-head` also labels the (now-hidden) LIST's own "who" heading -- scope to the page.
-    check('opens a page titled after the module',
-      host.querySelector('[data-page] .st-head')?.textContent === 'Comet',
-      host.querySelector('[data-page] .st-head')?.textContent);
-
-    // The 'Score' row on comet. It was the `showScore` toggle; since 2026-09-30 (row 2.40) it is the
-    // three-way `ownScore` choice (auto -> always -> off), so one press steps auto to always.
-    await sleep(150);   // the page's own async state load
-    const showScoreRow = () => [...host.querySelectorAll('[data-page-body] [data-n]')]
-      .find((b) => b.querySelector('.st-label')?.textContent === 'Score');
-    check('the sibling\'s OWN declared field shows up here', !!showScoreRow(), host.querySelector('[data-page-body]')?.innerHTML?.slice(0, 400));
-    showScoreRow()?.click();
-    await sleep(600);   // debounced write
-
-    // Read the SAME record directly, the way comet's own gear icon would -- proving this
-    // wrote through to the one real state, not a copy of it.
-    const direct = createState({ url: profiles.stateURL(profile.id, cometMod.id), user: USER });
-    await direct.load();
-    check('*** the write landed on the SIBLING\'S OWN saved state, not a second copy ***',
-      direct.get()?.ownScore === 'always', JSON.stringify(direct.get()));
+    kiosk.menu.open();
+    check('the ⚙ menu opened', kiosk.menu.isOpen());
+    // The same subject and the same tab on both, then every row of every tab.
+    for (const subj of [photos.id, 'level:screen', 'level:module']) {
+      kiosk.menu.setSubject(subj); pv.setSubject(subj);
+      kiosk.menu.showTab('module'); pv.showTab('module');
+      const a = rowsOf(kiosk.menu), b = rowsOf(pv);
+      const onlyA = a.filter((x) => !b.includes(x)), onlyB = b.filter((x) => !a.includes(x));
+      check(`*** "Settings for: ${subj}": the panel shows exactly the ⚙ menu’s rows (${a.length}) ***`,
+        a.length > 10 && J(a) === J(b), `only in ⚙: ${J(onlyA.slice(0, 4))} | only in the panel: ${J(onlyB.slice(0, 4))}`);
+      check(`...and the same tabs, in the same order`, J(kiosk.menu.tabs()) === J(pv.tabs()), `${J(kiosk.menu.tabs())} vs ${J(pv.tabs())}`);
+    }
+    const wayOut = kiosk.menu.items().filter((it) => WAYS_OUT.includes(it.id)).map((it) => it.id);
+    check('the ⚙ menu’s only extra rows are its ways out', wayOut.includes('close') && wayOut.every((id) => WAYS_OUT.includes(id)), J(wayOut));
+    check('*** none of the old panel’s own list is left (no "mod-" rows, no "This screen" note page) ***',
+      !pv.items().some((it) => /^mod-|^sc-(theme|device)$/.test(it.id)), J(pv.items().map((it) => it.id).filter((id) => /^mod-|^sc-/.test(id))));
   }
 
-  section('*** THEME scope — the same per-profile theme every screen reads ***');
+  section('*** both open: a change in one shows in the other ***');
   {
-    host.innerHTML = '';
-    inst.destroy();
-    const st2 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
-    const inst2 = mountModule('settings', {
-      mount: host, bus: createBus(), state: st2,
-      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
-      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
-      makeState, makeEvents,
-    });
-    await inst2.init();
+    const hintIn = (m, id) => m.items().find((it) => it.id === id)?.hint || '';
+    kiosk.menu.showTab('display'); pv.showTab('display');
+    const was = hintIn(pv, 'set:burnIn');
+    pv.focusRow('set:burnIn'); pv.select();
+    await sleep(30);
+    const now = hintIn(pv, 'set:burnIn');
+    check('(setup) a press in the panel stepped Screen burn-in protection', now && now !== was, `${was} -> ${now}`);
+    check('*** ...and the open ⚙ menu shows it at once ***', hintIn(kiosk.menu, 'set:burnIn') === now, hintIn(kiosk.menu, 'set:burnIn'));
+    check('...on screen, not only in its model',
+      [...root.querySelectorAll(':scope .kiosk > [data-settings] .st-item')].some((b) => b.dataset.id === 'set:burnIn' && b.textContent.includes(now)));
+    kiosk.menu.focusRow('set:burnIn'); kiosk.menu.select();
+    await sleep(30);
+    const after = hintIn(kiosk.menu, 'set:burnIn');
+    check('*** a press in the ⚙ menu shows in the panel at once ***', after !== now && hintIn(pv, 'set:burnIn') === after, `${after} / ${hintIn(pv, 'set:burnIn')}`);
+    check('...on screen in the panel too',
+      [...panelEl().querySelectorAll('.st-item')].some((b) => b.dataset.id === 'set:burnIn' && b.textContent.includes(after)));
+    // A panel's own setting, written from the panel: the same record the panel itself reads.
+    pv.setSubject(photos.id); pv.showTab('module');
+    const fitWas = hintIn(pv, 'set:intervalMs');
+    pv.focusRow('set:intervalMs'); pv.select();
+    await sleep(800);
+    const row = createState({ url: profiles.stateURL(p.id, photos.id), user: USER }); await row.load();
+    check('*** a Photos setting stepped in the panel lands on THAT panel’s own saved row ***',
+      typeof row.get()?.intervalMs === 'number' && hintIn(pv, 'set:intervalMs') !== fitWas, `${fitWas} -> ${hintIn(pv, 'set:intervalMs')} / ${J(row.get())}`);
+    kiosk.menu.close();
+  }
+
+  section('*** a switch walks the panel with the menu’s own scan ***');
+  {
+    // Select the Settings panel the way the bar does (its dot), so the verbs are routed to it.
+    root.querySelector(`[data-mods] .k-dot[data-id="${setMod.id}"]`)?.click();
+    await sleep(40);
+    pv.closePage();
+    pv.focusRow('tabs');
+    const tab0 = pv.tab();
+    const f0 = pv.focusId();
+    bus.publish(verbTopic('next'));
+    await sleep(20);
+    check('*** next: the panel’s cursor moves, as the menu’s does ***', pv.focusId() && pv.focusId() !== f0, `${f0} -> ${pv.focusId()}`);
+    bus.publish(verbTopic('prev'));
+    await sleep(20);
+    check('prev: back to where it was', pv.focusId() === f0, String(pv.focusId()));
+    bus.publish(verbTopic('select'));
+    await sleep(20);
+    check('*** select on the tab row: the next tab (the menu’s one-stop tab row) ***', pv.tab() !== tab0 && pv.focusId() === 'tabs', `${tab0} -> ${pv.tab()}`);
+    bus.publish(verbTopic('back'));
+    await sleep(20);
+    check('back on the list: the panel stays (it is not a menu that closes)', pv.isOpen() && !!panelEl().querySelector('.st-item'));
+    check('...and the ⚙ menu was never opened by any of it', !kiosk.menu.isOpen());
+    kiosk.menu.open();
+    const m0 = kiosk.menu.focusId(), p0 = pv.focusId();
+    bus.publish(verbTopic('next'));
+    await sleep(20);
+    check('*** with the ⚙ menu open, a press is the menu’s (it is in front), never the panel’s too ***',
+      kiosk.menu.focusId() !== m0 && pv.focusId() === p0, `${m0}->${kiosk.menu.focusId()} / ${p0}->${pv.focusId()}`);
+    kiosk.menu.close();
+  }
+
+  section('*** asked to show a page (Nimrod): the panel shows the menu’s page ***');
+  {
+    const answers = [];
+    bus.subscribe(SETTINGS_SHOWN_TOPIC, (p2) => answers.push(p2));
+    outside.focus();
+    const ask = async (page) => { bus.publish(SETTINGS_OPEN_TOPIC, { page }); await sleep(30); return answers.at(-1) || null; };
+    let a = await ask('sc-theme');
+    check('*** "sc-theme": the Colours list, answered shown ***', pv.page() === '__choice' && a?.shown === true, `${pv.page()} ${J(a)}`);
+    panelEl().querySelector('[data-chp-pick="dusk"]')?.click();
     await sleep(400);
-    const rows = () => [...host.querySelectorAll('[data-n]')];
-    const themeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Theme');
-    check('a Theme row exists', !!themeRow);
-    themeRow?.click();
-    await sleep(80);
-    // 2026-10-02: the theme page is the choice picker now (every theme at once, with its colours), not a
-    // <select>. Mike: "themes where there are a lot of options shouldn't be set up to have to click
-    // through them all as default."
-    const tiles = () => [...host.querySelectorAll('[data-theme-picker] [data-chp-pick]')];
-    check('*** a real picker with every theme as a tile (listThemes), not a dropdown ***',
-      tiles().length === listThemes().length && tiles().length >= 5 && !host.querySelector('select'), tiles().length);
-    check('*** each theme tile previews the theme’s own colours ***',
-      tiles().every((t) => t.querySelectorAll('.chp-chip').length >= 3), tiles()[0]?.innerHTML);
-    check('a "Back" stop is first, so a stray switch press changes nothing',
-      host.querySelector('[data-theme-picker] [data-chp-act="cancel"]')?.textContent.trim() === 'Back');
-    await sleep(200);   // the current theme arrives async
-    tiles().find((t) => t.dataset.chpPick === 'dusk')?.click();
-    await sleep(300);
-    check('the chosen tile is marked as the one in force', tiles().find((t) => t.dataset.chpPick === 'dusk')?.getAttribute('aria-pressed') === 'true');
-
-    // Read it back the way `resolveTheme` (used on every kiosk and pre-sign-in page) does --
-    // proving this wrote the SAME record, not a module-local one.
-    const theme = await resolveTheme(profiles, USER);
-    check('*** the choice landed on the real per-profile theme record ***', theme === 'dusk', String(theme));
-    inst2.destroy();
+    check('*** a tile chosen in the panel is the screen’s theme (the Colours row’s own write) ***', kiosk.shownTheme() === 'dusk', String(kiosk.shownTheme()));
+    a = await ask('sc-mode');
+    check('*** "sc-mode": the Lesson topics page, a ⚙ menu page now ***', pv.page() === 'sc-mode' && a?.shown === true
+      && /Lesson topics/.test(panelEl().querySelector('[data-page] .st-head')?.textContent || ''), `${pv.page()} ${J(a)}`);
+    panelEl().querySelector('[data-page] [data-chp-pick="quest"]')?.click();
+    await sleep(800);
+    const doc = createState({ url: profiles.stateURL(p.id, PROFILE_SETTINGS_KEY), user: USER }); await doc.load();
+    check('*** quest chosen there lands on the profile’s settings document the games read ***', doc.get()?.[MODE_KEY] === 'quest', J(doc.get()));
+    check('...beside the theme just chosen, not over it', doc.get()?.theme === 'dusk', J(doc.get()));
+    a = await ask(GAME_SETTINGS_PAGE);
+    check('*** the Nimrod Game page (unlocks.js draws it) ***', pv.page() === GAME_SETTINGS_PAGE && a?.shown === true
+      && /Nimrod Game/.test(panelEl().querySelector('[data-page] .st-head')?.textContent || ''), `${pv.page()} ${J(a)}`);
+    a = await ask(USER_FOLDERS_PAGE);
+    check('Your own folders', pv.page() === USER_FOLDERS_PAGE && a?.shown === true, `${pv.page()} ${J(a)}`);
+    a = await ask('type:photos');
+    check('*** "type:photos": Settings for the Photos panel, on its tab ***', !pv.page() && pv.subjectId() === photos.id && pv.tab() === 'module' && a?.shown === true,
+      `${pv.page()} ${pv.subjectId()} ${pv.tab()}`);
+    a = await ask('sc-device');
+    check('"sc-device" (the old "not reachable from here" note): the screen’s own Display tab, right here', pv.tab() === 'display' && a?.shown === true, String(pv.tab()));
+    a = await ask('type:no-such-module');
+    check('a panel that is not on this screen: answered "not shown", nothing changes', a?.shown === false && pv.tab() === 'display');
+    check('*** none of it moved the keyboard ***', document.activeElement === outside, document.activeElement?.outerHTML?.slice(0, 80));
   }
 
-  section('*** LEARNING MODE scope — quest vs sandbox, register 252/257.2 ***');
+  section('*** every page the old panel had is a page of the ⚙ menu ***');
   {
-    host.innerHTML = '';
-    const st4 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
-    const inst4 = mountModule('settings', {
-      mount: host, bus: createBus(), state: st4,
-      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
-      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
-      makeState, makeEvents,
-    });
-    await inst4.init();
-    await sleep(400);
-    const rows = () => [...host.querySelectorAll('[data-n]')];
-    // Renamed 2026-10-02: "Learning mode" is the Nimrod Game's mode now; this page is the lesson topics' Quest/Sandbox.
-    const modeRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'Lesson topics');
-    check('a Lesson topics row exists (no second thing called "Learning mode")', !!modeRow
-      && !rows().some((b) => b.querySelector('.st-label')?.textContent === 'Learning mode'));
-    modeRow?.click();
-    await sleep(80);
-    const sel = host.querySelector('[data-mode-select]');
-    check('a real picker offering exactly quest and sandbox', sel && sel.options.length === 2,
-      sel && JSON.stringify([...sel.options].map((o) => o.value)));
-    await sleep(150);   // the page's own async state load
-    check('*** shows sandbox on screen — this profile has never chosen, and that is the default ***',
-      sel.value === 'sandbox', sel.value);
-    sel.value = 'quest';
-    sel.dispatchEvent(new Event('change'));
-    await sleep(300);
-
-    // Read it back the way trivia/wordforge/algebra actually do (createQuestMode / lessons.js's
-    // modeFrom), proving this wrote the SAME per-profile record those games read, not a
-    // module-local copy of it — and the SAME reserved 'settings' document theme just wrote to.
-    const modeState = createState({ url: profiles.stateURL(profile.id, 'settings'), user: USER });
-    await modeState.load();
-    check('*** the choice landed on the real per-profile record the games read ***',
-      modeState.get()?.questMode === 'quest', JSON.stringify(modeState.get()));
-    check('...beside the theme this suite already set, not overwriting it',
-      modeState.get()?.theme === 'dusk', JSON.stringify(modeState.get()));
-    inst4.destroy();
+    kiosk.menu.open();
+    const via = (rowId) => { kiosk.menu.focusRow(rowId); kiosk.menu.select(); const pg = kiosk.menu.page(); kiosk.menu.back(); return pg; };
+    check('*** "Lesson topics" is a row of the ⚙ menu’s This screen tab, and opens its page ***',
+      kiosk.menu.tabOf('lesson-topics') === 'screen' && via('lesson-topics') === 'sc-mode', String(kiosk.menu.tabOf('lesson-topics')));
+    check('*** "Nimrod Game": the same page the panel showed ***', via('game') === GAME_SETTINGS_PAGE);
+    check('"Your own folders"', via(USER_FOLDERS_PAGE) === USER_FOLDERS_PAGE);
+    kiosk.menu.showTab('display');
+    kiosk.menu.focusRow('set:theme'); kiosk.menu.select();
+    check('*** Theme: the ⚙ menu’s Colours row opens the same tile list, each theme in its own colours ***',
+      kiosk.menu.page() === '__choice' && kiosk.menu.pickerProbe()?.tiles === listThemes().length
+        && [...root.querySelectorAll(':scope .kiosk > [data-settings] [data-chp-pick]')].every((t) => t.querySelectorAll('.chp-chip').length >= 3),
+      `${kiosk.menu.page()} ${J(kiosk.menu.pickerProbe())}`);
+    kiosk.menu.back();
+    kiosk.menu.close();
   }
 
-  section('*** DEVICE scope — honest about not reaching a screen\'s own settings yet ***');
+  section('*** the embedded kiosk (Home, the landing) hosts it the same way ***');
   {
-    host.innerHTML = '';
-    const st3 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
-    const inst3 = mountModule('settings', {
-      mount: host, bus: createBus(), state: st3,
-      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
-      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
-      makeState, makeEvents,
-    });
-    await inst3.init();
-    await sleep(400);
-    const rows = () => [...host.querySelectorAll('[data-n]')];
-    const deviceRow = rows().find((b) => b.querySelector('.st-label')?.textContent === 'This screen');
-    check('a "This screen" row exists', !!deviceRow);
-    deviceRow?.click();
-    await sleep(80);
-    check('*** says plainly it is not reachable from here yet, rather than showing fake controls ***',
-      /not reachable from here yet/i.test(host.querySelector('[data-page-body]')?.textContent || ''),
-      host.querySelector('[data-page-body]')?.textContent);
-    inst3.destroy();
+    const root2 = document.getElementById('root2');
+    kiosk2 = await mountKiosk(root2, { user: USER, profileId: p.id, profiles, bus: createBus(), embedded: true,
+      embedLayout: { preset: 'side', slots: [photos.id, setMod.id] }, ...seams() });
+    check('*** an embed’s Settings panel is that embed’s menu ***', await settled(() => !!viewOf(kiosk2), 6000));
+    const ev = viewOf(kiosk2);
+    if (ev) {
+      await settled(() => ev.page() === '__choice', 3000);
+      ev.closePage();
+      kiosk2.menu.open();
+      kiosk2.menu.setSubject(photos.id); ev.setSubject(photos.id);
+      kiosk2.menu.showTab('module'); ev.showTab('module');
+      check('...the same rows as its ⚙ menu', J(rowsOf(kiosk2.menu)) === J(rowsOf(ev)), `${rowsOf(kiosk2.menu).length} vs ${rowsOf(ev).length}`);
+      kiosk2.menu.close();
+    }
+    kiosk2.destroy(); kiosk2 = null;
   }
 
-  section('*** YOUR OWN FOLDERS — the row 2.49 screen is reachable from here ***');
+  section('*** gone with the screen ***');
   {
-    host.innerHTML = '';
-    const st5 = createState({ url: profiles.stateURL(profile.id, settingsMod.id), user: USER });
-    const inst5 = mountModule('settings', {
-      mount: host, bus: createBus(), state: st5,
-      events: createEvents({ url: profiles.eventsURL(profile.id, settingsMod.id), user: USER }),
-      user: USER, profileId: profile.id, personId: null, instanceId: settingsMod.id,
-      makeState, makeEvents,
-    });
-    await inst5.init();
-    await sleep(400);
-    const row = [...host.querySelectorAll('[data-n]')].find((b) => b.querySelector('.st-label')?.textContent === 'Your own folders');
-    check('a "Your own folders" row exists', !!row);
-    row?.click();
-    await sleep(300);   // the page reads this device's remembered folders, async
-    const body = host.querySelector('[data-page-body]')?.textContent || '';
-    check('*** it opens the folders page: the Nimrod folder, then fonts, colour looks and audio plugins ***',
-      host.querySelector('[data-page] .st-head')?.textContent === 'Your own folders'
-        && ['root', 'fonts', 'luts', 'plugins'].every((k) => host.querySelector(`[data-page-body] [data-uf-section="${k}"]`)),
-      body.slice(0, 300));
-    inst5.destroy();
+    kiosk.destroy();
+    check('destroying the screen lets go of the panel’s view', (kiosk.settingsViews?.() || []).length === 0);
+    kiosk = null;
   }
-
+  await profiles.remove(p.id).catch(() => {});
+  outside.remove();
 } catch (err) {
   check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
 }
+try { kiosk?.destroy?.(); kiosk2?.destroy?.(); } catch { /* gone */ }
 document.getElementById('summary').textContent =
   failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
 document.getElementById('summary').className = failed ? 'fail' : 'pass';

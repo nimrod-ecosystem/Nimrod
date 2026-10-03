@@ -420,8 +420,9 @@ const toTab = (m, id) => {
       // on the Devices tab makes the old rows 36. The lap is unchanged.)
       // (2026-10-02 evening: "Space between panels" on the Display tab makes the old rows 37. The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
-        && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders'].includes(i.id));
+        && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics'].includes(i.id));
       // ('user-folders', 2026-10-02: "Your own folders" on the This screen tab, like 'game' -- outside the lap.)
+      // ('lesson-topics', 2026-10-03: moved into the menu from the Settings panel's own list, beside 'game'.)
       check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 37) ***',
         lapStops.length === 14 && oldStops.length === 37 && oldStops.some((i) => i.id === 'set:panelGap') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),

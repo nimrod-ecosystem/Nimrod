@@ -1060,30 +1060,21 @@ const OKPIC = (tag) => 'data:image/svg+xml,' + encodeURIComponent(
       check('door 2, the settings menu: the same row, the same key, a number', r2.intervalMs === 4000, JSON.stringify(r2));
       check('...and the running panel is now on 4 s', armedNow() === '4000', armedNow());
 
-      // Door 3: the Settings module (Home's "edit another module's settings"), which opens its
-      // OWN state handle on the panel's row - the running panel hears it through polling.
-      const shost = document.createElement('div');
-      shost.style.cssText = 'position:absolute;left:-9999px;width:400px;height:500px';
-      document.body.append(shost);
-      const sm = mountModule('settings', { mount: shost, bus: createBus(), user: USER, profileId: scr.id,
-        instanceId: 'settings-door-test', personId: null,
-        state: { get: () => ({}), set() {}, subscribe: () => () => {}, load: async () => ({}), flush: async () => {} },
-        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() } });
-      await sm.init();
-      await sleep(300);
-      shost.querySelector(`[data-id="mod-${a.id}"]`)?.click();
-      await sleep(400);
-      const doorBtn = [...shost.querySelectorAll('.st-item')].find((b) => /Change photo every/.test(b.textContent));
-      check('door 3 reads what door 2 wrote', !!doorBtn && /4 seconds/.test(doorBtn.textContent), doorBtn?.textContent);
-      doorBtn?.click();                    // 4 -> 8
-      await sleep(700);                    // its handle debounces the write
+      // Door 3 WAS the Settings panel, with its own state handle on the panel's row. Since 2026-10-03
+      // (Mike: "There shouldn't be 2 different things") that panel IS door 2 - the screen's own menu
+      // drawn in a panel (kiosk.js `settingsMenuFor`) - so there are two doors now, and
+      // settings_module_test proves a Photos setting stepped in the panel lands on this same row.
+      // What is left to prove here is that the running panel hears a write made by ANOTHER handle on its
+      // row (the menu on another screen, say) without a reload.
+      const other3 = createState({ url: profiles.stateURL(scr.id, a.id), user: USER }); await other3.load();
+      other3.set({ intervalMs: 8000 }); await other3.flush();
       const r3 = await rowNow();
-      check('door 3, the Settings module: the same row, the same key, a number', r3.intervalMs === 8000, JSON.stringify(r3));
+      check('a write from another handle: the same row, the same key, a number', r3.intervalMs === 8000, JSON.stringify(r3));
       let heard = false;
       for (let i = 0; i < 30 && !heard; i++) { await sleep(100); heard = armedNow() === '8000'; }
       check('...and the running panel picks it up without a reload', heard, armedNow());
 
-      sm.destroy(); shost.remove(); inst.destroy(); host.remove();
+      inst.destroy(); host.remove();
       await profiles.remove(scr.id); await profiles.remove(other.id);
     }
   }
