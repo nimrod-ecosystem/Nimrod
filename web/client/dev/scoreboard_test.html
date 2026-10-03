@@ -38,6 +38,8 @@ import { localDay, periodKey, rollCounter, bump, stepTarget, cyclePeriod, descri
          newCounter, BUILTIN_SOURCES, SCOREBOARD_STATE,
          PLACE_REQUEST_TOPIC, PLACED_TOPIC, FLOAT_DEFAULTS } from '../modules/scoreboard.js';
 import * as ARR from '../arrangement.js';
+import { createGuideGameHook, withGameCard, GAME_ON_KEY, LEARNING_ON_KEY, GAME_MODE_KEY } from '../unlocks.js';
+import { PROFILE_SETTINGS_KEY } from '../lessons.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -526,6 +528,54 @@ try {
     check('...and does not offer to follow points it cannot read',
       ![...t.host.querySelectorAll('[data-act="follow"]')].some((b) => b.dataset.source.startsWith('points:')));
     t.inst.destroy(); t.host.remove();
+  }
+
+  // =====================================================================
+  section('*** the Nimrod Game card: one total, or BOTH with learning on (unlocks.js, 2026-10-03) ***');
+  {
+    // A profile: its settings doc, the shared scoreboard row (with the game's card on it), the points ledger.
+    const now0 = new Date().toISOString();
+    const seed = () => [
+      { id: 1, kind: 'points', created_at: now0, data: { amount: 4, type: 'Play', source: 'comet' } },
+      { id: 2, kind: 'points', created_at: now0, data: { amount: 6, type: 'School', source: 'lessons', minutes: 6 } },
+    ];
+    const profile = (settings) => {
+      const rows = { [PROFILE_SETTINGS_KEY]: fakeRow(settings), [SCOREBOARD_STATE]: fakeRow({ counters: withGameCard([]) }) };
+      const streams = { points: fakeStream(seed()) };
+      return { rows, makeState: (k) => rows[k] || (rows[k] = fakeRow()), makeEvents: (k) => streams[k] || (streams[k] = fakeStream()) };
+    };
+    const run = async (settings) => {
+      const bus = createBus();
+      const pf = profile(settings);
+      const t = mount({ bus, row: pf.rows[SCOREBOARD_STATE] });
+      const hook = createGuideGameHook({ makeState: pf.makeState, makeEvents: pf.makeEvents, bus, instanceId: 'ng1' }, { waitMs: 0 });
+      await hook.ready(); await sleep(10);
+      return { t, hook, done: () => { hook.destroy(); t.inst.destroy(); t.host.remove(); } };
+    };
+    {
+      const { t, hook, done } = await run({ [GAME_ON_KEY]: true, [LEARNING_ON_KEY]: true });
+      check('the card is the game’s, by its label', /Nimrod Game/.test(cardText(t.host)), cardText(t.host));
+      check('*** game and learning on: the number is the game points, and the card names BOTH totals ***',
+        value(t.host) === '4' && /Game points: 4/.test(cardText(t.host)) && /School points: 6/.test(cardText(t.host)), cardText(t.host));
+      check('...and it says nothing about being behind (a fact, not a verdict)', !VERDICT.test(cardText(t.host)), cardText(t.host));
+      await hook.act({ kind: 'game-mode', mode: 'learning-off' }); await sleep(5);
+      check('*** learning off: ONE total, every point a game point (4 Play + 6 School = 10) ***',
+        value(t.host) === '10' && !/School points/.test(cardText(t.host)), cardText(t.host));
+      await hook.act({ kind: 'game-mode', mode: 'learning' }); await hook.act({ kind: 'game-mode', mode: 'sandbox' }); await sleep(5);
+      check('*** the game off, learning on: School points alone, still shown ***', value(t.host) === '6' && /School points/.test(cardText(t.host)), cardText(t.host));
+      done();
+    }
+    {
+      const { t, done } = await run({ [GAME_MODE_KEY]: 'learning' });
+      check('*** a profile saved as the old "learning" mode shows both totals ***',
+        value(t.host) === '4' && /School points: 6/.test(cardText(t.host)), cardText(t.host));
+      done();
+    }
+    {
+      const { t, done } = await run({ [GAME_MODE_KEY]: 'game' });
+      check('...the old "game" mode: one total', value(t.host) === '10' && !/School points/.test(cardText(t.host)), cardText(t.host));
+      done();
+    }
   }
 
   // =====================================================================

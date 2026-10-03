@@ -1,7 +1,7 @@
-// unlocks.js — THE NIMROD GAME: game / learning / sandbox mode, what is locked in it, and how a thing is
-// unlocked (points, a free single unlock, or sandbox). Nimrod's node A (nimrod_guide_data.js `mode`) is
-// where somebody meets it; Home's Add and Switch trays (modules.html) are where it gates; the settings
-// page drawn here ("Nimrod Game") is where it is changed.
+// unlocks.js — THE NIMROD GAME: two switches (Game on/off, Learning on/off), what is locked while the game is
+// on, and how a thing is unlocked (points, a free single unlock, or turning the game off). Nimrod's node A
+// (nimrod_guide_data.js `mode`) is where somebody meets it; Home's Add and Switch trays (modules.html) and the
+// library (library.js) are where it gates; the settings page drawn here ("Nimrod Game") is where it is changed.
 //
 // Mike, 2026-10-02: *"Start using the site in game or learning mode (being game mode with separate
 // education points) ... It would add a scoreboard somewhere and you would start getting points for doing
@@ -13,21 +13,32 @@
 // going to have for points. It would also open up the Nimrod Game settings menu in the settings menu
 // window ... If it's closed suggest opening it again or going to the tutorial dashboard."*
 //
+// Mike, 2026-10-03, and it REPLACES the one three-way mode the file had the day before: *"Learning and game
+// shouldn't be mutually exclusive. Learning just adds a second type of points. In game mode all the points
+// would just be the game points."*
+//
 // =====================================================================================================
 // THE DECISIONS, each argued, each a default (Rule 1) and on Mike's list:
 //
-// 1. THE MODE IS A CHOICE ON THE PROFILE'S `settings` DOCUMENT (`gameMode`), DEFAULT SANDBOX.
+// 1. TWO SWITCHES ON THE PROFILE'S `settings` DOCUMENT (`gameOn`, `learningOn`), BOTH OFF BY DEFAULT.
 //    WHERE: the same reserved per-profile document theme and the lesson Quest/Sandbox switch already live
-//    in (lessons.js PROFILE_SETTINGS_KEY argues that seam). The points ledger and the unlock log below are
-//    per-profile streams too, so the mode, the points it pays into and what it has unlocked can never
-//    disagree. COST, stated: a person with several dashboards has a mode per dashboard (the same scope the
-//    points ledger already has); a person-wide mode is the "person level" the settings chain names, later.
-//    DEFAULT SANDBOX: FOR game mode by default — Mike framed it as the tutorial's game. AGAINST, and it
-//    wins: (a) register 257.2, "Sandbox is default for new profiles", is Mike's own ruling for the lesson
-//    gate, and two modes with opposite defaults would be a trap; (b) a default of game mode would lock
-//    things on every screen that already exists the day this ships, including screens set up for somebody
-//    who cannot press "unlock"; (c) Mike: "start using the site in game or learning mode" — something you
-//    start, i.e. opt in. So it is opted into from Nimrod's node A or the Nimrod Game page.
+//    in (lessons.js PROFILE_SETTINGS_KEY argues that seam). The points ledger and the unlock log are
+//    per-profile streams too, so the switches, the points they pay into and what has been unlocked can never
+//    disagree. COST, stated: a person with several dashboards has switches per dashboard (the points
+//    ledger's own scope); a person-wide setting is the "person level" the settings chain names, later.
+//    GAME OFF IS SANDBOX (everything addable, no locks), and it is the default: (a) register 257.2,
+//    "Sandbox is default for new profiles", is Mike's ruling for the lesson gate, and two defaults that
+//    disagree would be a trap; (b) a default of game on would lock things on every screen that exists the
+//    day this ships, including screens set up for somebody who cannot press "unlock"; (c) Mike: "start
+//    using the site in game or learning mode" — something you start, i.e. opt in. LEARNING OFF by default
+//    for the same reason (c), and because the tour pays nothing to somebody who never opted in (7).
+//
+// 1a. MIGRATION (2026-10-03). The day before, the profile stored ONE `gameMode`: 'game' | 'learning' |
+//    'sandbox'. It is READ as the switches, never rewritten: 'game' -> game on, learning off; 'learning' ->
+//    both on (it was "game mode with separate education points"); 'sandbox' -> both off. A switch written
+//    since wins over the old mode, switch by switch. Read-time, like settings_fields.js's `legacy`: nothing
+//    in storage moves until the person changes something, and a profile nobody touches keeps meaning what
+//    it meant. The first change writes BOTH switches, so from then on the old key is simply not consulted.
 //
 // 2. THE UNIT OF UNLOCK IS A MODULE TYPE ("module:<type>"), first. "Things you can build with" are modules,
 //    scenes/rooms and bricks; modules first because: (a) they are the one thing with ONE add path (Home's
@@ -38,9 +49,9 @@
 //    The key carries its kind so scenes ("scene:<id>") can join later as data, not a new mechanism.
 //
 // 3. UNLOCKS GATE ADDING, NEVER REMOVING. Nothing here can take a module off a screen, hide one, or stop
-//    one running: a thing already on somebody's screen stays, whatever the mode. Only `check()` exists,
-//    and only the Add tray and the add-in-place half of a switch ask it. Switching modes writes the mode
-//    and nothing else (the suite holds it to that).
+//    one running: a thing already on somebody's screen stays, whatever the switches say. Only `check()`
+//    exists, and only the Add tray and the add-in-place half of a switch ask it. Changing a switch writes
+//    the two switches and nothing else (the suite holds it to that).
 //
 // 4. THE STARTER SET (never locked): see STARTER_ITEMS, each line with its reason. Communication is in it
 //    because row 2.21 says the lesson gate "never gates communication", and this gate keeps the same rule.
@@ -51,22 +62,52 @@
 //    handful, not everything (about thirty are locked). A price per item is a design pass, and Mike has
 //    said games may get their own currencies; one number is the honest starting point.
 //
-// 6. "THE CREDIT SYSTEM WE WERE GOING TO HAVE FOR POINTS" IS points.js's CURRENCIES. There is no separate
-//    credit store: points.js already has two currencies (School, Play), a spend that records which one
-//    paid, and an append-only log. So buying an unlock is `ledger.spend()` — the same record the reward
-//    store (quests.js) writes. It is a point SINK, which Mike asked for ("We need some kind of point sink").
-//    Game mode spends and earns PLAY; learning mode spends and earns SCHOOL ("separate education points").
-//    Row 2.20: nothing shrinks earned School points without the person choosing it — so a purchase is two
-//    presses (the UI's "press again"), and if nobody presses again nothing happens.
+// 6. WHICH POINTS ARE WHICH — READ FROM THE LEDGER, NEVER REWRITTEN. points.js already has two currencies,
+//    School and Play, derived from each award's type (a lesson pays School, Comet pays Play). The switches
+//    change how that one record is COUNTED, not what was written:
+//      * LEARNING OFF: "all the points would just be the game points". Game points = every currency
+//        together, so the lesson's School points count toward the game too.
+//      * LEARNING ON: "learning just adds a second type of points". Game points = Play; School points are
+//        their own total, shown beside them.
+//    WHY READ-TIME, argued. FOR writing every award as Play while learning is off: the record would say
+//    plainly what each point was. AGAINST, and it wins: (a) every game and the lessons create their own
+//    ledger (a dozen modules), so routing at write time would put the Nimrod Game's switches into each of
+//    them; (b) a School award carries subject MINUTES that the weekly hours engine counts, and retyping it
+//    as Play would drop a child's school time out of the hours; (c) a record that depends on a switch's
+//    position the day it was written could not be re-counted when the person turns learning on later; read
+//    time, turning learning on shows the split of everything already earned. The record keeps what
+//    happened; the view is the person's choice (the same rule pointsValue's header holds for rounding).
+//    The ONE thing this file writes by switch is the tour's own award (7).
 //
-// 7. THE TOUR PAYS ONLY IN GAME OR LEARNING MODE. Sandbox is the default for everybody who never chose; a
-//    tour that wrote points into the ledger of somebody who never opted in would be a record nobody asked
-//    for. Games keep paying as they always have, in every mode — this file does not touch them. Each step
-//    pays ONCE EVER (not once per mode): otherwise switching modes would farm the tour.
+// 7. THE TOUR PAYS ONLY WHEN THE GAME OR LEARNING IS ON. With learning on it pays School (Bonus: points.js's
+//    School type is focused school time with minutes; a tour step is not a minute of a subject), with the
+//    game on and learning off it pays Play. Both off is the default for everybody who never chose; a tour
+//    that wrote points into the ledger of somebody who never opted in would be a record nobody asked for.
+//    Games keep paying as they always have, whatever the switches — this file does not touch them. Each step
+//    pays ONCE EVER (not once per switch position): otherwise flipping a switch would farm the tour.
+//    LEARNING WITH THE GAME OFF STILL PAYS, AND IS SHOWN (the coordinator's question, argued). FOR no points
+//    in a sandbox: sandbox means "no game". AGAINST, and it wins: Learning is its own switch, and School
+//    points are their own reward — a family can want them counted without a single thing being locked.
+//    Somebody who wants no points at all turns both off.
+//
+// 8. UNLOCKS ARE BOUGHT WITH GAME POINTS FIRST, THEN SCHOOL — `schoolUnlocks`, default ON. Argued both ways:
+//      * FOR Play only: "kept apart" — School points are for school, and spending them on a game unlock
+//        blurs the line learning exists to draw; and row 2.20, School points shrink only by a person's choice.
+//      * AGAINST, and it wins as the default: (a) with learning on the tour pays School, so Play-only would
+//        mean the tour — the main early income, ~six unlocks — buys nothing the moment learning is turned
+//        on: turning on the switch that "just adds a second type of points" would take spending away;
+//        (b) points.js already lets School be traded 1:1 for Play (DEFAULT_EXCHANGES), so Play-only is only
+//        a detour through the reward store, not a wall; (c) row 2.20 is kept: a purchase is two presses,
+//        the person's choice, and nothing happens if nobody presses again.
+//    Game points are spent first so School is touched only for what is left. "School points can unlock: No"
+//    is one setting away for the family that wants School kept for school rewards. With learning off the
+//    setting changes nothing: there are no School points to keep apart.
+//    "THE CREDIT SYSTEM WE WERE GOING TO HAVE FOR POINTS" IS points.js's CURRENCIES; buying is
+//    `ledger.spendFrom()`, the reward store's own record. It is a point SINK ("We need some kind of point sink").
 // =====================================================================================================
 
-import { GAME_MODES as GUIDE_GAME_MODES, POINTS_DISCLAIMER } from './nimrod_guide_data.js';
-import { createPointsLedger, pointsEvents, pointsValue, currencyOf, fmtPoints,
+import { POINTS_DISCLAIMER } from './nimrod_guide_data.js';
+import { createPointsLedger, pointsEvents, pointsValue, currencyOf, fmtPoints, planSpend,
          DEFAULT_CURRENCIES, REWARD_TYPE, EXCHANGE_TYPE } from './points.js';
 import { PROFILE_SETTINGS_KEY } from './lessons.js';
 import { CATALOG } from './modules_catalog.js';
@@ -74,33 +115,59 @@ import { createScoreSource } from './score_source.js';
 
 export { POINTS_DISCLAIMER };
 
-// ---------- the mode ----------
-export const GAME_MODE_KEY = 'gameMode';
-export const GAME_MODES = GUIDE_GAME_MODES;           // ['game', 'learning', 'sandbox'] — the guide's list
-export const DEFAULT_GAME_MODE = 'sandbox';           // decision 1
-export function gameModeFrom(values) {
-  const raw = values && values[GAME_MODE_KEY];
-  return GAME_MODES.includes(raw) ? raw : DEFAULT_GAME_MODE;
-}
-/** Has this profile ever chosen? (Presence is what counts, settings_fields.js's convention.) */
-export const modeChosen = (values) => !!values && GAME_MODES.includes(values[GAME_MODE_KEY]);
+// ---------- the two switches (decision 1) ----------
+export const GAME_ON_KEY = 'gameOn';
+export const LEARNING_ON_KEY = 'learningOn';
+export const DEFAULT_FLAGS = Object.freeze({ game: false, learning: false });
 
-// The two pools (decision 6). `type` is the points.js earning type that feeds the currency, so an award
-// lands in the right pool with no change to points.js: Play feeds 'play'; Bonus feeds 'school'. Bonus, not
-// School, for the tour: points.js's School type is focused school time and carries subject minutes; a tour
-// step is not a minute of a subject.
-export const POOLS = Object.freeze({
-  game: Object.freeze({ currency: 'play', type: 'Play' }),
-  learning: Object.freeze({ currency: 'school', type: 'Bonus' }),
+// ---------- the old three-way mode, read as the switches (decision 1a) ----------
+export const GAME_MODE_KEY = 'gameMode';                       // the key the old mode was saved under
+export const GAME_MODES = Object.freeze(['game', 'learning', 'sandbox']);
+export const DEFAULT_GAME_MODE = 'sandbox';
+export const LEGACY_MODE_FLAGS = Object.freeze({
+  game: Object.freeze({ game: true, learning: false }),
+  learning: Object.freeze({ game: true, learning: true }),     // "game mode with separate education points"
+  sandbox: Object.freeze({ game: false, learning: false }),
 });
-export const poolFor = (mode) => POOLS[mode] || null;
-/** "Play points" / "School points": the currency's own name (points.js), so a rename there renames here. */
-export function poolLabel(mode, currencies = DEFAULT_CURRENCIES) {
-  const p = poolFor(mode);
-  if (!p) return 'points';
-  const c = (currencies || []).find((x) => x.id === p.currency);
-  return `${c ? c.name : p.currency} points`;
+
+const isBool = (v) => typeof v === 'boolean';
+/** The switches in force: each switch's own key, else the old mode, else off. Pure; reading never writes. */
+export function gameFlagsFrom(values) {
+  const v = values && typeof values === 'object' ? values : {};
+  const old = LEGACY_MODE_FLAGS[v[GAME_MODE_KEY]] || DEFAULT_FLAGS;
+  return {
+    game: isBool(v[GAME_ON_KEY]) ? v[GAME_ON_KEY] : old.game,
+    learning: isBool(v[LEARNING_ON_KEY]) ? v[LEARNING_ON_KEY] : old.learning,
+  };
 }
+/** Has this profile ever chosen? Either switch saved, or a real old mode. (Presence counts, settings_fields.js.) */
+export const modeChosen = (values) => !!values && (isBool(values[GAME_ON_KEY]) || isBool(values[LEARNING_ON_KEY])
+  || GAME_MODES.includes(values[GAME_MODE_KEY]));
+/** The old name for a combination, for callers that still ask for a mode (library.js, modules.html). Learning on
+ *  with the game off has no old name: as a gate it is sandbox, which is what those callers ask about. */
+export const modeOfFlags = (f) => (f && f.game ? (f.learning ? 'learning' : 'game') : 'sandbox');
+export const gameModeFrom = (values) => modeOfFlags(gameFlagsFrom(values));
+
+// What the old three-way `setMode` writes (the library's select, the "switch to sandbox" escape in a lock).
+// 'sandbox' turns the GAME off and leaves learning alone, argued: the escape is "unlock everything", and
+// unlocking has nothing to do with whether School points are counted. 'game' turns learning off, so a
+// three-way select that shows "Game" reads back as "Game".
+export const SET_MODE_PATCHES = Object.freeze({
+  game: Object.freeze({ game: true, learning: false }),
+  learning: Object.freeze({ game: true, learning: true }),
+  sandbox: Object.freeze({ game: false }),
+});
+// What a guide `game-mode` act sets: ONE switch each. The guide's list (nimrod_guide_data.js GAME_MODES) must
+// be keys of this; the suite checks it.
+export const GAME_ACTS = Object.freeze({
+  game: Object.freeze({ game: true }),
+  sandbox: Object.freeze({ game: false }),
+  learning: Object.freeze({ learning: true }),
+  'learning-off': Object.freeze({ learning: false }),
+});
+const asFlags = (flagsOrMode) => (typeof flagsOrMode === 'string'
+  ? (LEGACY_MODE_FLAGS[flagsOrMode] || DEFAULT_FLAGS)
+  : { ...DEFAULT_FLAGS, ...(flagsOrMode || {}) });
 
 // ---------- the settings (Rule 1: each a person's choice) ----------
 export const GAME_SETTINGS_KEY = 'nimrodGame';
@@ -108,6 +175,7 @@ export const GAME_DEFAULTS = Object.freeze({
   tourStepPoints: 1,        // decision 5
   unlockCost: 5,            // decision 5
   freeUnlocks: true,        // Mike: "Individual items should also be available for unlocks, if you don't want to use the points"
+  schoolUnlocks: true,      // decision 8
 });
 export const TOUR_STEP_CHOICES = Object.freeze([0, 1, 2, 5]);
 export const UNLOCK_COST_CHOICES = Object.freeze([1, 2, 5, 10, 20, 50]);
@@ -117,8 +185,81 @@ export function gameSettingsFrom(values) {
   return {
     tourStepPoints: n(raw.tourStepPoints, GAME_DEFAULTS.tourStepPoints),
     unlockCost: Math.max(1, n(raw.unlockCost, GAME_DEFAULTS.unlockCost)),
-    freeUnlocks: typeof raw.freeUnlocks === 'boolean' ? raw.freeUnlocks : GAME_DEFAULTS.freeUnlocks,
+    freeUnlocks: isBool(raw.freeUnlocks) ? raw.freeUnlocks : GAME_DEFAULTS.freeUnlocks,
+    schoolUnlocks: isBool(raw.schoolUnlocks) ? raw.schoolUnlocks : GAME_DEFAULTS.schoolUnlocks,
   };
+}
+
+// ---------- which points are which (decisions 6-8) ----------
+// "Game points" is Mike's phrase ("all the points would just be the game points"), and a name of its own on
+// purpose: with learning off it is Play AND School together, so calling it "Play points" would put one number
+// here and a smaller one in the reward store under the same name.
+export const GAME_POINTS_LABEL = 'Game points';
+const currencyName = (id, currencies = DEFAULT_CURRENCIES) => {
+  const c = (currencies || []).find((x) => x.id === id);
+  return `${c ? c.name : id} points`;
+};
+const allCurrencies = (currencies = DEFAULT_CURRENCIES) => (currencies || []).map((c) => c.id);
+// The game's own currency and School's, by id (points.js DEFAULT_CURRENCIES).
+const PLAY = 'play';
+const SCHOOL = 'school';
+
+/** What the tour pays, by the switches (decision 7): `{ type, currency }` or null. */
+export function tourPayFor(flags) {
+  const f = asFlags(flags);
+  if (f.learning) return { type: 'Bonus', currency: SCHOOL };
+  if (f.game) return { type: 'Play', currency: PLAY };
+  return null;
+}
+/** What an unlock is paid with (decision 8): `{ currencies, label }` in spending order, or null (game off). */
+export function unlockPool(flags, prefs = GAME_DEFAULTS) {
+  const f = asFlags(flags);
+  if (!f.game) return null;
+  if (!f.learning) return { currencies: [PLAY, SCHOOL], label: GAME_POINTS_LABEL };
+  const p = { ...GAME_DEFAULTS, ...(prefs || {}) };
+  return p.schoolUnlocks === false ? { currencies: [PLAY], label: GAME_POINTS_LABEL }
+    : { currencies: [PLAY, SCHOOL], label: 'points' };
+}
+/** "Game points" / "points": what an unlock's price is in. Takes the switches, or an old mode name. */
+export function poolLabel(flagsOrMode, prefs = GAME_DEFAULTS) {
+  const pool = unlockPool(asFlags(flagsOrMode), prefs);
+  return pool ? pool.label : 'points';
+}
+
+/** Points EARNED into one currency, or several (spends and exchanges left out): the scoreboard's rule —
+ *  "spending a reward is not something to see a number drop for" (modules/scoreboard.js). */
+export function earnedIn(events, currency, currencies = DEFAULT_CURRENCIES) {
+  const want = new Set(Array.isArray(currency) ? currency : [currency]);
+  return pointsEvents(events).filter((e) => {
+    const t = e.data && e.data.type;
+    return t !== REWARD_TYPE && t !== EXCHANGE_TYPE && want.has(currencyOf(e, currencies));
+  }).reduce((n, e) => n + pointsValue(e), 0);
+}
+const spendable = (balances, list) => (list || []).reduce((s, c) => s + Math.max(0, Number(balances && balances[c]) || 0), 0);
+
+/**
+ * THE CARD'S NUMBERS (pure). `{ label, value, detail, parts: [{ label, value }], balance }`, or null when both
+ * switches are off. `value` is the headline the scoreboard shows big; `detail` is its one line under it, and
+ * with learning on it names BOTH totals.
+ *   game on,  learning off: Game points = everything earned
+ *   game on,  learning on:  Game points = Play earned (headline), School points beside it
+ *   game off, learning on:  School points alone
+ */
+export function scoreFor(flags, events = [], { prefs = GAME_DEFAULTS, balances = null, currencies = DEFAULT_CURRENCIES } = {}) {
+  const f = asFlags(flags);
+  if (!f.game && !f.learning) return null;
+  const school = { label: currencyName(SCHOOL, currencies), value: earnedIn(events, SCHOOL, currencies) };
+  if (!f.game) return { label: school.label, value: school.value, detail: school.label, parts: [school], balance: 0 };
+  const pool = unlockPool(f, prefs);
+  const bal = spendable(balances || {}, pool.currencies);
+  if (!f.learning) {
+    const game = { label: GAME_POINTS_LABEL, value: earnedIn(events, allCurrencies(currencies), currencies) };
+    return { label: game.label, value: game.value, detail: `${GAME_POINTS_LABEL}. ${fmtPoints(bal)} to spend`, parts: [game], balance: bal };
+  }
+  const game = { label: GAME_POINTS_LABEL, value: earnedIn(events, PLAY, currencies) };
+  return { label: game.label, value: game.value,
+    detail: `${game.label}: ${fmtPoints(game.value)}. ${school.label}: ${fmtPoints(school.value)}. ${fmtPoints(bal)} to spend`,
+    parts: [game, school], balance: bal };
 }
 
 // ---------- items ----------
@@ -129,7 +270,7 @@ export const itemId = (item) => String(item || '').split(':').slice(1).join(':')
 /** The Add tray's key ('photos', 'piece:picture') as an item. */
 export const itemForAddKey = (key) => (String(key || '').startsWith('piece:') ? String(key) : moduleItem(key));
 
-// Decision 4. Never locked, whatever the mode — with the reason for each.
+// Decision 4. Never locked, whatever the switches — with the reason for each.
 export const STARTER_ITEMS = Object.freeze({
   // The landing Home's four (dashboards.js `start`): locking what the site lands on would lock somebody
   // out of rebuilding their own first screen.
@@ -167,7 +308,7 @@ export const UNLOCKS_STREAM = 'unlocks';
 export const UNLOCK_KIND = 'unlocked';
 export const UNLOCK_SOURCE = 'unlocks';          // `source` on a purchase in the points ledger
 export const UNLOCK_TOPIC = 'game/unlocked';     // bus nudge (the record is the stream)
-export const MODE_TOPIC = 'game/mode';           // bus nudge when the mode changes
+export const MODE_TOPIC = 'game/mode';           // bus nudge when a switch changes
 export function unlockedFrom(events) {
   const out = new Set();
   for (const e of events || []) if (e && e.kind === UNLOCK_KIND && e.data && e.data.item) out.add(String(e.data.item));
@@ -177,51 +318,44 @@ export function unlockedFrom(events) {
 // ---------- the tour ----------
 export const TOUR_SOURCE = 'nimrod-tour';
 export const stepTag = (nodeId) => `step:${nodeId}`;
-/** Has this tour step ever paid (in any mode)? Read from the ledger — the record is the only truth. */
+/** Has this tour step ever paid (whatever the switches)? Read from the ledger — the record is the only truth. */
 export function tourStepPaid(events, nodeId) {
   const tag = stepTag(nodeId);
   return pointsEvents(events).some((e) => e.data && e.data.source === TOUR_SOURCE
     && Array.isArray(e.data.tags) && e.data.tags.includes(tag));
 }
 
-/** Points EARNED into one currency (spends and exchanges left out): the scoreboard's rule — "spending a
- *  reward is not something to see a number drop for" (modules/scoreboard.js). */
-export function earnedIn(events, currency, currencies = DEFAULT_CURRENCIES) {
-  return pointsEvents(events).filter((e) => {
-    const t = e.data && e.data.type;
-    return t !== REWARD_TYPE && t !== EXCHANGE_TYPE && currencyOf(e, currencies) === currency;
-  }).reduce((n, e) => n + pointsValue(e), 0);
-}
-
 // ---------- THE ONE QUESTION: may this be ADDED now, and if not, why and how? (pure) ----------
-//   { item, locked, reason, cost, currency, have, short, canBuy, canFree }
+//   { item, locked, reason, cost, currency, currencies, label, have, short, canBuy, canFree }
 //   reason: 'sandbox' | 'starter' | 'unlocked' | 'kind' (a kind this game does not gate) | 'locked'
-export function lockState(item, { mode = DEFAULT_GAME_MODE, unlocked = new Set(), prefs = GAME_DEFAULTS,
+//   `flags` are the switches; an old caller may pass `mode` ('game' | 'learning' | 'sandbox') instead.
+export function lockState(item, { flags = null, mode = DEFAULT_GAME_MODE, unlocked = new Set(), prefs = GAME_DEFAULTS,
   balances = {} } = {}) {
   const key = String(item || '');
-  const pool = poolFor(mode);
-  const open = (reason) => ({ item: key, locked: false, reason, cost: 0, currency: pool ? pool.currency : null,
-    have: 0, short: 0, canBuy: false, canFree: false });
+  const p = { ...GAME_DEFAULTS, ...(prefs || {}) };
+  const pool = unlockPool(flags || mode, p);
+  const open = (reason) => ({ item: key, locked: false, reason, cost: 0, currency: pool ? pool.currencies[0] : null,
+    currencies: pool ? [...pool.currencies] : [], label: pool ? pool.label : 'points', have: 0, short: 0, canBuy: false, canFree: false });
   if (!pool) return open('sandbox');
   if (isStarter(key)) return open('starter');
   if (itemKind(key) !== 'module') return open('kind');
   if (unlocked && unlocked.has(key)) return open('unlocked');
-  const p = { ...GAME_DEFAULTS, ...(prefs || {}) };
   const cost = Math.max(1, Number(p.unlockCost) || GAME_DEFAULTS.unlockCost);
-  const have = Number(balances && balances[pool.currency]) || 0;
-  return { item: key, locked: true, reason: 'locked', cost, currency: pool.currency, have,
-    short: Math.max(0, cost - have), canBuy: have >= cost, canFree: p.freeUnlocks !== false };
+  const have = spendable(balances, pool.currencies);
+  return { item: key, locked: true, reason: 'locked', cost, currency: pool.currencies[0], currencies: [...pool.currencies],
+    label: pool.label, have, short: Math.max(0, cost - have), canBuy: have >= cost, canFree: p.freeUnlocks !== false };
 }
 
-/** What a locked thing says: why it is locked, and every way to open it. Site copy: no names, no "her". */
+/** What a locked thing says: why it is locked, and every way to open it. Site copy: no names, no "her".
+ *  The third argument (an old mode name) is only used when the state does not carry its own label. */
 export function lockWords(state, label = 'This', mode = 'game') {
   if (!state || !state.locked) return { why: '', how: '' };
-  const pts = poolLabel(mode);
+  const pts = state.label || poolLabel(mode);
   const ways = [`use ${state.cost} ${pts} (you have ${fmtPoints(state.have)})`];
   if (state.canFree) ways.push('unlock it free');
   ways.push('switch to sandbox, which unlocks everything');
   return {
-    why: `${label} is locked in ${mode === 'learning' ? 'learning' : 'game'} mode. That is only for the game’s sake.`,
+    why: `${label} is locked in game mode. That is only for the game’s sake.`,
     how: `To add it: ${ways.join(', or ')}.`,
   };
 }
@@ -244,22 +378,37 @@ export function createUnlockGate({ makeState, makeEvents, bus = null, pollMs = 4
 
   const values = () => { try { return settings.get() || {}; } catch { return {}; } };
   const logEvents = () => { try { return (log.get() || {}).events || []; } catch { return []; } };
-  const mode = () => gameModeFrom(values());
+  const flags = () => gameFlagsFrom(values());
+  const mode = () => modeOfFlags(flags());
   const prefs = () => gameSettingsFrom(values());
   const unlocked = () => unlockedFrom(logEvents());
   const balances = () => { try { return ledger.balances(); } catch { return {}; } };
-  const snapshot = () => ({ mode: mode(), chosen: modeChosen(values()), prefs: prefs(), unlocked: unlocked(), balances: balances() });
+  const events = () => { try { return ledger.events(); } catch { return []; } };
+  const snapshot = () => ({ flags: flags(), mode: mode(), chosen: modeChosen(values()), prefs: prefs(), unlocked: unlocked(), balances: balances(),
+    score: scoreFor(flags(), events(), { prefs: prefs(), balances: balances() }) });
   const notify = () => { if (torn) return; const s = snapshot(); for (const f of [...subs]) { try { f(s); } catch (err) { console.error('unlocks: subscriber', err); } } };
   for (const h of [settings, log, ledger]) {
     try { const off = h.subscribe?.(notify); if (typeof off === 'function') offs.push(off); } catch { /* no subscribe */ }
   }
   const publish = (topic, payload) => { try { bus?.publish?.(topic, payload); } catch (err) { console.error('unlocks: publish', err); } };
-  const check = (item) => lockState(item, { mode: mode(), unlocked: unlocked(), prefs: prefs(), balances: balances() });
+  const check = (item) => lockState(item, { flags: flags(), unlocked: unlocked(), prefs: prefs(), balances: balances() });
 
   async function writeSettings(patch) {
     settings.set(patch);
     await settings.flush?.();
     notify();
+  }
+
+  /** Change one switch or both. Writes `gameOn` AND `learningOn` and NOTHING ELSE (decisions 1a, 3).
+   *  A patch with no boolean `game` or `learning` in it: null, nothing written. */
+  async function setFlags(patch = {}) {
+    const p = patch || {};
+    if (!isBool(p.game) && !isBool(p.learning)) return null;
+    const cur = flags();
+    const next = { game: isBool(p.game) ? p.game : cur.game, learning: isBool(p.learning) ? p.learning : cur.learning };
+    await writeSettings({ [GAME_ON_KEY]: next.game, [LEARNING_ON_KEY]: next.learning });
+    publish(MODE_TOPIC, { mode: modeOfFlags(next), ...next });
+    return next;
   }
 
   return {
@@ -268,15 +417,15 @@ export function createUnlockGate({ makeState, makeEvents, bus = null, pollMs = 4
       notify();
       return snapshot();
     },
-    mode, prefs, unlocked, balances, check, snapshot,
+    flags, mode, prefs, unlocked, balances, check, snapshot, setFlags,
     chosen: () => modeChosen(values()),
     ledger: () => ledger,
-    events: () => ledger.events(),
-    /** Set the mode. Writes `gameMode` and NOTHING ELSE (decision 3). Unknown mode: null, nothing written. */
+    events,
+    /** The old three-way choice (SET_MODE_PATCHES). Unknown mode: null, nothing written. */
     async setMode(m) {
-      if (!GAME_MODES.includes(m)) return null;
-      await writeSettings({ [GAME_MODE_KEY]: m });
-      publish(MODE_TOPIC, { mode: m });
+      const patch = SET_MODE_PATCHES[m];
+      if (!patch) return null;
+      await setFlags(patch);
       return m;
     },
     async setPrefs(patch = {}) {
@@ -297,42 +446,41 @@ export function createUnlockGate({ makeState, makeEvents, bus = null, pollMs = 4
       return { ok: true, reason: null };
     },
     /** Buy with points: { ok, reason } — 'short' when the pool cannot pay. THE UNLOCK IS WRITTEN FIRST,
-     *  then the spend: if the spend's append fails, the person has the thing for free, never the points
+     *  then the spend: if a spend's append fails, the person has the thing for less, never the points
      *  gone with nothing to show (the same direction points.js's one-event Exchange argues). */
     async buy(item, { label = '' } = {}) {
       const c = check(item);
       if (!c.locked) return { ok: true, reason: 'already' };
       if (!c.canBuy) return { ok: false, reason: 'short', short: c.short };
-      const data = { item: c.item, how: 'points', cost: c.cost, currency: c.currency };
+      const data = { item: c.item, how: 'points', cost: c.cost, currency: c.currency, currencies: c.currencies };
       await log.append(UNLOCK_KIND, data);
       publish(UNLOCK_TOPIC, data);
+      let paid = null;
       try {
-        await ledger.spend({ amount: c.cost, currency: c.currency, source: UNLOCK_SOURCE,
+        paid = await ledger.spendFrom({ amount: c.cost, from: c.currencies, source: UNLOCK_SOURCE,
           note: `Unlocked ${label || itemId(c.item)}`, tags: ['unlock', c.item] });
       } catch (err) { console.error('unlocks: the spend did not record (the unlock stands)', err); }
       notify();
-      return { ok: true, reason: null, cost: c.cost, currency: c.currency };
+      return { ok: true, reason: null, cost: c.cost, currency: c.currency,
+        paid: Array.isArray(paid) ? paid.filter(Boolean).map((r) => ({ currency: r.currency, amount: -r.amount })) : [] };
     },
-    /** One tour step: pays `tourStepPoints` once ever, in game or learning mode only (decision 7). */
+    /** One tour step: pays `tourStepPoints` once ever, by the switches (decision 7). Returns the award
+     *  (with `label`, the points it was paid in) or null. */
     async payTourStep(nodeId) {
       if (!nodeId) return null;
-      const pool = poolFor(mode());
+      const pay = tourPayFor(flags());
       const amount = prefs().tourStepPoints;
-      if (!pool || !(amount > 0)) return null;
+      if (!pay || !(amount > 0)) return null;
       if (paidHere.has(nodeId) || tourStepPaid(ledger.events(), nodeId)) return null;
       paidHere.add(nodeId);
       try {
-        return await ledger.award({ amount, type: pool.type, source: TOUR_SOURCE,
+        const r = await ledger.award({ amount, type: pay.type, source: TOUR_SOURCE,
           tags: ['tour', stepTag(nodeId)], note: `Nimrod tour: ${nodeId}` });
+        return r ? { ...r, label: pay.currency === SCHOOL ? currencyName(SCHOOL) : GAME_POINTS_LABEL } : r;
       } catch (err) { paidHere.delete(nodeId); console.error('unlocks: tour step', err); return null; }
     },
-    /** The pool's numbers for the scoreboard: earned (what the card shows) and the balance (to spend). */
-    score() {
-      const m = mode();
-      const pool = poolFor(m);
-      if (!pool) return null;
-      return { label: poolLabel(m), earned: earnedIn(ledger.events(), pool.currency), balance: balances()[pool.currency] || 0 };
-    },
+    /** The card's numbers (scoreFor), or null when both switches are off. */
+    score() { return scoreFor(flags(), events(), { prefs: prefs(), balances: balances() }); },
     subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
     startPolling() { try { settings.startPolling?.(); log.startPolling?.(); ledger.startPolling(); } catch { /* offline */ } },
     destroy() {
@@ -347,10 +495,12 @@ export function createUnlockGate({ makeState, makeEvents, bus = null, pollMs = 4
 // ---------- the scoreboard card ----------
 // "It would add a scoreboard somewhere." The scoreboard is ONE module (row 2.40: "we probably have a bunch
 // of modules drawing their own scoreboards. We shouldn't have that"), so the game does not draw its own: it
-// PUBLISHES its score on the score contract (score_source.js) and, when a mode is turned on, puts a card
+// PUBLISHES its score on the score contract (score_source.js) and, when a switch is turned on, puts a card
 // following that score on the profile's shared scoreboard row — so every Scoreboard panel on the dashboard
 // shows it. The card's shape is modules/scoreboard.js `newCounter` for a followed source (the suite checks
 // the two still agree; importing the module here would register it as a side effect of loading Nimrod).
+// BOTH TOTALS, with learning on: the headline is the game points and the card's line under it names both
+// (scoreFor's `detail`) — the score contract's own `detail` slot, so modules/scoreboard.js needs no change.
 export const GAME_SCORE_SOURCE = 'nimrod-game';
 export const GAME_SCORE_CARD_LABEL = 'Nimrod Game';
 export const SCOREBOARD_ROW = 'scoreboard';      // modules/scoreboard.js SCOREBOARD_STATE
@@ -381,7 +531,7 @@ export async function ensureGameCard(makeState) {
 // ---------- NIMROD'S NODE-A HOOK ----------
 // What modules/nimrod.js calls (four lines there): `arrive(node)` on every FORWARD arrival (pays the tour
 // step; on a node that shows the game page, checks the settings panel answered) and `act(a)` for a
-// `game-mode` act (sets the mode). Returns null when the host gives no makeState/makeEvents (a preview).
+// `game-mode` act (sets one switch, GAME_ACTS). Returns null when the host gives no makeState/makeEvents.
 //
 // THE MENU-OPEN CHECK (Mike: "make sure the settings menu is still open ... If it's closed suggest opening
 // it again or going to the tutorial dashboard"). The settings panel answers SETTINGS_SHOWN_TOPIC when it is
@@ -395,18 +545,26 @@ export const PANEL_ANSWER_MS = 400;
 export const PANEL_CLOSED_NOTE = 'The settings panel is not on this dashboard, so the game’s settings cannot open '
   + 'beside me. Open the settings menu (the gear on the bar, This screen tab, “Nimrod Game”), or go to the '
   + 'tutorial dashboard, where the settings always are. Both are buttons below.';
-export const MODE_NOTES = Object.freeze({
-  game: 'Game mode is on. This tour and the things you do earn Play points, and some things to build with are '
+// What Nimrod says after a switch changes: one sentence per switch, joined (flagsNote).
+export const FLAG_NOTES = Object.freeze({
+  gameOn: 'The game is on: this tour and the things you do earn game points, and some things to build with are '
     + 'locked until you unlock them. A “Nimrod Game” card on the scoreboard keeps the score.',
-  learning: 'Learning mode is on. This tour and your lessons earn School points, kept apart from the game’s Play '
-    + 'points. Things to build with unlock the same way as in game mode.',
-  sandbox: 'Sandbox mode is on: everything you can build with is unlocked. Nothing you unlocked is lost if you '
-    + 'switch back.',
+  gameOff: 'The game is off (sandbox): everything you can build with is unlocked. Nothing you unlocked is lost if '
+    + 'you turn it back on.',
+  learningOn: 'Learning is on: this tour and your lessons earn School points, a second kind kept apart from the '
+    + 'game points, and the scoreboard shows both.',
+  learningOff: 'Learning is off: every point you earn counts as a game point.',
 });
+export const flagsNote = (f) => {
+  const x = asFlags(f);
+  return `${x.game ? FLAG_NOTES.gameOn : FLAG_NOTES.gameOff} ${x.learning ? FLAG_NOTES.learningOn : FLAG_NOTES.learningOff}`;
+};
+// The help line for each `game-mode` act (modules/nimrod.js shows MODE_HELP[a.mode]); a key per GAME_ACTS.
 export const MODE_HELP = Object.freeze({
-  game: 'Turns game mode on: Play points for what you do, and things to build with unlock as you go.',
-  learning: 'Turns learning mode on: School points, kept apart from the game’s, and the same unlocks.',
-  sandbox: 'Turns sandbox mode on: everything unlocked.',
+  game: 'Turns the game on: game points for what you do, and things to build with unlock as you go.',
+  sandbox: 'Turns the game off (sandbox): everything unlocked. Learning stays as it is.',
+  learning: 'Turns learning on: School points for the tour and lessons, shown beside the game points.',
+  'learning-off': 'Turns learning off: every point counts as a game point.',
 });
 
 export function createGuideGameHook(ctx, { onNote = () => {}, waitMs = PANEL_ANSWER_MS } = {}) {
@@ -417,7 +575,7 @@ export function createGuideGameHook(ctx, { onNote = () => {}, waitMs = PANEL_ANS
   let torn = false;
   let answers = 0;
   const offs = [];
-  // `onNote(text, nodeId)`: nodeId is the step a note is about (null for a mode change), so the guide can
+  // `onNote(text, nodeId)`: nodeId is the step a note is about (null for a switch change), so the guide can
   // drop a note that arrives after the person has already moved on.
   const note = (t, nodeId = null) => { if (!torn && t) { try { onNote(t, nodeId); } catch (err) { console.error('unlocks: note', err); } } };
   try {
@@ -428,7 +586,7 @@ export function createGuideGameHook(ctx, { onNote = () => {}, waitMs = PANEL_ANS
   const publishScore = () => {
     const s = gate.score();
     if (!s) return;
-    score.set(s.earned, { label: `${GAME_SCORE_CARD_LABEL}: ${s.label}`, detail: `${fmtPoints(s.balance)} to spend` });
+    score.set(s.value, { label: `${GAME_SCORE_CARD_LABEL}: ${s.label}`, detail: s.detail });
   };
   offs.push(gate.subscribe(publishScore));
   const ready = gate.load().catch(() => null);
@@ -449,23 +607,22 @@ export function createGuideGameHook(ctx, { onNote = () => {}, waitMs = PANEL_ANS
         if (torn) return;
         if (answers === before) { note(PANEL_CLOSED_NOTE, node.id); return; }
       }
-      if (paid) {
-        const s = gate.score();
-        note(`+${fmtPoints(paid.value)} ${s ? s.label : 'points'} for a new step of the tour.`, node.id);
-      }
+      if (paid) note(`+${fmtPoints(paid.value)} ${paid.label || 'points'} for a new step of the tour.`, node.id);
     },
-    /** A `game-mode` act. Returns true when it was one. */
+    /** A `game-mode` act: sets the ONE switch it names (GAME_ACTS). Returns true when it was one. */
     async act(a) {
       if (!a || a.kind !== 'game-mode' || torn) return false;
       await ready;
       if (torn) return true;
       try {
-        const m = await gate.setMode(a.mode);
-        if (!m) return true;
-        if (poolFor(m)) await ensureGameCard(ctx.makeState);
+        const patch = GAME_ACTS[a.mode];
+        if (!patch) return true;
+        const f = await gate.setFlags(patch);
+        if (!f) return true;
+        if (f.game || f.learning) await ensureGameCard(ctx.makeState);
         publishScore();
-        note(MODE_NOTES[m]);
-      } catch (err) { console.error('unlocks: set mode', err); note('That did not save. Press it again to retry.'); }
+        note(flagsNote(f));
+      } catch (err) { console.error('unlocks: set a switch', err); note('That did not save. Press it again to retry.'); }
       return true;
     },
     destroy() {
@@ -478,28 +635,71 @@ export function createGuideGameHook(ctx, { onNote = () => {}, waitMs = PANEL_ANS
 }
 
 // ---------- THE "NIMROD GAME" SETTINGS PAGE ----------
-// One page, drawn here, used in two places by a few lines each (the settings PANEL's `sc-game` page and the
-// settings MENU's "Nimrod Game" row): the mode, the disclaimer, the two numbers and the free-unlock switch,
-// the pool's points, and every locked thing with its two ways to unlock. A purchase is two presses.
+// One page, drawn here, used wherever a host calls `gameSettingsPage` (the settings PANEL's `sc-game` page, the
+// settings MENU's "Nimrod Game" row): the disclaimer, the TWO SWITCHES, the numbers, the free-unlock and
+// School-unlock choices, the points, and every locked thing with its two ways to unlock. A purchase is two
+// presses.
+//
+// THE TWO SWITCHES AS settings_fields.js ROWS (GAME_MODE_FIELDS), for a host that draws rows itself: two
+// `toggle`s, Game then Learning, `essential` (no level may hide whether things are locked). Read their values
+// with `gameFlagValues(values)` (the old mode migrated) — NOT `fieldValue` on the raw row, which knows nothing
+// of the old `gameMode` — and write a press with `gate.setFlags({ game | learning: value })`, which writes both
+// keys and nothing else. The page below draws the same two rows as buttons (`gameFlagRowsHTML`).
+export const GAME_MODE_FIELDS = Object.freeze([
+  Object.freeze({ key: GAME_ON_KEY, label: 'Game', kind: 'toggle', default: false, level: 'essential',
+    onLabel: 'On: points, and things unlock as you go', offLabel: 'Off (sandbox): everything unlocked',
+    note: 'Locking is only for the game’s sake. Nothing already on a screen is ever taken off it.' }),
+  Object.freeze({ key: LEARNING_ON_KEY, label: 'Learning', kind: 'toggle', default: false, level: 'essential',
+    onLabel: 'On: School points too, kept apart from the game points', offLabel: 'Off: every point is a game point',
+    note: 'Works with the game on or off.' }),
+]);
+const FLAG_OF_KEY = Object.freeze({ [GAME_ON_KEY]: 'game', [LEARNING_ON_KEY]: 'learning' });
+/** `{ gameOn, learningOn }` in force, for GAME_MODE_FIELDS (the old mode migrated). */
+export function gameFlagValues(values) {
+  const f = gameFlagsFrom(values);
+  return { [GAME_ON_KEY]: f.game, [LEARNING_ON_KEY]: f.learning };
+}
+
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const SELECT_STYLE = 'width:100%;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);margin:4px 0 10px';
+// The old three-way choice, for a host that still draws one (library.js's filter row). New hosts use the switches.
 export const MODE_OPTIONS = Object.freeze([
-  ['sandbox', 'Sandbox — everything unlocked'],
-  ['game', 'Game — Play points, things unlock as you go'],
-  ['learning', 'Learning — School points, things unlock as you go'],
+  ['sandbox', 'Sandbox — the game off, everything unlocked'],
+  ['game', 'Game — game points, things unlock as you go'],
+  ['learning', 'Game and learning — School points too'],
 ]);
 const titleOfType = (type, catalog = CATALOG) => {
   const c = catalog.find((x) => x.type === type);
   if (c && c.title) return c.title;
   return String(type).replace(/_/g, ' ').replace(/^./, (x) => x.toUpperCase());
 };
+
+/** The two switches as rows: a button each (one press flips it; a switch user reaches it), On/Off in words,
+ *  `aria-pressed` for a screen reader, and the field's note under it. */
+export function gameFlagRowsHTML(flags) {
+  const f = asFlags(flags);
+  return GAME_MODE_FIELDS.map((field) => {
+    const k = FLAG_OF_KEY[field.key];
+    const on = !!f[k];
+    return `<div class="st-item" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 8px">
+      <span class="st-label" style="flex:1 1 100%">${esc(field.label)}</span>
+      <button type="button" class="st-item" data-game-flag="${esc(k)}" aria-pressed="${on ? 'true' : 'false'}">${esc(on ? field.onLabel : field.offLabel)}</button>
+      <span class="st-hint" style="display:block;flex:1 1 100%">${esc(field.note)}</span>
+    </div>`;
+  }).join('');
+}
+
 export function gameSettingsHTML(snap, { armed = null, catalog = CATALOG } = {}) {
-  const s = snap || { mode: DEFAULT_GAME_MODE, prefs: GAME_DEFAULTS, unlocked: new Set(), balances: {} };
-  const pool = poolFor(s.mode);
+  const s = snap || {};
+  const flags = s.flags ? asFlags(s.flags) : asFlags(s.mode || DEFAULT_GAME_MODE);
+  const prefs = { ...GAME_DEFAULTS, ...(s.prefs || {}) };
+  const balances = s.balances || {};
+  const unlocked = s.unlocked || new Set();
+  const pool = unlockPool(flags, prefs);
   const opt = (pairs, cur) => pairs.map(([v, l]) => `<option value="${esc(v)}"${String(v) === String(cur) ? ' selected' : ''}>${esc(l)}</option>`).join('');
-  const locked = lockableItems(catalog).map((it) => lockState(it, s)).filter((st) => st.locked);
-  const pts = poolLabel(s.mode);
-  const rows = !pool ? '<p class="st-hint" style="display:block">Sandbox: nothing is locked.</p>'
+  const locked = lockableItems(catalog).map((it) => lockState(it, { flags, prefs, balances, unlocked })).filter((st) => st.locked);
+  const pts = pool ? pool.label : 'points';
+  const rows = !pool ? '<p class="st-hint" style="display:block">The game is off (sandbox): nothing is locked.</p>'
     : !locked.length ? '<p class="st-hint" style="display:block">Everything is unlocked.</p>'
       : locked.map((st) => {
         const t = titleOfType(itemId(st.item), catalog);
@@ -511,23 +711,27 @@ export function gameSettingsHTML(snap, { armed = null, catalog = CATALOG } = {})
           ${st.canFree ? `<button type="button" class="st-item" data-game-free="${esc(st.item)}">Unlock it free</button>` : ''}
         </div>`;
       }).join('');
-  return `
-    <p class="st-hint" style="display:block;margin:0 0 8px" data-game-disclaimer>${esc(POINTS_DISCLAIMER)}</p>
-    <label class="st-label" for="ng-mode">Mode</label>
-    <select id="ng-mode" data-game-mode style="${SELECT_STYLE}">${opt(MODE_OPTIONS, s.mode)}</select>
-    <p class="st-hint" style="display:block;margin:0 0 10px">Locking is only for the game’s sake. Sandbox unlocks
-      everything; nothing you unlocked is lost by switching, and nothing already on a screen is ever taken off it.</p>
-    ${pool ? `<p class="st-label" data-game-balance>${esc(pts)}: ${esc(fmtPoints(s.balances[pool.currency] || 0))} to spend</p>` : ''}
+  const school = flags.learning
+    ? `<p class="st-label" data-game-school>School points: ${esc(fmtPoints(Math.max(0, Number(balances[SCHOOL]) || 0)))}</p>` : '';
+  const schoolPref = flags.learning && flags.game ? `
+    <label class="st-label" for="ng-school">School points can unlock things too</label>
+    <select id="ng-school" data-game-pref="schoolUnlocks" style="${SELECT_STYLE}">${opt([['true', 'Yes — game points are used first'], ['false', 'No — game points only']], String(prefs.schoolUnlocks))}</select>` : '';
+  return `<p class="st-hint" style="display:block;margin:0 0 8px" data-game-disclaimer>${esc(POINTS_DISCLAIMER)}</p>
+    ${gameFlagRowsHTML(flags)}
+    ${pool ? `<p class="st-label" data-game-balance>${esc(pts === 'points' ? 'Points' : pts)}: ${esc(fmtPoints(spendable(balances, pool.currencies)))} to spend</p>` : ''}
+    ${school}
     <label class="st-label" for="ng-step">Points for each new step of Nimrod’s tour</label>
-    <select id="ng-step" data-game-pref="tourStepPoints" style="${SELECT_STYLE}">${opt(TOUR_STEP_CHOICES.map((n) => [n, n === 0 ? 'None' : String(n)]), s.prefs.tourStepPoints)}</select>
+    <select id="ng-step" data-game-pref="tourStepPoints" style="${SELECT_STYLE}">${opt(TOUR_STEP_CHOICES.map((n) => [n, n === 0 ? 'None' : String(n)]), prefs.tourStepPoints)}</select>
     <label class="st-label" for="ng-cost">What one unlock costs</label>
-    <select id="ng-cost" data-game-pref="unlockCost" style="${SELECT_STYLE}">${opt(UNLOCK_COST_CHOICES.map((n) => [n, `${n} points`]), s.prefs.unlockCost)}</select>
+    <select id="ng-cost" data-game-pref="unlockCost" style="${SELECT_STYLE}">${opt(UNLOCK_COST_CHOICES.map((n) => [n, `${n} points`]), prefs.unlockCost)}</select>
     <label class="st-label" for="ng-free">Unlock single things free</label>
-    <select id="ng-free" data-game-pref="freeUnlocks" style="${SELECT_STYLE}">${opt([['true', 'Yes'], ['false', 'No — points or sandbox only']], String(s.prefs.freeUnlocks))}</select>
+    <select id="ng-free" data-game-pref="freeUnlocks" style="${SELECT_STYLE}">${opt([['true', 'Yes'], ['false', 'No — points or sandbox only']], String(prefs.freeUnlocks))}</select>
+    ${schoolPref}
     <p class="st-label" style="margin-top:6px">Locked things to build with</p>
     <div data-game-locked>${rows}</div>`;
 }
 
+const BOOL_PREFS = new Set(['freeUnlocks', 'schoolUnlocks']);
 /** Draw the page into `el` against a gate (createUnlockGate), and keep it current. Returns { destroy }. */
 export function mountGameSettings(el, gate, { catalog = CATALOG } = {}) {
   let armed = null;
@@ -540,19 +744,19 @@ export function mountGameSettings(el, gate, { catalog = CATALOG } = {}) {
     const t = e.target;
     if (!(t instanceof Element)) return;
     try {
-      if (t.matches('[data-game-mode]')) await gate.setMode(t.value);
-      else if (t.matches('[data-game-pref]')) {
+      if (t.matches('[data-game-pref]')) {
         const k = t.dataset.gamePref;
-        await gate.setPrefs({ [k]: k === 'freeUnlocks' ? t.value === 'true' : Number(t.value) });
+        await gate.setPrefs({ [k]: BOOL_PREFS.has(k) ? t.value === 'true' : Number(t.value) });
       }
     } catch (err) { console.error('unlocks: settings', err); }
     draw();
   };
   const onClick = async (e) => {
-    const b = e.target instanceof Element ? e.target.closest('[data-game-buy],[data-game-free]') : null;
+    const b = e.target instanceof Element ? e.target.closest('[data-game-flag],[data-game-buy],[data-game-free]') : null;
     if (!b || b.disabled) return;
     try {
-      if (b.dataset.gameFree) { armed = null; await gate.unlockFree(b.dataset.gameFree); }
+      if (b.dataset.gameFlag) { armed = null; const k = b.dataset.gameFlag; await gate.setFlags({ [k]: !gate.flags()[k] }); }
+      else if (b.dataset.gameFree) { armed = null; await gate.unlockFree(b.dataset.gameFree); }
       else if (armed !== b.dataset.gameBuy) { armed = b.dataset.gameBuy; }      // first press: arm
       else { const it = armed; armed = null; await gate.buy(it, { label: titleOfType(itemId(it), catalog) }); }
     } catch (err) { console.error('unlocks: unlock', err); }

@@ -28,7 +28,7 @@ import {
   pointsValue, sumPoints, sumEarned, sumSpent, sumBySource, sumMinutes, minutesBySubject,
   sumPointsOn, sumPointsOnBySource, dayKey, fmtPoints, createPointsLedger,
   INFLATION_DEFAULTS, INFLATION_PERIODS, addPeriods, periodsBetween, inflatedPrice, priceHistory,
-  inflationConfig,
+  inflationConfig, planSpend,
 } from '../points.js';
 
 const out = document.getElementById('results');
@@ -278,6 +278,36 @@ function memoryEvents(seed = []) {
     const aw = await led.award({ amount: 5, source: 'x', type: 'Exchange' });
     check('award() will not write an Exchange (it cannot say from/to) — nothing recorded',
       aw === null && led.events().length === n1);
+
+    // =====================================================================================
+    section('*** paying from more than one currency, in order (the Nimrod Game, 2026-10-03) ***');
+    {
+      // Mike: "In game mode all the points would just be the game points." With learning off, an
+      // unlock is paid from every currency, the game's own (Play) first.
+      const p1 = planSpend(5, { play: 2, school: 7 }, ['play', 'school']);
+      check('*** Play first, then School for what is left ***', p1.ok && J(p1.parts) === J([{ currency: 'play', amount: 2 }, { currency: 'school', amount: 3 }]), J(p1));
+      const p2 = planSpend(5, { play: 9, school: 7 }, ['play', 'school']);
+      check('enough in the first currency: one part only', p2.ok && J(p2.parts) === J([{ currency: 'play', amount: 5 }]), J(p2));
+      const p3 = planSpend(10, { play: 2, school: 3 }, ['play', 'school']);
+      check('*** short: refused, no parts, and says by how much ***', !p3.ok && p3.parts.length === 0 && p3.have === 5 && p3.short === 5, J(p3));
+      check('a currency below zero gives nothing (never pays from a debt)', J(planSpend(2, { play: -3, school: 5 }, ['play', 'school']).parts)
+        === J([{ currency: 'school', amount: 2 }]));
+      check('only the currencies named pay', !planSpend(5, { play: 2, school: 7 }, ['play']).ok);
+      check('nothing, or nonsense, to pay: refused', !planSpend(0, { play: 9 }, ['play']).ok && !planSpend('x', { play: 9 }, ['play']).ok);
+      check('a fraction is paid exactly (the record keeps what happened)', J(planSpend(1.5, { play: 0.75, school: 3 }, ['play', 'school']).parts)
+        === J([{ currency: 'play', amount: 0.75 }, { currency: 'school', amount: 0.75 }]));
+
+      const lg = createPointsLedger({ makeEvents: memoryEvents([earn(2, 'Play'), earn(7, 'School')]) });
+      const r = await lg.spendFrom({ amount: 5, from: ['play', 'school'], source: 'unlocks', note: 'Unlocked Trivia', tags: ['unlock'] });
+      const spends = lg.events().filter((e) => e.data.type === REWARD_TYPE);
+      check('*** spendFrom writes one Reward per currency that paid, each naming its currency ***',
+        Array.isArray(r) && r.length === 2 && spends.length === 2 && spends[0].data.currency === 'play' && spends[0].data.amount === -2
+        && spends[1].data.currency === 'school' && spends[1].data.amount === -3 && spends.every((e) => e.data.source === 'unlocks'), J(spends));
+      check('...and the balances are what was left', J(lg.balances()) === J({ school: 4, play: 0 }), J(lg.balances()));
+      const n2 = lg.events().length;
+      check('*** short: null, and NOTHING recorded ***', (await lg.spendFrom({ amount: 50, from: ['play', 'school'] })) === null && lg.events().length === n2);
+      lg.destroy();
+    }
 
     // =====================================================================================
     section('*** inflation (row 2.40): OFF by default; prices rise, points never shrink ***');

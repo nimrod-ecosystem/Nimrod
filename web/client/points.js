@@ -237,6 +237,39 @@ export function checkExchange({ from, to, amount } = {}, events = [],
   return { ok: true, reason: null, rate: row.rate, gets: n * row.rate, have };
 }
 
+// ---------- paying from more than one currency, in order (the Nimrod Game, 2026-10-03) ----------
+//
+// Mike: *"Learning just adds a second type of points. In game mode all the points would just be the game
+// points."* So with learning off, an unlock (unlocks.js) is paid from EVERY currency: the game's own (Play)
+// first, then School for whatever is left. That is a spend that can touch two balances, and this is the one
+// place that decides how. Pure, so a module can show the price against what it would draw before anybody
+// presses anything.
+//
+// RULES, each argued:
+//   * IN THE ORDER GIVEN. The caller decides (unlocks.js: Play first), because which currency a person would
+//     rather keep is about what the purchase is, not about the ledger.
+//   * A BALANCE BELOW ZERO GIVES NOTHING. A debt in one currency must never be "paid" by spending it deeper.
+//   * ALL OR NOTHING. Short of the whole amount, nothing is drawn: half an unlock is not a thing.
+//   * EXACT, NOT ROUNDED. Fractional points are real (pointsValue's header); the parts carry them as they are.
+/** `{ ok, parts: [{ currency, amount }], have, short }` — what paying `amount` from `order` would draw. */
+export function planSpend(amount, balances = {}, order = []) {
+  const n = Number(amount);
+  const list = (Array.isArray(order) ? order : []).filter((c, i, a) => c && a.indexOf(c) === i);
+  const avail = (c) => Math.max(0, Number(balances && balances[c]) || 0);
+  const have = list.reduce((s, c) => s + avail(c), 0);
+  if (!Number.isFinite(n) || n <= 0 || have < n) {
+    return { ok: false, parts: [], have, short: Number.isFinite(n) && n > 0 ? n - have : 0 };
+  }
+  const parts = [];
+  let left = n;
+  for (const c of list) {
+    if (left <= 0) break;
+    const take = Math.min(avail(c), left);
+    if (take > 0) { parts.push({ currency: c, amount: take }); left -= take; }
+  }
+  return { ok: true, parts, have, short: 0 };
+}
+
 // ---------- inflation (row 2.40): PRICES rise over time, POINTS never shrink ----------
 //
 // Mike, 2026-09-30: *"inflation as an option to the overall game."* OFF by default, and when it is
@@ -514,6 +547,7 @@ export function sumPointsOnBySource(events, key, source) {
 //
 //   award({amount, source, mult, tags, note})  append the record + publish the nudge
 //   spend({amount, currency, ...})             a Reward event that names the currency paid
+//   spendFrom({amount, from: [ids], ...})      paid from several currencies in order, or null if short
 //   exchange({from, to, amount})               one Exchange event, or null if refused
 //   subscribe(fn)                              fn({events,total}) on every refresh
 //   total() / totalToday()                     derived from the loaded window (the TOTAL)
@@ -590,9 +624,25 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     return { ...data, value, gets: verdict.gets };
   }
 
+  // Pay `amount` from several currencies in order (`planSpend` above): one Reward event per currency that
+  // pays, each naming it, so every balance stays derivable from the log. Short: null, NOTHING recorded.
+  // Two appends can be half-written (the second fails); the caller writes what was bought FIRST (unlocks.js
+  // does), so a half-written spend leaves the person with the thing and some points, never points gone for
+  // nothing. Throws only what an append throws.
+  async function spendFrom({ amount, from = [], note = '', source = 'quests', tags = [], latencyMs = null } = {}) {
+    const plan = planSpend(amount, balancesByCurrency(all(), currencies), from);
+    if (!plan.ok) return null;
+    const out = [];
+    for (const p of plan.parts) {
+      out.push(await spend({ amount: p.amount, currency: p.currency, note, source, tags, latencyMs }));
+    }
+    return out;
+  }
+
   return {
     award,
     spend,
+    spendFrom,
     exchange,
     currencies: () => currencyList(currencies),
     balances: () => balancesByCurrency(all(), currencies),
