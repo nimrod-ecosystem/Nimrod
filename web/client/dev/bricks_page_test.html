@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bricks_page — every Nimrod brick, with its picture, size and 3D model</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  iframe{border:1px solid #999;margin:4px 0;display:block}
+</style>
+</head>
+<body>
+<h1>bricks_page — every Nimrod brick, with its picture, size and 3D model</h1>
+<p>Mike, 2026-10-02: <i>"Can I see all the bricks somewhere?"</i> <code>/bricks.html</code> shows every part in
+<code>bricks.json</code> with its baked picture, its size in mm and a link to its GLB, plus the furniture built
+from them; <code>?build=desk_v1</code> shows one build's bricks with counts. This loads the REAL page in frames
+(desktop and phone width) and checks what it drew against the published files.</p>
+<p>Needs the server.</p>
+<div id="frames"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { groupParts, buildCounts, cardHtml, cleanBuildId, sizeWords, kb, KIND_GROUPS, CONNECTOR_ID } from '../bricks_page.js';
+import { BRICK_BUILDS } from '../brick_builds.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 8000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+
+/** The real page in a frame of `w` x `h`; resolves with its window once the page's own `ready` settles. */
+async function openPage(src, w = 1200, h = 900) {
+  const f = document.createElement('iframe');
+  f.width = w; f.height = h; f.src = src;
+  document.getElementById('frames').append(f);
+  await new Promise((r) => f.addEventListener('load', r, { once: true }));
+  await until(() => f.contentWindow.__bricks);
+  await f.contentWindow.__bricks.ready;
+  return f;
+}
+
+try {
+  const bricks = await (await fetch('/design-assets/bricks/bricks.json', { cache: 'no-cache' })).json();
+  const N = bricks.objects.length;
+
+  section('the helpers, pure');
+  const g = groupParts(bricks);
+  check('grouped: bricks, brackets, plates, every part once', J(g.map((x) => x.id)) === J(['bricks', 'brackets', 'plates'])
+    && g.reduce((n, x) => n + x.parts.length, 0) === N);
+  check('a kind in no group goes under Other, a malformed part nowhere', J(groupParts({ objects: [{ id: 'z_1', kind: 'gear' }, { id: 'bad id<' }, null] }).map((x) => [x.id, x.parts.length])) === J([['other', 1]]));
+  check('nothing in, nothing out', groupParts(null).length === 0 && groupParts({}).length === 0);
+  const c = buildCounts({ bom: { a: 2, b: 1, [CONNECTOR_ID]: 9, bad: -1 } });
+  check('counts from the bill of materials; the collars apart', c.parts === 3 && c.collars === 9 && c.counts.get('a') === 2 && !c.counts.has('bad'));
+  check('counts from the parts when there is no bom', buildCounts({ parts: [{ part: 'a' }, { part: 'a' }] }).counts.get('a') === 2);
+  check('a build id from a URL: letters, digits, underscores only', cleanBuildId('desk_v1') === 'desk_v1' && cleanBuildId('../x') === null && cleanBuildId('a"b') === null && cleanBuildId(null) === null);
+  check('sizes in words', sizeWords([40, 80, 160]) === '40 × 80 × 160 mm' && sizeWords([1, 2]) === '' && kb(141056) === '138 KB');
+  const evil = cardHtml({ id: 'brick_x', title: '<img src=x onerror=alert(1)>', dims_mm: [40, 40, 40], glb: 'javascript:alert(1)' });
+  check('a card escapes its title and drops a GLB link that is not a site path', !evil.includes('<img src=x') && !evil.includes('javascript:'));
+
+  // ==========================================================================================
+  section('*** the page: every brick, with its picture, size and model ***');
+  const f = await openPage('/bricks.html');
+  const w = f.contentWindow, d = f.contentDocument;
+  const cards = [...d.querySelectorAll('#grid .card[data-brick]')];
+  check(`*** one card per brick in bricks.json (${N}) ***`, cards.length === N, String(cards.length));
+  check('in the groups, in order', J([...d.querySelectorAll('#grid h3.group')].map((h) => h.dataset.group)) === J(KIND_GROUPS.map((k) => k.id)));
+  let sizesOk = true, glbOk = true;
+  for (const o of bricks.objects) {
+    const card = d.getElementById(o.id);
+    if (!card || card.querySelector('[data-size]')?.textContent !== `${o.dims_mm.join(' × ')} mm`) sizesOk = false;
+    const a = card?.querySelector('a[data-glb]');
+    if (!a || a.getAttribute('href') !== o.glb || !a.hasAttribute('download')) glbOk = false;
+  }
+  check('*** each card: its size in mm, from bricks.json ***', sizesOk);
+  check('*** each card: a download link to its GLB ***', glbOk);
+  const heads = await Promise.all(bricks.objects.map((o) => fetch(o.glb, { method: 'HEAD' }).then((r) => r.ok).catch(() => false)));
+  check('every GLB it links to is served', heads.every(Boolean));
+  const loaded = await until(() => [...d.querySelectorAll('#grid .pic img')].length === N && [...d.querySelectorAll('#grid .pic img')].every((i) => i.complete && i.naturalWidth > 0), 15000);
+  check('*** every brick\'s picture loads ***', loaded, `${[...d.querySelectorAll('#grid .pic img')].filter((i) => !(i.complete && i.naturalWidth > 0)).map((i) => i.src).join(' ')}`);
+  check('no card says "no picture"', !d.querySelector('.pic[data-missing]'));
+  const pic = d.querySelector('#grid .pic');
+  check('pictures are named for what they show', !!pic.getAttribute('aria-label') && pic.getAttribute('role') === 'img');
+  const tint = d.querySelector('#grid .pic [data-tint]');
+  check('pictures are tinted with a theme token (var(--accent)), not a literal colour', tint && tint.style.background.includes('var(--accent)'));
+  check('a 200 px card on a 1x screen gets the 512 picture (it is over 160 px)', d.querySelector('#grid .pic img').src.endsWith('_v1.png'));
+  const builds = [...d.querySelectorAll('#builds [data-build-card]')].map((x) => x.dataset.buildCard);
+  check('*** "Built from bricks": the desk and the side table, each linking to its bricks ***', J(builds) === J(Object.values(BRICK_BUILDS).map((b) => b.id))
+    && d.querySelector('[data-build-card="desk_v1"] a[data-open-build]')?.getAttribute('href') === '/bricks.html?build=desk_v1');
+  check('the build header is hidden on the full list', d.getElementById('build').hidden);
+  check('the theme is applied (a token on <html>)', !!getComputedStyle(d.documentElement).getPropertyValue('--bg').trim());
+  check('a theme picker, as on the other pre-sign-in pages', d.getElementById('theme-pick')?.options.length > 1);
+  check('no robots line (it is a public page, like wallpapers.html)', !d.querySelector('meta[name="robots"]'));
+  check('a title of its own', d.title === 'Nimrod bricks');
+
+  section('*** theme tokens only: no literal colour in the page ***');
+  const src = await (await fetch('/bricks.html', { cache: 'no-cache' })).text();
+  const style = (src.match(/<style>([\s\S]*?)<\/style>/) || [, ''])[1];
+  check('no #hex, rgb() or hsl() in the page\'s style', !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(style), (style.match(/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i) || [''])[0]);
+  const js = await (await fetch('/bricks_page.js', { cache: 'no-cache' })).text();
+  check('...nor in bricks_page.js', !/#[0-9a-f]{6}\b|rgba?\(/i.test(js.replace(/`#\$\{[^}]*\}`/g, '')));
+  check('no copy says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(src + js));
+
+  // ==========================================================================================
+  section('*** ?build=desk_v1: only the desk\'s bricks, each with how many ***');
+  const asm = await (await fetch('/design-assets/bricks/scenes/desk_v1.json', { cache: 'no-cache' })).json();
+  const f2 = await openPage('/bricks.html?build=desk_v1');
+  const d2 = f2.contentDocument;
+  const want = Object.entries(asm.bom).filter(([id]) => id !== CONNECTOR_ID);
+  const shown = [...d2.querySelectorAll('#grid .card[data-brick]')].map((x) => [x.dataset.brick, Number(x.querySelector('[data-count]')?.textContent.replace(/[^0-9]/g, ''))]);
+  check('*** exactly the parts in its bill of materials ***', J(shown.map((x) => x[0]).sort()) === J(want.map((x) => x[0]).sort()), J(shown));
+  check('*** each with its count ***', shown.every(([id, n]) => asm.bom[id] === n));
+  check('the counts add up to the desk\'s 32 parts', shown.reduce((s, [, n]) => s + n, 0) === asm.parts.length);
+  check('the heading names it', d2.getElementById('title').textContent === 'Desk: its bricks');
+  check('the words say the collars too', d2.getElementById('lede').textContent.includes(`${asm.bom[CONNECTOR_ID]} connector collars`));
+  check('its picture, its merged GLB and its parts list are offered', !d2.getElementById('build').hidden
+    && d2.querySelector('#build a[data-merged]')?.getAttribute('href') === asm.display.merged_glb
+    && !!d2.querySelector('#build a[data-assembly]') && d2.querySelector('#build a[data-all]')?.getAttribute('href') === '/bricks.html');
+  check('its picture loads', await until(() => { const i = d2.querySelector('#build .pic img'); return i && i.complete && i.naturalWidth > 0; }));
+  check('"Built from bricks" is not repeated here', d2.getElementById('builds-sec').hidden);
+
+  const f3 = await openPage('/bricks.html?build=no_such_thing');
+  const d3 = f3.contentDocument;
+  check('*** an unknown build: says so, and shows every brick ***', !!d3.querySelector('[data-missing-build]') && d3.querySelectorAll('#grid .card[data-brick]').length === N);
+  const f4 = await openPage('/bricks.html?build=%22%3E%3Cimg%20src=x%3E');
+  check('a hostile build id is not a build (and not markup)', !f4.contentDocument.querySelector('#build img[src="x"]') && f4.contentDocument.querySelectorAll('#grid .card[data-brick]').length === N);
+
+  // ==========================================================================================
+  section('*** a phone (375 and 320 wide): two columns, nothing wider than the screen ***');
+  for (const width of [375, 320]) {
+    const fp = await openPage('/bricks.html', width, 700);
+    const dp = fp.contentDocument;
+    check(`${width}: no sideways scroll`, dp.documentElement.scrollWidth <= width, String(dp.documentElement.scrollWidth));
+    const cols = getComputedStyle(dp.getElementById('grid')).gridTemplateColumns.split(' ').length;
+    check(`${width}: ${width >= 340 ? 2 : 1} column(s) of cards`, cols === (width >= 340 ? 2 : 1), String(cols));
+    const btn = dp.querySelector('#grid a[data-glb]');
+    check(`${width}: the download button is a 44 px target`, btn.getBoundingClientRect().height >= 44);
+  }
+  const f5 = await openPage('/bricks.html#brick_80x80x320_v1', 1200, 500);
+  check('#<brick id> scrolls to that brick (the library\'s "See every brick")', await until(() => f5.contentWindow.scrollY > 0));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

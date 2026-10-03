@@ -177,6 +177,8 @@ export function brickItems(doc) {
       needs: o.fits_bed_256 === false ? 'A printer bed bigger than 256 mm.' : 'A 3D printer, if you want one in your hand.',
       note: '', use: null, group: null, cats: ['3d'], settings: null, placeable: false, whyNot: BRICK_WHY_NOT,
       link: typeof o.glb === 'string' ? o.glb : '', lockKey: `brick:${o.id}`,
+      // Its picture (Blender/render_bricks.py, beside the GLBs) and its card on the bricks page.
+      picture: `/design-assets/bricks/renders/${o.id}_sm.png`, page: `/bricks.html#${o.id}`,
     };
   });
 }
@@ -605,10 +607,12 @@ export function mountLibrary(root, {
       acts.push(`<button type="button" class="lib-btn primary" data-lib-act="place" ${busy ? 'disabled' : ''}>${esc(placeWord)}</button>`);
     }
     if (it.link) acts.push(`<a class="lib-btn" href="${esc(it.link)}" target="_blank" rel="noopener" data-lib-act="link">Open the 3D model</a>`);
+    if (it.page) acts.push(`<a class="lib-btn" href="${esc(it.page)}" target="_blank" rel="noopener" data-lib-act="page">See every brick</a>`);
     acts.push('<button type="button" class="lib-btn" data-lib-act="close">Back to the list</button>');
     const why = !it.placeable ? it.whyNot
       : !canPlace() ? 'Open Modules on a dashboard (or Switch module there) to put this somewhere.' : '';
     d.innerHTML = `<h4>${esc(it.title)} <span class="lib-badge">${esc(kindLabel(it.kind))}</span></h4>
+      ${it.picture ? `<img class="lib-pic" data-lib-pic src="${esc(it.picture)}" alt="" width="96" height="96" loading="lazy" style="float:right;margin:0 0 6px 10px">` : ''}
       <p>${esc(it.lead)}</p>${u ? `<p class="lib-small">${esc(u)}</p>` : ''}
       <p>${esc(it.why)}</p><p class="lib-small">What it needs: ${esc(it.needs)}</p>
       ${it.note ? `<p class="lib-small">${esc(it.note)}</p>` : ''}

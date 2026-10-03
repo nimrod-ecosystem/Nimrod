@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>brick_builds — furniture built from Nimrod bricks, drawn in the rooms</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:1rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+  .box{position:relative;width:960px;height:540px;margin:8px 0;overflow:hidden}
+</style>
+</head>
+<body>
+<h1>brick_builds — furniture built from Nimrod bricks, drawn in the rooms</h1>
+<p>Mike, 2026-10-02: <i>"Can we make things like desks from Nimrod bricks and then have a merged version that
+is actually used in the dashboards? Then you can go into it and edit if you want."</i> The site has no mesh
+renderer, so the merged version a room uses is the build's baked FRONT PICTURE, tinted with the piece's own
+colour. This checks: the index of builds agrees with the published assemblies; the 2D room draws a brick-built
+desk and side table by default, drawn on request, and drawn when the picture will not load; edit mode offers
+the piece's Look and "Open its bricks"; the 3D room draws a brick-built piece as one face.</p>
+<p>Needs the server (it fetches the published assemblies and pictures).</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { BRICK_BUILDS, LOOKS, LOOK_DEFAULT, buildFor, buildUrls, lookOf, normalizeLooks, builtFromWords, bricksPageFor,
+  tintedPicture } from '../brick_builds.js';
+import { FURNITURE } from '../room_parts.js';
+import { mountRoomScene, RENDER_DEFAULTS } from '../room_scene.js';
+import { presetRecipe } from '../room_presets.js';
+import { mountModule } from '../module.js';
+import { createBus } from '../bus.js';
+import { selectionFor, renderOptions } from '../edit_mode.js';
+import { LOOK_FIELD, builtTarget, configFrom } from '../modules/room.js';
+import { mountRoom3d, lodPlan, normalizeRoom3d, viewOf } from '../room3d.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = (v) => JSON.stringify(v);
+const until = async (fn, ms = 4000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(25); } return false; };
+const box = () => { const b = document.createElement('div'); b.className = 'box'; document.getElementById('host').append(b); return b; };
+const imgLoaded = (img) => !!img && img.complete && img.naturalWidth > 0;
+function memState(seed = {}) {
+  let data = { ...seed };
+  const subs = new Set();
+  return { load: () => Promise.resolve(data), get: () => data,
+    set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+    subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, flush: () => Promise.resolve(),
+    startPolling() {}, destroy() {} };
+}
+const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
+  subscribe: () => () => {}, startPolling() {}, destroy() {} });
+
+try {
+  // ==========================================================================================
+  section('*** the index of builds agrees with what is PUBLISHED (a copied number with a check on it) ***');
+  for (const [part, b] of Object.entries(BRICK_BUILDS)) {
+    check(`${part}: is a room part`, !!FURNITURE[part]);
+    const r = await fetch(buildUrls(b.id).assembly, { cache: 'no-cache' });
+    check(`${part}: its assembly ${b.id}.json is published`, r.ok, String(r.status));
+    if (!r.ok) continue;
+    const a = await r.json();
+    check(`${part}: the assembly says it plays '${part}'`, a.plays === part, String(a.plays));
+    check(`${part}: schema nimrod-assembly/1`, a.schema === 'nimrod-assembly/1');
+    const bom = Object.entries(a.bom || {}).filter(([id]) => id !== 'CONN_10_collar_v1');
+    const n = (pre) => bom.filter(([id]) => id.startsWith(pre)).reduce((s, [, k]) => s + k, 0);
+    check(`${part}: parts ${b.parts} = the assembly's (${a.parts.length})`, b.parts === a.parts.length && b.parts === n(''));
+    check(`${part}: bricks ${b.bricks} and brackets ${b.brackets} = its bill of materials`, b.bricks === n('brick_') && b.brackets === n('bracket_'),
+      `${n('brick_')} / ${n('bracket_')}`);
+    for (const k of ['merged_glb', 'front', 'three_quarter', 'three_quarter_small']) {
+      const url = a.display?.[k];
+      const h = url ? await fetch(url, { method: 'HEAD', cache: 'no-cache' }) : null;
+      check(`${part}: display.${k} is named and served`, !!h && h.ok, String(url));
+    }
+    check(`${part}: the merged GLB is in its budget`, a.display && a.display.triangles > 0 && a.display.triangles <= a.display.budget,
+      J(a.display && [a.display.triangles, a.display.budget]));
+    check(`${part}: the URL the room draws is the one published`, buildUrls(b.id).front.endsWith(a.display?.front || '?'));
+  }
+
+  section('the rules, as data');
+  check('looks: bricks and drawn; default bricks (argued in brick_builds.js)', J(LOOKS) === J(['bricks', 'drawn']) && LOOK_DEFAULT === 'bricks');
+  check('a part with no build is always drawn', lookOf({ id: 's', part: 'sofa', look: 'bricks' }) === 'drawn' && buildFor('sofa') === null);
+  check('a desk with nothing said is brick-built', lookOf({ id: 'd', part: 'desk' }) === 'bricks');
+  check('the recipe can say drawn', lookOf({ id: 'd', part: 'desk', look: 'drawn' }) === 'drawn');
+  check('the host\'s per-piece choice wins over the recipe', lookOf({ id: 'd', part: 'desk', look: 'drawn' }, { d: 'bricks' }) === 'bricks');
+  check('nonsense is ignored, not obeyed', lookOf({ id: 'd', part: 'desk', look: 'purple' }, { d: 42 }) === 'bricks');
+  check('stored looks are cleaned', J(normalizeLooks({ a: 'drawn', b: 'nope', '': 'bricks' })) === J({ a: 'drawn' }) && J(normalizeLooks([1])) === '{}');
+  check('hasOwn, not the prototype: "constructor" is no build', buildFor('constructor') === null && buildFor('__proto__') === null);
+  check('"Built from …" in words', builtFromWords(BRICK_BUILDS.desk) === 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.');
+  check('the bricks page, filtered to the build', bricksPageFor('desk_v1') === '/bricks.html?build=desk_v1');
+  check('the renderer has no per-piece looks unless told (looks: null)', RENDER_DEFAULTS.looks === null);
+
+  // ==========================================================================================
+  section('*** the 2D room: the study\'s desk is the brick-built desk, tinted with its own colour ***');
+  {
+    const host = box();
+    const room = mountRoomScene(host, presetRecipe('study'), {});
+    const art = host.querySelector('[data-id="desk"] .rm-bricks');
+    check('*** the desk is drawn as its build\'s picture ***', !!art && art.dataset.build === 'desk_v1' && art.dataset.look === 'bricks');
+    const img = art?.querySelector('img');
+    check('the picture is the published front view', !!img && img.src === buildUrls('desk_v1', new URL('../design-assets/bricks/', import.meta.url).href).front, img?.src);
+    check('*** it loads ***', await until(() => imgLoaded(img)), img?.src);
+    const tint = art?.querySelector('[data-tint]');
+    const probeEl = document.createElement('i');
+    probeEl.style.color = FURNITURE.desk.color;
+    document.body.append(probeEl);
+    const probe = getComputedStyle(probeEl).color;
+    probeEl.remove();
+    check('tinted with the desk\'s own colour (Design\'s, from room_parts.js)', !!tint && getComputedStyle(tint).backgroundColor === probe, `${tint && getComputedStyle(tint).backgroundColor} vs ${probe}`);
+    const mask = tint ? (getComputedStyle(tint).maskImage || getComputedStyle(tint).webkitMaskImage || '') : '';
+    check('the tint is cut to the picture\'s own shape (mask)', mask.includes('desk_v1_front.png'), mask);
+    check('the picture multiplies over the tint, in its own group', img && getComputedStyle(img).mixBlendMode === 'multiply' && getComputedStyle(art).isolation === 'isolate');
+    check('the drawn desk\'s parts are NOT drawn as well', !host.querySelector('[data-id="desk"] [data-part="top"]'));
+    check('it stands on its feet (bottom of its box)', img && getComputedStyle(img).objectPosition === '50% 100%', img && getComputedStyle(img).objectPosition);
+    const objs = room.objectEls();
+    const d = objs.find((o) => o.id === 'desk');
+    check('objectEls says what it is built from and how it is drawn', d && d.build?.id === 'desk_v1' && d.look === 'bricks');
+    check('a piece with no build says so', objs.filter((o) => o.id !== 'desk').every((o) => o.build === null && o.look === 'drawn'));
+
+    room.setOptions({ looks: { desk: 'drawn' } });
+    check('*** looks { desk: drawn }: Design\'s drawn desk again ***', !host.querySelector('[data-id="desk"] .rm-bricks')
+      && !!host.querySelector('[data-id="desk"] .rm[data-furniture="desk"] [data-part="top"]'));
+    check('...and objectEls follows', room.objectEls().find((o) => o.id === 'desk')?.look === 'drawn');
+    room.setOptions({ looks: {} });
+    check('looks cleared: brick-built again', !!host.querySelector('[data-id="desk"] .rm-bricks'));
+    room.destroy();
+  }
+  {
+    const host = box();
+    const rec = presetRecipe('study');
+    rec.items = rec.items.map((it) => (it.id === 'desk' ? { ...it, color: '#3355aa', look: 'bricks' } : it));
+    const room = mountRoomScene(host, rec, {});
+    const tint = host.querySelector('[data-id="desk"] [data-tint]');
+    check('a recipe that recolours its desk recolours the brick-built desk', !!tint && getComputedStyle(tint).backgroundColor === 'rgb(51, 85, 170)', tint && getComputedStyle(tint).backgroundColor);
+    room.destroy();
+    const host2 = box();
+    const rec2 = presetRecipe('study');
+    rec2.items = rec2.items.map((it) => (it.id === 'desk' ? { ...it, look: 'drawn' } : it));
+    const room2 = mountRoomScene(host2, rec2, {});
+    check('a recipe that says drawn is drawn', !host2.querySelector('.rm-bricks') && !!host2.querySelector('[data-furniture="desk"] [data-part="top"]'));
+    room2.destroy();
+  }
+  {
+    const host = box();
+    const room = mountRoomScene(host, presetRecipe('living'), {});
+    const art = host.querySelector('[data-item="furniture:sideTable"] .rm-bricks');
+    check('the living room\'s side table is the brick-built side table', !!art && art.dataset.build === 'side_table_v1');
+    check('...and its picture loads', await until(() => imgLoaded(art?.querySelector('img'))));
+    room.destroy();
+  }
+  {
+    // *** NEVER AN EMPTY BOX: a picture that will not load puts Design's drawn piece back. ***
+    const host = box();
+    const room = mountRoomScene(host, presetRecipe('study'), { assetBase: new URL('./no-such-folder/', location.href).href });
+    const ok = await until(() => !host.querySelector('[data-id="desk"] .rm-bricks') && host.querySelector('[data-id="desk"] [data-furniture="desk"] [data-part="top"]'));
+    check('*** a picture that cannot load: the drawn desk takes its place ***', ok);
+    check('...and objectEls says drawn', room.objectEls().find((o) => o.id === 'desk')?.look === 'drawn');
+    room.destroy();
+  }
+  {
+    const doc = document;
+    let failedEl = null;
+    const el = tintedPicture(doc, '/no/such.png', null, { onFail: (e) => { failedEl = e; } });
+    document.getElementById('host').append(el);
+    check('no colour: the grey picture alone, no tint layer', !el.querySelector('[data-tint]') && !!el.querySelector('img'));
+    check('a failed picture says so (onFail, data-failed)', await until(() => failedEl === el && 'failed' in el.dataset));
+    el.remove();
+  }
+
+  // ==========================================================================================
+  section('*** "go into it": edit mode on the brick-built desk ***');
+  {
+    const cell = box();
+    const mount = document.createElement('div');
+    mount.style.cssText = 'position:absolute;inset:0';
+    cell.append(mount);
+    const state = memState({ preset: 'study' });
+    const bus = createBus();
+    const inst = mountModule('room', { mount, bus, rootBus: bus, state, events: noEvents(), user: 'u', personId: null, instanceId: 'r1' });
+    await inst.init();
+    await until(() => mount.querySelector('[data-id="desk"] .rm-bricks'));
+    const targets = inst.editTargets();
+    const t = targets.find((x) => x.id === 'desk');
+    check('the desk is a target with its own fields', !!t && Array.isArray(t.fields));
+    check('*** its first row is Look (Brick-built / Drawn) ***', t?.fields?.[0]?.key === 'look' && J(t.fields[0].options.map((o) => o.label)) === J(['Brick-built', 'Drawn']));
+    check('...and it keeps the rows about it (close-ups)', t?.fields?.some((f) => f.key === 'closeups'));
+    check('*** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***',
+      t?.actions?.[0]?.note === 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' && t.actions[0].label === 'Open its bricks'
+      && t.actions[0].href === '/bricks.html?build=desk_v1');
+    check('a piece with no build has no Look (the plant)', targets.filter((x) => x.id !== 'desk').every((x) => !x.fields && !x.actions));
+    check('Look reads brick-built to begin with', t.values().look === 'bricks');
+    const rec = { id: 'r1', type: 'room', title: 'Room', instance: inst, state, el: mount };
+    const sel = selectionFor(rec, t);
+    check('the selection carries the link', J(sel.actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' }]));
+    const card = document.createElement('div');
+    cell.append(card);
+    const view = renderOptions(card, sel, { onDone: () => {} });
+    const a = card.querySelector('[data-em-act="bricks"] a');
+    check('*** the options card draws it: a real link, new tab ***', !!a && a.getAttribute('href') === '/bricks.html?build=desk_v1' && a.target === '_blank' && a.rel.includes('noopener'));
+    check('...with the words before it', card.querySelector('[data-em-act="bricks"]')?.textContent.includes('Built from 32 Nimrod parts'));
+    check('the Look row is drawn and steppable', !!card.querySelector('[data-em-row="look"] [data-em-step="1"]'));
+    card.querySelector('[data-em-row="look"] [data-em-step="1"]').click();
+    check('*** one step: Drawn, saved per piece in the room\'s row ***', J(state.get().looks) === J({ desk: 'drawn' }) && sel.values().look === 'drawn');
+    check('*** and the room redraws the desk drawn ***', await until(() => !mount.querySelector('[data-id="desk"] .rm-bricks') && mount.querySelector('[data-furniture="desk"] [data-part="top"]')));
+    sel.set('closeups', 'off');
+    check('another row still writes where it always did', state.get().closeups === 'off' && J(state.get().looks) === J({ desk: 'drawn' }));
+    sel.set('look', 'bricks');
+    check('back to brick-built', await until(() => mount.querySelector('[data-id="desk"] .rm-bricks')));
+    check('configFrom cleans what is stored', J(configFrom({ looks: { desk: 'drawn', x: 'bad' } }).looks) === J({ desk: 'drawn' }));
+    check('LOOK_FIELD is a choice whose default is the argued default', LOOK_FIELD.kind === 'choice' && LOOK_FIELD.default === LOOK_DEFAULT);
+    check('builtTarget of a piece with no build is null', builtTarget({ id: 'p', build: null }) === null);
+    const bad = selectionFor(rec, { ...t, actions: [{ id: 'x', label: 'x', href: 'javascript:alert(1)' }, { id: 'y', label: 'y', href: '/ok' }] });
+    check('only site or http(s) links are drawn (no javascript: link)', J(bad.actions.map((x) => x.id)) === J(['y']));
+    view.destroy();
+    inst.destroy();
+  }
+
+  // ==========================================================================================
+  section('the 3D room: a piece naming a part with a build is its picture, one face');
+  {
+    const host = box();
+    const scene = { kind: 'room3d', recipe: { slots: [], furniture: [
+      { id: 'desk', name: 'Desk', part: 'desk', x: 40, z: 40, w: 210, h: 125, d: 100 },
+      { id: 'plain', name: 'Plain', x: 80, z: 40, w: 100, h: 80, d: 80 },
+      { id: 'drawn', name: 'Drawn desk', part: 'desk', look: 'drawn', x: 20, z: 70, w: 150, h: 90, d: 80 },
+    ] } };
+    const r = normalizeRoom3d(scene);
+    check('normalize keeps part (only one with a build) and look', r.furniture[0].part === 'desk' && !('part' in r.furniture[1]) && r.furniture[2].look === 'drawn');
+    check('normalize drops a part with no build', !('part' in normalizeRoom3d({ recipe: { furniture: [{ id: 'q', part: 'sofa' }] } }).furniture[0]));
+    const room = mountRoom3d(host, scene, { lod: 'full' });
+    const d = host.querySelector('[data-object="desk"]');
+    check('*** the desk is its picture on its front face ***', d?.dataset.look === 'bricks' && !!d.querySelector('.r3-bf-front.r3-bf-bricks img'));
+    check('...and nothing else: no top, no sides', d && d.querySelectorAll('.r3-bf').length === 1);
+    check('tinted with the room\'s wood token, not a literal colour', d?.querySelector('[data-tint]')?.style.background.includes('var(--r3-wood)'));
+    check('its picture loads', await until(() => imgLoaded(d?.querySelector('img'))));
+    check('a piece with no part is still a box of four faces', host.querySelectorAll('[data-object="plain"] .r3-bf').length === 4);
+    check('a desk whose look is drawn is a box', host.querySelectorAll('[data-object="drawn"] .r3-bf').length === 4 && !host.querySelector('[data-object="drawn"] img'));
+    const plan = lodPlan(r, viewOf(r, {}), 1, { lod: 'full' });
+    check('the level-of-detail budget counts it as one face', !!plan);
+    room.destroy();
+    const host2 = box();
+    const room2 = mountRoom3d(host2, scene, { lod: 'full' });
+    const imgs = host2.querySelector('[data-object="desk"] img');
+    imgs.dispatchEvent(new Event('error'));
+    check('*** a picture that cannot load: the plain box takes its place ***', await until(() => host2.querySelectorAll('[data-object="desk"] .r3-bf').length === 4 && !host2.querySelector('[data-object="desk"] img')));
+    room2.destroy();
+  }
+
+  section('copy');
+  check('no copy says "her screen", Christine or Cici', !/her screen|Christine|Cici/i.test(J(BRICK_BUILDS) + builtFromWords(BRICK_BUILDS.desk) + J(LOOK_FIELD)));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+</script>
+</body>
+</html>

@@ -66,6 +66,7 @@ import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { renderBackdrop, normalizeBackdrop, quadMatrix } from './room_backdrop.js';
 import { moveKeeping } from './dom_move.js';
+import { buildBrickArt, buildFor, lookOf } from './brick_builds.js';
 
 // *** A FLATTENED 3D ROOM IS AN ORDINARY ROOM (2026-10-02, room_flat.js). *** Three small additions make it so,
 // each data on the recipe and each ignored by a recipe that does not use it:
@@ -805,6 +806,8 @@ export const RENDER_DEFAULTS = Object.freeze({
   shelf: 'recipe', windowShows: 'recipe', windowPress: 'recipe', closeups: 'recipe', books: null,
   closeupReturnMs: 120000, aiVisits: 'news', petSound: true, weather: null,
   motionFps: MOTION_FPS_DEFAULT, travelFps: TRAVEL_FPS_DEFAULT, softFps: SOFT_FPS_DEFAULT, paused: false,
+  // Per piece: { objectId: 'bricks' | 'drawn' } (brick_builds.js argues the default, 'bricks' where a build exists).
+  looks: null,
 });
 const OPTION_KEYS = ['shelf', 'windowShows', 'windowPress', 'closeups'];
 // *** THE SECOND PASS, TURNED ON: what a room a PERSON sees uses (the room module's defaults, argued in
@@ -1007,7 +1010,17 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         rec.viewHost = vh;
         try { rec.scene = mountScene(vh, { scene: viewFor(recipe.view, light), motion: motion(), flashLimit: o.flashLimit }); } catch (err) { console.error('room: window view', err); }
       }
-      rec.art = buildFurniture(doc, it.part, it.color || def.color);
+      // A piece built from Nimrod bricks (brick_builds.js) is drawn as its build's baked picture, tinted with
+      // the piece's own colour -- unless its look is 'drawn', or the picture will not load (then Design's
+      // drawn piece takes its place: never an empty box).
+      const color = it.color || def.color;
+      rec.look = lookOf(it, o.looks);
+      rec.art = rec.look === 'bricks' ? buildBrickArt(doc, it.part, color, { base: `${base}bricks/`, onFail: (art) => {
+        const drawn = buildFurniture(doc, it.part, color);
+        art.replaceWith(drawn);
+        if (rec.art === art) { rec.art = drawn; rec.look = 'drawn'; }
+      } }) : null;
+      if (!rec.art) { rec.art = buildFurniture(doc, it.part, color); rec.look = 'drawn'; }
       el.append(rec.art);
       if (def.view) rec.panes = buildPanes(it, box);
     } else if (it.kind === 'cat') {
@@ -2111,6 +2124,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       id: r.it.id, name: objectName(r.it), kind: r.it.kind, part: r.it.part || null,
       role: r.role ? r.role.role : null, animal: isAnimal(r.it), window: !!FURNITURE[r.it.part]?.view,
       el: r.wrap || r.el, also: r.wrap && r.el ? [r.el] : [],
+      // Built from Nimrod bricks (brick_builds.js): its build ({ id, title, parts, ... }) and the look it is
+      // drawn with now ('bricks' | 'drawn'); null / 'drawn' for a piece with no build.
+      build: buildFor(r.it.part), look: r.look || 'drawn',
     })),
     /**
      * Make object `id` a door to dashboard `target` (null: no longer a door), WITHOUT rebuilding the room.
@@ -2134,7 +2150,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
       return true;
     },
     setOptions(next = {}) {
-      const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase', 'books', ...OPTION_KEYS].some((k) => k in next && JSON.stringify(next[k]) !== JSON.stringify(o[k]));
+      const rebuild = ['showSlots', 'signWords', 'zoom', 'pictureFor', 'assetBase', 'books', 'looks', ...OPTION_KEYS].some((k) => k in next && JSON.stringify(next[k]) !== JSON.stringify(o[k]));
       Object.assign(o, next);
       root.dataset.labels = o.labels === 'pointed' ? 'pointed' : 'always';
       if ('weather' in next) weatherNow = readWeather(next.weather);

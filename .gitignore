@@ -126,3 +126,9 @@ web/tools/walkthrough_out/
 
 # check_blocked_names.py's downloaded filter lists (re-fetched weekly)
 web/tools/.filter_cache/
+
+# *** THE BRICK RENDERS (2026-10-02). *** The same narrow kind of exception as the board's audio and the demo photos,
+# for the same reason. `*.png` above would silently keep these off the site. SAFE UNDER THE RULE AT THE TOP OF THIS
+# FILE: they are Blender renders of the project's own CAD bricks and brick-built furniture (Blender/render_bricks.py in
+# the private repo), with grey bricks on transparency, no people and no photographs. ONE folder, named.
+!web/client/design-assets/bricks/renders/*.png
