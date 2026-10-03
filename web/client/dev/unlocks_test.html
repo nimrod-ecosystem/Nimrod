@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>The Nimrod Game — modes, unlocks, the tour's points — test</title>
+<title>The Nimrod Game — game and learning switches, unlocks, the tour's points — test</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -12,22 +12,24 @@
 </style>
 </head>
 <body>
-<h1>The Nimrod Game — game / learning / sandbox, unlocks, the tour's points</h1>
-<p>Mike, 2026-10-02: game or learning mode, "game mode with separate education points"; points for the tutorial;
-things to build with start locked "just for the game's sake", with sandbox, a single unlock, or points to open
-them; points "have no real world value and we do not sell any form of coins or other microtransactions". No
-server needed: the profile's settings doc, the unlock log and the points ledger are in-memory stand-ins.</p>
+<h1>The Nimrod Game — Game on/off, Learning on/off, unlocks, the tour's points</h1>
+<p>Mike, 2026-10-03: "Learning and game shouldn't be mutually exclusive. Learning just adds a second type of
+points. In game mode all the points would just be the game points." Two switches, each on or off; Game off is
+sandbox. Saved modes from before are read as switches (game; learning = game with education points; sandbox).
+Points "have no real world value and we do not sell any form of coins or other microtransactions". No server
+needed: the profile's settings doc, the unlock log and the points ledger are in-memory stand-ins.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
 <script type="module">
 import {
-  GAME_MODE_KEY, GAME_MODES, DEFAULT_GAME_MODE, gameModeFrom, modeChosen, POOLS, poolFor, poolLabel,
+  GAME_MODE_KEY, GAME_ON_KEY, LEARNING_ON_KEY, LEGACY_MODE_FLAGS, DEFAULT_FLAGS, gameFlagsFrom, gameModeFrom,
+  modeOfFlags, modeChosen, SET_MODE_PATCHES, GAME_ACTS, tourPayFor, unlockPool, scoreFor, GAME_POINTS_LABEL, poolLabel,
   GAME_SETTINGS_KEY, GAME_DEFAULTS, gameSettingsFrom, STARTER_ITEMS, isStarter, lockableItems, moduleItem,
   itemForAddKey, UNLOCKS_STREAM, UNLOCK_KIND, unlockedFrom, TOUR_SOURCE, tourStepPaid, lockState, lockWords,
   createUnlockGate, withGameCard, GAME_SCORE_SOURCE, SCOREBOARD_ROW, createGuideGameHook, SETTINGS_SHOWN_TOPIC,
-  GAME_SETTINGS_PAGE, PANEL_CLOSED_NOTE, MODE_NOTES, MODE_HELP, POINTS_DISCLAIMER, gameSettingsHTML, mountGameSettings,
-  earnedIn,
+  GAME_SETTINGS_PAGE, PANEL_CLOSED_NOTE, FLAG_NOTES, flagsNote, MODE_HELP, POINTS_DISCLAIMER, gameSettingsHTML,
+  mountGameSettings, earnedIn, GAME_MODE_FIELDS, gameFlagValues, MODE_OPTIONS,
 } from '../unlocks.js';
 import { GUIDE_NODES, GAME_MODES as GUIDE_MODES, SETTINGS_PAGES, treeProblems, actMessages, GUIDE_TOPICS } from '../nimrod_guide_data.js';
 import { POINTS_KIND, POINTS_STREAM, REWARD_TYPE, balancesByCurrency } from '../points.js';
@@ -37,6 +39,7 @@ import { ADD_PIECES } from '../home_profile.js';
 import { SCORE_TOPIC } from '../score_source.js';
 import { newCounter, SCOREBOARD_STATE } from '../modules/scoreboard.js';
 import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
+import { normalizeField } from '../settings_fields.js';
 import { createBus } from '../bus.js';
 import { MENU_TAB_IDS } from '../actions.js';
 
@@ -85,38 +88,122 @@ function fakeProfile(seed = {}) {
 }
 const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new Date().toISOString(),
   data: { amount, mult: 1, type, source: 'test', tags: [], ...extra } });
+const F = (game, learning) => ({ game, learning });
+const flagsRow = (game, learning) => ({ [PROFILE_SETTINGS_KEY]: { [GAME_ON_KEY]: game, [LEARNING_ON_KEY]: learning } });
 
 (async () => {
   try {
     // ==========================================================================================
-    section('*** the mode: default sandbox for everybody who never chose; one list with the guide ***');
-    check('the modes are the guide’s list, in one place', GAME_MODES === GUIDE_MODES && J(GAME_MODES) === J(['game', 'learning', 'sandbox']));
-    check('*** never chosen = sandbox ***', gameModeFrom({}) === 'sandbox' && gameModeFrom(null) === 'sandbox' && DEFAULT_GAME_MODE === 'sandbox');
-    check('a stored value that is not a mode reads as never chosen', gameModeFrom({ [GAME_MODE_KEY]: 'arcade' }) === 'sandbox'
-      && !modeChosen({ [GAME_MODE_KEY]: 'arcade' }) && modeChosen({ [GAME_MODE_KEY]: 'sandbox' }));
-    check('game and learning keep SEPARATE pools: Play and School', poolFor('game').currency === 'play'
-      && poolFor('learning').currency === 'school' && poolFor('sandbox') === null);
-    check('the pools are named by the ledger’s own currency names', poolLabel('game') === 'Play points' && poolLabel('learning') === 'School points');
-    check('a tour award lands in the right pool through points.js’s own types (Play feeds play, Bonus feeds school)',
-      J(balancesByCurrency([earn(1, POOLS.game.type), earn(2, POOLS.learning.type)])) === J({ school: 2, play: 1 }));
+    section('*** two switches, Game and Learning; both off for everybody who never chose ***');
+    check('*** never chosen = Game off (sandbox), Learning off ***', J(gameFlagsFrom({})) === J(F(false, false))
+      && J(gameFlagsFrom(null)) === J(F(false, false)) && J(DEFAULT_FLAGS) === J(F(false, false)));
+    check('the switches are read from their own keys', J(gameFlagsFrom({ [GAME_ON_KEY]: true, [LEARNING_ON_KEY]: true })) === J(F(true, true))
+      && J(gameFlagsFrom({ [GAME_ON_KEY]: false, [LEARNING_ON_KEY]: true })) === J(F(false, true)));
+    check('*** they are independent: all four combinations exist ***',
+      [[false, false], [true, false], [true, true], [false, true]].every(([g, l]) => J(gameFlagsFrom({ [GAME_ON_KEY]: g, [LEARNING_ON_KEY]: l })) === J(F(g, l))));
+    check('a stored value that is not a boolean reads as not set', J(gameFlagsFrom({ [GAME_ON_KEY]: 'yes', [LEARNING_ON_KEY]: 1 })) === J(F(false, false)));
 
-    {
-      const pf = fakeProfile({ rows: { [PROFILE_SETTINGS_KEY]: { theme: 'dusk' } } });
+    // ==========================================================================================
+    section('*** MIGRATION: a saved three-way mode is read as the two switches (nothing rewritten) ***');
+    check('*** "game" -> Game on, Learning off ***', J(gameFlagsFrom({ [GAME_MODE_KEY]: 'game' })) === J(F(true, false)));
+    check('*** "learning" -> Game on, Learning on (it was game mode with education points) ***', J(gameFlagsFrom({ [GAME_MODE_KEY]: 'learning' })) === J(F(true, true)));
+    check('*** "sandbox" -> Game off, Learning off ***', J(gameFlagsFrom({ [GAME_MODE_KEY]: 'sandbox' })) === J(F(false, false)));
+    check('the table is exactly those three', J(LEGACY_MODE_FLAGS) === J({ game: F(true, false), learning: F(true, true), sandbox: F(false, false) }));
+    check('a saved value that was never a mode reads as never chosen', J(gameFlagsFrom({ [GAME_MODE_KEY]: 'arcade' })) === J(F(false, false))
+      && !modeChosen({ [GAME_MODE_KEY]: 'arcade' }) && modeChosen({ [GAME_MODE_KEY]: 'sandbox' }) && modeChosen({ [LEARNING_ON_KEY]: false }) && !modeChosen({}));
+    check('*** a switch set since wins over the old mode; the other switch still comes from the old mode ***',
+      J(gameFlagsFrom({ [GAME_MODE_KEY]: 'learning', [GAME_ON_KEY]: false })) === J(F(false, true))
+      && J(gameFlagsFrom({ [GAME_MODE_KEY]: 'game', [LEARNING_ON_KEY]: true })) === J(F(true, true)));
+    check('the old name of each combination, for callers that still ask for a mode', modeOfFlags(F(false, false)) === 'sandbox'
+      && modeOfFlags(F(true, false)) === 'game' && modeOfFlags(F(true, true)) === 'learning' && modeOfFlags(F(false, true)) === 'sandbox');
+    check('gameModeFrom reads through the switches', gameModeFrom({ [GAME_MODE_KEY]: 'learning' }) === 'learning' && gameModeFrom({}) === 'sandbox');
+    for (const [old, want] of Object.entries(LEGACY_MODE_FLAGS)) {
+      const pf = fakeProfile({ rows: { [PROFILE_SETTINGS_KEY]: { [GAME_MODE_KEY]: old, theme: 'dusk' } } });
       const gate = createUnlockGate(pf);
       await gate.load();
-      check('a fresh gate reads sandbox, not chosen', gate.mode() === 'sandbox' && !gate.chosen());
-      pf.writes.length = 0;
-      await gate.setMode('game');
-      check('*** setMode writes the mode AND NOTHING ELSE (switching never touches a screen) ***',
-        pf.writes.length === 1 && pf.writes[0].key === PROFILE_SETTINGS_KEY && J(Object.keys(pf.writes[0].patch)) === J([GAME_MODE_KEY]), J(pf.writes));
-      check('...and the rest of the settings doc (the theme) is left as it was', pf.rows[PROFILE_SETTINGS_KEY].theme === 'dusk' && gate.mode() === 'game' && gate.chosen());
-      check('an unknown mode is refused and nothing is written', (await gate.setMode('arcade')) === null && pf.writes.length === 1);
-      await gate.setMode('learning');
-      check('learning: switching again is just the mode', gate.mode() === 'learning');
+      check(`a profile saved as "${old}" loads as ${J(want)}, and reading wrote nothing`,
+        J(gate.flags()) === J(want) && gate.mode() === old && gate.chosen() && pf.writes.length === 0, J(gate.flags()));
+    }
+    {
+      const pf = fakeProfile({ rows: { [PROFILE_SETTINGS_KEY]: { [GAME_MODE_KEY]: 'learning' } }, streams: { [POINTS_STREAM]: [earn(2, 'Play')] } });
+      const gate = createUnlockGate(pf);
+      await gate.load();
+      const paid = await gate.payTourStep('mode');
+      check('*** a migrated "learning" profile: things stay locked, the tour pays School, both totals are kept ***',
+        gate.check('module:trivia').locked && paid && paid.type === 'Bonus' && gate.score().parts.length === 2, J(gate.score()));
     }
 
     // ==========================================================================================
-    section('*** unlocks gate ADDING only; the starter set; sandbox unlocks all ***');
+    section('*** changing a switch writes the two switches AND NOTHING ELSE ***');
+    {
+      const pf = fakeProfile({ rows: { [PROFILE_SETTINGS_KEY]: { theme: 'dusk', [GAME_MODE_KEY]: 'learning' } } });
+      const gate = createUnlockGate(pf);
+      await gate.load();
+      pf.writes.length = 0;
+      await gate.setFlags({ learning: false });
+      check('*** setFlags writes gameOn and learningOn, nothing else (switching never touches a screen) ***',
+        pf.writes.length === 1 && pf.writes[0].key === PROFILE_SETTINGS_KEY
+        && J(Object.keys(pf.writes[0].patch).sort()) === J([GAME_ON_KEY, LEARNING_ON_KEY].sort()), J(pf.writes));
+      check('...turning learning off left the game on (the old mode supplied it), and the theme is as it was',
+        J(gate.flags()) === J(F(true, false)) && pf.rows[PROFILE_SETTINGS_KEY].theme === 'dusk');
+      check('a patch with nothing usable in it is refused and nothing is written',
+        (await gate.setFlags({ game: 'yes' })) === null && (await gate.setFlags({})) === null && pf.writes.length === 1);
+      await gate.setFlags({ game: false });
+      await gate.setFlags({ learning: true });
+      check('*** learning on with the game off is its own state ***', J(gate.flags()) === J(F(false, true)) && gate.mode() === 'sandbox');
+      // The old three-way setMode (the library's select, the "switch to sandbox" escape) still works.
+      await gate.setMode('game');
+      check('setMode("game") = Game on, Learning off', J(gate.flags()) === J(F(true, false)));
+      await gate.setMode('learning');
+      check('setMode("learning") = both on', J(gate.flags()) === J(F(true, true)));
+      await gate.setMode('sandbox');
+      check('*** setMode("sandbox") turns the GAME off and leaves learning alone (unlocking is not about School points) ***',
+        J(gate.flags()) === J(F(false, true)));
+      check('an unknown mode is refused, nothing written', (await gate.setMode('arcade')) === null && J(gate.flags()) === J(F(false, true)));
+      check('MODE_OPTIONS (the old three-way select) offers only modes setMode knows', MODE_OPTIONS.every(([v]) => SET_MODE_PATCHES[v]));
+    }
+
+    // ==========================================================================================
+    section('*** POINTS ROUTING, all four combinations (seeded: 4 Play from a game, 6 School from a lesson) ***');
+    {
+      const want = [
+        // game, learning, tour pays (type), score label, score value, School part, locked
+        { g: false, l: false, pays: null, label: null, value: null, school: null, locked: false },
+        { g: true, l: false, pays: 'Play', label: GAME_POINTS_LABEL, value: 11, school: null, locked: true },
+        { g: true, l: true, pays: 'Bonus', label: GAME_POINTS_LABEL, value: 4, school: 7, locked: true },
+        { g: false, l: true, pays: 'Bonus', label: 'School points', value: 7, school: 7, locked: false },
+      ];
+      for (const w of want) {
+        const name = `Game ${w.g ? 'on' : 'off'}, Learning ${w.l ? 'on' : 'off'}`;
+        check(`${name}: tourPayFor says ${w.pays || 'nothing'}`, (tourPayFor(F(w.g, w.l))?.type || null) === w.pays);
+        const pf = fakeProfile({ rows: flagsRow(w.g, w.l), streams: { [POINTS_STREAM]: [earn(4, 'Play'), earn(6, 'School', { minutes: 6 })] } });
+        const gate = createUnlockGate(pf);
+        await gate.load();
+        const paid = await gate.payTourStep('mode');
+        const tour = (pf.streams[POINTS_STREAM] || []).filter((e) => e.data.source === TOUR_SOURCE);
+        check(`*** ${name}: the tour ${w.pays ? `pays ${w.pays}` : 'pays nothing'} ***`,
+          w.pays ? (paid && tour.length === 1 && tour[0].data.type === w.pays) : (paid === null && tour.length === 0), J(tour));
+        const s = gate.score();
+        check(`*** ${name}: the card ${w.label ? `reads ${w.label} ${w.value}` : 'has nothing to show'} ***`,
+          w.label ? (s && s.label === w.label && s.value === w.value) : s === null, J(s));
+        if (w.school !== null) {
+          check(`${name}: School points are their own total (${w.school})`, s.parts.some((p) => p.label === 'School points' && p.value === w.school), J(s && s.parts));
+        }
+        if (w.g && w.l) {
+          check('*** both on: the card shows BOTH totals, by name ***', s.parts.length === 2 && /Game points: 4/.test(s.detail) && /School points: 7/.test(s.detail), J(s));
+        }
+        if (w.g && !w.l) {
+          check('*** game on, learning off: ALL points are game points (the lesson’s School points included) ***', s.parts.length === 1 && s.value === 11);
+        }
+        check(`${name}: things to build with are ${w.locked ? 'locked' : 'all unlocked'}`, gate.check('module:trivia').locked === w.locked);
+        check(`${name}: nothing earned was rewritten (the lesson is still School, with its minutes)`,
+          pf.streams[POINTS_STREAM][1].data.type === 'School' && pf.streams[POINTS_STREAM][1].data.minutes === 6);
+      }
+      check('the pure score agrees with the gate (no flags on: null)', scoreFor(F(false, false), [earn(3, 'Play')]) === null);
+    }
+
+    // ==========================================================================================
+    section('*** unlocks gate ADDING only; the starter set; Game off unlocks all ***');
     {
       const known = new Set(CATALOG.map((c) => c.type));
       const pieceKeys = new Set(ADD_PIECES.map((p) => p.key));
@@ -131,76 +218,94 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
       const lockable = lockableItems();
       check('there is something to unlock (a real game), and it is not everything', lockable.length >= 10 && lockable.length < CATALOG.length, lockable.length);
       const prefs = GAME_DEFAULTS;
-      check('*** game mode: a lockable item is locked, a starter is not ***',
-        lockState('module:trivia', { mode: 'game', prefs }).locked && !lockState('module:photos', { mode: 'game', prefs }).locked);
-      check('learning mode locks the same things', lockState('module:trivia', { mode: 'learning', prefs }).locked);
-      check('*** sandbox unlocks EVERYTHING ***', lockable.every((it) => !lockState(it, { mode: 'sandbox', prefs }).locked));
-      check('a kind the game does not gate yet (a scene) is never locked', !lockState('scene:fireside', { mode: 'game', prefs }).locked);
+      check('*** game on: a lockable item is locked, a starter is not ***',
+        lockState('module:trivia', { flags: F(true, false), prefs }).locked && !lockState('module:photos', { flags: F(true, false), prefs }).locked);
+      check('game on with learning on locks the same things', lockState('module:trivia', { flags: F(true, true), prefs }).locked);
+      check('*** game off (sandbox) unlocks EVERYTHING, learning on or off ***', lockable.every((it) => !lockState(it, { flags: F(false, false), prefs }).locked
+        && !lockState(it, { flags: F(false, true), prefs }).locked));
+      check('an old caller passing a mode name still gets the right answer', lockState('module:trivia', { mode: 'game', prefs }).locked
+        && !lockState('module:trivia', { mode: 'sandbox', prefs }).locked);
+      check('a kind the game does not gate yet (a scene) is never locked', !lockState('scene:fireside', { flags: F(true, false), prefs }).locked);
       check('a locked state says its cost and whether it can be bought or opened free',
-        J((({ cost, canBuy, canFree, short }) => ({ cost, canBuy, canFree, short }))(lockState('module:trivia', { mode: 'game', prefs, balances: { play: 3 } })))
+        J((({ cost, canBuy, canFree, short }) => ({ cost, canBuy, canFree, short }))(lockState('module:trivia', { flags: F(true, false), prefs, balances: { play: 3 } })))
           === J({ cost: 5, canBuy: false, canFree: true, short: 2 }));
       const pf = fakeProfile();
       const gate = createUnlockGate(pf);
       const api = Object.keys(gate).join(',');
-      check('*** the gate has no way to remove, hide or stop anything: only check, unlock, buy, the mode ***',
+      check('*** the gate has no way to remove, hide or stop anything: only check, unlock, buy, the switches ***',
         !/remove|hide|relock|lockAway|take/i.test(api), api);
-      const w = lockWords(lockState('module:trivia', { mode: 'game', prefs, balances: { play: 2 } }), 'Trivia', 'game');
+      const w = lockWords(lockState('module:trivia', { flags: F(true, false), prefs, balances: { play: 2 } }), 'Trivia');
       check('a locked thing says WHY ("only for the game’s sake") and every way to open it',
-        /only for the game’s sake/.test(w.why) && /use 5 Play points \(you have 2\)/.test(w.how) && /unlock it free/.test(w.how) && /sandbox/.test(w.how), J(w));
+        /only for the game’s sake/.test(w.why) && /use 5 Game points \(you have 2\)/.test(w.how) && /unlock it free/.test(w.how) && /sandbox/.test(w.how), J(w));
       check('Home’s Add keys map to items: a type -> module:<type>, a piece stays a piece',
         itemForAddKey('trivia') === 'module:trivia' && itemForAddKey('piece:sign') === 'piece:sign');
     }
 
     // ==========================================================================================
-    section('*** individual unlock (free), and buying with points (two currencies, separate) ***');
+    section('*** UNLOCK SPENDING: Game points first, then School (a setting when learning is on) ***');
     {
-      const pf = fakeProfile({ streams: { [POINTS_STREAM]: [earn(7, 'Play'), earn(3, 'Bonus')] } });
+      check('the pool: game off = nothing to pay with (nothing is locked)', unlockPool(F(false, true), GAME_DEFAULTS) === null);
+      check('*** learning off: every point is a game point, Play first ***', J(unlockPool(F(true, false), GAME_DEFAULTS).currencies) === J(['play', 'school'])
+        && unlockPool(F(true, false), GAME_DEFAULTS).label === GAME_POINTS_LABEL);
+      check('*** learning on: School can unlock too by default, game points spent first ***', GAME_DEFAULTS.schoolUnlocks === true
+        && J(unlockPool(F(true, true), GAME_DEFAULTS).currencies) === J(['play', 'school']));
+      check('...and "School points can unlock" off: game points only', J(unlockPool(F(true, true), { ...GAME_DEFAULTS, schoolUnlocks: false }).currencies) === J(['play'])
+        && unlockPool(F(true, true), { ...GAME_DEFAULTS, schoolUnlocks: false }).label === GAME_POINTS_LABEL);
+      check('...which does nothing with learning off (there are no School points to keep apart)',
+        J(unlockPool(F(true, false), { ...GAME_DEFAULTS, schoolUnlocks: false }).currencies) === J(['play', 'school']));
+      check('poolLabel takes the switches, or an old mode name', poolLabel(F(true, false)) === GAME_POINTS_LABEL && poolLabel('game') === GAME_POINTS_LABEL
+        && poolLabel('sandbox') === 'points');
+
+      const pf = fakeProfile({ rows: flagsRow(true, false), streams: { [POINTS_STREAM]: [earn(2, 'Play'), earn(7, 'School')] } });
       const gate = createUnlockGate(pf);
       await gate.load();
-      await gate.setMode('game');
       const r1 = await gate.unlockFree('module:pond');
       check('*** a free single unlock opens it, with no points spent ***', r1.ok && !gate.check('module:pond').locked
-        && J(gate.balances()) === J({ school: 3, play: 7 }), J(r1));
+        && J(gate.balances()) === J({ school: 7, play: 2 }), J(r1));
       check('...recorded in the append-only unlock log, saying how', pf.streams[UNLOCKS_STREAM].length === 1
         && pf.streams[UNLOCKS_STREAM][0].kind === UNLOCK_KIND && pf.streams[UNLOCKS_STREAM][0].data.how === 'free');
       check('unlocking what is not locked is a harmless "already"', (await gate.unlockFree('module:photos')).reason === 'already'
         && pf.streams[UNLOCKS_STREAM].length === 1);
+      check('the price is checked against everything that may pay (2 Play + 7 School = 9)', gate.check('module:trivia').have === 9 && gate.check('module:trivia').canBuy);
       const r2 = await gate.buy('module:trivia', { label: 'Trivia' });
       const spends = pf.streams[POINTS_STREAM].filter((e) => e.data.type === REWARD_TYPE);
-      check('*** buying spends the pool’s points (game: Play), through the ledger’s own spend ***',
-        r2.ok && !gate.check('module:trivia').locked && spends.length === 1 && spends[0].data.amount === -5
-        && spends[0].data.currency === 'play' && J(gate.balances()) === J({ school: 3, play: 2 }), J(spends));
-      check('...School points are untouched by a game-mode purchase', gate.balances().school === 3);
+      check('*** buying with learning off: the 2 Play first, then 3 School, through the ledger’s own spends ***',
+        r2.ok && !gate.check('module:trivia').locked && spends.length === 2 && spends[0].data.currency === 'play' && spends[0].data.amount === -2
+        && spends[1].data.currency === 'school' && spends[1].data.amount === -3 && J(gate.balances()) === J({ school: 4, play: 0 }), J(spends));
+      check('...the unlock is in the log, saying what paid', pf.streams[UNLOCKS_STREAM].at(-1).data.how === 'points'
+        && J(pf.streams[UNLOCKS_STREAM].at(-1).data.currencies) === J(['play', 'school']));
       const before = J(pf.streams);
       const r3 = await gate.buy('module:comet');
       check('*** short of points: refused, nothing written to either log ***', !r3.ok && r3.reason === 'short' && J(pf.streams) === before);
       await gate.setPrefs({ freeUnlocks: false });
       const r4 = await gate.unlockFree('module:comet');
       check('free unlocks off (a setting): refused, nothing written', !r4.ok && r4.reason === 'free-off' && J(pf.streams) === before);
-      await gate.setMode('learning');
+
+      // Learning on, School kept for school: only game points pay.
+      await gate.setFlags({ learning: true });
+      await gate.setPrefs({ schoolUnlocks: false, unlockCost: 2 });
+      await pf.makeEvents(POINTS_STREAM).append(POINTS_KIND, earn(1, 'Play').data);
       const r5 = await gate.buy('module:comet');
-      const s2 = pf.streams[POINTS_STREAM].filter((e) => e.data.type === REWARD_TYPE);
-      check('*** learning mode buys with SCHOOL points (separate education points) ***',
-        !r5.ok && r5.reason === 'short' && gate.check('module:comet').currency === 'school');
-      await gate.setPrefs({ unlockCost: 2 });
+      check('*** learning on, "School can unlock" off: 4 School and 1 Play cannot buy a 2-point unlock ***',
+        !r5.ok && r5.reason === 'short' && gate.check('module:comet').have === 1 && J(gate.check('module:comet').currencies) === J(['play']));
+      await gate.setPrefs({ schoolUnlocks: true });
       const r6 = await gate.buy('module:comet');
-      check('...and the cost is a setting (2 here): School pays', r6.ok && r6.currency === 'school' && gate.balances().school === 1
-        && pf.streams[POINTS_STREAM].filter((e) => e.data.type === REWARD_TYPE).length === s2.length + 1);
-      await gate.setMode('sandbox'); await gate.setMode('game');
-      check('*** sandbox and back: nothing unlocked is lost ***', ['module:pond', 'module:trivia', 'module:comet'].every((it) => !gate.check(it).locked)
+      check('...turned on: 1 Play then 1 School pay', r6.ok && J(gate.balances()) === J({ school: 3, play: 0 }), J(gate.balances()));
+      await gate.setFlags({ game: false }); await gate.setFlags({ game: true });
+      check('*** game off and back: nothing unlocked is lost ***', ['module:pond', 'module:trivia', 'module:comet'].every((it) => !gate.check(it).locked)
         && unlockedFrom(pf.streams[UNLOCKS_STREAM]).size === 3);
       check('settings read back clean (bad values fall back to the defaults)',
-        J(gameSettingsFrom({ [GAME_SETTINGS_KEY]: { tourStepPoints: -1, unlockCost: 'x', freeUnlocks: 'yes' } })) === J(GAME_DEFAULTS));
+        J(gameSettingsFrom({ [GAME_SETTINGS_KEY]: { tourStepPoints: -1, unlockCost: 'x', freeUnlocks: 'yes', schoolUnlocks: 'no' } })) === J(GAME_DEFAULTS));
     }
 
     // ==========================================================================================
-    section('*** the tour: each step pays once, in game or learning mode only ***');
+    section('*** the tour: each step pays once, only when the game or learning is on ***');
     {
       const pf = fakeProfile();
       const gate = createUnlockGate(pf);
       await gate.load();
-      check('*** sandbox (the default): the tour pays nothing ***', (await gate.payTourStep('mode')) === null && !(pf.streams[POINTS_STREAM] || []).length);
-      await gate.setMode('game');
+      check('*** both off (the default): the tour pays nothing ***', (await gate.payTourStep('mode')) === null && !(pf.streams[POINTS_STREAM] || []).length);
+      await gate.setFlags({ game: true });
       const a = await gate.payTourStep('mode');
       const b = await gate.payTourStep('mode');
       const paid = (pf.streams[POINTS_STREAM] || []).filter((e) => e.data.source === TOUR_SOURCE);
@@ -209,15 +314,16 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
       check('a step already paid is read from the LEDGER', tourStepPaid(pf.streams[POINTS_STREAM], 'mode') && !tourStepPaid(pf.streams[POINTS_STREAM], 'points'));
       const gate2 = createUnlockGate(pf); await gate2.load();
       check('...so a second handle on the same profile (another screen, a reload) does not pay it again', (await gate2.payTourStep('mode')) === null);
-      await gate.setMode('learning');
-      check('*** switching mode does not pay the same step again (no farming) ***', (await gate.payTourStep('mode')) === null);
+      await gate.setFlags({ learning: true });
+      check('*** turning learning on does not pay the same step again (no farming) ***', (await gate.payTourStep('mode')) === null);
       const c = await gate.payTourStep('points');
       const pc = pf.streams[POINTS_STREAM].find((e) => e.data.tags.includes('step:points'));
-      check('a new step in learning mode pays School (Bonus), not Play', c && pc.data.type === 'Bonus' && gate.balances().school === 1);
+      check('a new step with learning on pays School (Bonus), not Play', c && pc.data.type === 'Bonus' && gate.balances().school === 1);
       await gate.setPrefs({ tourStepPoints: 0 });
       check('tour points set to None: nothing is paid', (await gate.payTourStep('devices')) === null);
-      check('the scoreboard reads EARNED in the pool (a spend does not make the number drop)',
-        earnedIn([earn(4, 'Play'), { kind: POINTS_KIND, data: { amount: -3, mult: 1, type: REWARD_TYPE, currency: 'play' } }], 'play') === 4);
+      check('the scoreboard reads EARNED (a spend does not make the number drop)',
+        earnedIn([earn(4, 'Play'), { kind: POINTS_KIND, data: { amount: -3, mult: 1, type: REWARD_TYPE, currency: 'play' } }], 'play') === 4
+        && earnedIn([earn(4, 'Play'), earn(2, 'School')], ['play', 'school']) === 6);
     }
 
     // ==========================================================================================
@@ -227,22 +333,27 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
         POINTS_DISCLAIMER === 'Points have no real-world value, and we do not sell any form of coins or other microtransactions.');
       check('*** Nimrod says it where points are introduced: node A and the points node ***',
         GUIDE_NODES.mode.say.includes(POINTS_DISCLAIMER) && GUIDE_NODES.points.say.includes(POINTS_DISCLAIMER));
-      check('...and it is the first thing on the Nimrod Game settings page', gameSettingsHTML(null).includes(POINTS_DISCLAIMER));
+      check('*** ...and it is the first thing on the Nimrod Game settings page ***', gameSettingsHTML(null).trim().startsWith('<p')
+        && gameSettingsHTML(null).indexOf(POINTS_DISCLAIMER) < gameSettingsHTML(null).indexOf('data-game-flag'));
       check('node A says unlocking is "only for the game’s sake", sandbox unlocks everything, and one at a time',
         /only for the game’s sake/.test(GUIDE_NODES.mode.say) && /sandbox mode unlocks everything/.test(GUIDE_NODES.mode.say)
         && /one at a time/.test(GUIDE_NODES.mode.say));
-      const copy = [...Object.values(MODE_NOTES), ...Object.values(MODE_HELP), PANEL_CLOSED_NOTE, gameSettingsHTML(null),
-        lockWords(lockState('module:trivia', { mode: 'game' }), 'Trivia', 'game').why].join(' ');
+      const copy = [...Object.values(FLAG_NOTES), ...Object.values(MODE_HELP), PANEL_CLOSED_NOTE, gameSettingsHTML(null),
+        gameSettingsHTML({ flags: F(true, true), prefs: GAME_DEFAULTS, unlocked: new Set(), balances: {} }),
+        lockWords(lockState('module:trivia', { flags: F(true, false) }), 'Trivia').why, ...GAME_MODE_FIELDS.map((f) => `${f.label} ${f.note} ${f.onLabel} ${f.offLabel}`)].join(' ');
       check('site copy never says "her screen", Christine or Cici', !/\bher screen|christine|cici/i.test(copy));
       check('no node A text says the game is "still being built" any more',
         ['mode', 'mode-game', 'mode-learning', 'mode-sandbox'].every((id) => !/still being built/.test(GUIDE_NODES[id].say)));
     }
 
     // ==========================================================================================
-    section('*** node A: sets the mode, shows the game settings, suggests the menu or the tutorial ***');
+    section('*** node A: sets the switches, shows the game settings, suggests the menu or the tutorial ***');
     {
       check('the guide’s tree is still valid with the new page and acts', treeProblems(GUIDE_NODES, { menuTabs: MENU_TAB_IDS }).length === 0,
         treeProblems(GUIDE_NODES, { menuTabs: MENU_TAB_IDS }).join('; '));
+      check('*** every game-mode act the guide may carry is one the hook understands ***', GUIDE_MODES.every((m) => GAME_ACTS[m] && MODE_HELP[m]), J(GUIDE_MODES));
+      check('each act sets ONE switch: game on, game off, learning on, learning off',
+        J(GAME_ACTS) === J({ game: { game: true }, sandbox: { game: false }, learning: { learning: true }, 'learning-off': { learning: false } }));
       check('sc-game is a settings page the guide may show', SETTINGS_PAGES.includes(GAME_SETTINGS_PAGE));
       check('*** every node of A shows the game settings by itself (a settings-PAGE act: takes nothing from anybody) ***',
         ['mode', 'mode-game', 'mode-learning', 'mode-sandbox'].every((id) => GUIDE_NODES[id].acts.some((a) => a.kind === 'settings-page' && a.page === GAME_SETTINGS_PAGE && a.auto)));
@@ -262,7 +373,7 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
       check('no makers (a preview): no hook, nothing breaks', createGuideGameHook({ bus }) === null);
       check('a game-mode act that is not one is left alone', (await hook.act({ kind: 'menu-tab' })) === false);
       await hook.act({ kind: 'game-mode', mode: 'game' });
-      check('*** pressing "Start game mode" sets game mode ***', gameModeFrom(pf.rows[PROFILE_SETTINGS_KEY]) === 'game');
+      check('*** pressing "Turn the game on" turns the game on (and only that) ***', J(gameFlagsFrom(pf.rows[PROFILE_SETTINGS_KEY])) === J(F(true, false)));
       const cards = pf.rows[SCOREBOARD_ROW].counters;
       check('*** a scoreboard card for the game appears on the profile’s scoreboard (the one scoreboard module) ***',
         cards.length === 2 && cards[1].source === GAME_SCORE_SOURCE && cards[0].label === 'Books', J(cards));
@@ -271,8 +382,8 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
         J(Object.keys(cards[1]).sort()) === J(Object.keys(ref).sort()) && cards[1].id === ref.id && SCOREBOARD_ROW === SCOREBOARD_STATE);
       check('...and is not added twice', withGameCard(cards) === null);
       check('*** the game’s score is published on the score contract ***',
-        scores.some((s) => s.source === GAME_SCORE_SOURCE && s.value === 0 && /Play points/.test(s.label)), J(scores));
-      check('Nimrod says what changed', notes.some((n) => n.t === MODE_NOTES.game && n.id === null));
+        scores.some((s) => s.source === GAME_SCORE_SOURCE && s.value === 0 && /Game points/.test(s.label)), J(scores));
+      check('Nimrod says what changed', notes.some((n) => n.t === flagsNote(F(true, false)) && n.id === null));
 
       notes.length = 0;
       const p1 = hook.arrive(GUIDE_NODES.mode);
@@ -291,30 +402,61 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
       bus.publish(SETTINGS_OPEN_TOPIC, { page: GAME_SETTINGS_PAGE });
       await p2;
       check('*** the panel answered: no suggestion, just the step’s points ***',
-        notes.length === 1 && /^\+1 Play points for a new step/.test(notes[0].t), J(notes));
+        notes.length === 1 && /^\+1 Game points for a new step/.test(notes[0].t), J(notes));
       check('the score follows the points', scores.filter((s) => s.source === GAME_SCORE_SOURCE).pop()?.value === 2);
+
+      await hook.act({ kind: 'game-mode', mode: 'learning' });
+      check('*** "Turn learning on" adds learning and leaves the game on ***', J(gameFlagsFrom(pf.rows[PROFILE_SETTINGS_KEY])) === J(F(true, true)));
       notes.length = 0;
       await hook.arrive(GUIDE_NODES.devices);
-      check('a node with no game page: just the points, no panel check', notes.length === 1 && /^\+1/.test(notes[0].t));
+      check('a node with no game page: just the points (School now), no panel check', notes.length === 1 && /^\+1 School points/.test(notes[0].t), J(notes));
+      const last = scores.filter((s) => s.source === GAME_SCORE_SOURCE).pop();
+      check('*** with learning on the published score carries both totals ***', last.value === 2 && /Game points: 2/.test(last.detail) && /School points: 1/.test(last.detail), J(last));
+      await hook.act({ kind: 'game-mode', mode: 'sandbox' });
+      check('"Sandbox" turns the game off and keeps learning', J(gameFlagsFrom(pf.rows[PROFILE_SETTINGS_KEY])) === J(F(false, true)));
+      check('...and the card follows School points alone', /School points/.test(scores.filter((s) => s.source === GAME_SCORE_SOURCE).pop().label));
+      await hook.act({ kind: 'game-mode', mode: 'learning-off' });
+      check('"Turn learning off" turns learning off', J(gameFlagsFrom(pf.rows[PROFILE_SETTINGS_KEY])) === J(F(false, false)));
       hook.destroy();
       check('destroy says the score is gone (the scoreboard keeps the last value)', scores[scores.length - 1].gone === true);
+
+      // Learning alone also puts the card up: School points are shown even in sandbox.
+      const pf2 = fakeProfile();
+      const hook2 = createGuideGameHook({ makeState: pf2.makeState, makeEvents: pf2.makeEvents, bus: createBus() }, { waitMs: 0 });
+      await hook2.ready();
+      await hook2.act({ kind: 'game-mode', mode: 'learning' });
+      check('*** learning on with the game off: the card appears too ***', J(gameFlagsFrom(pf2.rows[PROFILE_SETTINGS_KEY])) === J(F(false, true))
+        && (pf2.rows[SCOREBOARD_ROW]?.counters || []).some((c) => c.source === GAME_SCORE_SOURCE));
+      hook2.destroy();
     }
 
     // ==========================================================================================
-    section('*** the Nimrod Game settings page ***');
+    section('*** the Nimrod Game settings page: two on/off rows, Game and Learning ***');
     {
+      check('GAME_MODE_FIELDS are two settings_fields toggles, Game then Learning, both off by default',
+        GAME_MODE_FIELDS.length === 2 && GAME_MODE_FIELDS.map((f) => normalizeField(f)).every((f) => f && f.kind === 'toggle' && f.default === false && f.cycleable)
+        && J(GAME_MODE_FIELDS.map((f) => f.key)) === J([GAME_ON_KEY, LEARNING_ON_KEY]) && J(GAME_MODE_FIELDS.map((f) => f.label)) === J(['Game', 'Learning']));
+      check('gameFlagValues gives those rows their values, the old mode migrated', J(gameFlagValues({ [GAME_MODE_KEY]: 'learning' })) === J({ [GAME_ON_KEY]: true, [LEARNING_ON_KEY]: true })
+        && J(gameFlagValues({})) === J({ [GAME_ON_KEY]: false, [LEARNING_ON_KEY]: false }));
+
       const pf = fakeProfile({ streams: { [POINTS_STREAM]: [earn(6, 'Play')] } });
       const gate = createUnlockGate(pf);
       const el = document.createElement('div');
       document.body.append(el);
       mountGameSettings(el, gate);
       await sleep(20);
-      const modeSel = el.querySelector('[data-game-mode]');
-      check('it draws the mode, sandbox selected by default, and nothing is locked', modeSel?.value === 'sandbox' && !el.querySelector('[data-game-buy]'));
-      modeSel.value = 'game'; modeSel.dispatchEvent(new Event('change', { bubbles: true }));
-      await sleep(20);
-      check('choosing game mode there sets it, and the locked list appears', gate.mode() === 'game' && el.querySelectorAll('[data-game-buy]').length === lockableItems().length);
-      check('the balance shows in the pool’s name', /Play points: 6 to spend/.test(el.querySelector('[data-game-balance]')?.textContent || ''));
+      const flagBtn = (k) => el.querySelector(`[data-game-flag="${k}"]`);
+      check('*** it draws two switches, both off by default, and nothing is locked ***', flagBtn('game')?.getAttribute('aria-pressed') === 'false'
+        && flagBtn('learning')?.getAttribute('aria-pressed') === 'false' && !el.querySelector('[data-game-buy]') && !el.querySelector('[data-game-mode]'));
+      check('each switch is a button (one press, a switch reaches it), saying On or Off in words', /Off/.test(flagBtn('game').textContent) && flagBtn('game').tagName === 'BUTTON');
+      flagBtn('game').click(); await sleep(20);
+      check('*** pressing Game turns the game on: the locked list appears ***', gate.flags().game && !gate.flags().learning
+        && flagBtn('game').getAttribute('aria-pressed') === 'true' && el.querySelectorAll('[data-game-buy]').length === lockableItems().length);
+      check('the balance shows as game points', /Game points: 6 to spend/.test(el.querySelector('[data-game-balance]')?.textContent || ''), el.querySelector('[data-game-balance]')?.textContent);
+      check('"School points can unlock" is not offered while learning is off (it would change nothing)', !el.querySelector('[data-game-pref="schoolUnlocks"]'));
+      flagBtn('learning').click(); await sleep(20);
+      check('*** pressing Learning turns learning on, the game stays on ***', gate.flags().game && gate.flags().learning && flagBtn('learning').getAttribute('aria-pressed') === 'true');
+      check('...and now offers "School points can unlock", and shows the School total', !!el.querySelector('[data-game-pref="schoolUnlocks"]') && !!el.querySelector('[data-game-school]'));
       const buy = () => el.querySelector('[data-game-buy="module:trivia"]');
       buy().click(); await sleep(20);
       check('*** buying is TWO presses: the first only asks ***', gate.check('module:trivia').locked && /Press again/.test(buy().textContent));
@@ -325,6 +467,11 @@ const earn = (amount, type, extra = {}) => ({ kind: POINTS_KIND, created_at: new
       const cost = el.querySelector('[data-game-pref="unlockCost"]');
       cost.value = '10'; cost.dispatchEvent(new Event('change', { bubbles: true })); await sleep(20);
       check('the cost is a setting there', gate.prefs().unlockCost === 10);
+      const su = el.querySelector('[data-game-pref="schoolUnlocks"]');
+      su.value = 'false'; su.dispatchEvent(new Event('change', { bubbles: true })); await sleep(20);
+      check('"School points can unlock" is a setting there', gate.prefs().schoolUnlocks === false);
+      flagBtn('game').click(); await sleep(20);
+      check('pressing Game again turns it off: nothing locked, learning still on', !gate.flags().game && gate.flags().learning && !el.querySelector('[data-game-buy]'));
       el.remove();
     }
   } catch (err) {
