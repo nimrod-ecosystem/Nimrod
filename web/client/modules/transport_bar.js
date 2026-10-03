@@ -32,7 +32,8 @@
 // so the bar reads "⚙ Edit" and "⛶ Full screen" instead of two more buttons doing the same thing. A
 // button that cannot act is DIMMED (disabled), never removed (Design; D16's rule on this very bar).
 //
-// *** IN FULL SCREEN IT TUCKS ITSELF AWAY *** after the host's `barHideMs()` (Design's 6 s by default;
+// *** IN FULL SCREEN IT TUCKS ITSELF AWAY *** (and wherever the host page floats it over the panels,
+// `host.barOver()`: Home's dashboard filling the window) after the host's `barHideMs()` (Design's 6 s by default;
 // shell_verbs.js), and anything -- a press, a key, a switch edge, the pointer near it -- brings it back.
 // Tucked is `visibility:hidden`, not removed: nothing reflows, a click where it was lands on the content
 // (and brings it back), and the content never depends on it returning. Held (the cat pointing at it) or
@@ -41,6 +42,7 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
+  sitOutWakePress,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
@@ -117,10 +119,16 @@ registerModule(
     let held = (() => { try { return !!ctx.shell?.barHeld?.(); } catch { return false; } })();
     let tucked = false;
     let hideT = null;
+    let endWakePress = () => {};
 
     function arrangement() { return ctx.container?.arrangement?.() || null; }
 
+    // THE HOST PAGE FLOATS THIS BAR OVER THE PANELS (Home's dashboard filling the window, 2026-10-02 late:
+    // `host.barOver()`). Then it is a full screen's bar in every way that matters -- over the panels, nothing
+    // reflowing -- so it tucks itself away as it does in full screen, on the same delay.
+    const overHost = () => { try { return typeof host?.barOver === 'function' && !!host.barOver(); } catch { return false; } };
     function inFull() {
+      if (root && overHost()) return true;
       const f = fullEl();
       return !!(f && root && (f === root || f.contains?.(root)));
     }
@@ -310,7 +318,14 @@ registerModule(
         if (typeof offCall === 'function') offs.push(offCall);
         if (host && typeof host.subscribe === 'function') {
           try {
-            const off3 = host.subscribe(() => draw());
+            // ...and when the host starts or stops floating it, the bar comes up and the delay starts again
+            // (or stops: a bar in a row of the page never tucks).
+            let wasOver = overHost();
+            const off3 = host.subscribe(() => {
+              draw();
+              const over = overHost();
+              if (over !== wasOver) { wasOver = over; reveal(); }
+            });
             if (typeof off3 === 'function') offs.push(off3);
           } catch (err) { console.error('transport bar: host subscribe', err); }
         }
@@ -319,7 +334,14 @@ registerModule(
         const d = doc();
         if (d) {
           const onFs = () => { reveal(); draw(); };
-          const onAny = () => { if (tucked || hideT) reveal(); };
+          // A press that brings a tucked bar back is not also a press ON it (2026-10-02, late; transport_bar.js
+          // `sitOutWakePress`): the bar sits the rest of that press out, and it stays with what was under it.
+          const onAny = (e) => {
+            if (!tucked && !hideT) return;
+            const was = tucked;
+            reveal();
+            if (was && !tucked && e?.type === 'pointerdown' && root) endWakePress = sitOutWakePress(root, e);
+          };
           const onMove = (e) => {
             if (!tucked && !hideT) return;
             const r = root?.getBoundingClientRect?.();
@@ -346,6 +368,7 @@ registerModule(
       onHide() {},
       destroy() {
         clearTimeout(hideT); hideT = null;
+        try { endWakePress(); } catch { /* none under way */ }
         offs.splice(0).forEach((off) => { try { off(); } catch { /* already gone */ } });
         root?.remove(); root = null; modsEl = null; helpEl = null; hostEl = null; callEl = null;
       },

@@ -319,6 +319,24 @@ try {
       !bp.find((i) => i.act === 'save').disabled && bp.find((i) => i.act === 'save').primary
       && bp.find((i) => i.act === 'history').disabled);
     check('...and says so in words', bp.at(-1).text === 'Not made yet — Save makes it', bp.at(-1).text);
+    // 2026-10-02, late: ARRIVING on the dashboard (`land`), a Start here only being tried is not "something to
+    // save" until something is changed -- Save lit and "Not made yet" on every arrival was loud for a landing.
+    // (`bland`, above: Start here tried, on the dashboard, nothing changed.)
+    check('*** on the dashboard, a preview with NOTHING changed: Save there and pressable, but NOT lit ***',
+      !bland.find((i) => i.act === 'save').disabled && !bland.find((i) => i.act === 'save').primary,
+      J(bland.find((i) => i.act === 'save')));
+    check('*** ...and the status is quiet: it says how to keep it, not that something is missing, and it is not amber ***',
+      bland.at(-1).text === 'Try it, then Save to keep it' && !bland.at(-1).dirty, J(bland.at(-1)));
+    const blandD = homeBarItems({ title: 'Start here', target: preview, land: true, dirty: true });
+    check('*** ...something changed: Save lights, and the status says Unsaved changes, amber ***',
+      blandD.find((i) => i.act === 'save').primary && blandD.at(-1).text === 'Unsaved changes' && blandD.at(-1).dirty, J(blandD.at(-1)));
+    check('...the ⚙ menu’s Save row says the same, on the dashboard',
+      homeMenuModel({ target: preview, land: true }).find((i) => i.act === 'save').hint === 'Try it, then Save to keep it');
+    check('the editing page is unchanged: there a preview still lights Save and says Save makes it',
+      homeBarItems({ target: preview }).find((i) => i.act === 'save').primary
+      && homeBarItems({ target: preview }).at(-1).text === 'Not made yet — Save makes it');
+    check('a made dashboard reads the same on both', J(homeBarItems({ target: live, docCurrent: 'X', land: true }).at(-1))
+      === J(homeBarItems({ target: live, docCurrent: 'X' }).at(-1)));
     const bl = homeBarItems({ title: 'Your profile', target: live, docCurrent: 'My profile' });
     check('live and saved: History available, Save not primary, status names the save',
       !bl.find((i) => i.act === 'history').disabled && !bl.find((i) => i.act === 'save').primary

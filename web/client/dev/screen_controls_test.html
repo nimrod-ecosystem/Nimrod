@@ -95,6 +95,47 @@ async function realPress(x, y, pointerType = 'mouse') {
   return { down, up, click };
 }
 const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); const [x, y] = centre(el); return realPress(x, y, type); };
+// *** A PRESS THAT WAKES THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late). *** Measured: a tap on the
+// calculator's "=" where the hidden plain bar sits sent its click to `.k-controls`. The bar woke on the press's
+// pointerdown, and the tap was hit-tested again at its release -- by which time the bar was there. A mouse did
+// the same: its release landed on the woken bar, so its click went to what the key and the bar share, which is
+// neither. Both bars, both kinds of press; then, with the bar up, a press on the bar is still the bar's.
+// `barEl` the bar, `down` whether it is put away now, `waitDown` waits until it is, `barBtn` one of its buttons.
+async function wakePressChecks(tag, { barEl, down, waitDown, barBtn }) {
+  root.scrollIntoView({ block: 'nearest' });
+  check(`[${tag}] (setup) the bar has put itself away`, await waitDown());
+  const b = barEl().getBoundingClientRect();
+  const keys = [...root.querySelectorAll('[data-key]')].filter((k) => {
+    const [x, y] = centre(k); return x > b.left + 2 && x < b.right - 2 && y > b.top + 2 && y < b.bottom - 2;
+  });
+  const key = keys.find((k) => /^[0-9]$/.test(k.dataset.key)) || keys[0];
+  check(`[${tag}] (setup) a calculator key sits where the put-away bar is`, !!key, J([b.left, b.top, b.right, b.bottom].map(Math.round)));
+  if (!key) return;
+  // Aimed afresh before every press: each check written above the screen moves it down the page.
+  const aim = (el) => { root.scrollIntoView({ block: 'nearest' }); return centre(el); };
+  let at = aim(key);
+  check(`[${tag}] *** while the bar is away, a press there hits the KEY (nothing of the bar takes it, not even its empty box) ***`,
+    document.elementFromPoint(...at) === key, String(document.elementFromPoint(...at)?.className));
+  const readout = () => root.querySelector('[data-display]')?.textContent || '';
+  for (const type of ['touch', 'mouse']) {
+    if (!(await waitDown())) { check(`[${tag}] (setup) the bar put itself away again before the ${type} press`, false); continue; }
+    root.querySelector('[data-key="C"]')?.click();     // a clean display (a click with no hit-test: not a wake)
+    at = aim(key);
+    const r = await realPress(...at, type);
+    check(`[${tag}] *** a ${type.toUpperCase()} there wakes the bar ***`, !down());
+    check(`[${tag}] *** ...and the press is the KEY's, not the bar's (down, release and click) ***`,
+      r.down === key && r.up === key && r.click === key, `${r.down?.className} / ${r.up?.className} / ${r.click?.className}`);
+    if (/^[0-9]$/.test(key.dataset.key)) check(`[${tag}] ...the calculator took it`, readout().endsWith(key.dataset.key), readout());
+  }
+  // The bar is up now, and a press meant for it is its own: the sit-out is only for the press that woke it.
+  await sleep(600);
+  const btn = barBtn();
+  const r2 = await realPress(...aim(btn), 'mouse');
+  check(`[${tag}] *** with the bar already up, a press on one of its buttons is that button's ***`, !!btn && r2.click === btn,
+    `${btn?.dataset.act} got ${r2.click?.className}`);
+  const r3 = await realPress(...aim(btn), 'touch');
+  check(`[${tag}] ...a tap too`, !!btn && r3.click === btn, `${btn?.dataset.act} got ${r3.click?.className}`);
+}
 const J = (x) => JSON.stringify(x);
 async function settled(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; }
 function fakeStorage() {
@@ -590,6 +631,21 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.destroy(); root.innerHTML = '';
     }
 
+    section('*** (6) a press that WAKES the plain bar is the panel\'s, never the bar\'s -- touch and mouse ***');
+    {
+      const p = await profiles.create('SC-wake');
+      await profiles.addModule(p.id, 'calculator');
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), ...seams(fakeStorage()) });
+      await sleep(600);
+      const bar = () => root.querySelector('.kiosk > .k-controls');
+      const down = () => bar().classList.contains('hidden');
+      check('(setup) one calculator, on today\'s path, with the plain bar', !!root.querySelector('[data-calc]') && !!bar() && !kiosk.dashboardPath());
+      // Hush, pressed twice (on, then off again): a button with no other effect on this screen.
+      await wakePressChecks('plain bar', { barEl: bar, down, waitDown: () => settled(down, 7000),
+        barBtn: () => bar().querySelector('[data-act="hush"]') });
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
     section('*** (5) the Layout list: a new arrangement, in place, no reload ***');
     {
       const p = await profiles.create('SC-layout');
@@ -671,6 +727,22 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       await sleep(30);
       check('...which makes the selected panel bigger', !!kiosk.promoted().dashboard, J(kiosk.promoted()));
       kiosk.demote();
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
+    section('*** (6) the same for the PLACED bar on the dashboard path: tucked away, then woken by a press ***');
+    {
+      const p = await profiles.create('SC-wake-dash');
+      await profiles.addModule(p.id, 'calculator');
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), dashboardDefault: true, ...seams(fakeStorage()) });
+      await sleep(600);
+      const bar = () => root.querySelector('.view .tb-bar');
+      const down = () => bar()?.dataset.tucked === '1';
+      check('(setup) one calculator, on the dashboard path, its bar placed OVER the panels', kiosk.dashboardPath() && !!bar()
+        && !!bar().closest('[data-over]') && !!root.querySelector('[data-calc]'));
+      // The placed bar tucks away after its own time (FULLSCREEN_BAR_HIDE_DEFAULT_MS, 6 s) on a real screen.
+      await wakePressChecks('placed bar', { barEl: bar, down, waitDown: () => settled(down, 9000),
+        barBtn: () => bar().querySelector('.tb-actions:not(.tb-host) [data-act="hush"]') });
       kiosk.destroy(); root.innerHTML = '';
     }
   } catch (err) {

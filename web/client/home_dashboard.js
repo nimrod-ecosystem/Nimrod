@@ -118,7 +118,8 @@ export const HOME_SETTINGS = Object.freeze([
     options: [[true, 'On'], [false, 'Off']] },
   { key: 'chromeSurface', label: 'Menu and bar background',
     options: [['follow', 'Follow the screen'], ['solid', 'Solid'], ['veil', 'See-through'], ['clear', 'Fully clear']] },
-  { key: 'barHideMs', label: 'In full screen, tuck the bar away after',
+  // (2026-10-02, late: also the dashboard filling the window, where the bar floats over the panels the same way.)
+  { key: 'barHideMs', label: 'In full screen or filling the window, tuck the bar away after',
     options: BAR_HIDE_CHOICES.map((ms) => [ms, ms ? `${ms / 1000} seconds` : 'Never']) },
   { key: 'hoverLine', label: 'Explain what the pointer is on (a line along the bottom)',
     options: [[true, 'On'], [false, 'Off']] },
@@ -167,8 +168,17 @@ export function chromeSurfaceFor(settings, screenPanelSurface) {
 // settings }. `target` is the page's HOME.target (null while nothing is open, `{ live, kind }` after).
 // ---------------------------------------------------------------------------------------------------
 /** The status, in words (Design: "what state the module is in, in words"). */
-export function homeStatusText({ target = null, dirty = false, docCurrent = null } = {}) {
+// *** ARRIVING ON THE DASHBOARD (`land`, 2026-10-02, late). *** Start here is only TRIED until it is saved, so on
+// every arrival the bar said "Not made yet — Save makes it" with Save lit amber: a warning on a landing, about
+// nothing anybody did. There, a tried dashboard with nothing changed is quiet -- Save un-lit (still pressable:
+// it still makes it) and a line that says how to keep it -- and lights the moment something is changed, as
+// everywhere else. KEPT A LINE rather than nothing: the status is a fixed box on the bar, so an empty one reads
+// as a gap, and "only tried until saved" is still true and worth one quiet sentence. AGAINST keeping it: it is
+// one more thing on a bar that is meant to be out of the way. The editing page keeps the loud version: there,
+// somebody is building, and "not made yet" is the news.
+export function homeStatusText({ target = null, dirty = false, docCurrent = null, land = false } = {}) {
   if (!target) return '';
+  if (!target.live && land && target.kind !== 'module') return dirty ? 'Unsaved changes' : 'Try it, then Save to keep it';
   if (!target.live) return target.kind !== 'module' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it';
   if (dirty) return 'Unsaved changes';
   return docCurrent ? `Saved as “${docCurrent}”` : 'Not saved under a name yet';
@@ -205,8 +215,12 @@ export const LAND_ITEM = Object.freeze({ act: 'land', label: 'Dashboard',
 export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
   docCurrent = null, canSwitch = false, switchOpen = false, onHome = false, hasHome = false, land = false } = {}) {
   const t = target;
-  const save = { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy, primary: !!t && (dirty || !t.live) };
-  const status = { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent }), dirty: !!dirty };
+  // Lit while there is something to save: a change, or (on the editing page) a dashboard not made yet. Arriving
+  // on the dashboard, only a change lights it (`homeStatusText` argues it).
+  const quietTry = !!t && !t.live && land && t.kind !== 'module';
+  const save = { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy,
+    primary: !!t && (dirty || (!t.live && !quietTry)) };
+  const status = { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent, land }), dirty: !!dirty };
   // ON THE DASHBOARD: Edit, the other place, and Save -- a setting changed from the ⚙ menu here is held for
   // Save like anywhere on this page, so Save stays where it can be pressed. The rest is the editor's.
   if (land) return [{ ...EDIT_ITEM }, placeButton({ onHome, hasHome }), save, status];
@@ -257,7 +271,7 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('editpanel', 'Edit the chosen panel', { hint: 'press a thing in it to see its options; Done or Escape stops', disabled: !canEditPanel }),
     // THE BUILDER (dashboards.js `builder`): what you edit, its options, the modules library and Nimrod.
     item('builder', 'The builder…', { hint: 'edit one thing at a time: it top left, its options top right' }),
-    item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent }) || 'nothing open', disabled: !t || busy }),
+    item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent, land }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
     item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),

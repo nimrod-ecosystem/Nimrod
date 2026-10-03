@@ -44,7 +44,7 @@ const J = (x) => JSON.stringify(x);
 // the page cannot drift apart: the page keeps its phone layout in its own `<style data-phone>`, and the
 // suite checks those rules match at 375 and 320 and NOT at kiosk sizes.
 let ifr = null, doc = null, win = null;
-async function open(query, w, h) {
+async function open(query, w, h, { land = false } = {}) {
   ifr?.remove();
   ifr = document.createElement('iframe');
   // `?show=1` puts the frame on the page (top left) to watch it run; by default it is off to the side.
@@ -53,7 +53,8 @@ async function open(query, w, h) {
   document.body.append(ifr);
   // `edit=1`: this suite is about the editing page (2026-10-02 evening: a plain arrival is the dashboard filling
   // the window, which home_page_test checks; the editor is one press from it, and this is that page).
-  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}&edit=1`; });
+  // (`land`: a plain arrival -- the dashboard filling the window -- for the one section about that.)
+  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}${land ? '' : '&edit=1'}`; });
   doc = ifr.contentDocument; win = ifr.contentWindow;
   const orig = win.console.error.bind(win.console);
   win.console.error = (...a) => { pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };
@@ -310,6 +311,31 @@ try {
   check('(setup) Add opens', await until(() => !tray().hidden && /Add to your Home/.test(tray().textContent)));
   sheetOK('[320] Add');
   check('[320] with the sheet open: still no sideways page scroll', doc.documentElement.scrollWidth <= vw() + 0.5);
+
+  // ============================================================================================
+  // 2026-10-02, late: wider than a phone, the dashboard filling the window floats its bar over the panels and tucks
+  // it away (home_page_test checks that at 1280x720). On a phone it does NOT (modules.html `barFloats` argues it):
+  // the panels stack and scroll, and a bar that woke on every scrolling touch would sit over the panel being read.
+  section('*** 375 × 812, ARRIVING: the dashboard fills the window, and its bar stays a ROW (it does not float or tuck) ***');
+  await open(`user=${encodeURIComponent(USER + '-land')}`, 375, 812, { land: true });
+  check('(setup) a plain arrival: the dashboard filling the window, its bar up',
+    await until(() => doc.body.classList.contains('is-land') && !!hb('edit') && !!$('#stage .tb-bar'), 45000),
+    `homeError=${doc.body.dataset.homeError || '-'} land=${doc.body.classList.contains('is-land')}`);
+  const lbar = $('#stage .tb-bar');
+  const ldock = lbar?.closest('.v-dock-bottom');
+  check('*** the bar is a row of the dashboard on a phone, not floated over it ***',
+    !$('#stage').dataset.barOver && !!ldock && css(ldock).position !== 'absolute', `over=${$('#stage').dataset.barOver} dock=${ldock && css(ldock).position}`);
+  check('*** ...one row, inside the window, every button 44px ***', R(lbar).height <= 80 && R(lbar).bottom <= vh() + 0.5
+    && smallTargets(lbar).length === 0, `${J(R(lbar))} ${smallTargets(lbar).join(' ; ')}`);
+  check('*** ...and it does not tuck itself away (waited past the 6 s it would on a wider window) ***',
+    await (async () => { await sleep(7500); return lbar.dataset.tucked !== '1' && css(lbar).visibility !== 'hidden'; })(), lbar.dataset.tucked);
+  const lgrid = $('#stage .k-stage.k-grid');
+  const lcells = lgrid ? [...lgrid.children].filter((c) => c.classList.contains('k-cell') && shown(c)) : [];
+  check('...the panels still stack, one per screenful, above the bar', lcells.length === 4
+    && lcells.every((c) => Math.abs(R(c).width - innerW(lgrid)) <= 2) && R(lgrid).bottom <= R(lbar).top + 1,
+    `${lcells.length} grid ${J(R(lgrid || doc.body))} bar ${J(R(lbar))}`);
+  check('[375 land] no sideways page scroll, nothing sticking out', doc.documentElement.scrollWidth <= vw() + 0.5 && sticksOut().length === 0,
+    sticksOut().join(' ; '));
 
   // ============================================================================================
   section('*** 1280 × 720 and 1920 × 1080: the desktop and kiosk layout is untouched ***');

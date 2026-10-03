@@ -125,6 +125,65 @@ export function paintBigger(btn, s = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// *** A PRESS THAT WAKES THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late), BOTH BARS. *** Measured: a
+// tap on the calculator's "=" where the hidden plain bar sat sent its click to `.k-controls`. Both bars come
+// back on a press's pointerdown, and the rest of that press is hit-tested AGAIN -- a touch's tap at its point
+// when it lifts, a mouse's release where it is -- by which time the bar is there. So the key the person was
+// looking at and pressing lost the press: to the bar under a finger, to nothing at all under a mouse (its
+// click goes to what the press and the release share). A mouse whose pointer is already near the bar has
+// woken it before any press, so this is the touch screen's case most of all.
+//
+// WHERE THE PRESS GOES, ARGUED: to whatever was under it when it began, not nowhere. The bar was not on the
+// screen when the press started, so what the person aimed at is what they could see -- a key, a photo, a
+// game's button -- and the module under the finger is exactly as pressable as it looked. AGAINST: a person
+// who taps the bottom edge only to call the bar up presses whatever is there too. But that is a visible,
+// pressable thing they put their finger on; "a press does nothing" would make every first tap on a touch
+// screen a dud, and teach that the screen ignores you. The press-only-wakes option is still there for
+// anybody who wants it: a mouse near the bar, a key, or a switch wakes it without pressing anything.
+//
+// HOW: the bar sits out that one press -- `pointer-events:none`, inline, from its pointerdown until the press
+// has been aimed. The click (which is hit-tested before it is dispatched) ends it; so does a cancelled press;
+// and a release with no click after it (a drag, a long press) ends it `settleMs` later. (Should a release
+// never be reported at all, the next press ends it: a bar is never left unpressable.)
+// `WAKE_PRESS_SETTLE_MS`, argued rather than chosen: a tap's click comes straight after the finger lifts, but
+// a browser that still waits to see whether a tap is the first of a double-tap holds it ~300 ms -- so 400
+// covers that. It only matters when no click comes, and a person cannot see a bar appear, aim and press it
+// again inside 400 ms. Not a setting: it answers "when has this press been delivered", which nobody chooses.
+export const WAKE_PRESS_SETTLE_MS = 400;
+/** The bar `el` sits out the press `ev` (the pointerdown that woke it). Returns a function that ends it now. */
+export function sitOutWakePress(el, ev, { settleMs = WAKE_PRESS_SETTLE_MS } = {}) {
+  const w = el?.ownerDocument?.defaultView;
+  if (!w || !ev || ev.type !== 'pointerdown' || el.dataset.waking) return () => {};
+  const prev = el.style.pointerEvents;
+  el.dataset.waking = '1';
+  el.style.pointerEvents = 'none';
+  let t = null;
+  const id = ev.pointerId;
+  const done = () => {
+    clearTimeout(t); t = null;
+    w.removeEventListener('click', done, true);
+    w.removeEventListener('pointerup', onEnd, true);
+    w.removeEventListener('pointercancel', done, true);
+    w.removeEventListener('pointerdown', onNext, true);
+    if (!el.dataset.waking) return;
+    delete el.dataset.waking;
+    el.style.pointerEvents = prev;
+  };
+  const onEnd = (e) => {
+    if (e && id !== undefined && e.pointerId !== id) return;
+    clearTimeout(t);
+    t = setTimeout(done, settleMs);
+  };
+  // The backstop, should a release never be reported: the next press means this one is over.
+  const onNext = (e) => { if (e !== ev) done(); };
+  w.addEventListener('click', done, true);
+  w.addEventListener('pointerup', onEnd, true);
+  w.addEventListener('pointercancel', done, true);
+  w.addEventListener('pointerdown', onNext, true);
+  return done;
+}
+
+// ---------------------------------------------------------------------------------------------------
 // *** A LIVE CALL'S CONTROLS ON THE BAR (2026-10-02). *** From the call panel's own report
 // (actions.js CALL_CONTROLS_TOPIC; modules/call.js): shown only while a call is live, gone the moment it
 // ends. Each button says what pressing it DOES ("Mute my mic", then "Unmute my mic") and is lit while the

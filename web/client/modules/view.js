@@ -417,8 +417,12 @@ function dashboardFactory(ctx) {
         dock.style.position = 'absolute';
         dock.style.left = '0'; dock.style.right = '0';
         if ((def.dock || 'bottom') === 'top') dock.style.top = '0'; else dock.style.bottom = '0';
+        // NOT the host either (2026-10-02, late): its box is the bar's box, and while the bar is tucked away
+        // (`visibility:hidden`) that empty box still took a press meant for the panel under it -- measured, a
+        // calculator key under a tucked bar was unpressable. What the module DRAWS takes presses (set below,
+        // once it has drawn); the box around it never does.
         dock.style.pointerEvents = 'none';
-        host.style.pointerEvents = 'auto';
+        host.style.pointerEvents = 'none';
         host.style.height = 'auto';
       }
       dock.append(host);
@@ -433,6 +437,9 @@ function dashboardFactory(ctx) {
         }));
         await rec.instance.init();
         if (torn || chromeRecs.get(def.id) !== rec) { try { rec.instance.destroy(); } catch { /* gone */ } return; }
+        if (def.over === true) {
+          for (const c of host.children) { if (!c.style.pointerEvents) c.style.pointerEvents = 'auto'; }
+        }
         rec.status = 'carried';
       } catch (err) {
         console.error(`view: ${def.type} (placed ${role || 'chrome'}) failed to start`, err);
