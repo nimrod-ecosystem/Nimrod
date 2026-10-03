@@ -2167,3 +2167,14 @@ Mike's rulings, logged by Code.
      use first.
    - Furniture can be built from Nimrod bricks, with a merged version shown on dashboards that can be opened to
      edit its bricks.
+
+## Game and learning are independent; one settings; the guide/AI is the first thing to set up -- 2026-10-03
+
+Mike's rulings, logged by Code.
+
+1. **Learning and game are not mutually exclusive.** *"Learning just adds a second type of points. In game mode all
+   the points would just be the game points."* Game is on or off; Learning is on or off; Learning adds School
+   points. This supersedes the three-way game / learning / sandbox mode of 09558ea.
+2. **The settings panel and the settings menu are one thing.** *"There shouldn't be 2 different things."*
+3. **The first thing Nimrod offers to set up is your guide/AI,** not photos, because photos are no longer on the
+   first dashboard.
