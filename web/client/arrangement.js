@@ -65,7 +65,7 @@ import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_n
 // (room_doors.js argues where a door is saved and why that is not a rebuild).
 import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, tidyScene } from './room_doors.js';
 export { classifyLayoutChange };
-import { SHELL_PROMOTE } from './shell_verbs.js';
+import { SHELL_PROMOTE, SHELL_DEMOTE } from './shell_verbs.js';
 // 2026-10-02: EDIT ANY MODULE IN PLACE (edit_mode.js argues it). This file owns which panel is being edited
 // on this dashboard, the ✎ corner beside ⤢, and the `shell/edit-panel` verb.
 import { createEditMode, EDIT_PANEL_TOPIC, editSettingsFrom, ensureEditCss } from './edit_mode.js';
@@ -112,6 +112,13 @@ import { moveKeeping } from './dom_move.js';
 //   NEVER UNDER THE BAR: a bottom-row corner can sit under the transport bar (a 2x2's lower-left one, under
 // the placed bar, measured). kiosk.js lifts any corner that overlaps a bar that is showing, through
 // `--k-corner-lift` on the button; 0 everywhere else.
+//   THE WAY BACK (2026-10-03). Mike, after the deploy: "Promote works now but there's no way to demote it."
+// A panel filling its dashboard kept ⤢ ("fill the screen"), and both bars said Bigger: every visible press
+// went UP. On a kiosk that is already full screen the screen level looks like the dashboard level, and its ⤡
+// came back down to that same ⤢ -- a loop with no way out by pointer. So a panel made bigger at ANY level
+// reads ⤡ and its corner says SHELL_DEMOTE: the spot that made it bigger is the way back, one level a press.
+// It stays shown while promoted (`[data-promoted]>.k-promote`), not only on hover. Going further up is the
+// bars' Bigger, the menu's row, a switch, or "full screen" -- not this corner.
 // =====================================================================================================
 const PROMOTE_CSS_ID = 'k-promote-css';
 const PROMOTE_PX = 44;
@@ -127,7 +134,7 @@ function ensurePromoteCss() {
 :root:not([data-press="touch"]) .k-cell:hover>.k-promote,:root:not([data-press="touch"]) .k-pcell:hover>.k-promote,
 :root:not([data-press="touch"]) .k-stage:hover>.k-promote,
 .k-cell:focus-within>.k-promote,.k-pcell:focus-within>.k-promote,.k-stage:focus-within>.k-promote,
-.k-promote:focus-visible,[data-promoted]>.k-promote,
+.k-promote:focus-visible,[data-promoted]>.k-promote,.k-promote[data-down="1"],
 .kiosk[data-corners="up"] .k-promote{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
 [data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
@@ -1714,15 +1721,18 @@ export function createArrangement({
         b.className = 'k-promote';
         b.addEventListener('click', (e) => {
           e.stopPropagation();
-          try { bus?.publish?.(SHELL_PROMOTE, { id: b.dataset.for, from: 'corner' }); } catch (err) { console.error('arrangement: promote', err); }
+          const topic = b.dataset.down === '1' ? SHELL_DEMOTE : SHELL_PROMOTE;
+          try { bus?.publish?.(topic, { id: b.dataset.for, from: 'corner' }); } catch (err) { console.error('arrangement: promote', err); }
         });
         pb.box.append(b);
       }
-      const top = promoteTop === r.id;
+      // ⤡ on a panel made bigger AT ANY LEVEL (filling its dashboard, or the screen): see "THE WAY BACK" above.
+      const down = promoteTop === r.id || promoted === r.id;
       const t = r.title || r.type;
       b.dataset.for = r.id;
-      b.textContent = top ? '⤡' : '⤢';
-      const say = top ? `Make ${t} smaller` : promoted === r.id ? `Make ${t} fill the screen` : `Make ${t} bigger`;
+      if (down) b.dataset.down = '1'; else delete b.dataset.down;
+      b.textContent = down ? '⤡' : '⤢';
+      const say = down ? `Make ${t} smaller` : `Make ${t} bigger`;
       b.setAttribute('aria-label', say);
       b.title = say;
       // THE ✎ CORNER (2026-10-02, edit_mode.js): beside ⤢, shown when it is; pressing it edits this panel

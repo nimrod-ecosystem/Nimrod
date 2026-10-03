@@ -41,13 +41,13 @@
 
 import { registerModule } from '../module.js';
 import {
-  barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
+  barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
   sitOutWakePress,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
-  SHELL_PLAY_PAUSE, SHELL_PROMOTE,
+  SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -75,6 +75,8 @@ const BUTTONS = [
   { act: 'switch', verb: SHELL_SWITCH_MODULE, label: 'Switch module', title: 'switch the selected panel to another module' },
   // Bigger / Smaller (2026-10-02 evening): the panel corner's press, for the selected panel (paintBigger).
   { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the selected panel bigger, one step at a time' },
+  // Smaller (2026-10-03, "no way to demote it"): one level down, live while anything is bigger (paintSmaller).
+  { act: 'smaller', verb: SHELL_DEMOTE, label: '⤡ Smaller', title: 'nothing is bigger now' },
   { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false },
   { act: 'hush', verb: SHELL_HUSH, label: 'Hush',
     title: 'pause the music and video so you can talk (voices and speech are still heard)' },
@@ -255,6 +257,7 @@ registerModule(
       if (helpEl) helpEl.hidden = !helpShown;
       paintPlayPause(root.querySelector('.tb-actions:not(.tb-host) [data-act="playpause"]'), playPause || {});
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
+      paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }));
       drawHost();
       wordShell();

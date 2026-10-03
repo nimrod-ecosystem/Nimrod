@@ -515,10 +515,20 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const vis = (el) => getComputedStyle(el).visibility;
       check('*** the corner: Photos fills its dashboard, the other panel steps aside (still mounted) ***',
         kiosk.promoted().dashboard === ids[0] && cells[0].dataset.promoted === '1' && vis(cells[1]) === 'hidden' && kiosk.slotCount() === 2, J(kiosk.promoted()));
-      check('...its corner now says it fills the screen next', /fill the screen/.test(cells[0].querySelector('.k-promote').getAttribute('aria-label')));
+      // *** 2026-10-03, Mike: "Promote works now but there's no way to demote it." *** The corner of a panel
+      // filling its dashboard said ⤢ "fill the screen", and so did both bars: every visible press went UP. The
+      // screen level looks the same as the dashboard level on a kiosk that is already full screen, and its ⤡
+      // came back down to the ⤢ again -- a loop with no way out. A promoted panel's corner is ⤡ at EVERY level.
+      check('*** ...its corner now reads ⤡ "smaller": the press that made it bigger is where the way back is ***',
+        cells[0].querySelector('.k-promote').textContent === '⤡' && /smaller/.test(cells[0].querySelector('.k-promote').getAttribute('aria-label')),
+        cells[0].querySelector('.k-promote').getAttribute('aria-label'));
       cells[0].querySelector('.k-promote').click();
       await sleep(30);
-      check('*** pressed again: the screen (the mirror and clock step aside), and the corner reads "smaller" ***',
+      check('*** pressed again: one level back DOWN, the other panel is back ***',
+        !kiosk.promoted().dashboard && !kiosk.promoted().screen && vis(cells[1]) === 'visible', J(kiosk.promoted()));
+      kiosk.promote(ids[0]); kiosk.promote(ids[0]);
+      await sleep(30);
+      check('*** "bigger" twice: the screen (the mirror and clock step aside), and the corner reads "smaller" ***',
         kiosk.promoted().screen === ids[0] && root.querySelector('.kiosk').dataset.promoted === 'screen'
         && /smaller/.test(cells[0].querySelector('.k-promote').getAttribute('aria-label')), J(kiosk.promoted()));
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
@@ -534,9 +544,14 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.menu.open(); kiosk.menu.showTab('module');
       const prow = kiosk.menu.items().find((i) => i.id === 'promote');
       check('the menu offers it on the panel\'s tab', !!prow && /bigger/.test(prow.label));
+      check('...and no "smaller" row while nothing is bigger', !kiosk.menu.items().some((i) => i.id === 'demote'));
       kiosk.menu.focusRow('promote'); kiosk.menu.select();
       check('...which closes the menu and makes it bigger', !kiosk.menu.isOpen() && kiosk.promoted().dashboard === ids[0]);
-      kiosk.demote();
+      kiosk.menu.open(); kiosk.menu.showTab('module');
+      const drow = kiosk.menu.items().find((i) => i.id === 'demote');
+      check('*** filling its dashboard: the menu has "smaller" too (a scan\'s way back) ***', !!drow && /smaller/.test(drow.label), J(drow));
+      kiosk.menu.focusRow('demote'); kiosk.menu.select();
+      check('...which closes the menu and makes it smaller', !kiosk.menu.isOpen() && !kiosk.promoted().dashboard, J(kiosk.promoted()));
 
       // (4) A LIVE CALL'S CONTROLS ON THE PLAIN BAR, from the call panel's report.
       const sent = [];
@@ -598,11 +613,45 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** a TOUCH on the corner reaches the corner (not the panel under it) ***', t.down === corner(0) && t.click === corner(0),
         `${t.down?.className} / ${t.click?.className}`);
       check('*** ...and the panel fills its dashboard ***', kiosk.promoted().dashboard === ids[0] && getComputedStyle(cells[1]).visibility === 'hidden', J(kiosk.promoted()));
+      // THE WAY BACK (2026-10-03, Mike: "no way to demote it"): the promoted panel's corner reads ⤡, stays shown
+      // after the bar and the other corners have gone, sits clear of the bar, and a real press on it goes back down.
+      await settled(() => !kEl.dataset.corners, 6000);
+      await sleep(300);
+      root.scrollIntoView({ block: 'nearest' });
+      const [px, py] = centre(corner(0));
+      check('*** promoted: its ⤡ corner is STILL SHOWN once the bar and the other corners have gone, and nothing is over it ***',
+        !kEl.dataset.corners && corner(0).textContent === '⤡' && getComputedStyle(corner(0)).opacity === '1'
+        && getComputedStyle(corner(0)).pointerEvents === 'auto' && document.elementFromPoint(px, py) === corner(0),
+        `${kEl.dataset.corners} ${corner(0).textContent} ${getComputedStyle(corner(0)).opacity} at=${document.elementFromPoint(px, py)?.className}`);
       const m = await pressAt(corner(0), 'mouse');
-      check('*** a MOUSE press on the corner: up one more level, the screen ***', m.click === corner(0) && kiosk.promoted().screen === ids[0], J(kiosk.promoted()));
+      check('*** a MOUSE press on ⤡: back DOWN, all four panels again ***', m.click === corner(0) && !kiosk.promoted().dashboard && !kiosk.promoted().screen
+        && cells.every((c) => getComputedStyle(c).visibility === 'visible'), `${m.click?.className} ${J(kiosk.promoted())}`);
       check('...and a mouse press gives hover back', document.documentElement.dataset.press === 'mouse');
-      kiosk.demote(); kiosk.demote();
-      check('...back down', !kiosk.promoted().screen && !kiosk.promoted().dashboard);
+      // The same by touch, from the screen level too: each ⤡ is one level down, never back up.
+      await pressAt(cells[2].querySelector('.k-mod'), 'touch');
+      await sleep(300);
+      await pressAt(corner(2), 'touch');
+      kiosk.promote(ids[2]);
+      check('(setup) the calculator fills the screen', kiosk.promoted().screen === ids[2], J(kiosk.promoted()));
+      await sleep(300);
+      const s1 = await pressAt(corner(2), 'touch');
+      check('*** a TOUCH on ⤡ at the screen level: one level down (it still fills its dashboard), and its corner still reads ⤡ ***',
+        s1.click === corner(2) && !kiosk.promoted().screen && kiosk.promoted().dashboard === ids[2] && corner(2).textContent === '⤡',
+        `${s1.click?.className} ${J(kiosk.promoted())} ${corner(2).textContent}`);
+      const s2 = await pressAt(corner(2), 'touch');
+      check('*** ...and again: all the way back ***', s2.click === corner(2) && !kiosk.promoted().dashboard && corner(2).textContent === '⤢',
+        `${s2.click?.className} ${J(kiosk.promoted())}`);
+      // ESCAPE, with nothing focused (a key after a mouse press on a panel lands on the body).
+      await pressAt(corner(0), 'mouse');
+      document.activeElement?.blur?.();
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      await sleep(30);
+      check('*** Escape with nothing focused: back down ***', !kiosk.promoted().dashboard, J(kiosk.promoted()));
+      // BACK (the verb a switch, a voice or a mouse's back button sends).
+      kiosk.promote(ids[1]);
+      bus.publish('verb/back');
+      await sleep(30);
+      check('*** Back: back down ***', !kiosk.promoted().dashboard, J(kiosk.promoted()));
       // Once the corners have gone again, a press where one sits is the panel's -- the corner never
       // swallows a press it was not showing for (nor does it appear under the press and take its release).
       const gone = await settled(() => !kEl.dataset.corners, 6000);
@@ -620,13 +669,21 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       await sleep(30);
       kiosk.holdBar(true);              // the bar up (as a press brings it), for as long as this takes
       await sleep(30);
+      const small = () => root.querySelector('.k-actions [data-act="smaller"]');
+      check('*** the plain bar has Smaller beside it: dimmed (never hidden) while nothing is bigger ***',
+        !!small() && !small().hidden && small().disabled && /Smaller/.test(small().textContent), small()?.outerHTML);
       await pressAt(big(), 'touch');
       check('*** ...pressed: the SELECTED panel fills its dashboard ***', kiosk.promoted().dashboard === ids[3], J(kiosk.promoted()));
+      check('*** ...and Smaller is live at once (the way back is on the bar too) ***', !small().disabled && /Bigger/.test(big().textContent) && !big().disabled,
+        `${small().disabled} ${big().textContent}`);
       await pressAt(big(), 'mouse');
-      check('...again: the screen, and the button now says Smaller', kiosk.promoted().screen === ids[3] && /Smaller/.test(big().textContent), big().textContent);
-      await pressAt(big(), 'mouse');
-      check('...which goes one level back down', !kiosk.promoted().screen && kiosk.promoted().dashboard === ids[3] && /Bigger/.test(big().textContent), J(kiosk.promoted()));
-      kiosk.demote();
+      check('...Bigger again: the screen; Bigger dims (there is no level above), Smaller stays live', kiosk.promoted().screen === ids[3]
+        && big().disabled && !small().disabled, `${J(kiosk.promoted())} ${big().disabled} ${small().disabled}`);
+      const sm = await pressAt(small(), 'mouse');
+      check('*** a press on Smaller: one level back down ***', sm.click === small() && !kiosk.promoted().screen && kiosk.promoted().dashboard === ids[3] && !big().disabled,
+        `${sm.click?.dataset?.act} ${J(kiosk.promoted())}`);
+      await pressAt(small(), 'touch');
+      check('*** ...and a tap: all the way back, Smaller dimmed again ***', !kiosk.promoted().dashboard && small().disabled, J(kiosk.promoted()));
       kiosk.holdBar(false);
       kiosk.destroy(); root.innerHTML = '';
     }
@@ -726,6 +783,51 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       pbig()?.click();
       await sleep(30);
       check('...which makes the selected panel bigger', !!kiosk.promoted().dashboard, J(kiosk.promoted()));
+      // THE WAY BACK ON THE PLACED BAR (2026-10-03): Smaller, live while anything is bigger, a real press.
+      const psmall = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="smaller"]');
+      check('*** the placed bar has Smaller, live now ***', !!psmall() && !psmall().hidden && !psmall().disabled, psmall()?.outerHTML);
+      kiosk.holdBar(true);
+      await sleep(30);
+      root.scrollIntoView({ block: 'nearest' });
+      const ps = await pressAt(psmall(), 'mouse');
+      check('*** ...a real press on it: back down, and it dims ***', ps.click === psmall() && !kiosk.promoted().dashboard && psmall().disabled,
+        `${ps.click?.className} ${J(kiosk.promoted())}`);
+      kiosk.holdBar(false);
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
+    section('*** the way back on an EMBEDDED screen (Home\'s landing: the dashboard filling the page) ***');
+    {
+      const p = await profiles.create('SC-embed');
+      for (const t of ['photos', 'trivia', 'calculator', 'wordforge']) await profiles.addModule(p.id, t);
+      const ids = (await profiles.get(p.id)).modules.map((m) => m.id);
+      const bus = createBus();
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, embedded: true, dashboardModule: true,
+        embedLayout: { preset: 'quad', slots: ids }, ...seams(fakeStorage()) });
+      await sleep(800);
+      const cells = [...root.querySelectorAll('.view .k-stage > .k-cell')];
+      check('(setup) an embedded 2x2 on the dashboard path', kiosk.dashboardPath() && cells.length === 4, String(cells.length));
+      root.scrollIntoView({ block: 'nearest' });
+      await pressAt(cells[0].querySelector('.k-mod'), 'mouse');
+      await sleep(300);
+      const c0 = () => cells[0].querySelector(':scope > .k-promote');
+      const r = await pressAt(c0(), 'mouse');
+      check('(setup) a real press on the corner: it fills the dashboard', r.click === c0() && !!kiosk.promoted().dashboard, J(kiosk.promoted()));
+      // Measured on Home (real CDP keys, 2026-10-03): after a press on a panel nothing is focused, the key lands on
+      // the BODY, and the embed's "only a key inside its box" rule threw it away -- Escape did nothing there.
+      document.activeElement?.blur?.();
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      await sleep(30);
+      check('*** Escape with nothing focused, on an embed: back down ***', !kiosk.promoted().dashboard, J(kiosk.promoted()));
+      // ...but a key typed into the host page's own field is still the host's.
+      const field = document.createElement('input');
+      document.body.append(field);
+      kiosk.promote(ids[0]);
+      field.focus();
+      field.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+      await sleep(30);
+      check('...a key in a field of the host page is not taken', kiosk.promoted().dashboard === ids[0], J(kiosk.promoted()));
+      field.remove();
       kiosk.demote();
       kiosk.destroy(); root.innerHTML = '';
     }

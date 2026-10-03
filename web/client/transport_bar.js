@@ -111,17 +111,30 @@ export function paintPlayPause(btn, s = {}) {
 // corner is a small target in a panel's corner, and the bar is where a finger or a switch already goes.
 // Drawn from the shell's state ({ can, smaller, name }); dimmed with no panel selected (D16). Fixed width,
 // like Pause / Play, so the words changing never moves a button after it.
+//   SMALLER IS ITS OWN BUTTON (2026-10-03). Mike, after the deploy: "Promote works now but there's no way to
+// demote it." The one button said Smaller only at the screen level, so a panel filling its dashboard had no
+// way back on either bar (and the corner said "fill the screen" too). Now Bigger is always one level up --
+// dimmed at the top -- and Smaller, right after it, is one level down, live whenever anything is bigger and
+// dimmed (never hidden, D16) otherwise. State: { can, top, promoted, name } (kiosk.js `biggerState`).
 export const BIGGER_ACT = 'bigger';
+export const SMALLER_ACT = 'smaller';
 export function paintBigger(btn, s = {}) {
   if (!btn) return;
   const can = !!(s && s.can);
-  const smaller = !!(s && s.smaller);
+  const top = !!(s && s.top);
   const name = (s && s.name) || 'the selected panel';
-  btn.disabled = !can;
-  btn.textContent = smaller ? '⤡ Smaller' : '⤢ Bigger';
-  btn.setAttribute('aria-pressed', smaller ? 'true' : 'false');
+  btn.disabled = !can || top;
+  btn.textContent = '⤢ Bigger';
   btn.style.minWidth = '6.2em';
-  btn.title = !can ? 'no panel is selected' : smaller ? `make ${name} smaller` : `make ${name} bigger, one step at a time`;
+  btn.title = !can ? 'no panel is selected' : top ? `${name} already fills the screen` : `make ${name} bigger, one step at a time`;
+}
+export function paintSmaller(btn, s = {}) {
+  if (!btn) return;
+  const on = !!(s && s.promoted);
+  btn.disabled = !on;
+  btn.textContent = '⤡ Smaller';
+  btn.style.minWidth = '6.2em';
+  btn.title = on ? 'make it smaller, one step at a time' : 'nothing is bigger now';
 }
 
 // ---------------------------------------------------------------------------------------------------
