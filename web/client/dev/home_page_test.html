@@ -69,10 +69,11 @@ const modsOf = async (pid) => (await profiles.get(pid)).modules || [];
 let ifr = null, doc = null, win = null;
 // 2026-10-02 evening: a plain arrival is the dashboard FILLING THE WINDOW; this suite is mostly about the editing
 // page, so it asks for that (`edit=1`, what the dashboard's Edit opens) unless a check is about arriving (`land`).
-async function open(query, { land = false } = {}) {
+// `w`/`h`: the window's size (2026-10-02, late: arriving is checked at a kiosk's 1280x720, where the bar wraps).
+async function open(query, { land = false, w = 1300, h = 950 } = {}) {
   ifr?.remove();
   ifr = document.createElement('iframe');
-  ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px;border:0';
+  ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
   document.body.append(ifr);
   const q = land ? query : (query ? `${query}&edit=1` : 'edit=1');
   await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${q}`; });
@@ -85,6 +86,30 @@ async function open(query, { land = false } = {}) {
   };
 }
 const pageErrors = [];
+// A PRESS THE WAY THE BROWSER DELIVERS ONE, inside the page (screen_controls_test's `realPress`, for the frame):
+// each event goes to what is AT the point when it happens; a mouse's click to what its press and release share;
+// a touch's tap is hit-tested again where it lifts.
+async function realPress(x, y, pointerType = 'mouse') {
+  const opt = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerType, isPrimary: true,
+    pointerId: pointerType === 'mouse' ? 1 : 7, button: 0, buttons: 1 };
+  const down = doc.elementFromPoint(x, y);
+  if (!down) return { down: null, up: null, click: null };
+  down.dispatchEvent(new win.PointerEvent('pointerdown', opt));
+  if (pointerType === 'mouse') down.dispatchEvent(new win.MouseEvent('mousedown', opt));
+  await sleep(0);
+  const up = pointerType === 'mouse' ? doc.elementFromPoint(x, y) : down;
+  const off = { ...opt, buttons: 0 };
+  up.dispatchEvent(new win.PointerEvent('pointerup', off));
+  if (pointerType === 'mouse') up.dispatchEvent(new win.MouseEvent('mouseup', off));
+  await sleep(0);
+  let click = null;
+  if (pointerType === 'mouse') { for (let e = down; e; e = e.parentElement) if (e.contains(up)) { click = e; break; } }
+  else click = doc.elementFromPoint(x, y);
+  click?.dispatchEvent(new win.MouseEvent('click', { ...off, detail: 1 }));
+  await sleep(0);
+  return { down, up, click };
+}
+const mid = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
 const $ = (s) => doc.querySelector(s);
 const $$ = (s) => [...doc.querySelectorAll(s)];
 // Home's buttons are ON THE REAL TRANSPORT BAR in the stage (the kiosk's placed bar, drawn from the page's
@@ -139,7 +164,8 @@ try {
   {
     const LU = `${USER}-land`;
     const lp = createProfilesClient({ user: LU });
-    await open(`user=${encodeURIComponent(LU)}`, { land: true });
+    // At a kiosk's 1280x720: the size where the bar, as a docked row, wrapped to two rows and took ~110px.
+    await open(`user=${encodeURIComponent(LU)}`, { land: true, w: 1280, h: 720 });
     check('*** a plain arrival fills the window with the dashboard (body.is-land), its bar up ***',
       await until(() => doc.body.classList.contains('is-land') && !!hb('edit'), 45000),
       `homeError=${doc.body.dataset.homeError || '-'} land=${doc.body.classList.contains('is-land')}`);
@@ -170,8 +196,9 @@ try {
     check('*** no space between panels by default (the screen’s "Space between panels": none) ***',
       $('#stage .kiosk')?.dataset.panelGap === 'none' && grid && win.getComputedStyle(grid).columnGap === '0px' && win.getComputedStyle(grid).rowGap === '0px'
       && win.getComputedStyle(grid).paddingLeft === '0px', `${$('#stage .kiosk')?.dataset.panelGap} ${grid && win.getComputedStyle(grid).gap}`);
-    check('*** so each panel is EXACTLY a quarter of the dashboard (the window above the bar), tiled ***',
-      G && near(G.left, 0) && near(G.width, vwL) && near(G.top, 0) && cells.length === 4 && cells.every((c, i) => {
+    // 2026-10-02, late: of the WHOLE window -- the bar floats over the panels and takes no row of its own.
+    check('*** so each panel is EXACTLY a quarter of the WHOLE WINDOW (the bar takes no row), tiled ***',
+      G && near(G.left, 0) && near(G.width, vwL) && near(G.top, 0) && near(G.height, vhL) && cells.length === 4 && cells.every((c, i) => {
         const r = c.getBoundingClientRect();
         return near(r.width, G.width / 2) && near(r.height, G.height / 2)
           && near(r.left - G.left, (i % 2) * G.width / 2) && near(r.top - G.top, Math.floor(i / 2) * G.height / 2);
@@ -183,18 +210,76 @@ try {
       `${$('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent} (want ${lper?.name})`);
     check('nothing made on the account by arriving', (await lp.list()).length === 1);
 
-    // EDIT: one press to this page as the editor.
-    hb('edit').click();
+    // *** SAVE, QUIET ON ARRIVAL (2026-10-02, late). *** Start here is only tried until saved; on a landing that is
+    // not news. Save is there and pressable, un-lit, and the status says how to keep it -- until something changes.
+    check('*** Save is NOT lit on arrival (nothing has been changed), and still pressable ***',
+      !!hb('save') && hb('save').dataset.primary !== '1' && !hb('save').disabled, hb('save')?.outerHTML);
+    check('*** ...the status is quiet: "Try it, then Save to keep it", not amber ***',
+      status() === 'Try it, then Save to keep it' && !$('#stage .tb-bar [data-host-status]')?.classList.contains('dirty'), status());
+
+    // *** THE BAR FLOATS OVER THE PANELS AND TUCKS ITSELF AWAY (2026-10-02, late), as on a real screen. ***
+    const tb = () => $('#stage .tb-bar');
+    const tucked = () => tb()?.dataset.tucked === '1';
+    const dockOf = () => tb()?.closest('.v-dock-bottom');
+    check('*** the bar floats OVER the panels: its dock is out of the dashboard’s rows, on the bottom edge ***',
+      $('#stage')?.dataset.barOver === '1' && !!dockOf() && win.getComputedStyle(dockOf()).position === 'absolute'
+      && tb().getBoundingClientRect().bottom <= vhL + 0.5 && tb().getBoundingClientRect().top > vhL / 2,
+      `over=${$('#stage')?.dataset.barOver} dock=${dockOf() && win.getComputedStyle(dockOf()).position} bar=${tb() && J(box(tb()))}`);
+    // Its own delay is the person's "In full screen or filling the window, tuck the bar away after" (6 s).
+    const t0 = Date.now();
+    check('*** ...and tucks itself away after the person’s own delay (6 s by default) ***', await until(tucked, 10000),
+      `after ${Date.now() - t0}ms tucked=${tb()?.dataset.tucked}`);
+    const [bx, by] = mid(tb());
+    const atBar = doc.elementFromPoint(bx, by);
+    check('*** a tucked bar takes no press: what is at its spot is a PANEL (not the bar, not its empty box) ***',
+      !!atBar?.closest('.k-cell') && !tb().contains(atBar) && !atBar.closest('.v-dock-bottom'), String(atBar?.className));
+    doc.dispatchEvent(new win.MouseEvent('mousemove', { bubbles: true, clientX: bx, clientY: by }));
+    check('*** the pointer coming near it brings it back ***', !tucked());
+    check('(setup) it tucks again', await until(tucked, 10000));
+    doc.body.dispatchEvent(new win.KeyboardEvent('keydown', { bubbles: true, key: 'Shift' }));
+    check('*** a key brings it back ***', !tucked());
+    check('(setup) it tucks again', await until(tucked, 10000));
+
+    // Save LIGHTS once something is changed: a screen setting from the ⚙ menu ("Space between panels").
+    if (await ensureMenu()) {
+      // (The row is on the menu's Display tab.)
+      $('#stage [data-settings] .st-tab[data-tab="display"]')?.click();
+      await until(() => !!menuRow('Space between panels'), 3000);
+      const gapRow = menuRow('Space between panels');
+      gapRow?.click();
+      check('*** something changed: Save lights, and the status says Unsaved changes ***',
+        await until(() => hb('save')?.dataset.primary === '1' && /unsaved/i.test(status()), 6000),
+        `row=${!!gapRow} save=${hb('save')?.dataset.primary} status=${status()} pending=${J(win.__home?.pending?.())}`);
+      hb('view')?.click();
+      await until(() => !menuShown(), 4000);
+    } else {
+      check('(setup) the ⚙ menu opened on the dashboard', false);
+    }
+
+    // EDIT, by a real press: wake the bar by pressing the dashboard, then press Edit where it now is.
+    check('(setup) the bar has tucked away', await until(tucked, 10000));
+    $('#stage .k-stage').dispatchEvent(new win.PointerEvent('pointerdown', { bubbles: true, pointerType: 'touch', pointerId: 7, isPrimary: true }));
+    $('#stage .k-stage').dispatchEvent(new win.PointerEvent('pointerup', { bubbles: true, pointerType: 'touch', pointerId: 7, isPrimary: true }));
+    check('*** a press anywhere brings it back ***', !tucked());
+    await sleep(600);
+    const editBtn = hb('edit');
+    const ep = await realPress(...mid(editBtn), 'mouse');
+    check('*** ...and Edit is then one real press away (the press reaches it) ***', ep.click === editBtn,
+      `${ep.click?.className} ${ep.click?.textContent}`);
     check('*** Edit: the page comes back as the EDITOR (the edit bar, the starting points, Modules), the address says ?edit=1 ***',
       await until(() => !doc.body.classList.contains('is-land') && !gone('#home-edit') && !!hb('picker') && !!hb('land'), 8000)
       && new URL(win.location.href).searchParams.get('edit') === '1' && !gone('.top'),
       `land=${doc.body.classList.contains('is-land')} url=${win.location.search}`);
     check('...the dashboard is a box on the page there, not the window', $('#stage').getBoundingClientRect().top > 20);
+    check('*** ...and there its bar is a ROW of the dashboard again, up, not tucked (a page being used shows its bar) ***',
+      !$('#stage').dataset.barOver && win.getComputedStyle(dockOf()).position !== 'absolute' && !tucked()
+      && await (async () => { await sleep(7000); return !tucked(); })(), `over=${$('#stage').dataset.barOver} tucked=${tb()?.dataset.tucked}`);
     check('...the same dashboard, not a second one (one kiosk)', kiosks() === 1);
     check('...and the bar’s first button now says Dashboard', $$('#stage .tb-bar .tb-host button')[0]?.textContent === 'Dashboard');
     hb('land').click();
     check('*** Dashboard: back to the dashboard filling the window ***',
       await until(() => doc.body.classList.contains('is-land') && !!hb('edit'), 8000) && !new URL(win.location.href).searchParams.has('edit'));
+    check('...its bar floating over the panels again', $('#stage').dataset.barOver === '1' && win.getComputedStyle(dockOf()).position === 'absolute');
     win.history.back();
     check('*** the browser’s Back goes back across it (to the editor) ***', await until(() => !doc.body.classList.contains('is-land') && !!hb('picker'), 8000));
     win.history.back();

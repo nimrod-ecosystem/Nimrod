@@ -341,6 +341,14 @@
   body.is-land .detail{padding:0;border:0;background:none}
   body.is-land #stage{position:fixed;inset:0;width:auto;height:auto;min-height:0;margin:0;border:0;border-radius:0}
   body.is-land.has-infoline #stage{bottom:2.6em}
+  /* ...AND ITS BAR FLOATS OVER THE PANELS (`#stage[data-bar-over]`: the land view wider than a phone; the page's
+     `barFloats` argues it, phone included). The bottom dock leaves the dashboard's rows, so the panels take the
+     whole window -- four up is four quarters of it -- and the bar lies over their bottom edge and tucks itself
+     away, as kiosk.js's `over` dock does on a real screen. Neither the dock nor the box around the bar takes a
+     press: a tucked bar's empty box would eat one meant for the panel under it. The bar itself does. */
+  #stage[data-bar-over] .view > .v-dock-bottom{position:absolute;left:0;right:0;bottom:0;grid-row:auto;pointer-events:none}
+  #stage[data-bar-over] .view > .v-dock-bottom > .v-chrome{pointer-events:none;height:auto}
+  #stage[data-bar-over] .view > .v-dock-bottom > .v-chrome > .tb-bar{pointer-events:auto}
 
   /* THE MENU AND BAR BACKGROUND (Home setting, "Menu and bar background"). Only the placed bar
      (.tb-bar) and the docked menu: the shell's PLAIN bar (.k-plain) is solid by design and nothing
@@ -1337,6 +1345,8 @@ const HOME_HOST = {
     ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
   barHideMs: () => HOME.settings.barHideMs,
+  // The dashboard filling the window floats the bar over the panels, so it tucks away (`barFloats`).
+  barOver: () => barFloats(),
   subscribe(fn) { hostSubs.add(fn); return () => { hostSubs.delete(fn); }; },
   // The edit bar by switch (kiosk.js `host.scan`): defined with the bar, further down.
   scan: {
@@ -1511,9 +1521,32 @@ function paintHome() {
     const screenSurface = HOME.subject === HD.PROFILE_SUBJECT
       ? HOME.draft?.snapshot().settings?.panelSurface : HOME.defaultSurface;
     stage.dataset.chrome = HD.chromeSurfaceFor(HOME.settings, screenSurface);
+    // The bar floating over the panels (the CSS beside `body.is-land` above), or a row of the dashboard.
+    if (barFloats()) stage.dataset.barOver = '1'; else delete stage.dataset.barOver;
   }
   hostChanged();
 }
+
+// *** THE BAR FLOATS OVER THE DASHBOARD FILLING THE WINDOW (2026-10-02, late). *** Mike: "the dashboard should be
+// the whole screen" -- and the bar, as a docked row, took ~110px of it at 1280x720 (it wraps to two rows there),
+// so the four panels were quarters of the window less the bar. Now, as on a real screen (kiosk.js's `over` dock),
+// the bar sits OVER the panels' bottom edge and tucks itself away after "In full screen or filling the window,
+// tuck the bar away after" (the person's own setting, 6 s by default, Never a choice), and comes back on any
+// press, key, switch or the pointer near it -- so Edit, My Home and Save are always one movement away.
+//   THE DELAY IS THAT SETTING, NOT THE KIOSK'S 3 s (`BAR_HIDE_MS`): it is the same placed bar Home already tucks
+//   in full screen, with a row the person already has; a second number for the same bar would be two rules.
+//   NOT ON A PHONE (the page's own 620px line, `<style data-phone>` argues it): there the bar is ONE row (~60px of
+//   an 812px screen, not two), the panels STACK and scroll inside the stage, and a phone has no pointer to bring
+//   a bar back by coming near it. Floated, every scroll of the stacked panels would start with a touch that woke
+//   the bar over the panel being read, and its buttons would sit on top of the bottom of every panel in turn. A
+//   row that is always there and never covers anything is the better trade at that size.
+// (Asked fresh each time, inside the function, so nothing here can be read before this line has run.)
+function phoneWidth() { try { return window.matchMedia('(max-width:620px)'); } catch { return null; } }
+function barFloats() { return !!HOME.on && !!HOME.land && !phoneWidth()?.matches; }
+// Crossing the line (a window resized, a tablet turned) moves the bar between the two. Held on HOME so the list
+// it listens on is kept.
+HOME.phoneMq = phoneWidth();
+try { HOME.phoneMq?.addEventListener('change', () => paintHome()); } catch { /* an old browser: the width it opened at holds */ }
 
 /** The page's own settings save as they change: they are not the module's, and nothing is waiting. */
 function saveHomeSettings(patch) {

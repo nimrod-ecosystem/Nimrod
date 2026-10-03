@@ -40,6 +40,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
@@ -327,6 +328,8 @@ export async function mountKiosk(root, {
   //                       said it: the placed bar, a switch binding, a room object. ONE Save.
   //   menuItems()         a section of the ⚙ menu (settings.js items; `run` for a press)
   //   barHideMs()         how long a placed bar waits in full screen before tucking away (0 = never)
+  //   barOver()           (optional) true while the page floats the placed bar over the panels: it then tucks
+  //                       away as in full screen (Home's dashboard filling the window; modules/transport_bar.js)
   //   subscribe(fn)       the host's state changed: the bar and the menu redraw
   //   scan                (2026-10-02) the page's own controls taking the switch -- Home's edit bar:
   //                       { held(), next(), prev(), select(), back(), release() }. While `held()` the
@@ -5218,9 +5221,17 @@ export async function mountKiosk(root, {
   pokeBurnIn();
 
   root.addEventListener('mousemove', pokeIfNearBar, { passive: true });
-  for (const ev of ['pointerdown', 'keydown']) {
-    root.addEventListener(ev, poke, { passive: true });
-  }
+  // A PRESS THAT WOKE THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late; transport_bar.js `sitOutWakePress`
+  // argues it): a tap on the calculator's "=" where the hidden bar sat was sent to the bar. The bar that was
+  // hidden when this press began sits the rest of it out, so the press stays with what was under it.
+  let endWakePress = () => {};
+  const pokeOnPress = (e) => {
+    const wasHidden = controlsEl.classList.contains('hidden');
+    poke();
+    if (wasHidden && !controlsEl.classList.contains('hidden')) endWakePress = sitOutWakePress(controlsEl, e);
+  };
+  root.addEventListener('pointerdown', pokeOnPress, { passive: true });
+  root.addEventListener('keydown', poke, { passive: true });
   // Starts hidden, deliberately — it pops up on the first real interaction (a touch, a key)
   // or a mouse coming near it, rather than showing once at boot and then, per the note above,
   // effectively never actually leaving during ordinary use. The raw template has no `hidden`
@@ -5999,8 +6010,9 @@ export async function mountKiosk(root, {
       root.removeEventListener('mousemove', pokeIfNearBar);
       // The pointerdown/keydown pair were never detached here even before today - a real,
       // separate leak, fixed alongside this one since it is the exact same class of bug.
-      root.removeEventListener('pointerdown', poke);
+      root.removeEventListener('pointerdown', pokeOnPress);
       root.removeEventListener('keydown', poke);
+      try { endWakePress(); } catch { /* none under way */ }
       clearTimeout(hideT);
       barHeld = false;
       // The burn-in trio was never detached, and its timer never cleared. Invisible on a page that
