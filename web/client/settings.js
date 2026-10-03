@@ -278,6 +278,9 @@ export function buildItems({
   // See the Home row below. Default true, because "there should be SOME way out" is the
   // default that survived F18's correction.
   includeHome = true,
+  // "Close menu", by default. False only for the menu drawn IN A PANEL (mountSettings `asPanel`): a panel
+  // is not something that opens, so a row that closes it would leave an empty box on the dashboard.
+  includeClose = true,
   // TABS (2026-10-02; see "TABS" above mountSettings). When a host has tabs, every row is TAGGED
   // with the tab it belongs to: its own `tab` if the host gave one, else its slot's default here
   // (`{ who, subject, extras, screen }`). Absent, nothing is tagged and the list is exactly what it
@@ -287,7 +290,7 @@ export function buildItems({
   const out = [];
   if (slotTabs) {
     const res = buildItems({ person, subject, extras, fields, whoItems, screenItems, canFullscreen,
-      isFullscreen, includeHome });
+      isFullscreen, includeHome, includeClose });
     // Which slot each row came from, by walking the slots in the order buildItems lays them out.
     let slot = 'who';
     return res.map((it) => {
@@ -403,7 +406,7 @@ export function buildItems({
   // not that panel's to offer and is already on the shell's own menu. A row that cannot
   // honestly do what it says is worse than an absent one.
   if (includeHome) out.push({ kind: 'item', id: 'home', label: 'Home' });
-  out.push({ kind: 'item', id: 'close', label: 'Close menu' });
+  if (includeClose) out.push({ kind: 'item', id: 'close', label: 'Close menu' });
 
   return out;
 }
@@ -466,6 +469,17 @@ export function mountSettings(root, {
   // the same rows. Nothing about what the menu CAN do changes with it.
   inline = false,
   includeHome = true,
+  // *** THE SAME MENU, DRAWN IN A PANEL (2026-10-03). *** Mike: "The settings module should be the same as
+  // the settings menu. There shouldn't be 2 different things." So the Settings panel (modules/settings.js)
+  // mounts THIS menu with the host's own rows (kiosk.js `settingsMenuFor`), and `asPanel` takes away only the
+  // chrome that belongs to something that opens and closes:
+  //   * it is always open: no Close menu row, and `close()` / `back()` on the list leave it as it is;
+  //   * it is not a dialog: no scrim click, no Escape, no focus trap, not `aria-modal` (a keyboard user Tabs
+  //     in and out of it like any other panel);
+  //   * it never takes the keyboard by itself - focus moves into it only from inside it (a press there).
+  // Everything else - the rows, the tabs, "Settings for", the pages, the pickers, the four moves - is this
+  // file, unchanged. Implies `inline` (it measures against its box).
+  asPanel = false,
   // ---- TABS (2026-10-02; see "TABS" below). All optional: a host that passes none of these gets
   // the one flat list it always had. ----
   // `tabs`: [{ id, label }] or a function returning it, in the order the strip shows them. A tab with
@@ -521,8 +535,8 @@ export function mountSettings(root, {
   let router = null;
 
   root.innerHTML = `
-    <div class="st-scrim${inline ? ' st-inline' : ''}" data-scrim hidden>
-      <div class="st-panel" role="dialog" aria-modal="true" aria-label="Settings" tabindex="-1" data-panel>
+    <div class="st-scrim${inline || asPanel ? ' st-inline' : ''}${asPanel ? ' st-aspanel' : ''}" data-scrim hidden>
+      <div class="st-panel" ${asPanel ? 'role="region"' : 'role="dialog" aria-modal="true"'} aria-label="Settings" tabindex="-1" data-panel>
         <div class="st-list" data-list></div>
         <div class="st-page" data-page hidden></div>
       </div>
@@ -531,6 +545,13 @@ export function mountSettings(root, {
   const panel = root.querySelector('[data-panel]');
   const listEl = root.querySelector('[data-list]');
   const pageEl = root.querySelector('[data-page]');
+  // Keyboard focus to the menu. A menu drawn in a panel (`asPanel`) takes it only when it is already inside
+  // it - a press on one of its rows - so nothing ELSE on the screen (Nimrod asking for a page, a repaint)
+  // ever moves somebody's keyboard into it.
+  const grab = () => {
+    if (!asPanel) { panel.focus?.(); return; }
+    try { const a = doc?.activeElement; if (a && a !== doc.body && root.contains(a)) panel.focus?.(); } catch { /* no document */ }
+  };
 
   const isFullscreen = () => !!(doc && doc.fullscreenElement);
 
@@ -668,8 +689,10 @@ export function mountSettings(root, {
         catch (err) { console.warn('settings: whoItems() threw', err); return []; } })(),
       screenItems: (() => { try { return screenItems() || []; }
         catch (err) { console.warn('settings: screenItems() threw', err); return []; } })(),
-      canFullscreen: !!fullscreenTarget,
-      includeHome,
+      // (A menu in a panel has no ways out of itself: see `asPanel`.)
+      canFullscreen: !!fullscreenTarget && !asPanel,
+      includeHome: includeHome && !asPanel,
+      includeClose: !asPanel,
       isFullscreen: isFullscreen(),
       slotTabs: tabsOn ? SLOT_TABS : null,
     });
@@ -797,7 +820,7 @@ export function mountSettings(root, {
     }
     // Focus back to the panel: the box is gone, and the panel is where this menu's keys live
     // (Escape, the focus trap) - leaving it on <body> would put the next Escape nowhere.
-    if (open) { render(); panel.focus?.(); }
+    if (open) { render(); grab(); }
     return wrote;
   }
   const saveEdit = () => endEdit({ save: true });
@@ -830,11 +853,11 @@ export function mountSettings(root, {
         try { wrote = !!it.commit?.(ref); } catch (err) { console.warn('settings: commit threw', err); }
         closePage();
         if (wrote) onSelect?.(it);
-        if (open) { render(); panel.focus?.(); }
+        if (open) { render(); grab(); }
       },
-      onCancel: () => { closePage(); panel.focus?.(); },
+      onCancel: () => { closePage(); grab(); },
     });
-    panel.focus?.();
+    grab();
     return item;
   }
 
@@ -869,11 +892,11 @@ export function mountSettings(root, {
         try { wrote = !!it.commit?.(v); } catch (err) { console.warn('settings: commit threw', err); }
         closePage();
         if (wrote) onSelect?.(it);
-        if (open) { render(); focusRow(id); panel.focus?.(); }
+        if (open) { render(); focusRow(id); grab(); }
       },
-      onCancel: () => { closePage(); if (open) focusRow(id); panel.focus?.(); },
+      onCancel: () => { closePage(); if (open) focusRow(id); grab(); },
     });
-    panel.focus?.();
+    grab();
     return item;
   }
 
@@ -958,6 +981,8 @@ export function mountSettings(root, {
     }
     if (page) { closePage(); return; }
     if (editing) { cancelEdit(); return; }
+    // A menu in a panel is not a thing that closes: back on its list stays where it is.
+    if (asPanel) return;
     close();
   }
 
@@ -984,7 +1009,7 @@ export function mountSettings(root, {
       // A page that throws must not strand somebody inside a broken screen with no Back.
       pageEl.querySelector('[data-page-body]').textContent = String(err.message || err);
     }
-    panel.focus?.();
+    grab();
     return id;
   }
 
@@ -1018,13 +1043,16 @@ export function mountSettings(root, {
     render({ keepCursor: !tabsOn });
     if (opts && opts.focus) focusRow(opts.focus);
     scrim.hidden = false;
-    router?.setPaused?.(true);
-    panel.focus?.();
+    // (A menu in a panel is not in front of anything: the panels keep their verbs, and it takes no focus.)
+    if (!asPanel) router?.setPaused?.(true);
+    grab();
     return true;
   }
 
-  function close() {
+  function close({ force = false } = {}) {
     if (!open) return;
+    // A menu in a panel only lets go of a page; the panel itself stays (its `destroy` is the way it goes).
+    if (asPanel && !force) { if (page) closePage(); return; }
     if (page) closePage();
     // An open box is abandoned, not saved: closing is a way OUT, and saving half a word on the
     // way out would be a write nobody asked for. Removed from the DOM too, so a hidden menu is
@@ -1056,6 +1084,24 @@ export function mountSettings(root, {
     nav.setIndex(n);
     paint();
     return true;
+  }
+
+  /** SHOW what row `id` holds (2026-10-03): its list (a choice or a picture), else its page, else the cursor
+   *  on it - going to its tab first. It never STEPS a value, whatever the person's "How you choose things":
+   *  somebody (Nimrod) asking the menu to show the themes is asking to see them, not to change one. Null when
+   *  there is no such row here. */
+  function openRow(id) {
+    if (!open || !id) return null;
+    if (page) closePage();
+    if (editing) editing = null;
+    render();
+    if (!focusRow(id)) return null;
+    const it = items.find((x) => x.id === id);
+    if (!it) return null;
+    if (it.choice && it.field) return openChoice(it);
+    if (it.picture) return openPicture(it);
+    if (it.page) { openPage(it.page); return it; }
+    return it;
   }
 
   // --- mouse. Clicking is still how most caregivers will use this. ---
@@ -1122,7 +1168,7 @@ export function mountSettings(root, {
 
   // Clicking the scrim closes. A menu you cannot dismiss by clicking away reads as a
   // crash to anyone who did not mean to open it.
-  scrim.addEventListener('mousedown', (e) => { if (e.target === scrim) close(); }, sig);
+  scrim.addEventListener('mousedown', (e) => { if (e.target === scrim && !asPanel) close(); }, sig);
 
   pageEl.addEventListener('click', (e) => {
     if (e.target.closest('[data-page-back]')) closePage();
@@ -1135,7 +1181,8 @@ export function mountSettings(root, {
   // would move the cursor twice per press. The kiosk, which has no bus, calls next()/
   // prev()/select() from its own key handler instead. Two paths, never both at once.
   panel.addEventListener('keydown', (e) => {
-    if (!open) return;
+    // A menu in a panel is not a dialog: Escape is the screen's (its menu verb), and Tab walks on out of it.
+    if (!open || asPanel) return;
     // `stopPropagation` because Escape is ALSO bound (input_keyboard.js's default/menu -> verb/menu
     // -> `toggle()`, via `attachBus`), and the same keystroke bubbles on to the window listener
     // that feeds the input bus. Closing here and then letting that run put the menu straight back:
@@ -1220,6 +1267,9 @@ export function mountSettings(root, {
     focusIndex: () => nav.index(),
     focusId: () => nav.current()?.id || null,
     focusRow,
+    openRow,
+    // Whether this is the menu drawn in a panel (see `asPanel`).
+    asPanel: () => !!asPanel,
     // ---- tabs (all null / no-ops on a host without them) ----
     tabs: () => tabList.map((d) => ({ ...d })),
     tab: () => (tabsOn ? tab : null),
@@ -1232,7 +1282,7 @@ export function mountSettings(root, {
     setSubject(id) { chooseSubject(id); if (open) render(); return currentSubject()?.id || null; },
     attachBus,
     destroy() {
-      close();
+      close({ force: true });
       listeners.abort();
       busOffs.forEach((fn) => { try { fn(); } catch { /* already gone */ } });
       busOffs.length = 0;

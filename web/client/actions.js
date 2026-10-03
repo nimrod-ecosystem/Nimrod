@@ -529,6 +529,10 @@ export const MODULE_VERBS = {
   nimrod:        { next: 'nimrod/next', prev: 'nimrod/prev', select: 'nimrod/select', back: 'nimrod/back' },
   devices:       { next: 'devices/next', prev: 'devices/prev', select: 'devices/select' },
   whats_new:     { next: 'whats_new/next', prev: 'whats_new/prev', select: 'whats_new/select' },
+  // THE SETTINGS PANEL (2026-10-03): it IS the screen's settings menu, drawn in a panel (modules/settings.js),
+  // so a switch walks it with the menu's own four moves - next / prev the rows, select presses one (or steps
+  // the tab row), back leaves a page or a list. Missing before, so a switch could not reach the panel at all.
+  settings:      { next: 'settings/next', prev: 'settings/prev', select: 'settings/select', back: 'settings/back' },
   // THE MODULES LIBRARY (2026-10-02, library.js): next/prev walk its stops (one at a time, or a row at a time
   // with "Switch scanning: rows"), up/down a row of cards, select shows a thing then puts it here, back closes
   // the details (and, in another panel's place, puts that panel back).
