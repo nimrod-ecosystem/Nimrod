@@ -135,8 +135,14 @@ function backend(user) {
       const start = prebuiltRecord('start');
       const slotType = (rec) => rec.layout.slots.map((r) => rec.modules.find((m) => m.ref === r)?.type);
       const clockwise = (s) => [s[0], s[1], s[3], s[2]];    // TL, TR, BR, BL
-      check('*** the landing Home: four up, CLOCKWISE from the top left: pictures, settings, devices, Nimrod ***',
-        start.layout.preset === 'quad' && J(clockwise(slotType(start))) === J(['photos', 'settings', 'devices', 'nimrod']), J(slotType(start)));
+      // 2026-10-02 evening (Mike): "Four modules clockwise from top left: Profile (I know I said photos before.
+      // Changing it.), settings, Devices, Nimrod/AI."
+      check('*** the landing Home: four up, CLOCKWISE from the top left: PROFILE, settings, devices, Nimrod ***',
+        start.layout.preset === 'quad' && J(clockwise(slotType(start))) === J(['profile', 'settings', 'devices', 'nimrod']), J(slotType(start)));
+      check('...exactly those four types, and no pictures', J(start.modules.map((m) => m.type).sort()) === J(['devices', 'nimrod', 'profile', 'settings']));
+      check('...the profile stores NO subject, so it shows whoever is looking (modules/profile.js defaultSubject)',
+        start.modules.find((m) => m.type === 'profile').state === undefined);
+      check('...and its words say so', /your profile/.test(start.blurb) && !/pictures/.test(start.blurb), start.blurb);
       check('...the settings panel opens on its Theme page; Nimrod says the landing hello',
         start.modules.find((m) => m.type === 'settings').state.startPage === 'sc-theme'
         && start.modules.find((m) => m.type === 'nimrod').state.intro === 'landing', J(start.modules));

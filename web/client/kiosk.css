@@ -89,7 +89,25 @@
      ambient layer rule for why. Restored here rather than left implicit: a panel with no
      stated pointer-events is auto by inheritance today, so this looks like a no-op until
      `.k-stage` turns it off. */
-  .k-stage .k-mod{background:var(--surface);color:var(--text);border-radius:14px;pointer-events:auto}
+  .k-stage .k-mod{background:var(--surface);color:var(--text);border-radius:var(--k-panel-radius,0);pointer-events:auto}
+  /* *** SPACE BETWEEN PANELS, A SCREEN SETTING (kiosk.js `panelGap`; Mike, 2026-10-02 evening: "Why are there
+     always gaps between the modules? Can't they each take up a quarter?"). *** `data-panel-gap` on `.kiosk`;
+     these three variables are read by the stage's padding, the grid's gap and each panel's corners below, and
+     they inherit, so a dashboard drawn by `view.js` inside the kiosk gets the same.
+       none   (the default, and also what an element with no setting at all gets) -- the panels meet, each one
+              exactly its share of the stage: four up is four quarters. Square corners (a rounded corner with
+              nothing beside it is a notch cut out of the picture), and a HAIRLINE in the theme's own `--border`
+              between them, so four solid panels on one `--surface` still read as four things.
+       thin   a little air: .8vmin, 8px corners, no line (the gap is the line).
+       roomy  the look before this setting: 2vmin between, 2.5vmin round the edge, 14px corners.
+     AGAINST none, said: the near-black frame between panels was also what kept a screen somebody sleeps next to
+     from being one lit rectangle (see the panel note above). Roomy is one press, per screen. */
+  [data-panel-gap="thin"]{--k-panel-gap:.8vmin;--k-panel-pad:.8vmin;--k-panel-radius:8px;--k-panel-line:0;--k-ring-offset:-3px}
+  [data-panel-gap="roomy"]{--k-panel-gap:2vmin;--k-panel-pad:2.5vmin;--k-panel-radius:14px;--k-panel-line:0;--k-ring-offset:2px}
+  /* The hairline: on each cell's right and bottom edges, INSIDE its box (border-box), so a cell stays exactly
+     its share and neighbours share one line between them. */
+  .k-stage.k-grid > .k-cell{box-sizing:border-box;border-style:solid;border-color:var(--border);
+    border-width:0 var(--k-panel-line,1px) var(--k-panel-line,1px) 0}
   /* PANEL BACKGROUNDS, A HOST SETTING (kiosk.js's `panelSurface`, screen settings menu). `solid`
      above is the only behaviour before this existed and stays the default. `veil`/`clear` reuse
      `--board-veil`/`--board-halo` -- the SAME per-theme tokens board.js's own veil/clear mode
@@ -120,8 +138,11 @@
      is not a question anybody has. */
   /* `--focus`, not `--accent` (2026-10-02, MIKE_LIST_20260930): the accent ring measured 2.83:1 in
      the default theme. theme.js derives --focus from the accent, a shade deeper only where needed. */
+  /* With no space between panels (`panelGap` none or thin) there is no outside to draw on -- the cell clips
+     at its own edge -- so the ring is drawn just INSIDE the panel (`--k-ring-offset`, -3px): 3px of the
+     panel's edge under a ring, against no ring at all. Roomy keeps it outside, as it always was. */
   .k-stage.k-grid .k-cell[data-focused] .k-mod{
-    outline:3px solid var(--focus,var(--accent,#839958));outline-offset:2px}
+    outline:3px solid var(--focus,var(--accent,#839958));outline-offset:var(--k-ring-offset,-3px)}
   /* NO TRANSITION ON THE RING, and it is not a style preference. The first version faded
      `outline-color` in over 150ms, and the ring then rendered in the element's own text colour
      instead of the moss — because a transition sits at its START value until the page
@@ -143,7 +164,7 @@
      everything under it. Turned off HERE and restored on `.k-mod` (below) so a panel is exactly
      as clickable as before, and only the space that is NOT a panel -- this padding, and the
      grid gap between cells -- passes a press through to `.k-ambient` underneath. */
-  .k-stage{position:absolute;inset:0;padding:2.5vmin;display:flex;z-index:var(--z-panels);pointer-events:none}
+  .k-stage{position:absolute;inset:0;padding:var(--k-panel-pad,0);display:flex;z-index:var(--z-panels);pointer-events:none}
   /* SUBTITLES THAT HAVE NOWHERE TO GO (2026-09-30, row 2.42). When a game's answers sit at both the
      bottom and the top, subtitles.js asks the page for room by setting --subtitles-reserve on the
      root; the panels shrink up by that much, so the lines never cover an answer. 0 (unset) is today's
@@ -169,7 +190,7 @@
      against this same zero-height box and would be clipped by `.amb-drift{overflow:hidden}`
      rather than erroring, which is a quieter failure, not a different one. */
   .k-ambient > .k-mod{position:absolute;inset:0}
-  .k-stage.k-grid{display:grid;gap:2vmin}
+  .k-stage.k-grid{display:grid;gap:var(--k-panel-gap,0)}
   .k-stage.k-grid .k-cell{min-width:0;min-height:0;display:flex;overflow:hidden}
   /* `overflow:auto` was here and is now on `mod-host`, for every host rather than this one. */
   .k-stage.k-grid .k-cell .k-mod{flex:1;min-width:0;display:flex}

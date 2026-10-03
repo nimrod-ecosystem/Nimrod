@@ -326,6 +326,22 @@
      leave. The content never waits on the bar coming back. */
   .trystage:fullscreen{width:100vw;height:100vh;border:0;border-radius:0}
 
+  /* *** THE DASHBOARD, FILLING THE WINDOW (`body.is-land`; Mike, 2026-10-02 evening: "It's supposed to be a
+     dashboard, not a dashboard on a webpage. The dashboard should be the whole screen."). *** What a signed-in
+     person arrives on (home_dashboard.js `arriveIn` argues it). The SAME stage, the same embedded kiosk and the
+     same draft as the editing page -- only the page around it goes: no header, no title, no edit bar, no note,
+     no page scroll. The bar's Edit (or the ⚙ menu's Edit…) brings the page back as the editor. The dialogs and
+     the toast stay (a Save asked from here still asks). The info line keeps its strip along the bottom when it
+     shows, as it does on the page, so it never covers the bar. */
+  body.is-land{overflow:hidden;padding-bottom:0}
+  body.is-land .top,
+  body.is-land .wrap > :not(.browser):not(#home-dlg):not(#home-toast),
+  body.is-land .browser > :not(#detail),
+  body.is-land #detail > :not(#stage){display:none !important}
+  body.is-land .detail{padding:0;border:0;background:none}
+  body.is-land #stage{position:fixed;inset:0;width:auto;height:auto;min-height:0;margin:0;border:0;border-radius:0}
+  body.is-land.has-infoline #stage{bottom:2.6em}
+
   /* THE MENU AND BAR BACKGROUND (Home setting, "Menu and bar background"). Only the placed bar
      (.tb-bar) and the docked menu: the shell's PLAIN bar (.k-plain) is solid by design and nothing
      here may restyle it. See-through is Design's 80% with a 14px blur; Fully clear drops the ground
@@ -776,6 +792,10 @@ const HOME = {
   place: 'landing',
   landing: null,
   previewKey: null,       // an example being tried on the stage (not made); null = the Home itself
+  // 2026-10-02 evening: the dashboard FILLING THE WINDOW (`body.is-land`), or this page as the editor.
+  land: false,
+  landAtBoot: false,      // what the first history entry was (popstate with no state of its own)
+  landAfter: false,       // "Dashboard" pressed on a module page: land once the Home subject is back
   examplesOpen: false,    // the starting points, up front
   editView: false,        // edit view: the ⚙ menu open AND Design's edit bar showing
   tray: null,             // the edit bar's open tray: 'scene' | 'add' | 'change' | 'switch' | null
@@ -1056,7 +1076,10 @@ for (const ev of ['pointerdown', 'keydown', 'click', 'input', 'change']) {
   document.addEventListener(ev, (e) => {
     // ...except this page's own buttons on the bar (Save, Modules...): pressing Save is not an edit, and
     // counting it would hold the fresh module's start-up writes as "Unsaved changes" right after a save.
-    if (e.target instanceof Element && e.target.closest('#stage') && !e.target.closest('.tb-host')) lastInputAt = Date.now();
+    // (2026-10-02 evening: and the same page's own rows in the ⚙ menu -- "Start from an example…", Edit…, Dashboard
+    // -- are this page's buttons too. Pressing one and then trying an example held Photos choosing its own
+    // source as "Unsaved changes", and leaving asked about changes nobody made: found by home_page_test.)
+    if (e.target instanceof Element && e.target.closest('#stage') && !e.target.closest('.tb-host, [data-id^="home:"]')) lastInputAt = Date.now();
   }, true);
 }
 const isUserEdit = () => Date.now() - lastInputAt < HOME_EDIT_WINDOW_MS;
@@ -1121,7 +1144,7 @@ function renderHomeDetail(subject, target) {
     : m ? `<span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>` : '';
   const lead = subject !== HD.PROFILE_SUBJECT ? (m?.lead || '')
     : target?.landing
-      ? 'Where you land: your pictures, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
+      ? 'Where you land: your profile, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
       : 'Your Home is your profile: a dashboard you make your own. Change the scene, add, switch and move what is on it.';
   // Design's edit bar and its tray sit between the title and the stage (home-dashboard: "an edit bar when
   // the module has one"), only for Your Home.
@@ -1158,6 +1181,8 @@ function applyView(v) {
 }
 
 async function openSubject(subject, { view = null } = {}) {
+  // Only the Home subject fills the window: a module (a link, the picker) is looked at on the editing page.
+  if (subject !== HD.PROFILE_SUBJECT && HOME.land) setLand(false);
   if (openStage) { host?.unmount(openStage); openStage = null; }
   if (embed) { embed.destroy(); embed = null; }
   HOME.docRow?.destroy?.(); HOME.docRow = null; HOME.doc = null; HOME.restoredFrom = null;
@@ -1205,7 +1230,9 @@ async function openSubject(subject, { view = null } = {}) {
         const key = shows.key;
         const rec = prebuiltRecord(key, { personName: HOME.person?.name });
         const refs = Object.fromEntries(rec.modules.map((m) => [m.ref, previewIdFor(m.ref)]));
-        const record = { id: PREVIEW_PROFILE_ID, name: rec.name, person_id: null,
+        // Whose it is: the person looking (2026-10-02 evening) -- so a profile panel on it (the landing's top
+        // left) shows THEM, by name (`people`, read-only), as it will once made. Nothing is written by this.
+        const record = { id: PREVIEW_PROFILE_ID, name: rec.name, person_id: HOME.person?.id || null,
           modules: rec.modules.map((m, i) => ({ id: refs[m.ref], type: m.type, position: i })) };
         // Its settings as made (the lock list, the panel it opens being edited), under the preview's ids.
         draft.seed('settings', recordSettings(rec, refs));
@@ -1214,7 +1241,7 @@ async function openSubject(subject, { view = null } = {}) {
         target = { live: false, kind: 'example', key, refs, landing: shows.landing };
         const stage = renderHomeDetail(subject, target);
         e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST, layout: exampleLayout(rec, refs),
-          wrapState: (h, k) => wrapRow(draft, h, k, typeOf) });
+          wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people() });
       }
     } else {
       const prof = await profiles.get(HOME.defaultId);
@@ -1241,9 +1268,15 @@ async function openSubject(subject, { view = null } = {}) {
       try { HOME.doc = HD.readHistory(await row.load()); } catch { HOME.doc = HD.emptyHistory(); }
       if (mine !== pickSeq) return;
     }
-    applyView(view || (subject === HD.PROFILE_SUBJECT ? HOME.settings.openIn : 'live'));
+    // "Dashboard" pressed on a module page: the Home subject is back, so it fills the window now.
+    if (HOME.landAfter) { HOME.landAfter = false; if (subject === HD.PROFILE_SUBJECT) setLand(true); }
+    // Filling the window, the ⚙ menu stays shut (a drawer over the dashboard is not "the whole screen").
+    applyView(HOME.land ? 'live' : (view || (subject === HD.PROFILE_SUBJECT ? HOME.settings.openIn : 'live')));
   } catch (err) {
     console.error(`home: ${subject} would not open`, err);
+    // Nothing on the stage means no bar and nothing to press: filling the window with that would be a screen
+    // nobody can leave, so the editing page comes back, with its note and its picker.
+    if (mine === pickSeq && HOME.land) setLand(false);
     const note = $h('stagenote');
     if (note) note.textContent = 'This one would not start here — usually it wants a camera, a microphone or your own files.';
     // Nothing on the stage means no bar in it: the way to something else is the picker, so it opens.
@@ -1293,11 +1326,12 @@ function homeView() {
     onHome: HOME.subject === HD.PROFILE_SUBJECT && HOME.target?.kind === 'home' && !HOME.target.landing,
     hasHome: !!HOME.home,
     canEditPanel: !!HOME.target && (() => { try { return (dash()?.panels?.() || []).length > 0; } catch { return false; } })(),
+    land: HOME.land,
   };
 }
 const HOME_HOST = {
   barItems: () => (HOME.on ? HD.homeBarItems(homeView()) : []),
-  label: (act, state) => (HOME.on ? HD.homeShellLabel(act, state) : null),
+  label: (act, state) => (HOME.on ? HD.homeShellLabel(act, { ...(state || {}), land: HOME.land }) : null),
   press: (act, p) => homePress(act, p),
   menuItems: () => (HOME.on
     ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
@@ -1314,7 +1348,9 @@ const HOME_HOST = {
 };
 // The stage's kiosk, for the suites and a diagnostic page (as talk.html and intercom.html hand theirs out):
 // its bus is where a switch's verbs travel, so a suite can press the edit bar the way a switch does.
-window.__home = { get kiosk() { return embed?.kiosk || null; } };
+window.__home = { get kiosk() { return embed?.kiosk || null; },
+  // What the draft holds for Save, by row -- so a suite that meets an unexpected "Unsaved changes" can say which.
+  pending: () => { try { return HOME.draft?.pending?.() || {}; } catch { return {}; } } };
 function hostChanged() {
   for (const fn of [...hostSubs]) { try { fn(); } catch (err) { console.error('home: host listener', err); } }
 }
@@ -1324,7 +1360,16 @@ function hostChanged() {
 function homePress(act, p = null) {
   if (!HOME.on || !act) return;
   const t = HOME.target;
+  // What lives on the editing page (the picker, the starting points, the edit bar, Nimrod the cat's walk over
+  // the page) brings the page back first: on the dashboard filling the window there is nothing to show it in.
+  if (HOME.land && ['picker', 'examples', 'rewelcome', 'editbar', 'cat'].includes(act)) setLand(false);
   switch (act) {
+    // 2026-10-02 evening: the dashboard filling the window <-> this page as the editor (home_dashboard.js arriveIn).
+    case 'edit': setLand(false); break;
+    case 'land':
+      if (HOME.subject === HD.PROFILE_SUBJECT) setLand(true);
+      else { HOME.landAfter = true; requestSubject(HD.PROFILE_SUBJECT); }
+      break;
     // 2026-10-02: the tutorial dashboard, tried on the stage like any example (Make this my Home or Save
     // keeps it) -- from Nimrod's "Go to the tutorial" and the ⚙ menu's "Nimrod's tutorial".
     case 'tutorial': requestSubject(HD.PROFILE_SUBJECT, { previewKey: 'tutorial' }); break;
@@ -1395,6 +1440,42 @@ function togglePicker() {
   const open = document.body.classList.toggle('pick-open');
   if (open) qEl.focus();
 }
+
+// *** THE DASHBOARD, FILLING THE WINDOW, OR THIS PAGE AS THE EDITOR (2026-10-02 evening). ***
+// Mike: "It's supposed to be a dashboard, not a dashboard on a webpage. The dashboard should be the whole
+// screen." The least invasive way, argued (the report has the long form): this page ALREADY draws the landing
+// dashboard with the real kiosk renderer (home_embed.js: `mountKiosk`, embedded, on the dashboard path), made or
+// only tried, with the person's own settings and the draft behind Save. So filling the window is this page with
+// everything but its stage put away (`body.is-land`, the CSS above) -- not a second page. kiosk.html was the
+// other candidate and loses: it runs for a signed-in browser, but as a SCREEN (its remote-drive socket, the
+// person's saved switch bindings -- a saved pointer binding turns every click into a switch press, module_try.js
+// -- and the device's restart/recovery config), and it can only show a dashboard that already exists, while
+// "Start here" is tried, not made, until somebody saves it.
+// Each change is a history entry (`?edit=1` marks the editor), so the browser's Back goes back across it.
+function setLand(on, { push = true } = {}) {
+  const next = !!on && HOME.on && HOME.subject === HD.PROFILE_SUBJECT;
+  const was = HOME.land;
+  HOME.land = next;
+  document.body.classList.toggle('is-land', next);
+  if (next) { document.body.classList.remove('pick-open'); HOME.tray = null; }
+  else if (was) leaveFullScreen();   // the editing page has to be seen, and full screen paints only the stage
+  if (push && was !== next) {
+    try {
+      const u = new URL(location.href);
+      if (next) { u.searchParams.delete('edit'); u.searchParams.delete('m'); u.searchParams.delete('example'); }
+      else u.searchParams.set('edit', '1');
+      history.pushState({ land: next }, '', u);
+    } catch { /* a frame that may not change its address: the view still changes */ }
+  }
+  if (was !== next && embed) applyView(next ? 'live' : (HOME.subject === HD.PROFILE_SUBJECT ? HOME.settings.openIn : 'live'));
+  paintHome();
+}
+window.addEventListener('popstate', (e) => {
+  if (!HOME.on) return;
+  const want = e.state && typeof e.state.land === 'boolean' ? e.state.land : HOME.landAtBoot;
+  if (want && HOME.subject !== HD.PROFILE_SUBJECT) { HOME.landAfter = true; requestSubject(HD.PROFILE_SUBJECT); return; }
+  setLand(want, { push: false });
+});
 
 // ---- the page around the stage: the fallback bar, the welcome, the menu and bar background -----------
 function paintHome() {
@@ -2555,27 +2636,37 @@ async function bootHome(wanted) {
   HOME.profileMade = !!HOME.home;
   // 2026-10-02: the landing dashboard, if this person has made it (else it is tried on the stage).
   HOME.landing = maker ? await resolveLanding() : null;
-  const land = HD.homeLanding({ signedIn: true, wanted, known: (t) => ITEMS.some((m) => m.type === t), settings });
+  const qs = new URLSearchParams(location.search);
+  // `?example=<key>`: a link that opens one starting point, tried on the stage (a link to share, and the
+  // address the pictures in the report are taken from).
+  const exParam = qs.get('example');
+  const land = HD.homeLanding({ signedIn: true, wanted, known: (t) => ITEMS.some((m) => m.type === t), settings,
+    edit: qs.get('edit') === '1', example: !!PREBUILT_DASHBOARDS[exParam] });
   // WHERE THEY LAND: the landing dashboard, unless their setting says their own Home (`openOn`).
   HOME.place = land.place === 'home' ? 'home' : 'landing';
   const subject = land.subject === HD.PROFILE_SUBJECT && !maker ? ITEMS[0]?.type : land.subject;
   // The starting points open up front for somebody with no Home yet (until they say not to).
   HOME.examplesOpen = !!maker && !HOME.home && land.subject === HD.PROFILE_SUBJECT && !settings.welcomeDone;
-  // `?example=<key>`: a link that opens one starting point, tried on the stage (a link to share, and the
-  // address the pictures in the report are taken from).
-  const exParam = new URLSearchParams(location.search).get('example');
   if (maker && PREBUILT_DASHBOARDS[exParam] && land.subject === HD.PROFILE_SUBJECT) {
     HOME.previewKey = exParam;
     HOME.examplesOpen = true;
   }
   document.body.classList.add('is-home');
   document.title = 'Nimrod — Home';
+  // HOW THEY ARRIVE (2026-10-02 evening, `arriveIn`): the dashboard filling the window, unless their row says the
+  // editing page or the address asked for something. Marked on this first history entry, so Back finds it.
+  HOME.on = true;
+  HOME.subject = subject;
+  setLand(!!land.land && subject === HD.PROFILE_SUBJECT, { push: false });
+  HOME.landAtBoot = HOME.land;
+  try { history.replaceState({ ...(history.state || {}), land: HOME.land }, ''); } catch { /* not allowed here */ }
   await openSubject(subject, { view: land.view });
 }
 
 function undoHome() {
   HOME.on = false;
-  document.body.classList.remove('is-home', 'pick-open');
+  HOME.land = false;
+  document.body.classList.remove('is-home', 'pick-open', 'is-land');
   delete document.body.dataset.homeProfile;
   $h('stage-bar').hidden = true;
   $h('examples').hidden = true;

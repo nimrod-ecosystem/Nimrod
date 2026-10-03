@@ -67,12 +67,15 @@ const layoutOf = async (pid) => ((await row(pid, 'settings')).kiosk || {}).layou
 const modsOf = async (pid) => (await profiles.get(pid)).modules || [];
 
 let ifr = null, doc = null, win = null;
-async function open(query) {
+// 2026-10-02 evening: a plain arrival is the dashboard FILLING THE WINDOW; this suite is mostly about the editing
+// page, so it asks for that (`edit=1`, what the dashboard's Edit opens) unless a check is about arriving (`land`).
+async function open(query, { land = false } = {}) {
   ifr?.remove();
   ifr = document.createElement('iframe');
-  ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px';
+  ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px;border:0';
   document.body.append(ifr);
-  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+  const q = land ? query : (query ? `${query}&edit=1` : 'edit=1');
+  await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${q}`; });
   doc = ifr.contentDocument; win = ifr.contentWindow;
   // What the page logs as an error, kept so a failing run says what went wrong inside it.
   const orig = win.console.error.bind(win.console);
@@ -128,6 +131,88 @@ async function ensureMenu(rowAct = null) {
 
 try {
   // ============================================================================================
+  // Mike, 2026-10-02 evening, on a screenshot of "Start here" drawn inside this page: "What the website opens up
+  // to is nothing like what I asked for. It's supposed to be a dashboard, not a dashboard on a webpage. The
+  // dashboard should be the whole screen. Four modules clockwise from top left: Profile ..., settings, Devices,
+  // Nimrod/AI." and "Why are there always gaps between the modules? Can't they each take up a quarter?"
+  section('*** ARRIVING: the dashboard IS the whole window — no page, four quarters, Edit one press away ***');
+  {
+    const LU = `${USER}-land`;
+    const lp = createProfilesClient({ user: LU });
+    await open(`user=${encodeURIComponent(LU)}`, { land: true });
+    check('*** a plain arrival fills the window with the dashboard (body.is-land), its bar up ***',
+      await until(() => doc.body.classList.contains('is-land') && !!hb('edit'), 45000),
+      `homeError=${doc.body.dataset.homeError || '-'} land=${doc.body.classList.contains('is-land')}`);
+    const vwL = doc.documentElement.clientWidth, vhL = win.innerHeight;
+    const near = (a, b) => Math.abs(a - b) <= 0.75;
+    const box = (el) => { const r = el.getBoundingClientRect(); return [r.left, r.top, r.width, r.height]; };
+    check('*** the dashboard’s box IS the window: the stage and the kiosk in it are 0,0 to the window’s edges ***',
+      [box($('#stage')), box($('#stage .kiosk'))].every(([l, t, w, h]) => near(l, 0) && near(t, 0) && near(w, vwL) && near(h, vhL)),
+      `${J(box($('#stage')))} ${J(box($('#stage .kiosk')))} window ${vwL}x${vhL}`);
+    const gone = (sel) => { const el = $(sel); return !el || win.getComputedStyle(el).display === 'none'; };
+    check('*** no page chrome: no site header, no "Start here" heading, no edit bar, no caption, no starting points ***',
+      ['.top', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].every(gone),
+      ['.top', '#detail > h2', '#detail .lead', '#home-edit', '#stagenote', '#examples', '.pick', '#stage-bar', 'footer'].filter((s) => !gone(s)).join(', '));
+    check('*** no page scroll ***', doc.documentElement.scrollHeight <= vhL + 0.5 && win.getComputedStyle(doc.body).overflowY === 'hidden',
+      `${doc.documentElement.scrollHeight} > ${vhL}`);
+    check('*** the bar: Edit first, then My Home and Save (the editing tools are one press away, not here) ***',
+      $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === 'Edit|My Home|Save',
+      $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|'));
+    check('...and its gear says Settings here (the bar already has Edit)', hb('view')?.textContent === '⚙ Settings', hb('view')?.textContent);
+    check('...the ⚙ menu stays shut on arrival (a drawer over the dashboard is not the whole screen)', await (async () => { await sleep(1500); return !menuShown(); })());
+    // Four quarters, clockwise from the top left: Profile, Settings, Devices, Nimrod.
+    const grid = await until(() => $$('#stage .k-stage.k-grid > .k-cell').length === 4, 15000) ? $('#stage .k-stage.k-grid') : null;
+    const cells = grid ? [...grid.children].filter((c) => c.classList.contains('k-cell')) : [];
+    const kinds = cells.map((c) => c.dataset.kind);
+    check('*** clockwise from the top left: PROFILE, SETTINGS, DEVICES, NIMROD ***',
+      J([kinds[0], kinds[1], kinds[3], kinds[2]]) === J(['profile', 'settings', 'devices', 'nimrod']), J(kinds));
+    const G = grid ? grid.getBoundingClientRect() : null;
+    check('*** no space between panels by default (the screen’s "Space between panels": none) ***',
+      $('#stage .kiosk')?.dataset.panelGap === 'none' && grid && win.getComputedStyle(grid).columnGap === '0px' && win.getComputedStyle(grid).rowGap === '0px'
+      && win.getComputedStyle(grid).paddingLeft === '0px', `${$('#stage .kiosk')?.dataset.panelGap} ${grid && win.getComputedStyle(grid).gap}`);
+    check('*** so each panel is EXACTLY a quarter of the dashboard (the window above the bar), tiled ***',
+      G && near(G.left, 0) && near(G.width, vwL) && near(G.top, 0) && cells.length === 4 && cells.every((c, i) => {
+        const r = c.getBoundingClientRect();
+        return near(r.width, G.width / 2) && near(r.height, G.height / 2)
+          && near(r.left - G.left, (i % 2) * G.width / 2) && near(r.top - G.top, Math.floor(i / 2) * G.height / 2);
+      }), `${G && J([G.left, G.top, G.width, G.height])} ${J(cells.map((c) => box(c).map(Math.round)))}`);
+    const lper = (await lp.people())[0];
+    check('*** the profile, top left, is the person’s OWN card ***',
+      await until(() => $('#stage .k-cell[data-kind="profile"] [data-pf-line]')?.textContent === 'You'
+        && $('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent === lper?.name, 10000),
+      `${$('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent} (want ${lper?.name})`);
+    check('nothing made on the account by arriving', (await lp.list()).length === 1);
+
+    // EDIT: one press to this page as the editor.
+    hb('edit').click();
+    check('*** Edit: the page comes back as the EDITOR (the edit bar, the starting points, Modules), the address says ?edit=1 ***',
+      await until(() => !doc.body.classList.contains('is-land') && !gone('#home-edit') && !!hb('picker') && !!hb('land'), 8000)
+      && new URL(win.location.href).searchParams.get('edit') === '1' && !gone('.top'),
+      `land=${doc.body.classList.contains('is-land')} url=${win.location.search}`);
+    check('...the dashboard is a box on the page there, not the window', $('#stage').getBoundingClientRect().top > 20);
+    check('...the same dashboard, not a second one (one kiosk)', kiosks() === 1);
+    check('...and the bar’s first button now says Dashboard', $$('#stage .tb-bar .tb-host button')[0]?.textContent === 'Dashboard');
+    hb('land').click();
+    check('*** Dashboard: back to the dashboard filling the window ***',
+      await until(() => doc.body.classList.contains('is-land') && !!hb('edit'), 8000) && !new URL(win.location.href).searchParams.has('edit'));
+    win.history.back();
+    check('*** the browser’s Back goes back across it (to the editor) ***', await until(() => !doc.body.classList.contains('is-land') && !!hb('picker'), 8000));
+    win.history.back();
+    check('...and Back again, to the dashboard it arrived on', await until(() => doc.body.classList.contains('is-land'), 8000));
+
+    // "When I arrive, show" is the person's own setting.
+    check('*** the ⚙ menu here has Edit… as its first row (a switch reaches it) and "When I arrive, show" ***',
+      await ensureMenu('set:arriveIn') && !!hrow('edit') && /dashboard/i.test(hrow('set:arriveIn').textContent),
+      hrow('set:arriveIn')?.textContent);
+    hrow('set:arriveIn').click();
+    check('(setup) set to "The editing page", saved on the person', await until(async () => {
+      const h = createState({ url: lp.personStateURL(lper.id, 'home'), user: LU });
+      try { return (await h.load()).arriveIn === 'page'; } finally { h.destroy(); } }, 6000));
+    await open(`user=${encodeURIComponent(LU)}`, { land: true });
+    check('*** ...and the next arrival is the editing page ***', await until(() => !!hb('picker'), 45000) && !doc.body.classList.contains('is-land'));
+  }
+
+  // ============================================================================================
   section('*** first sign-in: Home, with the starting points UP FRONT, and nothing made by looking ***');
   await open(`user=${encodeURIComponent(USER)}`);
   // A brand-new account's first Home makes its default screen and boots a whole kiosk: on a loaded machine
@@ -135,8 +220,8 @@ try {
   // the page says why (`data-home-error`).
   check('*** Home is on: its buttons are IN the real transport bar in the stage ***', await until(() => !!hb('save') && !!hb('picker'), 45000),
     `homeError=${doc.body.dataset.homeError || '-'} signedIn=${/My dashboards/.test($('.top nav a.solid')?.textContent || '')}`);
-  check('*** the bar: Modules, My Home (2026-10-02), Save, Save as…, History, Switch module, then the status ***',
-    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === `Modules: ${pickName()}|My Home|Save|Save as…|History|Switch module`,
+  check('*** the bar (the editing page): Dashboard, Modules, My Home (2026-10-02), Save, Save as…, History, Switch module, then the status ***',
+    $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|') === `Dashboard|Modules: ${pickName()}|My Home|Save|Save as…|History|Switch module`,
     $$('#stage .tb-bar .tb-host button').map((b) => b.textContent).join('|'));
   check('the page’s own fallback bar is hidden (the real bar carries it)', await until(() => $('#stage-bar').hidden));
   check('the page is titled Home', doc.title.includes('Home'), doc.title);
@@ -529,7 +614,8 @@ try {
   card('basic').querySelector('[data-ex-try]').click();
   check('trying one shows it on the stage (your Home is untouched)', await until(() => /Trying “Plain Nimrod”/.test($('#stagenote').textContent), 15000));
   $('#examples [data-home="close-examples"]').click();
-  check('*** Close goes back to your own Home ***', await until(() => ex().hidden && /Your Home, live/.test($('#stagenote').textContent), 15000), $('#stagenote').textContent);
+  check('*** Close goes back to your own Home ***', await until(() => ex().hidden && /Your Home, live/.test($('#stagenote').textContent), 15000),
+    `${$('#stagenote').textContent} | examples hidden=${ex().hidden} dialog=${dlgOpen() ? $('#home-dlg').textContent.slice(0, 80) : 'shut'} status=${status()} pending=${J(win.__home?.pending?.())}`);
   check('...which is still your Home (nothing was made by trying)', (await homeId()) === HID && (await profiles.list()).length === 2, J((await profiles.list()).map((s) => s.name)));
 
   // ============================================================================================
@@ -581,9 +667,14 @@ try {
     check('*** a new person lands on the landing Home, TRIED on the stage (the first example) ***',
       await until(() => card('start')?.getAttribute('aria-current') === 'true' && /Trying “Start here”/.test($('#stagenote')?.textContent || ''), 45000),
       $('#stagenote')?.textContent);
-    check('*** four up: pictures, the settings panel, Nimrod and the devices ***',
+    check('*** four up: the PROFILE (2026-10-02 evening), the settings panel, Nimrod and the devices ***',
       await until(() => !!$('#stage [data-nimrod-guide]') && !!$('#stage .dv-root') && !!$('#stage [data-settings-root]')
-        && !!$('#stage .k-cell[data-kind="photos"]'), 15000));
+        && !!$('#stage .k-cell[data-kind="profile"] [data-profile-card]') && !$('#stage .k-cell[data-kind="photos"]'), 15000));
+    const nper = (await np.people())[0];
+    check('*** ...and the profile is THIS person’s own card ("You"), not Nimrod’s ***',
+      await until(() => $('#stage .k-cell[data-kind="profile"] [data-pf-line]')?.textContent === 'You'
+        && $('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent === nper.name, 10000),
+      `${$('#stage .k-cell[data-kind="profile"] [data-pf-name]')?.textContent} / ${$('#stage .k-cell[data-kind="profile"] [data-pf-line]')?.textContent} (want ${nper?.name})`);
     check('*** Nimrod says Mike’s words ***', await until(() => $('#stage [data-ng-say]')?.textContent === LANDING_INTRO, 8000),
       $('#stage [data-ng-say]')?.textContent);
     check('*** the settings panel opened on its Theme page ***',

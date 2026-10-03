@@ -114,11 +114,12 @@ const devNode = (d) => ({
 const BACK_TO_START = { label: 'Back to the start', to: GUIDE_ROOT };
 const withKeys = (choices) => choices.map((c, i) => ({ key: String.fromCharCode(65 + i), ...c }));
 
-// Mike's own words, with "pictures, settings, devices, Nimrod" in his order. Only said where it is true
-// (the dashboard the site lands on); anywhere else he introduces himself with `INTROS` instead.
+// Mike's own words, with the four in his order. Only said where it is true (the dashboard the site lands on);
+// anywhere else he introduces himself with `INTROS` instead. 2026-10-02 evening: "Profile (I know I said photos
+// before. Changing it.)" -- so the first of the four is "your profile" now, not "pictures".
 export const LANDING_INTRO = 'Hi, I’m Nimrod. I’m here to show you around and help out whenever you want. '
   + 'This is your default home dashboard. You will be able to modify it however you want. It currently has '
-  + 'four modules: pictures, settings, devices, and me, Nimrod. You can feel free to mess around with anything '
+  + 'four modules: your profile, settings, devices, and me, Nimrod. You can feel free to mess around with anything '
   + 'you want as we go through. Would you like to:';
 
 // What he says first, by where he is. A dashboard says which with its guide's `intro` state (dashboards.js
@@ -332,8 +333,8 @@ const NODES = [
   // ---- E. other modules ---------------------------------------------------------------------------
   {
     id: 'other', title: 'Other modules',
-    say: 'There are lots of other modules: games, videos, music, a clock, the weather, an AAC board and more. Try '
-      + 'replacing the pictures with something else: pick them, then press Switch module. You can replace any '
+    say: 'There are lots of other modules: pictures, games, videos, music, a clock, the weather, an AAC board and more. '
+      + 'Try replacing your profile with something else: pick it, then press Switch module. You can replace any '
       + 'module whenever you want, including me. Do you want to change:',
     choices: withKeys([
       { label: 'Play it as a game, or learn with it', to: 'mode' },
@@ -345,7 +346,9 @@ const NODES = [
       BACK_TO_START,
     ]),
     acts: [
-      { kind: 'switch', type: 'photos', label: 'Replace the pictures' },
+      // The profile, top left on the landing (2026-10-02 evening). On a dashboard with no profile the Switch
+      // falls back to the chosen panel (modules.html openSwitch), so the button still does something there.
+      { kind: 'switch', type: 'profile', label: 'Replace the profile' },
       { kind: 'host', act: 'picker', label: 'See every module' },
     ],
   },
@@ -360,7 +363,7 @@ const NODES = [
       BACK_TO_START,
     ]),
     acts: [
-      { kind: 'switch', type: 'photos', label: 'Switch module' },
+      { kind: 'switch', type: 'profile', label: 'Switch module' },
       { kind: 'host', act: 'picker', label: 'See every module' },
     ],
   },

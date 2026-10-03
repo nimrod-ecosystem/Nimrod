@@ -33,8 +33,10 @@ export function layoutFor(settings, modules) {
 
 // `host` (2026-09-30 follow-up): the page's own actions and settings, handed to the kiosk so they are
 // drawn in ITS bar and ITS ⚙ menu (kiosk.js's `host` option). Kept across rebuilds: it is the page's.
+// `people` (PREVIEW only, 2026-10-02 evening): the account's people, read-only, so a profile panel on a preview
+// (the landing's top left) can show the person looking by name. Absent, it shows them as "Somebody".
 export async function mountEmbeddedScreen({ stage, user = null, profileId = null, record = null, layout = null,
-  wrapState = null, host = null }) {
+  wrapState = null, host = null, people = null }) {
   const { mountKiosk } = await import('./kiosk.js');
   const wrap = wrapState || ((h) => h);
   let kiosk = null;
@@ -73,6 +75,7 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
         get: async () => ({ ...record, modules: record.modules.map((m) => ({ ...m })) }),
         stateURL: (pid, key) => `local:${pid}::${key}`,
         eventsURL: (pid, key) => `local:${pid}::${key}`,
+        ...(typeof people === 'function' ? { people: async () => { try { return (await people()) || []; } catch { return []; } } } : {}),
       };
       kiosk = await mountKiosk(stage, {
         ...seams, user: null, profileId: record.id, profiles,

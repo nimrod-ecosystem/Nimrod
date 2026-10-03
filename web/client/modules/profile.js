@@ -33,10 +33,14 @@
 // offers the same address / model / key fields. The AI connection is THIS DEVICE's (ai.js), shared with
 // Nimrod's panel: connect it in either and both answer.
 //
-// THE DEFAULT SUBJECT IS NIMROD, argued. FOR a blank picker: the panel was added to show somebody, and the
-// adder chooses whom. AGAINST, and it wins: a panel that opens on a list looks unfinished on a screen
-// nobody is setting up right now, and "start with Nimrod" is Mike's own phrase. Who… is one press. [Guess,
-// on Mike's list.]
+// THE DEFAULT SUBJECT IS WHOEVER IS LOOKING (Mike, 2026-10-02 evening: the landing dashboard's top left is
+// "Profile", and a profile there is the person's own). A panel with no stored subject shows the person this
+// screen or page is for (`ctx.personId`), and Nimrod only when there is nobody to show (signed out, a preview
+// with no person). FOR: the panel on the landing is "your profile", and one stored record (dashboards.js
+// `start`) then serves every person without naming one. AGAINST: a panel added to show somebody else opens
+// on yourself first -- Who… is one press, and the choice is then stored and kept. It was Nimrod for everyone
+// before ("start with Nimrod", an earlier phrase of Mike's); a character's own room still names its
+// character explicitly (ai_characters.js `self`), so that case is unchanged. [On Mike's list.]
 
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
@@ -56,6 +60,10 @@ import {
 
 export const SUBJECT_KEY = 'subject';
 export const DEFAULT_SUBJECT = Object.freeze({ kind: 'ai', id: 'nimrod' });
+/** Who a panel with no stored subject shows (see the header): the viewer, else Nimrod. PURE. */
+export function defaultSubject(viewerId = null) {
+  return typeof viewerId === 'string' && viewerId ? { kind: 'person', id: viewerId } : { ...DEFAULT_SUBJECT };
+}
 export const PROFILE_VERB_TOPICS = Object.freeze({
   next: 'profile/next', prev: 'profile/prev', select: 'profile/select', back: 'profile/back',
 });
@@ -736,7 +744,8 @@ registerModule(
         if (torn) return;
         const s = stateGet();
         prefs = profilePrefs(s);
-        subject = readSubject(s[SUBJECT_KEY]) || { ...DEFAULT_SUBJECT };
+        // Nothing stored: whoever is looking (see the header), else Nimrod.
+        subject = readSubject(s[SUBJECT_KEY]) || defaultSubject(viewerId());
         // RECORDS ONLY: the person's characters, their AI's name, and (for a person) whose Home. No AI call.
         await Promise.all([ensureStore().catch(() => {}), readAIRow()]);
         if (torn) return;

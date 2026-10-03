@@ -1474,6 +1474,11 @@ def auth_logout(request: Request):
 # home.html, is still one link away ("My dashboards"). A signed-OUT visitor keeps the landing
 # page: Mike's question (a) is open, and the landing is what explains the product to somebody
 # who has never seen it.
+#
+# 2026-10-02 evening (Mike: "The dashboard should be the whole screen"): the same address, but a plain
+# arrival there is the landing DASHBOARD filling the browser window (modules.html's land view, the
+# person's "When I arrive, show" row); its bar's Edit is the editing page, /modules.html?edit=1. No
+# route changed: the page decides, because only the page knows the person's row.
 HOME_PAGE = "/modules.html"
 
 

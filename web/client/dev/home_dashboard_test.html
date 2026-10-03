@@ -114,10 +114,24 @@ try {
     check('signed OUT never gets the profile or the welcome',
       homeLanding({ signedIn: false, wanted: PROFILE_SUBJECT, known }).subject === null);
     const first = homeLanding({ signedIn: true, known, settings: {} });
-    check('*** first sign-in: Home, on the PROFILE, in EDIT view, with the welcome ***',
-      first.home && first.subject === PROFILE_SUBJECT && first.view === 'edit' && first.welcome === true, J(first));
-    const live = homeLanding({ signedIn: true, known, settings: { openIn: 'live' } });
-    check('the setting "Open my profile in: Live view" is obeyed', live.view === 'live');
+    // 2026-10-02 evening (Mike: "It's supposed to be a dashboard, not a dashboard on a webpage. The dashboard
+    // should be the whole screen."): a plain arrival is the dashboard filling the window, menu shut.
+    check('*** first sign-in: Home, on the PROFILE, as THE DASHBOARD FILLING THE WINDOW (land), live, with the welcome ***',
+      first.home && first.subject === PROFILE_SUBJECT && first.land === true && first.view === 'live' && first.welcome === true, J(first));
+    check('..."When I arrive, show" is a row; its default is the dashboard; "The editing page" is obeyed',
+      HOME_DEFAULTS.arriveIn === 'dashboard' && HOME_SETTINGS.some((r) => r.key === 'arriveIn' && r.options.map(([v]) => v).join() === 'dashboard,page')
+      && homeLanding({ signedIn: true, known, settings: { arriveIn: 'page' } }).land === false
+      && readHomeSettings({ arriveIn: 'sideways' }).arriveIn === 'dashboard');
+    const ed = homeLanding({ signedIn: true, known, settings: {}, edit: true });
+    check('*** ?edit=1 (Edit pressed, or a link to the editor): the editing page, in EDIT view (Mike, 2.29) ***',
+      ed.land === false && ed.view === 'edit' && ed.subject === PROFILE_SUBJECT, J(ed));
+    check('...and a link that asked for something (?example=, ?m=) gets the editing page too',
+      homeLanding({ signedIn: true, known, settings: {}, example: true }).land === false
+      && homeLanding({ signedIn: true, wanted: 'trivia', known, settings: {} }).land === false
+      && homeLanding({ signedIn: true, wanted: PROFILE_SUBJECT, known, settings: {} }).land === false
+      && homeLanding({ signedIn: false, known }).land === false);
+    const live = homeLanding({ signedIn: true, known, settings: { openIn: 'live' }, edit: true });
+    check('the setting "Open my profile in: Live view" is obeyed (on the editing page)', live.view === 'live');
     const later = homeLanding({ signedIn: true, known, settings: { welcomeDone: true } });
     check('once dismissed, the welcome stays away', later.subject === PROFILE_SUBJECT && later.welcome === false);
     const link = homeLanding({ signedIn: true, wanted: 'trivia', known, settings: {} });
@@ -270,16 +284,31 @@ try {
     const preview = { live: false, kind: 'profile' };
     const acts = (items) => items.filter((i) => i.act).map((i) => i.act).join(',');
     const b0 = homeBarItems({ title: 'Your profile', target: null });
-    check('*** Design’s order on the bar: Modules, then My Home (2026-10-02, the landing), Save, Save as, History, Switch module, then the status ***',
-      acts(b0) === 'picker,myhome,save,saveas,history,switch' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
+    // 2026-10-02 evening: the editing page's bar starts with Dashboard (back to the dashboard filling the window).
+    check('*** Design’s order on the bar (the editing page): Dashboard, Modules, My Home, Save, Save as, History, Switch module, then the status ***',
+      acts(b0) === 'land,picker,myhome,save,saveas,history,switch' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
     check('*** My Home on the landing, Start here on your Home: one press either way, NEVER dimmed (no Home yet: it shows the starting points) ***',
-      b0[1].label === 'My Home' && !b0[1].disabled && /not made a Home/.test(b0[1].title)
-      && homeBarItems({ onHome: true, hasHome: true })[1].label === 'Start here'
-      && /the Home you made/.test(homeBarItems({ hasHome: true })[1].title));
-    check('Modules names what is being looked at', b0[0].label === 'Modules: Your profile', b0[0].label);
+      b0[2].label === 'My Home' && !b0[2].disabled && /not made a Home/.test(b0[2].title)
+      && homeBarItems({ onHome: true, hasHome: true })[2].label === 'Start here'
+      && /your profile, the settings, your devices and Nimrod/.test(homeBarItems({ onHome: true })[2].title)
+      && /the Home you made/.test(homeBarItems({ hasHome: true })[2].title));
+    check('Modules names what is being looked at', b0[1].label === 'Modules: Your profile', b0[1].label);
     check('*** nothing open: every button still THERE, the ones that cannot act DISABLED (dimmed, never hidden) ***',
-      b0.length === 7 && b0.find((i) => i.act === 'save').disabled && b0.find((i) => i.act === 'saveas').disabled
-      && b0.find((i) => i.act === 'history').disabled && !b0[0].disabled);
+      b0.length === 8 && b0.find((i) => i.act === 'save').disabled && b0.find((i) => i.act === 'saveas').disabled
+      && b0.find((i) => i.act === 'history').disabled && !b0[0].disabled && !b0[1].disabled);
+    // THE DASHBOARD FILLING THE WINDOW (2026-10-02 evening, Mike: "The dashboard should be the whole screen").
+    const bland = homeBarItems({ title: 'Start here', target: preview, land: true });
+    check('*** on the dashboard: Edit FIRST (the same place Dashboard has on the editing page), then the place button, Save, the status ***',
+      acts(bland) === 'edit,myhome,save' && bland[0].label === 'Edit' && bland.at(-1).kind === 'status' && b0[0].label === 'Dashboard',
+      J(bland.map((i) => i.act || i.kind)));
+    check('...Save is still pressable there (a setting changed from the ⚙ menu waits for it)', !bland.find((i) => i.act === 'save').disabled);
+    check('...and the gear says Settings there (the bar already has Edit), Edit on the editing page',
+      homeShellLabel('settings', { land: true }) === '⚙ Settings' && homeShellLabel('settings', { land: true, menuOpen: true }) === '⚙ Close settings'
+      && homeShellLabel('settings', {}) === '⚙ Edit');
+    const mland = homeMenuModel({ land: true }).filter((i) => i.kind === 'item');
+    const medit = homeMenuModel({}).filter((i) => i.kind === 'item');
+    check('*** the ⚙ menu’s first row is the same button: Edit… on the dashboard, back to the dashboard on the editing page ***',
+      mland[0].act === 'edit' && medit[0].act === 'land', `${mland[0].act} / ${medit[0].act}`);
     check('*** Switch module is ON the bar, dimmed unless a live Home is on the stage ***',
       b0.find((i) => i.act === 'switch').disabled && b0.find((i) => i.act === 'switch').label === 'Switch module'
       && !homeBarItems({ target: live, canSwitch: true }).find((i) => i.act === 'switch').disabled
@@ -300,8 +329,8 @@ try {
     const bb = homeBarItems({ title: 'x', target: live, busy: true });
     check('while a save is running, Save / Save as / History are dimmed (a second press cannot double it)',
       ['save', 'saveas', 'history'].every((a) => bb.find((i) => i.act === a).disabled));
-    check('Modules reports whether the picker is open', homeBarItems({ pickerOpen: true })[0].expanded === true);
-    check('*** Edit and Full screen are NOT extra buttons: they are the bar’s own ⚙ and ⛶, in words ***',
+    check('Modules reports whether the picker is open', homeBarItems({ pickerOpen: true })[1].expanded === true);
+    check('*** Edit view and Full screen are NOT extra buttons on the editing page: they are the bar’s own ⚙ and ⛶, in words ***',
       !b0.some((i) => ['view', 'full', 'edit', 'fs', 'settings'].includes(i.act))
       && homeShellLabel('settings', { menuOpen: false }) === '⚙ Edit'
       && homeShellLabel('settings', { menuOpen: true }) === '⚙ Done editing'

@@ -41,6 +41,9 @@ import { GUIDE_SETTINGS, guidePrefs, INFO_IDLE } from '../modules/nimrod.js';
 import { DEVICES_VERB_TOPICS } from '../modules/devices.js';
 import '../modules/photos.js';
 import '../modules/whats_new.js';
+// The guide's Switch acts name the profile (top left on the landing since 2026-10-02 evening): registered so
+// treeProblems can check the name against the real registry.
+import '../modules/profile.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -124,16 +127,17 @@ try {
       && /This is your default home dashboard\. You will be able to modify it however you want\./.test(LANDING_INTRO)
       && /It currently has four modules/.test(LANDING_INTRO)
       && /feel free to mess around with anything you want as we go through\. Would you like to:/.test(LANDING_INTRO));
-    const order = ['pictures', 'settings', 'devices', 'Nimrod'].map((w) => LANDING_INTRO.indexOf(w, LANDING_INTRO.indexOf('four modules')));
-    check('...listing the four in the order he did: pictures, settings, devices, Nimrod',
-      order.every((i) => i > 0) && order.every((i, n) => n === 0 || i > order[n - 1]), J(order));
+    // 2026-10-02 evening (Mike): "Profile (I know I said photos before. Changing it.), settings, Devices, Nimrod/AI."
+    const order = ['your profile', 'settings', 'devices', 'Nimrod'].map((w) => LANDING_INTRO.indexOf(w, LANDING_INTRO.indexOf('four modules')));
+    check('...listing the four in the order he did: your profile, settings, devices, Nimrod (no pictures any more)',
+      order.every((i) => i > 0) && order.every((i, n) => n === 0 || i > order[n - 1]) && !/pictures/.test(LANDING_INTRO), J(order));
     const other = GUIDE_NODES.other;
     check('*** "other modules": game/learning first, then module, dashboard, scene (a collection of dashboards), editing a module, AI ***',
       J(other.choices.slice(0, 6).map((c) => c.to)) === J(['mode', 'change-module', 'change-dashboard', 'change-scene', 'edit-module', 'ai'])
       && /collection of dashboards/.test(other.choices[3].label), J(other.choices));
-    check('*** it suggests replacing the pictures, and says ANY module can be replaced, including him ***',
-      /replacing the pictures/.test(other.say) && /replace any module whenever you want, including me/.test(other.say)
-      && other.acts.some((a) => a.kind === 'switch' && a.type === 'photos'));
+    check('*** it suggests replacing your profile (top left on the landing), and says ANY module can be replaced, including him ***',
+      /replacing your profile/.test(other.say) && /replace any module whenever you want, including me/.test(other.say)
+      && other.acts.some((a) => a.kind === 'switch' && a.type === 'profile'));
     const mode = GUIDE_NODES.mode;
     check('*** points: no real-world value, and no coins or microtransactions sold (Mike’s sentence, verbatim) ***',
       mode.say.includes(POINTS_DISCLAIMER) && GUIDE_NODES.points.say.includes(POINTS_DISCLAIMER)
