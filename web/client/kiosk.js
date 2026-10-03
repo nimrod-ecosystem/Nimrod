@@ -39,7 +39,7 @@ import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
   PLACE_REQUEST_TOPIC } from './arrangement.js';
 import {
-  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
@@ -423,6 +423,8 @@ export async function mountKiosk(root, {
           <button data-act="switch" title="switch the selected panel to another module">Switch module</button>
           <!-- BIGGER (2026-10-02 evening): the panel corner's press for the selected panel - see promotePanel. -->
           <button data-act="bigger" title="make the selected panel bigger, one step at a time">⤢ Bigger</button>
+          <!-- SMALLER (2026-10-03): the way back down, one level a press, dimmed while nothing is bigger - see demotePanel. -->
+          <button data-act="smaller" title="nothing is bigger now" disabled>⤡ Smaller</button>
           <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
           <!-- PLAY/PAUSE: the reason it was once left out is gone. NO BACKTICKS IN THIS COMMENT
                (it is inside the root.innerHTML template literal; see the BACK comment above).
@@ -2714,6 +2716,7 @@ export async function mountKiosk(root, {
   // Pause / Play (2026-10-02; `playPauseSelected` argues it): the selected panel's.
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
+  controlsEl.querySelector('[data-act="smaller"]')?.addEventListener('click', () => { demotePanel(); });
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
   // *** NIMROD, ON THE BAR (row 2.37, 2026-09-30). *** Press him and the cat explains whatever is
@@ -3895,16 +3898,25 @@ export async function mountKiosk(root, {
     try { paintPlayPause(controlsEl.querySelector('[data-act="playpause"]'), s); } catch { /* not drawn yet */ }
     // Bigger / Smaller follows the same selection (2026-10-02 evening; transport_bar.js paintBigger).
     let b = null;
-    try { b = biggerState(); paintBigger(controlsEl.querySelector('[data-act="bigger"]'), b); } catch { b = null; /* not built yet */ }
+    try {
+      b = biggerState();
+      paintBigger(controlsEl.querySelector('[data-act="bigger"]'), b);
+      paintSmaller(controlsEl.querySelector('[data-act="smaller"]'), b);
+    } catch { b = null; /* not built yet */ }
     if (useDashboard) { try { bus.publish(SHELL_STATE, b ? { playPause: s, bigger: b } : { playPause: s }); } catch { /* not load-bearing */ } }
     return s;
   }
-  // What the bar's Bigger says: the selected panel, and whether it is already at the top (the screen),
-  // where the same press goes back down -- the corner's own rule (`promotePanel`).
+  // What the bars' Bigger and Smaller say (2026-10-03, Mike: "no way to demote it"). Bigger: the selected
+  // panel, one level up; dimmed at the top (it already fills the screen). Smaller: one level down, live
+  // whenever ANYTHING is bigger -- before, the one button said Smaller only at the screen level, so a panel
+  // filling its dashboard had no way back on either bar. Two buttons, both always drawn (dimmed, never hidden).
   function biggerState() {
     let rec = null;
     try { rec = panelSubject(); } catch { rec = null; }
-    return { can: !!rec, smaller: !!rec && promotedScreen === rec.id, name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
+    let promoted = false;
+    try { promoted = promotedAny(); } catch { promoted = false; }
+    return { can: !!rec, top: !!rec && promotedScreen === rec.id, promoted,
+      name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
   }
 
   // ---- MAKE THE SELECTED PANEL BIGGER, ONE LEVEL AT A TIME (2026-10-02; arrangement.js has its half) ----
@@ -3968,11 +3980,16 @@ export async function mountKiosk(root, {
   if (typeof document !== 'undefined') document.addEventListener('fullscreenchange', onFsChange);
   // ESCAPE DEMOTES while something is made bigger -- before anything else hears it (capture, on the window):
   // the menu verb and the plain bar would otherwise take the same key. Not while typing, not with the menu
-  // open (it is the menu's), and on an embed only for a key inside its box.
+  // open (it is the menu's), and on an embed only for a key inside its box -- OR A KEY WITH NOTHING FOCUSED
+  // (2026-10-03). Measured on Home's landing with real keys: after a press on a panel nothing is focused, the
+  // key lands on the body, and "inside its box" threw it away, so Escape did nothing there. A panel made
+  // bigger is on screen and the key went to no field of the host page's: it is this screen's.
   const onEscDemote = (e) => {
     if (e.key !== 'Escape' || !promotedAny() || isTyping(e.target)) return;
     try { if (menu.isOpen()) return; } catch { return; }
-    if (embedded && !(e.target instanceof Node && root.contains(e.target))) return;
+    const t = e.target;
+    const nothingFocused = typeof document !== 'undefined' && (t === document || t === document.body || t === document.documentElement || t === window);
+    if (embedded && !nothingFocused && !(t instanceof Node && root.contains(t))) return;
     e.preventDefault(); e.stopImmediatePropagation();
     demotePanel();
   };
@@ -4048,6 +4065,12 @@ export async function mountKiosk(root, {
     if (t instanceof Element && t.closest('.k-cell, .k-pcell, .k-stage')) liftCorners();
   };
   root.addEventListener('pointerover', onPointerOverForCorners, { capture: true, passive: true });
+  // AND AGAIN WHEN THE PLAIN BAR HAS FADED IN (2026-10-03, measured with real CDP presses at 1920x1080 and
+  // 1280x720): the press that wakes the bar brings the corners up while the bar is still at opacity 0, so
+  // `shownBarRects` skipped it and a 2x2's lower-left corner stayed under the bar for that whole wake. Its
+  // own transition ending is the moment it is really there (no timer guessing kiosk.css's fade).
+  const onBarFaded = (e) => { if (e.target === controlsEl && e.propertyName === 'opacity') liftCorners(); };
+  controlsEl.addEventListener('transitionend', onBarFaded);
 
   // ---- A LIVE CALL'S CONTROLS (2026-10-02; modules/call.js answers, actions.js CALL_ACTIONS) ------------
   // Drawn on the plain bar here and on a placed bar by itself, from the call panel's own report; offered as
@@ -4540,10 +4563,21 @@ export async function mountKiosk(root, {
       if (complexity() !== 'essential') {
         const top = promotedScreen === rec.id;
         const filling = arr.promotedId?.() === rec.id;
-        items.push({ kind: 'item', id: 'promote', ...MENU_TAB.module(0),
-          label: top ? `Make ${panelName(rec)} smaller` : `Make ${panelName(rec)} bigger`,
-          hint: top ? 'back to filling its dashboard' : filling ? 'fills its dashboard now — next, the screen' : 'fills its dashboard, then the screen',
-          run: () => { try { menu.close(); } catch { /* already closed */ } promotePanel(rec.id); } });
+        // 2026-10-03 ("no way to demote it"): "smaller" is its own row whenever this panel is bigger, at
+        // either level -- before, it was offered only at the screen level. "Bigger" goes while there is no
+        // level above.
+        if (!top) {
+          items.push({ kind: 'item', id: 'promote', ...MENU_TAB.module(0),
+            label: `Make ${panelName(rec)} bigger`,
+            hint: filling ? 'fills its dashboard now — next, the screen' : 'fills its dashboard, then the screen',
+            run: () => { try { menu.close(); } catch { /* already closed */ } promotePanel(rec.id); } });
+        }
+        if (top || filling) {
+          items.push({ kind: 'item', id: 'demote', ...MENU_TAB.module(0),
+            label: `Make ${panelName(rec)} smaller`,
+            hint: top ? 'back to filling its dashboard' : 'back to its place on the dashboard',
+            run: () => { try { menu.close(); } catch { /* already closed */ } demotePanel(); } });
+        }
       }
       // IN THE SWITCH SCAN, OR NOT (2026-10-02; `inLapRow` argues it): on a panel placed freely.
       const lap = inLapRow(rec);
@@ -6003,6 +6037,7 @@ export async function mountKiosk(root, {
       root.removeEventListener('click', onClickForCorners, true);
       root.removeEventListener('pointerdown', onPressKind, true);
       root.removeEventListener('pointerover', onPointerOverForCorners, true);
+      controlsEl.removeEventListener('transitionend', onBarFaded);
       clearTimeout(cornersT);
       try { document.removeEventListener('fullscreenchange', onFsChange); } catch { /* no document */ }
       try { offDeviceRow?.(); } catch { /* already gone */ }
