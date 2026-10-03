@@ -60,6 +60,7 @@ import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
 import { mountNotifyEditor } from '../room_notify_editor.js';
 import { flashLimit } from '../flash_limit.js';
+import { LOOKS, LOOK_DEFAULT, LOOK_LABELS, normalizeLooks, builtFromWords, bricksPageFor } from '../brick_builds.js';
 
 // Every default argued (Rule 1), and every one of them a setting:
 //   preset 'theRoom'   the room whose furniture carries the controls: it is the one that shows what
@@ -237,7 +238,36 @@ export function configFrom(row = {}) {
   cfg.bookList = String(cfg.bookList ?? '').slice(0, 300);
   cfg.showSlots = !!cfg.showSlots;
   cfg.petSound = !!cfg.petSound;
+  // Per piece, not a row of the ⚙ menu: { objectId: 'bricks' | 'drawn' }, set on the piece in edit mode.
+  cfg.looks = normalizeLooks(row?.looks);
   return cfg;
+}
+
+// *** A PIECE BUILT FROM NIMROD BRICKS (brick_builds.js): its Look, and the way into its bricks. *** The Look is
+// stored per piece in this row's `looks` (the room has no per-object storage of its own, and the preset is not
+// this module's to change). "Open its bricks" opens the bricks page filtered to that build's parts, with
+// counts -- the honest "go into it" while the site has no 3D renderer: a real brick editor needs one, and that
+// is Mike's decision (three.js), not this file's.
+export const LOOK_FIELD = Object.freeze({
+  key: 'look', label: 'Look', kind: 'choice', default: LOOK_DEFAULT, level: 'essential',
+  help: 'Brick-built: the piece as it is built from Nimrod bricks. Drawn: the drawn picture.',
+  options: Object.freeze(LOOKS.map((v) => Object.freeze({ value: v, label: LOOK_LABELS[v] }))),
+});
+/** The edit-mode target for a piece with a build: its rows plus Look, written to the right places. */
+export function builtTarget(o, { keys = [], read = () => ({}), write = () => {} } = {}) {
+  const b = o?.build;
+  if (!b) return null;
+  const fields = [LOOK_FIELD, ...keys.map((k) => SETTINGS.find((s) => s.key === k)).filter(Boolean)];
+  return {
+    id: o.id, label: o.name, el: o.el, also: o.also || [], fields,
+    values: () => { const row = read() || {}; return { ...row, look: normalizeLooks(row.looks)[o.id] || o.look || LOOK_DEFAULT }; },
+    set: (patch = {}) => {
+      const { look, ...rest } = patch;
+      if (look !== undefined && LOOKS.includes(look)) write({ looks: { ...normalizeLooks((read() || {}).looks), [o.id]: look } });
+      if (Object.keys(rest).length) write(rest);
+    },
+    actions: [{ id: 'bricks', note: builtFromWords(b), label: 'Open its bricks', href: bricksPageFor(b.id) }],
+  };
 }
 
 // *** EDIT MODE: WHICH OF THIS MODULE'S OWN ROWS BELONG TO WHICH OBJECT (edit_mode.js, 2026-10-02). ***
@@ -273,7 +303,7 @@ const renderOpts = (cfg) => ({
   zoom: cfg.zoom === 'off' ? null : Number(cfg.zoom), signWords: cfg.signWords, showSlots: cfg.showSlots,
   shelf: cfg.shelf, books: booksOption(cfg), windowShows: cfg.windowShows,
   windowPress: cfg.windowPress === 'nothing' ? 'recipe' : cfg.windowPress, aiVisits: cfg.aiVisits,
-  closeups: cfg.closeups, closeupReturnMs: cfg.closeupReturnMs, petSound: cfg.petSound,
+  closeups: cfg.closeups, closeupReturnMs: cfg.closeupReturnMs, petSound: cfg.petSound, looks: cfg.looks || {},
   ...(MOTION_RATES[cfg.motionRate] || MOTION_RATES.light),
 });
 
@@ -391,7 +421,10 @@ registerModule(
       editTargets: () => {
         let objs = [];
         try { objs = scene?.objectEls?.() || []; } catch { objs = []; }
-        return objs.map((o) => ({ id: o.id, label: o.name, el: o.el, also: o.also || [], keys: objectKeys(o) }));
+        const read = () => state?.get?.() || {};
+        const write = (patch) => state?.set?.(patch);
+        return objs.map((o) => builtTarget(o, { keys: objectKeys(o), read, write })
+          || { id: o.id, label: o.name, el: o.el, also: o.also || [], keys: objectKeys(o) });
       },
       init() {
         mount.innerHTML = '';

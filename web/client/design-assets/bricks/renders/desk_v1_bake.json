@@ -1,0 +1,39 @@
+{
+ "id": "desk_v1",
+ "parts": 32,
+ "budget": 40000,
+ "target": 40000,
+ "triangles_in": 717120,
+ "triangles_after_dissolve": 699552,
+ "collapse_ratio": 0.05546,
+ "triangles_out": 38780,
+ "bounds_blender_m": {
+  "min": [
+   -0.0,
+   -0.0,
+   -0.0
+  ],
+  "max": [
+   1.28,
+   0.64,
+   0.76
+  ]
+ },
+ "glb": "desk_v1_merged.glb",
+ "glb_bytes": 399436,
+ "front": {
+  "file": "desk_v1_front.png",
+  "px": [
+   1065,
+   715
+  ],
+  "bytes": 149434
+ },
+ "three_quarter": {
+  "file": "desk_v1_34.png",
+  "bytes": 79928,
+  "small": "desk_v1_34_sm.png",
+  "small_bytes": 6122
+ },
+ "blender": "5.2.2 LTS"
+}

@@ -89,6 +89,8 @@
   transform-style: preserve-3d;
 }
 .r3-box > .r3-face{ transform-origin: 50% 50%; }
+/* Brick-built (brick_builds.js): the face is only the place for the picture -- no fill, no edge. */
+.r3-box > .r3-face.r3-bf-bricks{ background: transparent; box-shadow: none; }
 .r3-bf-front{ background: var(--r3-wood); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--r3-shade) 22%, transparent); }
 .r3-bf-top{ background: color-mix(in srgb, var(--r3-wood) 86%, var(--surface, Canvas)); }
 .r3-bf-left, .r3-bf-right{ background: color-mix(in srgb, var(--r3-wood) 78%, var(--r3-shade)); }

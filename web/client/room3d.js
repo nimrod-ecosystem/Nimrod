@@ -32,8 +32,10 @@
 //   3. NOTHING FLASHES. The drift changes no colour and no brightness, so the screen's flash limit
 //      (flash_limit.js) has nothing here to limit. If a reaction that lights something is ever added,
 //      it goes through `minFlashPeriodMs` the way room_scene.js's do.
-//   4. NO CONNECTOR GEOMETRY. The furniture is boxes. Nimrod's real brick/connector shapes are IP-gated
-//      and stay out of the public site.
+//   4. NO CONNECTOR GEOMETRY. The furniture is boxes -- or, for a piece naming a part with a brick build
+//      (brick_builds.js, 2026-10-02), a PICTURE of that piece built from the basic Nimrod bricks, which are
+//      published (design-assets/bricks, commit 1dc317c; public by Mike's ruling, as relayed that day). The
+//      connector collars themselves are drawn nowhere.
 //   5. THE HOST MOUNTS THE MODULES. Like room_scene.js (rule 2 there), this never mounts a module: it
 //      hands back empty elements (slots, and the faces for free placement). arrangement.js does the rest.
 //
@@ -65,6 +67,7 @@
 
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { chooseLod, deviceCapability, budgetFor, LOD_DEFAULTS } from './room_lod.js';
+import { buildFor, buildUrls, lookOf, normalizeLook, tintedPicture } from './brick_builds.js';
 
 export const OPENS_ACTION = 'dashboard.open';   // room_scene.js's name for the same press
 export const OPENS_MAX = 200;                    // layout.js OPENS_MAX: an id, not prose
@@ -170,6 +173,10 @@ export function normalizeRoom3d(scene = {}) {
       x: pct(f.x, 50), z: pct(f.z, 50), w: num(f.w, 120, [4, 2000]), h: num(f.h, 80, [4, 2000]), d: num(f.d, 80, [4, 2000]) };
     const opens = opensOf(f);
     if (opens) out.opens = opens;
+    // BRICK-BUILT (brick_builds.js): a piece naming a room part that has a brick build is drawn as that
+    // build's picture on its front, unless its `look` is 'drawn'. No `part`: a plain box, as before.
+    if (buildFor(f.part)) out.part = f.part;
+    if (normalizeLook(f.look)) out.look = f.look;
     return out;
   }).filter(Boolean);
   const out = { slots, furniture };
@@ -351,7 +358,9 @@ export function boxRect(f, view) {
 export function lodPlan(recipe, view, scale = 1, opts = {}) {
   const objs = (recipe.furniture || []).map((f) => {
     const r = boxRect(f, view);
-    return { id: f.id, w: r.w, h: r.h, faces: BOX_FACES, proxyFaces: PROXY_FACES };
+    // A brick-built piece is one face (its picture) at either level.
+    const faces = lookOf(f) === 'bricks' ? PROXY_FACES : BOX_FACES;
+    return { id: f.id, w: r.w, h: r.h, faces, proxyFaces: PROXY_FACES };
   });
   const mode = ['auto', 'full', 'proxy'].includes(opts.lod) ? opts.lod : 'auto';
   const budget = Number.isFinite(Number(opts.lodBudget)) && opts.lodBudget !== null && opts.lodBudget !== ''
@@ -473,7 +482,21 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       return d;
     };
     const front = face('r3-bf-front', f.w, f.h, `translate3d(0px, ${-f.h / 2}px, ${f.d / 2}px)`, door ? 'button' : 'div');
-    if (level !== 'proxy') {
+    // Brick-built (brick_builds.js): the build's front picture, tinted with the room's own wood token (rule 1:
+    // no literal colour), standing in the box's front plane -- the picture IS the piece, so no top or sides.
+    // If the picture will not load, the piece is redrawn as its plain box.
+    const bricks = lookOf(f) === 'bricks';
+    if (bricks) {
+      b.dataset.look = 'bricks';
+      front.classList.add('r3-bf-bricks');
+      front.prepend(tintedPicture(doc, buildUrls(buildFor(f.part).id).front, 'var(--r3-wood)', { onFail: () => {
+        if (destroyed || boxes.get(f.id) !== b) return;
+        const plain = buildBox({ ...f, look: 'drawn' }, level);
+        b.replaceWith(plain);
+        boxes.set(f.id, plain);
+      } }));
+    }
+    if (level !== 'proxy' && !bricks) {
       face('r3-bf-top', f.w, f.d, `translate3d(0px, ${-f.h}px, 0px) rotateX(90deg)`);
       face('r3-bf-left', f.d, f.h, `translate3d(${-f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(-90deg)`);
       face('r3-bf-right', f.d, f.h, `translate3d(${f.w / 2}px, ${-f.h / 2}px, 0px) rotateY(90deg)`);

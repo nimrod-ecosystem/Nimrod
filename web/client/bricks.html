@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod bricks</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<meta name="description" content="Every basic Nimrod brick, bracket and plate: a picture of each, its size in millimetres and its 3D model, and furniture built from them.">
+<style>
+  /* THEME TOKENS ONLY (theme.js sets them on <html> below). Every fallback is a CSS system colour, never a
+     number picked here, so a page whose script is blocked still reads in the browser's own colours. */
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg,Canvas);color:var(--text,CanvasText);
+    font:17px/1.6 var(--font,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);-webkit-font-smoothing:antialiased}
+  a{color:var(--link,LinkText)}
+  .wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+  .top{border-bottom:1px solid var(--border,GrayText);background:var(--surface-alt,Canvas)}
+  .top .wrap{display:flex;align-items:center;gap:12px;padding:12px 16px;flex-wrap:wrap}
+  .brand{font-weight:800;font-size:1.2rem;letter-spacing:-.02em;text-decoration:none;color:var(--text,CanvasText)}
+  .brand span{color:var(--accent-warm-deep,var(--link,LinkText))}
+  .top nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .top nav a,.top nav button{padding:8px 14px;border-radius:10px;text-decoration:none;font:650 .92rem/1.2 inherit;
+    border:1px solid var(--border,GrayText);color:var(--text,CanvasText);background:transparent;cursor:pointer;min-height:44px;
+    display:inline-flex;align-items:center}
+  .theme-pick{padding:7px 10px;border-radius:10px;border:1px solid var(--border,GrayText);min-height:44px;
+    background:transparent;color:var(--text,CanvasText);font-size:.92rem;max-width:140px}
+  header.hero{padding:30px 0 6px}
+  .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--text-muted,GrayText);margin:0 0 8px}
+  h1{font-size:clamp(1.7rem,4.4vw,2.4rem);line-height:1.15;letter-spacing:-.02em;margin:0 0 .35em}
+  .lede{font-size:1.05rem;color:var(--text-soft,CanvasText);max-width:68ch;margin:0 0 8px}
+  h2{font-size:1.35rem;margin:28px 0 6px}
+  h3.group{grid-column:1/-1;margin:18px 0 0;font-size:.8rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted,GrayText)}
+  h3.group:first-child{margin-top:0}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-top:14px}
+  .card{position:relative;background:var(--surface,Canvas);border:1px solid var(--border,GrayText);border-radius:16px;
+    padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+  .card h3{margin:4px 0 0;font-size:1rem;line-height:1.3}
+  .card .size{margin:0;font-weight:700;font-size:1.02rem;color:var(--text-strong,CanvasText)}
+  .card .meta,.meta{margin:0;color:var(--text-muted,GrayText);font-size:.88rem}
+  .pic{position:relative;width:100%;aspect-ratio:1;border-radius:12px;background:var(--surface-alt,Canvas);overflow:hidden}
+  .pic[data-missing]{display:grid;place-items:center;color:var(--text-muted,GrayText);font-size:.85rem}
+  .count{position:absolute;top:18px;right:18px;padding:2px 10px;border-radius:999px;font-weight:800;
+    background:var(--link,Highlight);color:var(--on-dark,HighlightText)}
+  .btn{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 12px;
+    border-radius:10px;border:1px solid var(--border,GrayText);text-decoration:none;font-weight:650;font-size:.9rem;
+    color:var(--link,LinkText);background:transparent;text-align:center}
+  #build{display:grid;gap:16px;grid-template-columns:minmax(0,360px) 1fr;align-items:center;margin-top:10px}
+  #build[hidden]{display:none}
+  #build .pic.big{max-width:360px}
+  #build .actions{display:flex;flex-wrap:wrap;gap:8px}
+  #build .actions .btn{margin-top:0}
+  .muted{color:var(--text-muted,GrayText)}
+  footer{margin:40px 0 50px;padding-top:18px;border-top:1px solid var(--border,GrayText);color:var(--text-muted,GrayText);font-size:.9rem}
+  @media (max-width:620px){
+    body{font-size:16px}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .card{padding:8px;border-radius:12px}
+    .count{top:12px;right:12px}
+    #build{grid-template-columns:1fr}
+    .top nav{margin-left:0}
+  }
+  @media (max-width:340px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="wrap">
+    <a class="brand" href="/">Nimrod<span>.</span></a>
+    <nav>
+      <!-- Shown only when this page was opened in a tab of its own (an edit window's "Open its bricks",
+           the library's "See every brick"): a screen with no browser bar can still put it away. -->
+      <button type="button" id="close" hidden>Close</button>
+      <select id="theme-pick" class="theme-pick" aria-label="Theme"></select>
+      <a href="/modules.html">What you can add</a>
+      <a href="/learn/print.html">Print your own</a>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap" id="main">
+  <header class="hero">
+    <p class="eyebrow">Nimrod bricks</p>
+    <h1 id="title">Every brick</h1>
+    <p class="lede" id="lede">Every brick is a multiple of 40 mm in every direction, with a 10 mm socket at the
+      centre of every 40 mm square on every face, so any brick lines up with any other. The brackets and plates
+      that join them use the same sockets. Each one has a 3D model you can download and open in any glTF viewer.</p>
+  </header>
+
+  <section id="build" hidden></section>
+
+  <section>
+    <div class="grid" id="grid"><p class="muted">Loading the bricks…</p></div>
+  </section>
+
+  <section id="builds-sec" hidden>
+    <h2>Built from bricks</h2>
+    <p class="lede">Furniture made only from the bricks above. A room can draw each of these as the real
+      brick-built piece; each one's bricks, with how many it takes, are one press away.</p>
+    <div class="grid" id="builds"></div>
+  </section>
+
+  <footer>
+    The list comes from <a href="/design-assets/bricks/bricks.json">bricks.json</a>. Every part is generated from
+    one parametric script, so a size not listed here is a number, not a new model.
+    <br><a href="/">What Nimrod is</a> · <a href="/modules.html">What you can add to a screen</a> ·
+    <a href="https://github.com/nimrod-ecosystem/Nimrod">View the code</a>
+  </footer>
+</main>
+
+<script type="module">
+import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
+import { mountBricksPage } from './bricks_page.js';
+// The same anonymous, per-browser theme choice as wallpapers.html (no account on this page).
+applyTheme(document.documentElement, resolveThemeId(getStoredTheme()));
+mountThemePicker(document.getElementById('theme-pick'));
+const close = document.getElementById('close');
+if (history.length <= 1) {
+  close.hidden = false;
+  close.addEventListener('click', () => { window.close(); setTimeout(() => { location.href = '/'; }, 300); });
+}
+window.__bricks = mountBricksPage(document);
+</script>
+</body>
+</html>

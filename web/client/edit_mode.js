@@ -169,6 +169,11 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
     label: target ? `${title}: ${target.label}` : title,
     help: help || '',
     fields,
+    // A target's LINKS (2026-10-02, a brick-built piece's "Open its bricks"): `{ id, label, href, note? }`,
+    // drawn under the rows as ordinary links that open in a new tab. Not settings: nothing is written.
+    actions: (Array.isArray(target?.actions) ? target.actions : [])
+      .filter((a) => a && a.id && a.label && typeof a.href === 'string' && /^(\/|https?:)/.test(a.href))
+      .map((a) => ({ id: String(a.id), label: String(a.label), href: a.href, note: a.note ? String(a.note) : '' })),
     values: () => { try { return read() || {}; } catch { return {}; } },
     set: (key, value) => { try { write({ [key]: value }); return true; } catch (err) { console.error('edit mode: set', err); return false; } },
   };
@@ -224,7 +229,8 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
               : r.picture
                 ? `<button type="button" class="em-btn" data-em-pick="${esc(r.key)}" data-em-focus="${esc(r.key)}:p">Choose…</button>`
                 : `<small>${esc(r.why)}</small>`}</span></div>`).join('')
-        : '<p class="em-none" data-em-none>Nothing to set on this one.</p>'}</div></div>`;
+        : '<p class="em-none" data-em-none>Nothing to set on this one.</p>'}</div>${(sel.actions || []).map((a) => `<div class="em-act" data-em-act="${esc(a.id)}">
+          ${a.note ? `<span class="em-v">${esc(a.note)}</span>` : ''}<a class="em-btn" href="${esc(a.href)}" target="_blank" rel="noopener" data-em-focus="act:${esc(a.id)}">${esc(a.label)}</a></div>`).join('')}</div>`;
     if (keepFocus) host.querySelector(`[data-em-focus="${keepFocus}"]`)?.focus();
   }
   const rowField = (key) => (sel.fields || []).find((f) => f.key === key) || null;
@@ -300,12 +306,15 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .em-c{grid-column:2;grid-row:1/span 2;display:flex;gap:4px;align-items:center}
 .em-text{min-height:44px;max-width:150px;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--text);font:inherit}
 .em-none{margin:4px 0;color:var(--text-soft,var(--text))}
-.k-editc{position:absolute;right:56px;bottom:6px;z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
+.em-act{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px}
+.em-act a.em-btn{display:inline-flex;align-items:center;text-decoration:none}
+.k-editc{position:absolute;right:56px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
-  font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;transition:opacity .15s}
-.k-cell:hover>.k-editc,.k-cell:focus-within>.k-editc,.k-pcell:hover>.k-editc,.k-pcell:focus-within>.k-editc,
-.k-stage:hover>.k-editc,.k-stage:focus-within>.k-editc,.k-room:hover>.k-editc,.k-room:focus-within>.k-editc,
-.k-editc:focus-visible,[data-editing]>.k-editc{opacity:1}
+  font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
+:root:not([data-press="touch"]) .k-cell:hover>.k-editc,:root:not([data-press="touch"]) .k-pcell:hover>.k-editc,
+:root:not([data-press="touch"]) .k-stage:hover>.k-editc,:root:not([data-press="touch"]) .k-room:hover>.k-editc,
+.k-cell:focus-within>.k-editc,.k-pcell:focus-within>.k-editc,.k-stage:focus-within>.k-editc,.k-room:focus-within>.k-editc,
+.k-editc:focus-visible,[data-editing]>.k-editc,.kiosk[data-corners="up"] .k-editc{opacity:1;pointer-events:auto}
 .k-room>.k-editc{right:6px}
 @media (prefers-reduced-motion: reduce){.k-editc{transition:none}}`;
   (doc.head || doc.documentElement).append(s);

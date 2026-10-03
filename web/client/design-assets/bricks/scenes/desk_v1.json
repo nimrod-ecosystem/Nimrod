@@ -2,6 +2,7 @@
  "schema": "nimrod-assembly/1",
  "id": "desk_v1",
  "title": "Desk",
+ "plays": "desk",
  "params_mm": {
   "length": 1280,
   "depth": 640,
@@ -2654,5 +2655,18 @@
    640.0,
    760.0
   ]
+ },
+ "display": {
+  "merged_glb": "/design-assets/bricks/scenes/desk_v1_merged.glb",
+  "front": "/design-assets/bricks/renders/desk_v1_front.png",
+  "three_quarter": "/design-assets/bricks/renders/desk_v1_34.png",
+  "three_quarter_small": "/design-assets/bricks/renders/desk_v1_34_sm.png",
+  "triangles": 38780,
+  "budget": 40000,
+  "front_px": [
+   1065,
+   715
+  ],
+  "made_by": "Blender/render_bricks.py"
  }
 }

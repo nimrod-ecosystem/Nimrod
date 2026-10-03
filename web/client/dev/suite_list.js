@@ -87,6 +87,8 @@ export const SUITES = [
   'room3d',
   // 2026-10-02: a 3D room flattened to a 2D room (doors and screens still live), and two levels of detail.
   'room_flat',
+  // 2026-10-02: furniture built from Nimrod bricks, drawn in the rooms (its picture), and the bricks page.
+  'brick_builds', 'bricks_page',
   // The QR encoder checked against a reference decoder.
   'qr_oracle',
   // Arrived on disk WHILE this list was being fixed (other work in flight the same day), and the

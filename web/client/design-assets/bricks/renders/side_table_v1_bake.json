@@ -1,0 +1,39 @@
+{
+ "id": "side_table_v1",
+ "parts": 29,
+ "budget": 40000,
+ "target": 17707,
+ "triangles_in": 302940,
+ "triangles_after_dissolve": 295132,
+ "collapse_ratio": 0.0582,
+ "triangles_out": 17152,
+ "bounds_blender_m": {
+  "min": [
+   -0.0,
+   -0.0,
+   -0.0
+  ],
+  "max": [
+   0.48,
+   0.48,
+   0.52
+  ]
+ },
+ "glb": "side_table_v1_merged.glb",
+ "glb_bytes": 179444,
+ "front": {
+  "file": "side_table_v1_front.png",
+  "px": [
+   399,
+   495
+  ],
+  "bytes": 47313
+ },
+ "three_quarter": {
+  "file": "side_table_v1_34.png",
+  "bytes": 88473,
+  "small": "side_table_v1_34_sm.png",
+  "small_bytes": 7344
+ },
+ "blender": "5.2.2 LTS"
+}
