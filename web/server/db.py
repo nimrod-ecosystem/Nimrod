@@ -492,12 +492,20 @@ class _Store:
                 "see_people": bool(r[9]), "messages": bool(r[10])}
 
     def create_invite(self, owner_id: str, person_id: str, token_hash: str, expires_at: str,
-                      see_people: bool = True, messages: bool = True) -> dict:
+                      see_people: bool = True, messages: bool = True, sweep_before: str | None = None) -> dict:
         """A new invitation. ONE LIVE LINK PER PERSON: any older one still waiting is cancelled in the
         same transaction, so a link sent last week and forgotten cannot be used after a new one went
-        out (and the inviter never has to wonder which of two links in a thread still works)."""
+        out (and the inviter never has to wonder which of two links in a thread still works).
+
+        `sweep_before` (an ISO time): links nobody used that ran out or were taken back before it are
+        deleted first, anybody's - the tidy-up rides on making a link, which is rate limited, rather
+        than on a timer this server does not have (claims.KEEP_DEAD_INVITE_DAYS says how long)."""
         iid, ts = _new_id(), _now()
         with self._tx() as cur:
+            if sweep_before:
+                cur.execute(self._q(
+                    "DELETE FROM claim_invites WHERE used_at IS NULL AND (expires_at < ? "
+                    "OR (cancelled_at IS NOT NULL AND cancelled_at < ?))"), (sweep_before, sweep_before))
             cur.execute(self._q(
                 "UPDATE claim_invites SET cancelled_at=? WHERE owner_id=? AND person_id=? "
                 "AND used_at IS NULL AND cancelled_at IS NULL"), (ts, owner_id, person_id))
@@ -972,7 +980,8 @@ class _Store:
         "claim_invites":   ("A link you made inviting somebody to take over one of your people: "
                             "which person, when it runs out, the two choices you made on it, and "
                             "whose login used it. Never the link itself - only a scrambled form "
-                            "of it that cannot be turned back into a working link.", True,
+                            "of it that cannot be turned back into a working link. A link nobody "
+                            "used is deleted 30 days after it runs out or is taken back.", True,
                             "when you invite somebody to use one of your people"),
         "person_claims":   ("Which of your people somebody else now uses with their own login, "
                             "and which login. One entry per person; it goes when either of you "
