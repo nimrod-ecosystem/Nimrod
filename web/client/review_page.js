@@ -6,7 +6,7 @@
 // paste to Code. Its own page, like claude.html: one task, reached from a link. Colours come only from the
 // theme (theme.js), never from this file.
 
-import { exportFlagged, packProgress, topicName } from './pack_reviews.js';
+import { exportFlagged, packProgress, topicName, sourceHtml } from './pack_reviews.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const day = (at) => (at ? String(at).slice(0, 10) : '');
@@ -23,6 +23,7 @@ export const REVIEW_PAGE_STYLE = `
 .rv-flag{margin:.6em 0;padding:10px 12px;border:1px solid var(--border);border-radius:10px}
 .rv-flag p{margin:.2em 0}
 .rv-q{font-weight:700}
+.rv-src{overflow-wrap:anywhere}.rv-src a{color:var(--link)}.rv-src-note{color:var(--text-muted)}
 .rv-btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
   color:var(--text);font:inherit;cursor:pointer}
 .rv-btn:focus-visible{outline:3px solid var(--link);outline-offset:2px}
@@ -59,6 +60,7 @@ export function mountReviewPage(el, { reviews, now = () => new Date(), copy = nu
         <p class="rv-muted">${esc(f.packName)}</p>
         <p class="rv-q">${esc(f.question)}</p>
         <p>Marked right: <b>${esc(f.answer)}</b>${f.answers.length ? ` <span class="rv-muted">(options: ${esc(f.answers.join(' | '))})</span>` : ''}</p>
+        ${f.orphan ? '' : sourceHtml(f.sources, { cls: 'rv-src' })}
         ${f.notes.length
           ? f.notes.map((n) => `<p data-rv-note>What’s wrong: ${esc(n.note)} <span class="rv-muted">${esc(n.by || '')}${n.at ? ` · ${esc(day(n.at))}` : ''}</span></p>`).join('')
           : '<p class="rv-muted">No note.</p>'}
@@ -68,10 +70,11 @@ export function mountReviewPage(el, { reviews, now = () => new Date(), copy = nu
     el.innerHTML = `
       <section class="rv-card">
         <h1>Questions waiting for review</h1>
-        <p>These questions were written by an AI. Some were written from its own memory, with no source to check
-          them against. A pack has to name where its questions came from, but “from memory” is a name, so that
-          check lets them through. <b>A person reading each question while playing it is the real check</b> — a
-          wrong “right answer” taught as fact is worse than no question.</p>
+        <p>These questions were written by an AI, some from its own memory. Each one names its own source — a
+          link, a reference work, or “common knowledge” with a reason — shown under the question while you review
+          it. A source an AI names can still be wrong, or not say what it is claimed to say, so open it when in
+          doubt. <b>A person reading each question while playing it is the real check</b> — a wrong “right
+          answer” taught as fact is worse than no question.</p>
         <p class="rv-muted">To review: open a Trivia panel’s settings, turn on <b>Include unreviewed questions (review
           as you play)</b>, and choose one of these packs under <b>Which pack</b>. Play as usual. A question
           answered and moved on from is passed; press <b>✗ wrong</b> (or W, or say “that one is wrong”) for one that

@@ -309,19 +309,67 @@ check("no thinking budget, no fallbacks (both rejected here), no forced tool", "
 check("a model not offered for questions is refused", raises(lambda: Q.build_batch_requests("x", 5, "claude-mythos-5-1")))
 check("too many is refused", raises(lambda: Q.build_batch_requests("x", Q.MAX_COUNT + 1, "claude-opus-5-5")))
 check("the worst case of the batch is priced at half (Batch API)", 0 < Q.worst_case(reqs) < 1.0, Q.worst_case(reqs))
+SRC = {"url": "", "ref": "Ohio Revised Code 5.03", "title": "", "note": ""}
 items, dropped = Q.clean_items([
-    {"question": "Which bird is Ohio's state bird?", "answers": ["Cardinal", "Robin", "Blue jay", "Crow"], "correct": "Cardinal", "difficulty": "easy", "explain": "Since 1933."},
-    {"question": "Which bird is Ohio's state bird?", "answers": ["Cardinal", "Robin", "Wren", "Crow"], "correct": "Cardinal", "difficulty": "easy", "explain": "dup"},
-    {"question": "No right answer?", "answers": ["A", "B", "C", "D"], "correct": "E", "difficulty": "hard", "explain": ""},
-    {"question": "Two the same?", "answers": ["A", "a", "C", "D"], "correct": "A", "difficulty": "hard", "explain": ""},
-    {"question": "Too few", "answers": ["A", "B"], "correct": "A"},
+    {"question": "Which bird is Ohio's state bird?", "answers": ["Cardinal", "Robin", "Blue jay", "Crow"], "correct": "Cardinal", "difficulty": "easy", "explain": "Since 1933.", "source": SRC},
+    {"question": "Which bird is Ohio's state bird?", "answers": ["Cardinal", "Robin", "Wren", "Crow"], "correct": "Cardinal", "difficulty": "easy", "explain": "dup", "source": SRC},
+    {"question": "No right answer?", "answers": ["A", "B", "C", "D"], "correct": "E", "difficulty": "hard", "explain": "", "source": SRC},
+    {"question": "Two the same?", "answers": ["A", "a", "C", "D"], "correct": "A", "difficulty": "hard", "explain": "", "source": SRC},
+    {"question": "Too few", "answers": ["A", "B"], "correct": "A", "source": SRC},
 ])
 check("*** only sound questions are kept: a repeat, a missing correct answer, duplicate answers, too few - dropped ***",
       len(items) == 1 and len(dropped) == 4 and items[0]["ai_written"] is True, f"{items} {dropped}")
+check("a kept question carries its source, with the empty fields left out",
+      items[0]["source"] == {"ref": "Ohio Revised Code 5.03"}, items[0].get("source"))
+
+section("*** every question names its source (Mike, 2026-10-04): the schema asks, clean_items enforces ***")
+item_schema = Q.ITEM_SCHEMA["properties"]["items"]["items"]
+check("*** the structured-output schema REQUIRES a source on every item, with url/ref/title/note and nothing else ***",
+      "source" in item_schema["required"] and item_schema["properties"]["source"] is Q.SOURCE_SCHEMA
+      and set(Q.SOURCE_SCHEMA["required"]) == {"url", "ref", "title", "note"}
+      and Q.SOURCE_SCHEMA["additionalProperties"] is False)
+check("...and that schema is the one every batch request sends",
+      all(r["params"]["output_config"]["format"]["schema"] is Q.ITEM_SCHEMA for r in reqs))
+check("the instructions ask for a named reference or a link, say never to make up a link, and that no source means thrown away",
+      "SOURCE" in Q.SYSTEM and "never make up a link" in Q.SYSTEM and "thrown away" in Q.SYSTEM)
+base = {"answers": ["A", "B", "C", "D"], "correct": "A", "difficulty": "easy", "explain": ""}
+cases = [
+    ("no source field", None),
+    ("an empty source", {"url": "", "ref": "", "title": "", "note": ""}),
+    ("'certain' is not a source", {"url": "", "ref": "certain", "title": "", "note": ""}),
+    ("'from memory' is not a source", {"url": "", "ref": "From memory", "title": "", "note": ""}),
+    ("common knowledge with no reason", {"url": "", "ref": "common knowledge", "title": "", "note": ""}),
+    ("a link that is not a link, and nothing else", {"url": "britannica.com/giraffe", "ref": "", "title": "x", "note": ""}),
+    ("a bare string non-answer", "certain"),
+]
+raw = [{**base, "question": f"Dropped {i}?", **({} if s is None else {"source": s})} for i, (_, s) in enumerate(cases)]
+raw += [
+    {**base, "question": "Kept common?", "source": {"url": "", "ref": "Common knowledge", "title": "", "note": "taught to small children"}},
+    {**base, "question": "Kept link?", "source": {"url": "https://www.britannica.com/animal/giraffe", "ref": "", "title": "Giraffe", "note": ""}},
+    {**base, "question": "Kept ref, bad link dropped?", "source": {"url": "not a link", "ref": "Britannica, 'Giraffe'", "title": "", "note": ""}},
+]
+kept, gone = Q.clean_items(raw)
+no_src = [d for d in gone if d.startswith(Q.NO_SOURCE + ":")]
+check("*** every source-less question is dropped, and each is counted as 'no source' ***",
+      len(no_src) == len(cases) and len(gone) == len(cases), gone)
+check("kept: common knowledge WITH a reason, a real link, and a reference beside a broken link (the broken link removed)",
+      [k["question"] for k in kept] == ["Kept common?", "Kept link?", "Kept ref, bad link dropped?"]
+      and kept[1]["source"] == {"url": "https://www.britannica.com/animal/giraffe", "title": "Giraffe"}
+      and kept[2]["source"] == {"ref": "Britannica, 'Giraffe'"}, kept)
+check("the collector's summary counts both: dropped for no source, and kept on common knowledge",
+      Q.source_counts(kept, gone) == f"sources: {len(cases)} question(s) dropped for naming no source; 1 of 3 kept rest on 'common knowledge'",
+      Q.source_counts(kept, gone))
+check("clean_source reads the old fact-check strings the same way: a URL, a reference, 'certain' refused",
+      Q.clean_source("https://example.org/a") == {"url": "https://example.org/a"} and Q.clean_source("Britannica") == {"ref": "Britannica"}
+      and Q.clean_source("certain") is None and Q.clean_source([]) is None
+      and Q.clean_source([{"ref": "A"}, "https://b.org"]) == [{"ref": "A"}, {"url": "https://b.org"}])
+
 pack = Q.make_pack("Birds of Ohio", items, model="claude-opus-5-5", day="2026-10-03")
 check("*** the pack says AI-written and UNREVIEWED in its name, source, review status and every item ***",
       "AI-written, not yet reviewed" in pack["name"] and "NOT checked" in pack["source"]["name"]
       and pack["review"]["status"] == "unreviewed" and pack["ai_written"] is True and all(i["ai_written"] for i in pack["items"]))
+check("...and every item in it names a source (the rule packs.js enforces on an AI-written pack)",
+      all(Q.clean_source(i.get("source")) for i in pack["items"]) and "source" in pack["source"]["name"])
 check("it is a valid nimrod.pack.v1 trivia pack shape", pack["schema"] == "nimrod.pack.v1" and pack["kind"] == "trivia"
       and all(i["correct"] in i["answers"] and len(i["answers"]) >= 3 for i in pack["items"]))
 check("*** it goes to packs_local (not shipped), and pack_library.js does not list it ***",
@@ -337,8 +385,12 @@ def _res(cid, kind="succeeded", m=None):
     return NS(custom_id=cid, result=NS(type=kind, message=m))
 
 
-good = _json.dumps({"items": [{"question": "Q1?", "answers": ["a", "b", "c", "d"], "correct": "a", "difficulty": "easy", "explain": "x"}]})
-good2 = _json.dumps({"items": [{"question": "Q2?", "answers": ["a", "b", "c", "d"], "correct": "b", "difficulty": "hard", "explain": "y"}]})
+good = _json.dumps({"items": [{"question": "Q1?", "answers": ["a", "b", "c", "d"], "correct": "a", "difficulty": "easy", "explain": "x",
+                               "source": {"url": "https://example.org/q1", "ref": "", "title": "Q1 page", "note": ""}}]})
+good2 = _json.dumps({"items": [{"question": "Q2?", "answers": ["a", "b", "c", "d"], "correct": "b", "difficulty": "hard", "explain": "y",
+                                "source": {"url": "", "ref": "A reference work, 'Q2'", "title": "", "note": ""}},
+                               {"question": "Q2 with no source?", "answers": ["a", "b", "c", "d"], "correct": "b", "difficulty": "hard", "explain": "y",
+                                "source": {"url": "", "ref": "", "title": "", "note": ""}}]})
 batch_state = {"status": "in_progress", "created": None}
 fake_batches = NS(
     create=lambda requests: (batch_state.__setitem__("created", requests), NS(id="msgbatch_fake1"))[1],
@@ -356,6 +408,9 @@ status, got, probs = Q.collect(bclient, "msgbatch_fake1", on_usage=lambda m, u: 
 check("*** ended: results keyed by custom_id (not arrival order), failures listed, cut-off answers skipped ***",
       status == "ended" and [i["question"] for i in got] == ["Q1?", "Q2?"] and any("errored" in p for p in probs)
       and any("not readable" in p for p in probs) and any("cut off" in p for p in probs), f"{got} {probs}")
+check("*** through the fake batch too: the answer that named no source is dropped and counted ***",
+      sum(1 for p in probs if p.startswith(Q.NO_SOURCE + ":")) == 1 and all(i.get("source") for i in got)
+      and "1 question(s) dropped for naming no source" in Q.source_counts(got, probs), f"{got} {probs}")
 check("every succeeded result is charged to the account (even one that was cut off)", len(charged) == 4)
 check("a batch result's cost is half the plain price", abs(C.cost_usd("claude-opus-5-5", usage(800, 1200), batch=True)
       - (800 * 4 + 1200 * 20) / 1e6 / 2) < 1e-12)

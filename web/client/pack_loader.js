@@ -15,7 +15,7 @@
 // Media tab, and Points & Quests — see the four callers rather than one, per Mike's own ask
 // that this not be buried behind a single game's menu.
 
-import { parsePack, lengthTells } from './packs.js';
+import { parsePack, lengthTells, itemSourceWarnings } from './packs.js';
 import { addUserPack, listUserPacks, removeUserPack } from './user_packs.js';
 
 const esc = (t) => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -131,7 +131,8 @@ export function mountPackLoader(root, { kind = null, onLoaded = null, documentRe
     renderList();
     // A tell is not a reason to refuse the pack (it is valid), so it rides on the success message --
     // the one moment the author is looking at this pack, before any player has met it.
-    const tells = lengthTells(pack);
+    // An old AI pack loading without per-item sources (packs.js grandfathering) is said here too.
+    const tells = [...lengthTells(pack), ...itemSourceWarnings(pack)];
     setMsg(`"${pack.name}" loaded from ${sourceLabel}. Reload the page to use it.`
       + (tells.length ? ` Heads up: ${tells.join('; and ')}.` : ''), tells.length ? 'warn' : 'ok');
     onLoaded?.(entry);

@@ -81,7 +81,7 @@ import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { answerMarkHtml } from '../answer_mark.js';
 import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_TOPIC,
-         REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC } from '../pack_reviews.js';
+         REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, sourceHtml } from '../pack_reviews.js';
 
 export const GAME = 'trivia';
 
@@ -554,8 +554,11 @@ registerModule(
     // answers, `after` walks Next and the contest — neither knows this exists), so the person playing never
     // spends a press on it. A reviewer reaches it by pointer, by the W / O keys, by voice ("that one is
     // wrong"), or by a switch bound to "Reviewing questions" in Devices (../pack_reviews.js REVIEW_ACTIONS).
+    // THE SOURCE (Mike, 2026-10-04) is part of the strip, in every state: what the question rests on is what
+    // the reviewer checks it against. Inside the strip, so the player never sees it.
     function reviewHtml() {
       if (!q || !q.reviewing) return '';
+      const src = sourceHtml(q.review?.sources);
       if (reviewMark === 'wrong') {
         return `<div class="tv-review" data-review data-review-state="wrong">
             <p class="tv-review-said" role="status">${reviewFailed
@@ -566,6 +569,7 @@ registerModule(
               : `<label class="tv-review-note">What is wrong? (optional)
                    <input type="text" data-review-note maxlength="1000" autocomplete="off"></label>
                  <button type="button" class="tv-review-btn" data-review-save>Save note</button>`}
+            ${src}
           </div>`;
       }
       if (reviewMark === 'fine') {
@@ -573,12 +577,14 @@ registerModule(
             <p class="tv-review-said" role="status">${reviewFailed ? 'Marked fine here, but it could not be saved just now.'
               : 'Marked fine.'}</p>
             <button type="button" class="tv-review-btn" data-review-wrong>✗ wrong after all</button>
+            ${src}
           </div>`;
       }
       return `<div class="tv-review" data-review data-review-state="open">
           <span class="tv-review-tag">Not yet reviewed</span>
           <button type="button" class="tv-review-btn" data-review-fine aria-label="This question is fine">✓ fine</button>
           <button type="button" class="tv-review-btn" data-review-wrong aria-label="This question is wrong">✗ wrong</button>
+          ${src}
         </div>`;
     }
 

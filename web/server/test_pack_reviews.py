@@ -80,6 +80,19 @@ check("pack_library.js still names none of them (claude_questions' own rule)",
       all(p["file"] not in (client / "pack_library.js").read_text(encoding="utf-8") for p in real)
       and "packs_review" not in (client / "pack_library.js").read_text(encoding="utf-8"))
 
+section("*** every question waiting in packs_review/ names its own source (Mike, 2026-10-04) ***")
+from claude_questions import clean_source  # noqa: E402  (the server side of packs.js's per-item rule)
+
+items = []
+for p in real:
+    shipped = json.loads((client / "packs_review" / p["file"]).read_text(encoding="utf-8"))
+    items += [(p["file"], it) for it in shipped["items"]]
+unsourced = [f"{f}: {it.get('question', '')[:50]}" for f, it in items if clean_source(it.get("source")) is None]
+check(f"all {len(items)} questions carry a real source (a link, a reference, or 'common knowledge' with a reason)",
+      len(items) >= 192 and not unsourced, unsourced[:5])
+check("...and none still keeps the old checked.sources list beside it (moved, not copied)",
+      all("sources" not in (it.get("checked") or {}) for _, it in items))
+
 section("a review row")
 ok = R.clean_review("pass", {"key": "c-abc123", "pack": "review:birds_ai", "question": "  Q1?  ", "answer": "a",
                              "place": "Bedside", "by": "forged", "at": "1999"})
