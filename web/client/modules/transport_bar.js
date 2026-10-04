@@ -125,6 +125,17 @@ registerModule(
 
     function arrangement() { return ctx.container?.arrangement?.() || null; }
 
+    // *** A PLAIN BAR, WHEN THE HOST PAGE ASKS FOR ONE (2026-10-04, Your people). *** The page a new person lands on
+    // (modules/people.js) is for people who are not building anything: no "module", "panel" or "dashboard" (people_page.js
+    // BANNED_WORDS). Over it the host page says `host.plainBar()`, and this bar leaves out what does not apply there --
+    // the panel chips ("Your People", "Nimrod, The Helper": one page and a helper, nothing to move between), Panel ▸,
+    // Switch module, Bigger / Smaller and Back / Pause / Next (a page of people has nothing to page through or play).
+    // HIDDEN, not dimmed, ARGUED against D16's "dimmed, never hidden": that rule is about a control that can act on
+    // this screen and cannot right now; these never act on this page, and a row of grey panel words is exactly the
+    // building vocabulary the page is meant to keep out of the way. Edit (the host's first button) brings all of it back.
+    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'bigger', 'smaller']);
+    const plainHost = () => { try { return typeof host?.plainBar === 'function' && !!host.plainBar(); } catch { return false; } };
+
     // THE HOST PAGE FLOATS THIS BAR OVER THE PANELS (Home's dashboard filling the window, 2026-10-02 late:
     // `host.barOver()`). Then it is a full screen's bar in every way that matters -- over the panels, nothing
     // reflowing -- so it tucks itself away as it does in full screen, on the same delay.
@@ -259,6 +270,17 @@ registerModule(
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       drawCallControls(callEl, callState, (payload) => say?.publish(CALL_CONTROL_TOPIC, { ...payload, from: 'transport_bar' }));
+      // The plain bar (above): last, so it wins over each button's own rule; undone the moment the host stops asking.
+      const plain = plainHost();
+      root.dataset.plain = plain ? '1' : '0';
+      modsEl.hidden = plain;
+      modsEl.style.display = plain ? 'none' : '';
+      for (const act of PLAIN_HIDES) {
+        const el = shell?.querySelector(`[data-act="${act}"]`);
+        if (!el) continue;
+        if (plain) el.hidden = true;
+        else if (act !== 'panel' && act !== 'switch') el.hidden = false;   // those two keep their own rule (above)
+      }
       drawHost();
       wordShell();
     }

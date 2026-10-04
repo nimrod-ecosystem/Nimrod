@@ -201,7 +201,7 @@ export function mountNoteVisit(root, {
           and every earlier note is kept.</p>
         ${screens.length > 1 ? `<div class="r-chips" data-nv-screens>${screens.map((s) => `
           <button class="r-chip${s.id === cur.id ? ' on' : ''}" data-nv-screen="${esc(s.id)}" aria-pressed="${s.id === cur.id}">${esc(s.name)}</button>`).join('')}</div>` : ''}
-        ${cur.has_note ? '' : `<p class="h-hint" data-nv-nopanel>${esc(cur.name)} has no note panel on it yet. A note you leave is kept and shows once one is added.</p>`}
+        ${cur.has_note ? '' : `<p class="h-hint" data-nv-nopanel>${esc(cur.name)} does not show notes yet. A note you leave is kept, and shows as soon as it does.</p>`}
         <form class="h-new nv-name" data-nv-name-form>
           <label>You sign notes as
             <input type="text" data-nv-name maxlength="${MAX_NAME}" value="${esc(displayName)}" placeholder="${SOMEONE}" aria-label="Your name on notes"></label>
