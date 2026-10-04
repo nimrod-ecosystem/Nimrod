@@ -80,6 +80,9 @@ export function validatePack(pack) {
       for (const problem of itemChecker(it)) bad.push(`item ${i}: ${problem}`);
     });
   }
+  // PER-ITEM SOURCES (below): a source that is there must be a real one, on any pack; an AI-written or
+  // recalled pack must have one on every item.
+  for (const problem of itemSourceProblems(pack)) bad.push(problem);
   return bad;
 }
 
@@ -145,6 +148,154 @@ function checkLessonItem(it) {
     });
   }
   return bad;
+}
+
+// ---------------------------------------------------------------------------------------------
+// PER-ITEM SOURCES (Mike, 2026-10-04: "Shouldn't the sources be noted when the questions are made?")
+//
+// The pack-level `source` above says where a pack came from. For a pack built FROM one document that
+// is enough. For a pack an AI wrote from its own knowledge it is not: "Written by Claude from memory"
+// is a true name and it is still nothing a reviewer can check a question against. So each item may
+// carry its own `source`, and a pack that says it is AI-written must carry one on EVERY item.
+//
+// THE SHAPE (argued; docs/PACK_SCHEMA.md, private repo, has the reader's version):
+//   "https://..."                                     a link (a string that starts http:// or https://)
+//   "Encyclopaedia Britannica, 'Giraffe'"             a named reference, or the line of the pack's own
+//                                                     source the item comes from (any other string)
+//   { "url": "https://...", "title": "...", "note": "..." }
+//   { "ref": "Encyclopaedia Britannica, 'Giraffe'", "note": "..." }
+//   { "ref": "common knowledge", "note": "<why no citation is needed>" }
+//   [ ...any of those ]                               several sources for one fact
+// WHY STRINGS AS WELL AS OBJECTS: the fact-check pass's `checked.sources` was already a list of strings
+// (a URL, or "certain"), and lesson questions from transcripts already carry `source` as the quoted line
+// (transcript_quiz.js `toLessonQuestion`). One field, read the same way in both. The object form is
+// there for a title and a note. WHY "common knowledge" IS ALLOWED, AND ONLY WITH A REASON: "What do we
+// call a baby dog?" has no citation worth the name, and demanding one is how a model is pushed into
+// inventing a plausible URL; but a bare "common knowledge" is exactly the unexplained "certain" this
+// rule exists to replace, so it has to say why. Bare non-answers ("certain", "from memory", ...) are
+// refused outright. An empty string or null counts as no source at all.
+//
+// WHICH PACKS MUST HAVE THEM: `ai_written: true` on the pack or on any item, or `source.kind:
+// "recalled"` (written from memory, by anybody). Hand-made packs from a named source do not: their
+// pack-level source already names the document, and a person writing questions out of a book should
+// not have to cite the book forty times. They MAY carry item sources, and one that is there is checked.
+//
+// GRANDFATHERING: an AI pack whose `generated` date is before ITEM_SOURCES_FROM (the day the rule was
+// made) loads without them, and `itemSourceWarnings` says how many items name nothing — a warning the
+// pack loader shows and the review strip shows per question ("Source: none given"). A pack with no
+// `generated` date is NOT grandfathered: the date is the only evidence of age it has.
+export const ITEM_SOURCES_FROM = '2026-10-04';
+export const COMMON_KNOWLEDGE = 'common knowledge';
+// Words that answer "where is this from?" with nothing. Lower-case, compared after trimming.
+const NOT_A_SOURCE = new Set(['certain', 'sure', 'known', 'well known', 'memory', 'from memory', 'my memory',
+  'my own knowledge', 'own knowledge', 'general knowledge', 'unknown', 'none', 'n/a', 'na', '-', 'ai', 'claude']);
+const isUrl = (s) => /^https?:\/\/[^\s]+$/i.test(s);
+const str = (v) => (typeof v === 'string' ? v.trim() : '');
+const isCommon = (ref) => str(ref).toLowerCase() === COMMON_KNOWLEDGE;
+
+/** True when an item's `source` field is absent (missing, null or an empty string). */
+const absent = (src) => src === undefined || src === null || (typeof src === 'string' && !src.trim());
+
+/** What is wrong with one item `source` value, or null when it is a real source. */
+export function itemSourceProblem(src) {
+  if (absent(src)) return 'source is missing';
+  if (Array.isArray(src)) {
+    if (!src.length) return 'source, as a list, needs at least one entry';
+    for (const s of src) { const p = itemSourceProblem(s); if (p) return p; }
+    return null;
+  }
+  if (typeof src === 'string') {
+    const s = src.trim();
+    if (isCommon(s)) return 'a "common knowledge" source needs a reason: { "ref": "common knowledge", "note": "why" }';
+    if (NOT_A_SOURCE.has(s.toLowerCase())) return `source "${s}" names nothing to check against; give a link or a reference work`;
+    return null;
+  }
+  if (typeof src !== 'object') return 'source must be text, an object or a list';
+  for (const f of ['url', 'ref', 'title', 'note']) {
+    if (src[f] !== undefined && src[f] !== null && typeof src[f] !== 'string') return `source.${f} must be text`;
+  }
+  const url = str(src.url), ref = str(src.ref);
+  if (url && !isUrl(url)) return 'source.url must be a link starting http:// or https://';
+  if (!url && !ref) return 'source needs a url or a ref';
+  if (!url && isCommon(ref) && !str(src.note)) return 'a "common knowledge" source needs a note saying why';
+  if (!url && !isCommon(ref) && NOT_A_SOURCE.has(ref.toLowerCase())) return `source.ref "${ref}" names nothing to check against`;
+  return null;
+}
+
+/**
+ * An item's source(s) as a list of `{ url, ref, title, note }` (only the fields that are there), for
+ * showing to a reviewer. [] when there is none or it is not a real source. Never throws.
+ */
+export function itemSources(src) {
+  if (absent(src) || itemSourceProblem(src)) return [];
+  const one = (s) => {
+    if (typeof s === 'string') return isUrl(s.trim()) ? { url: s.trim() } : { ref: s.trim() };
+    const o = {};
+    for (const f of ['url', 'ref', 'title', 'note']) if (str(s[f])) o[f] = str(s[f]);
+    return o;
+  };
+  return (Array.isArray(src) ? src : [src]).map(one);
+}
+
+/** Does this pack have to name a source on every item? (AI-written, or recalled from memory.) */
+export function needsItemSources(pack) {
+  if (!pack || typeof pack !== 'object') return false;
+  if (pack.ai_written === true) return true;
+  if (pack.source && typeof pack.source === 'object' && pack.source.kind === 'recalled') return true;
+  return Array.isArray(pack.items) && pack.items.some((it) => it && it.ai_written === true);
+}
+
+/** Written before the rule existed, by its own `generated` date. */
+export function itemSourcesGrandfathered(pack) {
+  const d = pack && typeof pack.generated === 'string' ? pack.generated.trim().slice(0, 10) : '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) && d < ITEM_SOURCES_FROM;
+}
+
+// Every place in a pack a fact lives, with the label validatePack uses for it: trivia and words items,
+// and each question inside a lesson item (a lesson item's own `source` counts for all its questions).
+function sourcedUnits(pack) {
+  const out = [];
+  (Array.isArray(pack?.items) ? pack.items : []).forEach((it, i) => {
+    if (!it || typeof it !== 'object') return;
+    if (pack.kind === 'lesson') {
+      if (!absent(it.source)) out.push({ label: `item ${i}`, src: it.source, own: true });
+      (Array.isArray(it.questions) ? it.questions : []).forEach((q, j) => {
+        if (!q || typeof q !== 'object') return;
+        out.push({ label: `item ${i}: questions[${j}]`, src: absent(q.source) ? it.source : q.source, own: !absent(q.source) });
+      });
+    } else {
+      out.push({ label: `item ${i}`, src: it.source, own: true });
+    }
+  });
+  return out;
+}
+
+/**
+ * The per-item source problems in a pack, as validatePack words them. `strict: true` ignores
+ * grandfathering (a test uses it to prove a pack would pass the rule as it stands today).
+ */
+export function itemSourceProblems(pack, { strict = false } = {}) {
+  const bad = [];
+  const required = needsItemSources(pack) && (strict || !itemSourcesGrandfathered(pack));
+  for (const u of sourcedUnits(pack)) {
+    if (absent(u.src)) {
+      if (required) bad.push(`${u.label}: source is required (this pack is AI-written or recalled, so every item names where its fact comes from)`);
+      continue;
+    }
+    if (!u.own) continue;            // inherited from its lesson item, which is checked on its own
+    const p = itemSourceProblem(u.src);
+    if (p) bad.push(`${u.label}: ${p}`);
+  }
+  return bad;
+}
+
+/** A warning (never a refusal) for a grandfathered AI pack whose items name no source. */
+export function itemSourceWarnings(pack) {
+  if (!needsItemSources(pack) || !itemSourcesGrandfathered(pack)) return [];
+  const units = sourcedUnits(pack);
+  const missing = units.filter((u) => absent(u.src)).length;
+  return missing ? [`${missing} of ${units.length} items name no source of their own (the pack was written before `
+    + `${ITEM_SOURCES_FROM}, when that was not yet required), so check those against a source while reviewing`] : [];
 }
 
 // ---------------------------------------------------------------------------------------------

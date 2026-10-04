@@ -191,6 +191,8 @@ Rules:
   - Four answers each, one correct, three plausible and wrong.
   - Mark difficulty easy / medium / hard.
   - Add a one-line "explain" for each, so a wrong answer teaches something.
+  - Give each question a "source": the sentence or section of the source it
+    comes from, quoted or named, so a person can find it.
   - Return ONLY valid JSON in the shape below, no commentary.
 
 { "schema": "nimrod.pack.v1", "kind": "trivia", "name": "...",
@@ -200,7 +202,8 @@ Rules:
   "generated": "YYYY-MM-DD",
   "items": [ { "question": "...", "answers": ["...","...","...","..."],
                "correct": "...", "difficulty": "easy",
-               "category": "...", "explain": "..." } ] }
+               "category": "...", "explain": "...",
+               "source": "&lt;where in the source this comes from&gt;" } ] }
 
 SOURCE:
 [paste the text, or the link, here]</pre>

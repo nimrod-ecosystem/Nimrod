@@ -46,7 +46,7 @@
 import { contestKey } from './contests.js';
 import { createEvents } from './events.js';
 import { authHeaders } from './auth.js';
-import { parsePack } from './packs.js';
+import { parsePack, itemSources, COMMON_KNOWLEDGE } from './packs.js';
 import { REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, REVIEW_ACTIONS } from './actions.js';
 
 export const REVIEWS_URL = '/api/account/reviews';
@@ -155,6 +155,41 @@ export function packItems(pack, map) {
   });
 }
 
+// *** THE SOURCE, FOR THE REVIEWER (Mike, 2026-10-04: "Shouldn't the sources be noted when the questions
+// are made?"). *** Each item's own `source` (packs.js, "PER-ITEM SOURCES") rides with it into review, so the
+// person passing a question can see what it rests on — and open the link — before deciding it is right. The
+// player never sees it: it is drawn only inside the review strip and on /reviews.html.
+const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hostOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
+
+/** One source as a plain line: "Title (host)", a reference, or "common knowledge — why". */
+export function sourceText(s) {
+  if (!s) return '';
+  const note = s.note ? ` — ${s.note}` : '';
+  if (s.url) return `${s.title ? `${s.title} (${hostOf(s.url)})` : s.url}${note}`;
+  return `${s.ref || ''}${note}`;
+}
+
+/**
+ * The "Source:" line(s) for a review screen, as HTML. A link opens in a new tab and its host is in the text,
+ * so it can be read without opening it. No source at all says so — that is the question to check hardest.
+ */
+export function sourceHtml(sources, { cls = 'tv-review-src' } = {}) {
+  const list = Array.isArray(sources) ? sources : [];
+  if (!list.length) {
+    return `<p class="${cls}" data-review-source="none">Source: none given — check this one against a source.</p>`;
+  }
+  return list.map((s) => {
+    const note = s.note ? ` <span class="${cls}-note">— ${escHtml(s.note)}</span>` : '';
+    if (s.url) {
+      const label = s.title ? `${escHtml(s.title)} (${escHtml(hostOf(s.url))})` : escHtml(s.url);
+      return `<p class="${cls}" data-review-source="url">Source: <a href="${escHtml(s.url)}" target="_blank" rel="noopener noreferrer">${label}</a>${note}</p>`;
+    }
+    const kind = String(s.ref || '').toLowerCase() === COMMON_KNOWLEDGE ? 'common' : 'ref';
+    return `<p class="${cls}" data-review-source="${kind}">Source: ${escHtml(s.ref)}${note}</p>`;
+  }).join('');
+}
+
 /** { total, passed, flagged, open, reviewed } — `reviewed` once nothing is left open. */
 export function packProgress(pack, map) {
   const rows = packItems(pack, map);
@@ -176,7 +211,7 @@ export function playableBank(pack, map, { includeUnreviewed = false, packId = ''
     if (status === REVIEW_STATUS.OPEN && !includeUnreviewed) continue;
     out.push({ question: item.question, answer: item.correct,
       wrong: (item.answers || []).filter((a) => a !== item.correct),
-      review: { key, packId, status } });
+      review: { key, packId, status, sources: itemSources(item.source) } });
   }
   return out;
 }
@@ -218,7 +253,7 @@ export function flaggedList(listing, packs, map) {
       const r = map.get(key);
       out.push({ key, packId: entry.id, packName: topicName(pack.name || entry.name), file: entry.url || entry.file || '',
         question: item.question, answer: item.correct, answers: item.answers || [], explain: item.explain || '',
-        notes: r.notes, flaggedBy: r.flaggedBy, flaggedAt: r.flaggedAt });
+        sources: itemSources(item.source), notes: r.notes, flaggedBy: r.flaggedBy, flaggedAt: r.flaggedAt });
     }
   }
   // A flag on a question no listed pack still holds (the file was fixed, renamed or removed) is still shown,
@@ -226,7 +261,7 @@ export function flaggedList(listing, packs, map) {
   for (const r of map ? map.values() : []) {
     if (r.status !== REVIEW_STATUS.FLAGGED || seen.has(r.key)) continue;
     out.push({ key: r.key, packId: r.pack, packName: '(no longer in a listed pack)', file: '',
-      question: r.question, answer: r.answer, answers: [], explain: '',
+      question: r.question, answer: r.answer, answers: [], explain: '', sources: [],
       notes: r.notes, flaggedBy: r.flaggedBy, flaggedAt: r.flaggedAt, orphan: true });
   }
   return out.sort((a, b) => String(a.flaggedAt || '').localeCompare(String(b.flaggedAt || '')));
@@ -248,6 +283,10 @@ export function exportFlagged(list, { now = new Date() } = {}) {
     lines.push(`  Marked right: ${r.answer}`);
     if (r.answers && r.answers.length) lines.push(`  Options: ${r.answers.join(' | ')}`);
     if (r.explain) lines.push(`  Its explanation: ${r.explain}`);
+    if (!r.orphan) {
+      const srcs = (r.sources || []).map((s) => (s.url && s.title ? `${s.title} <${s.url}>${s.note ? ` — ${s.note}` : ''}` : sourceText(s)));
+      lines.push(`  Its source: ${srcs.length ? srcs.join(' | ') : '(none given)'}`);
+    }
     for (const n of r.notes || []) lines.push(`  What's wrong: ${n.note}${n.by ? ` (${n.by})` : ''}`);
     if (!(r.notes || []).length) lines.push("  What's wrong: (no note)");
     lines.push(`  Flagged${r.flaggedBy ? ` by ${r.flaggedBy}` : ''}${r.flaggedAt ? ` on ${String(r.flaggedAt).slice(0, 10)}` : ''}; key ${r.key}`);

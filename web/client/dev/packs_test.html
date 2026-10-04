@@ -25,8 +25,9 @@ decision for the next pass, not a guess made here.</p>
 <div id="summary">running…</div>
 
 <script type="module">
-import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS }
-  from '../packs.js';
+import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS,
+  itemSourceProblem, itemSourceProblems, itemSourceWarnings, itemSources, needsItemSources,
+  itemSourcesGrandfathered, ITEM_SOURCES_FROM } from '../packs.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -336,6 +337,121 @@ try {
     check('never throws on nonsense', (() => { try { return lengthTells(null).length === 0
       && lengthTells({}).length === 0 && lengthTells({ kind: 'trivia', items: [null, {}] }).length === 0; }
       catch { return false; } })());
+  }
+
+  // =====================================================================================
+  section('*** PER-ITEM SOURCES (Mike, 2026-10-04): an AI-written pack names a source on every item ***');
+  {
+    // An AI pack made today: the rule applies in full.
+    const AI = {
+      schema: PACK_SCHEMA_VERSION, kind: 'trivia', name: 'Birds (AI-written)', ai_written: true,
+      source: { name: 'Written by Claude from its own knowledge; each item names its source.' },
+      generated: ITEM_SOURCES_FROM,
+      items: [
+        { question: 'Which bird is Ohio\'s state bird?', answers: ['Cardinal', 'Robin', 'Crow'], correct: 'Cardinal',
+          source: { ref: 'Ohio Revised Code 5.03' } },
+        { question: 'What do we call a baby dog?', answers: ['Puppy', 'Kitten', 'Calf'], correct: 'Puppy',
+          source: { ref: 'common knowledge', note: 'taught to small children' } },
+        { question: 'Which is the largest wild cat?', answers: ['Tiger', 'Lion', 'Puma'], correct: 'Tiger',
+          source: { url: 'https://nationalzoo.si.edu/animals/tiger', title: 'Tiger' } },
+      ],
+    };
+    check('*** an AI pack with a source on every item is accepted ***', validatePack(AI).length === 0,
+      JSON.stringify(validatePack(AI)));
+    const missing = clone(AI); delete missing.items[1].source;
+    const mp = validatePack(missing);
+    check('*** an AI pack with ONE item missing its source is rejected, naming that item ***',
+      mp.length === 1 && /^item 1: source is required/.test(mp[0]), JSON.stringify(mp));
+    let threw = null;
+    try { parsePack(JSON.stringify(missing)); } catch (e) { threw = e; }
+    check('...parsePack (what every loader calls) throws on it, saying why', threw && /source is required/.test(threw.message), String(threw));
+    const itemFlag = clone(missing); delete itemFlag.ai_written; itemFlag.items[0].ai_written = true;
+    check('ai_written on a single item is enough to require them', validatePack(itemFlag).some((m) => /source is required/.test(m)));
+    const recalled = clone(missing); delete recalled.ai_written; recalled.source.kind = 'recalled';
+    check('source.kind "recalled" (written from memory, by anybody) requires them too',
+      needsItemSources(recalled) && validatePack(recalled).some((m) => /source is required/.test(m)));
+    const undated = clone(missing); delete undated.generated;
+    check('*** no `generated` date is NOT grandfathered (the date is the only evidence of age) ***',
+      !itemSourcesGrandfathered(undated) && validatePack(undated).length > 0);
+    const emptyStr = clone(AI); emptyStr.items[0].source = '   ';
+    check('an empty string counts as no source', validatePack(emptyStr).some((m) => /^item 0: source is required/.test(m)));
+
+    // Not-a-source answers, refused wherever they appear.
+    const bad = (src) => { const p = clone(AI); p.items[0].source = src; return validatePack(p); };
+    check('*** "certain" (what the fact-check pass wrote) is not a source ***', bad('certain').some((m) => /names nothing/.test(m)));
+    check('"from memory" is not a source, as a string or a ref', bad('From memory').length > 0 && bad({ ref: 'from memory' }).length > 0);
+    check('*** bare "common knowledge" is refused: it has to say why ***',
+      bad('common knowledge').some((m) => /needs a reason/.test(m)) && bad({ ref: 'Common knowledge' }).some((m) => /note/.test(m)));
+    check('a url that is not a link is refused', bad({ url: 'britannica.com/giraffe' }).some((m) => /http/.test(m)));
+    check('an object with neither url nor ref is refused', bad({ title: 'Something' }).some((m) => /url or a ref/.test(m)));
+    check('a number is refused', bad(7).length > 0);
+    check('an empty list is refused; a list of real sources is fine',
+      bad([]).length > 0 && bad([{ ref: 'A book' }, 'https://example.org/b']).length === 0);
+    check('a plain reference string and a plain link string are both fine (the old checked.sources shape)',
+      bad('Encyclopaedia Britannica, "Giraffe"').length === 0 && bad('https://example.org/x').length === 0);
+    check('itemSourceProblem says null for a real source, words for a bad one',
+      itemSourceProblem({ ref: 'A book' }) === null && typeof itemSourceProblem('certain') === 'string');
+    check('itemSources normalises every form for showing to a reviewer',
+      JSON.stringify(itemSources('https://a.org/x')) === '[{"url":"https://a.org/x"}]'
+      && JSON.stringify(itemSources({ ref: ' Book ', note: '', url: '' })) === '[{"ref":"Book"}]'
+      && itemSources('certain').length === 0 && itemSources(undefined).length === 0
+      && itemSources([{ ref: 'A' }, 'https://b.org']).length === 2);
+
+    section('*** grandfathering: AI packs written before the rule load, with a warning ***');
+    const old = clone(missing); old.generated = '2026-10-03';
+    delete old.items[0].source; delete old.items[2].source;
+    check(`an AI pack generated before ${ITEM_SOURCES_FROM} with no item sources still loads`,
+      itemSourcesGrandfathered(old) && validatePack(old).length === 0, JSON.stringify(validatePack(old)));
+    const w = itemSourceWarnings(old);
+    check('*** ...and says how many items name nothing (the loader shows it; the review strip shows each) ***',
+      w.length === 1 && /3 of 3 items name no source/.test(w[0]), JSON.stringify(w));
+    check('...while strict (the rule as it stands today) would reject it', itemSourceProblems(old, { strict: true }).length === 3);
+    const oldBad = clone(old); oldBad.items[0].source = 'certain';
+    check('*** grandfathering excuses a MISSING source, never a bad one ***', validatePack(oldBad).some((m) => /names nothing/.test(m)));
+    check('a pack made under the rule has no warning', itemSourceWarnings(AI).length === 0);
+
+    section('hand-made packs: item sources optional, checked when there');
+    check('*** a hand-made pack with only a pack-level source still loads (the Gatsby example) ***',
+      !needsItemSources(GATSBY) && validatePack(GATSBY).length === 0 && itemSourceWarnings(GATSBY).length === 0);
+    const handBad = clone(GATSBY); handBad.items[0].source = 'certain';
+    check('...but an item source that IS there must be a real one, on any pack', validatePack(handBad).some((m) => /^item 0: /.test(m)));
+    const handGood = clone(GATSBY); handGood.items[0].source = 'Chapter 1, last paragraph';
+    check('...and a real one is fine (a line of the pack\'s own source counts)', validatePack(handGood).length === 0);
+
+    section('lesson and words packs');
+    const aiLesson = { schema: PACK_SCHEMA_VERSION, kind: 'lesson', name: 'L', ai_written: true, generated: ITEM_SOURCES_FROM,
+      source: { name: 'Claude' }, items: [
+        { topic: 'Roots', source: { ref: 'Etymonline, "sub-"' }, questions: [{ question: 'Under?', answers: ['sub', 'ex', 'in'], correct: 'sub' }] },
+        { topic: 'More', questions: [{ question: 'Over?', answers: ['super', 'ex', 'in'], correct: 'super' }] }] };
+    const lp = validatePack(aiLesson);
+    check('*** a lesson question inherits its lesson item\'s source; one with neither is named exactly ***',
+      lp.length === 1 && /^item 1: questions\[0\]: source is required/.test(lp[0]), JSON.stringify(lp));
+    const aiWords = { schema: PACK_SCHEMA_VERSION, kind: 'words', name: 'W', ai_written: true, generated: ITEM_SOURCES_FROM,
+      source: { name: 'Claude' }, items: [{ word: 'sanguine', definition: 'Cheerful.', source: { ref: 'Merriam-Webster, "sanguine"' } },
+        { word: 'civic', definition: 'Of a city.' }] };
+    check('an AI words pack needs one per word too', validatePack(aiWords).some((m) => /^item 1: source is required/.test(m)));
+
+    section('*** the 192 starter questions (packs_review/) pass the rule as it stands today, not just grandfathered ***');
+    const files = ['animals', 'finish_the_saying', 'food_and_cooking', 'general_knowledge', 'music_tv_and_movie_classics', 'us_states'];
+    let total = 0, own = 0, common = 0;
+    for (const f of files) {
+      const url = `/packs_review/${f}_ai_unreviewed.json`;
+      let pack = null;
+      try { pack = await loadPack(url); } catch (e) { check(`${url} loads`, false, e.message); continue; }
+      const strict = itemSourceProblems(pack, { strict: true });
+      check(`${f}: AI-written, and every item has its own source (strict)`, needsItemSources(pack) && strict.length === 0,
+        JSON.stringify(strict.slice(0, 3)));
+      for (const it of pack.items) {
+        total += 1;
+        if (itemSources(it.source).length) own += 1;
+        if (itemSources(it.source).some((s) => /^common knowledge$/i.test(s.ref || '') && s.note)) common += 1;
+      }
+      check(`${f}: checked is kept, without its old sources list`,
+        pack.items.every((it) => it.checked && it.checked.by && !('sources' in it.checked)));
+    }
+    check(`all 192 starter questions carry a source (${own} of ${total})`, total === 192 && own === 192, `${own}/${total}`);
+    check(`...of which ${common} rest on "common knowledge" with the fact-check's reason (the rest name a page)`,
+      common > 0 && common < 192, String(common));
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

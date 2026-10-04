@@ -32,7 +32,9 @@ import {
   reviewsFrom, packProgress, playableBank, reviewPackOptions, flaggedList, exportFlagged, topicName,
   missingReviewBindings, REVIEW_KEY_BINDINGS, REVIEW_STATUS, REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC,
   createPackReviews, listUnreviewedPacks, loadReviewPack, reviewKey, isReviewPackId, REVIEWS_URL,
+  sourceHtml, sourceText,
 } from '../pack_reviews.js';
+import { itemSources } from '../packs.js';
 import { mountReviewPage } from '../review_page.js';
 import { createDefaultRegistry } from '../actions.js';
 import { createInputBus } from '../input.js';
@@ -145,6 +147,36 @@ try {
     const all = reviewsFrom(Q.map((q, i) => ({ id: i + 1, kind: i === 4 ? 'flag' : 'pass', data: { key: q.key, question: q.question } })));
     check('*** a pack is REVIEWED once every question passed or was flagged ***', packProgress(fixturePack, all).reviewed);
     check('isReviewPackId knows its own ids', isReviewPackId(FIXTURE.id) && !isReviewPackId('maths_basic'));
+    check('*** each dealt question carries its own source(s) into review ***',
+      on.every((b) => Array.isArray(b.review.sources) && b.review.sources.length >= 1)
+      && JSON.stringify(on.find((b) => b.question === fixturePack.items[0].question)?.review.sources)
+        === JSON.stringify([{ url: 'https://example.org/fixture/grass', title: 'Fixture grass page' }]));
+  }
+
+  section('*** the "Source:" line a reviewer reads ***');
+  {
+    const div = document.createElement('div');
+    div.innerHTML = sourceHtml(itemSources({ url: 'https://www.example.org/a?b=1&c=2', title: 'A <b>page</b>', note: 'p. 4' }));
+    const a = div.querySelector('a');
+    check('a link opens in a new tab, its host is in the words, a title is escaped (no markup gets in)',
+      a && a.getAttribute('href') === 'https://www.example.org/a?b=1&c=2' && a.target === '_blank'
+      && /noopener/.test(a.rel) && a.textContent === 'A <b>page</b> (example.org)' && !div.querySelector('b')
+      && /p\. 4/.test(div.textContent), div.innerHTML);
+    div.innerHTML = sourceHtml(itemSources('Encyclopaedia Britannica, "Giraffe"'));
+    check('a reference is a plain line', div.querySelector('[data-review-source="ref"]')?.textContent === 'Source: Encyclopaedia Britannica, "Giraffe"');
+    div.innerHTML = sourceHtml(itemSources({ ref: 'common knowledge', note: 'taught to small children' }));
+    check('common knowledge shows its reason', /common knowledge/.test(div.textContent) && /taught to small children/.test(div.textContent)
+      && !!div.querySelector('[data-review-source="common"]'));
+    div.innerHTML = sourceHtml([]);
+    check('*** no source at all says so (a grandfathered pack\'s item: the one to check hardest) ***',
+      div.querySelector('[data-review-source="none"]') && /none given/.test(div.textContent));
+    div.innerHTML = sourceHtml(itemSources([{ ref: 'Book one' }, 'https://b.org/x']));
+    check('several sources: a line each', div.querySelectorAll('[data-review-source]').length === 2);
+    check('sourceText (the export\'s words) reads the same way',
+      sourceText({ url: 'https://www.b.org/x', title: 'X' }) === 'X (b.org)' && sourceText({ ref: 'common knowledge', note: 'why' }) === 'common knowledge — why');
+    const old = { ...fixturePack, generated: '2026-10-03', items: fixturePack.items.map(({ source, ...it }) => it) };
+    check('a grandfathered pack\'s items deal with no sources (and so show "none given")',
+      playableBank(old, reviewsFrom([]), { includeUnreviewed: true }).every((b) => b.review.sources.length === 0));
   }
 
   section('the flagged list and "Export flagged"');
@@ -228,6 +260,19 @@ try {
       !!r.host.querySelector('[data-review-fine]') && !!r.host.querySelector('[data-review-wrong]'));
     check('the pack is offered under "Which pack", with how many are left',
       (r.inst.impl.settingsChoices().packId || []).some((o) => o.value === FIXTURE.id && /5 of 5 left/.test(o.label)));
+    const srcOf = (text) => itemSources(fixturePack.items.find((it) => it.question === text)?.source);
+    const stripSources = () => [...r.host.querySelectorAll('[data-review] [data-review-source]')];
+    const sourceShown = () => {
+      const exp = srcOf(r.shown());
+      const got = stripSources();
+      return exp.length > 0 && got.length === exp.length && exp.every((s, i) => (s.url
+        ? got[i].querySelector(`a[href="${s.url}"][target="_blank"]`) : got[i].textContent.includes(s.ref)));
+    };
+    check('*** the reviewer sees THIS question\'s source in the strip (a link they can open, or the reference) ***',
+      sourceShown(), `${r.shown()} :: ${r.host.querySelector('[data-review]')?.innerHTML}`);
+    check('*** ...and only in the strip: nothing about sources in what the player reads ***',
+      r.host.querySelectorAll('[data-review-source]').length === stripSources().length
+      && !/Source:/.test([...r.host.querySelectorAll('.tv-q, .tv-opts')].map((n) => n.textContent).join(' ')));
     check('*** the control is not a stop in the player\'s walk: next walks only the answers ***', (() => {
       const seen = new Set();
       for (let i = 0; i < 8; i++) { r.bus.publish('trivia/next'); seen.add(r.probe().highlight); }
@@ -242,6 +287,7 @@ try {
       && rows[0].data.pack === FIXTURE.id, JSON.stringify(rows));
     check('...says so quietly, and leaves the question in play', /Marked fine/.test(r.host.querySelector('[data-review]').textContent)
       && r.shown() === first && r.probe().answered === null);
+    check('the source stays in the strip after ✓', sourceShown());
     r.answer(); r.bus.publish('trivia/next');
     check('moving on after ✓ does not write a second pass', kinds(rows).join() === 'pass');
 
@@ -263,6 +309,7 @@ try {
     await sleep(10);
     check('✗ writes a flag at once', rows.at(-1).kind === 'flag' && rows.at(-1).data.question === fourth);
     check('...and offers an optional "what is wrong" note', !!r.host.querySelector('[data-review-note]'));
+    check('*** the source stays beside the note box after ✗ (what the reviewer checks it against) ***', sourceShown());
     r.host.querySelector('[data-review-note]').value = 'two of these are right';
     r.host.querySelector('[data-review-save]').click();
     await sleep(10);
@@ -309,6 +356,8 @@ try {
     const passedQs = new Set(rows.filter((e) => e.kind === 'pass').map((e) => e.data.question));
     check('the pack plays ONLY its passed questions, with no control', r3.probe().bank === passedQs.size
       && passedQs.has(r3.shown()) && !r3.host.querySelector('[data-review]'), `${r3.probe().bank} ${r3.shown()}`);
+    check('*** the player never sees a source: a passed question plays with no "Source:" anywhere ***',
+      !r3.host.querySelector('[data-review-source]') && !/Source:/.test(r3.host.textContent));
     check('"Which pack" offers it as its reviewed questions',
       (r3.inst.impl.settingsChoices().packId || []).some((o) => o.value === FIXTURE.id && /— 2 reviewed questions$/.test(o.label)),
       JSON.stringify(r3.inst.impl.settingsChoices()));
@@ -324,12 +373,23 @@ try {
     check('*** it lists the flagged questions with their notes ***', page.querySelectorAll('[data-rv-flag]').length === 2
       && /two of these are right/.test(page.textContent));
     check('it says plainly that playing is the real check (a named source is not)', /real check/.test(page.textContent)
-      && /from memory/.test(page.textContent));
+      && /own memory/.test(page.textContent) && /names its own source/.test(page.textContent));
+    check('*** each flagged question shows its source, next to it, a link where there is one ***', (() => {
+      const cards = [...page.querySelectorAll('[data-rv-flag]')];
+      return cards.length === 2 && cards.every((c) => {
+        const q = c.querySelector('.rv-q').textContent;
+        const exp = itemSources(fixturePack.items.find((it) => it.question === q)?.source);
+        const got = [...c.querySelectorAll('[data-review-source]')];
+        return exp.length && got.length === exp.length
+          && exp.every((s, i) => (s.url ? got[i].querySelector(`a[href="${s.url}"]`) : got[i].textContent.includes(s.ref)));
+      });
+    })(), page.innerHTML.slice(0, 600));
     page.querySelector('[data-rv-export]').click();
     await sleep(20);
     check('*** "Export flagged" gives the text to paste to Code, and copies it ***',
       pg.exportText().includes(fourth) && pg.exportText().includes('two of these are right') && copiedText === pg.exportText()
       && !!page.querySelector('[data-rv-export-text]'));
+    check('...and the export carries each question\'s source', (pg.exportText().match(/ {2}Its source: /g) || []).length === 2, pg.exportText());
     page.querySelector(`[data-rv-unflag]`).click();
     await sleep(20);
     check('"Fixed — ask it again" writes an unflag, and the list shrinks', rows.at(-1).kind === 'unflag'
@@ -342,6 +402,23 @@ try {
     await sleep(40);
     check('a pack with nothing left open says Reviewed', !!page.querySelector('[data-rv-reviewed]'));
     void pg2;
+  }
+
+  section('every question\'s own source, as it comes up (its own panel and log)');
+  {
+    const rs = rig({ rows: [], saved: { includeUnreviewed: true } });
+    await settle(rs);
+    const seen = new Set();
+    let allShown = true;
+    for (let i = 0; i < 10 && seen.size < 5; i++) {
+      const exp = itemSources(fixturePack.items.find((it) => it.question === rs.shown())?.source);
+      const got = [...rs.host.querySelectorAll('[data-review] [data-review-source]')];
+      if (!(exp.length && got.length === exp.length)) allShown = false;
+      seen.add(rs.shown());
+      rs.bus.publish('trivia/skip');
+    }
+    check('all five fixture questions show their own source line(s)', allShown && seen.size === 5, [...seen].join(' / '));
+    rs.inst.destroy();
   }
 
   section('per account');

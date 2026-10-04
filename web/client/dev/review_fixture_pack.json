@@ -7,10 +7,10 @@
   "ai_written": true,
   "review": {"status": "unreviewed"},
   "items": [
-    {"question": "Fixture: what colour is grass?", "answers": ["Green", "Blue", "Red", "Black"], "correct": "Green"},
-    {"question": "Fixture: what colour is the clear daytime sky?", "answers": ["Blue", "Green", "Purple", "Brown"], "correct": "Blue"},
-    {"question": "Fixture: what colour is snow?", "answers": ["White", "Orange", "Pink", "Grey"], "correct": "White"},
-    {"question": "Fixture: what colour is a ripe banana?", "answers": ["Yellow", "Blue", "Black", "White"], "correct": "Yellow"},
-    {"question": "Fixture: what colour is coal?", "answers": ["Black", "Yellow", "Green", "Pink"], "correct": "Black"}
+    {"question": "Fixture: what colour is grass?", "answers": ["Green", "Blue", "Red", "Black"], "correct": "Green", "source": {"url": "https://example.org/fixture/grass", "title": "Fixture grass page"}},
+    {"question": "Fixture: what colour is the clear daytime sky?", "answers": ["Blue", "Green", "Purple", "Brown"], "correct": "Blue", "source": {"ref": "A fixture reference work, 'Sky'"}},
+    {"question": "Fixture: what colour is snow?", "answers": ["White", "Orange", "Pink", "Grey"], "correct": "White", "source": {"ref": "common knowledge", "note": "a fixture reason"}},
+    {"question": "Fixture: what colour is a ripe banana?", "answers": ["Yellow", "Blue", "Black", "White"], "correct": "Yellow", "source": "https://example.org/fixture/banana"},
+    {"question": "Fixture: what colour is coal?", "answers": ["Black", "Yellow", "Green", "Pink"], "correct": "Black", "source": [{"ref": "Fixture book one"}, {"url": "https://example.org/fixture/coal"}]}
   ]
 }

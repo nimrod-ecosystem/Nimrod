@@ -16,6 +16,12 @@ SDK's own credentials on this machine (ANTHROPIC_API_KEY or `ant auth login`) an
 `web/client/packs_local/` - the folder packs.js keeps for material that is not cleared to ship - and
 NOT added to pack_library.js, so no game loads it until a person has checked every question and
 answer and listed it. A wrong "correct" answer taught as fact is worse than no question.
+
+*** EVERY QUESTION NAMES ITS SOURCE (Mike, 2026-10-04: "Shouldn't the sources be noted when the questions
+are made?"). *** The structured-output schema requires a `source` on every item (a reference work, a link,
+or "common knowledge" with a reason); `clean_items` drops - and counts - any whose source is not one, with
+the same rule packs.js enforces on an AI-written pack. What Claude names is still unchecked: the reviewer
+sees it beside each question (pack_reviews.js) and is the one who checks it.
 """
 from __future__ import annotations
 
@@ -42,8 +48,36 @@ SYSTEM = (
     "exactly four answers: the correct one and three wrong ones of the same kind, plausible but clearly "
     "wrong to somebody who knows. Plain, short words. No trick questions, no 'all of the above', no "
     "questions about private individuals, nothing frightening or upsetting. For each, one plain sentence "
-    "saying why the answer is right. Mark each easy, medium or hard."
+    "saying why the answer is right. Mark each easy, medium or hard.\n\n"
+    "Every question names its SOURCE: where a person could check that the answer is right. Prefer a named "
+    "reference work and entry in `ref` (for example: Encyclopaedia Britannica, \"Giraffe\"; or the official "
+    "state website for Ohio). Put a link in `url` only when you are confident that exact page exists; never "
+    "make up a link, and leave `url` empty rather than guess. `title` is the page or entry's name, or empty. "
+    "Only for a fact nearly every child knows (a baby dog is a puppy) may `ref` be \"common knowledge\", and "
+    "then `note` must say why no reference is needed. If you cannot name a source for a fact, leave that "
+    "question out and write a different one: a question without a source is thrown away."
 )
+
+# PER-ITEM SOURCES (packs.js "PER-ITEM SOURCES", docs/PACK_SCHEMA.md). Every field is required and may be
+# empty, so structured output always returns the same four keys; clean_source decides whether what came
+# back is a source at all, and an item whose source is not one is dropped and counted.
+SOURCE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "url": {"type": "string"},
+        "ref": {"type": "string"},
+        "title": {"type": "string"},
+        "note": {"type": "string"},
+    },
+    "required": ["url", "ref", "title", "note"],
+    "additionalProperties": False,
+}
+COMMON_KNOWLEDGE = "common knowledge"
+NO_SOURCE = "no source"          # the prefix of every "dropped for having no source" line, so it can be counted
+# The same list packs.js refuses: words that answer "where is this from?" with nothing.
+NOT_A_SOURCE = {"certain", "sure", "known", "well known", "memory", "from memory", "my memory", "my own knowledge",
+                "own knowledge", "general knowledge", "unknown", "none", "n/a", "na", "-", "ai", "claude"}
+_URL_RE = re.compile(r"^https?://\S+$", re.I)
 
 ITEM_SCHEMA = {
     "type": "object",
@@ -58,8 +92,9 @@ ITEM_SCHEMA = {
                     "correct": {"type": "string"},
                     "difficulty": {"type": "string", "enum": list(DIFFICULTIES)},
                     "explain": {"type": "string"},
+                    "source": SOURCE_SCHEMA,
                 },
-                "required": ["question", "answers", "correct", "difficulty", "explain"],
+                "required": ["question", "answers", "correct", "difficulty", "explain", "source"],
                 "additionalProperties": False,
             },
         }
@@ -118,6 +153,41 @@ def _norm(s: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", str(s or "").lower()).strip()
 
 
+def _one_line(v) -> str:
+    return re.sub(r"\s+", " ", v).strip() if isinstance(v, str) else ""
+
+
+def clean_source(raw):
+    """An item's source as the pack stores it ({url?, ref?, title?, note?} with only what is there; a list for
+    several), or None when it is not a source: nothing given, a link that is not http(s) with no reference
+    beside it, a bare non-answer ("certain", "from memory"), or "common knowledge" with no reason. The same
+    rule as packs.js `itemSourceProblem`, so what this keeps, the site loads."""
+    if isinstance(raw, list):
+        got = [clean_source(s) for s in raw]
+        return got if got and all(g is not None for g in got) else None
+    if isinstance(raw, str):
+        s = _one_line(raw)
+        if not s or s.lower() == COMMON_KNOWLEDGE or s.lower() in NOT_A_SOURCE:
+            return None
+        return {"url": s} if _URL_RE.match(s) else {"ref": s}
+    if not isinstance(raw, dict):
+        return None
+    url, ref, title, note = (_one_line(raw.get(f)) for f in ("url", "ref", "title", "note"))
+    if url and not _URL_RE.match(url):
+        url = ""                 # a broken link is not kept; a reference beside it still can be
+    if not url and not ref:
+        return None
+    if not url and ref.lower() == COMMON_KNOWLEDGE and not note:
+        return None
+    if not url and ref.lower() in NOT_A_SOURCE:
+        return None
+    return {k: v for k, v in (("url", url), ("ref", ref), ("title", title), ("note", note)) if v}
+
+
+def is_common_knowledge(src) -> bool:
+    return isinstance(src, dict) and not src.get("url") and str(src.get("ref", "")).lower() == COMMON_KNOWLEDGE
+
+
 def clean_items(raw_items) -> tuple[list[dict], list[str]]:
     """Keep only questions packs.js would accept (and a few rules of its own). Returns (kept, why-dropped)."""
     kept, dropped, seen = [], [], set()
@@ -140,12 +210,17 @@ def clean_items(raw_items) -> tuple[list[dict], list[str]]:
             why = f"the correct answer is not one of the answers: {q[:60]}"
         elif _norm(q) in seen:
             why = f"a repeat: {q[:60]}"
+        source = clean_source(it.get("source")) if not why else None
+        if not why and source is None:
+            # *** THE RULE (Mike, 2026-10-04): a question Claude cannot say where it came from is not kept. ***
+            why = f"{NO_SOURCE}: {q[:60]}"
         if why:
             dropped.append(why)
             continue
         seen.add(_norm(q))
         item = {"question": q, "answers": answers, "correct": correct, "category": "",
-                "explain": re.sub(r"\s+", " ", str(it.get("explain") or "")).strip(), "ai_written": True}
+                "explain": re.sub(r"\s+", " ", str(it.get("explain") or "")).strip(), "ai_written": True,
+                "source": source}
         if diff:
             item["difficulty"] = diff
         kept.append(item)
@@ -162,8 +237,9 @@ def make_pack(topic: str, items: list[dict], *, model: str, day: str | None = No
         "name": f"{topic} (AI-written, not yet reviewed)",
         "description": f"{len(items)} questions on {topic}, written by Claude. Every question and answer needs "
                        "checking by a person before anybody plays it.",
-        "source": {"name": f"Written by {model} (Anthropic, Claude) through the Batch API on {day}. "
-                           "NOT checked against a source.", "url": "", "licence": "unreviewed - not cleared to ship"},
+        "source": {"name": f"Written by {model} (Anthropic, Claude) through the Batch API on {day}. Each question "
+                           "names the source Claude gave for it (its `source` field); NOT checked against those "
+                           "sources.", "url": "", "licence": "unreviewed - not cleared to ship"},
         "generated": day,
         "ai_written": True,
         "review": {"status": "unreviewed",
@@ -172,6 +248,15 @@ def make_pack(topic: str, items: list[dict], *, model: str, day: str | None = No
                           "pack_library.js."},
         "items": items,
     }
+
+
+def source_counts(items: list[dict], problems: list[str]) -> str:
+    """One line for the person collecting: how many were dropped for naming no source, and how many kept
+    ones rest only on "common knowledge" (allowed with a reason, but the weakest kind - worth knowing)."""
+    no_src = sum(1 for p in problems if p.startswith(NO_SOURCE + ":"))
+    common = sum(1 for it in items if is_common_knowledge(it.get("source")))
+    return (f"sources: {no_src} question(s) dropped for naming no source; "
+            f"{common} of {len(items)} kept rest on 'common knowledge'")
 
 
 def submit(client, requests: list[dict]):
@@ -272,6 +357,7 @@ def main(argv=None) -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(pack, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         print(f"wrote {len(items)} questions to {out} (UNREVIEWED - check every one before use)")
+        print(f"  {source_counts(items, problems)}")
         for line in problems:
             print(f"  dropped/skipped: {line}")
         return 0
