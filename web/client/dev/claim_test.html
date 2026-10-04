@@ -242,7 +242,7 @@ try {
     && !card2('Mom').querySelector('[data-pp-act="invite"]'), card2('Mom')?.textContent);
   check('Robin still has Invite', !!card2('Robin')?.querySelector('[data-pp-act="invite"]'));
   // Scoped to what this work adds: the card of somebody who joined, the invite buttons, and Connect. (The page's
-  // older "On your account" label under each of your people is Your people's own - people_page_test holds it.)
+  // older "Added by you" label under each of your people is Your people's own - people_page_test holds it.)
   const addedWords = [card2('Mom').textContent, ...[...box2.querySelectorAll('[data-pp-claim]')].map((e) => e.textContent), q2('[data-pp-connect]').textContent].join(' ');
   check('plain words in everything this adds to the inviter’s page', !claimWordProblems(addedWords).length, J(claimWordProblems(addedWords)));
   inst.destroy(); box2.remove();

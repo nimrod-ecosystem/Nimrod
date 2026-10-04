@@ -317,7 +317,7 @@ registerModule(
         const given = p.via === 'account' ? givenFor(p.id, claimsGiven) : null;
         const sub = p.via === 'shared' ? 'Shared with you'
           : p.via === 'linked' ? (p.joined ? CLAIM_WORDS.linkedJoinedSub(p.from) : CLAIM_WORDS.linkedSub(p.from))
-            : given ? CLAIM_WORDS.joinedSub : 'On your account';
+            : given ? CLAIM_WORDS.joinedSub : 'Added by you';
         return card(`p:${p.id}`, `<div class="pp-who"><div class="pp-face">${faceOf(p, CARD_FACE)}</div>
             <div><div class="pp-name"><span data-pp-name>${esc(p.name)}</span>${given ? ` <span class="pp-joined" data-pp-joined>— ${esc(CLAIM_WORDS.joined)}</span>` : ''}</div><p class="pp-sub">${esc(sub)}</p></div></div>
           <div class="pp-btns" data-pp-person="${esc(p.id)}">${acts.map((a) => button(a, `p:${p.id}`)).join('')}</div>${claimRow(p, given)}`);
