@@ -97,7 +97,7 @@ function makeServers() {
       queueMicrotask(() => this.onclose?.({ code: 1000 }));
     }
   }
-  function server(url, { engine = 'fake', secret = null, answer = () => ({ text: '' }), hold = false, partials = false, wake = null } = {}) {
+  function server(url, { engine = 'fake', secret = null, answer = () => ({ text: '' }), hold = false, partials = false, wake = null, grammar = true } = {}) {
     const s = { url, engine, secret, answer, hold, partials, down: false, conns: new Set(), held: [], utts: new Map(),
                 modes: [], begun: [], ended: [], audioBytes: 0, hellos: [], wakeOns: [], wakeBytes: 0 };
     const reply = (ws, m) => queueMicrotask(() => { if (ws.readyState === 1) ws.onmessage?.({ data: JSON.stringify(m) }); });
@@ -117,7 +117,7 @@ function makeServers() {
       if (m.type === 'hello') {
         s.hellos.push(m);
         if (secret && m.secret !== secret) { reply(ws, { kind: 'error', error: 'secret' }); queueMicrotask(() => ws.close()); return; }
-        reply(ws, { kind: 'hello', engine, grammar: true, partials, protocol: 1, wake: wake || [] });
+        reply(ws, { kind: 'hello', engine, grammar, partials, protocol: 1, wake: wake || [] });
       } else if (m.type === 'wake') { s.wakeOns.push(m.on); ws.wakeOn = m.on !== false && !!(wake && wake.length); }
       else if (m.type === 'mode') s.modes.push(m);
       else if (m.type === 'begin') { ws.cur = m.utteranceId; s.begun.push(m.utteranceId); s.utts.set(m.utteranceId, { bytes: 0 }); }
@@ -605,6 +605,38 @@ try {
     check('*** a detector up but NO recogniser: no microphone opened, status "waiting" ***',
       gum === 0 && r3.status().wake?.state === 'ready' && r3.status().state === 'waiting', JSON.stringify(r3.status()));
     r2.stop(); r3.stop();
+  }
+
+  // ======================================================================================
+  section('"ask <name>" said alone: can this recogniser write a sentence down? (2026-10-04)');
+  {
+    const c = fakeClock();
+    const m = makeServers();
+    const R2 = 'ws://100.64.0.2:8797/speech';
+    m.server(LOCAL_URL, { engine: 'vosk:small', grammar: true });
+    const vosk = rankedRecognizer({ plan: enginePlanFrom({}), WebSocketImpl: m.FakeWS, setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now, capture: false });
+    check('nothing up yet: no', vosk.canDictate() === false);
+    vosk.start(() => {});
+    await settle(); await settle(); await settle();
+    check('*** only a grammar-capable engine (Vosk-class) up: NO - "ask <name>" alone opens the chat to type ***', vosk.canDictate() === false,
+      JSON.stringify(vosk.connections()));
+    vosk.stop();
+    const m2 = makeServers();
+    m2.server(LOCAL_URL, { engine: 'vosk:small', grammar: true });
+    m2.server(R2, { engine: 'whisper:small.en', grammar: false });
+    const both = rankedRecognizer({ plan: enginePlanFrom({ speechPass2: 'remote1', speechRemote1Url: R2 }), WebSocketImpl: m2.FakeWS,
+      setTimer: c.setTimer, clearTimer: c.clearTimer, now: c.now, capture: false });
+    both.start(() => {});
+    await settle(); await settle(); await settle();
+    check('*** a whisper-class engine (no grammars: it writes down anything) in the ranked list: YES ***', both.canDictate() === true,
+      JSON.stringify(both.connections()));
+    m2.servers[R2].kill();
+    await settle(); await settle();
+    check('...and when it goes away, no again', both.canDictate() === false);
+    both.stop();
+    const sp = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {}, canDictate: () => false } });
+    check('attachSpeech asks the recogniser', sp.canDictate() === false
+      && attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} } }).canDictate() === true);
   }
 
   // ======================================================================================

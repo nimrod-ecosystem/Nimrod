@@ -1020,6 +1020,16 @@ export function rankedRecognizer({
     },
     get running() { return running; },
     setMode(m) { mode = m; for (const c of conns.values()) c.setMode(m); },
+    // CAN A FREE SENTENCE BE WRITTEN DOWN HERE? (input_speech.js: "ask <name>" / "make a note" said alone.)
+    // True when an engine that is up says it has NO grammars (a whisper-class engine: it writes down whatever
+    // is said); false when every engine up is grammar-capable (a Vosk-class engine). ARGUED: Vosk CAN run open,
+    // but the small model a Pi runs is built to pick from a list, and a sentence it guesses at goes VERBATIM to
+    // an AI [inferred from row 2.28's bench, where it wrote "computer please pass" for "pause" - not measured on
+    // sentences]. A wrong "no" costs a press of Talk; a wrong "yes" sends a garbled question. Nothing up: false
+    // (nothing is heard anyway). The ranked list's later passes count: Vosk first and whisper second is "yes".
+    canDictate() {
+      return [...conns.entries()].some(([k, c]) => !k.startsWith('wake|') && c.ready() && c.info()?.grammar === false);
+    },
     status,
     onStatus(fn) { statusFns.add(fn); return () => statusFns.delete(fn); },
     onCaption(fn) { captionFns.add(fn); return () => captionFns.delete(fn); },

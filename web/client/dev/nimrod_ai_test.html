@@ -30,6 +30,9 @@ import { MENU_TAB_TOPIC } from '../actions.js';
 import { SETTINGS_OPEN_TOPIC } from '../modules/settings.js';
 import { GUIDE_NODES, GUIDE_ROOT, GUIDE_VERB_TOPICS, GUIDE_TOPICS } from '../nimrod_guide_data.js';
 import { attachSpeech, SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC } from '../input_speech.js';
+// "ask <name>" by voice (2026-10-04), through the namespace so a missing export fails ITS checks only.
+import * as SP from '../input_speech.js';
+import * as NA from '../nimrod_ai.js';
 import { DELIVERY_TOPIC as OUTPUT_DELIVERY } from '../output.js';
 import {
   AI_DEFAULTS, AI_SOURCE, AI_STATE_KEY, SPEECH_TOPICS, DELIVERY_TOPIC, DEFAULT_PERSONA, LISTEN_CHOICES, MAX_ACTIONS,
@@ -468,6 +471,96 @@ try {
     g.done();
     check('*** a panel taken away while listening shuts its window ***', speech.answerTarget() === null);
     speech.destroy?.();
+  }
+  // ============================================================================================
+  section('*** "ask <name>, ..." and "make a note, ..." by voice (2026-10-04) ***');
+  {
+    check('the ask topics are input_speech.js’s', NA.SPEECH_TOPICS.ask === SP.SPEECH_ASK_TOPIC && NA.SPEECH_TOPICS.askTarget === SP.SPEECH_ASK_TARGET_TOPIC);
+    check('the fallback ask window is the speech layer’s own command window', NA.ASK_WINDOW_MS === SP.SPEECH_DEFAULTS.wakeWindowMs);
+    const bus = createBus();
+    const pressed = [];
+    const input = { down: (d, c) => pressed.push(c), up() {} };
+    const rec = { running: false, cb: null, start(cb) { this.cb = cb; this.running = true; }, stop() { this.running = false; }, setMode() {} };
+    let dictates = true;
+    const speech = attachSpeech(input, { recognizer: rec, bus, tone: () => {}, canDictate: () => dictates });
+    speech.start();
+    const say = (t) => rec.cb(t, {});
+    const ai = fakeAI({ replies: ['A scene is a set of dashboards. [[go change-scene]]', 'Shall I show you? [[go change-scene]]', 'Hello!', 'Sure.', 'Fine.'] });
+    const output = fakeOutput();
+    const g = await mountGuide({ ai, bus, output, person: 'per9', personInit: { name: 'Jarvis' } });
+    await until(() => speech.askTargets()[0]?.names?.[0] === 'jarvis');
+    check('*** the panel tells the speech layer the PERSON’s AI name (from their record) ***',
+      J(speech.askTargets()) === J([{ source: AI_SOURCE, instanceId: 'n1', names: ['jarvis'], notes: true }]), J(speech.askTargets()));
+    check('nothing was asked on mount', ai.calls.chat.length === 0);
+    say('Computer please, ask Jarvis: what is a scene?');
+    await until(() => ai.calls.chat.length === 1);
+    await g.inst.impl.__settled();
+    const sent = ai.calls.chat[0]?.msgs || [];
+    check('*** "ask Jarvis, ..." opens the chat and sends the question, the same as typing it ***',
+      g.probe().view === 'talk' && sent.at(-1)?.role === 'user' && sent.at(-1)?.content === 'what is a scene?', J(sent.at(-1)));
+    check('*** ONLY the question goes to the AI: no wake phrase, no "ask Jarvis" anywhere in what was sent ***',
+      !sent.some((m) => m.role === 'user' && /computer please|ask jarvis/i.test(m.content)), J(sent.filter((m) => m.role === 'user')));
+    check('*** the reply is shown, and read aloud (reading aloud is on) ***',
+      g.probe().log.some((m) => m.role !== 'user' && /A scene is a set of dashboards/.test(m.text))
+      && output.said.some((x) => /A scene is a set of dashboards/.test(x.t) && x.o?.source === AI_SOURCE));
+    check('*** what the AI asked to do is a BUTTON: nothing moved by itself ***', g.probe().pending.length === 1 && g.probe().id === GUIDE_ROOT && pressed.length === 0);
+    // Rename in "About": the speech layer follows at once.
+    g.doBtn('setup').click();
+    g.q('[data-ng-field="name"]').value = 'Friday';
+    g.doBtn('savesetup').click();
+    check('*** renamed to Friday: the route follows with no reload ***', J(speech.askTargets()[0]?.names) === J(['friday']), J(speech.askTargets()));
+    say('computer please ask jarvis what is a theme');
+    await sleep(30);
+    check('...the old name asks nobody', ai.calls.chat.length === 1);
+    // The prefix alone, on an engine that can write a sentence down: a one-utterance window.
+    say('computer please ask friday');
+    check('*** "ask Friday" alone: a ONE-utterance dictation window opens on the speech layer ***',
+      g.probe().listening && g.probe().onceOnly && speech.answerTarget()?.source === AI_SOURCE && speech.recognitionMode().mode === 'open',
+      J({ l: g.probe().listening, o: g.probe().onceOnly, t: speech.answerTarget() }));
+    say('yes');
+    await until(() => ai.calls.chat.length === 2);
+    await g.inst.impl.__settled();
+    check('*** ...the next thing said is the question (even "yes": it does NOT press the waiting action) ***',
+      ai.calls.chat[1]?.msgs.at(-1)?.content === 'yes' && g.probe().id === GUIDE_ROOT && g.probe().pending.length >= 1, J(g.probe().pending));
+    check('*** ...and the window shut after it: the room’s next words go nowhere ***', !g.probe().listening && speech.answerTarget() === null);
+    say('what a nice day');
+    await sleep(30);
+    check('...nothing else was sent', ai.calls.chat.length === 2);
+    check('the action is still there for a press', g.q('[data-ng-do="confirm"]') && g.probe().id === GUIDE_ROOT);
+    // A fixed-grammar engine: the chat opens and says how to ask.
+    dictates = false;
+    g.doBtn('guide').click();
+    say('computer please friday');
+    check('*** fixed grammar: "Friday" alone opens Talk and says type it or press Talk; no window opened ***',
+      g.probe().view === 'talk' && !g.probe().listening && /type your question, or press Talk/.test(g.probe().notice)
+      && output.said.some((x) => /press Talk to say it/.test(x.t)), g.probe().notice);
+    dictates = true;
+    // Notes by voice: no AI at all.
+    const before = ai.calls.chat.length;
+    g.doBtn('guide').click();
+    say('computer please make a note the trivia text is too small');
+    await until(() => g.probe().notes.some((n) => n.text === 'the trivia text is too small'));
+    const recd = g.ps.made[`per9/${AI_STATE_KEY}`].data();
+    check('*** "make a note, ..." keeps the note directly, in the person’s record, and calls no AI ***',
+      recd.notes?.some((n) => n.text === 'the trivia text is too small') && ai.calls.chat.length === before, J(recd.notes));
+    check('...shown (the notes view) and said back', g.probe().view === 'notes' && /Note saved/.test(g.probe().notice) && output.said.some((x) => x.t === 'Note saved.'));
+    say('computer please make a note');
+    check('*** "make a note" alone: a one-utterance window for the note ***', g.probe().listening && g.probe().nextAs === 'note' && !!g.q('[data-ng-listening]'));
+    say('the buttons on the clock are too small');
+    await until(() => g.probe().notes.some((n) => n.text === 'the buttons on the clock are too small'));
+    check('...the next thing said is the note, and the window shuts', !g.probe().listening && ai.calls.chat.length === before);
+    // Hidden: not asked.
+    g.inst.onHide?.({});
+    check('*** a hidden panel withdraws: nobody to ask ***', speech.askTargets().length === 0);
+    say('computer please ask friday hello');
+    await sleep(30);
+    check('...and nothing is sent', ai.calls.chat.length === before);
+    g.inst.onShow?.({});
+    check('shown again: back', speech.askTargets()[0]?.names?.[0] === 'friday');
+    check('no names in the copy', !NAMES.test(g.mount.textContent));
+    g.done();
+    check('*** taken away: withdrawn ***', speech.askTargets().length === 0);
+    speech.destroy();
   }
   {
     // No speech layer at all (voice commands off): the person is told, and can still type.
