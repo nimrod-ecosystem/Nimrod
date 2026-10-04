@@ -660,9 +660,9 @@ import { createProfilesClient, ensureProfile } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
-import { pickCurrent, readLastPerson } from './people.js';
+import { pickCurrent, readLastPerson, LAST_PERSON_KEY } from './people.js';
 // 2026-10-04: "Try it as someone new" -- a test person seeing this page as their first visit (try_new.js argues it).
-import { trialShowing, readTrialRecord, syncTrial, previewScopeFor, browserNotesSource, startTrial, startOver, backToMe, mountTrialBar,
+import { readTrialRecord, syncTrial, previewScopeFor, browserNotesSource, startTrial, startOver, backToMe, mountTrialBar,
   TRYING_LABEL } from './try_new.js';
 import { localScopeRows, clearLocalScope, createLocalBackend } from './local_store.js';
 import * as HD from './home_dashboard.js';
@@ -733,19 +733,39 @@ const signedIn = (async () => {
 // choice first (mountThemePicker below), not a bare hardcoded default -- a visitor who picked
 // a theme on landing.html sees it carried here too, until/unless a real signed-in profile
 // theme takes over.
-// ONE "make sure this account has its default screen" per page load, shared by the theme step and Home's
+// ONE "make sure this person has their default screen" per page load, shared by the theme step and Home's
 // boot. Two independent calls race on a new account and each makes a screen (see the theme step).
 let defaultScreenP = null;
-// TRYING IT AS SOMEONE NEW (try_new.js): the test person's own default screen, made for them on this first visit
-// exactly as a brand-new account's is -- never the owner's. Decided from this browser's own word (no extra request
-// for anybody else); `bootHome` checks it against the person's record and corrects it if the two disagree.
-const trialAtLoad = () => trialShowing(undefined, currentUser);
-let defaultScreenFor = '';       // whose screen `defaultScreenP` resolves: '' the account's, else that test person's
+// *** HOME IS THE PICKED PERSON'S (2026-10-04). *** The person picked on the people bar (people.js, My dashboards;
+// "Try it as someone new" picks the test person the same way) is who this page is for: THEIR default screen (their
+// first, made for them exactly as a brand-new account's first person's is when they have none), so their theme,
+// their screen settings and the module views all follow them. Before this, the default screen was the ACCOUNT's
+// first, whoever was picked: on an account with several people, Home showed and edited somebody else's screen.
+// (Their Home, landing and dashboards already followed the person: home settings and dashboards.js are per person.)
+// Screens are untouched by it: a kiosk is opened by its screen and the screen names its person (people.js header).
+// `pickedAtLoad`: the remembered person as this page found it, so a switch made elsewhere is noticed (`followPicked`)
+// even when the remembered id is a ghost that `pickCurrent` resolved to somebody else (comparing with the person
+// shown would then reload forever).
+let pickedPersonP = null;
+let pickedAtLoad = '';
+function pickedPerson(profiles) {
+  if (!pickedPersonP) {
+    pickedAtLoad = readLastPerson();
+    pickedPersonP = profiles.people().then((list) => pickCurrent(list, pickedAtLoad));
+    pickedPersonP.catch(() => { pickedPersonP = null; });   // a failure (offline) may be retried
+  }
+  return pickedPersonP;
+}
+let defaultScreenFor = '';       // whose screen `defaultScreenP` resolves: that person's id, '' the account's
 function defaultScreen(profiles) {
   if (!defaultScreenP) {
-    const t = trialAtLoad();
-    defaultScreenFor = t ? t.testId : '';
-    defaultScreenP = ensureProfile(profiles, currentUser, null, t ? { personId: t.testId } : {});
+    defaultScreenP = (async () => {
+      let person = null;
+      try { person = await pickedPerson(profiles); } catch { person = null; }
+      // Nobody can be read (offline): the account's, as before; `bootHome` corrects it once the person is known.
+      defaultScreenFor = person?.id || '';
+      return ensureProfile(profiles, currentUser, null, person ? { personId: person.id } : {});
+    })();
     defaultScreenP.catch(() => { defaultScreenP = null; });   // a failure (offline) may be retried
   }
   return defaultScreenP;
@@ -2859,12 +2879,12 @@ window.addEventListener('beforeunload', (e) => {
 async function bootHome(wanted) {
   const user = currentUser;
   const profiles = createProfilesClient({ user });
-  // A test person's screen that cannot be had (they were removed in another tab) must not stop Home: the
-  // account's is taken below instead.
+  // The picked person's screen that cannot be had (they were removed in another tab, or a moment offline) must not
+  // stop Home on its own: it is asked again below, for whoever is shown.
   let defaultId = null;
-  try { defaultId = await defaultScreen(profiles); } catch (err) { if (!defaultScreenFor) throw err; }
+  try { defaultId = await defaultScreen(profiles); } catch { defaultId = null; }
   let person = null;
-  try { person = pickCurrent(await profiles.people(), readLastPerson()); } catch { person = null; }
+  try { person = await pickedPerson(profiles); } catch { person = null; }
   // TRYING IT AS SOMEONE NEW (try_new.js): is the person shown a test person? Their record says; this browser is
   // made to agree (picked from the people bar, it enters; anybody else, it leaves). Unreadable (offline): this
   // browser's own word stands.
@@ -2876,7 +2896,12 @@ async function bootHome(wanted) {
     const known = syncTrial({ user, personId: person.id, record: rec });
     trial = rec ? rec : (rec === undefined && known && known.testId === person.id ? { trial: true, ownerId: known.ownerId } : null);
   }
-  const screenFor = trial ? person.id : '';
+  // syncTrial may have written the remembered person (a test person picked on the bar enters): what this page now
+  // remembers is what it shows, so it is not taken for a switch made elsewhere.
+  if (person && readLastPerson() === person.id) pickedAtLoad = person.id;
+  // HOME IS THE PICKED PERSON'S (see `defaultScreen`): their own default screen, whoever they are -- made for them
+  // if they have none. Only with nobody known (offline) the account's, as before.
+  const screenFor = person ? person.id : '';
   if (!defaultId || screenFor !== defaultScreenFor) {
     defaultId = await ensureProfile(profiles, user, null, screenFor ? { personId: screenFor } : {});
   }
@@ -2890,7 +2915,12 @@ async function bootHome(wanted) {
   let defaultSurface;
   try {
     const s = createState({ url: profiles.stateURL(defaultId, 'settings'), user });
-    defaultSurface = (await s.load()).panelSurface;
+    const row = (await s.load()) || {};
+    defaultSurface = row.panelSurface;
+    // The shown person's theme, again here: the theme step above read the screen it was given at load, and this
+    // one is corrected when that was not this person's (offline at first). Before the stage, so a dashboard's own
+    // theme (the embed's) still has the last word.
+    if (row.theme) applyTheme(document.documentElement, row.theme);
     s.destroy();
   } catch { defaultSurface = undefined; }
   const makeSettings = (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user });
@@ -2937,8 +2967,39 @@ async function bootHome(wanted) {
   // from the first paint; it takes no room (a small strip at the top).
   if (HOME.trial) mountHomeTrialBar();
   window.__home.trial = () => (HOME.trial ? { ...HOME.trial, personId: HOME.person?.id || '', defaultId: HOME.defaultId } : null);
+  // Whose this page is, for the suites (home_person_test): the person, their screen, their Home and landing.
+  window.__home.person = () => (HOME.on ? { personId: HOME.person?.id || '', defaultId: HOME.defaultId,
+    homeId: HOME.home?.id || null, landingId: HOME.landing?.id || null } : null);
   await openSubject(subject, { view: land.view });
 }
+
+// *** ANOTHER PERSON PICKED ELSEWHERE: THIS PAGE FOLLOWS, WITH A CLEAN RELOAD (2026-10-04). *** The people bar lives on
+// My dashboards (home.js); picking somebody there writes this browser's remembered person, which another tab of this
+// page hears (`storage`), and a page come back to by Back (`pageshow`) or a tab looked at again finds changed.
+// ARGUED, a reload against swapping in place:
+//   FOR swapping in place: no flash, and the scroll and the open menu stay.
+//   AGAINST, and it decides it: whose things these are is spread over some forty fields of HOME plus the embedded
+//   screen, its draft, the unlock gate, the undo list, Nimrod's notes host and the trial strip. A swap that misses one
+//   shows or edits the wrong person's -- the very bug this fixes -- and it is a second boot path that only this
+//   switch would exercise. A reload runs the one boot path every suite runs, and costs a second.
+// Unsaved changes are never thrown away by it: the page says so and stays (it follows the next time it is come back
+// to with nothing unsaved), and those changes are still the shown person's, so saving them is right.
+let followSaid = '';
+function followPicked() {
+  if (!HOME.on || readLastPerson() === pickedAtLoad) return;
+  if (HOME.draft?.dirty?.()) {
+    const now = readLastPerson();
+    if (followSaid !== now) {
+      followSaid = now;
+      toast(`Somebody else was picked on My dashboards. This page stays ${HOME.person?.name ? `${HOME.person.name}’s` : 'as it is'} while you have unsaved changes; save or leave them, and it follows when you come back to it.`);
+    }
+    return;
+  }
+  location.reload();
+}
+window.addEventListener('storage', (e) => { if (e.key === LAST_PERSON_KEY || e.key === null) followPicked(); });
+window.addEventListener('pageshow', (e) => { if (e.persisted) followPicked(); });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') followPicked(); });
 
 function undoHome() {
   HOME.on = false;

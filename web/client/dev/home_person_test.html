@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Home follows the picked person — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>Home follows the person picked on the people bar (modules.html)</h1>
+<p>2026-10-04. Home used the account's FIRST screen whoever was picked on the people bar, so on an account with several
+people it showed and edited somebody else's screen (theme, screen settings, module views). Two people on one account:
+Home shows each one's own default screen, theme, Home and landing; a person with no screen gets one made, as a new
+account's first person does; switching on the bar (another tab) switches Home; a remembered person who is gone does not
+make the page reload over and over; and a screen (a kiosk) keeps its own person whoever is picked. Needs the server
+(<code>SUITE_BASE</code>), and opens Home in a frame.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createProfilesClient, ensureProfile } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { LAST_PERSON_KEY } from '../people.js';
+import { HOME_STATE_KEY } from '../home_dashboard.js';
+import { createDashboardMaker, LANDING_KEY } from '../dashboards.js';
+import { THEMES } from '../theme.js';
+import { mountKiosk } from '../kiosk.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 20000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+
+const OWNER = 'home-person-' + Math.floor(Math.random() * 1e9);
+const api = createProfilesClient({ user: OWNER });
+const screenState = (pid, key) => createState({ url: api.stateURL(pid, key), user: OWNER });
+async function writeScreen(pid, key, patch) { const h = screenState(pid, key); await h.load(); h.set(patch); await h.flush(); h.destroy(); }
+async function writePerson(pid, key, patch) {
+  const h = createState({ url: api.personStateURL(pid, key), user: OWNER });
+  await h.load(); h.set(patch); await h.flush(); h.destroy();
+}
+const screensOf = async (pid) => (await api.list(pid)).map((s) => s.id);
+
+// Two themes that look different, told apart by a colour they do not share.
+const THEME_A = 'dusk', THEME_B = 'warm';
+const VAR = Object.keys(THEMES[THEME_A].vars).find((k) => THEMES[THEME_A].vars[k] !== THEMES[THEME_B].vars[k]);
+const realBefore = localStorage.getItem(LAST_PERSON_KEY);
+
+const ifr = document.createElement('iframe');
+ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px;border:0';
+document.body.append(ifr);
+const pageErrors = [];
+let loads = 0;
+ifr.addEventListener('load', () => {
+  loads++;
+  const w = ifr.contentWindow; const orig = w.console.error.bind(w.console);
+  w.console.error = (...a) => { pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };
+});
+const openHome = (q = '&edit=1') => new Promise((res) => { ifr.addEventListener('load', res, { once: true }); ifr.src = `../modules.html?user=${OWNER}${q}`; });
+const who = () => { try { return ifr.contentWindow.__home?.person?.() || null; } catch { return null; } };
+const themeVar = () => ifr.contentDocument?.documentElement?.style?.getPropertyValue(VAR)?.trim() || '';
+const why = () => J({ who: who(), homeError: ifr.contentDocument?.body?.dataset?.homeError || '', errors: pageErrors.slice(0, 3) });
+
+try {
+  // ============================================================================================
+  section('setup: one account, two people; the first has a screen (themed), a Home and a landing; the second has nothing');
+  const A = (await api.people())[0].id;
+  const B = (await api.addPerson('Robin')).id;
+  const screenA = await ensureProfile(api, OWNER, null, { personId: A });
+  await writeScreen(screenA, 'settings', { theme: THEME_A });
+  const homeA = (await api.create('My home', A)).id;   // a dashboard of A's, made A's Home below
+  await writePerson(A, HOME_STATE_KEY, { homeId: homeA, welcomeDone: true });
+  const makerA = createDashboardMaker({ profiles: api, makeSettings: (pid) => screenState(pid, 'settings'),
+    makeInstanceState: (pid, id) => screenState(pid, id), personId: () => A, personName: () => 'Me' });
+  const landingA = (await makerA.ensure(LANDING_KEY)).id;
+  const aScreens = J(await screensOf(A));
+  check('A has their screen first, then their Home and landing; B has no screen', (await screensOf(A))[0] === screenA
+    && (await screensOf(B)).length === 0 && !!VAR, J({ a: await screensOf(A), VAR }));
+
+  // ============================================================================================
+  section('*** Home as the first person: their screen, their theme, their Home, their landing ***');
+  localStorage.setItem(LAST_PERSON_KEY, A);
+  await openHome();
+  check('*** Home is A’s ***', await until(() => who()?.personId === A), why());
+  check('*** its default screen is A’s own ***', who()?.defaultId === screenA, why());
+  check('*** A’s theme is on the page ***', await until(() => themeVar() === THEMES[THEME_A].vars[VAR]), `${themeVar()} ${why()}`);
+  check('A’s Home and landing', who()?.homeId === homeA && who()?.landingId === landingA, why());
+
+  // ============================================================================================
+  section('*** Home as the second person, who has no screen: one is made for THEM, exactly as for a new account ***');
+  localStorage.setItem(LAST_PERSON_KEY, B);
+  await openHome();
+  check('*** Home is B’s ***', await until(() => who()?.personId === B), why());
+  const madeB = who()?.defaultId;
+  const bList = await api.list(B);
+  check('*** B now has exactly one screen, and it is Home’s default ***', bList.length === 1 && bList[0].id === madeB, J(bList));
+  check('*** it is the starter screen a new account gets (Bedside: photos, camera, clock, director) ***', bList[0]?.name === 'Bedside'
+    && J((await api.get(madeB)).modules.map((m) => m.type).sort()) === J(['camera', 'clock', 'director', 'photos']));
+  check('*** never A’s: A’s screen is not B’s Home default, and A’s screens are unchanged ***', madeB !== screenA && J(await screensOf(A)) === aScreens);
+  check('B has no Home and no landing of their own (A’s are not theirs)', who()?.homeId === null && who()?.landingId === null, why());
+  check('B’s page does not wear A’s theme', themeVar() !== THEMES[THEME_A].vars[VAR], themeVar());
+
+  // B's own things, then again.
+  await writeScreen(madeB, 'settings', { theme: THEME_B });
+  const homeB = (await api.create('Robin home', B)).id;
+  await writePerson(B, HOME_STATE_KEY, { homeId: homeB, welcomeDone: true });
+  await openHome();
+  check('*** B again: their own screen (not a second one), their theme, their Home ***', await until(() => who()?.personId === B)
+    && who()?.defaultId === madeB && who()?.homeId === homeB && (await api.list(B)).filter((s) => s.name === 'Bedside').length === 1, why());
+  check('*** B’s theme is on the page ***', await until(() => themeVar() === THEMES[THEME_B].vars[VAR]), themeVar());
+
+  // ============================================================================================
+  section('*** switching on the people bar (another tab) switches Home ***');
+  localStorage.setItem(LAST_PERSON_KEY, A);
+  await openHome();
+  await until(() => who()?.personId === A);
+  await until(() => themeVar() === THEMES[THEME_A].vars[VAR]);
+  const before = loads;
+  // The people bar on My dashboards writes this browser's remembered person (people.js writeLastPerson); written
+  // here, in another window of the same origin, the frame hears it as a tab would.
+  localStorage.setItem(LAST_PERSON_KEY, B);
+  check('*** the page loads again by itself ***', await until(() => loads > before, 10000), `loads ${before} -> ${loads}`);
+  check('*** ...and is B’s: screen, theme, Home ***', await until(() => who()?.personId === B && who()?.defaultId === madeB && who()?.homeId === homeB)
+    && await until(() => themeVar() === THEMES[THEME_B].vars[VAR]), why());
+  const before2 = loads;
+  localStorage.setItem(LAST_PERSON_KEY, A);
+  check('*** and back to A ***', await until(() => loads > before2, 10000) && await until(() => who()?.personId === A && who()?.defaultId === screenA)
+    && await until(() => themeVar() === THEMES[THEME_A].vars[VAR]), why());
+  check('no screen was made by switching', J(await screensOf(A)) === aScreens && (await api.list(B)).length === 2);
+
+  // ============================================================================================
+  section('a remembered person who is gone: the first person is shown, and the page does not reload over and over');
+  localStorage.setItem(LAST_PERSON_KEY, 'nobody-' + OWNER);
+  await openHome();
+  check('the first person is shown', await until(() => who()?.personId === A), why());
+  const settled = loads;
+  ifr.contentDocument.dispatchEvent(new Event('visibilitychange'));
+  await sleep(2500);
+  check('*** no reload loop ***', loads === settled, `loads ${settled} -> ${loads}`);
+
+  // ============================================================================================
+  section('*** a screen keeps its own person, whoever is picked ***');
+  ifr.src = 'about:blank';
+  localStorage.setItem(LAST_PERSON_KEY, B);
+  const root = document.createElement('div');
+  root.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
+  document.body.append(root);
+  const k = await mountKiosk(root, { user: OWNER, profileId: screenA, profiles: api, bus: createBus() });
+  const known = await Promise.race([k.personKnown().whenSettled(), sleep(10000).then(() => null)]);
+  check('*** A’s screen, opened while B is picked, is A’s ***', known?.personId === A, J(known));
+  check('opening it made nothing for anybody', J(await screensOf(A)) === aScreens && (await api.list(B)).length === 2);
+  try { k.destroy?.(); } catch { /* gone */ }
+  root.remove();
+} catch (e) {
+  check('the suite ran to completion', false, String(e && (e.stack || e.message)));
+  console.error(e);
+} finally {
+  ifr.remove();
+  if (realBefore == null) localStorage.removeItem(LAST_PERSON_KEY); else localStorage.setItem(LAST_PERSON_KEY, realBefore);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
