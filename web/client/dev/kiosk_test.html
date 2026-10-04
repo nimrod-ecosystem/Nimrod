@@ -420,6 +420,8 @@ const toTab = (m, id) => {
       // on the Devices tab makes the old rows 36. The lap is unchanged.)
       // (2026-10-02 evening: "Space between panels" on the Display tab makes the old rows 37. The lap is unchanged.)
       // (2026-10-03: "Show a small clock" on the Display tab makes the old rows 38. The lap is unchanged.)
+      // (2026-10-04, version_watch.js: "Pick up new versions by itself" on the This screen tab makes the old rows 39.
+      // The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
           'claude-page', 'reviews-page'].includes(i.id));
@@ -427,8 +429,8 @@ const toTab = (m, id) => {
       // ('lesson-topics', 2026-10-03: moved into the menu from the Settings panel's own list, beside 'game'.)
       // ('claude-page' on Devices and 'reviews-page' on This screen, 2026-10-04, page_links.js: rows that open a
       // page, like 'game' -- outside the panel's lap, which is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 38) ***',
-        lapStops.length === 14 && oldStops.length === 38 && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 39) ***',
+        lapStops.length === 14 && oldStops.length === 39 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       // (2026-10-02, deliberately UNCHANGED: "Font on this device" / "Colour look" are rows of "Settings for:

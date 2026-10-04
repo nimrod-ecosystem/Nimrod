@@ -1083,6 +1083,40 @@ try {
   } else {
     check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
   }
+
+  // ============================================================================================
+  // 2026-10-04 (version_watch.js): a screen reloads itself for a new version of the site at a quiet moment;
+  // Home is a page somebody works in, so it only SAYS so - a chip with Reload - and never reloads by itself.
+  section('*** a new version of the site: Home shows a quiet chip, never reloads by itself ***');
+  {
+    await open(`user=${encodeURIComponent(USER)}`);
+    // The page's own copy of the module: a module script added to Home's document resolves against Home's URL and
+    // shares its module map, so `pageVersionChip()` there is the chip Home mounted.
+    const probe = doc.createElement('script');
+    probe.type = 'module';
+    probe.textContent = "import { pageVersionChip } from './version_watch.js'; window.__versionChipProbe = pageVersionChip();";
+    doc.head.append(probe);
+    await until(() => win.__versionChipProbe !== undefined, 5000);
+    const chip = win.__versionChipProbe || null;
+    check('Home has a version chip watching', !!chip);
+    check('it knows the version it was loaded at', await until(() => !!chip?.state().known, 5000), JSON.stringify(chip?.state()));
+    check('no chip while nothing changed', !doc.querySelector('[data-version-chip]') || doc.querySelector('[data-version-chip]').hidden);
+    let unloaded = false;
+    win.addEventListener('beforeunload', () => { unloaded = true; });
+    const realFetch = win.fetch;
+    win.fetch = (url, opts) => (String(url).includes('/api/version')
+      ? Promise.resolve(new win.Response(JSON.stringify({ version: `newer${Date.now()}`, commit: null }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      : realFetch(url, opts));
+    await chip.poll();
+    const el = doc.querySelector('[data-version-chip]');
+    check('*** a new version: Home shows "A new version is ready", with Reload ***',
+      !!el && !el.hidden && /A new version is ready/.test(el.textContent) && !!el.querySelector('[data-version-reload]'),
+      el ? el.textContent : '(no chip)');
+    await sleep(300);
+    check('*** and Home did not reload itself ***', !unloaded && ifr.contentWindow === win && !!doc.querySelector('[data-version-chip]'));
+    win.fetch = realFetch;
+  }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));
   console.error(err);

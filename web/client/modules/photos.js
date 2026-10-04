@@ -285,7 +285,8 @@ registerModule(
     let paused = false;
     let resumeTimer = null;   // a pause carries on by itself (`resumeAfterMs`)
     const holding = () => waiting || paused;
-    const reportPlay = createPlayReporter(bus, ctx);
+    // 'slideshow': a screen picking up a new version waits for the next photo, not for this to stop (version_watch.js).
+    const reportPlay = createPlayReporter(bus, ctx, { kind: 'slideshow' });
 
     // *** WHICH SLIDESHOW A "NEXT" CAME FROM. *** (Mike, 2026-09-29: "Setting photos to 30
     // seconds doesn't seem to work now.")

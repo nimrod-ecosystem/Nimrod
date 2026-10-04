@@ -881,7 +881,8 @@ registerModule(
     // the panel opens, never by stopping a video somebody is watching. A directed panel is never held.
     let startDecided = false;
     let waiting = false;
-    const reportPlay = createPlayReporter(bus, ctx);
+    // 'video': a screen picking up a new version waits for this video to end, never cuts it off (version_watch.js).
+    const reportPlay = createPlayReporter(bus, ctx, { kind: 'video' });
     let waitTimer = null;
     function decideStart() {
       if (startDecided) return;

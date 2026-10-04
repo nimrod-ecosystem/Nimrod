@@ -60,8 +60,12 @@ import {
 } from './actions.js';
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
-import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD } from './call_notice.js';
-import { CALL_ENDED } from './modules/call.js';
+import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
+import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
+// 2026-10-04: the screen picks up a new version of the site by itself, at a quiet moment (version_watch.js).
+import {
+  createVersionWatch, fetchSiteVersion, pickUpVersionsOf, playKindOf, PICK_UP_FIELD, INPUT_QUIET_MS,
+} from './version_watch.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
@@ -92,7 +96,7 @@ import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
   SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES, spokenTable,
-  moduleVoiceTable,
+  moduleVoiceTable, SPEECH_GRAMMAR_TOPIC,
 } from './input_speech.js';
 import { attachCursorDrive } from './cursor_drive.js';
 import {
@@ -108,6 +112,7 @@ import { createAmplifier, AMPLIFY_FIELDS } from './amplify.js';
 import { createPhoneMicReceiver, mountMicLiveIndicator, PHONE_MIC_TOPIC } from './phone_mic.js';
 import {
   createVoiceRecorder, createIdbPairStore, createMemoryPairStore, mountRecordingIndicator, VOICE_RECORDING_FIELDS,
+  VOICE_RECORDING_TOPIC,
 } from './voice_recording.js';
 import { VOICE_MODEL_FIELDS } from './voice_model.js';
 import {
@@ -267,6 +272,10 @@ export async function mountKiosk(root, {
   onRecovery = null,               // told about every action taken, for the log and the tests
   recoveryNow = () => Date.now(),
   recoveryTick = 60 * 1000,
+  // PICKING UP A NEW VERSION (2026-10-04, version_watch.js): the seams a suite needs -- `{ fetchVersion,
+  // pollMs, checkMs, quietWaitMs, inputQuietMs, storage }`, every one optional; `false` turns the watch off
+  // for this mount. Never on an embed. The setting a person changes is the screen row's, not this.
+  versionWatch: versionWatchOpts = undefined,
   // Burn-in protection's own idle wait (2.18) — real default below, ten minutes. A test that
   // actually waited that long to prove the dim/drift class appears would be a test nobody
   // runs; this seam lets it use milliseconds instead, the same reason `recoveryTick` is one.
@@ -3500,6 +3509,11 @@ export async function mountKiosk(root, {
     // that should not ring at night, a hallway one that should), not the person, who rings on every screen.
     // Not on an embed (an embed never has the drive socket a call arrives on).
     ...(!embedded ? [{ ...CALL_NOTICE_FIELD }] : []),
+    // 2026-10-04 (version_watch.js argues the default, OFF: a live screen is never changed remotely, so following
+    // deploys is chosen per screen - the bench turns it on): this screen restarts itself once for a new version
+    // of the site, only when nothing is going on. The SCREEN's: it is about this device and its room. Not on an
+    // embed (an embed never reloads the page it sits on).
+    ...(!embedded ? [{ ...PICK_UP_FIELD }] : []),
   ];
 
   // *** THE SCREEN'S SOUND (2026-09-30). *** The master as master_volume.js declares it (Volume is
@@ -6170,6 +6184,97 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(SUBTITLES_EARLIER_TOPIC, (p) => { claimed(p); try { subtitles?.earlier(); } catch { /* none */ } }));
   offsScreen.push(bus.subscribe(SUBTITLES_LATEST_TOPIC, (p) => { claimed(p); try { subtitles?.latest(); } catch { /* none */ } }));
 
+  // ---- PICKING UP A NEW VERSION (2026-10-04; version_watch.js has the finding and every argument) ---------
+  // The bench soak found a screen one deploy behind after 41 hours: nothing reloads it. The watch polls the
+  // server's version and, when it changes, reloads through the SAME seam the 09-12 watch uses (`reloadPage`:
+  // `location.reload()`, which keeps this URL -- the same screen, the same dashboard, the device key in it), once
+  // per version, only when `versionHold()` says nothing would be lost, preferably between two photos or videos.
+  // Not on an embed: a preview on somebody else's page must never reload that page.
+  // What the bus tells this screen, kept for the hold list. Each is the panel's own report, not a guess:
+  const vPlaying = new Map();      // panel id -> 'game' | 'slideshow' | 'video', while it says it is playing
+  const vGrammars = new Map();     // key -> { instanceId, dictation }: a question waiting, a dictation window
+  let vRecording = false;          // an utterance heard and not yet saved, or a reading phrase armed
+  let vRingingAt = null;           // a Call panel ringing (its CALL_INCOMING), until its CALL_ENDED
+  let versionWatch = null;
+  if (!embedded && versionWatchOpts !== false) {
+    const vo = versionWatchOpts || {};
+    const inputQuietMs = Number.isFinite(vo.inputQuietMs) ? vo.inputQuietMs : INPUT_QUIET_MS;
+    offsScreen.push(bus.subscribe(PLAY_STATE_TOPIC, (p) => {
+      if (!p || !p.id) return;
+      if (p.playing) vPlaying.set(p.id, playKindOf(p)); else vPlaying.delete(p.id);
+    }));
+    offsScreen.push(bus.subscribe(CALL_INCOMING, () => { vRingingAt = Date.now(); }));
+    offsScreen.push(bus.subscribe(CALL_ENDED, () => { vRingingAt = null; }));
+    offsScreen.push(bus.subscribe(VOICE_RECORDING_TOPIC, (s) => {
+      vRecording = !!(s && ((Number(s.pending) || 0) > 0 || s.prompt));
+    }));
+    offsScreen.push(bus.subscribe(SPEECH_GRAMMAR_TOPIC, (p) => {
+      if (!p || typeof p !== 'object') return;
+      const key = p.instanceId ? `#${p.instanceId}` : `@${p.source || ''}`;
+      const words = Array.isArray(p.words) ? p.words.filter(Boolean) : [];
+      if (p.open !== false && (words.length > 0 || p.dictation === true)) {
+        vGrammars.set(key, { instanceId: p.instanceId || null, dictation: p.dictation === true });
+      } else vGrammars.delete(key);
+    }));
+    // ONLY WHAT IS STILL ON THE SCREEN COUNTS. A game switched away while it was playing never says it stopped;
+    // left in, it would hold every reload forever. A report with no panel id (a source-wide grammar) counts.
+    const onScreenIds = () => { try { return new Set(menuPanelRecs().map((r) => r.id)); } catch { return new Set(); } };
+    const playingKinds = () => {
+      const ids = onScreenIds();
+      return [...vPlaying].filter(([id]) => ids.has(id)).map(([, kind]) => kind);
+    };
+    // A ring that never said it ended (a Call panel taken off mid-ring) stops counting after the caller's own
+    // give-up time (call_notice.js NOTICE_RING_MS) and a margin, not never.
+    const ringing = () => vRingingAt !== null && Date.now() - vRingingAt < NOTICE_RING_MS + 30 * 1000;
+    const versionHold = () => {
+      if (torn) return 'gone';
+      try { if (callTransport?.isLive?.() || callView || callNotice?.showing?.() || ringing()) return 'call'; } catch { return 'call'; }
+      try { if ((intercomRx?.sessions?.() || []).length > 0) return 'intercom'; } catch { /* none */ }
+      if (playingKinds().includes('game')) return 'game';
+      try { if (menu?.isOpen?.() || screensOpen) return 'menu'; } catch { /* not built */ }
+      try { if (editorNow() || mapWin || arr.editing?.()) return 'edit'; } catch { /* not built */ }
+      if (libOpen) return 'library';
+      if (vRecording) return 'recording';
+      {
+        const ids = onScreenIds();
+        const open = [...vGrammars.values()].filter((g) => !g.instanceId || ids.has(g.instanceId));
+        if (open.length) return 'dictation';
+      }
+      try { if (drive?.presence?.().drivers > 0) return 'helping'; } catch { /* no socket */ }
+      if (inputQuietMs > 0) {
+        try {
+          const last = runtime?.recentActivity?.().slice(-1)[0];
+          if (last?.at && Date.now() - last.at < inputQuietMs) return 'input';
+        } catch { /* no runtime */ }
+      }
+      return null;
+    };
+    const quietKindNow = () => {
+      const kinds = playingKinds();
+      return kinds.includes('video') ? 'video' : (kinds.includes('slideshow') ? 'slideshow' : null);
+    };
+    try {
+      versionWatch = createVersionWatch({
+        fetchVersion: vo.fetchVersion || (() => fetchSiteVersion()),
+        enabled: () => !torn && pickUpVersionsOf(settings.get() || {}),
+        hold: versionHold,
+        quietKind: quietKindNow,
+        act: () => { if (!torn) reloadPage(); },
+        storage: vo.storage !== undefined ? vo.storage
+          : (session || (() => { try { return typeof sessionStorage !== 'undefined' ? sessionStorage : null; } catch { return null; } })()),
+        ...(vo.pollMs != null ? { pollMs: vo.pollMs } : {}),
+        ...(vo.checkMs != null ? { checkMs: vo.checkMs } : {}),
+        ...(vo.quietWaitMs != null ? { quietWaitMs: vo.quietWaitMs } : {}),
+      });
+      // THE QUIET MOMENTS: the next photo is asked for (photos.js publishes `photos/next` as it advances), a
+      // video ends (the content director's `segment/done`).
+      offsScreen.push(bus.subscribe('photos/next', () => { versionWatch?.quiet('slideshow').catch(() => {}); }));
+      offsScreen.push(bus.subscribe('segment/done', () => { versionWatch?.quiet('video').catch(() => {}); }));
+      offsScreen.push(() => { try { versionWatch?.destroy(); } catch { /* gone */ } });
+      versionWatch.start();
+    } catch (err) { console.error('kiosk: version watch', err); versionWatch = null; }
+  }
+
   // The long press itself, on the input bus's physical edges. Its length is a screen setting.
   const longPress = useDashboard ? createLongPress({
     bus, holdMs: () => (settings.get() || {}).plainBarHoldMs,
@@ -6476,6 +6581,12 @@ export async function mountKiosk(root, {
     showModule,
     menu,
     runtime,
+    // 2026-10-04: the version watch, so a suite can drive it a step at a time and a diagnostic page can say
+    // which version this screen runs and what it is waiting for. Null on an embed (it has none).
+    versionWatch: versionWatch ? {
+      poll: () => versionWatch.poll(), check: () => versionWatch.check(),
+      quiet: (kind) => versionWatch.quiet(kind), state: () => versionWatch.state(),
+    } : null,
     // The recovery machinery, exposed so a test can drive it a step at a time rather than
     // waiting on a timer, and so a diagnostic page can show what it currently thinks.
     health,

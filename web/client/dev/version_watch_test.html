@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>version watch — a screen picks up a deploy at a quiet moment — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>version watch — a screen picks up a deploy at a quiet moment</h1>
+<p>The bench soak (2026-10-04) found a screen one deploy behind after 41 hours: nothing ever reloads it.
+<code>version_watch.js</code> polls <code>/api/version</code> and, when it changes, reloads a screen ONCE, only
+when nothing would be lost (no call or ring, no game going, no menu / edit view / library, no recording or
+dictation, nobody pressing), preferring the moment between two photos or two videos. Other pages show a quiet
+"A new version is ready" chip instead. First the watch on its own (driven a step at a time, no timers), then
+the real kiosk's idea of "busy", then the chip. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import {
+  createVersionWatch, fetchSiteVersion, mountVersionChip, pageVersionChip,
+  PICK_UP_FIELD, PICK_UP_KEY, pickUpVersionsOf, playKindOf, VERSION_URL, VERSION_POLL_MS, RELOADED_KEY,
+} from '../version_watch.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk } from '../kiosk.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { CALL_INCOMING, CALL_ENDED } from '../modules/call.js';
+import { VOICE_RECORDING_TOPIC } from '../voice_recording.js';
+import { SPEECH_GRAMMAR_TOPIC } from '../input_speech.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 6000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+
+// A server that says what the test tells it to.
+function fakeServer(v = 'aaaa1111') {
+  const s = { v, fail: false, calls: 0, onGet: null };
+  s.get = async () => { s.calls++; s.onGet?.(); if (s.fail) throw new Error('no network'); return s.v; };
+  return s;
+}
+
+// A watch driven a step at a time: no timers run by themselves (`setTimer` records nothing), so every
+// step below is a call the test makes, and the clock is the test's.
+function makeWatch(over = {}) {
+  const srv = over.srv || fakeServer();
+  const t = { now: 0 };
+  const w = {
+    srv, t, acted: [], reason: null, kind: null, on: true, online: true,
+    storage: over.storage || memStore(),
+  };
+  w.watch = createVersionWatch({
+    fetchVersion: srv.get,
+    enabled: () => w.on,
+    hold: () => w.reason,
+    quietKind: () => w.kind,
+    online: () => w.online,
+    act: (v, how) => { w.acted.push({ v, how }); },
+    storage: w.storage,
+    now: () => t.now,
+    setTimer: () => 0, clearTimer: () => {},
+    quietWaitMs: 1000,
+    ...over.opts,
+  });
+  return w;
+}
+
+(async () => {
+  try {
+    // =====================================================================================================
+    section('the setting and the constants');
+    check('"Pick up new versions by itself" is a screen row, a toggle, OFF by default (a live screen is never changed remotely)',
+      PICK_UP_FIELD.key === PICK_UP_KEY && PICK_UP_FIELD.kind === 'toggle' && PICK_UP_FIELD.default === false
+      && /Pick up new versions by itself/.test(PICK_UP_FIELD.label), JSON.stringify(PICK_UP_FIELD));
+    check('a row that never chose follows the default (off); true is on; junk is the default',
+      pickUpVersionsOf({}) === false && pickUpVersionsOf(null) === false && pickUpVersionsOf({ [PICK_UP_KEY]: true }) === true
+      && pickUpVersionsOf({ [PICK_UP_KEY]: 'yes' }) === false);
+    check('the site copy never names a person', !/her screen|christine|cici/i.test(JSON.stringify(PICK_UP_FIELD)));
+    check('it polls every few minutes, not every few seconds', VERSION_POLL_MS >= 60 * 1000 && VERSION_POLL_MS <= 15 * 60 * 1000,
+      String(VERSION_POLL_MS));
+    check('a playing panel is a game unless it says it is a slideshow or a video',
+      playKindOf({}) === 'game' && playKindOf({ kind: 'slideshow' }) === 'slideshow' && playKindOf({ kind: 'video' }) === 'video'
+      && playKindOf({ kind: 'weird' }) === 'game');
+
+    // =====================================================================================================
+    section('fetching the version');
+    {
+      const real = await fetchSiteVersion();
+      check('against the real server: a short string', typeof real === 'string' && real.length >= 8, String(real));
+      const raw = await fetch(VERSION_URL).then((r) => r.json());
+      check('the same string the route says', raw.version === real, JSON.stringify(raw));
+      const bad = (status, body) => async () => new Response(body, { status, headers: { 'Content-Type': 'text/html' } });
+      check('a 502 page from a server mid-deploy is NOT a version', (await fetchSiteVersion(bad(502, '<html>bad gateway</html>'))) === null);
+      check('nor is a 200 that is not the JSON (a captive portal\'s page)', (await fetchSiteVersion(bad(200, '<html>log in to the wifi</html>'))) === null);
+      check('nor JSON without a sensible version', (await fetchSiteVersion(async () => new Response('{"version":""}', { status: 200 }))) === null);
+      let threw = false;
+      try { await fetchSiteVersion(async () => { throw new TypeError('offline'); }); } catch { threw = true; }
+      check('a network error is thrown to the watch (which counts it as a failed poll)', threw);
+    }
+
+    // =====================================================================================================
+    section('*** the watch: same version -> nothing; changed and idle -> act ONCE ***');
+    {
+      const w = makeWatch();
+      check('the first poll is the baseline: it acts on nothing', (await w.watch.poll()) === 'baseline' && w.acted.length === 0);
+      check('same version -> nothing', (await w.watch.poll()) === 'same' && w.acted.length === 0 && w.watch.state().pending === null);
+      w.srv.v = 'bbbb2222';
+      check('a new version is noticed (pending)', (await w.watch.poll()) === 'changed' && w.watch.state().pending === 'bbbb2222');
+      check('*** idle: it acts, for the new version ***', (await w.watch.check()) === 'acted'
+        && w.acted.length === 1 && w.acted[0].v === 'bbbb2222', JSON.stringify(w.acted));
+      check('the act is recorded where a reload keeps it (so a reload loop cannot happen)',
+        JSON.parse(w.storage.getItem(RELOADED_KEY) || '[]').includes('bbbb2222'));
+      await w.watch.poll(); await w.watch.check(); await w.watch.quiet('slideshow');
+      check('*** never twice for one version ***', w.acted.length === 1, JSON.stringify(w.acted));
+      check('and nothing is pending any more', w.watch.state().pending === null);
+      w.srv.v = 'cccc3333';
+      await w.watch.poll(); await w.watch.check();
+      check('the NEXT version is acted on in its turn', w.acted.length === 2 && w.acted[1].v === 'cccc3333');
+    }
+
+    // =====================================================================================================
+    section('*** busy: it waits, then acts when nothing would be lost ***');
+    for (const why of ['call', 'game', 'edit', 'menu', 'library', 'recording', 'dictation', 'input']) {
+      const w = makeWatch();
+      await w.watch.poll();
+      w.srv.v = 'dddd4444';
+      w.reason = why;
+      await w.watch.poll();
+      const r1 = await w.watch.check();
+      check(`${why}: waits (no act), and says why`, r1 === 'waiting' && w.acted.length === 0 && w.watch.state().reason === why,
+        `${r1} ${JSON.stringify(w.watch.state())}`);
+      await w.watch.check();
+      check(`${why}: still waiting a check later`, w.acted.length === 0);
+      w.reason = null;
+      await w.watch.check();
+      check(`${why}: when it ends, acts once`, w.acted.length === 1 && w.acted[0].v === 'dddd4444');
+    }
+    {
+      // A call rings WHILE the confirming fetch is out: the act must not happen under it.
+      const srv = fakeServer();
+      const w = makeWatch({ srv });
+      await w.watch.poll();
+      srv.v = 'eeee5555';
+      await w.watch.poll();
+      srv.onGet = () => { w.reason = 'call'; };
+      const r = await w.watch.check();
+      check('*** a call that rings while it checks the server one last time still stops it ***',
+        w.acted.length === 0 && r === 'waiting', String(r));
+    }
+
+    // =====================================================================================================
+    section('*** a poll failure -> nothing; offline -> hold off ***');
+    {
+      const w = makeWatch();
+      await w.watch.poll();
+      w.srv.fail = true;
+      check('a failed poll is a failed poll: nothing pending, nothing acted', (await w.watch.poll()) === 'failed'
+        && w.watch.state().pending === null && w.acted.length === 0 && w.watch.state().fails === 1);
+      w.srv.fail = false;
+      check('and the next good poll with the same version is just "same"', (await w.watch.poll()) === 'same' && w.watch.state().fails === 0);
+      // Pending, and the server stops answering at the moment it would act: no reload into an error page.
+      w.srv.v = 'ffff6666';
+      await w.watch.poll();
+      w.srv.fail = true;
+      check('*** the server not answering when it would act: no act (a reload now would be a dead page) ***',
+        (await w.watch.check()) === 'failed' && w.acted.length === 0 && w.watch.state().pending === 'ffff6666');
+      w.srv.fail = false;
+      await w.watch.check();
+      check('it answers again: acts then', w.acted.length === 1 && w.acted[0].v === 'ffff6666');
+    }
+    {
+      const w = makeWatch();
+      await w.watch.poll();
+      w.online = false;
+      const before = w.srv.calls;
+      check('offline: no poll at all', (await w.watch.poll()) === 'offline' && w.srv.calls === before);
+      w.online = true; w.srv.v = 'abab7777'; await w.watch.poll(); w.online = false;
+      check('pending and offline: no act', (await w.watch.check()) === 'offline' && w.acted.length === 0);
+      w.online = true;
+      await w.watch.check();
+      check('back online: acts', w.acted.length === 1);
+    }
+    {
+      // A deploy rolled back before the screen was idle: the pending version is dropped, nothing happens.
+      const w = makeWatch();
+      await w.watch.poll();
+      const was = w.srv.v;
+      w.srv.v = 'roll0001'; w.reason = 'game'; await w.watch.poll(); await w.watch.check();
+      w.srv.v = was; w.reason = null;
+      await w.watch.check();
+      check('a rolled-back deploy: nothing pending, nothing acted', w.watch.state().pending === null && w.acted.length === 0,
+        JSON.stringify(w.watch.state()));
+    }
+
+    // =====================================================================================================
+    section('*** the setting off -> nothing ***');
+    {
+      const w = makeWatch();
+      await w.watch.poll();
+      w.on = false;
+      w.srv.v = 'off00001';
+      const before = w.srv.calls;
+      check('off: no poll (no network), nothing pending', (await w.watch.poll()) === 'off' && w.srv.calls === before
+        && w.watch.state().pending === null);
+      await w.watch.check(); await w.watch.quiet('slideshow');
+      check('off: nothing acted', w.acted.length === 0);
+      w.on = true;
+      await w.watch.poll(); w.on = false;
+      check('pending, then turned off: nothing acted', (await w.watch.check()) === 'off' && w.acted.length === 0);
+      w.on = true;
+      await w.watch.check();
+      check('turned back on: the version it missed is picked up', w.acted.length === 1 && w.acted[0].v === 'off00001');
+    }
+    {
+      // Off from the start: one baseline request is still made, so turning it on later can see a deploy that
+      // happened while it was off. Nothing else.
+      const w = makeWatch();
+      w.on = false;
+      check('off from the start: the baseline is still known', (await w.watch.poll()) === 'baseline');
+      const n = w.srv.calls;
+      await w.watch.poll(); await w.watch.poll();
+      check('...and nothing after it is fetched', w.srv.calls === n);
+    }
+
+    // =====================================================================================================
+    section('*** once per version, across a reload ***');
+    {
+      const storage = memStore();
+      const a = makeWatch({ storage });
+      await a.watch.poll(); a.srv.v = 'new00001'; await a.watch.poll(); await a.watch.check();
+      check('acted for the new version', a.acted.length === 1);
+      // The reloaded page: same tab (same session storage), and - the case it guards - a server that flaps
+      // back to the old version and then to the new one again (two instances during a deploy).
+      const srv = fakeServer('aaaa1111');
+      const b = makeWatch({ storage, srv });
+      await b.watch.poll();                       // baseline: the old version
+      srv.v = 'new00001';
+      check('*** a version it already reloaded for is never reloaded for again ***',
+        (await b.watch.poll()) === 'already' && (await b.watch.check()) === 'none' && b.acted.length === 0);
+    }
+
+    // =====================================================================================================
+    section('*** a quiet moment: between photos, between videos ***');
+    {
+      const w = makeWatch();
+      await w.watch.poll(); w.srv.v = 'quiet001'; await w.watch.poll();
+      w.kind = 'slideshow';
+      check('a slideshow on screen: it waits for the next photo', (await w.watch.check()) === 'quiet-wait' && w.acted.length === 0);
+      await w.watch.quiet('slideshow');
+      check('*** the photo changes: acts then ***', w.acted.length === 1 && w.acted[0].how === 'quiet', JSON.stringify(w.acted));
+    }
+    {
+      const w = makeWatch();
+      await w.watch.poll(); w.srv.v = 'quiet002'; await w.watch.poll();
+      w.kind = 'slideshow';
+      await w.watch.check();
+      w.t.now += 999; await w.watch.check();
+      check('a slideshow that does not change: still waiting just under the wait', w.acted.length === 0);
+      w.t.now += 2; await w.watch.check();
+      check('...and acts once the wait is over (a slow slideshow does not hold it forever)', w.acted.length === 1);
+    }
+    {
+      const w = makeWatch();
+      await w.watch.poll(); w.srv.v = 'quiet003'; await w.watch.poll();
+      w.kind = 'video';
+      await w.watch.check();
+      w.t.now += 60 * 60 * 1000; await w.watch.check();
+      check('*** a video playing: never cut off mid-video, however long ***', w.acted.length === 0);
+      await w.watch.quiet('slideshow');
+      check('a photo changing elsewhere is not the video\'s moment', w.acted.length === 0);
+      await w.watch.quiet('video');
+      check('the video ends: acts then', w.acted.length === 1);
+    }
+    {
+      const w = makeWatch();
+      await w.watch.poll(); w.srv.v = 'quiet004'; await w.watch.poll();
+      w.kind = 'slideshow'; w.reason = 'call';
+      await w.watch.quiet('slideshow');
+      check('a quiet moment during a call is not a quiet moment', w.acted.length === 0);
+    }
+
+    // =====================================================================================================
+    section('*** the real kiosk: what it counts as busy ***');
+    const USER = 'version-watch-' + Math.floor(performance.now());
+    const profiles = createProfilesClient({ user: USER });
+    const root = document.getElementById('root');
+    const P = await profiles.create('TEST-version-watch');
+    await profiles.addModule(P.id, 'clock');
+    await profiles.addModule(P.id, 'trivia');
+    const setRow = async (pid, patch) => {
+      const st = createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+      await st.load(); st.set(patch); await st.flush(); st.destroy();
+    };
+
+    // *** OFF BY DEFAULT: A SCREEN THAT NEVER CHOSE NEVER RELOADS ITSELF. *** A live screen is never changed
+    // remotely; following deploys is turned on per screen (the bench). Its own screen, with no row written.
+    {
+      const P0 = await profiles.create('TEST-version-watch-never-chose');
+      await profiles.addModule(P0.id, 'clock');
+      const srv = fakeServer('base0001');
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
+      root.append(box);
+      const reloads = [];
+      const k = await mountKiosk(box, {
+        user: USER, profileId: P0.id, profiles, bus: createBus(),
+        storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => { reloads.push(1); },
+        recoveryTick: 0,
+        // Small intervals, left to its own timers: if anything could reload it, this would.
+        versionWatch: { fetchVersion: srv.get, pollMs: 80, checkMs: 40, quietWaitMs: 50, inputQuietMs: 0 },
+      });
+      check('(setup) the screen\'s row has no saved choice', !(PICK_UP_KEY in ((await (async () => {
+        const st = createState({ url: profiles.stateURL(P0.id, 'settings'), user: USER });
+        try { return await st.load(); } finally { st.destroy(); } })()) || {})));
+      await until(() => srv.calls >= 1, 3000);
+      const baselineCalls = srv.calls;
+      check('it still asks the version once at start (so turning it on later catches a deploy)',
+        baselineCalls === 1 && k.versionWatch.state().known === 'base0001', `calls=${srv.calls} ${JSON.stringify(k.versionWatch.state())}`);
+      srv.v = 'next0001';
+      await sleep(1200);
+      check('*** a screen with no saved setting: a new version, idle, its own timers running -> it never reloads ***',
+        reloads.length === 0, `reloads=${reloads.length} ${JSON.stringify(k.versionWatch.state())}`);
+      check('...and polls nothing after the first request', srv.calls === baselineCalls, `calls=${srv.calls}`);
+      await k.versionWatch.poll(); await k.versionWatch.check();
+      check('...even driven by hand', reloads.length === 0, JSON.stringify(k.versionWatch.state()));
+      k.destroy(); box.remove();
+    }
+
+    // Every scenario below is a screen that turned it ON (as the bench will).
+    await setRow(P.id, { [PICK_UP_KEY]: true });
+    // Each scenario mounts its own kiosk: a kiosk that reloaded is done (that page would be gone).
+    async function screen({ srv = fakeServer('base0001'), opts = {}, extra = {} } = {}) {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
+      root.append(box);
+      const reloads = [];
+      const bus = createBus();
+      const k = await mountKiosk(box, {
+        user: USER, profileId: P.id, profiles, bus,
+        storage: memStore(), session: memStore(), navigate: () => {},
+        reloadPage: () => { reloads.push(Date.now()); },
+        recoveryTick: 0,
+        // Big intervals: the suite drives the watch a step at a time (`k.versionWatch`), so nothing races it.
+        versionWatch: { fetchVersion: srv.get, pollMs: 10 * 60 * 1000, checkMs: 10 * 60 * 1000, quietWaitMs: 5000,
+          inputQuietMs: 0, ...opts },
+        ...extra,
+      });
+      await sleep(150);
+      return { k, bus, box, srv, reloads, panel: () => (k.panels().find((x) => x.type === 'trivia') || k.panels()[0] || {}).id, done() { try { k.destroy(); } catch { /* gone */ } box.remove(); } };
+    }
+    // Change the version and give the watch one poll and one check.
+    async function deploy(s, v = 'next0001') { s.srv.v = v; await s.k.versionWatch.poll(); return s.k.versionWatch.check(); }
+
+    {
+      const s = await screen();
+      check('the kiosk has a version watch, and it took its baseline at boot',
+        !!s.k.versionWatch && (await until(() => s.k.versionWatch.state().known === 'base0001', 3000)),
+        JSON.stringify(s.k.versionWatch?.state()));
+      await s.k.versionWatch.poll(); await s.k.versionWatch.check();
+      check('same version -> nothing', s.reloads.length === 0);
+      const r = await deploy(s);
+      check('*** a new version, the screen idle -> it reloads, once ***', r === 'acted' && s.reloads.length === 1,
+        `${r} reloads=${s.reloads.length} ${JSON.stringify(s.k.versionWatch.state())}`);
+      await s.k.versionWatch.poll(); await s.k.versionWatch.check();
+      check('and never again for that version', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.k.menu.open();
+      const r = await deploy(s);
+      check('the settings menu open -> waits', r === 'waiting' && s.reloads.length === 0 && s.k.versionWatch.state().reason === 'menu',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.k.menu.close();
+      await s.k.versionWatch.check();
+      check('menu closed -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(CALL_INCOMING, { from: 'someone' });
+      const r = await deploy(s);
+      check('*** a call ringing -> waits ***', r === 'waiting' && s.reloads.length === 0 && s.k.versionWatch.state().reason === 'call',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish(CALL_ENDED, { reason: 'declined' });
+      await s.k.versionWatch.check();
+      check('the call over -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(PLAY_STATE_TOPIC, { id: s.panel(), playing: true });
+      const r = await deploy(s);
+      check('*** a game started and not finished -> waits ***', r === 'waiting' && s.k.versionWatch.state().reason === 'game',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish(PLAY_STATE_TOPIC, { id: s.panel(), playing: false });
+      await s.k.versionWatch.check();
+      check('the game over -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(PLAY_STATE_TOPIC, { id: 'a-panel-switched-away', playing: true });
+      const r = await deploy(s);
+      check('a game that is no longer on the screen (switched away mid-game) does not hold it forever',
+        r === 'acted' && s.reloads.length === 1, `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(VOICE_RECORDING_TOPIC, { on: true, recording: true, pending: 1, prompt: null });
+      const r = await deploy(s);
+      check('*** a recording in progress (an utterance not yet saved) -> waits ***', r === 'waiting'
+        && s.k.versionWatch.state().reason === 'recording', `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish(VOICE_RECORDING_TOPIC, { on: true, recording: true, pending: 0, prompt: null });
+      await s.k.versionWatch.check();
+      check('saved -> reloads (recording that is merely switched on is not "in progress")', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'nimrod-ai', open: true, words: [], dictation: true });
+      const r = await deploy(s);
+      check('*** a dictation window open -> waits ***', r === 'waiting' && s.k.versionWatch.state().reason === 'dictation',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'nimrod-ai', open: false, words: [], dictation: true });
+      await s.k.versionWatch.check();
+      check('closed -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      const panel = s.k.panels().find((p) => p.type === 'trivia') || s.k.panels()[0];
+      const opened = await s.k.openLibrary(panel.id);
+      const r = await deploy(s);
+      check('*** the Modules library open -> waits ***', opened !== false && r === 'waiting' && s.k.versionWatch.state().reason === 'library',
+        `${opened} ${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.k.closeLibrary();
+      await s.k.versionWatch.check();
+      check('closed -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      const panel = s.k.panels().find((p) => p.type === 'trivia') || s.k.panels()[0];
+      // "Edit this panel" from the menu: the panel in edit mode (arrangement.js `editing`).
+      s.bus.publish('shell/edit-panel', { id: panel.id, on: true, from: 'menu' });
+      await sleep(200);
+      const r = await deploy(s);
+      check('*** a panel being edited -> waits ***', r === 'waiting' && s.k.versionWatch.state().reason === 'edit',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish('shell/edit-panel', { on: false });
+      await sleep(200);
+      await s.k.versionWatch.check();
+      check('editing over -> reloads', s.reloads.length === 1, JSON.stringify(s.k.versionWatch.state()));
+      s.done();
+    }
+    {
+      // The edit view (the edit windows: "Edit" on the bar, `system/edit`).
+      const s = await screen();
+      s.bus.publish('system/edit', {});
+      const opened = await until(() => !!s.k.editView(), 3000);
+      const r = await deploy(s);
+      check('*** the edit view open -> waits ***', opened && r === 'waiting' && s.k.versionWatch.state().reason === 'edit',
+        `opened=${opened} ${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish('system/edit', {});
+      await until(() => !s.k.editView(), 3000);
+      await s.k.versionWatch.check();
+      check('the edit view closed -> reloads', s.reloads.length === 1, JSON.stringify(s.k.versionWatch.state()));
+      s.done();
+    }
+    {
+      const s = await screen({ opts: { inputQuietMs: 60 * 1000 } });
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowRight' }));
+      await sleep(80);
+      const r = await deploy(s);
+      check('somebody pressing a moment ago -> waits (whatever they were in the middle of)', r === 'waiting'
+        && s.k.versionWatch.state().reason === 'input', `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(PLAY_STATE_TOPIC, { id: s.panel(), playing: true, kind: 'slideshow' });
+      const r = await deploy(s);
+      check('a slideshow playing is not busy: it waits for the next photo', r === 'quiet-wait' && s.reloads.length === 0,
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.bus.publish('photos/next');
+      await until(() => s.reloads.length > 0, 3000);
+      check('*** the next photo -> reloads, between two photos ***', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.bus.publish(PLAY_STATE_TOPIC, { id: s.panel(), playing: true, kind: 'video' });
+      const r = await deploy(s);
+      check('a video playing: waits for it to end', r === 'quiet-wait' && s.reloads.length === 0);
+      s.bus.publish('segment/done', { provider: 'youtube', reason: 'ended' });
+      await until(() => s.reloads.length > 0, 3000);
+      check('the video ends -> reloads, between two videos', s.reloads.length === 1);
+      s.done();
+    }
+    {
+      const s = await screen();
+      s.srv.fail = true;
+      s.srv.v = 'next0002';
+      await s.k.versionWatch.poll(); await s.k.versionWatch.check();
+      check('*** a poll failure -> nothing ***', s.reloads.length === 0 && s.k.versionWatch.state().pending === null);
+      s.done();
+    }
+    {
+      // The setting off on this screen's row.
+      const st = createState({ url: profiles.stateURL(P.id, 'settings'), user: USER });
+      await st.load(); st.set({ [PICK_UP_KEY]: false }); await st.flush(); st.destroy();
+      const s = await screen();
+      const r = await deploy(s);
+      await sleep(100);
+      check('*** the screen\'s "Pick up new versions by itself" off -> nothing ***', r !== 'acted' && s.reloads.length === 0,
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.done();
+      const st2 = createState({ url: profiles.stateURL(P.id, 'settings'), user: USER });
+      await st2.load(); st2.set({ [PICK_UP_KEY]: true }); await st2.flush(); st2.destroy();
+    }
+    {
+      // An embed (a preview on somebody else's page) never reloads the page it sits on, and never polls.
+      const srv = fakeServer('base0001');
+      const s = await screen({ srv, extra: { embedded: true } });
+      check('an embedded kiosk has no version watch and makes no request', !s.k.versionWatch && srv.calls === 0,
+        `watch=${!!s.k.versionWatch} calls=${srv.calls}`);
+      s.done();
+    }
+    {
+      // The timers are really wired: small intervals, nobody driving it.
+      const srv = fakeServer('base0001');
+      const s = await screen({ srv, opts: { pollMs: 120, checkMs: 60 } });
+      srv.v = 'next0009';
+      await until(() => s.reloads.length > 0, 8000);
+      check('left to its own timers, it notices and reloads once', s.reloads.length === 1, `reloads=${s.reloads.length}`);
+      await sleep(400);
+      check('...and stays reloaded once', s.reloads.length === 1, `reloads=${s.reloads.length}`);
+      s.done();
+    }
+
+    // =====================================================================================================
+    section('*** other pages: a quiet chip, never a reload by itself ***');
+    {
+      const srv = fakeServer('page0001');
+      const host = document.createElement('div');
+      document.body.append(host);
+      let reloaded = 0;
+      const chip = mountVersionChip({ host, fetchVersion: srv.get, pollMs: 10 * 60 * 1000, reload: () => { reloaded++; } });
+      await chip.poll();
+      check('same version: no chip', !host.querySelector('[data-version-chip]') && !chip.shown());
+      check('the page\'s chip can be found (a page has one)', pageVersionChip() === chip);
+      srv.v = 'page0002';
+      await chip.poll();
+      const el = host.querySelector('[data-version-chip]');
+      check('*** a new version: the chip says so ***', !!el && /A new version is ready/.test(el.textContent) && chip.shown(),
+        el?.textContent || '(none)');
+      check('*** and the page did NOT reload by itself (somebody may be mid-edit) ***', reloaded === 0);
+      el.querySelector('[data-version-reload]').click();
+      check('its Reload reloads', reloaded === 1);
+      el.querySelector('[data-version-later]').click();
+      check('"not now" puts it away', !chip.shown());
+      await chip.poll();
+      check('...and it does not come back for the same version', !chip.shown());
+      srv.v = 'page0003';
+      await chip.poll();
+      check('a newer version brings it back', chip.shown());
+      chip.destroy();
+      check('destroyed: gone', !host.querySelector('[data-version-chip]'));
+      host.remove();
+    }
+  } catch (err) {
+    check('the suite ran to the end', false, err?.stack || String(err));
+  }
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})();
+</script>
+</body>
+</html>

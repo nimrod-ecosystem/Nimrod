@@ -948,6 +948,10 @@
 })();
 </script>
 <script type="module">
+// 2026-10-04: a new version of the site shows a quiet "A new version is ready" chip here, never a reload by
+// itself (version_watch.js). Screens reload themselves; pages ask.
+import { mountVersionChip } from './version_watch.js';
+mountVersionChip();
 // THE MODULE LIST, RENDERED FROM THE CATALOG THE COMPOSER READS.
 //
 // It used to be a static block of HTML in this file. It listed fourteen modules when the catalog

@@ -366,6 +366,10 @@
 <div id="root"><p class="h-loading" style="max-width:880px;margin:40px auto">Loading…</p></div>
 
 <script type="module">
+// 2026-10-04: a new version of the site shows a quiet "A new version is ready" chip here, never a reload by
+// itself - somebody may be halfway through an edit (version_watch.js). Screens reload themselves; pages ask.
+import { mountVersionChip } from './version_watch.js';
+mountVersionChip();
 import { createProfilesClient, resolveTheme } from './profile.js';
 import { applyTheme, DEFAULT_THEME } from './theme.js';
 import { createState } from './state.js';

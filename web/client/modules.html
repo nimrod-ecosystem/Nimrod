@@ -590,6 +590,10 @@
 </div>
 
 <script type="module">
+// 2026-10-04: a new version of the site shows a quiet "A new version is ready" chip here, never a reload by
+// itself - somebody may be halfway through an edit (version_watch.js). Screens reload themselves; pages ask.
+import { mountVersionChip } from './version_watch.js';
+mountVersionChip();
 import { listManifests, getManifest } from './module.js';
 import { GROUPS, USE, groupItems, reconcile, titleFor } from './modules_catalog.js';
 // Importing the modules is what REGISTERS them. This page reads the same registry the home
