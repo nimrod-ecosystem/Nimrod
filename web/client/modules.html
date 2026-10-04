@@ -1503,6 +1503,9 @@ const HOME_HOST = {
     ? [...HD.homeMenuModel(homeView()), ...trialMenuRows()].map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
   barHideMs: () => HOME.settings.barHideMs,
+  // 2026-10-04: over Your people, filling the window, the bar keeps to plain words (modules/transport_bar.js
+  // `plainBar`): no panel chips, no Switch module, nothing that pages through a panel. Edit brings them all back.
+  plainBar: () => !!HOME.on && !!HOME.land && HOME.subject === HD.PROFILE_SUBJECT && !!HOME.target?.landing && HOME.landKey === LANDING_KEY,
   // The dashboard filling the window floats the bar over the panels, so it tucks away (`barFloats`).
   barOver: () => barFloats(),
   subscribe(fn) { hostSubs.add(fn); return () => { hostSubs.delete(fn); }; },

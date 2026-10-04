@@ -224,6 +224,11 @@ try {
   check('*** Send a message opens the note for Sam over the page, signed by you ***', await until(() => q('[data-pp-sheet="message"]') && /A note for Sam/.test(q('[data-pp-sheet="message"]').textContent), 8000)
     && await until(() => !!q('[data-pp-sheet="message"] [data-nv-name-form]'), 8000));
   check('...with a way back, first', q('[data-pp-sheet] [data-pp-close]')?.textContent.includes('Back to your people'));
+  // Sam's screen has no note on it yet: the window says so -- in plain words (it said "no note panel" before).
+  check('*** the message window says a screen that shows no notes yet does not -- without the word "panel" ***',
+    await until(() => /Den does not show notes yet/.test(q('[data-pp-sheet] [data-nv-nopanel]')?.textContent || ''), 4000), q('[data-pp-sheet]')?.textContent.slice(0, 200));
+  const sheetWords = q('[data-pp-sheet="message"]')?.textContent || '';
+  check('*** PLAIN WORDS in the message window too ***', sheetWords.length > 50 && !plainWordProblems(sheetWords).length, J(plainWordProblems(sheetWords)));
   q('[data-pp-close]').click();
   check('...and Back closes it', !q('[data-pp-sheet]'));
   // More: on Home, the page's own press.
@@ -311,6 +316,17 @@ try {
   const $ = (s) => doc.querySelector(s);
   const $$ = (s) => [...doc.querySelectorAll(s)];
   const hbar = (k) => $(`#stage .tb-bar .tb-host [data-host="${k}"]`);
+  // What the bar SHOWS: its buttons, chips and status that take up room (hidden ones and a display:none group do not).
+  const shown = (el) => !!el && el.getClientRects().length > 0 && !el.closest('[hidden]');
+  const barShows = () => $$('#stage .tb-bar button, #stage .tb-bar [data-host-status]').filter(shown).map((b) => b.textContent.trim());
+  const barPlain = (where) => {
+    const words = barShows();
+    check(`*** ${where}: the bar is in plain words (no module, panel, dashboard, grant) ***`, words.length >= 3 && !plainWordProblems(words.join(' | ')).length,
+      J(words));
+    check(`${where}: no panel chips ("Your People", "Nimrod, The Helper"), no Switch module, nothing that pages through a panel`,
+      !shown($('#stage .tb-bar .tb-mods')) && !['switch', 'panel', 'bigger', 'smaller', 'back', 'next', 'playpause'].some((a) => shown($(`#stage .tb-bar .tb-actions:not(.tb-host) [data-act="${a}"]`)))
+      && !words.some((w) => /Your People|The Helper/.test(w)), J(words));
+  };
   await open(`user=${encodeURIComponent(D)}`);
   check('*** a plain arrival fills the window with Your people ***', await until(() => doc.body.classList.contains('is-land') && $('#stage .k-cell[data-kind="people"] [data-people-page]'), 45000),
     `land=${doc.body.classList.contains('is-land')} err=${doc.body.dataset.homeError || '-'}`);
@@ -324,12 +340,16 @@ try {
   check('*** no sideways scroll at 375 (the page or Your people) ***', doc.documentElement.scrollWidth <= doc.documentElement.clientWidth + 1
     && $('#stage .pp-root').scrollWidth <= $('#stage .pp-root').clientWidth + 1, `${doc.documentElement.scrollWidth} ${$('#stage .pp-root')?.scrollWidth}`);
   check('nothing made on the account by arriving', (await createProfilesClient({ user: D }).list()).length === 1);
+  check('(setup) the bar is drawn', await until(() => !!$('#stage .tb-bar') && barShows().length >= 3, 10000));
+  barPlain('375 wide');
   $('#stage [data-pp-act="more"]').click();
   check('*** More: Start here fills the window (profile, settings, Nimrod, devices) ***',
     await until(() => J($$('#stage .k-cell').map((c) => c.dataset.kind).filter(Boolean).sort()) === J(['devices', 'nimrod', 'profile', 'settings']) && doc.body.classList.contains('is-land'), 20000),
     J($$('#stage .k-cell').map((c) => c.dataset.kind)));
   check('*** ...and the bar carries the way back, first: ‹ Your people ***', await until(() => hbar('people')?.textContent === '‹ Your people', 6000)
     && $$('#stage .tb-bar .tb-host button')[0] === hbar('people'));
+  check('*** ...and away from Your people the whole bar is back (the panel chips, Switch module) ***',
+    await until(() => shown($('#stage .tb-bar .tb-mods')) && shown($('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="switch"]')), 6000), J(barShows()));
   hbar('people').click();
   check('*** ‹ Your people goes back ***', await until(() => !!$('#stage [data-people-page]') && !hbar('people'), 20000));
 
@@ -339,6 +359,8 @@ try {
   const ov2 = $('#stage .k-placed-overlay [data-helper]')?.getBoundingClientRect();
   check('Nimrod bottom right, inside the window', !!ov2 && ov2.left > 640 && ov2.top > 360 && ov2.bottom <= 720 && ov2.right <= 1280, J(ov2));
   check('no sideways scroll at 1280', doc.documentElement.scrollWidth <= 1281);
+  check('(setup) the bar is drawn at 1280', await until(() => barShows().length >= 3, 10000));
+  barPlain('1280x720');
 
   section('*** "Open on: Start here" still lands there ***');
   const dper = (await createProfilesClient({ user: D }).people())[0];
