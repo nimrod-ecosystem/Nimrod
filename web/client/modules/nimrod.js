@@ -88,7 +88,7 @@ import { elsewhereHTML, themeQrColours } from '../page_links.js';
 import { authHeaders } from '../auth.js';
 import {
   draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, stamp, noteContextFrom, panelOf, contextLine,
-  notesFileName, nearlyFull, NOTES_MAX,
+  notesFileName, nearlyFull, NOTES_MAX, planBrowserMove, movedLine,
 } from '../nimrod_notes.js';
 // "Try it as someone new": notes made as the test person go to the owner's record (try_new.js argues it).
 import { openTrialNotes, TRIAL_NOTE_MARK } from '../try_new.js';
@@ -366,11 +366,50 @@ registerModule(
               catch (err) { console.error('nimrod: the owner’s notes', err); h.destroy(); }
             }
           }
+          if (s.kind === 'person' && !moveTried && !torn) { moveTried = true; await moveBrowserNotes(s); }
           if (s.kind !== 'person' && hasPersonStore()) storeOpening = null;
           return s;
         }).catch((err) => { storeOpening = null; throw err; });
       }
       return storeOpening;
+    }
+    // *** WHAT THIS BROWSER KEPT BEFORE A PERSON WAS KNOWN, MOVED TO THEIR RECORD (2026-10-04). *** A landing tried
+    // before anybody saved it kept Nimrod's notes on its panel, in this browser, under one preview id shared by
+    // everybody using it. On the first load where a person is known they move to the person's record: the host's
+    // `ctx.personHost.browserNotes` finds them (try_new.js `browserNotesSource`), nimrod_notes.js `planBrowserMove`
+    // merges them, and the browser lets go ONLY after the record has them. So a failed write loses nothing, a move
+    // cut off half way runs again without doubling (by id), and a second person on the browser is handed nothing.
+    // While trying it as someone new, they go where every note then goes: the owner's record (`notesHome`). The
+    // person is told in one line (`movedNote`). No host source (a screen, a suite): nothing to move.
+    let moveTried = false;
+    let movedNote = '';
+    async function moveBrowserNotes(s) {
+      let src = null;
+      try { src = ctx.personHost?.browserNotes || null; } catch { src = null; }
+      if (!src || typeof src.find !== 'function' || typeof src.clear !== 'function') return;
+      const sink = notesHome || s;
+      // A record that could not be read is never written by a move: it could overwrite what is there.
+      if (!notesHome && s.loaded === false) return;
+      let found = [];
+      try { found = (await src.find()) || []; } catch (err) { console.error('nimrod: this browser’s notes', err); return; }
+      if (torn || !found.length) return;
+      // The AI's name and manner are the person's own (`store`), even while notes go to the owner's record.
+      const plan = planBrowserMove(sink.get() || {}, found, notesHome ? { fields: [] } : undefined);
+      if (plan.patch) {
+        sink.set(plan.patch);
+        try { await sink.flush?.(); } catch (err) { console.error('nimrod: moving this browser’s notes (kept there)', err); return; }
+      }
+      // On the record: now the browser lets go of exactly what moved, row by row.
+      for (const f of found) {
+        const clearNotes = plan.waiting === 0 && Array.isArray(f?.ai?.notes) && f.ai.notes.length > 0;
+        const fields = plan.fields.filter((k) => f?.ai?.[k] === plan.patch?.[k]);
+        if (!clearNotes && !fields.length) continue;
+        try { await src.clear(f, { notes: clearNotes, fields }); } catch (err) { console.error('nimrod: clearing this browser’s notes', err); }
+      }
+      if (torn) return;
+      if (plan.patch?.notes) notes = cleanNotes(plan.patch.notes);
+      if (plan.fields.length) aiP = aiPrefs({ ...aiP, ...Object.fromEntries(plan.fields.map((k) => [k, plan.patch[k]])) });
+      movedNote = movedLine(plan);
     }
     function saveAI(patch) {
       store?.set(patch);
@@ -832,6 +871,7 @@ registerModule(
           <button type="button" class="ng-btn" data-ng-stop data-ng-do="talk"
             data-help="${esc(`Talk it over with ${aiP.name}, your AI, typed or spoken. It can show you around the guide with you.`)}">Talk to ${esc(aiP.name)}</button>
         </div>
+        ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${tree}`;
     }
 
@@ -973,6 +1013,7 @@ registerModule(
           ${btnHTML('exportfile', 'Save as a file (.md)', 'Save every note as a Markdown file in your downloads.', notes.length ? '' : 'disabled')}</div>
         ${exportText ? `<textarea class="ng-export" data-ng-export readonly aria-label="Your notes as text">${esc(exportText)}</textarea>` : ''}
         <p class="ng-status" data-ng-kept>${esc(WHERE_KEPT[store?.kind] || '')}</p>
+        ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${noteItems(notes)}`;
     }
 

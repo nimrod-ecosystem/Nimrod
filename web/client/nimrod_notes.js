@@ -11,7 +11,9 @@
 
 // *** WHERE NOTES LIVE (checked 2026-10-03, not assumed): on the ACCOUNT. *** With a person known, the person
 // record (`/api/people/<id>/state/nimrod-ai`, nimrod_ai.js `openAIStore`), so they follow the person to every
-// screen and browser they sign into; state.js keeps a last-known-good copy in this browser for offline. With
+// screen and browser they sign into; state.js keeps a last-known-good copy in this browser for offline. That holds
+// on a landing nobody has saved yet too (2026-10-04: the page holding the preview hands its own person maker in,
+// `ctx.personHost`; before that those notes stayed in this browser, shared by everybody using it). With
 // no person (a host still resolving, Home's try-out stage), the Nimrod PANEL's own state on that dashboard.
 // A preview with no state at all: memory only, gone on reload. (The AI's address and a key are different:
 // those are this browser's, ai.js.)
@@ -159,6 +161,53 @@ export function addNote(list, note) {
   return [...cleanNotes(list), note].slice(-NOTES_MAX);
 }
 export const removeNote = (list, id) => cleanNotes(list).filter((n) => n.id !== id);
+
+// ---------------------------------------------------------------------------------------------------
+// *** NOTES THIS BROWSER KEPT BEFORE A PERSON WAS KNOWN, MOVED TO THE PERSON'S RECORD (2026-10-04). *** A landing
+// tried before anybody saved it ran over this browser's local store under ONE preview id, shared by everybody who
+// used the browser; with no person store there, Nimrod kept his notes on that panel. Now a person known is a
+// person's record (nimrod_ai.js `openAIStore`), so what the browser holds is moved across, once, on the first load
+// where a person is known. MOVED, not copied: the browser lets go only after the record has them (modules/nimrod.js),
+// so a second person on the same browser cannot be handed them too, and a failed write loses nothing.
+//   * Notes merge by id: one already on the record is not added twice (a move cut off half way runs again cleanly).
+//   * Nothing is lost to the cap: when the record has no room for all of them, NONE move and they wait in the browser
+//     (said, so the person can copy or delete some first). Moving some would push the oldest off the record.
+//   * The AI's name and manner (MOVED_AI_FIELDS) go across only where the record has none of its own.
+// ---------------------------------------------------------------------------------------------------
+export const MOVED_AI_FIELDS = Object.freeze(['name', 'persona']);
+
+/**
+ * `record`: the person's record now; `found`: [{ key, ai }] from this browser. Returns `{ patch, moved, waiting,
+ * fields }`: `patch` (null when the record is unchanged) is written to the record; `moved` notes are new to it;
+ * `waiting` did not fit and stay in the browser; `fields` are the AI fields copied across.
+ */
+export function planBrowserMove(record, found, { fields = MOVED_AI_FIELDS } = {}) {
+  const rec = record && typeof record === 'object' ? record : {};
+  const have = cleanNotes(rec.notes);
+  const ids = new Set(have.map((n) => n.id));
+  const incoming = [];
+  for (const f of Array.isArray(found) ? found : []) {
+    for (const n of cleanNotes(f?.ai?.notes)) if (!ids.has(n.id)) { ids.add(n.id); incoming.push(n); }
+  }
+  const fits = have.length + incoming.length <= NOTES_MAX;
+  const patch = {};
+  if (fits && incoming.length) patch.notes = cleanNotes([...have, ...incoming]);
+  const copied = [];
+  for (const k of fields) {
+    if (typeof rec[k] === 'string' && rec[k].trim()) continue;
+    const v = (Array.isArray(found) ? found : []).map((f) => f?.ai?.[k]).find((x) => typeof x === 'string' && x.trim());
+    if (v) { patch[k] = v; copied.push(k); }
+  }
+  return { patch: Object.keys(patch).length ? patch : null, moved: fits ? incoming.length : 0, waiting: fits ? 0 : incoming.length, fields: copied };
+}
+
+/** The one quiet line a move leaves. '' when there is nothing to say. */
+export function movedLine({ moved = 0, waiting = 0 } = {}) {
+  if (moved) return `Moved ${moved} note${moved === 1 ? '' : 's'} from this browser to your record.`;
+  if (waiting) return `${waiting} note${waiting === 1 ? '' : 's'} kept in this browser could not move to your record: it is full `
+    + `(${NOTES_MAX}). Copy or delete some, then open Nimrod again.`;
+  return '';
+}
 
 /** Every note as one block of text to paste into a chat: dated, newest last. */
 // The context goes on its own line under the heading, in italics, so a pasted list still reads as notes.

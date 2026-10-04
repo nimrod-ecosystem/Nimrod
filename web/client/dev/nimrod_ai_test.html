@@ -42,7 +42,7 @@ import {
 import { mountClaudeSettings } from '../claude_settings.js';
 import {
   stamp, fallbackNote, notePrompt, draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, NOTES_MAX,
-  NOTES_WARN_AT, noteContextFrom, contextLine, notesFileName, nearlyFull,
+  NOTES_WARN_AT, noteContextFrom, contextLine, notesFileName, nearlyFull, planBrowserMove, movedLine, MOVED_AI_FIELDS,
 } from '../nimrod_notes.js';
 import { connectHelp } from '../modules/nimrod.js';
 import { DEFAULT_BASE_URL } from '../ai.js';
@@ -908,6 +908,144 @@ try {
     check('"Remove the key" removes it', /removed/.test(host.querySelector('[data-cs-msg]').textContent) && /not set up/.test(host.querySelector('[data-cs-status]').textContent));
     check('the page names nobody', !NAMES.test(host.textContent));
     host.remove();
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-04: a person known is a person’s record, even on a landing nobody has saved ***');
+  {
+    // A landing tried before it is saved: the kiosk's own makePersonState has nothing (null: the preview runs over
+    // this browser's store), and the page holding the preview hands its own maker in (ctx.personHost.state).
+    const ps = personStores();
+    const browserOf = (rows) => {
+      const data = JSON.parse(JSON.stringify(rows));
+      const calls = { find: 0, clear: [] };
+      return { calls, rows: () => data,
+        find: async () => { calls.find += 1; return data.filter((r) => r.ai?.notes?.length || MOVED_AI_FIELDS.some((k) => r.ai?.[k])).map((r) => ({ key: r.key, ai: JSON.parse(JSON.stringify(r.ai)) })); },
+        clear: async (f, { notes = false, fields = [] } = {}) => {
+          calls.clear.push({ key: f.key, notes, fields: [...fields] });
+          const r = data.find((x) => x.key === f.key);
+          if (!r) return;
+          if (notes) delete r.ai.notes;
+          for (const k of fields) delete r.ai[k];
+        } };
+    };
+    const mk = async (person, { state = fakeState(), browser = null, personState = (pid, key) => ps.make(pid, key) } = {}) => {
+      const mount = box();
+      const inst = mountModule('nimrod', { mount, bus: createBus(), state, events: null, output: fakeOutput(), user: null,
+        profileId: person ? `home-example-preview-${person}` : 'home-example-preview', personId: person, instanceId: 'home-ex-guide',
+        ai: fakeAI(), makePersonState: () => null, personHost: { state: personState, ...(browser ? { browserNotes: browser } : {}) } });
+      await inst.init();
+      const q = (s) => mount.querySelector(s);
+      const doBtn = (w) => mount.querySelector(`[data-ng-do="${w}"]`);
+      const probe = () => inst.impl.__probe();
+      const write = async (text) => {
+        doBtn('notes').click();
+        await until(() => q('[data-ng-field="quick"]'));
+        q('[data-ng-field="quick"]').value = text;
+        doBtn('savequick').click();
+      };
+      return { mount, inst, q, doBtn, probe, write, done: () => { inst.destroy(); mount.remove(); } };
+    };
+    const rec = (pid) => ps.made[`${pid}/${AI_STATE_KEY}`]?.data() || {};
+
+    // ---- the pure plan ----
+    const nA = makeNote('a', { at: 1e12 + 1 }); const nB = makeNote('b', { at: 1e12 + 2 }); const nC = makeNote('c', { at: 1e12 + 3 });
+    const p1 = planBrowserMove({ notes: [nB] }, [{ key: 'k', ai: { notes: [nA, nB, nC], name: 'Ada' } }]);
+    check('*** the plan: merged by id (none twice), oldest first; only the new ones count as moved ***',
+      J(p1.patch.notes.map((n) => n.id)) === J([nA.id, nB.id, nC.id]) && p1.moved === 2 && p1.waiting === 0, J(p1));
+    check('...the AI’s name goes across where the record has none, and never over one it has',
+      p1.patch.name === 'Ada' && J(p1.fields) === J(['name']) && planBrowserMove({ name: 'Robin' }, [{ key: 'k', ai: { name: 'Ada' } }]).patch === null);
+    const full = Array.from({ length: NOTES_MAX }, (_, i) => makeNote(`f${i}`, { at: 1e11 + i }));
+    const p2 = planBrowserMove({ notes: full }, [{ key: 'k', ai: { notes: [nA, nC] } }]);
+    check('*** a full record: NONE move (the oldest is never pushed off), and they are said to be waiting ***',
+      p2.patch === null && p2.moved === 0 && p2.waiting === 2 && /could not move/.test(movedLine(p2)) && /full/.test(movedLine(p2)), J({ ...p2, patch: !!p2.patch }));
+    check('the line: one quiet sentence, the number right', movedLine({ moved: 1 }) === 'Moved 1 note from this browser to your record.'
+      && movedLine({ moved: 3 }) === 'Moved 3 notes from this browser to your record.' && movedLine({}) === '');
+
+    // ---- on the landing, tried ----
+    const shared = fakeState();       // ONE panel row, as the old shared preview id was: two people, one browser
+    const ann = await mk('ann', { state: shared });
+    await ann.write('The landing should say who it is for.');
+    check('*** unsaved landing, a person known: the note is on the PERSON’S record ***',
+      rec('ann').notes?.length === 1 && rec('ann').notes[0].text === 'The landing should say who it is for.', J(rec('ann')));
+    check('*** ...and not on the preview’s panel row (this browser) ***', !shared.data().ai?.notes?.length, J(shared.data()));
+    check('it says they are kept on the account', ann.probe().storeKind === 'person' && /Kept on your account/.test(ann.q('[data-ng-kept]')?.textContent || ''));
+    ann.done();
+    const bob = await mk('bob', { state: shared });
+    await until(() => bob.probe().storeKind === 'person');
+    check('*** two people on one browser: the second sees none of the first’s notes ***', bob.probe().notes.length === 0, J(bob.probe().notes));
+    await bob.write('Bob’s own note.');
+    check('*** ...and each note is on its own person’s record ***', rec('bob').notes?.length === 1 && rec('bob').notes[0].text === 'Bob’s own note.'
+      && rec('ann').notes?.length === 1 && rec('ann').notes[0].text === 'The landing should say who it is for.');
+    bob.done();
+
+    // ---- the move ----
+    const browser = browserOf([{ key: 'home-ex-guide', ai: { notes: [nA, nB, nC], name: 'Ada' } }, { key: 'home-ex-other', ai: { name: 'x' } }]);
+    ps.make('cat', AI_STATE_KEY, { notes: [nB] });
+    const cat = await mk('cat', { browser });
+    await until(() => cat.probe().storeKind === 'person' && browser.calls.clear.length);
+    await sleep(30);
+    check('*** the browser’s notes are moved to the person’s record: nothing lost, none twice ***',
+      J((rec('cat').notes || []).map((n) => n.id)) === J([nA.id, nB.id, nC.id]), J((rec('cat').notes || []).map((n) => n.text)));
+    check('*** ...and the browser lets go of them (once moved, they are not there to move again) ***',
+      !browser.rows()[0].ai.notes && browser.calls.clear.some((c) => c.key === 'home-ex-guide' && c.notes === true), J(browser.calls.clear));
+    check('the AI’s name the person gave it in this browser came too (their record had none)', rec('cat').name === 'Ada' && cat.probe().ai.name === 'Ada');
+    check('*** one quiet line says so ***', /Moved 2 notes from this browser to your record\./.test(cat.mount.textContent), cat.mount.textContent.slice(0, 200));
+    check('the module shows the merged list', cat.probe().notes.length === 3);
+    cat.done();
+    const findsBefore = browser.calls.find;
+    const cat2 = await mk('cat', { browser });
+    await until(() => cat2.probe().storeKind === 'person' && browser.calls.find > findsBefore);
+    await sleep(30);
+    check('*** loaded again: nothing moves twice, no line ***', (rec('cat').notes || []).length === 3 && !/Moved \d/.test(cat2.mount.textContent));
+    cat2.done();
+    const dan = await mk('dan', { browser });
+    await until(() => dan.probe().storeKind === 'person');
+    await sleep(30);
+    check('*** somebody else on this browser afterwards gets none of them ***', !(rec('dan').notes || []).length && dan.probe().notes.length === 0);
+    dan.done();
+
+    // A write the record refuses: the browser keeps them (nothing lost), and the next load tries again.
+    const b2 = browserOf([{ key: 'home-ex-guide', ai: { notes: [nA] } }]);
+    const broken = fakeState({});
+    broken.flush = async () => { throw new Error('offline'); };
+    const eve = await mk('eve', { browser: b2, personState: () => broken });
+    await until(() => b2.calls.find > 0);
+    await sleep(50);
+    check('*** the record could not be written: the browser keeps its notes, nothing is cleared, no line ***',
+      b2.rows()[0].ai.notes?.length === 1 && b2.calls.clear.length === 0 && !/Moved \d/.test(eve.mount.textContent));
+    eve.done();
+    // A record that could not be READ is never written over by a move.
+    const unread = fakeState({ notes: [nB] });
+    unread.load = async () => { throw new Error('offline'); };
+    const b3 = browserOf([{ key: 'home-ex-guide', ai: { notes: [nA] } }]);
+    const fay = await mk('fay', { browser: b3, personState: () => unread });
+    await until(() => fay.probe().storeKind === 'person');
+    await sleep(50);
+    check('*** a record that could not be read: no move at all (it could overwrite what is there) ***',
+      b3.calls.clear.length === 0 && J(unread.data().notes.map((n) => n.id)) === J([nB.id]));
+    fay.done();
+    // Full: waiting, said.
+    ps.make('gus', AI_STATE_KEY, { notes: full });
+    const b4 = browserOf([{ key: 'home-ex-guide', ai: { notes: [nA] } }]);
+    const gus = await mk('gus', { browser: b4 });
+    await until(() => b4.calls.find > 0 && gus.probe().storeKind === 'person');
+    await sleep(50);
+    check('*** a full record: the browser keeps them, and the line says why ***', b4.rows()[0].ai.notes?.length === 1 && (rec('gus').notes || []).length === NOTES_MAX
+      && /could not move to your record/.test(gus.mount.textContent));
+    gus.done();
+
+    // ---- nobody known: as before ----
+    const b5 = browserOf([{ key: 'home-ex-guide', ai: { notes: [nA] } }]);
+    const panel = fakeState();
+    const nobody = await mk(null, { state: panel, browser: b5 });
+    await until(() => nobody.probe().storeKind);
+    await nobody.write('Nobody signed in.');
+    check('*** no person: the panel keeps the note, as before, and nothing is moved ***', nobody.probe().storeKind === 'panel'
+      && panel.data().ai?.notes?.length === 1 && b5.calls.find === 0 && b5.rows()[0].ai.notes.length === 1, J(panel.data()));
+    nobody.done();
+    const stP = await openAIStore({ personId: 'p9', makePersonState: () => null, personHost: { state: (pid, key) => ps.make(pid, key) } });
+    check('openAIStore: the host’s person maker stands in when the screen’s own has nothing', stP.kind === 'person' && stP.loaded === true);
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

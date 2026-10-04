@@ -23,7 +23,7 @@ touched. Needs the server (it drives the real <code>/api/people</code>), and ope
 <script type="module">
 import {
   TRY_NEW_KEY, TRY_STASH_KEY, TRIAL_KEY, NOTES_RECORD_KEY, NOTES_MAX as TN_NOTES_MAX, TRIAL_NAME, TRYING_LABEL,
-  TRIAL_NOTE_MARK, PREVIEW_BASE, previewIdFor, FIRST_RUN_KEYS, LAST_PERSON_KEY as TN_LAST,
+  TRIAL_NOTE_MARK, PREVIEW_BASE, previewIdFor, previewScopeFor, browserNotesSource, FIRST_RUN_KEYS, LAST_PERSON_KEY as TN_LAST,
   readTrial, trialShowing, stashBrowser, clearFirstRun, restoreBrowser, mergeNotes, readTrialRecord, findTrialPerson,
   startTrial, startOver, backToMe, removeTrial, syncTrial, openTrialNotes, mountTrialBar,
 } from '../try_new.js';
@@ -431,6 +431,76 @@ try {
     check('*** and at the end of everything: the owner’s own data exactly as it began ***', (await mine()) === before);
     check('the owner’s notes: every one kept, none twice', new Set(((await readPerson(me, AI_STATE_KEY)).notes || []).map((n) => n.id)).size
       === ((await readPerson(me, AI_STATE_KEY)).notes || []).length);
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-04: a landing nobody has saved, a person known: notes on the person’s record; walk and points per person ***');
+  {
+    const { mountEmbeddedScreen } = await import('../home_embed.js');
+    const { createLocalBackend, localScopeRows, clearLocalScope } = await import('../local_store.js');
+    check('*** the preview id is the person’s own; with nobody known, the one shared id as before ***',
+      previewScopeFor('a') === previewIdFor('a') && previewScopeFor('a') !== previewScopeFor('b') && previewScopeFor('') === PREVIEW_BASE && previewScopeFor(null) === PREVIEW_BASE);
+    check('modules.html opens the tried landing under it', modulesSrc.includes('previewScopeFor(HOME.person?.id)'));
+    check('...and hands the preview the page’s own person maker and this browser’s old notes',
+      /personHost/.test(modulesSrc) && modulesSrc.includes('browserNotesSource('));
+    const backend = createLocalBackend();
+    const scopeMe = previewScopeFor(me);
+    await clearLocalScope(PREVIEW_BASE); await clearLocalScope(scopeMe);
+    // What an earlier visit left under the shared id: Nimrod's notes on his panel, a name, and his walk.
+    const o1 = note('n-browser-1', 'Made on the landing before anybody saved it.', Date.now() - 50000);
+    const o2 = note('n-browser-2', 'And another one.', Date.now() - 40000);
+    { const h = backend.makeState('home-ex-guide', {}, PREVIEW_BASE); await h.load(); h.set({ ai: { notes: [o1, o2], name: 'Pip' }, walk: ['hello'] }); await h.flush(); h.destroy(); }
+    const src = browserNotesSource({ rows: localScopeRows, makeState: backend.makeState });
+    const found = await src.find();
+    check('browserNotesSource finds what the shared preview kept, and only there', found.length === 1 && found[0].key === 'home-ex-guide'
+      && found[0].ai.notes.length === 2 && (await browserNotesSource({ rows: localScopeRows, makeState: backend.makeState, scope: scopeMe }).find()).length === 0, J(found));
+    const ownerBefore = ((await readPerson(me, AI_STATE_KEY)).notes || []).length;
+    const stage = document.createElement('div'); stage.style.cssText = 'position:relative;width:900px;height:700px'; document.body.append(stage);
+    const record = { id: scopeMe, name: 'Start here', person_id: me, modules: [{ id: 'home-ex-guide', type: 'nimrod', position: 0 }] };
+    const mountIt = () => mountEmbeddedScreen({ stage, record, layout: { preset: 'full', slots: ['home-ex-guide'] },
+      personHost: { state: mps, browserNotes: src } });
+    let e = await mountIt();
+    const g = () => stage.querySelector('[data-nimrod-guide]');
+    const ownerNotes = async () => (await readPerson(me, AI_STATE_KEY)).notes || [];
+    const movedIn = await until(async () => { const n = await ownerNotes(); return [o1.id, o2.id].every((id) => n.some((x) => x.id === id)); }, 10000);
+    check('*** on the first load with a person known, the browser’s notes are on the person’s record ***', !!g() && movedIn, J({ guide: !!g(), n: (await ownerNotes()).map((x) => x.id) }));
+    const sharedRow = (await localScopeRows(PREVIEW_BASE)).find((r) => r.key === 'home-ex-guide');
+    check('*** ...and gone from this browser; the walk stays, and the name too (their record has its own) ***',
+      !sharedRow?.data?.ai?.notes && J(sharedRow?.data?.walk) === J(['hello']) && sharedRow?.data?.ai?.name === 'Pip' && (await readPerson(me, AI_STATE_KEY)).name === 'Robin', J(sharedRow));
+    check('*** one quiet line says so ***', await until(() => /Moved 2 notes from this browser to your record\./.test(g()?.textContent || '')), g()?.textContent?.slice(0, 200));
+    // A note made now: the person's record, not the preview's panel row.
+    g().querySelector('[data-ng-do="notes"]').click();
+    await until(() => g().querySelector('[data-ng-field="quick"]'));
+    g().querySelector('[data-ng-field="quick"]').value = 'Written on the landing, nobody saved it.';
+    g().querySelector('[data-ng-do="savequick"]').click();
+    check('*** a note written on the unsaved landing is on the person’s record ***',
+      await until(async () => (await ownerNotes()).some((x) => x.text === 'Written on the landing, nobody saved it.'), 8000));
+    const myRows = await localScopeRows(scopeMe);
+    check('*** ...not under the preview id in this browser ***', !myRows.some((r) => r.data?.ai?.notes?.length), J(myRows.map((r) => r.key)));
+    e.destroy();
+    e = await mountIt();
+    await until(() => g());
+    await sleep(1500);
+    const after = await ownerNotes();
+    check('*** loaded again: nothing moved twice, nothing lost ***', after.length === ownerBefore + 3 && new Set(after.map((x) => x.id)).size === after.length
+      && !/Moved \d/.test(g()?.textContent || ''), `${ownerBefore} -> ${after.length}`);
+    e.destroy(); stage.remove();
+
+    // Tour points: the ledger stays with the dashboard (unlocks.js decision 1); on the unsaved landing that is the
+    // person's own preview, so each step pays once ever PER PERSON.
+    const pa = previewScopeFor(`pts-a-${OWNER}`), pb = previewScopeFor(`pts-b-${OWNER}`);
+    const gateIn = (scope) => createUnlockGate({ makeState: (k, o) => backend.makeState(k, o, scope), makeEvents: (k, o) => backend.makeEvents(k, o, scope) });
+    const pointsIn = async (scope) => { const ev = backend.makeEvents(POINTS_STREAM, {}, scope); await ev.load(); const n = ev.get().events.length; ev.destroy(); return n; };
+    const ga = gateIn(pa); await ga.load(); await ga.setFlags({ game: true });
+    check('person A’s step pays', !!(await ga.payTourStep('devices')));
+    ga.destroy();
+    const gb = gateIn(pb); await gb.load(); await gb.setFlags({ game: true });
+    check('*** person B, same browser: the same step pays them too (A having walked it does not stop it) ***', !!(await gb.payTourStep('devices')));
+    gb.destroy();
+    const ga2 = gateIn(pa); await ga2.load();
+    check('*** and A again: the step does not pay twice ***', (await ga2.payTourStep('devices')) === null && (await pointsIn(pa)) === 1 && (await pointsIn(pb)) === 1);
+    ga2.destroy();
+    for (const s of [PREVIEW_BASE, scopeMe, pa, pb]) await clearLocalScope(s);
   }
 } catch (e) {
   check('the suite ran to completion', false, String(e && (e.stack || e.message)));
