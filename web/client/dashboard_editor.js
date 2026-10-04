@@ -31,6 +31,7 @@ import { getManifest } from './module.js';
 import { placedGeometry } from './layout.js';
 import { sceneDoors, withDoor, tidyScene } from './room_doors.js';
 import { SHOWING_TYPES } from './dashboard_map.js';
+import { AUTOMATION_TOPICS } from './automation_topics.js';
 
 /** The windows the edit view opens by default, in this order (the first one's Close is the walk's first stop). */
 export const EDIT_WINDOWS_DEFAULT = Object.freeze(['transform', 'layers', 'links']);
@@ -75,13 +76,17 @@ export function newDashboardName(list = [], base = NEW_DASHBOARD_NAME) {
  *                    the Automation window, whose switch walk it picks (edit_windows.js). Absent: point.
  *                    `scan.back()` is the walk's back: true when a window used it (came out of a row, or put
  *                    the Automation window away), false when the host should end the editing as before.
+ *   topics           2026-10-04: the message names the Automation window offers for "a message" (a value or a
+ *                    getter; automation_panel.js `topics`). Absent: automation_topics.js AUTOMATION_TOPICS -- the
+ *                    messages that carry a number, each with a plain label -- so a new message rule is finished by
+ *                    switch alone, on every host, with no host change. [] offers only the names rules already use.
  */
 export function openDashboardEditor(opts = {}) {
   const {
     arr, mountIn = null, host = null, baseLayout = () => arr.layout(), apply = (l) => arr.applyPlaced(l),
     save = null, windows = EDIT_WINDOWS_DEFAULT, listDashboards = null, createDashboard = null,
     currentId = () => null, loadMap = null, onGo = null, hidePolicy = null, onClose = null, onChange = null,
-    automation = null, chooseMode = 'point',
+    automation = null, chooseMode = 'point', topics = AUTOMATION_TOPICS,
   } = opts;
   if (!arr) throw new Error('openDashboardEditor: an arrangement is required');
   const doc = (host || mountIn)?.ownerDocument || document;
@@ -236,7 +241,7 @@ export function openDashboardEditor(opts = {}) {
     } else if (kind === 'automation' && automation) {
       // Row 2.41. Its own Close puts it away; the editing goes on (as the map).
       opened[kind] = mountAutomationWindow(h, {
-        engine: automation, panels: autoPanels, selected: chosenPanel, chooseMode,
+        engine: automation, panels: autoPanels, selected: chosenPanel, chooseMode, topics,
         onClose: () => { delete opened.automation; h.remove(); opened.layers?.render?.(); tell(); },
       });
     } else { h.remove(); return null; }

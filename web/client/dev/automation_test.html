@@ -785,6 +785,99 @@ try {
     check('Remove takes it away and the setting is its own again', eng.list().length === 0 && state.get().inkLightness === undefined);
     panel.destroy(); root.remove(); eng.destroy();
   }
+
+  // ================= the messages a rule can listen to (2026-10-04) =================
+  // The gap from 6114bb1: the message name offered only names rules already used, so a NEW message rule needed a
+  // keyboard. automation_topics.js is the list the edit view now offers. Each entry must be a REAL topic (its
+  // owner's constant), carry a plain label, and -- the test that matters -- move a setting when its REAL producer
+  // speaks, read the way the entry says (its field, its range). A listed message that moved nothing would be a
+  // rule that looks set up and does nothing.
+  section('2026-10-04: the messages a rule can listen to -- real topics, plain labels, each proven by its own producer');
+  {
+    const { AUTOMATION_TOPICS, AUTOMATION_TOPIC_RANGES } = await import('../automation_topics.js');
+    const { AIM_TOPIC, createAim } = await import('../aim.js');
+    const { EDGE_TOPIC, createInputBus } = await import('../input.js');
+    const { SCORE_TOPIC, createScoreSource } = await import('../score_source.js');
+    const { POINTS_TOPIC, createPointsLedger } = await import('../points.js');
+    const { LISTENING_TOPIC, ANSWERING_TOPIC } = await import('../input_speech.js');
+    const { createDefaultRegistry } = await import('../actions.js');
+    const J = (v) => JSON.stringify(v);
+    const keyOf = (e) => `${e.topic}|${e.path || ''}`;
+    const owners = [AIM_TOPIC, EDGE_TOPIC, SCORE_TOPIC, POINTS_TOPIC, LISTENING_TOPIC, ANSWERING_TOPIC];
+    check('there is a list', Array.isArray(AUTOMATION_TOPICS) && AUTOMATION_TOPICS.length >= owners.length, String(AUTOMATION_TOPICS?.length));
+    check('*** every name is a REAL topic, taken from the file that publishes it (none hand-typed) ***',
+      AUTOMATION_TOPICS.every((e) => owners.includes(e.topic)), J(AUTOMATION_TOPICS.map((e) => e.topic)));
+    check('*** every one has a plain label, not its topic name ***',
+      AUTOMATION_TOPICS.every((e) => typeof e.label === 'string' && e.label.trim() && e.label !== e.topic && !e.label.includes('/')),
+      J(AUTOMATION_TOPICS.map((e) => e.label)));
+    check('each says where its number comes from (a hint)', AUTOMATION_TOPICS.every((e) => typeof e.hint === 'string' && e.hint.trim()));
+    check('no message is listed twice (topic and field)', new Set(AUTOMATION_TOPICS.map(keyOf)).size === AUTOMATION_TOPICS.length);
+    check('each range spans something, lowest first', AUTOMATION_TOPICS.every((e) => Array.isArray(e.range) && e.range[0] < e.range[1]));
+    check('the sources asked for are covered: the pointer, a switch press, a game\'s score, points, speech',
+      owners.every((t) => AUTOMATION_TOPICS.some((e) => e.topic === t)));
+    check('*** no verb topic is listed: a press carries no number (a switch drives a setting through "a verb") ***',
+      !AUTOMATION_TOPICS.some((e) => e.topic.startsWith('verb/')) && Number.isNaN(readNumber(undefined)));
+    check('the list cannot be changed by whoever imports it', Object.isFrozen(AUTOMATION_TOPICS) && AUTOMATION_TOPICS.every((e) => Object.isFrozen(e)));
+
+    const FIELD = { settings: [{ key: 'level', label: 'Level', kind: 'number', min: 0, max: 100, default: 50 }] };
+    const proven = new Set();
+    const find = (topic, path = null) => AUTOMATION_TOPICS.find((e) => e.topic === topic && (e.path || null) === path);
+    async function prove(entry, why, fire, want) {
+      if (!entry) { check(`(${why}) is listed`, false); return; }
+      const bus = createBus();
+      const eng = createAutomation({ bus });
+      const st = eng.wrapState('p', memState({ level: 50 }), { manifest: FIELD });
+      const res = eng.add({ target: { instance: 'p', key: 'level' },
+        source: { kind: 'bus', topic: entry.topic, path: entry.path }, map: { inMin: entry.range[0], inMax: entry.range[1] } });
+      await fire(bus);
+      const got = eng.overlay('p').level;
+      if (res.ok && got === want) proven.add(keyOf(entry));
+      check(`*** "${entry.label}": ${why} moves a setting (to ${want}) ***`, res.ok && got === want, `${got} ${J(res)}`);
+      eng.destroy();
+    }
+    await prove(find(AIM_TOPIC, 'x'), 'the real aim (a mouse 75% across)', (bus) => { createAim({ bus }).report('pointer:mouse', 0.75, 0.25); }, 75);
+    await prove(find(AIM_TOPIC, 'y'), 'the real aim (25% down)', (bus) => { createAim({ bus }).report('pointer:mouse', 0.75, 0.25); }, 25);
+    await prove(find(EDGE_TOPIC, 'heldMs'), 'the real input bus (a switch held half the span)', (bus) => {
+      let t = 1000;
+      const input = createInputBus({ bus, actions: createDefaultRegistry(), now: () => t });
+      input.down('switch:0', 'button:0');
+      t += AUTOMATION_TOPIC_RANGES.heldMs[1] / 2;
+      input.up('switch:0', 'button:0');
+    }, 50);
+    await prove(find(SCORE_TOPIC), 'a real score source (half the span)', (bus) => {
+      createScoreSource(bus, { source: 'trivia', label: 'Trivia: right answers' }).set(AUTOMATION_TOPIC_RANGES.score[1] / 2);
+    }, 50);
+    await prove(find(POINTS_TOPIC), 'a real points ledger (an award of half the span)', async (bus) => {
+      const makeEvents = () => ({ get: () => ({ events: [] }), append: async () => {}, load: async () => {}, startPolling() {}, subscribe: () => () => {}, destroy() {} });
+      await createPointsLedger({ makeEvents, bus }).award({ amount: AUTOMATION_TOPIC_RANGES.points[1] / 2, source: 'test' });
+    }, 50);
+    // Speech's two states: attachSpeech needs a recogniser; these are the payloads it publishes (input_speech.js
+    // `announce({ on, reason })` and the answering `{ on, source, instanceId, phase }`).
+    await prove(find(LISTENING_TOPIC, 'on'), 'listening after the wake phrase', (bus) => { bus.publish(LISTENING_TOPIC, { on: true, reason: 'wake', ms: 8000 }); }, 100);
+    await prove(find(ANSWERING_TOPIC, 'on'), 'a game waiting for a spoken answer', (bus) => { bus.publish(ANSWERING_TOPIC, { on: true, source: 'trivia', instanceId: 't1', phase: 'answer' }); }, 100);
+    check('*** EVERY listed message is proven by a producer (a new one cannot be added unproven) ***',
+      AUTOMATION_TOPICS.every((e) => proven.has(keyOf(e))), J(AUTOMATION_TOPICS.filter((e) => !proven.has(keyOf(e))).map(keyOf)));
+
+    // The panel takes the entries: shown by label, chosen into topic + field + range.
+    const eng = createAutomation({ bus: createBus() });
+    eng.wrapState('p', memState({ level: 50 }), { manifest: FIELD });
+    const root = document.createElement('div');
+    host.append(root);
+    const panel = mountAutomationPanel(root, { engine: eng, panels: () => [{ id: 'p', title: 'The lamp', manifest: FIELD }],
+      topics: () => AUTOMATION_TOPICS, chooseMode: 'step' });
+    const stops = panel.scan.stops();
+    const topicRow = stops.find((n) => n.dataset.autoRow === 'topic');
+    check('*** given the list, the message name is a switch stop ***', !!topicRow);
+    panel.scan.light(topicRow);
+    panel.scan.select();
+    const opts = [...root.querySelectorAll('[data-auto-row="topic"] [data-auto-opt]')];
+    check('its choices are the labels', opts.length === AUTOMATION_TOPICS.length && opts.every((b, i) => b.textContent === AUTOMATION_TOPICS[i].label),
+      J(opts.map((b) => b.textContent)));
+    panel.scan.back();
+    check('*** nothing is chosen for the person: a stray Add makes nothing ***',
+      (panel.form.requestSubmit(), eng.list().length === 0) && /missing/.test(root.querySelector('[data-status]').textContent));
+    panel.destroy(); root.remove(); eng.destroy();
+  }
   th.destroy();
 
 } catch (e) {

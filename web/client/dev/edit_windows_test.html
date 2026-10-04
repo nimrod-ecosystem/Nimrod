@@ -970,6 +970,135 @@ section('2026-10-04: the Automation window by switch -- rows then items (step th
 }
 
 // =====================================================================
+// 2026-10-04 (gap from 6114bb1): a brand-new MESSAGE rule still needed a keyboard once -- the message name offered only
+// names the screen's rules already used. The edit view now hands the window the list of messages that carry a number
+// (automation_topics.js), each with a plain label, so the whole rule is made by switch; the box stays for a keyboard.
+section('2026-10-04: a new message rule by switch alone, start to finish; a typed name still works');
+{
+  const { createAutomation } = await import('../automation.js');
+  const { createBus } = await import('../bus.js');
+  const { AUTOMATION_TOPICS, AUTOMATION_TOPIC_RANGES } = await import('../automation_topics.js');
+  const { AIM_TOPIC, createAim } = await import('../aim.js');
+  const { EDGE_TOPIC, createInputBus } = await import('../input.js');
+  const { createDefaultRegistry } = await import('../actions.js');
+  const { mountAutomationWindow } = W;
+  const LEVEL = { settings: [{ key: 'level', label: 'Level', kind: 'number', min: 0, max: 100, default: 50 }] };
+  const base = () => ({ row: { level: 50 }, get() { return this.row; }, set(p) { this.row = { ...this.row, ...p }; return Promise.resolve(); }, subscribe: () => () => {} });
+  const rowOf = (n) => n?.closest?.('[data-auto-row]')?.dataset.autoRow ?? (n?.dataset?.ew === 'close' ? 'close' : null);
+  const walkTo = (w, pred, max = 80) => { for (let i = 0; i < max; i++) { const c = w.current(); if (c && pred(c)) return true; w.focusStep(1); } return !!(w.current() && pred(w.current())); };
+  const val = (w, n) => w.el.querySelector(`[data-a="${n}"]`)?.value;
+  const aimX = AUTOMATION_TOPICS.find((e) => e.topic === AIM_TOPIC && e.path === 'x');
+  const held = AUTOMATION_TOPICS.find((e) => e.topic === EDGE_TOPIC && e.path === 'heldMs');
+  // The choice picker by switch: rows (Keep first, then rows of tiles), select goes into a row, select takes a tile.
+  const pickTile = (w, label) => {
+    for (let g = 0; g < 30; g++) {
+      const cur = w.current();
+      if (!cur) { w.select(); continue; }
+      const tiles = [...cur.querySelectorAll('[data-chp-pick]')];
+      const i = tiles.findIndex((t) => t.querySelector('.chp-name')?.textContent === label);
+      if (i >= 0) {
+        if (tiles.length > 1) { w.select(); for (let n = 0; n < i; n++) w.focusStep(1); }
+        w.select();
+        return true;
+      }
+      w.focusStep(1);
+    }
+    return false;
+  };
+
+  // ---- ONE AT A TIME (point and click, everybody's default): the name is a long list, so it opens the picker ----
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const st = eng.wrapState('lamp', base(), { manifest: LEVEL });
+    const w = mountAutomationWindow(host, { engine: eng, panels: () => [{ id: 'lamp', title: 'The lamp', manifest: LEVEL }],
+      selected: 'lamp', topics: AUTOMATION_TOPICS });
+    check('(the window walks one stop at a time; driven by a message, as a new rule starts)', w.scanMode() === 'one' && val(w, 'kind') === 'bus');
+    check('*** the message name IS a stop now (names to choose from) ***', w.scanTargets().some((n) => rowOf(n) === 'topic'));
+    walkTo(w, (n) => rowOf(n) === 'topic');
+    w.select();
+    const pick = () => w.el.querySelector('[data-choice-picker]');
+    check('*** a press on it opens the choice picker (more than five names) ***', !!pick() && w.holds());
+    const names = [...w.el.querySelectorAll('[data-chp-pick] .chp-name')].map((n) => n.textContent);
+    check('*** the picker shows each message by its plain LABEL, not its topic ***',
+      AUTOMATION_TOPICS.every((e) => names.includes(e.label)) && !names.some((t) => t.includes('/')), J(names));
+    check('...and the topic rides as its hint, so a keyboard user learns the name',
+      [...w.el.querySelectorAll('[data-chp-pick] .chp-hint')].some((h) => h.textContent.includes(AIM_TOPIC)));
+    check('(by switch) the pointer, left to right, is taken from the picker', pickTile(w, aimX.label));
+    check('*** chosen: the picker goes, the box holds the topic, the field it reads goes with it ***',
+      !pick() && !w.holds() && val(w, 'topic') === AIM_TOPIC && val(w, 'path') === 'x', `${val(w, 'topic')} ${val(w, 'path')}`);
+    walkTo(w, (n) => rowOf(n) === 'add');
+    w.select();
+    const r = eng.list()[0];
+    check('*** Add, by switch alone: a message rule on the pointer\'s x, start to finish, no key pressed ***',
+      eng.list().length === 1 && r.source.kind === 'bus' && r.source.topic === AIM_TOPIC && r.source.path === 'x' && r.target.instance === 'lamp', J(eng.list()));
+    createAim({ bus }).report('pointer:mouse', 0.3, 0.9);
+    check('*** ...and the real pointer drives it (30% across -> 30) ***', st.get().level === 30, String(st.get().level));
+    check('the list says it in words, not as a topic', w.el.querySelector('[data-binding]')?.textContent.includes(aimX.label), w.el.querySelector('[data-binding]')?.textContent);
+    // Typed: a name the list does not have, by keyboard. The field a chosen message read must not stay behind.
+    eng.remove(r.id);
+    walkTo(w, (n) => rowOf(n) === 'topic');
+    w.select();
+    pickTile(w, aimX.label);
+    const box = w.el.querySelector('[data-a="topic"]');
+    box.value = 'puzzle/dial';
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('*** typing a name drops the chosen message\'s field ***', val(w, 'path') === '', val(w, 'path'));
+    w.panel.form.requestSubmit();
+    check('*** a typed custom name still works: the rule listens to exactly what was typed ***',
+      eng.list().length === 1 && eng.list()[0].source.topic === 'puzzle/dial' && !eng.list()[0].source.path, J(eng.list()));
+    bus.publish('puzzle/dial', 0.5);
+    check('...and it drives the setting', st.get().level === 50 && eng.overlay('lamp').level === 50, J(eng.overlay('lamp')));
+    walkTo(w, (n) => rowOf(n) === 'topic');
+    w.select();
+    const names2 = [...w.el.querySelectorAll('[data-chp-pick] .chp-name')].map((n) => n.textContent);
+    check('a typed name a rule now uses is offered next time, by its own name', names2.includes('puzzle/dial'), J(names2));
+    w.back();
+    w.destroy();
+    eng.destroy();
+  }
+
+  // ---- ROWS (step through): into the name's row, walk to a message, take it; its range comes with it ----
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const st = eng.wrapState('lamp', base(), { manifest: LEVEL });
+    const w = mountAutomationWindow(host, { engine: eng, panels: () => [{ id: 'lamp', title: 'The lamp', manifest: LEVEL }],
+      selected: 'lamp', topics: AUTOMATION_TOPICS, chooseMode: 'step' });
+    check('(rows)', w.scanMode() === 'rows');
+    check('(walk) to the message name row', walkTo(w, (n) => rowOf(n) === 'topic' && n.matches('[data-auto-row]')));
+    w.select();
+    check('*** select goes in: every message is a button in the row ***',
+      w.holds() && w.el.querySelectorAll('[data-auto-row="topic"] [data-auto-opt]').length === AUTOMATION_TOPICS.length);
+    walkTo(w, (n) => n.dataset.autoOpt !== undefined && n.textContent === held.label);
+    w.select();
+    check('*** taken: how long a switch was held -- the topic, its field, and its span (0 to 2 seconds) filled in ***',
+      !w.holds() && val(w, 'topic') === EDGE_TOPIC && val(w, 'path') === 'heldMs'
+      && Number(val(w, 'inMin')) === AUTOMATION_TOPIC_RANGES.heldMs[0] && Number(val(w, 'inMax')) === AUTOMATION_TOPIC_RANGES.heldMs[1],
+      `${val(w, 'topic')} ${val(w, 'path')} ${val(w, 'inMin')}..${val(w, 'inMax')}`);
+    walkTo(w, (n) => rowOf(n) === 'inMax');
+    w.select(); w.select();
+    check('*** its highest nudges in its own span (a twentieth of 2000 ms = 100), not by 0.05 ***',
+      Number(val(w, 'inMax')) === AUTOMATION_TOPIC_RANGES.heldMs[1] - 100, val(w, 'inMax'));
+    w.focusStep(1); w.select();
+    w.back();
+    walkTo(w, (n) => rowOf(n) === 'add');
+    w.select();
+    check('*** Add, by switch alone (rows) ***', eng.list().length === 1 && eng.list()[0].source.topic === EDGE_TOPIC
+      && eng.list()[0].source.path === 'heldMs' && eng.list()[0].map.inMax === AUTOMATION_TOPIC_RANGES.heldMs[1], J(eng.list()));
+    let t = 5000;
+    const input = createInputBus({ bus, actions: createDefaultRegistry(), now: () => t });
+    input.down('switch:0', 'button:0');
+    t += 500;
+    input.up('switch:0', 'button:0');
+    check('*** ...and a real switch held half a second drives it (500 of 2000 -> 25) ***', st.get().level === 25, String(st.get().level));
+    input.destroy?.();
+    w.destroy();
+    eng.destroy();
+  }
+}
+
+// =====================================================================
 section('destroy cleans up');
 {
   const m = fresh();
