@@ -420,12 +420,28 @@ const NODES = [
       + 'anywhere by itself.',
     choices: withKeys([
       { label: 'Set up your AI first', to: 'ai-setup' },
+      { label: 'See it as someone new', to: 'someone-new' },
       BACK_TO_START,
     ]),
     acts: [
       { kind: 'guide', do: 'notes', label: 'Open my notes' },
       { kind: 'guide', do: 'talk', label: 'Talk to my AI' },
     ],
+  },
+  // ---- "Try it as someone new" (2026-10-04, try_new.js): under the walk, not on the first question, so the
+  // landing's first choices are unchanged. The link opens My dashboards (its sidebar has the button); on a SCREEN
+  // it is that address and a code to scan, like every link here (modules/nimrod.js, page_links.js).
+  {
+    id: 'someone-new', title: 'See it as someone new',
+    say: 'To see the site the way somebody new does, as often as you like: on My dashboards, press “Try it as '
+      + 'someone new”. It adds a test person to your account and opens this page as their first visit: no tour, no '
+      + 'points, no Home, the usual settings. Your own things are not touched, and your notes still go to your '
+      + 'notes. “Start over” makes them new again; “Back to me” brings you back.',
+    choices: withKeys([
+      { label: 'Back to walking the site', to: 'notes-walk' },
+      BACK_TO_START,
+    ]),
+    acts: [{ kind: 'link', href: '/home.html', label: 'My dashboards: Try it as someone new' }],
   },
 
   // ---- a photo album (under "other modules" since 2026-10-03: photos are not on the first dashboard) ----

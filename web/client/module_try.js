@@ -411,7 +411,10 @@ export function memoryStorage() {
 // (home_dashboard.js `createDraft`). Omitted, nothing changes: the kiosk builds its handles itself.
 // `host` (Home, 2026-09-30 follow-up): the page's own actions and settings, drawn in the kiosk's bar and
 // ⚙ menu (kiosk.js's `host` option). Omitted, nothing changes.
-export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null, host = null }) {
+// `profileId` (2026-10-04): the screen to use, when the page already knows it (Home's `defaultId`). Omitted, the
+// account's default (`ensureProfile`), as before. Home passes it so a test person ("Try it as someone new",
+// try_new.js) looks at a module on THEIR screen, never on the owner's.
+export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState = null, host = null, profileId: givenProfile = null }) {
   // Dynamic, so the two hosts above (and every page that only wants THEM) do not drag in the
   // whole kiosk and, with it, every module registration -- `modules.html` deliberately does not
   // register `settings` or `keyboard`.
@@ -442,7 +445,7 @@ export async function mountEmbeddedKiosk({ stage, user = null, type, wrapState =
     };
     if (user) {
       const real = createProfilesClient({ user });
-      const profileId = await ensureProfile(real, user);
+      const profileId = givenProfile || await ensureProfile(real, user);
       const profile = await real.get(profileId);
       const mod = await ensureModuleInstance(real, profileId, profile, current);
       const pick = current;

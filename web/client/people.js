@@ -66,8 +66,10 @@ export function writeLastPerson(id, storage = globalThis.localStorage) {
 // or for anybody who has not made an avatar, the bar is byte-for-byte what it was before avatars
 // existed (`people_test.html` holds that markup). `avatarOptions` goes to `avatarHtml` (size,
 // animate, round); its defaults are argued there — chips are small, so they do not move.
+// `tag(person)` (2026-10-04, try_new.js): a short word after a person's name -- "test" for the test person of
+// "Try it as someone new", so it is marked on the bar too. Omitted, or '' for a person, the markup is unchanged.
 export function mountPeople(root, { profiles, onChange = null, storage = globalThis.localStorage,
-                                    avatars = null, avatarOptions = {} } = {}) {
+                                    avatars = null, avatarOptions = {}, tag = null } = {}) {
   let list = [];
   let current = null;
   let busy = false;
@@ -84,6 +86,11 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
 
   const face = (p) => (avatars && p && p.id
     ? avatarHtml(avatars.get(p.id), { ...avatarOptions, personId: p.id }) : '');
+  const tagOf = (p) => {
+    let t = '';
+    try { t = typeof tag === 'function' && p ? String(tag(p) || '') : ''; } catch { t = ''; }
+    return t ? ` <span class="p-tag" data-person-tag>${esc(t)}</span>` : '';
+  };
 
   const say = (text, bad = false) => {
     const el = root.querySelector('[data-msg]');
@@ -101,9 +108,9 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
     const who = many
       ? `<div class="p-chips">${list.map((p) => `
           <button class="p-chip${p.id === (current || {}).id ? ' on' : ''}" data-person="${esc(p.id)}"
-                  aria-pressed="${p.id === (current || {}).id}">${face(p)}${esc(p.name)}</button>`).join('')}
+                  aria-pressed="${p.id === (current || {}).id}">${face(p)}${esc(p.name)}${tagOf(p)}</button>`).join('')}
          </div>`
-      : `<span class="p-one">Setting up for ${face(current)}<b>${esc((current || {}).name || '…')}</b></span>`;
+      : `<span class="p-one">Setting up for ${face(current)}<b>${esc((current || {}).name || '…')}</b>${tagOf(current)}</span>`;
 
     return `<div class="p-row">
         ${many ? '<span class="p-lead">Setting up for</span>' : ''}
@@ -259,6 +266,8 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
     refresh,
     current: () => current,
     list: () => list.slice(),
+    // Redraw the who-line (a `tag` learned after mount); the manage form underneath is left alone.
+    repaint: () => repaintRow(),
     destroy() {
       listeners.abort();
       try { offAvatar?.(); } catch { /* gone */ }

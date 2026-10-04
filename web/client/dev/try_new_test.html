@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>try it as someone new — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>try it as someone new (try_new.js)</h1>
+<p>A test person on the account sees the site as a brand-new person does, as often as wanted: created fresh (no tour,
+no points, no Home, default settings), Start over makes them fresh again, Back to me restores this browser, notes go
+to the owner's own record and survive Start over, screens keep their own person, and the owner's own data is not
+touched. Needs the server (it drives the real <code>/api/people</code>), and opens Home in a frame.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  TRY_NEW_KEY, TRY_STASH_KEY, TRIAL_KEY, NOTES_RECORD_KEY, NOTES_MAX as TN_NOTES_MAX, TRIAL_NAME, TRYING_LABEL,
+  TRIAL_NOTE_MARK, PREVIEW_BASE, previewIdFor, FIRST_RUN_KEYS, LAST_PERSON_KEY as TN_LAST,
+  readTrial, trialShowing, stashBrowser, clearFirstRun, restoreBrowser, mergeNotes, readTrialRecord, findTrialPerson,
+  startTrial, startOver, backToMe, removeTrial, syncTrial, openTrialNotes, mountTrialBar,
+} from '../try_new.js';
+import { createProfilesClient, ensureProfile } from '../profile.js';
+import { createState } from '../state.js';
+import { createEvents } from '../events.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/nimrod.js';
+import { AI_STATE_KEY, AI_BACKEND_KEY } from '../nimrod_ai.js';
+import { AI_SETTINGS_KEY, AI_KEY_KEY } from '../ai.js';
+import { NOTES_MAX } from '../nimrod_notes.js';
+import { LAST_PERSON_KEY } from '../people.js';
+import { TOUR_KEYS } from '../tour.js';
+import { CAT_KEYS, CAT_PREFS_KEY } from '../cat_guide.js';
+import { CAT_PROFILE_KEY } from '../game/cat_steps.js';
+import { DEVICE_KEY as STARTING_KEY } from '../starting_defaults.js';
+import { DEVICE_SETTINGS_KEY } from '../settings.js';
+import { GRADE_KEY } from '../lut.js';
+import { USER_FONT_KEY } from '../user_fonts.js';
+import { RECENT_KEY } from '../picture_picker.js';
+import { DEMO_DISMISSED_KEY } from '../demo_strip.js';
+import { HOME_STATE_KEY } from '../home_dashboard.js';
+import { POINTS_STREAM } from '../points.js';
+import { createUnlockGate } from '../unlocks.js';
+import { mountHome } from '../home.js';
+import { GUIDE_NODES, treeProblems } from '../nimrod_guide_data.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 8000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(60); } return false; };
+const J = (x) => JSON.stringify(x);
+const NAMES = /\bher screen|christine|cici/i;
+
+function fakeStorage(seed = {}) {
+  const m = new Map(Object.entries(seed));
+  return {
+    getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k),
+    keys: () => [...m.keys()], dump: () => Object.fromEntries(m),
+  };
+}
+
+const OWNER = 'try-new-' + Math.floor(Math.random() * 1e9);
+const api = createProfilesClient({ user: OWNER });
+const mps = (pid, key, opts = {}) => createState({ url: api.personStateURL(pid, key), user: OWNER, ...opts });
+async function readPerson(pid, key) { const h = mps(pid, key); try { return await h.load(); } finally { h.destroy(); } }
+async function writePerson(pid, key, patch) { const h = mps(pid, key); await h.load(); h.set(patch); await h.flush(); h.destroy(); }
+async function readScreen(pid, key) { const h = createState({ url: api.stateURL(pid, key), user: OWNER }); try { return await h.load(); } finally { h.destroy(); } }
+const eventsOf = (pid, stream) => fetch(api.eventsURL(pid, stream), { headers: { 'X-Dev-User': OWNER } }).then((r) => r.json());
+function gateFor(pid) {
+  return createUnlockGate({
+    makeState: (key) => createState({ url: api.stateURL(pid, key), user: OWNER }),
+    makeEvents: (key, opts = {}) => createEvents({ url: api.eventsURL(pid, key), user: OWNER, ...opts }),
+  });
+}
+const note = (id, text, at) => ({ id, at, where: '', text });
+
+try {
+  // ============================================================================================
+  section('*** the keys agree with their owners ***');
+  check('the notes record is nimrod_ai.js’s, and the cap is nimrod_notes.js’s', NOTES_RECORD_KEY === AI_STATE_KEY && TN_NOTES_MAX === NOTES_MAX);
+  check('the remembered person is people.js’s key', TN_LAST === LAST_PERSON_KEY);
+  const modulesSrc = await fetch('../modules.html').then((r) => r.text());
+  check('the preview id is modules.html’s, plus the person', modulesSrc.includes(`PREVIEW_PROFILE_ID = '${PREVIEW_BASE}'`)
+    && previewIdFor('abc') === `${PREVIEW_BASE}-abc`);
+  const wanted = [TOUR_KEYS.pos, TOUR_KEYS.done, CAT_KEYS.pos, CAT_KEYS.done, CAT_PREFS_KEY, CAT_PROFILE_KEY, DEMO_DISMISSED_KEY,
+    STARTING_KEY, DEVICE_SETTINGS_KEY, 'nimrod:theme', GRADE_KEY, USER_FONT_KEY, RECENT_KEY];
+  check('*** every first-run key named in the file is the real one (tour, cat, demo strip, starting settings, screen settings, theme, grade, font, recent pictures) ***',
+    wanted.every((k) => FIRST_RUN_KEYS.includes(k)) && FIRST_RUN_KEYS.length === wanted.length, J(wanted.filter((k) => !FIRST_RUN_KEYS.includes(k))));
+  check('the theme key is theme.js’s', (await fetch('../theme.js').then((r) => r.text())).includes(`LOCAL_KEY = 'nimrod:theme'`));
+  check('*** NOT put aside: the sign-in key, the AI’s address, backend and key (Ollama keeps working) ***',
+    !['nimrod:deviceKey', AI_SETTINGS_KEY, AI_KEY_KEY, AI_BACKEND_KEY, LAST_PERSON_KEY].some((k) => FIRST_RUN_KEYS.includes(k)));
+  check('site words name nobody', !NAMES.test(TRIAL_NAME + TRYING_LABEL + TRIAL_NOTE_MARK + J(GUIDE_NODES['someone-new'] || {})));
+
+  // ============================================================================================
+  section('this browser’s half: put aside, cleared, put back exactly');
+  {
+    const st = fakeStorage({ 'nimrod:tourDone': '1', 'nimrod:device-settings': '{"theme":"dusk"}', [AI_SETTINGS_KEY]: '{"baseUrl":"x"}' });
+    stashBrowser(st); clearFirstRun(st);
+    check('cleared: the tour and the screen settings', st.getItem('nimrod:tourDone') == null && st.getItem('nimrod:device-settings') == null);
+    check('kept: the AI’s address', st.getItem(AI_SETTINGS_KEY) === '{"baseUrl":"x"}');
+    st.setItem('nimrod:tourStep', 'w3');
+    stashBrowser(st);
+    check('a second stash never overwrites the owner’s', J(JSON.parse(st.getItem(TRY_STASH_KEY)).kept) === J({ 'nimrod:tourDone': '1', 'nimrod:device-settings': '{"theme":"dusk"}' }));
+    restoreBrowser(st);
+    check('*** put back exactly: what was there is back, what the test made is gone, the stash is gone ***',
+      st.getItem('nimrod:tourDone') === '1' && st.getItem('nimrod:device-settings') === '{"theme":"dusk"}'
+      && st.getItem('nimrod:tourStep') == null && st.getItem(TRY_STASH_KEY) == null);
+    check('nothing to put back: says so, changes nothing', restoreBrowser(st) === false && st.getItem('nimrod:tourDone') === '1');
+  }
+  check('merging notes: by id, oldest first, never twice', J(mergeNotes([note('a', 'A', 1), note('c', 'C', 3)], [note('b', 'B', 2), note('a', 'A', 1)]).map((n) => n.id)) === J(['a', 'b', 'c']));
+
+  // ============================================================================================
+  section('the strip: Start over takes two presses');
+  {
+    const el = document.createElement('div'); document.body.append(el);
+    let started = 0, back = 0;
+    const bar = mountTrialBar(el, { onStartOver: async () => { started++; }, onBack: async () => { back++; } });
+    const b = (s) => el.querySelector(s);
+    check('it says so', b('[data-trial-bar]').textContent.includes(TRYING_LABEL) && b('[data-trial-bar]').textContent.includes(TRIAL_NAME));
+    b('[data-tn-start]').click();
+    check('the first press only arms it', started === 0 && !!b('[data-tn-armed]') && !!b('[data-tn-cancel]'));
+    b('[data-tn-cancel]').click();
+    check('Keep going disarms it (nobody answering = nothing happens)', started === 0 && !b('[data-tn-armed]'));
+    b('[data-tn-start]').click(); b('[data-tn-start]').click();
+    await sleep(10);
+    check('*** the second press does it ***', started === 1);
+    b('[data-tn-back]').click(); await sleep(10);
+    check('Back to me is one press', back === 1);
+    check('no colour written into the page: theme tokens only', !/#[0-9a-f]{3,6}\b|rgb\(/i.test(document.getElementById('tn-style').textContent));
+    bar.destroy(); el.remove();
+  }
+
+  // ============================================================================================
+  section('the guide: “See it as someone new”, under the walk, not on the first question');
+  {
+    const n = GUIDE_NODES['someone-new'];
+    check('the node exists, reached from the walk', !!n && GUIDE_NODES['notes-walk'].choices.some((c) => c.to === 'someone-new'));
+    check('*** the first question is unchanged (what a new person lands on) ***', !GUIDE_NODES.hello.choices.some((c) => c.to === 'someone-new'));
+    check('its link is My dashboards (on a screen: the address and a code, like every link)', n?.acts?.[0]?.kind === 'link' && n.acts[0].href === '/home.html');
+    check('the guide still checks clean', treeProblems().length === 0, J(treeProblems()));
+  }
+
+  // ============================================================================================
+  section('the server: the owner and their own data');
+  const live = await fetch('/api/healthz').then((r) => r.ok).catch(() => false);
+  if (!live) throw new Error('the server is not running');
+  const me = (await api.people())[0].id;
+  const myScreen = await ensureProfile(api, OWNER);
+  // ensureProfile writes the new screen's lesson mode a moment later (a debounced save): wait for it, so the "before"
+  // below is the owner's data as it settles, not a snapshot taken mid-write.
+  await until(async () => !!(await readScreen(myScreen, 'settings')).questMode);
+  await writePerson(me, HOME_STATE_KEY, { welcomeDone: true, openOn: 'home' });
+  const n1 = note('n-mine-1', 'A note of my own, from before.', Date.now() - 100000);
+  await writePerson(me, AI_STATE_KEY, { name: 'Robin', notes: [n1] });
+  const myGate = gateFor(myScreen); await myGate.load(); await myGate.setFlags({ game: true }); await myGate.payTourStep('mode'); myGate.destroy();
+  async function mine() {
+    const ai = await readPerson(me, AI_STATE_KEY);
+    const { notes: _n, ...aiRest } = ai;
+    return J({
+      home: await readPerson(me, HOME_STATE_KEY), ai: aiRest, trial: await readPerson(me, TRIAL_KEY),
+      screens: (await api.list(me)).map((s) => [s.id, s.name, s.person_id]),
+      settings: await readScreen(myScreen, 'settings'),
+      points: (await eventsOf(myScreen, POINTS_STREAM)).events?.length,
+      unlocks: (await eventsOf(myScreen, 'unlocks')).events?.length,
+    });
+  }
+  const before = await mine();
+  check('the owner has a Home setting, an AI name, a note, a screen and a point (the things that must not move)',
+    /welcomeDone/.test(before) && /Robin/.test(before) && JSON.parse(before).points === 1);
+
+  // ============================================================================================
+  section('*** Try it as someone new: a test person, fresh ***');
+  const st = fakeStorage({ [LAST_PERSON_KEY]: me, 'nimrod:tourDone': '1', 'nimrod:catDone': '1', 'nimrod:device-settings': '{"theme":"dusk"}',
+    [AI_SETTINGS_KEY]: '{"baseUrl":"http://127.0.0.1:11434/v1"}' });
+  const ownBrowser = J({ tourDone: '1', catDone: '1', ds: '{"theme":"dusk"}' });
+  const t1 = await startTrial({ profiles: api, makePersonState: mps, user: OWNER, ownerId: me, storage: st });
+  const test1 = t1.person.id;
+  const people1 = await api.people();
+  check('*** a test person is added, named so, and not resumed ***', people1.length === 2 && t1.person.name === TRIAL_NAME && t1.resumed === false);
+  check('their record says so, and whose they are', J(await readTrialRecord(mps, test1)).includes(`"ownerId":"${me}"`));
+  check('the owner is not a test person', (await readTrialRecord(mps, me)) === null);
+  check('*** this browser is switched to them ***', st.getItem(LAST_PERSON_KEY) === test1 && trialShowing(st, OWNER)?.testId === test1);
+  check('this browser’s first-run keys are put aside; the AI’s address is not', st.getItem('nimrod:tourDone') == null
+    && st.getItem('nimrod:catDone') == null && st.getItem('nimrod:device-settings') == null && !!st.getItem(AI_SETTINGS_KEY));
+  check('*** fresh: no dashboards, no Home record, no AI name or notes, no game record ***', (await api.list(test1)).length === 0
+    && J(await readPerson(test1, HOME_STATE_KEY)) === '{}' && J(await readPerson(test1, AI_STATE_KEY)) === '{}' && J(await readPerson(test1, 'game')) === '{}');
+  check('what’s new keeps no “seen” anywhere in this browser', !st.keys().some((k) => /whats|seen/i.test(k)));
+  const again = await startTrial({ profiles: api, makePersonState: mps, user: OWNER, ownerId: me, storage: st });
+  check('pressed again: the same test person, resumed (Start over is what makes them new)', again.person.id === test1 && again.resumed && (await api.people()).length === 2);
+  const fromTest = await startTrial({ profiles: api, makePersonState: mps, user: OWNER, ownerId: test1, storage: st });
+  check('pressed as the test person: the owner is still the owner', fromTest.ownerId === me);
+  check('found as the account’s test person', (await findTrialPerson({ profiles: api, makePersonState: mps }))?.person.id === test1);
+
+  // Their first visit makes a screen of THEIR own, as a brand-new account's does.
+  const theirScreen = await ensureProfile(api, OWNER, null, { personId: test1 });
+  check('*** their first visit makes a Bedside of their own; the account’s default is still the owner’s ***',
+    (await api.get(theirScreen)).person_id === test1 && (await ensureProfile(api, OWNER)) === myScreen);
+  {
+    const g = gateFor(theirScreen); await g.load();
+    const s = g.snapshot();
+    check('*** fresh: no points, nothing unlocked, the game off, on their dashboard ***',
+      Object.values(s.balances || {}).every((v) => !v) && s.unlocked.size === 0 && !s.flags.game && !s.flags.learning, J({ b: s.balances, f: s.flags }));
+    g.destroy();
+  }
+  check('the owner’s own data is untouched by starting', (await mine()) === before);
+
+  // ============================================================================================
+  section('Home, opened as the test person: the landing as a first visit');
+  const realKeys = [LAST_PERSON_KEY, TRY_NEW_KEY, TRY_STASH_KEY, ...FIRST_RUN_KEYS];
+  const realBefore = Object.fromEntries(realKeys.map((k) => [k, localStorage.getItem(k)]));
+  const ifr = document.createElement('iframe');
+  ifr.style.cssText = 'position:fixed;left:-9999px;top:0;width:1300px;height:950px;border:0';
+  document.body.append(ifr);
+  const pageErrors = [];
+  const openHome = (q) => new Promise((res) => {
+    ifr.onload = () => {
+      // What the page logs as an error, kept so a failing check says what went wrong inside it.
+      const w = ifr.contentWindow; const orig = w.console.error.bind(w.console);
+      w.console.error = (...a) => { pageErrors.push(a.map((x) => (x && x.stack) || String(x)).join(' ').slice(0, 300)); orig(...a); };
+      res();
+    };
+    ifr.src = `../modules.html?user=${OWNER}${q}`;
+  });
+  const why = () => J({ homeError: ifr.contentDocument?.body?.dataset?.homeError || '', errors: pageErrors.slice(0, 3),
+    body: ifr.contentDocument?.body?.className || '', title: ifr.contentDocument?.title || '', home: Object.keys(ifr.contentWindow?.__home || {}) });
+  try {
+    localStorage.setItem(TRY_NEW_KEY, st.getItem(TRY_NEW_KEY));
+    localStorage.setItem(LAST_PERSON_KEY, test1);
+    await openHome('&edit=1');
+    const w = ifr.contentWindow;
+    await until(() => w.__home?.trial?.(), 15000);
+    const tr = w.__home?.trial?.();
+    check('*** Home knows it is the test person ***', tr?.personId === test1 && tr?.ownerId === me, `${J(tr)} ${why()}`);
+    check('*** its screen is the test person’s own, never the owner’s ***', !!tr && (await api.get(tr.defaultId)).person_id === test1);
+    check('*** “Trying it as someone new” is said over the page ***', (await until(() => ifr.contentDocument.querySelector('#home-trial [data-trial-bar]')))
+      && ifr.contentDocument.querySelector('#home-trial').textContent.includes(TRYING_LABEL));
+    check('the starting points are up front (no Home yet), as for anybody new', await until(() => ifr.contentDocument.querySelector('#examples') && !ifr.contentDocument.querySelector('#examples').hidden));
+    check('*** the ⚙ menu has Start over and Back to me ***', await until(() => ifr.contentDocument.querySelector('#stage .st-item[data-id="home:trystart"]')
+      && ifr.contentDocument.querySelector('#stage .st-item[data-id="home:tryback"]'), 15000));
+    check('only one screen was made for them (the Bedside of their first visit)', (await api.list(test1)).length === 1);
+    const afterVisit = await mine();
+    check('the owner’s own data is untouched by the visit', afterVisit === before, `${before} => ${afterVisit}`);
+    // The ⚙ rows, pressed: Start over once only arms it; Back to me loads the page again as the owner.
+    const row = (act) => ifr.contentDocument.querySelector(`#stage .st-item[data-id="home:${act}"]`);
+    row('trystart')?.click();
+    check('*** the ⚙ row’s Start over: the first press only arms it (the row and the strip say so) ***',
+      await until(() => /Press again/.test(row('trystart')?.textContent || '') && ifr.contentDocument.querySelector('#home-trial [data-tn-armed]'))
+      && (await api.people()).some((p) => p.id === test1));
+    const reloaded = new Promise((res) => { ifr.addEventListener('load', res, { once: true }); });
+    row('tryback')?.click();
+    await Promise.race([reloaded, sleep(8000)]);
+    check('*** the ⚙ row’s Back to me: this browser is the owner again, the page loaded again ***',
+      localStorage.getItem(LAST_PERSON_KEY) === me && !localStorage.getItem(TRY_NEW_KEY) && (await api.people()).some((p) => p.id === test1));
+    // And as the owner: no strip, no trial.
+    localStorage.removeItem(TRY_NEW_KEY);
+    localStorage.setItem(LAST_PERSON_KEY, me);
+    await openHome('&edit=1');
+    await until(() => ifr.contentWindow.__home?.trial, 15000);
+    await until(() => ifr.contentDocument.querySelector('#stage .st-item[data-id="home:trynew"]'), 15000);
+    check('as the owner: no strip, and the ⚙ menu offers “Try it as someone new”', !!ifr.contentWindow.__home?.trial && !ifr.contentWindow.__home.trial()
+      && !ifr.contentDocument.querySelector('#home-trial [data-trial-bar]') && !!ifr.contentDocument.querySelector('#stage .st-item[data-id="home:trynew"]'));
+  } finally {
+    ifr.remove();
+    for (const [k, v] of Object.entries(realBefore)) { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }
+  }
+
+  // ============================================================================================
+  section('*** notes made as the test person go to the owner’s own record ***');
+  {
+    const mount = document.createElement('div'); mount.style.cssText = 'width:600px;height:600px'; document.body.append(mount);
+    const panel = { data: {} };
+    const state = { load: async () => ({ ...panel.data }), get: () => ({ ...panel.data }), set(p) { panel.data = { ...panel.data, ...p }; },
+      subscribe: () => () => {}, flush: async () => {}, destroy() {} };
+    // As on a landing tried before it is saved: the person is known, but there is no person store (preview).
+    const inst = mountModule('nimrod', { mount, bus: createBus(), state, events: null, output: { say() { return 1; }, cancel() {} },
+      user: null, profileId: previewIdFor(test1), personId: test1, instanceId: 'tn1', makePersonState: () => null, trialStorage: st,
+      ai: { settings: () => ({ baseUrl: 'http://127.0.0.1:1/v1', model: '' }), resolveModel: async () => ({ ok: false, reason: 'none' }), chat: async () => ({ ok: false }) } });
+    await inst.init();
+    const q = (s) => mount.querySelector(s);
+    await until(() => q('[data-ng-do="notes"]'));
+    q('[data-ng-do="notes"]').click();
+    await until(() => q('[data-ng-field="quick"]'));
+    await sleep(500);
+    q('[data-ng-field="quick"]').value = 'The landing should say who it is for.';
+    q('[data-ng-do="savequick"]').click();
+    const landed = await until(async () => (await readPerson(me, AI_STATE_KEY)).notes?.some((n) => n.text === 'The landing should say who it is for.'), 6000);
+    const ownerNotes = (await readPerson(me, AI_STATE_KEY)).notes || [];
+    const made = ownerNotes.find((n) => n.text === 'The landing should say who it is for.');
+    check('*** the note is on the owner’s record, beside the one they had ***', landed && ownerNotes.some((n) => n.id === n1.id), J(ownerNotes.map((n) => n.text)));
+    check('*** marked as made while trying it as someone new ***', !!made && String(made.context?.dashboard || '').includes(TRIAL_NOTE_MARK), J(made));
+    check('...and not kept on the panel (nothing for Start over to lose)', !panel.data.ai?.notes?.length);
+    check('the owner’s AI name is not touched by it', (await readPerson(me, AI_STATE_KEY)).name === 'Robin');
+    inst.destroy(); mount.remove();
+    check('with no trial in this browser, the module keeps its own (openTrialNotes says nobody)', openTrialNotes({ personId: test1, storage: fakeStorage() }) === null
+      && openTrialNotes({ personId: me, storage: st }) === null);
+  }
+
+  // ============================================================================================
+  section('progress as the test person, then the refusals');
+  await writePerson(test1, HOME_STATE_KEY, { welcomeDone: true });
+  {
+    const g = gateFor(theirScreen); await g.load(); await g.setFlags({ game: true });
+    const paid = await g.payTourStep('mode');
+    check('their tour pays a point (the game turned on)', !!paid && Object.values(g.balances()).some((v) => v > 0), J(g.balances()));
+    g.destroy();
+  }
+  const n2 = note('n-test-2', 'Made on the test person’s own record (picked from the people bar).', Date.now() - 5000);
+  await writePerson(test1, AI_STATE_KEY, { name: 'Testy', notes: [n2] });
+  const n3 = note('n-test-3', 'Made on the landing preview, kept in this browser.', Date.now() - 4000);
+  const cleared = [];
+  const localScope = { rows: async (pid) => (pid === previewIdFor(test1) ? [{ key: 'home-ex-guide', data: { ai: { notes: [n3] } } }] : []),
+    clear: async (pid) => { cleared.push(pid); } };
+  st.setItem('nimrod:tourStep', 'step-5');
+  let msg = '';
+  try { await startOver({ profiles: api, makePersonState: mps, personId: me, user: OWNER, storage: st }); } catch (e) { msg = e.message; }
+  check('*** Start over on a person who is not a test person: refused, nothing removed ***', /not a test person/.test(msg) && (await mine()) === before, msg);
+  await api.moveToPerson(myScreen, test1);
+  msg = '';
+  try { await startOver({ profiles: api, makePersonState: mps, personId: test1, user: OWNER, storage: st, localScope }); } catch (e) { msg = e.message; }
+  check('*** a screen of the owner’s handed to the test person stops it, with a sentence; nothing removed ***',
+    /one of your own/.test(msg) && (await api.people()).some((p) => p.id === test1) && (await api.list(test1)).length === 2, msg);
+  await api.moveToPerson(myScreen, me);
+  check('(moved back: the owner’s data is as it was)', (await mine()) === before);
+
+  // ============================================================================================
+  section('*** Start over: fresh again ***');
+  const r2 = await startOver({ profiles: api, makePersonState: mps, personId: test1, user: OWNER, storage: st, localScope });
+  const test2 = r2.person.id;
+  const people2 = await api.people();
+  check('a new test person, the old one gone', test2 !== test1 && people2.length === 2 && !people2.some((p) => p.id === test1) && people2.some((p) => p.id === test2));
+  check('the old one’s dashboard went with them', await fetch(api.stateURL(theirScreen, 'settings'), { headers: { 'X-Dev-User': OWNER } }).then((r) => r.status === 404));
+  check('the new one is the same owner’s', (await readTrialRecord(mps, test2))?.ownerId === me);
+  check('*** fresh: no dashboards, no Home record, no AI record ***', (await api.list(test2)).length === 0
+    && J(await readPerson(test2, HOME_STATE_KEY)) === '{}' && J(await readPerson(test2, AI_STATE_KEY)) === '{}');
+  {
+    const s2 = await ensureProfile(api, OWNER, null, { personId: test2 });
+    const g = gateFor(s2); await g.load();
+    check('*** fresh: their new dashboard has no points and the game is off ***', Object.values(g.balances() || {}).every((v) => !v) && !g.flags().game);
+    g.destroy();
+  }
+  check('this browser shows the new one; its first-run keys cleared again; the owner’s stash kept', st.getItem(LAST_PERSON_KEY) === test2
+    && st.getItem('nimrod:tourStep') == null && J(JSON.parse(st.getItem(TRY_STASH_KEY)).kept) === J({ 'nimrod:tourDone': '1', 'nimrod:catDone': '1', 'nimrod:device-settings': '{"theme":"dusk"}' }));
+  check('the old preview’s local store was cleared', J(cleared) === J([previewIdFor(test1)]));
+  const notesNow = (await readPerson(me, AI_STATE_KEY)).notes || [];
+  check('*** notes survive Start over: the owner’s, the one made as the test person, and the two found on the old test person ***',
+    [n1.id, n2.id, n3.id].every((id) => notesNow.some((n) => n.id === id)) && notesNow.some((n) => n.text === 'The landing should say who it is for.'), J(notesNow.map((n) => n.id)));
+  check('the owner’s own data is untouched by Start over (but for the notes)', (await mine()) === before);
+
+  // ============================================================================================
+  section('*** Back to me ***');
+  st.setItem('nimrod:catStep', 'made-by-the-test');
+  const owner = await backToMe({ makePersonState: mps, personId: test2, storage: st });
+  check('back to the owner', owner === me && st.getItem(LAST_PERSON_KEY) === me && readTrial(st) === null);
+  check('*** this browser’s own first-run keys are back exactly; what the test made is gone ***',
+    J({ tourDone: st.getItem('nimrod:tourDone'), catDone: st.getItem('nimrod:catDone'), ds: st.getItem('nimrod:device-settings') }) === ownBrowser
+    && st.getItem('nimrod:catStep') == null && st.getItem('nimrod:tourStep') == null && st.getItem(TRY_STASH_KEY) == null);
+  check('the test person stays on the account (Try it again carries on)', (await api.people()).some((p) => p.id === test2));
+  check('the owner’s Ollama address was never touched', st.getItem(AI_SETTINGS_KEY) === '{"baseUrl":"http://127.0.0.1:11434/v1"}');
+
+  // ============================================================================================
+  section('*** screens keep their own person ***');
+  check('the owner’s screen still names the owner', (await api.get(myScreen)).person_id === me);
+  check('a screen with no ?profile still opens the owner’s (the account’s oldest)', (await ensureProfile(api, OWNER)) === myScreen);
+  check('every screen of the account names a person, and only the test person’s are theirs',
+    (await api.list()).every((s) => s.person_id === me || s.person_id === test2));
+
+  // ============================================================================================
+  section('picked from the people bar: this browser follows who is shown');
+  {
+    const s2 = fakeStorage({ [LAST_PERSON_KEY]: me, 'nimrod:tourDone': '1' });
+    const rec = await readTrialRecord(mps, test2);
+    syncTrial({ user: OWNER, personId: test2, record: rec, storage: s2 });
+    check('choosing the test person enters it (marked, keys put aside)', readTrial(s2)?.testId === test2 && s2.getItem('nimrod:tourDone') == null);
+    syncTrial({ user: OWNER, personId: me, record: undefined, storage: s2 });
+    check('could not read the record: nothing changes', readTrial(s2)?.testId === test2);
+    syncTrial({ user: OWNER, personId: me, record: null, storage: s2 });
+    check('choosing anybody else leaves it (keys put back)', readTrial(s2) === null && s2.getItem('nimrod:tourDone') === '1');
+  }
+
+  // ============================================================================================
+  section('My dashboards: the sidebar button, the strip, the tag');
+  {
+    const host = document.createElement('div'); document.body.append(host);
+    const s3 = fakeStorage({ [LAST_PERSON_KEY]: me });
+    const navs = [];
+    const opts = { email: '', signedIn: true, profiles: api, manifests: [], user: OWNER, bus: createBus(),
+      makeSettings: (pid) => createState({ url: api.stateURL(pid, 'settings'), user: OWNER }),
+      makePersonState: mps, storage: s3, navigate: (u) => navs.push(u) };
+    let home = await mountHome(host, opts);
+    check('*** the sidebar has “Try it as someone new” ***', await until(() => host.querySelector('[data-trynew]') && !host.querySelector('[data-trynew]').hidden));
+    check('...and “Remove the test person”, since one exists', !host.querySelector('[data-tryremove]').hidden);
+    check('the test person is tagged on the people bar', await until(() => [...host.querySelectorAll('[data-person-tag]')].some((t) => t.textContent === 'test')));
+    host.querySelector('[data-trynew]').click();
+    check('*** pressed: this browser is the test person, and the landing opens ***', await until(() => navs.includes('/modules.html')) && s3.getItem(LAST_PERSON_KEY) === test2);
+    home.destroy(); host.innerHTML = '';
+    home = await mountHome(host, opts);
+    check('*** remounted as the test person: the strip says so ***', await until(() => host.querySelector('[data-trial] [data-trial-bar]')));
+    check('the try button steps aside while trying', host.querySelector('[data-trynew]').hidden);
+    host.querySelector('[data-trial] [data-tn-back]').click();
+    check('*** Back to me from the strip: the owner again, the strip gone ***', await until(() => home.person()?.id === me && !host.querySelector('[data-trial] [data-trial-bar]')));
+    home.destroy(); host.remove();
+  }
+
+  // ============================================================================================
+  section('Remove the test person');
+  {
+    const n4 = note('n-test-4', 'One more on the test person.', Date.now() - 1000);
+    await writePerson(test2, AI_STATE_KEY, { notes: [n4] });
+    const s4 = fakeStorage({ [LAST_PERSON_KEY]: me });
+    await removeTrial({ profiles: api, makePersonState: mps, personId: test2, storage: s4 });
+    check('gone, with their dashboard', !(await api.people()).some((p) => p.id === test2) && (await api.people()).length === 1);
+    check('their notes moved to the owner first', ((await readPerson(me, AI_STATE_KEY)).notes || []).some((n) => n.id === n4.id));
+    check('*** and at the end of everything: the owner’s own data exactly as it began ***', (await mine()) === before);
+    check('the owner’s notes: every one kept, none twice', new Set(((await readPerson(me, AI_STATE_KEY)).notes || []).map((n) => n.id)).size
+      === ((await readPerson(me, AI_STATE_KEY)).notes || []).length);
+  }
+} catch (e) {
+  check('the suite ran to completion', false, String(e && (e.stack || e.message)));
+  console.error(e);
+}
+
+const s = document.getElementById('summary');
+s.textContent = `${passed} passed, ${failed} failed`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

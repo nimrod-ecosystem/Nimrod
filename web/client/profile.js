@@ -34,11 +34,15 @@ import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 // Shared by kiosk.html and modules.html's live editor -- both need "an account's default
 // screen" resolved the same way, and a second copy of this is exactly the kind of drift
 // module_try.js's own header warns about.
-export async function ensureProfile(profiles, user, wantProfile = null) {
-  let list = await cachedFetch('profiles:' + user, () => profiles.list());
+// `personId` (2026-10-04, try_new.js): ONE person's default screen -- theirs, made for them if they have none --
+// instead of the account's. Used for a test person ("Try it as someone new"), whose first visit must make and use
+// a screen of THEIR own, exactly as a brand-new account's does, and never the owner's. Omitted: unchanged.
+export async function ensureProfile(profiles, user, wantProfile = null, { personId = '' } = {}) {
+  let list = await cachedFetch(`profiles:${user}${personId ? `:${personId}` : ''}`,
+    () => (personId ? profiles.list(personId) : profiles.list()));
   if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
   if (!list.length) {
-    const p = await profiles.create('Bedside');
+    const p = personId ? await profiles.create('Bedside', personId) : await profiles.create('Bedside');
     await profiles.addModule(p.id, 'photos');
     await profiles.addModule(p.id, 'camera');
     await profiles.addModule(p.id, 'clock');

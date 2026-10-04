@@ -661,6 +661,10 @@ import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
+// 2026-10-04: "Try it as someone new" -- a test person seeing this page as their first visit (try_new.js argues it).
+import { trialShowing, readTrialRecord, syncTrial, previewIdFor as trialPreviewId, startTrial, startOver, backToMe, mountTrialBar,
+  TRYING_LABEL } from './try_new.js';
+import { localScopeRows, clearLocalScope } from './local_store.js';
 import * as HD from './home_dashboard.js';
 // 2026-10-02: your Home is your profile -- started from an example (dashboards.js), edited with Design's
 // edit bar over the real dashboard (home_profile.js).
@@ -732,9 +736,16 @@ const signedIn = (async () => {
 // ONE "make sure this account has its default screen" per page load, shared by the theme step and Home's
 // boot. Two independent calls race on a new account and each makes a screen (see the theme step).
 let defaultScreenP = null;
+// TRYING IT AS SOMEONE NEW (try_new.js): the test person's own default screen, made for them on this first visit
+// exactly as a brand-new account's is -- never the owner's. Decided from this browser's own word (no extra request
+// for anybody else); `bootHome` checks it against the person's record and corrects it if the two disagree.
+const trialAtLoad = () => trialShowing(undefined, currentUser);
+let defaultScreenFor = '';       // whose screen `defaultScreenP` resolves: '' the account's, else that test person's
 function defaultScreen(profiles) {
   if (!defaultScreenP) {
-    defaultScreenP = ensureProfile(profiles, currentUser);
+    const t = trialAtLoad();
+    defaultScreenFor = t ? t.testId : '';
+    defaultScreenP = ensureProfile(profiles, currentUser, null, t ? { personId: t.testId } : {});
     defaultScreenP.catch(() => { defaultScreenP = null; });   // a failure (offline) may be retried
   }
   return defaultScreenP;
@@ -791,6 +802,8 @@ let selected = null;
 // function that uses it is in the HOME block further down. `on` stays false for a signed-out visitor.
 const HOME = {
   on: false, user: null, profiles: null, defaultId: null, person: null, game: null,
+  trial: null,            // 2026-10-04: the person shown is a test person ("Try it as someone new"): their record
+  trialArmed: false,      // the ⚙ row's Start over has been pressed once (the second press does it)
   settings: HD.readHomeSettings(null), settingsRow: null, defaultSurface: undefined,
   subject: null, target: null, draft: null, doc: null, docRow: null, restoredFrom: null,
   welcome: false, busy: false, dlg: null,
@@ -1247,7 +1260,10 @@ async function openSubject(subject, { view = null } = {}) {
         const refs = Object.fromEntries(rec.modules.map((m) => [m.ref, previewIdFor(m.ref)]));
         // Whose it is: the person looking (2026-10-02 evening) -- so a profile panel on it (the landing's top
         // left) shows THEM, by name (`people`, read-only), as it will once made. Nothing is written by this.
-        const record = { id: PREVIEW_PROFILE_ID, name: rec.name, person_id: HOME.person?.id || null,
+        // A test person's preview has an id of its own (try_new.js `previewIdFor`), so what the preview keeps in this
+        // browser (Nimrod's walk, the tour's points) starts empty for them, and again after Start over.
+        const record = { id: HOME.trial && HOME.person ? trialPreviewId(HOME.person.id) : PREVIEW_PROFILE_ID,
+          name: rec.name, person_id: HOME.person?.id || null,
           modules: rec.modules.map((m, i) => ({ id: refs[m.ref], type: m.type, position: i })) };
         // Its settings as made (the lock list, the panel it opens being edited), under the preview's ids.
         draft.seed('settings', recordSettings(rec, refs));
@@ -1269,7 +1285,7 @@ async function openSubject(subject, { view = null } = {}) {
         : { live: false, kind: 'module', type: subject, previewKey: key };
       const stage = renderHomeDetail(subject, target);
       const isSet = HD.settingKeysFor(getManifest(subject));
-      e = await mountEmbeddedKiosk({ stage, user: mod ? user : null, type: subject, host: HOME_HOST,
+      e = await mountEmbeddedKiosk({ stage, user: mod ? user : null, type: subject, host: HOME_HOST, profileId: HOME.defaultId,
         wrapState: (h, k) => (k === key ? draft.wrap(h, k, isSet) : h) });
     }
     if (mine !== pickSeq) { e?.destroy(); return; }
@@ -1344,6 +1360,60 @@ function homeView() {
     land: HOME.land,
   };
 }
+// *** "TRY IT AS SOMEONE NEW" IN THE ⚙ MENU (2026-10-04, try_new.js). *** Rows of THIS page, so they exist on Home
+// only and never on a screen. Argued, the other way being the address-and-code rule (page_links.js) on a screen too:
+// a screen's browser never changes whose screen it is (people.js: the person picker is home-side only), and the rows
+// switch THIS browser's person -- shown on a screen as a code, they would only send a phone to switch its own. The
+// guide's node (nimrod_guide_data.js `someone-new`) does follow that rule, since the guide is the same everywhere.
+// Start over is two presses here too: the first arms it (the row says so), the second does it.
+let trialBar = null;             // the "Trying it as someone new" strip over the page (try_new.js mountTrialBar)
+let trialBusy = false;
+const trialPersonState = () => (pid, key) => createState({ url: HOME.profiles.personStateURL(pid, key), user: HOME.user });
+const trialStartOver = () => startOver({ profiles: HOME.profiles, makePersonState: trialPersonState(),
+  personId: HOME.person.id, user: HOME.user, localScope: { rows: localScopeRows, clear: clearLocalScope } });
+// The page again, as whoever it now shows (unsaved changes: the browser's own "leave this page?" asks first).
+// A dev `?user=` rides along (a signed-in browser needs nothing: its cookie does).
+const trialReload = () => {
+  const u = new URLSearchParams(location.search).get('user');
+  location.assign(u ? `/modules.html?user=${encodeURIComponent(u)}` : '/modules.html');
+};
+async function trialDo(fn) {
+  if (trialBusy) return;
+  trialBusy = true;
+  try { await fn(); HOME.trialArmed = false; trialReload(); }
+  catch (err) {
+    console.error('home: try it as someone new', err);
+    HOME.trialArmed = false;
+    hostChanged();
+    toast(err?.message || 'That did not work.');
+  } finally { trialBusy = false; }
+}
+function mountHomeTrialBar() {
+  try { trialBar?.destroy(); } catch { /* gone */ }
+  let el = document.getElementById('home-trial');
+  if (!el) { el = document.createElement('div'); el.id = 'home-trial'; document.body.append(el); }
+  trialBar = mountTrialBar(el, { fixed: true, name: HOME.person?.name,
+    onStartOver: async () => { await trialStartOver(); trialReload(); },
+    onBack: async () => { await backToMe({ makePersonState: trialPersonState(), personId: HOME.person?.id || '' }); trialReload(); } });
+  // In full screen only the full-screen element is painted: the strip goes inside it, and back out after (as the toast).
+  document.addEventListener('fullscreenchange', () => {
+    const into = document.fullscreenElement || document.body;
+    if (el.parentNode !== into) into.append(el);
+  });
+}
+function trialMenuRows() {
+  if (!HOME.person) return [];
+  const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
+  if (!HOME.trial) {
+    return [item('trynew', 'Try it as someone new', { hint: 'a test person on your account: this page as their first visit; nothing of yours changes' })];
+  }
+  return [
+    { kind: 'heading', id: 'home-trial-head', label: TRYING_LABEL },
+    item('trystart', HOME.trialArmed ? 'Press again: start over as someone new' : 'Start over as someone new',
+      { hint: HOME.trialArmed ? 'makes them new again; your notes stay with you' : 'two presses: no tour, no points, no Home again' }),
+    item('tryback', 'Back to me', { hint: 'your own person; this browser’s own settings come back' }),
+  ];
+}
 const HOME_HOST = {
   barItems: () => (HOME.on ? HD.homeBarItems(homeView()) : []),
   label: (act, state) => (HOME.on ? HD.homeShellLabel(act, { ...(state || {}), land: HOME.land }) : null),
@@ -1352,7 +1422,7 @@ const HOME_HOST = {
   // dashboard (the Modules library) and "Show a small clock" (the ⚙ menu) -- on the Home subject only.
   handles: (act) => HOME.on && HOME.subject === HD.PROFILE_SUBJECT && (act === 'overlay' || act === 'smallclock'),
   menuItems: () => (HOME.on
-    ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
+    ? [...HD.homeMenuModel(homeView()), ...trialMenuRows()].map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
   barHideMs: () => HOME.settings.barHideMs,
   // The dashboard filling the window floats the bar over the panels, so it tucks away (`barFloats`).
@@ -1452,6 +1522,15 @@ function homePress(act, p = null) {
       flatRow(null);
       break;
     case 'cat': startWalk(); break;
+    // "Try it as someone new" (try_new.js): each ends by loading this page again, as whoever it now shows.
+    case 'trynew': trialDo(() => startTrial({ profiles: HOME.profiles, makePersonState: trialPersonState(), user: HOME.user,
+      ownerId: HOME.person?.id || '' })); break;
+    case 'trystart':
+      if (!HOME.trial) break;
+      if (!HOME.trialArmed) { HOME.trialArmed = true; trialBar?.arm(); hostChanged(); toast('Press “Start over” again to make them new again. Your notes stay with you.'); break; }
+      trialDo(() => trialStartOver());
+      break;
+    case 'tryback': if (HOME.trial) trialDo(() => backToMe({ makePersonState: trialPersonState(), personId: HOME.person?.id || '' })); break;
     default:
       if (act.startsWith('set:')) {
         const k = act.slice(4);
@@ -2764,9 +2843,28 @@ window.addEventListener('beforeunload', (e) => {
 async function bootHome(wanted) {
   const user = currentUser;
   const profiles = createProfilesClient({ user });
-  const defaultId = await defaultScreen(profiles);
+  // A test person's screen that cannot be had (they were removed in another tab) must not stop Home: the
+  // account's is taken below instead.
+  let defaultId = null;
+  try { defaultId = await defaultScreen(profiles); } catch (err) { if (!defaultScreenFor) throw err; }
   let person = null;
   try { person = pickCurrent(await profiles.people(), readLastPerson()); } catch { person = null; }
+  // TRYING IT AS SOMEONE NEW (try_new.js): is the person shown a test person? Their record says; this browser is
+  // made to agree (picked from the people bar, it enters; anybody else, it leaves). Unreadable (offline): this
+  // browser's own word stands.
+  let trial = null;
+  if (person) {
+    let rec;
+    try { rec = await readTrialRecord((pid, key) => createState({ url: profiles.personStateURL(pid, key), user }), person.id); }
+    catch { rec = undefined; }
+    const known = syncTrial({ user, personId: person.id, record: rec });
+    trial = rec ? rec : (rec === undefined && known && known.testId === person.id ? { trial: true, ownerId: known.ownerId } : null);
+  }
+  const screenFor = trial ? person.id : '';
+  if (!defaultId || screenFor !== defaultScreenFor) {
+    defaultId = await ensureProfile(profiles, user, null, screenFor ? { personId: screenFor } : {});
+  }
+  HOME.trial = trial;
   let settingsRow = null;
   let settings = HD.readHomeSettings(null);
   if (person && profiles.personStateURL) {
@@ -2819,6 +2917,10 @@ async function bootHome(wanted) {
   setLand(!!land.land && subject === HD.PROFILE_SUBJECT, { push: false });
   HOME.landAtBoot = HOME.land;
   try { history.replaceState({ ...(history.state || {}), land: HOME.land }, ''); } catch { /* not allowed here */ }
+  // Trying it as someone new: said over the page, whatever it shows (try_new.js). Before the stage, so it is there
+  // from the first paint; it takes no room (a small strip at the top).
+  if (HOME.trial) mountHomeTrialBar();
+  window.__home.trial = () => (HOME.trial ? { ...HOME.trial, personId: HOME.person?.id || '', defaultId: HOME.defaultId } : null);
   await openSubject(subject, { view: land.view });
 }
 

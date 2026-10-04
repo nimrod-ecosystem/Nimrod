@@ -27,6 +27,9 @@ import { createAvatarCache } from './avatar_display.js';
 import { createBus } from './bus.js';
 import { mountPackLoader } from './pack_loader.js';
 import { CLAUDE_PAGE, REVIEWS_PAGE } from './page_links.js';
+// "Try it as someone new" (2026-10-04): a test person, and the strip that says so (try_new.js argues it).
+import { readTrialRecord, startTrial, startOver, backToMe, removeTrial, syncTrial, mountTrialBar } from './try_new.js';
+import { localScopeRows, clearLocalScope } from './local_store.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -104,8 +107,16 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
                                        makeSettings = null, makeState = null, makeEvents = null,
                                        user = null, bus = null, mountTab = null,
                                        makePersonState = null, makePersonEvents = null,
-                                       signedIn = null, storage = undefined } = {}) {
+                                       signedIn = null, storage = undefined,
+                                       navigate = (url) => {
+                                         // A dev `?user=` rides along (a signed-in browser's cookie needs nothing).
+                                         const u = new URLSearchParams(location.search).get('user');
+                                         location.assign(u ? `${url}?user=${encodeURIComponent(u)}` : url);
+                                       } } = {}) {
   const isSignedIn = signedIn == null ? !!email : !!signedIn;
+  // TRY IT AS SOMEONE NEW: signed in only (signed out, a private window is the way -- try_new.js), and only with
+  // a person-state seam to keep the test person's record on.
+  const canTry = isSignedIn && typeof makePersonState === 'function' && typeof profiles?.addPerson === 'function';
   let active = 'screens';
   let panel = null;
   let personId = '';
@@ -167,12 +178,20 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
               // in, sign out); a page, not a screen, so plain links. After Sign out, which stays first.
               + `<a class="s-signout s-acct" data-acct="claude" href="${CLAUDE_PAGE}">Claude on this account</a>`
               + `<a class="s-signout s-acct" data-acct="reviews" href="${REVIEWS_PAGE}">Review questions</a>`
+              // TRY IT AS SOMEONE NEW (try_new.js): the site as a brand-new person meets it, on a test person,
+              // nothing of yours touched. While one is being tried, the strip above the people bar has its actions.
+              + (canTry
+                ? '<button type="button" class="s-signout s-acct" data-trynew hidden title="A test person on this account: the landing as their first visit. Nothing of yours changes; your notes stay yours.">Try it as someone new</button>'
+                  + '<button type="button" class="s-signout s-acct" data-tryremove hidden title="The test person and their dashboards go; any notes they hold move to you first.">Remove the test person</button>'
+                  + '<span class="s-signout" data-trymsg hidden></span>'
+                : '')
               + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'
             : '<a class="s-signout" href="/auth/login">Sign in</a>'
               + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'}
         </div>
       </nav>
       <main class="s-main">
+        <div data-trial></div>
         <div data-people></div>
         <div data-panel></div>
       </main>
@@ -439,13 +458,17 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   // Each person's avatar beside their name (row 2.37 item 5): ONE cache for the page, one read
   // per person, whatever redraws (`avatar_display.js`). No per-person state seam, no faces.
   const avatars = makePersonState ? createAvatarCache({ makePersonState, user }) : null;
+  // The account's test people (try_new.js), by id -> their record. Read on mount and after each trial action.
+  let trialRecs = new Map();
   const people = mountPeople(root.querySelector('[data-people]'), {
     profiles,
     storage,
     avatars,
+    tag: (p) => (trialRecs.has(p.id) ? 'test' : ''),
     onChange: (person) => {
       personId = (person && person.id) || '';
       personName = (person && person.name) || '';
+      trialFollow();
       if (panel) show(active);      // whoever is on screen is now showing the wrong person
     },
   });
@@ -453,13 +476,99 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
   personId = (people.current() || {}).id || '';
   personName = (people.current() || {}).name || '';
 
+  // ---- TRY IT AS SOMEONE NEW (try_new.js) ------------------------------------------------------------------
+  // Here because this is where the account's people are: the sidebar's "Try it as someone new" makes (or resumes)
+  // the test person and opens the landing as their first visit; while they are the person shown, a strip above
+  // the people bar says so and has Start over (two presses) and Back to me. Picking the test person on the bar
+  // enters it; picking anybody else leaves it (syncTrial), so this browser always agrees with who is shown.
+  const trialHost = root.querySelector('[data-trial]');
+  const localScope = { rows: localScopeRows, clear: clearLocalScope };
+  let trialBar = null;
+  const sideMsg = (text) => {
+    const el = root.querySelector('[data-trymsg]');
+    if (el) { el.textContent = text || ''; el.hidden = !text; }
+  };
+  function paintTrial() {
+    if (!canTry) return;
+    const cur = people.current();
+    const rec = cur ? trialRecs.get(cur.id) : null;
+    try { trialBar?.destroy(); } catch { /* gone */ }
+    trialBar = null;
+    if (rec) {
+      trialBar = mountTrialBar(trialHost, {
+        landing: '/modules.html', name: cur.name,
+        onStartOver: async () => {
+          await startOver({ profiles, makePersonState, personId: cur.id, user, storage, localScope });
+          navigate('/modules.html');
+        },
+        onBack: async () => {
+          const owner = await backToMe({ makePersonState, personId: cur.id, storage });
+          await people.refresh({ want: owner || null });
+          paintTrial();
+        },
+      });
+    }
+    const tryBtn = root.querySelector('[data-trynew]');
+    const rmBtn = root.querySelector('[data-tryremove]');
+    if (tryBtn) tryBtn.hidden = !!rec;
+    if (rmBtn) rmBtn.hidden = !!rec || !trialRecs.size;
+  }
+  function trialFollow() {
+    if (!canTry) return;
+    const cur = people.current();
+    if (cur) syncTrial({ user, personId: cur.id, record: trialRecs.get(cur.id) || null, storage });
+    paintTrial();
+  }
+  async function readTrials() {
+    if (!canTry) return;
+    const next = new Map();
+    for (const p of people.list()) {
+      try { const r = await readTrialRecord(makePersonState, p.id); if (r) next.set(p.id, r); }
+      catch { if (trialRecs.has(p.id)) next.set(p.id, trialRecs.get(p.id)); }   // offline: what was known
+    }
+    trialRecs = next;
+    people.repaint();
+    trialFollow();
+  }
+  if (canTry) {
+    root.querySelector('.s-foot')?.addEventListener('click', async (e) => {
+      const t = e.target;
+      if (t.closest?.('[data-trynew]')) {
+        t.disabled = true; sideMsg('');
+        try {
+          await startTrial({ profiles, makePersonState, user, ownerId: personId, storage });
+          navigate('/modules.html');
+        } catch (err) { console.error('home: try it as someone new', err); sideMsg(err?.message || 'That did not work.'); }
+        finally { t.disabled = false; }
+        return;
+      }
+      if (t.closest?.('[data-tryremove]')) {
+        const id = [...trialRecs.keys()][0];
+        if (!id || !globalThis.confirm('Remove the test person and their dashboards? Any notes they hold move to you first.')) return;
+        t.disabled = true; sideMsg('');
+        try {
+          await removeTrial({ profiles, makePersonState, personId: id, storage, localScope });
+          await people.refresh();
+          await readTrials();
+          sideMsg('The test person is gone.');
+        } catch (err) { console.error('home: remove the test person', err); sideMsg(err?.message || 'That did not work.'); }
+        finally { t.disabled = false; }
+      }
+    });
+    // Not awaited: one read per person must not hold up the page; the button and the strip appear when known.
+    readTrials().catch((err) => console.error('home: test people', err));
+  }
+
   const api = {
     show,
     active: () => active,
     panel: () => panel,
     people,
     person: () => people.current(),
+    // "Try it as someone new", for a suite: read the test people again, and who they are.
+    trial: { read: () => readTrials(), records: () => new Map(trialRecs) },
     destroy() {
+      try { trialBar?.destroy(); } catch { /* gone */ }
       people.destroy();
       avatars?.destroy();
       if (panel && panel.destroy) panel.destroy();

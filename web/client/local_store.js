@@ -441,6 +441,24 @@ export async function seedStarterScreen(profilesClient = createLocalProfilesClie
   return p;
 }
 
+// ONE SCOPE of this browser's store: its state rows as { key, data }, and clearing it (state AND events).
+// For try_new.js only, on a scope that is being thrown away whole: a test person's own preview of the landing
+// (modules.html, `previewIdFor`). Events are append-only everywhere else here, and that stands: this removes a
+// sandbox nobody will open again, never a row inside a record somebody keeps.
+export async function localScopeRows(pid) {
+  const pre = `${pid}::`;
+  try {
+    return (await allRows(STATE)).filter((r) => String(r.k).startsWith(pre))
+      .map((r) => ({ key: String(r.k).slice(pre.length), data: (r.v && r.v.data) || {} }));
+  } catch { return []; }
+}
+export async function clearLocalScope(pid) {
+  const pre = `${pid}::`;
+  for (const s of [STATE, EVENTS]) {
+    for (const r of await allRows(s)) if (String(r.k).startsWith(pre)) await delRow(s, r.k);
+  }
+}
+
 // Used by the "keep this" path later (slice 3) and by the tests, which must not leak state
 // from one case into the next.
 export async function clearLocalData() {
