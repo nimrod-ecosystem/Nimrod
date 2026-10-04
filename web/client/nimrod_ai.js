@@ -51,7 +51,12 @@ export const AI_STATE_KEY = 'nimrod-ai';        // the PERSON's record (ctx.make
 // suite checks they agree, word_games.js's habit.
 export const SPEECH_TOPICS = Object.freeze({
   grammar: 'speech/grammar', answer: 'speech/answer', answering: 'speech/answering',
+  // "ask <name> ..." / "make a note ..." by voice (2026-10-04): who answers, and what was asked.
+  ask: 'speech/ask', askTarget: 'speech/ask-target',
 });
+// How long "ask <name>" said ALONE waits for the question, when the speech layer does not say (it sends the
+// person's own wake window): the speech layer's default command window, for the same pause (suite-checked).
+export const ASK_WINDOW_MS = 8000;
 export const DELIVERY_TOPIC = 'output/delivery';   // output.js: a said thing has finished (or dropped)
 
 // How long the chat keeps listening after the last thing it heard, as the person's choice.

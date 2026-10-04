@@ -1392,6 +1392,109 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('*** every module’s spoken commands can fire (no phrase in any manifest is dropped) ***', bad.length === 0, bad.join(', '));
   }
 
+  section('*** "ask <name>, ..." and "make a note, ..." by voice (2026-10-04) ***');
+  {
+    const J = (x) => JSON.stringify(x);
+    const AP = SP.askPhrases(['Nimrod']);
+    check('*** the prefixes for an AI called Nimrod: "ask nimrod", the bare name, and the note phrases ***',
+      AP.some((p) => p.kind === 'ask' && p.phrase === 'ask nimrod') && AP.some((p) => p.kind === 'ask' && p.phrase === 'nimrod')
+      && SP.NOTE_PHRASES.every((n) => AP.some((p) => p.kind === 'note' && p.phrase === n)), JSON.stringify(AP));
+    const withAsk = { ...spokenTable(), '#note': [...SP.NOTE_PHRASES], '#ask': AP.filter((p) => p.kind === 'ask').map((p) => p.phrase) };
+    check('*** no duplicate phrases: the spoken table plus every ask and note prefix ***', duplicatePhrases(withAsk).length === 0,
+      duplicatePhrases(withAsk).join('; '));
+    check('...and the spoken table on its own is still clean', duplicatePhrases().length === 0);
+    check('no note phrase and no "ask" phrase is a command in either table',
+      !SP.NOTE_PHRASES.some((n) => verbFor(n) || routeFor(n)) && !Object.values(spokenTable()).flat().some((p) => normalize(p).startsWith('ask ')));
+    check('*** a name that IS a command gets no bare form ("Play" cannot swallow "play opposites"); "ask play" still works ***',
+      !SP.askPhrases(['Play']).some((p) => p.phrase === 'play') && SP.askPhrases(['Play']).some((p) => p.phrase === 'ask play'));
+    check('a name that is a wake phrase gets no bare form', !SP.askPhrases(['Computer please']).some((p) => p.phrase === 'computer please'));
+    check('a name too short or too long to hear gets no prefix at all',
+      SP.askPhrases(['Al'], { notes: false }).length === 0 && SP.askPhrases(['a b c d e f'], { notes: false }).length === 0 && SP.askName('R2') === '');
+    check('askFor: the question after "ask <name>"', J(SP.askFor('ask nimrod what is a scene', AP)) === J({ kind: 'ask', name: 'nimrod', phrase: 'ask nimrod', text: 'what is a scene' }));
+    check('askFor: the bare name', SP.askFor('nimrod what is a scene', AP)?.text === 'what is a scene');
+    check('askFor: the longest note prefix wins ("make a note that X" keeps X)', SP.askFor('make a note that the font is small', AP)?.text === 'the font is small'
+      && SP.askFor('make a note that the font is small', AP)?.kind === 'note');
+    check('askFor: the prefix alone is an empty question', SP.askFor('ask nimrod', AP)?.text === '' && SP.askFor('make a note', AP)?.text === '');
+    check('askFor: "nimrods" is not "nimrod ..." (whole words only)', SP.askFor('nimrods are fun', AP) === null);
+    check('*** textAfterWords keeps the recogniser’s own words: digits, apostrophes, the question mark ***',
+      SP.textAfterWords('Computer please, ask Nimrod: What’s 2 plus 2?', 4) === 'What’s 2 plus 2?', SP.textAfterWords('Computer please, ask Nimrod: What’s 2 plus 2?', 4));
+    check('...and says null when the cut falls inside a word', SP.textAfterWords("ask nimrod's opinion", 2) === null);
+
+    // The speech layer itself, with a fake recogniser and a real bus.
+    const bus = createBus();
+    const presses = [];
+    const input = { down: (d, c) => presses.push(c), up() {} };
+    let feed = null;
+    const heardLog = [];
+    const rec = { running: false, start(cb) { feed = cb; this.running = true; }, stop() { this.running = false; }, modes: [], setMode(m) { this.modes.push(m); } };
+    let dictates = true;
+    const sp = attachSpeech(input, { recognizer: rec, bus, confirm: 'off', canDictate: () => dictates, onHeard: (h) => heardLog.push(h) });
+    sp.start();
+    const asks = [];
+    bus.subscribe(`${SP.SPEECH_ASK_TOPIC}#n1`, (p) => asks.push(p));
+    feed('computer please ask nimrod what is a scene');
+    check('*** nobody has said they answer: nothing is sent, and nothing is pressed ***',
+      asks.length === 0 && heardLog.at(-1)?.verb === null && !heardLog.at(-1)?.ask && presses.length === 0);
+    bus.publish(SP.SPEECH_ASK_TARGET_TOPIC, { source: 'nimrod-ai', instanceId: 'n1', open: true, names: ['Nimrod'], notes: true });
+    check('a panel says it answers to "Nimrod": the speech layer knows the name', J(sp.askTargets()) === J([{ source: 'nimrod-ai', instanceId: 'n1', names: ['nimrod'], notes: true }]));
+    feed('Computer please, ask Nimrod, what is a scene?');
+    check('*** "ask Nimrod, ..." sends ONLY the question, in the recogniser’s own words, to that one panel ***',
+      asks.length === 1 && asks[0].kind === 'ask' && asks[0].text === 'what is a scene?' && asks[0].to === 'n1' && asks[0].name === 'nimrod'
+      && !/computer|please|ask/i.test(asks[0].text) && presses.length === 0, J(asks));
+    feed('computer please nimrod what time is it');
+    check('*** the bare name works too: "<name>, what time is it" ***', asks.length === 2 && asks[1].text === 'what time is it', J(asks[1]));
+    feed('nimrod what time is it');
+    feed('ask nimrod what time is it');
+    check('*** without the wake phrase: nothing goes to the AI ***', asks.length === 2);
+    feed('computer please');
+    feed('ask nimrod is this the window');
+    check('the two-step path: the wake phrase alone, then "ask nimrod ..." inside its window', asks.length === 3 && asks[2].text === 'is this the window' && !sp.windowOpen);
+    feed('computer please next');
+    check('*** a command is still a command (nothing changed for the table) ***', presses.at(-1) === 'phrase:next' && asks.length === 3);
+    // A rename: the panel says its new name; the old one stops working at once, with no restart.
+    bus.publish(SP.SPEECH_ASK_TARGET_TOPIC, { source: 'nimrod-ai', instanceId: 'n1', open: true, names: ['Jarvis'], notes: true });
+    feed('computer please ask nimrod hello');
+    check('*** renamed: "ask nimrod" no longer asks anybody ***', asks.length === 3);
+    feed('computer please ask jarvis hello there');
+    check('*** ...and "ask jarvis" does, with no reload ***', asks.length === 4 && asks[3].text === 'hello there' && asks[3].name === 'jarvis');
+    feed('computer please ask jarvis');
+    check('*** the prefix alone, on an engine that can write a sentence down: asks the panel to LISTEN, for the wake window ***',
+      asks.length === 5 && asks[4].text === '' && asks[4].listen === true && asks[4].dictation === true && asks[4].ms === SPEECH_DEFAULTS.wakeWindowMs, J(asks[4]));
+    dictates = false;
+    feed('computer please ask jarvis');
+    check('*** ...on a fixed-grammar engine: no window (it could not hear the question), the panel is told so ***',
+      asks.length === 6 && asks[5].listen === false && asks[5].dictation === false, J(asks[5]));
+    dictates = true;
+    feed('computer please make a note the trivia text is too small');
+    check('*** "make a note, ..." hands over the note’s words ***', asks.length === 7 && asks[6].kind === 'note' && asks[6].text === 'the trivia text is too small', J(asks[6]));
+    feed('computer please make a note');
+    check('"make a note" alone: listen for it', asks.length === 8 && asks[7].kind === 'note' && asks[7].listen === true);
+    feed('computer please paws');
+    check('a near miss of a command is still asked about, not sent to the AI', asks.length === 8 && !!sp.nearMissPending());
+    sp.answerNearMiss(false);
+    // Grammar mode: the prefixes are in the grammar while somebody can be asked, and gone when nobody can.
+    const g = attachSpeech({ down() {}, up() {} }, { recognizer: { start() {}, stop() {} }, bus, recognition: 'grammar' });
+    check('a grammar with nobody to ask has no ask prefix in it', !g.currentGrammar().some((p) => / ask /.test(p)));
+    bus.publish(SP.SPEECH_ASK_TARGET_TOPIC, { source: 'nimrod-ai', instanceId: 'n1', open: true, names: ['Jarvis'], notes: true });
+    check('*** a grammar-limited engine can HEAR "computer please ask jarvis" and "... make a note" (in its grammar) ***',
+      g.currentGrammar().includes('computer please ask jarvis') && g.currentGrammar().includes('computer please make a note'), g.currentGrammar().slice(-8).join(' | '));
+    bus.publish(SP.SPEECH_ASK_TARGET_TOPIC, { source: 'nimrod-ai', instanceId: 'n1', open: false });
+    check('*** the panel withdraws (hidden or gone): nobody to ask, and the grammar no longer has the prefixes ***',
+      sp.askTargets().length === 0 && !g.currentGrammar().some((p) => / ask jarvis$/.test(p)));
+    feed('computer please ask jarvis hello');
+    check('...and nothing is sent', asks.length === 8);
+    // Even with the wake gate off, the AI only hears what was said to the screen.
+    const open = attachSpeech({ down() {}, up() {} }, { recognizer: { start(cb) { feed = cb; }, stop() {} }, bus, requireWake: false, confirm: 'off' });
+    open.start();
+    bus.publish(SP.SPEECH_ASK_TARGET_TOPIC, { source: 'nimrod-ai', instanceId: 'n1', open: true, names: ['Nimrod'], notes: true });
+    feed('nimrod what are you doing on the table');
+    feed('make a note the cat is asleep');
+    check('*** wake gate OFF: a sentence that starts with the name (or "make a note") still goes nowhere ***', asks.length === 8);
+    feed('computer please nimrod hi');
+    check('...but said after the wake phrase it does', asks.length === 9);
+    sp.destroy(); g.destroy(); open.destroy();
+  }
+
   section('*** the shipped bindings ***');
   check('there is one per verb', DEFAULT_BINDINGS.length === Object.keys(PHRASES).length);
   const nextB = DEFAULT_BINDINGS.find((b) => b.control === phraseControl('next'));

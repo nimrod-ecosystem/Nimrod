@@ -46,8 +46,14 @@
 //     which a grammar-limited recogniser cannot hear. (c) is CHOSEN: "Talk" opens a DICTATION window on the
 //     speech layer (input_speech.js `dictation: true`); bare words go to the chat, the wake phrase still
 //     means a command, and the window closes by itself after the person's "stop listening after" time
-//     (and while the reply is being read aloud, so the screen does not answer itself). (a) is the natural
-//     next step and is on Mike's list.
+//     (and while the reply is being read aloud, so the screen does not answer itself).
+//   * (a) BUILT 2026-10-04, BESIDE (c): "<wake phrase>, ask <name>, what is this" (or "<name>, what is this")
+//     sends "what is this" to the chat, exactly as if typed; "make a note, ..." keeps a note with no AI at all.
+//     The speech layer owns the matching (input_speech.js "ASK <NAME>"); this panel tells it the name
+//     (SPEECH_TOPICS.askTarget, re-told on a rename, withdrawn when hidden) and does what it is handed. The
+//     prefix ALONE opens a ONE-utterance window when the engine can write a sentence down, and on a fixed-
+//     grammar engine opens the chat (or the notes) saying "type it, or press Talk". Only the words after the
+//     prefix are sent; whatever the AI then asks to do is a button, as always (no voice "yes" in that window).
 //   * "Make a note" reduces the conversation to a short dated note the person edits and keeps; "Copy all
 //     notes" puts them on the clipboard. Nothing is sent anywhere by itself.
 //   * No AI connected: it says how to connect one, and the tree works exactly as before.
@@ -77,7 +83,7 @@ import {
 // Node A's mechanics (game / learning / sandbox, the tour's points, the settings-panel check): unlocks.js.
 import { createGuideGameHook, MODE_HELP } from '../unlocks.js';
 import {
-  AI_SOURCE, SPEECH_TOPICS, DELIVERY_TOPIC, LISTEN_CHOICES, NAME_MAX, PERSONA_MAX, aiPrefs, openAIStore, isLocalAddress,
+  AI_SOURCE, SPEECH_TOPICS, DELIVERY_TOPIC, LISTEN_CHOICES, ASK_WINDOW_MS, NAME_MAX, PERSONA_MAX, aiPrefs, openAIStore, isLocalAddress,
   createGuideChat, createActionQueue, allowedActions, isYes, isNo, parseReply,
   OLLAMA_URL, firstChatModel, helloMessages, HELLO_TOKENS, ollamaOriginLines, ollamaAllowsByDefault,
   AI_BACKENDS, readAIBackend, writeAIBackend, createClaudeAI, claudeStatusLine, CLAUDE_SETTINGS_PAGE, CLAUDE_PLAIN_WORDS,
@@ -252,6 +258,13 @@ registerModule(
     let hintTimer = null;
     let holding = false;       // the reply is being read aloud: the dictation window is shut meanwhile
     let holdTimer = null;
+    // "ask <name>" / "make a note" said alone (2026-10-04): what the NEXT dictated utterance becomes, and
+    // whether the window shuts after it (opened by voice: one utterance) and how long it waits for it.
+    let nextAs = null;         // null | 'ask' | 'note'
+    let onceOnly = false;
+    let onceMs = 0;
+    let hidden = false;        // hidden panels are not asked (the reply would be read aloud from nowhere)
+    let askSig = '';
     let aiSaidId = null;
     let draft = null;          // { busy } | { text, reason, fromAI }
     let setupOpen = false;
@@ -515,10 +528,18 @@ registerModule(
     }
     function armIdle() {
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(() => stopListening(), aiP.listenMs);
+      idleTimer = setTimeout(() => stopListening(), onceOnly ? onceMs : aiP.listenMs);
     }
-    function startListening() {
-      if (listening || torn) return;
+    function startListening({ once = null, ms = 0 } = {}) {
+      if (torn) return;
+      if (listening) {
+        // Already listening (Talk): the next utterance becomes what was asked for, and the window stays open.
+        if (once) { nextAs = once; render(); }
+        return;
+      }
+      nextAs = once;
+      onceOnly = !!once;
+      onceMs = Number.isFinite(Number(ms)) && Number(ms) > 0 ? Number(ms) : ASK_WINDOW_MS;
       listening = true;
       heardAnswering = false;
       listenHint = '';
@@ -540,6 +561,8 @@ registerModule(
       listening = false;
       holding = false;
       listenHint = '';
+      nextAs = null;
+      onceOnly = false;
       if (was) announceGrammar();
       render();
     }
@@ -547,11 +570,72 @@ registerModule(
       if (!listening || !p || p.dictation !== true) return;
       const t = String(p.text || '').trim();
       if (!t) return;
-      armIdle();
-      const waiting = pending();
+      const as = nextAs;
+      nextAs = null;
+      // Opened by voice: ONE utterance, then the window shuts (only what followed "ask <name>" is sent).
+      if (onceOnly) stopListening(); else armIdle();
+      if (as === 'note') { voiceNote(t); return; }
+      // A voice "yes" confirms a waiting action only in a window somebody opened with Talk, never in one a
+      // spoken "ask <name>" opened: that window is for the question.
+      const waiting = as ? [] : pending();
       if (waiting.length && isYes(t)) { queue.confirm(waiting[0].id); return; }
       if (waiting.length && isNo(t)) { queue.dismiss(); return; }
       sendText(t, { spoken: true });
+    }
+
+    // ---- "ask <name> ..." and "make a note ..." by voice (input_speech.js "ASK <NAME>") ----------------------
+    // Tell the speech layer the name this panel answers to: on every render (a rename lands at once, with no
+    // reload), withdrawn while hidden or gone. Only sent when it changed.
+    function announceAsk() {
+      const open = !torn && !hidden && !!root;
+      const sig = JSON.stringify([open, aiP.name]);
+      if (sig === askSig) return;
+      askSig = sig;
+      publish(SPEECH_TOPICS.askTarget, { source: AI_SOURCE, instanceId: ctx.instanceId || null, open,
+        names: [aiP.name], notes: true });
+    }
+    // The speech layer handing over what was said after the prefix. Addressed to ONE panel (`to`).
+    function onAsk(p) {
+      if (torn || !p || typeof p !== 'object' || (p.to ?? null) !== (ctx.instanceId || null)) return;
+      const text = String(p.text || '').trim();
+      if (p.kind === 'note') { askedNote(text, p); return; }
+      if (p.kind !== 'ask') return;
+      setView('talk');
+      if (text) { if (onceOnly) stopListening(); sendText(text, { spoken: true }); return; }
+      if (p.listen) { startListening({ once: 'ask', ms: p.ms }); return; }
+      // A fixed-grammar engine heard the prefix and cannot hear the question.
+      notice = `Heard “ask ${aiP.name}”. This screen’s voice can only hear its own commands: type your question, or press Talk to say it.`;
+      render();
+      focusOn('say');
+      speak(`Type your question, or press Talk to say it.`);
+    }
+    function askedNote(text, p) {
+      if (text) { voiceNote(text); return; }
+      // The window can only stay open in the chat when it is already listening there; otherwise the notes view.
+      if (!(view === 'talk' && listening)) setView('notes');
+      if (p.listen) {
+        startListening({ once: 'note', ms: p.ms });
+        notice = 'Say the note.';
+        render();
+        return;
+      }
+      notice = 'Heard “make a note”. This screen’s voice can only hear its own commands: type the note here.';
+      render();
+      focusOn('quick');
+      speak('Type the note.');
+    }
+    // A note said aloud: kept as it is (no AI), with where it was made, in the person's record; said back so
+    // somebody walking around knows it was KEPT (the tone only said it was heard).
+    function voiceNote(text) {
+      ensureStore().then(() => {
+        if (torn) return;
+        if (view === 'guide') setView('notes');   // the guide view has nowhere to show "Note saved"
+        if (keepNote(text)) speak('Note saved.');
+        render();
+      }).catch((err) => console.error('nimrod: voice note', err));
+    }
+    function focusOn(k) {
+      try { root?.querySelector(`[data-ng-field="${k}"]`)?.focus({ preventScroll: false }); } catch { /* not focusable */ }
     }
 
     function setView(v) {
@@ -1004,6 +1088,7 @@ registerModule(
         <label class="ng-status" for="ng-f-quick">Write a note</label>
         <textarea id="ng-f-quick" class="ng-quick" data-ng-field="quick" maxlength="4000" placeholder="What you noticed, what you would change…"></textarea>
         <p class="ng-status" data-ng-context>${c ? `It will say when, and ${esc(c)}.` : 'It will say when it was written.'}</p>
+        ${listening && nextAs === 'note' ? '<p class="ng-status" data-ng-listening role="status">Listening for your note…</p>' : '<p class="ng-status" data-ng-voicetip>Hands free: say the wake phrase, then “make a note” and the note.</p>'}
         <div class="ng-btns">${btnHTML('savequick', 'Save note', 'Keep this note, with the time and where you were.')}
           ${chat.log().some((m) => m.role === 'user') ? btnHTML('makenote', `Make a note from the talk with ${esc(n)}`, 'Turn the conversation into a short note you can edit and keep.') : ''}</div>
         ${draftHTML()}
@@ -1064,7 +1149,7 @@ registerModule(
         <div class="ng-row"><input data-ng-field="say" aria-label="${esc(`Type to ${n}`)}" placeholder="${esc(`Type to ${n}…`)}" maxlength="4000">
           ${btn('send', 'Send', `Send what you typed to ${n}.`)}</div>
         <div class="ng-btns">
-          ${btn('listen', listening ? 'Listening… press to stop' : 'Talk', listening ? 'Stop sending what is said to the chat.' : `Say what you want to ${n}; the wake phrase still gives a command.`, `aria-pressed="${listening}"`)}
+          ${btn('listen', listening ? (nextAs === 'note' ? 'Listening for your note… press to stop' : onceOnly ? 'Listening for your question… press to stop' : 'Listening… press to stop') : 'Talk', listening ? 'Stop sending what is said to the chat.' : `Say what you want to ${n}; the wake phrase still gives a command. Hands free: say the wake phrase, then “ask ${n}” and your question.`, `aria-pressed="${listening}"`)}
           ${thinking ? btn('cancel', 'Stop', 'Stop waiting for this answer.') : ''}
           ${btn('makenote', 'Make a note', 'Turn this conversation into a short note you can edit and keep.')}
           ${btn('setup', `About ${esc(n)}`, 'Its name, how it talks, and which AI answers.', `aria-expanded="${setupOpen}"`)}
@@ -1102,6 +1187,7 @@ registerModule(
       // A new page of his keeps what the info area last explained (Kontakt's pane does not blank either).
       if (lastInfo) showInfo(lastInfo);
       paintCursor();
+      announceAsk();
       if (hadFocus) {
         const f = (focusField && root.querySelector(`[data-ng-field="${focusField}"]`))
           || root.querySelector('[data-ng-choice]') || stops()[0];
@@ -1283,6 +1369,9 @@ registerModule(
           if (p?.on && p.instanceId === (ctx.instanceId || null) && listening) { heardAnswering = true; if (listenHint) { listenHint = ''; render(); } }
         });
         on(DELIVERY_TOPIC, (rec) => { if (holding && rec && aiSaidId != null && rec.id === aiSaidId) release(); });
+        // "ask <name> ..." / "make a note ..." by voice, and the name this panel answers to.
+        on(SPEECH_TOPICS.ask, onAsk);
+        announceAsk();
         // Hover: the whole screen he is on (a kiosk), or the page.
         const scope = mount.closest?.('.kiosk') || mount.ownerDocument;
         hover = watchHover(scope, { enabled: () => prefs.hover && !torn, onInfo: showInfo });
@@ -1290,12 +1379,19 @@ registerModule(
       onResize() {},
       onHide() {
         if (saidId != null) { try { ctx.output?.cancel?.(saidId); } catch { /* said */ } saidId = null; }
-        // A hidden chat does not keep taking the room's words.
+        // A hidden chat does not keep taking the room's words, and is not asked by voice.
         if (listening) stopListening();
+        hidden = true;
+        announceAsk();
+      },
+      onShow() {
+        hidden = false;
+        announceAsk();
       },
       destroy() {
         if (listening) { listening = false; holding = false; announceGrammar(); }
         torn = true;
+        announceAsk();
         clearTimeout(idleTimer); clearTimeout(hintTimer); clearTimeout(holdTimer);
         try { inflight?.abort(); } catch { /* done */ }
         try { detectAbort?.abort(); } catch { /* done */ }
@@ -1318,7 +1414,7 @@ registerModule(
       // For the suite: where he is, without reaching into the closure.
       __probe: () => ({ id: nav.id(), history: nav.history(), prefs: { ...prefs }, intro, words, cursor,
         stops: stops().map((b) => b.textContent.trim()),
-        view, listening, holding, thinking, status: { ...status }, ai: { ...aiP }, pending: pending(),
+        view, listening, holding, thinking, nextAs, onceOnly, status: { ...status }, ai: { ...aiP }, pending: pending(),
         log: chat.log(), notes: notes.map((x) => ({ ...x })), draft: draft ? { ...draft } : null, notice, listenHint,
         storeKind: store?.kind || null, detect: detect ? { ...detect } : null, hello: hello ? { ...hello } : null,
         otherOpen, lastOther, context: noteContext(), backend, claudeCheck: claudeCheck ? { ...claudeCheck } : null }),

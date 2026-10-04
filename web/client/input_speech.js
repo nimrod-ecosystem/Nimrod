@@ -544,6 +544,131 @@ export function moduleVoiceTable(voice, { verbs = null, table = PHRASES } = {}) 
 }
 
 // ---------------------------------------------------------------------------------------
+// *** "ASK <NAME>, ..." AND "MAKE A NOTE, ..." BY VOICE (2026-10-04). ***
+// ---------------------------------------------------------------------------------------
+//
+// Mike, walking the site talking to his AI and taking notes: "ask Nimrod, what does this do" and "make a
+// note, the trivia text is too small", each after the wake phrase. These are the one kind of command that
+// carries FREE WORDS, so they are not rows in PHRASES or ROUTES (whole-utterance matches): they are a
+// PREFIX, and what follows the prefix is the payload.
+//
+// *** WHO IS ASKED, AND BY WHAT NAME. *** The AI's name is the person's (nimrod_ai.js: their record) and
+// changes without a reload, so this file holds no name. A module that answers says so on the bus
+// (SPEECH_ASK_TARGET_TOPIC { source, instanceId, open, names, notes }), as a voice game announces its words;
+// it re-announces on a rename and withdraws when hidden or gone. The newest open target is the one asked.
+// No target (no AI panel on this screen): nothing is sent; the hearing is reported, and that is all.
+//
+// *** THE RULES, each argued: ***
+//   * ONLY SAID TO THE SCREEN: the wake phrase in the same breath, or inside its window. EVEN WITH THE WAKE
+//     GATE TURNED OFF. The gate-off person chose bare COMMANDS from a closed list; a sentence that happens to
+//     start with a name (Mike's cat is called Nimrod) going to an AI is a different thing nobody chose.
+//   * A COMMAND WINS. Every exact phrase (the module's own, a verb, a route) is tried first, so an AI named
+//     "Play" cannot swallow "play opposites", and nothing that worked before changes.
+//   * ONLY WHAT FOLLOWED THE PREFIX is sent: never the wake phrase, never "ask <name>", never anything said
+//     before. It is cut from the recogniser's own words (`textAfterWords`), so "What's 2 plus 2?" keeps its
+//     digits and its question mark (`normalize` would have dropped both).
+//   * THE BARE NAME ("<name>, what is this") counts only for a name that is not itself a command or a wake
+//     phrase. "ask <name>" always counts.
+//   * NOTHING HERE ACTS. The question goes to the chat, the note to the notes; whatever the AI asks to do is
+//     still a button somebody presses (nimrod_ai.js createActionQueue), exactly as when it is typed.
+//
+// *** THE PREFIX ALONE ("computer please, ask Nimrod" ... a pause ... "what is this"). *** A recogniser ends
+// an utterance at a pause, so the question can arrive on its own. Then:
+//   * an engine that can write a sentence down (`canDictate`, below): the target opens a ONE-UTTERANCE
+//     dictation window on this layer (`dictation: true`, the chat's own) for `wakeWindowMs` - the same pause
+//     the wake phrase alone allows, for the same person who stops to think. One utterance, then it shuts:
+//     "only what was said after 'ask <name>'" means the NEXT thing said, not the next two minutes of room.
+//   * a FIXED-GRAMMAR engine (a Vosk-class recogniser listening for its own list): it cannot hear a free
+//     sentence, so the target opens its chat and says "type it, or press Talk". The phrase itself is in the
+//     grammar (`spokenNow`), so "computer please ask Nimrod" can be heard there. ARGUED against the other
+//     options: (1) loading an open model only for the question - the engine IS the limit, and a guess there
+//     goes verbatim to an AI; (2) the phone as a microphone (phone_mic.js) - it is a second EAR for the same
+//     recognisers, not a second recogniser, so it hears no more than the room's microphone does.
+export const SPEECH_ASK_TARGET_TOPIC = 'speech/ask-target';
+export const SPEECH_ASK_TOPIC = 'speech/ask';
+// "make a note" and its plain variants. "... that" is listed so "make a note that the font is small" keeps
+// "the font is small" (the longest prefix wins). None is a phrase in either table (the suite checks).
+export const NOTE_PHRASES = Object.freeze(['make a note', 'make a note that', 'take a note', 'take a note that',
+  'add a note', 'write a note', 'note that']);
+export const ASK_WORD = 'ask';
+// A name of more than this many words gets no spoken prefix: the table's own limit (VOICE_WORDS_MAX), and a
+// recogniser has to hear it exactly. Under three letters gets none either (the table's rule: a syllable).
+const ASK_NAME_WORDS_MAX = 4;
+
+/** A name as the speech layer hears it (normalised), or '' when it cannot be a spoken prefix. */
+export function askName(name) {
+  const n = normalize(name);
+  if (!n || n.replace(/\s/g, '').length < 3 || n.split(' ').length > ASK_NAME_WORDS_MAX) return '';
+  return n;
+}
+
+/**
+ * Every prefix that means "ask" or "note" right now: `[{ kind: 'ask'|'note', phrase, name }]`. `table` is the
+ * whole spoken table (a prefix that IS a command is dropped: the command wins anyway, and it must never look
+ * like it could mean both); `wakes` the wake phrases (a bare name that is one, or starts with one, is dropped).
+ */
+export function askPhrases(names = [], { table = spokenTable(), wakes = SPEECH_DEFAULTS.wake, notes = true } = {}) {
+  const commands = new Set(Object.values(table || {}).flat().map(normalize));
+  const ws = (Array.isArray(wakes) ? wakes : [wakes]).map(normalize).filter(Boolean);
+  const out = [];
+  const seen = new Set();
+  const add = (kind, phrase, name) => {
+    if (!phrase || commands.has(phrase) || seen.has(phrase)) return;
+    seen.add(phrase);
+    out.push({ kind, phrase, name });
+  };
+  if (notes) for (const p of NOTE_PHRASES) add('note', normalize(p), null);
+  for (const raw of Array.isArray(names) ? names : [names]) {
+    const n = askName(raw);
+    if (!n) continue;
+    add('ask', `${ASK_WORD} ${n}`, n);
+    // A name that IS a wake phrase, or starts with one, would be eaten by the wake split first. A name a wake
+    // phrase starts with ("nimrod" and "nimrod please") is fine: the wake split is at the START of what was
+    // said, and "computer please, nimrod, ..." still reaches the name.
+    const wakeLike = ws.some((w) => n === w || n.startsWith(`${w} `));
+    if (!wakeLike && !NOTE_PHRASES.some((p) => normalize(p) === n)) add('ask', n, n);
+  }
+  return out;
+}
+
+/**
+ * Did these (normalised) words start with an ask or note prefix? `{ kind, name, phrase, text }`, `text` the
+ * normalised words after it ('' when the prefix was all of it), or null. The longest prefix wins.
+ */
+export function askFor(text, phrases = []) {
+  const said = normalize(text);
+  if (!said) return null;
+  const list = [...(Array.isArray(phrases) ? phrases : [])].filter((p) => p && p.phrase)
+    .sort((a, b) => b.phrase.split(' ').length - a.phrase.split(' ').length);
+  for (const p of list) {
+    if (said === p.phrase) return { kind: p.kind, name: p.name || null, phrase: p.phrase, text: '' };
+    if (said.startsWith(`${p.phrase} `)) return { kind: p.kind, name: p.name || null, phrase: p.phrase, text: said.slice(p.phrase.length + 1) };
+  }
+  return null;
+}
+
+/**
+ * The recogniser's OWN words after the first `skip` normalised words, punctuation and digits kept, leading
+ * commas and the like trimmed. null when the cut falls inside a word ("nimrod's" is two normalised words) -
+ * the caller then sends the normalised words instead.
+ */
+export function textAfterWords(text, skip) {
+  const s = String(text ?? '');
+  const re = /\S+/g;
+  let seen = 0;
+  let end = 0;
+  let m;
+  while (seen < skip && (m = re.exec(s))) {
+    const k = normalize(m[0]);
+    seen += k ? k.split(' ').length : 0;
+    if (seen > skip) return null;
+    end = m.index + m[0].length;
+  }
+  if (seen < skip) return null;
+  return s.slice(end).replace(/^[\s,.;:!?\-–—]+/, '').trim();
+}
+
+// ---------------------------------------------------------------------------------------
 // WHAT A RECOGNISER MAY SAY BESIDES THE TEXT (row 2.31)
 // ---------------------------------------------------------------------------------------
 //
@@ -1151,6 +1276,10 @@ export function attachSpeech(input, {
   // (or null), asked each time something is heard, so focus moving needs no restart. Looked up BEFORE
   // the table. Null (the default): no module phrases, exactly as before.
   scoped = null,
+  // CAN THIS RECOGNISER WRITE A FREE SENTENCE DOWN? (`ask <name>` / `make a note` said alone). A function
+  // overriding the recogniser's own answer; null (the default) asks the recogniser (`rec.canDictate`, a
+  // function or a boolean), and one that does not say is taken as able (the browser's own is open-only).
+  canDictate = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -1330,6 +1459,65 @@ export function attachSpeech(input, {
   const offGrammar = bus && typeof bus.subscribe === 'function'
     ? bus.subscribe(SPEECH_GRAMMAR_TOPIC, onGrammar) : () => {};
 
+  // ---- who can be asked ("ask <name>", "make a note") ----------------------------------------
+  // The modules that said they answer, by instance; the newest open one is asked (as for games).
+  const askTargets = new Map();   // key -> { key, source, instanceId, names, notes, seq }
+  let askSeq = 0;
+  function onAskTarget(p) {
+    if (!p || typeof p !== 'object') return;
+    const key = p.instanceId ? `#${p.instanceId}` : `@${p.source || ''}`;
+    const names = (Array.isArray(p.names) ? p.names : []).map(askName).filter(Boolean);
+    const notes = p.notes === true;
+    if (p.open !== false && (names.length || notes)) {
+      const had = askTargets.get(key);
+      askTargets.set(key, { key, source: p.source || null, instanceId: p.instanceId || null, names, notes,
+                            seq: had ? had.seq : ++askSeq });
+    } else askTargets.delete(key);
+    pushMode();
+  }
+  const offAskTarget = bus && typeof bus.subscribe === 'function'
+    ? bus.subscribe(SPEECH_ASK_TARGET_TOPIC, onAskTarget) : () => {};
+  const askList = () => [...askTargets.values()].sort((a, b) => b.seq - a.seq);
+  // Every ask/note prefix right now, from every open target. Checked against the commands and the wake list.
+  function askNow() {
+    const list = askList();
+    if (!list.length) return [];
+    return askPhrases(list.flatMap((t) => t.names), { table: spoken, wakes, notes: list.some((t) => t.notes) });
+  }
+  // Which target hears this: the newest that answers to that name (an ask) or keeps notes (a note).
+  function askTarget(a) {
+    return askList().find((t) => (a.kind === 'note' ? t.notes : t.names.includes(a.name))) || null;
+  }
+  function canDictateNow() {
+    try {
+      if (typeof canDictate === 'function') return !!canDictate();
+      const c = rec?.canDictate;
+      if (typeof c === 'function') return !!c.call(rec);
+      if (typeof c === 'boolean') return c;
+    } catch (err) { console.error('speech: canDictate', err); return false; }
+    return true;
+  }
+  // "ask <name> ..." / "make a note ..." heard, said to the screen. Only the words after the prefix travel.
+  function asked(a, text, woke) {
+    const t = askTarget(a);
+    let words = '';
+    if (a.text) {
+      const all = normalize(text).split(' ').filter(Boolean).length;
+      const cut = textAfterWords(text, all - a.text.split(' ').length);
+      words = cut || a.text;
+    }
+    const dictation = canDictateNow();
+    report({ text, verb: null, woke, ask: a.kind, sent: !!t });
+    if (!t) return;
+    confirmed(a.kind);
+    publish(t.instanceId ? (typeof bus?.instanceTopic === 'function' ? bus.instanceTopic(t.instanceId, SPEECH_ASK_TOPIC)
+      : `${SPEECH_ASK_TOPIC}#${t.instanceId}`) : SPEECH_ASK_TOPIC, {
+      kind: a.kind, name: a.name, text: words, to: t.instanceId, source: t.source,
+      // The prefix alone: open a one-utterance window when the engine can write a sentence down.
+      listen: !words && dictation, dictation, ms: Math.max(0, Number(wakeWindowMs) || 0),
+    });
+  }
+
   function answer(g, text, detail) {
     // DICTATION (a chat): the words themselves, whatever they are; nothing to match, nothing to ask.
     if (g.dictation) {
@@ -1369,9 +1557,15 @@ export function attachSpeech(input, {
   // ---- how the recogniser should listen -------------------------------------------------
   // The spoken table plus the focused module's own phrases, for a grammar (a grammar-limited engine can
   // only hear what is listed). The key cannot collide with a verb or a route id (both are [a-z-]).
+  // And "ask <name>" / "make a note" while somebody can be asked (a grammar-limited engine must be able to
+  // hear the prefix to open the chat; the words after it it cannot hear, and is not asked to).
   const spokenNow = () => {
     const own = Object.keys(scopedTable());
-    return own.length ? { ...spoken, '#focused': own } : spoken;
+    const asks = askNow().map((p) => p.phrase);
+    let t = spoken;
+    if (own.length) t = { ...t, '#focused': own };
+    if (asks.length) t = { ...t, '#ask': asks };
+    return t;
   };
   function recognitionMode() {
     if (pendingLive()) {
@@ -1492,6 +1686,13 @@ export function attachSpeech(input, {
     // *** A NEAR MISS ASKS, and only when it was said to the screen, for the same reason. ***
     if (!verb && !route) {
       const toScreen = w.woke || inWindow;
+      // "ask <name> ..." / "make a note ...": only said to the screen, and only once no command matched.
+      const a = toScreen ? askFor(rest, askNow()) : null;
+      if (a) {
+        closeWindow('command');   // one wake, one command
+        asked(a, text, w.woke);
+        return;
+      }
       if (toScreen) logMiss(rest);
       const nm = toScreen && asking ? nearMiss(rest, spoken) : null;
       report(nm ? { text, verb: null, woke: w.woke, nearMiss: nm.phrase } : { text, verb: null, woke: w.woke });
@@ -1521,6 +1722,10 @@ export function attachSpeech(input, {
     currentGrammar: () => recognitionMode().grammar,
     // The game an answer would go to right now, or null.
     answerTarget: () => { const x = currentGame(); return x ? { source: x.source, instanceId: x.instanceId, phase: x.phase } : null; },
+    // Who "ask <name>" / "make a note" would reach right now, newest first, and the prefixes that mean them.
+    askTargets: () => askList().map((t) => ({ source: t.source, instanceId: t.instanceId, names: [...t.names], notes: t.notes })),
+    askPhrases: () => askNow().map((p) => ({ ...p })),
+    canDictate: () => canDictateNow(),
     // The "did you mean" question up right now ({ id, phrase, question }), or null.
     nearMissPending: () => (pendingLive() ? { id: pending.id, phrase: pending.phrase, question: pending.question } : null),
     // Answer it from a host's own control (an on-screen Yes, a switch the host wired itself):
@@ -1538,8 +1743,9 @@ export function attachSpeech(input, {
     stop() { halt(); },
     destroy() {
       halt();
-      for (const off of [offGrammar, offYes, offNo]) { try { off(); } catch { /* gone */ } }
+      for (const off of [offGrammar, offYes, offNo, offAskTarget]) { try { off(); } catch { /* gone */ } }
       games.clear();
+      askTargets.clear();
     },
   };
 }
