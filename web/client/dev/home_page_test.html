@@ -468,6 +468,118 @@ try {
   check('...and they close with their own Close', await until(() => !$('#stage [data-ew="close"]'), 5000));
 
   // ============================================================================================
+  // 2026-10-04, later: TWO DEVICES ON ONE HOME. Home's writes laid the layout they worked out over the doc as it was at
+  // the write, the Transform windows wrote the layout they opened on minutes later, and Undo put a whole snapshot back
+  // -- each one undid a change made meanwhile on another device (the screen itself, a phone). The other device here is
+  // a second client on the same doc. Each check below failed before the fix (reasoned: the write laid `kiosk` over the
+  // refusal's truth; withPlaced over the layout the windows opened on; the whole snapshot restored).
+  section('*** 2026-10-04: another device changes this Home while it is being edited here ***');
+  {
+    await until(editIdle, 15000);
+    const sPath = new URL(profiles.stateURL(HID, 'settings'), location.href).pathname;
+    const remote = async (fn) => { const r = createState({ url: profiles.stateURL(HID, 'settings'), user: USER }); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+    const placedOf = (L) => Object.fromEntries(((L && L.placed) || []).filter(Boolean).map((p) => [p.id, p]));
+    const moveIn = (id, at) => (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...d.kiosk.layout,
+      placed: d.kiosk.layout.placed.map((p) => (p && p.id === id ? { ...p, ...at } : p)) } } });
+    const savedX = async (id) => placedOf(await layoutOf(HID))[id]?.x;
+    // The page's next write of this doc whose layout places `id` at `x` waits for `fn` (the other device) first: the
+    // other device's write lands between this page's read and its write.
+    const beforeWrite = (id, x, fn) => {
+      const orig = win.fetch;
+      let fired = false;
+      win.fetch = async (url, opts = {}) => {
+        if (!fired && opts.method === 'PUT' && new URL(String(url), win.location.href).pathname === sPath) {
+          let body = null; try { body = JSON.parse(opts.body); } catch { body = null; }
+          if (placedOf(body?.data?.kiosk?.layout)[id]?.x === x) { fired = true; win.fetch = orig; await fn(); }
+        }
+        return orig(url, opts);
+      };
+      return () => { win.fetch = orig; return fired; };
+    };
+    const mods = await modsOf(HID);
+    const P = mods.find((m) => m.type === 'photos')?.id;
+    const B = mods.find((m) => m.type === 'button')?.id;
+    const p0 = await savedX(P), b0 = await savedX(B);
+    check('(setup) the photos and a button are placed freely on this Home', typeof p0 === 'number' && typeof b0 === 'number', `${p0} / ${b0}`);
+    if (tray().hidden || !tray().querySelector('[data-edit-change="move"]')) eb('change').click();
+    await until(() => !tray().hidden && !!tray().querySelector('[data-edit-change="move"]'));
+    for (let i = 0; i < 6 && !/Photos/.test(eb('change').textContent); i++) { tray().querySelector('[data-edit-change="next"]').click(); await sleep(150); }
+    check('(setup) Photos is the chosen thing', /Photos/.test(eb('change').textContent), eb('change').textContent);
+    const moveRight = () => $$('#home-tray [data-edit-change="move"]').find((b) => b.textContent === 'Move right')?.click();
+
+    // A. The edit bar: Move right here while the other device moves the button.
+    const doneA = beforeWrite(P, p0 + 3, () => remote(moveIn(B, { x: b0 + 7 })));
+    moveRight();
+    check('*** Move right here, the button moved there in the same moment: both are saved ***',
+      await until(async () => (await savedX(P)) === p0 + 3 && (await savedX(B)) === b0 + 7, 10000) && doneA(),
+      `photos ${await savedX(P)} (want ${p0 + 3}), button ${await savedX(B)} (want ${b0 + 7})`);
+    await until(editIdle, 15000);
+    check('...and nothing is said to have been lost', !/not kept/.test(toastText()), toastText());
+
+    // B. Undo after that merged save: the photos go back, the other device's button stays where it put it.
+    eb('undo').click();
+    check('*** Undo: the photos go back, and the button stays where the other device put it ***',
+      await until(async () => (await savedX(P)) === p0 && (await savedX(B)) === b0 + 7, 10000),
+      `photos ${await savedX(P)} (want ${p0}), button ${await savedX(B)} (want ${b0 + 7})`);
+    await until(editIdle, 15000);
+    eb('redo').click();
+    check('...Redo: the photos move right again, the button still the other device\'s',
+      await until(async () => (await savedX(P)) === p0 + 3 && (await savedX(B)) === b0 + 7, 10000),
+      `photos ${await savedX(P)}, button ${await savedX(B)}`);
+    await until(editIdle, 15000);
+
+    // C. A true clash: the other device moves the PHOTOS while they are moved here. Its place stands, and it is said.
+    if (tray().hidden || !tray().querySelector('[data-edit-change="move"]')) eb('change').click();
+    await until(() => !tray().hidden && !!tray().querySelector('[data-edit-change="move"]'));
+    for (let i = 0; i < 6 && !/Photos/.test(eb('change').textContent); i++) { tray().querySelector('[data-edit-change="next"]').click(); await sleep(150); }
+    const doneC = beforeWrite(P, p0 + 6, () => remote(moveIn(P, { x: 11 })));
+    moveRight();
+    check('*** a clash: the photos are where the other device put them, on the server ***',
+      await until(async () => (await savedX(P)) === 11, 10000) && doneC(), `photos ${await savedX(P)}`);
+    check('*** ...the page says the move made here was not kept ***',
+      await until(() => /not kept/.test(toastText()) && /another device/.test(toastText()), 5000), toastText());
+    check('...and so does the screen\'s quiet line', await until(() => /not kept/.test(win.__home.kiosk?.note?.() || ''), 5000), String(win.__home.kiosk?.note?.()));
+    check('...the screen shows the photos there', await until(() => placedOf({ placed: win.__home.kiosk?.dashboard?.()?.placed?.() })[P]?.x === 11, 8000),
+      JSON.stringify(placedOf({ placed: win.__home.kiosk?.dashboard?.()?.placed?.() })[P]));
+    await until(editIdle, 15000);
+
+    // D. The Transform windows, open while the other device moves the button.
+    const b1 = await savedX(B);
+    eb('transform').click();
+    const ed = () => win.__home.kiosk?.dashboard?.()?.editing?.() || null;
+    check('(setup) the Transform windows are open, over the photos and the button', await until(() => !!ed()?.model?.item?.(P) && !!ed()?.model?.item?.(B), 8000));
+    await remote(moveIn(B, { x: b1 - 5 }));
+    ed().model.select(P);
+    ed().model.set('x', 20);
+    check('*** Transform: the photos moved in the windows and the button moved there are both saved ***',
+      await until(async () => (await savedX(P)) === 20 && (await savedX(B)) === b1 - 5, 10000),
+      `photos ${await savedX(P)} (want 20), button ${await savedX(B)} (want ${b1 - 5})`);
+    $$('#stage [data-ew="close"]').forEach((b) => b.click());
+    check('...closing them shows the screen what was saved (the button where the other device put it)',
+      await until(() => placedOf({ placed: win.__home.kiosk?.dashboard?.()?.placed?.() })[B]?.x === b1 - 5, 15000),
+      JSON.stringify(placedOf({ placed: win.__home.kiosk?.dashboard?.()?.placed?.() })[B]));
+    await until(editIdle, 15000);
+    eb('undo').click();
+    check('*** Undo after the Transform windows: the photos go back, the button stays the other device\'s ***',
+      await until(async () => (await savedX(P)) === 11 && (await savedX(B)) === b1 - 5, 10000),
+      `photos ${await savedX(P)} (want 11), button ${await savedX(B)} (want ${b1 - 5})`);
+    await until(editIdle, 15000);
+
+    // E. A clash inside the Transform windows: said on the page and on the screen.
+    eb('transform').click();
+    await until(() => !!ed()?.model?.item?.(P), 8000);
+    await remote(moveIn(P, { x: 33 }));
+    ed().model.select(P);
+    ed().model.set('x', 25);
+    check('*** a clash in the Transform windows: the other device\'s place for the photos stands ***',
+      await until(async () => (await savedX(P)) === 33, 10000) && (await sleep(600), (await savedX(P)) === 33), `photos ${await savedX(P)}`);
+    check('*** ...and the page says the move made here was not kept ***', await until(() => /not kept/.test(toastText()), 5000), toastText());
+    $$('#stage [data-ew="close"]').forEach((b) => b.click());
+    await until(() => !$('#stage [data-ew="close"]'), 5000);
+    await until(editIdle, 15000);
+  }
+
+  // ============================================================================================
   // 2026-10-03, Mike: "Where are the overlays? I'd like to make a dashboard that's full screen photos with a small
   // clock overlay somewhere." Add has a "Put it" choice; Over the dashboard floats a module in a corner (layout.js
   // addAsOverlay), and a clock that way is the small corner clock. Undone at the end, so what follows is as it was.

@@ -6520,6 +6520,9 @@ export async function mountKiosk(root, {
     // 2026-10-04, for the suites: the same quiet line by its general name (`sayNote`), and the swapped-in
     // screen's doc while it shows (null on the boot screen).
     note: () => (lockNoteEl && !lockNoteEl.hidden ? lockNoteEl.textContent : null),
+    // ...and the way a host page says something on it (2026-10-04, later: Home's edit bar, when a change made there
+    // gave way to another device's -- modules.html `tellLost`). Same line, same timing rule.
+    say: (text) => (typeof text === 'string' && text ? sayNote(text) : null),
     swapDoc: () => swapDocNow(),
     // ...and the store the showing arrangement saves its room to (`ownLayoutStore`, or the dashboard's own,
     // view.js), so a suite can save with a base the doc has moved on from, in a fixed order.

@@ -149,11 +149,59 @@ export function mergeSettingsDoc(base, mine, theirs, { prefer = 'theirs' } = {})
  * layout (kiosk.js, both of its docs; modules/view.js; and since 2026-10-04 later, the edit windows on either --
  * dashboard_editor.js hands its `save` the layout its windows last matched as the base), so the rule is written once.
  */
-export function mergeLayoutSave(base, next, nowSaved, { prefer = 'theirs' } = {}) {
+export function mergeLayoutSave(base, next, nowSaved, { prefer = 'theirs', byId = false } = {}) {
   if (base === undefined || J(base) === J(nowSaved)) return { layout: next, lost: [], merged: false };
   const wrap = (l) => ({ kiosk: { layout: l ?? null } });
-  const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer });
-  return { layout: r.data?.kiosk?.layout ?? null, lost: r.lost, merged: true };
+  const keyed = byId ? keyPlaced([base, next, nowSaved]) : null;
+  const [b, m, t] = keyed ? keyed.sides : [base, next, nowSaved];
+  const r = mergeSettingsDoc(wrap(b), wrap(m), wrap(t), { prefer });
+  const layout = r.data?.kiosk?.layout ?? null;
+  return { layout: keyed ? keyed.back(layout) : layout, lost: r.lost, merged: true };
+}
+
+/**
+ * *** `byId`: THE PLACED LIST MERGED BY ID, NOT BY POSITION (2026-10-04, later; opt-in). *** The rule above merges an
+ * array element by element only when its shape is unchanged (the header). For `layout.placed` that makes any entry
+ * added or removed on one side and ANY entry moved on the other a clash -- so the other device's move "wins" and the
+ * module added here is left unplaced, or the one removed here stays placed with no module behind it. Home's edit bar
+ * and the composer add, remove and switch entries as a matter of course, and their Undo puts entries back, so for them
+ * the list is merged as what it is: a set of entries, each named by its `id`. An entry added on one side is added; one
+ * removed on one side (and not changed on the other) is removed; one changed on both is merged key by key as before;
+ * removed here and changed there (or the other way) is a true clash, settled by `prefer` and reported as before
+ * (`['kiosk','layout','placed', id]`, so `describeLost` still says "the layout"). The order kept is the other device's,
+ * with entries only this side has after it, in this side's order.
+ *   Opt-in, not the rule for every writer: the kiosk's and view.js's writers were proved against the positional rule
+ *   (kiosk_test), and widening it under them is its own change -- on Mike's list (2026-10-04).
+ * A list whose entries do not all carry a distinct string `id` is left to the positional rule.
+ */
+function keyPlaced(sides) {
+  const lists = sides.map((L) => (isObj(L) && Array.isArray(L.placed) ? L.placed : null));
+  if (!lists.some(Boolean)) return null;
+  for (const list of lists) {
+    if (!list) continue;
+    const ids = list.map(idOf);
+    if (ids.some((id) => !id) || new Set(ids).size !== ids.length) return null;
+  }
+  const keyedSides = sides.map((L, i) => {
+    if (!isObj(L)) return L;
+    const obj = {};
+    for (const e of lists[i] || []) obj[e.id] = e;
+    return { ...L, placed: obj };            // a side with no list: an empty set, so a removal reads as one
+  });
+  const [, mine, theirs] = lists;
+  const back = (layout) => {
+    if (!isObj(layout) || !isObj(layout.placed)) return layout;
+    const set = layout.placed;
+    const order = [...(theirs || []).map((e) => e.id), ...(mine || []).map((e) => e.id), ...Object.keys(set)];
+    const seen = new Set();
+    const placed = [];
+    for (const id of order) { if (set[id] && !seen.has(id)) { seen.add(id); placed.push(set[id]); } }
+    const out = { ...layout, placed };
+    // Nothing placed, and this side had no list (it removed the last entry the way home_profile.js does): no list.
+    if (!placed.length && !mine) delete out.placed;
+    return out;
+  };
+  return { sides: keyedSides, back };
 }
 
 /**

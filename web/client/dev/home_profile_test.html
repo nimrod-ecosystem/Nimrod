@@ -25,7 +25,7 @@ editor, the edit bar and its trays as data, and undo as a plan. No server. The p
 import {
   ADD_PIECES, pieceState, layoutIds, whereIs, swapInLayout, remapLayoutIds, removeFromLayout, addToLayout,
   nudgeInLayout, resizeInLayout, withPlaced, sceneChoices, currentScene, applyScene, ROOM_ROWS, roomRows,
-  cycleRoomRow, roomRecipe, editBarModel, changeTrayModel, stepThing, restorePlan, createUndo,
+  cycleRoomRow, roomRecipe, editBarModel, changeTrayModel, stepThing, restorePlan, createUndo, swapStep, remapStep,
   MOVE_STEP, SIZE_RANGE, UNDO_LIMIT, ADD_SPOTS_ROOM, SCENE_KINDS, editScanStep, scanAt, trayOwner,
   ADD_SPOTS_ROOM3D, ADD_SIZE_ROOM3D, room3dSpot, ROOM3D_ROWS, ROOM3D_DEPTHS, SCENE_ROWS,
 } from '../home_profile.js';
@@ -408,6 +408,36 @@ try {
     check('a new change forgets what was undone', !u.canRedo());
     for (let i = 0; i < 10; i++) u.push({ n: i });
     check('it keeps a limited number (default: Design’s 40)', u.sizes().back === 3 && UNDO_LIMIT === 40);
+  }
+
+  section('*** 2026-10-04: Undo puts back only what the step did (its stamp), not what another device did since ***');
+  {
+    // The step removed b. Since then, another device added z and removed a.
+    const snap = { mods: [{ id: 'a', type: 'photos', state: {} }, { id: 'b', type: 'clock', state: { tz: 'x' } }] };
+    const step = { from: ['a', 'b'], to: ['a'] };
+    const plan = restorePlan([{ id: 'z', type: 'trivia' }], snap, step);
+    check('*** with the step: b (taken off by it) comes back with its settings; z (added elsewhere) stays; a (removed elsewhere) stays gone ***',
+      J(plan.add.map((x) => [x.fromId, x.type, x.state])) === J([['b', 'clock', { tz: 'x' }]]) && J(plan.remove) === J([]), J(plan));
+    const addStep = restorePlan([{ id: 'a', type: 'photos' }, { id: 'n', type: 'notes' }, { id: 'z', type: 'trivia' }],
+      { mods: [{ id: 'a', type: 'photos' }] }, { from: ['a'], to: ['a', 'n'] });
+    check('...a step that added n: n comes off, z (added elsewhere) does not', J(addStep.remove) === J(['n']) && !addStep.add.length, J(addStep));
+    check('...without a step, the snapshot is restored whole, as before', J(restorePlan([{ id: 'z', type: 'trivia' }], snap).remove) === J(['z']));
+    const u = createUndo();
+    const e1 = u.push({ n: 1, mods: [{ id: 'b', type: 'clock' }], layout: { slots: ['b'] } });
+    u.stamp({ layout: { from: { slots: ['b'] }, to: { slots: [null] } }, mods: { from: ['b'], to: [] } }, e1);
+    const undone = u.undo({ n: 2, mods: [] });
+    check('a stamp rides on the entry it was given, and Undo hands it back', J(undone.after.mods) === J({ from: ['b'], to: [] }));
+    u.stamp(swapStep(undone.after));
+    u.remap((e) => remapStep(e, { b: 'b2' }));
+    const redone = u.redo({ n: 3 });
+    check('*** the entry Undo put on the redo list carries the step swapped, renamed through the new id ***',
+      J(redone.after.mods) === J({ from: [], to: ['b2'] }) && J(redone.after.layout) === J({ from: { slots: [null] }, to: { slots: ['b2'] } }), J(redone.after));
+    const e = { mods: [{ id: 'b', type: 'clock' }], layout: { slots: ['b'], placed: [{ id: 'b', x: 1 }] }, after: { layout: { from: null, to: { slots: ['b'] } }, mods: { from: [], to: ['b'] } } };
+    remapStep(e, { b: 'q' });
+    check('remapStep renames a step everywhere: modules, layout, stamp (a null layout stays null)',
+      e.mods[0].id === 'q' && e.layout.slots[0] === 'q' && e.layout.placed[0].id === 'q' && e.after.layout.from === null
+      && e.after.layout.to.slots[0] === 'q' && J(e.after.mods.to) === J(['q']), J(e));
+    check('swapStep of a step that wrote no layout keeps it null', swapStep({ layout: null, mods: { from: ['a'], to: [] } }).layout === null);
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

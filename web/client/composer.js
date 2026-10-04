@@ -17,6 +17,17 @@ import { stashPreviewLayout } from './preview.js';
 import {
   PRESETS, preset, normalizeLayout, isArranged, gridStyle, slotStyle, placement,
 } from './layout.js';
+import { mergeLayoutSave, lostEditWords } from './doc_merge.js';
+
+// *** A SAVE MERGES ONTO THE LAYOUT AS IT IS NOW (2026-10-04, later; the writer ddf57d7 left). *** The composer
+// keeps its own copy of the layout from the moment it loaded, and Save used to write that copy whole -- so a panel
+// moved, or a room changed, on another device while the composer was open was put back. Now `base` is the layout as
+// saved that the copy was made from (the load, then each save), and Save merges the copy onto the doc as it is at the
+// save (doc_merge.js `mergeLayoutSave`, the placed list by id: this page moves modules between the grid and the free
+// placement, which adds and removes entries). In a true clash the other device's value stands -- the kiosk's
+// CONFLICT_PREFER, for its reason (doc_merge.js header) -- and the status line says so, in the one wording.
+// The copy is then the merge, so what this page shows is what was saved. (No Undo here to keep in step with it.)
+const COMPOSER_CONFLICT_PREFER = 'theirs';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -37,6 +48,7 @@ export function mountComposer(root, {
   let current = null;     // the profile being arranged
   let settings = null;    // its settings state handle
   let layout = { preset: 'full', slots: [null] };
+  let base = undefined;   // the layout AS SAVED that `layout` was made from (see the header); undefined: not loaded
   let dirty = false;
   let busy = false;
   let saveTimer = null;
@@ -178,13 +190,35 @@ export function mountComposer(root, {
     if (busy || !current || !settings) return;
     busy = true;
     try {
-      const cur = settings.get().kiosk || {};
+      // The doc as it is NOW (this handle is not polled), so a change made elsewhere since the load is seen.
+      if (typeof settings.load === 'function') await settings.load().catch(() => {});
+      const cur = (settings.get() || {}).kiosk || {};
       // Store `null` when nothing is arranged, so the kiosk falls back to its normal
       // one-at-a-time stage instead of showing an empty grid.
-      settings.set({ kiosk: { ...cur, layout: isArranged(layout) ? layout : null } });
+      const mine = layout;
+      const next = isArranged(mine) ? mine : null;
+      const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: COMPOSER_CONFLICT_PREFER, byId: true });
+      settings.set({ kiosk: { ...cur, layout: m.layout } });
       await settings.flush();
-      dirty = false;
-      say(isArranged(layout) ? 'Layout saved.' : 'Layout cleared — the screen shows one module at a time.');
+      base = m.layout ?? null;
+      // The copy becomes what was saved -- with anything changed HERE while the save was out laid back on top
+      // (merged as this page's own, onto the save it was made against).
+      const ids = modules().map((x) => x.id);
+      if (layout === mine) {
+        // (Nothing merged in: the copy stays as it is -- a cleared grid keeps its shape although `null` was stored.)
+        if (m.merged) layout = normalizeLayout(m.layout, ids);
+        dirty = false;
+      } else if (!m.merged) {
+        dirty = true;
+        queueSave();
+      } else {
+        layout = normalizeLayout(mergeLayoutSave(mine, layout, m.layout, { prefer: 'mine', byId: true }).layout, ids);
+        dirty = true;
+        queueSave();
+      }
+      const what = isArranged(m.layout) ? 'Layout saved.' : 'Layout cleared — the screen shows one module at a time.';
+      if (m.lost.length) say(`${what} ${lostEditWords(m.lost, current.name || null)}`, true);
+      else say(m.merged ? `${what} A change made on another device is kept too.` : what);
       render();
     } catch (err) {
       console.error(err);
@@ -199,7 +233,8 @@ export function mountComposer(root, {
     if (settings) settings.destroy();
     settings = makeSettings(p.id);
     await settings.load().catch(() => {});
-    layout = normalizeLayout((settings.get().kiosk || {}).layout, modules().map((m) => m.id));
+    base = ((settings.get() || {}).kiosk || {}).layout ?? null;
+    layout = normalizeLayout(base, modules().map((m) => m.id));
     dirty = false;
     say('');
     render();

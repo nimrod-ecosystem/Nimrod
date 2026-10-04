@@ -429,6 +429,73 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       scr.destroy && scr.destroy();
     }
 
+    // ============ 2026-10-04: two devices on one screen's layout ============
+    // The composer kept its copy of the layout from the load and wrote it whole on Save, so a change made on
+    // another device while it was open (a panel moved on the screen itself, a corner set from a phone) was put back.
+    // Two clients: a change to a different thing survives Save; a true clash keeps the other device's value and the
+    // status line says so; the autosave path (the screen card) the same. (No Undo here.)
+    {
+      section('*** a change made on another device while the composer is open survives its Save ***');
+      const P = await profiles.create('Two devices');
+      const m = {};
+      for (const t of ['clock', 'photos', 'quests', 'wordforge']) m[t] = (await profiles.addModule(P.id, t)).id;
+      const remote = async (fn) => { const r = makeSettings(P.id); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+      const savedNow = async () => { const r = makeSettings(P.id); await r.load(); const v = r.get() || {}; r.destroy(); return v; };
+      const until = async (fn, ms = 5000) => { const t = Date.now() + ms; while (Date.now() < t) { if (await fn()) return true; await sleep(80); } return false; };
+      const quests = (L) => ((L && L.placed) || []).find((p) => p.id === m.quests);
+      const moveQuests = (x) => (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...d.kiosk.layout,
+        placed: d.kiosk.layout.placed.map((p) => (p.id === m.quests ? { ...p, x } : p)) } } });
+      await remote(() => ({ kiosk: { layout: { preset: 'side', slots: [m.clock, null],
+        placed: [{ id: m.quests, place: 'screen', x: 30, y: 30, w: 20, h: 20 }] } } }));
+
+      host.innerHTML = '';
+      const c = mountComposer(host, { profiles, manifests: listManifests(), makeSettings, initialProfileId: P.id, onOpen: () => {} });
+      await c.refresh();
+      await c.select(P.id);
+      check('(setup) the composer is on the screen, its layout loaded', c.layout().slots[0] === m.clock && quests(c.layout())?.x === 30, JSON.stringify(c.layout()));
+
+      // 1. Different things: there, the quests panel moves and a corner is set; here, a module goes in slot 2.
+      await remote((d) => ({ ...moveQuests(70)(d), kiosk: { ...moveQuests(70)(d).kiosk, mirror: { corner: 'bl' } } }));
+      assign(1, m.photos);
+      await sleep(60);
+      q('[data-save]').click();
+      check('*** Save: the slot filled here AND the panel moved there are both saved (and the corner set there) ***',
+        await until(async () => { const s = await savedNow(); return s.kiosk?.layout?.slots?.[1] === m.photos && quests(s.kiosk.layout)?.x === 70 && s.kiosk.mirror?.corner === 'bl'; }),
+        JSON.stringify((await savedNow()).kiosk));
+      check('...the composer now shows what was saved (the panel where the other device put it)', quests(c.layout())?.x === 70 && c.layout().slots[1] === m.photos,
+        JSON.stringify(c.layout()));
+      check('...and nothing is said to have been lost', /saved/i.test(q('[data-cmsg]').textContent) && !/not kept/.test(q('[data-cmsg]').textContent),
+        q('[data-cmsg]').textContent);
+
+      // 2. A true clash: slot 2 changed both ways. The other device's stands, and the status line says so.
+      await remote((d) => ({ ...d, kiosk: { ...d.kiosk, layout: { ...d.kiosk.layout, slots: [m.clock, m.wordforge] } } }));
+      assign(1, '');
+      await sleep(60);
+      q('[data-save]').click();
+      await until(() => /not kept/.test(q('[data-cmsg]').textContent));
+      const s2 = await savedNow();
+      check('*** a clash: the other device\'s module stays in slot 2 on the server (the moved panel stays moved) ***',
+        s2.kiosk?.layout?.slots?.[1] === m.wordforge && quests(s2.kiosk.layout)?.x === 70, JSON.stringify(s2.kiosk));
+      check('*** ...and the status line says the change made here was not kept ***',
+        /not kept/.test(q('[data-cmsg]').textContent) && /the layout/.test(q('[data-cmsg]').textContent) && /another device/.test(q('[data-cmsg]').textContent),
+        q('[data-cmsg]').textContent);
+      check('...the composer shows the other device\'s module there', c.layout().slots[1] === m.wordforge, JSON.stringify(c.layout().slots));
+      c.destroy();
+
+      // 3. The screen card's composer saves as you go (autosave): the same merge.
+      host.innerHTML = '';
+      const a = mountComposer(host, { profiles, manifests: listManifests(), makeSettings, initialProfileId: P.id, embedded: true, autosave: true, saveDelayMs: 50 });
+      await a.refresh();
+      await a.select(P.id);
+      await remote(moveQuests(40));
+      host.querySelector('[data-preset="stack"]')?.click();
+      await sleep(50);
+      await a.settle();
+      const s3 = await until(async () => { const s = await savedNow(); return s.kiosk?.layout?.preset === 'stack' && quests(s.kiosk.layout)?.x === 40; });
+      check('*** autosave (the screen card): the shape picked here and the panel moved there are both saved ***', s3, JSON.stringify((await savedNow()).kiosk));
+      a.destroy();
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
