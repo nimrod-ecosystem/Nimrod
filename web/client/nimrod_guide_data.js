@@ -457,6 +457,22 @@ const NODES = [
     acts: [{ kind: 'settings-page', page: 'type:photos', label: 'Show the pictures’ settings', auto: true }],
   },
 
+  // ---- checking trivia questions (2026-10-04): the review page had no link (page_links.js) ------------------
+  // Under "other modules", beside the album: it is one module's business. The link opens /reviews.html in a new
+  // tab; on a screen the guide shows its address and a code to scan instead (modules/nimrod.js).
+  {
+    id: 'reviews', title: 'Checking trivia questions',
+    say: 'New trivia questions wait to be checked before anybody plays them. Check them by playing: in a Trivia '
+      + 'panel’s settings, turn on “Include unreviewed questions”, then play. Playing a question through passes '
+      + 'it; “that one is wrong” keeps it out for good. The review page lists the packs waiting, how far each has '
+      + 'got, and every question marked wrong, with its note.',
+    choices: withKeys([
+      { label: 'Other modules', to: 'other' },
+      BACK_TO_START,
+    ]),
+    acts: [{ kind: 'link', href: '/reviews.html', label: 'Questions waiting for review' }],
+  },
+
   // ---- E. other modules ---------------------------------------------------------------------------
   {
     id: 'other', title: 'Other modules',
@@ -471,6 +487,7 @@ const NODES = [
       { label: 'How a module works (editing a module)', to: 'edit-module' },
       { label: 'Connect the AI of your choice', to: 'ai' },
       { label: 'Pictures: choose a photo album', to: 'album' },
+      { label: 'Trivia: check its questions', to: 'reviews' },
       BACK_TO_START,
     ]),
     acts: [

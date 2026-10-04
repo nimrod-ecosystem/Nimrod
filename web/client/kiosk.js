@@ -133,6 +133,7 @@ import { MODE_KEY, MODES, modeFrom } from './lessons.js';
 import { mountChoicePicker } from './choice_picker.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
+import { pageRow, elsewhereMenuPage, ELSEWHERE_PAGES, ELSEWHERE_PAGE_PREFIX } from './page_links.js';
 import { createHealthWatch } from './health.js';
 import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
@@ -3070,6 +3071,25 @@ export async function mountKiosk(root, {
     try { fs = fieldsFor(rec.instance.manifest, rec.instance) || []; } catch { fs = []; }
     return fs.filter((f) => f && f.cycleable && f.kind !== 'picture' && !f.readOnly);
   }
+  // *** "SEE REVIEWS…" UNDER "INCLUDE UNREVIEWED QUESTIONS" (2026-10-04; page_links.js). *** Trivia's row turns
+  // reviewing on; the list of what has been reviewed, flagged and is still waiting was a page nothing linked to.
+  // A ROW OF ITS OWN straight under it (after its "follow" row, if any), not words in its hint: a hint is not a
+  // control, and a switch has to be able to reach it. Keyed by the SETTING, not by "trivia", so any module that
+  // declares the same review setting gets the same link. Off a screen it opens /reviews.html in a new tab; on a
+  // screen it shows the address and a code (the menu page). Not at "Just the essentials". In place, on `rows`.
+  const REVIEW_SETTING_KEY = 'includeUnreviewed';
+  function withReviewsLink(rows) {
+    if (complexity() === 'essential') return rows;
+    const at = rows.findIndex((it) => it && it.kind === 'item'
+      && (it.key === REVIEW_SETTING_KEY || /(^|:)includeUnreviewed$/.test(String(it.id || ''))));
+    if (at < 0) return rows;
+    const base = String(rows[at].id || '');
+    let end = at;
+    while (end + 1 < rows.length && base && String(rows[end + 1]?.id || '').startsWith(`${base}:`)) end += 1;
+    rows.splice(end + 1, 0, pageRow('reviews', { isScreen: !embedded,
+      over: { id: 'see-reviews', label: 'See reviews…', ...MENU_TAB.module(0) } }));
+    return rows;
+  }
   function levelRows(lv) {
     const t = MENU_TAB.module(0);
     const tag = (rows) => rows.map((it) => ({ ...it, ...t }));
@@ -3085,6 +3105,7 @@ export async function mountKiosk(root, {
         write: (k, v) => writeTypeDefault(rec.type, k, v), complexity: complexity(),
         labels: levelLabels(), idPrefix: 'level:module:', defaultLabel: `${name}’s own default`,
       });
+      withReviewsLink(rows);
       return tag([
         { kind: 'heading', id: 'level-head', label: `Every ${name} panel on this screen — a panel that has not chosen follows these` },
         ...(rows.length ? rows : [{ kind: 'item', id: 'level-none', disabled: true, label: `Nothing to set for every ${name} panel` }]),
@@ -4682,6 +4703,8 @@ export async function mountKiosk(root, {
           }
         }
       }
+      // "See reviews…" under "Include unreviewed questions" (Trivia's), 2026-10-04 (`withReviewsLink`).
+      withReviewsLink(items);
       // PAUSE / PLAY for this panel (2026-10-02; `playPauseSelected` argues it): only on a panel that can.
       if (canPausePanel(rec)) {
         const paused = pausedPanels.has(rec.id);
@@ -4779,6 +4802,9 @@ export async function mountKiosk(root, {
       // LESSON TOPICS (moved here from the Settings panel's own list, 2026-10-03; its id 'sc-mode' kept, so the
       // guide's "Show the lesson-topic setting" still finds it). `lessonTopicsPage` argues it.
       get 'sc-mode'() { return lessonTopicsPage(); },
+      // A PAGE SET UP SOMEWHERE ELSE, ON A SCREEN (2026-10-04; page_links.js): the address and a code to scan,
+      // instead of opening /claude.html or /reviews.html over the dashboard. Back is the menu's own.
+      ...Object.fromEntries(Object.keys(ELSEWHERE_PAGES).map((k) => [`${ELSEWHERE_PAGE_PREFIX}${k}`, elsewhereMenuPage(k)])),
       // WHAT ELSE THIS CAN TALK TO. Always present, at every complexity level, because a page
       // that is itself hidden until you are advanced enough defeats its own purpose - it
       // exists so that everything ELSE can hide without becoming a secret.
@@ -4898,8 +4924,22 @@ export async function mountKiosk(root, {
       // the lessons and games let somebody open.
       ...tagged([{ kind: 'item', id: 'game', label: 'Nimrod Game', page: GAME_SETTINGS_PAGE },
         { kind: 'item', id: 'lesson-topics', label: 'Lesson topics', page: 'sc-mode',
-          hint: `now: ${modeFrom(settings.get() || {}) === 'quest' ? 'Quest' : 'Sandbox'}` }], 'screen', 2),
+          hint: `now: ${modeFrom(settings.get() || {}) === 'quest' ? 'Quest' : 'Sandbox'}` },
+        // *** "REVIEW QUESTIONS…" (2026-10-04; page_links.js argues the screen's behaviour). *** /reviews.html had
+        // no link at all. Beside the Nimrod Game and Lesson topics, argued: FOR the panel's own tab only (it is a
+        // Trivia thing): that row is there too, under "Include unreviewed questions" (`withReviewsLink`), but only
+        // while a Trivia panel is the subject, and the review list is the ACCOUNT's, for every pack, wanted from
+        // any panel. AGAINST This screen: it is not about this screen. It sits with the two rows that decide what
+        // the games ask, which is what a review decides. Not at "Just the essentials" (legibility and the ways out).
+        ...(complexity() !== 'essential' ? [pageRow('reviews', { isScreen: !embedded })] : [])], 'screen', 2),
       ...tagged(CONNECTION_ITEMS, 'devices', 3),
+      // *** "CLAUDE ON THIS ACCOUNT…" (2026-10-04). *** Mike: "How do I go there?" -- /claude.html had no link.
+      // ON DEVICES, beside "What else this can talk to", argued: there is no AI tab, and the voice rows (the
+      // closest thing: speech in) are on Devices already. Claude is something this screen TALKS TO, which is
+      // exactly what that row lists. AGAINST "This device" (the level in "Settings for"): the key is the
+      // ACCOUNT's, kept on the server, not this browser's -- and a level is a press away on every lap. AGAINST
+      // People: that tab is who the screen is for, not what it connects to. Not at "Just the essentials".
+      ...(complexity() !== 'essential' ? tagged([pageRow('claude', { isScreen: !embedded })], 'devices', 3) : []),
       ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
