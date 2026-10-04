@@ -532,6 +532,69 @@ class _Store:
             rows = cur.fetchall()
         return [self._person_full(r) for r in rows]
 
+    def holder_counts(self, account_id: str) -> dict[str, int]:
+        """For each profile this account looks after, how many rows on OTHER accounts hold it - one query for a
+        whole page of cards ("Who has this card")."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT p.home_id, COUNT(*) FROM people p JOIN people h ON h.id = p.home_id "
+                "WHERE h.account_id=? AND p.account_id<>? GROUP BY p.home_id"), (account_id, account_id))
+            rows = cur.fetchall()
+        return {r[0]: int(r[1]) for r in rows if r[0]}
+
+    def count_link_rows(self, account_id: str, link_id: str | None) -> int:
+        """How many rows one connection put on this account's page (claims.LAST_CARD_STAYS)."""
+        if not link_id:
+            return 0
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT COUNT(*) FROM people WHERE account_id=? AND link_id=?"), (account_id, link_id))
+            return int(cur.fetchone()[0])
+
+    def _drop_copy_permissions(self, cur, r: dict) -> None:
+        """The permissions that came with a row a connection put on an account: the switches on the row it reaches
+        through (`source_id`), on that connection, for that account ("may leave messages" above all). Nothing
+        else: the source's switches for anybody else, and every drive grant, stay as they are."""
+        if not r.get("link_id") or not r.get("source_id"):
+            return
+        cur.execute(self._q(
+            "DELETE FROM link_permissions WHERE link_id=? AND person_id=? AND subject_kind='account' AND subject_id=?"),
+            (r["link_id"], r["source_id"], r["account_id"]))
+
+    def drop_held_row(self, row_id: str, *, keep_if_screens: bool = True) -> str:
+        """Take ONE row whose profile lives elsewhere off its account's page, without ending the connection
+        (claims.py "ONE CARD AT A TIME"; the caller has asked claims.unshare_refusal / remove_card_refusal).
+          'removed'  a row a connection made: gone, with its settings;
+          'kept'     ...that has a screen of its own (and keep_if_screens): stays as that account's own plain row,
+                     named what they called them, so no screen loses its person;
+          'plain'    a row made by its account and taken over by a claim: its account's own plain row again, with
+                     the picture and page it had before (db.unlink treats it the same way);
+          'screens'  a row with a screen and not keep_if_screens: nothing done;
+          'gone'     no such row, or its own home: nothing done.
+        The permissions that came with the row go in every case but the last two."""
+        with self._tx() as cur:
+            cur.execute(self._q(f"SELECT {self._PERSON_COLS} FROM people WHERE id=?"), (row_id,))
+            got = cur.fetchone()
+            r = self._person_full(got) if got else None
+            if not r or not r["home_id"]:
+                return "gone"
+            cur.execute(self._q("SELECT COUNT(*) FROM profiles WHERE user_id=? AND person_id=?"), (r["account_id"], r["id"]))
+            screens = int(cur.fetchone()[0])
+            if r["made_by"] != "claim" and screens and not keep_if_screens:
+                return "screens"
+            self._drop_copy_permissions(cur, r)
+            if r["made_by"] == "claim":
+                self._make_plain(r, home_name=None, cur=cur)
+                return "plain"
+            if screens:
+                cur.execute(self._q("SELECT name FROM people WHERE id=?"), (r["home_id"],))
+                h = cur.fetchone()
+                self._make_plain(r, home_name=h[0] if h else None, cur=cur)
+                return "kept"
+            cur.execute(self._q("DELETE FROM link_permissions WHERE person_id=?"), (r["id"],))
+            cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (r["account_id"], person_scope(r["id"])))
+            cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (r["id"], r["account_id"]))
+            return "removed"
+
     def screens_by_person(self, account_id: str) -> dict[str, int]:
         """How many screens each of this account's people has - one query for a whole page of cards."""
         with self._tx() as cur:
@@ -961,6 +1024,10 @@ class _Store:
                 self._make_plain(h, home_name=row["name"], cur=cur)
             if mine:
                 cur.execute(self._q("DELETE FROM link_permissions WHERE person_id=?"), (person_id,))
+                # A row a connection put here takes the permissions that came with it (drop_held_row says which),
+                # so deleting your card for somebody does not leave you able to message them through it.
+                if row["home_id"]:
+                    self._drop_copy_permissions(cur, row)
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (account_id, scope))
             cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (person_id, account_id))
 

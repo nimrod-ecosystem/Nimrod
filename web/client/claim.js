@@ -1,5 +1,7 @@
 // claim.js — PEOPLE ACROSS ACCOUNTS, the client side: "Connect with someone", "Invite them to use this", "I call
-// them", "Stop sharing". 2026-10-04 (night).
+// them", "Stop sharing". 2026-10-04 (night). Later that night, one card at a time (claims.py argues each): "Who has
+// this card" with "Stop sharing with <name>" for whoever looks after a profile, and "Remove just this card" for a card
+// a connection put on your page.
 //
 // Mike, DECISIONS.md "People across accounts: a profile has a home, and appears on other accounts": most people
 // will "just want to be connected like friends on Facebook"; setting a profile up for somebody and handing it over
@@ -101,7 +103,48 @@ export const CLAIM_WORDS = Object.freeze({
   msgOff: 'Messages from them: off',
   msgShort: 'Press to change',
   failed: 'That did not work just now. Try again in a little while.',
+  // who has a card you look after (the server's claims.py, "ONE CARD AT A TIME")
+  holders: 'Who has this card',
+  holdersYou: 'Who has your card',
+  holdersShort: (n) => (n ? `On ${n} other ${n === 1 ? 'page' : 'pages'}` : 'Nobody else yet'),
+  holdersNone: (name) => (name ? `Nobody else has ${name}’s card yet. Share it when you connect with someone, and they show here.`
+    : 'Nobody else has your card yet. Connect with someone, and they show here.'),
+  holdersTitle: (name) => (name ? `Who has ${name}’s card` : 'Who has your card'),
+  holdersLead: (name) => `These people have ${name ? `${name}’s card` : 'your card'} on their page. Each shows by their own name; `
+    + `whatever they call ${name || 'you'} stays theirs.`,
+  someone: 'Someone',
+  through: (who) => `Through ${who || 'someone else'}`,
+  holderJoined: (name) => `Set this card up for ${name || 'you'} first`,
+  holderHas: 'Has it on their page',
+  stopWith: (n) => `Stop sharing with ${n || 'them'}`,
+  stopWithShort: 'Takes this one card off their page',
+  stopWithJoinedShort: 'Their card goes back to how they had it',
+  stopWithAgain: 'Press again to stop sharing',
+  stoppedWith: (n) => `Stopped. ${n || 'They'} no longer ${n ? 'has' : 'have'} this card.`,
+  lastShort: 'Their only card from you',
+  lastWhy: (n, through) => (through
+    ? `It is the only card ${n || 'they'} ${n ? 'has' : 'have'} from ${through}. ${through} can stop sharing with them.`
+    : `It is the only card ${n || 'they'} ${n ? 'has' : 'have'} from you. Stop sharing on ${poss(n)} card ends the connection instead.`),
+  // removing one card from your own page
+  removeCard: 'Remove just this card',
+  removeShort: (from) => (from ? `You stay connected with ${from}` : 'You stay connected'),
+  removeAgain: 'Press again to remove it',
+  removed: (name) => `Removed. ${name || 'They'} ${name ? 'is' : 'are'} no longer on your page.`,
+  removeDimShort: 'Not this card',
 });
+
+/** Why "Remove just this card" cannot act on this card, in words, from the server's code (GET /api/people `remove`). PURE. */
+export function removeWhy(code, { name = '', from = '' } = {}) {
+  switch (code) {
+    case 'last-here': return `This is the only card from ${from || name || 'them'} on your page. Stop sharing ends the connection instead.`;
+    case 'screens': return 'This card has a screen of its own. Move or delete that screen first.';
+    case 'joined': return `You made this card, and ${name || 'they'} took it over with their own login. Stop sharing gives it back to you.`;
+    default: return code ? CLAIM_WORDS.failed : '';
+  }
+}
+
+/** How the home's list names one holder: their own name, or "Someone" (somebody this login is not connected with). PURE. */
+export function holderName(h) { return String(h?.name || '').trim() || CLAIM_WORDS.someone; }
 
 /** The token in a join page's address, or ''. PURE. */
 export function inviteFromQuery(search) {
@@ -170,6 +213,9 @@ export function createClaimsClient({ user = null, fetchImpl = (typeof fetch !== 
     stop: (personId) => call('DELETE', `/api/people/${pid(personId)}/link`),
     setMessages: (personId, on) => call('PUT', `/api/people/${pid(personId)}/messages`, { on: !!on }),
     callName: (personId, name) => call('PUT', `/api/people/${pid(personId)}/call-name`, { name: String(name || '') }),
+    holders: (personId) => call('GET', `/api/people/${pid(personId)}/holders`),
+    unshare: (personId, holderId) => call('DELETE', `/api/people/${pid(personId)}/holders/${pid(holderId)}`),
+    removeCard: (personId) => call('DELETE', `/api/people/${pid(personId)}/card`),
     peek: (token) => call('POST', '/api/invites/peek', { token }),
     accept: (token, { messagesBack = true } = {}) => call('POST', '/api/invites/accept', { token, messages_back: !!messagesBack }),
   };
@@ -394,5 +440,107 @@ export function mountCallName(host, { person, client, onChange = null } = {}) {
   return {
     destroy() { torn = true; box.removeEventListener('click', onClick); style.remove(); box.remove(); },
     __probe: () => ({ value: input.value, said }),
+  };
+}
+
+/**
+ * "Who has this card": the other logins holding a profile you look after, each with "Stop sharing with <name>" (two
+ * presses, like Stop sharing; it takes that one card off their page and keeps the connection). Dimmed with why when it
+ * is the only card they have from you. Readable only by whoever looks after the profile (the server checks).
+ *   person  { id, name, you } - `you`: your own card ("Who has your card")
+ * Returns { ready, destroy, __probe }.
+ */
+export function mountHolders(host, { person, client, onChange = null, now = () => Date.now() } = {}) {
+  const W = CLAIM_WORDS;
+  const name = person?.you ? '' : String(person?.name || '').trim();
+  let list = null;                 // null: reading; [] nobody
+  let phase = 'loading';           // loading | ready | error
+  let armed = null;                // { id, at }
+  let armTimer = null;
+  let said = '';
+  let torn = false;
+  const style = host.ownerDocument.createElement('style');
+  style.textContent = INVITE_STYLE;
+  const box = host.ownerDocument.createElement('div');
+  box.className = 'cl-box';
+  box.setAttribute('data-cl-holders', person?.id || '');
+  host.append(style, box);
+
+  function render() {
+    if (torn) return;
+    let h = `<p class="cl-lead" data-cl-lead>${esc(W.holdersLead(name))}</p>`;
+    if (phase === 'loading') h += '<p class="cl-lead">Checking…</p>';
+    if (phase === 'error') h += `<p class="cl-say">${esc(said || W.failed)}</p>`;
+    if (phase === 'ready' && !list.length) h += `<p data-cl-holders-none>${esc(W.holdersNone(name))}</p>`;
+    if (phase === 'ready') {
+      for (const x of list) {
+        const n = holderName(x);
+        const again = armed && armed.id === x.id && twoPress(armed.at, now()) === 'fire';
+        const dim = !!x.stop;
+        const why = dim ? W.lastWhy(x.name || '', x.through || '') : '';
+        // DIMMED WITH WHY rather than hidden: the person can see they have it, and what to do instead.
+        h += `<div class="cl-share" data-cl-holder="${esc(x.id)}">
+          <p class="cl-h" data-cl-holder-name>${esc(n)}</p>
+          <p class="cl-lead" data-cl-holder-sub>${esc(x.through ? W.through(x.through) : x.joined ? W.holderJoined(name) : W.holderHas)}</p>
+          <button type="button" class="cl-btn" data-cl-act="unshare" data-cl-id="${esc(x.id)}" ${dim ? `aria-disabled="true" title="${esc(why)}" data-cl-why="${esc(why)}"` : ''}>${esc(again ? W.stopWithAgain : W.stopWith(x.name ? n : ''))}<br><small>${esc(dim ? W.lastShort : x.joined ? W.stopWithJoinedShort : W.stopWithShort)}</small></button>
+        </div>`;
+      }
+    }
+    h += `<p class="cl-say" role="status" data-cl-say>${esc(phase === 'error' ? '' : said)}</p>`;
+    box.innerHTML = h;
+  }
+
+  async function load() {
+    try {
+      const r = await client.holders(person.id);
+      if (torn) return;
+      if (r.status !== 200) { phase = 'error'; said = r.body?.text || r.body?.detail || W.failed; render(); return; }
+      list = Array.isArray(r.body?.holders) ? r.body.holders : [];
+      phase = 'ready';
+    } catch { phase = 'error'; said = W.failed; }
+    render();
+  }
+
+  async function unshare(id, el) {
+    const x = (list || []).find((y) => y.id === id);
+    if (!x) return;
+    if (el?.getAttribute('aria-disabled') === 'true') { said = el.dataset.clWhy || ''; render(); return; }
+    if (twoPress(armed && armed.id === id ? armed.at : 0, now()) === 'arm') {
+      armed = { id, at: now() };
+      said = '';
+      clearTimeout(armTimer);
+      armTimer = setTimeout(() => { if (armed && armed.id === id) { armed = null; render(); } }, STOP_CONFIRM_MS + 50);
+      render();
+      return;
+    }
+    armed = null; clearTimeout(armTimer);
+    try {
+      const r = await client.unshare(person.id, id);
+      if (torn) return;
+      if (r.status === 200) {
+        said = W.stoppedWith(x.name ? holderName(x) : '');
+        list = list.filter((y) => y.id !== id);
+        onChange?.();
+        await load();
+        if (!torn) { said = W.stoppedWith(x.name ? holderName(x) : ''); render(); }
+        return;
+      }
+      said = r.body?.text || r.body?.detail || W.failed;
+    } catch { said = W.failed; }
+    render();
+  }
+
+  function onClick(e) {
+    const b = e.target instanceof Element ? e.target.closest('[data-cl-act]') : null;
+    if (!b || !box.contains(b)) return;
+    if (b.dataset.clAct === 'unshare') unshare(b.dataset.clId, b);
+  }
+  box.addEventListener('click', onClick);
+  render();
+  const ready = load();
+  return {
+    ready,
+    destroy() { torn = true; clearTimeout(armTimer); box.removeEventListener('click', onClick); style.remove(); box.remove(); },
+    __probe: () => ({ phase, said, armed: armed ? armed.id : null, holders: (list || []).map((x) => ({ ...x })) }),
   };
 }
