@@ -46,7 +46,8 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import '../modules/trivia.js';
 import '../modules/scoreboard.js';
 import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
-import { answerSourceMode, answerSourceHtml, answerSourceText } from '../answer_source.js';
+import { answerSourceMode, answerSourceHtml, answerSourceText,
+         answerExplainOn, answerExplainHtml, answerExplainText } from '../answer_source.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -828,6 +829,105 @@ Shared Q | Shared A` });
       check('answerSourceText reads the same words as the line',
         answerSourceText(NASA) === 'Source: NASA (science.nasa.gov)' && answerSourceText(COMMON) === ''
         && answerSourceText(COMMON, { mode: 'all' }) === 'Source: common knowledge' && answerSourceText([]) === '');
+    }
+  }
+
+  // =====================================================================================
+  section('*** "Say why after the answer": the item\'s own explanation, under "Correct.", above the source ***');
+  {
+    // Every starter question carries an `explain` sentence (and 32715ec fact-checked ten of them), but Trivia used
+    // to drop it: a right answer said only "Correct.". This puts it back, on by default, after the answer only.
+    const WHY = 'Proxima Centauri is the nearest star beyond the Sun; the Sun itself is about 8 light-minutes away.';
+    const ITEM = (extra = {}) => ({ question: 'Which star is closest to Earth?', answer: 'The Sun',
+      wrong: ['Sirius', 'Vega', 'Polaris'], ...extra });
+    const NASA = [{ url: 'https://science.nasa.gov/sun/', title: 'NASA' }];
+    const answerIt = (r) => {
+      const q = r.probe().question; r.host.querySelector(`[data-opt="${q.correctIndex}"]`).click();
+    };
+    const missOnce = (r) => {
+      const q = r.probe().question; r.host.querySelector(`[data-opt="${q.correctIndex === 0 ? 1 : 0}"]`).click();
+    };
+    const why = (r) => r.host.querySelector('[data-answer-explain]');
+    const one = async (extra, saved = {}) => { const r = rig({ saved: { bank: [ITEM(extra)], ...saved } }); await sleep(20); return r; };
+
+    const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showExplain');
+    check('*** the row exists, "Say why after the answer", ON by default (row and DEFAULTS agree), a standard switch ***',
+      row && row.label === 'Say why after the answer' && row.default === true && DEFAULTS.showExplain === true
+      && row.level === 'standard' && !row.kind && typeof row.note === 'string' && row.note.length > 10, JSON.stringify(row));
+    check('*** it says, in its note, that nothing is read aloud (Trivia speaks nothing today) ***',
+      /aloud/i.test(row?.note || ''), row?.note);
+    check('the saved value: absent / true mean on, false (or "off") means off',
+      answerExplainOn({}) && answerExplainOn({ showExplain: true }) && !answerExplainOn({ showExplain: false })
+      && !answerExplainOn({ showExplain: 'off' }) && answerExplainOn(null));
+
+    {
+      const r = await one({ explain: WHY, sources: NASA });
+      check('*** before the answer: no explanation on screen ***', !why(r) && !r.host.textContent.includes(WHY),
+        r.host.textContent.slice(0, 200));
+      missOnce(r);
+      check('*** a wrong guess does not show it either (it would give the answer away) ***',
+        !why(r) && !r.host.textContent.includes(WHY));
+      answerIt(r);
+      check('*** once answered, the explanation is shown, word for word ***',
+        !!why(r) && why(r).textContent.trim() === WHY, r.host.innerHTML.slice(0, 600));
+      const said = r.host.querySelector('.tv-said'), src = r.host.querySelector('[data-answer-source]');
+      const next = r.host.querySelector('[data-next]');
+      const after = (a, b) => !!a && !!b && !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      check('*** the order is "Correct.", then the explanation, then the source line, then Next ***',
+        after(said, why(r)) && after(why(r), src) && after(src, next),
+        [...r.host.querySelectorAll('.tv-said, [data-answer-explain], [data-answer-source], [data-next]')].map((n) => n.className).join(' > '));
+      check('it is a small paragraph of its own (class tv-explain), not part of "Correct."',
+        why(r).tagName === 'P' && why(r).classList.contains('tv-explain') && said.textContent.trim() === 'Correct.');
+      r.inst.destroy();
+    }
+    for (const off of [false, 'off']) {
+      const r = await one({ explain: WHY, sources: NASA }, { showExplain: off });
+      answerIt(r);
+      check(`*** the setting off (${JSON.stringify(off)}): no explanation after the answer — the source line still shows ***`,
+        r.probe().answered !== null && !why(r) && !r.host.textContent.includes(WHY) && !!r.host.querySelector('[data-answer-source]'));
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ explain: WHY, sources: NASA }, { showSource: 'off' });
+      answerIt(r);
+      check('the two rows are independent: source off, explanation still shown',
+        !!why(r) && !r.host.querySelector('[data-answer-source]'));
+      r.inst.destroy();
+    }
+    for (const [label, extra] of [['no explain at all', {}], ['an empty one', { explain: '' }],
+      ['only spaces', { explain: '   ' }], ['not text', { explain: 42 }]]) {
+      const errs = [];
+      const orig = console.error;
+      console.error = (...a) => { errs.push(a.join(' ')); orig.apply(console, a); };
+      let r;
+      try { r = await one(extra); answerIt(r); } finally { console.error = orig; }
+      check(`*** an item with ${label}: nothing shown, no error, Next still there ***`,
+        r.probe().answered !== null && !why(r) && !!r.host.querySelector('[data-next]')
+        && !errs.some((e) => /trivia/i.test(e)), errs.join(' | '));
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ explain: 'Use <b>bold</b> & "quotes".' });
+      answerIt(r);
+      check('the sentence is escaped (no markup gets in)', !!why(r) && !why(r).querySelector('b')
+        && why(r).textContent.trim() === 'Use <b>bold</b> & "quotes".', why(r)?.outerHTML);
+      r.inst.destroy();
+    }
+    {
+      const mapped = packToTriviaBank({ items: [
+        { question: 'Q1', answers: ['a', 'b', 'c'], correct: 'a', explain: '  Because a.  ' },
+        { question: 'Q2', answers: ['a', 'b', 'c'], correct: 'a' },
+        { question: 'Q3', answers: ['a', 'b', 'c'], correct: 'a', explain: '' },
+      ] });
+      check('*** a pack item\'s explain rides into the bank (trimmed); none, or an empty one, carries nothing ***',
+        mapped[0].explain === 'Because a.' && mapped[1].explain === undefined && mapped[2].explain === undefined,
+        JSON.stringify(mapped));
+      check('makeQuestion carries it to the question on screen, and "" when there is none',
+        makeQuestion(mapped[0], mapped, { rand: () => 0 }).explain === 'Because a.'
+        && makeQuestion(mapped[1], mapped, { rand: () => 0 }).explain === '');
+      check('answerExplainHtml / answerExplainText: the words, or nothing',
+        answerExplainText(' Why. ') === 'Why.' && answerExplainText('') === '' && answerExplainText(null) === ''
+        && answerExplainHtml('') === '' && /data-answer-explain/.test(answerExplainHtml('Why.')));
     }
   }
 

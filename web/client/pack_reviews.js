@@ -205,7 +205,7 @@ export function packProgress(pack, map) {
 }
 
 /**
- * What Trivia may deal from a review pack, in its bank shape `{ question, answer, wrong, review }`.
+ * What Trivia may deal from a review pack, in its bank shape `{ question, answer, wrong, review, explain? }`.
  * FLAGGED never. PASSED always. OPEN only with the setting on — and then each carries `review.status:
  * 'open'`, which is what puts the review control on screen.
  */
@@ -214,9 +214,14 @@ export function playableBank(pack, map, { includeUnreviewed = false, packId = ''
   for (const { item, key, status } of packItems(pack, map)) {
     if (status === REVIEW_STATUS.FLAGGED) continue;
     if (status === REVIEW_STATUS.OPEN && !includeUnreviewed) continue;
-    out.push({ question: item.question, answer: item.correct,
+    const row = { question: item.question, answer: item.correct,
       wrong: (item.answers || []).filter((a) => a !== item.correct),
-      review: { key, packId, status, sources: itemSources(item.source) } });
+      review: { key, packId, status, sources: itemSources(item.source) } };
+    // The item's `explain` (Trivia's "Say why after the answer"). On the row itself, not under `review`: a
+    // PASSED question plays with no review strip and says why under "Correct." like any pack question.
+    const why = typeof item.explain === 'string' ? item.explain.trim() : '';
+    if (why) row.explain = why;
+    out.push(row);
   }
   return out;
 }
