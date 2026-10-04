@@ -30,6 +30,7 @@ real microphone, or a real speech service. The service's own folder check is in
 import {
   EUPHONIA, BASE_MODEL, VOICE_MODEL_PORT, VOICE_MODEL_FIELDS, VOICE_MODEL_CSS, MODEL_FILES, voiceModelFrom, voiceModelUrl,
   convertCommand, serviceCommand, parsePhrases, createPhrasePrompter, prompterBlocker, mountVoiceModel,
+  MY_VOICE_PATH, MY_VOICE_FROM_WEB, checkModelFiles, describeModelCheck, folderNames,
 } from '../voice_model.js';
 import {
   createVoiceRecorder, createMemoryPairStore, buildPair, encodeWav16, exportEuphonia, euphoniaSamples,
@@ -105,15 +106,56 @@ try {
       convertCommand({ checkpoint: 'C:\\train\\checkpoint-200', folder: 'C:\\models\\my-voice' })
         === 'ct2-transformers-converter --model "C:\\train\\checkpoint-200" --output_dir "C:\\models\\my-voice" --quantization int8 --copy_files tokenizer.json preprocessor_config.json',
       convertCommand({ checkpoint: 'C:\\train\\checkpoint-200', folder: 'C:\\models\\my-voice' }));
-    check('...placeholders when nothing is filled in', convertCommand({}) === 'ct2-transformers-converter --model "<checkpoint folder>" --output_dir "<model folder>" --quantization int8 --copy_files tokenizer.json preprocessor_config.json');
-    check('*** the exact command that starts the service on it ***',
-      serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 }) === 'py -3.13 -m speech_service --backend whisper --model "C:\\models\\my-voice" --port 8796',
-      serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 }));
+    // 2026-10-03 (Mike: "Shouldn't it be a folder picker for the voice model? Which folder do I even use?"): the
+    // service looks in ONE place of its own, so nobody types a path into the site, which never passed it on anyway.
+    check('*** the folder the service looks in: web/speech_service/my_voice_model (kept out of git) ***',
+      MY_VOICE_PATH === 'web/speech_service/my_voice_model' && MY_VOICE_FROM_WEB === 'speech_service/my_voice_model', MY_VOICE_PATH);
+    check('*** by default the conversion writes STRAIGHT INTO that folder (run in the web folder) ***',
+      convertCommand({}) === 'ct2-transformers-converter --model "<checkpoint folder>" --output_dir "speech_service/my_voice_model" --quantization int8 --copy_files tokenizer.json preprocessor_config.json',
+      convertCommand({}));
+    check('*** the exact command that starts it: --my-voice, no path to type ***',
+      serviceCommand({ port: 8796 }) === 'py -3.13 -m speech_service --my-voice --port 8796', serviceCommand({ port: 8796 }));
+    check('the port setting reaches the command', serviceCommand({ port: 9001 }) === 'py -3.13 -m speech_service --my-voice --port 9001');
+    check('a model kept somewhere else: --model names it, beside --my-voice',
+      serviceCommand({ folder: 'D:\\voice\\ct2', port: 8796 }) === 'py -3.13 -m speech_service --my-voice --model "D:\\voice\\ct2" --port 8796',
+      serviceCommand({ folder: 'D:\\voice\\ct2', port: 8796 }));
     const sneaky = serviceCommand({ folder: 'a" --host 0.0.0.0 "b', port: 8796 });
     check('*** a quote in a folder cannot break out of the command (no --host slipped in) ***',
       (sneaky.match(/"/g) || []).length === 2 && sneaky.endsWith('--port 8796'), sneaky);
     check('the files a converted folder holds, as the service checks them',
       ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json'].every((f) => MODEL_FILES.join(' ').includes(f)) && /vocabulary/.test(MODEL_FILES.join(' ')));
+  }
+
+  // ======================================================================================
+  section('*** "which folder?": a folder\'s file NAMES checked, the same rule the service applies ***');
+  {
+    const full = checkModelFiles(['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']);
+    check('*** a converted folder: ready ***', full.ok === true && full.missing.length === 0 && full.advised.length === 0, JSON.stringify(full));
+    check('vocabulary.txt (older converters) counts', checkModelFiles(['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.txt']).ok === true);
+    const half = checkModelFiles(['model.bin', 'config.json']);
+    check('*** converted without --copy_files: EVERY missing file named ***', !half.ok
+      && half.missing.join() === 'tokenizer.json,vocabulary.json (or vocabulary.txt)', JSON.stringify(half));
+    const noPre = checkModelFiles(['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json']);
+    check('preprocessor_config.json missing is advice, not a refusal (as in the service)', noPre.ok && noPre.advised.join() === 'preprocessor_config.json');
+    const ckpt = checkModelFiles(['model.safetensors', 'config.json', 'tokenizer.json', 'generation_config.json', 'preprocessor_config.json']);
+    check('*** the TRAINING checkpoint (not converted yet) is recognised and said so ***', !ckpt.ok && ckpt.kind === 'checkpoint'
+      && /convert/i.test(describeModelCheck(ckpt, 'checkpoint-200')), describeModelCheck(ckpt, 'checkpoint-200'));
+    const exp = checkModelFiles(['data', 'nimrod-export.json']);
+    check('*** the exported RECORDINGS folder is recognised and said so ***', !exp.ok && exp.kind === 'recordings'
+      && /recordings/i.test(describeModelCheck(exp, 'export')), describeModelCheck(exp, 'export'));
+    check('an empty folder: everything named', !checkModelFiles([]).ok && checkModelFiles([]).missing.length === 4);
+    check('*** the words for a good folder say where it goes ***', /ready/i.test(describeModelCheck(full, 'my-voice'))
+      && describeModelCheck(full, 'my-voice').includes(MY_VOICE_PATH));
+    check('the words for a short folder name the missing files', /tokenizer\.json/.test(describeModelCheck(half, 'x')));
+    // A folder handle as the browser hands it over: names only. Reading a FILE would throw.
+    const touched = [];
+    const handle = { name: 'my-voice', async *entries() {
+      for (const n of ['model.bin', 'config.json']) yield [n, { kind: 'file', name: n, getFile() { touched.push(n); throw new Error('read'); } }];
+    } };
+    const names = await folderNames(handle);
+    check('*** folderNames reads the NAMES in a picked folder and never opens a file ***', names.join() === 'model.bin,config.json' && touched.length === 0, names.join());
+    const viaValues = await folderNames({ async *values() { yield { name: 'a' }; yield { name: 'b' }; } });
+    check('...from values() where a browser has no entries()', viaValues.join() === 'a,b');
     check('*** no hard-coded colours in its styles ***', !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(VOICE_MODEL_CSS));
   }
 
@@ -121,7 +163,11 @@ try {
   section('*** per person: only that person\'s row turns it on, and only their speech goes to it ***');
   {
     const o = voiceModelFrom({});
-    check('*** OFF when the row says nothing ***', o.on === false && o.port === 8796 && o.folder === '');
+    check('*** OFF when the row says nothing ***', o.on === false && o.port === 8796);
+    check('*** the menu has the switch and the port, and NO folder row (the folder is the service\'s) ***',
+      VOICE_MODEL_FIELDS.map((f) => f.key).join() === 'voiceModelOn,voiceModelPort' && !VOICE_MODEL_FIELDS.some((f) => f.kind === 'text'),
+      VOICE_MODEL_FIELDS.map((f) => f.key).join());
+    check('a folder stored by the earlier version is ignored (nothing reads it)', !('folder' in voiceModelFrom({ voiceModelFolder: 'C:\\old' })));
     check('only a literal true turns it on', voiceModelFrom({ voiceModelOn: true }).on && !voiceModelFrom({ voiceModelOn: 'yes' }).on && !voiceModelFrom({ voiceModelOn: 1 }).on);
     check('a nonsense port is the default', voiceModelFrom({ voiceModelPort: 'x' }).port === 8796 && voiceModelFrom({ voiceModelPort: 80 }).port === 8796
       && voiceModelFrom({ voiceModelPort: 9001 }).port === 9001);
@@ -262,7 +308,7 @@ try {
   }
 
   // ======================================================================================
-  section('the page: what it is, the three steps, the commands, the folder');
+  section('the page: what it is, the steps, which folder, the commands');
   {
     const root = document.getElementById('panel');
     const store = createMemoryPairStore();
@@ -272,7 +318,11 @@ try {
     const storage = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, String(v)), removeItem: (k) => mem.delete(k) };
     const vr = createVoiceRecorder({ store, personId: 'mike' });
     vr.update({ voiceRecording: true }); vr.attach(fakeRecognizer());
-    const page = mountVoiceModel(root, { personId: 'mike', recorder: vr, store, storage,
+    // The folder picker for "Check a folder": a fake handle, the next one handed back each press.
+    const picks = [];
+    const pickModelFolder = async () => { const p = picks.shift(); if (p instanceof Error) throw p; return p; };
+    const dirOf = (name, files) => ({ name, async *entries() { for (const n of files) yield [n, { kind: 'file', name: n }]; } });
+    const page = mountVoiceModel(root, { personId: 'mike', recorder: vr, store, storage, pickModelFolder,
       values: () => row, save: (patch) => { saved.push(patch); row = { ...row, ...patch }; return true; } });
     const text = root.textContent;
     const hrefs = [...root.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
@@ -285,20 +335,42 @@ try {
     check('*** the three steps: record, train (with the base model named), convert ***',
       /Record/.test(text) && /Train/.test(text) && /Convert/.test(text) && text.includes('openai/whisper-small.en'));
     const codes = [...root.querySelectorAll('code[data-cmd]')].map((c) => c.textContent);
-    check('*** the exact conversion command is shown, into the saved folder ***', codes.includes(convertCommand({ folder: 'C:\\models\\my-voice' })), codes.join(' | '));
-    check('*** the exact service command, with the saved folder and port ***', codes.includes(serviceCommand({ folder: 'C:\\models\\my-voice', port: 8796 })), codes.join(' | '));
-    const input = root.querySelector('[data-folder]');
-    check('a field for the trained model\'s folder, filled from this person\'s settings', input && input.value === 'C:\\models\\my-voice');
-    input.value = 'D:\\voice\\ct2';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-    check('typing a folder updates both commands at once', root.querySelector('[data-cmd="serve"]').textContent.includes('D:\\voice\\ct2')
-      && root.querySelector('[data-cmd="convert"]').textContent.includes('D:\\voice\\ct2'));
-    root.querySelector('[data-save-folder]').click();
-    check('*** Save writes ONLY the folder, to this person\'s settings ***', saved.length === 1 && JSON.stringify(saved[0]) === JSON.stringify({ voiceModelFolder: 'D:\\voice\\ct2' }));
+    check('*** the exact conversion command is shown, writing straight into the service\'s folder ***', codes.includes(convertCommand({})), codes.join(' | '));
+    check('*** the exact service command, with this person\'s port and no path ***', codes.includes(serviceCommand({ port: 8796 })), codes.join(' | '));
+    check('*** NO folder to type, and nothing saves a folder (a stored one from before is not shown) ***',
+      !root.querySelector('[data-folder]') && !root.querySelector('[data-save-folder]') && !root.querySelector('input[type=text]')
+      && !text.includes('C:\\models\\my-voice'));
+    check('*** "which folder": the one ct2-transformers-converter --output_dir writes, and what is in it ***',
+      /--output_dir/.test(text) && ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json'].every((f) => text.includes(f))
+      && /vocabulary/.test(text));
+    check('*** ...NOT the training checkpoint, NOT the recordings ***', /not the checkpoint/i.test(text) && /not the recordings/i.test(text));
+    check('*** "put the converted folder here": the exact place, and that it stays out of git ***',
+      root.querySelector('[data-where]')?.textContent.includes(MY_VOICE_PATH) && /kept out of git|never committed/i.test(text));
+    check('*** a model kept elsewhere: the page says how (--model) ***', /--model/.test(root.querySelector('[data-elsewhere]')?.textContent || ''));
+
+    // "Check a folder": the browser's folder picker, used where it genuinely helps - names only.
+    const chk = root.querySelector('[data-check]');
+    check('*** a "Check a folder" button where the browser can open a folder ***', chk && !chk.hidden && /Check a folder/.test(chk.textContent));
+    picks.push(dirOf('my-voice', ['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']));
+    chk.click(); await settle(6);
+    const said = () => root.querySelector('[data-check-msg]').textContent;
+    check('*** a converted folder: "ready", and where it goes ***', /ready/i.test(said()) && said().includes(MY_VOICE_PATH), said());
+    picks.push(dirOf('checkpoint-200', ['model.safetensors', 'config.json', 'tokenizer.json', 'generation_config.json']));
+    chk.click(); await settle(6);
+    check('*** the training checkpoint: says to convert it first ***', /convert/i.test(said()) && !/ready/i.test(said()), said());
+    picks.push(dirOf('half', ['model.bin', 'config.json']));
+    chk.click(); await settle(6);
+    check('*** a half-converted folder: the missing files named ***', /tokenizer\.json/.test(said()) && /vocabulary/.test(said()), said());
+    const before = said();
+    picks.push(Object.assign(new Error('cancelled'), { name: 'AbortError' }));
+    chk.click(); await settle(6);
+    check('cancelling the picker is not an error (the last answer stays)', said() === before, said());
+    check('nothing about a checked folder is saved anywhere', saved.length === 0);
+
     const use = root.querySelector('[data-use]');
     check('the switch shows OFF', use && use.getAttribute('aria-pressed') === 'false' && /Off/.test(use.textContent));
     use.click();
-    check('*** pressing it turns on THIS person\'s own model (and nothing else) ***', JSON.stringify(saved[1]) === JSON.stringify({ voiceModelOn: true })
+    check('*** pressing it turns on THIS person\'s own model (and nothing else) ***', JSON.stringify(saved[0]) === JSON.stringify({ voiceModelOn: true })
       && root.querySelector('[data-use]').getAttribute('aria-pressed') === 'true');
 
     // Reading phrases from the page.
@@ -316,11 +388,13 @@ try {
     vr.destroy();
 
     // On a page with no recorder (Home, the modules page): the steps and commands, and why it cannot record here.
-    const page2 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}) });
+    const page2 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null });
     check('with no recorder: the steps are still there, and it says recording happens on a listening screen',
       /Train/.test(root.textContent) && /screen/.test(root.querySelector('[data-status]').textContent)
-      && root.querySelector('[data-cmd="serve"]').textContent.includes('<model folder>'));
-    check('with no way to save: no Save button, the settings are named instead', !root.querySelector('[data-save-folder]') || root.querySelector('[data-save-folder]').hidden);
+      && root.querySelector('[data-cmd="serve"]').textContent === serviceCommand({ port: 8796 }));
+    check('with no way to save: the switch button is hidden', root.querySelector('[data-use]').hidden === true);
+    check('*** a browser that cannot open a folder: no Check button, and the service still checks at start ***',
+      root.querySelector('[data-check]').hidden === true && /checks the folder when it starts/.test(root.textContent));
     page2.destroy();
   }
 

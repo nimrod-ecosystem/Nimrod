@@ -7,14 +7,16 @@ From `web/`:
     py -3.13 -m speech_service --backend fake                    # the protocol with no model
     python3 -m speech_service --backend none --wake hey_jarvis   # wake events only (openWakeWord)
     python3 -m speech_service --backend none --wake computer_please,nimrod_please   # our own (models/)
-    py -3.13 -m speech_service --backend whisper --model "C:\\models\\my-voice" --port 8796
-                                                                 # ONE PERSON'S OWN voice model (a folder)
+    py -3.13 -m speech_service --my-voice                        # ONE PERSON'S OWN voice model, port 8796
+    py -3.13 -m speech_service --my-voice --model "D:\\voice\\ct2"  # ...kept somewhere else
 
 A model trained on one person's voice (Google's Euphonia toolkit; the page is web/client/voice_model.js)
-is a FOLDER given to --model. It is checked at start-up: a folder missing a file faster-whisper needs is
-refused here, every missing file named. It runs as its OWN service on its own port (8796 by default, a
-setting on that person's row), so only the person whose speech settings point at it is ever heard by it;
-the shared service on 8797 keeps the stock model for everybody else.
+is a FOLDER: the one `ct2-transformers-converter --output_dir` wrote. `--my-voice` looks for it in
+speech_service/my_voice_model/ (kept out of git), so nobody types a path; `--model` names one kept
+elsewhere. It is checked at start-up: a folder missing a file faster-whisper needs is refused here, every
+missing file named. It runs as its OWN service on its own port (8796 by default, a setting on that
+person's row), so only the person whose speech settings point at it is ever heard by it; the shared
+service on 8797 keeps the stock model for everybody else.
 
 It binds 127.0.0.1:8797 by default: the room's sound stays on the machine that heard it, and only a
 screen on that same machine can reach it. The screen's "this screen" recogniser looks there.
@@ -35,8 +37,9 @@ import asyncio
 import os
 import sys
 
-from .backends import (WAKE_REFRACTORY_S, WAKE_THRESHOLD, ModelFolderError, check_whisper_folder, default_threads,
-                       is_model_folder, make_backend, make_wake)
+from .backends import (MY_VOICE_DIR, MY_VOICE_PORT, WAKE_REFRACTORY_S, WAKE_THRESHOLD, WHISPER_FOLDER_FILES,
+                       ModelFolderError, check_whisper_folder, default_threads, is_model_folder, make_backend,
+                       make_wake)
 from .service import MAX_UTTERANCE_S
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
@@ -67,8 +70,11 @@ def parse(argv=None):
     p.add_argument('--device', default='cpu', help="whisper: 'cpu' or 'cuda' (a GPU box)")
     p.add_argument('--no-word-confidence', action='store_true',
                    help='whisper: skip per-word confidence (the screen then cannot mark unsure words)')
+    p.add_argument('--my-voice', action='store_true',
+                   help='one person\'s own voice model (whisper): the folder speech_service/my_voice_model/ '
+                        f'(or --model), on port {MY_VOICE_PORT} unless --port says otherwise')
     p.add_argument('--host', default='127.0.0.1')
-    p.add_argument('--port', type=int, default=8797)
+    p.add_argument('--port', type=int, default=None, help=f'default 8797 ({MY_VOICE_PORT} with --my-voice)')
     p.add_argument('--secret', default=os.environ.get('NIMROD_SPEECH_SECRET') or None)
     p.add_argument('--no-secret-i-understand', action='store_true')
     p.add_argument('--max-utterance-s', type=float, default=MAX_UTTERANCE_S)
@@ -77,8 +83,25 @@ def parse(argv=None):
     return p.parse_args(argv)
 
 
+def model_and_port(a):
+    """(model, port) after --my-voice: its folder and port unless --model / --port name others."""
+    if a.my_voice:
+        return (a.model or MY_VOICE_DIR), (a.port if a.port is not None else MY_VOICE_PORT)
+    return (a.model or ('small.en' if a.backend == 'whisper' else None)), (a.port if a.port is not None else 8797)
+
+
 def main(argv=None):
     a = parse(argv)
+    if a.my_voice and a.backend != 'whisper':
+        print('--my-voice is a Whisper model: leave --backend out (or say whisper)', file=sys.stderr)
+        return 2
+    model_arg, a.port = model_and_port(a)
+    if a.my_voice and not a.model and not os.path.isdir(MY_VOICE_DIR):
+        need = ', '.join([*WHISPER_FOLDER_FILES, 'vocabulary.json (or vocabulary.txt)', 'preprocessor_config.json'])
+        print(f'speech service: --my-voice looks for your model in {MY_VOICE_DIR}, and there is no such folder yet. '
+              'Put the converted folder there with that name (the one ct2-transformers-converter --output_dir wrote), '
+              f'or pass --model <folder> for one kept elsewhere. It holds: {need}.', file=sys.stderr)
+        return 2
     remote = a.host not in LOOPBACK
     if remote and not a.secret and not a.no_secret_i_understand:
         print(f'refusing to bind {a.host} without a secret: this service carries a room\'s sound. '
@@ -90,7 +113,7 @@ def main(argv=None):
     kw = {'device': a.device, 'compute_type': a.compute_type, 'threads': a.threads,
           'word_confidence': not a.no_word_confidence}
     if a.backend == 'whisper':
-        model = os.path.expanduser(a.model) if a.model else 'small.en'
+        model = os.path.expanduser(model_arg)
         if is_model_folder(model):
             # Before the model loads (seconds, and a traceback if it cannot): every missing file, by name.
             try:

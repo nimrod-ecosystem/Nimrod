@@ -505,6 +505,77 @@ def model_folder_tests():
               refused and ('faster_whisper' in sys.modules) == loaded)
 
 
+def my_voice_tests():
+    """`--my-voice` (2026-10-03). Mike, on the site's folder text box: "Shouldn't it be a folder picker for the
+    voice model? Which folder do I even use?" The site never handed that path to anything - the service needs a
+    path at START, on the machine it runs on, and a browser's folder picker gives a handle, never a path. So the
+    service has ONE place of its own to look (speech_service/my_voice_model/), and nobody types a path anywhere.
+    `--model` still names a folder kept elsewhere. Kept out of git: a person's voice is not project history."""
+    import contextlib
+    import io
+    import subprocess
+    import tempfile
+    from speech_service import __main__ as cli
+    from speech_service.backends import MY_VOICE_DIR, MY_VOICE_PORT
+
+    here = Path(__file__).resolve().parent
+    check('*** the folder it looks in is speech_service/my_voice_model, beside this file ***',
+          Path(MY_VOICE_DIR) == here / 'my_voice_model', MY_VOICE_DIR)
+    check('its own port, beside the shared 8797', MY_VOICE_PORT == 8796)
+    a = cli.parse(['--my-voice'])
+    check('*** --my-voice alone: that folder, port 8796, whisper ***',
+          cli.model_and_port(a) == (MY_VOICE_DIR, 8796) and a.backend == 'whisper', cli.model_and_port(a))
+    check('--my-voice --port 9001: the port given wins', cli.model_and_port(cli.parse(['--my-voice', '--port', '9001']))[1] == 9001)
+    check('--my-voice --model <folder>: a model kept elsewhere, still on 8796',
+          cli.model_and_port(cli.parse(['--my-voice', '--model', 'D:/voice/ct2'])) == ('D:/voice/ct2', 8796))
+    check('*** without --my-voice nothing changed: small.en on 8797 (the shared service) ***',
+          cli.model_and_port(cli.parse([])) == ('small.en', 8797))
+    err = io.StringIO()
+    with contextlib.redirect_stderr(err):
+        code = cli.main(['--my-voice', '--backend', 'vosk'])
+    check('--my-voice is a Whisper model: with another backend it refuses, said plainly',
+          code == 2 and 'whisper' in err.getvalue(), (code, err.getvalue()))
+
+    # A folder that is not there: exit 2, and the message says WHERE to put it and what goes in it.
+    with tempfile.TemporaryDirectory() as d:
+        gone = str(Path(d) / 'my_voice_model')
+        err = io.StringIO()
+        saved = cli.MY_VOICE_DIR
+        cli.MY_VOICE_DIR = gone
+        try:
+            with contextlib.redirect_stderr(err):
+                code = cli.main(['--my-voice'])
+        finally:
+            cli.MY_VOICE_DIR = saved
+        msg = err.getvalue()
+        check('*** no folder yet: exit 2, naming the exact folder to put it in, the files, and --model ***',
+              code == 2 and gone in msg and 'model.bin' in msg and 'tokenizer.json' in msg and '--model' in msg, (code, msg))
+        Path(gone).mkdir()
+        (Path(gone) / 'model.bin').write_bytes(b'')
+        err = io.StringIO()
+        cli.MY_VOICE_DIR = gone
+        try:
+            with contextlib.redirect_stderr(err):
+                code = cli.main(['--my-voice'])
+        finally:
+            cli.MY_VOICE_DIR = saved
+        check('*** a folder with files missing: exit 2, every missing file named (the same check as --model) ***',
+              code == 2 and 'config.json' in err.getvalue() and 'tokenizer.json' in err.getvalue(), (code, err.getvalue()))
+
+    # *** KEPT OUT OF GIT. *** Asked of git itself, so a rule that stops matching fails here.
+    repo = here.parent.parent
+    probe = 'web/speech_service/my_voice_model/model.bin'
+    try:
+        r = subprocess.run(['git', 'check-ignore', '-q', probe], cwd=repo, capture_output=True, timeout=20)
+        check('*** git ignores everything in speech_service/my_voice_model/ ***', r.returncode == 0, r.returncode)
+        r2 = subprocess.run(['git', 'check-ignore', '-q', 'web/speech_service/backends.py'], cwd=repo, capture_output=True, timeout=20)
+        check('...and the rule is narrow: the service\'s own files are not ignored', r2.returncode == 1, r2.returncode)
+    except (OSError, subprocess.SubprocessError):
+        text = (repo / '.gitignore').read_text(encoding='utf-8', errors='replace')
+        check('*** .gitignore names speech_service/my_voice_model/ (no git here to ask) ***',
+              'web/speech_service/my_voice_model/' in text)
+
+
 if __name__ == '__main__':
     if '--live' in sys.argv:
         # --live <ws url> <wav folder> [--grammar "a,b,c"]: no tests, just a running service measured.
@@ -517,6 +588,7 @@ if __name__ == '__main__':
     asyncio.run(wake_tests())
     wake_model_tests()
     model_folder_tests()
+    my_voice_tests()
     fastapi_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')
