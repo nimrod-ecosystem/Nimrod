@@ -447,7 +447,8 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle, onAutom
 //   panels()    [{ id, title, manifest, instance? }] what is on the screen, read on every repaint
 //   selected    the panel id to open on (or a getter): the thing chosen in Layers
 //   verbs       extra verb ids to suggest
-//   topics      message names to offer for "a message" (a value or a getter)
+//   topics      message names to offer for "a message" (a value or a getter): strings or labelled entries
+//               (automation_topics.js; the edit view passes AUTOMATION_TOPICS, dashboard_editor.js)
 //   chooseMode  the person's "How you choose things" ('point' | 'step', or a getter)
 // ---------------------------------------------------------------------------------------
 export function mountAutomationWindow(host, {

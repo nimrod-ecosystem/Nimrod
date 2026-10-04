@@ -31,6 +31,12 @@
 // the box stays, for a keyboard:
 //   message name   the names given (`topics`) plus the ones this screen's rules already use. With none, it is
 //                  not a stop (a switch would land on something it cannot operate) and a keyboard types it.
+//                  (2026-10-04) The edit view now GIVES names (automation_topics.js, passed by dashboard_editor.js),
+//                  so a new message rule is finished by switch alone. A given name may be an entry, not just a
+//                  string: { topic, path?, label, hint?, range? } -- shown by its LABEL (the topic rides as the
+//                  hint), and choosing it also fills in the field it reads (`path`, kept in a hidden box) and its
+//                  lowest / highest (`range`). Typing in the box is a name of the keyboard's own: no field, and
+//                  the lowest / highest stay as they are.
 //   panel / output (another panel's output) the panels that SEND a number (links.js portsFor: an `out` port
 //                  of type number), by name; choosing one fills its first number output in.
 //   up / down with the verbs (actions.js), down with "none" first.
@@ -113,9 +119,9 @@ function numField(label, name, value, step = 'any') {
 }
 
 /** Describe a binding in one line, for the list. */
-export function describeBinding(b, { panelTitle = null, settingLabel = null } = {}) {
+export function describeBinding(b, { panelTitle = null, settingLabel = null, messageLabel = null } = {}) {
   const s = b.source || {};
-  const from = s.kind === 'bus' ? `“${s.topic}”`
+  const from = s.kind === 'bus' ? `“${messageLabel || s.topic}”`
     : s.kind === 'link' ? `${s.instance} → ${s.port}`
     : s.kind === 'verb' ? `the ${s.up} verb${s.down ? ` (and ${s.down} back)` : ''}`
     : s.kind === 'clock' ? 'the time of day'
@@ -127,13 +133,19 @@ export function describeBinding(b, { panelTitle = null, settingLabel = null } = 
 
 const decimals = (n) => { const s = String(n); const i = s.indexOf('.'); return i < 0 ? 0 : Math.min(6, s.length - i - 1); };
 
+// One message choice's key: its topic, and the field it reads when it reads one. The separator is a
+// character no topic name uses (bus.js instance topics already use '#').
+const MSG_SEP = '␟';
+const msgKey = (topic, path) => (path ? `${topic}${MSG_SEP}${path}` : String(topic || ''));
+
 /**
  * Mount the editor.
  *   engine     the createAutomation() of this screen
  *   panels     () => [{ id, title, manifest, instance? }] - the panels on this screen, read on every
  *              repaint so a panel added since is offered
  *   verbs      extra verb ids to suggest (a screen's custom verbs)
- *   topics     message names to offer for "a message" (a value or a getter); the ones this screen's rules
+ *   topics     message names to offer for "a message" (a value or a getter): strings, or entries
+ *              { topic, path?, label, hint?, range? } (automation_topics.js); the ones this screen's rules
  *              already use are always offered too
  *   selected   the panel id to start on (or a getter): the edit view passes the thing chosen in
  *              Layers, so "Automation…" pressed with the sign chosen opens on the sign
@@ -171,11 +183,13 @@ export function mountAutomationPanel(root, {
     listEl.innerHTML = '';
     const list = engine.list();
     if (!list.length) { listEl.append(el('li', { class: 'auto-empty', text: 'Nothing is driven yet.' })); return; }
+    const named = new Map(messageEntries().filter((m) => m.named).map((m) => [m.value, m.label]));
     for (const b of list) {
       const p = panelById(b.target.instance);
       const s = settingsOf(p).find((x) => x.key === b.target.key);
       const state = engine.status(b.id);
-      const what = describeBinding(b, { panelTitle: p?.title, settingLabel: s?.label });
+      const messageLabel = b.source?.kind === 'bus' ? named.get(msgKey(b.source.topic, b.source.path)) || null : null;
+      const what = describeBinding(b, { panelTitle: p?.title, settingLabel: s?.label, messageLabel });
       const rm = el('button', { type: 'button', data: { remove: b.id }, 'aria-label': `Remove: ${what}`, text: 'Remove' });
       rm.addEventListener('click', () => {
         engine.remove(b.id);
@@ -252,7 +266,13 @@ export function mountAutomationPanel(root, {
     srcBox.innerHTML = '';
     const k = kindSel.value;
     if (k === 'bus') {
-      srcBox.append(field('Message name', textInput('topic', '')),
+      // The field a chosen message's number is read from (`path`); empty for a typed name.
+      const pathBox = el('input', { type: 'hidden', name: 'path', value: '', data: { a: 'path' } });
+      const topicBox = textInput('topic', '');
+      // Typing is the keyboard's own name: whatever field a chosen message had goes with it. (A choice
+      // sets the field AFTER its own input event, so a choice keeps its field.)
+      topicBox.addEventListener('input', () => { pathBox.value = ''; });
+      srcBox.append(field('Message name', topicBox), pathBox,
         numField('Its lowest', 'inMin', AUTOMATION_DEFAULTS.inputRange[0]),
         numField('Its highest', 'inMax', AUTOMATION_DEFAULTS.inputRange[1]));
     } else if (k === 'link') {
@@ -274,7 +294,7 @@ export function mountAutomationPanel(root, {
     const n = (name) => { const s = v(name); return s === '' ? undefined : Number(s); };
     const kind = kindSel.value;
     const source = { kind };
-    if (kind === 'bus') Object.assign(source, { topic: v('topic').trim() });
+    if (kind === 'bus') Object.assign(source, { topic: v('topic').trim(), path: v('path').trim() || null });
     if (kind === 'link') Object.assign(source, { instance: v('instance').trim(), port: v('port').trim() });
     if (kind === 'verb') Object.assign(source, { up: v('up').trim(), down: v('down').trim() || null, step: n('step') });
     if (kind === 'lfo') Object.assign(source, { periodMs: (n('periodS') || 0) * 1000, shape: v('shape') });
@@ -304,14 +324,38 @@ export function mountAutomationPanel(root, {
   // cursor is remembered by the ROW's name, so a redraw underneath it does not lose it.
   // =================================================================================================
 
+  // The messages to offer: the ones given (strings or entries), then the ones this screen's rules already
+  // use, one per topic-and-field. Each choice's value is its KEY (`msgKey`), because one topic can carry
+  // more than one number (the pointer's x and y); `topic` / `path` / `range` are what choosing it fills in.
+  function messageEntries() {
+    let given = [];
+    try { given = (typeof topics === 'function' ? topics() : topics) || []; } catch { given = []; }
+    const out = new Map();
+    const add = (raw) => {
+      const e = typeof raw === 'string' ? { topic: raw } : (raw || {});
+      const topic = String(e.topic || '').trim();
+      if (!topic) return;
+      const path = typeof e.path === 'string' && e.path.trim() ? e.path.trim() : null;
+      const key = msgKey(topic, path);
+      if (out.has(key)) return;
+      const name = path ? `${topic} → ${path}` : topic;
+      const label = typeof e.label === 'string' && e.label.trim() ? e.label.trim() : name;
+      const lo = Number(e.range?.[0]), hi = Number(e.range?.[1]);
+      out.set(key, {
+        value: key, topic, path, label, named: label !== name,
+        // The topic's own name rides as the hint, so a keyboard user learns what to type next time.
+        hint: label !== name ? (e.hint ? `${e.hint} (${name})` : name) : (e.hint || ''),
+        range: Number.isFinite(lo) && Number.isFinite(hi) && lo !== hi ? [lo, hi] : null,
+      });
+    };
+    (Array.isArray(given) ? given : []).forEach(add);
+    engine.list().filter((b) => b.source?.kind === 'bus' && b.source.topic).forEach((b) => add({ topic: b.source.topic, path: b.source.path }));
+    return [...out.values()];
+  }
+
   // What a text box can be given instead of typing.
   function textChoices(name) {
-    if (name === 'topic') {
-      let given = [];
-      try { given = (typeof topics === 'function' ? topics() : topics) || []; } catch { given = []; }
-      const used = engine.list().filter((b) => b.source?.kind === 'bus' && b.source.topic).map((b) => b.source.topic);
-      return [...new Set([...given, ...used].map(String).filter(Boolean))].map((t) => ({ value: t, label: t }));
-    }
+    if (name === 'topic') return messageEntries();
     if (name === 'instance') {
       return allPanels().filter((p) => sendsNumber(p)).map((p) => ({ value: p.id, label: p.title || p.id }));
     }
@@ -354,6 +398,10 @@ export function mountAutomationPanel(root, {
     return rows;
   }
   const enabledOf = (r) => r.options.filter((o) => !o.disabled);
+  // What a row holds NOW, in its choices' terms: a message is its topic AND the field it reads.
+  const rowValue = (r) => (r.id === 'topic'
+    ? msgKey(String(r.ctl.value || '').trim(), form.querySelector('[data-a="path"]')?.value || null)
+    : r.ctl.value);
 
   // The top-level stops: a row each (rows), or every thing that can act (one).
   function topStops(rows) {
@@ -373,12 +421,13 @@ export function mountAutomationPanel(root, {
   }
   function ensureStrip(r) {
     let strip = r.el.querySelector('[data-auto-opts]');
-    const sig = JSON.stringify([r.options, r.ctl.value]);
+    const now = rowValue(r);
+    const sig = JSON.stringify([r.options, now]);
     if (strip && strip.dataset.sig === sig) return strip;
     strip?.remove();
     strip = el('div', { class: 'auto-opts', role: 'group', 'aria-label': r.label, data: { autoOpts: '', sig } });
     r.options.forEach((o, n) => {
-      const on = String(o.value) === String(r.ctl.value);
+      const on = String(o.value) === String(now);
       strip.append(el('button', { type: 'button', class: 'auto-opt', disabled: o.disabled ? true : null,
         'aria-pressed': on ? 'true' : 'false', title: o.hint || null, data: { autoOpt: String(n) }, text: o.label }));
     });
@@ -421,8 +470,21 @@ export function mountAutomationPanel(root, {
 
   function setChoice(r, value) {
     if (!r?.ctl) return;
-    r.ctl.value = value;
+    const m = r.id === 'topic' ? r.options.find((x) => String(x.value) === String(value)) || null : null;
+    r.ctl.value = m ? m.topic : value;
     r.ctl.dispatchEvent(new Event(r.ctl.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }));
+    // A message: the field it reads goes in after the box's own input event (which clears it for typing),
+    // and its range fills its lowest / highest when it has one.
+    if (r.id === 'topic') {
+      const pathBox = form.querySelector('[data-a="path"]');
+      if (pathBox) pathBox.value = m?.path || '';
+      if (m?.range) {
+        for (const [name, v] of [['inMin', m.range[0]], ['inMax', m.range[1]]]) {
+          const box = form.querySelector(`[data-a="${name}"]`);
+          if (box) { box.value = String(v); box.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+      }
+    }
     // A panel chosen for "another panel's output": its first number output goes in with it, so an output
     // from a panel that was not chosen is never left behind.
     if (r.id === 'instance') {
@@ -436,7 +498,7 @@ export function mountAutomationPanel(root, {
   function stepChoice(r) {
     const opts = enabledOf(r);
     if (!opts.length) return;
-    const at = opts.findIndex((o) => String(o.value) === String(r.ctl.value));
+    const at = opts.findIndex((o) => String(o.value) === String(rowValue(r)));
     setChoice(r, opts[(at + 1) % opts.length].value);
   }
   function nudgeSpec(name) {
@@ -450,8 +512,12 @@ export function mountAutomationPanel(root, {
       return { step, min: s.min, max: s.max };
     }
     if (name === 'inMin' || name === 'inMax') {
-      const [lo, hi] = AUTOMATION_DEFAULTS.inputRange;
-      return { step: (hi - lo) / across };
+      // A chosen message's own span (held 0..2000 ms nudges by 100, not by 0.05); otherwise 0..1.
+      const box = form.querySelector('[data-a="topic"]');
+      const key = box ? msgKey(box.value.trim(), form.querySelector('[data-a="path"]')?.value || null) : null;
+      const m = key ? messageEntries().find((x) => x.value === key) : null;
+      const [lo, hi] = m?.range || AUTOMATION_DEFAULTS.inputRange;
+      return { step: Math.abs(hi - lo) / across };
     }
     if (name === 'center' || name === 'width') return { step: 1 / across, min: 0, max: 1 };
     if (name === 'step') return { step: 1 / across, min: 1 / across, max: 1 };
@@ -479,7 +545,7 @@ export function mountAutomationPanel(root, {
     dropStrips();
     picker = mountChoicePicker(pickHost, {
       options: opts.map((o) => ({ value: o.value, label: o.label, hint: o.hint || '' })),
-      value: r.ctl.value,
+      value: rowValue(r),
       // The ones that cannot be chosen are not tiles (a tile is something you can take); the list behind
       // says each one's reason, so the title says how many and where.
       title: left ? `${r.label} (${left} more cannot be chosen: the list says why)` : r.label,

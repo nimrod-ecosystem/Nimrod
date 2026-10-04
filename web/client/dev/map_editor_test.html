@@ -687,6 +687,58 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       check('*** back again ends the editing, as before ***', await settled(() => !k.editView(), 2000) && !k.editScanHeld());
       k.destroy(); box.remove();
     }
+    {
+      // 6d. 2026-10-04 (the gap from 6114bb1): a new MESSAGE rule by switch alone on the real screen. The edit view
+      // hands the window the list of messages (automation_topics.js) with no change to the kiosk, so the message name
+      // is a choice: the picker opens, a switch takes "where the pointer is", Add makes the rule, the pointer drives it.
+      const { AUTOMATION_TOPICS } = await import('../automation_topics.js');
+      const { AIM_TOPIC } = await import('../aim.js');
+      const aimX = AUTOMATION_TOPICS.find((e) => e.topic === AIM_TOPIC && e.path === 'x');
+      const AM = await real.create('Message rule by switch');
+      const sign = await real.addModule(AM.id, 'button');
+      await setRow(AM.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [null],
+        placed: [{ id: sign.id, place: 'screen', x: 50, y: 50, w: 40, h: 30 }] } } });
+      const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+      const bus = createBus();
+      const k = await mountKiosk(box, { user: USER, profileId: AM.id, profiles: real, bus,
+        storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+      check('(setup) the sign mounted', await settled(() => !!k.dashboard()?.arrangement?.()?.recFor?.(sign.id), 8000));
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      check('(setup) the edit view holds the scan', await settled(() => !!k.editView(), 3000) && k.editScanHeld());
+      const ed = k.editView();
+      ed.model.select(sign.id);
+      ed.toggle('automation');
+      const aw = ed.windows.automation;
+      const press = (v) => bus.publish(verbTopic(v));
+      const walk = (pred) => { for (let i = 0; i < 200; i++) { const c = ed.scan.current(); if (c && pred(c)) return true; press('next'); } return false; };
+      check('*** the screen\'s Automation window offers message names: the name is a stop (no kiosk change needed) ***',
+        !!aw && walk((n) => n.dataset?.autoRow === 'topic'));
+      press('select');
+      check('*** a press opens the picker of messages, by label ***', !!aw.el.querySelector('[data-choice-picker]')
+        && [...aw.el.querySelectorAll('[data-chp-pick] .chp-name')].some((n) => n.textContent === aimX.label));
+      // The picker by switch: rows (Keep, then rows of tiles); select goes in, select takes.
+      let took = false;
+      for (let g = 0; g < 30 && !took; g++) {
+        const cur = ed.scan.current();
+        if (!cur) { press('select'); continue; }
+        const tiles = [...cur.querySelectorAll('[data-chp-pick]')];
+        const i = tiles.findIndex((t) => t.querySelector('.chp-name')?.textContent === aimX.label);
+        if (i >= 0) { if (tiles.length > 1) { press('select'); for (let n = 0; n < i; n++) press('next'); } press('select'); took = true; }
+        else press('next');
+      }
+      const f = (n) => aw.el.querySelector(`[data-a="${n}"]`)?.value;
+      check('*** taken by switch: the pointer\'s x ***', took && f('topic') === AIM_TOPIC && f('path') === 'x', `${f('topic')} ${f('path')}`);
+      check('(walk) next reaches Add', walk((n) => n.dataset?.autoRow === 'add'));
+      press('select');
+      const eng = k.automation();
+      const r = eng.list()[0];
+      check('*** a message rule made with the switch alone, on the screen\'s engine ***',
+        eng.list().length === 1 && r.target.instance === sign.id && r.source.kind === 'bus' && r.source.topic === AIM_TOPIC && r.source.path === 'x', J(eng.list()));
+      bus.publish(AIM_TOPIC, { x: 1, y: 0, device: 'pointer:mouse', at: Date.now() });
+      check('...and the pointer drives the sign', await settled(() => eng.overlay(sign.id)[r?.target?.key] !== undefined, 2000), J(eng.overlay(sign.id)));
+      press('back'); press('back');
+      k.destroy(); box.remove();
+    }
   } catch (e) {
     check('suite threw', false, String(e && e.stack || e));
   }
