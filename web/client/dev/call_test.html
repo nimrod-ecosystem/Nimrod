@@ -37,7 +37,7 @@ import { CALL_INCOMING, CALL_ENDED, CALL_ANSWER, CALL_HANGUP, CALL_DECLINE, ANSW
 import { createMachine } from '../statemachine.js';
 import { withCallRule } from '../rules.js';
 import '../modules/call.js';
-import { CALL_TRANSPORT_READY } from '../call_transport.js';
+import { CALL_TRANSPORT_READY, createCallTransport, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { DEFAULT_RECORD } from '../avatar.js';
 
 const out = document.getElementById('results');
@@ -1010,6 +1010,119 @@ function rig(saved = {}, { withCamera = true, withAudio = true, withMic = true,
         !r.camLog.some((c) => c[0] === 'acquireTrack') && !r.micLog.some((c) => c[0] === 'acquire')
         && !log.includes('answer') && r.impl.__probe().phase === 'idle', JSON.stringify([log, r.camLog]));
       r.inst.destroy();
+    }
+
+    // =====================================================================================
+    // *** 2026-10-04: AN ANSWERED CALL THAT NEVER CONNECTS ENDS. *** Answered, the camera and the
+    // microphone open, and the connection sat at 'new' or 'connecting' for ever: nothing reports 'failed',
+    // so the stall clock never started and the panel showed a call with nobody in it. The REAL transport
+    // here (call_transport.js), on a fake link and a fake peer, with its own clock the test turns.
+    const tClock = () => {
+      let t = 0, seq = 0, armed = [];
+      return {
+        setTimer: (fn, ms) => { const id = ++seq; armed.push({ id, fn, at: t + (ms || 0) }); return id; },
+        clearTimer: (id) => { armed = armed.filter((x) => x.id !== id); },
+        advance(ms) {
+          const target = t + ms;
+          for (let g = 0; g < 10000; g++) {
+            const due = armed.filter((x) => x.at <= target).sort((a, b) => a.at - b.at)[0];
+            if (!due) break;
+            armed = armed.filter((x) => x !== due);
+            t = due.at; due.fn();
+          }
+          t = target;
+        },
+      };
+    };
+    const realT = () => {
+      const made = [];
+      class PC {
+        constructor(cfg) { this.cfg = cfg; this.senders = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; made.push(this); }
+        addTrack(tr) { this.senders.push({ track: tr }); return {}; }
+        getSenders() { return this.senders; }
+        addEventListener() {}
+        async setRemoteDescription(d) { this.remote = d; }
+        async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+        async setLocalDescription(d) { this.localDescription = d; }
+        close() { this.closed = true; }
+        fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+      }
+      const sent = [], subs = new Set();
+      const link = { sent, sendSignal: (s) => { sent.push(s); return true; }, onSignal(cb) { subs.add(cb); return () => subs.delete(cb); },
+        deliver(sig) { for (const cb of [...subs]) cb(sig); } };
+      const clock = tClock();
+      const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: null,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      return { t, link, clock, made, last: () => made[made.length - 1], byes: () => sent.filter((s) => s.kind === 'bye') };
+    };
+    // Released AFTER it was taken (end() always releases, so a bare 'release' proves nothing).
+    const releasedAfterTake = (log, take) => {
+      const i = log.findIndex((c) => c[0] === take);
+      return i >= 0 && log.slice(i + 1).some((c) => c[0] === 'release');
+    };
+    const ring = async (x, extra = {}) => {
+      x.link.deliver({ kind: 'offer', sdp: 'O', from: { name: 'Mike', video: true }, purpose: 'call', session: 'call-00000000000000d1', ...extra });
+      await sleep(30);
+    };
+    section('*** an answered call that never connects ends: the camera and microphone let go, the caller told ***');
+    {
+      const x = realT();
+      const r = rig({ declineSeconds: 0 }, { callTransport: x.t });
+      await ring(x);
+      check('(setup) answered: connected on screen, the camera and the microphone open, the transport live',
+        r.impl.__probe().phase === 'connected' && r.camLog.some((c) => c[0] === 'acquireTrack') && r.micLog.some((c) => c[0] === 'acquire')
+        && x.t.isLive(), JSON.stringify([r.impl.__probe().phase, r.camLog, r.micLog]));
+      x.last().fire('connecting');
+      x.clock.advance(ANSWER_CONNECT_MS - 1);
+      check('stuck at connecting: still in the call just before the clock runs out', r.impl.__probe().phase === 'connected' && x.byes().length === 0);
+      x.clock.advance(1);
+      check('*** the clock runs out: the panel goes back to no call ***', r.impl.__probe().phase === 'idle' && !x.t.isLive());
+      check('*** ...the CAMERA is let go (released, and its track stopped) ***',
+        releasedAfterTake(r.camLog, 'acquireTrack') && r.track.stopped === true, JSON.stringify(r.camLog));
+      check('*** ...the MICROPHONE is let go ***', releasedAfterTake(r.micLog, 'acquire'), JSON.stringify(r.micLog));
+      check('*** ...the caller is told, once: "failed" (their page says "The call could not connect.") ***',
+        x.byes().length === 1 && x.byes()[0].reason === 'failed' && x.byes()[0].session === 'call-00000000000000d1', JSON.stringify(x.byes()));
+      check('*** ...and the panel says so: "could not connect", not "lost" (it never was a call) ***',
+        /could not connect/i.test(r.host.textContent) && !/connection was lost/i.test(r.host.textContent), r.host.textContent.slice(0, 160));
+      check('the screen hears the call ended (so it switches back)',
+        r.published.some(([tp, p]) => tp === CALL_ENDED && p.reason === 'failed'), JSON.stringify(r.published));
+      r.inst.destroy(); x.t.destroy();
+    }
+    {
+      const x = realT();
+      const r = rig({ declineSeconds: 0 }, { callTransport: x.t });
+      await ring(x);
+      x.clock.advance(ANSWER_CONNECT_MS - 1);
+      x.last().fire('connected');
+      x.clock.advance(ANSWER_CONNECT_MS * 3);
+      check('*** connects in time: the clock is cleared and the call goes on, camera and microphone kept ***',
+        r.impl.__probe().phase === 'connected' && x.t.isLive() && x.byes().length === 0
+        && !r.camLog.some((c) => c[0] === 'release') && !r.micLog.some((c) => c[0] === 'release'), JSON.stringify([r.camLog, r.micLog]));
+      r.impl.__end('hangup');
+      r.inst.destroy(); x.t.destroy();
+    }
+    {
+      // A RECONNECT re-arms it: connected, dropped, re-offered, and the re-answer never connects.
+      const x = realT();
+      const r = rig({ declineSeconds: 0 }, { callTransport: x.t });
+      const rings0 = r.published.filter(([tp]) => tp === CALL_INCOMING).length;
+      await ring(x);
+      x.last().fire('connected');
+      x.last().fire('failed');
+      x.clock.advance(20000);
+      await ring(x, { sdp: 'O2' });
+      check('(setup) the re-offer is answered as a reconnect, not rung again',
+        r.published.filter(([tp]) => tp === CALL_INCOMING).length === rings0 + 1 && r.impl.__probe().phase === 'connected'
+        && x.link.sent.filter((s) => s.kind === 'answer').length === 2);
+      x.clock.advance(ANSWER_CONNECT_MS - 1);
+      check('a full window from the re-offer', r.impl.__probe().phase === 'connected');
+      x.clock.advance(1);
+      check('*** a re-answer that never connects ends too, and lets go of the camera and microphone ***',
+        r.impl.__probe().phase === 'idle' && releasedAfterTake(r.camLog, 'acquireTrack') && releasedAfterTake(r.micLog, 'acquire'));
+      check('*** ...saying "the connection was lost" (it HAD connected), on screen and to the caller ***',
+        /connection was lost/i.test(r.host.textContent) && x.byes().length === 1 && x.byes()[0].reason === 'connection-lost',
+        JSON.stringify([r.host.textContent.slice(0, 120), x.byes()]));
+      r.inst.destroy(); x.t.destroy();
     }
 
     document.getElementById('summary').textContent =

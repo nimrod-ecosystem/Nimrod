@@ -42,6 +42,7 @@ that already exists rather than opening a second one.</p>
 import {
   createCallTransport, iceServers, gatheringDone, hasRelay,
   DEFAULT_STUN, GATHER_TIMEOUT_MS, STALL_MS, MODES, CALL_PURPOSE, CALL_CLAIM_MS, newCallSession,
+  ANSWER_CONNECT_MS,
 } from '../call_transport.js';
 import { SIGNAL_KINDS, DRIVE_VERBS, connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
@@ -342,6 +343,9 @@ try {
       const { t, link, clock, ended, last } = mk();
       link.deliver({ kind: 'offer', sdp: 'O' });
       await t.answer({ outgoing: { kind: 'video' } });
+      // (2026-10-04) A call that was RUNNING, then dropped: it connected first. A call that never
+      // connects is the connect clock's, in its own section below.
+      last().fire('connected');
       last().fire('failed');
       check('a dropped connection does NOT end the call immediately — the caller re-offers',
         ended.length === 0 && t.__probe().stalling === true);
@@ -360,6 +364,7 @@ try {
       t.onIncoming((f) => rings.push(f));
       link.deliver({ kind: 'offer', sdp: 'O1' });
       await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('connected');                  // (2026-10-04) it was running before it dropped
       last().fire('failed');
       check('a drop armed the stall', t.__probe().stalling === true);
       link.deliver({ kind: 'offer', sdp: 'O2' });
@@ -368,6 +373,12 @@ try {
       check('...and it cleared the stall it was racing', t.__probe().stalling === false);
       check('...with a fresh answer sent', link.sent.filter((s) => s.kind === 'answer').length === 2,
         JSON.stringify(link.sent.map((s) => s.kind)));
+      // (2026-10-04) The re-answer is a new connection with its own connect clock; it RECOVERS when it
+      // connects. Before, this test advanced the clock with the re-answer still at 'new' and called that
+      // recovered - the exact dead call the connect clock now ends (its own section, below).
+      check('...and the re-answer runs the connect clock until it connects', t.__probe().connecting === true);
+      last().fire('connected');
+      check('...which its connecting clears', t.__probe().connecting === false && t.__probe().stalling === false);
       clock.advance(STALL_MS * 2);
       check('and the recovered call is not killed by the old timer', t.__probe().live === true);
     }
@@ -384,6 +395,170 @@ try {
       check('...and stops listening to the link', link.subs() === 0);
       link.deliver({ kind: 'offer', sdp: 'AFTER' });
       check('a signal after destroy does nothing at all', t.__probe().live === false);
+    }
+  }
+
+  // =====================================================================================
+  // 2026-10-04. The stall clock only started on 'failed'. A connection stuck at 'new' or 'connecting'
+  // never says that, so an answered call stayed live for ever with the camera and the microphone open.
+  section('*** an answer that never connects ends: the connect clock ***');
+  {
+    const mk = (extra = {}) => {
+      const { PC, last, made } = fakePeer();
+      const link = fakeLink(); const clock = fakeClock(); const ended = [], ringEv = [];
+      const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, ...extra });
+      t.onEnded((r) => ended.push(r));
+      t.onRing((e) => ringEv.push(e));
+      return { t, link, clock, ended, ringEv, last, made };
+    };
+    const byes = (link) => link.sent.filter((s) => s.kind === 'bye');
+    const S = 'call-00000000000000c1';
+
+    check('the clock is the stall window\'s number, 30 s (the intercom\'s backstop for the same thing)',
+      ANSWER_CONNECT_MS === STALL_MS && ANSWER_CONNECT_MS === 30000);
+    check('...and comfortably longer than the gathering that happens before the answer leaves',
+      ANSWER_CONNECT_MS >= GATHER_TIMEOUT_MS * 5);
+
+    // 1. STUCK AT 'new': the caller vanished between offer and answer.
+    for (const stuck of ['new', 'connecting']) {
+      const { t, link, clock, ended, ringEv, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O', purpose: CALL_PURPOSE, session: S, from: 'Ann' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      const pc = last();
+      if (stuck !== 'new') pc.fire(stuck);
+      check(`(${stuck}) answered: live, and the connect clock runs`, t.isLive() && t.__probe().connecting === true);
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      check(`(${stuck}) still waiting just before the clock runs out`, t.isLive() && ended.length === 0 && byes(link).length === 0);
+      clock.advance(1);
+      check(`*** (${stuck}) the clock runs out: the call ENDS, connection closed ***`,
+        !t.isLive() && pc.closed === true && ended.join() === 'unconnected', JSON.stringify(ended));
+      check(`*** (${stuck}) ...and the caller is TOLD: a bye, "failed", naming the call ***`,
+        byes(link).length === 1 && byes(link)[0].reason === 'failed' && byes(link)[0].session === S, JSON.stringify(byes(link)));
+      check(`(${stuck}) the screen's watchers hear it too (the incoming-call notice), not as this end's choice`,
+        ringEv.at(-1)?.type === 'end' && ringEv.at(-1).reason === 'unconnected' && ringEv.at(-1).local === false, JSON.stringify(ringEv.at(-1)));
+      check(`(${stuck}) nothing is left running`, clock.pending() === 0 && t.__probe().connecting === false && t.__probe().stalling === false,
+        String(clock.pending()));
+      t.hangup('failed');            // what the Call panel does when it hears the end
+      check(`(${stuck}) ...and the panel's hang-up after it says nothing more to the caller`, byes(link).length === 1);
+      t.destroy();
+    }
+
+    // 2. CONNECTS IN TIME: the clock is cleared, and the call lives on.
+    {
+      const { t, link, clock, ended, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      last().fire('connected');
+      check('*** connected in time: the connect clock is cleared ***', t.__probe().connecting === false);
+      clock.advance(ANSWER_CONNECT_MS * 3);
+      check('*** ...and the call lives on, untouched ***', t.isLive() && ended.length === 0 && byes(link).length === 0, JSON.stringify(ended));
+      t.destroy();
+    }
+
+    // 3. FAILED BEFORE IT EVER CONNECTED: one clock, the connect clock; it says "could not connect".
+    {
+      const { t, link, clock, ended, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      clock.advance(10000);
+      last().fire('failed');
+      check('a failure before it ever connected does not start a second clock (the connect clock bounds it)',
+        t.__probe().stalling === false && t.__probe().connecting === true);
+      clock.advance(ANSWER_CONNECT_MS - 10000);
+      check('*** ...and it ends at the connect clock, as never-connected, once ***',
+        !t.isLive() && ended.join() === 'unconnected' && byes(link).length === 1 && byes(link)[0].reason === 'failed', JSON.stringify(ended));
+      t.destroy();
+    }
+
+    // 4. A RECONNECT RE-ARMS IT. Connected, dropped (the stall clock, as before), re-offered: the re-answer
+    // is a new connection and has to connect too.
+    {
+      const { t, link, clock, ended, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O1', purpose: CALL_PURPOSE, session: S });
+      await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('connected');
+      check('(setup) connected: no connect clock', t.__probe().connecting === false);
+      last().fire('failed');
+      check('*** a call that WAS connected and drops goes to the stall clock, not the connect clock ***',
+        t.__probe().stalling === true && t.__probe().connecting === false);
+      clock.advance(20000);
+      link.deliver({ kind: 'offer', sdp: 'O2', purpose: CALL_PURPOSE, session: S });
+      await sleep(5);
+      check('*** the re-offer re-arms the connect clock (and the stall clock gives way) ***',
+        t.__probe().connecting === true && t.__probe().stalling === false && link.sent.filter((s) => s.kind === 'answer').length === 2);
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      check('...a full window from the re-offer, not what was left of the stall', t.isLive() && ended.length === 0);
+      clock.advance(1);
+      check('*** a re-answer that never connects ends too: "the connection was lost" (it HAD connected) ***',
+        !t.isLive() && ended.join() === 'stalled' && byes(link).length === 1 && byes(link)[0].reason === 'connection-lost'
+        && byes(link)[0].session === S, JSON.stringify([ended, byes(link)]));
+      t.destroy();
+    }
+    {
+      // ...and a re-answer that DOES connect is a recovered call.
+      const { t, clock, ended, link, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O1' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('connected'); last().fire('failed');
+      link.deliver({ kind: 'offer', sdp: 'O2' });
+      await sleep(5);
+      clock.advance(5000);
+      last().fire('connected');
+      clock.advance(ANSWER_CONNECT_MS * 3);
+      check('*** a reconnect that connects: no clock left, the call goes on ***',
+        t.isLive() && ended.length === 0 && !t.__probe().connecting && !t.__probe().stalling, JSON.stringify(ended));
+      t.destroy();
+    }
+    {
+      // A re-offer while the FIRST answer is still connecting: a fresh window from the re-offer.
+      const { t, clock, ended, link, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O1' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      clock.advance(20000);
+      link.deliver({ kind: 'offer', sdp: 'O2' });
+      await sleep(5);
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      check('a re-offer during the first connect re-arms the clock from the re-offer', t.isLive() && ended.length === 0);
+      last().fire('connected');
+      clock.advance(ANSWER_CONNECT_MS);
+      check('...and connecting then keeps it', t.isLive() && ended.length === 0);
+      t.destroy();
+    }
+    {
+      // A re-answer that throws half-made (it used to leave NO clock: the stall had been cleared).
+      const { t, clock, ended, link, last } = mk();
+      link.deliver({ kind: 'offer', sdp: 'O1' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      last().fire('connected');
+      const Broken = last().constructor;
+      Broken.prototype.createAnswer = async () => { throw new Error('no answer today'); };
+      link.deliver({ kind: 'offer', sdp: 'O2' });
+      await sleep(5);
+      clock.advance(ANSWER_CONNECT_MS);
+      check('*** a re-answer that failed half-made still ends at the clock, rather than never ***',
+        !t.isLive() && ended.join() === 'stalled', JSON.stringify(ended));
+      t.destroy();
+    }
+
+    // 5. The clock is the transport's; the suites can shorten it. A driver never runs it (the caller page
+    // has its own clocks, and learns of this one from the bye).
+    {
+      const { t, link, clock, ended } = mk({ connectMs: 500 });
+      link.deliver({ kind: 'offer', sdp: 'O' });
+      await t.answer({ outgoing: { kind: 'video' } });
+      clock.advance(500);
+      check('connectMs is honoured', ended.join() === 'unconnected', JSON.stringify(ended));
+      t.destroy();
+      const dp = fakePeer();
+      const dl = fakeLink();
+      const d = createCallTransport({ link: dl, role: 'driver', PeerConnection: dp.PC, Stream: FakeStream });
+      await d.call({ tracks: [], from: { name: 'Ann' } });
+      dl.deliver({ kind: 'answer', sdp: 'A', purpose: CALL_PURPOSE, session: d.__probe().session });
+      await sleep(5);
+      check('a caller (driver) runs no connect clock of its own', d.__probe().connecting === false && d.__probe().answered === true);
+      d.destroy();
     }
   }
 

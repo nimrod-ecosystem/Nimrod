@@ -92,6 +92,42 @@ export const GATHER_TIMEOUT_MS = 3000;
 // stuck showing a dead call, because she cannot dismiss it.
 export const STALL_MS = 30000;
 
+// ---------------------------------------------------------------------------------------
+// *** AN ANSWER THAT NEVER CONNECTS ENDS *** (2026-10-04)
+// ---------------------------------------------------------------------------------------
+//
+// The stall clock above only starts when the connection reports 'failed'. A connection that sits
+// at 'new' or 'connecting' never reports that - a caller whose page closed between offer and
+// answer, a network whose packets go nowhere - so an answered call stayed "live" for ever, the
+// camera and the microphone open, the screen showing a call with nobody in it. The intercom
+// already had this clock (intercom.js, "AN ANSWER THAT NEVER CONNECTS ENDS"); a call did not.
+//
+// So from the moment the screen starts answering, a CONNECT CLOCK runs until the connection
+// reports 'connected'. Run out, and the call ends here: the caller is told (`bye`, reason
+// 'failed', which the caller page shows as "The call could not connect."), the connection closes,
+// and the panel releases the camera and the microphone and says so. A call that HAD connected and
+// is being re-answered after a drop says 'connection-lost' instead, because that is what happened.
+//
+// RECONNECTS: a re-offer re-arms the clock (the re-answer is a new connection that has to connect
+// too - before, a re-answer that never connected had no clock at all). A call that WAS connected
+// and drops goes to the stall clock above, exactly as before; this one is not running then. While
+// this clock runs, a 'failed' does not also start the stall clock: this one already bounds it.
+//
+// 30 s, ARGUED, and deliberately the same as STALL_MS:
+//   * it is the intercom's number for the very same backstop, so the two ways into a room behave
+//     alike;
+//   * the gathering is already done when the answer leaves (non-trickle, GATHER_TIMEOUT_MS), so
+//     this is connectivity checks only - a second or two on a good path, longer through a relay on
+//     TCP/443 on institutional wifi, which is exactly the network this project cares most about;
+//     a short clock would hang up on the slow-but-working call that matters most;
+//   * the cost of waiting is bounded and visible: the screen shows the call, as it already did for
+//     up to 30 s after a drop.
+// The caller page's CONNECT_MS (15 s) is a different clock - how long to wait for the SITE'S socket
+// - not this one; the caller learns this end gave up from the `bye`.
+// Not a person's setting: nobody can judge it from a menu, and a wrong value either strands the
+// room on a dead call or hangs up working ones. The constructor takes `connectMs` for the suites.
+export const ANSWER_CONNECT_MS = STALL_MS;
+
 export const MODES = ['auto', 'direct'];
 
 // ---------------------------------------------------------------------------------------
@@ -241,6 +277,7 @@ export function createCallTransport({
   // check that throws is NOT busy - failing toward a family call ringing, not toward it vanishing.
   busy = () => false,
   claimMs = CALL_CLAIM_MS,
+  connectMs = ANSWER_CONNECT_MS,
 } = {}) {
   if (!link) throw new Error('createCallTransport: a drive link is required');
 
@@ -256,6 +293,8 @@ export function createCallTransport({
   let incomingCb = null;
   let endedCb = null;
   let stallTimer = null;
+  let connectTimer = null;            // ANSWER_CONNECT_MS: answering until 'connected' (screen only)
+  let everConnected = false;          // this call reached 'connected' at least once
   let destroyed = false;
   let attached = null;                // the <video> the module handed us
   let live = false;
@@ -294,6 +333,24 @@ export function createCallTransport({
     stallTimer = setTimer(() => { stallTimer = null; if (live) finish('stalled'); }, STALL_MS);
   }
 
+  // The connect clock (ANSWER_CONNECT_MS). Armed when the screen starts answering, and again by a
+  // re-offer; cleared by 'connected' and by any ending.
+  function clearConnect() { if (connectTimer != null) { clearTimer(connectTimer); connectTimer = null; } }
+  function armConnect() {
+    clearConnect();
+    connectTimer = setTimer(() => { connectTimer = null; if (live || answering) noConnect(); }, connectMs);
+  }
+  function noConnect() {
+    const had = everConnected;
+    log(had ? 'the re-answer never connected' : 'the answer never connected');
+    // The caller FIRST, then the teardown: `finish` forgets which call this was.
+    try { link.sendSignal({ kind: 'bye', reason: had ? 'connection-lost' : 'failed', ...tagged(currentSession) }); }
+    catch { /* socket gone */ }
+    // 'unconnected': never connected (the panel says "could not connect"); 'stalled': it had, and the
+    // reconnect did not (the panel says "the connection was lost", as for any other drop).
+    finish(had ? 'stalled' : 'unconnected');
+  }
+
   function closePc() {
     if (!pc) return;
     try { pc.close(); } catch { /* already closed */ }
@@ -310,6 +367,8 @@ export function createCallTransport({
   // "on another call" rather than just "ended". The Call panel reads only the first argument, as before.
   function finish(reason, { local = false, why = null } = {}) {
     clearStall();
+    clearConnect();
+    everConnected = false;
     closePc();
     remoteStream = null;
     if (attached) { try { attached.srcObject = null; } catch { /* gone */ } attached = null; }
@@ -407,7 +466,7 @@ export function createCallTransport({
       const st = pc?.connectionState;
       log('conn', st);
       emit(connCbs, st);
-      if (st === 'connected') clearStall();
+      if (st === 'connected') { clearStall(); clearConnect(); everConnected = true; }
       // A drop is NOT the end. The caller re-offers on its own, so the panel stays up and
       // waits — with a stall timer, so a caller gone for good still releases the screen.
       else if (st === 'failed') trouble();
@@ -424,7 +483,8 @@ export function createCallTransport({
   // too, or a caller on a network that cannot connect would retry for ever. A call that was never answered
   // has nothing to re-offer to: the caller page's own give-up time covers that.
   function trouble() {
-    if (role !== 'driver') { armStall(); return; }
+    // A screen still on its connect clock is already bounded by it (ANSWER_CONNECT_MS).
+    if (role !== 'driver') { if (connectTimer == null) armStall(); return; }
     if (stallTimer != null) return;
     armStall();
     if (answeredOnce) reoffer().catch((e) => log('re-offer failed', e));
@@ -478,7 +538,10 @@ export function createCallTransport({
       if (isLost(session)) { log('a re-offer of a call another screen has'); return; }
       if (live) {
         if (!session || session === currentSession) {
+          // The stall clock gives way to the connect clock: the re-answer is a new connection that has
+          // to connect too, and is bounded from the moment the re-offer arrives (the claim included).
           clearStall();
+          armConnect();
           // An offer while a call is LIVE is a reconnect: the caller rebuilt and re-offered.
           // Answer it with the media we already hold rather than treating it as a new call,
           // or a blip would ring at her a second time.
@@ -543,6 +606,9 @@ export function createCallTransport({
 
   async function answerWith(sdp, tracks, session) {
     const mine = makePc(tracks);
+    // THE CONNECT CLOCK STARTS AT THE ANSWER (ANSWER_CONNECT_MS) and runs until 'connected' - through
+    // the gathering, so an answer that hangs half-made is bounded too.
+    armConnect();
     // Anything that replaces or closes this connection while the answer is being made (the call ended,
     // another screen was named) stops it here: nothing is sent and nothing goes live for a dead one.
     const still = () => { if (destroyed || pc !== mine) throw new Error('call: superseded while answering'); };
@@ -666,6 +732,7 @@ export function createCallTransport({
     // and be connecting, which is not the same as a call.
     __probe: () => ({ live, hasPc: !!pc, pendingOffer: !!pendingOffer,
                       ice: ice(), relay: hasRelay(config), stalling: stallTimer != null,
+                      connecting: connectTimer != null,
                       session: currentSession || pendingSession, claiming: claims.size > 0,
                       answered: answeredOnce }),
 

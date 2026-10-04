@@ -35,8 +35,9 @@ import {
   NOTICE_RING_MS, NOTICE_NOTE_MS, NOTICE_STOPS,
 } from '../call_notice.js';
 import { CALLER_GIVE_UP_MS } from '../call_page.js';
-import { LONGEST_RING_S } from '../modules/call.js';
-import { createCallTransport, CALL_PURPOSE } from '../call_transport.js';
+import { LONGEST_RING_S, CALL_ENDED } from '../modules/call.js';
+import { createCallTransport, CALL_PURPOSE, ANSWER_CONNECT_MS } from '../call_transport.js';
+import { mountModule } from '../module.js';
 import { connectDrive } from '../drive.js';
 import { createBus } from '../bus.js';
 import { createProfilesClient } from '../profile.js';
@@ -397,6 +398,128 @@ try {
     link.deliver({ kind: 'offer', sdp: 'W', from: { name: 'Di' } });
     check('unsubscribed: nothing more', ev.at(-1)?.from?.name !== 'Di');
     t.destroy();
+  }
+
+  // =====================================================================================
+  // 2026-10-04. A call answered from the notice is hosted by the Call module in a view over the panels
+  // (kiosk.js openCallView), and that view closes the moment the call ends - taking the module's own
+  // "could not connect" with it. An answered call whose connection never came up used to sit there for
+  // ever instead; now the transport's connect clock ends it, and the notice says why.
+  section('*** answered from the notice, and it never connects: it ends, lets go, and says so ***');
+  {
+    const mkHosted = () => {
+      const made = [];
+      class PC {
+        constructor(cfg) { this.cfg = cfg; this.senders = []; this.iceGatheringState = 'complete'; this.connectionState = 'new'; made.push(this); }
+        addTrack(tr, s) { this.senders.push({ track: tr, stream: s }); return {}; }
+        getSenders() { return this.senders; }
+        addEventListener() {}
+        async setRemoteDescription(d) { this.remote = d; }
+        async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+        async setLocalDescription(d) { this.localDescription = d; }
+        close() { this.closed = true; }
+        fire(st) { this.connectionState = st; this.onconnectionstatechange?.(); }
+      }
+      const link = fakeLink();
+      const clock = fakeClock();
+      const t = createCallTransport({ link, role: 'screen', PeerConnection: PC, Stream: FakeStream,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      const host = document.createElement('div');
+      document.body.append(host);
+      const camLog = [], micLog = [];
+      const track = { stopped: false, stop() { this.stopped = true; } };
+      const cameraOwner = {
+        acquire: (id) => { camLog.push(['acquire', id]); return Promise.resolve({}); },
+        acquireTrack: (id) => { camLog.push(['acquireTrack', id]); return Promise.resolve(track); },
+        release: (id) => { camLog.push(['release', id]); },
+        configure() {}, isLive: () => true, consumers: () => [],
+      };
+      const micOwner = {
+        acquire: (id) => { micLog.push(['acquire', id]); return Promise.resolve({ getAudioTracks: () => [{ kind: 'audio' }] }); },
+        release: (id) => { micLog.push(['release', id]); },
+        status: () => ({ mismatch: [] }),
+      };
+      const x = { t, link, clock, host, camLog, micLog, track, made, view: null, last: () => made[made.length - 1],
+        byes: () => link.sent.filter((s) => s.kind === 'bye') };
+      // What kiosk.js openCallView does, in miniature: the Call module over the panels, handed the call, and
+      // the view gone the moment the module says the call is over.
+      const openCall = async (from, opts) => {
+        const slot = document.createElement('div');
+        host.append(slot);
+        const vbus = createBus();
+        const inst = mountModule('call', {
+          mount: slot, bus: vbus, cameraOwner, micOwner, instanceId: 'cv', callTransport: t,
+          output: { alert() {}, say() {}, notify() {}, status() {}, destroy() {} },
+          events: { append: () => Promise.resolve() },
+          state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {},
+                   load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+        });
+        inst.init();
+        const v = { inst, slot };
+        x.view = v;
+        vbus.subscribe(CALL_ENDED, () => { if (x.view === v) { x.view = null; try { inst.destroy(); } catch { /* gone */ } slot.remove(); } });
+        await (inst.impl || inst).takeCall(from, opts);
+        return true;
+      };
+      x.n = createCallNotice({ transport: t, host, openCall, now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      x.done = () => { try { x.n.destroy(); } catch { /* gone */ } try { t.destroy(); } catch { /* gone */ } host.remove(); };
+      return x;
+    };
+    const after = (log, take) => { const i = log.findIndex((c) => c[0] === take); return i >= 0 && log.slice(i + 1).some((c) => c[0] === 'release'); };
+    const offer = { kind: 'offer', sdp: 'O', from: { name: 'Ann', video: true }, purpose: CALL_PURPOSE, session: 'call-00000000000000e1' };
+    {
+      const x = mkHosted();
+      x.link.deliver(offer);
+      check('(setup) the notice rings', x.n.showing());
+      await x.n.answer();
+      await sleep(20);
+      check('(setup) answered from the notice: hosted, live, the camera and the microphone open',
+        !!x.view && x.t.isLive() && x.camLog.some((c) => c[0] === 'acquireTrack') && x.micLog.some((c) => c[0] === 'acquire'),
+        JSON.stringify([!!x.view, x.t.isLive(), x.camLog, x.micLog]));
+      x.last().fire('connecting');
+      x.clock.advance(ANSWER_CONNECT_MS - 1);
+      check('stuck at connecting: still in the call just before the clock runs out', !!x.view && x.t.isLive() && x.byes().length === 0);
+      x.clock.advance(1);
+      check('*** the clock runs out: the call ends and the hosted view goes ***', !x.view && !x.t.isLive());
+      check('*** ...the camera and the microphone are let go ***',
+        after(x.camLog, 'acquireTrack') && after(x.micLog, 'acquire') && x.track.stopped === true, JSON.stringify([x.camLog, x.micLog]));
+      check('*** ...the caller is told, once: "failed" ***', x.byes().length === 1 && x.byes()[0].reason === 'failed', JSON.stringify(x.byes()));
+      check('*** ...and the notice says "The call could not connect." where the view was ***',
+        x.n.note() === 'The call could not connect.', String(x.n.note()));
+      x.clock.advance(NOTICE_NOTE_MS);
+      check('...for a moment, as every other notice line', x.n.note() === null);
+      x.done();
+    }
+    {
+      const x = mkHosted();
+      x.link.deliver(offer);
+      await x.n.answer();
+      await sleep(20);
+      x.clock.advance(5000);
+      x.last().fire('connected');
+      x.clock.advance(ANSWER_CONNECT_MS * 3);
+      check('*** connects in time: the clock is cleared and the hosted call goes on ***',
+        !!x.view && x.t.isLive() && x.byes().length === 0 && !after(x.camLog, 'acquireTrack'));
+      x.link.deliver({ kind: 'bye', purpose: CALL_PURPOSE, session: offer.session, reason: 'hangup' });
+      check('the caller hanging up an ordinary call leaves no line behind (nothing went wrong)', !x.view && x.n.note() === null, String(x.n.note()));
+      x.done();
+    }
+    {
+      // A hosted call that HAD connected and whose reconnect never does: "The connection was lost."
+      const x = mkHosted();
+      x.link.deliver(offer);
+      await x.n.answer();
+      await sleep(20);
+      x.last().fire('connected');
+      x.last().fire('failed');
+      x.link.deliver({ ...offer, sdp: 'O2' });
+      await sleep(20);
+      x.clock.advance(ANSWER_CONNECT_MS);
+      check('*** a hosted call whose reconnect never connects ends: "The connection was lost." ***',
+        !x.view && !x.t.isLive() && x.n.note() === 'The connection was lost.' && x.byes().at(-1)?.reason === 'connection-lost',
+        JSON.stringify([x.n.note(), x.byes()]));
+      x.done();
+    }
   }
 
   // =====================================================================================

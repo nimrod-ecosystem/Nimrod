@@ -128,6 +128,10 @@ export function createCallNotice({
   let ringT = null;
   let noteT = null;
   let held = false;
+  // A call this notice handed on to be hosted (kiosk.js mounts the Call module over the panels). That view
+  // closes the moment the call ends, taking the Call module's own ending line with it - so when a hosted
+  // call ends because it could not connect or was lost, the line is shown HERE instead (2026-10-04).
+  let hosted = false;
   const offs = [];
 
   // ---- the elements: the notice, and the short line it leaves behind -------------------------------
@@ -226,6 +230,7 @@ export function createCallNotice({
     try { m = mode(); } catch { m = 'notice'; }
     if (m === 'off') return;                           // "don't ring here": the caller waits on the others
     if (phase === 'answering') return;                 // an answer is already being made here
+    hosted = false;                                    // whatever was handed on before is over (or busy)
     // A new ring (or a caller ringing again over the last one): this caller, from the start.
     if (ringT != null) { try { clearTimer(ringT); } catch { /* gone */ } ringT = null; }
     showNote(null);
@@ -257,11 +262,19 @@ export function createCallNotice({
   }
 
   function ended(ev) {
-    if (phase === 'idle') return;                      // nothing showing (a call this notice handed on)
+    if (phase === 'idle') {                            // nothing showing: maybe a call this notice handed on
+      if (!hosted) return;
+      hosted = false;
+      if (ev.local) return;                            // hung up here: the person chose it, nothing to explain
+      // The same words the Call panel shows for the same endings (call.js END_MESSAGES).
+      if (ev.reason === 'unconnected' || ev.reason === 'failed') showNote('The call could not connect.');
+      else if (ev.reason === 'stalled') showNote('The connection was lost.');
+      return;
+    }
     if (ev.local) return;                              // this screen's own decline / ring-out: already done
     const name = nameOf(who);
     if (ev.reason === 'elsewhere') clear('Handled on another screen.');
-    else if (ev.reason === 'failed' || ev.reason === 'stalled') clear('The call could not connect.');
+    else if (ev.reason === 'failed' || ev.reason === 'stalled' || ev.reason === 'unconnected') clear('The call could not connect.');
     else clear(`Missed call from ${name}.`);           // the caller hung up or gave up
   }
 
@@ -293,10 +306,13 @@ export function createCallNotice({
     if (seq !== mine || phase !== 'answering') return false;    // the ring ended while asking
     if (won !== true) { clear('Handled on another screen.'); return false; }
     clear(null);
+    // Set BEFORE handing on: the answer itself can fail while `openCall` is still running.
+    hosted = true;
     let ok = false;
     try { ok = (await openCall?.(from, { ringStartedAt: at })) === true; }
     catch (err) { console.error('call notice: hosting the call', err); ok = false; }
     if (!ok) {
+      hosted = false;
       // Answered with nothing to host it: hang up rather than leave the caller "answered" by nobody.
       try { transport.hangup('failed'); } catch { /* already gone */ }
       showNote('The call could not connect.');
