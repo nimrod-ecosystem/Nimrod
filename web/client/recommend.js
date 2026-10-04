@@ -8,18 +8,21 @@
 //   parseLink ...         the server's link rule, mirrored so the dialog can say "that is not a link we take"
 //                         before anything is sent. THE SERVER IS THE CHECK; this is only quicker words. The suite
 //                         holds the two to the same cases.
-//   mountRecommend        the window opened from a person's card: paste a link, see what it is (title and picture,
-//                         from the server's preview), add a message if you like, Send.
+//   mountRecommend        the window opened from a person's card: search by name (with a key) or paste a link, see
+//                         what it is (title and picture, from the server's preview), add a message if you like, Send.
 //   recLine, recThumbHTML, recElsewhereHTML, playPlan
 //                         what "Recommended for you" on the recipient's Your people draws, and what Play does.
 //   mountRecommendedVideo the site's own YouTube player (modules/youtube.js) mounted to play ONE recommendation.
 //
-// *** SEARCH BY TITLE IS NOT HERE, AND THE DIALOG SAYS HOW TO GET A LINK INSTEAD. *** The site's only YouTube
-// search (youtube.js searchVideos) needs a YouTube API key, kept in ONE YouTube panel's own settings: bring your
-// own key, because Mike cannot pay for everybody's searches (CLAUDE.md). There is no account-wide key for this
-// window to borrow, and asking somebody recommending a song to set up a Google Cloud key is the opposite of the
-// page's point. So: paste a link, with a line saying where Share / Copy link is. A search here would need a key
-// on the account (the Claude key's shape); that is on Mike's list, not guessed.
+// *** SEARCH BY NAME, ON THE ACCOUNT'S OWN KEYS (2026-10-04). *** Mike: "I have a Youtube API and Spotify account."
+// Bring your own key, because Mike cannot pay for everybody's searches (CLAUDE.md): a YouTube key and/or a Spotify
+// Client ID + secret, pasted once on /search_keys.html (search_keys.js), kept encrypted by the server
+// (server/recommend_search.py) and never sent back. WITH a key, a search box sits above the paste box; picking a
+// result puts that result's link in the paste box and runs the paste path's own preview, so everything after the
+// pick is exactly what pasting that link does. WITHOUT one, the search box is there DIMMED, with one line saying a
+// key turns it on and linking to the page - dimmed, never hidden, and the paste box works exactly as before.
+// SEARCH RUNS ON A PRESS (Search, or Enter), NEVER PER KEYSTROKE: a YouTube search spends 100 of the key's 10,000
+// free daily units, so search-as-you-type would use up somebody's day in an afternoon.
 //
 // *** SPOTIFY ON A SCREEN: THE ADDRESS AND A CODE, NOT AN EMBED. *** Argued: FOR an embed, one press and it plays,
 // and Spotify offers an iframe player. AGAINST, and it decides it: a screen is not signed in to Spotify, and the
@@ -50,6 +53,11 @@ export const markURL = (personId, id, mark) => `${recommendationsURL(personId)}/
 // arrives in one event, so this only matters to somebody typing a link out, and asking per keystroke would spend
 // the server's preview limit on half-typed addresses. 400 ms is under the time it takes to look up from the keys.
 export const PREVIEW_DEBOUNCE_MS = 400;
+// Search by name (server/recommend_search.py). The keys' page is its own page, like /claude.html.
+export const SEARCH_KEYS_URL = '/api/recommend/keys';
+export const SEARCH_URL = '/api/recommend/search';
+export const SEARCH_KEYS_PAGE = '/search_keys.html';
+export const SEARCH_MIN = 2;               // = server recommend_search.MIN_QUERY
 
 const PROVIDER_NAME = Object.freeze({ youtube: 'YouTube', spotify: 'Spotify' });
 const KIND_WORD = Object.freeze({ video: 'video', playlist: 'playlist', song: 'song', album: 'album' });
@@ -167,8 +175,20 @@ export const REC_WORDS = Object.freeze({
   title: (name) => `Recommend a song or video to ${name || 'them'}`,
   intro: (name) => `Paste a link from YouTube or Spotify. It shows on ${name || 'their'}${name ? '’s' : ''} page with your name, and they can play it from there.`,
   howTo: 'To get a link: in YouTube or Spotify, press Share, then Copy link, and paste it here.',
-  noSearch: 'Searching by name is not here yet.',
+  searchLabel: 'Search by name',
+  searchPlaceholder: 'A song, a singer, a video…',
+  searchGo: 'Search',
+  searchWhere: 'Search',
+  searchBoth: 'Both',
+  searching: 'Searching…',
+  searchShort: `Type at least ${SEARCH_MIN} letters, then press Search.`,
+  searchNone: 'Nothing found. Try other words, or paste a link below.',
+  searchFailed: 'Could not search just now. You can still paste a link below.',
+  searchPicked: (title) => `Picked “${title}”. Add a message if you like, then Send.`,
+  noKeys: 'Add a YouTube or Spotify key to search by name.',
+  noKeysLink: 'Add a key',
   linkLabel: 'Link',
+  linkLabelOr: 'Or paste a link',
   messageLabel: 'A message (optional)',
   send: 'Send',
   notALink: 'That is not a YouTube or Spotify link. Paste a link from youtube.com, youtu.be or open.spotify.com.',
@@ -225,6 +245,28 @@ const STYLE = `
 .rc-send[aria-disabled="true"]{opacity:.55;cursor:default;border-color:var(--border)}
 .rc-msg{margin:0;min-height:1.4em}
 .rc-hint{margin:0;color:var(--text-muted)}
+.rc-search{display:flex;flex-direction:column;gap:8px}
+.rc-search:empty{display:none}
+.rc-srow{display:flex;gap:8px;align-items:stretch}
+.rc-srow input{flex:1 1 auto;min-width:0}
+.rc-go{box-sizing:border-box;min-height:48px;padding:10px 16px;border-radius:12px;border:2px solid var(--accent);background:var(--surface);
+  color:var(--text-strong);font:inherit;font-weight:700;cursor:pointer;flex:0 0 auto}
+.rc-go[aria-disabled="true"]{opacity:.55;cursor:default;border-color:var(--border)}
+.rc-where{display:flex;flex-wrap:wrap;gap:8px;border:0;margin:0;padding:0}
+.rc-where legend{padding:0;margin-bottom:4px;font-weight:600;color:var(--text-strong)}
+.rc-where label{flex-direction:row;align-items:center;gap:6px;min-height:48px;padding:0 12px;border-radius:12px;border:2px solid var(--border);
+  font-weight:400;color:var(--text);cursor:pointer}
+.rc-where input{width:auto;min-height:0;margin:0}
+.rc-off{opacity:.55}
+.rc-off a{color:var(--link)}
+.rc-hits{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.rc-hits:empty{display:none}
+.rc-pick{box-sizing:border-box;display:flex;gap:12px;align-items:center;width:100%;min-height:64px;padding:8px 10px;border-radius:12px;
+  border:2px solid var(--border);background:var(--surface);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.rc-pick[aria-pressed="true"]{border-color:var(--accent)}
+.rc-pick b{color:var(--text-strong);overflow-wrap:anywhere}
+.rc-pick small{color:var(--text-muted)}
+.rc-go:focus-visible,.rc-pick:focus-visible,.rc-send:focus-visible,.rc input:focus-visible,.rc textarea:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
 `;
 
 /**
@@ -246,12 +288,21 @@ export function mountRecommend(root, {
   let seq = 0;
   const who = personName || '';
 
+  // Search by name: 'loading' until the server says which keys are saved, then 'off' (no key: dimmed, with the
+  // line) or 'idle' | 'searching' | 'done' | 'error'.
+  let sstate = 'loading';
+  let keys = null;              // { youtube: {set}, spotify: {set} } from the server; never a key
+  let hits = [];
+  let picked = -1;
+  let sseq = 0;
+
   root.innerHTML = `<style>${STYLE}</style><div class="rc" data-rc>
     <h2 class="pp-h">${esc(REC_WORDS.title(who))}</h2>
     <p class="rc-hint">${esc(REC_WORDS.intro(who))}</p>
-    <label>${esc(REC_WORDS.linkLabel)}<input type="url" inputmode="url" autocomplete="off" data-rc-link
+    <div class="rc-search" data-rc-search></div>
+    <label><span data-rc-link-label>${esc(REC_WORDS.linkLabel)}</span><input type="url" inputmode="url" autocomplete="off" data-rc-link
       placeholder="https://youtu.be/…  or  https://open.spotify.com/track/…" aria-describedby="rc-how"></label>
-    <p class="rc-hint" id="rc-how" data-rc-how>${esc(REC_WORDS.howTo)} ${esc(REC_WORDS.noSearch)}</p>
+    <p class="rc-hint" id="rc-how" data-rc-how>${esc(REC_WORDS.howTo)}</p>
     <div class="rc-preview" data-rc-preview role="status"></div>
     <label>${esc(REC_WORDS.messageLabel)}<textarea data-rc-message rows="3" maxlength="${MAX_MESSAGE}"></textarea></label>
     <button type="button" class="rc-send" data-rc-send aria-disabled="true">${esc(REC_WORDS.send)}</button>
@@ -275,6 +326,98 @@ export function mountRecommend(root, {
       headers: { ...authHeaders(user), 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => null);
     return { status: r.status, body: j };
+  }
+
+  // ------------------------------------------------------------------ search by name
+  const haveYT = () => !!keys?.youtube?.set;
+  const haveSP = () => !!keys?.spotify?.set;
+  const sayS = (t) => { const m = $('[data-rc-smsg]'); if (m) m.textContent = t || ''; };
+
+  function hitHTML(h, i) {
+    const what = h.provider === 'youtube' ? 'YouTube video' : 'Spotify song';
+    const by = String(h.by || '').trim();
+    return `<li><button type="button" class="rc-pick" data-rc-pick="${i}" aria-pressed="${i === picked ? 'true' : 'false'}">
+      ${recThumbHTML({ thumb: h.thumbnail }, { size: '3rem' })}<span><b data-rc-hit-title>${esc(h.title || kindWords(h))}</b><br>
+      <small>${by ? `${esc(by)} · ` : ''}${esc(what)}</small></span></button></li>`;
+  }
+
+  function paintSearch() {
+    if (torn) return;
+    const box = $('[data-rc-search]');
+    if (!box || sstate === 'loading') return;
+    const lbl = $('[data-rc-link-label]');
+    if (sstate === 'off') {
+      // DIMMED, NEVER HIDDEN: the box is there, it says why it does not work, and where the key goes.
+      box.innerHTML = `<div class="rc-off" data-rc-search-off>
+        <label>${esc(REC_WORDS.searchLabel)}<input type="search" disabled placeholder="${esc(REC_WORDS.searchPlaceholder)}" aria-describedby="rc-nokeys"></label></div>
+        <p class="rc-hint" id="rc-nokeys" data-rc-nokeys>${esc(REC_WORDS.noKeys)}
+        <a href="${SEARCH_KEYS_PAGE}" target="_blank" rel="noopener" data-rc-keys-link>${esc(REC_WORDS.noKeysLink)}</a></p>`;
+      if (lbl) lbl.textContent = REC_WORDS.linkLabel;
+      return;
+    }
+    if (lbl) lbl.textContent = REC_WORDS.linkLabelOr;
+    if (!box.querySelector('[data-rc-q]')) {
+      const both = haveYT() && haveSP();
+      box.innerHTML = `<label for="rc-q">${esc(REC_WORDS.searchLabel)}</label>
+        <div class="rc-srow"><input id="rc-q" type="search" enterkeyhint="search" autocomplete="off" data-rc-q
+          placeholder="${esc(REC_WORDS.searchPlaceholder)}" maxlength="100">
+          <button type="button" class="rc-go" data-rc-go>${esc(REC_WORDS.searchGo)}</button></div>
+        ${both ? `<fieldset class="rc-where" data-rc-where><legend>${esc(REC_WORDS.searchWhere)}</legend>
+          ${[['both', REC_WORDS.searchBoth], ['youtube', 'YouTube'], ['spotify', 'Spotify']].map(([v, t]) =>
+            `<label><input type="radio" name="rc-where" value="${v}" ${v === 'both' ? 'checked' : ''}>${esc(t)}</label>`).join('')}</fieldset>` : ''}
+        <p class="rc-msg" data-rc-smsg role="status"></p>
+        <ul class="rc-hits" data-rc-hits></ul>`;
+    }
+    $('[data-rc-go]').setAttribute('aria-disabled', sstate === 'searching' ? 'true' : 'false');
+    $('[data-rc-hits]').innerHTML = hits.map(hitHTML).join('');
+  }
+
+  async function loadKeys() {
+    try {
+      const r = await fetchImpl(SEARCH_KEYS_URL, { credentials: 'same-origin', headers: { ...authHeaders(user) } });
+      const j = r.status === 200 ? await r.json().catch(() => null) : null;
+      if (torn) return;
+      keys = j && typeof j === 'object' ? j : null;
+    } catch { keys = null; }
+    if (torn) return;
+    sstate = haveYT() || haveSP() ? 'idle' : 'off';
+    paintSearch();
+  }
+
+  async function search(q, provider) {
+    if (sstate === 'off' || sstate === 'loading' || sstate === 'searching') return [];
+    const query = String(q ?? $('[data-rc-q]')?.value ?? '').trim();
+    if (query.length < SEARCH_MIN) { sayS(REC_WORDS.searchShort); return []; }
+    const where = provider || root.querySelector('input[name="rc-where"]:checked')?.value || 'both';
+    const my = ++sseq;
+    sstate = 'searching'; hits = []; picked = -1; sayS(REC_WORDS.searching); paintSearch();
+    try {
+      const r = await post(SEARCH_URL, { q: query, provider: where });
+      if (torn || my !== sseq) return [];
+      if (r.status === 200 && r.body) {
+        // Each row is checked again here: only a shape the paste rule accepts is ever drawn or picked.
+        hits = (Array.isArray(r.body.results) ? r.body.results : []).filter((h) => h && validRef(h) && parseLink(h.link));
+        const problems = Object.values(r.body.problems || {}).filter((s) => typeof s === 'string' && s);
+        sstate = 'done';
+        sayS([hits.length ? '' : REC_WORDS.searchNone, ...problems].filter(Boolean).join(' '));
+      } else {
+        sstate = 'error';
+        sayS((r.status === 400 || r.status === 404 || r.status === 429) && r.body?.detail ? r.body.detail : REC_WORDS.searchFailed);
+      }
+    } catch { if (!torn && my === sseq) { sstate = 'error'; sayS(REC_WORDS.searchFailed); } }
+    paintSearch();
+    return hits.map((h) => ({ ...h }));
+  }
+
+  async function pick(i) {
+    const h = hits[i];
+    if (!h) return;
+    picked = i;
+    paintSearch();
+    $('[data-rc-link]').value = h.link;
+    clearTimeout(timer); timer = null;
+    await look();
+    if (!torn && status === 'ready') say(REC_WORDS.searchPicked(titleOf(preview && preview.title ? preview : h)));
   }
 
   async function look() {
@@ -324,10 +467,15 @@ export function mountRecommend(root, {
   const ac = new AbortController();
   root.addEventListener('input', (e) => {
     if (!e.target.matches?.('[data-rc-link]')) return;
+    if (picked >= 0) { picked = -1; paintSearch(); }   // typed over a picked result: it is not that one any more
     clearTimeout(timer);
     timer = setTimeout(() => { timer = null; look(); }, Math.max(0, debounceMs));
   }, { signal: ac.signal });
   root.addEventListener('click', (e) => {
+    const go = e.target.closest?.('[data-rc-go]');
+    if (go) { e.preventDefault(); if (go.getAttribute('aria-disabled') !== 'true') search(); return; }
+    const hit = e.target.closest?.('[data-rc-pick]');
+    if (hit) { e.preventDefault(); pick(Number(hit.dataset.rcPick)); return; }
     const b = e.target.closest?.('[data-rc-send]');
     if (!b) return;
     e.preventDefault();
@@ -339,16 +487,29 @@ export function mountRecommend(root, {
   }, { signal: ac.signal });
   root.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && e.target.matches?.('[data-rc-link]')) { e.preventDefault(); clearTimeout(timer); timer = null; look(); }
+    if (e.key === 'Enter' && e.target.matches?.('[data-rc-q]')) { e.preventDefault(); search(); }
   }, { signal: ac.signal });
   paint();
   try { $('[data-rc-link]').focus({ preventScroll: true }); } catch { /* not focusable */ }
+  const ready = loadKeys().then(() => {
+    // The search box takes the focus when it appears, unless somebody has already started in the link box.
+    const link = $('[data-rc-link]');
+    const q = $('[data-rc-q]');
+    if (!torn && q && link && !link.value && document.activeElement === link) { try { q.focus({ preventScroll: true }); } catch { /* not focusable */ } }
+  });
 
   return {
-    ready: Promise.resolve(),
+    /** Resolves once the window knows whether search is on (which keys are saved). */
+    ready,
     status: () => status,
     preview: () => (preview ? { ...preview } : null),
     /** Paste-and-look, for a test or a caller with the link already in hand. */
     async setLink(v) { $('[data-rc-link]').value = v; clearTimeout(timer); timer = null; await look(); },
+    /** Search by name: 'off' (no key) | 'loading' | 'idle' | 'searching' | 'done' | 'error'. */
+    searchState: () => sstate,
+    search,
+    results: () => hits.map((h) => ({ ...h })),
+    pick,
     send,
     destroy() { torn = true; clearTimeout(timer); ac.abort(); root.innerHTML = ''; },
   };

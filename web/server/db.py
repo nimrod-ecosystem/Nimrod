@@ -951,7 +951,11 @@ class _Store:
                             "characters), the models you chose, your daily spending limit, and a "
                             "count per day of how much was used and what it cost - never what "
                             "was said. What you say to Claude is sent to Anthropic to be answered, "
-                            "as text only.", False,
+                            "as text only. And if you add a YouTube or Spotify key to search "
+                            "for songs and videos by name: those keys, ENCRYPTED (never shown "
+                            "back, only the last four characters), and which YouTube filter you "
+                            "chose. What you search for is sent to YouTube or Spotify to be "
+                            "answered and is not kept here.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
                             "when, a game result. It GROWS over time. Sensor readings, if you "

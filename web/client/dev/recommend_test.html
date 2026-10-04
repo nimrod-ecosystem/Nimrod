@@ -24,7 +24,9 @@ Spotify, Remove, and the screen variant. Needs the server (<code>SUITE_BASE</cod
 import {
   parseLink, validRef, canonicalURL, thumbOk, kindWords, titleOf, recLine, playPlan, REC_WORDS, PREVIEW_URL, MAX_MESSAGE,
   recommendationsURL, markURL, mountRecommend, recThumbHTML, recElsewhereHTML,
+  SEARCH_KEYS_URL, SEARCH_URL, SEARCH_KEYS_PAGE,
 } from '../recommend.js';
+import { mountSearchKeys, SEARCH_KEYS_WORDS, SEARCH_KEYS_API } from '../search_keys.js';
 import { PEOPLE_TYPE, plainWordProblems, PEOPLE_SETTINGS } from '../people_page.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
@@ -49,6 +51,9 @@ window.addEventListener('error', (e) => { failed++; out.append(Object.assign(doc
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
 const J = (x) => JSON.stringify(x);
+// The targets under 44px tall, named, so a failure says which one.
+const small = (root, sel) => [...root.querySelectorAll(sel)].filter((b) => b.getBoundingClientRect().height < 44)
+  .map((b) => `${b.tagName.toLowerCase()}[${[...b.attributes].map((a) => a.name).filter((n) => n.startsWith('data-')).join(' ')}] ${Math.round(b.getBoundingClientRect().height)}px`);
 
 const BASE_USER = new URLSearchParams(location.search).get('user') || ('recommend-' + Math.floor(Math.random() * 1e6));
 const A = `${BASE_USER}-a`, B = `${BASE_USER}-b`, C = `${BASE_USER}-c`;
@@ -136,13 +141,26 @@ try {
   let answer = (url) => (url === PREVIEW_URL
     ? { status: 200, body: { provider: 'youtube', kind: 'video', id: VID, title: 'Blue Moon', thumb: `https://i.ytimg.com/vi/${VID}/hqdefault.jpg` } }
     : { status: 200, body: { id: 9, provider: 'youtube', kind: 'video', item_id: VID, title: 'Blue Moon', from_name: 'Pat' } });
-  const fakeFetch = async (url, opts) => { asked.push({ url, body: opts?.body ? JSON.parse(opts.body) : null }); const a = answer(url); return { ok: a.status === 200, status: a.status, json: async () => a.body }; };
+  // The keys' status is answered on its own (no keys here) and not counted in `asked`, so the checks below count only
+  // what the paste path asks.
+  let keysAnswer = { status: 200, body: { any: false, youtube: { set: false }, spotify: { set: false } } };
+  const keysAsked = [];
+  const fakeFetch = async (url, opts) => {
+    if (url === SEARCH_KEYS_URL) { keysAsked.push(opts); const a = keysAnswer; return { ok: a.status === 200, status: a.status, json: async () => a.body }; }
+    asked.push({ url, body: opts?.body ? JSON.parse(opts.body) : null }); const a = answer(url); return { ok: a.status === 200, status: a.status, json: async () => a.body };
+  };
   const dbox = document.createElement('div'); dbox.style.cssText = 'position:relative;width:375px'; document.body.append(dbox);
   const sent = [];
   const dlg = mountRecommend(dbox, { personId: 'p-sam', personName: 'Sam', fromPersonId: 'p-pat', fetchImpl: fakeFetch, debounceMs: 0, onSent: (r) => sent.push(r) });
   const dq = (s) => dbox.querySelector(s);
+  await dlg.ready;
   check('*** it says what to do, and how to get a link (Share, then Copy link) ***', /Recommend a song or video to Sam/.test(dbox.textContent)
     && /Share, then Copy link/.test(dq('[data-rc-how]').textContent) && dq('[data-rc-send]').getAttribute('aria-disabled') === 'true');
+  check('*** no key: search is there DIMMED, with one plain line linking to the keys page (not hidden) ***',
+    dlg.searchState() === 'off' && !!dq('[data-rc-search-off] input[disabled]') && dq('[data-rc-nokeys]')?.textContent.includes(REC_WORDS.noKeys)
+    && dq('[data-rc-keys-link]')?.getAttribute('href') === SEARCH_KEYS_PAGE && dq('[data-rc-keys-link]').target === '_blank'
+    && /noopener/.test(dq('[data-rc-keys-link]').rel) && !dq('[data-rc-q]') && keysAsked.length === 1, dq('[data-rc-search]')?.innerHTML.slice(0, 300));
+  check('...and the old "not here yet" line is gone', !/not here yet/i.test(dbox.textContent));
   await dlg.setLink('https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ');
   check('*** a look-alike link: refused in words at once, nothing asked of the server, Send stays dimmed ***',
     dlg.status() === 'bad' && dq('[data-rc-msg]').textContent === REC_WORDS.notALink && !asked.length && dq('[data-rc-send]').getAttribute('aria-disabled') === 'true');
@@ -170,8 +188,156 @@ try {
   await dlg.setLink(`https://youtu.be/${VID}`);
   check('the preview could not be had (offline): still a good link, Send works, untitled until sent', dlg.status() === 'ready');
   check('plain words in the window', !plainWordProblems(dbox.textContent).length);
-  check('every target at least 44px', [...dbox.querySelectorAll('input, textarea, button')].every((b) => b.getBoundingClientRect().height >= 44));
+  check('every target at least 44px', !small(dbox, 'input, textarea, button').length, small(dbox, 'input, textarea, button').join());
   dlg.destroy(); dbox.remove();
+
+  // ============================================================================================
+  section('*** search by name, with a key (a stubbed search route) ***');
+  const SP2 = '5uLU6hMCjMI75M1A2tKUQC', VID2 = 'aBcDeFgHiJk';
+  const HITS = [
+    { provider: 'youtube', kind: 'video', id: VID, title: 'Blue Moon (live)', by: 'Ella', thumbnail: `https://i.ytimg.com/vi/${VID}/mqdefault.jpg`, link: `https://www.youtube.com/watch?v=${VID}` },
+    { provider: 'youtube', kind: 'video', id: VID2, title: 'Blue Moon', by: 'A channel', thumbnail: 'https://evil.example/x.jpg', link: `https://www.youtube.com/watch?v=${VID2}` },
+    { provider: 'youtube', kind: 'video', id: '<img src=x>', title: 'forged', by: '', thumbnail: '', link: 'https://evil.example/' },
+    { provider: 'spotify', kind: 'song', id: SP2, title: 'Blue Moon', by: 'Billie Holiday', thumbnail: 'https://i.scdn.co/image/300', link: `https://open.spotify.com/track/${SP2}` },
+  ];
+  const sAsked = [];
+  let searchAnswer = () => ({ status: 200, body: { results: HITS, searched: ['youtube', 'spotify'], problems: {} } });
+  const sFetch = async (url, opts) => {
+    const body = opts?.body ? JSON.parse(opts.body) : null;
+    sAsked.push({ url, body });
+    const a = url === SEARCH_KEYS_URL ? { status: 200, body: { any: true, youtube: { set: true, last4: '4f2a' }, spotify: { set: true, last4: 'cdef' } } }
+      : url === SEARCH_URL ? searchAnswer(body)
+      : url === PREVIEW_URL ? { status: 200, body: { ...parseLink(body.link), title: 'Blue Moon (from oEmbed)', thumb: '' } }
+      : { status: 200, body: { id: 11, provider: 'spotify', kind: 'song', item_id: SP2, title: 'Blue Moon', from_name: 'Pat' } };
+    return { ok: a.status === 200, status: a.status, json: async () => a.body };
+  };
+  const sbox = document.createElement('div'); sbox.style.cssText = 'position:relative;width:375px'; document.body.append(sbox);
+  const sdlg = mountRecommend(sbox, { personId: 'p-sam', personName: 'Sam', fromPersonId: 'p-pat', fetchImpl: sFetch, debounceMs: 0 });
+  const sq0 = (s) => sbox.querySelector(s);
+  await sdlg.ready;
+  check('*** with a key: a search box ABOVE the paste box, the paste box now says "Or paste a link" ***',
+    sdlg.searchState() === 'idle' && !!sq0('[data-rc-q]') && !sq0('[data-rc-nokeys]')
+    && (sq0('[data-rc-q]').compareDocumentPosition(sq0('[data-rc-link]')) & Node.DOCUMENT_POSITION_FOLLOWING)
+    && sq0('[data-rc-link-label]').textContent === REC_WORDS.linkLabelOr);
+  check('both keys: YouTube, Spotify or Both, Both chosen', [...sbox.querySelectorAll('input[name="rc-where"]')].map((i) => i.value).join() === 'both,youtube,spotify'
+    && sbox.querySelector('input[name="rc-where"]:checked')?.value === 'both');
+  sq0('[data-rc-q]').value = 'b';
+  sq0('[data-rc-go]').click();
+  await sleep(30);
+  check('*** one letter: says to type more, and asks nothing of the server ***', !sAsked.some((a) => a.url === SEARCH_URL) && sq0('[data-rc-smsg]').textContent === REC_WORDS.searchShort);
+  sq0('[data-rc-q]').value = 'blue moon';
+  sq0('[data-rc-q]').dispatchEvent(new Event('input', { bubbles: true }));
+  await sleep(30);
+  check('*** typing does not search (each YouTube search spends the key’s day) ***', !sAsked.some((a) => a.url === SEARCH_URL));
+  sq0('[data-rc-q]').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  check('*** Enter searches: the words and "both" go to the search route ***', await until(() => sdlg.searchState() === 'done', 3000)
+    && J(sAsked.find((a) => a.url === SEARCH_URL)?.body) === J({ q: 'blue moon', provider: 'both' }), J(sAsked));
+  const rows = [...sbox.querySelectorAll('[data-rc-pick]')];
+  check('*** big rows: title, who, what; a forged result is not drawn ***', rows.length === 3
+    && rows[0].querySelector('[data-rc-hit-title]').textContent === 'Blue Moon (live)' && /Ella · YouTube video/.test(rows[0].textContent)
+    && /Billie Holiday · Spotify song/.test(rows[2].textContent) && !/forged/.test(sbox.textContent), rows.map((r) => r.textContent.trim()).join(' | '));
+  check('pictures only from the providers’ own image hosts', !!rows[0].querySelector('[data-rc-thumb]') && !rows[1].querySelector('[data-rc-thumb]')
+    && !!rows[2].querySelector('[data-rc-thumb]'));
+  check('every row at least 48px tall', rows.every((b) => b.getBoundingClientRect().height >= 48), rows.map((b) => b.getBoundingClientRect().height).join());
+  rows[2].click();
+  check('*** picking one puts ITS link in the paste box and runs the paste path’s own preview ***',
+    await until(() => sdlg.status() === 'ready', 3000) && sq0('[data-rc-link]').value === `https://open.spotify.com/track/${SP2}`
+    && sAsked.filter((a) => a.url === PREVIEW_URL).length === 1 && sAsked.find((a) => a.url === PREVIEW_URL).body.link === `https://open.spotify.com/track/${SP2}`
+    && sq0('[data-rc-pick="2"]').getAttribute('aria-pressed') === 'true', J(sAsked.slice(-2)));
+  check('...and says what was picked', sq0('[data-rc-msg]').textContent === REC_WORDS.searchPicked('Blue Moon (from oEmbed)'), sq0('[data-rc-msg]').textContent);
+  await sdlg.send();
+  const sentBody = sAsked.find((a) => a.url === recommendationsURL('p-sam'))?.body;
+  check('*** Send sends exactly what pasting that link sends ***', sdlg.status() === 'sent' && J(sentBody) === J({ link: `https://open.spotify.com/track/${SP2}`, message: '', from_person: 'p-pat' }), J(sentBody));
+  searchAnswer = () => ({ status: 200, body: { results: [], searched: ['youtube'], problems: { youtube: 'Today’s YouTube searches on your key are used up.' } } });
+  await sdlg.search('blue moon', 'youtube');
+  check('*** nothing found and a provider’s problem: both said in words ***', sdlg.searchState() === 'done' && !sbox.querySelector('[data-rc-pick]')
+    && sq0('[data-rc-smsg]').textContent.includes(REC_WORDS.searchNone) && /used up/.test(sq0('[data-rc-smsg]').textContent));
+  searchAnswer = () => ({ status: 429, body: { detail: 'That is a lot of searches in a minute - wait a moment.' } });
+  await sdlg.search('blue moon');
+  check('the server’s 429 words are shown', sdlg.searchState() === 'error' && /a lot of searches/.test(sq0('[data-rc-smsg]').textContent));
+  searchAnswer = () => ({ status: 500, body: null });
+  await sdlg.search('blue moon');
+  check('anything else: "you can still paste a link"', sq0('[data-rc-smsg]').textContent === REC_WORDS.searchFailed);
+  check('plain words in the window with search', !plainWordProblems(sbox.textContent).length && !/\b(account|token|widget)s?\b/i.test(sbox.textContent));
+  check('every target at least 44px (a choice of where: its whole label is the target)', !small(sbox, 'input:not([type=radio]), textarea, button, .rc-where label').length,
+    small(sbox, 'input:not([type=radio]), textarea, button, .rc-where label').join());
+  check('no sideways scroll at 375', sbox.scrollWidth <= 376, `${sbox.scrollWidth}`);
+  sdlg.destroy(); sbox.remove();
+
+  // One key only: no YouTube / Spotify / Both choice.
+  const one = document.createElement('div'); document.body.append(one);
+  const odlg = mountRecommend(one, { personId: 'p', personName: 'Sam', debounceMs: 0, fetchImpl: async (url) => ({ ok: true, status: 200,
+    json: async () => (url === SEARCH_KEYS_URL ? { any: true, youtube: { set: false }, spotify: { set: true } } : { results: [] }) }) });
+  await odlg.ready;
+  check('one key: the search box, no choice of where', odlg.searchState() === 'idle' && !!one.querySelector('[data-rc-q]') && !one.querySelector('[data-rc-where]'));
+  odlg.destroy(); one.remove();
+  const offline = document.createElement('div'); document.body.append(offline);
+  const fdlg = mountRecommend(offline, { personId: 'p', personName: 'Sam', debounceMs: 0, fetchImpl: async () => { throw new Error('offline'); } });
+  await fdlg.ready;
+  check('the keys could not be checked (offline): the dimmed line, and the paste box still there', fdlg.searchState() === 'off' && !!offline.querySelector('[data-rc-nokeys]') && !!offline.querySelector('[data-rc-link]'));
+  fdlg.destroy(); offline.remove();
+
+  // ============================================================================================
+  section('*** the keys page (/search_keys.html), with a fake server ***');
+  const kCalls = [];
+  let kState = { can_store: true, any: false, safe_search: 'strict', safe_search_options: ['strict', 'moderate', 'none'],
+    youtube: { set: false, last4: null }, spotify: { set: false, last4: null } };
+  const kFetch = async (url, init) => {
+    const body = init?.body ? JSON.parse(init.body) : null;
+    kCalls.push({ url, method: init?.method, body });
+    let status = 200, out = kState;
+    if (init.method === 'PUT' && url.endsWith('/youtube')) { kState = { ...kState, any: true, youtube: { set: true, last4: body.key.slice(-4) } }; out = kState; }
+    else if (init.method === 'PUT' && url.endsWith('/spotify')) {
+      if (!/^[0-9a-f]{32}$/i.test(body.client_secret)) { status = 400; out = { detail: 'That does not look like a Spotify Client secret (32 letters and numbers).' }; }
+      else { kState = { ...kState, any: true, spotify: { set: true, last4: body.client_id.slice(-4) } }; out = kState; }
+    } else if (init.method === 'PUT' && url.endsWith('/settings')) { kState = { ...kState, safe_search: body.safe_search }; out = kState; }
+    else if (init.method === 'DELETE') { kState = { ...kState, youtube: { set: false, last4: null } }; out = kState; }
+    else if (init.method === 'POST' && url.endsWith('/youtube/check')) out = { ok: false, reason: 'YouTube did not accept your key. Check it was copied whole, or paste a new one.' };
+    return { ok: status === 200, status, json: async () => out };
+  };
+  const kbox = document.createElement('div'); kbox.style.cssText = 'width:375px'; document.body.append(kbox);
+  const kp = mountSearchKeys(kbox, { fetchImpl: kFetch, headers: () => ({ 'X-Dev-User': 'k' }) });
+  await kp.ready;
+  const kq = (s) => kbox.querySelector(s);
+  check('*** it says how to get each key, in steps (Google Cloud console, APIs & Services, YouTube Data API v3; developer.spotify.com, Create app) ***',
+    /console\.cloud\.google\.com/.test(kbox.textContent) && /APIs & Services/.test(kbox.textContent) && /YouTube Data API v3/.test(kbox.textContent)
+    && /developer\.spotify\.com/.test(kbox.textContent) && /Create app/.test(kbox.textContent) && /Client ID/.test(kbox.textContent));
+  check('*** it says YouTube’s free allowance is about 100 searches a day ***', /about 100 searches a day/.test(kbox.textContent));
+  check('nothing saved yet, said for each', kq('[data-sk-status="youtube"]').textContent === SEARCH_KEYS_WORDS.none && kq('[data-sk-status="spotify"]').textContent === SEARCH_KEYS_WORDS.none);
+  check('the key fields are password fields, empty', kq('[data-sk-yt]').type === 'password' && kq('[data-sk-sp-secret]').type === 'password' && kq('[data-sk-yt]').value === '');
+  const FAKE_YT = 'AIzaFakeKeyForTestsOnly_0123456789abcd4f2a';
+  kq('[data-sk-yt]').value = FAKE_YT;
+  kq('[data-sk-do="save-youtube"]').click();
+  check('*** Save: sent once, the field emptied at once, then "ending …4f2a" and never the key ***',
+    await until(() => /…4f2a/.test(kq('[data-sk-status="youtube"]')?.textContent || ''), 3000)
+    && kCalls.some((c) => c.method === 'PUT' && c.url === `${SEARCH_KEYS_API}/youtube` && c.body.key === FAKE_YT)
+    && kq('[data-sk-yt]').value === '' && !kbox.innerHTML.includes(FAKE_YT));
+  kq('[data-sk-do="check-youtube"]').click();
+  check('Check: the server’s words', await until(() => /did not accept your key/.test(kq('[data-sk-msg]')?.textContent || ''), 3000));
+  kq('[data-sk-sp-id]').value = '0123456789abcdef0123456789abcdef';
+  kq('[data-sk-sp-secret]').value = 'short';
+  kq('[data-sk-do="save-spotify"]').click();
+  check('a Spotify secret refused: the server’s words, both fields emptied', await until(() => /Client secret/.test(kq('[data-sk-msg]')?.textContent || ''), 3000)
+    && kq('[data-sk-sp-secret]').value === '' && kq('[data-sk-sp-id]').value === '');
+  kq('[data-sk-sp-id]').value = '0123456789abcdef0123456789abcdef';
+  kq('[data-sk-sp-secret]').value = 'fedcba9876543210fedcba9876543210';
+  kq('[data-sk-do="save-spotify"]').click();
+  check('*** Spotify saved: "the Client ID ends …cdef" ***', await until(() => /…cdef/.test(kq('[data-sk-status="spotify"]')?.textContent || ''), 3000)
+    && !kbox.innerHTML.includes('fedcba9876543210fedcba9876543210'));
+  check('the filter starts at strict', kq('[data-sk-filter]').value === 'strict');
+  kq('[data-sk-filter]').value = 'moderate';
+  kq('[data-sk-do="save-filter"]').click();
+  check('the filter can be changed', await until(() => kCalls.some((c) => c.url === `${SEARCH_KEYS_API}/settings` && c.body.safe_search === 'moderate'), 3000));
+  await until(() => !kp.state().busy, 2000);
+  kq('[data-sk-do="remove-youtube"]').click();
+  check('Remove: said in words, and the status goes back to none', await until(() => kq('[data-sk-status="youtube"]')?.textContent === SEARCH_KEYS_WORDS.none, 3000)
+    && /YouTube key is removed/.test(kq('[data-sk-msg]').textContent));
+  const kWords = JSON.stringify(SEARCH_KEYS_WORDS) + kbox.textContent;
+  check('*** plain words on the keys page (no module, dashboard, panel, grant, account, token, widget), and names nobody ***',
+    !plainWordProblems(kWords).length && !/\b(account|token|widget)s?\b/i.test(kWords) && !/her screen|christine|cici/i.test(kWords), J(plainWordProblems(kWords)));
+  check('every target at least 44px', !small(kbox, 'input, select, button').length, small(kbox, 'input, select, button').join());
+  check('no sideways scroll at 375', kbox.scrollWidth <= 376, `${kbox.scrollWidth}`);
+  kbox.remove();
 
   // ============================================================================================
   section('(setup) Pat and Robin on one account; Sam ticks Pat for messages; Lee does not');
@@ -205,6 +371,8 @@ try {
   btnOf('Sam', 'recommend').click();
   check('*** pressed: the window opens over the page, for Sam, with a way back ***', await until(() => /Recommend a song or video to Sam/.test(q('[data-pp-sheet="recommend"]')?.textContent || ''), 4000)
     && /Back to your people/.test(q('[data-pp-sheet] [data-pp-close]').textContent));
+  check('*** against the real server, no key saved: the dimmed search line, linking to the keys page ***',
+    await until(() => q('[data-pp-sheet] [data-rc-keys-link]')?.getAttribute('href') === SEARCH_KEYS_PAGE, 5000) && !q('[data-pp-sheet] [data-rc-q]'));
   const link = q('[data-pp-sheet] [data-rc-link]');
   link.value = `https://www.youtube.com/watch?v=${VID}&si=tracking`;
   link.dispatchEvent(new Event('input', { bubbles: true }));
@@ -219,6 +387,22 @@ try {
   const refused = await fetch(recommendationsURL(c1.id), { method: 'POST', headers: { 'X-Dev-User': A, 'Content-Type': 'application/json' }, body: JSON.stringify({ link: `https://youtu.be/${VID}` }) });
   check('*** the server refuses a person who has not said yes (403) ***', refused.status === 403);
   inst.destroy(); box.remove();
+
+  section('*** search keys against the real server (a made-up key: saved, read back as its last four, removed) ***');
+  const noKeySearch = await fetch(SEARCH_URL, { method: 'POST', headers: { 'X-Dev-User': A, 'Content-Type': 'application/json' }, body: J({ q: 'blue moon' }) });
+  check('no key: the search route says so (404), and nothing goes to YouTube or Spotify', noKeySearch.status === 404);
+  const MADE_UP = 'AIzaMadeUpKeyForTheSuiteOnly_0123456z9';
+  const saved = await call('PUT', `${SEARCH_KEYS_URL}/youtube`, A, { key: MADE_UP });
+  const back = await call('GET', SEARCH_KEYS_URL, A);
+  check('*** saved: "ending …" its last four, and the key itself never comes back ***', saved.youtube.set && saved.youtube.last4 === MADE_UP.slice(-4)
+    && !J(saved).includes(MADE_UP) && !J(back).includes(MADE_UP) && back.any === true && back.safe_search === 'strict', J(back));
+  const rbox = document.createElement('div'); rbox.style.cssText = 'width:375px'; document.body.append(rbox);
+  const rdlg = mountRecommend(rbox, { personId: b1.id, personName: 'Sam', user: A, debounceMs: 0 });
+  await rdlg.ready;
+  check('*** with a key saved on the real server, the window shows the search box ***', rdlg.searchState() === 'idle' && !!rbox.querySelector('[data-rc-q]') && !rbox.querySelector('[data-rc-where]'));
+  rdlg.destroy(); rbox.remove();
+  const gone = await call('DELETE', `${SEARCH_KEYS_URL}/youtube`, A);
+  check('removed', gone.youtube.set === false && gone.any === false);
 
   // Sam's own account adds a Spotify one straight onto Sam's stream (the owner may; the list checks every row again).
   await call('POST', `/api/people/${b1.id}/events/recommended`, B, { kind: 'recommend', data: {
