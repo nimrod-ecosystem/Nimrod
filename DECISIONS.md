@@ -2178,3 +2178,19 @@ Mike's rulings, logged by Code.
 2. **The settings panel and the settings menu are one thing.** *"There shouldn't be 2 different things."*
 3. **The first thing Nimrod offers to set up is your guide/AI,** not photos, because photos are no longer on the
    first dashboard.
+
+## Questions name their sources; a voice-model walk-through; AI modules as a set -- 2026-10-04
+
+Mike's rulings, logged by Code.
+
+1. **Questions note their sources when they are written,** not afterwards. *"Shouldn't the sources be noted when
+   the questions are made?"* Enforced in 69deea7: an AI-written pack without a source per item does not load.
+2. **Showing the source with the answer is an option, on by default.** *"Maybe even have an option to always show
+   the source when the answer is given that's on by default."*
+3. **Unreviewed questions are reviewed by playing them**, with a person saying when one is wrong (6466574). A Code
+   fact-check pass comes first, so the person can eventually play without anyone beside them (32715ec).
+4. **Direction:**
+   - The voice-model setup becomes a module that walks people through it, with its settings changeable later.
+   - It is part of a set of AI modules.
+5. **Direction:** one folder tree per person. Set the root once and every kind finds its folder; any kind can point
+   elsewhere, and nothing is copied (93c5a9f).
