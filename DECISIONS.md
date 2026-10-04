@@ -2207,3 +2207,10 @@ first thing a new person sees (2026-10-02 evening, item 1). That dashboard stays
 3. **It can still be a dashboard if it's that simple.**
 4. **Nimrod stays as a helper, overlaid at the bottom.**
 5. **Direction:** the fuller build-it-yourself site still exists "somewhere"; that's for later.
+6. **Linking starts as claiming a profile.** Mike: *"making users for her parents and sister on my account and hoping
+   they could link their own accounts to it, so most of the work could already be done for them."* An owner invites
+   someone to take over a person they made.
+7. **"Share" means recommending a YouTube or Spotify song or video,** not sending files.
+8. **Your people is a "webpage module": a familiar web-page format** (like MySpace) that people can add their own
+   sections to, as an alternative to a dashboard. A screen in someone's room is the edge case. (Direction; the page
+   format comes after linking and recommending.)
