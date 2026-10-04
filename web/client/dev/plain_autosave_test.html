@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>your people saves by itself — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>your people saves by itself (modules.html "SAVING BY ITSELF", home_dashboard.js)</h1>
+<p>2026-10-04: over Your people (the plain page) a setting changed from the ⚙ menu simply sticks -- no Save, no
+"Unsaved changes", no "leave?". Made quietly the first time when only tried (not their Home), written through with no
+History version once made, saved before More / Edit instead of asking, held as unsaved with Save offered when the save
+fails. Off that page nothing changes: a change made in the editor still waits for Save and is still asked about. Needs
+the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import * as HD from '../home_dashboard.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { pageWordProblems } from '../page_sections.js';
+import { FIRST_RUN_KEYS, TRY_NEW_KEY, TRY_STASH_KEY } from '../try_new.js';
+import { LAST_PERSON_KEY } from '../people.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+const BASE_USER = new URLSearchParams(location.search).get('user') || ('plain-save-' + Math.floor(Math.random() * 1e6));
+
+try {
+  // ============================================================================================
+  section('*** the words and the bar, pure ***');
+  const live = { live: true, kind: 'home', landing: true };
+  const tried = { live: false, kind: 'example', landing: true };
+  check('*** saving: "Saving…", never "Unsaved changes" ***', HD.homeStatusText({ target: live, autosave: 'saving', land: true }) === 'Saving…'
+    && HD.homeStatusText({ target: tried, autosave: 'saving', land: true }) === 'Saving…');
+  check('*** only tried, the ⚙ menu open: "Kept when you close the settings" ***', HD.homeStatusText({ target: tried, autosave: 'waiting', land: true }) === 'Kept when you close the settings');
+  check('*** only tried, nothing changed: it no longer says to press Save ***', HD.homeStatusText({ target: tried, autosave: 'on', land: true }) === 'What you change here is kept');
+  check('...and everywhere else the words are exactly as before', HD.homeStatusText({ target: tried, land: true }) === 'Try it, then Save to keep it'
+    && HD.homeStatusText({ target: tried, land: true, dirty: true }) === 'Unsaved changes' && HD.homeStatusText({ target: live, dirty: true }) === 'Unsaved changes'
+    && HD.homeStatusText({ target: tried, dirty: true, autosave: 'on', land: true }) === 'Unsaved changes');
+  const bar = HD.homeBarItems({ target: live, land: true, autosave: 'saving' });
+  check('*** the bar while saving: Save not lit, the status says Saving… ***', !bar.find((i) => i.act === 'save').primary
+    && bar.find((i) => i.kind === 'status').text === 'Saving…' && !bar.find((i) => i.kind === 'status').dirty);
+  check('the ⚙ menu’s Save row says the same', HD.homeMenuModel({ target: live, land: true, autosave: 'saving' }).find((i) => i.act === 'save').hint === 'Saving…');
+  const words = ['Saving…', 'Kept when you close the settings', 'What you change here is kept', 'Saved.',
+    'That did not save — check your connection. Your change is still here, and Save keeps it.'];
+  check('*** plain words (no module, dashboard, panel, grant, widget, account, token), and nobody named ***',
+    words.every((w) => !pageWordProblems(w).length) && !/her screen|christine|cici/i.test(words.join(' ')), J(words.map(pageWordProblems)));
+
+  section('*** the draft keeps a change made WHILE it is being written ***');
+  {
+    let release = null;
+    let v = {};
+    const slow = { get: () => v, set(p) { v = { ...v, ...p }; }, subscribe: () => () => {}, load: async () => v,
+      flush: () => new Promise((r) => { release = r; }) };
+    const d = HD.createDraft();
+    const w = d.wrap(slow, 'settings');
+    w.set({ theme: 'dusk' });
+    const p = d.commitLive();
+    await sleep(10);
+    w.set({ theme: 'warm', gap: 'none' });           // during the write
+    release(); await p;
+    check('*** the change made during the write is still held (not cleared unwritten) ***', d.dirty() && J(d.pending()) === J({ settings: { theme: 'warm', gap: 'none' } }), J(d.pending()));
+    check('...the one written is on the row', v.theme === 'dusk');
+    const p2 = d.commitLive(); await sleep(10); release(); await p2;
+    check('...and the next save writes it and leaves nothing held', !d.dirty() && v.theme === 'warm' && v.gap === 'none' && J(d.pending()) === '{}');
+    const d2 = HD.createDraft(); const w2 = d2.wrap(slow, 'settings');
+    w2.set({ theme: 'dusk' }); const p3 = d2.commitLive(); await sleep(10); release(); await p3;
+    check('a save with nothing happening meanwhile clears everything, as before', !d2.dirty() && J(d2.pending()) === '{}');
+  }
+
+  // ============================================================================================
+  let ifr = null, doc = null, win = null;
+  async function open(query, { w = 1280, h = 720 } = {}) {
+    ifr?.remove();
+    ifr = document.createElement('iframe');
+    ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
+    document.body.append(ifr);
+    await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+    doc = ifr.contentDocument; win = ifr.contentWindow;
+  }
+  const $ = (s) => doc.querySelector(s);
+  const $$ = (s) => [...doc.querySelectorAll(s)];
+  const hbar = (k) => $(`#stage .tb-bar .tb-host [data-host="${k}"]`);
+  const status = () => $('#stage .tb-bar [data-host-status]')?.textContent || '';
+  // A bar button, pressed once it is there: the panels of a new stage draw before its placed bar does (kiosk.js gives
+  // the bar up to 2 s), so "the page is showing" is not "its bar is". Pressing too soon pressed nothing -- the flake
+  // that left Start here showing in 2026-10-04's runs.
+  const pressBar = async (k) => { await until(() => !!hbar(k), 10000); hbar(k)?.click(); return !!hbar(k); };
+  const toastText = () => { const t = $('#home-toast'); return t && !t.hidden ? t.textContent : ''; };
+  const shown = (el) => !!el && el.getClientRects().length > 0 && !el.closest('[hidden]');
+  const gearBtn = () => $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]');
+  const gearOpen = () => !!$('#stage [data-settings] [data-scrim]:not([hidden])');
+  const openGear = async () => { for (let i = 0; i < 3 && !gearOpen(); i++) { gearBtn()?.click(); await until(gearOpen, 3000); } return gearOpen(); };
+  const closeGear = async () => { $('#stage [data-list] .st-item[data-id="close"]')?.click(); if (!(await until(() => !gearOpen(), 2000))) gearBtn()?.click(); return until(() => !gearOpen(), 3000); };
+  const menuRow = (id) => $(`#stage [data-list] .st-item[data-id="${id}"]`);
+  // "Colours" (a screen setting, held in the draft): whichever tab it is on.
+  async function themeRow() {
+    if (menuRow('set:theme')) return menuRow('set:theme');
+    for (const id of $$('#stage [data-list] .st-tab').map((t) => t.dataset.tab)) {
+      $(`#stage [data-list] .st-tab[data-tab="${id}"]`)?.click();
+      if (await until(() => !!menuRow('set:theme'), 800)) return menuRow('set:theme');
+    }
+    return null;
+  }
+  // Colours, and the next colour after the one chosen (the row opens a window of tiles); what the page now holds.
+  async function pressColours() {
+    const row = await themeRow();
+    row?.click();
+    if (!(await until(() => $$('#stage [data-chp-pick]').length > 1, 3000))) return null;
+    const tiles = $$('#stage [data-chp-pick]');
+    const on = tiles.findIndex((b) => b.getAttribute('aria-pressed') === 'true');
+    const next = tiles[(on + 1) % tiles.length];
+    next.click();
+    await until(() => !$('#stage [data-chp-pick]'), 2000);
+    const held = win.__home.pending()?.settings?.theme ?? null;
+    return held === next.dataset.chpPick ? held : `(held ${held}, picked ${next.dataset.chpPick})`;
+  }
+  // "Messages for you to show" (Your people's own setting, held in the draft under its panel's row): one press.
+  async function pressIncoming() {
+    $('#stage [data-list] .st-tab[data-tab="module"]')?.click();
+    if (!(await until(() => !!menuRow('set:incoming'), 2000))) return null;
+    menuRow('set:incoming').click();
+    const row = Object.values(win.__home.pending() || {}).find((r) => r && 'incoming' in r);
+    return row ? row.incoming : null;
+  }
+  async function peopleRow(profiles, pid, user) {
+    const scr = await profiles.get(pid);
+    const id = (scr.modules || []).find((m) => m.type === 'people')?.id;
+    return id ? rowOn(profiles, pid, id, user) : {};
+  }
+  const isPlain = () => doc.body.classList.contains('is-land') && !!$('#stage [data-people-page]') && !shown($('#stage .tb-bar .tb-mods'));
+  const pendingNone = () => J(win.__home.pending()) === '{}';
+  const startHereUp = () => J($$('#stage .k-cell').map((c) => c.dataset.kind).filter(Boolean).sort()) === J(['devices', 'nimrod', 'profile', 'settings']);
+  const dlgOpen = () => !!$('#home-dlg')?.open;
+  async function rowOn(profiles, pid, key, user) {
+    const h = createState({ url: profiles.stateURL(pid, key), user });
+    try { return (await h.load()) || {}; } finally { h.destroy(); }
+  }
+
+  // ============================================================================================
+  section('*** a brand-new person on Your people (only tried): the first change makes it, quietly, as their landing ***');
+  const E = `${BASE_USER}-e`;
+  const pe = createProfilesClient({ user: E });
+  await open(`user=${encodeURIComponent(E)}`);
+  check('(setup) Your people fills the window, in plain words', await until(isPlain, 45000), `err=${doc.body.dataset.homeError || '-'}`);
+  check('*** before any change: "What you change here is kept", Save not lit ***',
+    await until(() => status() === 'What you change here is kept', 8000) && hbar('save')?.dataset.primary !== '1', status());
+  check('(setup) ⚙ opens', await openGear());
+  const want1 = await pressColours();
+  check('(setup) Colours pressed: the page holds the new colour', !!want1 && !/^\(held/.test(want1), `${want1} ${J(win.__home.pending())}`);
+  check('*** the menu open: not "Unsaved changes" -- it says it is kept when the settings close ***',
+    await until(() => status() === 'Kept when you close the settings', 4000) && !/unsaved/i.test(status()) && hbar('save')?.dataset.primary !== '1', status());
+  await sleep(1500);
+  check('*** ...and nothing is made while the menu is open (the stage is not swapped under the person’s hands) ***',
+    (await pe.list()).length === 1 && gearOpen() && !win.__home.person().landingId);
+  check('(setup) ⚙ closes', await closeGear());
+  check('*** closed: it is made, by itself ***', await until(() => !!win.__home.person().landingId, 10000), J(win.__home.person()));
+  const landing = win.__home.person().landingId;
+  check('*** ...a plain "Saved.", and no editor: still Your people, filling the window, in plain words ***',
+    await until(() => isPlain() && /^Saved\./.test(toastText()), 8000), `${toastText()} plain=${isPlain()}`);
+  check('*** ...the colour chosen is on the made one, on the server ***', await until(async () => (await rowOn(pe, landing, 'settings', E)).theme === want1, 6000),
+    J((await rowOn(pe, landing, 'settings', E)).theme));
+  check('*** ...it is their landing, NOT their Home (no Home is made by a change of colour) ***', win.__home.person().homeId === null, J(win.__home.person()));
+  const hist = async () => HD.readHistory(await rowOn(pe, landing, HD.PROFILE_HISTORY_KEY, E));
+  check('*** ...History has the one version any made page has ***', (await hist()).versions.length === 1, J((await hist()).versions.map((v) => v.name)));
+  check('...nothing held, the bar quiet, no "leave?"', pendingNone() && !/unsaved/i.test(status()) && !dlgOpen() && hbar('save')?.dataset.primary !== '1', `${status()} ${J(win.__home.pending())}`);
+
+  section('*** made: each change is written through, with no new version, and the menu stays open ***');
+  check('(setup) ⚙ opens', await openGear());
+  const want2 = await pressColours();
+  check('*** written to the server by itself, the menu still open, one stage (no reload) ***',
+    await until(async () => (await rowOn(pe, landing, 'settings', E)).theme === want2, 6000) && gearOpen() && $$('.kiosk').length === 1,
+    `${J((await rowOn(pe, landing, 'settings', E)).theme)} want ${want2}`);
+  check('*** ...NO new History version for it ***', await until(pendingNone, 4000) && (await hist()).versions.length === 1, J((await hist()).versions.length));
+  check('...the bar says nothing is waiting', !/unsaved|saving/i.test(status()), status());
+  // Three presses in a row (stepping round to a choice): one save at the end.
+  const wantA = await pressColours(); await sleep(150); const wantB = await pressColours(); await sleep(150); const want3 = await pressColours();
+  check('(setup) three presses, three different colours', new Set([wantA, wantB, want3]).size === 3, J([wantA, wantB, want3]));
+  check('*** three quick presses: the last one is what is kept ***', await until(async () => pendingNone() && (await rowOn(pe, landing, 'settings', E)).theme === want3, 6000));
+  const inc = await pressIncoming();
+  check('*** "Messages for you to show" (Your people’s own setting) saves by itself too ***', inc != null
+    && await until(async () => pendingNone() && (await peopleRow(pe, landing, E)).incoming === inc, 6000), `${inc} ${J(await peopleRow(pe, landing, E))}`);
+  await closeGear();
+
+  section('*** More, right after a change: saved, not asked about ***');
+  check('(setup) ⚙ opens', await openGear());
+  const want4 = await pressColours();
+  await closeGear();
+  $('#stage [data-pp-act="more"]')?.click();
+  check('*** no "leave?": Start here shows ***', await until(startHereUp, 15000) && !dlgOpen(), `dlg=${dlgOpen()}`);
+  check('*** ...and the change is on the server ***', (await rowOn(pe, landing, 'settings', E)).theme === want4, J((await rowOn(pe, landing, 'settings', E)).theme));
+  await pressBar('people');
+  check('(setup) ‹ Your people goes back', await until(isPlain, 15000));
+
+  section('*** Edit, right after a change: saved, not "Unsaved changes" in the editor ***');
+  check('(setup) ⚙ opens', await openGear());
+  const want5 = await pressColours();
+  await closeGear();
+  await pressBar('edit');
+  check('(setup) the editing page', await until(() => !doc.body.classList.contains('is-land') && !!hbar('picker'), 8000));
+  check('*** the change was saved on the way: nothing unsaved in the editor ***',
+    await until(async () => pendingNone() && (await rowOn(pe, landing, 'settings', E)).theme === want5, 6000) && !/unsaved/i.test(status()), status());
+
+  section('*** OFF the plain page nothing changes: a change in the editor waits for Save, and is asked about ***');
+  check('(setup) the menu in the editor', await openGear());
+  const want6 = await pressColours();
+  check('*** the editor: "Unsaved changes", Save lit ***', await until(() => /unsaved/i.test(status()) && hbar('save')?.dataset.primary === '1', 4000), status());
+  await sleep(2500);
+  check('*** ...and it is NOT saved by itself ***', /unsaved/i.test(status()) && (await rowOn(pe, landing, 'settings', E)).theme === want5,
+    `${status()} server=${(await rowOn(pe, landing, 'settings', E)).theme} want6=${want6}`);
+  await closeGear();
+  await pressBar('land');
+  check('(setup) back on Your people', await until(isPlain, 8000));
+  await sleep(2000);
+  check('*** ...not even back on Your people: a change made in the editor is the builder’s, for Save ***',
+    /unsaved/i.test(status()) && (await rowOn(pe, landing, 'settings', E)).theme === want5, status());
+  $('#stage [data-pp-act="more"]')?.click();
+  check('*** ...and More asks first, as before ***', await until(dlgOpen, 4000));
+  $('#home-dlg [data-home-dlg="leave"]')?.click();
+  check('(setup) Leave without saving: Start here', await until(startHereUp, 15000) && (await rowOn(pe, landing, 'settings', E)).theme === want5);
+  await pressBar('people');
+  check('(setup) ‹ Your people goes back', await until(isPlain, 15000));
+
+  section('*** a save that fails: held as unsaved, Save offered, said in plain words; nothing lost ***');
+  const realFetch = win.fetch;
+  win.fetch = (u, o) => ((o?.method || 'GET').toUpperCase() === 'PUT' ? Promise.reject(new TypeError('offline (test)')) : realFetch.call(win, u, o));
+  check('(setup) ⚙ opens', await openGear());
+  const want7 = await pressColours();
+  check('*** it says so, plainly, and the change is held: "Unsaved changes", Save lit ***',
+    await until(() => /did not save/.test(toastText()) && /unsaved/i.test(status()) && hbar('save')?.dataset.primary === '1', 8000), `${toastText()} | ${status()}`);
+  check('...the colour still shows (held, not thrown away)', win.__home.pending()?.settings?.theme === want7);
+  await closeGear();
+  $('#stage [data-pp-act="more"]')?.click();
+  check('*** More tries again; failing, it asks, as before ***', await until(dlgOpen, 8000));
+  $('#home-dlg [data-home-dlg="cancel"]')?.click();
+  check('Cancel: still here, still held', await until(() => !dlgOpen(), 2000) && isPlain() && win.__home.pending()?.settings?.theme === want7);
+  win.fetch = realFetch;
+  await pressBar('save');
+  check('*** connection back, Save: saved, nothing held ***',
+    await until(async () => pendingNone() && (await rowOn(pe, landing, 'settings', E)).theme === want7, 8000) && !/unsaved/i.test(status()),
+    `${status()} ${J(win.__home.pending())}`);
+  check('...and still the one History version', (await hist()).versions.length === 1);
+
+  // ============================================================================================
+  section('*** only tried, a change, then More at once: made on the way, not asked about ***');
+  const F = `${BASE_USER}-f`;
+  const pf = createProfilesClient({ user: F });
+  await open(`user=${encodeURIComponent(F)}`);
+  check('(setup) Your people fills the window', await until(isPlain, 45000));
+  check('(setup) ⚙ opens', await openGear());
+  const wantF = await pressColours();
+  const incF = await pressIncoming();
+  await closeGear();
+  $('#stage [data-pp-act="more"]')?.click();
+  check('*** no "leave?": Start here ***', await until(startHereUp, 20000) && !dlgOpen());
+  const diagF = async (tag) => `${tag}: person=${J(win.__home.person())} kinds=${J($$('#stage .k-cell').map((c) => c.dataset.kind))} `
+    + `bar=${J($$('#stage .tb-bar .tb-host button').map((b) => b.textContent))} status=${status()} dlg=${dlgOpen()} toast=${toastText()} `
+    + `pending=${J(win.__home.pending())} screens=${J((await pf.list()).map((x) => x.name))}`;
+  const sawBack = await until(() => !!hbar('people'), 10000);
+  const before = sawBack ? '' : await diagF('no ‹ Your people');
+  await pressBar('people');
+  const backOk = await until(() => isPlain() && !!win.__home.person().landingId, 20000);
+  const landF = win.__home.person().landingId;
+  check('*** back: Your people, made, with the colour ***', backOk && !!landF
+    && (await rowOn(pf, landF, 'settings', F)).theme === wantF && win.__home.person().homeId === null, `${before} ${await diagF('after')}`);
+  check('*** ...and Your people’s own setting, carried from the tried copy onto the made one ***',
+    incF != null && !!landF && (await peopleRow(pf, landF, F)).incoming === incF, `${incF} ${landF ? J(await peopleRow(pf, landF, F)) : 'not made'}`);
+
+  // ============================================================================================
+  // "Try it as someone new" (try_new.js): a test person on the account, kept on the server like anybody -- so the same.
+  section('*** "Try it as someone new": the test person’s Your people saves by itself the same way ***');
+  {
+    const G = `${BASE_USER}-g`;
+    const pg = createProfilesClient({ user: G });
+    const realKeys = [LAST_PERSON_KEY, TRY_NEW_KEY, TRY_STASH_KEY, ...FIRST_RUN_KEYS];
+    const realBefore = Object.fromEntries(realKeys.map((k) => [k, localStorage.getItem(k)]));
+    try {
+      await open(`user=${encodeURIComponent(G)}`);
+      check('(setup) Your people', await until(isPlain, 45000));
+      const me = win.__home.person().personId;
+      for (let i = 0; i < 3 && !menuRow('home:trynew'); i++) { gearBtn()?.click(); await until(() => !!menuRow('home:trynew'), 4000); }
+      const reloaded = new Promise((res) => { ifr.addEventListener('load', res, { once: true }); });
+      menuRow('home:trynew')?.click();
+      await Promise.race([reloaded, sleep(15000)]);
+      doc = ifr.contentDocument; win = ifr.contentWindow;
+      check('(setup) as the test person, on Your people', await until(() => isPlain() && !!win.__home.trial?.() && win.__home.person().personId !== me, 45000));
+      check('(setup) ⚙ opens', await openGear());
+      const wantG = await pressColours();
+      await closeGear();
+      check('*** made by itself for the TEST person (their landing, not their Home), with the colour, on the server ***',
+        await until(() => !!win.__home.person().landingId, 10000) && win.__home.person().homeId === null
+        && await until(async () => (await rowOn(pg, win.__home.person().landingId, 'settings', G)).theme === wantG, 6000), J(win.__home.person()));
+      const back = new Promise((res) => { ifr.addEventListener('load', res, { once: true }); });
+      for (let i = 0; i < 3 && !menuRow('home:tryback'); i++) { gearBtn()?.click(); await until(() => !!menuRow('home:tryback'), 4000); }
+      menuRow('home:tryback')?.click();
+      await Promise.race([back, sleep(15000)]);
+    } finally {
+      ifr?.remove(); ifr = null;
+      for (const [k, v] of Object.entries(realBefore)) { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }
+    }
+  }
+
+  // ============================================================================================
+  section('*** signed out: no Home, no plain page, nothing saved by itself (it never reaches this) ***');
+  // (As home_page_test: a dev server signs everybody in, and then there is no signed-out visitor to look at.)
+  if ((await fetch('/api/me')).status === 401) {
+    await open('');
+    await sleep(4000);
+    check('*** with nobody signed in the page is the parts page, not Home ***', !doc.body.classList.contains('is-home') && !hbar('save'),
+      `is-home=${doc.body.classList.contains('is-home')}`);
+  } else {
+    check('(skipped) this server signs everybody in, so there is no signed-out visitor to test', true);
+  }
+  ifr?.remove();
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

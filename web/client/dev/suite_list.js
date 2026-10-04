@@ -129,6 +129,8 @@ export const SUITES = [
   'people_page',
   // 2026-10-04: "Edit my page" - Your people as sections you add, remove and move; About me and boxes from the library.
   'page_sections',
+  // 2026-10-04: over Your people a change saves by itself (no Save, no "leave?"); off it, the draft and Save as before.
+  'plain_autosave',
   // 2026-10-04: invite someone to take over a profile you made (the invite window, join.html, both sides' cards).
   'claim',
   // 2026-10-04: recommend a YouTube or Spotify song or video to one of your people; "Recommended for you".
