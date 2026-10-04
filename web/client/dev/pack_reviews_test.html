@@ -57,6 +57,17 @@ const FIXTURE = { id: 'review:fixture', file: 'review_fixture_pack.json', url: '
   kind: 'trivia', name: 'Fixture colours (AI-written, not yet reviewed)', count: 5 };
 const fixturePack = await loadReviewPack(FIXTURE);
 const Q = fixturePack.items.map((it) => ({ question: it.question, answer: it.correct, key: reviewKey(it.question, it.correct) }));
+// The fixture file carries no `explain` (its counts are asserted all over this suite), so the explanation checks
+// use a copy: grass and banana explain themselves (padded, to prove the trim), snow's is empty, sky and coal none.
+const EXPLAIN = ['Fixture: grass is green because of chlorophyll.', '', '', 'Fixture: a ripe banana is yellow.', ''];
+function withExplain(pack) {
+  return { ...pack, items: pack.items.map((it, i) => {
+    const out = { ...it };
+    if (EXPLAIN[i]) out.explain = `  ${EXPLAIN[i]} `;
+    else if (i === 2) out.explain = '';
+    return out;
+  }) };
+}
 
 // The ACCOUNT's log, faked: `rows` is shared between every handle given the same array — two handles on one
 // array are two screens of one account. The server stamps by/at; so does this.
@@ -151,6 +162,18 @@ try {
       on.every((b) => Array.isArray(b.review.sources) && b.review.sources.length >= 1)
       && JSON.stringify(on.find((b) => b.question === fixturePack.items[0].question)?.review.sources)
         === JSON.stringify([{ url: 'https://example.org/fixture/grass', title: 'Fixture grass page' }]));
+    // "Say why after the answer" (trivia.js): the item's `explain` rides with it, passed or open, so a passed
+    // question played with the setting off says why just as a built-in pack's does.
+    const explained = withExplain(fixturePack);
+    const onX = playableBank(explained, m, { includeUnreviewed: true, packId: FIXTURE.id });
+    const offX = playableBank(explained, m, { includeUnreviewed: false, packId: FIXTURE.id });
+    check('*** each dealt question carries its own explanation (passed and open alike), trimmed ***',
+      onX.find((b) => b.question === Q[0].question)?.explain === EXPLAIN[0]
+      && offX[0]?.explain === EXPLAIN[0] && onX.find((b) => b.question === Q[3].question)?.explain === EXPLAIN[3],
+      JSON.stringify(onX.map((b) => b.explain)));
+    check('...and an item with none carries nothing (no empty string pretending to be one)',
+      onX.filter((b) => !EXPLAIN[Q.findIndex((q) => q.question === b.question)]).every((b) => !('explain' in b)),
+      JSON.stringify(onX.map((b) => b.explain)));
   }
 
   section('*** the "Source:" line a reviewer reads ***');
@@ -444,6 +467,72 @@ try {
     rs.inst.destroy();
   }
 
+  section('*** "Say why after the answer" while reviewing: in the strip, after the answer, once ***');
+  {
+    // The player's line steps aside for the review strip, as the source line does: the strip shows the
+    // explanation (labelled, because the reviewer is checking it), only once the question is answered (it
+    // gives the answer away), and nowhere else on the panel.
+    const explainedHandle = (rows) => createPackReviews({ events: fakeLog(rows), listPacks: async () => [FIXTURE],
+      loadPack: async () => withExplain(fixturePack) });
+    const want = (text) => EXPLAIN[Q.findIndex((q) => q.question === text)] || '';
+    const toExplained = (r) => { for (let i = 0; i < 10 && !want(r.shown()); i++) r.bus.publish('trivia/skip'); return !!want(r.shown()); };
+    const toPlain = (r) => { for (let i = 0; i < 10 && want(r.shown()); i++) r.bus.publish('trivia/skip'); return !want(r.shown()); };
+    const anyWhy = (r) => r.host.querySelectorAll('[data-answer-explain], [data-review-explain]').length;
+    {
+      const r = rig({ reviews: explainedHandle([]), saved: { includeUnreviewed: true } });
+      await settle(r);
+      check('(a reviewing question that has an explanation is up)', toExplained(r) && !!r.host.querySelector('[data-review]'), r.shown());
+      const w = want(r.shown());
+      check('*** before the answer: no explanation anywhere, strip included ***',
+        anyWhy(r) === 0 && !r.host.textContent.includes(w), r.host.innerHTML.slice(0, 500));
+      r.answer();
+      const inStrip = r.host.querySelector('[data-review] [data-review-explain]');
+      check('*** once answered: shown exactly once, in the strip, labelled for the reviewer ***',
+        anyWhy(r) === 1 && !!inStrip && inStrip.textContent.trim() === `Explanation: ${w}`
+        && !r.host.querySelector('[data-answer-explain]'), r.host.innerHTML.slice(0, 800));
+      const firstSrc = r.host.querySelector('[data-review] [data-review-source]');
+      check('*** in the strip too, the explanation comes before the source ***',
+        !!firstSrc && !!(inStrip.compareDocumentPosition(firstSrc) & Node.DOCUMENT_POSITION_FOLLOWING));
+      r.host.querySelector('[data-review-wrong]').click();
+      await sleep(10);
+      check('after ✗ it stays in the strip, beside the note box (it may be what is wrong), still once',
+        anyWhy(r) === 1 && !!r.host.querySelector('[data-review] [data-review-explain]') && !!r.host.querySelector('[data-review-note]'));
+      r.bus.publish('trivia/next');
+      check('(on to a question with none)', toPlain(r) && !!r.host.querySelector('[data-review]'), r.shown());
+      r.answer();
+      check('*** a reviewing question with no explanation: nothing (no "none given" line) ***', anyWhy(r) === 0,
+        r.host.querySelector('[data-review]')?.innerHTML);
+      r.inst.destroy();
+    }
+    {
+      const r = rig({ reviews: explainedHandle([]), saved: { includeUnreviewed: true, showExplain: false } });
+      await settle(r);
+      toExplained(r);
+      r.answer();
+      check('*** the player setting off: the reviewer still sees it in the strip (the explanation is part of what is checked) ***',
+        anyWhy(r) === 1 && !!r.host.querySelector('[data-review] [data-review-explain]'), r.host.innerHTML.slice(0, 600));
+      r.inst.destroy();
+    }
+    {
+      // Promotion: grass and banana passed; the setting off; they play as ordinary questions, no strip.
+      const rows = Q.filter((q, i) => EXPLAIN[i]).map((q, i) => ({ id: i + 1, kind: 'pass', data: { key: q.key, question: q.question } }));
+      const r = rig({ reviews: explainedHandle(rows), saved: { includeUnreviewed: false } });
+      await settle(r);
+      const w = want(r.shown());
+      check('(a passed, explained question plays, with no strip)', r.probe().bank === 2 && !!w && !r.host.querySelector('[data-review]'), r.shown());
+      check('before the answer: no explanation', anyWhy(r) === 0);
+      r.answer();
+      const line = r.host.querySelector('[data-answer-explain]');
+      check('*** a passed review question says why under "Correct." like any pack question, above its source ***',
+        anyWhy(r) === 1 && !!line && line.textContent.trim() === w && !!r.host.querySelector('.tv-said')
+        && !!(r.host.querySelector('.tv-said').compareDocumentPosition(line) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (!r.host.querySelector('[data-answer-source]')
+          || !!(line.compareDocumentPosition(r.host.querySelector('[data-answer-source]')) & Node.DOCUMENT_POSITION_FOLLOWING)),
+        r.host.innerHTML.slice(0, 600));
+      r.inst.destroy();
+    }
+  }
+
   section('per account');
   {
     check('the client writes to the ACCOUNT\'s log (one per account, not per screen or person)', REVIEWS_URL === '/api/account/reviews');
@@ -472,6 +561,20 @@ try {
     for (const e of real) { try { await loadReviewPack(e); good += 1; } catch (err) { check(`${e.url} loads`, false, err.message); } }
     check('every listed pack is served and passes packs.js validation', good === real.length && good > 0);
     check('every one is a trivia pack (only Trivia reads packs)', real.every((e) => e.kind === 'trivia'));
+    // The starter questions all carry an `explain` (32715ec fact-checked them): every one reaches Trivia's bank.
+    let withWhy = 0, carried = 0;
+    for (const e of real) {
+      let pack = null;
+      try { pack = await loadReviewPack(e); } catch { continue; }
+      const dealt = playableBank(pack, reviewsFrom([]), { includeUnreviewed: true, packId: e.id });
+      for (const it of pack.items) {
+        if (typeof it.explain !== 'string' || !it.explain.trim()) continue;
+        withWhy += 1;
+        if (dealt.find((b) => b.question === it.question)?.explain === it.explain.trim()) carried += 1;
+      }
+    }
+    check(`*** every waiting question's explanation reaches the dealt bank (${carried} of ${withWhy}) ***`,
+      withWhy > 0 && carried === withWhy, `${carried}/${withWhy}`);
   }
 } catch (err) {
   check('the suite ran to the end', false, `${err.name}: ${err.message}\n${err.stack}`);

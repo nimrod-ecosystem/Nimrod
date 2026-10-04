@@ -74,7 +74,8 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack, itemSources } from '../packs.js';
-import { answerSourceField, answerSourceHtml, answerSourceMode, ANSWER_SOURCE_DEFAULT } from '../answer_source.js';
+import { answerSourceField, answerSourceHtml, answerSourceMode, ANSWER_SOURCE_DEFAULT,
+         answerExplainField, answerExplainHtml, answerExplainOn, answerExplainText, ANSWER_EXPLAIN_DEFAULT } from '../answer_source.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
@@ -143,6 +144,10 @@ export const DEFAULTS = {
   // one quiet line under "Correct.", once the answer is given. 'on' | 'all' (also says "common knowledge") |
   // 'off'. Every choice is argued in ../answer_source.js.
   showSource: ANSWER_SOURCE_DEFAULT,
+  // *** "SAY WHY AFTER THE ANSWER", ON BY DEFAULT (2026-10-04). *** The item's own `explain` sentence, under
+  // "Correct." and above the source line, once the answer is given. Argued in ../answer_source.js. Shown only:
+  // Trivia reads nothing aloud (not the question, not "Correct."), so this does not either.
+  showExplain: ANSWER_EXPLAIN_DEFAULT,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -198,6 +203,10 @@ export function packToTriviaBank(pack) {
     };
     const sources = itemSources(it.source);
     if (sources.length) row.sources = sources;
+    // `explain` (2026-10-04): the item's own sentence saying why, for "Say why after the answer". Only when
+    // there is one.
+    const why = answerExplainText(it.explain);
+    if (why) row.explain = why;
     return row;
   });
 }
@@ -262,8 +271,11 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
   // own (packToTriviaBank), or a review-pack item's (pack_reviews.js playableBank keeps it under `review`).
   const sources = Array.isArray(item.sources) ? item.sources
     : (Array.isArray(item.review?.sources) ? item.review.sources : []);
+  // `explain` (2026-10-04): why the answer is right, for "Say why after the answer" — a pack item's (packToTriviaBank)
+  // or a review-pack item's (playableBank). '' for a written bank row, which shows nothing.
   return { question: item.question, answer: item.answer, options,
-           correctIndex: options.indexOf(item.answer), source: item.source || '', sources };
+           correctIndex: options.indexOf(item.answer), source: item.source || '', sources,
+           explain: answerExplainText(item.explain) };
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -352,6 +364,8 @@ const SETTINGS = [
     note: 'a vocabulary row already holds everything a multiple-choice question needs' },
   // Mike, 2026-10-04. Per game (this panel's settings, like the score row), not per account: the same quiz on
   // a shared screen and on somebody's phone may want different amounts under the answer.
+  // 2026-10-04: the item's own explanation, above the source line — so its row is above the source's row too.
+  answerExplainField(),
   answerSourceField(),
   // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
   // rather than buried. A microphone that a person cannot easily find the switch for is a
@@ -549,6 +563,7 @@ registerModule(
           ${done
             ? `<p class="tv-said">Correct.</p>
                ${q.source ? `<p class="tv-src" data-source>From the lesson: “${esc(q.source)}”</p>` : ''}
+               ${answerExplainLine()}
                ${answerSourceLine()}
                <div class="tv-after">
                  <button type="button" class="tv-next" data-next${after === 0 ? ' data-on="1"' : ''}>Next question</button>
@@ -581,6 +596,15 @@ registerModule(
       return answerSourceHtml(q.sources, { mode: answerSourceMode(cfg), onScreen: ctx.isScreen === true });
     }
 
+    // *** "SAY WHY AFTER THE ANSWER" (2026-10-04; ../answer_source.js). *** The item's own explanation, between
+    // "Correct." and the source line — drawn in the same answered-only branch, so never before the answer nor
+    // after a wrong guess (an explanation names the answer). Steps aside for the review strip exactly as the
+    // source does: while reviewing, the strip shows it (labelled, once answered), so it is never on screen twice.
+    function answerExplainLine() {
+      if (!q || q.reviewing || !answerExplainOn(cfg)) return '';
+      return answerExplainHtml(q.explain);
+    }
+
     // *** THE REVIEW CONTROL: SMALL, QUIET, AND OUT OF THE PLAYER'S WAY. *** At the foot of the panel, in
     // muted text, after everything the player reads. Not one of the highlight's stops (`highlight` walks the
     // answers, `after` walks Next and the contest — neither knows this exists), so the person playing never
@@ -592,7 +616,13 @@ registerModule(
     function reviewHtml() {
       if (!q || !q.reviewing) return '';
       // (On a real screen, ctx.isScreen, a source link is plain words with its host: no stray tab. page_links.js.)
-      const src = sourceHtml(q.review?.sources, { onScreen: ctx.isScreen === true });
+      // THE EXPLANATION, FOR THE REVIEWER: once the question is answered (it names the answer), above the source,
+      // labelled — it is one of the things being checked (the fact-check pass corrected ten). Shown whatever the
+      // player's "Say why after the answer" says: reviewing is opted into, and a wrong "why" taught as fact is as
+      // bad as a wrong answer. The player's own line (answerExplainLine) steps aside, so it is shown once.
+      const src = (answered !== null ? answerExplainHtml(q.explain,
+        { cls: 'tv-review-explain', attr: 'data-review-explain', label: 'Explanation:' }) : '')
+        + sourceHtml(q.review?.sources, { onScreen: ctx.isScreen === true });
       if (reviewMark === 'wrong') {
         return `<div class="tv-review" data-review data-review-state="wrong">
             <p class="tv-review-said" role="status">${reviewFailed

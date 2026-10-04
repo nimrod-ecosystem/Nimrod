@@ -1474,6 +1474,9 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-said { margin: 14px 0 8px; font-size: 1.05rem; }
 /* a transcript-lesson question's source line, shown with the answer (row 2.24 / §0h) */
 .tv-src { margin: 0 0 10px; padding: 6px 10px; border-left: 3px solid var(--accent); font-size: .88rem; color: var(--text-soft); }
+/* "Say why after the answer" (answer_source.js): the item's explanation, between "Correct." and the source line.
+   A touch smaller than the answer, larger than the source (it is the content; the source is the footnote). Theme colours only. */
+.tv-explain { margin: 0 0 8px; max-width: 60ch; font-size: .92rem; line-height: 1.45; color: var(--text-soft); overflow-wrap: anywhere; }
 /* "Show where the answer comes from" (answer_source.js): one small, quiet line under the answer. Theme colours only. */
 .tv-answer-src { margin: 0 0 10px; font-size: .82rem; color: var(--text-muted); overflow-wrap: anywhere; }
 .tv-answer-src a { color: var(--link); }
@@ -1498,6 +1501,8 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 /* The item's own source (packs.js PER-ITEM SOURCES): its own line in the strip, so a long title wraps. */
 .tv-review-src { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
 .tv-review-src a { color: var(--link); }
+/* ...and, once answered, its explanation above that (the reviewer checks it too). Same quiet size as the strip. */
+.tv-review-explain { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
 .tv-review-note { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .tv-review-note input { min-height: 32px; min-width: 14ch; padding: 3px 8px; border-radius: 8px; font: inherit;
   border: 1px solid var(--border); background: var(--surface); color: var(--text); }

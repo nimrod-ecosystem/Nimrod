@@ -1,4 +1,5 @@
 // answer_source.js — "SHOW WHERE THE ANSWER COMES FROM": the player's own source line, after the answer.
+// (And, at the bottom, "SAY WHY AFTER THE ANSWER": the item's explanation, the line above it.)
 //
 // Mike, 2026-10-04: "Maybe even have an option to always show the source when the answer is given that's on
 // by default."
@@ -107,4 +108,54 @@ export function answerSourceHtml(sources, { mode = ANSWER_SOURCE_DEFAULT, onScre
     ? `<a href="${esc(x.url)}" target="_blank" rel="noopener noreferrer">${esc(x.words)}</a>`
     : esc(x.words))).join(' · ');
   return `<p class="${cls}" data-answer-source>Source: ${body}</p>`;
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// "SAY WHY AFTER THE ANSWER" — the item's own `explain` sentence, the line ABOVE the source (2026-10-04)
+// ---------------------------------------------------------------------------------------------------------
+// Every starter question carries an `explain` sentence (packs_review/; a fact-check pass, 32715ec, corrected
+// ten of them), and Trivia dropped it: a right answer said only "Correct.". Here because it is the same kind of
+// line as the source — after the answer, never before, one per game's settings — and the order of the two is
+// then decided in one file: the explanation first (it is the content: why the answer is right), the source
+// under it (what that rests on).
+//   * ON BY DEFAULT. For: it is the half of a quiz that teaches, it was written and checked for every starter
+//     question, and an item without one draws nothing. Against: a player who wants a brisk quiz reads more per
+//     question — so it is a switch, not a constant.
+//   * A SWITCH, NOT A CHOICE: there is no middle stop worth a press (unlike the source's "common knowledge").
+//   * NEVER BEFORE THE ANSWER, NOR AFTER A WRONG GUESS — an explanation names the answer almost every time.
+//   * NO LABEL ("Why:") ON THE PLAYER'S LINE: under "Correct." the sentence reads as the reason by itself. The
+//     reviewer's strip DOES label it ("Explanation: ..."), because there it is a thing being checked.
+//   * NOT READ ALOUD, AND NO ROW FOR IT — the same reason as the source above: Trivia speaks nothing today.
+//     `answerExplainText` is the words, ready for the day it does.
+export const ANSWER_EXPLAIN_KEY = 'showExplain';
+export const ANSWER_EXPLAIN_DEFAULT = true;
+
+/** The settings row a quiz game declares (a switch). */
+export function answerExplainField({ level = 'standard', note = null } = {}) {
+  return {
+    key: ANSWER_EXPLAIN_KEY, label: 'Say why after the answer', default: ANSWER_EXPLAIN_DEFAULT, level,
+    onLabel: 'On', offLabel: 'Off',
+    note: note || 'One short sentence under "Correct." saying why that is the answer, once it is given. Only '
+      + 'questions that come with an explanation show one. Shown, not read aloud.',
+  };
+}
+
+/** What the saved settings mean: on unless somebody turned it off (false, or "off" from anything that wrote words). */
+export function answerExplainOn(saved = {}) {
+  const v = (saved || {})[ANSWER_EXPLAIN_KEY];
+  return !(v === false || v === 'off');
+}
+
+/** The sentence, trimmed, or '' — anything that is not text counts as none. */
+export function answerExplainText(explain) {
+  return typeof explain === 'string' ? explain.trim() : '';
+}
+
+/**
+ * The line as HTML, or '' when there is nothing to say. Showing it only once the answer is given (and whether
+ * the setting is on) is the caller's: this draws what it is handed. `label` is for the reviewer's strip.
+ */
+export function answerExplainHtml(explain, { cls = 'tv-explain', attr = 'data-answer-explain', label = '' } = {}) {
+  const t = answerExplainText(explain);
+  return t ? `<p class="${cls}" ${attr}>${label ? `${esc(label)} ` : ''}${esc(t)}</p>` : '';
 }
