@@ -112,7 +112,7 @@ import { createArrangement } from '../arrangement.js';
 import { flashLimit } from '../flash_limit.js';
 // Row 2.38: a change that only moves a room object's door is a placement change too (room_doors.js).
 import { classifyLayoutChange as layoutChange } from '../room_doors.js';
-import { mergeSettingsDoc, lostEditWords } from '../doc_merge.js';
+import { mergeSettingsDoc, mergeLayoutSave, lostEditWords } from '../doc_merge.js';
 // Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below). Since row
 // 2.38 the editor itself is dashboard_editor.js, shared with the kiosk's own path.
 import { openDashboardEditor } from '../dashboard_editor.js';
@@ -524,6 +524,7 @@ function dashboardFactory(ctx) {
     // it is rebuilt (the kiosk reloads; Stage 4 is where a dashboard rebuilds itself).
     const overridden = !nested && 'layoutOverride' in ctx;
     let rawLayout = null;
+    let roomStore = null;                        // the arrangement's `layoutStore` (fill), named for the suites
     let editor = null;                           // the open edit windows, if any
     async function applyPlacedHere(next) {
       if (!arr) return { applied: false, reason: 'not mounted' };
@@ -761,6 +762,9 @@ function dashboardFactory(ctx) {
       // `settingsDoc()` the handle itself (null until init); `onSettings(fn)` fires on every change.
       settings: () => (settingsHandle?.get?.() || {}),
       settingsDoc: () => settingsHandle,
+      // 2026-10-04: where this dashboard's room edits are saved (the arrangement's `layoutStore`), so a suite
+      // can save with a base the doc has moved on from, in a fixed order. Null until init.
+      layoutStore: () => roomStore,
       onSettings(fn) { settingsListeners.add(fn); return () => settingsListeners.delete(fn); },
       // The element this dashboard draws into (its corners are on it), for the shell and the suites.
       rootEl: () => root,
@@ -888,13 +892,15 @@ function dashboardFactory(ctx) {
         // stale write here laid this copy over another device's change. A change made here that gave way is said
         // on the host's quiet line (`ctx.note`), when it has one. The policy is the host's (`ctx.conflictPrefer`,
         // default 'theirs', argued in doc_merge.js). A lent doc is the host's, merged there.)
+        const conflictPrefer = ctx.conflictPrefer === 'mine' ? 'mine' : 'theirs';
+        const sayLost = (lost) => {
+          const text = lostEditWords(lost, arrangement?.name || null);
+          if (typeof ctx.note === 'function') { try { ctx.note(text); } catch { /* not load-bearing */ } }
+          else console.warn('view:', text);
+        };
         settingsHandle = borrowedSettings || (makeState ? makeState('settings', {
-          merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: ctx.conflictPrefer === 'mine' ? 'mine' : 'theirs' }),
-          onLost: (lost) => {
-            const text = lostEditWords(lost, arrangement?.name || null);
-            if (typeof ctx.note === 'function') { try { ctx.note(text); } catch { /* not load-bearing */ } }
-            else console.warn('view:', text);
-          },
+          merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: conflictPrefer }),
+          onLost: sayLost,
         }, viewId) : null);
         if (!borrowedSettings) await settingsHandle?.load?.().catch(() => {});
         if (stale()) {
@@ -921,18 +927,34 @@ function dashboardFactory(ctx) {
           // 2026-10-02, edit mode on this dashboard's room (arrangement.js ROOM_PANEL_ID): a door or a Room
           // row it changes is saved exactly where the edit view saves (see `openEdit`'s `save`), and the host
           // is told first (`ctx.expectLayout`) so a room this dashboard redraws itself is not reloaded.
-          layoutStore: {
+          // *** AND MERGED ONTO THE DOC AS IT IS NOW (2026-10-04, the window 2769509 left). *** The edit read its
+          // `base` at the press and saves once the room is drawn; a change the poll heard in between (another
+          // device) is merged in, not laid over (doc_merge.js `mergeLayoutSave`, the host's policy, the same quiet
+          // line) -- the write carries a current version, so the server would have taken the stale copy. The
+          // base is `rawLayout` as the edit read it, so a placement the HOST applied meanwhile without telling
+          // `rawLayout` (the kiosk's 09-12 watch, on a lent doc) is kept the same way. The host and `rawLayout`
+          // hear the MERGED layout (what the doc will hold), and the screen is brought from `next` (what the
+          // edit drew) to it in place (`applySaved`); one that cannot be is left, as any grid change here is.
+          layoutStore: (roomStore = {
             get: () => rawLayout || null,
-            save: (next) => {
+            save: (next, base) => {
               rawLayout = next;
               if ((overridden && ctx.saveLayout !== true) || !settingsHandle?.set) return;
               try {
-                ctx.expectLayout?.(next);
                 const cur = settingsHandle.get?.()?.kiosk || {};
-                settingsHandle.set({ kiosk: { ...cur, layout: next } });
+                const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: conflictPrefer });
+                rawLayout = m.layout;
+                ctx.expectLayout?.(m.layout);
+                settingsHandle.set({ kiosk: { ...cur, layout: m.layout } });
+                if (m.lost.length) sayLost(m.lost);
+                const a = arr;
+                if (m.merged && a && JSON.stringify(m.layout ?? null) !== JSON.stringify(next ?? null)) {
+                  Promise.resolve(a.applySaved(next, m.layout)).then(() => { if (!torn && arr === a) changed(); })
+                    .catch((err) => console.error('view: applying a merged layout', err));
+                }
               } catch (err) { console.error('view: saving the room', err); }
             },
-          },
+          }),
           listDashboards: typeof profiles?.list === 'function' ? () => profiles.list() : null,
         });
 
@@ -1009,7 +1031,7 @@ function dashboardFactory(ctx) {
       for (const id of [...chromeRecs.keys()]) removeChrome(id);
       try { arr?.destroy(); } catch { /* already gone */ }
       if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* already gone */ } }
-      settingsHandle = null; arr = null; arrangement = null; rawLayout = null; lastStage = null;
+      settingsHandle = null; arr = null; arrangement = null; rawLayout = null; roomStore = null; lastStage = null;
       try { opener?.remove(); } catch { /* gone */ }
       opener = null;
       for (const el of [stageEl, mirrorEl, clockEl, ambientEl]) el?.replaceChildren();

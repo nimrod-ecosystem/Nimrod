@@ -138,6 +138,23 @@ export function mergeSettingsDoc(base, mine, theirs, { prefer = 'theirs' } = {})
   return { data, lost: r.lost, replaced: r.replaced };
 }
 
+/**
+ * A LAYOUT SAVE WHOSE SCREEN WAS WAITED ON (2026-10-04). An edit reads its `base` at the press and saves `next`
+ * once the screen is drawn (arrangement.js `save(next, base)`); if the doc moved on meanwhile (`nowSaved`: another
+ * device, heard by the poll), `next` is merged onto it rather than laid over it. The write that follows carries a
+ * CURRENT version, so the server would take it as it stands -- this is the only place that change can be kept.
+ * Same rule and same policy as a refused write (`mergeSettingsDoc`). Returns `{ layout, lost, merged }`: `layout`
+ * to save, `lost` as `mergeSettingsDoc`'s (paths in the doc, so `lostEditWords` reads them), `merged` false when
+ * nothing had moved (or no base came) and `layout` is `next` itself. One function for every host that saves a
+ * layout (kiosk.js, both of its docs; modules/view.js), so the rule is written once.
+ */
+export function mergeLayoutSave(base, next, nowSaved, { prefer = 'theirs' } = {}) {
+  if (base === undefined || J(base) === J(nowSaved)) return { layout: next, lost: [], merged: false };
+  const wrap = (l) => ({ kiosk: { layout: l ?? null } });
+  const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer });
+  return { layout: r.data?.kiosk?.layout ?? null, lost: r.lost, merged: true };
+}
+
 /** The one quiet line a screen shows when a change made on it gave way (one wording, every host). */
 export function lostEditWords(lost, name) {
   const what = describeLost(lost) || 'a setting';

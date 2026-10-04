@@ -23,7 +23,7 @@ The kiosk end of it (a swapped-in screen hearing and applying the other device) 
 <script type="module">
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
-import { merge3, mergeSettingsDoc, describeLost } from '../doc_merge.js';
+import { merge3, mergeSettingsDoc, mergeLayoutSave, describeLost } from '../doc_merge.js';
 import { sceneRecipe, recipeItemIds, withDoor, withLook, sceneDoors, sceneLooks } from '../room_doors.js';
 
 const out = document.getElementById('results');
@@ -99,6 +99,23 @@ const sceneOf = (doc) => doc?.kiosk?.layout?.scene || null;
       const keys = mergeSettingsDoc(base, docWith(STUDY, { mirrorSize: 'big' }), { ...docWith(withLook(STUDY, PIECE_B, 'drawn')), theme: 'night' });
       check('other keys of `kiosk` and other top-level keys merge the same way',
         keys.data.kiosk.mirrorSize === 'big' && keys.data.theme === 'night' && sceneLooks(sceneOf(keys.data))[PIECE_B] === 'drawn' && !keys.lost.length, J(keys.data));
+    }
+    {
+      // 2026-10-04: a layout save whose screen was waited on (`save(next, base)`), merged onto the doc as it is now.
+      const base = layoutWith(STUDY);
+      const next = layoutWith(withDoor(STUDY, PIECE_A, 'scr-1'));
+      const still = mergeLayoutSave(base, next, layoutWith(STUDY));
+      check('mergeLayoutSave: nothing moved meanwhile -- `next` itself, not merged', still.layout === next && !still.merged && !still.lost.length, J(still));
+      const nob = mergeLayoutSave(undefined, next, layoutWith(withLook(STUDY, PIECE_B, 'drawn')));
+      check('...no base handed in (a host that does not wait) -- `next` itself, as before', nob.layout === next && !nob.merged);
+      const both = mergeLayoutSave(base, next, layoutWith(withLook(STUDY, PIECE_B, 'drawn')));
+      check('*** ...the doc moved on: the door here and the look there are both in what is saved ***',
+        both.merged && sceneDoors(both.layout.scene)[PIECE_A] === 'scr-1' && sceneLooks(both.layout.scene)[PIECE_B] === 'drawn' && !both.lost.length, J(both));
+      const clash = mergeLayoutSave(base, next, layoutWith(withDoor(STUDY, PIECE_A, 'scr-2')));
+      check('...a clash: the other device\'s value stands, reported as a path in the doc (the quiet line reads "the room")',
+        sceneDoors(clash.layout.scene)[PIECE_A] === 'scr-2' && describeLost(clash.lost) === 'the room', J(clash));
+      const mine = mergeLayoutSave(base, next, layoutWith(withDoor(STUDY, PIECE_A, 'scr-2')), { prefer: 'mine' });
+      check('...prefer: "mine" keeps this one', sceneDoors(mine.layout.scene)[PIECE_A] === 'scr-1' && !mine.lost.length, J(mine));
     }
 
     // ===================================================================================

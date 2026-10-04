@@ -4005,6 +4005,92 @@ const toTab = (m, id) => {
     check('the boot / dashboard doc sync section threw', false, String((e && e.stack) || e));
   }
 
+  // *** 2026-10-04, later: THE REDRAW WINDOW, on the boot doc and on view.js. *** An edit reads its base at the
+  // press and saves once the screen is drawn (arrangement.js `save(next, base)`). A remote change the poll hears in
+  // between was laid over by that save: its version is current, so the server took it, and the other device's
+  // change was gone. Driven through the very store the arrangement saves to (`layoutStore()`, for the suites), in
+  // that order every time: base read, the other device writes, the poll hears it, then the save. Three docs: the
+  // boot screen's on the kiosk's own path, a swapped-in dashboard's own (view.js), and the boot doc lent to its
+  // dashboard (view.js, the borrowed handle).
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const urlOf = (s) => profiles.stateURL(s.id, 'settings');
+    const remote = async (s, fn) => { const r = createState({ url: urlOf(s), user: USER }); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+    const readOf = async (s) => { const r = createState({ url: urlOf(s), user: USER }); await r.load().catch(() => {}); const v = { ...(r.get() || {}) }; r.destroy(); return v; };
+    const sceneOf = (d) => d?.kiosk?.layout?.scene || null;
+    const setScene = (d, scene) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...(d.kiosk?.layout || {}), scene } } });
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const clone = (v) => JSON.parse(JSON.stringify(v));
+    const STUDY = { kind: 'room', preset: 'study' };
+    const roomScreen = async (name) => {
+      const s = await profiles.create(name);
+      const ph = await profiles.addModule(s.id, 'photos');
+      await remote(s, () => ({ kiosk: { layout: { preset: 'full', slots: [null], scene: STUDY,
+        placed: [{ id: ph.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }));
+      return s;
+    };
+    const doorsOn = async (s) => sceneDoors(sceneOf(await readOf(s))) || {};
+    const cases = [
+      { tag: 'boot', name: 'the BOOT screen\'s doc (the kiosk\'s own path)' },
+      { tag: 'dash', name: 'a swapped-in dashboard\'s own doc (view.js)', dash: 'swap' },
+      { tag: 'lent', name: 'the boot doc lent to its dashboard (view.js)', dash: 'boot' },
+    ];
+    for (const c of cases) {
+      const S = await roomScreen(`TEST-window-${c.tag}`);
+      let home = S;
+      if (c.dash === 'swap') { home = await profiles.create(`TEST-window-${c.tag}-home`); await profiles.addModule(home.id, 'photos'); }
+      const root = document.createElement('div');
+      root.style.cssText = 'position:relative;width:900px;height:560px';
+      document.body.append(root);
+      const k = await mountKiosk(root, { user: USER, profileId: home.id, profiles, bus: createBus(), reloadPage: () => {},
+        ...(c.dash ? { dashboardDefault: true } : {}) });
+      if (c.dash === 'swap') {
+        await settled(() => !!k.dashboard?.(), 6000);
+        await k.showScreen(S.id);
+      }
+      check(`(setup, ${c.tag}) the study is drawn, on the expected path`,
+        await settled(() => k.screenId() === S.id && !!root.querySelector('.rs-obj-wrap[data-id="bookshelf"]')
+          && (!c.dash === !k.dashboard?.()), 8000));
+      const store = () => k.layoutStore?.() || null;
+      check(`(setup, ${c.tag}) the store the arrangement saves to is reachable`, typeof store()?.save === 'function' && !!store()?.get?.()?.scene);
+      // The doc as it is NOW (what the poll has heard), as against the store's own copy.
+      const docNow = () => (c.dash ? (k.dashboard()?.settings?.()?.kiosk?.layout || null) : (store()?.get?.() || null));
+      const shownDoors = () => sceneDoors(k.slotLayout()?.scene || null) || {};
+
+      // 1. Different things: a door here (bookshelf), a door there (desk).
+      const base = clone(store().get());                    // read at the press
+      await remote(S, (d) => setScene(d, withDoor(sceneOf(d), 'desk', `${c.tag}-there`)));
+      check(`(setup, ${c.tag}) the poll heard the other device's change while the edit was still drawing`,
+        await pollAsync(() => (sceneDoors(docNow()?.scene || null) || {}).desk === `${c.tag}-there`), JSON.stringify(sceneDoors(docNow()?.scene || null)));
+      store().save({ ...base, scene: withDoor(base.scene, 'bookshelf', `${c.tag}-here`) }, base);
+      check(`*** ${c.name}: a change heard mid-redraw is merged, not laid over -- both doors are saved ***`,
+        await pollAsync(async () => { const ds = await doorsOn(S); return ds.bookshelf === `${c.tag}-here` && ds.desk === `${c.tag}-there`; }),
+        JSON.stringify(await doorsOn(S)));
+      check(`...(${c.tag}) and both are on the screen`,
+        await pollAsync(() => shownDoors().bookshelf === `${c.tag}-here` && shownDoors().desk === `${c.tag}-there`), JSON.stringify(shownDoors()));
+      check(`...(${c.tag}) nothing was said: nothing was lost`, !k.note(), String(k.note()));
+
+      // 2. A true clash: the same door, both ways. CONFLICT_PREFER ('theirs'): the other device's value stands.
+      const base2 = clone(store().get());
+      await remote(S, (d) => setScene(d, withDoor(sceneOf(d), 'bookshelf', `${c.tag}-theirs`)));
+      check(`(setup, ${c.tag}) the poll heard the clashing change`,
+        await pollAsync(() => (sceneDoors(docNow()?.scene || null) || {}).bookshelf === `${c.tag}-theirs`), JSON.stringify(sceneDoors(docNow()?.scene || null)));
+      store().save({ ...base2, scene: withDoor(base2.scene, 'bookshelf', `${c.tag}-mine`) }, base2);
+      await sleep(900);                                     // the write's debounce and its PUT
+      const after = await doorsOn(S);
+      check(`*** ${c.name}: a clash heard mid-redraw keeps the other device's value on the server ***`,
+        after.bookshelf === `${c.tag}-theirs` && after.desk === `${c.tag}-there`, JSON.stringify(after));
+      check(`...(${c.tag}) the screen shows it`, await pollAsync(() => shownDoors().bookshelf === `${c.tag}-theirs`), JSON.stringify(shownDoors()));
+      check(`*** ...(${c.tag}) and the quiet line says the change made here was not kept ***`,
+        await pollAsync(() => /not kept/.test(k.note() || '') && /the room/.test(k.note() || '') && /another device/.test(k.note() || ''), 4000),
+        String(k.note()));
+      k.destroy();
+      root.remove();
+    }
+  } catch (e) {
+    check('the redraw-window section threw', false, String((e && e.stack) || e));
+  }
+
   // *** 2026-10-02: TWO SWITCH-ACCESS GAPS, CLOSED. ***
   // (1) A panel placed freely can be left OUT of the switch lap (c93a1ec: `scan: false`, or `overlayScan: 'skip'`
   //     as the floating scoreboard declares). The only way back in was a button on the panel itself, which a
