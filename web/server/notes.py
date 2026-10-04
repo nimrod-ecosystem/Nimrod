@@ -80,15 +80,22 @@ def writers_from(row: dict | None) -> set[str]:
 
 
 def may_leave_note(person_id: str, *, account: str, owner: str | None, grants: list[dict],
-                   writers: set[str], now_iso: str) -> bool:
+                   writers: set[str], now_iso: str, messages: bool = False) -> bool:
     """The whole question. PURE. Read the module header for why it is grant AND tick.
 
     A person with no owner does not exist, and is indistinguishable from one you may not
     write to - same anti-oracle rule as grants.may_drive.
+
+    `messages` (2026-10-04): the SECOND WAY IN this header left room for - a live links.py
+    `messages` permission (links.may, answered by the caller). Today only a claim makes one
+    (claims.py: the owner said yes on the invitation, for one named person). It does not widen
+    anything else: no drive grant, no tick, no screen state.
     """
     if not person_id or not account or not owner:
         return False
     if owner == account:
+        return True
+    if messages:
         return True
     if account not in (writers or set()):
         return False

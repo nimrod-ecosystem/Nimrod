@@ -73,6 +73,10 @@ check("somebody else's tick does not let a stranger in",
       not may_leave_note("p1", account="stranger", owner="own", grants=[g()], writers={"vis"}, now_iso=NOW))
 check("no account, no answer", not may_leave_note("p1", account="", owner="own", grants=[g()],
       writers={""}, now_iso=NOW))
+check("*** the second way in: a links.py `messages` permission (made by a claim) - no grant, no tick needed ***",
+      may_leave_note("p1", grants=[], writers=set(), messages=True, **ok))
+check("...but never for a person who does not exist", not may_leave_note("p1", account="vis", owner=None, grants=[],
+      writers=set(), messages=True, now_iso=NOW))
 
 section("the ticked list, read from the person's row")
 check("plain account names", writers_from({"noteWriters": ["a", " b ", "a"]}) == {"a", "b"})

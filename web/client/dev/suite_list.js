@@ -127,6 +127,10 @@ export const SUITES = [
   'try_new',
   // 2026-10-04: "Your people" - the landing as a very simple profile page; Nimrod at the bottom; the screen variant.
   'people_page',
+  // 2026-10-04: invite someone to take over a profile you made (the invite window, join.html, both sides' cards).
+  'claim',
+  // 2026-10-04: recommend a YouTube or Spotify song or video to one of your people; "Recommended for you".
+  'recommend',
   // 2026-10-04: Home follows the person picked on the people bar (their screen, theme, Home; one made if none).
   'home_person',
   // 2026-10-02: AI characters as profiles (seeds, a person's own, rooms as dashboards) and the profile card.

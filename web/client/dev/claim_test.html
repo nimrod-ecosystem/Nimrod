@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>invite someone to take over a profile you made — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>claims: invite someone to take over a profile you made (claim.js, join_page.js, Your people's cards)</h1>
+<p>The words (plain, no "account", "token" or "grant"); the invite window (two choices, the link, Copy, a code to scan,
+Take the link back); the join page (who sent it, sign in, Make this mine, a used or wrong link); and the cards on
+both sides afterwards (— joined, Stop sharing in two presses, messages on / off; You are Mom on Pat's people, Pat's
+people as cards). Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, linkedPeopleFrom,
+  givenFor, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet,
+} from '../claim.js';
+import { mountJoinPage, JOIN_WORDS, backHere, AFTER_JOIN } from '../join_page.js';
+import { PEOPLE_TYPE, plainWordProblems } from '../people_page.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/people.js';
+import '../modules/avatar.js';
+import '../modules/note.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+const BASE = 'claim-' + Math.floor(Math.random() * 1e9);
+const A = `${BASE}-pat`, M = `${BASE}-mom`, D = `${BASE}-dee`;
+async function call(method, path, user, body) {
+  const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
+  return r.json();
+}
+function memState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; subs.forEach((f) => f(v)); }, subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, destroy() { subs.clear(); } };
+}
+function themed(el) {
+  // The tokens the page reads, so the QR code has two theme colours to draw with (a test page has no theme).
+  el.style.cssText += ';--text:#0A3323;--bg:#F7F4D5;--surface:#FFFFFF;--surface-alt:#eeeacc;--border:#cfc9a0;--text-strong:#0A3323;--text-muted:#3c5346;--accent:#839958';
+  return el;
+}
+async function mountPeople(user, personId, box, extra = {}) {
+  const profiles = createProfilesClient({ user });
+  const inst = mountModule(PEOPLE_TYPE, { mount: box, bus: createBus(), state: memState(), personId, instanceId: `cl-${user}`, user, profiles,
+    isScreen: false, chooseMode: () => 'point', makePersonState: (pid, key) => createState({ url: profiles.personStateURL(pid, key), user }), ...extra });
+  await inst.init();
+  return inst;
+}
+
+try {
+  // ============================================================================================
+  section('*** the words and rules, pure ***');
+  const allWords = Object.values(CLAIM_WORDS).map((w) => (typeof w === 'function' ? `${w('Mom', 'Pat')} ${w('', '')}` : w)).join(' ')
+    + ' ' + Object.values(JOIN_WORDS).map((w) => (typeof w === 'function' ? `${w('Pat', 'Mom')} ${w('', '')}` : w)).join(' ');
+  check('*** every word a person can read here is plain: no account, token, grant, module, dashboard or panel ***',
+    !claimWordProblems(allWords).length && J(CLAIM_BANNED) === J(['account', 'token']), J(claimWordProblems(allWords)));
+  check('the check catches them', J(claimWordProblems('your account token and a grant on a panel')) === J(['panel', 'grant', 'account', 'token']));
+  check('names nobody real', !/her screen|christine|cici|mike/i.test(allWords));
+  check('*** "Send this to Mom. When Mom opens it and signs in, this becomes Mom’s." ***',
+    CLAIM_WORDS.send('Mom') === 'Send this to Mom. When Mom opens it and signs in, this becomes Mom’s.', CLAIM_WORDS.send('Mom'));
+  check('the link: join.html?invite=<token>, the whole address for a code to scan',
+    joinPath('ab-c_1') === '/join.html?invite=ab-c_1' && JOIN_PAGE === '/join.html' && /^https?:\/\/.+\/join\.html\?invite=x$/.test(joinURL('x')));
+  check('the token read back from the address', inviteFromQuery('?invite=abc&x=1') === 'abc' && inviteFromQuery('') === '' && inviteFromQuery('?nope=1') === '');
+  check('the sign-in comes back here with the link (and never to another site)', backHere('t1') === '/join.html?invite=t1' && AFTER_JOIN === '/');
+  check('a date somebody reads', /\d/.test(whenText('2026-10-18T12:00:00+00:00')) && whenText('junk') === 'it runs out');
+  const lp = linkedPeopleFrom([{ person_id: 'mom', from: 'Pat', people: [{ id: 'pat', name: 'Pat', sender: true }, { id: 'mom', name: 'Mom', you: true },
+    { id: 'r', name: 'Robin', joined: true }] }, { person_id: 'x', from: 'Q', people: [{ id: 'r', name: 'Robin again' }] }]);
+  check('*** the people you see by taking over Mom: Pat and Robin, never Mom herself, each once ***',
+    J(lp.map((p) => [p.id, p.via, p.joined, p.from])) === J([['pat', 'linked', false, 'Pat'], ['r', 'linked', true, 'Pat']]), J(lp));
+  check('the claim on one of your people', givenFor('a', [{ person_id: 'a', by: 'Mom' }]).by === 'Mom' && givenFor('b', []) === null);
+  check('*** two presses: the first arms, a second within the time stops, a late one arms again ***',
+    twoPress(0, 1000) === 'arm' && twoPress(1000, 1000 + STOP_CONFIRM_MS - 1) === 'fire' && twoPress(1000, 1000 + STOP_CONFIRM_MS + 1) === 'arm' && STOP_CONFIRM_MS === 6000);
+
+  // ============================================================================================
+  section('(setup) Pat, with Robin (a screen that shows notes) and Mom; Mom has her own login; Dee a third');
+  const pat = (await call('GET', '/api/people', A)).people[0];
+  await call('PATCH', `/api/people/${pat.id}`, A, { name: 'Pat' });
+  const robin = await call('POST', '/api/people', A, { name: 'Robin' });
+  const mom = await call('POST', '/api/people', A, { name: 'Mom' });
+  const bed = await call('POST', '/api/profiles', A, { name: 'Bedside', person_id: robin.id });
+  await call('POST', `/api/profiles/${bed.id}/modules`, A, { type: 'note' });
+  const m1 = (await call('GET', '/api/people', M)).people[0];
+  check('(setup) seeded', !!(pat && robin && mom && m1));
+
+  // ============================================================================================
+  section('*** the inviter: Your people, at 375 wide ***');
+  const box = themed(document.createElement('div'));
+  box.style.cssText += ';position:relative;width:375px;height:900px;overflow:hidden;border:1px solid #888';
+  document.body.append(box);
+  let inst = await mountPeople(A, pat.id, box);
+  const q = (s) => box.querySelector(s);
+  const qa = (s) => [...box.querySelectorAll(s)];
+  const cardOf = (name) => qa('[data-pp-card]').find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  await until(() => cardOf('Mom')?.querySelector('[data-pp-act="invite"]:not([aria-disabled="true"])'), 15000);
+  check('*** Mom and Robin each have "Invite them to use this" ***',
+    !!cardOf('Mom')?.querySelector('[data-pp-act="invite"]') && !!cardOf('Robin')?.querySelector('[data-pp-act="invite"]')
+    && cardOf('Mom').querySelector('[data-pp-act="invite"]').getAttribute('aria-disabled') !== 'true');
+  check('...not on your own card (you cannot be handed over)', !q('[data-pp-card="self"] [data-pp-act="invite"]'));
+  check('the five buttons are still first, and in order', J([...cardOf('Mom').querySelector('[data-pp-person]').querySelectorAll('[data-pp-act]')].map((b) => b.dataset.ppAct)).startsWith('["call","message"'));
+  check('*** "Connect with someone" now says how: invite them from their card ***', /Invite them to use this/.test(q('[data-pp-connect]')?.textContent || ''));
+  const tall = qa('[data-pp-claim] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  check('the invite buttons are at least 44px tall', tall.length >= 2 && tall.every((h) => h >= 44), J(tall));
+
+  cardOf('Mom').querySelector('[data-pp-act="invite"]').click();
+  check('*** pressed: a window over the page, "Invite Mom", saying what it does ***',
+    await until(() => q('[data-pp-sheet="invite"]') && /Invite Mom/.test(q('[data-pp-sheet="invite"]').textContent) && q('[data-cl-act="make"]'), 8000));
+  check('...two choices, both ticked (see your other people, leave messages)',
+    q('[data-cl-see]')?.checked === true && q('[data-cl-msg]')?.checked === true
+    && /Let Mom see your other people/.test(q('[data-pp-sheet]').textContent) && /Let Mom leave messages for your people/.test(q('[data-pp-sheet]').textContent));
+  check('nothing made by opening it', (await call('GET', `/api/people/${mom.id}/invites`, A)).invites.length === 0);
+  q('[data-cl-act="make"]').click();
+  check('*** Make the link: the link to copy, a code to scan, and the plain words ***',
+    await until(() => /\/join\.html\?invite=[A-Za-z0-9_-]{40,}$/.test(q('[data-cl-link]')?.value || ''), 8000)
+    && !!q('[data-cl-qr] svg') && q('[data-cl-send]')?.textContent === CLAIM_WORDS.send('Mom') && /It works once, until/.test(q('[data-cl-until]')?.textContent || ''),
+    q('[data-pp-sheet]')?.textContent.slice(0, 300));
+  const firstToken = inviteFromQuery(new URL(q('[data-cl-link]').value).search);
+  const sheetWords = q('[data-pp-sheet]').textContent;
+  check('*** PLAIN WORDS in the window ***', !claimWordProblems(sheetWords).length, J(claimWordProblems(sheetWords)));
+  // Copy: the browser's clipboard may be refused in a test page; either way the window says what happened.
+  q('[data-cl-act="copy"]').click();
+  check('Copy says what happened (copied, or how to copy by hand)', await until(() => [CLAIM_WORDS.copied, CLAIM_WORDS.copyFailed].includes(q('[data-cl-say]')?.textContent), 4000));
+  q('[data-cl-act="cancel"]').click();
+  check('*** Take the link back: it says so, and the link no longer works ***',
+    await until(() => q('[data-cl-say]')?.textContent === CLAIM_WORDS.takenBack, 6000)
+    && (await createClaimsClient({ user: D }).peek(firstToken)).body.state === 'cancelled');
+  q('[data-cl-act="make"]').click();
+  await until(() => /invite=/.test(q('[data-cl-link]')?.value || ''), 8000);
+  const token = inviteFromQuery(new URL(q('[data-cl-link]').value).search);
+  check('(setup) a second link', token && token !== firstToken);
+  q('[data-pp-close]').click();
+  check('Back closes the window', !q('[data-pp-sheet]'));
+  inst.destroy();
+
+  section('the invite window, alone (a fake clipboard)');
+  const lone = themed(document.createElement('div')); document.body.append(lone);
+  let copiedText = '';
+  const sh = mountInviteSheet(lone, { person: { id: robin.id, name: 'Robin' }, client: createClaimsClient({ user: A }),
+    clipboard: { writeText: async (t) => { copiedText = t; } } });
+  await sh.ready;
+  lone.querySelector('[data-cl-see]').click();      // untick "see your other people"
+  lone.querySelector('[data-cl-act="make"]').click();
+  await until(() => sh.__probe().phase === 'made', 6000);
+  lone.querySelector('[data-cl-act="copy"]').click();
+  check('*** Copy puts the whole link on the clipboard ***', await until(() => copiedText && copiedText === lone.querySelector('[data-cl-link]').value, 3000)
+    && lone.querySelector('[data-cl-say]').textContent === CLAIM_WORDS.copied);
+  const robinPeek = (await createClaimsClient({ user: D }).peek(inviteFromQuery(new URL(copiedText).search))).body;
+  check('*** the choice made is the one the link carries (not the others; messages yes) ***', robinPeek.see_people === false && robinPeek.messages === true, J(robinPeek));
+  sh.destroy(); lone.remove();
+  const host2 = themed(document.createElement('div')); document.body.append(host2);
+  const sh2 = mountInviteSheet(host2, { person: { id: robin.id, name: 'Robin' }, client: createClaimsClient({ user: A }) });
+  await sh2.ready;
+  check('*** opened again: "a link for Robin is waiting", with Take the link back, and Make a new link ***',
+    !!sh2.__probe().waiting && /A link for Robin is waiting/.test(host2.textContent) && !!host2.querySelector('[data-cl-act="cancel"]')
+    && host2.querySelector('[data-cl-act="make"]')?.textContent === CLAIM_WORDS.makeAgain, host2.textContent);
+  sh2.destroy(); host2.remove();
+
+  // ============================================================================================
+  section('*** the join page ***');
+  const jbox = themed(document.createElement('div')); document.body.append(jbox);
+  let jp = mountJoinPage(jbox, { search: '' });
+  await jp.ready;
+  check('no link: says it does not work', jp.__probe().phase === 'refused' && /does not work/.test(jbox.textContent));
+  jp = mountJoinPage(jbox, { search: `?invite=${'x'.repeat(43)}`, user: M });
+  await jp.ready;
+  check('*** a wrong link: says it does not work, and to ask for a new one ***', jp.__probe().phase === 'refused' && /Ask whoever sent it/.test(jbox.textContent));
+  jp = mountJoinPage(jbox, { search: `?invite=${firstToken}`, user: M });
+  await jp.ready;
+  check('*** a link taken back: says so ***', /took it back/.test(jbox.textContent), jbox.textContent);
+  jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: A });
+  await jp.ready;
+  check('*** opened by the login that made it: refused, in words ***', jp.__probe().phase === 'refused' && /your own login/.test(jbox.textContent), jbox.textContent);
+  // Signed out: the dev server treats a request with no override as nobody for this page's first look.
+  const fakeLoc = { href: '', pathname: '/join.html', search: `?invite=${token}` };
+  const stash = new Map();
+  const fakeStore = { getItem: (k) => stash.get(k) || null, setItem: (k, v) => stash.set(k, v), removeItem: (k) => stash.delete(k) };
+  jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: null, loc: fakeLoc, store: fakeStore });
+  await jp.ready;
+  check('*** not signed in: who sent it and which person, and Sign in ***',
+    jp.__probe().phase === 'signed-out' && /Pat set up “Mom” for you/.test(jbox.textContent) && !!jbox.querySelector('[data-jp-act="signin"]'), jbox.textContent);
+  jbox.querySelector('[data-jp-act="signin"]').click();
+  check('*** Sign in goes to the sign-in and comes back here with the link (stashed first) ***',
+    fakeLoc.href === `/auth/login?next=${encodeURIComponent(`/join.html?invite=${token}`)}` && stash.get('nimrod:joinInvite') === token, fakeLoc.href);
+  jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: M, store: fakeStore });
+  await jp.ready;
+  check('*** signed in as Mom: "Pat set up “Mom” for you", what she will be able to do, and Make this mine ***',
+    jp.__probe().phase === 'ready' && jbox.querySelector('[data-jp-title]')?.textContent === 'Pat set up “Mom” for you'
+    && /change Mom’s picture/.test(jbox.textContent) && /see Pat’s other people/.test(jbox.textContent) && /leave messages for Pat’s people/.test(jbox.textContent)
+    && !!jbox.querySelector('[data-jp-act="make"]') && !!jbox.querySelector('[data-jp-other]'), jbox.textContent);
+  check('*** PLAIN WORDS on the join page ***', !claimWordProblems(jbox.textContent).length, J(claimWordProblems(jbox.textContent)));
+  check('nothing accepted by opening it', (await call('GET', '/api/claims', M)).mine.length === 0);
+  jbox.querySelector('[data-jp-act="make"]').click();
+  check('*** Make this mine: done, "Mom" is hers, and a way to her people ***',
+    await until(() => jp.__probe().phase === 'done', 8000) && /“Mom” is yours now/.test(jbox.textContent)
+    && jbox.querySelector('[data-jp-go]')?.getAttribute('href') === '/' && !stash.has('nimrod:joinInvite'), jbox.textContent);
+  jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: D });
+  await jp.ready;
+  check('*** the same link again: already used ***', jp.__probe().phase === 'refused' && /already been used/.test(jbox.textContent), jbox.textContent);
+  jbox.remove();
+
+  // ============================================================================================
+  section('*** after: the inviter sees "Mom — joined" ***');
+  const box2 = themed(document.createElement('div'));
+  box2.style.cssText += ';position:relative;width:375px;height:900px;overflow:hidden';
+  document.body.append(box2);
+  inst = await mountPeople(A, pat.id, box2);
+  const q2 = (s) => box2.querySelector(s);
+  const card2 = (name) => [...box2.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  check('*** Mom’s card: "— joined", with Stop sharing and her messages on ***',
+    await until(() => card2('Mom')?.querySelector('[data-pp-joined]'), 10000) && /— joined/.test(card2('Mom').textContent)
+    && /uses this with their own login/.test(card2('Mom').textContent)
+    && card2('Mom').querySelector('[data-pp-act="stop-share"]')?.textContent.includes('Stop sharing')
+    && card2('Mom').querySelector('[data-pp-act="claim-msg"]')?.textContent.includes(CLAIM_WORDS.msgOn)
+    && !card2('Mom').querySelector('[data-pp-act="invite"]'), card2('Mom')?.textContent);
+  check('Robin still has Invite', !!card2('Robin')?.querySelector('[data-pp-act="invite"]'));
+  // Scoped to what this work adds: the card of somebody who joined, the invite buttons, and Connect. (The page's
+  // older "On your account" label under each of your people is Your people's own - people_page_test holds it.)
+  const addedWords = [card2('Mom').textContent, ...[...box2.querySelectorAll('[data-pp-claim]')].map((e) => e.textContent), q2('[data-pp-connect]').textContent].join(' ');
+  check('plain words in everything this adds to the inviter’s page', !claimWordProblems(addedWords).length, J(claimWordProblems(addedWords)));
+  inst.destroy(); box2.remove();
+
+  // ============================================================================================
+  section('*** after: Mom’s own page ***');
+  const box3 = themed(document.createElement('div'));
+  box3.style.cssText += ';position:relative;width:375px;height:1100px;overflow:hidden';
+  document.body.append(box3);
+  inst = await mountPeople(M, m1.id, box3);
+  const q3 = (s) => box3.querySelector(s);
+  const card3 = (name) => [...box3.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  await until(() => q3('[data-pp-you-are]') && card3('Robin') && !card3('Robin').querySelector('[data-pp-act="message"] small')?.textContent.includes('Checking'), 15000);
+  check('*** "You are Mom on Pat’s people", with Edit that picture and Stop sharing ***',
+    q3('[data-pp-you-are]')?.textContent === 'You are Mom on Pat’s people.' && !!q3('[data-pp-act="edit-there"]') && !!q3('[data-pp-act="stop-mine"]'));
+  check('*** Pat’s people as her connections: Pat and Robin (not Mom - that is her) ***',
+    J([...box3.querySelectorAll('[data-pp-name]')].map((n) => n.textContent)) === J(['Pat', 'Robin']) && /Pat’s people/.test(card3('Robin').textContent),
+    J([...box3.querySelectorAll('[data-pp-name]')].map((n) => n.textContent)));
+  check('*** Send a message is live for Robin (the invite allowed messages) ***',
+    card3('Robin').querySelector('[data-pp-act="message"]').getAttribute('aria-disabled') !== 'true', J(inst.impl?.__probe?.().notes));
+  check('*** Call is dimmed, with why: calls only where already allowed ***',
+    card3('Robin').querySelector('[data-pp-act="call"]').getAttribute('aria-disabled') === 'true' && /Not shared yet/.test(card3('Robin').querySelector('[data-pp-act="call"]').textContent));
+  check('Pat has no screen: a message is dimmed, saying so', /has no screen yet/.test(card3('Pat').querySelector('[data-pp-act="message"]').dataset.ppWhy || ''));
+  check('no Invite under somebody else’s people', !q3('[data-pp-act="invite"]'));
+  check('*** plain words on her page ***', !claimWordProblems(q3('[data-pp-list]').textContent).length, J(claimWordProblems(q3('[data-pp-list]').textContent)));
+  q3('[data-pp-act="edit-there"]').click();
+  check('*** Edit that picture opens the picture maker for Mom (the one she took over) ***',
+    await until(() => q3('[data-pp-sheet="picture"]') && /Mom’s picture/.test(q3('[data-pp-sheet="picture"]').textContent), 8000));
+  q3('[data-pp-close]').click();
+  const stop = () => q3('[data-pp-act="stop-mine"]');
+  stop().click();
+  check('*** Stop sharing, first press: "Press again to stop sharing" - nothing stopped yet ***',
+    await until(() => stop()?.textContent.includes(CLAIM_WORDS.stopAgain), 3000) && (await call('GET', '/api/claims', M)).mine.length === 1);
+  stop().click();
+  check('*** second press: stopped; the card and Pat’s people go; it says so ***',
+    await until(() => !q3('[data-pp-you-are]') && !card3('Robin'), 8000) && (await call('GET', '/api/claims', M)).mine.length === 0
+    && /no longer uses this/.test(q3('[data-pp-card="self"] .pp-why')?.textContent || ''), q3('[data-pp-card="self"]')?.textContent);
+  check('*** the person stays on Pat’s people ***', (await call('GET', '/api/people', A)).people.some((p) => p.id === mom.id));
+  inst.destroy(); box3.remove();
+
+  section('a screen in a room: faces only, no invite buttons');
+  const sbox = themed(document.createElement('div')); sbox.style.cssText += ';position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(sbox);
+  const sinst = await mountPeople(A, pat.id, sbox, { isScreen: true });
+  await until(() => sbox.querySelector('[data-pp-face]'), 8000);
+  check('no Invite, no Stop sharing on a screen', !sbox.querySelector('[data-pp-act="invite"]') && !sbox.querySelector('[data-pp-act="stop-share"]'));
+  sinst.destroy(); sbox.remove();
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

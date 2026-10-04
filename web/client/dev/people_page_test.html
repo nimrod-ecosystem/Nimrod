@@ -85,17 +85,22 @@ try {
   check('*** connections: your account’s people (not you), then shared ones, each once, the account’s own winning ***',
     J(conn) === J([{ id: 'r', name: 'Robin', via: 'account' }, { id: 'x', name: 'Someone', via: 'account' }, { id: 's', name: 'Sam', via: 'shared' }]), J(conn));
   const a = (o) => actionsFor({ id: 'p', name: 'Sam' }, o);
-  check('*** every card has the same five, in order: Call, Send a message, Share a picture, a song, a video ***',
-    J(a({}).map((x) => x.act)) === J(ACTIONS) && J(ACTIONS) === J(['call', 'message', 'picture', 'song', 'video'])
-    && a({}).every((x) => x.label === ACTION_LABELS[x.act]));
+  check('*** every card has the same four, in order: Call, Send a message, Recommend a song or video, Share a picture ***',
+    J(a({}).map((x) => x.act)) === J(ACTIONS) && J(ACTIONS) === J(['call', 'message', 'recommend', 'picture'])
+    && a({}).every((x) => x.label === ACTION_LABELS[x.act]) && ACTION_LABELS.recommend === 'Recommend a song or video');
   const ok = a({ may: true, noteStatus: 'ok', callHref: '/call.html?person=p' });
   check('may call and may leave a message: Call is a link, Send a message is live, nothing dimmed on them',
     ok[0].enabled && ok[0].href === '/call.html?person=p' && ok[1].enabled && !ok[0].reason && !ok[1].short);
-  check('*** share a picture / song / video: dimmed, "coming soon", with why ***',
-    ok.slice(2).every((x) => !x.enabled && x.short === 'Coming soon' && /Coming soon: there is no way yet to send a (picture|song|video)/.test(x.reason)));
+  check('*** Recommend: live wherever a message may be left -- the same permission -- and with no screen too (it waits on their page) ***',
+    ok[2].enabled && a({ noteStatus: 'none' })[2].enabled && !a({ noteStatus: 'refused' })[2].enabled
+    && /Sam can’t get recommendations from you yet/.test(a({ noteStatus: 'refused' })[2].reason)
+    && a({ noteStatus: 'error' })[2].reason === WHY.messageError && a({ noteStatus: null })[2].reason === WHY.checking);
+  check('*** share a picture: still dimmed, "coming soon", with why ***',
+    !ok[3].enabled && ok[3].short === 'Coming soon' && /Coming soon: there is no way yet to send a picture/.test(ok[3].reason));
   const scr = a({ isScreen: true, may: true, noteStatus: 'ok' });
-  check('*** on a screen: Call and Send a message are dimmed, saying they are made from a phone or computer ***',
-    !scr[0].enabled && scr[0].reason === WHY.callOnScreen && !scr[1].enabled && scr[1].reason === WHY.messageOnScreen && !scr[0].href);
+  check('*** on a screen: Call, Send a message and Recommend are dimmed, saying they are made from a phone or computer ***',
+    !scr[0].enabled && scr[0].reason === WHY.callOnScreen && !scr[1].enabled && scr[1].reason === WHY.messageOnScreen && !scr[0].href
+    && !scr[2].enabled && scr[2].reason === WHY.recommendOnScreen);
   check('may not call: dimmed with why; still finding out: Checking…',
     !a({ may: false })[0].enabled && a({ may: false })[0].reason === WHY.callNotAllowed && a({ may: null })[0].reason === WHY.checking);
   check('*** message: not ticked, no screen, could not check, checking -- each dimmed with its own words ***',
@@ -194,8 +199,9 @@ try {
   check('*** a card for each of your people and connections: Robin (your account), Sam and Lee (shared with you) ***',
     J(qa('[data-pp-name]').map((n) => n.textContent)) === J(['Robin', 'Sam', 'Lee']) && /On your account/.test(cardOf('Robin').textContent)
     && /Shared with you/.test(cardOf('Lee').textContent), J(qa('[data-pp-name]').map((n) => n.textContent)));
-  check('each has the five buttons, in order, by their plain names',
-    ['Robin', 'Sam', 'Lee'].every((n) => J([...cardOf(n).querySelectorAll('[data-pp-act]')].map((b) => b.dataset.ppAct)) === J(ACTIONS)));
+  // (Filtered to ACTIONS: one of your own people's cards also carries "Invite them to use this", claim.js.)
+  check('each has the four buttons, in order, by their plain names',
+    ['Robin', 'Sam', 'Lee'].every((n) => J([...cardOf(n).querySelectorAll('[data-pp-act]')].map((b) => b.dataset.ppAct).filter((a) => ACTIONS.includes(a))) === J(ACTIONS)));
   check('*** Call: a link to the caller page for that person, for everybody this account may call ***',
     ['Robin', 'Sam', 'Lee'].every((n) => btnOf(n, 'call')?.tagName === 'A') && btnOf('Sam', 'call').getAttribute('href') === `/call.html?person=${b1.id}`
     && btnOf('Robin', 'call').getAttribute('href') === `/call.html?person=${a2.id}`);
@@ -204,13 +210,18 @@ try {
   check('*** ...dimmed for Lee, who has not said yes, with why, on the button and in its description ***',
     btnOf('Lee', 'message').getAttribute('aria-disabled') === 'true' && /Not allowed yet/.test(btnOf('Lee', 'message').textContent)
     && /Lee can’t get messages from you yet/.test(btnOf('Lee', 'message').dataset.ppWhy));
-  check('*** Share a picture / a song / a video: dimmed, Coming soon, everywhere ***',
-    ['picture', 'song', 'video'].every((k) => ['Robin', 'Sam', 'Lee'].every((n) => btnOf(n, k).getAttribute('aria-disabled') === 'true' && /Coming soon/.test(btnOf(n, k).textContent))));
+  check('*** Share a picture: dimmed, Coming soon, everywhere ***',
+    ['Robin', 'Sam', 'Lee'].every((n) => btnOf(n, 'picture').getAttribute('aria-disabled') === 'true' && /Coming soon/.test(btnOf(n, 'picture').textContent)));
+  check('*** Recommend a song or video: live for Robin and Sam, dimmed for Lee (not said yes), like the message ***',
+    btnOf('Robin', 'recommend').getAttribute('aria-disabled') !== 'true' && btnOf('Sam', 'recommend').getAttribute('aria-disabled') !== 'true'
+    && btnOf('Lee', 'recommend').getAttribute('aria-disabled') === 'true' && /recommendations/.test(btnOf('Lee', 'recommend').dataset.ppWhy));
+  check('*** Recommended for you: the heading, and "nothing yet" in plain words ***', /Recommended for you/.test(box.textContent) && !!q('[data-pp-rec-none]'));
   btnOf('Lee', 'picture').click();
   check('a dimmed button, pressed, says why on its card (a phone has no hover)', await until(() => /no way yet to send a picture/.test(cardOf('Lee').querySelector('.pp-why')?.textContent || ''), 3000));
   check('*** messages for you: the note on your screen, with who left it ***', /Sam: Hello from the garden/.test(q('[data-pp-incoming]')?.textContent || ''));
-  check('*** a clear "Connect with someone", saying it is coming and what works today ***', /Connect with someone/.test(q('[data-pp-card="connect"]')?.textContent || '')
-    && /Coming soon/.test(q('[data-pp-connect]').textContent));
+  // 2026-10-04: no longer "coming soon" - inviting somebody to one of your people is built (claim_test.html has the rest).
+  check('*** a clear "Connect with someone", saying how (invite them from their card) and what else works ***', /Connect with someone/.test(q('[data-pp-card="connect"]')?.textContent || '')
+    && /Invite them to use this/.test(q('[data-pp-connect]').textContent) && /share it with you/.test(q('[data-pp-connect]').textContent));
   check('More and Ask Nimrod are on the page', !!q('[data-pp-act="more"]') && !!q('[data-pp-act="nimrod"]'));
   const words = box.querySelector('[data-pp-list]').textContent;
   check('*** PLAIN WORDS: nothing on the page says module, dashboard, panel or grant ***', !plainWordProblems(words).length, J(plainWordProblems(words)));

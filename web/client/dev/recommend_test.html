@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>recommend a song or video — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>recommend a song or video (recommend.js, Your people's card and "Recommended for you")</h1>
+<p>Mike, 2026-10-04: "Share" on Your people means recommending a YouTube or Spotify song or video. The link rule (the
+same cases as server/test_recommend.py), the window with a fake fetch, then against the real server: sending (allowed
+and refused), what the recipient sees, Play for YouTube in the site's own player (a stub player, no network), Open in
+Spotify, Remove, and the screen variant. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  parseLink, validRef, canonicalURL, thumbOk, kindWords, titleOf, recLine, playPlan, REC_WORDS, PREVIEW_URL, MAX_MESSAGE,
+  recommendationsURL, markURL, mountRecommend, recThumbHTML, recElsewhereHTML,
+} from '../recommend.js';
+import { PEOPLE_TYPE, plainWordProblems, PEOPLE_SETTINGS } from '../people_page.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/people.js';
+import '../modules/note.js';
+import '../modules/youtube.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+
+const BASE_USER = new URLSearchParams(location.search).get('user') || ('recommend-' + Math.floor(Math.random() * 1e6));
+const A = `${BASE_USER}-a`, B = `${BASE_USER}-b`, C = `${BASE_USER}-c`;
+async function call(method, path, user, body) {
+  const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
+  return r.json();
+}
+function memState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; subs.forEach((f) => f(v)); }, subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, destroy() { subs.clear(); } };
+}
+// The YouTube player, stubbed: records what it was asked to load, and lets the test end the video.
+function makeStub() {
+  let h = {};
+  const o = { loaded: [], lists: [], end: () => h.onEnded?.(),
+    factory(_el, hh) { h = hh || {}; return { load: (id) => o.loaded.push(id), cue: (id) => o.loaded.push(id), cueList: (l) => o.lists.push(l), resume() {}, pause() {}, stop() {}, destroy() {} }; } };
+  return o;
+}
+
+const VID = 'dQw4w9WgXcQ', PL = 'PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG', SP = '4uLU6hMCjMI75M1A2tKUQC';
+
+try {
+  // ============================================================================================
+  section('*** the link rule (the same cases as the server’s) ***');
+  const good = {
+    [`https://www.youtube.com/watch?v=${VID}`]: ['youtube', 'video', VID],
+    [`https://youtube.com/watch?v=${VID}&t=42s&si=track`]: ['youtube', 'video', VID],
+    [`https://music.youtube.com/watch?v=${VID}&list=${PL}`]: ['youtube', 'video', VID],
+    [`https://youtu.be/${VID}?si=abc`]: ['youtube', 'video', VID],
+    [`youtu.be/${VID}`]: ['youtube', 'video', VID],
+    [`https://www.youtube.com/shorts/${VID}`]: ['youtube', 'video', VID],
+    [`https://www.youtube.com/live/${VID}`]: ['youtube', 'video', VID],
+    [`https://www.youtube.com/playlist?list=${PL}`]: ['youtube', 'playlist', PL],
+    [`https://open.spotify.com/track/${SP}?si=xyz`]: ['spotify', 'song', SP],
+    [`https://open.spotify.com/album/${SP}`]: ['spotify', 'album', SP],
+    [`https://open.spotify.com/playlist/${SP}`]: ['spotify', 'playlist', SP],
+    [`https://open.spotify.com/intl-de/track/${SP}`]: ['spotify', 'song', SP],
+    [`open.spotify.com/track/${SP}`]: ['spotify', 'song', SP],
+  };
+  const goodBad = Object.entries(good).filter(([l, w]) => { const r = parseLink(l); return !r || J([r.provider, r.kind, r.id]) !== J(w); });
+  check(`*** ${Object.keys(good).length} good links: provider + kind + id ***`, !goodBad.length, J(goodBad.map(([l]) => l)));
+  const spoofs = [
+    `https://youtube.com.evil.example/watch?v=${VID}`, `https://evilyoutube.com/watch?v=${VID}`, `https://www.youtube.com@evil.example/watch?v=${VID}`,
+    `https://user:pw@www.youtube.com/watch?v=${VID}`, `https://www.youtube.com:8443/watch?v=${VID}`, `https://youtu.be.evil.example/${VID}`,
+    `https://open.spotify.com.evil.example/track/${SP}`, `https://spotify.com/track/${SP}`, `https://evil.example/?u=https://www.youtube.com/watch?v=${VID}`,
+    `https://www.youtube-nocookie.com/embed/${VID}`, `javascript:alert('https://www.youtube.com/watch?v=${VID}')`, `ftp://www.youtube.com/watch?v=${VID}`,
+    `https://www.youtube.com/watch?v=${VID} https://evil.example`, '', 'just some words',
+    'https://www.youtube.com/watch?v=short', 'https://www.youtube.com/channel/UCxyz', `https://open.spotify.com/artist/${SP}`, `https://open.spotify.com/episode/${SP}`,
+  ];
+  const let_through = spoofs.filter((s) => parseLink(s));
+  check(`*** ${spoofs.length} bad and look-alike links refused ***`, !let_through.length, J(let_through));
+  check('the address is rebuilt from the parts, never the pasted one',
+    canonicalURL(parseLink(`https://youtu.be/${VID}?si=track&t=9`)) === `https://www.youtube.com/watch?v=${VID}`
+    && canonicalURL({ provider: 'spotify', kind: 'song', item_id: SP }) === `https://open.spotify.com/track/${SP}`
+    && canonicalURL({ provider: 'youtube', kind: 'video', item_id: '<script>' }) === '');
+  check('a row read back is checked again', validRef({ provider: 'youtube', kind: 'playlist', item_id: PL }) && !validRef({ provider: 'spotify', kind: 'video', item_id: SP }) && !validRef(null));
+  check('pictures only from YouTube’s and Spotify’s own image hosts, over https',
+    thumbOk('https://i.ytimg.com/vi/x/hq.jpg') && thumbOk('https://image-cdn-ak.spotifycdn.com/image/x') && !thumbOk('http://i.ytimg.com/x')
+    && !thumbOk('https://ytimg.com.evil.example/x') && !thumbOk('javascript:x') && recThumbHTML({ thumb: 'https://evil.example/x.jpg' }) === ''
+    && /referrerpolicy="no-referrer"/.test(recThumbHTML({ thumb: 'https://i.ytimg.com/vi/x/hq.jpg' })));
+  check('what it is, in words', kindWords({ provider: 'spotify', kind: 'song' }) === 'a song on Spotify' && kindWords({ provider: 'youtube', kind: 'video' }) === 'a YouTube video'
+    && titleOf({ provider: 'youtube', kind: 'playlist', title: '' }) === 'a YouTube playlist');
+  check('*** "<name> recommends: <title>" ***', recLine({ from_name: 'Pat', title: 'Blue Moon', provider: 'youtube', kind: 'video' }) === 'Pat recommends: Blue Moon'
+    && recLine({ provider: 'spotify', kind: 'album' }) === 'Someone recommends: an album on Spotify');
+  const yv = { provider: 'youtube', kind: 'video', item_id: VID }, ys = { provider: 'spotify', kind: 'song', item_id: SP };
+  check('*** Play: YouTube in the site’s player (on a screen too); Spotify in a new tab off a screen, the address on one ***',
+    J(playPlan(yv)) === J({ how: 'youtube', label: 'Play', videoId: VID }) && playPlan(yv, { isScreen: true }).how === 'youtube'
+    && playPlan({ provider: 'youtube', kind: 'playlist', item_id: PL }).playlistId === PL
+    && J(playPlan(ys)) === J({ how: 'tab', url: `https://open.spotify.com/track/${SP}`, label: 'Open in Spotify' })
+    && playPlan(ys, { isScreen: true }).how === 'elsewhere' && playPlan({ provider: 'x' }).how === 'none');
+  const el = recElsewhereHTML(ys, { colours: { dark: '#000000', light: '#ffffff' } });
+  check('on a screen, Spotify: the address in words and a code to scan', /open\.spotify\.com\/track\//.test(el) && /<svg/.test(el) && /data-rc-elsewhere/.test(el));
+  const words = Object.values(REC_WORDS).map((w) => (typeof w === 'function' ? w('Sam', 'Blue Moon') : w)).join(' ')
+    + PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`).join(' ');
+  check('*** every word it can put on the page is plain (no module, dashboard, panel or grant), and names nobody ***',
+    !plainWordProblems(words).length && !/her screen|christine|cici/i.test(words), J(plainWordProblems(words)));
+  check('the message limit is the note’s', MAX_MESSAGE === 280);
+
+  // ============================================================================================
+  section('*** the window, with a fake fetch ***');
+  const asked = [];
+  let answer = (url) => (url === PREVIEW_URL
+    ? { status: 200, body: { provider: 'youtube', kind: 'video', id: VID, title: 'Blue Moon', thumb: `https://i.ytimg.com/vi/${VID}/hqdefault.jpg` } }
+    : { status: 200, body: { id: 9, provider: 'youtube', kind: 'video', item_id: VID, title: 'Blue Moon', from_name: 'Pat' } });
+  const fakeFetch = async (url, opts) => { asked.push({ url, body: opts?.body ? JSON.parse(opts.body) : null }); const a = answer(url); return { ok: a.status === 200, status: a.status, json: async () => a.body }; };
+  const dbox = document.createElement('div'); dbox.style.cssText = 'position:relative;width:375px'; document.body.append(dbox);
+  const sent = [];
+  const dlg = mountRecommend(dbox, { personId: 'p-sam', personName: 'Sam', fromPersonId: 'p-pat', fetchImpl: fakeFetch, debounceMs: 0, onSent: (r) => sent.push(r) });
+  const dq = (s) => dbox.querySelector(s);
+  check('*** it says what to do, and how to get a link (Share, then Copy link) ***', /Recommend a song or video to Sam/.test(dbox.textContent)
+    && /Share, then Copy link/.test(dq('[data-rc-how]').textContent) && dq('[data-rc-send]').getAttribute('aria-disabled') === 'true');
+  await dlg.setLink('https://youtube.com.evil.example/watch?v=dQw4w9WgXcQ');
+  check('*** a look-alike link: refused in words at once, nothing asked of the server, Send stays dimmed ***',
+    dlg.status() === 'bad' && dq('[data-rc-msg]').textContent === REC_WORDS.notALink && !asked.length && dq('[data-rc-send]').getAttribute('aria-disabled') === 'true');
+  await dlg.setLink(`https://youtu.be/${VID}?si=x`);
+  check('*** a good link: the server is asked what it is; the title and picture show; Send lights ***',
+    asked.length === 1 && asked[0].url === PREVIEW_URL && asked[0].body.link === `https://youtu.be/${VID}?si=x`
+    && dq('[data-rc-title]')?.textContent === 'Blue Moon' && !!dq('[data-rc-thumb]') && dlg.status() === 'ready' && dq('[data-rc-send]').getAttribute('aria-disabled') === 'false', J(asked));
+  dq('[data-rc-message]').value = 'For Sunday';
+  dq('[data-rc-send]').click();
+  check('*** Send: the link, the message and who it is from, to that person’s address ***',
+    await until(() => dlg.status() === 'sent', 3000) && asked[1].url === recommendationsURL('p-sam')
+    && J(asked[1].body) === J({ link: `https://youtu.be/${VID}?si=x`, message: 'For Sunday', from_person: 'p-pat' }), J(asked[1]));
+  check('...and it says it was sent, in plain words, and clears the boxes', dq('[data-rc-msg]').textContent === REC_WORDS.sent('Sam', 'Blue Moon')
+    && dq('[data-rc-link]').value === '' && dq('[data-rc-message]').value === '' && sent.length === 1);
+  answer = (url) => (url === PREVIEW_URL ? { status: 200, body: { provider: 'spotify', kind: 'song', id: SP, title: '', thumb: 'https://evil.example/x.jpg' } }
+    : { status: 403, body: { detail: 'not allowed' } });
+  await dlg.setLink(`https://open.spotify.com/track/${SP}`);
+  check('a provider with no title: what it is instead; a picture from elsewhere is not drawn', dq('[data-rc-title]')?.textContent === 'a song on Spotify' && !dq('[data-rc-thumb]'));
+  await dlg.send();
+  check('*** refused by the server: says who can allow it ***', dlg.status() === 'refused' && dq('[data-rc-msg]').textContent === REC_WORDS.refused('Sam'));
+  answer = (url) => (url === PREVIEW_URL ? { status: 400, body: { detail: 'Could not find that. Check the link and try again.' } } : { status: 500 });
+  await dlg.setLink(`https://open.spotify.com/track/${SP}`);
+  check('*** the provider says no such thing: the server’s words, Send dimmed ***', dlg.status() === 'bad' && /Could not find that/.test(dq('[data-rc-msg]').textContent));
+  answer = () => ({ status: 503 });
+  await dlg.setLink(`https://youtu.be/${VID}`);
+  check('the preview could not be had (offline): still a good link, Send works, untitled until sent', dlg.status() === 'ready');
+  check('plain words in the window', !plainWordProblems(dbox.textContent).length);
+  check('every target at least 44px', [...dbox.querySelectorAll('input, textarea, button')].every((b) => b.getBoundingClientRect().height >= 44));
+  dlg.destroy(); dbox.remove();
+
+  // ============================================================================================
+  section('(setup) Pat and Robin on one account; Sam ticks Pat for messages; Lee does not');
+  const a1 = (await call('GET', '/api/people', A)).people[0];
+  await call('PATCH', `/api/people/${a1.id}`, A, { name: 'Pat' });
+  const a2 = await call('POST', '/api/people', A, { name: 'Robin' });
+  const b1 = (await call('GET', '/api/people', B)).people[0];
+  await call('PATCH', `/api/people/${b1.id}`, B, { name: 'Sam' });
+  await call('POST', '/api/profiles', B, { name: 'Den', person_id: b1.id });
+  await call('POST', `/api/people/${b1.id}/drive-grants`, B, { subject_id: A });
+  await call('PUT', `/api/people/${b1.id}/state/input-bindings`, B, { data: { noteWriters: [A] }, base_version: 0 });
+  const c1 = (await call('GET', '/api/people', C)).people[0];
+  await call('PATCH', `/api/people/${c1.id}`, C, { name: 'Lee' });
+  await call('POST', `/api/people/${c1.id}/drive-grants`, C, { subject_id: A });
+  check('(setup) seeded', !!(a1 && a2 && b1 && c1));
+
+  section('*** sending from Pat’s Your people, against the real server ***');
+  const box = document.createElement('div'); box.style.cssText = 'position:relative;width:375px;height:760px;overflow:hidden'; document.body.append(box);
+  const profilesA = createProfilesClient({ user: A });
+  const ctxA = { mount: box, bus: createBus(), state: memState(), personId: a1.id, instanceId: 'rc-a', user: A, profiles: profilesA, isScreen: false,
+    chooseMode: () => 'point', makePersonState: (pid, key) => createState({ url: profilesA.personStateURL(pid, key), user: A }) };
+  const inst = mountModule(PEOPLE_TYPE, ctxA);
+  await inst.init();
+  const q = (s) => box.querySelector(s);
+  const cardOf = (name) => [...box.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  const btnOf = (name, act) => cardOf(name)?.querySelector(`[data-pp-act="${act}"]`);
+  await until(() => btnOf('Lee', 'recommend') && !/Checking/.test(btnOf('Lee', 'recommend').textContent) && !/Checking/.test(btnOf('Sam', 'recommend').textContent), 15000);
+  check('*** the card’s Recommend: live for Sam (said yes), dimmed for Lee, with why ***',
+    btnOf('Sam', 'recommend').getAttribute('aria-disabled') !== 'true' && btnOf('Lee', 'recommend').getAttribute('aria-disabled') === 'true'
+    && /Lee can’t get recommendations from you yet/.test(btnOf('Lee', 'recommend').dataset.ppWhy));
+  btnOf('Sam', 'recommend').click();
+  check('*** pressed: the window opens over the page, for Sam, with a way back ***', await until(() => /Recommend a song or video to Sam/.test(q('[data-pp-sheet="recommend"]')?.textContent || ''), 4000)
+    && /Back to your people/.test(q('[data-pp-sheet] [data-pp-close]').textContent));
+  const link = q('[data-pp-sheet] [data-rc-link]');
+  link.value = `https://www.youtube.com/watch?v=${VID}&si=tracking`;
+  link.dispatchEvent(new Event('input', { bubbles: true }));
+  await until(() => q('[data-pp-sheet] [data-rc-send]')?.getAttribute('aria-disabled') === 'false', 12000);
+  q('[data-pp-sheet] [data-rc-message]').value = 'This one made me think of you';
+  q('[data-pp-sheet] [data-rc-send]').click();
+  check('*** sent through the real server (granted and ticked) ***', await until(() => /^Sent\./.test(q('[data-pp-sheet] [data-rc-msg]')?.textContent || ''), 12000),
+    q('[data-pp-sheet] [data-rc-msg]')?.textContent);
+  check('plain words in the window', !plainWordProblems(q('[data-pp-sheet]').textContent).length);
+  q('[data-pp-close]').click();
+  // Lee has not said yes: the server refuses, whatever the page does.
+  const refused = await fetch(recommendationsURL(c1.id), { method: 'POST', headers: { 'X-Dev-User': A, 'Content-Type': 'application/json' }, body: JSON.stringify({ link: `https://youtu.be/${VID}` }) });
+  check('*** the server refuses a person who has not said yes (403) ***', refused.status === 403);
+  inst.destroy(); box.remove();
+
+  // Sam's own account adds a Spotify one straight onto Sam's stream (the owner may; the list checks every row again).
+  await call('POST', `/api/people/${b1.id}/events/recommended`, B, { kind: 'recommend', data: {
+    provider: 'spotify', kind: 'song', id: SP, title: 'A song for you', thumb: 'https://evil.example/x.jpg', message: '', from_name: 'Robin' } });
+  await call('POST', `/api/people/${b1.id}/events/recommended`, B, { kind: 'recommend', data: { provider: 'youtube', kind: 'video', id: '<img src=x>', title: 'forged' } });
+
+  section('*** what Sam sees: Recommended for you ***');
+  const sboxB = document.createElement('div'); sboxB.style.cssText = 'position:relative;width:375px;height:760px;overflow:hidden'; document.body.append(sboxB);
+  const profilesB = createProfilesClient({ user: B });
+  const stub = makeStub();
+  const ctxB = { mount: sboxB, bus: createBus(), state: memState(), personId: b1.id, instanceId: 'rc-b', user: B, profiles: profilesB, isScreen: false,
+    chooseMode: () => 'point', playerFactory: stub.factory,
+    makePersonState: (pid, key) => createState({ url: profilesB.personStateURL(pid, key), user: B }) };
+  const instB = mountModule(PEOPLE_TYPE, ctxB);
+  await instB.init();
+  const bq = (s) => sboxB.querySelector(s);
+  const bqa = (s) => [...sboxB.querySelectorAll(s)];
+  await until(() => bqa('[data-pp-rec]').length >= 2, 10000);
+  const lines = bqa('[data-pp-rec-line]').map((n) => n.textContent);
+  check('*** newest first: Robin’s Spotify song, then Pat’s video; the forged row is not shown ***',
+    lines.length === 2 && lines[0] === 'Robin recommends: A song for you' && /^Pat recommends: /.test(lines[1]), J(lines));
+  const ytCard = bqa('[data-pp-card]').find((c) => /^Pat recommends/.test(c.querySelector('[data-pp-rec-line]')?.textContent || ''));
+  const spCard = bqa('[data-pp-card]').find((c) => /^Robin recommends/.test(c.querySelector('[data-pp-rec-line]')?.textContent || ''));
+  check('*** with who sent it, what it is, the message, and New ***', /a YouTube video/.test(ytCard.textContent) && /“This one made me think of you”/.test(ytCard.textContent)
+    && !!ytCard.querySelector('[data-pp-rec-new]') && /a song on Spotify/.test(spCard.textContent));
+  check('the video’s picture from YouTube’s image host; the forged Spotify picture not drawn',
+    /^https:\/\/i\.ytimg\.com\/vi\//.test(ytCard.querySelector('[data-rc-thumb]')?.getAttribute('src') || '') && !spCard.querySelector('[data-rc-thumb]'));
+  check('*** buttons: Play (YouTube), Open in Spotify, and Remove on each ***',
+    ytCard.querySelector('[data-pp-act="rec-play"]')?.textContent.startsWith('Play') && spCard.querySelector('[data-pp-act="rec-play"]')?.textContent.startsWith('Open in Spotify')
+    && !!ytCard.querySelector('[data-pp-act="rec-remove"]') && !!spCard.querySelector('[data-pp-act="rec-remove"]'));
+  check('plain words on the page', !plainWordProblems(bq('[data-pp-list]').textContent).length, J(plainWordProblems(bq('[data-pp-list]').textContent)));
+  check('every button at least 44px', bqa('[data-pp-stop]').every((b) => b.getBoundingClientRect().height >= 44));
+  check('no sideways scroll at 375', bq('.pp-root').scrollWidth <= bq('.pp-root').clientWidth + 1, `${bq('.pp-root').scrollWidth}`);
+  ytCard.querySelector('[data-pp-act="rec-play"]').click();
+  check('*** Play: the site’s own YouTube player opens over the page and loads THAT video ***',
+    await until(() => bq('[data-pp-sheet="video"] .youtube') && stub.loaded.includes(VID), 8000), J(stub.loaded));
+  check('...with who sent it as its title, and a way back', /Pat recommends/.test(bq('[data-pp-sheet="video"]').textContent) && !!bq('[data-pp-sheet] [data-pp-close]'));
+  const listB = async () => (await call('GET', `${recommendationsURL(b1.id)}`, B)).recommendations;
+  check('*** played: marked seen on the server ***', await until(async () => (await listB()).find((r) => r.provider === 'youtube')?.seen === true, 5000));
+  stub.end();
+  await sleep(100);
+  check('off a screen, the end of the video leaves the window where it is (the person holding it closes it)', !!bq('[data-pp-sheet="video"]'));
+  bq('[data-pp-close]').click();
+  check('Back closes it, and New is gone', !bq('[data-pp-sheet]') && await until(() => {
+    const c = bqa('[data-pp-card]').find((x) => /^Pat recommends/.test(x.querySelector('[data-pp-rec-line]')?.textContent || '')); return c && !c.querySelector('[data-pp-rec-new]'); }, 3000));
+  const opened = [];
+  const realOpen = window.open;
+  window.open = (u, t, f) => { opened.push([u, t, f]); return null; };
+  try {
+    bqa('[data-pp-card]').find((c) => /^Robin/.test(c.querySelector('[data-pp-rec-line]')?.textContent || '')).querySelector('[data-pp-act="rec-play"]').click();
+  } finally { window.open = realOpen; }
+  check('*** Open in Spotify: the rebuilt address in a new tab, nothing opened over this page ***',
+    J(opened) === J([[`https://open.spotify.com/track/${SP}`, '_blank', 'noopener']]) && !bq('[data-pp-sheet]'), J(opened));
+  bqa('[data-pp-card]').find((c) => /^Robin/.test(c.querySelector('[data-pp-rec-line]')?.textContent || '')).querySelector('[data-pp-act="rec-remove"]').click();
+  check('*** Remove: off the page at once, and off the server’s list ***', !bqa('[data-pp-rec-line]').some((n) => /^Robin/.test(n.textContent))
+    && await until(async () => !(await listB()).some((r) => r.provider === 'spotify'), 5000));
+  instB.destroy(); sboxB.remove();
+
+  // ============================================================================================
+  section('*** on a screen in Sam’s room ***');
+  await call('POST', `/api/people/${b1.id}/events/recommended`, B, { kind: 'recommend', data: {
+    provider: 'spotify', kind: 'album', id: SP, title: 'An album', thumb: '', message: 'Track 3!', from_name: 'Robin' } });
+  const scr = document.createElement('div'); scr.style.cssText = 'position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(scr);
+  const stub2 = makeStub();
+  const instS = mountModule(PEOPLE_TYPE, { ...ctxB, mount: scr, bus: createBus(), isScreen: true, instanceId: 'rc-screen', state: memState(), playerFactory: stub2.factory });
+  await instS.init();
+  const sq = (s) => scr.querySelector(s);
+  const sqa = (s) => [...scr.querySelectorAll(s)];
+  await until(() => sqa('[data-pp-rec]').length >= 2, 10000);
+  const sYt = sqa('[data-pp-card]').find((c) => /^Pat recommends/.test(c.querySelector('[data-pp-rec-line]')?.textContent || ''));
+  const sSp = sqa('[data-pp-card]').find((c) => /^Robin recommends: An album/.test(c.querySelector('[data-pp-rec-line]')?.textContent || ''));
+  check('*** a recommendation shows with who sent it ***', !!sYt && !!sSp && /“Track 3!”/.test(sSp.textContent));
+  check('*** nothing is removed on a screen (no Remove) ***', !sq('[data-pp-act="rec-remove"]'));
+  check('*** Spotify on a screen: the address and a code to scan, no button, nothing to open ***',
+    !sSp.querySelector('[data-pp-act]') && /open\.spotify\.com\/album\//.test(sSp.querySelector('[data-rc-address]')?.textContent || '') && !!sSp.querySelector('[data-rc-elsewhere]'));
+  check('plain words on the screen', !plainWordProblems(sq('[data-pp-list]').textContent).length);
+  sYt.querySelector('[data-pp-act="rec-play"]').click();
+  check('*** ONE press plays the YouTube one, through the YouTube player ***', await until(() => sq('[data-pp-sheet="video"]') && stub2.loaded.includes(VID), 8000), J(stub2.loaded));
+  stub2.end();
+  check('*** on a screen, when the video ends it goes back to the people by itself ***', await until(() => !sq('[data-pp-sheet]'), 3000));
+  instS.destroy(); scr.remove();
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>
