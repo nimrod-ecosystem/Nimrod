@@ -138,6 +138,12 @@ export function mergeSettingsDoc(base, mine, theirs, { prefer = 'theirs' } = {})
   return { data, lost: r.lost, replaced: r.replaced };
 }
 
+/** The one quiet line a screen shows when a change made on it gave way (one wording, every host). */
+export function lostEditWords(lost, name) {
+  const what = describeLost(lost) || 'a setting';
+  return `A change made here was not kept: ${what} on ${name || 'this dashboard'} was just changed on another device.`;
+}
+
 /** What a lost path was about, in a few plain words: "the room", "the layout", or "a setting". */
 export function describeLost(paths) {
   const words = new Set();

@@ -3930,6 +3930,81 @@ const toTab = (m, id) => {
     check('the swapped-in doc sync section threw', false, String((e && e.stack) || e));
   }
 
+  // *** 2026-10-04, the same for the two other settings docs a screen writes: the BOOT screen's own doc (this
+  // file's `settings`), and a dashboard's own doc on the dashboard-module path (modules/view.js). Two clients
+  // each: a stale write from the screen must not wipe the other device's change under `kiosk`. ***
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const urlOf = (s) => profiles.stateURL(s.id, 'settings');
+    const remote = async (s, fn) => { const r = createState({ url: urlOf(s), user: USER }); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+    const readOf = async (s) => { const r = createState({ url: urlOf(s), user: USER }); await r.load().catch(() => {}); const v = { ...(r.get() || {}) }; r.destroy(); return v; };
+    const sceneOf = (d) => d?.kiosk?.layout?.scene || null;
+    const setScene = (d, scene) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...(d.kiosk?.layout || {}), scene } } });
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const STUDY = { kind: 'room', preset: 'study' };
+    const roomScreen = async (name) => {
+      const s = await profiles.create(name);
+      const ph = await profiles.addModule(s.id, 'photos');
+      await remote(s, () => ({ kiosk: { layout: { preset: 'full', slots: [null], scene: STUDY,
+        placed: [{ id: ph.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }));
+      return s;
+    };
+    const doorsOn = async (s) => sceneDoors(sceneOf(await readOf(s))) || {};
+
+    // (a) The boot screen's own doc.
+    {
+      const D = await roomScreen('TEST-sync-boot');
+      const root = document.createElement('div');
+      root.style.cssText = 'position:relative;width:900px;height:560px';
+      document.body.append(root);
+      const k = await mountKiosk(root, { user: USER, profileId: D.id, profiles, bus: createBus(), reloadPage: () => {} });
+      check('(setup) booted on the study (the kiosk\'s own path)', await settled(() => !!root.querySelector('.rs-obj-wrap[data-id="bookshelf"]'), 6000) && !k.swapDoc());
+      const opt = (id) => { k.runtime.router.setFocus(`scene:room/o:${id}`); return k.focusedTarget()?.target || null; };
+      opt('bookshelf').set({ opens: 'boot-here' });
+      await remote(D, (d) => setScene(d, withDoor(sceneOf(d), 'desk', 'boot-there')));
+      check('*** the BOOT screen\'s doc: a stale write keeps the other device\'s door (desk) and saves this one (bookshelf) ***',
+        await pollAsync(async () => { const ds = await doorsOn(D); return ds.bookshelf === 'boot-here' && ds.desk === 'boot-there'; }),
+        JSON.stringify(await doorsOn(D)));
+      opt('bookshelf').set({ opens: 'boot-mine' });
+      await remote(D, (d) => setScene(d, withDoor(sceneOf(d), 'bookshelf', 'boot-theirs')));
+      check('...a true clash there: the other device\'s door stands, and the quiet line says so',
+        await pollAsync(async () => (await doorsOn(D)).bookshelf === 'boot-theirs' && /not kept/.test(k.note() || '')),
+        `${JSON.stringify(await doorsOn(D))} note=${k.note()}`);
+      k.destroy();
+      root.remove();
+    }
+
+    // (b) A dashboard's own doc, on the dashboard-module path (a swapped-in dashboard: its doc is view.js's own).
+    {
+      const E = await profiles.create('TEST-sync-dash-home');
+      await profiles.addModule(E.id, 'photos');
+      const F = await roomScreen('TEST-sync-dash-room');
+      const root = document.createElement('div');
+      root.style.cssText = 'position:relative;width:900px;height:560px';
+      document.body.append(root);
+      const k = await mountKiosk(root, { user: USER, profileId: E.id, profiles, bus: createBus(), reloadPage: () => {}, dashboardDefault: true });
+      check('(setup) on the dashboard path', await settled(() => !!k.dashboardPath?.() && !!k.dashboard?.(), 6000));
+      await k.showScreen(F.id);
+      check('(setup) swapped to the study dashboard', await settled(() => k.screenId() === F.id && !!root.querySelector('.rs-obj-wrap[data-id="bookshelf"]'), 8000));
+      const opt = (id) => { k.runtime.router.setFocus(`scene:room/o:${id}`); return k.focusedTarget()?.target || null; };
+      check('(setup) the bookshelf\'s own option is reachable there', !!opt('bookshelf')?.set);
+      opt('bookshelf').set({ opens: 'dash-here' });
+      await remote(F, (d) => setScene(d, withDoor(sceneOf(d), 'desk', 'dash-there')));
+      check('*** the DASHBOARD\'s own doc (view.js): a stale write keeps the other device\'s door and saves this one ***',
+        await pollAsync(async () => { const ds = await doorsOn(F); return ds.bookshelf === 'dash-here' && ds.desk === 'dash-there'; }),
+        JSON.stringify(await doorsOn(F)));
+      opt('bookshelf').set({ opens: 'dash-mine' });
+      await remote(F, (d) => setScene(d, withDoor(sceneOf(d), 'bookshelf', 'dash-theirs')));
+      check('...a true clash there: the other device\'s door stands, and the screen\'s quiet line says so (handed to the dashboard)',
+        await pollAsync(async () => (await doorsOn(F)).bookshelf === 'dash-theirs' && /not kept/.test(k.note() || '')),
+        `${JSON.stringify(await doorsOn(F))} note=${k.note()}`);
+      k.destroy();
+      root.remove();
+    }
+  } catch (e) {
+    check('the boot / dashboard doc sync section threw', false, String((e && e.stack) || e));
+  }
+
   // *** 2026-10-02: TWO SWITCH-ACCESS GAPS, CLOSED. ***
   // (1) A panel placed freely can be left OUT of the switch lap (c93a1ec: `scan: false`, or `overlayScan: 'skip'`
   //     as the floating scoreboard declares). The only way back in was a button on the panel itself, which a
