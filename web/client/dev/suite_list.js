@@ -62,6 +62,8 @@ export const SUITES = [
   // what they cover rather than slotted into the lines above, so the provenance stays readable. ***
   // Infrastructure: sign-in, the bus, server push, and the two polling back-offs.
   'auth', 'bus', 'push', 'poll_backoff', 'state_events_backoff',
+  // 2026-10-04: two clients on one settings doc -- a refused write is merged, never laid over the other's.
+  'doc_merge',
   // Input devices and the press primitives every control is built from.
   'keyboard', 'input_pointer', 'input_facegesture', 'button', 'pressable', 'choice_card', 'hide_sound', 'user_folders', 'color_picker',
   // Modules as things: the module contract, try-before-add, prefabs, presets, the editor windows,

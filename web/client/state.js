@@ -58,12 +58,30 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
                                // timer-based poll below backs off to `pollBackoffMaxMs`
                                // instead of `pollMs` — never off, since push has no delivery
                                // guarantee. Omit it and this behaves exactly as it always has.
-                               push = null }) {
+                               push = null,
+                               // *** OPTIONAL: A FINER REBASE FOR A REFUSED WRITE (2026-10-04). *** The
+                               // default rebase (`flush`, the 409 leg) keeps this handle's changed TOP-LEVEL
+                               // keys wholesale, which is right for a row of independent settings and wrong
+                               // for one whose whole arrangement sits under one key (a screen's `kiosk`).
+                               // `merge(base, mine, theirs) -> { data, lost }` replaces it: `base` is the
+                               // doc as the server last confirmed it to this handle, `mine` this handle's
+                               // copy, `theirs` the server's truth from the refusal (doc_merge.js
+                               // `mergeSettingsDoc`). `onLost(lost)` hears any part of a local change that
+                               // could not be kept, so the caller can say so. Omit both and the rebase is
+                               // exactly what it always was.
+                               merge = null, onLost = null }) {
   let data = {};
+  // The doc as the server last CONFIRMED it to this handle (a read, an accepted write, a refusal's truth):
+  // the common ancestor a `merge` needs. Kept for every handle; read only when `merge` is given.
+  let serverData = {};
   let version = 0;
   let loaded = false;
   let dirty = false;
   let pending = {};        // keys changed since last successful flush
+  // PUTs in flight (2026-10-04). While one is, a read can answer with the doc from BEFORE it; adopting
+  // that replaced the mirror with a copy missing the write, and once the write's new version landed the
+  // poll saw "same version" and never corrected it. A read is skipped while a write is out, as while dirty.
+  let writing = 0;
   let putTimer = null;
   let pollTimer = null;
   let unsubscribePush = null;
@@ -95,6 +113,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     lastServerOkAt = Date.now();
     const changed = server.version !== version || JSON.stringify(server.data) !== JSON.stringify(data);
     data = server.data;
+    serverData = server.data;
     version = server.version;
     loaded = true;
     if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
@@ -106,6 +125,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
       const c = cacheGet(`state:${cacheKey}`);
       if (c) {
         data = c.data || {};
+        serverData = data;
         version = c.version || 0;
         loaded = true;
         notify();                    // instant render from the last-known-good copy
@@ -113,7 +133,11 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
         // that is already showing something, and never throws past this point — a
         // failure here just means `stale()` starts counting, not an exception nobody
         // is awaiting.
-        fetchServer().then(applyServer).catch(() => { /* stays on the cache */ });
+        // (2026-10-04: NOT over a local change made since -- that used to replace the mirror the
+        // change was in, so the next write sent the server's copy without it. The handle keeps
+        // the cache's version, so that write is refused and rebased like any other stale one.)
+        fetchServer().then((s) => { if (dirty || writing) lastServerOkAt = Date.now(); else applyServer(s); })
+          .catch(() => { /* stays on the cache */ });
         return snapshot();
       }
     }
@@ -126,7 +150,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     } catch (err) {
       if (cacheKey) {
         const c = cacheGet(`state:${cacheKey}`);
-        if (c) { data = c.data || {}; version = c.version || 0; loaded = true; notify(); return snapshot(); }
+        if (c) { data = c.data || {}; serverData = data; version = c.version || 0; loaded = true; notify(); return snapshot(); }
       }
       throw err;
     }
@@ -163,42 +187,78 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
     if (!Object.keys(pending).length) { dirty = false; return; }
 
     const sending = { ...pending };   // the keys this attempt is responsible for
+    const sent = data;                // the doc this attempt sends (`data` is replaced, never mutated)
     pending = {};
     dirty = false;
 
     let res;
+    writing++;
     try {
       res = await fetch(url, {
         method: 'PUT',
         headers: { ...authHeaders(user), 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data, base_version: version }),
+        body: JSON.stringify({ data: sent, base_version: version }),
       });
     } catch (err) {
+      writing--;
       pending = { ...sending, ...pending }; dirty = true; throw err;
     }
 
-    if (res.ok) {
-      const body = await res.json();
-      version = body.version;
-      lastServerOkAt = Date.now();          // a write the server accepted is proof it's there
-      if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
-      return;
-    }
+    try {
+      if (res.ok) {
+        const body = await res.json();
+        version = body.version;
+        serverData = sent;
+        lastServerOkAt = Date.now();          // a write the server accepted is proof it's there
+        if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
+        return;
+      }
 
-    if (res.status === 409) {
-      const body = await res.json();               // { data, version } — server truth
-      pending = { ...sending, ...pending };        // keep our keys to retry
-      data = { ...(body.data || {}), ...pending };  // rebase onto truth
-      version = body.version || 0;
-      lastServerOkAt = Date.now();          // a 409 still means the server answered
-      notify();
-      if (retries > 0) return flush(retries - 1);
-      console.error('state: gave up after repeated version conflicts');
-      return;
-    }
+      if (res.status === 409) {
+        const body = await res.json();               // { data, version } — server truth
+        const theirs = body.data || {};
+        lastServerOkAt = Date.now();          // a 409 still means the server answered
+        if (typeof merge === 'function') {
+          // The finer rebase (see the option): base = what the server last confirmed to us.
+          let r = null;
+          try { r = merge(serverData, data, theirs); } catch (err) { console.error('state: merge', err); r = null; }
+          if (r && r.data && typeof r.data === 'object') {
+            serverData = theirs;
+            version = body.version || 0;
+            data = r.data;
+            if (Array.isArray(r.lost) && r.lost.length && typeof onLost === 'function') {
+              try { onLost(r.lost); } catch (err) { console.error('state: onLost', err); }
+            }
+            // Nothing of ours left to send (every local change gave way): adopt the truth, done.
+            if (JSON.stringify(data) === JSON.stringify(theirs) && !Object.keys(pending).length) {
+              dirty = false;
+              if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
+              notify();
+              return;
+            }
+            pending = { ...sending, ...pending };
+            notify();
+            if (retries > 0) return flush(retries - 1);
+            console.error('state: gave up after repeated version conflicts');
+            return;
+          }
+          // A merge that failed falls through to the ordinary rebase rather than losing the write.
+        }
+        pending = { ...sending, ...pending };        // keep our keys to retry
+        data = { ...theirs, ...pending };            // rebase onto truth
+        serverData = theirs;
+        version = body.version || 0;
+        notify();
+        if (retries > 0) return flush(retries - 1);
+        console.error('state: gave up after repeated version conflicts');
+        return;
+      }
 
-    pending = { ...sending, ...pending }; dirty = true;
-    throw httpError(res, `PUT ${url} -> ${res.status}`);
+      pending = { ...sending, ...pending }; dirty = true;
+      throw httpError(res, `PUT ${url} -> ${res.status}`);
+    } finally {
+      writing--;
+    }
   }
 
   // Cross-device convergence. Never overwrites a dirty mirror; adopts the server's
@@ -229,7 +289,7 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
   // exactly what a poll tick would have done anyway: ask, and skip asking at all while a
   // local edit is still pending (the same `dirty` guard as before push existed).
   async function pollOnce() {
-    if (dirty) return;
+    if (dirty || writing) return;
     try {
       const res = await fetch(url, { headers: authHeaders(user) });
       if (!res.ok) {
@@ -238,9 +298,13 @@ export function createState({ url, user, pollMs = 1500, debounceMs = 250, maxRet
         pollFailures = 0;
         const body = await res.json();
         lastServerOkAt = Date.now();          // answered, whether or not anything changed
+        // (2026-10-04: asked again AFTER the read -- a local change or a write made while it was out
+        // must not be replaced by a copy from before it. The next tick asks again.)
+        if (dirty || writing) return;
         if ((body.version || 0) !== version &&
             JSON.stringify(body.data || {}) !== JSON.stringify(data)) {
           data = body.data || {};
+          serverData = data;
           version = body.version || 0;
           if (cacheKey) cacheSet(`state:${cacheKey}`, { data, version });
           notify();

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>doc_merge.js + state.js merge — two clients on one settings doc</title>
+<style>
+  body{font:14px/1.5 system-ui,sans-serif;margin:20px;max-width:900px;background:#fff;color:#111}
+  h2{font-size:.95rem;margin:18px 0 6px;text-transform:uppercase;letter-spacing:.06em;opacity:.65}
+  .pass{color:#186a3b}.fail{color:#a32b2b;font-weight:600}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>Two clients on one settings doc: merged, never clobbered</h1>
+<p>The gap d377083 left (Mike's list 09-30): a swapped-in screen's settings doc was written blind, and
+state.js's ordinary rebase keeps a changed top-level key wholesale -- and a screen's whole arrangement is ONE
+key (<code>kiosk</code>). This proves the finer rule: <code>doc_merge.js</code> on its own, then
+<code>state.js</code>'s <code>merge</code> option with two real clients on the same doc on the real server.
+The kiosk end of it (a swapped-in screen hearing and applying the other device) is in <code>kiosk_test</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createState } from '../state.js';
+import { createProfilesClient } from '../profile.js';
+import { merge3, mergeSettingsDoc, describeLost } from '../doc_merge.js';
+import { sceneRecipe, recipeItemIds, withDoor, withLook, sceneDoors, sceneLooks } from '../room_doors.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = JSON.stringify;
+const params = new URLSearchParams(location.search);
+const USER = params.get('user') || 'doc-merge-test-user-' + Math.floor(performance.now());
+const until = async (fn, ms = 5000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(50); } return false; };
+
+// A 2D study: its desk is brick-built (has a Look); the bookshelf can be a door.
+const STUDY = { kind: 'room', preset: 'study' };
+const ids = recipeItemIds(sceneRecipe(STUDY));
+const PIECE_A = ids.find((id) => id && id !== 'desk' && withDoor(STUDY, id, 'x'));
+const PIECE_B = 'desk';
+const layoutWith = (scene) => ({ preset: 'full', slots: [null], scene });
+const docWith = (scene, extra = {}) => ({ kiosk: { layout: layoutWith(scene), ...extra } });
+const sceneOf = (doc) => doc?.kiosk?.layout?.scene || null;
+
+(async () => {
+  const realFetch = window.fetch.bind(window);
+  try {
+    // ===================================================================================
+    section('doc_merge.js on its own');
+    check('(setup) the study has a door-able piece A and a brick-built desk B',
+      !!PIECE_A && !!withLook(STUDY, PIECE_B, 'drawn'), `A=${PIECE_A}`);
+    {
+      const r = merge3({ a: 1, b: 1 }, { a: 2, b: 1 }, { a: 1, b: 3 });
+      check('different keys changed on each side: both kept, nothing lost', J(r.value) === J({ a: 2, b: 3 }) && !r.lost.length, J(r));
+      const d = merge3({ x: { k: 1 } }, { x: { k: 1 } }, {});
+      check('a key the other side removed (and this side left alone) stays removed', J(d.value) === '{}', J(d));
+      const c = merge3({ a: 1 }, { a: 2 }, { a: 3 });
+      check('*** the same key changed both ways: the other device\'s value stands, and the path is reported ***',
+        c.value.a === 3 && J(c.lost) === J([['a']]), J(c));
+      const m = merge3({ a: 1 }, { a: 2 }, { a: 3 }, { prefer: 'mine' });
+      check('...prefer: "mine" flips it, and says what it replaced', m.value.a === 2 && J(m.replaced) === J([['a']]) && !m.lost.length, J(m));
+      const arr = merge3({ l: [1, 2] }, { l: [1, 2, 3] }, { l: [2] });
+      check('an array both sides reshaped is one value: a conflict, never a splice', J(arr.value.l) === J([2]) && arr.lost.length === 1, J(arr));
+      const ids3 = merge3({ l: [{ id: 'a', v: 1 }, { id: 'b', v: 1 }] }, { l: [{ id: 'a', v: 2 }, { id: 'b', v: 1 }] }, { l: [{ id: 'a', v: 1 }, { id: 'b', v: 3 }] });
+      check('same-shaped arrays (same ids in the same places) merge element by element', J(ids3.value.l) === J([{ id: 'a', v: 2 }, { id: 'b', v: 3 }]) && !ids3.lost.length, J(ids3));
+      const ro = merge3({ l: [{ id: 'a', v: 1 }, { id: 'b', v: 1 }] }, { l: [{ id: 'a', v: 2 }, { id: 'b', v: 1 }] }, { l: [{ id: 'b', v: 1 }, { id: 'a', v: 1 }] });
+      check('a reorder on one side is not mixed element by element with an edit on the other', J(ro.value.l) === J([{ id: 'b', v: 1 }, { id: 'a', v: 1 }]) && ro.lost.length === 1, J(ro));
+    }
+    {
+      const base = docWith(STUDY);
+      const mine = docWith(withDoor(STUDY, PIECE_A, 'scr-1'));          // copies the preset in
+      const theirs = docWith(withLook(STUDY, PIECE_B, 'drawn'));        // ...and so does this
+      const r = mergeSettingsDoc(base, mine, theirs);
+      check('*** a door on piece A (here) and a look on piece B (elsewhere), on a preset room: BOTH kept ***',
+        sceneDoors(sceneOf(r.data))[PIECE_A] === 'scr-1' && sceneLooks(sceneOf(r.data))[PIECE_B] === 'drawn' && !r.lost.length,
+        J({ doors: sceneDoors(sceneOf(r.data)), looks: sceneLooks(sceneOf(r.data)), lost: r.lost }));
+      const same = mergeSettingsDoc(base, docWith(withDoor(STUDY, PIECE_B, 'scr-1')), docWith(withLook(STUDY, PIECE_B, 'drawn')));
+      check('...and a door and a look on the SAME piece: both kept too (different keys of one item)',
+        sceneDoors(sceneOf(same.data))[PIECE_B] === 'scr-1' && sceneLooks(sceneOf(same.data))[PIECE_B] === 'drawn' && !same.lost.length);
+      const back = mergeSettingsDoc(docWith(withDoor(STUDY, PIECE_A, 'scr-1')), docWith(STUDY), docWith(withDoor(STUDY, PIECE_A, 'scr-1')));
+      check('a door taken off here (the room back to naming its preset) with nothing changed there: the room names its preset again',
+        J(sceneOf(back.data)) === J(STUDY), J(sceneOf(back.data)));
+      const t = mergeSettingsDoc(base, docWith(withDoor(STUDY, PIECE_A, 'scr-1')), docWith(withDoor(STUDY, PIECE_A, 'scr-2')));
+      check('*** the same door changed both ways: the other device\'s stands, and it is reported as the room ***',
+        sceneDoors(sceneOf(t.data))[PIECE_A] === 'scr-2' && t.lost.length === 1 && describeLost(t.lost) === 'the room', J(t));
+      const other = { kind: 'room', preset: 'living' };
+      const p = mergeSettingsDoc(base, docWith(withDoor(STUDY, PIECE_A, 'scr-1')), docWith(other));
+      check('a door here while the room became another preset there: the scene is one value (no study recipe under the living room\'s name)',
+        J(sceneOf(p.data)) === J(other) && p.lost.length === 1, J(p));
+      const keys = mergeSettingsDoc(base, docWith(STUDY, { mirrorSize: 'big' }), { ...docWith(withLook(STUDY, PIECE_B, 'drawn')), theme: 'night' });
+      check('other keys of `kiosk` and other top-level keys merge the same way',
+        keys.data.kiosk.mirrorSize === 'big' && keys.data.theme === 'night' && sceneLooks(sceneOf(keys.data))[PIECE_B] === 'drawn' && !keys.lost.length, J(keys.data));
+    }
+
+    // ===================================================================================
+    section('state.js: a read that answers late never replaces a newer local copy');
+    {
+      // A poll whose answer lands AFTER a local change: it used to replace the mirror the change was in.
+      let release = null;
+      let gets = 0;
+      window.fetch = async (u, opts = {}) => {
+        if ((opts.method || 'GET') === 'GET') {
+          gets++;
+          if (gets === 1) return new Response(J({ data: { a: 1 }, version: 1 }), { status: 200 });
+          await new Promise((r) => { release = r; });
+          return new Response(J({ data: { a: 'old', other: 9 }, version: 2 }), { status: 200 });
+        }
+        return new Response(J({ version: 3 }), { status: 200 });
+      };
+      const s = createState({ url: '/fake-late-read', user: 'u', pollMs: 10, debounceMs: 5000 });
+      await s.load();
+      s.startPolling();
+      await until(() => !!release, 1000);
+      s.set({ a: 'mine' });
+      release();
+      await sleep(30);
+      check('*** a poll answering after a local change leaves the change in the mirror ***', s.get().a === 'mine', J(s.get()));
+      s.destroy();
+      window.fetch = realFetch;
+    }
+    {
+      // A poll answering WHILE A WRITE IS OUT, with another device's newer doc. Adopting it emptied the merge's
+      // own side: base and mine both became theirs, so the refused write "had nothing left" and was dropped.
+      let releasePut = null;
+      let otherWrote = false;
+      const puts = [];
+      window.fetch = async (u, opts = {}) => {
+        if ((opts.method || 'GET') === 'PUT') {
+          puts.push(JSON.parse(opts.body));
+          if (puts.length === 1) {
+            await new Promise((r) => { releasePut = r; });
+            return new Response(J({ error: 'version_conflict', data: { a: 1, b: 1 }, version: 5 }), { status: 409 });
+          }
+          return new Response(J({ version: 6 }), { status: 200 });
+        }
+        return new Response(J(otherWrote ? { data: { a: 1, b: 1 }, version: 5 } : { data: { a: 1 }, version: 1 }), { status: 200 });
+      };
+      const s = createState({ url: '/fake-inflight', user: 'u', pollMs: 10, debounceMs: 5000, merge: mergeSettingsDoc });
+      await s.load();
+      otherWrote = true;                // another device writes b, now
+      s.set({ a: 2 });
+      const f = s.flush();
+      s.startPolling();
+      await until(() => !!releasePut, 1000);
+      await sleep(60);                  // several polls while the write is out
+      releasePut();
+      await f;
+      check('*** a poll during a write in flight does not swallow the write: refused, merged, sent again with both ***',
+        J(s.get()) === J({ a: 2, b: 1 }) && puts.length === 2 && J(puts[1].data) === J({ a: 2, b: 1 }) && s.getVersion() === 6,
+        `${J(s.get())} puts=${J(puts)} v${s.getVersion()}`);
+      s.destroy();
+      window.fetch = realFetch;
+    }
+
+    // ===================================================================================
+    section('two real clients on one doc (the real server)');
+    const profiles = createProfilesClient({ user: USER });
+    const P = await profiles.create('TEST-doc-merge');
+    const url = profiles.stateURL(P.id, 'settings');
+    {
+      const seed = createState({ url, user: USER });
+      await seed.load(); seed.set(docWith(STUDY)); await seed.flush(); seed.destroy();
+    }
+    const read = async () => { const s = createState({ url, user: USER }); await s.load(); const v = s.get(); s.destroy(); return v; };
+    const lostSeen = [];
+    const merged = (o = {}) => createState({ url, user: USER, pollMs: 60, debounceMs: 20, merge: mergeSettingsDoc, onLost: (l) => lostSeen.push(l), ...o });
+    const remote = async (fn) => { const r = createState({ url, user: USER }); await r.load(); r.set(fn(r.get())); await r.flush(); r.destroy(); };
+    const setScene = (doc, scene) => ({ kiosk: { ...(doc.kiosk || {}), layout: { ...(doc.kiosk?.layout || {}), scene } } });
+
+    // 1. A remote edit shows up.
+    {
+      const K = merged();
+      await K.load();
+      let heard = 0;
+      K.subscribe(() => { heard++; });
+      K.startPolling();
+      await remote((d) => setScene(d, withDoor(sceneOf(d), PIECE_A, 'scr-remote')));
+      check('*** a remote edit shows up on the other client (polled), and its subscribers hear it ***',
+        await until(() => sceneDoors(sceneOf(K.get()))[PIECE_A] === 'scr-remote' && heard >= 2, 4000), J(sceneDoors(sceneOf(K.get()))));
+      K.destroy();
+      await remote((d) => setScene(d, STUDY));
+    }
+    // 2. A stale local write does not clobber the remote one (inside the same `kiosk` key).
+    {
+      const K = merged();
+      await K.load();                                  // stale from here: not polling
+      await remote((d) => setScene(d, withDoor(sceneOf(d), PIECE_A, 'scr-remote')));
+      const was = K.get().kiosk || {};
+      K.set({ kiosk: { ...was, mirrorSize: 'big' } });  // built from the stale copy, as the kiosk builds its writes
+      await K.flush();
+      const v = await read();
+      check('*** a stale local write is refused and merged: the remote door is still there, and so is the local change ***',
+        sceneDoors(sceneOf(v))[PIECE_A] === 'scr-remote' && v.kiosk?.mirrorSize === 'big', J(v.kiosk));
+      check('...and the local client\'s copy says the same', sceneDoors(sceneOf(K.get()))[PIECE_A] === 'scr-remote' && K.get().kiosk?.mirrorSize === 'big');
+      K.destroy();
+      await remote(() => docWith(STUDY));
+    }
+    // 3. Per-key merge keeps both: a door on piece A here, a look on piece B there.
+    {
+      lostSeen.length = 0;
+      const K = merged();
+      await K.load();
+      await remote((d) => setScene(d, withLook(sceneOf(d), PIECE_B, 'drawn')));
+      K.set(setScene(K.get(), withDoor(sceneOf(K.get()), PIECE_A, 'scr-here')));
+      await K.flush();
+      const v = await read();
+      check('*** per-key merge: the door here AND the look there are both on the server ***',
+        sceneDoors(sceneOf(v))[PIECE_A] === 'scr-here' && sceneLooks(sceneOf(v))[PIECE_B] === 'drawn', J(sceneOf(v)));
+      check('...on the local copy too, and nothing was reported lost',
+        sceneLooks(sceneOf(K.get()))[PIECE_B] === 'drawn' && sceneDoors(sceneOf(K.get()))[PIECE_A] === 'scr-here' && !lostSeen.length, J(lostSeen));
+      K.destroy();
+      await remote(() => docWith(STUDY));
+    }
+    // 4. A true conflict resolves by the policy, and says so.
+    {
+      lostSeen.length = 0;
+      const K = merged();
+      await K.load();
+      await remote((d) => setScene(d, withDoor(sceneOf(d), PIECE_A, 'scr-there')));
+      K.set(setScene(K.get(), withDoor(sceneOf(K.get()), PIECE_A, 'scr-here')));
+      await K.flush();
+      const v = await read();
+      check('*** a true conflict: the other device\'s door stands on the server ***', sceneDoors(sceneOf(v))[PIECE_A] === 'scr-there', J(sceneDoors(sceneOf(v))));
+      check('...the local copy shows it (no write left pending)', sceneDoors(sceneOf(K.get()))[PIECE_A] === 'scr-there');
+      check('*** ...and the lost local change was reported, as the room ***', lostSeen.length === 1 && describeLost(lostSeen[0]) === 'the room', J(lostSeen));
+      K.destroy();
+    }
+    // Control: without `merge`, the same handle behaves exactly as it always has (top-level rebase).
+    {
+      await remote(() => docWith(STUDY, { mirrorSize: 'small' }));
+      const K = createState({ url, user: USER });
+      await K.load();
+      await remote((d) => ({ ...d, theme: 'night' }));
+      K.set({ other: 1 });
+      await K.flush();
+      const v = await read();
+      check('without `merge`: the ordinary rebase still keeps another client\'s other keys', v.theme === 'night' && v.other === 1, J(v));
+      K.destroy();
+    }
+  } catch (e) {
+    window.fetch = realFetch;
+    check('the suite threw', false, String((e && e.stack) || e));
+  }
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+})();
+</script>
+</body>
+</html>
