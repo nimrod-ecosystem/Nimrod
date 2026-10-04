@@ -2194,3 +2194,16 @@ Mike's rulings, logged by Code.
    - It is part of a set of AI modules.
 5. **Direction:** one folder tree per person. Set the root once and every kind finds its folder; any kind can point
    elsewhere, and nothing is copied (93c5a9f).
+
+## The landing is a very simple profile page -- 2026-10-04 (evening)
+
+Mike, relayed by chat (inbox AW), logged by Code. This supersedes the full-window four-panel "Start here" as the
+first thing a new person sees (2026-10-02 evening, item 1). That dashboard stays, one press away.
+
+1. **The landing is a very simple profile page, "like facebook or something".** *"I got too far into what I'd like
+   for a site and lost track of the grandparents and soccer moms."*
+2. **It shows your people and anyone you're connected to,** and makes the ways to reach them clear: call, send a
+   message, share a picture, a song, a video.
+3. **It can still be a dashboard if it's that simple.**
+4. **Nimrod stays as a helper, overlaid at the bottom.**
+5. **Direction:** the fuller build-it-yourself site still exists "somewhere"; that's for later.
