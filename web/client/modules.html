@@ -653,6 +653,9 @@ import './modules/library.js';
 import './modules/card_sort.js';
 import './modules/profile.js';
 import './modules/edit_options.js';   // "Options", the panel editor's (described in the catalog)
+// 2026-10-04: "Your people" (the landing) and Nimrod at the bottom of it.
+import './modules/people.js';
+import './modules/helper.js';
 // "Hover over anything and Nimrod tells you what it does": the line along the bottom when he is not here.
 import { mountInfoLine } from './hover_info.js';
 // `settings` (and `keyboard` above it) are deliberately NOT imported here -- this is the
@@ -684,7 +687,7 @@ import { slowNote, deviceCapability } from './room_lod.js';
 import { createUnlockGate, itemForAddKey, lockWords, poolLabel } from './unlocks.js';
 import { createEvents } from './events.js';
 import { PREBUILT_DASHBOARDS, exampleCards, prebuiltRecord, layoutFor as exampleLayout,
-  createDashboardMaker, LOCKED_KEY, LANDING_KEY, recordSettings, remapSettingsIds } from './dashboards.js';
+  createDashboardMaker, LOCKED_KEY, LANDING_KEY, START_KEY, LANDING_KEYS, recordSettings, remapSettingsIds } from './dashboards.js';
 // 2026-10-02: edit any panel in place (edit_mode.js) -- Home's "Edit the chosen panel" says it on the bus.
 import { EDIT_PANEL_TOPIC } from './edit_mode.js';
 // 2026-10-03: over the dashboard -- the corner clock / mirror (HUD_TYPES) and "Show a small clock".
@@ -842,7 +845,14 @@ const HOME = {
   // landing dashboard if this person has made it ({ id }), else it is tried on the stage, nothing made.
   place: 'landing',
   landing: null,
-  previewKey: null,       // an example being tried on the stage (not made); null = the Home itself
+  // 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): WHICH dashboard is "the landing" right now
+  // -- Your people (LANDING_KEY, the default) or Start here (START_KEY: "Open on: Start here", or Your people's
+  // "More"). `landings`: each of the two this person has made ({ id }), so `landing` follows `landKey`.
+  // `moreFrom`: Start here was reached by More, so the bar carries "‹ Your people" (home_dashboard.js PEOPLE_ITEM).
+  landKey: LANDING_KEY,
+  landings: {},
+  moreFrom: false,
+  previewKey: null,      // an example being tried on the stage (not made); null = the Home itself
   // 2026-10-02 evening: the dashboard FILLING THE WINDOW (`body.is-land`), or this page as the editor.
   land: false,
   landAtBoot: false,      // what the first history entry was (popstate with no state of its own)
@@ -867,8 +877,15 @@ const HOME = {
   scan: { on: false, level: 'bar', key: null, resume: false },
 };
 const PROFILE_TITLE = HD.HOME_TITLE;
-// The landing dashboard's name everywhere on this page: its card's own title (dashboards.js `start`).
-const LANDING_TITLE = PREBUILT_DASHBOARDS[LANDING_KEY]?.title || 'Start here';
+// The landing dashboard's name everywhere on this page: its record's own title (dashboards.js `people`, or `start`
+// for somebody who lands there).
+const landTitle = () => PREBUILT_DASHBOARDS[HOME.landKey]?.title || PREBUILT_DASHBOARDS[LANDING_KEY].title;
+/** Which of the two is "the landing" now (`HOME.landKey`), and so which made one `HOME.landing` is. */
+function setLandKey(key) {
+  HOME.landKey = LANDING_KEYS.includes(key) ? key : LANDING_KEY;
+  HOME.landing = HOME.landings[HOME.landKey] || null;
+  if (HOME.landKey !== START_KEY) HOME.moreFrom = false;
+}
 
 /** Free text over the words somebody would actually type. Includes the ACCESS label, so
  *  searching "switch" finds the things a switch can drive — the question the legend says
@@ -886,10 +903,10 @@ function renderList() {
   // 2026-10-02: the landing dashboard ("Start here") and your own Home are two rows: either is one press.
   const onProfile = selected === HD.PROFILE_SUBJECT;
   const showingLanding = onProfile && !!HOME.target?.landing;
-  const yours = HOME.on && HOME.maker && (!q || 'start here landing your home profile optional room scene example dashboard'.includes(q))
+  const yours = HOME.on && HOME.maker && (!q || 'your people start here landing your home profile optional room scene example dashboard'.includes(q))
     ? `<div class="pickgroup"><h3>Yours</h3>
         <button type="button" class="pickrow" data-pick="${HD.PROFILE_SUBJECT}" data-place="landing" aria-current="${showingLanding}">
-          <span class="nm">${LANDING_TITLE}</span></button>
+          <span class="nm">${esc(landTitle())}</span></button>
         <button type="button" class="pickrow" data-pick="${HD.PROFILE_SUBJECT}" data-place="home" aria-current="${onProfile && !showingLanding && !HOME.previewKey}">
           <span class="nm">${PROFILE_TITLE}</span><span class="vb opt">Optional</span></button></div>`
     : '';
@@ -1151,12 +1168,16 @@ function homePersonHost() {
   return {
     state: (pid, key) => createState({ url: profiles.personStateURL(pid, key), user }),
     browserNotes: browserNotesSource({ rows: localScopeRows, makeState: local.makeState, scope: PREVIEW_PROFILE_ID }),
+    // 2026-10-04 (modules/people.js): the account this page is signed in as, so Your people -- tried, with no
+    // `ctx.user` -- can read who may be called or messaged, and leave a message on a press. (A signed-in browser's
+    // cookie carries it anyway; this is the dev `?user=` the suites use.)
+    user,
   };
 }
 
 // The Home subject is either the landing dashboard or your own Home (2026-10-02), and says which.
 const subjectTitle = (s, t = HOME.target) => (s === HD.PROFILE_SUBJECT
-  ? (t?.landing ? LANDING_TITLE : PROFILE_TITLE)
+  ? (t?.landing ? landTitle() : PROFILE_TITLE)
   : titleFor(ITEMS.find((m) => m.type === s) || { type: s }, manifests));
 const when = (t) => new Date(t).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short',
   hour: 'numeric', minute: '2-digit' });
@@ -1187,7 +1208,7 @@ function noteFor(t) {
       + 'screen. Or choose anything else from Modules.';
   }
   if (t.kind === 'home' && t.landing) {
-    return `${esc(LANDING_TITLE)}, live: where you land. What is on it and where saves as you change it, and settings `
+    return `${esc(landTitle())}, live: where you land. What is on it and where saves as you change it, and settings `
       + `wait for Save. ${HOME.home ? 'Your own Home is one press away: My Home, on the bar.' : ''} `
       + `<a href="${esc(kioskURL(t.profileId))}">Open it as a screen</a>.`;
   }
@@ -1211,7 +1232,9 @@ function renderHomeDetail(subject, target) {
     : m ? `<span class="pill ${esc(m.use)}">${esc(USE[m.use].label)}</span>` : '';
   const lead = subject !== HD.PROFILE_SUBJECT ? (m?.lead || '')
     : target?.landing
-      ? 'Where you land: your profile, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
+      ? (HOME.landKey === START_KEY
+        ? 'Where you land: your profile, the settings, your devices and Nimrod, who shows you around. Your own Home is one press away (My Home).'
+        : 'Where you land: you and your people, with big buttons to reach them, and Nimrod at the bottom. Start here is one press away (More); your own Home too (My Home).')
       : 'Your Home is your profile: a dashboard you make your own. Change the scene, add, switch and move what is on it.';
   // Design's edit bar and its tray sit between the title and the stage (home-dashboard: "an edit bar when
   // the module has one"), only for Your Home.
@@ -1277,7 +1300,7 @@ async function openSubject(subject, { view = null } = {}) {
       // WHICH ONE (2026-10-02): an example being tried; else the landing dashboard or your own Home, as
       // `place` says (home_dashboard.js homeShows) -- the landing made, or else tried, nothing made.
       const shows = HD.homeShows({ place: HOME.place, previewKey: PREBUILT_DASHBOARDS[HOME.previewKey] ? HOME.previewKey : null,
-        homeId, landingId: HOME.landing?.id || null, landingKey: LANDING_KEY });
+        homeId, landingId: HOME.landing?.id || null, landingKey: HOME.landKey });
       if (shows.show === 'live') {
         // A DASHBOARD OF YOURS, LIVE (your Home, or the landing once made): the whole of it, as arranged, editable.
         const liveId = shows.id;
@@ -1314,7 +1337,9 @@ async function openSubject(subject, { view = null } = {}) {
         target = { live: false, kind: 'example', key, refs, landing: shows.landing };
         const stage = renderHomeDetail(subject, target);
         e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST, layout: exampleLayout(rec, refs),
-          wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people(), personHost: homePersonHost() });
+          wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people(),
+          // 2026-10-04: and whose screens are shared with this account, read-only (Your people's cards).
+          shared: () => profiles.sharedWithMe(), personHost: homePersonHost() });
       }
     } else {
       const prof = await profiles.get(HOME.defaultId);
@@ -1370,13 +1395,21 @@ async function openSubject(subject, { view = null } = {}) {
  *  `previewKey` (Your Home only): undefined keeps what it shows, null shows the Home itself, a key tries
  *  that example -- trying another example is leaving the one being tried, so it asks too. */
 // `place` (2026-10-02): 'landing' | 'home' -- which of the two the Home subject shows; another one is moving too.
-function requestSubject(subject, { previewKey, place } = {}) {
+// `landKey` (2026-10-04): which dashboard the landing is (Your people / Start here); another one is moving too.
+function requestSubject(subject, { previewKey, place, landKey } = {}) {
   const moving = subject !== HOME.subject || (previewKey !== undefined && previewKey !== HOME.previewKey)
-    || (place !== undefined && place !== HOME.place);
-  if (HOME.draft?.dirty() && moving) return openDialog('leave', { next: subject, previewKey, place });
+    || (place !== undefined && place !== HOME.place) || (landKey !== undefined && landKey !== HOME.landKey);
+  if (HOME.draft?.dirty() && moving) return openDialog('leave', { next: subject, previewKey, place, landKey });
   if (previewKey !== undefined) HOME.previewKey = previewKey;
   if (place !== undefined) HOME.place = place;
+  if (landKey !== undefined) { const more = HOME.moreFrom; setLandKey(landKey); if (landKey === START_KEY) HOME.moreFrom = more; }
   return openSubject(subject);
+}
+/** The landing as `key` (Your people, or Start here), filling the window if it was. `more`: reached by Your people's
+ *  "More", so the bar carries the way back. */
+function goLanding(key, { more = false } = {}) {
+  HOME.moreFrom = more && key === START_KEY;
+  requestSubject(HD.PROFILE_SUBJECT, { previewKey: null, place: 'landing', landKey: key });
 }
 
 // ---- THE HOST: this page's actions and settings, drawn by the kiosk's own bar and ⚙ menu -------------
@@ -1400,6 +1433,9 @@ function homeView() {
     hasHome: !!HOME.home,
     canEditPanel: !!HOME.target && (() => { try { return (dash()?.panels?.() || []).length > 0; } catch { return false; } })(),
     land: HOME.land,
+    // 2026-10-04: the landing's own name (Your people / Start here), and whether More brought us to Start here.
+    landingTitle: landTitle(),
+    moreFrom: HOME.moreFrom && HOME.landKey === START_KEY && !!HOME.target?.landing,
   };
 }
 // *** "TRY IT AS SOMEONE NEW" IN THE ⚙ MENU (2026-10-04, try_new.js). *** Rows of THIS page, so they exist on Home
@@ -1505,6 +1541,10 @@ function homePress(act, p = null) {
     // 2026-10-02: the tutorial dashboard, tried on the stage like any example (Make this my Home or Save
     // keeps it) -- from Nimrod's "Go to the tutorial" and the ⚙ menu's "Nimrod's tutorial".
     case 'tutorial': requestSubject(HD.PROFILE_SUBJECT, { previewKey: 'tutorial' }); break;
+    // 2026-10-04: Your people's "More" (modules/people.js) -- Start here, as the landing, with the way back on the bar;
+    // and that way back (the bar's "‹ Your people", the ⚙ menu's row).
+    case 'more': goLanding(START_KEY, { more: true }); break;
+    case 'people': goLanding(LANDING_KEY); break;
     // 2026-10-02: the landing and your own Home, each one press from the other (the bar's My Home / Start here).
     case 'myhome': {
       const onHome = HOME.subject === HD.PROFILE_SUBJECT && t?.kind === 'home' && !t.landing;
@@ -1719,15 +1759,18 @@ async function resolveHome() {
   return null;
 }
 
-/** The landing dashboard this person has made ({ id }), or null: it is then tried on the stage, nothing made.
- *  Found by the maker's stamp (dashboards.js), so a screen merely NAMED "My Home" is never taken for it. */
-async function resolveLanding() {
+/** The landing dashboards this person has made, by key ({ people: { id }, start: { id } }); one not made is tried on
+ *  the stage, nothing made. Found by the maker's stamp (dashboards.js), so a screen merely NAMED "My Home" is never
+ *  taken for one. (2026-10-04: both, since either can be where somebody lands.) */
+async function resolveLandings() {
   let list = [];
   try { list = (await HOME.profiles.list()) || []; } catch { list = []; }
+  const out = {};
   try {
     const made = await HOME.maker.made(list);
-    return made[LANDING_KEY]?.done ? { id: made[LANDING_KEY].id } : null;
-  } catch { return null; }
+    for (const k of LANDING_KEYS) if (made[k]?.done) out[k] = { id: made[k].id };
+  } catch { /* none known: each is tried */ }
+  return out;
 }
 
 /** Make example `key` this person's Home (once: picking it again finds the one already made). What was
@@ -1750,7 +1793,8 @@ async function makeHome(key, { name = null, snapshot = null, refs = null, asHome
     await writeHistory(r.id, HD.PROFILE_HISTORY_KEY, (doc) => HD.commitVersion(doc, {
       name: name || PREBUILT_DASHBOARDS[key].name, snapshot: rows, keep: HOME.settings.keepVersions }));
   }
-  if (key === LANDING_KEY) HOME.landing = { id: r.id };
+  // (Either landing, made: Your people or Start here -- 2026-10-04.)
+  if (LANDING_KEYS.includes(key)) { HOME.landings[key] = { id: r.id }; if (key === HOME.landKey) HOME.landing = { id: r.id }; }
   const home = asHome || !HOME.home;
   Object.assign(HOME, { previewKey: null, examplesOpen: false, sel: null });
   if (home) {
@@ -1935,7 +1979,7 @@ async function writeHomeLayout(next, base = undefined) {
 /** Says what gave way, if anything did: after `msg` on the page's status line, and on the screen's quiet line. */
 function tellLost(msg = null) {
   const lost = lostNow; lostNow = [];
-  const words = lost.length ? lostEditWords(lost, HOME.target?.landing ? LANDING_TITLE : 'your Home') : '';
+  const words = lost.length ? lostEditWords(lost, HOME.target?.landing ? landTitle() : 'your Home') : '';
   if (!words) { if (msg) toast(msg); return; }
   toast(msg ? `${msg} ${words}` : words);
   try { embed?.kiosk?.say?.(words); } catch { /* the toast said it */ }
@@ -2859,7 +2903,7 @@ async function commitSave(name, { asHome = null } = {}) {
       draft.reset();
       HOME.busy = false;
       await openSubject(HD.PROFILE_SUBJECT, { view: 'edit' });
-      toast(!r.home ? `${LANDING_TITLE} is yours now, saved as “${name}”: it is where you land. Your Home is as it was (My Home).`
+      toast(!r.home ? `${landTitle()} is yours now, saved as “${name}”: it is where you land. Your Home is as it was (My Home).`
         : r.created ? `Your Home is made, and saved as “${name}”. Change anything on it.`
           : 'You had made this one already: here it is, as you left it. It is your Home now.');
     }
@@ -2951,6 +2995,7 @@ hdlg().addEventListener('click', (e) => {
       const next = d.next; closeDialog(); HOME.draft?.discard();
       if (d.previewKey !== undefined) HOME.previewKey = d.previewKey;
       if (d.place !== undefined) HOME.place = d.place;
+      if (d.landKey !== undefined) setLandKey(d.landKey);
       openSubject(next); break;
     }
     case 'save': closeDialog(); doSave(); break;
@@ -3059,7 +3104,7 @@ async function bootHome(wanted) {
   HOME.home = maker ? await resolveHome() : null;
   HOME.profileMade = !!HOME.home;
   // 2026-10-02: the landing dashboard, if this person has made it (else it is tried on the stage).
-  HOME.landing = maker ? await resolveLanding() : null;
+  HOME.landings = maker ? await resolveLandings() : {};
   const qs = new URLSearchParams(location.search);
   // `?example=<key>`: a link that opens one starting point, tried on the stage (a link to share, and the
   // address the pictures in the report are taken from).
@@ -3068,6 +3113,8 @@ async function bootHome(wanted) {
     edit: qs.get('edit') === '1', example: !!PREBUILT_DASHBOARDS[exParam] });
   // WHERE THEY LAND: the landing dashboard, unless their setting says their own Home (`openOn`).
   HOME.place = land.place === 'home' ? 'home' : 'landing';
+  // 2026-10-04: which dashboard the landing is -- Your people, unless "Open on" says Start here.
+  setLandKey(land.place === 'start' ? START_KEY : LANDING_KEY);
   const subject = land.subject === HD.PROFILE_SUBJECT && !maker ? ITEMS[0]?.type : land.subject;
   // The starting points open up front for somebody with no Home yet (until they say not to).
   HOME.examplesOpen = !!maker && !HOME.home && land.subject === HD.PROFILE_SUBJECT && !settings.welcomeDone;

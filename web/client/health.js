@@ -135,6 +135,9 @@ export const HEALTH_EXPECT = {
   library_slot:  { idle: true },
   options:       { idle: true },
   profile:       { idle: true },
+  // 2026-10-04: Your people (faces, names, buttons) and Nimrod at the bottom: left alone, each is a page, not a fault.
+  people:        { idle: true },
+  helper:        { idle: true },
   card_sort:     { idle: true },
   ambient_drift: { idle: true },
   comet_ambient: { idle: true },

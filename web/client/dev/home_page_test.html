@@ -70,7 +70,21 @@ let ifr = null, doc = null, win = null;
 // 2026-10-02 evening: a plain arrival is the dashboard FILLING THE WINDOW; this suite is mostly about the editing
 // page, so it asks for that (`edit=1`, what the dashboard's Edit opens) unless a check is about arriving (`land`).
 // `w`/`h`: the window's size (2026-10-02, late: arriving is checked at a kiosk's 1280x720, where the bar wraps).
+// *** 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): the landing is now Your people
+// (people_page_test covers it). This suite is about Start here and the editor, so each account it opens is set, ONCE,
+// to "Open on: Start here" -- the choice that keeps Start here where you land -- unless the suite already chose
+// something for it. Every check below then holds for Start here as it did when it was the default.
+const startHereSet = new Set();
+async function startHere(user) {
+  if (!user || startHereSet.has(user)) return;
+  startHereSet.add(user);
+  const p = createProfilesClient({ user });
+  const person = (await p.people())[0];
+  const h = createState({ url: p.personStateURL(person.id, 'home'), user });
+  try { const cur = (await h.load()) || {}; if (!cur.openOn) { h.set({ openOn: 'start' }); await h.flush(); } } finally { h.destroy(); }
+}
 async function open(query, { land = false, w = 1300, h = 950 } = {}) {
+  await startHere(new URLSearchParams(query).get('user'));
   ifr?.remove();
   ifr = document.createElement('iframe');
   ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
@@ -896,7 +910,8 @@ try {
   hb('myhome').click();
   check('Start here goes back to the landing', await until(() => pickName() === 'Start here', 15000));
   // The setting: "Open on: My Home".
-  check('*** "Open on" is a row in the ⚙ menu ***', await ensureMenu('set:openOn') && /landing/i.test(hrow('set:openOn').textContent));
+  // (2026-10-04: this account is on "Open on: Start here" -- see `startHere` -- so the next press is My Home.)
+  check('*** "Open on" is a row in the ⚙ menu ***', await ensureMenu('set:openOn') && /Start here/.test(hrow('set:openOn').textContent));
   hrow('set:openOn').click();
   check('...pressed, it says My Home, saved on the person', await until(async () => (await personRow('home')).openOn === 'home', 6000));
   check('*** next visit with "Open on: My Home": straight to your Home (the real one, not a preview), no examples ***',

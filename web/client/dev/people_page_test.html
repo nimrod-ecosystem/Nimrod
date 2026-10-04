@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>your people (the landing) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>your people: the landing as a very simple profile page (people_page.js, modules/people.js, modules/helper.js)</h1>
+<p>Mike, 2026-10-04: a very simple profile page, your people and anyone you are connected to, with clear ways to reach
+them, and Nimrod at the bottom as a helper. The rules (pure), the panel against the real server (who is on it, what
+each button does or why it is dimmed, the screen variant, the switch), and Home landing on it at 375 wide and at
+1280x720 (More opens Start here, "Open on" still picks Start here, "Try it as someone new" lands on it). Needs the
+server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  PEOPLE_TYPE, HELPER_TYPE, BANNED_WORDS, plainWordProblems, ACTIONS, ACTION_LABELS, WHY, connectionsFrom, actionsFor,
+  noteStatusFrom, scanModeOf, stepCursor, incomingFrom, HELPER_OPEN_TOPIC, PEOPLE_VERB_TOPICS, PEOPLE_SETTINGS,
+} from '../people_page.js';
+import { PREBUILT_DASHBOARDS, LANDING_KEY, START_KEY, LANDING_KEYS, recordProblems, prebuiltRecord, layoutFor, EXAMPLE_ORDER, HELPER_SPOT } from '../dashboards.js';
+import * as HD from '../home_dashboard.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { mountModule, listManifests, getManifest } from '../module.js';
+import { MODULE_VERBS } from '../actions.js';
+import { CATALOG } from '../modules_catalog.js';
+import { SHELL_HOST } from '../shell_verbs.js';
+import { DASHBOARD_GO_TOPIC } from '../dashboard_nest.js';
+import { MORE_ACT, MORE_KEY, CALL_PAGE } from '../modules/people.js';
+import { HELPER_ELSEWHERE } from '../modules/helper.js';
+import '../modules/nimrod.js';
+import '../modules/avatar.js';
+import '../modules/note.js';
+import { FIRST_RUN_KEYS, TRY_NEW_KEY, TRY_STASH_KEY, TRIAL_NAME } from '../try_new.js';
+import { LAST_PERSON_KEY } from '../people.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+
+const BASE_USER = new URLSearchParams(location.search).get('user') || ('people-page-' + Math.floor(Math.random() * 1e6));
+const A = `${BASE_USER}-a`, B = `${BASE_USER}-b`, C = `${BASE_USER}-c`, D = `${BASE_USER}-d`;
+async function call(method, path, user, body) {
+  const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
+  return r.json();
+}
+function memState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; subs.forEach((f) => f(v)); }, subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, destroy() { subs.clear(); } };
+}
+
+try {
+  // ============================================================================================
+  section('*** the rules, pure ***');
+  check('the banned words are found, whole words, plural too, any case',
+    J(plainWordProblems('This Module and two panels on a dashboard; a grant')) === J(['module', 'dashboard', 'panel', 'grant'])
+    && !plainWordProblems('Grantham modular paneling granted').length && J(BANNED_WORDS) === J(['module', 'dashboard', 'panel', 'grant']));
+  const conn = connectionsFrom({ own: [{ id: 'me', name: 'Pat' }, { id: 'r', name: 'Robin' }, { id: 'x', name: '' }],
+    shared: [{ person_id: 's', name: 'Sam' }, { person_id: 'r', name: 'Robin again' }, { person_id: 'me', name: 'me' }], selfId: 'me' });
+  check('*** connections: your account’s people (not you), then shared ones, each once, the account’s own winning ***',
+    J(conn) === J([{ id: 'r', name: 'Robin', via: 'account' }, { id: 'x', name: 'Someone', via: 'account' }, { id: 's', name: 'Sam', via: 'shared' }]), J(conn));
+  const a = (o) => actionsFor({ id: 'p', name: 'Sam' }, o);
+  check('*** every card has the same five, in order: Call, Send a message, Share a picture, a song, a video ***',
+    J(a({}).map((x) => x.act)) === J(ACTIONS) && J(ACTIONS) === J(['call', 'message', 'picture', 'song', 'video'])
+    && a({}).every((x) => x.label === ACTION_LABELS[x.act]));
+  const ok = a({ may: true, noteStatus: 'ok', callHref: '/call.html?person=p' });
+  check('may call and may leave a message: Call is a link, Send a message is live, nothing dimmed on them',
+    ok[0].enabled && ok[0].href === '/call.html?person=p' && ok[1].enabled && !ok[0].reason && !ok[1].short);
+  check('*** share a picture / song / video: dimmed, "coming soon", with why ***',
+    ok.slice(2).every((x) => !x.enabled && x.short === 'Coming soon' && /Coming soon: there is no way yet to send a (picture|song|video)/.test(x.reason)));
+  const scr = a({ isScreen: true, may: true, noteStatus: 'ok' });
+  check('*** on a screen: Call and Send a message are dimmed, saying they are made from a phone or computer ***',
+    !scr[0].enabled && scr[0].reason === WHY.callOnScreen && !scr[1].enabled && scr[1].reason === WHY.messageOnScreen && !scr[0].href);
+  check('may not call: dimmed with why; still finding out: Checking…',
+    !a({ may: false })[0].enabled && a({ may: false })[0].reason === WHY.callNotAllowed && a({ may: null })[0].reason === WHY.checking);
+  check('*** message: not ticked, no screen, could not check, checking -- each dimmed with its own words ***',
+    /Sam can’t get messages from you yet/.test(a({ noteStatus: 'refused' })[1].reason) && /Sam has no screen yet/.test(a({ noteStatus: 'none' })[1].reason)
+    && a({ noteStatus: 'error' })[1].reason === WHY.messageError && a({ noteStatus: null })[1].reason === WHY.checking
+    && [a({ noteStatus: 'refused' })[1], a({ noteStatus: 'none' })[1], a({ noteStatus: 'error' })[1]].every((x) => !x.enabled && x.short));
+  check('the server’s answer read as a message status', noteStatusFrom(403) === 'refused' && noteStatusFrom(404) === 'refused'
+    && noteStatusFrom(200, { screens: [{ id: 1 }] }) === 'ok' && noteStatusFrom(200, { screens: [] }) === 'none' && noteStatusFrom(500) === 'error' && noteStatusFrom(401) === 'error');
+  check('*** the switch follows "How you choose things": step walks cards then buttons, point every button ***',
+    scanModeOf('step') === 'rows' && scanModeOf('point') === 'one' && scanModeOf(undefined) === 'one');
+  check('the cursor wraps both ways', stepCursor(2, 3, 1) === 0 && stepCursor(0, 3, -1) === 2 && stepCursor(5, 0, 1) === 0);
+  const inc = incomingFrom([{ name: 'Kitchen', note: { created_at: '2026-10-04T10:00:00Z', data: { text: 'old', author: 'A' } } },
+    { name: 'Den', note: { created_at: '2026-10-04T12:00:00Z', data: { text: 'new', author: 'B' } } }, { name: 'X', note: null }], { limit: 3 });
+  check('messages for you: newest first, one per screen, empty ones left out', J(inc.map((m) => m.text)) === J(['new', 'old']) && incomingFrom(inc, { limit: 0 }).length === 0);
+  const allWords = [...Object.values(ACTION_LABELS), ...Object.values(WHY).map((w) => (typeof w === 'function' ? w('Sam') : w)),
+    ...PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`), HELPER_ELSEWHERE].join(' ');
+  check('*** every word the rules can put on the page is plain (no module, dashboard, panel or grant) ***', !plainWordProblems(allWords).length, J(plainWordProblems(allWords)));
+  check('names nobody', !/her screen|christine|cici/i.test(allWords));
+
+  // ============================================================================================
+  section('*** the landing is one ready-made dashboard: Your people, with Nimrod over it at the bottom ***');
+  const known = new Set(listManifests().map((m) => m.type));
+  const rec = prebuiltRecord('people');
+  check('*** LANDING_KEY is people; Start here is START_KEY; both can be where you land ***',
+    LANDING_KEY === 'people' && START_KEY === 'start' && J(LANDING_KEYS) === J(['people', 'start']));
+  check('the record is valid (registered modules, a layout that keeps both)', recordProblems(rec, { knownTypes: known }).length === 0, J(recordProblems(rec, { knownTypes: known })));
+  const lay = layoutFor(rec, { people: 'P', helper: 'H' });
+  const ov = (lay.placed || []).find((p) => p.id === 'H');
+  check('*** one panel filling it (people), and Nimrod as an OVERLAY in the bottom right, out of the switch lap ***',
+    lay.preset === 'full' && J(lay.slots) === J(['P']) && ov && ov.place === 'overlay' && ov.y > 50 && ov.x > 50 && ov.scan === false
+    && ov.y + ov.h / 2 <= 90, J(lay));
+  check('it is not one of Home’s cards (it is where you land), and Start here still is', !EXAMPLE_ORDER.includes('people') && EXAMPLE_ORDER.includes('start'));
+  check('both are described in the catalog, in plain words, and a switch reaches them (MODULE_VERBS)',
+    CATALOG.some((c) => c.type === PEOPLE_TYPE) && CATALOG.some((c) => c.type === HELPER_TYPE)
+    && !plainWordProblems(J(CATALOG.find((c) => c.type === PEOPLE_TYPE))).length
+    && J(Object.keys(MODULE_VERBS.people)) === J(['next', 'prev', 'select', 'back']) && MODULE_VERBS.people.next === PEOPLE_VERB_TOPICS.next
+    && !!MODULE_VERBS.helper?.select);
+  check('the catalog title equals the manifest title', CATALOG.find((c) => c.type === PEOPLE_TYPE).title === getManifest(PEOPLE_TYPE).title
+    && CATALOG.find((c) => c.type === HELPER_TYPE).title === getManifest(HELPER_TYPE).title);
+
+  section('*** "Open on": Your people by default, Start here and My Home still choices ***');
+  check('*** the default lands on the landing (Your people), and it is the first of three choices ***',
+    HD.HOME_DEFAULTS.openOn === 'landing' && J(HD.HOME_SETTINGS.find((r) => r.key === 'openOn').options.map(([v]) => v)) === J(['landing', 'start', 'home'])
+    && HD.homeSettingLabel(HD.readHomeSettings({}), 'openOn') === 'Your people');
+  check('Start here is a choice, and obeyed', HD.homeLanding({ signedIn: true, settings: { openOn: 'start' } }).place === 'start'
+    && HD.readHomeSettings({ openOn: 'start' }).openOn === 'start');
+  check('what it shows: Your people tried until made', J(HD.homeShows({ landingKey: LANDING_KEY })) === J({ show: 'example', key: 'people', landing: true }));
+  const bl = HD.homeBarItems({ target: { live: false, kind: 'example' }, land: true, landingTitle: 'Start here', moreFrom: true });
+  check('*** after More, the bar carries the way back FIRST: ‹ Your people ***', bl[0].act === 'people' && bl[0].label === '‹ Your people'
+    && J(HD.homeBarItems({ target: { live: false, kind: 'example' }, land: true }).filter((i) => i.act).map((i) => i.act)) === J(['edit', 'myhome', 'save']));
+  check('the place button names the landing it goes back to', HD.homeBarItems({ onHome: true, land: true })[1].label === 'Your people'
+    && HD.homeBarItems({ onHome: true, land: true, landingTitle: 'Start here' })[1].label === 'Start here');
+  const mrows = HD.homeMenuModel({ land: true }).filter((i) => i.kind === 'item').map((i) => i.act);
+  check('the ⚙ menu has a row for each place you can land (a switch reaches both)', mrows.includes('people') && mrows.includes('more'));
+
+  // ============================================================================================
+  section('(setup) three accounts: Pat and Robin on one; Sam shares and says yes to messages; Lee shares only');
+  const a1 = (await call('GET', '/api/people', A)).people[0];
+  await call('PATCH', `/api/people/${a1.id}`, A, { name: 'Pat' });
+  const a2 = await call('POST', '/api/people', A, { name: 'Robin' });
+  await call('POST', '/api/profiles', A, { name: 'Bedside', person_id: a2.id });
+  const sa1 = await call('POST', '/api/profiles', A, { name: 'Kitchen', person_id: a1.id });
+  await call('POST', `/api/profiles/${sa1.id}/events/note`, A, { kind: 'note', data: { text: 'Hello from the garden', author: 'Sam' } });
+  const b1 = (await call('GET', '/api/people', B)).people[0];
+  await call('PATCH', `/api/people/${b1.id}`, B, { name: 'Sam' });
+  await call('POST', '/api/profiles', B, { name: 'Den', person_id: b1.id });
+  await call('POST', `/api/people/${b1.id}/drive-grants`, B, { subject_id: A });
+  await call('PUT', `/api/people/${b1.id}/state/input-bindings`, B, { data: { noteWriters: [A] }, base_version: 0 });
+  const c1 = (await call('GET', '/api/people', C)).people[0];
+  await call('PATCH', `/api/people/${c1.id}`, C, { name: 'Lee' });
+  await call('POST', `/api/people/${c1.id}/drive-grants`, C, { subject_id: A });
+  check('(setup) seeded', !!(a1 && a2 && b1 && c1));
+
+  // ============================================================================================
+  section('*** the page, on a phone or computer (375 wide) ***');
+  const box = document.createElement('div');
+  box.style.cssText = 'position:relative;width:375px;height:760px;overflow:hidden;border:1px solid #888';
+  document.body.append(box);
+  const bus = createBus();
+  const said = [];
+  for (const t of [SHELL_HOST, DASHBOARD_GO_TOPIC]) bus.subscribe(t, (p) => said.push([t, p]));
+  let mode = 'point';
+  const profilesA = createProfilesClient({ user: A });
+  const ctx = { mount: box, bus, state: memState(), personId: a1.id, instanceId: 'pp-test', user: A, profiles: profilesA,
+    isScreen: false, chooseMode: () => mode,
+    makePersonState: (pid, key) => createState({ url: profilesA.personStateURL(pid, key), user: A }) };
+  const inst = mountModule(PEOPLE_TYPE, ctx);
+  await inst.init();
+  const q = (s) => box.querySelector(s);
+  const qa = (s) => [...box.querySelectorAll(s)];
+  const cardOf = (name) => qa('[data-pp-card]').find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  const btnOf = (name, act) => cardOf(name)?.querySelector(`[data-pp-act="${act}"]`);
+  await until(() => cardOf('Lee') && !qa('[data-pp-act="message"] small').some((s) => /Checking/.test(s.textContent)) && q('[data-pp-incoming]'), 15000);
+  check('*** your own card first: your name, your picture (or your initial), and Edit my picture ***',
+    q('[data-pp-self-name]')?.textContent === 'Pat' && !!q('[data-pp-card="self"] .pp-face *') && !!q('[data-pp-card="self"] [data-pp-act="picture-edit"]:not([aria-disabled="true"])'));
+  check('*** a card for each of your people and connections: Robin (your account), Sam and Lee (shared with you) ***',
+    J(qa('[data-pp-name]').map((n) => n.textContent)) === J(['Robin', 'Sam', 'Lee']) && /On your account/.test(cardOf('Robin').textContent)
+    && /Shared with you/.test(cardOf('Lee').textContent), J(qa('[data-pp-name]').map((n) => n.textContent)));
+  check('each has the five buttons, in order, by their plain names',
+    ['Robin', 'Sam', 'Lee'].every((n) => J([...cardOf(n).querySelectorAll('[data-pp-act]')].map((b) => b.dataset.ppAct)) === J(ACTIONS)));
+  check('*** Call: a link to the caller page for that person, for everybody this account may call ***',
+    ['Robin', 'Sam', 'Lee'].every((n) => btnOf(n, 'call')?.tagName === 'A') && btnOf('Sam', 'call').getAttribute('href') === `/call.html?person=${b1.id}`
+    && btnOf('Robin', 'call').getAttribute('href') === `/call.html?person=${a2.id}`);
+  check('*** Send a message: live for Robin (yours, with a screen) and Sam (said yes) ***',
+    btnOf('Robin', 'message').getAttribute('aria-disabled') !== 'true' && btnOf('Sam', 'message').getAttribute('aria-disabled') !== 'true', J(inst.impl.__probe().notes));
+  check('*** ...dimmed for Lee, who has not said yes, with why, on the button and in its description ***',
+    btnOf('Lee', 'message').getAttribute('aria-disabled') === 'true' && /Not allowed yet/.test(btnOf('Lee', 'message').textContent)
+    && /Lee can’t get messages from you yet/.test(btnOf('Lee', 'message').dataset.ppWhy));
+  check('*** Share a picture / a song / a video: dimmed, Coming soon, everywhere ***',
+    ['picture', 'song', 'video'].every((k) => ['Robin', 'Sam', 'Lee'].every((n) => btnOf(n, k).getAttribute('aria-disabled') === 'true' && /Coming soon/.test(btnOf(n, k).textContent))));
+  btnOf('Lee', 'picture').click();
+  check('a dimmed button, pressed, says why on its card (a phone has no hover)', await until(() => /no way yet to send a picture/.test(cardOf('Lee').querySelector('.pp-why')?.textContent || ''), 3000));
+  check('*** messages for you: the note on your screen, with who left it ***', /Sam: Hello from the garden/.test(q('[data-pp-incoming]')?.textContent || ''));
+  check('*** a clear "Connect with someone", saying it is coming and what works today ***', /Connect with someone/.test(q('[data-pp-card="connect"]')?.textContent || '')
+    && /Coming soon/.test(q('[data-pp-connect]').textContent));
+  check('More and Ask Nimrod are on the page', !!q('[data-pp-act="more"]') && !!q('[data-pp-act="nimrod"]'));
+  const words = box.querySelector('[data-pp-list]').textContent;
+  check('*** PLAIN WORDS: nothing on the page says module, dashboard, panel or grant ***', !plainWordProblems(words).length, J(plainWordProblems(words)));
+  const tall = qa('[data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  check('*** every button is at least 44px tall at 375 wide ***', tall.length > 10 && tall.every((h) => h >= 44), J(tall.map(Math.round)));
+  const root = q('.pp-root');
+  check('*** no sideways scroll at 375 wide ***', root.scrollWidth <= root.clientWidth + 1, `${root.scrollWidth} > ${root.clientWidth}`);
+
+  // Send a message: the note, from your own sign-in, over the page.
+  btnOf('Sam', 'message').click();
+  check('*** Send a message opens the note for Sam over the page, signed by you ***', await until(() => q('[data-pp-sheet="message"]') && /A note for Sam/.test(q('[data-pp-sheet="message"]').textContent), 8000)
+    && await until(() => !!q('[data-pp-sheet="message"] [data-nv-name-form]'), 8000));
+  check('...with a way back, first', q('[data-pp-sheet] [data-pp-close]')?.textContent.includes('Back to your people'));
+  q('[data-pp-close]').click();
+  check('...and Back closes it', !q('[data-pp-sheet]'));
+  // More: on Home, the page's own press.
+  said.length = 0;
+  q('[data-pp-act="more"]').click();
+  check('*** More asks the page for Start here (off a screen) ***', said.some(([t, p]) => t === SHELL_HOST && p.act === MORE_ACT) && MORE_KEY === 'start');
+
+  // The switch.
+  section('*** a switch: every button in turn (point), or cards then buttons (step) ***');
+  bus.publish(PEOPLE_VERB_TOPICS.next);
+  check('the first verb only shows the cursor (nothing pressed)', !!q('.is-scan') && !q('[data-pp-sheet]'));
+  const lit = () => q('.is-scan');
+  bus.publish(PEOPLE_VERB_TOPICS.next);
+  check('point: next walks the buttons (dimmed ones skipped)', lit()?.dataset.ppAct && lit().getAttribute('aria-disabled') !== 'true', lit()?.outerHTML.slice(0, 80));
+  mode = 'step';
+  bus.publish(PEOPLE_VERB_TOPICS.back);
+  bus.publish(PEOPLE_VERB_TOPICS.next);
+  check('*** step: next lights a CARD ***', lit()?.matches('[data-pp-card]'), lit()?.outerHTML.slice(0, 80));
+  for (let i = 0; i < 6 && lit()?.querySelector('[data-pp-name]')?.textContent !== 'Sam'; i++) bus.publish(PEOPLE_VERB_TOPICS.next);
+  check('(setup) Sam’s card lit', lit()?.querySelector('[data-pp-name]')?.textContent === 'Sam');
+  bus.publish(PEOPLE_VERB_TOPICS.select);
+  check('*** select goes into the card: its first button lit (Call) ***', lit()?.dataset.ppAct === 'call');
+  bus.publish(PEOPLE_VERB_TOPICS.next);
+  check('next: Send a message', lit()?.dataset.ppAct === 'message');
+  bus.publish(PEOPLE_VERB_TOPICS.select);
+  check('*** select presses it: the message opens ***', await until(() => !!q('[data-pp-sheet="message"]'), 4000));
+  bus.publish(PEOPLE_VERB_TOPICS.back);
+  check('back closes it', !q('[data-pp-sheet]'));
+  bus.publish(PEOPLE_VERB_TOPICS.back);
+  check('back again comes out of the card', lit()?.matches('[data-pp-card]'));
+
+  // Nimrod at the bottom, opened over the page.
+  section('*** Nimrod at the bottom ***');
+  const hbox = document.createElement('div'); hbox.style.cssText = 'position:relative;width:135px;height:84px'; document.body.append(hbox);
+  const helper = mountModule(HELPER_TYPE, { mount: hbox, bus, state: memState(), personId: a1.id, instanceId: 'hp-test' });
+  helper.init();
+  const hb = hbox.querySelector('[data-hp-open]');
+  check('*** the helper: his face and "Ask Nimrod", a target at least 44px ***', /Ask Nimrod/.test(hb?.textContent || '') && !!hb.querySelector('img')
+    && hb.getBoundingClientRect().height >= 44 && !plainWordProblems(hbox.textContent).length);
+  hb.click();
+  check('*** pressed: Nimrod opens over Your people (it answers his ask) ***', await until(() => q('[data-pp-sheet="nimrod"] [data-nimrod-guide]'), 8000) && !hbox.querySelector('[data-hp-note]'));
+  q('[data-pp-close]').click();
+  const lone = document.createElement('div'); lone.style.cssText = 'position:relative;width:135px;height:84px'; document.body.append(lone);
+  const helper2 = mountModule(HELPER_TYPE, { mount: lone, bus: createBus(), state: memState(), personId: a1.id, instanceId: 'hp-2' });
+  helper2.init();
+  lone.querySelector('[data-hp-open]').click();
+  check('over a page that cannot show him, he says where he is instead (words, nothing to dismiss)', lone.querySelector('[data-hp-note]')?.textContent === HELPER_ELSEWHERE);
+  helper2.destroy(); lone.remove();
+  inst.destroy(); box.remove(); helper.destroy(); hbox.remove();
+
+  // ============================================================================================
+  section('*** on a screen in somebody’s room: faces and names, and what came in ***');
+  const sbox = document.createElement('div'); sbox.style.cssText = 'position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(sbox);
+  const sbus = createBus(); const ssaid = [];
+  sbus.subscribe(DASHBOARD_GO_TOPIC, (p) => ssaid.push(p));
+  const sinst = mountModule(PEOPLE_TYPE, { ...ctx, mount: sbox, bus: sbus, isScreen: true, instanceId: 'pp-screen', state: memState() });
+  await sinst.init();
+  const sq = (s) => sbox.querySelector(s);
+  await until(() => sq('[data-pp-face]') && sq('[data-pp-incoming]'), 10000);
+  check('*** the people as faces with names ***', J([...sbox.querySelectorAll('[data-pp-face] [data-pp-name]')].map((n) => n.textContent)) === J(['Robin', 'Sam', 'Lee']));
+  check('*** no Call, no Send a message, no Share, no Edit my picture: a screen sends nothing ***',
+    !sq('[data-pp-act="call"]') && !sq('[data-pp-act="message"]') && !sq('[data-pp-act="picture"]') && !sq('[data-pp-act="picture-edit"]') && !sq('a[href*="call.html"]:not([data-elsewhere] a)'));
+  check('*** ...one line saying calls and messages are made from a phone or computer, with the address (and a code to scan) ***',
+    /phone or computer/.test(sq('[data-pp-screen-line]')?.textContent || '') && sq('[data-elsewhere]')?.dataset.elsewhere === CALL_PAGE
+    && /call\.html/.test(sq('[data-elsewhere-address]')?.textContent || ''));
+  check('*** what came in: the message left for this screen’s person ***', /Hello from the garden/.test(sq('[data-pp-incoming]')?.textContent || ''));
+  sq('[data-pp-act="more"]').click();
+  check('More on a screen goes to the ready-made Start here (a press, like "go to my room")', ssaid.some((p) => p.prebuilt === 'start'));
+  sq('[data-pp-act="nimrod"]').click();
+  check('Ask Nimrod opens him over the page there too', await until(() => sq('[data-pp-sheet="nimrod"]'), 4000));
+  check('plain words on the screen too', !plainWordProblems(sbox.querySelector('[data-pp-list]').textContent).length, J(plainWordProblems(sbox.querySelector('[data-pp-list]').textContent)));
+  sinst.destroy(); sbox.remove();
+
+  // ============================================================================================
+  section('*** Home lands on Your people (a brand-new person, 375 wide) ***');
+  let ifr = null, doc = null, win = null;
+  async function open(query, { w = 375, h = 812 } = {}) {
+    ifr?.remove();
+    ifr = document.createElement('iframe');
+    ifr.style.cssText = `position:fixed;left:-9999px;top:0;width:${w}px;height:${h}px;border:0`;
+    document.body.append(ifr);
+    await new Promise((res) => { ifr.onload = res; ifr.src = `../modules.html?${query}`; });
+    doc = ifr.contentDocument; win = ifr.contentWindow;
+  }
+  const $ = (s) => doc.querySelector(s);
+  const $$ = (s) => [...doc.querySelectorAll(s)];
+  const hbar = (k) => $(`#stage .tb-bar .tb-host [data-host="${k}"]`);
+  await open(`user=${encodeURIComponent(D)}`);
+  check('*** a plain arrival fills the window with Your people ***', await until(() => doc.body.classList.contains('is-land') && $('#stage .k-cell[data-kind="people"] [data-people-page]'), 45000),
+    `land=${doc.body.classList.contains('is-land')} err=${doc.body.dataset.homeError || '-'}`);
+  check('...for this person, by name ("You")', await until(() => /You/.test($('#stage [data-pp-card="self"]')?.textContent || ''), 8000));
+  const ovl = $('#stage .k-placed-overlay [data-helper]');
+  check('*** Nimrod is over it, at the bottom: the helper overlay ***', !!ovl && ovl.getBoundingClientRect().top > win.innerHeight / 2);
+  const stageText = $('#stage [data-pp-list]')?.textContent || '';
+  check('*** plain words on the landing (the page and Nimrod at the bottom) ***', !plainWordProblems(stageText + ovl?.textContent).length, J(plainWordProblems(stageText)));
+  const pstops = $$('#stage [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  check('*** targets at least 44px at 375 ***', pstops.length >= 3 && pstops.every((x) => x >= 44), J(pstops.map(Math.round)));
+  check('*** no sideways scroll at 375 (the page or Your people) ***', doc.documentElement.scrollWidth <= doc.documentElement.clientWidth + 1
+    && $('#stage .pp-root').scrollWidth <= $('#stage .pp-root').clientWidth + 1, `${doc.documentElement.scrollWidth} ${$('#stage .pp-root')?.scrollWidth}`);
+  check('nothing made on the account by arriving', (await createProfilesClient({ user: D }).list()).length === 1);
+  $('#stage [data-pp-act="more"]').click();
+  check('*** More: Start here fills the window (profile, settings, Nimrod, devices) ***',
+    await until(() => J($$('#stage .k-cell').map((c) => c.dataset.kind).filter(Boolean).sort()) === J(['devices', 'nimrod', 'profile', 'settings']) && doc.body.classList.contains('is-land'), 20000),
+    J($$('#stage .k-cell').map((c) => c.dataset.kind)));
+  check('*** ...and the bar carries the way back, first: ‹ Your people ***', await until(() => hbar('people')?.textContent === '‹ Your people', 6000)
+    && $$('#stage .tb-bar .tb-host button')[0] === hbar('people'));
+  hbar('people').click();
+  check('*** ‹ Your people goes back ***', await until(() => !!$('#stage [data-people-page]') && !hbar('people'), 20000));
+
+  section('*** 1280x720: the same landing ***');
+  await open(`user=${encodeURIComponent(D)}`, { w: 1280, h: 720 });
+  check('Your people fills the window at 1280x720', await until(() => doc.body.classList.contains('is-land') && $('#stage [data-people-page]'), 45000));
+  const ov2 = $('#stage .k-placed-overlay [data-helper]')?.getBoundingClientRect();
+  check('Nimrod bottom right, inside the window', !!ov2 && ov2.left > 640 && ov2.top > 360 && ov2.bottom <= 720 && ov2.right <= 1280, J(ov2));
+  check('no sideways scroll at 1280', doc.documentElement.scrollWidth <= 1281);
+
+  section('*** "Open on: Start here" still lands there ***');
+  const dper = (await createProfilesClient({ user: D }).people())[0];
+  { const h = createState({ url: createProfilesClient({ user: D }).personStateURL(dper.id, HD.HOME_STATE_KEY), user: D }); await h.load(); h.set({ openOn: 'start' }); await h.flush(); h.destroy(); }
+  await open(`user=${encodeURIComponent(D)}`, { w: 1280, h: 720 });
+  check('*** with "Open on: Start here", the arrival is Start here (four up) ***',
+    await until(() => J($$('#stage .k-cell').map((c) => c.dataset.kind).filter(Boolean).sort()) === J(['devices', 'nimrod', 'profile', 'settings']), 45000)
+    && !hbar('people'), J($$('#stage .k-cell').map((c) => c.dataset.kind)));
+
+  section('*** "Try it as someone new" lands a brand-new person on Your people ***');
+  const realKeys = [LAST_PERSON_KEY, TRY_NEW_KEY, TRY_STASH_KEY, ...FIRST_RUN_KEYS];
+  const realBefore = Object.fromEntries(realKeys.map((k) => [k, localStorage.getItem(k)]));
+  try {
+    localStorage.setItem(LAST_PERSON_KEY, dper.id);
+    await open(`user=${encodeURIComponent(D)}`, { w: 1280, h: 720 });
+    await until(() => !!$('#stage .tb-bar [data-act="settings"]'), 45000);
+    const row = (act) => $(`#stage .st-item[data-id="home:${act}"]`);
+    for (let i = 0; i < 3 && !row('trynew'); i++) { $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')?.click(); await until(() => !!row('trynew'), 4000); }
+    check('(setup) the ⚙ menu offers Try it as someone new', !!row('trynew'));
+    const reloaded = new Promise((res) => { ifr.addEventListener('load', res, { once: true }); });
+    row('trynew')?.click();
+    await Promise.race([reloaded, sleep(15000)]);
+    doc = ifr.contentDocument; win = ifr.contentWindow;
+    check('*** as the test person: the landing is Your people, for them ***',
+      await until(() => !!doc.querySelector('#stage [data-people-page]') && doc.querySelector('#stage [data-pp-self-name]')?.textContent === TRIAL_NAME
+        && !!doc.querySelector('#home-trial [data-trial-bar]'), 45000), doc.querySelector('#stage [data-pp-self-name]')?.textContent);
+    const back = new Promise((res) => { ifr.addEventListener('load', res, { once: true }); });
+    for (let i = 0; i < 3 && !doc.querySelector('#stage .st-item[data-id="home:tryback"]'); i++) {
+      doc.querySelector('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]')?.click();
+      await until(() => !!doc.querySelector('#stage .st-item[data-id="home:tryback"]'), 4000);
+    }
+    doc.querySelector('#stage .st-item[data-id="home:tryback"]')?.click();
+    await Promise.race([back, sleep(15000)]);
+    check('(cleanup) Back to me', localStorage.getItem(LAST_PERSON_KEY) === dper.id);
+  } finally {
+    ifr?.remove();
+    for (const [k, v] of Object.entries(realBefore)) { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }
+  }
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

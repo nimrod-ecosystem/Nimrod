@@ -85,7 +85,15 @@ export const BAR_HIDE_CHOICES = Object.freeze([0, 3000, 6000, 10000, 30000]);
 //   are; somebody who wants their own Home first says so once (this row) and it sticks.
 //   AGAINST: a person who made a Home and returns every day presses My Home every day until they find this
 //   row -- one press, and one more to stop it ever again. The other way round strands nobody either.
-export const OPEN_ON_CHOICES = Object.freeze(['landing', 'home']);
+// *** 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): THREE CHOICES. *** 'landing' is now
+// "Your people" (dashboards.js LANDING_KEY), the default; 'start' is the four-up Start here it superseded, kept as a
+// choice of its own for somebody who wants to land on it ("so someone can still choose the full Start here"); 'home'
+// is unchanged. 'landing' keeps its name so a row saved with it (or with nothing) lands on the new default. Start
+// here is also one press from Your people ("More").
+export const OPEN_ON_CHOICES = Object.freeze(['landing', 'start', 'home']);
+// The landing's name, in the words the bar and the menu use for it (dashboards.js `people`.title).
+export const LANDING_TITLE_DEFAULT = 'Your people';
+export const START_TITLE = 'Start here';
 // `arriveIn` (Mike, 2026-10-02 evening, on a screenshot of the landing drawn inside the page: "It's supposed to
 // be a dashboard, not a dashboard on a webpage. The dashboard should be the whole screen."): HOW a signed-in
 // person arrives. 'dashboard' -- the dashboard `openOn` names, filling the browser window, no page around it
@@ -107,7 +115,7 @@ const HOME_ID_MAX = 200;
 // settings_fields.js's one-switch rule: a control that stops at its end strands somebody there).
 export const HOME_SETTINGS = Object.freeze([
   { key: 'openOn', label: 'Open on',
-    options: [['landing', 'The landing dashboard (Start here)'], ['home', 'My Home']] },
+    options: [['landing', 'Your people'], ['start', 'Start here'], ['home', 'My Home']] },
   { key: 'arriveIn', label: 'When I arrive, show',
     options: [['dashboard', 'The dashboard, filling the window'], ['page', 'The editing page']] },
   { key: 'openIn', label: 'Open my Home in',
@@ -198,11 +206,19 @@ export function homeStatusText({ target = null, dirty = false, docCurrent = null
 // Home is ONE press away, and so is the way back: one button that says where it goes. `onHome`: the page's
 // own Home is what is on the stage (the button then goes to the landing). Never dimmed: with no Home made
 // yet, My Home opens the starting points (making one is how you get one).
-export function placeButton({ onHome = false, hasHome = false } = {}) {
+// (2026-10-04: the landing is named, not assumed: `landingTitle` is Your people, or Start here for somebody whose "Open
+// on" says so.)
+export function placeButton({ onHome = false, hasHome = false, landingTitle = LANDING_TITLE_DEFAULT } = {}) {
   return onHome
-    ? { act: 'myhome', label: 'Start here', title: 'the landing dashboard: your profile, the settings, your devices and Nimrod' }
+    ? { act: 'myhome', label: landingTitle, title: landingTitle === START_TITLE
+      ? 'the landing dashboard: your profile, the settings, your devices and Nimrod'
+      : `${landingTitle}: where you land` }
     : { act: 'myhome', label: 'My Home', title: hasHome ? 'the Home you made your own' : 'you have not made a Home yet: this shows the starting points' };
 }
+// *** "MORE" AND THE WAY BACK (2026-10-04). *** Your people's "More" shows Start here, filling the window as the landing
+// does; the bar then carries the way back, first, in words. Only after More (`moreFrom`): somebody whose "Open on" is
+// Start here lands there with the bar they had.
+export const PEOPLE_ITEM = Object.freeze({ act: 'people', label: '‹ Your people', title: 'back to your people: where you land' });
 
 // *** THE DASHBOARD, FILLING THE WINDOW, AND THE EDITOR (2026-10-02 evening, `arriveIn`). *** One button, in
 // the SAME first place on both, says where it goes: on the dashboard it is Edit (this page, as the editor), on
@@ -213,7 +229,8 @@ export const LAND_ITEM = Object.freeze({ act: 'land', label: 'Dashboard',
   title: 'the dashboard on its own, filling the window' });
 
 export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
-  docCurrent = null, canSwitch = false, switchOpen = false, onHome = false, hasHome = false, land = false } = {}) {
+  docCurrent = null, canSwitch = false, switchOpen = false, onHome = false, hasHome = false, land = false,
+  landingTitle = LANDING_TITLE_DEFAULT, moreFrom = false } = {}) {
   const t = target;
   // Lit while there is something to save: a change, or (on the editing page) a dashboard not made yet. Arriving
   // on the dashboard, only a change lights it (`homeStatusText` argues it).
@@ -223,11 +240,11 @@ export function homeBarItems({ title = '', target = null, dirty = false, busy = 
   const status = { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent, land }), dirty: !!dirty };
   // ON THE DASHBOARD: Edit, the other place, and Save -- a setting changed from the ⚙ menu here is held for
   // Save like anywhere on this page, so Save stays where it can be pressed. The rest is the editor's.
-  if (land) return [{ ...EDIT_ITEM }, placeButton({ onHome, hasHome }), save, status];
+  if (land) return [...(moreFrom ? [{ ...PEOPLE_ITEM }] : []), { ...EDIT_ITEM }, placeButton({ onHome, hasHome, landingTitle }), save, status];
   return [
     { ...LAND_ITEM },
     { act: 'picker', label: `Modules: ${title || '…'}`, title: 'choose what you are looking at', expanded: !!pickerOpen },
-    placeButton({ onHome, hasHome }),
+    placeButton({ onHome, hasHome, landingTitle }),
     save,
     { act: 'saveas', label: 'Save as…', title: 'keep a copy under a new name', disabled: !t || busy },
     { act: 'history', label: 'History', title: 'your last saves; restoring deletes nothing', disabled: !t || !t.live || busy },
@@ -255,17 +272,20 @@ export function homeShellLabel(act, { menuOpen = false, full = false, land = fal
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
   settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false, onHome = false, hasHome = false,
-  canEditPanel = false, land = false } = {}) {
+  canEditPanel = false, land = false, landingTitle = LANDING_TITLE_DEFAULT } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
-  const place = placeButton({ onHome, hasHome });
+  const place = placeButton({ onHome, hasHome, landingTitle });
   return [
     { kind: 'heading', id: 'home-head', label: 'This page (Home)' },
     // The bar's first button, as the menu's first row (a switch walking the menu reaches it the same way).
     land ? item('edit', 'Edit…', { hint: EDIT_ITEM.title }) : item('land', 'The dashboard, filling the window', { hint: 'leave the editing page' }),
     item('picker', `Modules: ${title || '…'}`, { hint: 'choose what you are looking at' }),
     item('myhome', place.label, { hint: place.title }),
+    // 2026-10-04: the two places you can land, each a row (a switch reaches both; "Open on" picks which is first).
+    item('people', 'Your people', { hint: 'you and your people, with ways to reach them: where you land' }),
+    item('more', 'Start here…', { hint: 'four to begin with: your profile, the settings, your devices and Nimrod' }),
     // EDIT MODE (edit_mode.js): the chosen panel (the bar's Panel ▸), edited in place -- press a thing in it
     // and its options show. The same as its ✎ corner. `canEditPanel`: a dashboard with panels is on the stage.
     item('editpanel', 'Edit the chosen panel', { hint: 'press a thing in it to see its options; Done or Escape stops', disabled: !canEditPanel }),
@@ -313,8 +333,9 @@ export function homeLanding({ signedIn = false, wanted = null, known = () => fal
   if (wanted && wanted !== PROFILE_SUBJECT && known(wanted)) {
     return { home: true, subject: wanted, view: 'live', welcome: false, place: s.openOn, land: false };
   }
-  // `place` (2026-10-02): which of the two the Home subject shows first -- the landing dashboard, or the
-  // person's own Home (`openOn`). `?m=profile` is a link to YOUR Home (the cat's "Open my profile").
+  // `place` (2026-10-02): which the Home subject shows first -- the landing dashboard, or the person's own Home
+  // (`openOn`). `?m=profile` is a link to YOUR Home (the cat's "Open my profile"). 2026-10-04: 'start' too (Start
+  // here as where you land); the page shows it as the landing, under its own name.
   const place = wanted === PROFILE_SUBJECT ? 'home' : s.openOn;
   const land = !wanted && !edit && !example && s.arriveIn === 'dashboard';
   return { home: true, subject: PROFILE_SUBJECT, view: land ? 'live' : s.openIn, welcome: !s.welcomeDone, place, land };

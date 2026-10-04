@@ -44,7 +44,22 @@ const J = (x) => JSON.stringify(x);
 // the page cannot drift apart: the page keeps its phone layout in its own `<style data-phone>`, and the
 // suite checks those rules match at 375 and 320 and NOT at kiosk sizes.
 let ifr = null, doc = null, win = null;
+// *** 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): the landing is now Your people, and
+// people_page_test checks it at 375. This suite is about Start here and the editor on a phone, so each account it
+// opens is set, once, to "Open on: Start here" (unless it chose something already): its checks hold as they did.
+const startHereSet = new Set();
+async function startHere(user) {
+  if (!user || startHereSet.has(user)) return;
+  startHereSet.add(user);
+  const { createProfilesClient } = await import('../profile.js');
+  const { createState } = await import('../state.js');
+  const p = createProfilesClient({ user });
+  const person = (await p.people())[0];
+  const st = createState({ url: p.personStateURL(person.id, 'home'), user });
+  try { const cur = (await st.load()) || {}; if (!cur.openOn) { st.set({ openOn: 'start' }); await st.flush(); } } finally { st.destroy(); }
+}
 async function open(query, w, h, { land = false } = {}) {
+  await startHere(new URLSearchParams(query).get('user'));
   ifr?.remove();
   ifr = document.createElement('iframe');
   // `?show=1` puts the frame on the page (top left) to watch it run; by default it is off to the side.
