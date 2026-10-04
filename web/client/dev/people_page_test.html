@@ -43,6 +43,7 @@ import '../modules/avatar.js';
 import '../modules/note.js';
 import { FIRST_RUN_KEYS, TRY_NEW_KEY, TRY_STASH_KEY, TRIAL_NAME } from '../try_new.js';
 import { LAST_PERSON_KEY } from '../people.js';
+import { pageWordProblems } from '../page_sections.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -353,6 +354,29 @@ try {
   check('nothing made on the account by arriving', (await createProfilesClient({ user: D }).list()).length === 1);
   check('(setup) the bar is drawn', await until(() => !!$('#stage .tb-bar') && barShows().length >= 3, 10000));
   barPlain('375 wide');
+
+  // The ⚙ menu over Your people (kiosk.js "THE ⚙ MENU IN PLAIN WORDS"): every tab, at every level of "How much this
+  // menu shows", in the page's own plain words (page_sections.js `pageWordProblems`: the page's banned words and
+  // widget, account, token), and "All settings…" the way to the whole menu.
+  section('*** the ⚙ menu over Your people: plain words, and "All settings…" ***');
+  const gearBtn = () => $('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="settings"]');
+  const gearOpen = () => !!$('#stage [data-settings] [data-scrim]:not([hidden])');
+  const openGear = async () => { for (let i = 0; i < 3 && !gearOpen(); i++) { gearBtn()?.click(); await until(gearOpen, 3000); } return gearOpen(); };
+  const closeGear = async () => { $('#stage [data-list] .st-item[data-id="close"]')?.click(); return until(() => !gearOpen(), 3000); };
+  const menuRow = (id) => $(`#stage [data-list] .st-item[data-id="${id}"]`);
+  const showMenuTab = async (id) => { $(`#stage [data-list] .st-tab[data-tab="${id}"]`)?.click(); return until(() => !!$(`#stage [data-list] .st-tab.on[data-tab="${id}"]`), 2000); };
+  // Every tab in turn: its words (the tab names, headings, rows and their hints) and its rows' ids.
+  async function menuTabs() {
+    const out = {};
+    for (const id of $$('#stage [data-list] .st-tab').map((t) => t.dataset.tab)) {
+      await showMenuTab(id);
+      out[id] = {
+        words: ['.st-tab', '.st-head', '.st-item .st-label', '.st-item .st-hint'].flatMap((s) => $$(`#stage [data-list] ${s}`)).map((e) => e.textContent.trim()).filter(Boolean),
+        rows: $$('#stage [data-list] .st-item').map((b) => b.dataset.id),
+      };
+    }
+    return out;
+  }
   $('#stage [data-pp-act="more"]').click();
   check('*** More: Start here fills the window (profile, settings, Nimrod, devices) ***',
     await until(() => J($$('#stage .k-cell').map((c) => c.dataset.kind).filter(Boolean).sort()) === J(['devices', 'nimrod', 'profile', 'settings']) && doc.body.classList.contains('is-land'), 20000),
@@ -361,8 +385,54 @@ try {
     && $$('#stage .tb-bar .tb-host button')[0] === hbar('people'));
   check('*** ...and away from Your people the whole bar is back (the panel chips, Switch module) ***',
     await until(() => shown($('#stage .tb-bar .tb-mods')) && shown($('#stage .tb-bar .tb-actions:not(.tb-host) [data-act="switch"]')), 6000), J(barShows()));
+  check('*** ...and so is the whole ⚙ menu, as before: no "All settings…", and "Settings for" steps through the panels and levels ***',
+    await openGear() && !menuRow('all-settings') && !menuRow('subject-pick')?.disabled
+    && Number(((menuRow('subject-pick')?.textContent || '').match(/of (\d+)/) || [])[1]) >= 4, $('#stage [data-list]')?.textContent.slice(0, 200));
+  await closeGear();
   hbar('people').click();
   check('*** ‹ Your people goes back ***', await until(() => !!$('#stage [data-people-page]') && !hbar('people'), 20000));
+  // (Back on Your people, and last on this page: stepping "How much this menu shows" is a change the page holds for
+  // Save, and More would stop to ask about it -- modules.html `requestSubject`.)
+  check('(setup) ⚙ opens the menu over Your people', await openGear());
+  const levelNow = () => menuRow('set:complexity')?.querySelector('.st-hint')?.textContent || '';
+  const startLevel = levelNow();
+  const menuWordsBad = [];
+  const tabsWithoutAll = [];
+  let usual = null;
+  for (let n = 0; n < 3; n++) {
+    const lv = levelNow();
+    const tabs = await menuTabs();
+    if (lv === 'The usual') usual = tabs;
+    for (const [id, t] of Object.entries(tabs)) {
+      for (const w of t.words) { const p = pageWordProblems(w); if (p.length) menuWordsBad.push(`${lv} / ${id}: ${w} (${p.join(',')})`); }
+      if (t.rows.slice(-4).join(' ') !== 'all-settings fullscreen home close') tabsWithoutAll.push(`${lv} / ${id}`);
+    }
+    menuRow('set:complexity')?.click();     // the next level; three presses come back round
+    await sleep(200);
+  }
+  check('(setup) "How much this menu shows" is back where it was, and "The usual" was walked', levelNow() === startLevel && !!usual, `${startLevel} -> ${levelNow()}`);
+  check('*** PLAIN WORDS in the ⚙ menu: every tab, every level (no module, dashboard, panel, grant, widget, account, token) ***',
+    !menuWordsBad.length, J(menuWordsBad.slice(0, 12)));
+  check('*** "All settings…" on every tab, at every level, just before the ways out ***', !tabsWithoutAll.length, J(tabsWithoutAll));
+  const usualRows = Object.values(usual || {}).flatMap((t) => t.rows);
+  const panelOnly = ['switch-module', 'edit-panel', 'promote', 'demote', 'set:instancePanelSurface', 'set:panelSurface', 'set:panelGap',
+    'edit-view', 'home:picker', 'home:editpanel', 'home:switch', 'home:editbar'];
+  check('*** what only acts on a panel is left out, not dimmed (Switch, Edit this panel, bigger, panel backgrounds, Edit this dashboard...) ***',
+    usualRows.length > 20 && !panelOnly.some((id) => usualRows.includes(id)), J(panelOnly.filter((id) => usualRows.includes(id))));
+  check('*** "Settings for" is Your people alone, and the first tab is named for it ***',
+    /Settings for: Your people/.test(menuRow('subject-pick')?.textContent || '') && !!menuRow('subject-pick')?.disabled
+    && $('#stage [data-list] .st-tab[data-tab="module"]')?.textContent === 'Your people');
+  check('...and the page’s own rows are still there (Edit…, Save, Open on, Try it as someone new)',
+    ['home:edit', 'home:save', 'home:set:openOn', 'home:trynew'].every((id) => usualRows.includes(id)));
+  await showMenuTab('module');
+  menuRow('all-settings')?.click();
+  check('*** "All settings…" reaches the whole menu: Switch, "Every Your people panel", the page’s Switch module… ***',
+    await until(() => !menuRow('all-settings') && /of \d/.test(menuRow('subject-pick')?.textContent || '') && !!menuRow('switch-module'), 3000)
+    && await showMenuTab('page') && !!menuRow('home:switch') && pageWordProblems($('#stage [data-list]').textContent).length > 0,
+    $('#stage [data-list]')?.textContent.slice(0, 200));
+  await closeGear();
+  check('*** ...until it closes: the next ⚙ is plain again ***', await openGear() && await showMenuTab('module') && !!menuRow('all-settings') && !menuRow('switch-module'));
+  await closeGear();
 
   section('*** 1280x720: the same landing ***');
   await open(`user=${encodeURIComponent(D)}`, { w: 1280, h: 720 });

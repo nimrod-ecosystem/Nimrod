@@ -5096,9 +5096,10 @@ export async function mountKiosk(root, {
       // the menu's middle: they are what somebody on that page came to the menu for. A host that throws
       // costs its own rows, never the menu -- the menu is the tool for repairing the broken thing.
       // (Tabs: its own tab, "This page" -- unless a row names another. Only on a page that has rows.)
+      // (2026-10-04: asked for in plain words while the menu is plain -- `plainMenu`, below.)
       ...(() => {
         if (!hostPage || typeof hostPage.menuItems !== 'function') return [];
-        try { return (hostPage.menuItems() || []).map((it) => (it && !it.tab ? { ...it, ...MENU_TAB.page(0) } : it)); }
+        try { return (hostPage.menuItems(plainMenu() ? { plain: true } : undefined) || []).map((it) => (it && !it.tab ? { ...it, ...MENU_TAB.page(0) } : it)); }
         catch (err) { console.error('kiosk: host menu', err); return []; }
       })(),
       // (Tabs: "what can I press" and "what else this talks to" are Devices.)
@@ -5157,7 +5158,68 @@ export async function mountKiosk(root, {
     // A press in the ⚙ menu shows in every Settings panel at once (`refreshViews`).
     onSelect: () => refreshViews(),
   };
-  const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), menuOptions);
+  // *** THE ⚙ MENU IN PLAIN WORDS, OVER A PAGE THAT ASKS FOR A PLAIN BAR (2026-10-04, Your people). *** The host page's
+  // `plainBar()` (modules.html: Your people, filling the window) already keeps the bar to plain words
+  // (modules/transport_bar.js "A PLAIN BAR"); this does the same for the menu its ⚙ opens -- the ⚙ menu only: a
+  // Settings panel (`settingsMenuFor`) is the whole menu, put on a dashboard on purpose. While the host asks:
+  //   * "Settings for" holds the selected part alone (no "Every <it> panel", no levels, no other panels); the first tab
+  //     and its heading are that part's own name ("This part" when it has none), and it loses what only acts on a
+  //     panel of a dashboard: Switch, Edit this panel, bigger / smaller, Pause / Play, the switch lap, the panel's box.
+  //   * the other tabs lose the rows that only act on the panels (Panel backgrounds, Space between panels, Grow the
+  //     panel the cursor is on, Show a small clock -- the page's own "Edit my page" adds a clock --, the hidden-panel
+  //     question, Edit this dashboard, the Map); two keep their place in plainer words (Claude, the screen's name);
+  //     and the host's own rows are asked for plainly (`menuItems({ plain: true })`).
+  // HIDDEN, NOT DIMMED, for the plain bar's reason (transport_bar.js PLAIN_HIDES, argued there against D16's "dimmed,
+  // never hidden"): these never act on this page, and a column of grey panel words is the vocabulary it keeps away.
+  // NOTHING BECOMES UNREACHABLE: "All settings…", at the end of every tab, is this menu as it is everywhere else, until
+  // it closes (the next ⚙ is plain again). Off such a page every slot below reads straight through, unchanged.
+  let menuAll = false;                     // "All settings…" pressed: the whole menu, until it closes
+  const hostAsksPlain = () => { try { return !!hostPage && typeof hostPage.plainBar === 'function' && !!hostPage.plainBar(); } catch { return false; } };
+  function plainMenu() { return !viewNow && !menuAll && hostAsksPlain(); }
+  const PLAIN_PART = 'This part';
+  const PLAIN_MENU_DROPS = new Set(['switch-module', 'edit-panel', 'promote', 'demote', 'play-pause', 'scan-lap', 'piece-edit',
+    'set:instancePanelSurface', 'set:panelSurface', `set:${PANEL_GAP_FIELD.key}`, `set:${ZOOM_FOCUS_FIELD.key}`,
+    `set:${SMALL_CLOCK_KEY}`, `set:${HIDE_ASK_TIMEOUT_FIELD.key}`, 'edit-view', 'dashboard-map']);
+  const PLAIN_MENU_WORDS = {
+    'claude-page': { label: 'Claude…', hint: (h) => h.replace('the account’s key', 'the key it uses') },
+    'screen-name': { hint: () => 'renamed on the home page' },
+  };
+  function plainRow(it) {
+    if (!it || PLAIN_MENU_DROPS.has(it.id) || /:follow$/.test(String(it.id || ''))) return null;
+    const w = PLAIN_MENU_WORDS[it.id];
+    let out = !w ? it : { ...it, ...(w.label ? { label: w.label } : {}), ...(w.hint && typeof it.hint === 'string' ? { hint: w.hint(it.hint) } : {}) };
+    // (A row following "every <it> panel" says only what it is set to: the level is not offered here.)
+    const follow = `Following: ${levelName('module')} — `;
+    if (typeof out.hint === 'string' && out.hint.startsWith(follow)) out = { ...out, hint: out.hint.slice(follow.length) };
+    return out;
+  }
+  const plainSlot = (f) => (...a) => (plainMenu() ? (f(...a) || []).map(plainRow).filter(Boolean) : f(...a));
+  const allSettingsRow = () => ({ kind: 'item', id: 'all-settings', tab: '*end', label: 'All settings…',
+    hint: 'the full menu, as it is everywhere else',
+    run: () => { menuAll = true; try { menu.refresh(); menu.focusRow('tabs'); } catch { /* closed meanwhile */ } } });
+  const plainMenuOptions = {
+    ...menuOptions,
+    subject: () => {
+      const s = menuOptions.subject();
+      return s && plainMenu() ? { ...s, heading: s.title || PLAIN_PART } : s;
+    },
+    tabs: () => {
+      const t = menuOptions.tabs();
+      return plainMenu() ? t.map((d) => (d.id === 'module' && d.label === 'This panel' ? { ...d, label: PLAIN_PART } : d)) : t;
+    },
+    subjects: () => {
+      const all = menuOptions.subjects();
+      if (!plainMenu()) return all;
+      const want = menuOptions.defaultSubject();
+      const one = (all || []).find((s) => s && s.id === want)
+        || (all || []).find((s) => s && !String(s.id || '').startsWith(LEVEL_PREFIX));
+      return one ? [one] : [];
+    },
+    fields: plainSlot(menuOptions.fields), whoItems: plainSlot(menuOptions.whoItems), screenItems: plainSlot(menuOptions.screenItems),
+    extras: () => (plainMenu() ? [...plainSlot(menuOptions.extras)(), allSettingsRow()] : menuOptions.extras()),
+    onClose: () => { menuAll = false; menuOptions.onClose(); },
+  };
+  const menu = mountSettings(kioskEl.querySelector(':scope > [data-settings]'), plainMenuOptions);
   // Every repaint the screen asks of the ⚙ menu (a name arriving, a voice changing...) reaches the panels too.
   {
     const ownRefresh = menu.refresh;

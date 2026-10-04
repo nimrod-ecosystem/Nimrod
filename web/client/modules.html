@@ -1479,11 +1479,13 @@ function mountHomeTrialBar() {
     if (el.parentNode !== into) into.append(el);
   });
 }
-function trialMenuRows() {
+// (`plain`: the ⚙ menu over Your people, kiosk.js "THE ⚙ MENU IN PLAIN WORDS" -- the same row, without "account".)
+function trialMenuRows({ plain = false } = {}) {
   if (!HOME.person) return [];
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
   if (!HOME.trial) {
-    return [item('trynew', 'Try it as someone new', { hint: 'a test person on your account: this page as their first visit; nothing of yours changes' })];
+    return [item('trynew', 'Try it as someone new', { hint: plain ? 'a test person: this page as their first visit; nothing of yours changes'
+      : 'a test person on your account: this page as their first visit; nothing of yours changes' })];
   }
   return [
     { kind: 'heading', id: 'home-trial-head', label: TRYING_LABEL },
@@ -1499,8 +1501,11 @@ const HOME_HOST = {
   // 2026-10-03: the presses the kiosk hands this page by name (kiosk.js `hostHandles`): a module over the
   // dashboard (the Modules library) and "Show a small clock" (the ⚙ menu) -- on the Home subject only.
   handles: (act) => HOME.on && HOME.subject === HD.PROFILE_SUBJECT && (act === 'overlay' || act === 'smallclock'),
-  menuItems: () => (HOME.on
-    ? [...HD.homeMenuModel(homeView()), ...trialMenuRows()].map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
+  // (2026-10-04: `{ plain: true }` from the kiosk while its ⚙ menu is in plain words, over Your people -- kiosk.js
+  // "THE ⚙ MENU IN PLAIN WORDS". "All settings…" there asks again without it.)
+  menuItems: (o) => (HOME.on
+    ? [...HD.homeMenuModel({ ...homeView(), plain: !!o?.plain }), ...trialMenuRows({ plain: !!o?.plain })]
+      .map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
   barHideMs: () => HOME.settings.barHideMs,
   // 2026-10-04: over Your people, filling the window, the bar keeps to plain words (modules/transport_bar.js
