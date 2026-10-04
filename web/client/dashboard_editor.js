@@ -71,13 +71,17 @@ export function newDashboardName(list = [], base = NEW_DASHBOARD_NAME) {
  *                    `windows.automation`, put away by its own Close like the map). Absent: not offered.
  *                    The window saves nothing itself: a binding is saved by the engine's own `onChange`,
  *                    exactly as before -- so this adds a way IN, not a new permission.
+ *   chooseMode       2026-10-04: the person's "How you choose things" ('point' | 'step', or a getter), handed to
+ *                    the Automation window, whose switch walk it picks (edit_windows.js). Absent: point.
+ *                    `scan.back()` is the walk's back: true when a window used it (came out of a row, or put
+ *                    the Automation window away), false when the host should end the editing as before.
  */
 export function openDashboardEditor(opts = {}) {
   const {
     arr, mountIn = null, host = null, baseLayout = () => arr.layout(), apply = (l) => arr.applyPlaced(l),
     save = null, windows = EDIT_WINDOWS_DEFAULT, listDashboards = null, createDashboard = null,
     currentId = () => null, loadMap = null, onGo = null, hidePolicy = null, onClose = null, onChange = null,
-    automation = null,
+    automation = null, chooseMode = 'point',
   } = opts;
   if (!arr) throw new Error('openDashboardEditor: an arrangement is required');
   const doc = (host || mountIn)?.ownerDocument || document;
@@ -232,7 +236,7 @@ export function openDashboardEditor(opts = {}) {
     } else if (kind === 'automation' && automation) {
       // Row 2.41. Its own Close puts it away; the editing goes on (as the map).
       opened[kind] = mountAutomationWindow(h, {
-        engine: automation, panels: autoPanels, selected: chosenPanel,
+        engine: automation, panels: autoPanels, selected: chosenPanel, chooseMode,
         onClose: () => { delete opened.automation; h.remove(); opened.layers?.render?.(); tell(); },
       });
     } else { h.remove(); return null; }

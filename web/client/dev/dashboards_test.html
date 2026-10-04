@@ -152,6 +152,13 @@ function backend(user) {
       check('*** the tutorial: Nimrod and the settings in the BOTTOM two places, both LOCKED ***',
         J(slotType(tut).slice(2)) === J(['nimrod', 'settings']) && J(tut.locked) === J(['nimrod', 'settings']), J(tut));
       check('...Nimrod there says the tutorial hello', tut.modules.find((m) => m.type === 'nimrod').state.intro === 'tutorial');
+      // 2026-10-04: the landing moved its top left from the pictures to the PROFILE (Mike, 2026-10-02 evening); the
+      // tutorial's top two were Code's own pick, so its top left follows. Top right stays the devices (an open
+      // DECIDE on Mike's list asks scoreboard vs devices there; not settled here).
+      check('*** ...its top left is the PROFILE, as the landing’s is (no pictures); its top right is still the devices ***',
+        J(slotType(tut).slice(0, 2)) === J(['profile', 'devices']) && !tut.modules.some((m) => m.type === 'photos'), J(slotType(tut)));
+      check('...the profile stores NO subject (it shows whoever is looking), and the blurb says profile, not pictures',
+        tut.modules.find((m) => m.type === 'profile').state === undefined && /profile/.test(tut.blurb) && !/picture|photo/i.test(tut.blurb), tut.blurb);
       // 2026-10-02: THE BUILDER, "clockwise from top left: The module you're editing, settings, modules, Nimrod/AI".
       const bld = prebuiltRecord('builder', { personName: 'Ada' });
       check('*** the builder: four up, CLOCKWISE from the top left: the module being edited, its options, the modules library, Nimrod ***',
@@ -258,8 +265,8 @@ function backend(user) {
       const tDoc = await B.read(rt.id, 'settings');
       const tMods = (await B.profiles.get(rt.id)).modules;
       const idOf = (type) => tMods.find((m) => m.type === type)?.id;
-      check('*** the tutorial is made: photos, devices, Nimrod, settings, in a quad ***',
-        rt.created && J(tMods.map((m) => m.type)) === J(['photos', 'devices', 'nimrod', 'settings'])
+      check('*** the tutorial is made: profile, devices, Nimrod, settings, in a quad ***',
+        rt.created && J(tMods.map((m) => m.type)) === J(['profile', 'devices', 'nimrod', 'settings'])
         && J(tDoc.kiosk?.layout?.slots) === J(tMods.map((m) => m.id)), J(tDoc.kiosk));
       check('*** its lock is on the dashboard: Nimrod’s and the settings’ own instance ids ***',
         J(tDoc[LOCKED_KEY]) === J([idOf('nimrod'), idOf('settings')]), J(tDoc[LOCKED_KEY]));
@@ -529,8 +536,8 @@ function backend(user) {
       const rt = await maker.ensure('tutorial');
       const tMods = (await B.profiles.get(rt.id)).modules;
       const idOf = (type) => tMods.find((m) => m.type === type)?.id;
-      const NIM = idOf('nimrod'), SET = idOf('settings'), PHO = idOf('photos');
-      const four = J(['photos', 'devices', 'nimrod', 'settings']);
+      const NIM = idOf('nimrod'), SET = idOf('settings'), PRO = idOf('profile');
+      const four = J(['profile', 'devices', 'nimrod', 'settings']);
 
       // (a) BOOTED on the tutorial (today's path).
       const box = mkBox();
@@ -564,9 +571,9 @@ function backend(user) {
       check('the menu\'s "Switch Nimrod…" row is still there, and says it is locked',
         k.menu.subjectId() === NIM && /locked on this dashboard/.test(swRow()?.hint || ''), J(swRow()));
       k.menu.close();
-      k.openSwitch(PHO);
-      check('*** an UNLOCKED panel still switches: the library opens in the photos\' place ***',
-        await settled(() => k.switchOpen()?.id === PHO, 4000), J(k.switchOpen()));
+      k.openSwitch(PRO);
+      check('*** an UNLOCKED panel still switches: the library opens in the profile\'s place ***',
+        await settled(() => k.switchOpen()?.id === PRO, 4000), J(k.switchOpen()));
       k.closeLibrary();
       // Unlock (Home's Change tray writes the list without the id): honoured at the next press, nothing cached.
       await B.write(rt.id, 'settings', { [LOCKED_KEY]: [SET] });

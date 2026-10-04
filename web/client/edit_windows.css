@@ -73,6 +73,15 @@
 .ew-auto :is(select,input){min-height:44px;min-width:0;width:100%;padding:0 8px;
   border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--text);font:inherit;font-weight:400}
 .ew-auto .auto-status{margin:0;color:var(--text-soft);font-size:.8rem}
+/* 2026-10-04: by switch. A number's − box +; a choice's options while its row is entered; the row being
+   walked carries a dashed outline (the lit thing in it has the solid ring below), never colour alone. */
+.ew-auto .auto-num{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:6px;align-items:center}
+.ew-win .ew-auto .auto-nudge{font-size:18px;padding:0}
+.ew-auto .auto-opts{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;font-weight:400}
+.ew-auto .auto-opts button{flex:1 1 auto;text-align:left}
+.ew-win .ew-auto .auto-opt[aria-pressed="true"]{background:var(--link);border-color:var(--link);color:var(--on-link)}
+.ew-auto [data-auto-in]{outline:2px dashed var(--link);outline-offset:3px;border-radius:9px}
+.ew-auto .auto-list li{margin:2px 0}
 .ew-auto [hidden]{display:none}
 .ew-win :is(select):focus-visible{outline:4px solid var(--link);outline-offset:2px}
 

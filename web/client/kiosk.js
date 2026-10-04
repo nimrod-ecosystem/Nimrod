@@ -185,6 +185,7 @@ import './modules/brickbreaker.js';    // registers 'brickbreaker' (row 2.37 ite
 import './modules/rhythm.js';          // registers 'rhythm' (row 2.37 item 10)
 import './modules/avatar.js';          // registers 'avatar' (row 2.37 item 5, avatar maker)
 import './modules/voice_review.js';    // registers 'voice_review' (row 2.44, the voice recordings kept here)
+import './modules/voice_model.js';     // registers 'voice_model' (2026-10-04: the voice-model steps, one at a time)
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
 import './modules/lessons.js';
 import './modules/algebra.js';
@@ -1325,9 +1326,9 @@ export async function mountKiosk(root, {
     // review panel sees what was just kept, and the person's row for its retention wording.
     get voiceStore() { return voiceStore; },
     personRow: () => personRow,
-    // "Your own voice model" (voice_model.js, the Voice recordings panel's second tab): the screen's recorder,
+    // "Your own voice model" (the Voice model module, modules/voice_model.js, 2026-10-04): the screen's recorder,
     // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
-    // flip "Use my own voice model", and nothing else on the row.
+    // flip "Use my own voice model" and set its port, and nothing else on the row.
     get voiceRecorder() { return voiceRec; },
     saveVoiceModel: (patch) => {
       const keys = new Set(VOICE_MODEL_FIELDS.map((f) => f.key));
@@ -2531,6 +2532,8 @@ export async function mountKiosk(root, {
           },
           onChange: () => { renderMods(); },
           automation,
+          // 2026-10-04: how a switch walks the Automation window follows the person's "How you choose things".
+          chooseMode: () => { try { return chooseModeNow(); } catch { return chooseModeOf(null); } },
         });
       }
     } catch (err) {
@@ -2608,7 +2611,16 @@ export async function mountKiosk(root, {
       }
       const ed = editorNow();
       if (!ed || !editScanHeld) return;
-      if (verb === 'back') { closeEditView(); return; }
+      // 2026-10-04: back comes out a level first (a row of the Automation window, its picker, the window
+      // itself: edit_windows.js createWindowGroup `back`); only when nothing used it does it end the editing.
+      if (verb === 'back') {
+        let used = false;
+        try { used = ed.scan?.back?.() === true; } catch (err) { console.error('kiosk: edit view back', err); }
+        if (!used) { closeEditView(); return; }
+        syncEditScan();
+        armEditIdle();
+        return;
+      }
       if (verb === 'select') ed.scan?.select?.();
       else if (verb === 'next') ed.scan?.next?.();
       else ed.scan?.prev?.();

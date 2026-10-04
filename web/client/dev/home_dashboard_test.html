@@ -404,6 +404,9 @@ try {
       && readHomeSettings({ hoverLine: false }).hoverLine === false && readHomeSettings({ hoverLine: 'x' }).hoverLine === true);
     check('*** "Nimrod’s tutorial" is a menu row (the way back to him when he has been switched away), just before Show me how ***',
       ids.includes('tutorial') && ids.indexOf('tutorial') === ids.length - 2 && !m.find((i) => i.act === 'tutorial').disabled, ids.join());
+    // 2026-10-04: the tutorial's top left is the profile now, not the pictures; the row's hint must not promise them.
+    check('...and its hint names Nimrod and the settings, and no pictures', /Nimrod and the settings/.test(m.find((i) => i.act === 'tutorial').hint || '')
+      && !/picture|photo/i.test(m.find((i) => i.act === 'tutorial').hint || ''), m.find((i) => i.act === 'tutorial').hint);
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));

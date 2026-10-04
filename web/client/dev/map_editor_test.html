@@ -547,6 +547,29 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       check('...and Layers shows it closed', more().getAttribute('aria-pressed') === 'false');
       ed.toggle('automation');
       check('toggle opens it, and closing the editor takes it with it', !!ed.windows.automation && (ed.close(), !t.box.querySelector('[data-automation-panel]')));
+      // 2026-10-04: the ONE walk reaches inside the Automation window. The host's "How you choose things" reaches it
+      // (`chooseMode`); a row entered holds next / prev in that window; back comes out a level at a time.
+      const ed2 = openDashboardEditor({ arr: t.v.arrangement(), mountIn: t.box, automation: eng, chooseMode: () => 'step' });
+      ed2.model.select('sign');
+      ed2.toggle('automation');
+      const aw2 = ed2.windows.automation;
+      check('*** the host\'s "How you choose things" reaches the window (step through -> rows) ***', aw2?.scanMode() === 'rows');
+      const autoRows = ed2.scan.stops().filter((b) => aw2.el.contains(b) && b.matches('[data-auto-row]'));
+      check('*** the one walk has the window\'s FIELDS in it now, not only its Close ***', autoRows.length > 5, String(autoRows.length));
+      let guard = 0;
+      while (!(ed2.scan.current()?.matches?.('[data-auto-row="kind"]')) && guard++ < 200) ed2.scan.next();
+      check('(walk) the one walk lands on Driven by', !!ed2.scan.current()?.matches?.('[data-auto-row="kind"]'));
+      ed2.scan.select();
+      const inRow = ed2.scan.current();
+      check('*** select goes into the row: the cursor is on one of its choices ***', !!inRow?.matches?.('[data-auto-opt]') && aw2.holds());
+      ed2.scan.next();
+      check('*** ...and next stays IN the row (it does not wander to another window) ***',
+        !!ed2.scan.current()?.matches?.('[data-auto-opt]') && ed2.scan.current() !== inRow && aw2.el.contains(ed2.scan.current()));
+      check('*** back comes out of the row (the press is used; the editing goes on) ***', ed2.scan.back() === true && !aw2.holds() && ed2.isOpen() && !!ed2.windows.automation);
+      check('*** back again puts the Automation window away; the editing goes on ***', ed2.scan.back() === true && !ed2.windows.automation && ed2.isOpen());
+      ed2.scan.next();
+      check('*** back on another window is NOT used, so the host ends the editing as before ***', ed2.scan.back() === false);
+      ed2.close();
       eng.destroy();
       t.inst.destroy(); t.box.remove();
     }
@@ -624,6 +647,45 @@ function mountTop(viewId, host, { limit = 2, bus = createBus() } = {}) {
       check('*** another account cannot save a rule on this screen (refused, as not found) ***', put.status === 404, String(put.status));
       const after = await getRow(AP.id, 'settings');
       check('*** ...and the screen\'s rules are unchanged ***', C(after.automations) === C(saved), J(after.automations));
+    }
+    {
+      // 6c. 2026-10-04: BY SWITCH ALONE, on the real screen. The screen's verbs (next / select / back on the bus) walk
+      // into the Automation window, make a rule there, and back comes out a level at a time.
+      const AS = await real.create('Automation by switch');
+      const sign = await real.addModule(AS.id, 'button');
+      await setRow(AS.id, 'settings', { [DASHBOARD_MODULE_KEY]: true, kiosk: { layout: { preset: 'full', slots: [null],
+        placed: [{ id: sign.id, place: 'screen', x: 50, y: 50, w: 40, h: 30 }] } } });
+      const box = document.createElement('div'); box.className = 'box'; document.body.append(box);
+      const bus = createBus();
+      const k = await mountKiosk(box, { user: USER, profileId: AS.id, profiles: real, bus,
+        storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {} });
+      check('(setup) the sign mounted', await settled(() => !!k.dashboard()?.arrangement?.()?.recFor?.(sign.id), 8000));
+      bus.publish(SYSTEM_TOPICS.edit, {});
+      check('(setup) the edit view holds the scan', await settled(() => !!k.editView(), 3000) && k.editScanHeld());
+      const ed = k.editView();
+      ed.model.select(sign.id);
+      ed.toggle('automation');
+      const aw = ed.windows.automation;
+      check('*** the screen hands the window the person\'s "How you choose things" (nobody set it: point -> one at a time) ***',
+        !!aw && aw.scanMode() === 'one');
+      const press = (v) => bus.publish(verbTopic(v));
+      const walk = (pred) => { for (let i = 0; i < 200; i++) { const c = ed.scan.current(); if (c && pred(c)) return true; press('next'); } return false; };
+      check('(walk) next reaches Driven by', walk((n) => !!n.matches?.('[data-auto-row="kind"]')));
+      press('select'); press('select');
+      check('*** two selects step it: bus -> link -> a verb ***', aw.el.querySelector('[data-a="kind"]').value === 'verb');
+      check('(walk) next reaches Add', walk((n) => n.dataset?.autoRow === 'add'));
+      press('select');
+      const eng = k.automation();
+      check('*** select on Add: a rule made with the switch alone, on the screen\'s engine ***',
+        eng.list().length === 1 && eng.list()[0].target.instance === sign.id && eng.list()[0].source.kind === 'verb', J(eng.list()));
+      const key0 = eng.list()[0]?.target?.key;
+      press('up');
+      check('...and the "up" verb drives the sign', await settled(() => eng.overlay(sign.id)[key0] !== undefined, 2000), J(eng.overlay(sign.id)));
+      press('back');
+      check('*** back puts the Automation window away; the editing goes on ***', !ed.windows.automation && !!k.editView() && k.editScanHeld());
+      press('back');
+      check('*** back again ends the editing, as before ***', await settled(() => !k.editView(), 2000) && !k.editScanHeld());
+      k.destroy(); box.remove();
     }
   } catch (e) {
     check('suite threw', false, String(e && e.stack || e));

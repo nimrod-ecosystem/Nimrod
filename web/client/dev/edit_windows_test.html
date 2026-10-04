@@ -780,6 +780,196 @@ section('row 2.41: Automation in the edit windows (the Layers window\'s way in, 
 }
 
 // =====================================================================
+// 2026-10-04: the Automation window BY SWITCH. It used to promise keyboard and pointer only ("a switch reaches
+// only Close"). Now its controls are walked like choice_picker.js / picture_picker.js: "How you choose things"
+// = step through -> ROWS (a field, then a thing in it); point and click (everybody's default) -> ONE stop at a
+// time, where a long list opens the choice picker. Typing stays for a keyboard; nothing here needs it.
+section('2026-10-04: the Automation window by switch -- rows then items (step through), one at a time (point)');
+{
+  const { createAutomation, AUTOMATION_DEFAULTS } = await import('../automation.js');
+  const { createBus } = await import('../bus.js');
+  const { verbTopic } = await import('../actions.js');
+  const { AUTOMATION_PANEL_DEFAULTS, autoScanModeOf } = await import('../automation_panel.js');
+  const { mountAutomationWindow } = W;
+  const LEVEL = { settings: [{ key: 'level', label: 'Level', kind: 'number', min: 0, max: 100, default: 50 },
+    { key: 'name', label: 'Name', kind: 'text', default: '' }] };
+  const base = () => ({ row: { level: 50 }, get() { return this.row; }, set(p) { this.row = { ...this.row, ...p }; return Promise.resolve(); }, subscribe: () => () => {} });
+  const rowOf = (n) => n?.closest?.('[data-auto-row]')?.dataset.autoRow ?? (n?.dataset?.ew === 'close' ? 'close' : null);
+  const lit = (w) => w.current();
+  const walkTo = (w, pred, max = 80) => { for (let i = 0; i < max; i++) { const c = w.current(); if (c && pred(c)) return true; w.focusStep(1); } return !!(w.current() && pred(w.current())); };
+  const val = (w, n) => w.el.querySelector(`[data-a="${n}"]`)?.value;
+
+  check('the walk follows the person\'s setting: step through -> rows, anything else -> one at a time',
+    autoScanModeOf('step') === 'rows' && autoScanModeOf('point') === 'one' && autoScanModeOf(undefined) === 'one' && autoScanModeOf('junk') === 'one');
+  check('the nudge is a default with its reason, overridable (20 presses end to end)', AUTOMATION_PANEL_DEFAULTS.across === 20);
+
+  // ---- ROWS (step through) ----
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const st = eng.wrapState('lamp', base(), { manifest: LEVEL });
+    const panels = () => [{ id: 'sign', title: 'The sign', manifest: LEVEL }, { id: 'lamp', title: 'The lamp', manifest: LEVEL }];
+    let closes = 0;
+    const w = mountAutomationWindow(host, { engine: eng, panels, selected: () => 'lamp', chooseMode: () => 'step', onClose: () => closes++ });
+    check('*** step through: the window walks in ROWS ***', w.scanMode() === 'rows');
+    const tops = w.scanTargets();
+    check('*** Close first, then a stop for each FIELD (not just Close any more) ***',
+      tops[0] === q(w.el, 'close') && tops.length > 5 && tops.slice(1).every((n) => n.matches('[data-auto-row]')),
+      J(tops.map(rowOf)));
+    check('...the fields a rule needs are all rows: panel, setting, driven by, from, to, shape, when quiet, Add',
+      ['panel', 'key', 'kind', 'outMin', 'outMax', 'curve', 'whenQuiet', 'add'].every((r) => tops.some((n) => rowOf(n) === r)), J(tops.map(rowOf)));
+    check('a message name with nothing to choose from is NOT a stop (typing it is a keyboard\'s job; a switch skips it)',
+      !tops.some((n) => rowOf(n) === 'topic'));
+    check('nothing is lit until the walk starts (a stray press lights, never acts)', w.current() === null);
+    w.focusStep(1);
+    check('the first step lights Close', lit(w) === q(w.el, 'close'));
+    w.focusStep(1);
+    check('the next lights the first ROW (the panel), not a thing in it', rowOf(lit(w)) === 'panel' && lit(w).matches('[data-auto-row]') && !w.holds());
+    w.select();
+    const strip = () => w.el.querySelector('[data-auto-row="panel"] [data-auto-opts]');
+    check('*** select goes INTO the row: its choices appear as buttons, the window holds the walk ***',
+      w.holds() && !!strip() && strip().querySelectorAll('[data-auto-opt]').length === 2);
+    check('...the lit one starts on what it is NOW (the lamp), so a stray select changes nothing',
+      /The lamp/.test(lit(w).textContent) && lit(w).getAttribute('aria-pressed') === 'true');
+    w.focusStep(1);
+    check('next walks the row\'s choices, wrapping', /The sign/.test(lit(w).textContent) && w.holds());
+    check('*** back comes OUT of the row, unchanged, and the window stays open ***', w.back() === true && !w.holds() && val(w, 'panel') === 'lamp'
+      && rowOf(lit(w)) === 'panel' && !strip() && w.isOpen());
+    // Driven by: into the row, to "a switch or key (a verb)", take it.
+    check('(walk) to the Driven-by row', walkTo(w, (n) => rowOf(n) === 'kind' && n.matches('[data-auto-row]')));
+    w.select();
+    check('(in it)', w.holds());
+    walkTo(w, (n) => n.dataset.autoOpt !== undefined && /verb/.test(n.textContent));
+    w.select();
+    check('*** select TAKES the lit choice and comes out: driven by a verb now ***', val(w, 'kind') === 'verb' && !w.holds() && rowOf(lit(w)) === 'kind');
+    const tops2 = w.scanTargets().map(rowOf);
+    check('...and the verb\'s own fields are rows now: up with, down with, one press moves', ['up', 'down', 'step'].every((r) => tops2.includes(r)), J(tops2));
+    // Up with: a picker in place of typing a verb id.
+    walkTo(w, (n) => rowOf(n) === 'up');
+    w.select();
+    const upOpts = [...w.el.querySelectorAll('[data-auto-row="up"] [data-auto-opt]')].map((b) => b.textContent);
+    check('*** "Up with" offers the verbs as choices (no typing) ***', upOpts.length > 3 && upOpts.some((t) => /^up\b/.test(t)), J(upOpts.slice(0, 6)));
+    w.back();
+    // To: a stepper. Into the row, − and + are its two things.
+    walkTo(w, (n) => rowOf(n) === 'outMax');
+    w.select();
+    check('*** a number row: select goes in; its things are − and + ***', w.holds() && lit(w).dataset.autoNudge === 'outMax:-1');
+    const step = (100 - 0) / AUTOMATION_PANEL_DEFAULTS.across;
+    w.select();
+    check('*** − nudges the number by a twentieth of the setting\'s range, and stays in the row ***', Number(val(w, 'outMax')) === 100 - step && w.holds(), val(w, 'outMax'));
+    w.focusStep(1);
+    w.select(); w.select(); w.select();
+    check('*** + three times: up again, and never past the setting\'s own top ***', Number(val(w, 'outMax')) === 100, val(w, 'outMax'));
+    w.back();
+    walkTo(w, (n) => rowOf(n) === 'outMin');
+    w.select(); w.focusStep(1); w.select();
+    check('From nudges the same way (0 -> 5)', Number(val(w, 'outMin')) === step, val(w, 'outMin'));
+    w.back();
+    // Add: a row with one thing in it is pressed by the select that would have entered it.
+    walkTo(w, (n) => rowOf(n) === 'add');
+    w.select();
+    check('*** Add, by switch alone: a verb rule on the lamp, its range as nudged ***',
+      eng.list().length === 1 && eng.list()[0].source.kind === 'verb' && eng.list()[0].source.up === 'up'
+      && eng.list()[0].target.instance === 'lamp' && eng.list()[0].map.outMin === step && eng.list()[0].map.outMax === 100, J(eng.list()));
+    bus.publish(verbTopic('up'), {});
+    check('...and it drives the lamp', st.get().level !== 50, String(st.get().level));
+    // The list: a row of Remove buttons, ALWAYS entered (a removal cannot be undone here; two deliberate presses).
+    check('the list of rules is a row now', w.scanTargets().some((n) => rowOf(n) === 'list' || n.matches('[data-auto-row="list"]')));
+    walkTo(w, (n) => n.matches('[data-auto-row="list"]'));
+    w.select();
+    check('*** select on the list goes IN, even with one rule (a stray select removes nothing) ***', eng.list().length === 1 && w.holds() && lit(w).matches('[data-remove]'));
+    w.select();
+    check('*** select on Remove removes it, and the walk comes out ***', eng.list().length === 0 && !w.holds());
+    // Back from the rows leaves the window (the picker's rule: back from the rows is Cancel).
+    walkTo(w, (n) => rowOf(n) === 'panel');
+    check('*** back from the rows CLOSES the window (and says it used the press) ***', w.back() === true && !w.isOpen() && closes === 1);
+    eng.destroy();
+  }
+
+  // ---- ONE AT A TIME (point and click, the default) ----
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const many = Array.from({ length: 7 }, (_, i) => ({ id: `p${i}`, title: `Panel ${i}`, manifest: LEVEL }));
+    for (const p of many) eng.wrapState(p.id, base(), { manifest: LEVEL });
+    const w = mountAutomationWindow(host, { engine: eng, panels: () => many, selected: 'p1', topics: ['room/light', 'puzzle/dial'] });
+    check('*** no setting given: point and click, ONE stop at a time ***', w.scanMode() === 'one');
+    const tops = w.scanTargets();
+    check('...Close, then each field\'s own stop -- a number\'s − and + are stops of their own',
+      tops[0] === q(w.el, 'close') && tops.some((n) => n.dataset.autoNudge === 'outMax:1') && tops.some((n) => rowOf(n) === 'kind'), J(tops.map((n) => n.dataset.autoNudge || rowOf(n))));
+    check('*** with message names to choose from, the message name IS a stop ***', tops.some((n) => rowOf(n) === 'topic'));
+    walkTo(w, (n) => rowOf(n) === 'kind');
+    w.select();
+    check('*** a SHORT choice (5 or fewer) steps on a press, as the settings menu\'s rows do ***', val(w, 'kind') === 'link' && !w.holds(), val(w, 'kind'));
+    w.select(); w.select(); w.select(); w.select();
+    check('...and wraps round to where it was (one switch is never stranded)', val(w, 'kind') === 'bus', val(w, 'kind'));
+    walkTo(w, (n) => rowOf(n) === 'topic');
+    w.select();
+    check('a two-name list steps too: the message name is now one of the offered names', ['room/light', 'puzzle/dial'].includes(val(w, 'topic')), val(w, 'topic'));
+    walkTo(w, (n) => rowOf(n) === 'panel');
+    w.select();
+    const pick = () => w.el.querySelector('[data-choice-picker]');
+    check('*** a LONG choice (seven panels) opens the choice picker inside the window; the form steps aside ***',
+      !!pick() && w.holds() && w.el.querySelector('[data-add]').hidden);
+    // The picker's own walk: Keep first, then rows of tiles.
+    w.select();
+    check('the picker\'s first select lights its first row (Keep the current one)', /Keep Panel 1/.test(lit(w)?.textContent || ''), lit(w)?.textContent);
+    w.focusStep(1); w.focusStep(1);
+    w.select();                       // into the second row of tiles (Panel 3, 4, 5)
+    w.select();                       // take its first
+    check('*** row, then tile: Panel 3 chosen, the picker gone, the form back, the cursor on the panel field ***',
+      val(w, 'panel') === 'p3' && !pick() && !w.holds() && !w.el.querySelector('[data-add]').hidden && rowOf(lit(w)) === 'panel', `${val(w, 'panel')} ${rowOf(lit(w))}`);
+    w.select();
+    check('(opened again)', !!pick());
+    check('*** back from the picker\'s rows is Cancel: the picker goes, the value stays, the window stays ***',
+      w.back() === true && !pick() && val(w, 'panel') === 'p3' && w.isOpen());
+    walkTo(w, (n) => n.dataset.autoNudge === 'inMax:-1');
+    w.select();
+    check('a message\'s "its highest" nudges by a twentieth of the input range',
+      Math.abs(Number(val(w, 'inMax')) - (AUTOMATION_DEFAULTS.inputRange[1] - 1 / AUTOMATION_PANEL_DEFAULTS.across)) < 1e-9, val(w, 'inMax'));
+    walkTo(w, (n) => rowOf(n) === 'add');
+    w.select();
+    check('*** Add by switch: a message rule on Panel 3 ***', eng.list().length === 1 && eng.list()[0].target.instance === 'p3'
+      && ['room/light', 'puzzle/dial'].includes(eng.list()[0].source.topic), J(eng.list()));
+    // Typing still works for a keyboard: the box is there and still read.
+    check('typing stays: the message box is still a text box a keyboard can fill', w.el.querySelector('[data-a="topic"]').type === 'text');
+    check('back on a stop that is not inside anything closes the window', w.back() === true && !w.isOpen());
+    eng.destroy();
+  }
+
+  // ---- link: choose the panel and its output, never type an id ----
+  {
+    const bus = createBus();
+    const eng = createAutomation({ bus });
+    const SENDER = { settings: LEVEL.settings, ports: [{ id: 'value', label: 'Its value', direction: 'out', class: 'continuous', type: 'number', range: [0, 10] },
+      { id: 'word', direction: 'out', class: 'event', type: 'text' }] };
+    eng.wrapState('lamp', base(), { manifest: LEVEL });
+    const panels = () => [{ id: 'lamp', title: 'The lamp', manifest: LEVEL }, { id: 'calc', title: 'The calculator', manifest: SENDER },
+      { id: 'dial', title: 'The dial', manifest: SENDER }];
+    const w = mountAutomationWindow(host, { engine: eng, panels, selected: 'lamp', chooseMode: 'step' });
+    walkTo(w, (n) => rowOf(n) === 'kind' && n.matches('[data-auto-row]'));
+    w.select();
+    walkTo(w, (n) => n.dataset.autoOpt !== undefined && /another panel/.test(n.textContent));
+    w.select();
+    check('(driven by another panel\'s output)', val(w, 'kind') === 'link');
+    walkTo(w, (n) => rowOf(n) === 'instance');
+    w.select();
+    const insts = [...w.el.querySelectorAll('[data-auto-row="instance"] [data-auto-opt]')].map((b) => b.textContent);
+    check('*** "Panel" offers only panels that SEND a number (the calculator and the dial, not the lamp), by name ***',
+      insts.length === 2 && insts.some((t) => /calculator/.test(t)) && !insts.some((t) => /lamp/.test(t)), J(insts));
+    walkTo(w, (n) => n.dataset.autoOpt !== undefined && /calculator/.test(n.textContent));
+    w.select();
+    check('*** chosen: the panel id is filled in for you ***', !w.holds() && val(w, 'instance') === 'calc', val(w, 'instance'));
+    check('*** ...and its output with that panel\'s only number output (the text one is not offered) ***', val(w, 'port') === 'value', val(w, 'port'));
+    walkTo(w, (n) => rowOf(n) === 'add');
+    w.select();
+    check('Add: a link rule, no id typed anywhere', eng.list().length === 1 && eng.list()[0].source.instance === 'calc' && eng.list()[0].source.port === 'value', J(eng.list()));
+    w.destroy();
+    eng.destroy();
+  }
+}
+
+// =====================================================================
 section('destroy cleans up');
 {
   const m = fresh();
