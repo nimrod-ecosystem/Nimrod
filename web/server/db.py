@@ -745,7 +745,12 @@ class _Store:
                             "about 11 km, and the last forecast, so the panel knows where to "
                             "look and still has something to show without a connection. "
                             "That place is also sent to Open-Meteo, a free weather service, "
-                            "to fetch the forecast.", False,
+                            "to fetch the forecast. And if you turn on Claude for your account: "
+                            "your Claude API key, ENCRYPTED (never shown back, only its last four "
+                            "characters), the models you chose, your daily spending limit, and a "
+                            "count per day of how much was used and what it cost - never what "
+                            "was said. What you say to Claude is sent to Anthropic to be answered, "
+                            "as text only.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
                             "when, a game result. It GROWS over time. Sensor readings, if you "

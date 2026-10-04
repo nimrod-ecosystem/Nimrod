@@ -1,5 +1,5 @@
 # Nimrod platform server — thin coordination layer only: accounts (stub), per-user
-# state. No media, no AI.
+# state. No media. One optional AI path: Claude on an account's own key (claude_ai.py).
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 
@@ -13,3 +13,11 @@ psycopg-pool>=3.2,<4
 authlib>=1.3,<2
 httpx>=0.27,<1
 itsdangerous>=2,<3
+
+# Claude, on one account (claude_ai.py) - OPTIONAL at runtime: the site boots without it and the
+# settings page says it is not installed. The official SDK (1.x is built on httpx2, a separate
+# package from the httpx above, so the two do not conflict). Needs Python 3.10+.
+anthropic>=1.11,<2
+# Fernet, for that account's key at rest. Already installed as Authlib's dependency; named here
+# because claude_ai.py imports it directly.
+cryptography>=42

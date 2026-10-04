@@ -368,7 +368,9 @@ const NODES = [
     id: 'ai-connect', title: 'Connect it', form: 'ai-connect',
     say: 'Which AI answers? The free way is Ollama, a program that runs AI models on your own computer. Press '
       + '“Look for Ollama on this computer” and I will check, once. Or use an online AI that speaks the OpenAI '
-      + 'API, free or with your own key; a key stays in this browser and goes only to that address.',
+      + 'API, free or with your own key; a key stays in this browser and goes only to that address. Or, if your '
+      + 'account has its own Claude key saved on the Claude settings page, choose “Claude, on this account”: '
+      + 'the key stays on the server, never in this browser, and a daily spending limit stops it.',
     choices: withKeys([
       { label: 'Next: say hello', to: 'ai-hello', keep: true },
       { label: 'Skip this step', to: 'ai-hello' },

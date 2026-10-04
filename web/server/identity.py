@@ -161,6 +161,16 @@ def optional_user(request: Request) -> str | None:
     return None
 
 
+def via_device_key(request: Request) -> bool:
+    """True when THIS request authenticated as an unattended screen (a valid X-Device-Key).
+
+    For the few things a screen may USE but not CHANGE - the account's stored Claude key above all
+    (app.py, /api/ai/claude/*). A screen in a shared room can be pressed by anybody who walks past;
+    pasting, replacing or removing a paid key is for the account owner's own signed-in device.
+    """
+    return _match_device_key(request.headers.get("X-Device-Key")) is not None
+
+
 def current_user(request: Request) -> str:
     # A valid device secret (unattended kiosk) always wins — works in dev + prod.
     user = _match_device_key(request.headers.get("X-Device-Key"))

@@ -22,7 +22,7 @@ from urllib.parse import urlparse
 import asyncio
 
 from authlib.integrations.starlette_client import OAuth
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -33,7 +33,8 @@ from drive import ROLES, Answerers, Rooms, Tickets, parse_message, stamp_signal
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
-from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch
+from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch, via_device_key
+import claude_ai
 import notes
 
 log = logging.getLogger("nimrod")
@@ -1185,6 +1186,88 @@ def leave_person_note(person_id: str, pid: str, stream: str, body: EventPost, re
     _push.publish(owner, f"/api/profiles/{pid}/events/{stream}")
     _push.publish(user, request.url.path)
     return notes.visible_row(row)
+
+
+# ------------------------------------------------------------ CLAUDE, ON THIS ACCOUNT
+# Mike, 2026-10-03: an optional Claude backend for ONE account's own use, "not something where I have
+# to pay for everyone". The rules - the key box, the cap, the request and reply shapes - are in
+# claude_ai.py and tested alone (test_claude_ai.py); these routes are the doors.
+#
+# WHO: `current_user` - the account. Its screens (device keys) and its own sign-ins may READ the status
+# and TALK; only a signed-in device may CHANGE the key or settings (`_not_a_screen`). Another account
+# has its own (empty) rows and can never name this one's: nothing here takes an account id from a URL
+# or a body, so there is no id to guess.
+_claude = claude_ai.ClaudeAccounts(store, keybox=claude_ai.KeyBox.from_env())
+# A STUCK LOOP MUST NOT SPEND THE DAY IN A MINUTE. Twenty messages a minute per account: a person
+# talking manages perhaps six; a retry loop or a screen answering itself would do hundreds. The daily
+# cap still bounds the money; this bounds the speed. In process, same honest limit as notes.RateLimit.
+_claude_limit = notes.RateLimit(limit=20, window=60.0)
+
+
+class ClaudeKeyPut(BaseModel):
+    key: str = ""
+
+
+class ClaudeSettingsPut(BaseModel):
+    chat_model: str | None = None
+    quiz_model: str | None = None
+    daily_cap_usd: float | None = None
+
+
+def _not_a_screen(request: Request) -> None:
+    if via_device_key(request):
+        raise HTTPException(status_code=403, detail="Change the Claude settings from your own phone or "
+                                                    "computer, signed in - not from a screen.")
+
+
+def _claude_do(fn):
+    try:
+        return fn()
+    except claude_ai.NotSetUp as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except claude_ai.Refused as e:
+        raise HTTPException(status_code=e.status, detail=e.detail)
+
+
+@app.get("/api/ai/claude")
+def claude_status(user: str = Depends(current_user)):
+    """Set or not, the key's last four characters, the models, today's spend against the cap. NEVER
+    the key itself - not here, not anywhere, once it is saved."""
+    return _claude_do(lambda: _claude.status(user))
+
+
+@app.put("/api/ai/claude/key")
+def claude_set_key(body: ClaudeKeyPut, request: Request, user: str = Depends(current_user)):
+    _not_a_screen(request)
+    return _claude_do(lambda: _claude.set_key(user, body.key))
+
+
+@app.delete("/api/ai/claude/key")
+def claude_clear_key(request: Request, user: str = Depends(current_user)):
+    _not_a_screen(request)
+    return _claude_do(lambda: _claude.clear_key(user))
+
+
+@app.put("/api/ai/claude/settings")
+def claude_set_settings(body: ClaudeSettingsPut, request: Request, user: str = Depends(current_user)):
+    _not_a_screen(request)
+    return _claude_do(lambda: _claude.set_settings(user, body.model_dump()))
+
+
+@app.post("/api/ai/claude/check")
+def claude_check(user: str = Depends(current_user)):
+    """Does the saved key work? Asks Anthropic for one model's details, which is not billed."""
+    return _claude_do(lambda: _claude.check_key(user))
+
+
+@app.post("/api/ai/claude/chat")
+def claude_chat(body: dict = Body(...), user: str = Depends(current_user)):
+    """nimrod_ai.js's request (messages with the system prompt first, plus `actions`: the allow-list)
+    -> `{ok, text, ...}`, the same shape ai.js's `chat` resolves to. Text only. Actions come back as
+    `[[name arg]]` lines and still only run on a press in the browser."""
+    if not _claude_limit.hit(user):
+        raise HTTPException(status_code=429, detail="That is a lot of messages in a minute - wait a moment.")
+    return _claude_do(lambda: _claude.chat(user, body))
 
 
 # --------------------------------------------------------------------- server push (SSE)

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — Claude on your account</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<link rel="stylesheet" href="./layers.css">
+<style id="cs-style"></style>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:24px 16px}
+  .cs-foot{max-width:40rem;margin:16px auto 0;font-size:.9rem;color:var(--text-muted)}
+  .cs-foot a{color:var(--link)}
+</style>
+</head>
+<body>
+<!--
+  THE ACCOUNT OWNER'S CLAUDE PAGE. Linked from the guide's "Set up your guide / AI" connect step and from
+  "About" in the talk view. Its own page, like pair.html: one task, reached from a link, nothing else here.
+  Colours come only from the theme (theme.js applyTheme), never from this file.
+-->
+<main id="root"></main>
+<p class="cs-foot"><a href="/home.html">Your dashboards</a></p>
+<script type="module">
+  import { mountClaudeSettings, CLAUDE_STYLE } from './claude_settings.js';
+  import { createProfilesClient, resolveTheme } from './profile.js';
+  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { authHeaders } from './auth.js';
+
+  applyTheme(document.documentElement, DEFAULT_THEME);
+  document.getElementById('cs-style').textContent = CLAUDE_STYLE;
+  (async () => {
+    try {
+      const me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null));
+      if (!me) return;
+      const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
+      if (theme) applyTheme(document.documentElement, theme);
+    } catch { /* offline or signed out -- the default theme already stands */ }
+  })();
+  mountClaudeSettings(document.getElementById('root'), { headers: () => authHeaders() });
+</script>
+</body>
+</html>
