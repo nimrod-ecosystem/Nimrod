@@ -2214,3 +2214,46 @@ first thing a new person sees (2026-10-02 evening, item 1). That dashboard stays
 8. **Your people is a "webpage module": a familiar web-page format** (like MySpace) that people can add their own
    sections to, as an alternative to a dashboard. A screen in someone's room is the edge case. (Direction; the page
    format comes after linking and recommending.)
+
+## People across accounts: a profile has a home, and appears on other accounts -- 2026-10-04 (night)
+
+Mike, live, after trying the first linking build (8908b2c). He ruled on items 1-10; the model under item 11 is
+Code's design to carry them out, recorded here so it can be argued with. Items 1, 2 and 4 supersede how
+8908b2c worked, where a claimed profile stayed on the inviter's account and the inviter kept the name.
+
+1. **A claimed profile is on the claimer's account too, and that copy is the main one.** *"The profile should also
+   be on their account. Their account would be the main instance of it."*
+2. **The person can change whatever they want on their own profile,** not just the picture. *"She should be able to
+   change whatever she wants."*
+3. **"I call them": each account can have its own name for somebody.** *"Christine's mom might want to use her real
+   name for her profile and then be called mom on Christine's account and grandma on Oscar's."*
+4. **One profile can be on several accounts.** *"Her parents might just want to make one account and have both
+   their users on their account and on her account."* First trial: Mike, Christine and Oscar. Mike sets up users
+   for them on his account, then sets up Christine's own account, and links Oscar to both.
+5. **Connecting works without setting anybody up first.** *"Most people will just want to be connected like
+   friends on Facebook."* Setting a profile up for someone and handing it over is the second way in, not the only
+   one.
+6. **An invite picks which profiles to share, and the permissions,** rather than one "see your other people" tick.
+7. **Who can see your page: the people you're linked with, plus a "Who can see my page" setting.** This was Code's
+   suggestion. *"That sounds good."*
+8. **What visitors see is set in permissions; the default is your profile.** By default a visitor sees your card
+   (picture, name) and no more. You open more parts to them yourself.
+9. **No separate guestbook.** Leaving a note on someone's page is the regular "leave a note", and you can scroll
+   back through your old notes.
+10. **Search by title:** Mike has a YouTube API key and a Spotify account. Keys are per account (bring your own),
+    under the 2026-08-28 "I can't be paying for everyone's tokens" ruling. Without a key, pasting a link keeps
+    working.
+11. **The model (Code's design, open to change):**
+    - Every person row can belong to an *identity*.
+    - The identity has one *home*: the account, and the person on it, that is the main instance.
+    - The profile itself (name, picture, avatar, page) is read from the home.
+    - Each other account holding that identity keeps its own row: its "I call them" name, its own screens,
+      settings and grants for that person.
+    - **Claiming** means "the person on Pat's account is me": Pat's row joins the claimer's own "you" as its
+      identity, and the home moves to the claimer.
+    - **Connecting like friends** makes, on each side, a row for the other's "you", joined to their identity.
+    - **Sharing profiles** in an invite makes rows for each chosen person on the other account, joined to the
+      same identities.
+    - Why rows stay per account, and the person is not moved: screens, settings, events and grants are keyed by
+      the account that holds them. Moving would orphan Pat's screens. An account's screens stay that account's
+      to run unless it grants otherwise.
