@@ -162,6 +162,14 @@ try {
       a && a.getAttribute('href') === 'https://www.example.org/a?b=1&c=2' && a.target === '_blank'
       && /noopener/.test(a.rel) && a.textContent === 'A <b>page</b> (example.org)' && !div.querySelector('b')
       && /p\. 4/.test(div.textContent), div.innerHTML);
+    // 2026-10-04 (page_links.js): on a real screen a link would open a tab nobody there can close.
+    div.innerHTML = sourceHtml(itemSources({ url: 'https://www.example.org/a?b=1&c=2', title: 'A <b>page</b>', note: 'p. 4' }), { onScreen: true });
+    check('*** on a screen (onScreen): the same words, host visible, as plain text and NOT a link ***',
+      !div.querySelector('a') && div.querySelector('[data-review-source-plain]')?.textContent === 'A <b>page</b> (example.org)'
+      && !div.querySelector('b') && /p\. 4/.test(div.textContent), div.innerHTML);
+    div.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'), { onScreen: true });
+    check('...an untitled link on a screen shows the whole address, as text', !div.querySelector('a')
+      && div.querySelector('[data-review-source-plain]')?.textContent === 'https://www.example.org/untitled', div.innerHTML);
     div.innerHTML = sourceHtml(itemSources('Encyclopaedia Britannica, "Giraffe"'));
     check('a reference is a plain line', div.querySelector('[data-review-source="ref"]')?.textContent === 'Source: Encyclopaedia Britannica, "Giraffe"');
     div.innerHTML = sourceHtml(itemSources({ ref: 'common knowledge', note: 'taught to small children' }));

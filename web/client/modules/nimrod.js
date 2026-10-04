@@ -82,6 +82,9 @@ import {
   OLLAMA_URL, firstChatModel, helloMessages, HELLO_TOKENS, ollamaOriginLines, ollamaAllowsByDefault,
   AI_BACKENDS, readAIBackend, writeAIBackend, createClaudeAI, claudeStatusLine, CLAUDE_SETTINGS_PAGE, CLAUDE_PLAIN_WORDS,
 } from '../nimrod_ai.js';
+// A page set up somewhere else (/claude.html, /reviews.html, a link act): on a SCREEN its address and a code to
+// scan, never the page itself over the dashboard (page_links.js argues it).
+import { elsewhereHTML, themeQrColours } from '../page_links.js';
 import { authHeaders } from '../auth.js';
 import {
   draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, stamp, noteContextFrom, panelOf, contextLine,
@@ -190,6 +193,10 @@ const STYLE = `
 .ng-lines{margin:0;padding-left:1.1rem}
 .ng-lines li{margin:2px 0;overflow-wrap:anywhere}
 .ng-warn{margin:0;padding:6px 10px;border-radius:10px;background:var(--surface-alt);font-weight:700}
+.ng-elsewhere{flex:1 1 100%;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface)}
+.ng-elsewhere p{margin:0}
+.ng-elsewhere b{overflow-wrap:anywhere}
+.ng-elsewhere [data-elsewhere-note]{color:var(--text-muted)}
 `;
 
 registerModule(
@@ -770,9 +777,12 @@ registerModule(
         return `<button type="button" class="ng-btn ng-choice" data-ng-stop data-ng-choice="${i}" data-help="${esc(help)}"
           data-help-title="${esc(c.label)}"><span class="ng-key">${esc(c.key || '')}.</span>${esc(c.label)}</button>`;
       }).join('');
+      // A link on a SCREEN is its address and a code to scan, not a stop (there is nothing to press); anywhere
+      // else it opens the page in a new tab (page_links.js).
       const actBtns = acts.map((a, i) => (a.kind === 'link'
-        ? `<a class="ng-btn ng-act" data-ng-stop data-ng-link href="${esc(a.href)}" target="_blank" rel="noopener"
-            data-help="${esc(`Opens ${a.label} in a new tab.`)}">${esc(a.label)} ↗</a>`
+        ? (onScreen() ? elsewhere(a.href)
+          : `<a class="ng-btn ng-act" data-ng-stop data-ng-link href="${esc(a.href)}" target="_blank" rel="noopener"
+            data-help="${esc(`Opens ${a.label} in a new tab.`)}">${esc(a.label)} ↗</a>`)
         : `<button type="button" class="ng-btn ng-act" data-ng-stop data-ng-act="${i}"
             data-help="${esc(actHelp(a))}">${esc(a.label)}</button>`)).join('');
       const tree = prefs.tree
@@ -808,6 +818,18 @@ registerModule(
     const btnHTML = (doWhat, label, help, extra = '') => `<button type="button" class="ng-btn" data-ng-stop data-ng-do="${doWhat}" ${extra}
         data-help="${esc(help)}">${label}</button>`;
     const pageOrigin = () => { try { return mount.ownerDocument.defaultView?.location?.origin || ''; } catch { return ''; } };
+    // *** ON A SCREEN, A PAGE IS ITS ADDRESS (2026-10-04; page_links.js argues it). *** The kiosk's own word
+    // (`ctx.isScreen`: true on a real screen, false embedded in Home or the modules page); a host that does not
+    // say (a suite, a try-it box) is not a screen. The code is drawn in the theme's own two colours, once per
+    // page and colours (a render happens on every hover).
+    const onScreen = () => ctx.isScreen === true;
+    const elsewhereMemo = new Map();
+    const elsewhere = (path) => {
+      const colours = themeQrColours(mount);
+      const k = `${path}|${colours ? `${colours.dark}/${colours.light}` : ''}`;
+      if (!elsewhereMemo.has(k)) elsewhereMemo.set(k, elsewhereHTML(path, { colours, cls: 'ng-elsewhere' }));
+      return elsewhereMemo.get(k);
+    };
     // Which AI answers: the three backends as buttons, the chosen one pressed. Used on the connect step and in About.
     const backendRow = () => `<p class="ng-status">Which AI answers on this device:</p><div class="ng-btns" data-ng-backends>${AI_BACKENDS.map((b) =>
       btnHTML('backend', esc(b.label), b.help, `data-ng-id="${esc(b.id)}" aria-pressed="${backend === b.id}"`)).join('')}</div>`;
@@ -848,8 +870,9 @@ registerModule(
             <p class="ng-status">Answering now: Claude, on this account. No key is kept in this browser.</p>
             <ul class="ng-lines" data-ng-claude-words>${CLAUDE_PLAIN_WORDS.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
             <div class="ng-btns">
-              <a class="ng-btn ng-act" data-ng-stop data-ng-link data-ng-claude-page href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener"
-                data-help="Opens the Claude settings in a new tab: the account owner saves the key, picks the model and sees today’s spending there.">Claude settings: key, model, spending ↗</a>
+              ${onScreen() ? elsewhere(CLAUDE_SETTINGS_PAGE)
+                : `<a class="ng-btn ng-act" data-ng-stop data-ng-link data-ng-claude-page href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener"
+                data-help="Opens the Claude settings in a new tab: the account owner saves the key, picks the model and sees today’s spending there.">Claude settings: key, model, spending ↗</a>`}
               ${claudeCheck?.busy ? '' : btnHTML('checkclaude', claudeCheck ? 'Check again' : 'Check Claude on this account',
                 'Asks this website’s server whether this account has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
             </div>${res}</div>`;
@@ -951,8 +974,10 @@ registerModule(
           <label for="ng-f-persona">How it talks (its persona, in your words)</label>
           <textarea id="ng-f-persona" data-ng-field="persona" maxlength="2000" placeholder="A patient, cheerful guide…">${esc(aiP.persona)}</textarea>
           ${backendRow()}
-          ${backend === 'claude' ? `<p class="ng-status">Claude, on this account: no key in this browser. The key, the model and the
-            daily limit are on the <a href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener" data-ng-claude-page>Claude settings page ↗</a>.</p>`
+          ${backend === 'claude' ? (onScreen()
+            ? `<p class="ng-status">Claude, on this account: no key in this browser. The key, the model and the daily limit are on the Claude settings page:</p>${elsewhere(CLAUDE_SETTINGS_PAGE)}`
+            : `<p class="ng-status">Claude, on this account: no key in this browser. The key, the model and the
+            daily limit are on the <a href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener" data-ng-claude-page>Claude settings page ↗</a>.</p>`)
             : `<label for="ng-f-url">AI address (this device)</label><input id="ng-f-url" data-ng-field="baseUrl" type="url" spellcheck="false" value="${esc(s.baseUrl || DEFAULT_BASE_URL)}">
           <label for="ng-f-model">Model (blank: choose one on this computer automatically)</label><input id="ng-f-model" data-ng-field="model" spellcheck="false" value="${esc(s.model || '')}">
           <label for="ng-f-key">Your own key, if the service needs one (kept in this browser only)</label>

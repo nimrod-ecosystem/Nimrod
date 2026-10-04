@@ -173,8 +173,10 @@ export function sourceText(s) {
 /**
  * The "Source:" line(s) for a review screen, as HTML. A link opens in a new tab and its host is in the text,
  * so it can be read without opening it. No source at all says so — that is the question to check hardest.
+ * `onScreen: true` (a real screen, ctx.isScreen; page_links.js argues it): the same words, host visible, as
+ * plain text and NOT a link — a tab opened on a screen is a stray page nobody there can close.
  */
-export function sourceHtml(sources, { cls = 'tv-review-src' } = {}) {
+export function sourceHtml(sources, { cls = 'tv-review-src', onScreen = false } = {}) {
   const list = Array.isArray(sources) ? sources : [];
   if (!list.length) {
     return `<p class="${cls}" data-review-source="none">Source: none given — check this one against a source.</p>`;
@@ -183,6 +185,7 @@ export function sourceHtml(sources, { cls = 'tv-review-src' } = {}) {
     const note = s.note ? ` <span class="${cls}-note">— ${escHtml(s.note)}</span>` : '';
     if (s.url) {
       const label = s.title ? `${escHtml(s.title)} (${escHtml(hostOf(s.url))})` : escHtml(s.url);
+      if (onScreen) return `<p class="${cls}" data-review-source="url">Source: <span data-review-source-plain>${label}</span>${note}</p>`;
       return `<p class="${cls}" data-review-source="url">Source: <a href="${escHtml(s.url)}" target="_blank" rel="noopener noreferrer">${label}</a>${note}</p>`;
     }
     const kind = String(s.ref || '').toLowerCase() === COMMON_KNOWLEDGE ? 'common' : 'ref';

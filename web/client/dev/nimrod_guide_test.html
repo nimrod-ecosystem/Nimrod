@@ -45,6 +45,11 @@ import '../modules/whats_new.js';
 // The guide's Switch acts name the profile (top left on the landing since 2026-10-02 evening): registered so
 // treeProblems can check the name against the real registry.
 import '../modules/profile.js';
+import {
+  CLAUDE_PAGE, REVIEWS_PAGE, ELSEWHERE_PAGES, ELSEWHERE_PAGE_PREFIX, pageAddress, pageURL, elsewhereLine, qrColours,
+  pageRow, elsewhereMenuPage, elsewhereHTML,
+} from '../page_links.js';
+import { CLAUDE_SETTINGS_PAGE, AI_BACKEND_KEY } from '../nimrod_ai.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -379,6 +384,95 @@ try {
       await until(() => mount4.querySelector('[data-ng-say]').textContent === 'An AI answered.'), mount4.querySelector('[data-ng-say]').textContent);
     for (const i of [inst2, inst3, inst4]) i.destroy();
     for (const b of [kiosk, mount2, mount3, mount4]) b.remove();
+  }
+
+  // ============================================================================================
+  // Mike, 2026-10-04: "On your own phone or computer (not a screen), open /claude.html ... How do I go there?"
+  // Nothing linked to /claude.html or /reviews.html. Off a screen a link opens the page in a new tab; ON a screen
+  // nothing navigates (CLAUDE.md: a screen must never enter a state only an input can leave) -- it shows the
+  // address and a code to scan instead.
+  section('*** pages set up somewhere else: a link off a screen, the address and a code on one (page_links.js) ***');
+  {
+    const rv = GUIDE_NODES.reviews;
+    check('*** the guide has a short node about checking trivia questions, linking to /reviews.html, under Other modules ***',
+      !!rv && rv.acts.some((a) => a.kind === 'link' && a.href === REVIEWS_PAGE) && treeParents().reviews === 'other'
+      && GUIDE_NODES.other.choices.some((c) => c.to === 'reviews'), J(rv));
+    check('the pages are where the site serves them, and the Claude one is nimrod_ai’s own constant',
+      CLAUDE_PAGE === '/claude.html' && REVIEWS_PAGE === '/reviews.html' && CLAUDE_PAGE === CLAUDE_SETTINGS_PAGE
+      && ELSEWHERE_PAGES.claude.path === CLAUDE_PAGE && ELSEWHERE_PAGES.reviews.path === REVIEWS_PAGE);
+    check('the connect step still names the Claude settings page in its words', /Claude settings page/.test(GUIDE_NODES['ai-connect'].say));
+
+    // ---- the pure part ----
+    const loc = { host: 'example.org', origin: 'https://example.org' };
+    check('the address as somebody would type it, from where the page is served (never a written-down host)',
+      pageAddress('/claude.html', loc) === 'example.org/claude.html' && pageAddress('/claude.html', { host: 'example.org:443', origin: 'x' }) === 'example.org/claude.html'
+      && pageURL('/reviews.html', loc) === 'https://example.org/reviews.html');
+    check('what a screen says instead', elsewhereLine('/reviews.html', loc) === 'open it on your phone or computer: example.org/reviews.html');
+    const c1 = qrColours('#111111', '#fafafa'), c2 = qrColours('#fafafa', '#111111');
+    check('*** the code’s colours come from the theme, dark squares on the light one, whichever way round the theme has them ***',
+      c1?.dark === '#111111' && c1?.light === '#fafafa' && c2?.dark === '#111111' && c2?.light === '#fafafa', J([c1, c2]));
+    check('...and no code when they are too close to read, or not plain colours (the address still stands)',
+      qrColours('#777777', '#888888') === null && qrColours('var(--x)', '#fff') === null && qrColours('', '') === null);
+    const opened = [];
+    const off = pageRow('claude', { isScreen: false, loc, open: (p) => opened.push(p) });
+    off.run();
+    check('*** off a screen, a menu row opens the page (in a new tab) and has no screen page ***',
+      off.id === 'claude-page' && off.label === 'Claude on this account…' && !off.page && J(opened) === J(['/claude.html']), J(off));
+    const on = pageRow('reviews', { isScreen: true, loc, open: (p) => opened.push(p) });
+    check('*** on a screen, the row opens NOTHING: no run, a menu page with the address, and the address in its hint ***',
+      on.id === 'reviews-page' && typeof on.run !== 'function' && on.page === `${ELSEWHERE_PAGE_PREFIX}reviews`
+      && /example\.org\/reviews\.html/.test(on.hint) && opened.length === 1, J(on));
+    check('a row can be renamed in place (Trivia’s "See reviews…")', pageRow('reviews', { isScreen: false, over: { id: 'see-reviews', label: 'See reviews…' } }).label === 'See reviews…');
+    const themed = box(); themed.style.cssText += ';--text:#111111;--bg:#fafafa';
+    elsewhereMenuPage('claude', { loc }).render(themed);
+    check('*** the screen’s menu page: the address in words, the code to scan in the theme’s colours, and that nothing opened ***',
+      themed.querySelector('[data-elsewhere-address]')?.textContent === 'example.org/claude.html'
+      && !!themed.querySelector('[data-elsewhere-qr] svg path[fill="#111111"]') && !!themed.querySelector('svg rect[fill="#fafafa"]')
+      && /Nothing opens on this screen/.test(themed.textContent), themed.innerHTML.slice(0, 300));
+    const plain = box();
+    plain.innerHTML = elsewhereHTML('/claude.html', { loc, colours: null });
+    check('no colours: the address alone, no code', !!plain.querySelector('[data-elsewhere-address]') && !plain.querySelector('svg'));
+    themed.remove(); plain.remove();
+
+    // ---- the guide's links, on a screen and off one ----
+    const wrapOn = box(); wrapOn.style.cssText += ';--text:#111111;--bg:#fafafa';
+    const mOn = document.createElement('div'); wrapOn.append(mOn);
+    const realOpen = window.open; const winOpens = [];
+    window.open = (...a) => { winOpens.push(a); return null; };
+    try {
+      const gOn = mountModule('nimrod', { mount: mOn, bus: createBus(), state: fakeState({ walk: [GUIDE_ROOT, 'other', 'reviews'] }),
+        events: null, output: fakeOutput(), user: null, profileId: 'p', personId: null, instanceId: 'gs1', isScreen: true });
+      await gOn.init();
+      const box1 = mOn.querySelector('.ng-elsewhere[data-elsewhere="/reviews.html"]');
+      check('*** on a screen (ctx.isScreen): the review link is the ADDRESS and a code, not a link ***',
+        gOn.impl.__probe().id === 'reviews' && !mOn.querySelector('a[data-ng-link]') && !!box1
+        && box1.querySelector('[data-elsewhere-address]')?.textContent === `${location.host}/reviews.html` && !!box1.querySelector('svg'),
+        mOn.innerHTML.slice(0, 400));
+      check('...and it is not a scan stop (there is nothing to press)', !box1?.closest('[data-ng-stop]') && !box1?.hasAttribute('data-ng-stop'));
+      gOn.destroy();
+      // The Claude choice on the connect step, on a screen.
+      const store = new Map([[AI_BACKEND_KEY, 'claude']]);
+      const aiStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => { store.set(k, String(v)); }, removeItem: (k) => { store.delete(k); } };
+      const claudeAI = { settings: () => ({ backend: 'claude', baseUrl: '', model: '' }), setSettings: () => ({}), hasKey: () => false };
+      const mC = document.createElement('div'); wrapOn.append(mC);
+      const gC = mountModule('nimrod', { mount: mC, bus: createBus(), state: fakeState({ walk: [GUIDE_ROOT, 'ai-setup', 'ai-connect'] }),
+        events: null, output: fakeOutput(), user: null, profileId: 'p', personId: null, instanceId: 'gs2', isScreen: true, aiStorage, claudeAI });
+      await gC.init();
+      check('*** on a screen, "Claude, on this account" shows /claude.html as an address and a code, not a link ***',
+        gC.impl.__probe().backend === 'claude' && !mC.querySelector('[data-ng-claude-page]')
+        && !!mC.querySelector('.ng-elsewhere[data-elsewhere="/claude.html"] svg'), mC.innerHTML.slice(0, 400));
+      gC.destroy();
+      // Off a screen (Home, the modules page, a suite): the link, in a new tab.
+      const mOff = box();
+      const gOff = mountModule('nimrod', { mount: mOff, bus: createBus(), state: fakeState({ walk: [GUIDE_ROOT, 'other', 'reviews'] }),
+        events: null, output: fakeOutput(), user: null, profileId: 'p', personId: null, instanceId: 'gs3', isScreen: false });
+      await gOff.init();
+      const a = mOff.querySelector('a[data-ng-link]');
+      check('*** off a screen: the review page is a real link, in a new tab ***',
+        a?.getAttribute('href') === '/reviews.html' && a.target === '_blank' && /noopener/.test(a.rel) && !mOff.querySelector('.ng-elsewhere'));
+      gOff.destroy(); mOff.remove();
+      check('nothing above opened a window', winOpens.length === 0, J(winOpens));
+    } finally { window.open = realOpen; wrapOn.remove(); }
   }
 
   // ============================================================================================

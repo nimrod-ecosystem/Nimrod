@@ -26,6 +26,7 @@ import { mountPeople } from './people.js';
 import { createAvatarCache } from './avatar_display.js';
 import { createBus } from './bus.js';
 import { mountPackLoader } from './pack_loader.js';
+import { CLAUDE_PAGE, REVIEWS_PAGE } from './page_links.js';
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -161,6 +162,11 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
               // runs pollutes the record" problem, already solved and linked from nowhere but
               // the landing page's iframe.
               + '<a class="s-signout" href="/auth/login?switch=1">Switch account</a>'
+              // THE ACCOUNT'S OWN PAGES (2026-10-04, page_links.js): Mike asked how to get to the Claude settings
+              // page, which nothing linked to. Here because this is where the account's things live (who is signed
+              // in, sign out); a page, not a screen, so plain links. After Sign out, which stays first.
+              + `<a class="s-signout s-acct" data-acct="claude" href="${CLAUDE_PAGE}">Claude on this account</a>`
+              + `<a class="s-signout s-acct" data-acct="reviews" href="${REVIEWS_PAGE}">Review questions</a>`
               + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'
             : '<a class="s-signout" href="/auth/login">Sign in</a>'
               + '<a class="s-signout" href="/kiosk.html?demo=1">Try as a guest</a>'}

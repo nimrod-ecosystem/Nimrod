@@ -421,9 +421,12 @@ const toTab = (m, id) => {
       // (2026-10-02 evening: "Space between panels" on the Display tab makes the old rows 37. The lap is unchanged.)
       // (2026-10-03: "Show a small clock" on the Display tab makes the old rows 38. The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
-        && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics'].includes(i.id));
+        && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
+          'claude-page', 'reviews-page'].includes(i.id));
       // ('user-folders', 2026-10-02: "Your own folders" on the This screen tab, like 'game' -- outside the lap.)
       // ('lesson-topics', 2026-10-03: moved into the menu from the Settings panel's own list, beside 'game'.)
+      // ('claude-page' on Devices and 'reviews-page' on This screen, 2026-10-04, page_links.js: rows that open a
+      // page, like 'game' -- outside the panel's lap, which is unchanged.)
       check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 38) ***',
         lapStops.length === 14 && oldStops.length === 38 && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
@@ -1894,6 +1897,61 @@ const toTab = (m, id) => {
         nk.slotTypes().join());
       check('layout: ...and it is now the focused panel', nBox.querySelector('.k-cell[data-focused]')?.getAttribute('data-kind') === 'youtube');
       check('layout: showModule("camera") is false', (await nk.showModule('camera')) === false);
+
+      // ================= PAGES SET UP SOMEWHERE ELSE: /claude.html AND /reviews.html (2026-10-04) =================
+      // Mike: "On your own phone or computer (not a screen), open /claude.html ... How do I go there?" Nothing linked
+      // to either page. Now: "Claude on this account…" (Devices), "Review questions…" (This screen), and "See
+      // reviews…" under Trivia's "Include unreviewed questions". OFF a screen (embedded: Home, the modules page)
+      // each opens its page in a new tab. ON a screen nothing navigates (page_links.js argues it): the row opens a
+      // menu page with the address and a code to scan, and Back leaves it.
+      {
+        const realOpen = window.open; const opens = [];
+        window.open = (...a) => { opens.push(a); return null; };
+        try {
+          // ---- ON A SCREEN (nk: not embedded) ----
+          await nk.showModule('trivia');
+          nk.menu.open();
+          const rowsOn = nk.menu.items();
+          const rOn = (id) => rowsOn.find((r) => r.id === id);
+          const addr = (p) => `${location.host}${p}`;
+          check('*** on a screen: "Claude on this account…" is on Devices, and opens a menu page, not the site page ***',
+            rOn('claude-page')?.tab === 'devices' && rOn('claude-page')?.label === 'Claude on this account…'
+            && rOn('claude-page')?.page === 'elsewhere:claude' && typeof rOn('claude-page')?.run !== 'function'
+            && rOn('claude-page')?.hint.includes(addr('/claude.html')), JSON.stringify(rOn('claude-page')));
+          check('*** on a screen: "Review questions…" is on This screen, the same way ***',
+            rOn('reviews-page')?.tab === 'screen' && rOn('reviews-page')?.page === 'elsewhere:reviews'
+            && rOn('reviews-page')?.hint.includes(addr('/reviews.html')), JSON.stringify(rOn('reviews-page')));
+          const ui = rowsOn.findIndex((r) => r.id === 'set:includeUnreviewed');
+          check('*** Trivia: "See reviews…" sits straight under "Include unreviewed questions", on the panel’s tab ***',
+            ui >= 0 && rowsOn[ui + 1]?.id === 'see-reviews' && rowsOn[ui + 1]?.label === 'See reviews…'
+            && rowsOn[ui + 1]?.tab === 'module' && rowsOn[ui + 1]?.page === 'elsewhere:reviews',
+            JSON.stringify(rowsOn.slice(Math.max(0, ui - 1), ui + 3).map((r) => r.id)));
+          toTab(nk.menu, 'claude-page');
+          nk.menu.focusRow('claude-page');
+          nk.menu.select();
+          const pageBody = nBox.querySelector('.st-page [data-page-body]');
+          check('*** pressing it on a screen: the address in words and a code to scan, and NO window opened ***',
+            nk.menu.page() === 'elsewhere:claude' && pageBody?.querySelector('[data-elsewhere-address]')?.textContent === addr('/claude.html')
+            && /Nothing opens on this screen/.test(pageBody?.textContent || '') && opens.length === 0,
+            `${nk.menu.page()} ${pageBody?.innerHTML.slice(0, 200)} opens=${opens.length}`);
+          nk.menu.back();
+          check('...and Back leaves the page, the menu still open where it was', nk.menu.page() === null && nk.menu.isOpen() && nk.menu.focusId() === 'claude-page');
+          nk.menu.close();
+
+          // ---- OFF A SCREEN (ek: embedded, as on Home) ----
+          await ek.showModule('trivia');
+          ek.menu.open();
+          const rowsOff = ek.menu.items();
+          const rOff = (id) => rowsOff.find((r) => r.id === id);
+          rOff('claude-page')?.run?.();
+          rOff('reviews-page')?.run?.();
+          rOff('see-reviews')?.run?.();
+          check('*** off a screen: each row opens its page in a NEW tab (noopener), and has no screen page ***',
+            JSON.stringify(opens) === JSON.stringify([['/claude.html', '_blank', 'noopener'], ['/reviews.html', '_blank', 'noopener'], ['/reviews.html', '_blank', 'noopener']])
+            && !rOff('claude-page')?.page && !rOff('see-reviews')?.page, JSON.stringify(opens));
+          ek.menu.close();
+        } finally { window.open = realOpen; }
+      }
 
       // ================= THE BOX SIZES TO ITS PARENT, AND THE MENU STAYS INSIDE IT =================
       // A fresh embed on a screen with NO camera. (kiosk.js mounts its settings menu into the first

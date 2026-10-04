@@ -558,7 +558,8 @@ registerModule(
     // the reviewer checks it against. Inside the strip, so the player never sees it.
     function reviewHtml() {
       if (!q || !q.reviewing) return '';
-      const src = sourceHtml(q.review?.sources);
+      // (On a real screen, ctx.isScreen, a source link is plain words with its host: no stray tab. page_links.js.)
+      const src = sourceHtml(q.review?.sources, { onScreen: ctx.isScreen === true });
       if (reviewMark === 'wrong') {
         return `<div class="tv-review" data-review data-review-state="wrong">
             <p class="tv-review-said" role="status">${reviewFailed
