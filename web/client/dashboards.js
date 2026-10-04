@@ -162,8 +162,11 @@ export const CLASSIC_THEME = 'fall';
 // does not remove, switch or move them while on this dashboard, and says why. NOT a lock with no key: the
 // Change tray offers Unlock, one press, because the person who wants the opposite -- somebody who has
 // learned the site and wants this dashboard for something else -- has a perfectly good reason, and a lock
-// with no way out is the undismissable-gate failure in a smaller coat. The top two are the pictures and
-// the devices, Code's pick (the two things a first visit most often sets up).
+// with no way out is the undismissable-gate failure in a smaller coat. The top two were the pictures and
+// the devices, Code's pick (the two things a first visit most often sets up). 2026-10-04: the top left
+// follows the landing's to the PROFILE (Mike's 2026-10-02 evening ruling moved the landing's; the tutorial's
+// pick was ours, so it goes with it, and the guide's "Replace the profile" now lands on the top left here
+// too). The top right stays the devices: whether it should be a scoreboard is an open DECIDE on Mike's list.
 //   It is in the bar's tray (PREBUILT_ORDER, LAST, so the three before it keep their places and a switch
 //   user's habits) and spoken as "tutorial"; it is not one of Home's cards (Nimrod and the ⚙ menu reach it).
 // =====================================================================================================
@@ -187,14 +190,15 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   }),
   tutorial: Object.freeze({
     key: 'tutorial', label: 'Tutorial', name: 'Tutorial', kind: 'static', title: 'The tutorial',
-    blurb: 'Nimrod and the settings, always in the bottom two places, with your pictures and your devices above.',
+    blurb: 'Nimrod and the settings, always in the bottom two places, with your profile and your devices above.',
     modules: [
-      { ref: 'photos', type: 'photos' },
+      // No subject, as the landing's: modules/profile.js then shows whoever is looking.
+      { ref: 'profile', type: 'profile' },
       { ref: 'devices', type: 'devices' },
       { ref: 'nimrod', type: 'nimrod', state: { intro: 'tutorial' } },
       { ref: 'settings', type: 'settings' },
     ],
-    layout: { preset: 'quad', slots: ['photos', 'devices', 'nimrod', 'settings'] },
+    layout: { preset: 'quad', slots: ['profile', 'devices', 'nimrod', 'settings'] },
     locked: ['nimrod', 'settings'],
     settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
   }),

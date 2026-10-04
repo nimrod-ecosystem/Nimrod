@@ -228,7 +228,11 @@ export function createWindowGroup(windows) {
     if (!at || !at.isOpen()) return null;
     return at.current();
   }
+  // 2026-10-04: a window that HOLDS the walk (the Automation window with a row entered or its picker open)
+  // gets next / prev itself, so the cursor walks inside it instead of leaving for the next window.
+  const holding = () => !!(at && at.isOpen() && typeof at.holds === 'function' && at.holds());
   function step(d) {
+    if (holding()) return at.focusStep(d);
     const list = stops();
     if (!list.length) { at = null; return null; }
     const cur = current();
@@ -243,7 +247,15 @@ export function createWindowGroup(windows) {
     current,
     next: () => step(1),
     prev: () => step(-1),
-    select() { const c = current(); if (!c) return false; return at.select(); },
+    select() { if (holding()) return at.select(); const c = current(); if (!c) return false; return at.select(); },
+    /** Back, for a window that has a level to come out of: true when it used the press (it came out of a
+     *  row, or put itself away); false when it did not, and the host decides (the kiosk ends the editing). */
+    back() {
+      if (!at || !at.isOpen() || typeof at.back !== 'function' || (!holding() && !current())) return false;
+      return at.back() === true;
+    },
+    /** True while the window the cursor is in holds the walk. */
+    holds: () => holding(),
     reset() { for (const w of live()) w.blur(); at = null; },
   };
 }
@@ -413,10 +425,17 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle, onAutom
 
 // ---------------------------------------------------------------------------------------
 // ROW 2.41: AUTOMATION -- "settings driven by something else" (automation.js), in the same shell as
-// every other window: solid, non-modal, Close first, Escape closes. Its inside is automation_panel.js,
-// unchanged: a form of native controls for the person SETTING UP a screen with a keyboard and a
-// pointer (that file argues why no switch walk is promised), so the walk's only stop here is Close --
-// the way out stays reachable by switch, which is the promise every window makes.
+// every other window: solid, non-modal, Close first, Escape closes. Its inside is automation_panel.js:
+// a form of native controls, so a keyboard and a pointer reach all of it.
+//
+// *** AND A SWITCH (2026-10-04). *** Until today the walk's only stop here was Close. Now the walk is
+// Close, then the panel's own stops (automation_panel.js `scan`, argued there): its fields as ROWS when
+// the person's "How you choose things" is step through, or one stop at a time when it is point and click
+// (`chooseMode`, a value or a getter the host passes; absent: point). While a row is entered or the choice
+// picker is open the window HOLDS the walk (`holds()`), so a group (`createWindowGroup`) hands it next and
+// prev instead of moving to the next window. `back()` comes out a level: out of the picker or the row, and
+// from the top it closes THIS window (the picker's rule: back from the rows is leave) -- and says it used
+// the press (true), so the host does not also end the editing.
 //
 // It adds and removes BINDINGS through the engine and writes nothing itself: saving is the engine's
 // `onChange`, i.e. whatever the host that built the engine already does (the kiosk: the screen's
@@ -428,8 +447,12 @@ export function mountLayersWindow(host, model, { onClose, onShownToggle, onAutom
 //   panels()    [{ id, title, manifest, instance? }] what is on the screen, read on every repaint
 //   selected    the panel id to open on (or a getter): the thing chosen in Layers
 //   verbs       extra verb ids to suggest
+//   topics      message names to offer for "a message" (a value or a getter)
+//   chooseMode  the person's "How you choose things" ('point' | 'step', or a getter)
 // ---------------------------------------------------------------------------------------
-export function mountAutomationWindow(host, { engine, panels = () => [], selected = null, verbs = [], onClose } = {}) {
+export function mountAutomationWindow(host, {
+  engine, panels = () => [], selected = null, verbs = [], topics = [], chooseMode = 'point', onClose,
+} = {}) {
   if (!engine) throw new Error('edit_windows: the Automation window needs the screen\'s automation engine');
   // A model of one, as the Map's: the shell draws once, and the panel keeps its own form after that
   // (a redraw would throw away what somebody is halfway through typing).
@@ -442,13 +465,57 @@ export function mountAutomationWindow(host, { engine, panels = () => [], selecte
     body: () => '<div class="ew-auto" data-ew-auto></div>',
     afterRender(el) {
       try { panel?.destroy(); } catch { /* gone */ }
-      panel = mountAutomationPanel(el.querySelector('[data-ew-auto]'), { engine, panels, selected, verbs });
+      panel = mountAutomationPanel(el.querySelector('[data-ew-auto]'), { engine, panels, selected, verbs, topics, chooseMode });
     },
     onClose,
   });
   // (The panel holds no subscription or timer of its own -- it reads the engine when it paints -- so the
   // window's own destroy, which removes its element, is all the teardown it needs.)
   Object.defineProperty(w, 'panel', { get: () => panel, enumerable: true });
+  // ---- the walk: Close, then the panel's own stops (see above) ----
+  let atClose = false;
+  const closeBtn = () => w.el.querySelector('[data-ew="close"]');
+  const paintClose = () => { closeBtn()?.classList.toggle('is-scan', atClose && w.isOpen()); };
+  w.scanTargets = () => (w.isOpen() ? [closeBtn(), ...(panel?.scan.stops() || [])].filter(Boolean) : []);
+  w.current = () => {
+    if (!w.isOpen()) return null;
+    if (atClose) return closeBtn();
+    return panel?.scan.current() || null;
+  };
+  w.focusTarget = (n) => {
+    if (!w.isOpen() || !n) return null;
+    if (n === closeBtn()) { atClose = true; panel?.scan.light(null); }
+    else if (panel?.scan.light(n)) atClose = false;
+    else return null;
+    paintClose();
+    return w.current();
+  };
+  w.blur = () => { atClose = false; try { panel?.scan.light(null); } catch { /* gone */ } paintClose(); };
+  w.holds = () => w.isOpen() && !atClose && !!panel?.scan.holds();
+  w.focusStep = (d) => {
+    if (w.holds()) { panel.scan.step(d); return w.current(); }
+    const list = w.scanTargets();
+    if (!list.length) return null;
+    const at = list.indexOf(w.current());
+    const n = at < 0 ? (d > 0 ? 0 : list.length - 1) : (at + Math.sign(d || 1) + list.length) % list.length;
+    return w.focusTarget(list[n]);
+  };
+  w.select = () => {
+    // Holding (the picker just opened, nothing in it lit yet): the press is the panel's, lit or not.
+    if (w.holds()) { panel.scan.select(); return true; }
+    if (!w.current()) return false;
+    if (atClose) { w.close(); return true; }
+    panel?.scan.select();
+    return true;
+  };
+  w.back = () => {
+    if (!w.isOpen()) return false;
+    if (w.holds()) { panel.scan.back(); return true; }
+    w.close();
+    return true;
+  };
+  /** 'rows' or 'one': the walk the person's "How you choose things" gives. */
+  w.scanMode = () => panel?.scan.mode() || 'one';
   /** Re-read the panels and the bindings (something was added to the screen meanwhile). */
   w.refresh = () => { try { panel?.refresh(); } catch (err) { console.error('edit_windows: automation refresh', err); } };
   return w;

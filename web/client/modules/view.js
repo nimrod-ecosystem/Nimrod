@@ -584,6 +584,9 @@ function dashboardFactory(ctx) {
         onChange: () => changed(),
         // The screen's automation engine, so Layers offers "Automation..." (edit_windows' automation window).
         automation: typeof hostWrapState === 'function' ? (ctx.automation || null) : null,
+        // 2026-10-04: the person's "How you choose things" (the kiosk's ctx.chooseMode), which picks how a switch
+        // walks the Automation window (rows for step through, one at a time for point and click).
+        chooseMode: () => { try { return typeof ctx.chooseMode === 'function' ? ctx.chooseMode() : (ctx.chooseMode || 'point'); } catch { return 'point'; } },
       });
       editor = ed;
       changed();

@@ -28,7 +28,7 @@ import { createBus } from '../bus.js';
 import { mountModule, getManifest, listManifests } from '../module.js';
 import { MENU_TAB_TOPIC, SWITCH_MODULE_TOPIC, MENU_TAB_IDS } from '../actions.js';
 import { SHELL_HOST } from '../shell_verbs.js';
-import { DASHBOARD_GO_TOPIC } from '../dashboards.js';
+import { DASHBOARD_GO_TOPIC, PREBUILT_DASHBOARDS } from '../dashboards.js';
 import { CATALOG } from '../modules_catalog.js';
 import {
   GUIDE_NODES, GUIDE_ROOT, GUIDE_TOPICS, GUIDE_VERB_TOPICS, LANDING_INTRO, INTROS, DEVICE_KINDS, treeProblems,
@@ -151,6 +151,14 @@ try {
     check('*** it suggests replacing your profile (top left on the landing), and says ANY module can be replaced, including him ***',
       /replacing your profile/.test(other.say) && /replace any module whenever you want, including me/.test(other.say)
       && other.acts.some((a) => a.kind === 'switch' && a.type === 'profile'));
+    // 2026-10-04: the guide's Switch acts name a TYPE; on the landing AND the tutorial that type must be what sits
+    // top left, or "Replace the profile" falls back to whatever happens to be chosen. Checked against the real
+    // records, so moving either dashboard's top left without the guide's words fails here.
+    const topLeft = (key) => { const r = PREBUILT_DASHBOARDS[key]; return r.modules.find((m) => m.ref === r.layout.slots[0])?.type; };
+    const switchTypes = [...new Set(Object.values(GUIDE_NODES).flatMap((n) => (n.acts || []).filter((a) => a.kind === 'switch').map((a) => a.type)))];
+    check('*** every Switch act in the guide names what is top left on BOTH the landing and the tutorial (the profile) ***',
+      topLeft('start') === 'profile' && topLeft('tutorial') === 'profile' && switchTypes.length > 0 && switchTypes.every((t) => t === topLeft('tutorial')),
+      J({ start: topLeft('start'), tutorial: topLeft('tutorial'), switchTypes }));
     const mode = GUIDE_NODES.mode;
     check('*** points: no real-world value, and no coins or microtransactions sold (Mike’s sentence, verbatim) ***',
       mode.say.includes(POINTS_DISCLAIMER) && GUIDE_NODES.points.say.includes(POINTS_DISCLAIMER)

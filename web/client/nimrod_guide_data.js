@@ -491,8 +491,9 @@ const NODES = [
       BACK_TO_START,
     ]),
     acts: [
-      // The profile, top left on the landing (2026-10-02 evening). On a dashboard with no profile the Switch
-      // falls back to the chosen panel (modules.html openSwitch), so the button still does something there.
+      // The profile, top left on the landing (2026-10-02 evening) and on the tutorial (2026-10-04, which had the
+      // pictures there until then; nimrod_guide_test checks both records). On a dashboard with no profile the
+      // Switch falls back to the chosen panel (modules.html openSwitch), so the button still does something there.
       { kind: 'switch', type: 'profile', label: 'Replace the profile' },
       { kind: 'host', act: 'picker', label: 'See every module' },
     ],
