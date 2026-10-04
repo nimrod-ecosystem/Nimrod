@@ -196,8 +196,8 @@ try {
   await until(() => cardOf('Lee') && !qa('[data-pp-act="message"] small').some((s) => /Checking/.test(s.textContent)) && q('[data-pp-incoming]'), 15000);
   check('*** your own card first: your name, your picture (or your initial), and Edit my picture ***',
     q('[data-pp-self-name]')?.textContent === 'Pat' && !!q('[data-pp-card="self"] .pp-face *') && !!q('[data-pp-card="self"] [data-pp-act="picture-edit"]:not([aria-disabled="true"])'));
-  check('*** a card for each of your people and connections: Robin (your account), Sam and Lee (shared with you) ***',
-    J(qa('[data-pp-name]').map((n) => n.textContent)) === J(['Robin', 'Sam', 'Lee']) && /On your account/.test(cardOf('Robin').textContent)
+  check('*** a card for each of your people and connections: Robin (added by you), Sam and Lee (shared with you) ***',
+    J(qa('[data-pp-name]').map((n) => n.textContent)) === J(['Robin', 'Sam', 'Lee']) && /Added by you/.test(cardOf('Robin').textContent) && !/account/i.test(cardOf('Robin').textContent)
     && /Shared with you/.test(cardOf('Lee').textContent), J(qa('[data-pp-name]').map((n) => n.textContent)));
   // (Filtered to ACTIONS: one of your own people's cards also carries "Invite them to use this", claim.js.)
   check('each has the four buttons, in order, by their plain names',
