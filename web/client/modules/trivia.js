@@ -74,7 +74,7 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack, itemSources } from '../packs.js';
-import { answerSourceField, answerSourceHtml, answerSourceMode, ANSWER_SOURCE_DEFAULT,
+import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
          answerExplainField, answerExplainHtml, answerExplainOn, answerExplainText, ANSWER_EXPLAIN_DEFAULT } from '../answer_source.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
@@ -145,9 +145,20 @@ export const DEFAULTS = {
   // 'off'. Every choice is argued in ../answer_source.js.
   showSource: ANSWER_SOURCE_DEFAULT,
   // *** "SAY WHY AFTER THE ANSWER", ON BY DEFAULT (2026-10-04). *** The item's own `explain` sentence, under
-  // "Correct." and above the source line, once the answer is given. Argued in ../answer_source.js. Shown only:
-  // Trivia reads nothing aloud (not the question, not "Correct."), so this does not either.
+  // "Correct." and above the source line, once the answer is given. Argued in ../answer_source.js. Read aloud
+  // after "Correct." too, while "Say the questions aloud" is on (below) — one row for both, since its label
+  // already says "say".
   showExplain: ANSWER_EXPLAIN_DEFAULT,
+  // *** TRIVIA READS ALOUD NOW (2026-10-04), THE WAY THE OTHER QUIZ GAMES DO. *** Same key, default and
+  // wording as ../quiz_flow.js `flowSettings` ("Say the questions aloud", on), through the person's own
+  // output routing (`ctx.output.say`, which reaches the speech channel — the one registered on the audio
+  // bus, so music ducks under it and the master volume applies; output_channels.js). What is read, and when,
+  // is argued at "SPEECH" inside the factory below.
+  speak: true,
+  // "Say the switch choice too" — the answer the scan lands on, as it lands. quiz_flow's key and default.
+  sayChoice: true,
+  // "Say where the answer comes from" — OFF, argued at its SETTINGS row.
+  speakSource: false,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -367,6 +378,31 @@ const SETTINGS = [
   // 2026-10-04: the item's own explanation, above the source line — so its row is above the source's row too.
   answerExplainField(),
   answerSourceField(),
+  // *** READING ALOUD (2026-10-04). *** The first row is quiz_flow.js's, word for word (key, label, default,
+  // level), so a caregiver who learned it in Brain games finds it here.
+  { key: 'speak', label: 'Say the questions aloud', default: true, level: 'standard',
+    onLabel: 'On', offLabel: 'Off',
+    note: 'The question and its answers, then "Correct." and why. Nothing is said until somebody first presses '
+      + 'or taps the game.' },
+  // quiz_flow.js's key and label; the words under it are Trivia's, because here the switch walks the answers
+  // themselves (no "Is it this one?"). Hidden while nothing is said at all.
+  { key: 'sayChoice', label: 'Say the switch choice too', default: true, level: 'standard',
+    onLabel: 'Yes (the answer it lands on)', offLabel: 'Only the question',
+    note: 'Somebody on a switch needs it to know where the scan is.',
+    appliesWhen: (v) => v.speak !== false },
+  // *** "SAY WHERE THE ANSWER COMES FROM": OFF BY DEFAULT, AND ADVANCED. *** Argued:
+  //   FOR on (matching "Show where the answer comes from", which is on): the same honesty, for somebody who
+  //   cannot read the line.
+  //   AGAINST, and it decides the default: a source is an address or a host ("NASA (science.nasa.gov)"), which
+  //   a voice reads as letters and dots; it adds a sentence to every answer that names one; and the line is
+  //   already on screen. Off costs a reader nothing. Advanced, because few will turn it on and the standard
+  //   menu is held to a press budget. It reads only what the shown line shows (so it is hidden while "Show
+  //   where the answer comes from" is off, or while nothing is said), plus a lesson question's "From the
+  //   lesson" line, which is the same kind of thing. [Guess, on Mike's list.]
+  { key: 'speakSource', label: 'Say where the answer comes from', default: false, level: 'advanced',
+    onLabel: 'On', offLabel: 'Off',
+    note: 'Reads the source line under the answer aloud, after why.',
+    appliesWhen: (v) => v.speak !== false && answerSourceMode(v) !== 'off' },
   // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
   // rather than buried. A microphone that a person cannot easily find the switch for is a
   // microphone they cannot easily turn off. ***
@@ -498,6 +534,90 @@ registerModule(
     // resolves after destroy() would also call startPolling() and bring a destroyed handle back.
     let dead = false;
     let onClick = null;
+
+    // ---------------------------------------------------------------------------------------
+    // *** SPEECH (2026-10-04): READ ALOUD THE WAY THE OTHER QUIZ GAMES DO (../quiz_view.js). ***
+    // ---------------------------------------------------------------------------------------
+    // THROUGH `ctx.output.say`, the person's own routing, with the newest line cancelling one still queued
+    // (quiz_view.js's rule: the last press is the one worth hearing). That is also how it respects the
+    // speaker arbiter: the speech channel is the source registered on the audio bus (output_channels.js), so
+    // music ducks under it and the master volume applies. No `ctx.output` (a harness, the modules page): silent.
+    //
+    // WHAT IS READ, AND WHEN:
+    //   * A QUESTION GOING UP: the question, then its answers, each its own sentence ("…France? Paris. London.
+    //     Rome. Madrid."). THE ANSWERS ARE READ, argued: FOR leaving them out — a switch user hears each one as
+    //     the scan lands, and a reader can see them. AGAINST, and it wins: without them a question like "Which
+    //     planet is closest to the Sun?" is open-ended to somebody who cannot read the tiles, and a pointer
+    //     user who cannot read has no scan to hear them on. The sentence breaks are the short pause (the Web
+    //     Speech voice pauses at a full stop; there is no other pause it honours everywhere). Not a row of its
+    //     own: "the questions" of a multiple-choice quiz include the choices. [Guess, on Mike's list.]
+    //   * THE SCAN LANDING ("Say the switch choice too"): the answer it is now on. After an answer, the stop it
+    //     is on ("Next question." / "I think this question is wrong.").
+    //   * A WRONG PRESS: the words on screen ("Not that one — try again."), then where the scan moved to.
+    //   * A RIGHT ANSWER: "Correct.", then the explanation ("Say why after the answer"), then — only with "Say
+    //     where the answer comes from" on — the source line as shown.
+    //   * A CONTEST: the thank-you on screen. A person who cannot read pressed it and should hear it landed.
+    //
+    // *** NOTHING IS SAID UNTIL SOMEBODY FIRST PRESSES OR TAPS THE GAME — ITS "START". *** game_start.js's
+    // reason, exactly: a game that talks by itself talks to an empty room, and a home screen comes up at boot
+    // and after every power cut ("a quiz starting to talk at 3 a.m. is exactly the bug"). Trivia has no Start
+    // button (it has always shown its first question at once, silently, and that stays), so its first press is
+    // the start: that press does what it always did, AND opens the voice. A first press that moves the scan
+    // reads the question and answers before the lit one, since nothing has been read yet. [Guess, on Mike's
+    // list: the alternative is the full game_start.js gate — a Start overlay, the autostart rows, Pause.]
+    //
+    // *** WHILE REVIEWING (../pack_reviews.js): THE REVIEWER'S ✓ / ✗ SAYS NOTHING AND CUTS NOTHING. ***
+    // Argued: cutting the line in flight on ✗ would land the reviewer's verdict on the player, which is the
+    // same reason ✗ leaves the question on screen (reviewWrong). So the question keeps being read. What
+    // changes is AFTER a ✗: a right answer says only "Correct." — not the explanation and not the source,
+    // because a question marked wrong may be wrong exactly there, and "a wrong 'why' taught as fact is as bad
+    // as a wrong answer" (reviewHtml). The screen still shows both, labelled, in the reviewer's strip. The
+    // review strip's own words ("Not yet reviewed", "Marked wrong") are never read: they are for the reviewer.
+    // A ✓ / ✗ press does not open the voice either (it is not the player starting the game).
+    //
+    // HIDDEN AND QUIET HOURS: the same as the other quiz games, because the speech is theirs. A hidden panel
+    // still speaks on a press (quiz_view.js does not stop it; "When this panel is hidden: Mute it" mutes the
+    // sources a panel registered, and the speech channel is the screen's, not the panel's). Quiet hours do not
+    // exist yet (output_panel.js "WHAT IS NOT HERE YET"); when they do, they mute the speech channel, and this
+    // goes quiet with every other caller of `say`.
+    let lastSpeech = null;
+    let voiceOpen = false;
+    const speaks = () => cfg.speak !== false;
+    // A line ends in punctuation, so each answer is its own sentence and the voice pauses between them.
+    const asLine = (s) => {
+      const t = String(s == null ? '' : s).trim();
+      return !t ? '' : (/[.?!…:;"”'’)]$/.test(t) ? t : `${t}.`);
+    };
+    function say(lines) {
+      if (dead || !voiceOpen || !speaks()) return;
+      const text = (Array.isArray(lines) ? lines : [lines]).map(asLine).filter(Boolean).join(' ');
+      const out = ctx.output;
+      if (!text || !out || typeof out.say !== 'function') return;
+      try {
+        if (lastSpeech && typeof out.cancel === 'function') out.cancel(lastSpeech);
+        lastSpeech = out.say(text, { source: GAME });
+      } catch (err) { console.error('trivia: say', err); }
+    }
+    // The player's press opens the voice. True when THIS press opened it.
+    function openVoice() {
+      if (voiceOpen) return false;
+      voiceOpen = true;
+      return true;
+    }
+    // The question and the answers still in play (one already guessed is out of play, and out of the read).
+    const questionLines = () => (q ? [q.question, ...q.options.filter((_, i) => !misses.includes(i))] : []);
+    const litLine = () => (q && cfg.sayChoice !== false ? q.options[highlight] : '');
+    const AFTER_LINES = ['Next question', 'I think this question is wrong'];
+    function rightLines() {
+      const lines = ['Correct.'];
+      if (reviewMark === 'wrong') return lines;
+      if (answerExplainOn(cfg)) lines.push(q.explain);
+      if (cfg.speakSource === true) {
+        if (q.source) lines.push(`From the lesson: “${q.source}”`);
+        lines.push(answerSourceText(q.sources, { mode: answerSourceMode(cfg) }));
+      }
+      return lines;
+    }
 
     const el = (s) => mount.querySelector(s);
 
@@ -726,12 +846,16 @@ registerModule(
       // *** THE MARK GOES IN AT THE MOMENT THE QUESTION APPEARS ***, not when it is answered,
       // because the audio that matters is what happens between the two.
       recorder?.mark?.(q ? q.answer : '', { event: 'asked', question: q?.question || '' });
+      // Read once it is up (SPEECH, above). Silent until somebody has pressed the game once.
+      if (q) say(questionLines());
     }
 
     // ONE SWITCH, WALKED IN ONE DIRECTION, WRAPPING — the rule from module-input-spec, and the
     // reason a quiz is reachable at all for somebody with one button. A highlight that stopped
     // at the last option would strand them there.
-    function moveHighlight(delta) {
+    // `fresh`: this press just opened the voice, so the question has not been heard yet — it is read first.
+    // `quiet`: the caller says something itself (a wrong press says "Not that one" and then where it moved).
+    function moveHighlight(delta, { fresh = false, quiet = false } = {}) {
       if (!q || answered !== null) return;
       const n = q.options.length;
       // SKIP THE ONES ALREADY GUESSED. They are disabled, and a scan that kept stopping on a
@@ -743,6 +867,7 @@ registerModule(
         if (!misses.includes(highlight)) break;
       }
       render();
+      if (!quiet) say(fresh ? [...questionLines(), litLine()] : [litLine()]);
     }
 
     // The post-answer highlight: Next, then the contest while it is still offered. With only Next
@@ -753,6 +878,7 @@ registerModule(
       if (stops === 1) { advance(); return; }
       after = ((after + delta) % stops + stops) % stops;
       render();
+      if (cfg.sayChoice !== false) say([AFTER_LINES[after]]);
     }
 
     function pressAfter() {
@@ -768,6 +894,7 @@ registerModule(
       contestFailed = false;
       after = 0;
       render();
+      say(['Thanks — it’s held back until someone looks at it.']);
       const shown = q;
       Promise.resolve(contests?.contest?.({ module: GAME, question: shown.question, answer: shown.answer,
         source: shown.source || '' }))
@@ -833,7 +960,10 @@ registerModule(
         streak = 0;
         // Leave the highlight somewhere pressable, or a switch user's next press lands on the
         // button they just spent.
-        if (misses.includes(highlight)) moveHighlight(1); else render();
+        const moved = misses.includes(highlight);
+        if (moved) moveHighlight(1, { quiet: true }); else render();
+        // The screen's own words, then where the scan went (only if it moved — otherwise it is where it was).
+        say(['Not that one — try again.', moved ? litLine() : '']);
         return;
       }
 
@@ -847,6 +977,7 @@ registerModule(
                                         note: q.question }))
         .catch((err) => console.error('trivia: points', err));
       render();
+      say(rightLines());
     }
 
     // ONE DOCUMENT, TWO GAMES. The bank text comes from this instance's own state if somebody
@@ -1017,19 +1148,27 @@ registerModule(
         // *** Mike, 2026-09-29: after an answer, Next goes to the NEXT QUESTION (the transport bar's
         // Next included) — it no longer steps onto the contest stop. `prev` walks the two post-answer
         // stops instead, and `select` presses whichever is lit, so a switch still reaches Contest.
-        bus.subscribe('trivia/next', () => (answered === null ? moveHighlight(1) : advance()));
-        bus.subscribe('trivia/prev', () => (answered === null ? moveHighlight(-1) : moveAfter(-1)));
-        bus.subscribe('trivia/select', () => (answered === null ? choose(highlight) : pressAfter()));
-        bus.subscribe('trivia/skip', () => advance());
+        // Each of them is the player's press, so each opens the voice (SPEECH: the first press is the start).
+        bus.subscribe('trivia/next', () => {
+          const fresh = openVoice();
+          return answered === null ? moveHighlight(1, { fresh }) : advance();
+        });
+        bus.subscribe('trivia/prev', () => {
+          const fresh = openVoice();
+          return answered === null ? moveHighlight(-1, { fresh }) : moveAfter(-1);
+        });
+        bus.subscribe('trivia/select', () => { openVoice(); return answered === null ? choose(highlight) : pressAfter(); });
+        bus.subscribe('trivia/skip', () => { openVoice(); advance(); });
 
         // Named so destroy() can take it off again: the mount is the HOST's element, and a host
         // that reuses it for the next module must not inherit a Trivia click handler.
         onClick = (e) => {
           const t = e.target.closest('button');
           if (!t) return;
-          if (t.dataset.opt != null) return choose(Number(t.dataset.opt));
-          if (t.hasAttribute('data-next')) return advance();
-          if (t.hasAttribute('data-contest')) return contest();
+          // The player's taps open the voice; the reviewer's ✓ / ✗ / Save note below do not (SPEECH).
+          if (t.dataset.opt != null) { openVoice(); return choose(Number(t.dataset.opt)); }
+          if (t.hasAttribute('data-next')) { openVoice(); return advance(); }
+          if (t.hasAttribute('data-contest')) { openVoice(); return contest(); }
           if (t.hasAttribute('data-review-fine')) return reviewFine();
           if (t.hasAttribute('data-review-wrong')) return reviewWrong();
           if (t.hasAttribute('data-review-save')) return saveReviewNote();
@@ -1116,6 +1255,9 @@ registerModule(
       destroy() {
         dead = true;
         recorder = null;
+        // A line still queued or being said goes with the panel.
+        try { if (lastSpeech && typeof ctx.output?.cancel === 'function') ctx.output.cancel(lastSpeech); } catch { /* gone */ }
+        lastSpeech = null;
         if (onClick) { mount.removeEventListener('click', onClick); onClick = null; }
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }

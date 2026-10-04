@@ -86,7 +86,8 @@ function fakeLog(rows) {
 const handleOn = (rows, bus = null) => createPackReviews({ events: fakeLog(rows), bus, listPacks: async () => [FIXTURE] });
 
 const BANK_TEXT = 'Bank question one? | A | B | C | D\nBank question two? | E | F | G | H\nBank question three? | I | J | K | L\nBank question four? | M | N | O | P';
-function rig({ rows = [], saved = {}, reviews = undefined } = {}) {
+// `output`: what trivia says aloud goes here (trivia.js SPEECH). Left out, it says nothing, as before.
+function rig({ rows = [], saved = {}, reviews = undefined, output = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -101,6 +102,7 @@ function rig({ rows = [], saved = {}, reviews = undefined } = {}) {
     makeEvents: (name) => ({ name, append: async () => {}, load: async () => {}, get: () => ({ events: [] }),
       subscribe: () => () => {}, startPolling() {}, destroy() {} }),
     ...(handle ? { makePackReviews: () => handle } : {}),
+    ...(output ? { output } : {}),
   });
   inst.init();
   return { inst, host, bus, handle, probe: () => inst.impl.__probe(),
@@ -529,6 +531,69 @@ try {
         && (!r.host.querySelector('[data-answer-source]')
           || !!(line.compareDocumentPosition(r.host.querySelector('[data-answer-source]')) & Node.DOCUMENT_POSITION_FOLLOWING)),
         r.host.innerHTML.slice(0, 600));
+      r.inst.destroy();
+    }
+  }
+
+  section('*** read aloud while reviewing (trivia.js SPEECH): the reviewer\'s ✓ / ✗ says nothing and cuts nothing ***');
+  {
+    const explainedHandle = (rows) => createPackReviews({ events: fakeLog(rows), listPacks: async () => [FIXTURE],
+      loadPack: async () => withExplain(fixturePack) });
+    const want = (text) => EXPLAIN[Q.findIndex((q) => q.question === text)] || '';
+    const toExplained = (r) => { for (let i = 0; i < 10 && !want(r.shown()); i++) r.bus.publish('trivia/skip'); return !!want(r.shown()); };
+    const fakeOut = () => {
+      const said = [], cancelled = [];
+      let n = 0;
+      return { said, cancelled, say(text, opts) { const id = `s${++n}`; said.push({ id, text, source: opts?.source }); return id; },
+        cancel(id) { cancelled.push(id); return true; } };
+    };
+    {
+      const out = fakeOut();
+      const r = rig({ reviews: explainedHandle([]), saved: { includeUnreviewed: true }, output: out });
+      await settle(r);
+      r.bus.publish('trivia/skip');     // the player's first press: the voice opens, the next question is read
+      check('(a reviewing question with an explanation is up, and its question was read)',
+        toExplained(r) && !!r.host.querySelector('[data-review]') && out.said.at(-1)?.text.startsWith(r.shown()), out.said.at(-1)?.text);
+      const w = want(r.shown());
+      const saidBefore = out.said.length, cutBefore = out.cancelled.length;
+      r.host.querySelector('[data-review-wrong]').click();
+      await sleep(10);
+      check('*** ✗ says nothing, and does not cut the question being read (the verdict is not landed on the player) ***',
+        out.said.length === saidBefore && out.cancelled.length === cutBefore,
+        JSON.stringify(out.said.slice(saidBefore)));
+      check('...and the strip\'s own words are never read', !out.said.some((s) => /Marked wrong|Not yet reviewed/.test(s.text)));
+      r.answer();
+      check('*** after ✗, a right answer says only "Correct." — not the flagged question\'s explanation ***',
+        out.said.at(-1)?.text === 'Correct.' && !out.said.some((s) => s.text.includes(w)), JSON.stringify(out.said.at(-1)));
+      r.inst.destroy();
+    }
+    {
+      const out = fakeOut();
+      const r = rig({ reviews: explainedHandle([]), saved: { includeUnreviewed: true }, output: out });
+      await settle(r);
+      toExplained(r);
+      const w = want(r.shown());
+      r.host.querySelector('[data-review-fine]').click();
+      const n = out.said.length;
+      await sleep(10);
+      check('✓ says nothing either', out.said.length === n);
+      r.answer();
+      check('*** not flagged: "Correct." and the explanation are read, as for any question ***',
+        out.said.at(-1)?.text === `Correct. ${w}`, JSON.stringify(out.said.at(-1)));
+      r.inst.destroy();
+    }
+    {
+      // A reviewer's press is not the player starting the game: it does not open the voice.
+      const out = fakeOut();
+      const r = rig({ reviews: explainedHandle([]), saved: { includeUnreviewed: true }, output: out });
+      await settle(r);
+      check('(a reviewing question is up, nothing said yet)', !!r.host.querySelector('[data-review]') && out.said.length === 0,
+        JSON.stringify(out.said));
+      r.host.querySelector('[data-review-wrong]').click();
+      await sleep(10);
+      r.host.querySelector('[data-review-note]').value = 'wrong year';
+      r.host.querySelector('[data-review-save]').click();
+      check('*** ✗ and Save note as the first presses: still silent ***', out.said.length === 0, JSON.stringify(out.said));
       r.inst.destroy();
     }
   }

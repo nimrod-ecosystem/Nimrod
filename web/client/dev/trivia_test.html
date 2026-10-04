@@ -48,6 +48,11 @@ import '../modules/scoreboard.js';
 import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
 import { answerSourceMode, answerSourceHtml, answerSourceText,
          answerExplainOn, answerExplainHtml, answerExplainText } from '../answer_source.js';
+import { flowSettings } from '../quiz_flow.js';
+import { createAudioBus } from '../audio_bus.js';
+import { createOutputBus } from '../output.js';
+import { createSpeechChannel } from '../output_channels.js';
+import { fieldItems, normalizeField } from '../settings_fields.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -83,7 +88,9 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               isScreen = undefined,
               // Per-stream rows, SHARED between rigs that are handed the same object — two rigs
               // with one `store` are two panels on one profile (the contests log is per profile).
-              store = {} } = {}) {
+              store = {},
+              // `ctx.output` (trivia.js SPEECH): what it says aloud goes here. Left out, it says nothing.
+              output = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -113,6 +120,7 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
   };
   const inst = mountModule('trivia', {
     mount: host, bus, rand, recorder,
+    ...(output ? { output } : {}),
     ...(isScreen !== undefined ? { isScreen } : {}),
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
@@ -854,8 +862,8 @@ Shared Q | Shared A` });
     check('*** the row exists, "Say why after the answer", ON by default (row and DEFAULTS agree), a standard switch ***',
       row && row.label === 'Say why after the answer' && row.default === true && DEFAULTS.showExplain === true
       && row.level === 'standard' && !row.kind && typeof row.note === 'string' && row.note.length > 10, JSON.stringify(row));
-    check('*** it says, in its note, that nothing is read aloud (Trivia speaks nothing today) ***',
-      /aloud/i.test(row?.note || ''), row?.note);
+    check('*** its note says it is read aloud too, by "Say the questions aloud" (2026-10-04) ***',
+      /Read aloud too while "Say the questions aloud" is on/.test(row?.note || ''), row?.note);
     check('the saved value: absent / true mean on, false (or "off") means off',
       answerExplainOn({}) && answerExplainOn({ showExplain: true }) && !answerExplainOn({ showExplain: false })
       && !answerExplainOn({ showExplain: 'off' }) && answerExplainOn(null));
@@ -928,6 +936,170 @@ Shared Q | Shared A` });
       check('answerExplainHtml / answerExplainText: the words, or nothing',
         answerExplainText(' Why. ') === 'Why.' && answerExplainText('') === '' && answerExplainText(null) === ''
         && answerExplainHtml('') === '' && /data-answer-explain/.test(answerExplainHtml('Why.')));
+    }
+  }
+
+  // =====================================================================================
+  section('*** read aloud, the way the other quiz games do (2026-10-04) ***');
+  {
+    // Trivia used to read nothing: not the question, not "Correct.", not the explanation. Now it speaks through
+    // ctx.output.say (the person's routing; the speech channel is the audio bus's voice source), from the
+    // player's first press on.
+    const WHY = 'Proxima Centauri is the nearest star beyond the Sun; the Sun itself is about 8 light-minutes away.';
+    const NASA = [{ url: 'https://science.nasa.gov/sun/', title: 'NASA' }];
+    const ITEM = (extra = {}) => ({ question: 'Which star is closest to Earth?', answer: 'The Sun',
+      wrong: ['Sirius', 'Vega', 'Polaris'], explain: WHY, sources: NASA, ...extra });
+    const ITEM2 = { question: 'How many legs does a spider have?', answer: 'Eight', wrong: ['Six', 'Ten', 'Four'] };
+    const fakeOut = () => {
+      const said = [], cancelled = [];
+      let n = 0;
+      return { said, cancelled, say(text, opts) { const id = `s${++n}`; said.push({ id, text, source: opts?.source }); return id; },
+        cancel(id) { cancelled.push(id); return true; }, last() { return said.at(-1)?.text || ''; } };
+    };
+    const one = async (saved = {}, bank = [ITEM()]) => {
+      const out = fakeOut();
+      const r = rig({ output: out, saved: { bank, ...saved } });
+      await sleep(20);
+      return { r, out };
+    };
+    const rightIdx = (r) => r.probe().question.correctIndex;
+    const wrongIdx = (r) => (rightIdx(r) === 0 ? 1 : 0);
+    const tap = (r, i) => r.host.querySelector(`[data-opt="${i}"]`).click();
+
+    // ---- the rows ----
+    const rows = getManifest('trivia').settings || [];
+    const flow = flowSettings();
+    const mine = (k) => rows.find((f) => f.key === k);
+    const theirs = (k) => flow.find((f) => f.key === k);
+    check('*** "Say the questions aloud": the same key, label, default, level and words as the other quiz games ***',
+      !!mine('speak') && ['key', 'label', 'default', 'level', 'onLabel', 'offLabel'].every((p) => mine('speak')[p] === theirs('speak')[p])
+      && DEFAULTS.speak === true, JSON.stringify({ trivia: mine('speak'), quiz: theirs('speak') }));
+    check('"Say the switch choice too": quiz_flow\'s key, label and default (the words under it are Trivia\'s)',
+      !!mine('sayChoice') && mine('sayChoice').label === theirs('sayChoice').label
+      && mine('sayChoice').default === theirs('sayChoice').default && DEFAULTS.sayChoice === true, JSON.stringify(mine('sayChoice')));
+    check('*** "Say where the answer comes from": its own row, OFF by default, advanced ***',
+      !!mine('speakSource') && mine('speakSource').default === false && DEFAULTS.speakSource === false
+      && mine('speakSource').level === 'advanced', JSON.stringify(mine('speakSource')));
+    const keysAt = (values) => fieldItems(rows.map(normalizeField), { values, level: 'advanced' }).map((it) => it.id);
+    const has = (values, k) => keysAt(values).includes(`set:${k}`);
+    check('the source row is offered only while something is said and the source line is shown',
+      has({}, 'speakSource') && !has({ speak: false }, 'speakSource') && !has({ showSource: 'off' }, 'speakSource')
+      && !has({ speak: false }, 'sayChoice') && has({}, 'sayChoice'), JSON.stringify(keysAt({ speak: false })));
+
+    // ---- silent before Start ----
+    {
+      const { r, out } = await one();
+      check('*** silent before Start: the question is on screen, and nothing has been said ***',
+        !!r.host.querySelector('.tv-q') && out.said.length === 0, JSON.stringify(out.said));
+      r.bus.publish('trivia/next');
+      const q = r.probe().question;
+      const text = out.last();
+      check('*** the first press is the start: the question, then each answer, then the one the scan is on ***',
+        text.startsWith('Which star is closest to Earth?') && q.options.every((o) => text.includes(`${o}.`))
+        && text.endsWith(`${q.options[r.probe().highlight]}.`), text);
+      check('...each answer its own sentence (the voice pauses at the full stop)',
+        text === `Which star is closest to Earth? ${q.options.map((o) => `${o}.`).join(' ')} ${q.options[r.probe().highlight]}.`, text);
+      check('...said as Trivia, through the output bus', out.said.at(-1).source === 'trivia');
+      r.bus.publish('trivia/next');
+      check('*** a scan step says the answer it lands on, and the newest line cancels the one before ***',
+        out.last() === `${q.options[r.probe().highlight]}.` && out.cancelled.includes(out.said.at(-2).id), JSON.stringify(out));
+      r.inst.destroy();
+      check('destroy takes back a line still queued', out.cancelled.includes(out.said.at(-1).id));
+    }
+
+    // ---- a wrong press, then the right one: "Correct." and why ----
+    {
+      const { r, out } = await one();
+      tap(r, wrongIdx(r));
+      check('a tap is a start too; a wrong one says the screen\'s words, not the question',
+        out.last().startsWith('Not that one — try again.') && !out.last().includes('Which star'), out.last());
+      tap(r, rightIdx(r));
+      check('*** a right answer: "Correct." and the explanation ***', out.last() === `Correct. ${WHY}`, out.last());
+      check('*** ...and NOT the source on the default (its own row is off), though the line is on screen ***',
+        !out.last().includes('Source') && !!r.host.querySelector('[data-answer-source]'), out.last());
+      r.inst.destroy();
+    }
+    {
+      const { r, out } = await one({ speakSource: true });
+      tap(r, rightIdx(r));
+      check('*** "Say where the answer comes from" on: the source line, as shown, after why ***',
+        out.last() === `Correct. ${WHY} Source: NASA (science.nasa.gov)`, out.last());
+      r.inst.destroy();
+    }
+    {
+      const { r, out } = await one({ speakSource: true, showSource: 'off' });
+      tap(r, rightIdx(r));
+      check('...it never says more than is shown: the source line off, nothing read', out.last() === `Correct. ${WHY}`, out.last());
+      r.inst.destroy();
+    }
+    {
+      const { r, out } = await one({ showExplain: false });
+      tap(r, rightIdx(r));
+      check('"Say why after the answer" off: "Correct." alone', out.last() === 'Correct.', out.last());
+      r.inst.destroy();
+    }
+    {
+      const { r, out } = await one({}, [ITEM(), ITEM2]);
+      const first = r.probe().question.question;
+      tap(r, rightIdx(r));
+      r.host.querySelector('[data-next]').click();
+      const q2 = r.probe().question;
+      check('*** Next: the next question is read as it goes up ***',
+        q2.question !== first && out.last().startsWith(q2.question), out.last());
+      r.inst.destroy();
+    }
+    {
+      const { r, out } = await one({ sayChoice: false });
+      r.bus.publish('trivia/next');
+      const q = r.probe().question;
+      check('"Say the switch choice too" off: the first press reads the question and answers, without the lit one',
+        out.last() === `Which star is closest to Earth? ${q.options.map((o) => `${o}.`).join(' ')}`, out.last());
+      const n = out.said.length;
+      r.bus.publish('trivia/next');
+      check('...and a scan step says nothing', out.said.length === n, JSON.stringify(out.said.slice(n)));
+      r.inst.destroy();
+    }
+
+    // ---- off ----
+    for (const off of [false]) {
+      const { r, out } = await one({ speak: off }, [ITEM(), ITEM2]);
+      r.bus.publish('trivia/next');
+      tap(r, wrongIdx(r));
+      tap(r, rightIdx(r));
+      r.bus.publish('trivia/prev');
+      r.host.querySelector('[data-next]').click();
+      check('*** "Say the questions aloud" off: nothing is said at all ***', out.said.length === 0, JSON.stringify(out.said));
+      r.inst.destroy();
+    }
+
+    // ---- the audio bus: the real chain, end to end ----
+    {
+      const audio = createAudioBus();
+      const gains = [];
+      audio.register('music', { tier: 'media', onGain: (g) => gains.push(g) });
+      audio.setActive('music', true);
+      const spoken = [];
+      const synth = { getVoices: () => [], cancel() {}, speak(u) { spoken.push(u); } };
+      class Utt { constructor(text) { this.text = text; this.rate = 1; this.pitch = 1; this.voice = null; this.lang = ''; } }
+      const output = createOutputBus({ channels: { speech: createSpeechChannel({ audio, synth, Utterance: Utt, pollMs: 0 }) } });
+      const r = rig({ output, saved: { bank: [ITEM()] } });
+      await sleep(20);
+      check('(the speech channel is registered on the audio bus, on its voice channel)',
+        audio.channelOf('speech') === 'voice', String(audio.channelOf('speech')));
+      check('*** nothing reaches the speaker before Start, and the music is not ducked ***',
+        spoken.length === 0 && !audio.isActive('speech'));
+      r.bus.publish('trivia/next');
+      await sleep(10);
+      check('*** after Start, the question is spoken through the real speech channel ***',
+        spoken.length === 1 && spoken[0].text.startsWith('Which star is closest to Earth?'), spoken.map((u) => u.text).join(' | '));
+      check('*** ...and the voice is ACTIVE on the audio bus, so the music ducks under it ***',
+        audio.isActive('speech') && audio.levelOf('music') < 1, JSON.stringify({ active: audio.isActive('speech'), music: audio.levelOf('music') }));
+      spoken[0].onend?.();
+      await sleep(10);
+      check('when the sentence ends the voice lets go and the music comes back', !audio.isActive('speech') && audio.levelOf('music') > 0.99,
+        JSON.stringify({ active: audio.isActive('speech'), music: audio.levelOf('music') }));
+      r.inst.destroy();
+      output.destroy();
     }
   }
 
