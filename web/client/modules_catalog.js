@@ -610,6 +610,29 @@ export const CATALOG = [
     why: 'Talk to an AI character, or open its room: a math tutor’s room has the calculator. People on this '
       + 'account show here too; friends on other accounts will once accounts can be linked.',
   },
+  // 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): you and your people, as cards. `touch`:
+  // left alone it is faces and names, and nothing waits on anybody. Words a visitor reads (the hover line uses them).
+  {
+    type: 'people',
+    title: 'Your people',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'You and your people, each with a picture and big buttons to call them or leave them a message.',
+    needs: 'Nothing. Calls and messages need the person to have a screen, and to have said yes to you.',
+    why: 'The simplest way in: who you keep in touch with, and how to reach them, on one page. On a screen in '
+      + 'somebody’s room it shows their people’s faces and the messages left for them; calls and messages are made '
+      + 'from a phone or computer. Sharing a picture, a song or a video is coming.',
+  },
+  // 2026-10-04: Nimrod at the bottom of a page, small, over it.
+  {
+    type: 'helper',
+    title: 'Nimrod, the helper',
+    group: 'ai',
+    use: 'touch',
+    lead: 'Nimrod’s face and “Ask Nimrod”, small, in a corner over the page.',
+    needs: 'Nothing.',
+    why: 'Help one press away without giving him a whole quarter of the screen: a press opens him beside your people.',
+  },
   // 2026-10-02 (edit_mode.js): the panel editor's options, as a panel of their own.
   {
     type: 'options',

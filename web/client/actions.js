@@ -658,6 +658,11 @@ export const MODULE_VERBS = {
                    play: 'card_sort/resume', pause: 'card_sort/pause' },
   // A profile card (a person or an AI character): next / prev walk its buttons, select presses one, back closes.
   profile:       { next: 'profile/next', prev: 'profile/prev', select: 'profile/select', back: 'profile/back' },
+  // 2026-10-04, "Your people" (modules/people.js): next / prev walk its cards, or every button, as the person's "How you
+  // choose things" says (people_page.js scanModeOf); select goes in or presses; back comes out or closes a window.
+  people:        { next: 'people/next', prev: 'people/prev', select: 'people/select', back: 'people/back' },
+  // Nimrod at the bottom (modules/helper.js): one button, so select presses it.
+  helper:        { select: 'helper/select' },
   // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.

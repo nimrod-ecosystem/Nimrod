@@ -102,6 +102,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
+  people: ['people'], helper: ['ai', 'tools'],
 });
 export function categoriesFor(entry) {
   const own = MODULE_CATEGORIES[entry && entry.type];
@@ -468,7 +469,7 @@ const CSS = `
    cursor (.is-scan, below) is a ring OUTSIDE, offset, in --scan-ring: on a light theme the two share a hue, and
    inside-edge vs. outside-ring is what tells "chosen" from "lit". */
 .lib-chip{flex:0 0 auto;border:1px solid var(--border);background:var(--surface-alt,var(--surface));border-radius:999px;
-  padding:5px 12px;cursor:pointer;min-height:36px;white-space:nowrap}
+  padding:5px 12px;cursor:pointer;min-height:36px;min-width:44px;white-space:nowrap}
 .lib-chip[aria-pressed=true]{border-color:var(--focus, var(--accent));font-weight:600;box-shadow:inset 0 0 0 1px var(--focus, var(--accent))}
 .lib-grid{flex:1 1 auto;min-height:0;overflow:auto;display:grid;gap:8px;align-content:start;padding:2px;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--lib-card,150px)),1fr))}

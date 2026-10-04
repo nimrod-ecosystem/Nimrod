@@ -39,8 +39,10 @@ export function layoutFor(settings, modules) {
 // kiosk.js's option of that name argues it. On a PREVIEW it is how a known person's Nimrod notes reach their own
 // record (the local store has no per-person rows); on a live screen it only carries `browserNotes`, so notes this
 // browser kept before are moved however the landing is opened.
+// `shared` (PREVIEW only, 2026-10-04): whose screens are shared with this account (/api/drive/shared), read-only, for
+// Your people's cards (modules/people.js). Absent, nobody shows as shared.
 export async function mountEmbeddedScreen({ stage, user = null, profileId = null, record = null, layout = null,
-  wrapState = null, host = null, people = null, personHost = null }) {
+  wrapState = null, host = null, people = null, shared = null, personHost = null }) {
   const { mountKiosk } = await import('./kiosk.js');
   const wrap = wrapState || ((h) => h);
   let kiosk = null;
@@ -81,6 +83,7 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
         stateURL: (pid, key) => `local:${pid}::${key}`,
         eventsURL: (pid, key) => `local:${pid}::${key}`,
         ...(typeof people === 'function' ? { people: async () => { try { return (await people()) || []; } catch { return []; } } } : {}),
+        ...(typeof shared === 'function' ? { sharedWithMe: async () => { try { return (await shared()) || []; } catch { return []; } } } : {}),
       };
       kiosk = await mountKiosk(stage, {
         ...seams, user: null, profileId: record.id, profiles,

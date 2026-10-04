@@ -143,11 +143,14 @@ try {
     check('*** everybody lands on the LANDING dashboard by default (openOn), a person with a Home included ***',
       HOME_DEFAULTS.openOn === 'landing' && first.place === 'landing'
       && homeLanding({ signedIn: true, known, settings: { homeId: 'mine-1', welcomeDone: true } }).place === 'landing');
-    check('*** "Open on: My Home" is a row, and obeyed ***',
-      HOME_SETTINGS.some((r) => r.key === 'openOn' && r.options.map(([v]) => v).join() === 'landing,home')
+    // 2026-10-04 (DECISIONS.md, "The landing is a very simple profile page"): the landing is Your people; Start here
+    // stays a choice of its own.
+    check('*** "Open on: My Home" is a row, and obeyed; Start here is a choice too; the landing is Your people ***',
+      HOME_SETTINGS.some((r) => r.key === 'openOn' && r.options.map(([v]) => v).join() === 'landing,start,home')
       && homeLanding({ signedIn: true, known, settings: { openOn: 'home' } }).place === 'home'
+      && homeLanding({ signedIn: true, known, settings: { openOn: 'start' } }).place === 'start'
       && readHomeSettings({ openOn: 'sideways' }).openOn === 'landing'
-      && homeSettingLabel(readHomeSettings({}), 'openOn') === 'The landing dashboard (Start here)');
+      && homeSettingLabel(readHomeSettings({}), 'openOn') === 'Your people');
     check('a link to your Home (?m=profile) opens your Home', homeLanding({ signedIn: true, wanted: PROFILE_SUBJECT, known, settings: {} }).place === 'home');
     const sh = (o) => J(homeShows({ landingKey: 'start', ...o }));
     check('*** WHAT IT SHOWS: the landing TRIED (nothing made) for somebody who has not made it -- with or without a Home ***',
@@ -287,10 +290,12 @@ try {
     // 2026-10-02 evening: the editing page's bar starts with Dashboard (back to the dashboard filling the window).
     check('*** Design’s order on the bar (the editing page): Dashboard, Modules, My Home, Save, Save as, History, Switch module, then the status ***',
       acts(b0) === 'land,picker,myhome,save,saveas,history,switch' && b0.at(-1).kind === 'status', J(b0.map((i) => i.act || i.kind)));
-    check('*** My Home on the landing, Start here on your Home: one press either way, NEVER dimmed (no Home yet: it shows the starting points) ***',
+    // (2026-10-04: the landing is named -- Your people by default, Start here for somebody who lands there.)
+    check('*** My Home on the landing, the landing on your Home: one press either way, NEVER dimmed (no Home yet: it shows the starting points) ***',
       b0[2].label === 'My Home' && !b0[2].disabled && /not made a Home/.test(b0[2].title)
-      && homeBarItems({ onHome: true, hasHome: true })[2].label === 'Start here'
-      && /your profile, the settings, your devices and Nimrod/.test(homeBarItems({ onHome: true })[2].title)
+      && homeBarItems({ onHome: true, hasHome: true })[2].label === 'Your people'
+      && homeBarItems({ onHome: true, hasHome: true, landingTitle: 'Start here' })[2].label === 'Start here'
+      && /your profile, the settings, your devices and Nimrod/.test(homeBarItems({ onHome: true, landingTitle: 'Start here' })[2].title)
       && /the Home you made/.test(homeBarItems({ hasHome: true })[2].title));
     check('Modules names what is being looked at', b0[1].label === 'Modules: Your profile', b0[1].label);
     check('*** nothing open: every button still THERE, the ones that cannot act DISABLED (dimmed, never hidden) ***',

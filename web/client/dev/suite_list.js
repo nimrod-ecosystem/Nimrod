@@ -125,6 +125,8 @@ export const SUITES = [
   'nimrod_ai',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
+  // 2026-10-04: "Your people" - the landing as a very simple profile page; Nimrod at the bottom; the screen variant.
+  'people_page',
   // 2026-10-04: Home follows the person picked on the people bar (their screen, theme, Home; one made if none).
   'home_person',
   // 2026-10-02: AI characters as profiles (seeds, a person's own, rooms as dashboards) and the profile card.

@@ -125,8 +125,23 @@ export function inKindOrder(kinds) {
   const at = (k) => KIND_ORDER.indexOf(k);
   return (kinds || []).every((k, i, a) => at(k) >= 0 && (i === 0 || at(a[i - 1]) <= at(k)));
 }
-// The landing dashboard's key (2026-10-02): what everyone lands on (home_dashboard.js `openOn`).
-export const LANDING_KEY = 'start';
+// The landing dashboard's key: what everyone lands on (home_dashboard.js `openOn`). 2026-10-04 (DECISIONS.md, "The
+// landing is a very simple profile page"): "Your people" (`people` below), superseding Start here (2026-10-02), which
+// stays one press away ("More") and is a choice of its own under "Open on" (START_KEY).
+export const LANDING_KEY = 'people';
+export const START_KEY = 'start';
+// The two dashboards that can be "where you land" (home_dashboard.js `openOn` 'landing' / 'start').
+export const LANDING_KEYS = Object.freeze([LANDING_KEY, START_KEY]);
+// Nimrod at the bottom of Your people: an overlay (layout.js `place: 'overlay'`, 9a7d972) in the bottom right-hand
+// corner, 36% of the width by 11% of the height, 2% in from the right, its bottom edge at 88.5%. Every number a
+// starting point the editor changes (Move / Smaller / Transform). ARGUED: BOTTOM because Mike said "at the bottom";
+// RIGHT because that is where a phone puts the thumb that presses it and where a page's own "help" bubble sits;
+// 36% x 11% because his face and "Ask Nimrod" must fit side by side on a phone's 375px (about 135px) and it must not
+// cover more than one row of a card on a 1280x720 screen; its bottom at 88.5%, not 98%, because on a phone the bar is
+// a row along the bottom of the window (about 8% of it) and covered him there (seen at 375x812). NOT in the switch
+// lap (`scan: false`, layout.js's overlay default argues it): "Ask Nimrod" is also the last stop on the page itself,
+// so a switch reaches him without the overlay taking the lap's first stop. [Guesses, on Mike's list.]
+export const HELPER_SPOT = Object.freeze({ x: 80, y: 83, w: 36, h: 11 });
 
 export const ROOM_SPOTS = Object.freeze({
   picture: Object.freeze({ x: 28, y: 30, w: 16, h: 24 }),
@@ -171,6 +186,24 @@ export const CLASSIC_THEME = 'fall';
 //   user's habits) and spoken as "tutorial"; it is not one of Home's cards (Nimrod and the ⚙ menu reach it).
 // =====================================================================================================
 export const PREBUILT_DASHBOARDS = Object.freeze({
+  // *** YOUR PEOPLE: THE LANDING (Mike, 2026-10-04). *** "Starting out with a very simple profile page, like facebook
+  // or something ... Maybe it can still be a dashboard if it's that simple? And yes, probably keep a Nimrod at the
+  // bottom as a helper overlaid on the screen." One panel filling the window (modules/people.js) and Nimrod over it,
+  // small, bottom right (modules/helper.js, HELPER_SPOT). The plain Nimrod look, solid: it is read, not looked at.
+  // Not one of Home's cards (EXAMPLE_ORDER): it is where you land, as the tutorial is a place you go.
+  people: Object.freeze({
+    key: 'people', label: 'Your people', name: 'Your people', kind: 'static', title: 'Your people',
+    blurb: 'You and the people you keep in touch with, with big buttons to call them or leave them a message, and Nimrod at the bottom to help.',
+    modules: [
+      { ref: 'people', type: 'people' },
+      { ref: 'helper', type: 'helper' },
+    ],
+    layout: {
+      preset: 'full', slots: ['people'],
+      placed: [{ ref: 'helper', place: 'overlay', ...HELPER_SPOT, scan: false }],
+    },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+  }),
   // *** PROFILE, NOT PICTURES, TOP LEFT (Mike, 2026-10-02 evening: "Four modules clockwise from top left:
   // Profile (I know I said photos before. Changing it.), settings, Devices, Nimrod/AI.") *** Clockwise from the
   // top left is TL profile, TR settings, BR devices, BL Nimrod: slots [profile, settings, nimrod, devices].
