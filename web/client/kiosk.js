@@ -24,6 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
+import { mergeSettingsDoc, describeLost } from './doc_merge.js';
 import { createEvents } from './events.js';
 import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
 import { createPush } from './push.js';
@@ -1550,13 +1551,32 @@ export async function mountKiosk(root, {
   // screen's room had nowhere to be written. The doc is now KEPT OPEN while that screen shows -- `{ id, doc }`,
   // closed by the next swap, by going home, and on teardown -- and the room's edits are saved to it, the
   // same way the boot screen's are saved to `settings`. Its lock list (`lockedIdsNow`) is read from it too.
-  // NOT polled: nothing on the boot path watches it either way, and a swap is usually a short visit.
   // CLOSED ONLY AFTER ITS LAST WRITE HAS GONE: state.js `destroy()` cancels a write still waiting out its
   // debounce, so a room edit made just before swapping away would otherwise be lost (found by kiosk_test).
-  let swapDoc = null;
+  //
+  // *** AND IT IS SYNCED LIKE ANY OTHER DOC (2026-10-04; the gap d377083 left: "an edit made on another device
+  // while that screen shows could be overwritten"). *** It used to be opened, read once and written blind:
+  //   * it now POLLS (and hears push), so a change made elsewhere -- Mike on his phone, in Home -- reaches the
+  //     screen while it shows: a door or a placement in place, a look or a Room row by drawing the room again,
+  //     anything else by rebuilding the arrangement in place (`applySwapLayout`; never a reload, which would
+  //     land on the boot screen). `shown` is the layout as saved that the screen is showing, so the doc's own
+  //     echo of an edit made here is recognised and not applied twice;
+  //   * a write still carries its version, so a stale one is refused (409) -- and the refusal is MERGED, not
+  //     rebased wholesale (doc_merge.js `mergeSettingsDoc`): the whole arrangement is one key (`kiosk`), so
+  //     state.js's ordinary rebase would have laid this screen's whole copy over the other device's change.
+  //     A door here and a look there both stay; the same thing changed both ways keeps the other device's
+  //     value, and the screen says so in one quiet line (`sayLostEdit`). The policy is argued in doc_merge.js.
+  // Which value stands when this screen and another device changed the SAME thing at once: 'theirs' (the
+  // other device's, already accepted by the server; the screen says so) or 'mine'. Argued in doc_merge.js:
+  // the edit that gives way must be the one whose author can be told, and only this screen can tell anyone.
+  const SWAP_CONFLICT_PREFER = 'theirs';
+  let swapDoc = null;                      // { id, doc, shown, off }
   const swapDocNow = () => (swapDoc && swapDoc.id === profileId ? swapDoc.doc : null);
-  function closeSwapDoc(doc) {
-    if (!doc) return;
+  function closeSwapDoc(rec) {
+    if (!rec || !rec.doc) return;
+    try { rec.off?.(); } catch { /* already gone */ }
+    rec.off = null;
+    const doc = rec.doc;
     let p = null;
     try { p = doc.flush?.(); } catch { p = null; }
     Promise.resolve(p).catch(() => { /* offline: nothing more to do */ })
@@ -1575,20 +1595,32 @@ export async function mountKiosk(root, {
     // The 09-12 watch is TOLD first, so a room the arrangement redraws itself is never reloaded under the
     // person editing it. (2026-10-02, later: on a SWAPPED-IN screen, that screen's own doc -- `swapDoc`
     // above. A preview layout belongs to the screen it was handed to and never follows a swap, so it only
-    // stops the boot screen's save. Nothing watches the swapped doc, so there is no watch to tell.)
+    // stops the boot screen's save. The swapped doc's watch is told through `shown`, 2026-10-04.)
     layoutStore: {
       get: () => {
         if (profileId === bootProfileId) return ((settings.get() || {}).kiosk || {}).layout || null;
         const d = swapDocNow();
         return d ? ((d.get() || {}).kiosk || {}).layout || null : null;
       },
-      save: (next) => {
+      save: (next, base) => {
         if (embedded) return;
         if (profileId !== bootProfileId) {
           const d = swapDocNow();
           if (!d) return;
           const was = (d.get() || {}).kiosk || {};
-          d.set({ kiosk: { ...was, layout: next } });
+          swapDoc.shown = next ?? null;     // already on the screen: the doc's echo is not applied again
+          // 2026-10-04: the change waited on the screen before saving, and the doc moved on meanwhile (another
+          // device, heard by the poll): merged onto it, never laid over it -- the same rule as a refused write.
+          // The doc's echo then carries the merge to the screen (`applySwapLayout`).
+          let out = next;
+          const nowSaved = was.layout ?? null;
+          if (base !== undefined && JSON.stringify(base ?? null) !== JSON.stringify(nowSaved)) {
+            const wrap = (l) => ({ kiosk: { layout: l ?? null } });
+            const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer: SWAP_CONFLICT_PREFER });
+            out = r.data?.kiosk?.layout ?? null;
+            if (r.lost.length) sayLostEdit(swapDoc.id, r.lost);
+          }
+          d.set({ kiosk: { ...was, layout: out } });
           return;
         }
         if (previewLayout) return;
@@ -1896,7 +1928,10 @@ export async function mountKiosk(root, {
       // arrangement is not on screen to correct -- and coming back mounts it fresh from this very doc
       // (`showScreen`). So the change is only noted, never applied to whatever IS showing, and never a
       // reload under somebody's call.
-      if (useDashboard && profileId !== bootProfileId) { mountedLayout = now; return; }
+      // (2026-10-04: on this file's own path too. There a placement change to the BOOT screen was applied to
+      // the swapped-in screen's arrangement, and any other change reloaded the page out of the swap. Coming
+      // back reads the boot screen's doc afresh (`showScreen`), so noting it is enough.)
+      if (profileId !== bootProfileId) { mountedLayout = now; return; }
       if (change === 'placement') {
         mountedLayout = now;
         Promise.resolve(arr.applyPlaced(now)).then((r) => {
@@ -2072,7 +2107,12 @@ export async function mountKiosk(root, {
       // The screen being left: its last room edit goes to the server FIRST, so coming straight back to it
       // reads that edit rather than the copy from before it.
       if (swapDoc) { try { await swapDoc.doc.flush?.(); } catch { /* offline: it stays pending */ } }
-      incoming = stateFor('settings');
+      // (2026-10-04: merged on a refused write, and a local change that could not be kept is said -- the
+      // header above `swapDoc`.)
+      incoming = stateFor('settings', {
+        merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: SWAP_CONFLICT_PREFER }),
+        onLost: (lost) => sayLostEdit(nextId, lost),
+      });
       let sl;
       let readable = false;
       try { await incoming.load(); sl = (incoming.get().kiosk || {}).layout; readable = true; }
@@ -2081,9 +2121,10 @@ export async function mountKiosk(root, {
       await applyModules();
       // Up: the incoming doc replaces the last swapped-in one (a swap that failed above keeps the old one).
       const before = swapDoc;
-      swapDoc = readable && nextId !== bootProfileId ? { id: nextId, doc: incoming } : null;
+      swapDoc = readable && nextId !== bootProfileId ? { id: nextId, doc: incoming, shown: sl ?? null, off: null } : null;
       adopted = !!swapDoc;
-      if (before) closeSwapDoc(before.doc);
+      if (before) closeSwapDoc(before);
+      if (swapDoc) watchSwapDoc(swapDoc);
       bus.publish(SCREEN_SHOWN, { profileId: nextId, from });
       drawCrumbs();
       return nextId;
@@ -2101,6 +2142,40 @@ export async function mountKiosk(root, {
       // A doc that is not kept (the boot screen, an unreadable one, a failed swap) is closed, as it always was.
       if (incoming && !adopted) { try { incoming.destroy(); } catch { /* already gone */ } }
     }
+  }
+
+  // *** THE SWAPPED-IN DOC, WATCHED (2026-10-04; the header above `swapDoc`). *** Polling starts with the watch,
+  // and both stop when the doc is closed (`closeSwapDoc`). Changes are applied one at a time, in order.
+  function watchSwapDoc(rec) {
+    let chain = Promise.resolve();
+    rec.off = rec.doc.subscribe((s) => {
+      const now = ((s || {}).kiosk || {}).layout ?? null;
+      if (JSON.stringify(now) === JSON.stringify(rec.shown ?? null)) return;
+      chain = chain.then(() => applySwapLayout(rec, now))
+        .catch((err) => console.error('kiosk: a swapped-in screen changed elsewhere', err));
+    });
+    try { rec.doc.startPolling?.(); } catch (err) { console.error('kiosk: polling the swapped-in screen', err); }
+  }
+  /** A layout saved elsewhere for the swapped-in screen that is showing: in place where the arrangement can
+   *  (`applySaved`), else the arrangement rebuilt in place, as a swap builds it. Never a reload: that would
+   *  land on the screen this kiosk booted on. */
+  async function applySwapLayout(rec, now) {
+    if (torn || swapping || swapDoc !== rec || profileId !== rec.id) return;
+    const prev = rec.shown ?? null;
+    if (JSON.stringify(now) === JSON.stringify(prev)) return;
+    rec.shown = now;
+    let r = null;
+    try { r = await arr.applySaved(prev, now); } catch (err) { console.error('kiosk: applying a saved layout', err); r = null; }
+    if (r && r.applied) return;
+    if (torn || swapDoc !== rec || profileId !== rec.id) return;
+    arr.resolve(now ?? undefined);
+    await applyModules();
+  }
+  /** One quiet line: a change made here gave way to the same thing changed on another device (doc_merge.js). */
+  function sayLostEdit(id, lost) {
+    const what = describeLost(lost) || 'a setting';
+    const name = screenNames.get(id) || 'this dashboard';
+    return sayNote(`A change made here was not kept: ${what} on ${name} was just changed on another device.`);
   }
 
   /** Back to whatever was showing before the last swap. */
@@ -3703,8 +3778,10 @@ export async function mountKiosk(root, {
   const LOCK_NOTE_MIN_MS = 6000;
   let lockNoteEl = null;
   let lockNoteT = null;
-  function sayLocked(rec) {
-    const text = lockedWords(rec);
+  function sayLocked(rec) { return sayNote(lockedWords(rec)); }
+  // The same quiet line, for anything else this screen has to say once (2026-10-04: an edit that gave way to
+  // another device's, `sayLostEdit`). Same timing rule, same place.
+  function sayNote(text) {
     if (torn || typeof document === 'undefined') return text;
     if (!lockNoteEl) {
       lockNoteEl = document.createElement('div');
@@ -6369,6 +6446,10 @@ export async function mountKiosk(root, {
     focusedTarget: () => focusedTargetNow(),
     lockedIds: () => [...lockedIdsNow()],
     lockNote: () => (lockNoteEl && !lockNoteEl.hidden ? lockNoteEl.textContent : null),
+    // 2026-10-04, for the suites: the same quiet line by its general name (`sayNote`), and the swapped-in
+    // screen's doc while it shows (null on the boot screen).
+    note: () => (lockNoteEl && !lockNoteEl.hidden ? lockNoteEl.textContent : null),
+    swapDoc: () => swapDocNow(),
     openSwitch: (id) => openSwitch(id),
     switchPanel: (id, type) => doSwitch(id, type),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
@@ -6457,7 +6538,7 @@ export async function mountKiosk(root, {
       // The Modules library, if it stands in a panel's place: its row and its game handle let go.
       try { closeLibrary('gone'); } catch { /* already gone */ }
       // A swapped-in screen's settings doc (kept open while it showed), and the lock notice's timer.
-      closeSwapDoc(swapDoc?.doc);
+      closeSwapDoc(swapDoc);
       swapDoc = null;
       clearTimeout(lockNoteT);
       clearTimeout(plainSummonT); clearTimeout(barGraceT);

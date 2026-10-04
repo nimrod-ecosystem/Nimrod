@@ -37,7 +37,7 @@ import { createState } from '../state.js';
 import { INPUTS_KEY, RECORD_VERSION } from '../input_runtime.js';
 import { registerModule } from '../module.js';
 import { DEFAULT_PALETTE } from '../color_picker.js';
-import { sceneDoors } from '../room_doors.js';
+import { sceneDoors, sceneLooks, withDoor, withLook } from '../room_doors.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'kiosk-test-user-' + Math.floor(performance.now());
@@ -3842,6 +3842,92 @@ const toTab = (m, id) => {
     proot.remove();
   } catch (e) {
     check('the room-piece / swapped-room section threw', false, String((e && e.stack) || e));
+  }
+
+  // *** 2026-10-04 (the gap d377083 left, Mike's list 09-30): A SWAPPED-IN SCREEN'S DOC IS SYNCED. *** Two clients
+  // on the same doc: this kiosk showing screen B (swapped in on this file's own path), and another device writing
+  // B's settings the way Home does (a plain state handle). Before: B's doc was read once and written blind, and a
+  // refused write was rebased by laying this screen's whole `kiosk` over the other device's.
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const urlOf = (s) => profiles.stateURL(s.id, 'settings');
+    const remote = async (s, fn) => { const r = createState({ url: urlOf(s), user: USER }); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+    const readOf = async (s) => { const r = createState({ url: urlOf(s), user: USER }); await r.load().catch(() => {}); const v = { ...(r.get() || {}) }; r.destroy(); return v; };
+    const sceneOf = (d) => d?.kiosk?.layout?.scene || null;
+    const setScene = (d, scene) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...(d.kiosk?.layout || {}), scene } } });
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const STUDY = { kind: 'room', preset: 'study' };
+    const A = await profiles.create('TEST-sync-plain');
+    await profiles.addModule(A.id, 'photos');
+    const C = await profiles.create('TEST-sync-third');
+    const B = await profiles.create('TEST-sync-room');
+    const bPhotos = await profiles.addModule(B.id, 'photos');
+    await remote(B, () => ({ kiosk: { layout: { preset: 'full', slots: [null], scene: STUDY,
+      placed: [{ id: bPhotos.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }));
+    const sroot = document.createElement('div');
+    sroot.style.cssText = 'position:relative;width:900px;height:560px';
+    document.body.append(sroot);
+    const sk = await mountKiosk(sroot, { user: USER, profileId: A.id, profiles, bus: createBus(), reloadPage: () => {} });
+    await sleep(200);
+    await sk.showScreen(B.id);
+    check('(setup) swapped to the study: its bookshelf and desk are drawn',
+      await settled(() => !!sroot.querySelector('.rs-obj-wrap[data-id="bookshelf"]') && !!sroot.querySelector('.rs-obj-wrap[data-id="desk"]'), 6000));
+    const mounted = () => sk.slotLayout()?.scene || null;
+    const pieceOpt = (id) => { sk.runtime.router.setFocus(`scene:room/o:${id}`); return sk.focusedTarget()?.target || null; };
+
+    // 1. A remote edit shows up.
+    await remote(B, (d) => setScene(d, withDoor(sceneOf(d), 'bookshelf', C.id)));
+    check('*** a door set on another device reaches the swapped-in screen while it shows ***',
+      await pollAsync(() => (sceneDoors(mounted()) || {}).bookshelf === C.id), JSON.stringify(sceneDoors(mounted())));
+    check('...and the piece\'s own option reads it', pieceOpt('bookshelf')?.values?.().opens === C.id, JSON.stringify(pieceOpt('bookshelf')?.values?.()));
+    const photosEl = sroot.querySelector(`.k-pcell[data-placed="${bPhotos.id}"] .k-mod`) || sroot.querySelector(`.k-pcell[data-placed="${bPhotos.id}"]`);
+    await remote(B, (d) => setScene(d, withLook(sceneOf(d), 'desk', 'drawn')));
+    check('*** a look set on another device: the room is drawn again with it ***',
+      await pollAsync(() => (sceneLooks(mounted()) || {}).desk === 'drawn'), JSON.stringify(sceneLooks(mounted())));
+    check('...and the photos panel in the room was moved across, not remounted (still the same element, still in the page)',
+      !!photosEl && photosEl.isConnected && sroot.contains(photosEl), String(!!photosEl));
+    check('...without leaving the swapped-in screen', sk.screenId() === B.id);
+
+    // 2. A stale local write does not clobber the remote one. The edit here starts FIRST (its base is read at
+    //    the press), the other device writes while it waits, so the edit is saved from a copy that is behind.
+    await remote(B, () => ({ kiosk: { layout: { preset: 'full', slots: [null], scene: STUDY,
+      placed: [{ id: bPhotos.id, place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }));
+    check('(setup) back to the plain study on the screen', await pollAsync(() => JSON.stringify(mounted()) === JSON.stringify(STUDY)
+      || (!Object.keys(sceneDoors(mounted()) || {}).length && (sceneLooks(mounted()) || {}).desk !== 'drawn')), JSON.stringify(mounted()));
+    pieceOpt('bookshelf').set({ opens: A.id });
+    await remote(B, (d) => setScene(d, withDoor(sceneOf(d), 'desk', C.id)));
+    const both = async () => { const v = await readOf(B); const ds = sceneDoors(sceneOf(v)) || {}; return ds.bookshelf === A.id && ds.desk === C.id; };
+    check('*** a stale local write is merged, not laid over: the other device\'s door (desk) AND this one (bookshelf) are both saved ***',
+      await pollAsync(both), JSON.stringify(sceneDoors(sceneOf(await readOf(B)))));
+    check('...and both are on the screen', await pollAsync(() => { const ds = sceneDoors(mounted()) || {}; return ds.bookshelf === A.id && ds.desk === C.id; }),
+      JSON.stringify(sceneDoors(mounted())));
+
+    // 3. Per key: a door here and a look there, on the same room at once.
+    pieceOpt('bookshelf').set({ opens: C.id });
+    await remote(B, (d) => setScene(d, withLook(sceneOf(d), 'desk', 'drawn')));
+    const kept = async () => { const v = await readOf(B); return (sceneDoors(sceneOf(v)) || {}).bookshelf === C.id && (sceneLooks(sceneOf(v)) || {}).desk === 'drawn'; };
+    check('*** per-key merge: the door changed here and the look changed there are both saved ***',
+      await pollAsync(kept), JSON.stringify(sceneOf(await readOf(B))));
+    check('...and both are on the screen', await pollAsync(() => (sceneDoors(mounted()) || {}).bookshelf === C.id && (sceneLooks(mounted()) || {}).desk === 'drawn'),
+      JSON.stringify({ d: sceneDoors(mounted()), l: sceneLooks(mounted()) }));
+    check('nothing was said: nothing was lost', !sk.note(), String(sk.note()));
+
+    // 4. A true conflict: the same door changed both ways at once. The other device's value stands (doc_merge.js
+    //    argues why), the screen shows it, and says in one quiet line that the change made here was not kept.
+    const theirs = `${C.id}-elsewhere`;          // any target string: a door names a dashboard id
+    pieceOpt('bookshelf').set({ opens: A.id });
+    await remote(B, (d) => setScene(d, withDoor(sceneOf(d), 'bookshelf', theirs)));
+    check('*** a true conflict: the other device\'s door stands on the server ***',
+      await pollAsync(async () => (sceneDoors(sceneOf(await readOf(B))) || {}).bookshelf === theirs), JSON.stringify(sceneDoors(sceneOf(await readOf(B)))));
+    check('...the screen shows it', await pollAsync(() => (sceneDoors(mounted()) || {}).bookshelf === theirs), JSON.stringify(sceneDoors(mounted())));
+    check('*** ...and one quiet line says the change made here was not kept ***',
+      await pollAsync(() => /not kept/.test(sk.note() || '') && /the room/.test(sk.note() || '') && /another device/.test(sk.note() || ''), 4000), String(sk.note()));
+    check('the line never names the person the project was first built for', !/her screen|christine|cici/i.test(sk.note() || ''));
+    check('...the rest of the room is untouched by the conflict (the look is still drawn)', (sceneLooks(mounted()) || {}).desk === 'drawn');
+    sk.destroy();
+    sroot.remove();
+  } catch (e) {
+    check('the swapped-in doc sync section threw', false, String((e && e.stack) || e));
   }
 
   // *** 2026-10-02: TWO SWITCH-ACCESS GAPS, CLOSED. ***

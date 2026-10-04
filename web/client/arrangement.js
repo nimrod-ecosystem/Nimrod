@@ -242,6 +242,9 @@ export function createArrangement({
   // EDIT MODE ON THE DASHBOARD'S ROOM (2026-10-02; see ROOM_PANEL_ID below). Both optional.
   //   layoutStore  { get() -> the layout as SAVED, save(next) }: where a changed door or Room row is written.
   //                Absent: the change is applied on the screen and kept in memory only (a preview page).
+  //                (2026-10-04: `save(next, base)` -- where the change waited on the screen before saving, the
+  //                layout it was made FROM comes too, so a host whose doc changed meanwhile (another device)
+  //                can merge rather than lay a stale copy over it. A host may ignore it.)
   //   listDashboards() -> Promise<[{ id, name }]>: the choices for what a room object opens.
   layoutStore = null,
   listDashboards = null,
@@ -1210,8 +1213,8 @@ export function createArrangement({
     const b = raw && typeof raw === 'object' ? raw : layout;
     return b ? JSON.parse(JSON.stringify(b)) : null;
   }
-  function saveLayout(next) {
-    try { layoutStore?.save?.(next); } catch (err) { console.error('arrangement: saving a placement', err); }
+  function saveLayout(next, base = undefined) {
+    try { layoutStore?.save?.(next, base); } catch (err) { console.error('arrangement: saving a placement', err); }
   }
   function afterMove(id) {
     try { recFor(id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
@@ -1257,7 +1260,7 @@ export function createArrangement({
     let r = null;
     try { r = await applyPlaced(next); } catch (err) { console.error('arrangement: a placement', err); r = null; }
     if (!r || !r.applied) return { ok: false, reason: r?.reason || 'not applied' };
-    saveLayout(next);
+    saveLayout(next, base);                 // (the base too: the screen was waited on -- see `layoutStore`)
     return { ok: true, place: entry.place };
   }
   async function backToGrid(id) {
@@ -1875,9 +1878,46 @@ export function createArrangement({
     let r = null;
     try { r = await applyPlaced(next); } catch (err) { console.error('arrangement: room', err); r = null; }
     if (!r || !r.applied) await redrawRoom(next);
-    try { layoutStore?.save?.(next); } catch (err) { console.error('arrangement: saving the room', err); }
+    // (The base too: the screen was waited on, and the doc may have changed meanwhile -- see `layoutStore`.)
+    try { layoutStore?.save?.(next, base); } catch (err) { console.error('arrangement: saving the room', err); }
     reselectRoom();
     return true;
+  }
+  /**
+   * A layout saved ELSEWHERE -- another device, or a merge after this screen's own write was refused as stale
+   * (2026-10-04, doc_merge.js) -- brought onto the screen the least disruptive way this screen's own edits
+   * already use: a placement or a door in place (`applyPlaced`); a change to the room's scene alone (a look, a
+   * Room row) by drawing the room again with its modules moved across (`redrawRoom`, as `writeRoomScene`
+   * does), then any placement with it. Anything else is refused (`applied: false`) and the caller rebuilds.
+   * `prev` is the layout as SAVED before (the mounted slots may differ from it on purpose, see `applyPlaced`).
+   * Nothing is saved: the change came from the doc.
+   */
+  async function applySaved(prev, next) {
+    if (!layout || !profile) return { applied: false, reason: 'not mounted' };
+    const a = prev || null, b = next || null;
+    const kind = classifyLayoutChange(a, b);
+    if (kind === 'none') return { applied: true, how: 'none' };
+    if (kind === 'placement') {
+      let r = null;
+      try { r = await applyPlaced(b); } catch (err) { console.error('arrangement: a saved placement', err); r = null; }
+      if (!r || !r.applied) return { applied: false, reason: 'placement refused' };
+      reselectRoom();
+      return { applied: true, how: 'placement' };
+    }
+    // The room's scene alone (same kind of room, everything beside the scene and the placement the same).
+    const sa = a && a.scene, sb = b && b.scene;
+    if (!isRoomScene(sa) || !isRoomScene(sb) || sa.kind !== sb.kind || !isRoomScene(layout.scene)) {
+      return { applied: false, reason: 'grid' };
+    }
+    const { scene: _sa, placed: _pa, ...ra } = a;      // eslint-disable-line no-unused-vars
+    const { scene: _sb, placed: _pb, ...rb } = b;      // eslint-disable-line no-unused-vars
+    if (JSON.stringify(ra) !== JSON.stringify(rb)) return { applied: false, reason: 'grid' };
+    let drawn = false;
+    try { drawn = await redrawRoom(b); } catch (err) { console.error('arrangement: a saved room', err); drawn = false; }
+    if (!drawn) return { applied: false, reason: 'room' };
+    try { await applyPlaced(b); } catch (err) { console.error('arrangement: a saved placement', err); }
+    reselectRoom();
+    return { applied: true, how: 'room' };
   }
   /**
    * The room drawn again from a new scene (a Room row changed), and every module placed in it MOVED into the
@@ -2065,6 +2105,8 @@ export function createArrangement({
     mountLayout,
     mountPlaced,
     applyPlaced,
+    // 2026-10-04: a layout saved elsewhere, applied in place where it can be (`applySaved` says how).
+    applySaved,
     showPrimary,
     applyModules,
     // ---- focus: which panel the bar, the ring and the menu are about ----

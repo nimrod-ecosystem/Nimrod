@@ -95,8 +95,16 @@ const threw = async (fn) => { try { await fn(); return false; } catch { return t
 
       // Move the SERVER on without touching the cache, so the background correction below
       // has something real to disagree with.
-      seed.set({ v: 'server-now-says-this' });
-      await seed.flush();
+      // (2026-10-04: through a handle with NO cache. `seed` writes its cache on every accepted PUT, so this
+      // only ever worked because seed's own background read from the load above landed after the PUT and
+      // put the OLD value back in the cache -- the late-read bug state.js no longer has.)
+      // (seed's background read lands first, so it cannot write the NEW value into the cache.)
+      await new Promise((r) => setTimeout(r, 200));
+      const mover = createState({ url: url2, user: USER });
+      await mover.load();
+      mover.set({ v: 'server-now-says-this' });
+      await mover.flush();
+      mover.destroy();
 
       const realFetch = window.fetch;
       let sawSlowFetch = false;
