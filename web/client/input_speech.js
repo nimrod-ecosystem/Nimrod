@@ -364,6 +364,18 @@ export const ROUTES = {
     phrases: ['decline', 'decline it', 'decline the call'] },
   'call-hang-up': { action: 'call/hang-up', label: 'Call: hang up',
     phrases: ['hang up', 'end the call', 'end call'] },
+  // *** REVIEWING QUESTIONS (2026-10-03; actions.js REVIEW_ACTIONS, pack_reviews.js). *** Mike's words: "that
+  // one's wrong", "that's wrong", "question wrong". A recogniser hands back "that one's wrong" and `normalize`
+  // turns the apostrophe into a space, so the table holds "that one s wrong" and "that s wrong" (what those
+  // become) beside the spelled-out "that one is wrong" / "that is wrong", which a small closed-grammar model
+  // can hear as whole known words. Whole utterances, so "that one" (select) cannot fire it and a sentence with
+  // "wrong" in it cannot either. Nothing happens unless a Trivia panel is showing a question not yet reviewed.
+  // "Fine" by voice is deliberately narrow ("question is fine"): bare "that's fine" is said in passing.
+  'review-wrong': { action: 'review/wrong', label: 'Reviewing: this question is wrong',
+    phrases: ['that one is wrong', 'that one s wrong', 'that is wrong', 'that s wrong', 'question wrong',
+              'the question is wrong'] },
+  'review-fine': { action: 'review/fine', label: 'Reviewing: this question is fine',
+    phrases: ['question is fine', 'question fine', 'the question is fine'] },
 };
 
 // Every spoken phrase, verbs and routes, as one table keyed by what it presses. Route keys are the

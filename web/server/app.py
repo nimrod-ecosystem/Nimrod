@@ -36,6 +36,7 @@ from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
 from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch, via_device_key
 import claude_ai
 import notes
+import pack_reviews
 
 log = logging.getLogger("nimrod")
 
@@ -1268,6 +1269,41 @@ def claude_chat(body: dict = Body(...), user: str = Depends(current_user)):
     if not _claude_limit.hit(user):
         raise HTTPException(status_code=429, detail="That is a lot of messages in a minute - wait a moment.")
     return _claude_do(lambda: _claude.chat(user, body))
+
+
+# ------------------------------------------------------------ review by playing (pack_reviews.py)
+# Mike, 2026-10-03, about AI-written question packs: "Can I just play through and pass them?"
+# Which packs wait for review (packs_review/, then packs_local/), and the ACCOUNT's review log: one
+# append-only stream in the reserved `_account` scope, so a question passed on a phone counts on every
+# screen of the account - and on no other account's. Screens may write (reviewing is done at a screen,
+# often beside the person playing); WHO and WHEN are stamped here, never taken from the browser.
+REVIEW_FOLDERS = [CLIENT_DIR / "packs_review", CLIENT_DIR / "packs_local"]
+REVIEWS_PATH = "/api/account/reviews"
+REVIEWS_MAX_LIMIT = 5000      # a few rows per question, 200-question packs: room for several packs' history
+
+
+@app.get("/api/packs/unreviewed")
+def packs_unreviewed(user: str = Depends(current_user)):
+    return {"packs": pack_reviews.list_unreviewed(REVIEW_FOLDERS)}
+
+
+@app.get(REVIEWS_PATH)
+def list_reviews(limit: int = 1000, user: str = Depends(current_user)):
+    return store.list_events(user, ACCOUNT_SCOPE, pack_reviews.REVIEW_STREAM,
+                             max(1, min(int(limit), REVIEWS_MAX_LIMIT)))
+
+
+@app.post(REVIEWS_PATH)
+def append_review(body: EventPost, request: Request, user: str = Depends(current_user)):
+    try:
+        data = pack_reviews.clean_review(body.kind, body.data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    data["by"] = "a screen" if via_device_key(request) else (_display_name(user) or "the account owner")
+    data["at"] = _now_iso()
+    result = store.append_event(user, ACCOUNT_SCOPE, pack_reviews.REVIEW_STREAM, body.kind, data)
+    _push.publish(user, REVIEWS_PATH)
+    return result
 
 
 # --------------------------------------------------------------------- server push (SSE)

@@ -25,6 +25,7 @@
 import { createBus } from './bus.js';
 import { createState } from './state.js';
 import { createEvents } from './events.js';
+import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
 import { createPush } from './push.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule, extendCtx, getManifest } from './module.js';
@@ -1059,8 +1060,13 @@ export async function mountKiosk(root, {
     const add = (s) => {
       const rec = s && s[INPUTS_KEY];
       if (!rec || rec.v !== RECORD_VERSION || !Array.isArray(rec.bindings)) return s;
-      if (rec.bindings.some((b) => b && b.device === SPEECH_DEVICE)) return s;
-      return { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...SPEECH_BINDINGS] } };
+      // The reviewing keys (W / O, pack_reviews.js) the same way: added in memory where the record does
+      // not already use that key or bind that action. What a person set up wins.
+      const review = missingReviewBindings(rec.bindings);
+      if (rec.bindings.some((b) => b && b.device === SPEECH_DEVICE)) {
+        return review.length ? { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...review] } } : s;
+      }
+      return { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...SPEECH_BINDINGS, ...review] } };
     };
     return {
       load: (...a) => handle.load(...a),
@@ -1331,6 +1337,13 @@ export async function mountKiosk(root, {
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
     makeEvents: (key, opts) => eventsFor(key, opts),
+    // *** REVIEW BY PLAYING (pack_reviews.js). *** The ACCOUNT's review log - not this screen's, not the
+    // person's: a question passed on a phone counts on every screen of the account - plus the packs waiting
+    // for review. A local backend (the suites, signed out) keeps the log in its own store under `_account`.
+    makePackReviews: () => createPackReviews({
+      events: makeEvents ? makeEvents('question-reviews', { pollMs: 30000 }, '_account') : null,
+      user, push, bus, pollMs: 30000,
+    }),
     // *** THE MODULES LIBRARY AS A PANEL OF ITS OWN (2026-10-02, modules/library.js). *** A function of the
     // instance id, not a value bound to `mod`: a dashboard module hands its children THIS ctx (extended), so a
     // library inside it asks with its own id. Picking there turns that panel into the pick, in its place.
@@ -5149,6 +5162,8 @@ export async function mountKiosk(root, {
     fallback: [
       ...(useDashboard ? DEFAULT_BINDINGS.filter((b) => b.control !== 'key:escape') : DEFAULT_BINDINGS),
       ...SPEECH_BINDINGS,
+      // W / O: "this question is wrong / fine" while reviewing (pack_reviews.js). Inert everywhere else.
+      ...REVIEW_KEY_BINDINGS,
     ],
     ignore: isKioskChrome,
     // Row 2.38: an unanswered `back` goes back a dashboard when there is one to go back to (`backUnhandled`).

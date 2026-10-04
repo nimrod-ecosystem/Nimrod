@@ -1483,6 +1483,18 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-next[data-on="1"], .tv-contest[data-on="1"] { outline: 3px solid var(--link, #105666); outline-offset: 2px; }
 .tv-next[data-on="1"]::before, .tv-contest[data-on="1"]::before { content: "\25B8\00a0"; }
 .tv-contested { margin: 10px 0 0; font-size: .92rem; color: var(--text-soft, #3d5347); }
+/* Review by playing (pack_reviews.js): a small, quiet strip at the foot, for the reviewer, not the player.
+   Muted, smaller than everything the player reads, never a highlight stop. Theme colours only. */
+.tv-review { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin: 14px 0 0;
+  padding-top: 8px; border-top: 1px dashed var(--border); font-size: .82rem; color: var(--text-muted); }
+.tv-review-tag { font-style: italic; }
+.tv-review-btn { min-height: 32px; padding: 3px 10px; border-radius: 8px; font-size: .82rem;
+  border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
+.tv-review-btn:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.tv-review-said { margin: 0; }
+.tv-review-note { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tv-review-note input { min-height: 32px; min-width: 14ch; padding: 3px 8px; border-radius: 8px; font: inherit;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); }
 .tv-empty { color: var(--text-muted, #5d7064); max-width: 60ch; }
 
 /* ---- THE BANK EDITOR (Questions tab) ----
