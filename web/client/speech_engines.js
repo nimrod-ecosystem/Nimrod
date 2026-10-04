@@ -288,7 +288,9 @@ export function createSegmenter(options = {}) {
       if (over >= o.onsetFrames) {
         seq += 1;
         cur = { id: `${o.idPrefix}${seq}`, startT: t - (pre.length - 1) * o.frameMs, lastVoice: t, voicedMs: over * o.frameMs };
-        ev.push({ type: 'begin', id: cur.id, t: cur.startT });
+        // `onset`: where the voice itself began - `t` is earlier by the pre-roll (screen_speech.js asks when
+        // the VOICE began, so a quiet run-up sitting in the screen's tail is not taken for the screen).
+        ev.push({ type: 'begin', id: cur.id, t: cur.startT, onset: t - (o.onsetFrames - 1) * o.frameMs });
         for (const f of pre) ev.push({ type: 'audio', id: cur.id, pcm: f });
         pre = [];
         over = 0;
@@ -307,7 +309,8 @@ export function createSegmenter(options = {}) {
     const ended = t - cur.lastVoice >= o.endSilenceMs;
     const tooLong = t - cur.startT >= o.maxUtteranceMs;
     if (ended || tooLong) {
-      if (cur.voicedMs >= o.minSpeechMs) ev.push({ type: 'end', id: cur.id, t, ms: t - cur.startT, cut: !ended });
+      // `voiceEnd`: the last loud frame - `t` is later by the trailing silence that ended it.
+      if (cur.voicedMs >= o.minSpeechMs) ev.push({ type: 'end', id: cur.id, t, ms: t - cur.startT, cut: !ended, voiceEnd: cur.lastVoice });
       else ev.push({ type: 'cancel', id: cur.id, t });
       cur = null;
       over = 0;
@@ -320,7 +323,7 @@ export function createSegmenter(options = {}) {
     flush(t) {
       if (!cur) return [];
       const c = cur; cur = null;
-      return [c.voicedMs >= o.minSpeechMs ? { type: 'end', id: c.id, t, ms: t - c.startT, cut: true } : { type: 'cancel', id: c.id, t }];
+      return [c.voicedMs >= o.minSpeechMs ? { type: 'end', id: c.id, t, ms: t - c.startT, cut: true, voiceEnd: c.lastVoice } : { type: 'cancel', id: c.id, t }];
     },
     get speaking() { return !!cur; },
     get floorDb() { return floor; },
@@ -518,8 +521,11 @@ export function createRanker({
     if (g.giveUp !== null) { try { clearTimer(g.giveUp); } catch { /* gone */ } g.giveUp = null; }
   }
 
-  /** An ear started an utterance. `asked` = the slots it was sent to. Returns the group id. */
-  function begin(ear, uttId, t = now(), asked = passes) {
+  /**
+   * An ear started an utterance. `asked` = the slots it was sent to. `onset`: where its voice began (after
+   * the pre-roll; `t` when not given). Returns the group id.
+   */
+  function begin(ear, uttId, t = now(), asked = passes, onset = null) {
     let g = null;
     for (const cand of [...groups.values()].reverse()) {
       if (cand.done || cand.ears.has(ear)) continue;
@@ -527,16 +533,19 @@ export function createRanker({
       if (near) { g = cand; break; }
     }
     if (!g) g = newGroup(t);
-    g.ears.set(ear, { ear, uttId, begunAt: t, endedAt: null, asked: new Set(asked), results: new Map() });
+    g.ears.set(ear, { ear, uttId, begunAt: t, endedAt: null, asked: new Set(asked), results: new Map(),
+                      voiceFrom: Number.isFinite(Number(onset)) && onset != null ? Number(onset) : t, voiceTo: null });
     byUtt.set(`${ear}|${uttId}`, g.id);
     return g.id;
   }
 
-  function end(ear, uttId, t = now()) {
+  /** An ear's utterance ended. `voiceEnd`: its last loud moment (before the trailing silence; `t` when not given). */
+  function end(ear, uttId, t = now(), voiceEnd = null) {
     const g = groups.get(byUtt.get(`${ear}|${uttId}`));
     const e = g?.ears.get(ear);
     if (!e) return;
     e.endedAt = t;
+    e.voiceTo = Number.isFinite(Number(voiceEnd)) && voiceEnd != null ? Number(voiceEnd) : t;
     armGiveUp(g);
     settle(g);
   }
@@ -615,7 +624,13 @@ export function createRanker({
         if (r.final && r.text && !sameWords(r.text, text) && !alts.some((a) => sameWords(a, r.text))) alts.push(r.text);
       }
     }
-    const detail = { ...(conf(pick) !== null ? { confidence: conf(pick) } : {}), ...(alts.length ? { alternatives: alts } : {}) };
+    // WHEN the voice was heard, across every ear (2026-10-04): input_speech.js asks screen_speech.js whether the
+    // screen itself was talking then, so the screen does not take its own words as a person's.
+    const es = [...g.ears.values()];
+    const voiceFrom = Math.min(...es.map((e) => e.voiceFrom));
+    const voiceTo = Math.max(...es.map((e) => (e.voiceTo ?? now())));
+    const detail = { ...(conf(pick) !== null ? { confidence: conf(pick) } : {}), ...(alts.length ? { alternatives: alts } : {}),
+                     ...(Number.isFinite(voiceFrom) && Number.isFinite(voiceTo) ? { voiceFrom, voiceTo } : {}) };
     try { onCommand?.(text, detail, { group: g.id, slot: pick.slot, ear: pick.ear, why }); }
     catch (err) { console.error('speech ranker: onCommand', err); }
   }
@@ -822,14 +837,14 @@ export function rankedRecognizer({
         // not waited for - it will be there for the next utterance.
         const asked = plan.passes.map((p) => conns.get(`${p.slot}|${ear}`)).filter((c) => c && c.ready());
         e.open = { uid, asked };
-        ranker.begin(ear, uid, ev.t, asked.map((x) => x.slot));
+        ranker.begin(ear, uid, ev.t, asked.map((x) => x.slot), ev.onset);
         for (const en of asked) en.begin(uid);
       } else if (ev.type === 'audio') {
         if (e.open?.uid === uid) for (const en of e.open.asked) en.audio(uid, ev.pcm);
       } else if (ev.type === 'end') {
         if (e.open?.uid === uid) for (const en of e.open.asked) en.end(uid);
         e.open = null;
-        ranker.end(ear, uid, ev.t);
+        ranker.end(ear, uid, ev.t, ev.voiceEnd);
       } else if (ev.type === 'cancel') {
         if (e.open?.uid === uid) for (const en of e.open.asked) en.cancel(uid);
         e.open = null;
@@ -840,7 +855,8 @@ export function rankedRecognizer({
   }
   function tapUtterance(ear, uid, ev) {
     const u = { type: ev.type, ear, uid, group: ranker?.groupOf(ear, uid) || null, t: ev.t ?? now(),
-                ...(ev.type === 'audio' ? { pcm: ev.pcm } : {}) };
+                ...(ev.type === 'audio' ? { pcm: ev.pcm } : {}),
+                ...(ev.onset != null ? { onset: ev.onset } : {}), ...(ev.voiceEnd != null ? { voiceEnd: ev.voiceEnd } : {}) };
     emit(utteranceFns, u);
   }
   // ---- the connections ------------------------------------------------------------------
@@ -929,7 +945,7 @@ export function rankedRecognizer({
     for (const ev of e.seg.flush(now())) {
       const uid = `${ear}:${ev.id}`;
       if (e.open?.uid === uid) for (const en of e.open.asked) (ev.type === 'end' ? en.end(uid) : en.cancel(uid));
-      if (ev.type === 'end') ranker?.end(ear, uid, ev.t); else ranker?.cancel(ear, uid);
+      if (ev.type === 'end') ranker?.end(ear, uid, ev.t, ev.voiceEnd); else ranker?.cancel(ear, uid);
       if (utteranceFns.size) tapUtterance(ear, uid, ev);
     }
     try { e.node?.port?.postMessage({ type: 'stop' }); } catch { /* gone */ }

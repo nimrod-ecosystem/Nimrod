@@ -33,6 +33,7 @@ import { mountModule, extendCtx, getManifest } from './module.js';
 import { createAutomation } from './automation.js';
 import { createOutputBus } from './output.js';
 import { createAudioBus } from './audio_bus.js';
+import { createScreenSpeech } from './screen_speech.js';
 import { createCameraOwner } from './camera_owner.js';
 import { defaultChannels } from './output_channels.js';
 import { REMOTE_STREAM } from './output_remote.js';
@@ -557,6 +558,9 @@ export async function mountKiosk(root, {
   // above all three - a module cannot know what else is making noise. Built before the output
   // bus because the speech channel registers with it.
   const audio = createAudioBus();
+  // *** WHEN THIS SCREEN IS TALKING (screen_speech.js, 2026-10-04). *** The speech channel marks it; the voice
+  // recorder keeps nothing heard while it talks, and the recogniser does not take its own words as a person's.
+  const screenSpeech = createScreenSpeech();
   // WAS THE MENU OPEN WHEN A PAUSE / PLAY VERB ARRIVED (2026-10-02)? Subscribed HERE, before the input router
   // exists, so it hears each verb before the router does (the bus delivers in subscription order): the bar's
   // Pause / Play follows a spoken or switched pause only when the verb went to the panel -- and a pause that
@@ -948,6 +952,7 @@ export async function mountKiosk(root, {
         recognizer: rec,
         ...opts,
         routes,
+        screenSpeech,
         scoped: sw.on ? focusedVoice : null,
         // Subtitles-only: no commands, so nothing is confirmed, asked, logged or announced -- the
         // recogniser is there to write the room down, and a wake phrase does nothing.
@@ -1184,7 +1189,7 @@ export async function mountKiosk(root, {
   // and stays hidden until it records; nothing hides it while it does.
   try {
     try { voiceStore = createIdbPairStore(); } catch { voiceStore = createMemoryPairStore(); }
-    voiceRec = createVoiceRecorder({ store: voiceStore, bus });
+    voiceRec = createVoiceRecorder({ store: voiceStore, bus, screenSpeech });
     recPill = mountRecordingIndicator(kioskEl, { recorder: voiceRec, bus });
   } catch (err) { console.error('kiosk: voice recording', err); voiceRec = null; recPill = null; }
   try {
@@ -1215,6 +1220,7 @@ export async function mountKiosk(root, {
       bus,
       channels: defaultChannels({
         audio,
+        screenSpeech,
         // WIRED TO `push`, 2026-09-17 — the legacy /api/user-events alias's POST handler
         // (append_user_event) now calls `_push.publish` too, the same self-referential-path
         // pattern the per-profile events endpoint already used. Until this, this mailbox

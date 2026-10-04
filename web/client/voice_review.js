@@ -90,7 +90,8 @@ export function mountVoiceReview(root, {
       : '<button type="button" data-del>Delete</button>';
     return `<li class="vr-row" data-id="${esc(p.id)}" data-reviewed="${p.reviewed ? '1' : '0'}">
       <div class="vr-meta">${esc(fmtWhen(p.at))} · ${esc(secs.toFixed(1))} s${p.reviewed ? ' · reviewed' : ''}</div>
-      <div class="vr-heard">${esc(saidLine(p))}</div>${others}
+      <div class="vr-heard">${esc(saidLine(p))}</div>${others}${p.overlap ? `
+      <div class="vr-other" data-cut>Cut where the screen started talking: the words above may run past the recording.</div>` : ''}
       <div class="vr-play">${clips}</div>
       <label class="vr-meant"><span>What was meant</span>
         <input type="text" data-meant maxlength="1000" value="${esc(p.meant || '')}" placeholder="type what they meant"></label>

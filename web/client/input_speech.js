@@ -67,6 +67,7 @@
 
 import { verbTopic } from './actions.js';
 import { createSoundChannel } from './output_channels.js';
+import { heardOverScreen } from './screen_speech.js';
 
 export const SPEECH_DEVICE = 'speech';
 
@@ -1280,6 +1281,11 @@ export function attachSpeech(input, {
   // overriding the recogniser's own answer; null (the default) asks the recogniser (`rec.canDictate`, a
   // function or a boolean), and one that does not say is taken as able (the browser's own is open-only).
   canDictate = null,
+  // WHEN THE SCREEN ITSELF IS TALKING (screen_speech.js, 2026-10-04). Heard while it talked (or inside its tail)
+  // and not a wake-phrase command of the person's own: the screen hearing itself, reported `echo` and dropped -
+  // never an answer, a dictation or a command. Times from the recogniser's `voiceFrom`/`voiceTo` when it gives
+  // them. Null (the default): nothing changes.
+  screenSpeech = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -1648,6 +1654,12 @@ export function attachSpeech(input, {
     const detail = cleanDetail(rawDetail);
     const w = splitWake(text, wakes);
     const rest = w.rest;
+    // THE SCREEN HEARING ITSELF (screen_speech.js): before anything else, the near-miss answer included. Not for
+    // a wake detector's own event (it heard the wake phrase, not a transcript of the screen).
+    if (screenSpeech && !rawDetail?.wake) {
+      const r = heardOverScreen(screenSpeech, { text, woke: w.woke, from: rawDetail?.voiceFrom, to: rawDetail?.voiceTo });
+      if (r.echo) { report({ text, verb: null, woke: w.woke, echo: true, screen: true }); return; }
+    }
     // A QUESTION IS UP: this may be its answer, and the answer comes before anything else.
     if (pending) {
       if (!pendingLive()) endPending('timeout');

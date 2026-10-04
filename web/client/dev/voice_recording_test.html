@@ -30,8 +30,10 @@ below is the REAL ranked recogniser fed frames through <code>feed</code>, agains
 import {
   VOICE_RECORDING_DEFAULTS, VOICE_RECORDING_FIELDS, VOICE_RECORDING_TOPIC, voiceRecordingOptionsFrom, encodeWav16,
   buildPair, pairExpired, withMeant, createMemoryPairStore, createIdbPairStore, createVoiceRecorder,
-  recordingText, mountRecordingIndicator, exportPairs, pairFolderName, CLIP_RATE,
+  recordingText, mountRecordingIndicator, exportPairs, pairFolderName, CLIP_RATE, euphoniaSamples,
 } from '../voice_recording.js';
+import { createScreenSpeech, heardOverScreen, SCREEN_SPEECH_TAIL_MS } from '../screen_speech.js';
+import { createSpeechChannel } from '../output_channels.js';
 import { mountVoiceReview, saidLine, reviewSummary } from '../voice_review.js';
 import { rankedRecognizer, enginePlanFrom } from '../speech_engines.js';
 import { CAPTURE_RATE, FRAME_MS } from '../speech_capture.js';
@@ -480,6 +482,197 @@ try {
     check('one folder per recording, named by its time', folder === 'voice-20260930-140307-12345678', folder);
     check('*** the audio first, pair.json LAST (an interrupted export never leaves a manifest promising missing audio) ***',
       r.written.length === 1 && files.join() === `${folder}/room.wav:48,${folder}/pair.json:json`, files.join());
+  }
+
+  // ======================================================================================
+  section('*** the screen\'s own voice: when is the screen talking (screen_speech.js) ***');
+  {
+    check('the tail is 400 ms by default (argued in screen_speech.js)', SCREEN_SPEECH_TAIL_MS === 400 && createScreenSpeech().tailMs === 400);
+    const ss = createScreenSpeech({ now: () => 10_000, tailMs: 400 });
+    check('nothing said: not speaking, nothing overlaps', !ss.speaking(10_000) && ss.firstBusy(0, 1e9) === null);
+    const changes = [];
+    ss.onChange((x) => changes.push(x.speaking));
+    const id = ss.begin('Which city is the capital of France? Paris, London, Berlin or Rome.', 11_000);
+    check('*** talking: from the moment it began, for as long as it goes on ***',
+      ss.talkingNow() && ss.speaking(11_000) && ss.speaking(50_000) && !ss.speaking(10_999));
+    ss.end(id, 14_000);
+    check('*** THE TAIL: still counted 399 ms after it stopped, not at 401 ***', ss.speaking(14_399) && !ss.speaking(14_401) && !ss.talkingNow());
+    check('firstBusy: the earliest moment of a stretch that touches it (tail included)',
+      ss.firstBusy(10_500, 12_000) === 11_000 && ss.firstBusy(14_200, 16_000) === 14_200 && ss.firstBusy(14_500, 16_000) === null);
+    check('what it was saying in a stretch', /^Which city/.test(ss.saidBetween(12_000, 12_100)[0] || '') && ss.saidBetween(20_000, 21_000).length === 0);
+    check('starting and stopping are announced (the tail is not)', changes.join() === 'true,false', changes.join());
+    ss.end(id, 15_000);
+    check('ending twice changes nothing', !ss.speaking(14_401));
+    const a = ss.begin('one', 20_000); const b = ss.begin('two', 20_100); ss.end(a, 20_500);
+    check('two at once: talking until BOTH have ended', ss.talkingNow() && ss.speaking(21_000));
+    ss.end(b, 21_000);
+    check('setTail: 0 is no tail; nonsense is the default', ss.setTail(0) === 0 && !ss.speaking(21_001) && ss.setTail('x') === 400);
+
+    // The recogniser's question (input_speech.js asks it; speech_test.html drives it end to end).
+    const s2 = createScreenSpeech({ now: () => 0, tailMs: 400 });
+    const k = s2.begin('Say computer please pause to stop the video. Paris, London or Berlin?', 1000); s2.end(k, 3000);
+    check('no tracker: never an echo', heardOverScreen(null, { text: 'paris', from: 1500, to: 1600 }).echo === false);
+    check('*** heard while the screen talked, no wake phrase: the screen hearing itself ***',
+      heardOverScreen(s2, { text: 'paris', from: 2000, to: 2500 }).echo === true);
+    check('*** ...and starting inside the tail too ***', heardOverScreen(s2, { text: 'paris', from: 3300, to: 3800 }).echo === true);
+    check('*** after the tail: a person, as before ***', heardOverScreen(s2, { text: 'paris', from: 3500, to: 4000 }).echo === false
+      && heardOverScreen(s2, { text: 'paris', from: 3500, to: 4000 }).overlapped === false);
+    check('*** a wake-phrase line the SCREEN said ("say computer please pause") is its own: an echo ***',
+      heardOverScreen(s2, { text: 'computer please pause', woke: true, from: 1500, to: 2400 }).echo === true);
+    check('*** a wake-phrase command the screen did NOT say is a person talking over it: kept ***',
+      heardOverScreen(s2, { text: 'computer please quieter', woke: true, from: 1500, to: 2400 }).echo === false);
+    check('nothing made out ([unk]) while it talked: an echo', heardOverScreen(s2, { text: '[unk]', from: 1500, to: 1600 }).echo === true);
+    let nowT = 2000;
+    const s3 = createScreenSpeech({ now: () => nowT });
+    s3.end(s3.begin('hello', 1000), 2500);
+    check('no times from the recogniser (the browser\'s own): "is it talking now"',
+      heardOverScreen(s3, { text: 'hello' }).echo === true && ((nowT = 5000), heardOverScreen(s3, { text: 'hello' }).echo === false));
+  }
+
+  // ======================================================================================
+  section('*** the speech channel marks it - the same two points it marks the audio bus ***');
+  {
+    const spoken = [];
+    const synth = { speak(u) { spoken.push(u); }, cancel() {}, getVoices: () => [] };
+    class U { constructor(t) { this.text = t; } }
+    const c = fakeClock(50_000);
+    const ss = createScreenSpeech({ now: c.now });
+    const ch = createSpeechChannel({ synth, Utterance: U, screenSpeech: ss, pollMs: 0, setTimer: c.setTimer, clearTimer: c.clearTimer });
+    let done = 0;
+    ch.present({ verb: 'say', text: 'What is two plus two?' }, { done: () => { done += 1; } });
+    check('*** a sentence starts: the screen is talking, and what it says is known ***',
+      ss.talkingNow() && ss.saidBetween(50_000, 50_000)[0] === 'What is two plus two?');
+    c.advance(1500); spoken.at(-1).onend();
+    check('*** the sentence ends: not talking (the tail then runs) ***', !ss.talkingNow() && done === 1
+      && ss.speaking(c.now() + 399) && !ss.speaking(c.now() + 401));
+    const cancel = ch.present({ verb: 'say', text: 'Another' }, { done() {} });
+    const was = ss.talkingNow(); cancel();
+    check('cancelled: not talking', was && !ss.talkingNow());
+    ch.present({ verb: 'say', text: 'An engine that never says it ended' }, { done() {} });
+    c.advance(30_000);
+    check('*** the watchdog ends it too (a sentence that never fires onend cannot hold the gate forever) ***', !ss.talkingNow());
+    const plain = createSpeechChannel({ synth, Utterance: U, pollMs: 0, setTimer: c.setTimer, clearTimer: c.clearTimer });
+    let ok = true; try { plain.present({ verb: 'say', text: 'no tracker' }, { done() {} })?.(); } catch { ok = false; }
+    check('no tracker given: speaks exactly as before', ok && spoken.at(-1).text === 'no tracker');
+  }
+
+  // ======================================================================================
+  section('*** the recorder keeps nothing the screen said ***');
+  {
+    // A recogniser that hands over utterances directly, so each test says exactly when things happen.
+    function uttRec() {
+      const u = new Set(); const cap = new Set();
+      return {
+        onUtterance(fn) { u.add(fn); return () => u.delete(fn); },
+        onCaption(fn) { cap.add(fn); return () => cap.delete(fn); },
+        onStatus() { return () => {}; },
+        status: () => ({ state: 'listening' }),
+        utt(x) { for (const f of [...u]) f(x); },
+        caption(x) { for (const f of [...cap]) f(x); },
+      };
+    }
+    const c = fakeClock(100_000);
+    const ss = createScreenSpeech({ now: c.now, tailMs: 400 });
+    const store = createMemoryPairStore();
+    const vr = createVoiceRecorder({ store, personId: 'p1', now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer, screenSpeech: ss });
+    const r = uttRec();
+    vr.update({ voiceRecording: true });
+    vr.attach(r);
+    let n = 0;
+    // An utterance: begin at t0 (onset: where the voice started, after the pre-roll), 20 ms frames for `ms`,
+    // end (voiceEnd: where the voice stopped, before the trailing silence), then its final transcript.
+    // `at`: { ms, fn } runs between frames - the screen starting to talk in the middle of it.
+    const utter = async ({ t0, ms, text = 'paris', onset = null, voiceEnd = null, at = null, rec = r, recorder = vr }) => {
+      n += 1;
+      const uid = `room:u${n}`; const group = `g${n}`;
+      rec.utt({ type: 'begin', ear: 'room', uid, group, t: t0, ...(onset != null ? { onset } : {}) });
+      for (let i = 0; i < ms / 20; i++) {
+        if (at && i * 20 === at.ms) at.fn();
+        rec.utt({ type: 'audio', ear: 'room', uid, group, t: t0 + i * 20, pcm: frame(LOUD, i) });
+      }
+      rec.utt({ type: 'end', ear: 'room', uid, group, t: t0 + ms, ...(voiceEnd != null ? { voiceEnd } : {}) });
+      rec.caption({ id: group, text, final: true, confidence: 0.9 });
+      await settle(4); await recorder.settle();
+    };
+    const count = () => store.count({});
+    const newest = async () => (await store.list({})).sort((x, y) => y.at - x.at)[0];
+    const samplesOf = async (p) => { const w = await store.audio(p.id, p.clips[0].ear); return w ? (w.byteLength - 44) / 2 : 0; };
+
+    await utter({ t0: 100_000, ms: 1000 });
+    let p = await newest();
+    check('*** the screen silent: kept exactly as before (all of it, no mark) ***',
+      (await count()) === 1 && (await samplesOf(p)) === 16000 && !('overlap' in p), JSON.stringify(p && p.clips));
+
+    const s1 = ss.begin('Which city is the capital of France?', 102_000);
+    await utter({ t0: 102_500, ms: 1000, text: 'which city is the capital of france' });
+    check('*** begun while the screen was talking: NOT kept ***', (await count()) === 1);
+    ss.end(s1, 104_000);
+    await utter({ t0: 104_200, ms: 800 });
+    check('*** begun inside the tail (400 ms after it stopped): NOT kept ***', (await count()) === 1);
+    await utter({ t0: 104_600, ms: 800 });
+    check('*** begun after the tail: kept ***', (await count()) === 2);
+
+    // A person talking when the screen starts: CUT where the screen started, and marked.
+    let s2 = null;
+    await utter({ t0: 110_000, ms: 1500, text: 'i think it is paris right the answer is paris',
+                  at: { ms: 400, fn: () => { s2 = ss.begin('Right! The answer is Paris.', 110_400); } } });
+    ss.end(s2, 112_000);
+    p = await newest();
+    check('*** began before the screen spoke, overlapped it: kept, CUT where the screen began ***',
+      (await count()) === 3 && (await samplesOf(p)) === 6400 && Math.round(p.clips[0].durationMs) === 400, `${await samplesOf(p)}`);
+    check('*** ...and MARKED: the transcript covers more than the audio, so it is not counted as reviewed ***',
+      p.overlap && p.overlap.screenSpeech === true && p.overlap.cutAtMs === 400 && p.reviewed === false, JSON.stringify(p.overlap));
+
+    // A phrase being read, overlapped: what was meant is still the phrase, but somebody must look.
+    vr.prompt({ text: 'The quick brown fox', index: 0, list: 'test' });
+    let s3 = null;
+    await utter({ t0: 120_000, ms: 1500, text: 'the quick brown fox',
+                  at: { ms: 600, fn: () => { s3 = ss.begin('Well done.', 120_600); } } });
+    ss.end(s3, 121_500);
+    p = await newest();
+    check('*** a read phrase overlapped: meant is the phrase, but NOT reviewed ***',
+      p.prompt?.text === 'The quick brown fox' && p.meant === 'The quick brown fox' && p.reviewed === false && p.overlap?.screenSpeech === true);
+    const all = await store.list({});
+    check('*** ...so it is NOT a training sample until somebody has listened ***',
+      !euphoniaSamples(all, { which: 'prompted' }).some((x) => x.pairId === p.id)
+      && euphoniaSamples(all.map((x) => (x.id === p.id ? withMeant(x, x.meant) : x)), { which: 'prompted' }).some((x) => x.pairId === p.id));
+    vr.prompt(null);
+
+    // Cut too soon to be anybody's words: not kept.
+    const c0 = await count();
+    let s4 = null;
+    await utter({ t0: 130_000, ms: 1000, at: { ms: 100, fn: () => { s4 = ss.begin('Hello.', 130_100); } } });
+    ss.end(s4, 131_000);
+    check('*** cut after 100 ms (shorter than any word): not kept ***', (await count()) === c0);
+
+    // The pre-roll (quiet run-up before the voice started) may sit in the tail; the person did not.
+    const s5 = ss.begin('Next question.', 140_000); ss.end(s5, 141_000);
+    await utter({ t0: 141_200, onset: 141_500, ms: 1000 });
+    p = await newest();
+    check('*** voice began after the tail, its quiet pre-roll inside it: kept, the pre-roll inside the tail trimmed, not marked ***',
+      (await count()) === c0 + 1 && !p.overlap && (await samplesOf(p)) < 16000 && (await samplesOf(p)) >= 0.55 * 16000
+      && p.at >= 141_400, `${await samplesOf(p)} at ${p.at}`);
+
+    // The screen starting during the trailing silence (after the voice stopped): only silence is lost.
+    let s6 = null;
+    await utter({ t0: 150_000, ms: 1500, voiceEnd: 150_600, at: { ms: 1000, fn: () => { s6 = ss.begin('Okay.', 151_000); } } });
+    ss.end(s6, 151_400);
+    p = await newest();
+    check('*** the screen spoke only in the trailing silence: the silence is cut, the pair is NOT marked ***',
+      (await samplesOf(p)) === 16000 && !p.overlap, `${await samplesOf(p)} ${JSON.stringify(p.overlap)}`);
+
+    // Speech OFF: the channel never marks the tracker, and a recorder with no tracker is as it was.
+    const store2 = createMemoryPairStore();
+    const vr2 = createVoiceRecorder({ store: store2, now: c.now, setTimer: c.setTimer, clearTimer: c.clearTimer });
+    const r2 = uttRec();
+    vr2.update({ voiceRecording: true }); vr2.attach(r2);
+    const s7 = ss.begin('Spoken, but this recorder was given no tracker.', 160_000);
+    await utter({ t0: 160_100, ms: 1000, rec: r2, recorder: vr2 });
+    ss.end(s7, 161_000);
+    const q = (await store2.list({}))[0];
+    check('*** no tracker (speech off / an older host): unchanged - all of it kept, no mark ***',
+      q && !q.overlap && ((await store2.audio(q.id, 'room')).byteLength - 44) / 2 === 16000);
+    vr.destroy(); vr2.destroy();
   }
 
   // ======================================================================================

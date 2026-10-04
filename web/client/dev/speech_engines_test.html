@@ -214,6 +214,12 @@ try {
     run(LOUD, 200); run(QUIET, 700);
     const end = ev.find((e) => e.type === 'end');
     check('*** a pause as long as the setting ends it ***', !!end && end.id === b.id && !end.cut, JSON.stringify(end));
+    // 2026-10-04 (screen_speech.js): where the VOICE began and stopped, apart from the pre-roll and the trailing
+    // silence - the recorder and the recogniser ask whether the screen was talking THEN.
+    check('*** begin says where the voice began (onset = the first loud frame, after the pre-roll) ***',
+      b.onset === 1000 && b.t < b.onset, `${b.t} ${b.onset}`);
+    check('*** end says where the voice stopped (voiceEnd = the last loud frame, before the trailing silence) ***',
+      end.voiceEnd === 2380 && end.t - end.voiceEnd >= 600, `${end.voiceEnd} ${end.t}`);
     ev = [];
     run(LOUD, 60); run(QUIET, 700);
     check('*** a click (shorter than the minimum) is cancelled, never transcribed ***',
@@ -255,6 +261,16 @@ try {
     r.result('room', { slot: 'local', utteranceId: 'u1', kind: 'final', text: 'computer please pause', confidence: 0.9 });
     check('*** a SURE fast guess acts at once - no waiting for the desktop ***', cmds.length === 1 && cmds[0].t === 'computer please pause'
       && cmds[0].m.why === 'sure' && cmds[0].d.confidence === 0.9, JSON.stringify(cmds));
+    check('the command says WHEN the voice was heard (no onset/voiceEnd given: the begin and end times)',
+      cmds[0].d.voiceFrom === 0 && cmds[0].d.voiceTo === 1000, JSON.stringify(cmds[0].d));
+    {
+      const x = mk();
+      x.r.begin('room', 'v1', 100, undefined, 400); x.r.begin('phone1', 'v2', 150, undefined, 380);
+      x.r.end('room', 'v1', 2000, 1100); x.r.end('phone1', 'v2', 2050, 1150);
+      x.r.result('room', { slot: 'local', utteranceId: 'v1', kind: 'final', text: 'hello', confidence: 0.95 });
+      check('*** two ears: from the earliest voice onset to the latest voice end (not the pre-roll, not the trailing silence) ***',
+        x.cmds[0]?.d.voiceFrom === 380 && x.cmds[0]?.d.voiceTo === 1150, JSON.stringify(x.cmds[0]?.d));
+    }
     check('...and is on screen as the guess (not final: a better pass may still come)',
       caps.at(-1)?.text === 'computer please pause' && caps.at(-1)?.final === false && caps.at(-1)?.pass === 0);
     r.result('room', { slot: 'remote1', utteranceId: 'u1', kind: 'final', text: 'Computer please pause.', confidence: 0.95 });
