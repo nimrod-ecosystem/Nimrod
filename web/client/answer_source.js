@@ -30,9 +30,10 @@
 //     nobody there can close (page_links.js). Off a screen it is a link that opens a new tab.
 //   * AN UNTITLED LINK SHOWS ITS HOST ONLY ("klobuchar.senate.gov"), not the whole address: the reviewer's
 //     strip shows the full address because a reviewer checks it; a player is not going to read a path.
-//   * NOT READ ALOUD, AND NO ROW FOR IT. Trivia reads nothing aloud — not the question, not "Correct." — so a
-//     "read the source aloud" row would be a setting that changes nothing (the defect trivia.js's own
-//     `tryingPoints` comment describes). `answerSourceText` is the words, ready for the day a game does speak.
+//   * READ ALOUD ONLY BY ITS OWN ROW, OFF (2026-10-04). Trivia reads aloud now (the question, "Correct.", the
+//     explanation; modules/trivia.js SPEECH), and the source joins them only with "Say where the answer comes
+//     from" on — that row, and why it defaults off, are Trivia's (its SETTINGS). `answerSourceText` is the words
+//     it reads: exactly the shown line's, so what is heard never says more than what is shown.
 
 import { COMMON_KNOWLEDGE } from './packs.js';
 
@@ -125,8 +126,9 @@ export function answerSourceHtml(sources, { mode = ANSWER_SOURCE_DEFAULT, onScre
 //   * NEVER BEFORE THE ANSWER, NOR AFTER A WRONG GUESS — an explanation names the answer almost every time.
 //   * NO LABEL ("Why:") ON THE PLAYER'S LINE: under "Correct." the sentence reads as the reason by itself. The
 //     reviewer's strip DOES label it ("Explanation: ..."), because there it is a thing being checked.
-//   * NOT READ ALOUD, AND NO ROW FOR IT — the same reason as the source above: Trivia speaks nothing today.
-//     `answerExplainText` is the words, ready for the day it does.
+//   * READ ALOUD AFTER "Correct." WHILE "Say the questions aloud" IS ON (2026-10-04, modules/trivia.js SPEECH),
+//     and by this same row, not a second one: the label already says "say", and a "why" shown but not heard (or
+//     heard but not shown) is two settings for one sentence. `answerExplainText` is the words.
 export const ANSWER_EXPLAIN_KEY = 'showExplain';
 export const ANSWER_EXPLAIN_DEFAULT = true;
 
@@ -136,7 +138,7 @@ export function answerExplainField({ level = 'standard', note = null } = {}) {
     key: ANSWER_EXPLAIN_KEY, label: 'Say why after the answer', default: ANSWER_EXPLAIN_DEFAULT, level,
     onLabel: 'On', offLabel: 'Off',
     note: note || 'One short sentence under "Correct." saying why that is the answer, once it is given. Only '
-      + 'questions that come with an explanation show one. Shown, not read aloud.',
+      + 'questions that come with an explanation show one. Read aloud too while "Say the questions aloud" is on.',
   };
 }
 
