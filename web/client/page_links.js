@@ -32,6 +32,7 @@ import { contrast, TEXT_MIN } from './theme.js';
 
 export const CLAUDE_PAGE = '/claude.html';     // = nimrod_ai.js CLAUDE_SETTINGS_PAGE (the suite checks they agree)
 export const REVIEWS_PAGE = '/reviews.html';
+export const SEARCH_KEYS_PAGE = '/search_keys.html';   // recommend.js's "Add a key" opens the same page
 
 // The pages, by key: what a row is called, the menu page's title on a screen, and the hint off one.
 export const ELSEWHERE_PAGES = Object.freeze({
@@ -39,6 +40,9 @@ export const ELSEWHERE_PAGES = Object.freeze({
     offHint: 'opens in a new tab: the account’s key, the model, today’s spending' }),
   reviews: Object.freeze({ path: REVIEWS_PAGE, label: 'Review questions…', title: 'Questions waiting for review',
     offHint: 'opens in a new tab: the packs waiting, how far each has got, every question marked wrong' }),
+  search: Object.freeze({ path: SEARCH_KEYS_PAGE, label: 'Search songs and videos by name\u2026',
+    title: 'Search songs and videos by name',
+    offHint: 'opens in a new tab: your own YouTube and Spotify keys, for finding something to recommend' }),
 });
 // The menu page a screen's row opens instead (settings.js `page`): `elsewhere:<key>`.
 export const ELSEWHERE_PAGE_PREFIX = 'elsewhere:';

@@ -429,8 +429,10 @@ const toTab = (m, id) => {
       // ('lesson-topics', 2026-10-03: moved into the menu from the Settings panel's own list, beside 'game'.)
       // ('claude-page' on Devices and 'reviews-page' on This screen, 2026-10-04, page_links.js: rows that open a
       // page, like 'game' -- outside the panel's lap, which is unchanged.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 39) ***',
-        lapStops.length === 14 && oldStops.length === 39 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
+      // ('search-page' on Devices, 2026-10-04, page_links.js: the song and video search keys, beside Claude. It makes
+      // the old rows 40; the panel's lap is unchanged.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 14 stops (was every row: 40) ***',
+        lapStops.length === 14 && oldStops.length === 40 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
       // (2026-10-02, deliberately UNCHANGED: "Font on this device" / "Colour look" are rows of "Settings for:
