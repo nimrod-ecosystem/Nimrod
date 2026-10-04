@@ -156,6 +156,79 @@ export const EDIT_WORDS = Object.freeze({
   cannotShow: 'This could not be shown here just now.',
 });
 
+// ---- who can see your page, and which parts (DECISIONS.md 2026-10-04 night, items 7 and 8) --------------------------
+// The SERVER decides what a visitor is sent (web/server/page_visits.py, test_page_visits.py) -- these are the same
+// names and lists, for drawing the choices, and test_page_visits.py fails if the two sides drift apart. Stored in
+// this same page record, so two devices merge it with the rest (mergePageDoc):
+//   { visitors: 'me' | 'connections' | 'picked', picked: [<id of one of your people>], sections: [...options.seenBy] }
+// "WHO CAN SEE MY PAGE", default the people you are connected with (Mike's item 7). FOR "Only me" by default: nothing
+// is shown to anybody until you choose. AGAINST, and it decides it: with item 8's default (your card, and no more) a
+// connection opening your page sees only what their own page already shows them -- your picture and your name -- so
+// the default opens nothing new, and "See their page" works the day two people connect.
+// "PEOPLE I PICK" is offered too: it costs one list of the people you are connected with, and it is the case "my
+// family may, my old workmates may not" that the other two cannot say.
+export const WHO_KEY = 'visitors';
+export const PICKED_KEY = 'picked';
+export const WHO_CHOICES = Object.freeze(['me', 'connections', 'picked']);
+export const DEFAULT_WHO = 'connections';
+// Each part's "Who sees this": default Only me (item 8: you open more parts yourself).
+export const SEEN_KEY = 'seenBy';
+export const DEFAULT_SEEN = 'me';
+// The parts that may be opened to whoever can see your page, and the ones that never are (page_visits.py argues each).
+export const OPENABLE_KINDS = Object.freeze(['about', 'clock', 'photos', 'video']);
+export const PRIVATE_KINDS = Object.freeze(['messages', 'recommended', 'people', 'connect', 'nimrod']);
+
+export const WHO_WORDS = Object.freeze({
+  label: 'Who can see my page',
+  choice: Object.freeze({ me: 'Only me', connections: 'People I’m connected with', picked: 'Only the people I pick' }),
+  line: Object.freeze({
+    me: 'Nobody else can open your page. Your picture and name still show on the pages of the people you are connected with.',
+    connections: 'Everyone you are connected with can open your page. They see your picture and name, and the parts you show them.',
+    picked: 'Only the people you pick below can open your page. They see your picture and name, and the parts you show them.',
+  }),
+  pickLead: 'Who may open your page:',
+  pickNone: 'You are not connected with anybody yet. Connect with someone first.',
+  pickOn: 'Can see your page',
+  pickOff: 'Can’t see your page',
+  seen: 'Who sees this',
+  seenChoice: Object.freeze({ me: 'Only me', visitors: 'People who can see my page' }),
+  privateBtn: 'Only you see this',
+  keptShort: 'Kept to you',
+  privateWhy: Object.freeze({
+    messages: 'Messages left for you are only ever shown to you.',
+    recommended: 'What your people sent you is only ever shown to you.',
+    people: 'Your people’s pictures and names are theirs to share, so this part is only shown to you.',
+    connect: 'This part is for you to use, so only you see it.',
+    nimrod: 'This part opens your own settings, so only you see it.',
+    newer: 'This part needs a newer version of the site, so only you see it.',
+  }),
+  selfLine: 'Your picture and name are shown to whoever can see your page.',
+});
+
+const isObj0 = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+/** "Who can see my page" as stored, or the default; a value this version does not know reads as Only me. PURE. */
+export function whoOf(doc) {
+  const v = isObj0(doc) ? doc[WHO_KEY] : undefined;
+  if (v === undefined || v === null || v === '') return DEFAULT_WHO;
+  return WHO_CHOICES.includes(v) ? v : 'me';
+}
+/** The people picked (ids of the owner's own people). PURE. */
+export const pickedOf = (doc) => (isObj0(doc) && Array.isArray(doc[PICKED_KEY]) ? doc[PICKED_KEY].filter((x) => typeof x === 'string' && x) : []);
+/** The picked list with `id` added or taken away. PURE. */
+export function togglePicked(doc, id) {
+  const now = pickedOf(doc);
+  return now.includes(id) ? now.filter((x) => x !== id) : [...now, id];
+}
+/** May this kind of part be opened to visitors? PURE. */
+export const canOpen = (kind) => OPENABLE_KINDS.includes(kind);
+/** Who sees one part: 'visitors' | 'me'. You always 'visitors'; a private or unknown part always 'me'. PURE. */
+export function seenByOf(s) {
+  if (!isObj0(s)) return 'me';
+  if (s.kind === FIXED_KIND) return 'visitors';
+  if (!canOpen(s.kind)) return 'me';
+  return s.options?.[SEEN_KEY] === 'visitors' ? 'visitors' : DEFAULT_SEEN;
+}
+
 // ---- the list -----------------------------------------------------------------------------------------------------
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 const J = (v) => JSON.stringify(v === undefined ? null : v);

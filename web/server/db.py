@@ -1215,7 +1215,9 @@ class _Store:
         # because a town IS a location, and NEVER_STORED below used to say "your location" flat.
         "state":           ("Settings for those modules - a photo interval, a theme, a "
                             "layout. Small, and yours. Also the name you sign notes with, "
-                            "if you choose one. And if you set a place for Weather: the town "
+                            "if you choose one. Your page: the parts on it, what you wrote in "
+                            "About me, who can see your page, and which parts of it they are "
+                            "shown. And if you set a place for Weather: the town "
                             "you typed, the match you picked with its position rounded to "
                             "about 11 km, and the last forecast, so the panel knows where to "
                             "look and still has something to show without a connection. "
@@ -1820,6 +1822,40 @@ class _Store:
              "attested_by": r[7], "attested_at": r[8], "producer_version": r[9]} for r in rows
         ][::-1]  # chronological (oldest first) for display
         return {"events": events, "total": total}
+
+    def events_before(self, user_id: str, profile_ids: list[str], streams: tuple[str, ...] | list[str], kind: str,
+                      *, before: int | None = None, limit: int = 50) -> list[dict]:
+        """One account's events of one kind across several screens and streams, NEWEST FIRST, with ids below
+        `before` (None: from the newest). For "See older messages" (notes.py): a page at a time, by id, so a note
+        arriving while somebody reads does not shift what "Show more" brings. Ids only ever grow, on both engines.
+        No provenance columns: the caller lists words, not who wrote the row."""
+        if not profile_ids or not streams:
+            return []
+        pin = ",".join("?" for _ in profile_ids)
+        sin = ",".join("?" for _ in streams)
+        sql = (f"SELECT id, profile_id, stream, kind, data, created_at FROM events WHERE user_id=? "
+               f"AND profile_id IN ({pin}) AND stream IN ({sin}) AND kind=?")
+        params: list = [user_id, *profile_ids, *streams, kind]
+        if before is not None:
+            sql += " AND id < ?"
+            params.append(int(before))
+        sql += " ORDER BY id DESC LIMIT ?"
+        params.append(int(limit))
+        with self._tx() as cur:
+            cur.execute(self._q(sql), tuple(params))
+            rows = cur.fetchall()
+        return [{"id": r[0], "profile_id": r[1], "stream": r[2], "kind": r[3], "data": json.loads(r[4]),
+                 "created_at": r[5]} for r in rows]
+
+    def rows_through(self, owner: str, visitor: str) -> list[str]:
+        """The owner's rows that stand for the visitor's login: each row on the owner's page whose profile came
+        through the visitor's login (its `source_id` is a row of theirs). What "Who can see my page: people I
+        pick" names (page_visits.py)."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT p.id FROM people p JOIN people s ON s.id = p.source_id "
+                "WHERE p.account_id=? AND s.account_id=?"), (owner, visitor))
+            return [r[0] for r in cur.fetchall()]
 
 
 class SQLiteStore(_Store):

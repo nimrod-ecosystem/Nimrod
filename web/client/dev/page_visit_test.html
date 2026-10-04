@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>see their page, who can see mine, older messages — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>see their page, who can see mine, older messages (page_visit.js, page_sections.js, modules/people.js)</h1>
+<p>Mike, 2026-10-04 (night), items 7-9: who can see your page is the people you are connected with plus a setting;
+which parts they see is yours to open (by default your card and no more); "Leave a note" on their page is the regular
+note; and "Messages for you" scrolls back through your old notes. Two logins, connected, against the real server at
+375 wide. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  PAGE_KEY, WHO_KEY, PICKED_KEY, WHO_CHOICES, DEFAULT_WHO, SEEN_KEY, DEFAULT_SEEN, OPENABLE_KINDS, PRIVATE_KINDS, WHO_WORDS,
+  whoOf, pickedOf, togglePicked, canOpen, seenByOf, pageWordProblems,
+} from '../page_sections.js';
+import { VISIT_WORDS, OLDER_WORDS, visitURL, historyURL } from '../page_visit.js';
+import { PEOPLE_TYPE } from '../people_page.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/people.js';
+import '../modules/nimrod.js';
+import '../modules/avatar.js';
+import '../modules/note.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+
+const BASE_USER = 'page-visit-' + Math.floor(Math.random() * 1e6);
+const PAT = `${BASE_USER}-pat`, OSC = `${BASE_USER}-oscar`;
+async function call(method, path, user, body) {
+  const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
+  return r.json();
+}
+async function putPage(user, pid, data) {
+  const cur = await call('GET', `/api/people/${pid}/state/${PAGE_KEY}`, user);
+  return call('PUT', `/api/people/${pid}/state/${PAGE_KEY}`, user, { data, base_version: cur.version });
+}
+function memState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; subs.forEach((f) => f(v)); }, subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, destroy() { subs.clear(); } };
+}
+const allWords = (o) => Object.values(o).flatMap((w) => (typeof w === 'function' ? [w('Pat'), w('')] : (w && typeof w === 'object' ? allWords(w) : [w]))).join(' ');
+const VID = 'dQw4w9WgXcQ';
+
+try {
+  // ============================================================================================
+  section('*** the rules, pure ***');
+  check('*** Who can see my page: three choices, the people you are connected with by default ***',
+    J(WHO_CHOICES) === J(['me', 'connections', 'picked']) && DEFAULT_WHO === 'connections' && whoOf({}) === 'connections' && whoOf({ [WHO_KEY]: 'me' }) === 'me');
+  check('*** a choice this version does not know reads as Only me ***', whoOf({ [WHO_KEY]: 'everyone' }) === 'me');
+  check('people picked: added, taken away', J(togglePicked({}, 'a')) === J(['a']) && J(togglePicked({ [PICKED_KEY]: ['a', 'b'] }, 'a')) === J(['b'])
+    && J(pickedOf({ [PICKED_KEY]: ['x', 3, ''] })) === J(['x']));
+  check('*** each part Only me by default; You follows the page; a private part can not be opened ***',
+    DEFAULT_SEEN === 'me' && seenByOf({ kind: 'about', id: 'a' }) === 'me' && seenByOf({ kind: 'about', id: 'a', options: { [SEEN_KEY]: 'visitors' } }) === 'visitors'
+    && seenByOf({ kind: 'self', id: 'self' }) === 'visitors' && PRIVATE_KINDS.every((k) => !canOpen(k) && seenByOf({ kind: k, id: k, options: { [SEEN_KEY]: 'visitors' } }) === 'me')
+    && J(OPENABLE_KINDS) === J(['about', 'clock', 'photos', 'video']));
+  const ruleWords = [allWords(WHO_WORDS), allWords(VISIT_WORDS), allWords(OLDER_WORDS), VISIT_WORDS.why('closed', 'Pat'), VISIT_WORDS.why('not-connected', 'Pat')].join(' ');
+  check('*** plain words in every word these can put on a page ***', !pageWordProblems(ruleWords).length, J(pageWordProblems(ruleWords)));
+  check('names nobody', !/her screen|christine|cici/i.test(ruleWords));
+  check('the addresses', visitURL('p1') === '/api/people/p1/visit' && historyURL('p1') === '/api/people/p1/notes/history'
+    && historyURL('p1', { before: 9, limit: 5 }) === '/api/people/p1/notes/history?before=9&limit=5');
+
+  // ============================================================================================
+  section('(setup) Pat and Oscar, connected; Pat’s page with parts open and shut; notes on Pat’s screens');
+  const pat = (await call('GET', '/api/people', PAT)).people[0].id;
+  await call('PATCH', `/api/people/${pat}`, PAT, { name: 'Pat' });
+  const osc = (await call('GET', '/api/people', OSC)).people[0].id;
+  await call('PATCH', `/api/people/${osc}`, OSC, { name: 'Oscar' });
+  const kit = await call('POST', '/api/profiles', PAT, { name: 'Kitchen', person_id: pat });
+  await call('POST', `/api/profiles/${kit.id}/modules`, PAT, { type: 'note' });
+  for (let i = 0; i < 25; i++) await call('POST', `/api/profiles/${kit.id}/events/note`, PAT, { kind: 'note', data: { text: `note ${i}`, author: i % 2 ? 'Sam' : 'Lee' } });
+  const { token } = await call('POST', '/api/connect/invites', PAT, {});
+  await call('POST', '/api/invites/accept', OSC, { token });
+  const oscPeople = (await call('GET', '/api/people', OSC)).people;
+  const oscPat = oscPeople.find((p) => p.kind === 'connected');
+  const patOsc = (await call('GET', '/api/people', PAT)).people.find((p) => p.kind === 'connected');
+  check('(setup) connected, each with a card for the other; Oscar’s card for Pat says the page opens', !!oscPat && !!patOsc && oscPat.page === '', J(oscPat));
+  await putPage(PAT, pat, { sections: [
+    { kind: 'self', id: 'self', options: {} },
+    { kind: 'messages', id: 'messages', options: { [SEEN_KEY]: 'visitors' } },
+    { kind: 'recommended', id: 'recommended', options: {} },
+    { kind: 'people', id: 'people', options: {} },
+    { kind: 'connect', id: 'connect', options: {} },
+    { kind: 'nimrod', id: 'nimrod', options: {} },
+    { kind: 'about', id: 'about-open', options: { [SEEN_KEY]: 'visitors', text: 'I grow tomatoes.' } },
+    { kind: 'about', id: 'about-shut', options: { text: 'Just for me.' } },
+    { kind: 'photos', id: 'photos-1', options: { [SEEN_KEY]: 'visitors' } },
+    { kind: 'clock', id: 'clock-1', options: { [SEEN_KEY]: 'visitors', size: 'small' } },
+    { kind: 'video', id: 'video-1', options: { [SEEN_KEY]: 'visitors', link: `https://youtu.be/${VID}` } },
+  ] });
+
+  const newBox = (w = 375, h = 760) => { const b = document.createElement('div'); b.style.cssText = `position:relative;width:${w}px;height:${h}px;overflow:hidden;border:1px solid #888`; document.body.append(b); return b; };
+  const stub = { loaded: [], factory() { return { load: (id) => stub.loaded.push(id), cue: (id) => stub.loaded.push(id), cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} }; } };
+  const mountAs = async (user, personId) => {
+    const profiles = createProfilesClient({ user });
+    const makePS = (pid, key, opts = {}) => createState({ url: profiles.personStateURL(pid, key), user, ...opts });
+    const box = newBox();
+    const inst = mountModule(PEOPLE_TYPE, { mount: box, bus: createBus(), state: memState(), personId, instanceId: `pv-${user}`, user, profiles,
+      isScreen: false, chooseMode: () => 'point', makePersonState: makePS, playerFactory: stub.factory });
+    await inst.init();
+    return { box, inst, q: (s) => box.querySelector(s), qa: (s) => [...box.querySelectorAll(s)], probe: () => inst.impl.__probe() };
+  };
+
+  // ============================================================================================
+  section('*** Oscar: See their page ***');
+  let o = await mountAs(OSC, osc);
+  const seeBtn = () => o.q(`[data-pp-claim="${oscPat.id}"] [data-pp-act="visit"]`);
+  check('*** on Pat’s card: "See their page", live ***', await until(() => !!seeBtn(), 10000) && seeBtn().getAttribute('aria-disabled') !== 'true'
+    && seeBtn().textContent.includes(VISIT_WORDS.see));
+  check('...and it is not on a card for somebody you look after, nor on yours', !o.q(`[data-pp-claim="${osc}"]`));
+  await until(() => !o.qa('[data-pp-act="message"] small').some((s) => /Checking/.test(s.textContent)), 8000);
+  seeBtn().click();
+  const sheet = () => o.q('[data-pp-sheet="visit"]');
+  check('*** pressed: Pat’s page opens over yours, with a way back ***', await until(() => o.probe().visit?.status === 'ok', 8000)
+    && /Back to your people/.test(sheet().querySelector('[data-pp-close]').textContent) && /Pat’s page/.test(sheet().textContent));
+  const vText = () => sheet().textContent;
+  check('*** only the parts Pat opened, in his order: About me, Pictures, the clock, the video ***',
+    J(o.probe().visit.sections.map((s) => s.id)) === J(['self', 'about-open', 'photos-1', 'clock-1', 'video-1'])
+    && J([...sheet().querySelectorAll('[data-pv-sec]')].map((s) => s.dataset.pvSec)) === J(['self', 'about-open', 'photos-1', 'clock-1', 'video-1']), J(o.probe().visit.sections.map((s) => s.id)));
+  check('*** his picture and name, and what he wrote; never the shut About me or his messages ***',
+    sheet().querySelector('[data-pv-name]')?.textContent === 'Pat' && /I grow tomatoes\./.test(vText()) && !/Just for me/.test(vText())
+    && !/Messages for you|Recommended for you|Your people/.test(vText()));
+  check('*** Pictures: said to be on Pat’s own devices (nothing leaked, nothing broken) ***',
+    sheet().querySelector('[data-pv-photos-elsewhere]')?.textContent === VISIT_WORDS.photosElsewhere('Pat'));
+  check('the clock in its box, small', await until(() => (sheet().querySelector('[data-pv-box="clock-1"]')?.children.length || 0) > 0, 8000)
+    && sheet().querySelector('[data-pv-box="clock-1"]').style.height === '12rem');
+  const play = sheet().querySelector('[data-pv-act="play"]');
+  check('the video waits for Play (nothing plays by itself)', !!play && !stub.loaded.length);
+  play.click();
+  check('*** Play: the site’s own player, that video ***', await until(() => stub.loaded.includes(VID), 8000) && !!sheet().querySelector('[data-pv-act="stop"]'), J(stub.loaded));
+  sheet().querySelector('[data-pv-act="stop"]').click();
+  check('Stop takes it down', await until(() => !!sheet().querySelector('[data-pv-act="play"]'), 3000));
+  const note = sheet().querySelector('[data-pv-act="note"]');
+  check('*** "Leave a note": the regular note, live because Pat lets Oscar leave messages ***', !!note && note.getAttribute('aria-disabled') !== 'true', note?.outerHTML.slice(0, 200));
+  note.click();
+  check('*** pressed: the note to leave, on Pat’s page, signed from Oscar’s own login ***',
+    await until(() => o.probe().visit.noteOpen && !!sheet().querySelector('[data-pv-note] .nv') && /A note for Pat/.test(sheet().textContent), 8000));
+  check('*** plain words on their page ***', !pageWordProblems(vText()).length, J(pageWordProblems(vText())));
+  const vh = [...sheet().querySelectorAll('[data-pv-page] .pp-btn')].map((b) => b.getBoundingClientRect().height);
+  check('their page’s own buttons at least 44px tall at 375', vh.length >= 2 && vh.every((h) => h >= 44), J(vh.map(Math.round)));
+  sheet().querySelector('[data-pp-close]').click();
+  check('Back: their page closes and yours is there', await until(() => !sheet() && !!seeBtn(), 3000));
+  o.inst.destroy(); o.box.remove();
+
+  section('*** Pat chooses Only me ***');
+  const curPage = (await call('GET', `/api/people/${pat}/state/${PAGE_KEY}`, PAT)).data;
+  await putPage(PAT, pat, { ...curPage, [WHO_KEY]: 'me' });
+  o = await mountAs(OSC, osc);
+  check('*** "See their page" dimmed, "Not open to you" ***', await until(() => seeBtn()?.getAttribute('aria-disabled') === 'true', 10000)
+    && seeBtn().textContent.includes(VISIT_WORDS.dimShort));
+  seeBtn().click();
+  check('*** pressed: it says why, on the card, and nothing opens ***',
+    await until(() => o.q(`[data-pp-card="p:${oscPat.id}"] .pp-why`)?.textContent === 'Pat has not opened their page to you.', 3000) && !sheet());
+  o.inst.destroy(); o.box.remove();
+  await putPage(PAT, pat, { ...curPage, [WHO_KEY]: 'connections' });
+
+  // ============================================================================================
+  section('*** Pat: Who can see my page, and Who sees this ***');
+  let p = await mountAs(PAT, pat);
+  await until(() => !!p.q('[data-pp-card="self"] [data-pp-act="page-edit"]') && p.probe().page.canEdit, 10000);
+  p.q('[data-pp-card="self"] [data-pp-act="page-edit"]').click();
+  const who = () => p.q('[data-pp-card="edit"] [data-pp-who]');
+  check('*** editing: "Who can see my page" under You, People I’m connected with chosen ***', await until(() => !!who(), 3000)
+    && who().value === 'connections' && J([...who().options].map((x) => x.textContent)) === J(['Only me', 'People I’m connected with', 'Only the people I pick'])
+    && p.q('[data-pp-who-line]').textContent === WHO_WORDS.line.connections);
+  const seenSel = (id) => p.q(`[data-pp-seen][data-pp-sec-id="${id}"]`);
+  check('*** each part that can be opened: "Who sees this", as stored ***', seenSel('about-open')?.value === 'visitors' && seenSel('about-shut')?.value === 'me'
+    && J([...seenSel('about-shut').options].map((x) => x.textContent)) === J(['Only me', 'People who can see my page']));
+  const priv = (id) => p.q(`[data-pp-seen-private="${id}"] [data-pp-act="seen-private"]`);
+  check('*** the private parts: "Only you see this", dimmed, no switch ***',
+    ['messages', 'recommended', 'people', 'connect', 'nimrod'].every((k) => priv(k)?.getAttribute('aria-disabled') === 'true' && !seenSel(k)));
+  priv('people').click();
+  check('pressed: it says why', await until(() => p.q('[data-pp-card="e:people"] .pp-why')?.textContent === WHO_WORDS.privateWhy.people, 2000));
+  seenSel('about-shut').value = 'visitors'; seenSel('about-shut').dispatchEvent(new Event('change', { bubbles: true }));
+  check('*** opened: saved into that part ***', await until(async () => (await call('GET', `/api/people/${pat}/state/${PAGE_KEY}`, PAT)).data.sections
+    .find((s) => s.id === 'about-shut')?.options?.[SEEN_KEY] === 'visitors', 5000));
+  check('*** ...and Oscar now sees it (the server says so) ***', /Just for me/.test(JSON.stringify(await call('GET', `/api/people/${oscPat.id}/visit`, OSC))));
+  who().value = 'picked'; who().dispatchEvent(new Event('change', { bubbles: true }));
+  const pick = () => p.q(`[data-pp-pick="${patOsc.id}"]`);
+  check('*** Only the people I pick: a button for Oscar, not picked yet ***', await until(() => !!pick(), 3000) && pick().getAttribute('aria-pressed') === 'false'
+    && pick().textContent.includes(WHO_WORDS.pickOff));
+  check('...and the page is shut to him until he is picked (the server says so)', await until(async () => (await fetch(`/api/people/${oscPat.id}/visit`, { headers: { 'X-Dev-User': OSC } })).status === 403, 5000));
+  pick().click();
+  check('*** picked: saved, and his page opens again ***', await until(() => pick()?.getAttribute('aria-pressed') === 'true', 3000)
+    && await until(async () => J((await call('GET', `/api/people/${pat}/state/${PAGE_KEY}`, PAT)).data[PICKED_KEY]) === J([patOsc.id]), 5000)
+    && (await fetch(`/api/people/${oscPat.id}/visit`, { headers: { 'X-Dev-User': OSC } })).status === 200);
+  const editWords = p.q('[data-pp-list]').textContent;
+  check('*** plain words in edit mode with the new choices ***', !pageWordProblems(editWords).length, J(pageWordProblems(editWords)));
+  const eh = p.qa('[data-pp-card="edit"] [data-pp-stop], [data-pp-seen-private] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  const sh = p.qa('[data-pp-who], [data-pp-seen]').map((s) => s.getBoundingClientRect().height);
+  check('every new button and choice at least 44px tall', eh.every((h) => h >= 44) && sh.every((h) => h >= 44), J([eh, sh].map((a) => a.map(Math.round))));
+  const root = p.q('.pp-root');
+  check('no sideways scroll at 375', root.scrollWidth <= root.clientWidth + 1, `${root.scrollWidth} > ${root.clientWidth}`);
+  p.q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  await p.inst.impl.__probe().flushPage();
+
+  // ============================================================================================
+  section('*** Pat: See older messages ***');
+  const older = () => p.q('[data-pp-card="older"] [data-pp-act="older"]');
+  check('*** under Messages for you: "See older messages" ***', await until(() => !!older(), 5000) && older().textContent.includes(OLDER_WORDS.see));
+  older().click();
+  const osheet = () => p.q('[data-pp-sheet="older"]');
+  check('*** pressed: 20, newest first, each with who, when and which screen ***', await until(() => p.probe().older?.rows.length === 20, 8000)
+    && osheet().querySelectorAll('[data-po-row]').length === 20 && /Lee/.test(osheet().querySelector('[data-po-row]').textContent)
+    && osheet().querySelector('[data-po-row]').textContent.includes('note 24') && /on Kitchen/.test(osheet().querySelector('[data-po-row]').textContent),
+    osheet()?.textContent.slice(0, 200));
+  const moreBtn = () => osheet().querySelector('[data-po-more]');
+  check('a "Show more" while there are older ones', !!moreBtn() && moreBtn().getBoundingClientRect().height >= 44);
+  moreBtn().click();
+  check('*** Show more: the last 5, the oldest at the bottom, and it says that is all ***', await until(() => p.probe().older.rows.length === 25 && !p.probe().older.more, 8000)
+    && /note 0/.test([...osheet().querySelectorAll('[data-po-row]')].at(-1).textContent) && !!osheet().querySelector('[data-po-end]') && !moreBtn());
+  check('*** plain words in the older messages ***', !pageWordProblems(osheet().textContent).length, J(pageWordProblems(osheet().textContent)));
+  osheet().querySelector('[data-pp-close]').click();
+  p.inst.destroy(); p.box.remove();
+
+  section('*** older messages are yours alone ***');
+  check('*** Oscar asking for Pat’s: the same 404 as no such person ***', (await fetch(historyURL(pat), { headers: { 'X-Dev-User': OSC } })).status === 404);
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

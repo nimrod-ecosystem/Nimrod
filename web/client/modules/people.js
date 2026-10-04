@@ -62,6 +62,13 @@
 //   so mounting the page still writes nothing.
 //   ON A SCREEN the page is drawn from the same record, and "Edit my page" is shown dimmed with why: a page is
 //   changed from a phone or computer.
+//   WHO SEES IT (2026-10-04 night, items 7-9; page_sections.js WHO_WORDS, the server's rule page_visits.py): the card
+//   under You says "Who can see my page" (Only me / People I'm connected with, the default / Only the people I pick,
+//   with a button per person), and each part's edit bar "Who sees this" (Only me, the default / People who can see my
+//   page) -- or, for a part that is only ever yours (Messages for you, Recommended for you, Your people, Connect with
+//   someone, Ask Nimrod), a dimmed "Only you see this" that says why. On a card a connection put here, "See their
+//   page" opens theirs read-only (page_visit.js), dimmed with why when they have not opened it to you; "Messages for
+//   you" has "See older messages".
 //   MESSAGES FOR YOU REMOVED: the newest message still shows, as one "Latest message" line on your own card, so a
 //   message left for you is never only on a page you took it off. ASK NIMROD REMOVED: "More" moves onto your card,
 //   so your settings stay one press away.
@@ -91,7 +98,10 @@ import {
 import {
   PAGE_KEY, EDIT_WORDS, BOX_SIZES, BOX_SIZE_LABELS, DEFAULT_BOX_SIZE, ABOUT_MAX, viewSections, hasKind, addSection, removeSection,
   restoreSection, canMove, moveSection, updateSection, videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc, boxHeight,
+  WHO_KEY, PICKED_KEY, WHO_CHOICES, WHO_WORDS, SEEN_KEY, whoOf, pickedOf, togglePicked, canOpen, seenByOf,
 } from '../page_sections.js';
+// See their page / See older messages (page_visit.js; the server's rules are page_visits.py and notes.py).
+import { mountPageVisit, mountOlderMessages, VISIT_WORDS, OLDER_WORDS } from '../page_visit.js';
 
 // The site's own things a page box can hold, loaded the first time one is on a page (page_sections.js SECTION_LIBRARY).
 const BOX_LOADERS = Object.freeze({
@@ -247,7 +257,8 @@ registerModule(
         const r = p.via === 'account' ? rows.get(p.id) : null;
         if (!r) return { ...p, reach: p.id };
         return { ...p, reach: r.reach || p.id, kind: r.kind || 'mine', home: r.home !== false, from: r.from || '',
-          linked: !!r.linked, messagesFromThem: !!r.messages_from_them, callName: r.call_name || '', profileName: r.profile_name || p.name };
+          linked: !!r.linked, messagesFromThem: !!r.messages_from_them, callName: r.call_name || '', profileName: r.profile_name || p.name,
+          visit: typeof r.page === 'string' ? r.page : null };
       });
     };
     const mayCallNow = (pid) => mayCall(pid, { own: Array.isArray(own) ? own : null, shared });
@@ -341,6 +352,8 @@ registerModule(
       if (!hasKind(pageDoc, 'nimrod')) btns.push(button({ act: 'more', label: EDIT_WORDS.more, short: EDIT_WORDS.moreShort, enabled: true }, 'self'));
       // Messages for you taken off the page: the newest one still shows, here.
       const latest = !hasKind(pageDoc, 'messages') && prefs.incoming && incoming.length ? incoming[0] : null;
+      // ...and so does the way back through the older ones.
+      if (!hasKind(pageDoc, 'messages') && prefs.incoming && me.id) btns.push(button({ act: 'older', label: OLDER_WORDS.see, short: OLDER_WORDS.seeShort, enabled: true }, 'self'));
       return card('self', `<div class="pp-who"><div class="pp-face">${faceOf(me, SELF_FACE)}</div>
         <div><div class="pp-name" data-pp-self-name>${esc(me.name || (me.id ? 'You' : 'Welcome'))}</div>
         <p class="pp-sub">${isScreen() ? 'This screen is for you.' : 'You'}</p></div></div>
@@ -351,10 +364,13 @@ registerModule(
 
     function incomingHTML() {
       if (!prefs.incoming) return '';
+      // "See older messages" (page_visit.js): every message left for you, a page at a time. On a screen too: the
+      // screen is the person's own, and its window closes by itself after "close after" (people_page.js).
+      const older = selfId() ? card('older', `<div class="pp-btns">${button({ act: 'older', label: OLDER_WORDS.see, short: OLDER_WORDS.seeShort, enabled: true }, 'older')}</div>`) : '';
       return `<h2 class="pp-h">Messages for you</h2>${incoming.length
         ? incoming.map((m) => `<p class="pp-msg" data-pp-incoming><b>${esc(m.author || 'Someone')}</b>: ${esc(m.text)}
             <br><small>${esc(whenWords(m.at))}</small></p>`).join('')
-        : '<p class="pp-note" data-pp-incoming-none>No messages yet. When someone leaves you one, it shows here.</p>'}`;
+        : '<p class="pp-note" data-pp-incoming-none>No messages yet. When someone leaves you one, it shows here.</p>'}${older}`;
     }
 
     // "Recommended for you": who sent it, what it is, their message, and Play / Open in Spotify / Remove (recommend.js
@@ -412,6 +428,10 @@ registerModule(
       if (p.home) {
         btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: CLAIM_WORDS.inviteShort, enabled: true }, key)];
       } else {
+        // "See their page" (page_visit.js): live when the server says it opens for you (`page` ''), dimmed with why.
+        const shut = typeof p.visit === 'string' && p.visit !== '';
+        btns.push(button({ act: 'visit', label: VISIT_WORDS.see, short: shut ? VISIT_WORDS.dimShort : VISIT_WORDS.seeShort, enabled: !shut,
+          reason: shut ? VISIT_WORDS.why(p.visit, p.name) : '' }, key));
         btns.push(button({ act: 'call-name', label: CLAIM_WORDS.callThem, short: CLAIM_WORDS.callThemShort(p.callName ? p.profileName : ''), enabled: true }, key));
         if (p.linked) {
           const again = stopLabel(`${key}|stop-share`);
@@ -474,7 +494,26 @@ registerModule(
       if (!hasKind(pageDoc, 'people')) btns.push(button({ act: 'show-people', label: EDIT_WORDS.showPeople, short: EDIT_WORDS.showPeopleShort, enabled: true }, 'edit'));
       if (lastRemoved) btns.push(button({ act: 'put-back', label: EDIT_WORDS.putBack(lastRemoved.name), short: EDIT_WORDS.putBackShort, enabled: true }, 'edit'));
       return card('edit', `<h2 class="pp-h" data-pp-editing>${esc(EDIT_WORDS.editing)}</h2><p class="pp-note">${esc(EDIT_WORDS.intro)}</p>
-        <div class="pp-btns">${btns.join('')}</div>`, ' pp-edit');
+        <div class="pp-btns">${btns.join('')}</div>${whoHTML()}`, ' pp-edit');
+    }
+    // "Who can see my page" (page_sections.js WHO_WORDS; the server's rule is page_visits.py), and, for "Only the
+    // people I pick", one button per person you are connected with (their own login): can or can't see it.
+    const pickable = () => people().filter((p) => p.via === 'account' && !p.home && (p.kind === 'connected' || p.kind === 'joined'));
+    function whoHTML() {
+      const who = whoOf(pageDoc);
+      const sel = `<label class="pp-field">${esc(WHO_WORDS.label)}<select data-pp-who>${WHO_CHOICES
+        .map((w) => `<option value="${w}"${w === who ? ' selected' : ''}>${esc(WHO_WORDS.choice[w])}</option>`).join('')}</select>
+        <small data-pp-who-line>${esc(WHO_WORDS.line[who])}</small></label>`;
+      let picks = '';
+      if (who === 'picked') {
+        const list = pickable();
+        const on = new Set(pickedOf(pageDoc));
+        picks = list.length
+          ? `<p class="pp-note">${esc(WHO_WORDS.pickLead)}</p><div class="pp-btns" data-pp-picks>${list.map((p) => button({ act: 'pick', label: p.name,
+            short: on.has(p.id) ? WHO_WORDS.pickOn : WHO_WORDS.pickOff, enabled: true }, `k:${p.id}`).replace('<button ', `<button aria-pressed="${on.has(p.id)}" data-pp-pick="${esc(p.id)}" `)).join('')}</div>`
+          : `<p class="pp-note" data-pp-picks-none>${esc(WHO_WORDS.pickNone)}</p>`;
+      }
+      return `<div class="pp-fields" data-pp-who-row>${sel}</div>${picks}<p class="pp-note">${esc(WHO_WORDS.selfLine)}</p>`;
     }
     // A choice / toggle / text / number row for one of a box's own settings (its manifest's, by key).
     function fieldsOf(s) {
@@ -529,7 +568,18 @@ registerModule(
         extra = `<div class="pp-fields">${sizeRow}${s.kind === 'video' ? '' : rows}</div>${s.kind === 'video' ? rows : ''}`;
       }
       return card(key, `<div class="pp-name" data-pp-edit-name>${esc(sectionName(s))}</div>
-        <div class="pp-btns" data-pp-edit-for="${esc(s.id)}">${btns.join('')}</div>${extra}`, ' pp-edit');
+        <div class="pp-btns" data-pp-edit-for="${esc(s.id)}">${btns.join('')}</div>${seenHTML(s, key)}${extra}`, ' pp-edit');
+    }
+    // "Who sees this": Only me (the default) or People who can see my page, for a part that may be opened; for a
+    // private one (Messages for you, Your people...) a dimmed "Only you see this" that says why when pressed.
+    function seenHTML(s, key) {
+      if (!canOpen(s.kind)) {
+        const why = WHO_WORDS.privateWhy[s.known ? s.kind : 'newer'] || WHO_WORDS.privateWhy.newer;
+        return `<div class="pp-btns" data-pp-seen-private="${esc(s.id)}">${button({ act: 'seen-private', label: WHO_WORDS.privateBtn, enabled: false, reason: why, short: WHO_WORDS.keptShort }, key)}</div>`;
+      }
+      const seen = seenByOf(s);
+      return `<div class="pp-fields"><label class="pp-field">${esc(WHO_WORDS.seen)}<select data-pp-seen data-pp-sec-id="${esc(s.id)}">${['me', 'visitors']
+        .map((v) => `<option value="${v}"${v === seen ? ' selected' : ''}>${esc(WHO_WORDS.seenChoice[v])}</option>`).join('')}</select></label></div>`;
     }
     const isBox = (s) => !!s.entry?.module;
 
@@ -848,6 +898,17 @@ registerModule(
       if (!(t instanceof Element) || !root?.contains(t) || t.closest('[data-pp-sheet-body]')) return;
       if (t.matches('[data-pp-sec-field]')) setField(t.dataset.ppSecId, t.dataset.ppSecField, t);
       else if (t.matches('[data-pp-sec-size]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { size: BOX_SIZES[t.value] ? t.value : DEFAULT_BOX_SIZE }));
+      else if (t.matches('[data-pp-seen]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { [SEEN_KEY]: t.value === 'visitors' ? 'visitors' : 'me' }));
+      else if (t.matches('[data-pp-who]')) writeWho({ [WHO_KEY]: WHO_CHOICES.includes(t.value) ? t.value : 'me' });
+    }
+    // "Who can see my page" and the people picked: keys of the page record beside its sections (page_sections.js).
+    function writeWho(patch) {
+      if (!pageState) { why = new Map([['edit', EDIT_WORDS.failed]]); render(); return; }
+      why = new Map();
+      pageState.set(patch);
+      pageDoc = pageState.get() || pageDoc;
+      render();
+      saving = saving.then(() => pageState?.flush?.()).catch(() => { why = new Map([['edit', EDIT_WORDS.failed]]); render(); });
     }
 
     // ---- the switch -------------------------------------------------------------------------------------
@@ -956,6 +1017,9 @@ registerModule(
         case 'call-name': openCallName(pid); return;
         case 'stop-share': stopSharing(pid, `${key}|stop-share`); return;
         case 'claim-msg': toggleClaimMessages(pid); return;
+        case 'visit': openVisit(pid); return;
+        case 'older': openOlder(); return;
+        case 'pick': if (el?.dataset.ppPick) writeWho({ [PICKED_KEY]: togglePicked(pageDoc, el.dataset.ppPick) }); return;
         case 'nimrod': openNimrod(); return;
         case 'more': more(); return;
         default: render();
@@ -1052,6 +1116,33 @@ registerModule(
         sheet.personId = p.id;
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: message', err); host.textContent = 'The message could not be opened here just now.'; }
+    }
+    // "See their page": their page, read-only, as the server hands it to you (page_visit.js). "Leave a note" there is
+    // the card's own "Send a message" -- the same answer from the server, the same note.
+    function openVisit(pid) {
+      const p = people().find((x) => x.id === pid);
+      if (!p) return;
+      const host = openSheet('visit', VISIT_WORDS.title(p.profileName || p.name));
+      host.style.padding = '12px';
+      const msg = actionsFor(p, { isScreen: isScreen(), may: mayCallNow(p.reach), noteStatus: notes.get(p.reach) ?? null, callHref: '' })
+        .find((a) => a.act === 'message') || { enabled: false, reason: '', short: '' };
+      try {
+        sheet.child = mountPageVisit(host, { personId: p.id, name: p.profileName || p.name, faceHTML: faceOf(p, SELF_FACE), reach: p.reach,
+          note: { enabled: msg.enabled, reason: msg.reason, short: msg.short }, user: account(), baseCtx: ctx });
+        sheet.personId = p.id;
+        Promise.resolve(sheet.child.ready).then(() => paintCursor());
+      } catch (err) { console.error('people: visit', err); host.textContent = VISIT_WORDS.failed; }
+    }
+    // "See older messages": every message left for you, newest first, a page at a time.
+    function openOlder() {
+      const me = selfId();
+      if (!me) return;
+      const host = openSheet('older', OLDER_WORDS.title);
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountOlderMessages(host, { personId: me, user: account() });
+        Promise.resolve(sheet.child.ready).then(() => paintCursor());
+      } catch (err) { console.error('people: older', err); host.textContent = OLDER_WORDS.failed; }
     }
     // ---- people across accounts (claim.js) ------------------------------------------------------------------
     function openInvite(pid) {
@@ -1257,6 +1348,9 @@ registerModule(
         sheet: sheet ? sheet.kind : null, cursor: { ...cursor }, mode: scanModeOf(chooseMode()), isScreen: isScreen(),
         claims: { armed: armed ? armed.key : null },
         invite: sheet?.kind === 'invite' ? sheet.child?.__probe?.() || null : null,
+        visit: sheet?.kind === 'visit' && sheet.child ? { status: sheet.child.status(), sections: sheet.child.sections(), noteOpen: sheet.child.noteOpen() } : null,
+        older: sheet?.kind === 'older' && sheet.child ? { status: sheet.child.status(), rows: sheet.child.rows(), more: sheet.child.hasMore() } : null,
+        who: whoOf(pageDoc), picked: pickedOf(pageDoc),
         page: { sections: viewSections(pageDoc, { isScreen: isScreen() }).map((s) => ({ kind: s.kind, id: s.id, known: s.known })), editing,
           own: Array.isArray(pageDoc?.sections), canEdit: canEdit(), boxes: [...boxes].map(([id, b]) => ({ id, kind: b.kind, mounted: !!b.inst })) },
         flushPage: () => Promise.resolve(saving).then(() => pageState?.flush?.()),

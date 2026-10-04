@@ -277,10 +277,17 @@ check("*** ...and Pat's card for her shows it (read from her home) ***", face(OW
 r = put_state(OWN, mom, "avatar", {"face": "Pat again"})
 check("*** Pat can no longer change her picture - 403, in words ***", r.status_code == 403 and "their own login" in r.text, r.text)
 check("*** ...nor her page ***", put_state(OWN, mom, "page", {"sections": []}).status_code == 403)
+# Pat's screen in her room: a device key on Pat's login (page_visits.py: a screen through a claimed card gets the
+# whole page; Pat's own phone gets what a visitor gets).
+store._conn.execute("INSERT INTO device_keys(key, user_id, label, created_at) VALUES('nk_test_pat_screen', ?, 'Mom room', ?)", (OWN, NOW))
+store._conn.commit()
+PAT_SCREEN = {"X-Device-Key": "nk_test_pat_screen"}
 check("Pat's screen for her shows HER page (a claimed row reads the page from the home)",
-      c.get(f"/api/people/{mom}/state/page", headers=H(OWN)).json()["data"]["sections"][0]["options"]["text"] == "Pat wrote this")
+      c.get(f"/api/people/{mom}/state/page", headers=PAT_SCREEN).json()["data"]["sections"][0]["options"]["text"] == "Pat wrote this")
+check("*** ...but Pat's own phone reading it is a visit: her card only, About me not opened to visitors ***",
+      [s["kind"] for s in c.get(f"/api/people/{mom}/state/page", headers=H(OWN)).json()["data"]["sections"]] == ["self"])
 check("Mom changes her page too", put_state(MOM, mom_me, "page", {"sections": [{"id": "about-1", "kind": "about", "options": {"text": "Linda here"}}]}).status_code == 200
-      and c.get(f"/api/people/{mom}/state/page", headers=H(OWN)).json()["data"]["sections"][0]["options"]["text"] == "Linda here")
+      and c.get(f"/api/people/{mom}/state/page", headers=PAT_SCREEN).json()["data"]["sections"][0]["options"]["text"] == "Linda here")
 check("Pat still changes everything else on his own row for her (his screens' settings)",
       put_state(OWN, mom, "home", {"x": 1}).status_code == 200 and c.get(f"/api/people/{mom_me}/state/home", headers=H(MOM)).json()["data"] == {})
 r = c.patch(f"/api/people/{mom}", json={"name": "Mother"}, headers=H(OWN))
