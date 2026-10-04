@@ -60,7 +60,7 @@ import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
 import { mountNotifyEditor } from '../room_notify_editor.js';
 import { flashLimit } from '../flash_limit.js';
-import { LOOKS, LOOK_DEFAULT, LOOK_LABELS, normalizeLooks, builtFromWords, bricksPageFor } from '../brick_builds.js';
+import { LOOKS, LOOK_DEFAULT, normalizeLooks, LOOK_FIELD, builtActions } from '../brick_builds.js';
 
 // Every default argued (Rule 1), and every one of them a setting:
 //   preset 'theRoom'   the room whose furniture carries the controls: it is the one that shows what
@@ -247,12 +247,9 @@ export function configFrom(row = {}) {
 // stored per piece in this row's `looks` (the room has no per-object storage of its own, and the preset is not
 // this module's to change). "Open its bricks" opens the bricks page filtered to that build's parts, with
 // counts -- the honest "go into it" while the site has no 3D renderer: a real brick editor needs one, and that
-// is Mike's decision (three.js), not this file's.
-export const LOOK_FIELD = Object.freeze({
-  key: 'look', label: 'Look', kind: 'choice', default: LOOK_DEFAULT, level: 'essential',
-  help: 'Brick-built: the piece as it is built from Nimrod bricks. Drawn: the drawn picture.',
-  options: Object.freeze(LOOKS.map((v) => Object.freeze({ value: v, label: LOOK_LABELS[v] }))),
-});
+// is Mike's decision (three.js), not this file's. The row and the action are brick_builds.js's (a dashboard's own
+// room offers the same ones); re-exported here for whoever imported them from this module.
+export { LOOK_FIELD };
 /** The edit-mode target for a piece with a build: its rows plus Look, written to the right places. */
 export function builtTarget(o, { keys = [], read = () => ({}), write = () => {} } = {}) {
   const b = o?.build;
@@ -266,7 +263,7 @@ export function builtTarget(o, { keys = [], read = () => ({}), write = () => {} 
       if (look !== undefined && LOOKS.includes(look)) write({ looks: { ...normalizeLooks((read() || {}).looks), [o.id]: look } });
       if (Object.keys(rest).length) write(rest);
     },
-    actions: [{ id: 'bricks', note: builtFromWords(b), label: 'Open its bricks', href: bricksPageFor(b.id) }],
+    actions: builtActions(b),
   };
 }
 

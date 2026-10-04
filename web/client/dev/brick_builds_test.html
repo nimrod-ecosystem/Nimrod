@@ -28,7 +28,8 @@ the piece's Look and "Open its bricks"; the 3D room draws a brick-built piece as
 
 <script type="module">
 import { BRICK_BUILDS, LOOKS, LOOK_DEFAULT, buildFor, buildUrls, lookOf, normalizeLooks, builtFromWords, bricksPageFor,
-  tintedPicture } from '../brick_builds.js';
+  tintedPicture, LOOK_FIELD as LOOK_FIELD_BB, builtActions } from '../brick_builds.js';
+import { withLook, sceneLooks, tidyScene } from '../room_doors.js';
 import { FURNITURE } from '../room_parts.js';
 import { mountRoomScene, RENDER_DEFAULTS } from '../room_scene.js';
 import { presetRecipe } from '../room_presets.js';
@@ -64,6 +65,7 @@ function memState(seed = {}) {
 const noEvents = () => ({ load: () => Promise.resolve(), get: () => ({ events: [], total: 0 }), append: () => Promise.resolve(),
   subscribe: () => () => {}, startPolling() {}, destroy() {} });
 
+let partsList = null;
 try {
   // ==========================================================================================
   section('*** the index of builds agrees with what is PUBLISHED (a copied number with a check on it) ***');
@@ -88,6 +90,18 @@ try {
     check(`${part}: the merged GLB is in its budget`, a.display && a.display.triangles > 0 && a.display.triangles <= a.display.budget,
       J(a.display && [a.display.triangles, a.display.budget]));
     check(`${part}: the URL the room draws is the one published`, buildUrls(b.id).front.endsWith(a.display?.front || '?'));
+    // 2026-10-04: the side table was missing from Print Your Own's parts list. Every build has an entry there, in the
+    // desk's shape, whose words agree with the assembly (its size, its bricks, its connector pins).
+    const parts = partsList || (partsList = await (await fetch('../learn/parts.json', { cache: 'no-cache' })).json());
+    const e = (parts.parts || []).find((p) => p.assembly === `/design-assets/bricks/scenes/${b.id}.json`);
+    check(`${part}: *** it has an entry in learn/parts.json (Print Your Own) ***`, !!e, b.id);
+    if (e) {
+      const [x, y, z] = a.bbox_mm?.max || [];
+      check(`${part}: ...in the Builds group, titled ${b.title}, the desk's shape`, e.group === 'Builds' && e.title === b.title && e.status === 'available'
+        && ['id', 'title', 'group', 'status', 'summary', 'glb', 'stl', 'source', 'photo', 'assembly'].every((k) => k in e), J(e));
+      check(`${part}: ...its summary says its size, its ${b.bricks} bricks and its ${a.connectors?.count} connector pins`,
+        e.summary.includes(`${x} x ${y} x ${z} mm`) && e.summary.includes(`${b.bricks} bricks`) && e.summary.includes(`${a.connectors?.count} connector pins`), e.summary);
+    }
   }
 
   section('the rules, as data');
@@ -257,6 +271,22 @@ try {
     imgs.dispatchEvent(new Event('error'));
     check('*** a picture that cannot load: the plain box takes its place ***', await until(() => host2.querySelectorAll('[data-object="desk"] .r3-bf').length === 4 && !host2.querySelector('[data-object="desk"] img')));
     room2.destroy();
+  }
+
+  // ==========================================================================================
+  section('a DASHBOARD\'s room: the Look saved on the piece\'s recipe item (room_doors.js), 2D and 3D');
+  {
+    check('the Look row is declared once (brick_builds.js); the room module re-exports the same one', LOOK_FIELD === LOOK_FIELD_BB);
+    check('"Open its bricks" is declared once too', J(builtActions(BRICK_BUILDS.desk)) === J([{ id: 'bricks', note: builtFromWords(BRICK_BUILDS.desk), label: 'Open its bricks', href: bricksPageFor('desk_v1') }]) && J(builtActions(null)) === '[]');
+    const s3 = { kind: 'room3d', preset: 'box' };
+    check('a 3D box room: its desk is brick-built to begin with', J(sceneLooks(s3)) === J({ table: 'bricks' }), J(sceneLooks(s3)));
+    const d3 = withLook(s3, 'table', 'drawn');
+    check('*** Drawn: the preset copied in, the desk\'s item says drawn ***', d3?.recipe?.furniture.find((f) => f.id === 'table')?.look === 'drawn' && sceneLooks(d3).table === 'drawn');
+    check('*** back to Brick-built stores NO look, so the room names only its preset again ***', J(tidyScene(withLook(d3, 'table', 'bricks'))) === J(s3));
+    check('a piece with no build has no Look to set (null)', withLook(s3, 'cabinet', 'drawn') === null && !('cabinet' in sceneLooks(s3)));
+    check('nonsense is refused, not stored', withLook(s3, 'table', 'purple') === null && withLook(s3, 'nope', 'drawn') === null && withLook({ kind: 'plain' }, 'table', 'drawn') === null);
+    const s2 = { kind: 'room', preset: 'study' };
+    check('a 2D study: its desk too', sceneLooks(s2).desk === 'bricks' && withLook(s2, 'desk', 'drawn')?.recipe?.items.find((i) => i.id === 'desk')?.look === 'drawn');
   }
 
   section('copy');

@@ -130,6 +130,16 @@ const num =(v, d, [lo, hi]) => (Number.isFinite(Number(v)) && v !== null && v !=
 // furniture. Slot x/y/w/h are percent of THEIR FACE AS SEEN: on a side wall x runs left to right as the
 // viewer sees it (the left wall's 0 is at the front, the right wall's 0 at the back). Furniture: x is %
 // across the room, z is % of the depth from the back wall (0) to the screen (100), w/h/d in stage px.
+//
+// *** THE DESK IS THE BRICK-BUILT ONE (2026-10-04). *** The piece that was a plain 'table' box names
+// `part: 'desk'`, so it is drawn as brick_builds.js's desk_v1 picture (its Look, per piece, can make it the drawn
+// box again). Its size is desk_v1's own, 1280 x 760 x 640 mm, at 0.2 stage px per mm -- the scale at which the
+// 540 px stage is a 2.7 m room, an ordinary ceiling -- so 256 x 152 x 128: the build's proportions, so its picture
+// fills its front instead of shrinking inside a box of another shape. Its id stays 'table' (a door already saved
+// on it, by id, still finds it); its name is what it now is. The cabinet (a long low box) and the bookshelf have
+// no build that fits them, so they stay boxes; the side table (480 x 480 x 520 mm, 96 x 96 x 104 here) has no
+// piece in this room it is the size of -- adding one is a design choice left on Mike's list, not made here.
+const ROOM3D_DESK =Object.freeze({ id: 'table', name: 'Desk', part: 'desk', x: 24, z: 62, w: 256, h: 152, d: 128 });
 export const ROOM3D_PRESETS = Object.freeze({
   box: Object.freeze({
     label: 'A 3D room',
@@ -141,7 +151,7 @@ export const ROOM3D_PRESETS = Object.freeze({
       ]),
       furniture: Object.freeze([
         Object.freeze({ id: 'cabinet', name: 'Cabinet', x: 50, z: 10, w: 380, h: 92, d: 90 }),
-        Object.freeze({ id: 'table', name: 'Table', x: 24, z: 62, w: 170, h: 74, d: 120 }),
+        ROOM3D_DESK,
         Object.freeze({ id: 'shelf', name: 'Bookshelf', x: 88, z: 34, w: 80, h: 300, d: 70 }),
       ]),
     }),
@@ -619,9 +629,15 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
     },
     /** The furniture, for the map editor: `{ id, name, opens }`, in recipe order. */
     objects: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, opens: opensOf(f) })),
-    /** EDIT MODE (edit_mode.js, 2026-10-02): each piece as drawn, `{ id, name, el }`, for choosing it by a
-     *  press (the box: a press on any of its faces is a press on it). In recipe order. */
-    objectEls: () => recipe.furniture.map((f) => ({ id: f.id, name: f.name, el: boxes.get(f.id) || null })).filter((x) => x.el),
+    /** EDIT MODE (edit_mode.js, 2026-10-02): each piece as drawn, `{ id, name, el, part, build, look }`, for
+     *  choosing it by a press (the box: a press on any of its faces is a press on it). In recipe order. `build`
+     *  is its brick build (brick_builds.js) or null; `look` how it is drawn NOW ('drawn' once a picture failed),
+     *  the same two fields room_scene.js's objectEls carries, so a host offers the same Look row for both. */
+    objectEls: () => recipe.furniture.map((f) => {
+      const el = boxes.get(f.id) || null;
+      return { id: f.id, name: f.name, el, part: f.part || null, build: buildFor(f.part),
+        look: el && el.dataset.look === 'bricks' ? 'bricks' : 'drawn' };
+    }).filter((x) => x.el),
     /**
      * Make piece `id` a door to dashboard `target` (null: no longer one) IN PLACE: only its box is redrawn,
      * so the walls, their slots and every module in them stay mounted. True if anything changed.

@@ -31,7 +31,7 @@ import { mountRoom3d, ensureRoom3dCss, ROOM3D_PRESETS, normalizeRoom3d, viewOf, 
 import { mountRoomScene, ensureRoomCss, quadOf, hotspotClip } from '../room_scene.js';
 import { quadHomography, applyHomography, quadMatrix, normalizeBackdrop, paintCss, PAINTS, FLAT_TOKENS } from '../room_backdrop.js';
 import { flattenLayout, unflattenLayout, rebakeLayout, flatState, flatActions, applyFlatAction, bakePlan, hotspotFor,
-  slotQuad, placedQuad, convexHull, sourceHash, FLAT_VERSION, FLAT_SLOT_PREFIX, flatOf } from '../room_flat.js';
+  slotQuad, placedQuad, convexHull, sourceHash, FLAT_VERSION, FLAT_SLOT_PREFIX, flatOf, bakedAsPicture } from '../room_flat.js';
 import { chooseLod, measureCapability, deviceCapability, resetCapability, budgetFor, slowNote, lodOptionsFor,
   BUDGETS, SLOW_MS, SLOW_NOTE, DETAIL_FIELD, LOD_DEFAULTS } from '../room_lod.js';
 import { normalizeLayout } from '../layout.js';
@@ -59,6 +59,7 @@ const rectOf = (el) => { const r = el.getBoundingClientRect(), h = host.getBound
 const bboxOf = (pts) => { const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]); return { left: Math.min(...xs), top: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }; };
 const sameRect = (a, b, tol) => near(a.left, b.left, tol) && near(a.top, b.top, tol) && near(a.w, b.w, tol) && near(a.h, b.h, tol);
 const pctPts = (q) => q.map(([x, y]) => [x / 100 * W, y / 100 * H]);
+const until = async (fn, ms = 2000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const v = fn(); if (v) return v; await new Promise((r) => setTimeout(r, 25)); } return fn(); };
 
 // The 3D dashboard every section flattens: the box room, photos in its back slot, a clock in its left slot, a
 // "TV" placed freely on the right wall (turned a little), a note placed freely on the back wall, the cabinet a door.
@@ -182,14 +183,22 @@ try {
     const rec = normalizeRoom3d(threeD().scene);
     const hs = rec.furniture.map((f) => hotspotFor(f, view));
     check('one hotspot per piece, same ids', J(hs.map((h) => h.id)) === J(['cabinet', 'table', 'shelf']));
-    check('same names, as the label', J(hs.map((h) => h.label)) === J(['Cabinet', 'Table', 'Bookshelf']));
+    check('same names, as the label', J(hs.map((h) => h.label)) === J(['Cabinet', 'Desk', 'Bookshelf']));
     check('*** the door keeps its door; the others have none ***', hs[0].opens === 'D2' && !('opens' in hs[1]) && !('opens' in hs[2]));
     for (const [i, f] of rec.furniture.entries()) {
       const h = hs[i];
       const box = { left: (h.x / 100) * W - h.w / 2, top: (h.y / 100) * H - h.h / 2, w: h.w, h: h.h };
+      if (bakedAsPicture(f)) {
+        // A brick-built piece is ONE face in 3D (its picture in the front plane): its hotspot is that face.
+        const front = bboxOf(boxFaces(f, view).front.pts.map(([x, y, z]) => project(view, x, y, z)));
+        check(`*** the ${f.id} (brick-built) hotspot's box is its FRONT FACE as drawn, and it names its part ***`,
+          sameRect(box, front, 0.2) && h.bricks === f.part && h.poly.length === 4, J({ box, front, bricks: h.bricks, n: h.poly.length }));
+        continue;
+      }
       check(`the ${f.id} hotspot's box is the box's drawn rectangle`, sameRect(box, boxRect(f, view), 0.2), J({ box, r: boxRect(f, view) }));
-      check(`...its outline has 4..6 corners (a box seen from one side)`, h.poly.length >= 4 && h.poly.length <= 6, String(h.poly.length));
+      check(`...its outline has 4..6 corners (a box seen from one side)`, h.poly.length >= 4 && h.poly.length <= 6 && !('bricks' in h), String(h.poly.length));
     }
+    check('the preset\'s desk is the brick-built one (and only it)', J(rec.furniture.map(bakedAsPicture)) === J([false, true, false]));
     const hull = convexHull([[0, 0], [10, 0], [10, 10], [0, 10], [5, 5], [5, 0]]);
     check('convexHull drops inside points and points on an edge', hull.length === 4, J(hull));
     check('hotspotClip makes a CSS polygon from the outline; junk makes none', hotspotClip(hs[0]).startsWith('polygon(') && hotspotClip({ poly: [[0, 0], ['x', 1], [2, 2]] }) === '');
@@ -260,7 +269,7 @@ try {
     check('the scan walks it', room.scanTargets().includes(doorBtn));
     // Farthest first: a nearer hotspot is drawn over a farther one where their outlines overlap.
     check('*** the map editor sees all three pieces, by id, with their doors (farthest first) ***',
-      J(room.objects()) === J([{ id: 'cabinet', name: 'Cabinet', opens: 'D2' }, { id: 'shelf', name: 'Bookshelf', opens: null }, { id: 'table', name: 'Table', opens: null }]), J(room.objects()));
+      J(room.objects()) === J([{ id: 'cabinet', name: 'Cabinet', opens: 'D2' }, { id: 'shelf', name: 'Bookshelf', opens: null }, { id: 'table', name: 'Desk', opens: null }]), J(room.objects()));
     check('...and can make another of them a door, in place', room.setObjectOpens('table', 'D5') === true && room.root.querySelector('.rs-obj[data-id="table"]'));
     check('*** its slots are the 3D room\'s slots plus one per free module ***', J([...room.slots().keys()].sort()) === J(['back', 'left', 'p-n1', 'p-tv', 'right']), J([...room.slots().keys()]));
     for (const id of ['back', 'left', 'right']) {
@@ -269,7 +278,27 @@ try {
     }
     check('an empty slot on a quad shows no "module slot" card (the 3D room shows nothing there)',
       getComputedStyle(room.root.querySelector('.rs-mount[data-quad] > .rs-slot-card')).display === 'none');
+    // 2026-10-04, FLAT_VERSION 2: a brick-built piece is baked as its picture, not as a box.
+    check('*** the bake draws NO box for the brick-built desk: two wood fronts (cabinet, shelf), not three ***',
+      flat.scene.recipe.backdrop.shapes.filter((s) => s.fill === 'wood').length === 2 && FLAT_VERSION === 2,
+      String(flat.scene.recipe.backdrop.shapes.filter((s) => s.fill === 'wood').length));
+    const pic = room.root.querySelector('.rs-hotspot[data-bricks="desk"]');
+    const picImg = pic?.querySelector('.rm-bricks img');
+    check('*** its hotspot draws the desk_v1 picture, as the 3D room did ***', !!picImg && /\/renders\/desk_v1_front\.png$/.test(picImg.src), picImg?.src);
+    check('...tinted with the bake\'s own wood paint (the 3D room\'s --r3-wood), no literal colour',
+      pic?.querySelector('[data-tint]')?.style.background.includes('color-mix') && PAINTS.wood.includes('var(--accent'), pic?.querySelector('[data-tint]')?.style.background);
+    const deskIt = flat.scene.recipe.items.find((x) => x.id === 'table');
+    check('the picture fills the hotspot, which is the desk\'s front face as drawn', sameRect(rectOf(pic), { left: (deskIt.x / 100) * W - deskIt.w / 2, top: (deskIt.y / 100) * H - deskIt.h / 2, w: deskIt.w, h: deskIt.h }, 1.5),
+      J({ got: rectOf(pic), it: [deskIt.x, deskIt.y, deskIt.w, deskIt.h] }));
+    check('the other hotspots draw nothing (the backdrop has them)', !room.root.querySelector('.rs-hotspot:not([data-bricks]) *'));
     room.destroy();
+    // A picture that will not load: the front face's wood, never an empty hole.
+    const broken = JSON.parse(J(flat.scene.recipe));
+    const roomB = mountRoomScene(host, broken, { assetBase: '/no-such-assets/' });
+    const fellBack = await until(() => roomB.root.querySelector('.rs-hotspot[data-bricks="desk"] [data-face="wood"]'), 4000);
+    check('*** if the picture will not load, the hotspot is filled with the wood front instead ***', !!fellBack
+      && !roomB.root.querySelector('.rs-hotspot[data-bricks="desk"] .rm-bricks'));
+    roomB.destroy();
   }
 
   // =====================================================================================================
@@ -402,12 +431,15 @@ try {
     host.innerHTML = '';
     const room = mountRoom3d(host, { kind: 'room3d', preset: 'box' }, { lod: 'auto', lodBudget: 6, capability: { slow: true } });
     const lod = room.lod();
-    check('*** in the 3D room: a budget of 6 faces keeps ONE piece full and draws the others as proxies ***',
-      Object.values(lod.levels).filter((l) => l === 'full').length === 1 && lod.cost <= 6, J(lod));
-    const proxyId = Object.keys(lod.levels).find((k) => lod.levels[k] === 'proxy');
+    // The preset's desk is brick-built (one face at either level, so dropping it saves nothing): the budget is
+    // met by the two BOXES, cabinet and shelf.
+    const boxIds = Object.keys(lod.levels).filter((k) => k !== 'table');
+    check('*** in the 3D room: a budget of 6 faces keeps ONE box full and draws the other as a proxy ***',
+      boxIds.filter((k) => lod.levels[k] === 'full').length === 1 && lod.cost <= 6, J(lod));
+    const proxyId = boxIds.find((k) => lod.levels[k] === 'proxy');
     const proxyEl = room.root.querySelector(`[data-object="${proxyId}"]`);
     check('a proxy is ONE face (its front); a full piece is four', proxyEl.querySelectorAll('.r3-face').length === PROXY_FACES
-      && room.root.querySelector(`[data-object="${Object.keys(lod.levels).find((k) => lod.levels[k] === 'full')}"]`).querySelectorAll('.r3-face').length === BOX_FACES);
+      && room.root.querySelector(`[data-object="${boxIds.find((k) => lod.levels[k] === 'full')}"]`).querySelectorAll('.r3-face').length === BOX_FACES);
     check('the proxy is drawn where the full piece\'s front was', sameRect(rectOf(proxyEl.querySelector('.r3-bf-front')),
       bboxOf(boxFaces(normalizeRoom3d({ preset: 'box' }).furniture.find((f) => f.id === proxyId), view).front.pts.map(([x, y, zz]) => project(view, x, y, zz))), 1));
     room.setObjectOpens(proxyId, 'D4');
@@ -422,7 +454,7 @@ try {
     room.destroy();
     check('lodPlan with no budget given uses the capability: fast -> 400 faces, slow -> 24',
       lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: false } }).budget === BUDGETS.fast && lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: true } }).budget === BUDGETS.slow);
-    check('the box room (12 furniture faces) is all full even on a slow device -- it is the measured-good room',
+    check('the box room (9 furniture faces: two boxes and the brick-built desk) is all full even on a slow device -- it is the measured-good room',
       [...lodPlan(normalizeRoom3d({}), view, 1, { capability: { slow: true } }).levels.values()].every((l) => l === 'full'));
   }
 

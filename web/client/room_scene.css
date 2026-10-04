@@ -17,8 +17,14 @@
   --rs-chip-bg: var(--surface, #fbf9ef);        /* Design's chip: cream... */
   --rs-chip-ink: var(--text, #0A3323);          /* ...with deep-green words */
   --rs-chip-shadow: 0 2px 6px rgba(0,0,0,.3);
-  --rs-ring: var(--link, #105666);              /* the switch cursor on an object */
-  --rs-ring-halo: rgba(255,211,110,.65);
+  /* The switch cursor on an object: the theme's scan ring (theme.js scanRingColor -- its gold where that reads,
+     else its --focus), 3:1 on every surface in every theme. Its halo is the SURFACE that ring was measured on,
+     not a gold glow: the halo is what the ring actually sits on (both sides of it). The old --link ring on the
+     gold halo measured 1.07-2.08:1 on the seven dark themes (2026-10-04), and on those the scan ring IS that gold.
+     The two-colour ring of WCAG's C40, with Design's gold kept wherever it reads; worst now 3.02:1 (warm).
+     dev/theme_test.html measures the ring against its halo and every surface, every theme. */
+  --rs-ring: var(--scan-ring, var(--focus, #105666));
+  --rs-ring-halo: var(--surface, #fbf9ef);
   --rs-lift-bg: var(--surface, #ffffff);
   --rs-lift-ink: var(--text, #0A3323);
   --rs-lift-edge: var(--border, #0A3323);

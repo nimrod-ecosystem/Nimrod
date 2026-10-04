@@ -323,6 +323,69 @@ try {
   }
 
   // ============================================================================================
+  // 2026-10-04: a dashboard's room offered its pieces only "Opens". A piece built from Nimrod bricks gets the same
+  // Look row and "Open its bricks" the room MODULE's pieces have (modules/room.js builtTarget), in 2D and 3D, saved
+  // on the piece's recipe item like its door (room_doors.js withLook).
+  section('*** a DASHBOARD’S room: a brick-built piece offers Look and "Open its bricks", 2D and 3D ***');
+  for (const kind of ['room3d', 'room']) {
+    const scene0 = kind === 'room3d' ? { kind: 'room3d', preset: 'box' } : { kind: 'room', preset: 'study' };
+    const objId = kind === 'room3d' ? 'table' : 'desk';
+    const objSel = kind === 'room3d' ? `.r3-box[data-object="${objId}"]` : `.rs-item[data-id="${objId}"]`;
+    const isBricks = () => (kind === 'room3d' ? host.querySelector(`${objSel}[data-look="bricks"]`) : host.querySelector(`${objSel} .rm-bricks`));
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: [null], scene: scene0,
+      placed: [{ id: 'lc', place: 'scene', x: 70, y: 22, w: 14, h: 14 }] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const rbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: rbus, rootBus: rbus, viewId: 'LK', user: 'u', personId: null,
+      arrangement: { id: 'LK', name: 'Looks', modules: [{ id: 'lc', type: 'clock' }] },
+      profiles: { list: async () => [{ id: 'LK', name: 'Looks' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} },
+      state: memState(), instanceId: `dash-look-${kind}` });
+    await view.init();
+    const d = view.impl;
+    const arr = () => d.arrangement();
+    const sel = () => arr().editSelection();
+    check(`(${kind}) (setup) the brick-built piece is drawn as its bricks`, await until(() => !!isBricks(), 6000));
+    d.editPanel(ROOM_PANEL_ID, true);
+    await until(() => sel()?.target?.id === 'room', 3000);
+    host.querySelector(objSel).click();
+    check(`(${kind}) *** choosing it shows Look first, then Opens ***`,
+      sel()?.target?.id === objId && J(sel().fields.map((f) => f.key)) === J(['look', 'opens']), J(sel()?.fields?.map((f) => f.key)));
+    check(`(${kind}) Look reads Brick-built to begin with`, sel().values().look === 'bricks', J(sel().values()));
+    check(`(${kind}) *** "Built from 32 Nimrod parts" and "Open its bricks" → the bricks page for desk_v1 ***`,
+      J(sel().actions) === J([{ id: 'bricks', label: 'Open its bricks', href: '/bricks.html?build=desk_v1', note: 'Built from 32 Nimrod parts: 24 bricks, 8 brackets.' }]), J(sel().actions));
+    const card = () => host.querySelector('.k-room .em-card');
+    check(`(${kind}) the card draws the Look row and the link`, !!card()?.querySelector('[data-em-row="look"]') && card()?.querySelector('[data-em-act="bricks"] a')?.getAttribute('href') === '/bricks.html?build=desk_v1');
+    const savedScene = () => store.get('settings')?.kiosk?.layout?.scene;
+    const itemOf = (s) => (kind === 'room3d' ? s?.recipe?.furniture : s?.recipe?.items)?.find((x) => x.id === objId);
+    sel().set('look', 'drawn');
+    check(`(${kind}) *** Drawn: saved on the piece's recipe item ***`, await until(() => itemOf(savedScene())?.look === 'drawn', 3000), J(savedScene())?.slice(0, 200));
+    check(`(${kind}) *** ...and the room draws it drawn ***`, await until(() => !!host.querySelector(objSel) && !isBricks(), 4000));
+    await until(() => !!host.querySelector(objSel), 3000);
+    host.querySelector(objSel).click();
+    check(`(${kind}) choosing it again, Look reads Drawn`, sel()?.target?.id === objId && sel().values().look === 'drawn', J(sel()?.values?.()));
+    sel().set('look', 'bricks');
+    check(`(${kind}) *** back to Brick-built: the room names only its preset again (nothing copied in for nothing) ***`,
+      await until(() => J(savedScene()) === J(scene0), 3000), J(savedScene()));
+    check(`(${kind}) ...and it is drawn as its bricks again`, await until(() => !!isBricks(), 4000));
+    const cab = kind === 'room3d' ? '.r3-box[data-object="cabinet"]' : '.rs-item[data-id="lamp"]';
+    host.querySelector(cab).click();
+    check(`(${kind}) a piece with no build still offers only Opens`, J(sel()?.fields?.map((f) => f.key)) === J(['opens']) && !(sel()?.actions || []).length, J(sel()?.fields?.map((f) => f.key)));
+    d.editPanel(ROOM_PANEL_ID, false);
+    view.destroy();
+    host.remove();
+  }
+
+  // ============================================================================================
   section('nobody answers: it leaves by itself (never a gate)');
   {
     const em3 = createEditMode({ bus, recs: () => [sign], boxOf: () => sign.cell, settings: () => ({ [EDIT_IDLE_KEY]: 60 }) });

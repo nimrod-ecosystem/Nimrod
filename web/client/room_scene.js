@@ -64,7 +64,7 @@ import { getManifest } from './module.js';
 import { renderAvatar, normalizeRecord } from './avatar.js';
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
-import { renderBackdrop, normalizeBackdrop, quadMatrix } from './room_backdrop.js';
+import { renderBackdrop, normalizeBackdrop, quadMatrix, PAINTS } from './room_backdrop.js';
 import { moveKeeping } from './dom_move.js';
 import { buildBrickArt, buildFor, lookOf } from './brick_builds.js';
 
@@ -74,7 +74,10 @@ import { buildBrickArt, buildFor, lookOf } from './brick_builds.js';
 //                     in theme tokens, or an image). The lighting veil, content and objects draw over it as ever.
 //   kind 'hotspot'    an object with no art: a place on the backdrop (`w` x `h` stage px at x/y, `poly` its
 //                     outline in % of that box) that takes a role like any object -- `opens` makes it a door.
-//                     Only its outline takes a press; the focus ring is its box.
+//                     Only its outline takes a press; the focus ring is its box. `bricks: '<part>'` (2026-10-04,
+//                     room_flat.js FLAT_VERSION 2): a brick-built piece -- its build's picture is drawn in the box,
+//                     tinted with the backdrop's 'wood' paint, as the 3D room drew it; if the picture will not
+//                     load, the box is filled with that wood (the 3D room's front face).
 //   `quad` on a module mount  four corners (% of the stage, TL TR BR BL): the mount's `w` x `h` box is drawn
 //                     onto them with a matrix3d, so a module on a flattened side wall stays in perspective.
 // `recipe.flat` (where it came from, room_flat.js) rides along untouched.
@@ -1158,6 +1161,17 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
         s.className = 'rs-hotspot';
         const c = contentSize(it);
         applyStyle(s, { display: 'block', width: c.w, height: c.h });
+        // ...unless it is a brick-built piece (`bricks`, room_flat.js): then its picture, as the 3D room drew it.
+        if (buildFor(it.bricks)) {
+          applyStyle(s, { position: 'relative' });
+          s.dataset.bricks = it.bricks;
+          s.append(buildBrickArt(doc, it.bricks, PAINTS.wood, { base: `${base}bricks/`, onFail: (art) => {
+            const face = doc.createElement('span');
+            face.dataset.face = 'wood';
+            applyStyle(face, { position: 'absolute', inset: 0, display: 'block', background: PAINTS.wood, boxShadow: `inset 0 0 0 2px ${PAINTS.edge}` });
+            art.replaceWith(face);
+          } }));
+        }
         return s;
       }
       default: return null;

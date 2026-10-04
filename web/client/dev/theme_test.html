@@ -19,6 +19,9 @@
      is the surface with the most riding on it here. Both stylesheets, or the check
      measures a button the browser styled. -->
 <link rel="stylesheet" href="../kiosk.css">
+<!-- The two rooms' scan rings (2026-10-04) are measured as DRAWN, from their own sheets. -->
+<link rel="stylesheet" href="../room_scene.css">
+<link rel="stylesheet" href="../room3d.css">
 </head>
 <body>
 <h1>themes — integration test</h1>
@@ -552,19 +555,115 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     const OUTLINE = /outline(?:-color|Color)?\s*[:=]\s*([^;}\n]*)/g;
     const bad = [];
     let read = 0;
+    const texts = new Map();
     for (const p of paths) {
       const res = await fetch('../' + p, { cache: 'no-store' });
       if (!res.ok) continue;
       read++;
       const text = await res.text();
+      texts.set(p, text);
       for (const m of text.matchAll(OUTLINE)) {
         if (/var\(\s*--highlight/.test(m[1].replace(ALLOWED, ''))) bad.push(`${p}: ${m[0].trim().slice(0, 80)}`);
       }
     }
     check(`no outline anywhere is drawn in the raw --highlight (${read} files read)`,
       bad.length === 0 && read > 50, bad.join(' || ') || `read ${read}`);
+
+    // *** WIDER (2026-10-04): NO SCAN/FOCUS RING IN THE RAW --link, --accent OR --highlight, CUSTOM PROPERTIES
+    // FOLLOWED. *** The check above caught only --highlight, and only where an outline names it. The rooms rang in
+    // `--link` through their own `--rs-ring` (and the 3D room in `--accent`, the same colour as its wood), so the
+    // read now follows a custom property declared in the same file, and covers an outline AND a ring-shaped
+    // box-shadow (`0 0 0 <width>`). Allowed: `var(--scan-ring, var(--highlight))`, `var(--scan-ring, var(--focus,
+    // ...))`, `var(--focus, var(--accent ...))` -- the raw colour only as the fallback of a measured role.
+    // RING_DEBT: files that rang in a raw colour when this check was written. Each is a FILE allowed to keep doing
+    // so until it is fixed (the list only shrinks); any OTHER file doing it fails. On Mike's list.
+    const RING_DEBT = new Set(['arrangement.js', 'claude_settings.js', 'edit_mode.js', 'game_start.js', 'library.js',
+      'quiz_view.js', 'review_page.js', 'avatar.css', 'brickbreaker.css', 'card_sort.css', 'color_picker.css',
+      'edit_windows.css', 'modules.css', 'music.css', 'note.css', 'picture_picker.css', 'scoreboard.css', 'settings.css',
+      'solitaire.css', 'weather.css', 'modules/voice_model.js']);
+    const RING_ALLOWED = [/var\(\s*--scan-ring\s*,\s*var\(\s*--highlight\s*\)\s*\)/g,
+      /var\(\s*--scan-ring\s*,\s*var\(\s*--focus[^()]*(?:\([^()]*\))?[^()]*\)\s*\)/g,
+      /var\(\s*--focus\s*,\s*var\(\s*--accent[^()]*(?:\([^()]*\))?[^()]*\)\s*\)/g];
+    const ringBad = [], debtSeen = new Set();
+    for (const [p, text] of texts) {
+      const decls = new Map();
+      for (const m of text.matchAll(/(--[\w-]+)\s*:\s*([^;}\n]+)/g)) { if (!decls.has(m[1])) decls.set(m[1], []); decls.get(m[1]).push(m[2]); }
+      const expand = (v, d = 0) => (d > 3 ? v : v.replace(/var\(\s*(--[\w-]+)\s*\)/g, (all, n) => (decls.has(n) ? decls.get(n).map((x) => expand(x, d + 1)).join(' ') : all)));
+      for (const m of text.matchAll(/(outline(?:-color|Color)?|box-?[sS]hadow)\s*[:=]\s*([^;}\n]*)/g)) {
+        if (/^box/i.test(m[1]) && !/\b0\s+0\s+0\s+\d/.test(m[2])) continue;
+        let v = expand(m[2]);
+        for (const a of RING_ALLOWED) v = v.replace(a, '');
+        if (!/var\(\s*--(link|accent|highlight)\b/.test(v)) continue;
+        if (RING_DEBT.has(p)) debtSeen.add(p); else ringBad.push(`${p}: ${m[0].trim().slice(0, 80)}`);
+      }
+    }
+    console.log(`rings still in a raw colour (RING_DEBT, ${debtSeen.size} files):`, [...debtSeen].join(', '));
+    check(`*** no ring outside RING_DEBT is drawn in the raw --link/--accent/--highlight, custom properties followed (${texts.size} files; ${debtSeen.size} debt files still do) ***`,
+      ringBad.length === 0 && texts.size > 50, ringBad.join(' || '));
+    check('*** the rooms are not on the debt list: room_scene.css and room3d.css were read and pass ***',
+      texts.has('room_scene.css') && texts.has('room3d.css') && !RING_DEBT.has('room_scene.css') && !RING_DEBT.has('room3d.css'));
   } catch (e) {
     check('scan ring checks ran', false, String(e && e.stack || e));
+  }
+
+  // ── *** THE ROOMS' SCAN RINGS, AS DRAWN: 3:1 IN EVERY THEME, AGAINST WHAT EACH RING ACTUALLY SITS ON *** ──
+  //
+  // 2026-10-04. The 2D room ringed an object in `--link` with a gold halo around it; the 3D room ringed a piece in
+  // `--accent`, inside its face, on the room's wood (which is mixed FROM --accent). Both now ring in the theme's
+  // `--scan-ring` (3:1 on every surface, above), each on a band of the theme's `--surface` (WCAG's two-colour
+  // ring, C40), so the colour beside the ring is one it was measured against. Measured off real elements, every
+  // theme, both visions; BEFORE is the old rule's ring against what it sat on (the halo over --bg; the wood).
+  try {
+    const parseC = (c) => {
+      const s = String(c);
+      let m = s.match(/color\(srgb\s+([\d.e-]+)\s+([\d.e-]+)\s+([\d.e-]+)(?:\s*\/\s*([\d.]+))?/);
+      if (m) return { rgb: [m[1], m[2], m[3]].map((x) => Math.max(0, Math.min(255, Math.round(Number(x) * 255)))), a: m[4] === undefined ? 1 : Number(m[4]) };
+      m = s.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?/);
+      if (m) return { rgb: [m[1], m[2], m[3]].map((x) => Math.round(Number(x))), a: m[4] === undefined ? 1 : Number(m[4]) };
+      return null;
+    };
+    const hx = (p) => '#' + p.rgb.map((n) => n.toString(16).padStart(2, '0')).join('');
+    const J = (x) => JSON.stringify(x);
+    // A colour the theme names, as the browser resolves it (an element must be in the page to be measured).
+    const resolved = (css) => { const i = document.createElement('i'); i.style.color = css; document.body.append(i); const c = parseC(getComputedStyle(i).color); i.remove(); return c; };
+    const over = (fg, bg) => ({ rgb: fg.rgb.map((c, i) => Math.round(c * fg.a + bg.rgb[i] * (1 - fg.a))), a: 1 });
+    const both = (a, b) => Math.min(contrast(a, b), contrast(a, b, { deutan: true }));
+    const OLD_HALO = { rgb: [255, 211, 110], a: 0.65 };           // room_scene.css's old --rs-ring-halo
+    const rows2 = [], rows3 = [];
+    let worst2 = Infinity, worst3 = Infinity, at2 = '', at3 = '';
+    for (const id of Object.keys(THEMES)) {
+      const v = THEMES[id].vars;
+      const bg = resolved(v['--bg']) || { rgb: [255, 255, 255], a: 1 };
+      const host = document.createElement('div');
+      document.body.append(host);
+      applyTheme(host, id);
+      host.innerHTML = '<div class="rs" style="position:relative;width:200px;height:120px"><span class="rs-obj-wrap is-scan" style="left:20px;top:20px;width:80px;height:60px"><button class="rs-obj"></button></span></div>'
+        + '<div class="r3" style="position:relative;width:200px;height:120px;contain:none"><div class="r3-box is-scan" data-opens="x"><div class="r3-face r3-bf r3-bf-front" style="width:80px;height:60px"></div></div></div>';
+      const ob = getComputedStyle(host.querySelector('.rs-obj'));
+      const ring2 = parseC(ob.outlineColor), halo2 = parseC(ob.boxShadow);
+      const face = getComputedStyle(host.querySelector('.r3-bf-front'));
+      const ring3 = parseC(face.outlineColor), band3 = parseC(face.boxShadow), wood = parseC(face.backgroundColor);
+      host.remove();
+      if (!ring2 || !halo2 || !ring3 || !band3 || !wood) { check(`${id}: the room rings could be measured`, false, J([ob.outlineColor, ob.boxShadow, face.outlineColor, face.boxShadow, face.backgroundColor])); continue; }
+      const r2 = Math.min(both(hx(ring2), hx(over(halo2, bg))), worstContrast(hx(ring2), v));
+      const r3 = Math.min(both(hx(ring3), hx(over(band3, bg))), worstContrast(hx(ring3), v));
+      const before2 = Math.min(both(v['--link'], hx(over(OLD_HALO, bg))), worstContrast(v['--link'], v));
+      const before3 = Math.min(both(v['--accent'], hx(over(wood, bg))), worstContrast(v['--accent'], v));
+      rows2.push(`${id} ${before2.toFixed(2)}->${r2.toFixed(2)}`);
+      rows3.push(`${id} ${before3.toFixed(2)}->${r3.toFixed(2)} (ring on wood ${both(hx(ring3), hx(over(wood, bg))).toFixed(2)})`);
+      if (r2 < worst2) { worst2 = r2; at2 = id; }
+      if (r3 < worst3) { worst3 = r3; at3 = id; }
+      check(`${id}: the 2D room's scan ring ${hx(ring2)} clears ${FOCUS_MIN}:1 on its halo ${hx(halo2)} and every surface (${r2.toFixed(2)}:1, was ${before2.toFixed(2)})`, r2 >= FOCUS_MIN);
+      check(`${id}: the 3D room's scan ring ${hx(ring3)} clears ${FOCUS_MIN}:1 on its band ${hx(band3)} and every surface (${r3.toFixed(2)}:1, was ${before3.toFixed(2)})`, r3 >= FOCUS_MIN);
+      const want = resolved(scanRingColor(v));
+      check(`${id}: both rooms ring in the theme's scan ring, exactly`, !!want && hx(ring2) === hx(want) && hx(ring3) === hx(want),
+        `${hx(ring2)} ${hx(ring3)} ${scanRingColor(v)}`);
+    }
+    console.log('2D room ring, before -> after (worst, incl. deuteranopia):', rows2.join(' | '));
+    console.log('3D room ring, before -> after (worst, incl. deuteranopia):', rows3.join(' | '));
+    check(`the rooms' rings as drawn: worst 2D ${worst2.toFixed(2)}:1 (${at2}), worst 3D ${worst3.toFixed(2)}:1 (${at3})`, worst2 >= FOCUS_MIN && worst3 >= FOCUS_MIN);
+  } catch (e) {
+    check('room ring checks ran', false, String(e && e.stack || e));
   }
 
   // ── *** RIGHT AND WRONG ANSWERS: A SHAPE AND A WORD, NOT COLOUR ALONE *** ──────────────────
