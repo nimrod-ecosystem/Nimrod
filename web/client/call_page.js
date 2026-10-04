@@ -84,6 +84,9 @@ export function endText(reason, why, { answered = false, connected = false } = {
     if (why && CALLER_END_TEXT[why]) return CALLER_END_TEXT[why];
     return answered ? 'The call ended.' : 'The call ended before it was answered.';
   }
+  // Answered, and the connection never came up within the transport's connect clock (call_transport.js
+  // ANSWER_CONNECT_MS) - the screen's own `bye` never came either (its socket died). 2026-10-04.
+  if (reason === 'unconnected') return CALLER_END_TEXT.failed;
   if (reason === 'stalled') {
     return connected ? 'The connection was lost.'
       : 'The call could not connect. The two networks may not be able to reach each other directly.';

@@ -30,7 +30,7 @@
 import {
   mountCallPage, endText, CALLER_GIVE_UP_MS, CALLER_END_TEXT, CALL_MODES, CONNECT_MS, PRESENCE_MS,
 } from '../call_page.js';
-import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS } from '../call_transport.js';
+import { createCallTransport, CALL_PURPOSE, CALL_CLAIM_MS, GATHER_TIMEOUT_MS, ANSWER_CONNECT_MS } from '../call_transport.js';
 import { SIGNAL_KINDS, connectDrive } from '../drive.js';
 import { createProfilesClient } from '../profile.js';
 import { LONGEST_RING_S, LONGEST_COUNTDOWN_S } from '../modules/call.js';
@@ -475,6 +475,60 @@ try {
     check('...and the screens are told it is over (a ring left going would answer into nothing)', got.some((s) => s.kind === 'bye' && s.reason === 'unanswered'), JSON.stringify(got.map((s) => s.kind)));
     M.page.destroy();
   }
+
+  // 2026-10-04. Answered, then the screen's socket died: its connection never comes up and its `bye` never
+  // arrives. The page sat at "Answered — connecting…" with the camera and microphone open, for ever.
+  section('*** answered, and it never connects: the caller gives up by itself, lets go, and says so ***');
+  {
+    const clk = fakeClock();
+    const peers = fakePeer();
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, extra: {
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: peers.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer }),
+    } });
+    press('[data-start="video"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({ outgoing: { kind: 'video' } });
+    await settled(() => M.page.state() === 'answered');
+    check('(setup) answered, connecting', M.page.state() === 'answered' && /Answered/.test(root.querySelector('[data-word]')?.textContent || ''));
+    // The screen vanishes without a word: its socket is gone, so nothing more comes from it.
+    room.screens.delete(S.link);
+    peers.last().fire('connecting');
+    clk.advance(ANSWER_CONNECT_MS - 1); await sleep(5);
+    check('still connecting just before the clock runs out', M.page.state() === 'answered' && M.media.allTracks().every((t) => !t.stopped));
+    clk.advance(1); await sleep(5);
+    check('*** the clock runs out: the page ends the call and says "The call could not connect." ***',
+      M.page.state() === 'idle' && M.page.ended() === 'The call could not connect.' && /could not connect/.test(text()), M.page.ended());
+    check('*** ...the camera and the microphone are let go ***', M.media.allTracks().length > 0 && M.media.allTracks().every((t) => t.stopped));
+    const byes = M.connect.made[0].sent.filter((s) => s.kind === 'bye');
+    check('*** ...and a bye goes out, once: "failed", naming the call ***',
+      byes.length === 1 && byes[0].reason === 'failed' && byes[0].session === M.connect.made[0].sent.find((s) => s.kind === 'offer')?.session, JSON.stringify(byes));
+    check('the page\'s socket is closed', M.connect.made[0].closed === true);
+    M.page.destroy(); S.t.destroy();
+  }
+  {
+    // Connected in time: the caller's clock is cleared, and the call goes on.
+    const clk = fakeClock();
+    const peers = fakePeer();
+    const room = fakeRoom();
+    const S = screenOn(room);
+    const M = await mount({ room, extra: {
+      makeTransport: (x) => createCallTransport({ ...x, PeerConnection: peers.PC, Stream: FakeStream, setTimer: clk.setTimer, clearTimer: clk.clearTimer }),
+    } });
+    press('[data-start="audio"]');
+    await settled(() => S.rings.length === 1);
+    await S.t.answer({});
+    await settled(() => M.page.state() === 'answered');
+    clk.advance(ANSWER_CONNECT_MS - 1);
+    peers.last().fire('connected');
+    clk.advance(ANSWER_CONNECT_MS * 3); await sleep(5);
+    check('*** connected in time: still in the call, nothing let go, no bye ***',
+      M.page.state() === 'in-call' && M.media.allTracks().every((t) => !t.stopped)
+      && !M.connect.made[0].sent.some((s) => s.kind === 'bye'), M.page.state());
+    M.page.destroy(); S.t.destroy();
+  }
+  check('the words for it: "The call could not connect."', endText('unconnected', null, { answered: true }) === 'The call could not connect.');
 
   section('*** the page going away hangs up and lets go ***');
   {

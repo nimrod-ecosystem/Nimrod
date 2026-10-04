@@ -542,8 +542,7 @@ try {
       t.destroy();
     }
 
-    // 5. The clock is the transport's; the suites can shorten it. A driver never runs it (the caller page
-    // has its own clocks, and learns of this one from the bye).
+    // 5. The clock is the transport's; the suites can shorten it.
     {
       const { t, link, clock, ended } = mk({ connectMs: 500 });
       link.deliver({ kind: 'offer', sdp: 'O' });
@@ -551,13 +550,73 @@ try {
       clock.advance(500);
       check('connectMs is honoured', ended.join() === 'unconnected', JSON.stringify(ended));
       t.destroy();
-      const dp = fakePeer();
-      const dl = fakeLink();
-      const d = createCallTransport({ link: dl, role: 'driver', PeerConnection: dp.PC, Stream: FakeStream });
+    }
+  }
+
+  // =====================================================================================
+  // 2026-10-04. THE CALLER'S HALF of the same clock. The screen's `bye` normally ends a caller whose call
+  // never connects; a screen whose socket died never sends one, and the caller sat at "answered" for ever.
+  section('*** the caller runs the connect clock too, from the moment the answer is applied ***');
+  {
+    const mkD = () => {
+      const dp = fakePeer(); const dl = fakeLink(); const clock = fakeClock(); const ended = [];
+      const d = createCallTransport({ link: dl, role: 'driver', PeerConnection: dp.PC, Stream: FakeStream,
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer });
+      d.onEnded((r, info) => ended.push([r, info?.why ?? null]));
+      const answer = async (sdp = 'A') => { dl.deliver({ kind: 'answer', sdp, purpose: CALL_PURPOSE, session: d.__probe().session }); await sleep(5); };
+      return { d, dl, dp, clock, ended, answer, byes: () => dl.sent.filter((s) => s.kind === 'bye') };
+    };
+    {
+      const { d, dp, clock, ended, answer, byes } = mkD();
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' } });
+      const session = d.__probe().session;
+      clock.advance(ANSWER_CONNECT_MS * 2);
+      check('*** ringing is NOT on the connect clock (the caller page\'s own give-up covers a ring) ***',
+        d.isLive() && ended.length === 0 && d.__probe().connecting === false);
+      await answer();
+      check('answered: the connect clock starts', d.__probe().answered === true && d.__probe().connecting === true);
+      const pc = dp.last();
+      pc.fire('connecting');
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      check('still waiting just before the clock runs out', d.isLive() && ended.length === 0 && byes().length === 0);
+      clock.advance(1);
+      check('*** the clock runs out: the caller ends the call, connection closed, as never-connected ***',
+        !d.isLive() && pc.closed === true && JSON.stringify(ended) === '[["unconnected",null]]', JSON.stringify(ended));
+      check('*** ...and tells the screen: a bye, "failed", naming the call ***',
+        byes().length === 1 && byes()[0].reason === 'failed' && byes()[0].session === session, JSON.stringify(byes()));
+      check('nothing left running', clock.pending() === 0, String(clock.pending()));
+      d.destroy();
+    }
+    {
+      const { d, dp, clock, ended, answer, byes } = mkD();
       await d.call({ tracks: [], from: { name: 'Ann' } });
-      dl.deliver({ kind: 'answer', sdp: 'A', purpose: CALL_PURPOSE, session: d.__probe().session });
+      await answer();
+      clock.advance(ANSWER_CONNECT_MS - 1);
+      dp.last().fire('connected');
+      check('*** connected in time: the caller\'s clock is cleared ***', d.__probe().connecting === false);
+      clock.advance(ANSWER_CONNECT_MS * 3);
+      check('...and the call goes on', d.isLive() && ended.length === 0 && byes().length === 0, JSON.stringify(ended));
+      d.destroy();
+    }
+    {
+      // A dropped call is re-offered (once per drop); the re-offer's answer re-arms the clock, and the
+      // stall clock from the drop still bounds it all.
+      const { d, dp, clock, ended, answer, dl } = mkD();
+      await d.call({ tracks: [{ kind: 'audio' }], from: { name: 'Ann' } });
+      await answer();
+      dp.last().fire('connected');
+      dp.last().fire('failed');
       await sleep(5);
-      check('a caller (driver) runs no connect clock of its own', d.__probe().connecting === false && d.__probe().answered === true);
+      check('(setup) a drop: the stall clock, and a re-offer on the same call',
+        d.__probe().stalling === true && dl.sent.filter((s) => s.kind === 'offer').length === 2);
+      check('...with no connect clock until the re-offer is answered', d.__probe().connecting === false);
+      clock.advance(5000);
+      await answer('A2');
+      check('*** the re-offer\'s answer re-arms the caller\'s clock ***', d.__probe().connecting === true);
+      dp.last().fire('connected');
+      clock.advance(ANSWER_CONNECT_MS * 3);
+      check('...and connecting clears both clocks: the call recovered', d.isLive() && ended.length === 0
+        && !d.__probe().connecting && !d.__probe().stalling, JSON.stringify(ended));
       d.destroy();
     }
   }

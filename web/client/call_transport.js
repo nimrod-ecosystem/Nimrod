@@ -123,7 +123,14 @@ export const STALL_MS = 30000;
 //   * the cost of waiting is bounded and visible: the screen shows the call, as it already did for
 //     up to 30 s after a drop.
 // The caller page's CONNECT_MS (15 s) is a different clock - how long to wait for the SITE'S socket
-// - not this one; the caller learns this end gave up from the `bye`.
+// - not this one.
+//
+// THE CALLER RUNS IT TOO (2026-10-04), from the moment the screen's answer is APPLIED until
+// 'connected', with the same length - so neither end can outlast the other on a call that never
+// came up. Normally the screen's `bye` ends the caller first; this is for a screen whose socket died
+// and whose `bye` never arrives, which left the caller page at "Answered - connecting..." with its
+// camera open. A re-offer's answer re-arms it. A caller's dropped call keeps its own stall clock
+// (armed once per drop, not pushed back), which still bounds the re-offers.
 // Not a person's setting: nobody can judge it from a menu, and a wrong value either strands the
 // room on a dead call or hangs up working ones. The constructor takes `connectMs` for the suites.
 export const ANSWER_CONNECT_MS = STALL_MS;
@@ -293,7 +300,7 @@ export function createCallTransport({
   let incomingCb = null;
   let endedCb = null;
   let stallTimer = null;
-  let connectTimer = null;            // ANSWER_CONNECT_MS: answering until 'connected' (screen only)
+  let connectTimer = null;            // ANSWER_CONNECT_MS: answered until 'connected' (screen: from its answer; caller: from applying it)
   let everConnected = false;          // this call reached 'connected' at least once
   let destroyed = false;
   let attached = null;                // the <video> the module handed us
@@ -334,7 +341,7 @@ export function createCallTransport({
   }
 
   // The connect clock (ANSWER_CONNECT_MS). Armed when the screen starts answering, and again by a
-  // re-offer; cleared by 'connected' and by any ending.
+  // re-offer; on a caller, when an answer is applied. Cleared by 'connected' and by any ending.
   function clearConnect() { if (connectTimer != null) { clearTimer(connectTimer); connectTimer = null; } }
   function armConnect() {
     clearConnect();
@@ -593,6 +600,9 @@ export function createCallTransport({
         .then(() => {
           if (destroyed || pc !== mine) return;
           answeredOnce = true;
+          // THE CALLER'S CONNECT CLOCK (2026-10-04): answered, and now it has to connect. If the screen's
+          // socket died and its own bye never comes, this is what ends the call (ANSWER_CONNECT_MS).
+          if (mine.connectionState !== 'connected') armConnect();
           emit(answeredCbs, { session: currentSession, by: typeof sig.by === 'string' ? sig.by : null });
         })
         .catch((e) => log('setRemoteDescription(answer) failed', e));
