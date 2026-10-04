@@ -1,15 +1,16 @@
-// claim.js — "INVITE SOMEBODY TO TAKE OVER A PROFILE YOU MADE", the client side. 2026-10-04.
+// claim.js — PEOPLE ACROSS ACCOUNTS, the client side: "Connect with someone", "Invite them to use this", "I call
+// them", "Stop sharing". 2026-10-04 (night).
 //
-// Mike: *"I was thinking about making users for her parents and sister on my account and hoping they could
-// link their own accounts to it, so most of the work could already be done for them."* The rules are the
-// server's (web/server/claims.py, argued there: the person STAYS on your account and their login gets a claim
-// on it; the link works 14 days, once; their picture becomes theirs). This file is the words, the calls, and
-// the window that makes a link (opened over Your people, modules/people.js). join.html / join_page.js is the
-// other end: the page the link opens.
+// Mike, DECISIONS.md "People across accounts: a profile has a home, and appears on other accounts": most people
+// will "just want to be connected like friends on Facebook"; setting a profile up for somebody and handing it over
+// is the second way in; one profile can be on several accounts, each calling them what it likes ("Mom" on one,
+// "Grandma" on another); and an invite picks which profiles to share, and what the other side may do. The rules are
+// the server's (web/server/claims.py). This file is the words, the calls, the window that makes a link (opened over
+// Your people, modules/people.js) and the small window for "I call them". join.html / join_page.js is the other end.
 //
-// *** PLAIN WORDS. *** The people who read these are not building anything: no "account", "token" or "grant",
-// and none of Your people's banned words either (people_page.js BANNED_WORDS). `claimWordProblems` is the
-// check, run by the suite over everything this file and the join page can say.
+// *** PLAIN WORDS. *** The people who read these are not building anything: none of Your people's banned words
+// (people_page.js BANNED_WORDS) and none of CLAIM_BANNED. `claimWordProblems` is the check, run by the suite over
+// everything this file and the join page can say.
 //
 // NOTHING IS MADE WITHOUT A PRESS. Opening the window reads whether a link is waiting; "Make the link" makes one.
 
@@ -26,9 +27,11 @@ export const INVITE_PARAM = 'invite';
 // again (a slow press, a switch user's next scan step), short enough that a stray press does not leave a live
 // trap on the card for the next person to touch. Nothing is lost if it lapses - press it twice again.
 export const STOP_CONFIRM_MS = 6000;
+// "I call them" is a name: the server's own limit for a person's name (app.py NAME_RE, 60 characters).
+export const CALL_NAME_MAX = 60;
 
 // Words the page may not use, beyond Your people's own (module, dashboard, panel, grant).
-export const CLAIM_BANNED = Object.freeze(['account', 'token']);
+export const CLAIM_BANNED = Object.freeze(['account', 'token', 'widget', 'identity', 'instance']);
 /** The banned words found in `text`. PURE. */
 export function claimWordProblems(text) {
   const s = String(text == null ? '' : text);
@@ -37,18 +40,35 @@ export function claimWordProblems(text) {
   return out;
 }
 
+const poss = (name) => (name ? `${name}’s` : 'their');
+
 // Every sentence, in one place, so the suite can hold all of them to the rule above.
 export const CLAIM_WORDS = Object.freeze({
+  // handing one of your people over
   invite: 'Invite them to use this',
   inviteShort: 'With their own login',
   inviteTitle: (name) => `Invite ${name || 'them'}`,
-  inviteLead: (name) => `${name || 'They'} can use this with their own login: their own picture, your people on their page, `
-    + 'and messages between you. Everything you set up stays as it is.',
-  seePeople: (name) => `Let ${name || 'them'} see your other people`,
-  messages: (name) => `Let ${name || 'them'} leave messages for your people`,
+  inviteLead: (name) => `${name || 'They'} can use this with their own login. It becomes ${poss(name)} own: `
+    + 'they can change the name, the picture and the page. You keep calling them what you call them, and '
+    + 'everything you set up for them stays as it is.',
+  // connecting like friends
+  connect: 'Connect with someone',
+  connectShort: 'Send them a link',
+  connectTitle: 'Connect with someone',
+  connectLead: 'Send somebody a link. When they open it and sign in with their own login, you are on each other’s '
+    + 'page, and you can send each other messages.',
+  connectLine: 'Send somebody a link, and when they open it and sign in you show on each other’s page. Made someone '
+    + 'here for a relative or friend? Press “Invite them to use this” on their card instead, and it becomes theirs. '
+    + 'Whoever looks after a screen can also share it with you, and that person shows up here.',
+  // which people come with it
+  sharesLead: 'Who they will see on their page:',
+  shareYou: (name) => `${name || 'You'} (you)`,
+  shareMsg: (name) => `…and may leave messages for ${name || 'them'}`,
+  noneToShare: 'Nobody else to share yet.',
   make: 'Make the link',
   makeAgain: 'Make a new link (the old one stops working)',
   send: (name) => `Send this to ${name || 'them'}. When ${name || 'they'} open${name ? 's' : ''} it and sign${name ? 's' : ''} in, this becomes ${name ? `${name}’s` : 'theirs'}.`,
+  sendConnect: 'Send this to whoever you want to connect with. It works for one person.',
   copy: 'Copy the link',
   copied: 'Copied. Paste it into a message or an email.',
   copyFailed: 'Could not copy here. Press and hold the link to copy it.',
@@ -57,22 +77,29 @@ export const CLAIM_WORDS = Object.freeze({
   waiting: (name, when) => `A link for ${name || 'them'} is waiting. It works until ${when}.`,
   takeBack: 'Take the link back',
   takenBack: 'Taken back. That link no longer works.',
+  // on the cards
   joined: 'joined',
-  joinedSub: 'On your people · uses this with their own login',
+  joinedSub: 'Uses this with their own login',
+  connectedSub: 'Connected',
+  sharedSub: (from) => `From ${poss(from)} people`,
+  addedSub: 'Added by you',
+  callThem: 'I call them…',
+  callThemShort: (name) => (name ? `Their own name: ${name}` : 'Only you see it'),
+  callTitle: (name) => `What you call ${name || 'them'}`,
+  callLabel: 'I call them',
+  callHow: (name) => `Only you see this. It does not change the name ${name || 'they'} chose.`,
+  callSave: 'Save',
+  callClear: (name) => `Use ${poss(name)} own name`,
+  callSaved: 'Saved.',
   stop: 'Stop sharing',
   stopShort: 'They keep nothing; it stays yours',
+  stopLinked: (from) => `Stops everything ${from || 'they'} shared with you`,
   stopAgain: 'Press again to stop sharing',
-  stopped: (name) => `Stopped. ${name || 'They'} no longer use${name ? 's' : ''} this, and it stays on your people.`,
+  stopped: (name) => `Stopped. ${name || 'They'} no longer show${name ? 's' : ''} here, and you no longer show on ${poss(name)} page.`,
+  stoppedJoined: (name) => `Stopped. ${name || 'They'} no longer use${name ? 's' : ''} this, and it is yours again.`,
   msgOn: 'Messages from them: on',
   msgOff: 'Messages from them: off',
   msgShort: 'Press to change',
-  youAre: (name, from) => `You are ${name} on ${from ? `${from}’s` : 'their'} people.`,
-  youAreSub: 'Your own login, with the picture and people they set up.',
-  editThere: 'Edit that picture',
-  stopMine: 'Stop sharing',
-  stopMineShort: 'It goes back to whoever set it up',
-  linkedSub: (from) => `${from ? `${from}’s` : 'Their'} people`,
-  linkedJoinedSub: (from) => `${from ? `${from}’s` : 'Their'} people · joined`,
   failed: 'That did not work just now. Try again in a little while.',
 });
 
@@ -92,25 +119,25 @@ export function whenText(iso) {
   try { return new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }); } catch { return new Date(t).toDateString(); }
 }
 
-/**
- * The people a login sees because it took over somebody on another login's people (GET /api/claims `mine`). PURE.
- * -> [{ id, name, via: 'linked', joined, from, sender }], each once, never the person they ARE ('you').
- */
-export function linkedPeopleFrom(mine) {
-  const out = [];
-  for (const c of Array.isArray(mine) ? mine : []) {
-    for (const p of Array.isArray(c?.people) ? c.people : []) {
-      if (!p || !p.id || p.you || out.some((x) => x.id === p.id)) continue;
-      out.push({ id: String(p.id), name: String(p.name || '').trim() || 'Someone', via: 'linked', joined: !!p.joined,
-        from: String(c.from || ''), sender: !!p.sender });
-    }
+/** The line under a name on a card, from what the row is to you (GET /api/people `kind`). PURE. */
+export function kindSub(p) {
+  switch (p && p.kind) {
+    case 'joined': return CLAIM_WORDS.joinedSub;
+    case 'connected': return CLAIM_WORDS.connectedSub;
+    case 'shared': return CLAIM_WORDS.sharedSub(p.from || '');
+    default: return CLAIM_WORDS.addedSub;
   }
-  return out;
 }
 
-/** The claim on one of YOUR people (GET /api/claims `given`), or null. PURE. */
-export function givenFor(personId, given) {
-  return (Array.isArray(given) ? given : []).find((g) => g && g.person_id === personId) || null;
+/** The people an invite can share: the ones you look after, you first, never the person being handed over. PURE. */
+export function shareable(own, { exclude = '' } = {}) {
+  const rows = (Array.isArray(own) ? own : []).filter((p) => p && p.id && p.home !== false && p.id !== exclude);
+  return rows.map((p, i) => ({ id: String(p.id), name: String(p.name || '').trim() || 'Someone', you: p.kind === 'you' || (!p.kind && i === 0) }));
+}
+
+/** The shares the window sends, from its ticks. PURE. */
+export function sharesFrom(picked, msgs) {
+  return [...picked].map((id) => ({ person_id: id, messages: msgs.has(id) }));
 }
 
 /** A two-press button's state: the first press arms, the second (within `ms`) fires. PURE over `now`. */
@@ -131,16 +158,20 @@ export function createClaimsClient({ user = null, fetchImpl = (typeof fetch !== 
     return { status: r.status, body: j };
   }
   const pid = (id) => encodeURIComponent(id);
+  const withDays = (o, days) => (days ? { ...o, days } : o);
   return {
-    list: () => call('GET', '/api/claims'),
     invites: (personId) => call('GET', `/api/people/${pid(personId)}/invites`),
-    invite: (personId, { seePeople = true, messages = true, days = null } = {}) =>
-      call('POST', `/api/people/${pid(personId)}/invites`, { see_people: !!seePeople, messages: !!messages, ...(days ? { days } : {}) }),
+    invite: (personId, { shares = null, days = null } = {}) =>
+      call('POST', `/api/people/${pid(personId)}/invites`, withDays(shares ? { shares } : {}, days)),
     cancel: (personId, inviteId) => call('DELETE', `/api/people/${pid(personId)}/invites/${pid(inviteId)}`),
-    stop: (personId) => call('DELETE', `/api/claims/${pid(personId)}`),
-    setMessages: (personId, on) => call('PUT', `/api/claims/${pid(personId)}/messages`, { on: !!on }),
+    connect: ({ shares = null, days = null } = {}) => call('POST', '/api/connect/invites', withDays(shares ? { shares } : {}, days)),
+    connectInvites: () => call('GET', '/api/connect/invites'),
+    cancelConnect: (inviteId) => call('DELETE', `/api/connect/invites/${pid(inviteId)}`),
+    stop: (personId) => call('DELETE', `/api/people/${pid(personId)}/link`),
+    setMessages: (personId, on) => call('PUT', `/api/people/${pid(personId)}/messages`, { on: !!on }),
+    callName: (personId, name) => call('PUT', `/api/people/${pid(personId)}/call-name`, { name: String(name || '') }),
     peek: (token) => call('POST', '/api/invites/peek', { token }),
-    accept: (token) => call('POST', '/api/invites/accept', { token }),
+    accept: (token, { messagesBack = true } = {}) => call('POST', '/api/invites/accept', { token, messages_back: !!messagesBack }),
   };
 }
 
@@ -150,12 +181,16 @@ export const INVITE_STYLE = `
 .cl-box{display:flex;flex-direction:column;gap:12px;max-width:34rem;margin:0 auto;color:var(--text)}
 .cl-box p{margin:0}
 .cl-lead{color:var(--text-muted)}
-.cl-opt{display:flex;align-items:center;gap:10px;min-height:48px;padding:6px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);cursor:pointer}
+.cl-h{font-weight:700;color:var(--text-strong)}
+.cl-share{display:flex;flex-direction:column;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.cl-opt{display:flex;align-items:center;gap:10px;min-height:48px;cursor:pointer}
+.cl-opt.is-sub{padding-left:2rem;color:var(--text-muted)}
+.cl-opt.is-off{opacity:.55;cursor:default}
 .cl-opt input{width:1.4rem;height:1.4rem;flex:0 0 auto;accent-color:var(--accent)}
 .cl-btn{box-sizing:border-box;min-height:48px;padding:10px 14px;border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text-strong);font:inherit;font-weight:600;cursor:pointer;text-align:left}
 .cl-btn.is-go{border-color:var(--accent)}
 .cl-btn:focus-visible{outline:4px solid var(--scan-ring, var(--highlight));outline-offset:2px}
-.cl-link{box-sizing:border-box;width:100%;min-height:48px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text-strong);font:inherit;font-size:.95rem}
+.cl-link,.cl-input{box-sizing:border-box;width:100%;min-height:48px;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--surface-alt);color:var(--text-strong);font:inherit;font-size:.95rem}
 .cl-send{font-weight:700;color:var(--text-strong)}
 .cl-qr{width:min(200px,60%)}
 .cl-qr svg{display:block;width:100%;height:auto}
@@ -164,34 +199,53 @@ export const INVITE_STYLE = `
 `;
 
 /**
- * The window that makes a link for one of your people: two choices, Make the link, then the link (Copy) and a
- * code to scan, and Take the link back. Mounted into `host` (Your people's window over the page).
- *   person   { id, name }
+ * The window that makes a link: who comes with it (a tick per person you look after - just you by default - and,
+ * under each, whether they may leave messages for them), Make the link, then the link (Copy) and a code to scan,
+ * and Take the link back. Mounted into `host` (Your people's window over the page).
+ *   kind     'claim' (hand `person` over) | 'connect' (connect like friends)
+ *   person   { id, name } for a claim
+ *   people   your rows from GET /api/people (who can be shared)
  *   client   createClaimsClient(...)
  *   loc      where the page is served (the link's address is built from it)
  *   clipboard  { writeText } (a seam for the suites)
  * Returns { ready, destroy, __probe }.
  */
-export function mountInviteSheet(host, { person, client, loc = (typeof location !== 'undefined' ? location : null),
+export function mountInviteSheet(host, { kind = 'claim', person = null, people = [], client, loc = (typeof location !== 'undefined' ? location : null),
   clipboard = (typeof navigator !== 'undefined' ? navigator.clipboard : null), onChange = null } = {}) {
+  const isClaim = kind !== 'connect';
   const name = String(person?.name || '').trim();
-  let phase = 'loading';          // loading | choose | made | error
-  let waiting = null;             // a live invite already waiting ({ id, expires_at })
+  const options = shareable(people, { exclude: isClaim ? person?.id : '' });
+  // GUESS (claims.py DEFAULT_SHARES): just you, ticked; messages ticked under each person that is ticked.
+  const picked = new Set(options.filter((o) => o.you).map((o) => o.id));
+  const msgs = new Set(options.map((o) => o.id));
+  let phase = isClaim ? 'loading' : 'choose';     // loading | choose | made | error
+  let waiting = null;             // a live claim invite already waiting ({ id, expires_at })
   let made = null;                // { token, invite }
   let said = '';
-  let seePeople = true, messages = true;
   let torn = false;
   const style = host.ownerDocument.createElement('style');
   style.textContent = INVITE_STYLE;
   const box = host.ownerDocument.createElement('div');
   box.className = 'cl-box';
-  box.setAttribute('data-cl-invite', person?.id || '');
+  box.setAttribute('data-cl-invite', isClaim ? (person?.id || '') : 'connect');
   host.append(style, box);
+
+  function sharesHTML() {
+    const W = CLAIM_WORDS;
+    if (!options.length) return `<p class="cl-lead" data-cl-none>${esc(W.noneToShare)}</p>`;
+    return `<p class="cl-h">${esc(W.sharesLead)}</p>${options.map((o) => {
+      const on = picked.has(o.id);
+      // DIMMED WITH WHY rather than hidden: messages for somebody not shared cannot be allowed, and the box says so.
+      return `<div class="cl-share" data-cl-share-row="${esc(o.id)}">
+        <label class="cl-opt"><input type="checkbox" data-cl-share="${esc(o.id)}" ${on ? 'checked' : ''}> ${esc(o.you ? W.shareYou(o.name) : o.name)}</label>
+        <label class="cl-opt is-sub${on ? '' : ' is-off'}"${on ? '' : ` title="${esc(`Tick ${o.name} first`)}"`}><input type="checkbox" data-cl-msg="${esc(o.id)}" ${on && msgs.has(o.id) ? 'checked' : ''} ${on ? '' : 'disabled'}> ${esc(W.shareMsg(o.you ? 'you' : o.name))}</label></div>`;
+    }).join('')}`;
+  }
 
   function render() {
     if (torn) return;
     const W = CLAIM_WORDS;
-    let h = `<p class="cl-lead" data-cl-lead>${esc(W.inviteLead(name))}</p>`;
+    let h = `<p class="cl-lead" data-cl-lead>${esc(isClaim ? W.inviteLead(name) : W.connectLead)}</p>`;
     if (phase === 'loading') h += '<p class="cl-lead">Checking…</p>';
     if (phase === 'error') h += `<p class="cl-say">${esc(W.failed)}</p>`;
     if (phase === 'choose') {
@@ -199,18 +253,16 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
         h += `<p data-cl-waiting>${esc(W.waiting(name, whenText(waiting.expires_at)))}</p>
           <button type="button" class="cl-btn" data-cl-act="cancel">${esc(W.takeBack)}</button>`;
       }
-      h += `<label class="cl-opt"><input type="checkbox" data-cl-see ${seePeople ? 'checked' : ''}> ${esc(W.seePeople(name))}</label>
-        <label class="cl-opt"><input type="checkbox" data-cl-msg ${messages ? 'checked' : ''}> ${esc(W.messages(name))}</label>
-        <button type="button" class="cl-btn is-go" data-cl-act="make">${esc(waiting ? W.makeAgain : W.make)}</button>`;
+      h += `${sharesHTML()}<button type="button" class="cl-btn is-go" data-cl-act="make">${esc(waiting ? W.makeAgain : W.make)}</button>`;
     }
     if (phase === 'made' && made) {
       const url = joinURL(made.token, loc);
       let qr = '';
       try {
         const colours = themeQrColours(box);
-        if (colours) qr = qrSVG(url, { level: 'M', quiet: 4, dark: colours.dark, light: colours.light, title: `Scan to open the invitation for ${name}` });
+        if (colours) qr = qrSVG(url, { level: 'M', quiet: 4, dark: colours.dark, light: colours.light, title: isClaim ? `Scan to open the invitation for ${name}` : 'Scan to open the invitation' });
       } catch (err) { console.error('claim: qr', err); qr = ''; }
-      h += `<p class="cl-send" data-cl-send>${esc(W.send(name))}</p>
+      h += `<p class="cl-send" data-cl-send>${esc(isClaim ? W.send(name) : W.sendConnect)}</p>
         <input class="cl-link" readonly data-cl-link value="${esc(url)}" aria-label="The link to send">
         <button type="button" class="cl-btn is-go" data-cl-act="copy">${esc(W.copy)}</button>
         ${qr ? `<p>${esc(W.scan)}</p><div class="cl-qr" data-cl-qr>${qr}</div>` : ''}
@@ -222,6 +274,7 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
   }
 
   async function load() {
+    if (!isClaim) { render(); return; }
     try {
       const r = await client.invites(person.id);
       if (torn) return;
@@ -234,10 +287,11 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
 
   async function make() {
     said = '';
+    const shares = sharesFrom(options.filter((o) => picked.has(o.id)).map((o) => o.id), msgs);
     try {
-      const r = await client.invite(person.id, { seePeople, messages });
+      const r = isClaim ? await client.invite(person.id, { shares }) : await client.connect({ shares });
       if (torn) return;
-      if (r.status !== 200 || !r.body?.token) { said = r.body?.text || CLAIM_WORDS.failed; render(); return; }
+      if (r.status !== 200 || !r.body?.token) { said = r.body?.text || r.body?.detail || CLAIM_WORDS.failed; render(); return; }
       made = { token: r.body.token, invite: r.body.invite };
       waiting = null;
       phase = 'made';
@@ -250,7 +304,7 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
     const id = made?.invite?.id || waiting?.id;
     if (!id) return;
     try {
-      const r = await client.cancel(person.id, id);
+      const r = isClaim ? await client.cancel(person.id, id) : await client.cancelConnect(id);
       if (torn) return;
       said = r.status === 200 ? CLAIM_WORDS.takenBack : CLAIM_WORDS.failed;
       if (r.status === 200) { made = null; waiting = null; phase = 'choose'; onChange?.(); }
@@ -278,8 +332,13 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
     else if (a === 'copy') copy();
   }
   function onInput(e) {
-    if (e.target?.matches?.('[data-cl-see]')) seePeople = !!e.target.checked;
-    if (e.target?.matches?.('[data-cl-msg]')) messages = !!e.target.checked;
+    const t = e.target;
+    if (t?.matches?.('[data-cl-share]')) {
+      if (t.checked) picked.add(t.dataset.clShare); else picked.delete(t.dataset.clShare);
+      render();
+    } else if (t?.matches?.('[data-cl-msg]')) {
+      if (t.checked) msgs.add(t.dataset.clMsg); else msgs.delete(t.dataset.clMsg);
+    }
   }
   box.addEventListener('click', onClick);
   box.addEventListener('change', onInput);
@@ -288,6 +347,52 @@ export function mountInviteSheet(host, { person, client, loc = (typeof location 
   return {
     ready,
     destroy() { torn = true; box.removeEventListener('click', onClick); box.removeEventListener('change', onInput); style.remove(); box.remove(); },
-    __probe: () => ({ phase, waiting, made: made ? { token: made.token, expires_at: made.invite?.expires_at } : null, said, seePeople, messages }),
+    __probe: () => ({ kind: isClaim ? 'claim' : 'connect', phase, waiting, made: made ? { token: made.token, expires_at: made.invite?.expires_at } : null, said,
+      options: options.map((o) => ({ ...o })), shares: sharesFrom(options.filter((o) => picked.has(o.id)).map((o) => o.id), msgs) }),
+  };
+}
+
+/**
+ * "I call them": a text box, Save, and "Use their own name". Mounted into `host`.
+ *   person  { id, name, call_name, profile_name } (a row from GET /api/people)
+ * Returns { destroy, __probe }.
+ */
+export function mountCallName(host, { person, client, onChange = null } = {}) {
+  const own = String(person?.profile_name || '').trim();
+  let said = '';
+  let torn = false;
+  const style = host.ownerDocument.createElement('style');
+  style.textContent = INVITE_STYLE;
+  const box = host.ownerDocument.createElement('div');
+  box.className = 'cl-box';
+  box.setAttribute('data-cl-callname', person?.id || '');
+  host.append(style, box);
+  const W = CLAIM_WORDS;
+  box.innerHTML = `<label class="cl-h" for="cl-call-${esc(person?.id)}">${esc(W.callLabel)}</label>
+    <input class="cl-input" id="cl-call-${esc(person?.id)}" data-cl-call maxlength="${CALL_NAME_MAX}" value="${esc(person?.call_name || '')}" placeholder="${esc(own)}">
+    <p class="cl-lead">${esc(W.callHow(own))}</p>
+    <button type="button" class="cl-btn is-go" data-cl-act="save">${esc(W.callSave)}</button>
+    <button type="button" class="cl-btn" data-cl-act="clear">${esc(W.callClear(own))}</button>
+    <p class="cl-say" role="status" data-cl-say></p>`;
+  const input = box.querySelector('[data-cl-call]');
+  const say = (t) => { said = t; const el = box.querySelector('[data-cl-say]'); if (el) el.textContent = t; };
+  async function save(name) {
+    try {
+      const r = await client.callName(person.id, name);
+      if (torn) return;
+      if (r.status === 200) { input.value = r.body?.call_name || ''; say(W.callSaved); onChange?.(r.body); }
+      else say(r.body?.detail || W.failed);
+    } catch { say(W.failed); }
+  }
+  function onClick(e) {
+    const b = e.target instanceof Element ? e.target.closest('[data-cl-act]') : null;
+    if (!b || !box.contains(b)) return;
+    if (b.dataset.clAct === 'save') save(String(input.value || '').trim().slice(0, CALL_NAME_MAX));
+    if (b.dataset.clAct === 'clear') save('');
+  }
+  box.addEventListener('click', onClick);
+  return {
+    destroy() { torn = true; box.removeEventListener('click', onClick); style.remove(); box.remove(); },
+    __probe: () => ({ value: input.value, said }),
   };
 }

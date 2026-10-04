@@ -19,12 +19,19 @@
 //                  Spotify (off a screen; on a screen the address and a code), Remove (off a screen only).
 //   Share a picture dimmed, "coming soon": nothing puts a picture on somebody else's screen yet.
 //   Edit my picture the avatar maker (modules/avatar.js), opened over this page, saving to YOUR record.
-//   Invite them to use this  (2026-10-04, claim.js; the rules are web/server/claims.py) under each of your own
-//                  people but you: a link (and a code to scan) that, opened and signed in to with somebody's own
-//                  login, makes that person theirs. Once they have joined the card says "— joined", with "Stop
-//                  sharing" (two presses) and their messages on / off. On THEIR page: a "You are Mom on Pat's
-//                  people" card (Edit that picture, Stop sharing) and Pat's people as cards with the same buttons,
-//                  each live or dimmed by the same rules as everybody else's.
+//   PEOPLE ACROSS ACCOUNTS (2026-10-04 night, claim.js; the rules are web/server/claims.py). A profile has a home
+//                  (the login that looks after it) and shows on other logins' pages, each calling them what it likes.
+//                  Connect with someone  a link (and a code to scan) that, opened and signed in to, puts you on
+//                  each other's page, like friends; the window picks which of your people come with it (just you,
+//                  by default) and whether they may leave messages for each.
+//                  Invite them to use this  under each of the people you look after but you: the same link, and
+//                  opened, that person becomes the opener's own profile (their name, picture and page) - your card
+//                  keeps what you called them, says "— joined", and you can no longer rename them or change the
+//                  picture (I call them… instead).
+//                  On a card a connection put here: I call them… (your own name for them), Messages from them:
+//                  on / off, and Stop sharing (two presses; it ends the connection with that login). Call, message
+//                  and recommend go where that person can be reached (`reach`, from the server), each live or dimmed
+//                  by the same rules as everybody else's.
 //
 // *** ON A SCREEN IN SOMEBODY'S ROOM (`ctx.isScreen`) IT IS FACES AND NAMES, AND WHAT CAME IN. *** A screen never
 // places a call (kiosk.js; modules/profile.js) and never sends anything, so none of the five buttons could ever act
@@ -70,8 +77,8 @@ import {
   mountRecommend, mountRecommendedVideo, recommendationsURL, markURL, playPlan, recLine, recThumbHTML, recElsewhereHTML,
   kindWords, REC_WORDS,
 } from '../recommend.js';
-// "Invite them to use this" / "— joined" / "Stop sharing" (claim.js; the rules are the server's claims.py).
-import { createClaimsClient, linkedPeopleFrom, givenFor, mountInviteSheet, twoPress, CLAIM_WORDS, STOP_CONFIRM_MS } from '../claim.js';
+// Connect with someone / Invite them to use this / I call them / Stop sharing (claim.js; the rules are claims.py).
+import { createClaimsClient, mountInviteSheet, mountCallName, twoPress, kindSub, CLAIM_WORDS, STOP_CONFIRM_MS } from '../claim.js';
 import { mountNoteVisit, screensURL, noteURL } from '../note_visit.js';
 import { currentNote, whenOf, whenWords } from './note.js';
 import { mayCall, callURL } from './profile.js';
@@ -184,9 +191,6 @@ registerModule(
     const notes = new Map();      // person id -> 'ok' | 'refused' | 'none' | 'error' (absent: checking)
     let incoming = [];            // people_page.js incomingFrom
     let recs = [];                // recommended to you (recommend.js), newest first
-    // Claims (claim.js): `mine` = people on OTHER logins this one took over (with their people); `given` = your
-    // people somebody else's login took over. claimsOK: null not read yet, false could not read, true read.
-    let claimsMine = [], claimsGiven = [], claimsOK = null;
     let armed = null;             // { key, at } - the first press of a two-press "Stop sharing"
     let armTimer = null;
     let avatars = null;
@@ -232,37 +236,32 @@ registerModule(
       if (typeof ctx.profiles?.sharedWithMe === 'function') {
         try { const r = await ctx.profiles.sharedWithMe(); shared = Array.isArray(r) ? r : []; } catch { shared = []; }
       } else { shared = []; }
-      await loadClaims();
     }
     const claimsClient = () => createClaimsClient({ user: account() });
-    async function loadClaims() {
-      if (typeof fetch !== 'function') { claimsMine = []; claimsGiven = []; claimsOK = false; return; }
-      try {
-        const r = await claimsClient().list();
-        const ok = r.status === 200 && r.body;
-        claimsMine = ok && Array.isArray(r.body.mine) ? r.body.mine : [];
-        claimsGiven = ok && Array.isArray(r.body.given) ? r.body.given : [];
-        claimsOK = !!ok;
-      } catch { claimsMine = []; claimsGiven = []; claimsOK = false; }
-    }
     const selfRow = () => (Array.isArray(own) ? own.find((p) => p.id === selfId()) : null) || { id: selfId(), name: '' };
-    // Your account's people and those shared with you (people_page.js), then the people you see because you took
-    // over somebody on another login's people (claim.js linkedPeopleFrom) - each once.
+    // Your account's people and those shared with you (people_page.js), each once. A row of yours carries what the
+    // server says it is to you (claims.py): `kind`, where to reach them (`reach`), who it came through (`from`).
     const people = () => {
-      const list = connectionsFrom({ own: own || [], shared: shared || [], selfId: selfId() });
-      for (const l of linkedPeopleFrom(claimsMine)) if (l.id !== selfId() && !list.some((x) => x.id === l.id)) list.push(l);
-      return list;
+      const rows = new Map((Array.isArray(own) ? own : []).map((r) => [r.id, r]));
+      return connectionsFrom({ own: own || [], shared: shared || [], selfId: selfId() }).map((p) => {
+        const r = p.via === 'account' ? rows.get(p.id) : null;
+        if (!r) return { ...p, reach: p.id };
+        return { ...p, reach: r.reach || p.id, kind: r.kind || 'mine', home: r.home !== false, from: r.from || '',
+          linked: !!r.linked, messagesFromThem: !!r.messages_from_them, callName: r.call_name || '', profileName: r.profile_name || p.name };
+      });
     };
     const mayCallNow = (pid) => mayCall(pid, { own: Array.isArray(own) ? own : null, shared });
 
-    // May a message be left for them? Asked once per card, off a screen only (a screen sends nothing).
+    // May a message be left for them? Asked once per person they can be reached at, off a screen only (a screen
+    // sends nothing). Keyed by `reach`: a card a connection put here asks the person it reaches, on their login.
     async function checkNotes() {
       if (isScreen()) return;
       // (A signed-in browser needs no `user`: its cookie goes with the request. Nobody signed in: the server says no,
       // and the button says to try later rather than "Checking…" for ever.)
-      await Promise.all(people().filter((p) => !notes.has(p.id)).map(async (p) => {
-        try { const r = await getJSON(screensURL(p.id)); notes.set(p.id, noteStatusFrom(r.status, r.body)); }
-        catch { notes.set(p.id, 'error'); }
+      const ids = [...new Set(people().map((p) => p.reach))].filter((id) => id && !notes.has(id));
+      await Promise.all(ids.map(async (id) => {
+        try { const r = await getJSON(screensURL(id)); notes.set(id, noteStatusFrom(r.status, r.body)); }
+        catch { notes.set(id, 'error'); }
       }));
     }
 
@@ -388,48 +387,40 @@ registerModule(
         return `<p class="pp-note" data-pp-nobody>${esc(peopleNote || (own === null && !ctx.profiles ? 'Sign in to see your people.' : 'Nobody here yet. Connect with someone below.'))}</p>`;
       }
       return list.map((p) => {
-        const acts = actionsFor(p, { isScreen: false, may: mayCallNow(p.id), noteStatus: notes.get(p.id) ?? null, callHref: callURL(p.id) });
-        const given = p.via === 'account' ? givenFor(p.id, claimsGiven) : null;
-        const sub = p.via === 'shared' ? 'Shared with you'
-          : p.via === 'linked' ? (p.joined ? CLAIM_WORDS.linkedJoinedSub(p.from) : CLAIM_WORDS.linkedSub(p.from))
-            : given ? CLAIM_WORDS.joinedSub : 'Added by you';
+        // Call, message and recommend go where they can be reached (`reach`); the face and name are this card's own.
+        const acts = actionsFor(p, { isScreen: false, may: mayCallNow(p.reach), noteStatus: notes.get(p.reach) ?? null, callHref: callURL(p.reach) });
+        const joined = p.kind === 'joined';
+        const sub = p.via === 'shared' ? 'Shared with you' : kindSub(p);
         return card(`p:${p.id}`, `<div class="pp-who"><div class="pp-face">${faceOf(p, CARD_FACE)}</div>
-            <div><div class="pp-name"><span data-pp-name>${esc(p.name)}</span>${given ? ` <span class="pp-joined" data-pp-joined>— ${esc(CLAIM_WORDS.joined)}</span>` : ''}</div><p class="pp-sub">${esc(sub)}</p></div></div>
-          <div class="pp-btns" data-pp-person="${esc(p.id)}">${acts.map((a) => button(a, `p:${p.id}`)).join('')}</div>${claimRow(p, given)}`);
+            <div><div class="pp-name"><span data-pp-name>${esc(p.name)}</span>${joined ? ` <span class="pp-joined" data-pp-joined>— ${esc(CLAIM_WORDS.joined)}</span>` : ''}</div>
+            <p class="pp-sub" data-pp-sub>${esc(sub)}</p></div></div>
+          <div class="pp-btns" data-pp-person="${esc(p.id)}">${acts.map((a) => button(a, `p:${p.id}`)).join('')}</div>${claimRow(p)}`);
       }).join('');
     }
 
-    // UNDER ONE OF YOUR OWN PEOPLE: "Invite them to use this" (claim.js), or - once they have joined - "Stop sharing"
-    // (two presses) and their messages on / off. Not under you (the account's first person cannot be handed over:
-    // claims.py `invite_refusal`), and not under anybody who is not on your account.
+    // UNDER EACH OF YOUR OWN PEOPLE (claim.js; the server's claims.py decides):
+    //   somebody you look after (not you - claims.py `invite_refusal`)  "Invite them to use this"
+    //   somebody whose profile is on another login                     "I call them…", and - when a connection put
+    //                                                                   them here - "Messages from them" and "Stop
+    //                                                                   sharing" (two presses)
+    // Nothing under you, or under a screen shared with you.
     const stopLabel = (key) => (armed && armed.key === key && twoPress(armed.at, Date.now()) === 'fire');
-    function claimRow(p, given) {
-      if (p.via !== 'account' || (Array.isArray(own) && own[0] && own[0].id === p.id)) return '';
+    function claimRow(p) {
+      if (p.via !== 'account' || p.kind === 'you') return '';
       const key = `p:${p.id}`;
-      let btns;
-      if (given) {
-        const again = stopLabel(`${key}|stop-share`);
-        btns = [button({ act: 'stop-share', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stop, short: CLAIM_WORDS.stopShort, enabled: true }, key),
-          button({ act: 'claim-msg', label: given.messages ? CLAIM_WORDS.msgOn : CLAIM_WORDS.msgOff, short: CLAIM_WORDS.msgShort, enabled: true }, key)];
+      let btns = [];
+      if (p.home) {
+        btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: CLAIM_WORDS.inviteShort, enabled: true }, key)];
       } else {
-        const can = claimsOK === true;
-        btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: can ? CLAIM_WORDS.inviteShort : (claimsOK === null ? 'Checking…' : 'Try again later'),
-          enabled: can, reason: can ? '' : (claimsOK === null ? 'Checking…' : CLAIM_WORDS.failed) }, key)];
+        btns.push(button({ act: 'call-name', label: CLAIM_WORDS.callThem, short: CLAIM_WORDS.callThemShort(p.callName ? p.profileName : ''), enabled: true }, key));
+        if (p.linked) {
+          const again = stopLabel(`${key}|stop-share`);
+          btns.push(button({ act: 'claim-msg', label: p.messagesFromThem ? CLAIM_WORDS.msgOn : CLAIM_WORDS.msgOff, short: CLAIM_WORDS.msgShort, enabled: true }, key),
+            button({ act: 'stop-share', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stop,
+              short: p.kind === 'joined' ? CLAIM_WORDS.stopShort : CLAIM_WORDS.stopLinked(p.from), enabled: true }, key));
+        }
       }
       return `<div class="pp-btns" data-pp-claim="${esc(p.id)}">${btns.join('')}</div>`;
-    }
-
-    // YOU, ON SOMEBODY ELSE'S PEOPLE: one card per person this login took over - who you are there, "Edit that
-    // picture" (the picture is yours now), and "Stop sharing" (two presses; it goes back to whoever set it up).
-    function joinedCards() {
-      return claimsMine.map((c) => {
-        const key = `j:${c.person_id}`;
-        const again = stopLabel(`${key}|stop-mine`);
-        return card(key, `<div class="pp-who"><div class="pp-face">${faceOf({ id: c.person_id, name: c.name }, CARD_FACE)}</div>
-            <div><div class="pp-name" data-pp-you-are>${esc(CLAIM_WORDS.youAre(c.name, c.from))}</div><p class="pp-sub">${esc(CLAIM_WORDS.youAreSub)}</p></div></div>
-          <div class="pp-btns" data-pp-joined-as="${esc(c.person_id)}">${button({ act: 'edit-there', label: CLAIM_WORDS.editThere, enabled: true }, key)}
-            ${button({ act: 'stop-mine', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stopMine, short: CLAIM_WORDS.stopMineShort, enabled: true }, key)}</div>`);
-      }).join('');
     }
 
     function screenFaces() {
@@ -445,10 +436,14 @@ registerModule(
         ${elsewhereHTML(CALL_PAGE, { colours, cls: 'pp-note pl-elsewhere' })}`);
     }
 
-    const connectCard = () => card('connect', `<h2 class="pp-h">Connect with someone</h2>
-      <p class="pp-note" data-pp-connect>Made someone here for a relative or friend? Press “Invite them to use this” on their card and send
-      them the link: when they open it and sign in with their own login, it becomes theirs, and you show on each other’s page.
-      Whoever looks after a screen can also share it with you, and that person shows up here.</p>`);
+    // "Connect with someone": live once your people are read (you are signed in); dimmed with why otherwise.
+    const connectCard = () => {
+      const can = Array.isArray(own) && !!selfId();
+      return card('connect', `<h2 class="pp-h">${esc(CLAIM_WORDS.connect)}</h2>
+        <p class="pp-note" data-pp-connect>${esc(CLAIM_WORDS.connectLine)}</p>
+        <div class="pp-btns">${button({ act: 'connect', label: CLAIM_WORDS.connect, short: can ? CLAIM_WORDS.connectShort : 'Sign in first',
+          enabled: can, reason: can ? '' : 'Sign in to connect with someone.' }, 'connect')}</div>`);
+    };
     const moreCard = () => card('more', `<div class="pp-btns">${button({ act: 'more', label: 'More', short: 'Your settings, your devices and more', enabled: true }, 'more')}
       ${button({ act: 'nimrod', label: 'Ask Nimrod', short: 'He shows you around', enabled: true }, 'more')}</div>`);
 
@@ -457,7 +452,7 @@ registerModule(
     // One of today's parts, or About me, or the quiet line for a kind this version does not know.
     function sectionHTML(s) {
       switch (s.kind) {
-        case 'self': return selfCard() + (isScreen() ? '' : joinedCards()) + (editing ? editCard() : '');
+        case 'self': return selfCard() + (editing ? editCard() : '');
         case 'messages': return incomingHTML();
         case 'recommended': return recommendedHTML();
         case 'people': return isScreen() ? screenFaces() : `<h2 class="pp-h">Your people</h2>${peopleCards()}`;
@@ -957,10 +952,10 @@ registerModule(
         case 'rec-remove': markRec(recId, 'dismissed'); return;
         case 'picture-edit': openPicture(); return;
         case 'invite': openInvite(pid); return;
+        case 'connect': openConnect(); return;
+        case 'call-name': openCallName(pid); return;
         case 'stop-share': stopSharing(pid, `${key}|stop-share`); return;
         case 'claim-msg': toggleClaimMessages(pid); return;
-        case 'edit-there': openPictureThere(key.startsWith('j:') ? key.slice(2) : ''); return;
-        case 'stop-mine': stopSharing(key.startsWith('j:') ? key.slice(2) : '', `${key}|stop-mine`); return;
         case 'nimrod': openNimrod(); return;
         case 'more': more(); return;
         default: render();
@@ -1053,30 +1048,44 @@ registerModule(
       const host = openSheet('message', `A message for ${p.name}`);
       host.style.padding = '12px';
       try {
-        sheet.child = mountNoteVisit(host, { personId: p.id, personName: p.name, user: account() });
+        sheet.child = mountNoteVisit(host, { personId: p.reach || p.id, personName: p.name, user: account() });
         sheet.personId = p.id;
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: message', err); host.textContent = 'The message could not be opened here just now.'; }
     }
-    // ---- claims (claim.js) ------------------------------------------------------------------------------
+    // ---- people across accounts (claim.js) ------------------------------------------------------------------
     function openInvite(pid) {
       const p = people().find((x) => x.id === pid);
       if (!p) return;
       const host = openSheet('invite', CLAIM_WORDS.inviteTitle(p.name));
       host.style.padding = '12px';
       try {
-        sheet.child = mountInviteSheet(host, { person: { id: p.id, name: p.name }, client: claimsClient() });
+        sheet.child = mountInviteSheet(host, { kind: 'claim', person: { id: p.id, name: p.name }, people: own || [], client: claimsClient() });
         sheet.personId = p.id;
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: invite', err); host.textContent = CLAIM_WORDS.failed; }
     }
-    // The picture of the person you ARE on somebody else's people (the server lets the claimer write that one key).
-    async function openPictureThere(pid) {
-      const c = claimsMine.find((x) => x.person_id === pid);
-      if (!c) return;
-      const host = openSheet('picture', `${c.name}’s picture`);
-      try { sheet.child = await mountChild('avatar', host, { personId: pid }); } catch (err) { console.error('people: picture there', err); host.textContent = CLAIM_WORDS.failed; }
-      paintCursor();
+    function openConnect() {
+      const host = openSheet('invite', CLAIM_WORDS.connectTitle);
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountInviteSheet(host, { kind: 'connect', people: own || [], client: claimsClient() });
+        Promise.resolve(sheet.child.ready).then(() => paintCursor());
+      } catch (err) { console.error('people: connect', err); host.textContent = CLAIM_WORDS.failed; }
+    }
+    // "I call them…": your own name for somebody whose profile lives on their own login. Saved, the page reads your
+    // people again, so the card shows it at once.
+    function openCallName(pid) {
+      const p = people().find((x) => x.id === pid);
+      if (!p) return;
+      const host = openSheet('callname', CLAIM_WORDS.callTitle(p.profileName || p.name));
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountCallName(host, { person: { id: p.id, call_name: p.callName, profile_name: p.profileName || p.name }, client: claimsClient(),
+          onChange: () => { afterClaimChange(); } });
+        sheet.personId = p.id;
+        paintCursor();
+      } catch (err) { console.error('people: call name', err); host.textContent = CLAIM_WORDS.failed; }
     }
     // TWO PRESSES: the first turns the button into "Press again to stop sharing" (claim.js STOP_CONFIRM_MS argues
     // the time); the second, within it, stops. Either side may (the server checks which).
@@ -1090,28 +1099,29 @@ registerModule(
         return;
       }
       armed = null; clearTimeout(armTimer);
-      const name = (claimsGiven.find((g) => g.person_id === pid) || claimsMine.find((m) => m.person_id === pid) || {}).name || '';
+      const p = people().find((x) => x.id === pid) || {};
+      const name = p.kind === 'joined' ? p.name : (p.from || p.name || '');
       const cardKey = armKey.split('|')[0];
       try {
         const r = await claimsClient().stop(pid);
-        why = new Map([[cardKey, r.status === 200 ? CLAIM_WORDS.stopped(name) : CLAIM_WORDS.failed]]);
+        why = new Map([[cardKey, r.status === 200 ? (p.kind === 'joined' ? CLAIM_WORDS.stoppedJoined(name) : CLAIM_WORDS.stopped(name)) : CLAIM_WORDS.failed]]);
       } catch { why = new Map([[cardKey, CLAIM_WORDS.failed]]); }
       await afterClaimChange();
-      // The card that said it may have gone (the claimer's own "you are" card): say it on the self card instead.
+      // The card that said it may have gone (a card the connection made): say it on your own card instead.
       if (!root?.querySelector(`[data-pp-card="${cardKey}"]`)) { why = new Map([['self', [...why.values()][0] || '']]); render(); }
     }
     async function toggleClaimMessages(pid) {
-      const g = claimsGiven.find((x) => x.person_id === pid);
-      if (!g) return;
+      const p = people().find((x) => x.id === pid);
+      if (!p || !p.linked) return;
       try {
-        const r = await claimsClient().setMessages(pid, !g.messages);
+        const r = await claimsClient().setMessages(pid, !p.messagesFromThem);
         if (r.status !== 200) why = new Map([[`p:${pid}`, CLAIM_WORDS.failed]]);
       } catch { why = new Map([[`p:${pid}`, CLAIM_WORDS.failed]]); }
       await afterClaimChange();
     }
-    // Who is on the page, and who may get a message, can both change with a claim: read both again.
+    // Who is on the page, what they are called, and who may get a message can all change: read them again.
     async function afterClaimChange() {
-      await loadClaims();
+      await loadPeople();
       notes.clear();
       if (torn) return;
       render();
@@ -1125,7 +1135,7 @@ registerModule(
       const host = openSheet('recommend', `A song or video for ${p.name}`);
       host.style.padding = '12px';
       try {
-        sheet.child = mountRecommend(host, { personId: p.id, personName: p.name, fromPersonId: selfId(), user: account() });
+        sheet.child = mountRecommend(host, { personId: p.reach || p.id, personName: p.name, fromPersonId: selfId(), user: account() });
         sheet.personId = p.id;
         paintCursor();
       } catch (err) { console.error('people: recommend', err); host.textContent = 'This could not be opened here just now.'; }
@@ -1245,7 +1255,7 @@ registerModule(
       __probe: () => ({
         people: people(), self: selfRow(), notes: Object.fromEntries(notes), incoming: incoming.slice(), recs: recs.map((r) => ({ ...r })), prefs: { ...prefs },
         sheet: sheet ? sheet.kind : null, cursor: { ...cursor }, mode: scanModeOf(chooseMode()), isScreen: isScreen(),
-        claims: { mine: claimsMine.map((c) => ({ ...c })), given: claimsGiven.map((g) => ({ ...g })), ok: claimsOK, armed: armed ? armed.key : null },
+        claims: { armed: armed ? armed.key : null },
         invite: sheet?.kind === 'invite' ? sheet.child?.__probe?.() || null : null,
         page: { sections: viewSections(pageDoc, { isScreen: isScreen() }).map((s) => ({ kind: s.kind, id: s.id, known: s.known })), editing,
           own: Array.isArray(pageDoc?.sections), canEdit: canEdit(), boxes: [...boxes].map(([id, b]) => ({ id, kind: b.kind, mounted: !!b.inst })) },

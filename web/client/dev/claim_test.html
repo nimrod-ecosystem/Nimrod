@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>invite someone to take over a profile you made — test</title>
+<title>people across accounts: connect, hand a profile over, I call them — test</title>
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
   h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
@@ -12,21 +12,22 @@
 </style>
 </head>
 <body>
-<h1>claims: invite someone to take over a profile you made (claim.js, join_page.js, Your people's cards)</h1>
-<p>The words (plain, no "account", "token" or "grant"); the invite window (two choices, the link, Copy, a code to scan,
-Take the link back); the join page (who sent it, sign in, Make this mine, a used or wrong link); and the cards on
-both sides afterwards (— joined, Stop sharing in two presses, messages on / off; You are Mom on Pat's people, Pat's
-people as cards). Needs the server (<code>SUITE_BASE</code>).</p>
+<h1>people across accounts (claim.js, join_page.js, Your people's cards)</h1>
+<p>The words (plain: no "account", "token", "grant", "identity"...); the invite window (who comes with it - just you by
+default - and messages for each; the link, Copy, a code to scan, Take the link back); the join page for both kinds of
+link (Connect, Make this mine, the "leave you messages" tick, a used or wrong link); the cards on both sides afterwards
+(— joined, I call them…, Messages from them, Stop sharing in two presses; Connected, From Pat's people). Needs the
+server (<code>SUITE_BASE</code>).</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
 <script type="module">
 import {
-  JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, linkedPeopleFrom,
-  givenFor, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet,
+  JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, kindSub, shareable,
+  sharesFrom, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet, mountCallName,
 } from '../claim.js';
 import { mountJoinPage, JOIN_WORDS, backHere, AFTER_JOIN } from '../join_page.js';
-import { PEOPLE_TYPE, plainWordProblems } from '../people_page.js';
+import { PEOPLE_TYPE } from '../people_page.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
 import { createBus } from '../bus.js';
@@ -51,7 +52,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
 const J = (x) => JSON.stringify(x);
 const BASE = 'claim-' + Math.floor(Math.random() * 1e9);
-const A = `${BASE}-pat`, M = `${BASE}-mom`, D = `${BASE}-dee`;
+const A = `${BASE}-pat`, M = `${BASE}-mom`, D = `${BASE}-dee`, O = `${BASE}-oscar`;
 async function call(method, path, user, body) {
   const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
   if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
@@ -75,15 +76,23 @@ async function mountPeople(user, personId, box, extra = {}) {
   await inst.init();
   return inst;
 }
+function pageBox(h = 1100) {
+  const b = themed(document.createElement('div'));
+  b.style.cssText += `;position:relative;width:375px;height:${h}px;overflow:hidden;border:1px solid #888`;
+  document.body.append(b);
+  return b;
+}
+const cardIn = (box) => (name) => [...box.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
 
 try {
   // ============================================================================================
   section('*** the words and rules, pure ***');
   const allWords = Object.values(CLAIM_WORDS).map((w) => (typeof w === 'function' ? `${w('Mom', 'Pat')} ${w('', '')}` : w)).join(' ')
     + ' ' + Object.values(JOIN_WORDS).map((w) => (typeof w === 'function' ? `${w('Pat', 'Mom')} ${w('', '')}` : w)).join(' ');
-  check('*** every word a person can read here is plain: no account, token, grant, module, dashboard or panel ***',
-    !claimWordProblems(allWords).length && J(CLAIM_BANNED) === J(['account', 'token']), J(claimWordProblems(allWords)));
-  check('the check catches them', J(claimWordProblems('your account token and a grant on a panel')) === J(['panel', 'grant', 'account', 'token']));
+  check('*** every word a person can read here is plain: no account, token, widget, identity, instance, grant, module, dashboard or panel ***',
+    !claimWordProblems(allWords).length && J(CLAIM_BANNED) === J(['account', 'token', 'widget', 'identity', 'instance']), J(claimWordProblems(allWords)));
+  check('the check catches them', J(claimWordProblems('your account token, a grant on a panel, an identity and an instance'))
+    === J(['panel', 'grant', 'account', 'token', 'identity', 'instance']));
   check('names nobody real', !/her screen|christine|cici|mike/i.test(allWords));
   check('*** "Send this to Mom. When Mom opens it and signs in, this becomes Mom’s." ***',
     CLAIM_WORDS.send('Mom') === 'Send this to Mom. When Mom opens it and signs in, this becomes Mom’s.', CLAIM_WORDS.send('Mom'));
@@ -92,16 +101,19 @@ try {
   check('the token read back from the address', inviteFromQuery('?invite=abc&x=1') === 'abc' && inviteFromQuery('') === '' && inviteFromQuery('?nope=1') === '');
   check('the sign-in comes back here with the link (and never to another site)', backHere('t1') === '/join.html?invite=t1' && AFTER_JOIN === '/');
   check('a date somebody reads', /\d/.test(whenText('2026-10-18T12:00:00+00:00')) && whenText('junk') === 'it runs out');
-  const lp = linkedPeopleFrom([{ person_id: 'mom', from: 'Pat', people: [{ id: 'pat', name: 'Pat', sender: true }, { id: 'mom', name: 'Mom', you: true },
-    { id: 'r', name: 'Robin', joined: true }] }, { person_id: 'x', from: 'Q', people: [{ id: 'r', name: 'Robin again' }] }]);
-  check('*** the people you see by taking over Mom: Pat and Robin, never Mom herself, each once ***',
-    J(lp.map((p) => [p.id, p.via, p.joined, p.from])) === J([['pat', 'linked', false, 'Pat'], ['r', 'linked', true, 'Pat']]), J(lp));
-  check('the claim on one of your people', givenFor('a', [{ person_id: 'a', by: 'Mom' }]).by === 'Mom' && givenFor('b', []) === null);
+  check('*** the line under a name: Added by you, Uses this with their own login, Connected, From Pat’s people ***',
+    kindSub({ kind: 'mine' }) === 'Added by you' && kindSub({ kind: 'joined' }) === 'Uses this with their own login'
+    && kindSub({ kind: 'connected' }) === 'Connected' && kindSub({ kind: 'shared', from: 'Pat' }) === 'From Pat’s people');
+  const sh = shareable([{ id: 'me', name: 'Pat', kind: 'you', home: true }, { id: 'r', name: 'Robin', kind: 'mine', home: true },
+    { id: 'm', name: 'Mom', kind: 'mine', home: true }, { id: 'x', name: 'Lent', kind: 'shared', home: false }], { exclude: 'm' });
+  check('*** who can be shared: the people you look after, you first, never the one handed over, never a profile you only hold ***',
+    J(sh.map((s) => [s.id, s.you])) === J([['me', true], ['r', false]]), J(sh));
+  check('the shares sent, from the ticks', J(sharesFrom(['me', 'r'], new Set(['me']))) === J([{ person_id: 'me', messages: true }, { person_id: 'r', messages: false }]));
   check('*** two presses: the first arms, a second within the time stops, a late one arms again ***',
     twoPress(0, 1000) === 'arm' && twoPress(1000, 1000 + STOP_CONFIRM_MS - 1) === 'fire' && twoPress(1000, 1000 + STOP_CONFIRM_MS + 1) === 'arm' && STOP_CONFIRM_MS === 6000);
 
   // ============================================================================================
-  section('(setup) Pat, with Robin (a screen that shows notes) and Mom; Mom has her own login; Dee a third');
+  section('(setup) Pat, with Robin (a screen that shows notes) and Mom; Mom has her own login; Dee and Oscar too');
   const pat = (await call('GET', '/api/people', A)).people[0];
   await call('PATCH', `/api/people/${pat.id}`, A, { name: 'Pat' });
   const robin = await call('POST', '/api/people', A, { name: 'Robin' });
@@ -109,82 +121,94 @@ try {
   const bed = await call('POST', '/api/profiles', A, { name: 'Bedside', person_id: robin.id });
   await call('POST', `/api/profiles/${bed.id}/modules`, A, { type: 'note' });
   const m1 = (await call('GET', '/api/people', M)).people[0];
-  check('(setup) seeded', !!(pat && robin && mom && m1));
+  const o1 = (await call('GET', '/api/people', O)).people[0];
+  await call('PATCH', `/api/people/${o1.id}`, O, { name: 'Oscar' });
+  check('(setup) seeded', !!(pat && robin && mom && m1 && o1));
 
   // ============================================================================================
   section('*** the inviter: Your people, at 375 wide ***');
-  const box = themed(document.createElement('div'));
-  box.style.cssText += ';position:relative;width:375px;height:900px;overflow:hidden;border:1px solid #888';
-  document.body.append(box);
+  const box = pageBox(900);
   let inst = await mountPeople(A, pat.id, box);
   const q = (s) => box.querySelector(s);
   const qa = (s) => [...box.querySelectorAll(s)];
-  const cardOf = (name) => qa('[data-pp-card]').find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
+  const cardOf = cardIn(box);
   await until(() => cardOf('Mom')?.querySelector('[data-pp-act="invite"]:not([aria-disabled="true"])'), 15000);
   check('*** Mom and Robin each have "Invite them to use this" ***',
-    !!cardOf('Mom')?.querySelector('[data-pp-act="invite"]') && !!cardOf('Robin')?.querySelector('[data-pp-act="invite"]')
-    && cardOf('Mom').querySelector('[data-pp-act="invite"]').getAttribute('aria-disabled') !== 'true');
+    !!cardOf('Mom')?.querySelector('[data-pp-act="invite"]') && !!cardOf('Robin')?.querySelector('[data-pp-act="invite"]'));
   check('...not on your own card (you cannot be handed over)', !q('[data-pp-card="self"] [data-pp-act="invite"]'));
   check('the five buttons are still first, and in order', J([...cardOf('Mom').querySelector('[data-pp-person]').querySelectorAll('[data-pp-act]')].map((b) => b.dataset.ppAct)).startsWith('["call","message"'));
-  check('*** "Connect with someone" now says how: invite them from their card ***', /Invite them to use this/.test(q('[data-pp-connect]')?.textContent || ''));
-  const tall = qa('[data-pp-claim] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
-  check('the invite buttons are at least 44px tall', tall.length >= 2 && tall.every((h) => h >= 44), J(tall));
+  check('*** "Connect with someone": a button of its own, and the words say how both ways in work ***',
+    !!q('[data-pp-card="connect"] [data-pp-act="connect"]:not([aria-disabled="true"])') && /Send somebody a link/.test(q('[data-pp-connect]')?.textContent || '')
+    && /Invite them to use this/.test(q('[data-pp-connect]')?.textContent || ''));
+  const tall = qa('[data-pp-claim] [data-pp-stop], [data-pp-card="connect"] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  check('the buttons are at least 44px tall', tall.length >= 3 && tall.every((h) => h >= 44), J(tall));
 
   cardOf('Mom').querySelector('[data-pp-act="invite"]').click();
-  check('*** pressed: a window over the page, "Invite Mom", saying what it does ***',
-    await until(() => q('[data-pp-sheet="invite"]') && /Invite Mom/.test(q('[data-pp-sheet="invite"]').textContent) && q('[data-cl-act="make"]'), 8000));
-  check('...two choices, both ticked (see your other people, leave messages)',
-    q('[data-cl-see]')?.checked === true && q('[data-cl-msg]')?.checked === true
-    && /Let Mom see your other people/.test(q('[data-pp-sheet]').textContent) && /Let Mom leave messages for your people/.test(q('[data-pp-sheet]').textContent));
+  check('*** pressed: a window over the page, "Invite Mom", saying it becomes hers ***',
+    await until(() => q('[data-pp-sheet="invite"]') && /Invite Mom/.test(q('[data-pp-sheet="invite"]').textContent) && q('[data-cl-act="make"]'), 8000)
+    && /change the name, the picture and the page/.test(q('[data-cl-lead]').textContent));
+  const shareBoxes = () => qa('[data-cl-share]').map((b) => [b.dataset.clShare, b.checked]);
+  check('*** who comes with it: you ticked (the default), Robin not, Mom herself not offered ***',
+    J(shareBoxes()) === J([[pat.id, true], [robin.id, false]]) && /Pat \(you\)/.test(q('[data-pp-sheet]').textContent), J(shareBoxes()));
+  check('*** messages ticked under you; under Robin dimmed (not shared), with why ***',
+    q(`[data-cl-msg="${pat.id}"]`).checked === true && q(`[data-cl-msg="${robin.id}"]`).disabled === true
+    && /Tick Robin first/.test(q(`[data-cl-msg="${robin.id}"]`).closest('label').title));
   check('nothing made by opening it', (await call('GET', `/api/people/${mom.id}/invites`, A)).invites.length === 0);
+  q(`[data-cl-share="${robin.id}"]`).click();
+  check('ticking Robin: messages for Robin can be chosen, ticked', await until(() => q(`[data-cl-msg="${robin.id}"]`)?.disabled === false && q(`[data-cl-msg="${robin.id}"]`).checked));
   q('[data-cl-act="make"]').click();
   check('*** Make the link: the link to copy, a code to scan, and the plain words ***',
     await until(() => /\/join\.html\?invite=[A-Za-z0-9_-]{40,}$/.test(q('[data-cl-link]')?.value || ''), 8000)
     && !!q('[data-cl-qr] svg') && q('[data-cl-send]')?.textContent === CLAIM_WORDS.send('Mom') && /It works once, until/.test(q('[data-cl-until]')?.textContent || ''),
     q('[data-pp-sheet]')?.textContent.slice(0, 300));
   const firstToken = inviteFromQuery(new URL(q('[data-cl-link]').value).search);
-  const sheetWords = q('[data-pp-sheet]').textContent;
-  check('*** PLAIN WORDS in the window ***', !claimWordProblems(sheetWords).length, J(claimWordProblems(sheetWords)));
-  // Copy: the browser's clipboard may be refused in a test page; either way the window says what happened.
+  check('*** PLAIN WORDS in the window ***', !claimWordProblems(q('[data-pp-sheet]').textContent).length, J(claimWordProblems(q('[data-pp-sheet]').textContent)));
   q('[data-cl-act="copy"]').click();
   check('Copy says what happened (copied, or how to copy by hand)', await until(() => [CLAIM_WORDS.copied, CLAIM_WORDS.copyFailed].includes(q('[data-cl-say]')?.textContent), 4000));
   q('[data-cl-act="cancel"]').click();
   check('*** Take the link back: it says so, and the link no longer works ***',
     await until(() => q('[data-cl-say]')?.textContent === CLAIM_WORDS.takenBack, 6000)
     && (await createClaimsClient({ user: D }).peek(firstToken)).body.state === 'cancelled');
+  q(`[data-cl-share="${robin.id}"]`).click();      // the window remembers: tick Robin again for this link
+  if (!q(`[data-cl-share="${robin.id}"]`).checked) q(`[data-cl-share="${robin.id}"]`).click();
   q('[data-cl-act="make"]').click();
   await until(() => /invite=/.test(q('[data-cl-link]')?.value || ''), 8000);
   const token = inviteFromQuery(new URL(q('[data-cl-link]').value).search);
-  check('(setup) a second link', token && token !== firstToken);
+  check('(setup) a second link, sharing Pat and Robin', token && token !== firstToken
+    && J((await createClaimsClient({ user: D }).peek(token)).body.shares.map((s) => s.name)) === J(['Pat', 'Robin']));
   q('[data-pp-close]').click();
   check('Back closes the window', !q('[data-pp-sheet]'));
-  inst.destroy();
+  inst.destroy(); box.remove();
 
   section('the invite window, alone (a fake clipboard)');
   const lone = themed(document.createElement('div')); document.body.append(lone);
   let copiedText = '';
-  const sh = mountInviteSheet(lone, { person: { id: robin.id, name: 'Robin' }, client: createClaimsClient({ user: A }),
+  const own = (await call('GET', '/api/people', A)).people;
+  const sh1 = mountInviteSheet(lone, { kind: 'claim', person: { id: robin.id, name: 'Robin' }, people: own, client: createClaimsClient({ user: A }),
     clipboard: { writeText: async (t) => { copiedText = t; } } });
-  await sh.ready;
-  lone.querySelector('[data-cl-see]').click();      // untick "see your other people"
+  await sh1.ready;
+  lone.querySelector(`[data-cl-msg="${pat.id}"]`).click();      // untick "may leave messages for you"
   lone.querySelector('[data-cl-act="make"]').click();
-  await until(() => sh.__probe().phase === 'made', 6000);
+  await until(() => sh1.__probe().phase === 'made', 6000);
   lone.querySelector('[data-cl-act="copy"]').click();
   check('*** Copy puts the whole link on the clipboard ***', await until(() => copiedText && copiedText === lone.querySelector('[data-cl-link]').value, 3000)
     && lone.querySelector('[data-cl-say]').textContent === CLAIM_WORDS.copied);
   const robinPeek = (await createClaimsClient({ user: D }).peek(inviteFromQuery(new URL(copiedText).search))).body;
-  check('*** the choice made is the one the link carries (not the others; messages yes) ***', robinPeek.see_people === false && robinPeek.messages === true, J(robinPeek));
-  sh.destroy(); lone.remove();
+  check('*** the choice made is the one the link carries (just Pat; no messages) ***',
+    J(robinPeek.shares.map((s) => [s.name, s.messages])) === J([['Pat', false]]), J(robinPeek));
+  sh1.destroy(); lone.remove();
   const host2 = themed(document.createElement('div')); document.body.append(host2);
-  const sh2 = mountInviteSheet(host2, { person: { id: robin.id, name: 'Robin' }, client: createClaimsClient({ user: A }) });
+  const sh2 = mountInviteSheet(host2, { kind: 'claim', person: { id: robin.id, name: 'Robin' }, people: own, client: createClaimsClient({ user: A }) });
   await sh2.ready;
   check('*** opened again: "a link for Robin is waiting", with Take the link back, and Make a new link ***',
     !!sh2.__probe().waiting && /A link for Robin is waiting/.test(host2.textContent) && !!host2.querySelector('[data-cl-act="cancel"]')
     && host2.querySelector('[data-cl-act="make"]')?.textContent === CLAIM_WORDS.makeAgain, host2.textContent);
+  host2.querySelector('[data-cl-act="cancel"]').click();
+  await until(() => sh2.__probe().said === CLAIM_WORDS.takenBack, 4000);
   sh2.destroy(); host2.remove();
 
   // ============================================================================================
-  section('*** the join page ***');
+  section('*** the join page: handing Mom over ***');
   const jbox = themed(document.createElement('div')); document.body.append(jbox);
   let jp = mountJoinPage(jbox, { search: '' });
   await jp.ready;
@@ -198,7 +222,6 @@ try {
   jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: A });
   await jp.ready;
   check('*** opened by the login that made it: refused, in words ***', jp.__probe().phase === 'refused' && /your own login/.test(jbox.textContent), jbox.textContent);
-  // Signed out: the dev server treats a request with no override as nobody for this page's first look.
   const fakeLoc = { href: '', pathname: '/join.html', search: `?invite=${token}` };
   const stash = new Map();
   const fakeStore = { getItem: (k) => stash.get(k) || null, setItem: (k, v) => stash.set(k, v), removeItem: (k) => stash.delete(k) };
@@ -211,12 +234,14 @@ try {
     fakeLoc.href === `/auth/login?next=${encodeURIComponent(`/join.html?invite=${token}`)}` && stash.get('nimrod:joinInvite') === token, fakeLoc.href);
   jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: M, store: fakeStore });
   await jp.ready;
-  check('*** signed in as Mom: "Pat set up “Mom” for you", what she will be able to do, and Make this mine ***',
+  check('*** signed in as Mom: "Pat set up “Mom” for you", it becomes hers, who comes with it, and Make this mine ***',
     jp.__probe().phase === 'ready' && jbox.querySelector('[data-jp-title]')?.textContent === 'Pat set up “Mom” for you'
-    && /change Mom’s picture/.test(jbox.textContent) && /see Pat’s other people/.test(jbox.textContent) && /leave messages for Pat’s people/.test(jbox.textContent)
-    && !!jbox.querySelector('[data-jp-act="make"]') && !!jbox.querySelector('[data-jp-other]'), jbox.textContent);
+    && /change the name, the picture and the page/.test(jbox.textContent)
+    && J([...jbox.querySelectorAll('[data-jp-also] li')].map((l) => l.textContent)) === J(['Pat, and you can leave Pat messages', 'Robin, and you can leave Robin messages'])
+    && jbox.querySelector('[data-jp-act="make"]')?.textContent === 'Make this mine' && !!jbox.querySelector('[data-jp-other]'), jbox.textContent);
+  check('*** "Let Pat leave messages for you": ticked by default ***', jbox.querySelector('[data-jp-back]')?.checked === true && /Let Pat leave messages for you/.test(jbox.textContent));
   check('*** PLAIN WORDS on the join page ***', !claimWordProblems(jbox.textContent).length, J(claimWordProblems(jbox.textContent)));
-  check('nothing accepted by opening it', (await call('GET', '/api/claims', M)).mine.length === 0);
+  check('nothing accepted by opening it', (await call('GET', '/api/people', M)).people.length === 1);
   jbox.querySelector('[data-jp-act="make"]').click();
   check('*** Make this mine: done, "Mom" is hers, and a way to her people ***',
     await until(() => jp.__probe().phase === 'done', 8000) && /“Mom” is yours now/.test(jbox.textContent)
@@ -224,70 +249,123 @@ try {
   jp = mountJoinPage(jbox, { search: `?invite=${token}`, user: D });
   await jp.ready;
   check('*** the same link again: already used ***', jp.__probe().phase === 'refused' && /already been used/.test(jbox.textContent), jbox.textContent);
-  jbox.remove();
 
   // ============================================================================================
-  section('*** after: the inviter sees "Mom — joined" ***');
-  const box2 = themed(document.createElement('div'));
-  box2.style.cssText += ';position:relative;width:375px;height:900px;overflow:hidden';
-  document.body.append(box2);
+  section('*** after: the inviter sees "Mom — joined", and calls her what he called her ***');
+  const box2 = pageBox(1100);
   inst = await mountPeople(A, pat.id, box2);
   const q2 = (s) => box2.querySelector(s);
-  const card2 = (name) => [...box2.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
-  check('*** Mom’s card: "— joined", with Stop sharing and her messages on ***',
+  const card2 = cardIn(box2);
+  check('*** Mom’s card: still "Mom", "— joined", with I call them…, Messages from them: on, Stop sharing - and no Invite ***',
     await until(() => card2('Mom')?.querySelector('[data-pp-joined]'), 10000) && /— joined/.test(card2('Mom').textContent)
-    && /uses this with their own login/.test(card2('Mom').textContent)
-    && card2('Mom').querySelector('[data-pp-act="stop-share"]')?.textContent.includes('Stop sharing')
+    && /Uses this with their own login/.test(card2('Mom').textContent)
+    && !!card2('Mom').querySelector('[data-pp-act="call-name"]')
     && card2('Mom').querySelector('[data-pp-act="claim-msg"]')?.textContent.includes(CLAIM_WORDS.msgOn)
+    && card2('Mom').querySelector('[data-pp-act="stop-share"]')?.textContent.includes('Stop sharing')
     && !card2('Mom').querySelector('[data-pp-act="invite"]'), card2('Mom')?.textContent);
   check('Robin still has Invite', !!card2('Robin')?.querySelector('[data-pp-act="invite"]'));
-  // Scoped to what this work adds: the card of somebody who joined, the invite buttons, and Connect. (The page's
-  // older "Added by you" label under each of your people is Your people's own - people_page_test holds it.)
   const addedWords = [card2('Mom').textContent, ...[...box2.querySelectorAll('[data-pp-claim]')].map((e) => e.textContent), q2('[data-pp-connect]').textContent].join(' ');
   check('plain words in everything this adds to the inviter’s page', !claimWordProblems(addedWords).length, J(claimWordProblems(addedWords)));
+  card2('Mom').querySelector('[data-pp-act="call-name"]').click();
+  check('*** I call them…: a window, "What you call Mom", saying only you see it ***',
+    await until(() => q2('[data-pp-sheet="callname"] [data-cl-call]'), 6000) && /What you call Mom/.test(q2('[data-pp-sheet]').textContent)
+    && /Only you see this/.test(q2('[data-pp-sheet]').textContent));
+  q2('[data-cl-call]').value = 'Mum';
+  q2('[data-pp-sheet] [data-cl-act="save"]').click();
+  check('*** saved: the card says "Mum" ***', await until(() => q2('[data-cl-say]')?.textContent === CLAIM_WORDS.callSaved, 6000)
+    && await until(() => !!card2('Mum'), 6000));
+  check('...and on Mom’s own login she is still Mom', (await call('GET', '/api/people', M)).people[0].name === 'Mom');
+  q2('[data-pp-sheet] [data-cl-act="clear"]').click();
+  check('*** "Use Mom’s own name": the card says her own name again ***', await until(() => !!card2('Mom'), 6000));
+  q2('[data-pp-close]').click();
   inst.destroy(); box2.remove();
 
   // ============================================================================================
   section('*** after: Mom’s own page ***');
-  const box3 = themed(document.createElement('div'));
-  box3.style.cssText += ';position:relative;width:375px;height:1100px;overflow:hidden';
-  document.body.append(box3);
+  const box3 = pageBox(1300);
   inst = await mountPeople(M, m1.id, box3);
   const q3 = (s) => box3.querySelector(s);
-  const card3 = (name) => [...box3.querySelectorAll('[data-pp-card]')].find((c) => c.querySelector('[data-pp-name]')?.textContent === name);
-  await until(() => q3('[data-pp-you-are]') && card3('Robin') && !card3('Robin').querySelector('[data-pp-act="message"] small')?.textContent.includes('Checking'), 15000);
-  check('*** "You are Mom on Pat’s people", with Edit that picture and Stop sharing ***',
-    q3('[data-pp-you-are]')?.textContent === 'You are Mom on Pat’s people.' && !!q3('[data-pp-act="edit-there"]') && !!q3('[data-pp-act="stop-mine"]'));
-  check('*** Pat’s people as her connections: Pat and Robin (not Mom - that is her) ***',
-    J([...box3.querySelectorAll('[data-pp-name]')].map((n) => n.textContent)) === J(['Pat', 'Robin']) && /Pat’s people/.test(card3('Robin').textContent),
+  const card3 = cardIn(box3);
+  await until(() => card3('Robin') && !card3('Robin').querySelector('[data-pp-act="message"] small')?.textContent.includes('Checking'), 15000);
+  check('*** her own card is her own profile, called Mom ***', q3('[data-pp-self-name]')?.textContent === 'Mom' && !!q3('[data-pp-card="self"] [data-pp-act="picture-edit"]'));
+  check('*** Pat (connected) and Robin (from Pat’s people) as her cards ***',
+    J([...box3.querySelectorAll('[data-pp-list] [data-pp-name]')].map((n) => n.textContent)) === J(['Pat', 'Robin'])
+    && card3('Pat').querySelector('[data-pp-sub]').textContent === 'Connected' && card3('Robin').querySelector('[data-pp-sub]').textContent === 'From Pat’s people',
     J([...box3.querySelectorAll('[data-pp-name]')].map((n) => n.textContent)));
-  check('*** Send a message is live for Robin (the invite allowed messages) ***',
+  check('*** Send a message is live for Robin (the invite allowed it) ***',
     card3('Robin').querySelector('[data-pp-act="message"]').getAttribute('aria-disabled') !== 'true', J(inst.impl?.__probe?.().notes));
   check('*** Call is dimmed, with why: calls only where already allowed ***',
     card3('Robin').querySelector('[data-pp-act="call"]').getAttribute('aria-disabled') === 'true' && /Not shared yet/.test(card3('Robin').querySelector('[data-pp-act="call"]').textContent));
   check('Pat has no screen: a message is dimmed, saying so', /has no screen yet/.test(card3('Pat').querySelector('[data-pp-act="message"]').dataset.ppWhy || ''));
-  check('no Invite under somebody else’s people', !q3('[data-pp-act="invite"]'));
+  check('*** no Invite under people whose profile is somebody else’s - I call them… instead, and Stop sharing ***',
+    !q3('[data-pp-act="invite"]') && !!card3('Robin').querySelector('[data-pp-act="call-name"]') && !!card3('Pat').querySelector('[data-pp-act="stop-share"]'));
   check('*** plain words on her page ***', !claimWordProblems(q3('[data-pp-list]').textContent).length, J(claimWordProblems(q3('[data-pp-list]').textContent)));
-  q3('[data-pp-act="edit-there"]').click();
-  check('*** Edit that picture opens the picture maker for Mom (the one she took over) ***',
-    await until(() => q3('[data-pp-sheet="picture"]') && /Mom’s picture/.test(q3('[data-pp-sheet="picture"]').textContent), 8000));
+  card3('Robin').querySelector('[data-pp-act="message"]').click();
+  check('*** the message window opens for Robin (on Pat’s screen for Robin) ***',
+    await until(() => q3('[data-pp-sheet="message"]') && /A message for Robin/.test(q3('[data-pp-sheet="message"]').textContent), 8000));
   q3('[data-pp-close]').click();
-  const stop = () => q3('[data-pp-act="stop-mine"]');
+  const stop = () => card3('Pat')?.querySelector('[data-pp-act="stop-share"]');
   stop().click();
   check('*** Stop sharing, first press: "Press again to stop sharing" - nothing stopped yet ***',
-    await until(() => stop()?.textContent.includes(CLAIM_WORDS.stopAgain), 3000) && (await call('GET', '/api/claims', M)).mine.length === 1);
+    await until(() => stop()?.textContent.includes(CLAIM_WORDS.stopAgain), 3000) && (await call('GET', '/api/people', M)).people.length === 3);
   stop().click();
-  check('*** second press: stopped; the card and Pat’s people go; it says so ***',
-    await until(() => !q3('[data-pp-you-are]') && !card3('Robin'), 8000) && (await call('GET', '/api/claims', M)).mine.length === 0
-    && /no longer uses this/.test(q3('[data-pp-card="self"] .pp-why')?.textContent || ''), q3('[data-pp-card="self"]')?.textContent);
-  check('*** the person stays on Pat’s people ***', (await call('GET', '/api/people', A)).people.some((p) => p.id === mom.id));
+  check('*** second press: stopped; Pat and Robin go from her page; it says so on her own card ***',
+    await until(() => !card3('Pat') && !card3('Robin'), 8000) && (await call('GET', '/api/people', M)).people.length === 1
+    && /Stopped/.test(q3('[data-pp-card="self"] .pp-why')?.textContent || ''), q3('[data-pp-card="self"]')?.textContent);
+  check('*** Mom is Pat’s own person again ***', (await call('GET', '/api/people', A)).people.some((p) => p.id === mom.id && p.kind === 'mine' && p.name === 'Mom'));
   inst.destroy(); box3.remove();
 
-  section('a screen in a room: faces only, no invite buttons');
+  // ============================================================================================
+  section('*** CONNECT LIKE FRIENDS: Pat and Oscar ***');
+  const box4 = pageBox(1100);
+  inst = await mountPeople(A, pat.id, box4);
+  const q4 = (s) => box4.querySelector(s);
+  await until(() => q4('[data-pp-card="connect"] [data-pp-act="connect"]:not([aria-disabled="true"])'), 10000);
+  q4('[data-pp-card="connect"] [data-pp-act="connect"]').click();
+  check('*** Connect with someone: a window, just you ticked, everybody you look after offered ***',
+    await until(() => q4('[data-pp-sheet="invite"] [data-cl-act="make"]'), 6000) && /Connect with someone/.test(q4('[data-pp-sheet]').textContent)
+    && J([...box4.querySelectorAll('[data-cl-share]')].map((b) => [b.dataset.clShare, b.checked])) === J([[pat.id, true], [robin.id, false], [mom.id, false]]));
+  q4('[data-cl-act="make"]').click();
+  await until(() => /invite=/.test(q4('[data-cl-link]')?.value || ''), 8000);
+  const ctoken = inviteFromQuery(new URL(q4('[data-cl-link]').value).search);
+  check('the connect link, with its words', !!ctoken && q4('[data-cl-send]')?.textContent === CLAIM_WORDS.sendConnect
+    && !claimWordProblems(q4('[data-pp-sheet]').textContent).length);
+  q4('[data-pp-close]').click();
+  inst.destroy(); box4.remove();
+  jp = mountJoinPage(jbox, { search: `?invite=${ctoken}`, user: O });
+  await jp.ready;
+  check('*** Oscar opens it: "Pat wants to connect with you", Pat on his page, and Connect ***',
+    jp.__probe().phase === 'ready' && jbox.querySelector('[data-jp-title]')?.textContent === 'Pat wants to connect with you'
+    && J([...jbox.querySelectorAll('[data-jp-also] li')].map((l) => l.textContent)) === J(['Pat, and you can leave Pat messages'])
+    && jbox.querySelector('[data-jp-act="make"]')?.textContent === 'Connect' && !claimWordProblems(jbox.textContent).length, jbox.textContent);
+  jbox.querySelector('[data-jp-back]').click();      // Oscar would rather Pat did not leave him messages
+  jbox.querySelector('[data-jp-act="make"]').click();
+  check('*** Connect: done, "You and Pat are connected" ***', await until(() => jp.__probe().phase === 'done', 8000)
+    && /You and Pat are connected/.test(jbox.textContent) && jp.__probe().messagesBack === false, jbox.textContent);
+  jbox.remove();
+  const box5 = pageBox(900);
+  inst = await mountPeople(O, o1.id, box5);
+  const card5 = cardIn(box5);
+  check('*** Oscar’s page: Pat, connected ***', await until(() => card5('Pat')?.querySelector('[data-pp-sub]')?.textContent === 'Connected', 10000));
+  inst.destroy(); box5.remove();
+  const box6 = pageBox(1200);
+  inst = await mountPeople(A, pat.id, box6);
+  const card6 = cardIn(box6);
+  check('*** Pat’s page: Oscar, connected, with I call them… and Stop sharing ***',
+    await until(() => card6('Oscar')?.querySelector('[data-pp-sub]')?.textContent === 'Connected', 10000)
+    && !!card6('Oscar').querySelector('[data-pp-act="call-name"]') && !!card6('Oscar').querySelector('[data-pp-act="stop-share"]'));
+  check('*** ...and Send a message for Oscar is dimmed: he said no ***',
+    await until(() => card6('Oscar').querySelector('[data-pp-act="message"]').getAttribute('aria-disabled') === 'true'
+      && /Not allowed yet/.test(card6('Oscar').querySelector('[data-pp-act="message"]').textContent), 8000));
+  inst.destroy(); box6.remove();
+
+  section('a screen in a room: faces only, no invite, connect or stop buttons');
   const sbox = themed(document.createElement('div')); sbox.style.cssText += ';position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(sbox);
   const sinst = await mountPeople(A, pat.id, sbox, { isScreen: true });
   await until(() => sbox.querySelector('[data-pp-face]'), 8000);
-  check('no Invite, no Stop sharing on a screen', !sbox.querySelector('[data-pp-act="invite"]') && !sbox.querySelector('[data-pp-act="stop-share"]'));
+  check('no Invite, no Connect, no Stop sharing, no I call them on a screen',
+    !sbox.querySelector('[data-pp-act="invite"]') && !sbox.querySelector('[data-pp-act="connect"]') && !sbox.querySelector('[data-pp-act="stop-share"]')
+    && !sbox.querySelector('[data-pp-act="call-name"]'));
   sinst.destroy(); sbox.remove();
 } catch (err) {
   failed++;

@@ -36,6 +36,7 @@ from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
 from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch, via_device_key
 import claims
 import claude_ai
+import links
 import notes
 import pack_reviews
 import recommend
@@ -682,27 +683,90 @@ def put_state(pid: str, key: str, body: StatePut, request: Request, user: str = 
 # configuring.
 @app.get("/api/people")
 def list_people(user: str = Depends(current_user)):
-    """Every account has at least one person; this is where a legacy account grows one."""
+    """Every account has at least one person; this is where a legacy account grows one.
+
+    Each row is as THIS account knows them (2026-10-04 night, claims.py): `name` is what you see - your
+    "I call them" for somebody whose profile lives on another login, else their own name - and the rest says
+    what the row is to you (`kind`), where a call or a message for them goes (`reach`), and, for somebody you
+    are connected with, who it came through (`from`) and whether they may leave messages for your people.
+    Names only: no account id is in it."""
     store.ensure_default_person(user)
-    return {"people": store.list_people(user)}
+    return {"people": _people_view(user)}
+
+
+def _people_view(user: str) -> list[dict]:
+    rows = store.people_rows(user)
+    if not rows:
+        return []
+    first = rows[0]["id"]
+    screens = store.screens_by_person(user)
+    names: dict[str, str] = {}
+    firsts: dict[str, str | None] = {}
+    out = []
+    for r in rows:
+        source = store.person_row(r["source_id"]) if r["source_id"] else None
+        other = source["account_id"] if source and source["account_id"] != user else None
+        if other and other not in firsts:
+            firsts[other] = store.first_person_id(other)
+        kind = claims.row_kind(r, first_person_id=first,
+                               source_is_their_first=bool(other and source["id"] == firsts.get(other)))
+        v = {"id": r["id"], "name": claims.display_name(r, r["home_name"]), "created_at": r["created_at"],
+             "home": not r["home_id"], "kind": kind,
+             "reach": claims.reach_id(r, own_screens=screens.get(r["id"], 0)),
+             "call_name": r["call_name"] if r["home_id"] else "",
+             "profile_name": (r["home_name"] or r["name"]) if r["home_id"] else r["name"]}
+        if other and r["link_id"]:
+            link = store.get_link(user, other)
+            if link and links.link_is_active(link) and link["id"] == r["link_id"]:
+                if other not in names:
+                    names[other] = _inviter_name(other)
+                v.update({"linked": True, "from": names[other],
+                          "messages_from_them": store.link_messages(link["id"], user, other)})
+        out.append(v)
+    return out
 
 
 @app.post("/api/people")
 def create_person(body: PersonCreate, user: str = Depends(current_user)):
     _check(body.name, NAME_RE, "person name")
     store.ensure_default_person(user)   # never let the second person be the first
-    made = store.create_person(user, body.name)
-    store.sync_claim_messages(user)     # somebody who joined with "may leave messages" reaches them too
-    return made
+    return store.create_person(user, body.name)
 
 
 @app.patch("/api/people/{person_id}")
 def rename_person(person_id: str, body: PersonCreate, user: str = Depends(current_user)):
+    """A profile's name is changed by the account that looks after it. Somebody whose profile lives on their
+    own login keeps the name they chose; you set what YOU call them instead (PUT .../call-name)."""
     _check(person_id, ID_RE, "person id")
     _check(body.name, NAME_RE, "person name")
     owned_person(user, person_id)
+    row = store.person_row(person_id)
+    if row and row.get("home_id"):
+        raise HTTPException(status_code=403,
+                            detail="They look after their own name now. You can change what you call them.")
     store.rename_person(user, person_id, body.name)
     return store.get_person(user, person_id)
+
+
+class CallNamePut(BaseModel):
+    name: str = ""
+
+
+@app.put("/api/people/{person_id}/call-name")
+def put_call_name(person_id: str, body: CallNamePut, user: str = Depends(current_user)):
+    """"I call them": your own name for somebody whose profile is on another login. Empty: their own name
+    shows again. It never changes the name they chose, and only you see it."""
+    _check(person_id, ID_RE, "person id")
+    row = store.person_row(person_id)
+    if not row or row["account_id"] != user:
+        raise HTTPException(status_code=404, detail="no such person")
+    if not row.get("home_id"):
+        raise HTTPException(status_code=409, detail="This is somebody you look after: change their name instead.")
+    name = re.sub(r"\s+", " ", body.name or "").strip()
+    if name:
+        _check(name, NAME_RE, "name")
+    store.set_call_name(user, person_id, name)
+    return {"id": person_id, "call_name": name, "name": (store.get_person(user, person_id) or {}).get("name", "")}
 
 
 @app.delete("/api/people/{person_id}")
@@ -712,7 +776,8 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
     Both refusals are deliberate. Cascading the screens would make deleting a name a way
     to silently destroy someone's whole setup, and an account with no people has no valid
     state at all - every other endpoint would have to invent one back.
-    """
+
+    A profile other logins hold too: their rows stay, as their own (db.delete_person says why)."""
     _check(person_id, ID_RE, "person id")
     owned_person(user, person_id)
     if len(store.list_people(user)) <= 1:
@@ -723,12 +788,7 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
             status_code=409,
             detail="this person still has %d screen%s - move or delete them first"
                    % (n, "" if n == 1 else "s"))
-    # A person somebody uses with their own login is not deleted out from under them (claims.py).
-    if store.get_claim(person_id):
-        raise HTTPException(status_code=409,
-                            detail="they use this with their own login now - stop sharing first")
     store.delete_person(user, person_id)
-    store.sync_claim_messages(user)
     return {"ok": True}
 
 
@@ -742,37 +802,30 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
 # hold it 300ms" is a fact about a BODY. It does not change between someone's bedside
 # screen and their living-room screen, and re-entering it per screen is precisely the
 # per-device toil this project exists to remove.
-def _person_state_owner(user: str, person_id: str, key: str, *, write: bool) -> str:
-    """The account whose row this is, if `user` may read (or write) person state `key` here; else the
-    same 404 as a person that does not exist.
+def _person_state_target(user: str, person_id: str, key: str, *, write: bool) -> tuple[str, str]:
+    """(account, person) whose row person state `key` lives in, for `user` reaching it through `person_id`.
 
-    The owner, as before - except that a CLAIMED person's picture is the claimer's now (claims.py
-    may_write_state). The claimer reads and writes the picture of the person they took over; a
-    claimer of another of the owner's people reads the faces they can see. Nothing else."""
-    owner = _person_owner(person_id)
-    if owner == user and not write:
-        return owner
-    claim = store.get_claim(person_id) if owner else None
-    if write:
-        if claims.may_write_state(key, actor=user, person_id=person_id, owner=owner, claim=claim):
-            return owner
-        if owner == user:
-            raise HTTPException(status_code=403,
-                                detail="They use this with their own login now, so they change their own picture.")
-    elif owner and claims.may_read_state(key, actor=user, person_id=person_id, owner=owner,
-                                         claims_on_owner=store.claims_on_owner(owner),
-                                         owner_people=store.list_people(owner),
-                                         first_person_id=store.first_person_id(owner)):
-        return owner
-    raise HTTPException(status_code=404, detail="no such person")
+    Only through a row on your own account (claims.state_target - a security invariant). The PROFILE keys
+    (picture, page) of somebody whose profile lives on another login are read from that home, and are theirs
+    alone to write: 403, in words, rather than a pretend save. Everything else - bindings, routing, who may
+    leave notes - is your own row's, as it always was."""
+    row = store.person_row(person_id)
+    home = store.person_row(row["home_id"]) if row and row.get("home_id") and row["account_id"] == user else None
+    t = claims.state_target(key, actor=user, row=row, home=home, write=write)
+    if t == "profile":
+        raise HTTPException(status_code=403,
+                            detail="They look after their own picture and page now, on their own login.")
+    if t == "missing":
+        raise HTTPException(status_code=404, detail="no such person")
+    return t
 
 
 @app.get("/api/people/{person_id}/state/{key}")
 def get_person_state(person_id: str, key: str, user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
-    owner = _person_state_owner(user, person_id, key, write=False)
-    return store.get_state(owner, person_scope(person_id), key)
+    acct, pid = _person_state_target(user, person_id, key, write=False)
+    return store.get_state(acct, person_scope(pid), key)
 
 
 @app.put("/api/people/{person_id}/state/{key}")
@@ -780,13 +833,15 @@ def put_person_state(person_id: str, key: str, body: StatePut, request: Request,
                       user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
-    owner = _person_state_owner(user, person_id, key, write=True)
-    status, result = store.put_state(owner, person_scope(person_id), key, body.data, body.base_version)
+    acct, pid = _person_state_target(user, person_id, key, write=True)
+    status, result = store.put_state(acct, person_scope(pid), key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
-    _push.publish(owner, request.url.path)
-    if owner != user:
-        _push.publish(user, request.url.path)
+    _push.publish(acct, request.url.path)
+    # A profile key: every login that holds this profile reads it through its own row - tell each.
+    if key in claims.PROFILE_KEYS:
+        for h in store.holders_of(pid):
+            _push.publish(h["account_id"], f"/api/people/{h['id']}/state/{key}")
     return result
 
 
@@ -1169,7 +1224,7 @@ def _note_gate(user: str, person_id: str) -> str:
     owner = _person_owner(person_id)
     row = (store.get_state(owner, person_scope(person_id), notes.PERSON_ROW_KEY).get("data")
            if owner else None)
-    # The second way in (notes.py): a links.py `messages` permission - today, made only by a claim.
+    # The second way in (notes.py): a links.py `messages` permission - made by an invitation (claims.py).
     linked_ok = bool(owner) and owner != user and store.may_capability("messages", actor=user, person_id=person_id)
     if not notes.may_leave_note(person_id, account=user, owner=owner,
                                 grants=store.grants_on_person(person_id) if owner else [],
@@ -1355,11 +1410,12 @@ import recommend_search  # noqa: E402 - search by name on the account's own YouT
 app.include_router(recommend_search.make_router(store))
 
 
-# ------------------------------------- CLAIMS: invite someone to take over a profile you made
-# Mike, 2026-10-04: make people for your family on your account, and let each of them link their own
-# login to theirs "so most of the work could already be done for them". The rules are claims.py (pure,
-# test_claims.py); the page is join.html. Every route here takes the account from the sign-in, never
-# from a URL or a body, and no route hands back an account id - only names.
+# ------------------------------------- PEOPLE ACROSS ACCOUNTS: connect, hand a profile over, share profiles
+# Mike, 2026-10-04 (night): a profile has a home and appears on other accounts (DECISIONS.md, items 1-11).
+# Two ways in, one link machinery: "Connect with someone" (connect like friends - the main one) and "Invite
+# them to use this" on one of your people (hand over a profile you made). Either can share chosen profiles.
+# The rules are claims.py (pure, test_claims.py); the page is join.html. Every route here takes the account
+# from the sign-in, never from a URL or a body, and no route hands back an account id - only names.
 #
 # RATE LIMITS. Making links: 20 an hour per account (a family is a handful; a stuck loop is hundreds).
 # Wrong links: the same throttle and numbers as pairing codes (8 misses per account, 60 per address, in
@@ -1370,21 +1426,27 @@ _invite_limit = notes.RateLimit(limit=20, window=3600.0)
 
 class InviteCreate(BaseModel):
     days: int | None = None
-    see_people: bool = claims.DEFAULT_SEE_PEOPLE
+    # [{person_id, messages}] or [person_id]: which of the people you look after the other side gets.
+    # Absent: just you (claims.DEFAULT_SHARES), with `messages` for it.
+    shares: list | None = None
     messages: bool = claims.DEFAULT_MESSAGES
+    # 8908b2c's "see your other people": absent `shares`, True shares everybody you look after.
+    see_people: bool | None = None
 
 
 class InviteToken(BaseModel):
     token: str = ""
+    # The join page's own tick: may whoever sent the link leave messages for you (claims.MESSAGES_BACK).
+    messages_back: bool = claims.MESSAGES_BACK
 
 
-class ClaimMessagesPut(BaseModel):
+class MessagesPut(BaseModel):
     on: bool
 
 
 def _inviter_name(owner: str) -> str:
-    """What the join page calls whoever sent the link: their display name, else their own first
-    person's name - unless that is still the default "Me", which would read as the visitor."""
+    """What a page calls another login: their display name, else their own first person's name - unless that
+    is still the default "Me", which would read as the visitor."""
     name = _display_name(owner)
     if name:
         return name
@@ -1394,10 +1456,12 @@ def _inviter_name(owner: str) -> str:
     return "" if not n or n.lower() == "me" else n
 
 
-def _invite_view(inv: dict, now: str) -> dict:
-    return {"id": inv["id"], "created_at": inv["created_at"], "expires_at": inv["expires_at"],
-            "state": claims.invite_state(inv, now), "see_people": inv["see_people"],
-            "messages": inv["messages"]}
+def _invite_view(inv: dict, now: str, names: dict[str, str] | None = None) -> dict:
+    shares = inv.get("shares") or []
+    return {"id": inv["id"], "kind": inv.get("kind", "claim"), "created_at": inv["created_at"],
+            "expires_at": inv["expires_at"], "state": claims.invite_state(inv, now),
+            "shares": [{"person_id": s.get("person_id"), "messages": bool(s.get("messages")),
+                        "name": (names or {}).get(s.get("person_id"), "")} for s in shares]}
 
 
 def _refused(reason: str, status: int) -> JSONResponse:
@@ -1412,45 +1476,70 @@ def _invite_throttle_keys(request: Request, user: str | None) -> list[tuple[str,
     return keys
 
 
-@app.post("/api/people/{person_id}/invites")
-def create_invite(person_id: str, body: InviteCreate, request: Request, user: str = Depends(current_user)):
-    """A new link for one of your people. The token is in THIS response and nowhere else, ever."""
-    _check(person_id, ID_RE, "person id")
+def _shares_for(user: str, body: InviteCreate, *, exclude: str | None) -> tuple[list[dict], dict[str, str]]:
+    """The invite's shares, checked (claims.clean_shares), and the names of your people by id."""
+    rows = store.people_rows(user)
+    first = rows[0]["id"] if rows else None
+    names = {r["id"]: claims.display_name(r, r["home_name"]) for r in rows}
+    raw = body.shares
+    if raw is None and body.see_people:
+        raw = [r["id"] for r in rows if not r["home_id"]]
+    try:
+        shares = claims.clean_shares(raw, own_rows=rows, first_person_id=first, exclude=exclude)
+    except ValueError:
+        raise HTTPException(status_code=400, detail=claims.REFUSAL_TEXT["shares"])
+    if body.shares is None and not body.see_people:
+        shares = [{**s, "messages": bool(body.messages)} for s in shares]
+    return shares, names
+
+
+def _make_invite(user: str, person_id: str, kind: str, body: InviteCreate, request: Request, *,
+                 exclude: str | None) -> dict:
     if via_device_key(request):
         raise HTTPException(status_code=403, detail=claims.REFUSAL_TEXT["screen"])
-    owner = _person_owner(person_id)
-    reason = claims.invite_refusal(account=user, owner=owner, person_id=person_id,
-                                   first_person_id=store.first_person_id(user),
-                                   claimed=bool(owner == user and store.get_claim(person_id)))
-    if reason == "not-yours":
-        raise HTTPException(status_code=404, detail="no such person")
-    if reason:
-        return _refused(reason, 409)
     try:
         days = claims.clamp_days(body.days)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    shares, names = _shares_for(user, body, exclude=exclude)
     if not _invite_limit.hit(user):
         raise HTTPException(status_code=429, detail="That is a lot of invitations - try again in a while.")
     token = claims.new_token()
-    inv = store.create_invite(user, person_id, claims.hash_token(token), _iso_in_days(days),
-                              see_people=body.see_people, messages=body.messages,
-                              sweep_before=_iso_in_days(-claims.KEEP_DEAD_INVITE_DAYS))
-    return {"invite": {**_invite_view({**inv, "used_at": None, "cancelled_at": None}, _now_iso())},
+    inv = store.create_invite(user, person_id, claims.hash_token(token), _iso_in_days(days), kind=kind,
+                              shares=shares, sweep_before=_iso_in_days(-claims.KEEP_DEAD_INVITE_DAYS))
+    return {"invite": _invite_view({**inv, "used_at": None, "cancelled_at": None}, _now_iso(), names),
             "token": token, "path": f"/join.html?invite={token}"}
+
+
+@app.post("/api/people/{person_id}/invites")
+def create_invite(person_id: str, body: InviteCreate, request: Request, user: str = Depends(current_user)):
+    """"Invite them to use this": a link that hands one of your people over. The token is in THIS response
+    and nowhere else, ever."""
+    _check(person_id, ID_RE, "person id")
+    if via_device_key(request):
+        raise HTTPException(status_code=403, detail=claims.REFUSAL_TEXT["screen"])
+    row = store.person_row(person_id)
+    reason = claims.invite_refusal(account=user, row=row, first_person_id=store.first_person_id(user))
+    if reason == "not-yours":
+        raise HTTPException(status_code=404, detail="no such person")
+    if reason:
+        return _refused(reason, 409)
+    return _make_invite(user, person_id, "claim", body, request, exclude=person_id)
 
 
 @app.get("/api/people/{person_id}/invites")
 def list_invites(person_id: str, user: str = Depends(current_user)):
-    """The owner's view: links still waiting for this person (no tokens), and whether it is taken over."""
+    """The links still waiting for this person (no tokens), and whether somebody uses it with their own login."""
     _check(person_id, ID_RE, "person id")
     owned_person(user, person_id)
     now = _now_iso()
-    waiting = [_invite_view(i, now) for i in store.list_invites(user, person_id)]
-    claim = store.get_claim(person_id)
-    return {"invites": [i for i in waiting if i["state"] == "live"],
-            "claimed": bool(claim),
-            "by": _display_name(claim["account_id"]) if claim else ""}
+    names = {p["id"]: p["name"] for p in store.list_people(user)}
+    waiting = [_invite_view(i, now, names) for i in store.list_invites(user, person_id, kind="claim")]
+    row = store.person_row(person_id) or {}
+    joined = row.get("made_by") == "claim" and bool(row.get("home_id"))
+    home = store.person_row(row["home_id"]) if joined else None
+    return {"invites": [i for i in waiting if i["state"] == "live"], "claimed": joined,
+            "by": _inviter_name(home["account_id"]) if home else ""}
 
 
 @app.delete("/api/people/{person_id}/invites/{invite_id}")
@@ -1463,35 +1552,76 @@ def cancel_invite(person_id: str, invite_id: str, user: str = Depends(current_us
     return {"ok": True}
 
 
+@app.post("/api/connect/invites")
+def create_connect_invite(body: InviteCreate, request: Request, user: str = Depends(current_user)):
+    """"Connect with someone": a link that connects whoever opens it with you, like friends. Nobody needs
+    setting up first. The token is in THIS response and nowhere else."""
+    first = store.ensure_default_person(user)
+    return _make_invite(user, first, "connect", body, request, exclude=None)
+
+
+@app.get("/api/connect/invites")
+def list_connect_invites(user: str = Depends(current_user)):
+    """Your connect links still waiting (no tokens)."""
+    now = _now_iso()
+    names = {p["id"]: p["name"] for p in store.list_people(user)}
+    waiting = [_invite_view(i, now, names) for i in store.list_invites(user, kind="connect")]
+    return {"invites": [i for i in waiting if i["state"] == "live"]}
+
+
+@app.delete("/api/connect/invites/{invite_id}")
+def cancel_connect_invite(invite_id: str, user: str = Depends(current_user)):
+    _check(invite_id, ID_RE, "invite id")
+    if not store.cancel_invite(user, invite_id):
+        raise HTTPException(status_code=404, detail="no such invitation waiting")
+    return {"ok": True}
+
+
+def _invite_target(inv: dict) -> tuple[dict | None, str]:
+    """(the row handed over or the inviter's "you", '' | 'unknown' | 'claimed')."""
+    row = store.person_row(inv["person_id"])
+    if not row or row["account_id"] != inv["owner_id"]:
+        return None, "unknown"
+    if inv.get("kind") == "claim" and row.get("home_id"):
+        return row, "claimed"
+    return row, ""
+
+
 @app.post("/api/invites/peek")
 def peek_invite(body: InviteToken, request: Request):
-    """What the join page shows BEFORE anybody signs in: who sent it and which person. Holding the link
-    is what lets you see this - names only, never an account. Wrong links count against the address."""
+    """What the join page shows BEFORE anybody signs in: who sent it, what kind, and which people it shares.
+    Holding the link is what lets you see this - names only, never an account. Wrong links count against the
+    address."""
     viewer = optional_user(request)
     keys = _invite_throttle_keys(request, viewer)
     if any(_pair_throttled(k, lim) for k, lim in keys):
         raise HTTPException(status_code=429, detail="Too many tries - wait a few minutes.")
     inv = store.invite_by_hash(claims.hash_token(body.token))
-    owner = _person_owner(inv["person_id"]) if inv else None
-    person = store.get_person(inv["owner_id"], inv["person_id"]) if inv and owner == inv["owner_id"] else None
-    if not inv or not person:
+    row, why = _invite_target(inv) if inv else (None, "unknown")
+    if not inv or why == "unknown":
         for k, _ in keys:
             _pair_miss(k)
         return _refused("unknown", 404)
     state = claims.invite_state(inv, _now_iso())
     out = {"state": state, "text": claims.REFUSAL_TEXT.get(state, ""), "signed_in": bool(viewer),
-           "screen": via_device_key(request)}
+           "screen": via_device_key(request), "kind": inv.get("kind", "claim")}
     if state == "live":
-        out.update({"name": person["name"], "from": _inviter_name(inv["owner_id"]),
-                    "expires_at": inv["expires_at"], "see_people": inv["see_people"],
-                    "messages": inv["messages"], "is_inviter": viewer == inv["owner_id"],
-                    "claimed": bool(store.get_claim(inv["person_id"]))})
+        owner = inv["owner_id"]
+        names = {p["id"]: p["name"] for p in store.list_people(owner)}
+        sender = _inviter_name(owner)
+        shares = [{"name": names.get(s["person_id"], ""), "messages": bool(s.get("messages")),
+                   "sender": s["person_id"] == store.first_person_id(owner)}
+                  for s in store.invite_shares(inv) if s.get("person_id") in names]
+        out.update({"name": names.get(row["id"], "") if out["kind"] == "claim" else (sender or names.get(row["id"], "")),
+                    "from": sender, "expires_at": inv["expires_at"], "shares": shares,
+                    "is_inviter": viewer == owner, "claimed": why == "claimed"})
     return out
 
 
 @app.post("/api/invites/accept")
 def accept_invite(body: InviteToken, request: Request, user: str = Depends(current_user)):
-    """"Make this mine". Signed in, on your own login (not a screen, not the inviter's)."""
+    """"Make this mine" (a claim) or "Connect" (a connect link). Signed in, on your own login (not a screen,
+    not the inviter's)."""
     keys = _invite_throttle_keys(request, user)
     if any(_pair_throttled(k, lim) for k, lim in keys):
         raise HTTPException(status_code=429, detail="Too many tries - wait a few minutes.")
@@ -1500,82 +1630,71 @@ def accept_invite(body: InviteToken, request: Request, user: str = Depends(curre
         for k, _ in keys:
             _pair_miss(k)
         return _refused("unknown", 404)
-    person = store.get_person(inv["owner_id"], inv["person_id"])
-    reason = claims.accept_refusal(inv, account=user, now_iso=_now_iso(),
-                                   claimed=bool(store.get_claim(inv["person_id"])),
-                                   person_exists=bool(person), via_screen=via_device_key(request))
+    row, why = _invite_target(inv)
+    reason = claims.accept_refusal(inv, account=user, now_iso=_now_iso(), target_ok=why != "unknown",
+                                   via_screen=via_device_key(request)) or ("claimed" if why == "claimed" else "")
     if reason:
         return _refused(reason, {"unknown": 404, "screen": 403, "own": 403, "signed-out": 401}.get(reason, 409))
-    status, claim = store.accept_invite(inv["id"], user)
+    owner = inv["owner_id"]
+    claimed_name = (store.get_person(owner, inv["person_id"]) or {}).get("name", "")
+    status, made = store.accept_invite(inv["id"], user, messages_back=bool(body.messages_back))
     if status != "ok":
         return _refused("claimed" if status == "claimed" else "used", 409)
-    store.sync_claim_messages(inv["owner_id"])
-    # MOST OF THE WORK ALREADY DONE: a login with no name of its own yet signs its notes with the name
-    # it was invited as ("Mom"), rather than "Someone". Never over a name somebody chose.
-    if not _display_name(user):
-        try:
-            nm = notes.clean_display_name(person["name"])
-            if nm:
-                cur = store.get_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY)
-                store.put_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY, {"name": nm}, cur.get("version", 0))
-        except ValueError:
-            pass
-    return {"ok": True, "person_id": inv["person_id"], "name": person["name"],
-            "from": _inviter_name(inv["owner_id"])}
+    sender = _inviter_name(owner)
+    if made["kind"] == "claim":
+        # MOST OF THE WORK ALREADY DONE. A login with no name of its own yet signs its notes with the name it
+        # was invited as ("Mom"), rather than "Someone"; its own profile, still called "Me", takes that name
+        # too; and the picture and page the inviter made are copied over if it has none. Never over anything
+        # somebody chose.
+        if not _display_name(user):
+            try:
+                nm = notes.clean_display_name(claimed_name)
+                if nm:
+                    cur = store.get_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY)
+                    store.put_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY, {"name": nm}, cur.get("version", 0))
+            except ValueError:
+                pass
+        mine = store.get_person(user, made["first"]) or {}
+        if (mine.get("name") or "").strip().lower() in ("", "me"):
+            nm = _display_name(user) or claimed_name
+            if nm and NAME_RE.match(nm):
+                store.rename_person(user, made["first"], nm)
+        store.copy_profile_if_empty(owner, inv["person_id"], user, made["first"])
+    return {"ok": True, "kind": made["kind"], "name": claimed_name if made["kind"] == "claim" else sender,
+            "from": sender}
 
 
-@app.get("/api/claims")
-def list_claims(user: str = Depends(current_user)):
-    """Both sides of every claim this login is part of, in names.
-      mine   people on OTHER accounts this login has taken over, each with the inviter's people it may
-             see (and which of those have joined too)
-      given  people on THIS account that somebody else's login has taken over"""
-    mine = []
-    for c in store.claims_by_account(user):
-        owner = c["owner_id"]
-        person = store.get_person(owner, c["person_id"])
-        if not person:
-            continue
-        owner_people = store.list_people(owner)
-        first = store.first_person_id(owner)
-        joined = {x["person_id"] for x in store.claims_on_owner(owner)}
-        seen = claims.visible_people(owner_people, see_people=c["see_people"],
-                                     claimed_person_id=c["person_id"], first_person_id=first)
-        mine.append({
-            "person_id": c["person_id"], "name": person["name"], "from": _inviter_name(owner),
-            "see_people": c["see_people"], "messages": c["messages"], "claimed_at": c["claimed_at"],
-            "people": [{"id": p["id"], "name": p["name"], "joined": p["id"] in joined,
-                        "you": p["id"] == c["person_id"], "sender": p["id"] == first} for p in seen],
-        })
-    given = []
-    for c in store.claims_on_owner(user):
-        person = store.get_person(user, c["person_id"])
-        if not person:
-            continue
-        given.append({"person_id": c["person_id"], "name": person["name"], "by": _display_name(c["account_id"]),
-                      "see_people": c["see_people"], "messages": c["messages"], "claimed_at": c["claimed_at"]})
-    return {"mine": mine, "given": given}
-
-
-@app.delete("/api/claims/{person_id}")
-def stop_sharing(person_id: str, user: str = Depends(current_user)):
-    """Either side ends it. The person stays on the inviter's account, exactly as it is."""
+def _linked_row(user: str, person_id: str) -> tuple[dict, str, dict]:
+    """(your row, the other account, the active connection) for a row a connection put on your page - or the
+    404 a row that is not yours, or not from a connection, gets."""
     _check(person_id, ID_RE, "person id")
-    claim = store.get_claim(person_id)
-    if not claim or user not in (claim["owner_id"], claim["account_id"]):
+    row = store.person_row(person_id)
+    source = store.person_row(row["source_id"]) if row and row.get("source_id") else None
+    if not row or row["account_id"] != user or not row.get("link_id") or not source or source["account_id"] == user:
         raise HTTPException(status_code=404, detail="nothing shared here")
-    store.end_claim(person_id)
+    link = store.get_link(user, source["account_id"])
+    if not link or not links.link_is_active(link) or link["id"] != row["link_id"]:
+        raise HTTPException(status_code=404, detail="nothing shared here")
+    return row, source["account_id"], link
+
+
+@app.delete("/api/people/{person_id}/link")
+def stop_sharing(person_id: str, user: str = Depends(current_user)):
+    """"Stop sharing" on the card of somebody a connection put on your page - either side. It ends the
+    connection with that login: what it made goes, on both pages; a person somebody had taken over goes back
+    to being the inviter's own (db.unlink)."""
+    _row, other, _link = _linked_row(user, person_id)
+    store.unlink(user, other, broken_by=user)
     return {"ok": True}
 
 
-@app.put("/api/claims/{person_id}/messages")
-def claim_messages(person_id: str, body: ClaimMessagesPut, user: str = Depends(current_user)):
-    """The inviter turns "may leave messages for my people" on or off for somebody who joined."""
-    _check(person_id, ID_RE, "person id")
-    owned_person(user, person_id)
-    if not store.set_claim_messages(person_id, user, body.on):
-        raise HTTPException(status_code=404, detail="nothing shared here")
-    return {"ok": True, "messages": bool(body.on)}
+@app.put("/api/people/{person_id}/messages")
+def link_messages(person_id: str, body: MessagesPut, user: str = Depends(current_user)):
+    """"Messages from them: on / off": may the login behind this card leave messages for the people of yours
+    they have on their page. Yours to switch; theirs is on their card for you."""
+    _row, other, link = _linked_row(user, person_id)
+    store.set_link_messages(link["id"], user, other, bool(body.on))
+    return {"ok": True, "messages": store.link_messages(link["id"], user, other)}
 
 
 # ------------------------------------------------------------ CLAUDE, ON THIS ACCOUNT

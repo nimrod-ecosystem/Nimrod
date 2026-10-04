@@ -36,6 +36,7 @@ import threading
 import uuid
 
 # Pure rules, no storage - db imports grants/links and never the other way round.
+import claims as claim_rules
 import grants
 import links
 import provenance
@@ -152,18 +153,30 @@ class _Store:
                         (pid, account_id, name, ts))
         return {"id": pid, "name": name, "created_at": ts}
 
+    # THE NAME A ROW SHOWS ITS OWN ACCOUNT (claims.display_name, in SQL): a home row its own name; a row whose
+    # profile lives on another account its "I call them", else the home's name. Every caller of list_people /
+    # get_person - screens, notes, the kiosk - gets the name the holding account knows them by, without knowing
+    # homes exist.
+    _NAME_SQL = ("CASE WHEN p.home_id IS NULL OR p.home_id='' THEN p.name "
+                 "ELSE COALESCE(NULLIF(p.call_name,''), h.name, p.name) END")
+    # FIRST IS "YOU": the oldest row, and on a tie (two rows written in the same clock tick) a home row before one
+    # a connection made - so a link accepted on a brand-new login can never become that login's "you".
+    _PEOPLE_ORDER = "p.created_at, CASE WHEN p.home_id IS NULL OR p.home_id='' THEN 0 ELSE 1 END"
+
     def list_people(self, account_id: str) -> list[dict]:
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, name, created_at FROM people WHERE account_id=? ORDER BY created_at"),
-                        (account_id,))
+            cur.execute(self._q(
+                f"SELECT p.id, {self._NAME_SQL}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
+                f"WHERE p.account_id=? ORDER BY {self._PEOPLE_ORDER}"), (account_id,))
             rows = cur.fetchall()
         return [{"id": r[0], "name": r[1], "created_at": r[2]} for r in rows]
 
     def get_person(self, account_id: str, person_id: str) -> dict | None:
         """Ownership gate: only the owning account ever sees a person."""
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id, name, created_at FROM people WHERE account_id=? AND id=?"),
-                        (account_id, person_id))
+            cur.execute(self._q(
+                f"SELECT p.id, {self._NAME_SQL}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
+                "WHERE p.account_id=? AND p.id=?"), (account_id, person_id))
             r = cur.fetchone()
         return None if r is None else {"id": r[0], "name": r[1], "created_at": r[2]}
 
@@ -287,26 +300,30 @@ class _Store:
         somebody who was cut off and later re-invited has to be re-granted, rather than
         silently getting back everything they had before the fallout.
         """
-        lo, hi = links.canonical_pair(a, b)
-        ts = _now()
         with self._tx() as cur:
-            cur.execute(self._q(
-                "SELECT id, account_lo, account_hi, created_by, created_at, broken_at, broken_by "
-                "FROM links WHERE account_lo=? AND account_hi=?"), (lo, hi))
-            row = cur.fetchone()
-            if row:
-                if row[5]:
-                    cur.execute(self._q(
-                        "UPDATE links SET broken_at=NULL, broken_by=NULL, created_by=?, created_at=? "
-                        "WHERE id=?"), (created_by, ts, row[0]))
-                    return {"id": row[0], "account_lo": lo, "account_hi": hi,
-                            "created_by": created_by, "created_at": ts,
-                            "broken_at": None, "broken_by": None, "revived": True}
-                return self._link_row(row)
-            lid = _new_id()
-            cur.execute(self._q(
-                "INSERT INTO links(id, account_lo, account_hi, created_by, created_at, "
-                "broken_at, broken_by) VALUES(?,?,?,?,?,NULL,NULL)"), (lid, lo, hi, created_by, ts))
+            return self._link_upsert(cur, a, b, created_by, _now())
+
+    def _link_upsert(self, cur, a: str, b: str, created_by: str, ts: str) -> dict:
+        """create_link's body, on a cursor the caller holds - so accepting an invitation can connect two
+        accounts inside the same transaction that marks the link used (SQLite's lock is not re-entrant)."""
+        lo, hi = links.canonical_pair(a, b)
+        cur.execute(self._q(
+            "SELECT id, account_lo, account_hi, created_by, created_at, broken_at, broken_by "
+            "FROM links WHERE account_lo=? AND account_hi=?"), (lo, hi))
+        row = cur.fetchone()
+        if row:
+            if row[5]:
+                cur.execute(self._q(
+                    "UPDATE links SET broken_at=NULL, broken_by=NULL, created_by=?, created_at=? "
+                    "WHERE id=?"), (created_by, ts, row[0]))
+                return {"id": row[0], "account_lo": lo, "account_hi": hi,
+                        "created_by": created_by, "created_at": ts,
+                        "broken_at": None, "broken_by": None, "revived": True}
+            return self._link_row(row)
+        lid = _new_id()
+        cur.execute(self._q(
+            "INSERT INTO links(id, account_lo, account_hi, created_by, created_at, "
+            "broken_at, broken_by) VALUES(?,?,?,?,?,NULL,NULL)"), (lid, lo, hi, created_by, ts))
         return {"id": lid, "account_lo": lo, "account_hi": hi, "created_by": created_by,
                 "created_at": ts, "broken_at": None, "broken_by": None}
 
@@ -468,60 +485,141 @@ class _Store:
                          link=link, permissions=self.permissions_on_person(person_id),
                          now_iso=_now())
 
-    # ---- CLAIMS: "invite someone to take over a profile you made" --------
-    # Read claims.py first: the RULES live there, pure and tested alone. This is storage. An
-    # invitation is stored as the SHA-256 of its token, never the token; a claim is one row per
-    # person (person_id is the PRIMARY KEY - that, not a check in code, is what makes "an already
-    # claimed person cannot be claimed again" true).
+    # ---- PEOPLE ACROSS ACCOUNTS: a profile has a home (claims.py) --------
+    # Read claims.py first: the RULES live there, pure and tested alone. This is storage.
+    #   * `people.home_id`  the row that is the main instance of this profile; NULL: this row is its own home.
+    #                       Kept FLAT - it always names a home - so "whose profile is this" is one lookup.
+    #   * `people.call_name` "I call them": the holding account's own name for somebody whose home is elsewhere.
+    #   * `people.source_id` the row on the other account this one reaches through (messages, a call's grant).
+    #   * `people.link_id`  the connection (links) that put it here; `people.made_by` 'claim' | 'link' - so
+    #                       ending a connection undoes exactly what it made, and nothing else.
+    # An invitation is stored as the SHA-256 of its token, never the token.
+
+    _PERSON_COLS = "id, account_id, name, created_at, home_id, call_name, source_id, link_id, made_by"
+
+    @staticmethod
+    def _person_full(r) -> dict:
+        return {"id": r[0], "account_id": r[1], "name": r[2], "created_at": r[3], "home_id": r[4] or None,
+                "call_name": r[5] or "", "source_id": r[6] or None, "link_id": r[7] or None,
+                "made_by": r[8] or None}
+
+    def person_row(self, person_id: str) -> dict | None:
+        """The whole row, NOT scoped to the caller (person_owner's warning applies: not a permission)."""
+        with self._tx() as cur:
+            cur.execute(self._q(f"SELECT {self._PERSON_COLS} FROM people WHERE id=?"), (person_id,))
+            r = cur.fetchone()
+        return self._person_full(r) if r else None
+
+    def people_rows(self, account_id: str) -> list[dict]:
+        """Every row on this account, in list_people's order, each with its home's name and account."""
+        cols = ", ".join(f"p.{c.strip()}" for c in self._PERSON_COLS.split(","))
+        with self._tx() as cur:
+            cur.execute(self._q(
+                f"SELECT {cols}, h.name, h.account_id FROM people p LEFT JOIN people h ON h.id = p.home_id "
+                f"WHERE p.account_id=? ORDER BY {self._PEOPLE_ORDER}"), (account_id,))
+            rows = cur.fetchall()
+        out = []
+        for r in rows:
+            d = self._person_full(r)
+            d["home_name"], d["home_account"] = r[9], r[10]
+            out.append(d)
+        return out
+
+    def holders_of(self, home_id: str) -> list[dict]:
+        """The rows on other accounts whose profile is this one."""
+        with self._tx() as cur:
+            cur.execute(self._q(f"SELECT {self._PERSON_COLS} FROM people WHERE home_id=?"), (home_id,))
+            rows = cur.fetchall()
+        return [self._person_full(r) for r in rows]
+
+    def screens_by_person(self, account_id: str) -> dict[str, int]:
+        """How many screens each of this account's people has - one query for a whole page of cards."""
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT person_id, COUNT(*) FROM profiles WHERE user_id=? GROUP BY person_id"),
+                        (account_id,))
+            rows = cur.fetchall()
+        return {r[0]: int(r[1]) for r in rows if r[0]}
+
+    def set_call_name(self, account_id: str, person_id: str, name: str) -> bool:
+        """"I call them". Only on a row whose home is elsewhere (a home's name is its profile name); '' clears."""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "UPDATE people SET call_name=? WHERE id=? AND account_id=? AND home_id IS NOT NULL AND home_id<>''"),
+                (name or None, person_id, account_id))
+            return bool(cur.rowcount and cur.rowcount > 0)
+
+    def _first_person(self, cur, account_id: str) -> dict | None:
+        cur.execute(self._q(
+            f"SELECT p.id, p.home_id, p.created_at FROM people p WHERE p.account_id=? "
+            f"ORDER BY {self._PEOPLE_ORDER} LIMIT 1"), (account_id,))
+        r = cur.fetchone()
+        return {"id": r[0], "home_id": r[1] or None, "created_at": r[2]} if r else None
 
     def first_person_id(self, account_id: str) -> str | None:
         """The account's first person ("you"), WITHOUT creating one (ensure_default_person does)."""
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id FROM people WHERE account_id=? ORDER BY created_at LIMIT 1"),
-                        (account_id,))
-            r = cur.fetchone()
-        return r[0] if r else None
+            f = self._first_person(cur, account_id)
+        return f["id"] if f else None
 
     _INVITE_COLS = ("id, token_hash, owner_id, person_id, created_at, expires_at, used_at, used_by, "
-                    "cancelled_at, see_people, messages")
+                    "cancelled_at, see_people, messages, kind, shares")
 
     @staticmethod
     def _invite_row(r) -> dict:
+        try:
+            shares = json.loads(r[12]) if r[12] else None
+        except (TypeError, ValueError):
+            shares = None
         return {"id": r[0], "token_hash": r[1], "owner_id": r[2], "person_id": r[3], "created_at": r[4],
                 "expires_at": r[5], "used_at": r[6], "used_by": r[7], "cancelled_at": r[8],
-                "see_people": bool(r[9]), "messages": bool(r[10])}
+                "see_people": bool(r[9]), "messages": bool(r[10]), "kind": r[11] or "claim",
+                "shares": shares if isinstance(shares, list) else None}
 
-    def create_invite(self, owner_id: str, person_id: str, token_hash: str, expires_at: str,
-                      see_people: bool = True, messages: bool = True, sweep_before: str | None = None) -> dict:
-        """A new invitation. ONE LIVE LINK PER PERSON: any older one still waiting is cancelled in the
-        same transaction, so a link sent last week and forgotten cannot be used after a new one went
-        out (and the inviter never has to wonder which of two links in a thread still works).
+    def create_invite(self, owner_id: str, person_id: str, token_hash: str, expires_at: str, *,
+                      kind: str = "claim", shares: list[dict] | None = None,
+                      sweep_before: str | None = None) -> dict:
+        """A new invitation. `kind` 'claim' (person_id: who is handed over) or 'connect' (person_id: the
+        inviter's own "you"). `shares`: claims.clean_shares' list, stored as JSON.
+
+        ONE LIVE LINK PER PERSON HANDED OVER: an older claim link still waiting for the same person is
+        cancelled in the same transaction, so a link sent last week and forgotten cannot be used after a new
+        one went out. CONNECT LINKS ARE NOT: somebody may send one to each of three friends at once.
 
         `sweep_before` (an ISO time): links nobody used that ran out or were taken back before it are
         deleted first, anybody's - the tidy-up rides on making a link, which is rate limited, rather
         than on a timer this server does not have (claims.KEEP_DEAD_INVITE_DAYS says how long)."""
+        if kind not in claim_rules.INVITE_KINDS:
+            raise ValueError(f"unknown invitation kind {kind!r}")
         iid, ts = _new_id(), _now()
+        shares = list(shares or [])
+        any_msgs = any(s.get("messages") for s in shares)
         with self._tx() as cur:
             if sweep_before:
                 cur.execute(self._q(
                     "DELETE FROM claim_invites WHERE used_at IS NULL AND (expires_at < ? "
                     "OR (cancelled_at IS NOT NULL AND cancelled_at < ?))"), (sweep_before, sweep_before))
+            if kind == "claim":
+                cur.execute(self._q(
+                    "UPDATE claim_invites SET cancelled_at=? WHERE owner_id=? AND person_id=? AND kind='claim' "
+                    "AND used_at IS NULL AND cancelled_at IS NULL"), (ts, owner_id, person_id))
+            # see_people / messages are 8908b2c's two choices, kept for links made before this (accept_invite
+            # reads them when `shares` is empty); a new link writes them as what its shares add up to.
             cur.execute(self._q(
-                "UPDATE claim_invites SET cancelled_at=? WHERE owner_id=? AND person_id=? "
-                "AND used_at IS NULL AND cancelled_at IS NULL"), (ts, owner_id, person_id))
-            cur.execute(self._q(
-                f"INSERT INTO claim_invites({self._INVITE_COLS}) VALUES(?,?,?,?,?,?,NULL,NULL,NULL,?,?)"),
-                (iid, token_hash, owner_id, person_id, ts, expires_at, 1 if see_people else 0,
-                 1 if messages else 0))
+                f"INSERT INTO claim_invites({self._INVITE_COLS}) VALUES(?,?,?,?,?,?,NULL,NULL,NULL,?,?,?,?)"),
+                (iid, token_hash, owner_id, person_id, ts, expires_at, 1 if len(shares) > 1 else 0,
+                 1 if any_msgs else 0, kind, json.dumps(shares)))
         return {"id": iid, "owner_id": owner_id, "person_id": person_id, "created_at": ts,
-                "expires_at": expires_at, "see_people": bool(see_people), "messages": bool(messages)}
+                "expires_at": expires_at, "kind": kind, "shares": shares}
 
-    def list_invites(self, owner_id: str, person_id: str) -> list[dict]:
-        """Every invitation for this person, newest first. The token is not here - it never was."""
+    def list_invites(self, owner_id: str, person_id: str | None = None, *, kind: str = "claim") -> list[dict]:
+        """This account's invitations of one kind (for one person, if given), newest first. No tokens."""
+        sql = f"SELECT {self._INVITE_COLS} FROM claim_invites WHERE owner_id=? AND kind=?"
+        params: tuple = (owner_id, kind)
+        if person_id:
+            sql += " AND person_id=?"
+            params = (owner_id, kind, person_id)
         with self._tx() as cur:
-            cur.execute(self._q(
-                f"SELECT {self._INVITE_COLS} FROM claim_invites WHERE owner_id=? AND person_id=? "
-                "ORDER BY created_at DESC"), (owner_id, person_id))
+            cur.execute(self._q(sql + " ORDER BY created_at DESC"), params)
             rows = cur.fetchall()
         return [self._invite_row(r) for r in rows]
 
@@ -542,132 +640,298 @@ class _Store:
             r = cur.fetchone()
         return self._invite_row(r) if r else None
 
-    @staticmethod
-    def _claim_row(r) -> dict:
-        return {"person_id": r[0], "owner_id": r[1], "account_id": r[2], "invite_id": r[3],
-                "see_people": bool(r[4]), "messages": bool(r[5]), "claimed_at": r[6], "role": "self"}
+    def invite_shares(self, inv: dict) -> list[dict]:
+        """What an invitation shares. A link made before shares existed (8908b2c) carries its two old
+        choices instead: "see your other people" meant everybody the inviter looks after."""
+        if inv.get("shares") is not None:
+            return inv["shares"]
+        owner = inv["owner_id"]
+        first = self.first_person_id(owner)
+        rows = [r for r in self.people_rows(owner) if not r["home_id"] and r["id"] != inv["person_id"]]
+        picked = rows if inv.get("see_people") else [r for r in rows if r["id"] == first]
+        return [{"person_id": r["id"], "messages": bool(inv.get("messages"))} for r in picked]
 
-    _CLAIM_COLS = "person_id, owner_id, account_id, invite_id, see_people, messages, claimed_at"
+    # -- rows made by a connection --------------------------------------------------------------------
 
-    def accept_invite(self, invite_id: str, account_id: str) -> tuple[str, dict | None]:
-        """("ok", claim) | ("gone", None) | ("claimed", None). SINGLE USE BY CONSTRUCTION: the invite is
-        marked used by an UPDATE that only matches an unused, uncancelled, unexpired row, and only the
-        request whose UPDATE changed exactly one row goes on to write the claim. Two people pressing
-        "Make this mine" on the same link at the same moment get one yes and one "already used".
+    class _Refused(Exception):
+        def __init__(self, reason: str):
+            super().__init__(reason)
+            self.reason = reason
 
-        Then the two accounts are CONNECTED (create_link) - after the transaction, because SQLite's
-        lock is not re-entrant and create_link takes it itself."""
+    def _holds(self, cur, account_id: str, home_id: str) -> bool:
+        """Does this account already have a row for this profile (the home itself, or one pointing at it)?"""
+        cur.execute(self._q("SELECT id FROM people WHERE account_id=? AND (id=? OR home_id=?) LIMIT 1"),
+                    (account_id, home_id, home_id))
+        return cur.fetchone() is not None
+
+    def _add_linked_row(self, cur, account_id: str, *, home_id: str, source_id: str, link_id: str,
+                        ts: str) -> str | None:
+        """A row on `account_id` for somebody whose profile lives at `home_id`, unless it has one already.
+        Its stored name is the home's name at this moment - only ever shown if the home goes away."""
+        if self._holds(cur, account_id, home_id):
+            return None
+        cur.execute(self._q("SELECT name FROM people WHERE id=?"), (home_id,))
+        r = cur.fetchone()
+        rid = _new_id()
+        cur.execute(self._q(
+            f"INSERT INTO people({self._PERSON_COLS}) VALUES(?,?,?,?,?,NULL,?,?,'link')"),
+            (rid, account_id, (r[0] if r else "") or "Someone", ts, home_id, source_id, link_id))
+        return rid
+
+    def _messages_upsert(self, cur, link_id: str, person_id: str, subject_id: str, ts: str) -> None:
+        """links.py's `messages` switch, on: `subject_id` may leave messages for `person_id` (idempotent)."""
+        cur.execute(self._q(
+            "SELECT id FROM link_permissions WHERE link_id=? AND person_id=? AND capability='messages' "
+            "AND subject_kind='account' AND subject_id=?"), (link_id, person_id, subject_id))
+        if cur.fetchone():
+            return
+        cur.execute(self._q(
+            "INSERT INTO link_permissions(id, link_id, person_id, capability, subject_kind, subject_id, "
+            "expires_at, created_at) VALUES(?,?,?,'messages','account',?,NULL,?)"),
+            (_new_id(), link_id, person_id, subject_id, ts))
+
+    def accept_invite(self, invite_id: str, account_id: str, *, messages_back: bool = True) -> tuple[str, dict | None]:
+        """("ok", {kind, link_id, joined, first}) | ("gone", None) | ("claimed", None).
+
+        SINGLE USE BY CONSTRUCTION: the invite is marked used by an UPDATE that only matches an unused,
+        uncancelled, unexpired row, and only the request whose UPDATE changed exactly one row goes on.
+        A CLAIM IS ONE BY CONSTRUCTION TOO: the inviter's row joins the claimer's profile through an UPDATE
+        that only matches it while it is still its own home, so two people pressing "Make this mine" on two
+        links for the same person get one yes and one "already". Everything - the connection, the rows, the
+        switches - is written in that one transaction: a refusal anywhere rolls all of it back, and the link
+        stays unused, which is right: it did not make anything theirs.
+
+        THE CLAIMER'S FIRST PERSON IS WHO THEY ARE. ensure_default_person makes one first, so a link accepted
+        by a brand-new login never makes a row that could become its "you"."""
+        self.ensure_default_person(account_id)
         ts = _now()
         try:
             with self._tx() as cur:
-                cur.execute(self._q(f"SELECT {self._INVITE_COLS} FROM claim_invites WHERE id=?"),
-                            (invite_id,))
+                cur.execute(self._q(f"SELECT {self._INVITE_COLS} FROM claim_invites WHERE id=?"), (invite_id,))
                 r = cur.fetchone()
                 if not r:
                     return ("gone", None)
                 inv = self._invite_row(r)
-                cur.execute(self._q("SELECT person_id FROM person_claims WHERE person_id=?"),
-                            (inv["person_id"],))
-                if cur.fetchone():
-                    return ("claimed", None)
                 cur.execute(self._q(
                     "UPDATE claim_invites SET used_at=?, used_by=? WHERE id=? AND used_at IS NULL "
                     "AND cancelled_at IS NULL AND expires_at > ?"), (ts, account_id, invite_id, ts))
                 if cur.rowcount != 1:
                     return ("gone", None)
-                cur.execute(self._q(
-                    f"INSERT INTO person_claims({self._CLAIM_COLS}) VALUES(?,?,?,?,?,?,?)"),
-                    (inv["person_id"], inv["owner_id"], account_id, invite_id,
-                     1 if inv["see_people"] else 0, 1 if inv["messages"] else 0, ts))
+                owner = inv["owner_id"]
+                me = self._first_person(cur, account_id)
+                my_home = me["home_id"] or me["id"]
+                link = self._link_upsert(cur, owner, account_id, account_id, ts)
+                lid = link["id"]
+                joined = None
+                if inv["kind"] == "claim":
+                    pid = inv["person_id"]
+                    cur.execute(self._q(
+                        "UPDATE people SET home_id=?, source_id=?, link_id=?, made_by='claim', "
+                        "call_name=COALESCE(NULLIF(call_name,''), name) "
+                        "WHERE id=? AND account_id=? AND (home_id IS NULL OR home_id='')"),
+                        (my_home, me["id"], lid, pid, owner))
+                    if cur.rowcount != 1:
+                        raise self._Refused("claimed")
+                    # Everything that pointed at the claimed row points at the claimer's own profile now.
+                    cur.execute(self._q("UPDATE people SET home_id=? WHERE home_id=?"), (my_home, pid))
+                    joined = pid
+                shares = inv["shares"]
+                if shares is None:
+                    # A link made before shares existed (8908b2c): its two old choices, read in this same
+                    # transaction ("see your other people" meant everybody the inviter looks after).
+                    cur.execute(self._q(
+                        f"SELECT p.id FROM people p WHERE p.account_id=? AND (p.home_id IS NULL OR p.home_id='') "
+                        f"ORDER BY {self._PEOPLE_ORDER}"), (owner,))
+                    homes = [x[0] for x in cur.fetchall()]
+                    first_owner = homes[0] if homes else None
+                    picked = [h for h in homes if h != inv["person_id"]] if inv["see_people"] else \
+                        [h for h in homes if h == first_owner and h != inv["person_id"]]
+                    shares = [{"person_id": h, "messages": inv["messages"]} for h in picked]
+                for s in shares:
+                    q = s.get("person_id")
+                    if not q or q == joined:
+                        continue
+                    # Still the inviter's, and still a profile they look after - else it is skipped, not refused:
+                    # one person deleted since the link was made must not cost the rest of the invitation.
+                    cur.execute(self._q(
+                        "SELECT id FROM people WHERE id=? AND account_id=? AND (home_id IS NULL OR home_id='')"),
+                        (q, owner))
+                    if not cur.fetchone():
+                        continue
+                    self._add_linked_row(cur, account_id, home_id=q, source_id=q, link_id=lid, ts=ts)
+                    if s.get("messages"):
+                        self._messages_upsert(cur, lid, q, account_id, ts)
+                if inv["kind"] == "connect":
+                    self._add_linked_row(cur, owner, home_id=my_home, source_id=me["id"], link_id=lid, ts=ts)
+                if messages_back:
+                    self._messages_upsert(cur, lid, me["id"], owner, ts)
+        except self._Refused as e:
+            return (e.reason, None)
         except Exception as e:                              # noqa: BLE001 - narrowed just below
             # By NAME, because psycopg is not importable in SQLite dev: both engines call it this.
             if type(e).__name__ not in ("IntegrityError", "UniqueViolation"):
                 raise
-            # Somebody else's claim landed between our read and our write. The transaction rolled
-            # back, so the invite is still unused - which is right: it did not make anything theirs.
             return ("claimed", None)
-        self.create_link(inv["owner_id"], account_id, created_by=account_id)
-        return ("ok", self.get_claim(inv["person_id"]))
+        if joined:
+            self._tidy_self_rows(account_id, me["id"])
+        return ("ok", {"kind": inv["kind"], "link_id": lid, "joined": joined, "first": me["id"],
+                       "owner_id": owner})
 
-    def get_claim(self, person_id: str) -> dict | None:
-        with self._tx() as cur:
-            cur.execute(self._q(f"SELECT {self._CLAIM_COLS} FROM person_claims WHERE person_id=?"),
-                        (person_id,))
-            r = cur.fetchone()
-        return self._claim_row(r) if r else None
-
-    def claims_by_account(self, account_id: str) -> list[dict]:
-        """The people this login has taken over, on other accounts."""
-        with self._tx() as cur:
-            cur.execute(self._q(f"SELECT {self._CLAIM_COLS} FROM person_claims WHERE account_id=? "
-                                "ORDER BY claimed_at"), (account_id,))
-            rows = cur.fetchall()
-        return [self._claim_row(r) for r in rows]
-
-    def claims_on_owner(self, owner_id: str) -> list[dict]:
-        """The people on this account that somebody else's login has taken over."""
-        with self._tx() as cur:
-            cur.execute(self._q(f"SELECT {self._CLAIM_COLS} FROM person_claims WHERE owner_id=? "
-                                "ORDER BY claimed_at"), (owner_id,))
-            rows = cur.fetchall()
-        return [self._claim_row(r) for r in rows]
-
-    def end_claim(self, person_id: str) -> dict | None:
-        """"Stop sharing": the claim goes; THE PERSON STAYS on the inviter's account, as it is.
-
-        The link between the two accounts is broken too - with every permission on it (break_link) -
-        UNLESS another claim still joins the same pair (Mom took over two profiles on Mike's account,
-        and stops sharing one). Then the messages permissions are re-synced to what remains."""
-        claim = self.get_claim(person_id)
-        if not claim:
-            return None
-        with self._tx() as cur:
-            cur.execute(self._q("DELETE FROM person_claims WHERE person_id=?"), (person_id,))
-        o, a = claim["owner_id"], claim["account_id"]
-        still = [c for c in self.claims_on_owner(o) if c["account_id"] == a] \
-            + [c for c in self.claims_on_owner(a) if c["account_id"] == o]
-        if still:
-            self.sync_claim_messages(o)
-        else:
-            self.break_link(o, a, broken_by=a)
-        return claim
-
-    def set_claim_messages(self, person_id: str, owner_id: str, on: bool) -> bool:
-        """The inviter turns "may leave messages for my people" on or off for one claim."""
-        with self._tx() as cur:
-            cur.execute(self._q("UPDATE person_claims SET messages=? WHERE person_id=? AND owner_id=?"),
-                        (1 if on else 0, person_id, owner_id))
-            n = cur.rowcount
-        if n:
-            self.sync_claim_messages(owner_id)
-        return bool(n)
-
-    def sync_claim_messages(self, owner_id: str) -> None:
-        """Make links.py `messages` permissions match what every claim on this account allows.
-
-        Called after a claim is made, changed or ended, and when the owner adds or removes a person -
-        so a person added after the claim is reachable too, and one removed takes its row with it.
-        Touches ONLY rows whose subject is a claimer and whose person is on this account: whatever
-        else a link may carry one day is not this function's to rewrite."""
-        import claims as claim_rules                       # pure; local so db's imports stay as they were
-        claims_here = self.claims_on_owner(owner_id)
-        owner_people = self.list_people(owner_id)
-        first = self.first_person_id(owner_id)
-        mine = {p["id"] for p in owner_people}
-        by_account: dict[str, set] = {}
-        for c in claims_here:
-            by_account.setdefault(c["account_id"], set()).update(
-                claim_rules.message_people(c, owner_people, first))
-        for account, wanted in by_account.items():
-            link = self.get_link(owner_id, account)
-            if not link or not links.link_is_active(link):
+    def _tidy_self_rows(self, account_id: str, first_id: str) -> None:
+        """After a claim: a row on the claimer's own account that now points at the claimer (they had been
+        shared the very profile they took over) is them twice. A connection's row is removed; one with a
+        screen of its own is kept, as a plain row."""
+        for r in self.holders_of(first_id):
+            if r["account_id"] != account_id or r["made_by"] != "link":
                 continue
-            have = {p["person_id"]: p for p in self.list_link_permissions(link["id"])
-                    if p["capability"] == "messages" and p["subject_id"] == account and p["person_id"] in mine}
-            for pid in wanted - set(have):
-                self.add_link_permission(link["id"], pid, "messages", account)
-            for pid in set(have) - wanted:
-                self.delete_link_permission(have[pid]["id"], link_id=link["id"])
+            if self.count_person_screens(account_id, r["id"]):
+                self._make_plain(r, home_name=None)
+            else:
+                self.delete_person(account_id, r["id"])
+
+    def _make_plain(self, r: dict, *, home_name: str | None, cur=None) -> None:
+        """A row whose profile is no longer elsewhere: its own name (what it was called), nothing pointing out."""
+        name = claim_rules.display_name(r, home_name) or r.get("name") or "Someone"
+        sql = self._q("UPDATE people SET name=?, call_name=NULL, home_id=NULL, source_id=NULL, link_id=NULL, "
+                      "made_by=NULL WHERE id=?")
+        if cur is not None:
+            cur.execute(sql, (name, r["id"]))
+            return
+        with self._tx() as c:
+            c.execute(sql, (name, r["id"]))
+
+    def copy_profile_if_empty(self, from_account: str, from_pid: str, to_account: str, to_pid: str) -> list[str]:
+        """"Most of the work already done": each profile key (picture, page) the claimer has not set yet is
+        copied from the row the inviter made. Never over something the claimer already has."""
+        copied = []
+        for key in sorted(claim_rules.PROFILE_KEYS):
+            dst = self.get_state(to_account, person_scope(to_pid), key)
+            if dst.get("version") or dst.get("data"):
+                continue
+            src = self.get_state(from_account, person_scope(from_pid), key)
+            if not src.get("data"):
+                continue
+            status, _ = self.put_state(to_account, person_scope(to_pid), key, src["data"], dst.get("version", 0))
+            if status == "ok":
+                copied.append(key)
+        return copied
+
+    # -- ending a connection --------------------------------------------------------------------------
+
+    def unlink(self, a: str, b: str, broken_by: str) -> int:
+        """"Stop sharing", from either side: undo what the connection between a and b made, then break it.
+
+          * a row the connection MADE ('link') is removed with its settings - unless the account holding it
+            gave it a screen, when it stays as that account's own plain row (nobody's screen loses its person);
+          * a row the connection JOINED ('claim') goes back to being its account's own plain row, called what
+            that account called it, with whatever picture and page it had before the claim (the claimer's
+            later changes stay the claimer's), and rows that were shared FROM it point at it again;
+          * links.py's break: every permission on the link goes, and the link is marked broken.
+        Never a home row. Message history is left alone (break_link says why). 1 if a link was broken, else 0."""
+        link = self.get_link(a, b)
+        if not link or not links.link_is_active(link):
+            return 0
+        lid, ts = link["id"], _now()
+        with self._tx() as cur:
+            cur.execute(self._q(f"SELECT {self._PERSON_COLS} FROM people WHERE link_id=?"), (lid,))
+            rows = [self._person_full(r) for r in cur.fetchall()]
+            for r in rows:
+                if r["made_by"] == "claim":
+                    self._make_plain(r, home_name=None, cur=cur)
+                    cur.execute(self._q("UPDATE people SET home_id=? WHERE source_id=? AND id<>?"),
+                                (r["id"], r["id"], r["id"]))
+                    continue
+                cur.execute(self._q("SELECT COUNT(*) FROM profiles WHERE user_id=? AND person_id=?"),
+                            (r["account_id"], r["id"]))
+                if cur.fetchone()[0]:
+                    cur.execute(self._q("SELECT name FROM people WHERE id=?"), (r["home_id"],))
+                    h = cur.fetchone()
+                    self._make_plain(r, home_name=h[0] if h else None, cur=cur)
+                    continue
+                cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"),
+                            (r["account_id"], person_scope(r["id"])))
+                cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (r["id"], r["account_id"]))
+            cur.execute(self._q("DELETE FROM link_permissions WHERE link_id=?"), (lid,))
+            cur.execute(self._q("UPDATE links SET broken_at=?, broken_by=? WHERE id=?"), (ts, broken_by, lid))
+        return 1
+
+    # -- "may they leave messages for my people", per connection ---------------------------------------
+
+    def _shared_sources(self, cur, link_id: str, owner: str, other: str) -> list[str]:
+        """The owner's rows the other account holds through this connection."""
+        cur.execute(self._q(
+            "SELECT DISTINCT p.source_id FROM people p JOIN people s ON s.id = p.source_id "
+            "WHERE p.account_id=? AND p.link_id=? AND s.account_id=?"), (other, link_id, owner))
+        return [r[0] for r in cur.fetchall() if r[0]]
+
+    def link_messages(self, link_id: str, owner: str, other: str) -> bool:
+        """May `other` leave messages for any of `owner`'s people through this connection?"""
+        with self._tx() as cur:
+            cur.execute(self._q(
+                "SELECT lp.id FROM link_permissions lp JOIN people p ON p.id = lp.person_id "
+                "WHERE lp.link_id=? AND lp.capability='messages' AND lp.subject_id=? AND p.account_id=? LIMIT 1"),
+                (link_id, other, owner))
+            return cur.fetchone() is not None
+
+    def set_link_messages(self, link_id: str, owner: str, other: str, on: bool) -> int:
+        """Turn "may leave messages" on or off for every one of `owner`'s people `other` holds through this
+        connection. Touches only `messages` rows whose subject is `other` on `owner`'s people."""
+        ts = _now()
+        with self._tx() as cur:
+            sources = self._shared_sources(cur, link_id, owner, other)
+            if on:
+                for s in sources:
+                    self._messages_upsert(cur, link_id, s, other, ts)
+                return len(sources)
+            cur.execute(self._q(
+                "DELETE FROM link_permissions WHERE link_id=? AND capability='messages' AND subject_id=? "
+                "AND person_id IN (SELECT id FROM people WHERE account_id=?)"), (link_id, other, owner))
+            return cur.rowcount if cur.rowcount and cur.rowcount > 0 else 0
+
+    # -- 8908b2c's claims, carried over once ------------------------------------------------------------
+
+    def _migrate_old_claims(self) -> int:
+        """`person_claims` (8908b2c: the claimed person stayed on the inviter's account, with a row naming
+        the claimer) becomes the home model, then the table is dropped - a table nothing reads would tell the
+        privacy page we keep a record we no longer use. SAFE EITHER WAY: no table, nothing happens; each row
+        is carried over idempotently, so a migration cut short by a restart finishes on the next one.
+
+        For each old claim: the person joins the claimer's own first person (their picture and page are
+        copied to the claimer if theirs are empty - the claimer's own changes lived on that person), the
+        inviter keeps the old name as "I call them", and the people the claimer could see become rows on
+        the claimer's account. The `messages` switches the old claim wrote are already on the link."""
+        if "person_claims" not in self._table_names():
+            return 0
+        with self._tx() as cur:
+            cur.execute("SELECT person_id, owner_id, account_id, see_people, messages FROM person_claims")
+            old = cur.fetchall()
+        n = 0
+        for pid, owner, acct, see, _msgs in old:
+            row = self.person_row(pid)
+            if not row or row["account_id"] != owner or not acct or acct == owner:
+                continue
+            first = self.ensure_default_person(acct)
+            link = self.create_link(owner, acct, created_by=acct)
+            ts = _now()
+            with self._tx() as cur:
+                if not row["home_id"]:
+                    cur.execute(self._q(
+                        "UPDATE people SET home_id=?, source_id=?, link_id=?, made_by='claim', "
+                        "call_name=COALESCE(NULLIF(call_name,''), name) WHERE id=?"), (first, first, link["id"], pid))
+                    cur.execute(self._q("UPDATE people SET home_id=? WHERE home_id=?"), (first, pid))
+                cur.execute(self._q(
+                    f"SELECT p.id FROM people p WHERE p.account_id=? AND (p.home_id IS NULL OR p.home_id='') "
+                    f"ORDER BY {self._PEOPLE_ORDER}"), (owner,))
+                homes = [x[0] for x in cur.fetchall()]
+                seen = homes if see else homes[:1]
+                for q in seen:
+                    self._add_linked_row(cur, acct, home_id=q, source_id=q, link_id=link["id"], ts=ts)
+            if not row["home_id"]:
+                self.copy_profile_if_empty(owner, pid, acct, first)
+            n += 1
+        with self._tx() as cur:
+            cur.execute("DROP TABLE IF EXISTS person_claims")
+        return n
 
     def count_person_screens(self, account_id: str, person_id: str) -> int:
         with self._tx() as cur:
@@ -682,9 +946,21 @@ class _Store:
         delete that silently took N screens with it is exactly the destructive surprise
         this project avoids, so the refusal lives at the edge where it can explain
         itself. Their append-only events are left in place; the trigger forbids deleting
-        them, and that is the point."""
+        them, and that is the point.
+
+        A PROFILE OTHER ACCOUNTS HOLD (2026-10-04 night): their rows stay, as their own plain rows named
+        what they called them (a GUESS - Mike's list; the case for the opposite is that the person meant to
+        leave everybody's page, which "Stop sharing" with each of them does). The switches on this person
+        go with it."""
         scope = person_scope(person_id)
+        row = self.person_row(person_id)
+        mine = bool(row) and row["account_id"] == account_id
+        holders = self.holders_of(person_id) if mine and not row["home_id"] else []
         with self._tx() as cur:
+            for h in holders:
+                self._make_plain(h, home_name=row["name"], cur=cur)
+            if mine:
+                cur.execute(self._q("DELETE FROM link_permissions WHERE person_id=?"), (person_id,))
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (account_id, scope))
             cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (person_id, account_id))
 
@@ -708,11 +984,9 @@ class _Store:
         contorting the schema to rescue.
         """
         with self._tx() as cur:
-            cur.execute(self._q("SELECT id FROM people WHERE account_id=? ORDER BY created_at LIMIT 1"),
-                        (account_id,))
-            r = cur.fetchone()
+            r = self._first_person(cur, account_id)
             if r is not None:
-                return r[0]
+                return r["id"]
             pid, ts = _new_id(), _now()
             cur.execute(self._q("INSERT INTO people(id, account_id, name, created_at) VALUES(?,?,?,?)"),
                         (pid, account_id, name, ts))
@@ -962,8 +1236,13 @@ class _Store:
                             "run a logger, arrive here too.", True,
                             "when a module you added writes one"),
         "people":          ("The NAME you gave a person, so their screen can say who it is "
-                            "for. This is the most personal thing here.", True,
-                            "when you add a person"),
+                            "for. This is the most personal thing here. When somebody's profile "
+                            "is on your page because you connected, or because they took over a "
+                            "person you made: which profile it is (theirs, kept on their own login), "
+                            "what you call them if you chose a name of your own, which connection "
+                            "put them there, and how - so stopping sharing removes exactly that.", True,
+                            "when you add a person, connect with somebody, or somebody shares a "
+                            "person with you"),
         "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "
                             "pointer at your own machine. Never the files themselves.", True,
                             "when you connect a folder"),
@@ -981,16 +1260,13 @@ class _Store:
                             "watch a screen, add photos. Each one can be switched off on its "
                             "own, and ending the connection removes them all.", True,
                             "when you allow a connection to do something"),
-        "claim_invites":   ("A link you made inviting somebody to take over one of your people: "
-                            "which person, when it runs out, the two choices you made on it, and "
-                            "whose login used it. Never the link itself - only a scrambled form "
-                            "of it that cannot be turned back into a working link. A link nobody "
+        "claim_invites":   ("A link you made to connect with somebody, or inviting somebody to take "
+                            "over one of your people: which kind, which person, which of your people "
+                            "it shares and whether they may leave messages for each, when it runs "
+                            "out, and whose login used it. Never the link itself - only a scrambled "
+                            "form of it that cannot be turned back into a working link. A link nobody "
                             "used is deleted 30 days after it runs out or is taken back.", True,
-                            "when you invite somebody to use one of your people"),
-        "person_claims":   ("Which of your people somebody else now uses with their own login, "
-                            "and which login. One entry per person; it goes when either of you "
-                            "stops sharing, and the person stays yours.", True,
-                            "when somebody accepts your invitation"),
+                            "when you send somebody a link"),
         "sessions":        ("When a play or therapy session started and ended, and how it "
                             "ended. It is what lets a result say who was in the room, without "
                             "tagging every single answer.", True,
@@ -1556,6 +1832,7 @@ class SQLiteStore(_Store):
         self._conn = sqlite3.connect(path, check_same_thread=False)
         self._conn.execute("PRAGMA journal_mode=WAL")
         self._migrate()
+        self._migrate_old_claims()
 
     @contextlib.contextmanager
     def _tx(self):
@@ -1578,9 +1855,13 @@ class SQLiteStore(_Store):
         with self._lock:
             self._conn.executescript(
                 """
+                -- home_id .. made_by: PEOPLE ACROSS ACCOUNTS (claims.py; the storage section above
+                -- says what each holds). All nullable: a NULL home_id is a row that is its own home,
+                -- which is what every row written before them was. Indexed after the guarded ALTERs.
                 CREATE TABLE IF NOT EXISTS people (
                     id TEXT PRIMARY KEY, account_id TEXT NOT NULL, name TEXT NOT NULL,
-                    created_at TEXT NOT NULL
+                    created_at TEXT NOT NULL, home_id TEXT, call_name TEXT, source_id TEXT,
+                    link_id TEXT, made_by TEXT
                 );
                 CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id);
 
@@ -1650,24 +1931,19 @@ class SQLiteStore(_Store):
                 CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id);
                 CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id);
 
-                -- CLAIMS (claims.py). An invitation holds the SHA-256 of its token, never the
-                -- token. A claim is one row per person: person_id is the PRIMARY KEY, which is
-                -- what makes "already claimed" a fact the database enforces.
+                -- INVITATIONS (claims.py). An invitation holds the SHA-256 of its token, never the
+                -- token. `kind` claim | connect; `shares` the people it shares, as JSON. The old
+                -- `person_claims` table (8908b2c) is carried into people.home_id and dropped by
+                -- _migrate_old_claims - it is not created here any more.
                 CREATE TABLE IF NOT EXISTS claim_invites (
                     id TEXT PRIMARY KEY, token_hash TEXT NOT NULL, owner_id TEXT NOT NULL,
                     person_id TEXT NOT NULL, created_at TEXT NOT NULL, expires_at TEXT NOT NULL,
                     used_at TEXT, used_by TEXT, cancelled_at TEXT,
-                    see_people INTEGER NOT NULL DEFAULT 1, messages INTEGER NOT NULL DEFAULT 1
+                    see_people INTEGER NOT NULL DEFAULT 1, messages INTEGER NOT NULL DEFAULT 1,
+                    kind TEXT NOT NULL DEFAULT 'claim', shares TEXT
                 );
                 CREATE UNIQUE INDEX IF NOT EXISTS ux_claim_invites_hash ON claim_invites(token_hash);
                 CREATE INDEX IF NOT EXISTS ix_claim_invites_person ON claim_invites(owner_id, person_id);
-                CREATE TABLE IF NOT EXISTS person_claims (
-                    person_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, account_id TEXT NOT NULL,
-                    invite_id TEXT NOT NULL, see_people INTEGER NOT NULL DEFAULT 1,
-                    messages INTEGER NOT NULL DEFAULT 1, claimed_at TEXT NOT NULL
-                );
-                CREATE INDEX IF NOT EXISTS ix_person_claims_account ON person_claims(account_id);
-                CREATE INDEX IF NOT EXISTS ix_person_claims_owner ON person_claims(owner_id);
 
                 CREATE TABLE IF NOT EXISTS profiles (
                     id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
@@ -1825,6 +2101,20 @@ class SQLiteStore(_Store):
                 self._conn.execute("ALTER TABLE media_sources ADD COLUMN person_id TEXT")
             self._conn.execute(
                 "CREATE INDEX IF NOT EXISTS ix_media_sources_person ON media_sources(person_id)")
+            # People across accounts (2026-10-04 night): a profile's home, "I call them", and where a
+            # row came from. Nullable, undefaulted: every existing row is its own home, as it was.
+            pcols = {r[1] for r in self._conn.execute("PRAGMA table_info(people)")}
+            for col in ("home_id", "call_name", "source_id", "link_id", "made_by"):
+                if col not in pcols:
+                    self._conn.execute(f"ALTER TABLE people ADD COLUMN {col} TEXT")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS ix_people_home ON people(home_id)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS ix_people_link ON people(link_id)")
+            self._conn.execute("CREATE INDEX IF NOT EXISTS ix_people_source ON people(source_id)")
+            icols = {r[1] for r in self._conn.execute("PRAGMA table_info(claim_invites)")}
+            if "kind" not in icols:
+                self._conn.execute("ALTER TABLE claim_invites ADD COLUMN kind TEXT NOT NULL DEFAULT 'claim'")
+            if "shares" not in icols:
+                self._conn.execute("ALTER TABLE claim_invites ADD COLUMN shares TEXT")
             self._conn.commit()
 
 
@@ -1891,6 +2181,13 @@ class PostgresStore(_Store):
             log.error("Migration did not run at boot (%s) -- it will NOT be retried "
                       "automatically; restart the service once the database is reachable "
                       "if this deploy added one", err)
+        try:
+            self._migrate_old_claims()
+        except Exception as err:
+            # Each old claim is carried over idempotently and the table is dropped only at the end, so
+            # a failure here leaves person_claims in place for the next boot to finish.
+            log.error("Carrying old claims into the home model did not finish (%s) -- "
+                      "the next restart tries again", err)
 
     def _table_names(self) -> list[str]:
         with self._tx() as cur:
@@ -1947,22 +2244,31 @@ class PostgresStore(_Store):
             "CREATE INDEX IF NOT EXISTS ix_link_perm_person ON link_permissions(person_id)",
             "CREATE INDEX IF NOT EXISTS ix_link_perm_link ON link_permissions(link_id)",
 
-            # Claims - see claims.py and the SQLite block above.
+            # Invitations - see claims.py and the SQLite block above. person_claims is no longer
+            # created: _migrate_old_claims carries any rows into people.home_id and drops it.
             "CREATE TABLE IF NOT EXISTS claim_invites (id TEXT PRIMARY KEY, token_hash TEXT NOT NULL, "
             "owner_id TEXT NOT NULL, person_id TEXT NOT NULL, created_at TEXT NOT NULL, "
             "expires_at TEXT NOT NULL, used_at TEXT, used_by TEXT, cancelled_at TEXT, "
-            "see_people INTEGER NOT NULL DEFAULT 1, messages INTEGER NOT NULL DEFAULT 1)",
+            "see_people INTEGER NOT NULL DEFAULT 1, messages INTEGER NOT NULL DEFAULT 1, "
+            "kind TEXT NOT NULL DEFAULT 'claim', shares TEXT)",
+            "ALTER TABLE claim_invites ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'claim'",
+            "ALTER TABLE claim_invites ADD COLUMN IF NOT EXISTS shares TEXT",
             "CREATE UNIQUE INDEX IF NOT EXISTS ux_claim_invites_hash ON claim_invites(token_hash)",
             "CREATE INDEX IF NOT EXISTS ix_claim_invites_person ON claim_invites(owner_id, person_id)",
-            "CREATE TABLE IF NOT EXISTS person_claims (person_id TEXT PRIMARY KEY, owner_id TEXT NOT NULL, "
-            "account_id TEXT NOT NULL, invite_id TEXT NOT NULL, see_people INTEGER NOT NULL DEFAULT 1, "
-            "messages INTEGER NOT NULL DEFAULT 1, claimed_at TEXT NOT NULL)",
-            "CREATE INDEX IF NOT EXISTS ix_person_claims_account ON person_claims(account_id)",
-            "CREATE INDEX IF NOT EXISTS ix_person_claims_owner ON person_claims(owner_id)",
 
             "CREATE TABLE IF NOT EXISTS people (id TEXT PRIMARY KEY, account_id TEXT NOT NULL, "
-            "name TEXT NOT NULL, created_at TEXT NOT NULL)",
+            "name TEXT NOT NULL, created_at TEXT NOT NULL, home_id TEXT, call_name TEXT, source_id TEXT, "
+            "link_id TEXT, made_by TEXT)",
+            # People across accounts - nullable, undefaulted; every existing row is its own home.
+            "ALTER TABLE people ADD COLUMN IF NOT EXISTS home_id TEXT",
+            "ALTER TABLE people ADD COLUMN IF NOT EXISTS call_name TEXT",
+            "ALTER TABLE people ADD COLUMN IF NOT EXISTS source_id TEXT",
+            "ALTER TABLE people ADD COLUMN IF NOT EXISTS link_id TEXT",
+            "ALTER TABLE people ADD COLUMN IF NOT EXISTS made_by TEXT",
             "CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id)",
+            "CREATE INDEX IF NOT EXISTS ix_people_home ON people(home_id)",
+            "CREATE INDEX IF NOT EXISTS ix_people_link ON people(link_id)",
+            "CREATE INDEX IF NOT EXISTS ix_people_source ON people(source_id)",
 
             "CREATE TABLE IF NOT EXISTS profiles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT '')",
