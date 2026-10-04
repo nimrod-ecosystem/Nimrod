@@ -43,8 +43,10 @@
   background:var(--surface, Field);color:var(--text, FieldText);font:inherit}
 .pp-search input:focus{outline:3px solid var(--focus, var(--accent, Highlight));outline-offset:1px}
 
-/* THE SWITCH CURSOR. A lit ROW gets a ring around the whole row; a lit thing inside it gets its own. */
-.pp [data-on="1"]{outline:4px solid var(--link, Highlight);outline-offset:2px}
+/* THE SWITCH CURSOR. A lit ROW gets a ring around the whole row; a lit thing inside it gets its own. In the
+   theme's --scan-ring (3:1 on every surface, every theme; theme.js), not the raw --link (2026-10-04). A chosen
+   tile is told apart by its thicker accent BORDER and the check mark, inside; the cursor is the ring outside. */
+.pp [data-on="1"]{outline:4px solid var(--scan-ring, var(--focus, var(--link, Highlight)));outline-offset:2px}
 .pp-row[data-on="1"]{background:var(--surface-alt, Canvas)}
 .pp-btn[data-on="1"]::before,.pp-tile[data-on="1"] .pp-name::before{content:"\25B8\00a0"}
 

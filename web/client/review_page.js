@@ -26,7 +26,7 @@ export const REVIEW_PAGE_STYLE = `
 .rv-src{overflow-wrap:anywhere}.rv-src a{color:var(--link)}.rv-src-note{color:var(--text-muted)}
 .rv-btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);
   color:var(--text);font:inherit;cursor:pointer}
-.rv-btn:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.rv-btn:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
 .rv-export{box-sizing:border-box;width:100%;min-height:12rem;margin-top:.5em;padding:8px;border-radius:10px;border:1px solid var(--border);
   background:var(--surface);color:var(--text);font:13px/1.4 ui-monospace,Menlo,Consolas,monospace}
 `;

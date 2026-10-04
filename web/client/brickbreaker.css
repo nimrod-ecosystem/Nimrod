@@ -29,7 +29,11 @@
   --bb-edge: var(--border, #c9c3ad);
   width:100%;height:100%;min-height:0;color:var(--text);outline:none;
 }
-.bb-wrap:focus-visible{outline:3px solid var(--link, currentColor);outline-offset:-3px}
+/* Keyboard focus on the game: the theme's --focus (3:1 on every surface, every theme; theme.js), not the raw
+   --link (2026-10-04). Drawn inside the panel, on a band of --surface just inside it, because what is behind an
+   inset ring here is the panel's own background -- a scene, on veil and clear (above). */
+.bb-wrap:focus-visible{outline:3px solid var(--focus, var(--accent, currentColor));outline-offset:-3px;
+  box-shadow:inset 0 0 0 5px var(--surface, Canvas)}
 .bb-wrap *{box-sizing:border-box}
 .bb{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.4rem;padding:.5rem;
   background:transparent;font-family:var(--font)}

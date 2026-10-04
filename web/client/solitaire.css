@@ -91,12 +91,28 @@ button.sol-card{cursor:pointer}
   --sol-step: min(calc(var(--sol-ch) * .28), calc((100cqh - var(--sol-ch)) / max(var(--sol-span, 1), 1)));
 }
 
-/* ---- picking and placing ---- */
-.sol-card[data-picked="1"]{outline:max(3px, calc(var(--sol-cw) * .04)) solid var(--accent-warm);outline-offset:1px;
+/* ---- picking and placing ----
+   THREE RINGS, EACH IN A MEASURED COLOUR, TOLD APART BY SHAPE AS WELL (2026-10-04). They were three raw colours --
+   picked in --accent-warm, targets in --accent, the cursor in --link -- none of them measured, and the accent ring
+   sat beside face-DOWN cards painted in that same --accent. Now:
+     cursor  = the theme's --scan-ring (theme.js: the gold where it reads, else --focus; 3:1 on every surface),
+               the thickest ring, solid, with a MARKER (the triangle below);
+     picked  = the theme's --text (the colour every theme already holds to 4.5:1 on its surfaces), solid, and the
+               card LIFTS. --text and not --focus ON PURPOSE: "the card you are moving" and "where the next press
+               lands" are both on screen at once, and on a light theme --focus IS the scan ring's colour, so the
+               two would differ only in thickness;
+     target  = the theme's --focus, DASHED and thinner: "it can go here", a hint, not the cursor.
+   Picked and the cursor each sit on a band of the theme's --surface in the gap between the card and the ring
+   (a box-shadow spread equal to the offset), so the colour on the ring's inner side is one it was measured
+   against, never a face-down card's accent. dev/solitaire_test.html checks the shapes; dev/theme_test.html the
+   colours. */
+.sol-card[data-picked="1"]{outline:max(3px, calc(var(--sol-cw) * .04)) solid var(--text);outline-offset:2px;
+  box-shadow:0 0 0 2px var(--surface);
   transform:translateY(calc(var(--sol-cw) * -.06));z-index:2}
-[data-target]{outline:max(3px, calc(var(--sol-cw) * .035)) dashed var(--accent);outline-offset:2px;border-radius:var(--sol-rad)}
+[data-target]{outline:max(3px, calc(var(--sol-cw) * .035)) dashed var(--focus, var(--accent));outline-offset:2px;border-radius:var(--sol-rad)}
 /* THE SWITCH CURSOR: a thick outline AND a marker, so the lit thing reads without colour. */
-.sol [data-on="1"]{outline:max(4px, calc(var(--sol-cw) * .05)) solid var(--link);outline-offset:2px;z-index:3}
+.sol [data-on="1"]{outline:max(4px, calc(var(--sol-cw) * .05)) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px;
+  box-shadow:0 0 0 2px var(--surface);z-index:3}
 .sol-card[data-on="1"]::after,.sol-stock[data-on="1"]::after{content:"\25B8";position:absolute;right:calc(var(--sol-cw) * .06);
   top:calc(var(--sol-cw) * .02);font-size:calc(var(--sol-cw) * .26);color:var(--link);line-height:1}
 

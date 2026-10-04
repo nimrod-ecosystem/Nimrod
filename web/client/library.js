@@ -463,14 +463,18 @@ const CSS = `
 .lib-row{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:0 0 auto;padding:2px 2px 4px;scrollbar-width:thin}
 .lib-row[hidden]{display:none}
 .lib-row .lib-label{align-self:center;flex:0 0 auto}
+/* CHOSEN (a pressed chip, the selected card) is a 2px edge INSIDE, in the theme's --focus -- its accent, made to
+   clear 3:1 on every surface (theme.js); the raw --accent measured 2.83:1 at worst, in default (2026-10-04). The switch
+   cursor (.is-scan, below) is a ring OUTSIDE, offset, in --scan-ring: on a light theme the two share a hue, and
+   inside-edge vs. outside-ring is what tells "chosen" from "lit". */
 .lib-chip{flex:0 0 auto;border:1px solid var(--border);background:var(--surface-alt,var(--surface));border-radius:999px;
   padding:5px 12px;cursor:pointer;min-height:36px;white-space:nowrap}
-.lib-chip[aria-pressed=true]{border-color:var(--accent);font-weight:600;box-shadow:inset 0 0 0 1px var(--accent)}
+.lib-chip[aria-pressed=true]{border-color:var(--focus, var(--accent));font-weight:600;box-shadow:inset 0 0 0 1px var(--focus, var(--accent))}
 .lib-grid{flex:1 1 auto;min-height:0;overflow:auto;display:grid;gap:8px;align-content:start;padding:2px;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--lib-card,150px)),1fr))}
 .lib-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:1px solid var(--border);
   background:var(--surface-alt,var(--surface));border-radius:12px;padding:9px 10px;cursor:pointer;min-height:84px}
-.lib-card[aria-selected=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.lib-card[aria-selected=true]{border-color:var(--focus, var(--accent));box-shadow:inset 0 0 0 1px var(--focus, var(--accent))}
 .lib-card .t{font-weight:600;line-height:1.2}
 .lib-card .l{font-size:.85rem;color:var(--text-muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;
   -webkit-box-orient:vertical;overflow:hidden}

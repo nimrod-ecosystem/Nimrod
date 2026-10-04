@@ -575,26 +575,48 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
     // read now follows a custom property declared in the same file, and covers an outline AND a ring-shaped
     // box-shadow (`0 0 0 <width>`). Allowed: `var(--scan-ring, var(--highlight))`, `var(--scan-ring, var(--focus,
     // ...))`, `var(--focus, var(--accent ...))` -- the raw colour only as the fallback of a measured role.
-    // RING_DEBT: files that rang in a raw colour when this check was written. Each is a FILE allowed to keep doing
-    // so until it is fixed (the list only shrinks); any OTHER file doing it fails. On Mike's list.
-    const RING_DEBT = new Set(['arrangement.js', 'claude_settings.js', 'edit_mode.js', 'game_start.js', 'library.js',
-      'quiz_view.js', 'review_page.js', 'avatar.css', 'brickbreaker.css', 'card_sort.css', 'color_picker.css',
-      'edit_windows.css', 'modules.css', 'music.css', 'note.css', 'picture_picker.css', 'scoreboard.css', 'settings.css',
-      'solitaire.css', 'weather.css', 'modules/voice_model.js']);
+    // RING_DEBT: files allowed to ring in a raw colour, each with the REASON it is deliberate. It held the 21 files
+    // that did when this check was written; all 21 were moved onto --scan-ring / --focus (or --text, for a
+    // "chosen" ring that must not look like focus) on 2026-10-04, and it is EMPTY. It only shrinks: a file goes
+    // back on it only with a reason a reviewer accepts, written here, never to get a red suite green.
+    const RING_DEBT = new Map([]);
     const RING_ALLOWED = [/var\(\s*--scan-ring\s*,\s*var\(\s*--highlight\s*\)\s*\)/g,
       /var\(\s*--scan-ring\s*,\s*var\(\s*--focus[^()]*(?:\([^()]*\))?[^()]*\)\s*\)/g,
       /var\(\s*--focus\s*,\s*var\(\s*--accent[^()]*(?:\([^()]*\))?[^()]*\)\s*\)/g];
-    const ringBad = [], debtSeen = new Set();
-    for (const [p, text] of texts) {
+    // A file that REDECLARES a theme role (modules.css's `:root{--link:#105666}` fallback block) must not
+    // launder it: `var(--link)` there is still the theme's --link at runtime, so the name is kept beside
+    // what it expands to. (Before 2026-10-04 it was replaced, and five raw --link rings in modules.css
+    // read as a literal and passed.) The allowed forms are taken out BEFORE expanding as well as after,
+    // so the fallback inside one (`var(--focus, var(--accent))` in a file that declares --accent, as
+    // learn.css does) is not expanded into a raw ring.
+    const ROLE = /^--(link|accent|highlight)\b/;
+    const strip = (v) => RING_ALLOWED.reduce((s, a) => s.replace(a, ''), v);
+    const ringsIn = (text) => {
       const decls = new Map();
       for (const m of text.matchAll(/(--[\w-]+)\s*:\s*([^;}\n]+)/g)) { if (!decls.has(m[1])) decls.set(m[1], []); decls.get(m[1]).push(m[2]); }
-      const expand = (v, d = 0) => (d > 3 ? v : v.replace(/var\(\s*(--[\w-]+)\s*\)/g, (all, n) => (decls.has(n) ? decls.get(n).map((x) => expand(x, d + 1)).join(' ') : all)));
+      const expand = (v, d = 0) => (d > 3 ? v : v.replace(/var\(\s*(--[\w-]+)\s*\)/g, (all, n) => {
+        if (!decls.has(n)) return all;
+        const ex = decls.get(n).map((x) => expand(strip(x), d + 1)).join(' ');
+        return ROLE.test(n) ? `${all} ${ex}` : ex;
+      }));
+      const out = [];
       for (const m of text.matchAll(/(outline(?:-color|Color)?|box-?[sS]hadow)\s*[:=]\s*([^;}\n]*)/g)) {
         if (/^box/i.test(m[1]) && !/\b0\s+0\s+0\s+\d/.test(m[2])) continue;
-        let v = expand(m[2]);
-        for (const a of RING_ALLOWED) v = v.replace(a, '');
-        if (!/var\(\s*--(link|accent|highlight)\b/.test(v)) continue;
-        if (RING_DEBT.has(p)) debtSeen.add(p); else ringBad.push(`${p}: ${m[0].trim().slice(0, 80)}`);
+        if (/var\(\s*--(link|accent|highlight)\b/.test(strip(expand(strip(m[2]))))) out.push(m[0].trim().slice(0, 80));
+      }
+      return out;
+    };
+    // The reader itself, on the two shapes that fooled or would fool it.
+    check('the ring read sees a raw --link through a file\'s own redeclaration of --link',
+      ringsIn(':root{--link:#105666}\n.a{outline:3px solid var(--link)}').length === 1);
+    check('...and does not flag var(--focus, var(--accent)) in a file that declares --accent',
+      ringsIn(':root{--accent:#14636A}\n.a{outline:3px solid var(--focus, var(--accent))}').length === 0);
+    check('...and sees a raw ring through a module-scoped token (--x-lit: var(--accent))',
+      ringsIn('.b{--x-lit:var(--accent,#839958)}\n.a:focus-visible{outline:3px solid var(--x-lit)}').length === 1);
+    const ringBad = [], debtSeen = new Set();
+    for (const [p, text] of texts) {
+      for (const hit of ringsIn(text)) {
+        if (RING_DEBT.has(p)) debtSeen.add(p); else ringBad.push(`${p}: ${hit}`);
       }
     }
     console.log(`rings still in a raw colour (RING_DEBT, ${debtSeen.size} files):`, [...debtSeen].join(', '));
@@ -602,6 +624,44 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       ringBad.length === 0 && texts.size > 50, ringBad.join(' || '));
     check('*** the rooms are not on the debt list: room_scene.css and room3d.css were read and pass ***',
       texts.has('room_scene.css') && texts.has('room3d.css') && !RING_DEBT.has('room_scene.css') && !RING_DEBT.has('room3d.css'));
+    check('*** RING_DEBT is empty: no file anywhere rings in the raw --link / --accent / --highlight ***',
+      RING_DEBT.size === 0 && debtSeen.size === 0, [...RING_DEBT.keys()].join(', '));
+    // The 21 it held, read and passing: the list emptying because a file stopped being READ would be no proof.
+    const WAS_DEBT = ['arrangement.js', 'claude_settings.js', 'edit_mode.js', 'game_start.js', 'library.js',
+      'quiz_view.js', 'review_page.js', 'avatar.css', 'brickbreaker.css', 'card_sort.css', 'color_picker.css',
+      'edit_windows.css', 'modules.css', 'music.css', 'note.css', 'picture_picker.css', 'scoreboard.css', 'settings.css',
+      'solitaire.css', 'weather.css', 'modules/voice_model.js'];
+    check(`...and the ${WAS_DEBT.length} files it used to hold were all read this run`,
+      WAS_DEBT.every((p) => texts.has(p)), WAS_DEBT.filter((p) => !texts.has(p)).join(', '));
+
+    // BEFORE AND AFTER, measured (2026-10-04): the worst contrast, over every theme and both visions, of the raw
+    // colours those rings were drawn in, against the roles they are drawn in now. As drawn, through applyTheme.
+    const drawnWorst = (css) => {
+      let w = Infinity, at = '';
+      for (const id of Object.keys(THEMES)) {
+        const box = document.createElement('div');
+        document.body.append(box);
+        applyTheme(box, id);
+        box.innerHTML = `<i style="display:block;outline:3px solid ${css}">x</i>`;
+        const r = worstContrast(toHexS(getComputedStyle(box.firstChild).outlineColor), THEMES[id].vars);
+        if (r < w) { w = r; at = id; }
+        box.remove();
+      }
+      return { w, at };
+    };
+    const BEFORE = { '--link': 'var(--link)', '--accent': 'var(--accent)', '--accent-warm': 'var(--accent-warm)' };
+    const AFTER = { 'scan': 'var(--scan-ring, var(--focus, var(--link)))', 'focus': 'var(--focus, var(--accent))', 'chosen (--text)': 'var(--text)' };
+    const fmt = (o) => Object.entries(o).map(([k, css]) => { const { w, at } = drawnWorst(css); return `${k} ${w.toFixed(2)} (${at})`; }).join(' | ');
+    console.log('rings, worst over every theme incl. deuteranopia. BEFORE:', fmt(BEFORE), ' AFTER:', fmt(AFTER));
+    // Why the move was needed, kept as a fact the suite re-measures: if a theme change ever made every raw colour
+    // pass, this goes red and the reasoning in the former debt files needs re-reading.
+    const before = Object.values(BEFORE).map((css) => drawnWorst(css).w);
+    check(`the raw colours those rings used to be drawn in did NOT all clear ${FOCUS_MIN}:1 (worst before: ${fmt(BEFORE)})`,
+      Math.min(...before) < FOCUS_MIN, before.join(', '));
+    for (const [k, css] of Object.entries(AFTER)) {
+      const { w, at } = drawnWorst(css);
+      check(`the ${k} ring the former debt files now draw clears ${FOCUS_MIN}:1 in every theme (worst ${w.toFixed(2)}:1, ${at})`, w >= FOCUS_MIN, at);
+    }
   } catch (e) {
     check('scan ring checks ran', false, String(e && e.stack || e));
   }

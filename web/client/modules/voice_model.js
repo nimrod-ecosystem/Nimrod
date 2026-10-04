@@ -267,7 +267,10 @@ export const VOICE_MODEL_GUIDE_CSS = `
   display:inline-flex;align-items:center;gap:6px;position:relative}
 .vmg button[disabled]{opacity:.55;cursor:default}
 .vmg button.primary{border-color:var(--accent);font-weight:600}
-.vmg button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+/* PRESSED is an edge INSIDE the button in the theme's --focus (its accent, made to clear 3:1 on every surface,
+   theme.js; 2026-10-04); the switch cursor and keyboard focus are a ring OUTSIDE it, offset. Inside vs outside
+   is what tells them apart where the two share a hue. */
+.vmg button[aria-pressed="true"]{border-color:var(--focus, var(--accent));box-shadow:inset 0 0 0 2px var(--focus, var(--accent))}
 .vmg .is-scan,.vmg button:focus-visible,.vmg .vmg-btn:focus-visible{outline:3px solid var(--scan-ring, var(--highlight));outline-offset:2px}
 .vmg-btn input[type=file]{position:absolute;opacity:0;width:1px;height:1px}
 .vmg-step{border:1px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;

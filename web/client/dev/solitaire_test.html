@@ -40,6 +40,7 @@ import {
   solve, cardName, cardShort, homeCount, legalMoves,
 } from '../klondike.js';
 import { GAME, DEFAULTS, whereKey, placeWords, cardWords } from '../modules/solitaire.js';
+import { THEMES, applyTheme, worstContrast } from '../theme.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -578,6 +579,54 @@ try {
     check('destroying it tells the scoreboard the score is gone', scores[scores.length - 1]?.gone === true);
     s.pub('next');
     check('a destroyed table answers no verbs', true);
+  }
+
+  // 2026-10-04: the three rings were three raw colours; now each is a measured role, so on a light theme two of
+  // them can share a hue. This is what keeps them apart: shape, a marker, a lift -- and picked never takes the
+  // cursor's colour. Every theme, as drawn off real elements.
+  section('*** picked, a place it can go, and the switch cursor read apart in every theme, by more than colour ***');
+  {
+    const t = mount({ host: scratch(960, 540) });
+    await cssReady(t.host);
+    const probe = document.createElement('div');
+    probe.className = 'sol-wrap';
+    probe.innerHTML = '<div class="sol"><div class="sol-col">'
+      + '<div class="sol-card" data-up="1" data-suit="S" data-picked="1">a</div>'
+      + '<div class="sol-card" data-up="1" data-suit="H" data-target="1">b</div>'
+      + '<div class="sol-card" data-up="1" data-suit="D" data-on="1">c</div></div></div>';
+    t.host.append(probe);
+    const [pk, tg, on] = probe.querySelectorAll('.sol-card');
+    const hex = (c) => '#' + (String(c).match(/[\d.]+/g) || []).slice(0, 3).map((x) => Math.round(Number(x)).toString(16).padStart(2, '0')).join('');
+    const bad = [], worst = { picked: Infinity, target: Infinity, cursor: Infinity };
+    for (const id of Object.keys(THEMES)) {
+      applyTheme(probe, id);
+      const [P, G, O] = [pk, tg, on].map((el) => getComputedStyle(el));
+      const v = THEMES[id].vars;
+      const swatch = document.createElement('i');
+      swatch.style.color = 'var(--surface)';
+      probe.append(swatch);
+      const surf = hex(getComputedStyle(swatch).color);
+      swatch.remove();
+      const r = { picked: worstContrast(hex(P.outlineColor), v), target: worstContrast(hex(G.outlineColor), v), cursor: worstContrast(hex(O.outlineColor), v) };
+      for (const k of Object.keys(r)) worst[k] = Math.min(worst[k], r[k]);
+      if (!(P.outlineStyle === 'solid' && G.outlineStyle === 'dashed' && O.outlineStyle === 'solid')) bad.push(`${id}: styles ${P.outlineStyle}/${G.outlineStyle}/${O.outlineStyle}`);
+      if (!(parseFloat(O.outlineWidth) > parseFloat(P.outlineWidth) && parseFloat(O.outlineWidth) > parseFloat(G.outlineWidth))) bad.push(`${id}: widths ${P.outlineWidth}/${G.outlineWidth}/${O.outlineWidth}`);
+      if (P.transform === 'none') bad.push(`${id}: picked does not lift`);
+      if (!/▸/.test(getComputedStyle(on, '::after').content) || /▸/.test(getComputedStyle(pk, '::after').content)) bad.push(`${id}: the marker is not on the cursor alone`);
+      if (hex(P.outlineColor) === hex(O.outlineColor)) bad.push(`${id}: picked and the cursor are the same colour (${hex(P.outlineColor)})`);
+      for (const [name, S] of [['picked', P], ['cursor', O]]) {
+        if (!(S.boxShadow.includes('0px 0px 0px 2px') && hex(S.boxShadow) === surf)) bad.push(`${id}: ${name} has no --surface band (${S.boxShadow})`);
+      }
+      if (Math.min(r.picked, r.target, r.cursor) < 3) bad.push(`${id}: ${Object.entries(r).map(([k, x]) => `${k} ${x.toFixed(2)}`).join(', ')}`);
+    }
+    check('*** picked SOLID and lifted, a place DASHED, the cursor the THICKEST with the marker -- every theme ***',
+      !bad.some((b) => /styles|widths|lift|marker/.test(b)), bad.join(' | '));
+    check('*** picked is never the cursor\'s colour, and both sit on a band of the theme\'s --surface ***',
+      !bad.some((b) => /same colour|band/.test(b)), bad.join(' | '));
+    check(`*** all three rings clear 3:1 on every surface, every theme, deuteranopia included (worst: picked ${worst.picked.toFixed(2)}, place ${worst.target.toFixed(2)}, cursor ${worst.cursor.toFixed(2)}) ***`,
+      !bad.some((b) => /picked \d/.test(b)), bad.join(' | '));
+    probe.remove();
+    t.inst.destroy();
   }
 
   section('settings: every one has a label, and a switch can walk every choice');
