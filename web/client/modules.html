@@ -660,6 +660,8 @@ import { createProfilesClient, ensureProfile } from './profile.js';
 import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './theme.js';
 // HOME (rows 2.29 / 2.30): what this page is for a signed-in visitor. See the HOME block below.
 import { createState } from './state.js';
+// 2026-10-04, later: Home's layout writes merge a change made elsewhere instead of overwriting it (writeHomeLayout).
+import { mergeSettingsDoc, mergeLayoutSave, lostEditWords } from './doc_merge.js';
 import { pickCurrent, readLastPerson, LAST_PERSON_KEY } from './people.js';
 // 2026-10-04: "Try it as someone new" -- a test person seeing this page as their first visit (try_new.js argues it).
 import { readTrialRecord, syncTrial, previewScopeFor, browserNotesSource, startTrial, startOver, backToMe, mountTrialBar,
@@ -1891,14 +1893,56 @@ function unlockThing() {
   }, { rebuild: false });
 }
 const lockedNow = (t) => !!t && HP.isLocked(HOME.locked, t.id);
-async function writeHomeLayout(next) {
-  const h = createState({ url: HOME.profiles.stateURL(liveId(), 'settings'), user: HOME.user });
+// *** HOME'S LAYOUT WRITES MERGE, THEY DO NOT OVERWRITE (2026-10-04, later; the writer ddf57d7 left). *** Every
+// change here reads the layout, works out `next`, and writes it -- and the Transform windows write a `next` worked
+// out from the layout they opened on, minutes later. A change made meanwhile on another device (the screen itself, a
+// phone) was laid over. Now a write carries the BASE its `next` was worked out from, and is merged onto the doc as it
+// is at the write (doc_merge.js `mergeLayoutSave`, the placed list by id -- that file argues `byId`); the handle merges
+// a refusal the same way (`mergeSettingsDoc`), for a change landing between this read and this write.
+// WHO WINS A TRUE CLASH: the other device (`HOME_CONFLICT_PREFER`, the kiosk's CONFLICT_PREFER for its reason --
+// doc_merge.js header: the person HERE can be told, the other device's author cannot). What gave way is said on this
+// page's status line (the toast) and the screen's quiet line (`tellLost`), in the one wording (`lostEditWords`).
+// Returns `{ layout, merged }`: what the doc holds now, and whether that differs from `next` (the caller then shows
+// the merge -- a rebuild -- rather than applying its own `next` in place).
+const HOME_CONFLICT_PREFER = 'theirs';
+let lostNow = [];        // paths of changes made here that gave way, not yet said
+let stepLog = null;      // the step being made (editOp): the base its first write carried, the `next` of its last
+const sameJ = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+async function writeHomeLayout(next, base = undefined) {
+  const h = createState({ url: HOME.profiles.stateURL(liveId(), 'settings'), user: HOME.user,
+    merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: HOME_CONFLICT_PREFER }),
+    onLost: (lost) => { lostNow.push(...lost); } });
   try {
     const cur = (await h.load().catch(() => ({}))) || {};
-    h.set({ kiosk: { ...(cur.kiosk || {}), layout: next } });
+    const was = (cur.kiosk || {}).layout ?? null;
+    const m = mergeLayoutSave(base, next, was, { prefer: HOME_CONFLICT_PREFER, byId: true });
+    if (m.lost.length) lostNow.push(...m.lost);
+    h.set({ kiosk: { ...(cur.kiosk || {}), layout: m.layout } });
     await h.flush();
-    HOME.layoutNow = next;
+    const saved = ((h.get() || {}).kiosk || {}).layout ?? null;
+    HOME.layoutNow = saved;
+    if (stepLog) {
+      if (stepLog.from === undefined) stepLog.from = base === undefined ? was : base;
+      stepLog.to = next;
+    }
+    return { layout: saved, merged: !sameJ(saved, next) };
   } finally { h.destroy(); }
+}
+/** Says what gave way, if anything did: after `msg` on the page's status line, and on the screen's quiet line. */
+function tellLost(msg = null) {
+  const lost = lostNow; lostNow = [];
+  const words = lost.length ? lostEditWords(lost, HOME.target?.landing ? LANDING_TITLE : 'your Home') : '';
+  if (!words) { if (msg) toast(msg); return; }
+  toast(msg ? `${msg} ${words}` : words);
+  try { embed?.kiosk?.say?.(words); } catch { /* the toast said it */ }
+}
+/** What a step did, onto its Undo entry (home_profile.js "UNDO PUTS BACK ONLY WHAT THE STEP DID"). */
+async function stampStep(step, log) {
+  if (!step) return;
+  const layout = log && log.from !== undefined ? { from: log.from, to: log.to } : null;
+  let ids = null;
+  try { ids = ((await HOME.profiles.get(liveId())).modules || []).map((m) => m.id); } catch { ids = null; }
+  HOME.undo.stamp({ layout, mods: ids ? { from: (step.mods || []).map((m) => m.id), to: ids } : null }, step);
 }
 
 /** A snapshot for Undo. `full`: every module's settings too (a Remove or a Switch takes one away, and
@@ -1918,21 +1962,31 @@ async function captureHome({ full = true } = {}) {
   return { layout: await readHomeLayout(), mods, theme: themeNow() };
 }
 
+/** Undo / Redo one step. A stamped step (`snap.after`, see stampStep) puts back only what it did, merged onto the
+ *  Home as it is now; an unstamped one is restored whole, as before. Returns the step's stamp, renamed through any
+ *  module brought back under a new id (for the entry Redo / Undo will make of it: `swapStep`). */
 async function restoreHome(snap) {
   const pid = liveId();
   const screen = await HOME.profiles.get(pid);
-  const plan = HP.restorePlan(screen.modules || [], snap);
+  const a = snap.after || null;
+  const plan = HP.restorePlan(screen.modules || [], snap, a && a.mods ? a.mods : null);
   const map = {};
-  for (const a of plan.add) {
-    const mod = await HOME.profiles.addModule(pid, a.type);
-    HOME.typeOf?.set(mod.id, a.type);
-    if (Object.keys(a.state || {}).length) await writeRows(pid, { [mod.id]: a.state });
-    map[a.fromId] = mod.id;
+  for (const p of plan.add) {
+    const mod = await HOME.profiles.addModule(pid, p.type);
+    HOME.typeOf?.set(mod.id, p.type);
+    if (Object.keys(p.state || {}).length) await writeRows(pid, { [mod.id]: p.state });
+    map[p.fromId] = mod.id;
   }
   for (const id of plan.remove) { try { await HOME.profiles.removeModule(pid, id); } catch { /* already gone */ } }
-  await writeHomeLayout(snap.layout ? HP.remapLayoutIds(snap.layout, map) : null);
+  const re = (L) => (L ? HP.remapLayoutIds(L, map) : (L ?? null));
+  // Back to the layout the step was made FROM, with the layout it wrote as the base: what it changed goes back,
+  // what another device changed since stays (writeHomeLayout merges). A step that wrote no layout leaves it alone.
+  if (!a) await writeHomeLayout(re(snap.layout));
+  else if (a.layout) await writeHomeLayout(re(a.layout.from), re(a.layout.to));
   if (snap.theme && snap.theme !== themeNow()) HOME.draft?.restore({ settings: { theme: snap.theme } });
+  if (Object.keys(map).length) HOME.undo.remap((e) => HP.remapStep(e, map));
   if (map[HOME.sel]) HOME.sel = map[HOME.sel];
+  return a ? HP.remapStep({ after: JSON.parse(JSON.stringify(a)) }, map).after : null;
 }
 
 /** The embedded Home, rebuilt from what is saved (what is on it, where, the scene). The draft is kept by
@@ -1954,17 +2008,26 @@ async function editOp(fn, { rebuild = true, full = false, undo = true } = {}) {
   if (HOME.editBusy || !homeLive()) return;
   HOME.editBusy = true;
   paintEdit(); hostChanged();
+  // (2026-10-04, later: what the step writes is logged, so its Undo entry can be stamped with what it did -- stampStep.)
+  const log = { from: undefined, to: undefined };
+  stepLog = log;
+  let step = null;
   try {
     // (`undo: false`, 2026-10-03: a change Undo's snapshot does not hold -- the small clock's corner -- is not a
     // step of its own, or the next Undo would undo nothing and the one after it the wrong thing.)
-    if (undo) HOME.undo.push(await captureHome({ full }));
+    if (undo) step = HOME.undo.push(await captureHome({ full }));
     const msg = await fn();
+    if (stepLog === log) stepLog = null;
+    await stampStep(step, log);
     if (rebuild) await rebuildHome();
-    if (msg) toast(msg);
+    tellLost(msg);
   } catch (err) {
     console.error('home: edit', err);
+    if (stepLog === log) stepLog = null;
+    try { await stampStep(step, log); } catch { /* the step stays, restored whole */ }
+    lostNow = [];
     toast('That change did not go through. Nothing else was touched; press it again to retry.');
-  } finally { HOME.editBusy = false; paintEdit(); hostChanged(); }
+  } finally { if (stepLog === log) stepLog = null; HOME.editBusy = false; paintEdit(); hostChanged(); }
 }
 
 const pieceOrType = (key) => {
@@ -1988,7 +2051,7 @@ function addThing(key, { over = HOME.addOver } = {}) {
     const mod = await addModuleFor(key);
     const cur = await readHomeLayout();
     const next = HP.addToLayout(cur, mod.id);
-    if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next);
+    if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next, cur);
     HOME.sel = mod.id;
     HOME.tray = 'change';
     return `${label} is on your Home now.`;
@@ -2051,11 +2114,14 @@ function addOverThing(key) {
     if (!r.entry) {
       // The one-at-a-time stage has nothing to float over: it joins the stage, as any added module does.
       const next = HP.addToLayout(cur, mod.id);
-      if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next);
+      if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next, cur);
       HOME.sel = mod.id; HOME.tray = 'change';
       return `${label} is on your Home now. This Home shows one thing at a time, so there is nothing to put it over.`;
     }
-    await writeHomeLayout(r.layout);
+    // (2026-10-04, later: `cur` was read before the waits above -- the module made, the corners looked up -- so the
+    // write carries it as its base and a change made elsewhere meanwhile is merged in; the placed list by id, so the
+    // new entry is not a clash with it.)
+    await writeHomeLayout(r.layout, cur);
     HOME.sel = mod.id;
     HOME.tray = 'change';
     const corner = HP.cornerOf(r.entry);
@@ -2098,14 +2164,15 @@ function switchTo(key, settings = null) {
     if (settings && typeof settings === 'object' && !Array.isArray(settings)) await writeRows(liveId(), { [mod.id]: settings });
     const cur = await readHomeLayout();
     const next = HP.swapInLayout(cur, old.id, mod.id);
-    if (next) await writeHomeLayout(next);
+    const w = next ? await writeHomeLayout(next, cur) : null;
     await HOME.profiles.removeModule(liveId(), old.id);
     HOME.sel = mod.id;
     HOME.tray = 'change';
     // In place when the dashboard can (view.js replace, dd9299f): the old one goes and the new one mounts
-    // in its cell or spot, nothing else remounts. Anything it can't do falls back to the rebuild.
+    // in its cell or spot, nothing else remounts. Anything it can't do falls back to the rebuild -- and so does a
+    // write that merged in a change made elsewhere (2026-10-04, later): the screen shows what was saved.
     let r = null;
-    try { r = await dash()?.replace?.(old.id, { id: mod.id, type: mod.type }, next); } catch { r = null; }
+    if (!w?.merged) { try { r = await dash()?.replace?.(old.id, { id: mod.id, type: mod.type }, next); } catch { r = null; } }
     if (!r || !r.applied) await rebuildHome();
     return `${thingTitle(old)} is switched for ${label}, in the same place.`;
   }, { full: true, rebuild: false });
@@ -2118,7 +2185,7 @@ function removeThing() {
   const nextSel = HP.stepThing(things().filter((x) => x.id !== t.id), t.id, 1)?.id || null;
   return editOp(async () => {
     const cur = await readHomeLayout();
-    if (cur) await writeHomeLayout(HP.removeFromLayout(cur, t.id));
+    if (cur) await writeHomeLayout(HP.removeFromLayout(cur, t.id), cur);
     await HOME.profiles.removeModule(liveId(), t.id);
     HOME.sel = nextSel;
     return `${thingTitle(t)} is off your Home. Undo puts it back.`;
@@ -2133,9 +2200,10 @@ function placeThing(change) {
     const cur = await readHomeLayout();
     const next = change(cur, t.id);
     if (!next) return `${thingTitle(t)} sits in a grid cell: Transform… moves it.`;
-    await writeHomeLayout(next);
+    // (2026-10-04, later: merged onto the doc as it is now; the screen is moved to what was SAVED, in place when it can.)
+    const w = await writeHomeLayout(next, cur);
     let r = null;
-    try { r = await dash()?.applyPlaced?.(next); } catch { r = null; }
+    try { r = await dash()?.applyPlaced?.(w.layout); } catch { r = null; }
     if (!r || !r.applied) await rebuildHome();
     return null;
   }, { rebuild: false });
@@ -2149,7 +2217,7 @@ function sceneTo(id) {
     const screen = await HOME.profiles.get(liveId());
     const r = HP.applyScene(cur, id, { theme: themeNow(), ids: (screen.modules || []).map((m) => m.id) });
     if (!r) return null;
-    await writeHomeLayout(r.layout);
+    await writeHomeLayout(r.layout, cur);
     if (r.theme !== undefined && r.theme !== themeNow()) HOME.draft?.restore({ settings: { theme: r.theme } });
     return `The scene is ${c.label} now.${r.theme !== undefined ? ' Its colours wait for Save.' : ''}`;
   });
@@ -2157,8 +2225,9 @@ function sceneTo(id) {
 
 function roomRow(key) {
   return editOp(async () => {
-    const next = HP.cycleRoomRow(await readHomeLayout(), key);
-    if (next) await writeHomeLayout(next);
+    const cur = await readHomeLayout();
+    const next = HP.cycleRoomRow(cur, key);
+    if (next) await writeHomeLayout(next, cur);
     return null;
   });
 }
@@ -2172,7 +2241,7 @@ function flatRow(key = null) {
     const k = key || flatActions(cur).find((a) => a.enabled)?.key || null;
     const next = k ? applyFlatAction(cur, k) : null;
     if (!next) return key ? null : 'This dashboard has no 3D room to flatten.';
-    await writeHomeLayout(next);
+    await writeHomeLayout(next, cur);
     return null;
   });
 }
@@ -2184,18 +2253,40 @@ async function undoRedo(which) {
   try {
     const now = await captureHome({ full: true });
     const snap = which === 'undo' ? HOME.undo.undo(now) : HOME.undo.redo(now);
-    if (snap) { await restoreHome(snap); await rebuildHome(); }
+    if (snap) {
+      const did = await restoreHome(snap);
+      // The entry just handed to the other list (`now`) is stamped with this step pointed the other way, so Redo
+      // (or Undo again) makes it again onto whatever the Home is THEN (home_profile.js swapStep).
+      HOME.undo.stamp(did ? HP.swapStep(did) : null);
+      await rebuildHome();
+      tellLost();
+    }
   } catch (err) {
     console.error('home: undo', err);
+    lostNow = [];
     toast('That did not go through. Press it again to retry.');
   } finally { HOME.editBusy = false; paintEdit(); hostChanged(); }
 }
 
+// *** THE TRANSFORM WINDOWS' SESSION (2026-10-04, later). *** `from`: the layout they opened on (the step's base, for
+// Undo); `synced`: the layout the windows' own picture matches -- what they opened on, then each write's own `next`,
+// NEVER the merge. (dashboard_editor.js argues it for the kiosk: the windows still show the old place for a panel
+// moved elsewhere, so the next write must not read that old place as a move made here; re-filling them with the merge
+// instead would let their own Undo put the old place back over the other device's move.) `merged`: a write took in a
+// change made elsewhere that the screen does not show yet -- shown (a rebuild) when the windows close.
+let tfSession = null;
+function newTfSession(step = null) {
+  return { step, from: HOME.layoutNow, synced: HOME.layoutNow, merged: false };
+}
 async function openTransform() {
   const d = dash();
   if (!d?.edit || HOME.editBusy || !homeLive()) return;
-  try { HOME.undo.push(await captureHome({ full: false })); } catch { /* still open it */ }
+  let step = null;
+  try { step = HOME.undo.push(await captureHome({ full: false })); } catch { /* still open it */ }
   HOME.layoutNow = await readHomeLayout();
+  tfSession = newTfSession(step);
+  // Not written yet: Undo of an untouched Transform session changes nothing (no layout, the same modules).
+  if (step) HOME.undo.stamp({ layout: null, mods: { from: (step.mods || []).map((m) => m.id), to: (step.mods || []).map((m) => m.id) } }, step);
   const t = selThing();
   if (t) { try { await d.focus?.(t.id); } catch { /* not focusable */ } }
   try { d.edit(); } catch (err) { console.error('home: transform', err); }
@@ -2235,15 +2326,37 @@ function openSwitch(type = null) {
 // The Transform windows on an embed keep their moves in memory (kiosk.js: an embed's edit view is never
 // saved); on Home they are the person's real Home, so what they leave is written back here -- the placed
 // entries only, over what is saved, so nothing else the arrangement holds is touched.
+// (2026-10-04, later: over the layout the windows' picture matches, `tfSession.synced`, and merged onto the doc as it
+// is now -- writeHomeLayout -- so a panel moved elsewhere while they are open stays moved. See `tfSession`.)
 let persistT = 0;
 async function persistTransform() {
   const d = dash();
   if (!d || !homeLive() || !HOME.layoutNow) return;
   let placed = null;
   try { placed = d.placed(); } catch { return; }
-  const next = HP.withPlaced(HOME.layoutNow, placed);
-  if (JSON.stringify(next.placed || null) === JSON.stringify(HOME.layoutNow.placed || null)) return;
-  try { await writeHomeLayout(next); } catch (err) { console.error('home: transform save', err); }
+  if (!tfSession) tfSession = newTfSession();      // the windows opened some other way: no Undo step of their own
+  const tf = tfSession;
+  const base = tf.synced;
+  const next = HP.withPlaced(base, placed);
+  if (JSON.stringify(next.placed || null) === JSON.stringify((base && base.placed) || null)) return;
+  try {
+    const w = await writeHomeLayout(next, base);
+    tf.synced = next;
+    if (w.merged) tf.merged = true;
+    if (tf.step) {
+      const ids = (tf.step.mods || []).map((m) => m.id);
+      HOME.undo.stamp({ layout: { from: tf.from, to: next }, mods: { from: ids, to: ids } }, tf.step);
+    }
+    tellLost();
+  } catch (err) { console.error('home: transform save', err); lostNow = []; }
+}
+/** The windows closed: what is still waiting is written, and a merge the screen does not show yet is shown. */
+async function endTransform() {
+  clearTimeout(persistT); persistT = 0;
+  if (!tfSession) return;
+  try { await persistTransform(); } catch { /* said there */ }
+  const tf = tfSession; tfSession = null;
+  if (tf && tf.merged && homeLive()) { try { await rebuildHome(); } catch (err) { console.error('home: transform rebuild', err); } }
 }
 
 let offDash = null;
@@ -2251,6 +2364,8 @@ let menuObs = null;
 async function attachHomeEditing() {
   try { offDash?.(); } catch { /* gone */ }
   offDash = null;
+  // A new dashboard on the stage: any Transform session was the old one's (its windows went with it).
+  tfSession = null;
   try { HOME.layoutNow = await readHomeLayout(); } catch { HOME.layoutNow = null; }
   const d = dash();
   if (!selThing()) HOME.sel = things()[0]?.id || null;
@@ -2266,6 +2381,8 @@ async function attachHomeEditing() {
       let editingNow = false;
       try { editingNow = !!d.editing?.(); } catch { editingNow = false; }
       if (wasEditing && !editingNow && HOME.scan.resume) { HOME.scan.resume = false; takeBarScan(); }
+      // (2026-10-04, later: the Transform session ends with the windows -- endTransform.)
+      if (wasEditing && !editingNow) endTransform().catch((err) => console.error('home: transform end', err));
       wasEditing = editingNow;
       // The bar's Panel ▸ chooses a panel; when it MOVES, the edit bar follows it, so Switch module means
       // the one outlined.

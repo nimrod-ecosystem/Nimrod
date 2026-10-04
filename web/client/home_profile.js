@@ -619,11 +619,46 @@ export function editScanStep(state, verb, view = {}) {
 // which to take off, and the layout with any returned module's new id. The page carries it out with the
 // screens client, so undoing "Remove" brings the module back as it was, not as a fresh one.
 // =====================================================================================================
-export function restorePlan(currentMods, snap) {
+//
+// *** UNDO PUTS BACK ONLY WHAT THE STEP DID (2026-10-04, later). *** A snapshot restored whole also put back
+// everything ANOTHER device changed since -- a panel moved on the screen itself went back where it was when the
+// step here was made. So each step is STAMPED with what it did (`stamp`, after it is made):
+//   after.layout = { from, to }  the layout the step was made FROM (the base its write carried) and the layout it
+//                                wrote TO (its own `next`, not the merge -- the merge holds the other device's changes,
+//                                which are not this step's to take back). null: the step wrote no layout.
+//   after.mods   = { from, to }  the module ids before and after the step.
+// Undo then sends the layout back to `from` merged onto the doc as it is now, with `to` as the base (doc_merge.js
+// `mergeLayoutSave`, the placed list by id): what the step changed goes back, what it did not touch stays as it now
+// is, and a part changed both here and elsewhere since is a true clash (the other device's stands, and it is said).
+// Modules the same way (`restorePlan`'s `step`): only the ones the step took off come back and only the ones it put
+// on come off. Redo is the same thing pointed the other way: the entry Undo hands to the redo list is stamped with the
+// step swapped (`swapStep`). A module brought back gets a new id, and every step in both lists is renamed with it
+// (`remap`, `remapStep`), so a later Undo still recognises it.
+//   FOR this over clearing the list when another device's change is heard: the list stays useful (the common case is
+//   two people on two devices touching different panels), and nothing has to watch the doc for changes. AGAINST: it
+//   is more machinery than "Undo is gone after a remote change". A step not stamped (none should be) is restored
+//   whole, as before.
+/**
+ * `step` (optional): the stamped `after.mods` ({ from, to } ids) of the step being undone. Without it, the
+ * snapshot's modules are restored whole (as before 2026-10-04).
+ */
+export function restorePlan(currentMods, snap, step = null) {
   const now = new Map((currentMods || []).map((m) => [m.id, m]));
   const want = new Map(((snap && snap.mods) || []).map((m) => [m.id, m]));
   const add = [];
   const remove = [];
+  if (step && Array.isArray(step.from) && Array.isArray(step.to)) {
+    const from = new Set(step.from), to = new Set(step.to);
+    // Taken off by the step and not back since: back, with the settings the snapshot kept.
+    for (const id of from) {
+      if (to.has(id) || now.has(id)) continue;
+      const m = want.get(id);
+      if (m) add.push({ fromId: id, type: m.type, state: clone(m.state || {}) });
+    }
+    // Put on by the step and still here: off. Anything else (added or removed elsewhere since) is left alone.
+    for (const id of to) if (!from.has(id) && now.has(id)) remove.push(id);
+    return { add, remove };
+  }
   for (const [id, m] of want) {
     const cur = now.get(id);
     if (!cur) add.push({ fromId: id, type: m.type, state: clone(m.state || {}) });
@@ -633,18 +668,42 @@ export function restorePlan(currentMods, snap) {
   return { add, remove };
 }
 
+/** A step's stamp pointed the other way: what Undo did, as a step Redo can make again (and the reverse). */
+export function swapStep(after) {
+  if (!after) return after;
+  const flip = (p) => (p ? { from: clone(p.to), to: clone(p.from) } : p ?? null);
+  return { layout: flip(after.layout), mods: flip(after.mods) };
+}
+
+/** A step with every module id renamed by `map` (oldId -> newId), in place: its modules, layout and stamp. */
+export function remapStep(entry, map = {}) {
+  if (!entry || !Object.keys(map).length) return entry;
+  const to = (id) => (id && map[id] ? map[id] : id);
+  if (Array.isArray(entry.mods)) entry.mods = entry.mods.map((m) => (m ? { ...m, id: to(m.id) } : m));
+  if (entry.layout) entry.layout = remapLayoutIds(entry.layout, map);
+  const a = entry.after;
+  if (a && a.layout) a.layout = { from: remapLayoutIds(a.layout.from, map), to: remapLayoutIds(a.layout.to, map) };
+  if (a && a.mods) a.mods = { from: (a.mods.from || []).map(to), to: (a.mods.to || []).map(to) };
+  return entry;
+}
+
 export function createUndo({ limit = UNDO_LIMIT } = {}) {
   let back = [];
   let fwd = [];
+  let last = null;      // the entry most recently put on either list: what `stamp` stamps by default
   return {
-    /** Before a change: remember how it was. A new change forgets anything that was undone. */
-    push(snap) { back.push(clone(snap)); if (back.length > limit) back = back.slice(-limit); fwd = []; },
+    /** Before a change: remember how it was. A new change forgets anything that was undone. Returns the entry. */
+    push(snap) { const e = clone(snap); back.push(e); if (back.length > limit) back = back.slice(-limit); fwd = []; last = e; return e; },
     /** Undo: hand in how it is NOW (for redo); get back the snapshot to restore, or null. */
-    undo(now) { if (!back.length) return null; fwd.push(clone(now)); return back.pop(); },
-    redo(now) { if (!fwd.length) return null; back.push(clone(now)); return fwd.pop(); },
+    undo(now) { if (!back.length) return null; const e = clone(now); fwd.push(e); last = e; return back.pop(); },
+    redo(now) { if (!fwd.length) return null; const e = clone(now); back.push(e); last = e; return fwd.pop(); },
+    /** What a step did (see above), onto `entry` (default: the one last put on a list). */
+    stamp(after, entry = last) { if (entry) entry.after = clone(after); return entry; },
+    /** Every entry on both lists, through `fn` (in place): `remapStep` when a module came back under a new id. */
+    remap(fn) { for (const e of [...back, ...fwd]) { try { fn(e); } catch { /* one entry, not the list */ } } },
     canUndo: () => back.length > 0,
     canRedo: () => fwd.length > 0,
-    clear() { back = []; fwd = []; },
+    clear() { back = []; fwd = []; last = null; },
     sizes: () => ({ back: back.length, fwd: fwd.length }),
   };
 }

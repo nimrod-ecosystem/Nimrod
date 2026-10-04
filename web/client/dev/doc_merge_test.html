@@ -131,6 +131,33 @@ const sceneOf = (doc) => doc?.kiosk?.layout?.scene || null;
       check('...a clash: the other device\'s corner stands, reported as "a setting"',
         clash.kiosk.clock.corner === 'br' && describeLost(clash.lost) === 'a setting' && J(clash.lost) === J([['kiosk', 'clock', 'corner']]), J(clash));
     }
+    {
+      // 2026-10-04, later still: `byId` -- the placed list merged as a set of entries named by id (Home, the composer).
+      const e = (id, x, more = {}) => ({ id, place: 'screen', x, y: 50, w: 20, h: 20, ...more });
+      const base = { preset: 'full', slots: [null], placed: [e('a', 10), e('b', 50)] };
+      const added = { ...base, placed: [...base.placed, e('c', 80)] };              // here: C added
+      const bMoved = { ...base, placed: [e('a', 10), e('b', 60)] };                 // there: B moved
+      const pos = mergeLayoutSave(base, added, bMoved);
+      check('(the positional rule, as before) an entry added here and another moved there is a clash: the addition is lost',
+        pos.lost.length === 1 && !(pos.layout.placed || []).some((p) => p.id === 'c'), J(pos));
+      const add = mergeLayoutSave(base, added, bMoved, { byId: true });
+      check('*** byId: C added here and B moved there are both kept, nothing lost ***',
+        J(add.layout.placed.map((p) => [p.id, p.x])) === J([['a', 10], ['b', 60], ['c', 80]]) && !add.lost.length, J(add));
+      const rem = mergeLayoutSave(base, { ...base, placed: [e('b', 50)] }, bMoved, { byId: true });
+      check('...A removed here and B moved there: A is gone, B is moved', J(rem.layout.placed.map((p) => [p.id, p.x])) === J([['b', 60]]) && !rem.lost.length, J(rem));
+      const last = mergeLayoutSave({ ...base, placed: [e('a', 10)] }, { preset: 'full', slots: [null] }, { preset: 'quad', slots: [null, null, null, null], placed: [e('a', 10)] }, { byId: true });
+      check('...the last entry removed by dropping the list (home_profile.js removeFromLayout) is a removal, not a clash',
+        !('placed' in last.layout) && last.layout.preset === 'quad' && !last.lost.length, J(last));
+      const swap = mergeLayoutSave(base, { ...base, placed: [e('a', 10), e('d', 50)] }, { ...base, placed: [e('a', 30), e('b', 50)] }, { byId: true });
+      check('...a switch (B becomes D in its place) while A moved there: both kept', J(swap.layout.placed.map((p) => [p.id, p.x])) === J([['a', 30], ['d', 50]]) && !swap.lost.length, J(swap));
+      const clash = mergeLayoutSave(base, { ...base, placed: [e('a', 10), e('b', 70)] }, bMoved, { byId: true });
+      check('...B moved both ways is still a true clash: the other device\'s place stands, "the layout" is said',
+        clash.layout.placed.find((p) => p.id === 'b').x === 60 && describeLost(clash.lost) === 'the layout' && J(clash.lost) === J([['kiosk', 'layout', 'placed', 'b', 'x']]), J(clash));
+      const gone = mergeLayoutSave(base, { ...base, placed: [e('a', 10)] }, bMoved, { byId: true });
+      check('...removed here and moved there is a clash too: the other device\'s entry stands', gone.layout.placed.some((p) => p.id === 'b' && p.x === 60) && gone.lost.length === 1, J(gone));
+      const odd = mergeLayoutSave(base, added, { ...base, placed: [e('a', 10), { place: 'screen', x: 5 }] }, { byId: true });
+      check('...a list with an entry that has no id is left to the positional rule', odd.lost.length === 1, J(odd));
+    }
 
     // ===================================================================================
     section('state.js: a read that answers late never replaces a newer local copy');
