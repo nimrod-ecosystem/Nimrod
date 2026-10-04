@@ -60,6 +60,7 @@ import { listManifests, getManifest } from './module.js';
 import { lockWords, poolLabel, MODE_OPTIONS, POINTS_DISCLAIMER } from './unlocks.js';
 import { registerAIAction } from './nimrod_ai.js';
 import { PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC } from './actions.js';
+import { CLAUDE_PAGE, elsewhereHTML, themeQrColours } from './page_links.js';
 
 export const LIBRARY_TYPE = 'library';
 export const LIBRARY_TITLE = 'Modules';
@@ -76,12 +77,15 @@ export const CATEGORIES = Object.freeze([
   Object.freeze({ id: 'people', label: 'People and talking' }),
   Object.freeze({ id: 'tracking', label: 'Keeping track' }),
   Object.freeze({ id: 'tools', label: 'Tools' }),
+  // 2026-10-04 (Mike, on the voice-model steps: "maybe just a part of the AI module? Or in a set of AI modules?"):
+  // the AI set - the guide, the AI characters' card, the voice model, and two settings pages (pageItems below).
+  Object.freeze({ id: 'ai', label: 'AI' }),
   Object.freeze({ id: 'scenes', label: 'Scenes' }),
   Object.freeze({ id: 'furniture', label: 'Furniture' }),
   Object.freeze({ id: '3d', label: '3D bricks' }),
 ]);
 export const CATEGORY_IDS = Object.freeze(CATEGORIES.map((c) => c.id));
-const GROUP_CATEGORY = Object.freeze({ comfort: 'visual', practice: 'learning', record: 'tracking' });
+const GROUP_CATEGORY = Object.freeze({ comfort: 'visual', practice: 'learning', record: 'tracking', ai: 'ai' });
 
 // The overrides. A module not named here gets its catalog group's chip.
 export const MODULE_CATEGORIES = Object.freeze({
@@ -96,7 +100,8 @@ export const MODULE_CATEGORIES = Object.freeze({
   word_builder: ['games', 'learning'], brain_games: ['games', 'learning'], name_that: ['games', 'learning', 'people'],
   solitaire: ['games'], brickbreaker: ['games'], rhythm: ['games'], sprint: ['tools'], quests: ['games', 'tracking'],
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
-  voice_review: ['tracking'], nimrod: ['tools'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
+  voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
+  profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
 });
 export function categoriesFor(entry) {
   const own = MODULE_CATEGORIES[entry && entry.type];
@@ -111,7 +116,8 @@ export function categoriesFor(entry) {
 // `type` is the module a pick puts in the place; `settings` the one choice made on it (a scene).
 // `lockKey` is what the Nimrod Game is asked about (only modules are ever locked — unlocks.js).
 // ---------------------------------------------------------------------------------------------------
-const KIND_LABELS = Object.freeze({ module: 'Module', scene: 'Scene', furniture: 'Furniture', brick: '3D brick' });
+const KIND_LABELS = Object.freeze({ module: 'Module', scene: 'Scene', furniture: 'Furniture', brick: '3D brick',
+  page: 'Settings page' });
 export const kindLabel = (k) => KIND_LABELS[k] || k;
 const FURNITURE_WHY_NOT = 'A piece of furniture goes in a room, not in a panel’s place. The rooms under Scenes come '
   + 'furnished; putting one piece into a room of your own is not built yet.';
@@ -183,8 +189,47 @@ export function brickItems(doc) {
   });
 }
 
+// ---------------------------------------------------------------------------------------------------
+// THE AI SET'S TWO SETTINGS PAGES (2026-10-04). Mike asked for the voice-model steps as a module "maybe just a
+// part of the AI module? Or in a set of AI modules?" The set is the "AI" chip: Nimrod, the profile card (AI
+// characters), the Voice model module - and these two. MODULES OR LINKS? Argued, both ways:
+//   AS MODULES: one shape for everything in the set, and a panel could sit on a dashboard showing the state
+//   (key set or not, today's spending against the limit; the wake phrase in force).
+//   AS LINKS, and it decides it: both are ACCOUNT or DEVICE settings, not something to look at. The Claude page
+//   is a form for a secret key that is typed on a keyboard, and page_links.js already rules that on a screen it
+//   shows its address and a code to scan, never opens; a panel would be that same address card taking a place on
+//   a dashboard for good. The wake phrases are rows in the settings menu (Devices), per person, beside the other
+//   speech rows - a second editor for them in a panel would be two things to keep in step (devices.js's rule).
+// So they are in the library, findable under AI and by search, as "settings pages": not for a panel's place
+// (like furniture, said rather than hidden), each with the one way in that fits where you are.
+// ---------------------------------------------------------------------------------------------------
+const MENU_TAB_WORDS = Object.freeze({ module: 'This panel', audio: 'Sound', display: 'Display', devices: 'Devices',
+  people: 'People', screen: 'This screen' });
+export const menuTabWord = (tab) => MENU_TAB_WORDS[tab] || String(tab || '');
+const PAGE_WHY_NOT ='A settings page, not a panel: it is opened, not put on a dashboard.';
+export const AI_PAGES = Object.freeze([
+  Object.freeze({ id: 'claude', title: 'Claude on this account', path: CLAUDE_PAGE, menuTab: null,
+    lead: 'Claude for one account: the key, which model talks, and the daily limit.',
+    why: 'For an account whose owner chose to pay for Claude. The key is kept on the server for that account only, '
+      + 'never in a screen’s browser. Everybody else keeps the free default: an AI on their own computer.',
+    needs: 'An Anthropic API key, typed on a phone or computer.' }),
+  Object.freeze({ id: 'wake', title: 'Wake phrases', path: '', menuTab: 'devices',
+    lead: 'What you say first, so the screen knows a command is coming.',
+    why: 'Each person’s own words for “computer please”, beside their other speech settings. Changing them is a '
+      + 'setting in the menu, so nothing else on a dashboard has to move.',
+    needs: 'Spoken commands turned on for the person. The rows show at the menu’s “Everything” level.' }),
+]);
+export function pageItems({ pages = AI_PAGES } = {}) {
+  return (pages || []).map((p) => ({
+    key: `page:${p.id}`, kind: 'page', id: p.id, type: null, title: p.title, lead: p.lead, why: p.why, needs: p.needs,
+    note: '', use: null, group: null, cats: ['ai'], settings: null, placeable: false, whyNot: PAGE_WHY_NOT, link: '',
+    // Never locked: a settings page is not a thing the Nimrod Game hands out.
+    path: p.path || '', menuTab: p.menuTab || null, lockKey: null,
+  }));
+}
+
 export function libraryItems(opts = {}) {
-  return [...moduleItems(opts), ...sceneItems(opts), ...furnitureItems(opts), ...brickItems(opts.bricks || null)];
+  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts), ...brickItems(opts.bricks || null)];
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -390,6 +435,10 @@ export const LIBRARY_SETTINGS = Object.freeze([
 //   say(text)  reads a detail aloud (optional)
 //   keys       true: handle arrow keys / Enter / Escape itself (a page with no input runtime). A key the
 //              page's own keyboard already took (defaultPrevented) is left alone, so nothing moves twice.
+//   isScreen   true on a real screen (ctx.isScreen): a settings page shows its address and a code to scan,
+//              never opens (page_links.js). Off a screen it opens in a new tab.
+//   openMenuTab(tab)  opens the settings menu on a tab (a settings page that is menu rows); absent, the
+//              details name the tab instead.
 // ---------------------------------------------------------------------------------------------------
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const CSS_ID = 'library-css';
@@ -449,7 +498,7 @@ const RECENT_MAX = 6;   // kiosk.js SWITCH_RECENT_MAX argues six
 
 export function mountLibrary(root, {
   items = [], moreItems = null, host = null, gate = null, prefs = {}, onPrefs = null, say = null, keys = true,
-  chooseMode = null,
+  chooseMode = null, isScreen = false, openMenuTab = null,
   setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (t) => clearTimeout(t),
 } = {}) {
   const doc = root.ownerDocument;
@@ -616,6 +665,22 @@ export function mountLibrary(root, {
       acts.push(`<button type="button" class="lib-btn" data-lib-act="overlay" ${busy ? 'disabled' : ''}
         title="a small panel floating in a corner, over what is there; a clock becomes the small corner clock">Over the dashboard</button>`);
     }
+    // A SETTINGS PAGE (the AI set, pageItems): off a screen, the page in a new tab; on a screen, its address and a
+    // code (below, in the words), and nothing opens. A page that is menu rows opens the menu on its tab.
+    let pageWords = '';
+    if (it.kind === 'page') {
+      if (it.path && !isScreen) {
+        acts.push(`<a class="lib-btn primary" href="${esc(it.path)}" target="_blank" rel="noopener" data-lib-act="open-page">Open it (a new tab)</a>`);
+      }
+      if (it.path && isScreen) {
+        try { pageWords = elsewhereHTML(it.path, { colours: themeQrColours(el), cls: 'lib-small lib-elsewhere' }); } catch { pageWords = ''; }
+      }
+      if (it.menuTab && typeof openMenuTab === 'function') {
+        acts.push(`<button type="button" class="lib-btn primary" data-lib-act="menu-tab" data-lib-tab="${esc(it.menuTab)}">Open the settings menu: ${esc(menuTabWord(it.menuTab))}</button>`);
+      } else if (it.menuTab) {
+        pageWords += `<p class="lib-small" data-lib-menu-where>In the ⚙ settings menu, on its ${esc(menuTabWord(it.menuTab))} tab.</p>`;
+      }
+    }
     if (it.link) acts.push(`<a class="lib-btn" href="${esc(it.link)}" target="_blank" rel="noopener" data-lib-act="link">Open the 3D model</a>`);
     if (it.page) acts.push(`<a class="lib-btn" href="${esc(it.page)}" target="_blank" rel="noopener" data-lib-act="page">See every brick</a>`);
     acts.push('<button type="button" class="lib-btn" data-lib-act="close">Back to the list</button>');
@@ -628,6 +693,7 @@ export function mountLibrary(root, {
       ${it.note ? `<p class="lib-small">${esc(it.note)}</p>` : ''}
       ${words ? `<p data-lib-lock>${esc(words.why)} ${esc(words.how)}</p>` : ''}
       ${why ? `<p class="lib-small" data-lib-whynot>${esc(why)}</p>` : ''}
+      ${pageWords}
       <div class="lib-acts">${acts.join('')}</div>`;
     d.hidden = false;
   }
@@ -830,7 +896,12 @@ export function mountLibrary(root, {
     if (act === 'place') { place(detail); return; }
     if (act === 'overlay') { overlay(detail); return; }
     if (act === 'buy' || act === 'free' || act === 'sandbox') { unlock(act); return; }
-    if (act === 'link') return;
+    if (act === 'link' || act === 'open-page') return;
+    if (act === 'menu-tab') {
+      const tab = t.closest('[data-lib-tab]')?.dataset.libTab;
+      try { if (tab) openMenuTab?.(tab); } catch (err) { console.error('library: menu tab', err); }
+      return;
+    }
     if (keyEl) { const it = byKey(keyEl.dataset.libKey); if (it) openDetail(it, { focusPrimary: pressing }); }
   };
   const onDbl = (e) => {

@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>voice model module - the steps one at a time - test</title>
+<link rel="stylesheet" href="../layers.css">
+<style>
+  :root{--text:#0A3323;--bg:#F7F4D5;--surface:#FFFFFF;--border:#839958;--accent:#2c6e49}
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:82ch;font-size:.92rem}
+  #panel{position:relative;width:640px;height:560px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>Voice model module: the six steps, one at a time</h1>
+<p>2026-10-04. Mike: <i>"I think this might need to be a module that walks people through the setup for it. Then they
+can change the folder or any settings for it later. I guess maybe just a part of the AI module? Or in a set of AI
+modules?"</i> This checks the module (modules/voice_model.js): where it opens (from evidence), Back / Skip this step /
+Done, next, reading phrases in the panel, export to Recordings by default, the commands, the folder check, the "is it
+answering?" probe, the Settings view, a real screen, a switch, the registration, and the AI set in the catalog and the
+library.</p>
+<div class="note"><b>Not covered here:</b> a real microphone, a real speech service, training or converting a model,
+a real folder picker. The recorder, the folders, the clipboard and fetch are fakes; the helpers they drive are
+voice_model_test's.</div>
+<div id="panel"></div>
+<div id="results"></div>
+<div id="summary">running...</div>
+
+<script type="module">
+import {
+  VOICE_MODEL_TYPE, VOICE_MODEL_TITLE, VOICE_MODEL_VERB_TOPICS, STEP_COUNT, STEP_GUIDE, PROBE_TIMEOUT_MS, PROBE_EVERY_MS,
+  serviceHealthUrl, openingStep, createWalk, probeVoiceService, describeProbe, recordingsFolder, mountVoiceModelGuide,
+  VOICE_MODEL_GUIDE_CSS,
+} from '../modules/voice_model.js';
+import { STEPS, BASE_MODEL, convertCommand, serviceCommand, voiceModelStatus, checkModelFiles, VOICE_PLACE, NIMROD_ROOT_WORDS,
+  PHRASES_KEY } from '../voice_model.js';
+import { createMemoryPairStore, buildPair, encodeWav16 } from '../voice_recording.js';
+import { ROOT_KEY, kindKey, ROOT_PATH_KEY } from '../user_folders.js';
+import { getManifest, mountModule } from '../module.js';
+import { MODULE_VERBS } from '../actions.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { CATALOG, GROUPS, groupItems } from '../modules_catalog.js';
+import { CATEGORY_IDS, categoriesFor, libraryItems, filterItems, pageItems, AI_PAGES, mountLibrary } from '../library.js';
+import { CLAUDE_PAGE } from '../page_links.js';
+import { createBus } from '../bus.js';
+import '../modules/nimrod.js';
+import '../modules/profile.js';
+import '../modules/voice_review.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const settle = async (n = 6) => { for (let i = 0; i < n; i++) await sleep(0); };
+const J = JSON.stringify;
+
+// ---- fakes ----
+function memStorage(init = {}) {
+  const m = new Map(Object.entries(init));
+  return { m, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) };
+}
+// The screen's recorder as the prompter sees it: state / prompt / onPrompt. `say` saves the armed phrase.
+function fakeRecorder(st = { on: true, attached: true, listening: true, held: [], paused: null }) {
+  const subs = new Set();
+  let armed = null;
+  return {
+    state: () => ({ ...st, prompt: armed }),
+    prompt(p) { armed = p; },
+    onPrompt(fn) { subs.add(fn); return () => subs.delete(fn); },
+    armed: () => armed,
+    say(text) { const p = armed; for (const f of [...subs]) f({ ok: true, prompt: p, pair: { id: `pair-${p?.index}`, said: { text } } }); },
+  };
+}
+// A folder somebody picked: records every file written.
+function fakeDir(name = 'picked', path = '', files = []) {
+  return {
+    name, files,
+    async getDirectoryHandle(n) { return fakeDir(n, path ? `${path}/${n}` : n, files); },
+    async getFileHandle(f) {
+      const full = path ? `${path}/${f}` : f;
+      return { async createWritable() { let data = null; return { async write(d) { data = d; }, async close() { files.push({ path: full, data }); } }; } };
+    },
+  };
+}
+const dirOf = (name, names) => ({ name, async *entries() { for (const n of names) yield [n, { kind: 'file', name: n }]; } });
+const NO_NIMROD = { path: () => '', voice: async () => null };
+const READY = ['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json'];
+const q = (root, s) => root.querySelector(s);
+const act = (root, a) => root.querySelector(`[data-vmg-act="${a}"]`);
+const count = (root) => q(root, '[data-vmg-count]').textContent;
+
+(async () => {
+try {
+  // ======================================================================================
+  section('*** where it opens: worked out from evidence, never asked ***');
+  {
+    const S = (o) => voiceModelStatus(o);
+    check('nothing yet: step 1', openingStep({ evidence: S({}) }) === 1);
+    check('*** every phrase read: step 2 ***', openingStep({ evidence: S({ total: 3, index: 3 }) }) === 2);
+    check('*** exported: step 3 ***', openingStep({ evidence: S({ exported: true }) }) === 3);
+    check('*** a checkpoint checked: step 4 ***', openingStep({ evidence: S({ picked: { ...checkModelFiles(['model.safetensors', 'config.json']), name: 'c' } }) }) === 4);
+    check('*** a converted folder checked: step 5 ***', openingStep({ evidence: S({ picked: { ...checkModelFiles(READY), name: 'ct2' } }) }) === 5);
+    check('*** a model in the Nimrod folder: step 6 ***', openingStep({ evidence: S({ nimrod: checkModelFiles(READY) }) }) === 6);
+    check('*** training cannot be seen from here: "Done" on step 3 opens step 4 next time ***', openingStep({ evidence: S({ exported: true }), doneTo: 3 }) === 4);
+    check('...the further of the two wins (proof beats an older "done")', openingStep({ evidence: S({ nimrod: checkModelFiles(READY) }), doneTo: 2 }) === 6);
+    check('never past step 6, never before step 1', openingStep({ evidence: S({}), doneTo: 9 }) === 6 && openingStep({ evidence: null, doneTo: -4 }) === 1);
+  }
+
+  // ======================================================================================
+  section('*** the walk: Back / Skip this step / Done, next, and Settings ***');
+  {
+    const changes = [];
+    const w = createWalk({ evidence: { step: 1, done: false }, onChange: (s) => changes.push(s) });
+    check('opens on step 1, in the steps', w.state().at === 1 && w.state().view === 'steps' && w.state().first);
+    w.back();
+    check('Back on step 1: nothing to go back to (and no change told)', w.state().at === 1 && changes.length === 0);
+    w.next({ claim: true });
+    check('*** Done, next: step 2, and step 1 is remembered as done ***', w.state().at === 2 && w.state().doneTo === 1 && changes.length === 1);
+    w.next();
+    check('*** Skip this step: step 3, and claims nothing ***', w.state().at === 3 && w.state().doneTo === 1);
+    w.back();
+    check('Back: step 2', w.state().at === 2);
+    w.evidence({ step: 5 });
+    check('*** proven progress past the step on screen moves it forward ***', w.state().at === 5);
+    w.evidence({ step: 2 });
+    check('*** ...and never back ***', w.state().at === 5);
+    w.back(); w.back();
+    w.evidence({ step: 5 });
+    check('the same evidence again does not drag somebody who went back', w.state().at === 3);
+    w.go(6); w.next({ claim: true });
+    check('*** past step 6: the Settings ***', w.state().view === 'settings' && w.state().doneTo === 6);
+    w.back();
+    check('Back from the Settings: the steps', w.state().view === 'steps');
+    w.onePage(); w.back();
+    check('Back from the one-page view: the Settings', w.state().view === 'settings');
+    w.restart({ step: 1 });
+    check('*** start again: step 1, nothing claimed ***', w.state().at === 1 && w.state().doneTo === 0 && w.state().view === 'steps');
+    w.evidence({ step: 3 });
+    check('...and new proof after starting again moves it on as before', w.state().at === 3);
+    check('*** finished (a model in place and on): it opens on its Settings ***', createWalk({ evidence: { step: 6, done: true } }).state().view === 'settings');
+    check('six steps, the same six voice_model.js names', STEP_COUNT === 6 && STEP_GUIDE.length === 6 && STEPS.length === 6);
+    check('*** steps 3, 4, 5 and 6 are done on a computer; 1 on the screen you talk to ***',
+      STEP_GUIDE[0].where === 'screen' && [2, 3, 4, 5].every((i) => STEP_GUIDE[i].where === 'computer'));
+  }
+
+  // ======================================================================================
+  section('*** "is it answering?": the speech service\'s /health, through a fake fetch ***');
+  {
+    check('the address: this computer, its port, /health', serviceHealthUrl(9001) === 'http://127.0.0.1:9001/health');
+    const seen = [];
+    const ok = await probeVoiceService({ port: 9001, fetchImpl: async (url, o) => { seen.push([url, o.mode]); return { ok: true, type: 'cors', status: 200, json: async () => ({ ok: true, engine: 'my voice' }) }; } });
+    check('*** it answers and may be read: answering, with its engine ***', ok.answering === true && ok.engine === 'my voice' && ok.why === 'ok'
+      && seen[0][0] === 'http://127.0.0.1:9001/health' && seen[0][1] === 'cors', J([ok, seen]));
+    const opaque = await probeVoiceService({ fetchImpl: (url, o) => (o.mode === 'cors' ? Promise.reject(new TypeError('Failed to fetch')) : Promise.resolve({ type: 'opaque', ok: false, status: 0 })) });
+    check('*** another site may not read it: the no-cors request still proves something answered ***', opaque.answering === true && opaque.why === 'opaque' && !opaque.engine, J(opaque));
+    const refused = await probeVoiceService({ fetchImpl: () => Promise.reject(new TypeError('Failed to fetch')) });
+    check('*** nothing there: not answering ***', refused.answering === false && refused.why === 'refused', J(refused));
+    const hung = await probeVoiceService({ timeoutMs: 20, fetchImpl: () => new Promise(() => {}) });
+    check('*** no answer in time: not answering (timeout) ***', hung.answering === false && hung.why === 'timeout', J(hung));
+    const err = await probeVoiceService({ fetchImpl: async () => ({ ok: false, type: 'basic', status: 500 }) });
+    check('an error status: something is there, but not answering as the service does', err.answering === true && err.why === 'status 500', J(err));
+    check('no fetch in this browser: cannot tell (null), never a crash', (await probeVoiceService({ fetchImpl: null })).answering === null);
+    check('the words: answering names the port and the engine', /answering on port 9001, with “my voice”/.test(describeProbe(ok, { port: 9001 })), describeProbe(ok, { port: 9001 }));
+    check('the words: not answering says how to start it, and that the browser may block it', /Nothing is answering on port 8796/.test(describeProbe(refused))
+      && /allow it/.test(describeProbe(refused)));
+    check('the timings are argued constants, not hidden ones', PROBE_TIMEOUT_MS === 3000 && PROBE_EVERY_MS === 5000);
+  }
+
+  // ======================================================================================
+  section('*** export goes to <your Nimrod folder>/Recordings by default ***');
+  {
+    const memStore = (m) => ({ async get(k) { return m.get(k) ?? null; }, async put(k, h) { m.set(k, h); }, async del(k) { m.delete(k); } });
+    const handle = (name, { perm = 'granted', subs = {} } = {}) => ({
+      name, kind: 'directory', subs,
+      async queryPermission() { return perm === 'granted' ? 'granted' : 'prompt'; },
+      async requestPermission() { return perm; },
+      async getDirectoryHandle(n, o) {
+        if (subs[n]) return subs[n];
+        if (o && o.create) { subs[n] = handle(n); return subs[n]; }
+        throw new DOMException('not found', 'NotFoundError');
+      },
+    });
+    check('*** no Nimrod folder on this device: says so (why: none) ***', (await recordingsFolder({ store: memStore(new Map()) })).why === 'none');
+    const rec = handle('Recordings');
+    const r1 = await recordingsFolder({ store: memStore(new Map([[ROOT_KEY, handle('Nimrod', { subs: { Recordings: rec } })]])) });
+    check('*** the Nimrod folder\'s own Recordings ***', r1.dir === rec && r1.name === 'Nimrod/Recordings' && r1.source === 'root', J({ name: r1.name, source: r1.source }));
+    const bare = handle('Nimrod');
+    const r2 = await recordingsFolder({ store: memStore(new Map([[ROOT_KEY, bare]])) });
+    check('a Recordings folder deleted by hand is made again', r2.dir && bare.subs.Recordings && r2.dir === bare.subs.Recordings);
+    const r3 = await recordingsFolder({ store: memStore(new Map([[ROOT_KEY, handle('Nimrod', { perm: 'denied' })]])) });
+    check('*** the browser said no: why "permission", nothing written ***', r3.dir === null && r3.why === 'permission');
+    const own = handle('My recordings');
+    const r4 = await recordingsFolder({ store: memStore(new Map([[kindKey('recordings'), own], [ROOT_KEY, handle('Nimrod')]])) });
+    check('a Recordings folder of its own (chosen in "Your own folders") comes first', r4.dir === own && r4.source === 'own');
+  }
+
+  // ======================================================================================
+  section('*** the panel: one step on screen, and the walk\'s controls ***');
+  {
+    const root = document.getElementById('panel');
+    const storage = memStorage();
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage, nimrodFolder: NO_NIMROD, pickModelFolder: null,
+      recorder: fakeRecorder(), store: createMemoryPairStore(), probe: async () => ({ answering: false, why: 'refused' }),
+      every: () => 1, stopEvery: () => {} });
+    await page.ready;
+    check('*** "Step 1 of 6", and only ONE step on screen ***', count(root) === 'Step 1 of 6' && root.querySelectorAll('[data-vmg-step]').length === 1
+      && q(root, '[data-vmg-step]').dataset.vmgStep === '1', count(root));
+    check('what this screen can see, in words ("not started")', /step 1 of 6/.test(q(root, '[data-vmg-seen]').textContent) && /Not started/.test(q(root, '[data-vmg-seen]').textContent));
+    check('*** Back (not on step 1), Skip this step, Done, next, Settings ***', act(root, 'back').disabled && /Skip this step/.test(act(root, 'skip').textContent)
+      && /Done, next/.test(act(root, 'done').textContent) && !!act(root, 'settings'));
+    check('each step says what you need', /What you need/.test(q(root, '[data-vmg-step]').textContent) && /microphone/.test(q(root, '[data-vmg-step]').textContent));
+    act(root, 'done').click();
+    check('*** Done, next: step 2, remembered on this screen ***', count(root) === 'Step 2 of 6' && JSON.parse(storage.getItem(PHRASES_KEY('mike'))).doneTo === 1);
+    act(root, 'back').click();
+    check('Back: step 1', count(root) === 'Step 1 of 6');
+    act(root, 'skip').click(); act(root, 'skip').click();
+    check('*** Skip, Skip: step 3, still only step 1 claimed ***', count(root) === 'Step 3 of 6' && JSON.parse(storage.getItem(PHRASES_KEY('mike'))).doneTo === 1);
+    page.destroy();
+    check('destroy leaves nothing', root.innerHTML === '');
+    const again = mountVoiceModelGuide(root, { personId: 'mike', storage, nimrodFolder: NO_NIMROD, pickModelFolder: null, every: () => 1, stopEvery: () => {} });
+    check('*** opened again: the step after the last "Done" (step 2), not where Skip left it ***', count(root) === 'Step 2 of 6', count(root));
+    again.destroy();
+  }
+
+  // ======================================================================================
+  section('*** step 1: reading the phrases right in the panel (a fake recorder) ***');
+  {
+    const root = document.getElementById('panel');
+    const storage = memStorage();
+    const rec = fakeRecorder();
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage, nimrodFolder: NO_NIMROD, pickModelFolder: null, recorder: rec,
+      store: createMemoryPairStore(), every: () => 1, stopEvery: () => {} });
+    check('no phrases yet: Start reading waits for some', act(root, 'start').disabled === true && /No phrases yet/.test(q(root, '[data-vmg-phrase-summary]').textContent));
+    q(root, '[data-vmg-phrases]').value = 'Good morning\nWhat time is it';
+    act(root, 'use-phrases').click();
+    check('pasted phrases are counted and kept for this person', /2 phrases/.test(q(root, '[data-vmg-phrase-summary]').textContent)
+      && /Good morning/.test(storage.getItem(PHRASES_KEY('mike'))));
+    act(root, 'start').click();
+    check('*** Start reading: phrase 1 of 2, big, and armed in the screen\'s recorder ***', /Phrase 1 of 2/.test(q(root, '[data-vmg-progress]').textContent)
+      && q(root, '[data-vmg-phrase]').textContent === 'Good morning' && rec.armed()?.text === 'Good morning' && rec.armed()?.list === 'own:mike', J(rec.armed()));
+    rec.say('good morning');
+    await settle();
+    check('*** saved: the next phrase comes up by itself, and what it heard is shown ***', rec.armed()?.text === 'What time is it'
+      && /Phrase 2 of 2/.test(q(root, '[data-vmg-progress]').textContent) && /It heard: “good morning”/.test(q(root, '[data-vmg-status]').textContent));
+    rec.say('what time is it');
+    await settle();
+    check('*** the last phrase read: the walk moves on to step 2 (export) by itself ***', count(root) === 'Step 2 of 6' && rec.armed() === null
+      && JSON.parse(storage.getItem(PHRASES_KEY('mike'))).index === 2, count(root));
+    act(root, 'back').click();
+    check('back on step 1: "All 2 phrases read"', /All 2 phrases read/.test(q(root, '[data-vmg-progress]').textContent));
+    page.destroy();
+    check('*** leaving disarms the phrase ***', rec.armed() === null);
+    const blocked = mountVoiceModelGuide(root, { personId: 'x', storage: memStorage(), nimrodFolder: NO_NIMROD, pickModelFolder: null,
+      recorder: fakeRecorder({ on: false, attached: true, listening: true, held: [] }), every: () => 1, stopEvery: () => {} });
+    check('recording off for the person: it says what to turn on', /Record this person/.test(q(root, '[data-vmg-status]').textContent));
+    blocked.destroy();
+    const none = mountVoiceModelGuide(root, { personId: 'x', storage: memStorage(), nimrodFolder: NO_NIMROD, pickModelFolder: null, recorder: null,
+      every: () => 1, stopEvery: () => {} });
+    check('a page that does not listen: recording happens on the screen you speak to', /screen/.test(q(root, '[data-vmg-status]').textContent));
+    none.destroy();
+  }
+
+  // ======================================================================================
+  section('*** step 2: export to Recordings by default, a different folder on request ***');
+  {
+    const root = document.getElementById('panel');
+    const store = createMemoryPairStore();
+    const wav = encodeWav16(new Int16Array(4).fill(3));
+    await store.add(buildPair({ id: 'a', personId: 'mike', at: 10, caption: { text: 'good morning' }, prompt: { text: 'Good morning', index: 0 },
+      clips: [{ ear: 'room', durationMs: 10 }] }), [{ ear: 'room', wav }]);
+    const storage = memStorage({ [PHRASES_KEY('mike')]: J({ text: 'Good morning', index: 1 }) });
+    const recDir = fakeDir('Recordings');
+    let asked = 0;
+    let answer = { dir: null, why: 'none' };
+    const picked = fakeDir('Elsewhere');
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage, store, nimrodFolder: NO_NIMROD, pickModelFolder: null,
+      recordingsDir: async () => { asked++; return answer; }, fs: { available: () => true, pickFolder: async () => picked },
+      every: () => 1, stopEvery: () => {} });
+    check('*** all phrases read: it opens on step 2 ***', count(root) === 'Step 2 of 6', count(root));
+    check('*** it says where: <your Nimrod folder>/Recordings ***', q(root, '[data-vmg-recordings]').textContent === '<your Nimrod folder>/Recordings');
+    check('the default button first, the override beside it', !act(root, 'export-default').hidden && !act(root, 'export-pick').hidden);
+    act(root, 'export-default').click(); await settle();
+    check('*** no Nimrod folder here: says how to make one, writes nothing, stays on step 2 ***', asked === 1 && /Set up your Nimrod folder/.test(q(root, '[data-vmg-export-msg]').textContent)
+      && recDir.files.length === 0 && count(root) === 'Step 2 of 6', q(root, '[data-vmg-export-msg]').textContent);
+    answer = { dir: recDir, name: 'Nimrod/Recordings', source: 'root' };
+    act(root, 'export-default').click(); await settle(10);
+    check('*** with one: the recordings go into Recordings, in the notebook\'s layout ***',
+      recDir.files.map((f) => f.path).join() === 'data/001/recording.wav,data/001/phrase.txt,nimrod-export.json', recDir.files.map((f) => f.path).join());
+    check('*** ...it says so, remembers the export, and moves on to step 3 (train) ***', /Exported 1 recording to Nimrod\/Recordings/.test(q(root, '[data-vmg-export-msg]')?.textContent || J(page.__probe().notes))
+      && !!JSON.parse(storage.getItem(PHRASES_KEY('mike'))).exportedAt && count(root) === 'Step 3 of 6', `${count(root)} ${J(page.__probe().notes)}`);
+    act(root, 'back').click();
+    act(root, 'export-pick').click(); await settle(10);
+    check('*** "Choose a different folder": the same export, where somebody chose ***', picked.files.some((f) => f.path === 'data/001/phrase.txt')
+      && /Elsewhere/.test(q(root, '[data-vmg-export-msg]').textContent));
+    page.destroy();
+    const nostore = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage({ [PHRASES_KEY('mike')]: J({ text: 'a', index: 1 }) }),
+      store: null, nimrodFolder: NO_NIMROD, pickModelFolder: null, every: () => 1, stopEvery: () => {} });
+    check('a page with no recordings: says they are on the screen that recorded them, no export button', !!q(root, '[data-vmg-nostore]')
+      && act(root, 'export-default').hidden);
+    nostore.destroy();
+  }
+
+  // ======================================================================================
+  section('*** steps 3 and 4: the links and the exact commands, with Copy ***');
+  {
+    const root = document.getElementById('panel');
+    const copied = [];
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage({ [PHRASES_KEY('mike')]: J({ doneTo: 2 }) }),
+      nimrodFolder: NO_NIMROD, pickModelFolder: null, copy: async (t) => { copied.push(t); return true; }, every: () => 1, stopEvery: () => {} });
+    check('opens on step 3 after "Done" on 2', count(root) === 'Step 3 of 6');
+    const hrefs = [...root.querySelectorAll('[data-vmg-step] a[href]')].map((a) => a.getAttribute('href'));
+    check('*** the training notebook and the toolkit, opening apart from this page ***', hrefs.some((h) => /Project_Euphonia_Finetuning\.ipynb/.test(h))
+      && hrefs.some((h) => /project-euphonia-app$/.test(h)) && [...root.querySelectorAll('[data-vmg-step] a[href]')].every((a) => a.target === '_blank' && /noopener/.test(a.rel)));
+    check('*** the base model, exactly, with Copy ***', q(root, 'code[data-cmd="base"]').textContent === BASE_MODEL);
+    q(root, '[data-vmg-copy="base"]').click(); await settle();
+    check('Copy copies it', copied[0] === BASE_MODEL && /Copied/.test(q(root, '[data-vmg-copy="base"]').textContent));
+    check('training says what it needs: a Google account or a graphics card', /Google account/.test(root.textContent) && /graphics card/.test(root.textContent));
+    act(root, 'done').click();
+    check('*** step 4: the exact conversion command, into the Nimrod folder\'s Voice model ***', q(root, 'code[data-cmd="convert"]').textContent === convertCommand({ folder: VOICE_PLACE }));
+    q(root, '[data-vmg-copy="convert"]').click(); await settle();
+    check('...and Copy copies that', copied[1] === convertCommand({ folder: VOICE_PLACE }));
+    check('no full path known: it says to replace the placeholder (or type it in Settings)', /Replace <your Nimrod folder>/.test(root.textContent));
+    page.destroy();
+  }
+
+  // ======================================================================================
+  section('*** step 5: check the folder ***');
+  {
+    const root = document.getElementById('panel');
+    const picks = [dirOf('checkpoint-200', ['model.safetensors', 'config.json']), dirOf('ct2', READY)];
+    let voice = null;
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage({ [PHRASES_KEY('mike')]: J({ doneTo: 4, exportedAt: 1 }) }),
+      nimrodFolder: { path: () => '', voice: async () => voice }, pickModelFolder: async () => picks.shift(),
+      probe: async () => ({ answering: false, engine: null, why: 'refused' }), every: () => 1, stopEvery: () => {} });
+    await page.ready;
+    check('opens on step 5', count(root) === 'Step 5 of 6');
+    check('*** the folder you want, its files, and its place ***', /not the checkpoint/.test(root.textContent) && root.textContent.includes('model.bin')
+      && q(root, '[data-vmg-place]').textContent === VOICE_PLACE);
+    act(root, 'check').click(); await settle();
+    check('*** a checkpoint: says to convert it first ***', /convert/i.test(q(root, '[data-vmg-check-msg]').textContent), q(root, '[data-vmg-check-msg]').textContent);
+    act(root, 'check').click(); await settle();
+    check('*** a converted folder: ready, and where it goes ***', /ready/i.test(q(root, '[data-vmg-check-msg]').textContent)
+      && /step 5 of 6/.test(q(root, '[data-vmg-seen]').textContent));
+    voice = { source: 'root', dir: dirOf('Voice model', ['README.txt', ...READY]) };
+    act(root, 'look').click(); await settle();
+    check('*** "Look in my Nimrod folder again": a model in place -> step 6 by itself ***', count(root) === 'Step 6 of 6' && /step 6 of 6/.test(q(root, '[data-vmg-seen]').textContent), count(root));
+    page.destroy();
+  }
+
+  // ======================================================================================
+  section('*** step 6: the start command, and a live "is it answering?" ***');
+  {
+    const root = document.getElementById('panel');
+    const timers = []; const stopped = [];
+    let probes = 0;
+    let answer = { answering: false, engine: null, why: 'refused' };
+    const saved = [];
+    let row = { voiceModelPort: 8796 };
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage({ [PHRASES_KEY('mike')]: J({ doneTo: 5 }) }), nimrodFolder: NO_NIMROD,
+      pickModelFolder: null, probe: async ({ port }) => { probes++; return { ...answer, port }; },
+      every: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, stopEvery: (t) => stopped.push(t),
+      values: () => row, save: (p) => { saved.push(p); row = { ...row, ...p }; return true; } });
+    await settle();
+    check('opens on step 6', count(root) === 'Step 6 of 6');
+    check('*** the exact start command, with the port and --root ***', q(root, 'code[data-cmd="serve"]').textContent === serviceCommand({ port: 8796, root: NIMROD_ROOT_WORDS }));
+    check('*** arriving on step 6 asks at once, and every 5 s while it is showing ***', probes === 1 && timers.length === 1 && timers[0].ms === PROBE_EVERY_MS);
+    check('not answering: it says so', /Nothing is answering on port 8796/.test(q(root, '[data-vmg-probe]').textContent), q(root, '[data-vmg-probe]').textContent);
+    answer = { answering: true, engine: 'Voice model', why: 'ok' };
+    timers[0].fn(); await settle();
+    check('*** started: the next look says it is answering ***', /It is answering on port 8796, with “Voice model”/.test(q(root, '[data-vmg-probe]').textContent), q(root, '[data-vmg-probe]').textContent);
+    act(root, 'use').click();
+    check('*** "Use my own voice model": this person\'s own switch, and nothing else ***', J(saved[0]) === J({ voiceModelOn: true })
+      && act(root, 'use').getAttribute('aria-pressed') === 'true');
+    act(root, 'back').click();
+    check('*** leaving step 6 stops the asking ***', stopped.length === 1 && count(root) === 'Step 5 of 6');
+    act(root, 'done').click(); act(root, 'done').click();
+    check('Done on step 6: the Settings', count(root) === 'Settings' && stopped.length === 2);
+    page.destroy();
+  }
+
+  // ======================================================================================
+  section('*** the Settings view: the folder, the port, on / off, start again ***');
+  {
+    const root = document.getElementById('panel');
+    const saved = [];
+    let row = { voiceModelPort: 8796, voiceModelOn: false };
+    const paths = memStorage();
+    const storage = memStorage({ [PHRASES_KEY('mike')]: J({ text: 'a\nb', index: 2, exportedAt: 5, doneTo: 4 }) });
+    const page = mountVoiceModelGuide(root, { personId: 'mike', storage, rootPathStorage: paths,
+      nimrodFolder: { path: () => paths.getItem(ROOT_PATH_KEY) || '', voice: async () => null }, pickModelFolder: null,
+      probe: async () => ({ answering: false, engine: null, why: 'refused' }),
+      values: () => row, save: (p) => { saved.push(p); row = { ...row, ...p }; return true; }, every: () => 1, stopEvery: () => {} });
+    act(root, 'settings').click();
+    check('*** Settings, in the same panel ***', count(root) === 'Settings' && q(root, '[data-vmg-step]').dataset.vmgStep === 'settings');
+    q(root, '[data-vmg-port]').value = '80';
+    act(root, 'save-port').click();
+    check('a port below 1024 is refused, and said why', saved.length === 0 && /1024 to 65535/.test(q(root, '[data-vmg-settings-msg]').textContent));
+    q(root, '[data-vmg-port]').value = '9001';
+    act(root, 'save-port').click();
+    check('*** the port: this person\'s own row (voiceModelPort) ***', J(saved[0]) === J({ voiceModelPort: 9001 }) && /9001/.test(q(root, '[data-vmg-settings-msg]').textContent));
+    act(root, 'use').click();
+    check('*** on / off: this person\'s own row (voiceModelOn) ***', J(saved[1]) === J({ voiceModelOn: true }));
+    q(root, '[data-vmg-root]').value = '"D:\\Nimrod\\"';
+    act(root, 'save-root').click();
+    check('*** the Nimrod folder\'s full path: saved on this device, tidied (the same key "Your own folders" uses) ***',
+      paths.getItem(ROOT_PATH_KEY) === 'D:\\Nimrod' && /D:\\Nimrod/.test(q(root, '[data-vmg-settings-msg]').textContent), paths.getItem(ROOT_PATH_KEY));
+    act(root, 'restart').click();
+    check('*** start again needs a second press (nothing happens if nobody presses again) ***', count(root) === 'Settings' && /Press again/.test(act(root, 'restart').textContent));
+    act(root, 'restart').click();
+    const kept = JSON.parse(storage.getItem(PHRASES_KEY('mike')));
+    check('*** ...then step 1: progress reset, the phrase list kept ***', count(root) === 'Step 1 of 6' && kept.index === 0 && !kept.exportedAt && kept.doneTo === 0
+      && kept.text === 'a\nb', J(kept));
+    for (let i = 0; i < 5; i++) act(root, 'skip').click();
+    check('*** after the changes, step 6\'s command carries the new port and the full path ***',
+      q(root, 'code[data-cmd="serve"]').textContent === serviceCommand({ port: 9001, root: 'D:\\Nimrod' }), q(root, 'code[data-cmd="serve"]')?.textContent);
+    act(root, 'settings').click();
+    act(root, 'onepage').click();
+    check('*** "All six steps on one page": the original page, in the same panel ***', !!q(root, '[data-vm-now]') && count(root) === 'All six steps');
+    act(root, 'back').click();
+    check('...and back to the Settings (the one-page view taken down)', count(root) === 'Settings' && !q(root, '[data-vm-now]'));
+    act(root, 'forget-root').click();
+    check('forget the path: gone from this device', paths.getItem(ROOT_PATH_KEY) === null);
+    page.destroy();
+    const nosave = mountVoiceModelGuide(root, { personId: 'mike', storage: memStorage(), nimrodFolder: NO_NIMROD, pickModelFolder: null, save: null,
+      every: () => 1, stopEvery: () => {} });
+    act(root, 'settings').click();
+    check('a page that cannot save a person\'s settings: names the menu instead, no dead buttons', !!q(root, '[data-vmg-nosave]') && act(root, 'save-port').hidden);
+    nosave.destroy();
+  }
+
+  // ======================================================================================
+  section('*** on a real screen: "do this on your computer", addresses not tabs, no Copy; recording still here ***');
+  {
+    const root = document.getElementById('panel');
+    const page = mountVoiceModelGuide(root, { personId: 'mike', isScreen: true, storage: memStorage(), nimrodFolder: NO_NIMROD,
+      pickModelFolder: async () => null, recorder: fakeRecorder(), store: createMemoryPairStore(), every: () => 1, stopEvery: () => {} });
+    check('*** step 1 (record) is done right here: no "on your computer" ***', !q(root, '[data-vmg-where]') && !!act(root, 'start'));
+    check('...and its phrase-list link is an address, not a tab', !q(root, '[data-vmg-step] a[href]') && !!q(root, '[data-vmg-addr]'));
+    act(root, 'skip').click(); act(root, 'skip').click();
+    check('*** step 3 says "Do this on your computer" ***', count(root) === 'Step 3 of 6' && /Do this on your computer/.test(q(root, '[data-vmg-where]')?.textContent || ''));
+    check('*** the notebook: its address, and a code to scan; nothing opens ***', !q(root, '[data-vmg-step] a[href]')
+      && /colab|github\.com/.test(q(root, '.vmg-address').textContent) && !!q(root, '[data-vmg-qr] svg'));
+    check('*** no Copy on a screen ***', !q(root, '[data-vmg-act="copy"]'));
+    act(root, 'skip').click(); act(root, 'skip').click();
+    check('step 5 on a screen: no folder picker, but its own Nimrod folder can still be looked in', act(root, 'check').hidden && !act(root, 'look').hidden);
+    act(root, 'settings').click();
+    check('the one-page view is for a desk: not offered on a screen', act(root, 'onepage').hidden);
+    check('site copy never names the person it was first built for, nor "her screen"', !/christine|cici|her screen/i.test(root.textContent));
+    page.destroy();
+  }
+
+  // ======================================================================================
+  section('*** a switch: the module answers next / prev / select / back on the bus ***');
+  {
+    const box = document.getElementById('panel');
+    const bus = createBus();
+    const store = createMemoryPairStore();
+    const inst = mountModule(VOICE_MODEL_TYPE, { mount: box, bus, rootBus: bus, personId: 'sw', instanceId: 'vmg1', voiceStore: store,
+      voiceRecorder: fakeRecorder(), personRow: () => ({}), isScreen: true, state: null, events: null, makeState: () => null, makeEvents: () => null });
+    inst.init();
+    await settle();
+    const P = () => inst.impl.__probe();
+    check('mounted: step 1 of 6', P().at === 1 && P().view === 'steps', J(P()));
+    bus.publish(VOICE_MODEL_VERB_TOPICS.select);
+    check('the first select lights the first stop (Skip this step: Back is not a stop on step 1)', P().lit === 'skip', P().lit);
+    bus.publish(VOICE_MODEL_VERB_TOPICS.next);
+    check('*** next: Done, next ***', P().lit === 'done', P().lit);
+    bus.publish(VOICE_MODEL_VERB_TOPICS.select);
+    check('*** select: step 2, and the cursor stays on Done, next ***', P().at === 2 && P().lit === 'done', J(P()));
+    bus.publish(VOICE_MODEL_VERB_TOPICS.select);
+    check('select again: step 3', P().at === 3);
+    bus.publish(VOICE_MODEL_VERB_TOPICS.prev); bus.publish(VOICE_MODEL_VERB_TOPICS.prev);
+    check('*** prev reaches Back ***', P().lit === 'back', P().lit);
+    bus.publish(VOICE_MODEL_VERB_TOPICS.back);
+    check('*** the back verb: the walk\'s Back (step 2) ***', P().at === 2);
+    inst.destroy();
+    check('destroy leaves nothing behind, and the verbs are let go', box.innerHTML === '' && (bus.publish(VOICE_MODEL_VERB_TOPICS.next), true));
+  }
+
+  // ======================================================================================
+  section('*** registration ***');
+  {
+    const m = getManifest(VOICE_MODEL_TYPE);
+    check('*** registered: "Voice model", on the new core ***', m && m.title === 'Voice model' && m.title === VOICE_MODEL_TITLE && m.core === 'new', J(m && { title: m.title, core: m.core }));
+    check('*** a switch reaches it: MODULE_VERBS next / prev / select / back ***', J(MODULE_VERBS.voice_model) === J({ next: 'voice_model/next', prev: 'voice_model/prev',
+      select: 'voice_model/select', back: 'voice_model/back' }) && J(VOICE_MODEL_VERB_TOPICS) === J(MODULE_VERBS.voice_model));
+    check('*** its silence means nothing (health: idle) ***', HEALTH_EXPECT.voice_model?.idle === true);
+    const c = CATALOG.find((x) => x.type === 'voice_model');
+    check('*** described in the catalog, in the AI group, title matching the module ***', c && c.group === 'ai' && c.title === m.title && c.use === 'touch' && /Raspberry Pi/.test(c.note));
+    check('no hard-coded colours in its styles', !/#[0-9a-f]{3,8}\b|rgba?\(|hsla?\(/i.test(VOICE_MODEL_GUIDE_CSS));
+  }
+
+  // ======================================================================================
+  section('*** the AI set: the catalog group and the library\'s "AI" chip ***');
+  {
+    const ai = GROUPS.find((g) => g.id === 'ai');
+    check('*** the catalog has an AI group ***', !!ai && ai.title === 'AI');
+    const ALL = [...CATALOG.map((x) => ({ type: x.type, title: x.title || x.type }))];
+    check('*** Nimrod, the profile card and the voice model are in it ***', ['nimrod', 'profile', 'voice_model'].every((t) => groupItems('ai', ALL).some((x) => x.type === t)));
+    check('*** the library has an "AI" chip ***', CATEGORY_IDS.includes('ai'));
+    check('*** ...and the three modules carry it (and keep their other chips) ***', categoriesFor({ type: 'nimrod' }).includes('ai') && categoriesFor({ type: 'nimrod' }).includes('tools')
+      && categoriesFor({ type: 'profile' }).includes('ai') && categoriesFor({ type: 'profile' }).includes('people') && categoriesFor({ type: 'voice_model' }).includes('ai'));
+    const its = filterItems(libraryItems({ manifests: ALL, bricks: null }), { category: 'ai' });
+    const keys = its.map((i) => i.key);
+    check('*** under AI: the three modules and the two settings pages ***', ['module:nimrod', 'module:profile', 'module:voice_model', 'page:claude', 'page:wake'].every((k) => keys.includes(k)), keys.join());
+    const pages = pageItems();
+    check('*** "Claude on this account" and "Wake phrases" are settings pages, not panels (said, not hidden) ***',
+      pages.length === 2 && pages.every((p) => p.kind === 'page' && p.placeable === false && /settings page/i.test(p.whyNot) && p.cats.includes('ai')));
+    check('the Claude page is the one page_links knows; wake phrases are the menu\'s Devices tab', AI_PAGES[0].path === CLAUDE_PAGE && AI_PAGES[1].menuTab === 'devices');
+    check('search finds them', filterItems(pageItems(), { query: 'wake' }).length === 1 && filterItems(pageItems(), { query: 'claude key' }).length === 1);
+    check('no money words, no names', !/\b(shop|price|coins?|purchase)\b/i.test(J(pages)) && !/christine|cici|her screen/i.test(J(pages)));
+
+    // The details of a settings page, off a screen and on one.
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:640px;height:480px';
+    document.body.append(host);
+    const tabs = [];
+    let lib = mountLibrary(host, { items: pageItems(), keys: false, openMenuTab: (t) => tabs.push(t) });
+    host.querySelector('[data-lib-key="page:claude"]').click();
+    const open = host.querySelector('[data-lib-act="open-page"]');
+    check('*** off a screen: "Open it (a new tab)" ***', open && open.getAttribute('href') === CLAUDE_PAGE && open.target === '_blank' && !host.querySelector('[data-elsewhere]'));
+    check('...and nothing offers to put it in a panel', !host.querySelector('[data-lib-act="place"]') && !!host.querySelector('[data-lib-whynot]'));
+    host.querySelector('[data-lib-act="close"]').click();
+    host.querySelector('[data-lib-key="page:wake"]').click();
+    host.querySelector('[data-lib-act="menu-tab"]').click();
+    check('*** wake phrases: opens the settings menu on its Devices tab ***', J(tabs) === J(['devices']));
+    lib.destroy();
+    lib = mountLibrary(host, { items: pageItems(), keys: false, isScreen: true });
+    host.querySelector('[data-lib-key="page:claude"]').click();
+    check('*** on a screen: the address (and a code), never opened ***', !host.querySelector('[data-lib-act="open-page"]')
+      && host.querySelector('[data-elsewhere]')?.dataset.elsewhere === CLAUDE_PAGE && /claude\.html/.test(host.querySelector('[data-elsewhere-address]')?.textContent || ''));
+    host.querySelector('[data-lib-act="close"]').click();
+    host.querySelector('[data-lib-key="page:wake"]').click();
+    check('wake phrases with no menu to open: it names the tab', /Devices tab/.test(host.querySelector('[data-lib-menu-where]')?.textContent || ''));
+    lib.destroy();
+    host.remove();
+  }
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

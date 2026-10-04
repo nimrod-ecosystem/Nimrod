@@ -82,6 +82,19 @@ export const GROUPS = [
     blurb: 'What happened, and whether it is getting easier. Useful to a therapist, and '
       + 'useful in a meeting where somebody needs to be told how a person is really doing.',
   },
+  // 2026-10-04. Mike, on the voice-model steps: *"I think this might need to be a module that walks people through
+  // the setup for it ... I guess maybe just a part of the AI module? Or in a set of AI modules?"* A SET, argued: the
+  // guide (`nimrod`) is about the whole site, not about speech, and a voice model is a separate piece of software
+  // somebody may want without the guide - one module each, grouped. ONE GROUP PER MODULE on this page, so Nimrod
+  // and the profile card move here from "Something to do" and "Keeping track" (the library's chips are tags, and
+  // keep them under Tools and People as well).
+  {
+    id: 'ai',
+    title: 'AI',
+    blurb: 'Your guide, AI characters to talk to, and a speech recogniser trained on your own voice. The AI costs '
+      + 'nothing by default: it runs on your own computer, or on a key you bring. Claude on this account and the '
+      + 'wake phrases are settings, not panels: they are in the ⚙ menu (Devices) and in Modules under AI.',
+  },
 ];
 
 // `needs` is deliberately in plain words rather than a technical dependency. "A folder of
@@ -547,7 +560,7 @@ export const CATALOG = [
   {
     type: 'nimrod',
     title: 'Nimrod',
-    group: 'practice',
+    group: 'ai',      // 2026-10-04: the AI set (was 'practice')
     use: 'touch',
     lead: 'A guide: what everything does, and what to try next.',
     needs: 'Nothing.',
@@ -590,7 +603,7 @@ export const CATALOG = [
   {
     type: 'profile',
     title: 'Profile',
-    group: 'record',
+    group: 'ai',      // 2026-10-04: the AI set, for its AI characters (was 'record')
     use: 'touch',
     lead: 'A person or an AI character, as a card: their face, their name, and what you can do with them.',
     needs: 'Nothing for the card. Talking to an AI needs one connected to this device (Ollama, free, or your own key).',
@@ -741,6 +754,23 @@ export const CATALOG = [
       + 'typing what was meant is how a recogniser can learn a voice it keeps getting wrong. The '
       + 'recordings stay on this screen, and leave it only when somebody exports them to a folder.',
     note: 'Recording is off unless it is turned on for one person, and the screen shows whenever it records.',
+  },
+  // 2026-10-04 (modules/voice_model.js): the six voice-model steps as a guided panel, in the AI set. `touch`: left
+  // alone it shows one step and waits on nobody; the recording in step 1 happens only after Start.
+  {
+    type: 'voice_model',
+    title: 'Voice model',
+    group: 'ai',
+    use: 'touch',
+    lead: 'A speech recogniser trained on one person’s own voice, set up one step at a time.',
+    needs: 'A microphone on the screen, to read about 100 short phrases. Then a computer: a free Google account to '
+      + 'train on, or a computer with a graphics card, and the speech service running on it.',
+    why: 'For somebody whose speech an ordinary recogniser keeps getting wrong. It walks the six steps one at a '
+      + 'time (record the phrases here, export them, train, convert, put the folder in place, start the service) '
+      + 'and works out which step you are on from what it can see. The folder, the port and on or off stay in the '
+      + 'same panel afterwards.',
+    note: 'Nothing is uploaded by this site: the recordings stay on the screen until you export them to a folder. '
+      + 'It does not run on a Raspberry Pi.',
   },
 ];
 

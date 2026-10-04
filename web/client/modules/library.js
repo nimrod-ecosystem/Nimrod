@@ -18,6 +18,7 @@
 import { registerModule } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { createUnlockGate } from '../unlocks.js';
+import { MENU_TAB_TOPIC } from '../actions.js';
 import {
   LIBRARY_TYPE, LIBRARY_TITLE, LIBRARY_SETTINGS, LIBRARY_DEFAULTS, libraryItems, brickItems, mountLibrary,
   registerLibraryAIActions, CATEGORY_IDS, USE_FILTERS,
@@ -87,6 +88,10 @@ registerModule(
           host, gate, say,
           // The person's "How you choose things" (6fd7575): "step through" scans the library by rows.
           chooseMode: () => (typeof ctx.chooseMode === 'function' ? ctx.chooseMode() : ctx.chooseMode),
+          // The AI set's settings pages (../library.js pageItems): on a real screen an address and a code, never
+          // a page opened over the dashboard; a page that is menu rows opens the menu on its tab.
+          isScreen: ctx.isScreen === true,
+          openMenuTab: ctx.bus?.publish ? (tab) => ctx.bus.publish(MENU_TAB_TOPIC, { tab }) : null,
           prefs: libraryPrefsFrom(values()),
           onPrefs: (patch) => { try { ctx.state?.set?.(patch); } catch (err) { console.error('library: save', err); } },
         });

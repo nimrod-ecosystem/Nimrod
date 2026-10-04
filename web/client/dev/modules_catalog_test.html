@@ -79,6 +79,7 @@ import '../modules/brickbreaker.js';
 import '../modules/rhythm.js';
 import '../modules/avatar.js';
 import '../modules/voice_review.js';
+import '../modules/voice_model.js';   // 2026-10-04: the voice-model steps (new core)
 // `wallpaper` was already reaching the registry, but only because `director.js` imports it —
 // a transitive registration this suite would lose the moment the director stopped mounting an
 // overlay. Both are listed explicitly now. Worth noting what that says about the check itself:
@@ -179,8 +180,9 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: row 2.37's `note` and `solitaire` are built on the new core.
   // 2026-09-30: row 2.37 item 10's `brickbreaker` and `rhythm` are built on the new core.
   const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'button', 'calculator', 'card_sort', 'devices', 'karaoke', 'library', 'name_that', 'nimrod', 'note',
-    'options', 'profile', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'think_games', 'voice_review', 'weather', 'whats_new',
+    'options', 'profile', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'think_games', 'voice_model', 'voice_review', 'weather', 'whats_new',
     'word_builder', 'word_games'];
+  // 2026-10-04: `voice_model` (the voice-model steps, one at a time, in the AI set) is built on the new core.
   // 2026-10-02: `card_sort`, `profile` (a person or an AI character) and `options` (the panel editor's) are built on the new core.
   // 2026-10-02: `library` ("Modules", the library of everything addable) is built on the new core.
   // 2026-10-02: the landing Home's `nimrod`, `devices` and `whats_new` are built on the new core.
@@ -188,7 +190,7 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-10-01: row 2.45's `think_games` (the SLP exercises) is built on the new core.
   // 2026-09-30: row 2.37's `weather` is built on the new core.
   // 2026-09-30: row 2.44's `voice_review` (the voice recordings kept on this screen) is built on the new core.
-  check('exactly twenty-six modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, card_sort, devices, karaoke, library, name_that, nimrod, note, options, profile, rhythm, room, scoreboard, simple_math, solitaire, spelling, think_games, voice_review, weather, whats_new, word_builder and word_games',
+  check('exactly twenty-seven modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, card_sort, devices, karaoke, library, name_that, nimrod, note, options, profile, rhythm, room, scoreboard, simple_math, solitaire, spelling, think_games, voice_model, voice_review, weather, whats_new, word_builder and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length
@@ -297,6 +299,16 @@ section('titles');
     titleFor({ type: 'photos' }, manifests) === (manifests.find((m) => m.type === 'photos') || {}).title);
   check('...falling back to the type rather than to "undefined"',
     titleFor({ type: 'nope' }, manifests) === 'nope');
+}
+
+section('*** the AI set (2026-10-04): the guide, the AI characters’ card, the voice model ***');
+{
+  const ai = GROUPS.find((g) => g.id === 'ai');
+  check('*** an "AI" group, with words saying what is in it ***', ai && ai.title === 'AI' && ai.blurb.length > 40, JSON.stringify(ai));
+  const inAi = groupItems('ai', manifests).map((m) => m.type);
+  check('*** Nimrod, the profile card and the Voice model are in it ***', ['nimrod', 'profile', 'voice_model'].every((t) => inAi.includes(t)), inAi.join());
+  check('the AI words never name the person it was first built for', !/christine|cici|her screen/i.test(JSON.stringify(ai)
+    + JSON.stringify(CATALOG.find((c) => c.type === 'voice_model'))));
 }
 
 const s = document.getElementById('summary');

@@ -664,6 +664,9 @@ export const MODULE_VERBS = {
   music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause' },
   // The weather: select reads now (or the lit day), next / prev walk the days, back returns to now.
   weather:       { next: 'weather/next', prev: 'weather/prev', select: 'weather/select', back: 'weather/back' },
+  // 2026-10-04, the Voice model module (modules/voice_model.js): next / prev walk its buttons (the walk's own Back /
+  // Skip this step / Done, next among them), select presses the lit one, back is the walk's Back.
+  voice_model:   { next: 'voice_model/next', prev: 'voice_model/prev', select: 'voice_model/select', back: 'voice_model/back' },
 };
 
 // What a verb does on a given module type, normalized to {topic, payload}.
