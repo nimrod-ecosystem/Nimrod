@@ -23,7 +23,7 @@
 // them, and Close or Escape ends the editing. While a SWITCH is walking them the host hands the walk to
 // `editor.scan` (the kiosk pauses the panel router meanwhile, the tray's rule) and gives it back on close.
 
-import { createEditModel } from './edit_model.js';
+import { createEditModel, normalizeItem } from './edit_model.js';
 import {
   mountTransformWindow, mountLayersWindow, mountLinksWindow, mountMapWindow, mountAutomationWindow, createWindowGroup,
 } from './edit_windows.js';
@@ -57,7 +57,9 @@ export function newDashboardName(list = [], base = NEW_DASHBOARD_NAME) {
  *   host             an element to put the windows in as they are
  *   baseLayout()     the layout as SAVED (what a change is made from); default `arr.layout()`
  *   apply(layout)    applies a layout in place; default `arr.applyPlaced`
- *   save(layout)     persists it (absent: memory only)
+ *   save(layout, base) persists it (absent: memory only). `base` is the layout as saved that the windows last
+ *                    matched; the host merges `layout` onto its doc as it is now (doc_merge.js `mergeLayoutSave`)
+ *                    and may return `{ layout }`, what it saved, which is then what `apply` is given (2026-10-04)
  *   windows          which windows open first (EDIT_WINDOWS_DEFAULT)
  *   listDashboards() -> Promise<[{ id, name }]>   the person's dashboards (for Opens / Shows and the map)
  *   createDashboard(name) -> Promise<{ id, name }> "+ New dashboard" (absent: disabled)
@@ -123,22 +125,44 @@ export function openDashboardEditor(opts = {}) {
   const model = createEditModel({ items: [...arr.placed().map(toItem), ...objectItems()] });
   let closed = false;
   let syncing = false;
-  const unsub = model.subscribe((evt) => {
-    if (!evt || evt.type !== 'items' || syncing || closed) return;
-    const items = model.items();
-    const ok = known();
-    const mods = items.filter((it) => !it.fixed);
-    const ghosts = mods.filter((it) => !ok.has(it.id));
-    if (ghosts.length) {
-      notes.push('A copy of a module needs a module of its own on this screen. That is not built yet, so the copy was not placed.');
-      syncing = true;
-      try { for (const g of ghosts) model.remove(g.id); } finally { syncing = false; }
+  // *** WHAT A SAVE IS MADE FROM, AND THE BASE IT CARRIES (2026-10-04, later; d40424f left this gap). *** The model is
+  // built ONCE, here, and is not told when another device moves something while the windows are open (the host moves
+  // it on the screen; the windows still show the old place). Every change used to write the WHOLE placed list from
+  // the model over the layout as saved now -- so a panel moved elsewhere went back where the windows last saw it.
+  // Now, for a host that saves: `synced` is the layout as saved that the model matches (the saved layout at open,
+  // then each save's own `next`), and a change is written as `synced` with only what the model changed laid onto it
+  // (`entryLike`: an entry keeps its saved form, key for key, except where the windows now say something else).
+  // `save(next, synced)` merges that onto the doc as it is now (doc_merge.js `mergeLayoutSave`, the host's policy
+  // and quiet line) and may return `{ layout }`, what was actually saved: that is what the screen is moved to, in
+  // place (`apply`), so the other device's move stays on the screen too.
+  //   `synced` stays the model's view (`next`), NOT the merge: the windows still show the old place for a panel
+  //   moved elsewhere, so the next change must not read that old place as a move made here. (FOR re-filling the
+  //   model with the merge instead: the windows would show the new place. AGAINST, and it decides it: Undo restores
+  //   the model's earlier items, which hold the old place, and would then write it back over the other device's
+  //   move. This way Undo undoes only what was done here.)
+  // A host that does not save (the modules page: memory only) is unchanged: the layout it holds now, plus the model.
+  const savable = typeof save === 'function';
+  const startLayout = () => baseLayout() || arr.layout() || { preset: 'full', slots: [] };
+  let synced = savable ? JSON.parse(JSON.stringify(startLayout())) : null;
+  const J = (v) => JSON.stringify(v === undefined ? null : v);
+  /** `stored` (an entry as saved) with only the keys the windows changed (`it`) laid on; a new one is `it`'s own. */
+  function entryLike(stored, it) {
+    const mine = fromItem(it, stored);
+    if (!stored) return mine;
+    const was = fromItem(normalizeItem(toItem(stored)), stored);   // what the windows made of it when it was saved
+    const out = { ...stored };
+    for (const k of new Set([...Object.keys(was), ...Object.keys(mine)])) {
+      if (J(mine[k]) === J(was[k])) continue;
+      if (mine[k] === undefined) delete out[k]; else out[k] = mine[k];
     }
-    // Placement and module doors.
-    const prev = new Map(arr.placed().map((e) => [e.id, e]));
-    const placed = model.items().filter((it) => !it.fixed && ok.has(it.id)).map((it) => fromItem(it, prev.get(it.id)));
-    const base = baseLayout() || arr.layout() || { preset: 'full', slots: [] };
+    return out;
+  }
+  /** The layout to save: `base` with the placed things (`entryOf`) and the room objects' doors from the model. */
+  function build(base, entryOf) {
+    const ok = known();
+    const placed = model.items().filter((it) => !it.fixed && ok.has(it.id)).map(entryOf);
     const next = { ...base, placed };
+    if (savable && !placed.length && !Array.isArray(base.placed)) delete next.placed;   // nothing added, nothing changed
     // Room objects' doors, onto the scene's recipe.
     // (2026-10-02: the 3D room's furniture too -- room_doors.js reads and writes either kind of room.)
     let scene = base.scene || null;
@@ -151,8 +175,34 @@ export function openDashboardEditor(opts = {}) {
       scene = tidyScene(scene);
       if (JSON.stringify(scene) !== JSON.stringify(base.scene)) next.scene = scene;
     }
-    Promise.resolve(apply(next)).then(() => tell()).catch((err) => console.error('dashboard_editor: apply', err));
-    if (typeof save === 'function') { try { save(next); } catch (err) { console.error('dashboard_editor: save', err); } }
+    return next;
+  }
+  const unsub = model.subscribe((evt) => {
+    if (!evt || evt.type !== 'items' || syncing || closed) return;
+    const items = model.items();
+    const ok = known();
+    const mods = items.filter((it) => !it.fixed);
+    const ghosts = mods.filter((it) => !ok.has(it.id));
+    if (ghosts.length) {
+      notes.push('A copy of a module needs a module of its own on this screen. That is not built yet, so the copy was not placed.');
+      syncing = true;
+      try { for (const g of ghosts) model.remove(g.id); } finally { syncing = false; }
+    }
+    // Placement and module doors.
+    let next;
+    let shown = null;
+    if (savable) {
+      const stored = new Map((Array.isArray(synced?.placed) ? synced.placed : []).filter((e) => e && e.id).map((e) => [e.id, e]));
+      next = build(synced || startLayout(), (it) => entryLike(stored.get(it.id), it));
+      let r;
+      try { r = save(next, synced); } catch (err) { console.error('dashboard_editor: save', err); r = undefined; }
+      synced = next;
+      if (r && typeof r === 'object' && r.layout) shown = r.layout;
+    } else {
+      const prev = new Map(arr.placed().map((e) => [e.id, e]));
+      next = build(startLayout(), (it) => fromItem(it, prev.get(it.id)));
+    }
+    Promise.resolve(apply(shown || next)).then(() => tell()).catch((err) => console.error('dashboard_editor: apply', err));
     // Frames: what each one shows is its own row.
     for (const it of model.items().filter((x) => x.canShow && ok.has(x.id))) {
       const rec = arr.recFor(it.id);

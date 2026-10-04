@@ -23,7 +23,7 @@ The kiosk end of it (a swapped-in screen hearing and applying the other device) 
 <script type="module">
 import { createState } from '../state.js';
 import { createProfilesClient } from '../profile.js';
-import { merge3, mergeSettingsDoc, mergeLayoutSave, describeLost } from '../doc_merge.js';
+import { merge3, mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, describeLost } from '../doc_merge.js';
 import { sceneRecipe, recipeItemIds, withDoor, withLook, sceneDoors, sceneLooks } from '../room_doors.js';
 
 const out = document.getElementById('results');
@@ -116,6 +116,20 @@ const sceneOf = (doc) => doc?.kiosk?.layout?.scene || null;
         sceneDoors(clash.layout.scene)[PIECE_A] === 'scr-2' && describeLost(clash.lost) === 'the room', J(clash));
       const mine = mergeLayoutSave(base, next, layoutWith(withDoor(STUDY, PIECE_A, 'scr-2')), { prefer: 'mine' });
       check('...prefer: "mine" keeps this one', sceneDoors(mine.layout.scene)[PIECE_A] === 'scr-1' && !mine.lost.length, J(mine));
+    }
+    {
+      // 2026-10-04, later: the whole `kiosk` key, written back after a wait (kiosk.js `rebuildHere`).
+      const base = { layout: layoutWith(STUDY), clock: { corner: 'bl' } };
+      const next = { ...base, clock: { corner: 'tr' } };
+      const still = mergeKioskSave(base, next, JSON.parse(J(base)));
+      check('mergeKioskSave: nothing moved meanwhile -- `next` itself', still.kiosk === next && !still.merged);
+      check('...no base handed in -- `next` itself', mergeKioskSave(undefined, next, {}).kiosk === next);
+      const both = mergeKioskSave(base, next, { ...base, mirror: { corner: 'bl' }, layout: layoutWith(withLook(STUDY, PIECE_B, 'drawn')) });
+      check('*** ...the key moved on: the corner here, the mirror and the room there, all kept ***',
+        both.merged && both.kiosk.clock.corner === 'tr' && both.kiosk.mirror.corner === 'bl' && sceneLooks(both.kiosk.layout.scene)[PIECE_B] === 'drawn' && !both.lost.length, J(both));
+      const clash = mergeKioskSave(base, next, { ...base, clock: { corner: 'br' } });
+      check('...a clash: the other device\'s corner stands, reported as "a setting"',
+        clash.kiosk.clock.corner === 'br' && describeLost(clash.lost) === 'a setting' && J(clash.lost) === J([['kiosk', 'clock', 'corner']]), J(clash));
     }
 
     // ===================================================================================
