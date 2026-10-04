@@ -157,8 +157,10 @@ export function packItems(pack, map) {
 
 // *** THE SOURCE, FOR THE REVIEWER (Mike, 2026-10-04: "Shouldn't the sources be noted when the questions
 // are made?"). *** Each item's own `source` (packs.js, "PER-ITEM SOURCES") rides with it into review, so the
-// person passing a question can see what it rests on — and open the link — before deciding it is right. The
-// player never sees it: it is drawn only inside the review strip and on /reviews.html.
+// person passing a question can see what it rests on — and open the link — before deciding it is right. This
+// is the REVIEWER's version (full address, the note, "none given"), drawn inside the review strip and on
+// /reviews.html. The player's own shorter line, after the answer, is answer_source.js (Mike, 2026-10-04:
+// "always show the source when the answer is given"), and it steps aside while this strip is showing.
 const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hostOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
 
