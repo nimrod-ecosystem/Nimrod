@@ -157,14 +157,17 @@ export const START_VOICE = Object.freeze({
 // TELLING THE SHELL WHETHER THIS PANEL IS PLAYING. `{ id, playing }` on PLAY_STATE_TOPIC, only when it
 // changes. The kiosk's Pause / Play button follows it (kiosk.js `pausedPanels`), so the next press on a
 // waiting game is `play`. A host that does not listen loses nothing.
+// `kind` (2026-10-04): what kind of playing this is -- 'slideshow' (photos.js), 'video' (youtube.js), or left
+// out for a game. The screen's version watch (version_watch.js `playKindOf`) holds a reload for a game being
+// played and waits for the moment between two photos or two videos instead; the Pause / Play button ignores it.
 // ---------------------------------------------------------------------------------------------------
-export function createPlayReporter(bus, ctx) {
+export function createPlayReporter(bus, ctx, { kind = null } = {}) {
   let last = null;
   return (playing) => {
     const p = !!playing;
     if (p === last) return;
     last = p;
-    try { bus?.publish?.(PLAY_STATE_TOPIC, { id: ctx?.instanceId || null, playing: p }); }
+    try { bus?.publish?.(PLAY_STATE_TOPIC, { id: ctx?.instanceId || null, playing: p, ...(kind ? { kind } : {}) }); }
     catch (err) { console.error('game: play state', err); }
   };
 }

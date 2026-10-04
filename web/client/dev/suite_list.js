@@ -57,6 +57,8 @@ export const SUITES = [
   'sprint',
   'statemachine', 'talk', 'theme', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
   'youtube_watchdog',
+  // 2026-10-04: a screen picks up a deploy by itself, once, at a quiet moment; pages show a chip instead.
+  'version_watch',
   // *** ADDED 2026-09-30, WHEN THE LIST CHECK FIRST RAN: all of these were on disk and had never
   // been on this page. Each was run on its own from `run_suite.py` before being added. Grouped by
   // what they cover rather than slotted into the lines above, so the provenance stays readable. ***

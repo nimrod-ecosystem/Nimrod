@@ -23,7 +23,7 @@ import asyncio
 
 from authlib.integrations.starlette_client import OAuth
 from fastapi import Body, Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from starlette.middleware.sessions import SessionMiddleware
@@ -37,6 +37,7 @@ from identity import current_user, optional_user, set_device_key_lookup, set_dev
 import claude_ai
 import notes
 import pack_reviews
+from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
 
@@ -293,6 +294,28 @@ def healthz():
                             content={"ok": False, "db": "down", "engine": engine,
                                      "error": type(e).__name__})
     return {"ok": True, "db": "up", "engine": engine}
+
+
+# WHAT VERSION OF THE SITE THIS IS (2026-10-04, version.py says why it is a hash of the client code and
+# not the commit). Computed ONCE, at startup: a deploy is a new process, so a new deploy is a new value.
+SITE_VERSION = safe_code_version(CLIENT_DIR)
+DEPLOY_COMMIT = deploy_commit()
+
+
+@app.get("/api/version")
+def site_version(request: Request):
+    """Unauthenticated, tiny and cacheable: every screen polls it (client: version_watch.js).
+
+    Public on purpose - a screen that has lost its sign-in still needs to pick up the fix for that -
+    and it says nothing a visitor cannot already read: the repo is public. An ETag lets a poll that
+    finds nothing new cost a 304 with no body; `no-cache` makes the browser ask rather than guess.
+    """
+    etag = f'"{SITE_VERSION}"'
+    headers = {"ETag": etag, "Cache-Control": "no-cache"}
+    asked = [t.strip().removeprefix("W/") for t in (request.headers.get("if-none-match") or "").split(",")]
+    if etag in asked or "*" in asked:
+        return Response(status_code=304, headers=headers)
+    return JSONResponse({"version": SITE_VERSION, "commit": DEPLOY_COMMIT}, headers=headers)
 
 
 @app.get("/api/whoami")
