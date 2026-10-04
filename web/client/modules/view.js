@@ -112,6 +112,7 @@ import { createArrangement } from '../arrangement.js';
 import { flashLimit } from '../flash_limit.js';
 // Row 2.38: a change that only moves a room object's door is a placement change too (room_doors.js).
 import { classifyLayoutChange as layoutChange } from '../room_doors.js';
+import { mergeSettingsDoc, lostEditWords } from '../doc_merge.js';
 // Stage R: the edit windows, bound to this dashboard's modules placed freely (`edit()` below). Since row
 // 2.38 the editor itself is dashboard_editor.js, shared with the kiosk's own path.
 import { openDashboardEditor } from '../dashboard_editor.js';
@@ -882,7 +883,19 @@ function dashboardFactory(ctx) {
         // STAGE 4: a host that already holds THIS dashboard's settings doc open (the kiosk, for the
         // screen it booted on) lends it (`ctx.settingsHandle`), so one doc is not polled twice. A lent
         // handle is used, never loaded again and never closed here: it is the host's.
-        settingsHandle = borrowedSettings || childState('settings');
+        // (2026-10-04: its own doc merges a refused write -- doc_merge.js -- rather than state.js's ordinary
+        // rebase, which keeps a changed top-level key wholesale: the whole arrangement is ONE key, `kiosk`, so a
+        // stale write here laid this copy over another device's change. A change made here that gave way is said
+        // on the host's quiet line (`ctx.note`), when it has one. The policy is the host's (`ctx.conflictPrefer`,
+        // default 'theirs', argued in doc_merge.js). A lent doc is the host's, merged there.)
+        settingsHandle = borrowedSettings || (makeState ? makeState('settings', {
+          merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: ctx.conflictPrefer === 'mine' ? 'mine' : 'theirs' }),
+          onLost: (lost) => {
+            const text = lostEditWords(lost, arrangement?.name || null);
+            if (typeof ctx.note === 'function') { try { ctx.note(text); } catch { /* not load-bearing */ } }
+            else console.warn('view:', text);
+          },
+        }, viewId) : null);
         if (!borrowedSettings) await settingsHandle?.load?.().catch(() => {});
         if (stale()) {
           if (!borrowedSettings) { try { settingsHandle?.destroy?.(); } catch { /* gone */ } }

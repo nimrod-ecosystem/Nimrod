@@ -24,7 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
-import { mergeSettingsDoc, describeLost } from './doc_merge.js';
+import { mergeSettingsDoc, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
 import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
 import { createPush } from './push.js';
@@ -1518,7 +1518,18 @@ export async function mountKiosk(root, {
   }
 
   // ---- per-profile settings: theme + the kiosk LAYOUT (data-driven) --------
-  const settings = stateFor('settings');
+  // (2026-10-04: a refused write is MERGED, not rebased wholesale -- doc_merge.js; the same as a swapped-in
+  // screen's doc, `swapDoc` below. The whole arrangement is one key, `kiosk`, so the ordinary rebase laid this
+  // screen's whole copy over another device's change. A change made here that gave way is said once.)
+  // Which value stands when this screen and another device changed the SAME thing at once: 'theirs' (the
+  // other device's, already accepted by the server; the screen says so) or 'mine'. Argued in doc_merge.js:
+  // the edit that gives way must be the one whose author can be told, and only this screen can tell anyone.
+  // Used for this doc, a swapped-in screen's, and a dashboard's own (handed to view.js as `ctx.conflictPrefer`).
+  const CONFLICT_PREFER = 'theirs';
+  const settings = stateFor('settings', {
+    merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: CONFLICT_PREFER }),
+    onLost: (lost) => sayLostEdit(bootProfileId, lost),
+  });
   // HIDE = MUTE (ad7dc49): what hiding a sound-making panel does, asked once and remembered (choices row).
   // (The choices row is loaded in the background and closed on teardown: a handle never loaded reads
   // empty forever and writes against version 0.)
@@ -1566,11 +1577,8 @@ export async function mountKiosk(root, {
   //     state.js's ordinary rebase would have laid this screen's whole copy over the other device's change.
   //     A door here and a look there both stay; the same thing changed both ways keeps the other device's
   //     value, and the screen says so in one quiet line (`sayLostEdit`). The policy is argued in doc_merge.js.
-  // Which value stands when this screen and another device changed the SAME thing at once: 'theirs' (the
-  // other device's, already accepted by the server; the screen says so) or 'mine'. Argued in doc_merge.js:
-  // the edit that gives way must be the one whose author can be told, and only this screen can tell anyone.
-  const SWAP_CONFLICT_PREFER = 'theirs';
-  let swapDoc = null;                      // { id, doc, shown, off }
+  // (Which value stands in a true clash: `CONFLICT_PREFER`, beside `settings` above.)
+  let swapDoc = null;                     // { id, doc, shown, off }
   const swapDocNow = () => (swapDoc && swapDoc.id === profileId ? swapDoc.doc : null);
   function closeSwapDoc(rec) {
     if (!rec || !rec.doc) return;
@@ -1616,7 +1624,7 @@ export async function mountKiosk(root, {
           const nowSaved = was.layout ?? null;
           if (base !== undefined && JSON.stringify(base ?? null) !== JSON.stringify(nowSaved)) {
             const wrap = (l) => ({ kiosk: { layout: l ?? null } });
-            const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer: SWAP_CONFLICT_PREFER });
+            const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer: CONFLICT_PREFER });
             out = r.data?.kiosk?.layout ?? null;
             if (r.lost.length) sayLostEdit(swapDoc.id, r.lost);
           }
@@ -2110,7 +2118,7 @@ export async function mountKiosk(root, {
       // (2026-10-04: merged on a refused write, and a local change that could not be kept is said -- the
       // header above `swapDoc`.)
       incoming = stateFor('settings', {
-        merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: SWAP_CONFLICT_PREFER }),
+        merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: CONFLICT_PREFER }),
         onLost: (lost) => sayLostEdit(nextId, lost),
       });
       let sl;
@@ -2173,9 +2181,7 @@ export async function mountKiosk(root, {
   }
   /** One quiet line: a change made here gave way to the same thing changed on another device (doc_merge.js). */
   function sayLostEdit(id, lost) {
-    const what = describeLost(lost) || 'a setting';
-    const name = screenNames.get(id) || 'this dashboard';
-    return sayNote(`A change made here was not kept: ${what} on ${name} was just changed on another device.`);
+    return sayNote(lostEditWords(lost, screenNames.get(id) || null));
   }
 
   /** Back to whatever was showing before the last swap. */
@@ -6167,6 +6173,10 @@ export async function mountKiosk(root, {
         router: runtime.router, health, storage, embedded: !!embedded,
         ...(embedded ? {} : {
           makeState: stateForProfile, makeEvents: eventsForProfile,
+          // 2026-10-04: a dashboard's own settings doc merges a refused write (view.js), with the same policy,
+          // and a change that gave way is said on this screen's quiet line.
+          conflictPrefer: CONFLICT_PREFER,
+          note: (text) => sayNote(text),
           // (2026-10-02: layered by "every <module> panel" on this screen first -- `withTypeLayer`.)
           wrapState: (mid, st, type) => automation.wrapState(mid, withTypeLayer(st, type), { manifest: getManifest(type) }),
           ...(id === bootProfileId ? {
