@@ -1430,7 +1430,8 @@ def create_invite(person_id: str, body: InviteCreate, request: Request, user: st
         raise HTTPException(status_code=429, detail="That is a lot of invitations - try again in a while.")
     token = claims.new_token()
     inv = store.create_invite(user, person_id, claims.hash_token(token), _iso_in_days(days),
-                              see_people=body.see_people, messages=body.messages)
+                              see_people=body.see_people, messages=body.messages,
+                              sweep_before=_iso_in_days(-claims.KEEP_DEAD_INVITE_DAYS))
     return {"invite": {**_invite_view({**inv, "used_at": None, "cancelled_at": None}, _now_iso())},
             "token": token, "path": f"/join.html?invite={token}"}
 

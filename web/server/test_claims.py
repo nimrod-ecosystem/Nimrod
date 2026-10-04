@@ -338,6 +338,26 @@ codes = [c.post(f"/api/people/{robin}/invites", json={}, headers=H(OWN)).status_
 check(f"*** {appmod._invite_limit.limit} links an hour, then 429 ***", codes[:-1] == [200] * appmod._invite_limit.limit and codes[-1] == 429, str(codes))
 appmod._invite_limit.reset()
 
+section("*** old links are tidied away; recent dead ones and used ones stay ***")
+_db = sqlite3.connect(os.environ["NIMROD_DB"])
+_old = (datetime.now(timezone.utc) - timedelta(days=claims.KEEP_DEAD_INVITE_DAYS + 2)).isoformat()
+_recent = (datetime.now(timezone.utc) - timedelta(days=2)).isoformat()
+_cols = "id, token_hash, owner_id, person_id, created_at, expires_at, used_at, used_by, cancelled_at, see_people, messages"
+for _id, _exp, _used, _canc in [("oldexp", _old, None, None), ("oldcanc", FUTURE, None, _old),
+                                ("newexp", _recent, None, None), ("oldused", _old, _old, None)]:
+    _db.execute(f"INSERT INTO claim_invites({_cols}) VALUES(?,?,?,?,?,?,?,?,?,1,1)",
+                (_id, "h-" + _id, "someone-else", "p-" + _id, _old, _exp, _used, "x" if _used else None, _canc))
+_db.commit()
+appmod._invite_limit.reset()
+_gran = c.post("/api/people", json={"name": "Gran"}, headers=H(OWN)).json()["id"]
+_r = c.post(f"/api/people/{_gran}/invites", json={}, headers=H(OWN))
+check("(a fresh person's link is made)", _r.status_code == 200, _r.text)
+_left = {r[0] for r in _db.execute("SELECT id FROM claim_invites WHERE id IN ('oldexp','oldcanc','newexp','oldused')")}
+_db.close()
+check("*** making a link deletes unused links dead for over 30 days (anybody's), keeps a recent one and a used one ***",
+      _left == {"newexp", "oldused"}, str(_left))
+appmod._invite_limit.reset()
+
 section("the privacy page")
 d = c.get("/api/what-we-store").json()
 check("*** both new tables are described (none undocumented) ***",

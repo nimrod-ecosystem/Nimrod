@@ -80,6 +80,12 @@ TOKEN_BYTES = 32
 # A caller may ask for 1..MAX_INVITE_DAYS; the page uses the default.
 DEFAULT_INVITE_DAYS = 14
 MAX_INVITE_DAYS = 30
+# HOW LONG A DEAD LINK IS KEPT. A link that ran out or was taken back stays this many days, so the
+# person holding it reads "this link has run out - ask Pat for a new one" rather than a bare "not
+# found" (which also counts against their address as a wrong guess). After that it is deleted, so the
+# table does not keep every link anybody ever made. 30: the longest a link can live, again - somebody
+# who missed a month-long link has had a month to ask. A used link is kept: its claim names it.
+KEEP_DEAD_INVITE_DAYS = 30
 
 # SEE THE INVITER'S OTHER PEOPLE - default ON, argued:
 #   FOR off: an account holding a caseload (a therapist, a facility) would show one resident's
