@@ -35,8 +35,9 @@
   background:var(--surface-alt);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
 .sb-btn:hover{border-color:var(--accent)}
 /* THE SWITCH CURSOR — the same treatment the quizzes use: an outline AND a leading marker, so the
-   lit button reads without colour. */
-.sb-btn[data-on="1"]{outline:3px solid var(--link);outline-offset:2px}
+   lit button reads without colour. In the theme's --scan-ring (3:1 on every surface, every theme; theme.js),
+   not the raw --link (2026-10-04). */
+.sb-btn[data-on="1"]{outline:3px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
 .sb-btn[data-on="1"]::before{content:"\25B8\00a0"}
 
 .sb-input{flex:1 1 12em;min-height:44px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;

@@ -80,18 +80,23 @@
 .ew-auto .auto-opts{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;font-weight:400}
 .ew-auto .auto-opts button{flex:1 1 auto;text-align:left}
 .ew-win .ew-auto .auto-opt[aria-pressed="true"]{background:var(--link);border-color:var(--link);color:var(--on-link)}
-.ew-auto [data-auto-in]{outline:2px dashed var(--link);outline-offset:3px;border-radius:9px}
+.ew-auto [data-auto-in]{outline:2px dashed var(--scan-ring, var(--focus, var(--link)));outline-offset:3px;border-radius:9px}
 .ew-auto .auto-list li{margin:2px 0}
 .ew-auto [hidden]{display:none}
-.ew-win :is(select):focus-visible{outline:4px solid var(--link);outline-offset:2px}
+.ew-win :is(select):focus-visible{outline:4px solid var(--focus, var(--accent));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
 
 .ew-note{margin:0;color:var(--text-soft);font-size:.8rem}
 .ew-warn{margin:0;padding:6px 8px;border-radius:8px;font-size:.8rem;font-weight:600;
   background:var(--bad-surface);color:var(--text);border-left:4px solid var(--accent-warm-deep)}
 
-/* The switch cursor, and keyboard focus: a thick link-coloured ring outside the control. */
-.ew-win .is-scan,
-.ew-win :is(button,input):focus-visible{outline:4px solid var(--link);outline-offset:2px}
+/* The switch cursor, and keyboard focus: a thick ring outside the control. The cursor in the theme's
+   --scan-ring, keyboard focus in its --focus (theme.js: both 3:1 on every surface in every theme) -- not the
+   raw --link, which was never measured (2026-10-04). Each sits on a 2px band of --surface filling the gap
+   between control and ring: a chosen layer row is tinted from --link (`.ew-ly.is-sel`), and a pressed toggle
+   is filled with --accent, and the band keeps either from being the colour on the ring's inner side. A row
+   being walked is DASHED (`[data-auto-in]`, above) and the lit thing in it SOLID, so the two read apart. */
+.ew-win .is-scan{outline:4px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
+.ew-win :is(button,input):focus-visible{outline:4px solid var(--focus, var(--accent));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
 
 @media (prefers-reduced-motion: no-preference){
   .ew-win button{transition:background-color .12s}

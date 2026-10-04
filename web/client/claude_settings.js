@@ -33,7 +33,7 @@ export const CLAUDE_STYLE = `
   color:var(--text);font:inherit;cursor:pointer}
 .cs-btn.cs-go{font-weight:700;border-color:var(--accent)}
 .cs-btn[disabled]{opacity:.5;cursor:default}
-.cs-btn:focus-visible,.cs-card input:focus-visible,.cs-card select:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.cs-btn:focus-visible,.cs-card input:focus-visible,.cs-card select:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
 .cs-msg{margin:.5em 0;padding:8px 10px;border-radius:10px;border:1px solid var(--border)}
 .cs-days{width:100%;border-collapse:collapse}
 .cs-days th,.cs-days td{text-align:left;padding:4px 6px;border-bottom:1px solid var(--border)}

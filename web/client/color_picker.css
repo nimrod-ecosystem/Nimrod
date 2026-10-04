@@ -7,8 +7,8 @@
  *
  * TOKEN-ONLY, deliberately: the ONLY colour literal a swatch has is its own `--sw`, set inline by
  * the renderer from the palette DATA. Everything around it (border, pressed ring) is the theme's,
- * so a white swatch still has an edge on a white panel and the pressed ring follows the cursor
- * colour in every theme. `check_hardcoded_colors.py` should report 0 for this file.
+ * so a white swatch still has an edge on a white panel and the pressed ring follows the theme's
+ * text colour in every theme. `check_hardcoded_colors.py` should report 0 for this file.
  *
  * THE FALLBACKS ARE KEYWORDS (`currentColor`, `Canvas`), NOT HEX. Measured on a page that never
  * applied a theme (dev/settings_test.html): with a bare `var(--border)` the whole `border`
@@ -36,11 +36,15 @@
 }
 .cp-swatch:hover { border-color: var(--text-muted, currentColor); }
 
-/* PRESSED IS SHAPE AS WELL AS COLOUR: a thick ring in the cursor colour AND a gap, so it reads
- * for somebody who cannot tell the ring's colour from the swatch's. */
+/* PRESSED IS SHAPE AS WELL AS COLOUR: a thick ring AND a gap (the border turns the surface colour), so it
+ * reads for somebody who cannot tell the ring's colour from the swatch's.
+ * THE RING IS THE THEME'S --text, NOT --link AND NOT --focus (2026-10-04). --link was never measured against
+ * the surfaces. --focus is, but it is the keyboard ring just below, and "the colour you chose" and "where the
+ * keyboard is" must not look alike on the one swatch row; --text is the colour every theme already holds to
+ * 4.5:1 on its own surfaces, so it passes 3:1 everywhere AND differs in hue from the focus ring in every theme. */
 .cp-swatch[aria-pressed="true"] {
   border-color: var(--surface, Canvas);
-  outline: 3px solid var(--link, currentColor);
+  outline: 3px solid var(--text, currentColor);
   outline-offset: 1px;
 }
 .cp-swatch:focus-visible { outline: 3px solid var(--focus, var(--accent, currentColor)); outline-offset: 2px; }

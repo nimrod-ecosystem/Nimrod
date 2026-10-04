@@ -453,7 +453,10 @@
   --ab-card:var(--surface,#fff);
   --ab-ink:var(--text-strong,#0A3323);
   --ab-line:var(--border,#e4e0c2);
-  --ab-lit:var(--accent,#839958);
+  /* The theme's --focus, not its raw --accent (2026-10-04): --ab-lit is the lit card's edge and the board's
+     focus ring as well as a fill, so it has to clear 3:1 on the theme's surfaces, which --focus is made to do
+     (theme.js focusColor: the accent kept exactly where it already passes, a shade deeper where it does not). */
+  --ab-lit:var(--focus, var(--accent,#839958));
 }
 /* THE BOARD'S OWN HIGH-CONTRAST SWITCH. It needs one BECAUSE it no longer inherits the
    `contrast` theme, and losing that for the one panel somebody talks through would be a
@@ -939,7 +942,7 @@
    lit stop gets the same border + arrow treatment as a lit option, never color alone. */
 .wordforge .wf-after{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .wordforge .wf-contest{background:transparent;color:var(--text-soft)}
-.wordforge .wf-after [data-on="1"]{outline:3px solid var(--link,#105666);outline-offset:2px}
+.wordforge .wf-after [data-on="1"]{outline:3px solid var(--scan-ring, var(--focus, var(--link,#105666)));outline-offset:2px}
 .wordforge .wf-after [data-on="1"]::before{content:"\25B8\00a0"}
 .wordforge .wf-contested{margin:8px 0 0;font-size:.9rem;color:var(--text-soft)}
 .wordforge .wf-btn{margin-top:10px;padding:10px 18px;border:1px solid var(--border);border-radius:10px;
@@ -1142,7 +1145,7 @@
 .calc .calc-key.is-op{background:var(--surface-alt);color:var(--link);font-weight:800}
 .calc .calc-key.is-fn{color:var(--text-muted)}
 .calc .calc-key.is-eq{grid-column:span 2;background:var(--link);border-color:var(--link);color:var(--on-link)}
-.calc .calc-key[data-on="1"]{outline:3px solid var(--link);outline-offset:2px;z-index:1}
+.calc .calc-key[data-on="1"]{outline:3px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px;z-index:1}
 .calc .calc-key.is-eq[data-on="1"]{outline-color:var(--text-strong)}
 .calc .calc-key[data-on="1"]::before{content:"\25B8";position:absolute;left:5px;top:50%;transform:translateY(-50%);
   font-size:.8em;line-height:1}
@@ -1486,7 +1489,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-after { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .tv-contest { min-height: 48px; padding: 10px 16px; font-size: .95rem; border-radius: 10px;
   border: 1px solid var(--border, #e4e0c2); background: transparent; color: var(--text-soft, #3d5347); cursor: pointer; }
-.tv-next[data-on="1"], .tv-contest[data-on="1"] { outline: 3px solid var(--link, #105666); outline-offset: 2px; }
+.tv-next[data-on="1"], .tv-contest[data-on="1"] { outline: 3px solid var(--scan-ring, var(--focus, var(--link, #105666))); outline-offset: 2px; }
 .tv-next[data-on="1"]::before, .tv-contest[data-on="1"]::before { content: "\25B8\00a0"; }
 .tv-contested { margin: 10px 0 0; font-size: .92rem; color: var(--text-soft, #3d5347); }
 /* Review by playing (pack_reviews.js): a small, quiet strip at the foot, for the reviewer, not the player.
@@ -1496,7 +1499,7 @@ body[data-hide-system-cursor="1"], body[data-hide-system-cursor="1"] * { cursor:
 .tv-review-tag { font-style: italic; }
 .tv-review-btn { min-height: 32px; padding: 3px 10px; border-radius: 8px; font-size: .82rem;
   border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
-.tv-review-btn:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.tv-review-btn:focus-visible { outline: 2px solid var(--focus, var(--accent)); outline-offset: 2px; }
 .tv-review-said { margin: 0; }
 /* The item's own source (packs.js PER-ITEM SOURCES): its own line in the strip, so a long title wraps. */
 .tv-review-src { flex-basis: 100%; margin: 0; overflow-wrap: anywhere; }
@@ -1764,8 +1767,10 @@ html[data-live-scene] body{background:transparent}
   border-radius:2.4cqmin;border:max(2px,.5cqmin) solid var(--border);background:var(--surface);
   color:var(--text);font:800 clamp(16px,5cqmin,62px)/1 var(--font);cursor:pointer;white-space:nowrap}
 .wg-btn[data-act="yes"],.wg-btn[data-act="confirm"],.wg-btn[data-act="more"]{border-color:var(--accent)}
-/* THE HIGHLIGHT IS AN OUTLINE AND AN ARROW, never colour alone (module-input-spec). */
-.wg-btn[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.6cqmin)}
+/* THE HIGHLIGHT IS AN OUTLINE AND AN ARROW, never colour alone (module-input-spec). The outline is the theme's
+   --scan-ring, 3:1 on every surface in every theme (theme.js), not the raw --link (2026-10-04). Every switch
+   cursor in this file (word games, word forge, trivia, the calculator) rings the same way. */
+.wg-btn[data-on="1"]{outline:max(3px,1cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.6cqmin)}
 .wg-btn[data-on="1"]::before{content:"\25B8\00a0"}
 .wg-foot{display:flex;align-items:center;justify-content:space-between;gap:2cqmin;flex-wrap:wrap;
   font-size:clamp(13px,3.2cqmin,40px);color:var(--text-soft)}

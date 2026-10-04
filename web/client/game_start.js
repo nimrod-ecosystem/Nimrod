@@ -172,6 +172,10 @@ export function createPlayReporter(bus, ctx) {
 // ---------------------------------------------------------------------------------------------------
 // THE START BUTTON. One look for every game: a big button and one line, at the bottom of the panel, over
 // whatever is behind it (the demo, or the game's still first frame). Theme variables only.
+// The lit button rings in the theme's --scan-ring (3:1 on every surface in every theme, theme.js), not the raw
+// --link (2026-10-04). Because what is behind it is a GAME FRAME, not a surface, the gap between the button and
+// the ring is filled with a band of --surface (a box-shadow as wide as the offset), so the ring's inner side is
+// always a colour it was measured against.
 // ---------------------------------------------------------------------------------------------------
 const STYLE_ID = 'game-start-style';
 const CSS = `
@@ -181,7 +185,8 @@ const CSS = `
 .gs-btn{pointer-events:auto;min-height:max(56px,12cqmin);min-width:max(140px,30cqmin);padding:0 clamp(16px,4cqmin,48px);
   border-radius:clamp(12px,2.5cqmin,28px);border:max(3px,.7cqmin) solid var(--accent);background:var(--surface);
   color:var(--text-strong,var(--text));font:800 clamp(18px,6cqmin,64px)/1 var(--font);cursor:pointer}
-.gs-btn[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.5cqmin)}
+.gs-btn[data-on="1"]{outline:max(3px,1cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.5cqmin);
+  box-shadow:0 0 0 max(2px,.5cqmin) var(--surface)}
 .gs-note{pointer-events:none;margin:0;padding:.3em .8em;border-radius:999px;
   background:color-mix(in srgb, var(--surface) 85%, transparent);color:var(--text);
   font:700 clamp(13px,3cqmin,32px)/1.25 var(--font)}

@@ -277,15 +277,20 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
 
 // The look: theme tokens only (theme.js sets them on every page that draws a dashboard). Solid, because a
 // question you have to read should not be see-through (Design's rule for dialogs).
+// THE RINGS (2026-10-04) are the theme's --focus (3:1 on every surface in every theme, theme.js), not the raw
+// --link, which was never measured. Told apart by SHAPE, since they share the hue: the panel being edited is
+// DASHED (inside its edge), the things you can choose in it DOTTED, the one chosen SOLID -- on a band of
+// --surface filling the gap, because what is around a chosen thing is the module's own picture (a room's wood
+// is mixed from --accent), not a surface the ring was measured on.
 const CSS_ID = 'em-css';
 export function ensureEditCss(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(CSS_ID)) return;
   const s = doc.createElement('style');
   s.id = CSS_ID;
   s.textContent = `
-[data-editing]{outline:3px dashed var(--link);outline-offset:-3px}
-[data-editing] [data-edit-target]{outline:2px dotted var(--link);outline-offset:2px;cursor:pointer}
-[data-editing] [data-edit-selected]{outline:3px solid var(--link);outline-offset:2px}
+[data-editing]{outline:3px dashed var(--focus, var(--accent));outline-offset:-3px}
+[data-editing] [data-edit-target]{outline:2px dotted var(--focus, var(--accent));outline-offset:2px;cursor:pointer}
+[data-editing] [data-edit-selected]{outline:3px solid var(--focus, var(--accent));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
 .em-bar{position:absolute;left:6px;top:6px;z-index:calc(var(--z-panel-contents,300) + 30);display:flex;gap:6px;align-items:center}
 .em-card{position:absolute;right:6px;top:58px;bottom:58px;width:min(340px,calc(100% - 12px));overflow:auto;
   z-index:calc(var(--z-panel-contents,300) + 30);background:var(--surface);color:var(--text);
@@ -293,7 +298,7 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .em-card[hidden]{display:none}
 .em-btn{min-width:44px;min-height:44px;padding:6px 12px;border-radius:10px;border:1px solid var(--border);
   background:var(--surface-alt,var(--surface));color:var(--text);font:600 15px/1.2 system-ui,-apple-system,Segoe UI,sans-serif;cursor:pointer}
-.em-btn:focus-visible{outline:3px solid var(--link);outline-offset:2px}
+.em-btn:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
 .em-done{background:var(--link);color:var(--on-link);border-color:var(--link)}
 .em-opts{padding:10px 12px;font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}
 .em-head{display:flex;gap:10px;align-items:center;margin:0 0 6px}

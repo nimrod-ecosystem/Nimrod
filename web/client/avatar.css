@@ -50,8 +50,9 @@
 .av-btns{display:flex;flex-wrap:wrap;gap:clamp(4px, 1.2cqmin, 12px);justify-content:center}
 .av-parts .av-btns{justify-content:flex-start;padding-top:6px}
 
-/* THE SWITCH CURSOR: an outline AND a marker, so the lit stop reads without colour (note.css's rule). */
-.av [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit stop reads without colour (note.css's rule). In the
+   theme's --scan-ring, 3:1 on every surface in every theme (theme.js), not the raw --link (2026-10-04). */
+.av [data-on="1"]{outline:max(3px, .8cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
 .av-btn[data-on="1"]::before,.av-opt[data-on="1"]::before,.av-row[data-on="1"] .av-label::before{content:"\25B8\00a0"}
 
 .av-head{margin:8px 0 4px;font-size:clamp(14px, 3.2cqmin, 26px);font-weight:700;color:var(--text-strong)}

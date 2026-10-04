@@ -50,6 +50,9 @@ export const up = (w) => String(w == null ? '' : w).toUpperCase();
 // *** STYLES: ONLY THE THEME'S OWN VARIABLES. *** The shared look is word games' `.wg` rules in
 // modules.css; this adds the board, the typed answer, a text card, dots and a clip frame. Injected
 // once per document rather than added to modules.css, which other work owns right now.
+// The switch cursor rings in the theme's `--scan-ring` (theme.js: 3:1 on every surface in every theme), not
+// the raw --link, which is not measured (2026-10-04). It sits on the panel's surfaces, never on an accent, so it
+// needs no band; the triangle marker still says "lit" without colour.
 const STYLE_ID = 'quiz-games-style';
 const CSS = `
 .wg[data-quiz]{display:block}
@@ -69,14 +72,14 @@ const CSS = `
 .qz-board{display:grid;gap:1.1cqmin;width:100%}
 .qz-row{display:flex;gap:1.1cqmin;justify-content:center;flex-wrap:wrap;align-items:center;
   padding:.5cqmin;border-radius:2cqmin}
-.qz-row[data-on="1"]{outline:max(3px,.8cqmin) solid var(--link);outline-offset:max(1px,.3cqmin)}
+.qz-row[data-on="1"]{outline:max(3px,.8cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(1px,.3cqmin)}
 .qz-row[data-on="1"]::before{content:"\\25B8";font-weight:800;color:var(--text)}
 .qz-key{min-width:max(32px,8cqmin);min-height:max(32px,7.5cqmin);padding:0 1.2cqmin;
   border-radius:1.6cqmin;border:max(2px,.4cqmin) solid var(--border);background:var(--surface);
   color:var(--text);font:800 clamp(13px,4.2cqmin,52px)/1 var(--font);cursor:pointer}
 .qz-key[data-cmd],.qz-key[data-rowback]{min-width:max(64px,14cqmin);font-size:clamp(12px,3.2cqmin,38px)}
 .qz-key[data-cmd="check"]{border-color:var(--accent)}
-.qz-key[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.5cqmin)}
+.qz-key[data-on="1"]{outline:max(3px,1cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.5cqmin)}
 .qz-key[data-on="1"]::before{content:"\\25B8\\00a0"}
 .qz-entry{margin:0;font:800 clamp(20px,8cqmin,96px)/1.1 var(--font);letter-spacing:.16em;text-align:center}
 .qz-entry .qz-blank{color:var(--text-soft)}
@@ -108,7 +111,7 @@ const CSS = `
 .qz-pick[data-small]{min-height:max(56px,13cqmin);font-size:clamp(16px,5.5cqmin,66px)}
 .qz-dots[data-count] .qz-dot{width:clamp(18px,8cqmin,72px)}
 .qz-dots[data-count] .qz-dotrow{gap:2cqmin}
-.qz-pick[data-on="1"]{outline:max(3px,1cqmin) solid var(--link);outline-offset:max(2px,.5cqmin)}
+.qz-pick[data-on="1"]{outline:max(3px,1cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.5cqmin)}
 .qz-left-stack{display:grid;gap:2cqmin;justify-items:center}
 .qz-things{display:flex;flex-wrap:wrap;gap:1.5cqmin;justify-content:center}
 .qz-things .qz-card{font-size:clamp(16px,5.5cqmin,64px);padding:1.5cqmin 3cqmin}

@@ -63,8 +63,9 @@
 .wx-btn-small{min-height:36px;font-size:clamp(12px, 3cqmin, 22px)}
 .wx-credit{margin:auto 0 0;font-size:clamp(10px, 2.2cqmin, 16px);color:var(--text-muted)}
 
-/* THE SWITCH CURSOR: an outline AND a marker, so the lit item reads without colour. */
-.wx [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit item reads without colour. The theme's --scan-ring
+   (3:1 on every surface, every theme; theme.js), not the raw --link (2026-10-04). */
+.wx [data-on="1"]{outline:max(3px, .8cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
 .wx-btn[data-on="1"]::before,.wx-day[data-on="1"] .wx-dlabel::before{content:"\25B8\00a0"}
 
 /* Short boxes: the days go first, then the hours; "now" always stays. */

@@ -690,16 +690,19 @@ export function createArrangement({
     if (!layout) return;
     for (const cell of stageEl.querySelectorAll('.k-cell')) delete cell.dataset.focused;
     // Stage R: the placed boxes carry the ring too. Their outline is drawn inline (kiosk.css's ring
-    // rule is for `.k-cell`), in the same colour and offset.
-    for (const m of placedMeta.values()) { delete m.wrap.dataset.focused; m.wrap.style.outline = ''; }
+    // rule is for `.k-cell`), in the same colour: the theme's --focus, 3:1 on every surface (theme.js),
+    // not the raw --accent it used to be (2026-10-04). A placed box can sit in the room, whose wood is
+    // mixed FROM --accent, so it also gets a 2px band of --surface in the gap between box and ring.
+    for (const m of placedMeta.values()) { delete m.wrap.dataset.focused; m.wrap.style.outline = ''; m.wrap.style.boxShadow = ''; }
     const rec = slotRecs.find((r) => r.id === id);
     const cell = rec?.el?.closest?.('.k-cell');
     if (cell) cell.dataset.focused = '1';
     const pm = placedMeta.get(id);
     if (pm && placedRecs.some((r) => r.id === id)) {
       pm.wrap.dataset.focused = '1';
-      pm.wrap.style.outline = '3px solid var(--accent,#839958)';
+      pm.wrap.style.outline = '3px solid var(--focus, var(--accent,#839958))';
       pm.wrap.style.outlineOffset = '2px';
+      pm.wrap.style.boxShadow = '0 0 0 2px var(--surface, Canvas)';
     }
     // A piece of the dashboard's room (THE ROOM'S PIECES, below): the room draws it, in its own scan look;
     // focus anywhere else takes that off.

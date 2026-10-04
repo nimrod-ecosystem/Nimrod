@@ -18,8 +18,9 @@
 .mu-btn{min-height:44px;padding:0 clamp(10px, 2cqmin, 20px);border:2px solid var(--border);border-radius:12px;
   background:var(--surface);color:var(--text);font:inherit;font-weight:700;font-size:clamp(14px, 3.4cqmin, 28px);cursor:pointer}
 .mu-btn[disabled]{opacity:.5;cursor:default}
-/* THE SWITCH CURSOR: an outline AND a marker, so the lit button reads without colour. */
-.mu [data-on="1"]{outline:max(3px, .8cqmin) solid var(--link);outline-offset:2px}
+/* THE SWITCH CURSOR: an outline AND a marker, so the lit button reads without colour. The theme's --scan-ring
+   (3:1 on every surface, every theme; theme.js), not the raw --link (2026-10-04). */
+.mu [data-on="1"]{outline:max(3px, .8cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
 .mu-btn[data-on="1"]::before{content:"\25B8\00a0"}
 .mu-head{font-size:clamp(14px, 3.8cqmin, 30px);font-weight:700;color:var(--text-strong)}
 .mu-field{display:flex;flex-direction:column;gap:4px;font-size:clamp(13px, 3cqmin, 22px)}
