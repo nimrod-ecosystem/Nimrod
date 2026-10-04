@@ -80,7 +80,9 @@ import {
   AI_SOURCE, SPEECH_TOPICS, DELIVERY_TOPIC, LISTEN_CHOICES, NAME_MAX, PERSONA_MAX, aiPrefs, openAIStore, isLocalAddress,
   createGuideChat, createActionQueue, allowedActions, isYes, isNo, parseReply,
   OLLAMA_URL, firstChatModel, helloMessages, HELLO_TOKENS, ollamaOriginLines, ollamaAllowsByDefault,
+  AI_BACKENDS, readAIBackend, writeAIBackend, createClaudeAI, claudeStatusLine, CLAUDE_SETTINGS_PAGE, CLAUDE_PLAIN_WORDS,
 } from '../nimrod_ai.js';
+import { authHeaders } from '../auth.js';
 import {
   draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, stamp, noteContextFrom, panelOf, contextLine,
   notesFileName, nearlyFull, NOTES_MAX,
@@ -137,7 +139,9 @@ export function connectHelp(name, reason = '') {
     + ` free on this computer with Ollama (ollama.com: download a model such as qwen2.5:3b, and let this website use it`
     + ` with Ollama’s OLLAMA_ORIGINS setting; the address is ${DEFAULT_BASE_URL});`
     + ' or any online service that speaks the OpenAI API, free or with your own key (its address, a model name and the key;'
-    + ' the key stays in this browser and goes only to that address). Nothing is sent anywhere until you talk.';
+    + ' the key stays in this browser and goes only to that address);'
+    + ` or Claude, on this account, if the account owner has saved a Claude key on ${CLAUDE_SETTINGS_PAGE} (kept on the server,`
+    + ' never in this browser, with a daily spending limit). Nothing is sent anywhere until you talk.';
 }
 
 // Every colour is a theme token. Sizes are in rem so the person's own text size carries.
@@ -211,7 +215,16 @@ registerModule(
     // ---- the AI side (only woken by a press) -------------------------------------------------------
     let view = 'guide';        // 'guide' | 'talk'
     let aiClient = null;
-    const ai = () => aiClient || (aiClient = ctx.ai || createAI());
+    // WHICH AI ANSWERS on this device (nimrod_ai.js AI_BACKENDS): 'local' and 'online' are ai.js (the host's
+    // `ctx.ai` in a suite); 'claude' is the server's, with no key in this browser. `ctx.aiStorage` and
+    // `ctx.claudeAI` are a suite's stand-ins for localStorage and the server.
+    const backendStore = () => { if (ctx.aiStorage) return ctx.aiStorage; try { return globalThis.localStorage || null; } catch { return null; } };
+    let backend = readAIBackend(backendStore());
+    const ai = () => aiClient || (aiClient = backend === 'claude'
+      ? (ctx.claudeAI || createClaudeAI({ ...(typeof ctx.serverFetch === 'function' ? { fetchImpl: ctx.serverFetch } : {}),
+        headers: () => authHeaders(ctx.user || undefined) }))
+      : (ctx.ai || createAI()));
+    let claudeCheck = null;    // null | { busy } | { ok, line } — "Check Claude on this account"
     let store = null;          // nimrod_ai.js openAIStore: the person's AI settings and notes
     let storeOpening = null;
     let aiP = aiPrefs({});
@@ -238,7 +251,7 @@ registerModule(
     // ---- setting the AI up (the guide's ai-* nodes, 2026-10-03) -------------------------------------
     let detect = null;         // null | { busy } | { ok: true, models, others, chosen } | { ok: false, reason }
     let detectAbort = null;
-    let otherOpen = false;     // "Use an online AI, or another address" on the connect step
+    let otherOpen = backend === 'online';   // the online address + key fields on the connect step
     let hello = null;          // null | { busy } | { ok: true, text, model } | { ok: false, reason }
     let helloAbort = null;
     // ---- notes from anywhere (2026-10-03) -----------------------------------------------------------
@@ -348,7 +361,8 @@ registerModule(
       try { s = ai().settings(); } catch { s = { baseUrl: DEFAULT_BASE_URL, model: '' }; }
       // A remote address is never given a model by itself: its list can hold paid models, and picking
       // the biggest (ai.js pickModel) could spend somebody's money without them choosing it.
-      if (!isLocalAddress(s.baseUrl) && !s.model) {
+      // ("Claude, on this account" has no address: its model is the account's own choice, on the server.)
+      if (s.backend !== 'claude' && !isLocalAddress(s.baseUrl) && !s.model) {
         status = { state: 'needs-model', model: '', reason: `Name the model to use at ${s.baseUrl} in “About ${aiP.name}”.` };
         render();
         return status;
@@ -357,7 +371,7 @@ registerModule(
       try { r = await ai().resolveModel(s.model || ''); } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
       if (torn) return status;
       if (!r?.ok) status = { state: 'none', model: '', reason: r?.reason || 'The AI did not answer.' };
-      else if (r.fellBack && !isLocalAddress(s.baseUrl)) status = { state: 'needs-model', model: '', reason: `That service has no model called “${s.model}”.` };
+      else if (r.fellBack && s.backend !== 'claude' && !isLocalAddress(s.baseUrl)) status = { state: 'needs-model', model: '', reason: `That service has no model called “${s.model}”.` };
       else status = { state: 'ok', model: r.model, reason: r.fellBack ? `“${s.model}” is not on this computer, so ${r.model} is answering.` : '' };
       render();
       return status;
@@ -370,6 +384,7 @@ registerModule(
         case 'checking': return `Looking for ${n}’s AI…`;
         case 'ok': {
           let s; try { s = ai().settings(); } catch { s = {}; }
+          if (s.backend === 'claude') return `Connected: Claude, on this account (${status.model}).`;
           return `Connected: ${status.model} at ${hostOf(s.baseUrl)}.${status.reason ? ` ${status.reason}` : ''}`;
         }
         case 'needs-model': return status.reason;
@@ -639,6 +654,26 @@ registerModule(
       notice = `${id} on this computer will answer.`;
       render();
     }
+    /** A backend pressed: that is the choice, kept on this device at once (like a model). Sends nothing. */
+    function setBackend(id) {
+      const was = backend;
+      backend = writeAIBackend(id, backendStore());
+      if (backend === 'online') otherOpen = true;
+      if (backend === 'local') otherOpen = false;
+      if (was !== backend) { aiClient = null; status = { state: 'unchecked', model: '', reason: '' }; claudeCheck = null; hello = null; }
+      notice = backend === 'claude' ? 'Claude, on this account, will answer here once the account has a key saved.' : '';
+      render();
+    }
+    /** "Check Claude on this account": one GET of the account's Claude status (not billed, no key in it). */
+    async function checkClaude() {
+      claudeCheck = { busy: true };
+      render();
+      let r;
+      try { r = await ai().status?.(); } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
+      if (torn) return;
+      claudeCheck = r?.ok ? { ok: !!r.status?.key_set, line: claudeStatusLine(r.status) } : { ok: false, line: r?.reason || 'Could not ask.' };
+      render();
+    }
     const fieldVal = (k) => root?.querySelector(`[data-ng-field="${k}"]`)?.value ?? null;
     function keepAI(patch) {
       aiP = aiPrefs({ ...aiP, ...patch });
@@ -649,6 +684,8 @@ registerModule(
       if (kind === 'ai-name') { const v = fieldVal('fname'); if (v != null) keepAI({ name: v }); return; }
       if (kind === 'ai-persona') { const v = fieldVal('fpersona'); if (v != null) keepAI({ persona: v }); return; }
       if (kind === 'ai-connect') {
+        // Claude: the choice is already kept (pressing it), and there is nothing else here to keep - no key.
+        if (backend === 'claude') { status = { state: 'unchecked', model: '', reason: '' }; return; }
         try {
           if (otherOpen && fieldVal('furl') != null) {
             ai().setSettings?.({ baseUrl: fieldVal('furl'), model: fieldVal('fmodel') || '' });
@@ -700,7 +737,7 @@ registerModule(
     function saveSetup() {
       const f = (k) => root?.querySelector(`[data-ng-field="${k}"]`)?.value ?? '';
       saveAI({ name: f('name'), persona: f('persona') });
-      try {
+      if (backend !== 'claude') try {
         ai().setSettings?.({ baseUrl: f('baseUrl'), model: f('model') });
         const key = f('key');
         if (key.trim()) ai().setKey?.(key);
@@ -771,6 +808,9 @@ registerModule(
     const btnHTML = (doWhat, label, help, extra = '') => `<button type="button" class="ng-btn" data-ng-stop data-ng-do="${doWhat}" ${extra}
         data-help="${esc(help)}">${label}</button>`;
     const pageOrigin = () => { try { return mount.ownerDocument.defaultView?.location?.origin || ''; } catch { return ''; } };
+    // Which AI answers: the three backends as buttons, the chosen one pressed. Used on the connect step and in About.
+    const backendRow = () => `<p class="ng-status">Which AI answers on this device:</p><div class="ng-btns" data-ng-backends>${AI_BACKENDS.map((b) =>
+      btnHTML('backend', esc(b.label), b.help, `data-ng-id="${esc(b.id)}" aria-pressed="${backend === b.id}"`)).join('')}</div>`;
 
     // The forms of the setup steps (nimrod_guide_data.js FORM_KINDS). Field names start with f so a value
     // kept across a redraw never lands in the talk view's own "About" fields.
@@ -799,6 +839,21 @@ registerModule(
             <p class="ng-status">${allowed ? 'This page is on this computer, so Ollama allows it already: it may simply not be running. Start Ollama and look again.'
               : `This page is ${esc(pageOrigin())}. If Ollama is running, it may not allow this website yet: see “Why can’t the website reach it?” below.`}</p>`;
         }
+        const choose = backendRow();
+        if (backend === 'claude') {
+          let res = '';
+          if (claudeCheck?.busy) res = '<p class="ng-status" data-ng-claude>Asking this website’s server…</p>';
+          else if (claudeCheck) res = `<p class="ng-status" data-ng-claude>${esc(claudeCheck.line)}</p>`;
+          return `<div class="ng-form ng-box" data-ng-form="ai-connect">${choose}
+            <p class="ng-status">Answering now: Claude, on this account. No key is kept in this browser.</p>
+            <ul class="ng-lines" data-ng-claude-words>${CLAUDE_PLAIN_WORDS.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>
+            <div class="ng-btns">
+              <a class="ng-btn ng-act" data-ng-stop data-ng-link data-ng-claude-page href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener"
+                data-help="Opens the Claude settings in a new tab: the account owner saves the key, picks the model and sees today’s spending there.">Claude settings: key, model, spending ↗</a>
+              ${claudeCheck?.busy ? '' : btnHTML('checkclaude', claudeCheck ? 'Check again' : 'Check Claude on this account',
+                'Asks this website’s server whether this account has a Claude key saved, and today’s spending. Nothing is sent to Claude.')}
+            </div>${res}</div>`;
+        }
         const other = otherOpen ? `<label for="ng-f-furl">The AI’s address (OpenAI-style, ending in /v1)</label>
             <input id="ng-f-furl" data-ng-field="furl" type="url" spellcheck="false" value="${esc(s.baseUrl || DEFAULT_BASE_URL)}">
             <label for="ng-f-fmodel">Model name (an online AI needs one; blank picks one on this computer)</label>
@@ -806,12 +861,11 @@ registerModule(
             <label for="ng-f-fkey">Your own key, if it needs one (kept in this browser only, sent only to that address)</label>
             <input id="ng-f-fkey" data-ng-field="fkey" type="password" autocomplete="off" placeholder="${keySaved ? 'A key is saved' : 'None'}">
             <div class="ng-btns">${btnHTML('saveother', 'Save this AI', 'Keep this address, model and key on this device.')}</div>` : '';
-        return `<div class="ng-form ng-box" data-ng-form="ai-connect">
+        return `<div class="ng-form ng-box" data-ng-form="ai-connect">${choose}
           <p class="ng-status">Answering now: ${esc(s.model || 'chosen automatically')} at ${esc(hostOf(s.baseUrl || DEFAULT_BASE_URL))}.</p>
-          <div class="ng-btns">${detect?.busy ? '' : btnHTML('detect', detect ? 'Look again' : 'Look for Ollama on this computer',
-            `Asks ${OLLAMA_URL} which models it has. Nothing else is sent.`)}
-            ${btnHTML('other', otherOpen ? 'Hide the other AI' : 'Use an online AI, or another address', 'A free online AI, or one you pay for with your own key.', `aria-expanded="${otherOpen}"`)}</div>
-          ${found}${other}</div>`;
+          ${backend === 'local' ? `<div class="ng-btns">${detect?.busy ? '' : btnHTML('detect', detect ? 'Look again' : 'Look for Ollama on this computer',
+            `Asks ${OLLAMA_URL} which models it has. Nothing else is sent.`)}</div>` : ''}
+          ${backend === 'local' ? found : ''}${other}</div>`;
       }
       if (kind === 'ai-origins') {
         const o = pageOrigin();
@@ -896,10 +950,13 @@ registerModule(
           <label for="ng-f-name">Name</label><input id="ng-f-name" data-ng-field="name" maxlength="40" value="${esc(n)}">
           <label for="ng-f-persona">How it talks (its persona, in your words)</label>
           <textarea id="ng-f-persona" data-ng-field="persona" maxlength="2000" placeholder="A patient, cheerful guide…">${esc(aiP.persona)}</textarea>
-          <label for="ng-f-url">AI address (this device)</label><input id="ng-f-url" data-ng-field="baseUrl" type="url" spellcheck="false" value="${esc(s.baseUrl || DEFAULT_BASE_URL)}">
+          ${backendRow()}
+          ${backend === 'claude' ? `<p class="ng-status">Claude, on this account: no key in this browser. The key, the model and the
+            daily limit are on the <a href="${esc(CLAUDE_SETTINGS_PAGE)}" target="_blank" rel="noopener" data-ng-claude-page>Claude settings page ↗</a>.</p>`
+            : `<label for="ng-f-url">AI address (this device)</label><input id="ng-f-url" data-ng-field="baseUrl" type="url" spellcheck="false" value="${esc(s.baseUrl || DEFAULT_BASE_URL)}">
           <label for="ng-f-model">Model (blank: choose one on this computer automatically)</label><input id="ng-f-model" data-ng-field="model" spellcheck="false" value="${esc(s.model || '')}">
           <label for="ng-f-key">Your own key, if the service needs one (kept in this browser only)</label>
-          <input id="ng-f-key" data-ng-field="key" type="password" autocomplete="off" placeholder="${keySaved ? 'A key is saved' : 'None'}">
+          <input id="ng-f-key" data-ng-field="key" type="password" autocomplete="off" placeholder="${keySaved ? 'A key is saved' : 'None'}">`}
           <div class="ng-btns" style="margin-top:8px">
             ${btn('savesetup', 'Save', 'Keep these, and try the AI again.')}
             ${keySaved ? btn('forgetkey', 'Forget the key', 'Remove the saved key from this browser.') : ''}
@@ -990,7 +1047,9 @@ registerModule(
         case 'detect': detectOllama(); return;
         case 'stopdetect': try { detectAbort?.abort(); } catch { /* done */ } return;
         case 'usemodel': useModel(id); return;
-        case 'other': otherOpen = !otherOpen; render(); return;
+        case 'other': setBackend('online'); return;
+        case 'backend': setBackend(id); return;
+        case 'checkclaude': checkClaude(); return;
         case 'saveother': saveOther(); return;
         case 'hello': sayHello(); return;
         case 'stophello': try { helloAbort?.abort(); } catch { /* done */ } return;
@@ -1175,7 +1234,7 @@ registerModule(
         view, listening, holding, thinking, status: { ...status }, ai: { ...aiP }, pending: pending(),
         log: chat.log(), notes: notes.map((x) => ({ ...x })), draft: draft ? { ...draft } : null, notice, listenHint,
         storeKind: store?.kind || null, detect: detect ? { ...detect } : null, hello: hello ? { ...hello } : null,
-        otherOpen, lastOther, context: noteContext() }),
+        otherOpen, lastOther, context: noteContext(), backend, claudeCheck: claudeCheck ? { ...claudeCheck } : null }),
       // For the suite: wait until every message sent so far is answered.
       __settled: () => sendChain,
     };

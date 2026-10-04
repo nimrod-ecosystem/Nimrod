@@ -13,6 +13,14 @@
 // `/chat/completions` at the address this device was given — a local Ollama (free), a free endpoint,
 // or the person's own key — is the AI. Nothing here knows which.
 //
+// *** AND A THIRD CHOICE (2026-10-03): "Claude, on this account" (`createClaudeAI`). *** Mike: an optional
+// Claude backend for one account's own use, "not something where I have to pay for everyone". It has the
+// SAME SHAPE as ai.js's client (settings, listModels, resolveModel, chat), so the guide, the hello, the
+// notes and the action queue below cannot tell it apart. The difference is where the key is: NOWHERE in
+// the browser. The account owner pastes it once on /claude.html; the server keeps it encrypted, calls
+// Claude, and enforces the account's daily spending limit (web/server/claude_ai.py). The local Ollama
+// stays the default (`DEFAULT_BACKEND`).
+//
 // *** THE NAME AND THE PERSONA ARE THE PERSON'S, NOT THE SITE'S. *** Default name "Nimrod" (he is the
 // guide already); any other name is somebody's own choice for their own AI, kept on THEIR person record
 // (`AI_STATE_KEY`, per person, follows them to every screen). The site never ships another name.
@@ -130,6 +138,139 @@ export function ollamaOriginLines(origin) {
     { os: 'Linux', how: `sudo systemctl edit ollama.service, add the two lines [Service] and Environment="OLLAMA_ORIGINS=${o}", then sudo systemctl restart ollama.` },
     { os: 'Already set?', how: `If OLLAMA_ORIGINS already lists other addresses, add this one after a comma: ...,${o}` },
   ];
+}
+
+// ---------------------------------------------------------------------------------------------------
+// *** WHICH AI ANSWERS (2026-10-03). *** Three backends, the local one first and the default.
+// PER DEVICE, like ai.js's address: the machine in front of you decides where its AI is (a desktop with
+// Ollama, a kiosk with none). The choice is not a secret, so it is plain localStorage, in try/catch.
+// ---------------------------------------------------------------------------------------------------
+export const AI_BACKEND_KEY = 'nimrod.ai.backend';
+export const DEFAULT_BACKEND = 'local';
+export const AI_BACKENDS = Object.freeze([
+  Object.freeze({ id: 'local', label: 'Local (Ollama)',
+    help: 'Free: an AI program on this computer. Nothing leaves it.' }),
+  Object.freeze({ id: 'online', label: 'Online address + your own key',
+    help: 'Any online AI that speaks the OpenAI API, free or with your own key. The key stays in this browser and goes only to that address.' }),
+  Object.freeze({ id: 'claude', label: 'Claude, on this account',
+    help: 'Claude, paid for by this account’s own Claude key, which the account owner saves once on the Claude settings page. The key is kept on the server, never in this browser.' }),
+]);
+const BACKEND_IDS = AI_BACKENDS.map((b) => b.id);
+const backendStorage = () => { try { return globalThis.localStorage || null; } catch { return null; } };
+
+/** This device's choice, or the default. Unreadable storage reads as the default, never a throw. */
+export function readAIBackend(storage = backendStorage()) {
+  let v = null;
+  try { v = storage ? storage.getItem(AI_BACKEND_KEY) : null; } catch { v = null; }
+  return BACKEND_IDS.includes(v) ? v : DEFAULT_BACKEND;
+}
+/** Keep a choice on this device. Returns what is now chosen. */
+export function writeAIBackend(id, storage = backendStorage()) {
+  const v = BACKEND_IDS.includes(id) ? id : DEFAULT_BACKEND;
+  try { storage?.setItem(AI_BACKEND_KEY, v); } catch { /* read-only storage */ }
+  return readAIBackend(storage);
+}
+
+// The server's doors (web/server/app.py, "CLAUDE, ON THIS ACCOUNT") and the owner's page.
+export const CLAUDE_API = '/api/ai/claude';
+export const CLAUDE_SETTINGS_PAGE = '/claude.html';
+export const CLAUDE_TIMEOUT_MS = 90 * 1000;
+// What is sent, the limit, and how to remove the key, in plain words: said on the connect step and on
+// the settings page, from this one list.
+export const CLAUDE_PLAIN_WORDS = Object.freeze([
+  'What is sent: only the words of the conversation (typed, or what the microphone heard) and the guide’s place, as text, to Anthropic, who make Claude. Never pictures, sound or files.',
+  'The key: saved once by the account owner on the Claude settings page, kept encrypted on the server, and never sent back to any screen or browser. Only its last four characters are ever shown.',
+  'The limit: a daily spending limit for the account, $1 a day unless the owner changes it. Past it, Claude stops answering until midnight UTC; the guide itself keeps working.',
+  'To remove the key: “Remove the key” on the Claude settings page. Also set a monthly spend limit for the key in the Anthropic Console, as a second wall.',
+]);
+
+const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
+/** One line for a status from GET /api/ai/claude: what answers, and today's spend against the limit. */
+export function claudeStatusLine(st) {
+  if (!st || typeof st !== 'object') return 'Could not read the Claude settings.';
+  if (!st.key_set) return 'Claude is not set up on this account yet: the account owner saves a key on the Claude settings page.';
+  const label = (st.chat_models || []).find((m) => m.id === st.chat_model)?.label || st.chat_model || 'Claude';
+  return `Claude is set up (key ending ${st.key_last4 || '????'}), answering with ${label}. Today: ${money(st.today?.usd)} of ${money(st.daily_cap_usd)}.`;
+}
+
+/**
+ * "Claude, on this account": ai.js's shape, answered by the server. NO KEY IS EVER HELD HERE: `hasKey` is
+ * always false and `setKey` stores nothing. `fetchImpl` and `headers` are the host's (the screen's
+ * X-Device-Key, or a signed-in session's cookie, same-origin).
+ */
+export function createClaudeAI({ fetchImpl = (...a) => fetch(...a), headers = () => ({}), base = '',
+                                 timeoutMs = CLAUDE_TIMEOUT_MS } = {}) {
+  let last = null;     // the last status the server gave
+  async function call(path, init = {}, { signal, timeoutMs: t } = {}) {
+    const ctl = new AbortController();
+    let timedOut = false;
+    const timer = setTimeout(() => { timedOut = true; ctl.abort(); }, Number(t) > 0 ? Number(t) : timeoutMs);
+    const onCancel = () => ctl.abort();
+    if (signal?.aborted) return { ok: false, cancelled: true, reason: 'Cancelled.' };
+    signal?.addEventListener?.('abort', onCancel);
+    try {
+      let h = {};
+      try { h = headers() || {}; } catch { h = {}; }
+      const res = await fetchImpl(`${base}${path}`, { ...init, headers: { ...(init.headers || {}), ...h },
+        credentials: 'same-origin', signal: ctl.signal });
+      let body = null;
+      try { body = await res.json(); } catch { body = null; }
+      if (!res.ok) {
+        const d = body && typeof body.detail === 'string' ? body.detail : '';
+        return { ok: false, status: res.status, reason: d || `The site answered with an error (${res.status}).` };
+      }
+      return { ok: true, body };
+    } catch (err) {
+      if (timedOut) return { ok: false, timedOut: true, reason: 'Claude took too long to answer and was stopped.' };
+      if (signal?.aborted || err?.name === 'AbortError') return { ok: false, cancelled: true, reason: 'Cancelled.' };
+      return { ok: false, reason: 'Could not reach this website’s server.' };
+    } finally {
+      clearTimeout(timer);
+      signal?.removeEventListener?.('abort', onCancel);
+    }
+  }
+  async function status({ signal } = {}) {
+    const r = await call(CLAUDE_API, { method: 'GET' }, { signal, timeoutMs: 15000 });
+    if (r.ok) last = r.body;
+    return r.ok ? { ok: true, status: r.body } : r;
+  }
+  async function listModels({ signal } = {}) {
+    const r = await status({ signal });
+    if (!r.ok) return { ok: false, models: [], reason: r.reason, cancelled: r.cancelled };
+    if (!r.status?.key_set) return { ok: false, models: [], reason: claudeStatusLine(r.status) };
+    return { ok: true, models: [r.status.chat_model] };
+  }
+  async function resolveModel(_preferred = '', { signal } = {}) {
+    const l = await listModels({ signal });
+    if (!l.ok) return { ok: false, model: null, models: [], reason: l.reason, cancelled: l.cancelled };
+    return { ok: true, model: l.models[0], models: l.models, fellBack: false };
+  }
+  /** One reply. `actions` (the allow-list, from createGuideChat) go to the server as tools. */
+  async function chat(messages, { maxTokens = 0, signal, timeoutMs: t, actions = [] } = {}) {
+    const started = Date.now();
+    const list = (Array.isArray(actions) ? actions : []).map((a) => ({ name: String(a?.name || ''), args: String(a?.args || ''), help: String(a?.help || '') }));
+    const body = { messages: (Array.isArray(messages) ? messages : []).map((m) => ({ role: m?.role, content: m?.content })),
+      actions: list, ...(Number(maxTokens) > 0 ? { max_tokens: Math.floor(Number(maxTokens)) } : {}) };
+    const r = await call(`${CLAUDE_API}/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body) }, { signal, timeoutMs: t });
+    if (!r.ok) return { ...r, ms: Date.now() - started };
+    const b = r.body || {};
+    if (!b.ok) return { ok: false, reason: b.reason || 'Claude did not answer.', refusal: !!b.refusal, ms: Date.now() - started };
+    return { ok: true, text: String(b.text || ''), model: b.model || null, ms: Date.now() - started, truncated: !!b.truncated,
+      spentToday: b.spent_today_usd, cap: b.daily_cap_usd };
+  }
+  return {
+    backend: 'claude',
+    settings: () => ({ backend: 'claude', baseUrl: '', model: last?.chat_model || '' }),
+    setSettings: () => ({ backend: 'claude', baseUrl: '', model: last?.chat_model || '' }),
+    hasKey: () => false,
+    setKey: () => false,
+    status,
+    lastStatus: () => last,
+    listModels,
+    resolveModel,
+    chat,
+  };
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -368,7 +509,10 @@ export function createGuideChat({ ai, prefs = () => aiPrefs({}), context = () =>
     ];
     busy = true;
     let r;
-    try { r = await ai.chat(msgs, { model: model() || '', temperature: 0.4, maxTokens: REPLY_TOKENS, signal }); }
+    // `actions`: the allow-list as data. ai.js ignores it (its models read the [[lines]] in the prompt);
+    // "Claude, on this account" sends it to the server, which offers each one as a strict tool.
+    const acts = list.map((a) => ({ name: a.name, args: a.args || '', help: a.help || '' }));
+    try { r = await ai.chat(msgs, { model: model() || '', temperature: 0.4, maxTokens: REPLY_TOKENS, signal, actions: acts }); }
     catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
     finally { busy = false; }
     if (!r || !r.ok) {

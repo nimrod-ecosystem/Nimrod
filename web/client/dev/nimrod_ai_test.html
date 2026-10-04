@@ -36,7 +36,10 @@ import {
   aiPrefs, isLocalAddress, parseReply, systemPrompt, createActionQueue, createGuideChat, registerAIAction,
   allowedActions, BUILTIN_ACTIONS, isYes, isNo, openAIStore, KEEP_TURNS,
   OLLAMA_URL, firstChatModel, helloMessages, HELLO_TEXT, ollamaAllowsByDefault, ollamaOriginLines,
+  AI_BACKENDS, AI_BACKEND_KEY, DEFAULT_BACKEND, readAIBackend, writeAIBackend, createClaudeAI, claudeStatusLine,
+  CLAUDE_API, CLAUDE_SETTINGS_PAGE, CLAUDE_PLAIN_WORDS,
 } from '../nimrod_ai.js';
+import { mountClaudeSettings } from '../claude_settings.js';
 import {
   stamp, fallbackNote, notePrompt, draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, NOTES_MAX,
   NOTES_WARN_AT, noteContextFrom, contextLine, notesFileName, nearlyFull,
@@ -600,7 +603,8 @@ try {
     // Nobody there: Ollama not running (or refusing this website).
     serverUp = false;
     const ai2 = fakeAI();
-    const g2 = await mountGuide({ ai: ai2, extra: { aiFetch }, state: fakeState({ walk: [GUIDE_ROOT, 'ai-setup', 'ai-connect'] }) });
+    const mem2 = new Map();   // this device's backend choice, kept off the real localStorage
+    const g2 = await mountGuide({ ai: ai2, extra: { aiFetch, aiStorage: { getItem: (k) => mem2.get(k) ?? null, setItem: (k, v) => mem2.set(k, v), removeItem: (k) => mem2.delete(k) } }, state: fakeState({ walk: [GUIDE_ROOT, 'ai-setup', 'ai-connect'] }) });
     g2.doBtn('detect').click();
     await until(() => g2.probe().detect && !g2.probe().detect.busy);
     check('*** not found: says so plainly, and what to do (this page is on this computer, so it may not be running) ***',
@@ -611,8 +615,8 @@ try {
       && g2.q('[data-ng-origin]')?.textContent === location.origin
       && (ollamaAllowsByDefault(location.origin) ? /allows it already/ : /OLLAMA_ORIGINS/).test(g2.q('[data-ng-form]').textContent));
     g2.q('[data-ng-back]').click();
-    // The other ways: a free online AI, or your own key.
-    g2.doBtn('other').click();
+    // The other ways: a free online AI, or your own key (since 2026-10-03 one of the three backend buttons).
+    g2.mount.querySelector('[data-ng-do="backend"][data-ng-id="online"]').click();
     g2.q('[data-ng-field="furl"]').value = 'https://api.example.com/v1';
     g2.q('[data-ng-field="fmodel"]').value = 'free-model-1';
     g2.q('[data-ng-field="fkey"]').value = 'sk-test-not-real';
@@ -733,6 +737,177 @@ try {
     const after = new KeyboardEvent('keydown', { key: 'n', bubbles: true, cancelable: true });
     document.body.dispatchEvent(after);
     check('taken away: N is not heard any more', !after.defaultPrevented);
+  }
+
+  // ============================================================================================
+  section('*** 2026-10-03: which AI answers — Local (Ollama) by default, an online address, or Claude on this account ***');
+  {
+    const memStorage = () => { const m = new Map(); return { m, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k) }; };
+    const lsSnapshot = () => { const o = {}; try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); o[k] = localStorage.getItem(k); } } catch { /* none */ } return o; };
+    const noKeyAnywhere = (snap) => !Object.values(snap).some((v) => /sk-ant-/.test(String(v)));
+    check('*** three choices, the local one first and the default ***', J(AI_BACKENDS.map((b) => b.label))
+      === J(['Local (Ollama)', 'Online address + your own key', 'Claude, on this account']) && DEFAULT_BACKEND === 'local');
+    const st0 = memStorage();
+    check('nothing saved: Local', readAIBackend(st0) === 'local' && readAIBackend(null) === 'local');
+    check('a choice is kept on the device; junk reads as Local', writeAIBackend('claude', st0) === 'claude' && st0.m.get(AI_BACKEND_KEY) === 'claude'
+      && writeAIBackend('evil', st0) === 'local' && (st0.setItem(AI_BACKEND_KEY, 'x'), readAIBackend(st0)) === 'local');
+    check('unreadable storage is the default, never a throw', readAIBackend({ getItem() { throw new Error('blocked'); } }) === 'local');
+    check('*** the plain words: text only, the key on the server, the limit, how to remove it ***',
+      /only the words/.test(CLAUDE_PLAIN_WORDS[0]) && /Never pictures, sound or files/.test(CLAUDE_PLAIN_WORDS[0])
+      && /never sent back/.test(CLAUDE_PLAIN_WORDS[1]) && /daily spending limit/.test(CLAUDE_PLAIN_WORDS[2]) && /Remove the key/.test(CLAUDE_PLAIN_WORDS[3])
+      && /Anthropic Console/.test(CLAUDE_PLAIN_WORDS[3]) && !NAMES.test(CLAUDE_PLAIN_WORDS.join(' ')));
+
+    // A FAKE SERVER for the Claude routes: records every request; never sees a key from the browser.
+    const STATUS = { key_set: true, key_last4: 'AB12', chat_model: 'claude-haiku-4-5', daily_cap_usd: 1, today: { usd: 0.0123, requests: 3 },
+      chat_models: [{ id: 'claude-haiku-4-5', label: 'Claude Haiku 4.5 (fast, cheapest)' }], quiz_models: [], days: [], can_store: true, sdk_installed: true, max_daily_cap_usd: 50 };
+    const srv = { reqs: [], replies: [], status: { ...STATUS }, fail: null };
+    const serverFetch = async (url, init = {}) => {
+      const body = init.body ? JSON.parse(init.body) : null;
+      srv.reqs.push({ url, method: init.method, headers: { ...(init.headers || {}) }, credentials: init.credentials, body });
+      const res = (code, j) => ({ ok: code < 400, status: code, json: async () => j, text: async () => JSON.stringify(j) });
+      if (srv.fail) return res(srv.fail.code, { detail: srv.fail.detail });
+      if (url.endsWith('/api/ai/claude') && init.method === 'GET') return res(200, srv.status);
+      if (url.endsWith('/api/ai/claude/chat')) return res(200, srv.replies.length ? srv.replies.shift() : { ok: true, text: 'Okay.', model: 'claude-haiku-4-5', spent_today_usd: 0.02, daily_cap_usd: 1 });
+      return res(404, { detail: 'no' });
+    };
+    const before = lsSnapshot();
+    const cl = createClaudeAI({ fetchImpl: serverFetch, headers: () => ({ 'X-Dev-User': 'tester' }) });
+    check('*** the Claude client holds NO key: hasKey is false and setKey stores nothing ***',
+      cl.hasKey() === false && cl.setKey('sk-ant-api03-not-real-at-all-0000') === false && cl.hasKey() === false && J(lsSnapshot()) === J(before));
+    const lm = await cl.resolveModel('');
+    check('its model is the account’s choice, from the server', lm.ok && lm.model === 'claude-haiku-4-5' && srv.reqs[0].url === CLAUDE_API && srv.reqs[0].method === 'GET');
+    srv.replies.push({ ok: true, text: 'Here are the themes.\n[[page sc-theme]]', model: 'claude-haiku-4-5', spent_today_usd: 0.03, daily_cap_usd: 1 });
+    const cr = await cl.chat([{ role: 'system', content: 'S' }, { role: 'user', content: 'show me the themes' }],
+      { maxTokens: 400, actions: [{ name: 'page', args: '<sc-theme>', help: 'show that page', run: () => {} }] });
+    const pr = srv.reqs.at(-1);
+    check('*** chat: one POST to the account’s route, same-origin, the host’s auth header, NO Authorization/key ***',
+      pr.url === `${CLAUDE_API}/chat` && pr.method === 'POST' && pr.credentials === 'same-origin' && pr.headers['X-Dev-User'] === 'tester'
+      && !('Authorization' in pr.headers) && !/sk-ant-/.test(JSON.stringify(pr)), J(pr));
+    check('*** the allow-list goes as data (name, args, help — never a function), with the text messages ***',
+      J(pr.body.actions) === J([{ name: 'page', args: '<sc-theme>', help: 'show that page' }]) && pr.body.max_tokens === 400
+      && J(pr.body.messages) === J([{ role: 'system', content: 'S' }, { role: 'user', content: 'show me the themes' }]));
+    check('the reply comes back in ai.js’s shape (text with the [[line]] for parseReply), with today’s spend',
+      cr.ok && cr.text === 'Here are the themes.\n[[page sc-theme]]' && cr.spentToday === 0.03 && cr.cap === 1, J(cr));
+    srv.replies.push({ ok: false, refusal: true, reason: 'Claude declined to answer that one. Try asking another way.' });
+    const rf = await cl.chat([{ role: 'user', content: 'x' }]);
+    check('a refusal is ok:false with the server’s plain sentence', rf.ok === false && rf.refusal && /declined/.test(rf.reason));
+    srv.fail = { code: 429, detail: 'Today’s Claude spending limit for this account is reached ($1.00 of $1.00).' };
+    const capped = await cl.chat([{ role: 'user', content: 'x' }]);
+    check('*** past the daily limit: ok:false, the server’s words (the guide shows them) ***', capped.ok === false && /spending limit/.test(capped.reason));
+    srv.fail = null;
+    srv.status = { ...STATUS, key_set: false, key_last4: null };
+    const nm = await cl.listModels();
+    check('no key on the account: not connected, saying where the owner saves one', nm.ok === false && /Claude settings page/.test(nm.reason));
+    srv.status = { ...STATUS };
+    check('the status line: key ending, model, today against the limit', claudeStatusLine(STATUS)
+      === 'Claude is set up (key ending AB12), answering with Claude Haiku 4.5 (fast, cheapest). Today: $0.01 of $1.00.');
+
+    // createGuideChat sends the allow-list with every message (ai.js ignores it; Claude uses it).
+    const fa = fakeAI({ replies: ['Sure.'] });
+    const gc = createGuideChat({ ai: fa });
+    await gc.send('hello');
+    check('*** the guide chat sends the allow-list as data with each message ***',
+      J(fa.calls.chat[0].opts.actions.map((a) => a.name)) === J(allowedActions().map((a) => a.name))
+      && fa.calls.chat[0].opts.actions.every((a) => Object.keys(a).join() === 'name,args,help'));
+
+    // THE MODULE: the connect step, Claude chosen, the hello and a talk through the fake server.
+    srv.reqs.length = 0;
+    const aiStorage = memStorage();
+    const localAI = fakeAI();
+    const lsBefore = lsSnapshot();
+    const g = await mountGuide({ ai: localAI, person: 'cl1', extra: { aiStorage, serverFetch }, state: fakeState({ walk: [GUIDE_ROOT, 'ai-setup', 'ai-connect'] }) });
+    const bk = (id) => g.mount.querySelector(`[data-ng-do="backend"][data-ng-id="${id}"]`);
+    check('*** the connect step offers the three, Local pressed (the default) ***', g.probe().id === 'ai-connect' && g.probe().backend === 'local'
+      && bk('local')?.getAttribute('aria-pressed') === 'true' && bk('claude')?.getAttribute('aria-pressed') === 'false' && !!bk('online') && !!g.doBtn('detect'));
+    check('arriving sent nothing to the server either', srv.reqs.length === 0);
+    bk('online').click();
+    check('"Online address + your own key": the address, model and key fields', g.probe().backend === 'online' && !!g.q('[data-ng-field="furl"]')
+      && !!g.q('[data-ng-field="fkey"]') && aiStorage.m.get(AI_BACKEND_KEY) === 'online');
+    bk('claude').click();
+    check('*** "Claude, on this account": chosen on this device, NO key field, the plain words, the settings page link ***',
+      g.probe().backend === 'claude' && aiStorage.m.get(AI_BACKEND_KEY) === 'claude' && !g.q('[data-ng-field="fkey"]') && !g.q('[data-ng-field="key"]')
+      && g.q('[data-ng-claude-words]')?.children.length === CLAUDE_PLAIN_WORDS.length
+      && g.q('[data-ng-claude-page]')?.getAttribute('href') === CLAUDE_SETTINGS_PAGE && g.q('[data-ng-claude-page]')?.target === '_blank');
+    check('choosing sent nothing', srv.reqs.length === 0);
+    g.doBtn('checkclaude').click();
+    await until(() => g.probe().claudeCheck && !g.probe().claudeCheck.busy);
+    check('*** "Check Claude on this account": one GET of the status, shown in words ***', srv.reqs.length === 1 && srv.reqs[0].method === 'GET'
+      && /key ending AB12/.test(g.q('[data-ng-claude]').textContent), g.q('[data-ng-claude]')?.textContent);
+    [...g.mount.querySelectorAll('[data-ng-choice]')].find((b) => /Next: say hello/.test(b.textContent)).click();
+    srv.replies.push({ ok: true, text: 'Hello, I am Nimrod!', model: 'claude-haiku-4-5', spent_today_usd: 0.02, daily_cap_usd: 1 });
+    g.doBtn('hello').click();
+    await until(() => g.probe().hello && !g.probe().hello.busy);
+    const hp = srv.reqs.find((r) => r.url.endsWith('/chat'));
+    check('*** "Say hello" goes to the account’s Claude route (not to Ollama), and the answer is shown ***',
+      g.probe().hello?.ok && /Hello, I am Nimrod!/.test(g.q('[data-ng-hello]').textContent) && !!hp && localAI.calls.chat.length === 0, J(g.probe().hello));
+    [...g.mount.querySelectorAll('[data-ng-choice]')].find((b) => /Next: you’re set/.test(b.textContent)).click();
+    g.doBtn('talk').click();
+    await until(() => g.probe().status.state === 'ok');
+    check('the talk view says Claude, on this account, is answering', /Connected: Claude, on this account/.test(g.q('[data-ng-status]').textContent));
+    srv.replies.push({ ok: true, text: 'Here are the themes.\n[[page sc-theme]]', model: 'claude-haiku-4-5', spent_today_usd: 0.03, daily_cap_usd: 1 });
+    await g.type('show me the themes');
+    const tp = srv.reqs.filter((r) => r.url.endsWith('/chat')).at(-1);
+    check('*** a message carries the guide prompt, the words, and the allow-list as data ***', tp.body.messages[0].role === 'system'
+      && tp.body.messages.at(-1).content === 'show me the themes' && J(tp.body.actions.map((a) => a.name)) === J(allowedActions().map((a) => a.name)));
+    check('*** the action Claude asked for WAITS FOR A PRESS, as with any AI ***', g.probe().pending.length === 1 && g.probe().pending[0].name === 'page'
+      && /Here are the themes/.test(g.q('[data-ng-log]').textContent));
+    g.doBtn('setup').click();
+    check('About shows the choice and the settings page, and no address or key fields under Claude',
+      !!g.q('[data-ng-backends]') && !g.q('[data-ng-field="key"]') && !g.q('[data-ng-field="baseUrl"]') && !!g.q('[data-ng-claude-page]'));
+    check('*** NO KEY in localStorage, nor in this device’s backend store: only the word "claude" ***',
+      noKeyAnywhere(lsSnapshot()) && J(lsSnapshot()) === J(lsBefore) && J([...aiStorage.m.entries()]) === J([[AI_BACKEND_KEY, 'claude']]));
+    check('*** and no request to the server ever carried a key or an Authorization header ***',
+      srv.reqs.every((r) => !('Authorization' in (r.headers || {})) && !/sk-ant-/.test(JSON.stringify(r))));
+    bk('local').click();
+    check('back to Local: the local AI answers again', g.probe().backend === 'local' && aiStorage.m.get(AI_BACKEND_KEY) === 'local');
+    g.done();
+
+    // THE OWNER'S PAGE (/claude.html): the key goes one way.
+    const page = { reqs: [], status: { ...STATUS, key_set: false, key_last4: null, chat_models: [{ id: 'claude-haiku-4-5', label: 'Haiku' }, { id: 'claude-sonnet-5-5', label: 'Sonnet' }],
+      quiz_models: [{ id: 'claude-opus-5-5', label: 'Opus' }], quiz_model: 'claude-opus-5-5', days: [{ day: '2026-10-03', usd: 0.0123, requests: 3 }] }, deny: false };
+    const pageFetch = async (url, init = {}) => {
+      const body = init.body ? JSON.parse(init.body) : null;
+      page.reqs.push({ url, method: init.method, body, headers: { ...(init.headers || {}) } });
+      const res = (code, j) => ({ ok: code < 400, status: code, json: async () => j });
+      if (page.deny && init.method !== 'GET') return res(403, { detail: 'Change the Claude settings from your own phone or computer, signed in - not from a screen.' });
+      if (init.method === 'PUT' && url.endsWith('/key')) { page.status = { ...page.status, key_set: true, key_last4: body.key.slice(-4) }; return res(200, page.status); }
+      if (init.method === 'PUT' && url.endsWith('/settings')) { page.status = { ...page.status, ...body }; return res(200, page.status); }
+      if (init.method === 'DELETE') { page.status = { ...page.status, key_set: false, key_last4: null }; return res(200, page.status); }
+      return res(200, page.status);
+    };
+    const host = box();
+    const lsB = lsSnapshot();
+    const cs = mountClaudeSettings(host, { fetchImpl: pageFetch, headers: () => ({ 'X-Dev-User': 'owner' }) });
+    await cs.ready;
+    const key = host.querySelector('[data-cs-key]');
+    check('*** the page: status, the plain words, an EMPTY password field for the key ***', /not set up/.test(host.querySelector('[data-cs-status]').textContent)
+      && key?.type === 'password' && key.value === '' && host.querySelector('[data-cs-words]')?.children.length === CLAUDE_PLAIN_WORDS.length);
+    check('today’s spend against the limit, and the week', /\$0\.01 of \$1\.00/.test(host.querySelector('[data-cs-today]').textContent) && !!host.querySelector('[data-cs-days]'));
+    key.value = 'sk-ant-api03-not-a-real-key-just-a-test-WXYZ';
+    host.querySelector('[data-cs-do="savekey"]').click();
+    check('the field is emptied the moment Save is pressed', host.querySelector('[data-cs-key]').value === '');
+    await until(() => !cs.state().busy && cs.state().status?.key_set);
+    const put = page.reqs.find((r) => r.method === 'PUT');
+    check('*** Save sends the key ONCE, to the server, and the page then shows only its last four ***', put?.url === `${CLAUDE_API}/key` && put.body.key.endsWith('WXYZ')
+      && host.querySelector('[data-cs-last4]')?.textContent === 'WXYZ' && !host.innerHTML.includes('not-a-real-key') && host.querySelector('[data-cs-key]').value === '');
+    check('*** nothing went into localStorage ***', J(lsSnapshot()) === J(lsB) && noKeyAnywhere(lsSnapshot()));
+    host.querySelector('[data-cs-chat]').value = 'claude-sonnet-5-5';
+    host.querySelector('[data-cs-cap]').value = '2.5';
+    host.querySelector('[data-cs-do="savesettings"]').click();
+    await until(() => !cs.state().busy && page.reqs.some((r) => r.url.endsWith('/settings')));
+    const sp = page.reqs.find((r) => r.url.endsWith('/settings'));
+    check('the models and the limit are saved', sp.body.chat_model === 'claude-sonnet-5-5' && sp.body.daily_cap_usd === 2.5 && sp.body.quiz_model === 'claude-opus-5-5');
+    page.deny = true;
+    host.querySelector('[data-cs-do="removekey"]').click();
+    await until(() => !cs.state().busy && /not from a screen/.test(cs.state().msg));
+    check('*** a screen is refused by the server, and the page says the server’s sentence ***', /not from a screen/.test(host.querySelector('[data-cs-msg]')?.textContent || '')
+      && cs.state().status.key_set === true);
+    page.deny = false;
+    host.querySelector('[data-cs-do="removekey"]').click();
+    await until(() => !cs.state().busy && cs.state().status?.key_set === false);
+    check('"Remove the key" removes it', /removed/.test(host.querySelector('[data-cs-msg]').textContent) && /not set up/.test(host.querySelector('[data-cs-status]').textContent));
+    check('the page names nobody', !NAMES.test(host.textContent));
+    host.remove();
   }
 } catch (err) {
   check('*** the run itself did not throw ***', false, String(err?.stack || err));
