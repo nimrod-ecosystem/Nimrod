@@ -35,8 +35,9 @@ import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 // screen" resolved the same way, and a second copy of this is exactly the kind of drift
 // module_try.js's own header warns about.
 // `personId` (2026-10-04, try_new.js): ONE person's default screen -- theirs, made for them if they have none --
-// instead of the account's. Used for a test person ("Try it as someone new"), whose first visit must make and use
-// a screen of THEIR own, exactly as a brand-new account's does, and never the owner's. Omitted: unchanged.
+// instead of the account's. First for a test person ("Try it as someone new"); since the same day for whoever Home
+// (modules.html) shows, so an account with several people never shows or edits one person's screen as another's.
+// Omitted (the kiosk's any-screen-will-do fallback, `resolveTheme`): unchanged.
 export async function ensureProfile(profiles, user, wantProfile = null, { personId = '' } = {}) {
   let list = await cachedFetch(`profiles:${user}${personId ? `:${personId}` : ''}`,
     () => (personId ? profiles.list(personId) : profiles.list()));

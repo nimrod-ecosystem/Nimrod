@@ -121,6 +121,8 @@ export const SUITES = [
   'nimrod_ai',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
+  // 2026-10-04: Home follows the person picked on the people bar (their screen, theme, Home; one made if none).
+  'home_person',
   // 2026-10-02: AI characters as profiles (seeds, a person's own, rooms as dashboards) and the profile card.
   'ai_characters', 'profile',
   // 2026-10-02: "Modules", the library of everything addable (categories, sort, filter, the game's locks,
