@@ -511,6 +511,17 @@ def my_voice_tests():
     path at START, on the machine it runs on, and a browser's folder picker gives a handle, never a path. So the
     service has ONE place of its own to look (speech_service/my_voice_model/), and nobody types a path anywhere.
     `--model` still names a folder kept elsewhere. Kept out of git: a person's voice is not project history."""
+    from speech_service import __main__ as cli
+    # The checks below are about having NO Nimrod folder: a nimrod_folder.txt on this computer must not change them.
+    saved_file = cli.NIMROD_FOLDER_FILE
+    cli.NIMROD_FOLDER_FILE = str(Path(__file__).resolve().parent / 'no-such-nimrod_folder.txt')
+    try:
+        _my_voice_checks()
+    finally:
+        cli.NIMROD_FOLDER_FILE = saved_file
+
+
+def _my_voice_checks():
     import contextlib
     import io
     import subprocess
@@ -564,6 +575,14 @@ def my_voice_tests():
 
     # *** KEPT OUT OF GIT. *** Asked of git itself, so a rule that stops matching fails here.
     repo = here.parent.parent
+    for probe_file in ('web/speech_service/nimrod_folder.txt',):
+        try:
+            r = subprocess.run(['git', 'check-ignore', '-q', probe_file], cwd=repo, capture_output=True, timeout=20)
+            check('*** git ignores speech_service/nimrod_folder.txt (it names a folder on somebody\'s computer) ***',
+                  r.returncode == 0, r.returncode)
+        except (OSError, subprocess.SubprocessError):
+            text = (repo / '.gitignore').read_text(encoding='utf-8', errors='replace')
+            check('*** .gitignore names speech_service/nimrod_folder.txt ***', probe_file in text)
     probe = 'web/speech_service/my_voice_model/model.bin'
     try:
         r = subprocess.run(['git', 'check-ignore', '-q', probe], cwd=repo, capture_output=True, timeout=20)
@@ -574,6 +593,95 @@ def my_voice_tests():
         text = (repo / '.gitignore').read_text(encoding='utf-8', errors='replace')
         check('*** .gitignore names speech_service/my_voice_model/ (no git here to ask) ***',
               'web/speech_service/my_voice_model/' in text)
+
+
+def root_tests():
+    """`--root` (2026-10-04). Mike: "giving them an empty folder tree ... they can set the root once in the site
+    and everything else could autopopulate the folder location." The site now sets up a Nimrod folder with a
+    "Voice model" subfolder; the service follows it: --my-voice loads "<root>/Voice model", falling back to
+    speech_service/my_voice_model as before; --model still wins. The root comes from --root, or from the first
+    line of speech_service/nimrod_folder.txt."""
+    import contextlib
+    import io
+    import re
+    import tempfile
+    from speech_service import __main__ as cli
+    from speech_service.backends import VOICE_MODEL_SUBFOLDER
+
+    here = Path(__file__).resolve().parent
+    # *** ONE NAME, TWO LANGUAGES. *** The site makes the folder; the service looks in it. Read from the site's file.
+    js = (here.parent / 'client' / 'user_folders.js').read_text(encoding='utf-8')
+    m = re.search(r"\bvoice:\s*'([^']+)'", js)
+    check('*** the service\'s "Voice model" folder name is the one the site makes (user_folders.js SUBFOLDERS) ***',
+          m is not None and m.group(1) == VOICE_MODEL_SUBFOLDER == 'Voice model', m and m.group(1))
+    check('--root is read', cli.parse(['--root', 'D:/Nimrod']).root == 'D:/Nimrod' and cli.parse([]).root is None)
+
+    saved_file, saved_dir = cli.NIMROD_FOLDER_FILE, cli.MY_VOICE_DIR
+
+    def run(argv):
+        err = io.StringIO()
+        with contextlib.redirect_stderr(err):
+            code = cli.main(argv)
+        return code, err.getvalue()
+
+    with tempfile.TemporaryDirectory() as d:
+        D = Path(d)
+        root = D / 'My Nimrod'
+        voice = root / VOICE_MODEL_SUBFOLDER
+        voice.mkdir(parents=True)
+        (voice / 'README.txt').write_text('Put the converted voice model here.', encoding='utf-8')
+        old = D / 'my_voice_model'
+        cli.NIMROD_FOLDER_FILE = str(D / 'nimrod_folder.txt')        # not there yet
+        cli.MY_VOICE_DIR = str(old)                                  # not there yet
+        try:
+            # 1. The site's tree with nothing in "Voice model" yet, and no old folder either.
+            code, msg = run(['--my-voice', '--root', str(root)])
+            check('*** root set, "Voice model" holds only the site\'s README, no old folder: exit 2, naming <root>/Voice model ***',
+                  code == 2 and str(voice) in msg and 'no model' in msg and 'model.bin' in msg and '--model' in msg, (code, msg))
+            # 2. ...with the old folder there: it falls back to it, and says why.
+            old.mkdir()
+            a = cli.parse(['--my-voice', '--root', str(root)])
+            folder, how, note = cli.my_voice_folder(a)
+            check('*** nothing in <root>/Voice model yet: it falls back to speech_service/my_voice_model, and says so ***',
+                  folder == str(old) and how == 'fallback' and str(voice) in note, (folder, how, note))
+            # 3. A model in <root>/Voice model: that is the one, before the old folder.
+            (voice / 'model.bin').write_bytes(b'')
+            check('*** a model in <root>/Voice model: --my-voice loads it, on 8796 ***',
+                  cli.model_and_port(a) == (str(voice), 8796) and cli.my_voice_folder(a)[1] == 'root', cli.model_and_port(a))
+            code, msg = run(['--my-voice', '--root', str(root)])
+            check('*** ...checked at start like any model folder: every missing file named, under <root>/Voice model ***',
+                  code == 2 and str(voice) in msg and 'tokenizer.json' in msg and 'config.json' in msg, (code, msg))
+            # 4. --model is still the override.
+            check('*** --model still wins over --root ***',
+                  cli.model_and_port(cli.parse(['--my-voice', '--root', str(root), '--model', 'D:/elsewhere'])) == ('D:/elsewhere', 8796))
+            # 5. Without --my-voice, --root changes nothing.
+            check('without --my-voice, --root changes nothing (small.en on 8797)',
+                  cli.model_and_port(cli.parse(['--root', str(root)])) == ('small.en', 8797))
+            # 6. The file: its first real line, quotes taken off, comments and blanks skipped.
+            Path(cli.NIMROD_FOLDER_FILE).write_text(f'# my Nimrod folder\n\n"{root}"\n', encoding='utf-8')
+            check('*** nimrod_folder.txt: the first line that is not a comment, quotes taken off ***',
+                  cli.read_root_file(cli.NIMROD_FOLDER_FILE) == str(root), cli.read_root_file(cli.NIMROD_FOLDER_FILE))
+            check('*** no --root: the file names the Nimrod folder, and --my-voice loads its Voice model ***',
+                  cli.model_and_port(cli.parse(['--my-voice'])) == (str(voice), 8796), cli.model_and_port(cli.parse(['--my-voice'])))
+            other = D / 'Other'
+            (other / VOICE_MODEL_SUBFOLDER).mkdir(parents=True)
+            (other / VOICE_MODEL_SUBFOLDER / 'model.bin').write_bytes(b'')
+            check('--root beats the file', cli.model_and_port(cli.parse(['--my-voice', '--root', str(other)]))[0] == str(other / VOICE_MODEL_SUBFOLDER))
+            Path(cli.NIMROD_FOLDER_FILE).write_text('# nothing yet\n\n', encoding='utf-8')
+            check('a file with only comments names nothing', cli.read_root_file(cli.NIMROD_FOLDER_FILE) is None)
+            check('no file names nothing', cli.read_root_file(str(D / 'nope.txt')) is None)
+            # 7. A root that does not exist (a typo, an unplugged drive): the old folder if there, said plainly.
+            folder, how, note = cli.my_voice_folder(cli.parse(['--my-voice', '--root', str(D / 'Typo')]))
+            check('*** a Nimrod folder that does not exist: falls back to the old folder, and says the folder is missing ***',
+                  how == 'fallback' and 'does not exist' in note, (folder, how, note))
+            # 8. A training checkpoint left in Voice model is USED (and refused with names), never skipped silently.
+            (voice / 'model.bin').unlink()
+            (voice / 'model.safetensors').write_bytes(b'')
+            code, msg = run(['--my-voice', '--root', str(root)])
+            check('*** a checkpoint (not converted) in <root>/Voice model: refused, saying what is missing and how to convert ***',
+                  code == 2 and str(voice) in msg and 'model.bin' in msg and 'ct2-transformers-converter' in msg, (code, msg))
+        finally:
+            cli.NIMROD_FOLDER_FILE, cli.MY_VOICE_DIR = saved_file, saved_dir
 
 
 if __name__ == '__main__':
@@ -589,6 +697,7 @@ if __name__ == '__main__':
     wake_model_tests()
     model_folder_tests()
     my_voice_tests()
+    root_tests()
     fastapi_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')

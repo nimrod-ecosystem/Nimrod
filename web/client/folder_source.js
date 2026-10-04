@@ -127,15 +127,37 @@ async function getRow(id) {
 export async function pickFolder(label = '') {
   if (!isFolderPickerSupported()) throw new Error('This browser cannot open a folder directly.');
   const handle = await window.showDirectoryPicker({ id: 'nimrod-media', mode: 'read' });
+  return addFolderSource(handle, label);
+}
+
+/**
+ * A folder this device ALREADY HAS a handle for, kept as a folder source with no picker (2026-10-04): the
+ * Pictures, Music or Videos folder of the person's Nimrod folder (user_folders.js), or a folder they pointed
+ * one of those kinds at. The same row `pickFolder` keeps, so every panel treats it the same. Nothing is copied:
+ * a source is a handle, and the files stay where they are.
+ */
+export async function addFolderSource(handle, label = '') {
+  if (!handle) throw new Error('No folder to connect.');
   const id = (crypto.randomUUID && crypto.randomUUID()) || `f${Date.now()}`;
   const row = {
     id,
-    label: label.trim() || handle.name || 'Folder',
+    label: String(label || '').trim() || handle.name || 'Folder',
     handle,
     created_at: new Date().toISOString(),
   };
   await tx('readwrite', (s) => s.put(row));
   return toSource(row);
+}
+
+/** The folder source already kept for this very folder (`isSameEntry`), or null. Never throws. */
+export async function findFolderSource(handle) {
+  if (!handle || typeof indexedDB === 'undefined') return null;
+  let rows = [];
+  try { rows = (await tx('readonly', (s) => reqAsPromise(s.getAll()))) || []; } catch { return null; }
+  for (const row of rows) {
+    try { if (row.handle && await row.handle.isSameEntry(handle)) return toSource(row); } catch { /* a stale handle */ }
+  }
+  return null;
 }
 
 export async function removeFolderSource(id) {

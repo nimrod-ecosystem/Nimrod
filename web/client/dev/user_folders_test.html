@@ -13,7 +13,9 @@
 </head>
 <body>
 <h1>user folders — row 2.49 (and its screen, user_folders_page.js)</h1>
-<p>The one storage root's <code>fonts/</code>, <code>luts/</code> and <code>audio-plugins/</code> subfolders,
+<p>The one storage root ("your Nimrod folder", set up by the page since 2026-10-04: Pictures, Music, Videos, Fonts,
+Colour looks, Audio plugins, Voice model, Recordings - with the first tree's <code>fonts/</code>, <code>luts/</code> and
+<code>audio-plugins/</code> still found),
 against FAKE folders (an in-memory directory handle — no picker, no prompt, no files). The colour grade is
 checked by actually drawing through the SVG filter; the plugin loader by actually importing modules and
 running an AudioWorklet from rewritten <code>blob:</code> URLs in an OfflineAudioContext.</p>
@@ -36,6 +38,10 @@ import { loadedFamilies, userFontOptions, loadDeviceFonts, USER_FONTS_EVENT } fr
 import { refreshGrade, reconcileGrade, FIRST_LOOK_TARGETS } from '../lut.js';
 import { checkDeviceLook } from '../user_folders.js';
 import { applyTheme, listThemes, themeFont, refreshUserFont, THEMES } from '../theme.js';
+// 2026-10-04: "Set up your Nimrod folder", the eight kinds, where to save things.
+import { setUpRoot, LEGACY_SUBFOLDERS, POINTER_KINDS, cleanRootPath, joinPath, readRootPath, saveRootPath, pathMatchesRoot,
+  ROOT_PATH_KEY } from '../user_folders.js';
+import { placeOf, copyText, foundWords, NIMROD_PLACEHOLDER, SAVE_WORDS } from '../user_folders_page.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -99,16 +105,30 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const tree = { 'my notes.txt': 'mine' };
       const root = fakeDir('Nimrod', tree);
       const r1 = await ensureTree(root);
-      check('*** fonts/, luts/ and audio-plugins/ are made ***',
-        isDir(tree.fonts) && isDir(tree.luts) && isDir(tree['audio-plugins']) && J(r1.made) === J(['fonts', 'luts', 'audio-plugins']), J(Object.keys(tree)));
-      check('each has a short README saying what goes in it', /font files/i.test(tree.fonts['README.txt'])
-        && /\.cube/.test(tree.luts['README.txt']) && /VST plugins cannot run in a web browser/.test(tree['audio-plugins']['README.txt']));
+      // 2026-10-04: eight folders, plain names (user_folders.js SUBFOLDERS argues each).
+      const eight = ['Pictures', 'Music', 'Videos', 'Fonts', 'Colour looks', 'Audio plugins', 'Voice model', 'Recordings'];
+      check('*** the tree: Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings ***',
+        eight.every((n) => isDir(tree[n])) && J(r1.made) === J(eight) && J(Object.values(SUBFOLDERS)) === J(eight), J(Object.keys(tree)));
+      check('*** every one has a README.txt saying what goes there ***', eight.every((n) => typeof tree[n]['README.txt'] === 'string' && tree[n]['README.txt'].length > 40),
+        J(eight.map((n) => (tree[n]['README.txt'] || '').length)));
+      check('each says what goes in it', /font files/i.test(tree.Fonts['README.txt'])
+        && /\.cube/.test(tree['Colour looks']['README.txt']) && /VST plugins cannot run in a web browser/.test(tree['Audio plugins']['README.txt']));
+      check('*** Pictures and Music say plainly that nothing is copied ***', /Nothing is copied/.test(tree.Pictures['README.txt'])
+        && /Nothing is copied/.test(tree.Music['README.txt']) && /already in/.test(tree.Pictures['README.txt']));
+      check('*** Voice model says it is empty until the conversion step, and how the service loads it ***',
+        /model\.bin/.test(tree['Voice model']['README.txt']) && /converting/.test(tree['Voice model']['README.txt'])
+          && /--my-voice --root/.test(tree['Voice model']['README.txt']));
       check('*** the plugins README says plainly that a plugin is a program ***',
-        /can do anything this page can do/.test(tree['audio-plugins']['README.txt']));
-      tree.fonts['README.txt'] = 'my own notes about fonts';
+        /can do anything this page can do/.test(tree['Audio plugins']['README.txt']));
+      tree.Fonts['README.txt'] = 'my own notes about fonts';
       const r2 = await ensureTree(root);
       check('*** run again: nothing made, and a README somebody edited is NOT overwritten ***',
-        r2.made.length === 0 && tree.fonts['README.txt'] === 'my own notes about fonts', J(r2));
+        r2.made.length === 0 && tree.Fonts['README.txt'] === 'my own notes about fonts', J(r2));
+      delete tree.Music;
+      tree.Pictures['holiday.jpg'] = 'a photo';
+      const r2b = await ensureTree(root);
+      check('*** run again after a folder was deleted: ONLY that one is made, and nothing in the others is touched ***',
+        J(r2b.made) === J(['Music']) && tree.Pictures['holiday.jpg'] === 'a photo' && /Nothing is copied/.test(tree.Music['README.txt']), J(r2b));
       check('the person\'s own files in the root are untouched', tree['my notes.txt'] === 'mine');
       check('subfolder() finds one and never creates', !!(await subfolder(root, 'luts')) && (await subfolder(root, 'nope')) === null
         && !('nope' in tree));
@@ -121,7 +141,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const view = { showDirectoryPicker: async (o) => { view.opts = o; return picked; } };
       const r3 = await pickRoot({ view, idb: null });
       check('picking asks for read+write under its own id, and makes the tree', view.opts.mode === 'readwrite'
-        && view.opts.id === 'nimrod-root' && r3.made.length === 3, J(view.opts));
+        && view.opts.id === 'nimrod-root' && r3.made.length === 8, J(view.opts));
       check('the root is remembered under its own key (fs_sink, not a new store)', ROOT_KEY === 'root'
         && J(await recallRoot({ idb: null })) === J({ handle: null, permission: 'unknown' }));
     }
@@ -373,7 +393,8 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
     });
     {
       const store = memStore();
-      check('three kinds, the same names as the root\'s subfolders', FOLDER_KINDS.join() === 'fonts,luts,plugins' && kindKey('luts') === 'folder:luts');
+      check('eight kinds, the same as the root\'s subfolders', FOLDER_KINDS.join() === 'pictures,music,videos,fonts,luts,plugins,voice,recordings'
+        && J(FOLDER_KINDS) === J(Object.keys(SUBFOLDERS)) && kindKey('luts') === 'folder:luts');
       const none = await kindFolder('fonts', { store });
       check('nothing chosen: source none, no folder, no throw', none.source === 'none' && none.dir === null && none.permission === 'none', J(none));
       const rootTree = {};
@@ -383,7 +404,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       await pickRoot({ view, store });
       const fromRoot = await kindFolder('fonts', { store });
       check('*** the root chosen: every kind reads its subfolder of it, by default ***',
-        fromRoot.source === 'root' && fromRoot.name === 'Nimrod/fonts' && !!fromRoot.dir && fromRoot.permission === 'granted', J({ ...fromRoot, dir: !!fromRoot.dir, holder: !!fromRoot.holder }));
+        fromRoot.source === 'root' && fromRoot.name === 'Nimrod/Fonts' && !!fromRoot.dir && fromRoot.permission === 'granted', J({ ...fromRoot, dir: !!fromRoot.dir, holder: !!fromRoot.holder }));
       const lutTree = { 'Warm.cube': 'LUT_1D_SIZE 2\n0 0 0\n1 1 1' };
       view.next = fakeDir('Looks I already had', lutTree);
       await pickKindFolder('luts', { view, store });
@@ -396,7 +417,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('"use the one in my Nimrod folder" goes back to the root, and the other folder is not touched',
         (await kindFolder('luts', { store })).source === 'root' && lutTree['Warm.cube'].startsWith('LUT_1D'));
       let refused = '';
-      try { await pickKindFolder('videos', { view, store }); } catch (e) { refused = e.message; }
+      try { await pickKindFolder('spreadsheets', { view, store }); } catch (e) { refused = e.message; }
       check('an unknown kind is refused before any prompt', /no such kind/.test(refused));
       // Lapsed permission: the folder is remembered but cannot be read until a press lets it back in.
       const perm = { state: 'prompt' };
@@ -411,7 +432,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
         && (await permissionOf({ queryPermission() { throw new Error('x'); } })) === 'unknown');
       await forgetRoot({ store });
       check('stop using the root: kinds without their own folder have none; the files stay', (await kindFolder('luts', { store })).source === 'none'
-        && (await kindFolder('fonts', { store })).source === 'own' && 'fonts' in rootTree);
+        && (await kindFolder('fonts', { store })).source === 'own' && 'Fonts' in rootTree);
     }
 
     section('*** what the screen lists: names only, and a plugin is NEVER run ***');
@@ -461,11 +482,12 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       btn('pick-root').click();
       await settle();
       check('*** choosing the root: the browser\'s picker (read+write), the tree made, and the page says what it found ***',
-        view.picks === 1 && view.opts.mode === 'readwrite' && 'fonts' in rootTree && /Using “Nimrod”/.test(text())
-          && /Made fonts, luts, audio-plugins in it/.test(text()) && /No font files in it yet/.test(text()), text().slice(0, 600));
-      rootTree.fonts['Lexend-Regular.ttf'] = new Uint8Array([1]);
-      rootTree.luts['Film.cube'] = 'x';
-      rootTree['audio-plugins'].Chorus = { 'index.js': 'globalThis.__pluginRan++;' };
+        view.picks === 1 && view.opts.mode === 'readwrite' && 'Fonts' in rootTree && /Using “Nimrod”/.test(text())
+          && /Made Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings in it, each with a README\.txt/.test(text())
+          && /No font files in it yet/.test(text()), text().slice(0, 600));
+      rootTree.Fonts['Lexend-Regular.ttf'] = new Uint8Array([1]);
+      rootTree['Colour looks']['Film.cube'] = 'x';
+      rootTree['Audio plugins'].Chorus = { 'index.js': 'globalThis.__pluginRan++;' };
       await page.refresh();
       check('*** what is in each folder, by name ***', /Found: Lexend \(1 file\)/.test(text()) && /Found: Film\.cube/.test(text()) && /Found: Chorus/.test(text()), text());
       check('*** the plugin line says the host files are missing, and that nothing here runs a plugin ***',
@@ -492,14 +514,14 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       check('a refusal is said in words, not a crash', /refused permission/.test(text()), text());
       btn('use-root', 'fonts').click();
       await settle();
-      check('"Use the one in your Nimrod folder" goes back to the root', /From your Nimrod folder: “Nimrod\/fonts”/.test(text()) && /Found: Lexend/.test(text()), text());
+      check('"Use the one in your Nimrod folder" goes back to the root', /From your Nimrod folder: “Nimrod\/Fonts”/.test(text()) && /Found: Lexend/.test(text()), text());
       view.showDirectoryPicker = async () => { throw new DOMException('cancelled', 'AbortError'); };
       btn('pick-root').click();
       await settle();
       check('a cancelled picker changes nothing and says nothing', /Using “Nimrod”/.test(text()) && host.querySelector('[data-uf-msg]').textContent === '');
       btn('forget-root').click();
       await settle();
-      check('"Stop using it" forgets it on this device; the files stay', /Your Nimrod folder Not chosen/.test(text()) && 'Film.cube' in rootTree.luts, text().slice(0, 300));
+      check('"Stop using it" forgets it on this device; the files stay', /Your Nimrod folder Not set up yet/.test(text()) && 'Film.cube' in rootTree['Colour looks'], text().slice(0, 300));
       check('every press told the host', J(changes.map((c) => c.action)) === J(['pick-root', 'pick-kind', 'allow-kind', 'allow-kind', 'use-root', 'forget-root']), J(changes));
       page.destroy();
       host.remove();
@@ -829,6 +851,236 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
         readGrade(st) === null && by('uf:look').value === '' && !by('uf:look:photos'), J(by('uf:look')));
       const r = await applyDeviceChoice('nonsense', 1, { store, storage: st });
       check('an unknown key writes nothing and does not throw', r.action === null && r.message === '');
+    }
+
+    // =========================================================================================
+    // 2026-10-04. Mike: "giving them an empty folder tree to download and then they can set the root once in the
+    // site and everything else could autopopulate the folder location ... Would that mean duplicate copies of their
+    // pictures?" No zip, no copies: the page makes the tree, every kind finds its folder in it, any kind can point
+    // elsewhere, and the places to save things are shown and copied.
+    section('*** a tree made before today (fonts/, luts/, audio-plugins/) keeps working, with no second copy made ***');
+    {
+      const tree = { fonts: { 'Lexend-Regular.ttf': new Uint8Array([1]) }, luts: { 'Warm.cube': 'x' }, 'audio-plugins': {} };
+      const root = fakeDir('Nimrod', tree);
+      const r = await ensureTree(root);
+      check('*** setting up again makes only the five new folders; no "Fonts" beside "fonts" ***',
+        J(r.made) === J(['Pictures', 'Music', 'Videos', 'Voice model', 'Recordings']) && !('Fonts' in tree) && !('Colour looks' in tree)
+          && !('Audio plugins' in tree), J(Object.keys(tree)));
+      check('the earlier names are known for the three kinds that had them', J(LEGACY_SUBFOLDERS.fonts) === J(['fonts'])
+        && J(LEGACY_SUBFOLDERS.luts) === J(['luts']) && J(LEGACY_SUBFOLDERS.plugins) === J(['audio-plugins']));
+      const store = memStore();
+      await store.put(ROOT_KEY, root);
+      const f = await kindFolder('fonts', { store });
+      check('*** the fonts kind reads the earlier "fonts" folder, and says its real name ***',
+        f.source === 'root' && !!f.dir && f.name === 'Nimrod/fonts' && f.sub === 'fonts', J({ name: f.name, sub: f.sub }));
+      check('...its files are there', (await listFiles(f.dir, ['ttf'])).length === 1);
+      check('a new kind reads its new folder', (await kindFolder('voice', { store })).name === 'Nimrod/Voice model');
+    }
+
+    section('*** "Set up your Nimrod folder": picks once, then only adds what is missing ***');
+    {
+      const store = memStore();
+      const rootTree = {};
+      const view = { picks: 0, showDirectoryPicker: async (o) => { view.picks++; view.opts = o; return fakeDir('Nimrod', rootTree); } };
+      const a = await setUpRoot({ view, store });
+      check('*** no root yet: the picker opens (read+write), the root is remembered, all eight made ***',
+        a.ok && a.picked && view.picks === 1 && view.opts.mode === 'readwrite' && a.made.length === 8 && !!(await store.get(ROOT_KEY)), J({ ...a, handle: !!a.handle }));
+      rootTree.Pictures['me.jpg'] = 'a photo';
+      rootTree.Fonts['README.txt'] = 'mine';
+      delete rootTree.Recordings;
+      const b = await setUpRoot({ view, store });
+      check('*** again: NO picker, only the missing folder made, a photo and an edited README untouched ***',
+        b.ok && !b.picked && view.picks === 1 && J(b.made) === J(['Recordings']) && rootTree.Pictures['me.jpg'] === 'a photo'
+          && rootTree.Fonts['README.txt'] === 'mine', J({ ...b, handle: !!b.handle }));
+      const c = await setUpRoot({ view, store });
+      check('*** a third time: nothing made at all (idempotent) ***', c.ok && c.made.length === 0 && view.picks === 1);
+      // A lapsed permission: the browser asks (only from a press); a refusal changes nothing.
+      const perm = { state: 'prompt', answer: 'denied' };
+      const lapsedTree = {};
+      await store.put(ROOT_KEY, withPerm(fakeDir('Nimrod', lapsedTree), perm));
+      const d = await setUpRoot({ view, store });
+      check('*** permission lapsed and refused: nothing made, said as a permission, no picker ***',
+        !d.ok && d.permission === 'denied' && perm.requested?.mode === 'readwrite' && Object.keys(lapsedTree).length === 0 && view.picks === 1, J({ ...d, handle: !!d.handle }));
+      perm.state = 'prompt'; perm.answer = 'granted';
+      const e = await setUpRoot({ view, store });
+      check('...allowed: the tree is made in it', e.ok && e.made.length === 8 && 'Voice model' in lapsedTree);
+    }
+
+    section('*** every kind autopopulates from the root; a per-kind folder wins for that kind only ***');
+    {
+      const store = memStore();
+      await setUpRoot({ view: { showDirectoryPicker: async () => fakeDir('Nimrod', {}) }, store });
+      const all = [];
+      for (const k of FOLDER_KINDS) all.push(await kindFolder(k, { store }));
+      check('*** all eight kinds read their own subfolder of the root, with nothing else chosen ***',
+        all.every((k) => k.source === 'root' && !!k.dir && k.name === `Nimrod/${SUBFOLDERS[k.kind]}`), J(all.map((k) => [k.kind, k.source, k.name])));
+      const photosTree = { 'beach.jpg': 'x' };
+      await pickKindFolder('pictures', { view: { showDirectoryPicker: async () => fakeDir('My Photos', photosTree) }, store });
+      const pics = await kindFolder('pictures', { store });
+      check('*** pictures pointed at "My Photos": that kind reads it, the other seven still read the root ***',
+        pics.source === 'own' && pics.name === 'My Photos' && (await Promise.all(FOLDER_KINDS.filter((k) => k !== 'pictures').map((k) => kindFolder(k, { store }))))
+          .every((k) => k.source === 'root'), J(pics.name));
+      check('the three pointer kinds are pictures, music and videos', J(POINTER_KINDS) === J(['pictures', 'music', 'videos']));
+    }
+
+    section('*** where to save things: the place, and the words to copy ***');
+    {
+      check('a typed path is tidied: quotes off, no trailing separator, a drive keeps its backslash',
+        cleanRootPath('  "D:\\Nimrod\\"  ') === 'D:\\Nimrod' && cleanRootPath('/home/sam/Nimrod/') === '/home/sam/Nimrod'
+          && cleanRootPath('E:') === 'E:\\' && cleanRootPath('E:/') === 'E:\\' && cleanRootPath('/') === '/' && cleanRootPath('') === '', cleanRootPath('  "D:\\Nimrod\\"  '));
+      check('*** joined with the separator the path already uses ***', joinPath('D:\\Nimrod', 'Voice model') === 'D:\\Nimrod\\Voice model'
+        && joinPath('/home/sam/Nimrod', 'Voice model') === '/home/sam/Nimrod/Voice model' && joinPath('E:\\', 'Pictures') === 'E:\\Pictures');
+      const st = memStorage();
+      check('no path typed: nothing stored, nothing read', readRootPath(st) === '' && !st._m.has(ROOT_PATH_KEY));
+      check('*** kept on this device, under its own key ***', saveRootPath('"D:\\Nimrod"', st) === 'D:\\Nimrod' && readRootPath(st) === 'D:\\Nimrod' && st._m.has(ROOT_PATH_KEY));
+      check('emptied: forgotten', saveRootPath('', st) === '' && !st._m.has(ROOT_PATH_KEY));
+      check('a path checked against the chosen folder\'s NAME (all a page can check)', pathMatchesRoot('D:\\Stuff\\Nimrod', 'Nimrod')
+        && !pathMatchesRoot('D:\\Stuff\\Other', 'Nimrod') && pathMatchesRoot('', 'Nimrod'));
+      const viaRoot = { kind: 'voice', source: 'root', sub: 'Voice model', name: 'Nimrod/Voice model' };
+      const rel = placeOf(viaRoot);
+      check('*** no full path: "<your Nimrod folder>/Voice model" (a browser never reveals a real path) ***',
+        rel.text === '<your Nimrod folder>/Voice model' && rel.path === '' && NIMROD_PLACEHOLDER === '<your Nimrod folder>', J(rel));
+      const full = placeOf(viaRoot, 'D:\\Nimrod');
+      check('*** the root\'s full path typed: the full path ***', full.text === 'D:\\Nimrod\\Voice model' && full.path === full.text, J(full));
+      check('a kind not set up yet still has its place in the tree', placeOf({ kind: 'pictures', source: 'none', sub: 'Pictures' }).text === '<your Nimrod folder>/Pictures');
+      check('an earlier folder name is the place shown (the folder that is really there)', placeOf({ kind: 'fonts', source: 'root', sub: 'fonts' }, 'D:\\N').text === 'D:\\N\\fonts');
+      const own = placeOf({ kind: 'pictures', source: 'own', name: 'Family photos' }, 'D:\\Nimrod');
+      check('*** a kind pointed elsewhere: that folder by name, never a guessed path ***', own.own && own.path === '' && /Family photos/.test(own.text), J(own));
+      check('*** the words to copy: what to save, and where ***', copyText('voice', rel) === 'Put the files of your converted voice model in: <your Nimrod folder>/Voice model'
+        && copyText('voice', full) === 'Put the files of your converted voice model in: D:\\Nimrod\\Voice model'
+        && copyText('pictures', placeOf({ kind: 'pictures', source: 'root', sub: 'Pictures' })) === 'Save photos in: <your Nimrod folder>/Pictures', copyText('voice', rel));
+      check('...and for a folder of its own', copyText('pictures', own) === 'Save photos in the folder “Family photos” (the one chosen for pictures on this device).', copyText('pictures', own));
+      check('every kind has its words', FOLDER_KINDS.every((k) => SAVE_WORDS[k]));
+      check('site copy never names the person it was first built for, nor "her screen"',
+        !/Christine|Cici|her screen/i.test(JSON.stringify([SAVE_WORDS, Object.values(SUBFOLDERS)]) + Object.values((await import('../user_folders.js')).README).join(' ')));
+    }
+
+    section('*** what the new kinds\' folders hold, by name only ***');
+    {
+      const pics = await scanFolder('pictures', fakeDir('p', { 'a.jpg': 'x', 'B.PNG': 'x', 'song.mp3': 'x', 'README.txt': 'x', Holiday: {}, Birthday: {} }));
+      check('*** pictures: the pictures directly in it and its folders; a song is not a picture ***', pics.count === 2 && pics.folders === 2
+        && foundWords('pictures', pics) === 'In it: 2 pictures and 2 folders.', J(pics));
+      check('music counts music', (await scanFolder('music', fakeDir('m', { 'a.mp3': 'x', 'b.flac': 'x', 'c.jpg': 'x' }))).count === 2);
+      check('an empty Pictures folder (only its README) says so', foundWords('pictures', await scanFolder('pictures', fakeDir('p', { 'README.txt': 'x' }))) === 'No pictures directly in it yet.');
+      const v0 = await scanFolder('voice', fakeDir('v', { 'README.txt': 'x' }));
+      check('*** Voice model with only its README: "no voice model yet ... after step 4" ***', /No voice model in it yet/.test(foundWords('voice', v0)) && /step 4/.test(foundWords('voice', v0)));
+      const v1 = await scanFolder('voice', fakeDir('v', { 'model.bin': 'x', 'config.json': 'x', 'tokenizer.json': 'x', 'vocabulary.json': 'x' }));
+      check('a converted model: ready', /ready/.test(foundWords('voice', v1)));
+      const v2 = await scanFolder('voice', fakeDir('v', { 'model.safetensors': 'x', 'config.json': 'x' }));
+      check('a checkpoint: still needs converting', /converting/.test(foundWords('voice', v2)));
+      const v3 = await scanFolder('voice', fakeDir('v', { 'model.bin': 'x', 'config.json': 'x' }));
+      check('half converted: the missing files named', /tokenizer\.json/.test(foundWords('voice', v3)));
+      const rec = await scanFolder('recordings', fakeDir('r', { 'README.txt': 'x', data: {}, 'nimrod-export.json': '{}' }));
+      check('recordings: what is in it, and that an export is there', rec.count === 2 && rec.exported && /export for training/.test(foundWords('recordings', rec)));
+    }
+
+    section('*** the page: set up, pointers not copies, copy buttons, the full path, connect for photos ***');
+    {
+      const store = memStore();
+      const rootTree = {};
+      const view = { picks: 0, showDirectoryPicker: async (o) => { view.picks++; view.opts = o; return view.next(); } };
+      view.next = () => fakeDir('Nimrod', rootTree);
+      const copied = [];
+      const clipboard = { writeText: async (t) => { copied.push(t); } };
+      // `find` matches the SAME folder, as isSameEntry does: a fresh handle on the same in-memory tree.
+      const media = { kept: [], async find(h) { return this.kept.find((x) => x.handle.tree === h.tree) || null; },
+        async add(h, label) { const s = { id: `f${this.kept.length}`, label, handle: h }; this.kept.push(s); return s; } };
+      const st = memStorage();
+      const host = document.createElement('div');
+      document.body.append(host);
+      const page = renderUserFolders(host, { view, store, storage: st, clipboard, media, ...fakeFonts() });
+      await page.ready;
+      const settle = async () => { for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 10)); };
+      const text = () => host.textContent.replace(/\s+/g, ' ');
+      const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
+      check('*** before: "Set up your Nimrod folder…", saying it makes the eight with a README each, nothing to download ***',
+        /Set up your Nimrod folder…/.test(btn('pick-root')?.textContent || '') && /README\.txt/.test(text()) && /nothing to download/.test(text())
+          && /Voice model, Recordings inside it/.test(text()), text().slice(0, 500));
+      check('*** says folder access is per device and per browser: a second computer sets it up once too ***',
+        /this device and this browser/.test(host.querySelector('[data-uf-per-device]')?.textContent || '') && /second computer/.test(text()));
+      check('*** every kind is on the page, each with its place to save things and a Copy button ***',
+        FOLDER_KINDS.every((k) => host.querySelector(`[data-uf-section="${k}"]`) && host.querySelector(`[data-uf-place="${k}"]`) && btn('copy', k)), text().slice(0, 200));
+      check('*** Pictures, Music, Videos say nothing is copied, and offer to point at the folder they are already in ***',
+        POINTER_KINDS.every((k) => /Nothing is copied/.test(host.querySelector(`[data-uf-pointer="${k}"]`)?.textContent || ''))
+          && /Point at the folder your photos are already in/.test(btn('pick-kind', 'pictures')?.textContent || '')
+          && /Point at the folder your music is already in/.test(btn('pick-kind', 'music')?.textContent || ''), text());
+      btn('pick-root').click();
+      await settle();
+      check('*** set up: the tree made, the page says so ***', view.picks === 1 && Object.keys(rootTree).length === 8 && /each with a README\.txt/.test(text()));
+      check('*** now "Set up your Nimrod folder again" (adds only what is missing) and "Choose a different Nimrod folder…" ***',
+        !!btn('set-up') && /adds only what is missing/.test(btn('set-up').textContent) && /Choose a different Nimrod folder/.test(btn('pick-root').textContent));
+      delete rootTree.Videos;
+      rootTree.Pictures['cat.jpg'] = 'x';
+      btn('set-up').click();
+      await settle();
+      check('*** "again": no picker, only Videos made, the picture untouched ***', view.picks === 1 && 'Videos' in rootTree
+        && rootTree.Pictures['cat.jpg'] === 'x' && /Made Videos in it/.test(text()), text().slice(-300));
+      btn('set-up').click();
+      await settle();
+      check('*** and again: nothing changed, said so ***', /Everything was already there/.test(text()));
+      check('the place before a path is typed: "<your Nimrod folder>/Voice model", and no "Copy the path"',
+        host.querySelector('[data-uf-place="voice"] code').textContent === '<your Nimrod folder>/Voice model' && !btn('copy-path', 'voice'));
+      btn('copy', 'voice').click();
+      await settle();
+      check('*** Copy: the sentence, on the clipboard, and the page says what was copied ***',
+        copied[copied.length - 1] === 'Put the files of your converted voice model in: <your Nimrod folder>/Voice model' && /Copied:/.test(text()), J(copied));
+      host.querySelector('[data-uf-path]').value = '"D:\\Stuff\\Nimrod\\"';
+      btn('save-path').click();
+      await settle();
+      check('*** the full path typed and kept (on this device only) ***', readRootPath(st) === 'D:\\Stuff\\Nimrod'
+        && host.querySelector('[data-uf-path]').value === 'D:\\Stuff\\Nimrod' && /Kept on this device/.test(text()));
+      check('*** ...now every place is a full path ***', host.querySelector('[data-uf-place="voice"] code').textContent === 'D:\\Stuff\\Nimrod\\Voice model'
+        && host.querySelector('[data-uf-place="pictures"] code').textContent === 'D:\\Stuff\\Nimrod\\Pictures');
+      btn('copy-path', 'voice').click();
+      await settle();
+      check('*** "Copy the path": the path alone ***', copied[copied.length - 1] === 'D:\\Stuff\\Nimrod\\Voice model', J(copied));
+      btn('copy', 'recordings').click();
+      await settle();
+      check('Copy for recordings: the full path in the sentence', copied[copied.length - 1] === 'Save recordings and voice-training exports in: D:\\Stuff\\Nimrod\\Recordings');
+      host.querySelector('[data-uf-path]').value = 'D:\\Stuff\\Other';
+      btn('save-path').click();
+      await settle();
+      check('*** a path whose last name is not the chosen folder\'s: a warning, not a refusal ***',
+        /ends in “Other”, but the folder chosen is “Nimrod”/.test(host.querySelector('[data-uf-path-mismatch]')?.textContent || ''), text().slice(0, 900));
+      host.querySelector('[data-uf-path]').value = '';
+      btn('save-path').click();
+      await settle();
+      check('emptied: forgotten, places relative again', readRootPath(st) === '' && /forgotten/.test(text())
+        && host.querySelector('[data-uf-place="voice"] code').textContent === '<your Nimrod folder>/Voice model');
+      // Connect it for photos: the Pictures folder kept as a media source. A handle, never a copy.
+      check('*** "Connect it for photos" on Pictures, "for music" on Music, none on Fonts ***', /Connect it for photos/.test(btn('connect', 'pictures')?.textContent || '')
+        && /Connect it for music/.test(btn('connect', 'music')?.textContent || '') && !btn('connect', 'fonts'));
+      const before = J(rootTree);
+      btn('connect', 'pictures').click();
+      await settle();
+      check('*** connected: kept as a media source labelled as the Nimrod folder\'s Pictures, and NOTHING copied ***',
+        media.kept.length === 1 && media.kept[0].label === 'Pictures (your Nimrod folder)' && media.kept[0].handle.name === 'Pictures'
+          && J(rootTree) === before && /Nothing was copied/.test(text()), J(media.kept.map((x) => x.label)) + text().slice(-200));
+      btn('connect', 'pictures').click();
+      await settle();
+      check('pressed again: "already connected", no second source', media.kept.length === 1 && /Already connected/.test(text()));
+      // The override, visible per kind: pictures pointed at a folder of photos somebody already has.
+      view.next = () => fakeDir('Family photos', { 'a.jpg': 'x', 'b.jpg': 'x' });
+      btn('pick-kind', 'pictures').click();
+      await settle();
+      check('*** pointed elsewhere: "From its own folder", what is in it, and the way back to the Nimrod folder ***',
+        /From its own folder, “Family photos”/.test(host.querySelector('[data-uf-where="pictures"]').textContent)
+          && /2 pictures/.test(host.querySelector('[data-uf-found="pictures"]').textContent) && !!btn('use-root', 'pictures'), text());
+      btn('copy', 'pictures').click();
+      await settle();
+      check('Copy for a folder of its own names that folder', /the folder “Family photos”/.test(copied[copied.length - 1]));
+      // A clipboard the browser refuses: the words are still on the page to copy by hand.
+      const host2 = document.createElement('div');
+      const page2 = renderUserFolders(host2, { view, store, storage: st, clipboard: { writeText: async () => { throw new Error('denied'); } }, media, ...fakeFonts() });
+      await page2.ready;
+      host2.querySelector('[data-act="copy"][data-kind="voice"]').click();
+      await settle();
+      check('*** a refused clipboard: the page shows the words to copy by hand ***', /Could not copy here/.test(host2.textContent) && /Voice model/.test(host2.querySelector('[data-uf-msg]').textContent));
+      page2.destroy();
+      check('no colour is written into the page (the theme\'s classes only)', !/#[0-9a-f]{3,6}\b|rgb\(|hsl\(/i.test(host.innerHTML));
+      check('site copy never names the person it was first built for, nor "her screen"', !/Christine|Cici|her screen/i.test(host.textContent));
+      page.destroy();
+      host.remove();
     }
 
     check('*** over the whole suite: no request to anywhere but blob: URLs ***',

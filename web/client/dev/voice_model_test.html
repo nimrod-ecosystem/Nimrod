@@ -31,7 +31,11 @@ import {
   EUPHONIA, BASE_MODEL, VOICE_MODEL_PORT, VOICE_MODEL_FIELDS, VOICE_MODEL_CSS, MODEL_FILES, voiceModelFrom, voiceModelUrl,
   convertCommand, serviceCommand, parsePhrases, createPhrasePrompter, prompterBlocker, mountVoiceModel,
   MY_VOICE_PATH, MY_VOICE_FROM_WEB, checkModelFiles, describeModelCheck, folderNames,
+  STEPS, voiceModelStatus, VOICE_PLACE, VOICE_FOLDER, NIMROD_ROOT_WORDS, RECORDINGS_PLACE,
 } from '../voice_model.js';
+import { SUBFOLDERS } from '../user_folders.js';
+// No Nimrod folder on this device, for the pages below that are not about it (they must not read the real one).
+const NO_NIMROD = { path: () => '', voice: async () => null };
 import {
   createVoiceRecorder, createMemoryPairStore, buildPair, encodeWav16, exportEuphonia, euphoniaSamples,
 } from '../voice_recording.js';
@@ -124,6 +128,51 @@ try {
       (sneaky.match(/"/g) || []).length === 2 && sneaky.endsWith('--port 8796'), sneaky);
     check('the files a converted folder holds, as the service checks them',
       ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json'].every((f) => MODEL_FILES.join(' ').includes(f)) && /vocabulary/.test(MODEL_FILES.join(' ')));
+    // 2026-10-04: the Nimrod folder. The service follows it with --root; its "Voice model" is the model's place.
+    check('*** the place is the Nimrod folder\'s own "Voice model" (the name the site makes, and the service reads) ***',
+      VOICE_FOLDER === SUBFOLDERS.voice && VOICE_FOLDER === 'Voice model' && VOICE_PLACE === '<your Nimrod folder>/Voice model'
+      && RECORDINGS_PLACE === '<your Nimrod folder>/Recordings', VOICE_PLACE);
+    check('*** the service command with the Nimrod folder: --my-voice --root "<that folder>" ***',
+      serviceCommand({ port: 8796, root: 'D:\\Nimrod' }) === 'py -3.13 -m speech_service --my-voice --root "D:\\Nimrod" --port 8796',
+      serviceCommand({ port: 8796, root: 'D:\\Nimrod' }));
+    const sneakyRoot = serviceCommand({ root: 'D:\\N" --host 0.0.0.0 "x', port: 8796 });
+    check('*** a quote in the root cannot break out of the command either ***', (sneakyRoot.match(/"/g) || []).length === 2 && sneakyRoot.endsWith('--port 8796'), sneakyRoot);
+  }
+
+  // ======================================================================================
+  section('*** "where you are": which of the six steps, and "you will not have the folder until step 4" ***');
+  {
+    check('six steps, in order: record, export, train, convert, put it in place, start the service',
+      STEPS.length === 6 && /Record/.test(STEPS[0]) && /Export/.test(STEPS[1]) && /Train/.test(STEPS[2]) && /Convert/.test(STEPS[3])
+        && STEPS[4].includes(VOICE_PLACE) && /speech service/.test(STEPS[5]), JSON.stringify(STEPS));
+    const ready = checkModelFiles(['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']);
+    const ckpt = checkModelFiles(['model.safetensors', 'config.json']);
+    const half = checkModelFiles(['model.bin', 'config.json']);
+    const exp = checkModelFiles(['data', 'nimrod-export.json']);
+    const empty = checkModelFiles(['README.txt']);
+    const S = (o) => voiceModelStatus(o);
+    check('*** nothing yet: step 1, "not started" ***', S({}).step === 1 && /Not started/.test(S({}).text) && S({}).haveFolder === false);
+    check('reading: step 1, how far through', S({ total: 100, index: 37 }).step === 1 && /37 of 100/.test(S({ total: 100, index: 37 }).text));
+    check('*** every phrase read: step 2, export them ***', S({ total: 100, index: 100 }).step === 2 && /export/i.test(S({ total: 100, index: 100 }).text));
+    check('*** exported: step 3, train ***', S({ total: 100, index: 100, exported: true }).step === 3 && /train/i.test(S({ exported: true }).text));
+    check('a checked folder that is the export also says step 3', S({ picked: { ...exp, name: 'export' } }).step === 3);
+    check('*** a checkpoint checked: step 4, convert ***', S({ exported: true, picked: { ...ckpt, name: 'checkpoint-200' } }).step === 4
+      && /convert/i.test(S({ picked: ckpt }).text));
+    check('*** a half-converted folder: step 4, the missing files named ***', S({ picked: { ...half, name: 'x' } }).step === 4
+      && /tokenizer\.json/.test(S({ picked: half }).text));
+    check('*** a converted folder checked (not yet in place): step 5, put it in the Nimrod folder ***',
+      S({ picked: { ...ready, name: 'ct2' } }).step === 5 && S({ picked: { ...ready, name: 'ct2' } }).text.includes(VOICE_PLACE)
+        && S({ picked: ready }).haveFolder === true);
+    check('*** a model IN the Nimrod folder\'s Voice model: step 6, start the service ***', S({ nimrod: ready }).step === 6 && /start the speech service/i.test(S({ nimrod: ready }).text)
+      && S({ nimrod: ready }).done === false);
+    check('...and with "Use my own voice model" on: done', S({ nimrod: ready, on: true }).done === true);
+    check('*** the Voice model folder as the site makes it (only its README) is NOT a model: no step skipped ***',
+      S({ total: 3, index: 1, nimrod: empty }).step === 1);
+    check('what is proven beats what is remembered: a model in place wins over an unfinished phrase list',
+      S({ total: 100, index: 3, nimrod: ready }).step === 6);
+    check('a full path, when known, is the place it names', S({ picked: ready, place: 'D:\\Nimrod\\Voice model' }).text.includes('D:\\Nimrod\\Voice model'));
+    check('site copy never names the person it was first built for, nor "her screen"',
+      !/Christine|Cici|her screen/i.test(JSON.stringify([STEPS, S({}), S({ nimrod: ready }), S({ picked: ckpt })])));
   }
 
   // ======================================================================================
@@ -144,8 +193,10 @@ try {
     check('*** the exported RECORDINGS folder is recognised and said so ***', !exp.ok && exp.kind === 'recordings'
       && /recordings/i.test(describeModelCheck(exp, 'export')), describeModelCheck(exp, 'export'));
     check('an empty folder: everything named', !checkModelFiles([]).ok && checkModelFiles([]).missing.length === 4);
-    check('*** the words for a good folder say where it goes ***', /ready/i.test(describeModelCheck(full, 'my-voice'))
-      && describeModelCheck(full, 'my-voice').includes(MY_VOICE_PATH));
+    check('*** the words for a good folder say where it goes (the Nimrod folder\'s Voice model) ***', /ready/i.test(describeModelCheck(full, 'my-voice'))
+      && describeModelCheck(full, 'my-voice').includes(VOICE_PLACE)
+      && describeModelCheck(full, 'my-voice', { place: 'D:\\Nimrod\\Voice model' }).includes('D:\\Nimrod\\Voice model'));
+    check('the words name the convert step by its new number (4)', /step 4/.test(describeModelCheck(ckpt, 'c')) && /step 4/.test(describeModelCheck(half, 'h')));
     check('the words for a short folder name the missing files', /tokenizer\.json/.test(describeModelCheck(half, 'x')));
     // A folder handle as the browser hands it over: names only. Reading a FILE would throw.
     const touched = [];
@@ -322,8 +373,9 @@ try {
     const picks = [];
     const pickModelFolder = async () => { const p = picks.shift(); if (p instanceof Error) throw p; return p; };
     const dirOf = (name, files) => ({ name, async *entries() { for (const n of files) yield [n, { kind: 'file', name: n }]; } });
-    const page = mountVoiceModel(root, { personId: 'mike', recorder: vr, store, storage, pickModelFolder,
+    const page = mountVoiceModel(root, { personId: 'mike', recorder: vr, store, storage, pickModelFolder, nimrodFolder: NO_NIMROD,
       values: () => row, save: (patch) => { saved.push(patch); row = { ...row, ...patch }; return true; } });
+    await page.ready;
     const text = root.textContent;
     const hrefs = [...root.querySelectorAll('a[href]')].map((a) => a.getAttribute('href'));
     check('*** links to the Euphonia repo, its notebook and its phrase list ***', [EUPHONIA.repo, EUPHONIA.notebook, EUPHONIA.phrases].every((h) => hrefs.includes(h)), hrefs.join());
@@ -332,11 +384,20 @@ try {
       /100 (short )?phrases/.test(text) && /Whisper/.test(text) && /yourself/.test(text) && /Nothing you record here is uploaded/.test(text), text.slice(0, 400));
     check('*** says who it is for: yours, nobody else\'s settings use it, and not on a Raspberry Pi ***',
       /only your own speech settings/i.test(text) && /not run on a Raspberry Pi/.test(text));
-    check('*** the three steps: record, train (with the base model named), convert ***',
-      /Record/.test(text) && /Train/.test(text) && /Convert/.test(text) && text.includes('openai/whisper-small.en'));
+    check('*** the six steps: record, export, train (with the base model named), convert, put in place, start ***',
+      /Record/.test(text) && /Export them/.test(text) && /Train/.test(text) && /Convert/.test(text) && /Put the folder in place/.test(text)
+        && /Start the speech service/.test(text) && text.includes('openai/whisper-small.en'));
+    check('*** training says plainly what it needs: a Google account (Colab) or a computer with a graphics card ***',
+      /Google account/.test(text) && /Colab/.test(text) && /graphics card/.test(text));
+    const now = root.querySelector('[data-vm-now]').textContent;
+    check('*** "Where you are" answers "do I have it yet?": step 1, and the folder comes only after step 4 ***',
+      /Step 1 of 6/.test(now) && !root.querySelector('[data-vm-notyet]').hidden && /until step 4/.test(root.querySelector('[data-vm-notyet]').textContent)
+        && root.querySelector('[data-vm-step="1"]').getAttribute('aria-current') === 'step', now);
     const codes = [...root.querySelectorAll('code[data-cmd]')].map((c) => c.textContent);
-    check('*** the exact conversion command is shown, writing straight into the service\'s folder ***', codes.includes(convertCommand({})), codes.join(' | '));
-    check('*** the exact service command, with this person\'s port and no path ***', codes.includes(serviceCommand({ port: 8796 })), codes.join(' | '));
+    check('*** no full path known: the conversion writes into <your Nimrod folder>/Voice model, said to be replaced ***',
+      codes.includes(convertCommand({ folder: VOICE_PLACE })) && /Replace <your Nimrod folder>/.test(root.querySelector('[data-vm-fill]').textContent), codes.join(' | '));
+    check('*** the exact service command, with this person\'s port and --root ***', codes.includes(serviceCommand({ port: 8796, root: NIMROD_ROOT_WORDS })), codes.join(' | '));
+    check('*** export says where to save it: <your Nimrod folder>/Recordings ***', root.querySelector('[data-vm-recordings]').textContent === RECORDINGS_PLACE);
     check('*** NO folder to type, and nothing saves a folder (a stored one from before is not shown) ***',
       !root.querySelector('[data-folder]') && !root.querySelector('[data-save-folder]') && !root.querySelector('input[type=text]')
       && !text.includes('C:\\models\\my-voice'));
@@ -344,8 +405,10 @@ try {
       /--output_dir/.test(text) && ['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json'].every((f) => text.includes(f))
       && /vocabulary/.test(text));
     check('*** ...NOT the training checkpoint, NOT the recordings ***', /not the checkpoint/i.test(text) && /not the recordings/i.test(text));
-    check('*** "put the converted folder here": the exact place, and that it stays out of git ***',
-      root.querySelector('[data-where]')?.textContent.includes(MY_VOICE_PATH) && /kept out of git|never committed/i.test(text));
+    check('*** "its place": the Nimrod folder\'s Voice model ***', root.querySelector('[data-where]')?.textContent.includes(VOICE_PLACE),
+      root.querySelector('[data-where]')?.textContent);
+    check('*** no Nimrod folder: the old place still works, and it stays out of git ***',
+      root.querySelector('[data-elsewhere]')?.textContent.includes(MY_VOICE_PATH) && /kept out of git|never committed/i.test(text));
     check('*** a model kept elsewhere: the page says how (--model) ***', /--model/.test(root.querySelector('[data-elsewhere]')?.textContent || ''));
 
     // "Check a folder": the browser's folder picker, used where it genuinely helps - names only.
@@ -354,10 +417,13 @@ try {
     picks.push(dirOf('my-voice', ['model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']));
     chk.click(); await settle(6);
     const said = () => root.querySelector('[data-check-msg]').textContent;
-    check('*** a converted folder: "ready", and where it goes ***', /ready/i.test(said()) && said().includes(MY_VOICE_PATH), said());
+    check('*** a converted folder: "ready", and where it goes ***', /ready/i.test(said()) && said().includes(VOICE_PLACE), said());
+    check('*** ...and "Where you are" moves on: step 5, put it in place ***', /Step 5 of 6/.test(root.querySelector('[data-vm-now]').textContent)
+      && root.querySelector('[data-vm-notyet]').hidden, root.querySelector('[data-vm-now]').textContent);
     picks.push(dirOf('checkpoint-200', ['model.safetensors', 'config.json', 'tokenizer.json', 'generation_config.json']));
     chk.click(); await settle(6);
     check('*** the training checkpoint: says to convert it first ***', /convert/i.test(said()) && !/ready/i.test(said()), said());
+    check('*** ...and "Where you are" says step 4, convert ***', /Step 4 of 6/.test(root.querySelector('[data-vm-now]').textContent), root.querySelector('[data-vm-now]').textContent);
     picks.push(dirOf('half', ['model.bin', 'config.json']));
     chk.click(); await settle(6);
     check('*** a half-converted folder: the missing files named ***', /tokenizer\.json/.test(said()) && /vocabulary/.test(said()), said());
@@ -388,14 +454,44 @@ try {
     vr.destroy();
 
     // On a page with no recorder (Home, the modules page): the steps and commands, and why it cannot record here.
-    const page2 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null });
+    const page2 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null, nimrodFolder: NO_NIMROD });
     check('with no recorder: the steps are still there, and it says recording happens on a listening screen',
       /Train/.test(root.textContent) && /screen/.test(root.querySelector('[data-status]').textContent)
-      && root.querySelector('[data-cmd="serve"]').textContent === serviceCommand({ port: 8796 }));
+      && root.querySelector('[data-cmd="serve"]').textContent === serviceCommand({ port: 8796, root: NIMROD_ROOT_WORDS }));
     check('with no way to save: the switch button is hidden', root.querySelector('[data-use]').hidden === true);
     check('*** a browser that cannot open a folder: no Check button, and the service still checks at start ***',
       root.querySelector('[data-check]').hidden === true && /checks the folder when it starts/.test(root.textContent));
     page2.destroy();
+
+    // 2026-10-04: the Nimrod folder's full path typed on this device, and a model already in its Voice model.
+    const voiceDir = dirOf('Voice model', ['README.txt', 'model.bin', 'config.json', 'tokenizer.json', 'vocabulary.json', 'preprocessor_config.json']);
+    let asked = 0;
+    const page3 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null,
+      nimrodFolder: { path: () => 'D:\\Nimrod', voice: async () => { asked++; return { source: 'root', dir: voiceDir }; } } });
+    await page3.ready;
+    const codes3 = [...root.querySelectorAll('code[data-cmd]')].map((c) => c.textContent);
+    check('*** the full path known: the commands carry it (no placeholder to replace) ***',
+      codes3.includes(convertCommand({ folder: 'D:\\Nimrod\\Voice model' })) && codes3.includes(serviceCommand({ port: 8796, root: 'D:\\Nimrod' }))
+        && !codes3.join(' ').includes('<your Nimrod folder>'), codes3.join(' | '));
+    check('...and the places on the page are full paths', root.querySelector('[data-where]').textContent.includes('D:\\Nimrod\\Voice model')
+      && root.querySelector('[data-vm-recordings]').textContent === 'D:\\Nimrod\\Recordings');
+    check('*** a model already in the Nimrod folder\'s Voice model: "Where you are" says step 6, with no "not yet" ***',
+      asked === 1 && /Step 6 of 6/.test(root.querySelector('[data-vm-now]').textContent) && root.querySelector('[data-vm-notyet]').hidden
+        && root.querySelector('[data-vm-step="5"]').dataset.vmState === 'done', root.querySelector('[data-vm-now]').textContent);
+    page3.destroy();
+    const page4 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null,
+      nimrodFolder: { path: () => '', voice: async () => ({ source: 'root', dir: dirOf('Voice model', ['README.txt']) }) } });
+    await page4.ready;
+    check('*** the Voice model folder as set up (only its README): still step 1 - the folder is there, the model is not ***',
+      /Step 1 of 6/.test(root.querySelector('[data-vm-now]').textContent) && !root.querySelector('[data-vm-notyet]').hidden);
+    page4.destroy();
+    const exported = new Map([['nimrod-voice-model:mike', JSON.stringify({ text: 'a\nb', index: 2, exportedAt: 1 })]]);
+    const page5 = mountVoiceModel(root, { personId: 'mike', recorder: null, store, values: () => ({}), pickModelFolder: null, nimrodFolder: NO_NIMROD,
+      storage: { getItem: (k) => exported.get(k) ?? null, setItem: (k, v) => exported.set(k, String(v)), removeItem: (k) => exported.delete(k) } });
+    await page5.ready;
+    check('*** exported from this screen before: step 3, train ***', /Step 3 of 6/.test(root.querySelector('[data-vm-now]').textContent),
+      root.querySelector('[data-vm-now]').textContent);
+    page5.destroy();
   }
 
   // ======================================================================================

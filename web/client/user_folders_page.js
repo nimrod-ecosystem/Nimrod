@@ -43,11 +43,26 @@
 //
 // Everything is injectable (`view` for the picker, `store` for remembered handles, `storage`/`fontSet`
 // for the choices), so the suite drives it against in-memory folders with no prompt.
+//
+// *** "SET UP YOUR NIMROD FOLDER" (2026-10-04). *** Mike: *"giving them an empty folder tree to download and
+// then they can set the root once in the site and everything else could autopopulate the folder location ...
+// Would that mean duplicate copies of their pictures?"* No zip: the page makes the tree itself, inside a folder
+// the person chooses or makes (`setUpRoot`), and running it again only adds what is missing. And no copies,
+// said on the page: Pictures, Music and Videos are POINTERS - the Nimrod folder's own subfolder, or "point at the
+// folder your photos are already in" (the per-kind override, now shown on every kind) - and "Connect it for
+// photos" keeps that folder as a media source (folder_source.js `addFolderSource`), a handle, never a copy.
+//   WHERE TO SAVE THINGS: each kind shows its place. A browser never tells a page a folder's real path, so the
+// place reads "<your Nimrod folder>/Voice model" unless the person types the root's full path once (kept on
+// this device only, user_folders.js `saveRootPath`); then it is a full path. "Copy" copies a sentence saying
+// what to save where; "Copy the path" (only with a full path) copies the path alone, for a Save dialog.
 
 import {
-  FOLDER_KINDS, SUBFOLDERS, ROOT_KEY, ROOT_MODE, available, handleStore, permissionOf, allowAgain,
-  pickRoot, pickKindFolder, useRootFor, forgetRoot, kindFolder, listFiles, listFolders, checkDeviceLook,
+  FOLDER_KINDS, SUBFOLDERS, ROOT_KEY, ROOT_MODE, POINTER_KINDS, available, handleStore, permissionOf, allowAgain,
+  pickRoot, setUpRoot, pickKindFolder, useRootFor, forgetRoot, kindFolder, listFiles, listFolders, checkDeviceLook,
+  readRootPath, saveRootPath, joinPath, pathMatchesRoot, lastName,
 } from './user_folders.js';
+import { kindOf, addFolderSource, findFolderSource } from './folder_source.js';
+import { checkModelFiles } from './voice_model.js';
 import { FONT_EXTS, faceFromName, chosenUserFont, chooseUserFont, userFontOptions, loadDeviceFonts } from './user_fonts.js';
 // CHOOSING (2026-10-02): the device's font and its colour look, on this page, through the menu's own
 // field machinery and choice picker - one engine for every choice in the product.
@@ -65,11 +80,21 @@ export const USER_FOLDERS_PAGE = 'user-folders';
 // (Not frozen: a host may tag its rows - kiosk.js's `tagged` - and the menu treats rows as its own.)
 export const USER_FOLDER_ITEMS = [
   { kind: 'item', id: USER_FOLDERS_PAGE, label: 'Your own folders',
-    hint: 'fonts, colour looks and audio plugins on this device', page: USER_FOLDERS_PAGE },
+    hint: 'your Nimrod folder: pictures, music, fonts, voice model and more, on this device', page: USER_FOLDERS_PAGE },
 ];
 
 // The words for each kind. `none` is what an empty folder says (what to put in it).
 export const KIND_WORDS = Object.freeze({
+  pictures: Object.freeze({ title: 'Pictures', what: 'pictures', noun: ['picture', 'pictures'],
+    none: 'No pictures directly in it yet.' }),
+  music: Object.freeze({ title: 'Music', what: 'music', noun: ['music file', 'music files'],
+    none: 'No music files directly in it yet.' }),
+  videos: Object.freeze({ title: 'Videos', what: 'videos', noun: ['video', 'videos'],
+    none: 'No videos directly in it yet.' }),
+  voice: Object.freeze({ title: 'Voice model', what: 'the voice model',
+    none: 'No voice model in it yet. You only have one after step 4 (convert) of “Your own voice model” in Voice recordings.' }),
+  recordings: Object.freeze({ title: 'Recordings', what: 'recordings', noun: ['item', 'items'],
+    none: 'Nothing saved in it yet.' }),
   fonts: Object.freeze({ title: 'Fonts', what: 'fonts',
     none: 'No font files in it yet (.woff2, .woff, .ttf or .otf).' }),
   luts: Object.freeze({ title: 'Colour looks (LUTs)', what: 'colour looks',
@@ -101,6 +126,34 @@ export function permissionWords(p) {
 export async function scanFolder(kind, dir) {
   try {
     if (!dir) return { items: [] };
+    // Pictures, music, videos (2026-10-04): how many of that kind sit directly in it, and how many folders.
+    // Names only, one level: a photo library of thousands is counted, never opened.
+    const media = { pictures: 'image', music: 'audio', videos: 'video' }[kind];
+    if (media) {
+      let count = 0;
+      let folders = 0;
+      for await (const [name, entry] of dir.entries()) {
+        if (name.startsWith('.')) continue;
+        if (entry.kind === 'directory') folders += 1;
+        else if (kindOf(name) === media) count += 1;
+      }
+      return { items: [], count, folders };
+    }
+    if (kind === 'voice') {
+      const names = [];
+      for await (const [name] of dir.entries()) names.push(String(name));
+      return { items: [], voice: checkModelFiles(names), names };
+    }
+    if (kind === 'recordings') {
+      let count = 0;
+      let exported = false;
+      for await (const [name] of dir.entries()) {
+        if (name.startsWith('.') || name === 'README.txt') continue;
+        if (name === 'nimrod-export.json') exported = true;
+        count += 1;
+      }
+      return { items: [], count, exported };
+    }
     if (kind === 'fonts') {
       const fam = new Map();
       for (const { name } of await listFiles(dir, FONT_EXTS)) {
@@ -368,6 +421,69 @@ export function createDeviceLookRows({ store = null, names = SUBFOLDERS, storage
  * Everything the page shows, read without prompting:
  * `{ available, root: { chosen, name, permission }, kinds: [ kindFolder(...) + { found } ], choices }`.
  */
+// ---------------------------------------------------------------------------------------------
+// WHERE TO SAVE THINGS, AND THE WORDS TO COPY (2026-10-04). Pure.
+// ---------------------------------------------------------------------------------------------
+export const NIMROD_PLACEHOLDER = '<your Nimrod folder>';
+// What "Copy" says, per kind: a sentence somebody can paste into a note, a message or a Save dialog's help.
+export const SAVE_WORDS = Object.freeze({
+  pictures: 'Save photos in', music: 'Save music in', videos: 'Save videos in',
+  fonts: 'Save font files (.woff2, .woff, .ttf, .otf) in', luts: 'Save colour look files (.cube) in',
+  plugins: 'Save audio plugins (one folder each) in', voice: 'Put the files of your converted voice model in',
+  recordings: 'Save recordings and voice-training exports in',
+});
+// What "Connect it for ..." connects it for: the panels that read a media source of that kind.
+export const CONNECT_WORDS = Object.freeze({ pictures: 'photos', music: 'music', videos: 'videos' });
+const POINTER_WORDS = Object.freeze({ pictures: 'your photos are', music: 'your music is', videos: 'your videos are' });
+
+/**
+ * One kind's place, from its `kindFolder` reading: `{ own, name, path, relative, text }`.
+ *   own      the kind points at a folder of its own (its name is known, its path never is);
+ *   relative "<your Nimrod folder>/Pictures" - always true, and all a browser can say by itself;
+ *   path     the full path, only when the root's full path was typed (`rootPath`); '' otherwise;
+ *   text     the best of those to show.
+ */
+export function placeOf(k, rootPath = '') {
+  const sub = (k && k.sub) || SUBFOLDERS[k && k.kind] || (k && k.kind) || '';
+  if (k && k.source === 'own') return { own: true, name: String(k.name || ''), path: '', relative: '', text: `the folder “${k.name || ''}”` };
+  const relative = `${NIMROD_PLACEHOLDER}/${sub}`;
+  const path = rootPath ? joinPath(rootPath, sub) : '';
+  return { own: false, name: sub, path, relative, text: path || relative };
+}
+
+/** The sentence "Copy" puts on the clipboard for one kind's place. Pure. */
+export function copyText(kind, place) {
+  const w = SAVE_WORDS[kind] || 'Save it in';
+  if (!place) return '';
+  if (place.own) return `${w} the folder “${place.name}” (the one chosen for ${(KIND_WORDS[kind] || { what: kind }).what} on this device).`;
+  return `${w}: ${place.text}`;
+}
+
+/** What one kind's folder holds, in words, for the page (`scanFolder`'s reading). Pure. */
+export function foundWords(kind, found) {
+  const w = KIND_WORDS[kind] || { none: '' };
+  if (!found) return '';
+  if (kind === 'voice') {
+    const r = found.voice;
+    if (!r) return w.none;
+    if (r.ok) return 'A voice model is here, ready for the speech service.';
+    if (r.kind === 'checkpoint') return 'A training checkpoint is here: it still needs converting (step 4 of “Your own voice model”).';
+    if ((found.names || []).includes('model.bin')) return `A model is here, but it is missing ${r.missing.join(', ')}. Convert it again (step 4).`;
+    return w.none;
+  }
+  if (typeof found.count === 'number') {
+    const [one, many] = w.noun || ['item', 'items'];
+    const bits = [];
+    if (found.count) bits.push(`${found.count} ${found.count === 1 ? one : many}`);
+    if (found.folders) bits.push(`${found.folders} folder${found.folders === 1 ? '' : 's'}`);
+    const extra = found.exported ? ' (an export for training is here)' : '';
+    return bits.length ? `In it: ${bits.join(' and ')}${extra}.` : w.none;
+  }
+  return found.items.length
+    ? `Found: ${found.items.map((it) => (it.detail ? `${it.name} (${it.detail})` : it.name)).join(', ')}.`
+    : w.none;
+}
+
 export async function readUserFolders({ view = (typeof window !== 'undefined' ? window : null), store = handleStore(), names = SUBFOLDERS,
   storage, fontSet, fontsFailed = [] } = {}) {
   let rootHandle = null;
@@ -382,7 +498,7 @@ export async function readUserFolders({ view = (typeof window !== 'undefined' ? 
   const luts = kinds.find((k) => k.kind === 'luts');
   const choices = deviceChoices({ storage, fontSet, fontsFailed,
     lutFiles: luts && luts.found ? luts.found.items.map((it) => it.name) : null });
-  return { available: available(view), root, kinds, choices };
+  return { available: available(view), root, kinds, choices, rootPath: readRootPath(storage) };
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -424,20 +540,40 @@ function lookChoiceHtml(c, items, mode) {
 export function userFoldersHtml(s) {
   const parts = [];
   const items = s.choices ? choiceItems(s.choices) : [];
+  const rootPath = s.rootPath || '';
   parts.push(say('Files in these folders are read on this device and never uploaded. Everything here is off until somebody chooses it.'));
+  parts.push(say('Folder access belongs to this device and this browser. On a second computer, or in another browser, set up '
+    + 'the Nimrod folder there once too; every kind below then finds its own folder in it.', 'data-uf-per-device'));
   if (!s.available) {
     parts.push(say('This browser cannot open a folder you choose (Chrome and Edge can; Firefox and Safari cannot yet).', 'data-uf-unavailable'));
   }
   // --- the root ---
   parts.push('<div class="st-head" data-uf-section="root">Your Nimrod folder</div>');
   if (!s.root.chosen) {
-    parts.push(say(`Not chosen. Choosing one makes ${Object.values(SUBFOLDERS).join(', ')} folders inside it, each with a short note saying what goes in it.`, 'data-uf-root-state'));
+    parts.push(say(`Not set up yet. “Set up your Nimrod folder” asks you to choose or make one folder (anywhere: Documents, `
+      + `a USB drive), then makes ${Object.values(SUBFOLDERS).join(', ')} inside it, each with a README.txt saying what goes there. `
+      + 'Nothing else is touched, and there is nothing to download.', 'data-uf-root-state'));
   } else {
     parts.push(say([`Using “${s.root.name}”.`, permissionWords(s.root.permission)].filter(Boolean).join(' '), 'data-uf-root-state'));
   }
-  if (s.available) parts.push(button('pick-root', s.root.chosen ? 'Choose a different Nimrod folder…' : 'Choose your Nimrod folder…'));
+  if (s.available && !s.root.chosen) parts.push(button('pick-root', 'Set up your Nimrod folder…', 'choose or make a folder'));
+  if (s.available && s.root.chosen) {
+    parts.push(button('set-up', 'Set up your Nimrod folder again', 'adds only what is missing; nothing is changed or removed'));
+    parts.push(button('pick-root', 'Choose a different Nimrod folder…'));
+  }
   if (s.root.chosen && s.root.permission !== 'granted') parts.push(button('allow-root', 'Allow it again', 'the browser asks'));
   if (s.root.chosen) parts.push(button('forget-root', 'Stop using it on this device', 'the folder and its files stay where they are'));
+  // Its full path: optional, this device only. A browser never tells a page where a folder really is.
+  parts.push(say('A browser never tells a web page where a folder really is, so the places below read “<your Nimrod folder>/…”. '
+    + 'Type its full path once to get full paths you can copy (in Windows: Shift + right-click the folder, “Copy as path”). '
+    + 'Optional; kept on this device only.', 'data-uf-path-note'));
+  parts.push(`<p style="display:block;margin:0 0 8px"><input type="text" data-uf-path aria-label="Your Nimrod folder's full path"
+    placeholder="for example D:\\Nimrod" value="${esc(rootPath)}" spellcheck="false" autocomplete="off"
+    style="width:100%;box-sizing:border-box;min-height:44px;font:inherit;padding:6px 10px;border-radius:10px;border:1px solid currentColor;background:transparent;color:inherit"></p>`);
+  parts.push(button('save-path', 'Keep this path on this device', rootPath ? 'empty it and press to forget it' : ''));
+  if (rootPath && s.root.chosen && !pathMatchesRoot(rootPath, s.root.name)) {
+    parts.push(say(`That path ends in “${lastName(rootPath)}”, but the folder chosen is “${s.root.name}”. Check it is the same folder.`, 'data-uf-path-mismatch'));
+  }
   // --- each kind ---
   for (const k of s.kinds) {
     const w = KIND_WORDS[k.kind] || { title: k.kind, what: k.kind, none: '' };
@@ -445,15 +581,17 @@ export function userFoldersHtml(s) {
     let where;
     if (k.source === 'own') where = `From its own folder, “${k.name}”.`;
     else if (k.source === 'root') where = `From your Nimrod folder: “${k.name}”.`;
-    else where = 'No folder yet: choose your Nimrod folder above, or a folder just for these.';
+    else where = 'No folder yet: set up your Nimrod folder above, or choose a folder just for these.';
     parts.push(say([where, k.source !== 'none' ? permissionWords(k.permission) : ''].filter(Boolean).join(' '), `data-uf-where="${esc(k.kind)}"`));
+    if (POINTER_KINDS.includes(k.kind)) {
+      parts.push(say(`Nothing is copied. Use the ${SUBFOLDERS[k.kind]} folder in your Nimrod folder, or point at the folder `
+        + `${POINTER_WORDS[k.kind]} already in: it is read where it is.`, `data-uf-pointer="${esc(k.kind)}"`));
+    }
     let found;
     if (k.found) {
-      found = k.found.items.length
-        ? `Found: ${k.found.items.map((it) => (it.detail ? `${it.name} (${it.detail})` : it.name)).join(', ')}.`
-        : w.none;
+      found = foundWords(k.kind, k.found);
     } else if (k.missing) {
-      found = `The “${SUBFOLDERS[k.kind] || k.kind}” folder is not in your Nimrod folder any more. Choosing the Nimrod folder again makes it.`;
+      found = `The “${k.sub || SUBFOLDERS[k.kind] || k.kind}” folder is not in your Nimrod folder any more. “Set up your Nimrod folder again” makes it.`;
     } else if (k.source !== 'none') {
       found = 'Allow the folder again to see what is in it.';
     } else found = '';
@@ -467,7 +605,20 @@ export function userFoldersHtml(s) {
       }
       parts.push(say('Listed only: nothing on this page runs a plugin. A plugin is a program, so only add ones you trust.', 'data-uf-plugins-note'));
     }
-    if (s.available) parts.push(button('pick-kind', `Choose a different folder for ${w.what}…`, '', k.kind));
+    // Where to save things of this kind, and the words to copy.
+    const place = placeOf(k, rootPath);
+    parts.push(`<p class="st-hint" style="display:block;margin:0 0 8px" data-uf-place="${esc(k.kind)}">Save ${esc(w.what)} in: `
+      + `<code style="user-select:all;word-break:break-all">${esc(place.text)}</code>${k.source === 'none' && !place.own ? ' (once it is set up)' : ''}</p>`);
+    parts.push(button('copy', 'Copy', 'what to save, and where', k.kind));
+    if (place.path) parts.push(button('copy-path', 'Copy the path', 'just the path, for a Save dialog', k.kind));
+    if (CONNECT_WORDS[k.kind] && k.dir) {
+      parts.push(button('connect', `Connect it for ${CONNECT_WORDS[k.kind]}`, 'kept as a media folder on this device; nothing is copied', k.kind));
+    }
+    // THE OVERRIDE, on every kind: point this kind somewhere else, or back at the Nimrod folder.
+    if (s.available) {
+      parts.push(button('pick-kind', POINTER_KINDS.includes(k.kind) ? `Point at the folder ${POINTER_WORDS[k.kind]} already in…`
+        : `Choose a different folder for ${w.what}…`, 'for this kind only', k.kind));
+    }
     if (k.source === 'own') {
       if (k.permission !== 'granted') parts.push(button('allow-kind', 'Allow it again', 'the browser asks', k.kind));
       parts.push(button('use-root', 'Use the one in your Nimrod folder', s.root.chosen ? '' : 'none chosen yet', k.kind));
@@ -486,7 +637,11 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
   // The choices (2026-10-02): where they are stored (default: this browser), the font set and FontFace
   // fonts load into (default: the page's), how the person chooses ('point' | 'step', or a function read
   // at each press), and the list the picker opens in (default: the choice picker as a dialog).
-  storage, fontSet, FontFaceImpl, chooseMode = DEFAULT_CHOOSE_MODE, openDialog = openChoiceDialog } = {}) {
+  storage, fontSet, FontFaceImpl, chooseMode = DEFAULT_CHOOSE_MODE, openDialog = openChoiceDialog,
+  // 2026-10-04: where "Copy" writes (default: the browser's clipboard), and where "Connect it for photos" keeps a
+  // folder as a media source (default: folder_source.js, this device's IndexedDB) - `{ add(handle, label), find(handle) }`.
+  clipboard = (typeof navigator !== 'undefined' ? navigator.clipboard : null),
+  media = { add: addFolderSource, find: findFolderSource } } = {}) {
   let torn = false;
   let last = null;
   let message = '';
@@ -540,13 +695,52 @@ export function renderUserFolders(el, { view = (typeof window !== 'undefined' ? 
   // A cancelled picker is not an error: somebody changed their mind.
   const failed = (err) => (err && err.name === 'AbortError' ? '' : `That did not work: ${String((err && err.message) || err)}`);
 
+  const madeWords = (made) => (made.length
+    ? `Made ${made.join(', ')} in it, each with a README.txt saying what goes there.`
+    : 'Everything was already there. Nothing was changed.');
+
+  // COPY (2026-10-04): no redraw, nothing stored, nobody told - it only puts words on the clipboard.
+  async function copy(kind, pathOnly) {
+    const k = last?.kinds?.find((x) => x.kind === kind);
+    if (!k) return;
+    const place = placeOf(k, last?.rootPath || '');
+    const text = pathOnly ? place.path : copyText(kind, place);
+    if (!text) return;
+    try {
+      if (!clipboard || typeof clipboard.writeText !== 'function') throw new Error('no clipboard');
+      await clipboard.writeText(text);
+      tell(`Copied: ${text}`);
+    } catch {
+      tell(`Could not copy here. Select it and copy it yourself: ${text}`);
+    }
+  }
+
   async function act(name, kind) {
     if (name === 'set') { press(kind); return; }
+    if (name === 'copy' || name === 'copy-path') { await copy(kind, name === 'copy-path'); return; }
     message = '';
     try {
       if (name === 'pick-root') {
         const { made } = await pickRoot({ view, store, names });
-        message = made.length ? `Made ${made.join(', ')} in it.` : '';
+        message = madeWords(made);
+      } else if (name === 'set-up') {
+        const r = await setUpRoot({ view, store, names });
+        message = r.ok ? madeWords(r.made) : (permissionWords(r.permission) || 'The browser did not let this page into the folder.');
+      } else if (name === 'save-path') {
+        const input = el.querySelector('[data-uf-path]');
+        const kept = saveRootPath(input ? input.value : '', storage);
+        message = kept ? `Kept on this device: ${kept}` : 'The path is forgotten on this device.';
+      } else if (name === 'connect') {
+        const k = last?.kinds?.find((x) => x.kind === kind);
+        if (!k?.dir) throw new Error('that folder cannot be read right now');
+        const already = await media.find(k.dir);
+        if (already) {
+          message = `Already connected on this device, as “${already.label}”.`;
+        } else {
+          const label = k.source === 'own' ? k.name : `${k.sub || SUBFOLDERS[kind]} (your Nimrod folder)`;
+          const src = await media.add(k.dir, label);
+          message = `Connected as “${(src && src.label) || label}”. Nothing was copied. Choose it in a panel’s settings where it asks which folder to use.`;
+        }
       } else if (name === 'allow-root') {
         const p = await allowAgain(last?.root?.handle, ROOT_MODE);
         message = p === 'granted' ? '' : permissionWords(p);
