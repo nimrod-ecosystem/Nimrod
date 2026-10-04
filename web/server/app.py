@@ -39,6 +39,7 @@ import claude_ai
 import links
 import notes
 import pack_reviews
+import page_visits
 import recommend
 from version import deploy_commit, safe_code_version
 
@@ -722,8 +723,50 @@ def _people_view(user: str) -> list[dict]:
                     names[other] = _inviter_name(other)
                 v.update({"linked": True, "from": names[other],
                           "messages_from_them": store.link_messages(link["id"], user, other)})
+        if r["home_id"]:
+            # "See their page": '' when it opens for you, else why not (page_visits.REFUSAL_TEXT's codes).
+            v["page"] = _visit_check(user, r)[0]
         out.append(v)
     return out
+
+
+# ------------------------------------------------- SOMEBODY'S PAGE, AS A VISITOR SEES IT (page_visits.py)
+# Mike, 2026-10-04 (night), items 7-9: who can see your page is the people you are connected with plus a setting,
+# and which parts they see is yours to open (by default your card and nothing more). The rules are page_visits.py
+# (pure, test_page_visits.py). Every answer here is reached through a row on the VISITOR's own page (their card for
+# that person) and is filtered on the server, part by part and field by field - never by trusting the client.
+def _visit_check(user: str, row: dict | None) -> tuple[str, dict | None, dict]:
+    """(why not - '' if they may | 'missing' | 'yours' | page_visits' codes, the profile's home row, its page)."""
+    if not row or row.get("account_id") != user:
+        return "missing", None, {}
+    if not row.get("home_id"):
+        return "yours", None, {}
+    home = store.person_row(row["home_id"])
+    if not home:
+        return "missing", None, {}
+    owner = home["account_id"]
+    if owner == user:
+        return "yours", home, {}
+    doc = store.get_state(owner, person_scope(home["id"]), page_visits.PAGE_KEY).get("data") or {}
+    linked = links.linked(store.get_link(user, owner), user, owner)
+    rows = set(store.rows_through(owner, user)) if page_visits.who_of(doc) == "picked" else set()
+    return page_visits.page_refusal(doc, linked=linked, visitor_rows=rows), home, doc
+
+
+@app.get("/api/people/{person_id}/visit")
+def visit_page(person_id: str, user: str = Depends(current_user)):
+    """"See their page": the page of the person behind one of YOUR cards, showing only what they opened to you.
+    Not yours to see: 403, in words. Not a card of yours: the same 404 as no such person."""
+    _check(person_id, ID_RE, "person id")
+    row = store.person_row(person_id)
+    reason, home, doc = _visit_check(user, row)
+    if reason == "missing":
+        raise HTTPException(status_code=404, detail="no such person")
+    name = (home or {}).get("name") or (row or {}).get("name") or ""
+    if reason:
+        return JSONResponse(status_code=409 if reason == "yours" else 403,
+                            content={"error": reason, "text": page_visits.refusal_text(reason, claims.display_name(row, name))})
+    return {"name": name, "call_name": row.get("call_name") or "", "sections": page_visits.visitor_view(doc)}
 
 
 @app.post("/api/people")
@@ -821,11 +864,20 @@ def _person_state_target(user: str, person_id: str, key: str, *, write: bool) ->
 
 
 @app.get("/api/people/{person_id}/state/{key}")
-def get_person_state(person_id: str, key: str, user: str = Depends(current_user)):
+def get_person_state(person_id: str, key: str, request: Request, user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
     acct, pid = _person_state_target(user, person_id, key, write=False)
-    return store.get_state(acct, person_scope(pid), key)
+    got = store.get_state(acct, person_scope(pid), key)
+    # SOMEBODY ELSE'S PAGE, read from a phone or computer through a card that reads it from their home (a person
+    # who took over one you made - claims.READ_THROUGH_CLAIM): that is a visit, and gets only what a visit gets
+    # (page_visits.py). A SCREEN reading it through that card gets the whole page: that card's screens are the
+    # person's own, in their room, set up for them - the same page they see on their own login.
+    if key == page_visits.PAGE_KEY and acct != user and not via_device_key(request):
+        reason, _home, _doc = _visit_check(user, store.person_row(person_id))
+        got = {"data": {"sections": page_visits.card_only() if reason else page_visits.visitor_view(got.get("data") or {})},
+               "version": got.get("version", 0)}
+    return got
 
 
 @app.put("/api/people/{person_id}/state/{key}")
@@ -1270,6 +1322,34 @@ def note_screens(person_id: str, user: str = Depends(current_user)):
         out.append({"id": p["id"], "name": p["name"],
                     "has_note": any(m.get("type") == "note" for m in full.get("modules", []))})
     return {"screens": out}
+
+
+@app.get("/api/people/{person_id}/notes/history")
+def note_history(person_id: str, before: int | None = None, limit: int = notes.HISTORY_PAGE,
+                 user: str = Depends(current_user)):
+    """"See older messages": every note left on this person's screens, newest first, a page at a time
+    (notes.history_entry says what is listed). THE PERSON'S OWN: only the login that holds them (owned_person - the
+    same 404 for not yours and no such person). `next` is the `before` that brings the page after this one."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    names = {s["id"]: s["name"] for s in store.list_profiles(user, person_id)}
+    want = max(1, min(int(limit), notes.HISTORY_MAX))
+    out: list[dict] = []
+    cursor = before
+    while len(out) <= want:
+        chunk = store.events_before(user, list(names), notes.NOTE_STREAMS, notes.NOTE_KIND, before=cursor, limit=100)
+        for e in chunk:
+            cursor = e["id"]
+            h = notes.history_entry(e, names.get(e["profile_id"], ""))
+            if h:
+                out.append(h)
+                if len(out) > want:
+                    break
+        if len(chunk) < 100:
+            break
+    more = len(out) > want
+    out = out[:want]
+    return {"messages": out, "more": more, "next": out[-1]["id"] if more and out else None}
 
 
 @app.get("/api/people/{person_id}/notes/{pid}/{stream}")

@@ -133,6 +133,8 @@ export const SUITES = [
   'claim',
   // 2026-10-04: recommend a YouTube or Spotify song or video to one of your people; "Recommended for you".
   'recommend',
+  // 2026-10-04 (night): See their page (only what they opened to you), Who can see my page / Who sees this, See older messages.
+  'page_visit',
   // 2026-10-04: Home follows the person picked on the people bar (their screen, theme, Home; one made if none).
   'home_person',
   // 2026-10-02: AI characters as profiles (seeds, a person's own, rooms as dashboards) and the profile card.

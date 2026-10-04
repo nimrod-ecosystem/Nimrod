@@ -180,8 +180,9 @@ try {
   check('*** the sections drawn, in order: You, Messages for you, Recommended for you, Your people, Connect with someone, Ask Nimrod ***',
     J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS) && J(probe().sections.map((s) => s.kind)) === J(BUILT_IN_KINDS));
   const cardKeys = () => qa('[data-pp-list] [data-pp-card]').map((c) => c.dataset.ppCard).filter((k) => !k.startsWith('p:') && !k.startsWith('r:'));
-  check('*** the cards in today’s order: you, then Connect with someone, then More / Ask Nimrod; the headings in today’s order ***',
-    J(cardKeys()) === J(['self', 'connect', 'more']) && J(qa('[data-pp-list] h2.pp-h').map((h) => h.textContent)) === J(['Messages for you', 'Recommended for you', 'Your people', 'Connect with someone']),
+  // 'older': "See older messages" under Messages for you (2026-10-04 night, page_visit.js).
+  check('*** the cards in today’s order: you, See older messages, then Connect with someone, then More / Ask Nimrod; the headings in today’s order ***',
+    J(cardKeys()) === J(['self', 'older', 'connect', 'more']) && J(qa('[data-pp-list] h2.pp-h').map((h) => h.textContent)) === J(['Messages for you', 'Recommended for you', 'Your people', 'Connect with someone']),
     J([cardKeys(), qa('[data-pp-list] h2.pp-h').map((h) => h.textContent)]));
   check('...and each section takes no room of its own (it is the same column as before)', qa('[data-pp-sec]').every((w) => getComputedStyle(w).display === 'contents'));
   check('*** mounting wrote nothing: no page of their own on the server ***', (await serverPage()).version === 0 && !probe().own);

@@ -143,6 +143,35 @@ def visible_row(e: dict) -> dict:
     }
 
 
+# ---------------------------------------------------------------- "See older messages"
+# Mike, 2026-10-04 (DECISIONS.md "People across accounts", item 9): "you can scroll back through your old notes".
+# The person's own history across all their screens and all three note streams, newest first, a page at a time.
+#
+# HOW FAR BACK IT GOES: to the first note ever left. Notes are rows in the append-only `events` table, which a
+# trigger keeps from being changed or deleted (the note's history is the note - see the header), so nothing here
+# prunes, and this changes no retention: it reads what was already kept.
+#
+# WHAT IS LEFT OUT: a take-down (it has no words) and a "put back" (the same note shown again, already in the list
+# once). WHAT A ROW SAYS: the words, who signed it, when, and which screen - never which login wrote it (the owner's
+# own screen log has that, in `principal_id`; this list is for reading, not for auditing).
+HISTORY_PAGE = 20      # how many one press of "Show more" brings: a phone screen or two of messages
+HISTORY_MAX = 50       # the most one request may ask for: bounds one request, not a person
+
+
+def history_entry(e: dict, screen_name: str = "") -> dict | None:
+    """One note row as a line of "See older messages", or None if it is not one to list. PURE."""
+    if not isinstance(e, dict) or e.get("kind") != NOTE_KIND:
+        return None
+    d = e.get("data") if isinstance(e.get("data"), dict) else {}
+    if d.get("via") in (TAKEN_DOWN, "put back"):
+        return None
+    text = str(d.get("text") or "").strip()
+    if not text:
+        return None
+    return {"id": e.get("id"), "text": text, "author": str(d.get("author") or "").strip() or SOMEONE,
+            "at": e.get("created_at"), "screen": screen_name}
+
+
 class RateLimit:
     """Sliding window, per key, in process.
 
