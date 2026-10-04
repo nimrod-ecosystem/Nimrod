@@ -174,6 +174,8 @@ export const HEALTH_EXPECT = {
   view:        { idle: true },
   // The voice recordings (row 2.44): a list nobody is reviewing is a list, not a stalled panel.
   voice_review: { idle: true },
+  // The voice model's steps (2026-10-04): one step on screen, waiting on nobody; nobody pressing is not a fault.
+  voice_model: { idle: true },
 };
 
 export function expectFor(type, table = HEALTH_EXPECT) {

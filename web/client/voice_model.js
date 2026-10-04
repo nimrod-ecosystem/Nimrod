@@ -47,6 +47,10 @@
 // speech_service/my_voice_model stays the fallback. When the person has typed the Nimrod folder's full path
 // (user_folders.js `readRootPath`, this device only), the commands carry it; otherwise they carry a placeholder
 // and say to replace it.
+//
+// *** WHERE IT IS SHOWN (2026-10-04): modules/voice_model.js, the "Voice model" module in the AI set, walks these
+// steps one at a time with these helpers; `mountVoiceModel` below is its "All six steps on one page" view. The Voice
+// recordings panel's tab now points there.
 import { cleanPrompt, exportEuphonia, EUPHONIA_DATA, EUPHONIA_AUDIO, EUPHONIA_PHRASE } from './voice_recording.js';
 import { SUBFOLDERS, readRootPath, joinPath, kindFolder, handleStore } from './user_folders.js';
 
@@ -83,7 +87,7 @@ export const VOICE_MODEL_FIELDS = [
     onLabel: 'On', offLabel: 'Off',
     note: 'A speech model trained on this person’s own voice, running on this computer. Only this person’s '
         + 'settings use it. Off: the standard recogniser. Not on a Raspberry Pi. How to make one: the Voice '
-        + 'recordings panel, “Your own voice model”.' },
+        + 'model panel (Modules, under AI).' },
   // No folder row (2026-10-03): the folder belongs to the speech service, which looks in its own place.
   { key: 'voiceModelPort', label: 'My own voice model: its port', kind: 'number', default: VOICE_MODEL_PORT,
     min: 1024, max: 65535, step: 1, level: 'advanced',
@@ -368,6 +372,10 @@ const defaultNimrodFolder = () => {
     voice: () => kindFolder('voice', { store: st || (st = handleStore()) }),
   };
 };
+
+// The defaults above, for the guided Voice model module (modules/voice_model.js, 2026-10-04), which shares this
+// page's helpers rather than keeping copies: the read-only folder picker, this device's Nimrod folder, the storage.
+export { defaultPicker as modelFolderPicker, defaultNimrodFolder as nimrodVoiceFolder, defaultStorage as voiceModelStorage };
 
 export function mountVoiceModel(root, {
   personId = null, values = () => ({}), save = null, recorder = null, store = null, fs = null, storage = defaultStorage(),

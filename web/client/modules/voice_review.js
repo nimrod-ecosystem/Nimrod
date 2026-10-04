@@ -13,12 +13,33 @@
 // the screen's own - absent on a page that does not listen, which then says so), export them for Euphonia's
 // notebook, and the commands that convert the result and start it. `ctx.saveVoiceModel` writes only that
 // person's own voice-model settings; absent, the page names the settings instead.
+//
+// *** 2026-10-04: THE TAB IS NOW A POINTER TO THE VOICE MODEL MODULE (modules/voice_model.js). *** Argued, both ways:
+//   KEEP THE WHOLE PAGE HERE: somebody reviewing recordings is one tab away from the steps, and nothing they knew moves.
+//   A POINTER, and it decides it: the steps are now a module of their own that walks them one at a time (Mike: "a
+//   module that walks people through the setup"), and the same six steps drawn twice, in two different shapes, is
+//   two things to keep in step. The one-page version still exists, inside that module ("All six steps on one page"),
+//   and the progress is kept in one place, so nothing anybody did here is lost. The tab stays, so whoever looks here
+//   by habit is told where it went - and, on a screen, can turn this panel into it with one press.
 
 import { registerModule } from '../module.js';
 import { createIdbPairStore, createMemoryPairStore, voiceRecordingOptionsFrom } from '../voice_recording.js';
 import { mountVoiceReview } from '../voice_review.js';
-import { mountVoiceModel } from '../voice_model.js';
 import { available as fsAvailable, pickFolder } from '../fs_sink.js';
+import { PLACE_MODULE_TOPIC } from '../actions.js';
+
+export const VOICE_MODEL_MODULE = 'voice_model';
+/** The pointer the "Your own voice model" tab shows. `canSwitch`: this panel can become the module. Pure. */
+export function voiceModelPointerHTML({ canSwitch = false } = {}) {
+  return `<div data-vm-pointer>
+    <h3 class="vr-h">Your own voice model</h3>
+    <p>It has a panel of its own now: <b>Voice model</b>, in Modules under AI. It walks the six steps one at a time
+      (record the phrases, export them, train, convert, put the folder in place, start the service), works out which
+      step you are on, and keeps its settings afterwards. Anything you already did here carries over.</p>
+    ${canSwitch ? '<div class="vr-bar"><button type="button" data-vm-switch>Switch this panel to Voice model</button></div>'
+      : '<p class="vr-said">Add it to a dashboard from Modules (AI).</p>'}
+  </div>`;
+}
 
 const CSS = `
 .m-voice-review{position:absolute;inset:0;overflow:auto;box-sizing:border-box;padding:16px;
@@ -77,17 +98,18 @@ registerModule(
           body.hidden = showModel;
           modelBox.hidden = !showModel;
           if (showModel && !model) {
-            // Built on first open, so a screen that never opens it never arms anything.
-            model = mountVoiceModel(modelBox, {
-              personId: ctx.personId || null,
-              values: () => { try { return ctx.personRow?.() || {}; } catch { return {}; } },
-              save: typeof ctx.saveVoiceModel === 'function' ? (patch) => ctx.saveVoiceModel(patch) : null,
-              recorder: ctx.voiceRecorder || null,
-              store,
-              fs: { available: () => fsAvailable(), pickFolder: () => pickFolder() },
+            // The pointer (see the header). Switching goes through the library in this panel's place, exactly as
+            // Switch module does, so the Nimrod Game's lock is asked as for any press.
+            const bus = ctx.rootBus || ctx.bus || null;
+            const canSwitch = !!(bus && typeof bus.publish === 'function' && ctx.instanceId);
+            modelBox.innerHTML = voiceModelPointerHTML({ canSwitch });
+            modelBox.querySelector('[data-vm-switch]')?.addEventListener('click', () => {
+              try { bus.publish(PLACE_MODULE_TOPIC, { id: ctx.instanceId, type: VOICE_MODEL_MODULE, from: 'press' }); }
+              catch (err) { console.error('voice review: switch to the voice model', err); }
             });
-          } else if (showModel) model.refresh();
-          if (!showModel) panel?.refresh?.();      // phrases just read show up in "All"
+            model = true;
+          }
+          if (!showModel) panel?.refresh?.();
         });
         panel = mountVoiceReview(body, {
           store,
@@ -103,7 +125,6 @@ registerModule(
       destroy() {
         try { panel?.destroy(); } catch { /* gone */ }
         panel = null;
-        try { model?.destroy(); } catch { /* gone */ }
         model = null;
         if (!ctx.voiceStore) { try { store?.close?.(); } catch { /* gone */ } }
         store = null;

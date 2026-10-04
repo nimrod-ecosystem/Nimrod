@@ -510,9 +510,17 @@ try {
     await settle(6);
     const tab = box.querySelector('[data-tab="model"]');
     check('*** the Voice recordings panel has a "Your own voice model" tab ***', tab && /own voice model/i.test(tab.textContent));
+    const placed = [];
+    bus.subscribe('shell/place-module', (p) => placed.push(p));
     tab.click();
     await settle(2);
-    check('...which shows the page', !!box.querySelector('[data-cmd="serve"]') && /Euphonia/.test(box.textContent));
+    // 2026-10-04: the steps are the Voice model module now; the tab says where, and can turn this panel into it.
+    check('*** ...which now points at the Voice model module (Modules, AI) instead of drawing the steps again ***',
+      !!box.querySelector('[data-vm-pointer]') && /Voice model/.test(box.textContent) && /AI/.test(box.textContent)
+        && !box.querySelector('[data-cmd="serve"]'), box.textContent.slice(0, 300));
+    box.querySelector('[data-vm-switch]')?.click();
+    check('*** "Switch this panel to Voice model": this panel, through the library, as Switch module does ***',
+      placed.length === 1 && placed[0].id === 'vm1' && placed[0].type === 'voice_model', JSON.stringify(placed));
     box.querySelector('[data-tab="recordings"]').click();
     check('...and back to the recordings', !box.querySelector('[data-model]') || box.querySelector('[data-model]').hidden);
     inst.destroy();

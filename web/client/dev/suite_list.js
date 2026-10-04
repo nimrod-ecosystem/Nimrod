@@ -100,6 +100,9 @@ export const SUITES = [
   'voice_recording', 'intercom',
   // 2026-10-02: a speech model trained on one person's own voice (Euphonia): the page, reading phrases, the export.
   'voice_model',
+  // 2026-10-04: the Voice model module - the six steps one at a time, worked out from evidence; export to Recordings;
+  // the "is it answering?" probe; its settings; the AI set in the catalog and the library.
+  'voice_model_guide',
   // 2026-10-02: the caller page - a family member calls a screen (call.html), gated on the drive grant.
   'call_page',
   // 2026-10-02: a call to a screen with no Call panel - a notice (Decline / Answer), and the call it answers
