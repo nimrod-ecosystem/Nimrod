@@ -46,6 +46,7 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import '../modules/trivia.js';
 import '../modules/scoreboard.js';
 import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source.js';
+import { answerSourceMode, answerSourceHtml, answerSourceText } from '../answer_source.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -76,6 +77,9 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               // "never chosen", which `lessons.js`'s own `modeFrom` reads as sandbox, same as
               // any other profile that has not touched the setting.
               mode = undefined,
+              // `ctx.isScreen` (kiosk.js: true on a real screen). Left out unless a test sets it,
+              // the way a harness or the modules page leaves it out.
+              isScreen = undefined,
               // Per-stream rows, SHARED between rigs that are handed the same object — two rigs
               // with one `store` are two panels on one profile (the contests log is per profile).
               store = {} } = {}) {
@@ -108,6 +112,7 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
   };
   const inst = mountModule('trivia', {
     mount: host, bus, rand, recorder,
+    ...(isScreen !== undefined ? { isScreen } : {}),
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
     makeState: (key) => (key === 'settings' ? modeRow : sharedRow),
@@ -692,6 +697,138 @@ Shared Q | Shared A` });
     check('*** an explicit "bank" choice is respected even though the default is now "pack" ***',
       /Own Q/.test(r.probe().question?.question || ''), JSON.stringify(r.probe().question));
     r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** "Show where the answer comes from" (Mike, 2026-10-04): on by default, after the answer ***');
+  {
+    const ITEM = (extra = {}) => ({ question: 'Which star is closest to Earth?', answer: 'The Sun',
+      wrong: ['Sirius', 'Vega', 'Polaris'], ...extra });
+    const NASA = [{ url: 'https://science.nasa.gov/sun/', title: 'NASA' }];
+    const BRIT = [{ ref: 'Encyclopaedia Britannica', note: 'giraffe' }];
+    const COMMON = [{ ref: 'common knowledge', note: 'Widely known; the fact-check pass judged it certain.' }];
+    const answerIt = (r) => {
+      const q = r.probe().question; r.host.querySelector(`[data-opt="${q.correctIndex}"]`).click();
+    };
+    const missOnce = (r) => {
+      const q = r.probe().question; r.host.querySelector(`[data-opt="${q.correctIndex === 0 ? 1 : 0}"]`).click();
+    };
+    const line = (r) => r.host.querySelector('[data-answer-source]');
+    const one = async (extra, opts = {}) => { const r = rig({ saved: { bank: [ITEM(extra)], ...(opts.saved || {}) },
+      ...(opts.isScreen !== undefined ? { isScreen: opts.isScreen } : {}) }); await sleep(20); return r; };
+
+    const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showSource');
+    check('*** the row exists, in Mike\'s words, ON by default (row and DEFAULTS agree) ***',
+      row && row.label === 'Show where the answer comes from' && row.default === 'on' && DEFAULTS.showSource === 'on',
+      JSON.stringify(row));
+    check('three stops: on / on and say "common knowledge" / off',
+      JSON.stringify((row?.options || []).map((o) => o.value)) === '["on","all","off"]', JSON.stringify(row?.options));
+    check('a saved true/false (a plain switch, if anything wrote one) still means on/off',
+      answerSourceMode({ showSource: true }) === 'on' && answerSourceMode({ showSource: false }) === 'off'
+      && answerSourceMode({}) === 'on' && answerSourceMode({ showSource: 'nonsense' }) === 'on'
+      && answerSourceMode({ showSource: 'all' }) === 'all');
+
+    {
+      const r = await one({ sources: NASA });
+      check('*** before the answer: no source on screen ***', !line(r) && !/Source:/.test(r.host.textContent),
+        r.host.textContent.slice(0, 200));
+      missOnce(r);
+      check('*** a wrong guess does not show it either (the question is still open) ***', !line(r) && !/Source:/.test(r.host.textContent));
+      answerIt(r);
+      check('*** default on: once answered, "Source: NASA (science.nasa.gov)" ***',
+        !!line(r) && line(r).textContent.trim() === 'Source: NASA (science.nasa.gov)', line(r)?.outerHTML || r.host.innerHTML.slice(0, 400));
+      const a = line(r)?.querySelector('a');
+      check('*** off a screen it is a link that opens in a new tab (noopener) ***',
+        !!a && a.getAttribute('href') === NASA[0].url && a.target === '_blank' && /noopener/.test(a.rel), line(r)?.outerHTML);
+      const said = r.host.querySelector('.tv-said'), next = r.host.querySelector('[data-next]');
+      check('it sits under "Correct." and above Next',
+        !!said && !!next && !!line(r)
+        && (said.compareDocumentPosition(line(r)) & Node.DOCUMENT_POSITION_FOLLOWING)
+        && (line(r).compareDocumentPosition(next) & Node.DOCUMENT_POSITION_FOLLOWING));
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ sources: NASA }, { isScreen: true });
+      answerIt(r);
+      check('*** on a screen: the same words, host visible, plain text, NOT a link ***',
+        !!line(r) && !line(r).querySelector('a') && line(r).textContent.trim() === 'Source: NASA (science.nasa.gov)',
+        line(r)?.outerHTML);
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ sources: [{ url: 'https://www.klobuchar.senate.gov/public/index.cfm/2024/12/a-long-path' }] }, { isScreen: true });
+      answerIt(r);
+      check('an untitled link shows just its host (the player is not reading a whole address)',
+        line(r)?.textContent.trim() === 'Source: klobuchar.senate.gov', line(r)?.outerHTML);
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ sources: BRIT });
+      answerIt(r);
+      check('*** a named reference: "Source: Encyclopaedia Britannica — giraffe" ***',
+        line(r)?.textContent.trim() === 'Source: Encyclopaedia Britannica — giraffe' && !line(r).querySelector('a'),
+        line(r)?.outerHTML);
+      r.inst.destroy();
+    }
+    {
+      const r = await one({ sources: COMMON });
+      answerIt(r);
+      check('*** "common knowledge", on the default: nothing at all (no clutter on most questions) ***',
+        !line(r) && !/Source:/.test(r.host.textContent), r.host.innerHTML.slice(0, 400));
+      r.inst.destroy();
+      const r2 = await one({ sources: COMMON }, { saved: { showSource: 'all' } });
+      answerIt(r2);
+      check('*** ...with "on, and say common knowledge": "Source: common knowledge", and NOT the reviewer\'s note ***',
+        line(r2)?.textContent.trim() === 'Source: common knowledge' && !/fact-check/.test(r2.host.textContent),
+        line(r2)?.outerHTML);
+      r2.inst.destroy();
+    }
+    for (const off of ['off', false]) {
+      const r = await one({ sources: NASA }, { saved: { showSource: off } });
+      answerIt(r);
+      check(`*** the setting off (${JSON.stringify(off)}): no source after the answer ***`,
+        r.probe().answered !== null && !line(r) && !/Source:/.test(r.host.textContent));
+      r.inst.destroy();
+    }
+    {
+      // A pack written before per-item sources (or a hand-written bank row): nothing to show.
+      const errs = [];
+      const orig = console.error;
+      console.error = (...a) => { errs.push(a.join(' ')); orig.apply(console, a); };
+      let r;
+      try {
+        r = await one({});
+        answerIt(r);
+      } finally { console.error = orig; }
+      check('*** no source on the item (an old pack): nothing shown, no error, Next still there ***',
+        r.probe().answered !== null && !line(r) && !/Source:/.test(r.host.textContent)
+        && !!r.host.querySelector('[data-next]') && !errs.some((e) => /trivia/i.test(e)), errs.join(' | '));
+      r.inst.destroy();
+    }
+    {
+      // A lesson-routed question's own `source` is the transcript line ("From the lesson"), not a citation.
+      const r = await one({ source: 'The Sun is the star at the centre of our solar system.' });
+      answerIt(r);
+      check('a lesson question still shows "From the lesson", and no second "Source:" line',
+        /From the lesson/.test(r.host.textContent) && !line(r));
+      r.inst.destroy();
+    }
+    {
+      const mapped = packToTriviaBank({ items: [
+        { question: 'Q1', answers: ['a', 'b', 'c'], correct: 'a', source: { url: 'https://www.nasa.gov/x', title: 'NASA' } },
+        { question: 'Q2', answers: ['a', 'b', 'c'], correct: 'a' },
+        { question: 'Q3', answers: ['a', 'b', 'c'], correct: 'a', source: 'certain' },
+      ] });
+      check('*** a pack item\'s own source rides into the bank, normalised; none (old pack) or a non-source carries nothing ***',
+        JSON.stringify(mapped[0].sources) === '[{"url":"https://www.nasa.gov/x","title":"NASA"}]'
+        && mapped[1].sources === undefined && mapped[2].sources === undefined, JSON.stringify(mapped));
+      check('a title is escaped, and a link that is not http(s) is never made a link',
+        !/<b>/.test(answerSourceHtml([{ url: 'https://a.org/', title: '<b>x</b>' }]))
+        && !/href="javascript/i.test(answerSourceHtml([{ url: 'javascript:alert(1)', title: 'x' }])));
+      check('answerSourceText reads the same words as the line',
+        answerSourceText(NASA) === 'Source: NASA (science.nasa.gov)' && answerSourceText(COMMON) === ''
+        && answerSourceText(COMMON, { mode: 'all' }) === 'Source: common knowledge' && answerSourceText([]) === '');
+    }
   }
 
   // =====================================================================================

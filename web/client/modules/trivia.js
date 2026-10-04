@@ -73,7 +73,8 @@ import { createTelemetry } from '../telemetry.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
-import { loadPack } from '../packs.js';
+import { loadPack, itemSources } from '../packs.js';
+import { answerSourceField, answerSourceHtml, answerSourceMode, ANSWER_SOURCE_DEFAULT } from '../answer_source.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          TRIVIA_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
@@ -137,6 +138,11 @@ export const DEFAULTS = {
   // passed play (as "<topic> — N reviewed questions"). On, the review packs join "Which pack" and their
   // open questions carry a quiet ✓ fine / ✗ wrong for whoever is reviewing.
   includeUnreviewed: false,
+  // *** "SHOW WHERE THE ANSWER COMES FROM", ON BY DEFAULT (Mike, 2026-10-04: "Maybe even have an option to
+  // always show the source when the answer is given that's on by default."). *** A question's own source, in
+  // one quiet line under "Correct.", once the answer is given. 'on' | 'all' (also says "common knowledge") |
+  // 'off'. Every choice is argued in ../answer_source.js.
+  showSource: ANSWER_SOURCE_DEFAULT,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -179,12 +185,21 @@ export function parseBank(text) {
 // `answers` includes `correct` (packs.js requires it), so `wrong` is everything else in order —
 // which matters for `makeQuestion`'s degrading-option rule below: a pack's distractors are
 // somebody's real, written wrong answers, exactly like a bank's, never generated here.
+//
+// `sources` (2026-10-04): the item's own source (packs.js PER-ITEM SOURCES), normalised, for "Show where the
+// answer comes from". Only when it names one — an item from a pack written before per-item sources carries
+// nothing, and shows nothing. NOT `source`: that field is a lesson question's transcript line (below).
 export function packToTriviaBank(pack) {
-  return (pack.items || []).map((it) => ({
-    question: it.question,
-    answer: it.correct,
-    wrong: (it.answers || []).filter((a) => a !== it.correct),
-  }));
+  return (pack.items || []).map((it) => {
+    const row = {
+      question: it.question,
+      answer: it.correct,
+      wrong: (it.answers || []).filter((a) => a !== it.correct),
+    };
+    const sources = itemSources(it.source);
+    if (sources.length) row.sources = sources;
+    return row;
+  });
 }
 
 // Turn a bank into a round. Deterministic under an injected `rand`, the same way `wordforge`
@@ -243,8 +258,12 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
   // nothing about the wrong ones), the optional Wikipedia check, the "I think this question is
   // wrong" contest after every answer (../contests.js), and the setting to turn review back on.
   // Stated here because this function's header still says "nothing here generates an option".
+  // `sources` (2026-10-04): what the answer rests on, for "Show where the answer comes from" — a pack item's
+  // own (packToTriviaBank), or a review-pack item's (pack_reviews.js playableBank keeps it under `review`).
+  const sources = Array.isArray(item.sources) ? item.sources
+    : (Array.isArray(item.review?.sources) ? item.review.sources : []);
   return { question: item.question, answer: item.answer, options,
-           correctIndex: options.indexOf(item.answer), source: item.source || '' };
+           correctIndex: options.indexOf(item.answer), source: item.source || '', sources };
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -331,6 +350,9 @@ const SETTINGS = [
   { key: 'includeWords', label: 'Also ask about the word bank', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'Only written questions',
     note: 'a vocabulary row already holds everything a multiple-choice question needs' },
+  // Mike, 2026-10-04. Per game (this panel's settings, like the score row), not per account: the same quiz on
+  // a shared screen and on somebody's phone may want different amounts under the answer.
+  answerSourceField(),
   // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
   // rather than buried. A microphone that a person cannot easily find the switch for is a
   // microphone they cannot easily turn off. ***
@@ -527,6 +549,7 @@ registerModule(
           ${done
             ? `<p class="tv-said">Correct.</p>
                ${q.source ? `<p class="tv-src" data-source>From the lesson: “${esc(q.source)}”</p>` : ''}
+               ${answerSourceLine()}
                <div class="tv-after">
                  <button type="button" class="tv-next" data-next${after === 0 ? ' data-on="1"' : ''}>Next question</button>
                  ${contested ? '' : `<button type="button" class="tv-contest" data-contest${after === 1 ? ' data-on="1"' : ''}>I think this question is wrong</button>`}
@@ -549,13 +572,23 @@ registerModule(
         </div>`;
     }
 
+    // *** "SHOW WHERE THE ANSWER COMES FROM" (Mike, 2026-10-04; ../answer_source.js). *** Drawn only in the
+    // answered branch above, so never before the answer, nor after a wrong guess (the question is still open).
+    // NOT WHILE THE REVIEW STRIP IS SHOWING: the strip already names the source, in full, in every state — the
+    // same words twice in one panel is clutter, and the strip's version is the one with the reviewer's detail.
+    function answerSourceLine() {
+      if (!q || q.reviewing) return '';
+      return answerSourceHtml(q.sources, { mode: answerSourceMode(cfg), onScreen: ctx.isScreen === true });
+    }
+
     // *** THE REVIEW CONTROL: SMALL, QUIET, AND OUT OF THE PLAYER'S WAY. *** At the foot of the panel, in
     // muted text, after everything the player reads. Not one of the highlight's stops (`highlight` walks the
     // answers, `after` walks Next and the contest — neither knows this exists), so the person playing never
     // spends a press on it. A reviewer reaches it by pointer, by the W / O keys, by voice ("that one is
     // wrong"), or by a switch bound to "Reviewing questions" in Devices (../pack_reviews.js REVIEW_ACTIONS).
     // THE SOURCE (Mike, 2026-10-04) is part of the strip, in every state: what the question rests on is what
-    // the reviewer checks it against. Inside the strip, so the player never sees it.
+    // the reviewer checks it against — full address, the note, and "none given" when there is none. (The
+    // player's own, shorter line after the answer is answerSourceLine above, and steps aside for this.)
     function reviewHtml() {
       if (!q || !q.reviewing) return '';
       // (On a real screen, ctx.isScreen, a source link is plain words with its host: no stray tab. page_links.js.)

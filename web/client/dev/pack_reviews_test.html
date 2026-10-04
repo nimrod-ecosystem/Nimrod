@@ -303,6 +303,8 @@ try {
     const second = r.shown();
     r.answer();
     check('answering does not pass it yet (the reviewer can still press ✗ with the answer showing)', rows.length === 1);
+    check('*** while reviewing, the answer does not repeat the source the strip already shows ***',
+      !r.host.querySelector('[data-answer-source]') && sourceShown(), r.host.innerHTML.slice(0, 500));
     r.bus.publish('trivia/next');
     check('*** answered and moved on, nobody pressed ✗: passed ***', rows.length === 2 && rows[1].kind === 'pass'
       && rows[1].data.question === second);
@@ -364,8 +366,21 @@ try {
     const passedQs = new Set(rows.filter((e) => e.kind === 'pass').map((e) => e.data.question));
     check('the pack plays ONLY its passed questions, with no control', r3.probe().bank === passedQs.size
       && passedQs.has(r3.shown()) && !r3.host.querySelector('[data-review]'), `${r3.probe().bank} ${r3.shown()}`);
-    check('*** the player never sees a source: a passed question plays with no "Source:" anywhere ***',
+    check('*** before the answer the player sees no source: a passed question goes up with no "Source:" anywhere ***',
       !r3.host.querySelector('[data-review-source]') && !/Source:/.test(r3.host.textContent));
+    // Mike, 2026-10-04: "Maybe even have an option to always show the source when the answer is given that's on
+    // by default." Trivia's "Show where the answer comes from" (../answer_source.js) -- the player's own line,
+    // after the answer, never the reviewer's strip.
+    {
+      const shownQ = r3.shown();
+      r3.answer();
+      const exp = itemSources(fixturePack.items.find((it) => it.question === shownQ)?.source)
+        .filter((s) => (s.ref || '').toLowerCase() !== 'common knowledge');
+      const ln = r3.host.querySelector('[data-answer-source]');
+      check('*** once answered, the player sees where it comes from (on by default), and still no review strip ***',
+        exp.length ? (!!ln && /^Source: /.test(ln.textContent.trim()) && !r3.host.querySelector('[data-review]'))
+          : (!ln && !r3.host.querySelector('[data-review]')), `${shownQ} :: ${ln?.outerHTML}`);
+    }
     check('"Which pack" offers it as its reviewed questions',
       (r3.inst.impl.settingsChoices().packId || []).some((o) => o.value === FIXTURE.id && /— 2 reviewed questions$/.test(o.label)),
       JSON.stringify(r3.inst.impl.settingsChoices()));
