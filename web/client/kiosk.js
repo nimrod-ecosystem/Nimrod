@@ -24,7 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
-import { mergeSettingsDoc, lostEditWords } from './doc_merge.js';
+import { mergeSettingsDoc, mergeLayoutSave, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
 import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
 import { createPush } from './push.js';
@@ -1590,21 +1590,14 @@ export async function mountKiosk(root, {
     Promise.resolve(p).catch(() => { /* offline: nothing more to do */ })
       .finally(() => { try { doc.destroy(); } catch { /* already gone */ } });
   }
-  const ownArr = createArrangement({
-    bus, user, storage, embedded, settings,
-    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
-    mountInstance, destroyRec, watchRec, renderMods,
-    runtime: () => runtime,
-    health: () => health,
-    profileId: () => profileId,
-    flashLimit: flashLimitNow,
-    // 2026-10-02, edit mode on the dashboard's room (arrangement.js ROOM_PANEL_ID): where a door or a Room
-    // row it changes is saved -- this screen's own layout, the doc the edit view saves to.
-    // The 09-12 watch is TOLD first, so a room the arrangement redraws itself is never reloaded under the
-    // person editing it. (2026-10-02, later: on a SWAPPED-IN screen, that screen's own doc -- `swapDoc`
-    // above. A preview layout belongs to the screen it was handed to and never follows a swap, so it only
-    // stops the boot screen's save. The swapped doc's watch is told through `shown`, 2026-10-04.)
-    layoutStore: {
+  // 2026-10-02, edit mode on the dashboard's room (arrangement.js ROOM_PANEL_ID): where a door or a Room
+  // row it changes is saved -- this screen's own layout, the doc the edit view saves to.
+  // The 09-12 watch is TOLD first, so a room the arrangement redraws itself is never reloaded under the
+  // person editing it. (2026-10-02, later: on a SWAPPED-IN screen, that screen's own doc -- `swapDoc`
+  // above. A preview layout belongs to the screen it was handed to and never follows a swap, so it only
+  // stops the boot screen's save. The swapped doc's watch is told through `shown`, 2026-10-04.)
+  // (Named, 2026-10-04, so the suites can drive the save the arrangement makes: `layoutStore` on the handle.)
+  const ownLayoutStore = {
       get: () => {
         if (profileId === bootProfileId) return ((settings.get() || {}).kiosk || {}).layout || null;
         const d = swapDocNow();
@@ -1620,23 +1613,46 @@ export async function mountKiosk(root, {
           // 2026-10-04: the change waited on the screen before saving, and the doc moved on meanwhile (another
           // device, heard by the poll): merged onto it, never laid over it -- the same rule as a refused write.
           // The doc's echo then carries the merge to the screen (`applySwapLayout`).
-          let out = next;
-          const nowSaved = was.layout ?? null;
-          if (base !== undefined && JSON.stringify(base ?? null) !== JSON.stringify(nowSaved)) {
-            const wrap = (l) => ({ kiosk: { layout: l ?? null } });
-            const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer: CONFLICT_PREFER });
-            out = r.data?.kiosk?.layout ?? null;
-            if (r.lost.length) sayLostEdit(swapDoc.id, r.lost);
-          }
-          d.set({ kiosk: { ...was, layout: out } });
+          const m = mergeLayoutSave(base, next, was.layout ?? null, { prefer: CONFLICT_PREFER });
+          if (m.lost.length) sayLostEdit(swapDoc.id, m.lost);
+          d.set({ kiosk: { ...was, layout: m.layout } });
           return;
         }
         if (previewLayout) return;
+        // *** THE BOOT SCREEN'S DOC, THE SAME RULE (2026-10-04, the window 2769509 left). *** A change heard by the
+        // poll while this edit was still drawing is merged, not laid over (`mergeLayoutSave`): the write carries a
+        // current version, so the server would have taken this stale copy as it stood.
+        // THE 09-12 WATCH IS TOLD THE MERGED LAYOUT, not `next`: that is what the doc will hold, so it is noted and
+        // never a reload. It already moved the other device's change onto the screen if it could (a placement or a
+        // door, in place) -- but the edit's own redraw may have drawn over it since, so the screen is brought from
+        // `next` (what the edit drew) to the merge here, the least disruptive way (`applySaved`), else rebuilt in
+        // place as a swapped-in screen's is (`applySwapLayout`). Never a reload under the person editing.
         const cur = (settings.get() || {}).kiosk || {};
-        expectLayoutSig = JSON.stringify(next ?? null);
-        settings.set({ kiosk: { ...cur, layout: next } });
+        const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
+        expectLayoutSig = JSON.stringify(m.layout ?? null);
+        settings.set({ kiosk: { ...cur, layout: m.layout } });
+        if (m.lost.length) sayLostEdit(bootProfileId, m.lost);
+        if (m.merged && JSON.stringify(m.layout ?? null) !== JSON.stringify(next ?? null)) {
+          Promise.resolve().then(async () => {
+            if (torn || profileId !== bootProfileId) return;
+            let r = null;
+            try { r = await ownArr.applySaved(next, m.layout); } catch (err) { console.error('kiosk: applying a merged layout', err); r = null; }
+            if ((r && r.applied) || torn || profileId !== bootProfileId) return;
+            arr.resolve(m.layout ?? undefined);
+            await applyModules();
+          }).catch((err) => console.error('kiosk: a merged layout', err));
+        }
       },
-    },
+  };
+  const ownArr = createArrangement({
+    bus, user, storage, embedded, settings,
+    kioskEl, stageEl, mirrorEl, clockEl, ambientEl,
+    mountInstance, destroyRec, watchRec, renderMods,
+    runtime: () => runtime,
+    health: () => health,
+    profileId: () => profileId,
+    flashLimit: flashLimitNow,
+    layoutStore: ownLayoutStore,          // (above)
     listDashboards: () => listDashboards(),
   });
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
@@ -6460,6 +6476,9 @@ export async function mountKiosk(root, {
     // screen's doc while it shows (null on the boot screen).
     note: () => (lockNoteEl && !lockNoteEl.hidden ? lockNoteEl.textContent : null),
     swapDoc: () => swapDocNow(),
+    // ...and the store the showing arrangement saves its room to (`ownLayoutStore`, or the dashboard's own,
+    // view.js), so a suite can save with a base the doc has moved on from, in a fixed order.
+    layoutStore: () => (dash?.impl?.layoutStore?.() || ownLayoutStore),
     openSwitch: (id) => openSwitch(id),
     switchPanel: (id, type) => doSwitch(id, type),
     openLibrary: (id, opts = {}) => openLibraryAt(id, opts || {}),
