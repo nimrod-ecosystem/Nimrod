@@ -554,6 +554,27 @@ function dashboardFactory(ctx) {
     // UNSCOPED makers (a nested one's `nestMakeState`, else this one's own), never this dashboard's
     // scoped `childMakes`.
     const rowMaker = ctx.nestMakeState || makeState;
+    // *** ONE WAY THIS DASHBOARD SAVES A ROOM OR A PLACEMENT THAT WAITED (2026-10-04, later). *** The room's own
+    // edits (`layoutStore` in `init`) and the edit windows (`openEdit`) both read a base, wait, and save; each save is
+    // merged onto the doc as it is now (doc_merge.js `mergeLayoutSave`), with the host's policy (`ctx.conflictPrefer`,
+    // default 'theirs', argued in doc_merge.js) and its quiet line (`ctx.note`). `rawLayout` and the host
+    // (`ctx.expectLayout`) hear the MERGED layout first -- what the doc will hold -- so neither this dashboard's own
+    // placement watch nor the kiosk's 09-12 watch applies it a second time. Returns the merge.
+    const conflictPrefer = ctx.conflictPrefer === 'mine' ? 'mine' : 'theirs';
+    function sayLost(lost) {
+      const text = lostEditWords(lost, arrangement?.name || null);
+      if (typeof ctx.note === 'function') { try { ctx.note(text); } catch { /* not load-bearing */ } }
+      else console.warn('view:', text);
+    }
+    function saveMerged(next, base) {
+      const cur = settingsHandle.get?.()?.kiosk || {};
+      const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: conflictPrefer });
+      rawLayout = m.layout;
+      ctx.expectLayout?.(m.layout);
+      settingsHandle.set({ kiosk: { ...cur, layout: m.layout } });
+      if (m.lost.length) sayLost(m.lost);
+      return m;
+    }
     function openEdit({ windows, host: winHost = null } = {}) {
       if (!arr || !root) return null;
       if (editor) return editor;
@@ -565,11 +586,11 @@ function dashboardFactory(ctx) {
         // Saved unless the host handed the layout in and did not say it may be saved (the modules page:
         // memory only, as it promises). A REAL screen hands its boot layout in too (Stage 4) and says
         // `saveLayout` -- without it, an edit on a real screen's dashboard was never written anywhere.
-        save: (overridden && ctx.saveLayout !== true) || !settingsHandle?.set ? null : (next) => {
-          try {
-            const cur = settingsHandle.get?.()?.kiosk || {};
-            settingsHandle.set({ kiosk: { ...cur, layout: next } });
-          } catch (err) { console.error('view: saving the placement', err); }
+        // (2026-10-04, later: merged onto the doc as it is now, from the base the windows last matched -- see
+        // `saveMerged` and dashboard_editor.js -- and the merge handed back, so the windows move the screen to it.)
+        save: (overridden && ctx.saveLayout !== true) || !settingsHandle?.set ? null : (next, base) => {
+          try { return { layout: saveMerged(next, base).layout }; }
+          catch (err) { console.error('view: saving the placement', err); return undefined; }
         },
         listDashboards: typeof profiles?.list === 'function' ? () => profiles.list() : null,
         createDashboard: typeof profiles?.create === 'function'
@@ -892,12 +913,7 @@ function dashboardFactory(ctx) {
         // stale write here laid this copy over another device's change. A change made here that gave way is said
         // on the host's quiet line (`ctx.note`), when it has one. The policy is the host's (`ctx.conflictPrefer`,
         // default 'theirs', argued in doc_merge.js). A lent doc is the host's, merged there.)
-        const conflictPrefer = ctx.conflictPrefer === 'mine' ? 'mine' : 'theirs';
-        const sayLost = (lost) => {
-          const text = lostEditWords(lost, arrangement?.name || null);
-          if (typeof ctx.note === 'function') { try { ctx.note(text); } catch { /* not load-bearing */ } }
-          else console.warn('view:', text);
-        };
+        // (`conflictPrefer` and `sayLost`: above `openEdit`, shared with the edit windows' save.)
         settingsHandle = borrowedSettings || (makeState ? makeState('settings', {
           merge: (b, m, t) => mergeSettingsDoc(b, m, t, { prefer: conflictPrefer }),
           onLost: sayLost,
@@ -941,12 +957,7 @@ function dashboardFactory(ctx) {
               rawLayout = next;
               if ((overridden && ctx.saveLayout !== true) || !settingsHandle?.set) return;
               try {
-                const cur = settingsHandle.get?.()?.kiosk || {};
-                const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: conflictPrefer });
-                rawLayout = m.layout;
-                ctx.expectLayout?.(m.layout);
-                settingsHandle.set({ kiosk: { ...cur, layout: m.layout } });
-                if (m.lost.length) sayLost(m.lost);
+                const m = saveMerged(next, base);     // (above `openEdit`: the one way this dashboard saves a wait)
                 const a = arr;
                 if (m.merged && a && JSON.stringify(m.layout ?? null) !== JSON.stringify(next ?? null)) {
                   Promise.resolve(a.applySaved(next, m.layout)).then(() => { if (!torn && arr === a) changed(); })

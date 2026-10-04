@@ -24,7 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
-import { mergeSettingsDoc, mergeLayoutSave, lostEditWords } from './doc_merge.js';
+import { mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
 import { createPackReviews, missingReviewBindings, REVIEW_KEY_BINDINGS } from './pack_reviews.js';
 import { createPush } from './push.js';
@@ -2626,13 +2626,31 @@ export async function mountKiosk(root, {
       if (dash?.impl?.edit) ed = dash.impl.edit();
       else {
         const own = profileId === bootProfileId;
-        const doc = own ? settings : stateForProfile('settings', { cacheKey: null }, profileId);
-        if (!own) { kEditorDoc = doc; doc.load?.().catch?.(() => {}); }
+        const edId = profileId;
+        // (2026-10-04, later: a swapped-in screen's OWN doc, `swapDoc`, when it is open -- the doc that screen polls and
+        // applies, so the save and the screen read one copy. A fresh handle only when there is none.)
+        const swapRec = !own && swapDoc && swapDoc.id === profileId ? swapDoc : null;
+        const doc = own ? settings : (swapRec ? swapRec.doc : stateForProfile('settings', { cacheKey: null }, profileId));
+        if (!own && !swapRec) { kEditorDoc = doc; doc.load?.().catch?.(() => {}); }
         const savable = !embedded && !previewLayout;
         ed = kEditor = openDashboardEditor({
           arr, mountIn: kioskEl,
           baseLayout: () => ((doc.get?.() || {}).kiosk || {}).layout || arr.layout(),
-          save: savable ? (next) => { const cur = (doc.get?.() || {}).kiosk || {}; doc.set({ kiosk: { ...cur, layout: next } }); } : null,
+          // *** MERGED ONTO THE DOC AS IT IS NOW (2026-10-04, later; the gap d40424f left). *** The windows hand the
+          // base they last matched (dashboard_editor.js); a move made elsewhere while they were open is merged in, not
+          // laid over (doc_merge.js `mergeLayoutSave`, CONFLICT_PREFER, the same quiet line). The watch on the doc is
+          // told the merged layout first -- the 09-12 watch on the boot doc (`expectLayoutSig`), a swapped-in doc's
+          // `shown` -- and the merge is handed back, so the windows move the screen to it in place. Never a reload.
+          save: savable ? (next, base) => {
+            if (!own && swapRec && swapDoc !== swapRec) return undefined;     // swapped away: that doc is closed
+            const cur = (doc.get?.() || {}).kiosk || {};
+            const m = mergeLayoutSave(base, next, cur.layout ?? null, { prefer: CONFLICT_PREFER });
+            if (own) { if (JSON.stringify(m.layout ?? null) !== JSON.stringify(cur.layout ?? null)) expectLayoutSig = JSON.stringify(m.layout ?? null); }
+            else if (swapRec) swapRec.shown = m.layout ?? null;
+            doc.set({ kiosk: { ...cur, layout: m.layout } });
+            if (m.lost.length) sayLostEdit(edId, m.lost);
+            return { layout: m.layout };
+          } : null,
           listDashboards: async () => (await listDashboards()) || [],
           createDashboard: !embedded && typeof profiles?.create === 'function'
             ? (name) => profiles.create(name, personId || arr.profile()?.person_id || '') : null,
@@ -3369,6 +3387,9 @@ export async function mountKiosk(root, {
     const mods = arr.profile()?.modules || [];
     const next = withPreset(cur.layout, id, mods, { spareOk: (m) => getManifest(m.type)?.mount !== 'ambient' });
     layoutOpen = false;
+    // (2026-10-04: NO BASE NEEDED HERE, checked -- read above and written below with nothing waited on between, so
+    // a change already heard is in `cur`; one not yet heard is the server's refusal, merged by the doc itself
+    // (doc_merge.js `mergeSettingsDoc`). kiosk_test's "last writers" section proves the first.)
     // Told FIRST: the 09-12 watch hears this write synchronously, and must not reload for a change this
     // file is about to apply in place.
     expectLayoutSig = JSON.stringify(next);
@@ -3970,11 +3991,21 @@ export async function mountKiosk(root, {
     const held = new Set([...((layout && layout.slots) || []), ...((layout && layout.placed) || []).map((p) => p && p.id)]);
     return (arr.profile()?.modules || []).find((m) => m.type === type && !held.has(m.id)) || null;
   }
-  /** Put this screen together again with a new module and/or layout (the Layout row's way, `applyLayoutPreset`). */
-  async function rebuildHere(doc, kiosk) {
+  /** Put this screen together again with a new module and/or layout (the Layout row's way, `applyLayoutPreset`).
+   *  `base`: the `kiosk` key as it was read before the wait (2026-10-04, later) -- see below. */
+  async function rebuildHere(doc, kioskIn, base = undefined) {
+    // *** THE WAIT IS MERGED, NOT LAID OVER (2026-10-04, later; the gap d40424f left). *** Both callers read the key,
+    // wait on the server to add a module, then write the whole key back: a change heard in that wait (another device
+    // -- a placement, a corner, the room) was gone. It is merged onto the key as it is now (doc_merge.js
+    // `mergeKioskSave`, CONFLICT_PREFER), and a choice made here that gave way is said on the quiet line. What is
+    // rebuilt below is the merge, so the screen shows what was saved.
+    const now = (doc.get?.() || {}).kiosk || {};
+    const m = mergeKioskSave(base, kioskIn, now, { prefer: CONFLICT_PREFER });
+    const kiosk = m.kiosk;
+    if (m.lost.length) sayLostEdit(profileId, m.lost);
     // Told FIRST, as the Layout row does: the 09-12 watch hears this write synchronously and must not reload for
     // a change this file applies itself. Only when the layout really changes (an unchanged one is never heard).
-    const before = ((doc.get?.() || {}).kiosk || {}).layout ?? null;
+    const before = now.layout ?? null;
     if (JSON.stringify(before) !== JSON.stringify(kiosk.layout ?? null)) expectLayoutSig = JSON.stringify(kiosk.layout ?? null);
     doc.set({ kiosk });
     try {
@@ -4013,16 +4044,24 @@ export async function mountKiosk(root, {
           return true;
         }
         await profiles.addModule(profileId, type);
-        await rebuildHere(doc, { ...next });
+        await rebuildHere(doc, { ...next }, cur);      // (the base: read before the wait, merged in `rebuildHere`)
         return true;
       }
       const mod = await profiles.addModule(profileId, type);
+      // *** PLACED ON THE KEY AS IT IS AFTER THE WAIT (2026-10-04, later), not the one read before it. *** "Put W
+      // over the dashboard" is a choice that can be made again on whatever the layout now is (`addAsOverlay` is
+      // pure), so it is: a panel moved elsewhere meanwhile stays moved, and W takes a corner that is free NOW.
+      //   FOR this over merging (as `rebuildHere` does for the corner clock): adding an entry changes the placed
+      //   list's shape, and doc_merge.js merges a list element by element only when its shape is unchanged -- so a
+      //   merge would call ANY placement change elsewhere a clash and drop W. AGAINST: none found; there is nothing
+      //   here a clash could be about. (The base still goes to `rebuildHere`, so it is one rule if this ever waits again.)
+      const now = (doc.get?.() || {}).kiosk || {};
       const avoid = [];
-      if (hudHere('clock', cur.layout) && clockCornerOf({ kiosk: cur }) !== 'off') avoid.push(clockCornerOf({ kiosk: cur }));
-      if (hudHere('camera', cur.layout)) avoid.push((cur.mirror && cur.mirror.corner) || 'tr');
-      const r = addAsOverlay(cur.layout || null, mod.id, { type, avoid });
+      if (hudHere('clock', now.layout) && clockCornerOf({ kiosk: now }) !== 'off') avoid.push(clockCornerOf({ kiosk: now }));
+      if (hudHere('camera', now.layout)) avoid.push((now.mirror && now.mirror.corner) || 'tr');
+      const r = addAsOverlay(now.layout || null, mod.id, { type, avoid });
       // The one-at-a-time stage has nothing to float over: the new module simply joins it.
-      await rebuildHere(doc, r.entry ? { ...cur, layout: r.layout } : { ...cur });
+      await rebuildHere(doc, r.entry ? { ...now, layout: r.layout } : { ...now }, now);
       return true;
     } catch (err) {
       console.error('kiosk: over the dashboard', err);
@@ -4048,7 +4087,7 @@ export async function mountKiosk(root, {
       return true;
     }
     try { await profiles.addModule(profileId, 'clock'); } catch (err) { console.error('kiosk: adding a small clock', err); return false; }
-    await rebuildHere(doc, next);
+    await rebuildHere(doc, next, cur);                 // (the base: read before the wait, merged in `rebuildHere`)
     return true;
   }
   /** What the row shows: the corner clock's corner, or Off when this screen has none. */

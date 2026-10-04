@@ -146,13 +146,27 @@ export function mergeSettingsDoc(base, mine, theirs, { prefer = 'theirs' } = {})
  * Same rule and same policy as a refused write (`mergeSettingsDoc`). Returns `{ layout, lost, merged }`: `layout`
  * to save, `lost` as `mergeSettingsDoc`'s (paths in the doc, so `lostEditWords` reads them), `merged` false when
  * nothing had moved (or no base came) and `layout` is `next` itself. One function for every host that saves a
- * layout (kiosk.js, both of its docs; modules/view.js), so the rule is written once.
+ * layout (kiosk.js, both of its docs; modules/view.js; and since 2026-10-04 later, the edit windows on either --
+ * dashboard_editor.js hands its `save` the layout its windows last matched as the base), so the rule is written once.
  */
 export function mergeLayoutSave(base, next, nowSaved, { prefer = 'theirs' } = {}) {
   if (base === undefined || J(base) === J(nowSaved)) return { layout: next, lost: [], merged: false };
   const wrap = (l) => ({ kiosk: { layout: l ?? null } });
   const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer });
   return { layout: r.data?.kiosk?.layout ?? null, lost: r.lost, merged: true };
+}
+
+/**
+ * ...AND THE SAME FOR A WRITE OF THE WHOLE `kiosk` KEY THAT WAITED (2026-10-04, later). The ⚙ menu's "Show a small
+ * clock" reads the key, waits on the server to add a clock, then writes the key back with its corner (kiosk.js
+ * `rebuildHere`); a change heard during that wait -- anything under `kiosk`, the layout included -- is merged in,
+ * never laid over. Same rule and policy as `mergeLayoutSave`. Returns `{ kiosk, lost, merged }`.
+ */
+export function mergeKioskSave(base, next, nowSaved, { prefer = 'theirs' } = {}) {
+  if (base === undefined || J(base) === J(nowSaved)) return { kiosk: next, lost: [], merged: false };
+  const wrap = (k) => ({ kiosk: isObj(k) ? k : {} });
+  const r = mergeSettingsDoc(wrap(base), wrap(next), wrap(nowSaved), { prefer });
+  return { kiosk: isObj(r.data?.kiosk) ? r.data.kiosk : {}, lost: r.lost, merged: true };
 }
 
 /** The one quiet line a screen shows when a change made on it gave way (one wording, every host). */

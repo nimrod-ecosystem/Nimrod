@@ -4091,6 +4091,204 @@ const toTab = (m, id) => {
     check('the redraw-window section threw', false, String((e && e.stack) || e));
   }
 
+  // *** 2026-10-04, later still: THE LAST WRITERS WITHOUT A BASE. *** d40424f left two: the edit windows' save
+  // (dashboard_editor.js, opened by the kiosk itself or by view.js) and the ⚙ menu's writes that rebuild the screen.
+  //   THE EDIT WINDOWS: their model is built once, when they open, and every change wrote the WHOLE placed list from
+  //     it -- so a panel moved on another device while they were open went back where the windows last saw it.
+  //   "SHOW A SMALL CLOCK" / "OVER THE DASHBOARD": they read the screen's `kiosk` key, wait on the server to add the
+  //     module, then wrote the whole key back from that early read -- anything changed in that wait was gone.
+  //   THE LAYOUT ROW reads and writes in one go (nothing waits between), so it has no window: proved, not fixed.
+  // Two clients each: a change to a different thing survives; a true clash keeps the other device's value and the
+  // screen says so. Every remote change is heard by the screen BEFORE the local write, so the window is the cause.
+  try {
+    const profiles = createProfilesClient({ user: USER });
+    const urlOf = (id) => profiles.stateURL(id, 'settings');
+    const remote = async (id, fn) => { const r = createState({ url: urlOf(id), user: USER }); await r.load(); r.set(fn(r.get() || {})); await r.flush(); r.destroy(); };
+    const readOf = async (id) => { const r = createState({ url: urlOf(id), user: USER }); await r.load().catch(() => {}); const v = { ...(r.get() || {}) }; r.destroy(); return v; };
+    const pollAsync = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { if (await fn()) return true; await sleep(100); } return false; };
+    const placedOf = (L) => Object.fromEntries(((L && L.placed) || []).filter(Boolean).map((e) => [e.id, e]));
+    const moveIn = (id, at) => (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), layout: { ...(d.kiosk?.layout || {}),
+      placed: (d.kiosk?.layout?.placed || []).map((e) => (e && e.id === id ? { ...e, ...at } : e)) } } });
+    const box = () => { const el = document.createElement('div'); el.style.cssText = 'position:relative;width:900px;height:560px'; document.body.append(el); return el; };
+
+    // ---- 1. THE EDIT WINDOWS, on every host that opens them ----
+    const editCases = [
+      { tag: 'own', name: 'the boot screen\'s edit windows (the kiosk\'s own editor)' },
+      { tag: 'swap', name: 'a swapped-in screen\'s edit windows (the kiosk\'s own editor, that screen\'s doc)', swap: true },
+      { tag: 'dash', name: 'a swapped-in dashboard\'s edit windows (view.js)', dash: 'swap' },
+      { tag: 'lent', name: 'the boot dashboard\'s edit windows (view.js, the lent doc)', dash: 'boot' },
+    ];
+    for (const c of editCases) {
+      const S = await profiles.create(`TEST-editwin-${c.tag}`);
+      const a = await profiles.addModule(S.id, 'clock');
+      const b = await profiles.addModule(S.id, 'clock');
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [null], placed: [
+        { id: a.id, place: 'screen', x: 30, y: 50, w: 20, h: 20 }, { id: b.id, place: 'screen', x: 70, y: 50, w: 20, h: 20 }] } } }));
+      let home = S;
+      if (c.swap || c.dash === 'swap') { home = await profiles.create(`TEST-editwin-${c.tag}-home`); await profiles.addModule(home.id, 'photos'); }
+      const root = box();
+      let reloads = 0;
+      const k = await mountKiosk(root, { user: USER, profileId: home.id, profiles, bus: createBus(), reloadPage: () => { reloads++; },
+        ...(c.dash ? { dashboardDefault: true } : {}) });
+      if (home !== S) {
+        if (c.dash) await settled(() => !!k.dashboard?.(), 6000);
+        await k.showScreen(S.id);
+      }
+      check(`(setup, ${c.tag}) both clocks are placed, on the expected path`,
+        await settled(() => k.screenId() === S.id && !!placedOf(k.slotLayout())[a.id] && !!placedOf(k.slotLayout())[b.id]
+          && (!c.dash === !k.dashboard?.()), 8000), JSON.stringify(k.slotLayout()));
+      const ed = k.openEditView();
+      check(`(setup, ${c.tag}) the edit windows are open over both`, !!ed && !!ed.model?.item(a.id) && !!ed.model?.item(b.id));
+      const docNow = () => (c.dash ? (k.dashboard()?.settings?.()?.kiosk?.layout || null) : (k.layoutStore()?.get?.() || null));
+      const shownX = (id) => placedOf(k.slotLayout())[id]?.x;
+      const savedPlaced = async () => placedOf((await readOf(S.id)).kiosk?.layout);
+
+      // 1a. Different things: the other device moves A; here, the windows move B.
+      await remote(S.id, moveIn(a.id, { x: 80 }));
+      check(`(setup, ${c.tag}) the screen heard the other device move A while the windows were open`,
+        await pollAsync(() => placedOf(docNow())[a.id]?.x === 80 && shownX(a.id) === 80), JSON.stringify(placedOf(docNow())[a.id]));
+      ed.model.select(b.id);
+      ed.model.set('x', 20);
+      check(`*** ${c.name}: B moved here, A moved there -- both are saved ***`,
+        await pollAsync(async () => { const p = await savedPlaced(); return p[a.id]?.x === 80 && p[b.id]?.x === 20; }),
+        JSON.stringify(await savedPlaced()));
+      await sleep(400);
+      check(`...(${c.tag}) and both are where they were put, on the screen`, await pollAsync(() => shownX(a.id) === 80 && shownX(b.id) === 20),
+        `${shownX(a.id)} / ${shownX(b.id)}`);
+      check(`...(${c.tag}) nothing was said: nothing was lost`, !k.note(), String(k.note()));
+
+      // 1b. A true clash: both move A.
+      await remote(S.id, moveIn(a.id, { x: 85 }));
+      check(`(setup, ${c.tag}) the screen heard the clashing move`, await pollAsync(() => placedOf(docNow())[a.id]?.x === 85 && shownX(a.id) === 85),
+        JSON.stringify(placedOf(docNow())[a.id]));
+      ed.model.select(a.id);
+      ed.model.set('x', 10);
+      await sleep(900);                                     // the write's debounce and its PUT
+      const after = await savedPlaced();
+      check(`*** ${c.name}: a clash keeps the other device's place for A on the server (B's stays) ***`,
+        after[a.id]?.x === 85 && after[b.id]?.x === 20, JSON.stringify(after));
+      check(`...(${c.tag}) the screen shows A there`, await pollAsync(() => shownX(a.id) === 85), String(shownX(a.id)));
+      check(`*** ...(${c.tag}) and the quiet line says the move made here was not kept ***`,
+        await pollAsync(() => /not kept/.test(k.note() || '') && /the layout/.test(k.note() || '') && /another device/.test(k.note() || ''), 4000),
+        String(k.note()));
+      check(`...(${c.tag}) and the screen never reloaded`, reloads === 0, `reloads=${reloads}`);
+      try { k.closeEditView(); } catch { /* gone */ }
+      k.destroy();
+      root.remove();
+    }
+
+    // ---- 2. "SHOW A SMALL CLOCK" (a clock is added first: the wait), on both paths ----
+    for (const dashPath of [false, true]) {
+      for (const clash of [false, true]) {
+        const tag = `${dashPath ? 'dash' : 'own'}-${clash ? 'clash' : 'both'}`;
+        const S = await profiles.create(`TEST-smallclock-${tag}`);
+        const photos = (await profiles.addModule(S.id, 'photos')).id;
+        await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [photos] } } }));
+        let gate = null;
+        const gated = { ...profiles, addModule: async (...args) => { const g = gate; gate = null; if (g) await g(); return profiles.addModule(...args); } };
+        const root = box();
+        let reloads = 0;
+        const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles: gated, bus: createBus(), reloadPage: () => { reloads++; },
+          ...(dashPath ? { dashboardDefault: true } : {}) });
+        check(`(setup, small clock ${tag}) the photos fill the screen, no corner clock`,
+          await settled(() => k.slotLayout()?.slots?.[0] === photos && !k.hasClock() && (!dashPath === !k.dashboard?.()), 8000));
+        const kioskNow = () => (dashPath ? k.dashboard()?.settings?.()?.kiosk : k.levelLayers().screen?.kiosk) || {};
+        let heard = false;
+        gate = clash
+          ? async () => { await remote(S.id, (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), clock: { corner: 'br' } } })); heard = await pollAsync(() => kioskNow().clock?.corner === 'br'); }
+          : async () => { await remote(S.id, (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), mirror: { corner: 'bl' } } })); heard = await pollAsync(() => kioskNow().mirror?.corner === 'bl'); };
+        k.menu.open();
+        const row = k.menu.items().find((i) => i.id === 'set:clockCorner');
+        check(`(setup, small clock ${tag}) the row is on the menu`, !!row && typeof row.commit === 'function');
+        row?.commit('tr');
+        check(`(setup, small clock ${tag}) a clock is added`, await settled(() => k.hasClock(), 15000));
+        check(`(setup, small clock ${tag}) the screen heard the other device while the clock was being added`, heard);
+        await sleep(900);
+        const s = await readOf(S.id);
+        if (!clash) {
+          check(`*** "Show a small clock" (${dashPath ? 'dashboard path' : 'today\'s path'}): the corner chosen here and the change made there are both saved ***`,
+            s.kiosk?.clock?.corner === 'tr' && s.kiosk?.mirror?.corner === 'bl' && JSON.stringify(s.kiosk?.layout?.slots) === JSON.stringify([photos]), JSON.stringify(s.kiosk));
+          check(`...(${tag}) the clock is drawn top right`, await settled(() => k.layout().clockCorner === 'tr', 4000), String(k.layout().clockCorner));
+          check(`...(${tag}) nothing was said`, !k.note(), String(k.note()));
+        } else {
+          check(`*** "Show a small clock" (${dashPath ? 'dashboard path' : 'today\'s path'}): a clash keeps the other device's corner ***`,
+            s.kiosk?.clock?.corner === 'br' && JSON.stringify(s.kiosk?.layout?.slots) === JSON.stringify([photos]), JSON.stringify(s.kiosk));
+          check(`...(${tag}) the clock is drawn there`, await settled(() => k.layout().clockCorner === 'br', 4000), String(k.layout().clockCorner));
+          check(`*** ...(${tag}) and the quiet line says the corner chosen here was not kept ***`,
+            await settled(() => /not kept/.test(k.note() || '') && /a setting/.test(k.note() || '') && /another device/.test(k.note() || ''), 4000), String(k.note()));
+        }
+        check(`...(${tag}) the screen never reloaded`, reloads === 0, `reloads=${reloads}`);
+        try { k.menu.close(); } catch { /* gone */ }
+        k.destroy();
+        root.remove();
+      }
+    }
+
+    // ---- 3. "OVER THE DASHBOARD" from the library (the module is added first: the wait) ----
+    {
+      const S = await profiles.create('TEST-overhere');
+      const photos = (await profiles.addModule(S.id, 'photos')).id;
+      const clk = (await profiles.addModule(S.id, 'clock')).id;
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [photos],
+        placed: [{ id: clk, place: 'overlay', x: 14, y: 15, w: 24, h: 26, scan: false }] } } }));
+      let gate = null;
+      const gated = { ...profiles, addModule: async (...args) => { const g = gate; gate = null; if (g) await g(); return profiles.addModule(...args); } };
+      const root = box();
+      let reloads = 0;
+      const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles: gated, bus: createBus(), reloadPage: () => { reloads++; } });
+      check('(setup, over the dashboard) photos and a floating clock', await settled(() => k.slotLayout()?.slots?.[0] === photos && !!placedOf(k.slotLayout())[clk], 8000));
+      let heard = false;
+      gate = async () => { await remote(S.id, moveIn(clk, { x: 50, y: 50 })); heard = await pollAsync(() => placedOf(k.layoutStore().get())[clk]?.x === 50); };
+      k.openSwitch(photos);
+      const card = () => root.querySelector('.lib-card[data-lib-key="module:weather"]');
+      check('(setup, over the dashboard) the library is open in the photos\' place', await settled(() => !!card(), 8000));
+      card()?.click();
+      const ov = () => root.querySelector('[data-lib-act="overlay"]');
+      check('(setup, over the dashboard) it offers "Over the dashboard"', await settled(() => !!ov(), 3000));
+      ov()?.click();
+      check('(setup, over the dashboard) the screen heard the other device move the clock while weather was being added',
+        await pollAsync(() => heard, 10000));
+      await sleep(900);
+      const s = await readOf(S.id);
+      const p = placedOf(s.kiosk?.layout);
+      const w = Object.values(p).find((e) => e.id !== clk);
+      check('*** "Over the dashboard": the clock moved there and the weather put over it here are both saved ***',
+        p[clk]?.x === 50 && p[clk]?.y === 50 && w?.place === 'overlay', JSON.stringify(s.kiosk?.layout));
+      check('...and both are on the screen', await settled(() => placedOf(k.slotLayout())[clk]?.x === 50 && !!w && !!placedOf(k.slotLayout())[w.id], 6000),
+        JSON.stringify(k.slotLayout()));
+      check('...nothing was said, and no reload', !k.note() && reloads === 0, `${k.note()} reloads=${reloads}`);
+      k.destroy();
+      root.remove();
+    }
+
+    // ---- 4. THE LAYOUT ROW: no window (read and written in one go), so a change heard is never overwritten ----
+    for (const dashPath of [false, true]) {
+      const S = await profiles.create(`TEST-layoutrow-${dashPath ? 'dash' : 'own'}`);
+      const photos = (await profiles.addModule(S.id, 'photos')).id;
+      await profiles.addModule(S.id, 'weather');
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [photos] } } }));
+      const root = box();
+      let reloads = 0;
+      const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles, bus: createBus(), reloadPage: () => { reloads++; },
+        ...(dashPath ? { dashboardDefault: true } : {}) });
+      check(`(setup, Layout row ${dashPath ? 'dash' : 'own'}) the photos fill the screen`, await settled(() => k.slotLayout()?.preset === 'full' && (!dashPath === !k.dashboard?.()), 8000));
+      const kioskNow = () => (dashPath ? k.dashboard()?.settings?.()?.kiosk : k.levelLayers().screen?.kiosk) || {};
+      await remote(S.id, (d) => ({ ...d, kiosk: { ...(d.kiosk || {}), mirror: { corner: 'bl' } } }));
+      check(`(setup, Layout row ${dashPath ? 'dash' : 'own'}) the screen heard the other device`, await pollAsync(() => kioskNow().mirror?.corner === 'bl'));
+      await k.pickLayout('side');
+      await sleep(900);
+      const s = await readOf(S.id);
+      check(`*** the Layout row (${dashPath ? 'dashboard path' : 'today\'s path'}): the arrangement picked here and the change made there are both saved ***`,
+        s.kiosk?.layout?.preset === 'side' && s.kiosk?.mirror?.corner === 'bl', JSON.stringify(s.kiosk));
+      check(`...(${dashPath ? 'dash' : 'own'}) the screen is side by side, never reloaded`, await settled(() => k.slotLayout()?.preset === 'side', 6000) && reloads === 0,
+        `${k.slotLayout()?.preset} reloads=${reloads}`);
+      k.destroy();
+      root.remove();
+    }
+  } catch (e) {
+    check('the last-writers section threw', false, String((e && e.stack) || e));
+  }
+
   // *** 2026-10-02: TWO SWITCH-ACCESS GAPS, CLOSED. ***
   // (1) A panel placed freely can be left OUT of the switch lap (c93a1ec: `scan: false`, or `overlayScan: 'skip'`
   //     as the floating scoreboard declares). The only way back in was a button on the panel itself, which a
