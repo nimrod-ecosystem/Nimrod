@@ -35,8 +35,12 @@ export function layoutFor(settings, modules) {
 // drawn in ITS bar and ITS ⚙ menu (kiosk.js's `host` option). Kept across rebuilds: it is the page's.
 // `people` (PREVIEW only, 2026-10-02 evening): the account's people, read-only, so a profile panel on a preview
 // (the landing's top left) can show the person looking by name. Absent, it shows them as "Somebody".
+// `personHost` (2026-10-04): the person looking, as the page knows them -- `{ state(personId, key), browserNotes }`,
+// kiosk.js's option of that name argues it. On a PREVIEW it is how a known person's Nimrod notes reach their own
+// record (the local store has no per-person rows); on a live screen it only carries `browserNotes`, so notes this
+// browser kept before are moved however the landing is opened.
 export async function mountEmbeddedScreen({ stage, user = null, profileId = null, record = null, layout = null,
-  wrapState = null, host = null, people = null }) {
+  wrapState = null, host = null, people = null, personHost = null }) {
   const { mountKiosk } = await import('./kiosk.js');
   const wrap = wrapState || ((h) => h);
   let kiosk = null;
@@ -54,6 +58,7 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
       embedded: true,
       dashboardModule: true,
       ...(host ? { host } : {}),
+      ...(personHost ? { personHost } : {}),
     };
     if (user && profileId) {
       const real = createProfilesClient({ user });

@@ -343,6 +343,16 @@ export async function mountKiosk(root, {
   //                       how the kiosk asks for it back (see syncHostScan)
   // `fullscreenElement` is a seam for the suites (a real full screen needs a person's gesture).
   host = null,
+  // *** `personHost` -- THE PERSON LOOKING, AS THE HOSTING PAGE KNOWS THEM (2026-10-04). *** Read only when
+  // `embedded`; null everywhere else, so no real screen takes a page's records. Home's landing, tried before anybody
+  // saved it, runs over this browser's local store, whose screens client has no per-person rows: `makePersonState`
+  // answers null there, and Nimrod kept a known person's notes in the browser, shared by everybody using it. The
+  // contract (both optional): `state(personId, key)` -> a state handle on the person's own record (Home's own
+  // maker), and `browserNotes` -> what this browser kept before a person was known (try_new.js
+  // `browserNotesSource`). Handed to panels as `ctx.personHost`; today Nimrod is its one reader (nimrod_ai.js
+  // `openAIStore`, modules/nimrod.js). Argued: the other per-person readers (music favourites, avatars...) keep today's preview
+  // behaviour; giving every module a person's real records on a page that is only being tried is a wider choice.
+  personHost = null,
   fullscreenElement = () => (typeof document !== 'undefined' ? document.fullscreenElement : null),
   // *** THE SPEECH RECOGNISER, BY WHICH ENGINE THE PERSON CHOSE (2026-09-30). *** Called ONLY when a
   // person's row turns spoken commands (or subtitles) on - never at boot. `null` means "none here", and
@@ -1276,6 +1286,8 @@ export async function mountKiosk(root, {
     rootBus: bus, instanceId: mod.id,
     // What a note made in Nimrod's notes says about where it was made (modules/nimrod.js noteContext).
     noteContext: () => ({ dashboard: arr.profile()?.name || null }),
+    // The hosting page's word for the person looking (the `personHost` option): embedded only.
+    personHost: embedded && personHost && typeof personHost === 'object' ? personHost : null,
     // *** THE OUTPUT BUS, WHICH THE KIOSK DID NOT HAVE. *** Exactly the gap input_runtime.js
     // closed on the other side: the whole output layer was constructed inside the Output TAB,
     // so "how you want to be told things" was configurable where a clinician sets up and

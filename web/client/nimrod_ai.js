@@ -277,6 +277,12 @@ export function createClaudeAI({ fetchImpl = (...a) => fetch(...a), headers = ()
 // WHERE THE PERSON'S AI SETTINGS LIVE: their person record when the host has one (they follow them),
 // else this panel's own state under `ai` (a preview, Home without a person). One shape either way.
 // ---------------------------------------------------------------------------------------------------
+// *** A PERSON KNOWN IS A PERSON'S RECORD, PREVIEW OR NOT (2026-10-04). *** A landing tried before anybody saved it
+// runs over this browser's local store, whose screens client has no per-person rows, so the screen's own
+// `makePersonState` answers null there. The page holding the preview hands its own maker in (`ctx.personHost.state`,
+// kiosk.js `personHost`, embedded only), and it stands in. Without it, those notes stayed on the preview's panel, in
+// this browser, shared by everybody who used it. `loaded` says whether the record was actually read: a move from the
+// browser (modules/nimrod.js) never writes a record it could not read first, which could overwrite what is there.
 export async function openAIStore(ctx) {
   let pid = null;
   try { pid = ctx?.personId || null; } catch { pid = null; }
@@ -284,21 +290,32 @@ export async function openAIStore(ctx) {
   if (pid && typeof ctx?.makePersonState === 'function') {
     try { handle = ctx.makePersonState(pid, AI_STATE_KEY); } catch { handle = null; }
   }
+  let hostState = null;
+  try { hostState = typeof ctx?.personHost?.state === 'function' ? ctx.personHost.state : null; } catch { hostState = null; }
+  if (!handle && pid && hostState) {
+    try { handle = hostState(pid, AI_STATE_KEY); } catch { handle = null; }
+  }
   if (handle && typeof handle.get === 'function') {
-    try { await handle.load?.(); } catch { /* offline: what is cached */ }
+    let loaded = false;
+    try { await handle.load?.(); loaded = true; } catch { /* offline: what is cached */ }
     return {
       kind: 'person',
+      loaded,
       get: () => { try { return handle.get() || {}; } catch { return {}; } },
       set: (patch) => { try { handle.set(patch); } catch (err) { console.error('nimrod-ai: save', err); } },
-      destroy: () => { try { handle.flush?.(); } catch { /* gone */ } try { handle.destroy?.(); } catch { /* gone */ } },
+      // Rejects when the write did not land (state.js), so a caller can tell "kept" from "tried".
+      flush: async () => { await handle.flush?.(); },
+      destroy: () => { try { handle.flush?.()?.catch?.(() => {}); } catch { /* gone */ } try { handle.destroy?.(); } catch { /* gone */ } },
     };
   }
   const st = ctx?.state || null;
   const own = () => { try { const a = st?.get?.()?.ai; return a && typeof a === 'object' ? a : {}; } catch { return {}; } };
   return {
     kind: st ? 'panel' : 'memory',
+    loaded: true,
     get: own,
     set: (patch) => { try { st?.set?.({ ai: { ...own(), ...patch } }); } catch (err) { console.error('nimrod-ai: save', err); } },
+    flush: async () => { await st?.flush?.(); },
     destroy: () => {},
   };
 }

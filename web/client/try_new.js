@@ -27,9 +27,9 @@
 //     empty record;
 //   * what's new has NO "seen" marker anywhere (modules/whats_new.js reads only the changelog), so there is
 //     nothing to reset — the suite checks no such key appears;
-//   * the landing tried before it is saved runs over this browser's local store under ONE preview id
-//     (modules.html), shared by every person in the browser. A test person gets an id of their own
-//     (`previewIdFor`), so Nimrod's walk and anything the preview kept start empty, and "Start over", which
+//   * the landing tried before it is saved runs over this browser's local store under a preview id of the
+//     person's own (`previewScopeFor`, modules.html; 2026-10-04 made it every person's, not only a test person's),
+//     so Nimrod's walk and anything the preview kept start empty for a test person, and "Start over", which
 //     makes a NEW person, gets a new one;
 //   * a few first-run facts live in THIS BROWSER, not on any record: FIRST_RUN_KEYS, each argued below. They
 //     are put aside on the way in and put back on "Back to me", so the owner's own browser state is untouched.
@@ -80,6 +80,48 @@ export const TRIAL_NOTE_MARK = '(trying it as someone new)';
 // A landing tried before it is saved: modules.html's own preview id, plus the test person's id.
 export const PREVIEW_BASE = 'home-example-preview';   // = modules.html PREVIEW_PROFILE_ID (the suite checks)
 export const previewIdFor = (personId) => `${PREVIEW_BASE}-${personId}`;
+// *** EVERY PERSON'S PREVIEW IS THEIR OWN (2026-10-04), not only a test person's. *** The landing tried before it is
+// saved runs over this browser's local store; under one shared id, everybody who used the browser shared Nimrod's
+// walk and the tour's points there (and, before nimrod_ai.js took `ctx.personHost`, his notes). With a person known
+// the id is theirs; with nobody known, the one shared id, exactly as before. What was kept under the shared id is
+// left where it is but for the notes, which move to the person's record (`browserNotesSource`, modules/nimrod.js):
+// a walk position and a preview's points never reached any record, and Save does not carry either (it keeps the
+// draft's settings rows), so there is nothing of a person's to lose by starting them fresh.
+export const previewScopeFor = (personId) => (personId ? previewIdFor(personId) : PREVIEW_BASE);
+
+/**
+ * What THIS BROWSER kept for Nimrod under the shared preview id before a person was known, for modules/nimrod.js to
+ * move to the person's record: `{ find() -> [{ key, ai }], clear(found, { notes, fields }) }`. `rows(pid)` and
+ * `makeState(key, opts, pid)` are local_store.js's (`localScopeRows`, `createLocalBackend().makeState`), handed in so
+ * this file (imported by modules/nimrod.js) does not bring the local store with it. `clear` removes only what was
+ * moved (the notes, the AI fields named), and keeps everything else on the row (the walk, the switches).
+ */
+export function browserNotesSource({ rows = null, makeState = null, scope = PREVIEW_BASE } = {}) {
+  if (typeof rows !== 'function' || typeof makeState !== 'function') return null;
+  return {
+    async find() {
+      const out = [];
+      for (const r of (await rows(scope)) || []) {
+        const ai = r?.data?.ai;
+        if (!ai || typeof ai !== 'object') continue;
+        if ((Array.isArray(ai.notes) && ai.notes.length > 0) || ai.name || ai.persona) out.push({ key: r.key, ai: { ...ai } });
+      }
+      return out;
+    },
+    async clear(found, { notes = false, fields = [] } = {}) {
+      if (!found?.key || (!notes && !fields.length)) return;
+      const h = makeState(found.key, {}, scope);
+      try {
+        const data = (await h.load()) || {};
+        const ai = { ...(data.ai && typeof data.ai === 'object' ? data.ai : {}) };
+        if (notes) delete ai.notes;
+        for (const k of fields) delete ai[k];
+        h.set({ ai });
+        await h.flush?.();
+      } finally { try { h.destroy?.(); } catch { /* gone */ } }
+    },
+  };
+}
 
 // THIS BROWSER'S FIRST-RUN FACTS. Put aside on the way in, put back exactly on "Back to me".
 //   IN, each because a brand-new person on a brand-new browser would not have it:

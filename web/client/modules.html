@@ -662,9 +662,9 @@ import { applyTheme, getStoredTheme, resolveThemeId, mountThemePicker } from './
 import { createState } from './state.js';
 import { pickCurrent, readLastPerson } from './people.js';
 // 2026-10-04: "Try it as someone new" -- a test person seeing this page as their first visit (try_new.js argues it).
-import { trialShowing, readTrialRecord, syncTrial, previewIdFor as trialPreviewId, startTrial, startOver, backToMe, mountTrialBar,
+import { trialShowing, readTrialRecord, syncTrial, previewScopeFor, browserNotesSource, startTrial, startOver, backToMe, mountTrialBar,
   TRYING_LABEL } from './try_new.js';
-import { localScopeRows, clearLocalScope } from './local_store.js';
+import { localScopeRows, clearLocalScope, createLocalBackend } from './local_store.js';
 import * as HD from './home_dashboard.js';
 // 2026-10-02: your Home is your profile -- started from an example (dashboards.js), edited with Design's
 // edit bar over the real dashboard (home_profile.js).
@@ -1112,8 +1112,21 @@ for (const ev of ['pointerdown', 'keydown', 'click', 'input', 'change']) {
 }
 const isUserEdit = () => Date.now() - lastInputAt < HOME_EDIT_WINDOW_MS;
 // An example being tried on the stage: held in memory under ids no list shows (home_embed.js's preview).
+// (With a person known, the id is the person's own: try_new.js `previewScopeFor`, which falls back to this one.)
 const PREVIEW_PROFILE_ID = 'home-example-preview';
 const previewIdFor = (ref) => `home-ex-${ref}`;
+// THE PERSON LOOKING, FOR THE EMBED (2026-10-04; kiosk.js `personHost` argues it): their own record, and what this
+// browser kept for Nimrod under the shared preview id before a person was known (moved to them once, on the first
+// load: modules/nimrod.js). Null with nobody known: the preview behaves as before.
+function homePersonHost() {
+  const { profiles, user, person } = HOME;
+  if (!person || !profiles?.personStateURL) return null;
+  const local = createLocalBackend();
+  return {
+    state: (pid, key) => createState({ url: profiles.personStateURL(pid, key), user }),
+    browserNotes: browserNotesSource({ rows: localScopeRows, makeState: local.makeState, scope: PREVIEW_PROFILE_ID }),
+  };
+}
 
 // The Home subject is either the landing dashboard or your own Home (2026-10-02), and says which.
 const subjectTitle = (s, t = HOME.target) => (s === HD.PROFILE_SUBJECT
@@ -1250,7 +1263,7 @@ async function openSubject(subject, { view = null } = {}) {
         target = { live: true, kind: 'home', profileId: liveId, docPid: liveId, docKey: HD.PROFILE_HISTORY_KEY, landing: shows.landing };
         const stage = renderHomeDetail(subject, target);
         e = await mountEmbeddedScreen({ stage, user, profileId: liveId, host: HOME_HOST,
-          wrapState: (h, key) => wrapRow(draft, h, key, typeOf) });
+          wrapState: (h, key) => wrapRow(draft, h, key, typeOf), personHost: homePersonHost() });
       } else {
         // AN EXAMPLE, TRIED: EXACTLY what the maker would make (dashboards.js prebuiltRecord), in memory,
         // its starting settings held in the draft -- so what you change while trying it is what Save keeps.
@@ -1260,9 +1273,12 @@ async function openSubject(subject, { view = null } = {}) {
         const refs = Object.fromEntries(rec.modules.map((m) => [m.ref, previewIdFor(m.ref)]));
         // Whose it is: the person looking (2026-10-02 evening) -- so a profile panel on it (the landing's top
         // left) shows THEM, by name (`people`, read-only), as it will once made. Nothing is written by this.
-        // A test person's preview has an id of its own (try_new.js `previewIdFor`), so what the preview keeps in this
-        // browser (Nimrod's walk, the tour's points) starts empty for them, and again after Start over.
-        const record = { id: HOME.trial && HOME.person ? trialPreviewId(HOME.person.id) : PREVIEW_PROFILE_ID,
+        // EVERY person's preview has an id of its own (try_new.js `previewScopeFor`; 2026-10-04, it was a test person's
+        // only), so what the preview keeps in this browser (Nimrod's walk, the tour's points) is theirs, not shared by
+        // everybody using the browser -- and a test person's starts empty again after Start over. Nobody known: the
+        // one shared id (PREVIEW_PROFILE_ID), as before. Nimrod's NOTES are not kept here at all with a person known:
+        // they go to the person's record (`homePersonHost`).
+        const record = { id: previewScopeFor(HOME.person?.id),
           name: rec.name, person_id: HOME.person?.id || null,
           modules: rec.modules.map((m, i) => ({ id: refs[m.ref], type: m.type, position: i })) };
         // Its settings as made (the lock list, the panel it opens being edited), under the preview's ids.
@@ -1272,7 +1288,7 @@ async function openSubject(subject, { view = null } = {}) {
         target = { live: false, kind: 'example', key, refs, landing: shows.landing };
         const stage = renderHomeDetail(subject, target);
         e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST, layout: exampleLayout(rec, refs),
-          wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people() });
+          wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people(), personHost: homePersonHost() });
       }
     } else {
       const prof = await profiles.get(HOME.defaultId);
