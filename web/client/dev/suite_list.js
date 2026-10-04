@@ -127,6 +127,8 @@ export const SUITES = [
   'try_new',
   // 2026-10-04: "Your people" - the landing as a very simple profile page; Nimrod at the bottom; the screen variant.
   'people_page',
+  // 2026-10-04: "Edit my page" - Your people as sections you add, remove and move; About me and boxes from the library.
+  'page_sections',
   // 2026-10-04: invite someone to take over a profile you made (the invite window, join.html, both sides' cards).
   'claim',
   // 2026-10-04: recommend a YouTube or Spotify song or video to one of your people; "Recommended for you".
