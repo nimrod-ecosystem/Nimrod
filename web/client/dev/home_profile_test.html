@@ -71,7 +71,9 @@ try {
     const known = new Set(listManifests().map((m) => m.type));
     check('*** the landing Home first (Mike, second set: "the home dashboard that the site lands on"), then static 2D, a live theme, Design’s rooms, the 3D room ***',
       EXAMPLE_ORDER[0] === 'start'
-      && J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'static', 'live', 'room', 'room', 'room', 'room3d']), J(EXAMPLE_ORDER));
+      // (2026-10-03: "Photos with a clock" is a third still one, after Plain Nimrod -- Mike: "full screen photos
+      // with a small clock overlay". overlay_test checks the record.)
+      && J(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)) === J(['static', 'static', 'static', 'live', 'room', 'room', 'room', 'room3d']), J(EXAMPLE_ORDER));
     check('...the tutorial is not a card (Nimrod, the ⚙ menu, the bar’s tray and "tutorial" reach it)', !EXAMPLE_ORDER.includes('tutorial'));
     {
       // 2026-10-02 (Mike: "3d if possible"): the CSS-3D room, appended after the rooms.

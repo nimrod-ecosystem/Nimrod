@@ -124,6 +124,9 @@ export const SUITES = [
   // 2026-10-02: settings at every level, Pause / Play on the bar, a panel made bigger, a call's controls,
   // more layouts. Mounts real kiosks (needs the server).
   'screen_controls',
+  // 2026-10-03: "Over the dashboard" -- any module as a small floating panel, the small corner clock as a setting,
+  // and the "Photos with a clock" example measured at 1280x720 and 1920x1080. Mounts real kiosks (needs the server).
+  'overlay',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

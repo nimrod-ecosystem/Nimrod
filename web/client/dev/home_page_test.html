@@ -468,6 +468,105 @@ try {
   check('...and they close with their own Close', await until(() => !$('#stage [data-ew="close"]'), 5000));
 
   // ============================================================================================
+  // 2026-10-03, Mike: "Where are the overlays? I'd like to make a dashboard that's full screen photos with a small
+  // clock overlay somewhere." Add has a "Put it" choice; Over the dashboard floats a module in a corner (layout.js
+  // addAsOverlay), and a clock that way is the small corner clock. Undone at the end, so what follows is as it was.
+  section('*** OVER THE DASHBOARD: Add, then "Over the dashboard", then a module ***');
+  {
+    await until(editIdle, 15000);
+    if (tray().hidden || !tray().querySelector('[data-edit-addwhere]')) eb('add').click();
+    check('*** the Add tray asks where to put it: "In the dashboard" (chosen, as before) or "Over the dashboard" ***',
+      await until(() => !!tray().querySelector('[data-edit-addwhere="over"]'), 5000)
+      && tray().querySelector('[data-edit-addwhere="in"]')?.getAttribute('aria-pressed') === 'true'
+      && tray().querySelector('[data-edit-addwhere="over"]')?.getAttribute('aria-pressed') === 'false');
+    tray().querySelector('[data-edit-addwhere="over"]').click();
+    check('...one press chooses Over the dashboard (and it stays chosen)',
+      await until(() => tray().querySelector('[data-edit-addwhere="over"]')?.getAttribute('aria-pressed') === 'true', 3000));
+    const had = new Set((await modsOf(HID)).map((m) => m.id));
+    tray().querySelector('[data-edit-add="weather"]').click();
+    let wid = null;
+    check('*** one more press: a Weather is on the Home ***', await until(async () => {
+      wid = (await modsOf(HID)).find((m) => m.type === 'weather' && !had.has(m.id))?.id || null; return !!wid;
+    }, 15000));
+    let went = null;
+    await until(async () => { went = ((await layoutOf(HID))?.placed || []).find((p) => p.id === wid) || null; return !!went; }, 10000);
+    check('*** ...OVER the dashboard: an overlay, top right, 24 x 26, out of the switch lap ***',
+      went?.place === 'overlay' && went.scan === false && went.w === 24 && went.h === 26 && went.x === 86 && went.y === 15, J(went));
+    check('...drawn in the stage\'s overlay layer, above the room', await until(() => !!$(`#stage .k-placed-overlay [data-placed="${wid}"]`), 15000));
+    check('...and not a stop in the switch lap', await until(() => !(win.__home?.kiosk?.focusRing?.() || []).some((s) => s.id === wid), 5000),
+      J(win.__home?.kiosk?.focusRing?.()));
+    check('it says where it went', await until(() => /over your Home now, in the top right corner/i.test(toastText()), 5000), toastText());
+    await until(editIdle, 15000);
+    if (tray().hidden || !tray().querySelector('[data-edit-add="clock"]')) eb('add').click();
+    await until(() => !!tray().querySelector('[data-edit-add="clock"]'), 5000);
+    check('(setup) still Over the dashboard', tray().querySelector('[data-edit-addwhere="over"]')?.getAttribute('aria-pressed') === 'true');
+    tray().querySelector('[data-edit-add="clock"]').click();
+    let cid = null;
+    check('*** a Clock over the dashboard: added, and NOT placed (so it is the small corner clock) ***', await until(async () => {
+      const c = (await modsOf(HID)).find((m) => m.type === 'clock');
+      cid = c?.id || null;
+      const L = await layoutOf(HID);
+      return !!cid && ![...(L?.slots || []), ...((L?.placed || []).map((p) => p.id))].includes(cid);
+    }, 15000));
+    check('...drawn small in its corner on the stage, no floating panel for it',
+      await until(() => { const el = $('#stage .k-clock'); return !!el?.querySelector('.k-mod') && getComputedStyle(el).display !== 'none'; }, 15000)
+      && !$(`#stage .k-placed-overlay [data-placed="${cid}"]`));
+    check('it says where the small clock is, and where to move it', await until(() => /small clock is in the .* corner/i.test(toastText()), 5000), toastText());
+    await until(editIdle, 15000);
+    // "Show a small clock" on the ⚙ menu: on Home the kiosk hands the press to the page (host.handles), which saves
+    // the corner where the arrangement is saved.
+    const scRow = () => (win.__home?.kiosk?.menu?.items?.() || []).find((i) => i.id === 'set:clockCorner') || null;
+    check('*** the ⚙ menu has "Show a small clock", saying where it is (bottom left) ***', await until(() => scRow()?.value === 'bl', 8000),
+      J(scRow() && { value: scRow().value, hint: scRow().hint }));
+    scRow()?.commit('tr');
+    check('*** choosing top right moves it there, saved beside the arrangement ***', await until(async () => {
+      const s = await row(HID, 'settings'); return s.kiosk?.clock?.corner === 'tr' && !!s.kiosk?.layout;
+    }, 15000));
+    check('...and the stage shows it top right', await until(() => {
+      const el = $('#stage .k-clock'); const st = $('#stage .kiosk');
+      if (!el || !st) return false;
+      const a = el.getBoundingClientRect(), b = st.getBoundingClientRect();
+      return a.left > b.left + b.width / 2 && a.bottom < b.top + b.height / 2;
+    }, 15000));
+    await until(editIdle, 15000);
+    // THE MODULES LIBRARY's "Over the dashboard": opened in a panel's place, the pick goes OVER the Home (the page
+    // does it, as for Add) and the panel it stood in for comes back as it was.
+    const libPid = (await modsOf(HID)).find((m) => m.type === 'photos')?.id;
+    await win.__home.kiosk.openLibrary(libPid);
+    const libEl = () => $('#stage [data-library-for]');
+    check('(setup) the library is open in the photos\' place', await until(() => !!libEl(), 8000));
+    libEl()?.querySelector('.lib-card[data-lib-key="module:scoreboard"]')?.click();
+    check('*** its details offer "Over the dashboard" ***', await until(() => !!libEl()?.querySelector('[data-lib-act="overlay"]'), 4000));
+    const had2 = new Set((await modsOf(HID)).map((m) => m.id));
+    libEl()?.querySelector('[data-lib-act="overlay"]')?.click();
+    let sid = null, sent = null;
+    check('*** pressed: the library goes, and a Scoreboard is OVER the Home, in the next free corner (top left) ***', await until(async () => {
+      sid = (await modsOf(HID)).find((m) => m.type === 'scoreboard' && !had2.has(m.id))?.id || null;
+      sent = ((await layoutOf(HID))?.placed || []).find((p) => p.id === sid) || null;
+      return !libEl() && sent?.place === 'overlay' && sent.scan === false && sent.x === 14 && sent.y === 15;
+    }, 15000), J(sent));
+    check('...and the photos are still where they were', (await layoutOf(HID)).placed.some((p) => p.id === libPid));
+    // (The library closes the ⚙ menu -- and with it edit view -- while it is open; edit view back for Undo.)
+    await ensureMenu();
+    await until(editIdle, 15000);
+    eb('undo').click();
+    check('Undo takes the scoreboard off', await until(async () => !(await modsOf(HID)).some((m) => m.id === sid), 15000));
+    await until(editIdle, 15000);
+    eb('undo').click();
+    check('Undo takes the clock off again', await until(async () => !(await modsOf(HID)).some((m) => m.type === 'clock'), 15000));
+    await until(editIdle, 15000);
+    eb('undo').click();
+    check('...and Undo again the Weather', await until(async () => !(await modsOf(HID)).some((m) => m.id === wid), 15000));
+    await until(editIdle, 15000);
+    if (tray().hidden || !tray().querySelector('[data-edit-addwhere]')) eb('add').click();
+    await until(() => !!tray().querySelector('[data-edit-addwhere="in"]'), 5000);
+    tray().querySelector('[data-edit-addwhere="in"]')?.click();
+    check('(cleanup) back to In the dashboard', await until(() => tray().querySelector('[data-edit-addwhere="in"]')?.getAttribute('aria-pressed') === 'true', 3000));
+    tray().querySelector('[data-edit="closetray"]')?.click();
+    await until(() => tray().hidden, 3000);
+  }
+
+  // ============================================================================================
   section('*** the edit bar BY SWITCH: it takes the scan; next / select / back walk it, Close first ***');
   {
     const K = () => win.__home?.kiosk || null;
@@ -505,7 +604,9 @@ try {
     check('*** select on Add opens its tray, and the cursor goes INTO it, on its Close (the way out first) ***',
       await until(() => !tray().hidden && /Add to your Home/.test(tray().textContent) && curText() === 'Close' && tray().contains(cur()), 3000), curText());
     await verb('next');
-    check('next walks the tray', tray().contains(cur()) && cur()?.dataset.editAdd === 'piece:picture', curText());
+    // (2026-10-03, deliberately: the tray's "Put it" choice -- In / Over the dashboard -- comes before the modules,
+    // so a switch reaches it once and every module after it is added that way. It was the picture frame.)
+    check('next walks the tray (its "Put it" choice first)', tray().contains(cur()) && cur()?.dataset.editAddwhere === 'in', curText());
     await verb('back');
     check('*** back in a tray leaves the TRAY, back onto Add on the bar ***', await until(() => tray().hidden && cur() === eb('add'), 2000), curText());
 

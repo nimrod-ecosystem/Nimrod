@@ -43,6 +43,8 @@ import { SYSTEM_TOPICS } from './actions.js';
 import { DASHBOARD_GO_TOPIC as NEST_GO_TOPIC, SCREEN_BACK_TOPIC, SCREEN_HOME_TOPIC } from './dashboard_nest.js';
 
 export const PANEL_SURFACES = Object.freeze(['solid', 'veil', 'clear']);
+// The corner clock's corners a record may set (arrangement.js CLOCK_CORNERS; see recordProblems).
+export const RECORD_CLOCK_CORNERS = Object.freeze(['off', 'tl', 'tr', 'bl', 'br']);
 
 // The settings-doc keys the maker writes. Exported so a suite, a diagnostic page and Home can read them.
 export const PREBUILT_KEY = 'prebuilt';
@@ -223,6 +225,26 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     layout: { preset: 'side', slots: ['photos', 'clock'] },
     settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
   }),
+  // *** PHOTOS WITH A CLOCK (Mike, 2026-10-03: "I'd like to make a dashboard that's full screen photos with a
+  // small clock overlay somewhere"). *** The photos fill the dashboard (one 'full' slot) and the clock is left
+  // UNPLACED, which is what makes it the corner clock (layout.js HUD_TYPES; arrangement.js SMALL_CLOCK_FIELD):
+  // small, no panel chrome, on a backing checked for contrast over white and black in every theme. The corner is
+  // the dashboard's own `kiosk.clock.corner` (the maker writes it beside the layout, `kiosk` below).
+  //   corner    TOP RIGHT: the bar is along the bottom and floats over the panels while it is up, so a bottom
+  //             corner would be covered by it; top right is where a phone or a TV puts the time (and where
+  //             home_profile.js OVERLAY_CORNERS starts). Guess, on Mike's list; "Show a small clock" moves it.
+  //   look      the plain Nimrod look, solid panels: a still example, so in the Still group (KIND_ORDER).
+  photoclock: Object.freeze({
+    key: 'photoclock', label: 'Photos + clock', name: 'Photos with a clock', kind: 'static', title: 'Photos with a clock',
+    blurb: 'Your photos filling the screen, with a small clock in the corner.',
+    modules: [
+      { ref: 'photos', type: 'photos' },
+      { ref: 'clock', type: 'clock' },
+    ],
+    layout: { preset: 'full', slots: ['photos'] },
+    kiosk: { clock: { corner: 'tr' } },
+    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+  }),
   classic: Object.freeze({
     key: 'classic', label: 'Classic 2D', name: 'Classic 2D', kind: 'live', title: 'Fall, moving',
     blurb: 'See-through panels over a moving background: photos, videos, a word game and a clock.',
@@ -334,7 +356,9 @@ export const PREBUILT_ORDER = Object.freeze(['basic', 'classic', 'room', 'tutori
 // 2026-10-02 (third set): "Still, live, rooms, 3d" -- which this already is: the two still ones (the landing
 // and Plain Nimrod, both the Nimrod light theme), the moving one, Design's rooms, the 3D room. Checked by
 // `inKindOrder` in the suites so a new card cannot quietly land out of place.
-export const EXAMPLE_ORDER = Object.freeze(['start', 'basic', 'classic', 'room', 'study', 'fireside', 'room3d']);
+// 2026-10-03: Photos with a clock joins the Still group, after Plain Nimrod (Mike: "full screen photos with a
+// small clock overlay"). Not in PREBUILT_ORDER: the bar's tray stays three stops plus the tutorial (see above).
+export const EXAMPLE_ORDER = Object.freeze(['start', 'basic', 'photoclock', 'classic', 'room', 'study', 'fireside', 'room3d']);
 
 /** Home's cards: one per starting point, in EXAMPLE_ORDER, in words (`kindLabel`). */
 export function exampleCards(order = EXAMPLE_ORDER) {
@@ -385,6 +409,9 @@ export function lockedIds(rec, refs = {}) {
  *  it opens with being edited. What the maker writes, and what a preview of it is seeded with. */
 export function recordSettings(rec, refs = {}) {
   const out = { ...(rec?.settings || {}) };
+  // 2026-10-03 (Photos with a clock): the record's screen-level `kiosk` keys beside the layout -- the corner
+  // clock's corner. The maker writes the layout into the same `kiosk` (and merges, never replaces).
+  if (rec?.kiosk && typeof rec.kiosk === 'object') out.kiosk = clone(rec.kiosk);
   if (Array.isArray(rec?.locked)) out[LOCKED_KEY] = lockedIds(rec, refs);
   if (rec?.editPanel && refs[rec.editPanel]) out[EDIT_PANEL_KEY] = refs[rec.editPanel];
   return out;
@@ -458,6 +485,14 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
   }
   if (rec.kind === 'room' && !(L.scene && L.scene.kind === 'room')) out.push('a room with no room scene');
   if (rec.kind === 'room3d' && !(L.scene && L.scene.kind === 'room3d')) out.push('a 3D room with no 3D room scene');
+  // The corner clock's corner, when a record sets one: one of arrangement.js CLOCK_CORNERS (written out here, as
+  // EDIT_PANEL_KEY is, so every page that reads this file does not load the arrangement; overlay_test checks
+  // the two lists agree). Only `clock` rides in `kiosk`: the layout is the record's own `layout`.
+  if (rec.kiosk !== undefined) {
+    const k = rec.kiosk;
+    if (!k || typeof k !== 'object' || Object.keys(k).some((x) => x !== 'clock')) out.push('kiosk may only carry clock');
+    else if (k.clock && !RECORD_CLOCK_CORNERS.includes(k.clock.corner)) out.push(`clock corner ${k.clock.corner} is not one of ${RECORD_CLOCK_CORNERS.join('/')}`);
+  }
   const s = rec.settings || {};
   if (!s.theme || !THEMES[s.theme]) out.push(`theme ${s.theme} does not exist`);
   if (!PANEL_SURFACES.includes(s.panelSurface)) out.push(`panel backgrounds ${s.panelSurface} is not one of ${PANEL_SURFACES.join('/')}`);
@@ -553,7 +588,7 @@ export function createDashboardMaker({ profiles, makeSettings, makeInstanceState
     // DONE LAST, with the arrangement and the look, in one write.
     await patchDoc(pid, (cur) => ({
       ...recordSettings(rec, refs),
-      kiosk: { ...(cur.kiosk || {}), layout },
+      kiosk: { ...(cur.kiosk || {}), ...(rec.kiosk || {}), layout },
       [PREBUILT_KEY]: key, [PREBUILT_REFS_KEY]: { ...refs }, [PREBUILT_DONE_KEY]: true,
     }));
     stamps.set(pid, { key, refs: { ...refs }, done: true });

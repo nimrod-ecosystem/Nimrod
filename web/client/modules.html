@@ -676,6 +676,9 @@ import { PREBUILT_DASHBOARDS, exampleCards, prebuiltRecord, layoutFor as example
   createDashboardMaker, LOCKED_KEY, LANDING_KEY, recordSettings, remapSettingsIds } from './dashboards.js';
 // 2026-10-02: edit any panel in place (edit_mode.js) -- Home's "Edit the chosen panel" says it on the bus.
 import { EDIT_PANEL_TOPIC } from './edit_mode.js';
+// 2026-10-03: over the dashboard -- the corner clock / mirror (HUD_TYPES) and "Show a small clock".
+import { HUD_TYPES } from './layout.js';
+import { CLOCK_CORNERS, SMALL_CLOCK_FIELD, clockCornerOf } from './arrangement.js';
 import { createGame, kioskURL } from './game/game.js';
 import { CAT_STEPS, HOME_PAGE as CAT_HOME, CAT_BAR_SELECTOR, catGoThere, rememberCatProfile } from './game/cat_steps.js';
 
@@ -811,7 +814,10 @@ const HOME = {
   unlockAsk: null,        // { act: 'add'|'switch', key }: a locked thing was pressed; its unlock choices show
   unlockArmed: false,     // the first press of "Use N points" (the second one spends them)
   sel: null,              // the chosen thing on the Home (a module instance id)
-  locked: [],             // instance ids this Home keeps in place (the tutorial's; home_profile.js isLocked)
+  // 2026-10-03: the Add tray's "Put it": false = in the dashboard (a free cell, else placed), true = OVER it
+  // (home_profile.js addAsOverlay). Kept while the page is open, so adding three overlays is three presses.
+  addOver: false,
+  locked: [],            // instance ids this Home keeps in place (the tutorial's; home_profile.js isLocked)
   undo: HP.createUndo(),
   editBusy: false,
   rebuilding: false,
@@ -1341,6 +1347,9 @@ const HOME_HOST = {
   barItems: () => (HOME.on ? HD.homeBarItems(homeView()) : []),
   label: (act, state) => (HOME.on ? HD.homeShellLabel(act, { ...(state || {}), land: HOME.land }) : null),
   press: (act, p) => homePress(act, p),
+  // 2026-10-03: the presses the kiosk hands this page by name (kiosk.js `hostHandles`): a module over the
+  // dashboard (the Modules library) and "Show a small clock" (the ⚙ menu) -- on the Home subject only.
+  handles: (act) => HOME.on && HOME.subject === HD.PROFILE_SUBJECT && (act === 'overlay' || act === 'smallclock'),
   menuItems: () => (HOME.on
     ? HD.homeMenuModel(homeView()).map((it) => (it.kind === 'item' ? { ...it, run: () => homePress(it.act) } : it))
     : []),
@@ -1399,6 +1408,17 @@ function homePress(act, p = null) {
       gatedDo('switch', p.type);
       break;
     }
+    // 2026-10-03: a module OVER the dashboard (the Modules library's "Over the dashboard", kiosk.js asks the host
+    // page as it does for 'place'): the same as Add with "Over the dashboard" chosen. `p.type`: the module.
+    case 'overlay': {
+      if (!p || typeof p.type !== 'string') break;
+      if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then a module can go over it.'); break; }
+      if (gateCheck(p.type)?.locked) { HOME.tray = 'add'; HOME.addOver = true; gatedDo('add', p.type); break; }
+      addThing(p.type, { over: true });
+      break;
+    }
+    // 2026-10-03: "Show a small clock" from the ⚙ menu (kiosk.js asks the host page). `p.corner`: off / tl / tr / bl / br.
+    case 'smallclock': if (p && typeof p.corner === 'string') smallClockTo(p.corner); break;
     // The builder, tried on the stage like the tutorial (Save keeps it).
     case 'builder': requestSubject(HD.PROFILE_SUBJECT, { previewKey: 'builder' }); break;
     // Edit the chosen panel in place (edit_mode.js), said on the stage's bus -- the same as its ✎ corner.
@@ -1814,12 +1834,14 @@ async function rebuildHome() {
 
 /** One change to the Home: one at a time, remembered for Undo first, rebuilt after. Nothing waits on it,
  *  and a change that fails says so and leaves the rest as it was. */
-async function editOp(fn, { rebuild = true, full = false } = {}) {
+async function editOp(fn, { rebuild = true, full = false, undo = true } = {}) {
   if (HOME.editBusy || !homeLive()) return;
   HOME.editBusy = true;
   paintEdit(); hostChanged();
   try {
-    HOME.undo.push(await captureHome({ full }));
+    // (`undo: false`, 2026-10-03: a change Undo's snapshot does not hold -- the small clock's corner -- is not a
+    // step of its own, or the next Undo would undo nothing and the one after it the wrong thing.)
+    if (undo) HOME.undo.push(await captureHome({ full }));
     const msg = await fn();
     if (rebuild) await rebuildHome();
     if (msg) toast(msg);
@@ -1843,8 +1865,9 @@ async function addModuleFor(key) {
   return mod;
 }
 
-function addThing(key) {
+function addThing(key, { over = HOME.addOver } = {}) {
   const { label } = pieceOrType(key);
+  if (over) return addOverThing(key);
   return editOp(async () => {
     const mod = await addModuleFor(key);
     const cur = await readHomeLayout();
@@ -1854,6 +1877,95 @@ function addThing(key) {
     HOME.tray = 'change';
     return `${label} is on your Home now.`;
   });
+}
+
+// ---- OVER THE DASHBOARD (2026-10-03; home_profile.js addAsOverlay argues the corner, the size, the lap) ----
+/** This Home's screen-level `kiosk` keys as saved (the corner clock's corner lives there, beside the layout). */
+async function readHomeKiosk() {
+  const h = createState({ url: HOME.profiles.stateURL(liveId(), 'settings'), user: HOME.user });
+  try { const s = await h.load(); return (s && s.kiosk) || {}; } catch { return {}; } finally { h.destroy(); }
+}
+/** The corner clock's corner, written beside the layout (saved as it is made, like the layout: it is WHERE a
+ *  thing is, not a setting waiting for Save). */
+async function writeHomeClockCorner(corner) {
+  const h = createState({ url: HOME.profiles.stateURL(liveId(), 'settings'), user: HOME.user });
+  try {
+    const cur = (await h.load().catch(() => ({}))) || {};
+    const k = cur.kiosk || {};
+    h.set({ kiosk: { ...k, clock: { ...(k.clock || {}), corner } } });
+    await h.flush();
+  } finally { h.destroy(); }
+}
+/** The HUD one of `type` this Home already has (an unplaced clock or camera), or null. */
+async function hudOf(type, layout) {
+  const screen = await HOME.profiles.get(liveId());
+  const placed = new Set(HP.layoutIds(layout));
+  return (screen.modules || []).find((m) => m.type === type && !placed.has(m.id)) || null;
+}
+function addOverThing(key) {
+  const { label, type } = pieceOrType(key);
+  return (async () => {
+  // A corner clock / mirror already there adds nothing Undo could take back: no Undo step for it (editOp `undo`).
+  const already = HUD_TYPES.includes(type) && homeLive() ? !!(await hudOf(type, await readHomeLayout())) : false;
+  return editOp(async () => {
+    const cur = await readHomeLayout();
+    const k = await readHomeKiosk();
+    // THE CLOCK (and the camera): the corner clock (the corner mirror), not a floating panel -- addAsOverlay says why.
+    if (HUD_TYPES.includes(type)) {
+      const have = await hudOf(type, cur);
+      if (!have) await addModuleFor(key);
+      if (type === 'clock') {
+        const now = clockCornerOf({ kiosk: k });
+        // Off, it is turned on where it was last set (its default when never set): what Add means.
+        if (now === 'off' || !have) await writeHomeClockCorner(now === 'off' ? SMALL_CLOCK_FIELD.default : now);
+        const at = now === 'off' ? SMALL_CLOCK_FIELD.default : now;
+        const words = SMALL_CLOCK_FIELD.options.find((o) => o.value === at)?.label.toLowerCase() || 'a corner';
+        return have
+          ? `There is already a small clock on your Home: it shows in the ${words} corner. ⚙ menu, Display, “Show a small clock” moves it.`
+          : `A small clock is in the ${words} corner of your Home now. ⚙ menu, Display, “Show a small clock” moves it or turns it off.`;
+      }
+      return have ? 'There is already a camera in the corner of your Home.' : `${label} is in the corner of your Home now.`;
+    }
+    const mod = await addModuleFor(key);
+    // Corners in use by the corner clock and the mirror are left free too.
+    const avoid = [];
+    if (await hudOf('clock', cur) && clockCornerOf({ kiosk: k }) !== 'off') avoid.push(clockCornerOf({ kiosk: k }));
+    if (await hudOf('camera', cur)) avoid.push((k.mirror && k.mirror.corner) || 'tr');
+    const r = HP.addAsOverlay(cur, mod.id, { type, avoid });
+    if (!r.entry) {
+      // The one-at-a-time stage has nothing to float over: it joins the stage, as any added module does.
+      const next = HP.addToLayout(cur, mod.id);
+      if (next && JSON.stringify(next) !== JSON.stringify(cur)) await writeHomeLayout(next);
+      HOME.sel = mod.id; HOME.tray = 'change';
+      return `${label} is on your Home now. This Home shows one thing at a time, so there is nothing to put it over.`;
+    }
+    await writeHomeLayout(r.layout);
+    HOME.sel = mod.id;
+    HOME.tray = 'change';
+    const corner = HP.cornerOf(r.entry);
+    const where = SMALL_CLOCK_FIELD.options.find((o) => o.value === corner)?.label.toLowerCase() || 'a corner';
+    return `${label} is over your Home now, in the ${where} corner. Move it with Change or Transform…`;
+  }, { undo: !already });
+  })();
+}
+
+/** "Show a small clock" from the ⚙ menu on Home (kiosk.js asks the host page: Home's settings are drafted, and
+ *  where a thing is saves as it is made). `corner`: one of CLOCK_CORNERS. A corner with no clock adds one. */
+function smallClockTo(corner) {
+  if (!CLOCK_CORNERS.includes(corner)) return Promise.resolve();
+  if (!homeLive()) { toast('Make this your Home first (Make this my Home, or Save): then its clock can be set.'); return Promise.resolve(); }
+  const words = SMALL_CLOCK_FIELD.options.find((o) => o.value === corner)?.label.toLowerCase() || 'a corner';
+  const said = corner === 'off' ? 'The small clock is off. Its settings are kept for when it is turned back on.'
+    : `The small clock is in the ${words} corner.`;
+  return (async () => {
+    const have = corner === 'off' ? true : !!(await hudOf('clock', await readHomeLayout()));
+    // A clock ADDED is a step Undo takes back (the module comes off); only the corner moving is not one.
+    return editOp(async () => {
+      if (!have && !(await hudOf('clock', await readHomeLayout()))) await addModuleFor('clock');
+      await writeHomeClockCorner(corner);
+      return said;
+    }, { undo: !have });
+  })();
 }
 
 /** *** SWITCH MODULE: the hot swap. *** A new module of `key`'s type takes the chosen one's place -- the
@@ -2241,7 +2353,13 @@ function paintTray(live, list, t) {
   // An unlock question belongs to the tray it was asked in; another tray drops it (nothing was changed).
   if (HOME.unlockAsk && HOME.unlockAsk.act !== which) { HOME.unlockAsk = null; HOME.unlockArmed = false; }
   if (which === 'add') {
-    setHTML(tray, trayHead('Add to your Home') + unlockPanel() + moduleButtons('data-edit-add'));
+    // "Put it": in the dashboard, or OVER it (2026-10-03; home_profile.js addAsOverlay). A choice that stays,
+    // before the modules, so a switch reaches it once and then every module after it is added that way.
+    const where = `<div class="grp">Put it</div><div class="hbtns">${
+      ebtn('data-edit-addwhere="in"', 'In the dashboard', { pressed: !HOME.addOver, hint: 'in a free place, as it always was' })}${
+      ebtn('data-edit-addwhere="over"', 'Over the dashboard', { pressed: HOME.addOver,
+        hint: 'a small panel floating in a corner, over what is there; a clock becomes the small corner clock' })}</div>`;
+    setHTML(tray, trayHead('Add to your Home') + unlockPanel() + where + moduleButtons('data-edit-add'));
     return;
   }
   if (which === 'switch') {
@@ -2365,6 +2483,7 @@ document.addEventListener('click', (e) => {
   if (ds.editScene) { sceneTo(ds.editScene); return; }
   if (ds.editRoom) { roomRow(ds.editRoom); return; }
   if (ds.editFlat) { flatRow(ds.editFlat); return; }
+  if (ds.editAddwhere) { HOME.addOver = ds.editAddwhere === 'over'; paintEdit(); hostChanged(); return; }
   if (ds.editAdd) { gatedDo('add', ds.editAdd); return; }
   if (ds.editSwitch) { gatedDo('switch', ds.editSwitch); return; }
   if (ds.editUnlock) { unlockAnswer(ds.editUnlock); return; }
@@ -2445,7 +2564,13 @@ async function writeRows(pid, rows) {
   for (const [key, values] of Object.entries(rows)) {
     const h = createState({ url: HOME.profiles.stateURL(pid, key), user: HOME.user });
     await h.load().catch(() => {});
-    h.set(values);
+    // 2026-10-03: a row's `kiosk` is MERGED into the one saved, never put in its place -- an example's settings
+    // carry the corner clock's corner there (dashboards.js recordSettings), and the maker has already written
+    // the layout into the same `kiosk`; replacing it would lose the arrangement just made.
+    const cur = h.get?.() || {};
+    if (values && values.kiosk && typeof values.kiosk === 'object' && cur.kiosk && typeof cur.kiosk === 'object') {
+      h.set({ ...values, kiosk: { ...cur.kiosk, ...values.kiosk } });
+    } else h.set(values);
     await h.flush();
     h.destroy();
   }

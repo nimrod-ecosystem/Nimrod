@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>over the dashboard - any module as a small floating panel, and a small clock - test</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  /* A box the size of the screen being checked (panel_gap_test's way): the kiosk is pinned to it. */
+  .box{position:absolute;left:0;top:0;overflow:hidden;border:0}
+  .box .kiosk{position:absolute}
+  #libhost{position:absolute;left:-9999px;top:0;width:900px;height:600px}
+</style>
+</head>
+<body>
+<h1>over the dashboard</h1>
+<p>Mike, 2026-10-03: <i>"Where are the overlays? I'd like to make a dashboard that's full screen photos with a small
+clock overlay somewhere."</i> This checks: where an overlay goes and that it is out of the switch lap (layout.js
+<code>addAsOverlay</code>); "Over the dashboard" in the Modules library; a real kiosk drawing an overlay in its corner
+on an opaque backdrop, moved in place, over a panel made bigger; "Show a small clock" on a screen's ⚙ menu (a clock
+added when there is none, hidden by Off, moved by a corner); and the "Photos with a clock" example at 1280×720 and
+1920×1080 on both paths, its clock readable over a light and a dark photo. Home's Add tray is driven in
+<code>home_page_test</code>. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="libhost"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk } from '../kiosk.js';
+import { addAsOverlay, overlaySpot, cornerOf, OVERLAY_SIZE, OVERLAY_MARGIN, OVERLAY_CORNERS, HUD_TYPES,
+  normalizeLayout } from '../layout.js';
+import * as HP from '../home_profile.js';
+import { SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from '../arrangement.js';
+import { PREBUILT_DASHBOARDS, EXAMPLE_ORDER, KIND_ORDER, inKindOrder, prebuiltRecord, recordProblems, recordSettings,
+  createDashboardMaker, RECORD_CLOCK_CORNERS, layoutFor } from '../dashboards.js';
+import { mountLibrary, libraryItems } from '../library.js';
+import { listManifests } from '../module.js';
+import { contrast } from '../theme.js';
+
+const USER = 'overlay-' + Math.floor(Math.random() * 1e6);
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(50); } return false; };
+const J = (x) => JSON.stringify(x);
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } }; };
+const R = (el) => el.getBoundingClientRect();
+const near = (a, b, tol = 2) => Math.abs(a - b) <= tol;
+
+// Computed colours: rgb(), rgba(), or color(srgb ...) (color-mix), to [r, g, b, a] in 0..255 / 0..1.
+function parseColor(s) {
+  let m = /^rgba?\(([^)]+)\)$/.exec(s);
+  if (m) { const p = m[1].split(/[\s,/]+/).filter(Boolean).map(Number); return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]; }
+  m = /^color\(srgb\s+([^)]+)\)$/.exec(s);
+  if (m) { const p = m[1].split(/[\s/]+/).filter(Boolean).map(Number); return [p[0] * 255, p[1] * 255, p[2] * 255, p.length > 3 ? p[3] : 1]; }
+  throw new Error(`unparsed colour: ${s}`);
+}
+const hex = ([r, g, b]) => '#' + [r, g, b].map((c) => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0')).join('');
+const over = ([r, g, b, a], [R2, G2, B2]) => [r * a + R2 * (1 - a), g * a + G2 * (1 - a), b * a + B2 * (1 - a)];
+// A LIGHT photo and a DARK one: the brightest and darkest a picture under the clock can be.
+const LIGHT = [255, 255, 255], DARK = [0, 0, 0];
+
+const profiles = createProfilesClient({ user: USER });
+async function writeRow(pid, key, patch) {
+  const h = createState({ url: profiles.stateURL(pid, key), user: USER });
+  try { await h.load().catch(() => {}); h.set(patch); await h.flush(); } finally { h.destroy(); }
+}
+async function readRow(pid, key) {
+  const h = createState({ url: profiles.stateURL(pid, key), user: USER });
+  try { await h.load().catch(() => {}); return { ...(h.get() || {}) }; } finally { h.destroy(); }
+}
+
+/** A real kiosk for `pid` in a W x H box; `rows` are the handles it opened on its own settings row. */
+async function mountAt(pid, W, H, { dashboardDefault = false } = {}) {
+  const box = document.createElement('div');
+  box.className = 'box';
+  box.style.width = `${W}px`; box.style.height = `${H}px`;
+  document.body.append(box);
+  const rows = [];
+  const makeState = (key, opts = {}, forPid = pid) => {
+    const h = createState({ url: profiles.stateURL(forPid, key), user: USER, ...opts });
+    if (key === 'settings' && forPid === pid) rows.push(h);
+    return h;
+  };
+  const kiosk = await mountKiosk(box, { user: USER, profileId: pid, profiles, bus: createBus(), makeState,
+    storage: memStore(), session: memStore(), navigate: () => {}, reloadPage: () => {}, dashboardDefault });
+  const cells = () => [...box.querySelectorAll('.k-stage.k-grid > .k-cell')];
+  await until(() => cells().length >= 1 && cells().every((c) => !!c.querySelector('.k-mod')), 15000);
+  return { box, kiosk, rows, cells, kioskEl: box.querySelector('.kiosk'),
+    pcell: (id) => box.querySelector(`.k-placed-overlay > .k-pcell[data-placed="${id}"]`),
+    clockEl: () => [...box.querySelectorAll('.k-clock')].find((c) => c.querySelector('.k-mod')) || null,
+    setRow: (p) => { for (const h of rows) h.set(p); },
+    done() { try { kiosk.destroy(); } catch { /* gone */ } box.remove(); } };
+}
+const shown = (el) => !!el && getComputedStyle(el).display !== 'none' && getComputedStyle(el).visibility !== 'hidden' && R(el).width > 0;
+
+try {
+  // ============================================================================================
+  section('*** 1. where an overlay goes (layout.js addAsOverlay, pure) ***');
+  {
+    const L = { preset: 'full', slots: ['P'] };
+    const a = addAsOverlay(L, 'W', { type: 'weather' });
+    check('*** a module over the dashboard: an OVERLAY entry, out of the switch lap ***',
+      a.entry && a.entry.place === 'overlay' && a.entry.scan === false && a.layout.placed?.length === 1 && a.hud === null, J(a));
+    check('*** its default size is the scoreboard float\'s, 24 x 26 % ***', a.entry.w === 24 && a.entry.h === 26
+      && J(OVERLAY_SIZE) === J({ w: 24, h: 26 }));
+    check('*** its default corner is TOP RIGHT, 2% in from the edges (centre 86, 15) ***',
+      cornerOf(a.entry) === 'tr' && a.entry.x === 100 - OVERLAY_MARGIN - 12 && a.entry.y === OVERLAY_MARGIN + 13, J(a.entry));
+    check('the grid is untouched (still one full slot, the photos)', J(a.layout.slots) === J(['P']) && a.layout.preset === 'full');
+    check('the layout handed in is not changed (pure)', J(L) === J({ preset: 'full', slots: ['P'] }));
+    const b = addAsOverlay(a.layout, 'S', { type: 'scoreboard' });
+    check('a second one takes the next free corner (top left), not the first one\'s', cornerOf(b.entry) === 'tl', J(b.entry));
+    const c = addAsOverlay(L, 'W', { type: 'weather', avoid: ['tr'] });
+    check('a corner the corner clock uses (`avoid`) is left free', cornerOf(c.entry) === 'tl', J(c.entry));
+    let full = L;
+    for (const id of ['a', 'b', 'c', 'd']) full = addAsOverlay(full, id, { type: 'weather' }).layout;
+    check('four overlays fill the four corners in order: tr, tl, br, bl', J(full.placed.map(cornerOf)) === J(OVERLAY_CORNERS), J(full.placed.map(cornerOf)));
+    check('a fifth goes round again rather than failing', !!addAsOverlay(full, 'e', { type: 'weather' }).entry);
+    const k = addAsOverlay(L, 'C', { type: 'clock' });
+    check('*** a CLOCK over the dashboard is the corner clock: the layout is left as it was (unplaced), hud says so ***',
+      k.hud === 'clock' && !k.entry && J(k.layout) === J(L), J(k));
+    check('...and a camera is the corner mirror, the same way', addAsOverlay(L, 'M', { type: 'camera' }).hud === 'camera'
+      && J(HUD_TYPES) === J(['camera', 'clock']));
+    check('the one-at-a-time stage (no layout) has nothing to float over: null back, no entry',
+      addAsOverlay(null, 'W', { type: 'weather' }).layout === null && !addAsOverlay(null, 'W').entry);
+    check('a module the layout already holds is left where it is', !addAsOverlay(L, 'P').entry);
+    const n = normalizeLayout(a.layout, ['P', 'W']);
+    check('*** what is saved survives normalizeLayout exactly (scan false kept) ***', J(n.placed) === J(a.layout.placed), J(n.placed));
+    check('overlaySpot is symmetric (bottom left: 14, 85)', J(overlaySpot('bl')) === J({ x: 14, y: 85 }), J(overlaySpot('bl')));
+    check('Home reads the same functions (home_profile.js re-exports them)', HP.addAsOverlay === addAsOverlay && HP.cornerOf === cornerOf);
+    // A ROOM (2D, 3D, or a 3D room flattened to 2D, room_flat.js): an overlay floats over the room, never on its wall.
+    for (const scene of [{ kind: 'room', preset: 'theRoom' }, { kind: 'room3d', preset: 'box' }]) {
+      const rr = addAsOverlay({ preset: 'full', slots: [null], scene, placed: [{ id: 'pic', place: 'scene', surface: 'back', x: 30, y: 30 }] }, 'W', { type: 'weather' });
+      check(`over a ${scene.kind} it is an overlay too (the room's own placements kept)`,
+        rr.entry?.place === 'overlay' && rr.layout.placed.length === 2 && rr.layout.placed[0].place === 'scene' && J(rr.layout.scene) === J(scene), J(rr.layout));
+    }
+  }
+
+  // ============================================================================================
+  section('*** 2. "Show a small clock": the row, and the example record ***');
+  {
+    check('*** off / top left / top right / bottom left / bottom right, in words; bottom left by default (unchanged) ***',
+      J(SMALL_CLOCK_FIELD.options.map((o) => o.value)) === J(['off', 'tl', 'tr', 'bl', 'br'])
+      && SMALL_CLOCK_FIELD.label === 'Show a small clock' && SMALL_CLOCK_FIELD.default === 'bl' && SMALL_CLOCK_KEY === 'clockCorner',
+      J(SMALL_CLOCK_FIELD));
+    check('the corners a record may set are exactly the row\'s (dashboards.js keeps its own copy)',
+      J([...RECORD_CLOCK_CORNERS].sort()) === J([...CLOCK_CORNERS].sort()));
+    check('clockCornerOf: off is kept, junk is the default', clockCornerOf({ kiosk: { clock: { corner: 'off' } } }) === 'off'
+      && clockCornerOf({ kiosk: { clock: { corner: 'sideways' } } }) === 'bl' && clockCornerOf(null) === 'bl');
+    const rec = prebuiltRecord('photoclock');
+    check('*** "Photos with a clock" is a starting point, in the Still group, after Plain Nimrod ***',
+      !!PREBUILT_DASHBOARDS.photoclock && EXAMPLE_ORDER.indexOf('photoclock') === EXAMPLE_ORDER.indexOf('basic') + 1
+      && rec.kind === 'static' && inKindOrder(EXAMPLE_ORDER.map((k) => PREBUILT_DASHBOARDS[k].kind)), J(EXAMPLE_ORDER));
+    const known = new Set(listManifests().map((m) => m.type));
+    check('its record is valid (recordProblems)', recordProblems(rec, { knownTypes: known }).length === 0
+      || !known.size, J(recordProblems(rec, { knownTypes: known })));
+    const lay = layoutFor(rec, { photos: 'P', clock: 'C' });
+    check('*** the photos fill the dashboard (one full slot) and the clock is NOT placed (so it is the corner clock) ***',
+      lay.preset === 'full' && J(lay.slots) === J(['P']) && !lay.placed, J(lay));
+    check('its clock sits top right (`kiosk.clock.corner`), carried in what a preview is seeded with',
+      recordSettings(rec, {}).kiosk?.clock?.corner === 'tr', J(recordSettings(rec, {})));
+    const bad = prebuiltRecord('photoclock'); bad.kiosk = { clock: { corner: 'middle' } };
+    check('a record with a corner that is not one is caught', recordProblems(bad).some((p) => /clock corner/.test(p)));
+    const bad2 = prebuiltRecord('photoclock'); bad2.kiosk = { layout: { preset: 'quad' } };
+    check('...and one that tries to carry a layout in `kiosk` too', recordProblems(bad2).some((p) => /kiosk may only carry clock/.test(p)));
+  }
+
+  // ============================================================================================
+  section('*** 3. "Over the dashboard" in the Modules library ***');
+  {
+    const el = document.getElementById('libhost');
+    const asked = [];
+    const host = { mode: 'panel', target: null, usage: () => ({ recent: [], counts: {} }),
+      place: async () => true, overlay: async (it) => { asked.push(it.type); return true; } };
+    const lib = mountLibrary(el, { items: () => libraryItems(), host, keys: false });
+    const card = (k) => el.querySelector(`.lib-card[data-lib-key="${k}"]`);
+    check('(setup) the library lists Weather', !!card('module:weather'));
+    card('module:weather').click();
+    const ov = () => el.querySelector('[data-lib-act="overlay"]');
+    check('*** a module\'s details offer "Over the dashboard" beside the way to put it here ***',
+      !!ov() && ov().textContent.trim() === 'Over the dashboard' && !!el.querySelector('[data-lib-act="place"]'), el.querySelector('[data-lib-detail]')?.textContent.slice(0, 120));
+    ov().click();
+    check('*** pressed: the host is asked to put THAT module over its dashboard ***', await until(() => asked.join() === 'weather', 3000), J(asked));
+    check('...and the library says so', await until(() => /over the dashboard now/.test(el.querySelector('[data-lib-note]')?.textContent || ''), 3000));
+    const scene = el.querySelector('.lib-card[data-lib-key^="scene:"]');
+    if (scene) {
+      scene.click();
+      check('a SCENE has no "Over the dashboard" (it is a backdrop, not a panel)', !ov(), el.querySelector('[data-lib-detail]')?.textContent.slice(0, 80));
+    }
+    lib.destroy();
+    const lib2 = mountLibrary(el, { items: () => libraryItems(), host: { mode: 'panel', place: async () => true }, keys: false });
+    el.querySelector('.lib-card[data-lib-key="module:weather"]').click();
+    check('a host that cannot put things over its dashboard gets no such button (never a button that does nothing)',
+      !el.querySelector('[data-lib-act="overlay"]') && !!el.querySelector('[data-lib-act="place"]'));
+    lib2.destroy();
+  }
+
+  // ============================================================================================
+  section('*** 4. a real kiosk: an overlay over full-screen photos ***');
+  for (const dash of [false, true]) {
+    const path = dash ? 'dashboard path' : 'today\'s path';
+    const p = await profiles.create(`ov-${dash ? 'dash' : 'classic'}`);
+    const photos = (await profiles.addModule(p.id, 'photos')).id;
+    const weather = (await profiles.addModule(p.id, 'weather')).id;
+    const r = addAsOverlay({ preset: 'full', slots: [photos] }, weather, { type: 'weather' });
+    await writeRow(p.id, 'settings', { kiosk: { layout: r.layout } });
+    const W = 1280, H = 720;
+    const k = await mountAt(p.id, W, H, { dashboardDefault: dash });
+    check(`[${path}] (setup) the overlay is mounted in the overlay layer`, await until(() => !!k.pcell(weather)?.querySelector('.k-mod'), 15000));
+    const screen = R(k.kioskEl);
+    const pr = R(k.pcell(weather));
+    check(`[${path}] *** drawn in the TOP RIGHT corner: 24% x 26% of the screen, 2% in ***`,
+      near(pr.width, W * 0.24) && near(pr.height, H * 0.26) && near(screen.right - pr.right, W * 0.02) && near(pr.top - screen.top, H * 0.02),
+      J({ l: pr.left - screen.left, t: pr.top - screen.top, w: pr.width, h: pr.height }));
+    check(`[${path}] the photos still fill the screen under it`, near(R(k.cells()[0]).width, W) && near(R(k.cells()[0]).height, H), J(R(k.cells()[0])));
+    check(`[${path}] *** out of the switch lap: the ring is the photos only, and focus starts there ***`,
+      J(k.kiosk.focusRing().map((s) => s.id)) === J([photos]), J(k.kiosk.focusRing()));
+    check(`[${path}] ...but still a panel the bar and the menu reach`, k.kiosk.panels().some((x) => x.id === weather), J(k.kiosk.panels().map((x) => x.id)));
+    // BELOW THE BAR: the overlay layer is the `floating` band, the bar is `transport` -- a bar floating over the
+    // dashboard (the landing) is never covered by an overlay, and the way out stays on top.
+    const layer = k.pcell(weather).parentElement;
+    const bar = k.box.querySelector('.k-controls');
+    const zOf = (el) => Number(getComputedStyle(el).zIndex);
+    check(`[${path}] *** the overlay sits BELOW the bar (z ${zOf(layer)} < ${bar ? zOf(bar) : '?'}), above the panels ***`,
+      !!bar && zOf(layer) < zOf(bar) && zOf(layer) > Number(getComputedStyle(k.box.querySelector('.k-stage') || k.kioskEl).zIndex || 0),
+      `${zOf(layer)} vs bar ${bar && zOf(bar)}`);
+    // THE BACKDROP: opaque --surface, with the theme's --text, whatever is under it.
+    const mod = k.pcell(weather).querySelector(':scope > .k-mod');
+    const probe = document.createElement('i'); probe.style.color = 'var(--surface)'; k.kioskEl.append(probe);
+    const surface = getComputedStyle(probe).color; probe.style.color = 'var(--text)'; const text = getComputedStyle(probe).color; probe.remove();
+    const bg = parseColor(getComputedStyle(mod).backgroundColor);
+    check(`[${path}] *** the overlay's backdrop is OPAQUE, the theme's own --surface ***`, bg[3] === 1 && getComputedStyle(mod).backgroundColor === surface,
+      `${getComputedStyle(mod).backgroundColor} vs ${surface}`);
+    const cr = contrast(hex(parseColor(text)), hex(bg));
+    check(`[${path}] ...so its words are the theme's --text on --surface (${cr.toFixed(2)}:1, whatever photo is under it)`, cr >= 4.5, cr.toFixed(2));
+    // A PANEL MADE BIGGER: the overlay stays over it at the dashboard level, and steps aside at the screen level.
+    k.kiosk.promote(photos);
+    check(`[${path}] *** the photos made bigger (fill the dashboard): the overlay STAYS over them ***`,
+      await until(() => k.kiosk.promoted().dashboard === photos, 3000) && shown(k.pcell(weather)), `${J(k.kiosk.promoted())} ${getComputedStyle(k.pcell(weather)).visibility}`);
+    k.kiosk.promote(photos);
+    check(`[${path}] *** bigger again (the screen): the overlay steps aside, as the corner clock does ***`,
+      await until(() => !!k.kiosk.promoted().screen, 3000) && getComputedStyle(k.pcell(weather)).visibility === 'hidden', J(k.kiosk.promoted()));
+    k.kiosk.demote(); k.kiosk.demote();
+    check(`[${path}] back down: the overlay is shown again`, await until(() => !k.kiosk.promoted().dashboard && !k.kiosk.promoted().screen, 3000) && shown(k.pcell(weather)));
+    if (!dash) {
+      // MOVED IN EDIT MODE: what the edit windows save -- the placed entry with new x / y -- is applied IN PLACE.
+      const before = k.pcell(weather).querySelector(':scope > .k-mod');
+      const moved = { ...r.layout, placed: [{ ...r.entry, x: 20, y: 80 }] };
+      k.setRow({ kiosk: { layout: moved } });
+      check(`[${path}] *** moved (as the edit view saves it): drawn bottom left now ***`, await until(() => {
+        const m = R(k.pcell(weather)); return near(m.left + m.width / 2, W * 0.2) && near(m.top + m.height / 2, H * 0.8);
+      }, 6000), J(R(k.pcell(weather))));
+      check(`[${path}] ...the SAME instance (nothing remounted)`, k.pcell(weather)?.querySelector(':scope > .k-mod') === before);
+      // And resized, the same way.
+      k.setRow({ kiosk: { layout: { ...moved, placed: [{ ...r.entry, x: 20, y: 80, w: 40, h: 30 }] } } });
+      check(`[${path}] ...and resized`, await until(() => near(R(k.pcell(weather)).width, W * 0.4), 6000), J(R(k.pcell(weather))));
+    }
+    k.done();
+  }
+
+  // ============================================================================================
+  section('*** 5. "Show a small clock" on a screen\'s own ⚙ menu ***');
+  {
+    const p = await profiles.create('ov-smallclock');
+    const photos = (await profiles.addModule(p.id, 'photos')).id;
+    await writeRow(p.id, 'settings', { kiosk: { layout: { preset: 'full', slots: [photos] } } });
+    const k = await mountAt(p.id, 1280, 720);
+    k.kiosk.menu.open();
+    const row = () => k.kiosk.menu.items().find((i) => i.id === `set:${SMALL_CLOCK_KEY}`) || null;
+    check('*** the row is on the menu\'s Display tab, and with no clock on the screen it says Off ***',
+      row()?.tab === 'display' && row()?.value === 'off' && !row()?.disabled, J(row() && { tab: row().tab, value: row().value, hint: row().hint }));
+    check('(setup) no corner clock yet', !k.kiosk.hasClock() && !k.clockEl());
+    row().commit('tr');
+    check('*** a corner chosen with no clock: a clock is ADDED to the screen and drawn in that corner ***',
+      await until(async () => (await profiles.get(p.id)).modules.filter((m) => m.type === 'clock').length === 1 && k.kiosk.hasClock() && shown(k.clockEl()), 15000),
+      `clocks=${(await profiles.get(p.id)).modules.filter((m) => m.type === 'clock').length} has=${k.kiosk.hasClock()}`);
+    const screen = R(k.kioskEl);
+    const cr0 = k.clockEl() ? R(k.clockEl()) : null;
+    check('...top right', !!cr0 && cr0.left > screen.left + screen.width / 2 && cr0.bottom < screen.top + screen.height / 2, J(cr0));
+    check('...saved where the screen keeps it (kiosk.clock.corner), the photos untouched',
+      await until(async () => { const s = await readRow(p.id, 'settings'); return s.kiosk?.clock?.corner === 'tr' && J(s.kiosk?.layout?.slots) === J([photos]); }, 6000));
+    check('the row says top right now', await until(() => row()?.value === 'tr', 4000), row()?.value);
+    row().commit('off');
+    check('*** Off: the corner clock is hidden, its module kept (settings and all) ***',
+      await until(() => !shown(k.clockEl()), 4000) && k.kiosk.hasClock()
+      && (await profiles.get(p.id)).modules.filter((m) => m.type === 'clock').length === 1);
+    row().commit('bl');
+    check('*** a corner again: shown at once, bottom left, and no second clock made ***',
+      await until(() => shown(k.clockEl()) && R(k.clockEl()).top > screen.top + screen.height / 2 && R(k.clockEl()).right < screen.left + screen.width / 2, 4000)
+      && (await profiles.get(p.id)).modules.filter((m) => m.type === 'clock').length === 1, J(k.clockEl() && R(k.clockEl())));
+    k.done();
+  }
+
+  // ============================================================================================
+  section('*** 6. "Photos with a clock": photos filling the screen, a small clock in its corner ***');
+  {
+    const maker = createDashboardMaker({ profiles,
+      makeSettings: (pid) => createState({ url: profiles.stateURL(pid, 'settings'), user: USER }),
+      makeInstanceState: (pid, mid) => createState({ url: profiles.stateURL(pid, mid), user: USER }) });
+    const made = await maker.ensure('photoclock');
+    const scr = await profiles.get(made.id);
+    const saved = await readRow(made.id, 'settings');
+    const photosId = scr.modules.find((m) => m.type === 'photos')?.id;
+    check('*** made: photos and a clock; the photos fill one full slot, the clock is unplaced, its corner top right ***',
+      scr.modules.length === 2 && saved.kiosk?.layout?.preset === 'full' && J(saved.kiosk?.layout?.slots) === J([photosId])
+      && !saved.kiosk?.layout?.placed && saved.kiosk?.clock?.corner === 'tr', J({ mods: scr.modules.map((m) => m.type), kiosk: saved.kiosk }));
+    for (const [W, H] of [[1280, 720], [1920, 1080]]) {
+      for (const dash of [false, true]) {
+        const tag = `[${W}x${H} ${dash ? 'dashboard path' : 'today\'s path'}]`;
+        const k = await mountAt(made.id, W, H, { dashboardDefault: dash });
+        await until(() => shown(k.clockEl()), 10000);
+        const screen = R(k.kioskEl);
+        const cell = R(k.cells()[0]);
+        check(`${tag} *** the photos fill the screen: ${W} x ${H} ***`, k.cells().length === 1 && near(cell.width, W, 1) && near(cell.height, H, 1)
+          && near(cell.left, screen.left, 1) && near(cell.top, screen.top, 1), J(cell));
+        const c = k.clockEl() ? R(k.clockEl()) : null;
+        check(`${tag} *** the clock is drawn, in the TOP RIGHT corner, close to the edges ***`,
+          !!c && shown(k.clockEl()) && c.left > screen.left + W / 2 && c.bottom < screen.top + H / 2
+          && screen.right - c.right < W * 0.06 && c.top - screen.top < H * 0.08, J(c));
+        check(`${tag} *** ...and SMALL: under a tenth of the screen, over the photos (not a panel of its own) ***`,
+          !!c && (c.width * c.height) < 0.1 * W * H && k.cells().length === 1 && !k.box.querySelector('.k-placed'), J(c));
+        // READABLE OVER A LIGHT PHOTO AND A DARK ONE: the HUD's own backing carries the contrast.
+        const time = k.clockEl()?.querySelector('.time');
+        const bg = parseColor(getComputedStyle(k.clockEl()).backgroundColor);
+        const fg = time ? parseColor(getComputedStyle(time).color) : [0, 0, 0, 0];
+        const onLight = contrast(hex(fg), hex(over(bg, LIGHT))), onDark = contrast(hex(fg), hex(over(bg, DARK)));
+        check(`${tag} *** the time reads over a LIGHT photo (${onLight.toFixed(2)}:1) and a DARK one (${onDark.toFixed(2)}:1) ***`,
+          !!time && bg[3] >= 0.5 && fg[3] === 1 && onLight >= 4.5 && onDark >= 4.5, `bg ${J(bg)} fg ${J(fg)}`);
+        check(`${tag} no panel chrome on it: no promote corner, no ring`, !k.clockEl()?.querySelector('.k-promote'));
+        k.done();
+      }
+    }
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

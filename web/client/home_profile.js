@@ -231,6 +231,13 @@ export function addToLayout(layout, id) {
   return L;
 }
 
+// *** OVER THE DASHBOARD (Mike, 2026-10-03). *** Add with "Over the dashboard" chosen puts a module over the
+// dashboard as a small panel in a corner, out of the switch lap; a clock or a camera becomes the corner clock /
+// mirror. layout.js "OVER THE DASHBOARD" argues each number and choice.
+// The numbers and the placing live in layout.js (the bare kiosk's ⚙ menu and the Modules library place overlays
+// too, and neither loads this file); re-exported here, where Home reads them.
+export { OVERLAY_SIZE, OVERLAY_MARGIN, OVERLAY_CORNERS, overlaySpot, cornerOf, addAsOverlay } from './layout.js';
+
 // A thing IN one of a 3D room's slots comes out of it first, at the slot's own place, so a press of Move or
 // Bigger moves it from where it is seen (a slot holds its module at the slot's box whatever x/y say). The 2D
 // room's slots are left as they were: where one is drawn is room_scene.js's to say, not this file's.

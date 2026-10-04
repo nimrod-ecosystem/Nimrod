@@ -116,6 +116,13 @@ export function isArranged(layout) {
 // the older decision), and one placed twice keeps its first entry -- the same rule the slots follow.
 
 export const PLACES = Object.freeze(['scene', 'screen', 'overlay']);
+
+// *** THE HUD PAIR (2026-10-03, named once). *** A camera or a clock that no slot and no placement holds is not a
+// panel waiting for a home: the camera is the corner mirror and the clock is the corner clock (arrangement.js
+// `partition`). `resolveLayout` and `withPreset` below never treat one as spare, and "Over the dashboard"
+// (home_profile.js `addAsOverlay`) puts one in its corner by leaving it unplaced. One list, so the three agree.
+export const HUD_TYPES = Object.freeze(['camera', 'clock']);
+const isHud = (m) => !!m && HUD_TYPES.includes(m.type);
 export const PLACE_SURFACES = Object.freeze(['back', 'left', 'right', 'floor']);
 
 // *** EVERY NUMBER HERE IS A DEFAULT, NOT A RULE (Rule 1). *** Applied at render time only, never
@@ -212,6 +219,82 @@ export function placedGeometry(entry) {
   return g;
 }
 
+// =====================================================================================================
+// *** OVER THE DASHBOARD (Mike, 2026-10-03: "Where are the overlays? I'd like to make a dashboard that's full
+// screen photos with a small clock overlay somewhere."). *** Any module can be put OVER a dashboard instead of
+// in it: a small floating panel in a corner (place 'overlay': the layer above every panel, below the bar), the
+// same thing the scoreboard's "Show as overlay" makes (arrangement.js "A PANEL ASKS TO FLOAT"), offered for
+// everything from Home's Add tray and the Modules library. home_profile.js re-exports this for Home.
+//   THE CLOCK AND THE CAMERA ARE THE EXCEPTION, ON PURPOSE: each already has a way to sit over a dashboard --
+//   the corner clock and the corner mirror (HUD_TYPES) -- small, with no panel chrome, on a backing checked for
+//   contrast over pure white and pure black in every theme (dev/clock_hud_contrast_test.html). A clock as a
+//   floating PANEL would be a second, worse version of the same thing (a box with a panel's background, sized by
+//   somebody pressing Smaller). So "over the dashboard" for these two means "unplaced": `hud` says so and the
+//   caller leaves the layout alone.
+// Every number is a starting point (Rule 1); the Transform window, the Move / Smaller buttons and edit mode put
+// an overlay anywhere at any size, so none is a setting of its own:
+//   OVERLAY_SIZE 24 x 26   the scoreboard's float (modules/scoreboard.js FLOAT_DEFAULTS), so every overlay
+//                          starts the same size: big enough to read across a room on a TV, a quarter of the
+//                          width, so the panel under it is mostly still seen.
+//   OVERLAY_MARGIN 2       % from the screen's edge: clear of the edge on a TV that overscans, close enough to
+//                          read as "in the corner".
+//   OVERLAY_CORNERS        top right first, then top left, bottom right, bottom left: the top corners first
+//                          because the bar is along the bottom (it floats over the panels and would cover a
+//                          bottom overlay while it is up); top right before top left because that is where a
+//                          phone or a TV puts its time and status. A corner another overlay (or the corner
+//                          clock / mirror, `avoid`) already uses is skipped, so a second overlay does not sit on
+//                          the first; with all four taken they go round again.
+//   scan: false            OUT OF THE SWITCH LAP unless somebody puts it in. Argued (arrangement.js `scanOff`
+//                          has the scoreboard's half): FOR -- what people put over a dashboard is something to
+//                          GLANCE at (a clock, a score, the weather); on a one-switch lap a stop nobody presses
+//                          costs a press on every lap, and an overlay otherwise takes the lap's FIRST stop, so the
+//                          first press of the day would land on it. AGAINST -- an overlay that IS a control (a
+//                          button, a door) then needs one more choice to reach by switch. That choice is one row:
+//                          the ⚙ menu's "In the switch scan" on the overlay's tab; a pointer presses it directly.
+// =====================================================================================================
+export const OVERLAY_SIZE = Object.freeze({ w: 24, h: 26 });
+export const OVERLAY_MARGIN = 2;
+export const OVERLAY_CORNERS = Object.freeze(['tr', 'tl', 'br', 'bl']);
+
+/** The centre of a `size` box in `corner` ('tr' | 'tl' | 'br' | 'bl'), in % of the dashboard. */
+export function overlaySpot(corner, size = OVERLAY_SIZE) {
+  const right = corner === 'tr' || corner === 'br';
+  const bottom = corner === 'br' || corner === 'bl';
+  const x = right ? 100 - OVERLAY_MARGIN - size.w / 2 : OVERLAY_MARGIN + size.w / 2;
+  const y = bottom ? 100 - OVERLAY_MARGIN - size.h / 2 : OVERLAY_MARGIN + size.h / 2;
+  return { x: round1(x), y: round1(y) };
+}
+
+/** Which corner a placed entry's centre is nearest ('tr' | 'tl' | 'br' | 'bl'). */
+export function cornerOf(entry) {
+  const x = typeof entry?.x === 'number' ? entry.x : PLACED_DEFAULTS.x;
+  const y = typeof entry?.y === 'number' ? entry.y : PLACED_DEFAULTS.y;
+  return `${y >= 50 ? 'b' : 't'}${x >= 50 ? 'r' : 'l'}`;
+}
+
+/**
+ * A module OVER the dashboard. Pure. Returns `{ layout, hud, entry }`:
+ *   hud    'clock' | 'camera' for the HUD pair (above): the layout comes back as it was (the module is left
+ *          unplaced, which IS the corner clock / mirror), and `entry` is null.
+ *   entry  otherwise, the overlay entry added: place 'overlay', the first free corner, OVERLAY_SIZE, scan false.
+ * A `null` layout (the one-at-a-time stage) has nothing to float over: it comes back null, with no entry, and
+ * the caller adds the module as it would any other. A module the layout already holds is left where it is.
+ * `avoid`: corners in use by something that is not in `layout.placed` (the corner clock's, the mirror's).
+ */
+export function addAsOverlay(layout, id, { type = null, avoid = [] } = {}) {
+  if (type && HUD_TYPES.includes(type)) return { layout, hud: type, entry: null };
+  if (!layout || !id) return { layout, hud: null, entry: null };
+  const L = JSON.parse(JSON.stringify(layout));
+  const held = [...(Array.isArray(L.slots) ? L.slots : []), ...(Array.isArray(L.placed) ? L.placed : []).map((p) => p && p.id)];
+  if (held.includes(id)) return { layout: L, hud: null, entry: null };
+  const overlays = (Array.isArray(L.placed) ? L.placed : []).filter((p) => p && p.place === 'overlay');
+  const taken = new Set([...overlays.map(cornerOf), ...(Array.isArray(avoid) ? avoid : [])]);
+  const corner = OVERLAY_CORNERS.find((c) => !taken.has(c)) || OVERLAY_CORNERS[overlays.length % OVERLAY_CORNERS.length];
+  const entry = { id, place: 'overlay', ...overlaySpot(corner), ...OVERLAY_SIZE, scan: false };
+  L.placed = [...(Array.isArray(L.placed) ? L.placed : []), entry];
+  return { layout: L, hud: null, entry };
+}
+
 /**
  * *** WHICH KIND OF CHANGE IS THIS -- AND SO, CAN IT BE APPLIED IN PLACE? ***
  *
@@ -284,8 +367,7 @@ export function resolveLayout(saved, modules = []) {
   const rawSlots = Array.isArray(saved && saved.slots) ? saved.slots : [];
   // Stage R: a module placed freely is placed, so it is never "spare" for an orphaned slot.
   const placed = new Set([...l.slots.filter(Boolean), ...(l.placed || []).map((p) => p.id)]);
-  const spare = modules.filter((m) => !placed.has(m.id)
-    && m.type !== 'camera' && m.type !== 'clock');
+  const spare = modules.filter((m) => !placed.has(m.id) && !isHud(m));
   for (let i = 0; i < l.slots.length && spare.length; i++) {
     if (!l.slots[i] && rawSlots[i]) l.slots[i] = spare.shift().id;
   }
@@ -316,8 +398,7 @@ export function withPreset(saved, presetId, modules = [], { spareOk = null } = {
     if (id && valid.has(id) && !seen.has(id) && !free.has(id)) { seen.add(id); slots.push(id); }
     else slots.push(null);
   }
-  const spare = (modules || []).filter((m) => m && m.id && !seen.has(m.id) && !free.has(m.id)
-    && m.type !== 'camera' && m.type !== 'clock'
+  const spare = (modules || []).filter((m) => m && m.id && !seen.has(m.id) && !free.has(m.id) && !isHud(m)
     && (typeof spareOk !== 'function' || (() => { try { return spareOk(m) !== false; } catch { return true; } })()));
   for (let i = 0; i < p.slots && spare.length; i += 1) {
     if (i >= slots.length) slots.push(null);

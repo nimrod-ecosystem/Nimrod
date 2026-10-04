@@ -200,6 +200,8 @@ try {
       'showPrimary', 'applyModules', 'focusedRec', 'focusPlaced', 'focusRing', 'paintFocus', 'unplacedDefs',
       'showUnplaced', 'showModule', 'instanceTitle', 'recFor', 'remountPanel', 'swapPanel', 'applyLayout',
       'patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner', 'destroy',
+      // 2026-10-03: "Show a small clock" writes the corner clock's corner (overlay_test drives it).
+      'patchClock',
       // Stage R (2026-09-30): free placement -- placement_test.html drives these.
       'placedRecs', 'placed', 'panelRecs', 'roomScene', 'mountPlaced', 'applyPlaced',
       // Row 2.38 (2026-10-01): a placed module that is a door -- dashboard_nest_test.html drives these.
@@ -434,6 +436,12 @@ try {
     t.arr.applyLayout({ kiosk: { mirror: { size: 'huge', corner: 'xx' }, clock: { corner: 'tl' } } });
     check('a bad value falls back, a good one is used',
       t.kioskEl.dataset.mirrorSize === 'lg' && t.kioskEl.dataset.mirrorCorner === 'tr' && t.kioskEl.dataset.clockCorner === 'tl');
+    // 2026-10-03: "Show a small clock: Off" is a value of the clock's corner (kiosk.css hides the corner clock).
+    t.arr.applyLayout({ kiosk: { clock: { corner: 'off' } } });
+    check('the clock\'s corner may be off ("Show a small clock")', t.kioskEl.dataset.clockCorner === 'off');
+    t.arr.patchClock({ corner: 'br' });
+    check('patchClock merges into settings.kiosk.clock and keeps the layout beside it',
+      t.getData().kiosk.clock?.corner === 'br' && t.getData().kiosk.layout?.preset === 'full', JSON.stringify(t.getData().kiosk));
     t.arr.patchMirror({ size: 'sm' });
     const k = t.getData().kiosk;
     check('patchMirror merges into settings.kiosk and keeps the layout beside it',
