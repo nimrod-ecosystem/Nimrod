@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>edit my page (sections) — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>edit my page: Your people as sections you add, remove and move (page_sections.js, modules/people.js)</h1>
+<p>Mike, 2026-10-04: the landing becomes a "webpage module", like MySpace: a single column of sections. The rules (pure:
+the default, add / remove / move, unknown kinds kept, two devices merged), then the page against the real server at 375
+wide: the default page is today's, "Edit my page", the library (About me, a clock, pictures, a video, each
+mounted in its box), persistence across a reload, a section from a newer version kept untouched, two devices at once,
+and a screen (edit dimmed with why). Plain words in view and edit mode. Needs the server (<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import {
+  PAGE_KEY, PAGE_EXTRA_BANNED, pageWordProblems, FIXED_KIND, BUILT_IN_KINDS, DEFAULT_SECTIONS, SECTION_LIBRARY, EDIT_WORDS, BOX_SIZES,
+  ABOUT_MAX, hasOwnPage, sectionsOf, viewSections, hasKind, addSection, removeSection, restoreSection, canMove, moveSection, updateSection,
+  videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc,
+} from '../page_sections.js';
+import { PEOPLE_TYPE, plainWordProblems } from '../people_page.js';
+import { ABOUT_SAVE_MS } from '../modules/people.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import '../modules/nimrod.js';
+import '../modules/avatar.js';
+import '../modules/note.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 10000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(80); } return false; };
+const J = (x) => JSON.stringify(x);
+const kinds = (L) => L.map((s) => s.kind);
+
+const BASE_USER = new URLSearchParams(location.search).get('user') || ('page-sections-' + Math.floor(Math.random() * 1e6));
+const A = `${BASE_USER}-a`, B = `${BASE_USER}-b`;
+async function call(method, path, user, body) {
+  const r = await fetch(path, { method, headers: { 'X-Dev-User': user, 'Content-Type': 'application/json' }, body: body === undefined ? undefined : JSON.stringify(body) });
+  if (!r.ok) throw new Error(`${method} ${path} -> ${r.status}`);
+  return r.json();
+}
+function memState(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return { get: () => v, set(p) { v = { ...v, ...p }; subs.forEach((f) => f(v)); }, subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    load: async () => v, flush: async () => {}, destroy() { subs.clear(); } };
+}
+function makeStub() {
+  const o = { loaded: [], factory() { return { load: (id) => o.loaded.push(id), cue: (id) => o.loaded.push(id), cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} }; } };
+  return o;
+}
+const VID = 'dQw4w9WgXcQ';
+
+try {
+  // ============================================================================================
+  section('*** the rules, pure ***');
+  check('*** the default page is today’s parts, in today’s order, You first ***',
+    J(kinds(DEFAULT_SECTIONS)) === J(['self', 'messages', 'recommended', 'people', 'connect', 'nimrod']) && J(BUILT_IN_KINDS) === J(kinds(DEFAULT_SECTIONS))
+    && DEFAULT_SECTIONS.every((s) => s.id === s.kind) && FIXED_KIND === 'self' && PAGE_KEY === 'page');
+  check('a person who never saved a page has none, and gets the default (a copy, never the frozen one)',
+    !hasOwnPage({}) && !hasOwnPage(null) && J(kinds(sectionsOf({}))) === J(BUILT_IN_KINDS) && sectionsOf({}) !== DEFAULT_SECTIONS && !Object.isFrozen(sectionsOf({})[0].options));
+  check('drawn: the default, and on a screen without Connect with someone (a screen invites nobody)',
+    J(kinds(viewSections({}))) === J(BUILT_IN_KINDS) && J(kinds(viewSections({}, { isScreen: true }))) === J(['self', 'messages', 'recommended', 'people', 'nimrod']));
+  const odd = { sections: [{ kind: 'people', id: 'people' }, { kind: 'self', id: 'self' }, 'junk', { id: 'x' }, { kind: 'clock', id: 'people' }, { kind: 'guestbook', id: 'g1', options: { a: 1 } }] };
+  const ov = viewSections(odd);
+  check('*** You is drawn first whatever the list says; entries that are not sections are not drawn (and not dropped from storage) ***',
+    J(ov.map((s) => s.id)) === J(['self', 'people', 'g1']) && sectionsOf(odd).length === 6, J(ov.map((s) => s.id)));
+  check('*** a kind this version does not know is drawn as unknown, its options as stored ***', ov[2].known === false && ov[2].entry === null && J(ov[2].options) === J({ a: 1 }));
+  check('You is drawn even when a list left it out', J(viewSections({ sections: [{ kind: 'people', id: 'people' }] }).map((s) => s.kind)) === J(['self', 'people']));
+  const r1 = addSection({}, 'clock', { rand: () => 0.5 });
+  check('*** add: a new thing goes at the bottom, with a fresh id ***', r1.id && r1.id.startsWith('clock-') && r1.sections.at(-1).id === r1.id
+    && J(kinds(r1.sections)) === J([...BUILT_IN_KINDS, 'clock']));
+  check('add: a part of today’s page that is already there is refused; You and unknown kinds too',
+    addSection({}, 'people').why === 'already' && addSection({}, 'self').why === 'unknown' && addSection({}, 'guestbook').why === 'unknown');
+  check('add: things that may repeat do', addSection({ sections: r1.sections }, 'clock').id && addSection({}, 'about').id);
+  const noPeople = removeSection({}, 'people');
+  check('*** remove: gone, and what was removed is handed back to put back; You cannot be removed ***',
+    !noPeople.sections.some((s) => s.kind === 'people') && noPeople.removed.index === 3 && removeSection({}, 'self').removed === null);
+  const back = addSection({ sections: noPeople.sections }, 'people');
+  check('*** a part of today’s page put back goes where it was by default (Show your people again) ***', J(kinds(back.sections)) === J(BUILT_IN_KINDS));
+  check('put back the last removed: where it was', J(kinds(restoreSection({ sections: noPeople.sections }, noPeople.removed))) === J(BUILT_IN_KINDS));
+  check('*** move: up and down, swapping with the drawn neighbour; nothing above You, nothing below the last ***',
+    J(kinds(moveSection({}, 'people', -1))) === J(['self', 'messages', 'people', 'recommended', 'connect', 'nimrod'])
+    && J(kinds(moveSection({}, 'people', 1))) === J(['self', 'messages', 'recommended', 'connect', 'people', 'nimrod'])
+    && J(kinds(moveSection({}, 'messages', -1))) === J(BUILT_IN_KINDS) && J(kinds(moveSection({}, 'nimrod', 1))) === J(BUILT_IN_KINDS)
+    && J(kinds(moveSection({}, 'self', 1))) === J(BUILT_IN_KINDS));
+  check('canMove says the same', J(canMove({}, 'messages')) === J({ up: false, down: true }) && J(canMove({}, 'nimrod')) === J({ up: true, down: false })
+    && J(canMove({}, 'self')) === J({ up: false, down: false }));
+  const wUnknown = { sections: [{ kind: 'self', id: 'self' }, { kind: 'guestbook', id: 'g1', options: { a: 1, deep: { b: [1, 2] } } }, { kind: 'people', id: 'people' }] };
+  const moved = moveSection(wUnknown, 'people', -1);
+  check('*** an edit keeps an unknown section exactly as stored ***', J(moved.find((s) => s.id === 'g1')) === J(wUnknown.sections[1]) && J(moved.map((s) => s.id)) === J(['self', 'people', 'g1']));
+  const up = updateSection({ sections: [{ kind: 'clock', id: 'c', options: { size: 'small', settings: { a: 1 } } }] }, 'c', { settings: { b: 2 } });
+  check('update: settings merged one level deeper, the rest kept', J(up[0].options) === J({ size: 'small', settings: { a: 1, b: 2 } }));
+  check('a video section plays one YouTube video, nothing else', videoOf({ link: `https://youtu.be/${VID}` })?.id === VID && !videoOf({ link: 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC' })
+    && !videoOf({ link: 'https://www.youtube.com/playlist?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG' }) && !videoOf({}));
+  check('About me is kept to its limit', aboutText({ text: 'x'.repeat(ABOUT_MAX + 50) }).length === ABOUT_MAX && aboutText({}) === '');
+  check('*** the library: every entry has a plain name and one line; You is not offered (it is always there) ***',
+    SECTION_LIBRARY.every((e) => e.name && e.line && /\.$/.test(e.line)) && !addableEntries().some((e) => e.kind === 'self')
+    && ['about', 'clock', 'photos', 'video'].every((k) => libraryEntry(k)) && libraryEntry('clock').module === 'clock' && !libraryEntry('weather'));
+
+  section('*** two devices at once (mergePageDoc) ***');
+  const base = {};
+  const mineAdd = { sections: addSection(base, 'clock', { id: 'clock-1' }).sections };
+  const theirsMove = { sections: moveSection(base, 'people', -1) };
+  const m1 = mergePageDoc(base, mineAdd, theirsMove);
+  check('*** a section added here and another moved there (both first edits): both survive ***',
+    J(m1.data.sections.map((s) => s.id)) === J(['self', 'messages', 'people', 'recommended', 'connect', 'nimrod', 'clock-1']) && !m1.lost.length, J(m1.data.sections.map((s) => s.id)));
+  const m2 = mergePageDoc(base, { sections: moveSection(base, 'people', -1) }, { sections: addSection(base, 'about', { id: 'about-1' }).sections });
+  check('...and the other way round', J(m2.data.sections.map((s) => s.id)) === J(['self', 'messages', 'people', 'recommended', 'connect', 'nimrod', 'about-1']) && !m2.lost.length);
+  const m3 = mergePageDoc(base, { sections: removeSection(base, 'connect').sections }, { sections: updateSection(base, 'messages', { x: 1 }) });
+  check('removed here, a different one changed there: both', !m3.data.sections.some((s) => s.id === 'connect') && m3.data.sections.find((s) => s.id === 'messages').options.x === 1);
+  const m4 = mergePageDoc(base, { sections: moveSection(base, 'people', -1) }, { sections: moveSection(base, 'nimrod', -1) });
+  check('*** both reordered differently: the other device’s order stands, and that is reported ***',
+    J(m4.data.sections.map((s) => s.id)) === J(moveSection(base, 'nimrod', -1).map((s) => s.id)) && J(m4.lost) === J([['sections', 'order']]));
+  const g = { sections: [{ kind: 'self', id: 'self' }, { kind: 'guestbook', id: 'g1', options: { a: 1 } }] };
+  const m5 = mergePageDoc(g, { sections: addSection(g, 'clock', { id: 'c1' }).sections }, { ...g, other: 1 });
+  check('an unknown section survives a merge untouched, and other keys of the doc too', J(m5.data.sections[1]) === J(g.sections[1]) && m5.data.other === 1 && m5.data.sections.length === 3);
+  check('neither side ever saved a page: the merge adds no page', !hasOwnPage(mergePageDoc({}, { x: 1 }, { y: 2 }).data));
+
+  section('*** plain words in every word the rules can put on the page ***');
+  const ruleWords = [...SECTION_LIBRARY.flatMap((e) => [e.name, e.line]), ...Object.values(EDIT_WORDS).map((w) => (typeof w === 'function' ? w('Clock') : w))].join(' ');
+  check('*** the stricter page check: module, dashboard, panel, grant, widget, account, token ***',
+    J(pageWordProblems('a Widget on my account with a token and a panel')) === J(['panel', 'widget', 'account', 'token']) && J(PAGE_EXTRA_BANNED) === J(['widget', 'account', 'token'])
+    && !pageWordProblems('accountant tokenism widgetry').length);
+  check('*** none of them in the library or the edit words ***', !pageWordProblems(ruleWords).length, J(pageWordProblems(ruleWords)));
+  check('names nobody', !/her screen|christine|cici/i.test(ruleWords));
+
+  // ============================================================================================
+  section('(setup) Pat and Robin on one login, a screen with a message on it; Sam on another, sharing');
+  const a1 = (await call('GET', '/api/people', A)).people[0];
+  await call('PATCH', `/api/people/${a1.id}`, A, { name: 'Pat' });
+  await call('POST', '/api/people', A, { name: 'Robin' });
+  const sa1 = await call('POST', '/api/profiles', A, { name: 'Kitchen', person_id: a1.id });
+  await call('POST', `/api/profiles/${sa1.id}/events/note`, A, { kind: 'note', data: { text: 'Hello from the garden', author: 'Sam' } });
+  const b1 = (await call('GET', '/api/people', B)).people[0];
+  await call('PATCH', `/api/people/${b1.id}`, B, { name: 'Sam' });
+  await call('POST', `/api/people/${b1.id}/drive-grants`, B, { subject_id: A });
+  check('(setup) seeded', !!(a1 && b1));
+  const pageURL = `/api/people/${a1.id}/state/${PAGE_KEY}`;
+  const serverPage = async () => (await call('GET', pageURL, A));
+
+  const profilesA = createProfilesClient({ user: A });
+  const stub = makeStub();
+  const makePS = (pid, key, opts = {}) => createState({ url: profilesA.personStateURL(pid, key), user: A, ...opts });
+  const makeCtx = (mount, extra = {}) => ({ mount, bus: createBus(), state: memState(), personId: a1.id, instanceId: 'ps-test', user: A, profiles: profilesA,
+    isScreen: false, chooseMode: () => 'point', makePersonState: makePS, playerFactory: stub.factory, ...extra });
+  const newBox = (w = 375, h = 760) => { const b = document.createElement('div'); b.style.cssText = `position:relative;width:${w}px;height:${h}px;overflow:hidden;border:1px solid #888`; document.body.append(b); return b; };
+
+  // ============================================================================================
+  section('*** the default page is today’s page ***');
+  let box = newBox();
+  let inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  await inst.init();
+  const q = (s) => box.querySelector(s);
+  const qa = (s) => [...box.querySelectorAll(s)];
+  await until(() => q('[data-pp-incoming]') && qa('[data-pp-name]').length >= 2, 15000);
+  const probe = () => inst.impl.__probe().page;
+  check('*** the sections drawn, in order: You, Messages for you, Recommended for you, Your people, Connect with someone, Ask Nimrod ***',
+    J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS) && J(probe().sections.map((s) => s.kind)) === J(BUILT_IN_KINDS));
+  const cardKeys = () => qa('[data-pp-list] [data-pp-card]').map((c) => c.dataset.ppCard).filter((k) => !k.startsWith('p:') && !k.startsWith('r:'));
+  check('*** the cards in today’s order: you, then Connect with someone, then More / Ask Nimrod; the headings in today’s order ***',
+    J(cardKeys()) === J(['self', 'connect', 'more']) && J(qa('[data-pp-list] h2.pp-h').map((h) => h.textContent)) === J(['Messages for you', 'Recommended for you', 'Your people', 'Connect with someone']),
+    J([cardKeys(), qa('[data-pp-list] h2.pp-h').map((h) => h.textContent)]));
+  check('...and each section takes no room of its own (it is the same column as before)', qa('[data-pp-sec]').every((w) => getComputedStyle(w).display === 'contents'));
+  check('*** mounting wrote nothing: no page of their own on the server ***', (await serverPage()).version === 0 && !probe().own);
+  const editBtn = () => q('[data-pp-card="self"] [data-pp-act="page-edit"], [data-pp-card="self"] [data-pp-act="page-done"]');
+  check('*** "Edit my page", live, beside "Edit my picture" ***', editBtn()?.textContent.trim() === EDIT_WORDS.edit && editBtn().getAttribute('aria-disabled') !== 'true'
+    && editBtn().previousElementSibling?.dataset.ppAct === 'picture-edit' && probe().canEdit);
+  const viewWords = q('[data-pp-list]').textContent;
+  check('*** plain words in view mode (the stricter page check) ***', !pageWordProblems(viewWords).length, J(pageWordProblems(viewWords)));
+
+  // ============================================================================================
+  section('*** Edit my page ***');
+  editBtn().click();
+  check('*** pressed: editing, a card under You (Add something, Done), an edit bar on every section but You ***',
+    await until(() => probe().editing && q('[data-pp-card="edit"] [data-pp-act="page-add"]') && q('[data-pp-card="edit"] [data-pp-act="page-done"]'), 3000)
+    && J(qa('[data-pp-edit-for]').map((e) => e.dataset.ppEditFor)) === J(['messages', 'recommended', 'people', 'connect', 'nimrod']));
+  check('the header button now says Done', editBtn()?.dataset.ppAct === 'page-done');
+  const bar = (id) => q(`[data-pp-edit-for="${id}"]`);
+  const barBtn = (id, act) => bar(id)?.querySelector(`[data-pp-act="${act}"]`);
+  check('*** the first can not move up, the last can not move down: dimmed, saying why ***',
+    barBtn('messages', 'sec-up').getAttribute('aria-disabled') === 'true' && /Already at the top/.test(barBtn('messages', 'sec-up').textContent)
+    && barBtn('nimrod', 'sec-down').getAttribute('aria-disabled') === 'true' && barBtn('people', 'sec-up').getAttribute('aria-disabled') !== 'true');
+  const editWords = q('[data-pp-list]').textContent;
+  check('*** plain words in edit mode ***', !pageWordProblems(editWords).length, J(pageWordProblems(editWords)));
+  const tall = qa('[data-pp-list] [data-pp-stop]').map((b) => b.getBoundingClientRect().height);
+  check('*** every button at least 44px tall in edit mode, at 375 wide ***', tall.length > 15 && tall.every((h) => h >= 44), J(tall.map(Math.round)));
+  const root = q('.pp-root');
+  check('*** no sideways scroll in edit mode at 375 ***', root.scrollWidth <= root.clientWidth + 1, `${root.scrollWidth} > ${root.clientWidth}`);
+
+  barBtn('people', 'sec-up').click();
+  check('*** Move up: Your people above Recommended for you, drawn and saved ***',
+    await until(() => J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(['self', 'messages', 'people', 'recommended', 'connect', 'nimrod']), 3000)
+    && await until(async () => J(((await serverPage()).data.sections || []).map((s) => s.kind)) === J(['self', 'messages', 'people', 'recommended', 'connect', 'nimrod']), 5000));
+  barBtn('people', 'sec-down').click();
+  check('Move down puts it back', await until(() => J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS), 3000));
+
+  barBtn('messages', 'sec-remove').click();
+  check('*** Remove: Messages for you is gone, and the card says so ***', await until(() => !q('[data-pp-sec="messages"]'), 3000)
+    && /Took Messages for you off your page/.test(q('[data-pp-card="edit"] .pp-why')?.textContent || ''));
+  check('*** ...and the newest message still shows, on your own card ***', /Latest message, from Sam: Hello from the garden/.test(q('[data-pp-self-message]')?.textContent || ''),
+    q('[data-pp-card="self"]')?.textContent.slice(0, 300));
+  const putBack = () => q('[data-pp-card="edit"] [data-pp-act="put-back"]');
+  check('a Put back button for it', /Put back Messages for you/.test(putBack()?.textContent || ''));
+  putBack().click();
+  check('*** Put back: where it was, and the latest-message line goes ***', await until(() => J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS), 3000)
+    && !q('[data-pp-self-message]') && !putBack());
+
+  barBtn('people', 'sec-remove').click();
+  const showPeople = () => q('[data-pp-card="edit"] [data-pp-act="show-people"]');
+  check('*** Your people removed: gone, and "Show your people again" is offered ***', await until(() => !q('[data-pp-sec="people"]') && !!showPeople(), 3000)
+    && showPeople().textContent.includes(EDIT_WORDS.showPeople));
+  barBtn('nimrod', 'sec-remove').click();
+  check('*** Ask Nimrod removed: More moves onto your card ***', await until(() => !q('[data-pp-sec="nimrod"]') && !!q('[data-pp-card="self"] [data-pp-act="more"]'), 3000));
+  showPeople().click();
+  check('*** Show your people again: back where they were by default ***', await until(() => J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(['self', 'messages', 'recommended', 'people', 'connect']), 3000)
+    && !showPeople() && qa('[data-pp-name]').length >= 2);
+
+  // ---- the library -----------------------------------------------------------------------------------
+  section('*** Add something: the library ***');
+  const openLib = async () => { q('[data-pp-card="edit"] [data-pp-act="page-add"]').click(); return until(() => !!q('[data-pp-sheet="library"] [data-pp-library]'), 3000); };
+  check('*** Add something opens the library over the page, with a way back ***', await openLib() && /Back to your page/.test(q('[data-pp-sheet] [data-pp-close]').textContent));
+  const libKinds = qa('[data-pp-lib]').map((e) => e.dataset.ppLib);
+  check('*** it lists every part but You, each with its name and line ***', J(libKinds) === J(addableEntries().map((e) => e.kind))
+    && addableEntries().every((e) => q(`[data-pp-lib="${e.kind}"]`).textContent.includes(e.name) && q(`[data-pp-lib="${e.kind}"]`).textContent.includes(e.line)));
+  const libAdd = (k) => q(`[data-pp-lib-add="${k}"]`);
+  check('*** a part already on the page is dimmed, "Already on your page"; one taken off is offered again ***',
+    libAdd('people').getAttribute('aria-disabled') === 'true' && /Already on your page/.test(libAdd('people').textContent) && libAdd('nimrod').getAttribute('aria-disabled') !== 'true'
+    && libAdd('clock').getAttribute('aria-disabled') !== 'true');
+  const libWords = q('[data-pp-sheet="library"]').textContent;
+  check('*** plain words in the library ***', !pageWordProblems(libWords).length, J(pageWordProblems(libWords)));
+  check('library buttons at least 44px', qa('[data-pp-lib-add]').every((b) => b.getBoundingClientRect().height >= 44));
+  libAdd('about').click();
+  check('*** About me: added at the bottom, the window closed, the card says where ***', await until(() => qa('[data-pp-sec]').at(-1)?.dataset.ppSecKind === 'about' && !q('[data-pp-sheet]'), 3000)
+    && /Added About me at the bottom of your page/.test(q('[data-pp-card="edit"] .pp-why')?.textContent || ''));
+  const aboutId = qa('[data-pp-sec]').at(-1).dataset.ppSec;
+  const ta = q(`[data-pp-about-input][data-pp-sec-id="${aboutId}"]`);
+  ta.focus();
+  ta.value = 'I like <b>gardens</b> & "tea".\nSecond line.';
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+  check('the count follows the typing', /of 2000 letters/.test(q('[data-pp-about-count]').textContent) && q('[data-pp-about-count]').textContent.startsWith(String(ta.value.length)));
+  await sleep(ABOUT_SAVE_MS + 200);
+  const shown = q(`[data-pp-sec="${aboutId}"] [data-pp-about]`);
+  check('*** saved after a pause, and drawn as the words written (escaped, never markup) ***', shown?.textContent === ta.value && !shown.querySelector('b'), shown?.innerHTML);
+  check('...without redrawing the box being typed in (still the same box, still focused)', q(`[data-pp-about-input][data-pp-sec-id="${aboutId}"]`) === ta && document.activeElement === ta);
+
+  for (const k of ['clock', 'photos', 'video']) {
+    await openLib();
+    libAdd(k).click();
+    await until(() => qa('[data-pp-sec]').at(-1)?.dataset.ppSecKind === k, 3000);
+  }
+  check('*** a clock, pictures and a video added, in that order, at the bottom ***',
+    J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind).slice(-4)) === J(['about', 'clock', 'photos', 'video']));
+  const secOf = (k) => qa('[data-pp-sec]').find((w) => w.dataset.ppSecKind === k);
+  check('*** each mounted in its box, the normal way (the clock and pictures at once) ***',
+    await until(() => ['clock', 'photos'].every((k) => probe().boxes.some((b) => b.kind === k && b.mounted)), 15000)
+    && ['clock', 'photos'].every((k) => secOf(k).querySelector('[data-pp-box]').children.length > 0)
+    && ['clock', 'photos'].every((k) => !!getManifest(k)), J(probe().boxes));
+  check('*** each box the height of its section’s size (medium by default) ***',
+    ['clock', 'photos'].every((k) => Math.abs(secOf(k).querySelector('[data-pp-box]').getBoundingClientRect().height - parseFloat(BOX_SIZES.medium) * parseFloat(getComputedStyle(document.documentElement).fontSize)) < 2));
+  const sizeSel = secOf('clock').querySelector('[data-pp-sec-size]');
+  sizeSel.value = 'small'; sizeSel.dispatchEvent(new Event('change', { bubbles: true }));
+  check('*** How tall it is: Small makes the clock’s box smaller ***', await until(() => secOf('clock').querySelector('[data-pp-box]').style.height === BOX_SIZES.small, 3000));
+  check('*** the clock’s own settings, a few, in its edit bar (its date shown or not) ***',
+    await until(() => !!secOf('clock').querySelector('[data-pp-sec-field="showDate"]'), 5000) && !!secOf('photos').querySelector('[data-pp-sec-field="intervalMs"]')
+    && [...secOf('photos').querySelectorAll('[data-pp-sec-field="fit"] option')].some((o) => o.textContent === 'Fill the box'));
+  const dateSel = secOf('clock').querySelector('[data-pp-sec-field="showDate"]');
+  dateSel.value = '0'; dateSel.dispatchEvent(new Event('change', { bubbles: true }));
+  const clockId = secOf('clock').dataset.ppSec;
+  check('...and changing one saves it into the section', await until(async () => ((await serverPage()).data.sections || []).find((s) => s.id === clockId)?.options?.settings?.showDate === false, 5000));
+  const vid = secOf('video');
+  check('a video section with no link says how to choose one', /No video chosen yet/.test(vid.querySelector('[data-pp-video-none]')?.textContent || '') && !probe().boxes.some((b) => b.kind === 'video'));
+  const link = vid.querySelector('[data-pp-video-link]');
+  link.value = 'https://example.com/not-a-video';
+  vid.querySelector('[data-pp-act="video-save"]').click();
+  check('a link that is not one YouTube video: said, in words, on its bar', await until(() => /not a link to one YouTube video/.test(secOf('video').querySelector('.pp-edit .pp-why')?.textContent || ''), 2000));
+  secOf('video').querySelector('[data-pp-video-link]').value = `https://youtu.be/${VID}`;
+  secOf('video').querySelector('[data-pp-act="video-save"]').click();
+  check('*** a YouTube link: Play shows (nothing plays by itself) ***', await until(() => !!secOf('video').querySelector('[data-pp-act="video-play"]'), 3000) && !stub.loaded.length);
+  secOf('video').querySelector('[data-pp-act="video-play"]').click();
+  check('*** Play: the site’s own YouTube player in the box, asked for that video ***', await until(() => !!secOf('video').querySelector('[data-pp-box] .youtube') && stub.loaded.includes(VID), 8000)
+    && !!secOf('video').querySelector('[data-pp-act="video-stop"]'), J(stub.loaded));
+  secOf('video').querySelector('[data-pp-act="video-stop"]').click();
+  check('Stop takes it down again', await until(() => !secOf('video').querySelector('[data-pp-box] .youtube') && !!secOf('video').querySelector('[data-pp-act="video-play"]'), 3000));
+  const fullEditWords = q('[data-pp-list]').textContent;
+  check('*** plain words over the whole page in edit mode, the boxes and what is in them too ***', !pageWordProblems(fullEditWords).length, J(pageWordProblems(fullEditWords)));
+  check('no sideways scroll with the boxes on', root.scrollWidth <= root.clientWidth + 1, `${root.scrollWidth} > ${root.clientWidth}`);
+  const clockHost = secOf('clock').querySelector('[data-pp-box]').firstElementChild;
+  barBtn(secOf('photos').dataset.ppSec, 'sec-up').click();
+  await until(() => qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind).slice(-3).join() === 'photos,clock,video', 3000);
+  check('*** a box moved past keeps what is mounted in it (the clock was not remounted) ***', secOf('clock').querySelector('[data-pp-box]').firstElementChild === clockHost
+    && qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind).slice(-3).join() === 'photos,clock,video');
+
+  q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  check('*** Done: the edit bars go, the boxes stay ***', await until(() => !probe().editing && !q('[data-pp-edit-for]') && !q('[data-pp-card="edit"]'), 3000)
+    && probe().boxes.filter((b) => b.mounted).length === 2 && editBtn()?.dataset.ppAct === 'page-edit');
+  const doneWords = q('[data-pp-list]').textContent;
+  check('*** plain words in view mode with the boxes on ***', !pageWordProblems(doneWords).length, J(pageWordProblems(doneWords)));
+  const before = probe().sections.map((s) => s.kind);
+  await inst.impl.__probe().flushPage();
+  inst.destroy(); box.remove();
+
+  // ============================================================================================
+  section('*** after a reload: the same page ***');
+  check('(setup) the server has it', await until(async () => J(((await serverPage()).data.sections || []).map((s) => s.kind)) === J(before), 5000), J(before));
+  box = newBox();
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  await inst.init();
+  check('*** reloaded: the same sections in the same order ***', await until(() => J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)) === J(before), 8000), J(qa('[data-pp-sec]').map((w) => w.dataset.ppSecKind)));
+  check('*** About me as written; the clock mounted, small, its date off ***', q('[data-pp-about]')?.textContent.startsWith('I like <b>gardens</b>')
+    && await until(() => probe().boxes.some((b) => b.kind === 'clock' && b.mounted), 8000) && secOf('clock').querySelector('[data-pp-box]').style.height === BOX_SIZES.small);
+  inst.destroy(); box.remove();
+
+  // ============================================================================================
+  section('*** a section from a newer version: shown quietly, kept untouched ***');
+  const cur = await serverPage();
+  const guest = { kind: 'guestbook', id: 'guestbook-1', options: { entries: [{ from: 'Sam', text: 'hi' }], nested: { a: 1 } } };
+  await call('PUT', pageURL, A, { data: { ...cur.data, sections: [...cur.data.sections.slice(0, 2), guest, ...cur.data.sections.slice(2)], futureKey: 'kept' }, base_version: cur.version });
+  box = newBox();
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  await inst.init();
+  check('*** it shows as one quiet line, "needs a newer version", and the page around it is whole ***',
+    await until(() => /needs a newer version/.test(q('[data-pp-sec="guestbook-1"] [data-pp-newer]')?.textContent || ''), 8000) && !!q('[data-pp-card="self"]') && !!q('[data-pp-about]'));
+  editBtn().click();
+  await until(() => !!bar('guestbook-1'), 3000);
+  check('in edit mode it can be moved or removed like anything else (it is their page)', !!barBtn('guestbook-1', 'sec-up') && !!barBtn('guestbook-1', 'sec-remove'));
+  barBtn('messages', 'sec-down').click();
+  await inst.impl.__probe().flushPage();
+  const after = await serverPage();
+  check('*** after an edit here, it is stored exactly as it was, and so is a key this version does not know ***',
+    J(after.data.sections.find((s) => s.id === 'guestbook-1')) === J(guest) && after.data.futureKey === 'kept' && after.version > cur.version, J(after.data.sections.find((s) => s.id === 'guestbook-1')));
+  q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  inst.destroy(); box.remove();
+
+  // ============================================================================================
+  section('*** two devices editing at once, against the server ***');
+  const h1 = makePS(a1.id, PAGE_KEY, { merge: mergePageDoc });
+  const h2 = makePS(a1.id, PAGE_KEY, { merge: mergePageDoc });
+  await h1.load(); await h2.load();
+  const start = h1.get();
+  h1.set({ sections: addSection(start, 'clock', { id: 'clock-two' }).sections });
+  await h1.flush();
+  h2.set({ sections: moveSection(h2.get(), 'recommended', -1) });   // stale: written against the doc before h1's
+  await h2.flush();
+  const both = await serverPage();
+  const ids = both.data.sections.map((s) => s.id);
+  check('*** a clock added on one device and a section moved on the other: both kept ***',
+    ids.includes('clock-two') && ids.indexOf('recommended') < ids.indexOf('messages') && ids.includes('guestbook-1'), J(ids));
+  h1.set({ sections: removeSection(both.data, 'clock-two').sections }); await h1.flush();
+  h1.destroy(); h2.destroy();
+
+  // ============================================================================================
+  section('*** on a screen: the page from the same record; Edit my page dimmed, saying why ***');
+  const sbox = newBox(1280, 720);
+  const sinst = mountModule(PEOPLE_TYPE, makeCtx(sbox, { isScreen: true, instanceId: 'ps-screen' }));
+  await sinst.init();
+  const sq = (s) => sbox.querySelector(s);
+  await until(() => !!sq('[data-pp-about]') && !!sq('[data-pp-face]'), 10000);
+  const sKinds = [...sbox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind);
+  check('*** the same sections as the person’s page (Connect with someone left out, as on today’s screen) ***',
+    J(sKinds) === J(viewSections(await serverPage().then((p) => p.data), { isScreen: true }).map((s) => s.kind)) && !sKinds.includes('connect') && sKinds.includes('about'), J(sKinds));
+  const sEdit = sq('[data-pp-card="self"] [data-pp-act="page-edit"]');
+  check('*** Edit my page is there, dimmed, "From a phone" ***', sEdit?.getAttribute('aria-disabled') === 'true' && /From a phone/.test(sEdit.textContent) && sEdit.dataset.ppWhy === EDIT_WORDS.screenWhy);
+  sEdit.click();
+  check('*** pressed: it says why, on the card, and nothing opens ***', await until(() => sq('[data-pp-card="self"] .pp-why')?.textContent === EDIT_WORDS.screenWhy, 2000)
+    && !sinst.impl.__probe().page.editing && !sq('[data-pp-edit-for]') && !sinst.impl.__probe().page.canEdit);
+  check('the boxes show on the screen too', await until(() => sinst.impl.__probe().page.boxes.some((b) => b.kind === 'clock' && b.mounted), 8000));
+  const sWords = sq('[data-pp-list]').textContent;
+  check('*** plain words on the screen ***', !pageWordProblems(sWords).length, J(pageWordProblems(sWords)));
+  sinst.destroy(); sbox.remove();
+
+  section('*** nobody signed in here (no page to change): Edit my page dimmed, saying why; the default page drawn ***');
+  const nbox = newBox();
+  const ninst = mountModule(PEOPLE_TYPE, { mount: nbox, bus: createBus(), state: memState(), personId: null, instanceId: 'ps-none', isScreen: false, chooseMode: () => 'point' });
+  await ninst.init();
+  const nEdit = nbox.querySelector('[data-pp-card="self"] [data-pp-act="page-edit"]');
+  check('*** dimmed, "Sign in first", and the default page ***', nEdit?.getAttribute('aria-disabled') === 'true' && nEdit.dataset.ppWhy === EDIT_WORDS.signInWhy
+    && J([...nbox.querySelectorAll('[data-pp-sec]')].map((w) => w.dataset.ppSecKind)) === J(BUILT_IN_KINDS));
+  check('plain words there too', !pageWordProblems(nbox.querySelector('[data-pp-list]').textContent).length);
+  ninst.destroy(); nbox.remove();
+  check('(the old four-word check still passes on everything above: it is a subset)', !plainWordProblems(fullEditWords + doneWords + sWords).length);
+} catch (err) {
+  failed++;
+  out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';
+</script>
+</body>
+</html>

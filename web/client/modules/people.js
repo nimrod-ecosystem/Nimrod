@@ -38,6 +38,26 @@
 //
 // NOTHING IS SENT WITHOUT A PRESS. Mounting reads records (who, which face, may I call or leave a message, what
 // came in); it never calls, never writes, never speaks.
+//
+// *** "EDIT MY PAGE" (2026-10-04, later; the rules are page_sections.js). *** The page is drawn as a single column of
+// SECTIONS in the order the person's own page record says (`PAGE_KEY` in their per-person state), and today's parts
+// are the default sections: You, Messages for you, Recommended for you, Your people, Connect with someone, Ask Nimrod.
+// "Edit my page" (beside "Edit my picture") turns on an edit bar over each section -- Move up, Move down, Remove, and
+// that section's own few options -- and a card under You with "Add something" (a short library, in a window over the
+// page), "Done", "Put back" (the last thing removed) and, once Your people is removed, "Show your people again".
+//   ONE COLUMN AT EVERY WIDTH, no side column on a wide screen. FOR a side column: a computer has the room, and a
+//   profile page there often uses it. AGAINST, and it decides it for now: the page as it was before this had none,
+//   and nothing may look different for somebody who never edits; a side column is a later choice the page can offer.
+//   A BOX (a clock, pictures, a video) is the site's own thing mounted the normal way (mountModule) in a
+//   box of the section's height, kept mounted across redraws (each section is its own element, so redrawing the
+//   page never tears a box down; only removing that section does). Its settings live in the section's `options`, set
+//   from its edit bar; what the thing itself changes while it runs (photos picking its first source) stays in memory,
+//   so mounting the page still writes nothing.
+//   ON A SCREEN the page is drawn from the same record, and "Edit my page" is shown dimmed with why: a page is
+//   changed from a phone or computer.
+//   MESSAGES FOR YOU REMOVED: the newest message still shows, as one "Latest message" line on your own card, so a
+//   message left for you is never only on a page you took it off. ASK NIMROD REMOVED: "More" moves onto your card,
+//   so your settings stay one press away.
 
 import { registerModule, mountModule, getManifest, extendCtx } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
@@ -61,6 +81,20 @@ import {
   PEOPLE_TYPE, PEOPLE_SETTINGS, PEOPLE_VERB_TOPICS, HELPER_OPEN_TOPIC, WHY, connectionsFrom, actionsFor,
   noteStatusFrom, scanModeOf, stepCursor, incomingFrom,
 } from '../people_page.js';
+import {
+  PAGE_KEY, EDIT_WORDS, BOX_SIZES, BOX_SIZE_LABELS, DEFAULT_BOX_SIZE, ABOUT_MAX, viewSections, hasKind, addSection, removeSection,
+  restoreSection, canMove, moveSection, updateSection, videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc, boxHeight,
+} from '../page_sections.js';
+
+// The site's own things a page box can hold, loaded the first time one is on a page (page_sections.js SECTION_LIBRARY).
+const BOX_LOADERS = Object.freeze({
+  clock: () => import('./clock.js'),
+  photos: () => import('./photos.js'),
+  youtube: () => import('./youtube.js'),
+});
+// How long About me waits after the last key before saving. ARGUED, not a setting: long enough that a word typed is
+// one write rather than one per letter, short enough that closing the page straight after typing has saved it.
+export const ABOUT_SAVE_MS = 600;
 
 // The page "More" opens (dashboards.js `start`), and the act Home's page answers for it (modules.html homePress).
 export const MORE_KEY = 'start';
@@ -118,6 +152,21 @@ const STYLE = `
 .pp-sheet-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border)}
 .pp-sheet-top b{font-size:1.15rem;color:var(--text-strong)}
 .pp-sheet-body{position:relative;flex:1 1 auto;min-height:0;overflow:auto}
+.pp-sec,.pp-sec-body{display:contents}
+.pp-sec.is-edit{display:flex;flex-direction:column;gap:10px;border:2px dashed var(--border);border-radius:18px;padding:8px}
+.pp-sec.is-edit>.pp-sec-body{display:flex;flex-direction:column;gap:14px}
+.pp-edit{background:var(--surface-alt)}
+.pp-edit [data-pp-edit-for]{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pp-edit [data-pp-edit-for] .pp-btn{padding:8px;text-align:center;align-items:center}
+.pp-box{position:relative;overflow:hidden;border-radius:12px;background:var(--surface-alt)}
+.pp-about{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--text)}
+.pp-fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(12rem,1fr));gap:10px}
+.pp-field{display:flex;flex-direction:column;gap:4px;color:var(--text-strong);font-weight:600}
+.pp-field select,.pp-field input,.pp-field textarea{box-sizing:border-box;width:100%;min-height:48px;font:inherit;font-weight:400;padding:8px 10px;
+  border-radius:12px;border:2px solid var(--border);background:var(--surface);color:var(--text-strong)}
+.pp-field textarea{min-height:8rem;resize:vertical}
+.pp-field small{font-weight:400;color:var(--text-muted)}
+.pp-lib{display:flex;flex-direction:column;gap:10px;padding:12px;max-width:46rem;margin:0 auto}
 `;
 
 registerModule(
@@ -147,6 +196,15 @@ registerModule(
     let closeTimer = null, refreshTimer = null;
     const offs = [];
     let offState = null;
+    // "Edit my page" (page_sections.js). pageState: the person's own page record (null: nobody signed in here, or no
+    // person-state path on this host -- the default page is drawn and editing is dimmed). pageDoc: its last value.
+    let pageState = null, pageDoc = {}, offPage = null, pageOpening = null;
+    let editing = false;
+    let lastRemoved = null;       // { section, index, name } - what "Put back" puts back
+    let saving = Promise.resolve();
+    let aboutTimer = null;
+    const wrappers = new Map();   // section id -> its element in the list (kept across redraws)
+    const boxes = new Map();      // section id -> { inst, st, kind, seen } - a thing mounted in a page box
 
     const isScreen = () => (typeof ctx.isScreen === 'boolean' ? ctx.isScreen : false);
     const selfId = () => { try { return ctx.personId || ''; } catch { return ''; } };
@@ -264,15 +322,32 @@ registerModule(
     const card = (key, inner, extra = '') => `<section class="pp-card${extra}" data-pp-card="${esc(key)}">${inner}
       <p class="pp-why" id="pp-why-${esc(key)}" role="status">${esc(why.get(key) || '')}</p></section>`;
 
+    // "Edit my page": live off a screen for a person with a page of their own; dimmed with why otherwise.
+    const canEdit = () => !isScreen() && !!selfId() && !!pageState;
+    function editButton() {
+      if (isScreen()) return button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: false, reason: EDIT_WORDS.screenWhy, short: EDIT_WORDS.screenShort }, 'self');
+      if (!canEdit()) return button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: false, reason: EDIT_WORDS.signInWhy, short: EDIT_WORDS.signInShort }, 'self');
+      return editing ? button({ act: 'page-done', label: EDIT_WORDS.done, short: EDIT_WORDS.doneShort, enabled: true }, 'self')
+        : button({ act: 'page-edit', label: EDIT_WORDS.edit, enabled: true }, 'self');
+    }
     function selfCard() {
       const me = selfRow();
-      const pic = isScreen()
-        ? ''
-        : `<div class="pp-btns">${button({ act: 'picture-edit', label: 'Edit my picture', enabled: !!me.id,
-          reason: me.id ? '' : 'Sign in to have a picture of your own.', short: me.id ? '' : 'Sign in first' }, 'self')}</div>`;
+      const btns = [];
+      if (!isScreen()) {
+        btns.push(button({ act: 'picture-edit', label: 'Edit my picture', enabled: !!me.id,
+          reason: me.id ? '' : 'Sign in to have a picture of your own.', short: me.id ? '' : 'Sign in first' }, 'self'));
+      }
+      btns.push(editButton());
+      // Ask Nimrod taken off the page: More comes here, so the person's settings stay one press away.
+      if (!hasKind(pageDoc, 'nimrod')) btns.push(button({ act: 'more', label: EDIT_WORDS.more, short: EDIT_WORDS.moreShort, enabled: true }, 'self'));
+      // Messages for you taken off the page: the newest one still shows, here.
+      const latest = !hasKind(pageDoc, 'messages') && prefs.incoming && incoming.length ? incoming[0] : null;
       return card('self', `<div class="pp-who"><div class="pp-face">${faceOf(me, SELF_FACE)}</div>
         <div><div class="pp-name" data-pp-self-name>${esc(me.name || (me.id ? 'You' : 'Welcome'))}</div>
-        <p class="pp-sub">${isScreen() ? 'This screen is for you.' : 'You'}</p></div></div>${pic}`, ' pp-self');
+        <p class="pp-sub">${isScreen() ? 'This screen is for you.' : 'You'}</p></div></div>
+        ${latest ? `<p class="pp-msg" data-pp-self-message><b>${esc(EDIT_WORDS.latest)}</b>, from ${esc(latest.author || 'Someone')}: ${esc(latest.text)}
+          <br><small>${esc(whenWords(latest.at))}</small></p>` : ''}
+        <div class="pp-btns">${btns.join('')}</div>`, ' pp-self');
     }
 
     function incomingHTML() {
@@ -377,21 +452,407 @@ registerModule(
     const moreCard = () => card('more', `<div class="pp-btns">${button({ act: 'more', label: 'More', short: 'Your settings, your devices and more', enabled: true }, 'more')}
       ${button({ act: 'nimrod', label: 'Ask Nimrod', short: 'He shows you around', enabled: true }, 'more')}</div>`);
 
+    // ---- sections (page_sections.js) --------------------------------------------------------------------
+    const sectionName = (s) => s.entry?.name || 'A part from a newer version';
+    // One of today's parts, or About me, or the quiet line for a kind this version does not know.
+    function sectionHTML(s) {
+      switch (s.kind) {
+        case 'self': return selfCard() + (isScreen() ? '' : joinedCards()) + (editing ? editCard() : '');
+        case 'messages': return incomingHTML();
+        case 'recommended': return recommendedHTML();
+        case 'people': return isScreen() ? screenFaces() : `<h2 class="pp-h">Your people</h2>${peopleCards()}`;
+        case 'connect': return connectCard();
+        case 'nimrod': return moreCard();
+        case 'about': {
+          const text = aboutText(s.options);
+          return card(`s:${s.id}`, `<h2 class="pp-h">About me</h2>${text.trim()
+            ? `<p class="pp-about" data-pp-about>${esc(text)}</p>`
+            : `<p class="pp-note" data-pp-about-none>${esc(isScreen() ? 'Nothing here yet.' : EDIT_WORDS.aboutEmpty)}</p>`}`);
+        }
+        default: return card(`s:${s.id}`, `<p class="pp-note" data-pp-newer>${esc(EDIT_WORDS.newer)}</p>`);
+      }
+    }
+    // The card under You while editing: Add something, Done, and the two ways back.
+    function editCard() {
+      const btns = [button({ act: 'page-add', label: EDIT_WORDS.add, short: EDIT_WORDS.addShort, enabled: true }, 'edit'),
+        button({ act: 'page-done', label: EDIT_WORDS.done, short: EDIT_WORDS.doneShort, enabled: true }, 'edit')];
+      if (!hasKind(pageDoc, 'people')) btns.push(button({ act: 'show-people', label: EDIT_WORDS.showPeople, short: EDIT_WORDS.showPeopleShort, enabled: true }, 'edit'));
+      if (lastRemoved) btns.push(button({ act: 'put-back', label: EDIT_WORDS.putBack(lastRemoved.name), short: EDIT_WORDS.putBackShort, enabled: true }, 'edit'));
+      return card('edit', `<h2 class="pp-h" data-pp-editing>${esc(EDIT_WORDS.editing)}</h2><p class="pp-note">${esc(EDIT_WORDS.intro)}</p>
+        <div class="pp-btns">${btns.join('')}</div>`, ' pp-edit');
+    }
+    // A choice / toggle / text / number row for one of a box's own settings (its manifest's, by key).
+    function fieldsOf(s) {
+      const type = s.entry?.module;
+      const m = type ? getManifest(type) : null;
+      let decl = m?.settings;
+      if (typeof decl === 'function') { try { decl = decl(); } catch { decl = []; } }
+      const want = s.entry?.fields || [];
+      return want.map((k) => (Array.isArray(decl) ? decl : []).find((d) => d && d.key === k)).filter(Boolean).map((d) => normalizeField(d)).filter(Boolean);
+    }
+    function fieldHTML(s, f) {
+      const values = s.options?.settings || {};
+      const v = fieldValue(f, values);
+      const attrs = `data-pp-sec-field="${esc(f.key)}" data-pp-sec-id="${esc(s.id)}"`;
+      let ctl;
+      if (f.kind === 'toggle') {
+        ctl = `<select ${attrs} data-pp-kind="toggle"><option value="1"${v ? ' selected' : ''}>${esc(f.onLabel)}</option><option value="0"${v ? '' : ' selected'}>${esc(f.offLabel)}</option></select>`;
+      } else if (f.kind === 'choice') {
+        const words = s.entry?.relabel?.[f.key] || {};
+        ctl = `<select ${attrs} data-pp-kind="choice">${(f.options || []).map((o, i) => `<option value="${i}"${String(o.value) === String(v) ? ' selected' : ''}>${esc(words[o.value] || o.label)}</option>`).join('')}</select>`;
+      } else if (f.kind === 'number') {
+        ctl = `<input type="number" ${attrs} data-pp-kind="number" value="${esc(v)}"${f.min != null ? ` min="${f.min}"` : ''}${f.max != null ? ` max="${f.max}"` : ''} step="${f.step || 1}">`;
+      } else {
+        ctl = `<input type="text" ${attrs} data-pp-kind="text" value="${esc(v ?? '')}" maxlength="200">`;
+      }
+      return `<label class="pp-field">${esc(f.label)}${ctl}</label>`;
+    }
+    // The edit bar over one section: its name, Move up / Move down / Remove, and its own few options.
+    function editBarHTML(s) {
+      const key = `e:${s.id}`;
+      const mv = canMove(pageDoc, s.id);
+      const btns = [
+        button({ act: 'sec-up', label: EDIT_WORDS.moveUp, enabled: mv.up, reason: mv.up ? '' : EDIT_WORDS.topWhy, short: mv.up ? '' : EDIT_WORDS.atTop }, key),
+        button({ act: 'sec-down', label: EDIT_WORDS.moveDown, enabled: mv.down, reason: mv.down ? '' : EDIT_WORDS.bottomWhy, short: mv.down ? '' : EDIT_WORDS.atBottom }, key),
+        button({ act: 'sec-remove', label: EDIT_WORDS.remove, short: EDIT_WORDS.removeShort, enabled: true }, key),
+      ];
+      let extra = '';
+      if (s.kind === 'about') {
+        // The text and its count are put in after the bar is drawn (render), never in its markup: a save while
+        // somebody is typing must not redraw the box they are typing in.
+        extra = `<label class="pp-field">${esc(EDIT_WORDS.aboutLabel)}<textarea data-pp-about-input data-pp-sec-id="${esc(s.id)}" maxlength="${ABOUT_MAX}" rows="5"></textarea>
+          <small data-pp-about-count></small></label>`;
+      } else if (s.entry?.module) {
+        const size = BOX_SIZES[s.options?.size] ? s.options.size : DEFAULT_BOX_SIZE;
+        const sizeRow = `<label class="pp-field">${esc(EDIT_WORDS.size)}<select data-pp-sec-size data-pp-sec-id="${esc(s.id)}">${Object.keys(BOX_SIZES)
+          .map((k) => `<option value="${k}"${k === size ? ' selected' : ''}>${esc(BOX_SIZE_LABELS[k])}</option>`).join('')}</select></label>`;
+        const rows = s.kind === 'video'
+          ? `<label class="pp-field">${esc(EDIT_WORDS.videoLink)}<input type="url" inputmode="url" data-pp-video-link data-pp-sec-id="${esc(s.id)}" value="${esc(s.options?.link || '')}" maxlength="2000">
+              <small>${esc(EDIT_WORDS.videoHow)}</small></label>
+              <div class="pp-btns">${button({ act: 'video-save', label: EDIT_WORDS.videoSave, enabled: true }, key)}</div>`
+          : fieldsOf(s).map((f) => fieldHTML(s, f)).join('');
+        extra = `<div class="pp-fields">${sizeRow}${s.kind === 'video' ? '' : rows}</div>${s.kind === 'video' ? rows : ''}`;
+      }
+      return card(key, `<div class="pp-name" data-pp-edit-name>${esc(sectionName(s))}</div>
+        <div class="pp-btns" data-pp-edit-for="${esc(s.id)}">${btns.join('')}</div>${extra}`, ' pp-edit');
+    }
+    const isBox = (s) => !!s.entry?.module;
+
+    // A box's settings, as the thing in it reads them: the section's stored `settings`, with whatever the thing set
+    // itself while running laid over them in memory (see the header: mounting writes nothing).
+    function sectionState(id) {
+      let local = {};
+      const subs = new Set();
+      const stored = () => viewSections(pageDoc).find((x) => x.id === id)?.options?.settings || {};
+      const cur = () => ({ ...stored(), ...local });
+      const tell = () => { const v = cur(); subs.forEach((f) => { try { f(v); } catch (err) { console.error('people: box state', err); } }); };
+      return {
+        get: cur,
+        set(p) { local = { ...local, ...(p || {}) }; tell(); },
+        subscribe(f) { subs.add(f); return () => subs.delete(f); },
+        load: async () => cur(), flush: async () => {}, destroy() { subs.clear(); },
+        // The page's own edit bar set `key`: the stored value is the one now, not a value the thing set earlier.
+        forget(key) { delete local[key]; },
+        tell,
+      };
+    }
+    function noEvents() {
+      return { append: async () => ({}), subscribe: () => () => {}, load: async () => {}, get: () => ({ events: [] }), flush: async () => {}, destroy() {} };
+    }
+    // The card a box section lives in, made once (so the thing in it stays mounted while the page redraws).
+    function boxSkeleton(w, s) {
+      const body = w.querySelector('[data-pp-sec-body]');
+      body.innerHTML = `<section class="pp-card" data-pp-card="s:${esc(s.id)}" data-pp-box-card="${esc(s.kind)}">
+        <h2 class="pp-h" data-pp-box-title></h2><div data-pp-box-controls></div>
+        <div class="pp-box" data-pp-box="${esc(s.kind)}"></div>
+        <p class="pp-why" id="pp-why-s:${esc(s.id)}" role="status"></p></section>`;
+    }
+    function paintBox(w, s) {
+      const title = w.querySelector('[data-pp-box-title]');
+      if (title && title.textContent !== s.entry.name) title.textContent = s.entry.name;
+      const host = w.querySelector('[data-pp-box]');
+      const h = boxHeight(s.options);
+      const vid = s.kind === 'video' ? videoOf(s.options) : null;
+      const playing = s.kind === 'video' && boxes.get(s.id)?.inst;
+      // A video box is only as tall as its player once it plays; before, it is the Play button.
+      const height = s.kind === 'video' && !playing ? '0px' : h;
+      if (host && host.style.height !== height) host.style.height = height;
+      const ctl = w.querySelector('[data-pp-box-controls]');
+      if (ctl) {
+        const key = `s:${s.id}`;
+        let html = '';
+        if (s.kind === 'video') {
+          html = !vid ? `<p class="pp-note" data-pp-video-none>${esc(isScreen() ? 'No video chosen yet.' : EDIT_WORDS.videoNone)}</p>`
+            : `<div class="pp-btns">${playing ? button({ act: 'video-stop', label: EDIT_WORDS.stop, enabled: true }, key)
+              : button({ act: 'video-play', label: EDIT_WORDS.play, short: EDIT_WORDS.playShort, enabled: true }, key)}</div>`;
+        }
+        if (ctl.dataset.html !== html) { ctl.innerHTML = html; ctl.dataset.html = html; }
+      }
+      const whyEl = w.querySelector('[data-pp-sec-body] .pp-why');
+      const said = why.get(`s:${s.id}`) || '';
+      if (whyEl && whyEl.textContent !== said) whyEl.textContent = said;
+    }
+    // Mount the site's own thing in a box, the normal way. A video waits for Play (nothing plays by itself).
+    async function mountBox(s, w) {
+      if (boxes.has(s.id) || s.kind === 'video') return;
+      const type = s.entry.module;
+      const slot = { inst: null, st: sectionState(s.id), kind: s.kind, seen: JSON.stringify(s.options?.settings || {}) };
+      boxes.set(s.id, slot);
+      const host = w.querySelector('[data-pp-box]');
+      try {
+        if (!getManifest(type)) await BOX_LOADERS[type]?.();
+        if (torn || boxes.get(s.id) !== slot) return;
+        if (!getManifest(type)) throw new Error(`no ${type} here`);
+        const inst = mountModule(type, extendCtx(ctx, {
+          mount: host, bus: createBus(), instanceId: `${ctx.instanceId || 'people'}-box-${s.id}`, state: slot.st, events: noEvents(),
+          makePersonState: makePS,
+        }));
+        slot.inst = inst;
+        await inst.init();
+        // A section edited before the thing finished mounting: draw the edit bar's rows now its settings are known.
+        if (editing && !torn) render();
+      } catch (err) {
+        console.error('people: box', err);
+        if (boxes.get(s.id) === slot && host) host.innerHTML = `<p class="pp-note" style="padding:12px" data-pp-box-failed>${esc(EDIT_WORDS.cannotShow)}</p>`;
+      }
+    }
+    function unmountBox(id) {
+      const slot = boxes.get(id);
+      if (!slot) return;
+      boxes.delete(id);
+      try { slot.inst?.destroy?.(); } catch (err) { console.error('people: box destroy', err); }
+    }
+    // The page record changed (here or on another device): each box hears only a change to its own settings.
+    function tellBoxes() {
+      for (const s of viewSections(pageDoc)) {
+        const slot = boxes.get(s.id);
+        if (!slot) continue;
+        const now = JSON.stringify(s.options?.settings || {});
+        if (now !== slot.seen) { slot.seen = now; slot.st.tell(); }
+      }
+    }
+
     function render() {
       if (!root || torn) return;
       const keepFocus = root.ownerDocument.activeElement;
       const focusAct = keepFocus && root.contains(keepFocus) ? `${keepFocus.dataset?.ppCardKey || ''}|${keepFocus.dataset?.ppAct || ''}` : null;
-      const list = isScreen()
-        ? [selfCard(), incomingHTML(), recommendedHTML(), screenFaces(), moreCard()]
-        : [selfCard(), joinedCards(), incomingHTML(), recommendedHTML(), `<h2 class="pp-h">Your people</h2>`, peopleCards(), connectCard(), moreCard()];
-      const body = root.querySelector('[data-pp-list]');
-      body.innerHTML = list.join('');
+      const list = root.querySelector('[data-pp-list]');
+      const secs = viewSections(pageDoc, { isScreen: isScreen() });
+      root.classList.toggle('pp-editing', editing);
+      // Sections gone from the page: their element, and anything mounted in it.
+      const want = new Set(secs.map((s) => s.id));
+      for (const [id, w] of [...wrappers]) {
+        if (want.has(id)) continue;
+        unmountBox(id); w.remove(); wrappers.delete(id);
+      }
+      let prev = null;
+      for (const s of secs) {
+        let w = wrappers.get(s.id);
+        if (w && w.dataset.ppSecKind !== s.kind) { unmountBox(s.id); w.remove(); wrappers.delete(s.id); w = null; }
+        if (!w) {
+          w = root.ownerDocument.createElement('div');
+          w.className = 'pp-sec';
+          w.dataset.ppSec = s.id;
+          w.dataset.ppSecKind = s.kind;
+          w.innerHTML = '<div class="pp-sec-body" data-pp-sec-edit></div><div class="pp-sec-body" data-pp-sec-body></div>';
+          wrappers.set(s.id, w);
+          if (isBox(s)) boxSkeleton(w, s);
+        }
+        // In order, moving an element only when it is out of place (a box moved is a box reloaded).
+        const at = prev ? prev.nextSibling : list.firstChild;
+        if (at !== w) list.insertBefore(w, at);
+        prev = w;
+        w.classList.toggle('is-edit', editing && s.kind !== 'self');
+        const edit = editing && s.kind !== 'self' ? editBarHTML(s) : '';
+        const editEl = w.querySelector('[data-pp-sec-edit]');
+        if (editEl.dataset.html !== edit) {
+          editEl.innerHTML = edit; editEl.dataset.html = edit;
+          const ta = editEl.querySelector('[data-pp-about-input]');
+          if (ta) {
+            ta.value = aboutText(s.options);
+            const count = editEl.querySelector('[data-pp-about-count]');
+            if (count) count.textContent = EDIT_WORDS.aboutCount(ta.value.length);
+          }
+        }
+        if (isBox(s)) { paintBox(w, s); mountBox(s, w); continue; }
+        const html = sectionHTML(s);
+        const bodyEl = w.querySelector('[data-pp-sec-body]');
+        if (bodyEl.dataset.html !== html) { bodyEl.innerHTML = html; bodyEl.dataset.html = html; }
+      }
       paintCursor();
       if (focusAct) {
         const [k, a] = focusAct.split('|');
         const el = [...root.querySelectorAll('[data-pp-stop]')].find((b) => b.dataset.ppCardKey === k && b.dataset.ppAct === a);
-        try { el?.focus?.({ preventScroll: true }); } catch { /* not focusable */ }
+        try { if (el && el !== root.ownerDocument.activeElement) el.focus?.({ preventScroll: true }); } catch { /* not focusable */ }
       }
+    }
+
+    // ---- editing the page -------------------------------------------------------------------------------
+    async function openPage() {
+      if (pageState || torn) return;
+      const pid = selfId();
+      if (!pid) return;
+      if (pageOpening) return pageOpening;
+      pageOpening = (async () => {
+        let h = null;
+        try {
+          h = makePS(pid, PAGE_KEY, { merge: mergePageDoc, onLost: () => { why = new Map([[editing ? 'edit' : 'self', EDIT_WORDS.lost]]); render(); } });
+        } catch { h = null; }
+        if (!h) return;
+        try { await h.load(); } catch { /* the default page stands; a later poll may still bring theirs */ }
+        if (torn) { try { h.destroy?.(); } catch { /* gone */ } return; }
+        pageState = h;
+        pageDoc = h.get() || {};
+        offPage = h.subscribe?.((v) => { pageDoc = v || {}; tellBoxes(); render(); }) || null;
+        try { h.startPolling?.(); } catch { /* a handle with no polling: this page's own edits still show */ }
+      })().finally(() => { pageOpening = null; });
+      return pageOpening;
+    }
+    // One press, one write, in order (a second press before the first is saved waits for it).
+    function writePage(sections, say = '') {
+      if (!pageState) { why = new Map([[editing ? 'edit' : 'self', EDIT_WORDS.failed]]); render(); return false; }
+      why = say ? new Map([['edit', say]]) : new Map();
+      pageState.set({ sections });
+      pageDoc = pageState.get() || pageDoc;
+      render();
+      saving = saving.then(() => pageState?.flush?.()).catch(() => { why = new Map([['edit', EDIT_WORDS.failed]]); render(); });
+      return true;
+    }
+    function startEditing() {
+      if (!canEdit()) return;
+      editing = true; lastRemoved = null; why = new Map();
+      render();
+      try { root.querySelector('[data-pp-card="edit"] [data-pp-act="page-add"]')?.focus({ preventScroll: true }); } catch { /* not focusable */ }
+    }
+    function stopEditing() {
+      editing = false; lastRemoved = null;
+      clearTimeout(aboutTimer); aboutTimer = null;
+      if (sheet?.kind === 'library') closeSheet({ quiet: true });
+      flushAbout();
+      render();
+    }
+    function addKind(kind) {
+      const entry = libraryEntry(kind);
+      const r = addSection(pageDoc, kind);
+      if (!r.id) return;
+      lastRemoved = null;
+      writePage(r.sections, EDIT_WORDS.added(entry.name));
+      try { wrappers.get(r.id)?.scrollIntoView?.({ block: 'nearest' }); } catch { /* not in a scrolling box */ }
+    }
+    function removeSec(id) {
+      const s = viewSections(pageDoc).find((x) => x.id === id);
+      const r = removeSection(pageDoc, id);
+      if (!r.removed) return;
+      lastRemoved = { ...r.removed, name: s ? sectionName(s) : 'it' };
+      writePage(r.sections, EDIT_WORDS.removed(lastRemoved.name));
+    }
+    function putBack() {
+      if (!lastRemoved) return;
+      const next = restoreSection(pageDoc, lastRemoved);
+      lastRemoved = null;
+      writePage(next);
+    }
+    function moveSec(id, dir) {
+      writePage(moveSection(pageDoc, id, dir));
+      // The pressed button again (it is in the section's edit bar, which moved with it).
+      try { root.querySelector(`[data-pp-edit-for="${CSS.escape(id)}"] [data-pp-act="${dir < 0 ? 'sec-up' : 'sec-down'}"]:not([aria-disabled="true"])`)?.focus({ preventScroll: true }); } catch { /* gone */ }
+    }
+    // A box's own setting, from its edit bar: stored in the section, and the thing in the box told.
+    function setField(id, key, el) {
+      const s = viewSections(pageDoc).find((x) => x.id === id);
+      const f = s ? fieldsOf(s).find((x) => x.key === key) : null;
+      if (!f) return;
+      let v;
+      if (f.kind === 'toggle') v = el.value === '1';
+      else if (f.kind === 'choice') { const o = (f.options || [])[Number(el.value)]; if (!o) return; v = o.value; }
+      else if (f.kind === 'number') { v = Number(el.value); if (!Number.isFinite(v)) return; if (f.min != null) v = Math.max(f.min, v); if (f.max != null) v = Math.min(f.max, v); }
+      else v = String(el.value || '').slice(0, 200);
+      boxes.get(id)?.st.forget(key);
+      writePage(updateSection(pageDoc, id, { settings: { [key]: v } }));
+    }
+    function saveAbout(id, text) {
+      if (!pageState) return;
+      pageState.set({ sections: updateSection(pageDoc, id, { text: String(text || '').slice(0, ABOUT_MAX) }) });
+      pageDoc = pageState.get() || pageDoc;
+      render();
+    }
+    let aboutPending = null;      // { id, text } typed and not yet saved
+    function flushAbout() {
+      if (!aboutPending) return;
+      const p = aboutPending; aboutPending = null;
+      saveAbout(p.id, p.text);
+    }
+    function saveVideo(id) {
+      const input = root.querySelector(`[data-pp-video-link][data-pp-sec-id="${CSS.escape(id)}"]`);
+      const link = String(input?.value || '').trim();
+      if (link && !videoOf({ link })) { why = new Map([[`e:${id}`, EDIT_WORDS.videoBad]]); render(); return; }
+      stopVideo(id);
+      writePage(updateSection(pageDoc, id, { link }));
+    }
+    async function playVideo(id) {
+      const s = viewSections(pageDoc).find((x) => x.id === id);
+      const vid = s ? videoOf(s.options) : null;
+      const w = wrappers.get(id);
+      if (!vid || !w || boxes.has(id)) return;
+      const slot = { inst: null, st: null, kind: 'video', seen: '' };
+      boxes.set(id, slot);
+      const host = w.querySelector('[data-pp-box]');
+      host.style.height = boxHeight(s.options);
+      try {
+        const child = await mountRecommendedVideo(host, { rec: { provider: 'youtube', kind: 'video', id: vid.id }, baseCtx: ctx,
+          instanceId: `${ctx.instanceId || 'people'}-box-${id}` });
+        if (torn || boxes.get(id) !== slot) { child.destroy(); return; }
+        slot.inst = child;
+      } catch (err) {
+        console.error('people: video box', err);
+        boxes.delete(id);
+        host.innerHTML = `<p class="pp-note" style="padding:12px" data-pp-box-failed>${esc(EDIT_WORDS.cannotShow)}</p>`;
+      }
+      render();
+    }
+    function stopVideo(id) {
+      unmountBox(id);
+      const host = wrappers.get(id)?.querySelector('[data-pp-box]');
+      if (host) host.innerHTML = '';
+      render();
+    }
+    // "Add something": the library, in a window over the page.
+    function openLibrary() {
+      const host = openSheet('library', EDIT_WORDS.addTitle, { back: '‹ Back to your page' });
+      const list = addableEntries().map((e) => {
+        const there = !e.repeat && hasKind(pageDoc, e.kind);
+        return `<section class="pp-card" data-pp-lib="${esc(e.kind)}"><div class="pp-name">${esc(e.name)}</div><p class="pp-sub">${esc(e.line)}</p>
+          <div class="pp-btns"><button type="button" class="pp-btn${there ? '' : ' is-go'}" data-pp-lib-add="${esc(e.kind)}"${there ? ` aria-disabled="true" title="${esc(EDIT_WORDS.already)}"` : ''}>
+          ${esc(EDIT_WORDS.addOne)}${there ? `<small>${esc(EDIT_WORDS.already)}</small>` : ''}</button></div></section>`;
+      }).join('');
+      host.innerHTML = `<div class="pp-lib" data-pp-library>${list}</div>`;
+      try { root.scrollTop = 0; } catch { /* not scrolled */ }
+      host.addEventListener('click', (e) => {
+        const b = e.target instanceof Element ? e.target.closest('[data-pp-lib-add]') : null;
+        if (!b || b.getAttribute('aria-disabled') === 'true') return;
+        const kind = b.dataset.ppLibAdd;
+        closeSheet({ quiet: true });
+        addKind(kind);
+      });
+      paintCursor();
+    }
+    function onInput(e) {
+      const t = e.target;
+      if (!(t instanceof Element) || !root?.contains(t)) return;
+      if (t.matches('[data-pp-about-input]')) {
+        const id = t.dataset.ppSecId;
+        const count = t.closest('.pp-field')?.querySelector('[data-pp-about-count]');
+        if (count) count.textContent = EDIT_WORDS.aboutCount(t.value.length);
+        aboutPending = { id, text: t.value };
+        clearTimeout(aboutTimer);
+        aboutTimer = setTimeout(flushAbout, ABOUT_SAVE_MS);
+      }
+    }
+    function onChange(e) {
+      const t = e.target;
+      if (!(t instanceof Element) || !root?.contains(t) || t.closest('[data-pp-sheet-body]')) return;
+      if (t.matches('[data-pp-sec-field]')) setField(t.dataset.ppSecId, t.dataset.ppSecField, t);
+      else if (t.matches('[data-pp-sec-size]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { size: BOX_SIZES[t.value] ? t.value : DEFAULT_BOX_SIZE }));
     }
 
     // ---- the switch -------------------------------------------------------------------------------------
@@ -477,7 +938,19 @@ registerModule(
       why = new Map();
       const pid = (key.startsWith('p:') ? key.slice(2) : '') || el?.closest?.('[data-pp-person]')?.dataset.ppPerson || '';
       const recId = key.startsWith('r:') ? key.slice(2) : '';
+      const secId = key.startsWith('e:') || key.startsWith('s:') ? key.slice(2) : '';
       switch (what) {
+        case 'page-edit': startEditing(); return;
+        case 'page-done': stopEditing(); return;
+        case 'page-add': openLibrary(); return;
+        case 'show-people': addKind('people'); return;
+        case 'put-back': putBack(); return;
+        case 'sec-up': moveSec(secId, -1); return;
+        case 'sec-down': moveSec(secId, 1); return;
+        case 'sec-remove': removeSec(secId); return;
+        case 'video-save': saveVideo(secId); return;
+        case 'video-play': playVideo(secId); return;
+        case 'video-stop': stopVideo(secId); return;
         case 'message': openMessage(pid); return;
         case 'recommend': openRecommend(pid); return;
         case 'rec-play': playRec(recId); return;
@@ -512,14 +985,14 @@ registerModule(
     }
 
     // ---- windows over the page ------------------------------------------------------------------------
-    function openSheet(kind, title) {
+    function openSheet(kind, title, { back = '‹ Back to your people' } = {}) {
       closeSheet({ quiet: true });
       const el = root.ownerDocument.createElement('div');
       el.className = 'pp-sheet';
       el.setAttribute('data-pp-sheet', kind);
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-label', title);
-      el.innerHTML = `<div class="pp-sheet-top"><button type="button" class="pp-btn" data-pp-close>‹ Back to your people</button><b>${esc(title)}</b></div>
+      el.innerHTML = `<div class="pp-sheet-top"><button type="button" class="pp-btn" data-pp-close>${esc(back)}</button><b>${esc(title)}</b></div>
         <div class="pp-sheet-body" data-pp-sheet-body></div>`;
       root.append(el);
       sheet = { kind, title, el, child: null };
@@ -689,6 +1162,8 @@ registerModule(
     }
 
     async function refresh() {
+      // The person may have been found since the page mounted (a screen learning whose it is): their page too.
+      if (!pageState) { await openPage(); if (!torn) render(); }
       await loadPeople();
       if (torn) return;
       render();
@@ -708,8 +1183,14 @@ registerModule(
         mount.append(style, root);
         root.addEventListener('click', onClick);
         root.addEventListener('keydown', onKey);
+        root.addEventListener('input', onInput);
+        root.addEventListener('change', onChange);
         root.addEventListener('pointerdown', () => pokeClose(), { passive: true });
-        try { await ctx.state?.load?.(); } catch { /* a preview, or offline: the defaults stand */ }
+        // The page's settings and the person's own page record, read side by side (one round trip, not two).
+        await Promise.all([
+          (async () => { try { await ctx.state?.load?.(); } catch { /* a preview, or offline: the defaults stand */ } })(),
+          openPage().catch(() => {}),
+        ]);
         if (torn) return;
         prefs = peoplePrefs(ctx.state?.get?.() || {});
         render();
@@ -737,10 +1218,22 @@ registerModule(
       onResize() {},
       onHide() {},
       destroy() {
+        // Something typed in About me and not yet saved is saved now, before the page goes.
+        clearTimeout(aboutTimer);
+        try { flushAbout(); } catch { /* nothing to save */ }
         torn = true;
         clearTimeout(closeTimer); clearInterval(refreshTimer); clearTimeout(armTimer);
         try { sheet?.child?.destroy?.(); } catch { /* gone */ }
         sheet = null;
+        for (const id of [...boxes.keys()]) unmountBox(id);
+        wrappers.clear();
+        try { offPage?.(); } catch { /* gone */ }
+        if (pageState) {
+          const h = pageState; pageState = null;
+          Promise.resolve(saving).then(() => h.flush?.()).catch(() => {}).finally(() => { try { h.destroy?.(); } catch { /* gone */ } });
+        }
+        root?.removeEventListener('input', onInput);
+        root?.removeEventListener('change', onChange);
         for (const off of offs.splice(0)) { try { off(); } catch { /* gone */ } }
         try { offState?.(); } catch { /* gone */ }
         try { avatars?.destroy(); } catch { /* gone */ }
@@ -754,6 +1247,9 @@ registerModule(
         sheet: sheet ? sheet.kind : null, cursor: { ...cursor }, mode: scanModeOf(chooseMode()), isScreen: isScreen(),
         claims: { mine: claimsMine.map((c) => ({ ...c })), given: claimsGiven.map((g) => ({ ...g })), ok: claimsOK, armed: armed ? armed.key : null },
         invite: sheet?.kind === 'invite' ? sheet.child?.__probe?.() || null : null,
+        page: { sections: viewSections(pageDoc, { isScreen: isScreen() }).map((s) => ({ kind: s.kind, id: s.id, known: s.known })), editing,
+          own: Array.isArray(pageDoc?.sections), canEdit: canEdit(), boxes: [...boxes].map(([id, b]) => ({ id, kind: b.kind, mounted: !!b.inst })) },
+        flushPage: () => Promise.resolve(saving).then(() => pageState?.flush?.()),
         stops: (sheet ? sheetStops() : allStops()).map((b) => b.textContent.trim()),
       }),
     };
