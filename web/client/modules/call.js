@@ -779,8 +779,12 @@ registerModule(
       // before; `'stalled'`/`'failed'` now say so.
       // `'elsewhere'` (2026-10-02): another screen of the person took the call or refused it first; the
       // ring stops at once and says so (END_MESSAGES). The transport has already told the caller nothing.
+      // `'unconnected'` (2026-10-04): answered, and the connection never came up within the transport's
+      // connect clock (call_transport.js ANSWER_CONNECT_MS). It never was a call, so it says "could not
+      // connect", not "lost". The transport has already told the caller.
       const b = transport.onEnded?.((reason) =>
-        end(reason === 'stalled' || reason === 'failed' ? 'connection-lost'
+        end(reason === 'unconnected' ? 'failed'
+          : reason === 'stalled' || reason === 'failed' ? 'connection-lost'
           : reason === 'elsewhere' ? 'elsewhere' : 'remote'));
       for (const off of [a, b]) if (typeof off === 'function') transportOffs.push(off);
     }
