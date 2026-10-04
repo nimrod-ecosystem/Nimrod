@@ -5125,6 +5125,9 @@ export async function mountKiosk(root, {
       // ACCOUNT's, kept on the server, not this browser's -- and a level is a press away on every lap. AGAINST
       // People: that tab is who the screen is for, not what it connects to. Not at "Just the essentials".
       ...(complexity() !== 'essential' ? tagged([pageRow('claude', { isScreen: !embedded })], 'devices', 3) : []),
+      // (2026-10-04: the song and video search keys, 93074ff, beside Claude for the same reason: something this
+      // site talks to, with a key kept on the server. Until now only the recommend window linked to it.)
+      ...(complexity() !== 'essential' ? tagged([pageRow('search', { isScreen: !embedded })], 'devices', 3) : []),
       ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
