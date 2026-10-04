@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>pack_reviews — review by playing — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#page{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>pack_reviews — review by playing</h1>
+<p>Mike, 2026-10-03: <i>"Can I just play through and pass them? Maybe even play with [the person the screen is
+for] and just say if any are wrong?"</i> Unreviewed packs play only with the setting on; a question played
+through passes; ✗ (pointer, W, voice, a bound switch) flags it for good; the review page lists the flagged
+ones and exports them. Uses its own fixture pack (<code>dev/review_fixture_pack.json</code>) and, at the end,
+reads whatever really waits in <code>packs_review/</code>.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="page"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import '../modules/trivia.js';
+import {
+  reviewsFrom, packProgress, playableBank, reviewPackOptions, flaggedList, exportFlagged, topicName,
+  missingReviewBindings, REVIEW_KEY_BINDINGS, REVIEW_STATUS, REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC,
+  createPackReviews, listUnreviewedPacks, loadReviewPack, reviewKey, isReviewPackId, REVIEWS_URL,
+} from '../pack_reviews.js';
+import { mountReviewPage } from '../review_page.js';
+import { createDefaultRegistry } from '../actions.js';
+import { createInputBus } from '../input.js';
+import { attachSpeech, routeFor, routeAction, duplicatePhrases, SPEECH_BINDINGS, normalize, ROUTES } from '../input_speech.js';
+import { fieldsFor } from '../settings_fields.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const FIXTURE = { id: 'review:fixture', file: 'review_fixture_pack.json', url: '/dev/review_fixture_pack.json',
+  kind: 'trivia', name: 'Fixture colours (AI-written, not yet reviewed)', count: 5 };
+const fixturePack = await loadReviewPack(FIXTURE);
+const Q = fixturePack.items.map((it) => ({ question: it.question, answer: it.correct, key: reviewKey(it.question, it.correct) }));
+
+// The ACCOUNT's log, faked: `rows` is shared between every handle given the same array — two handles on one
+// array are two screens of one account. The server stamps by/at; so does this.
+function fakeLog(rows) {
+  const subs = new Set();
+  return {
+    load: async () => {}, get: () => ({ events: rows }),
+    append: async (kind, data) => {
+      rows.push({ id: rows.length + 1, kind, data: { ...data, by: 'Tester', at: `2026-10-03T12:00:${String(rows.length).padStart(2, '0')}Z` } });
+      for (const fn of [...subs]) fn();
+    },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    startPolling() {}, destroy() {},
+  };
+}
+const handleOn = (rows, bus = null) => createPackReviews({ events: fakeLog(rows), bus, listPacks: async () => [FIXTURE] });
+
+const BANK_TEXT = 'Bank question one? | A | B | C | D\nBank question two? | E | F | G | H\nBank question three? | I | J | K | L\nBank question four? | M | N | O | P';
+function rig({ rows = [], saved = {}, reviews = undefined } = {}) {
+  const host = document.getElementById('host');
+  host.innerHTML = '';
+  const bus = createBus();
+  const stored = { contentSource: 'pack', packId: FIXTURE.id, bankText: BANK_TEXT, roundLength: 10, ...saved };
+  const quiet = { get: () => ({}), set() {}, flush: async () => {}, load: async () => {}, startPolling() {},
+    subscribe: () => () => {}, destroy() {} };
+  const handle = reviews === undefined ? handleOn(rows, bus) : reviews;
+  const inst = mountModule('trivia', {
+    mount: host, bus, rand: () => 0,
+    makeState: () => quiet,
+    state: { get: () => stored, set() {}, flush() {}, subscribe: (fn) => { fn(stored); return () => {}; } },
+    makeEvents: (name) => ({ name, append: async () => {}, load: async () => {}, get: () => ({ events: [] }),
+      subscribe: () => () => {}, startPolling() {}, destroy() {} }),
+    ...(handle ? { makePackReviews: () => handle } : {}),
+  });
+  inst.init();
+  return { inst, host, bus, handle, probe: () => inst.impl.__probe(),
+    shown: () => inst.impl.__probe().question?.question || '',
+    answer() { const p = inst.impl.__probe(); host.querySelector(`[data-opt="${p.question.correctIndex}"]`).click(); } };
+}
+const settle = async (r) => { if (r.handle) await r.handle.ready; await sleep(40); };
+const kinds = (rows) => rows.map((e) => e.kind);
+const isFixtureQ = (text) => text.startsWith('Fixture:');
+
+(async () => {
+try {
+  section('the rule, as a fold over the log');
+  {
+    const k = 'c-k1';
+    const ev = (kind, extra = {}) => ({ kind, data: { key: k, question: 'Q?', answer: 'A', ...extra } });
+    const seqOf = (...list) => list.map((e, i) => ({ id: i + 1, ...e }));
+    check('nothing said: open', (reviewsFrom([]).get(k)?.status || 'open') === REVIEW_STATUS.OPEN);
+    check('a pass passes', reviewsFrom(seqOf(ev('pass'))).get(k).status === REVIEW_STATUS.PASSED);
+    check('*** a flag beats a pass, whichever came first ***',
+      reviewsFrom(seqOf(ev('pass'), ev('flag'))).get(k).status === REVIEW_STATUS.FLAGGED
+      && reviewsFrom(seqOf(ev('flag'), ev('pass'))).get(k).status === REVIEW_STATUS.FLAGGED);
+    const fixed = reviewsFrom(seqOf(ev('flag', { note: 'wrong year' }), { kind: 'unflag', data: { key: k } }));
+    check('"Fixed - ask it again" puts it back to OPEN (it is reviewed again), keeping the notes as history',
+      fixed.get(k).status === REVIEW_STATUS.OPEN && fixed.get(k).notes.length === 1);
+    const noted = reviewsFrom(seqOf(ev('flag'), { kind: 'note', data: { key: k, note: 'it is 1803' } }));
+    check('a note after a flag is kept, with who wrote it', noted.get(k).notes[0].note === 'it is 1803');
+    check('the order is the server ids, not the array order',
+      reviewsFrom([{ id: 2, ...ev('pass') }, { id: 1, ...ev('flag') }]).get(k).status === REVIEW_STATUS.FLAGGED);
+  }
+
+  section('a pack: what plays, what is offered');
+  {
+    const m = reviewsFrom([{ id: 1, kind: 'pass', data: { key: Q[0].key, question: Q[0].question } },
+                           { id: 2, kind: 'flag', data: { key: Q[1].key, question: Q[1].question } }]);
+    const p = packProgress(fixturePack, m);
+    check('progress counts passed / flagged / open', p.total === 5 && p.passed === 1 && p.flagged === 1 && p.open === 3 && !p.reviewed);
+    const off = playableBank(fixturePack, m, { includeUnreviewed: false, packId: FIXTURE.id });
+    const on = playableBank(fixturePack, m, { includeUnreviewed: true, packId: FIXTURE.id });
+    check('*** setting OFF: only passed questions play ***', off.length === 1 && off[0].question === Q[0].question);
+    check('setting ON: passed and open play, each open one marked open', on.length === 4
+      && on.filter((b) => b.review.status === 'open').length === 3);
+    check('*** a flagged question plays in neither ***', ![...off, ...on].some((b) => b.question === Q[1].question));
+    check('a played item keeps its pack id and key', on[0].review.packId === FIXTURE.id && on[0].review.key === Q[0].key);
+    const packs = new Map([[FIXTURE.id, fixturePack]]);
+    const none = reviewsFrom([]);
+    check('*** setting OFF and nothing passed: the pack is not offered at all ***',
+      reviewPackOptions([FIXTURE], packs, none, { includeUnreviewed: false }).length === 0);
+    check('setting OFF, one passed: offered by its topic as its reviewed questions',
+      reviewPackOptions([FIXTURE], packs, m)[0]?.label === 'Fixture colours — 1 reviewed question',
+      JSON.stringify(reviewPackOptions([FIXTURE], packs, m)));
+    check('setting ON: offered, saying how many are left',
+      /reviewing: 3 of 5 left/.test(reviewPackOptions([FIXTURE], packs, m, { includeUnreviewed: true })[0]?.label || ''));
+    check('the "(AI-written, not yet reviewed)" tail is dropped from labels', topicName(fixturePack.name) === 'Fixture colours');
+    const all = reviewsFrom(Q.map((q, i) => ({ id: i + 1, kind: i === 4 ? 'flag' : 'pass', data: { key: q.key, question: q.question } })));
+    check('*** a pack is REVIEWED once every question passed or was flagged ***', packProgress(fixturePack, all).reviewed);
+    check('isReviewPackId knows its own ids', isReviewPackId(FIXTURE.id) && !isReviewPackId('maths_basic'));
+  }
+
+  section('the flagged list and "Export flagged"');
+  {
+    const m = reviewsFrom([
+      { id: 1, kind: 'flag', data: { key: Q[2].key, question: Q[2].question, answer: Q[2].answer, by: 'Mike', at: '2026-10-03T10:00:00Z' } },
+      { id: 2, kind: 'note', data: { key: Q[2].key, note: 'snow can be other colours', by: 'Mike' } },
+      { id: 3, kind: 'flag', data: { key: 'c-gone', question: 'An old question?', answer: 'X', at: '2026-10-02T09:00:00Z' } },
+    ]);
+    const list = flaggedList([FIXTURE], new Map([[FIXTURE.id, fixturePack]]), m);
+    check('flagged questions are listed with their notes and options',
+      list.some((f) => f.key === Q[2].key && f.notes[0].note === 'snow can be other colours' && f.answers.length === 4));
+    check('*** a flag whose question no pack still holds is still listed (nothing flagged silently vanishes) ***',
+      list.some((f) => f.key === 'c-gone' && f.orphan));
+    const text = exportFlagged(list, { now: new Date('2026-10-03T12:00:00Z') });
+    check('the export names the pack file, the question, the right answer marked, and what is wrong',
+      text.includes('/dev/review_fixture_pack.json') && text.includes(Q[2].question)
+      && text.includes('Marked right: White') && text.includes("What's wrong: snow can be other colours (Mike)"), text);
+    check('...and says how many, and when', text.startsWith('Flagged questions (2), exported 2026-10-03.'));
+  }
+
+  section('keyboard, voice and switch: one action each way');
+  {
+    const reg = createDefaultRegistry();
+    check('the two review actions are registered (a switch can be bound to either in Devices)',
+      reg.has('review/wrong') && reg.has('review/fine') && reg.get('review/wrong').topic === REVIEW_FLAG_TOPIC);
+    check('*** said: "that one is wrong", "that one\'s wrong", "that\'s wrong", "question wrong" all press review/wrong ***',
+      ['that one is wrong', "That one's wrong.", "that's wrong", 'question wrong'].every((p) => routeFor(p) === 'review-wrong')
+      && routeAction('review-wrong') === 'review/wrong', ['that one is wrong', "that's wrong"].map(routeFor).join());
+    check('"question is fine" presses review/fine; bare "that\'s fine" does nothing', routeFor('question is fine') === 'review-fine'
+      && routeFor("that's fine") === null);
+    check('no review phrase collides with any other phrase, and each is plain words, four at most',
+      duplicatePhrases().length === 0 && ROUTES['review-wrong'].phrases.every((p) => p === normalize(p) && p.split(' ').length <= 4),
+      JSON.stringify(duplicatePhrases()));
+    check('"that one" alone is still select (whole utterances)', routeFor('that one') === null);
+    const bus = createBus();
+    const flags = []; const fines = [];
+    bus.subscribe(REVIEW_FLAG_TOPIC, () => flags.push(1));
+    bus.subscribe(REVIEW_PASS_TOPIC, () => fines.push(1));
+    const input = createInputBus({ bus, actions: reg });
+    [...SPEECH_BINDINGS, ...REVIEW_KEY_BINDINGS].forEach((b) => input.addBinding(b));
+    input.down('keyboard', 'key:w'); input.up('keyboard', 'key:w');
+    input.down('keyboard', 'key:o'); input.up('keyboard', 'key:o');
+    check('*** the W key flags and the O key passes (through the input bus, like any binding) ***',
+      flags.length === 1 && fines.length === 1, `${flags.length}/${fines.length}`);
+    let feed = null;
+    const sp = attachSpeech(input, { recognizer: { start(cb) { feed = cb; this.running = true; }, stop() {}, running: false }, confirm: 'off' });
+    sp.start();
+    feed("Computer please, that one's wrong.");
+    check('*** end to end: "computer please, that one\'s wrong" publishes review/flag ***', flags.length === 2, String(flags.length));
+    sp.destroy(); input.destroy();
+    const saved = [{ device: 'keyboard', control: 'key:w', actionId: 'verb/next' }, { device: 'switch', control: 'b1', actionId: 'review/fine' }];
+    check('a saved record keeps what it set up: W already used and "fine" already bound are not added again',
+      missingReviewBindings(saved).length === 0 && missingReviewBindings([]).length === 2);
+  }
+
+  section('*** setting OFF: unreviewed questions are never shown ***');
+  {
+    const rows = [];
+    const r = rig({ rows, saved: { includeUnreviewed: false } });
+    await settle(r);
+    check('the review pack with nothing passed falls back to the bank: no fixture question is dealt',
+      r.probe().bank === 4 && !isFixtureQ(r.shown()), r.shown());
+    check('no review control anywhere', !r.host.querySelector('[data-review]'));
+    check('the pack is not offered under "Which pack"', !('packId' in r.inst.impl.settingsChoices()));
+    for (let i = 0; i < 4; i++) { r.answer(); r.bus.publish('trivia/next'); }
+    check('playing on writes nothing to the review log', rows.length === 0);
+    check('the setting exists, off by default, labelled as Mike asked',
+      fieldsFor(getManifest('trivia')).some((f) => f.key === 'includeUnreviewed' && f.default === false
+        && f.label === 'Include unreviewed questions (review as you play)'));
+    r.inst.destroy();
+  }
+
+  section('*** setting ON: unreviewed questions shown, with the control ***');
+  {
+    const rows = [];
+    const r = rig({ rows, saved: { includeUnreviewed: true } });
+    await settle(r);
+    check('the fixture questions are dealt', r.probe().bank === 5 && isFixtureQ(r.shown()), r.shown());
+    check('*** the quiet review control is on screen: ✓ fine and ✗ wrong ***',
+      !!r.host.querySelector('[data-review-fine]') && !!r.host.querySelector('[data-review-wrong]'));
+    check('the pack is offered under "Which pack", with how many are left',
+      (r.inst.impl.settingsChoices().packId || []).some((o) => o.value === FIXTURE.id && /5 of 5 left/.test(o.label)));
+    check('*** the control is not a stop in the player\'s walk: next walks only the answers ***', (() => {
+      const seen = new Set();
+      for (let i = 0; i < 8; i++) { r.bus.publish('trivia/next'); seen.add(r.probe().highlight); }
+      return [...seen].every((h) => h >= 0 && h < 4) && r.probe().reviewMark === null;
+    })());
+
+    section('✓ fine, by pointer');
+    const first = r.shown();
+    r.host.querySelector('[data-review-fine]').click();
+    await sleep(10);
+    check('✓ writes a pass for that question, at once', kinds(rows).join() === 'pass' && rows[0].data.question === first
+      && rows[0].data.pack === FIXTURE.id, JSON.stringify(rows));
+    check('...says so quietly, and leaves the question in play', /Marked fine/.test(r.host.querySelector('[data-review]').textContent)
+      && r.shown() === first && r.probe().answered === null);
+    r.answer(); r.bus.publish('trivia/next');
+    check('moving on after ✓ does not write a second pass', kinds(rows).join() === 'pass');
+
+    section('passing by playing through');
+    const second = r.shown();
+    r.answer();
+    check('answering does not pass it yet (the reviewer can still press ✗ with the answer showing)', rows.length === 1);
+    r.bus.publish('trivia/next');
+    check('*** answered and moved on, nobody pressed ✗: passed ***', rows.length === 2 && rows[1].kind === 'pass'
+      && rows[1].data.question === second);
+    const third = r.shown();
+    r.bus.publish('trivia/skip');
+    check('skipped without answering: NOT passed (it was not looked at)', rows.length === 2, kinds(rows).join());
+
+    section('✗ wrong, by pointer, with a note');
+    const fourth = r.shown();
+    check('(the next question still carries the control)', !!r.host.querySelector('[data-review-wrong]') && fourth !== third);
+    r.host.querySelector('[data-review-wrong]').click();
+    await sleep(10);
+    check('✗ writes a flag at once', rows.at(-1).kind === 'flag' && rows.at(-1).data.question === fourth);
+    check('...and offers an optional "what is wrong" note', !!r.host.querySelector('[data-review-note]'));
+    r.host.querySelector('[data-review-note]').value = 'two of these are right';
+    r.host.querySelector('[data-review-save]').click();
+    await sleep(10);
+    check('the note is saved against that question', rows.at(-1).kind === 'note' && rows.at(-1).data.note === 'two of these are right'
+      && rows.at(-1).data.key === reviewKey(fourth, rows.at(-2).data.answer));
+    check('the question stays on screen for the player (the verdict is the reviewer\'s, not theirs)', r.shown() === fourth);
+    r.answer(); r.bus.publish('trivia/next');
+    check('*** a flagged question is not passed by playing it through afterwards ***',
+      rows.filter((e) => e.data.question === fourth).every((e) => e.kind !== 'pass'));
+
+    section('✗ by the action (what the W key, the phrase and a bound switch all press)');
+    const fifth = r.shown();
+    r.bus.publish(REVIEW_FLAG_TOPIC);
+    await sleep(10);
+    check('*** review/flag flags the question on screen ***', rows.at(-1).kind === 'flag' && rows.at(-1).data.question === fifth,
+      JSON.stringify(rows.at(-1)));
+    r.bus.publish(REVIEW_FLAG_TOPIC);
+    await sleep(10);
+    check('pressed again, nothing more is written', rows.filter((e) => e.kind === 'flag' && e.data.question === fifth).length === 1);
+    r.inst.destroy();
+
+    section('*** a flagged question is never shown again ***');
+    const r2 = rig({ rows, saved: { includeUnreviewed: true } });
+    await settle(r2);
+    const flaggedQs = rows.filter((e) => e.kind === 'flag').map((e) => e.data.question);
+    const dealt = new Set();
+    for (let i = 0; i < 12; i++) { dealt.add(r2.shown()); r2.bus.publish('trivia/skip'); }
+    check('a new panel on the same account deals neither flagged question, round after round',
+      flaggedQs.length === 2 && flaggedQs.every((q) => !dealt.has(q)) && r2.probe().bank === 3, [...dealt].join(' / '));
+    check('...and passed ones play without the control', (() => {
+      for (let i = 0; i < 6; i++) {
+        const s = r2.shown();
+        const passedQ = rows.some((e) => e.kind === 'pass' && e.data.question === s);
+        if (passedQ) return !r2.host.querySelector('[data-review]');
+        r2.bus.publish('trivia/skip');
+      }
+      return false;
+    })());
+    r2.inst.destroy();
+
+    section('*** promotion: passed questions play with the setting OFF ***');
+    const r3 = rig({ rows, saved: { includeUnreviewed: false } });
+    await settle(r3);
+    const passedQs = new Set(rows.filter((e) => e.kind === 'pass').map((e) => e.data.question));
+    check('the pack plays ONLY its passed questions, with no control', r3.probe().bank === passedQs.size
+      && passedQs.has(r3.shown()) && !r3.host.querySelector('[data-review]'), `${r3.probe().bank} ${r3.shown()}`);
+    check('"Which pack" offers it as its reviewed questions',
+      (r3.inst.impl.settingsChoices().packId || []).some((o) => o.value === FIXTURE.id && /— 2 reviewed questions$/.test(o.label)),
+      JSON.stringify(r3.inst.impl.settingsChoices()));
+    r3.inst.destroy();
+
+    section('the review page');
+    const page = document.getElementById('page');
+    let copiedText = '';
+    const pg = mountReviewPage(page, { reviews: handleOn(rows), now: () => new Date('2026-10-03T13:00:00Z'),
+      copy: async (t) => { copiedText = t; } });
+    await sleep(40);
+    check('it lists the pack with its counts', /Fixture colours/.test(page.querySelector('[data-rv-pack]')?.textContent || ''));
+    check('*** it lists the flagged questions with their notes ***', page.querySelectorAll('[data-rv-flag]').length === 2
+      && /two of these are right/.test(page.textContent));
+    check('it says plainly that playing is the real check (a named source is not)', /real check/.test(page.textContent)
+      && /from memory/.test(page.textContent));
+    page.querySelector('[data-rv-export]').click();
+    await sleep(20);
+    check('*** "Export flagged" gives the text to paste to Code, and copies it ***',
+      pg.exportText().includes(fourth) && pg.exportText().includes('two of these are right') && copiedText === pg.exportText()
+      && !!page.querySelector('[data-rv-export-text]'));
+    page.querySelector(`[data-rv-unflag]`).click();
+    await sleep(20);
+    check('"Fixed — ask it again" writes an unflag, and the list shrinks', rows.at(-1).kind === 'unflag'
+      && page.querySelectorAll('[data-rv-flag]').length === 1);
+    const all = [...rows];
+    for (const q of Q) if (!reviewsFrom(all).get(q.key) || reviewsFrom(all).get(q.key).status === 'open') {
+      all.push({ id: all.length + 1, kind: 'pass', data: { key: q.key, question: q.question } });
+    }
+    const pg2 = mountReviewPage(page, { reviews: handleOn(all) });
+    await sleep(40);
+    check('a pack with nothing left open says Reviewed', !!page.querySelector('[data-rv-reviewed]'));
+    void pg2;
+  }
+
+  section('per account');
+  {
+    check('the client writes to the ACCOUNT\'s log (one per account, not per screen or person)', REVIEWS_URL === '/api/account/reviews');
+    const a = []; const b = [];
+    const ra = rig({ rows: a, saved: { includeUnreviewed: true } });
+    await settle(ra);
+    ra.host.querySelector('[data-review-wrong]').click();
+    await sleep(10);
+    ra.inst.destroy();
+    const rb = rig({ rows: b, saved: { includeUnreviewed: true } });
+    await settle(rb);
+    check('another account (its own log) still has all five questions', rb.probe().bank === 5 && a.length === 1 && b.length === 0);
+    rb.inst.destroy();
+    const rn = rig({ reviews: null, saved: { includeUnreviewed: true } });
+    await sleep(20);
+    check('a host with no reviews: the review pack falls back to the bank, no control, nothing breaks',
+      rn.probe().bank === 4 && !rn.host.querySelector('[data-review]'));
+    rn.inst.destroy();
+  }
+
+  section('what really waits for review (the server, packs_review/)');
+  {
+    const real = await listUnreviewedPacks();
+    check(`the server lists the packs waiting (${real.length})`, real.length >= 1, 'run against the server');
+    let good = 0;
+    for (const e of real) { try { await loadReviewPack(e); good += 1; } catch (err) { check(`${e.url} loads`, false, err.message); } }
+    check('every listed pack is served and passes packs.js validation', good === real.length && good > 0);
+    check('every one is a trivia pack (only Trivia reads packs)', real.every((e) => e.kind === 'trivia'));
+  }
+} catch (err) {
+  check('the suite ran to the end', false, `${err.name}: ${err.message}\n${err.stack}`);
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})();
+</script>
+</body>
+</html>

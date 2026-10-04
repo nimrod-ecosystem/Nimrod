@@ -1,0 +1,53 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "US states (AI-written, not yet reviewed)",
+  "description": "34 questions on US states, written by Claude. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-03, from its own knowledge: no API call and no source document. NOT checked against a source.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-03",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {"question": "Which state is called the Sunshine State?", "answers": ["Florida", "California", "Texas", "Arizona"], "correct": "Florida", "difficulty": "easy", "category": "US states", "explain": "Florida's nickname is the Sunshine State.", "ai_written": true},
+    {"question": "Which is the largest state by area?", "answers": ["Alaska", "Texas", "California", "Montana"], "correct": "Alaska", "difficulty": "easy", "category": "US states", "explain": "Alaska is more than twice the size of Texas.", "ai_written": true},
+    {"question": "Which is the smallest state by area?", "answers": ["Rhode Island", "Delaware", "Connecticut", "Vermont"], "correct": "Rhode Island", "difficulty": "medium", "category": "US states", "explain": "Rhode Island is the smallest state; Delaware is second smallest.", "ai_written": true},
+    {"question": "What is the capital of Texas?", "answers": ["Austin", "Dallas", "Houston", "San Antonio"], "correct": "Austin", "difficulty": "medium", "category": "US states", "explain": "Austin is the capital, though Houston is the biggest city.", "ai_written": true},
+    {"question": "What is the capital of California?", "answers": ["Sacramento", "Los Angeles", "San Francisco", "San Diego"], "correct": "Sacramento", "difficulty": "medium", "category": "US states", "explain": "Sacramento is California's capital.", "ai_written": true},
+    {"question": "Which state is made up of islands in the Pacific Ocean?", "answers": ["Hawaii", "Alaska", "Florida", "Oregon"], "correct": "Hawaii", "difficulty": "easy", "category": "US states", "explain": "Hawaii is a chain of islands in the middle of the Pacific.", "ai_written": true},
+    {"question": "Which state is called the Empire State?", "answers": ["New York", "Pennsylvania", "Ohio", "New Jersey"], "correct": "New York", "difficulty": "medium", "category": "US states", "explain": "New York is the Empire State, like the famous building.", "ai_written": true},
+    {"question": "The Grand Canyon is in which state?", "answers": ["Arizona", "Nevada", "Utah", "Colorado"], "correct": "Arizona", "difficulty": "medium", "category": "US states", "explain": "The Grand Canyon National Park is in northern Arizona.", "ai_written": true},
+    {"question": "Mount Rushmore is in which state?", "answers": ["South Dakota", "North Dakota", "Wyoming", "Montana"], "correct": "South Dakota", "difficulty": "medium", "category": "US states", "explain": "Mount Rushmore is in the Black Hills of South Dakota.", "ai_written": true},
+    {"question": "Which state is famous for its potatoes?", "answers": ["Idaho", "Iowa", "Georgia", "Utah"], "correct": "Idaho", "difficulty": "easy", "category": "US states", "explain": "Idaho grows more potatoes than any other state.", "ai_written": true},
+    {"question": "Which state is called the Peach State?", "answers": ["Georgia", "Alabama", "South Carolina", "Tennessee"], "correct": "Georgia", "difficulty": "medium", "category": "US states", "explain": "Georgia's nickname is the Peach State.", "ai_written": true},
+    {"question": "What is the capital of New York State?", "answers": ["Albany", "New York City", "Buffalo", "Rochester"], "correct": "Albany", "difficulty": "medium", "category": "US states", "explain": "Albany, on the Hudson River, is the state capital.", "ai_written": true},
+    {"question": "Which state is called the Lone Star State?", "answers": ["Texas", "Oklahoma", "Nevada", "Arizona"], "correct": "Texas", "difficulty": "easy", "category": "US states", "explain": "Texas has a single star on its flag, so it is the Lone Star State.", "ai_written": true},
+    {"question": "The city of Chicago is in which state?", "answers": ["Illinois", "Michigan", "Indiana", "Wisconsin"], "correct": "Illinois", "difficulty": "easy", "category": "US states", "explain": "Chicago is the largest city in Illinois.", "ai_written": true},
+    {"question": "Which state is called the Golden State?", "answers": ["California", "Nevada", "Colorado", "Oregon"], "correct": "California", "difficulty": "medium", "category": "US states", "explain": "California is the Golden State, a name from its gold rush.", "ai_written": true},
+    {"question": "The Liberty Bell is in which state?", "answers": ["Pennsylvania", "Massachusetts", "Virginia", "New York"], "correct": "Pennsylvania", "difficulty": "medium", "category": "US states", "explain": "The Liberty Bell is in Philadelphia, Pennsylvania.", "ai_written": true},
+    {"question": "Las Vegas is in which state?", "answers": ["Nevada", "Arizona", "California", "Utah"], "correct": "Nevada", "difficulty": "easy", "category": "US states", "explain": "Las Vegas is the biggest city in Nevada.", "ai_written": true},
+    {"question": "Which state is shaped like a mitten?", "answers": ["Michigan", "Wisconsin", "Minnesota", "Ohio"], "correct": "Michigan", "difficulty": "medium", "category": "US states", "explain": "Michigan's lower half looks like a mitten on the map.", "ai_written": true},
+    {"question": "How many states are there in the United States?", "answers": ["Fifty", "Forty-eight", "Fifty-two", "Forty-five"], "correct": "Fifty", "difficulty": "easy", "category": "US states", "explain": "There have been fifty states since 1959.", "ai_written": true},
+    {"question": "Which was the fiftieth and last state to join?", "answers": ["Hawaii", "Alaska", "Arizona", "New Mexico"], "correct": "Hawaii", "difficulty": "medium", "category": "US states", "explain": "Hawaii became the fiftieth state in August 1959, a few months after Alaska.", "ai_written": true},
+    {"question": "What is the capital of Florida?", "answers": ["Tallahassee", "Miami", "Orlando", "Tampa"], "correct": "Tallahassee", "difficulty": "medium", "category": "US states", "explain": "Tallahassee, in the north of the state, is Florida's capital.", "ai_written": true},
+    {"question": "The city of Seattle is in which state?", "answers": ["Washington", "Oregon", "California", "Idaho"], "correct": "Washington", "difficulty": "easy", "category": "US states", "explain": "Seattle is the largest city in Washington State.", "ai_written": true},
+    {"question": "Which state is called the Green Mountain State?", "answers": ["Vermont", "New Hampshire", "Maine", "Colorado"], "correct": "Vermont", "difficulty": "medium", "category": "US states", "explain": "Vermont is named for its Green Mountains; the name comes from French for green mountain.", "ai_written": true},
+    {"question": "What is the capital of Massachusetts?", "answers": ["Boston", "Springfield", "Worcester", "Salem"], "correct": "Boston", "difficulty": "medium", "category": "US states", "explain": "Boston is both the capital and the largest city.", "ai_written": true},
+    {"question": "Which state is called the Bluegrass State?", "answers": ["Kentucky", "Tennessee", "Virginia", "Missouri"], "correct": "Kentucky", "difficulty": "medium", "category": "US states", "explain": "Kentucky is the Bluegrass State, after a grass that grows there.", "ai_written": true},
+    {"question": "Which state is called the Show Me State?", "answers": ["Missouri", "Kansas", "Arkansas", "Iowa"], "correct": "Missouri", "difficulty": "medium", "category": "US states", "explain": "Missouri's nickname is the Show Me State.", "ai_written": true},
+    {"question": "Nashville, a home of country music, is in which state?", "answers": ["Tennessee", "Kentucky", "Texas", "Georgia"], "correct": "Tennessee", "difficulty": "easy", "category": "US states", "explain": "Nashville is the capital of Tennessee.", "ai_written": true},
+    {"question": "Which state is called the Garden State?", "answers": ["New Jersey", "New York", "Delaware", "Maryland"], "correct": "New Jersey", "difficulty": "medium", "category": "US states", "explain": "New Jersey is the Garden State.", "ai_written": true},
+    {"question": "Most of Yellowstone National Park is in which state?", "answers": ["Wyoming", "Montana", "Idaho", "Colorado"], "correct": "Wyoming", "difficulty": "medium", "category": "US states", "explain": "Nearly all of Yellowstone is in Wyoming, with small edges in Montana and Idaho.", "ai_written": true},
+    {"question": "What is the capital of Ohio?", "answers": ["Columbus", "Cleveland", "Cincinnati", "Dayton"], "correct": "Columbus", "difficulty": "medium", "category": "US states", "explain": "Columbus, in the middle of the state, is Ohio's capital.", "ai_written": true},
+    {"question": "Which state is called the Beehive State?", "answers": ["Utah", "Idaho", "Colorado", "Nevada"], "correct": "Utah", "difficulty": "medium", "category": "US states", "explain": "Utah is the Beehive State; a beehive is on its flag.", "ai_written": true},
+    {"question": "The city of New Orleans is in which state?", "answers": ["Louisiana", "Mississippi", "Alabama", "Texas"], "correct": "Louisiana", "difficulty": "easy", "category": "US states", "explain": "New Orleans is the largest city in Louisiana.", "ai_written": true},
+    {"question": "What is the capital of Colorado?", "answers": ["Denver", "Boulder", "Aspen", "Colorado Springs"], "correct": "Denver", "difficulty": "easy", "category": "US states", "explain": "Denver, the Mile High City, is Colorado's capital.", "ai_written": true},
+    {"question": "Which state is in the far top right corner of the map of the lower 48 states?", "answers": ["Maine", "Vermont", "New Hampshire", "New York"], "correct": "Maine", "difficulty": "medium", "category": "US states", "explain": "Maine is the state farthest to the northeast in the lower 48.", "ai_written": true}
+  ]
+}

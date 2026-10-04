@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nimrod — Questions waiting for review</title>
+<link rel="icon" type="image/svg+xml" href="/design-assets/nimrod-mark-favicon.svg">
+<link rel="stylesheet" href="./layers.css">
+<style id="rv-style"></style>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:24px 16px}
+  .rv-foot{max-width:46rem;margin:16px auto 0;font-size:.9rem;color:var(--text-muted)}
+  .rv-foot a{color:var(--link)}
+</style>
+</head>
+<body>
+<!--
+  THE REVIEW PAGE (review_page.js, pack_reviews.js). Which question packs wait for review, how far each has
+  got, and every question marked wrong while playing, with its note and "Export flagged". Its own page,
+  like claude.html. Colours come only from the theme (theme.js applyTheme), never from this file.
+-->
+<main id="root"></main>
+<p class="rv-foot"><a href="/home.html">Your dashboards</a></p>
+<script type="module">
+  import { mountReviewPage, REVIEW_PAGE_STYLE } from './review_page.js';
+  import { createPackReviews } from './pack_reviews.js';
+  import { createProfilesClient, resolveTheme } from './profile.js';
+  import { applyTheme, DEFAULT_THEME } from './theme.js';
+  import { authHeaders } from './auth.js';
+
+  applyTheme(document.documentElement, DEFAULT_THEME);
+  document.getElementById('rv-style').textContent = REVIEW_PAGE_STYLE;
+  (async () => {
+    try {
+      const me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null));
+      if (!me) return;
+      const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
+      if (theme) applyTheme(document.documentElement, theme);
+    } catch { /* offline or signed out -- the default theme already stands */ }
+  })();
+  const reviews = createPackReviews({});
+  reviews.startPolling();
+  mountReviewPage(document.getElementById('root'), { reviews });
+</script>
+</body>
+</html>

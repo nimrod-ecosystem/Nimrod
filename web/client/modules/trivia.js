@@ -80,6 +80,8 @@ import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { answerMarkHtml } from '../answer_mark.js';
+import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_TOPIC,
+         REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC } from '../pack_reviews.js';
 
 export const GAME = 'trivia';
 
@@ -130,6 +132,11 @@ export const DEFAULTS = {
   // itself ("Where questions come from" -> "Written questions"), not reverting this.
   contentSource: 'pack',
   packId: packsFor('trivia')[0]?.id || null,
+  // *** REVIEW BY PLAYING (Mike, 2026-10-03; ../pack_reviews.js). OFF BY DEFAULT. *** Off, an unreviewed
+  // question is never dealt and an unreviewed pack is not even offered; only questions somebody already
+  // passed play (as "<topic> — N reviewed questions"). On, the review packs join "Which pack" and their
+  // open questions carry a quiet ✓ fine / ✗ wrong for whoever is reviewing.
+  includeUnreviewed: false,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -297,6 +304,21 @@ const SETTINGS = [
       level: 'standard',
       options: TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })) },
   ] : []),
+  // *** WHERE THIS SETTING LIVES, ARGUED: THIS PANEL, ON THIS SCREEN — not the account, not the person. ***
+  //   FOR the account (or the person): turn it on once and review anywhere. AGAINST, and it decides it: on
+  //   the account it would put unchecked questions on EVERY screen at once — including a screen where
+  //   somebody is playing alone, with nobody beside them to catch a wrong "right answer", which is the one
+  //   case this whole feature exists to prevent. The person's level has the same problem across their
+  //   screens. A panel setting is on exactly where the reviewer is sitting. The cost: it stays on there
+  //   until somebody turns it off (stated in the note), and reviewing on a second screen means turning it on
+  //   there too. "Every Trivia panel" (the menu's own module level) still covers a screen with several.
+  //   WHAT IS NOT PER SCREEN: the reviews themselves are the account's, so a question passed here is passed
+  //   everywhere (../pack_reviews.js).
+  { key: 'includeUnreviewed', label: 'Include unreviewed questions (review as you play)', default: false,
+    level: 'standard', onLabel: 'On', offLabel: 'Off',
+    note: 'Adds the packs waiting for review to "Which pack". Each unreviewed question shows a small ✓ fine / ✗ wrong '
+      + '(or press W / O, or say "that one is wrong"). Playing a question through passes it; ✗ keeps it out '
+      + 'for good. Only for this panel — turn it off when you have finished reviewing.' },
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
     level: 'standard',
     options: [{ value: 5, label: '5' }, { value: 10, label: '10' },
@@ -420,6 +442,18 @@ registerModule(
     let contested = false;       // the question on screen was contested
     let contestFailed = false;   // ...but the row could not be saved
     const isHeldItem = (item, set) => !!item && set.has(contestKey(item.question, item.answer));
+    // *** REVIEW BY PLAYING (../pack_reviews.js). *** `reviews` is the account's review log plus the packs
+    // waiting for review — made only where the host offers it (`ctx.makePackReviews`, the kiosk), so a
+    // harness or page without it behaves exactly as before. Per question on screen: `reviewing` (it was
+    // OPEN when it went up and the setting is on — the control shows), `reviewMark` (what the reviewer did
+    // this time: null | 'fine' | 'wrong'), `noteSaved`, `reviewFailed` (a verdict that could not be saved).
+    let reviews = null;
+    let offReviews = null;
+    let reviewMark = null;
+    let noteSaved = false;
+    let reviewFailed = false;
+    const isFlaggedItem = (item) => !!(reviews && item?.review
+      && reviews.map().get(item.review.key)?.status === REVIEW_STATUS.FLAGGED);
     // *** SET BY destroy(), AND CHECKED BY EVERY CALLBACK THAT CAN LAND AFTER IT. *** (Stage 4
     // bench soak, 2026-10-01: ~40 DOM nodes kept alive per destroyed Trivia.) The shared bank row
     // and the lesson-routed row are handles THIS module opens with ctx.makeState, so the runtime
@@ -511,7 +545,86 @@ registerModule(
             : (misses.length
               ? '<p class="tv-said">Not that one — try again.</p>'
               : '')}
+          ${reviewHtml()}
         </div>`;
+    }
+
+    // *** THE REVIEW CONTROL: SMALL, QUIET, AND OUT OF THE PLAYER'S WAY. *** At the foot of the panel, in
+    // muted text, after everything the player reads. Not one of the highlight's stops (`highlight` walks the
+    // answers, `after` walks Next and the contest — neither knows this exists), so the person playing never
+    // spends a press on it. A reviewer reaches it by pointer, by the W / O keys, by voice ("that one is
+    // wrong"), or by a switch bound to "Reviewing questions" in Devices (../pack_reviews.js REVIEW_ACTIONS).
+    function reviewHtml() {
+      if (!q || !q.reviewing) return '';
+      if (reviewMark === 'wrong') {
+        return `<div class="tv-review" data-review data-review-state="wrong">
+            <p class="tv-review-said" role="status">${reviewFailed
+              ? 'Marked wrong here, but it could not be saved just now.'
+              : 'Marked wrong — it will not be asked again until it is fixed.'}</p>
+            ${noteSaved
+              ? '<p class="tv-review-said" data-review-note-saved>Note saved.</p>'
+              : `<label class="tv-review-note">What is wrong? (optional)
+                   <input type="text" data-review-note maxlength="1000" autocomplete="off"></label>
+                 <button type="button" class="tv-review-btn" data-review-save>Save note</button>`}
+          </div>`;
+      }
+      if (reviewMark === 'fine') {
+        return `<div class="tv-review" data-review data-review-state="fine">
+            <p class="tv-review-said" role="status">${reviewFailed ? 'Marked fine here, but it could not be saved just now.'
+              : 'Marked fine.'}</p>
+            <button type="button" class="tv-review-btn" data-review-wrong>✗ wrong after all</button>
+          </div>`;
+      }
+      return `<div class="tv-review" data-review data-review-state="open">
+          <span class="tv-review-tag">Not yet reviewed</span>
+          <button type="button" class="tv-review-btn" data-review-fine aria-label="This question is fine">✓ fine</button>
+          <button type="button" class="tv-review-btn" data-review-wrong aria-label="This question is wrong">✗ wrong</button>
+        </div>`;
+    }
+
+    const reviewPlace = () => {
+      try { return String(ctx.noteContext?.()?.dashboard || ''); } catch { return ''; }
+    };
+
+    // ✓ — passes it now. The question stays on screen and the game goes on.
+    function reviewFine() {
+      if (!q || !q.reviewing || reviewMark || !reviews) return;
+      reviewMark = 'fine';
+      reviewFailed = false;
+      render();
+      const shown = q;
+      reviews.pass({ question: shown.question, answer: shown.answer, packId: shown.review.packId, place: reviewPlace() })
+        .then((ok) => { if (!ok && q === shown) { reviewFailed = true; render(); } });
+    }
+
+    // ✗ — flagged at once (so it is never lost), the note follows if somebody types one. The question stays
+    // on screen: yanking it away mid-answer would be the reviewer's verdict landing on the player. `back`
+    // (Skip) moves on as always; it is never dealt again (advance / newRound leave flagged ones out).
+    function reviewWrong() {
+      if (!q || !q.reviewing || reviewMark === 'wrong' || !reviews) return;
+      reviewMark = 'wrong';
+      reviewFailed = false;
+      noteSaved = false;
+      render();
+      const shown = q;
+      reviews.flag({ question: shown.question, answer: shown.answer, packId: shown.review.packId, place: reviewPlace() })
+        .then((ok) => { if (!ok && q === shown) { reviewFailed = true; render(); } });
+    }
+
+    function saveReviewNote() {
+      if (!q || reviewMark !== 'wrong' || !reviews) return;
+      const text = String(mount.querySelector('[data-review-note]')?.value || '').trim();
+      if (!text) return;
+      noteSaved = true;
+      render();
+      reviews.note(q.review.key, text);
+    }
+
+    // PLAYED THROUGH = PASSED: leaving an ANSWERED question nobody marked passes it. Skipping one unanswered
+    // passes nothing — it was not looked at.
+    function passIfPlayedThrough() {
+      if (!q || !q.reviewing || reviewMark || answered === null || !reviews) return;
+      reviews.pass({ question: q.question, answer: q.answer, packId: q.review.packId, place: reviewPlace() });
     }
 
     function show(i) {
@@ -521,6 +634,17 @@ registerModule(
       askedCount += 1;
       at = Math.max(0, Math.min(deck.length - 1, i));
       q = makeQuestion(deck[at], bank, { choices: cfg.choices, rand });
+      // Review: the control shows only for a question still OPEN on this account, with the setting on.
+      // Read once, as it goes up, so a pass written elsewhere mid-question does not pull it out from under
+      // the reviewer.
+      reviewMark = null;
+      noteSaved = false;
+      reviewFailed = false;
+      if (q && deck[at]?.review) {
+        q.review = { ...deck[at].review };
+        q.reviewing = !!(cfg.includeUnreviewed && reviews
+          && (reviews.map().get(q.review.key)?.status || REVIEW_STATUS.OPEN) === REVIEW_STATUS.OPEN);
+      }
       answered = null;
       misses = [];
       askedAt = now();
@@ -675,7 +799,19 @@ registerModule(
     async function readBank() {
       if (dead) return;
       const gen = ++bankGen;
-      if (cfg.contentSource === 'pack' && cfg.packId) {
+      // A REVIEW PACK (../pack_reviews.js): flagged questions never; passed ones always; open ones only with
+      // "Include unreviewed questions" on. Nothing playable (the setting off and nothing passed yet, or no
+      // reviews on this host) falls through to the bank, the same way an unreachable pack does.
+      if (cfg.contentSource === 'pack' && isReviewPackId(cfg.packId)) {
+        if (reviews) {
+          await reviews.ready;
+          if (gen !== bankGen || dead) return;
+          const pack = reviews.packById(cfg.packId);
+          const items = pack ? playableBank(pack, reviews.map(),
+            { includeUnreviewed: !!cfg.includeUnreviewed, packId: cfg.packId }) : [];
+          if (items.length) { applyBank([...items, ...lessonItems()]); return; }
+        }
+      } else if (cfg.contentSource === 'pack' && cfg.packId) {
         try {
           const pack = await loadPackCached(cfg.packId);
           if (gen !== bankGen || dead) return; // superseded while the fetch was in flight
@@ -704,10 +840,30 @@ registerModule(
       // A question contested during this round is not asked again in it (a bank can carry the same
       // question twice, or a pack question can also arrive from a lesson).
       const out = contests ? contests.held() : null;
+      passIfPlayedThrough();
       let i = at + 1;
-      while (out && out.size && i < deck.length && isHeldItem(deck[i], out)) i++;
+      // ...nor is one flagged wrong while reviewing (here, or on another device of the account).
+      while (i < deck.length && ((out && out.size && isHeldItem(deck[i], out)) || isFlaggedItem(deck[i]))) i++;
       if (i < deck.length) show(i);
       else newRound();
+    }
+
+    // *** WHILE REVIEWING, QUESTIONS NOT YET REVIEWED ARE DEALT FIRST. *** Argued: a 32-question pack dealt
+    // at random ten at a time keeps re-asking questions already passed, and "play through and pass them"
+    // becomes many more rounds than the pack has questions. Open ones first (shuffled among themselves),
+    // then the round is filled from the rest as usual. With the setting off, nothing changes.
+    function dealDeck(pool) {
+      const opts = { roundLength: cfg.roundLength, rand };
+      if (cfg.includeUnreviewed && reviews) {
+        const m = reviews.map();
+        const isOpen = (b) => !!b?.review && (m.get(b.review.key)?.status || REVIEW_STATUS.OPEN) === REVIEW_STATUS.OPEN;
+        const first = buildDeck(pool.filter(isOpen), opts);
+        if (first.length) {
+          return [...first, ...buildDeck(pool.filter((b) => !isOpen(b)),
+            { ...opts, roundLength: Math.max(0, cfg.roundLength - first.length) })];
+        }
+      }
+      return buildDeck(pool, opts);
     }
 
     function newRound() {
@@ -725,10 +881,11 @@ registerModule(
       // CONTESTED QUESTIONS ARE LEFT OUT FIRST (../contests.js), before the "fewer than four open"
       // fallback — otherwise a small bank would deal the whole bank, contested ones included.
       const out = contests ? contests.held() : null;
-      const playable = out && out.size ? bank.filter((b) => !isHeldItem(b, out)) : bank;
+      const playable = (out && out.size ? bank.filter((b) => !isHeldItem(b, out)) : bank)
+        .filter((b) => !isFlaggedItem(b));
       const open = gate(playable, unlocked).open;
       held = lockedTopics(playable, unlocked, topics);
-      deck = buildDeck(open.length >= 4 ? open : playable, { roundLength: cfg.roundLength, rand });
+      deck = dealDeck(open.length >= 4 ? open : playable);
       if (!deck.length) { q = null; render(); return; }
       show(0);
     }
@@ -740,9 +897,31 @@ registerModule(
       __score: () => ({ right: rightCount, asked: askedCount }),
       __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
-        highlight, streak, deck: deck.length, after, contested,
+        highlight, streak, deck: deck.length, after, contested, reviewMark,
                         question: q ? { ...q } : null, bank: bank.length }),
+      __reviews: () => reviews,
+      // THE LIVE "WHICH PACK" LIST (settings_fields.js `fieldsFor` reads this when the menu opens): the
+      // built-in and loaded packs, then this ACCOUNT's review packs — only those with passed questions while
+      // the setting is off, every one while it is on. Nothing until the reviews have loaded (the declared
+      // list stands meanwhile).
+      settingsChoices() {
+        if (!reviews || !TRIVIA_PACKS.length) return {};
+        const extra = reviews.options({ includeUnreviewed: !!cfg.includeUnreviewed });
+        if (!extra.length) return {};
+        return { packId: [...TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })), ...extra] };
+      },
       init() {
+        // THE REVIEWS, where the host offers them (the kiosk: ctx.makePackReviews). Loaded once and polled
+        // slowly; a deck already dealt is not reshuffled when they land — the next round reads them.
+        try {
+          reviews = typeof ctx.makePackReviews === 'function' ? ctx.makePackReviews() : null;
+          if (reviews) {
+            reviews.ready.then(() => { if (!dead) { reviews.startPolling?.(); readBank(); } });
+            offReviews = bus.subscribe(REVIEW_TOPIC, () => { reviews?.reload?.(); });
+          }
+        } catch (err) { reviews = null; console.error('trivia: no pack reviews', err); }
+        bus.subscribe(REVIEW_FLAG_TOPIC, () => reviewWrong());
+        bus.subscribe(REVIEW_PASS_TOPIC, () => reviewFine());
         // Before anything renders, so the first render already knows whether a Scoreboard on this
         // screen is showing Trivia (a Scoreboard that is already here answers the source's ask).
         score = createScoreSource(bus, { source: GAME, label: 'Trivia: right answers',
@@ -781,6 +960,9 @@ registerModule(
           if (t.dataset.opt != null) return choose(Number(t.dataset.opt));
           if (t.hasAttribute('data-next')) return advance();
           if (t.hasAttribute('data-contest')) return contest();
+          if (t.hasAttribute('data-review-fine')) return reviewFine();
+          if (t.hasAttribute('data-review-wrong')) return reviewWrong();
+          if (t.hasAttribute('data-review-save')) return saveReviewNote();
           return undefined;
         };
         mount.addEventListener('click', onClick);
@@ -867,6 +1049,8 @@ registerModule(
         if (onClick) { mount.removeEventListener('click', onClick); onClick = null; }
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
+        if (reviews) { reviews.destroy?.(); reviews = null; }
+        if (offReviews) { try { offReviews(); } catch { /* a bus without unsubscribe */ } offReviews = null; }
         if (lessons) { lessons.destroy(); lessons = null; }
         if (mode) { mode.destroy(); mode = null; }
         // THE TWO THAT LEAKED (see `dead`): rows this module opened itself, polling until now.

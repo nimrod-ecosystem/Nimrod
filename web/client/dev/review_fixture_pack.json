@@ -1,0 +1,16 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Fixture colours (AI-written, not yet reviewed)",
+  "description": "Five made-up questions for dev/pack_reviews_test.html. Not content; never listed anywhere.",
+  "source": {"name": "Written for a test suite. Not content.", "url": "", "licence": "test fixture"},
+  "ai_written": true,
+  "review": {"status": "unreviewed"},
+  "items": [
+    {"question": "Fixture: what colour is grass?", "answers": ["Green", "Blue", "Red", "Black"], "correct": "Green"},
+    {"question": "Fixture: what colour is the clear daytime sky?", "answers": ["Blue", "Green", "Purple", "Brown"], "correct": "Blue"},
+    {"question": "Fixture: what colour is snow?", "answers": ["White", "Orange", "Pink", "Grey"], "correct": "White"},
+    {"question": "Fixture: what colour is a ripe banana?", "answers": ["Yellow", "Blue", "Black", "White"], "correct": "Yellow"},
+    {"question": "Fixture: what colour is coal?", "answers": ["Black", "Yellow", "Green", "Pink"], "correct": "Black"}
+  ]
+}

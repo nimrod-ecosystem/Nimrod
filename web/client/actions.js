@@ -367,6 +367,22 @@ export const MENU_ACTIONS = [
 ];
 
 // ---------------------------------------------------------------------------------------
+// REVIEWING QUESTIONS (2026-10-03, pack_reviews.js). Mike: "Can I just play through and pass them? ... and
+// just say if any are wrong?" SCREEN actions, like the cursor's: whichever Trivia panel is showing a
+// question not yet reviewed answers them; with none showing, nothing does. A switch can be bound to either
+// (a spare switch, or a long press) — deliberately NOT a stop in the player's own walk, so the person
+// playing never spends a press on the reviewer's control. "That one is wrong" (input_speech.js ROUTES) and
+// the W / O keys (pack_reviews.js REVIEW_KEY_BINDINGS) press these same two.
+export const REVIEW_FLAG_TOPIC = 'review/flag';
+export const REVIEW_PASS_TOPIC = 'review/pass';
+export const REVIEW_ACTIONS = [
+  { id: 'review/wrong', label: 'Reviewing questions: this question is wrong', topic: REVIEW_FLAG_TOPIC,
+    group: 'Reviewing questions' },
+  { id: 'review/fine', label: 'Reviewing questions: this question is fine', topic: REVIEW_PASS_TOPIC,
+    group: 'Reviewing questions' },
+];
+
+// ---------------------------------------------------------------------------------------
 // CUSTOM VERBS — Mike: *"a verb is just a variable. You bind something to verb X and then
 // verb X performs this action in your module."*
 //
@@ -687,6 +703,7 @@ export function createDefaultRegistry() {
   reg.registerAll(SYSTEM_ACTIONS);
   reg.registerAll(CALL_ACTIONS);
   reg.registerAll(CALL_RING_ACTIONS);
+  reg.registerAll(REVIEW_ACTIONS);
   reg.register(ROOM_HOLD_ACTION);
   return reg;
 }
