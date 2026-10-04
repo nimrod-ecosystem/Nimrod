@@ -127,6 +127,12 @@ web/tools/walkthrough_out/
 # check_blocked_names.py's downloaded filter lists (re-fetched weekly)
 web/tools/.filter_cache/
 
+# *** ONE PERSON'S OWN VOICE MODEL (2026-10-03). *** `py -3.13 -m speech_service --my-voice` loads the folder
+# below: a Whisper model fine-tuned on somebody's own recorded voice (web/client/voice_model.js). It is personal
+# (trained on a person's speech) and big (a few hundred MB), so it never enters the tree. ONE folder, named;
+# test_service.py asks git itself that this matches, and that the service's own files do not.
+web/speech_service/my_voice_model/
+
 # *** THE BRICK RENDERS (2026-10-02). *** The same narrow kind of exception as the board's audio and the demo photos,
 # for the same reason. `*.png` above would silently keep these off the site. SAFE UNDER THE RULE AT THE TOP OF THIS
 # FILE: they are Blender renders of the project's own CAD bricks and brick-built furniture (Blender/render_bricks.py in

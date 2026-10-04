@@ -12,9 +12,19 @@
 //              Exported in the folder layout Euphonia's notebook reads (exportEuphonia).
 //   2. TRAIN   with Euphonia's own notebook, model set to openai/whisper-small.en (ours), data pointed at
 //              the exported folder instead of its Firebase bucket. Run by the person, where they choose.
-//   3. CONVERT with Euphonia's own command (convertCommand), into a folder.
-//   4. USE     `--model <folder>` on its OWN port (serviceCommand), and this person's "Use my own voice
+//   3. CONVERT with Euphonia's own command (convertCommand), into web/speech_service/my_voice_model/.
+//   4. USE     `--my-voice` on its OWN port (serviceCommand), and this person's "Use my own voice
 //              model" switch, which points their "this screen" recogniser at it (speech_engines.js).
+//
+// *** NO FOLDER IS TYPED INTO THE SITE (2026-10-03). *** Mike, on the menu's "its folder" text row: *"Shouldn't
+// it be a folder picker for the voice model? Which folder do I even use?"* The honest answer to the first
+// half was neither: the site never handed that path to anything. It only pasted it into a command shown on
+// this page, because the SERVICE needs a filesystem path at START, on the computer it runs on - which may not
+// be the screen's computer - and a browser's folder picker gives a handle, never a path. So the service has
+// ONE place of its own to look (MY_VOICE_PATH, kept out of git), the menu keeps only the switch and the port,
+// and this page says which folder and where it goes. The picker is used where it genuinely helps: "Check a
+// folder" reads the NAMES in a folder somebody picks and says whether it is the right one (checkModelFiles,
+// the same rule the service applies at start). It reads no file and uploads nothing.
 //
 // *** WHOSE IT IS. *** A per-PERSON setting (`voiceModelOn`, on the person's row, beside their other speech
 // settings), off unless that person turns it on. It runs as its own service on its own port (8796), beside
@@ -45,6 +55,10 @@ export const VOICE_MODEL_PORT = 8796;
 // What a converted folder holds; the service checks the same list at start-up (backends.py).
 export const MODEL_FILES = Object.freeze(['model.bin', 'config.json', 'tokenizer.json', 'preprocessor_config.json',
   'vocabulary.json (or vocabulary.txt)']);
+// Where `--my-voice` looks (backends.py MY_VOICE_DIR): from the project folder, and from its web folder (where
+// the commands run). Gitignored: a person's voice is not project history.
+export const MY_VOICE_PATH = 'web/speech_service/my_voice_model';
+export const MY_VOICE_FROM_WEB = 'speech_service/my_voice_model';
 // Euphonia's README asks for short phrases (<140 characters). A longer one is kept and flagged, not cut.
 export const PHRASE_CHARS = 140;
 export const PHRASE_MAX = 500;
@@ -55,38 +69,90 @@ export const VOICE_MODEL_FIELDS = [
     note: 'A speech model trained on this person’s own voice, running on this computer. Only this person’s '
         + 'settings use it. Off: the standard recogniser. Not on a Raspberry Pi. How to make one: the Voice '
         + 'recordings panel, “Your own voice model”.' },
-  { key: 'voiceModelFolder', label: 'My own voice model: its folder', kind: 'text', default: '', level: 'advanced',
-    note: 'The converted folder on this computer. Used to show the command that starts it.' },
+  // No folder row (2026-10-03): the folder belongs to the speech service, which looks in its own place.
   { key: 'voiceModelPort', label: 'My own voice model: its port', kind: 'number', default: VOICE_MODEL_PORT,
     min: 1024, max: 65535, step: 1, level: 'advanced',
-    note: 'Its own port, beside the standard recogniser’s 8797.' },
+    note: 'Where its speech service listens, beside the standard recogniser’s 8797. The same number as --port '
+        + 'in the command that starts it.' },
 ];
 
 export const voiceModelUrl = (port = VOICE_MODEL_PORT) => `ws://127.0.0.1:${port}/speech`;
 
-/** `{ on, port, folder, url }` from a person's row. Only a literal true turns it on. Pure. */
+/** `{ on, port, url }` from a person's row. Only a literal true turns it on. A `voiceModelFolder` stored by
+ * the first version is left on the row and read by nothing. Pure. */
 export function voiceModelFrom(values = {}) {
   const v = values || {};
   const p = Number(v.voiceModelPort);
   const port = typeof v.voiceModelPort !== 'boolean' && Number.isInteger(p) && p >= 1024 && p <= 65535 ? p : VOICE_MODEL_PORT;
-  const folder = typeof v.voiceModelFolder === 'string' ? v.voiceModelFolder.trim() : '';
-  return { on: v.voiceModelOn === true, port, folder, url: voiceModelUrl(port) };
+  return { on: v.voiceModelOn === true, port, url: voiceModelUrl(port) };
 }
 
 // A folder goes inside double quotes; a quote in it would end the argument early, so it is removed.
 const q = (s, dflt) => `"${String(s || '').replace(/"/g, '').trim() || dflt}"`;
 
-/** Euphonia's own conversion (its api's app_faster_whisper.py), with the tokenizer files copied. Pure. */
+/** Euphonia's own conversion (its api's app_faster_whisper.py), with the tokenizer files copied. By default it
+ * writes straight into the folder the service looks in (run in the project's web folder). Pure. */
 export function convertCommand({ checkpoint = '', folder = '' } = {}) {
-  return `ct2-transformers-converter --model ${q(checkpoint, '<checkpoint folder>')} --output_dir ${q(folder, '<model folder>')} `
+  return `ct2-transformers-converter --model ${q(checkpoint, '<checkpoint folder>')} --output_dir ${q(folder, MY_VOICE_FROM_WEB)} `
     + '--quantization int8 --copy_files tokenizer.json preprocessor_config.json';
 }
 
-/** The speech service on that folder, on its own port. Run from the project's web folder. Pure. */
+/** The speech service on this person's own model, on its own port. Run from the project's web folder. `folder`
+ * only for a model kept somewhere other than MY_VOICE_PATH. Pure. */
 export function serviceCommand({ folder = '', port = VOICE_MODEL_PORT } = {}) {
   const p = Number.isInteger(Number(port)) ? Number(port) : VOICE_MODEL_PORT;
-  return `py -3.13 -m speech_service --backend whisper --model ${q(folder, '<model folder>')} --port ${p}`;
+  const f = String(folder || '').replace(/"/g, '').trim();
+  return `py -3.13 -m speech_service --my-voice${f ? ` --model "${f}"` : ''} --port ${p}`;
 }
+
+/**
+ * Is this the right folder? From the NAMES in it - the same rule the service applies at start (backends.py):
+ * model.bin, config.json, tokenizer.json and a vocabulary are needed; preprocessor_config.json is advised.
+ * `kind`: 'model' (converted), 'checkpoint' (the training output, not converted yet), 'recordings' (the
+ * export), or 'other'. Pure.
+ */
+export function checkModelFiles(names = []) {
+  const has = new Set((names || []).map((n) => String(n)));
+  const missing = ['model.bin', 'config.json', 'tokenizer.json'].filter((f) => !has.has(f));
+  if (!has.has('vocabulary.json') && !has.has('vocabulary.txt')) missing.push('vocabulary.json (or vocabulary.txt)');
+  const advised = has.has('preprocessor_config.json') ? [] : ['preprocessor_config.json'];
+  const checkpoint = !has.has('model.bin') && (has.has('model.safetensors') || has.has('pytorch_model.bin'));
+  const recordings = has.has('nimrod-export.json') || (has.has('data') && !has.has('config.json'));
+  const kind = !missing.length ? 'model' : checkpoint ? 'checkpoint' : recordings ? 'recordings' : 'other';
+  return { ok: missing.length === 0, missing, advised, kind };
+}
+
+/** The sentence "Check a folder" shows for a checkModelFiles result. Pure. */
+export function describeModelCheck(r, name = 'That folder') {
+  const n = `“${String(name || 'That folder')}”`;
+  if (!r) return '';
+  if (r.ok) {
+    return `${n} is ready: it has everything the speech service needs${r.advised.length ? ` (it has no ${r.advised.join(', ')}, which the service can do without)` : ''}. `
+      + `Its place is ${MY_VOICE_PATH}: the folder itself named my_voice_model, with these files directly inside it.`;
+  }
+  if (r.kind === 'checkpoint') return `${n} is the training checkpoint, not converted yet. Convert it with the command in step 3; the folder that makes is the one you want.`;
+  if (r.kind === 'recordings') return `${n} holds the recordings you exported for training, not a model. The model is the folder step 3’s conversion writes.`;
+  return `${n} is missing ${r.missing.join(', ')}. If it is the converted folder, convert it again with the command in step 3 (it copies the tokenizer files).`;
+}
+
+/** The names in a folder somebody picked (a FileSystemDirectoryHandle). Names only: no file is opened. */
+export async function folderNames(dir) {
+  const out = [];
+  if (!dir) return out;
+  if (typeof dir.entries === 'function') { for await (const [name] of dir.entries()) out.push(String(name)); return out; }
+  if (typeof dir.values === 'function') { for await (const h of dir.values()) out.push(String(h?.name || '')); }
+  return out.filter(Boolean);
+}
+
+// A folder picker that only READS (no "let this site edit files" prompt); null where the browser has none.
+const defaultPicker = () => {
+  try {
+    if (typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function') {
+      return () => window.showDirectoryPicker({ id: 'nimrod-voice-model', mode: 'read' });
+    }
+  } catch { /* no picker */ }
+  return null;
+};
 
 /** A pasted or loaded list: one phrase per line; blanks, `#` comments and repeats skipped. Pure. */
 export function parsePhrases(text, { max = PHRASE_MAX } = {}) {
@@ -221,18 +287,19 @@ export const PHRASES_KEY = (personId) => `nimrod-voice-model:${personId || 'anyo
 const defaultStorage = () => { try { return typeof localStorage !== 'undefined' ? localStorage : null; } catch { return null; } };
 
 /**
- * The page. `values()` is this person's row; `save(patch)` writes it (only voiceModelOn / voiceModelFolder),
- * absent where a page cannot. `recorder` / `store` are the screen's voice recorder and its store (absent on a
- * page that does not listen). `fs` { available(), pickFolder() } for the export. `storage` keeps the pasted
+ * The page. `values()` is this person's row; `save(patch)` writes it (only voiceModelOn), absent where a page
+ * cannot. `recorder` / `store` are the screen's voice recorder and its store (absent on a page that does not
+ * listen). `fs` { available(), pickFolder() } for the export. `pickModelFolder()` -> a folder handle for "Check
+ * a folder" (default: the browser's read-only picker; null hides the button). `storage` keeps the pasted
  * phrase list and the place in it, per person, on this screen.
  */
 export function mountVoiceModel(root, {
   personId = null, values = () => ({}), save = null, recorder = null, store = null, fs = null, storage = defaultStorage(),
+  pickModelFolder = defaultPicker(),
 } = {}) {
   if (!root) throw new Error('mountVoiceModel: a root element is required');
   const row = () => { try { return values() || {}; } catch { return {}; } };
   let vm = voiceModelFrom(row());
-  let folder = vm.folder;
   let prompter = null;
   let destroyed = false;
   const ac = new AbortController();
@@ -303,23 +370,42 @@ export function mountVoiceModel(root, {
 
     <section class="vm-step">
       <h4>3. Convert it for the speech service</h4>
-      <p>On the computer that trained it (it needs the ctranslate2 and transformers Python packages), with the
-        trained checkpoint’s folder in place of the first name:</p>
+      <p>Training leaves a <b>checkpoint</b> folder (named like <code>checkpoint-200</code>, holding
+        <code>model.safetensors</code>). The speech service cannot load that; converting it makes the folder it
+        can. It needs the ctranslate2 and transformers Python packages. Run this in the project’s
+        <code>web</code> folder, with the checkpoint’s folder in place of the first name:</p>
       <code data-cmd="convert"></code>
-      <p class="vm-soft">The folder must end up holding ${esc(MODEL_FILES.join(', '))}.</p>
+      <p class="vm-soft">That writes the converted folder straight into the place the speech service looks
+        (step 4). Converting on a different computer? Run it there as it is, then copy the
+        <code>${esc(MY_VOICE_FROM_WEB)}</code> folder it made to the same place on the computer that runs the
+        speech service.</p>
     </section>
 
     <section class="vm-step">
-      <h4>4. Start it, and use it</h4>
-      <label>The converted folder on this computer
-        <input type="text" data-folder spellcheck="false" placeholder="for example C:\\models\\my-voice"></label>
-      <div class="vm-row"><button type="button" data-save-folder>Save as my model’s folder</button>
-        <span data-saved class="vm-soft" role="status" aria-live="polite"></span></div>
-      <p>Run this in the project’s <code>web</code> folder, on this computer (<code>python3</code> instead of
-        <code>py -3.13</code> on a Mac or Linux):</p>
+      <h4>4. Which folder, and where it goes</h4>
+      <p><b>The folder you want is the one the conversion wrote</b>: whatever followed <code>--output_dir</code>
+        in step 3. It is not the checkpoint training left, and not the recordings you exported. It holds these
+        files, directly inside it: ${esc(MODEL_FILES.join(', '))}.</p>
+      <p data-where>Put the converted folder here, on the computer that runs the speech service, inside the
+        project folder: <code>${esc(MY_VOICE_PATH)}</code> (a folder named <code>my_voice_model</code>, with
+        those files directly in it). That folder is kept out of git, so your voice never ends up in the
+        project’s history.</p>
+      <div class="vm-row"><button type="button" data-check>Check a folder</button>
+        <span data-check-msg role="status" aria-live="polite"></span></div>
+      <p class="vm-soft" data-check-note>Check a folder opens your browser’s folder picker and reads the
+        <i>names</i> of the files in the folder you choose. It opens no file and sends nothing anywhere.</p>
+    </section>
+
+    <section class="vm-step">
+      <h4>5. Start it, and use it</h4>
+      <p>Run this in the project’s <code>web</code> folder, on the computer that runs the speech service
+        (<code>python3</code> instead of <code>py -3.13</code> on a Mac or Linux):</p>
       <code data-cmd="serve"></code>
       <p class="vm-soft">It checks the folder when it starts and names any file that is missing. It runs beside the
-        standard recogniser (port 8797), which stays for everybody else.</p>
+        standard recogniser (port 8797), which stays for everybody else. Its port is “My own voice model: its
+        port” in your settings; the two numbers must match.</p>
+      <p class="vm-soft" data-elsewhere>Keeping the model somewhere else? Add <code>--model "&lt;that folder&gt;"</code>
+        after <code>--my-voice</code>.</p>
       <div class="vm-row"><button type="button" data-use aria-pressed="false"></button></div>
       <p class="vm-soft" data-use-note></p>
     </section>
@@ -327,15 +413,27 @@ export function mountVoiceModel(root, {
 
   const $ = (s) => root.querySelector(s);
   $('[data-phrases]').value = load().text || '';
-  $('[data-folder]').value = folder;
-  if (typeof save !== 'function') {
-    $('[data-save-folder]').hidden = true;
-    $('[data-saved]').textContent = 'To keep it, set it in this person’s settings (Devices, Voice).';
-  }
+  // No picker in this browser (Firefox, Safari): no button. The service's own start-up check still names
+  // every missing file, so nothing is lost but the early warning.
+  $('[data-check]').hidden = typeof pickModelFolder !== 'function';
+  $('[data-check-note]').hidden = typeof pickModelFolder !== 'function';
 
   function renderCommands() {
-    $('[data-cmd="convert"]').textContent = convertCommand({ folder });
-    $('[data-cmd="serve"]').textContent = serviceCommand({ folder, port: vm.port });
+    $('[data-cmd="convert"]').textContent = convertCommand({});
+    $('[data-cmd="serve"]').textContent = serviceCommand({ port: vm.port });
+  }
+  async function checkFolder() {
+    let dir = null;
+    try { dir = await pickModelFolder(); } catch { return; }       // cancelled is not an error
+    if (!dir || destroyed) return;
+    const msg = $('[data-check-msg]');
+    try {
+      const r = checkModelFiles(await folderNames(dir));
+      if (!destroyed) msg.textContent = describeModelCheck(r, dir.name || 'That folder');
+    } catch (err) {
+      console.error('voice model: check folder', err);
+      if (!destroyed) msg.textContent = 'Could not look inside that folder.';
+    }
   }
   function renderUse() {
     const b = $('[data-use]');
@@ -384,9 +482,6 @@ export function mountVoiceModel(root, {
     } catch (err) { console.error('voice model: export', err); msg.textContent = 'Could not export into that folder.'; }
   }
 
-  root.addEventListener('input', (e) => {
-    if (e.target.matches?.('[data-folder]')) { folder = e.target.value.trim(); renderCommands(); }
-  }, { signal: ac.signal });
   root.addEventListener('change', async (e) => {
     if (!e.target.matches?.('[data-load]')) return;
     const f = e.target.files && e.target.files[0];
@@ -411,12 +506,7 @@ export function mountVoiceModel(root, {
     if (b.hasAttribute('data-back')) { if (!prompter) makePrompter(load().index || 0); prompter.back(); return; }
     if (b.hasAttribute('data-again')) { prompter?.again(); return; }
     if (b.hasAttribute('data-export')) { doExport(); return; }
-    if (b.hasAttribute('data-save-folder') && typeof save === 'function') {
-      let ok = false;
-      try { ok = save({ voiceModelFolder: folder }) !== false; } catch (err) { console.error('voice model: save', err); }
-      $('[data-saved]').textContent = ok ? 'Saved.' : 'Could not save it.';
-      return;
-    }
+    if (b.hasAttribute('data-check') && typeof pickModelFolder === 'function') { checkFolder(); return; }
     if (b.hasAttribute('data-use') && typeof save === 'function') {
       const next = !vm.on;
       let ok = false;

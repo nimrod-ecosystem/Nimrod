@@ -84,6 +84,17 @@ CONVERT_HINT = ('Convert the checkpoint again with the tokenizer files copied: c
                 '--copy_files tokenizer.json preprocessor_config.json')
 
 
+# *** WHERE `--my-voice` LOOKS (2026-10-03). *** The site used to carry a "its folder" text box, which it only
+# pasted into a command it showed: the service needs a PATH, at START, on the machine it runs on, and a browser
+# can give none of that. So the service has one place of its own, beside this file, and nobody types a path.
+# A folder and not an environment variable (argued): a folder is visible - you can see whether the model is
+# there - and an environment variable is invisible state that would quietly load a different model months later.
+# A model kept anywhere else is `--model <folder>`, which already existed. Kept out of git (.gitignore), because
+# a person's voice is not project history.
+MY_VOICE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'my_voice_model')
+MY_VOICE_PORT = 8796      # beside the shared service's 8797; the person's "its port" setting must match
+
+
 class ModelFolderError(ValueError):
     """A --model folder that cannot be loaded, with what is wrong said in words."""
 
@@ -505,6 +516,6 @@ def make_wake(models, **kw):
 
 
 __all__ = ['SAMPLE_RATE', 'WhisperBackend', 'ModelFolderError', 'is_model_folder', 'whisper_folder_missing',
-           'check_whisper_folder', 'whisper_engine_name', 'WHISPER_FOLDER_FILES','VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
+           'check_whisper_folder', 'whisper_engine_name', 'WHISPER_FOLDER_FILES', 'MY_VOICE_DIR', 'MY_VOICE_PORT', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
            'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S',
            'WAKE_MODELS_DIR', 'resolve_wake_models']

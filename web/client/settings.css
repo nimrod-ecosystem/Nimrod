@@ -116,11 +116,19 @@
 }
 .st-head:first-child { padding-top: 0; }
 
+/* *** A LONG HINT WRAPS INSIDE ITS ROW, AND A LABEL KEEPS ITS WIDTH (2026-10-03). *** Mike sent a screenshot
+ * of "My own voice model: its folder": the hint ran off the side of the menu and the label was squeezed into a
+ * column one word wide. The hint was `flex: none`, so it never shrank, and the label got whatever was left.
+ * Now the row WRAPS: the label asks for about ten characters' room and will not go under nine (or the row's
+ * width, if the row is narrower); a hint that fits beside it stays beside it, and one that does not drops onto
+ * its own line under the label and wraps there. Measured at the drawer, a phone and the Settings panel by
+ * settings_test.html ("long hints and long labels"). */
 .st-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: clamp(2px, 0.5vmin, 6px) 12px;
   width: 100%;
   text-align: left;
   font: inherit;
@@ -159,10 +167,19 @@
 
 .st-item:disabled { opacity: 0.5; cursor: default; }
 
+.st-label {
+  flex: 1 1 10em;
+  min-width: min(9em, 100%);
+  overflow-wrap: anywhere;
+}
 .st-hint {
   font-size: clamp(0.72rem, 1.4vmin, 0.9rem);
   color: var(--text-muted, #5d7064);
-  flex: none;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  /* A path or an address has no spaces to break at; it must still not run off the row. */
+  overflow-wrap: anywhere;
 }
 .st-item.on .st-hint { color: var(--bg, #F7F4D5); opacity: 0.8; }
 

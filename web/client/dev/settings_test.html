@@ -1439,6 +1439,87 @@ section('*** TABS (2026-10-02, Mike: "broken up into tabs ... the choice for wha
   plain.destroy();
 }
 
+// =====================================================================
+section('*** long hints and long labels: nothing runs off a row, and no label collapses to one word a line ***');
+// Mike, 2026-10-03, with a screenshot: the row "My own voice model: its folder" had its hint running off the
+// side ("Not set · needs a keyboard · The converted folder on this computer. U...") and its label squeezed into
+// a column one word wide. The hint was `flex: none`, so it never shrank and the label took what was left.
+// MEASURED, not inspected: every row's label and hint must sit inside the row's box, at the widths the menu is
+// drawn at - the drawer (its own width), a phone, and the Settings panel (ccbd4da), narrow and wide.
+
+{
+  const longNote = 'The converted folder on this computer. Used to show the command that starts it, which is run in the '
+    + 'project\'s web folder on the computer that runs the speech service.';
+  const fields = [
+    normalizeField({ key: 'vmFolder', label: 'My own voice model: its folder', kind: 'text', note: longNote }),
+    normalizeField({ key: 'vmPort', label: 'My own voice model: its port', kind: 'number', default: 8796, min: 1024, max: 65535, step: 1,
+      note: 'Its own port, beside the standard recogniser’s 8797.' }),
+    normalizeField({ key: 'calm', label: 'Motion', default: false }),
+    normalizeField({ key: 'path', label: 'A path with no spaces in it at all', kind: 'text',
+      note: 'C:\\Users\\Somebody\\Documents\\GitHub\\Nimrod\\web\\speech_service\\my_voice_model\\model.bin' }),
+    normalizeField({ key: 'ink', label: 'Ink', kind: 'color', default: '#105666' }),
+  ];
+  const live = { vmFolder: '', vmPort: 8796, calm: false, path: '', ink: '#105666' };
+  const widths = [
+    ['the drawer', { inline: true }, 560],
+    ['a phone', { inline: true }, 360],
+    ['a narrow phone', { inline: true }, 300],
+    ['the Settings panel, narrow', { asPanel: true }, 320],
+    ['the Settings panel, wide', { asPanel: true }, 1000],
+  ];
+  for (const [where, mode, w] of widths) {
+    const box = makeHost();
+    box.style.cssText = `position:relative;width:${w}px;height:640px;overflow:hidden`;
+    const m = mountSettings(box, { ...mode,
+      subject: () => ({ type: 'speech', title: 'Speech' }),
+      fields: () => fieldItems(fields, { values: () => live, onStep: (k, v) => { live[k] = v; } }) });
+    m.open();
+    const rows = [...box.querySelectorAll('.st-item')];
+    const bad = [];
+    const squeezed = [];
+    for (const row of rows) {
+      const r = row.getBoundingClientRect();
+      const cs = getComputedStyle(row);
+      const left = r.left + parseFloat(cs.paddingLeft) - 1;
+      const right = r.right - parseFloat(cs.paddingRight) + 1;
+      for (const part of row.querySelectorAll('.st-label, .st-hint')) {
+        const p = part.getBoundingClientRect();
+        if (p.left < left || p.right > right || part.scrollWidth > part.clientWidth + 1) {
+          bad.push(`${row.dataset.id} ${part.className}: ${Math.round(p.left)}..${Math.round(p.right)} in ${Math.round(left)}..${Math.round(right)}`);
+        }
+      }
+      if (row.scrollWidth > row.clientWidth + 1) bad.push(`${row.dataset.id}: scrolls sideways (${row.scrollWidth} > ${row.clientWidth})`);
+      // One word a line is a label a word wide. The floor: 6em (about a dozen characters), or the label's own
+      // width on one line where it is shorter than that ("Motion"), or the whole row where the row is narrower.
+      const label = row.querySelector('.st-label');
+      if (label) {
+        const em = parseFloat(getComputedStyle(label).fontSize);
+        const probe = label.cloneNode(true);
+        probe.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;width:auto;min-width:0;flex:none';
+        row.append(probe);
+        const natural = probe.getBoundingClientRect().width;
+        probe.remove();
+        const want = Math.min(right - left - 2, 6 * em, natural - 1);
+        if (label.getBoundingClientRect().width + 1 < want) squeezed.push(`${row.dataset.id}: ${Math.round(label.getBoundingClientRect().width)}px < ${Math.round(want)}px`);
+      }
+    }
+    const panelEl = box.querySelector('.st-panel');
+    check(`${where} (${w}px): the menu drew rows`, rows.length >= fields.length, String(rows.length));
+    check(`*** ${where} (${w}px): every label and hint sits inside its row ***`, bad.length === 0, bad.join(' | '));
+    check(`*** ${where} (${w}px): no label is squeezed to a word a line ***`, squeezed.length === 0, squeezed.join(' | '));
+    check(`${where} (${w}px): the menu never scrolls sideways`, panelEl.scrollWidth <= panelEl.clientWidth + 1, `${panelEl.scrollWidth} > ${panelEl.clientWidth}`);
+    const folderRow = box.querySelector('[data-id="set:vmFolder"]');
+    const fl = folderRow?.querySelector('.st-label')?.getBoundingClientRect();
+    const fh = folderRow?.querySelector('.st-hint')?.getBoundingClientRect();
+    if (w <= 360) {
+      check(`*** ${where}: the long hint stacks UNDER the label when space is tight ***`, fl && fh && fh.top >= fl.bottom - 1,
+        fl && fh ? `label ${Math.round(fl.top)}..${Math.round(fl.bottom)}, hint ${Math.round(fh.top)}..${Math.round(fh.bottom)}` : 'no row');
+    }
+    m.destroy();
+    box.remove();
+  }
+}
+
 await tick();
 const s = document.getElementById('summary');
 s.textContent = `${passed} passed, ${failed} failed`;
