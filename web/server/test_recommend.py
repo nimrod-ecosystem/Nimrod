@@ -319,5 +319,240 @@ c.post(url, json={"link": link}, headers=H(VIS))
 check("a refused send never asks the provider", len(fetched) == n)
 appmod._rec_limit.reset()
 
+# ================================================================ search by name (recommend_search.py)
+import json  # noqa: E402
+import recommend_search as S  # noqa: E402
+
+section("search by name: the pure rules")
+YT_KEY = "AIza" + "FakeKeyForTestsOnly_0123456789abcd"      # 39 characters, made up
+SP_ID, SP_SECRET = "0123456789abcdef0123456789abcdef", "fedcba9876543210fedcba9876543210"   # made up
+check("a YouTube key: whitespace stripped, shape checked", S.clean_youtube_key(f"  {YT_KEY}\n") == YT_KEY)
+for bad in ("", "short", "has.dots/and:colons-but-is-long-enough-to-pass", "x" * 65, "AIza<script>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"):
+    try:
+        S.clean_youtube_key(bad)
+        check(f"refused youtube key {bad[:20]!r}", False, "accepted")
+    except ValueError as e:
+        check(f"refused youtube key {bad[:20]!r}, in words", bool(str(e)))
+check("Spotify id + secret", S.clean_spotify(f" {SP_ID} ", SP_SECRET) == (SP_ID, SP_SECRET))
+for i, s in (("", SP_SECRET), (SP_ID, ""), ("nothex" * 6, SP_SECRET), (SP_ID, SP_ID)):
+    try:
+        S.clean_spotify(i, s)
+        check("refused spotify pair", False, "accepted")
+    except ValueError as e:
+        check(f"refused spotify pair: {e}", True)
+try:
+    S.clean_query(" a ")
+    check("one letter refused", False)
+except S.Refused as e:
+    check("*** one letter is not a search (it would still cost a YouTube search) ***", e.status == 400)
+check("a long query is cut to 100", len(S.clean_query("x" * 300)) == 100)
+check("which: both -> the saved ones only", S.which("both", {"spotify"}) == ["spotify"] and S.which("both", {"youtube", "spotify"}) == ["youtube", "spotify"])
+for raw, have in (("youtube", {"spotify"}), ("both", set()), ("vimeo", {"youtube"})):
+    try:
+        S.which(raw, have)
+        check(f"which({raw}) refused", False)
+    except S.Refused:
+        check(f"which({raw}, {sorted(have)}) refused", True)
+
+yt_body = {"items": [
+    {"id": {"kind": "youtube#video", "videoId": VID}, "snippet": {"title": "Don&#39;t Stop &amp; Go", "channelTitle": "Band&amp;Co",
+                                                                  "thumbnails": {"medium": {"url": "https://evil.example/x.jpg"}}}},
+    {"id": {"videoId": "<script>alert</script>"}, "snippet": {"title": "forged"}},
+    {"id": {"videoId": VID}, "snippet": {"title": "duplicate"}},
+    {"id": {"videoId": VID2}, "snippet": {"title": "Two", "channelTitle": "C2"}},
+    "not a dict",
+]}
+yr = S.youtube_results(yt_body)
+check("*** YouTube rows: forged id dropped, duplicate dropped, titles unescaped ***",
+      [r["id"] for r in yr] == [VID, VID2] and yr[0]["title"] == "Don't Stop & Go" and yr[0]["by"] == "Band&Co", json.dumps(yr)[:300])
+check("*** each row carries the SAME link the paste path accepts, and parse_link gives back the same ref ***",
+      all(parse_link(r["link"]) == {"provider": r["provider"], "kind": r["kind"], "id": r["id"]} for r in yr)
+      and yr[0]["link"] == f"https://www.youtube.com/watch?v={VID}")
+check("the picture is YouTube's own address for the id, never the answer's", yr[0]["thumbnail"] == f"https://i.ytimg.com/vi/{VID}/mqdefault.jpg")
+check("at most 8", len(S.youtube_results({"items": [{"id": {"videoId": f"abcdefghi{n:02d}"}, "snippet": {}} for n in range(20)]})) == 8)
+check("nonsense answers give no rows", S.youtube_results(None) == [] and S.youtube_results({"items": "x"}) == [] and S.spotify_results([]) == [])
+sp_body = {"tracks": {"items": [
+    {"id": SP, "name": "Blue Moon", "artists": [{"name": "Ella"}, {"name": "Louis"}],
+     "album": {"images": [{"url": "https://i.scdn.co/image/640", "width": 640}, {"url": "https://i.scdn.co/image/300", "width": 300},
+                          {"url": "https://i.scdn.co/image/64", "width": 64}]}},
+    {"id": "tooShort", "name": "forged"},
+    {"id": "5uLU6hMCjMI75M1A2tKUQC", "name": "Elsewhere", "artists": [], "album": {"images": [{"url": "https://evil.example/x.jpg", "width": 300}]}},
+]}}
+sr = S.spotify_results(sp_body)
+check("*** Spotify rows: a track is a 'song', artists joined, the 300 picture, forged id dropped ***",
+      [r["id"] for r in sr] == [SP, "5uLU6hMCjMI75M1A2tKUQC"] and sr[0]["kind"] == "song" and sr[0]["by"] == "Ella, Louis"
+      and sr[0]["thumbnail"] == "https://i.scdn.co/image/300" and sr[0]["link"] == f"https://open.spotify.com/track/{SP}", json.dumps(sr)[:300])
+check("*** a picture off Spotify's own hosts is not drawn ***", sr[1]["thumbnail"] == "")
+check("YouTube errors in words: used up / not enabled / restricted / bad key / offline",
+      S.youtube_error(403, {"error": {"errors": [{"reason": "quotaExceeded"}]}}) == S.YT_USED_UP
+      and S.youtube_error(403, {"error": {"errors": [{"reason": "accessNotConfigured"}]}}) == S.YT_NOT_ENABLED
+      and S.youtube_error(403, {"error": {"message": "Requests from referer <empty> are blocked."}}) == S.YT_RESTRICTED
+      and S.youtube_error(400, {"error": {"errors": [{"reason": "badRequest"}], "message": "API key not valid."}}) == S.YT_BAD_KEY
+      and "reach" in S.youtube_error(0, None) and "trouble" in S.youtube_error(503, None))
+check("Spotify errors in words", S.spotify_error(400, {"error": "invalid_client"}) == S.SP_BAD_KEY and "minute" in S.spotify_error(429, None)
+      and "reach" in S.spotify_error(0, None))
+check("the filter defaults to strict; a bad stored value reads as strict", S.clean_settings(None) == {"safe_search": "strict"}
+      and S.clean_settings({"safe_search": "wild"}) == {"safe_search": "strict"})
+
+section("*** search by name: the routes, with a fake transport (no network) ***")
+CALLS = []
+SCRIPT = {}       # url -> list of (status, body) answered in order; empty -> the default
+
+
+def fake_http(method, url, *, params=None, data=None, headers=None, timeout=None):
+    CALLS.append({"method": method, "url": url, "params": dict(params or {}), "data": dict(data or {}), "headers": dict(headers or {})})
+    q = SCRIPT.get(url)
+    if q:
+        return q.pop(0)
+    if url == S.YT_SEARCH:
+        return 200, yt_body
+    if url == S.YT_VIDEOS:
+        return 200, {"items": [{"id": S.CHECK_VIDEO}]}
+    if url == S.SP_TOKEN:
+        return 200, {"access_token": "pass-1", "token_type": "Bearer", "expires_in": 3600}
+    if url == S.SP_SEARCH:
+        return 200, sp_body
+    return 599, None
+
+
+S.keys.http = fake_http
+S.search_limit.reset()
+S.check_limit.reset()
+K = "/api/recommend/keys"
+SR = "/api/recommend/search"
+SK_A, SK_B = "srch-a", "srch-b"
+st = c.get(K, headers=H(SK_A)).json()
+check("before: nothing saved, it can store, the filter is strict", st["any"] is False and st["youtube"]["set"] is False
+      and st["spotify"]["set"] is False and st["can_store"] is True and st["safe_search"] == "strict", str(st))
+r = c.post(SR, json={"q": "blue moon"}, headers=H(SK_A))
+check("*** no keys: search is a 404 in words, and nothing is asked of YouTube or Spotify ***",
+      r.status_code == 404 and "key" in r.json()["detail"] and CALLS == [], r.text)
+r = c.put(f"{K}/youtube", json={"key": "nope"}, headers=H(SK_A))
+check("a key of the wrong shape: 400 in words", r.status_code == 400 and "YouTube key" in r.json()["detail"], r.text)
+r = c.put(f"{K}/youtube", json={"key": YT_KEY}, headers=H(SK_A))
+check("*** saved: the answer says so with the last four, and NEVER the key ***",
+      r.status_code == 200 and r.json()["youtube"] == {**r.json()["youtube"], "set": True, "last4": YT_KEY[-4:]} and YT_KEY not in r.text, r.text)
+row = appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["youtube"])["data"]
+check("*** stored encrypted: the row does not hold the key in the clear ***", YT_KEY not in json.dumps(row) and row.get("sealed"))
+check("the status never carries it either", YT_KEY not in c.get(K, headers=H(SK_A)).text)
+CALLS.clear()
+r = c.post(SR, json={"q": "  don't stop  ", "provider": "both"}, headers=H(SK_A))
+j = r.json()
+check("*** a YouTube key only: 'both' searches YouTube, and the rows come back ***",
+      r.status_code == 200 and j["searched"] == ["youtube"] and [x["id"] for x in j["results"]] == [VID, VID2] and j["problems"] == {}, r.text)
+yc = CALLS[0] if CALLS else {}
+check("*** the key goes in the X-goog-api-key header, never in the address or its query ***",
+      yc.get("headers", {}).get("X-goog-api-key") == YT_KEY and YT_KEY not in yc.get("url", "") and YT_KEY not in json.dumps(yc.get("params")), str(yc)[:300])
+check("*** safeSearch=strict by default, type=video, 8 results, the words tidied ***",
+      yc["params"].get("safeSearch") == "strict" and yc["params"].get("type") == "video" and yc["params"].get("maxResults") == "8"
+      and yc["params"].get("q") == "don't stop", str(yc["params"]))
+check("one call for one provider", len(CALLS) == 1)
+r = c.put(f"{K}/settings", json={"safe_search": "moderate"}, headers=H(SK_A))
+check("the filter can be turned down by the owner", r.status_code == 200 and r.json()["safe_search"] == "moderate")
+CALLS.clear()
+c.post(SR, json={"q": "blue moon", "provider": "youtube"}, headers=H(SK_A))
+check("...and the next search uses it", CALLS and CALLS[0]["params"].get("safeSearch") == "moderate")
+check("a filter that is not offered: 400", c.put(f"{K}/settings", json={"safe_search": "wild"}, headers=H(SK_A)).status_code == 400)
+c.put(f"{K}/settings", json={"safe_search": "strict"}, headers=H(SK_A))
+
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": "short"}, headers=H(SK_A))
+check("a Spotify secret of the wrong shape: 400", r.status_code == 400, r.text)
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": SP_SECRET}, headers=H(SK_A))
+check("*** Spotify saved: last four of the CLIENT ID, nothing of the secret ***",
+      r.status_code == 200 and r.json()["spotify"]["last4"] == SP_ID[-4:] and SP_SECRET not in r.text and SP_ID not in r.text, r.text)
+check("the Spotify row holds neither in the clear", SP_SECRET not in json.dumps(appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["spotify"])["data"]))
+CALLS.clear()
+r = c.post(SR, json={"q": "blue moon", "provider": "both"}, headers=H(SK_A))
+j = r.json()
+check("*** both keys, 'both': YouTube rows then Spotify rows ***", r.status_code == 200 and j["searched"] == ["youtube", "spotify"]
+      and [x["provider"] for x in j["results"]] == ["youtube", "youtube", "spotify", "spotify"], r.text)
+tok = [x for x in CALLS if x["url"] == S.SP_TOKEN]
+spc = [x for x in CALLS if x["url"] == S.SP_SEARCH]
+import base64 as _b64  # noqa: E402
+check("*** Spotify: client credentials, id and secret in the Basic header only ***",
+      len(tok) == 1 and tok[0]["method"] == "POST" and tok[0]["data"] == {"grant_type": "client_credentials"}
+      and tok[0]["headers"].get("Authorization") == "Basic " + _b64.b64encode(f"{SP_ID}:{SP_SECRET}".encode()).decode(), str(tok)[:300])
+check("...and the search carries the pass, type=track, limit 8", spc and spc[0]["headers"].get("Authorization") == "Bearer pass-1"
+      and spc[0]["params"].get("type") == "track" and spc[0]["params"].get("limit") == "8")
+CALLS.clear()
+c.post(SR, json={"q": "another", "provider": "spotify"}, headers=H(SK_A))
+check("*** the pass is kept in memory until it runs out: no second pass request ***",
+      [x["url"] for x in CALLS] == [S.SP_SEARCH], str([x["url"] for x in CALLS]))
+SCRIPT[S.SP_SEARCH] = [(401, {"error": {"status": 401, "message": "The access token expired"}})]
+SCRIPT[S.SP_TOKEN] = [(200, {"access_token": "pass-2", "expires_in": 3600})]
+CALLS.clear()
+r = c.post(SR, json={"q": "another", "provider": "spotify"}, headers=H(SK_A))
+check("*** a pass Spotify says ran out: one fresh pass, the search again, the rows ***",
+      r.status_code == 200 and [x["url"] for x in CALLS] == [S.SP_SEARCH, S.SP_TOKEN, S.SP_SEARCH]
+      and CALLS[-1]["headers"]["Authorization"] == "Bearer pass-2" and len(r.json()["results"]) == 2, f"{r.text} {[x['url'] for x in CALLS]}")
+SCRIPT[S.YT_SEARCH] = [(403, {"error": {"code": 403, "errors": [{"reason": "quotaExceeded"}]}})]
+r = c.post(SR, json={"q": "blue moon", "provider": "both"}, headers=H(SK_A))
+j = r.json()
+check("*** YouTube used up for the day: Spotify's rows still come, and YouTube's problem is said in words ***",
+      r.status_code == 200 and [x["provider"] for x in j["results"]] == ["spotify", "spotify"] and j["problems"].get("youtube") == S.YT_USED_UP, r.text)
+SCRIPT[S.YT_SEARCH] = [(0, None)]
+r = c.post(SR, json={"q": "blue moon", "provider": "youtube"}, headers=H(SK_A))
+check("YouTube unreachable: 200, no rows, 'could not reach'", r.status_code == 200 and r.json()["results"] == [] and "reach" in r.json()["problems"]["youtube"], r.text)
+check("a one-letter search: 400 before anything is asked", (CALLS.clear(), c.post(SR, json={"q": "x"}, headers=H(SK_A)).status_code)[1] == 400 and CALLS == [])
+
+section("*** check, screens, other people, removing ***")
+CALLS.clear()
+r = c.post(f"{K}/youtube/check", headers=H(SK_A))
+check("*** check YouTube: one video's details (1 unit), not a 100-unit search ***", r.json() == {"ok": True}
+      and [x["url"] for x in CALLS] == [S.YT_VIDEOS], f"{r.text} {CALLS}")
+SCRIPT[S.YT_VIDEOS] = [(400, {"error": {"errors": [{"reason": "badRequest"}], "message": "API key not valid. Please pass a valid API key."}})]
+check("a key YouTube refuses says so", c.post(f"{K}/youtube/check", headers=H(SK_A)).json() == {"ok": False, "reason": S.YT_BAD_KEY})
+SCRIPT[S.SP_TOKEN] = [(400, {"error": "invalid_client"})]
+check("Spotify refusing the pair says so", c.post(f"{K}/spotify/check", headers=H(SK_A)).json() == {"ok": False, "reason": S.SP_BAD_KEY})
+check("Spotify check passes on a good pair", c.post(f"{K}/spotify/check", headers=H(SK_A)).json() == {"ok": True})
+SCREEN_HDR = {"X-Device-Key": "rec-screen-secret-for-tests"}
+os.environ["DEVICE_KEYS"] = f"{SK_A}:rec-screen-secret-for-tests"
+r = c.put(f"{K}/youtube", json={"key": YT_KEY}, headers=SCREEN_HDR)
+check("*** a screen cannot save a key ***", r.status_code == 403, r.text)
+check("...or remove one", c.delete(f"{K}/youtube", headers=SCREEN_HDR).status_code == 403)
+check("...or change the filter", c.put(f"{K}/settings", json={"safe_search": "none"}, headers=SCREEN_HDR).status_code == 403)
+check("...but a screen of the account may read the status and search", c.get(K, headers=SCREEN_HDR).json()["any"] is True
+      and c.post(SR, json={"q": "blue moon"}, headers=SCREEN_HDR).status_code == 200)
+os.environ.pop("DEVICE_KEYS", None)
+stB = c.get(K, headers=H(SK_B)).json()
+check("*** another account sees its own (empty) keys, nothing of A's ***", stB["any"] is False and stB["youtube"]["last4"] is None)
+CALLS.clear()
+check("*** and its search is a 404, with nobody's key used ***", c.post(SR, json={"q": "blue moon"}, headers=H(SK_B)).status_code == 404 and CALLS == [])
+sealedA = appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["youtube"])["data"]["sealed"]
+check("A's sealed key does not open for B", S.keys.keybox.open(SK_B, sealedA) is None)
+spA = appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["spotify"])["data"]
+appmod.store.put_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["youtube"], {**spA},
+                       appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["youtube"])["version"])
+CALLS.clear()
+r = c.post(SR, json={"q": "blue moon", "provider": "youtube"}, headers=H(SK_A))
+check("*** a Spotify blob planted in the YouTube row opens to nothing: no YouTube call, words to paste again ***",
+      r.status_code == 200 and "Paste it again" in r.json()["problems"].get("youtube", "") and CALLS == [], r.text)
+r = c.delete(f"{K}/youtube", headers=H(SK_A))
+check("*** removing: not set, and the row no longer holds a sealed key ***", r.status_code == 200 and r.json()["youtube"]["set"] is False
+      and "sealed" not in appmod.store.get_state(SK_A, S.ACCOUNT_SCOPE, S.KEY_ROWS["youtube"])["data"])
+check("...Spotify still searches", c.post(SR, json={"q": "blue moon"}, headers=H(SK_A)).json()["searched"] == ["spotify"])
+check("removing a provider that is not one: 404", c.delete(f"{K}/vimeo", headers=H(SK_A)).status_code == 404)
+
+section("search rate limit")
+S.search_limit.reset()
+codes = [c.post(SR, json={"q": "blue moon"}, headers=H(SK_A)).status_code for _ in range(S.search_limit.limit + 1)]
+check(f"*** {S.search_limit.limit} searches a minute are fine, the next is a 429 ***",
+      codes[:-1] == [200] * S.search_limit.limit and codes[-1] == 429, str(codes))
+S.search_limit.reset()
+
+section("a server that cannot store keys says so")
+saved_box = S.keys.keybox
+S.keys.keybox = None
+r = c.put(f"{K}/youtube", json={"key": YT_KEY}, headers=H(SK_B))
+check("no key secret: 503 naming the variable; the status says it cannot store",
+      r.status_code == 503 and "NIMROD_AI_KEY_SECRET" in r.json()["detail"] and c.get(K, headers=H(SK_B)).json()["can_store"] is False, r.text)
+S.keys.keybox = saved_box
+
+section("the privacy page")
+d = repr(c.get("/api/what-we-store").json())
+check("*** 'what we store' describes the search keys (encrypted) and says searches are not kept ***",
+      "YouTube or Spotify key" in d and "is not kept here" in d)
+check("...and still says what it said before", "never what was said" in d and "sign notes" in d)
+
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

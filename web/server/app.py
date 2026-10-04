@@ -1351,6 +1351,10 @@ def mark_recommendation(person_id: str, rid: int, mark: str, user: str = Depends
     return {"ok": True, "of": rid, "mark": mark}
 
 
+import recommend_search  # noqa: E402 - search by name on the account's own YouTube / Spotify keys (its own file)
+app.include_router(recommend_search.make_router(store))
+
+
 # ------------------------------------- CLAIMS: invite someone to take over a profile you made
 # Mike, 2026-10-04: make people for your family on your account, and let each of them link their own
 # login to theirs "so most of the work could already be done for them". The rules are claims.py (pure,
