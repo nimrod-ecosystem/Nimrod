@@ -87,9 +87,9 @@ def may_leave_note(person_id: str, *, account: str, owner: str | None, grants: l
     write to - same anti-oracle rule as grants.may_drive.
 
     `messages` (2026-10-04): the SECOND WAY IN this header left room for - a live links.py
-    `messages` permission (links.may, answered by the caller). Today only a claim makes one
-    (claims.py: the owner said yes on the invitation, for one named person). It does not widen
-    anything else: no drive grant, no tick, no screen state.
+    `messages` permission (links.may, answered by the caller). Only an invitation makes one
+    (claims.py: the account that looks after the person said yes on it, for named people). It
+    does not widen anything else: no drive grant, no tick, no screen state.
     """
     if not person_id or not account or not owner:
         return False

@@ -1,59 +1,53 @@
-"""claims.py - "INVITE SOMEBODY TO TAKE OVER A PROFILE YOU MADE". The rules, pure.
+"""claims.py - PEOPLE ACROSS ACCOUNTS: a profile has a home, and appears on other accounts. The rules, pure.
 
-Mike, 2026-10-04: *"I was thinking about making users for her parents and sister on my account and
-hoping they could link their own accounts to it, so most of the work could already be done for
-them."* This is that, and it is the first real form of linking: a person on your account, made by
-you, becomes somebody else's - THEIR sign-in acts as that person - while the work you did stays put.
+Mike, 2026-10-04 (DECISIONS.md "People across accounts: a profile has a home, and appears on other accounts"),
+after trying the first linking build (8908b2c), which left a claimed profile on the inviter's account and let the
+inviter keep the name. His rulings, in short:
+  1. a claimed profile is on the claimer's account too, and THAT copy is the main one;
+  2. the person can change whatever they want on their own profile;
+  3. "I call them": each account can have its own name for somebody ("Mom" on one, "Grandma" on another);
+  4. one profile can be on several accounts;
+  5. connecting works without setting anybody up first ("connected like friends on Facebook");
+  6. an invite picks which profiles to share, and the permissions.
 
-Same shape as grants.py, links.py and notes.py: every question here is answered with no server, no
-socket and no clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the door.
+Same shape as grants.py, links.py and notes.py: every question here is answered with no server, no socket and no
+clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the door.
 
-*** THE MODEL, ARGUED ***
+*** THE MODEL (DECISIONS.md item 11, Code's design) ***
 
-  A. MOVE THE PERSON to the claimer's account. FOR: it is theirs, so it lives with them. AGAINST, and
-     it decides it: the person's screens, settings, history and every grant on them are keyed by the
-     OWNING account (`user_id` everywhere, the room a call joins, the note streams). Moving the row
-     means moving all of that across accounts, or leaving it dangling - and "most of the work already
-     done for them" is precisely that work.
-  B. LEAVE THE PERSON WHERE IT IS and give the claimer's account a CLAIM on it: one row,
-     {person_id, owner, account}, i.e. "this login IS that person" (role 'self'). Chosen. Nothing
-     moves, so nothing breaks; ending the claim deletes one row and the person is exactly as it was.
+  * Every person row is on ONE account and stays there. Screens, settings, events and grants are keyed by the
+    account that holds the row, so a row is never moved: moving it would orphan that account's screens.
+  * A row may point at a HOME row (`people.home_id`). The home is the main instance of that profile; a row with no
+    home_id is its own home. The pointer is kept FLAT: it always names a row that is itself a home.
+  * THE PROFILE - name, picture (`avatar`), page (`page`, About me lives in it) - is read from the home and written
+    only by the home's account (PROFILE_KEYS). Every other person-state key stays the holding account's own.
+  * A row whose home is elsewhere keeps "I call them" (`people.call_name`): the holder's own name for them. Empty,
+    the home's name shows. It never changes the home's name.
+  * `people.source_id` is the row on the OTHER account this one reaches through (where its messages go when it
+    has no screen of its own), `people.link_id` the connection (links.py) that put it here, and `people.made_by`
+    how: 'claim' (an existing row joined to a claimer's own profile) or 'link' (a row made by a connection).
 
-  A claim also CONNECTS the two accounts (a `links` row, links.py): the relationship layer, which is
-  what "they show on each other's page" is. The claim is the reason for the link; a link outlives no
-  claim it was made for (db.end_claim breaks it when the last claim between the pair ends).
+*** THE TWO WAYS IN ***
 
-*** WHAT A CLAIM LETS THE CLAIMER DO - and nothing else ***
+  CONNECT LIKE FRIENDS (the main one). "Connect with someone" makes a link. Accepted, the two logins are connected
+  (a `links` row), and each side gets a row for the other's "you" (their first person), pointing at it as home.
+  CLAIM (the second). "Invite them to use this" on one of your people: accepted, that row is joined to the
+  claimer's own "you" - its home becomes the claimer's - and the inviter's row keeps the name it had as "I call
+  them", so nothing visibly changes for the inviter. "Most of the work already done": a picture or page the
+  inviter made is copied to the claimer's own profile if theirs is still empty (db.copy_profile_if_empty).
 
-  1. Change the person's PICTURE (person state key 'avatar' - CLAIMER_KEYS). It is their face; it is
-     the one thing on the person that most plainly IS them.
-  2. SEE the inviter's other people, if the invite said so (`see_people`, default on - argued at
-     DEFAULT_SEE_PEOPLE). Names and faces only.
-  3. LEAVE MESSAGES (the note from someone, notes.py) for those people, if the invite said so
-     (`messages`, default on - argued at DEFAULT_MESSAGES). Stored as links.py `messages`
-     permissions, which is exactly the "second way in" notes.py left room for.
-  4. CALL - only where calls are already allowed (a drive grant, grants.py). A claim creates no grant.
+  BOTH CAN SHARE PROFILES: the inviter ticks which of the people they look after the other side gets a row for
+  (default: just themselves - DEFAULT_SHARES argues it), and for each whether the other side may leave messages
+  (a links.py `messages` permission on the inviter's row). Calls stay on the drive-grant path: an invite grants no
+  call and reaches no screen. The person accepting decides, on the join page, whether the inviter may leave
+  messages for THEM (MESSAGES_BACK).
 
-  *** NOTHING GRANTS ACCESS TO THE INVITER'S SCREENS BEYOND WHAT THE PERSON ALREADY HAD. *** A claim
-  never writes a drive grant, never ticks a note writer, never reaches screen state. A message is the
-  one thing it can put on a screen, it is a choice the inviter makes on the invite, and it is signed
-  by the claimer's own name (notes.build_row), never the person's.
+*** WHAT ENDS IT ***
 
-*** WHAT CHANGES FOR THE INVITER ("can no longer impersonate them in ways that matter") ***
-
-  * The PICTURE becomes the claimer's: the inviter can no longer change it (`may_write_state`). A face
-    is what everybody else reads as "this is Mom"; letting the account that made the record keep
-    rewriting it after Mom took it over is the impersonation that matters.
-  * The person cannot be DELETED while claimed - "Stop sharing" first. Deleting would pull somebody's
-    identity out from under their own login with no word to them.
-  * What stays the inviter's: the NAME (it is how the inviter's own screens address them - "Mom" on
-    Mike's account and "Linda" on her own are both true), the person's screens, their settings and
-    who may drive them. Those are the inviter's work, and the person was never a login before.
-  * Notes the inviter leaves are signed with the INVITER's name, as they always were (notes.py), so a
-    claim does not add a way to speak as the person - there never was one.
-
-Either side ends a claim ("Stop sharing", two presses on the page). The person stays on the inviter's
-account, exactly as it is; the claimer's account keeps nothing of it.
+  "Stop sharing", from either side, ends the connection: rows that connection MADE are removed (a row with screens
+  of its own is kept as a plain row instead, so nobody's screen loses its person), a claimed row goes back to being
+  the inviter's own plain row with the name it was called and whatever picture it had before, and links.py drops
+  every permission on the link. The home row is never removed by it.
 """
 from __future__ import annotations
 
@@ -64,7 +58,7 @@ import secrets
 # --------------------------------------------------------------------------- the invitation
 #
 # THE TOKEN. 32 random bytes (256 bits), URL-safe: unguessable by any amount of trying, so the rate
-# limit below is belt and braces, not the security. ONLY ITS SHA-256 IS STORED: a database dump (or
+# limit in app.py is belt and braces, not the security. ONLY ITS SHA-256 IS STORED: a database dump (or
 # a log of one) holds nothing that opens an invitation. Not salted, and not slow, ON PURPOSE: a slow
 # salted hash defends a LOW-entropy secret (a password) against guessing; a 256-bit random token has
 # nothing to guess, and the lookup has to be an indexed equality on the hash.
@@ -75,44 +69,48 @@ TOKEN_BYTES = 32
 #   FOR 30: grandparents check messages when they check them; a link that died before Sunday dinner
 #           is a call to the person who sent it.
 #   14, and it decides it: two weekends - long enough for somebody who is not online every day, short
-#   enough that a forgotten link dies by itself. The inviter can cancel at any moment, and a new link
-#   cancels the old one, so the length only matters for a link nobody is watching.
+#   enough that a forgotten link dies by itself. The inviter can take it back at any moment.
 # A caller may ask for 1..MAX_INVITE_DAYS; the page uses the default.
 DEFAULT_INVITE_DAYS = 14
 MAX_INVITE_DAYS = 30
 # HOW LONG A DEAD LINK IS KEPT. A link that ran out or was taken back stays this many days, so the
 # person holding it reads "this link has run out - ask Pat for a new one" rather than a bare "not
-# found" (which also counts against their address as a wrong guess). After that it is deleted, so the
-# table does not keep every link anybody ever made. 30: the longest a link can live, again - somebody
-# who missed a month-long link has had a month to ask. A used link is kept: its claim names it.
+# found" (which also counts against their address as a wrong guess). After that it is deleted. 30: the
+# longest a link can live, again. A used link is kept: it is the record of who joined.
 KEEP_DEAD_INVITE_DAYS = 30
 
-# SEE THE INVITER'S OTHER PEOPLE - default ON, argued:
-#   FOR off: an account holding a caseload (a therapist, a facility) would show one resident's
-#            daughter every other resident's name.
-#   FOR on, and it decides the DEFAULT: the case this exists for is a family - Mom joins and expects to
-#            see her daughter, her husband and her son, which is the whole point of "your people".
-#   So it is a choice on the invite, on by default, named in plain words where the link is made; a
-#   caseload account unticks it. Off, the claimer still sees the inviter (whoever sent the link).
-DEFAULT_SEE_PEOPLE = True
-
-# LEAVE MESSAGES FOR THOSE PEOPLE - default ON, argued:
-#   FOR off: notes.py's own argument - typing words onto somebody's screen from anywhere at any hour is
-#            a different thing to consent to than driving it, and needs a specific yes.
-#   FOR on, and it decides the default: the invite IS that specific yes, made by the one account that
-#            may give it (the owner), on purpose, for one named relative, with the box in front of them.
-#            "Allow notes both ways" is what a family claim is for. Unticked, messages need the owner's
-#            usual yes (the Remote tab's tick), exactly as before.
-#   Every message is signed with the claimer's own name and the owner's log knows which login wrote it.
-DEFAULT_MESSAGES = True
-
-# The person-state keys a claimer may read and write on the person they claimed. The picture only.
-CLAIMER_KEYS = frozenset({"avatar"})
-# The person-state keys a CONNECTED account may READ on the inviter's visible people: faces, so a card
-# shows a face rather than an initial. Read only.
-FACE_KEYS = frozenset({"avatar"})
-
+INVITE_KINDS = ("claim", "connect")
 INVITE_STATES = ("live", "used", "expired", "cancelled")
+
+# WHICH OF YOUR PEOPLE AN INVITE SHARES, BY DEFAULT: JUST YOU. A GUESS (Mike's list), argued:
+#   FOR everybody you look after (what 8908b2c did with "see your other people", on by default): a family -
+#            Mom joins and expects to see her daughter, her husband and her son.
+#   FOR just you, and it decides the default: the commonest invite is now "connect like friends", and a
+#            friend from work does not expect your mother's card on their page; an account holding a
+#            caseload (a therapist, a facility) would hand one resident's daughter every resident. The
+#            family case is three ticks away, on the same window, in plain words.
+DEFAULT_SHARES = "self"
+# LEAVE MESSAGES, per shared person - default ON. The invite IS the specific yes notes.py asks for, made
+# by the one account that may give it, for named people, with the box in front of them. Unticked, a
+# message needs that account's usual yes (the Remote tab's tick), exactly as before.
+DEFAULT_MESSAGES = True
+# THE OTHER WAY: may whoever SENT the link leave messages for the person accepting it - default ON, asked
+# on the join page. Connecting "like friends" is two-way; somebody who only wants to receive unticks it.
+MESSAGES_BACK = True
+# At most this many people on one invite. A family is a handful; this bounds one request, not a person.
+MAX_SHARES = 50
+
+# THE PROFILE: the person-state keys read from the home and written only by the home's account.
+PROFILE_KEYS = frozenset({"avatar", "page"})
+# Which of them another account can READ through the row it holds:
+#   * the picture, through any row - a card on your page shows their face (Mike, item 8: by default a
+#     visitor sees the card, picture and name, and no more);
+#   * the page too, through a row joined by a CLAIM: that row's screens are the person's own (a screen in
+#     their room, set up by the account that made them), so the page they show is the person's own page.
+#     A row made by a connection does not show the page: "who can see my page" is a later setting
+#     (item 7), and until it exists the default is the card.
+READ_THROUGH_ANY = frozenset({"avatar"})
+READ_THROUGH_CLAIM = frozenset({"avatar", "page"})
 
 
 def new_token() -> str:
@@ -161,117 +159,147 @@ def invite_state(inv: dict | None, now_iso: str) -> str:
     return "live"
 
 
-def invite_refusal(*, account: str, owner: str | None, person_id: str, first_person_id: str | None,
-                   claimed: bool) -> str:
-    """Why `account` may NOT invite somebody to take over `person_id`, or '' if it may. PURE.
+def is_home(row: dict | None) -> bool:
+    """Is this row its own home (the main instance of its profile)? PURE."""
+    return bool(row) and not row.get("home_id")
 
-    `owner` None means the person does not exist - the same answer as not yours (no id oracle)."""
-    if not account or not person_id or not owner or owner != account:
+
+def invite_refusal(*, account: str, row: dict | None, first_person_id: str | None) -> str:
+    """Why `account` may NOT invite somebody to take over this row, or '' if it may. PURE.
+
+    `row` None means the person does not exist - the same answer as not yours (no id oracle)."""
+    if not account or not row or row.get("account_id") != account:
         return "not-yours"
-    if claimed:
-        return "claimed"
+    if row.get("home_id"):
+        # Joined by a claim: they already use it. Made by a connection: it is somebody else's profile,
+        # and only whoever looks after a profile hands it over.
+        return "claimed" if row.get("made_by") == "claim" else "not-home"
     # THE ACCOUNT'S FIRST PERSON IS YOU ("Me", the card at the top of your page). Handing it over would
     # let another login change your own picture and show up on your people's pages as you. A DEFAULT rather
     # than a law of nature (a parent who made the account FOR a teenager is the case that wants the
     # opposite), so it is on Mike's list; the way round it today is to add the teenager as a person.
-    if first_person_id and person_id == first_person_id:
+    if first_person_id and row.get("id") == first_person_id:
         return "self"
     return ""
 
 
-def accept_refusal(inv: dict | None, *, account: str, now_iso: str, claimed: bool,
-                   person_exists: bool, via_screen: bool) -> str:
-    """Why `account` may NOT accept this invitation, or ''. PURE. Order is the order a person meets it."""
+def accept_refusal(inv: dict | None, *, account: str, now_iso: str, target_ok: bool, via_screen: bool) -> str:
+    """Why `account` may NOT accept this invitation, or ''. PURE. Order is the order a person meets it.
+
+    `target_ok`: for a claim, the person still exists and is still its own home on the inviter's account
+    (False after it was deleted - 'unknown' - or already taken over - the caller says which); for a connect,
+    the inviter still exists."""
     state = invite_state(inv, now_iso)
     if state != "live":
         return state
-    if not person_exists:
-        return "unknown"            # the person was deleted after the link was made
+    if not target_ok:
+        return "unknown"
     if via_screen:
         return "screen"             # a screen in a room is not somebody's own login
     if not account:
         return "signed-out"
     if account == inv.get("owner_id"):
-        return "own"                # you cannot take over a profile on your own account
-    if claimed:
-        return "claimed"
+        return "own"                # you cannot accept your own link
     return ""
 
 
-# --------------------------------------------------------------------------- after a claim
+def clean_shares(raw, *, own_rows: list[dict], first_person_id: str | None, exclude: str | None = None) -> list[dict]:
+    """The people an invite shares, checked: [{person_id, messages}], in the order asked. PURE.
 
-def visible_people(owner_people: list[dict], *, see_people: bool, claimed_person_id: str,
-                   first_person_id: str | None) -> list[dict]:
-    """The inviter's people a claimer sees, in the owner's order. PURE.
-
-    With `see_people`: all of them. Without: only the inviter's first person (whoever sent the link) -
-    the one connection a claim always makes. The claimed person itself is in the list either way (the
-    page draws it as "you", not as somebody to call)."""
-    out = []
-    for p in owner_people or []:
-        pid = p.get("id")
-        if not pid:
+    `raw` None -> the default (just you, messages DEFAULT_MESSAGES). Each entry may be a person id or
+    {person_id, messages}. Only people this account LOOKS AFTER (home rows on it) can be shared: a profile
+    you only hold came from somebody else, and passing it on is theirs to do (a GUESS - Mike's list; the
+    case for the opposite is a grandparent who would like their grandchild to pass their card along).
+    `exclude` (the person being handed over) is left out. Raises ValueError naming the first problem."""
+    homes = {r["id"]: r for r in own_rows or [] if r.get("id") and is_home(r)}
+    if raw is None:
+        return [{"person_id": first_person_id, "messages": DEFAULT_MESSAGES}] \
+            if first_person_id and first_person_id in homes and first_person_id != exclude else []
+    if not isinstance(raw, list):
+        raise ValueError("shares must be a list")
+    if len(raw) > MAX_SHARES:
+        raise ValueError(f"at most {MAX_SHARES} people on one invitation")
+    out, seen = [], set()
+    for e in raw:
+        if isinstance(e, str):
+            pid, msg = e, DEFAULT_MESSAGES
+        elif isinstance(e, dict):
+            pid, msg = e.get("person_id"), e.get("messages", DEFAULT_MESSAGES)
+        else:
+            raise ValueError("each shared person is an id or {person_id, messages}")
+        if not isinstance(pid, str) or pid not in homes:
+            raise ValueError("you can only share people you look after")
+        if pid == exclude or pid in seen:
             continue
-        if see_people or pid == first_person_id or pid == claimed_person_id:
-            out.append(p)
+        seen.add(pid)
+        out.append({"person_id": pid, "messages": bool(msg)})
     return out
 
 
-def claim_of(claims: list[dict], person_id: str) -> dict | None:
-    return next((c for c in claims or [] if c.get("person_id") == person_id), None)
+# --------------------------------------------------------------------------- rows across accounts
+
+def display_name(row: dict | None, home_name: str | None) -> str:
+    """What the holding account sees: its "I call them", else the home's name, else the row's own. PURE."""
+    if not row:
+        return ""
+    call = (row.get("call_name") or "").strip()
+    if call:
+        return call
+    return (home_name or row.get("name") or "").strip()
 
 
-def may_read_state(key: str, *, actor: str, person_id: str, owner: str | None,
-                   claims_on_owner: list[dict], owner_people: list[dict],
-                   first_person_id: str | None) -> bool:
-    """May `actor` READ person state `key` on `person_id`? PURE. The owner always; otherwise:
-      * the claimer of THIS person, for CLAIMER_KEYS;
-      * a claimer of ANOTHER person on the same account, for FACE_KEYS, on the people they can see.
-    Nothing else - every other key on another account's person stays the owner's alone."""
-    if not actor or not person_id or not owner:
-        return False
-    if actor == owner:
-        return True
-    mine = [c for c in claims_on_owner or [] if c.get("account_id") == actor]
-    if not mine:
-        return False
-    if key in CLAIMER_KEYS and any(c.get("person_id") == person_id for c in mine):
-        return True
-    if key in FACE_KEYS:
-        for c in mine:
-            seen = visible_people(owner_people, see_people=bool(c.get("see_people")),
-                                  claimed_person_id=c.get("person_id"), first_person_id=first_person_id)
-            if any(p.get("id") == person_id for p in seen):
-                return True
-    return False
+def row_kind(row: dict, *, first_person_id: str | None, source_is_their_first: bool = False) -> str:
+    """What a row is TO THE ACCOUNT HOLDING IT. PURE.
+      'you'       the account's first person
+      'mine'      a profile this account looks after (its own home)
+      'joined'    one of this account's people that somebody took over with their own login
+      'connected' somebody this account connected with (their own "you")
+      'shared'    somebody another account shared with this one"""
+    if first_person_id and row.get("id") == first_person_id:
+        return "you"
+    if not row.get("home_id"):
+        return "mine"
+    if row.get("made_by") == "claim":
+        return "joined"
+    return "connected" if source_is_their_first else "shared"
 
 
-def may_write_state(key: str, *, actor: str, person_id: str, owner: str | None,
-                    claim: dict | None) -> bool:
-    """May `actor` WRITE person state `key` on `person_id`? PURE.
+def reach_id(row: dict, *, own_screens: int) -> str:
+    """Where a message, a recommendation or a call for this row goes: the row itself when this account has a
+    screen for it (or it is this account's own profile), else the row it came through on the other account
+    (whose permissions say whether it may). PURE.
 
-    Unclaimed: the owner, any key (as before). Claimed: the CLAIMER for CLAIMER_KEYS, and the owner for
-    everything EXCEPT those - the picture is theirs now."""
-    if not actor or not person_id or not owner:
-        return False
-    if claim:
-        if key in CLAIMER_KEYS:
-            return actor == claim.get("account_id")
-        return actor == owner
-    return actor == owner
+    A GUESS for a claimed row (Mike's list): the inviter's own screen for the person (a screen in their room,
+    which the inviter set up) wins over the person's own login, because it is the one that is on the wall."""
+    if own_screens > 0 or not row.get("home_id") or not row.get("source_id"):
+        return row["id"]
+    return row["source_id"]
 
 
-def message_people(claim: dict, owner_people: list[dict], first_person_id: str | None) -> list[str]:
-    """The person ids a claimer may leave messages for: the people they can see, if the invite allowed
-    messages; none otherwise. PURE. What db syncs into links.py `messages` permissions."""
-    if not claim or not claim.get("messages"):
-        return []
-    return [p["id"] for p in visible_people(owner_people, see_people=bool(claim.get("see_people")),
-                                             claimed_person_id=claim.get("person_id"),
-                                             first_person_id=first_person_id)]
+def state_target(key: str, *, actor: str, row: dict | None, home: dict | None, write: bool):
+    """Which (account, person) person-state `key` on `row` is read from or written to by `actor`, or a
+    refusal: 'missing' (the same 404 as no such person) | 'profile' (a profile key written by an account
+    that does not look after the profile). PURE.
+
+    *** A SECURITY INVARIANT: only the account holding a row reaches anything through it, and only the
+    home's account writes a profile key. *** No other account's person state is reachable here at all -
+    not for reading, not for writing."""
+    if not actor or not row or row.get("account_id") != actor:
+        return "missing"
+    if key not in PROFILE_KEYS or not row.get("home_id"):
+        return (row["account_id"], row["id"])
+    if write:
+        return "profile"
+    allowed = READ_THROUGH_CLAIM if row.get("made_by") == "claim" else READ_THROUGH_ANY
+    if key not in allowed:
+        return "missing"
+    if not home:
+        return (row["account_id"], row["id"])      # a home that went away: the row's own, until it is tidied
+    return (home["account_id"], home["id"])
 
 
-# What the join page says for each refusal, in plain words (no "account", "token" or "grant").
+# What the join page and the invite window say for each refusal, in plain words (no "account", "token" or
+# "grant").
 REFUSAL_TEXT = {
     "unknown": "This link does not work. Ask whoever sent it for a new one.",
     "used": "This link has already been used. Ask whoever sent it for a new one if you need it.",
@@ -279,8 +307,10 @@ REFUSAL_TEXT = {
     "cancelled": "Whoever sent this link took it back. Ask them for a new one.",
     "screen": "Open this on your own phone or computer, not on a screen in a room.",
     "signed-out": "Sign in first, with your own login.",
-    "own": "This came from your own login, so it is already yours. Send it to the person it is for.",
-    "claimed": "Somebody has already made this theirs.",
-    "self": "That is you. Invite somebody to one of your other people instead.",
+    "own": "This came from your own login. Send it to the person it is for.",
+    "claimed": "Somebody already uses this with their own login.",
+    "not-home": "Only whoever looks after this person can invite somebody to it.",
+    "self": "That is you. Use Connect with someone to send somebody a link to you.",
     "not-yours": "Only whoever made this person can invite somebody to it.",
+    "shares": "Only the people you look after can be shared.",
 }
