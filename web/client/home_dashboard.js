@@ -264,6 +264,14 @@ export function homeShellLabel(act, { menuOpen = false, full = false, land = fal
   return null;
 }
 
+// *** `plain` (2026-10-04): THE ⚙ MENU OVER YOUR PEOPLE (kiosk.js "THE ⚙ MENU IN PLAIN WORDS"). *** The rows that only act
+// on a panel or a module are left out (Modules, Edit the chosen panel, Switch module, Edit bar), and the rest say what
+// they do without those words. Edit… stays first: it is the way to all of them, as on the plain bar.
+const PLAIN_EDIT_HINT = 'the editing page: Save, History, the starting points and more';
+const PLAIN_TUTORIAL_HINT = 'try Nimrod’s tutorial here: Nimrod and the settings, always in the bottom two places';
+const PLAIN_SETTING_WORDS = Object.freeze({ arriveIn: Object.freeze({ dashboard: 'The page on its own, filling the window' }) });
+const PLAIN_MENU_LEAVES = Object.freeze(['picker', 'editpanel', 'switch', 'editbar']);
+
 /**
  * The ⚙ menu's section for this page (settings.js items, each with the `act` the page's press does).
  * The same actions as the bar, so they are reachable even when no placed bar is there (the plain bar's
@@ -272,15 +280,16 @@ export function homeShellLabel(act, { menuOpen = false, full = false, land = fal
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
   settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false, onHome = false, hasHome = false,
-  canEditPanel = false, land = false, landingTitle = LANDING_TITLE_DEFAULT } = {}) {
+  canEditPanel = false, land = false, landingTitle = LANDING_TITLE_DEFAULT, plain = false } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
   const place = placeButton({ onHome, hasHome, landingTitle });
-  return [
+  const settingWords = (key) => (plain && PLAIN_SETTING_WORDS[key]?.[s[key]]) || homeSettingLabel(s, key);
+  const rows = [
     { kind: 'heading', id: 'home-head', label: 'This page (Home)' },
     // The bar's first button, as the menu's first row (a switch walking the menu reaches it the same way).
-    land ? item('edit', 'Edit…', { hint: EDIT_ITEM.title }) : item('land', 'The dashboard, filling the window', { hint: 'leave the editing page' }),
+    land ? item('edit', 'Edit…', { hint: plain ? PLAIN_EDIT_HINT : EDIT_ITEM.title }) : item('land', 'The dashboard, filling the window', { hint: 'leave the editing page' }),
     item('picker', `Modules: ${title || '…'}`, { hint: 'choose what you are looking at' }),
     item('myhome', place.label, { hint: place.title }),
     // 2026-10-04: the two places you can land, each a row (a switch reaches both; "Open on" picks which is first).
@@ -302,14 +311,15 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     // The starting points are up front on the page; this row is how a switch (or the plain bar's ⚙) gets
     // back to them once a Home exists.
     item('examples', 'Start from an example…', { hint: 'ready-made Homes to begin from' }),
-    ...HOME_SETTINGS.map((r) => item(`set:${r.key}`, r.label, { hint: homeSettingLabel(s, r.key) })),
+    ...HOME_SETTINGS.map((r) => item(`set:${r.key}`, r.label, { hint: settingWords(r.key) })),
     // (Its id is the old welcome card's; since 2026-10-02 the starting points are what greets you.)
     item('rewelcome', 'Show the examples when I arrive', { hint: 'they open up front again, until you say not to' }),
     // 2026-10-02: the tutorial dashboard, where Nimrod and the settings always are -- the way back to him
     // when he has been switched away (Mike: "If it's closed suggest ... going to the tutorial dashboard").
-    item('tutorial', 'Nimrod’s tutorial', { hint: 'try the tutorial dashboard here: Nimrod and the settings, always in the bottom two places' }),
+    item('tutorial', 'Nimrod’s tutorial', { hint: plain ? PLAIN_TUTORIAL_HINT : 'try the tutorial dashboard here: Nimrod and the settings, always in the bottom two places' }),
     item('cat', 'Show me how', { hint: 'Nimrod the cat walks you through this page', disabled: !catReady }),
   ];
+  return plain ? rows.filter((it) => !PLAIN_MENU_LEAVES.includes(it.act)) : rows;
 }
 
 // ---------------------------------------------------------------------------------------------------
