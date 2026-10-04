@@ -90,6 +90,8 @@ import {
   draftNote, makeNote, addNote, removeNote, cleanNotes, notesToText, stamp, noteContextFrom, panelOf, contextLine,
   notesFileName, nearlyFull, NOTES_MAX,
 } from '../nimrod_notes.js';
+// "Try it as someone new": notes made as the test person go to the owner's record (try_new.js argues it).
+import { openTrialNotes, TRIAL_NOTE_MARK } from '../try_new.js';
 
 export const GUIDE_TYPE = 'nimrod';
 export const GUIDE_SOURCE = 'nimrod-guide';     // `source` on everything he says, for the output log
@@ -233,6 +235,8 @@ registerModule(
       : (ctx.ai || createAI()));
     let claudeCheck = null;    // null | { busy } | { ok, line } — "Check Claude on this account"
     let store = null;          // nimrod_ai.js openAIStore: the person's AI settings and notes
+    let notesHome = null;      // try_new.js openTrialNotes: the owner's record, while trying it as someone new
+    const notesSink = () => notesHome || store;
     let storeOpening = null;
     let aiP = aiPrefs({});
     let notes = [];
@@ -343,13 +347,25 @@ registerModule(
     async function ensureStore() {
       if (store && (store.kind === 'person' || !hasPersonStore())) return store;
       if (!storeOpening) {
-        storeOpening = openAIStore(ctx).then((s) => {
+        storeOpening = openAIStore(ctx).then(async (s) => {
           if (torn) { s.destroy(); return s; }
           if (store && store !== s) { try { store.destroy(); } catch { /* gone */ } }
           store = s;
           const v = s.get() || {};
           aiP = aiPrefs(v);
           notes = cleanNotes(v.notes);
+          // TRYING IT AS SOMEONE NEW (try_new.js): the notes are the OWNER's, written to their record as they are
+          // made, so nothing is copied later and "Start over" cannot reach them. The AI's name and manner stay
+          // the test person's (fresh). Read once; a failed read keeps the module's own list.
+          if (!notesHome) {
+            let personId = '';
+            try { personId = ctx.personId || ''; } catch { personId = ''; }
+            const h = openTrialNotes({ personId, storage: ctx.trialStorage || undefined });
+            if (h) {
+              try { await h.load(); notesHome = h; notes = cleanNotes(h.get().notes); }
+              catch (err) { console.error('nimrod: the owner’s notes', err); h.destroy(); }
+            }
+          }
           if (s.kind !== 'person' && hasPersonStore()) storeOpening = null;
           return s;
         }).catch((err) => { storeOpening = null; throw err; });
@@ -533,10 +549,14 @@ registerModule(
     }
     /** Keep a note with where it was made. False (and says so) when it is empty. */
     function keepNote(text) {
-      const n = makeNote(text, { where: nav.current().title, context: noteContext() });
+      const c = noteContext();
+      // Made while trying it as someone new: said in the note's context, so a pasted list says which ones were.
+      if (notesHome && c) c.dashboard = `${c.dashboard ? `${c.dashboard} ` : ''}${TRIAL_NOTE_MARK}`;
+      const n = makeNote(text, { where: nav.current().title, context: c });
       if (!n) { notice = 'The note is empty.'; render(); return false; }
-      notes = addNote(notes, n);
-      store?.set({ notes });
+      // The owner's list as it is now (another tab of theirs may have added one), plus this.
+      notes = addNote(notesHome ? cleanNotes(notesHome.get().notes) : notes, n);
+      notesSink()?.set({ notes });
       notice = `Note saved (${notes.length} kept).`;
       return true;
     }
@@ -1093,7 +1113,7 @@ registerModule(
         case 'savenote': saveDraft(); return;
         case 'dropnote': draft = null; render(); return;
         case 'copynotes': copyNotes(); return;
-        case 'delnote': notes = removeNote(notes, id); store?.set({ notes }); render(); return;
+        case 'delnote': notes = removeNote(notes, id); notesSink()?.set({ notes }); render(); return;
         case 'setup': setupOpen = !setupOpen; render(); return;
         case 'savesetup': saveSetup(); return;
         case 'forgetkey': try { ai().setKey?.(''); } catch { /* none */ } notice = 'The key is forgotten.'; render(); return;
@@ -1248,6 +1268,7 @@ registerModule(
         if (saidId != null) { try { ctx.output?.cancel?.(saidId); } catch { /* said */ } }
         if (aiSaidId != null) { try { ctx.output?.cancel?.(aiSaidId); } catch { /* said */ } }
         try { store?.destroy(); } catch { /* gone */ }
+        try { notesHome?.destroy(); } catch { /* gone */ }
         root?.removeEventListener('click', onClick);
         root?.removeEventListener('keydown', onKey);
         mount.innerHTML = '';
