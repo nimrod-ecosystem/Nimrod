@@ -34,9 +34,11 @@ from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
 from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch, via_device_key
+import claims
 import claude_ai
 import notes
 import pack_reviews
+import recommend
 from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
@@ -689,7 +691,9 @@ def list_people(user: str = Depends(current_user)):
 def create_person(body: PersonCreate, user: str = Depends(current_user)):
     _check(body.name, NAME_RE, "person name")
     store.ensure_default_person(user)   # never let the second person be the first
-    return store.create_person(user, body.name)
+    made = store.create_person(user, body.name)
+    store.sync_claim_messages(user)     # somebody who joined with "may leave messages" reaches them too
+    return made
 
 
 @app.patch("/api/people/{person_id}")
@@ -719,7 +723,12 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
             status_code=409,
             detail="this person still has %d screen%s - move or delete them first"
                    % (n, "" if n == 1 else "s"))
+    # A person somebody uses with their own login is not deleted out from under them (claims.py).
+    if store.get_claim(person_id):
+        raise HTTPException(status_code=409,
+                            detail="they use this with their own login now - stop sharing first")
     store.delete_person(user, person_id)
+    store.sync_claim_messages(user)
     return {"ok": True}
 
 
@@ -733,12 +742,37 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
 # hold it 300ms" is a fact about a BODY. It does not change between someone's bedside
 # screen and their living-room screen, and re-entering it per screen is precisely the
 # per-device toil this project exists to remove.
+def _person_state_owner(user: str, person_id: str, key: str, *, write: bool) -> str:
+    """The account whose row this is, if `user` may read (or write) person state `key` here; else the
+    same 404 as a person that does not exist.
+
+    The owner, as before - except that a CLAIMED person's picture is the claimer's now (claims.py
+    may_write_state). The claimer reads and writes the picture of the person they took over; a
+    claimer of another of the owner's people reads the faces they can see. Nothing else."""
+    owner = _person_owner(person_id)
+    if owner == user and not write:
+        return owner
+    claim = store.get_claim(person_id) if owner else None
+    if write:
+        if claims.may_write_state(key, actor=user, person_id=person_id, owner=owner, claim=claim):
+            return owner
+        if owner == user:
+            raise HTTPException(status_code=403,
+                                detail="They use this with their own login now, so they change their own picture.")
+    elif owner and claims.may_read_state(key, actor=user, person_id=person_id, owner=owner,
+                                         claims_on_owner=store.claims_on_owner(owner),
+                                         owner_people=store.list_people(owner),
+                                         first_person_id=store.first_person_id(owner)):
+        return owner
+    raise HTTPException(status_code=404, detail="no such person")
+
+
 @app.get("/api/people/{person_id}/state/{key}")
 def get_person_state(person_id: str, key: str, user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
-    owned_person(user, person_id)
-    return store.get_state(user, person_scope(person_id), key)
+    owner = _person_state_owner(user, person_id, key, write=False)
+    return store.get_state(owner, person_scope(person_id), key)
 
 
 @app.put("/api/people/{person_id}/state/{key}")
@@ -746,11 +780,13 @@ def put_person_state(person_id: str, key: str, body: StatePut, request: Request,
                       user: str = Depends(current_user)):
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
-    owned_person(user, person_id)
-    status, result = store.put_state(user, person_scope(person_id), key, body.data, body.base_version)
+    owner = _person_state_owner(user, person_id, key, write=True)
+    status, result = store.put_state(owner, person_scope(person_id), key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
-    _push.publish(user, request.url.path)
+    _push.publish(owner, request.url.path)
+    if owner != user:
+        _push.publish(user, request.url.path)
     return result
 
 
@@ -1133,9 +1169,11 @@ def _note_gate(user: str, person_id: str) -> str:
     owner = _person_owner(person_id)
     row = (store.get_state(owner, person_scope(person_id), notes.PERSON_ROW_KEY).get("data")
            if owner else None)
+    # The second way in (notes.py): a links.py `messages` permission - today, made only by a claim.
+    linked_ok = bool(owner) and owner != user and store.may_capability("messages", actor=user, person_id=person_id)
     if not notes.may_leave_note(person_id, account=user, owner=owner,
                                 grants=store.grants_on_person(person_id) if owner else [],
-                                writers=notes.writers_from(row), now_iso=_now_iso()):
+                                writers=notes.writers_from(row), now_iso=_now_iso(), messages=linked_ok):
         raise HTTPException(status_code=403, detail="not allowed to leave notes for this person")
     return owner
 
@@ -1210,6 +1248,329 @@ def leave_person_note(person_id: str, pid: str, stream: str, body: EventPost, re
     _push.publish(owner, f"/api/profiles/{pid}/events/{stream}")
     _push.publish(user, request.url.path)
     return notes.visible_row(row)
+
+
+# ------------------------------------------------------------ RECOMMEND A SONG OR VIDEO (recommend.py)
+# Mike, 2026-10-04: "Share" on Your people means recommending a YouTube or Spotify song or video. The rules
+# - which links, what oEmbed's answers mean, what the recipient sees - are in recommend.py, tested alone
+# (test_recommend.py). WHO MAY SEND is `_note_gate`: exactly who may leave a note (Mike: the same permission).
+# WHO READS AND CLEARS is the person's owner (`owned_person`): the person's own page, on a screen or signed in.
+# A refused send for "not allowed" and "no such person" is the note's one 403, so no id oracle here either.
+#
+# `_rec_fetch` is looked up when a route runs, so test_recommend.py swaps in a fake and nothing it does
+# reaches the network. Only ever called with recommend.oembed_endpoint's two addresses.
+_rec_fetch = recommend.http_fetch
+# TWELVE IN TEN MINUTES per sender per person: the note's own limit and reasoning (notes.RateLimit). Counted
+# BEFORE the provider is asked, so a flood never becomes a flood of requests to YouTube or Spotify.
+_rec_limit = notes.RateLimit()
+# The dialog's preview (title and picture before Send): thirty a minute per account, enough for somebody
+# pasting and re-pasting, not enough to use this site as somebody's oEmbed proxy.
+_rec_preview_limit = notes.RateLimit(limit=30, window=60.0)
+
+
+class RecommendPost(BaseModel):
+    link: str = ""
+    message: str = ""
+    from_person: str | None = None
+
+
+class RecommendPreview(BaseModel):
+    link: str = ""
+
+
+def _rec_about(link: str) -> tuple[dict, dict]:
+    try:
+        ref = recommend.parse_link(link)
+        return ref, recommend.describe(ref, lambda u: _rec_fetch(u))
+    except recommend.Refused as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/recommend/preview")
+def recommend_preview(body: RecommendPreview, user: str = Depends(current_user)):
+    """What a pasted link is, before Send: {provider, kind, id, title, thumb, url}, or the 400 saying why not."""
+    try:
+        ref = recommend.parse_link(body.link)
+    except recommend.Refused as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not _rec_preview_limit.hit(user):
+        raise HTTPException(status_code=429, detail="That is a lot of links in a minute - wait a moment.")
+    _, about = _rec_about(body.link)
+    return {**ref, **about, "url": recommend.canonical_url(ref)}
+
+
+@app.post("/api/people/{person_id}/recommendations")
+def send_recommendation(person_id: str, body: RecommendPost, user: str = Depends(current_user)):
+    """Recommend one song or video to this person. Who sent it is stamped HERE, from the signed-in account."""
+    owner = _note_gate(user, person_id)
+    try:
+        ref = recommend.parse_link(body.link)
+        message = recommend.clean_message(body.message)
+    except recommend.Refused as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    from_name, from_person = "", None
+    if body.from_person and ID_RE.match(body.from_person):
+        me = store.get_person(user, body.from_person)     # one of the SENDER's own people, or ignored
+        if me:
+            from_person, from_name = me["id"], (me.get("name") or "").strip()
+    if not from_name:
+        from_name = _display_name(user)
+    if not _rec_limit.hit(f"{user}|{person_id}"):
+        raise HTTPException(status_code=429, detail="That is a lot of recommendations - try again in a few minutes.")
+    _, about = _rec_about(body.link)
+    data = recommend.build_row(ref, about, message=message, from_name=from_name, from_person=from_person)
+    row = store.append_event(owner, person_scope(person_id), recommend.STREAM, recommend.REC_KIND, data,
+                             principal_id=user, principal_type="human")
+    _push.publish(owner, f"/api/people/{person_id}/recommendations")
+    return recommend.visible(row.get("id"), row.get("created_at"), row.get("data") or data)
+
+
+@app.get("/api/people/{person_id}/recommendations")
+def list_recommendations(person_id: str, limit: int = 20, user: str = Depends(current_user)):
+    """The person's own: newest first, dismissed ones left out, each with `seen`. Owner only."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    got = store.list_events(user, person_scope(person_id), recommend.STREAM, 500)
+    return {"recommendations": recommend.fold(got["events"], max(1, min(limit, 50)))}
+
+
+@app.post("/api/people/{person_id}/recommendations/{rid}/{mark}")
+def mark_recommendation(person_id: str, rid: int, mark: str, user: str = Depends(current_user)):
+    """`seen` (it was played or opened) or `dismissed` (take it off the page). Appended, never deleted. Owner only."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    kind = recommend.MARKS.get(mark)
+    if not kind:
+        raise HTTPException(status_code=400, detail="only seen or dismissed")
+    got = store.list_events(user, person_scope(person_id), recommend.STREAM, 500)
+    if not any(e.get("id") == rid and e.get("kind") == recommend.REC_KIND for e in got["events"]):
+        raise HTTPException(status_code=404, detail="no such recommendation")
+    store.append_event(user, person_scope(person_id), recommend.STREAM, kind, {"of": rid},
+                       principal_id=user, principal_type="human")
+    _push.publish(user, f"/api/people/{person_id}/recommendations")
+    return {"ok": True, "of": rid, "mark": mark}
+
+
+# ------------------------------------- CLAIMS: invite someone to take over a profile you made
+# Mike, 2026-10-04: make people for your family on your account, and let each of them link their own
+# login to theirs "so most of the work could already be done for them". The rules are claims.py (pure,
+# test_claims.py); the page is join.html. Every route here takes the account from the sign-in, never
+# from a URL or a body, and no route hands back an account id - only names.
+#
+# RATE LIMITS. Making links: 20 an hour per account (a family is a handful; a stuck loop is hundreds).
+# Wrong links: the same throttle and numbers as pairing codes (8 misses per account, 60 per address, in
+# ten minutes - PAIR_MAX_MISSES' argument, including the shared facility NAT). A 256-bit token cannot
+# be guessed anyway; this is so nothing can grind at the door. Same honest limit: in process.
+_invite_limit = notes.RateLimit(limit=20, window=3600.0)
+
+
+class InviteCreate(BaseModel):
+    days: int | None = None
+    see_people: bool = claims.DEFAULT_SEE_PEOPLE
+    messages: bool = claims.DEFAULT_MESSAGES
+
+
+class InviteToken(BaseModel):
+    token: str = ""
+
+
+class ClaimMessagesPut(BaseModel):
+    on: bool
+
+
+def _inviter_name(owner: str) -> str:
+    """What the join page calls whoever sent the link: their display name, else their own first
+    person's name - unless that is still the default "Me", which would read as the visitor."""
+    name = _display_name(owner)
+    if name:
+        return name
+    first = store.first_person_id(owner)
+    p = store.get_person(owner, first) if first else None
+    n = (p or {}).get("name", "").strip()
+    return "" if not n or n.lower() == "me" else n
+
+
+def _invite_view(inv: dict, now: str) -> dict:
+    return {"id": inv["id"], "created_at": inv["created_at"], "expires_at": inv["expires_at"],
+            "state": claims.invite_state(inv, now), "see_people": inv["see_people"],
+            "messages": inv["messages"]}
+
+
+def _refused(reason: str, status: int) -> JSONResponse:
+    return JSONResponse(status_code=status, content={"error": reason, "text": claims.REFUSAL_TEXT.get(reason, "")})
+
+
+def _invite_throttle_keys(request: Request, user: str | None) -> list[tuple[str, int]]:
+    ip = request.client.host if request.client else "?"
+    keys = [(f"invite-ip:{ip}", PAIR_MAX_MISSES_IP)]
+    if user:
+        keys.append((f"invite-acct:{user}", PAIR_MAX_MISSES))
+    return keys
+
+
+@app.post("/api/people/{person_id}/invites")
+def create_invite(person_id: str, body: InviteCreate, request: Request, user: str = Depends(current_user)):
+    """A new link for one of your people. The token is in THIS response and nowhere else, ever."""
+    _check(person_id, ID_RE, "person id")
+    if via_device_key(request):
+        raise HTTPException(status_code=403, detail=claims.REFUSAL_TEXT["screen"])
+    owner = _person_owner(person_id)
+    reason = claims.invite_refusal(account=user, owner=owner, person_id=person_id,
+                                   first_person_id=store.first_person_id(user),
+                                   claimed=bool(owner == user and store.get_claim(person_id)))
+    if reason == "not-yours":
+        raise HTTPException(status_code=404, detail="no such person")
+    if reason:
+        return _refused(reason, 409)
+    try:
+        days = claims.clamp_days(body.days)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    if not _invite_limit.hit(user):
+        raise HTTPException(status_code=429, detail="That is a lot of invitations - try again in a while.")
+    token = claims.new_token()
+    inv = store.create_invite(user, person_id, claims.hash_token(token), _iso_in_days(days),
+                              see_people=body.see_people, messages=body.messages)
+    return {"invite": {**_invite_view({**inv, "used_at": None, "cancelled_at": None}, _now_iso())},
+            "token": token, "path": f"/join.html?invite={token}"}
+
+
+@app.get("/api/people/{person_id}/invites")
+def list_invites(person_id: str, user: str = Depends(current_user)):
+    """The owner's view: links still waiting for this person (no tokens), and whether it is taken over."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    now = _now_iso()
+    waiting = [_invite_view(i, now) for i in store.list_invites(user, person_id)]
+    claim = store.get_claim(person_id)
+    return {"invites": [i for i in waiting if i["state"] == "live"],
+            "claimed": bool(claim),
+            "by": _display_name(claim["account_id"]) if claim else ""}
+
+
+@app.delete("/api/people/{person_id}/invites/{invite_id}")
+def cancel_invite(person_id: str, invite_id: str, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
+    _check(invite_id, ID_RE, "invite id")
+    owned_person(user, person_id)
+    if not store.cancel_invite(user, invite_id):
+        raise HTTPException(status_code=404, detail="no such invitation waiting")
+    return {"ok": True}
+
+
+@app.post("/api/invites/peek")
+def peek_invite(body: InviteToken, request: Request):
+    """What the join page shows BEFORE anybody signs in: who sent it and which person. Holding the link
+    is what lets you see this - names only, never an account. Wrong links count against the address."""
+    viewer = optional_user(request)
+    keys = _invite_throttle_keys(request, viewer)
+    if any(_pair_throttled(k, lim) for k, lim in keys):
+        raise HTTPException(status_code=429, detail="Too many tries - wait a few minutes.")
+    inv = store.invite_by_hash(claims.hash_token(body.token))
+    owner = _person_owner(inv["person_id"]) if inv else None
+    person = store.get_person(inv["owner_id"], inv["person_id"]) if inv and owner == inv["owner_id"] else None
+    if not inv or not person:
+        for k, _ in keys:
+            _pair_miss(k)
+        return _refused("unknown", 404)
+    state = claims.invite_state(inv, _now_iso())
+    out = {"state": state, "text": claims.REFUSAL_TEXT.get(state, ""), "signed_in": bool(viewer),
+           "screen": via_device_key(request)}
+    if state == "live":
+        out.update({"name": person["name"], "from": _inviter_name(inv["owner_id"]),
+                    "expires_at": inv["expires_at"], "see_people": inv["see_people"],
+                    "messages": inv["messages"], "is_inviter": viewer == inv["owner_id"],
+                    "claimed": bool(store.get_claim(inv["person_id"]))})
+    return out
+
+
+@app.post("/api/invites/accept")
+def accept_invite(body: InviteToken, request: Request, user: str = Depends(current_user)):
+    """"Make this mine". Signed in, on your own login (not a screen, not the inviter's)."""
+    keys = _invite_throttle_keys(request, user)
+    if any(_pair_throttled(k, lim) for k, lim in keys):
+        raise HTTPException(status_code=429, detail="Too many tries - wait a few minutes.")
+    inv = store.invite_by_hash(claims.hash_token(body.token))
+    if not inv:
+        for k, _ in keys:
+            _pair_miss(k)
+        return _refused("unknown", 404)
+    person = store.get_person(inv["owner_id"], inv["person_id"])
+    reason = claims.accept_refusal(inv, account=user, now_iso=_now_iso(),
+                                   claimed=bool(store.get_claim(inv["person_id"])),
+                                   person_exists=bool(person), via_screen=via_device_key(request))
+    if reason:
+        return _refused(reason, {"unknown": 404, "screen": 403, "own": 403, "signed-out": 401}.get(reason, 409))
+    status, claim = store.accept_invite(inv["id"], user)
+    if status != "ok":
+        return _refused("claimed" if status == "claimed" else "used", 409)
+    store.sync_claim_messages(inv["owner_id"])
+    # MOST OF THE WORK ALREADY DONE: a login with no name of its own yet signs its notes with the name
+    # it was invited as ("Mom"), rather than "Someone". Never over a name somebody chose.
+    if not _display_name(user):
+        try:
+            nm = notes.clean_display_name(person["name"])
+            if nm:
+                cur = store.get_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY)
+                store.put_state(user, ACCOUNT_SCOPE, DISPLAY_NAME_KEY, {"name": nm}, cur.get("version", 0))
+        except ValueError:
+            pass
+    return {"ok": True, "person_id": inv["person_id"], "name": person["name"],
+            "from": _inviter_name(inv["owner_id"])}
+
+
+@app.get("/api/claims")
+def list_claims(user: str = Depends(current_user)):
+    """Both sides of every claim this login is part of, in names.
+      mine   people on OTHER accounts this login has taken over, each with the inviter's people it may
+             see (and which of those have joined too)
+      given  people on THIS account that somebody else's login has taken over"""
+    mine = []
+    for c in store.claims_by_account(user):
+        owner = c["owner_id"]
+        person = store.get_person(owner, c["person_id"])
+        if not person:
+            continue
+        owner_people = store.list_people(owner)
+        first = store.first_person_id(owner)
+        joined = {x["person_id"] for x in store.claims_on_owner(owner)}
+        seen = claims.visible_people(owner_people, see_people=c["see_people"],
+                                     claimed_person_id=c["person_id"], first_person_id=first)
+        mine.append({
+            "person_id": c["person_id"], "name": person["name"], "from": _inviter_name(owner),
+            "see_people": c["see_people"], "messages": c["messages"], "claimed_at": c["claimed_at"],
+            "people": [{"id": p["id"], "name": p["name"], "joined": p["id"] in joined,
+                        "you": p["id"] == c["person_id"], "sender": p["id"] == first} for p in seen],
+        })
+    given = []
+    for c in store.claims_on_owner(user):
+        person = store.get_person(user, c["person_id"])
+        if not person:
+            continue
+        given.append({"person_id": c["person_id"], "name": person["name"], "by": _display_name(c["account_id"]),
+                      "see_people": c["see_people"], "messages": c["messages"], "claimed_at": c["claimed_at"]})
+    return {"mine": mine, "given": given}
+
+
+@app.delete("/api/claims/{person_id}")
+def stop_sharing(person_id: str, user: str = Depends(current_user)):
+    """Either side ends it. The person stays on the inviter's account, exactly as it is."""
+    _check(person_id, ID_RE, "person id")
+    claim = store.get_claim(person_id)
+    if not claim or user not in (claim["owner_id"], claim["account_id"]):
+        raise HTTPException(status_code=404, detail="nothing shared here")
+    store.end_claim(person_id)
+    return {"ok": True}
+
+
+@app.put("/api/claims/{person_id}/messages")
+def claim_messages(person_id: str, body: ClaimMessagesPut, user: str = Depends(current_user)):
+    """The inviter turns "may leave messages for my people" on or off for somebody who joined."""
+    _check(person_id, ID_RE, "person id")
+    owned_person(user, person_id)
+    if not store.set_claim_messages(person_id, user, body.on):
+        raise HTTPException(status_code=404, detail="nothing shared here")
+    return {"ok": True, "messages": bool(body.on)}
 
 
 # ------------------------------------------------------------ CLAUDE, ON THIS ACCOUNT

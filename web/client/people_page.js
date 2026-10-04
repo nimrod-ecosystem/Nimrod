@@ -15,7 +15,7 @@
 // says so in plain words on a "Connect with someone" card rather than pretending.
 //
 // *** DIMMED, NEVER HIDDEN, AND SAYS WHY *** (Design's rule, home_profile.js and modules/profile.js). Every person's
-// card has the same five buttons in the same places, so a switch user's habit holds from card to card.
+// card has the same buttons in the same places, so a switch user's habit holds from card to card.
 //
 // *** PLAIN WORDS ONLY. *** The people this is for are not building anything: no "module", "dashboard", "panel" or
 // "grant" on this page (`plainWordProblems`, checked by the suite over everything the page shows).
@@ -34,10 +34,14 @@ export function plainWordProblems(text) {
 }
 
 // The buttons on every person's card, in order. Call first (the one Mike named first, and the one that matters most
-// to somebody far away), then the message, then the three kinds of thing to share.
-export const ACTIONS = Object.freeze(['call', 'message', 'picture', 'song', 'video']);
+// to somebody far away), then the message, then recommending a song or video, then sharing a picture.
+// *** "SHARE A SONG" AND "SHARE A VIDEO" BECAME ONE "RECOMMEND A SONG OR VIDEO" (Mike, 2026-10-04: "I was picturing
+// more like recommending a youtube or spotify song/video"; recommend.js). One button, because it is one thing: a
+// YouTube or Spotify link, whichever it is, and the window works out which. It sits before the picture so the live
+// buttons come first and the one still dimmed ("Share a picture", coming soon) is last on every card.
+export const ACTIONS = Object.freeze(['call', 'message', 'recommend', 'picture']);
 export const ACTION_LABELS = Object.freeze({
-  call: 'Call', message: 'Send a message', picture: 'Share a picture', song: 'Share a song', video: 'Share a video',
+  call: 'Call', message: 'Send a message', recommend: 'Recommend a song or video', picture: 'Share a picture',
 });
 
 // The reasons, in plain words. Exported so the suite holds the page to them.
@@ -49,8 +53,11 @@ export const WHY = Object.freeze({
   messageRefused: (name) => `${name || 'They'} can’t get messages from you yet. Whoever looks after their screen can allow it.`,
   messageNoScreen: (name) => `${name || 'They'} ha${name ? 's' : 've'} no screen yet, so there is nowhere for a message to show.`,
   messageError: 'Could not check just now. Try again in a little while.',
-  // Share: no way to put a picture, a song or a video on somebody else's screen exists yet (the report says what
-  // would: the intercom's approved list, and the screen saying who sent it). Dimmed, with that said.
+  // Recommend: the SAME permission as a message (server/recommend.py: who may leave a note), so the same answer from
+  // the server decides both buttons. It needs no screen: a recommendation shows on their own page.
+  recommendOnScreen: 'Recommendations are sent from a phone or computer, not from this screen.',
+  recommendRefused: (name) => `${name || 'They'} can’t get recommendations from you yet. Whoever looks after their screen can allow it.`,
+  // Share a picture: no way to put a picture on somebody else's screen exists yet. Dimmed, with that said.
   soon: (what) => `Coming soon: there is no way yet to send a ${what} to someone’s screen.`,
   pictureOnScreen: 'Change your picture from a phone or computer.',
 });
@@ -99,10 +106,13 @@ export function actionsFor(person, { isScreen = false, may = null, noteStatus = 
         : noteStatus === 'none' ? b('message', false, WHY.messageNoScreen(name), 'No screen yet')
           : noteStatus === 'error' ? b('message', false, WHY.messageError, 'Try again later')
             : b('message', false, WHY.checking, 'Checking…');
-  return [call, message,
-    b('picture', false, WHY.soon('picture'), 'Coming soon'),
-    b('song', false, WHY.soon('song'), 'Coming soon'),
-    b('video', false, WHY.soon('video'), 'Coming soon')];
+  // 'none' (they have no screen) still lets a recommendation through: it waits on their page, not on a screen.
+  const recommend = isScreen ? b('recommend', false, WHY.recommendOnScreen, 'From a phone')
+    : noteStatus === 'ok' || noteStatus === 'none' ? b('recommend', true)
+      : noteStatus === 'refused' ? b('recommend', false, WHY.recommendRefused(name), 'Not allowed yet')
+        : noteStatus === 'error' ? b('recommend', false, WHY.messageError, 'Try again later')
+          : b('recommend', false, WHY.checking, 'Checking…');
+  return [call, message, recommend, b('picture', false, WHY.soon('picture'), 'Coming soon')];
 }
 
 // Nimrod at the bottom (modules/helper.js) asks for himself to be opened; the page that can open him over itself
@@ -124,7 +134,7 @@ export function noteStatusFrom(status, body) {
 // *** HOW A SWITCH WALKS IT: the person's "How you choose things" (settings_fields.js CHOOSE_MODE_KEY), as the
 // transport bar reads it (transport_bar.js barScanModeOf). *** 'step' -> 'rows': next / prev walk the CARDS (you,
 // each person, Connect, More, Nimrod), select goes into one and next / prev then walk its buttons, back comes out.
-// 'point' (the default) -> 'one': next / prev walk every button in turn. FOR rows by default: five buttons on every
+// 'point' (the default) -> 'one': next / prev walk every button in turn. FOR rows by default: four buttons on every
 // card is a long walk for one switch. AGAINST, and it decides it: the person's own setting already says which they
 // want, everywhere else on the site, and a page that answered differently would be the one place they had to learn.
 export function scanModeOf(chooseMode) { return chooseMode === 'step' ? 'rows' : 'one'; }
@@ -156,13 +166,20 @@ export function incomingFrom(screens, { limit = 3, whenOf = (e) => Date.parse(e?
 //                 long enough to read his longest answer, short enough that a stray press costs a few minutes of the
 //                 page, not a night. Off a screen (a phone, a computer) it never closes by itself: the person who
 //                 opened it is the one holding it. "Never" is a choice for somebody who wants it to stay.
+//   recommended  3  how many songs and videos recommended to you the page shows (recommend.js). FOR 3: the same
+//                 reasoning as `incoming` -- the page stays about people, and on a screen, where nothing is removed by
+//                 hand (a stray press there must not throw away what somebody sent), the oldest simply drop off as new
+//                 ones come in. Off a screen each has a Remove. Choices 0 (off) to 5.
 export const INCOMING_CHOICES = Object.freeze([0, 1, 3, 5]);
 export const CLOSE_CHOICES = Object.freeze([60000, 120000, 300000, 0]);
 export const PEOPLE_SETTINGS = Object.freeze([
   { key: 'incoming', label: 'Messages for you to show', kind: 'choice', default: 3, level: 'standard',
     options: INCOMING_CHOICES.map((n) => ({ value: n, label: n ? String(n) : 'None' })),
     help: 'The newest message left on each of your screens, newest first.' },
+  { key: 'recommended', label: 'Songs and videos recommended to you to show', kind: 'choice', default: 3, level: 'standard',
+    options: INCOMING_CHOICES.map((n) => ({ value: n, label: n ? String(n) : 'None' })),
+    help: 'The newest first, with who sent each one.' },
   { key: 'closeAfterMs', label: 'On a screen, close Nimrod by himself after', kind: 'choice', default: 120000, level: 'advanced',
     options: CLOSE_CHOICES.map((ms) => ({ value: ms, label: ms ? `${ms / 60000} minute${ms === 60000 ? '' : 's'}` : 'Never' })),
-    help: 'So a window opened on a screen nobody is pressing goes back to the people by itself.' },
+    help: 'So a window opened on a screen nobody is pressing goes back to the people by itself. A recommended video stays open while it plays.' },
 ]);

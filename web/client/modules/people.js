@@ -13,8 +13,18 @@
 //   Send a message the "note from someone" (modules/note.js) left from your own sign-in (note_visit.js, 499c976),
 //                  opened over this page: it shows on their screen with your name and the time. Dimmed when the
 //                  server says you may not (they have not ticked you) or they have no screen -- asked once per card.
-//   Share ...      dimmed, "coming soon": nothing puts a picture, a song or a video on somebody else's screen yet.
+//   Recommend a song or video  a YouTube or Spotify link, with a message if you like (recommend.js), opened over
+//                  this page; the same permission as a message. It shows under "Recommended for you" on THEIR page,
+//                  with who sent it: Play (YouTube, in the site's own player, one press, on a screen too), Open in
+//                  Spotify (off a screen; on a screen the address and a code), Remove (off a screen only).
+//   Share a picture dimmed, "coming soon": nothing puts a picture on somebody else's screen yet.
 //   Edit my picture the avatar maker (modules/avatar.js), opened over this page, saving to YOUR record.
+//   Invite them to use this  (2026-10-04, claim.js; the rules are web/server/claims.py) under each of your own
+//                  people but you: a link (and a code to scan) that, opened and signed in to with somebody's own
+//                  login, makes that person theirs. Once they have joined the card says "— joined", with "Stop
+//                  sharing" (two presses) and their messages on / off. On THEIR page: a "You are Mom on Pat's
+//                  people" card (Edit that picture, Stop sharing) and Pat's people as cards with the same buttons,
+//                  each live or dimmed by the same rules as everybody else's.
 //
 // *** ON A SCREEN IN SOMEBODY'S ROOM (`ctx.isScreen`) IT IS FACES AND NAMES, AND WHAT CAME IN. *** A screen never
 // places a call (kiosk.js; modules/profile.js) and never sends anything, so none of the five buttons could ever act
@@ -35,7 +45,13 @@ import { authHeaders } from '../auth.js';
 import { createBus } from '../bus.js';
 import { avatarHtml, createAvatarCache } from '../avatar_display.js';
 import { catImageURL } from '../cat_guide.js';
-import { elsewhereHTML, themeQrColours } from '../page_links.js';
+import { elsewhereHTML, themeQrColours, openPageTab } from '../page_links.js';
+import {
+  mountRecommend, mountRecommendedVideo, recommendationsURL, markURL, playPlan, recLine, recThumbHTML, recElsewhereHTML,
+  kindWords, REC_WORDS,
+} from '../recommend.js';
+// "Invite them to use this" / "— joined" / "Stop sharing" (claim.js; the rules are the server's claims.py).
+import { createClaimsClient, linkedPeopleFrom, givenFor, mountInviteSheet, twoPress, CLAIM_WORDS, STOP_CONFIRM_MS } from '../claim.js';
 import { mountNoteVisit, screensURL, noteURL } from '../note_visit.js';
 import { currentNote, whenOf, whenWords } from './note.js';
 import { mayCall, callURL } from './profile.js';
@@ -118,6 +134,12 @@ registerModule(
     let peopleNote = '';
     const notes = new Map();      // person id -> 'ok' | 'refused' | 'none' | 'error' (absent: checking)
     let incoming = [];            // people_page.js incomingFrom
+    let recs = [];                // recommended to you (recommend.js), newest first
+    // Claims (claim.js): `mine` = people on OTHER logins this one took over (with their people); `given` = your
+    // people somebody else's login took over. claimsOK: null not read yet, false could not read, true read.
+    let claimsMine = [], claimsGiven = [], claimsOK = null;
+    let armed = null;             // { key, at } - the first press of a two-press "Stop sharing"
+    let armTimer = null;
     let avatars = null;
     let sheet = null;             // { kind, title, el, child, personId }
     let why = new Map();          // card key -> the reason last tapped, shown on that card
@@ -152,9 +174,27 @@ registerModule(
       if (typeof ctx.profiles?.sharedWithMe === 'function') {
         try { const r = await ctx.profiles.sharedWithMe(); shared = Array.isArray(r) ? r : []; } catch { shared = []; }
       } else { shared = []; }
+      await loadClaims();
+    }
+    const claimsClient = () => createClaimsClient({ user: account() });
+    async function loadClaims() {
+      if (typeof fetch !== 'function') { claimsMine = []; claimsGiven = []; claimsOK = false; return; }
+      try {
+        const r = await claimsClient().list();
+        const ok = r.status === 200 && r.body;
+        claimsMine = ok && Array.isArray(r.body.mine) ? r.body.mine : [];
+        claimsGiven = ok && Array.isArray(r.body.given) ? r.body.given : [];
+        claimsOK = !!ok;
+      } catch { claimsMine = []; claimsGiven = []; claimsOK = false; }
     }
     const selfRow = () => (Array.isArray(own) ? own.find((p) => p.id === selfId()) : null) || { id: selfId(), name: '' };
-    const people = () => connectionsFrom({ own: own || [], shared: shared || [], selfId: selfId() });
+    // Your account's people and those shared with you (people_page.js), then the people you see because you took
+    // over somebody on another login's people (claim.js linkedPeopleFrom) - each once.
+    const people = () => {
+      const list = connectionsFrom({ own: own || [], shared: shared || [], selfId: selfId() });
+      for (const l of linkedPeopleFrom(claimsMine)) if (l.id !== selfId() && !list.some((x) => x.id === l.id)) list.push(l);
+      return list;
+    };
     const mayCallNow = (pid) => mayCall(pid, { own: Array.isArray(own) ? own : null, shared });
 
     // May a message be left for them? Asked once per card, off a screen only (a screen sends nothing).
@@ -182,6 +222,16 @@ registerModule(
         incoming = incomingFrom(rows, { limit: prefs.incoming, whenOf });
       } catch { incoming = []; }
     }
+    // Recommended to you: the songs and videos sent to the person this page is for (the owner's read).
+    async function loadRecommended() {
+      const me = selfId();
+      if (!me || !prefs.recommended) { recs = []; return; }
+      try {
+        const r = await getJSON(`${recommendationsURL(me)}?limit=${prefs.recommended}`);
+        recs = r.body && Array.isArray(r.body.recommendations) ? r.body.recommendations : [];
+      } catch { recs = []; }
+    }
+    const loadInbox = () => Promise.all([loadIncoming(), loadRecommended()]);
 
     function avatarCache() {
       if (avatars) return avatars;
@@ -205,7 +255,7 @@ registerModule(
       const dim = !a.enabled;
       const id = `pp-why-${esc(cardKey)}`;
       const inner = `${esc(a.label)}${a.short ? `<small>${esc(a.short)}</small>` : ''}`;
-      const common = `class="pp-btn${a.enabled && (a.act === 'call' || a.act === 'message') ? ' is-go' : ''}" data-pp-stop data-pp-act="${esc(a.act)}"
+      const common = `class="pp-btn${a.enabled && (a.act === 'call' || a.act === 'message' || a.act === 'recommend' || a.act === 'rec-play') ? ' is-go' : ''}" data-pp-stop data-pp-act="${esc(a.act)}"
         data-pp-card-key="${esc(cardKey)}" ${a.reason ? `data-pp-why="${esc(a.reason)}" title="${esc(a.reason)}" data-help="${esc(a.reason)}"` : ''}
         ${dim ? `aria-disabled="true" aria-describedby="${id}"` : ''}`;
       if (a.href && !dim) return `<a ${common} href="${esc(a.href)}">${inner}</a>`;
@@ -233,6 +283,30 @@ registerModule(
         : '<p class="pp-note" data-pp-incoming-none>No messages yet. When someone leaves you one, it shows here.</p>'}`;
     }
 
+    // "Recommended for you": who sent it, what it is, their message, and Play / Open in Spotify / Remove (recommend.js
+    // argues each). Each is its own card, so a switch walks them like the people. On a screen nothing is removed.
+    function recommendedHTML() {
+      if (!prefs.recommended) return '';
+      const list = recs.slice(0, prefs.recommended);
+      let colours = null;
+      if (isScreen()) { try { colours = root ? themeQrColours(root) : null; } catch { colours = null; } }
+      return `<h2 class="pp-h">${esc(REC_WORDS.heading)}</h2>${list.length ? list.map((r) => {
+        const key = `r:${r.id}`;
+        const plan = playPlan(r, { isScreen: isScreen() });
+        const btns = [];
+        if (plan.how === 'youtube' || plan.how === 'tab') {
+          btns.push(button({ act: 'rec-play', label: plan.label, short: plan.how === 'tab' ? 'Opens in a new tab' : '', enabled: true }, key));
+        }
+        if (!isScreen()) btns.push(button({ act: 'rec-remove', label: REC_WORDS.remove, short: REC_WORDS.removeWhy, enabled: true }, key));
+        return card(key, `<div class="pp-who" data-pp-rec="${esc(r.id)}">${recThumbHTML(r, { size: '3.5rem' })}
+            <div><div class="pp-name" data-pp-rec-line>${esc(recLine(r))}</div>
+            <p class="pp-sub">${esc(kindWords(r))}, ${esc(whenWords(whenOf({ created_at: r.at })))}${r.seen ? '' : ` <b data-pp-rec-new>${esc(REC_WORDS.isNew)}</b>`}</p></div></div>
+          ${r.message ? `<p class="pp-msg" data-pp-rec-message>“${esc(r.message)}”</p>` : ''}
+          ${plan.how === 'elsewhere' ? recElsewhereHTML(r, { colours }) : ''}
+          ${btns.length ? `<div class="pp-btns">${btns.join('')}</div>` : ''}`);
+      }).join('') : `<p class="pp-note" data-pp-rec-none>${esc(REC_WORDS.none)}</p>`}`;
+    }
+
     function peopleCards() {
       const list = people();
       if (!list.length) {
@@ -240,9 +314,46 @@ registerModule(
       }
       return list.map((p) => {
         const acts = actionsFor(p, { isScreen: false, may: mayCallNow(p.id), noteStatus: notes.get(p.id) ?? null, callHref: callURL(p.id) });
+        const given = p.via === 'account' ? givenFor(p.id, claimsGiven) : null;
+        const sub = p.via === 'shared' ? 'Shared with you'
+          : p.via === 'linked' ? (p.joined ? CLAIM_WORDS.linkedJoinedSub(p.from) : CLAIM_WORDS.linkedSub(p.from))
+            : given ? CLAIM_WORDS.joinedSub : 'On your account';
         return card(`p:${p.id}`, `<div class="pp-who"><div class="pp-face">${faceOf(p, CARD_FACE)}</div>
-            <div><div class="pp-name" data-pp-name>${esc(p.name)}</div><p class="pp-sub">${p.via === 'shared' ? 'Shared with you' : 'On your account'}</p></div></div>
-          <div class="pp-btns" data-pp-person="${esc(p.id)}">${acts.map((a) => button(a, `p:${p.id}`)).join('')}</div>`);
+            <div><div class="pp-name"><span data-pp-name>${esc(p.name)}</span>${given ? ` <span class="pp-joined" data-pp-joined>— ${esc(CLAIM_WORDS.joined)}</span>` : ''}</div><p class="pp-sub">${esc(sub)}</p></div></div>
+          <div class="pp-btns" data-pp-person="${esc(p.id)}">${acts.map((a) => button(a, `p:${p.id}`)).join('')}</div>${claimRow(p, given)}`);
+      }).join('');
+    }
+
+    // UNDER ONE OF YOUR OWN PEOPLE: "Invite them to use this" (claim.js), or - once they have joined - "Stop sharing"
+    // (two presses) and their messages on / off. Not under you (the account's first person cannot be handed over:
+    // claims.py `invite_refusal`), and not under anybody who is not on your account.
+    const stopLabel = (key) => (armed && armed.key === key && twoPress(armed.at, Date.now()) === 'fire');
+    function claimRow(p, given) {
+      if (p.via !== 'account' || (Array.isArray(own) && own[0] && own[0].id === p.id)) return '';
+      const key = `p:${p.id}`;
+      let btns;
+      if (given) {
+        const again = stopLabel(`${key}|stop-share`);
+        btns = [button({ act: 'stop-share', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stop, short: CLAIM_WORDS.stopShort, enabled: true }, key),
+          button({ act: 'claim-msg', label: given.messages ? CLAIM_WORDS.msgOn : CLAIM_WORDS.msgOff, short: CLAIM_WORDS.msgShort, enabled: true }, key)];
+      } else {
+        const can = claimsOK === true;
+        btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: can ? CLAIM_WORDS.inviteShort : (claimsOK === null ? 'Checking…' : 'Try again later'),
+          enabled: can, reason: can ? '' : (claimsOK === null ? 'Checking…' : CLAIM_WORDS.failed) }, key)];
+      }
+      return `<div class="pp-btns" data-pp-claim="${esc(p.id)}">${btns.join('')}</div>`;
+    }
+
+    // YOU, ON SOMEBODY ELSE'S PEOPLE: one card per person this login took over - who you are there, "Edit that
+    // picture" (the picture is yours now), and "Stop sharing" (two presses; it goes back to whoever set it up).
+    function joinedCards() {
+      return claimsMine.map((c) => {
+        const key = `j:${c.person_id}`;
+        const again = stopLabel(`${key}|stop-mine`);
+        return card(key, `<div class="pp-who"><div class="pp-face">${faceOf({ id: c.person_id, name: c.name }, CARD_FACE)}</div>
+            <div><div class="pp-name" data-pp-you-are>${esc(CLAIM_WORDS.youAre(c.name, c.from))}</div><p class="pp-sub">${esc(CLAIM_WORDS.youAreSub)}</p></div></div>
+          <div class="pp-btns" data-pp-joined-as="${esc(c.person_id)}">${button({ act: 'edit-there', label: CLAIM_WORDS.editThere, enabled: true }, key)}
+            ${button({ act: 'stop-mine', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stopMine, short: CLAIM_WORDS.stopMineShort, enabled: true }, key)}</div>`);
       }).join('');
     }
 
@@ -260,8 +371,9 @@ registerModule(
     }
 
     const connectCard = () => card('connect', `<h2 class="pp-h">Connect with someone</h2>
-      <p class="pp-note" data-pp-connect>Coming soon: connecting with a friend or relative on their own sign-in, so you show on each other’s page.
-      For now, whoever looks after a screen can share it with you, and that person shows up here.</p>`);
+      <p class="pp-note" data-pp-connect>Made someone here for a relative or friend? Press “Invite them to use this” on their card and send
+      them the link: when they open it and sign in with their own login, it becomes theirs, and you show on each other’s page.
+      Whoever looks after a screen can also share it with you, and that person shows up here.</p>`);
     const moreCard = () => card('more', `<div class="pp-btns">${button({ act: 'more', label: 'More', short: 'Your settings, your devices and more', enabled: true }, 'more')}
       ${button({ act: 'nimrod', label: 'Ask Nimrod', short: 'He shows you around', enabled: true }, 'more')}</div>`);
 
@@ -270,8 +382,8 @@ registerModule(
       const keepFocus = root.ownerDocument.activeElement;
       const focusAct = keepFocus && root.contains(keepFocus) ? `${keepFocus.dataset?.ppCardKey || ''}|${keepFocus.dataset?.ppAct || ''}` : null;
       const list = isScreen()
-        ? [selfCard(), incomingHTML(), screenFaces(), moreCard()]
-        : [selfCard(), incomingHTML(), `<h2 class="pp-h">Your people</h2>`, peopleCards(), connectCard(), moreCard()];
+        ? [selfCard(), incomingHTML(), recommendedHTML(), screenFaces(), moreCard()]
+        : [selfCard(), joinedCards(), incomingHTML(), recommendedHTML(), `<h2 class="pp-h">Your people</h2>`, peopleCards(), connectCard(), moreCard()];
       const body = root.querySelector('[data-pp-list]');
       body.innerHTML = list.join('');
       paintCursor();
@@ -364,9 +476,18 @@ registerModule(
       }
       why = new Map();
       const pid = (key.startsWith('p:') ? key.slice(2) : '') || el?.closest?.('[data-pp-person]')?.dataset.ppPerson || '';
+      const recId = key.startsWith('r:') ? key.slice(2) : '';
       switch (what) {
         case 'message': openMessage(pid); return;
+        case 'recommend': openRecommend(pid); return;
+        case 'rec-play': playRec(recId); return;
+        case 'rec-remove': markRec(recId, 'dismissed'); return;
         case 'picture-edit': openPicture(); return;
+        case 'invite': openInvite(pid); return;
+        case 'stop-share': stopSharing(pid, `${key}|stop-share`); return;
+        case 'claim-msg': toggleClaimMessages(pid); return;
+        case 'edit-there': openPictureThere(key.startsWith('j:') ? key.slice(2) : ''); return;
+        case 'stop-mine': stopSharing(key.startsWith('j:') ? key.slice(2) : '', `${key}|stop-mine`); return;
         case 'nimrod': openNimrod(); return;
         case 'more': more(); return;
         default: render();
@@ -464,12 +585,114 @@ registerModule(
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: message', err); host.textContent = 'The message could not be opened here just now.'; }
     }
+    // ---- claims (claim.js) ------------------------------------------------------------------------------
+    function openInvite(pid) {
+      const p = people().find((x) => x.id === pid);
+      if (!p) return;
+      const host = openSheet('invite', CLAIM_WORDS.inviteTitle(p.name));
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountInviteSheet(host, { person: { id: p.id, name: p.name }, client: claimsClient() });
+        sheet.personId = p.id;
+        Promise.resolve(sheet.child.ready).then(() => paintCursor());
+      } catch (err) { console.error('people: invite', err); host.textContent = CLAIM_WORDS.failed; }
+    }
+    // The picture of the person you ARE on somebody else's people (the server lets the claimer write that one key).
+    async function openPictureThere(pid) {
+      const c = claimsMine.find((x) => x.person_id === pid);
+      if (!c) return;
+      const host = openSheet('picture', `${c.name}’s picture`);
+      try { sheet.child = await mountChild('avatar', host, { personId: pid }); } catch (err) { console.error('people: picture there', err); host.textContent = CLAIM_WORDS.failed; }
+      paintCursor();
+    }
+    // TWO PRESSES: the first turns the button into "Press again to stop sharing" (claim.js STOP_CONFIRM_MS argues
+    // the time); the second, within it, stops. Either side may (the server checks which).
+    async function stopSharing(pid, armKey) {
+      if (!pid) return;
+      if (twoPress(armed && armed.key === armKey ? armed.at : 0, Date.now()) === 'arm') {
+        armed = { key: armKey, at: Date.now() };
+        clearTimeout(armTimer);
+        armTimer = setTimeout(() => { if (armed && armed.key === armKey) { armed = null; render(); } }, STOP_CONFIRM_MS + 50);
+        render();
+        return;
+      }
+      armed = null; clearTimeout(armTimer);
+      const name = (claimsGiven.find((g) => g.person_id === pid) || claimsMine.find((m) => m.person_id === pid) || {}).name || '';
+      const cardKey = armKey.split('|')[0];
+      try {
+        const r = await claimsClient().stop(pid);
+        why = new Map([[cardKey, r.status === 200 ? CLAIM_WORDS.stopped(name) : CLAIM_WORDS.failed]]);
+      } catch { why = new Map([[cardKey, CLAIM_WORDS.failed]]); }
+      await afterClaimChange();
+      // The card that said it may have gone (the claimer's own "you are" card): say it on the self card instead.
+      if (!root?.querySelector(`[data-pp-card="${cardKey}"]`)) { why = new Map([['self', [...why.values()][0] || '']]); render(); }
+    }
+    async function toggleClaimMessages(pid) {
+      const g = claimsGiven.find((x) => x.person_id === pid);
+      if (!g) return;
+      try {
+        const r = await claimsClient().setMessages(pid, !g.messages);
+        if (r.status !== 200) why = new Map([[`p:${pid}`, CLAIM_WORDS.failed]]);
+      } catch { why = new Map([[`p:${pid}`, CLAIM_WORDS.failed]]); }
+      await afterClaimChange();
+    }
+    // Who is on the page, and who may get a message, can both change with a claim: read both again.
+    async function afterClaimChange() {
+      await loadClaims();
+      notes.clear();
+      if (torn) return;
+      render();
+      await checkNotes();
+      if (!torn) render();
+    }
+
+    function openRecommend(pid) {
+      const p = people().find((x) => x.id === pid);
+      if (!p) return;
+      const host = openSheet('recommend', `A song or video for ${p.name}`);
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountRecommend(host, { personId: p.id, personName: p.name, fromPersonId: selfId(), user: account() });
+        sheet.personId = p.id;
+        paintCursor();
+      } catch (err) { console.error('people: recommend', err); host.textContent = 'This could not be opened here just now.'; }
+    }
+    // Seen (played or opened) and Remove are the person's own marks on their own list; appended, never deleted.
+    async function markRec(id, mark) {
+      const r = recs.find((x) => String(x.id) === String(id));
+      if (!r) return;
+      if (mark === 'dismissed') { recs = recs.filter((x) => x !== r); render(); } else { r.seen = true; }
+      try {
+        await fetch(markURL(selfId(), r.id, mark), { method: 'POST', headers: authHeaders(account()), credentials: 'same-origin' });
+      } catch (err) { console.error('people: mark', err); }
+    }
+    // Play: YouTube in the site's own player over the page (recommend.js mountRecommendedVideo); Spotify in a new tab.
+    // ON A SCREEN the video goes back to the people when it ends, or after "close after" with nothing playing -- the
+    // player's own progress beat restarts that clock, so a playing video is never cut off.
+    async function playRec(id) {
+      const r = recs.find((x) => String(x.id) === String(id));
+      if (!r) return;
+      const plan = playPlan(r, { isScreen: isScreen() });
+      if (plan.how === 'tab') { openPageTab(plan.url); markRec(r.id, 'seen'); render(); return; }
+      if (plan.how !== 'youtube') return;
+      markRec(r.id, 'seen');
+      const host = openSheet('video', recLine(r));
+      const mine = sheet;
+      try {
+        const child = await mountRecommendedVideo(host, { rec: r, baseCtx: ctx, instanceId: `${ctx.instanceId || 'people'}-rec-video`,
+          onBeat: () => { if (sheet === mine) pokeClose(); },
+          onDone: () => { if (sheet === mine && isScreen()) closeSheet(); } });
+        if (sheet !== mine || torn) { child.destroy(); return; }
+        mine.child = child;
+      } catch (err) { console.error('people: video', err); host.textContent = 'The video could not be played here just now.'; }
+      paintCursor();
+    }
 
     async function refresh() {
       await loadPeople();
       if (torn) return;
       render();
-      await Promise.all([checkNotes(), loadIncoming()]);
+      await Promise.all([checkNotes(), loadInbox()]);
       if (!torn) render();
     }
 
@@ -493,9 +716,9 @@ registerModule(
         try {
           offState = ctx.state?.subscribe?.((v) => {
             const next = peoplePrefs(v || {});
-            const again = next.incoming !== prefs.incoming;
+            const again = next.incoming !== prefs.incoming || next.recommended !== prefs.recommended;
             prefs = next;
-            if (again) loadIncoming().then(() => render()); else render();
+            if (again) loadInbox().then(() => render()); else render();
           }) || null;
         } catch { offState = null; }
         const on = (topic, fn) => { try { const off = ctx.bus?.subscribe?.(topic, fn); if (typeof off === 'function') offs.push(off); } catch { /* no bus */ } };
@@ -506,8 +729,8 @@ registerModule(
         // Nimrod at the bottom (modules/helper.js): this page opens him over itself.
         on(HELPER_OPEN_TOPIC, (p) => { try { p?.claim?.(); } catch { /* a publisher's claim must not stop the press */ } openNimrod(); });
         await refresh();
-        if (isScreen()) refreshTimer = setInterval(() => { if (!torn) loadIncoming().then(() => render()); }, INCOMING_REFRESH_MS);
-        const vis = () => { if (!torn && doc.visibilityState === 'visible') loadIncoming().then(() => render()); };
+        if (isScreen()) refreshTimer = setInterval(() => { if (!torn) loadInbox().then(() => render()); }, INCOMING_REFRESH_MS);
+        const vis = () => { if (!torn && doc.visibilityState === 'visible') loadInbox().then(() => render()); };
         doc.addEventListener('visibilitychange', vis);
         offs.push(() => doc.removeEventListener('visibilitychange', vis));
       },
@@ -515,7 +738,7 @@ registerModule(
       onHide() {},
       destroy() {
         torn = true;
-        clearTimeout(closeTimer); clearInterval(refreshTimer);
+        clearTimeout(closeTimer); clearInterval(refreshTimer); clearTimeout(armTimer);
         try { sheet?.child?.destroy?.(); } catch { /* gone */ }
         sheet = null;
         for (const off of offs.splice(0)) { try { off(); } catch { /* gone */ } }
@@ -527,8 +750,10 @@ registerModule(
         root = null;
       },
       __probe: () => ({
-        people: people(), self: selfRow(), notes: Object.fromEntries(notes), incoming: incoming.slice(), prefs: { ...prefs },
+        people: people(), self: selfRow(), notes: Object.fromEntries(notes), incoming: incoming.slice(), recs: recs.map((r) => ({ ...r })), prefs: { ...prefs },
         sheet: sheet ? sheet.kind : null, cursor: { ...cursor }, mode: scanModeOf(chooseMode()), isScreen: isScreen(),
+        claims: { mine: claimsMine.map((c) => ({ ...c })), given: claimsGiven.map((g) => ({ ...g })), ok: claimsOK, armed: armed ? armed.key : null },
+        invite: sheet?.kind === 'invite' ? sheet.child?.__probe?.() || null : null,
         stops: (sheet ? sheetStops() : allStops()).map((b) => b.textContent.trim()),
       }),
     };
