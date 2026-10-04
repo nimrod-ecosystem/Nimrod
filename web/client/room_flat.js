@@ -36,6 +36,24 @@
 //     where CSS draws them across the face (so in perspective). Flat colours, edges and lines are exact.
 //   - MODULES DRAW ABOVE THE FURNITURE, as everything a 2D room holds does (room_scene.js rule 1). A piece of
 //     furniture standing in front of a wall screen would hide it in 3D and does not here. The box room has none.
+//     (A brick-built piece, below, is the exception: its picture is drawn in its hotspot, after the screens, so it
+//     covers one it stands in front of -- as it does in 3D.)
+//
+// *** A BRICK-BUILT PIECE IS BAKED AS ITS PICTURE, NOT AS A BOX (2026-10-04, FLAT_VERSION 2). *** In 3D a piece
+// whose look is 'bricks' (brick_builds.js) is ONE face: its build's front picture, standing in the box's front
+// plane, with no top or sides. Baking it as a wood box would flatten a different object from the one on the screen
+// -- a "photo mode" whose photo shows a box where the room showed a desk. And it is cheap to get exactly right: the
+// front plane is parallel to the screen, so its projection is a plain rectangle and the picture needs no
+// perspective at all. So the bake draws no polygons for it; its hotspot IS that rectangle and carries
+//   `bricks: '<part>'`   room_scene.js draws the build's picture in the hotspot, tinted with the bake's own 'wood'
+//                        paint (the 3D room's `--r3-wood`), exactly as room3d.js draws it.
+//   FOR: the flat room shows what the 3D room showed, in the theme, and a door on it is still pressed on its shape.
+//   AGAINST: it is a download on the device (~150 KB for the desk) where the box was free -- the same cost the 2D
+//   room's own brick desk already has -- and a hotspot now draws something. If the picture will not load, the
+//   hotspot is filled with the front face's wood instead (the 3D room's proxy level), never left empty.
+//   Its look is the 3D room's: change it there and the flat room goes stale (its hash), and Re-bake follows.
+//   The limit, said plainly: a BOX piece standing in front of a brick-built one is in the backdrop, so it is drawn
+//   behind that picture rather than in front of it. The box room's pieces do not overlap.
 //   - ANIMATION: the 3D room has none but the drift, so nothing is lost today. A later scene that moves would
 //     bake its moving parts as loops or overlays, not into the backdrop.
 //   - RE-BAKE: a flattened room keeps its 3D source (`recipe.flat.source`) and the source's HASH. `flatState`
@@ -54,9 +72,13 @@ import { W, H, normalizeRoom3d, viewOf, faceToWorld, faceSize, project, boxFaces
   SURFACES, NEAR_CLIP, opensOf } from './room3d.js';
 import { placedGeometry } from './layout.js';
 import { sceneRecipe, furnitureIds, tidyScene } from './room_doors.js';
+import { lookOf } from './brick_builds.js';
 
 // Bump when the bake itself changes how a room is drawn: every flattened room then offers Re-bake.
-export const FLAT_VERSION = 1;
+// 2 (2026-10-04): a brick-built piece is baked as its picture (header), not as a box.
+export const FLAT_VERSION = 2;
+/** True when a piece is drawn in 3D as its brick picture (one face) -- and so is baked as one. */
+export const bakedAsPicture = (f) => lookOf(f) === 'bricks';
 // The slot a module placed freely on a 3D wall gets in the flattened room.
 export const FLAT_SLOT_PREFIX = 'p-';
 
@@ -141,6 +163,7 @@ export function bakePlan(recipe, view) {
   shapes.push({ pts: poly(faceRect('back', 0, H - SKIRT, W, H, view)), fill: 'base' });
   // The furniture, farthest first (painter's order), each box's faces that can be seen.
   for (const f of furnitureFarFirst(recipe, view)) {
+    if (bakedAsPicture(f)) continue;               // its hotspot draws its picture (header)
     const fs = boxFaces(f, view);
     if (fs.top.seen) shapes.push({ pts: poly(fs.top.pts), fill: 'woodTop' });
     if (fs.left.seen) shapes.push({ pts: poly(fs.left.pts), fill: 'woodSide' });
@@ -160,9 +183,12 @@ export function furnitureFarFirst(recipe, view) {
 // ---------------------------------------------------------------------------------------------
 // 2. HOTSPOTS, 3. QUADS
 // ---------------------------------------------------------------------------------------------
-/** A piece of furniture -> a 2D room `hotspot` item: same id, name and door; its drawn outline. */
+/** A piece of furniture -> a 2D room `hotspot` item: same id, name and door; its drawn outline. A brick-built
+ *  piece's outline is its front face (all 3D draws of it), and it carries `bricks` (its part) for its picture. */
 export function hotspotFor(f, view) {
-  const hull = convexHull(boxCorners(f, view).map(([x, y, z]) => project(view, x, y, z)));
+  const pic = bakedAsPicture(f);
+  const corners = pic ? boxFaces(f, view).front.pts : boxCorners(f, view);
+  const hull = convexHull(corners.map(([x, y, z]) => project(view, x, y, z)));
   const b = bbox(hull);
   const w = Math.max(b.w, 1), h = Math.max(b.h, 1);
   const it = {
@@ -170,6 +196,7 @@ export function hotspotFor(f, view) {
     x: r2(((b.left + w / 2) / W) * 100), y: r2(((b.top + h / 2) / H) * 100), w: r1(w), h: r1(h),
     poly: hull.map(([x, y]) => [r1(((x - b.left) / w) * 100), r1(((y - b.top) / h) * 100)]),
   };
+  if (pic) it.bricks = f.part;
   const door = opensOf(f);
   if (door) it.opens = door;
   return it;

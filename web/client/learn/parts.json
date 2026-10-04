@@ -244,6 +244,18 @@
       "source": null,
       "photo": null,
       "assembly": "/design-assets/bricks/scenes/desk_v1.json"
+    },
+    {
+      "id": "side_table",
+      "title": "Side table",
+      "group": "Builds",
+      "status": "available",
+      "summary": "A 480 x 480 x 520 mm side table made only of the parts above: 21 bricks and 8 L-brackets, held by 128 connector pins. Its 320 mm legs are longer than many print beds, so it is a virtual build for now, like the desk.",
+      "glb": null,
+      "stl": null,
+      "source": null,
+      "photo": null,
+      "assembly": "/design-assets/bricks/scenes/side_table_v1.json"
     }
   ]
 }

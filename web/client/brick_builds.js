@@ -134,3 +134,14 @@ export function builtFromWords(b) {
   const bits = [b.bricks ? `${b.bricks} brick${b.bricks === 1 ? '' : 's'}` : '', b.brackets ? `${b.brackets} bracket${b.brackets === 1 ? '' : 's'}` : ''].filter(Boolean);
   return `Built from ${b.parts} Nimrod part${b.parts === 1 ? '' : 's'}${bits.length ? `: ${bits.join(', ')}` : ''}.`;
 }
+
+// *** THE LOOK ROW AND "OPEN ITS BRICKS", FOR ANY HOST THAT OFFERS A PIECE'S OPTIONS IN EDIT MODE. *** The room
+// module (modules/room.js `builtTarget`) and a dashboard's own room (arrangement.js `roomTargets`, 2D and 3D) both
+// offer them, so the row and the action are declared once, here, beside the builds they describe.
+export const LOOK_FIELD = Object.freeze({
+  key: 'look', label: 'Look', kind: 'choice', default: LOOK_DEFAULT, level: 'essential',
+  help: 'Brick-built: the piece as it is built from Nimrod bricks. Drawn: the drawn picture.',
+  options: Object.freeze(LOOKS.map((v) => Object.freeze({ value: v, label: LOOK_LABELS[v] }))),
+});
+/** A built piece's edit-mode actions: "Built from N parts" and the way into its bricks. [] with no build. */
+export const builtActions = (b) => (b ? [{ id: 'bricks', note: builtFromWords(b), label: 'Open its bricks', href: bricksPageFor(b.id) }] : []);

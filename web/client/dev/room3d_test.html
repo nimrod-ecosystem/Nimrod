@@ -165,8 +165,24 @@ try {
     check('*** six faces at most: back, floor, ceiling, left, right ***', faces.length === 5 && faces.length <= 6,
       faces.map((f) => f.dataset.surface).join());
     const objs = root.querySelectorAll('.r3-box');
-    check('three pieces of furniture, each a box of four faces (front, top, two sides)',
-      objs.length === 3 && [...objs].every((o) => o.querySelectorAll(':scope > .r3-face').length === 4), String(objs.length));
+    check('three pieces of furniture; the cabinet and the shelf each a box of four faces (front, top, two sides)',
+      objs.length === 3 && [...objs].filter((o) => o.dataset.object !== 'table').every((o) => o.querySelectorAll(':scope > .r3-face').length === 4), String(objs.length));
+    // 2026-10-04: the preset's desk names part 'desk', so it is drawn as the brick-built desk_v1 (brick_builds.js).
+    const desk = root.querySelector('[data-object="table"]');
+    check('*** the preset\'s desk is BRICK-BUILT: one face, its build\'s picture (desk_v1) ***',
+      desk?.dataset.look === 'bricks' && desk.querySelectorAll(':scope > .r3-face').length === 1
+      && /\/renders\/desk_v1_front\.png$/.test(desk.querySelector('.r3-bf-bricks img')?.src || ''), desk?.outerHTML.slice(0, 160));
+    const pdesk = ROOM3D_PRESETS.box.recipe.furniture.find((f) => f.id === 'table');
+    check('...at desk_v1\'s own proportions (1280 x 760 x 640 mm at 0.2 px/mm), named for what it is',
+      pdesk.part === 'desk' && pdesk.name === 'Desk' && pdesk.w === 256 && pdesk.h === 152 && pdesk.d === 128, J(pdesk));
+    check('objectEls says what each piece is built from and how it is drawn (the Look row reads these)',
+      J(room.objectEls().map((o) => [o.id, o.build?.id || null, o.look])) === J([['cabinet', null, 'drawn'], ['table', 'desk_v1', 'bricks'], ['shelf', null, 'drawn']]),
+      J(room.objectEls().map((o) => [o.id, o.build?.id || null, o.look])));
+    const drawnRoom = mountRoom3d(document.createElement('div'), { kind: 'room3d', preset: 'box',
+      recipe: { ...ROOM3D_PRESETS.box.recipe, furniture: ROOM3D_PRESETS.box.recipe.furniture.map((f) => (f.id === 'table' ? { ...f, look: 'drawn' } : f)) } });
+    check('*** its Look, Drawn on its recipe item: the plain box again ***',
+      drawnRoom.objectEls().find((o) => o.id === 'table')?.look === 'drawn' && drawnRoom.root.querySelectorAll('[data-object="table"] > .r3-face').length === 4);
+    drawnRoom.destroy();
     check('objects() lists them for the map editor, none a door', J(room.objects().map((o) => o.opens)) === J([null, null, null])
       && room.objects().map((o) => o.id).join() === 'cabinet,table,shelf');
     check('no piece is a button until it is a door (a button that does nothing is a dead stop for a switch)',

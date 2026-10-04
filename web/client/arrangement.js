@@ -63,7 +63,8 @@ import { createScreenLinks } from './screen_links.js';
 import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
 // Row 2.38, the map editor: a change that only moves a room object's door is applied in place too
 // (room_doors.js argues where a door is saved and why that is not a rebuild).
-import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, tidyScene } from './room_doors.js';
+import { classifyLayoutChange, sceneDoorChanges, sceneDoors, withDoor, withLook, sceneLooks, tidyScene } from './room_doors.js';
+import { LOOK_FIELD, LOOK_DEFAULT, builtActions } from './brick_builds.js';
 export { classifyLayoutChange };
 import { SHELL_PROMOTE, SHELL_DEMOTE } from './shell_verbs.js';
 // 2026-10-02: EDIT ANY MODULE IN PLACE (edit_mode.js argues it). This file owns which panel is being edited
@@ -1932,18 +1933,34 @@ export function createArrangement({
     loadDashChoices();
     let objs = [];
     try { objs = roomScene.objectEls?.() || []; } catch { objs = []; }
-    const out = objs.filter((o) => o && o.el).map((o) => ({
-      id: o.id, label: o.name, el: o.el, also: o.also || [],
-      help: `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
-      fields: [opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
-      values: () => ({ opens: (sceneDoors(roomBase()?.scene || null) || {})[o.id] || '' }),
-      set: (patch) => {
-        if (!patch || !('opens' in patch)) return;
-        const base = roomBase();
-        const s = base && withDoor(base.scene, o.id, patch.opens || null);
-        if (s) writeRoomScene(tidyScene(s));
-      },
-    }));
+    // A piece built from Nimrod bricks (brick_builds.js) also gets its Look and "Open its bricks" -- the rows the
+    // room MODULE's own pieces have (modules/room.js builtTarget), in 2D and 3D alike. Here the Look is saved on
+    // the piece's recipe item, like its door (room_doors.js withLook), since a dashboard's room has no row of its own.
+    const out = objs.filter((o) => o && o.el).map((o) => {
+      const built = !!o.build;
+      return {
+        id: o.id, label: o.name, el: o.el, also: o.also || [],
+        help: built ? `${o.name}: how it is drawn, and which dashboard it opens when it is pressed, or nothing.`
+          : `${o.name}: which dashboard it opens when it is pressed, or nothing.`,
+        fields: [...(built ? [LOOK_FIELD] : []), opensField((sceneDoors(roomBase()?.scene || null) || {})[o.id] || '')],
+        values: () => {
+          const scene = roomBase()?.scene || null;
+          const v = { opens: (sceneDoors(scene) || {})[o.id] || '' };
+          if (built) v.look = (sceneLooks(scene) || {})[o.id] || LOOK_DEFAULT;
+          return v;
+        },
+        ...(built ? { actions: builtActions(o.build) } : {}),
+        set: (patch) => {
+          if (!patch) return;
+          const base = roomBase();
+          if (!base) return;
+          let s = base.scene;
+          if ('opens' in patch) s = withDoor(s, o.id, patch.opens || null) || s;
+          if (built && 'look' in patch) s = withLook(s, o.id, patch.look) || s;
+          if (s !== base.scene) writeRoomScene(tidyScene(s));
+        },
+      };
+    });
     // The walls and the floor: the room itself, last (it holds everything above).
     const root = roomScene.root || roomHost;
     const rows = () => { try { return roomRowsLib ? roomRowsLib.roomRows(roomBase()) : []; } catch { return []; } };

@@ -32,6 +32,7 @@
 import { presetRecipe } from './room_presets.js';
 import { layoutChange, isArranged } from './layout.js';
 import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET } from './room3d.js';
+import { buildFor, normalizeLook, LOOK_DEFAULT } from './brick_builds.js';
 
 const J = JSON.stringify;
 const clone = (v) => JSON.parse(J(v));
@@ -123,6 +124,37 @@ export function withDoor(scene, objectId, target) {
   if (t) item.opens = t; else delete item.opens;
   r[key] = r[key].map((it, j) => (j === i ? item : it));
   return { ...clone(scene), recipe: r };
+}
+
+/**
+ * The scene with object `objectId`'s LOOK set (brick_builds.js: 'bricks' | 'drawn'), on its recipe item -- the
+ * same place, and the same copy-the-preset-in trade-off, as a door (header). A dashboard's own room keeps it
+ * there because it has no state row of its own (the room MODULE keeps its looks in its row instead). The
+ * default look is saved as NO `look` at all, so trying Drawn and going back leaves a preset room naming its
+ * preset again (`tidyScene`). Null when the scene is not a room, there is no such piece, the piece has no
+ * brick build, or `look` is not a look.
+ */
+export function withLook(scene, objectId, look) {
+  const r = sceneRecipe(scene);
+  if (!r || !normalizeLook(look)) return null;
+  const { key, ids, ok } = doorList(scene, r);
+  const i = objectId ? ids.indexOf(objectId) : -1;
+  if (i < 0 || !ok(r[key][i]) || !buildFor(r[key][i].part)) return null;
+  const item = { ...r[key][i] };
+  if (look === LOOK_DEFAULT) delete item.look; else item.look = look;
+  r[key] = r[key].map((it, j) => (j === i ? item : it));
+  return { ...clone(scene), recipe: r };
+}
+/** `{ objectId: 'bricks' | 'drawn' }` for every brick-built piece in the scene: its saved look, else the default. */
+export function sceneLooks(scene) {
+  const r = sceneRecipe(scene);
+  if (!r) return {};
+  const { key, ids, ok } = doorList(scene, r);
+  const out = {};
+  (r[key] || []).forEach((it, i) => {
+    if (ok(it) && ids[i] && buildFor(it.part)) out[ids[i]] = normalizeLook(it.look) || LOOK_DEFAULT;
+  });
+  return out;
 }
 
 /** A room scene back to naming only its preset when its copied recipe is exactly the preset's again (the
