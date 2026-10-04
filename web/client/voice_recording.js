@@ -59,6 +59,10 @@
 // room has recording signs. The review panel is where somebody deletes what is not the person. A
 // "record only when the speaker match says it is them" option needs the speaker engine that does not
 // exist yet (subtitles.js lists what it needs).
+//
+// THE SCREEN'S OWN VOICE IS THE EXCEPTION, because the screen knows when it is talking (screen_speech.js,
+// 2026-10-04): what was heard while it spoke is not kept - see MIN_CUT_MS below. Its OTHER sounds (a video,
+// music, a game's effects) are not covered: they reach the microphone too, and nothing here knows when.
 
 import { noticeStack } from './live_notices.js';
 
@@ -86,6 +90,24 @@ export const VOICE_RECORDING_DEFAULTS = Object.freeze({
 });
 
 export const KEEP_DAY_CHOICES = Object.freeze([7, 30, 90, 0]);
+
+// *** THE SCREEN'S OWN VOICE (2026-10-04, screen_speech.js). *** The screen's speaker is in the room, and while
+// it reads a question and its answers the microphone hears it. A training pair of the screen's synthetic voice
+// labelled as the person is exactly the pair this file exists not to make. So, with a tracker (`screenSpeech`):
+//   * an utterance whose VOICE BEGAN while the screen was talking, or inside the tail after it stopped, is not
+//     kept at all (on a raw microphone the energy gate cuts the screen's sentence as an utterance of its own);
+//   * an utterance that began BEFORE the screen spoke and ran into it is CUT where the screen began - the
+//     person's own words before that are clean audio and are kept - and MARKED (`overlap`), because the
+//     transcript then covers more than the audio: it is never counted as reviewed, and the Euphonia export
+//     leaves it out until somebody has listened. ARGUED against only marking it (keeping the screen's voice
+//     in the audio with a flag): every reader of the pairs would have to know to check the flag, and the one
+//     that forgets trains on the screen's voice. A cut clip with a mark is safe for a reader who knows nothing.
+//   * the quiet run-up before the voice began (the segmenter's pre-roll) is trimmed where it sits in the tail;
+//     a cut that lands only in the trailing silence after the voice stopped is not marked (nothing was lost).
+// With no tracker - speech off, so the screen never says anything, or an older host - nothing changes.
+// Shorter than this after a cut, it is not anybody's words: the segmenter's own minimum (speech_engines.js
+// SEGMENT_DEFAULTS.minSpeechMs, "shorter than this, it was a knock or a cough"), reused rather than invented.
+export const MIN_CUT_MS = 200;
 
 // Not settings, argued: plumbing nobody in a room can judge.
 // A group whose transcript never became final (an engine went away) is saved with what it has after
@@ -173,6 +195,8 @@ export function newPairId(at, rand = Math.random) {
 export function buildPair({
   id, personId = null, at = 0, caption = null, clips = [], keepDays = VOICE_RECORDING_DEFAULTS.keepDays,
   finalTranscript = true, prompt = null,
+  // Cut where the screen started talking ({ cutAtMs }, from the start of the pair), or null. Never reviewed.
+  overlap = null,
 } = {}) {
   const c = caption || {};
   const text = String(c.text || '').trim();
@@ -201,8 +225,10 @@ export function buildPair({
     unclear: !text,
     meant: pr ? pr.text : '',
     meantAt: pr ? at : null,
-    reviewed: !!pr,
+    // A read phrase counts as reviewed - unless the screen talked over it, when somebody must listen first.
+    reviewed: !!pr && !overlap,
     ...(pr ? { prompt: pr } : {}),
+    ...(overlap ? { overlap: { screenSpeech: true, cutAtMs: Math.max(0, Math.round(Number(overlap.cutAtMs) || 0)) } } : {}),
     clips: clips.map((k) => ({ ear: String(k.ear || 'room'), file: `${String(k.ear || 'room')}.wav`,
                                sampleRate: Number(k.sampleRate) || CLIP_RATE,
                                durationMs: Math.round(Number(k.durationMs) || 0),
@@ -407,8 +433,20 @@ export function createVoiceRecorder({
   bus = null,
   onChange = null,
   onSaved = null,
+  // When the screen itself is talking (screen_speech.js), so its own voice is not kept. See MIN_CUT_MS above.
+  screenSpeech = null,
 } = {}) {
   if (!store) throw new Error('createVoiceRecorder: a store is required');
+  let screen = screenSpeech;
+  // The earliest moment in [t0, t1] that is the screen talking (or its tail), or null. A tracker that throws
+  // is treated as silent: the recorder behaves as it did before trackers existed, never stops recording.
+  const screenAt = (t0, t1) => {
+    if (!screen || typeof screen.firstBusy !== 'function') return null;
+    try { const v = screen.firstBusy(t0, t1); return v == null || !Number.isFinite(Number(v)) ? null : Number(v); }
+    catch { return null; }
+  };
+  const gated = new Set();          // uids whose voice began while the screen was talking: ignored to their end
+  const MS_PER_SAMPLE = 1000 / CLIP_RATE;
   let opts = voiceRecordingOptionsFrom({});
   let rec = null;
   let offs = [];
@@ -456,7 +494,7 @@ export function createVoiceRecorder({
     try { bus?.publish?.(VOICE_RECORDING_TOPIC, s); } catch (err) { console.error('voice recording publish', err); }
   }
 
-  function dropAll() { clips.clear(); groups.clear(); promptGroup = null; }
+  function dropAll() { clips.clear(); groups.clear(); gated.clear(); promptGroup = null; }
 
   function groupOf(gid, t) {
     let g = groups.get(gid);
@@ -469,19 +507,45 @@ export function createVoiceRecorder({
     // Held: nothing begun now is kept, and an utterance that began before the hold was dropped by it.
     if (holds.size) return;
     if (u.type === 'begin') {
+      const start = Number(u.t) || now();
+      // Where the VOICE began: after the pre-roll when the recogniser says so (`onset`), else the start.
+      const onset = Number.isFinite(Number(u.onset)) && u.onset != null ? Number(u.onset) : start;
+      // THE SCREEN WAS TALKING WHEN THIS VOICE BEGAN (or had stopped less than the tail ago): its own.
+      if (screenAt(onset, onset) !== null) { gated.add(u.uid); return; }
       const gid = u.group || `solo:${u.uid}`;
       const fresh = !groups.has(gid);
-      clips.set(u.uid, { ear: u.ear || 'room', group: gid, frames: [], samples: 0, t0: Number(u.t) || now(), done: false, endT: null });
-      const g = groupOf(gid, Number(u.t) || now());
+      // `pos`: the time of the next frame, from the samples seen (frames arrive in order, 16 kHz). `t0` is the
+      // time of the first sample KEPT - later than `start` when a pre-roll in the tail is trimmed.
+      clips.set(u.uid, { ear: u.ear || 'room', group: gid, frames: [], samples: 0, t0: start, pos: start, onset,
+                         cutAt: null, done: false, endT: null, voiceEnd: null });
+      const g = groupOf(gid, start);
       g.uids.add(u.uid);
       if (fresh && prompt && promptGroup === null) { g.prompt = prompt; promptGroup = gid; }
+      return;
+    }
+    if (gated.has(u.uid)) {
+      if (u.type === 'end' || u.type === 'cancel') gated.delete(u.uid);
       return;
     }
     const c = clips.get(u.uid);
     if (!c) return;
     if (u.type === 'audio' && u.pcm && !c.done) {
+      if (c.cutAt !== null) return;           // cut: the rest of it is the screen's
       // COPIED: the frame belongs to the audio thread's message and the engines' sockets.
       const f = u.pcm instanceof Int16Array ? u.pcm.slice() : Int16Array.from(u.pcm);
+      const from = c.pos;
+      const to = from + f.length * MS_PER_SAMPLE;
+      c.pos = to;
+      const hit = screenAt(from, to);
+      if (hit !== null) {
+        // The quiet run-up before the voice began, sitting in the screen's tail: trimmed off the front.
+        if (!c.samples && from < c.onset) { c.t0 = to; return; }
+        // The screen started talking over it: keep what came before, and nothing after.
+        const keep = Math.max(0, Math.min(f.length, Math.floor((hit - from) / MS_PER_SAMPLE)));
+        if (keep > 0) { c.frames.push(f.slice(0, keep)); c.samples += keep; }
+        c.cutAt = from + keep * MS_PER_SAMPLE;
+        return;
+      }
       c.frames.push(f);
       c.samples += f.length;
       return;
@@ -496,6 +560,7 @@ export function createVoiceRecorder({
     if (u.type === 'end') {
       c.done = true;
       c.endT = Number(u.t) || now();
+      if (Number.isFinite(Number(u.voiceEnd)) && u.voiceEnd != null) c.voiceEnd = Number(u.voiceEnd);
       maybeSave(c.group);
     }
     staleCheck();
@@ -525,7 +590,9 @@ export function createVoiceRecorder({
     groups.delete(gid);
     for (const uid of g.uids) clips.delete(uid);
     if (promptGroup === gid) promptGroup = null;
-    const done = members.filter((m) => m.done && m.samples > 0);
+    // A clip cut by the screen's voice down to less than a word is nobody's words (MIN_CUT_MS).
+    const done = members.filter((m) => m.done && m.samples > 0
+      && (m.cutAt === null || m.samples * MS_PER_SAMPLE >= MIN_CUT_MS));
     if (!done.length) return;                  // no audio: a phrase it held is armed again for the next try
     const text = String(g.caption?.text || '').trim();
     // A READ PHRASE IS KEPT EVEN WHEN NOTHING WAS MADE OUT: the words are known (they were on the screen).
@@ -566,8 +633,12 @@ export function createVoiceRecorder({
       pairClips.push({ ear, sampleRate: CLIP_RATE, durationMs: (m.samples / CLIP_RATE) * 1000, offsetMs: m.t0 - at });
       wavs.push({ ear, wav: encodeWav16(flat, CLIP_RATE) });
     }
+    // Cut by the screen's voice while the person's voice was still going (a cut in the trailing silence
+    // after it stopped lost nothing, and is not marked). With no `voiceEnd` from the recogniser, any cut is.
+    const cuts = members.filter((m) => m.cutAt !== null && (m.voiceEnd === null || m.cutAt < m.voiceEnd));
+    const overlap = cuts.length ? { cutAtMs: Math.min(...cuts.map((m) => m.cutAt)) - at } : null;
     const pair = buildPair({ id: newPairId(at, rand), personId, at, caption: g.caption, clips: pairClips,
-                             keepDays: opts.keepDays, finalTranscript: final, prompt: g.prompt || null });
+                             keepDays: opts.keepDays, finalTranscript: final, prompt: g.prompt || null, overlap });
     if (count !== null) count += 1;
     const w = Promise.resolve()
       .then(() => store.add(pair, wavs))
@@ -678,6 +749,8 @@ export function createVoiceRecorder({
       promptSubs.add(fn);
       return () => { promptSubs.delete(fn); };
     },
+    /** The screen-speech tracker (screen_speech.js), or null for none. Takes effect from the next utterance. */
+    setScreenSpeech(s) { screen = s || null; },
     /** Whose recordings these are (the screen learns its person after it starts). */
     setPersonId(id) {
       if ((id || null) === personId) return;
@@ -796,7 +869,9 @@ export async function exportPairs(dir, store, { personId, onlyReviewed = false }
 // whether it expects a level between data/ and the numbers (the app's user or session), and whether it
 // strips a trailing newline. So: padded (sorts the same everywhere), one level, no trailing newline -
 // and nimrod-export.json maps each folder back to its recording, so a bad sample can be found and deleted.
-// Only pairs with what was meant AND audio go in: a pair with no words is not a training sample.
+// Only pairs with what was meant AND audio go in: a pair with no words is not a training sample. Nor a pair
+// cut where the screen started talking (`overlap`) that nobody has listened to yet: its words may run past
+// its audio (2026-10-04, screen_speech.js).
 export const EUPHONIA_DATA = 'data';
 export const EUPHONIA_AUDIO = 'recording.wav';
 export const EUPHONIA_PHRASE = 'phrase.txt';
@@ -805,7 +880,7 @@ export const EUPHONIA_INDEX = 'nimrod-export.json';
 /** The training samples among `pairs`, oldest first, numbered. which: 'meant' (default) | 'prompted'. Pure. */
 export function euphoniaSamples(pairs = [], { which = 'meant', ear = 'room' } = {}) {
   const ok = (pairs || []).filter((p) => p && String(p.meant || '').trim() && (p.clips || []).length
-    && (which !== 'prompted' || p.prompt));
+    && (which !== 'prompted' || p.prompt) && !(p.overlap && !p.reviewed));
   ok.sort((a, b) => ((Number(a.at) || 0) - (Number(b.at) || 0)) || String(a.id).localeCompare(String(b.id)));
   const width = Math.max(3, String(ok.length).length);
   return ok.map((p, i) => {

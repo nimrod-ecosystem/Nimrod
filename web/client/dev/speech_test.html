@@ -44,6 +44,7 @@ import { VERBS, MEDIA_VERBS, ACTION_VERBS, verbTopic, createDefaultRegistry } fr
 import { createBus } from '../bus.js';
 import { createInputBus } from '../input.js';
 import { createVerbRouter } from '../input_router.js';
+import { createScreenSpeech } from '../screen_speech.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -1493,6 +1494,53 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     feed('computer please nimrod hi');
     check('...but said after the wake phrase it does', asks.length === 9);
     sp.destroy(); g.destroy(); open.destroy();
+  }
+
+  section('*** the screen does not take its OWN words as a person\'s (screen_speech.js, 2026-10-04) ***');
+  {
+    let clock = 50_000;
+    const ss = createScreenSpeech({ now: () => clock, tailMs: 400 });
+    const heard = [];
+    const r = arig({ screenSpeech: ss, onHeard: (h) => heard.push(h) });
+    r.grammar('wg-1', true, ['paris', 'london', 'berlin', 'rome', UNKNOWN_WORD]);
+    const q = ss.begin('Which city is the capital of France? Paris, London, Berlin or Rome.', 50_000);
+    r.say('paris', { voiceFrom: 51_000, voiceTo: 51_400, confidence: 0.95 });
+    check('*** the quiz reading its own answers aloud: "paris" heard while it talked is NOT sent as the answer ***',
+      r.answers.length === 0 && heard.at(-1)?.echo === true && heard.at(-1)?.screen === true, JSON.stringify(r.answers));
+    r.say('[unk]', { voiceFrom: 51_500, voiceTo: 52_000 });
+    check('*** ...nor is "nothing made out" (the game would answer itself "I did not catch that") ***', r.answers.length === 0);
+    ss.end(q, 53_000);
+    r.say('paris', { voiceFrom: 53_200, voiceTo: 53_500 });
+    check('*** a voice that began inside the tail (400 ms) is still the screen ***', r.answers.length === 0);
+    r.say('paris', { voiceFrom: 54_000, voiceTo: 54_400 });
+    check('*** after the tail: the person\'s answer goes to the game, as before ***',
+      r.answers.length === 1 && r.answers[0][1].text === 'paris' && !('voiceFrom' in r.answers[0][1]), JSON.stringify(r.answers));
+
+    const line = ss.begin('To stop the video, say computer please pause.', 60_000);
+    r.say('computer please pause', { voiceFrom: 61_000, voiceTo: 62_100 });
+    check('*** the screen SAYING a command ("say computer please pause") does not fire it ***', r.pressed().length === 0, JSON.stringify(r.pressed()));
+    r.say('computer please next', { voiceFrom: 60_500, voiceTo: 61_200 });
+    check('*** a person\'s own wake-phrase command over the screen still works ***',
+      JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+    ss.end(line, 62_000);
+
+    clock = 70_000;
+    const live = ss.begin('Paris is right.', 70_000);
+    r.say('rome');
+    check('*** a recogniser that gives no times (the browser\'s own): dropped while the screen is talking ***', r.answers.length === 1);
+    ss.end(live, 70_500);
+    clock = 71_000;
+    r.say('rome');
+    check('...and heard once it has stopped (and the tail is over)', r.answers.length === 2 && r.answers[1][1].text === 'rome');
+
+    // No tracker (speech off, or an older host): nothing changes.
+    const plain = arig();
+    plain.grammar('wg-1', true, ['paris', UNKNOWN_WORD]);
+    const q2 = ss.begin('Paris, London?', 80_000);
+    plain.say('paris', { voiceFrom: 80_100, voiceTo: 80_500 });
+    ss.end(q2, 81_000);
+    check('*** no tracker: exactly as before - it goes to the game ***', plain.answers.length === 1);
+    r.speech.destroy(); plain.speech.destroy();
   }
 
   section('*** the shipped bindings ***');

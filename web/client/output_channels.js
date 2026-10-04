@@ -42,6 +42,11 @@ export function createSpeechChannel({
   // audio bus's `aac` channel - with that channel's fader and its minimum (60% by default), so a
   // "quieter" meant for the video can never bury her words. Everything else stays on `voice`.
   aacSources = ['board'],
+  // *** WHEN THE SCREEN IS TALKING (screen_speech.js, 2026-10-04). *** Marked at exactly the points the
+  // voice tier is marked active and released below, so the voice recorder and the recogniser know what the
+  // microphone heard was the screen. The board's words too: they come out of the same speaker. Optional:
+  // none means nothing is marked, never no speech.
+  screenSpeech = null,
   // A hard stop, because speechSynthesis does not always fire `onend` - a canceled or
   // interrupted utterance can leave the channel believing it is still speaking forever,
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
@@ -106,12 +111,18 @@ export function createSpeechChannel({
       // music down forever, which is the same stuck-switch disease the input bus has a
       // watchdog for, pointed at the speaker.
       audio?.setActive?.(sid, true);
+      let said = null;
+      try { said = screenSpeech?.begin?.(item.text) ?? null; } catch (err) { console.error('speech: screen speech', err); }
+      const quiet = () => {
+        audio?.setActive?.(sid, false);
+        if (said !== null) { try { screenSpeech?.end?.(said); } catch (err) { console.error('speech: screen speech', err); } said = null; }
+      };
 
       let finished = false;
       let watch = null;
       const stopWatch = () => { if (watch != null) { clearTimer(watch); watch = null; } };
-      const guard = setTimer(() => { if (!finished) { finished = true; stopWatch(); audio?.setActive?.(sid, false); done(); } }, maxMs);
-      const end = () => { if (finished) return; finished = true; clearTimer(guard); stopWatch(); audio?.setActive?.(sid, false); done(); };
+      const guard = setTimer(() => { if (!finished) { finished = true; stopWatch(); quiet(); done(); } }, maxMs);
+      const end = () => { if (finished) return; finished = true; clearTimer(guard); stopWatch(); quiet(); done(); };
       u.onend = end;
       u.onerror = end;
 
@@ -134,7 +145,7 @@ export function createSpeechChannel({
         finished = true;
         clearTimer(guard);
         stopWatch();
-        audio?.setActive?.(sid, false);
+        quiet();
         cancelSpeech(synth || undefined);
       };
     },
@@ -240,14 +251,15 @@ export function createSoundChannel({ context = null, gain = 0.12 } = {}) {
 // says is also written as a subtitle line, at the moment it is said - so a sentence the person's
 // routing sends to "Spoken" is captioned, and one that is muted or dropped is not. Only speech is
 // tapped: the screen channel is already on screen, and a tone has no words.
+// `screenSpeech` (2026-10-04): the screen_speech.js tracker the speech channel marks while it talks.
 export function defaultChannels({ mount = null, pref = () => ({}), events = null, audio = null,
-                                  captions = null } = {}) {
+                                  captions = null, screenSpeech = null } = {}) {
   const out = {};
   // Signed out there is no account, so there are no "other devices" and no mailbox.
   // The channel is absent rather than present-and-broken, which is what makes
   // output.js report `no-adapter` instead of a message vanishing.
   if (events) out.remote = createRemoteChannel({ events });
-  const speech = createSpeechChannel({ pref, audio });
+  const speech = createSpeechChannel({ pref, audio, screenSpeech });
   if (speech.available()) {
     out.speech = captions && typeof captions.tap === 'function' ? captions.tap(speech) : speech;
   }
