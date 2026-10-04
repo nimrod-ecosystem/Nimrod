@@ -94,6 +94,15 @@ CONVERT_HINT = ('Convert the checkpoint again with the tokenizer files copied: c
 MY_VOICE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'my_voice_model')
 MY_VOICE_PORT = 8796      # beside the shared service's 8797; the person's "its port" setting must match
 
+# *** THE NIMROD FOLDER (2026-10-04). *** The site now sets up one folder a person chooses, with a subfolder per
+# kind of file (web/client/user_folders.js SUBFOLDERS). Its "Voice model" subfolder is where a converted model
+# goes, so `--my-voice` looks there FIRST when it knows the Nimrod folder: from `--root <path>`, or from the one
+# line in NIMROD_FOLDER_FILE (a plain text file, argued: a person can open and fix it in Notepad, and a Windows
+# path needs no escaping, which JSON would demand of every backslash). MY_VOICE_DIR stays the fallback, as before.
+# The subfolder's NAME must be the site's: test_service.py reads user_folders.js and holds the two equal.
+VOICE_MODEL_SUBFOLDER = 'Voice model'
+NIMROD_FOLDER_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'nimrod_folder.txt')
+
 
 class ModelFolderError(ValueError):
     """A --model folder that cannot be loaded, with what is wrong said in words."""
@@ -516,6 +525,7 @@ def make_wake(models, **kw):
 
 
 __all__ = ['SAMPLE_RATE', 'WhisperBackend', 'ModelFolderError', 'is_model_folder', 'whisper_folder_missing',
-           'check_whisper_folder', 'whisper_engine_name', 'WHISPER_FOLDER_FILES', 'MY_VOICE_DIR', 'MY_VOICE_PORT', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
+           'check_whisper_folder', 'whisper_engine_name', 'WHISPER_FOLDER_FILES', 'MY_VOICE_DIR', 'MY_VOICE_PORT', 'VOICE_MODEL_SUBFOLDER',
+           'NIMROD_FOLDER_FILE', 'VoskBackend', 'FakeBackend', 'make_backend', 'default_threads',
            'OpenWakeWordDetector', 'FakeWakeDetector', 'make_wake', 'WAKE_THRESHOLD', 'WAKE_REFRACTORY_S',
            'WAKE_MODELS_DIR', 'resolve_wake_models']

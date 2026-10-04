@@ -38,7 +38,17 @@
 // file was not fetched - nothing is downloaded by this work; linked instead, and the person pastes or loads
 // it), run anything, or upload anything. The recordings stay in this browser until somebody exports them.
 
+// *** THE NIMROD FOLDER (2026-10-04). *** Mike: *"Where is this? In E:\nimrod-wakeword that folder? Do I maybe not
+// have it set up yet? There's going to need to be an explanation for the average user."* The honest answer: nobody
+// has the folder until they have recorded, exported, trained and converted - and E:\nimrod-wakeword is unrelated
+// (wake-word training). So the page now opens with "Where you are" (`voiceModelStatus`): six steps, which one you
+// are on, and that the folder only exists after step 4. And the folder's place is the Nimrod folder's own
+// "Voice model" subfolder (user_folders.js), which the speech service reads with `--my-voice --root <that folder>`;
+// speech_service/my_voice_model stays the fallback. When the person has typed the Nimrod folder's full path
+// (user_folders.js `readRootPath`, this device only), the commands carry it; otherwise they carry a placeholder
+// and say to replace it.
 import { cleanPrompt, exportEuphonia, EUPHONIA_DATA, EUPHONIA_AUDIO, EUPHONIA_PHRASE } from './voice_recording.js';
+import { SUBFOLDERS, readRootPath, joinPath, kindFolder, handleStore } from './user_folders.js';
 
 export const EUPHONIA = Object.freeze({
   repo: 'https://github.com/google/project-euphonia-app',
@@ -59,6 +69,11 @@ export const MODEL_FILES = Object.freeze(['model.bin', 'config.json', 'tokenizer
 // the commands run). Gitignored: a person's voice is not project history.
 export const MY_VOICE_PATH = 'web/speech_service/my_voice_model';
 export const MY_VOICE_FROM_WEB = 'speech_service/my_voice_model';
+// The Nimrod folder's subfolder for it, and how the page names a place it cannot see (a browser never reveals a path).
+export const VOICE_FOLDER = SUBFOLDERS.voice;
+export const NIMROD_ROOT_WORDS = '<your Nimrod folder>';
+export const VOICE_PLACE = `${NIMROD_ROOT_WORDS}/${VOICE_FOLDER}`;
+export const RECORDINGS_PLACE = `${NIMROD_ROOT_WORDS}/${SUBFOLDERS.recordings}`;
 // Euphonia's README asks for short phrases (<140 characters). A longer one is kept and flagged, not cut.
 export const PHRASE_CHARS = 140;
 export const PHRASE_MAX = 500;
@@ -97,12 +112,13 @@ export function convertCommand({ checkpoint = '', folder = '' } = {}) {
     + '--quantization int8 --copy_files tokenizer.json preprocessor_config.json';
 }
 
-/** The speech service on this person's own model, on its own port. Run from the project's web folder. `folder`
- * only for a model kept somewhere other than MY_VOICE_PATH. Pure. */
-export function serviceCommand({ folder = '', port = VOICE_MODEL_PORT } = {}) {
+/** The speech service on this person's own model, on its own port. Run from the project's web folder. `root`: the
+ * Nimrod folder, whose "Voice model" it then loads (2026-10-04). `folder` only for a model kept somewhere else. Pure. */
+export function serviceCommand({ folder = '', port = VOICE_MODEL_PORT, root = '' } = {}) {
   const p = Number.isInteger(Number(port)) ? Number(port) : VOICE_MODEL_PORT;
   const f = String(folder || '').replace(/"/g, '').trim();
-  return `py -3.13 -m speech_service --my-voice${f ? ` --model "${f}"` : ''} --port ${p}`;
+  const r = String(root || '').replace(/"/g, '').trim();
+  return `py -3.13 -m speech_service --my-voice${r ? ` --root "${r}"` : ''}${f ? ` --model "${f}"` : ''} --port ${p}`;
 }
 
 /**
@@ -122,17 +138,62 @@ export function checkModelFiles(names = []) {
   return { ok: missing.length === 0, missing, advised, kind };
 }
 
-/** The sentence "Check a folder" shows for a checkModelFiles result. Pure. */
-export function describeModelCheck(r, name = 'That folder') {
+/** The sentence "Check a folder" shows for a checkModelFiles result. `place`: where the files go. Pure. */
+export function describeModelCheck(r, name = 'That folder', { place = VOICE_PLACE } = {}) {
   const n = `“${String(name || 'That folder')}”`;
   if (!r) return '';
   if (r.ok) {
     return `${n} is ready: it has everything the speech service needs${r.advised.length ? ` (it has no ${r.advised.join(', ')}, which the service can do without)` : ''}. `
-      + `Its place is ${MY_VOICE_PATH}: the folder itself named my_voice_model, with these files directly inside it.`;
+      + `Its place is ${place}: put these files directly in that folder (step 5).`;
   }
-  if (r.kind === 'checkpoint') return `${n} is the training checkpoint, not converted yet. Convert it with the command in step 3; the folder that makes is the one you want.`;
-  if (r.kind === 'recordings') return `${n} holds the recordings you exported for training, not a model. The model is the folder step 3’s conversion writes.`;
-  return `${n} is missing ${r.missing.join(', ')}. If it is the converted folder, convert it again with the command in step 3 (it copies the tokenizer files).`;
+  if (r.kind === 'checkpoint') return `${n} is the training checkpoint, not converted yet. Convert it with the command in step 4; the folder that makes is the one you want.`;
+  if (r.kind === 'recordings') return `${n} holds the recordings you exported for training, not a model. The model is the folder step 4’s conversion writes.`;
+  return `${n} is missing ${r.missing.join(', ')}. If it is the converted folder, convert it again with the command in step 4 (it copies the tokenizer files).`;
+}
+
+// ---------------------------------------------------------------------------------------
+// *** "WHERE YOU ARE" (2026-10-04): which of the six steps somebody is on. *** Mike's question - "Do I maybe not
+// have it set up yet?" - answered on the page rather than by whoever he asks. Pure, from what the page can know:
+//   total, index  the phrase list and how far through it this person is (kept on this screen);
+//   exported      an export for training was made from this page (kept on this screen);
+//   nimrod        checkModelFiles of the Nimrod folder's "Voice model", when it could be read (null otherwise);
+//   picked        checkModelFiles of the last folder "Check a folder" looked at, plus its `name` (null if none);
+//   on            this person's "Use my own voice model" switch.
+// The most advanced thing PROVEN wins: a ready model in place beats everything; a folder somebody checked beats
+// what this screen remembers. It cannot see training happen on another computer, so a checkpoint is only known
+// once somebody checks it - said in the steps rather than guessed.
+// ---------------------------------------------------------------------------------------
+export const STEPS = Object.freeze([
+  'Record the phrases',
+  'Export them',
+  'Train the model (on Euphonia’s notebook)',
+  'Convert it',
+  `Put the folder in ${VOICE_PLACE}`,
+  'Start the speech service',
+]);
+
+const hasModelBin = (r) => !!r && !r.missing.includes('model.bin');
+
+/** `{ step (1-6), done, text, haveFolder }`. Pure. */
+export function voiceModelStatus({ total = 0, index = 0, exported = false, nimrod = null, picked = null, on = false, place = VOICE_PLACE } = {}) {
+  const at = (step, text, extra = {}) => ({ step, done: false, text, haveFolder: step >= 5, ...extra });
+  if (nimrod && nimrod.ok) {
+    return on
+      ? at(6, `You have it, in its place, and “Use my own voice model” is on. If this screen says no recogniser is answering, start the speech service (step 6).`, { done: true })
+      : at(6, 'You have it, in its place. Last step: start the speech service, then turn on “Use my own voice model”.');
+  }
+  if (picked && picked.ok) return at(5, `You have the converted folder (“${picked.name || 'the folder you checked'}”). Next: put its files in ${place}.`);
+  const partial = [nimrod, picked].find((r) => r && !r.ok && r.kind !== 'checkpoint' && hasModelBin(r));
+  if (partial) return at(4, `A converted model is there but it is missing ${partial.missing.join(', ')}. Convert it again: the command copies them.`);
+  if ((nimrod && nimrod.kind === 'checkpoint') || (picked && picked.kind === 'checkpoint')) {
+    return at(4, 'You have the training result (a checkpoint). Next: convert it, which makes the voice model folder.');
+  }
+  if (exported || (picked && picked.kind === 'recordings')) return at(3, 'Your recordings are exported. Next: train the model on them.');
+  const n = Math.max(0, Math.round(Number(total) || 0));
+  const i = Math.max(0, Math.min(n, Math.round(Number(index) || 0)));
+  if (n && i >= n) return at(2, `All ${n} phrases are read. Next: export them for training.`);
+  if (n) return at(1, `${i} of ${n} phrases read so far.`);
+  return at(1, 'Not started: there are no phrases to read yet.');
 }
 
 /** The names in a folder somebody picked (a FileSystemDirectoryHandle). Names only: no file is opened. */
@@ -277,7 +338,12 @@ export const VOICE_MODEL_CSS = `
 .vm button[aria-pressed="true"]{background:var(--accent,currentColor);color:var(--on-accent,Canvas);border-color:var(--accent,currentColor)}
 .vm .vm-file input{position:absolute;opacity:0;width:1px;height:1px}
 .vm .vm-phrase{font-size:1.8em;font-weight:600;line-height:1.25;margin:6px 0}
-.vm .vm-step{border:1px solid var(--border,currentColor);border-radius:12px;padding:10px 12px}`;
+.vm .vm-step{border:1px solid var(--border,currentColor);border-radius:12px;padding:10px 12px}
+.vm [data-vm-steps]{margin:4px 0;padding-left:1.6em}
+.vm [data-vm-state="now"]{font-weight:700}
+.vm [data-vm-state="now"]::after{content:" \\2190  you are here"}
+.vm [data-vm-state="done"]{color:var(--text-soft,inherit)}
+.vm [data-vm-state="done"]::after{content:" (done)"}`;
 
 const esc = (s) => String(s == null ? '' : s)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -291,11 +357,21 @@ const defaultStorage = () => { try { return typeof localStorage !== 'undefined' 
  * cannot. `recorder` / `store` are the screen's voice recorder and its store (absent on a page that does not
  * listen). `fs` { available(), pickFolder() } for the export. `pickModelFolder()` -> a folder handle for "Check
  * a folder" (default: the browser's read-only picker; null hides the button). `storage` keeps the pasted
- * phrase list and the place in it, per person, on this screen.
+ * phrase list and the place in it, per person, on this screen. `nimrodFolder` (2026-10-04) `{ path(), voice() }`:
+ * the Nimrod folder's typed full path ('' when none) and its "Voice model" folder (a user_folders.js `kindFolder`
+ * reading; never prompts) - the default reads this device's own; null leaves both out.
  */
+const defaultNimrodFolder = () => {
+  let st = null;
+  return {
+    path: () => readRootPath(),
+    voice: () => kindFolder('voice', { store: st || (st = handleStore()) }),
+  };
+};
+
 export function mountVoiceModel(root, {
   personId = null, values = () => ({}), save = null, recorder = null, store = null, fs = null, storage = defaultStorage(),
-  pickModelFolder = defaultPicker(),
+  pickModelFolder = defaultPicker(), nimrodFolder = defaultNimrodFolder(),
 } = {}) {
   if (!root) throw new Error('mountVoiceModel: a root element is required');
   const row = () => { try { return values() || {}; } catch { return {}; } };
@@ -311,12 +387,21 @@ export function mountVoiceModel(root, {
   root.innerHTML = `<style>${VOICE_MODEL_CSS}</style>
   <div class="vm">
     <h3>Your own voice model</h3>
-    <p>A speech recogniser trained on one person’s voice. Google’s Project Euphonia toolkit fine-tunes Whisper
-      (the recogniser this site’s speech service runs) on about 100 short phrases read aloud by that person. You
-      run every step yourself, on computers you choose. Nothing you record here is uploaded by this site: the
-      recordings stay on this screen until you export them to a folder.</p>
+    <p>A speech recogniser trained on one person’s voice, so it understands that person better. You read about
+      100 short phrases aloud; Google’s Project Euphonia toolkit then fine-tunes (further trains) Whisper, the
+      recogniser this site’s speech service runs, on them. You run every step yourself, on computers you choose.
+      Nothing you record here is uploaded by this site: the recordings stay on this screen until you export them.</p>
     <p class="vm-row">${link(EUPHONIA.repo, 'Project Euphonia toolkit (GitHub, Apache-2.0)')} ·
       ${link(EUPHONIA.notebook, 'its training notebook')} · ${link(EUPHONIA.phrases, 'its 100 phrases')}</p>
+
+    <section class="vm-step" data-vm-status>
+      <h4>Where you are</h4>
+      <p data-vm-now role="status" aria-live="polite"></p>
+      <ol data-vm-steps>${STEPS.map((s, i) => `<li data-vm-step="${i + 1}">${esc(s)}</li>`).join('')}</ol>
+      <p class="vm-soft" data-vm-notyet>You will not have the voice model folder until step 4 (convert) is done.
+        Before that there is nothing to put anywhere. Its place is waiting: <code data-vm-place></code>.</p>
+    </section>
+
     <p class="vm-soft">The toolkit’s own phone app uploads recordings to a Firebase bucket. You do not need it:
       record here instead.</p>
     <p><b>Who it is for.</b> It is yours. Only your own speech settings use it (“Use my own voice model”); other
@@ -348,48 +433,51 @@ export function mountVoiceModel(root, {
         <button type="button" data-skip>Skip</button>
         <button type="button" data-again hidden>Again</button>
       </div>
+    </section>
+
+    <section class="vm-step">
+      <h4>2. Export them</h4>
+      <p>Export saves your recordings, with the phrase each one is, into a folder you choose: choose
+        <code data-vm-recordings></code>. Nothing is uploaded.</p>
       <div class="vm-row">
         <button type="button" data-export hidden>Export for training</button>
         <span data-export-msg class="vm-soft" role="status" aria-live="polite"></span>
       </div>
-      <p class="vm-soft">Export into an empty folder. It gets a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered
-        folder per phrase (<code>${esc(EUPHONIA_DATA)}/001/${esc(EUPHONIA_AUDIO)}</code> and
-        <code>${esc(EUPHONIA_PHRASE)}</code>), plus <code>nimrod-export.json</code> saying which recording is which.
-        Every recording with what was meant goes in: the phrases you read, and any you typed in the review.</p>
+      <p class="vm-soft">It makes a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder per phrase
+        (<code>${esc(EUPHONIA_DATA)}/001/${esc(EUPHONIA_AUDIO)}</code> and <code>${esc(EUPHONIA_PHRASE)}</code>), plus
+        <code>nimrod-export.json</code> saying which recording is which. Every recording with what was meant goes
+        in: the phrases you read, and any you typed in the review.</p>
     </section>
 
     <section class="vm-step">
-      <h4>2. Train it with Euphonia’s notebook</h4>
+      <h4>3. Train it, with Euphonia’s notebook</h4>
+      <p><b>What you need:</b> a Google account, to run the notebook free on Google Colab (Google’s notebooks that
+        run in your web browser, on a computer Google lends you with a graphics card), <b>or</b> a computer with a
+        graphics card (GPU) of its own. An ordinary laptop alone takes a very long time.</p>
       <p>Open ${link(EUPHONIA.notebook, 'the training notebook')}. Set its model to <code>${esc(BASE_MODEL)}</code>
-        (type it; the dropdown does not list it), so the result matches the model the speech service already runs.
-        Its data cell copies from a Firebase bucket: point it at the <code>${esc(EUPHONIA_DATA)}</code> folder you
-        exported instead. On your own computer, skip the three Colab-only cells (sign-in, Google Drive,
-        TensorBoard), and turn fp16 off if there is no graphics card. A computer with a graphics card is much
-        faster than one without.</p>
+        (type it; the list does not offer it), so the result matches the recogniser the speech service already
+        runs. Its data cell copies from a Firebase bucket: point it at the <code>${esc(EUPHONIA_DATA)}</code> folder
+        you exported instead. On your own computer, skip the three Colab-only cells (sign-in, Google Drive,
+        TensorBoard), and turn fp16 off if there is no graphics card.</p>
     </section>
 
     <section class="vm-step">
-      <h4>3. Convert it for the speech service</h4>
-      <p>Training leaves a <b>checkpoint</b> folder (named like <code>checkpoint-200</code>, holding
-        <code>model.safetensors</code>). The speech service cannot load that; converting it makes the folder it
-        can. It needs the ctranslate2 and transformers Python packages. Run this in the project’s
-        <code>web</code> folder, with the checkpoint’s folder in place of the first name:</p>
+      <h4>4. Convert it</h4>
+      <p>Training leaves a <b>checkpoint</b>: a folder named like <code>checkpoint-200</code>, holding
+        <code>model.safetensors</code> - the trained model in the form training writes. The speech service cannot
+        load that; converting makes the folder it can. <b>This is the step that makes your voice model
+        folder.</b> It needs the ctranslate2 and transformers Python packages. Run this, with the checkpoint’s
+        folder in place of the first name:</p>
       <code data-cmd="convert"></code>
-      <p class="vm-soft">That writes the converted folder straight into the place the speech service looks
-        (step 4). Converting on a different computer? Run it there as it is, then copy the
-        <code>${esc(MY_VOICE_FROM_WEB)}</code> folder it made to the same place on the computer that runs the
-        speech service.</p>
+      <p class="vm-soft" data-vm-fill></p>
     </section>
 
     <section class="vm-step">
-      <h4>4. Which folder, and where it goes</h4>
+      <h4>5. Put the folder in place</h4>
       <p><b>The folder you want is the one the conversion wrote</b>: whatever followed <code>--output_dir</code>
-        in step 3. It is not the checkpoint training left, and not the recordings you exported. It holds these
-        files, directly inside it: ${esc(MODEL_FILES.join(', '))}.</p>
-      <p data-where>Put the converted folder here, on the computer that runs the speech service, inside the
-        project folder: <code>${esc(MY_VOICE_PATH)}</code> (a folder named <code>my_voice_model</code>, with
-        those files directly in it). That folder is kept out of git, so your voice never ends up in the
-        project’s history.</p>
+        in step 4. It is not the checkpoint training left, and not the recordings you exported. It holds these
+        files: ${esc(MODEL_FILES.join(', '))}.</p>
+      <p data-where></p>
       <div class="vm-row"><button type="button" data-check>Check a folder</button>
         <span data-check-msg role="status" aria-live="polite"></span></div>
       <p class="vm-soft" data-check-note>Check a folder opens your browser’s folder picker and reads the
@@ -397,14 +485,18 @@ export function mountVoiceModel(root, {
     </section>
 
     <section class="vm-step">
-      <h4>5. Start it, and use it</h4>
+      <h4>6. Start the speech service, and use it</h4>
       <p>Run this in the project’s <code>web</code> folder, on the computer that runs the speech service
-        (<code>python3</code> instead of <code>py -3.13</code> on a Mac or Linux):</p>
+        (<code>python3</code> instead of <code>py -3.13</code> on a Mac or Linux). <code>--root</code> tells it
+        where your Nimrod folder is; or write that path as the only line of
+        <code>speech_service/nimrod_folder.txt</code> and leave <code>--root</code> off.</p>
       <code data-cmd="serve"></code>
       <p class="vm-soft">It checks the folder when it starts and names any file that is missing. It runs beside the
         standard recogniser (port 8797), which stays for everybody else. Its port is “My own voice model: its
         port” in your settings; the two numbers must match.</p>
-      <p class="vm-soft" data-elsewhere>Keeping the model somewhere else? Add <code>--model "&lt;that folder&gt;"</code>
+      <p class="vm-soft" data-elsewhere>No Nimrod folder? Leave <code>--root</code> off: the service then looks in
+        <code>${esc(MY_VOICE_PATH)}</code> inside the project, which is kept out of git, so your voice never ends
+        up in the project’s history. A model kept anywhere else: add <code>--model "&lt;that folder&gt;"</code>
         after <code>--my-voice</code>.</p>
       <div class="vm-row"><button type="button" data-use aria-pressed="false"></button></div>
       <p class="vm-soft" data-use-note></p>
@@ -418,9 +510,50 @@ export function mountVoiceModel(root, {
   $('[data-check]').hidden = typeof pickModelFolder !== 'function';
   $('[data-check-note]').hidden = typeof pickModelFolder !== 'function';
 
+  // THE NIMROD FOLDER: its typed full path (this device only), and what is in its "Voice model" right now.
+  let nimrodCheck = null;          // checkModelFiles of <root>/Voice model, when it could be read
+  let pickedCheck = null;          // the last folder "Check a folder" looked at, with its name
+  const rootPath = () => { try { return String(nimrodFolder?.path?.() || ''); } catch { return ''; } };
+  const places = () => {
+    const p = rootPath();
+    return { root: p || NIMROD_ROOT_WORDS, voice: p ? joinPath(p, VOICE_FOLDER) : VOICE_PLACE,
+      recordings: p ? joinPath(p, SUBFOLDERS.recordings) : RECORDINGS_PLACE, known: !!p };
+  };
   function renderCommands() {
-    $('[data-cmd="convert"]').textContent = convertCommand({});
-    $('[data-cmd="serve"]').textContent = serviceCommand({ port: vm.port });
+    const pl = places();
+    $('[data-cmd="convert"]').textContent = convertCommand({ folder: pl.voice });
+    $('[data-cmd="serve"]').textContent = serviceCommand({ port: vm.port, root: pl.root });
+    $('[data-vm-fill]').textContent = pl.known
+      ? 'That writes the converted files straight into your Nimrod folder’s Voice model folder. Converting on a different '
+        + 'computer? Run it there with that computer’s path, then copy the folder’s files into the Voice model folder here.'
+      : `Replace ${NIMROD_ROOT_WORDS} with your Nimrod folder’s full path. Or type that path once in “Your own folders” `
+        + '(Settings) and these commands fill it in.';
+    $('[data-where]').textContent = `Its place: ${pl.voice}, the Voice model folder your Nimrod folder already has `
+      + '(“Set up your Nimrod folder” in “Your own folders” makes it). Put the files directly in it, on the computer that '
+      + 'runs the speech service.';
+    $('[data-vm-place]').textContent = pl.voice;
+    $('[data-vm-recordings]').textContent = pl.recordings;
+  }
+  function renderStatus() {
+    if (destroyed) return;
+    const l = load();
+    const s = voiceModelStatus({ total: phrases.length, index: prompter ? prompter.state().index : (l.index || 0),
+      exported: !!l.exportedAt, nimrod: nimrodCheck, picked: pickedCheck, on: vm.on, place: places().voice });
+    $('[data-vm-now]').textContent = `Step ${s.step} of ${STEPS.length}: ${s.text}`;
+    for (const li of root.querySelectorAll('[data-vm-step]')) {
+      const n = Number(li.dataset.vmStep);
+      if (n === s.step) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+      li.dataset.vmState = n < s.step || (s.done && n === s.step) ? 'done' : n === s.step ? 'now' : 'later';
+    }
+    $('[data-vm-notyet]').hidden = s.haveFolder;
+  }
+  async function readNimrodVoice() {
+    try {
+      const k = await nimrodFolder?.voice?.();
+      if (!k || !k.dir || destroyed) return;
+      nimrodCheck = checkModelFiles(await folderNames(k.dir));
+      renderStatus();
+    } catch { /* not readable now: the status goes on what this screen knows */ }
   }
   async function checkFolder() {
     let dir = null;
@@ -429,7 +562,8 @@ export function mountVoiceModel(root, {
     const msg = $('[data-check-msg]');
     try {
       const r = checkModelFiles(await folderNames(dir));
-      if (!destroyed) msg.textContent = describeModelCheck(r, dir.name || 'That folder');
+      pickedCheck = { ...r, name: dir.name || '' };
+      if (!destroyed) { msg.textContent = describeModelCheck(r, dir.name || 'That folder', { place: places().voice }); renderStatus(); }
     } catch (err) {
       console.error('voice model: check folder', err);
       if (!destroyed) msg.textContent = 'Could not look inside that folder.';
@@ -443,6 +577,7 @@ export function mountVoiceModel(root, {
     $('[data-use-note]').textContent = vm.on
       ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no recogniser is answering.`
       : 'Off: your speech goes to the standard recogniser.';
+    renderStatus();
   }
   function renderPhrases() {
     const n = phrases.length;
@@ -463,6 +598,7 @@ export function mountVoiceModel(root, {
     $('[data-stop]').hidden = !s.running;
     $('[data-again]').hidden = !(s.last && s.last.ok && store);
     $('[data-export]').hidden = !(fs && typeof fs.available === 'function' && fs.available() && store);
+    renderStatus();
   }
 
   function makePrompter(at) {
@@ -479,6 +615,7 @@ export function mountVoiceModel(root, {
     try {
       const r = await exportEuphonia(dir, store, { personId });
       msg.textContent = `Exported ${r.written.length} recording${r.written.length === 1 ? '' : 's'}${r.failed.length ? `; ${r.failed.length} could not be written` : ''}.`;
+      if (r.written.length) { keep({ exportedAt: Date.now() }); renderStatus(); }
     } catch (err) { console.error('voice model: export', err); msg.textContent = 'Could not export into that folder.'; }
   }
 
@@ -522,10 +659,13 @@ export function mountVoiceModel(root, {
   const offState = () => clearInterval(tick);
 
   renderCommands(); renderUse(); renderPhrases(); renderPrompt();
+  const nimrodRead = readNimrodVoice();
 
   return {
     prompter: () => prompter,
-    refresh() { vm = voiceModelFrom(row()); renderUse(); renderCommands(); renderPrompt(); },
+    /** Settles once the Nimrod folder's Voice model has been looked at (for a suite). */
+    ready: nimrodRead,
+    refresh() { vm = voiceModelFrom(row()); renderUse(); renderCommands(); renderPrompt(); readNimrodVoice(); },
     destroy() {
       destroyed = true;
       try { prompter?.destroy(); } catch { /* gone */ }
