@@ -1279,7 +1279,8 @@ async function openSubject(subject, { view = null } = {}) {
   const mine = ++pickSeq;
   // A NEW draft per subject, not a reset one: an older pick still booting wraps its handles into ITS
   // draft, never into this one.
-  const draft = HD.createDraft({ onChange: () => { if (HOME.draft === draft) paintHome(); }, isUserEdit });
+  // (2026-10-04: and over Your people a change saves by itself -- `autosaveHeard`, "SAVING BY ITSELF" below.)
+  const draft = HD.createDraft({ onChange: () => { if (HOME.draft === draft) { autosaveHeard(draft); paintHome(); } }, isUserEdit });
   Object.assign(HOME, { draft, subject, target: null });
   // Another subject: the edit bar (if it held the scan) is gone with the old stage.
   HOME.scan = { on: false, level: 'bar', key: null, resume: false };
@@ -1334,7 +1335,9 @@ async function openSubject(subject, { view = null } = {}) {
         draft.seed('settings', recordSettings(rec, refs));
         for (const m of rec.modules) if (m.state) draft.seed(refs[m.ref], m.state);
         const typeOf = new Map(record.modules.map((x) => [x.id, x.type]));
-        target = { live: false, kind: 'example', key, refs, landing: shows.landing };
+        // `seeded`: the starting settings as seeded, so a page saving by itself can tell the person's own changes
+        // from them (`autosaveMake`).
+        target = { live: false, kind: 'example', key, refs, landing: shows.landing, seeded: draft.pending() };
         const stage = renderHomeDetail(subject, target);
         e = await mountEmbeddedScreen({ stage, record, host: HOME_HOST, layout: exampleLayout(rec, refs),
           wrapState: (h, k) => wrapRow(draft, h, k, typeOf), people: () => profiles.people(),
@@ -1399,6 +1402,13 @@ async function openSubject(subject, { view = null } = {}) {
 function requestSubject(subject, { previewKey, place, landKey } = {}) {
   const moving = subject !== HOME.subject || (previewKey !== undefined && previewKey !== HOME.previewKey)
     || (place !== undefined && place !== HOME.place) || (landKey !== undefined && landKey !== HOME.landKey);
+  // Changes the page saves by itself (over Your people) are saved now, not asked about; only if that fails is the
+  // question asked, as before.
+  if (HOME.draft?.dirty() && moving && autosaveCovers()) {
+    return autosaveNow({ reopen: false }).then((ok) => (ok && !HOME.draft?.dirty()
+      ? requestSubject(subject, { previewKey, place, landKey })
+      : openDialog('leave', { next: subject, previewKey, place, landKey })));
+  }
   if (HOME.draft?.dirty() && moving) return openDialog('leave', { next: subject, previewKey, place, landKey });
   if (previewKey !== undefined) HOME.previewKey = previewKey;
   if (place !== undefined) HOME.place = place;
@@ -1422,8 +1432,11 @@ function goLanding(key, { more = false } = {}) {
 // Mike: "several ways in, but they should all really just be the same thing."
 const hostSubs = new Set();
 function homeView() {
+  // A change the page is saving by itself is not "Unsaved changes" (and does not light Save): it says so instead.
+  const autosave = autosaveShows();
   return {
-    title: subjectTitle(HOME.subject), target: HOME.target, dirty: !!HOME.draft?.dirty(), busy: HOME.busy,
+    title: subjectTitle(HOME.subject), target: HOME.target, busy: HOME.busy, autosave,
+    dirty: !!HOME.draft?.dirty() && autosave !== 'saving' && autosave !== 'waiting',
     pickerOpen: document.body.classList.contains('pick-open'), docCurrent: HOME.doc?.current || null,
     settings: HOME.settings,
     canSwitch: HOME.target?.kind === 'home' && !HOME.editBusy, switchOpen: HOME.tray === 'switch',
@@ -1655,6 +1668,9 @@ function togglePicker() {
 function setLand(on, { push = true } = {}) {
   const next = !!on && HOME.on && HOME.subject === HD.PROFILE_SUBJECT;
   const was = HOME.land;
+  // Leaving the page that saves by itself (Edit, Back): what it was about to save is saved now, rather than turning
+  // into "Unsaved changes" in the editor a moment later. (Not awaited: the view changes at once; a failure is said.)
+  if (was && !next && autosaveCovers()) autosaveNow();
   HOME.land = next;
   document.body.classList.toggle('is-land', next);
   if (next) { document.body.classList.remove('pick-open'); HOME.tray = null; }
@@ -1787,23 +1803,19 @@ async function resolveLandings() {
 // Save on any example -- except the LANDING, saved by somebody who already has a Home: that makes their own
 // copy of the landing (where they land from then on) and leaves their Home as it was. With no Home yet, the
 // landing saved IS their Home too (there is nothing else for My Home to mean).
-async function makeHome(key, { name = null, snapshot = null, refs = null, asHome = true } = {}) {
+// `firstIsHome` (2026-10-04): false only for a landing the page makes BY ITSELF (`autosaveMake` argues it) -- then
+// it stays the landing even for somebody with no Home yet.
+async function makeHome(key, { name = null, snapshot = null, refs = null, asHome = true, firstIsHome = true } = {}) {
   const r = await HOME.maker.ensure(key);
   if (r.created) {
-    const st = await HOME.maker.stampOf(r.id);
-    const map = { settings: 'settings' };
-    const ids = {};
-    for (const [ref, previewId] of Object.entries(refs || {})) if (st?.refs?.[ref]) { map[previewId] = st.refs[ref]; ids[previewId] = st.refs[ref]; }
-    const rows = snapshot ? HD.remapSnapshot(snapshot, map) : {};
-    // The ids the settings doc itself holds (the lock list, the panel it opens being edited) were the preview's.
-    if (rows.settings) rows.settings = remapSettingsIds(rows.settings, ids);
+    const rows = await madeRows(r.id, refs, snapshot);
     if (Object.keys(rows).length) await writeRows(r.id, rows);
     await writeHistory(r.id, HD.PROFILE_HISTORY_KEY, (doc) => HD.commitVersion(doc, {
       name: name || PREBUILT_DASHBOARDS[key].name, snapshot: rows, keep: HOME.settings.keepVersions }));
   }
   // (Either landing, made: Your people or Start here -- 2026-10-04.)
   if (LANDING_KEYS.includes(key)) { HOME.landings[key] = { id: r.id }; if (key === HOME.landKey) HOME.landing = { id: r.id }; }
-  const home = asHome || !HOME.home;
+  const home = asHome || (firstIsHome && !HOME.home);
   Object.assign(HOME, { previewKey: null, examplesOpen: false, sel: null });
   if (home) {
     Object.assign(HOME, { home: { id: r.id, legacy: false }, profileMade: true, place: 'home' });
@@ -1813,6 +1825,17 @@ async function makeHome(key, { name = null, snapshot = null, refs = null, asHome
   }
   HOME.undo.clear();
   return { ...r, home };
+}
+/** A preview's rows (`snapshot`, under the preview's ids in `refs`) as rows of the made dashboard `id`. */
+async function madeRows(id, refs, snapshot) {
+  const st = await HOME.maker.stampOf(id);
+  const map = { settings: 'settings' };
+  const ids = {};
+  for (const [ref, previewId] of Object.entries(refs || {})) if (st?.refs?.[ref]) { map[previewId] = st.refs[ref]; ids[previewId] = st.refs[ref]; }
+  const rows = snapshot ? HD.remapSnapshot(snapshot, map) : {};
+  // The ids the settings doc itself holds (the lock list, the panel it opens being edited) were the preview's.
+  if (rows.settings) rows.settings = remapSettingsIds(rows.settings, ids);
+  return rows;
 }
 
 /** Go to the landing dashboard or your own Home (asking first about unsaved changes, as any move does). */
@@ -2833,6 +2856,142 @@ document.addEventListener('click', (e) => {
   requestSubject(HD.PROFILE_SUBJECT);
 }, true);
 
+// ---- SAVING BY ITSELF, OVER YOUR PEOPLE (2026-10-04) ---------------------------------------------------
+// Your people is meant to feel like an ordinary website, and on an ordinary website a change simply sticks: there is
+// no Save. So over it (`HOME_HOST.plainBar`: Your people filling the window) a setting changed from the ⚙ menu is
+// saved by the page itself, quietly, a moment after the last change -- through the same draft as everything else
+// here, so a builder (the editing page, Start here, their own Home) keeps the draft, Save, "Unsaved changes" and the
+// leave question exactly as before.
+//   MADE ALREADY (live): the draft written through (`commitLive`), with NO new version in History. History is the
+//   editor's: a version per press of Colours would bury the saves somebody made on purpose, and "keep your last N
+//   saves" would then throw those away to keep the flood.
+//   NOT MADE YET (only tried): made, quietly, the first time something is changed -- with the maker's one version,
+//   as any made dashboard has -- and shown again, made, still as the landing (`autosaveMake`). Not while the ⚙ menu
+//   is open: making it puts the made copy on the stage, which would shut the menu in the person's hands. The change
+//   already shows; it is written when the menu closes, and the bar says so meanwhile.
+//   A MOVE (More, My Home, Edit, Back) saves first instead of asking; only a save that fails asks, as before.
+//   A SAVE THAT FAILS is held as unsaved changes with Save offered, and said in plain words; the next change, Save or
+//   a move tries again. Nothing is thrown away by it.
+//   ONLY CHANGES MADE HERE: a draft that also holds a change made in the editor (`mixed`) is not saved by itself --
+//   somebody is building, and Save is theirs.
+// THE WAIT, 800 ms after the last change: a settings row cycles on each press, so somebody stepping one round to the
+// choice they want presses three or four times, about a third of a second apart; 800 ms saves once at the end of that
+// (one write, one "Saved") rather than once per press, and is still soon enough that "Saved" comes while they are
+// looking. Shorter saves every step of a cycle; longer leaves more time for the tab to be closed first (the browser's
+// own "leave this page?" then asks, as today -- nothing is lost either way). Not a person's preference, so not a
+// setting (as HOME_EDIT_WINDOW_MS): a wrong number only shows as more or fewer "Saved".
+const PLAIN_AUTOSAVE_MS = 800;
+const AUTO = { draft: null, timer: null, running: null, mixed: false, failed: false, waiting: false };
+
+/** Does the page save this draft's changes by itself? (All of them made over Your people.) */
+function autosaveCovers(draft = HOME.draft) {
+  return !!draft && AUTO.draft === draft && !AUTO.mixed && draft.dirty();
+}
+/** For the bar: 'saving' | 'waiting' (written when the ⚙ menu closes) | 'on' (over Your people, nothing waiting) |
+ *  null (anywhere else, or after a save that failed -- then it is "Unsaved changes", as before). */
+function autosaveShows() {
+  if (!HOME.on || !HOME.draft) return null;
+  if (autosaveCovers() && !AUTO.failed) return AUTO.waiting ? 'waiting' : 'saving';
+  return HOME_HOST.plainBar() ? 'on' : null;
+}
+/** The draft changed (its onChange): a change over Your people is saved in a moment; one in the editor is Save's. */
+function autosaveHeard(draft) {
+  if (AUTO.draft !== draft) Object.assign(AUTO, { draft, mixed: false, failed: false, waiting: false });
+  if (!draft.dirty()) {
+    clearTimeout(AUTO.timer); AUTO.timer = null;
+    Object.assign(AUTO, { mixed: false, failed: false, waiting: false });
+    return;
+  }
+  if (!HOME_HOST.plainBar()) { AUTO.mixed = true; clearTimeout(AUTO.timer); AUTO.timer = null; return; }
+  if (AUTO.mixed) return;
+  // (Only tried, the ⚙ menu open: it says at once that it waits for the menu, not "Saving…" first.)
+  Object.assign(AUTO, { failed: false, waiting: !HOME.target?.live && menuOpen() });
+  armAutosave();
+}
+function armAutosave() {
+  clearTimeout(AUTO.timer);
+  AUTO.timer = setTimeout(() => { AUTO.timer = null; autosaveNow({ fromTimer: true }); }, PLAIN_AUTOSAVE_MS);
+}
+/** Save now what the page saves by itself. True when nothing is left held. `reopen: false`: the page is about to
+ *  show something else anyway, so a landing made just now is not shown first. */
+async function autosaveNow({ reopen = true, fromTimer = false } = {}) {
+  clearTimeout(AUTO.timer); AUTO.timer = null;
+  while (AUTO.running) await AUTO.running;          // one at a time (it never rejects)
+  const draft = HOME.draft;
+  const t = HOME.target;
+  if (!t || !autosaveCovers(draft)) return !draft?.dirty();
+  // A Save already under way writes these too: look again after it.
+  if (HOME.busy) { if (fromTimer) armAutosave(); return false; }
+  if (!t.live && fromTimer && menuOpen()) {
+    if (!AUTO.waiting) { AUTO.waiting = true; paintHome(); }
+    armAutosave();
+    return false;
+  }
+  AUTO.waiting = false;
+  const run = (async () => {
+    HOME.busy = true;
+    paintHome();
+    try {
+      if (t.live) await draft.commitLive();
+      else await autosaveMake(draft, t, { reopen });
+      toast('Saved.');
+      return true;
+    } catch (err) {
+      console.error('home: saving by itself failed', err);
+      if (HOME.draft === draft) AUTO.failed = true;
+      toast('That did not save — check your connection. Your change is still here, and Save keeps it.');
+      return false;
+    } finally { HOME.busy = false; }
+  })();
+  AUTO.running = run;
+  const ok = await run;
+  AUTO.running = null;
+  paintHome();
+  return ok && !HOME.draft?.dirty();
+}
+/** The settings in `after` that are not the same in `before`, by row. */
+function changedSince(before, after) {
+  const out = {};
+  for (const [key, vals] of Object.entries(after || {})) {
+    const was = before?.[key] || {};
+    for (const [k, v] of Object.entries(vals || {})) if (JSON.stringify(was[k]) !== JSON.stringify(v)) (out[key] ||= {})[k] = v;
+  }
+  return out;
+}
+// THE LANDING, MADE BY ITSELF. The same making as Save (makeHome: the maker, then what was changed, on top) without
+// the editor, the name or "Saved as…". WHETHER IT BECOMES THEIR HOME -- Save's rule is "the landing saved by somebody
+// with a Home is their own landing; with no Home yet it is their Home too" -- here it never does (`asHome: false,
+// firstIsHome: false`). Argued:
+//   FOR keeping Save's rule: one rule, not two; and with no Home yet, My Home would have something of theirs to show.
+//   AGAINST, and it decides it: Save is a choice somebody made on the editing page; this is a side effect of pressing
+//   Colours. Becoming their Home is a decision with consequences they never asked for -- their Home record is
+//   written, My Home then opens the very page they are on (a button that seems to do nothing), and the starting
+//   points stop greeting them on the editing page (they open only for somebody with no Home), hiding them from the
+//   moment this person does want to build. As the landing only, nothing else changes: My Home still offers the
+//   starting points, and Save (or "Make this my Home") on the editing page still follows Save's rule.
+async function autosaveMake(draft, t, { reopen }) {
+  const first = draft.pending();
+  const examplesOpen = HOME.examplesOpen;
+  const r = await makeHome(t.key, { name: PREBUILT_DASHBOARDS[t.key].name, snapshot: draft.snapshot(), refs: t.refs,
+    asHome: false, firstIsHome: false });
+  // (makeHome puts the starting points away; a save nobody pressed leaves them as they were.)
+  HOME.examplesOpen = examplesOpen;
+  // What makeHome did not write: a change made while it was making it; or, when it was made already (another tab, a
+  // moment ago; or a try here that failed half way), every change the person made here -- their own only, never the
+  // starting settings the preview was seeded with, which would put back what that copy has changed since.
+  // (Again while there is more: a change can land during these writes too. Three rounds is plenty for hands.)
+  let done = r.created ? first : (t.seeded || {});
+  for (let round = 0; round < 3; round++) {
+    const now = draft.pending();
+    const extra = changedSince(done, now);
+    if (!Object.keys(extra).length) break;
+    await writeRows(r.id, await madeRows(r.id, t.refs, extra));
+    done = now;
+  }
+  draft.reset();
+  if (reopen && HOME.draft === draft) { HOME.busy = false; await openSubject(HD.PROFILE_SUBJECT); }
+}
+
 // ---- Save, Save as, the overwrite warning, history ----------------------------------------------------
 function defaultSaveName() {
   if (HOME.doc?.current) return `${HOME.doc.current} (copy)`;
@@ -2841,6 +3000,9 @@ function defaultSaveName() {
 }
 
 async function doSave({ saveAs = false, name = null } = {}) {
+  // Save pressed over changes the page saves by itself (an autosave that failed, the leave question's Save): the
+  // same save, now. Save as is still Save as.
+  if (!saveAs && autosaveCovers()) { await autosaveNow(); return; }
   if (!HOME.target || HOME.busy) return;
   const dec = HD.saveDecision({ doc: HOME.doc || HD.emptyHistory(), name, warn: HOME.settings.warnOverwrite, saveAs });
   if (dec.action === 'name') return openDialog('saveAs', { name: saveAs ? (name || defaultSaveName()) : defaultSaveName() });

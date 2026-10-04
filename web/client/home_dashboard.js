@@ -184,9 +184,16 @@ export function chromeSurfaceFor(settings, screenPanelSurface) {
 // as a gap, and "only tried until saved" is still true and worth one quiet sentence. AGAINST keeping it: it is
 // one more thing on a bar that is meant to be out of the way. The editing page keeps the loud version: there,
 // somebody is building, and "not made yet" is the news.
-export function homeStatusText({ target = null, dirty = false, docCurrent = null, land = false } = {}) {
+// *** `autosave` (2026-10-04): OVER YOUR PEOPLE A CHANGE SAVES BY ITSELF (modules.html "SAVING BY ITSELF"). *** The page
+// says which: 'saving' (a change being saved), 'waiting' (the landing is made when the ⚙ menu closes), 'on' (nothing
+// waiting). There "Try it, then Save to keep it" is not true any more, so it says what is.
+export function homeStatusText({ target = null, dirty = false, docCurrent = null, land = false, autosave = null } = {}) {
   if (!target) return '';
-  if (!target.live && land && target.kind !== 'module') return dirty ? 'Unsaved changes' : 'Try it, then Save to keep it';
+  if (autosave === 'saving') return 'Saving…';
+  if (autosave === 'waiting') return 'Kept when you close the settings';
+  if (!target.live && land && target.kind !== 'module') {
+    return dirty ? 'Unsaved changes' : autosave === 'on' ? 'What you change here is kept' : 'Try it, then Save to keep it';
+  }
   if (!target.live) return target.kind !== 'module' ? 'Not made yet — Save makes it' : 'Not on your screen yet — Save adds it';
   if (dirty) return 'Unsaved changes';
   return docCurrent ? `Saved as “${docCurrent}”` : 'Not saved under a name yet';
@@ -230,16 +237,18 @@ export const LAND_ITEM = Object.freeze({ act: 'land', label: 'Dashboard',
 
 export function homeBarItems({ title = '', target = null, dirty = false, busy = false, pickerOpen = false,
   docCurrent = null, canSwitch = false, switchOpen = false, onHome = false, hasHome = false, land = false,
-  landingTitle = LANDING_TITLE_DEFAULT, moreFrom = false } = {}) {
+  landingTitle = LANDING_TITLE_DEFAULT, moreFrom = false, autosave = null } = {}) {
   const t = target;
   // Lit while there is something to save: a change, or (on the editing page) a dashboard not made yet. Arriving
-  // on the dashboard, only a change lights it (`homeStatusText` argues it).
+  // on the dashboard, only a change lights it (`homeStatusText` argues it). A change the page is saving by itself
+  // (`autosave`) does not: the page hands it over as `dirty: false`.
   const quietTry = !!t && !t.live && land && t.kind !== 'module';
   const save = { act: 'save', label: 'Save', title: 'keep what you changed', disabled: !t || busy,
     primary: !!t && (dirty || (!t.live && !quietTry)) };
-  const status = { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent, land }), dirty: !!dirty };
+  const status = { kind: 'status', text: homeStatusText({ target: t, dirty, docCurrent, land, autosave }), dirty: !!dirty };
   // ON THE DASHBOARD: Edit, the other place, and Save -- a setting changed from the ⚙ menu here is held for
   // Save like anywhere on this page, so Save stays where it can be pressed. The rest is the editor's.
+  // (2026-10-04: over Your people it saves by itself instead; Save stays for a save that failed there.)
   if (land) return [...(moreFrom ? [{ ...PEOPLE_ITEM }] : []), { ...EDIT_ITEM }, placeButton({ onHome, hasHome, landingTitle }), save, status];
   return [
     { ...LAND_ITEM },
@@ -280,7 +289,7 @@ const PLAIN_MENU_LEAVES = Object.freeze(['picker', 'editpanel', 'switch', 'editb
  */
 export function homeMenuModel({ title = '', target = null, dirty = false, busy = false, docCurrent = null,
   settings = HOME_DEFAULTS, catReady = true, canSwitch = false, canEdit = false, onHome = false, hasHome = false,
-  canEditPanel = false, land = false, landingTitle = LANDING_TITLE_DEFAULT, plain = false } = {}) {
+  canEditPanel = false, land = false, landingTitle = LANDING_TITLE_DEFAULT, plain = false, autosave = null } = {}) {
   const s = readHomeSettings(settings);
   const t = target;
   const item = (act, label, extra = {}) => ({ kind: 'item', id: `home:${act}`, act, label, ...extra });
@@ -300,7 +309,7 @@ export function homeMenuModel({ title = '', target = null, dirty = false, busy =
     item('editpanel', 'Edit the chosen panel', { hint: 'press a thing in it to see its options; Done or Escape stops', disabled: !canEditPanel }),
     // THE BUILDER (dashboards.js `builder`): what you edit, its options, the modules library and Nimrod.
     item('builder', 'The builder…', { hint: 'edit one thing at a time: it top left, its options top right' }),
-    item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent, land }) || 'nothing open', disabled: !t || busy }),
+    item('save', 'Save', { hint: homeStatusText({ target: t, dirty, docCurrent, land, autosave }) || 'nothing open', disabled: !t || busy }),
     item('saveas', 'Save as…', { hint: 'a copy under a new name', disabled: !t || busy }),
     item('history', 'History…', { hint: `your last ${s.keepVersions} saves`, disabled: !t || !t.live || busy }),
     item('switch', 'Switch module…', { hint: 'another module in the place of the chosen one', disabled: !canSwitch || busy }),
@@ -562,15 +571,24 @@ export function createDraft({ onChange = () => {}, isUserEdit = () => true } = {
     return out;
   }
 
+  // (2026-10-04: it clears only what it WROTE. A change made while it writes -- easy once a page saves by itself,
+  // modules.html "SAVING BY ITSELF" -- used to be cleared with the rest, unwritten. It is kept for the next save.)
   async function commitLive() {
-    for (const [key, ov] of [...overlays]) {
+    const sent = [...overlays].map(([key, ov]) => [key, clone(ov)]);
+    for (const [key, ov] of sent) {
       const e = rows.get(key);
       if (!e || !Object.keys(ov).length) continue;
       e.base.set(clone(ov));
       await e.base.flush?.();
     }
-    overlays.clear();
-    dirty = false;
+    for (const [key, ov] of sent) {
+      const now = overlays.get(key);
+      if (!now) continue;
+      const left = {};
+      for (const [k, v] of Object.entries(now)) if (!(k in ov) || JSON.stringify(ov[k]) !== JSON.stringify(v)) left[k] = v;
+      if (Object.keys(left).length) overlays.set(key, left); else overlays.delete(key);
+    }
+    dirty = [...overlays.values()].some((ov) => Object.keys(ov).length > 0);
     for (const key of rows.keys()) notifyRow(key);
     changed();
   }
