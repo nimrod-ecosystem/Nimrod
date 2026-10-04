@@ -701,6 +701,11 @@ def _people_view(user: str) -> list[dict]:
         return []
     first = rows[0]["id"]
     screens = store.screens_by_person(user)
+    held = store.holder_counts(user)
+    per_link: dict[str, int] = {}
+    for r in rows:
+        if r["link_id"]:
+            per_link[r["link_id"]] = per_link.get(r["link_id"], 0) + 1
     names: dict[str, str] = {}
     firsts: dict[str, str | None] = {}
     out = []
@@ -726,6 +731,13 @@ def _people_view(user: str) -> list[dict]:
         if r["home_id"]:
             # "See their page": '' when it opens for you, else why not (page_visits.REFUSAL_TEXT's codes).
             v["page"] = _visit_check(user, r)[0]
+            # "Remove just this card": '' when it may, else why not (claims.remove_card_refusal's codes).
+            v["remove"] = claims.remove_card_refusal(actor=user, row=r, first_person_id=first,
+                                                     screens=screens.get(r["id"], 0),
+                                                     link_rows=per_link.get(r["link_id"], 0))
+        else:
+            # "Who has this card": how many other logins hold this profile you look after (the names: GET .../holders).
+            v["holders"] = held.get(r["id"], 0)
         out.append(v)
     return out
 
@@ -831,6 +843,12 @@ def delete_person(person_id: str, user: str = Depends(current_user)):
             status_code=409,
             detail="this person still has %d screen%s - move or delete them first"
                    % (n, "" if n == 1 else "s"))
+    # A card a connection put here goes the same way as "Remove just this card" (claims.LAST_CARD_STAYS: the last
+    # card from a connection stays, so the connection can still be seen and ended from this page).
+    row = store.person_row(person_id) or {}
+    if row.get("home_id") and row.get("made_by") == "link" and \
+            claims.holder_refusal(row, link_rows=store.count_link_rows(user, row.get("link_id"))) == "last":
+        raise HTTPException(status_code=409, detail=claims.REFUSAL_TEXT["last-here"])
     store.delete_person(user, person_id)
     return {"ok": True}
 
@@ -1775,6 +1793,90 @@ def link_messages(person_id: str, body: MessagesPut, user: str = Depends(current
     _row, other, link = _linked_row(user, person_id)
     store.set_link_messages(link["id"], user, other, bool(body.on))
     return {"ok": True, "messages": store.link_messages(link["id"], user, other)}
+
+
+# ---- ONE CARD AT A TIME (claims.py, the section of that name) ---------------------------------------------------
+# "Who has this card" and "Stop sharing with Oscar" for the account that looks after a profile; "Remove just this
+# card" for an account holding one. Each refuses a screen in a room (they are a phone's or computer's), and each
+# answers somebody else's person with the same 404 as no person at all.
+def _holders_view(user: str, home: dict) -> list[dict]:
+    """Who holds this profile: each by THAT login's own name, never what they call the person (claims.py argues
+    it); a login this account is not connected with is nameless, with who it came through."""
+    out = []
+    names: dict[str, str] = {}
+
+    def name_of(acct: str) -> str:
+        if acct not in names:
+            names[acct] = _inviter_name(acct)
+        return names[acct]
+
+    for h in store.holders_of(home["id"]):
+        acct = h["account_id"]
+        if acct == user:
+            continue
+        source = store.person_row(h["source_id"]) if h.get("source_id") else None
+        via = source["account_id"] if source and source["account_id"] not in (acct, user) else None
+        connected = links.linked(store.get_link(user, acct), user, acct)
+        stop = claims.holder_refusal(h, link_rows=store.count_link_rows(acct, h.get("link_id")))
+        out.append({"id": h["id"], "name": name_of(acct) if connected else "", "through": name_of(via) if via else "",
+                    "joined": h.get("made_by") == "claim", "stop": stop, "text": claims.REFUSAL_TEXT.get(stop, "")})
+    out.sort(key=lambda x: (not x["name"], x["name"].lower(), x["through"].lower()))
+    return out
+
+
+@app.get("/api/people/{person_id}/holders")
+def list_holders(person_id: str, request: Request, user: str = Depends(current_user)):
+    """"Who has this card": the other logins holding this profile you look after. Readable only by you."""
+    _check(person_id, ID_RE, "person id")
+    if via_device_key(request):
+        return _refused("screen", 403)
+    row = store.person_row(person_id)
+    if not row or row["account_id"] != user:
+        raise HTTPException(status_code=404, detail="no such person")
+    if row.get("home_id"):
+        return _refused("not-home-list", 409)
+    return {"holders": _holders_view(user, row)}
+
+
+@app.delete("/api/people/{person_id}/holders/{holder_id}")
+def unshare_holder(person_id: str, holder_id: str, request: Request, user: str = Depends(current_user)):
+    """"Stop sharing with Oscar": Oscar's card for this one profile comes off his page, with the permissions that
+    came with it. The connection stays (db.drop_held_row)."""
+    _check(person_id, ID_RE, "person id")
+    _check(holder_id, ID_RE, "card id")
+    if via_device_key(request):
+        return _refused("screen", 403)
+    home, holder = store.person_row(person_id), store.person_row(holder_id)
+    rows = store.count_link_rows(holder["account_id"], holder.get("link_id")) if holder else 0
+    reason = claims.unshare_refusal(actor=user, home=home, holder=holder, link_rows=rows)
+    if reason == "missing":
+        raise HTTPException(status_code=404, detail="no such card")
+    if reason:
+        return _refused("not-home-list" if reason == "not-home" else reason, 409)
+    store.drop_held_row(holder_id, keep_if_screens=True)
+    return {"ok": True}
+
+
+@app.delete("/api/people/{person_id}/card")
+def remove_card(person_id: str, request: Request, user: str = Depends(current_user)):
+    """"Remove just this card": one card a connection put on your page goes, with the permissions that came with
+    it; the connection stays."""
+    _check(person_id, ID_RE, "person id")
+    if via_device_key(request):
+        return _refused("screen", 403)
+    row = store.person_row(person_id)
+    mine = bool(row) and row["account_id"] == user
+    reason = claims.remove_card_refusal(
+        actor=user, row=row, first_person_id=store.first_person_id(user),
+        screens=store.count_person_screens(user, person_id) if mine else 0,
+        link_rows=store.count_link_rows(user, row.get("link_id")) if mine else 0)
+    if reason == "missing":
+        raise HTTPException(status_code=404, detail="no such person")
+    if reason:
+        return _refused(reason, 409)
+    if store.drop_held_row(person_id, keep_if_screens=False) != "removed":
+        return _refused("screens", 409)
+    return {"ok": True}
 
 
 # ------------------------------------------------------------ CLAUDE, ON THIS ACCOUNT

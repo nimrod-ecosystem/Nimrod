@@ -32,6 +32,10 @@
 //                  on / off, and Stop sharing (two presses; it ends the connection with that login). Call, message
 //                  and recommend go where that person can be reached (`reach`, from the server), each live or dimmed
 //                  by the same rules as everybody else's.
+//                  ONE CARD AT A TIME (claims.py): "Remove just this card" on such a card (two presses; the
+//                  connection stays), dimmed with why when the server says no (`remove`); "Who has this card" on each
+//                  of the people you look after, and "Who has your card" on your own, opening the list of other
+//                  logins that hold it, each with "Stop sharing with <name>".
 //
 // *** ON A SCREEN IN SOMEBODY'S ROOM (`ctx.isScreen`) IT IS FACES AND NAMES, AND WHAT CAME IN. *** A screen never
 // places a call (kiosk.js; modules/profile.js) and never sends anything, so none of the five buttons could ever act
@@ -85,7 +89,7 @@ import {
   kindWords, REC_WORDS,
 } from '../recommend.js';
 // Connect with someone / Invite them to use this / I call them / Stop sharing (claim.js; the rules are claims.py).
-import { createClaimsClient, mountInviteSheet, mountCallName, twoPress, kindSub, CLAIM_WORDS, STOP_CONFIRM_MS } from '../claim.js';
+import { createClaimsClient, mountInviteSheet, mountCallName, mountHolders, removeWhy, twoPress, kindSub, CLAIM_WORDS, STOP_CONFIRM_MS } from '../claim.js';
 import { mountNoteVisit, screensURL, noteURL } from '../note_visit.js';
 import { currentNote, whenOf, whenWords } from './note.js';
 import { mayCall, callURL } from './profile.js';
@@ -258,7 +262,8 @@ registerModule(
         if (!r) return { ...p, reach: p.id };
         return { ...p, reach: r.reach || p.id, kind: r.kind || 'mine', home: r.home !== false, from: r.from || '',
           linked: !!r.linked, messagesFromThem: !!r.messages_from_them, callName: r.call_name || '', profileName: r.profile_name || p.name,
-          visit: typeof r.page === 'string' ? r.page : null };
+          visit: typeof r.page === 'string' ? r.page : null,
+          holders: Number.isFinite(r.holders) ? r.holders : null, remove: typeof r.remove === 'string' ? r.remove : null };
       });
     };
     const mayCallNow = (pid) => mayCall(pid, { own: Array.isArray(own) ? own : null, shared });
@@ -348,6 +353,8 @@ registerModule(
           reason: me.id ? '' : 'Sign in to have a picture of your own.', short: me.id ? '' : 'Sign in first' }, 'self'));
       }
       btns.push(editButton());
+      // "Who has your card" (claim.js): the logins with your card on their page. Off a screen, once your people are read.
+      if (!isScreen() && me.id && Number.isFinite(me.holders)) btns.push(holdersButton({ ...me, kind: 'you' }, 'self'));
       // Ask Nimrod taken off the page: More comes here, so the person's settings stay one press away.
       if (!hasKind(pageDoc, 'nimrod')) btns.push(button({ act: 'more', label: EDIT_WORDS.more, short: EDIT_WORDS.moreShort, enabled: true }, 'self'));
       // Messages for you taken off the page: the newest one still shows, here.
@@ -421,12 +428,20 @@ registerModule(
     //                                                                   sharing" (two presses)
     // Nothing under you, or under a screen shared with you.
     const stopLabel = (key) => (armed && armed.key === key && twoPress(armed.at, Date.now()) === 'fire');
+    // "Who has this card" / "Who has your card": live when somebody else holds it, dimmed with why when nobody does.
+    function holdersButton(p, key) {
+      const you = p.kind === 'you';
+      const n = Number(p.holders) || 0;
+      return button({ act: 'holders', label: you ? CLAIM_WORDS.holdersYou : CLAIM_WORDS.holders, short: CLAIM_WORDS.holdersShort(n),
+        enabled: n > 0, reason: n > 0 ? '' : CLAIM_WORDS.holdersNone(you ? '' : (p.name || '')) }, key);
+    }
     function claimRow(p) {
       if (p.via !== 'account' || p.kind === 'you') return '';
       const key = `p:${p.id}`;
       let btns = [];
       if (p.home) {
         btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: CLAIM_WORDS.inviteShort, enabled: true }, key)];
+        if (p.holders !== null && p.holders !== undefined) btns.push(holdersButton(p, key));
       } else {
         // "See their page" (page_visit.js): live when the server says it opens for you (`page` ''), dimmed with why.
         const shut = typeof p.visit === 'string' && p.visit !== '';
@@ -438,6 +453,15 @@ registerModule(
           btns.push(button({ act: 'claim-msg', label: p.messagesFromThem ? CLAIM_WORDS.msgOn : CLAIM_WORDS.msgOff, short: CLAIM_WORDS.msgShort, enabled: true }, key),
             button({ act: 'stop-share', label: again ? CLAIM_WORDS.stopAgain : CLAIM_WORDS.stop,
               short: p.kind === 'joined' ? CLAIM_WORDS.stopShort : CLAIM_WORDS.stopLinked(p.from), enabled: true }, key));
+        }
+        // "Remove just this card" (two presses; the connection stays). The server says whether (`remove`): '' yes,
+        // else why not - dimmed with that, in words.
+        if (typeof p.remove === 'string') {
+          const can = p.remove === '';
+          const again = can && stopLabel(`${key}|remove-card`);
+          btns.push(button({ act: 'remove-card', label: again ? CLAIM_WORDS.removeAgain : CLAIM_WORDS.removeCard,
+            short: can ? CLAIM_WORDS.removeShort(p.from) : CLAIM_WORDS.removeDimShort, enabled: can,
+            reason: can ? '' : removeWhy(p.remove, { name: p.name, from: p.from }) }, key));
         }
       }
       return `<div class="pp-btns" data-pp-claim="${esc(p.id)}">${btns.join('')}</div>`;
@@ -1017,6 +1041,8 @@ registerModule(
         case 'call-name': openCallName(pid); return;
         case 'stop-share': stopSharing(pid, `${key}|stop-share`); return;
         case 'claim-msg': toggleClaimMessages(pid); return;
+        case 'holders': openHolders(key === 'self' ? selfId() : pid); return;
+        case 'remove-card': removeCard(pid, `${key}|remove-card`); return;
         case 'visit': openVisit(pid); return;
         case 'older': openOlder(); return;
         case 'pick': if (el?.dataset.ppPick) writeWho({ [PICKED_KEY]: togglePicked(pageDoc, el.dataset.ppPick) }); return;
@@ -1200,6 +1226,45 @@ registerModule(
       await afterClaimChange();
       // The card that said it may have gone (a card the connection made): say it on your own card instead.
       if (!root?.querySelector(`[data-pp-card="${cardKey}"]`)) { why = new Map([['self', [...why.values()][0] || '']]); render(); }
+    }
+    // "Remove just this card": the same two presses as Stop sharing; the second takes this one card off your page and
+    // keeps the connection (the server checks it is yours, and may go).
+    async function removeCard(pid, armKey) {
+      if (!pid) return;
+      if (twoPress(armed && armed.key === armKey ? armed.at : 0, Date.now()) === 'arm') {
+        armed = { key: armKey, at: Date.now() };
+        clearTimeout(armTimer);
+        armTimer = setTimeout(() => { if (armed && armed.key === armKey) { armed = null; render(); } }, STOP_CONFIRM_MS + 50);
+        render();
+        return;
+      }
+      armed = null; clearTimeout(armTimer);
+      const p = people().find((x) => x.id === pid) || {};
+      const cardKey = armKey.split('|')[0];
+      let said = CLAIM_WORDS.failed;
+      try {
+        const r = await claimsClient().removeCard(pid);
+        said = r.status === 200 ? CLAIM_WORDS.removed(p.name || '') : (r.body?.text || r.body?.detail || CLAIM_WORDS.failed);
+      } catch { said = CLAIM_WORDS.failed; }
+      why = new Map([[cardKey, said]]);
+      await afterClaimChange();
+      // The card that said it has gone: say it on your own card instead.
+      if (!root?.querySelector(`[data-pp-card="${cardKey}"]`)) { why = new Map([['self', said]]); render(); }
+    }
+    // "Who has this card" / "Who has your card": the list, in a window over the page (claim.js mountHolders). A change
+    // there reads your people again, so the counts on the cards follow.
+    function openHolders(pid) {
+      if (!pid) return;
+      const self = pid === selfId();
+      const p = self ? { ...selfRow(), kind: 'you' } : people().find((x) => x.id === pid);
+      if (!p) return;
+      const host = openSheet('holders', CLAIM_WORDS.holdersTitle(self ? '' : p.name));
+      host.style.padding = '12px';
+      try {
+        sheet.child = mountHolders(host, { person: { id: p.id, name: p.name, you: self }, client: claimsClient(), onChange: () => { afterClaimChange(); } });
+        sheet.personId = p.id;
+        Promise.resolve(sheet.child.ready).then(() => paintCursor());
+      } catch (err) { console.error('people: holders', err); host.textContent = CLAIM_WORDS.failed; }
     }
     async function toggleClaimMessages(pid) {
       const p = people().find((x) => x.id === pid);

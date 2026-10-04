@@ -143,6 +143,30 @@ check("everything else stays the holding account's own row", state_target("input
 check("*** nobody reaches another account's row at all ***", state_target("avatar", actor="mom", row=held, home=hm, write=False) == "missing"
       and state_target("avatar", actor="x", row=None, home=None, write=False) == "missing")
 check("the profile is the picture and the page", PROFILE_KEYS == frozenset({"avatar", "page"}))
+section("one card at a time (pure)")
+hh = {"id": "h", "account_id": "mom", "home_id": None}
+cp = {"id": "c", "account_id": "osc", "home_id": "h", "made_by": "link", "link_id": "L", "source_id": "h"}
+check("*** the home may stop sharing one card; the last card from a connection stays (LAST_CARD_STAYS) ***",
+      claims.LAST_CARD_STAYS is True
+      and claims.unshare_refusal(actor="mom", home=hh, holder=cp, link_rows=2) == ""
+      and claims.unshare_refusal(actor="mom", home=hh, holder=cp, link_rows=1) == "last")
+check("*** only the home: anybody else, or a row that is not a copy of it, is the same 404 ***",
+      claims.unshare_refusal(actor="osc", home=hh, holder=cp, link_rows=2) == "missing"
+      and claims.unshare_refusal(actor="mom", home=hh, holder={**cp, "home_id": "other"}, link_rows=2) == "missing"
+      and claims.unshare_refusal(actor="mom", home=hh, holder=None, link_rows=2) == "missing"
+      and claims.unshare_refusal(actor="mom", home=None, holder=cp, link_rows=2) == "missing"
+      and claims.unshare_refusal(actor="mom", home={**hh, "home_id": "x"}, holder=cp, link_rows=2) == "not-home")
+rc = dict(actor="osc", first_person_id="osc-me", screens=0, link_rows=2)
+check("*** the holder removes one card that came through a connection ***", claims.remove_card_refusal(row=cp, **rc) == "")
+check("*** ...not the last one, not one with a screen, not their own card, not somebody they look after ***",
+      claims.remove_card_refusal(row=cp, **{**rc, "link_rows": 1}) == "last-here"
+      and claims.remove_card_refusal(row=cp, **{**rc, "screens": 1}) == "screens"
+      and claims.remove_card_refusal(row={**cp, "id": "osc-me"}, **rc) == "own-card"
+      and claims.remove_card_refusal(row={**cp, "home_id": None}, **rc) == "mine")
+check("*** a row they made that somebody took over is NOT this (Stop sharing gives it back) ***",
+      claims.remove_card_refusal(row={**cp, "made_by": "claim"}, **rc) == "joined")
+check("*** only the holder: anybody else is the same 404 ***", claims.remove_card_refusal(row=cp, **{**rc, "actor": "mom"}) == "missing"
+      and claims.remove_card_refusal(row=None, **rc) == "missing")
 words = " ".join(REFUSAL_TEXT.values())
 check("*** the words a person reads say no 'account', 'token' or 'grant' ***",
       not any(w in words.lower() for w in ("account", "token", "grant")), words)
@@ -405,6 +429,107 @@ check("neither can change it", put_state(CHR, g_chr, "avatar", {"face": "x"}).st
       and put_state(OSC, g_osc, "avatar", {"face": "x"}).status_code == 403)
 check("*** per-person permissions held: messages for Linda, none for Gary ***",
       store.may_capability("messages", actor=CHR, person_id=par_me) and not store.may_capability("messages", actor=CHR, person_id=gary))
+
+section("*** WHO HAS THIS CARD (the home's list) ***")
+pv = people(PAR)
+check("*** each profile the parents look after says how many other logins hold it ***",
+      pv[gary]["holders"] == 2 and pv[par_me]["holders"] == 1 and "holders" not in people(CHR)[g_chr], f"{pv[gary]} {pv[par_me]}")
+r = c.get(f"/api/people/{gary}/holders", headers=H(PAR))
+hl = r.json().get("holders", [])
+check("*** Gary's list: Christine and Oscar, by their own names ***",
+      r.status_code == 200 and sorted(h["name"] for h in hl) == ["Christine", "Oscar"], r.text)
+check("*** ...never what they call him ('Dad', 'Grandpa' are theirs alone), and no login ids ***",
+      "Dad" not in r.text and "Grandpa" not in r.text and CHR not in r.text and OSC not in r.text, r.text)
+check("*** only the parents can read it: a holder gets 'not the one who looks after it', a stranger the 404 ***",
+      c.get(f"/api/people/{g_chr}/holders", headers=H(CHR)).status_code == 409
+      and c.get(f"/api/people/{gary}/holders", headers=H(CHR)).status_code == 404
+      and c.get(f"/api/people/{gary}/holders", headers=H(STR)).status_code == 404)
+store._conn.execute("INSERT INTO device_keys(key, user_id, label, created_at) VALUES('nk_test_par_screen', ?, 'Hall', ?)", (PAR, NOW))
+store._conn.commit()
+PAR_SCREEN = {"X-Device-Key": "nk_test_par_screen"}
+check("*** not from a screen in a room ***", c.get(f"/api/people/{gary}/holders", headers=PAR_SCREEN).status_code == 403
+      and c.delete(f"/api/people/{gary}/holders/{g_chr}", headers=PAR_SCREEN).status_code == 403
+      and c.delete(f"/api/people/{g_chr}/card", headers=PAR_SCREEN).status_code == 403)
+
+section("*** REMOVE JUST THIS CARD (the holder's side) ***")
+l_chr = by_name(CHR)["Linda"]["id"]
+pc = people(CHR)
+check("*** Christine's two cards from the parents can each be removed; her own card cannot ***",
+      pc[l_chr]["remove"] == "" and pc[g_chr]["remove"] == "" and "remove" not in pc[chr_me], f"{pc[l_chr]}")
+check("*** nobody else removes it; her own card, a person you look after: refused, in words ***",
+      c.delete(f"/api/people/{l_chr}/card", headers=H(PAR)).status_code == 404
+      and c.delete(f"/api/people/{chr_me}/card", headers=H(CHR)).json().get("error") == "own-card"
+      and c.delete(f"/api/people/{robin}/card", headers=H(OWN)).json().get("error") == "mine")
+check("*** a card Pat made that Mom took over is not this: refused, saying Stop sharing gives it back ***",
+      c.delete(f"/api/people/{mom}/card", headers=H(OWN)).json().get("error") == "joined" and people(OWN)[mom]["remove"] == "joined")
+check("(Christine may leave Linda messages before)", store.may_capability("messages", actor=CHR, person_id=par_me))
+r = c.delete(f"/api/people/{l_chr}/card", headers=H(CHR))
+check("*** Christine removes just Linda's card ***", r.status_code == 200, r.text)
+check("*** Linda is gone from her page; Dad stays; the connection stays ***",
+      "Linda" not in by_name(CHR) and "Dad" in by_name(CHR) and links.link_is_active(store.get_link(CHR, PAR))
+      and "Christine" in by_name(PAR))
+check("*** ...and the permission that came with that card went with it ***",
+      not store.may_capability("messages", actor=CHR, person_id=par_me))
+check("Linda's own profile is untouched, and now nobody else holds it", people(PAR)[par_me]["name"] == "Linda"
+      and people(PAR)[par_me]["holders"] == 0)
+check("*** Dad is now the only card from the parents: Remove just this card is refused (Stop sharing instead) ***",
+      people(CHR)[g_chr]["remove"] == "last-here" and c.delete(f"/api/people/{g_chr}/card", headers=H(CHR)).json().get("error") == "last-here")
+check("*** ...and so is deleting it the old way ***", c.delete(f"/api/people/{g_chr}", headers=H(CHR)).status_code == 409
+      and "Dad" in by_name(CHR))
+
+section("*** STOP SHARING WITH ONE LOGIN, ONE PERSON (the home's side) ***")
+hl = {h["name"]: h for h in c.get(f"/api/people/{gary}/holders", headers=H(PAR)).json()["holders"]}
+check("*** each holder of Gary has only that one card from the parents: dimmed, with why ***",
+      hl["Christine"]["stop"] == "last" and hl["Oscar"]["stop"] == "last" and "Stop sharing" in hl["Oscar"]["text"], str(hl))
+check("*** ...and the server refuses it too ***",
+      c.delete(f"/api/people/{gary}/holders/{g_osc}", headers=H(PAR)).json().get("error") == "last")
+sue = c.post("/api/people", json={"name": "Sue"}, headers=H(PAR)).json()["id"]
+t = c.post("/api/connect/invites", json={"shares": [sue]}, headers=H(PAR)).json()["token"]
+check("(the parents share Sue with Christine too, on the same connection)",
+      c.post("/api/invites/accept", json={"token": t}, headers=H(CHR)).status_code == 200 and "Sue" in by_name(CHR))
+s_chr = by_name(CHR)["Sue"]["id"]
+check("(Christine may leave Sue messages)", store.may_capability("messages", actor=CHR, person_id=sue))
+check("*** a stranger, or the holder, cannot use the home's button; a card that is not Sue's is a 404 ***",
+      c.delete(f"/api/people/{sue}/holders/{s_chr}", headers=H(STR)).status_code == 404
+      and c.delete(f"/api/people/{sue}/holders/{s_chr}", headers=H(CHR)).status_code == 404
+      and c.delete(f"/api/people/{sue}/holders/{g_osc}", headers=H(PAR)).status_code == 404)
+r = c.delete(f"/api/people/{sue}/holders/{s_chr}", headers=H(PAR))
+check("*** the parents stop sharing Sue with Christine ***", r.status_code == 200, r.text)
+check("*** Sue is gone from Christine's page, Dad stays, the connection stays, the permission went ***",
+      "Sue" not in by_name(CHR) and "Dad" in by_name(CHR) and links.link_is_active(store.get_link(CHR, PAR))
+      and not store.may_capability("messages", actor=CHR, person_id=sue))
+t = c.post("/api/connect/invites", json={"shares": [sue]}, headers=H(PAR)).json()["token"]
+c.post("/api/invites/accept", json={"token": t}, headers=H(CHR))
+s_chr = by_name(CHR)["Sue"]["id"]
+sue_screen = c.post("/api/profiles", json={"name": "Sue's frame", "person_id": s_chr}, headers=H(CHR)).json()["id"]
+check("*** a card with a screen of its own: Christine cannot remove it until the screen goes ***",
+      people(CHR)[s_chr]["remove"] == "screens" and c.delete(f"/api/people/{s_chr}/card", headers=H(CHR)).json().get("error") == "screens")
+check("*** the parents stop sharing it anyway: it stays on her page, as her own, so the screen keeps its person ***",
+      c.delete(f"/api/people/{sue}/holders/{s_chr}", headers=H(PAR)).status_code == 200
+      and people(CHR)[s_chr]["home"] is True and people(CHR)[s_chr]["name"] == "Sue"
+      and not store.may_capability("messages", actor=CHR, person_id=sue) and people(PAR)[sue]["holders"] == 0)
+
+section("*** who has a profile somebody took over ***")
+mh = c.get(f"/api/people/{mom_me}/holders", headers=H(MOM)).json()["holders"]
+check("*** Mom's list: Pat, who made the card for her first - the only card he has from her, so dimmed ***",
+      [(h["name"], h["joined"], h["stop"]) for h in mh] == [("Pat", True, "last")], str(mh))
+NAN = "acct-nan"
+nan_p = c.post("/api/people", json={"name": "Nan"}, headers=H(PAR)).json()["id"]
+t = c.post("/api/connect/invites", json={"shares": [nan_p]}, headers=H(PAR)).json()["token"]
+check("(the parents share Nan with Oscar, on their connection)", c.post("/api/invites/accept", json={"token": t}, headers=H(OSC)).status_code == 200)
+n_osc = by_name(OSC)["Nan"]["id"]
+t = c.post(f"/api/people/{nan_p}/invites", json={}, headers=H(PAR)).json()["token"]
+check("(Nan takes her card over with her own login)", c.post("/api/invites/accept", json={"token": t}, headers=H(NAN)).status_code == 200)
+nan_me = people(NAN)
+nan_me = [p for p in nan_me.values() if p["kind"] == "you"][0]["id"]
+nh = {(h["name"], h["through"]): h for h in c.get(f"/api/people/{nan_me}/holders", headers=H(NAN)).json()["holders"]}
+check("*** Nan's list: Linda (connected, made the card first), and 'someone, through Linda' - Oscar is not named to her ***",
+      set(nh) == {("Linda", ""), ("", "Linda")} and nh[("Linda", "")]["joined"] is True and nh[("", "Linda")]["stop"] == "", str(nh))
+r = c.get(f"/api/people/{nan_me}/holders", headers=H(NAN))
+check("...no Oscar in it at all", "Oscar" not in r.text and OSC not in r.text, r.text)
+check("*** Nan stops sharing with that someone: Oscar's Nan card goes; his Grandpa and his connection stay ***",
+      c.delete(f"/api/people/{nan_me}/holders/{nh[('', 'Linda')]['id']}", headers=H(NAN)).status_code == 200
+      and "Nan" not in by_name(OSC) and "Grandpa" in by_name(OSC) and links.link_is_active(store.get_link(OSC, PAR)))
 
 section("*** STOP SHARING ***")
 check("a stranger cannot; nor on a person no connection made", c.delete(f"/api/people/{g_chr}/link", headers=H(STR)).status_code == 404

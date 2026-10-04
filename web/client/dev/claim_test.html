@@ -24,7 +24,7 @@ server (<code>SUITE_BASE</code>).</p>
 <script type="module">
 import {
   JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, kindSub, shareable,
-  sharesFrom, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet, mountCallName,
+  sharesFrom, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet, mountCallName, removeWhy, holderName,
 } from '../claim.js';
 import { mountJoinPage, JOIN_WORDS, backHere, AFTER_JOIN } from '../join_page.js';
 import { PEOPLE_TYPE } from '../people_page.js';
@@ -359,13 +359,98 @@ try {
       && /Not allowed yet/.test(card6('Oscar').querySelector('[data-pp-act="message"]').textContent), 8000));
   inst.destroy(); box6.remove();
 
+  // ============================================================================================
+  section('*** ONE CARD AT A TIME: who has this card, stop sharing with one login, remove just this card ***');
+  check('the reasons, in words', /only card from Pat on your page/.test(removeWhy('last-here', { name: 'Pat', from: 'Pat' }))
+    && /screen of its own/.test(removeWhy('screens')) && /took it over/.test(removeWhy('joined', { name: 'Mom' })) && removeWhy('') === ''
+    && holderName({ name: '' }) === 'Someone' && holderName({ name: 'Oscar' }) === 'Oscar');
+  const ac = createClaimsClient({ user: A }), oc = createClaimsClient({ user: O });
+  const oPat = (await call('GET', '/api/people', O)).people.find((p) => p.name === 'Pat');
+  await oc.callName(oPat.id, 'Gramps');
+  const bx = pageBox(1500);
+  inst = await mountPeople(A, pat.id, bx);
+  const qx = (s) => bx.querySelector(s);
+  const cardX = cardIn(bx);
+  const holdersBtn = () => qx('[data-pp-card="self"] [data-pp-act="holders"]');
+  check('*** your own card: "Who has your card — On 1 other page" (Oscar) ***',
+    await until(() => /On 1 other page/.test(holdersBtn()?.textContent || ''), 10000) && holdersBtn().getAttribute('aria-disabled') !== 'true', holdersBtn()?.textContent);
+  check('*** Robin’s card: "Who has this card", dimmed with why (nobody has it yet) ***',
+    cardX('Robin')?.querySelector('[data-pp-act="holders"]')?.getAttribute('aria-disabled') === 'true'
+    && /Nobody else has Robin’s card yet/.test(cardX('Robin').querySelector('[data-pp-act="holders"]').dataset.ppWhy || ''));
+  cardX('Robin').querySelector('[data-pp-act="holders"]').click();
+  check('pressed while dimmed: the reason shows on the card', await until(() => /Nobody else has Robin/.test(cardX('Robin').querySelector('.pp-why')?.textContent || ''), 3000));
+  holdersBtn().click();
+  check('*** the list: Oscar, by his own name - not "Gramps", what he calls you ***',
+    await until(() => qx('[data-pp-sheet="holders"] [data-cl-holder-name]'), 8000)
+    && J([...bx.querySelectorAll('[data-cl-holder-name]')].map((e) => e.textContent)) === J(['Oscar'])
+    && !/Gramps/.test(qx('[data-pp-sheet]').textContent) && /Who has your card/.test(qx('[data-pp-sheet]').textContent), qx('[data-pp-sheet]')?.textContent);
+  const unBtn = () => qx('[data-cl-act="unshare"]');
+  check('*** the only card Oscar has from you: "Stop sharing with Oscar" dimmed, saying Stop sharing on his card ends it ***',
+    unBtn()?.getAttribute('aria-disabled') === 'true' && /Stop sharing with Oscar/.test(unBtn().textContent)
+    && /only card Oscar has from you/.test(unBtn().dataset.clWhy || ''), unBtn()?.outerHTML);
+  unBtn().click();
+  check('pressed: it says why, and nothing changed', await until(() => /only card Oscar has/.test(qx('[data-cl-say]')?.textContent || ''), 3000)
+    && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Gramps'));
+  check('*** plain words in the list ***', !claimWordProblems(qx('[data-pp-sheet]').textContent).length, J(claimWordProblems(qx('[data-pp-sheet]').textContent)));
+  qx('[data-pp-close]').click();
+  inst.destroy(); bx.remove();
+  const rt = (await ac.connect({ shares: [robin.id] })).body.token;
+  check('(setup) Pat shares Robin with Oscar on the same connection', (await oc.accept(rt)).status === 200
+    && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Robin'));
+  const by = pageBox(1500);
+  inst = await mountPeople(A, pat.id, by);
+  const qy = (s) => by.querySelector(s);
+  const cardY = cardIn(by);
+  const rHold = () => cardY('Robin')?.querySelector('[data-pp-act="holders"]');
+  check('*** Robin’s card now: "On 1 other page", live ***', await until(() => /On 1 other page/.test(rHold()?.textContent || '') && rHold().getAttribute('aria-disabled') !== 'true', 10000));
+  rHold().click();
+  await until(() => qy('[data-pp-sheet="holders"] [data-cl-act="unshare"]'), 8000);
+  const un2 = () => qy('[data-cl-act="unshare"]');
+  check('*** "Stop sharing with Oscar", live (he has two cards from you) ***', un2()?.getAttribute('aria-disabled') !== 'true' && /Stop sharing with Oscar/.test(un2().textContent)
+    && /Who has Robin’s card/.test(qy('[data-pp-sheet]').textContent));
+  un2().click();
+  check('*** first press: "Press again to stop sharing" - nothing stopped yet ***',
+    await until(() => un2()?.textContent.includes(CLAIM_WORDS.stopWithAgain), 3000) && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Robin'));
+  un2().click();
+  check('*** second press: stopped, said so; Robin is off Oscar’s page; Pat is still on it ***',
+    await until(() => qy('[data-cl-say]')?.textContent === CLAIM_WORDS.stoppedWith('Oscar'), 8000) && !!qy('[data-cl-holders-none]')
+    && !(await call('GET', '/api/people', O)).people.some((p) => p.name === 'Robin')
+    && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Gramps'), qy('[data-pp-sheet]')?.textContent);
+  qy('[data-pp-close]').click();
+  check('the count on Robin’s card follows', await until(() => rHold()?.getAttribute('aria-disabled') === 'true', 6000));
+  inst.destroy(); by.remove();
+  const rt2 = (await ac.connect({ shares: [robin.id] })).body.token;
+  await oc.accept(rt2);
+  const bz = pageBox(1500);
+  inst = await mountPeople(O, o1.id, bz);
+  const qz = (s) => bz.querySelector(s);
+  const cardZ = cardIn(bz);
+  const rm = (n) => cardZ(n)?.querySelector('[data-pp-act="remove-card"]');
+  check('*** Oscar’s page: "Remove just this card" on Robin and on Pat, each live, "You stay connected with Pat" ***',
+    await until(() => rm('Robin') && rm('Gramps'), 10000) && rm('Robin').getAttribute('aria-disabled') !== 'true'
+    && rm('Gramps').getAttribute('aria-disabled') !== 'true' && /You stay connected with Pat/.test(rm('Robin').textContent), cardZ('Robin')?.textContent);
+  check('...and no "Who has this card" on cards that are not his to look after', !cardZ('Robin').querySelector('[data-pp-act="holders"]'));
+  rm('Robin').click();
+  check('*** first press: "Press again to remove it" - nothing removed yet ***',
+    await until(() => rm('Robin')?.textContent.includes(CLAIM_WORDS.removeAgain), 3000) && (await call('GET', '/api/people', O)).people.some((p) => p.name === 'Robin'));
+  rm('Robin').click();
+  check('*** second press: Robin is gone from his page; it says so on his own card; Pat stays ***',
+    await until(() => !cardZ('Robin'), 8000) && /Removed\. Robin is no longer on your page/.test(qz('[data-pp-card="self"] .pp-why')?.textContent || '')
+    && !!cardZ('Gramps'), qz('[data-pp-card="self"]')?.textContent);
+  check('*** the connection stays: Pat still has Oscar’s card ***', (await call('GET', '/api/people', A)).people.some((p) => p.name === 'Oscar'));
+  check('*** Pat is now the only card from Pat: Remove is dimmed, saying Stop sharing instead ***',
+    await until(() => rm('Gramps')?.getAttribute('aria-disabled') === 'true', 6000)
+    && /only card from Pat on your page/.test(rm('Gramps').dataset.ppWhy || ''), rm('Gramps')?.outerHTML);
+  check('*** plain words on everything this adds ***', !claimWordProblems(qz('[data-pp-list]').textContent).length, J(claimWordProblems(qz('[data-pp-list]').textContent)));
+  inst.destroy(); bz.remove();
+
   section('a screen in a room: faces only, no invite, connect or stop buttons');
   const sbox = themed(document.createElement('div')); sbox.style.cssText += ';position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(sbox);
   const sinst = await mountPeople(A, pat.id, sbox, { isScreen: true });
   await until(() => sbox.querySelector('[data-pp-face]'), 8000);
-  check('no Invite, no Connect, no Stop sharing, no I call them on a screen',
+  check('no Invite, no Connect, no Stop sharing, no I call them, no Who has this card, no Remove on a screen',
     !sbox.querySelector('[data-pp-act="invite"]') && !sbox.querySelector('[data-pp-act="connect"]') && !sbox.querySelector('[data-pp-act="stop-share"]')
-    && !sbox.querySelector('[data-pp-act="call-name"]'));
+    && !sbox.querySelector('[data-pp-act="call-name"]') && !sbox.querySelector('[data-pp-act="holders"]') && !sbox.querySelector('[data-pp-act="remove-card"]'));
   sinst.destroy(); sbox.remove();
 } catch (err) {
   failed++;

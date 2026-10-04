@@ -48,6 +48,23 @@ clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the
   of its own is kept as a plain row instead, so nobody's screen loses its person), a claimed row goes back to being
   the inviter's own plain row with the name it was called and whatever picture it had before, and links.py drops
   every permission on the link. The home row is never removed by it.
+
+*** ONE CARD AT A TIME (2026-10-04, later the same night: the three things 63f3d72 left unbuilt) ***
+
+  "WHO HAS THIS CARD", for the account that looks after a profile (the home): which logins hold a row for it. Each
+  is shown by THAT LOGIN'S OWN NAME, never by what they call the person (`call_name`). Argued: FOR showing it, it is
+  warm ("Oscar calls you Grandpa") and it is a name for the home's own person. AGAINST, and it decides it: the "I
+  call them" window already promises "Only you see this", and a promise the site has made is not ours to break in a
+  later build. A holder the home is not connected with (somebody shared the profile with them before it was taken
+  over) is "Someone, through Pat" - they never agreed to be named to the home. (A GUESS - Mike's list.)
+  "STOP SHARING WITH OSCAR", from that list: Oscar's row for this one profile goes (kept as Oscar's own plain row
+  if he gave it a screen, as "Stop sharing" does), with the permissions that came with that row - and the
+  connection stays. A row Oscar's login had made and somebody then took over (made_by 'claim') is Oscar's own
+  original: it is not removed, it goes back to being his own plain row, as "Stop sharing" treats it.
+  "REMOVE JUST THIS CARD", on the holder's side: the holder's row for one profile goes, same permissions, the
+  connection stays. Not on a row taken over by a claim: that is the holder's own original, with their screens and
+  settings, and removing it would remove what they set up; Stop sharing gives it back to them instead.
+  BOTH LEAVE AT LEAST ONE CARD FROM A CONNECTION ON EACH SIDE (`LAST_CARD_STAYS`, argued there).
 """
 from __future__ import annotations
 
@@ -298,6 +315,65 @@ def state_target(key: str, *, actor: str, row: dict | None, home: dict | None, w
     return (home["account_id"], home["id"])
 
 
+# --------------------------------------------------------------------------- one card at a time
+#
+# THE LAST CARD FROM A CONNECTION STAYS. Removing one card ("Remove just this card", or the home's "Stop sharing
+# with Oscar") is refused when it is the only row that connection put on that login's page; Stop sharing ends the
+# connection instead. A DEFAULT, argued (Mike's list):
+#   FOR allowing it: somebody who wants Oscar to keep seeing their page, but not Oscar's face on their own.
+#   AGAINST, and it decides it for now: with no card left, nothing on that page shows the connection is there -
+#            Oscar can still see their page and leave them messages, and there is no card left to press Stop
+#            sharing on. A connection you cannot see from your own page is the surprise this project avoids.
+# True: refuse the last one. False would allow it (and leave such a connection to be ended from the other side).
+LAST_CARD_STAYS = True
+
+
+def holder_refusal(holder: dict | None, *, link_rows: int) -> str:
+    """Why this one row on another login may NOT be taken away by itself, or ''. PURE.
+    `link_rows`: how many rows the same connection put on that login's page (this one included)."""
+    if not holder:
+        return "missing"
+    if LAST_CARD_STAYS and holder.get("link_id") and link_rows <= 1:
+        return "last"
+    return ""
+
+
+def unshare_refusal(*, actor: str, home: dict | None, holder: dict | None, link_rows: int) -> str:
+    """Why `actor` may NOT stop sharing this one profile (`home`) with the login holding `holder`, or ''. PURE.
+
+    *** A SECURITY INVARIANT: only the account that looks after a profile sees or takes away who holds it. ***
+    'missing' (the same 404 as no such person: not your profile, or that row is not a copy of it) | 'not-home'
+    (yours, but somebody else looks after the profile) | 'last' | ''."""
+    if not actor or not home or home.get("account_id") != actor:
+        return "missing"
+    if home.get("home_id"):
+        return "not-home"
+    if not holder or holder.get("home_id") != home.get("id") or holder.get("account_id") == actor:
+        return "missing"
+    return holder_refusal(holder, link_rows=link_rows)
+
+
+def remove_card_refusal(*, actor: str, row: dict | None, first_person_id: str | None, screens: int,
+                        link_rows: int) -> str:
+    """Why `actor` may NOT remove this one card from their own page with "Remove just this card", or ''. PURE.
+
+    *** A SECURITY INVARIANT: only the account holding a row removes it. ***
+    'missing' | 'own-card' (your own card) | 'mine' (somebody you look after: that is Delete, not this) | 'joined' (a
+    row you made that somebody took over: Stop sharing gives it back) | 'screens' (it has a screen of its own, the
+    same refusal as deleting a person) | 'last-here' (LAST_CARD_STAYS) | ''."""
+    if not actor or not row or row.get("account_id") != actor:
+        return "missing"
+    if first_person_id and row.get("id") == first_person_id:
+        return "own-card"
+    if not row.get("home_id"):
+        return "mine"
+    if row.get("made_by") == "claim":
+        return "joined"
+    if screens > 0:
+        return "screens"
+    return "last-here" if holder_refusal(row, link_rows=link_rows) == "last" else ""
+
+
 # What the join page and the invite window say for each refusal, in plain words (no "account", "token" or
 # "grant").
 REFUSAL_TEXT = {
@@ -313,4 +389,12 @@ REFUSAL_TEXT = {
     "self": "That is you. Use Connect with someone to send somebody a link to you.",
     "not-yours": "Only whoever made this person can invite somebody to it.",
     "shares": "Only the people you look after can be shared.",
+    # one card at a time
+    "last": "It is the only card they have from this connection. Stop sharing ends the connection instead.",
+    "last-here": "It is the only card from them on your page. Stop sharing ends the connection instead.",
+    "screens": "This card has a screen of its own. Move or delete that screen first.",
+    "joined": "You made this card, and they took it over with their own login. Stop sharing gives it back to you.",
+    "own-card": "This is your own card.",
+    "mine": "This is somebody you look after. Remove them from your people instead.",
+    "not-home-list": "Only whoever looks after this person can see who has their card.",
 }
