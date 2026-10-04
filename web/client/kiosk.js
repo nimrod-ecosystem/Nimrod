@@ -38,14 +38,14 @@ import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
-  PLACE_REQUEST_TOPIC } from './arrangement.js';
+  PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
-import { PRESETS as LAYOUT_PRESETS, withPreset } from './layout.js';
+import { PRESETS as LAYOUT_PRESETS, withPreset, HUD_TYPES, addAsOverlay } from './layout.js';
 import { createLongPress } from './input_longpress.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
@@ -834,8 +834,8 @@ export async function mountKiosk(root, {
   let lastDashList = [];
   const SILENT_INPUT = { down() {}, up() {} };   // subtitles-only: the room is heard, nothing is pressed
   // `subtitlesRoute` is here too: the online captioner starts and stops with the recogniser.
-  // The person's own voice model (voice_model.js): its switch and port change where "this screen" listens;
-  // its folder only changes a command shown on a page, so it restarts nothing.
+  // The person's own voice model (voice_model.js): its switch and port change where "this screen" listens.
+  // (Its folder is the speech service's own, `--my-voice`, not a setting here.)
   const SPEECH_KEYS = [...SPEECH_ON_FIELDS, ...SPEECH_FIELDS, ...SPEECH_PASS_FIELDS, ...MISS_FIELDS]
     .map((f) => f.key).concat('subtitlesRoute', 'voiceModelOn', 'voiceModelPort');
   const AMP_KEYS = AMPLIFY_FIELDS.map((f) => f.key);
@@ -1326,7 +1326,7 @@ export async function mountKiosk(root, {
     personRow: () => personRow,
     // "Your own voice model" (voice_model.js, the Voice recordings panel's second tab): the screen's recorder,
     // so reading phrases arms it, and a writer for ONLY that person's own voice-model rows - the panel can
-    // save the model's folder and flip "Use my own voice model", and nothing else on the row.
+    // flip "Use my own voice model", and nothing else on the row.
     get voiceRecorder() { return voiceRec; },
     saveVoiceModel: (patch) => {
       const keys = new Set(VOICE_MODEL_FIELDS.map((f) => f.key));
@@ -1609,7 +1609,7 @@ export async function mountKiosk(root, {
     if (cornersFollowDash()) { for (const k of CORNER_KEYS) delete kioskEl.dataset[k]; return; }
     ownArr.applyLayout(s);
   }
-  const CORNER_FNS = new Set(['patchMirror', 'cycleMirrorSize', 'cycleMirrorCorner']);
+  const CORNER_FNS = new Set(['patchMirror', 'patchClock', 'cycleMirrorSize', 'cycleMirrorCorner']);
   const arr = {};
   for (const k of Object.keys(ownArr)) {
     if (typeof ownArr[k] === 'function') {
@@ -2915,6 +2915,7 @@ export async function mountKiosk(root, {
   // Which tab (and section) each of the screen's own rows is on.
   const SCREEN_FIELD_TABS = {
     theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],
+    [SMALL_CLOCK_KEY]: ['display', 0],
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
@@ -3297,6 +3298,9 @@ export async function mountKiosk(root, {
       ] },
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
+    // "Show a small clock" (2026-10-03; arrangement.js SMALL_CLOCK_FIELD argues it): off or a corner. Only where
+    // it can act (`canOverlayHere`: Home, or a screen whose arrangement this menu may change).
+    ...(hostHandles('smallclock') || canAddHere() ? [{ ...SMALL_CLOCK_FIELD, options: SMALL_CLOCK_FIELD.options.map((o) => ({ ...o })) }] : []),
     // 2026-10-02 (room_lod.js): how much detail 3D rooms draw on THIS device -- measured, or chosen by somebody
     // who knows better (a fast Pi 5, a slow laptop on battery). `advanced`, as room_lod.js declares it.
     { ...DETAIL_FIELD },
@@ -3736,6 +3740,13 @@ export async function mountKiosk(root, {
       place: (item) => pickInPlace(lo, item),
       cancel: (why) => { if (libOpen === lo) closeLibrary(why || 'keep'); },
       bigger: () => { if (libOpen !== lo) return; lo.promoted = !!promotePanel(rec.id) || lo.promoted; },
+      // 2026-10-03: "Over the dashboard" -- the library goes, the panel it stood in for is shown as it was, and
+      // the pick is put over the dashboard (`overlayHere`). Only where that can be done (`canOverlayHere`).
+      ...(canOverlayHere() ? { overlay: async (item) => {
+        if (libOpen !== lo || !item || !item.type) return false;
+        closeLibrary('keep');
+        return overlayHere(item.type);
+      } } : {}),
     };
     try {
       lo.state = withTypeLayer(stateFor(LIBRARY_ROW), LIBRARY_TYPE);
@@ -3776,7 +3787,126 @@ export async function mountKiosk(root, {
         }
         return doSwitch(instanceId, item.type, item.settings || null);
       },
+      // 2026-10-03: "Over the dashboard" -- this Modules panel stays, and the pick goes over the dashboard.
+      ...(canOverlayHere() ? { overlay: (item) => (item && item.type && !torn ? overlayHere(item.type) : false) } : {}),
     };
+  }
+
+  // =================================================================================================
+  // *** OVER THE DASHBOARD, AND "SHOW A SMALL CLOCK", FROM THIS SCREEN (2026-10-03). ***
+  // Mike: "Where are the overlays? I'd like to make a dashboard that's full screen photos with a small clock
+  // overlay somewhere." layout.js `addAsOverlay` argues where an overlay goes (a free corner, out of the lap);
+  // arrangement.js SMALL_CLOCK_FIELD argues the corner clock's row. Two ways to do either:
+  //   ON HOME (a host page with its own switch, `hostSwitch`): Home's settings are drafted and its arrangement
+  //     is Home's to write (with Undo), so the press goes to the page -- `overlay { type }`, `smallclock { corner }`.
+  //   ON A SCREEN OF ITS OWN (kiosk.html, a Pi), where this file may change the arrangement (`canChangeLayout`):
+  //     the module is added to the screen (`profiles.addModule`), the layout or the corner is written where the
+  //     Layout row writes (`layoutDoc`), and the screen is put together again the way the Layout row does it --
+  //     a remount, like any arrangement change from this menu. A clock that is already the corner clock is
+  //     never added twice: its corner is set, and 'off' hides it (its module and its settings kept).
+  //   ANYWHERE ELSE (a preview, an embed with no page behind it): neither is offered -- a row or a button that
+  //     cannot do what it says is not drawn.
+  // =================================================================================================
+  // (Declarations, not consts: a menu drawn before this line runs asks them, as it asks `lockedNow`.)
+  function canAddHere() { return !torn && canChangeLayout() && typeof profiles?.addModule === 'function' && typeof profiles?.get === 'function'; }
+  // The host page says which of these presses it answers (`host.handles(act)`; Home: 'overlay' and 'smallclock',
+  // on the dashboard filling the window too, where its bar has no Switch module for `hostSwitch` to find).
+  function hostHandles(act) {
+    try { return !!hostPage && typeof hostPage.press === 'function' && hostPage.handles?.(act) === true; } catch { return false; }
+  }
+  function canOverlayHere() { return hostHandles('overlay') || canAddHere(); }
+  /** The HUD module of `type` (an unplaced clock or camera) on this screen, or null. */
+  function hudHere(type, layout) {
+    const held = new Set([...((layout && layout.slots) || []), ...((layout && layout.placed) || []).map((p) => p && p.id)]);
+    return (arr.profile()?.modules || []).find((m) => m.type === type && !held.has(m.id)) || null;
+  }
+  /** Put this screen together again with a new module and/or layout (the Layout row's way, `applyLayoutPreset`). */
+  async function rebuildHere(doc, kiosk) {
+    // Told FIRST, as the Layout row does: the 09-12 watch hears this write synchronously and must not reload for
+    // a change this file applies itself. Only when the layout really changes (an unchanged one is never heard).
+    const before = ((doc.get?.() || {}).kiosk || {}).layout ?? null;
+    if (JSON.stringify(before) !== JSON.stringify(kiosk.layout ?? null)) expectLayoutSig = JSON.stringify(kiosk.layout ?? null);
+    doc.set({ kiosk });
+    try {
+      if (useDashboard && dash) {
+        await doc.flush?.().catch?.(() => {});
+        await swapDashboard(profileId, { remember: false });
+      } else {
+        arr.setProfile(await profiles.get(profileId));
+        arr.resolve(kiosk.layout);
+        await applyModules();
+      }
+    } catch (err) { console.error('kiosk: putting the screen together again', err); }
+    try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
+    refreshViews();
+    renderMods();
+  }
+  /** A module of `type` over the dashboard. Resolves true when it was done (or handed to the page). */
+  async function overlayHere(type) {
+    if (torn || !type) return false;
+    if (hostHandles('overlay')) {
+      try { hostPage.press('overlay', { type, from: 'library' }); return true; }
+      catch (err) { console.error('kiosk: host overlay', err); return false; }
+    }
+    if (!canAddHere()) return false;
+    const doc = layoutDoc();
+    const cur = (doc.get?.() || {}).kiosk || {};
+    try {
+      if (HUD_TYPES.includes(type)) {
+        const have = hudHere(type, cur.layout);
+        const c = clockCornerOf({ kiosk: cur });
+        // A corner clock that is off is turned on where it was set: what "over the dashboard" means for it.
+        const next = type === 'clock' && (!have || c === 'off')
+          ? { ...cur, clock: { ...(cur.clock || {}), corner: c === 'off' ? SMALL_CLOCK_FIELD.default : c } } : cur;
+        if (have) {
+          if (next !== cur) doc.set({ kiosk: next });       // only the corner: nothing remounts
+          return true;
+        }
+        await profiles.addModule(profileId, type);
+        await rebuildHere(doc, { ...next });
+        return true;
+      }
+      const mod = await profiles.addModule(profileId, type);
+      const avoid = [];
+      if (hudHere('clock', cur.layout) && clockCornerOf({ kiosk: cur }) !== 'off') avoid.push(clockCornerOf({ kiosk: cur }));
+      if (hudHere('camera', cur.layout)) avoid.push((cur.mirror && cur.mirror.corner) || 'tr');
+      const r = addAsOverlay(cur.layout || null, mod.id, { type, avoid });
+      // The one-at-a-time stage has nothing to float over: the new module simply joins it.
+      await rebuildHere(doc, r.entry ? { ...cur, layout: r.layout } : { ...cur });
+      return true;
+    } catch (err) {
+      console.error('kiosk: over the dashboard', err);
+      return false;
+    }
+  }
+  /** "Show a small clock": `corner` is one of CLOCK_CORNERS. A corner with no corner clock adds one. */
+  async function smallClockHere(corner) {
+    if (torn || !CLOCK_CORNERS.includes(corner)) return false;
+    if (hostHandles('smallclock')) {
+      try { hostPage.press('smallclock', { corner, from: 'menu' }); return true; }
+      catch (err) { console.error('kiosk: host small clock', err); return false; }
+    }
+    if (!canAddHere()) return false;
+    const doc = layoutDoc();
+    const cur = (doc.get?.() || {}).kiosk || {};
+    const have = hudHere('clock', cur.layout);
+    const next = { ...cur, clock: { ...(cur.clock || {}), corner } };
+    if (have || corner === 'off') {
+      // Only the corner: applied by the settings subscribe (arrangement.js applyLayout), nothing remounts.
+      doc.set({ kiosk: next });
+      try { if (menu.isOpen()) menu.refresh(); } catch { /* the menu may be gone */ }
+      return true;
+    }
+    try { await profiles.addModule(profileId, 'clock'); } catch (err) { console.error('kiosk: adding a small clock', err); return false; }
+    await rebuildHere(doc, next);
+    return true;
+  }
+  /** What the row shows: the corner clock's corner, or Off when this screen has none. */
+  function smallClockNow() {
+    let cur = {};
+    try { cur = (layoutDoc().get?.() || {}).kiosk || {}; } catch { cur = {}; }
+    if (!hudHere('clock', arr.layout() || cur.layout)) return 'off';
+    return clockCornerOf({ kiosk: cur });
   }
   async function pickInPlace(lo, item) {
     if (libOpen !== lo || lo.picking || !item || !item.type) return false;
@@ -4359,7 +4489,7 @@ export async function mountKiosk(root, {
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
         // (Row 2.34: "Panel backgrounds" likewise -- the showing dashboard's, `shownPanelSurface`.)
         values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()),
-          panelGap: shownPanelGap(settings.get()) }),
+          panelGap: shownPanelGap(settings.get()), [SMALL_CLOCK_KEY]: smallClockNow() }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
@@ -4368,6 +4498,8 @@ export async function mountKiosk(root, {
           if (key === 'theme') themeDoc().set({ theme: value });
           else if (key === 'panelSurface') themeDoc().set({ panelSurface: value });
           else if (key === 'panelGap') themeDoc().set({ panelGap: value });
+          // (2026-10-03: not a key of its own -- the corner clock's corner, or a clock added; `smallClockHere`.)
+          else if (key === SMALL_CLOCK_KEY) smallClockHere(value).catch((err) => console.error('kiosk: small clock', err));
           else settings.set({ [key]: value });
           // A THEME PICKED HERE, BY SOMEBODY AT THIS SCREEN. Published after the set (which
           // applies the theme synchronously), so a listener sees the new theme already on screen.

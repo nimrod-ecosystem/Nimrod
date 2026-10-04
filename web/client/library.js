@@ -487,6 +487,8 @@ export function mountLibrary(root, {
   };
   const gateMode = () => { try { return gate ? gate.mode() : 'sandbox'; } catch { return 'sandbox'; } };
   const canPlace = () => !!(host && typeof host.place === 'function');
+  // "Over the dashboard" (2026-10-03): a host that can put a module over its dashboard says so with `overlay(item)`.
+  const canOverlay = () => !!(host && typeof host.overlay === 'function');
   const placeWord = mode === 'switch' ? 'Put it here' : 'Use it here';
 
   root.innerHTML = '';
@@ -605,6 +607,14 @@ export function mountLibrary(root, {
       acts.push(`<button type="button" class="lib-btn" data-lib-act="sandbox">${esc(`Sandbox: unlock everything${then}`)}</button>`);
     } else if (it.placeable && canPlace()) {
       acts.push(`<button type="button" class="lib-btn primary" data-lib-act="place" ${busy ? 'disabled' : ''}>${esc(placeWord)}</button>`);
+    }
+    // 2026-10-03: OVER THE DASHBOARD -- a module as a small panel floating in a corner (a clock: the small corner
+    // clock), beside "Put it here", wherever the host can do it (Home: kiosk.js hands the press to the page).
+    // Only modules: a scene is a backdrop, and furniture and bricks are not panels. A locked one shows its ways
+    // to unlock first, as "Put it here" does.
+    if (!lock && it.placeable && it.kind === 'module' && canOverlay()) {
+      acts.push(`<button type="button" class="lib-btn" data-lib-act="overlay" ${busy ? 'disabled' : ''}
+        title="a small panel floating in a corner, over what is there; a clock becomes the small corner clock">Over the dashboard</button>`);
     }
     if (it.link) acts.push(`<a class="lib-btn" href="${esc(it.link)}" target="_blank" rel="noopener" data-lib-act="link">Open the 3D model</a>`);
     if (it.page) acts.push(`<a class="lib-btn" href="${esc(it.page)}" target="_blank" rel="noopener" data-lib-act="page">See every brick</a>`);
@@ -759,6 +769,18 @@ export function mountLibrary(root, {
     draw();
     return ok;
   }
+  async function overlay(it) {
+    if (!it || busy || torn || !canOverlay() || lockOf(it) || !it.placeable || it.kind !== 'module') return false;
+    busy = true; note = `Putting ${it.title} over the dashboard…`; draw();
+    let ok = false;
+    try { ok = !!(await host.overlay(it)); } catch (err) { console.error('library: overlay', err); ok = false; }
+    if (torn) return ok;               // the host closed this library: done
+    busy = false;
+    note = ok ? `${it.title} is over the dashboard now.` : `${it.title} could not be put over the dashboard. Nothing changed.`;
+    if (ok) { detail = null; armed = null; }
+    draw();
+    return ok;
+  }
   async function unlock(how) {
     const it = detail;
     if (!it || !gate) return;
@@ -806,6 +828,7 @@ export function mountLibrary(root, {
     if (act === 'clear') { query = ''; qEl.value = ''; savePrefs({ category: 'all', use: 'any' }); draw(); return; }
     if (act === 'close') { closeDetail(); return; }
     if (act === 'place') { place(detail); return; }
+    if (act === 'overlay') { overlay(detail); return; }
     if (act === 'buy' || act === 'free' || act === 'sandbox') { unlock(act); return; }
     if (act === 'link') return;
     if (keyEl) { const it = byKey(keyEl.dataset.libKey); if (it) openDetail(it, { focusPrimary: pressing }); }

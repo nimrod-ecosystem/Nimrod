@@ -119,6 +119,15 @@ import { moveKeeping } from './dom_move.js';
 // reads ⤡ and its corner says SHELL_DEMOTE: the spot that made it bigger is the way back, one level a press.
 // It stays shown while promoted (`[data-promoted]>.k-promote`), not only on hover. Going further up is the
 // bars' Bigger, the menu's row, a switch, or "full screen" -- not this corner.
+//   OVERLAYS STAY OVER A PANEL THAT FILLS ITS DASHBOARD, AND STEP ASIDE WHEN ONE FILLS THE SCREEN (2026-10-03,
+// "Over the dashboard"). Before this, every placed module -- overlays too -- was hidden the moment any panel
+// filled the dashboard, while the corner clock stayed until the screen level. Argued:
+//   FOR staying: an overlay is something somebody put OVER the dashboard on purpose -- a small clock over the
+//   photos is the case it exists for -- and making the photos bigger is "show me this more", not "take my clock
+//   away". It is also what the corner clock already does, so the two kinds of small clock now agree.
+//   AGAINST: an overlay covers a corner of the panel you made bigger. The next level (Bigger again, "full
+//   screen") hides every overlay and the corner clock and mirror with them, so a true full view is one press on.
+// A panel that IS an overlay and was made bigger is never hidden by this (`:not([data-promoted])`).
 // =====================================================================================================
 const PROMOTE_CSS_ID = 'k-promote-css';
 const PROMOTE_PX = 44;
@@ -138,7 +147,8 @@ function ensurePromoteCss() {
 .kiosk[data-corners="up"] .k-promote{opacity:1;pointer-events:auto}
 @media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
 [data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
-[data-promoted-panel]>.k-placed>.k-pcell:not([data-promoted]){visibility:hidden}
+[data-promoted-panel]>.k-placed:not(.k-placed-overlay)>.k-pcell:not([data-promoted]){visibility:hidden}
+.kiosk[data-promoted="screen"] .k-placed-overlay>.k-pcell:not([data-promoted]){visibility:hidden}
 [data-promoted-panel]>.k-stage>.k-cell[data-promoted]{grid-area:1/1/-1/-1!important;z-index:5}
 [data-promoted-panel]>.k-placed>.k-pcell[data-promoted]{inset:0!important;left:0!important;top:0!important;
   width:100%!important;height:100%!important;transform:none!important;display:flex!important;z-index:99!important}
@@ -181,6 +191,33 @@ export { moveKeeping };
 const MIRROR_SIZES = ['sm', 'md', 'lg'];
 const CORNERS = ['tr', 'br', 'bl', 'tl'];
 const KDEF = { mirror: { size: 'lg', corner: 'tr' }, clock: { corner: 'bl' } };
+// =====================================================================================================
+// *** "SHOW A SMALL CLOCK" (Mike, 2026-10-03: "full screen photos with a small clock overlay somewhere"). ***
+// The corner clock has always been here -- an UNPLACED clock module, drawn small in a corner with no panel
+// chrome, on a backing checked for contrast over pure white and pure black in every theme
+// (dev/clock_hud_contrast_test.html) -- but nothing on any screen said so, and its corner (`settings.kiosk.
+// clock.corner`) had no control at all. Now it is a row on the ⚙ menu's Display tab (kiosk.js) and a choice in
+// Add: off, or one of the four corners.
+//   'off' HIDES the corner clock and keeps the clock module (its own settings -- 12 or 24 hours, the date --
+//   are kept, and turning it back on is instant). Argued against removing the module on 'off': removing loses
+//   those settings and makes "on" a module to make again; hiding costs one small panel left mounted.
+//   The default stays bottom left (KDEF), as it always was: nobody's corner clock moves.
+// Exported so the kiosk's row, Home and the suites name the same five.
+// =====================================================================================================
+export const CLOCK_CORNERS = Object.freeze(['off', 'tl', 'tr', 'bl', 'br']);
+export const SMALL_CLOCK_KEY = 'clockCorner';
+export const SMALL_CLOCK_FIELD = Object.freeze({
+  key: SMALL_CLOCK_KEY, label: 'Show a small clock', kind: 'choice', level: 'standard', default: KDEF.clock.corner,
+  options: [
+    { value: 'off', label: 'Off' }, { value: 'tl', label: 'Top left' }, { value: 'tr', label: 'Top right' },
+    { value: 'bl', label: 'Bottom left' }, { value: 'br', label: 'Bottom right' },
+  ],
+});
+/** The corner the corner clock is set to in a settings doc (`off` included), or the default. Pure. */
+export function clockCornerOf(s) {
+  const c = s && s.kiosk && s.kiosk.clock && s.kiosk.clock.corner;
+  return CLOCK_CORNERS.includes(c) ? c : KDEF.clock.corner;
+}
 const wrap = (i, n) => ((i % n) + n) % n;
 
 export function createArrangement({
@@ -228,13 +265,19 @@ export function createArrangement({
     const c = { ...KDEF.clock, ...(k.clock || {}) };
     kioskEl.dataset.mirrorSize = MIRROR_SIZES.includes(m.size) ? m.size : KDEF.mirror.size;
     kioskEl.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : KDEF.mirror.corner;
-    kioskEl.dataset.clockCorner = CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
+    // ('off' too, 2026-10-03: "Show a small clock: Off" -- kiosk.css hides the corner clock; SMALL_CLOCK_FIELD.)
+    kioskEl.dataset.clockCorner = CLOCK_CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
   }
 
   // persist a mirror change into the profile settings (merges with theme/voice/clock)
   function patchMirror(patch) {
     const cur = settings.get().kiosk || {};
     settings.set({ kiosk: { ...cur, mirror: { ...KDEF.mirror, ...(cur.mirror || {}), ...patch } } });
+  }
+  // ...and the corner clock's corner, the same way ("Show a small clock", SMALL_CLOCK_FIELD).
+  function patchClock(patch) {
+    const cur = settings.get().kiosk || {};
+    settings.set({ kiosk: { ...cur, clock: { ...KDEF.clock, ...(cur.clock || {}), ...patch } } });
   }
   // live bedside tuning of the mirror -> persisted to the profile settings
   function cycleMirrorSize(dir) {
@@ -2040,6 +2083,7 @@ export function createArrangement({
     // ---- the mirror/clock corners ----
     applyLayout,
     patchMirror,
+    patchClock,
     cycleMirrorSize,
     cycleMirrorCorner,
     destroy,

@@ -232,6 +232,23 @@
   /* A countdown in the corner too: clock.js colours these for a PANEL (`--text-strong`, dark in
      every light theme), which on this dark backing would be dark on dark. */
   .k-clock .clock .cd-label,.k-clock .clock .cd-value,.k-clock .clock .cd-status{color:var(--on-dark)}
+  /* "Show a small clock: Off" (arrangement.js SMALL_CLOCK_FIELD): the corner clock is hidden, its module kept, so
+     turning it back on is instant and its own settings are as they were. On either root (`.view` carries the
+     corners on the dashboard path). */
+  .kiosk[data-clock-corner="off"] .k-clock,.view[data-clock-corner="off"] .k-clock{display:none}
+  /* *** AN OVERLAY'S BACKDROP (2026-10-03, "Over the dashboard"; home_profile.js addAsOverlay). *** A module
+     placed OVER the dashboard sits on whatever is under it -- a photo, a video, a moving scene -- and a placed
+     box has no panel background of its own (that rule is `.k-stage .k-mod`, above). Every module draws its words
+     in the theme's panel colours, made to be read on `--surface`. So an overlay gets an OPAQUE `--surface`, the
+     theme's own `--text`, and a `--border` edge. Argued against see-through (the scoreboard's float argued it
+     first, scoreboard.css): any see-through hands the contrast to the picture underneath, which nobody chose and
+     which changes every few seconds on a slideshow -- a dark photo under a translucent cream box puts dark words
+     on a muddy grey. Opaque costs the corner of the picture the overlay covers, and an overlay is small.
+     Not the "Panel backgrounds" setting either: see-through panels were calibrated against a live theme behind
+     them (`--board-veil`), not against a photograph directly under a small box. The corner clock is not a placed
+     overlay and keeps its own darker backing (`.k-clock`, above), which carries `--on-dark` words. */
+  .k-placed-overlay > .k-pcell > .k-mod{background:var(--surface);color:var(--text);border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;box-sizing:border-box}
   /* MIRROR MODE (M): the camera fills the whole screen */
   .kiosk.mirror-full .k-mirror{position:fixed;inset:0;width:auto;aspect-ratio:auto;
     border:0;border-radius:0;box-shadow:none;z-index:calc(var(--z-panels) + 50)}
