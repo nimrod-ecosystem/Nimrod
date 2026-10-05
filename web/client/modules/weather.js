@@ -544,8 +544,12 @@ registerModule(
         if (n) {
           const c = describeCode(n.code, n.isDay);
           const p = place();
+          // (2026-10-05, sky.js: the live wallpaper follows this reading - the WMO code for the sky, is_day,
+          // and the place's position, already rounded to about 11 km, for the sunrise and sunset there and
+          // for which half of the world the seasons are in. Nothing new is fetched for it.)
           bus.publish('weather/now', { icon: c.icon, words: c.words, temp: deg(n.tempC), stale: isStale(), at: g.at,
-            spoken: spokenNow(g.model, units(), { place: p.kind === 'chosen' ? p.name : '' }) }, OWN);
+            spoken: spokenNow(g.model, units(), { place: p.kind === 'chosen' ? p.name : '' }),
+            code: n.code, isDay: n.isDay, lat: Number.isFinite(p.lat) ? p.lat : null, lon: Number.isFinite(p.lon) ? p.lon : null }, OWN);
         }
       } catch { /* the room's window can wait */ }
     }

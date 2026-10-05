@@ -150,6 +150,8 @@ export const SUITES = [
   // 2026-10-03: "Over the dashboard" -- any module as a small floating panel, the small corner clock as a setting,
   // and the "Photos with a clock" example measured at 1280x720 and 1920x1080. Mounts real kiosks (needs the server).
   'overlay',
+  // 2026-10-05: "With the seasons" (and Halloween), and a live wallpaper that follows the time of day and the weather.
+  'seasons',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

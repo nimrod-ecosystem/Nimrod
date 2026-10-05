@@ -54,6 +54,8 @@
 // `data-scene-host` (see below), so every existing call site is unaffected.
 import { liveThemes, BOARD_BASE } from './live_themes.js';
 import { syncScene } from './livescene.js';
+// "With the seasons" (2026-10-05): a choice that is a rule for picking a theme by the date, not a palette.
+import { FOLLOW_THEMES, isFollowThemeId, resolveSeasonal, seasonContext } from './seasons.js';
 // User folders (867a7ff): a font the device's own folder supplies goes in front of the theme's stack.
 import { userFontStack, USER_FONTS_EVENT } from './user_fonts.js';
 
@@ -253,10 +255,36 @@ export const THEMES = {
 
 export const DEFAULT_THEME = 'default';
 
-// Resolve an id to a known theme id, falling back to default for null/unknown.
+// Resolve an id to a known theme CHOICE, falling back to default for null/unknown. A choice is a theme
+// in THEMES or a follow theme ("With the seasons", seasons.js FOLLOW_THEMES) - kept as itself, so it is
+// what gets saved and what a picker shows. What it PAINTS today is `paintedThemeId` / `paintedTheme`.
 export function resolveThemeId(id) {
-  return id && THEMES[id] ? id : DEFAULT_THEME;
+  return id && (THEMES[id] || isFollowThemeId(id)) ? id : DEFAULT_THEME;
 }
+
+/** Is `id` a choice that picks a theme by a rule (the date), rather than a theme itself? */
+export const isFollowTheme = (id) => isFollowThemeId(id);
+
+/**
+ * *** WHAT A CHOICE PAINTS, NOW. *** For an ordinary theme, that theme. For "With the seasons", the
+ * season's or holiday's theme on this date (seasons.js `resolveSeasonal`), or its stated fallback while
+ * Design's art for it does not exist yet - with the fallback's overlays added to the theme's own, which
+ * is how Halloween can be Night plus the black cat until it has a world of its own.
+ *   `now` (ms), `lat`, `holidays`: override the page's own context (seasons.js), for a suite.
+ * Returns the THEMES entry as a new object, plus `id` (the painted theme) and, for a follow choice,
+ * `follows` (the choice) and `season` (what resolveSeasonal said). Always a real theme: `.vars` is there.
+ */
+export function paintedTheme(id, { now, lat, holidays } = {}) {
+  const choice = resolveThemeId(id);
+  if (!isFollowThemeId(choice)) return { ...THEMES[choice], id: choice };
+  const ctx = { ...seasonContext(), ...(lat !== undefined ? { lat } : {}), ...(holidays !== undefined ? { holidays } : {}) };
+  const season = resolveSeasonal(new Date(now ?? Date.now()), { ...ctx, has: (t) => !!THEMES[t], last: DEFAULT_THEME });
+  const base = THEMES[season.theme] || THEMES[DEFAULT_THEME];
+  const overlays = [...(base.overlays || [])];
+  for (const o of season.overlays) if (!overlays.includes(o)) overlays.push(o);
+  return { ...base, overlays, id: THEMES[season.theme] ? season.theme : DEFAULT_THEME, follows: choice, season };
+}
+export const paintedThemeId = (id, opts) => paintedTheme(id, opts).id;
 
 // Apply a theme by setting its CSS variables on `rootEl` (usually
 // document.documentElement, so the whole page — shell + every module — re-themes).
@@ -431,9 +459,12 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 // flicker. A kiosk passes its `flashLimitNow`. OMITTED, it is not sent at all: a scene mounted fresh
 // gets flash_limit.js's default (no limit, since 8a89e31), and a scene already running KEEPS the limit its host
 // gave it - so a settings panel re-applying the theme on the same page cannot loosen a stricter one.
-export function applyTheme(rootEl, id, { flashLimit } = {}) {
-  const resolved = resolveThemeId(id);
-  const theme = THEMES[resolved];
+// (2026-10-05) A follow choice ("With the seasons") paints today's theme for it (`paintedTheme`), and the
+// id RETURNED is that painted theme's, so every caller's `THEMES[applyTheme(...)]` is still a real theme.
+// `now`/`lat`/`holidays` pass through to paintedTheme, for a suite.
+export function applyTheme(rootEl, id, { flashLimit, now, lat, holidays } = {}) {
+  const theme = paintedTheme(id, { now, lat, holidays });
+  const resolved = theme.id;
   const vars = theme.vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
   rootEl.style.setProperty('--font', userFontStack(vars['--font']));
@@ -506,9 +537,14 @@ export function refreshUserFont({ storage } = {}) {
   return n;
 }
 
-// [{id,label}] for building a picker.
+// [{id,label}] for building a picker. The follow choices ("With the seasons") come LAST, after every real
+// theme, marked `follows: true` - last so a list's first entry is still a real theme, and marked so a
+// picker that draws a theme's colours can ask `paintedTheme` for today's instead of THEMES.
 export function listThemes() {
-  return Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label }));
+  return [
+    ...Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label })),
+    ...Object.entries(FOLLOW_THEMES).map(([id, t]) => ({ id, label: t.label, follows: true })),
+  ];
 }
 
 // --- anonymous theme choice -------------------------------------------------------

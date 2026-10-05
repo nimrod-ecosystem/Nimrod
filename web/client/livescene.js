@@ -24,6 +24,9 @@
 //      legible over it. Those numbers are Design's ESTIMATES; Code measures them (PRIORITY.md #2).
 
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
+// THE SKY OUTSIDE (2026-10-05): which weather overlays and washes a scene gets for the time of day and the
+// weather. Data and pure functions; see `sky` in mountScene and setSceneSky below.
+import { skyLook, TINTS, TIMES, WEATHERS } from './seasons.js';
 
 // ---------------------------------------------------------------------------------------------
 // __lsh() — the whole "framework". JSX compiled with pragma `__lsh` lands here. Deliberately NOT
@@ -2840,7 +2843,16 @@ const MOTION_CSS = `
 .ls{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:var(--z-world,0)}
 .ls .ng{position:absolute;inset:0}
 .ls.ls-still .ng, .ls.ls-still .ng *{animation-play-state:paused !important}
+.ls .ls-tint{inset:0;pointer-events:none}
 `;
+
+/** `{ time, weather }` with anything unknown dropped, or null when neither is known. */
+export function normalizeSky(sky) {
+  if (!sky || typeof sky !== 'object') return null;
+  const time = TIMES.includes(sky.time) ? sky.time : null;
+  const weather = WEATHERS.includes(sky.weather) ? sky.weather : null;
+  return time || weather ? { time, weather } : null;
+}
 
 function injectCss(doc) {
   if (doc.getElementById('livescene-css')) return;
@@ -2858,8 +2870,14 @@ function injectCss(doc) {
  *   s.destroy();
  *
  * `tokens` is the scene's board token set (--ab-*), for a host that wants to apply it.
+ *
+ * `sky` (2026-10-05): the sky outside, `{ time, weather }` (seasons.js TIMES / WEATHERS; either may be
+ * null). A scene listed in seasons.js SCENE_SKY gets the shared layer's part for it - a weather overlay
+ * and/or a still darkening wash; every scene gets it as `render(sky)` and as `data-sky-time` /
+ * `data-sky-weather` on the `.ls` root, for a scene that draws its own night or rain. Omitted: no sky,
+ * exactly as before. A scene mounted by syncScene (a page's theme) follows `setSceneSky` instead.
  */
-export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit } = {}) {
+export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit, sky = null } = {}) {
   const doc = host.ownerDocument || document;
   injectCss(doc);
   const root = doc.createElement('div');
@@ -2871,7 +2889,7 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   let systemReduced = !!mq?.matches;
   // `flashLimit`: the screen's limit (flash_limit.js) - a number or a getter, read on every render.
   // A host that passes nothing gets 3, the published ceiling.
-  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit };
+  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit, sky: normalizeSky(sky) };
   const limitNow = () => {
     try { return normalizeFlashLimit(typeof cfg.flashLimit === 'function' ? cfg.flashLimit() : cfg.flashLimit); }
     catch { return normalizeFlashLimit(undefined); }
@@ -2883,8 +2901,16 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     root.style.background = s.ground;
     root.classList.toggle('ls-still', m === 'still');
     root.dataset.scene = cfg.scene;
-    const ng = __lsh('div', { className: 'ng' }, s.render());
-    for (const entry of cfg.overlays) {
+    // The sky, as attributes a scene's own CSS can read (empty when there is none).
+    for (const [attr, v] of [['skyTime', cfg.sky?.time], ['skyWeather', cfg.sky?.weather]]) {
+      if (v) root.dataset[attr] = v; else delete root.dataset[attr];
+    }
+    const ng = __lsh('div', { className: 'ng' }, s.render(cfg.sky));
+    // The shared layer's weather overlays join the scene's own, once each (a theme already wearing
+    // rain does not get a second rain).
+    const look = skyLook(cfg.scene, cfg.sky);
+    const asked = cfg.overlays.map((e) => overlaySpec(e).id);
+    for (const entry of [...cfg.overlays, ...look.overlays.filter((id) => !asked.includes(id))]) {
       const { id, speed, every } = overlaySpec(entry);
       if (!OVERLAYS[id]) continue;
       const box = __lsh('div', null, OVERLAYS[id].render());
@@ -2901,6 +2927,11 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     }
     // LAST, after speed and calm: the whole scene's flicker on one clock, under the flash limit.
     scheduleFlicker(ng, limitNow());
+    // The washes (dawn, dusk, night, cloud, storm), above everything in the scene and still behind every
+    // panel. Static: no animation, so nothing for motion or the flash limit to govern.
+    for (const t of look.tints) {
+      if (TINTS[t]) ng.append(__lsh('span', { className: 'ls-tint', 'data-tint': t, style: { background: TINTS[t] } }));
+    }
     root.replaceChildren(ng);
   }
   const onMq = (e) => { systemReduced = e.matches; render(); };
@@ -2910,8 +2941,10 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   return {
     get tokens() { return { ...((SCENES[cfg.scene] || SCENES.nimrod).tokens) }; },
     get halo() { return (SCENES[cfg.scene] || SCENES.nimrod).halo; },
+    get sky() { return cfg.sky ? { ...cfg.sky } : null; },
     set(next = {}) {
       cfg = { ...cfg, ...next, overlays: [].concat(next.overlays ?? cfg.overlays) };
+      if ('sky' in next) cfg.sky = normalizeSky(next.sky);
       render();
     },
     destroy() {
@@ -2936,6 +2969,32 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
 //   * anything else                       -> variables only, exactly as today
 const hosts = new WeakMap();
 
+// *** THE PAGE'S SKY (2026-10-05). *** One sky per page: every panel on a screen is under the same one.
+// Scenes mounted here (a theme's world) follow it; `setSceneSky` is how a screen (sky.js) tells them.
+// Null until somebody sets it, so a page that never does - the landing page, every suite that mounts a
+// scene by itself - draws exactly what it always did. Held weakly: a host that goes away takes its scene.
+let PAGE_SKY = null;
+const SKY_SCENES = new Set();
+const derefScene = (r) => { try { return typeof r?.deref === 'function' ? r.deref() : r; } catch { return undefined; } };
+const holdScene = (s) => SKY_SCENES.add(typeof WeakRef === 'function' ? new WeakRef(s) : s);
+const dropScene = (s) => { for (const r of [...SKY_SCENES]) { const x = derefScene(r); if (!x || x === s) SKY_SCENES.delete(r); } };
+
+/** The page's sky now, or null. */
+export const sceneSky = () => (PAGE_SKY ? { ...PAGE_SKY } : null);
+
+/** Tell every theme scene on the page the sky outside. Re-draws only on a change; returns whether it changed. */
+export function setSceneSky(sky) {
+  const next = normalizeSky(sky);
+  if (JSON.stringify(next) === JSON.stringify(PAGE_SKY)) return false;
+  PAGE_SKY = next;
+  for (const r of [...SKY_SCENES]) {
+    const s = derefScene(r);
+    if (!s) { SKY_SCENES.delete(r); continue; }
+    try { s.set({ sky: PAGE_SKY }); } catch (err) { console.error('livescene: sky', err); }
+  }
+  return true;
+}
+
 // `flashLimit` (a number or a getter) is the screen's flash limit; omitted, the scene uses 3.
 export function syncScene(rootEl, theme, { motion, flashLimit } = {}) {
   if (!rootEl) return;
@@ -2947,19 +3006,21 @@ export function syncScene(rootEl, theme, { motion, flashLimit } = {}) {
   const want = theme?.scene || null;
   const had = hosts.get(host);
   if (!want) {
+    if (had) dropScene(had);
     had?.destroy();
     hosts.delete(host);
     if (isPage) doc.documentElement.removeAttribute('data-live-scene');
     return;
   }
   const opts = { scene: want, overlays: theme.overlays || [], ...(motion ? { motion } : {}),
-    ...(flashLimit !== undefined ? { flashLimit } : {}) };
+    ...(flashLimit !== undefined ? { flashLimit } : {}), sky: PAGE_SKY };
   if (had) had.set(opts);
   else {
     const s = mountScene(host, opts);
     // Pinned to the viewport at the very back of the page, behind every panel.
     if (isPage) Object.assign(host.firstElementChild.style, { position: 'fixed', zIndex: '-1' });
     hosts.set(host, s);
+    holdScene(s);
   }
   // The page-level scene only shows where nothing opaque paints over it; this attribute is the
   // hook a page's CSS uses to stop painting --bg on the body while a live theme is on.

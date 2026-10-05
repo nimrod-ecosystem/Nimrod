@@ -26,7 +26,7 @@
 // WHAT IT HANDS BACK is the option's VALUE, exactly as declared. It writes nothing: the caller commits
 // it through the row's own `commit()` — the one write path every other row uses.
 
-import { THEMES } from './theme.js';
+import { THEMES, isFollowTheme, paintedTheme } from './theme.js';
 import { normalizeHex } from './color_picker.js';
 import { gridRows, filterByName } from './picture_picker.js';
 
@@ -64,7 +64,8 @@ export function previewOf(option, { preview = null, key = '' } = {}) {
   }
   if (option.font) return { kind: 'font', family: String(option.font) };
   const themeish = preview === 'theme' || (preview == null && THEME_KEY.test(String(key || '')));
-  const t = themeish ? THEMES[option.value] : null;
+  // "With the seasons" (seasons.js) is not in THEMES: its tile wears the colours it paints today.
+  const t = themeish ? (THEMES[option.value] || (isFollowTheme(option.value) ? paintedTheme(option.value) : null)) : null;
   if (t && t.vars) {
     const colors = THEME_ROLES.map((r) => normalizeHex(t.vars[r])).filter(Boolean);
     if (colors.length) return { kind: 'swatch', colors };
