@@ -424,7 +424,10 @@ const toTab = (m, id) => {
       // The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
-          'claude-page', 'reviews-page'].includes(i.id));
+          'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin'].includes(i.id));
+      // ('screen-lock' and 'screen-lock-pin', 2026-10-05, screen_lock.js: "Lock this screen" and "Unlock PIN" at the top of
+      // the This screen tab -- outside the panel's lap, like 'game'. Left out here DELIBERATELY so the old rows stay 40;
+      // the lap is unchanged. dev/screen_lock_test.html walks them.)
       // ('user-folders', 2026-10-02: "Your own folders" on the This screen tab, like 'game' -- outside the lap.)
       // ('lesson-topics', 2026-10-03: moved into the menu from the Settings panel's own list, beside 'game'.)
       // ('claude-page' on Devices and 'reviews-page' on This screen, 2026-10-04, page_links.js: rows that open a

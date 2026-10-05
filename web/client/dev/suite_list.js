@@ -152,6 +152,9 @@ export const SUITES = [
   'overlay',
   // 2026-10-05: "With the seasons" (and Halloween), and a live wallpaper that follows the time of day and the weather.
   'seasons',
+  // 2026-10-05: lock this screen (Ctrl+Shift+L) - everything inside works, the ways out and the setup go; unlocked by a
+  // person, the version reload and the recovery reload / reboot wait. Mounts real kiosks (needs the server).
+  'screen_lock',
   // This list's own check, as a suite - so `run_suite.py` and CI catch drift too.
   'suite_list',
 ];

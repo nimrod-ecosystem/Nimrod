@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>screen lock — everything inside works, the ways out are gone — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  p{max-width:80ch}
+</style>
+</head>
+<body>
+<h1>screen lock — everything inside works, the ways out are gone</h1>
+<p>Mike, 2026-10-05: lock a screen with Ctrl+Shift+L so people can use everything inside the dashboards and modules
+but cannot get back out to the computer; when he unlocks it, the site stays out of the way (no new-version reload,
+no recovery reload or reboot) until it is locked again. First <code>screen_lock.js</code> on its own (the record,
+the PIN, "lock again by itself", which menu rows stay, the guards, the PIN strip, the Pi helper's report), then a
+real kiosk: the chord, the locked menu, the tray with no way out, edit and switch refused, the chip, the version
+watch and the recovery ladder standing down while unlocked, and the lock surviving a reload. Needs the server
+(<code>SUITE_BASE</code>).</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import {
+  createScreenLock, normalizeLockRecord, missingLockBindings, chordWords, lockControlOf, lockedLine, LOCK_KEY_BINDINGS,
+  LOCK_CONTROL, SCREEN_LOCK_ACTION, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC, LOCK_STORE_KEY, keepWhileLocked, panelSubjectsOnly,
+  isLeaveKey, isLeavingLink, attachLockGuards, mountPinStrip, mountLockChip, isLoopbackUrl, lockHelperFrom,
+  createLockReporter, LOCK_HELPER_KEY, PIN_TRIES, PIN_WAIT_MS, isPinShape, RELOCK_CHOICES, LOCK_MENU_DROPS,
+} from '../screen_lock.js';
+import { SYSTEM_ACTIONS, SYSTEM_TOPICS } from '../actions.js';
+import { DEFAULT_BINDINGS } from '../input_keyboard.js';
+import { REVIEW_KEY_BINDINGS } from '../pack_reviews.js';
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { createState } from '../state.js';
+import { mountKiosk } from '../kiosk.js';
+import { PICK_UP_KEY } from '../version_watch.js';
+import { authHeaders } from '../auth.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 6000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), _m: m }; };
+const J = (x) => JSON.stringify(x);
+// A document stand-in for the relock clock: only what createScreenLock reads.
+const fakeDoc = () => ({ visibilityState: 'visible', defaultView: null, addEventListener() {}, removeEventListener() {} });
+const chord = (type = 'keydown') => window.dispatchEvent(new KeyboardEvent(type, { key: 'L', ctrlKey: true, shiftKey: true, bubbles: true }));
+const pressChord = () => { chord('keydown'); chord('keyup'); };
+
+(async () => {
+  try {
+    // =====================================================================================================
+    section('*** the action and the chord ***');
+    const act = SYSTEM_ACTIONS.find((a) => a.id === SCREEN_LOCK_ACTION);
+    check('actions.js has the lock action, and its id and topic are screen_lock.js\'s', !!act && act.topic === SCREEN_LOCK_TOPIC
+      && SCREEN_LOCK_ACTION === 'system/screen-lock', J(act));
+    check('it is NOT one of the room\'s SYSTEM_TOPICS (kiosk_test holds those equal to room_scene\'s)',
+      !Object.values(SYSTEM_TOPICS).includes(SCREEN_LOCK_TOPIC));
+    const taken = [...DEFAULT_BINDINGS, ...REVIEW_KEY_BINDINGS].map((b) => b.control);
+    check('*** Ctrl+Shift+L collides with no shipped binding (the gate toggle is Ctrl+Shift+E) ***',
+      LOCK_CONTROL === 'key:ctrl+shift+l' && !taken.includes(LOCK_CONTROL) && taken.includes('key:ctrl+shift+e'), taken.join());
+    check('the default binding: the keyboard, a press, for anybody (universal)', LOCK_KEY_BINDINGS.length === 1
+      && LOCK_KEY_BINDINGS[0].device === 'keyboard' && LOCK_KEY_BINDINGS[0].edge === 'press' && LOCK_KEY_BINDINGS[0].role === 'universal'
+      && LOCK_KEY_BINDINGS[0].actionId === SCREEN_LOCK_ACTION);
+    check('a saved record with nothing about it gets the chord, in memory (a copy)', missingLockBindings([]).length === 1
+      && missingLockBindings([])[0] !== LOCK_KEY_BINDINGS[0]);
+    check('...a record that moved the lock to another key keeps its own (no second binding)',
+      missingLockBindings([{ device: 'keyboard', control: 'key:ctrl+alt+k', actionId: SCREEN_LOCK_ACTION }]).length === 0);
+    check('...a record that uses Ctrl+Shift+L for something else keeps it',
+      missingLockBindings([{ device: 'keyboard', control: LOCK_CONTROL, actionId: 'photos/next' }]).length === 0);
+    check('the words: "Ctrl+Shift+L", and a rebinding shows in them', chordWords(LOCK_CONTROL) === 'Ctrl+Shift+L'
+      && chordWords(lockControlOf([{ device: 'keyboard', control: 'key:ctrl+alt+k', actionId: SCREEN_LOCK_ACTION }])) === 'Ctrl+Alt+K'
+      && lockControlOf([]) === LOCK_CONTROL, chordWords(LOCK_CONTROL));
+    check('the refusal line is plain and says how to unlock', lockedLine('editing') === 'This screen is locked, so editing waits until it is unlocked (Ctrl+Shift+L).',
+      lockedLine('editing'));
+
+    // =====================================================================================================
+    section('*** the record: per device, unlocked by default, survives a reload ***');
+    {
+      const st = memStore();
+      const L = createScreenLock({ storage: st, setIntervalFn: null, doc: fakeDoc() });
+      check('*** a new screen is UNLOCKED, and not "staying out" (today\'s screen, exactly) ***',
+        !L.isLocked() && !L.staysOut() && !L.needsPin(), J(L.get()));
+      const heard = [];
+      L.subscribe((s) => heard.push(s));
+      L.lock({ by: 'menu' });
+      check('lock: locked, said to listeners with who', L.isLocked() && heard.length === 1 && heard[0].locked && heard[0].by === 'menu', J(heard));
+      check('kept in this browser\'s storage', JSON.parse(st.getItem(LOCK_STORE_KEY)).locked === true);
+      const L2 = createScreenLock({ storage: st, setIntervalFn: null, doc: fakeDoc() });
+      check('*** a reload comes back locked ***', L2.isLocked());
+      const r = await L2.unlock();
+      check('unlocked by a person: unlocked AND staying out of the way', r.ok && !L2.isLocked() && L2.staysOut(), J(L2.get()));
+      const L3 = createScreenLock({ storage: st, setIntervalFn: null, doc: fakeDoc() });
+      check('...which also survives a reload (a reload mid-film keeps staying out)', L3.staysOut());
+      await L3.toggle();
+      check('toggle locks again, and locking ends "staying out"', L3.isLocked() && !L3.staysOut());
+      const t = await L3.toggle();
+      check('toggle unlocks (no PIN)', t.ok && !L3.isLocked());
+      check('a junk record is an unlocked one', !normalizeLockRecord('nonsense').locked && normalizeLockRecord({ locked: true, stayOut: true }).stayOut === false);
+      L.destroy(); L2.destroy(); L3.destroy();
+    }
+
+    // =====================================================================================================
+    section('*** the PIN: off by default; typed on the strip; five tries then a wait ***');
+    {
+      let clock = 1_000_000;
+      const st = memStore();
+      const L = createScreenLock({ storage: st, setIntervalFn: null, doc: fakeDoc(), now: () => clock });
+      check('PIN shape: 4 to 8 digits', isPinShape('1234') && isPinShape('12345678') && !isPinShape('123') && !isPinShape('12a4') && !isPinShape('123456789'));
+      check('a bad PIN is not kept', (await L.setPin('12')).ok === false && !L.needsPin());
+      check('a PIN is set while unlocked', (await L.setPin('2468')).ok === true && L.needsPin());
+      check('...and kept as a salted hash, never the digits', !st.getItem(LOCK_STORE_KEY).includes('2468')
+        && /^(sha256|fnv):/.test(JSON.parse(st.getItem(LOCK_STORE_KEY)).pinHash));
+      L.lock();
+      check('locked, the PIN cannot be changed or removed', (await L.setPin('1111')).ok === false && L.clearPin() === false);
+      const t = await L.toggle();
+      check('*** with a PIN, the chord asks for it instead of unlocking ***', t.ok === false && t.reason === 'pin' && L.isLocked());
+      check('a wrong PIN: still locked, tries counted', (await L.unlock({ pin: '0000' })).reason === 'wrong' && L.isLocked());
+      for (let i = 0; i < PIN_TRIES - 2; i += 1) await L.unlock({ pin: '0000' });
+      const w = await L.unlock({ pin: '0000' });
+      check(`after ${PIN_TRIES} wrong tries: a wait of ${PIN_WAIT_MS / 1000} s`, w.reason === 'wait' && w.waitMs === PIN_WAIT_MS, J(w));
+      check('...even the right PIN waits', (await L.unlock({ pin: '2468' })).reason === 'wait' && L.isLocked());
+      clock += PIN_WAIT_MS + 1;
+      check('after the wait, the right PIN unlocks', (await L.unlock({ pin: '2468' })).ok === true && !L.isLocked() && L.staysOut());
+      check('unlocked, the PIN can be removed; then the chord unlocks by itself', L.clearPin() && !L.needsPin()
+        && (L.lock(), (await L.toggle()).ok === true) && !L.isLocked());
+      L.destroy();
+    }
+
+    // =====================================================================================================
+    section('*** "lock again by itself": off by default, only while the page is showing ***');
+    {
+      let clock = 0;
+      const doc = fakeDoc();
+      const st = memStore();
+      const L = createScreenLock({ storage: st, setIntervalFn: null, doc, now: () => clock });
+      check('off by default', L.get().relockHours === 0 && RELOCK_CHOICES[0] === 0);
+      L.lock(); await L.unlock();
+      clock += 24 * 3600e3;
+      check('*** off: a whole day untouched, unlocked, it never locks itself ***', L.tick() === false && !L.isLocked());
+      check('choices are the listed hours only', L.setRelockHours(3) === false && L.setRelockHours(1) === true);
+      clock += 59 * 60e3;
+      check('one hour chosen: 59 minutes untouched -> still unlocked', L.tick() === false && !L.isLocked());
+      clock += 2 * 60e3;
+      check('61 minutes untouched -> locked, by "idle"', L.tick() === true && L.isLocked());
+      await L.unlock();
+      doc.visibilityState = 'hidden';
+      clock += 5 * 3600e3;
+      check('*** the page hidden (Netflix in front of it): hours pass and it never locks ***', L.tick() === false && !L.isLocked());
+      doc.visibilityState = 'visible';
+      clock += 30 * 60e3;
+      check('shown again: its clock started again when it was hidden, so 30 minutes is not an hour', L.tick() === false && !L.isLocked());
+      L.poke(); clock += 59 * 60e3;
+      check('a touch starts the hour again', L.tick() === false);
+      const L2 = createScreenLock({ storage: memStore(), setIntervalFn: null, doc: fakeDoc(), now: () => clock });
+      L2.setRelockHours(1); clock += 10 * 3600e3;
+      check('a screen NOBODY unlocked (never locked) is never locked by the clock', L2.tick() === false && !L2.isLocked());
+      L.destroy(); L2.destroy();
+    }
+
+    // =====================================================================================================
+    section('*** the ⚙ menu while locked: which rows stay ***');
+    {
+      const rows = [
+        { kind: 'item', id: 'set:intervalMs', tab: 'module' }, { kind: 'item', id: 'play-pause', tab: 'module' },
+        { kind: 'item', id: 'promote', tab: 'module' }, { kind: 'item', id: 'switch-module', tab: 'module' },
+        { kind: 'item', id: 'edit-panel', tab: 'module' }, { kind: 'item', id: 'load-pack', tab: 'module' },
+        { kind: 'item', id: 'set:masterVolume', tab: 'audio' }, { kind: 'item', id: 'set:theme', tab: 'display' },
+        { kind: 'item', id: 'set:panelGap', tab: 'display' }, { kind: 'item', id: 'room-reactions', tab: 'display' },
+        { kind: 'item', id: 'controls', tab: 'devices' }, { kind: 'item', id: 'who-pick', tab: 'people' },
+        { kind: 'item', id: 'set:pickUpVersions', tab: 'screen' }, { kind: 'item', id: 'layout:three', tab: 'module' },
+        { kind: 'item', id: 'level:screen:theme', tab: 'module' }, { kind: 'item', id: 'call-ctl:mic', tab: 'module' },
+      ];
+      const kept = keepWhileLocked(rows, { drop: ['set:panelGap'] }).map((r) => r.id);
+      check('*** kept: the panel\'s own rows, Pause / Play, Bigger, a call\'s controls, Volume, Colours ***',
+        ['set:intervalMs', 'play-pause', 'promote', 'call-ctl:mic', 'set:masterVolume', 'set:theme'].every((id) => kept.includes(id)), kept.join());
+      check('*** gone: Switch, Edit, a pack file, rearranging, the room editor, Devices, People, This screen, levels ***',
+        ['switch-module', 'edit-panel', 'load-pack', 'set:panelGap', 'room-reactions', 'controls', 'who-pick', 'set:pickUpVersions',
+          'layout:three', 'level:screen:theme'].every((id) => !kept.includes(id)), kept.join());
+      check('the shipped drop list names the edit and leave rows', ['switch-module', 'edit-panel', 'edit-view', 'dashboard-map'].every((id) => LOCK_MENU_DROPS.includes(id)));
+      const subs = panelSubjectsOnly([{ id: 'p1' }, { id: 'level:module' }, { id: 'level:screen' }, { id: 'piece:door' }, { id: 'p2' }],
+        { levelPrefix: 'level:', piecePrefix: 'piece:' }).map((s) => s.id);
+      check('"Settings for" while locked: the panels only', subs.join() === 'p1,p2', subs.join());
+    }
+
+    // =====================================================================================================
+    section('*** the guards: what leaves the page ***');
+    {
+      const key = (k, o = {}) => ({ key: k, ctrlKey: false, shiftKey: false, altKey: false, metaKey: false, ...o });
+      check('leave keys: Ctrl+L, Ctrl+T, Ctrl+W, Ctrl+N, Alt+Left, F11, F12, Ctrl+1, Ctrl+P, Ctrl+O, Ctrl+Shift+I',
+        [key('l', { ctrlKey: true }), key('t', { ctrlKey: true }), key('w', { ctrlKey: true }), key('n', { ctrlKey: true }),
+          key('ArrowLeft', { altKey: true }), key('F11'), key('F12'), key('1', { ctrlKey: true }), key('p', { ctrlKey: true }),
+          key('o', { ctrlKey: true }), key('I', { ctrlKey: true, shiftKey: true })].every(isLeaveKey));
+      check('*** NOT leave keys: the lock chord itself, the gate toggle, undo / copy / paste, F5, digits, arrows, Escape, f ***',
+        ![key('L', { ctrlKey: true, shiftKey: true }), key('E', { ctrlKey: true, shiftKey: true }), key('z', { ctrlKey: true }),
+          key('c', { ctrlKey: true }), key('v', { ctrlKey: true }), key('F5'), key('1'), key('ArrowLeft'), key('Escape'), key('f'),
+          key(' ')].some(isLeaveKey));
+      const a = (attrs) => { const el = document.createElement('a'); for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v); return el; };
+      const loc = new URL('https://nimrod.example/kiosk.html?profile=p1');
+      check('leaving links: a new tab, another page, another site, a download, a middle click',
+        isLeavingLink(a({ href: '/x', target: '_blank' }), {}, loc) && isLeavingLink(a({ href: '/home.html' }), {}, loc)
+        && isLeavingLink(a({ href: 'https://elsewhere.example/' }), {}, loc) && isLeavingLink(a({ href: '/kiosk.html?profile=p1', download: '' }), {}, loc)
+        && isLeavingLink(a({ href: '/kiosk.html?profile=p1' }), { button: 1 }, loc));
+      check('not leaving: a jump within the page', !isLeavingLink(a({ href: '#top' }), {}, loc) && !isLeavingLink(a({ href: '/kiosk.html?profile=p1#x' }), {}, loc));
+
+      let locked = false;
+      const blocked = [];
+      const scope = document.createElement('div');
+      document.body.append(scope);
+      const origOpen = window.open;
+      const g = attachLockGuards({ scope, isLocked: () => locked, onBlocked: (w) => blocked.push(w), isFullscreen: () => false });
+      check('unlocked: window.open is the browser\'s own', window.open === origOpen && !g.wrapped());
+      // Was it refused BEFORE the page's own handlers? Read in the bubble phase (after the guard's capture), then
+      // stopped there, so a link the guard rightly lets through never actually navigates this suite away.
+      const fire = (el, type, init = {}) => {
+        let was = null;
+        const stop = (e) => { was = e.defaultPrevented; e.preventDefault(); };
+        document.addEventListener(type, stop);
+        const e = new MouseEvent(type, { bubbles: true, cancelable: true, ...init });
+        el.dispatchEvent(e);
+        document.removeEventListener(type, stop);
+        return was === null ? e.defaultPrevented : was;
+      };
+      const link = a({ href: 'https://elsewhere.example/', target: '_blank' });
+      link.textContent = 'x';
+      scope.append(link);
+      check('unlocked: a link opens as ever (nothing refused)', fire(link, 'click') === false && blocked.length === 0);
+      locked = true; g.sync();
+      check('*** locked: window.open opens nothing, and says so ***', window.open !== origOpen && window.open('https://x.example') === null
+        && blocked.includes('window'));
+      check('*** locked: a link to another page or tab is refused ***', fire(link, 'click') === true && blocked.includes('link'));
+      const hash = a({ href: '#here' }); scope.append(hash);
+      check('...a jump within the page is not', fire(hash, 'click') === false);
+      check('locked: the right-click menu is refused', fire(link, 'contextmenu') === true && blocked.includes('menu'));
+      const file = document.createElement('input'); file.type = 'file'; scope.append(file);
+      check('*** locked: a file dialog (a window onto the computer) is refused ***', fire(file, 'click') === true && blocked.includes('file'));
+      if (typeof window.showDirectoryPicker === 'function') {
+        let rej = null;
+        try { await window.showDirectoryPicker(); } catch (e) { rej = e; }
+        check('locked: the folder picker gives a Cancel (AbortError)', rej && rej.name === 'AbortError', String(rej));
+      } else check('(this browser has no folder picker to wrap)', true);
+      const kd = new KeyboardEvent('keydown', { key: 'l', ctrlKey: true, bubbles: true, cancelable: true });
+      window.dispatchEvent(kd);
+      check('locked: Ctrl+L (the address bar) is refused', kd.defaultPrevented && blocked.includes('key'));
+      const kd2 = new KeyboardEvent('keydown', { key: 'L', ctrlKey: true, shiftKey: true, bubbles: true, cancelable: true });
+      window.dispatchEvent(kd2);
+      check('...Ctrl+Shift+L is not refused by the guard', !kd2.defaultPrevented);
+      const outside = a({ href: '/elsewhere.html' }); document.body.append(outside);
+      check('a link OUTSIDE the screen (the page\'s own, e.g. a demo\'s way out) is the page\'s, not refused', fire(outside, 'click') === false);
+      outside.remove();
+      locked = false; g.sync();
+      check('*** unlocked again: window.open is exactly the browser\'s own again ***', window.open === origOpen && !g.wrapped());
+      check('...and the link opens', fire(link, 'click') === false);
+      locked = true; g.sync(); g.destroy();
+      check('destroyed while locked: window.open is given back', window.open === origOpen);
+      scope.remove();
+    }
+
+    // =====================================================================================================
+    section('*** the PIN strip: a strip, never a gate ***');
+    {
+      let timers = [];
+      const host = document.createElement('div'); host.style.position = 'relative'; document.body.append(host);
+      const submits = [];
+      let answer = { ok: false, text: 'That is not the PIN.' };
+      const closes = [];
+      const s = mountPinStrip(host, { submit: async (m, pin) => { submits.push([m, pin]); return answer; },
+        onClose: (w) => closes.push(w), setTimer: (f, ms) => { timers.push({ f, ms }); return timers.length; }, clearTimer: () => {} });
+      check('closed until asked', !s.isOpen() && s.el.hidden);
+      s.open('unlock');
+      check('opens low on the screen, not over it (no scrim, no dialog role)', s.isOpen() && !s.el.querySelector('[aria-modal]')
+        && s.el.getAttribute('role') === 'group');
+      for (const k of ['2', '4', '6', '8']) s.press(k);
+      s.press('ok');
+      await sleep(20);
+      check('the keypad types, OK submits', submits.length === 1 && submits[0][0] === 'unlock' && submits[0][1] === '2468', J(submits));
+      check('a wrong PIN: stays open and says so', s.isOpen() && /not the PIN/.test(s.el.textContent));
+      answer = { ok: true };
+      for (const k of ['2', '4', '6', '8']) s.press(k);
+      await s.enter();
+      check('the right one: it closes', !s.isOpen() && closes.includes('done'));
+      s.open('unlock');
+      const last = timers[timers.length - 1];
+      check('*** nobody answering: it puts itself away (45 s) ***', last && last.ms === 45000);
+      last.f();
+      check('...and does', !s.isOpen() && closes.includes('idle'));
+      s.open('set'); submits.length = 0;
+      for (const k of ['1', '3', '5', '7']) s.press(k); await s.enter();
+      check('setting a PIN asks for it twice', submits.length === 0 && /again/.test(s.el.textContent));
+      for (const k of ['9', '9', '9', '9']) s.press(k); await s.enter();
+      check('two different: starts again, nothing kept', submits.length === 0 && /not the same/.test(s.el.textContent));
+      for (const k of ['1', '3', '5', '7']) s.press(k); await s.enter();
+      for (const k of ['1', '3', '5', '7']) s.press(k); await s.enter();
+      check('the same twice: kept', submits.length === 1 && submits[0][0] === 'set' && submits[0][1] === '1357', J(submits));
+      s.open('unlock');
+      s.el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      check('Escape puts it away', !s.isOpen() && closes.includes('escape'));
+      s.destroy(); host.remove();
+      const chipHost = document.createElement('div'); document.body.append(chipHost);
+      const chip = mountLockChip(chipHost);
+      chip.show('Unlocked — Ctrl+Shift+L to lock');
+      check('the chip: plain words, not a button (nothing to press by mistake)', !chip.el.hidden && chip.el.tagName === 'DIV'
+        && getComputedStyle(chip.el).pointerEvents === 'none');
+      chip.destroy(); chipHost.remove();
+    }
+
+    // =====================================================================================================
+    section('*** the Pi helper\'s report (loopback only, off unless the launcher names one) ***');
+    {
+      check('loopback addresses only', isLoopbackUrl('http://127.0.0.1:8765/screen-lock') && isLoopbackUrl('http://localhost:1/x')
+        && !isLoopbackUrl('https://evil.example/x') && !isLoopbackUrl('http://10.0.0.5/x') && !isLoopbackUrl('file:///etc/passwd'));
+      const st = memStore();
+      check('no parameter, nothing kept: off', lockHelperFrom({ search: '', storage: st }) === null);
+      check('?lockHelper=<loopback> is kept for next time', lockHelperFrom({ search: '?lockHelper=http://127.0.0.1:8765/screen-lock', storage: st }) === 'http://127.0.0.1:8765/screen-lock'
+        && lockHelperFrom({ search: '', storage: st }) === 'http://127.0.0.1:8765/screen-lock');
+      check('*** a link naming somebody else\'s server is ignored ***', lockHelperFrom({ search: '?lockHelper=https://evil.example/x', storage: st }) === 'http://127.0.0.1:8765/screen-lock');
+      check('?lockHelper=off forgets it', lockHelperFrom({ search: '?lockHelper=off', storage: st }) === null && st.getItem(LOCK_HELPER_KEY) === null);
+      const posts = [];
+      const beats = [];
+      const rep = createLockReporter({ url: 'http://127.0.0.1:8765/screen-lock', fetchImpl: async (u, o) => { posts.push([u, JSON.parse(o.body)]); return { ok: true }; },
+        setIntervalFn: (f) => { beats.push(f); return 1; }, clearIntervalFn: () => {}, now: () => 42 });
+      rep.report({ locked: true, stayOut: false, hasPin: true });
+      check('a change is posted: locked / staying out, and when', posts.length === 1 && posts[0][1].locked === true && posts[0][1].stayOut === false
+        && posts[0][1].at === 42 && !('hasPin' in posts[0][1]), J(posts));
+      beats[0]();
+      check('...and again on the heartbeat', posts.length === 2);
+      const none = createLockReporter({ url: 'https://evil.example/x', fetchImpl: async () => { posts.push('no'); } });
+      none.report({ locked: true });
+      check('a reporter for a non-loopback address does nothing', posts.length === 2);
+      const failing = createLockReporter({ url: 'http://127.0.0.1:1/x', fetchImpl: () => Promise.reject(new Error('no helper')), setIntervalFn: null });
+      failing.report({ locked: false });
+      await sleep(10);
+      check('a missing helper is not an error (nothing thrown)', true);
+    }
+
+    // =====================================================================================================
+    section('*** the real kiosk ***');
+    const USER = 'screen-lock-' + Math.floor(performance.now());
+    const profiles = createProfilesClient({ user: USER });
+    const root = document.getElementById('root');
+    const P = await profiles.create('TEST-screen-lock');
+    await profiles.addModule(P.id, 'clock');
+    await profiles.addModule(P.id, 'trivia');
+    const P2 = await profiles.create('TEST-screen-lock-other');
+    await profiles.addModule(P2.id, 'clock');
+    const setRow = async (pid, patch) => {
+      const st = createState({ url: profiles.stateURL(pid, 'settings'), user: USER });
+      await st.load(); st.set(patch); await st.flush(); st.destroy();
+    };
+    await setRow(P.id, { [PICK_UP_KEY]: true });
+    const fake = { v: 'lock0001' };
+    const storage = memStore();
+    async function screen(extra = {}) {
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
+      root.append(box);
+      const reloads = [];
+      const navs = [];
+      const bus = createBus();
+      const heard = [];
+      bus.subscribe(LOCK_STATE_TOPIC, (s) => heard.push(s));
+      const k = await mountKiosk(box, {
+        user: USER, profileId: P.id, profiles, bus, storage, session: memStore(),
+        navigate: (u) => navs.push(u), reloadPage: () => { reloads.push(Date.now()); }, recoveryTick: 0,
+        versionWatch: { fetchVersion: async () => fake.v, pollMs: 10 * 60 * 1000, checkMs: 10 * 60 * 1000, quietWaitMs: 5000, inputQuietMs: 0 },
+        ...extra,
+      });
+      await sleep(200);
+      return { k, bus, box, reloads, heard, kiosk: box.querySelector('.kiosk'), done() { try { k.destroy(); } catch { /* gone */ } box.remove(); } };
+    }
+    const ids = (k) => k.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
+
+    {
+      const s = await screen();
+      const L = s.k.screenLock();
+      check('the kiosk has a lock, unlocked by default', !!L && !L.isLocked() && !L.staysOut());
+      check('booted: the bus heard the state once', s.heard.length === 1 && s.heard[0].locked === false && s.heard[0].by === 'boot', J(s.heard));
+      s.k.menu.open();
+      await until(() => ids(s.k).includes('screen-lock'), 3000);
+      const lockRow = s.k.menu.items().find((i) => i.id === 'screen-lock');
+      check('*** ⚙ This screen: "Lock this screen", for somebody with no keyboard ***', lockRow && lockRow.tab === 'screen'
+        && /Ctrl\+Shift\+L/.test(lockRow.hint || ''), J(lockRow));
+      check('...and "Unlock PIN: off" beside it (off by default)', s.k.menu.items().find((i) => i.id === 'screen-lock-pin')?.label === 'Unlock PIN: off');
+      check('unlocked, the menu is the whole menu (Devices, People, This screen tabs)', ['devices', 'people', 'screen'].every((t) => s.k.menu.tabs().some((x) => x.id === t)),
+        J(s.k.menu.tabs()));
+      check('no "Locked" row while unlocked', !ids(s.k).includes('screen-lock-state'));
+      s.k.menu.close();
+
+      // ---- THE CHORD ----
+      pressChord();
+      check('*** Ctrl+Shift+L locks it ***', await until(() => L.isLocked(), 3000), J(L.get()));
+      check('the bus heard it, by the chord', await until(() => s.heard.some((h) => h.locked && h.by === 'chord'), 2000), J(s.heard));
+      check('the screen carries data-screen-locked', s.kiosk.hasAttribute('data-screen-locked'));
+      const sw = s.kiosk.querySelector('.k-controls [data-act="switch"]');
+      check('*** the bar\'s "Switch module" is gone while locked ***', sw && getComputedStyle(sw).display === 'none');
+      check('...and every other button of the bar is still there (Home, Pause, Next, Hush, ⚙, ⛶)',
+        ['home', 'playpause', 'next', 'hush', 'settings', 'fs'].every((a) => getComputedStyle(s.kiosk.querySelector(`.k-controls [data-act="${a}"]`)).display !== 'none'));
+
+      // ---- THE LOCKED MENU ----
+      s.k.menu.open();
+      await sleep(50);
+      const tabs = s.k.menu.tabs().map((t) => t.id);
+      check('*** locked menu: only the panel, Sound and Display tabs ***', tabs.every((t) => ['module', 'audio', 'display'].includes(t)) && tabs.includes('module')
+        && tabs.includes('audio'), tabs.join());
+      const got = ids(s.k);
+      const state = s.k.menu.items().find((i) => i.id === 'screen-lock-state');
+      check('*** above the tabs: "Locked: Ctrl+Shift+L unlocks it" (not a stop: no PIN) ***', state && state.tab === '*top' && state.disabled
+        && /Ctrl\+Shift\+L unlocks it/.test(state.label), J(state));
+      check('kept: Volume, Colours, the panel\'s own rows', got.includes('set:masterVolume') && got.includes('set:theme') && got.some((id) => /^set:/.test(id) && !['set:masterVolume', 'set:theme', 'set:complexity'].includes(id)),
+        got.join());
+      check('*** gone: Switch, Edit this panel, Edit this dashboard, who this screen is for, recovery, bindings, version pick-up ***',
+        ['switch-module', 'edit-panel', 'edit-view', 'who-pick', 'controls', 'set:pickUpVersions', 'restart-screen', 'screen-lock', 'screen-lock-pin'].every((id) => !got.includes(id)),
+        got.filter((id) => ['switch-module', 'edit-panel', 'edit-view', 'who-pick', 'controls', 'set:pickUpVersions', 'restart-screen'].includes(id)).join());
+      const subjects = s.k.menu.items().find((i) => i.id === 'subject-pick');
+      check('"Settings for" holds no levels while locked', !s.k.menu.items().some((i) => /^level:/.test(String(i.id))) && (!subjects || !/This screen|This device/.test(subjects.label)),
+        J(subjects));
+      check('the ways out of the MENU stay (Home is the tray; Close)', got.includes('home') && got.includes('close'));
+      s.k.menu.close();
+
+      // ---- THE TRAY: dashboards swap, no way out, nothing made ----
+      s.bus.publish(SYSTEM_TOPICS.dashboards, {});
+      check('the tray opens while locked', await until(() => s.k.trayOpen() && s.k.picker().items().length > 1, 4000));
+      const tray = s.k.picker().items();
+      check('*** locked tray: the other dashboard is there to swap to ***', tray.some((i) => i.kind === 'dashboard' && i.id === P2.id), J(tray));
+      check('*** ...and no "Set up dashboards" way out, and no "+ Room" to make ***', !tray.some((i) => i.kind === 'leave' || i.kind === 'prebuilt'), J(tray.map((i) => i.kind)));
+      s.k.picker().reset(); s.k.picker().select();          // the tray's own ✕ Close, first
+      check('the tray closes with its own Close', await until(() => !s.k.trayOpen(), 2000));
+
+      // ---- EDIT / MAP / SWITCH REFUSED ----
+      check('*** the edit view is refused while locked ***', s.k.openEditView() === null && !s.k.editView());
+      check('the map is refused', s.k.openMap() === null);
+      const note = () => s.kiosk.querySelector('[data-lock-note]')?.textContent || '';
+      check('...and it says so, plainly, with the chord', /This screen is locked, so .* waits until it is unlocked \(Ctrl\+Shift\+L\)/.test(note()), note());
+      s.bus.publish('shell/switch-module', {});
+      await sleep(80);
+      check('*** Switch module is refused (no library in a panel\'s place) ***', !s.kiosk.querySelector('.k-libslot'));
+      check('window.open opens nothing while locked', window.open('https://elsewhere.example/') === null);
+
+      // ---- VERSION WATCH WHILE LOCKED: a locked screen still follows deploys if it chose to ----
+      await until(() => s.k.versionWatch.state().known === 'lock0001', 3000);
+      fake.v = 'lock0002'; await s.k.versionWatch.poll();
+      const r1 = await s.k.versionWatch.check();
+      check('locked (nobody using it for something else): a deploy is picked up as before', r1 === 'acted' && s.reloads.length === 1,
+        `${r1} ${J(s.k.versionWatch.state())}`);
+
+      // ---- UNLOCK: STAY OUT OF IT ----
+      pressChord();
+      check('*** Ctrl+Shift+L again unlocks it ***', await until(() => !L.isLocked(), 3000));
+      check('unlocked by a person: staying out of the way', L.staysOut());
+      const chip = s.kiosk.querySelector('[data-lock-chip]');
+      check('*** the chip: "Unlocked — Ctrl+Shift+L to lock" ***', chip && !chip.hidden && chip.textContent === 'Unlocked — Ctrl+Shift+L to lock', chip?.textContent);
+      fake.v = 'lock0003'; await s.k.versionWatch.poll();
+      const r2 = await s.k.versionWatch.check();
+      check('*** unlocked by somebody: a new version WAITS (reason "unlocked") ***', r2 === 'waiting' && s.reloads.length === 1
+        && s.k.versionWatch.state().reason === 'unlocked', `${r2} ${J(s.k.versionWatch.state())}`);
+      check('the menu is whole again', (s.k.menu.open(), await until(() => ids(s.k).includes('screen-lock'), 2000)) && s.k.menu.tabs().some((t) => t.id === 'devices'));
+      s.k.menu.close();
+      check('the bar\'s Switch module is back', getComputedStyle(sw).display !== 'none' && !s.kiosk.hasAttribute('data-screen-locked'));
+      pressChord();
+      await until(() => L.isLocked(), 3000);
+      check('chip gone once locked again', s.kiosk.querySelector('[data-lock-chip]').hidden);
+      const r3 = await s.k.versionWatch.check();
+      check('*** locked again: the waiting version is picked up ***', r3 === 'acted' && s.reloads.length === 2, `${r3} ${J(s.k.versionWatch.state())}`);
+      s.done();
+
+      // ---- A RELOAD COMES BACK LOCKED (the same device's storage) ----
+      const s2 = await screen();
+      check('*** remounted on the same device: still locked ***', s2.k.screenLock().isLocked() && s2.kiosk.hasAttribute('data-screen-locked'));
+      s2.k.menu.open(); await sleep(50);
+      check('...and the ⚙ menu says so', s2.k.menu.items().some((i) => i.id === 'screen-lock-state'));
+      s2.k.menu.close();
+
+      // ---- A PIN, TYPED ON THE STRIP ----
+      await s2.k.screenLock().unlock();
+      check('(setup) a PIN set from the lock while unlocked', (await s2.k.screenLock().setPin('2468')).ok);
+      s2.k.menu.open(); await sleep(30);
+      check('the PIN row says it is on', s2.k.menu.items().find((i) => i.id === 'screen-lock-pin')?.label === 'Unlock PIN: on');
+      s2.k.menu.close();
+      pressChord();
+      await until(() => s2.k.screenLock().isLocked(), 3000);
+      s2.k.menu.open(); await sleep(30);
+      const st2 = s2.k.menu.items().find((i) => i.id === 'screen-lock-state');
+      check('locked with a PIN: the row above the tabs is pressable ("Locked: unlock…")', st2 && !st2.disabled && st2.label === 'Locked: unlock…', J(st2));
+      s2.k.menu.close();
+      pressChord();
+      check('*** with a PIN, the chord opens the PIN strip instead of unlocking ***', await until(() => s2.k.pinStrip()?.isOpen(), 3000) && s2.k.screenLock().isLocked());
+      check('the panels underneath keep running (nothing hidden: the strip is not a scrim)', !s2.kiosk.querySelector('.k-stage')?.hidden);
+      for (const d of ['1', '1', '1', '1']) s2.k.pinStrip().press(d);
+      await s2.k.pinStrip().enter();
+      check('a wrong PIN: still locked', s2.k.screenLock().isLocked() && s2.k.pinStrip().isOpen());
+      for (const d of ['2', '4', '6', '8']) s2.k.pinStrip().press(d);
+      await s2.k.pinStrip().enter();
+      check('*** the right PIN on the keypad: unlocked, by touch alone ***', await until(() => !s2.k.screenLock().isLocked(), 2000) && !s2.k.pinStrip().isOpen());
+      s2.k.screenLock().clearPin();
+      s2.done();
+    }
+
+    // =====================================================================================================
+    section('*** the recovery ladder: reload and reboot wait while somebody has it unlocked ***');
+    {
+      let clock = 5_000_000;
+      let reloaded = 0;
+      const rebooted = [];
+      const rp = await profiles.create('TEST-screen-lock-recovery');
+      await profiles.addModule(rp.id, 'photos');
+      await profiles.addModule(rp.id, 'youtube');
+      const res = await fetch(`/api/profiles/${rp.id}/state/settings`, {
+        method: 'PUT', headers: { 'Content-Type': 'application/json', ...authHeaders(USER) },
+        body: JSON.stringify({ data: { recovery: { on: true } }, base_version: 0 }),
+      });
+      check('(setup) recovery turned on for this screen', res.ok);
+      const st = memStore();
+      const box = document.createElement('div');
+      box.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
+      root.append(box);
+      const k = await mountKiosk(box, {
+        user: USER, profileId: rp.id, profiles, bus: createBus(), storage: st, session: memStore(), navigate: () => {},
+        recoveryNow: () => clock, recoveryTick: 0, reloadPage: () => { reloaded += 1; }, rebootDevice: (d) => rebooted.push(d),
+        versionWatch: false,
+      });
+      await sleep(300);
+      k.screenLock().lock(); await k.screenLock().unlock();
+      check('(setup) unlocked by a person', k.screenLock().staysOut());
+      clock += 4 * 60 * 60 * 1000;
+      const r1 = await k.recovery.step();
+      check('the first rung (remount, mends a panel in place) still runs', r1?.action === 'remount' && r1.performed === true, J(r1?.action));
+      clock += 40 * 60 * 1000;
+      const r2 = await k.recovery.step();
+      check('*** the reload rung: held while unlocked, nothing reloaded ***', r2?.action === 'reload' && r2.performed === false && r2.held === 'unlocked'
+        && reloaded === 0, J({ a: r2?.action, p: r2?.performed, h: r2?.held, reloaded }));
+      k.screenLock().lock();
+      const r3 = await k.recovery.step();
+      check('*** locked again: the reload goes ahead ***', r3?.action === 'reload' && r3.performed === true && reloaded === 1, J({ a: r3?.action, reloaded }));
+      k.destroy(); box.remove();
+    }
+
+    // =====================================================================================================
+    section('*** a screen nobody ever locked behaves exactly as today ***');
+    {
+      const s = await screen({ storage: memStore() });
+      check('never locked: not staying out', !s.k.screenLock().staysOut() && !s.k.screenLock().isLocked());
+      fake.v = 'lock0100'; await s.k.versionWatch.poll();
+      const r = await s.k.versionWatch.check();
+      check('*** never locked: a deploy is picked up as it always was ***', r === 'acted', `${r} ${J(s.k.versionWatch.state())}`);
+      check('no chip on a screen nobody unlocked', s.kiosk.querySelector('[data-lock-chip]').hidden);
+      s.done();
+    }
+  } catch (err) {
+    failed++;
+    out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err) }));
+  }
+  document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+})();
+</script>
+</body>
+</html>
