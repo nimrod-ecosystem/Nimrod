@@ -2257,3 +2257,26 @@ Code's design to carry them out, recorded here so it can be argued with. Items 1
     - Why rows stay per account, and the person is not moved: screens, settings, events and grants are keyed by
       the account that holds them. Moving would orphan Pat's screens. An account's screens stay that account's
       to run unless it grants otherwise.
+
+## Your page, themes by season, and locking a screen -- 2026-10-05
+
+Mike, live, after trying 63f3d72 / 9d0ae08 / 070d355. Items 1-6 are his. The "builds as" notes are Code's way of
+carrying them out, open to change.
+
+1. **"I call them" can be added at any time, on any card,** not only on cards whose profile lives on another login.
+2. **"Who has this card" is confusing.** Code proposed **"Shared with"**, the wording people know from shared
+   documents and photo albums; it is being built for Mike to see.
+3. **You can set the theme on your own page.** Builds as "Colours for my page" in Edit my page. A visitor's own
+   contrast or photosensitivity setting still wins over the page's colours.
+4. **Themes that follow the season, with holidays, starting with Halloween; the live wallpaper follows the user's
+   weather and the time of day.** *"If it's night and raining where you are it will be night and raining on your
+   live wallpaper."* Design makes Spring, Summer and Halloween (design note 32). Code builds "With the seasons",
+   the holiday calendar, and the weather and time-of-day state the scenes read. Scenes without the art fall back
+   to an existing theme.
+5. **"See older messages" is a setting** you can set when editing your profile. Mike would likely leave it on for a
+   dashboard. Builds as a page setting, plus a per-screen row so a screen in a shared room can turn it off.
+6. **A screen can be locked and unlocked,** like Ctrl+Shift+L. While locked, people control things inside the
+   dashboards and modules but can't get back out to the computer. Once unlocked, the site stays out of the way
+   (*"so we can watch Netflix and stuff"*) until it is locked again. Nothing that is playing stops, and locking puts
+   up no screen that only an input can leave: only the exits go. The Pi side (kiosk and watchdog) is planned in
+   writing and built later on the bench.
