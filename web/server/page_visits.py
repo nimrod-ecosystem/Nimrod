@@ -77,6 +77,23 @@ BOX_SIZES = ("small", "medium", "large")
 ABOUT_MAX = 2000
 LINK_MAX = 2000
 
+# "COLOURS FOR MY PAGE" (Mike, 2026-10-05: "you can set the theme on your profile page"). The page record's `theme`
+# is one of the site's theme ids (theme.js listThemes, which this file does not know - the client resolves an id it
+# does not have to "keep the visitor's own colours"). A visitor of an open page is sent it, as an id and nothing
+# else: anything that is not a short id is not sent. What the visitor's page DOES with it (their own High contrast
+# wins) is page_sections.js pageColours, argued there.
+THEME_KEY = "theme"
+THEME_ID_MAX = 40
+
+
+def visitor_theme(doc) -> str:
+    """The page's own colours as a visitor is sent them: a theme id, or ''. PURE."""
+    v = doc.get(THEME_KEY) if _is_obj(doc) else None
+    if not isinstance(v, str) or not v or len(v) > THEME_ID_MAX:
+        return ""
+    return v if all(c.isascii() and (c.isalnum() or c in "-_") for c in v) else ""
+
+
 # Why a visit is refused, in plain words (no "account", "token" or "grant"). `{name}` is the profile's name.
 REFUSAL_TEXT = {
     "closed": "{name} has not opened their page to you.",

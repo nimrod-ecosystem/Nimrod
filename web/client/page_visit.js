@@ -11,6 +11,9 @@
 // (web/server/page_visits.py filters part by part and field by field). It never asks for the person's page record
 // itself and never filters anything on its own: a part that is not in the answer does not exist here.
 //
+// THEIR COLOURS (2026-10-05, "Colours for my page"): the server sends the page's theme id with an open page; it is
+// worn on this window (`wearColours`) unless the visitor's own colours are for reading (page_sections.js pageColours).
+//
 // PICTURES ON SOMEBODY ELSE'S PAGE: the pictures come from the owner's own folder through their own media connection
 // (an address on their machine, theirs alone), so the visitor's page says "Pictures are only on <name>'s own
 // devices" -- the server never sends that address, so there is nothing here to leak and no broken box to show.
@@ -21,7 +24,58 @@ import { createBus } from './bus.js';
 import { mountRecommendedVideo } from './recommend.js';
 import { mountNoteVisit } from './note_visit.js';
 import { whenOf, whenWords } from './modules/note.js';
-import { boxHeight, videoOf, aboutText } from './page_sections.js';
+import { boxHeight, videoOf, aboutText, pageColours, ACCESS_THEMES } from './page_sections.js';
+import { THEMES, applyTheme, listThemes } from './theme.js';
+
+// ---- "Colours for my page" (2026-10-05; the rule is page_sections.js pageColours) ----------------------------------
+const norm = (v) => String(v || '').trim().toLowerCase();
+/** Which of the site's themes the colours around `el` are ('' when they match none, or cannot be read). An
+ *  accessibility theme is looked for first: it is the one the rule turns on. */
+export function viewerThemeOf(el) {
+  try {
+    const cs = getComputedStyle(el);
+    const bg = norm(cs.getPropertyValue('--bg'));
+    const text = norm(cs.getPropertyValue('--text'));
+    if (!bg) return '';
+    const ids = [...ACCESS_THEMES, ...Object.keys(THEMES).filter((k) => !ACCESS_THEMES.includes(k))];
+    return ids.find((id) => THEMES[id] && norm(THEMES[id].vars['--bg']) === bg && norm(THEMES[id].vars['--text']) === text) || '';
+  } catch { return ''; }
+}
+/** Does this browser ask for more contrast, or force its own colours? */
+export function wantsMoreContrast(win = (typeof window !== 'undefined' ? window : null)) {
+  try { return !!(win?.matchMedia?.('(prefers-contrast: more)').matches || win?.matchMedia?.('(forced-colors: active)').matches); } catch { return false; }
+}
+export const knownThemes = () => { try { return listThemes().map((t) => t.id); } catch { return []; } };
+// What wearing a theme changed on each element, so taking it off puts back exactly what was there.
+const WORN = new WeakMap();
+/**
+ * Put a page's colours on `el` (theme.js applyTheme: the variables only -- the moving scene of a live theme is drawn
+ * only on <html> or an element marked `data-scene-host`, which this does not mark), with the page's own background
+ * and text, or take them off again (`id` ''). Returns the id worn. Only what it changed is put back.
+ */
+export function wearColours(el, id) {
+  if (!el?.style) return '';
+  const want = id && THEMES[id] ? id : '';
+  const prev = WORN.get(el);
+  if ((prev?.id || '') === want) return want;
+  if (prev) {
+    for (const [n, v] of prev.before) { if (v) el.style.setProperty(n, v); else el.style.removeProperty(n); }
+    WORN.delete(el);
+    delete el.dataset.pageColours;
+  }
+  if (!want) return '';
+  const snap = () => new Map([...el.style].map((n) => [n, el.style.getPropertyValue(n)]));
+  const before = snap();
+  applyTheme(el, want);
+  el.style.setProperty('background-color', 'var(--bg)');
+  el.style.setProperty('color', 'var(--text)');
+  const after = snap();
+  const changed = new Map();
+  for (const [n, v] of after) if (before.get(n) !== v) changed.set(n, before.get(n) || '');
+  WORN.set(el, { id: want, before: changed });
+  el.dataset.pageColours = want;
+  return want;
+}
 
 export const visitURL = (personId) => `/api/people/${encodeURIComponent(personId)}/visit`;
 export const historyURL = (personId, { before = null, limit = null } = {}) => {
@@ -98,10 +152,14 @@ const btn = (attrs, label, short = '', { dim = false, why = '' } = {}) => `<butt
  */
 export function mountPageVisit(root, {
   personId = '', name = '', faceHTML = '', note = { enabled: false, reason: '', short: '' }, reach = '', user = null, baseCtx = {},
-  fetchImpl = (...a) => fetch(...a), noteImpl = mountNoteVisit,
+  fetchImpl = (...a) => fetch(...a), noteImpl = mountNoteVisit, isScreen = false, moreContrast = wantsMoreContrast(),
 } = {}) {
   if (!root) throw new Error('mountPageVisit: a root element is required');
   let torn = false;
+  let colours = '';                // the page's own colours, as worn here ('' : the visitor's own)
+  // The visitor's own colours, read BEFORE the page's go on (page_sections.js pageColours: theirs win when they are for
+  // reading, like High contrast).
+  const viewerTheme = viewerThemeOf(root);
   let status = 'loading';          // 'loading' | 'ok' | 'refused' | 'error'
   let answer = null;               // the server's { name, call_name, sections } or { error, text }
   let noteOpen = null;             // mountNoteVisit's handle, while the note is open
@@ -249,15 +307,21 @@ export function mountPageVisit(root, {
       answer = body;
       status = r.ok && body && Array.isArray(body.sections) ? 'ok' : (r.status === 403 || r.status === 409 ? 'refused' : 'error');
     } catch { status = torn ? status : 'error'; }
+    if (!torn && status === 'ok') {
+      colours = wearColours(root, pageColours({ pageTheme: typeof answer?.theme === 'string' ? answer.theme : '', known: knownThemes(),
+        isScreen, viewerTheme, moreContrast }));
+    }
     render();
   })();
   return {
     ready,
     status: () => status,
+    colours: () => colours,
+    pageTheme: () => (typeof answer?.theme === 'string' ? answer.theme : ''),
     sections: () => (answer && Array.isArray(answer.sections) ? answer.sections.map((s) => ({ ...s })) : []),
     noteOpen: () => !!noteOpen,
     playing: () => [...boxes.keys()],
-    destroy() { torn = true; ac.abort(); unmountAll(); if (noteOpen) { try { noteOpen.destroy(); } catch { /* gone */ } } root.innerHTML = ''; },
+    destroy() { torn = true; ac.abort(); unmountAll(); if (noteOpen) { try { noteOpen.destroy(); } catch { /* gone */ } } wearColours(root, ''); root.innerHTML = ''; },
   };
 }
 

@@ -179,6 +179,13 @@ export const PEOPLE_SETTINGS = Object.freeze([
   { key: 'recommended', label: 'Songs and videos recommended to you to show', kind: 'choice', default: 3, level: 'standard',
     options: INCOMING_CHOICES.map((n) => ({ value: n, label: n ? String(n) : 'None' })),
     help: 'The newest first, with who sent each one.' },
+  // "See older messages", HERE (Mike, 2026-10-05): the page's own "Let this page show older messages" says whether the
+  // page offers them at all (page_sections.js OLDER_KEY); this row lets ONE screen - a screen in a room other people
+  // use - turn them off for itself. A row of this page's own, so it is stored per screen like the two above, and it
+  // lives where the other "what this page shows" rows are. Default on (Mike: he'd likely leave it on).
+  { key: 'olderHere', label: 'Offer older messages here', kind: 'toggle', default: true, level: 'standard',
+    onLabel: 'Yes', offLabel: 'No',
+    help: 'No: “See older messages” is not offered here, even when the page allows it. For a screen in a room other people use.' },
   { key: 'closeAfterMs', label: 'On a screen, close Nimrod by himself after', kind: 'choice', default: 120000, level: 'advanced',
     options: CLOSE_CHOICES.map((ms) => ({ value: ms, label: ms ? `${ms / 60000} minute${ms === 60000 ? '' : 's'}` : 'Never' })),
     help: 'So a window opened on a screen nobody is pressing goes back to the people by itself. A recommended video stays open while it plays.' },

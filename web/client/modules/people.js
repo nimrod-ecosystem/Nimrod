@@ -33,9 +33,13 @@
 //                  and recommend go where that person can be reached (`reach`, from the server), each live or dimmed
 //                  by the same rules as everybody else's.
 //                  ONE CARD AT A TIME (claims.py): "Remove just this card" on such a card (two presses; the
-//                  connection stays), dimmed with why when the server says no (`remove`); "Who has this card" on each
-//                  of the people you look after, and "Who has your card" on your own, opening the list of other
-//                  logins that hold it, each with "Stop sharing with <name>".
+//                  connection stays), dimmed with why when the server says no (`remove`); "Shared with 2" (dimmed
+//                  "Not shared yet") on each of the people you look after and on your own card, opening the list
+//                  of other logins that hold it, each with "Stop sharing with <name>". (First built as "Who has
+//                  this card"; renamed 2026-10-05, Mike found it confusing.)
+//                  I CALL THEM… ON EVERY CARD (Mike, 2026-10-05: "can be added at any time, on any card"): on the
+//                  people you made too, where it is your private label beside the name on their card. Not on your
+//                  own card, nor on a screen shared with you (there is no card of yours to hold it).
 //
 // *** ON A SCREEN IN SOMEBODY'S ROOM (`ctx.isScreen`) IT IS FACES AND NAMES, AND WHAT CAME IN. *** A screen never
 // places a call (kiosk.js; modules/profile.js) and never sends anything, so none of the five buttons could ever act
@@ -73,6 +77,12 @@
 //   someone, Ask Nimrod), a dimmed "Only you see this" that says why. On a card a connection put here, "See their
 //   page" opens theirs read-only (page_visit.js), dimmed with why when they have not opened it to you; "Messages for
 //   you" has "See older messages".
+//   THE PAGE'S OWN LOOK (Mike, 2026-10-05; page_sections.js argues both): the card under You also has "Colours for
+//   my page" (the site's own themes, the list the settings menu's Colours row offers) and "Let this page show older
+//   messages" (default on). The colours are worn on this page (page_visit.js wearColours) and on the page a visitor
+//   opens, unless whoever is looking uses colours for reading, like High contrast; on a screen the screen's own
+//   Colours stand. "See older messages" is offered when the page allows it AND this page's own "Offer older
+//   messages here" row (people_page.js, per screen) is on; otherwise it is dimmed with which one turned it off.
 //   MESSAGES FOR YOU REMOVED: the newest message still shows, as one "Latest message" line on your own card, so a
 //   message left for you is never only on a page you took it off. ASK NIMROD REMOVED: "More" moves onto your card,
 //   so your settings stay one press away.
@@ -103,9 +113,13 @@ import {
   PAGE_KEY, EDIT_WORDS, BOX_SIZES, BOX_SIZE_LABELS, DEFAULT_BOX_SIZE, ABOUT_MAX, viewSections, hasKind, addSection, removeSection,
   restoreSection, canMove, moveSection, updateSection, videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc, boxHeight,
   WHO_KEY, PICKED_KEY, WHO_CHOICES, WHO_WORDS, SEEN_KEY, whoOf, pickedOf, togglePicked, canOpen, seenByOf,
+  THEME_KEY, OLDER_KEY, ACCESS_THEMES, PAGE_LOOK_WORDS, themeOf, olderOf, pageColours,
 } from '../page_sections.js';
 // See their page / See older messages (page_visit.js; the server's rules are page_visits.py and notes.py).
-import { mountPageVisit, mountOlderMessages, VISIT_WORDS, OLDER_WORDS } from '../page_visit.js';
+import {
+  mountPageVisit, mountOlderMessages, VISIT_WORDS, OLDER_WORDS, wearColours, viewerThemeOf, wantsMoreContrast, knownThemes,
+} from '../page_visit.js';
+import { listThemes } from '../theme.js';
 
 // The site's own things a page box can hold, loaded the first time one is on a page (page_sections.js SECTION_LIBRARY).
 const BOX_LOADERS = Object.freeze({
@@ -353,14 +367,14 @@ registerModule(
           reason: me.id ? '' : 'Sign in to have a picture of your own.', short: me.id ? '' : 'Sign in first' }, 'self'));
       }
       btns.push(editButton());
-      // "Who has your card" (claim.js): the logins with your card on their page. Off a screen, once your people are read.
+      // "Shared with" (claim.js): the logins with your card on their page. Off a screen, once your people are read.
       if (!isScreen() && me.id && Number.isFinite(me.holders)) btns.push(holdersButton({ ...me, kind: 'you' }, 'self'));
       // Ask Nimrod taken off the page: More comes here, so the person's settings stay one press away.
       if (!hasKind(pageDoc, 'nimrod')) btns.push(button({ act: 'more', label: EDIT_WORDS.more, short: EDIT_WORDS.moreShort, enabled: true }, 'self'));
       // Messages for you taken off the page: the newest one still shows, here.
       const latest = !hasKind(pageDoc, 'messages') && prefs.incoming && incoming.length ? incoming[0] : null;
       // ...and so does the way back through the older ones.
-      if (!hasKind(pageDoc, 'messages') && prefs.incoming && me.id) btns.push(button({ act: 'older', label: OLDER_WORDS.see, short: OLDER_WORDS.seeShort, enabled: true }, 'self'));
+      if (!hasKind(pageDoc, 'messages') && prefs.incoming && me.id) btns.push(olderButton('self'));
       return card('self', `<div class="pp-who"><div class="pp-face">${faceOf(me, SELF_FACE)}</div>
         <div><div class="pp-name" data-pp-self-name>${esc(me.name || (me.id ? 'You' : 'Welcome'))}</div>
         <p class="pp-sub">${isScreen() ? 'This screen is for you.' : 'You'}</p></div></div>
@@ -369,11 +383,17 @@ registerModule(
         <div class="pp-btns">${btns.join('')}</div>`, ' pp-self');
     }
 
+    // "See older messages": live when the page allows it (Edit my page) AND this page's own row does (people_page.js
+    // `olderHere`, per screen); otherwise dimmed, saying which one turned it off.
+    function olderButton(key) {
+      const why = !olderOf(pageDoc) ? PAGE_LOOK_WORDS.olderOffPage : prefs.olderHere === false ? PAGE_LOOK_WORDS.olderOffHere : '';
+      return button({ act: 'older', label: OLDER_WORDS.see, short: why ? PAGE_LOOK_WORDS.olderOffShort : OLDER_WORDS.seeShort, enabled: !why, reason: why }, key);
+    }
     function incomingHTML() {
       if (!prefs.incoming) return '';
       // "See older messages" (page_visit.js): every message left for you, a page at a time. On a screen too: the
       // screen is the person's own, and its window closes by itself after "close after" (people_page.js).
-      const older = selfId() ? card('older', `<div class="pp-btns">${button({ act: 'older', label: OLDER_WORDS.see, short: OLDER_WORDS.seeShort, enabled: true }, 'older')}</div>`) : '';
+      const older = selfId() ? card('older', `<div class="pp-btns">${olderButton('older')}</div>`) : '';
       return `<h2 class="pp-h">Messages for you</h2>${incoming.length
         ? incoming.map((m) => `<p class="pp-msg" data-pp-incoming><b>${esc(m.author || 'Someone')}</b>: ${esc(m.text)}
             <br><small>${esc(whenWords(m.at))}</small></p>`).join('')
@@ -422,19 +442,24 @@ registerModule(
     }
 
     // UNDER EACH OF YOUR OWN PEOPLE (claim.js; the server's claims.py decides):
-    //   somebody you look after (not you - claims.py `invite_refusal`)  "Invite them to use this"
+    //   somebody you look after (not you - claims.py `invite_refusal`)  "Invite them to use this", "Shared with",
+    //                                                                   "I call them…"
     //   somebody whose profile is on another login                     "I call them…", and - when a connection put
     //                                                                   them here - "Messages from them" and "Stop
     //                                                                   sharing" (two presses)
     // Nothing under you, or under a screen shared with you.
     const stopLabel = (key) => (armed && armed.key === key && twoPress(armed.at, Date.now()) === 'fire');
-    // "Who has this card" / "Who has your card": live when somebody else holds it, dimmed with why when nobody does.
+    // "Shared with 2": live when somebody else holds it; "Not shared yet", dimmed with why, when nobody does.
     function holdersButton(p, key) {
       const you = p.kind === 'you';
       const n = Number(p.holders) || 0;
-      return button({ act: 'holders', label: you ? CLAIM_WORDS.holdersYou : CLAIM_WORDS.holders, short: CLAIM_WORDS.holdersShort(n),
+      return button({ act: 'holders', label: CLAIM_WORDS.holders(n), short: you ? CLAIM_WORDS.holdersYouShort : CLAIM_WORDS.holdersShort(n),
         enabled: n > 0, reason: n > 0 ? '' : CLAIM_WORDS.holdersNone(you ? '' : (p.name || '')) }, key);
     }
+    // "I call them…" (Mike, 2026-10-05: at any time, on any card): on somebody you made, a label only you see beside
+    // the name on their card; on somebody whose profile is on another login, your name for them.
+    const callNameButton = (p, key) => button({ act: 'call-name', label: CLAIM_WORDS.callThem,
+      short: CLAIM_WORDS.callThemShort(p.callName ? p.profileName : ''), enabled: true }, key);
     function claimRow(p) {
       if (p.via !== 'account' || p.kind === 'you') return '';
       const key = `p:${p.id}`;
@@ -442,12 +467,13 @@ registerModule(
       if (p.home) {
         btns = [button({ act: 'invite', label: CLAIM_WORDS.invite, short: CLAIM_WORDS.inviteShort, enabled: true }, key)];
         if (p.holders !== null && p.holders !== undefined) btns.push(holdersButton(p, key));
+        btns.push(callNameButton(p, key));
       } else {
         // "See their page" (page_visit.js): live when the server says it opens for you (`page` ''), dimmed with why.
         const shut = typeof p.visit === 'string' && p.visit !== '';
         btns.push(button({ act: 'visit', label: VISIT_WORDS.see, short: shut ? VISIT_WORDS.dimShort : VISIT_WORDS.seeShort, enabled: !shut,
           reason: shut ? VISIT_WORDS.why(p.visit, p.name) : '' }, key));
-        btns.push(button({ act: 'call-name', label: CLAIM_WORDS.callThem, short: CLAIM_WORDS.callThemShort(p.callName ? p.profileName : ''), enabled: true }, key));
+        btns.push(callNameButton(p, key));
         if (p.linked) {
           const again = stopLabel(`${key}|stop-share`);
           btns.push(button({ act: 'claim-msg', label: p.messagesFromThem ? CLAIM_WORDS.msgOn : CLAIM_WORDS.msgOff, short: CLAIM_WORDS.msgShort, enabled: true }, key),
@@ -518,8 +544,38 @@ registerModule(
       if (!hasKind(pageDoc, 'people')) btns.push(button({ act: 'show-people', label: EDIT_WORDS.showPeople, short: EDIT_WORDS.showPeopleShort, enabled: true }, 'edit'));
       if (lastRemoved) btns.push(button({ act: 'put-back', label: EDIT_WORDS.putBack(lastRemoved.name), short: EDIT_WORDS.putBackShort, enabled: true }, 'edit'));
       return card('edit', `<h2 class="pp-h" data-pp-editing>${esc(EDIT_WORDS.editing)}</h2><p class="pp-note">${esc(EDIT_WORDS.intro)}</p>
-        <div class="pp-btns">${btns.join('')}</div>${whoHTML()}`, ' pp-edit');
+        <div class="pp-btns">${btns.join('')}</div>${whoHTML()}${lookHTML()}`, ' pp-edit');
     }
+    // "Colours for my page" and "Let this page show older messages" (page_sections.js argues both): keys of the page
+    // record beside "Who can see my page", written the same way.
+    function lookHTML() {
+      const W = PAGE_LOOK_WORDS;
+      const cur = themeOf(pageDoc);
+      let themes = [];
+      try { themes = listThemes(); } catch { themes = []; }
+      const opts = [{ id: '', label: W.coloursNone }, ...themes];
+      // A theme this version does not have (a newer site chose it) is kept, and named as such, not quietly swapped.
+      if (cur && !opts.some((t) => t.id === cur)) opts.push({ id: cur, label: EDIT_WORDS.newer });
+      const own = colourState().viewerKeepsOwn && cur;
+      const older = olderOf(pageDoc);
+      return `<div class="pp-fields" data-pp-look-row>
+          <label class="pp-field">${esc(W.colours)}<select data-pp-colours>${opts.map((t) => `<option value="${esc(t.id)}"${t.id === cur ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}</select>
+            <small data-pp-colours-line>${esc(own ? W.coloursOwn : W.coloursLine)}</small></label>
+          <label class="pp-field">${esc(W.older)}<select data-pp-older><option value="1"${older ? ' selected' : ''}>${esc(W.olderOn)}</option><option value="0"${older ? '' : ' selected'}>${esc(W.olderOff)}</option></select>
+            <small>${esc(W.olderLine)}</small></label>
+        </div>`;
+    }
+    // Which colours this page wears for whoever is looking (page_sections.js pageColours). The viewer's own colours are
+    // read from around the page (the element it is mounted in), not from the page itself.
+    function colourState() {
+      const viewerTheme = mount ? viewerThemeOf(mount) : '';
+      const moreContrast = wantsMoreContrast();
+      const pageTheme = themeOf(pageDoc);
+      const id = pageColours({ pageTheme, known: knownThemes(), isScreen: isScreen(), viewerTheme, moreContrast });
+      return { id, pageTheme, viewerTheme, viewerKeepsOwn: !isScreen() && (moreContrast || ACCESS_THEMES.includes(viewerTheme)) };
+    }
+    let worn = '';
+    function paintColours() { if (root) worn = wearColours(root, colourState().id); }
     // "Who can see my page" (page_sections.js WHO_WORDS; the server's rule is page_visits.py), and, for "Only the
     // people I pick", one button per person you are connected with (their own login): can or can't see it.
     const pickable = () => people().filter((p) => p.via === 'account' && !p.home && (p.kind === 'connected' || p.kind === 'joined'));
@@ -708,6 +764,7 @@ registerModule(
       const list = root.querySelector('[data-pp-list]');
       const secs = viewSections(pageDoc, { isScreen: isScreen() });
       root.classList.toggle('pp-editing', editing);
+      paintColours();
       // Sections gone from the page: their element, and anything mounted in it.
       const want = new Set(secs.map((s) => s.id));
       for (const [id, w] of [...wrappers]) {
@@ -924,8 +981,11 @@ registerModule(
       else if (t.matches('[data-pp-sec-size]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { size: BOX_SIZES[t.value] ? t.value : DEFAULT_BOX_SIZE }));
       else if (t.matches('[data-pp-seen]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { [SEEN_KEY]: t.value === 'visitors' ? 'visitors' : 'me' }));
       else if (t.matches('[data-pp-who]')) writeWho({ [WHO_KEY]: WHO_CHOICES.includes(t.value) ? t.value : 'me' });
+      else if (t.matches('[data-pp-colours]')) writeWho({ [THEME_KEY]: themeOf({ [THEME_KEY]: t.value }) });
+      else if (t.matches('[data-pp-older]')) writeWho({ [OLDER_KEY]: t.value !== '0' });
     }
-    // "Who can see my page" and the people picked: keys of the page record beside its sections (page_sections.js).
+    // "Who can see my page" and the people picked, the page's colours and its older messages: keys of the page record
+    // beside its sections (page_sections.js).
     function writeWho(patch) {
       if (!pageState) { why = new Map([['edit', EDIT_WORDS.failed]]); render(); return; }
       why = new Map();
@@ -1154,7 +1214,7 @@ registerModule(
         .find((a) => a.act === 'message') || { enabled: false, reason: '', short: '' };
       try {
         sheet.child = mountPageVisit(host, { personId: p.id, name: p.profileName || p.name, faceHTML: faceOf(p, SELF_FACE), reach: p.reach,
-          note: { enabled: msg.enabled, reason: msg.reason, short: msg.short }, user: account(), baseCtx: ctx });
+          note: { enabled: msg.enabled, reason: msg.reason, short: msg.short }, user: account(), baseCtx: ctx, isScreen: isScreen() });
         sheet.personId = p.id;
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: visit', err); host.textContent = VISIT_WORDS.failed; }
@@ -1190,15 +1250,16 @@ registerModule(
         Promise.resolve(sheet.child.ready).then(() => paintCursor());
       } catch (err) { console.error('people: connect', err); host.textContent = CLAIM_WORDS.failed; }
     }
-    // "I call them…": your own name for somebody whose profile lives on their own login. Saved, the page reads your
-    // people again, so the card shows it at once.
+    // "I call them…": your own name for one of your people - somebody whose profile lives on their own login, or
+    // (2026-10-05) somebody you made, as a label only you see. Saved, the page reads your people again, so the card
+    // shows it at once.
     function openCallName(pid) {
       const p = people().find((x) => x.id === pid);
       if (!p) return;
       const host = openSheet('callname', CLAIM_WORDS.callTitle(p.profileName || p.name));
       host.style.padding = '12px';
       try {
-        sheet.child = mountCallName(host, { person: { id: p.id, call_name: p.callName, profile_name: p.profileName || p.name }, client: claimsClient(),
+        sheet.child = mountCallName(host, { person: { id: p.id, call_name: p.callName, profile_name: p.profileName || p.name, home: !!p.home }, client: claimsClient(),
           onChange: () => { afterClaimChange(); } });
         sheet.personId = p.id;
         paintCursor();
@@ -1251,7 +1312,7 @@ registerModule(
       // The card that said it has gone: say it on your own card instead.
       if (!root?.querySelector(`[data-pp-card="${cardKey}"]`)) { why = new Map([['self', said]]); render(); }
     }
-    // "Who has this card" / "Who has your card": the list, in a window over the page (claim.js mountHolders). A change
+    // "Shared with": the list, in a window over the page (claim.js mountHolders). A change
     // there reads your people again, so the counts on the cards follow.
     function openHolders(pid) {
       if (!pid) return;
@@ -1413,7 +1474,9 @@ registerModule(
         sheet: sheet ? sheet.kind : null, cursor: { ...cursor }, mode: scanModeOf(chooseMode()), isScreen: isScreen(),
         claims: { armed: armed ? armed.key : null },
         invite: sheet?.kind === 'invite' ? sheet.child?.__probe?.() || null : null,
-        visit: sheet?.kind === 'visit' && sheet.child ? { status: sheet.child.status(), sections: sheet.child.sections(), noteOpen: sheet.child.noteOpen() } : null,
+        visit: sheet?.kind === 'visit' && sheet.child ? { status: sheet.child.status(), sections: sheet.child.sections(), noteOpen: sheet.child.noteOpen(),
+          colours: sheet.child.colours(), pageTheme: sheet.child.pageTheme() } : null,
+        look: { colours: worn, theme: themeOf(pageDoc), older: olderOf(pageDoc), olderHere: prefs.olderHere !== false },
         older: sheet?.kind === 'older' && sheet.child ? { status: sheet.child.status(), rows: sheet.child.rows(), more: sheet.child.hasMore() } : null,
         who: whoOf(pageDoc), picked: pickedOf(pageDoc),
         page: { sections: viewSections(pageDoc, { isScreen: isScreen() }).map((s) => ({ kind: s.kind, id: s.id, known: s.known })), editing,

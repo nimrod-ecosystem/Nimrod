@@ -123,6 +123,10 @@ held = {"id": "row", "account_id": "pat", "name": "Mom", "home_id": "h", "call_n
 check("*** \"I call them\" first, else the home's name, else the row's own ***",
       display_name({**held, "call_name": "Mum"}, "Linda") == "Mum" and display_name(held, "Linda") == "Linda"
       and display_name(held, None) == "Mom")
+mine_row = {"id": "r", "account_id": "pat", "name": "Robin", "home_id": None, "call_name": "Robbie"}
+check("*** \"I call them\" on a person you made (2026-10-05): what YOU see; everybody else sees the name on the card ***",
+      display_name(mine_row, None) == "Robbie" and claims.profile_name(mine_row, None) == "Robin"
+      and claims.profile_name({**held, "call_name": "Mum"}, "Linda") == "Linda" and claims.profile_name(None, "x") == "")
 check("kinds: you, mine, joined, connected, shared",
       row_kind({"id": "me"}, first_person_id="me") == "you" and row_kind({"id": "r"}, first_person_id="me") == "mine"
       and row_kind(held, first_person_id="me") == "joined"
@@ -331,9 +335,9 @@ c.put(f"/api/people/{mom}/call-name", json={"name": "Mom"}, headers=H(OWN))
 check("*** Mom calls Robin 'Bobby' on hers; Pat's Robin is still Robin ***",
       c.put(f"/api/people/{r_mom}/call-name", json={"name": "Bobby"}, headers=H(MOM)).status_code == 200
       and people(MOM)[r_mom]["name"] == "Bobby" and people(OWN)[robin]["name"] == "Robin")
-check("*** nobody else sets it; a profile you look after has a name, not an 'I call them' ***",
+check("*** nobody else sets it (the same 404 as no such person) ***",
       c.put(f"/api/people/{r_mom}/call-name", json={"name": "x"}, headers=H(OWN)).status_code == 404
-      and c.put(f"/api/people/{robin}/call-name", json={"name": "x"}, headers=H(OWN)).status_code == 409)
+      and c.put("/api/people/doesnotexist1/call-name", json={"name": "x"}, headers=H(OWN)).status_code == 404)
 check("a name is a name (the usual characters)", c.put(f"/api/people/{r_mom}/call-name", json={"name": "<b>"}, headers=H(MOM)).status_code == 400)
 
 section("*** what Mom reaches through her cards ***")
@@ -673,6 +677,60 @@ s2._conn.close()
 s3 = dbmod.SQLiteStore(mpath)
 check("*** booting again changes nothing ***", len(s3.people_rows("old-acc")) == 3 and s3.person_row(nana)["home_id"] == acc_first)
 s3._conn.close()
+
+section("*** I CALL THEM ON ANY CARD (Mike, 2026-10-05): a label on a person you made, and only you see it ***")
+appmod._invite_limit.reset()
+r = c.put(f"/api/people/{robin}/call-name", json={"name": "Robbie"}, headers=H(OWN))
+pr = people(OWN)[robin]
+check("*** Pat labels Robin (somebody he made) 'Robbie': his page says Robbie, with the name on the card beside it ***",
+      r.status_code == 200 and pr["name"] == "Robbie" and pr["call_name"] == "Robbie" and pr["profile_name"] == "Robin"
+      and pr["home"] is True and pr["kind"] == "mine", str(pr))
+check("...and his screens and notes for Robin say Robbie too (the name his login knows Robin by)",
+      store.get_person(OWN, robin)["name"] == "Robbie" and store.get_person(OWN, robin, profile=True)["name"] == "Robin")
+# Somebody holding Robin's card with no label of their own sees the name on the card, never Pat's label.
+t_lab = c.post("/api/connect/invites", json={"shares": [me, robin]}, headers=H(OWN)).json()
+LAB = "acct-label-check"
+pk = c.post("/api/invites/peek", json={"token": t_lab["token"]}, headers=H(LAB)).json()
+check("*** a link's first look names the people on it by the names on their cards - 'Robin', never 'Robbie' ***",
+      [s["name"] for s in pk["shares"]] == ["Pat", "Robin"] and "Robbie" not in json.dumps(pk), str(pk))
+check("...and so does what the link says to Pat himself (his own window: his own names)",
+      [s["name"] for s in t_lab["invite"]["shares"]] == ["Pat", "Robbie"], str(t_lab["invite"]))
+check("(setup) somebody new connects, and gets Robin's card", c.post("/api/invites/accept", json={"token": t_lab["token"]}, headers=H(LAB)).status_code == 200)
+bl = by_name(LAB)
+check("*** on their page Robin is 'Robin': Pat's label stays Pat's ***", "Robin" in bl and "Robbie" not in json.dumps(people(LAB)), str(list(bl)))
+check("*** they may give Robin a label of their own; Pat's page still says Robbie ***",
+      c.put(f"/api/people/{bl['Robin']['id']}/call-name", json={"name": "Rob"}, headers=H(LAB)).status_code == 200
+      and by_name(LAB)["Rob"]["profile_name"] == "Robin" and people(OWN)[robin]["name"] == "Robbie")
+hl2 = c.get(f"/api/people/{robin}/holders", headers=H(OWN)).json()["holders"]
+check("*** Robin's 'Shared with' list names the holder by their own name - not 'Rob' ***",
+      len(hl2) >= 1 and "Rob" not in json.dumps(hl2).replace("Robin", ""), str(hl2))
+r = c.put(f"/api/people/{me}/call-name", json={"name": "Daddy"}, headers=H(OWN))
+check("*** even a label on Pat's own card stays his: the people he is connected with still see 'Pat' ***",
+      r.status_code == 200 and "Pat" in by_name(LAB) and "Daddy" not in json.dumps(people(LAB))
+      and c.post("/api/invites/peek", json={"token": c.post("/api/connect/invites", json={}, headers=H(OWN)).json()["token"]}).json()["from"] == "Pat")
+c.put(f"/api/people/{me}/call-name", json={"name": ""}, headers=H(OWN))
+c.delete(f"/api/people/{by_name(LAB)['Pat']['id']}/link", headers=H(LAB))
+check("*** cleared: the name on the card shows again ***",
+      c.put(f"/api/people/{robin}/call-name", json={"name": ""}, headers=H(OWN)).status_code == 200 and people(OWN)[robin]["name"] == "Robin")
+
+section("*** a label on a person you made carries over when they take it over, and comes back with it ***")
+grace = c.post("/api/people", json={"name": "Grace"}, headers=H(OWN)).json()["id"]
+c.put(f"/api/people/{grace}/call-name", json={"name": "Gran"}, headers=H(OWN))
+gt = c.post(f"/api/people/{grace}/invites", json={}, headers=H(OWN)).json()["token"]
+GRA = "acct-grace"
+pg = c.post("/api/invites/peek", json={"token": gt}).json()
+check("*** the link says Pat set up 'Grace' - not his label for her ***", pg["name"] == "Grace" and "Gran" not in json.dumps(pg), str(pg))
+r = c.post("/api/invites/accept", json={"token": gt}, headers=H(GRA))
+gra_me = c.get("/api/people", headers=H(GRA)).json()["people"][0]["id"]
+check("*** Grace takes it over: her own name is 'Grace', not 'Gran' ***",
+      r.status_code == 200 and r.json()["name"] == "Grace" and people(GRA)[gra_me]["name"] == "Grace", r.text)
+pgr = people(OWN)[grace]
+check("*** Pat's label is the 'I call them' it already was: still 'Gran' on his page, her name beside it ***",
+      pgr["name"] == "Gran" and pgr["call_name"] == "Gran" and pgr["profile_name"] == "Grace" and pgr["kind"] == "joined", str(pgr))
+c.delete(f"/api/people/{by_name(GRA)['Pat']['id']}/link", headers=H(GRA))
+pgr = people(OWN)[grace]
+check("*** she stops sharing: the person is Pat's own again - named Grace, and still labelled Gran ***",
+      pgr["home"] is True and pgr["name"] == "Gran" and pgr["profile_name"] == "Grace" and pgr["call_name"] == "Gran", str(pgr))
 
 section("Postgres-safe SQL (a review, kept honest by a check)")
 src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "db.py"), encoding="utf-8").read()

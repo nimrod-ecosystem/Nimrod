@@ -21,8 +21,11 @@ clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the
     home_id is its own home. The pointer is kept FLAT: it always names a row that is itself a home.
   * THE PROFILE - name, picture (`avatar`), page (`page`, About me lives in it) - is read from the home and written
     only by the home's account (PROFILE_KEYS). Every other person-state key stays the holding account's own.
-  * A row whose home is elsewhere keeps "I call them" (`people.call_name`): the holder's own name for them. Empty,
-    the home's name shows. It never changes the home's name.
+  * Any row may carry "I call them" (`people.call_name`): the holding account's own name for that person. Empty,
+    the profile's name shows (the home's, for a row whose home is elsewhere). It never changes the profile's name.
+    Mike, 2026-10-05: *"I call them" can be added at any time, on any card* - so a person you made yourself can
+    carry one too, as your private label beside the name on their card; handed over later, that label is already
+    the "I call them" the claim keeps (db.accept_invite keeps a label that is there rather than overwriting it).
   * `people.source_id` is the row on the OTHER account this one reaches through (where its messages go when it
     has no screen of its own), `people.link_id` the connection (links.py) that put it here, and `people.made_by`
     how: 'claim' (an existing row joined to a claimer's own profile) or 'link' (a row made by a connection).
@@ -51,7 +54,9 @@ clock of its own, and tested alone (test_claims.py). db.py stores; app.py is the
 
 *** ONE CARD AT A TIME (2026-10-04, later the same night: the three things 63f3d72 left unbuilt) ***
 
-  "WHO HAS THIS CARD", for the account that looks after a profile (the home): which logins hold a row for it. Each
+  "SHARED WITH" (2026-10-05; first built as "Who has this card", renamed because Mike found that confusing - the
+  words people know from shared documents and photo albums), for the account that looks after a profile (the
+  home): which logins hold a row for it. Each
   is shown by THAT LOGIN'S OWN NAME, never by what they call the person (`call_name`). Argued: FOR showing it, it is
   warm ("Oscar calls you Grandpa") and it is a name for the home's own person. AGAINST, and it decides it: the "I
   call them" window already promises "Only you see this", and a promise the site has made is not ours to break in a
@@ -262,6 +267,16 @@ def display_name(row: dict | None, home_name: str | None) -> str:
     call = (row.get("call_name") or "").strip()
     if call:
         return call
+    return profile_name(row, home_name)
+
+
+def profile_name(row: dict | None, home_name: str | None) -> str:
+    """The name on the person's card, as ANYBODY ELSE sees it: the home's name, else the row's own - never the
+    holding account's "I call them". PURE. *** A SECURITY INVARIANT: "I call them" is only ever shown to the
+    account that set it *** - so whatever a page shows another login (an invitation's first look, the people a
+    link shares, a screen shared through a drive grant, a login's own name) reads this, never display_name."""
+    if not row:
+        return ""
     return (home_name or row.get("name") or "").strip()
 
 
@@ -396,5 +411,5 @@ REFUSAL_TEXT = {
     "joined": "You made this card, and they took it over with their own login. Stop sharing gives it back to you.",
     "own-card": "This is your own card.",
     "mine": "This is somebody you look after. Remove them from your people instead.",
-    "not-home-list": "Only whoever looks after this person can see who has their card.",
+    "not-home-list": "Only whoever looks after this person can see who they are shared with.",
 }

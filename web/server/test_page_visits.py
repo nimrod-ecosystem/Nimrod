@@ -104,6 +104,14 @@ words = " ".join(REFUSAL_TEXT.values())
 check("*** the refusals say no 'account', 'token' or 'grant', and name nobody ***",
       not any(w in words.lower() for w in ("account", "token", "grant")) and not re.search(r"her screen|christine|cici", words, re.I))
 
+section("the page's own colours (2026-10-05)")
+check("*** a theme id is sent as it is; nothing set is '' ***", pv.visitor_theme({"theme": "warm"}) == "warm" and pv.visitor_theme({}) == ""
+      and pv.visitor_theme(None) == "" and pv.visitor_theme({"theme": ""}) == "")
+check("*** anything that is not a short id is not sent (no markup, no address, no object) ***",
+      pv.visitor_theme({"theme": "<b>x</b>"}) == "" and pv.visitor_theme({"theme": "https://x.example/a.css"}) == ""
+      and pv.visitor_theme({"theme": {"vars": 1}}) == "" and pv.visitor_theme({"theme": "x" * 41}) == ""
+      and pv.visitor_theme({"theme": "fall-woods_2"}) == "fall-woods_2")
+
 section("*** the client says the same (page_sections.js) ***")
 js = open(os.path.join(os.path.dirname(__file__), "..", "client", "page_sections.js"), encoding="utf-8").read()
 
@@ -119,6 +127,7 @@ check("*** OPENABLE_KINDS and PRIVATE_KINDS are the same lists on both sides ***
 check("the stored names and defaults match", all(re.search(p, js) for p in (
     r"WHO_KEY\s*=\s*'visitors'", r"PICKED_KEY\s*=\s*'picked'", r"SEEN_KEY\s*=\s*'seenBy'",
     r"DEFAULT_WHO\s*=\s*'connections'", r"DEFAULT_SEEN\s*=\s*'me'")))
+check("the page's colours are stored under the same key on both sides", re.search(r"THEME_KEY\s*=\s*'theme'", js) and pv.THEME_KEY == "theme")
 
 section("a line of older messages")
 row = {"id": 5, "kind": "note", "created_at": "2026-10-04T10:00:00+00:00", "data": {"text": " Hello ", "author": "Sam"}}
@@ -223,6 +232,21 @@ check("*** picked Oscar (Pat's card for him): it opens ***", r.status_code == 20
 check("*** a value a newer site wrote reads as Only me ***",
       put_page(PAT, pat, {**full, "visitors": "everyone"}).status_code == 200
       and c.get(f"/api/people/{osc_pat}/visit", headers=H(OSC)).status_code == 403)
+put_page(PAT, pat, full)
+
+section("*** the page's colours go with the page (2026-10-05) ***")
+r = c.get(f"/api/people/{osc_pat}/visit", headers=H(OSC))
+check("no colours chosen: '' (the visitor's own)", r.status_code == 200 and r.json()["theme"] == "", r.text)
+put_page(PAT, pat, {**full, "theme": "warm", "olderMessages": False})
+r = c.get(f"/api/people/{osc_pat}/visit", headers=H(OSC))
+check("*** Pat picks Warm: Oscar's visit carries 'warm' ***", r.status_code == 200 and r.json()["theme"] == "warm", r.text)
+check("*** ...but not whether Pat's page shows older messages: that is Pat's own ***", "olderMessages" not in r.text, r.text)
+put_page(PAT, pat, {**full, "theme": "warm", "visitors": "me"})
+r = c.get(f"/api/people/{osc_pat}/visit", headers=H(OSC))
+check("*** a page that is not open to Oscar sends no colours (nothing of the page) ***", r.status_code == 403 and "warm" not in r.text, r.text)
+put_page(PAT, pat, {**full, "theme": "javascript:alert(1)"})
+r = c.get(f"/api/people/{osc_pat}/visit", headers=H(OSC))
+check("*** a stored value that is not a theme id is not sent ***", r.status_code == 200 and r.json()["theme"] == "" and "alert" not in r.text, r.text)
 put_page(PAT, pat, full)
 
 section("*** the connection ends without tidying (a broken link): nothing ***")

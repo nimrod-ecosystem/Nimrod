@@ -26,7 +26,11 @@ import {
   PAGE_KEY, PAGE_EXTRA_BANNED, pageWordProblems, FIXED_KIND, BUILT_IN_KINDS, DEFAULT_SECTIONS, SECTION_LIBRARY, EDIT_WORDS, BOX_SIZES,
   ABOUT_MAX, hasOwnPage, sectionsOf, viewSections, hasKind, addSection, removeSection, restoreSection, canMove, moveSection, updateSection,
   videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc,
+  THEME_KEY, OLDER_KEY, DEFAULT_OLDER, ACCESS_THEMES, PAGE_LOOK_WORDS, themeOf, pageColours, olderOf,
 } from '../page_sections.js';
+import { THEMES, listThemes, applyTheme } from '../theme.js';
+import { wearColours, viewerThemeOf } from '../page_visit.js';
+import { OLDER_WORDS } from '../page_visit.js';
 import { PEOPLE_TYPE, plainWordProblems } from '../people_page.js';
 import { ABOUT_SAVE_MS } from '../modules/people.js';
 import { createProfilesClient } from '../profile.js';
@@ -146,6 +150,31 @@ try {
     && !pageWordProblems('accountant tokenism widgetry').length);
   check('*** none of them in the library or the edit words ***', !pageWordProblems(ruleWords).length, J(pageWordProblems(ruleWords)));
   check('names nobody', !/her screen|christine|cici/i.test(ruleWords));
+
+  section('*** the page’s own look, pure (Mike, 2026-10-05) ***');
+  const known = listThemes().map((t) => t.id);
+  check('stored beside the sections: theme, olderMessages', THEME_KEY === 'theme' && OLDER_KEY === 'olderMessages' && DEFAULT_OLDER === true);
+  check('*** the colours as stored: a theme id, or nothing; junk is nothing ***', themeOf({ theme: 'warm' }) === 'warm' && themeOf({}) === '' && themeOf(null) === ''
+    && themeOf({ theme: '<b>' }) === '' && themeOf({ theme: 7 }) === '');
+  check('*** visitors see your colours ***', pageColours({ pageTheme: 'warm', known }) === 'warm');
+  check('*** ...unless their own colours are for reading (High contrast), or their browser asks for more contrast ***',
+    J(ACCESS_THEMES) === J(['contrast']) && pageColours({ pageTheme: 'warm', known, viewerTheme: 'contrast' }) === ''
+    && pageColours({ pageTheme: 'warm', known, moreContrast: true }) === '' && pageColours({ pageTheme: 'warm', known, viewerTheme: 'dusk' }) === 'warm');
+  check('*** a screen in a room keeps its own colours; nothing chosen, or a theme this site lacks: the colours around it ***',
+    pageColours({ pageTheme: 'warm', known, isScreen: true }) === '' && pageColours({ pageTheme: '', known }) === ''
+    && pageColours({ pageTheme: 'from-a-newer-site', known }) === '');
+  check('*** older messages: on unless turned off (only an explicit off) ***', olderOf({}) === true && olderOf(null) === true && olderOf({ olderMessages: false }) === false
+    && olderOf({ olderMessages: 0 }) === true);
+  const lookWords = Object.values(PAGE_LOOK_WORDS).join(' ');
+  check('*** plain words, naming nobody ***', !pageWordProblems(lookWords).length && !/her screen|christine|cici/i.test(lookWords), J(pageWordProblems(lookWords)));
+  const wbox = document.createElement('div'); wbox.style.cssText = 'padding:3px'; document.body.append(wbox);
+  check('*** wearing: the theme’s colours on the element, with its background; off again, exactly as it was ***',
+    wearColours(wbox, 'warm') === 'warm' && wbox.style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.warm.vars['--bg'].toLowerCase()
+    && /var\(--bg\)/.test(wbox.style.backgroundColor) && wbox.dataset.pageColours === 'warm'
+    && wearColours(wbox, '') === '' && wbox.style.cssText === 'padding: 3px;' && !wbox.dataset.pageColours, wbox.style.cssText);
+  applyTheme(wbox, 'contrast');
+  check('*** the viewer’s own colours are recognised (High contrast found first) ***', viewerThemeOf(wbox) === 'contrast' && viewerThemeOf(document.createElement('div')) === '');
+  wbox.remove();
 
   // ============================================================================================
   section('(setup) Pat and Robin on one login, a screen with a message on it; Sam on another, sharing');
@@ -373,6 +402,69 @@ try {
   h1.destroy(); h2.destroy();
 
   // ============================================================================================
+  section('*** Colours for my page, and Let this page show older messages (Mike, 2026-10-05) ***');
+  box = newBox(375, 1400);
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  await inst.init();
+  const look = () => inst.impl.__probe().look;
+  const olderBtn = () => q('[data-pp-card="older"] [data-pp-act="older"]');
+  check('(setup) the page, with See older messages live', await until(() => olderBtn() && olderBtn().getAttribute('aria-disabled') !== 'true', 8000) && look().older === true);
+  editBtn().click();
+  await until(() => !!q('[data-pp-colours]'), 3000);
+  const colSel = () => q('[data-pp-colours]');
+  check('*** in the card under You: "Colours for my page", the usual colours first, then every one of the site’s themes ***',
+    colSel()?.closest('label').textContent.includes(PAGE_LOOK_WORDS.colours)
+    && J([...colSel().options].map((o) => o.value)) === J(['', ...listThemes().map((t) => t.id)]) && colSel().value === ''
+    && colSel().options[0].textContent === PAGE_LOOK_WORDS.coloursNone, J([...(colSel()?.options || [])].map((o) => o.value)));
+  check('...saying who sees them', q('[data-pp-colours-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
+  colSel().value = 'warm'; colSel().dispatchEvent(new Event('change', { bubbles: true }));
+  check('*** Warm: saved in the page record, and the page wears it ***',
+    await until(async () => (await serverPage()).data.theme === 'warm', 5000) && await until(() => q('.pp-root').dataset.pageColours === 'warm', 3000)
+    && q('.pp-root').style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.warm.vars['--bg'].toLowerCase()
+    && getComputedStyle(q('.pp-root')).backgroundColor !== 'rgba(0, 0, 0, 0)' && look().colours === 'warm');
+  const oldSel = () => q('[data-pp-older]');
+  check('*** "Let this page show older messages": On by default ***', oldSel()?.value === '1' && oldSel().closest('label').textContent.includes(PAGE_LOOK_WORDS.older));
+  oldSel().value = '0'; oldSel().dispatchEvent(new Event('change', { bubbles: true }));
+  check('*** Off: saved, and See older messages is dimmed, saying it was turned off for this page ***',
+    await until(async () => (await serverPage()).data.olderMessages === false, 5000)
+    && await until(() => olderBtn()?.getAttribute('aria-disabled') === 'true', 3000) && olderBtn().dataset.ppWhy === PAGE_LOOK_WORDS.olderOffPage);
+  q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  await until(() => !probe().editing, 3000);
+  olderBtn().click();
+  check('pressed: it says why on its card, and nothing opens', await until(() => q('[data-pp-card="older"] .pp-why')?.textContent === PAGE_LOOK_WORDS.olderOffPage, 2000)
+    && !inst.impl.__probe().sheet);
+  check('*** plain words with both set ***', !pageWordProblems(q('[data-pp-list]').textContent).length, J(pageWordProblems(q('[data-pp-list]').textContent)));
+  editBtn().click();
+  await until(() => !!q('[data-pp-older]'), 3000);
+  oldSel().value = '1'; oldSel().dispatchEvent(new Event('change', { bubbles: true }));
+  check('On again: live again', await until(() => olderBtn()?.getAttribute('aria-disabled') !== 'true', 3000)
+    && await until(async () => (await serverPage()).data.olderMessages === true, 5000));
+  q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  await inst.impl.__probe().flushPage();
+  inst.destroy(); box.remove();
+
+  section('*** somebody who uses High contrast keeps it, on their own page too ***');
+  box = newBox(375, 1400);
+  applyTheme(box, 'contrast');
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  await inst.init();
+  check('*** the page record says Warm, but this page keeps High contrast (nothing worn) ***',
+    await until(() => look().theme === 'warm', 5000) && !q('.pp-root').dataset.pageColours && look().colours === '');
+  editBtn().click();
+  check('*** and the edit card says so ***', await until(() => q('[data-pp-colours-line]')?.textContent === PAGE_LOOK_WORDS.coloursOwn, 3000));
+  q('[data-pp-card="edit"] [data-pp-act="page-done"]').click();
+  inst.destroy(); box.remove();
+
+  section('*** one screen turns older messages off for itself (its own row) ***');
+  box = newBox(375, 1400);
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box, { state: memState({ olderHere: false }) }));
+  await inst.init();
+  check('*** "Offer older messages here: No": dimmed, saying it was turned off here; the page itself still allows it ***',
+    await until(() => olderBtn()?.getAttribute('aria-disabled') === 'true', 8000) && olderBtn().dataset.ppWhy === PAGE_LOOK_WORDS.olderOffHere
+    && look().older === true && look().olderHere === false);
+  inst.destroy(); box.remove();
+
+  // ============================================================================================
   section('*** on a screen: the page from the same record; Edit my page dimmed, saying why ***');
   const sbox = newBox(1280, 720);
   const sinst = mountModule(PEOPLE_TYPE, makeCtx(sbox, { isScreen: true, instanceId: 'ps-screen' }));
@@ -388,6 +480,8 @@ try {
   check('*** pressed: it says why, on the card, and nothing opens ***', await until(() => sq('[data-pp-card="self"] .pp-why')?.textContent === EDIT_WORDS.screenWhy, 2000)
     && !sinst.impl.__probe().page.editing && !sq('[data-pp-edit-for]') && !sinst.impl.__probe().page.canEdit);
   check('the boxes show on the screen too', await until(() => sinst.impl.__probe().page.boxes.some((b) => b.kind === 'clock' && b.mounted), 8000));
+  check('*** the page says Warm, but a screen in a room keeps its own colours ***', sinst.impl.__probe().look.theme === 'warm'
+    && !sq('.pp-root').dataset.pageColours && sinst.impl.__probe().look.colours === '');
   const sWords = sq('[data-pp-list]').textContent;
   check('*** plain words on the screen ***', !pageWordProblems(sWords).length, J(pageWordProblems(sWords)));
   sinst.destroy(); sbox.remove();

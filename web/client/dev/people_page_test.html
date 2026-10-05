@@ -120,6 +120,9 @@ try {
     ...PEOPLE_SETTINGS.map((s) => `${s.label} ${s.help}`), HELPER_ELSEWHERE].join(' ');
   check('*** every word the rules can put on the page is plain (no module, dashboard, panel or grant) ***', !plainWordProblems(allWords).length, J(plainWordProblems(allWords)));
   check('names nobody', !/her screen|christine|cici/i.test(allWords));
+  const olderRow = PEOPLE_SETTINGS.find((s) => s.key === 'olderHere');
+  check('*** "Offer older messages here": a yes/no row of this page’s own (stored per screen), yes by default (Mike, 2026-10-05) ***',
+    olderRow && olderRow.kind === 'toggle' && olderRow.default === true && olderRow.level === 'standard' && /older messages/i.test(olderRow.label), J(olderRow));
 
   // ============================================================================================
   section('*** the landing is one ready-made dashboard: Your people, with Nimrod over it at the bottom ***');

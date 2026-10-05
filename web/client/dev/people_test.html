@@ -25,7 +25,7 @@ driven against a FAKE profiles client (no server, no network), and the real
 <div id="host"></div>
 
 <script type="module">
-import { mountPeople, pickCurrent, readLastPerson, writeLastPerson, LAST_PERSON_KEY } from '../people.js';
+import { mountPeople, pickCurrent, readLastPerson, writeLastPerson, LAST_PERSON_KEY, nameOnCard } from '../people.js';
 import { createProfilesClient } from '../profile.js';
 import { createAvatarCache, AVATAR_CHANGED_EVENT } from '../avatar_display.js';
 import { surprise } from '../avatar.js';
@@ -93,6 +93,8 @@ function fakePeopleClient(initial = [{ id: 'p1', name: 'Me', created_at: '1' }])
       pickCurrent(three, 'gone').id === 'a');
     check('junk in the list is ignored', pickCurrent([null, { name: 'no id' }, ...three], 'c').id === 'c');
     check('a list of only junk is nobody', pickCurrent([null, {}], 'a') === null);
+    check('*** a rename changes the name on the card, not the "I call them" label shown on the chip (2026-10-05) ***',
+      nameOnCard({ id: 'r', name: 'Robbie', profile_name: 'Robin' }) === 'Robin' && nameOnCard({ id: 'r', name: 'Robin' }) === 'Robin' && nameOnCard(null) === '');
 
     const st = fakeStorage();
     check('nothing remembered yet', readLastPerson(st) === '');

@@ -229,6 +229,73 @@ export function seenByOf(s) {
   return s.options?.[SEEN_KEY] === 'visitors' ? 'visitors' : DEFAULT_SEEN;
 }
 
+// ---- the page's own colours, and whether it offers older messages (Mike, 2026-10-05) ---------------------------------
+// Both are keys of this same page record, beside "Who can see my page", so two devices merge them with the rest:
+//   { theme: '<a theme id>' | '' , olderMessages: true | false, ... }
+//
+// "COLOURS FOR MY PAGE" (*"you can set the theme on your profile page"*). One of the site's own themes (theme.js
+// listThemes -- the same list the settings menu's Colours row offers), or '' for none: the page wears whatever
+// colours are around it, as it always has. WHO SEES THEM -- `pageColours` below decides, ARGUED:
+//   FOR visitors keeping their own colours: a visitor's colours are a setting THEY chose, sometimes to be able to
+//       read at all, and a page that overrode them would be a page some visitors cannot use.
+//   FOR visitors seeing yours (a MySpace page): choosing how your page looks is half the point of having one, and
+//       a page that looks the same for everybody is what makes it "yours".
+//   DECIDED: visitors see your page in your colours -- EXCEPT a visitor whose own colours are for READING rather
+//       than taste (ACCESS_THEMES: High contrast), or whose browser asks for more contrast or forced colours: theirs
+//       win. A taste beats a taste; a need beats a taste. The same rule holds for you on your own page, so your
+//       page does not turn your own High contrast off, and the edit card says so when it is happening.
+//   THE MOVING SCENE of a live theme is not drawn inside a page (today): a page wears its colours only. So a visitor's
+//       photosensitivity limit has nothing on the page to hold back (a scene is a whole-screen thing, and stays the
+//       visitor's own); if a page ever draws one, it has to pass the visitor's flash limit first.
+//   ON A SCREEN IN A ROOM the screen's own Colours stand: that row is a legibility control for whoever is in front
+//       of the screen ("essential" in its menu), and a page's look must not undo it. A GUESS (Mike's list).
+export const THEME_KEY = 'theme';
+// The themes that are for reading, not taste: whoever chose one keeps it over a page's colours. A list rather than
+// one id so a second one (a large-text or a low-glare theme) is a line here. Only High contrast today.
+export const ACCESS_THEMES = Object.freeze(['contrast']);
+/** The page's own colours as stored ('' for none). PURE. Not checked against the list: `pageColours` does that. */
+export function themeOf(doc) {
+  const v = isObj0(doc) ? doc[THEME_KEY] : '';
+  return typeof v === 'string' && /^[A-Za-z0-9_-]{1,40}$/.test(v) ? v : '';
+}
+/**
+ * Which theme the page is drawn in, for whoever is looking. PURE. -> a theme id, or '' (keep the colours around it).
+ *   pageTheme    themeOf(the page record)
+ *   known        the theme ids this site has (theme.js listThemes) -- an id it does not have is ''
+ *   isScreen     a screen in a room: '' (its own Colours stand; see above)
+ *   viewerTheme  the theme the viewer's own colours are (an id, or '' if not known)
+ *   moreContrast the viewer's browser asks for more contrast or forced colours
+ */
+export function pageColours({ pageTheme = '', known = [], isScreen = false, viewerTheme = '', moreContrast = false } = {}) {
+  if (!pageTheme || isScreen || !known.includes(pageTheme)) return '';
+  if (moreContrast || ACCESS_THEMES.includes(viewerTheme)) return '';
+  return pageTheme;
+}
+// "LET THIS PAGE SHOW OLDER MESSAGES" (*"'See older messages' becomes a setting"*): default ON -- Mike, *"he'd likely
+// leave it on"*, and it is how the page worked before the setting existed. Off: "See older messages" is shown
+// dimmed with why, on this page wherever it is drawn (your phone and every screen of yours). Each screen has its own
+// row too (people_page.js PEOPLE_SETTINGS `olderHere`), for a screen in a room other people use: shown only when
+// both are on. It decides what the page OFFERS; who may read the messages is the server's rule and is unchanged
+// (only the person's own login, notes/history).
+export const OLDER_KEY = 'olderMessages';
+export const DEFAULT_OLDER = true;
+/** Does the page offer "See older messages"? PURE. Only an explicit false turns it off. */
+export const olderOf = (doc) => !(isObj0(doc) && doc[OLDER_KEY] === false);
+
+export const PAGE_LOOK_WORDS = Object.freeze({
+  colours: 'Colours for my page',
+  coloursNone: 'The usual colours',
+  coloursLine: 'People who can see your page see it in these colours, unless they use colours for easier reading, like High contrast.',
+  coloursOwn: 'You use High contrast, so you see your page in your own colours. People who can see your page see the colours you pick.',
+  older: 'Let this page show older messages',
+  olderOn: 'On',
+  olderOff: 'Off',
+  olderLine: 'Off: “See older messages” is not offered on your page. A screen can also turn it off just for itself, in its settings.',
+  olderOffPage: 'Older messages are turned off for this page. Turn them on in Edit my page.',
+  olderOffHere: 'Older messages are turned off here, in this screen’s settings.',
+  olderOffShort: 'Turned off',
+});
+
 // ---- the list -----------------------------------------------------------------------------------------------------
 const isObj = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
 const J = (v) => JSON.stringify(v === undefined ? null : v);

@@ -719,8 +719,9 @@ def _people_view(user: str) -> list[dict]:
         v = {"id": r["id"], "name": claims.display_name(r, r["home_name"]), "created_at": r["created_at"],
              "home": not r["home_id"], "kind": kind,
              "reach": claims.reach_id(r, own_screens=screens.get(r["id"], 0)),
-             "call_name": r["call_name"] if r["home_id"] else "",
-             "profile_name": (r["home_name"] or r["name"]) if r["home_id"] else r["name"]}
+             # "I call them" on ANY card (2026-10-05), and the name on the card beside it.
+             "call_name": r["call_name"] or "",
+             "profile_name": claims.profile_name(r, r["home_name"] if r["home_id"] else None)}
         if other and r["link_id"]:
             link = store.get_link(user, other)
             if link and links.link_is_active(link) and link["id"] == r["link_id"]:
@@ -736,7 +737,7 @@ def _people_view(user: str) -> list[dict]:
                                                      screens=screens.get(r["id"], 0),
                                                      link_rows=per_link.get(r["link_id"], 0))
         else:
-            # "Who has this card": how many other logins hold this profile you look after (the names: GET .../holders).
+            # "Shared with": how many other logins hold this profile you look after (the names: GET .../holders).
             v["holders"] = held.get(r["id"], 0)
         out.append(v)
     return out
@@ -778,7 +779,8 @@ def visit_page(person_id: str, user: str = Depends(current_user)):
     if reason:
         return JSONResponse(status_code=409 if reason == "yours" else 403,
                             content={"error": reason, "text": page_visits.refusal_text(reason, claims.display_name(row, name))})
-    return {"name": name, "call_name": row.get("call_name") or "", "sections": page_visits.visitor_view(doc)}
+    return {"name": name, "call_name": row.get("call_name") or "", "sections": page_visits.visitor_view(doc),
+            "theme": page_visits.visitor_theme(doc)}
 
 
 @app.post("/api/people")
@@ -809,14 +811,14 @@ class CallNamePut(BaseModel):
 
 @app.put("/api/people/{person_id}/call-name")
 def put_call_name(person_id: str, body: CallNamePut, user: str = Depends(current_user)):
-    """"I call them": your own name for somebody whose profile is on another login. Empty: their own name
-    shows again. It never changes the name they chose, and only you see it."""
+    """"I call them": your own name for one of the people on your page - any of them, at any time (Mike,
+    2026-10-05), including somebody you made yourself, where it is your private label beside the name on their
+    card. Empty: the name on their card shows again. It never changes that name, and only you see it
+    (claims.profile_name is what every other login reads)."""
     _check(person_id, ID_RE, "person id")
     row = store.person_row(person_id)
     if not row or row["account_id"] != user:
         raise HTTPException(status_code=404, detail="no such person")
-    if not row.get("home_id"):
-        raise HTTPException(status_code=409, detail="This is somebody you look after: change their name instead.")
     name = re.sub(r"\s+", " ", body.name or "").strip()
     if name:
         _check(name, NAME_RE, "name")
@@ -893,8 +895,12 @@ def get_person_state(person_id: str, key: str, request: Request, user: str = Dep
     # person's own, in their room, set up for them - the same page they see on their own login.
     if key == page_visits.PAGE_KEY and acct != user and not via_device_key(request):
         reason, _home, _doc = _visit_check(user, store.person_row(person_id))
-        got = {"data": {"sections": page_visits.card_only() if reason else page_visits.visitor_view(got.get("data") or {})},
-               "version": got.get("version", 0)}
+        doc = got.get("data") or {}
+        data = {"sections": page_visits.card_only() if reason else page_visits.visitor_view(doc)}
+        # "Colours for my page" (2026-10-05) goes with the page when it is open to them, never with the card alone.
+        if not reason and page_visits.visitor_theme(doc):
+            data["theme"] = page_visits.visitor_theme(doc)
+        got = {"data": data, "version": got.get("version", 0)}
     return got
 
 
@@ -1135,7 +1141,8 @@ def shared_with_me(user: str = Depends(current_user)):
     for g in store.grants_for_subject("account", user):
         if g.get("expires_at") and str(g["expires_at"]) <= now:
             continue
-        person = store.get_person(g["owner_id"], g["person_id"])
+        # The name on their card, never what the owner calls them ("I call them" is the owner's alone).
+        person = store.get_person(g["owner_id"], g["person_id"], profile=True)
         if not person:
             continue                      # the person was deleted; the row is a tombstone
         out.append({
@@ -1549,7 +1556,7 @@ def _inviter_name(owner: str) -> str:
     if name:
         return name
     first = store.first_person_id(owner)
-    p = store.get_person(owner, first) if first else None
+    p = store.get_person(owner, first, profile=True) if first else None
     n = (p or {}).get("name", "").strip()
     return "" if not n or n.lower() == "me" else n
 
@@ -1705,7 +1712,8 @@ def peek_invite(body: InviteToken, request: Request):
            "screen": via_device_key(request), "kind": inv.get("kind", "claim")}
     if state == "live":
         owner = inv["owner_id"]
-        names = {p["id"]: p["name"] for p in store.list_people(owner)}
+        # Names as the person opening the link may see them: the names on the cards, never the inviter's labels.
+        names = {p["id"]: p["name"] for p in store.list_people(owner, profile=True)}
         sender = _inviter_name(owner)
         shares = [{"name": names.get(s["person_id"], ""), "messages": bool(s.get("messages")),
                    "sender": s["person_id"] == store.first_person_id(owner)}
@@ -1734,7 +1742,8 @@ def accept_invite(body: InviteToken, request: Request, user: str = Depends(curre
     if reason:
         return _refused(reason, {"unknown": 404, "screen": 403, "own": 403, "signed-out": 401}.get(reason, 409))
     owner = inv["owner_id"]
-    claimed_name = (store.get_person(owner, inv["person_id"]) or {}).get("name", "")
+    # The name on the card (not what the inviter calls them): it may become the claimer's own name just below.
+    claimed_name = (store.get_person(owner, inv["person_id"], profile=True) or {}).get("name", "")
     status, made = store.accept_invite(inv["id"], user, messages_back=bool(body.messages_back))
     if status != "ok":
         return _refused("claimed" if status == "claimed" else "used", 409)
@@ -1796,7 +1805,7 @@ def link_messages(person_id: str, body: MessagesPut, user: str = Depends(current
 
 
 # ---- ONE CARD AT A TIME (claims.py, the section of that name) ---------------------------------------------------
-# "Who has this card" and "Stop sharing with Oscar" for the account that looks after a profile; "Remove just this
+# "Shared with" (first built as "Who has this card") and "Stop sharing with Oscar" for the account that looks after a profile; "Remove just this
 # card" for an account holding one. Each refuses a screen in a room (they are a phone's or computer's), and each
 # answers somebody else's person with the same 404 as no person at all.
 def _holders_view(user: str, home: dict) -> list[dict]:
@@ -1826,7 +1835,7 @@ def _holders_view(user: str, home: dict) -> list[dict]:
 
 @app.get("/api/people/{person_id}/holders")
 def list_holders(person_id: str, request: Request, user: str = Depends(current_user)):
-    """"Who has this card": the other logins holding this profile you look after. Readable only by you."""
+    """"Shared with": the other logins holding this profile you look after. Readable only by you."""
     _check(person_id, ID_RE, "person id")
     if via_device_key(request):
         return _refused("screen", 403)

@@ -26,6 +26,7 @@ import {
   whoOf, pickedOf, togglePicked, canOpen, seenByOf, pageWordProblems,
 } from '../page_sections.js';
 import { VISIT_WORDS, OLDER_WORDS, visitURL, historyURL } from '../page_visit.js';
+import { THEMES, applyTheme } from '../theme.js';
 import { PEOPLE_TYPE } from '../people_page.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
@@ -121,10 +122,11 @@ try {
 
   const newBox = (w = 375, h = 760) => { const b = document.createElement('div'); b.style.cssText = `position:relative;width:${w}px;height:${h}px;overflow:hidden;border:1px solid #888`; document.body.append(b); return b; };
   const stub = { loaded: [], factory() { return { load: (id) => stub.loaded.push(id), cue: (id) => stub.loaded.push(id), cueList() {}, resume() {}, pause() {}, stop() {}, destroy() {} }; } };
-  const mountAs = async (user, personId) => {
+  const mountAs = async (user, personId, { theme = '' } = {}) => {
     const profiles = createProfilesClient({ user });
     const makePS = (pid, key, opts = {}) => createState({ url: profiles.personStateURL(pid, key), user, ...opts });
     const box = newBox();
+    if (theme) applyTheme(box, theme);      // the visitor's own colours, as their site would put them around the page
     const inst = mountModule(PEOPLE_TYPE, { mount: box, bus: createBus(), state: memState(), personId, instanceId: `pv-${user}`, user, profiles,
       isScreen: false, chooseMode: () => 'point', makePersonState: makePS, playerFactory: stub.factory });
     await inst.init();
@@ -242,6 +244,30 @@ try {
   check('*** plain words in the older messages ***', !pageWordProblems(osheet().textContent).length, J(pageWordProblems(osheet().textContent)));
   osheet().querySelector('[data-pp-close]').click();
   p.inst.destroy(); p.box.remove();
+
+  // ============================================================================================
+  section('*** Pat’s colours on his page, as Oscar sees it (Mike, 2026-10-05) ***');
+  const withTheme = (await call('GET', `/api/people/${pat}/state/${PAGE_KEY}`, PAT)).data;
+  await putPage(PAT, pat, { ...withTheme, theme: 'warm' });
+  o = await mountAs(OSC, osc);
+  await until(() => seeBtn()?.getAttribute('aria-disabled') !== 'true' && !!seeBtn(), 10000);
+  seeBtn().click();
+  check('*** Pat chose Warm: his page opens in Warm for Oscar ***', await until(() => o.probe().visit?.status === 'ok', 8000)
+    && o.probe().visit.colours === 'warm' && sheet().querySelector('[data-pp-sheet-body]').dataset.pageColours === 'warm'
+    && sheet().querySelector('[data-pp-sheet-body]').style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.warm.vars['--bg'].toLowerCase(),
+    J(o.probe().visit));
+  check('...and Oscar’s own page around it is not changed by it', !o.q('.pp-root').dataset.pageColours);
+  sheet().querySelector('[data-pp-close]').click();
+  o.inst.destroy(); o.box.remove();
+  o = await mountAs(OSC, osc, { theme: 'contrast' });
+  await until(() => seeBtn()?.getAttribute('aria-disabled') !== 'true' && !!seeBtn(), 10000);
+  seeBtn().click();
+  check('*** Oscar uses High contrast: Pat’s page opens in Oscar’s own colours (a need beats a taste) ***',
+    await until(() => o.probe().visit?.status === 'ok', 8000) && o.probe().visit.pageTheme === 'warm' && o.probe().visit.colours === ''
+    && !sheet().querySelector('[data-pp-sheet-body]').dataset.pageColours, J(o.probe().visit));
+  sheet().querySelector('[data-pp-close]').click();
+  o.inst.destroy(); o.box.remove();
+  await putPage(PAT, pat, withTheme);
 
   section('*** older messages are yours alone ***');
   check('*** Oscar asking for Pat’s: the same 404 as no such person ***', (await fetch(historyURL(pat), { headers: { 'X-Dev-User': OSC } })).status === 404);
