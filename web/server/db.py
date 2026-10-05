@@ -153,29 +153,32 @@ class _Store:
                         (pid, account_id, name, ts))
         return {"id": pid, "name": name, "created_at": ts}
 
-    # THE NAME A ROW SHOWS ITS OWN ACCOUNT (claims.display_name, in SQL): a home row its own name; a row whose
-    # profile lives on another account its "I call them", else the home's name. Every caller of list_people /
-    # get_person - screens, notes, the kiosk - gets the name the holding account knows them by, without knowing
-    # homes exist.
-    _NAME_SQL = ("CASE WHEN p.home_id IS NULL OR p.home_id='' THEN p.name "
-                 "ELSE COALESCE(NULLIF(p.call_name,''), h.name, p.name) END")
+    # THE NAME A ROW SHOWS ITS OWN ACCOUNT (claims.display_name, in SQL): its "I call them" if it has one (any row,
+    # since 2026-10-05), else a home row's own name, else the home's name. Every caller of list_people / get_person -
+    # screens, notes, the kiosk - gets the name the holding account knows them by, without knowing homes exist.
+    # *** NOT FOR ANYTHING ANOTHER LOGIN READS: that is _PROFILE_NAME_SQL (claims.profile_name). ***
+    _PROFILE_NAME_SQL = "CASE WHEN p.home_id IS NULL OR p.home_id='' THEN p.name ELSE COALESCE(h.name, p.name) END"
+    _NAME_SQL = f"COALESCE(NULLIF(p.call_name,''), {_PROFILE_NAME_SQL})"
     # FIRST IS "YOU": the oldest row, and on a tie (two rows written in the same clock tick) a home row before one
     # a connection made - so a link accepted on a brand-new login can never become that login's "you".
     _PEOPLE_ORDER = "p.created_at, CASE WHEN p.home_id IS NULL OR p.home_id='' THEN 0 ELSE 1 END"
 
-    def list_people(self, account_id: str) -> list[dict]:
+    def list_people(self, account_id: str, *, profile: bool = False) -> list[dict]:
+        """`profile`: each name as anybody else sees it (claims.profile_name), for whatever another login reads."""
+        name_sql = self._PROFILE_NAME_SQL if profile else self._NAME_SQL
         with self._tx() as cur:
             cur.execute(self._q(
-                f"SELECT p.id, {self._NAME_SQL}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
+                f"SELECT p.id, {name_sql}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
                 f"WHERE p.account_id=? ORDER BY {self._PEOPLE_ORDER}"), (account_id,))
             rows = cur.fetchall()
         return [{"id": r[0], "name": r[1], "created_at": r[2]} for r in rows]
 
-    def get_person(self, account_id: str, person_id: str) -> dict | None:
-        """Ownership gate: only the owning account ever sees a person."""
+    def get_person(self, account_id: str, person_id: str, *, profile: bool = False) -> dict | None:
+        """Ownership gate: only the owning account ever sees a person. `profile` as list_people's."""
+        name_sql = self._PROFILE_NAME_SQL if profile else self._NAME_SQL
         with self._tx() as cur:
             cur.execute(self._q(
-                f"SELECT p.id, {self._NAME_SQL}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
+                f"SELECT p.id, {name_sql}, p.created_at FROM people p LEFT JOIN people h ON h.id = p.home_id "
                 "WHERE p.account_id=? AND p.id=?"), (account_id, person_id))
             r = cur.fetchone()
         return None if r is None else {"id": r[0], "name": r[1], "created_at": r[2]}
@@ -489,7 +492,7 @@ class _Store:
     # Read claims.py first: the RULES live there, pure and tested alone. This is storage.
     #   * `people.home_id`  the row that is the main instance of this profile; NULL: this row is its own home.
     #                       Kept FLAT - it always names a home - so "whose profile is this" is one lookup.
-    #   * `people.call_name` "I call them": the holding account's own name for somebody whose home is elsewhere.
+    #   * `people.call_name` "I call them": the holding account's own name for the person (any row, 2026-10-05).
     #   * `people.source_id` the row on the other account this one reaches through (messages, a call's grant).
     #   * `people.link_id`  the connection (links) that put it here; `people.made_by` 'claim' | 'link' - so
     #                       ending a connection undoes exactly what it made, and nothing else.
@@ -534,7 +537,7 @@ class _Store:
 
     def holder_counts(self, account_id: str) -> dict[str, int]:
         """For each profile this account looks after, how many rows on OTHER accounts hold it - one query for a
-        whole page of cards ("Who has this card")."""
+        whole page of cards ("Shared with")."""
         with self._tx() as cur:
             cur.execute(self._q(
                 "SELECT p.home_id, COUNT(*) FROM people p JOIN people h ON h.id = p.home_id "
@@ -604,11 +607,11 @@ class _Store:
         return {r[0]: int(r[1]) for r in rows if r[0]}
 
     def set_call_name(self, account_id: str, person_id: str, name: str) -> bool:
-        """"I call them". Only on a row whose home is elsewhere (a home's name is its profile name); '' clears."""
+        """"I call them", on any row of this account's (2026-10-05: a person you made too - your private label
+        beside the name on their card); '' clears."""
         with self._tx() as cur:
-            cur.execute(self._q(
-                "UPDATE people SET call_name=? WHERE id=? AND account_id=? AND home_id IS NOT NULL AND home_id<>''"),
-                (name or None, person_id, account_id))
+            cur.execute(self._q("UPDATE people SET call_name=? WHERE id=? AND account_id=?"),
+                        (name or None, person_id, account_id))
             return bool(cur.rowcount and cur.rowcount > 0)
 
     def _first_person(self, cur, account_id: str) -> dict | None:
@@ -853,15 +856,22 @@ class _Store:
                 self.delete_person(account_id, r["id"])
 
     def _make_plain(self, r: dict, *, home_name: str | None, cur=None) -> None:
-        """A row whose profile is no longer elsewhere: its own name (what it was called), nothing pointing out."""
-        name = claim_rules.display_name(r, home_name) or r.get("name") or "Someone"
-        sql = self._q("UPDATE people SET name=?, call_name=NULL, home_id=NULL, source_id=NULL, link_id=NULL, "
+        """A row whose profile is no longer elsewhere: nothing pointing out, and still called what it was called.
+        Since "I call them" may sit on any row (2026-10-05) it is KEPT as that account's label, and the name on the
+        card is the profile's: a row taken over by a claim keeps its own name from before the claim (the claim never
+        changed it), a connection's row the home's name. What the account sees is unchanged either way. A label the
+        same as the name is dropped, so nothing reads twice."""
+        prof = ((r.get("name") if r.get("made_by") == "claim" else None) or home_name or r.get("name") or "").strip()
+        call = (r.get("call_name") or "").strip()
+        name = prof or call or "Someone"
+        label = call if call and call != name else None
+        sql = self._q("UPDATE people SET name=?, call_name=?, home_id=NULL, source_id=NULL, link_id=NULL, "
                       "made_by=NULL WHERE id=?")
         if cur is not None:
-            cur.execute(sql, (name, r["id"]))
+            cur.execute(sql, (name, label, r["id"]))
             return
         with self._tx() as c:
-            c.execute(sql, (name, r["id"]))
+            c.execute(sql, (name, label, r["id"]))
 
     def copy_profile_if_empty(self, from_account: str, from_pid: str, to_account: str, to_pid: str) -> list[str]:
         """"Most of the work already done": each profile key (picture, page) the claimer has not set yet is
@@ -1283,8 +1293,9 @@ class _Store:
         "state":           ("Settings for those modules - a photo interval, a theme, a "
                             "layout. Small, and yours. Also the name you sign notes with, "
                             "if you choose one. Your page: the parts on it, what you wrote in "
-                            "About me, who can see your page, and which parts of it they are "
-                            "shown. And if you set a place for Weather: the town "
+                            "About me, who can see your page, which parts of it they are "
+                            "shown, its colours, and whether it shows older messages. And if "
+                            "you set a place for Weather: the town "
                             "you typed, the match you picked with its position rounded to "
                             "about 11 km, and the last forecast, so the panel knows where to "
                             "look and still has something to show without a connection. "
@@ -1305,11 +1316,12 @@ class _Store:
                             "run a logger, arrive here too.", True,
                             "when a module you added writes one"),
         "people":          ("The NAME you gave a person, so their screen can say who it is "
-                            "for. This is the most personal thing here. When somebody's profile "
-                            "is on your page because you connected, or because they took over a "
-                            "person you made: which profile it is (theirs, kept on their own login), "
-                            "what you call them if you chose a name of your own, which connection "
-                            "put them there, and how - so stopping sharing removes exactly that.", True,
+                            "for, and what you call them if you chose a name of your own for "
+                            "anybody on your page (only you see that). This is the most personal "
+                            "thing here. When somebody's profile is on your page because you "
+                            "connected, or because they took over a person you made: which profile "
+                            "it is (theirs, kept on their own login), which connection put them "
+                            "there, and how - so stopping sharing removes exactly that.", True,
                             "when you add a person, connect with somebody, or somebody shares a "
                             "person with you"),
         "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "

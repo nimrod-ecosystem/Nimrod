@@ -41,6 +41,12 @@ export const LAST_PERSON_KEY = 'nimrod:last-person';
 // that no longer resolves — someone deleted that person, or this is a different account on
 // a shared browser — must fall back rather than leave the page addressing a ghost, which
 // would 404 every save.
+// The name a rename changes: the name on the person's card (`profile_name`), not the "I call them" label the chips
+// show (2026-10-05: a label may sit on anybody, and renaming must not turn the label into their name). PURE.
+export function nameOnCard(p) {
+  return p && typeof p.profile_name === 'string' && p.profile_name ? p.profile_name : (p?.name || '');
+}
+
 export function pickCurrent(list, wantedId) {
   const people = Array.isArray(list) ? list.filter((p) => p && p.id) : [];
   if (!people.length) return null;
@@ -160,7 +166,7 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
           <ul class="p-list">
             ${list.map((p) => `
               <li>
-                <input type="text" class="p-name" value="${esc(p.name)}" maxlength="64"
+                <input type="text" class="p-name" value="${esc(nameOnCard(p))}" maxlength="64"
                        data-rename="${esc(p.id)}" aria-label="name">
                 <button class="h-btn h-danger p-small" data-remove="${esc(p.id)}"
                         ${list.length <= 1 ? 'disabled title="an account needs at least one person"' : ''}
@@ -233,7 +239,7 @@ export function mountPeople(root, { profiles, onChange = null, storage = globalT
     const id = field.dataset.rename;
     const name = field.value.trim();
     const person = list.find((p) => p.id === id);
-    if (!person || !name || name === person.name) { if (person) field.value = person.name; return; }
+    if (!person || !name || name === nameOnCard(person)) { if (person) field.value = nameOnCard(person); return; }
     guard(async () => {
       await profiles.renamePerson(id, name);
       await refresh();

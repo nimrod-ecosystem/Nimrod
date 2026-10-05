@@ -1,7 +1,9 @@
 // claim.js — PEOPLE ACROSS ACCOUNTS, the client side: "Connect with someone", "Invite them to use this", "I call
-// them", "Stop sharing". 2026-10-04 (night). Later that night, one card at a time (claims.py argues each): "Who has
-// this card" with "Stop sharing with <name>" for whoever looks after a profile, and "Remove just this card" for a card
-// a connection put on your page.
+// them", "Stop sharing". 2026-10-04 (night). Later that night, one card at a time (claims.py argues each): "Shared
+// with" (first built as "Who has this card"; renamed 2026-10-05, Mike found it confusing) with "Stop sharing with
+// <name>" for whoever looks after a profile, and "Remove just this card" for a card a connection put on your page.
+// 2026-10-05: "I call them" on every card, at any time - for somebody you made, your private label beside the name on
+// their card (claims.py; only you see it either way).
 //
 // Mike, DECISIONS.md "People across accounts: a profile has a home, and appears on other accounts": most people
 // will "just want to be connected like friends on Facebook"; setting a profile up for somebody and handing it over
@@ -90,6 +92,8 @@ export const CLAIM_WORDS = Object.freeze({
   callTitle: (name) => `What you call ${name || 'them'}`,
   callLabel: 'I call them',
   callHow: (name) => `Only you see this. It does not change the name ${name || 'they'} chose.`,
+  // ...on somebody you made yourself: the name on their card is yours to change too, and is what others see.
+  callHowMine: (name) => `Only you see this. Anybody you share them with still sees ${name ? `the name on their card, ${name}` : 'the name on their card'}.`,
   callSave: 'Save',
   callClear: (name) => `Use ${poss(name)} own name`,
   callSaved: 'Saved.',
@@ -103,14 +107,15 @@ export const CLAIM_WORDS = Object.freeze({
   msgOff: 'Messages from them: off',
   msgShort: 'Press to change',
   failed: 'That did not work just now. Try again in a little while.',
-  // who has a card you look after (the server's claims.py, "ONE CARD AT A TIME")
-  holders: 'Who has this card',
-  holdersYou: 'Who has your card',
-  holdersShort: (n) => (n ? `On ${n} other ${n === 1 ? 'page' : 'pages'}` : 'Nobody else yet'),
-  holdersNone: (name) => (name ? `Nobody else has ${name}’s card yet. Share it when you connect with someone, and they show here.`
-    : 'Nobody else has your card yet. Connect with someone, and they show here.'),
-  holdersTitle: (name) => (name ? `Who has ${name}’s card` : 'Who has your card'),
-  holdersLead: (name) => `These people have ${name ? `${name}’s card` : 'your card'} on their page. Each shows by their own name; `
+  // who a card you look after is shared with (the server's claims.py, "ONE CARD AT A TIME"). "Shared with", the
+  // words people know from shared documents and photo albums (Mike, 2026-10-05: "Who has this card" was confusing).
+  holders: (n) => (n ? `Shared with ${n}` : 'Not shared yet'),
+  holdersShort: (n) => (n ? 'See who, or stop sharing' : 'Share when you connect'),
+  holdersYouShort: 'Your card',
+  holdersNone: (name) => (name ? `${name} is not shared with anybody yet. Share ${name} when you connect with someone, and they show here.`
+    : 'Your card is not shared with anybody yet. Connect with someone, and they show here.'),
+  holdersTitle: (name) => (name ? `${name} is shared with` : 'Your card is shared with'),
+  holdersLead: (name) => `${name || 'You'} ${name ? 'is' : 'are'} on these people’s pages. Each shows by their own name; `
     + `whatever they call ${name || 'you'} stays theirs.`,
   someone: 'Someone',
   through: (who) => `Through ${who || 'someone else'}`,
@@ -120,7 +125,7 @@ export const CLAIM_WORDS = Object.freeze({
   stopWithShort: 'Takes this one card off their page',
   stopWithJoinedShort: 'Their card goes back to how they had it',
   stopWithAgain: 'Press again to stop sharing',
-  stoppedWith: (n) => `Stopped. ${n || 'They'} no longer ${n ? 'has' : 'have'} this card.`,
+  stoppedWith: (n) => `Stopped. No longer shared with ${n || 'them'}.`,
   lastShort: 'Their only card from you',
   lastWhy: (n, through) => (through
     ? `It is the only card ${n || 'they'} ${n ? 'has' : 'have'} from ${through}. ${through} can stop sharing with them.`
@@ -400,7 +405,8 @@ export function mountInviteSheet(host, { kind = 'claim', person = null, people =
 
 /**
  * "I call them": a text box, Save, and "Use their own name". Mounted into `host`.
- *   person  { id, name, call_name, profile_name } (a row from GET /api/people)
+ *   person  { id, name, call_name, profile_name, home } (a row from GET /api/people; `home`: somebody you look
+ *           after, whose card's name is yours to change - the words say that others still see it)
  * Returns { destroy, __probe }.
  */
 export function mountCallName(host, { person, client, onChange = null } = {}) {
@@ -416,7 +422,7 @@ export function mountCallName(host, { person, client, onChange = null } = {}) {
   const W = CLAIM_WORDS;
   box.innerHTML = `<label class="cl-h" for="cl-call-${esc(person?.id)}">${esc(W.callLabel)}</label>
     <input class="cl-input" id="cl-call-${esc(person?.id)}" data-cl-call maxlength="${CALL_NAME_MAX}" value="${esc(person?.call_name || '')}" placeholder="${esc(own)}">
-    <p class="cl-lead">${esc(W.callHow(own))}</p>
+    <p class="cl-lead" data-cl-call-how>${esc(person?.home ? W.callHowMine(own) : W.callHow(own))}</p>
     <button type="button" class="cl-btn is-go" data-cl-act="save">${esc(W.callSave)}</button>
     <button type="button" class="cl-btn" data-cl-act="clear">${esc(W.callClear(own))}</button>
     <p class="cl-say" role="status" data-cl-say></p>`;
@@ -444,10 +450,10 @@ export function mountCallName(host, { person, client, onChange = null } = {}) {
 }
 
 /**
- * "Who has this card": the other logins holding a profile you look after, each with "Stop sharing with <name>" (two
+ * "Shared with": the other logins holding a profile you look after, each with "Stop sharing with <name>" (two
  * presses, like Stop sharing; it takes that one card off their page and keeps the connection). Dimmed with why when it
  * is the only card they have from you. Readable only by whoever looks after the profile (the server checks).
- *   person  { id, name, you } - `you`: your own card ("Who has your card")
+ *   person  { id, name, you } - `you`: your own card ("Your card is shared with")
  * Returns { ready, destroy, __probe }.
  */
 export function mountHolders(host, { person, client, onChange = null, now = () => Date.now() } = {}) {
