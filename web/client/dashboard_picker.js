@@ -33,7 +33,7 @@ const CURSOR_OUTLINE = '3px solid var(--accent, #2c6e49)';
  *   onHome()             row 2.38: home, the dashboard this screen started on
  * `draw(model)`:  { list: [{ id, name }], current, offers: [{ key, label, blurb }], making: key|null,
  *                   note: string|null, empty: string|null,
- *                   back: { id, name }|null, home: { id, name }|null }
+ *                   back: { id, name }|null, home: { id, name }|null, leave: false (2026-10-05: no way out row) }
  *
  * *** ROW 2.38: BACK AND HOME COME RIGHT AFTER CLOSE. *** Inside a dashboard an object opened, the tray is
  * how a SWITCH gets back out (the breadcrumb on screen is for a pointer), so the way back is the first
@@ -108,9 +108,13 @@ export function createDashboardPicker(el, { onClose, onPick, onMake, onLeave, on
       b.disabled = !!model.making;
     }
     if (model.note) note(model.note, true);
-    const out = button('k-scr-out', 'Set up dashboards ↗', { pick: 'leave', pickKey: 'leave' },
-      'opens the composer — this does leave full screen, because it leaves the screen');
-    out.disabled = false;
+    // (2026-10-05, screen_lock.js: a LOCKED screen's tray says `leave: false` and has no way out to the composer --
+    // the dashboards themselves still swap. Absent or true: the row, as it always was.)
+    if (model.leave !== false) {
+      const out = button('k-scr-out', 'Set up dashboards ↗', { pick: 'leave', pickKey: 'leave' },
+        'opens the composer — this does leave full screen, because it leaves the screen');
+      out.disabled = false;
+    }
     // Keep the cursor on the same thing across a redraw (a "making" redraw must not jump it to Close).
     const i = keepKey ? buttons().findIndex((b) => b.dataset.pickKey === keepKey) : -1;
     if (i >= 0) cursor = i;

@@ -32,6 +32,8 @@
 //              mean a screen that records never updates
 //   dictation  a dictation window open, or a question waiting for a spoken answer (an open grammar)
 //   helping    somebody driving this screen from another one
+//   unlocked   (2026-10-05, screen_lock.js) somebody unlocked this screen to use it for something else (a film):
+//              the site stays out of it until it is locked again. A screen nobody ever locked never holds for this
 //   input      somebody pressed something in the last `inputQuietMs` (2 minutes). ARGUED: it catches what
 //              the list cannot name - a sentence half-built on the talking board, a note being read, a
 //              caregiver halfway through something - for the price of a reload two minutes later.

@@ -174,6 +174,12 @@ export const SYSTEM_ACTIONS = [
   // 2026-10-02: the transport bar takes the switch (pressed again, or back from the top, it lets go). Not on
   // the remote-drive allowlist, for the reason the rest of this list is not.
   { id: BAR_SCAN_TOPIC, label: 'Walk the transport bar with the switch (press again to leave)', topic: BAR_SCAN_TOPIC, group: 'System' },
+  // *** LOCK THIS SCREEN (2026-10-05; screen_lock.js SCREEN_LOCK_ACTION, the same string, written out here so
+  // this file imports nothing). *** Ctrl+Shift+L by default (screen_lock.js LOCK_KEY_BINDINGS), movable to any
+  // key or switch from Devices. Locked, everything on the screen keeps working and only the ways out and the
+  // setup go. NOT a spoken route (anybody in the room can speak), and not on the remote-drive allowlist, for
+  // the reason the rest of this list is not.
+  { id: 'system/screen-lock', label: 'Lock or unlock this screen', topic: 'system/screen-lock', group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***

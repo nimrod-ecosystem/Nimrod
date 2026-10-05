@@ -454,6 +454,9 @@ export function mountSettings(root, {
   isModerator = () => true,
   onRefused = null,
   fullscreenTarget = null,     // an element, or null for "this surface cannot go fullscreen"
+  // (2026-10-05, screen_lock.js) Read at every paint: false while in full screen means no "Leave full screen"
+  // row (a locked screen does not leave it from here; entering stays offered). Absent: always true.
+  canLeaveFullscreen = null,
   // *** WHERE THE MENU IS ALLOWED TO REACH. ***
   //
   // The default is the whole viewport, which is right for the SHELL's menu — it is the one a
@@ -690,7 +693,7 @@ export function mountSettings(root, {
       screenItems: (() => { try { return screenItems() || []; }
         catch (err) { console.warn('settings: screenItems() threw', err); return []; } })(),
       // (A menu in a panel has no ways out of itself: see `asPanel`.)
-      canFullscreen: !!fullscreenTarget && !asPanel,
+      canFullscreen: !!fullscreenTarget && !asPanel && !(isFullscreen() && !safeCall(canLeaveFullscreen, true)),
       includeHome: includeHome && !asPanel,
       includeClose: !asPanel,
       isFullscreen: isFullscreen(),
@@ -938,7 +941,7 @@ export function mountSettings(root, {
     }
     if (item.id === 'fullscreen') {
       try {
-        if (isFullscreen()) doc.exitFullscreen?.();
+        if (isFullscreen()) { if (safeCall(canLeaveFullscreen, true)) doc.exitFullscreen?.(); }
         else fullscreenTarget?.requestFullscreen?.();
       } catch { /* a browser that refuses is not an error worth showing here */ }
       // The fullscreen change is async; repaint when it lands so the label is truthful.
