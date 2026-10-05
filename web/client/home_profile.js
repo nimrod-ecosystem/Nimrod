@@ -35,7 +35,7 @@
 import { PLACED_DEFAULTS } from './layout.js';
 import { ROOM_PRESETS, presetRecipe } from './room_presets.js';
 import { ROOM_SHELLS, WALL_FINISHES, FLOOR_FINISHES } from './room_parts.js';
-import { THEMES, DEFAULT_THEME } from './theme.js';
+import { THEMES, DEFAULT_THEME, paintedTheme } from './theme.js';
 import { profileSetup } from './game/game.js';
 import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET, ROOM3D_DEFAULTS, normalizeRoom3d, viewOf, slotSpot } from './room3d.js';
 import { tidyScene } from './room_doors.js';
@@ -356,7 +356,8 @@ export function applyScene(layout, choiceId, { theme = null, ids = [] } = {}) {
       placed.push({ id, place: 'scene', surface: 'back', x: at[0], y: at[1], ...ADD_SIZE_ROOM });
     }
     if (placed.length) L.placed = placed; else delete L.placed;
-    const live = theme && THEMES[theme] && THEMES[theme].scene;
+    // (2026-10-05: "With the seasons" counts by what it paints today - Fall's woods are a moving world too.)
+    const live = theme && paintedTheme(theme).scene;
     return { layout: L, theme: live ? DEFAULT_THEME : undefined };
   }
   if (!layout) return { layout: null, theme: c.key };

@@ -13,7 +13,7 @@ import { createState } from './state.js';
 import { createEvents } from './events.js';
 import { createProfilesClient } from './profile.js';
 import { mountModule, listManifests } from './module.js';
-import { applyTheme, listThemes } from './theme.js';
+import { applyTheme, listThemes, resolveThemeId } from './theme.js';
 import { listVoices, waitForVoices, speak } from './voice.js';
 import './modules/clock.js';      // registers 'clock'
 import './modules/camera.js';     // registers 'camera'
@@ -131,7 +131,9 @@ function renderVoicePicker() {
 
 // Reflect a settings snapshot into the shell controls (theme + voice pickers).
 function reflectSettings(s) {
-  themePickerEl.value = applyTheme(document.documentElement, s.theme);
+  // The picker shows the CHOICE ("With the seasons" stays itself), not the theme it paints today.
+  applyTheme(document.documentElement, s.theme);
+  themePickerEl.value = resolveThemeId(s.theme);
   const pref = (s && s.voice) || {};
   if (pref.uri) voicePickerEl.value = pref.uri;
   voiceRateEl.value = String(pref.rate || 1);

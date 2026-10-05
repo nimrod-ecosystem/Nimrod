@@ -156,6 +156,10 @@ import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
 import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
+// Seasons and the sky outside (2026-10-05): "With the seasons" and a wallpaper that follows the weather.
+import { paintedTheme, isFollowTheme } from './theme.js';
+import { followSky, SKY_FIELD, HOLIDAY_FIELD, SKY_FOLLOW_KEY, HOLIDAYS_KEY } from './sky.js';
+import { sceneTakesSky } from './seasons.js';
 import { cachedFetch } from './cache.js';
 import { createPersonKnown, PERSON_KNOWN, PERSON_WAIT_MS } from './person_known.js';
 import './modules/clock.js';
@@ -520,7 +524,9 @@ export async function mountKiosk(root, {
     // is a later `let`, and the first theme is applied before it exists.
     try { subtitles?.restyle(); } catch (err) { console.error('kiosk: subtitles', err); }
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
-    syncScene(kioskEl, THEMES[resolved], { flashLimit: flashLimitNow });
+    // (2026-10-05: `paintedTheme`, not THEMES[resolved] -- the same theme, plus what "With the seasons"
+    // adds to it while it falls back, e.g. Halloween's cat on Night. See theme.js.)
+    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
     soundScene = THEMES[resolved]?.scene || null;
     try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }
@@ -1861,6 +1867,15 @@ export async function mountKiosk(root, {
   try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
   catch (err) { console.error('kiosk: mixer', err); mixer = null; }
   applyKioskTheme(shownTheme());
+  // SEASONS AND THE SKY (2026-10-05; sky.js): the time of day, and the weather from a Weather panel on this
+  // screen, reach the theme's scene; "With the seasons" turns over by itself (a new day, a holiday starting).
+  // After the first theme, so the first sky lands on a scene that is there. Guarded: it must never stop the
+  // screen coming up. Reads (and follows) the screen's row for its two settings.
+  let skyFollow = null;
+  try {
+    skyFollow = followSky({ bus, read: readScreen, subscribe: (fn) => settings.subscribe(fn),
+      onTheme: () => { if (!torn && isFollowTheme(lastShownTheme)) applyKioskTheme(lastShownTheme); } });
+  } catch (err) { console.error('kiosk: the sky', err); }
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
   // The device level changed (the menu's "This device" rows): the chain re-resolves now.
@@ -3073,6 +3088,7 @@ export async function mountKiosk(root, {
   const SCREEN_FIELD_TABS = {
     theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],
     [SMALL_CLOCK_KEY]: ['display', 0],
+    [HOLIDAYS_KEY]: ['display', 0], [SKY_FOLLOW_KEY]: ['display', 0],   // seasons and the sky (sky.js)
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
@@ -3476,6 +3492,13 @@ export async function mountKiosk(root, {
         { value: 'veil', label: 'See-through' },
         { value: 'clear', label: 'Fully clear' },
       ] },
+    // SEASONS AND THE SKY (2026-10-05; sky.js argues both defaults). Each row only where it changes something
+    // anybody can see -- a row tuning a thing that is off is a stop on the switch walk for nothing: "Holiday
+    // looks" while the Colours follow the seasons, "Wallpaper follows the sky outside" while the scene showing
+    // answers to the weather or the time of day (seasons.js SCENE_SKY). So on any other theme the menu's rows
+    // are exactly what they were.
+    ...(isFollowTheme(shownTheme()) ? [{ ...HOLIDAY_FIELD }] : []),
+    ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
     // "Show a small clock" (2026-10-03; arrangement.js SMALL_CLOCK_FIELD argues it): off or a corner. Only where
@@ -6810,6 +6833,7 @@ export async function mountKiosk(root, {
       clearTimeout(cornersT);
       try { document.removeEventListener('fullscreenchange', onFsChange); } catch { /* no document */ }
       try { offDeviceRow?.(); } catch { /* already gone */ }
+      try { skyFollow?.stop(); } catch { /* already gone */ }   // seasons and the sky (sky.js): its minute timer
       for (const off of offVerbSnap) { try { off?.(); } catch { /* already gone */ } }
       root.removeEventListener('mousemove', pokeIfNearBar);
       // The pointerdown/keydown pair were never detached here even before today - a real,
