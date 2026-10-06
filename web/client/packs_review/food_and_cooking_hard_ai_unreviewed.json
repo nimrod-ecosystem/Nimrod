@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Food and cooking - hard (AI-written, not yet reviewed)",
-  "description": "21 HARD questions on food & cooking, written by Claude as an add-on to the easier 'Food & cooking' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "description": "21 questions on food & cooking (6 hard, 14 medium, 1 easy), written by Claude as an add-on to the easier 'Food & cooking' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -24,7 +24,7 @@
         "Vanilla"
       ],
       "correct": "Saffron",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Saffron threads are picked from crocus flowers by hand.",
       "source": {
@@ -32,7 +32,12 @@
         "title": "Wikipedia: Saffron",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'crocus'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, saffron from crocus is fairly well known"
+      }
     },
     {
       "question": "Miso paste is made mainly from which fermented bean?",
@@ -43,7 +48,7 @@
         "Chickpeas"
       ],
       "correct": "Soybeans",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Miso is fermented soybean paste from Japan.",
       "source": {
@@ -51,7 +56,12 @@
         "title": "Wikipedia: Miso",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'soybean'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, miso/soy is fairly well known"
+      }
     },
     {
       "question": "What is the French name for diced onion, carrot and celery cooked as a base?",
@@ -70,7 +80,11 @@
         "title": "Wikipedia: Mirepoix",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'celery'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Paella comes from which country?",
@@ -81,7 +95,7 @@
         "Mexico"
       ],
       "correct": "Spain",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "Food & cooking",
       "explain": "Paella is a rice dish from Valencia, Spain.",
       "source": {
@@ -89,7 +103,12 @@
         "title": "Wikipedia: Paella",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Valencia'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know paella is Spanish"
+      }
     },
     {
       "question": "A roux is made from flour and what?",
@@ -100,7 +119,7 @@
         "Milk"
       ],
       "correct": "Fat, such as butter",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Cooked flour and fat thicken sauces and gravies.",
       "source": {
@@ -108,7 +127,12 @@
         "title": "Wikipedia: Roux",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'flour'; 'fat'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of home cooks know a roux is flour and fat"
+      }
     },
     {
       "question": "Which nuts are used in traditional pesto Genovese?",
@@ -119,7 +143,7 @@
         "Peanuts"
       ],
       "correct": "Pine nuts",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Classic pesto uses basil, pine nuts, garlic, cheese and olive oil.",
       "source": {
@@ -127,7 +151,12 @@
         "title": "Wikipedia: Pesto",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pine nuts'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, pine nuts in pesto is fairly well known"
+      }
     },
     {
       "question": "Baba ghanoush is a dip made mainly from which vegetable?",
@@ -146,7 +175,11 @@
         "title": "Wikipedia: Baba ghanoush",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eggplant'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What gives sourdough bread its tangy taste?",
@@ -157,7 +190,7 @@
         "Baking soda"
       ],
       "correct": "Wild yeast and bacteria",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Lactic acid bacteria in the starter make the tang.",
       "source": {
@@ -165,7 +198,12 @@
         "title": "Wikipedia: Sourdough",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lactic'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the answer is easy to reason out from the three wrong options"
+      }
     },
     {
       "question": "Couscous is made from which grain?",
@@ -178,13 +216,18 @@
       "correct": "Wheat",
       "difficulty": "hard",
       "category": "Food & cooking",
-      "explain": "Couscous is made from semolina, a kind of wheat.",
+      "explain": "Couscous is made from semolina, which is ground from durum wheat.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Couscous",
         "title": "Wikipedia: Couscous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'semolina'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: semolina is not 'a kind of wheat', it is a flour ground from durum wheat"
+      }
     },
     {
       "question": "What is the Japanese word for sliced raw fish served without rice?",
@@ -195,7 +238,7 @@
         "Teriyaki"
       ],
       "correct": "Sashimi",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Sushi is about the rice; sashimi is just the fish.",
       "source": {
@@ -203,7 +246,12 @@
         "title": "Wikipedia: Sashimi",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'raw'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, sushi vs sashimi is widely known"
+      }
     },
     {
       "question": "What is sous vide cooking?",
@@ -214,7 +262,7 @@
         "Cooking under a hot grill"
       ],
       "correct": "Cooking sealed food in a warm water bath",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Sous vide means 'under vacuum' in French.",
       "source": {
@@ -222,7 +270,12 @@
         "title": "Wikipedia: Sous vide",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'water bath'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, sous vide is a common term now and the wrong options are far off"
+      }
     },
     {
       "question": "Éclairs are made from which kind of pastry?",
@@ -241,7 +294,11 @@
         "title": "Wikipedia: Éclair",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'choux'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Feta cheese comes from which country?",
@@ -252,7 +309,7 @@
         "Spain"
       ],
       "correct": "Greece",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Feta is a brined cheese from Greece.",
       "source": {
@@ -260,7 +317,12 @@
         "title": "Wikipedia: Feta",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Greece'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, feta as Greek is widely known"
+      }
     },
     {
       "question": "How is gazpacho soup usually served?",
@@ -271,7 +333,7 @@
         "Boiling"
       ],
       "correct": "Cold",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Gazpacho is a cold tomato soup from Spain.",
       "source": {
@@ -279,7 +341,12 @@
         "title": "Wikipedia: Gazpacho",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cold'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of adults know gazpacho is served cold"
+      }
     },
     {
       "question": "Which spice is made from the bark of a tree?",
@@ -290,7 +357,7 @@
         "Clove"
       ],
       "correct": "Cinnamon",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Cinnamon sticks are rolled-up dried bark.",
       "source": {
@@ -298,7 +365,12 @@
         "title": "Wikipedia: Cinnamon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bark'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, cinnamon sticks as bark is fairly well known"
+      }
     },
     {
       "question": "The Indian dish dal is made mainly from what?",
@@ -309,7 +381,7 @@
         "Spinach"
       ],
       "correct": "Lentils or other split pulses",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Dal means split pulses, like lentils, cooked into a stew.",
       "source": {
@@ -317,7 +389,12 @@
         "title": "Wikipedia: Dal",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lentil'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, dal as lentils is fairly well known"
+      }
     },
     {
       "question": "Chipotle is a smoked, dried version of which chili pepper?",
@@ -336,7 +413,11 @@
         "title": "Wikipedia: Chipotle",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'jalapeño'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which Italian dessert is made with coffee-soaked ladyfingers?",
@@ -347,7 +428,7 @@
         "Gelato"
       ],
       "correct": "Tiramisu",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Tiramisu layers ladyfingers with mascarpone cream.",
       "source": {
@@ -355,7 +436,12 @@
         "title": "Wikipedia: Tiramisu",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ladyfinger'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, tiramisu is one of the best-known desserts"
+      }
     },
     {
       "question": "Which part of the wasabi plant is grated to make wasabi?",
@@ -374,7 +460,11 @@
         "title": "Wikipedia: Wasabi",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'rhizome'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Kimchi comes from which country?",
@@ -385,7 +475,7 @@
         "Thailand"
       ],
       "correct": "Korea",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Kimchi is spicy fermented cabbage from Korea.",
       "source": {
@@ -393,7 +483,12 @@
         "title": "Wikipedia: Kimchi",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Korean'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, kimchi as Korean is widely known"
+      }
     },
     {
       "question": "What does 'al dente' mean for cooked pasta?",
@@ -404,7 +499,7 @@
         "Served cold"
       ],
       "correct": "Firm to the bite",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Food & cooking",
       "explain": "Al dente is Italian for 'to the tooth'.",
       "source": {
@@ -412,7 +507,12 @@
         "title": "Wikipedia: Al dente",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tooth'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 'firm to the bite' is widely known"
+      }
     }
   ]
 }

@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "History, US and world (AI-written, not yet reviewed)",
-  "description": "60 questions on history, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "54 questions on history, written by Claude, spread across every level the game understands: 6 very easy (filed as easy, marked in `note`), 12 easy, 18 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -33,7 +33,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'France'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the first person to walk on the Moon?",
@@ -53,27 +57,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first person to walk on the Moon'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
-    },
-    {
-      "question": "Which inventor is famous for making a practical light bulb?",
-      "answers": [
-        "Thomas Edison",
-        "Henry Ford",
-        "Benjamin Franklin",
-        "Alexander Graham Bell"
-      ],
-      "correct": "Thomas Edison",
-      "difficulty": "easy",
-      "category": "History",
-      "explain": "Edison's team made a long-lasting electric light bulb in 1879.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Thomas_Edison",
-        "title": "Wikipedia: Thomas Edison",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'light bulb'."
-      },
-      "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Whose face is on the US penny?",
@@ -93,7 +81,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Lincoln'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In 1492, Christopher Columbus sailed across which ocean?",
@@ -113,7 +105,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Atlantic'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Wright brothers are famous for the first powered what?",
@@ -126,34 +122,19 @@
       "correct": "Airplane flight",
       "difficulty": "easy",
       "category": "History",
-      "explain": "Orville and Wilbur Wright flew the first powered airplane in 1903.",
+      "explain": "Orville and Wilbur Wright made the first controlled, sustained powered airplane flight in 1903.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Wright_brothers",
         "title": "Wikipedia: Wright brothers",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'airplane'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
-    },
-    {
-      "question": "Who is famous for inventing the telephone?",
-      "answers": [
-        "Alexander Graham Bell",
-        "Thomas Edison",
-        "Samuel Morse",
-        "Henry Ford"
-      ],
-      "correct": "Alexander Graham Bell",
-      "difficulty": "easy",
-      "category": "History",
-      "explain": "Bell was granted the first US patent for the telephone in 1876.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Alexander_Graham_Bell",
-        "title": "Wikipedia: Alexander Graham Bell",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'telephone'."
-      },
-      "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'flew the first powered airplane' is disputed (the page notes rival claims); now the page's own wording, 'first controlled, sustained' flight"
+      }
     },
     {
       "question": "In which city is the White House?",
@@ -173,7 +154,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Washington'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the main author of the Declaration of Independence?",
@@ -192,7 +177,11 @@
         "title": "Wikipedia: United States Declaration of Independence",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In what year did the United States declare independence?",
@@ -211,7 +200,11 @@
         "title": "Wikipedia: United States Declaration of Independence",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1776'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which of these presidents is carved on Mount Rushmore?",
@@ -230,7 +223,11 @@
         "title": "US National Park Service",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which ancient people built the Colosseum?",
@@ -249,7 +246,11 @@
         "title": "Wikipedia: Colosseum",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roman'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was president during the American Civil War?",
@@ -268,7 +269,11 @@
         "title": "Wikipedia: Abraham Lincoln",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Civil War'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The United States bought Alaska from which country?",
@@ -287,7 +292,11 @@
         "title": "Wikipedia: Alaska Purchase",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Russia'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which country was the Great Wall built?",
@@ -306,7 +315,11 @@
         "title": "Wikipedia: Great Wall of China",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'China'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What was the name of the ship that carried the Pilgrims in 1620?",
@@ -325,7 +338,11 @@
         "title": "Wikipedia: Mayflower",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1620'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Vikings came from which part of Europe?",
@@ -344,7 +361,11 @@
         "title": "Wikipedia: Vikings",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Scandinavia'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which famous wall in Germany came down in 1989?",
@@ -363,7 +384,11 @@
         "title": "Wikipedia: Berlin Wall",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1989'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Benjamin Franklin flew a kite to learn about what?",
@@ -376,32 +401,18 @@
       "correct": "Electricity",
       "difficulty": "easy",
       "category": "History",
-      "explain": "Franklin's kite test showed that lightning is electricity.",
+      "explain": "Franklin's kite experiment was meant to show that lightning is electricity.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Benjamin_Franklin",
         "title": "Wikipedia: Benjamin Franklin",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kite'; 'electricity'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "In what year did Columbus first reach the Americas?",
-      "answers": [
-        "1492",
-        "1592",
-        "1392",
-        "1776"
-      ],
-      "correct": "1492",
-      "difficulty": "easy",
-      "category": "History",
-      "explain": "Columbus landed in the Bahamas in October 1492.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Christopher_Columbus",
-        "title": "Wikipedia: Christopher Columbus",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1492'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'showed' over-claims; the page says the experiment was proposed to prove lightning is electricity and that he did not do it the way it is usually pictured"
+      }
     },
     {
       "question": "Who was the first woman to fly solo across the Atlantic Ocean?",
@@ -420,26 +431,11 @@
         "title": "Wikipedia: Amelia Earhart",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Atlantic'; '1932'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "In which year did people first walk on the Moon?",
-      "answers": [
-        "1969",
-        "1959",
-        "1975",
-        "1965"
-      ],
-      "correct": "1969",
-      "difficulty": "medium",
-      "category": "History",
-      "explain": "Apollo 11 landed on the Moon in July 1969.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Apollo_11",
-        "title": "Wikipedia: Apollo 11",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1969'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which British queen reigned for most of the 1800s?",
@@ -458,7 +454,11 @@
         "title": "Wikipedia: Queen Victoria",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1837'; '1901'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Magna Carta was agreed in 1215 in which country?",
@@ -477,7 +477,11 @@
         "title": "Wikipedia: Magna Carta",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1215'; 'England'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which president started the New Deal in the 1930s?",
@@ -496,7 +500,11 @@
         "title": "Wikipedia: New Deal",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roosevelt'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which ancient Roman town, buried by volcanic ash, is now a famous dig site?",
@@ -515,7 +523,11 @@
         "title": "Wikipedia: Pompeii",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Vesuvius'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who built a printing press with movable type in Europe around 1440?",
@@ -530,11 +542,16 @@
       "category": "History",
       "explain": "Gutenberg's press made books much faster to produce.",
       "source": {
-        "url": "https://en.wikipedia.org/wiki/Johannes_Gutenberg",
-        "title": "Wikipedia: Johannes Gutenberg",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'printing press'."
+        "url": "https://en.wikipedia.org/wiki/Printing_press",
+        "title": "Wikipedia: Printing press",
+        "note": "Fetched 2026-10-05 by the fact-check pass; the page says inventor johannes gutenberg, invented c. 1440."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "source: the Gutenberg page does not give the 1440 date the question uses; now Wikipedia: Printing press (invented c. 1440)"
+      }
     },
     {
       "question": "The Lewis and Clark expedition explored land from which purchase?",
@@ -553,7 +570,11 @@
         "title": "Wikipedia: Lewis and Clark Expedition",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Louisiana Purchase'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The US bought the Louisiana territory from which country?",
@@ -572,7 +593,11 @@
         "title": "Wikipedia: Louisiana Purchase",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'France'; '1803'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who gave the 'I Have a Dream' speech in 1963?",
@@ -591,7 +616,11 @@
         "title": "Wikipedia: I Have a Dream",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'King'; '1963'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Rosa Parks is famous for refusing to give up her seat on a what?",
@@ -602,7 +631,7 @@
         "Boat"
       ],
       "correct": "Bus",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "category": "History",
       "explain": "Her stand on a Montgomery bus in 1955 sparked a famous boycott.",
       "source": {
@@ -610,26 +639,12 @@
         "title": "Wikipedia: Rosa Parks",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bus'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "Who was the first person to travel into space and orbit the Earth?",
-      "answers": [
-        "Yuri Gagarin",
-        "Neil Armstrong",
-        "John Glenn",
-        "Alan Shepard"
-      ],
-      "correct": "Yuri Gagarin",
-      "difficulty": "medium",
-      "category": "History",
-      "explain": "Yuri Gagarin orbited the Earth in 1961.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Yuri_Gagarin",
-        "title": "Wikipedia: Yuri Gagarin",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first human'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: medium -> easy, most adults know Rosa Parks and the bus"
+      }
     },
     {
       "question": "The Renaissance began in which country?",
@@ -648,7 +663,11 @@
         "title": "Wikipedia: Renaissance",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Italy'; 'Florence'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which city was the Declaration of Independence signed?",
@@ -667,7 +686,11 @@
         "title": "Wikipedia: Independence Hall",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Philadelphia'; 'Declaration of Independence'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which document begins with the words 'We the People'?",
@@ -686,7 +709,11 @@
         "title": "Wikipedia: Preamble to the United States Constitution",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'We the People'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the first woman to win a Nobel Prize?",
@@ -705,7 +732,11 @@
         "title": "Wikipedia: Marie Curie",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first woman'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In 1849, crowds rushed to California hoping to find what?",
@@ -724,7 +755,11 @@
         "title": "Wikipedia: California gold rush",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'gold'; '1849'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Industrial Revolution began in which country?",
@@ -743,7 +778,11 @@
         "title": "Wikipedia: Industrial Revolution",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Great Britain'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which ancient Greek city is called the birthplace of democracy?",
@@ -762,7 +801,11 @@
         "title": "Wikipedia: Athenian democracy",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Athens'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which year did the Wright brothers make their first powered flight?",
@@ -775,13 +818,18 @@
       "correct": "1903",
       "difficulty": "medium",
       "category": "History",
-      "explain": "The first flight was at Kitty Hawk, North Carolina, in December 1903.",
+      "explain": "The first flight was near Kitty Hawk, North Carolina, in December 1903.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Wright_brothers",
         "title": "Wikipedia: Wright brothers",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1903'; 'Kitty Hawk'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: the flight was at Kill Devil Hills, four miles south of Kitty Hawk (per the page); now 'near Kitty Hawk'"
+      }
     },
     {
       "question": "Who was the first US president to live in the White House?",
@@ -800,7 +848,11 @@
         "title": "Wikipedia: White House",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'John Adams'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which year was the US Constitution signed?",
@@ -819,7 +871,11 @@
         "title": "Wikipedia: Constitution of the United States",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1787'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which ancient wonder stood in the Egyptian city of Alexandria?",
@@ -838,7 +894,11 @@
         "title": "Wikipedia: Lighthouse of Alexandria",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Seven Wonders'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the first emperor of Rome?",
@@ -857,26 +917,11 @@
         "title": "Wikipedia: Augustus",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first Roman emperor'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "What was the name of the first artificial satellite, launched in 1957?",
-      "answers": [
-        "Sputnik 1",
-        "Explorer 1",
-        "Vostok 1",
-        "Telstar"
-      ],
-      "correct": "Sputnik 1",
-      "difficulty": "hard",
-      "category": "History",
-      "explain": "The Soviet Union launched Sputnik 1 in October 1957.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Sputnik_1",
-        "title": "Wikipedia: Sputnik 1",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1957'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which treaty ended the American Revolutionary War in 1783?",
@@ -895,7 +940,11 @@
         "title": "Wikipedia: Treaty of Paris (1783)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1783'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Whose nearly untouched tomb did Howard Carter find in 1922?",
@@ -914,7 +963,11 @@
         "title": "Wikipedia: Tutankhamun",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Carter'; '1922'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Rosetta Stone helped scholars learn to read which writing?",
@@ -933,7 +986,11 @@
         "title": "Wikipedia: Rosetta Stone",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hieroglyph'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which expedition was the first to sail all the way around the world (1519-1522)?",
@@ -952,7 +1009,11 @@
         "title": "Wikipedia: Magellan expedition",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'circumnavigation'; 'Elcano'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was president when the US made the Louisiana Purchase?",
@@ -971,7 +1032,11 @@
         "title": "Wikipedia: Louisiana Purchase",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which order did Lincoln issue on January 1, 1863?",
@@ -990,7 +1055,11 @@
         "title": "Wikipedia: Emancipation Proclamation",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1863'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the first woman to serve on the US Supreme Court?",
@@ -1009,7 +1078,11 @@
         "title": "Wikipedia: Sandra Day O'Connor",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first woman'; '1981'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which empire built Machu Picchu?",
@@ -1020,7 +1093,7 @@
         "The Olmecs"
       ],
       "correct": "The Inca",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "History",
       "explain": "The Inca built Machu Picchu in the 1400s.",
       "source": {
@@ -1028,10 +1101,15 @@
         "title": "Wikipedia: Machu Picchu",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Inca'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Machu Picchu as an Inca site is widely known"
+      }
     },
     {
-      "question": "Which Chinese dynasty built most of the Great Wall that stands today?",
+      "question": "Which Chinese dynasty built the best-known sections of the Great Wall?",
       "answers": [
         "Ming",
         "Han",
@@ -1041,13 +1119,18 @@
       "correct": "Ming",
       "difficulty": "hard",
       "category": "History",
-      "explain": "Most of the wall seen today was built under the Ming dynasty.",
+      "explain": "The best-known sections of the wall were built under the Ming dynasty (1368-1644).",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
         "title": "Wikipedia: Great Wall of China",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ming'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question + explanation: 'built most of the wall that stands today' is not what the source says (Han-era walls were longer); now the page's wording, 'the best-known sections were built by the Ming dynasty'"
+      }
     },
     {
       "question": "Who was the first European to reach India by sailing around Africa?",
@@ -1066,7 +1149,11 @@
         "title": "Wikipedia: Vasco da Gama",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'India'; '1498'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which year did the 19th Amendment give US women the right to vote?",
@@ -1085,7 +1172,11 @@
         "title": "Wikipedia: Nineteenth Amendment to the United States Constitution",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1920'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who founded the American Red Cross?",
@@ -1104,7 +1195,11 @@
         "title": "Wikipedia: Clara Barton",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'American Red Cross'; '1881'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which city was George Washington sworn in as the first president?",
@@ -1123,7 +1218,11 @@
         "title": "Wikipedia: First inauguration of George Washington",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Federal Hall'; 'New York'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which Roman emperor built a wall across northern England?",
@@ -1142,7 +1241,11 @@
         "title": "Wikipedia: Hadrian's Wall",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '122'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which explorer led the first expedition to reach the South Pole, in 1911?",
@@ -1161,7 +1264,11 @@
         "title": "Wikipedia: Roald Amundsen",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'South Pole'; '1911'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }

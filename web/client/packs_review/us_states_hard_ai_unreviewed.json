@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "US states - hard (AI-written, not yet reviewed)",
-  "description": "21 HARD questions on us states, written by Claude as an add-on to the easier 'US states' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "description": "20 questions on us states (12 hard, 8 medium), written by Claude as an add-on to the easier 'US states' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -32,7 +32,11 @@
         "title": "Wikipedia: Montpelier, Vermont",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the capital of South Dakota?",
@@ -51,7 +55,11 @@
         "title": "Wikipedia: Pierre, South Dakota",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which state was the first to ratify the US Constitution?",
@@ -62,7 +70,7 @@
         "Virginia"
       ],
       "correct": "Delaware",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "That's why Delaware is called the First State.",
       "source": {
@@ -70,7 +78,12 @@
         "title": "Wikipedia: Delaware",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'First State'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Delaware's 'First State' nickname is widely known (plates, quarter)"
+      }
     },
     {
       "question": "What is the capital of Nevada?",
@@ -81,7 +94,7 @@
         "Henderson"
       ],
       "correct": "Carson City",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "Carson City is named after the scout Kit Carson.",
       "source": {
@@ -89,7 +102,12 @@
         "title": "Wikipedia: Carson City, Nevada",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Carson City is the best-known 'not Las Vegas' capital trick; a fair share of adults know it"
+      }
     },
     {
       "question": "Which state is nicknamed the Old Dominion?",
@@ -108,26 +126,11 @@
         "title": "Wikipedia: Virginia",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Old Dominion'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "Which state has a flag that is not a rectangle?",
-      "answers": [
-        "Ohio",
-        "Texas",
-        "Alaska",
-        "Maine"
-      ],
-      "correct": "Ohio",
-      "difficulty": "hard",
-      "category": "US states",
-      "explain": "Ohio's flag is a swallowtail shape.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Flag_of_Ohio",
-        "title": "Wikipedia: Flag of Ohio",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'swallowtail'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Tennessee and which other state each border eight other states?",
@@ -146,7 +149,11 @@
         "title": "Wikipedia: Missouri",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eight'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the capital of Kentucky?",
@@ -165,7 +172,11 @@
         "title": "Wikipedia: Frankfort, Kentucky",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which state is nicknamed the Treasure State?",
@@ -184,7 +195,11 @@
         "title": "Wikipedia: Montana",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Treasure State'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which state is nicknamed the Land of Enchantment?",
@@ -203,7 +218,11 @@
         "title": "Wikipedia: New Mexico",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Land of Enchantment'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the capital of North Dakota?",
@@ -222,7 +241,11 @@
         "title": "Wikipedia: Bismarck, North Dakota",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which is the only state named after a US president?",
@@ -233,7 +256,7 @@
         "Maryland"
       ],
       "correct": "Washington",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "Washington State is named after George Washington.",
       "source": {
@@ -241,7 +264,12 @@
         "title": "Wikipedia: Washington (state)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'George Washington'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, most adults can work out Washington from the four options"
+      }
     },
     {
       "question": "Arizona, New Mexico, Colorado and which state meet at the Four Corners?",
@@ -252,7 +280,7 @@
         "Texas"
       ],
       "correct": "Utah",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "It is the only spot where four states touch.",
       "source": {
@@ -260,7 +288,12 @@
         "title": "Wikipedia: Four Corners",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Utah'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the Four Corners states are fairly widely known"
+      }
     },
     {
       "question": "Juneau is the capital of which state?",
@@ -271,7 +304,7 @@
         "Oregon"
       ],
       "correct": "Alaska",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "Juneau can't be reached by road from the rest of North America.",
       "source": {
@@ -279,7 +312,12 @@
         "title": "Wikipedia: Juneau, Alaska",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Juneau-Alaska is a fairly well-known capital, and the question goes from city to state, which is easier"
+      }
     },
     {
       "question": "Which state is nicknamed the Pelican State?",
@@ -298,7 +336,11 @@
         "title": "Wikipedia: Louisiana",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Pelican State'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the capital of Oregon?",
@@ -317,7 +359,11 @@
         "title": "Wikipedia: Salem, Oregon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which Great Lake lies entirely within the United States?",
@@ -328,7 +374,7 @@
         "Lake Erie"
       ],
       "correct": "Lake Michigan",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "The other four Great Lakes are shared with Canada.",
       "source": {
@@ -336,7 +382,12 @@
         "title": "Wikipedia: Lake Michigan",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'entirely within'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Lake Michigan being the only all-US Great Lake is common trivia"
+      }
     },
     {
       "question": "Which state is nicknamed the Keystone State?",
@@ -347,7 +398,7 @@
         "Virginia"
       ],
       "correct": "Pennsylvania",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
       "explain": "Pennsylvania sat in the middle of the original thirteen colonies, like a keystone.",
       "source": {
@@ -355,7 +406,12 @@
         "title": "Wikipedia: Pennsylvania",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Keystone State'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the Keystone State is widely known (it is on Pennsylvania road signs)"
+      }
     },
     {
       "question": "What is the capital of Maryland?",
@@ -374,7 +430,11 @@
         "title": "Wikipedia: Annapolis, Maryland",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which state is nicknamed the Cornhusker State?",
@@ -385,15 +445,20 @@
         "Indiana"
       ],
       "correct": "Nebraska",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "US states",
-      "explain": "Nebraska's nickname comes from husking corn by hand.",
+      "explain": "Nebraska is a big corn state, and its university teams are the Cornhuskers.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Nebraska",
         "title": "Wikipedia: Nebraska",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Cornhusker'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, widely known through the Nebraska Cornhuskers; explanation: the nickname came by way of the university football team, so 'comes from husking corn by hand' over-claimed the origin"
+      }
     },
     {
       "question": "What is the capital of West Virginia?",
@@ -412,7 +477,11 @@
         "title": "Wikipedia: Charleston, West Virginia",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }

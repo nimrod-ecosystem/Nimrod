@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Animals - hard (AI-written, not yet reviewed)",
-  "description": "21 HARD questions on animals, written by Claude as an add-on to the easier 'Animals' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "description": "21 questions on animals (6 hard, 13 medium, 2 easy), written by Claude as an add-on to the easier 'Animals' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -32,7 +32,11 @@
         "title": "Wikipedia: Owl",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'parliament'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which bird is the fastest animal in a dive?",
@@ -43,7 +47,7 @@
         "Albatross"
       ],
       "correct": "Peregrine falcon",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Diving peregrine falcons can pass 300 km per hour.",
       "source": {
@@ -51,7 +55,12 @@
         "title": "Wikipedia: Peregrine falcon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fastest'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the diving peregrine falcon is a well-known record"
+      }
     },
     {
       "question": "How many hearts does an octopus have?",
@@ -62,7 +71,7 @@
         "Eight"
       ],
       "correct": "Three",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Two hearts pump blood to the gills and one to the body.",
       "source": {
@@ -70,7 +79,12 @@
         "title": "Wikipedia: Octopus",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three hearts'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, an octopus's three hearts is a widely shared fun fact"
+      }
     },
     {
       "question": "What is a female donkey called?",
@@ -89,7 +103,11 @@
         "title": "Wikipedia: Donkey",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'jenny'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which egg-laying mammal has a bill like a duck?",
@@ -100,7 +118,7 @@
         "Mole"
       ],
       "correct": "Platypus",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "Animals",
       "explain": "The platypus is one of the few mammals that lay eggs.",
       "source": {
@@ -108,7 +126,12 @@
         "title": "Wikipedia: Platypus",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'egg'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know the duck-billed platypus"
+      }
     },
     {
       "question": "What is the largest species of shark?",
@@ -119,7 +142,7 @@
         "Tiger shark"
       ],
       "correct": "Whale shark",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "The whale shark is the largest fish alive, and it eats plankton.",
       "source": {
@@ -127,7 +150,12 @@
         "title": "Wikipedia: Whale shark",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of adults know the whale shark is the biggest shark"
+      }
     },
     {
       "question": "What word describes animals that are most active at dawn and dusk?",
@@ -146,7 +174,11 @@
         "title": "Wikipedia: Crepuscular animal",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'twilight'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many compartments does a cow's stomach have?",
@@ -157,7 +189,7 @@
         "Six"
       ],
       "correct": "Four",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "A cow's stomach has four parts, starting with the rumen.",
       "source": {
@@ -165,7 +197,12 @@
         "title": "Wikipedia: Ruminant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a cow's four-part stomach is fairly well known"
+      }
     },
     {
       "question": "Which bird can fly backwards?",
@@ -176,7 +213,7 @@
         "Sparrow"
       ],
       "correct": "Hummingbird",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Hummingbirds can hover and even fly backwards.",
       "source": {
@@ -184,7 +221,12 @@
         "title": "Smithsonian's National Zoo",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fly backward'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, hummingbirds flying backwards is fairly well known"
+      }
     },
     {
       "question": "Which of these animals has the longest pregnancy?",
@@ -195,7 +237,7 @@
         "Horse"
       ],
       "correct": "Elephant",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "An elephant pregnancy lasts nearly two years.",
       "source": {
@@ -203,7 +245,12 @@
         "title": "Wikipedia: Elephant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'gestation'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the elephant's long pregnancy is fairly well known"
+      }
     },
     {
       "question": "What do koalas mostly eat?",
@@ -214,7 +261,7 @@
         "Insects"
       ],
       "correct": "Eucalyptus leaves",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "Animals",
       "explain": "Koalas live almost entirely on eucalyptus leaves.",
       "source": {
@@ -222,7 +269,12 @@
         "title": "Wikipedia: Koala",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eucalyptus'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know koalas eat eucalyptus"
+      }
     },
     {
       "question": "What kind of animal is a Komodo dragon?",
@@ -233,7 +285,7 @@
         "Turtle"
       ],
       "correct": "Lizard",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "The Komodo dragon is the largest living lizard.",
       "source": {
@@ -241,7 +293,12 @@
         "title": "Wikipedia: Komodo dragon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lizard'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of adults know the Komodo dragon is a lizard"
+      }
     },
     {
       "question": "What is a male honey bee called?",
@@ -252,7 +309,7 @@
         "A buck"
       ],
       "correct": "A drone",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Drones are the male bees in a hive.",
       "source": {
@@ -260,7 +317,12 @@
         "title": "Wikipedia: Drone (bee)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'male'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, drone for a male bee is fairly well known"
+      }
     },
     {
       "question": "Which is the largest living reptile?",
@@ -273,13 +335,18 @@
       "correct": "Saltwater crocodile",
       "difficulty": "hard",
       "category": "Animals",
-      "explain": "Big male saltwater crocodiles can be over 6 metres long.",
+      "explain": "Big male saltwater crocodiles can grow to about 6 metres long.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Saltwater_crocodile",
         "title": "Wikipedia: Saltwater crocodile",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'can be over 6 metres' overstates it; the source says males reach about 6 m and rarely exceed 6.3 m"
+      }
     },
     {
       "question": "What is a young swan called?",
@@ -290,7 +357,7 @@
         "An eaglet"
       ],
       "correct": "A cygnet",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Baby swans are cygnets; baby geese are goslings.",
       "source": {
@@ -298,7 +365,12 @@
         "title": "Wikipedia: Swan",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cygnet'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, cygnet is fairly well known"
+      }
     },
     {
       "question": "Which is the largest species of penguin?",
@@ -309,7 +381,7 @@
         "Gentoo penguin"
       ],
       "correct": "Emperor penguin",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Adult emperor penguins measure about 110 to 120 centimetres.",
       "source": {
@@ -317,7 +389,12 @@
         "title": "Wikipedia: Emperor penguin",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the emperor as the biggest penguin is fairly well known"
+      }
     },
     {
       "question": "What kind of animal is an axolotl?",
@@ -328,7 +405,7 @@
         "An insect"
       ],
       "correct": "A salamander",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "The axolotl is a salamander from lakes near Mexico City.",
       "source": {
@@ -336,7 +413,12 @@
         "title": "Wikipedia: Axolotl",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'salamander'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the axolotl is a popular pet and widely known as a salamander, though 'fish' is a fair trap"
+      }
     },
     {
       "question": "What is the world's largest rodent?",
@@ -347,7 +429,7 @@
         "Groundhog"
       ],
       "correct": "Capybara",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Capybaras from South America can weigh over 60 kilograms.",
       "source": {
@@ -355,7 +437,12 @@
         "title": "Wikipedia: Capybara",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the capybara as the largest rodent is fairly well known"
+      }
     },
     {
       "question": "Lobsters, crabs and shrimp belong to a group whose name means 'ten feet'. What is it?",
@@ -374,7 +461,11 @@
         "title": "Wikipedia: Decapoda",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ten'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What do we call a scientist who studies birds?",
@@ -385,7 +476,7 @@
         "Ichthyologist"
       ],
       "correct": "Ornithologist",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Animals",
       "explain": "Ornithology is the study of birds.",
       "source": {
@@ -393,7 +484,12 @@
         "title": "Wikipedia: Ornithology",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'birds'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, ornithologist is fairly well known"
+      }
     },
     {
       "question": "Which big cat cannot fully pull in its claws?",
@@ -412,7 +508,11 @@
         "title": "Wikipedia: Cheetah",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'claws'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }

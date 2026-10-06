@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Holidays and seasons (AI-written, not yet reviewed)",
-  "description": "61 questions on holidays & seasons, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 21 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "59 questions on holidays & seasons, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 23 medium, 16 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -33,7 +33,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '25 December'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What do people often carve faces into for Halloween?",
@@ -53,7 +57,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pumpkin'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which season comes after winter?",
@@ -73,7 +81,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'spring'; 'winter'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which holiday has the Easter Bunny?",
@@ -93,7 +105,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Easter'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "On Valentine's Day, cards are often shaped like what?",
@@ -113,7 +129,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'heart'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which season is usually the coldest?",
@@ -133,7 +153,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'coldest'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What do people say to each other at midnight on New Year's Eve?",
@@ -152,7 +176,11 @@
         "note": "Universally known New Year's custom in English-speaking countries."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which season is usually the warmest?",
@@ -172,7 +200,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'warmest'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "On what date is US Independence Day?",
@@ -191,7 +223,11 @@
         "title": "Wikipedia: Independence Day (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'July 4'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What do children say when they knock on doors on Halloween?",
@@ -210,7 +246,11 @@
         "title": "Wikipedia: Trick-or-treating",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'trick or treat'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Halloween is celebrated on which date?",
@@ -229,7 +269,11 @@
         "title": "Wikipedia: Halloween",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '31 October'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Valentine's Day is in which month?",
@@ -248,7 +292,11 @@
         "title": "Wikipedia: Valentine's Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February 14'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which Jewish holiday lasts eight nights and uses a menorah?",
@@ -267,10 +315,14 @@
         "title": "Wikipedia: Hanukkah",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eight'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
-      "question": "In which season do leaves change colour and fall from trees?",
+      "question": "In which season do leaves change colour and drop from trees?",
       "answers": [
         "Fall",
         "Spring",
@@ -286,7 +338,12 @@
         "title": "Wikipedia: Autumn",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'leaves'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question: 'leaves ... fall' gave away the answer 'Fall'; now 'drop'"
+      }
     },
     {
       "question": "What is often put on top of a Christmas tree?",
@@ -305,7 +362,11 @@
         "title": "Wikipedia: Christmas tree",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'star'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "St. Patrick's Day is in which month?",
@@ -324,7 +385,11 @@
         "title": "Wikipedia: Saint Patrick's Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '17 March'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which colour do many people wear on St. Patrick's Day?",
@@ -343,7 +408,11 @@
         "title": "Wikipedia: Saint Patrick's Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'green'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What do many families do with eggs at Easter?",
@@ -362,7 +431,11 @@
         "title": "Wikipedia: Easter egg",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'decorat'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Thanksgiving in the US comes in which month?",
@@ -381,7 +454,11 @@
         "title": "Wikipedia: Thanksgiving (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'November'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the plant people kiss under at Christmas?",
@@ -400,26 +477,11 @@
         "title": "Wikipedia: Mistletoe",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kiss'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "US Thanksgiving falls on which day?",
-      "answers": [
-        "The fourth Thursday of November",
-        "The first Monday of November",
-        "The last Friday of November",
-        "November 1"
-      ],
-      "correct": "The fourth Thursday of November",
-      "difficulty": "medium",
-      "category": "Holidays & seasons",
-      "explain": "Thanksgiving is always on the fourth Thursday of November.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
-        "title": "Wikipedia: Thanksgiving (United States)",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fourth Thursday'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the Hindu festival of lights called?",
@@ -438,7 +500,11 @@
         "title": "Wikipedia: Diwali",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'festival of lights'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many days does Kwanzaa last?",
@@ -457,7 +523,11 @@
         "title": "Wikipedia: Kwanzaa",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'seven'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which US holiday on November 11 honours military veterans?",
@@ -476,10 +546,14 @@
         "title": "Wikipedia: Veterans Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'November 11'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
-      "question": "In the Northern Hemisphere, spring officially begins with which event?",
+      "question": "In the Northern Hemisphere, which event marks the start of astronomical spring?",
       "answers": [
         "The March equinox",
         "The June solstice",
@@ -495,7 +569,12 @@
         "title": "Wikipedia: March equinox",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'spring'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question: 'officially begins' is disputed (meteorological spring starts March 1); Wikipedia says the equinox marks the start of astronomical spring, now says that"
+      }
     },
     {
       "question": "What flat bread do people eat during Passover?",
@@ -514,7 +593,11 @@
         "title": "Wikipedia: Passover",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'matzo'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which holiday is celebrated with red envelopes and dragon dances?",
@@ -533,7 +616,11 @@
         "title": "Wikipedia: Chinese New Year",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'red envelope'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Holi, the festival of colours, began in which country?",
@@ -552,7 +639,11 @@
         "title": "Wikipedia: Holi",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'India'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which US holiday is on the first Monday in September?",
@@ -571,7 +662,11 @@
         "title": "Wikipedia: Labor Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first Monday in September'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which holiday marks the end of Ramadan?",
@@ -590,7 +685,11 @@
         "title": "Wikipedia: Eid al-Fitr",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ramadan'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Groundhog Day is on which date?",
@@ -609,7 +708,11 @@
         "title": "Wikipedia: Groundhog Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February 2'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "If the groundhog sees its shadow, what does the folk tale say?",
@@ -628,7 +731,11 @@
         "title": "Wikipedia: Groundhog Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six more weeks'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the Jewish New Year called?",
@@ -647,7 +754,11 @@
         "title": "Wikipedia: Rosh Hashanah",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'New Year'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which poem begins 'Twas the night before Christmas'?",
@@ -666,7 +777,11 @@
         "title": "Wikipedia: A Visit from St. Nicholas",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'night before Christmas'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Poinsettias, the red Christmas plants, first came from which country?",
@@ -685,7 +800,11 @@
         "title": "Wikipedia: Poinsettia",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Mexico'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Mother's Day in the US is on the second Sunday of which month?",
@@ -704,7 +823,11 @@
         "title": "Wikipedia: Mother's Day (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'second Sunday in May'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Father's Day in the US is in which month?",
@@ -717,13 +840,18 @@
       "correct": "June",
       "difficulty": "medium",
       "category": "Holidays & seasons",
-      "explain": "Father's Day is the third Sunday in June.",
+      "explain": "In the US, Father's Day is the third Sunday in June.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Father's_Day",
         "title": "Wikipedia: Father's Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'June'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: the date varies by country (e.g. May in Romania, September in Australia); now says 'In the US'"
+      }
     },
     {
       "question": "Boxing Day is celebrated on which day?",
@@ -742,7 +870,11 @@
         "title": "Wikipedia: Boxing Day",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '26 December'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "On what date is Juneteenth?",
@@ -755,13 +887,18 @@
       "correct": "June 19",
       "difficulty": "medium",
       "category": "Holidays & seasons",
-      "explain": "Juneteenth marks the end of slavery in the United States.",
+      "explain": "Juneteenth celebrates the emancipation of enslaved African Americans.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Juneteenth",
         "title": "Wikipedia: Juneteenth",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'June 19'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'the end of slavery in the United States' over-claims (June 19, 1865 was emancipation in Texas; the 13th Amendment came that December); now 'celebrates the emancipation of enslaved African Americans'"
+      }
     },
     {
       "question": "Leap Day falls on which date?",
@@ -780,7 +917,11 @@
         "title": "Wikipedia: February 29",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'leap'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which ancient Celtic festival is thought to be one of the roots of Halloween?",
@@ -799,10 +940,14 @@
         "title": "Wikipedia: Samhain",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Halloween'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
-      "question": "In which year did Lincoln proclaim Thanksgiving a national holiday?",
+      "question": "In which year did Lincoln proclaim a national day of Thanksgiving?",
       "answers": [
         "1863",
         "1776",
@@ -818,7 +963,12 @@
         "title": "Wikipedia: Thanksgiving (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1863'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question: Lincoln proclaimed a national day of thanksgiving in 1863 (page: 'began annual national proclamations ... in 1863'); it was not made a legal national holiday then, so 'national holiday' is now 'national day of Thanksgiving'"
+      }
     },
     {
       "question": "Which president signed the law fixing Thanksgiving as the fourth Thursday of November?",
@@ -837,7 +987,11 @@
         "title": "Wikipedia: Thanksgiving (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roosevelt'; '1941'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which year was the first Macy's Thanksgiving Day Parade?",
@@ -856,29 +1010,14 @@
         "title": "Wikipedia: Macy's Thanksgiving Day Parade",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1924'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
-      "question": "Who wrote A Christmas Carol in 1843?",
-      "answers": [
-        "Charles Dickens",
-        "Mark Twain",
-        "Lewis Carroll",
-        "Jane Austen"
-      ],
-      "correct": "Charles Dickens",
-      "difficulty": "hard",
-      "category": "Holidays & seasons",
-      "explain": "Dickens gave us Scrooge and Tiny Tim.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/A_Christmas_Carol",
-        "title": "Wikipedia: A Christmas Carol",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Dickens'; '1843'."
-      },
-      "ai_written": true
-    },
-    {
-      "question": "The Twelve Days of Christmas end with which feast?",
+      "question": "The Twelve Days of Christmas lead up to which feast?",
       "answers": [
         "Epiphany",
         "New Year's Day",
@@ -888,13 +1027,18 @@
       "correct": "Epiphany",
       "difficulty": "hard",
       "category": "Holidays & seasons",
-      "explain": "The twelve days run from Christmas to Epiphany on January 6.",
+      "explain": "The twelve days run from Christmas Day to January 5, the eve of Epiphany on January 6.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Twelve_Days_of_Christmas",
         "title": "Wikipedia: Twelve Days of Christmas",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Epiphany'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question+explanation: Wikipedia gives the twelve days as 25 December - 5 January, with Epiphany on 6 January just after, so they do not 'end with' Epiphany; now 'lead up to', and the explanation gives the right dates"
+      }
     },
     {
       "question": "How many candle holders does a Hanukkah menorah have, counting the helper candle?",
@@ -913,7 +1057,11 @@
         "title": "Wikipedia: Hanukkah menorah",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'nine'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Before pumpkins, what did people in Ireland carve for jack-o'-lanterns?",
@@ -932,7 +1080,11 @@
         "title": "Wikipedia: Jack-o'-lantern",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'turnip'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In the Southern Hemisphere, in which month does summer begin?",
@@ -951,7 +1103,11 @@
         "title": "Wikipedia: December solstice",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Southern Hemisphere'; 'summer'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which country celebrates Thanksgiving on the second Monday of October?",
@@ -970,7 +1126,11 @@
         "title": "Wikipedia: Thanksgiving (Canada)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'second Monday'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which year was Kwanzaa first celebrated?",
@@ -989,7 +1149,11 @@
         "title": "Wikipedia: Kwanzaa",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1966'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the 40-day season before Easter called?",
@@ -1000,15 +1164,20 @@
         "Epiphany"
       ],
       "correct": "Lent",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Holidays & seasons",
-      "explain": "Lent begins on Ash Wednesday.",
+      "explain": "In Western churches, Lent begins on Ash Wednesday.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Lent",
         "title": "Wikipedia: Lent",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ash Wednesday'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: Eastern churches begin Lent on Clean Monday (Wikipedia: 'begins on Ash Wednesday (western) on Clean Monday (eastern)'); now 'In Western churches'. difficulty: hard -> medium, Lent is widely known"
+      }
     },
     {
       "question": "The four weeks before Christmas make up which season?",
@@ -1019,7 +1188,7 @@
         "Pentecost"
       ],
       "correct": "Advent",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Holidays & seasons",
       "explain": "Advent calendars count down the days to Christmas.",
       "source": {
@@ -1027,7 +1196,12 @@
         "title": "Wikipedia: Advent",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Christmas'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Advent (and Advent calendars) are widely known"
+      }
     },
     {
       "question": "In which year did the first New Year's Eve ball drop in Times Square?",
@@ -1046,7 +1220,11 @@
         "title": "Wikipedia: Times Square Ball",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1907'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Mexico's Independence Day is on which date?",
@@ -1065,7 +1243,11 @@
         "title": "Wikipedia: Cinco de Mayo",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'September 16'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The name Halloween comes from which older name?",
@@ -1076,7 +1258,7 @@
         "Hall of Winter"
       ],
       "correct": "All Hallows' Eve",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Holidays & seasons",
       "explain": "It is the evening before All Hallows' (All Saints') Day.",
       "source": {
@@ -1084,7 +1266,12 @@
         "title": "Wikipedia: Halloween",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'All Hallows'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 'All Hallows' Eve' is familiar to a fair share of adults"
+      }
     },
     {
       "question": "What causes Earth's seasons?",
@@ -1103,7 +1290,11 @@
         "title": "Wikipedia: Season",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tilt'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "At which Chinese festival do people eat mooncakes?",
@@ -1122,7 +1313,11 @@
         "title": "Wikipedia: Mid-Autumn Festival",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'mooncake'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The 1621 harvest feast at Plymouth was shared with which Native American people?",
@@ -1141,7 +1336,11 @@
         "title": "Wikipedia: Thanksgiving (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Wampanoag'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In the Northern Hemisphere, in which month does autumn begin?",
@@ -1152,15 +1351,20 @@
         "November"
       ],
       "correct": "September",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Holidays & seasons",
-      "explain": "The September equinox marks the start of autumn in the north.",
+      "explain": "The September equinox marks the start of astronomical autumn in the north.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/September_equinox",
         "title": "Wikipedia: September equinox",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'autumn'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of adults know autumn starts in September; explanation: added 'astronomical' (meteorological autumn starts September 1 - same month, so the answer stands)"
+      }
     },
     {
       "question": "On which day is the White House Easter Egg Roll held?",
@@ -1179,7 +1383,11 @@
         "title": "Wikipedia: White House Easter Egg Roll",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Easter Monday'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }

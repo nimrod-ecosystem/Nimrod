@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Sports (AI-written, not yet reviewed)",
-  "description": "60 questions on sports, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "60 questions on sports, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 13 easy, 20 medium, 19 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -33,7 +33,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'five players'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport do you hit a home run?",
@@ -53,7 +57,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'baseball'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which sport is played at Wimbledon?",
@@ -73,7 +81,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tennis'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport do players hit a puck?",
@@ -93,7 +105,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ice hockey'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In golf, what do you try to hit the ball into?",
@@ -113,7 +129,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hole'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many points is a touchdown worth in American football?",
@@ -133,7 +153,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six points'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport do players make a slam dunk?",
@@ -153,7 +177,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'basketball'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In soccer, players score by kicking the ball into the what?",
@@ -173,7 +201,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'net'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many players does a soccer team have on the field?",
@@ -192,7 +224,11 @@
         "title": "Wikipedia: Association football",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eleven'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In tennis, what is a score of zero called?",
@@ -211,7 +247,11 @@
         "title": "Wikipedia: Tennis scoring",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'love'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How often are the Summer Olympic Games usually held?",
@@ -230,7 +270,11 @@
         "title": "Wikipedia: Olympic Games",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four years'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In ten-pin bowling, how many pins are set up?",
@@ -249,7 +293,11 @@
         "title": "Wikipedia: Ten-pin bowling",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ten pins'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Golfers shout which word to warn people a ball is coming?",
@@ -268,7 +316,11 @@
         "title": "Wikipedia: Fore (golf)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'warn'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What shape is the ball in American football?",
@@ -286,7 +338,11 @@
         "ref": "common knowledge",
         "note": "Universally recognised; an American football's pointed oval shape is seen on every broadcast."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Super Bowl is the championship game of which sport?",
@@ -305,7 +361,11 @@
         "title": "Wikipedia: Super Bowl",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'National Football League'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many rings are on the Olympic flag?",
@@ -318,13 +378,18 @@
       "correct": "Five",
       "difficulty": "easy",
       "category": "Sports",
-      "explain": "The five rings stand for the world's continents joined together.",
+      "explain": "The five rings stand for the inhabited continents of the world, joined together.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Olympic_symbols",
         "title": "Wikipedia: Olympic symbols",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'five'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'the world's continents' implies all of them (usually counted as seven); page says the rings represent the inhabited continents"
+      }
     },
     {
       "question": "In the Tour de France, how do the racers travel?",
@@ -343,7 +408,11 @@
         "title": "Wikipedia: Tour de France",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bicycle'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the area where a boxing match takes place called?",
@@ -362,7 +431,11 @@
         "title": "Wikipedia: Boxing ring",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'boxing'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The World Series is played in which sport?",
@@ -381,7 +454,11 @@
         "title": "Wikipedia: World Series",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Major League Baseball'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport do you use a shuttlecock?",
@@ -400,7 +477,11 @@
         "title": "Wikipedia: Shuttlecock",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'badminton'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How long is a marathon?",
@@ -419,7 +500,11 @@
         "title": "Wikipedia: Marathon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '42.195'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Stanley Cup is the trophy for which sport?",
@@ -438,7 +523,11 @@
         "title": "Wikipedia: Stanley Cup",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hockey'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many holes are in a standard round of golf?",
@@ -457,7 +546,11 @@
         "title": "Wikipedia: Golf",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '18 holes'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which country did the modern Olympic Games begin in 1896?",
@@ -476,7 +569,11 @@
         "title": "Wikipedia: 1896 Summer Olympics",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Athens'; 'Greece'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many points is a free throw worth in basketball?",
@@ -495,7 +592,11 @@
         "title": "Wikipedia: Free throw",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'one point'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In tennis, what is a serve the other player cannot touch called?",
@@ -514,7 +615,11 @@
         "title": "Wikipedia: Ace (tennis)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'serve'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is a perfect score in one game of ten-pin bowling?",
@@ -533,7 +638,11 @@
         "title": "Wikipedia: Perfect game (bowling)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '300'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In baseball, how many strikes make an out?",
@@ -544,7 +653,7 @@
         "Five"
       ],
       "correct": "Three",
-      "difficulty": "medium",
+      "difficulty": "easy",
       "category": "Sports",
       "explain": "Three strikes and the batter is out.",
       "source": {
@@ -552,7 +661,12 @@
         "title": "Wikipedia: Strikeout",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three strikes'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: medium -> easy, 'three strikes and you're out' is known to most adults"
+      }
     },
     {
       "question": "How many players does each team have on a volleyball court?",
@@ -571,7 +685,11 @@
         "title": "Wikipedia: Volleyball",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six players'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport do teams compete for the America's Cup?",
@@ -590,7 +708,11 @@
         "title": "Wikipedia: America's Cup",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'sailing'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which country did the sport of judo begin?",
@@ -609,7 +731,11 @@
         "title": "Wikipedia: Judo",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Japan'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which city is the Kentucky Derby run?",
@@ -628,7 +754,11 @@
         "title": "Wikipedia: Kentucky Derby",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Louisville'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many periods are in a regular ice hockey game?",
@@ -647,7 +777,11 @@
         "title": "Wikipedia: Ice hockey",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three periods'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In soccer, which player may use their hands in their own penalty area?",
@@ -660,13 +794,18 @@
       "correct": "Goalkeeper",
       "difficulty": "medium",
       "category": "Sports",
-      "explain": "Only the goalkeeper may handle the ball, and only in their own box.",
+      "explain": "In open play, only the goalkeeper may handle the ball, and only in their own penalty area.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/Goalkeeper_(association_football)",
         "title": "Wikipedia: Goalkeeper (association football)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hands'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'only the goalkeeper may handle the ball' is false as written, every outfield player takes throw-ins with their hands; now 'in open play'"
+      }
     },
     {
       "question": "How long is an Olympic swimming pool?",
@@ -685,7 +824,11 @@
         "title": "Wikipedia: Olympic-size swimming pool",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '50'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Masters, played at Augusta National, is a tournament in which sport?",
@@ -704,7 +847,11 @@
         "title": "Wikipedia: Masters Tournament",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Augusta'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In American football, how many points is a field goal worth?",
@@ -723,7 +870,11 @@
         "title": "Wikipedia: Field goal",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three points'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In bowling, what is three strikes in a row called?",
@@ -742,7 +893,11 @@
         "title": "Wikipedia: Strike (bowling)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'turkey'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In golf, what is a score of one under par on a hole called?",
@@ -761,7 +916,11 @@
         "title": "Wikipedia: Par (score)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'birdie'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In tennis, what is the score called when both players have 40?",
@@ -780,7 +939,11 @@
         "title": "Wikipedia: Tennis scoring",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'deuce'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How far apart are the bases on a Major League Baseball field?",
@@ -799,7 +962,11 @@
         "title": "Wikipedia: Baseball field",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '90 feet'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How high is a regulation basketball hoop above the floor?",
@@ -810,7 +977,7 @@
         "9 feet"
       ],
       "correct": "10 feet",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Sports",
       "explain": "The rim is 10 feet (3.05 m) off the floor.",
       "source": {
@@ -818,7 +985,12 @@
         "title": "Wikipedia: Basketball",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '10 feet'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, the 10-foot hoop is widely known"
+      }
     },
     {
       "question": "In which year were the first Winter Olympics held?",
@@ -837,7 +1009,11 @@
         "title": "Wikipedia: 1924 Winter Olympics",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Chamonix'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which city hosted the 1984 Summer Olympics?",
@@ -856,7 +1032,11 @@
         "title": "Wikipedia: 1984 Summer Olympics",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Los Angeles'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How far is it from the pitcher's rubber to home plate in Major League Baseball?",
@@ -875,7 +1055,11 @@
         "title": "Wikipedia: Pitcher's mound",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '60 feet 6 inches'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In golf, what is a score of three under par on one hole called?",
@@ -894,7 +1078,11 @@
         "title": "Wikipedia: Par (score)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'albatross'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many players per team are on the field in rugby union?",
@@ -913,7 +1101,11 @@
         "title": "Wikipedia: Rugby union",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '15 players'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Ryder Cup is a team competition in which sport?",
@@ -932,7 +1124,11 @@
         "title": "Wikipedia: Ryder Cup",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'golf'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In cricket, how many balls are bowled in a standard over?",
@@ -951,7 +1147,11 @@
         "title": "Wikipedia: Over (cricket)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In cricket, what is it called when a batter is out without scoring?",
@@ -970,7 +1170,11 @@
         "title": "Wikipedia: Duck (cricket)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'zero'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which country won the first FIFA World Cup in 1930?",
@@ -989,7 +1193,11 @@
         "title": "Wikipedia: 1930 FIFA World Cup",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Uruguay'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "At which Olympic Games did Jesse Owens win four gold medals?",
@@ -1008,7 +1216,11 @@
         "title": "Wikipedia: Jesse Owens",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1936'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many minutes long is a regulation NBA game?",
@@ -1027,7 +1239,11 @@
         "title": "Wikipedia: Rules of basketball",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '48 minutes'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In which sport would you perform a 'clean and jerk'?",
@@ -1046,7 +1262,11 @@
         "title": "Wikipedia: Clean and jerk",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'weightlifting'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the name of the trophy given to the Super Bowl winner?",
@@ -1065,7 +1285,11 @@
         "title": "Wikipedia: Vince Lombardi Trophy",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Super Bowl'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "James Naismith invented basketball in 1891. In which country was he born?",
@@ -1084,7 +1308,11 @@
         "title": "Wikipedia: James Naismith",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Canadian'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Davis Cup is a team competition in which sport?",
@@ -1103,7 +1331,11 @@
         "title": "Wikipedia: Davis Cup",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tennis'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "The Kentucky Derby, the Preakness Stakes and which race make up the US Triple Crown?",
@@ -1122,7 +1354,11 @@
         "title": "Wikipedia: Triple Crown of Thoroughbred Racing (United States)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Belmont Stakes'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "In baseball, what is it called when a pitcher allows no hits in a full game?",
@@ -1135,13 +1371,18 @@
       "correct": "A no-hitter",
       "difficulty": "hard",
       "category": "Sports",
-      "explain": "A no-hitter is a complete game with no hits allowed.",
+      "explain": "In a no-hitter, the other team gets no hits for the whole game.",
       "source": {
         "url": "https://en.wikipedia.org/wiki/No-hitter",
         "title": "Wikipedia: No-hitter",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'no hits'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'a complete game' is wrong for combined no-hitters thrown by two or more pitchers (the page lists them); now says the other team gets no hits"
+      }
     },
     {
       "question": "How many hurdles are in an Olympic 110-metre hurdles race?",
@@ -1160,7 +1401,11 @@
         "title": "Wikipedia: 110 metres hurdles",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ten hurdles'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }
