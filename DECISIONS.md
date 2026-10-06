@@ -2280,3 +2280,21 @@ carrying them out, open to change.
    (*"so we can watch Netflix and stuff"*) until it is locked again. Nothing that is playing stops, and locking puts
    up no screen that only an input can leave: only the exits go. The Pi side (kiosk and watchdog) is planned in
    writing and built later on the bench.
+
+## The lock keeps the dashboards open; "I call them" for everyone or for one person; questions at every level -- 2026-10-05 (later)
+
+Mike, live. Item 1 narrows item 6 of the 2026-10-05 entry above. That entry's "the ways out and the setup go"
+was Code's reading, and Mike corrected it.
+
+1. **Locked means no way out to the computer or to logins, nothing more.** *"They can change to different
+   dashboards and modules. Do anything you could normally do in a dashboard. I just don't want people foraging
+   around the computer for logins or anything."* Switching dashboards and modules, the library and editing stay
+   while locked. Leaving the browser goes, and so do sign-in and key pages, file pickers and links out.
+2. **"I call them" at two levels:** the whole account, or one person on it. *"Maybe there should be an option to
+   set I call them at account vs user levels."* Mike calls Christine "Christine", so her own screen's greeting
+   isn't an issue for him. A label still never greets the person it labels on their own screen, as a safe default.
+3. **Lots of questions at pretty much every level,** for Christine, Oscar and Mike. No automatic question writing
+   exists yet: the nightly batch is still an open decision. Code writes packs by hand into packs_review/, with a
+   source for each item and a fact-check pass, and Mike reviews by playing.
+4. **The bench Pi runs the new site** (Mike, 2026-10-05). So the Pi side of the lock is built on the bench, not
+   left as a plan.
