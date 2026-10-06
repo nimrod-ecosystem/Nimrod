@@ -104,6 +104,19 @@ function checkTriviaItem(it) {
   return bad;
 }
 
+// *** A PACK'S `difficulty` AS A LEVEL (2026-10-05). *** The ladder (rating.js / adaptive_play.js) counts
+// levels from 1, the easiest; a question's level is where its rating STARTS, and play moves it from there.
+// easy 1, medium 2, hard 3: one level per word, in order, so a question marked hard starts two levels
+// (300 rating points, about 85/15 odds at rating.js's numbers) above one marked easy. ARGUED against a
+// wider spread (easy 1, medium 3, hard 5): the gaps would be a guess about how much harder "medium" is,
+// while the ratings find the real gaps by play anyway; and three levels runs Mike's threshold curve
+// (rating.js thresholdsAt) from end to end the same way five do. Anything else (no difficulty, a word
+// this file does not know) is null: the caller decides what an unlevelled item means.
+export const DIFFICULTY_LEVELS = Object.freeze({ easy: 1, medium: 2, hard: 3 });
+export function difficultyLevel(d) {
+  return DIFFICULTY_LEVELS[String(d == null ? '' : d).trim().toLowerCase()] || null;
+}
+
 function checkWordsItem(it) {
   const bad = [];
   if (!it || typeof it.word !== 'string' || !it.word.trim()) bad.push('word is required');
