@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Food and cooking - hard (AI-written, not yet reviewed)",
-  "description": "21 questions on food & cooking (6 hard, 14 medium, 1 easy), written by Claude as an add-on to the easier 'Food & cooking' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "39 questions on food & cooking (21 hard, 17 medium, 1 easy), written by Claude as an add-on to the easier 'Food & cooking' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. A second writing pass on 2026-10-05 added 18 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 15 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -512,6 +512,426 @@
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05",
         "fixed": "difficulty: hard -> medium, 'firm to the bite' is widely known"
+      }
+    },
+    {
+      "question": "The Middle Eastern salad tabbouleh is made mostly of which chopped herb?",
+      "answers": [
+        "Parsley",
+        "Mint",
+        "Coriander",
+        "Dill"
+      ],
+      "correct": "Parsley",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Tabbouleh is mainly finely chopped parsley, with mint, tomato, onion and bulgur.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tabbouleh",
+        "title": "Wikipedia: Tabbouleh",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Levantine salad of finely chopped parsley'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What do chefs call having every ingredient measured, chopped and ready before cooking starts?",
+      "answers": [
+        "Mise en place",
+        "Sous vide",
+        "Amuse-bouche",
+        "Bain-marie"
+      ],
+      "correct": "Mise en place",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Mise en place is French for 'putting into place'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mise_en_place",
+        "title": "Wikipedia: Mise en place",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'putting into place'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which spice is made from the lacy red covering around a nutmeg seed?",
+      "answers": [
+        "Mace",
+        "Cloves",
+        "Allspice",
+        "Cardamom"
+      ],
+      "correct": "Mace",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Nutmeg and mace come from the same fruit: nutmeg is the seed and mace is the red aril around it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nutmeg",
+        "title": "Wikipedia: Nutmeg",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'mace', 'aril'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is 'beurre noisette' in French cooking?",
+      "answers": [
+        "Browned butter",
+        "Hazelnut cream",
+        "Clarified butter",
+        "Nut oil dressing"
+      ],
+      "correct": "Browned butter",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Beurre noisette is butter cooked until it browns and smells nutty, like hazelnuts.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Beurre_noisette",
+        "title": "Wikipedia: Beurre noisette",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'loosely: brown butter'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Baklava is made with layers of which very thin pastry?",
+      "answers": [
+        "Filo",
+        "Puff",
+        "Choux",
+        "Shortcrust"
+      ],
+      "correct": "Filo",
+      "difficulty": "medium",
+      "category": "Food & cooking",
+      "explain": "Baklava layers paper-thin filo pastry with chopped nuts and syrup or honey.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Baklava",
+        "title": "Wikipedia: Baklava",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Layered filo pastry dessert'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 'very thin' gives it away"
+      }
+    },
+    {
+      "question": "Hollandaise sauce is an emulsion of butter, lemon juice and what?",
+      "answers": [
+        "Egg yolks",
+        "Cream",
+        "Mustard",
+        "Egg whites"
+      ],
+      "correct": "Egg yolks",
+      "difficulty": "medium",
+      "category": "Food & cooking",
+      "explain": "Hollandaise is made by whisking egg yolks with melted butter and lemon juice.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hollandaise_sauce",
+        "title": "Wikipedia: Hollandaise sauce",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Main ingredients Egg yolk'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, hollandaise on eggs Benedict is widely known"
+      }
+    },
+    {
+      "question": "Which French 'mother sauce' is milk thickened with a white roux?",
+      "answers": [
+        "Béchamel",
+        "Velouté",
+        "Espagnole",
+        "Hollandaise"
+      ],
+      "correct": "Béchamel",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Béchamel, the classic white sauce, is milk thickened with a roux of butter and flour.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/B%C3%A9chamel_sauce",
+        "title": "Wikipedia: Béchamel sauce",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'mother sauces', 'roux and milk'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Japanese dashi stock is usually made from kombu seaweed and flakes of which dried, smoked fish?",
+      "answers": [
+        "Bonito",
+        "Salmon",
+        "Cod",
+        "Eel"
+      ],
+      "correct": "Bonito",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Classic dashi uses kombu and katsuobushi, shaved flakes of simmered, smoked and fermented bonito (skipjack tuna).",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Katsuobushi",
+        "title": "Wikipedia: Katsuobushi",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'simmered , smoked and fermented skipjack tuna', 'sometimes referred to as bonito', 'kombu —are the main ingredients of dashi'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractor Mackerel -> Cod (bonito is in the mackerel family); source moved to the Katsuobushi page, which says 'smoked'"
+      }
+    },
+    {
+      "question": "What is the large, vase-shaped clay oven used in South Asian cooking for naan called?",
+      "answers": [
+        "Tandoor",
+        "Tagine",
+        "Kamado",
+        "Kiln"
+      ],
+      "correct": "Tandoor",
+      "difficulty": "medium",
+      "category": "Food & cooking",
+      "explain": "Naan and tandoori chicken are cooked in a tandoor, a very hot clay oven.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tandoor",
+        "title": "Wikipedia: Tandoor",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'large vase-shaped oven , usually made of clay'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question: 'cylindrical' -> 'vase-shaped' (the page's wording); distractor Wok -> Kamado; difficulty: hard -> medium, 'naan' gives it away"
+      }
+    },
+    {
+      "question": "Which Italian rice is a classic choice for risotto?",
+      "answers": [
+        "Arborio",
+        "Basmati",
+        "Jasmine",
+        "Wild rice"
+      ],
+      "correct": "Arborio",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Starchy Arborio rice gives risotto its creamy texture.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Arborio_rice",
+        "title": "Wikipedia: Arborio rice",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Arborio rice is often used to make risotto'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "dropped 'short-grain' and the long-grain clause, which the cited page does not support"
+      }
+    },
+    {
+      "question": "The tangelo is a cross between a tangerine and which other fruit?",
+      "answers": [
+        "Pomelo",
+        "Lemon",
+        "Lime",
+        "Kumquat"
+      ],
+      "correct": "Pomelo",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "A tangelo is a hybrid of a tangerine with a pomelo or grapefruit.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tangelo",
+        "title": "Wikipedia: Tangelo",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'portmanteau of 'tangerine' and 'pomelo''."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "answer 'Pomelo or grapefruit' -> 'Pomelo' (the hedged answer gave itself away by length)"
+      }
+    },
+    {
+      "question": "Before New Zealand growers renamed it, what was the kiwifruit commonly called?",
+      "answers": [
+        "Chinese gooseberry",
+        "Hairy plum",
+        "Jade apple",
+        "Southern fig"
+      ],
+      "correct": "Chinese gooseberry",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "New Zealand exporters began calling it kiwifruit in 1959; before that it was sold as the Chinese gooseberry.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kiwifruit",
+        "title": "Wikipedia: Kiwifruit",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Chinese gooseberry', 'In 1959, Turners & Growers'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is the Japanese breaded, deep-fried pork cutlet called?",
+      "answers": [
+        "Tonkatsu",
+        "Teriyaki",
+        "Tempura",
+        "Yakitori"
+      ],
+      "correct": "Tonkatsu",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Tonkatsu is a pork cutlet coated in panko breadcrumbs and deep-fried.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tonkatsu",
+        "title": "Wikipedia: Tonkatsu",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'coated with panko (bread crumbs) and then deep-fried'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Halloumi, the squeaky cheese that can be grilled without melting, comes from which island?",
+      "answers": [
+        "Cyprus",
+        "Sicily",
+        "Crete",
+        "Malta"
+      ],
+      "correct": "Cyprus",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Halloumi has been made in Cyprus for centuries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Halloumi",
+        "title": "Wikipedia: Halloumi",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Place of origin Cyprus'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Bouillabaisse, the fish stew, comes from which French port city?",
+      "answers": [
+        "Marseille",
+        "Bordeaux",
+        "Nice",
+        "Brest"
+      ],
+      "correct": "Marseille",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Bouillabaisse is the traditional fish stew of Marseille.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bouillabaisse",
+        "title": "Wikipedia: Bouillabaisse",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'originating in the port city of Marseille'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which herb gives béarnaise sauce its distinctive flavor?",
+      "answers": [
+        "Tarragon",
+        "Basil",
+        "Rosemary",
+        "Sage"
+      ],
+      "correct": "Tarragon",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Béarnaise is a butter and egg-yolk sauce flavored with tarragon and shallots.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/B%C3%A9arnaise_sauce",
+        "title": "Wikipedia: Béarnaise sauce",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'uses shallot', 'and tarragon'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Ghee, used widely in South Asian cooking, is a kind of what?",
+      "answers": [
+        "Clarified butter",
+        "Fermented yogurt",
+        "Coconut oil",
+        "Soft cheese"
+      ],
+      "correct": "Clarified butter",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Ghee is butter simmered until the water cooks off and the milk solids are removed.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ghee",
+        "title": "Wikipedia: Ghee",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'is a type of clarified butter'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Manchego cheese, made from sheep's milk, comes from which country?",
+      "answers": [
+        "Spain",
+        "Italy",
+        "Portugal",
+        "Greece"
+      ],
+      "correct": "Spain",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Manchego is made in the La Mancha region of Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Manchego",
+        "title": "Wikipedia: Manchego",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'made in the La Mancha region of Spain'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
       }
     }
   ]
