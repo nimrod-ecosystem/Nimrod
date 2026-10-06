@@ -1,0 +1,1164 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Science and nature (AI-written, not yet reviewed)",
+  "description": "60 questions on science & nature, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which planet do we live on?",
+      "answers": [
+        "Earth",
+        "Mars",
+        "Venus",
+        "Jupiter"
+      ],
+      "correct": "Earth",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "We live on Earth, the third planet from the Sun.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known; every reader knows they live on Earth."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "The Sun is a kind of what?",
+      "answers": [
+        "Star",
+        "Planet",
+        "Moon",
+        "Comet"
+      ],
+      "correct": "Star",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "The Sun is a star, the closest one to us.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sun",
+        "title": "Wikipedia: Sun",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'star'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What hot, melted rock comes out of a volcano?",
+      "answers": [
+        "Lava",
+        "Snow",
+        "Sand",
+        "Mud"
+      ],
+      "correct": "Lava",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Melted rock that pours out of a volcano is called lava.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lava",
+        "title": "Wikipedia: Lava",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'volcano'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Rain falls from what?",
+      "answers": [
+        "Clouds",
+        "Trees",
+        "Mountains",
+        "Rainbows"
+      ],
+      "correct": "Clouds",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Rain is water that falls from clouds.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known everyday weather fact."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What do we call the colourful arc in the sky after rain?",
+      "answers": [
+        "Rainbow",
+        "Lightning",
+        "Thunder",
+        "Fog"
+      ],
+      "correct": "Rainbow",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Sunlight shining through raindrops makes a rainbow.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rainbow",
+        "title": "Wikipedia: Rainbow",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'droplets'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which season has the most snow in places like Canada?",
+      "answers": [
+        "Winter",
+        "Summer",
+        "Spring",
+        "Fall"
+      ],
+      "correct": "Winter",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Winter is the coldest season, when snow falls most.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known; snow falls in winter in cold climates."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What does a seed grow into?",
+      "answers": [
+        "A plant",
+        "A rock",
+        "A cloud",
+        "A shell"
+      ],
+      "correct": "A plant",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Give a seed soil, water and light and it grows into a plant.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Seed",
+        "title": "Wikipedia: Seed",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'plant'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What shines in the sky at night and changes shape over the month?",
+      "answers": [
+        "The Moon",
+        "The Sun",
+        "A rainbow",
+        "A cloud"
+      ],
+      "correct": "The Moon",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "The Moon seems to change shape as we see more or less of its lit side.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lunar_phase",
+        "title": "Wikipedia: Lunar phase",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Moon'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What is the closest star to Earth?",
+      "answers": [
+        "The Sun",
+        "Polaris",
+        "Sirius",
+        "Alpha Centauri"
+      ],
+      "correct": "The Sun",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "The Sun is a star, and it is the nearest one to us.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sun",
+        "title": "Wikipedia: Sun",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'nearest star'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which planet is famous for its big, bright rings?",
+      "answers": [
+        "Saturn",
+        "Mars",
+        "Mercury",
+        "Venus"
+      ],
+      "correct": "Saturn",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Saturn's rings are made of ice and rock.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saturn",
+        "title": "Wikipedia: Saturn",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'rings'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many planets are in our solar system?",
+      "answers": [
+        "Eight",
+        "Seven",
+        "Nine",
+        "Ten"
+      ],
+      "correct": "Eight",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Since 2006 the solar system has eight planets; Pluto is a dwarf planet.",
+      "source": {
+        "url": "https://science.nasa.gov/solar-system/planets/",
+        "title": "NASA Science",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eight'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What force pulls things down toward the ground?",
+      "answers": [
+        "Gravity",
+        "Magnetism",
+        "Friction",
+        "Wind"
+      ],
+      "correct": "Gravity",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Gravity is what makes a dropped apple fall.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gravity",
+        "title": "Wikipedia: Gravity",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Earth'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which part of a plant takes in water from the soil?",
+      "answers": [
+        "Roots",
+        "Leaves",
+        "Flowers",
+        "Seeds"
+      ],
+      "correct": "Roots",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Roots soak up water and hold the plant in place.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Root",
+        "title": "Wikipedia: Root",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'water'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the hardest natural material?",
+      "answers": [
+        "Diamond",
+        "Gold",
+        "Iron",
+        "Granite"
+      ],
+      "correct": "Diamond",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Diamond is the hardest natural substance known.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Diamond",
+        "title": "Wikipedia: Diamond",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hardest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which organ pumps blood around the body?",
+      "answers": [
+        "Heart",
+        "Lungs",
+        "Liver",
+        "Stomach"
+      ],
+      "correct": "Heart",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "The heart is a muscle that pumps blood.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Heart",
+        "title": "Wikipedia: Heart",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'blood'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call a scientist who studies stars and planets?",
+      "answers": [
+        "Astronomer",
+        "Geologist",
+        "Botanist",
+        "Chemist"
+      ],
+      "correct": "Astronomer",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Astronomers study space and everything in it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Astronomer",
+        "title": "Wikipedia: Astronomer",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'astronomy'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do bees carry from flower to flower?",
+      "answers": [
+        "Pollen",
+        "Sand",
+        "Salt",
+        "Seeds"
+      ],
+      "correct": "Pollen",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Bees carry pollen, which helps plants make fruit and seeds.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pollination",
+        "title": "Wikipedia: Pollination",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bees'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the name of the galaxy we live in?",
+      "answers": [
+        "Milky Way",
+        "Andromeda",
+        "Sombrero",
+        "Whirlpool"
+      ],
+      "correct": "Milky Way",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Our solar system is part of the Milky Way.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Milky_Way",
+        "title": "Wikipedia: Milky Way",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Solar System'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call a group of stars that makes a picture in the sky?",
+      "answers": [
+        "Constellation",
+        "Galaxy",
+        "Comet",
+        "Nebula"
+      ],
+      "correct": "Constellation",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "The Big Dipper is part of a constellation.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Constellation",
+        "title": "Wikipedia: Constellation",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'stars'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which planet is closest to the Sun?",
+      "answers": [
+        "Mercury",
+        "Venus",
+        "Mars",
+        "Earth"
+      ],
+      "correct": "Mercury",
+      "difficulty": "easy",
+      "category": "Science & nature",
+      "explain": "Mercury is the smallest planet and the nearest to the Sun.",
+      "source": {
+        "url": "https://science.nasa.gov/mercury/facts/",
+        "title": "NASA Science",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'closest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What gas do plants take in from the air to make food?",
+      "answers": [
+        "Carbon dioxide",
+        "Oxygen",
+        "Nitrogen",
+        "Helium"
+      ],
+      "correct": "Carbon dioxide",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Plants use carbon dioxide, water and sunlight to make sugar.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Photosynthesis",
+        "title": "Wikipedia: Photosynthesis",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'carbon dioxide'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the chemical symbol for gold?",
+      "answers": [
+        "Au",
+        "Ag",
+        "Gd",
+        "Go"
+      ],
+      "correct": "Au",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Au comes from aurum, the Latin word for gold.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gold",
+        "title": "Wikipedia: Gold",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Au'; 'aurum'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the largest organ of the human body?",
+      "answers": [
+        "Skin",
+        "Liver",
+        "Heart",
+        "Lungs"
+      ],
+      "correct": "Skin",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Your skin is the body's largest organ.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Human_skin",
+        "title": "Wikipedia: Human skin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest organ'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many bones are in the adult human body?",
+      "answers": [
+        "206",
+        "186",
+        "226",
+        "306"
+      ],
+      "correct": "206",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "A baby has more bones, but many join together, leaving 206.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Human_skeleton",
+        "title": "Wikipedia: Human skeleton",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '206'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What gives plants their green colour?",
+      "answers": [
+        "Chlorophyll",
+        "Carotene",
+        "Melanin",
+        "Keratin"
+      ],
+      "correct": "Chlorophyll",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Chlorophyll is green and helps plants catch sunlight.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chlorophyll",
+        "title": "Wikipedia: Chlorophyll",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'green'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What kind of rock forms when lava cools?",
+      "answers": [
+        "Igneous rock",
+        "Sedimentary rock",
+        "Metamorphic rock",
+        "Limestone"
+      ],
+      "correct": "Igneous rock",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Igneous rock forms from cooled melted rock.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Igneous_rock",
+        "title": "Wikipedia: Igneous rock",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lava'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the centre of an atom called?",
+      "answers": [
+        "Nucleus",
+        "Electron",
+        "Shell",
+        "Molecule"
+      ],
+      "correct": "Nucleus",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Protons and neutrons sit in the nucleus at the centre.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atomic_nucleus",
+        "title": "Wikipedia: Atomic nucleus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'nucleus'; 'center'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which blood cells carry oxygen around the body?",
+      "answers": [
+        "Red blood cells",
+        "White blood cells",
+        "Platelets",
+        "Plasma cells"
+      ],
+      "correct": "Red blood cells",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Red blood cells carry oxygen from the lungs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Red_blood_cell",
+        "title": "Wikipedia: Red blood cell",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'oxygen'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the chemical name for table salt?",
+      "answers": [
+        "Sodium chloride",
+        "Potassium chloride",
+        "Calcium carbonate",
+        "Sodium bicarbonate"
+      ],
+      "correct": "Sodium chloride",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Table salt is sodium chloride.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sodium_chloride",
+        "title": "Wikipedia: Sodium chloride",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'table salt'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call the study of weather?",
+      "answers": [
+        "Meteorology",
+        "Geology",
+        "Astrology",
+        "Ecology"
+      ],
+      "correct": "Meteorology",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Meteorologists study and forecast the weather.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Meteorology",
+        "title": "Wikipedia: Meteorology",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'weather'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the most common gas in the air we breathe?",
+      "answers": [
+        "Nitrogen",
+        "Oxygen",
+        "Carbon dioxide",
+        "Argon"
+      ],
+      "correct": "Nitrogen",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "About 78 percent of the air is nitrogen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atmosphere_of_Earth",
+        "title": "Wikipedia: Atmosphere of Earth",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'nitrogen'; '78'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How long does it take the Earth to go once around the Sun?",
+      "answers": [
+        "About one year",
+        "One day",
+        "One month",
+        "Ten years"
+      ],
+      "correct": "About one year",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "One trip around the Sun takes about 365 days.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Earth's_orbit",
+        "title": "Wikipedia: Earth's orbit",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '365'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What kind of animal is a whale?",
+      "answers": [
+        "Mammal",
+        "Fish",
+        "Reptile",
+        "Amphibian"
+      ],
+      "correct": "Mammal",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Whales breathe air and feed their babies milk, like other mammals.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Whale",
+        "title": "Wikipedia: Whale",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'mammal'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which vitamin does your skin make in sunlight?",
+      "answers": [
+        "Vitamin D",
+        "Vitamin C",
+        "Vitamin A",
+        "Vitamin B12"
+      ],
+      "correct": "Vitamin D",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Sunlight on the skin helps the body make vitamin D.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Vitamin_D",
+        "title": "Wikipedia: Vitamin D",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'skin'; 'sun'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "At what temperature does water freeze on the Celsius scale?",
+      "answers": [
+        "0 degrees",
+        "32 degrees",
+        "10 degrees",
+        "100 degrees"
+      ],
+      "correct": "0 degrees",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "On the Celsius scale water freezes at 0 and boils at 100.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Celsius",
+        "title": "Wikipedia: Celsius",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'freezing point'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which planet is the hottest in our solar system?",
+      "answers": [
+        "Venus",
+        "Mercury",
+        "Mars",
+        "Jupiter"
+      ],
+      "correct": "Venus",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Venus's thick clouds trap heat, so it is hotter than Mercury.",
+      "source": {
+        "url": "https://science.nasa.gov/venus/facts/",
+        "title": "NASA Science",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hottest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call an animal that eats both plants and meat?",
+      "answers": [
+        "Omnivore",
+        "Herbivore",
+        "Carnivore",
+        "Insectivore"
+      ],
+      "correct": "Omnivore",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Omnivores, like bears and people, eat both plants and meat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Omnivore",
+        "title": "Wikipedia: Omnivore",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'plant'; 'animal'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What particle in an atom has no electric charge?",
+      "answers": [
+        "Neutron",
+        "Proton",
+        "Electron",
+        "Ion"
+      ],
+      "correct": "Neutron",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Neutrons are neutral, which is how they got their name.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Neutron",
+        "title": "Wikipedia: Neutron",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'charge'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is a diamond made of?",
+      "answers": [
+        "Carbon",
+        "Silicon",
+        "Glass",
+        "Iron"
+      ],
+      "correct": "Carbon",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "A diamond is carbon atoms packed in a very strong pattern.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Diamond",
+        "title": "Wikipedia: Diamond",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'carbon'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call animals that are active at night?",
+      "answers": [
+        "Nocturnal",
+        "Diurnal",
+        "Aquatic",
+        "Migratory"
+      ],
+      "correct": "Nocturnal",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Owls and bats are nocturnal: they come out at night.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nocturnality",
+        "title": "Wikipedia: Nocturnality",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'night'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the chemical symbol for potassium?",
+      "answers": [
+        "K",
+        "P",
+        "Po",
+        "Pt"
+      ],
+      "correct": "K",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "K comes from kalium, the Latin name for potassium.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Potassium",
+        "title": "Wikipedia: Potassium",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kalium'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Roughly how fast does light travel?",
+      "answers": [
+        "About 300,000 km per second",
+        "About 30,000 km per second",
+        "About 3,000 km per second",
+        "About 3 million km per second"
+      ],
+      "correct": "About 300,000 km per second",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Light travels about 299,792 kilometres every second.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Speed_of_light",
+        "title": "Wikipedia: Speed of light",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '299792'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which element has the chemical symbol Fe?",
+      "answers": [
+        "Iron",
+        "Fluorine",
+        "Francium",
+        "Fermium"
+      ],
+      "correct": "Iron",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Fe comes from ferrum, the Latin word for iron.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Iron",
+        "title": "Wikipedia: Iron",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ferrum'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which planet spins on its side?",
+      "answers": [
+        "Uranus",
+        "Neptune",
+        "Saturn",
+        "Mars"
+      ],
+      "correct": "Uranus",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Uranus is tipped over, so it rolls around the Sun on its side.",
+      "source": {
+        "url": "https://science.nasa.gov/uranus/facts/",
+        "title": "NASA Science",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'side'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which part of a cell is often called its powerhouse?",
+      "answers": [
+        "Mitochondria",
+        "Ribosome",
+        "Nucleus",
+        "Golgi apparatus"
+      ],
+      "correct": "Mitochondria",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Mitochondria turn food into energy the cell can use.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mitochondrion",
+        "title": "Wikipedia: Mitochondrion",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'powerhouse'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who developed the theory of general relativity?",
+      "answers": [
+        "Albert Einstein",
+        "Isaac Newton",
+        "Niels Bohr",
+        "Galileo Galilei"
+      ],
+      "correct": "Albert Einstein",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Einstein published general relativity in 1915.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/General_relativity",
+        "title": "Wikipedia: General relativity",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Einstein'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the most common element in the universe?",
+      "answers": [
+        "Hydrogen",
+        "Helium",
+        "Oxygen",
+        "Carbon"
+      ],
+      "correct": "Hydrogen",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Hydrogen makes up most of the ordinary matter in the universe.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hydrogen",
+        "title": "Wikipedia: Hydrogen",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'abundant'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Sound travels fastest through which of these?",
+      "answers": [
+        "Steel",
+        "Air",
+        "Water",
+        "Wood"
+      ],
+      "correct": "Steel",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Sound moves faster through solids like steel than through water or air.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Speed_of_sound",
+        "title": "Wikipedia: Speed of sound",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'steel'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the unit of electrical resistance?",
+      "answers": [
+        "Ohm",
+        "Volt",
+        "Ampere",
+        "Watt"
+      ],
+      "correct": "Ohm",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Resistance is measured in ohms, named after Georg Ohm.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ohm",
+        "title": "Wikipedia: Ohm",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'resistance'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many chambers does the human heart have?",
+      "answers": [
+        "Four",
+        "Two",
+        "Three",
+        "Six"
+      ],
+      "correct": "Four",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "The heart has two upper and two lower chambers.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Heart",
+        "title": "Wikipedia: Heart",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four chambers'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the pH of pure water at room temperature?",
+      "answers": [
+        "7",
+        "0",
+        "5",
+        "14"
+      ],
+      "correct": "7",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Pure water is neutral, with a pH of 7.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/PH",
+        "title": "Wikipedia: PH",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'neutral'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which layer of the atmosphere holds the ozone layer?",
+      "answers": [
+        "Stratosphere",
+        "Troposphere",
+        "Mesosphere",
+        "Thermosphere"
+      ],
+      "correct": "Stratosphere",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "The ozone layer sits in the stratosphere and blocks much of the Sun's UV light.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ozone_layer",
+        "title": "Wikipedia: Ozone layer",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'stratosphere'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What was the name of the supercontinent that formed about 300 million years ago?",
+      "answers": [
+        "Pangaea",
+        "Gondwana",
+        "Laurasia",
+        "Rodinia"
+      ],
+      "correct": "Pangaea",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "All the main land masses were joined together as Pangaea.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pangaea",
+        "title": "Wikipedia: Pangaea",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'supercontinent'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who discovered penicillin in 1928?",
+      "answers": [
+        "Alexander Fleming",
+        "Louis Pasteur",
+        "Marie Curie",
+        "Joseph Lister"
+      ],
+      "correct": "Alexander Fleming",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Fleming noticed mould killing bacteria in a dish in his lab.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Penicillin",
+        "title": "Wikipedia: Penicillin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Fleming'; '1928'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the largest moon of Saturn?",
+      "answers": [
+        "Titan",
+        "Europa",
+        "Ganymede",
+        "Io"
+      ],
+      "correct": "Titan",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Titan is Saturn's biggest moon and has a thick atmosphere.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Titan_(moon)",
+        "title": "Wikipedia: Titan (moon)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What shape is a DNA molecule?",
+      "answers": [
+        "Double helix",
+        "Single ring",
+        "Flat sheet",
+        "Triple cube"
+      ],
+      "correct": "Double helix",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "DNA looks like a twisted ladder, called a double helix.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/DNA",
+        "title": "Wikipedia: DNA",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'double helix'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is absolute zero on the Celsius scale?",
+      "answers": [
+        "-273.15 °C",
+        "-100 °C",
+        "-180 °C",
+        "-373.15 °C"
+      ],
+      "correct": "-273.15 °C",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Absolute zero, the coldest possible temperature, is -273.15 °C.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Absolute_zero",
+        "title": "Wikipedia: Absolute zero",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '273.15'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who wrote On the Origin of Species in 1859?",
+      "answers": [
+        "Charles Darwin",
+        "Gregor Mendel",
+        "Alfred Wegener",
+        "Carl Linnaeus"
+      ],
+      "correct": "Charles Darwin",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Darwin's book explained evolution by natural selection.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/On_the_Origin_of_Species",
+        "title": "Wikipedia: On the Origin of Species",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Darwin'; '1859'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does a light-year measure?",
+      "answers": [
+        "Distance",
+        "Time",
+        "Brightness",
+        "Speed"
+      ],
+      "correct": "Distance",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "A light-year is how far light travels in a year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Light-year",
+        "title": "Wikipedia: Light-year",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'distance'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which scientist described the laws of motion in the 1680s?",
+      "answers": [
+        "Isaac Newton",
+        "Galileo Galilei",
+        "Johannes Kepler",
+        "Nicolaus Copernicus"
+      ],
+      "correct": "Isaac Newton",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Newton set out his three laws of motion in 1687.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Newton's_laws_of_motion",
+        "title": "Wikipedia: Newton's laws of motion",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1687'."
+      },
+      "ai_written": true
+    }
+  ]
+}

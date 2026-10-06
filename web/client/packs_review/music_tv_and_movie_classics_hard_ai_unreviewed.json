@@ -1,0 +1,418 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Music, TV and movie classics - hard (AI-written, not yet reviewed)",
+  "description": "21 HARD questions on music, tv & movies, written by Claude as an add-on to the easier 'Music, TV & movies' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Who composed The Four Seasons?",
+      "answers": [
+        "Antonio Vivaldi",
+        "Johann Sebastian Bach",
+        "Wolfgang Amadeus Mozart",
+        "George Frideric Handel"
+      ],
+      "correct": "Antonio Vivaldi",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Vivaldi wrote The Four Seasons around 1720.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Four_Seasons_(Vivaldi)",
+        "title": "Wikipedia: The Four Seasons (Vivaldi)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Vivaldi'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which film won the first Academy Award for Best Picture?",
+      "answers": [
+        "Wings",
+        "The Jazz Singer",
+        "Metropolis",
+        "Gone with the Wind"
+      ],
+      "correct": "Wings",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Wings, a 1927 film about pilots, won the top award in 1929.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wings_(1927_film)",
+        "title": "Wikipedia: Wings (1927 film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Academy Award'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who played Rick in Casablanca?",
+      "answers": [
+        "Humphrey Bogart",
+        "Cary Grant",
+        "Clark Gable",
+        "James Stewart"
+      ],
+      "correct": "Humphrey Bogart",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Bogart starred with Ingrid Bergman in the 1942 film.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Casablanca_(film)",
+        "title": "Wikipedia: Casablanca (film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Bogart'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who became the Beatles' drummer in 1962?",
+      "answers": [
+        "Ringo Starr",
+        "Pete Best",
+        "George Harrison",
+        "Charlie Watts"
+      ],
+      "correct": "Ringo Starr",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Ringo replaced Pete Best in August 1962.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ringo_Starr",
+        "title": "Wikipedia: Ringo Starr",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1962'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which TV show featured Hawkeye Pierce and Radar O'Reilly?",
+      "answers": [
+        "M*A*S*H",
+        "Hogan's Heroes",
+        "Cheers",
+        "Taxi"
+      ],
+      "correct": "M*A*S*H",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "M*A*S*H ran from 1972 to 1983.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/M*A*S*H_(TV_series)",
+        "title": "Wikipedia: M*A*S*H (TV series)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Hawkeye'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who directed the 1975 film Jaws?",
+      "answers": [
+        "Steven Spielberg",
+        "George Lucas",
+        "Francis Ford Coppola",
+        "Martin Scorsese"
+      ],
+      "correct": "Steven Spielberg",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Jaws made Spielberg famous.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jaws_(film)",
+        "title": "Wikipedia: Jaws (film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Spielberg'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which musical features the song Memory?",
+      "answers": [
+        "Cats",
+        "Evita",
+        "The Phantom of the Opera",
+        "Les Misérables"
+      ],
+      "correct": "Cats",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Memory is sung by Grizabella in Cats.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cats_(musical)",
+        "title": "Wikipedia: Cats (musical)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Memory'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In The Wizard of Oz (1939), what is the name of Dorothy's dog?",
+      "answers": [
+        "Toto",
+        "Rover",
+        "Spot",
+        "Benji"
+      ],
+      "correct": "Toto",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Toto is a little Cairn Terrier.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1939_film)",
+        "title": "Wikipedia: The Wizard of Oz (1939 film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Toto'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who recorded What a Wonderful World in 1967?",
+      "answers": [
+        "Louis Armstrong",
+        "Nat King Cole",
+        "Ray Charles",
+        "Sam Cooke"
+      ],
+      "correct": "Louis Armstrong",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Armstrong's gravelly voice made the song famous.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/What_a_Wonderful_World",
+        "title": "Wikipedia: What a Wonderful World",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Armstrong'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many children were in The Brady Bunch?",
+      "answers": [
+        "Six",
+        "Four",
+        "Five",
+        "Eight"
+      ],
+      "correct": "Six",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Three boys and three girls made up the bunch.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Brady_Bunch",
+        "title": "Wikipedia: The Brady Bunch",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three boys'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who composed the music for the ballet The Nutcracker?",
+      "answers": [
+        "Pyotr Ilyich Tchaikovsky",
+        "Igor Stravinsky",
+        "Sergei Prokofiev",
+        "Sergei Rachmaninoff"
+      ],
+      "correct": "Pyotr Ilyich Tchaikovsky",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "The Nutcracker was first performed in 1892.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Nutcracker",
+        "title": "Wikipedia: The Nutcracker",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Tchaikovsky'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the captain of the starship Enterprise in the original Star Trek?",
+      "answers": [
+        "James T. Kirk",
+        "Jean-Luc Picard",
+        "Han Solo",
+        "Spock"
+      ],
+      "correct": "James T. Kirk",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "William Shatner played Captain Kirk from 1966.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Star_Trek:_The_Original_Series",
+        "title": "Wikipedia: Star Trek: The Original Series",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Kirk'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which 1950s show starred Jackie Gleason as bus driver Ralph Kramden?",
+      "answers": [
+        "The Honeymooners",
+        "I Love Lucy",
+        "Leave It to Beaver",
+        "The Jack Benny Program"
+      ],
+      "correct": "The Honeymooners",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "The Honeymooners is set in a Brooklyn apartment.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Honeymooners",
+        "title": "Wikipedia: The Honeymooners",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Kramden'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who wrote the music for West Side Story?",
+      "answers": [
+        "Leonard Bernstein",
+        "Richard Rodgers",
+        "Stephen Sondheim",
+        "Cole Porter"
+      ],
+      "correct": "Leonard Bernstein",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Bernstein wrote the music; Sondheim wrote the lyrics.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/West_Side_Story",
+        "title": "Wikipedia: West Side Story",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Bernstein'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Motown group was led by Diana Ross?",
+      "answers": [
+        "The Supremes",
+        "The Temptations",
+        "Martha and the Vandellas",
+        "The Marvelettes"
+      ],
+      "correct": "The Supremes",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Diana Ross sang lead for the Supremes in the 1960s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Supremes",
+        "title": "Wikipedia: The Supremes",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Diana Ross'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which 1977 film opens with 'A long time ago in a galaxy far, far away'?",
+      "answers": [
+        "Star Wars",
+        "Close Encounters of the Third Kind",
+        "Star Trek",
+        "E.T."
+      ],
+      "correct": "Star Wars",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Star Wars opened in May 1977.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Star_Wars_(film)",
+        "title": "Wikipedia: Star Wars (film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'galaxy far'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In Peanuts, which instrument does Schroeder play?",
+      "answers": [
+        "Toy piano",
+        "Drums",
+        "Violin",
+        "Trumpet"
+      ],
+      "correct": "Toy piano",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Schroeder loves Beethoven and plays a toy piano.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Schroeder_(Peanuts)",
+        "title": "Wikipedia: Schroeder (Peanuts)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'piano'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which instrument did Duke Ellington play?",
+      "answers": [
+        "Piano",
+        "Saxophone",
+        "Trumpet",
+        "Clarinet"
+      ],
+      "correct": "Piano",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Ellington led his famous orchestra from the piano.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Duke_Ellington",
+        "title": "Wikipedia: Duke Ellington",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pian'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Gone with the Wind (1939) is set mainly in which state?",
+      "answers": [
+        "Georgia",
+        "Virginia",
+        "Alabama",
+        "South Carolina"
+      ],
+      "correct": "Georgia",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Scarlett O'Hara's home, Tara, is in Georgia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gone_with_the_Wind_(film)",
+        "title": "Wikipedia: Gone with the Wind (film)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Georgia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which TV detective wore a rumpled raincoat and drove an old Peugeot?",
+      "answers": [
+        "Columbo",
+        "Kojak",
+        "Magnum",
+        "Rockford"
+      ],
+      "correct": "Columbo",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Peter Falk played Lieutenant Columbo.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Columbo",
+        "title": "Wikipedia: Columbo",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'raincoat'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which singer was nicknamed the Velvet Fog?",
+      "answers": [
+        "Mel Tormé",
+        "Bing Crosby",
+        "Perry Como",
+        "Tony Bennett"
+      ],
+      "correct": "Mel Tormé",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Mel Tormé also co-wrote The Christmas Song.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mel_Tormé",
+        "title": "Wikipedia: Mel Tormé",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Velvet Fog'."
+      },
+      "ai_written": true
+    }
+  ]
+}

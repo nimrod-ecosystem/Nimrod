@@ -1,0 +1,1163 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Words and spelling (AI-written, not yet reviewed)",
+  "description": "60 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is the opposite of up?",
+      "answers": [
+        "Down",
+        "Over",
+        "Out",
+        "Near"
+      ],
+      "correct": "Down",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Up and down are opposites.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Basic English opposites; known to any English speaker."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which word means very big?",
+      "answers": [
+        "Huge",
+        "Tiny",
+        "Quiet",
+        "Slow"
+      ],
+      "correct": "Huge",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Huge means very, very big.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/huge",
+        "title": "Wiktionary: huge",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'large'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which word means happy?",
+      "answers": [
+        "Glad",
+        "Sad",
+        "Angry",
+        "Tired"
+      ],
+      "correct": "Glad",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "If you are glad, you are happy.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/glad",
+        "title": "Wiktionary: glad",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'happy'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What is the opposite of day?",
+      "answers": [
+        "Night",
+        "Noon",
+        "Morning",
+        "Week"
+      ],
+      "correct": "Night",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Day and night are opposites.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Basic English opposites; known to any English speaker."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a pal'?",
+      "answers": [
+        "Friend",
+        "Freind",
+        "Frend",
+        "Freend"
+      ],
+      "correct": "Friend",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Friend is spelled F-R-I-E-N-D.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/friend",
+        "title": "Wiktionary: friend",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'friend'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which word rhymes with cat?",
+      "answers": [
+        "Hat",
+        "Dog",
+        "Cup",
+        "Sun"
+      ],
+      "correct": "Hat",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Cat and hat end with the same sound.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Rhyme is self-evident from the sound of the words."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which word means the same as start?",
+      "answers": [
+        "Begin",
+        "Stop",
+        "End",
+        "Wait"
+      ],
+      "correct": "Begin",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "To begin is to start.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/begin",
+        "title": "Wiktionary: begin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'start'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What is the opposite of open?",
+      "answers": [
+        "Closed",
+        "Empty",
+        "Wide",
+        "Bright"
+      ],
+      "correct": "Closed",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "A door is either open or closed.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Basic English opposites; known to any English speaker."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'for the reason that'?",
+      "answers": [
+        "Because",
+        "Becuase",
+        "Becaus",
+        "Beacause"
+      ],
+      "correct": "Because",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Because is spelled B-E-C-A-U-S-E.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/because",
+        "title": "Wiktionary: because",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'because'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the opposite of early?",
+      "answers": [
+        "Late",
+        "Soon",
+        "Fast",
+        "First"
+      ],
+      "correct": "Late",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "If you are not early, you might be late.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/early",
+        "title": "Wiktionary: early",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'late'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which word means very tired?",
+      "answers": [
+        "Exhausted",
+        "Excited",
+        "Hungry",
+        "Curious"
+      ],
+      "correct": "Exhausted",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Exhausted means completely worn out.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/exhausted",
+        "title": "Wiktionary: exhausted",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tired'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'very pretty'?",
+      "answers": [
+        "Beautiful",
+        "Beutiful",
+        "Beautifull",
+        "Beatiful"
+      ],
+      "correct": "Beautiful",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Beautiful has 'beau' at the start and one L at the end.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/beautiful",
+        "title": "Wiktionary: beautiful",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'beautiful'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which word means the same as quick?",
+      "answers": [
+        "Fast",
+        "Slow",
+        "Heavy",
+        "Soft"
+      ],
+      "correct": "Fast",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Quick and fast mean the same thing.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/quick",
+        "title": "Wiktionary: quick",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fast'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'the day after today'?",
+      "answers": [
+        "Tomorrow",
+        "Tommorow",
+        "Tomorow",
+        "Tommorrow"
+      ],
+      "correct": "Tomorrow",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Tomorrow has one M and two Rs.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/tomorrow",
+        "title": "Wiktionary: tomorrow",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tomorrow'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does enormous mean?",
+      "answers": [
+        "Very large",
+        "Very small",
+        "Very old",
+        "Very loud"
+      ],
+      "correct": "Very large",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "An enormous thing is very large.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/enormous",
+        "title": "Wiktionary: enormous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'large'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a place to borrow books'?",
+      "answers": [
+        "Library",
+        "Libary",
+        "Liberry",
+        "Librery"
+      ],
+      "correct": "Library",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Library has an R after the B: li-BRAR-y.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/library",
+        "title": "Wiktionary: library",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'library'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which word means to look at something closely?",
+      "answers": [
+        "Examine",
+        "Ignore",
+        "Forget",
+        "Shout"
+      ],
+      "correct": "Examine",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "To examine is to look at carefully.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/examine",
+        "title": "Wiktionary: examine",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'observe'; 'carefully'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a chart of the days and months'?",
+      "answers": [
+        "Calendar",
+        "Calender",
+        "Calandar",
+        "Calandre"
+      ],
+      "correct": "Calendar",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Calendar ends in -dar.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/calendar",
+        "title": "Wiktionary: calendar",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'calendar'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the opposite of brave?",
+      "answers": [
+        "Cowardly",
+        "Bold",
+        "Strong",
+        "Kind"
+      ],
+      "correct": "Cowardly",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Brave is the opposite of cowardly.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/brave",
+        "title": "Wiktionary: brave",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cowardly'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does the word ancient mean?",
+      "answers": [
+        "Very old",
+        "Very new",
+        "Very fast",
+        "Very rare"
+      ],
+      "correct": "Very old",
+      "difficulty": "easy",
+      "category": "Words & spelling",
+      "explain": "Ancient things come from long, long ago.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/ancient",
+        "title": "Wiktionary: ancient",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'old'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'needed'?",
+      "answers": [
+        "Necessary",
+        "Neccessary",
+        "Necessery",
+        "Neccesary"
+      ],
+      "correct": "Necessary",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Necessary has one C and two Ss.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/necessary",
+        "title": "Wiktionary: necessary",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'necessary'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'apart'?",
+      "answers": [
+        "Separate",
+        "Seperate",
+        "Separete",
+        "Seperete"
+      ],
+      "correct": "Separate",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "There's 'a rat' in sep-A-RAT-e.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/separate",
+        "title": "Wiktionary: separate",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'separate'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the opposite of expand?",
+      "answers": [
+        "Shrink",
+        "Grow",
+        "Widen",
+        "Stretch"
+      ],
+      "correct": "Shrink",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "To expand is to get bigger; to shrink is to get smaller.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/shrink",
+        "title": "Wiktionary: shrink",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'smaller'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does fragile mean?",
+      "answers": [
+        "Easily broken",
+        "Very heavy",
+        "Brightly coloured",
+        "Hard to find"
+      ],
+      "correct": "Easily broken",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Fragile things, like glass, break easily.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/fragile",
+        "title": "Wiktionary: fragile",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'easily broken'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'the beat in music'?",
+      "answers": [
+        "Rhythm",
+        "Rythm",
+        "Rhythym",
+        "Rhytm"
+      ],
+      "correct": "Rhythm",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Rhythm has no vowels except the Ys: R-H-Y-T-H-M.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/rhythm",
+        "title": "Wiktionary: rhythm",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'rhythm'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does reluctant mean?",
+      "answers": [
+        "Unwilling",
+        "Eager",
+        "Lucky",
+        "Loud"
+      ],
+      "correct": "Unwilling",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "A reluctant person doesn't really want to do something.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/reluctant",
+        "title": "Wiktionary: reluctant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'unwilling'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'to make someone feel awkward'?",
+      "answers": [
+        "Embarrass",
+        "Embarass",
+        "Embarras",
+        "Embaress"
+      ],
+      "correct": "Embarrass",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Embarrass has two Rs and two Ss.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/embarrass",
+        "title": "Wiktionary: embarrass",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'embarrass'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which word means the same as courageous?",
+      "answers": [
+        "Brave",
+        "Afraid",
+        "Careless",
+        "Gentle"
+      ],
+      "correct": "Brave",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Courageous people are brave.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/courageous",
+        "title": "Wiktionary: courageous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'brave'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'for sure'?",
+      "answers": [
+        "Definitely",
+        "Definately",
+        "Definitly",
+        "Defenitely"
+      ],
+      "correct": "Definitely",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Definitely comes from 'finite': de-FINITE-ly.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/definitely",
+        "title": "Wiktionary: definitely",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'definitely'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does humid mean?",
+      "answers": [
+        "Damp and muggy",
+        "Very dry",
+        "Very windy",
+        "Very cold"
+      ],
+      "correct": "Damp and muggy",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Humid air is full of moisture.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/humid",
+        "title": "Wiktionary: humid",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'moist'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the opposite of ancient?",
+      "answers": [
+        "Modern",
+        "Old",
+        "Antique",
+        "Historic"
+      ],
+      "correct": "Modern",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Ancient means very old; modern means of today.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/modern",
+        "title": "Wiktionary: modern",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'present'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a special event'?",
+      "answers": [
+        "Occasion",
+        "Ocassion",
+        "Occassion",
+        "Ocasion"
+      ],
+      "correct": "Occasion",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Occasion has two Cs and one S.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/occasion",
+        "title": "Wiktionary: occasion",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'occasion'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does nocturnal mean?",
+      "answers": [
+        "Active at night",
+        "Active by day",
+        "Living in water",
+        "Eating plants"
+      ],
+      "correct": "Active at night",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Nocturnal animals, like owls, come out at night.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/nocturnal",
+        "title": "Wiktionary: nocturnal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'night'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a place to eat out'?",
+      "answers": [
+        "Restaurant",
+        "Restaraunt",
+        "Resturant",
+        "Restaurent"
+      ],
+      "correct": "Restaurant",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Restaurant ends in -aurant.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/restaurant",
+        "title": "Wiktionary: restaurant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'restaurant'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does vacant mean?",
+      "answers": [
+        "Empty",
+        "Busy",
+        "Crowded",
+        "Noisy"
+      ],
+      "correct": "Empty",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "A vacant room has nobody in it.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/vacant",
+        "title": "Wiktionary: vacant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'empty'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'to suggest something good'?",
+      "answers": [
+        "Recommend",
+        "Reccomend",
+        "Recomend",
+        "Reccommend"
+      ],
+      "correct": "Recommend",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Recommend has one C and two Ms.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/recommend",
+        "title": "Wiktionary: recommend",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'recommend'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does punctual mean?",
+      "answers": [
+        "On time",
+        "Very late",
+        "Very rude",
+        "Full of holes"
+      ],
+      "correct": "On time",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "A punctual person arrives on time.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/punctual",
+        "title": "Wiktionary: punctual",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'on time'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'the second month'?",
+      "answers": [
+        "February",
+        "Febuary",
+        "Februery",
+        "Febrary"
+      ],
+      "correct": "February",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "February has an R after the B: Feb-RU-ary.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/February",
+        "title": "Wiktionary: February",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does abundant mean?",
+      "answers": [
+        "Plentiful",
+        "Scarce",
+        "Tiny",
+        "Hidden"
+      ],
+      "correct": "Plentiful",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "Abundant means there is plenty of something.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/abundant",
+        "title": "Wiktionary: abundant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'plentiful'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does meander mean?",
+      "answers": [
+        "To wander slowly",
+        "To run fast",
+        "To shout loudly",
+        "To build quickly"
+      ],
+      "correct": "To wander slowly",
+      "difficulty": "medium",
+      "category": "Words & spelling",
+      "explain": "A river that meanders winds back and forth.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/meander",
+        "title": "Wiktionary: meander",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'wander'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'to make room for'?",
+      "answers": [
+        "Accommodate",
+        "Accomodate",
+        "Acommodate",
+        "Accommadate"
+      ],
+      "correct": "Accommodate",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Accommodate has two Cs and two Ms.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/accommodate",
+        "title": "Wiktionary: accommodate",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'accommodate'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does ephemeral mean?",
+      "answers": [
+        "Lasting a very short time",
+        "Lasting forever",
+        "Very large",
+        "Very loud"
+      ],
+      "correct": "Lasting a very short time",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Ephemeral things, like soap bubbles, don't last long.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/ephemeral",
+        "title": "Wiktionary: ephemeral",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'short'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'careful and hard-working'?",
+      "answers": [
+        "Conscientious",
+        "Conscientous",
+        "Consciencious",
+        "Concientious"
+      ],
+      "correct": "Conscientious",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Conscientious is 'conscience' plus -tious.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/conscientious",
+        "title": "Wiktionary: conscientious",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'conscientious'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does gregarious mean?",
+      "answers": [
+        "Sociable",
+        "Shy",
+        "Greedy",
+        "Grumpy"
+      ],
+      "correct": "Sociable",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "A gregarious person enjoys being with others.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/gregarious",
+        "title": "Wiktionary: gregarious",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'socializing'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a thousand years'?",
+      "answers": [
+        "Millennium",
+        "Millenium",
+        "Milennium",
+        "Millenneum"
+      ],
+      "correct": "Millennium",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Millennium has two Ls and two Ns.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/millennium",
+        "title": "Wiktionary: millennium",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'millennium'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does ubiquitous mean?",
+      "answers": [
+        "Found everywhere",
+        "Very rare",
+        "Very old",
+        "Hard to see"
+      ],
+      "correct": "Found everywhere",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Something ubiquitous seems to be everywhere at once.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/ubiquitous",
+        "title": "Wiktionary: ubiquitous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'everywhere'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a link between groups'?",
+      "answers": [
+        "Liaison",
+        "Liason",
+        "Laison",
+        "Liasion"
+      ],
+      "correct": "Liaison",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Liaison has an I on both sides of the A: li-AI-son.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/liaison",
+        "title": "Wiktionary: liaison",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'liaison'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does loquacious mean?",
+      "answers": [
+        "Very talkative",
+        "Very quiet",
+        "Very lazy",
+        "Very lucky"
+      ],
+      "correct": "Very talkative",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "A loquacious person loves to talk.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/loquacious",
+        "title": "Wiktionary: loquacious",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'talk'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'playfully naughty'?",
+      "answers": [
+        "Mischievous",
+        "Mischievious",
+        "Mischevious",
+        "Mischeivous"
+      ],
+      "correct": "Mischievous",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Mischievous has three syllables: MIS-chi-vous.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/mischievous",
+        "title": "Wiktionary: mischievous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'mischievous'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does benevolent mean?",
+      "answers": [
+        "Kind and generous",
+        "Cruel",
+        "Forgetful",
+        "Proud"
+      ],
+      "correct": "Kind and generous",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "A benevolent person wants to do good for others.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/benevolent",
+        "title": "Wiktionary: benevolent",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kind'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'rule by offices and paperwork'?",
+      "answers": [
+        "Bureaucracy",
+        "Beaurocracy",
+        "Burocracy",
+        "Bureaucrasy"
+      ],
+      "correct": "Bureaucracy",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Bureaucracy starts with 'bureau'.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/bureaucracy",
+        "title": "Wiktionary: bureaucracy",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bureaucracy'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does pusillanimous mean?",
+      "answers": [
+        "Cowardly",
+        "Generous",
+        "Tiny",
+        "Cheerful"
+      ],
+      "correct": "Cowardly",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Pusillanimous means lacking courage.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/pusillanimous",
+        "title": "Wiktionary: pusillanimous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cowardice'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a list of questions'?",
+      "answers": [
+        "Questionnaire",
+        "Questionaire",
+        "Questionnare",
+        "Quesionnaire"
+      ],
+      "correct": "Questionnaire",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Questionnaire has two Ns.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/questionnaire",
+        "title": "Wiktionary: questionnaire",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'questionnaire'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does magnanimous mean?",
+      "answers": [
+        "Generous in forgiving",
+        "Very angry",
+        "Very small",
+        "Easily scared"
+      ],
+      "correct": "Generous in forgiving",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "A magnanimous person is big-hearted, even toward a rival.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/magnanimous",
+        "title": "Wiktionary: magnanimous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'generous'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a king of ancient Egypt'?",
+      "answers": [
+        "Pharaoh",
+        "Pharoah",
+        "Pharoh",
+        "Farao"
+      ],
+      "correct": "Pharaoh",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Pharaoh ends with -aoh.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/pharaoh",
+        "title": "Wiktionary: pharaoh",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pharaoh'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does esoteric mean?",
+      "answers": [
+        "Understood by only a few",
+        "Known by everyone",
+        "Very cheap",
+        "Very happy"
+      ],
+      "correct": "Understood by only a few",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Esoteric knowledge belongs to a small group of experts.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/esoteric",
+        "title": "Wiktionary: esoteric",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'few'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does frugal mean?",
+      "answers": [
+        "Careful with money",
+        "Wasteful",
+        "Very rich",
+        "Very angry"
+      ],
+      "correct": "Careful with money",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "A frugal person avoids spending more than needed.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/frugal",
+        "title": "Wiktionary: frugal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'thrifty'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a word that sounds like its meaning, like buzz'?",
+      "answers": [
+        "Onomatopoeia",
+        "Onomatopia",
+        "Onomatopeia",
+        "Onamatopoeia"
+      ],
+      "correct": "Onomatopoeia",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Onomatopoeia ends in -poeia.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/onomatopoeia",
+        "title": "Wiktionary: onomatopoeia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'onomatopoeia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does serendipity mean?",
+      "answers": [
+        "A happy accident",
+        "A sad ending",
+        "A strong storm",
+        "A long journey"
+      ],
+      "correct": "A happy accident",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Serendipity is finding something good without looking for it.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/serendipity",
+        "title": "Wiktionary: serendipity",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'accident'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spelling is right for the word meaning 'a cloth for your nose'?",
+      "answers": [
+        "Handkerchief",
+        "Handkercheif",
+        "Hankerchief",
+        "Handkerchef"
+      ],
+      "correct": "Handkerchief",
+      "difficulty": "hard",
+      "category": "Words & spelling",
+      "explain": "Handkerchief keeps the D: hand-ker-chief.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/handkerchief",
+        "title": "Wiktionary: handkerchief",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'handkerchief'."
+      },
+      "ai_written": true
+    }
+  ]
+}

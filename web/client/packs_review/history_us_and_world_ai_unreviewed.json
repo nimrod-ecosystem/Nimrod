@@ -1,0 +1,1167 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "History, US and world (AI-written, not yet reviewed)",
+  "description": "60 questions on history, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which country gave the Statue of Liberty to the United States?",
+      "answers": [
+        "France",
+        "England",
+        "Spain",
+        "Italy"
+      ],
+      "correct": "France",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The statue was a gift of friendship from the people of France.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Statue_of_Liberty",
+        "title": "Wikipedia: Statue of Liberty",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'France'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Who was the first person to walk on the Moon?",
+      "answers": [
+        "Neil Armstrong",
+        "Buzz Aldrin",
+        "John Glenn",
+        "Yuri Gagarin"
+      ],
+      "correct": "Neil Armstrong",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Neil Armstrong stepped onto the Moon in 1969.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Neil_Armstrong",
+        "title": "Wikipedia: Neil Armstrong",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first person to walk on the Moon'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which inventor is famous for making a practical light bulb?",
+      "answers": [
+        "Thomas Edison",
+        "Henry Ford",
+        "Benjamin Franklin",
+        "Alexander Graham Bell"
+      ],
+      "correct": "Thomas Edison",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Edison's team made a long-lasting electric light bulb in 1879.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thomas_Edison",
+        "title": "Wikipedia: Thomas Edison",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'light bulb'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Whose face is on the US penny?",
+      "answers": [
+        "Abraham Lincoln",
+        "George Washington",
+        "Thomas Jefferson",
+        "Benjamin Franklin"
+      ],
+      "correct": "Abraham Lincoln",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Lincoln has been on the penny since 1909.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Penny_(United_States_coin)",
+        "title": "Wikipedia: Penny (United States coin)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Lincoln'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "In 1492, Christopher Columbus sailed across which ocean?",
+      "answers": [
+        "Atlantic Ocean",
+        "Pacific Ocean",
+        "Indian Ocean",
+        "Arctic Ocean"
+      ],
+      "correct": "Atlantic Ocean",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Columbus sailed west from Spain across the Atlantic.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Christopher_Columbus",
+        "title": "Wikipedia: Christopher Columbus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Atlantic'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "The Wright brothers are famous for the first powered what?",
+      "answers": [
+        "Airplane flight",
+        "Car ride",
+        "Train trip",
+        "Boat race"
+      ],
+      "correct": "Airplane flight",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Orville and Wilbur Wright flew the first powered airplane in 1903.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wright_brothers",
+        "title": "Wikipedia: Wright brothers",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'airplane'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Who is famous for inventing the telephone?",
+      "answers": [
+        "Alexander Graham Bell",
+        "Thomas Edison",
+        "Samuel Morse",
+        "Henry Ford"
+      ],
+      "correct": "Alexander Graham Bell",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Bell was granted the first US patent for the telephone in 1876.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alexander_Graham_Bell",
+        "title": "Wikipedia: Alexander Graham Bell",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'telephone'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "In which city is the White House?",
+      "answers": [
+        "Washington, D.C.",
+        "New York City",
+        "Philadelphia",
+        "Boston"
+      ],
+      "correct": "Washington, D.C.",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The White House is the president's home in Washington, D.C.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/White_House",
+        "title": "Wikipedia: White House",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Washington'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Who was the main author of the Declaration of Independence?",
+      "answers": [
+        "Thomas Jefferson",
+        "George Washington",
+        "Benjamin Franklin",
+        "Alexander Hamilton"
+      ],
+      "correct": "Thomas Jefferson",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Jefferson wrote the first draft in 1776.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence",
+        "title": "Wikipedia: United States Declaration of Independence",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In what year did the United States declare independence?",
+      "answers": [
+        "1776",
+        "1492",
+        "1812",
+        "1865"
+      ],
+      "correct": "1776",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Declaration of Independence was adopted on July 4, 1776.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_Declaration_of_Independence",
+        "title": "Wikipedia: United States Declaration of Independence",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1776'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which of these presidents is carved on Mount Rushmore?",
+      "answers": [
+        "Thomas Jefferson",
+        "John Adams",
+        "James Madison",
+        "Andrew Jackson"
+      ],
+      "correct": "Thomas Jefferson",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Mount Rushmore shows Washington, Jefferson, Theodore Roosevelt and Lincoln.",
+      "source": {
+        "url": "https://www.nps.gov/moru/index.htm",
+        "title": "US National Park Service",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ancient people built the Colosseum?",
+      "answers": [
+        "The Romans",
+        "The Greeks",
+        "The Egyptians",
+        "The Vikings"
+      ],
+      "correct": "The Romans",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Colosseum in Rome was finished in AD 80.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Colosseum",
+        "title": "Wikipedia: Colosseum",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roman'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was president during the American Civil War?",
+      "answers": [
+        "Abraham Lincoln",
+        "George Washington",
+        "Ulysses S. Grant",
+        "Thomas Jefferson"
+      ],
+      "correct": "Abraham Lincoln",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Lincoln was president from 1861 to 1865.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Abraham_Lincoln",
+        "title": "Wikipedia: Abraham Lincoln",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Civil War'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The United States bought Alaska from which country?",
+      "answers": [
+        "Russia",
+        "Canada",
+        "England",
+        "Spain"
+      ],
+      "correct": "Russia",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The US bought Alaska from Russia in 1867.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alaska_Purchase",
+        "title": "Wikipedia: Alaska Purchase",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Russia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which country was the Great Wall built?",
+      "answers": [
+        "China",
+        "Japan",
+        "India",
+        "Korea"
+      ],
+      "correct": "China",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Great Wall stretches across northern China.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+        "title": "Wikipedia: Great Wall of China",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'China'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What was the name of the ship that carried the Pilgrims in 1620?",
+      "answers": [
+        "Mayflower",
+        "Santa Maria",
+        "Endeavour",
+        "Victory"
+      ],
+      "correct": "Mayflower",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Mayflower sailed from England to Massachusetts in 1620.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mayflower",
+        "title": "Wikipedia: Mayflower",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1620'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Vikings came from which part of Europe?",
+      "answers": [
+        "Scandinavia",
+        "Italy",
+        "Greece",
+        "Spain"
+      ],
+      "correct": "Scandinavia",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Vikings came from what is now Norway, Sweden and Denmark.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Vikings",
+        "title": "Wikipedia: Vikings",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Scandinavia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which famous wall in Germany came down in 1989?",
+      "answers": [
+        "The Berlin Wall",
+        "Hadrian's Wall",
+        "The Great Wall",
+        "The Western Wall"
+      ],
+      "correct": "The Berlin Wall",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "The Berlin Wall was opened in November 1989.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Berlin_Wall",
+        "title": "Wikipedia: Berlin Wall",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1989'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Benjamin Franklin flew a kite to learn about what?",
+      "answers": [
+        "Electricity",
+        "Magnets",
+        "Steam",
+        "Radio"
+      ],
+      "correct": "Electricity",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Franklin's kite test showed that lightning is electricity.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Benjamin_Franklin",
+        "title": "Wikipedia: Benjamin Franklin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kite'; 'electricity'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In what year did Columbus first reach the Americas?",
+      "answers": [
+        "1492",
+        "1592",
+        "1392",
+        "1776"
+      ],
+      "correct": "1492",
+      "difficulty": "easy",
+      "category": "History",
+      "explain": "Columbus landed in the Bahamas in October 1492.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Christopher_Columbus",
+        "title": "Wikipedia: Christopher Columbus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1492'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first woman to fly solo across the Atlantic Ocean?",
+      "answers": [
+        "Amelia Earhart",
+        "Bessie Coleman",
+        "Sally Ride",
+        "Harriet Quimby"
+      ],
+      "correct": "Amelia Earhart",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Amelia Earhart made the flight in 1932.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Amelia_Earhart",
+        "title": "Wikipedia: Amelia Earhart",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Atlantic'; '1932'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year did people first walk on the Moon?",
+      "answers": [
+        "1969",
+        "1959",
+        "1975",
+        "1965"
+      ],
+      "correct": "1969",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Apollo 11 landed on the Moon in July 1969.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Apollo_11",
+        "title": "Wikipedia: Apollo 11",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1969'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which British queen reigned for most of the 1800s?",
+      "answers": [
+        "Queen Victoria",
+        "Elizabeth I",
+        "Mary I",
+        "Queen Anne"
+      ],
+      "correct": "Queen Victoria",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Victoria reigned from 1837 to 1901.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Queen_Victoria",
+        "title": "Wikipedia: Queen Victoria",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1837'; '1901'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Magna Carta was agreed in 1215 in which country?",
+      "answers": [
+        "England",
+        "France",
+        "Spain",
+        "Scotland"
+      ],
+      "correct": "England",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "King John agreed to the Magna Carta at Runnymede, England.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Magna_Carta",
+        "title": "Wikipedia: Magna Carta",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1215'; 'England'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which president started the New Deal in the 1930s?",
+      "answers": [
+        "Franklin D. Roosevelt",
+        "Herbert Hoover",
+        "Harry Truman",
+        "Theodore Roosevelt"
+      ],
+      "correct": "Franklin D. Roosevelt",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "The New Deal was a set of programs begun by FDR.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/New_Deal",
+        "title": "Wikipedia: New Deal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roosevelt'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ancient Roman town, buried by volcanic ash, is now a famous dig site?",
+      "answers": [
+        "Pompeii",
+        "Athens",
+        "Carthage",
+        "Troy"
+      ],
+      "correct": "Pompeii",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Ash from Mount Vesuvius preserved Pompeii for centuries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pompeii",
+        "title": "Wikipedia: Pompeii",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Vesuvius'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who built a printing press with movable type in Europe around 1440?",
+      "answers": [
+        "Johannes Gutenberg",
+        "Leonardo da Vinci",
+        "William Caxton",
+        "Galileo Galilei"
+      ],
+      "correct": "Johannes Gutenberg",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Gutenberg's press made books much faster to produce.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Johannes_Gutenberg",
+        "title": "Wikipedia: Johannes Gutenberg",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'printing press'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Lewis and Clark expedition explored land from which purchase?",
+      "answers": [
+        "The Louisiana Purchase",
+        "The Alaska Purchase",
+        "The Gadsden Purchase",
+        "The Treaty of Paris"
+      ],
+      "correct": "The Louisiana Purchase",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Lewis and Clark set out in 1804 to explore the new Louisiana territory.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lewis_and_Clark_Expedition",
+        "title": "Wikipedia: Lewis and Clark Expedition",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Louisiana Purchase'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The US bought the Louisiana territory from which country?",
+      "answers": [
+        "France",
+        "Spain",
+        "Britain",
+        "Mexico"
+      ],
+      "correct": "France",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "The US bought it from France in 1803.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Louisiana_Purchase",
+        "title": "Wikipedia: Louisiana Purchase",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'France'; '1803'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who gave the 'I Have a Dream' speech in 1963?",
+      "answers": [
+        "Martin Luther King Jr.",
+        "Frederick Douglass",
+        "Malcolm X",
+        "John Lewis"
+      ],
+      "correct": "Martin Luther King Jr.",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Dr. King gave the speech at the March on Washington.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/I_Have_a_Dream",
+        "title": "Wikipedia: I Have a Dream",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'King'; '1963'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Rosa Parks is famous for refusing to give up her seat on a what?",
+      "answers": [
+        "Bus",
+        "Train",
+        "Plane",
+        "Boat"
+      ],
+      "correct": "Bus",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Her stand on a Montgomery bus in 1955 sparked a famous boycott.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rosa_Parks",
+        "title": "Wikipedia: Rosa Parks",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bus'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first person to travel into space and orbit the Earth?",
+      "answers": [
+        "Yuri Gagarin",
+        "Neil Armstrong",
+        "John Glenn",
+        "Alan Shepard"
+      ],
+      "correct": "Yuri Gagarin",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Yuri Gagarin orbited the Earth in 1961.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yuri_Gagarin",
+        "title": "Wikipedia: Yuri Gagarin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first human'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Renaissance began in which country?",
+      "answers": [
+        "Italy",
+        "France",
+        "England",
+        "Germany"
+      ],
+      "correct": "Italy",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "The Renaissance began in Italy, in cities like Florence.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Renaissance",
+        "title": "Wikipedia: Renaissance",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Italy'; 'Florence'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which city was the Declaration of Independence signed?",
+      "answers": [
+        "Philadelphia",
+        "Boston",
+        "New York City",
+        "Washington, D.C."
+      ],
+      "correct": "Philadelphia",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "It was signed at Independence Hall in Philadelphia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Independence_Hall",
+        "title": "Wikipedia: Independence Hall",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Philadelphia'; 'Declaration of Independence'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which document begins with the words 'We the People'?",
+      "answers": [
+        "The US Constitution",
+        "The Declaration of Independence",
+        "The Gettysburg Address",
+        "The Emancipation Proclamation"
+      ],
+      "correct": "The US Constitution",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "The Constitution's opening lines begin 'We the People'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Preamble_to_the_United_States_Constitution",
+        "title": "Wikipedia: Preamble to the United States Constitution",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'We the People'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first woman to win a Nobel Prize?",
+      "answers": [
+        "Marie Curie",
+        "Florence Nightingale",
+        "Jane Addams",
+        "Mother Teresa"
+      ],
+      "correct": "Marie Curie",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Marie Curie won the Nobel Prize in Physics in 1903.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Marie_Curie",
+        "title": "Wikipedia: Marie Curie",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first woman'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In 1849, crowds rushed to California hoping to find what?",
+      "answers": [
+        "Gold",
+        "Oil",
+        "Silver",
+        "Diamonds"
+      ],
+      "correct": "Gold",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Gold was found at Sutter's Mill in 1848, starting the Gold Rush.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/California_gold_rush",
+        "title": "Wikipedia: California gold rush",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'gold'; '1849'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Industrial Revolution began in which country?",
+      "answers": [
+        "Great Britain",
+        "The United States",
+        "Germany",
+        "France"
+      ],
+      "correct": "Great Britain",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Steam power and factories spread from Britain in the 1700s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Industrial_Revolution",
+        "title": "Wikipedia: Industrial Revolution",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Great Britain'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ancient Greek city is called the birthplace of democracy?",
+      "answers": [
+        "Athens",
+        "Sparta",
+        "Corinth",
+        "Troy"
+      ],
+      "correct": "Athens",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "Athens had an early form of democracy about 2,500 years ago.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Athenian_democracy",
+        "title": "Wikipedia: Athenian democracy",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Athens'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year did the Wright brothers make their first powered flight?",
+      "answers": [
+        "1903",
+        "1893",
+        "1913",
+        "1927"
+      ],
+      "correct": "1903",
+      "difficulty": "medium",
+      "category": "History",
+      "explain": "The first flight was at Kitty Hawk, North Carolina, in December 1903.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wright_brothers",
+        "title": "Wikipedia: Wright brothers",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1903'; 'Kitty Hawk'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first US president to live in the White House?",
+      "answers": [
+        "John Adams",
+        "George Washington",
+        "Thomas Jefferson",
+        "James Madison"
+      ],
+      "correct": "John Adams",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "John Adams moved in in 1800, before it was finished.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/White_House",
+        "title": "Wikipedia: White House",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'John Adams'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year was the US Constitution signed?",
+      "answers": [
+        "1787",
+        "1776",
+        "1791",
+        "1803"
+      ],
+      "correct": "1787",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "It was signed in Philadelphia in September 1787.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Constitution_of_the_United_States",
+        "title": "Wikipedia: Constitution of the United States",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1787'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ancient wonder stood in the Egyptian city of Alexandria?",
+      "answers": [
+        "The Lighthouse",
+        "The Hanging Gardens",
+        "The Colossus",
+        "The Temple of Artemis"
+      ],
+      "correct": "The Lighthouse",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The Lighthouse of Alexandria was one of the Seven Wonders.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lighthouse_of_Alexandria",
+        "title": "Wikipedia: Lighthouse of Alexandria",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Seven Wonders'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first emperor of Rome?",
+      "answers": [
+        "Augustus",
+        "Julius Caesar",
+        "Nero",
+        "Constantine"
+      ],
+      "correct": "Augustus",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Julius Caesar was never emperor; his heir Augustus was the first.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Augustus",
+        "title": "Wikipedia: Augustus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first Roman emperor'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What was the name of the first artificial satellite, launched in 1957?",
+      "answers": [
+        "Sputnik 1",
+        "Explorer 1",
+        "Vostok 1",
+        "Telstar"
+      ],
+      "correct": "Sputnik 1",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The Soviet Union launched Sputnik 1 in October 1957.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sputnik_1",
+        "title": "Wikipedia: Sputnik 1",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1957'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which treaty ended the American Revolutionary War in 1783?",
+      "answers": [
+        "The Treaty of Paris",
+        "The Treaty of Versailles",
+        "The Treaty of Ghent",
+        "The Treaty of Utrecht"
+      ],
+      "correct": "The Treaty of Paris",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Britain recognised American independence in the Treaty of Paris.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Treaty_of_Paris_(1783)",
+        "title": "Wikipedia: Treaty of Paris (1783)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1783'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Whose nearly untouched tomb did Howard Carter find in 1922?",
+      "answers": [
+        "Tutankhamun",
+        "Ramesses II",
+        "Khufu",
+        "Cleopatra"
+      ],
+      "correct": "Tutankhamun",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The young pharaoh's tomb was full of golden treasures.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tutankhamun",
+        "title": "Wikipedia: Tutankhamun",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Carter'; '1922'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Rosetta Stone helped scholars learn to read which writing?",
+      "answers": [
+        "Egyptian hieroglyphs",
+        "Cuneiform",
+        "Linear B",
+        "Maya glyphs"
+      ],
+      "correct": "Egyptian hieroglyphs",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The stone has the same text in three scripts.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rosetta_Stone",
+        "title": "Wikipedia: Rosetta Stone",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hieroglyph'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which expedition was the first to sail all the way around the world (1519-1522)?",
+      "answers": [
+        "Ferdinand Magellan's",
+        "Vasco da Gama's",
+        "James Cook's",
+        "Francis Drake's"
+      ],
+      "correct": "Ferdinand Magellan's",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Magellan led it; Juan Sebastián Elcano brought it home.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Magellan_expedition",
+        "title": "Wikipedia: Magellan expedition",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'circumnavigation'; 'Elcano'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was president when the US made the Louisiana Purchase?",
+      "answers": [
+        "Thomas Jefferson",
+        "John Adams",
+        "James Madison",
+        "James Monroe"
+      ],
+      "correct": "Thomas Jefferson",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Jefferson's government bought the territory in 1803.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Louisiana_Purchase",
+        "title": "Wikipedia: Louisiana Purchase",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jefferson'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which order did Lincoln issue on January 1, 1863?",
+      "answers": [
+        "The Emancipation Proclamation",
+        "The Monroe Doctrine",
+        "The Bill of Rights",
+        "The Declaration of Independence"
+      ],
+      "correct": "The Emancipation Proclamation",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "It declared enslaved people in the Confederate states free.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Emancipation_Proclamation",
+        "title": "Wikipedia: Emancipation Proclamation",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1863'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first woman to serve on the US Supreme Court?",
+      "answers": [
+        "Sandra Day O'Connor",
+        "Ruth Bader Ginsburg",
+        "Sonia Sotomayor",
+        "Elena Kagan"
+      ],
+      "correct": "Sandra Day O'Connor",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Sandra Day O'Connor joined the Court in 1981.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sandra_Day_O'Connor",
+        "title": "Wikipedia: Sandra Day O'Connor",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first woman'; '1981'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which empire built Machu Picchu?",
+      "answers": [
+        "The Inca",
+        "The Aztecs",
+        "The Maya",
+        "The Olmecs"
+      ],
+      "correct": "The Inca",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The Inca built Machu Picchu in the 1400s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Machu_Picchu",
+        "title": "Wikipedia: Machu Picchu",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Inca'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Chinese dynasty built most of the Great Wall that stands today?",
+      "answers": [
+        "Ming",
+        "Han",
+        "Qin",
+        "Tang"
+      ],
+      "correct": "Ming",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Most of the wall seen today was built under the Ming dynasty.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+        "title": "Wikipedia: Great Wall of China",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ming'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the first European to reach India by sailing around Africa?",
+      "answers": [
+        "Vasco da Gama",
+        "Christopher Columbus",
+        "Ferdinand Magellan",
+        "John Cabot"
+      ],
+      "correct": "Vasco da Gama",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Vasco da Gama reached India in 1498.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Vasco_da_Gama",
+        "title": "Wikipedia: Vasco da Gama",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'India'; '1498'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year did the 19th Amendment give US women the right to vote?",
+      "answers": [
+        "1920",
+        "1865",
+        "1900",
+        "1945"
+      ],
+      "correct": "1920",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "The 19th Amendment was ratified in 1920.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nineteenth_Amendment_to_the_United_States_Constitution",
+        "title": "Wikipedia: Nineteenth Amendment to the United States Constitution",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1920'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who founded the American Red Cross?",
+      "answers": [
+        "Clara Barton",
+        "Florence Nightingale",
+        "Susan B. Anthony",
+        "Harriet Tubman"
+      ],
+      "correct": "Clara Barton",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Clara Barton founded it in 1881.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Clara_Barton",
+        "title": "Wikipedia: Clara Barton",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'American Red Cross'; '1881'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which city was George Washington sworn in as the first president?",
+      "answers": [
+        "New York City",
+        "Philadelphia",
+        "Boston",
+        "Washington, D.C."
+      ],
+      "correct": "New York City",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "He took the oath at Federal Hall in New York in 1789.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/First_inauguration_of_George_Washington",
+        "title": "Wikipedia: First inauguration of George Washington",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Federal Hall'; 'New York'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Roman emperor built a wall across northern England?",
+      "answers": [
+        "Hadrian",
+        "Nero",
+        "Caligula",
+        "Augustus"
+      ],
+      "correct": "Hadrian",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Hadrian's Wall was begun in AD 122.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hadrian's_Wall",
+        "title": "Wikipedia: Hadrian's Wall",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '122'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which explorer led the first expedition to reach the South Pole, in 1911?",
+      "answers": [
+        "Roald Amundsen",
+        "Robert Falcon Scott",
+        "Ernest Shackleton",
+        "Robert Peary"
+      ],
+      "correct": "Roald Amundsen",
+      "difficulty": "hard",
+      "category": "History",
+      "explain": "Amundsen's Norwegian team reached the Pole in December 1911.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roald_Amundsen",
+        "title": "Wikipedia: Roald Amundsen",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'South Pole'; '1911'."
+      },
+      "ai_written": true
+    }
+  ]
+}

@@ -1,0 +1,418 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Food and cooking - hard (AI-written, not yet reviewed)",
+  "description": "21 HARD questions on food & cooking, written by Claude as an add-on to the easier 'Food & cooking' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which spice comes from the crocus flower?",
+      "answers": [
+        "Saffron",
+        "Turmeric",
+        "Cardamom",
+        "Vanilla"
+      ],
+      "correct": "Saffron",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Saffron threads are picked from crocus flowers by hand.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saffron",
+        "title": "Wikipedia: Saffron",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'crocus'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Miso paste is made mainly from which fermented bean?",
+      "answers": [
+        "Soybeans",
+        "Black beans",
+        "Lentils",
+        "Chickpeas"
+      ],
+      "correct": "Soybeans",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Miso is fermented soybean paste from Japan.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Miso",
+        "title": "Wikipedia: Miso",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'soybean'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the French name for diced onion, carrot and celery cooked as a base?",
+      "answers": [
+        "Mirepoix",
+        "Roux",
+        "Bouquet garni",
+        "Julienne"
+      ],
+      "correct": "Mirepoix",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Mirepoix is the base of many soups and sauces.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mirepoix",
+        "title": "Wikipedia: Mirepoix",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'celery'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Paella comes from which country?",
+      "answers": [
+        "Spain",
+        "Italy",
+        "Portugal",
+        "Mexico"
+      ],
+      "correct": "Spain",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Paella is a rice dish from Valencia, Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Paella",
+        "title": "Wikipedia: Paella",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Valencia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "A roux is made from flour and what?",
+      "answers": [
+        "Fat, such as butter",
+        "Eggs",
+        "Sugar",
+        "Milk"
+      ],
+      "correct": "Fat, such as butter",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Cooked flour and fat thicken sauces and gravies.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roux",
+        "title": "Wikipedia: Roux",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'flour'; 'fat'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which nuts are used in traditional pesto Genovese?",
+      "answers": [
+        "Pine nuts",
+        "Walnuts",
+        "Almonds",
+        "Peanuts"
+      ],
+      "correct": "Pine nuts",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Classic pesto uses basil, pine nuts, garlic, cheese and olive oil.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pesto",
+        "title": "Wikipedia: Pesto",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pine nuts'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Baba ghanoush is a dip made mainly from which vegetable?",
+      "answers": [
+        "Eggplant",
+        "Chickpeas",
+        "Avocado",
+        "Zucchini"
+      ],
+      "correct": "Eggplant",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Baba ghanoush is roasted eggplant mashed with tahini.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Baba_ghanoush",
+        "title": "Wikipedia: Baba ghanoush",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eggplant'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What gives sourdough bread its tangy taste?",
+      "answers": [
+        "Wild yeast and bacteria",
+        "Vinegar",
+        "Lemon juice",
+        "Baking soda"
+      ],
+      "correct": "Wild yeast and bacteria",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Lactic acid bacteria in the starter make the tang.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sourdough",
+        "title": "Wikipedia: Sourdough",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lactic'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Couscous is made from which grain?",
+      "answers": [
+        "Wheat",
+        "Rice",
+        "Corn",
+        "Oats"
+      ],
+      "correct": "Wheat",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Couscous is made from semolina, a kind of wheat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Couscous",
+        "title": "Wikipedia: Couscous",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'semolina'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the Japanese word for sliced raw fish served without rice?",
+      "answers": [
+        "Sashimi",
+        "Sushi",
+        "Tempura",
+        "Teriyaki"
+      ],
+      "correct": "Sashimi",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Sushi is about the rice; sashimi is just the fish.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sashimi",
+        "title": "Wikipedia: Sashimi",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'raw'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is sous vide cooking?",
+      "answers": [
+        "Cooking sealed food in a warm water bath",
+        "Cooking over open flames",
+        "Cooking with alcohol set alight",
+        "Cooking under a hot grill"
+      ],
+      "correct": "Cooking sealed food in a warm water bath",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Sous vide means 'under vacuum' in French.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sous_vide",
+        "title": "Wikipedia: Sous vide",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'water bath'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Éclairs are made from which kind of pastry?",
+      "answers": [
+        "Choux pastry",
+        "Puff pastry",
+        "Filo pastry",
+        "Shortcrust pastry"
+      ],
+      "correct": "Choux pastry",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Choux pastry puffs up hollow, ready to be filled.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Éclair",
+        "title": "Wikipedia: Éclair",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'choux'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Feta cheese comes from which country?",
+      "answers": [
+        "Greece",
+        "Italy",
+        "France",
+        "Spain"
+      ],
+      "correct": "Greece",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Feta is a brined cheese from Greece.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Feta",
+        "title": "Wikipedia: Feta",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Greece'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How is gazpacho soup usually served?",
+      "answers": [
+        "Cold",
+        "Hot",
+        "Frozen",
+        "Boiling"
+      ],
+      "correct": "Cold",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Gazpacho is a cold tomato soup from Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gazpacho",
+        "title": "Wikipedia: Gazpacho",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cold'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which spice is made from the bark of a tree?",
+      "answers": [
+        "Cinnamon",
+        "Nutmeg",
+        "Black pepper",
+        "Clove"
+      ],
+      "correct": "Cinnamon",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Cinnamon sticks are rolled-up dried bark.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cinnamon",
+        "title": "Wikipedia: Cinnamon",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bark'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Indian dish dal is made mainly from what?",
+      "answers": [
+        "Lentils or other split pulses",
+        "Rice",
+        "Potatoes",
+        "Spinach"
+      ],
+      "correct": "Lentils or other split pulses",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Dal means split pulses, like lentils, cooked into a stew.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dal",
+        "title": "Wikipedia: Dal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lentil'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Chipotle is a smoked, dried version of which chili pepper?",
+      "answers": [
+        "Jalapeño",
+        "Habanero",
+        "Poblano",
+        "Serrano"
+      ],
+      "correct": "Jalapeño",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "A chipotle is a smoke-dried jalapeño.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chipotle",
+        "title": "Wikipedia: Chipotle",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'jalapeño'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Italian dessert is made with coffee-soaked ladyfingers?",
+      "answers": [
+        "Tiramisu",
+        "Panna cotta",
+        "Cannoli",
+        "Gelato"
+      ],
+      "correct": "Tiramisu",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Tiramisu layers ladyfingers with mascarpone cream.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tiramisu",
+        "title": "Wikipedia: Tiramisu",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ladyfinger'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which part of the wasabi plant is grated to make wasabi?",
+      "answers": [
+        "The root (rhizome)",
+        "The leaves",
+        "The flowers",
+        "The seeds"
+      ],
+      "correct": "The root (rhizome)",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Real wasabi is grated from the plant's thick stem-root.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wasabi",
+        "title": "Wikipedia: Wasabi",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'rhizome'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Kimchi comes from which country?",
+      "answers": [
+        "Korea",
+        "Japan",
+        "China",
+        "Thailand"
+      ],
+      "correct": "Korea",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Kimchi is spicy fermented cabbage from Korea.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kimchi",
+        "title": "Wikipedia: Kimchi",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Korean'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What does 'al dente' mean for cooked pasta?",
+      "answers": [
+        "Firm to the bite",
+        "Very soft",
+        "Cooked in oil",
+        "Served cold"
+      ],
+      "correct": "Firm to the bite",
+      "difficulty": "hard",
+      "category": "Food & cooking",
+      "explain": "Al dente is Italian for 'to the tooth'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Al_dente",
+        "title": "Wikipedia: Al dente",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tooth'."
+      },
+      "ai_written": true
+    }
+  ]
+}
