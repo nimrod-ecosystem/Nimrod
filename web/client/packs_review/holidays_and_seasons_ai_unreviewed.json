@@ -1,0 +1,1185 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Holidays and seasons (AI-written, not yet reviewed)",
+  "description": "61 questions on holidays & seasons, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 21 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "In which month is Christmas Day?",
+      "answers": [
+        "December",
+        "November",
+        "January",
+        "October"
+      ],
+      "correct": "December",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Christmas Day is December 25.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Christmas",
+        "title": "Wikipedia: Christmas",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '25 December'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What do people often carve faces into for Halloween?",
+      "answers": [
+        "Pumpkins",
+        "Apples",
+        "Potatoes",
+        "Melons"
+      ],
+      "correct": "Pumpkins",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "A carved pumpkin with a candle inside is a jack-o'-lantern.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jack-o'-lantern",
+        "title": "Wikipedia: Jack-o'-lantern",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pumpkin'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which season comes after winter?",
+      "answers": [
+        "Spring",
+        "Summer",
+        "Fall",
+        "Winter"
+      ],
+      "correct": "Spring",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Spring follows winter, when flowers start to bloom.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Season",
+        "title": "Wikipedia: Season",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'spring'; 'winter'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which holiday has the Easter Bunny?",
+      "answers": [
+        "Easter",
+        "Halloween",
+        "Thanksgiving",
+        "New Year's Day"
+      ],
+      "correct": "Easter",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "The Easter Bunny is said to bring eggs at Easter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Easter_Bunny",
+        "title": "Wikipedia: Easter Bunny",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Easter'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "On Valentine's Day, cards are often shaped like what?",
+      "answers": [
+        "Hearts",
+        "Stars",
+        "Moons",
+        "Trees"
+      ],
+      "correct": "Hearts",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "The heart shape stands for love.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Valentine's_Day",
+        "title": "Wikipedia: Valentine's Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'heart'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which season is usually the coldest?",
+      "answers": [
+        "Winter",
+        "Summer",
+        "Spring",
+        "Fall"
+      ],
+      "correct": "Winter",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Winter is the coldest time of year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Winter",
+        "title": "Wikipedia: Winter",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'coldest'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What do people say to each other at midnight on New Year's Eve?",
+      "answers": [
+        "Happy New Year!",
+        "Happy Birthday!",
+        "Good night!",
+        "Trick or treat!"
+      ],
+      "correct": "Happy New Year!",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "At midnight, people wish each other a happy new year.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known New Year's custom in English-speaking countries."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which season is usually the warmest?",
+      "answers": [
+        "Summer",
+        "Winter",
+        "Fall",
+        "Spring"
+      ],
+      "correct": "Summer",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Summer is the warmest time of year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Summer",
+        "title": "Wikipedia: Summer",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'warmest'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "On what date is US Independence Day?",
+      "answers": [
+        "July 4",
+        "June 14",
+        "July 14",
+        "August 4"
+      ],
+      "correct": "July 4",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Americans celebrate the Fourth of July with fireworks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Independence_Day_(United_States)",
+        "title": "Wikipedia: Independence Day (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'July 4'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do children say when they knock on doors on Halloween?",
+      "answers": [
+        "Trick or treat!",
+        "Happy holidays!",
+        "Knock knock!",
+        "Surprise!"
+      ],
+      "correct": "Trick or treat!",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Trick-or-treaters say it and get sweets.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Trick-or-treating",
+        "title": "Wikipedia: Trick-or-treating",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'trick or treat'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Halloween is celebrated on which date?",
+      "answers": [
+        "October 31",
+        "November 1",
+        "October 13",
+        "September 30"
+      ],
+      "correct": "October 31",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Halloween is the last day of October.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Halloween",
+        "title": "Wikipedia: Halloween",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '31 October'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Valentine's Day is in which month?",
+      "answers": [
+        "February",
+        "January",
+        "March",
+        "April"
+      ],
+      "correct": "February",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Valentine's Day is February 14.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Valentine's_Day",
+        "title": "Wikipedia: Valentine's Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February 14'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Jewish holiday lasts eight nights and uses a menorah?",
+      "answers": [
+        "Hanukkah",
+        "Passover",
+        "Yom Kippur",
+        "Purim"
+      ],
+      "correct": "Hanukkah",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "One more candle is lit each night of Hanukkah.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hanukkah",
+        "title": "Wikipedia: Hanukkah",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eight'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which season do leaves change colour and fall from trees?",
+      "answers": [
+        "Fall",
+        "Spring",
+        "Summer",
+        "Winter"
+      ],
+      "correct": "Fall",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "That's why autumn is also called fall.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Autumn",
+        "title": "Wikipedia: Autumn",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'leaves'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is often put on top of a Christmas tree?",
+      "answers": [
+        "A star",
+        "A pumpkin",
+        "A snowball",
+        "A shoe"
+      ],
+      "correct": "A star",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "A star or an angel often sits on top of the tree.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Christmas_tree",
+        "title": "Wikipedia: Christmas tree",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'star'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "St. Patrick's Day is in which month?",
+      "answers": [
+        "March",
+        "April",
+        "May",
+        "February"
+      ],
+      "correct": "March",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "St. Patrick's Day is March 17.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saint_Patrick's_Day",
+        "title": "Wikipedia: Saint Patrick's Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '17 March'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which colour do many people wear on St. Patrick's Day?",
+      "answers": [
+        "Green",
+        "Purple",
+        "Pink",
+        "Black"
+      ],
+      "correct": "Green",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Green is the colour linked with Ireland.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saint_Patrick's_Day",
+        "title": "Wikipedia: Saint Patrick's Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'green'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do many families do with eggs at Easter?",
+      "answers": [
+        "Paint them and hide them",
+        "Plant them",
+        "Freeze them",
+        "Throw them"
+      ],
+      "correct": "Paint them and hide them",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Decorating eggs and hunting for them are old Easter customs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Easter_egg",
+        "title": "Wikipedia: Easter egg",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'decorat'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Thanksgiving in the US comes in which month?",
+      "answers": [
+        "November",
+        "October",
+        "December",
+        "September"
+      ],
+      "correct": "November",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "American Thanksgiving is in November.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
+        "title": "Wikipedia: Thanksgiving (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'November'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the plant people kiss under at Christmas?",
+      "answers": [
+        "Mistletoe",
+        "Holly",
+        "Ivy",
+        "Pine"
+      ],
+      "correct": "Mistletoe",
+      "difficulty": "easy",
+      "category": "Holidays & seasons",
+      "explain": "Kissing under the mistletoe is a Christmas tradition.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mistletoe",
+        "title": "Wikipedia: Mistletoe",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kiss'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "US Thanksgiving falls on which day?",
+      "answers": [
+        "The fourth Thursday of November",
+        "The first Monday of November",
+        "The last Friday of November",
+        "November 1"
+      ],
+      "correct": "The fourth Thursday of November",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Thanksgiving is always on the fourth Thursday of November.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
+        "title": "Wikipedia: Thanksgiving (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fourth Thursday'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the Hindu festival of lights called?",
+      "answers": [
+        "Diwali",
+        "Holi",
+        "Navratri",
+        "Eid"
+      ],
+      "correct": "Diwali",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Diwali is celebrated with lamps, sweets and fireworks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Diwali",
+        "title": "Wikipedia: Diwali",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'festival of lights'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many days does Kwanzaa last?",
+      "answers": [
+        "Seven",
+        "Three",
+        "Five",
+        "Twelve"
+      ],
+      "correct": "Seven",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Kwanzaa runs from December 26 to January 1.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kwanzaa",
+        "title": "Wikipedia: Kwanzaa",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'seven'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which US holiday on November 11 honours military veterans?",
+      "answers": [
+        "Veterans Day",
+        "Memorial Day",
+        "Labor Day",
+        "Flag Day"
+      ],
+      "correct": "Veterans Day",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Veterans Day thanks everyone who has served.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Veterans_Day",
+        "title": "Wikipedia: Veterans Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'November 11'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In the Northern Hemisphere, spring officially begins with which event?",
+      "answers": [
+        "The March equinox",
+        "The June solstice",
+        "The December solstice",
+        "The harvest moon"
+      ],
+      "correct": "The March equinox",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Around March 20, day and night are about the same length.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/March_equinox",
+        "title": "Wikipedia: March equinox",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'spring'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What flat bread do people eat during Passover?",
+      "answers": [
+        "Matzo",
+        "Pita",
+        "Bagels",
+        "Hot cross buns"
+      ],
+      "correct": "Matzo",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Matzo is unleavened bread, made without yeast.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Passover",
+        "title": "Wikipedia: Passover",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'matzo'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which holiday is celebrated with red envelopes and dragon dances?",
+      "answers": [
+        "Lunar New Year",
+        "Halloween",
+        "Diwali",
+        "Easter"
+      ],
+      "correct": "Lunar New Year",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Red envelopes with money are given for luck at Lunar New Year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chinese_New_Year",
+        "title": "Wikipedia: Chinese New Year",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'red envelope'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Holi, the festival of colours, began in which country?",
+      "answers": [
+        "India",
+        "China",
+        "Mexico",
+        "Ireland"
+      ],
+      "correct": "India",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "At Holi people throw coloured powder to welcome spring.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Holi",
+        "title": "Wikipedia: Holi",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'India'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which US holiday is on the first Monday in September?",
+      "answers": [
+        "Labor Day",
+        "Memorial Day",
+        "Columbus Day",
+        "Flag Day"
+      ],
+      "correct": "Labor Day",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Labor Day honours working people and marks the end of summer.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Labor_Day",
+        "title": "Wikipedia: Labor Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first Monday in September'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which holiday marks the end of Ramadan?",
+      "answers": [
+        "Eid al-Fitr",
+        "Eid al-Adha",
+        "Rosh Hashanah",
+        "Diwali"
+      ],
+      "correct": "Eid al-Fitr",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Eid al-Fitr is a happy feast after the month of fasting.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Eid_al-Fitr",
+        "title": "Wikipedia: Eid al-Fitr",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ramadan'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Groundhog Day is on which date?",
+      "answers": [
+        "February 2",
+        "February 14",
+        "March 1",
+        "January 2"
+      ],
+      "correct": "February 2",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Groundhog Day is February 2.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Groundhog_Day",
+        "title": "Wikipedia: Groundhog Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February 2'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "If the groundhog sees its shadow, what does the folk tale say?",
+      "answers": [
+        "Six more weeks of winter",
+        "An early spring",
+        "A rainy summer",
+        "A snowy Christmas"
+      ],
+      "correct": "Six more weeks of winter",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "No shadow means an early spring; a shadow means more winter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Groundhog_Day",
+        "title": "Wikipedia: Groundhog Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six more weeks'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the Jewish New Year called?",
+      "answers": [
+        "Rosh Hashanah",
+        "Yom Kippur",
+        "Hanukkah",
+        "Purim"
+      ],
+      "correct": "Rosh Hashanah",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Rosh Hashanah means 'head of the year'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rosh_Hashanah",
+        "title": "Wikipedia: Rosh Hashanah",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'New Year'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which poem begins 'Twas the night before Christmas'?",
+      "answers": [
+        "A Visit from St. Nicholas",
+        "The Night Watch",
+        "Jingle Bells",
+        "Frosty the Snowman"
+      ],
+      "correct": "A Visit from St. Nicholas",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "The poem was first published in 1823.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/A_Visit_from_St._Nicholas",
+        "title": "Wikipedia: A Visit from St. Nicholas",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'night before Christmas'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Poinsettias, the red Christmas plants, first came from which country?",
+      "answers": [
+        "Mexico",
+        "Ireland",
+        "Japan",
+        "Norway"
+      ],
+      "correct": "Mexico",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Poinsettias are native to Mexico.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Poinsettia",
+        "title": "Wikipedia: Poinsettia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Mexico'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Mother's Day in the US is on the second Sunday of which month?",
+      "answers": [
+        "May",
+        "June",
+        "April",
+        "March"
+      ],
+      "correct": "May",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Americans celebrate mothers in May.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mother's_Day_(United_States)",
+        "title": "Wikipedia: Mother's Day (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'second Sunday in May'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Father's Day in the US is in which month?",
+      "answers": [
+        "June",
+        "May",
+        "July",
+        "August"
+      ],
+      "correct": "June",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Father's Day is the third Sunday in June.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Father's_Day",
+        "title": "Wikipedia: Father's Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'June'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Boxing Day is celebrated on which day?",
+      "answers": [
+        "The day after Christmas",
+        "The day before Halloween",
+        "The first day of spring",
+        "The last day of the year"
+      ],
+      "correct": "The day after Christmas",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Boxing Day is December 26 in Britain, Canada and other countries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Boxing_Day",
+        "title": "Wikipedia: Boxing Day",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '26 December'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "On what date is Juneteenth?",
+      "answers": [
+        "June 19",
+        "July 4",
+        "June 14",
+        "May 19"
+      ],
+      "correct": "June 19",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "Juneteenth marks the end of slavery in the United States.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Juneteenth",
+        "title": "Wikipedia: Juneteenth",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'June 19'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Leap Day falls on which date?",
+      "answers": [
+        "February 29",
+        "February 28",
+        "March 1",
+        "February 30"
+      ],
+      "correct": "February 29",
+      "difficulty": "medium",
+      "category": "Holidays & seasons",
+      "explain": "February 29 comes once every four years or so.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/February_29",
+        "title": "Wikipedia: February 29",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'leap'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ancient Celtic festival is thought to be one of the roots of Halloween?",
+      "answers": [
+        "Samhain",
+        "Beltane",
+        "Imbolc",
+        "Lughnasadh"
+      ],
+      "correct": "Samhain",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Samhain marked the end of harvest and the start of winter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Samhain",
+        "title": "Wikipedia: Samhain",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Halloween'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year did Lincoln proclaim Thanksgiving a national holiday?",
+      "answers": [
+        "1863",
+        "1776",
+        "1621",
+        "1901"
+      ],
+      "correct": "1863",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Lincoln set a national day of thanksgiving in 1863.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
+        "title": "Wikipedia: Thanksgiving (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1863'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which president signed the law fixing Thanksgiving as the fourth Thursday of November?",
+      "answers": [
+        "Franklin D. Roosevelt",
+        "Abraham Lincoln",
+        "George Washington",
+        "Harry Truman"
+      ],
+      "correct": "Franklin D. Roosevelt",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "FDR signed it into law in 1941.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
+        "title": "Wikipedia: Thanksgiving (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Roosevelt'; '1941'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year was the first Macy's Thanksgiving Day Parade?",
+      "answers": [
+        "1924",
+        "1900",
+        "1945",
+        "1950"
+      ],
+      "correct": "1924",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "The first parade marched through New York in 1924.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Macy's_Thanksgiving_Day_Parade",
+        "title": "Wikipedia: Macy's Thanksgiving Day Parade",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1924'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who wrote A Christmas Carol in 1843?",
+      "answers": [
+        "Charles Dickens",
+        "Mark Twain",
+        "Lewis Carroll",
+        "Jane Austen"
+      ],
+      "correct": "Charles Dickens",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Dickens gave us Scrooge and Tiny Tim.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/A_Christmas_Carol",
+        "title": "Wikipedia: A Christmas Carol",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Dickens'; '1843'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Twelve Days of Christmas end with which feast?",
+      "answers": [
+        "Epiphany",
+        "New Year's Day",
+        "Christmas Eve",
+        "Candlemas"
+      ],
+      "correct": "Epiphany",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "The twelve days run from Christmas to Epiphany on January 6.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Twelve_Days_of_Christmas",
+        "title": "Wikipedia: Twelve Days of Christmas",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Epiphany'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many candle holders does a Hanukkah menorah have, counting the helper candle?",
+      "answers": [
+        "Nine",
+        "Seven",
+        "Eight",
+        "Ten"
+      ],
+      "correct": "Nine",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Eight candles for the nights, plus the helper candle, the shamash.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hanukkah_menorah",
+        "title": "Wikipedia: Hanukkah menorah",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'nine'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Before pumpkins, what did people in Ireland carve for jack-o'-lanterns?",
+      "answers": [
+        "Turnips",
+        "Apples",
+        "Melons",
+        "Onions"
+      ],
+      "correct": "Turnips",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Carved turnips came first; Americans switched to pumpkins.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jack-o'-lantern",
+        "title": "Wikipedia: Jack-o'-lantern",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'turnip'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In the Southern Hemisphere, in which month does summer begin?",
+      "answers": [
+        "December",
+        "June",
+        "March",
+        "September"
+      ],
+      "correct": "December",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "South of the equator, the summer solstice is in December.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/December_solstice",
+        "title": "Wikipedia: December solstice",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Southern Hemisphere'; 'summer'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which country celebrates Thanksgiving on the second Monday of October?",
+      "answers": [
+        "Canada",
+        "United Kingdom",
+        "Australia",
+        "Mexico"
+      ],
+      "correct": "Canada",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Canadian Thanksgiving comes in October.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(Canada)",
+        "title": "Wikipedia: Thanksgiving (Canada)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'second Monday'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year was Kwanzaa first celebrated?",
+      "answers": [
+        "1966",
+        "1920",
+        "1980",
+        "1945"
+      ],
+      "correct": "1966",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Maulana Karenga created Kwanzaa in 1966.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kwanzaa",
+        "title": "Wikipedia: Kwanzaa",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1966'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the 40-day season before Easter called?",
+      "answers": [
+        "Lent",
+        "Advent",
+        "Pentecost",
+        "Epiphany"
+      ],
+      "correct": "Lent",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Lent begins on Ash Wednesday.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lent",
+        "title": "Wikipedia: Lent",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Ash Wednesday'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The four weeks before Christmas make up which season?",
+      "answers": [
+        "Advent",
+        "Lent",
+        "Epiphany",
+        "Pentecost"
+      ],
+      "correct": "Advent",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Advent calendars count down the days to Christmas.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Advent",
+        "title": "Wikipedia: Advent",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Christmas'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year did the first New Year's Eve ball drop in Times Square?",
+      "answers": [
+        "1907",
+        "1950",
+        "1888",
+        "1925"
+      ],
+      "correct": "1907",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "The ball first dropped to welcome 1908.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Times_Square_Ball",
+        "title": "Wikipedia: Times Square Ball",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1907'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Mexico's Independence Day is on which date?",
+      "answers": [
+        "September 16",
+        "May 5",
+        "July 4",
+        "November 2"
+      ],
+      "correct": "September 16",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Cinco de Mayo is often mistaken for it, but it's September 16.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cinco_de_Mayo",
+        "title": "Wikipedia: Cinco de Mayo",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'September 16'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The name Halloween comes from which older name?",
+      "answers": [
+        "All Hallows' Eve",
+        "Hallowed Wind",
+        "Harvest Evening",
+        "Hall of Winter"
+      ],
+      "correct": "All Hallows' Eve",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "It is the evening before All Hallows' (All Saints') Day.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Halloween",
+        "title": "Wikipedia: Halloween",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'All Hallows'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What causes Earth's seasons?",
+      "answers": [
+        "The tilt of Earth's axis",
+        "How far Earth is from the Sun",
+        "The phases of the Moon",
+        "Ocean currents"
+      ],
+      "correct": "The tilt of Earth's axis",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "The tilt means each half of Earth leans toward the Sun for part of the year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Season",
+        "title": "Wikipedia: Season",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tilt'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "At which Chinese festival do people eat mooncakes?",
+      "answers": [
+        "Mid-Autumn Festival",
+        "Lunar New Year",
+        "Dragon Boat Festival",
+        "Lantern Festival"
+      ],
+      "correct": "Mid-Autumn Festival",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Mooncakes are shared under the full moon at the Mid-Autumn Festival.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mid-Autumn_Festival",
+        "title": "Wikipedia: Mid-Autumn Festival",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'mooncake'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The 1621 harvest feast at Plymouth was shared with which Native American people?",
+      "answers": [
+        "Wampanoag",
+        "Cherokee",
+        "Lakota",
+        "Navajo"
+      ],
+      "correct": "Wampanoag",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Wampanoag people and their leader Massasoit joined the Plymouth colonists.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thanksgiving_(United_States)",
+        "title": "Wikipedia: Thanksgiving (United States)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Wampanoag'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In the Northern Hemisphere, in which month does autumn begin?",
+      "answers": [
+        "September",
+        "October",
+        "August",
+        "November"
+      ],
+      "correct": "September",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "The September equinox marks the start of autumn in the north.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/September_equinox",
+        "title": "Wikipedia: September equinox",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'autumn'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "On which day is the White House Easter Egg Roll held?",
+      "answers": [
+        "Easter Monday",
+        "Good Friday",
+        "Easter Sunday",
+        "Ash Wednesday"
+      ],
+      "correct": "Easter Monday",
+      "difficulty": "hard",
+      "category": "Holidays & seasons",
+      "explain": "Children roll eggs on the White House lawn the day after Easter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/White_House_Easter_Egg_Roll",
+        "title": "Wikipedia: White House Easter Egg Roll",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Easter Monday'."
+      },
+      "ai_written": true
+    }
+  ]
+}

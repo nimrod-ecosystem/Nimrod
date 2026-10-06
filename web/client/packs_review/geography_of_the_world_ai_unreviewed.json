@@ -1,0 +1,1166 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Geography of the world (AI-written, not yet reviewed)",
+  "description": "60 questions on geography, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is the largest ocean on Earth?",
+      "answers": [
+        "Pacific Ocean",
+        "Atlantic Ocean",
+        "Indian Ocean",
+        "Arctic Ocean"
+      ],
+      "correct": "Pacific Ocean",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The Pacific is the biggest and deepest ocean.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pacific_Ocean",
+        "title": "Wikipedia: Pacific Ocean",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which continent is Egypt in?",
+      "answers": [
+        "Africa",
+        "Asia",
+        "Europe",
+        "South America"
+      ],
+      "correct": "Africa",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Egypt is in the northeast corner of Africa.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Egypt",
+        "title": "Wikipedia: Egypt",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Africa'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Paris is the capital of which country?",
+      "answers": [
+        "France",
+        "Italy",
+        "Spain",
+        "Germany"
+      ],
+      "correct": "France",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Paris has been France's capital for centuries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Paris",
+        "title": "Wikipedia: Paris",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'; 'France'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which continent is the coldest?",
+      "answers": [
+        "Antarctica",
+        "Europe",
+        "Asia",
+        "Australia"
+      ],
+      "correct": "Antarctica",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Antarctica, at the South Pole, is the coldest place on Earth.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Antarctica",
+        "title": "Wikipedia: Antarctica",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'coldest'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Rome is the capital of which country?",
+      "answers": [
+        "Italy",
+        "Greece",
+        "Spain",
+        "Portugal"
+      ],
+      "correct": "Italy",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Rome is Italy's capital and its largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rome",
+        "title": "Wikipedia: Rome",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'; 'Italy'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Sydney is a big city in which country?",
+      "answers": [
+        "Australia",
+        "Canada",
+        "England",
+        "South Africa"
+      ],
+      "correct": "Australia",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Sydney is Australia's largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sydney",
+        "title": "Wikipedia: Sydney",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Australia'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Big Ben is in which city?",
+      "answers": [
+        "London",
+        "Paris",
+        "Dublin",
+        "Edinburgh"
+      ],
+      "correct": "London",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Big Ben is the great bell in the clock tower at Westminster, in London.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Big_Ben",
+        "title": "Wikipedia: Big Ben",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'London'."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "Which country is shaped like a boot?",
+      "answers": [
+        "Italy",
+        "Greece",
+        "Chile",
+        "Norway"
+      ],
+      "correct": "Italy",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "On a map, Italy looks like a boot kicking a ball (Sicily).",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Italy's boot shape is one of the best-known map outlines; taught in schools everywhere."
+      },
+      "ai_written": true,
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+    },
+    {
+      "question": "What is the largest hot desert in the world?",
+      "answers": [
+        "Sahara",
+        "Gobi",
+        "Mojave",
+        "Kalahari"
+      ],
+      "correct": "Sahara",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The Sahara covers much of North Africa.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sahara",
+        "title": "Wikipedia: Sahara",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest hot desert'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Mount Everest is in which mountain range?",
+      "answers": [
+        "Himalayas",
+        "Andes",
+        "Alps",
+        "Rockies"
+      ],
+      "correct": "Himalayas",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Everest sits in the Himalayas, on the border of Nepal and China.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mount_Everest",
+        "title": "Wikipedia: Mount Everest",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Himalaya'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which ocean lies between Europe and North America?",
+      "answers": [
+        "Atlantic Ocean",
+        "Pacific Ocean",
+        "Indian Ocean",
+        "Arctic Ocean"
+      ],
+      "correct": "Atlantic Ocean",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The Atlantic separates the Americas from Europe and Africa.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atlantic_Ocean",
+        "title": "Wikipedia: Atlantic Ocean",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Europe'; 'North America'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Great Barrier Reef is off the coast of which country?",
+      "answers": [
+        "Australia",
+        "Brazil",
+        "Mexico",
+        "Japan"
+      ],
+      "correct": "Australia",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The reef runs along the coast of Queensland, Australia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Great_Barrier_Reef",
+        "title": "Wikipedia: Great Barrier Reef",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Queensland'; 'Australia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Canada?",
+      "answers": [
+        "Ottawa",
+        "Toronto",
+        "Vancouver",
+        "Montreal"
+      ],
+      "correct": "Ottawa",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Ottawa, in Ontario, is Canada's capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ottawa",
+        "title": "Wikipedia: Ottawa",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which great river flows through Egypt?",
+      "answers": [
+        "Nile",
+        "Amazon",
+        "Thames",
+        "Danube"
+      ],
+      "correct": "Nile",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The Nile runs north through Egypt to the Mediterranean.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nile",
+        "title": "Wikipedia: Nile",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Egypt'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which continent is Brazil in?",
+      "answers": [
+        "South America",
+        "Africa",
+        "Asia",
+        "North America"
+      ],
+      "correct": "South America",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Brazil is the biggest country in South America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Brazil",
+        "title": "Wikipedia: Brazil",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'South America'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Spain?",
+      "answers": [
+        "Madrid",
+        "Barcelona",
+        "Lisbon",
+        "Seville"
+      ],
+      "correct": "Madrid",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Madrid sits in the middle of Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Madrid",
+        "title": "Wikipedia: Madrid",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which country are the Giza pyramids?",
+      "answers": [
+        "Egypt",
+        "Mexico",
+        "Greece",
+        "India"
+      ],
+      "correct": "Egypt",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The great pyramids stand at Giza, near Cairo.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Giza_pyramid_complex",
+        "title": "Wikipedia: Giza pyramid complex",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Egypt'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which country is the Taj Mahal?",
+      "answers": [
+        "India",
+        "Pakistan",
+        "Iran",
+        "Bangladesh"
+      ],
+      "correct": "India",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The Taj Mahal is in Agra, India.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
+        "title": "Wikipedia: Taj Mahal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'India'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which river runs through London?",
+      "answers": [
+        "Thames",
+        "Seine",
+        "Rhine",
+        "Danube"
+      ],
+      "correct": "Thames",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "The River Thames flows through the middle of London.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/River_Thames",
+        "title": "Wikipedia: River Thames",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'London'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the largest island in the world?",
+      "answers": [
+        "Greenland",
+        "Iceland",
+        "Ireland",
+        "Madagascar"
+      ],
+      "correct": "Greenland",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Not counting Australia, which is a continent, Greenland is the biggest island.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Greenland",
+        "title": "Wikipedia: Greenland",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest island'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Australia?",
+      "answers": [
+        "Canberra",
+        "Sydney",
+        "Melbourne",
+        "Perth"
+      ],
+      "correct": "Canberra",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Canberra was built to be the capital, between Sydney and Melbourne.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Canberra",
+        "title": "Wikipedia: Canberra",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the smallest country in the world by area?",
+      "answers": [
+        "Vatican City",
+        "Monaco",
+        "San Marino",
+        "Malta"
+      ],
+      "correct": "Vatican City",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Vatican City, inside Rome, is the smallest country.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Vatican_City",
+        "title": "Wikipedia: Vatican City",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'smallest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Brazil?",
+      "answers": [
+        "Brasília",
+        "Rio de Janeiro",
+        "São Paulo",
+        "Salvador"
+      ],
+      "correct": "Brasília",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Brasília became the capital in 1960.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Brasília",
+        "title": "Wikipedia: Brasília",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which mountain range runs down the west side of South America?",
+      "answers": [
+        "Andes",
+        "Alps",
+        "Urals",
+        "Atlas Mountains"
+      ],
+      "correct": "Andes",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "The Andes are the longest mountain range on land.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Andes",
+        "title": "Wikipedia: Andes",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'South America'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Strait of Gibraltar separates Spain from which country?",
+      "answers": [
+        "Morocco",
+        "Algeria",
+        "Portugal",
+        "Tunisia"
+      ],
+      "correct": "Morocco",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Only a few miles of water lie between Spain and Morocco there.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Strait_of_Gibraltar",
+        "title": "Wikipedia: Strait of Gibraltar",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Morocco'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Egypt?",
+      "answers": [
+        "Cairo",
+        "Alexandria",
+        "Luxor",
+        "Giza"
+      ],
+      "correct": "Cairo",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Cairo, on the Nile, is Egypt's capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cairo",
+        "title": "Wikipedia: Cairo",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The ruins of Machu Picchu are in which country?",
+      "answers": [
+        "Peru",
+        "Mexico",
+        "Chile",
+        "Bolivia"
+      ],
+      "correct": "Peru",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Machu Picchu sits high in the Andes of Peru.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Machu_Picchu",
+        "title": "Wikipedia: Machu Picchu",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Peru'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which desert covers much of Mongolia and northern China?",
+      "answers": [
+        "Gobi",
+        "Sahara",
+        "Atacama",
+        "Kalahari"
+      ],
+      "correct": "Gobi",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "The Gobi is a cold desert in East Asia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gobi_Desert",
+        "title": "Wikipedia: Gobi Desert",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Mongolia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Danube river flows into which sea?",
+      "answers": [
+        "Black Sea",
+        "Mediterranean Sea",
+        "North Sea",
+        "Baltic Sea"
+      ],
+      "correct": "Black Sea",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "The Danube crosses Europe and ends at the Black Sea.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Danube",
+        "title": "Wikipedia: Danube",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Black Sea'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Turkey?",
+      "answers": [
+        "Ankara",
+        "Istanbul",
+        "Izmir",
+        "Antalya"
+      ],
+      "correct": "Ankara",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Istanbul is bigger, but Ankara is the capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ankara",
+        "title": "Wikipedia: Ankara",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Panama Canal links the Atlantic Ocean with which ocean?",
+      "answers": [
+        "Pacific Ocean",
+        "Indian Ocean",
+        "Arctic Ocean",
+        "Southern Ocean"
+      ],
+      "correct": "Pacific Ocean",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Ships use the canal to cross between the Atlantic and the Pacific.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Panama_Canal",
+        "title": "Wikipedia: Panama Canal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Pacific'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the highest mountain in Africa?",
+      "answers": [
+        "Mount Kilimanjaro",
+        "Mount Kenya",
+        "Table Mountain",
+        "Mount Stanley"
+      ],
+      "correct": "Mount Kilimanjaro",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Kilimanjaro, in Tanzania, is Africa's tallest peak.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mount_Kilimanjaro",
+        "title": "Wikipedia: Mount Kilimanjaro",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'highest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The city of Marrakesh is in which country?",
+      "answers": [
+        "Morocco",
+        "Egypt",
+        "Tunisia",
+        "Algeria"
+      ],
+      "correct": "Morocco",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Marrakesh is a famous old city in Morocco.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Marrakesh",
+        "title": "Wikipedia: Marrakesh",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Morocco'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of South Korea?",
+      "answers": [
+        "Seoul",
+        "Busan",
+        "Pyongyang",
+        "Incheon"
+      ],
+      "correct": "Seoul",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Seoul is South Korea's capital and largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Seoul",
+        "title": "Wikipedia: Seoul",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which sea lies between Europe and Africa?",
+      "answers": [
+        "Mediterranean Sea",
+        "Caribbean Sea",
+        "Red Sea",
+        "Baltic Sea"
+      ],
+      "correct": "Mediterranean Sea",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "The Mediterranean has Europe to the north and Africa to the south.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mediterranean_Sea",
+        "title": "Wikipedia: Mediterranean Sea",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Africa'; 'Europe'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Argentina?",
+      "answers": [
+        "Buenos Aires",
+        "Santiago",
+        "Montevideo",
+        "Lima"
+      ],
+      "correct": "Buenos Aires",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Buenos Aires sits on the Río de la Plata.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Buenos_Aires",
+        "title": "Wikipedia: Buenos Aires",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Iceland?",
+      "answers": [
+        "Reykjavík",
+        "Oslo",
+        "Helsinki",
+        "Copenhagen"
+      ],
+      "correct": "Reykjavík",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Reykjavík is the most northerly capital of a country.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Reykjavík",
+        "title": "Wikipedia: Reykjavík",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the name of the large island off the southeast coast of Africa?",
+      "answers": [
+        "Madagascar",
+        "Sri Lanka",
+        "Sicily",
+        "Borneo"
+      ],
+      "correct": "Madagascar",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Madagascar lies in the Indian Ocean, east of Mozambique.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Madagascar",
+        "title": "Wikipedia: Madagascar",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Indian Ocean'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of New Zealand?",
+      "answers": [
+        "Wellington",
+        "Auckland",
+        "Christchurch",
+        "Queenstown"
+      ],
+      "correct": "Wellington",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Auckland is bigger, but Wellington is the capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wellington",
+        "title": "Wikipedia: Wellington",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the largest lake in Africa?",
+      "answers": [
+        "Lake Victoria",
+        "Lake Tanganyika",
+        "Lake Malawi",
+        "Lake Chad"
+      ],
+      "correct": "Lake Victoria",
+      "difficulty": "medium",
+      "category": "Geography",
+      "explain": "Lake Victoria is shared by Uganda, Kenya and Tanzania.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lake_Victoria",
+        "title": "Wikipedia: Lake Victoria",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: \"africa's largest lake\"."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the deepest lake in the world?",
+      "answers": [
+        "Lake Baikal",
+        "Lake Tanganyika",
+        "Lake Superior",
+        "Crater Lake"
+      ],
+      "correct": "Lake Baikal",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Lake Baikal in Siberia is over a mile deep.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lake_Baikal",
+        "title": "Wikipedia: Lake Baikal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'deepest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which country has the longest coastline in the world?",
+      "answers": [
+        "Canada",
+        "Russia",
+        "Australia",
+        "Norway"
+      ],
+      "correct": "Canada",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Canada's many islands give it the longest coastline.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Canada",
+        "title": "Wikipedia: Canada",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'longest coastline'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which desert in Chile is one of the driest places on Earth?",
+      "answers": [
+        "Atacama Desert",
+        "Namib Desert",
+        "Sonoran Desert",
+        "Thar Desert"
+      ],
+      "correct": "Atacama Desert",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Some weather stations in the Atacama have never recorded rain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atacama_Desert",
+        "title": "Wikipedia: Atacama Desert",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'driest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Lake Titicaca lies on the border of Peru and which other country?",
+      "answers": [
+        "Bolivia",
+        "Chile",
+        "Ecuador",
+        "Argentina"
+      ],
+      "correct": "Bolivia",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Lake Titicaca is shared by Peru and Bolivia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lake_Titicaca",
+        "title": "Wikipedia: Lake Titicaca",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Bolivia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which African country was once known as Abyssinia?",
+      "answers": [
+        "Ethiopia",
+        "Eritrea",
+        "Somalia",
+        "Sudan"
+      ],
+      "correct": "Ethiopia",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Abyssinia is an old name for Ethiopia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ethiopia",
+        "title": "Wikipedia: Ethiopia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Abyssinia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the longest river in Europe?",
+      "answers": [
+        "Volga",
+        "Danube",
+        "Rhine",
+        "Dnieper"
+      ],
+      "correct": "Volga",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "The Volga flows through Russia to the Caspian Sea.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Volga",
+        "title": "Wikipedia: Volga",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'longest river in Europe'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the deepest known point in the ocean called?",
+      "answers": [
+        "Challenger Deep",
+        "Milwaukee Deep",
+        "Horizon Deep",
+        "Sirena Deep"
+      ],
+      "correct": "Challenger Deep",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Challenger Deep is in the Mariana Trench in the Pacific.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Challenger_Deep",
+        "title": "Wikipedia: Challenger Deep",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'deepest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of the Canadian province of British Columbia?",
+      "answers": [
+        "Victoria",
+        "Vancouver",
+        "Kelowna",
+        "Surrey"
+      ],
+      "correct": "Victoria",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Victoria, on Vancouver Island, is the capital of British Columbia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Victoria,_British_Columbia",
+        "title": "Wikipedia: Victoria, British Columbia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which two countries share the longest international border?",
+      "answers": [
+        "Canada and the United States",
+        "Russia and Kazakhstan",
+        "Chile and Argentina",
+        "China and Mongolia"
+      ],
+      "correct": "Canada and the United States",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "The Canada-US border is the longest between two countries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Canada–United_States_border",
+        "title": "Wikipedia: Canada–United States border",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'longest international border'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Morocco?",
+      "answers": [
+        "Rabat",
+        "Casablanca",
+        "Marrakesh",
+        "Fez"
+      ],
+      "correct": "Rabat",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Casablanca is bigger, but Rabat is the capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rabat",
+        "title": "Wikipedia: Rabat",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which strait separates Asia from North America?",
+      "answers": [
+        "Bering Strait",
+        "Strait of Magellan",
+        "Bosporus",
+        "Strait of Hormuz"
+      ],
+      "correct": "Bering Strait",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "The Bering Strait lies between Russia and Alaska.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bering_Strait",
+        "title": "Wikipedia: Bering Strait",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Asia'; 'North America'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The historic city of Timbuktu is in which country?",
+      "answers": [
+        "Mali",
+        "Niger",
+        "Chad",
+        "Senegal"
+      ],
+      "correct": "Mali",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Timbuktu is near the Niger River in Mali.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Timbuktu",
+        "title": "Wikipedia: Timbuktu",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Mali'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Vietnam?",
+      "answers": [
+        "Hanoi",
+        "Ho Chi Minh City",
+        "Da Nang",
+        "Hue"
+      ],
+      "correct": "Hanoi",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Ho Chi Minh City is larger, but Hanoi is the capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hanoi",
+        "title": "Wikipedia: Hanoi",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the highest mountain in North America?",
+      "answers": [
+        "Denali",
+        "Mount Logan",
+        "Mount Whitney",
+        "Mount Rainier"
+      ],
+      "correct": "Denali",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Denali, in Alaska, is North America's tallest peak.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Denali",
+        "title": "Wikipedia: Denali",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'highest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Kalahari Desert covers much of which country?",
+      "answers": [
+        "Botswana",
+        "Kenya",
+        "Egypt",
+        "Nigeria"
+      ],
+      "correct": "Botswana",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Most of Botswana lies in the Kalahari.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kalahari_Desert",
+        "title": "Wikipedia: Kalahari Desert",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Botswana'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which European capital stands on the Vltava river?",
+      "answers": [
+        "Prague",
+        "Vienna",
+        "Budapest",
+        "Warsaw"
+      ],
+      "correct": "Prague",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "The Vltava flows through the middle of Prague.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Vltava",
+        "title": "Wikipedia: Vltava",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Prague'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Ushuaia, often called the world's southernmost city, is in which country?",
+      "answers": [
+        "Argentina",
+        "Chile",
+        "New Zealand",
+        "South Africa"
+      ],
+      "correct": "Argentina",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Ushuaia is at the tip of Argentina, on Tierra del Fuego.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ushuaia",
+        "title": "Wikipedia: Ushuaia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Argentina'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Nigeria?",
+      "answers": [
+        "Abuja",
+        "Lagos",
+        "Kano",
+        "Ibadan"
+      ],
+      "correct": "Abuja",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Lagos is the biggest city, but Abuja became the capital in 1991.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Abuja",
+        "title": "Wikipedia: Abuja",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "The Atlas Mountains run through Morocco, Algeria and which other country?",
+      "answers": [
+        "Tunisia",
+        "Egypt",
+        "Libya",
+        "Mali"
+      ],
+      "correct": "Tunisia",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "The Atlas range stretches across Morocco, Algeria and Tunisia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atlas_Mountains",
+        "title": "Wikipedia: Atlas Mountains",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Tunisia'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which river flows through Baghdad?",
+      "answers": [
+        "Tigris",
+        "Euphrates",
+        "Jordan",
+        "Indus"
+      ],
+      "correct": "Tigris",
+      "difficulty": "hard",
+      "category": "Geography",
+      "explain": "Baghdad stands on the Tigris River.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Baghdad",
+        "title": "Wikipedia: Baghdad",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Tigris'."
+      },
+      "ai_written": true
+    }
+  ]
+}

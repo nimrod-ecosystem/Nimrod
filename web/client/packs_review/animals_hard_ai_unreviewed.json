@@ -1,0 +1,418 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Animals - hard (AI-written, not yet reviewed)",
+  "description": "21 HARD questions on animals, written by Claude as an add-on to the easier 'Animals' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is a group of owls called?",
+      "answers": [
+        "A parliament",
+        "A gaggle",
+        "A pod",
+        "A herd"
+      ],
+      "correct": "A parliament",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A group of owls is called a parliament.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Owl",
+        "title": "Wikipedia: Owl",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'parliament'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which bird is the fastest animal in a dive?",
+      "answers": [
+        "Peregrine falcon",
+        "Golden eagle",
+        "Swift",
+        "Albatross"
+      ],
+      "correct": "Peregrine falcon",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Diving peregrine falcons can pass 300 km per hour.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peregrine_falcon",
+        "title": "Wikipedia: Peregrine falcon",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fastest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many hearts does an octopus have?",
+      "answers": [
+        "Three",
+        "One",
+        "Two",
+        "Eight"
+      ],
+      "correct": "Three",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Two hearts pump blood to the gills and one to the body.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Octopus",
+        "title": "Wikipedia: Octopus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'three hearts'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is a female donkey called?",
+      "answers": [
+        "A jenny",
+        "A doe",
+        "A ewe",
+        "A sow"
+      ],
+      "correct": "A jenny",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A female donkey is a jenny, or jennet; a male is a jack.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Donkey",
+        "title": "Wikipedia: Donkey",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'jenny'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which egg-laying mammal has a bill like a duck?",
+      "answers": [
+        "Platypus",
+        "Beaver",
+        "Otter",
+        "Mole"
+      ],
+      "correct": "Platypus",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The platypus is one of the few mammals that lay eggs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Platypus",
+        "title": "Wikipedia: Platypus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'egg'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the largest species of shark?",
+      "answers": [
+        "Whale shark",
+        "Great white shark",
+        "Basking shark",
+        "Tiger shark"
+      ],
+      "correct": "Whale shark",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The whale shark is the largest fish alive, and it eats plankton.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Whale_shark",
+        "title": "Wikipedia: Whale shark",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What word describes animals that are most active at dawn and dusk?",
+      "answers": [
+        "Crepuscular",
+        "Nocturnal",
+        "Diurnal",
+        "Arboreal"
+      ],
+      "correct": "Crepuscular",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Crepuscular animals, like deer, come out in the twilight.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Crepuscular_animal",
+        "title": "Wikipedia: Crepuscular animal",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'twilight'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many compartments does a cow's stomach have?",
+      "answers": [
+        "Four",
+        "Two",
+        "Three",
+        "Six"
+      ],
+      "correct": "Four",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A cow's stomach has four parts, starting with the rumen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ruminant",
+        "title": "Wikipedia: Ruminant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which bird can fly backwards?",
+      "answers": [
+        "Hummingbird",
+        "Kingfisher",
+        "Swallow",
+        "Sparrow"
+      ],
+      "correct": "Hummingbird",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Hummingbirds can hover and even fly backwards.",
+      "source": {
+        "url": "https://nationalzoo.si.edu/migratory-birds/hummingbirds",
+        "title": "Smithsonian's National Zoo",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fly backward'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which of these animals has the longest pregnancy?",
+      "answers": [
+        "Elephant",
+        "Giraffe",
+        "Rhinoceros",
+        "Horse"
+      ],
+      "correct": "Elephant",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "An elephant pregnancy lasts nearly two years.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Elephant",
+        "title": "Wikipedia: Elephant",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'gestation'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do koalas mostly eat?",
+      "answers": [
+        "Eucalyptus leaves",
+        "Bamboo",
+        "Grass",
+        "Insects"
+      ],
+      "correct": "Eucalyptus leaves",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Koalas live almost entirely on eucalyptus leaves.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Koala",
+        "title": "Wikipedia: Koala",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eucalyptus'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What kind of animal is a Komodo dragon?",
+      "answers": [
+        "Lizard",
+        "Snake",
+        "Crocodile",
+        "Turtle"
+      ],
+      "correct": "Lizard",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The Komodo dragon is the largest living lizard.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Komodo_dragon",
+        "title": "Wikipedia: Komodo dragon",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'lizard'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is a male honey bee called?",
+      "answers": [
+        "A drone",
+        "A worker",
+        "A soldier",
+        "A buck"
+      ],
+      "correct": "A drone",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Drones are the male bees in a hive.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Drone_(bee)",
+        "title": "Wikipedia: Drone (bee)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'male'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the largest living reptile?",
+      "answers": [
+        "Saltwater crocodile",
+        "Komodo dragon",
+        "Green anaconda",
+        "Leatherback turtle"
+      ],
+      "correct": "Saltwater crocodile",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Big male saltwater crocodiles can be over 6 metres long.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Saltwater_crocodile",
+        "title": "Wikipedia: Saltwater crocodile",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is a young swan called?",
+      "answers": [
+        "A cygnet",
+        "A gosling",
+        "A duckling",
+        "An eaglet"
+      ],
+      "correct": "A cygnet",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Baby swans are cygnets; baby geese are goslings.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Swan",
+        "title": "Wikipedia: Swan",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cygnet'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the largest species of penguin?",
+      "answers": [
+        "Emperor penguin",
+        "King penguin",
+        "Adélie penguin",
+        "Gentoo penguin"
+      ],
+      "correct": "Emperor penguin",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Adult emperor penguins measure about 110 to 120 centimetres.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Emperor_penguin",
+        "title": "Wikipedia: Emperor penguin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What kind of animal is an axolotl?",
+      "answers": [
+        "A salamander",
+        "A fish",
+        "A lizard",
+        "An insect"
+      ],
+      "correct": "A salamander",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The axolotl is a salamander from lakes near Mexico City.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Axolotl",
+        "title": "Wikipedia: Axolotl",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'salamander'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the world's largest rodent?",
+      "answers": [
+        "Capybara",
+        "Beaver",
+        "Porcupine",
+        "Groundhog"
+      ],
+      "correct": "Capybara",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Capybaras from South America can weigh over 60 kilograms.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Capybara",
+        "title": "Wikipedia: Capybara",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'largest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Lobsters, crabs and shrimp belong to a group whose name means 'ten feet'. What is it?",
+      "answers": [
+        "Decapods",
+        "Arachnids",
+        "Cephalopods",
+        "Gastropods"
+      ],
+      "correct": "Decapods",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Decapod means ten-footed.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Decapoda",
+        "title": "Wikipedia: Decapoda",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ten'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call a scientist who studies birds?",
+      "answers": [
+        "Ornithologist",
+        "Entomologist",
+        "Herpetologist",
+        "Ichthyologist"
+      ],
+      "correct": "Ornithologist",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Ornithology is the study of birds.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ornithology",
+        "title": "Wikipedia: Ornithology",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'birds'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which big cat cannot fully pull in its claws?",
+      "answers": [
+        "Cheetah",
+        "Lion",
+        "Leopard",
+        "Jaguar"
+      ],
+      "correct": "Cheetah",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A cheetah's claws stay partly out, gripping the ground like running spikes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cheetah",
+        "title": "Wikipedia: Cheetah",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'claws'."
+      },
+      "ai_written": true
+    }
+  ]
+}

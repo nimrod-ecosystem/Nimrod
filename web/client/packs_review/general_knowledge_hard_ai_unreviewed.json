@@ -1,0 +1,417 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "General knowledge - hard (AI-written, not yet reviewed)",
+  "description": "21 HARD questions on general knowledge, written by Claude as an add-on to the easier 'General knowledge' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "How many sides does a dodecagon have?",
+      "answers": [
+        "Twelve",
+        "Ten",
+        "Eleven",
+        "Twenty"
+      ],
+      "correct": "Twelve",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Dodeca- means twelve.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dodecagon",
+        "title": "Wikipedia: Dodecagon",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'twelve'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the Roman numeral for 50?",
+      "answers": [
+        "L",
+        "C",
+        "D",
+        "V"
+      ],
+      "correct": "L",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "L is 50, C is 100, D is 500 and V is 5.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roman_numerals",
+        "title": "Wikipedia: Roman numerals",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '50'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the longest bone in the human body?",
+      "answers": [
+        "Femur",
+        "Tibia",
+        "Humerus",
+        "Fibula"
+      ],
+      "correct": "Femur",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "The femur is the thigh bone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Femur",
+        "title": "Wikipedia: Femur",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'longest'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the currency of Japan?",
+      "answers": [
+        "Yen",
+        "Won",
+        "Yuan",
+        "Rupee"
+      ],
+      "correct": "Yen",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Japan uses the yen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Japanese_yen",
+        "title": "Wikipedia: Japanese yen",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Japan'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who painted the ceiling of the Sistine Chapel?",
+      "answers": [
+        "Michelangelo",
+        "Raphael",
+        "Leonardo da Vinci",
+        "Donatello"
+      ],
+      "correct": "Michelangelo",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Michelangelo painted it between 1508 and 1512.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
+        "title": "Wikipedia: Sistine Chapel ceiling",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Michelangelo'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many keys does a standard piano have?",
+      "answers": [
+        "88",
+        "76",
+        "92",
+        "64"
+      ],
+      "correct": "88",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A full piano has 52 white keys and 36 black keys.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Piano",
+        "title": "Wikipedia: Piano",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '88'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many is a baker's dozen?",
+      "answers": [
+        "Thirteen",
+        "Twelve",
+        "Fourteen",
+        "Ten"
+      ],
+      "correct": "Thirteen",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A baker's dozen is one more than a dozen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dozen",
+        "title": "Wikipedia: Dozen",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: \"baker's dozen\"."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who wrote Pride and Prejudice?",
+      "answers": [
+        "Jane Austen",
+        "Charlotte Brontë",
+        "Emily Brontë",
+        "George Eliot"
+      ],
+      "correct": "Jane Austen",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Jane Austen's novel came out in 1813.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pride_and_Prejudice",
+        "title": "Wikipedia: Pride and Prejudice",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Austen'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In Einstein's E = mc², what does the c stand for?",
+      "answers": [
+        "The speed of light",
+        "Carbon",
+        "Electric charge",
+        "Calories"
+      ],
+      "correct": "The speed of light",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Energy equals mass times the speed of light squared.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mass–energy_equivalence",
+        "title": "Wikipedia: Mass–energy equivalence",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'speed of light'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which country is the ancient city of Petra?",
+      "answers": [
+        "Jordan",
+        "Egypt",
+        "Israel",
+        "Syria"
+      ],
+      "correct": "Jordan",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Petra's buildings are carved into rose-red rock in Jordan.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Petra",
+        "title": "Wikipedia: Petra",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jordan'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many squares are on a chessboard?",
+      "answers": [
+        "64",
+        "81",
+        "100",
+        "49"
+      ],
+      "correct": "64",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A chessboard is 8 squares by 8 squares.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chessboard",
+        "title": "Wikipedia: Chessboard",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '64'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which chess piece moves only diagonally?",
+      "answers": [
+        "Bishop",
+        "Rook",
+        "Knight",
+        "King"
+      ],
+      "correct": "Bishop",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A bishop always stays on squares of one colour.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bishop_(chess)",
+        "title": "Wikipedia: Bishop (chess)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'diagonal'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which alphabet is used to write Russian?",
+      "answers": [
+        "Cyrillic",
+        "Latin",
+        "Greek",
+        "Arabic"
+      ],
+      "correct": "Cyrillic",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Russian is written in the Cyrillic alphabet.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Russian_alphabet",
+        "title": "Wikipedia: Russian alphabet",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Cyrillic'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In Greek myth, who is king of the gods?",
+      "answers": [
+        "Zeus",
+        "Apollo",
+        "Poseidon",
+        "Hermes"
+      ],
+      "correct": "Zeus",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Zeus ruled the gods from Mount Olympus.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Zeus",
+        "title": "Wikipedia: Zeus",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'king of the gods'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many strings does a standard violin have?",
+      "answers": [
+        "Four",
+        "Five",
+        "Six",
+        "Three"
+      ],
+      "correct": "Four",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A violin's four strings are tuned G, D, A and E.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Violin",
+        "title": "Wikipedia: Violin",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four strings'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "In which year was Mount Everest first climbed?",
+      "answers": [
+        "1953",
+        "1923",
+        "1963",
+        "1975"
+      ],
+      "correct": "1953",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Edmund Hillary and Tenzing Norgay reached the top in 1953.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mount_Everest",
+        "title": "Wikipedia: Mount Everest",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1953'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who was the Roman god of the sea?",
+      "answers": [
+        "Neptune",
+        "Mars",
+        "Mercury",
+        "Vulcan"
+      ],
+      "correct": "Neptune",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Neptune matches the Greek god Poseidon.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Neptune_(mythology)",
+        "title": "Wikipedia: Neptune (mythology)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'sea'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Who painted The Starry Night?",
+      "answers": [
+        "Vincent van Gogh",
+        "Claude Monet",
+        "Paul Cézanne",
+        "Pablo Picasso"
+      ],
+      "correct": "Vincent van Gogh",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Van Gogh painted it in 1889.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Starry_Night",
+        "title": "Wikipedia: The Starry Night",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'van Gogh'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What do we call a word that reads the same backward and forward, like 'level'?",
+      "answers": [
+        "Palindrome",
+        "Anagram",
+        "Acronym",
+        "Homonym"
+      ],
+      "correct": "Palindrome",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Racecar and noon are palindromes too.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Palindrome",
+        "title": "Wikipedia: Palindrome",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'backward'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the line of latitude at 0 degrees called?",
+      "answers": [
+        "The Equator",
+        "The Prime Meridian",
+        "The Tropic of Cancer",
+        "The Arctic Circle"
+      ],
+      "correct": "The Equator",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "The Equator circles the middle of the Earth.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Equator",
+        "title": "Wikipedia: Equator",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'latitude'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "How many zeros are in one million?",
+      "answers": [
+        "Six",
+        "Five",
+        "Seven",
+        "Nine"
+      ],
+      "correct": "Six",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "One million is written 1,000,000.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Place value; 1,000,000 is written with six zeros by definition."
+      },
+      "ai_written": true
+    }
+  ]
+}

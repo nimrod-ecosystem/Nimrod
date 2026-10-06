@@ -1,0 +1,418 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "US states - hard (AI-written, not yet reviewed)",
+  "description": "21 HARD questions on us states, written by Claude as an add-on to the easier 'US states' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-05",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is the capital of Vermont?",
+      "answers": [
+        "Montpelier",
+        "Burlington",
+        "Concord",
+        "Augusta"
+      ],
+      "correct": "Montpelier",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Montpelier is the smallest state capital by population.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Montpelier,_Vermont",
+        "title": "Wikipedia: Montpelier, Vermont",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of South Dakota?",
+      "answers": [
+        "Pierre",
+        "Sioux Falls",
+        "Rapid City",
+        "Bismarck"
+      ],
+      "correct": "Pierre",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Pierre sits on the Missouri River.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pierre,_South_Dakota",
+        "title": "Wikipedia: Pierre, South Dakota",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state was the first to ratify the US Constitution?",
+      "answers": [
+        "Delaware",
+        "Pennsylvania",
+        "New Jersey",
+        "Virginia"
+      ],
+      "correct": "Delaware",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "That's why Delaware is called the First State.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Delaware",
+        "title": "Wikipedia: Delaware",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'First State'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Nevada?",
+      "answers": [
+        "Carson City",
+        "Las Vegas",
+        "Reno",
+        "Henderson"
+      ],
+      "correct": "Carson City",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Carson City is named after the scout Kit Carson.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Carson_City,_Nevada",
+        "title": "Wikipedia: Carson City, Nevada",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Old Dominion?",
+      "answers": [
+        "Virginia",
+        "Maryland",
+        "Delaware",
+        "Massachusetts"
+      ],
+      "correct": "Virginia",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Virginia has been called the Old Dominion since colonial times.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Virginia",
+        "title": "Wikipedia: Virginia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Old Dominion'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state has a flag that is not a rectangle?",
+      "answers": [
+        "Ohio",
+        "Texas",
+        "Alaska",
+        "Maine"
+      ],
+      "correct": "Ohio",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Ohio's flag is a swallowtail shape.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flag_of_Ohio",
+        "title": "Wikipedia: Flag of Ohio",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'swallowtail'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Tennessee and which other state each border eight other states?",
+      "answers": [
+        "Missouri",
+        "Kentucky",
+        "Illinois",
+        "Colorado"
+      ],
+      "correct": "Missouri",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Tennessee and Missouri tie for the most neighbouring states.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Missouri",
+        "title": "Wikipedia: Missouri",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'eight'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Kentucky?",
+      "answers": [
+        "Frankfort",
+        "Louisville",
+        "Lexington",
+        "Bowling Green"
+      ],
+      "correct": "Frankfort",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Frankfort is the capital, not the bigger city of Louisville.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Frankfort,_Kentucky",
+        "title": "Wikipedia: Frankfort, Kentucky",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Treasure State?",
+      "answers": [
+        "Montana",
+        "Nevada",
+        "Colorado",
+        "Alaska"
+      ],
+      "correct": "Montana",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Montana's nickname comes from its gold and silver mines.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Montana",
+        "title": "Wikipedia: Montana",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Treasure State'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Land of Enchantment?",
+      "answers": [
+        "New Mexico",
+        "Arizona",
+        "Utah",
+        "Oregon"
+      ],
+      "correct": "New Mexico",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "It's even on New Mexico's license plates.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/New_Mexico",
+        "title": "Wikipedia: New Mexico",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Land of Enchantment'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of North Dakota?",
+      "answers": [
+        "Bismarck",
+        "Fargo",
+        "Pierre",
+        "Grand Forks"
+      ],
+      "correct": "Bismarck",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Bismarck is named after the German chancellor Otto von Bismarck.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bismarck,_North_Dakota",
+        "title": "Wikipedia: Bismarck, North Dakota",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which is the only state named after a US president?",
+      "answers": [
+        "Washington",
+        "Virginia",
+        "Georgia",
+        "Maryland"
+      ],
+      "correct": "Washington",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Washington State is named after George Washington.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Washington_(state)",
+        "title": "Wikipedia: Washington (state)",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'George Washington'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Arizona, New Mexico, Colorado and which state meet at the Four Corners?",
+      "answers": [
+        "Utah",
+        "Nevada",
+        "Wyoming",
+        "Texas"
+      ],
+      "correct": "Utah",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "It is the only spot where four states touch.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Four_Corners",
+        "title": "Wikipedia: Four Corners",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Utah'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Juneau is the capital of which state?",
+      "answers": [
+        "Alaska",
+        "Hawaii",
+        "Washington",
+        "Oregon"
+      ],
+      "correct": "Alaska",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Juneau can't be reached by road from the rest of North America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Juneau,_Alaska",
+        "title": "Wikipedia: Juneau, Alaska",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Pelican State?",
+      "answers": [
+        "Louisiana",
+        "Florida",
+        "Alabama",
+        "Mississippi"
+      ],
+      "correct": "Louisiana",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "The brown pelican is Louisiana's state bird.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Louisiana",
+        "title": "Wikipedia: Louisiana",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Pelican State'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Oregon?",
+      "answers": [
+        "Salem",
+        "Portland",
+        "Eugene",
+        "Bend"
+      ],
+      "correct": "Salem",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Salem, not Portland, is Oregon's capital.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Salem,_Oregon",
+        "title": "Wikipedia: Salem, Oregon",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which Great Lake lies entirely within the United States?",
+      "answers": [
+        "Lake Michigan",
+        "Lake Superior",
+        "Lake Huron",
+        "Lake Erie"
+      ],
+      "correct": "Lake Michigan",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "The other four Great Lakes are shared with Canada.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lake_Michigan",
+        "title": "Wikipedia: Lake Michigan",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'entirely within'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Keystone State?",
+      "answers": [
+        "Pennsylvania",
+        "New York",
+        "Ohio",
+        "Virginia"
+      ],
+      "correct": "Pennsylvania",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Pennsylvania sat in the middle of the original thirteen colonies, like a keystone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pennsylvania",
+        "title": "Wikipedia: Pennsylvania",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Keystone State'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of Maryland?",
+      "answers": [
+        "Annapolis",
+        "Baltimore",
+        "Frederick",
+        "Dover"
+      ],
+      "correct": "Annapolis",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Annapolis is home to the US Naval Academy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Annapolis,_Maryland",
+        "title": "Wikipedia: Annapolis, Maryland",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "Which state is nicknamed the Cornhusker State?",
+      "answers": [
+        "Nebraska",
+        "Iowa",
+        "Kansas",
+        "Indiana"
+      ],
+      "correct": "Nebraska",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "Nebraska's nickname comes from husking corn by hand.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nebraska",
+        "title": "Wikipedia: Nebraska",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Cornhusker'."
+      },
+      "ai_written": true
+    },
+    {
+      "question": "What is the capital of West Virginia?",
+      "answers": [
+        "Charleston",
+        "Wheeling",
+        "Morgantown",
+        "Huntington"
+      ],
+      "correct": "Charleston",
+      "difficulty": "hard",
+      "category": "US states",
+      "explain": "West Virginia's capital shares its name with a city in South Carolina.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Charleston,_West_Virginia",
+        "title": "Wikipedia: Charleston, West Virginia",
+        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'capital'."
+      },
+      "ai_written": true
+    }
+  ]
+}
