@@ -74,7 +74,7 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack, itemSources, difficultyLevel } from '../packs.js';
-import { createAdaptiveSession, adaptiveSettings } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, openLadderStore, splitLadderStore, LADDER_STATE_OPTIONS } from '../adaptive_play.js';
 import { RATING_DEFAULTS, LADDER_DEFAULTS, expected, levelOf, levelRating } from '../rating.js';
 import { ensureQuizStyle } from '../quiz_view.js';
 import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
@@ -135,7 +135,17 @@ export const DEFAULTS = {
   // this module either way, so the actual risk today is to content nobody in this room can see.
   // Flipped. If a written bank is later found broken by this, the fix is the settings row
   // itself ("Where questions come from" -> "Written questions"), not reverting this.
-  contentSource: 'pack',
+  //
+  // *** EVERY PACK TOGETHER, DEFAULT SINCE 2026-10-06 (Mike: "There should be a choice to have the questions
+  // come from all of the pools."). *** 'all' deals from every pack this panel may play at once, by level (see
+  // ALL THE PACKS below). Made the default, argued:
+  //   FOR: the first pack in the list, which a panel nobody set up played until now, is basic arithmetic (300
+  //   sums), which is a thin idea of trivia; with levels, one big mixed pool gives every player variety at their
+  //   own level. Mike's ask reads as the way he wants to play.
+  //   AGAINST: it is not only new panels. A panel that never chose a source reads this default too, so it moves
+  //   from the maths pack to every pack (there is no telling a new panel from one nobody configured). Anybody who
+  //   wants the one pack picks "One pack". [Guess, on Mike's list.]
+  contentSource: 'all',
   packId: packsFor('trivia')[0]?.id || null,
   // *** REVIEW BY PLAYING (Mike, 2026-10-03; ../pack_reviews.js). OFF BY DEFAULT. *** Off, an unreviewed
   // question is never dealt and an unreviewed pack is not even offered; only questions somebody already
@@ -268,11 +278,40 @@ export function packToTriviaBank(pack) {
 // *** ITS OWN ROW, `ratings_trivia`, NOT THE SHARED `ratings` (adaptive_play.js LADDER_KEY). *** Argued:
 //   FOR sharing: one place for every game's ladder, which is what adaptive_play.js describes.
 //   AGAINST, and it decides it: what sharing buys is a question's rating learning from every game that
-//   meets it, and no other game meets a trivia question. What it costs: a session writes its WHOLE ladder
-//   on every answer, from what it loaded when it started, so two games open on one screen overwrite each
-//   other's progress; and a few hundred pack questions' ratings would ride in the row every other game
-//   rewrites on every answer. A player's trivia level is per game in either row. [Guess, on Mike's list.]
+//   meets it, and no other game meets a trivia question. What it costs: a few hundred (now over a thousand)
+//   pack questions' ratings would ride in the row every other game rewrites on every answer. A player's trivia
+//   level is per game in either row. [Guess, on Mike's list.] (The other cost argued here on 2026-10-05, two
+//   games overwriting each other's progress, is fixed in adaptive_play.js: saving merges entry by entry.)
+//
+// ---------------------------------------------------------------------------------------
+// *** THE LEVEL FOLLOWS THE PERSON (2026-10-06) ***
+// ---------------------------------------------------------------------------------------
+// Until now a player's trivia level was a row on one screen: the same person on another screen started over.
+// Now the screen's own person (`person:<id>`) keeps their trivia row WITH THEM, in their own `ratings_trivia`
+// (ctx.makePersonState), so it is the same on every screen of theirs; adaptive_play.js `splitLadderStore`
+// argues the split and the one-time move. What stays on the screen's row: every question's rating (a fact
+// about the question, learned from everybody who meets it here), and players typed into "Players", who have
+// no person to keep it with. A host with no per-person rows (a test, the modules page) keeps everything on the
+// screen's row, as before.
+//
+// *** "START TRIVIA AT" (Mike, 2026-10-06: an older player should not start at the easy end), kept with the person too (`start`: easy / medium /
+// hard). *** DEFAULT EASY, argued:
+//   FOR medium: a capable teenager or adult answers about ten easy questions before the floor moves (90% of ten
+//   at the easiest level), which is a dull first few minutes.
+//   AGAINST, and it decides it: the ladder aims at 80% success, and a start that is too hard for a young child or
+//   somebody recovering from an injury is discouraging in a way ten easy questions are not; a person who should
+//   start higher is one setting away. [Guess, on Mike's list.]
+// CHANGING IT starts them again at that level, up OR down (adaptive_play.js `startAt`: floor and rating there,
+// the answers being judged cleared, everything else kept). Argued: FOR only for a new player, which the word
+// "start" suggests: a setting changed on somebody who has already played would otherwise change nothing,
+// which reads as broken. A caregiver who picks it is saying where they should be now. [Guess, on Mike's list.]
+// THE MENU ROW IS THE PANEL'S (settings rows are kept per panel), so the panel keeps a copy and the person's row
+// is the truth: a change made in the menu is written to the person; a change made on another of their screens
+// is copied back into the row so the menu shows it. A screen with no person: the row applies to its one
+// unnamed player, on the panel.
 export const TRIVIA_LADDER_KEY = 'ratings_trivia';
+export const PERSON_START_KEY = 'personStart';
+export const START_LEVELS = Object.freeze(['easy', 'medium', 'hard']);
 export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}`;
 
 /** The level an item was written for: its `level`, else its `difficulty` (packs.js), else null. */
@@ -291,10 +330,12 @@ export const hasLevels = (bank) => (bank || []).some((b) => itemLevel(b) != null
  *   playerRating  the player's rating, for which in-window level is nearest `target`
  *   avoid         ids not to repeat if anything else is left (seen this sitting)
  *   never         ids not to repeat unless nothing else exists at all (already in this round)
+ *   poolOf(c)     which pack a candidate came from (ALL THE PACKS): inside the chosen level, a pack is picked
+ *                 first, evenly, then a question in it. Left out, or one pack: one pick, as before.
  * Returns one of `cands`, or null when there are none.
  */
 export function pickNear(cands = [], { lo = 1, hi = 1, playerRating = RATING_DEFAULTS.start, avoid = new Set(),
-  never = new Set(), target = LADDER_DEFAULTS.target, rand = Math.random, rating = {} } = {}) {
+  never = new Set(), target = LADDER_DEFAULTS.target, rand = Math.random, rating = {}, poolOf = null } = {}) {
   const list = (cands || []).filter((c) => c && c.item);
   if (!list.length) return null;
   const R = { ...RATING_DEFAULTS, ...(rating || {}) };
@@ -306,9 +347,17 @@ export function pickNear(cands = [], { lo = 1, hi = 1, playerRating = RATING_DEF
     : [1, L < lo ? lo - L : L - hi, L < lo ? 0 : 1]);
   const cmp = (a, b) => { const x = rank(a), y = rank(b); return (x[0] - y[0]) || (x[1] - y[1]) || (x[2] - y[2]) || (a - b); };
   const best = [...new Set(from.map((c) => c.level))].sort(cmp)[0];
-  const group = from.filter((c) => c.level === best);
-  const i = Math.floor(Number(rand()) * group.length);
-  return group[Math.max(0, Math.min(group.length - 1, Number.isFinite(i) ? i : 0))];
+  let group = from.filter((c) => c.level === best);
+  const at = (n) => { const i = Math.floor(Number(rand()) * n); return Math.max(0, Math.min(n - 1, Number.isFinite(i) ? i : 0)); };
+  // ALL THE PACKS (below): a pack first, then a question in it, so 300 sums do not crowd out a pack of ten.
+  if (typeof poolOf === 'function') {
+    const pools = [...new Set(group.map((c) => poolOf(c)))];
+    if (pools.length > 1) {
+      const pool = pools[at(pools.length)];
+      group = group.filter((c) => poolOf(c) === pool);
+    }
+  }
+  return group[at(group.length)];
 }
 
 // Turn a bank into a round. Deterministic under an injected `rand`, the same way `wordforge`
@@ -425,15 +474,18 @@ function loadPackCached(id) {
 
 const SETTINGS = [
   ...(TRIVIA_PACKS.length ? [
-    { key: 'contentSource', label: 'Where questions come from', kind: 'choice', default: 'pack',
+    // 'all' FIRST: it is the default, and a switch walks a choice from the top.
+    { key: 'contentSource', label: 'Where questions come from', kind: 'choice', default: 'all',
       level: 'standard',
-      options: [{ value: 'bank', label: 'Written questions + word bank' },
-                { value: 'pack', label: 'A built-in pack' }],
+      options: [{ value: 'all', label: 'Every question pack' },
+                { value: 'pack', label: 'A built-in pack' },
+                { value: 'bank', label: 'Written questions + word bank' }],
       note: 'A pack is ready-made — nobody has to write questions first, and nobody playing '
-        + 'already knows the answers.' },
+        + 'already knows the answers. "Every question pack" mixes them all, each player at their own level.' },
     { key: 'packId', label: 'Which pack', kind: 'choice', default: TRIVIA_PACKS[0].id,
       level: 'standard',
-      options: TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })) },
+      options: TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })),
+      appliesWhen: (v) => (v.contentSource ?? DEFAULTS.contentSource) === 'pack' },
   ] : []),
   // *** WHERE THIS SETTING LIVES, ARGUED: THIS PANEL, ON THIS SCREEN — not the account, not the person. ***
   //   FOR the account (or the person): turn it on once and review anywhere. AGAINST, and it decides it: on
@@ -447,7 +499,8 @@ const SETTINGS = [
   //   everywhere (../pack_reviews.js).
   { key: 'includeUnreviewed', label: 'Include unreviewed questions (review as you play)', default: false,
     level: 'standard', onLabel: 'On', offLabel: 'Off',
-    note: 'Adds the packs waiting for review to "Which pack". Each unreviewed question shows a small ✓ fine / ✗ wrong '
+    note: 'Adds the packs waiting for review to "Which pack", and their questions to "Every question pack". '
+      + 'Each unreviewed question shows a small ✓ fine / ✗ wrong '
       + '(or press W / O, or say "that one is wrong"). Playing a question through passes it; ✗ keeps it out '
       + 'for good. Only for this panel — turn it off when you have finished reviewing.' },
   { key: 'roundLength', label: 'Questions in a round', kind: 'choice', default: 10,
@@ -470,6 +523,15 @@ const SETTINGS = [
   // which carry no levels.
   ...adaptiveSettings({ startLevels: 3, appliesWhen: (v) => v.contentSource !== 'bank' })
     .filter((row) => row.key !== 'review'),
+  // THE PERSON'S OWN START (THE LEVEL FOLLOWS THE PERSON, above). Standard, because it is the one a caregiver
+  // setting up somebody new reaches for; the per-panel "A new player starts at level" stays advanced.
+  { key: PERSON_START_KEY, label: 'Start trivia at', kind: 'choice', default: 'easy', level: 'standard',
+    options: [{ value: 'easy', label: 'Easy questions' }, { value: 'medium', label: 'Medium questions' },
+              { value: 'hard', label: 'Hard questions' }],
+    note: 'For the person this screen is for, and kept with them, so it is the same on each of their screens. '
+      + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
+      + 'start at "A new player starts at level".',
+    appliesWhen: (v) => v.contentSource !== 'bank' },
   // Mike, 2026-10-04. Per game (this panel's settings, like the score row), not per account: the same quiz on
   // a shared screen and on somebody's phone may want different amounts under the answer.
   // 2026-10-04: the item's own explanation, above the source line — so its row is above the source's row too.
@@ -643,6 +705,60 @@ registerModule(
     let ladderBank = [];
     let idOf = new Map();
     const seenBy = {};
+    // THE LEVEL FOLLOWS THE PERSON (above). `splitStore`: the screen's row plus the person's own, as one row to
+    // the ladder (null on a host with no per-person rows). `personHandles`: the person's own row, one per person
+    // id this panel has met. `rawPersonStart`: the panel's copy of "Start trivia at", as saved (undefined: never).
+    let splitStore = null;
+    const personHandles = new Map();
+    let rawPersonStart;
+    let seenRawStart = false;
+    function personHandleFor(playerId) {
+      const id = ctx.personId;
+      if (!id || playerId !== `person:${id}` || typeof ctx.makePersonState !== 'function') return null;
+      if (personHandles.has(id)) return personHandles.get(id).handle;
+      let handle = null;
+      try { handle = ctx.makePersonState(id, TRIVIA_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
+      let off = null;
+      if (handle) { try { off = handle.subscribe?.(() => { if (!dead) syncStartToPanel(); }) || null; } catch { off = null; } }
+      personHandles.set(id, { handle, off });
+      return handle;
+    }
+    const personDoc = () => {
+      const h = ctx.personId ? personHandles.get(ctx.personId)?.handle : null;
+      try { return h?.get?.() || null; } catch { return null; }
+    };
+    const personStartNow = () => { const s = personDoc()?.start; return START_LEVELS.includes(s) ? s : null; };
+    // The person's row is the truth; the panel's copy is what the menu shows. A copy the person's row has never
+    // had (a value chosen on this panel before it knew the person) is given to the person, without moving them.
+    function syncStartToPanel() {
+      const h = ctx.personId ? personHandles.get(ctx.personId)?.handle : null;
+      const s = personStartNow();
+      if (!s) {
+        if (h && START_LEVELS.includes(rawPersonStart) && splitStore) {
+          splitStore.ownReady(`person:${ctx.personId}`).then(() => {
+            if (!dead && !personStartNow()) { try { h.set({ start: rawPersonStart }); } catch { /* next time */ } }
+          });
+        }
+        return;
+      }
+      if (s === rawPersonStart || typeof state?.set !== 'function') return;
+      rawPersonStart = s;   // set first, so the panel's own echo of this is not read as somebody changing it
+      try { state.set({ [PERSON_START_KEY]: s }); } catch (err) { console.error('trivia: start copy', err); }
+    }
+    // Somebody changed "Start trivia at" in the menu: the person's row says so, and they start again there.
+    async function applyPersonStart(v) {
+      const lvl = difficultyLevel(v);
+      if (!lvl || !ladder) return;
+      const pid = ctx.personId ? `person:${ctx.personId}` : null;
+      const h = pid && splitStore ? splitStore.ownHandle(pid) : null;
+      if (h) {
+        await splitStore.ownReady(pid);
+        if (dead || !ladder) return;
+        if (personStartNow() === v) return;     // a copy coming back from the person's row: nobody changed it
+        try { h.set({ start: v }); } catch (err) { console.error('trivia: start', err); }
+      }
+      ladder.startAt(pid || 'player', GAME, lvl);
+    }
 
     // ---------------------------------------------------------------------------------------
     // *** SPEECH (2026-10-04): READ ALOUD THE WAY THE OTHER QUIZ GAMES DO (../quiz_view.js). ***
@@ -952,7 +1068,8 @@ registerModule(
       const win = ladder.windowFor(p.id, GAME);
       const never = new Set(deck.filter(Boolean).map((b) => idOf.get(b)));
       const pick = pickNear(candidates(roundPool, win.maxLevel), { lo: win.lo, hi: win.hi,
-        playerRating: ladder.playerRow(p.id, GAME).rating, avoid: seenBy[p.id] || new Set(), never, rand });
+        playerRating: ladder.playerRow(p.id, GAME).rating, avoid: seenBy[p.id] || new Set(), never, rand,
+      poolOf: (c) => c.item?.pool || '' });
       return pick ? pick.item : null;
     }
     // Tells the ladder which question is up and for whom (its `deal`, handed the id: "deal THIS question").
@@ -1164,9 +1281,56 @@ registerModule(
     // holds it back exactly like a hand-written topic-tagged bank row would.
     const lessonItems = () => lessonQ?.get?.()?.items || [];
 
+    // ---------------------------------------------------------------------------------------
+    // *** ALL THE PACKS ("Every question pack", Mike 2026-10-06: "a choice to have the questions come from
+    // all of the pools") ***
+    // ---------------------------------------------------------------------------------------
+    // WHAT IS IN IT: every pack "A built-in pack" lists (pack_library.js: the built-in packs cleared to ship,
+    // plus any this browser has loaded itself), and every question of the account's review packs that somebody
+    // has PASSED (pack_reviews.js). With "Include unreviewed questions" on, the review packs' open questions
+    // join too; flagged ones never. Plus whatever a lesson routes here, as for any source.
+    // WHAT IS NOT: the written questions and the word bank. Argued: FOR including them, Mike said "all". AGAINST,
+    // and it decides it for now: a written bank is usually somebody's syllabus for one purpose, the word bank
+    // turns every vocabulary row into a question, and with nothing written the bank is five demo questions, so
+    // "all" would quietly mean "packs plus the demo". They have no levels either. [Guess, on Mike's list.]
+    // HOW IT IS DEALT: by level, exactly as one pack is (pickNear). Inside a level a PACK is picked first, evenly,
+    // then a question in it, so the 300 sums of the maths pack do not make "every pack" mostly sums.
+    // While reviewing (the setting on, open questions in play): open ones first, no levels, as for one review
+    // pack. Argued: FOR levels while reviewing (a reviewer could meet the easy ones of every pack first). AGAINST,
+    // and it keeps today's: a reviewer has to meet the hard questions too, and over a thousand open questions are
+    // more rounds than anybody plays in a sitting, so dealing open-first is what gets them through.
+    // A "pick which packs" choice is NOT here: the settings menu has no many-of-a-list row, and a row per pack
+    // (about thirty) would swamp a menu walked one press at a time. [On Mike's list.]
+    async function allPacksBank() {
+      const built = await Promise.all(packsFor('trivia').map((p) => loadPackCached(p.id)
+        .then((pack) => packToTriviaBank(pack).map((r) => ({ ...r, pool: p.id })))
+        .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
+      const out = built.flat();
+      if (reviews) {
+        await reviews.ready;
+        const m = reviews.map();
+        for (const entry of (typeof reviews.listing === 'function' ? reviews.listing() : []) || []) {
+          if (!entry || entry.kind !== 'trivia') continue;
+          const pack = reviews.packById(entry.id);
+          if (!pack) continue;
+          out.push(...playableBank(pack, m, { includeUnreviewed: !!cfg.includeUnreviewed, packId: entry.id })
+            .map((r) => ({ ...r, pool: entry.id })));
+        }
+      }
+      // The same question in two packs is one question.
+      const seen = new Set();
+      return out.filter((r) => { const id = triviaId(r); if (seen.has(id)) return false; seen.add(id); return true; });
+    }
+
     async function readBank() {
       if (dead) return;
       const gen = ++bankGen;
+      if (cfg.contentSource === 'all') {
+        const rows = await allPacksBank();
+        if (gen !== bankGen || dead) return;
+        if (rows.length) { applyBank([...rows, ...lessonItems()]); return; }
+        // Nothing loaded at all: the bank plays, as for one unreachable pack.
+      }
       // A REVIEW PACK (../pack_reviews.js): flagged questions never; passed ones always; open ones only with
       // "Include unreviewed questions" on. Nothing playable (the setting off and nothing passed yet, or no
       // reviews on this host) falls through to the bank, the same way an unreachable pack does.
@@ -1309,15 +1473,27 @@ registerModule(
         // No spaced review and no writer here (see the settings rows). Its saved rows load in the background;
         // if they land before anybody has touched the first question, that question is picked again from them,
         // so a returning player's first question is at their level rather than a new player's.
-        try {
-          ladderStore = typeof ctx.makeState === 'function' ? ctx.makeState(TRIVIA_LADDER_KEY) : null;
-        } catch { ladderStore = null; }
+        // THE LEVEL FOLLOWS THE PERSON (above): the screen's person's row goes in their own `ratings_trivia`,
+        // where the host has per-person rows; everything else stays on this screen's.
+        ladderStore = openLadderStore(ctx, TRIVIA_LADDER_KEY);
+        let store = ladderStore;
+        if (typeof ctx.makePersonState === 'function') {
+          splitStore = splitLadderStore({ shared: ladderStore, ownIds: () => (ctx.personId ? [`person:${ctx.personId}`] : []),
+            ownFor: (pid) => personHandleFor(pid) });
+          store = splitStore;
+        }
         try {
           ladder = createAdaptiveSession({
             cfg: () => ({ ...cfg, review: 'off', aiWrite: 'off' }),
             bankFor: () => ladderBank,
-            store: ladderStore, rand, now,
+            store, rand, now,
             personId: () => ctx.personId || null,
+            // "Start trivia at": the person's own; on a screen with no person, the panel's, for its one player.
+            startFor: (pid) => {
+              if (ctx.personId && pid === `person:${ctx.personId}`) return difficultyLevel(personStartNow());
+              if (pid === 'player') return difficultyLevel(rawPersonStart);
+              return null;
+            },
             onChange: () => {
               if (dead || !levelled || !q || answered !== null || misses.length || voiceOpen) return;
               deck[at] = null;
@@ -1325,6 +1501,12 @@ registerModule(
             },
           });
         } catch (err) { ladder = null; console.error('trivia: no ladder', err); }
+        // The person's row loads with the ladder (splitLadderStore.load); once it is in, the menu's copy of their
+        // "Start trivia at" is brought in line with it (the person's row is the truth).
+        if (splitStore && ctx.personId) {
+          const pid = `person:${ctx.personId}`;
+          splitStore.ownReady(pid).then(() => { if (!dead) syncStartToPanel(); });
+        }
         // THE REVIEWS, where the host offers them (the kiosk: ctx.makePackReviews). Loaded once and polled
         // slowly; a deck already dealt is not reshuffled when they land — the next round reads them.
         try {
@@ -1418,6 +1600,13 @@ registerModule(
         state?.subscribe?.((s) => {
           const snap = s || {};
           cfg = { ...DEFAULTS, ...snap };
+          // "Start trivia at", changed in the menu (not the first read, and not the copy syncStartToPanel wrote).
+          const rs = snap[PERSON_START_KEY];
+          if (!seenRawStart) { seenRawStart = true; rawPersonStart = rs; }
+          else if (rs !== rawPersonStart) {
+            rawPersonStart = rs;
+            if (START_LEVELS.includes(rs)) applyPersonStart(rs).catch((err) => console.error('trivia: start', err));
+          }
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           readBank();
         });
@@ -1483,7 +1672,14 @@ registerModule(
         if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
         // The ladder's row is opened here too (init), so it goes the same way. Saved on every answer already.
         if (ladder) { ladder.destroy(); ladder = null; }
+        if (splitStore) { splitStore.destroy(); splitStore = null; }
         if (ladderStore) { ladderStore.flush?.(); ladderStore.destroy?.(); ladderStore = null; }
+        // ...and the person's own row (THE LEVEL FOLLOWS THE PERSON), opened here too.
+        for (const { handle, off } of personHandles.values()) {
+          try { off?.(); } catch { /* none */ }
+          try { handle?.flush?.(); handle?.destroy?.(); } catch { /* gone */ }
+        }
+        personHandles.clear();
         // And the two streams Word Forge already closed and Trivia never did.
         if (ledger) { ledger.destroy?.(); ledger = null; }
         if (telemetry) { telemetry.destroy?.(); telemetry = null; }

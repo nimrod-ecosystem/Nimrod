@@ -11,7 +11,10 @@
 // screen shares it, which is what lets a question's rating learn from every player who meets it.
 // AGAINST: it is per SCREEN, not per person, so somebody who plays on two screens has two ladders.
 // Per-person state needs a person id for every player, and a second player typed in by name has
-// none. On Mike's list. With no `makeState` (a test, a bare host) it is kept in memory only.
+// none. 2026-10-06: Trivia keeps the screen's person's row WITH THE PERSON (`splitLadderStore` below);
+// the other games still keep it on the screen, on Mike's list. With no `makeState` (a test, a bare
+// host) it is kept in memory only. Saving merges entry by entry, so games sharing the row do not
+// overwrite each other (`mergeLadder3` below).
 //
 // WHO THE PLAYERS ARE. The `players` setting: names in turn order ("Ann, Bob"). Empty is one player,
 // the screen's own person, with nothing drawn about turns at all. Up to FOUR: a longer order is a
@@ -148,6 +151,203 @@ export function parsePlayers(text, { personId = null } = {}) {
 
 export const emptyLadder = () => ({ v: 1, players: {}, questions: {}, extra: {} });
 
+// ---------------------------------------------------------------------------------------------------
+// *** TWO GAMES ON ONE SCREEN NO LONGER OVERWRITE EACH OTHER (2026-10-06). ***
+// ---------------------------------------------------------------------------------------------------
+// Found 2026-10-05 (bdc1d1a, "Found, not fixed"): a session saved its WHOLE ladder on every answer, from
+// what it loaded when it opened. Brain games and Thinking games share the screen's `ratings` row, so
+// whichever answered last wrote the other's progress out of it; two Trivia panels did the same to
+// `ratings_trivia`. The fix is a MERGE, not a lock: a lock would leave one game waiting on the other,
+// and a game left open is exactly the thing nobody comes back to close.
+//
+// THE MERGE IS THREE-WAY, ONE ENTRY AT A TIME. An entry is one player's row in one game, one question's
+// rating, or one game's written questions. For each: if this session changed it since it last saw the
+// row (`base`), its own copy wins; otherwise the newer copy (`theirs`) does. So two games never touch
+// each other's entries, and the only thing that can still be lost is the same player in the same game
+// answered on two panels at the same moment, where the last answer wins. Written questions are a union.
+// It runs in two places: before every save, against the newest copy this page has (two games sharing
+// one handle), and when the server refuses a save as out of date (two handles, two screens:
+// `ladderDocMerge`, state.js's `merge` option, passed by `openLadderStore`).
+const same = (a, b) => a === b || JSON.stringify(a) === JSON.stringify(b);
+const pick3 = (b, m, t) => (same(m, b) ? t : m);
+function merge3Keys(b, m, t, inner = null) {
+  const B = b && typeof b === 'object' ? b : {};
+  const M = m && typeof m === 'object' ? m : {};
+  const T = t && typeof t === 'object' ? t : {};
+  const out = {};
+  for (const k of new Set([...Object.keys(B), ...Object.keys(M), ...Object.keys(T)])) {
+    const v = inner && M[k] !== undefined && T[k] !== undefined && !same(M[k], B[k])
+      ? inner(B[k], M[k], T[k]) : pick3(B[k], M[k], T[k]);
+    if (v !== undefined) out[k] = v;
+  }
+  return out;
+}
+function mergePlayer3(b, m, t) {
+  const B = b && typeof b === 'object' ? b : {};
+  return { name: pick3(B.name, m.name, t.name) || '', games: merge3Keys(B.games, m.games, t.games) };
+}
+
+/** `base` -> `mine` and `base` -> `theirs`, entry by entry (above). PURE; never throws on missing parts. */
+export function mergeLadder3(base, mine, theirs) {
+  const b = base && typeof base === 'object' ? base : emptyLadder();
+  const m = mine && typeof mine === 'object' ? mine : emptyLadder();
+  const t = theirs && typeof theirs === 'object' ? theirs : emptyLadder();
+  const extra = {};
+  for (const g of new Set([...Object.keys(t.extra || {}), ...Object.keys(m.extra || {})])) {
+    const have = new Set((t.extra?.[g] || []).map((q) => q && q.id));
+    extra[g] = [...(t.extra?.[g] || []), ...(m.extra?.[g] || []).filter((q) => q && !have.has(q.id))].slice(-EXTRA_CAP);
+  }
+  return { v: 1, players: merge3Keys(b.players, m.players, t.players, mergePlayer3),
+    questions: merge3Keys(b.questions, m.questions, t.questions), extra };
+}
+
+/** state.js `merge(base, mine, theirs)` for a row holding a `ladder`: the ladder entry by entry, any other key whole. */
+export function ladderDocMerge(base, mine, theirs) {
+  const b = base || {}, m = mine || {}, t = theirs || {};
+  const data = merge3Keys(b, m, t);
+  if (m.ladder || t.ladder) data.ladder = mergeLadder3(b.ladder, m.ladder, t.ladder);
+  return { data, lost: [] };
+}
+export const LADDER_STATE_OPTIONS = Object.freeze({ merge: ladderDocMerge });
+
+/** The screen's ladder row (`key`, default the shared `ratings`), opened so a refused save merges. null when there is none. */
+export function openLadderStore(ctx, key = LADDER_KEY) {
+  if (!ctx || typeof ctx.makeState !== 'function') return null;
+  try { return ctx.makeState(key, { ...LADDER_STATE_OPTIONS }) || null; } catch { return null; }
+}
+
+// ---------------------------------------------------------------------------------------------------
+// *** A PLAYER'S ROW CAN BE KEPT WITH THE PLAYER (2026-10-06, Trivia first). ***
+// ---------------------------------------------------------------------------------------------------
+// Mike's 2026-10-05 ask (questions at every level, for several people) found the gap the header names: a level kept on
+// a screen's row starts over on the person's next screen. This keeps the rows of the players a game
+// names in their OWN row (Trivia: the screen's person, `person:<id>`, in `ctx.makePersonState`), and the
+// rest where they were: the questions' ratings, and players typed in by name, who have no person to keep
+// them with. To a session it is one state handle (`load`, `get`, `set`, `subscribe`).
+//
+// MOVED ONCE: a row of theirs already on the screen's row is moved to their own the first time both are
+// loaded. If both hold one for the same game, the one with MORE ANSWERS stays (`n`, how many answers the
+// level rests on: the better-founded of the two; a tie keeps their own). Then it is taken off the
+// screen's row, so the move does not happen again.
+//
+// Until their own row has loaded, a player's answers stay on the screen's row and move with the rest,
+// so nothing written in the first moment is lost and nothing better on their own row is overwritten.
+/**
+ *   shared       the screen's row (a state handle)
+ *   ownIds()     the player ids kept in a row of their own right now
+ *   ownFor(id)   that row's handle (the caller keeps one per id and closes it), or null
+ *   pollOwn      keep listening to their own rows once loaded (another screen of theirs may play too)
+ */
+export function splitLadderStore({ shared = null, ownIds = () => [], ownFor = () => null, pollOwn = true } = {}) {
+  const subs = new Set();
+  const own = new Map();            // id -> { handle, loaded, ready, off }
+  let sharedReady = null;
+  let sharedLoaded = false;
+  let dead = false;
+  const ladderOf = (h) => { try { return h?.get?.()?.ladder || null; } catch { return null; } };
+  const ids = () => { try { return (ownIds() || []).filter(Boolean); } catch { return []; } };
+  function notify() {
+    if (dead) return;
+    const snap = { ladder: combined() };
+    for (const fn of [...subs]) { try { fn(snap); } catch (err) { console.error('ladder: subscriber', err); } }
+  }
+  function entry(pid) {
+    if (own.has(pid)) return own.get(pid);
+    let handle = null;
+    try { handle = ownFor(pid) || null; } catch { handle = null; }
+    if (!handle) return null;
+    const e = { handle, loaded: false, ready: null, off: null };
+    own.set(pid, e);
+    try { e.off = handle.subscribe?.(() => { if (e.loaded) notify(); }) || null; } catch { e.off = null; }
+    e.ready = Promise.resolve().then(() => handle.load?.()).catch(() => {}).then(() => {
+      if (dead) return;
+      e.loaded = true;
+      migrate(pid);
+      if (pollOwn) { try { handle.startPolling?.(); } catch { /* none */ } }
+      notify();
+    });
+    return e;
+  }
+  function combined() {
+    const s = ladderOf(shared) || emptyLadder();
+    const players = { ...(s.players || {}) };
+    for (const pid of ids()) {
+      const e = own.get(pid);
+      const mine = e && e.loaded ? ladderOf(e.handle)?.players?.[pid] : null;
+      if (mine) players[pid] = mine;
+    }
+    return { v: 1, players, questions: s.questions || {}, extra: s.extra || {} };
+  }
+  function migrate(pid) {
+    const e = own.get(pid);
+    if (dead || !sharedLoaded || !e?.loaded) return;
+    const s = ladderOf(shared);
+    const there = s?.players?.[pid];
+    if (!there) return;
+    const mine = ladderOf(e.handle) || emptyLadder();
+    const cur = mine.players?.[pid] || { name: there.name || '', games: {} };
+    const games = { ...(cur.games || {}) };
+    let took = false;
+    for (const [g, row] of Object.entries(there.games || {})) {
+      const have = games[g];
+      if (!have || !Number.isFinite(have.rating) || (Number(row?.n) || 0) > (Number(have.n) || 0)) { games[g] = row; took = true; }
+    }
+    try {
+      if (took) {
+        e.handle.set({ ladder: { ...emptyLadder(), ...mine,
+          players: { ...(mine.players || {}), [pid]: { name: cur.name || there.name || '', games } } } });
+      }
+      const rest = { ...(s.players || {}) };
+      delete rest[pid];
+      shared.set({ ladder: { ...emptyLadder(), ...s, players: rest } });
+    } catch (err) { console.error('ladder: moving a row', err); }
+  }
+  let offShared = null;
+  try { offShared = shared?.subscribe?.(() => { if (sharedLoaded) notify(); }) || null; } catch { offShared = null; }
+  return {
+    load() {
+      if (!sharedReady) {
+        sharedReady = Promise.resolve().then(() => shared?.load?.()).catch(() => {}).then(() => {
+          sharedLoaded = true;
+          for (const pid of own.keys()) migrate(pid);
+        });
+      }
+      const waits = [sharedReady, ...ids().map((pid) => entry(pid)?.ready).filter(Boolean)];
+      return Promise.all(waits).then(() => ({ ladder: combined() }));
+    },
+    get: () => ({ ladder: combined() }),
+    set(patch = {}) {
+      const lad = patch.ladder;
+      if (!lad || typeof lad !== 'object') { shared?.set?.(patch); return; }
+      const routed = new Set(ids());
+      const sharedPlayers = {};
+      for (const [pid, row] of Object.entries(lad.players || {})) {
+        const e = routed.has(pid) ? entry(pid) : null;
+        if (e && e.loaded) {
+          const mine = ladderOf(e.handle) || emptyLadder();
+          if (!same(mine.players?.[pid], row)) {
+            e.handle.set({ ladder: { ...emptyLadder(), ...mine, players: { ...(mine.players || {}), [pid]: row } } });
+          }
+        } else {
+          sharedPlayers[pid] = row;
+        }
+      }
+      shared?.set?.({ ...patch, ladder: { ...lad, players: sharedPlayers } });
+    },
+    subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
+    flush: () => Promise.all([shared?.flush?.(), ...[...own.values()].map((e) => e?.handle?.flush?.())]).catch(() => {}),
+    /** A player's own row's handle, once there is one (Trivia reads and sets "Start trivia at" on it). */
+    ownHandle: (pid) => entry(pid)?.handle || null,
+    ownReady: (pid) => entry(pid)?.ready || Promise.resolve(),
+    destroy() {
+      dead = true;
+      subs.clear();
+      try { offShared?.(); } catch { /* none */ }
+      for (const e of own.values()) { try { e?.off?.(); } catch { /* none */ } }
+    },
+  };
+}
+
 /** Two ladders into one: the saved one, with anything this page has recorded since laid over it. */
 export function mergeLadder(saved, local) {
   const a = saved && typeof saved === 'object' ? saved : emptyLadder();
@@ -171,11 +371,17 @@ export function mergeLadder(saved, local) {
  *   store            a state handle ({ load, get, set }) or null for memory only
  *   writer           async ({ game, level, examples, count, existing }) -> [{ id, level, ... }], or null
  *   personId()       the screen's person, for the one-player id
+ *   startFor(pid)    a level this player starts at, or null for the `startLevel` setting (Trivia: the
+ *                    screen's person's own "Start trivia at", kept with them)
  */
 export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], store = null, writer = null,
-  now = () => Date.now(), rand = Math.random, personId = () => null, onChange = () => {}, rating = {} } = {}) {
+  now = () => Date.now(), rand = Math.random, personId = () => null, onChange = () => {}, rating = {},
+  startFor = () => null } = {}) {
   const R = { ...RATING_DEFAULTS, ...(rating || {}) };
   let data = emptyLadder();
+  // The row as this session last saw it (loaded, adopted or saved): the `base` of the merge above.
+  let synced = emptyLadder();
+  const clone = (x) => JSON.parse(JSON.stringify(x));
   let turn = 0;
   let asked = 0;
   let current = null;          // { player, game, id, item, review }
@@ -188,21 +394,50 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
   const sitting = `s${now()}`;
   const c = () => ({ ...ADAPTIVE_DEFAULTS, ...(cfg() || {}) });
 
+  // A newer copy of the row (loaded, or written by another game on this screen or another screen):
+  // whatever this session has not changed since it last saw the row is taken from it.
+  function adopt(saved) {
+    if (!saved || typeof saved !== 'object') return false;
+    const before = JSON.stringify(data);
+    data = mergeLadder3(synced, data, saved);
+    synced = clone(saved);
+    return JSON.stringify(data) !== before;
+  }
   if (store && typeof store.load === 'function') {
     Promise.resolve(store.load()).then(() => {
       if (dead) return;
       const saved = store.get?.()?.ladder;
-      if (saved) { data = mergeLadder(saved, data); onChange(); }
+      if (saved) { adopt(saved); onChange(); }
     }).catch(() => {});
   }
+  let offStore = null;
+  if (store && typeof store.subscribe === 'function') {
+    try {
+      offStore = store.subscribe((snap) => {
+        if (dead || !snap?.ladder) return;
+        if (adopt(snap.ladder)) onChange();
+      });
+    } catch { offStore = null; }
+  }
+  // READ, MERGE, WRITE: never the whole ladder as this session loaded it (see the merge above).
   function persist() {
     if (!store?.set) return;
-    try { store.set({ ladder: data }); } catch (err) { console.error('ladder: save', err); }
+    try {
+      const latest = store.get?.()?.ladder;
+      if (latest) data = mergeLadder3(synced, data, latest);
+      synced = clone(data);
+      store.set({ ladder: data });
+    } catch (err) { console.error('ladder: save', err); }
   }
 
   const players = () => parsePlayers(c().players, { personId: personId() });
   const currentPlayer = () => { const ps = players(); return ps[turn % ps.length]; };
-  const startLevel = () => Math.max(1, Math.floor(Number(c().startLevel) || 1));
+  const startLevel = (pid = null) => {
+    let own = null;
+    try { own = pid ? startFor(pid) : null; } catch { own = null; }
+    const v = Number.isFinite(Number(own)) && Number(own) >= 1 ? own : c().startLevel;
+    return Math.max(1, Math.floor(Number(v) || 1));
+  };
 
   function allQuestions(game) {
     const seed = (bankFor(game) || []).filter((q) => q && q.id);
@@ -217,7 +452,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
   function playerRow(pid, game) {
     const r = data.players[pid]?.games?.[game];
     if (r && Number.isFinite(r.rating)) return r;
-    const s = startLevel();
+    const s = startLevel(pid);
     return { rating: levelRating(s, R), n: 0, floor: s, recent: [], review: {} };
   }
   function savePlayer(p, game, row) {
@@ -242,7 +477,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     const list = allQuestions(game);
     const maxLevel = maxLevelOf(list);
     const row = playerRow(pid, game);
-    const floor = c().adapt === false ? startLevel() : row.floor;
+    const floor = c().adapt === false ? startLevel(pid) : row.floor;
     return { ...poolLevels(floor, Number(c().levelsAtOnce) || 2, maxLevel), maxLevel, floor };
   }
 
@@ -365,6 +600,22 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
       const w = windowFor(pid, game);
       return thresholdsAt(w.floor, w.maxLevel, ladderOpts(w.maxLevel));
     },
+    /**
+     * Put this player at `level` in this game NOW: the floor there, the rating that level's, the answers
+     * being judged cleared (they were judged at the old level). Kept: how many they have answered, and
+     * what is due to come back. For an explicit change by a person (Trivia's "Start trivia at"), never by play.
+     */
+    startAt(pid, game, level) {
+      const L = Math.max(1, Math.floor(Number(level) || 1));
+      if (!pid || !game) return null;
+      const prow = playerRow(pid, game);
+      const row = { ...prow, rating: levelRating(L, R), floor: L, recent: [] };
+      const p = players().find((x) => x.id === pid) || { id: pid, name: data.players[pid]?.name || '' };
+      savePlayer(p, game, row);
+      persist();
+      onChange();
+      return row;
+    },
     tally: () => ({ ...tally }),
     lastPlayer: () => lastPlayer,
     lastMove: () => lastMove,
@@ -401,6 +652,6 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
       const p = current?.player || lastPlayer;
       return !p || p.index === 0;
     },
-    destroy() { dead = true; },
+    destroy() { dead = true; try { offStore?.(); } catch { /* a store without unsubscribe */ } offStore = null; },
   };
 }

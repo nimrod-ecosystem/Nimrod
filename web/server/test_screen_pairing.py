@@ -254,6 +254,9 @@ def main() -> None:
           "where to look" in state_what, state_what)
     check("...and that the place also goes to Open-Meteo, so nobody thinks it stays here",
           "Open-Meteo" in state_what, state_what)
+    # 2026-10-06: a person's Trivia level is kept with the person (person state `ratings_trivia`).
+    check("the settings row says game levels are kept, and that a person's Trivia level goes with them",
+          "level" in state_what and "Trivia level" in state_what and "kept with them" in state_what, state_what)
     check("the never-stored list no longer says 'your location' with nothing after it",
           "your location" not in d["never"], str(d["never"]))
     check("...but still says the device is never asked where it is",

@@ -37,7 +37,7 @@ import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, fill, esc, normalize, parseLetters, LETTER_WORDS } from '../quiz_flow.js';
 import { quizModule, up } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
 import { PUZZLES, TIER, canMake } from '../word_builder_words.js';
 // 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
 // No demo yet, so no "While nobody is playing" row.
@@ -229,7 +229,7 @@ registerModule(
     let unsubBack = null;
     let unsubPlay = null;
     const sets = new Map();      // player id -> their set
-    const store = typeof ctx.makeState === 'function' ? (() => { try { return ctx.makeState(LADDER_KEY); } catch { return null; } })() : null;
+    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
     let ladderSeen = false;
     const maxLetters = () =>Math.max(3, Math.floor(Number(cfgNow.maxLetters) || DEFAULTS.maxLetters));
     const session = createAdaptiveSession({

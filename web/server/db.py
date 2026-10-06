@@ -1330,7 +1330,11 @@ class _Store:
         # place in its own settings, here, so this row is where it is declared. Said in full
         # because a town IS a location, and NEVER_STORED below used to say "your location" flat.
         "state":           ("Settings for those modules - a photo interval, a theme, a "
-                            "layout. Small, and yours. Also the name you sign notes with, "
+                            "layout. Small, and yours. For the question games: each player's "
+                            "level and how each question has gone, on the screen they play on; "
+                            "for the person a screen is for, their Trivia level and where it "
+                            "starts are kept with them instead, so it is the same on each of "
+                            "their screens. Also the name you sign notes with, "
                             "if you choose one. Your page: the parts on it, what you wrote in "
                             "About me, who can see your page, which parts of it they are "
                             "shown, its colours, and whether it shows older messages. And if "

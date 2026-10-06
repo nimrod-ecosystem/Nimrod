@@ -24,7 +24,9 @@ clock and a fake store.</p>
 import { harness } from './quiz_test_rig.js';
 import * as R from '../rating.js';
 import { createAdaptiveSession, parsePlayers, mergeLadder, adaptiveSettings, ADAPTIVE_DEFAULTS, emptyLadder,
-  EXTRA_CAP } from '../adaptive_play.js';
+  EXTRA_CAP, mergeLadder3, ladderDocMerge, LADDER_STATE_OPTIONS, openLadderStore } from '../adaptive_play.js';
+import { createState } from '../state.js';
+import { createLocalBackend, clearLocalScope } from '../local_store.js';
 import { isOpenModel, buildWriterPrompt, parseWritten, checkWritten, writeQuestions } from '../question_writer.js';
 import { normalizeField } from '../settings_fields.js';
 import { auditFields } from '../settings_audit.js';
@@ -296,6 +298,102 @@ try {
     check('both games kept for the same player, both questions kept', m.players.p.games.g && m.players.p.games.h && m.questions.q1 && m.questions.q2);
     const big = emptyLadder(); big.extra.g = Array.from({ length: EXTRA_CAP + 20 }, (_, i) => ({ id: `x${i}` }));
     check('AI-written questions are capped', mergeLadder(emptyLadder(), big).extra.g.length === EXTRA_CAP);
+  }
+
+  // =====================================================================================
+  section('*** TWO GAMES ON ONE SCREEN NO LONGER OVERWRITE EACH OTHER (2026-10-06) ***');
+  {
+    // ---- the merge, pure: three-way, one entry at a time ----
+    const row = (n) => ({ rating: 1000 + n, n, floor: 1, recent: [], review: {} });
+    const L = (players, questions = {}) => ({ v: 1, players, questions, extra: {} });
+    const base = L({ p: { name: '', games: { brain: row(1) } } }, { q1: { rating: 1000, n: 1 } });
+    const mine = L({ p: { name: '', games: { brain: row(2) } } }, { q1: { rating: 1000, n: 1 }, q2: { rating: 990, n: 1 } });
+    const theirs = L({ p: { name: '', games: { brain: row(1), think: row(5) } } }, { q1: { rating: 1010, n: 2 } });
+    const m = mergeLadder3(base, mine, theirs);
+    check('*** what I changed is mine, what they changed is theirs, per player per game and per question ***',
+      m.players.p.games.brain.n === 2 && m.players.p.games.think.n === 5 && m.questions.q1.n === 2 && m.questions.q2.n === 1,
+      JSON.stringify(m));
+    check('an entry nobody here changed takes the newer copy, even if this page holds an older one',
+      mergeLadder3(base, base, theirs).players.p.games.brain.n === 1 && mergeLadder3(base, base, theirs).players.p.games.think.n === 5);
+    const gone = L({});
+    check('an entry this page removed stays removed (a row moved to its person, say)',
+      !mergeLadder3(base, gone, base).players.p);
+    check('the same entry changed on both: the last save wins (mine), never a mix of the two rows',
+      mergeLadder3(base, mine, L({ p: { name: '', games: { brain: row(9) } } })).players.p.games.brain.n === 2);
+    const docM = ladderDocMerge({ ladder: base, x: 1 }, { ladder: mine, x: 1 }, { ladder: theirs, x: 2 });
+    check('the state.js merge: the ladder entry by entry, any other key whole', docM.data.x === 2
+      && docM.data.ladder.players.p.games.think.n === 5 && docM.data.ladder.players.p.games.brain.n === 2 && docM.lost.length === 0);
+    check('openLadderStore asks for the row with the merge', (() => {
+      let got = null; openLadderStore({ makeState: (k, o) => { got = [k, o]; return {}; } }, 'ratings_x');
+      return got[0] === 'ratings_x' && got[1].merge === ladderDocMerge;
+    })());
+
+    // ---- two REAL state.js handles on one row (two games' own handles), against a tiny versioned server ----
+    // The server is a fake fetch with state.js's rules: a PUT names the version it read; a stale one is
+    // refused (409) with the current truth. That refusal is where the second game used to win outright.
+    const realFetch = globalThis.fetch;
+    const server = { data: {}, version: 0, puts: 0, refused: 0 };
+    globalThis.fetch = async (url, init = {}) => {
+      if (!String(url).startsWith('/fake/ladder')) return realFetch(url, init);
+      if ((init.method || 'GET') === 'GET') return new Response(JSON.stringify({ data: server.data, version: server.version }), { status: 200 });
+      const body = JSON.parse(init.body);
+      server.puts += 1;
+      if (body.base_version !== server.version) {
+        server.refused += 1;
+        return new Response(JSON.stringify({ error: 'version_conflict', data: server.data, version: server.version }), { status: 409 });
+      }
+      server.data = body.data; server.version += 1;
+      return new Response(JSON.stringify({ version: server.version }), { status: 200 });
+    };
+    const twoGames = async (opts) => {
+      server.data = {}; server.version = 0; server.puts = 0; server.refused = 0;
+      const ha = createState({ url: '/fake/ladder', user: 'suite', debounceMs: 5, ...opts });
+      const hb = createState({ url: '/fake/ladder', user: 'suite', debounceMs: 5, ...opts });
+      const bank = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}`, level: 1 + (i % 3) }));
+      const a = createAdaptiveSession({ bankFor: () => bank, store: ha, rand: () => 0 });
+      const b = createAdaptiveSession({ bankFor: () => bank, store: hb, rand: () => 0 });
+      await new Promise((r) => setTimeout(r, 20));        // both loaded the empty row
+      for (let i = 0; i < 4; i++) {
+        const qa = a.deal('brain'); a.record({ item: qa, right: true });
+        const qb = b.deal('think'); b.record({ item: qb, right: true });
+        await new Promise((r) => setTimeout(r, 30));      // each save goes out between answers
+      }
+      await ha.flush(); await hb.flush();
+      a.destroy(); b.destroy(); ha.destroy(); hb.destroy();
+      return server.data.ladder?.players?.player?.games || {};
+    };
+    const plain = await twoGames({});
+    check('(without the merge, the bug is real: one game\'s answers are written away by the other\'s)',
+      !((plain.brain?.n || 0) === 4 && (plain.think?.n || 0) === 4), JSON.stringify(Object.fromEntries(Object.entries(plain).map(([g, r]) => [g, r.n]))));
+    const merged = await twoGames({ ...LADDER_STATE_OPTIONS });
+    check('*** two games, two handles on one row, saves refused and retried: BOTH games\' four answers are kept ***',
+      merged.brain?.n === 4 && merged.think?.n === 4 && server.refused > 0,
+      JSON.stringify({ games: Object.fromEntries(Object.entries(merged).map(([g, r]) => [g, r.n])), refused: server.refused }));
+    globalThis.fetch = realFetch;
+
+    // ---- the same in this browser's own store (signed out: no server, so no refusal to merge on) ----
+    const pid = `suite-ladder-${Date.now()}`;
+    try {
+      const back = createLocalBackend();
+      const la = back.makeState('ratings', { ...LADDER_STATE_OPTIONS }, pid);
+      const lb = back.makeState('ratings', { ...LADDER_STATE_OPTIONS }, pid);
+      await la.load(); await lb.load();
+      const bank = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}`, level: 1 }));
+      const a = createAdaptiveSession({ bankFor: () => bank, store: la, rand: () => 0 });
+      const b = createAdaptiveSession({ bankFor: () => bank, store: lb, rand: () => 0 });
+      await new Promise((r) => setTimeout(r, 10));
+      for (let i = 0; i < 3; i++) {
+        const qa = a.deal('brain'); a.record({ item: qa, right: true });
+        const qb = b.deal('think'); b.record({ item: qb, right: true });
+      }
+      await la.flush(); await lb.flush();
+      const fresh = back.makeState('ratings', {}, pid);
+      await fresh.load();
+      const g = fresh.get().ladder?.players?.player?.games || {};
+      check('*** this browser\'s own store too: two handles, both games\' answers kept ***', g.brain?.n === 3 && g.think?.n === 3,
+        JSON.stringify(Object.fromEntries(Object.entries(g).map(([k, r]) => [k, r.n]))));
+      a.destroy(); b.destroy();
+    } finally { await clearLocalScope(pid).catch(() => {}); }
   }
 
   // =====================================================================================

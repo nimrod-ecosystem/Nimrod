@@ -40,7 +40,7 @@ import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, answerByField, fill, esc, normalize, parseNumber } from '../quiz_flow.js';
 import { quizModule } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
 import { SUITS, RANK_LABEL, RANK_NAME, cardName, shuffled } from '../klondike.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
 
@@ -268,7 +268,7 @@ registerModule(
     let dealt = null;            // the question on screen
     let pending = null;          // a card whose suit is asked and whose place is next
     const aces = () => (cfgNow.aces === 'high' ? 'high' : 'low');
-    const store = typeof ctx.makeState === 'function' ? (() => { try { return ctx.makeState(LADDER_KEY); } catch { return null; } })() : null;
+    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
       bankFor: () => BANK,

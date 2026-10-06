@@ -10,7 +10,7 @@
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
   .warn{margin:14px 0;padding:12px 14px;border-left:4px solid #a4243b;background:#fff;font-weight:600;max-width:78ch}
-  #host{position:absolute;left:-9999px;width:600px}
+  #host,#host2{position:absolute;left:-9999px;width:600px}
 </style>
 </head>
 <body>
@@ -34,6 +34,7 @@ aloud.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
+<div id="host2"></div>
 
 <script type="module">
 import { createBus } from '../bus.js';
@@ -42,7 +43,9 @@ import { mountModule, getManifest } from '../module.js';
 // it deliberately matches rather than inventing a second answer to one question.
 import '../modules/comet.js';
 import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS, packToTriviaBank,
-         pickNear, itemLevel, hasLevels, triviaId, TRIVIA_LADDER_KEY } from '../modules/trivia.js';
+         pickNear, itemLevel, hasLevels, triviaId, TRIVIA_LADDER_KEY, PERSON_START_KEY } from '../modules/trivia.js';
+import { packsFor } from '../pack_library.js';
+import { loadPack } from '../packs.js';
 import { difficultyLevel } from '../packs.js';
 import { thresholdsAt } from '../rating.js';
 import { REVIEW_STATUS, reviewKey } from '../pack_reviews.js';
@@ -97,8 +100,11 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               output = null,
               // QUESTIONS AT EVERY LEVEL: `ctx.personId` (the screen's person), the ladder's row (a
               // `memRow`, so a test can seed it and read what was saved), and `ctx.makePackReviews`.
-              personId = undefined, ladderRow = null, reviews = null } = {}) {
-  const host = document.getElementById('host');
+              personId = undefined, ladderRow = null, reviews = null,
+              // THE LEVEL FOLLOWS THE PERSON (2026-10-06): `ctx.makePersonState(pid, key)`, left out unless a
+              // test gives one (the way a harness or the modules page has none). `hostId`: a second panel.
+              makePersonState = null, hostId = 'host' } = {}) {
+  const host = document.getElementById(hostId);
   host.innerHTML = '';
   const bus = createBus();
   const events = [];
@@ -112,6 +118,7 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
   let stored = bankText == null ? { ...base, ...saved }
                                  : { ...base, bankText, ...saved };
   let sub = null;
+  const stateSets = [];
   const sharedRow = {
     get: () => (sharedText == null ? {} : { bankText: sharedText }),
     set: () => {}, flush: async () => {}, load: async () => {},
@@ -133,8 +140,10 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     ...(telemetry ? { telemetry } : {}),
     ...(personId !== undefined ? { personId } : {}),
     ...(reviews ? { makePackReviews: () => reviews } : {}),
+    ...(makePersonState ? { makePersonState } : {}),
     makeState: (key) => (key === 'settings' ? modeRow : (key === TRIVIA_LADDER_KEY && ladderRow ? ladderRow : sharedRow)),
-    state: { get: () => stored, set: () => {}, flush: () => {},
+    // `set` keeps what it is given ("Start trivia at": the panel's copy of the person's value).
+    state: { get: () => stored, set: (p) => { stateSets.push(p); stored = { ...stored, ...p }; sub?.(stored); }, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
     // Each named stream keeps its own rows in `store` (so the contests log really holds what was
     // contested); `events` still collects every append, in order, as every older check reads it.
@@ -146,7 +155,9 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
                              startPolling() {}, destroy() {} }),
   });
   inst.init();
-  return { inst, host, bus, events, store, probe: () => inst.impl.__probe() };
+  // `menu(patch)`: somebody changing this panel's settings in the menu.
+  return { inst, host, bus, events, store, probe: () => inst.impl.__probe(), stateSets,
+    menu: (patch) => { stored = { ...stored, ...patch }; sub?.(stored); } };
 }
 
 (async () => {
@@ -695,14 +706,18 @@ Shared Q | Shared A` });
     // the games without setting anything up." A brand-new instance (nothing saved at all,
     // `rigDefault: null` so the rig's own convenience baseline above does not mask it) now
     // opens on the real shipped pack, not a five-question seed.
+    // 2026-10-06 (Mike: "a choice to have the questions come from all of the pools"): the default is now
+    // EVERY pack together, so a fresh instance plays every built-in pack, not the maths pack alone.
     const r = rig({ bankText: null, saved: {}, rigDefault: null });
-    await sleep(120);          // the pack fetch is real and async; let it land
-    check('*** a fresh instance, nothing configured, opens on the real pack ***',
-      r.probe().bank === 300, String(r.probe().bank));
+    await sleep(250);          // every pack fetch is real and async; let them land
+    const builtIn = new Set((await Promise.all(packsFor('trivia').map((p) => loadPack(p.url))))
+      .flatMap((k) => packToTriviaBank(k).map(triviaId))).size;   // the same question in two places is one
+    check('*** a fresh instance, nothing configured, opens on every real pack together ***',
+      DEFAULTS.contentSource === 'all' && r.probe().bank === builtIn && builtIn > 300, JSON.stringify([r.probe().bank, builtIn]));
     r.inst.destroy();
     const csRow = (getManifest('trivia').settings || []).find((f) => f.key === 'contentSource');
     check('...and the settings row agrees with DEFAULTS, not left pointing at "bank"',
-      csRow?.default === 'pack', String(csRow?.default));
+      csRow?.default === 'all' && csRow.options[0].value === 'all', String(csRow?.default));
   }
   {
     // The flip must not run over somebody who EXPLICITLY chose "Written questions" in
@@ -1446,6 +1461,193 @@ Shared Q | Shared A` });
       check('hidden for "Written questions" (no levels there), shown for a pack',
         rows.find((f) => f.key === 'adapt').appliesWhen({ contentSource: 'bank' }) === false
         && rows.find((f) => f.key === 'adapt').appliesWhen({ contentSource: 'pack' }) === true);
+    }
+  }
+
+  // =====================================================================================
+  section('*** every question pack (Mike, 2026-10-06: "the questions come from all of the pools") ***');
+  {
+    // ---- the pick, pure: a pack first, then a question in it ----
+    const C = (pool, n) => ({ id: `${pool}-${n}`, item: { pool, n }, level: 1 });
+    const cands = [...Array.from({ length: 30 }, (_, i) => C('sums', i)), C('art', 0)];
+    const poolOf = (c) => c.item.pool;
+    check('*** inside a level a pack is picked first, evenly: one art question is as likely as thirty sums ***',
+      pickNear(cands, { rand: () => 0.99, poolOf })?.item.pool === 'art' && pickNear(cands, { rand: () => 0, poolOf })?.item.pool === 'sums');
+    check('...one pack (or no poolOf) is one pick, exactly as before',
+      pickNear(cands.slice(0, 30), { rand: () => 0.5, poolOf })?.id === pickNear(cands.slice(0, 30), { rand: () => 0.5 })?.id);
+    check('...and the level still comes first: a pack with nothing at the chosen level is not picked',
+      pickNear([...cands, { id: 'h', item: { pool: 'hard' }, level: 3 }], { lo: 1, hi: 1, rand: () => 0.99, poolOf })?.level === 1);
+
+    // ---- mounted: the built-in packs, plus the account's reviewed ones ----
+    const LV = (d, n) => ({ question: `${d} all ${n}?`, answers: [`${d} A${n}`, `${d} x${n}`, `${d} y${n}`], correct: `${d} A${n}`, difficulty: d });
+    const reviewPack = { kind: 'trivia', name: 'Review pack', items: [1, 2, 3].flatMap((n) => ['easy', 'medium', 'hard'].map((d) => LV(d, n))) };
+    const keyOf = (it) => reviewKey(it.question, it.correct);
+    const statusFor = (i) => (i < 4 ? REVIEW_STATUS.PASSED : (i === 4 ? REVIEW_STATUS.FLAGGED : REVIEW_STATUS.OPEN));
+    const fakeReviews = () => {
+      const m = new Map(reviewPack.items.map((it, i) => [keyOf(it), { status: statusFor(i) }]));
+      return { ready: Promise.resolve(), startPolling() {}, reload() {}, destroy() {}, map: () => m,
+        listing: () => [{ id: 'review:all', kind: 'trivia' }, { id: 'review:words', kind: 'words' }],
+        packById: (id) => (id === 'review:all' ? reviewPack : null), options: () => [],
+        pass: async () => true, flag: async () => true, note() {} };
+    };
+    const builtIn = new Set((await Promise.all(packsFor('trivia').map((p) => loadPack(p.url))))
+      .flatMap((k) => packToTriviaBank(k).map(triviaId))).size;   // the same question in two places is one
+    const off = rig({ bankText: null, saved: { contentSource: 'all' }, reviews: fakeReviews(), personId: 'pat' });
+    await sleep(250);
+    check('*** every built-in pack plus the questions somebody PASSED (four), not the open ones, never the flagged one ***',
+      off.probe().bank === builtIn + 4, JSON.stringify([off.probe().bank, builtIn]));
+    check('...dealt by level, as one pack is', off.probe().levelled === true && off.probe().level === 1, JSON.stringify(off.probe()));
+    check('...and no review strip (nothing open is in play)', !off.host.querySelector('[data-review]'));
+    off.inst.destroy();
+    const on = rig({ bankText: null, saved: { contentSource: 'all', includeUnreviewed: true }, reviews: fakeReviews(), personId: 'pat' });
+    await sleep(250);
+    check('*** with "Include unreviewed questions" on, the open ones join too (eight of nine; the flagged one never) ***',
+      on.probe().bank === builtIn + 8, JSON.stringify([on.probe().bank, builtIn]));
+    check('*** ...and reviewing deals as it always did: open ones first, not by level, with the review strip ***',
+      on.probe().levelled === false && !!on.host.querySelector('[data-review]')
+      && /all \d\?/.test(on.probe().question?.question || ''), JSON.stringify(on.probe().question?.question));
+    on.inst.destroy();
+    const rows = getManifest('trivia').settings || [];
+    const which = rows.find((f) => f.key === 'packId');
+    check('"Which pack" shows only for "A built-in pack" (and not for the new default)',
+      which.appliesWhen({ contentSource: 'pack' }) === true && which.appliesWhen({ contentSource: 'all' }) === false
+      && which.appliesWhen({}) === false && which.appliesWhen({ contentSource: 'bank' }) === false);
+    check('the words on the choice are plain', rows.find((f) => f.key === 'contentSource').options
+      .every((o) => !/module|dashboard|panel|widget|account|token|grant/i.test(o.label)));
+  }
+
+  // =====================================================================================
+  section('*** a player\'s trivia level follows the person (2026-10-06) ***');
+  {
+    // A state handle that behaves like state.js's: subscribers hear every change, its own included.
+    const liveRow = (init = {}) => { let d = JSON.parse(JSON.stringify(init)); let writes = 0; const subs = new Set();
+      return { get: () => d, set: (p) => { writes += 1; d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+        load: async () => d, flush: async () => {}, startPolling() { this.polling = true; }, destroy() { this.destroyed = true; },
+        subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); }, writes: () => writes }; };
+    // One person store per (person, key), shared by every rig given the same `people` — one person, many screens.
+    const peopleRows = (seed = {}) => { const rows = {}; const asked = [];
+      const make = (pid, key, opts) => { asked.push({ pid, key, opts }); return (rows[`${pid}:${key}`] ||= liveRow(seed[`${pid}:${key}`] || {})); };
+      return { make, rows, asked, row: (pid) => rows[`${pid}:${TRIVIA_LADDER_KEY}`] }; };
+    const LV = (d, n) => ({ question: `${d} p ${n}?`, answer: `${d} A${n}`, wrong: [`${d} x${n}`, `${d} y${n}`, `${d} z${n}`], difficulty: d });
+    const BANK3 = [1, 2, 3, 4].flatMap((n) => ['easy', 'medium', 'hard'].map((d) => LV(d, n)));
+    const answerRight = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex}"]`).click();
+    const next = (r) => r.host.querySelector('[data-next]').click();
+    const play = (r, k) => { const out = []; for (let i = 0; i < k; i++) { out.push(r.probe().level); answerRight(r); next(r); } return out; };
+    const prow = (rows, pid) => rows.row(pid)?.get()?.ladder?.players?.[`person:${pid}`]?.games?.trivia;
+    const row = (rating, floor, n) => ({ rating, n, floor, recent: [], review: {} });
+
+    {
+      const people = peopleRows();
+      const screenA = liveRow();
+      const a = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: screenA, makePersonState: people.make });
+      await sleep(30);
+      check('the person\'s own row is opened as Trivia\'s, merging (not overwriting) when a save is refused',
+        people.asked.some((x) => x.pid === 'pat' && x.key === TRIVIA_LADDER_KEY && typeof x.opts?.merge === 'function'));
+      play(a, 10);
+      await sleep(10);
+      const mine = prow(people, 'pat');
+      check('*** ten answers: the level is kept WITH THE PERSON (their own row), floor 2 ***',
+        mine?.n === 10 && mine.floor === 2, JSON.stringify(mine));
+      check('*** ...and not on the screen\'s row, which keeps the questions\' ratings ***',
+        !screenA.get().ladder?.players?.['person:pat'] && Object.keys(screenA.get().ladder?.questions || {}).length >= 10,
+        JSON.stringify(screenA.get().ladder?.players));
+      a.inst.destroy();
+      const screenB = liveRow();
+      const b = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: screenB, makePersonState: people.make, hostId: 'host2' });
+      await sleep(30);
+      check('*** the same person on ANOTHER screen starts where they left off (level 2), not over ***',
+        b.probe().level === 2 && b.inst.impl.__ladder().playerRow('person:pat', 'trivia').n === 10,
+        JSON.stringify([b.probe().level, b.inst.impl.__ladder().playerRow('person:pat', 'trivia')]));
+      b.inst.destroy();
+    }
+    {
+      // *** MOVED ONCE. *** A row of theirs already on a screen moves to their own row, and leaves the screen's.
+      const people = peopleRows();
+      const screen = liveRow({ ladder: { v: 1, players: { 'person:mike': { name: '', games: { trivia: row(1500, 3, 80) } },
+        'name:bob': { name: 'Bob', games: { trivia: row(1100, 1, 4) } } }, questions: {}, extra: {} } });
+      const r = rig({ saved: { bank: BANK3 }, personId: 'mike', ladderRow: screen, makePersonState: people.make });
+      await sleep(30);
+      check('*** an existing screen row of theirs is moved to their own row ***', prow(people, 'mike')?.n === 80
+        && prow(people, 'mike').floor === 3, JSON.stringify(prow(people, 'mike')));
+      check('...and taken off the screen\'s row (so it is not moved again); a typed-in player stays there',
+        !screen.get().ladder.players['person:mike'] && screen.get().ladder.players['name:bob']?.games?.trivia?.n === 4,
+        JSON.stringify(screen.get().ladder.players));
+      check('...and they are dealt at it (hard)', r.probe().level === 3, String(r.probe().level));
+      r.inst.destroy();
+    }
+    {
+      // Both have one: the one with more answers stays.
+      const people = peopleRows({ 'ann:ratings_trivia': { ladder: { v: 1, players: { 'person:ann': { name: '', games: { trivia: row(1300, 3, 40) } } }, questions: {}, extra: {} } } });
+      const screen = liveRow({ ladder: { v: 1, players: { 'person:ann': { name: '', games: { trivia: row(1000, 1, 5) } } }, questions: {}, extra: {} } });
+      const r = rig({ saved: { bank: BANK3 }, personId: 'ann', ladderRow: screen, makePersonState: people.make });
+      await sleep(30);
+      check('*** both have a row: the better-founded one (40 answers) stays, not the screen\'s 5 ***',
+        prow(people, 'ann')?.n === 40 && prow(people, 'ann').floor === 3 && !screen.get().ladder.players['person:ann'],
+        JSON.stringify([prow(people, 'ann'), screen.get().ladder.players]));
+      r.inst.destroy();
+      const people2 = peopleRows({ 'cy:ratings_trivia': { ladder: { v: 1, players: { 'person:cy': { name: '', games: { trivia: row(1000, 1, 3) } } }, questions: {}, extra: {} } } });
+      const screen2 = liveRow({ ladder: { v: 1, players: { 'person:cy': { name: '', games: { trivia: row(1300, 3, 50) } } }, questions: {}, extra: {} } });
+      const r2 = rig({ saved: { bank: BANK3 }, personId: 'cy', ladderRow: screen2, makePersonState: people2.make });
+      await sleep(30);
+      check('...and the other way round: the screen\'s 50 answers beat their own 3', prow(people2, 'cy')?.n === 50,
+        JSON.stringify(prow(people2, 'cy')));
+      r2.inst.destroy();
+    }
+    {
+      // Typed-in players have no person: their rows stay on the screen's row, as today.
+      const people = peopleRows();
+      const screen = liveRow();
+      const t = rig({ saved: { bank: BANK3, players: 'Ann, Bob' }, personId: 'pat', ladderRow: screen, makePersonState: people.make });
+      await sleep(30);
+      answerRight(t); next(t); answerRight(t); next(t);
+      check('*** players typed in by name stay on the screen\'s row ***',
+        screen.get().ladder?.players?.['name:ann']?.games?.trivia?.n === 1 && screen.get().ladder.players['name:bob']?.games?.trivia?.n === 1
+        && !prow(people, 'pat'), JSON.stringify(screen.get().ladder?.players));
+      t.inst.destroy();
+    }
+    {
+      // *** "START TRIVIA AT": somebody older starts above the easy end. ***
+      const rows = getManifest('trivia').settings || [];
+      const st = rows.find((f) => f.key === PERSON_START_KEY);
+      check('a "Start trivia at" row: easy, medium, hard; easy by default; standard', st && st.default === 'easy'
+        && JSON.stringify(st.options.map((o) => o.value)) === '["easy","medium","hard"]' && st.level === 'standard', JSON.stringify(st));
+      const people = peopleRows({ 'pat:ratings_trivia': { start: 'medium' } });
+      const r = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: liveRow(), makePersonState: people.make });
+      await sleep(30);
+      check('*** a person whose row says "medium" starts on medium questions, on any screen ***',
+        r.probe().level === 2 && r.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 2,
+        JSON.stringify([r.probe().level, r.inst.impl.__ladder().playerRow('person:pat', 'trivia')]));
+      check('...and the menu shows it (the panel\'s copy is brought in line with the person\'s row)',
+        r.stateSets.some((p) => p[PERSON_START_KEY] === 'medium'), JSON.stringify(r.stateSets));
+      const writesBefore = people.row('pat').writes();
+      play(r, 3);
+      r.menu({ [PERSON_START_KEY]: 'hard' });
+      await sleep(20);
+      const after = r.inst.impl.__ladder().playerRow('person:pat', 'trivia');
+      check('*** changing it in the menu writes it to the person and starts them again there (hard) ***',
+        people.row('pat').get().start === 'hard' && after.floor === 3 && after.n === 3 && after.recent.length === 0
+        && prow(people, 'pat')?.floor === 3, JSON.stringify([people.row('pat').get().start, after, prow(people, 'pat')]));
+      check('...and the copy coming back is not taken as a second change', people.row('pat').writes() > writesBefore
+        && r.stateSets.filter((p) => p[PERSON_START_KEY] === 'hard').length === 0, JSON.stringify(r.stateSets));
+      r.inst.destroy();
+      // A screen with no person: the row is the panel's, for its one player.
+      const solo = rig({ saved: { bank: BANK3, [PERSON_START_KEY]: 'hard' }, ladderRow: liveRow() });
+      await sleep(30);
+      check('a screen with no person: the panel\'s "Start trivia at" starts its one player there', solo.probe().level === 3,
+        String(solo.probe().level));
+      solo.inst.destroy();
+    }
+    {
+      // *** TWO TRIVIA PANELS ON ONE SCREEN DO NOT OVERWRITE EACH OTHER (adaptive_play.js, the merge). ***
+      const screen = liveRow();
+      const a = rig({ saved: { bank: BANK3, players: 'Ann' }, ladderRow: screen });
+      const b = rig({ saved: { bank: BANK3, players: 'Bob' }, ladderRow: screen, hostId: 'host2' });
+      await sleep(30);
+      for (let i = 0; i < 3; i++) { answerRight(a); next(a); answerRight(b); next(b); }
+      const pl = screen.get().ladder.players;
+      check('*** two Trivia panels on one row: both players\' progress is there (3 answers each) ***',
+        pl['name:ann']?.games?.trivia?.n === 3 && pl['name:bob']?.games?.trivia?.n === 3, JSON.stringify(pl));
+      a.inst.destroy(); b.inst.destroy();
     }
   }
 

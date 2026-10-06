@@ -58,7 +58,7 @@ import { ownScoreField } from '../score_source.js';
 import { flowSettings, answerByField, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
 import { autostartFields, attractFields, ATTRACT_DEFAULTS, START_VOICE } from '../game_start.js';
 import { quizModule } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
 import { BANKS, shapeSvg } from '../brain_banks.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 
@@ -267,7 +267,7 @@ registerModule(
     let roundRight = 0;
     let mixStart = 0;            // which kind a mix opens on (chosen when the game starts)
     let mixAsked = 0;            // questions dealt in this mix, for 'every question'
-    const store = typeof ctx.makeState === 'function' ? (() => { try { return ctx.makeState(LADDER_KEY); } catch { return null; } })() : null;
+    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
       bankFor: (g) => BANKS[String(g).replace(/^brain_/, '')] || [],

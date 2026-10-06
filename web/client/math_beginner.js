@@ -38,7 +38,7 @@
 import { ownScoreField } from './score_source.js';
 import { flowSettings, answerByField, fill, esc, parseNumber, numberWords, shuffle } from './quiz_flow.js';
 import { quizModule } from './quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, LADDER_KEY } from './adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from './adaptive_play.js';
 
 export const GAME = 'simple_math';
 // The ladder's name for this game. ONE rating per player for beginner math, whichever panel (Math at
@@ -303,7 +303,7 @@ export function beginnerMath({ type = GAME, title = 'Simple math', scoreLabel = 
     let cfgNow = { ...defaults };
     let api = null;
     const adaptive = () => (MATH_LEVEL_MODES.includes(cfgNow.mathLevel) ? cfgNow.mathLevel : defaults.mathLevel) === 'adaptive';
-    const store = typeof ctx.makeState === 'function' ? (() => { try { return ctx.makeState(LADDER_KEY); } catch { return null; } })() : null;
+    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
     const session = createAdaptiveSession({
       cfg: () => cfgNow, bankFor: (g) => (g === RATING_GAME ? mathBank() : []), store, rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
