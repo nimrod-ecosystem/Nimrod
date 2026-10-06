@@ -16,11 +16,14 @@
 <h1>seasons and the sky</h1>
 
 <p>Mike, 2026-10-05: a theme you can set to follow the seasons (and holidays, starting with Halloween),
-and a live wallpaper that shows the time of day and the weather where you are. This checks the season
-and holiday rules (dates, both hemispheres, the boundaries, the off switch, the fallbacks while Design's
-art is not there yet), the time of day (real sunrise and sunset with a place, fixed hours without), the
-weather mapping from what the Weather panel already fetches, the shared overlay on and off, reduced
-motion, and the follower that ties it to a screen.</p>
+and a live wallpaper that shows the time of day and the weather where you are. Then Claude Design's
+seasons-holidays handoff the same day: thirteen scenes (Spring, Summer and a scene per holiday), their
+palettes, and theme_schedule.js, which is now the one place that decides which look shows. This checks
+the schedule's dates for every holiday in 2026-2028 (Easter and Thanksgiving computed, Hanukkah and
+Lunar New Year from the browser's calendars, Diwali from its checked table), the per-holiday ticks, the
+"why" and "coming up" sentences, the change waiting for a calm moment and fading in, the scenes
+themselves (Hanukkah's candles, fireworks that bloom and go soft with the photosensitivity setting,
+nothing moving without motion), the time of day and the weather, and the rows on a real screen.</p>
 
 <div id="results"></div>
 <div id="summary">running...</div>
@@ -28,14 +31,17 @@ motion, and the follower that ties it to a screen.</p>
 
 <script type="module">
 import {
-  FOLLOW_THEMES, SEASON_LOOKS, HOLIDAYS, SEASON_STARTS, inWindow, hemisphereOf, seasonFor, holidayFor,
-  resolveSeasonal, sunTimes, timeOfDay, weatherKind, skyLook, sceneTakesSky, SCENE_SKY, TINTS, FIXED_TIMES,
+  FOLLOW_THEMES, SEASON_LOOKS, HOLIDAYS, HOLIDAY_IDS, hemisphereOf, seasonFor, holidayPrefs,
+  resolveSeasonal, seasonalKey, comingUp, holidayWindow, seasonsNote, seasonsWhy,
+  sunTimes, timeOfDay, weatherKind, skyLook, sceneTakesSky, SCENE_SKY, TINTS, FIXED_TIMES,
   seasonContext, setSeasonContext,
 } from '../seasons.js';
+import { DIWALI_DATES, LUNAR_NEW_YEAR_DATES, easterSunday, thanksgiving, hanukkahNight, SCHEDULE_DEFAULTS } from '../theme_schedule.js';
 import { THEMES, listThemes, resolveThemeId, paintedTheme, paintedThemeId, isFollowTheme, applyTheme,
   setStoredTheme, getStoredTheme, luminance } from '../theme.js';
-import { mountScene, setSceneSky, sceneSky, SCENE_OVERLAYS, normalizeSky } from '../livescene.js';
-import { skyFrom, followSky, SKY_FIELD, HOLIDAY_FIELD, WEATHER_FRESH_MS, SKY_MODES } from '../sky.js';
+import { mountScene, setSceneSky, sceneSky, SCENES, SCENE_OVERLAYS, normalizeSky, FADE_MS } from '../livescene.js';
+import { skyFrom, followSky, SKY_FIELD, HOLIDAY_FIELDS, HOLIDAYS_KEY, holidayKey, holidaysFrom, holidayDatesText,
+  holidayRowLabel, WEATHER_FRESH_MS, SKY_MODES } from '../sky.js';
 import { previewOf } from '../choice_picker.js';
 import '../modules/weather.js';
 import { mountModule } from '../module.js';
@@ -57,6 +63,7 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
 const J = (v) => JSON.stringify(v);
 const day = (m, d, y = 2026) => new Date(y, m - 1, d, 12, 0);       // noon, this device's calendar
 const flush = async (n = 6) => { for (let i = 0; i < n; i++) await new Promise((r) => setTimeout(r, 0)); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 function box(attr = false) {
   const el = document.createElement('div');
   el.className = 'box';
@@ -64,19 +71,20 @@ function box(attr = false) {
   document.body.append(el);
   return el;
 }
+// Only holiday `id` kept, so a date check is about that one holiday and no other.
+const only = (id) => Object.fromEntries(HOLIDAY_IDS.map((k) => [k, k === id]));
+const isOn = (id, d) => resolveSeasonal(d, { holidays: only(id) }).key === id;
 
 (async () => {
 try {
   // =====================================================================
-  section('seasons: whole months, both halves of the world');
+  section('seasons: whole months, both halves of the world (theme_schedule.js seasonOf)');
   {
     const N = (m, d) => seasonFor(day(m, d));
     check('*** March 1 to May 31 is spring, June to August summer, September to November fall, December to February winter ***',
       N(3, 1) === 'spring' && N(5, 31) === 'spring' && N(6, 1) === 'summer' && N(8, 31) === 'summer'
       && N(9, 1) === 'fall' && N(11, 30) === 'fall' && N(12, 1) === 'winter' && N(1, 15) === 'winter' && N(2, 28) === 'winter',
       J([N(3, 1), N(5, 31), N(6, 1), N(8, 31), N(9, 1), N(11, 30), N(12, 1), N(1, 15), N(2, 28)]));
-    check('the boundaries: the day before each start is still the season before', N(2, 28) === 'winter' && N(5, 31) === 'spring'
-      && N(8, 31) === 'summer' && N(11, 30) === 'fall');
     check('a leap day is winter', seasonFor(day(2, 29, 2028)) === 'winter');
     const S = (m, d) => seasonFor(day(m, d), { hemisphere: 'south' });
     check('*** in the south it runs six months on: January is summer, July winter, October spring, April fall ***',
@@ -84,100 +92,168 @@ try {
     check('the hemisphere comes from the latitude; none (or the equator) is north',
       hemisphereOf(-33.9) === 'south' && hemisphereOf(40.7) === 'north' && hemisphereOf(null) === 'north'
       && hemisphereOf(undefined) === 'north' && hemisphereOf(0) === 'north' && hemisphereOf('') === 'north');
-    check('the starts are data: moving them moves the season (equinox-style starts)',
-      seasonFor(day(9, 10), { starts: { spring: '03-20', summer: '06-21', fall: '09-22', winter: '12-21' } }) === 'summer'
-      && seasonFor(day(9, 10)) === 'fall');
-    check('the four starts are whole months, as argued', J(SEASON_STARTS) === J({ spring: '03-01', summer: '06-01', fall: '09-01', winter: '12-01' }));
+    check('*** every season wears its own theme, and each one exists: spring and summer are Design\'s, fall and winter as before ***',
+      ['spring', 'summer', 'fall', 'winter'].every((s) => THEMES[s]?.scene === s && SCENES[s]) && Object.keys(SEASON_LOOKS).length === 4);
   }
 
   // =====================================================================
-  section('holidays: a window of dates, and a switch');
+  section('every holiday\'s dates, 2026-2028 (each checked with only that holiday kept)');
   {
-    const hw = HOLIDAYS.find((h) => h.id === 'halloween');
-    check('Halloween is the first holiday, October 15 to 31', HOLIDAYS[0] === hw && hw.from === '10-15' && hw.to === '10-31');
-    check('*** October 14 is not Halloween, the 15th and the 31st are, November 1 is not ***',
-      !holidayFor(day(10, 14)) && holidayFor(day(10, 15))?.id === 'halloween' && holidayFor(day(10, 31))?.id === 'halloween'
-      && !holidayFor(day(11, 1)));
-    check('the window counts whole days: 00:01 on the 15th and 23:59 on the 31st are in',
-      holidayFor(new Date(2026, 9, 15, 0, 1))?.id === 'halloween' && holidayFor(new Date(2026, 9, 31, 23, 59))?.id === 'halloween');
-    check('a window that wraps the new year works (12-20 to 01-02)', inWindow(day(12, 25), '12-20', '01-02')
-      && inWindow(day(1, 2), '12-20', '01-02') && !inWindow(day(1, 3), '12-20', '01-02') && !inWindow(day(12, 19), '12-20', '01-02'));
-    check('a malformed window is never in', !inWindow(day(10, 20), 'soon', '10-31') && !inWindow(day(10, 20), '', ''));
-    const has = (id) => !!THEMES[id];
-    const on = resolveSeasonal(day(10, 20), { has });
-    const off = resolveSeasonal(day(10, 20), { has, holidays: false });
-    check('*** with holidays on, October 20 is Halloween; with them off it is fall ***', on.key === 'halloween' && on.kind === 'holiday'
-      && off.key === 'fall' && off.kind === 'season' && off.theme === 'fall', J({ on, off }));
-    check('a holiday wins over the season in the south too (Halloween is a date, not a season)',
-      resolveSeasonal(day(10, 20), { has, lat: -33.9 }).key === 'halloween' && resolveSeasonal(day(10, 5), { has, lat: -33.9 }).key === 'spring');
-    check('holidays are data: a second entry is picked up with no code change',
-      resolveSeasonal(day(12, 25), { has, holidayList: [...HOLIDAYS, { id: 'xmas', label: 'Winter holidays', from: '12-20', to: '12-31', theme: 'nope', fallback: { theme: 'winter', overlays: [] } }] }).key === 'xmas');
+    // [id, year, first day [m, d], last day [m, d]] - the first and last day are in, the days either side are out.
+    const RUNS = [
+      ['lunarNewYear', 2026, [2, 16], [2, 24]], ['lunarNewYear', 2027, [2, 5], [2, 13]], ['lunarNewYear', 2028, [1, 25], [2, 2]],
+      ['valentines', 2026, [2, 10], [2, 14]], ['valentines', 2027, [2, 10], [2, 14]], ['valentines', 2028, [2, 10], [2, 14]],
+      ['stPatricks', 2026, [3, 14], [3, 17]], ['stPatricks', 2028, [3, 14], [3, 17]],
+      ['easter', 2026, [4, 2], [4, 6]], ['easter', 2027, [3, 25], [3, 29]], ['easter', 2028, [4, 13], [4, 17]],
+      ['july4', 2026, [7, 2], [7, 4]], ['july4', 2027, [7, 2], [7, 4]],
+      ['halloween', 2026, [10, 25], [10, 31]], ['halloween', 2027, [10, 25], [10, 31]], ['halloween', 2028, [10, 25], [10, 31]],
+      ['diwali', 2026, [11, 6], [11, 10]], ['diwali', 2027, [10, 27], [10, 31]], ['diwali', 2028, [10, 15], [10, 19]],
+      ['thanksgiving', 2026, [11, 23], [11, 27]], ['thanksgiving', 2027, [11, 22], [11, 26]], ['thanksgiving', 2028, [11, 20], [11, 24]],
+      ['hanukkah', 2026, [12, 4], [12, 12]], ['hanukkah', 2028, [12, 12], [12, 20]],
+      ['christmas', 2026, [12, 18], [12, 26]], ['christmas', 2027, [12, 18], [12, 26]], ['christmas', 2028, [12, 18], [12, 26]],
+    ];
+    for (const [id, y, [m1, d1], [m2, d2]] of RUNS) {
+      const first = day(m1, d1, y), last = day(m2, d2, y);
+      const before = new Date(y, m1 - 1, d1 - 1, 12), after = new Date(y, m2 - 1, d2 + 1, 12);
+      check(`${HOLIDAYS[id].label} ${y}: ${m1}/${d1} to ${m2}/${d2}`,
+        isOn(id, first) && isOn(id, last) && !isOn(id, before) && !isOn(id, after),
+        J([isOn(id, before), isOn(id, first), isOn(id, last), isOn(id, after)]));
+    }
+    for (const y of [2026, 2027, 2028]) {
+      check(`New Year's ${y}-${y + 1}: Dec 31 and Jan 1, not Dec 30 or Jan 2`, isOn('newYear', day(12, 31, y)) && isOn('newYear', day(1, 1, y + 1))
+        && !isOn('newYear', day(12, 30, y)) && !isOn('newYear', day(1, 2, y + 1)));
+    }
+    // The browser's Chinese calendar against the published dates (theme_schedule.js LUNAR_NEW_YEAR_DATES): where they
+    // disagree, the table wins. Reported, not failed - the browser's calendar is not ours to fix.
+    {
+      const intl = (y) => { for (let d = 15; d <= 55; d++) { const x = new Date(y, 0, d, 12); const p = new Intl.DateTimeFormat('en-u-ca-chinese', { month: 'numeric', day: 'numeric' }).formatToParts(x);
+        if ((p.find((q) => q.type === 'month') || {}).value === '1' && +(p.find((q) => q.type === 'day') || {}).value === 1) return `${x.getMonth() + 1}/${x.getDate()}`; } return '?'; };
+      const off = Object.entries(LUNAR_NEW_YEAR_DATES).filter(([y, [m, d]]) => intl(+y) !== `${m + 1}/${d}`).map(([y, [m, d]]) => `${y}: published ${m + 1}/${d}, this browser ${intl(+y)}`);
+      const note = document.createElement('div'); note.textContent = `note: the browser's Chinese calendar disagrees with the published Lunar New Year in ${off.length} of 10 years: ${off.join('; ') || 'none'}`; out.append(note);
+      check('*** Lunar New Year 2027 is Saturday Feb 6 (published), whatever the browser\'s calendar says ***', isOn('lunarNewYear', day(2, 6, 2027)) && isOn('lunarNewYear', day(2, 5, 2027)) && !isOn('lunarNewYear', day(2, 4, 2027)));
+    }
+    // Hanukkah 2027 starts on the evening of Dec 24 and runs into 2028: across the new year.
+    check('Hanukkah 2027: from Dec 24 (the first candle that evening) to Jan 1 2028, across the new year',
+      isOn('hanukkah', day(12, 24, 2027)) && isOn('hanukkah', day(1, 1, 2028)) && !isOn('hanukkah', day(12, 23, 2027)) && !isOn('hanukkah', day(1, 2, 2028)));
+    check('*** Easter Sunday 2026-2028 is April 5, March 28, April 16 (the Gregorian algorithm) ***',
+      J([2026, 2027, 2028].map((y) => easterSunday(y).toDateString())) === J([new Date(2026, 3, 5), new Date(2027, 2, 28), new Date(2028, 3, 16)].map((d) => d.toDateString())));
+    check('*** Thanksgiving 2026-2028 is November 26, 25, 23 (the fourth Thursday) ***',
+      [[2026, 26], [2027, 25], [2028, 23]].every(([y, d]) => thanksgiving(y).getMonth() === 10 && thanksgiving(y).getDate() === d && thanksgiving(y).getDay() === 4));
+    check('*** Diwali\'s table, checked against published calendars: 2026 Nov 8 ... 2035 Oct 30 ***',
+      J(DIWALI_DATES) === J({ 2026: [10, 8], 2027: [9, 29], 2028: [9, 17], 2029: [10, 5], 2030: [9, 26], 2031: [10, 14], 2032: [10, 2], 2033: [9, 22], 2034: [10, 10], 2035: [9, 30] }));
+    check('past the table there is no Diwali look (nothing guessed)', !isOn('diwali', day(11, 8, 2036)) && !isOn('diwali', day(10, 28, 2036)));
+    check('*** Hanukkah lights the real night: 1 on the first evening, 5 on Dec 8 2026 evening, 8 on the last day, 0 after ***',
+      hanukkahNight(new Date(2026, 11, 4, 18)) === 1 && hanukkahNight(new Date(2026, 11, 4, 12)) === 0
+      && hanukkahNight(new Date(2026, 11, 8, 19)) === 5 && hanukkahNight(new Date(2026, 11, 12, 12)) === 8
+      && hanukkahNight(new Date(2026, 11, 12, 19)) === 0,
+      J([4.12, 4.18, 8.19, 12.12, 12.19].map((x) => hanukkahNight(new Date(2026, 11, Math.floor(x), Math.round((x % 1) * 100))))));
+    check('*** where two holidays meet, the schedule\'s order decides: Halloween over Diwali (Oct 29 2027), Hanukkah over Christmas (Dec 25 2027) ***',
+      resolveSeasonal(day(10, 29, 2027), { holidays: { diwali: true } }).key === 'halloween'
+      && resolveSeasonal(day(12, 25, 2027), { holidays: { hanukkah: true } }).key === 'hanukkah');
+    const hw = holidayWindow('halloween', day(10, 5));
+    check('holidayWindow: the next run, from today: Halloween Oct 25 to 31', hw && hw.from.toDateString() === day(10, 25).toDateString() && hw.to.toDateString() === day(10, 31).toDateString());
+    const hk = holidayWindow('hanukkah', day(10, 5));
+    check('...Hanukkah from the browser\'s calendar: Dec 4 to 12', hk && hk.from.getDate() === 4 && hk.to.getDate() === 12 && hk.from.getMonth() === 11, J(hk));
+    const ln = holidayWindow('lunarNewYear', day(10, 5));
+    check('...Lunar New Year, the next one: Feb 5 to 13 2027', ln && ln.from.getFullYear() === 2027 && ln.from.getMonth() === 1 && ln.from.getDate() === 5 && ln.to.getDate() === 13, J(ln));
+    check('...inside a run it is that run (Oct 28: Oct 25 to 31)', holidayWindow('halloween', day(10, 28)).from.getDate() === 25);
+    check('...New Year\'s from October: Dec 31 to Jan 1', (() => { const w = holidayWindow('newYear', day(10, 5)); return w && w.from.getMonth() === 11 && w.from.getDate() === 31 && w.to.getFullYear() === 2027 && w.to.getDate() === 1; })());
   }
 
   // =====================================================================
-  section('fallbacks: what each look wears until Design\'s art exists');
+  section('which holidays: the starter set, ticks one by one, and the old switch');
   {
-    const has = (id) => !!THEMES[id];
-    const sp = resolveSeasonal(day(4, 10), { has });
-    const su = resolveSeasonal(day(7, 10), { has });
-    const hw = resolveSeasonal(day(10, 25), { has });
-    const fa = resolveSeasonal(day(10, 5), { has });
-    const wi = resolveSeasonal(day(1, 10), { has });
-    check('the art is not here yet: no spring, summer or halloween theme exists', !THEMES.spring && !THEMES.summer && !THEMES.halloween);
-    check('*** spring -> Cozy + petals, summer -> Cozy + a butterfly, Halloween -> Night + the cat and the moon ***',
-      sp.theme === 'cozy' && J(sp.overlays) === J(['petals']) && sp.fellBack
-      && su.theme === 'cozy' && J(su.overlays) === J(['butterfly']) && su.fellBack
-      && hw.theme === 'night' && J(hw.overlays) === J(['cat', 'moon']) && hw.fellBack, J({ sp, su, hw }));
-    check('fall and winter wear their own live themes, no fallback', fa.theme === 'fall' && !fa.fellBack && wi.theme === 'winter' && !wi.fellBack);
-    check('every fallback names a theme that exists, and every overlay it adds exists',
-      [...Object.values(SEASON_LOOKS), ...HOLIDAYS].every((e) => THEMES[e.fallback.theme]
-        && (e.fallback.overlays || []).every((o) => SCENE_OVERLAYS[o])));
-    check('*** adding the art is one entry: once "spring" exists, spring wears it ***',
-      resolveSeasonal(day(4, 10), { has: (id) => id === 'spring' || has(id) }).theme === 'spring'
-      && !resolveSeasonal(day(4, 10), { has: (id) => id === 'spring' || has(id) }).fellBack);
-    check('neither the art nor the fallback: the last resort (default), never nothing',
-      resolveSeasonal(day(4, 10), { has: () => false }).theme === 'default');
+    const starter = HOLIDAY_IDS.filter((id) => HOLIDAYS[id].starter);
+    check('*** the starter set is Design\'s: New Year\'s, Valentine\'s, St Patrick\'s, Easter, July 4, Halloween, Thanksgiving, Christmas ***',
+      J(starter) === J(['newYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'thanksgiving', 'christmas']));
+    check('Lunar New Year, Diwali and Hanukkah are offered, off', ['lunarNewYear', 'diwali', 'hanukkah'].every((id) => HOLIDAYS[id] && !HOLIDAYS[id].starter));
+    check('holidayPrefs: nothing saved is the starter set; false is none; ticks win over the starter',
+      J(holidayPrefs(undefined)) === J(SCHEDULE_DEFAULTS.holidays) && Object.values(holidayPrefs(false)).every((v) => v === false)
+      && holidayPrefs({ diwali: true, halloween: false }).diwali === true && holidayPrefs({ diwali: true, halloween: false }).halloween === false
+      && holidayPrefs({ diwali: true }).christmas === true);
+    check('*** one row per holiday: eleven toggles, default the starter set, plain labels ***',
+      HOLIDAY_FIELDS.length === 11 && HOLIDAY_FIELDS.every((f) => f.kind === 'toggle' && f.default === !!HOLIDAYS[f.holiday].starter && /look$/.test(f.label))
+      && new Set(HOLIDAY_FIELDS.map((f) => f.key)).size === 11 && !/her screen|christine|cici/i.test(J(HOLIDAY_FIELDS)));
+    check('the keys: holidayHalloween, holidayLunarNewYear, ...', holidayKey('halloween') === 'holidayHalloween' && holidayKey('lunarNewYear') === 'holidayLunarNewYear');
+    check('holidaysFrom a row: the ticks; the old single "Holiday looks: Off" means every holiday not ticked is off',
+      J(holidaysFrom({ holidayHalloween: false, holidayDiwali: true })) === J({ halloween: false, diwali: true })
+      && Object.values(holidaysFrom({ holidayLooks: false })).length === 11 && Object.values(holidaysFrom({ holidayLooks: false })).every((v) => v === false)
+      && holidaysFrom({ holidayLooks: false, holidayChristmas: true }).christmas === true && J(holidaysFrom({})) === '{}');
+    check('*** Halloween ticked off: October 27 is fall; Diwali ticked on: November 8 is Diwali ***',
+      resolveSeasonal(day(10, 27), { holidays: { halloween: false } }).key === 'fall'
+      && resolveSeasonal(day(11, 8), { holidays: { diwali: true } }).key === 'diwali' && resolveSeasonal(day(11, 8)).key === 'fall');
+    check('each row names its next dates: "Halloween look, Oct 25 to Oct 31"',
+      holidayRowLabel('halloween', { now: day(10, 5).valueOf(), lang: 'en-US' }) === 'Halloween look, Oct 25 to Oct 31'
+      && holidayDatesText('christmas', { now: day(10, 5).valueOf(), lang: 'en-US' }) === 'Dec 18 to Dec 26',
+      holidayRowLabel('halloween', { now: day(10, 5).valueOf(), lang: 'en-US' }));
   }
 
   // =====================================================================
-  section('theme.js: "With the seasons" as a choice');
+  section('why this look, and what is coming up');
+  {
+    const r = resolveSeasonal(day(10, 27));
+    check('*** October 27: Halloween, with the schedule\'s own reason ***', r.key === 'halloween' && r.kind === 'holiday' && r.theme === 'halloween'
+      && r.reason === 'Halloween is on, and it wins over the fall scene.', J(r));
+    check('October 5: fall, "It\'s fall."', resolveSeasonal(day(10, 5)).reason === "It's fall." && resolveSeasonal(day(10, 5)).theme === 'fall');
+    check('*** "Coming up": on October 5 it is Halloween on Oct 25 ***', J(seasonsWhy(day(10, 5), { lang: 'en-US' })) === J({ reason: "It's fall.", next: 'Coming up: Halloween on Oct 25.' }),
+      J(seasonsWhy(day(10, 5), { lang: 'en-US' })));
+    check('*** the day before, it says "Tomorrow: Halloween." (a caregiver is not surprised) ***', seasonsWhy(day(10, 24), { lang: 'en-US' }).next === 'Tomorrow: Halloween.');
+    check('in Halloween, what comes after it: Fall on Nov 1', seasonsNote(day(10, 27), { lang: 'en-US' }) === 'Halloween is on, and it wins over the fall scene. Coming up: Fall on Nov 1.',
+      seasonsNote(day(10, 27), { lang: 'en-US' }));
+    check('Hanukkah\'s reason says which night', /Hanukkah \(night 5\)/.test(resolveSeasonal(new Date(2026, 11, 8, 19), { holidays: { hanukkah: true } }).reason));
+    check('comingUp lists the next changes in order', J(comingUp(day(10, 5), { n: 3 }).map((u) => u.key)) === J(['halloween', 'fall', 'thanksgiving']));
+    check('*** the look\'s identity includes Hanukkah\'s night, so one more candle is a change ***',
+      seasonalKey(new Date(2026, 11, 8, 12), { holidays: { hanukkah: true } }) === 'hanukkah:4'
+      && seasonalKey(new Date(2026, 11, 8, 19), { holidays: { hanukkah: true } }) === 'hanukkah:5' && seasonalKey(day(10, 5)) === 'fall');
+  }
+
+  // =====================================================================
+  section('theme.js: "With the seasons" as a choice, and the new themes');
   {
     const L = listThemes();
     check('*** listThemes offers "With the seasons", LAST, marked follows ***', L[L.length - 1].id === 'seasons' && L[L.length - 1].follows === true
       && /seasons/i.test(L[L.length - 1].label), J(L[L.length - 1]));
-    check('every real theme is still listed first, in the same order, the default first',
-      J(L.slice(0, -1).map((t) => t.id)) === J(Object.keys(THEMES)) && L[0].id === 'default');
-    check('it is not a palette: THEMES has no entry for it (every per-theme check still walks real themes)', !THEMES.seasons && !!FOLLOW_THEMES.seasons);
+    const holidayIds = Object.keys(THEMES).filter((id) => THEMES[id].group === 'holiday');
+    check('*** the eleven holiday themes are in THEMES (so every theme check measures them) but NOT in the Colours list ***',
+      holidayIds.length === 11 && holidayIds.every((id) => !L.some((t) => t.id === id)), holidayIds.join());
+    check('every other real theme is listed first, in THEMES\' order, the default first; Spring and Summer among them',
+      J(L.slice(0, -1).map((t) => t.id)) === J(Object.keys(THEMES).filter((id) => THEMES[id].group !== 'holiday')) && L[0].id === 'default'
+      && L.some((t) => t.id === 'spring') && L.some((t) => t.id === 'summer'));
+    check('*** every holiday in the schedule has a theme and a scene of that name ***',
+      HOLIDAY_IDS.every((id) => THEMES[HOLIDAYS[id].scene]?.scene === HOLIDAYS[id].scene && SCENES[HOLIDAYS[id].scene]));
+    check('every new theme is whole: all of BASE\'s keys, and the dark flag where the page is dark',
+      [...holidayIds, 'spring', 'summer'].every((id) => Object.keys(THEMES.default.vars).every((k) => k in THEMES[id].vars))
+      && THEMES.halloween.dark === true && !THEMES.spring.dark && !THEMES.harvest.dark);
+    check('it is not a palette: THEMES has no entry for "seasons"', !THEMES.seasons && !!FOLLOW_THEMES.seasons);
     check('resolveThemeId keeps it as itself (it is what gets saved); unknown is still default',
       resolveThemeId('seasons') === 'seasons' && resolveThemeId('nope') === 'default' && isFollowTheme('seasons') && !isFollowTheme('fall'));
     const mem = { v: null, getItem() { return this.v; }, setItem(k, v) { this.v = v; } };
     setStoredTheme('seasons', mem);
     check('a visitor\'s stored choice keeps "seasons", not the theme it paints today', getStoredTheme(mem) === 'seasons');
     const now = (m, d) => day(m, d).valueOf();
-    check('*** October 5 paints Fall; October 20 paints Night with the cat and the moon ***',
-      paintedThemeId('seasons', { now: now(10, 5), holidays: true, lat: null }) === 'fall'
-      && paintedTheme('seasons', { now: now(10, 20), holidays: true, lat: null }).id === 'night'
-      && J(paintedTheme('seasons', { now: now(10, 20), holidays: true, lat: null }).overlays) === J(['cat', 'moon']));
-    check('holidays off: October 20 paints Fall', paintedThemeId('seasons', { now: now(10, 20), holidays: false, lat: null }) === 'fall');
-    check('in the south, October 5 is spring: Cozy with petals',
-      paintedTheme('seasons', { now: now(10, 5), lat: -33.9, holidays: true }).id === 'cozy'
-      && J(paintedTheme('seasons', { now: now(10, 5), lat: -33.9, holidays: true }).overlays) === J(['petals']));
+    check('*** October 5 paints Fall; October 27 paints Design\'s Halloween ***',
+      paintedThemeId('seasons', { now: now(10, 5), lat: null }) === 'fall'
+      && paintedThemeId('seasons', { now: now(10, 27), lat: null }) === 'halloween'
+      && J(paintedTheme('seasons', { now: now(10, 27), lat: null }).overlays) === '[]');
+    check('Halloween ticked off: October 27 paints Fall', paintedThemeId('seasons', { now: now(10, 27), holidays: { halloween: false }, lat: null }) === 'fall');
+    check('in the south, October 5 is spring: Design\'s Spring', paintedThemeId('seasons', { now: now(10, 5), lat: -33.9 }) === 'spring');
     check('a real theme paints itself, unchanged', paintedThemeId('dusk') === 'dusk' && paintedTheme('dusk').vars === THEMES.dusk.vars
       && paintedThemeId('nope') === 'default');
-    check('the painted theme is never THEMES\' own object (adding overlays cannot change the theme for everybody)',
-      paintedTheme('seasons', { now: now(10, 20) }) !== THEMES.night && THEMES.night.overlays.length === 0);
     const b = box();
-    const ret = applyTheme(b, 'seasons', { now: now(10, 5), holidays: true, lat: null });
-    check('*** applyTheme paints it and RETURNS the painted id, so THEMES[applyTheme(...)] is a real theme ***', ret === 'fall'
-      && b.style.getPropertyValue('--bg').trim() === THEMES.fall.vars['--bg'] && !!THEMES[ret]);
-    const ret2 = applyTheme(b, 'seasons', { now: now(10, 20), holidays: true, lat: null });
-    check('a week later it is Night\'s colours', ret2 === 'night' && b.style.getPropertyValue('--bg').trim() === THEMES.night.vars['--bg']);
+    const ret = applyTheme(b, 'seasons', { now: now(10, 5), lat: null });
+    check('*** applyTheme paints it and RETURNS the painted id ***', ret === 'fall' && b.style.getPropertyValue('--bg').trim() === THEMES.fall.vars['--bg']);
+    const ret2 = applyTheme(b, 'seasons', { now: now(12, 22), lat: null });
+    check('three days before Christmas it is Christmas\'s colours', ret2 === 'christmas' && b.style.getPropertyValue('--bg').trim() === THEMES.christmas.vars['--bg']);
     b.remove();
     const ctx0 = seasonContext();
-    setSeasonContext({ lat: -20, holidays: false });
-    check('the page context (where, holidays) is what applyTheme uses when not told', seasonContext().lat === -20 && seasonContext().holidays === false);
+    setSeasonContext({ lat: -20, holidays: false, at: now(10, 27) });
+    check('*** the page context (where, which holidays, and the moment SHOWING) is what applyTheme uses when not told ***',
+      seasonContext().lat === -20 && Object.values(seasonContext().holidays).every((v) => v === false)
+      && paintedThemeId('seasons') === 'spring');
+    setSeasonContext({ holidays: undefined, lat: null, at: now(10, 27) });
+    check('...a held moment paints that day\'s look, whatever the clock says', paintedThemeId('seasons') === 'halloween');
     setSeasonContext(ctx0);
-    check('the context resets', seasonContext().lat === ctx0.lat && seasonContext().holidays === ctx0.holidays);
+    check('the context resets', seasonContext().lat === ctx0.lat && seasonContext().at === ctx0.at);
     const p = previewOf({ value: 'seasons', label: 'x' }, { key: 'theme' });
     const today = paintedTheme('seasons').vars;
     check('the Colours list\'s tile for it wears the colours it paints today', p && p.kind === 'swatch' && p.colors.length >= 2
@@ -251,6 +327,7 @@ try {
     host.remove();
   }
 
+
   // =====================================================================
   section('which scenes answer, and with what');
   {
@@ -263,18 +340,29 @@ try {
       J(skyLook('winter', { time: 'day', weather: 'rain' })) === J({ overlays: [], tints: [] })
       && J(skyLook('winter', { time: 'night', weather: 'fog' })) === J({ overlays: ['fog'], tints: ['night'] }));
     check('the Night theme takes weather but no night wash (it is night already)', J(skyLook('night', { time: 'night', weather: 'snow' })) === J({ overlays: ['snow'], tints: ['cloud'] }));
-    check('*** a scene that is not listed ignores the sky: cozy (light), cyberpunk, ocean, steampunk, nimrod ***',
-      ['cozy', 'cyberpunk', 'ocean', 'steampunk', 'nimrod'].every((sc) => J(skyLook(sc, { time: 'night', weather: 'rain' })) === J({ overlays: [], tints: [] })
+    check('*** a scene that is not listed ignores the sky: cozy (light), cyberpunk, ocean, steampunk, nimrod, and the indoor Hanukkah and Diwali ***',
+      ['cozy', 'cyberpunk', 'ocean', 'steampunk', 'nimrod', 'hanukkah', 'diwali'].every((sc) => J(skyLook(sc, { time: 'night', weather: 'rain' })) === J({ overlays: [], tints: [] })
         && !sceneTakesSky(sc)) && sceneTakesSky('fall') && sceneTakesSky('winter') && sceneTakesSky('night'));
+    check('*** Design: rain, snow and fog go on top of whatever scene wins - a LIGHT one (Spring) gets the rain without the darkening wash ***',
+      J(skyLook('spring', { time: 'night', weather: 'rain' })) === J({ overlays: ['rain'], tints: [] })
+      && ['spring', 'summer', 'easter', 'stPatricks', 'valentines', 'harvest'].every((sc) => skyLook(sc, { time: 'day', weather: 'snow' }).overlays[0] === 'snow'
+        && skyLook(sc, { time: 'dusk', weather: 'storm' }).tints.length === 0));
+    check('a dark holiday night (Halloween) takes the weather and its wash, but no time of day (it is night already)',
+      J(skyLook('halloween', { time: 'day', weather: 'rain' })) === J({ overlays: ['rain'], tints: ['cloud'] })
+      && J(skyLook('halloween', { time: 'dusk', weather: null })) === J({ overlays: [], tints: [] }));
+    check('Christmas is snowing already: cloud and fog only', J(skyLook('christmas', { time: 'night', weather: 'snow' })) === J({ overlays: [], tints: [] })
+      && J(skyLook('christmas', { time: 'night', weather: 'fog' })) === J({ overlays: ['fog'], tints: [] }));
     check('no sky, nothing', J(skyLook('fall', null)) === J({ overlays: [], tints: [] }));
     check('every overlay the table can add exists in livescene', Object.keys(SCENE_SKY).every((sc) => ['dawn', 'day', 'dusk', 'night'].flatMap((t) => ['clear', 'cloudy', 'rain', 'snow', 'fog', 'storm']
       .flatMap((w) => skyLook(sc, { time: t, weather: w }).overlays)).every((o) => SCENE_OVERLAYS[o])));
-    // Every wash darkens: each colour stop's own luminance is dark (they only go on dark scenes, whose words are light).
+    check('every scene the table names exists', Object.keys(SCENE_SKY).every((sc) => SCENES[sc]));
     const stops = Object.values(TINTS).flatMap((g) => [...g.matchAll(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/g)]
       .map((m) => '#' + [m[1], m[2], m[3]].map((x) => (+x).toString(16).padStart(2, '0')).join('')));
     check('*** every wash darkens: each colour in it is dark (luminance under 0.06) ***', stops.length >= 10 && stops.every((c) => luminance(c) < 0.06), J(stops));
-    check('only dark themes\' scenes take a wash (light words on them can only get easier to read)',
-      Object.keys(SCENE_SKY).every((sc) => Object.values(THEMES).filter((t) => t.scene === sc).every((t) => t.dark === true)));
+    check('*** only dark themes\' scenes take a wash (light words on them can only get easier to read); light ones are marked tints: false ***',
+      Object.keys(SCENE_SKY).filter((sc) => SCENE_SKY[sc].tints !== false)
+        .every((sc) => Object.values(THEMES).filter((t) => t.scene === sc).every((t) => t.dark === true))
+      && Object.keys(SCENE_SKY).filter((sc) => SCENE_SKY[sc].tints === false).every((sc) => THEMES[sc] && !THEMES[sc].dark));
   }
 
   // =====================================================================
@@ -345,11 +433,113 @@ try {
     s.destroy(); b.remove();
   }
 
+
   // =====================================================================
-  section('the follower: a screen, its settings, the clock');
+  section('the thirteen scenes: drawn, Hanukkah\'s real night, fireworks, motion');
   {
-    check('one row each, plain words, defaults as argued', SKY_FIELD.default === 'both' && SKY_FIELD.kind === 'choice' && SKY_FIELD.options.length === 4
-      && HOLIDAY_FIELD.default === true && HOLIDAY_FIELD.kind === 'toggle' && !/her screen|christine|cici/i.test(J([SKY_FIELD, HOLIDAY_FIELD])));
+    const NEW = ['spring', 'summer', 'newYear', 'lunarNewYear', 'valentines', 'stPatricks', 'easter', 'july4', 'halloween', 'diwali', 'harvest', 'hanukkah', 'christmas'];
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const drawn = [];
+    for (const id of NEW) {
+      const b = box();
+      let ok = true;
+      try { const s = mountScene(b, { scene: id }); drawn.push(`${id} ${b.querySelectorAll('.ng *').length}`); ok = b.querySelector('.ls').dataset.scene === id && b.querySelectorAll('.ng > *').length > 5; s.destroy(); }
+      catch (err) { ok = false; drawn.push(`${id} threw ${err}`); }
+      check(`${id}: draws (${drawn[drawn.length - 1]} elements)`, ok);
+      b.remove();
+    }
+    check('every new scene carries its board tokens and a halo direction', NEW.every((id) => SCENES[id].tokens?.['--ab-veil'] && ['dark', 'light'].includes(SCENES[id].halo)));
+    // Hanukkah: the candles lit are the real night (plus the shamash); outside Hanukkah, all eight.
+    const flames = (date) => { const b = box(); const s = mountScene(b, { scene: 'hanukkah', date }); const n = b.querySelectorAll('.ngs-flame').length; s.destroy(); b.remove(); return n; };
+    check('*** Hanukkah on Dec 4 2026 at 6 pm: one candle and the shamash; Dec 8 at 7 pm: five and the shamash; outside it: all eight ***',
+      flames(new Date(2026, 11, 4, 18)) === 2 && flames(new Date(2026, 11, 8, 19)) === 6 && flames(day(10, 5)) === 9,
+      J([flames(new Date(2026, 11, 4, 18)), flames(new Date(2026, 11, 8, 19)), flames(day(10, 5))]));
+    {
+      const ctx0 = seasonContext();
+      setSeasonContext({ at: new Date(2026, 11, 8, 19).valueOf() });
+      check('with no date given, a scene draws the day the page\'s look is showing (seasons.js `at`)', flames(undefined) === 6);
+      setSeasonContext(ctx0);
+    }
+    // The render context: one object, never null, so a scene that destructures it never throws.
+    {
+      let got = 'unset';
+      const was = SCENES.spring.render;
+      SCENES.spring.render = (ctx) => { got = ctx; return was(ctx); };
+      const b = box();
+      const s = mountScene(b, { scene: 'spring', sky: { time: 'dusk', weather: 'rain' }, date: day(4, 1) });
+      s.set({ sky: null });
+      SCENES.spring.render = was;
+      s.destroy(); b.remove();
+      check('render(ctx): { date, time, weather }, an object even with no sky', got && got.date instanceof Date && got.time === null && got.weather === null
+        && got.date.getMonth() === 3, J(got));
+    }
+    // FIREWORKS BLOOM, THEY DO NOT FLASH.
+    const css = document.getElementById('livescene-css')?.textContent || '';
+    const kf = (name) => (css.match(new RegExp(`@keyframes ${name}\\{(.*?\\})\\}`)) || [])[1] || '';
+    const peak = (name) => Math.max(...[...kf(name).matchAll(/opacity:([\d.]+)/g)].map((m) => +m[1]));
+    check('*** a burst peaks under full brightness (.95) and the photosafe one never past half (.45) ***', peak('ngsBurst') <= 0.95 && peak('ngsBurstSoft') <= 0.5,
+      `${peak('ngsBurst')} / ${peak('ngsBurstSoft')}`);
+    const burstsIn = (id, opts = {}) => { const b = box(); const s = mountScene(b, { scene: id, ...opts }); const r = { b, s, els: [...b.querySelectorAll('.ngs-burst')] }; return r; };
+    for (const id of ['newYear', 'july4', 'diwali']) {
+      const { b, s, els } = burstsIn(id);
+      check(`${id}: every burst repeats no faster than every 9 s, and nothing is photosafe without a flash limit`,
+        els.length > 0 && els.every((el) => parseFloat(el.style.animationDuration) >= 9) && !b.querySelector('.ls').hasAttribute('data-photosafe'),
+        els.map((el) => el.style.animationDuration).join());
+      s.destroy(); b.remove();
+    }
+    {
+      const { b, s, els } = burstsIn('newYear', { flashLimit: 3 });
+      await flush(2);
+      const ls = b.querySelector('.ls');
+      check('*** the photosensitivity setting\'s flash limit makes the scene photosafe ***', ls.hasAttribute('data-photosafe'));
+      if (!reduced) {
+        const cs = getComputedStyle(els[0]);
+        check('*** ...and the fireworks go soft and slow: ngsBurstSoft, every 16 s ***', cs.animationName === 'ngsBurstSoft' && parseFloat(cs.animationDuration) === 16,
+          `${cs.animationName} ${cs.animationDuration}`);
+      }
+      s.set({ flashLimit: 'none' });
+      check('no limit chosen: not photosafe', !ls.hasAttribute('data-photosafe'));
+      s.destroy(); b.remove();
+    }
+    // EVERYTHING THAT MOVES IS INSIDE THE REDUCED-MOTION QUERY.
+    const motionBlock = (css.match(/@media \(prefers-reduced-motion: no-preference\)\{\n  \.ngs-cloud[\s\S]*?\n\}/) || [''])[0];
+    const outside = css.replace(motionBlock, '').match(/\.ngs-[\w-]+\{[^}]*animation[^}]*\}/g) || [];
+    check('*** every ngs- mover is animated only inside prefers-reduced-motion: no-preference ***', motionBlock.length > 100 && outside.length === 0, outside.join(' '));
+    // Still: nothing runs.
+    for (const id of ['christmas', 'diwali', 'lunarNewYear']) {
+      const b = box();
+      const s = mountScene(b, { scene: id, motion: 'still' });
+      await flush(2);
+      const running = b.getAnimations({ subtree: true }).filter((a) => a.playState === 'running');
+      check(`${id}, motion "still": nothing runs`, running.length === 0, `${running.length} running`);
+      s.destroy(); b.remove();
+    }
+    // A SCHEDULED CHANGE FADES; a person's choice and "still" are one cut.
+    {
+      const b = box();
+      const s = mountScene(b, { scene: 'fall' });
+      s.set({ scene: 'halloween' });
+      check('a change that is not a fade: no ghost', !b.querySelector('.ls-ghost'));
+      s.set({ scene: 'fall', fade: true });
+      const g = b.querySelector('.ls-ghost');
+      check('*** a scheduled change (fade): the old world stays over the new one, fading ***', g && g.dataset.ghost === 'halloween' && b.querySelector('.ls').dataset.scene === 'fall');
+      await sleep(120);
+      check('...it is on its way out (ls-gone), over FADE_MS', FADE_MS === 3000 && g.classList.contains('ls-gone')
+        && (reduced || getComputedStyle(g).transitionDuration === '3s'), getComputedStyle(g).transitionDuration);
+      await sleep(FADE_MS + 500);
+      check('...and gone after it', !b.querySelector('.ls-ghost'));
+      s.set({ motion: 'still' });
+      s.set({ scene: 'christmas', fade: true });
+      check('motion "still": no fade, one cut', !b.querySelector('.ls-ghost'));
+      s.destroy(); b.remove();
+    }
+  }
+
+  // =====================================================================
+  section('the follower: a screen, its settings, the clock, the calm moment');
+  {
+    check('the sky row: one choice, plain words, default as argued', SKY_FIELD.default === 'both' && SKY_FIELD.kind === 'choice' && SKY_FIELD.options.length === 4
+      && !/her screen|christine|cici/i.test(J(SKY_FIELD)));
     const T = Date.parse('2026-10-05T16:00:00Z');
     const rain = { code: 63, icon: 'rain', isDay: true, lat: 40.7, lon: -74.0, at: T };
     check('*** "both": the weather and the time of day ***', J(skyFrom(rain, { now: T })) === J({ time: 'day', weather: 'rain', lat: 40.7, lon: -74 }));
@@ -365,18 +555,20 @@ try {
     // The live follower, with a fake clock, timers and page.
     const bus = createBus();
     const skies = [];
-    let row = { skyFollow: 'both', holidayLooks: true };
+    let row = { skyFollow: 'both' };
     const subs = new Set();
     const timers = new Map(); let tid = 0;
-    const clock = { t: new Date(2026, 9, 14, 12, 0).valueOf() };
+    const clock = { t: new Date(2026, 9, 24, 12, 0).valueOf() };
     const doc = { hidden: false, l: null, addEventListener(_e, f) { this.l = f; }, removeEventListener() { this.l = null; } };
-    let themed = 0;
+    const told = [];
+    let calm = true;
     const ctx0 = seasonContext();
     const f = followSky({ bus, read: () => row, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
-      onTheme: () => { themed++; }, now: () => clock.t, doc, setSky: (s) => skies.push(s),
+      onTheme: (o) => { told.push(o); }, now: () => clock.t, doc, setSky: (s) => skies.push(s), calm: () => calm,
       setTimer: (fn, ms) => { timers.set(++tid, { fn, ms }); return tid; }, clearTimer: (i) => timers.delete(i) });
     const fire = () => { for (const [i, t] of [...timers]) { timers.delete(i); t.fn(); } };
-    check('it starts with the clock: noon, no weather', J(skies[skies.length - 1]) === J({ time: 'day', weather: null }) && timers.size === 1);
+    check('it starts with the clock: noon, no weather; the look showing is held at now', J(skies[skies.length - 1]) === J({ time: 'day', weather: null }) && timers.size === 1
+      && seasonContext().at === clock.t && paintedThemeId('seasons') === 'fall');
     bus.publish('weather/now', { code: 71, icon: 'snow', isDay: true, lat: 51.5, lon: -0.1, at: clock.t });
     check('*** the Weather panel\'s reading arrives: snow, and London\'s hemisphere and sun ***', J(skies[skies.length - 1]) === J({ time: 'day', weather: 'snow' })
       && seasonContext().lat === 51.5 && f.state.weather === 'snow');
@@ -385,15 +577,28 @@ try {
     check('the setting turned to "Neither" lands at once', J(skies[skies.length - 1]) === J({ time: null, weather: null }));
     row = { ...row, skyFollow: 'both' };
     subs.forEach((fn) => fn(row));
-    const before = themed;
-    clock.t = new Date(2026, 9, 15, 0, 1).valueOf();
+    // Midnight into Halloween, in the middle of something (a call, a game): it WAITS.
+    calm = false;
+    const n0 = told.length;
+    clock.t = new Date(2026, 9, 25, 0, 1).valueOf();
     fire();
-    check('*** midnight on October 15: Halloween starts, and the screen is told to re-apply "With the seasons" ***', themed === before + 1);
-    row = { ...row, holidayLooks: false };
+    check('*** midnight on October 25 in the middle of a call: Halloween waits - nothing told, the old look held ***',
+      told.length === n0 && f.pending === 'halloween' && paintedThemeId('seasons') === 'fall', `${told.length - n0} ${f.pending} ${paintedThemeId('seasons')}`);
+    clock.t += 60000; fire();
+    check('still busy a minute later: still waiting', told.length === n0 && f.pending === 'halloween');
+    calm = true;
+    clock.t += 60000; fire();
+    check('*** the first calm tick: Halloween lands, told to FADE, and the page paints it ***',
+      told.length === n0 + 1 && told[told.length - 1].fade === true && f.pending === null && paintedThemeId('seasons') === 'halloween', J(told.slice(-1)));
+    // A setting is somebody asking: at once, whatever is going on, and no fade.
+    calm = false;
+    row = { ...row, holidayHalloween: false };
     subs.forEach((fn) => fn(row));
-    check('holiday looks turned off: told again (back to Fall)', themed === before + 2 && seasonContext().holidays === false);
+    check('*** Halloween ticked off in the middle of a call: back to fall at once (somebody asked), no fade ***',
+      told.length === n0 + 2 && told[told.length - 1].fade === false && seasonContext().holidays.halloween === false && paintedThemeId('seasons') === 'fall');
+    calm = true;
     fire();
-    check('nothing changed, nothing told', themed === before + 2 && timers.size === 1);
+    check('nothing changed, nothing told', told.length === n0 + 2 && timers.size === 1);
     doc.hidden = true;
     const n = skies.length;
     clock.t += 10 * 60000;
@@ -401,8 +606,12 @@ try {
     check('*** a hidden page does no work, but keeps its clock ***', skies.length === n && timers.size === 1);
     doc.hidden = false; doc.l?.();
     check('shown again: caught up at once', skies.length === n + 1);
+    row = { skyFollow: 'both', holidayLooks: false };
+    subs.forEach((fn) => fn(row));
+    check('the old single "Holiday looks: Off" still turns every holiday off', Object.values(seasonContext().holidays).every((v) => v === false));
     f.stop();
-    check('stopped: no timer, and the page\'s scenes go back to no sky', timers.size === 0 && skies[skies.length - 1] === null);
+    check('stopped: no timer, the page\'s scenes go back to no sky, and nothing holds the look still', timers.size === 0 && skies[skies.length - 1] === null
+      && seasonContext().at === null);
     setSeasonContext(ctx0);
   }
 
@@ -415,17 +624,18 @@ try {
       removeItem: (k) => { m.delete(k); }, key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, clear: () => m.clear() }; };
     const seams = () => ({ storage: fakeStorage(), session: fakeStorage(), navigate: () => {}, reloadPage: () => {}, recoveryTick: 0 });
     const root = document.getElementById('root');
-    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-    const rowIds = (k) => { try { k.menu.open(); return k.menu.items().map((i) => i.id); } finally { try { k.menu.close(); } catch { /* fine */ } } };
+    const rowItems = (k) => { try { k.menu.open(); return k.menu.items(); } finally { try { k.menu.close(); } catch { /* fine */ } } };
+    const rowIds = (k) => rowItems(k).map((i) => i.id);
 
-    // A plain screen first: the menu is exactly what it was (the two rows are not offered).
+    // A plain screen first: the menu is exactly what it was (none of the seasons rows are offered).
     const plain = await profiles.create('Seasons-plain');
     await profiles.addModule(plain.id, 'clock');
     let kiosk = await mountKiosk(root, { user: USER, profileId: plain.id, profiles, bus: createBus(), ...seams() });
     await sleep(300);
     const plainIds = rowIds(kiosk);
-    check('*** on the default theme neither row is offered (no new stops on the switch walk) ***',
-      plainIds.includes('set:theme') && !plainIds.includes('set:holidayLooks') && !plainIds.includes('set:skyFollow'), plainIds.filter((i) => /^set:/.test(i)).join());
+    check('*** on the default theme no seasons row is offered (no new stops on the switch walk) ***',
+      plainIds.includes('set:theme') && !plainIds.some((i) => /^set:holiday/.test(i)) && !plainIds.includes('set:skyFollow') && !plainIds.includes('seasons-why'),
+      plainIds.filter((i) => /^set:/.test(i)).join());
     kiosk.destroy();
     root.innerHTML = '';
 
@@ -441,14 +651,24 @@ try {
     kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams() });
     await sleep(400);
     const want = paintedTheme('seasons');
-    const ids = rowIds(kiosk);
-    check('*** with the seasons: "Holiday looks" is offered ***', ids.includes('set:holidayLooks'), ids.filter((i) => /^set:/.test(i)).join());
+    const items = rowItems(kiosk);
+    const ids = items.map((i) => i.id);
+    check('*** with the seasons: one row per holiday, eleven, on the Display tab; the old single row is gone ***',
+      HOLIDAY_FIELDS.every((fld) => ids.includes(`set:${fld.key}`)) && !ids.includes('set:holidayLooks')
+      && items.filter((i) => /^set:holiday/.test(i.id)).every((i) => i.tab === 'display'), ids.filter((i) => /^set:holiday/.test(i)).join());
+    const hrow = items.find((i) => i.id === 'set:holidayHalloween');
+    check('...each names its next dates', hrow && /^Halloween look, /.test(hrow.label) && / to /.test(hrow.label), hrow?.label);
+    const why = items.find((i) => i.id === 'seasons-why');
+    const at = ids.indexOf('set:theme');
+    check('*** under Colours: why this look, and what comes next - read, not a stop ***', why && why.disabled === true && ids[at + 1] === 'seasons-why'
+      && why.label === seasonsWhy(new Date(seasonContext().at ?? Date.now()), seasonContext()).reason && /^(Coming up|Tomorrow): /.test(why.hint), J(why));
     check('"Wallpaper follows the sky outside" is offered exactly when today\'s look answers to the sky',
       ids.includes('set:skyFollow') === sceneTakesSky(want.scene), `${want.id} ${want.scene}`);
     const kls = () => root.querySelector('.kiosk > .ls');
     check('*** the screen wears today\'s look ***', getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === want.vars['--bg']
       && (!want.scene || kls()?.dataset.scene === want.scene), `${want.id} / ${kls()?.dataset.scene}`);
     check('...its scene has the time of day from the clock', !want.scene || ['dawn', 'day', 'dusk', 'night'].includes(kls()?.dataset.skyTime), kls()?.dataset.skyTime);
+    check('...and the screen holds the moment it shows (seasons.js at)', Number.isFinite(seasonContext().at));
     bus.publish('weather/now', { code: 63, icon: 'rain', isDay: true, lat: 40.7, lon: -74.0, at: Date.now() });
     await sleep(50);
     check('*** a Weather panel\'s reading reaches the screen\'s scene: rain ***', !want.scene || kls()?.dataset.skyWeather === 'rain', kls()?.dataset.skyWeather);
@@ -463,7 +683,7 @@ try {
       `${kls()?.dataset.skyWeather} after ${Date.now() - t0} ms`);
     kiosk.destroy();
     root.innerHTML = '';
-    check('*** the screen gone: the page has no sky ***', sceneSky() === null);
+    check('*** the screen gone: the page has no sky, and nothing holds the look ***', sceneSky() === null && seasonContext().at === null);
     try { st.destroy?.(); } catch { /* fine */ }
   }
 } catch (err) {

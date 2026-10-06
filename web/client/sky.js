@@ -22,10 +22,13 @@
 // A HIDDEN PAGE DOES NO WORK: the minute's check is skipped while the document is hidden, and runs once
 // the moment it is shown again. (The scene's own movement is CSS; a hidden page paints nothing.)
 
-import { timeOfDay, weatherKind, setSeasonContext, seasonContext, resolveSeasonal } from './seasons.js';
+import { timeOfDay, weatherKind, setSeasonContext, seasonContext, seasonalKey, HOLIDAYS, HOLIDAY_IDS,
+  holidayWindow } from './seasons.js';
 import { setSceneSky } from './livescene.js';
 
 export const SKY_FOLLOW_KEY = 'skyFollow';
+// The single "Holiday looks" on/off of 16aeded. Still READ (false = none, for a screen that saved it);
+// no longer offered: each holiday is its own row now (HOLIDAY_FIELDS).
 export const HOLIDAYS_KEY = 'holidayLooks';
 export const SKY_MODES = Object.freeze(['both', 'weather', 'time', 'off']);
 // How long a weather reading counts: live_weather.js's STALE_MS, so the site has one answer.
@@ -53,15 +56,53 @@ export const SKY_FIELD = Object.freeze({
   ],
 });
 
-/** "Holiday looks", beside "With the seasons" (seasons.js argues the default and the dates). */
-export const HOLIDAY_FIELD = Object.freeze({
-  key: HOLIDAYS_KEY, label: 'Holiday looks', kind: 'toggle', level: 'standard', default: true,
-  onLabel: 'On', offLabel: 'Off',
-  note: 'With the seasons, a holiday look on its dates - Halloween from October 15 to 31.',
-});
+/**
+ * *** ONE ROW PER HOLIDAY (2026-10-05, Design's seasons-holidays handoff): "Each holiday is its own
+ * checkbox." *** Shown only while the Colours follow the seasons, so on any other theme the menu is exactly
+ * what it was. Eleven rows is eleven stops on a one-switch walk of that tab - ARGUED: a holiday somebody
+ * does not keep is the one thing that must be easy to turn off (and one somebody does keep, easy to turn
+ * on), and a single "which ones" choice row cannot say "Halloween and Diwali but not Christmas". AGAINST: the
+ * walk; a "the usual ones / all / none" choice in front of them is the lighter shape if Mike finds it long.
+ * The defaults are the schedule's starter set (seasons.js holidayPrefs argues it). Keys: `holiday` + the
+ * schedule's id with a capital (holidayHalloween, holidayLunarNewYear, ...).
+ */
+export const holidayKey = (id) => `holiday${id.charAt(0).toUpperCase()}${id.slice(1)}`;
+export const HOLIDAY_FIELDS = Object.freeze(HOLIDAY_IDS.map((id) => Object.freeze({
+  key: holidayKey(id), holiday: id, label: `${HOLIDAYS[id].label} look`, kind: 'toggle', level: 'standard',
+  default: !!HOLIDAYS[id].starter, onLabel: 'On', offLabel: 'Off',
+  note: 'With the seasons: shown on its dates.',
+})));
+
+/**
+ * The holiday's next dates in words, "Oct 25 to Oct 31" ('' when unknown). A menu row's hint shows only its
+ * value, so the kiosk puts this in the row's LABEL - "Halloween look, Oct 25 to Oct 31" - where it is read
+ * before anybody presses it. The field itself stays static.
+ */
+export function holidayDatesText(id, { now = Date.now(), lang } = {}) {
+  const w = holidayWindow(id, new Date(now));
+  if (!w) return '';
+  const f = (d) => d.toLocaleDateString(lang || undefined, { month: 'short', day: 'numeric' });
+  return w.from.valueOf() === w.to.valueOf() ? f(w.from) : `${f(w.from)} to ${f(w.to)}`;
+}
+export const holidayRowLabel = (id, opts) => {
+  const f = HOLIDAY_FIELDS.find((x) => x.holiday === id);
+  const dates = holidayDatesText(id, opts);
+  return f ? (dates ? `${f.label}, ${dates}` : f.label) : id;
+};
+
+/** Which holidays a settings row keeps, as seasons.js holidayPrefs takes it: the per-holiday rows, over the old switch. */
+export function holidaysFrom(row = {}) {
+  const r = row && typeof row === 'object' ? row : {};
+  const out = {};
+  for (const id of HOLIDAY_IDS) {
+    const v = r[holidayKey(id)];
+    if (typeof v === 'boolean') out[id] = v;
+    else if (r[HOLIDAYS_KEY] === false) out[id] = false;
+  }
+  return out;
+}
 
 export const skyModeOf = (v) => (SKY_MODES.includes(v) ? v : SKY_FIELD.default);
-export const holidaysOn = (v) => v !== false;
 
 /**
  * The sky to draw, from a reading and the time. Pure, so the suite checks it without a bus or a clock.
@@ -87,25 +128,33 @@ export function skyFrom(reading, { now = Date.now(), mode = 'both' } = {}) {
  *   bus        the screen's bus (`weather/now` arrives on it)
  *   read()     the screen's settings row ({ skyFollow, holidayLooks })
  *   subscribe  (fn) => off: told when that row changes (optional)
- *   onTheme()  "With the seasons" now paints something else: re-apply the theme
- * Returns { sync(), stop(), get state(), get reading() }.
+ *   onTheme({ fade })  "With the seasons" now paints something else: re-apply the theme. `fade` is true
+ *              when the DATE moved it (fade the scene, livescene FADE_MS), false when a setting did (at once)
+ *   calm()     (seasons, 2026-10-05) true when the screen may change its look now. Design's decision 3: "at
+ *              midnight or on the next screen change, not in the middle of a game or a call". A change the
+ *              date brings WAITS while calm() is false, re-asked every tick (a minute), and lands the first
+ *              tick it is true. The kiosk passes its version-watch hold list (a call, a game, the menu, an
+ *              edit view, a recording, somebody pressing something in the last two minutes...). Omitted:
+ *              always calm. A change a SETTING brings (a holiday ticked off) lands at once: somebody asked.
+ * Returns { sync(), stop(), get state(), get reading(), get pending() }.
  */
 export function followSky({ bus, read = () => ({}), subscribe = null, onTheme = null, now = () => Date.now(),
-  setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (id) => clearTimeout(id),
+  setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (id) => clearTimeout(id), calm = () => true,
   doc = (typeof document !== 'undefined' ? document : null), tickMs = SKY_TICK_MS, setSky = setSceneSky } = {}) {
   let reading = null;
   let state = null;
   let seasonKey = null;
+  let pending = null;            // the look the date has moved on to, waiting for a calm moment
   let timer = null;
   let stopped = false;
   const offs = [];
 
-  const seasonal = () => {
-    const ctx = seasonContext();
-    const r = resolveSeasonal(new Date(now()), { ...ctx, has: () => true });   // the key, not the theme
-    return `${r.key}`;
-  };
-  seasonKey = seasonal();
+  // The look's identity at `t` under the page's context (seasons.js seasonalKey: the holiday or season,
+  // with Hanukkah's night). THE LOOK SHOWING is the one at seasons.js's `at`, which this holds still while
+  // a change waits, and moves on when it lands.
+  const keyAt = (t) => seasonalKey(new Date(t), seasonContext());
+  setSeasonContext({ at: now() });
+  seasonKey = keyAt(now());
 
   function sync() {
     if (stopped) return;
@@ -114,14 +163,26 @@ export function followSky({ bus, read = () => ({}), subscribe = null, onTheme = 
     if (doc && doc.hidden) return;                         // nothing to look at; caught up on show
     let cfg = {};
     try { cfg = read() || {}; } catch { cfg = {}; }
-    const next = skyFrom(reading, { now: now(), mode: cfg[SKY_FOLLOW_KEY] });
+    const t = now();
+    const next = skyFrom(reading, { now: t, mode: cfg[SKY_FOLLOW_KEY] });
     state = next;
     try { setSky({ time: next.time, weather: next.weather }); } catch (err) { console.error('sky: scene', err); }
-    setSeasonContext({ lat: next.lat, holidays: holidaysOn(cfg[HOLIDAYS_KEY]) });
-    const key = seasonal();
-    if (key !== seasonKey) {
-      seasonKey = key;
-      try { onTheme?.(); } catch (err) { console.error('sky: theme', err); }
+    setSeasonContext({ lat: next.lat, holidays: holidaysFrom(cfg) });
+    const shownAt = seasonContext().at ?? t;
+    const keyNow = keyAt(t);
+    let fade = false;
+    if (keyAt(shownAt) !== keyNow) {
+      // The date has moved the look on. Only at a calm moment.
+      let ok = true;
+      try { ok = calm() !== false; } catch { ok = true; }
+      if (!ok) { pending = keyNow; return; }
+      fade = true;
+    }
+    pending = null;
+    setSeasonContext({ at: t });
+    if (keyNow !== seasonKey) {
+      seasonKey = keyNow;
+      try { onTheme?.({ fade }); } catch (err) { console.error('sky: theme', err); }
     }
   }
 
@@ -145,8 +206,11 @@ export function followSky({ bus, read = () => ({}), subscribe = null, onTheme = 
     sync,
     get state() { return state ? { ...state } : null; },
     get reading() { return reading ? { ...reading } : null; },
+    get pending() { return pending; },
     stop() {
       stopped = true;
+      // Nothing holds the page's look still any more: it is "now" again.
+      setSeasonContext({ at: null });
       if (timer != null) clearTimer(timer);
       timer = null;
       while (offs.length) { try { offs.pop()(); } catch { /* gone */ } }

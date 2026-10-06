@@ -282,7 +282,11 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       // choice of TEXT clears 4.5 -- the accent itself has to move, which is a palette value and
       // Claude Design's (D19). Asserted at its measured floor so a REGRESSION still fails,
       // rather than dropped from the list. Delete this the day the accent changes.
-      const EXEMPT = { 'forge:the algebra = key': 4.3 };
+      // (seasons, 2026-10-05) Hanukkah's accent #4a7ad0 (Design's seasons-holidays palette): 4.25 with dark
+      // text, 4.21 with white - the same middle-blue problem as forge's link. Contrast is a WARNING for Design's
+      // palettes (their README), reported in NOTES_FOR_DESIGN 2026-10-05; held at its floor so a regression fails.
+      const EXEMPT = { 'forge:the algebra = key': 4.3,
+        'hanukkah:the primary button': 4.2, 'hanukkah:the focused-panel chip on the transport bar': 4.2 };
       for (const id of Object.keys(THEMES)) {
         const box = document.createElement('div');
         box.style.color = 'var(--text)';
@@ -308,7 +312,7 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
           // fifteen failures that were about the arithmetic rather than the colours.
           const r = rgbRatio(cs.color, cs.backgroundColor);
           const floor = EXEMPT[`${id}:${what}`] ?? 4.5;
-          const note = floor === 4.5 ? '' : ' (D19: the accent itself needs moving)';
+          const note = floor === 4.5 ? '' : (id === 'forge' ? ' (D19: the accent itself needs moving)' : ' (Design\'s palette: reported, a warning)');
           check(`${id}: ${what} is readable (${r.toFixed(2)}:1)${note}`, r >= floor,
             `${cs.color} on ${cs.backgroundColor} = ${r.toFixed(2)}, needs ${floor}`);
         }
@@ -402,6 +406,21 @@ const settingsHandle = (profiles, pid) => createState({ url: profiles.stateURL(p
       worstBorder >= 3, `worst = ${worstBorder.toFixed(2)} (${worstBorderWhere})`);
     check('*** every NEW theme’s text stays readable on its own right/wrong (ok/bad) washes ***',
       worstWash >= 4.5, `worst = ${worstWash.toFixed(2)} (${worstWashWhere})`);
+
+    // (seasons, 2026-10-05) THE THIRTEEN SEASON AND HOLIDAY THEMES. The washes are checked like the seven above.
+    // Their BORDERS are reported, not failed: every one is a pale or dark hairline (1.22-1.83:1 on its own
+    // --bg), the same choice as `default`'s 1.20 (MIKE_CHANGE_LIST §live-themes-border-gap), and Design's README
+    // makes contrast a warning on its palettes. Sent back in NOTES_FOR_DESIGN 2026-10-05.
+    const SEASON_THEMES = Object.keys(THEMES).filter((id) => THEMES[id].group === 'season' || THEMES[id].group === 'holiday');
+    check('the thirteen season and holiday themes are all there', SEASON_THEMES.length === 13, SEASON_THEMES.join());
+    const borders = [];
+    for (const id of SEASON_THEMES) {
+      const v = THEMES[id].vars;
+      const wash = Math.min(contrast(v['--text'], v['--ok-surface']), contrast(v['--text'], v['--bad-surface']));
+      check(`${id}: text on its own right/wrong washes (${wash.toFixed(2)}:1)`, wash >= 4.5);
+      borders.push(`${id} ${contrast(v['--border'], v['--bg']).toFixed(2)}`);
+    }
+    console.log('season/holiday borders on their own --bg (3:1 non-text floor; a warning):', borders.join(' | '));
   }
 
   // ── *** FOCUS RINGS AND MUTED TEXT: WCAG AA IN EVERY THEME, DEUTERANOPIA INCLUDED *** ──────

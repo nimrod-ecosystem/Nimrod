@@ -52,7 +52,7 @@
 // From Claude Design's live-themes handoff, 2026-09-22 -- seven animated themes and the scene
 // system they ride on. `syncScene` is a no-op on anything but <html> or an element carrying
 // `data-scene-host` (see below), so every existing call site is unaffected.
-import { liveThemes, BOARD_BASE } from './live_themes.js';
+import { liveThemes, BOARD_BASE, seasonThemes } from './live_themes.js';
 import { syncScene } from './livescene.js';
 // "With the seasons" (2026-10-05): a choice that is a rule for picking a theme by the date, not a palette.
 import { FOLLOW_THEMES, isFollowThemeId, resolveSeasonal, seasonContext } from './seasons.js';
@@ -251,6 +251,10 @@ export const THEMES = {
     },
   },
   ...liveThemes(BASE),
+  // Spring, Summer and a look for each holiday (Design's seasons-holidays handoff, 2026-10-05). The holiday
+  // ones carry `group: 'holiday'` and are left out of listThemes (see there); THEMES has them all, so every
+  // check that walks THEMES measures them, and applyTheme can paint one when its day comes.
+  ...seasonThemes(BASE),
 };
 
 export const DEFAULT_THEME = 'default';
@@ -278,7 +282,9 @@ export function paintedTheme(id, { now, lat, holidays } = {}) {
   const choice = resolveThemeId(id);
   if (!isFollowThemeId(choice)) return { ...THEMES[choice], id: choice };
   const ctx = { ...seasonContext(), ...(lat !== undefined ? { lat } : {}), ...(holidays !== undefined ? { holidays } : {}) };
-  const season = resolveSeasonal(new Date(now ?? Date.now()), { ...ctx, has: (t) => !!THEMES[t], last: DEFAULT_THEME });
+  // (seasons) `ctx.at`: the moment whose look a screen is showing, held still while a change waits for a
+  // calm moment (sky.js). Null on a page with no screen: now.
+  const season = resolveSeasonal(new Date(now ?? ctx.at ?? Date.now()), { ...ctx, has: (t) => !!THEMES[t], last: DEFAULT_THEME });
   const base = THEMES[season.theme] || THEMES[DEFAULT_THEME];
   const overlays = [...(base.overlays || [])];
   for (const o of season.overlays) if (!overlays.includes(o)) overlays.push(o);
@@ -540,9 +546,11 @@ export function refreshUserFont({ storage } = {}) {
 // [{id,label}] for building a picker. The follow choices ("With the seasons") come LAST, after every real
 // theme, marked `follows: true` - last so a list's first entry is still a real theme, and marked so a
 // picker that draws a theme's colours can ask `paintedTheme` for today's instead of THEMES.
+// (2026-10-05) A HOLIDAY theme (`group: 'holiday'`, live_themes.js seasonThemes) is not listed: it comes by
+// date through "With the seasons". live_themes.js argues it; the case for the opposite is there too.
 export function listThemes() {
   return [
-    ...Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label })),
+    ...Object.entries(THEMES).filter(([, t]) => t.group !== 'holiday').map(([id, t]) => ({ id, label: t.label })),
     ...Object.entries(FOLLOW_THEMES).map(([id, t]) => ({ id, label: t.label, follows: true })),
   ];
 }

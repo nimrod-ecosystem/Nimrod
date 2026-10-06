@@ -165,8 +165,8 @@ import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
 // Seasons and the sky outside (2026-10-05): "With the seasons" and a wallpaper that follows the weather.
 import { paintedTheme, isFollowTheme } from './theme.js';
-import { followSky, SKY_FIELD, HOLIDAY_FIELD, SKY_FOLLOW_KEY, HOLIDAYS_KEY } from './sky.js';
-import { sceneTakesSky } from './seasons.js';
+import { followSky, SKY_FIELD, HOLIDAY_FIELDS, SKY_FOLLOW_KEY, HOLIDAYS_KEY, holidayRowLabel } from './sky.js';
+import { sceneTakesSky, seasonsWhy, seasonContext } from './seasons.js';
 import { cachedFetch } from './cache.js';
 import { createPersonKnown, PERSON_KNOWN, PERSON_WAIT_MS } from './person_known.js';
 import './modules/clock.js';
@@ -534,7 +534,8 @@ export async function mountKiosk(root, {
   // effect to save one redundant (and cheap — CSS-driven, not a second detection loop) animated
   // background is not a trade worth making under time pressure without checking every caller.
   kioskEl.setAttribute('data-scene-host', '');
-  function applyKioskTheme(id) {
+  // (seasons, 2026-10-05) `fade`: the date changed the look by itself (sky.js) - the scene fades (livescene FADE_MS).
+  function applyKioskTheme(id, { fade = false } = {}) {
     // An embed lives on somebody's page, which already has a theme (its own picker, or the
     // signed-in profile's). A screen that has never picked one must not reset that to default.
     lastShownTheme = id;                     // Stage 4: what `syncShownTheme` compares against
@@ -546,7 +547,7 @@ export async function mountKiosk(root, {
     // The scene's own flashes (neon signs, lightning) follow the screen's flash limit, read every render.
     // (2026-10-05: `paintedTheme`, not THEMES[resolved] -- the same theme, plus what "With the seasons"
     // adds to it while it falls back, e.g. Halloween's cat on Night. See theme.js.)
-    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow });
+    syncScene(kioskEl, paintedTheme(id), { flashLimit: flashLimitNow, fade });
     // The mixer's "sounds like: match the scene" follows the scene the screen is actually showing.
     soundScene = THEMES[resolved]?.scene || null;
     try { mixer?.setScene(soundScene); } catch (err) { console.error('kiosk: mixer scene', err); }
@@ -1893,9 +1894,15 @@ export async function mountKiosk(root, {
   // After the first theme, so the first sky lands on a scene that is there. Guarded: it must never stop the
   // screen coming up. Reads (and follows) the screen's row for its two settings.
   let skyFollow = null;
+  // (seasons, 2026-10-05) A change of look the DATE brings waits for a calm moment (Design's decision 3: not
+  // mid-call, mid-game). `seasonCalm` is the version watch's hold list once it exists ("PICKING UP A NEW
+  // VERSION" below sets it): the same answer to "would changing the screen now take something from somebody".
+  // Before then, or with no version watch (an embed), always calm.
+  let seasonCalm = null;
   try {
     skyFollow = followSky({ bus, read: readScreen, subscribe: (fn) => settings.subscribe(fn),
-      onTheme: () => { if (!torn && isFollowTheme(lastShownTheme)) applyKioskTheme(lastShownTheme); } });
+      calm: () => { try { return !seasonCalm || seasonCalm() == null; } catch { return true; } },
+      onTheme: (o) => { if (!torn && isFollowTheme(lastShownTheme)) applyKioskTheme(lastShownTheme, { fade: !!o?.fade }); } });
   } catch (err) { console.error('kiosk: the sky', err); }
   applyLayout(settings.get());
   applyPanelSurface(settings.get());
@@ -3116,6 +3123,7 @@ export async function mountKiosk(root, {
     theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],
     [SMALL_CLOCK_KEY]: ['display', 0],
     [HOLIDAYS_KEY]: ['display', 0], [SKY_FOLLOW_KEY]: ['display', 0],   // seasons and the sky (sky.js)
+    ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['display', 0]])),   // seasons: one row per holiday
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
@@ -3255,6 +3263,18 @@ export async function mountKiosk(root, {
     return () => {};
   }
   // The settings that have a level above the panel (see above). Their options are the Display tab's.
+  // (seasons, 2026-10-05) While the Colours follow the seasons, a row under them says why this look and what
+  // comes next (seasons.js seasonsWhy: "Halloween is on, and it wins over the fall scene." / "Coming up: Fall on
+  // Nov 1."). Design: "People trust a theme change more when it says why." Disabled, so it is read, never a
+  // stop on the switch walk (the "This screen: <name>" row's shape). For the look SHOWING (seasons.js `at`).
+  const seasonsWhyItems = () => {
+    if (!isFollowTheme(shownTheme())) return [];
+    try {
+      const c = seasonContext();
+      const w = seasonsWhy(new Date(c.at ?? Date.now()), c);
+      return [{ kind: 'item', id: 'seasons-why', disabled: true, label: w.reason, hint: w.next }];
+    } catch { return []; }
+  };
   const LEVEL_LOOK_FIELDS = () => [
     { key: 'theme', label: 'Colours', kind: 'choice', level: 'essential',
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
@@ -3524,7 +3544,12 @@ export async function mountKiosk(root, {
     // looks" while the Colours follow the seasons, "Wallpaper follows the sky outside" while the scene showing
     // answers to the weather or the time of day (seasons.js SCENE_SKY). So on any other theme the menu's rows
     // are exactly what they were.
-    ...(isFollowTheme(shownTheme()) ? [{ ...HOLIDAY_FIELD }] : []),
+    // (seasons, 2026-10-05) "Holiday looks" is now one row per holiday (sky.js HOLIDAY_FIELDS argues the eleven
+    // stops), each naming its next dates ("Halloween look, Oct 25 to Oct 31"). A screen that saved the old
+    // single "Off" shows them all off.
+    ...(isFollowTheme(shownTheme()) ? HOLIDAY_FIELDS.map((f) => ({ ...f,
+      default: readScreen()[HOLIDAYS_KEY] === false ? false : f.default,
+      label: (() => { try { return holidayRowLabel(f.holiday); } catch { return f.label; } })() })) : []),
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
@@ -4769,7 +4794,7 @@ export async function mountKiosk(root, {
       }).map((it) => {
         const [tab, rank] = SCREEN_FIELD_TABS[String(it.id || '').replace(/^set:/, '')] || ['screen', 0];
         return { ...it, tab, rank };
-      }),
+      }).flatMap((it) => (it.id === 'set:theme' ? [it, ...seasonsWhyItems().map((w) => ({ ...w, tab: it.tab, rank: it.rank }))] : [it])),   // seasons
       // MOVEMENT AND FLASHING (argued at MOTION_FIELDS): written to the screen's row, seen at once (the
       // settings subscribe applies zoom; the flash limit is read live by everything that repeats).
       ...(() => {
@@ -6527,6 +6552,8 @@ export async function mountKiosk(root, {
       }
       return null;
     };
+    // (seasons) The same hold list decides when the date may change the look (see `seasonCalm` at the sky).
+    seasonCalm = versionHold;
     const quietKindNow = () => {
       const kinds = playingKinds();
       return kinds.includes('video') ? 'video' : (kinds.includes('slideshow') ? 'slideshow' : null);
