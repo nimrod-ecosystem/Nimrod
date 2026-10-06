@@ -10,7 +10,7 @@
   .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
   #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
   #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
-  #host{position:absolute;left:-9999px;width:800px;height:450px}
+  #host,#host2{position:absolute;left:-9999px;width:800px;height:450px}
 </style>
 </head>
 <body>
@@ -21,6 +21,7 @@ nothing timed unless that is turned on.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <div id="host"></div>
+<div id="host2"></div>
 
 <script type="module">
 import { harness, rig, sleep, fakeTimers } from './quiz_test_rig.js';
@@ -32,6 +33,7 @@ import '../modules/word_games.js';
 import { GAME, GAMES, MIX_ORDER, LINES, DEFAULTS, judgeItem, answerOf, orderAnswer, numberOptions, codesFromSpeech, ladderGame } from '../modules/brain_games.js';
 import { BANKS, ODD, COUNT, NEXT, ORDER, SHAPE_NAMES, shapeSvg } from '../brain_banks.js';
 import { BANKS as THINK } from '../think_banks.js';
+import { targetOf } from '../modules/think_games.js';
 import { PUZZLES } from '../word_builder_words.js';
 import { UNKNOWN, FLOW_LINES, numberWord } from '../quiz_flow.js';
 import { createBus } from '../bus.js';
@@ -346,6 +348,28 @@ try {
     check('both on the saved ladder under the brain games\' own name', saved.players['name:ann'].games[ladderGame('count')].n === 81
       && saved.players['name:bob'].games[ladderGame('count')].n === 1);
     r.inst.destroy();
+  }
+
+  section('*** TWO LADDER GAMES ON ONE SCREEN DO NOT OVERWRITE EACH OTHER (2026-10-06) ***');
+  {
+    // Found 2026-10-05: each game saved its WHOLE ladder from what it loaded, so with Brain games and Thinking
+    // games open on one screen (one `ratings` row) the last to answer wrote the other's progress away.
+    const store = ladderStore();
+    const bus = createBus();
+    const b = R({ game: 'count' }, { store, bus });
+    const t = rig('think_games', { saved: { autostart: true, answerBy: 'yesno', game: 'numbers' }, bus, hostId: 'host2',
+      extra: { makeState: (k) => (k === LADDER_KEY ? store : null) } });
+    await sleep(0);
+    for (let i = 0; i < 3; i++) {
+      tap(b, b.item().n); await sleep(0); b.timers.flush();
+      tap(t, targetOf(t.probe().item)); await sleep(0); t.timers.flush();
+    }
+    const games = store.peek().ladder?.players?.player?.games || {};
+    const nb = games[ladderGame('count')]?.n || 0;
+    const nt = games.numbers?.n || 0;
+    check('*** both games\' progress is on the one row: Brain games\' AND Thinking games\' answers ***',
+      nb >= 3 && nt >= 3, JSON.stringify(Object.fromEntries(Object.entries(games).map(([g, r]) => [g, r.n]))));
+    b.inst.destroy(); t.inst.destroy();
   }
 
   section('grammar');

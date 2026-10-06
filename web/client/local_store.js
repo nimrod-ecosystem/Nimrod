@@ -240,12 +240,19 @@ function createLocalProfilesClient() {
 }
 
 // ---------------------------------------------------------------- state
-function createLocalState(pid, key) {
+const MERGE_CHAINS = new Map();   // row key -> the last merging write on it (see `persist` below)
+// `merge` (optional, state.js's option of the same name): two handles on one row in one browser (two
+// games sharing a ladder row) each wrote their own whole copy, so the second write lost the first's. With
+// a `merge`, a write finds the row moved on since this handle last read or wrote it, and merges instead
+// (base = what this handle last saw, mine = this handle's copy, theirs = the row). Without one, a write is
+// exactly what it always was.
+function createLocalState(pid, key, { merge = null } = {}) {
   const k = `${pid}::${key}`;
   let data = {};
   let version = 0;
   let loaded = false;
   let writing = Promise.resolve();
+  let base = {};
   const subs = new Set();
 
   const notify = () => {
@@ -257,12 +264,39 @@ function createLocalState(pid, key) {
     const row = await getRow(STATE, k);
     data = (row && row.v && row.v.data) || {};
     version = (row && row.v && row.v.version) || 0;
+    base = data;
     loaded = true;
     notify();
     return { ...data };
   }
 
   function persist() {
+    if (typeof merge === 'function') {
+      // One write at a time PER ROW, across every handle on it in this page: two handles each reading the row
+      // before either wrote would both see "nothing changed", and the second would still write the first away.
+      const prev = MERGE_CHAINS.get(k) || Promise.resolve();
+      writing = prev.then(async () => {
+        const mine = data;
+        const row = await getRow(STATE, k);
+        const cur = row && row.v;
+        let out = { ...mine };
+        if (cur && (cur.version || 0) !== version) {
+          try { const r = merge(base, mine, cur.data || {}); if (r && r.data) out = r.data; } catch (e) { console.error(e); }
+        }
+        version = Math.max(version, (cur && cur.version) || 0) + 1;
+        await putRow(STATE, { k, v: { data: out, version } });
+        // Anything set while this was out is laid over what was written, the same three-way way.
+        if (data !== mine) {
+          try { const r = merge(mine, data, out); data = r && r.data ? r.data : data; } catch (e) { console.error(e); }
+        } else {
+          data = out;
+        }
+        base = out;
+        if (JSON.stringify(out) !== JSON.stringify(mine)) notify();
+      }).catch((e) => console.error(e));
+      MERGE_CHAINS.set(k, writing);
+      return writing;
+    }
     version += 1;
     const snapshot = { data: { ...data }, version };
     writing = writing.then(() => putRow(STATE, { k, v: snapshot })).catch((e) => console.error(e));
@@ -345,10 +379,10 @@ export function createLocalBackend() {
     local: true,
     profiles,
     makeSettings: (pid) => createLocalState(pid, 'settings'),
-    makeState: (key, _opts, forPid) => createLocalState(forPid || keyPid(key), key),
+    makeState: (key, opts, forPid) => createLocalState(forPid || keyPid(key), key, { merge: opts?.merge || null }),
     // Per-PERSON, signed out. The scope string matches db.person_scope on the server so
     // the two halves address a person's bindings identically and cannot drift.
-    makePersonState: (personId, key) => createLocalState(personScope(personId), key),
+    makePersonState: (personId, key, opts) => createLocalState(personScope(personId), key, { merge: opts?.merge || null }),
     makePersonEvents: (personId, stream) => createLocalEvents(personScope(personId), stream),
     makeEvents: (key, _opts, forPid) => createLocalEvents(forPid || keyPid(key), key),
   };
