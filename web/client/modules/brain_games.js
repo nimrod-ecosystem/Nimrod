@@ -58,7 +58,7 @@ import { ownScoreField } from '../score_source.js';
 import { flowSettings, answerByField, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
 import { autostartFields, attractFields, ATTRACT_DEFAULTS, START_VOICE } from '../game_start.js';
 import { quizModule } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { BANKS, shapeSvg } from '../brain_banks.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 
@@ -267,7 +267,11 @@ registerModule(
     let roundRight = 0;
     let mixStart = 0;            // which kind a mix opens on (chosen when the game starts)
     let mixAsked = 0;            // questions dealt in this mix, for 'every question'
-    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
+    // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
+    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // entry (adaptive_play.js openPersonLadder).
+    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
       bankFor: (g) => BANKS[String(g).replace(/^brain_/, '')] || [],
@@ -275,8 +279,10 @@ registerModule(
       rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null,
+      startFor: ladderRows.startFor, startMark: ladderRows.startMark,
       onChange: () => api?.render(),
     });
+    ladderRows.attach(session);
     const roundTotal = () => Math.max(1, Math.floor(Number(cfgNow.roundSize) || DEFAULTS.roundSize)) * session.players().length;
 
     function stopLook() {
@@ -486,9 +492,9 @@ registerModule(
       scoreDetail: (s) => session.scoreDetail() || (roundAsked ? `${roundRight} of ${roundAsked} this round` : ''),
       scoreLine: () => session.scoreDetail() || `${roundRight} of ${roundAsked} right this round.`,
       pointNote: (game, item) => `brain games: ${item.kind}`,
-      onConfig: (c) => { cfgNow = c; },
+      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
       init(a) { api = a; ensureStyle(ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null)); },
-      destroy: () => { stopLook(); session.destroy(); try { store?.destroy?.(); } catch { /* gone */ } },
+      destroy: () => { stopLook(); session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Brain games', scoreLabel: 'Brain games: right answers',

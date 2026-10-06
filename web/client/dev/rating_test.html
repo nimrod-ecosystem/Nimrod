@@ -24,7 +24,8 @@ clock and a fake store.</p>
 import { harness } from './quiz_test_rig.js';
 import * as R from '../rating.js';
 import { createAdaptiveSession, parsePlayers, mergeLadder, adaptiveSettings, ADAPTIVE_DEFAULTS, emptyLadder,
-  EXTRA_CAP, mergeLadder3, ladderDocMerge, LADDER_STATE_OPTIONS, openLadderStore } from '../adaptive_play.js';
+  EXTRA_CAP, mergeLadder3, ladderDocMerge, LADDER_STATE_OPTIONS, openLadderStore, openPersonLadder, startWordLevel,
+  START_WORDS, PERSON_LADDER_KEY, PERSON_START_KEY } from '../adaptive_play.js';
 import { createState } from '../state.js';
 import { createLocalBackend, clearLocalScope } from '../local_store.js';
 import { isOpenModel, buildWriterPrompt, parseWritten, checkWritten, writeQuestions } from '../question_writer.js';
@@ -397,6 +398,95 @@ try {
   }
 
   // =====================================================================================
+  section('*** EVERY GAME ON THE LADDER: THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  {
+    check('"easy" / "medium" / "hard" over a game\'s levels: the easiest, the middle, the hardest',
+      [3, 5, 6, 1].map((t) => START_WORDS.map((w) => startWordLevel(w, t)).join('/')).join(' ') === '1/2/3 1/3/5 1/4/6 1/1/1'
+      && startWordLevel('loud', 5) === null, [3, 5, 6, 1].map((t) => START_WORDS.map((w) => startWordLevel(w, t)).join('/')).join(' '));
+    check('the person\'s own row is named "ratings" (in their scope); the panel\'s copy is "personStart"',
+      PERSON_LADDER_KEY === 'ratings' && PERSON_START_KEY === 'personStart');
+
+    // ---- the mark: a change of start reaches a row nobody has open ----
+    const bank = Array.from({ length: 15 }, (_, i) => ({ id: `m${i}`, level: 1 + (i % 5) }));
+    const old = { rating: 1000, n: 12, floor: 2, recent: [1, 1], review: { m3: { due: 5 } } };
+    let mark = null;
+    const s = createAdaptiveSession({ bankFor: () => bank, rand: () => 0, personId: () => 'pat',
+      startFor: (pid) => (pid === 'person:pat' ? 'hard' : null), startMark: (pid) => (pid === 'person:pat' ? mark : null) });
+    s.ladder().players['person:pat'] = { name: '', games: { g: { ...old } } };
+    check('no mark: a row is read as it was saved', s.playerRow('person:pat', 'g').floor === 2);
+    mark = 'm1';
+    const now = s.playerRow('person:pat', 'g');
+    check('*** a new mark: the row is read as starting again at the start (hard = level 5 here), answers and reviews kept ***',
+      now.floor === 5 && now.n === 12 && now.recent.length === 0 && !!now.review.m3 && now.mark === 'm1', JSON.stringify(now));
+    s.record({ item: s.deal('g'), right: true });
+    const saved = s.ladder().players['person:pat'].games.g;
+    check('...and the next answer saves it with the mark, so it happens once', saved.mark === 'm1' && saved.n === 13
+      && s.playerRow('person:pat', 'g').floor === saved.floor, JSON.stringify(saved));
+    check('a new player\'s row carries the mark from the start', s.playerRow('person:pat', 'fresh').mark === 'm1'
+      && s.playerRow('person:pat', 'fresh').floor === 5);
+    check('a typed-in player has no mark and their own start ("A new player starts at level")',
+      s.playerRow('name:ann', 'g').mark === undefined && s.playerRow('name:ann', 'g').floor === 1);
+    s.destroy();
+
+    // ---- two games, two panels, their own handles on the person's row and the screen's, against a server ----
+    // The real case on a dashboard: Brain games and Thinking games each open the screen's row and the person's
+    // row; saves are refused as stale and merged (state.js `merge`), entry by entry.
+    const realFetch = globalThis.fetch;
+    const rows = {};
+    globalThis.fetch = async (url, init = {}) => {
+      const u = String(url);
+      if (!u.startsWith('/fake/p/')) return realFetch(url, init);
+      const r = (rows[u] ||= { data: {}, version: 0, refused: 0 });
+      if ((init.method || 'GET') === 'GET') return new Response(JSON.stringify({ data: r.data, version: r.version }), { status: 200 });
+      const body = JSON.parse(init.body);
+      if (body.base_version !== r.version) {
+        r.refused += 1;
+        return new Response(JSON.stringify({ error: 'version_conflict', data: r.data, version: r.version }), { status: 409 });
+      }
+      r.data = body.data; r.version += 1;
+      return new Response(JSON.stringify({ version: r.version }), { status: 200 });
+    };
+    const handles = [];
+    const ctxFor = (screen) => ({ personId: 'pat',
+      makeState: (k, o) => { const h = createState({ url: `/fake/p/${screen}/${k}`, user: 'suite', debounceMs: 5, ...(o || {}) }); handles.push(h); return h; },
+      makePersonState: (p, k, o) => { const h = createState({ url: `/fake/p/person-${p}/${k}`, user: 'suite', debounceMs: 5, ...(o || {}) }); handles.push(h); return h; } });
+    const lb = openPersonLadder(ctxFor('screen1'));
+    const lt = openPersonLadder(ctxFor('screen1'));
+    const a = createAdaptiveSession({ bankFor: () => bank, store: lb.store, rand: () => 0, personId: () => 'pat',
+      startFor: lb.startFor, startMark: lb.startMark });
+    const b = createAdaptiveSession({ bankFor: () => bank, store: lt.store, rand: () => 0, personId: () => 'pat',
+      startFor: lt.startFor, startMark: lt.startMark });
+    lb.attach(a); lt.attach(b);
+    await new Promise((r) => setTimeout(r, 30));
+    for (let i = 0; i < 4; i++) {
+      a.record({ item: a.deal('brain'), right: true });
+      b.record({ item: b.deal('think'), right: true });
+      await new Promise((r) => setTimeout(r, 30));
+    }
+    await lb.flush(); await lt.flush();
+    await new Promise((r) => setTimeout(r, 30));
+    const person = rows['/fake/p/person-pat/ratings'];
+    const screen = rows['/fake/p/screen1/ratings'];
+    const g = person?.data?.ladder?.players?.['person:pat']?.games || {};
+    check('*** two games, each with its own handles: BOTH games\' four answers are on the PERSON\'s row ***',
+      g.brain?.n === 4 && g.think?.n === 4 && person?.refused > 0, JSON.stringify({ games: Object.fromEntries(Object.entries(g).map(([k, r]) => [k, r.n])), refused: person?.refused }));
+    check('...none of theirs on the screen\'s row, which keeps the questions\' ratings',
+      !screen?.data?.ladder?.players?.['person:pat'] && Object.keys(screen?.data?.ladder?.questions || {}).length > 0,
+      JSON.stringify(screen?.data?.ladder?.players));
+    // A second dashboard: same person, another screen, nothing on it.
+    const l2 = openPersonLadder(ctxFor('screen2'));
+    const c = createAdaptiveSession({ bankFor: () => bank, store: l2.store, rand: () => 0, personId: () => 'pat',
+      startFor: l2.startFor, startMark: l2.startMark });
+    l2.attach(c);
+    await new Promise((r) => setTimeout(r, 30));
+    check('*** ...and on a second dashboard they are where they left off in both games ***',
+      c.playerRow('person:pat', 'brain').n === 4 && c.playerRow('person:pat', 'think').n === 4);
+    a.destroy(); b.destroy(); c.destroy(); lb.destroy(); lt.destroy(); l2.destroy();
+    for (const h of handles) { try { h.destroy(); } catch { /* gone */ } }
+    globalThis.fetch = realFetch;
+  }
+
+  // =====================================================================================
   section('*** THE QUESTION WRITER: an open model, off unless turned on ***');
   {
     check('Claude is refused as the writer (row 2.50)', !isOpenModel('claude-3-5-sonnet') && !isOpenModel('anthropic/claude') && !isOpenModel(''));
@@ -449,6 +539,10 @@ try {
     check('*** the curve\'s four ends are settings: 90% / 70% right, 75% / 50% wrong ***',
       ['upEasy', 'upHard', 'downEasy', 'downHard'].map((k) => rows.find((r) => r.key === k)?.default).join() === '0.9,0.7,0.75,0.5');
     check('the writer is off by default', rows.find((r) => r.key === 'aiWrite').default === 'off');
+    const st = rows.find((r) => r.key === PERSON_START_KEY);
+    check('*** "Start games at": easy / medium / hard, easy by default, a standard row ***', st && st.default === 'easy'
+      && JSON.stringify(st.options.map((o) => o.value)) === '["easy","medium","hard"]' && st.level === 'standard', JSON.stringify(st));
+    check('...left out for a game with its own (Trivia)', !adaptiveSettings({ personStart: false }).some((r) => r.key === PERSON_START_KEY));
     const errs = auditFields(rows, { type: 'adaptive' }).filter((f) => f.severity === 'error');
     check('no audit errors', errs.length === 0, JSON.stringify(errs));
     check('no row says she / her', !/\b(she|her|hers|herself)\b/i.test(rows.map((r) => `${r.label} ${r.note || ''}`).join(' ')));

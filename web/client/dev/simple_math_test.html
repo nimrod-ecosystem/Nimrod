@@ -22,7 +22,7 @@ time: "Is it 7?"), on a number pad, or aloud. Hints: how to count it (with dots)
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks, personLadderChecks } from './quiz_test_rig.js';
 import { getManifest, listManifests } from '../module.js';
 import '../modules/simple_math.js';
 import '../modules/algebra.js';
@@ -329,6 +329,10 @@ try {
     const own = getManifest(GAME).settings.map(normalizeField).filter(Boolean).find((x) => x.key === 'answerBy');
     check('...and on the old panel, hidden on the number pad', own.appliesWhen({ answerWith: 'pad' }) === false && own.appliesWhen({}) !== false);
   }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  await personLadderChecks({ check, name: 'Simple math', game: 'math', saved: { mathLevel: 'adaptive' },
+    mount: ({ saved, store, extra }) => R(saved, { extra: { makeState: (k) => (k === LADDER_KEY ? store : null), ...extra } }) });
 
   finish();
 } catch (err) { finish(err); }

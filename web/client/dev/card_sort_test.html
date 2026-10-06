@@ -23,7 +23,7 @@ per-level thresholds. Say it, tap it, or walk it with one switch. Waits for Star
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig } from './quiz_test_rig.js';
+import { harness, rig, personLadderChecks } from './quiz_test_rig.js';
 import { getManifest } from '../module.js';
 import {
   GAME, GAMES, DEFAULTS, LINES, LEVEL_REFS, MAX_LEVEL, BANK, refsWanted, pickRefs, placeOk, rightPlace, suitFromText,
@@ -219,6 +219,10 @@ try {
     check('*** nine of ten right: up to level 2 ***', row.floor === 2, JSON.stringify(row));
     r.inst.destroy();
   }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  await personLadderChecks({ check, name: 'Card sort', game: GAME,
+    mount: ({ saved, store, extra }) => R(saved, { store, extra }) });
 
   finish();
 } catch (err) { finish(err); }

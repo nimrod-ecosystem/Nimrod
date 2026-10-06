@@ -40,7 +40,7 @@ import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, answerByField, fill, esc, normalize, parseNumber } from '../quiz_flow.js';
 import { quizModule } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { SUITS, RANK_LABEL, RANK_NAME, cardName, shuffled } from '../klondike.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
 
@@ -268,7 +268,11 @@ registerModule(
     let dealt = null;            // the question on screen
     let pending = null;          // a card whose suit is asked and whose place is next
     const aces = () => (cfgNow.aces === 'high' ? 'high' : 'low');
-    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
+    // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
+    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // entry (adaptive_play.js openPersonLadder).
+    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
       bankFor: () => BANK,
@@ -276,8 +280,10 @@ registerModule(
       rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null,
+      startFor: ladderRows.startFor, startMark: ladderRows.startMark,
       onChange: () => api?.render(),
     });
+    ladderRows.attach(session);
 
     function draw() {
       if (!deck.length) {
@@ -461,7 +467,7 @@ registerModule(
       allowAward: () => session.allowAward(),
       scoreDetail: (s) => session.scoreDetail() || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
       pointNote: (game, item) => `card sort: ${item.kind}`,
-      onConfig: (c) => { cfgNow = c; },
+      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
       init(a) {
         api = a;
         const doc = ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -474,7 +480,7 @@ registerModule(
           }
         } catch { /* unstyled, still works */ }
       },
-      destroy: () => { session.destroy(); try { store?.destroy?.(); } catch { /* gone */ } },
+      destroy: () => { session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Card sort', scoreLabel: 'Card sort: right answers',

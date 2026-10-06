@@ -1609,8 +1609,10 @@ Shared Q | Shared A` });
       // *** "START TRIVIA AT": somebody older starts above the easy end. ***
       const rows = getManifest('trivia').settings || [];
       const st = rows.find((f) => f.key === PERSON_START_KEY);
-      check('a "Start trivia at" row: easy, medium, hard; easy by default; standard', st && st.default === 'easy'
-        && JSON.stringify(st.options.map((o) => o.value)) === '["easy","medium","hard"]' && st.level === 'standard', JSON.stringify(st));
+      check('a "Start trivia at" row: where the other games start (the default), easy, medium, hard; standard',
+        st && st.default === 'same'
+        && JSON.stringify(st.options.map((o) => o.value)) === '["same","easy","medium","hard"]' && st.level === 'standard', JSON.stringify(st));
+      check('...and no second "Start games at" row in Trivia\'s menu', rows.filter((f) => f.key === PERSON_START_KEY).length === 1);
       const people = peopleRows({ 'pat:ratings_trivia': { start: 'medium' } });
       const r = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: liveRow(), makePersonState: people.make });
       await sleep(30);
@@ -1636,6 +1638,39 @@ Shared Q | Shared A` });
       check('a screen with no person: the panel\'s "Start trivia at" starts its one player there', solo.probe().level === 3,
         String(solo.probe().level));
       solo.inst.destroy();
+    }
+    {
+      // *** "WHERE THE OTHER GAMES START" (2026-10-06): Trivia follows "Start games at" unless it has its own. ***
+      const people = peopleRows({ 'pat:ratings': { start: 'hard', startMark: 'k1' } });
+      const r = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: liveRow(), makePersonState: people.make });
+      await sleep(30);
+      check('the person\'s other ladder row is read for "Start games at"', people.asked.some((x) => x.pid === 'pat' && x.key === 'ratings'));
+      check('*** nothing set for Trivia: it follows "Start games at" (hard) ***', r.probe().level === 3
+        && r.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 3, String(r.probe().level));
+      play(r, 2);
+      await sleep(10);
+      check('...and the Trivia row carries that start\'s mark', prow(people, 'pat')?.mark === 'k1', JSON.stringify(prow(people, 'pat')));
+      // "Start games at" changed in another game: a new mark, and Trivia, following, starts again there.
+      people.rows['pat:ratings'].set({ start: 'easy', startMark: 'k2' });
+      const again = r.inst.impl.__ladder().playerRow('person:pat', 'trivia');
+      check('*** a change to "Start games at" made in another game starts them again in Trivia too (easy), answers kept ***',
+        again.floor === 1 && again.n === 2 && again.mark === 'k2', JSON.stringify(again));
+      r.inst.destroy();
+      // Its own easy / medium / hard overrides it.
+      const own = peopleRows({ 'pat:ratings': { start: 'hard', startMark: 'k1' }, 'pat:ratings_trivia': { start: 'easy' } });
+      const o = rig({ saved: { bank: BANK3 }, personId: 'pat', ladderRow: liveRow(), makePersonState: own.make });
+      await sleep(30);
+      check('*** "Start trivia at: easy" overrides "Start games at: hard" ***', o.probe().level === 1
+        && o.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 1, String(o.probe().level));
+      own.rows['pat:ratings'].set({ start: 'medium', startMark: 'k9' });
+      check('...and a change to "Start games at" does not move them in Trivia then',
+        o.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 1);
+      o.menu({ [PERSON_START_KEY]: 'same' });
+      await sleep(20);
+      check('*** choosing "Where the other games start" puts them there now (medium) and writes it to the person ***',
+        own.row('pat').get().start === 'same' && o.inst.impl.__ladder().playerRow('person:pat', 'trivia').floor === 2,
+        JSON.stringify([own.row('pat').get().start, o.inst.impl.__ladder().playerRow('person:pat', 'trivia')]));
+      o.inst.destroy();
     }
     {
       // *** TWO TRIVIA PANELS ON ONE SCREEN DO NOT OVERWRITE EACH OTHER (adaptive_play.js, the merge). ***

@@ -24,7 +24,7 @@ nothing timed unless that is turned on.</p>
 <div id="host2"></div>
 
 <script type="module">
-import { harness, rig, sleep, fakeTimers } from './quiz_test_rig.js';
+import { harness, rig, sleep, fakeTimers, personLadderChecks, peopleRows, liveRow } from './quiz_test_rig.js';
 import { getManifest, listManifests } from '../module.js';
 import '../modules/brain_games.js';
 import '../modules/think_games.js';
@@ -371,6 +371,27 @@ try {
       nb >= 3 && nt >= 3, JSON.stringify(Object.fromEntries(Object.entries(games).map(([g, r]) => [g, r.n]))));
     b.inst.destroy(); t.inst.destroy();
   }
+  {
+    // ...and the same with the screen's person, whose rows now live in their OWN `ratings` row (openPersonLadder):
+    // two games open on one screen write the one person row, entry by entry.
+    const screen = liveRow();
+    const people = peopleRows();
+    const bus = createBus();
+    const who = { personId: 'pat', makePersonState: people.make };
+    const b = R({ game: 'count' }, { store: screen, bus, extra: who });
+    const t = rig('think_games', { saved: { autostart: true, answerBy: 'yesno', game: 'numbers' }, bus, hostId: 'host2',
+      extra: { makeState: (k) => (k === LADDER_KEY ? screen : null), ...who } });
+    await sleep(30);
+    for (let i = 0; i < 3; i++) {
+      tap(b, b.item().n); await sleep(0); b.timers.flush();
+      tap(t, targetOf(t.probe().item)); await sleep(0); t.timers.flush();
+    }
+    const games = people.row('pat')?.get()?.ladder?.players?.['person:pat']?.games || {};
+    check('*** with a person: both games\' progress is on THEIR row (Brain games\' AND Thinking games\'), none on the screen\'s ***',
+      (games[ladderGame('count')]?.n || 0) >= 3 && (games.numbers?.n || 0) >= 3 && !screen.get().ladder?.players?.['person:pat'],
+      JSON.stringify([Object.fromEntries(Object.entries(games).map(([g, r]) => [g, r.n])), screen.get().ladder?.players]));
+    b.inst.destroy(); t.inst.destroy();
+  }
 
   section('grammar');
   {
@@ -480,6 +501,10 @@ try {
     check('two switches that are Yes and No mean the yes / no shape whatever "Answering" says', two.probe().offers === 'yesno');
     two.inst.destroy();
   }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  await personLadderChecks({ check, name: 'Brain games', game: ladderGame('count'), saved: { game: 'count' },
+    mount: ({ saved, store, extra }) => R(saved, { store, extra }) });
 
   finish();
 } catch (err) { finish(err); }
