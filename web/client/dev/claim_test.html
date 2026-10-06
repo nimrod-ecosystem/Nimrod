@@ -25,6 +25,7 @@ server (<code>SUITE_BASE</code>).</p>
 import {
   JOIN_PAGE, CLAIM_WORDS, CLAIM_BANNED, claimWordProblems, inviteFromQuery, joinPath, joinURL, whenText, kindSub, shareable,
   sharesFrom, twoPress, STOP_CONFIRM_MS, createClaimsClient, mountInviteSheet, mountCallName, removeWhy, holderName,
+  callLevels,
 } from '../claim.js';
 import { mountJoinPage, JOIN_WORDS, backHere, AFTER_JOIN } from '../join_page.js';
 import { PEOPLE_TYPE } from '../people_page.js';
@@ -111,6 +112,46 @@ try {
   check('the shares sent, from the ticks', J(sharesFrom(['me', 'r'], new Set(['me']))) === J([{ person_id: 'me', messages: true }, { person_id: 'r', messages: false }]));
   check('*** two presses: the first arms, a second within the time stops, a late one arms again ***',
     twoPress(0, 1000) === 'arm' && twoPress(1000, 1000 + STOP_CONFIRM_MS - 1) === 'fire' && twoPress(1000, 1000 + STOP_CONFIRM_MS + 1) === 'arm' && STOP_CONFIRM_MS === 6000);
+
+  section('*** I call them: everyone on this login, or just the person the page is for (2026-10-05) ***');
+  check('*** a new label starts at Everyone on this login; one already there opens at its own level ***',
+    callLevels({ viewerId: 'v', person: {} }).level === 'everyone' && callLevels({ viewerId: 'v', person: { call_name: 'Mum' } }).level === 'everyone'
+    && callLevels({ viewerId: 'v', person: { call_name: 'Mum', viewer_call_name: 'Mumsie' } }).level === 'viewer'
+    && callLevels({ viewerId: 'v', person: {} }).justWhy === '');
+  check('*** "Just <name>" cannot be picked when nobody else uses the login, or the page does not know whose it is - with why ***',
+    callLevels({ viewerId: 'v', alone: true, person: { viewer_call_name: 'x' } }).level === 'everyone'
+    && callLevels({ viewerId: 'v', alone: true }).justWhy === CLAIM_WORDS.callJustAlone && callLevels({ viewerId: '' }).justWhy === CLAIM_WORDS.callJustNobody);
+  const fakeCalls = [];
+  const fakeClient = { callName: async (id, name, opts = {}) => { fakeCalls.push([id, name, opts.viewer || '']);
+    return { status: 200, body: { id, call_name: opts.viewer ? 'Gran' : name, viewer_call_name: opts.viewer ? name : undefined, name } }; } };
+  const solo = themed(document.createElement('div')); document.body.append(solo);
+  const cn1 = mountCallName(solo, { person: { id: 'g', call_name: 'Gran', profile_name: 'Grace', home: false }, client: fakeClient, viewer: { id: 'v', name: 'Sam' }, alone: true });
+  const just1 = solo.querySelector('[data-cl-level][value="viewer"]');
+  check('*** one person on the login: "Just Sam" shown dimmed, with why under it; the words are the ones they always were ***',
+    just1?.disabled === true && just1.closest('label').classList.contains('is-off') && solo.querySelector('[data-cl-just-why]')?.textContent === CLAIM_WORDS.callJustAlone
+    && solo.querySelector('[data-cl-call-how]').textContent === CLAIM_WORDS.callHow('Grace') && solo.querySelector('[data-cl-call]').value === 'Gran', solo.textContent);
+  just1.click();
+  check('...pressing it changes nothing', cn1.__probe().level === 'everyone' && !just1.checked);
+  cn1.destroy(); solo.remove();
+  const duo = themed(document.createElement('div')); document.body.append(duo);
+  const cn2 = mountCallName(duo, { person: { id: 'g', call_name: 'Gran', profile_name: 'Grace' }, client: fakeClient, viewer: null, alone: false });
+  check('the page does not know whose it is yet: "Just you" dimmed, saying so', duo.querySelector('[data-cl-level][value="viewer"]')?.disabled === true
+    && duo.querySelector('[data-cl-just-why]')?.textContent === CLAIM_WORDS.callJustNobody);
+  cn2.destroy(); duo.remove();
+  const trio = themed(document.createElement('div')); document.body.append(trio);
+  const cn3 = mountCallName(trio, { person: { id: 'g', call_name: 'Gran', profile_name: 'Grace' }, client: fakeClient, viewer: { id: 'v', name: 'Sam' }, alone: false });
+  trio.querySelector('[data-cl-level][value="viewer"]').click();
+  trio.querySelector('[data-cl-call]').value = 'Nana';
+  trio.querySelector('[data-cl-act="save"]').click();
+  check('*** saving at "Just Sam" sends Sam as the one it is for; the window then says both ***',
+    await until(() => cn3.__probe().said === CLAIM_WORDS.callSaved, 3000) && J(fakeCalls.at(-1)) === J(['g', 'Nana', 'v'])
+    && trio.querySelector('[data-cl-both]').textContent === CLAIM_WORDS.callBoth('Gran', 'Sam', 'Nana'), J(fakeCalls));
+  trio.querySelector('[data-cl-level][value="everyone"]').click();
+  trio.querySelector('[data-cl-call]').value = 'Granny';
+  trio.querySelector('[data-cl-act="save"]').click();
+  check('...and at Everyone on this login, sends nobody', await until(() => J(fakeCalls.at(-1)) === J(['g', 'Granny', '']), 3000), J(fakeCalls));
+  check('plain words in the window', !claimWordProblems(trio.textContent).length, J(claimWordProblems(trio.textContent)));
+  cn3.destroy(); trio.remove();
 
   // ============================================================================================
   section('(setup) Pat, with Robin (a screen that shows notes) and Mom; Mom has her own login; Dee and Oscar too');
@@ -267,14 +308,43 @@ try {
   const addedWords = [card2('Mom').textContent, ...[...box2.querySelectorAll('[data-pp-claim]')].map((e) => e.textContent), q2('[data-pp-connect]').textContent].join(' ');
   check('plain words in everything this adds to the inviter’s page', !claimWordProblems(addedWords).length, J(claimWordProblems(addedWords)));
   card2('Mom').querySelector('[data-pp-act="call-name"]').click();
-  check('*** I call them…: a window, "What you call Mom", saying only you see it ***',
+  // Pat's login has three people on it (Pat, Robin, and Mom, who still has a page here): the window asks who sees it.
+  const levelBox = (v) => q2(`[data-cl-level][value="${v}"]`);
+  check('*** I call them…: a window, "What you call Mom", asking who sees it - Everyone on this login, picked - or Just Pat ***',
     await until(() => q2('[data-pp-sheet="callname"] [data-cl-call]'), 6000) && /What you call Mom/.test(q2('[data-pp-sheet]').textContent)
-    && /Only you see this/.test(q2('[data-pp-sheet]').textContent));
+    && levelBox('everyone')?.checked === true && levelBox('viewer')?.checked === false && levelBox('viewer')?.disabled === false
+    && q2('[data-cl-levels]').textContent.includes(CLAIM_WORDS.callEveryone) && q2('[data-cl-levels]').textContent.includes('Just Pat')
+    && q2('[data-cl-call-how]')?.textContent === CLAIM_WORDS.callHowEveryone('Mom', false), q2('[data-pp-sheet]')?.textContent);
   q2('[data-cl-call]').value = 'Mum';
   q2('[data-pp-sheet] [data-cl-act="save"]').click();
   check('*** saved: the card says "Mum" ***', await until(() => q2('[data-cl-say]')?.textContent === CLAIM_WORDS.callSaved, 6000)
     && await until(() => !!card2('Mum'), 6000));
   check('...and on Mom’s own login she is still Mom', (await call('GET', '/api/people', M)).people[0].name === 'Mom');
+  levelBox('viewer').click();
+  check('*** "Just Pat": the box is Pat’s own (empty, showing "Mum" as the hint), it says it shows only for Pat, and clearing goes back to "Mum" ***',
+    await until(() => levelBox('viewer').checked && q2('[data-cl-call]').value === '' && q2('[data-cl-call]').placeholder === 'Mum', 3000)
+    && q2('[data-cl-call-how]').textContent === CLAIM_WORDS.callHowJust('Pat', 'Mom', false)
+    && q2('[data-pp-sheet] [data-cl-act="clear"]').textContent === CLAIM_WORDS.callClearTo('Mum'), q2('[data-pp-sheet]')?.textContent);
+  q2('[data-cl-call]').value = 'Mumsie';
+  q2('[data-pp-sheet] [data-cl-act="save"]').click();
+  check('*** saved just for Pat: his card says "Mumsie", and the window says both ***',
+    await until(() => !!card2('Mumsie'), 6000) && q2('[data-cl-both]')?.textContent === CLAIM_WORDS.callBoth('Mum', 'Pat', 'Mumsie'),
+    q2('[data-cl-both]')?.textContent);
+  const asRobin = (await call('GET', `/api/people?viewer=${robin.id}`, A)).people;
+  check('*** read as Robin (the other person on Pat’s login): Mom is "Mum" - Pat’s own "Mumsie" is his alone ***',
+    asRobin.find((p) => p.id === mom.id)?.name === 'Mum' && !JSON.stringify(asRobin).includes('Mumsie'), JSON.stringify(asRobin.find((p) => p.id === mom.id)));
+  check('...and Mom’s own login never sees either', !/Mumsie|"Mum"/.test(JSON.stringify((await call('GET', '/api/people', M)).people)));
+  check('plain words in the window', !claimWordProblems(q2('[data-pp-sheet]').textContent).length, J(claimWordProblems(q2('[data-pp-sheet]').textContent)));
+  q2('[data-pp-close]').click();
+  card2('Mumsie').querySelector('[data-pp-act="call-name"]').click();
+  check('*** opened again: it opens at Pat’s own level (the one his card shows), with both labels said ***',
+    await until(() => q2('[data-pp-sheet="callname"] [data-cl-call]'), 6000) && levelBox('viewer').checked && q2('[data-cl-call]').value === 'Mumsie'
+    && q2('[data-cl-both]').textContent === CLAIM_WORDS.callBoth('Mum', 'Pat', 'Mumsie'));
+  q2('[data-pp-sheet] [data-cl-act="clear"]').click();
+  check('*** "Back to “Mum”": Pat’s own label goes, and the card says the login’s "Mum" again ***',
+    await until(() => !!card2('Mum'), 6000) && !q2('[data-cl-both]').textContent);
+  levelBox('everyone').click();
+  await until(() => q2('[data-cl-call]').value === 'Mum', 3000);
   q2('[data-pp-sheet] [data-cl-act="clear"]').click();
   check('*** "Use Mom’s own name": the card says her own name again ***', await until(() => !!card2('Mom'), 6000));
   q2('[data-pp-close]').click();
@@ -283,9 +353,9 @@ try {
     !!card2('Robin')?.querySelector('[data-pp-act="call-name"]') && !!card2('Robin').querySelector('[data-pp-act="invite"]')
     && !!card2('Robin').querySelector('[data-pp-act="holders"]'), card2('Robin')?.textContent);
   card2('Robin').querySelector('[data-pp-act="call-name"]').click();
-  check('*** its window says only you see it, and that anybody he shares Robin with still sees "Robin" ***',
+  check('*** its window says everyone on this login sees it, and that anybody he shares Robin with still sees "Robin" ***',
     await until(() => q2('[data-pp-sheet="callname"] [data-cl-call]'), 6000)
-    && q2('[data-cl-call-how]')?.textContent === CLAIM_WORDS.callHowMine('Robin') && /Only you see this/.test(q2('[data-cl-call-how]').textContent),
+    && q2('[data-cl-call-how]')?.textContent === CLAIM_WORDS.callHowEveryone('Robin', true) && /Anybody you share them with still sees the name on their card, Robin/.test(q2('[data-cl-call-how]').textContent),
     q2('[data-cl-call-how]')?.textContent);
   q2('[data-cl-call]').value = 'Robbie';
   q2('[data-pp-sheet] [data-cl-act="save"]').click();
@@ -474,6 +544,26 @@ try {
     !sbox.querySelector('[data-pp-act="invite"]') && !sbox.querySelector('[data-pp-act="connect"]') && !sbox.querySelector('[data-pp-act="stop-share"]')
     && !sbox.querySelector('[data-pp-act="call-name"]') && !sbox.querySelector('[data-pp-act="holders"]') && !sbox.querySelector('[data-pp-act="remove-card"]'));
   sinst.destroy(); sbox.remove();
+
+  section('*** a screen for Robin: Robin by the name on the card, the labels for others as Robin sees them ***');
+  await ac.callName(robin.id, 'Robbie');                         // everyone on Pat's login calls Robin "Robbie"
+  await ac.callName(pat.id, 'Grandad', { viewer: robin.id });     // ...and Robin, just for Robin, calls Pat "Grandad"
+  const rbox = themed(document.createElement('div')); rbox.style.cssText += ';position:relative;width:1280px;height:720px;overflow:hidden'; document.body.append(rbox);
+  const rinst = await mountPeople(A, robin.id, rbox, { isScreen: true });
+  check('*** Robin’s screen greets Robin as "Robin" - not the login’s "Robbie" ***',
+    await until(() => rbox.querySelector('[data-pp-self-name]')?.textContent === 'Robin', 8000) && !/Robbie/.test(rbox.textContent),
+    rbox.querySelector('[data-pp-self-name]')?.textContent);
+  check('*** ...and shows Pat as Robin calls him: "Grandad" ***',
+    await until(() => [...rbox.querySelectorAll('[data-pp-face] [data-pp-name]')].some((n) => n.textContent === 'Grandad'), 8000),
+    J([...rbox.querySelectorAll('[data-pp-face] [data-pp-name]')].map((n) => n.textContent)));
+  rinst.destroy(); rbox.remove();
+  const pbox = pageBox(900);
+  const pinst = await mountPeople(A, pat.id, pbox);
+  check('*** Pat’s own page: Robin is the login’s "Robbie", and Pat is "Pat" - Robin’s "Grandad" is Robin’s alone ***',
+    await until(() => !!cardIn(pbox)('Robbie'), 8000) && pbox.querySelector('[data-pp-self-name]')?.textContent === 'Pat' && !/Grandad/.test(pbox.textContent));
+  pinst.destroy(); pbox.remove();
+  await ac.callName(robin.id, '');
+  await ac.callName(pat.id, '', { viewer: robin.id });
 } catch (err) {
   failed++;
   out.append(Object.assign(document.createElement('div'), { className: 'fail', textContent: 'FAIL  threw: ' + (err.stack || err.message) }));

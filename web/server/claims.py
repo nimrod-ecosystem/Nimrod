@@ -280,6 +280,36 @@ def profile_name(row: dict | None, home_name: str | None) -> str:
     return (home_name or row.get("name") or "").strip()
 
 
+# --------------------------------------------------------------------------- "I call them", per person (2026-10-05)
+#
+# Mike, 2026-10-05: *"Maybe there should be an option to set I call them at account vs user levels."* A login can
+# hold several people (the parents' shared login with Mom and Dad on it; Mike's with Mike, Christine and Oscar), and
+# until now a label was the LOGIN's: everybody using it saw it. So there are two levels:
+#   * the login's label (`people.call_name`, as before): "Everyone on this login" sees it;
+#   * a person's own label (`person_labels`, keyed by login, the person looking, and the card): only shown while the
+#     page is FOR that person - Dad's "Sweetie" for Christine on the parents' login, Oscar's "Dad" on Mike's.
+# WHAT IS SHOWN (`seen_name`): the person looking's own label, else the login's label, else the name on the card.
+# *** THE PERSON LOOKING IS NAMED BY THE NAME ON THEIR OWN CARD, NOT A LABEL (the default, argued). *** The page for
+# somebody (their own screen, or Home with them picked) names them as their card does - not by what the login, or
+# anybody on it, calls them. Mike, earlier: "I call her Christine so it doesn't matter" - true for him. FOR showing
+# the label there too: one name everywhere on the login. AGAINST, and it decides it: another login's label may be a
+# carer's shorthand or a pet name the person never chose, and a screen greeting its own person with it is the label
+# reaching the one person it was not written for. Not a setting yet (a GUESS, open to change: seen_name's first if).
+# The SECURITY INVARIANT, beside profile_name's: a person's own label is only ever read for a page that is for the
+# person who set it, on the login that holds them (app.py checks the `viewer` belongs to the asking login).
+
+def seen_name(row: dict | None, home_name: str | None, *, viewer_id: str | None = None,
+              own_label: str | None = None) -> str:
+    """The name a card shows to the person the page is for (`viewer_id`; None: the login as a whole, as before). PURE.
+    `own_label`: the viewer's own label for this card, if any."""
+    if not row:
+        return ""
+    if viewer_id and row.get("id") == viewer_id:
+        return profile_name(row, home_name)
+    label = (own_label or "").strip() if viewer_id else ""
+    return label or display_name(row, home_name)
+
+
 def row_kind(row: dict, *, first_person_id: str | None, source_is_their_first: bool = False) -> str:
     """What a row is TO THE ACCOUNT HOLDING IT. PURE.
       'you'       the account's first person

@@ -683,23 +683,34 @@ def put_state(pid: str, key: str, body: StatePut, request: Request, user: str = 
 # The picker is only ever needed on the home side, where a moderator chooses who they are
 # configuring.
 @app.get("/api/people")
-def list_people(user: str = Depends(current_user)):
+def list_people(viewer: str = "", user: str = Depends(current_user)):
     """Every account has at least one person; this is where a legacy account grows one.
 
     Each row is as THIS account knows them (2026-10-04 night, claims.py): `name` is what you see - your
     "I call them" for somebody whose profile lives on another login, else their own name - and the rest says
     what the row is to you (`kind`), where a call or a message for them goes (`reach`), and, for somebody you
     are connected with, who it came through (`from`) and whether they may leave messages for your people.
-    Names only: no account id is in it."""
+    Names only: no account id is in it.
+
+    `viewer` (2026-10-05, claims.seen_name): the person on this login the page is FOR. Given, `name` is what THEY
+    see - their own label, else the login's, else the name on the card; their own card is named by the name on
+    it - and each row carries `viewer_call_name`. *** Only one of this login's own people may be the viewer: any
+    other id is the same 404 as no such person (a security invariant - a person's labels are read for nobody
+    else). *** Left out, every name is the login's, as before (screens' menus, notes, the call page)."""
     store.ensure_default_person(user)
-    return {"people": _people_view(user)}
+    if viewer:
+        _check(viewer, ID_RE, "person id")
+        if store.person_owner(viewer) != user:
+            raise HTTPException(status_code=404, detail="no such person")
+    return {"people": _people_view(user, viewer or None)}
 
 
-def _people_view(user: str) -> list[dict]:
+def _people_view(user: str, viewer: str | None = None) -> list[dict]:
     rows = store.people_rows(user)
     if not rows:
         return []
     first = rows[0]["id"]
+    labels = store.person_labels(user, viewer) if viewer else {}
     screens = store.screens_by_person(user)
     held = store.holder_counts(user)
     per_link: dict[str, int] = {}
@@ -716,12 +727,19 @@ def _people_view(user: str) -> list[dict]:
             firsts[other] = store.first_person_id(other)
         kind = claims.row_kind(r, first_person_id=first,
                                source_is_their_first=bool(other and source["id"] == firsts.get(other)))
-        v = {"id": r["id"], "name": claims.display_name(r, r["home_name"]), "created_at": r["created_at"],
+        v = {"id": r["id"], "created_at": r["created_at"],
+             "name": claims.seen_name(r, r["home_name"], viewer_id=viewer, own_label=labels.get(r["id"])),
              "home": not r["home_id"], "kind": kind,
              "reach": claims.reach_id(r, own_screens=screens.get(r["id"], 0)),
              # "I call them" on ANY card (2026-10-05), and the name on the card beside it.
              "call_name": r["call_name"] or "",
              "profile_name": claims.profile_name(r, r["home_name"] if r["home_id"] else None)}
+        if viewer:
+            # ...and the viewer's own label for it. Neither label rides on the viewer's own card: no window there
+            # shows one, and the page for somebody carries no name anybody gave them.
+            v["viewer_call_name"] = "" if r["id"] == viewer else labels.get(r["id"], "")
+            if r["id"] == viewer:
+                v["call_name"] = ""
         if other and r["link_id"]:
             link = store.get_link(user, other)
             if link and links.link_is_active(link) and link["id"] == r["link_id"]:
@@ -807,23 +825,47 @@ def rename_person(person_id: str, body: PersonCreate, user: str = Depends(curren
 
 class CallNamePut(BaseModel):
     name: str = ""
+    # 2026-10-05: '' sets the login's label (everyone on the login sees it, as before); a person id on this login
+    # sets THAT person's own label, shown only while the page is for them (claims.seen_name).
+    viewer: str = ""
 
 
 @app.put("/api/people/{person_id}/call-name")
 def put_call_name(person_id: str, body: CallNamePut, user: str = Depends(current_user)):
     """"I call them": your own name for one of the people on your page - any of them, at any time (Mike,
     2026-10-05), including somebody you made yourself, where it is your private label beside the name on their
-    card. Empty: the name on their card shows again. It never changes that name, and only you see it
-    (claims.profile_name is what every other login reads)."""
+    card. Empty: the name on their card shows again. It never changes that name, and only your login sees it
+    (claims.profile_name is what every other login reads).
+
+    With `viewer` (Mike, 2026-10-05: "an option to set I call them at account vs user levels"): the label is that
+    person's own - both must be people on this login (else 404, as for no such person), and not the same person
+    (400: nobody labels their own card). The login's label is left as it is, and the other way round."""
     _check(person_id, ID_RE, "person id")
     row = store.person_row(person_id)
     if not row or row["account_id"] != user:
         raise HTTPException(status_code=404, detail="no such person")
+    viewer = (body.viewer or "").strip()
+    if viewer:
+        _check(viewer, ID_RE, "person id")
+        if store.person_owner(viewer) != user:
+            raise HTTPException(status_code=404, detail="no such person")
+        if viewer == person_id:
+            raise HTTPException(status_code=400, detail="Your own card shows the name on it.")
     name = re.sub(r"\s+", " ", body.name or "").strip()
     if name:
         _check(name, NAME_RE, "name")
-    store.set_call_name(user, person_id, name)
-    return {"id": person_id, "call_name": name, "name": (store.get_person(user, person_id) or {}).get("name", "")}
+    if viewer:
+        store.set_person_label(user, viewer, person_id, name)
+    else:
+        store.set_call_name(user, person_id, name)
+    fresh = store.person_row(person_id) or {}
+    home = store.person_row(fresh["home_id"]) if fresh.get("home_id") else None
+    own = store.person_labels(user, viewer).get(person_id, "") if viewer else ""
+    out = {"id": person_id, "call_name": fresh.get("call_name") or "",
+           "name": claims.seen_name(fresh, home["name"] if home else None, viewer_id=viewer or None, own_label=own)}
+    if viewer:
+        out["viewer_call_name"] = own
+    return out
 
 
 @app.delete("/api/people/{person_id}")

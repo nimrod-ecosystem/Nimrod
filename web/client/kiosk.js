@@ -5560,7 +5560,7 @@ export async function mountKiosk(root, {
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
         // A person_id pointing at somebody who is gone is ALSO a finished answer.
-        whoState = who ? { name: who.name } : false;
+        whoState = who ? { name: who.profile_name || who.name } : false;
         menu.refresh();
       }
       // REMOTE DRIVE. A verb arriving on the wire is published onto this screen's own

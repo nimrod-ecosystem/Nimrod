@@ -3,7 +3,9 @@
 // with" (first built as "Who has this card"; renamed 2026-10-05, Mike found it confusing) with "Stop sharing with
 // <name>" for whoever looks after a profile, and "Remove just this card" for a card a connection put on your page.
 // 2026-10-05: "I call them" on every card, at any time - for somebody you made, your private label beside the name on
-// their card (claims.py; only you see it either way).
+// their card (claims.py; only you see it either way). Later that day (Mike: "an option to set I call them at account
+// vs user levels"), when more than one person uses a login, the window asks who sees the name: "Everyone on this
+// login" or "Just <the person the page is for>" (callLevels argues the starting choice; claims.seen_name the rules).
 //
 // Mike, DECISIONS.md "People across accounts: a profile has a home, and appears on other accounts": most people
 // will "just want to be connected like friends on Facebook"; setting a profile up for somebody and handing it over
@@ -88,12 +90,28 @@ export const CLAIM_WORDS = Object.freeze({
   sharedSub: (from) => `From ${poss(from)} people`,
   addedSub: 'Added by you',
   callThem: 'I call them…',
-  callThemShort: (name) => (name ? `Their own name: ${name}` : 'Only you see it'),
+  callThemShort: (name) => (name ? `Their own name: ${name}` : 'Your own name for them'),
   callTitle: (name) => `What you call ${name || 'them'}`,
   callLabel: 'I call them',
   callHow: (name) => `Only you see this. It does not change the name ${name || 'they'} chose.`,
   // ...on somebody you made yourself: the name on their card is yours to change too, and is what others see.
   callHowMine: (name) => `Only you see this. Anybody you share them with still sees ${name ? `the name on their card, ${name}` : 'the name on their card'}.`,
+  // WHO SEES IT, when more than one person uses the same login (Mike, 2026-10-05; the server's claims.seen_name).
+  // "Everyone on this login" rather than "everyone on this account" (a banned word) or "everyone here" (on Home,
+  // "here" could be the page, the room or the house): the site already calls it a login ("With their own login").
+  callLevel: 'Who sees this name',
+  callEveryone: 'Everyone on this login',
+  callJust: (name) => `Just ${name || 'you'}`,
+  callJustAlone: 'Nobody else uses this login yet, so it would be the same name.',
+  callJustNobody: 'This page does not know yet who it is for.',
+  callHowEveryone: (name, mine) => `Everyone on this login sees this, and nobody else. ${mine
+    ? `Anybody you share them with still sees ${name ? `the name on their card, ${name}` : 'the name on their card'}.`
+    : `It does not change the name ${name || 'they'} chose.`}`,
+  callHowJust: (viewer, name, mine) => `Shows only when this page is for ${viewer || 'you'}. ${mine
+    ? `Everybody else sees ${name ? `the name on their card, ${name}` : 'the name on their card'}, or what everyone on this login calls them.`
+    : `It does not change the name ${name || 'they'} chose.`}`,
+  callBoth: (everyone, viewer, just) => `Everyone on this login: ${everyone || '…'} · Just ${viewer || 'you'}: ${just || '…'}`,
+  callClearTo: (name) => `Back to “${name || 'their own name'}”`,
   callSave: 'Save',
   callClear: (name) => `Use ${poss(name)} own name`,
   callSaved: 'Saved.',
@@ -217,7 +235,9 @@ export function createClaimsClient({ user = null, fetchImpl = (typeof fetch !== 
     cancelConnect: (inviteId) => call('DELETE', `/api/connect/invites/${pid(inviteId)}`),
     stop: (personId) => call('DELETE', `/api/people/${pid(personId)}/link`),
     setMessages: (personId, on) => call('PUT', `/api/people/${pid(personId)}/messages`, { on: !!on }),
-    callName: (personId, name) => call('PUT', `/api/people/${pid(personId)}/call-name`, { name: String(name || '') }),
+    // `viewer`: a person on this login - the label is theirs alone (2026-10-05); left out, everyone on the login's.
+    callName: (personId, name, { viewer = '' } = {}) => call('PUT', `/api/people/${pid(personId)}/call-name`,
+      viewer ? { name: String(name || ''), viewer: String(viewer) } : { name: String(name || '') }),
     holders: (personId) => call('GET', `/api/people/${pid(personId)}/holders`),
     unshare: (personId, holderId) => call('DELETE', `/api/people/${pid(personId)}/holders/${pid(holderId)}`),
     removeCard: (personId) => call('DELETE', `/api/people/${pid(personId)}/card`),
@@ -404,13 +424,41 @@ export function mountInviteSheet(host, { kind = 'claim', person = null, people =
 }
 
 /**
- * "I call them": a text box, Save, and "Use their own name". Mounted into `host`.
- *   person  { id, name, call_name, profile_name, home } (a row from GET /api/people; `home`: somebody you look
- *           after, whose card's name is yours to change - the words say that others still see it)
+ * WHO SEES AN "I CALL THEM" NAME (Mike, 2026-10-05: "an option to set I call them at account vs user levels"). PURE.
+ *   viewerId  the person the page is for ('' when the page does not know yet)
+ *   alone     true when nobody else uses this login (the two levels would show the same name to the same person)
+ *   person    { call_name, viewer_call_name }
+ * -> { level: 'everyone' | 'viewer', justWhy: '' | why "Just <name>" cannot be picked }
+ * THE STARTING CHOICE, argued: a label already there opens at its own level (the viewer's own if they have one -
+ * it is the one they see). A NEW label starts at "Everyone on this login". FOR "Just me": a nickname is personal,
+ * and Dad's "Sweetie" showing to Mom by surprise is the worse mistake. AGAINST, and it decides it: until today
+ * every label was the whole login's, so that is what people who have used it expect; most labels are the family's
+ * shared name ("Grandma", "Mom") that everybody on the login would otherwise set again one by one; and the choice is
+ * shown right under the box, before Save. On a login only one person uses, the choice is dimmed with why.
+ */
+export function callLevels({ viewerId = '', alone = false, person = null } = {}) {
+  const justWhy = !viewerId ? CLAIM_WORDS.callJustNobody : alone ? CLAIM_WORDS.callJustAlone : '';
+  const level = !justWhy && String(person?.viewer_call_name || '').trim() ? 'viewer' : 'everyone';
+  return { level, justWhy };
+}
+
+/**
+ * "I call them": a text box, who sees it (everyone on this login, or just the person the page is for), Save, and
+ * "Use their own name". Mounted into `host`.
+ *   person  { id, name, call_name, viewer_call_name, profile_name, home } (a row from GET /api/people?viewer=;
+ *           `home`: somebody you look after, whose card's name is yours to change - the words say others still see it)
+ *   viewer  { id, name } the person the page is for (`name`: the name on their own card); null: not known yet
+ *   alone   nobody else uses this login
  * Returns { destroy, __probe }.
  */
-export function mountCallName(host, { person, client, onChange = null } = {}) {
+export function mountCallName(host, { person, client, viewer = null, alone = false, onChange = null } = {}) {
   const own = String(person?.profile_name || '').trim();
+  const W = CLAIM_WORDS;
+  const viewerId = String(viewer?.id || '');
+  const viewerName = String(viewer?.name || '').trim();
+  const labels = { everyone: String(person?.call_name || '').trim(), viewer: String(person?.viewer_call_name || '').trim() };
+  const start = callLevels({ viewerId, alone, person });
+  let level = start.level;
   let said = '';
   let torn = false;
   const style = host.ownerDocument.createElement('style');
@@ -419,21 +467,49 @@ export function mountCallName(host, { person, client, onChange = null } = {}) {
   box.className = 'cl-box';
   box.setAttribute('data-cl-callname', person?.id || '');
   host.append(style, box);
-  const W = CLAIM_WORDS;
+  const group = `cl-level-${esc(person?.id)}`;
+  const off = !!start.justWhy;
   box.innerHTML = `<label class="cl-h" for="cl-call-${esc(person?.id)}">${esc(W.callLabel)}</label>
-    <input class="cl-input" id="cl-call-${esc(person?.id)}" data-cl-call maxlength="${CALL_NAME_MAX}" value="${esc(person?.call_name || '')}" placeholder="${esc(own)}">
-    <p class="cl-lead" data-cl-call-how>${esc(person?.home ? W.callHowMine(own) : W.callHow(own))}</p>
+    <input class="cl-input" id="cl-call-${esc(person?.id)}" data-cl-call maxlength="${CALL_NAME_MAX}" value="" placeholder="">
+    <fieldset class="cl-share" data-cl-levels><legend class="cl-h">${esc(W.callLevel)}</legend>
+      <label class="cl-opt"><input type="radio" name="${group}" value="everyone" data-cl-level>${esc(W.callEveryone)}</label>
+      <label class="cl-opt${off ? ' is-off' : ''}"${off ? ` title="${esc(start.justWhy)}"` : ''}><input type="radio" name="${group}" value="viewer" data-cl-level${off ? ` disabled aria-describedby="cl-just-why-${esc(person?.id)}"` : ''}>${esc(W.callJust(viewerName))}</label>
+      ${off ? `<p class="cl-lead" id="cl-just-why-${esc(person?.id)}" data-cl-just-why>${esc(start.justWhy)}</p>` : ''}
+    </fieldset>
+    <p class="cl-lead" data-cl-call-how></p>
     <button type="button" class="cl-btn is-go" data-cl-act="save">${esc(W.callSave)}</button>
-    <button type="button" class="cl-btn" data-cl-act="clear">${esc(W.callClear(own))}</button>
+    <button type="button" class="cl-btn" data-cl-act="clear"></button>
+    <p class="cl-lead" data-cl-both></p>
     <p class="cl-say" role="status" data-cl-say></p>`;
   const input = box.querySelector('[data-cl-call]');
-  const say = (t) => { said = t; const el = box.querySelector('[data-cl-say]'); if (el) el.textContent = t; };
+  const $ = (s) => box.querySelector(s);
+  const say = (t) => { said = t; const el = $('[data-cl-say]'); if (el) el.textContent = t; };
+  // What the box, its hint, the words under it and the clear button say, for the level picked.
+  function paint({ value = true } = {}) {
+    for (const r of box.querySelectorAll('[data-cl-level]')) r.checked = r.value === level;
+    const just = level === 'viewer';
+    if (value) input.value = labels[level] || '';
+    input.placeholder = just ? (labels.everyone || own) : own;
+    const how = off && start.justWhy === W.callJustAlone
+      ? (person?.home ? W.callHowMine(own) : W.callHow(own))
+      : just ? W.callHowJust(viewerName, own, !!person?.home) : W.callHowEveryone(own, !!person?.home);
+    $('[data-cl-call-how]').textContent = how;
+    $('[data-cl-act="clear"]').textContent = just && labels.everyone ? W.callClearTo(labels.everyone) : W.callClear(own);
+    // Both levels set: say both, so nobody wonders why the card shows the other one.
+    $('[data-cl-both]').textContent = labels.everyone && labels.viewer ? W.callBoth(labels.everyone, viewerName, labels.viewer) : '';
+  }
   async function save(name) {
+    const at = level;
     try {
-      const r = await client.callName(person.id, name);
+      const r = await client.callName(person.id, name, at === 'viewer' ? { viewer: viewerId } : {});
       if (torn) return;
-      if (r.status === 200) { input.value = r.body?.call_name || ''; say(W.callSaved); onChange?.(r.body); }
-      else say(r.body?.detail || W.failed);
+      if (r.status === 200) {
+        labels.everyone = String(r.body?.call_name || '').trim();
+        if (at === 'viewer') labels.viewer = String(r.body?.viewer_call_name || '').trim();
+        paint();
+        say(W.callSaved);
+        onChange?.(r.body);
+      } else say(r.body?.detail || W.failed);
     } catch { say(W.failed); }
   }
   function onClick(e) {
@@ -442,10 +518,19 @@ export function mountCallName(host, { person, client, onChange = null } = {}) {
     if (b.dataset.clAct === 'save') save(String(input.value || '').trim().slice(0, CALL_NAME_MAX));
     if (b.dataset.clAct === 'clear') save('');
   }
+  function onChangeLevel(e) {
+    const t = e.target;
+    if (!t?.matches?.('[data-cl-level]') || t.disabled) return;
+    level = t.value === 'viewer' && !off ? 'viewer' : 'everyone';
+    say('');
+    paint();
+  }
   box.addEventListener('click', onClick);
+  box.addEventListener('change', onChangeLevel);
+  paint();
   return {
-    destroy() { torn = true; box.removeEventListener('click', onClick); style.remove(); box.remove(); },
-    __probe: () => ({ value: input.value, said }),
+    destroy() { torn = true; box.removeEventListener('click', onClick); box.removeEventListener('change', onChangeLevel); style.remove(); box.remove(); },
+    __probe: () => ({ value: input.value, said, level, justWhy: start.justWhy, labels: { ...labels } }),
   };
 }
 

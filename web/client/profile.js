@@ -88,8 +88,11 @@ export function createProfilesClient({ user, baseURL = '' }) {
     // ---- people ------------------------------------------------------------
     // Every account has at least one; the server makes one on first ask rather than
     // making anybody meet the concept before they need it.
-    people: () =>
-      fetch(`${baseURL}/api/people`, { headers: authHeaders(user) }).then(json).then((b) => b.people),
+    // `viewer` (2026-10-05): the person on this login the page is for - each name is then what THEY see (their own
+    // "I call them" first; their own card by the name on it). Left out, every name is the login's, as before.
+    people: (viewer) =>
+      fetch(`${baseURL}/api/people${viewer ? `?viewer=${encodeURIComponent(viewer)}` : ''}`, { headers: authHeaders(user) })
+        .then(json).then((b) => b.people),
 
     addPerson: (name) =>
       fetch(`${baseURL}/api/people`, {

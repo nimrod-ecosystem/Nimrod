@@ -40,6 +40,9 @@
 //                  I CALL THEM… ON EVERY CARD (Mike, 2026-10-05: "can be added at any time, on any card"): on the
 //                  people you made too, where it is your private label beside the name on their card. Not on your
 //                  own card, nor on a screen shared with you (there is no card of yours to hold it).
+//                  WHO SEES IT (Mike, 2026-10-05: "at account vs user levels"): the window asks "Everyone on this
+//                  login" or "Just <the person this page is for>", and the people are read as that person (their own
+//                  label first, then the login's, then the name on the card; their own card by the name on it).
 //
 // *** ON A SCREEN IN SOMEBODY'S ROOM (`ctx.isScreen`) IT IS FACES AND NAMES, AND WHAT CAME IN. *** A screen never
 // places a call (kiosk.js; modules/profile.js) and never sends anything, so none of the five buttons could ever act
@@ -256,10 +259,17 @@ registerModule(
     }
 
     // ---- who ------------------------------------------------------------------------------------------
+    // Read AS the person the page is for (`selfId`; claims.seen_name on the server): their own "I call them" first,
+    // and their own card by the name on it. Refused (the page's person is not one of this login's own - a page held
+    // over from before a change), the login's names, as before, rather than nobody at all.
     async function loadPeople() {
       if (typeof ctx.profiles?.people === 'function') {
-        try { own = (await ctx.profiles.people()) || []; peopleNote = ''; }
-        catch { own = null; peopleNote = 'Your people could not be read just now.'; }
+        const viewer = selfId();
+        try { own = (await ctx.profiles.people(viewer || undefined)) || []; peopleNote = ''; }
+        catch {
+          try { own = viewer ? ((await ctx.profiles.people()) || []) : null; peopleNote = own ? '' : 'Your people could not be read just now.'; }
+          catch { own = null; peopleNote = 'Your people could not be read just now.'; }
+        }
       } else { own = null; }
       if (typeof ctx.profiles?.sharedWithMe === 'function') {
         try { const r = await ctx.profiles.sharedWithMe(); shared = Array.isArray(r) ? r : []; } catch { shared = []; }
@@ -267,6 +277,14 @@ registerModule(
     }
     const claimsClient = () => createClaimsClient({ user: account() });
     const selfRow = () => (Array.isArray(own) ? own.find((p) => p.id === selfId()) : null) || { id: selfId(), name: '' };
+    // THE PAGE'S OWN PERSON BY THE NAME ON THEIR CARD, not an "I call them" somebody on the login gave them - on a
+    // screen in their room above all. A default, argued in the server's claims.seen_name, which does the same for a
+    // read as them; this covers a page that read its people before it knew whose it was.
+    const selfName = (me) => String(me?.profile_name || me?.name || '').trim();
+    // How many people use this login (a person you made, or one of them who took their card over, keeps screens and
+    // a page here; somebody you are connected with or who was shared with you does not): one, and "Just <name>" in
+    // "I call them…" would be the same as everyone on the login, so it is dimmed with why.
+    const peopleHere = () => (Array.isArray(own) ? own : []).filter((r) => !r.kind || r.kind === 'you' || r.kind === 'mine' || r.kind === 'joined').length;
     // Your account's people and those shared with you (people_page.js), each once. A row of yours carries what the
     // server says it is to you (claims.py): `kind`, where to reach them (`reach`), who it came through (`from`).
     const people = () => {
@@ -276,6 +294,7 @@ registerModule(
         if (!r) return { ...p, reach: p.id };
         return { ...p, reach: r.reach || p.id, kind: r.kind || 'mine', home: r.home !== false, from: r.from || '',
           linked: !!r.linked, messagesFromThem: !!r.messages_from_them, callName: r.call_name || '', profileName: r.profile_name || p.name,
+          viewerCallName: r.viewer_call_name || '',
           visit: typeof r.page === 'string' ? r.page : null,
           holders: Number.isFinite(r.holders) ? r.holders : null, remove: typeof r.remove === 'string' ? r.remove : null };
       });
@@ -376,7 +395,7 @@ registerModule(
       // ...and so does the way back through the older ones.
       if (!hasKind(pageDoc, 'messages') && prefs.incoming && me.id) btns.push(olderButton('self'));
       return card('self', `<div class="pp-who"><div class="pp-face">${faceOf(me, SELF_FACE)}</div>
-        <div><div class="pp-name" data-pp-self-name>${esc(me.name || (me.id ? 'You' : 'Welcome'))}</div>
+        <div><div class="pp-name" data-pp-self-name>${esc(selfName(me) || (me.id ? 'You' : 'Welcome'))}</div>
         <p class="pp-sub">${isScreen() ? 'This screen is for you.' : 'You'}</p></div></div>
         ${latest ? `<p class="pp-msg" data-pp-self-message><b>${esc(EDIT_WORDS.latest)}</b>, from ${esc(latest.author || 'Someone')}: ${esc(latest.text)}
           <br><small>${esc(whenWords(latest.at))}</small></p>` : ''}
@@ -459,7 +478,7 @@ registerModule(
     // "I call them…" (Mike, 2026-10-05: at any time, on any card): on somebody you made, a label only you see beside
     // the name on their card; on somebody whose profile is on another login, your name for them.
     const callNameButton = (p, key) => button({ act: 'call-name', label: CLAIM_WORDS.callThem,
-      short: CLAIM_WORDS.callThemShort(p.callName ? p.profileName : ''), enabled: true }, key);
+      short: CLAIM_WORDS.callThemShort(p.callName || p.viewerCallName ? p.profileName : ''), enabled: true }, key);
     function claimRow(p) {
       if (p.via !== 'account' || p.kind === 'you') return '';
       const key = `p:${p.id}`;
@@ -1259,7 +1278,10 @@ registerModule(
       const host = openSheet('callname', CLAIM_WORDS.callTitle(p.profileName || p.name));
       host.style.padding = '12px';
       try {
-        sheet.child = mountCallName(host, { person: { id: p.id, call_name: p.callName, profile_name: p.profileName || p.name, home: !!p.home }, client: claimsClient(),
+        // Who sees it (2026-10-05): everyone on this login, or just the person this page is for (claim.js callLevels).
+        const me = selfRow();
+        sheet.child = mountCallName(host, { person: { id: p.id, call_name: p.callName, viewer_call_name: p.viewerCallName, profile_name: p.profileName || p.name, home: !!p.home },
+          client: claimsClient(), viewer: selfId() ? { id: selfId(), name: selfName(me) } : null, alone: peopleHere() <= 1,
           onChange: () => { afterClaimChange(); } });
         sheet.personId = p.id;
         paintCursor();
