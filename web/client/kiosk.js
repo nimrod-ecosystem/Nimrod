@@ -66,13 +66,13 @@ import { CALL_ENDED, CALL_INCOMING } from './modules/call.js';
 import {
   createVersionWatch, fetchSiteVersion, pickUpVersionsOf, playKindOf, PICK_UP_FIELD, INPUT_QUIET_MS,
 } from './version_watch.js';
-// 2026-10-05: LOCK THIS SCREEN -- everything inside keeps working, the ways out and the setup go (screen_lock.js).
+// 2026-10-05: LOCK THIS SCREEN -- everything inside keeps working, setup included; the ways out to the computer and
+// in to the account go (screen_lock.js; narrowed the same day).
 import {
-  createScreenLock, attachLockGuards, mountLockChip, mountPinStrip, keepWhileLocked, panelSubjectsOnly,
+  createScreenLock, attachLockGuards, mountLockChip, mountPinStrip, keepWhileLocked, LOCK_PAGE_DROPS, LOCKED_PAGE,
   LOCK_KEY_BINDINGS, missingLockBindings, lockControlOf, chordWords, lockedLine, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC,
   RELOCK_CHOICES, lockHelperFrom, createLockReporter, ensureLockCss,
 } from './screen_lock.js';
-import { EDIT_PANEL_TOPIC as LOCK_EDIT_PANEL_TOPIC } from './actions.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
   createDashboardMaker, PREBUILT_DASHBOARDS, DASHBOARD_GO_TOPIC, DASHBOARD_OFFERS_FIELD, offersOn,
@@ -2534,8 +2534,9 @@ export async function mountKiosk(root, {
     for (const d of list) nameScreen(d?.id, d?.name);
     const prevId = screenStack[screenStack.length - 1];
     picker.draw({
-      list, current: profileId, offers: screenLocked() ? [] : offers, making: pickerMaking, note: pickerNote,
-      // (2026-10-05, screen_lock.js: locked, the dashboards still swap; making one and the way out are gone.)
+      list, current: profileId, offers, making: pickerMaking, note: pickerNote,
+      // (2026-10-05, screen_lock.js: locked, the dashboards still swap and a ready-made one is still made; only the
+      // way out to the plain website pages, where the account's controls are, is gone.)
       leave: !screenLocked(),
       // Row 2.38: inside something an object opened -- Back (one step) and Home (the start), first.
       back: prevId ? { id: prevId, name: crumbName(prevId, screenNames) } : null,
@@ -2674,7 +2675,7 @@ export async function mountKiosk(root, {
     title: (t) => getManifest(t)?.title || t,
   })();
   function openEditView() {
-    if (torn || lockRefuses('editing')) return null;          // (2026-10-05, screen_lock.js)
+    if (torn) return null;
     const have = editorNow();
     if (have) { syncEditScan(); armEditIdle(); return have; }
     try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
@@ -2759,7 +2760,6 @@ export async function mountKiosk(root, {
   }
   function openMap() {
     if (torn || embedded || typeof profiles?.list !== 'function') return null;
-    if (lockRefuses('the map of your dashboards')) return null;   // (2026-10-05, screen_lock.js)
     if (mapWin) { armMapIdle(); return mapWin; }
     try { if (menu?.isOpen?.()) menu.close(); } catch { /* not up yet */ }
     if (screensOpen) toggleScreens(false);
@@ -3643,7 +3643,7 @@ export async function mountKiosk(root, {
   // the editor is in the room, under where the menu was.
   function openRoomReactions() {
     const rec = roomRec();
-    if (!rec || lockRefuses('changing the room')) return;   // (2026-10-05, screen_lock.js)
+    if (!rec) return;
     try { menu.close(); } catch { /* already closed */ }
     const topic = typeof bus.instanceTopic === 'function' ? bus.instanceTopic(rec.id, 'room/reactions') : 'room/reactions';
     bus.publish(topic, { from: 'menu' });
@@ -3975,8 +3975,6 @@ export async function mountKiosk(root, {
    *  told when it goes without a pick. `focus` / `autoPlace`: a module asked for by name (the AI). */
   async function openLibraryAt(id, { onPick = null, onCancel = null, focus = null, autoPlace = false } = {}) {
     if (torn || typeof document === 'undefined') return false;
-    // (2026-10-05, screen_lock.js: locked, a panel is not switched to another module -- Switch module, the AI's place.)
-    if (lockRefuses('switching a panel to another module')) return false;
     const rec = menuPanelRecs().find((r) => r.id === id) || null;
     const host = rec && rec.el;
     if (!rec || !host || !host.parentNode) return false;
@@ -5242,9 +5240,11 @@ export async function mountKiosk(root, {
   // ---- LOCK THIS SCREEN, IN THE ONE MENU (2026-10-05; screen_lock.js argues which rows stay and why) ------------------
   // Applied to `menuOptions` ITSELF, so the ⚙ menu (and the plain-words layer below, built over it) and every Settings
   // panel (`settingsMenuFor`) are one locked menu - no second list. Unlocked, every slot reads straight through, plus the
-  // lock's own rows at the top of This screen. Locked: "Settings for" steps the panels only (no levels, no pieces of the
-  // room), the rows are `keepWhileLocked`'s (the panel's own, Sound, Display's legibility rows), "Leave full screen" is not
-  // offered, and ABOVE THE TABS one row says it is locked and how to unlock (a stop only when a PIN makes it pressable).
+  // lock's own rows at the top of This screen. Locked (narrowed 2026-10-05): every tab, every level and every row stays
+  // EXCEPT the ways to the computer and the account (`keepWhileLocked`: the keys pages, Your own folders, Who this screen
+  // is for, key / pass phrase / sound-address rows), those pages refuse to open whatever asks (`LOCK_PAGE_DROPS`),
+  // "Leave full screen" is not offered, and ABOVE THE TABS one row says it is locked and how to unlock (a stop only when
+  // a PIN makes it pressable).
   const LOCK_STATE_ROW = 'screen-lock-state';
   const LOCK_RELOCK_KEY = 'screenRelockHours';
   let pinStrip = null;
@@ -5277,7 +5277,7 @@ export async function mountKiosk(root, {
     if (screenLocked()) {
       return [{ kind: 'item', id: LOCK_STATE_ROW, disabled: !pin,
         label: pin ? 'Locked: unlock…' : `Locked: ${words} unlocks it`,
-        hint: pin ? `type the PIN (or press ${words})` : 'everything on it still works; its setup waits until it is unlocked',
+        hint: pin ? `type the PIN (or press ${words})` : 'everything on it still works; leaving it and the account’s keys wait until it is unlocked',
         ...(pin ? { run: () => { try { menu.close(); } catch { /* already closed */ } openPinStrip('unlock'); } } : {}) }];
     }
     // Not at "Just the essentials" (legibility and the ways out); the chord works at every level.
@@ -5286,7 +5286,7 @@ export async function mountKiosk(root, {
     return [
       { kind: 'heading', id: 'screen-lock-head', label: 'Locking this screen', ...t },
       { kind: 'item', id: 'screen-lock', label: 'Lock this screen', ...t,
-        hint: `everything on it keeps working; leaving it and changing its setup wait for ${words}${pin ? ' and the PIN' : ''}`,
+        hint: `everything on it keeps working, editing too; leaving it and the account’s keys wait for ${words}${pin ? ' and the PIN' : ''}`,
         run: () => { screenLock.lock({ by: 'menu' }); } },
       { kind: 'item', id: 'screen-lock-pin', label: pin ? 'Unlock PIN: on' : 'Unlock PIN: off', ...t,
         hint: pin ? 'press to remove it' : 'press to choose one: then unlocking asks for it, and works by touch alone',
@@ -5305,18 +5305,18 @@ export async function mountKiosk(root, {
     ];
   }
   if (screenLock) {
-    const own = { subjects: menuOptions.subjects, fields: menuOptions.fields, whoItems: menuOptions.whoItems,
-      screenItems: menuOptions.screenItems, extras: menuOptions.extras };
-    // The rows the kiosk's own constants name, on top of screen_lock.js's list.
-    const drop = [`set:${PANEL_GAP_FIELD.key}`, `set:${SMALL_CLOCK_KEY}`, `set:${BAR_PLACE_FIELD.key}`];
-    const keep = (rows) => (screenLocked() ? keepWhileLocked(rows, { drop }) : rows);
+    const own = { fields: menuOptions.fields, whoItems: menuOptions.whoItems,
+      screenItems: menuOptions.screenItems, extras: menuOptions.extras, pages: menuOptions.pages };
+    const keep = (rows) => (screenLocked() ? keepWhileLocked(rows) : rows);
     Object.assign(menuOptions, {
-      subjects: () => (screenLocked()
-        ? panelSubjectsOnly(own.subjects(), { levelPrefix: LEVEL_PREFIX, piecePrefix: ROOM_PIECE_PREFIX }) : own.subjects()),
       fields: () => keep(own.fields()),
-      whoItems: () => (screenLocked() ? [] : own.whoItems()),
+      whoItems: () => keep(own.whoItems()),
       screenItems: () => keep(own.screenItems()),
       extras: () => [...lockMenuRows(), ...keep(own.extras())],
+      // The pages behind the dropped rows, whatever asks for them (a guide's act, a bound switch): words and Back.
+      pages: new Proxy(own.pages, {
+        get: (t, k) => (screenLocked() && LOCK_PAGE_DROPS.includes(k) ? LOCKED_PAGE : t[k]),
+      }),
       topIds: [...(menuOptions.topIds || []), LOCK_STATE_ROW],
       canLeaveFullscreen: () => !screenLocked(),
     });
@@ -5584,7 +5584,8 @@ export async function mountKiosk(root, {
       try { voiceRec?.setPersonId(p.person_id); } catch (err) { console.error('kiosk: voice recording', err); }
       if (profiles.people) {
         const who = (await profiles.people()).find((x) => x.id === p.person_id);
-        // A person_id pointing at somebody who is gone is ALSO a finished answer.
+        // A person_id pointing at somebody who is gone is ALSO a finished answer. Named by the name on their card
+        // (`profile_name`), not an "I call them" the login gave them: this screen is theirs (claims.seen_name).
         whoState = who ? { name: who.profile_name || who.name } : false;
         menu.refresh();
       }
@@ -6421,8 +6422,8 @@ export async function mountKiosk(root, {
 
   // ---- LOCK THIS SCREEN (2026-10-05; screen_lock.js has Mike's ask and every argument) ---------------------------
   // The chord (or a switch bound to `system/screen-lock`) toggles it; with a PIN set, unlocking opens the PIN strip.
-  // Locking puts away whatever was editing (the edit view, the map, the library in a panel's place, a panel's edit
-  // mode) - never what was playing. The guards refuse what leaves the page; the chip says "Unlocked" while somebody
+  // Locking puts nothing away (narrowed 2026-10-05: editing, the map and Switch module stay usable while locked) except
+  // a password box somebody was typing in. The guards refuse what leaves the page; the chip says "Unlocked" while somebody
   // has unlocked it; the bus hears every change (LOCK_STATE_TOPIC), and so does a helper on this computer when the
   // launcher named one (`?lockHelper=`, loopback only: the Pi's half, in the report's plan).
   // ONE SENTENCE EVERY 10 SECONDS AT MOST (hard-coded): a refused key pressed twice, or held, says so once.
@@ -6437,7 +6438,8 @@ export async function mountKiosk(root, {
   if (screenLock) {
     ensureLockCss(document);
     const BLOCKED_WORDS = { link: 'opening another page', window: 'opening another page', file: 'opening the computer’s files',
-      menu: 'the browser’s own menu', drag: 'dragging things off the screen', key: 'leaving it' };
+      menu: 'the browser’s own menu', drag: 'dragging things off the screen', key: 'leaving it',
+      secret: 'typing a key or password' };
     lockGuards = attachLockGuards({
       scope: root, isLocked: screenLocked,
       isFullscreen: () => { try { return !!fullscreenElement(); } catch { return false; } },
@@ -6451,11 +6453,12 @@ export async function mountKiosk(root, {
     lockChip = mountLockChip(kioskEl);
     const helperUrl = lockHelperFrom({ storage });
     lockReporter = helperUrl ? createLockReporter({ url: helperUrl }) : null;
+    // A password box somebody is in when it locks is put down (the guards refuse it from then on).
     const closeForLock = () => {
-      try { closeEditView(); } catch { /* none open */ }
-      try { closeMap(); } catch { /* none open */ }
-      try { closeLibrary('keep'); } catch { /* none open */ }
-      try { bus.publish(LOCK_EDIT_PANEL_TOPIC, { on: false }); } catch { /* none editing */ }
+      try {
+        const a = document.activeElement;
+        if (a && a.matches?.('input[type="password"]') && !a.closest?.('[data-pin-strip]')) a.blur();
+      } catch { /* nothing focused */ }
     };
     const syncLock = (s, boot = false) => {
       const locked = screenLocked();
@@ -6472,12 +6475,6 @@ export async function mountKiosk(root, {
     };
     offsScreen.push(screenLock.subscribe((s) => { if (!torn) syncLock(s); }));
     offsScreen.push(bus.subscribe(SCREEN_LOCK_TOPIC, (p) => { claimed(p); toggleScreenLock(); }));
-    // A panel's edit mode asked for while locked (a bound switch, a spoken route, a corner the CSS hid): put back at once.
-    offsScreen.push(bus.subscribe(LOCK_EDIT_PANEL_TOPIC, (p) => {
-      if (!screenLocked() || (p && p.on === false)) return;
-      Promise.resolve().then(() => { if (!torn) bus.publish(LOCK_EDIT_PANEL_TOPIC, { on: false }); });
-      lockRefuses('editing');
-    }));
     offsScreen.push(() => {
       for (const x of [lockGuards, lockChip, lockReporter, pinStrip]) { try { x?.destroy(); } catch { /* gone */ } }
       try { screenLock.destroy(); } catch { /* gone */ }

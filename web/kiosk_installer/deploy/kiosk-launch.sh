@@ -15,6 +15,11 @@ set -euo pipefail
 
 URL="${NIMROD_KIOSK_URL:?set NIMROD_KIOSK_URL in the systemd units Environment= line}"
 PROFILE="${NIMROD_KIOSK_PROFILE:-$HOME/.config/chromium}"
+# LOCK THIS SCREEN (2026-10-05; nimrod-lock-helper.py). Where the page reports its lock, and the helper's own path.
+# Empty NIMROD_LOCK_HELPER_URL: no report, and this launcher behaves exactly as it did before.
+LOCK_HELPER_URL="${NIMROD_LOCK_HELPER_URL:-}"
+LOCK_HELPER="${NIMROD_LOCK_HELPER:-$HOME/.local/bin/nimrod-lock-helper.py}"
+EXIT_STAY_OUT=75     # = the unit's RestartPreventExitStatus / SuccessExitStatus, and nimrod-lock-helper.py's
 
 # Wait for the network to actually be reachable before the first navigation — a kiosk that
 # never auto-reloads must not get stuck on a "can't connect" page because Chromium's first
@@ -39,10 +44,31 @@ if [ -f "$PROFILE/Default/Preferences" ]; then
     "$PROFILE/Default/Preferences" 2>/dev/null || true
 fi
 
-# `exec`, not a subshell call — systemd tracks THIS process's PID. A script that backgrounds
-# Chromium and exits itself would report "active" to systemd while Chromium was actually gone,
-# which is the exact "invisible loop" problem this installer exists to replace.
-exec chromium \
+# The address the page loads: the unit's URL, plus `lockHelper=` when a helper is configured (the page keeps it in
+# its own storage after the first load, screen_lock.js `lockHelperFrom`, so a pairing reload that drops it is fine).
+# *** ONLY WHEN CHROMIUM HAS BEEN TOLD THE SITE MAY REACH THIS COMPUTER (found on the bench 2026-10-05). *** Without the
+# managed policy (install-linux.sh step 6), the page's first report makes Chromium ask "<site> wants to access other
+# apps and services on this device - Block / Allow", a box that sits on the screen until somebody answers it: on a
+# bedside screen, exactly the state the project's invariant forbids. So: policy present -> `lockHelper=<address>`;
+# absent -> `lockHelper=off`, which also makes a page that learned an address earlier forget it (no report, no question).
+POLICY_FILE="${NIMROD_LOCK_POLICY_FILE:-/etc/chromium/policies/managed/nimrod-lock-helper.json}"
+PAGE="$URL"
+if [ -n "$LOCK_HELPER_URL" ]; then
+  if [ -f "$POLICY_FILE" ]; then LH="$LOCK_HELPER_URL"; else LH="off"; LOCK_HELPER_URL=""; fi
+  case "$PAGE" in *\?*) PAGE="$PAGE&lockHelper=$LH" ;; *) PAGE="$PAGE?lockHelper=$LH" ;; esac
+fi
+
+# *** CHROMIUM AS A CHILD, NOT `exec` (2026-10-05). *** Before, this script `exec`ed Chromium so systemd tracked its PID
+# directly. Now it waits for Chromium and then decides HOW it exits, which is the one thing systemd reads:
+#   - unlocked by a person, and the page said so in the last few minutes (nimrod-lock-helper.py --check stayout):
+#     exit 75, which the unit lists in RestartPreventExitStatus, so a Chromium somebody closed on purpose (to watch a
+#     film) STAYS closed. Ctrl+Alt+Shift+Return (nimrod-kiosk-back.sh) brings it back, and so does a reboot.
+#   - anything else - locked, never locked, no helper, the helper silent, a crash: Chromium's own exit status
+#     (non-zero, or 0 for a clean close), and Restart=always relaunches it exactly as it always has.
+# systemd still sees the truth: this script is the unit's main process and Chromium is in the unit's cgroup, so a
+# `systemctl --user stop` stops both (KillMode=control-group, the default), and the TERM is passed on to Chromium so
+# it closes its profile cleanly rather than being killed.
+chromium \
   --ozone-platform=wayland \
   --kiosk \
   --noerrdialogs \
@@ -53,4 +79,20 @@ exec chromium \
   --password-store=basic \
   --autoplay-policy=no-user-gesture-required \
   --use-fake-ui-for-media-stream \
-  "$URL"
+  "$PAGE" &
+CHILD=$!
+trap 'kill -TERM "$CHILD" 2>/dev/null || true' TERM INT
+set +e
+wait "$CHILD"; RC=$?
+# A TERM to this script interrupts the first `wait`; wait again so Chromium's own exit is the one recorded.
+if kill -0 "$CHILD" 2>/dev/null; then wait "$CHILD"; RC=$?; fi
+set -e
+
+if [ -n "$LOCK_HELPER_URL" ] && [ -f "$LOCK_HELPER" ] && python3 "$LOCK_HELPER" --check stayout; then
+  echo "nimrod-kiosk: Chromium closed (status $RC) while unlocked by a person: staying out of the way (exit $EXIT_STAY_OUT)."
+  exit "$EXIT_STAY_OUT"
+fi
+echo "nimrod-kiosk: Chromium exited (status $RC); systemd relaunches it."
+# Never 75 by accident: a Chromium that itself exits 75 is still relaunched.
+if [ "$RC" -eq "$EXIT_STAY_OUT" ]; then exit 1; fi
+exit "$RC"

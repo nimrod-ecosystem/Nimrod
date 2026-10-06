@@ -4,18 +4,31 @@
 // people could control things within whatever dashboards/modules but can't get back out to the computer.
 // I'd like to be able to stay out of it though when I unlock, so we can watch Netflix and stuff."*
 //
+// *** NARROWED THE SAME DAY (Mike, 2026-10-05): *** *"I'm thinking they can change to different dashboards and
+// modules. Do anything you could normally do in a dashboard. I just don't want people foraging around the
+// computer for logins or anything."* The first cut also took away the setup (the edit view, the map, Switch
+// module, Devices, People, This screen); it does not any more. The line now is the COMPUTER and the ACCOUNT,
+// not the setup.
+//
 // *** WHAT "LOCKED" IS, AND WHY IT IS THE OPPOSITE OF A MODAL. *** Nothing is put in front of anything.
-// Photos keep changing, a video keeps playing, a call keeps ringing and can be answered, a game is played,
-// the panels are switched, paused and made bigger, the dashboards tray swaps dashboards. What goes is every
-// way OUT of the screen and every way of CHANGING ITS SETUP:
-//   * leaving: the tray's "Set up dashboards" row (it navigates to the composer), leaving full screen,
-//     links that open another page or tab, `window.open`, the browser's own leave-the-page keys where the
-//     page is allowed to stop them (Ctrl+L, Ctrl+T, Alt+Left, F11, F12 ...), the right-click menu ("Open
-//     in new tab", "Back", "Inspect"), dragging a link out, and the computer's file dialogs (a file picker
-//     is a window onto the whole computer);
-//   * changing the setup: the edit view, the map, a panel's edit corner, Switch module, the Modules library
-//     in a panel's place, the room's reactions editor, making a ready-made dashboard, and every ⚙ row that
-//     is not about using what is on screen (see "THE ⚙ MENU WHILE LOCKED" below).
+// Photos keep changing, a video keeps playing, a call keeps ringing and can be answered, a game is played.
+// EVERYTHING A PERSON CAN DO IN A DASHBOARD STAYS: switching dashboards (and making a ready-made one),
+// Switch module and the Modules library, editing a panel or the whole dashboard, the map, the room's
+// reactions, Bigger / Smaller, and the ⚙ tabs (each panel's own settings, Sound, Display, Devices' voice
+// and switch rows, the intercom, recovery, where a cold boot lands). What goes is the way OUT to the
+// computer, and the way IN to the account:
+//   * out to the computer: leaving full screen (that shows the browser and the desktop), links that open
+//     another page or tab, `window.open`, downloads, the browser's own leave-the-page keys where the page is
+//     allowed to stop them (Ctrl+L, Ctrl+T, Alt+Left, F11, F12 ...), the right-click menu ("Open in new
+//     tab", "Back", "Inspect"), dragging a link out, and the computer's file and folder dialogs (a file
+//     picker is a window onto the whole computer's files);
+//   * in to the account: the tray's "Set up dashboards" row (it navigates to the plain website pages, where
+//     signing in and out, pairing and the account's settings live), every row that shows or changes a key,
+//     a pass phrase or an address the room's sound is sent to (`LOCK_SECRET_KEYS`, and any field marked
+//     `secret`), the pages for the account's own keys (Claude, song and video search), "Who this screen is
+//     for" (it reloads the screen as another of the account's people, with THEIR keys and bindings -
+//     which can take the unlock chord away), a password box anywhere on the screen (a module's own AI key),
+//     and starting a sign-in elsewhere (Spotify's, music_spotify.js). See "THE ⚙ MENU WHILE LOCKED".
 // CLAUDE.md's invariant is that a screen must never enter a state only an input can leave when the person
 // in front of it cannot give that input. A lock that hid content until somebody unlocked it would be exactly
 // that; this one hides nothing, so "what if nobody answers?" has the answer the invariant wants: nothing
@@ -179,7 +192,13 @@ function writeRecord(storage, rec) {
   try { storage?.setItem?.(LOCK_STORE_KEY, JSON.stringify(rec)); return true; } catch { return false; }
 }
 
-export const isPinShape = (pin) => typeof pin === 'string' && new RegExp(`^\\d{${PIN_MIN},${PIN_MAX}}$`).test(pin);
+/**
+ * Is this device's screen locked right now? A plain read of the record, for code with no kiosk in hand that
+ * must not start something the lock refuses (music_spotify.js: a sign-in that leaves the page for Spotify's).
+ */
+export function screenLockedHere(storage = defaultStorage()) { return readRecord(storage).locked; }
+
+export const isPinShape =(pin) => typeof pin === 'string' && new RegExp(`^\\d{${PIN_MIN},${PIN_MAX}}$`).test(pin);
 
 /** A salted hash of a PIN: SHA-256 where the browser has it (any https page, and localhost), else FNV-1a. */
 export async function hashPin(pin, salt, subtle = (globalThis.crypto && globalThis.crypto.subtle) || null) {
@@ -341,44 +360,56 @@ export function createScreenLock({
 // ---------------------------------------------------------------------------------------------------------
 // THE ⚙ MENU WHILE LOCKED (kiosk.js applies this to the one menu, so a Settings panel gets it too).
 // ---------------------------------------------------------------------------------------------------------
-// WHICH TABS STAY, argued. The line is "using what is on screen" against "changing the screen's setup":
-//   STAY  the selected panel's own settings (a slideshow's speed, a game's level, a video's own volume: the
-//         module's own choices are using the module), its Pause / Play and Bigger / Smaller, a live call's
-//         controls, the Sound tab (volume first of all - the thing anybody in the room should be able to
-//         turn down), and the Display tab's legibility rows (Colours, burn-in, movement and flashing). "How
-//         much this menu shows" stays above the tabs.
-//   GO    Devices (bindings, voice, connections, keys to other services), People (who the screen is for),
-//         This screen (recovery, where a cold boot lands, the screen's own switches, the folders page that
-//         opens file dialogs), the levels in "Settings for" (every panel of a kind, the screen, the device,
-//         the person) and the pieces of the room, and on the tabs that stay the rows that rearrange or edit
-//         (LOCK_MENU_DROPS).
-//   AGAINST keeping Colours: a visitor can make the screen ugly. It stays because on a bedside screen it is
-//   the legibility control (kiosk.js SCREEN_FIELDS calls it essential) and it is undone in one press.
-//   AGAINST dropping the panel's own rows: a module's setting can be a setup choice (which album a slideshow
-//   shows). Kept because "control things within whatever dashboards/modules" is Mike's own line, and a
-//   module's settings are the module's controls; the ones that open the computer (a folder picker) are
-//   refused at the file dialog itself.
-export const LOCK_KEEP_TABS = Object.freeze(['module', 'audio', 'display']);
-export const LOCK_MENU_DROPS = Object.freeze([
-  'switch-module', 'edit-panel', 'piece-edit', 'scan-lap', 'load-pack', 'see-reviews', 'set:instancePanelSurface',
-  'set:panelSurface', 'room-reactions', 'layout-pick', 'layout-keep', 'edit-view', 'dashboard-map',
+// EVERY TAB STAYS (narrowed 2026-10-05, see the header). A row goes only when it is a way to the computer or
+// to the account; each, argued:
+//   GO  'claude-page', 'search-page'   the account's own keys (Claude; YouTube and Spotify search). On a
+//       screen the row only shows an address, but the address is the way in to the keys, and nobody at a
+//       locked screen needs it - the owner opens it on their own phone.
+//   GO  'user-folders'                 "Your own folders": every button on it opens the computer's folder
+//       dialog (refused anyway while locked). Its font and colour-look rows are also at "Settings for: This
+//       device", which stays.
+//   GO  'who-pick' (and its page)      "Who this screen is for": the account's people, and pressing one
+//       RELOADS the screen as that person - their bindings (which may not have the unlock chord, leaving the
+//       owner locked out of their own screen) and their keys. AGAINST: choosing who a screen is for is a
+//       dashboard-sized thing in a family home. It loses because of the reload: a lock that a visitor can
+//       turn into "nobody can unlock it" is worse than no lock.
+//   GO  `LOCK_SECRET_KEYS`, and any row whose field is marked `secret` (a YouTube key)   a key, a pass phrase,
+//       or an address the room's sound is sent to. The address rows are here although they are not
+//       secrets: a visitor who types their own server there is sent everything the microphone hears.
+//   STAY 'load-pack'        a pack is a game's questions; the paste box works, its file button is refused at
+//       the file dialog itself.
+//   STAY 'reviews-page', 'see-reviews'   about the games' questions, and on a screen only an address.
+//   STAY 'connections', 'controls', 'activity'   read-only pages: what this can talk to, what can be pressed.
+//   STAY the levels, the pieces of the room, Layout, Edit, the map, Switch module, Room reactions, recovery,
+//       "When the power comes back", version pick-up: all of it is the dashboard and the screen, none of it
+//       reaches the computer or the account.
+//   The lock's own rows ("Lock this screen", the PIN, "Lock again by itself") show only while unlocked.
+export const LOCK_MENU_DROPS = Object.freeze(['claude-page', 'search-page', 'user-folders', 'who-pick']);
+/** The ⚙ menu PAGES a locked screen does not open, whatever asks for them (kiosk.js wraps `pages`). */
+export const LOCK_PAGE_DROPS = Object.freeze(['who', 'user-folders', 'elsewhere:claude', 'elsewhere:search']);
+/** Settings that are a key, a pass phrase, or an address the room's sound goes to (speech_engines.js). */
+export const LOCK_SECRET_KEYS = Object.freeze([
+  'speechRemote1Url', 'speechRemote1Key', 'speechRemote2Url', 'speechRemote2Key', 'speechLocalUrl', 'speechWakeUrl',
 ]);
-/** The rows a locked menu keeps. `drop`: more ids (the kiosk adds the ones its own constants name). */
-export function keepWhileLocked(rows, { drop = [], keepTabs = LOCK_KEEP_TABS } = {}) {
-  const gone = new Set([...LOCK_MENU_DROPS, ...drop]);
-  return (rows || []).filter((it) => {
-    if (!it) return false;
-    if (it.id && gone.has(it.id)) return false;
-    if (typeof it.id === 'string' && (it.id.startsWith('layout:') || it.id.startsWith('level:'))) return false;
-    // A row with no tab of its own lands on the first tab (the panel's), which stays.
-    return !it.tab || keepTabs.includes(it.tab) || it.tab === '*end';
-  });
+const keyOfRow = (it) => (it && typeof it.key === 'string' ? it.key
+  : (typeof it?.id === 'string' && it.id.startsWith('set:') ? it.id.slice(4).split(':')[0] : ''));
+/** Is this ⚙ row a way to the account (a key, an address, a keys page)? Pure; the suite drives it. */
+export function isAccountRow(it, { drop = [] } = {}) {
+  if (!it) return false;
+  if (it.id && (LOCK_MENU_DROPS.includes(it.id) || drop.includes(it.id))) return true;
+  if (it.field && it.field.secret === true) return true;
+  const k = keyOfRow(it);
+  return !!k && LOCK_SECRET_KEYS.includes(k);
 }
-/** "Settings for" while locked: the panels only - no levels, no pieces of the room. */
-export function panelSubjectsOnly(list, { levelPrefix = 'level:', piecePrefix = '' } = {}) {
-  return (list || []).filter((s) => s && typeof s.id === 'string' && !s.id.startsWith(levelPrefix)
-    && !(piecePrefix && s.id.startsWith(piecePrefix)));
+/** The rows a locked menu keeps: every row but the ways to the computer and the account. */
+export function keepWhileLocked(rows, { drop = [] } = {}) {
+  return (rows || []).filter((it) => it && !isAccountRow(it, { drop }));
 }
+/** What a page dropped while locked shows instead, if something still asks for it: words, and Back. */
+export const LOCKED_PAGE = Object.freeze({
+  title: 'Locked',
+  render(el) { el.innerHTML = '<div class="st-hint">This screen is locked, so this waits until it is unlocked.</div>'; },
+});
 
 // ---------------------------------------------------------------------------------------------------------
 // THE GUARDS: what leaves the page, refused while locked. Every one checks `isLocked()` at the moment.
@@ -432,7 +463,7 @@ export function isLeavingLink(a, e = {}, loc = (typeof location !== 'undefined' 
  * lock change and full-screen change) puts on or takes off the two that replace something global
  * (`window.open`, the file pickers) and asks for, or gives back, the Keyboard Lock.
  *   scope       the element whose links and file inputs are this screen's (the kiosk's root)
- *   onBlocked   told what was refused ('key' | 'link' | 'menu' | 'window' | 'file' | 'drag'), to say so
+ *   onBlocked   told what was refused ('key' | 'link' | 'menu' | 'window' | 'file' | 'drag' | 'secret'), to say so
  *   isFullscreen  whether the page is in full screen now
  */
 export function attachLockGuards({
@@ -452,14 +483,29 @@ export function attachLockGuards({
     e.preventDefault();
     said('key');
   };
+  // (Narrowed 2026-10-05.) A FILE DIALOG AND A PASSWORD BOX ARE REFUSED ANYWHERE ON THIS PAGE, not only inside
+  // `scope`: a picture picker or a module's dialog is drawn on the page's body, outside the kiosk's root, and
+  // the computer's files and the account's keys are the two things the lock is for. Links keep to `scope`
+  // (a demo page's own way out is the page's - the suite holds that).
   const onClick = (e) => {
-    if (!isLocked() || !inScope(e.target)) return;
+    if (!isLocked()) return;
     const t = e.target;
-    const a = t && typeof t.closest === 'function' ? t.closest('a[href]') : null;
-    if (a && isLeavingLink(a, e, win.location)) { e.preventDefault(); said('link'); return; }
     const input = t && typeof t.closest === 'function' ? (t.closest('input[type="file"]') || t.closest('label')?.control || null) : null;
-    if (input && String(input.type || '').toLowerCase() === 'file') { e.preventDefault(); said('file'); }
+    if (input && String(input.type || '').toLowerCase() === 'file') { e.preventDefault(); said('file'); return; }
+    if (!inScope(t)) return;
+    const a = t && typeof t.closest === 'function' ? t.closest('a[href]') : null;
+    if (a && isLeavingLink(a, e, win.location)) { e.preventDefault(); said('link'); }
   };
+  // A PASSWORD BOX (a module's own AI key, a YouTube key in a panel's edit window): put down the moment it is
+  // reached, and nothing typed lands in it. The lock's own PIN strip is the one password box that stays.
+  const isSecretBox = (t) => !!(t && typeof t.matches === 'function' && t.matches('input[type="password"]')
+    && !(typeof t.closest === 'function' && t.closest('[data-pin-strip]')));
+  const onFocus = (e) => {
+    if (!isLocked() || !isSecretBox(e.target)) return;
+    try { e.target.blur(); } catch { /* gone */ }
+    said('secret');
+  };
+  const onType = (e) => { if (isLocked() && isSecretBox(e.target)) { e.preventDefault(); said('secret'); } };
   const onMenu = (e) => { if (isLocked() && inScope(e.target)) { e.preventDefault(); said('menu'); } };
   const onDrag = (e) => {
     if (!isLocked() || !inScope(e.target)) return;
@@ -471,6 +517,9 @@ export function attachLockGuards({
   doc.addEventListener('auxclick', onClick, true);
   doc.addEventListener('contextmenu', onMenu, true);
   doc.addEventListener('dragstart', onDrag, true);
+  doc.addEventListener('focusin', onFocus, true);
+  doc.addEventListener('beforeinput', onType, true);
+  doc.addEventListener('paste', onType, true);
 
   // ---- The two global replacements, only while locked. Restored exactly as found. ----
   const PICKERS = ['showOpenFilePicker', 'showSaveFilePicker', 'showDirectoryPicker'];
@@ -525,6 +574,9 @@ export function attachLockGuards({
       doc.removeEventListener('auxclick', onClick, true);
       doc.removeEventListener('contextmenu', onMenu, true);
       doc.removeEventListener('dragstart', onDrag, true);
+      doc.removeEventListener('focusin', onFocus, true);
+      doc.removeEventListener('beforeinput', onType, true);
+      doc.removeEventListener('paste', onType, true);
       doc.removeEventListener('fullscreenchange', onFs);
       unwrap();
       keyboardLock(false);
@@ -540,8 +592,8 @@ export function ensureLockCss(doc) {
   if (!doc || doc.getElementById?.(CSS_ID)) return;
   const st = doc.createElement('style');
   st.id = CSS_ID;
+  // (Narrowed 2026-10-05: the edit corner and the bar's Switch module are no longer hidden while locked.)
   st.textContent = `
-  .kiosk[data-screen-locked] .k-editc, .kiosk[data-screen-locked] [data-act="switch"] { display: none !important; }
   .sl-chip { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); z-index: ${LAYERS.transport + 5};
     pointer-events: none; padding: 4px 12px; border-radius: 999px; font: 600 13px/1.4 system-ui, -apple-system, Segoe UI, sans-serif;
     background: var(--surface); color: var(--text); border: 1px solid var(--focus); opacity: .85; white-space: nowrap; }

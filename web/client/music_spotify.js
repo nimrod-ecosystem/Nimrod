@@ -45,6 +45,7 @@
 // UNTESTED AGAINST REAL SPOTIFY: the suite drives all of it through a fake fetch. Nobody has signed in.
 
 import { parseSpotifyUri } from './music_favourites.js';
+import { screenLockedHere } from './screen_lock.js';
 
 export const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 export const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
@@ -75,6 +76,8 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   'bad-uri': 'That is not a Spotify link.',
   'not-secure': 'Connecting Spotify needs this site on https, or opened as http://127.0.0.1 on this machine.',
   'state-mismatch': 'That Spotify sign-in did not match one started here. Try Connect Spotify again.',
+  // (2026-10-05, screen_lock.js: signing in leaves this page for Spotify's, and a locked screen does not leave.)
+  locked: 'This screen is locked, so connecting Spotify waits until it is unlocked.',
   denied: 'Spotify was not connected.',
 });
 
@@ -148,6 +151,9 @@ export function createSpotify({
   cryptoImpl = globalThis.crypto,
   now = () => Date.now(),
   navigate = (url) => { location.assign(url); },
+  // (2026-10-05, screen_lock.js) A LOCKED SCREEN DOES NOT START A SIGN-IN: `beginLogin` navigates this page to
+  // Spotify's sign-in page, which is a way out of the screen and in to an account. A seam for the suites.
+  isLocked = () => { try { return screenLockedHere(); } catch { return false; } },
 } = {}) {
   const id = String(clientId || '').trim();
   const store = safeStorage(storage);
@@ -234,6 +240,7 @@ export function createSpotify({
     /** Start signing in: remember a verifier on this device, then go to Spotify. */
     async beginLogin({ returnTo = '/' } = {}) {
       if (!id) return { ok: false, reason: 'no-client-id' };
+      if (isLocked()) return { ok: false, reason: 'locked' };   // (2026-10-05, screen_lock.js)
       let verifier, challenge;
       try {
         verifier = makeVerifier(cryptoImpl);
