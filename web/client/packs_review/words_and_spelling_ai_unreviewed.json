@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Words and spelling (AI-written, not yet reviewed)",
-  "description": "60 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 20 medium, 20 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "59 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 21 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -32,7 +32,11 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means very big?",
@@ -52,7 +56,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'large'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means happy?",
@@ -72,7 +80,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'happy'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of day?",
@@ -91,7 +103,11 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a pal'?",
@@ -111,7 +127,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'friend'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word rhymes with cat?",
@@ -130,7 +150,11 @@
         "note": "Rhyme is self-evident from the sound of the words."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means the same as start?",
@@ -150,7 +174,11 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'start'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of open?",
@@ -169,7 +197,11 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here"
+      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'for the reason that'?",
@@ -188,7 +220,11 @@
         "title": "Wiktionary: because",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'because'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of early?",
@@ -207,7 +243,11 @@
         "title": "Wiktionary: early",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'late'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means very tired?",
@@ -226,7 +266,11 @@
         "title": "Wiktionary: exhausted",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tired'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'very pretty'?",
@@ -245,7 +289,11 @@
         "title": "Wiktionary: beautiful",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'beautiful'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means the same as quick?",
@@ -264,7 +312,11 @@
         "title": "Wiktionary: quick",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'fast'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'the day after today'?",
@@ -283,7 +335,11 @@
         "title": "Wiktionary: tomorrow",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tomorrow'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does enormous mean?",
@@ -302,7 +358,11 @@
         "title": "Wiktionary: enormous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'large'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a place to borrow books'?",
@@ -321,7 +381,11 @@
         "title": "Wiktionary: library",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'library'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means to look at something closely?",
@@ -340,7 +404,11 @@
         "title": "Wiktionary: examine",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'observe'; 'carefully'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a chart of the days and months'?",
@@ -359,7 +427,11 @@
         "title": "Wiktionary: calendar",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'calendar'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of brave?",
@@ -378,7 +450,11 @@
         "title": "Wiktionary: brave",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cowardly'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does the word ancient mean?",
@@ -397,7 +473,11 @@
         "title": "Wiktionary: ancient",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'old'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'needed'?",
@@ -416,7 +496,11 @@
         "title": "Wiktionary: necessary",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'necessary'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'apart'?",
@@ -435,7 +519,11 @@
         "title": "Wiktionary: separate",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'separate'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of expand?",
@@ -454,7 +542,11 @@
         "title": "Wiktionary: shrink",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'smaller'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does fragile mean?",
@@ -473,7 +565,11 @@
         "title": "Wiktionary: fragile",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'easily broken'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'the beat in music'?",
@@ -486,13 +582,18 @@
       "correct": "Rhythm",
       "difficulty": "medium",
       "category": "Words & spelling",
-      "explain": "Rhythm has no vowels except the Ys: R-H-Y-T-H-M.",
+      "explain": "Rhythm has no A, E, I, O or U: R-H-Y-T-H-M.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/rhythm",
         "title": "Wiktionary: rhythm",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'rhythm'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'except the Ys' was wrong, rhythm has only one Y; now names the missing vowels"
+      }
     },
     {
       "question": "What does reluctant mean?",
@@ -511,7 +612,11 @@
         "title": "Wiktionary: reluctant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'unwilling'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'to make someone feel awkward'?",
@@ -530,7 +635,11 @@
         "title": "Wiktionary: embarrass",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'embarrass'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which word means the same as courageous?",
@@ -549,7 +658,11 @@
         "title": "Wiktionary: courageous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'brave'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'for sure'?",
@@ -562,13 +675,18 @@
       "correct": "Definitely",
       "difficulty": "medium",
       "category": "Words & spelling",
-      "explain": "Definitely comes from 'finite': de-FINITE-ly.",
+      "explain": "Definitely has 'finite' inside it: de-FINITE-ly.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/definitely",
         "title": "Wiktionary: definitely",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'definitely'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'comes from finite' is a mnemonic, not the etymology (it comes from 'definite'); now says the word contains 'finite'"
+      }
     },
     {
       "question": "What does humid mean?",
@@ -587,7 +705,11 @@
         "title": "Wiktionary: humid",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'moist'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What is the opposite of ancient?",
@@ -606,7 +728,11 @@
         "title": "Wiktionary: modern",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'present'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a special event'?",
@@ -625,26 +751,11 @@
         "title": "Wiktionary: occasion",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'occasion'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "What does nocturnal mean?",
-      "answers": [
-        "Active at night",
-        "Active by day",
-        "Living in water",
-        "Eating plants"
-      ],
-      "correct": "Active at night",
-      "difficulty": "medium",
-      "category": "Words & spelling",
-      "explain": "Nocturnal animals, like owls, come out at night.",
-      "source": {
-        "url": "https://en.wiktionary.org/wiki/nocturnal",
-        "title": "Wiktionary: nocturnal",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'night'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a place to eat out'?",
@@ -663,7 +774,11 @@
         "title": "Wiktionary: restaurant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'restaurant'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does vacant mean?",
@@ -682,7 +797,11 @@
         "title": "Wiktionary: vacant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'empty'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'to suggest something good'?",
@@ -701,7 +820,11 @@
         "title": "Wiktionary: recommend",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'recommend'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does punctual mean?",
@@ -720,7 +843,11 @@
         "title": "Wiktionary: punctual",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'on time'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'the second month'?",
@@ -739,7 +866,11 @@
         "title": "Wiktionary: February",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'February'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does abundant mean?",
@@ -758,7 +889,11 @@
         "title": "Wiktionary: abundant",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'plentiful'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does meander mean?",
@@ -777,7 +912,11 @@
         "title": "Wiktionary: meander",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'wander'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'to make room for'?",
@@ -796,7 +935,11 @@
         "title": "Wiktionary: accommodate",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'accommodate'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does ephemeral mean?",
@@ -815,7 +958,11 @@
         "title": "Wiktionary: ephemeral",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'short'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'careful and hard-working'?",
@@ -828,13 +975,18 @@
       "correct": "Conscientious",
       "difficulty": "hard",
       "category": "Words & spelling",
-      "explain": "Conscientious is 'conscience' plus -tious.",
+      "explain": "Conscientious is 'conscien' (from conscience) plus -tious.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/conscientious",
         "title": "Wiktionary: conscientious",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'conscientious'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explanation: 'conscience' plus -tious would spell 'consciencetious'; now 'conscien' (from conscience) plus -tious"
+      }
     },
     {
       "question": "What does gregarious mean?",
@@ -853,7 +1005,11 @@
         "title": "Wiktionary: gregarious",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'socializing'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a thousand years'?",
@@ -872,7 +1028,11 @@
         "title": "Wiktionary: millennium",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'millennium'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does ubiquitous mean?",
@@ -891,7 +1051,11 @@
         "title": "Wiktionary: ubiquitous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'everywhere'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a link between groups'?",
@@ -910,7 +1074,11 @@
         "title": "Wiktionary: liaison",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'liaison'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does loquacious mean?",
@@ -929,14 +1097,18 @@
         "title": "Wiktionary: loquacious",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'talk'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'playfully naughty'?",
       "answers": [
         "Mischievous",
-        "Mischievious",
-        "Mischevious",
+        "Mischivous",
+        "Mischievus",
         "Mischeivous"
       ],
       "correct": "Mischievous",
@@ -948,7 +1120,12 @@
         "title": "Wiktionary: mischievous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'mischievous'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "answers: Wiktionary lists 'mischievious' and 'mischevious' as alternative forms (nonstandard but attested), so two distractors could be argued right; replaced with plain misspellings 'Mischivous' and 'Mischievus'"
+      }
     },
     {
       "question": "What does benevolent mean?",
@@ -967,7 +1144,11 @@
         "title": "Wiktionary: benevolent",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'kind'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'rule by offices and paperwork'?",
@@ -986,7 +1167,11 @@
         "title": "Wiktionary: bureaucracy",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'bureaucracy'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does pusillanimous mean?",
@@ -1005,7 +1190,11 @@
         "title": "Wiktionary: pusillanimous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'cowardice'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a list of questions'?",
@@ -1024,7 +1213,11 @@
         "title": "Wiktionary: questionnaire",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'questionnaire'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does magnanimous mean?",
@@ -1043,7 +1236,11 @@
         "title": "Wiktionary: magnanimous",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'generous'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a king of ancient Egypt'?",
@@ -1062,7 +1259,11 @@
         "title": "Wiktionary: pharaoh",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pharaoh'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does esoteric mean?",
@@ -1081,7 +1282,11 @@
         "title": "Wiktionary: esoteric",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'few'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does frugal mean?",
@@ -1092,7 +1297,7 @@
         "Very angry"
       ],
       "correct": "Careful with money",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Words & spelling",
       "explain": "A frugal person avoids spending more than needed.",
       "source": {
@@ -1100,7 +1305,12 @@
         "title": "Wiktionary: frugal",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'thrifty'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, frugal is an everyday word most adults know"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a word that sounds like its meaning, like buzz'?",
@@ -1119,7 +1329,11 @@
         "title": "Wiktionary: onomatopoeia",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'onomatopoeia'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "What does serendipity mean?",
@@ -1130,7 +1344,7 @@
         "A long journey"
       ],
       "correct": "A happy accident",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "Words & spelling",
       "explain": "Serendipity is finding something good without looking for it.",
       "source": {
@@ -1138,7 +1352,12 @@
         "title": "Wiktionary: serendipity",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'accident'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, serendipity is widely known, not quiz-night hard"
+      }
     },
     {
       "question": "Which spelling is right for the word meaning 'a cloth for your nose'?",
@@ -1157,7 +1376,11 @@
         "title": "Wiktionary: handkerchief",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'handkerchief'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     }
   ]
 }

@@ -2,9 +2,9 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "General knowledge - hard (AI-written, not yet reviewed)",
-  "description": "21 HARD questions on general knowledge, written by Claude as an add-on to the easier 'General knowledge' review pack (which has almost no hard ones). Every question and answer needs checking by a person before anybody plays it.",
+  "description": "16 questions on general knowledge (2 hard, 10 medium, 4 easy), written by Claude as an add-on to the easier 'General knowledge' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Fact-check pending: no item carries `checked` yet; a separate fact-check pass adds it. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -24,7 +24,7 @@
         "Twenty"
       ],
       "correct": "Twelve",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "Dodeca- means twelve.",
       "source": {
@@ -32,7 +32,12 @@
         "title": "Wikipedia: Dodecagon",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'twelve'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a fair share of adults know dodeca- = twelve"
+      }
     },
     {
       "question": "What is the Roman numeral for 50?",
@@ -43,7 +48,7 @@
         "V"
       ],
       "correct": "L",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "L is 50, C is 100, D is 500 and V is 5.",
       "source": {
@@ -51,26 +56,12 @@
         "title": "Wikipedia: Roman numerals",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '50'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "What is the longest bone in the human body?",
-      "answers": [
-        "Femur",
-        "Tibia",
-        "Humerus",
-        "Fibula"
-      ],
-      "correct": "Femur",
-      "difficulty": "hard",
-      "category": "General knowledge",
-      "explain": "The femur is the thigh bone.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Femur",
-        "title": "Wikipedia: Femur",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'longest'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, L = 50 is school-level knowledge"
+      }
     },
     {
       "question": "What is the currency of Japan?",
@@ -81,7 +72,7 @@
         "Rupee"
       ],
       "correct": "Yen",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "General knowledge",
       "explain": "Japan uses the yen.",
       "source": {
@@ -89,45 +80,12 @@
         "title": "Wikipedia: Japanese yen",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Japan'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "Who painted the ceiling of the Sistine Chapel?",
-      "answers": [
-        "Michelangelo",
-        "Raphael",
-        "Leonardo da Vinci",
-        "Donatello"
-      ],
-      "correct": "Michelangelo",
-      "difficulty": "hard",
-      "category": "General knowledge",
-      "explain": "Michelangelo painted it between 1508 and 1512.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Sistine_Chapel_ceiling",
-        "title": "Wikipedia: Sistine Chapel ceiling",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Michelangelo'."
-      },
-      "ai_written": true
-    },
-    {
-      "question": "How many keys does a standard piano have?",
-      "answers": [
-        "88",
-        "76",
-        "92",
-        "64"
-      ],
-      "correct": "88",
-      "difficulty": "hard",
-      "category": "General knowledge",
-      "explain": "A full piano has 52 white keys and 36 black keys.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Piano",
-        "title": "Wikipedia: Piano",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '88'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know Japan uses the yen"
+      }
     },
     {
       "question": "How many is a baker's dozen?",
@@ -138,7 +96,7 @@
         "Ten"
       ],
       "correct": "Thirteen",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "A baker's dozen is one more than a dozen.",
       "source": {
@@ -146,26 +104,12 @@
         "title": "Wikipedia: Dozen",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: \"baker's dozen\"."
       },
-      "ai_written": true
-    },
-    {
-      "question": "Who wrote Pride and Prejudice?",
-      "answers": [
-        "Jane Austen",
-        "Charlotte Brontë",
-        "Emily Brontë",
-        "George Eliot"
-      ],
-      "correct": "Jane Austen",
-      "difficulty": "hard",
-      "category": "General knowledge",
-      "explain": "Jane Austen's novel came out in 1813.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/Pride_and_Prejudice",
-        "title": "Wikipedia: Pride and Prejudice",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Austen'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a baker's dozen is a common phrase"
+      }
     },
     {
       "question": "In Einstein's E = mc², what does the c stand for?",
@@ -176,7 +120,7 @@
         "Calories"
       ],
       "correct": "The speed of light",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "Energy equals mass times the speed of light squared.",
       "source": {
@@ -184,7 +128,12 @@
         "title": "Wikipedia: Mass–energy equivalence",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'speed of light'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, c = speed of light is widely known"
+      }
     },
     {
       "question": "In which country is the ancient city of Petra?",
@@ -203,7 +152,11 @@
         "title": "Wikipedia: Petra",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Jordan'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "How many squares are on a chessboard?",
@@ -214,7 +167,7 @@
         "49"
       ],
       "correct": "64",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "A chessboard is 8 squares by 8 squares.",
       "source": {
@@ -222,7 +175,12 @@
         "title": "Wikipedia: Chessboard",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '64'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 8x8 = 64 is known to anyone who has seen a chessboard"
+      }
     },
     {
       "question": "Which chess piece moves only diagonally?",
@@ -233,7 +191,7 @@
         "King"
       ],
       "correct": "Bishop",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "A bishop always stays on squares of one colour.",
       "source": {
@@ -241,7 +199,12 @@
         "title": "Wikipedia: Bishop (chess)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'diagonal'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, basic chess rule known to a fair share of adults"
+      }
     },
     {
       "question": "Which alphabet is used to write Russian?",
@@ -252,7 +215,7 @@
         "Arabic"
       ],
       "correct": "Cyrillic",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "Russian is written in the Cyrillic alphabet.",
       "source": {
@@ -260,7 +223,12 @@
         "title": "Wikipedia: Russian alphabet",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Cyrillic'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Cyrillic for Russian is fairly well known"
+      }
     },
     {
       "question": "In Greek myth, who is king of the gods?",
@@ -271,7 +239,7 @@
         "Hermes"
       ],
       "correct": "Zeus",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "General knowledge",
       "explain": "Zeus ruled the gods from Mount Olympus.",
       "source": {
@@ -279,7 +247,12 @@
         "title": "Wikipedia: Zeus",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'king of the gods'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know Zeus is king of the gods"
+      }
     },
     {
       "question": "How many strings does a standard violin have?",
@@ -290,7 +263,7 @@
         "Three"
       ],
       "correct": "Four",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "A violin's four strings are tuned G, D, A and E.",
       "source": {
@@ -298,7 +271,12 @@
         "title": "Wikipedia: Violin",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'four strings'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, four strings is common knowledge for a fair share of adults"
+      }
     },
     {
       "question": "In which year was Mount Everest first climbed?",
@@ -317,7 +295,11 @@
         "title": "Wikipedia: Mount Everest",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '1953'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
     },
     {
       "question": "Who was the Roman god of the sea?",
@@ -328,7 +310,7 @@
         "Vulcan"
       ],
       "correct": "Neptune",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "Neptune matches the Greek god Poseidon.",
       "source": {
@@ -336,26 +318,12 @@
         "title": "Wikipedia: Neptune (mythology)",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'sea'."
       },
-      "ai_written": true
-    },
-    {
-      "question": "Who painted The Starry Night?",
-      "answers": [
-        "Vincent van Gogh",
-        "Claude Monet",
-        "Paul Cézanne",
-        "Pablo Picasso"
-      ],
-      "correct": "Vincent van Gogh",
-      "difficulty": "hard",
-      "category": "General knowledge",
-      "explain": "Van Gogh painted it in 1889.",
-      "source": {
-        "url": "https://en.wikipedia.org/wiki/The_Starry_Night",
-        "title": "Wikipedia: The Starry Night",
-        "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'van Gogh'."
-      },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Neptune as the sea god is fairly well known"
+      }
     },
     {
       "question": "What do we call a word that reads the same backward and forward, like 'level'?",
@@ -366,7 +334,7 @@
         "Homonym"
       ],
       "correct": "Palindrome",
-      "difficulty": "hard",
+      "difficulty": "medium",
       "category": "General knowledge",
       "explain": "Racecar and noon are palindromes too.",
       "source": {
@@ -374,7 +342,12 @@
         "title": "Wikipedia: Palindrome",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'backward'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 'palindrome' is widely known"
+      }
     },
     {
       "question": "What is the line of latitude at 0 degrees called?",
@@ -385,7 +358,7 @@
         "The Arctic Circle"
       ],
       "correct": "The Equator",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "General knowledge",
       "explain": "The Equator circles the middle of the Earth.",
       "source": {
@@ -393,7 +366,12 @@
         "title": "Wikipedia: Equator",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'latitude'."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, most adults know 0 degrees latitude is the Equator"
+      }
     },
     {
       "question": "How many zeros are in one million?",
@@ -404,14 +382,19 @@
         "Nine"
       ],
       "correct": "Six",
-      "difficulty": "hard",
+      "difficulty": "easy",
       "category": "General knowledge",
       "explain": "One million is written 1,000,000.",
       "source": {
         "ref": "common knowledge",
         "note": "Place value; 1,000,000 is written with six zeros by definition."
       },
-      "ai_written": true
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> easy, counting the zeros in 1,000,000 is basic"
+      }
     }
   ]
 }
