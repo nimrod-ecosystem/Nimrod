@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Animals - hard (AI-written, not yet reviewed)",
-  "description": "21 questions on animals (6 hard, 13 medium, 2 easy), written by Claude as an add-on to the easier 'Animals' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "39 questions on animals (21 hard, 16 medium, 2 easy), written by Claude as an add-on to the easier 'Animals' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. A second writing pass on 2026-10-05 added 18 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 15 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -507,6 +507,426 @@
         "url": "https://en.wikipedia.org/wiki/Cheetah",
         "title": "Wikipedia: Cheetah",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'claws'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is a group of flamingos called?",
+      "answers": [
+        "A flamboyance",
+        "A pandemonium",
+        "A murmuration",
+        "A congregation"
+      ],
+      "correct": "A flamboyance",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A group of flamingos is a flamboyance.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flamingo",
+        "title": "Wikipedia: Flamingo",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'group of flamingos is called a \"flamboyance\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is a male ferret called?",
+      "answers": [
+        "A hob",
+        "A buck",
+        "A jack",
+        "A tom"
+      ],
+      "correct": "A hob",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Male ferrets are hobs and females are jills.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ferret",
+        "title": "Wikipedia: Ferret",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'male ferret is called a hob'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is a baby echidna called?",
+      "answers": [
+        "A puggle",
+        "A hoglet",
+        "A kit",
+        "A pup"
+      ],
+      "correct": "A puggle",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A baby echidna is a puggle.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Echidna",
+        "title": "Wikipedia: Echidna",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'young are called puggles'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractor 'A joey' -> 'A hoglet' (joey is used informally for baby echidnas)"
+      }
+    },
+    {
+      "question": "Which mammal has the densest fur of any mammal?",
+      "answers": [
+        "Sea otter",
+        "Arctic fox",
+        "Chinchilla",
+        "Polar bear"
+      ],
+      "correct": "Sea otter",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Sea otters have no blubber and keep warm with the densest fur of any mammal, around 130,000 hairs per square centimeter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sea_otter",
+        "title": "Wikipedia: Sea otter",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'densest fur of any mammal'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which bird lays one of the largest eggs, for its body size, of any bird in the world?",
+      "answers": [
+        "Kiwi",
+        "Ostrich",
+        "Emu",
+        "Chicken"
+      ],
+      "correct": "Kiwi",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A kiwi lays one of the largest eggs of any bird compared with its own body size.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kiwi_(bird)",
+        "title": "Wikipedia: Kiwi (bird)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'largest eggs in proportion to its size'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped the ostrich clause the cited page does not support"
+      }
+    },
+    {
+      "question": "Under its white-looking fur, what color is a polar bear's skin?",
+      "answers": [
+        "Black",
+        "Pink",
+        "White",
+        "Grey-blue"
+      ],
+      "correct": "Black",
+      "difficulty": "medium",
+      "category": "Animals",
+      "explain": "A polar bear's skin is black; its guard hairs are see-through and only look white.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Polar_bear",
+        "title": "Wikipedia: Polar bear",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'black skin', 'transparent guard hairs'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, polar bears' black skin is a much-repeated fact"
+      }
+    },
+    {
+      "question": "What is the offspring of a male horse and a female donkey called?",
+      "answers": [
+        "A hinny",
+        "A mule",
+        "A zonkey",
+        "A burro"
+      ],
+      "correct": "A hinny",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A hinny has a horse father and a donkey mother; a mule is the other way round.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hinny",
+        "title": "Wikipedia: Hinny",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'offspring of a male horse (a stallion ) and a female donkey'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is a baby hare called?",
+      "answers": [
+        "A leveret",
+        "A kit",
+        "A cub",
+        "A kid"
+      ],
+      "correct": "A leveret",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A hare less than a year old is called a leveret.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hare",
+        "title": "Wikipedia: Hare",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'less than one year old is called a leveret'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which is the largest living species of deer?",
+      "answers": [
+        "Moose",
+        "Caribou",
+        "Red deer",
+        "Sambar"
+      ],
+      "correct": "Moose",
+      "difficulty": "medium",
+      "category": "Animals",
+      "explain": "The moose is the tallest, largest and heaviest deer alive today.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Moose",
+        "title": "Wikipedia: Moose",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'largest and heaviest extant species of deer'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, most adults would pick moose"
+      }
+    },
+    {
+      "question": "Which is the world's smallest bird?",
+      "answers": [
+        "Bee hummingbird",
+        "Goldcrest",
+        "Ruby-throated hummingbird",
+        "Pygmy owl"
+      ],
+      "correct": "Bee hummingbird",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The bee hummingbird of Cuba is about 5 to 6 cm long.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bee_hummingbird",
+        "title": "Wikipedia: Bee hummingbird",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'smallest living bird'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which is the largest frog in the world?",
+      "answers": [
+        "Goliath frog",
+        "Cane toad",
+        "American bullfrog",
+        "African bullfrog"
+      ],
+      "correct": "Goliath frog",
+      "difficulty": "medium",
+      "category": "Animals",
+      "explain": "The Goliath frog of Cameroon and Equatorial Guinea can grow over 30 cm long, not counting its legs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Goliath_frog",
+        "title": "Wikipedia: Goliath frog",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'largest living frog'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: range is Cameroon and Equatorial Guinea, not west Africa, and the length is body length; difficulty: hard -> medium, the name 'Goliath' gives it away"
+      }
+    },
+    {
+      "question": "Which is the only marsupial native to the United States and Canada?",
+      "answers": [
+        "Virginia opossum",
+        "Raccoon",
+        "Flying squirrel",
+        "Woodchuck"
+      ],
+      "correct": "Virginia opossum",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The Virginia opossum is the only marsupial found north of Mexico.",
+      "source": {
+        "url": "https://nationalzoo.si.edu/animals/virginia-opossum",
+        "title": "Smithsonian's National Zoo: Virginia opossum",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'only marsupial found north of Mexico'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is a narwhal's long 'tusk' really?",
+      "answers": [
+        "A tooth",
+        "A horn",
+        "A bony nose spike",
+        "A fin ray"
+      ],
+      "correct": "A tooth",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The spiral tusk is an overgrown canine tooth that pokes through the upper lip.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Narwhal",
+        "title": "Wikipedia: Narwhal",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'canine tooth that projects from the left side of the upper jaw'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which living bird has the largest wingspan?",
+      "answers": [
+        "Wandering albatross",
+        "Andean condor",
+        "Bald eagle",
+        "Great white pelican"
+      ],
+      "correct": "Wandering albatross",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "The wandering (or snowy) albatross has the greatest wingspan of any living bird, up to about 3.7 meters.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wandering_albatross",
+        "title": "Wikipedia: Wandering albatross",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'greatest known wingspan of any living bird'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which farm animal has horizontal, rectangular pupils?",
+      "answers": [
+        "Goat",
+        "Chicken",
+        "Duck",
+        "Rabbit"
+      ],
+      "correct": "Goat",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Goats have horizontal slit-shaped pupils that give them a very wide view.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Goat",
+        "title": "Wikipedia: Goat",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'horizontal, slit-shaped pupils'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractors Pig and Cow -> Duck and Rabbit (cattle and pigs also have horizontally elongated pupils)"
+      }
+    },
+    {
+      "question": "What is an adult male swan called?",
+      "answers": [
+        "A cob",
+        "A pen",
+        "A drake",
+        "A gander"
+      ],
+      "correct": "A cob",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "A male swan is a cob and a female is a pen; drakes are male ducks and ganders male geese.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Swan",
+        "title": "Wikipedia: Swan",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'adult male is a cob'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What are the closest living relatives of the hippopotamus?",
+      "answers": [
+        "Whales and dolphins",
+        "Pigs",
+        "Elephants",
+        "Rhinoceroses"
+      ],
+      "correct": "Whales and dolphins",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Despite looking like pigs, hippos are most closely related to whales and dolphins.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hippopotamus",
+        "title": "Wikipedia: Hippopotamus",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'closest living relatives of the hippopotamids are cetaceans'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "The name of which African animal means 'earth pig' in Afrikaans?",
+      "answers": [
+        "Aardvark",
+        "Warthog",
+        "Pangolin",
+        "Meerkat"
+      ],
+      "correct": "Aardvark",
+      "difficulty": "hard",
+      "category": "Animals",
+      "explain": "Aardvark comes from Afrikaans for 'earth pig', for its burrowing habits.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Aardvark",
+        "title": "Wikipedia: Aardvark",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'earth pig', 'Afrikaans'."
       },
       "ai_written": true,
       "checked": {

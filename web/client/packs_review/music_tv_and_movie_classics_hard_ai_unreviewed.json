@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Music, TV and movie classics - hard (AI-written, not yet reviewed)",
-  "description": "15 questions on music, tv & movies (3 hard, 9 medium, 3 easy), written by Claude as an add-on to the easier 'Music, TV & movies' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "44 questions on music, tv & movies (22 hard, 19 medium, 3 easy), written by Claude as an add-on to the easier 'Music, TV & movies' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. A second writing pass on 2026-10-05 added 29 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 19 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -365,6 +365,690 @@
         "url": "https://en.wikipedia.org/wiki/Mel_Tormé",
         "title": "Wikipedia: Mel Tormé",
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Velvet Fog'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On The Lone Ranger, what was the name of Tonto's horse?",
+      "answers": [
+        "Scout",
+        "Silver",
+        "Trigger",
+        "Champion"
+      ],
+      "correct": "Scout",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "The Lone Ranger rode Silver; his partner Tonto rode Scout.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tonto",
+        "title": "Wikipedia: Tonto",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'the name \"Scout\" was adopted'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On Gilligan's Island, what was the name of the boat that was shipwrecked?",
+      "answers": [
+        "The Minnow",
+        "The Sea Breeze",
+        "The Wanderer",
+        "The Mary Ann"
+      ],
+      "correct": "The Minnow",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "The S.S. Minnow was wrecked in a storm on a 'three-hour tour' from Honolulu.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gilligan%27s_Island",
+        "title": "Wikipedia: Gilligan's Island",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'charter boat SS Minnow'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "only the right answer had the 'S.S.' prefix; explain said 'ran aground' (page: shipwrecked in a storm); difficulty: hard -> medium, the theme song made Minnow well known"
+      }
+    },
+    {
+      "question": "Who won the Best Actor Oscar for playing Atticus Finch in the 1962 film To Kill a Mockingbird?",
+      "answers": [
+        "Gregory Peck",
+        "James Stewart",
+        "Henry Fonda",
+        "Spencer Tracy"
+      ],
+      "correct": "Gregory Peck",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Gregory Peck won the Academy Award for Best Actor for the role.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/To_Kill_a_Mockingbird_(film)",
+        "title": "Wikipedia: To Kill a Mockingbird (film)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Gregory Peck', 'Best Actor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, as well known as Bogart as Rick (medium in this pack)"
+      }
+    },
+    {
+      "question": "Who played Mrs. Robinson in the 1967 film The Graduate?",
+      "answers": [
+        "Anne Bancroft",
+        "Lauren Bacall",
+        "Shirley MacLaine",
+        "Elizabeth Taylor"
+      ],
+      "correct": "Anne Bancroft",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Anne Bancroft played Mrs. Robinson opposite Dustin Hoffman.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Graduate",
+        "title": "Wikipedia: The Graduate",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Mrs. Robinson (Bancroft)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which of the Marx Brothers played the silent one, who honked a horn instead of talking?",
+      "answers": [
+        "Harpo",
+        "Groucho",
+        "Chico",
+        "Zeppo"
+      ],
+      "correct": "Harpo",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Harpo never spoke on screen, communicating with a horn and whistles, and was also a fine harpist.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Harpo_Marx",
+        "title": "Wikipedia: Harpo Marx",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Harpo's evolution as the \"silent\" character', 'harp'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain reworded (dropped 'mute clown'); difficulty: hard -> medium, a pub-quiz staple"
+      }
+    },
+    {
+      "question": "What was the family's last name on Leave It to Beaver?",
+      "answers": [
+        "Cleaver",
+        "Anderson",
+        "Nelson",
+        "Stone"
+      ],
+      "correct": "Cleaver",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "The show follows young Theodore 'Beaver' Cleaver and his family.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Leave_It_to_Beaver",
+        "title": "Wikipedia: Leave It to Beaver",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Theodore \"Beaver\" Cleaver'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped the Father Knows Best line the cited page does not support; difficulty: hard -> medium, 'Beaver Cleaver' is a household phrase"
+      }
+    },
+    {
+      "question": "On The Dick Van Dyke Show, what was Rob Petrie's job?",
+      "answers": [
+        "TV comedy writer",
+        "Newspaper reporter",
+        "High school teacher",
+        "Advertising executive"
+      ],
+      "correct": "TV comedy writer",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Rob Petrie was head writer for the fictional Alan Brady Show.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Dick_Van_Dyke_Show",
+        "title": "Wikipedia: The Dick Van Dyke Show",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'head writer for the fictitious variety show The Alan Brady Show'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On Happy Days, what was the name of the drive-in restaurant where the gang hung out?",
+      "answers": [
+        "Arnold's",
+        "Mel's",
+        "Al's Place",
+        "The Max"
+      ],
+      "correct": "Arnold's",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "The gang hung out at Arnold's Drive-In.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Happy_Days",
+        "title": "Wikipedia: Happy Days",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Arnold's Drive-In'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On Cheers, what was Norm's last name?",
+      "answers": [
+        "Peterson",
+        "Clavin",
+        "Malone",
+        "Crane"
+      ],
+      "correct": "Peterson",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Norm Peterson always got a shout of 'Norm!' as he walked in; Cliff was the Clavin.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Norm_Peterson",
+        "title": "Wikipedia: Norm Peterson",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Fictional character in the series Cheers'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On I Love Lucy, what was Lucy Ricardo's maiden name?",
+      "answers": [
+        "McGillicuddy",
+        "Mertz",
+        "O'Hara",
+        "Ball"
+      ],
+      "correct": "McGillicuddy",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "In the show's story, Lucy was born Lucille Esmeralda McGillicuddy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lucy_Ricardo",
+        "title": "Wikipedia: Lucy Ricardo",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'McGillicuddy Ricardo'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: 'Lucy Esmeralda' -> 'Lucille Esmeralda', as on the page"
+      }
+    },
+    {
+      "question": "What was the name of the Jetsons' dog?",
+      "answers": [
+        "Astro",
+        "Dino",
+        "Scooby",
+        "Rocket"
+      ],
+      "correct": "Astro",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Astro is the Jetsons' family dog, who talks with a growl.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Jetsons",
+        "title": "Wikipedia: The Jetsons",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'dog named Astro'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped 'Great Dane' and the Dino line (not on the cited page); difficulty: hard -> medium, Astro is widely known"
+      }
+    },
+    {
+      "question": "What was the family's last name on The Beverly Hillbillies?",
+      "answers": [
+        "Clampett",
+        "Douglas",
+        "Hatfield",
+        "Walton"
+      ],
+      "correct": "Clampett",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Jed Clampett struck oil and moved his family to Beverly Hills.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Beverly_Hillbillies",
+        "title": "Wikipedia: The Beverly Hillbillies",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Jed Clampett'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which singer, known for his dark glasses, was nicknamed 'The Big O'?",
+      "answers": [
+        "Roy Orbison",
+        "Del Shannon",
+        "Johnny Cash",
+        "Ray Charles"
+      ],
+      "correct": "Roy Orbison",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Roy Orbison was known as the Big O.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Roy_Orbison",
+        "title": "Wikipedia: Roy Orbison",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '\"the Big O\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractor Otis Redding -> Del Shannon (Redding was also called 'The Big O')"
+      }
+    },
+    {
+      "question": "Who wrote and first recorded the rockabilly hit Blue Suede Shoes?",
+      "answers": [
+        "Carl Perkins",
+        "Elvis Presley",
+        "Jerry Lee Lewis",
+        "Buddy Holly"
+      ],
+      "correct": "Carl Perkins",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Carl Perkins wrote it and released it in January 1956; Elvis Presley recorded his cover at the end of that month.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Blue_Suede_Shoes",
+        "title": "Wikipedia: Blue Suede Shoes",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'first recorded by Carl Perkins in 1955'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "the record was released in January 1956, not a '1955 hit'; explain updated"
+      }
+    },
+    {
+      "question": "What was the name of Buddy Holly's band?",
+      "answers": [
+        "The Crickets",
+        "The Comets",
+        "The Teenagers",
+        "The Drifters"
+      ],
+      "correct": "The Crickets",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Buddy Holly formed the Crickets in Lubbock, Texas, in 1957.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Crickets",
+        "title": "Wikipedia: The Crickets",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Buddy Holly & The Crickets'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain named a four-word song title; difficulty: hard -> medium, 'Buddy Holly and the Crickets' is well known"
+      }
+    },
+    {
+      "question": "Who played the Tin Man in the 1939 film The Wizard of Oz?",
+      "answers": [
+        "Jack Haley",
+        "Ray Bolger",
+        "Bert Lahr",
+        "Frank Morgan"
+      ],
+      "correct": "Jack Haley",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Jack Haley was the Tin Man; Ray Bolger played the Scarecrow and Bert Lahr the Cowardly Lion.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1939_film)",
+        "title": "Wikipedia: The Wizard of Oz (1939 film)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Jack Haley as Hickory/ Tin Man'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Who composed the musical score for the 1939 film Gone with the Wind?",
+      "answers": [
+        "Max Steiner",
+        "Alfred Newman",
+        "Erich Wolfgang Korngold",
+        "Bernard Herrmann"
+      ],
+      "correct": "Max Steiner",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Max Steiner wrote the score, including the famous Tara's Theme.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gone_with_the_Wind_(film)",
+        "title": "Wikipedia: Gone with the Wind (film)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Max Steiner'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractors John Williams and Henry Mancini (decades later) -> Alfred Newman and Erich Wolfgang Korngold, composers of the same era"
+      }
+    },
+    {
+      "question": "What was the name of Roy Rogers' horse?",
+      "answers": [
+        "Trigger",
+        "Silver",
+        "Champion",
+        "Buttermilk"
+      ],
+      "correct": "Trigger",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Trigger was Roy Rogers' palomino horse.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Trigger_(horse)",
+        "title": "Wikipedia: Trigger (horse)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Roy Rogers and co-star'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped the Buttermilk line (not on the cited page); difficulty: hard -> medium, Trigger is very well known"
+      }
+    },
+    {
+      "question": "Who composed the waltz The Blue Danube?",
+      "answers": [
+        "Johann Strauss II",
+        "Franz Schubert",
+        "Johannes Brahms",
+        "Franz Liszt"
+      ],
+      "correct": "Johann Strauss II",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Johann Strauss II wrote The Blue Danube in 1866-67.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Blue_Danube",
+        "title": "Wikipedia: The Blue Danube",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '1866 waltz by Johann Strauss II'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped 'Waltz King' (not on the cited page); difficulty: hard -> medium, Nutcracker-level (medium in this pack)"
+      }
+    },
+    {
+      "question": "Which composer wrote the opera Carmen?",
+      "answers": [
+        "Georges Bizet",
+        "Giuseppe Verdi",
+        "Giacomo Puccini",
+        "Jules Massenet"
+      ],
+      "correct": "Georges Bizet",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "Bizet's Carmen opened in Paris in 1875.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Carmen",
+        "title": "Wikipedia: Carmen",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '1875 opera by Georges Bizet'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, a pub-quiz staple"
+      }
+    },
+    {
+      "question": "Who composed the piano piece Clair de lune?",
+      "answers": [
+        "Claude Debussy",
+        "Erik Satie",
+        "Frédéric Chopin",
+        "Maurice Ravel"
+      ],
+      "correct": "Claude Debussy",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Clair de lune is the third movement of Debussy's Suite bergamasque.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Suite_bergamasque",
+        "title": "Wikipedia: Suite bergamasque",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Piano composition by Claude Debussy'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which Motown group scored its first number-one hit with My Girl?",
+      "answers": [
+        "The Temptations",
+        "The Four Tops",
+        "The Miracles",
+        "The Supremes"
+      ],
+      "correct": "The Temptations",
+      "difficulty": "medium",
+      "category": "Music, TV & movies",
+      "explain": "My Girl, written by Smokey Robinson and Ronald White, reached number one in March 1965, the Temptations' first.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/My_Girl_(The_Temptations_song)",
+        "title": "Wikipedia: My Girl (The Temptations song)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Temptations' first US number-one single', 'Smokey Robinson'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractor The Drifters (not Motown) -> The Supremes; difficulty: hard -> medium"
+      }
+    },
+    {
+      "question": "What was Radar O'Reilly's favorite drink on TV?",
+      "answers": [
+        "Grape Nehi",
+        "Orange Crush",
+        "Dr Pepper",
+        "Root beer"
+      ],
+      "correct": "Grape Nehi",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Radar's favorite drink was Nehi grape soda.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Radar_O%27Reilly",
+        "title": "Wikipedia: Radar O'Reilly",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'favorite beverage is Nehi brand grape soda'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question no longer names M*A*S*H (gave away another item); brand-name distractors so the answer does not stand out"
+      }
+    },
+    {
+      "question": "On Bewitched, what was the name of Samantha's mother?",
+      "answers": [
+        "Endora",
+        "Esmeralda",
+        "Tabitha",
+        "Clara"
+      ],
+      "correct": "Endora",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Agnes Moorehead played Endora, Samantha's mother.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Endora_(Bewitched)",
+        "title": "Wikipedia: Endora (Bewitched)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'Endora ( Agnes Moorehead ) is Samantha's mother'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "On Get Smart, what was Maxwell Smart's agent number?",
+      "answers": [
+        "86",
+        "99",
+        "44",
+        "13"
+      ],
+      "correct": "86",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Maxwell Smart was Agent 86; his partner was Agent 99.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Get_Smart",
+        "title": "Wikipedia: Get Smart",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'also known as Agent 86', 'Agent 99'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "joke distractor 007 -> 44 (a real Get Smart agent)"
+      }
+    },
+    {
+      "question": "Who composed the famous theme music for the 1963 film The Pink Panther?",
+      "answers": [
+        "Henry Mancini",
+        "John Barry",
+        "Burt Bacharach",
+        "Elmer Bernstein"
+      ],
+      "correct": "Henry Mancini",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Henry Mancini wrote the Pink Panther theme in 1963.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Pink_Panther_Theme",
+        "title": "Wikipedia: The Pink Panther Theme",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: '1963 jazz piece by Henry Mancini', 'Composer Henry Mancini'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Who was the first host of The Tonight Show, when it began in 1954?",
+      "answers": [
+        "Steve Allen",
+        "Jack Paar",
+        "Johnny Carson",
+        "Ed Sullivan"
+      ],
+      "correct": "Steve Allen",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Steve Allen hosted The Tonight Show from 1954 to 1957.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Tonight_Show",
+        "title": "Wikipedia: The Tonight Show",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'hosted by seven comedians: Steve Allen (1954–1957)', 'Jack Paar (1957–1962)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain no longer names Paar and Carson (gave away a classics-pack question)"
+      }
+    },
+    {
+      "question": "Which jazz singer was nicknamed 'Lady Day'?",
+      "answers": [
+        "Billie Holiday",
+        "Ella Fitzgerald",
+        "Sarah Vaughan",
+        "Dinah Washington"
+      ],
+      "correct": "Billie Holiday",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Saxophonist Lester Young nicknamed Billie Holiday 'Lady Day'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Billie_Holiday",
+        "title": "Wikipedia: Billie Holiday",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'Young nicknamed her \"Lady Day\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which bandleader was known as the 'King of Swing'?",
+      "answers": [
+        "Benny Goodman",
+        "Glenn Miller",
+        "Duke Ellington",
+        "Count Basie"
+      ],
+      "correct": "Benny Goodman",
+      "difficulty": "hard",
+      "category": "Music, TV & movies",
+      "explain": "Clarinetist Benny Goodman led one of the most popular swing big bands and was called the King of Swing.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Benny_Goodman",
+        "title": "Wikipedia: Benny Goodman",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass (replacement round); the page text contains: 'jazz clarinetist and bandleader, known as the \"King of Swing\"'."
       },
       "ai_written": true,
       "checked": {

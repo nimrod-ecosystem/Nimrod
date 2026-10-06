@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Science and nature (AI-written, not yet reviewed)",
-  "description": "50 questions on science & nature, written by Claude, spread across every level the game understands: 7 very easy (filed as easy, marked in `note`), 9 easy, 24 medium, 10 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "65 questions on science & nature, written by Claude, spread across every level the game understands: 7 very easy (filed as easy, marked in `note`), 9 easy, 27 medium, 22 hard. A second writing pass on 2026-10-05 added 15 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 12 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -1179,6 +1179,361 @@
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05",
         "fixed": "difficulty: hard -> medium, Newton and the laws of motion is widely known"
+      }
+    },
+    {
+      "question": "Which element has the chemical symbol W?",
+      "answers": [
+        "Tungsten",
+        "Tin",
+        "Zinc",
+        "Vanadium"
+      ],
+      "correct": "Tungsten",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "W comes from wolfram, the element's other name.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tungsten",
+        "title": "Wikipedia: Tungsten",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Alternative name Wolfram'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "made-up distractor 'Wolfium' -> Vanadium"
+      }
+    },
+    {
+      "question": "Which mineral is the softest, at 1 on the Mohs hardness scale?",
+      "answers": [
+        "Talc",
+        "Gypsum",
+        "Calcite",
+        "Quartz"
+      ],
+      "correct": "Talc",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Talc is 1 on the Mohs scale; diamond is 10.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mohs_scale",
+        "title": "Wikipedia: Mohs scale",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '1 Talc'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is the SI unit of electric charge?",
+      "answers": [
+        "Coulomb",
+        "Volt",
+        "Ampere",
+        "Farad"
+      ],
+      "correct": "Coulomb",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Charge is measured in coulombs; the ampere measures current, the volt voltage and the farad capacitance.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Coulomb",
+        "title": "Wikipedia: Coulomb",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'SI derived unit of electric charge'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which physicist is famous for the uncertainty principle?",
+      "answers": [
+        "Werner Heisenberg",
+        "Niels Bohr",
+        "Max Planck",
+        "Erwin Schrödinger"
+      ],
+      "correct": "Werner Heisenberg",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "Heisenberg stated the uncertainty principle in 1927.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Uncertainty_principle",
+        "title": "Wikipedia: Uncertainty principle",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Uncertainty principle of Heisenberg, 1927'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, Heisenberg and the uncertainty principle are widely known"
+      }
+    },
+    {
+      "question": "Which chemist published the first widely recognised periodic table in 1869?",
+      "answers": [
+        "Dmitri Mendeleev",
+        "John Dalton",
+        "Antoine Lavoisier",
+        "Michael Faraday"
+      ],
+      "correct": "Dmitri Mendeleev",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Mendeleev arranged the elements by atomic weight and predicted elements not yet discovered, such as gallium, germanium and scandium.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dmitri_Mendeleev",
+        "title": "Wikipedia: Dmitri Mendeleev",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'On 6 March 1869, he made a formal presentation'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: 'weight' -> 'atomic weight'; 'left gaps' -> the predicted elements the page names"
+      }
+    },
+    {
+      "question": "What is it called when a solid turns straight into a gas without melting first?",
+      "answers": [
+        "Sublimation",
+        "Evaporation",
+        "Condensation",
+        "Deposition"
+      ],
+      "correct": "Sublimation",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Dry ice sublimes: it turns from solid carbon dioxide straight into gas.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sublimation_(phase_transition)",
+        "title": "Wikipedia: Sublimation (phase transition)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'sublimation of dry ice'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: 'sublimates' -> 'sublimes' (the preferred verb)"
+      }
+    },
+    {
+      "question": "Roughly how fast does sound travel through air at room temperature?",
+      "answers": [
+        "About 343 meters per second",
+        "About 120 meters per second",
+        "About 1,500 meters per second",
+        "About 900 meters per second"
+      ],
+      "correct": "About 343 meters per second",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Sound covers about 343 meters per second in air at 20 degrees C, roughly a kilometer every three seconds.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Speed_of_sound",
+        "title": "Wikipedia: Speed of sound",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'the speed of sound in air is about 343 m/s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractors no longer a x10 digit pattern that gave the answer away"
+      }
+    },
+    {
+      "question": "Which is the lightest metal, with the lowest density of any solid element?",
+      "answers": [
+        "Lithium",
+        "Aluminum",
+        "Magnesium",
+        "Sodium"
+      ],
+      "correct": "Lithium",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Lithium is the least dense metal; it is light enough to float on water and even on light oils.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lithium",
+        "title": "Wikipedia: Lithium",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'least dense metal', 'float on water'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which French scientist discovered radioactivity in 1896, while studying uranium salts?",
+      "answers": [
+        "Henri Becquerel",
+        "Pierre Curie",
+        "Louis Pasteur",
+        "Antoine Lavoisier"
+      ],
+      "correct": "Henri Becquerel",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Becquerel found that uranium salts fogged photographic plates; he shared the 1903 Nobel Prize with the Curies.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Henri_Becquerel",
+        "title": "Wikipedia: Henri Becquerel",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'shared the 1903 Nobel Prize in Physics with Marie and Pierre Curie for his discovery of radioactivity'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is the boundary between Earth's crust and the mantle beneath it called?",
+      "answers": [
+        "The Moho",
+        "The Ring of Fire",
+        "The asthenosphere",
+        "The Gutenberg discontinuity"
+      ],
+      "correct": "The Moho",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "The Mohorovičić discontinuity, or Moho, marks where the crust ends and the mantle begins.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mohorovi%C4%8Di%C4%87_discontinuity",
+        "title": "Wikipedia: Mohorovičić discontinuity",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Boundary between the Earth's crust and the mantle'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "invented distractor 'Gutenberg line' -> the real Gutenberg discontinuity (core-mantle boundary)"
+      }
+    },
+    {
+      "question": "Which is the most abundant element in Earth's crust, by weight?",
+      "answers": [
+        "Oxygen",
+        "Silicon",
+        "Iron",
+        "Aluminum"
+      ],
+      "correct": "Oxygen",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Oxygen makes up nearly half of the crust's weight, mostly locked into rocks; silicon comes second.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Abundance_of_elements_in_Earth%27s_crust",
+        "title": "Wikipedia: Abundance of elements in Earth's crust",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'oxygen O Lithophile 461,000 (46.1%)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "The Venus flytrap is native to only one small region of the world. Where?",
+      "answers": [
+        "The Carolinas, USA",
+        "The Amazon basin",
+        "Borneo",
+        "Madagascar"
+      ],
+      "correct": "The Carolinas, USA",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Venus flytraps are native only to the coastal bogs of North and South Carolina, near Wilmington.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Venus_flytrap",
+        "title": "Wikipedia: Venus flytrap",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'native only to the coastal bogs of North and South Carolina'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "question said 'grows wild in only one part', but the source notes naturalized populations elsewhere; now 'native to'"
+      }
+    },
+    {
+      "question": "What is a hollow rock lined inside with crystals called?",
+      "answers": [
+        "A geode",
+        "A fossil",
+        "A nodule",
+        "A stalactite"
+      ],
+      "correct": "A geode",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "A geode is a hollow, roughly round rock with crystals grown on the inside, often quartz.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Geode",
+        "title": "Wikipedia: Geode",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Geodes are hollow', 'crystals'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, most adults would pick geode"
+      }
+    },
+    {
+      "question": "What does DNA stand for?",
+      "answers": [
+        "Deoxyribonucleic acid",
+        "Diribonucleic acid",
+        "Deoxyribose nucleic amine",
+        "Dinucleotide acid"
+      ],
+      "correct": "Deoxyribonucleic acid",
+      "difficulty": "medium",
+      "category": "Science & nature",
+      "explain": "DNA is short for deoxyribonucleic acid.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/DNA",
+        "title": "Wikipedia: DNA",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'deoxyribonucleic acid'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, widely known; distractors changed to near-misses"
+      }
+    },
+    {
+      "question": "Which tree species holds the record as the tallest living trees?",
+      "answers": [
+        "Coast redwood",
+        "Giant sequoia",
+        "Douglas fir",
+        "Mountain ash"
+      ],
+      "correct": "Coast redwood",
+      "difficulty": "hard",
+      "category": "Science & nature",
+      "explain": "Coast redwoods are the tallest living trees, growing to more than 115 meters (about 380 feet).",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sequoia_sempervirens",
+        "title": "Wikipedia: Sequoia sempervirens",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'tallest living trees on Earth'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain: dropped the giant-sequoia claim the cited page does not make"
       }
     }
   ]

@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "General knowledge - hard (AI-written, not yet reviewed)",
-  "description": "16 questions on general knowledge (2 hard, 10 medium, 4 easy), written by Claude as an add-on to the easier 'General knowledge' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "38 questions on general knowledge (21 hard, 13 medium, 4 easy), written by Claude as an add-on to the easier 'General knowledge' review pack (which has almost no hard ones); written as hard questions, and the fact-check pass moved the ones most adults would know down a level. A second writing pass on 2026-10-05 added 22 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 19 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -394,6 +394,517 @@
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05",
         "fixed": "difficulty: hard -> easy, counting the zeros in 1,000,000 is basic"
+      }
+    },
+    {
+      "question": "What is the national animal of Scotland?",
+      "answers": [
+        "The unicorn",
+        "The red deer",
+        "The golden eagle",
+        "The Highland cow"
+      ],
+      "correct": "The unicorn",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Scotland's national animal is the unicorn, which appears on its royal coat of arms.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/National_symbols_of_Scotland",
+        "title": "Wikipedia: National symbols of Scotland",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'The unicorn is the national animal of Scotland'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "The Atomium, a giant model of an iron crystal built for the 1958 World's Fair, stands in which city?",
+      "answers": [
+        "Brussels",
+        "Amsterdam",
+        "Geneva",
+        "Vienna"
+      ],
+      "correct": "Brussels",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "The Atomium was built in Brussels for Expo 58 and is now one of the city's landmarks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atomium",
+        "title": "Wikipedia: Atomium",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Brussels', 'elementary iron crystal magnified 165 billion times'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "The zloty is the currency of which country?",
+      "answers": [
+        "Poland",
+        "Hungary",
+        "Czech Republic",
+        "Romania"
+      ],
+      "correct": "Poland",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "The zloty, whose name means 'golden', is Poland's currency.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Polish_z%C5%82oty",
+        "title": "Wikipedia: Polish złoty",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Currency of Poland', 'adjective 'golden''."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Counting its overseas territories, which country uses the most time zones?",
+      "answers": [
+        "France",
+        "Russia",
+        "United States",
+        "China"
+      ],
+      "correct": "France",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "With its overseas territories scattered around the globe, France spans 12 time zones, more than any other country.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Time_in_France",
+        "title": "Wikipedia: Time in France",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '12 different time zones', 'more than any other country'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which is the only country whose national flag is not a rectangle?",
+      "answers": [
+        "Nepal",
+        "Bhutan",
+        "Switzerland",
+        "Sri Lanka"
+      ],
+      "correct": "Nepal",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Nepal's flag is made of two stacked pennants; Switzerland's is square, which is still a rectangle.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flag_of_Nepal",
+        "title": "Wikipedia: Flag of Nepal",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'only non-rectangular national flag'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "The Hermitage, one of the world's largest art museums, is in which city?",
+      "answers": [
+        "Saint Petersburg",
+        "Moscow",
+        "Vienna",
+        "Prague"
+      ],
+      "correct": "Saint Petersburg",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "The State Hermitage Museum fills the Winter Palace and other buildings in Saint Petersburg.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hermitage_Museum",
+        "title": "Wikipedia: Hermitage Museum",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Museum in Saint Petersburg, Russia', 'Winter Palace'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "In Norse mythology, what is the name of Thor's hammer?",
+      "answers": [
+        "Mjölnir",
+        "Gungnir",
+        "Gram",
+        "Durendal"
+      ],
+      "correct": "Mjölnir",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Thor's hammer is Mjölnir; Gungnir is Odin's spear, Gram is the hero Sigurd's sword and Durendal is Roland's sword.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mj%C3%B6lnir",
+        "title": "Wikipedia: Mjölnir",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Hammer of the god Thor in Norse mythology'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "distractor Excalibur -> Gram (Excalibur was too easy to rule out); explain updated to match"
+      }
+    },
+    {
+      "question": "In Norse mythology, what is the name of the giant tree that links the nine worlds?",
+      "answers": [
+        "Yggdrasil",
+        "Valhalla",
+        "Bifrost",
+        "Asgard"
+      ],
+      "correct": "Yggdrasil",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Yggdrasil is the world tree; Bifrost is the rainbow bridge, Valhalla a hall and Asgard a realm.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yggdrasil",
+        "title": "Wikipedia: Yggdrasil",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'sacred tree in Norse cosmology', 'Nine Worlds'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "In which Shakespeare play is Prospero a magician living on a remote island with his daughter Miranda?",
+      "answers": [
+        "The Tempest",
+        "Othello",
+        "Measure for Measure",
+        "Twelfth Night"
+      ],
+      "correct": "The Tempest",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Prospero, the exiled Duke of Milan, conjures the storm that opens The Tempest.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Prospero",
+        "title": "Wikipedia: Prospero",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'The Tempest', 'Miranda', 'Duke of Milan'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which gemstone is traditionally linked with a 40th wedding anniversary?",
+      "answers": [
+        "Ruby",
+        "Emerald",
+        "Sapphire",
+        "Pearl"
+      ],
+      "correct": "Ruby",
+      "difficulty": "medium",
+      "category": "General knowledge",
+      "explain": "Traditionally pearl marks 30 years, ruby 40, sapphire 45 and emerald 55.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wedding_anniversary",
+        "title": "Wikipedia: Wedding anniversary",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '40th anniversary: ruby'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, 'ruby wedding' is an everyday phrase"
+      }
+    },
+    {
+      "question": "How many pieces (checkers) does each player have in a game of backgammon?",
+      "answers": [
+        "15",
+        "12",
+        "16",
+        "20"
+      ],
+      "correct": "15",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Each backgammon player has 15 pieces to move around the board and bear off.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Backgammon",
+        "title": "Wikipedia: Backgammon",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '15 pieces', 'fifteen pieces'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "In the standard English edition of Scrabble, how many points is the letter Q worth?",
+      "answers": [
+        "10",
+        "8",
+        "5",
+        "12"
+      ],
+      "correct": "10",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Q and Z are the highest-scoring tiles in English Scrabble, worth 10 points each.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Scrabble_letter_distributions",
+        "title": "Wikipedia: Scrabble letter distributions",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '10 points : Q ×1, Z ×1'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "In the NATO phonetic alphabet, which word stands for the letter Q?",
+      "answers": [
+        "Quebec",
+        "Queen",
+        "Quiet",
+        "Quintet"
+      ],
+      "correct": "Quebec",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Q is 'Quebec' in the NATO phonetic alphabet used by pilots, police and armies.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/NATO_phonetic_alphabet",
+        "title": "Wikipedia: NATO phonetic alphabet",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Papa , Quebec , Romeo'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "How many years does a sesquicentennial celebrate?",
+      "answers": [
+        "150",
+        "75",
+        "125",
+        "175"
+      ],
+      "correct": "150",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Sesqui- means one and a half, so a sesquicentennial is one and a half centuries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Anniversary",
+        "title": "Wikipedia: Anniversary",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: '150 years Sesquicentennial'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "In the word SCUBA, what does the S stand for?",
+      "answers": [
+        "Self-contained",
+        "Submarine",
+        "Surface",
+        "Safety"
+      ],
+      "correct": "Self-contained",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "SCUBA stands for self-contained underwater breathing apparatus.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Scuba_diving",
+        "title": "Wikipedia: Scuba diving",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'self-contained underwater breathing apparatus'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What is the Japanese art of flower arranging called?",
+      "answers": [
+        "Ikebana",
+        "Bonsai",
+        "Origami",
+        "Kintsugi"
+      ],
+      "correct": "Ikebana",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Ikebana is flower arranging; bonsai is growing miniature trees, origami is paper folding and kintsugi is mending pottery with gold.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ikebana",
+        "title": "Wikipedia: Ikebana",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Japanese art of flower arrangement'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Which Greek philosopher was a tutor to the young Alexander the Great?",
+      "answers": [
+        "Aristotle",
+        "Plato",
+        "Socrates",
+        "Pythagoras"
+      ],
+      "correct": "Aristotle",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Philip II of Macedon hired Aristotle to teach his son Alexander.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Aristotle",
+        "title": "Wikipedia: Aristotle",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'tutor to his thirteen-year-old son Alexander'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "Whose portrait appears on the US fifty-dollar bill?",
+      "answers": [
+        "Ulysses S. Grant",
+        "Andrew Jackson",
+        "Alexander Hamilton",
+        "Benjamin Franklin"
+      ],
+      "correct": "Ulysses S. Grant",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Ulysses S. Grant has been on the $50 since the 1910s; the reverse shows the US Capitol.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_fifty-dollar_bill",
+        "title": "Wikipedia: United States fifty-dollar bill",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'obverse features American Civil War general and 18th U.S. president', 'U.S. Capitol is featured on the reverse'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "explain no longer names the other bills' portraits, which could change (time-sensitive)"
+      }
+    },
+    {
+      "question": "Who wrote the 16th-century book on power and politics called The Prince?",
+      "answers": [
+        "Niccolò Machiavelli",
+        "Thomas More",
+        "Dante Alighieri",
+        "Erasmus"
+      ],
+      "correct": "Niccolò Machiavelli",
+      "difficulty": "medium",
+      "category": "General knowledge",
+      "explain": "Niccolò Machiavelli's The Prince was published in 1532.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Prince",
+        "title": "Wikipedia: The Prince",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Machiavelli', '1532'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, most adults know Machiavelli wrote The Prince"
+      }
+    },
+    {
+      "question": "The mischievous sprite Puck appears in which Shakespeare play?",
+      "answers": [
+        "A Midsummer Night's Dream",
+        "The Winter's Tale",
+        "As You Like It",
+        "Much Ado About Nothing"
+      ],
+      "correct": "A Midsummer Night's Dream",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "Puck, also called Robin Goodfellow, serves the fairy king Oberon in A Midsummer Night's Dream.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Puck_(A_Midsummer_Night%27s_Dream)",
+        "title": "Wikipedia: Puck (A Midsummer Night's Dream)",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'Puck , or Robin Goodfellow'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
+      }
+    },
+    {
+      "question": "What does the Latin phrase 'carpe diem' mean?",
+      "answers": [
+        "Seize the day",
+        "Remember the past",
+        "Love conquers all",
+        "Time flies"
+      ],
+      "correct": "Seize the day",
+      "difficulty": "medium",
+      "category": "General knowledge",
+      "explain": "Carpe diem, from the poet Horace, means 'seize the day'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Carpe_diem",
+        "title": "Wikipedia: Carpe diem",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'seize the day', 'Horace'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05",
+        "fixed": "difficulty: hard -> medium, carpe diem is one of the best-known Latin phrases"
+      }
+    },
+    {
+      "question": "How many dominoes are in a standard double-six set?",
+      "answers": [
+        "28",
+        "24",
+        "32",
+        "36"
+      ],
+      "correct": "28",
+      "difficulty": "hard",
+      "category": "General knowledge",
+      "explain": "A double-six set has one tile for every pair of numbers from blank to six: 28 tiles.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dominoes",
+        "title": "Wikipedia: Dominoes",
+        "note": "Fetched 2026-10-05 by the hard-questions writing pass; the page text contains: 'consists of 28 tiles'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-05"
       }
     }
   ]
