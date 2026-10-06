@@ -20,6 +20,18 @@
 # keyboard triggers by accident (see the labwc keybind this installer adds).
 set -euo pipefail
 
+# *** NOT WHILE THE SCREEN IS LOCKED (2026-10-05; "Lock this screen", nimrod-lock-helper.py). *** A lock that this
+# chord walked straight through would be no lock. Unlock on the dashboard first (Ctrl+Shift+L), then press it.
+# Refused only while the page has said "locked" in the last few minutes (`--check locked` reads freshness): a page
+# that has gone silent (a blank or broken kiosk) cannot be unlocked from the page, so then the chord works as it
+# always did - this is the maintenance way out, and it must not become a way to be stranded.
+HELPER="${NIMROD_LOCK_HELPER:-$HOME/.local/bin/nimrod-lock-helper.py}"
+if [ -f "$HELPER" ] && python3 "$HELPER" --check locked; then
+  echo "nimrod-kiosk-pause: this screen is locked; unlock it on the dashboard first." >&2
+  command -v notify-send >/dev/null 2>&1 && notify-send "This screen is locked" "Unlock it on the dashboard first." || true
+  exit 1
+fi
+
 systemctl --user stop nimrod-kiosk.service || true
 
 # A bare desktop with nothing on it answers "did this work" but not "now what" — try to put a

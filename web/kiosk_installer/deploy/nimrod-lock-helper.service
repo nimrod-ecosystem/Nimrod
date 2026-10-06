@@ -1,0 +1,19 @@
+[Unit]
+Description=Nimrod lock helper — hears "Lock this screen" from the kiosk page (127.0.0.1 only)
+# A REFERENCE COPY: install-linux.sh writes the real one into ~/.config/systemd/user/ with the paths and the site's
+# address filled in. Started with the user's session (lingering is on for the kiosk user), before or beside the
+# kiosk: the page simply finds nobody listening until it is up, which is not an error.
+
+[Service]
+Type=simple
+Environment=NIMROD_KIOSK_URL=CHANGE_ME_TO_YOUR_DASHBOARD_URL
+# The site(s) allowed to report, comma-separated. Empty: the origin of NIMROD_KIOSK_URL.
+Environment=NIMROD_LOCK_ORIGINS=
+# 1 = while locked, swap labwc's keys for a copy with no way out (rc.open.xml / rc.locked.xml beside rc.xml).
+Environment=NIMROD_LOCK_RC_SWAP=1
+ExecStart=/usr/bin/python3 CHANGE_ME_TO_LOCK_HELPER_PATH
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

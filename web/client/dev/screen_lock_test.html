@@ -18,7 +18,9 @@
 but cannot get back out to the computer; when he unlocks it, the site stays out of the way (no new-version reload,
 no recovery reload or reboot) until it is locked again. First <code>screen_lock.js</code> on its own (the record,
 the PIN, "lock again by itself", which menu rows stay, the guards, the PIN strip, the Pi helper's report), then a
-real kiosk: the chord, the locked menu, the tray with no way out, edit and switch refused, the chip, the version
+real kiosk: the chord, the locked menu, the tray with no way out, edit, the map and switch still working (narrowed the
+same day: <em>"Do anything you could normally do in a dashboard. I just don't want people foraging around the computer
+for logins"</em>), the keys pages and password boxes refused, the chip, the version
 watch and the recovery ladder standing down while unlocked, and the lock surviving a reload. Needs the server
 (<code>SUITE_BASE</code>).</p>
 <div id="results"></div>
@@ -28,10 +30,13 @@ watch and the recovery ladder standing down while unlocked, and the lock survivi
 <script type="module">
 import {
   createScreenLock, normalizeLockRecord, missingLockBindings, chordWords, lockControlOf, lockedLine, LOCK_KEY_BINDINGS,
-  LOCK_CONTROL, SCREEN_LOCK_ACTION, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC, LOCK_STORE_KEY, keepWhileLocked, panelSubjectsOnly,
+  LOCK_CONTROL, SCREEN_LOCK_ACTION, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC, LOCK_STORE_KEY, keepWhileLocked, isAccountRow,
   isLeaveKey, isLeavingLink, attachLockGuards, mountPinStrip, mountLockChip, isLoopbackUrl, lockHelperFrom,
   createLockReporter, LOCK_HELPER_KEY, PIN_TRIES, PIN_WAIT_MS, isPinShape, RELOCK_CHOICES, LOCK_MENU_DROPS,
+  LOCK_PAGE_DROPS, LOCK_SECRET_KEYS, screenLockedHere,
 } from '../screen_lock.js';
+import { createSpotify } from '../music_spotify.js';
+import { SPEECH_PASS_FIELDS } from '../speech_engines.js';
 import { SYSTEM_ACTIONS, SYSTEM_TOPICS } from '../actions.js';
 import { DEFAULT_BINDINGS } from '../input_keyboard.js';
 import { REVIEW_KEY_BINDINGS } from '../pack_reviews.js';
@@ -175,7 +180,7 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
     }
 
     // =====================================================================================================
-    section('*** the ⚙ menu while locked: which rows stay ***');
+    section('*** the ⚙ menu while locked: every tab stays; only the ways to the computer and the account go (narrowed 2026-10-05) ***');
     {
       const rows = [
         { kind: 'item', id: 'set:intervalMs', tab: 'module' }, { kind: 'item', id: 'play-pause', tab: 'module' },
@@ -183,20 +188,54 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
         { kind: 'item', id: 'edit-panel', tab: 'module' }, { kind: 'item', id: 'load-pack', tab: 'module' },
         { kind: 'item', id: 'set:masterVolume', tab: 'audio' }, { kind: 'item', id: 'set:theme', tab: 'display' },
         { kind: 'item', id: 'set:panelGap', tab: 'display' }, { kind: 'item', id: 'room-reactions', tab: 'display' },
-        { kind: 'item', id: 'controls', tab: 'devices' }, { kind: 'item', id: 'who-pick', tab: 'people' },
+        { kind: 'item', id: 'controls', tab: 'devices' }, { kind: 'item', id: 'connections', tab: 'devices' },
         { kind: 'item', id: 'set:pickUpVersions', tab: 'screen' }, { kind: 'item', id: 'layout:three', tab: 'module' },
         { kind: 'item', id: 'level:screen:theme', tab: 'module' }, { kind: 'item', id: 'call-ctl:mic', tab: 'module' },
+        { kind: 'item', id: 'edit-view', tab: 'screen' }, { kind: 'item', id: 'dashboard-map', tab: 'screen' },
+        { kind: 'item', id: 'restart-screen', tab: 'screen' }, { kind: 'item', id: 'reviews-page', tab: 'screen' },
+        { kind: 'item', id: 'set:speechOn', key: 'speechOn', tab: 'devices' },
+        // ...and the ways to the account:
+        { kind: 'item', id: 'who-pick', tab: 'people' }, { kind: 'item', id: 'claude-page', tab: 'devices' },
+        { kind: 'item', id: 'search-page', tab: 'devices' }, { kind: 'item', id: 'user-folders', tab: 'screen' },
+        { kind: 'item', id: 'set:speechRemote1Key', key: 'speechRemote1Key', tab: 'devices' },
+        { kind: 'item', id: 'set:speechRemote1Url', key: 'speechRemote1Url', tab: 'devices' },
+        { kind: 'item', id: 'set:speechLocalUrl', tab: 'devices' },
+        { kind: 'item', id: 'set:apiKey', key: 'apiKey', field: { key: 'apiKey', secret: true }, tab: 'module' },
       ];
-      const kept = keepWhileLocked(rows, { drop: ['set:panelGap'] }).map((r) => r.id);
-      check('*** kept: the panel\'s own rows, Pause / Play, Bigger, a call\'s controls, Volume, Colours ***',
-        ['set:intervalMs', 'play-pause', 'promote', 'call-ctl:mic', 'set:masterVolume', 'set:theme'].every((id) => kept.includes(id)), kept.join());
-      check('*** gone: Switch, Edit, a pack file, rearranging, the room editor, Devices, People, This screen, levels ***',
-        ['switch-module', 'edit-panel', 'load-pack', 'set:panelGap', 'room-reactions', 'controls', 'who-pick', 'set:pickUpVersions',
-          'layout:three', 'level:screen:theme'].every((id) => !kept.includes(id)), kept.join());
-      check('the shipped drop list names the edit and leave rows', ['switch-module', 'edit-panel', 'edit-view', 'dashboard-map'].every((id) => LOCK_MENU_DROPS.includes(id)));
-      const subs = panelSubjectsOnly([{ id: 'p1' }, { id: 'level:module' }, { id: 'level:screen' }, { id: 'piece:door' }, { id: 'p2' }],
-        { levelPrefix: 'level:', piecePrefix: 'piece:' }).map((s) => s.id);
-      check('"Settings for" while locked: the panels only', subs.join() === 'p1,p2', subs.join());
+      const kept = keepWhileLocked(rows).map((r) => r.id);
+      const STAY = ['set:intervalMs', 'play-pause', 'promote', 'switch-module', 'edit-panel', 'load-pack', 'set:masterVolume',
+        'set:theme', 'set:panelGap', 'room-reactions', 'controls', 'connections', 'set:pickUpVersions', 'layout:three',
+        'level:screen:theme', 'call-ctl:mic', 'edit-view', 'dashboard-map', 'restart-screen', 'reviews-page', 'set:speechOn'];
+      check('*** kept: everything a person does in a dashboard - Switch, Edit, the map, Layout, levels, the room, Devices, recovery ***',
+        STAY.every((id) => kept.includes(id)), STAY.filter((id) => !kept.includes(id)).join());
+      const GONE = ['who-pick', 'claude-page', 'search-page', 'user-folders', 'set:speechRemote1Key', 'set:speechRemote1Url',
+        'set:speechLocalUrl', 'set:apiKey'];
+      check('*** gone: the keys pages, Your own folders, Who this screen is for, a key, a pass phrase, an address the sound goes to ***',
+        GONE.every((id) => !kept.includes(id)), GONE.filter((id) => kept.includes(id)).join());
+      check('a field marked secret goes wherever it is (a module\'s own key)', isAccountRow({ id: 'set:anything', field: { secret: true } })
+        && !isAccountRow({ id: 'set:anything', field: { secret: false } }));
+      const ADDR = SPEECH_PASS_FIELDS.filter((f) => /(Url|Key)$/.test(f.key)).map((f) => f.key);
+      check('every speech address and pass phrase in speech_engines.js is on the list (a new one must be added)',
+        ADDR.length >= 5 && ADDR.every((k) => LOCK_SECRET_KEYS.includes(k)), ADDR.filter((k) => !LOCK_SECRET_KEYS.includes(k)).join());
+      check('the pages behind the dropped rows are listed too', ['who', 'user-folders', 'elsewhere:claude', 'elsewhere:search'].every((p) => LOCK_PAGE_DROPS.includes(p)));
+      check('no edit or setup row is on the drop list any more', !['switch-module', 'edit-panel', 'edit-view', 'dashboard-map', 'room-reactions', 'load-pack']
+        .some((id) => LOCK_MENU_DROPS.includes(id)), LOCK_MENU_DROPS.join());
+    }
+
+    // =====================================================================================================
+    section('*** starting a sign-in elsewhere (Spotify) is refused while locked ***');
+    {
+      const navs = [];
+      let locked = true;
+      const sp = createSpotify({ clientId: 'abc', storage: memStore(), navigate: (u) => navs.push(u), isLocked: () => locked });
+      const r = await sp.beginLogin({ returnTo: '/kiosk.html' });
+      check('*** locked: Connect Spotify does not leave the page ***', r.ok === false && r.reason === 'locked' && navs.length === 0, J(r));
+      locked = false;
+      const r2 = await sp.beginLogin({ returnTo: '/kiosk.html' });
+      check('unlocked: it goes to Spotify\'s sign-in as before', (r2.ok === true && navs.length === 1) || r2.reason === 'not-secure', J(r2));
+      const st = memStore();
+      check('screenLockedHere reads this device\'s record', screenLockedHere(st) === false
+        && (st.setItem(LOCK_STORE_KEY, J({ locked: true })), screenLockedHere(st) === true));
     }
 
     // =====================================================================================================
@@ -264,6 +303,31 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       const outside = a({ href: '/elsewhere.html' }); document.body.append(outside);
       check('a link OUTSIDE the screen (the page\'s own, e.g. a demo\'s way out) is the page\'s, not refused', fire(outside, 'click') === false);
       outside.remove();
+      // (Narrowed 2026-10-05) the computer's files and the account's keys, anywhere on the page.
+      const fileOut = document.createElement('input'); fileOut.type = 'file'; document.body.append(fileOut);
+      check('*** a file dialog OUTSIDE the screen\'s root (a picture picker drawn on the body) is refused too ***', fire(fileOut, 'click') === true);
+      fileOut.remove();
+      const pw = document.createElement('input'); pw.type = 'password'; document.body.append(pw);
+      const before = blocked.filter((w) => w === 'secret').length;
+      pw.focus();
+      // (A suite's window may not have the system's focus, and then the browser moves focus without a focusin; say it.)
+      if (blocked.filter((w) => w === 'secret').length === before) pw.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      check('*** a password box (a module\'s own AI key) is put down the moment it is reached ***', document.activeElement !== pw
+        && blocked.filter((w) => w === 'secret').length === before + 1, String(document.activeElement?.tagName));
+      const bi = new InputEvent('beforeinput', { bubbles: true, cancelable: true, inputType: 'insertText', data: 'x' });
+      pw.dispatchEvent(bi);
+      check('...and nothing typed lands in it', bi.defaultPrevented);
+      pw.remove();
+      const strip = document.createElement('div'); strip.dataset.pinStrip = '';
+      const pin = document.createElement('input'); pin.type = 'password'; strip.append(pin); scope.append(strip);
+      const before2 = blocked.filter((w) => w === 'secret').length;
+      pin.focus(); pin.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+      check('*** the lock\'s own PIN strip is the one password box that stays ***', document.activeElement === pin
+        && blocked.filter((w) => w === 'secret').length === before2);
+      pin.blur(); strip.remove();
+      const txt = document.createElement('input'); txt.type = 'text'; scope.append(txt); txt.focus();
+      check('an ordinary text box is not touched (a caption, a name, a question)', document.activeElement === txt);
+      txt.blur(); txt.remove();
       locked = false; g.sync();
       check('*** unlocked again: window.open is exactly the browser\'s own again ***', window.open === origOpen && !g.wrapped());
       check('...and the link opens', fire(link, 'click') === false);
@@ -400,7 +464,15 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       check('unlocked, the menu is the whole menu (Devices, People, This screen tabs)', ['devices', 'people', 'screen'].every((t) => s.k.menu.tabs().some((x) => x.id === t)),
         J(s.k.menu.tabs()));
       check('no "Locked" row while unlocked', !ids(s.k).includes('screen-lock-state'));
+      const tabsOpen = s.k.menu.tabs().map((t) => t.id).sort().join();
       s.k.menu.close();
+      // The tray, unlocked, for comparing with the locked one below.
+      s.bus.publish(SYSTEM_TOPICS.dashboards, {});
+      await until(() => s.k.trayOpen() && s.k.picker().items().length > 1, 4000);
+      const trayOpenKinds = s.k.picker().items().map((i) => i.kind).filter((k) => k !== 'leave');
+      check('(unlocked tray: the way out is there)', s.k.picker().items().some((i) => i.kind === 'leave'));
+      s.k.picker().reset(); s.k.picker().select();
+      await until(() => !s.k.trayOpen(), 2000);
 
       // ---- THE CHORD ----
       pressChord();
@@ -408,49 +480,67 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       check('the bus heard it, by the chord', await until(() => s.heard.some((h) => h.locked && h.by === 'chord'), 2000), J(s.heard));
       check('the screen carries data-screen-locked', s.kiosk.hasAttribute('data-screen-locked'));
       const sw = s.kiosk.querySelector('.k-controls [data-act="switch"]');
-      check('*** the bar\'s "Switch module" is gone while locked ***', sw && getComputedStyle(sw).display === 'none');
+      check('*** the bar\'s "Switch module" STAYS while locked (narrowed 2026-10-05) ***', sw && getComputedStyle(sw).display !== 'none');
       check('...and every other button of the bar is still there (Home, Pause, Next, Hush, ⚙, ⛶)',
         ['home', 'playpause', 'next', 'hush', 'settings', 'fs'].every((a) => getComputedStyle(s.kiosk.querySelector(`.k-controls [data-act="${a}"]`)).display !== 'none'));
 
       // ---- THE LOCKED MENU ----
       s.k.menu.open();
       await sleep(50);
-      const tabs = s.k.menu.tabs().map((t) => t.id);
-      check('*** locked menu: only the panel, Sound and Display tabs ***', tabs.every((t) => ['module', 'audio', 'display'].includes(t)) && tabs.includes('module')
-        && tabs.includes('audio'), tabs.join());
+      const tabs = s.k.menu.tabs().map((t) => t.id).sort().join();
+      check('*** locked menu: the same tabs as unlocked (Devices, People, This screen included) ***', tabs === tabsOpen, `${tabs} vs ${tabsOpen}`);
       const got = ids(s.k);
       const state = s.k.menu.items().find((i) => i.id === 'screen-lock-state');
       check('*** above the tabs: "Locked: Ctrl+Shift+L unlocks it" (not a stop: no PIN) ***', state && state.tab === '*top' && state.disabled
         && /Ctrl\+Shift\+L unlocks it/.test(state.label), J(state));
       check('kept: Volume, Colours, the panel\'s own rows', got.includes('set:masterVolume') && got.includes('set:theme') && got.some((id) => /^set:/.test(id) && !['set:masterVolume', 'set:theme', 'set:complexity'].includes(id)),
         got.join());
-      check('*** gone: Switch, Edit this panel, Edit this dashboard, who this screen is for, recovery, bindings, version pick-up ***',
-        ['switch-module', 'edit-panel', 'edit-view', 'who-pick', 'controls', 'set:pickUpVersions', 'restart-screen', 'screen-lock', 'screen-lock-pin'].every((id) => !got.includes(id)),
-        got.filter((id) => ['switch-module', 'edit-panel', 'edit-view', 'who-pick', 'controls', 'set:pickUpVersions', 'restart-screen'].includes(id)).join());
+      check('*** kept: Switch, Edit this panel, Edit this dashboard, recovery, What can I press, where the power lands ***',
+        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-screen'].every((id) => got.includes(id)),
+        ['switch-module', 'edit-panel', 'edit-view', 'controls', 'restart-screen'].filter((id) => !got.includes(id)).join());
+      check('*** gone: the keys pages, Your own folders, who this screen is for, and the lock\'s own setup rows ***',
+        ['claude-page', 'search-page', 'user-folders', 'who-pick', 'screen-lock', 'screen-lock-pin'].every((id) => !got.includes(id)),
+        got.filter((id) => ['claude-page', 'search-page', 'user-folders', 'who-pick', 'screen-lock', 'screen-lock-pin'].includes(id)).join());
       const subjects = s.k.menu.items().find((i) => i.id === 'subject-pick');
-      check('"Settings for" holds no levels while locked', !s.k.menu.items().some((i) => /^level:/.test(String(i.id))) && (!subjects || !/This screen|This device/.test(subjects.label)),
-        J(subjects));
+      check('"Settings for" still steps the levels while locked', !!subjects, J(subjects));
       check('the ways out of the MENU stay (Home is the tray; Close)', got.includes('home') && got.includes('close'));
       s.k.menu.close();
 
-      // ---- THE TRAY: dashboards swap, no way out, nothing made ----
+      // ---- THE TRAY: dashboards swap and are made, no way out ----
       s.bus.publish(SYSTEM_TOPICS.dashboards, {});
       check('the tray opens while locked', await until(() => s.k.trayOpen() && s.k.picker().items().length > 1, 4000));
+      // (The tray draws again once the list is fetched; until then it shows its last drawing - whose way out is
+      // refused anyway while locked, `goHome`. Wait for the fresh one.)
+      await until(() => !s.k.picker().items().some((i) => i.kind === 'leave'), 4000);
       const tray = s.k.picker().items();
       check('*** locked tray: the other dashboard is there to swap to ***', tray.some((i) => i.kind === 'dashboard' && i.id === P2.id), J(tray));
-      check('*** ...and no "Set up dashboards" way out, and no "+ Room" to make ***', !tray.some((i) => i.kind === 'leave' || i.kind === 'prebuilt'), J(tray.map((i) => i.kind)));
+      check('*** ...and no "Set up dashboards" way out to the website\'s pages ***', !tray.some((i) => i.kind === 'leave'), J(tray.map((i) => i.kind)));
+      check('*** ...and everything else the tray had unlocked (a ready-made dashboard to make included) ***',
+        tray.map((i) => i.kind).join() === trayOpenKinds.join(), `${tray.map((i) => i.kind).join()} vs ${trayOpenKinds.join()}`);
       s.k.picker().reset(); s.k.picker().select();          // the tray's own ✕ Close, first
       check('the tray closes with its own Close', await until(() => !s.k.trayOpen(), 2000));
 
-      // ---- EDIT / MAP / SWITCH REFUSED ----
-      check('*** the edit view is refused while locked ***', s.k.openEditView() === null && !s.k.editView());
-      check('the map is refused', s.k.openMap() === null);
-      const note = () => s.kiosk.querySelector('[data-lock-note]')?.textContent || '';
-      check('...and it says so, plainly, with the chord', /This screen is locked, so .* waits until it is unlocked \(Ctrl\+Shift\+L\)/.test(note()), note());
+      // ---- EDIT / MAP / SWITCH: ALL STAY (narrowed 2026-10-05) ----
+      check('*** the edit view opens while locked ***', s.k.openEditView() !== null && !!s.k.editView());
+      s.k.closeEditView();
+      await sleep(40);
+      check('the map opens while locked', s.k.openMap() !== null);
+      s.k.closeMap();
+      await sleep(40);
       s.bus.publish('shell/switch-module', {});
-      await sleep(80);
-      check('*** Switch module is refused (no library in a panel\'s place) ***', !s.kiosk.querySelector('.k-libslot'));
+      check('*** Switch module opens the library in a panel\'s place while locked ***', await until(() => !!s.kiosk.querySelector('.k-libslot'), 2000));
+      s.k.closeLibrary();
+      await until(() => !s.kiosk.querySelector('.k-libslot'), 2000);
       check('window.open opens nothing while locked', window.open('https://elsewhere.example/') === null);
+      const note = () => s.kiosk.querySelector('[data-lock-note]')?.textContent || '';
+      check('...and it says so, plainly, with the chord', await until(() => /This screen is locked, so .* waits until it is unlocked \(Ctrl\+Shift\+L\)/.test(note()), 1000), note());
+      s.k.menu.open(); await sleep(30);
+      const opened = s.k.menu.openPage('who');
+      await sleep(30);
+      const pageText = s.k.menu.page() === 'who' ? (document.querySelector('[data-page-body]')?.textContent || '') : '';
+      check('*** a dropped page asked for anyway (the who page) says it is locked, and lists nobody ***',
+        opened === 'who' && /This screen is locked/.test(pageText) && !/Loading/.test(pageText), `${opened} ${pageText}`);
+      s.k.menu.close();
 
       // ---- VERSION WATCH WHILE LOCKED: a locked screen still follows deploys if it chose to ----
       await until(() => s.k.versionWatch.state().known === 'lock0001', 3000);

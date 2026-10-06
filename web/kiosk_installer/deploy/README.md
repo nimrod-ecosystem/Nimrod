@@ -55,6 +55,28 @@ If `~/.config/labwc/rc.xml` already exists, this installer adds the keybind into
 first, same timestamped-backup discipline as `autostart` below) rather than overwriting whatever
 customization was already there.
 
+**Lock this screen, the computer's half (2026-10-05).** The site's Ctrl+Shift+L lock (`web/client/screen_lock.js`)
+keeps everything inside the dashboards working and refuses the ways out to the computer and the account. The
+installer adds the computer's half (on by default; `NIMROD_LOCK=0` installs exactly what it did before):
+
+- `nimrod-lock-helper.py` (its own user unit, `nimrod-lock-helper.service`): listens on 127.0.0.1:8765 only, accepts
+  a report only from the kiosk site's origin, and keeps it in `$XDG_RUNTIME_DIR/nimrod/lock.json` (gone at every
+  boot, so a reboot is always the screen as before) plus a copy in `~/.local/state/nimrod/`. `--state` shows it.
+- `kiosk-launch.sh` now runs Chromium as a child: closed while **unlocked by a person** (reported in the last
+  5 minutes), it exits 75 and the unit (`RestartPreventExitStatus=75`) leaves it closed. Any other exit is
+  relaunched as before.
+- **Ctrl+Alt+Shift+Return** brings the dashboard back (`nimrod-kiosk-back.sh`) and stays usable while locked.
+- **Ctrl+Alt+Shift+T** opens an ordinary browser window with its own profile at `NIMROD_TV_URL` (default Netflix,
+  `nimrod-tv.sh`). It is refused while locked, and so is the Ctrl+Alt+Shift+Esc pause.
+- While locked, the helper swaps `rc.xml` for a copy with no way out (`rc.locked.xml`: no labwc defaults such as
+  Alt+F4, no pause, no TV key) and back to `rc.open.xml` on unlock. It never overwrites an `rc.xml` somebody edited
+  by hand. `NIMROD_LOCK_RC_SWAP=0` in the helper unit turns this off.
+- **It needs one Chromium policy before the page will report**: `NIMROD_LOCK_POLICY=1 bash install-linux.sh <url>`
+  writes `/etc/chromium/policies/managed/nimrod-lock-helper.json`, allowing only the kiosk's site to reach this
+  computer. Without it, Chromium shows a "wants to access other apps and services on this device" box that
+  stays until somebody answers it, so the launcher passes the page `lockHelper=off` and nothing above ever
+  triggers. Tested by `test_lock_helper.py` (`python3 -m unittest test_lock_helper.py`).
+
 **What this does NOT do:** get the Pi to a logged-in graphical session at boot in the first
 place. Console autologin + labwc launching already works on the machines this has been tested
 on; this installer only takes over from the moment `autostart` runs. If a fresh Pi doesn't

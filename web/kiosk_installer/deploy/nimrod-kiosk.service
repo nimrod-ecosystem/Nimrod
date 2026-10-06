@@ -13,9 +13,16 @@ Type=simple
 # session the media agent's system-wide service never does. Only edit this one if you are
 # installing by hand, and if you are, CHANGE_ME below is the one value you must set.
 Environment=NIMROD_KIOSK_URL=CHANGE_ME_TO_YOUR_DASHBOARD_URL
+# LOCK THIS SCREEN (2026-10-05): where the page reports its lock (nimrod-lock-helper.py). Empty: no report, and the
+# kiosk behaves exactly as before.
+Environment=NIMROD_LOCK_HELPER_URL=http://127.0.0.1:8765/screen-lock
 ExecStart=/usr/bin/env CHANGE_ME_TO_KIOSK_LAUNCH_SH_PATH
 Restart=always
 RestartSec=3
+# 75 = "closed on purpose by somebody who unlocked the screen" (kiosk-launch.sh): not relaunched, and not a failure.
+# Every other exit, a clean close included, is relaunched as always.
+RestartPreventExitStatus=75
+SuccessExitStatus=75
 
 [Install]
 WantedBy=graphical-session.target

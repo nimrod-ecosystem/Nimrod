@@ -240,7 +240,12 @@ function offerCat(kiosk) {
     boot.remove();
     mountScreenPairing(root, {
       label: 'This screen',
-      onPaired: () => { location.href = location.pathname; },
+      // (2026-10-05, screen_lock.js: the Pi launcher's `?lockHelper=` is kept through the reload, so a screen
+      // paired for the first time still reports its lock to the helper on that computer.)
+      onPaired: () => {
+        const lh = params.get('lockHelper');
+        location.href = location.pathname + (lh ? `?lockHelper=${encodeURIComponent(lh)}` : '');
+      },
     });
     return;
   }

@@ -1,5 +1,9 @@
-# Shell scripts run on Linux (Pi kiosk/media-agent installers). CRLF breaks the shebang line
-# there — CLAUDE.md's own standing rule. Without this, core.autocrlf=true on a Windows checkout
-# (the desktop this project is normally worked from) would silently convert them to CRLF on
-# checkout, with nothing here catching it before it reaches a Pi.
+* text=auto
+
+# Anything destined for a Linux box keeps LF, whatever the host does.
 *.sh text eol=lf
+*.py text eol=lf
+*.service text eol=lf
+
+# Markdown is documents, not scripts - let the platform decide locally.
+*.md text
