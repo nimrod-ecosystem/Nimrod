@@ -595,6 +595,7 @@ class _Store:
                 return "kept"
             cur.execute(self._q("DELETE FROM link_permissions WHERE person_id=?"), (r["id"],))
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (r["account_id"], person_scope(r["id"])))
+            self._drop_person_labels(cur, r["id"])
             cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (r["id"], r["account_id"]))
             return "removed"
 
@@ -613,6 +614,41 @@ class _Store:
             cur.execute(self._q("UPDATE people SET call_name=? WHERE id=? AND account_id=?"),
                         (name or None, person_id, account_id))
             return bool(cur.rowcount and cur.rowcount > 0)
+
+    # "I CALL THEM", PER PERSON (Mike, 2026-10-05; claims.seen_name has the rules). `person_labels`: one row per
+    # (the person looking, the card), on the login that holds both. A TABLE, not a key in the looking person's own
+    # state - argued: FOR state, it is no new table, it goes wherever that person's settings go, and deleting the
+    # person deletes it. AGAINST, and it decides it: (1) the name every list shows is resolved here, in one query,
+    # instead of opening a settings blob per read; (2) a write is checked by the server, field by field (the name's
+    # rules, both people on this login, not your own card) - a state key is written whole by the client through the
+    # general state route, which would have to be fenced off for this one key; (3) two labels saved at once from two
+    # tabs are two rows, not one blob's version conflict; (4) the privacy page lists it by name. The cost is cleanup,
+    # paid in the three places a person row is deleted (_drop_person_labels).
+    def person_labels(self, account_id: str, viewer_id: str) -> dict[str, str]:
+        """The labels `viewer_id` has set, card id -> name, on this login only."""
+        if not viewer_id:
+            return {}
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT person_id, name FROM person_labels WHERE account_id=? AND viewer_id=?"),
+                        (account_id, viewer_id))
+            rows = cur.fetchall()
+        return {r[0]: r[1] for r in rows if r[1]}
+
+    def set_person_label(self, account_id: str, viewer_id: str, person_id: str, name: str) -> None:
+        """The caller (app.py) has checked both people are on this login and are not the same person. '' clears."""
+        with self._tx() as cur:
+            if not name:
+                cur.execute(self._q("DELETE FROM person_labels WHERE account_id=? AND viewer_id=? AND person_id=?"),
+                            (account_id, viewer_id, person_id))
+                return
+            cur.execute(self._q(
+                "INSERT INTO person_labels(account_id, viewer_id, person_id, name, updated_at) VALUES(?,?,?,?,?) "
+                "ON CONFLICT(account_id, viewer_id, person_id) DO UPDATE SET name=excluded.name, "
+                "updated_at=excluded.updated_at"), (account_id, viewer_id, person_id, name, _now()))
+
+    def _drop_person_labels(self, cur, person_id: str) -> None:
+        """A person row is going: every label set BY them and every label ON them, so no name outlives its card."""
+        cur.execute(self._q("DELETE FROM person_labels WHERE viewer_id=? OR person_id=?"), (person_id, person_id))
 
     def _first_person(self, cur, account_id: str) -> dict | None:
         cur.execute(self._q(
@@ -923,6 +959,7 @@ class _Store:
                     continue
                 cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"),
                             (r["account_id"], person_scope(r["id"])))
+                self._drop_person_labels(cur, r["id"])
                 cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (r["id"], r["account_id"]))
             cur.execute(self._q("DELETE FROM link_permissions WHERE link_id=?"), (lid,))
             cur.execute(self._q("UPDATE links SET broken_at=?, broken_by=? WHERE id=?"), (ts, broken_by, lid))
@@ -1039,6 +1076,8 @@ class _Store:
                 if row["home_id"]:
                     self._drop_copy_permissions(cur, row)
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (account_id, scope))
+            if mine:
+                self._drop_person_labels(cur, person_id)
             cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (person_id, account_id))
 
     def ensure_default_person(self, account_id: str, name: str = "Me") -> str:
@@ -1317,13 +1356,20 @@ class _Store:
                             "when a module you added writes one"),
         "people":          ("The NAME you gave a person, so their screen can say who it is "
                             "for, and what you call them if you chose a name of your own for "
-                            "anybody on your page (only you see that). This is the most personal "
+                            "anybody on your page (only the people using your login see that). This is the most personal "
                             "thing here. When somebody's profile is on your page because you "
                             "connected, or because they took over a person you made: which profile "
                             "it is (theirs, kept on their own login), which connection put them "
                             "there, and how - so stopping sharing removes exactly that.", True,
                             "when you add a person, connect with somebody, or somebody shares a "
                             "person with you"),
+        # 2026-10-05: "I call them" for just one of the people on a login (claims.seen_name).
+        "person_labels":   ("When more than one person uses the same login: what one of them calls "
+                            "somebody on their page, if they saved it just for themselves rather than "
+                            "for everyone on the login - who set it, who it is for, and the name. It shows only while "
+                            "the page is for the person who set it, never to the person it names or to "
+                            "anybody on another login. Removing either person removes it.", True,
+                            "when somebody saves an \"I call them\" name just for themselves"),
         "media_sources":   ("A label and an ADDRESS for the folder your media lives in - a "
                             "pointer at your own machine. Never the files themselves.", True,
                             "when you connect a folder"),
@@ -1980,6 +2026,16 @@ class SQLiteStore(_Store):
                 );
                 CREATE INDEX IF NOT EXISTS ix_people_account ON people(account_id);
 
+                -- "I CALL THEM", PER PERSON (2026-10-05; claims.seen_name, and the storage note
+                -- beside person_labels() argues a table over a state key): the name `viewer_id`
+                -- calls `person_id`, both people on `account_id`.
+                CREATE TABLE IF NOT EXISTS person_labels (
+                    account_id TEXT NOT NULL, viewer_id TEXT NOT NULL, person_id TEXT NOT NULL,
+                    name TEXT NOT NULL, updated_at TEXT NOT NULL,
+                    PRIMARY KEY (account_id, viewer_id, person_id)
+                );
+                CREATE INDEX IF NOT EXISTS ix_person_labels_person ON person_labels(person_id);
+
                 -- WHO MAY DRIVE SOMEBODY ELSE'S SCREEN. `subject_kind` is polymorphic on
                 -- purpose (account / group / tag) even though only 'account' resolves
                 -- today: a permissions table is the worst kind to migrate later. See
@@ -2384,6 +2440,11 @@ class PostgresStore(_Store):
             "CREATE INDEX IF NOT EXISTS ix_people_home ON people(home_id)",
             "CREATE INDEX IF NOT EXISTS ix_people_link ON people(link_id)",
             "CREATE INDEX IF NOT EXISTS ix_people_source ON people(source_id)",
+            # "I call them", per person - see the SQLite block.
+            "CREATE TABLE IF NOT EXISTS person_labels (account_id TEXT NOT NULL, viewer_id TEXT NOT NULL, "
+            "person_id TEXT NOT NULL, name TEXT NOT NULL, updated_at TEXT NOT NULL, "
+            "PRIMARY KEY (account_id, viewer_id, person_id))",
+            "CREATE INDEX IF NOT EXISTS ix_person_labels_person ON person_labels(person_id)",
 
             "CREATE TABLE IF NOT EXISTS profiles (id TEXT PRIMARY KEY, user_id TEXT NOT NULL, "
             "name TEXT NOT NULL, created_at TEXT NOT NULL, person_id TEXT NOT NULL DEFAULT '')",
