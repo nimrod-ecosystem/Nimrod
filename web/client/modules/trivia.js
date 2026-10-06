@@ -74,7 +74,8 @@ import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack, itemSources, difficultyLevel } from '../packs.js';
-import { createAdaptiveSession, adaptiveSettings, openLadderStore, splitLadderStore, LADDER_STATE_OPTIONS } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, openLadderStore, splitLadderStore, LADDER_STATE_OPTIONS,
+  PERSON_LADDER_KEY } from '../adaptive_play.js';
 import { RATING_DEFAULTS, LADDER_DEFAULTS, expected, levelOf, levelRating } from '../rating.js';
 import { ensureQuizStyle } from '../quiz_view.js';
 import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
@@ -309,9 +310,20 @@ export function packToTriviaBank(pack) {
 // is the truth: a change made in the menu is written to the person; a change made on another of their screens
 // is copied back into the row so the menu shows it. A screen with no person: the row applies to its one
 // unnamed player, on the panel.
+//
+// *** "WHERE THE OTHER GAMES START" (2026-10-06, the same day): THE FIRST CHOICE, AND THE DEFAULT. *** Every other
+// game on the ladder now keeps the person's level with them too, with ONE "Start games at" for all of them
+// (adaptive_play.js openPersonLadder argues one, not one per game). This row can follow it ('same') or override
+// it (easy / medium / hard). Default 'same', argued: FOR keeping 'easy': it is what shipped. AGAINST, and it
+// decides it: nobody has set either yet, so 'same' starts everybody exactly where 'easy' did until somebody sets
+// "Start games at", and then a caregiver who set it once is not surprised that Trivia ignored it. A person whose
+// row already says easy / medium / hard keeps it. Following it, a change to "Start games at" starts them again
+// in Trivia too (the same mark the other games read). [Guess, on Mike's list.]
 export const TRIVIA_LADDER_KEY = 'ratings_trivia';
 export const PERSON_START_KEY = 'personStart';
 export const START_LEVELS = Object.freeze(['easy', 'medium', 'hard']);
+export const START_SAME = 'same';
+export const START_CHOICES = Object.freeze([START_SAME, ...START_LEVELS]);
 export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}`;
 
 /** The level an item was written for: its `level`, else its `difficulty` (packs.js), else null. */
@@ -521,14 +533,17 @@ const SETTINGS = [
   // questions come back" (Trivia's pick does not use the ladder's spaced review, so the row would change
   // nothing) and the AI-writer rows (Trivia's questions come from packs). Hidden for "Written questions",
   // which carry no levels.
-  ...adaptiveSettings({ startLevels: 3, appliesWhen: (v) => v.contentSource !== 'bank' })
+  // (Its "Start games at" row is left out too: Trivia has its own, below, which can follow it.)
+  ...adaptiveSettings({ startLevels: 3, appliesWhen: (v) => v.contentSource !== 'bank', personStart: false })
     .filter((row) => row.key !== 'review'),
   // THE PERSON'S OWN START (THE LEVEL FOLLOWS THE PERSON, above). Standard, because it is the one a caregiver
   // setting up somebody new reaches for; the per-panel "A new player starts at level" stays advanced.
-  { key: PERSON_START_KEY, label: 'Start trivia at', kind: 'choice', default: 'easy', level: 'standard',
-    options: [{ value: 'easy', label: 'Easy questions' }, { value: 'medium', label: 'Medium questions' },
+  { key: PERSON_START_KEY, label: 'Start trivia at', kind: 'choice', default: START_SAME, level: 'standard',
+    options: [{ value: START_SAME, label: 'Where the other games start' },
+              { value: 'easy', label: 'Easy questions' }, { value: 'medium', label: 'Medium questions' },
               { value: 'hard', label: 'Hard questions' }],
     note: 'For the person this screen is for, and kept with them, so it is the same on each of their screens. '
+      + '"Where the other games start" follows "Start games at" in the other question games. '
       + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
       + 'start at "A new player starts at level".',
     appliesWhen: (v) => v.contentSource !== 'bank' },
@@ -720,21 +735,38 @@ registerModule(
       try { handle = ctx.makePersonState(id, TRIVIA_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
       let off = null;
       if (handle) { try { off = handle.subscribe?.(() => { if (!dead) syncStartToPanel(); }) || null; } catch { off = null; } }
-      personHandles.set(id, { handle, off });
+      // "WHERE THE OTHER GAMES START" (above): their "Start games at" is on the person's other ladder row.
+      // Read here, never written; listened to, so a change made in another game reaches this one.
+      let games = null;
+      let gamesReady = null;
+      try { games = ctx.makePersonState(id, PERSON_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { games = null; }
+      if (games) {
+        gamesReady = Promise.resolve().then(() => games.load?.()).catch(() => {})
+          .then(() => { if (!dead) { try { games.startPolling?.(); } catch { /* none */ } } });
+      }
+      personHandles.set(id, { handle, off, games, gamesReady });
       return handle;
     }
     const personDoc = () => {
       const h = ctx.personId ? personHandles.get(ctx.personId)?.handle : null;
       try { return h?.get?.() || null; } catch { return null; }
     };
-    const personStartNow = () => { const s = personDoc()?.start; return START_LEVELS.includes(s) ? s : null; };
+    const gamesDoc = () => {
+      const h = ctx.personId ? personHandles.get(ctx.personId)?.games : null;
+      try { return h?.get?.() || null; } catch { return null; }
+    };
+    const personStartNow = () => { const s = personDoc()?.start; return START_CHOICES.includes(s) ? s : null; };
+    // Follows "Start games at": the person's row says 'same', or nothing yet (the row's default).
+    const followsGames = () => !START_LEVELS.includes(personStartNow());
+    const gamesStartNow = () => { const s = gamesDoc()?.start; return START_LEVELS.includes(s) ? s : null; };
+    const gamesMarkNow = () => { const m = gamesDoc()?.startMark; return m == null || m === '' ? null : String(m); };
     // The person's row is the truth; the panel's copy is what the menu shows. A copy the person's row has never
     // had (a value chosen on this panel before it knew the person) is given to the person, without moving them.
     function syncStartToPanel() {
       const h = ctx.personId ? personHandles.get(ctx.personId)?.handle : null;
       const s = personStartNow();
       if (!s) {
-        if (h && START_LEVELS.includes(rawPersonStart) && splitStore) {
+        if (h && START_CHOICES.includes(rawPersonStart) && splitStore) {
           splitStore.ownReady(`person:${ctx.personId}`).then(() => {
             if (!dead && !personStartNow()) { try { h.set({ start: rawPersonStart }); } catch { /* next time */ } }
           });
@@ -746,9 +778,9 @@ registerModule(
       try { state.set({ [PERSON_START_KEY]: s }); } catch (err) { console.error('trivia: start copy', err); }
     }
     // Somebody changed "Start trivia at" in the menu: the person's row says so, and they start again there.
+    // 'same': where "Start games at" says, else "A new player starts at level".
     async function applyPersonStart(v) {
-      const lvl = difficultyLevel(v);
-      if (!lvl || !ladder) return;
+      if (!START_CHOICES.includes(v) || !ladder) return;
       const pid = ctx.personId ? `person:${ctx.personId}` : null;
       const h = pid && splitStore ? splitStore.ownHandle(pid) : null;
       if (h) {
@@ -757,6 +789,8 @@ registerModule(
         if (personStartNow() === v) return;     // a copy coming back from the person's row: nobody changed it
         try { h.set({ start: v }); } catch (err) { console.error('trivia: start', err); }
       }
+      const lvl = v === START_SAME ? (difficultyLevel(h ? gamesStartNow() : null) || Number(cfg.startLevel) || 1)
+        : difficultyLevel(v);
       ladder.startAt(pid || 'player', GAME, lvl);
     }
 
@@ -1482,6 +1516,12 @@ registerModule(
             ownFor: (pid) => personHandleFor(pid) });
           store = splitStore;
         }
+        // A newer copy of somebody's level arrived before anybody touched the first question: pick it again.
+        const firstAgain = () => {
+          if (dead || !levelled || !q || answered !== null || misses.length || voiceOpen) return;
+          deck[at] = null;
+          show(at, { count: false });
+        };
         try {
           ladder = createAdaptiveSession({
             cfg: () => ({ ...cfg, review: 'off', aiWrite: 'off' }),
@@ -1489,16 +1529,17 @@ registerModule(
             store, rand, now,
             personId: () => ctx.personId || null,
             // "Start trivia at": the person's own; on a screen with no person, the panel's, for its one player.
+            // Their own easy / medium / hard; else, following, where "Start games at" says.
             startFor: (pid) => {
-              if (ctx.personId && pid === `person:${ctx.personId}`) return difficultyLevel(personStartNow());
+              if (ctx.personId && pid === `person:${ctx.personId}`) {
+                return difficultyLevel(followsGames() ? gamesStartNow() : personStartNow());
+              }
               if (pid === 'player') return difficultyLevel(rawPersonStart);
               return null;
             },
-            onChange: () => {
-              if (dead || !levelled || !q || answered !== null || misses.length || voiceOpen) return;
-              deck[at] = null;
-              show(at, { count: false });
-            },
+            // Following "Start games at", a change to it starts them again here too (adaptive_play.js `startMark`).
+            startMark: (pid) => (ctx.personId && pid === `person:${ctx.personId}` && followsGames() ? gamesMarkNow() : null),
+            onChange: () => firstAgain(),
           });
         } catch (err) { ladder = null; console.error('trivia: no ladder', err); }
         // The person's row loads with the ladder (splitLadderStore.load); once it is in, the menu's copy of their
@@ -1506,6 +1547,10 @@ registerModule(
         if (splitStore && ctx.personId) {
           const pid = `person:${ctx.personId}`;
           splitStore.ownReady(pid).then(() => { if (!dead) syncStartToPanel(); });
+          // "Start games at" is on another row, which may land after the ladder: the first question is picked
+          // again from it, as it is when the ladder lands.
+          const games = personHandles.get(ctx.personId)?.gamesReady;
+          if (games) games.then(() => { if (!dead && followsGames() && gamesStartNow()) firstAgain(); });
         }
         // THE REVIEWS, where the host offers them (the kiosk: ctx.makePackReviews). Loaded once and polled
         // slowly; a deck already dealt is not reshuffled when they land — the next round reads them.
@@ -1605,7 +1650,7 @@ registerModule(
           if (!seenRawStart) { seenRawStart = true; rawPersonStart = rs; }
           else if (rs !== rawPersonStart) {
             rawPersonStart = rs;
-            if (START_LEVELS.includes(rs)) applyPersonStart(rs).catch((err) => console.error('trivia: start', err));
+            if (START_CHOICES.includes(rs)) applyPersonStart(rs).catch((err) => console.error('trivia: start', err));
           }
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
           readBank();
@@ -1675,9 +1720,10 @@ registerModule(
         if (splitStore) { splitStore.destroy(); splitStore = null; }
         if (ladderStore) { ladderStore.flush?.(); ladderStore.destroy?.(); ladderStore = null; }
         // ...and the person's own row (THE LEVEL FOLLOWS THE PERSON), opened here too.
-        for (const { handle, off } of personHandles.values()) {
+        for (const { handle, off, games } of personHandles.values()) {
           try { off?.(); } catch { /* none */ }
           try { handle?.flush?.(); handle?.destroy?.(); } catch { /* gone */ }
+          try { games?.destroy?.(); } catch { /* gone (read only: nothing to flush) */ }
         }
         personHandles.clear();
         // And the two streams Word Forge already closed and Trivia never did.

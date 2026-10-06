@@ -38,7 +38,7 @@
 import { ownScoreField } from './score_source.js';
 import { flowSettings, answerByField, fill, esc, parseNumber, numberWords, shuffle } from './quiz_flow.js';
 import { quizModule } from './quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from './adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from './adaptive_play.js';
 
 export const GAME = 'simple_math';
 // The ladder's name for this game. ONE rating per player for beginner math, whichever panel (Math at
@@ -287,7 +287,11 @@ export function beginnerSettings({ when = null, levelDefault = 'fixed', withScor
       onLabel: 'As soon as it has enough digits', offLabel: 'Only when Check is pressed' }),
     w({ key: 'boardScan', label: 'Number pad with a switch', kind: 'choice', default: 'rows', level: 'advanced',
       options: [{ value: 'rows', label: 'A row, then a number' }, { value: 'keys', label: 'One key at a time' }] }),
-    ...adaptiveSettings({ appliesWhen: adaptive, startLevels: MATH_LEVELS.length }),
+    // "Start games at" ADVANCED here (standard in the other games), for the same 12-press budget: it made
+    // Beginner 13. Nothing is lost by it: the row is ONE value for the person across every game on the
+    // ladder, so it can be set from any of their other games' menus, and Math follows it either way.
+    // [On Mike's list.]
+    ...adaptiveSettings({ appliesWhen: adaptive, startLevels: MATH_LEVELS.length, personStartLevel: 'advanced' }),
     ...flowSettings({ lines: LINES, labels: LINE_LABELS }).map((row) => w(row)),
   ];
 }
@@ -303,12 +307,18 @@ export function beginnerMath({ type = GAME, title = 'Simple math', scoreLabel = 
     let cfgNow = { ...defaults };
     let api = null;
     const adaptive = () => (MATH_LEVEL_MODES.includes(cfgNow.mathLevel) ? cfgNow.mathLevel : defaults.mathLevel) === 'adaptive';
-    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
+    // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
+    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // entry (adaptive_play.js openPersonLadder).
+    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow, bankFor: (g) => (g === RATING_GAME ? mathBank() : []), store, rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null, onChange: () => api?.render(),
+      startFor: ladderRows.startFor, startMark: ladderRows.startMark,
     });
+    ladderRows.attach(session);
     const adapter = mathAdapter({
       items: (c, r) => {
         if (!adaptive()) return makeProblems(c, r, 20);
@@ -324,9 +334,9 @@ export function beginnerMath({ type = GAME, title = 'Simple math', scoreLabel = 
       allowAward: () => (adaptive() ? session.allowAward() : true),
       scoreDetail: (s) => (adaptive() && session.scoreDetail()) || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
       scoreLine: (s) => (adaptive() && session.scoreDetail()) || `${s.rightCount} right so far.`,
-      onConfig: (c) => { cfgNow = c; },
+      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
       init: (a) => { api = a; },
-      destroy: () => { session.destroy(); try { store?.destroy?.(); } catch { /* gone */ } },
+      destroy: () => { session.destroy(); ladderRows.destroy(); },
     };
     const inner = quizModule({ type, title, scoreLabel, games: { math: adapter }, defaults, view, extraTopics })(ctx);
     inner.__session = session;

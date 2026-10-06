@@ -23,7 +23,7 @@ the shared miss flow. Each player at their own level; two players take turns.</p
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks, personLadderChecks } from './quiz_test_rig.js';
 import { getManifest, listManifests } from '../module.js';
 import '../modules/think_games.js';
 import '../modules/word_games.js';
@@ -330,6 +330,10 @@ try {
     check('*** saying a group that is NOT one of the three on screen is still a real answer (and a miss) ***', r.probe().misses === 1);
     r.inst.destroy();
   }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  await personLadderChecks({ check, name: 'Thinking games', game: 'numbers', saved: { game: 'numbers' },
+    mount: ({ saved, store, extra }) => R(saved, { store, extra }) });
 
   finish();
 } catch (err) { finish(err); }

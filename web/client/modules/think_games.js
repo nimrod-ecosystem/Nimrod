@@ -32,7 +32,7 @@ import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, answerByField, fill, esc, normalize, parseNumber, numberWord, shuffle } from '../quiz_flow.js';
 import { quizModule } from '../quiz_view.js';
-import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openLadderStore } from '../adaptive_play.js';
+import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { BANKS, GROUP_NAMES, GROUPS, shownOrder } from '../think_banks.js';
 import { createAI } from '../ai.js';
 import { writeQuestions } from '../question_writer.js';
@@ -193,7 +193,11 @@ registerModule(
     let mixAt = 0;
     let dealt = null;              // the item on screen (a dealt copy, with `want`)
     let api = null;
-    const store = openLadderStore(ctx);   // a refused save merges, entry by entry (adaptive_play.js)
+    // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
+    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // entry (adaptive_play.js openPersonLadder).
+    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const store = ladderRows.store;
     let ai = null;
     const getAI = () => (ai = ai || ctx.questionAI || createAI());
     const session = createAdaptiveSession({
@@ -203,9 +207,11 @@ registerModule(
       rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null,
+      startFor: ladderRows.startFor, startMark: ladderRows.startMark,
       onChange: () => api?.render(),
       writer: async (req) => (await writeQuestions({ ai: getAI(), ...req })).items,
     });
+    ladderRows.attach(session);
 
     function deal(game) {
       const q = session.deal(game);
@@ -324,9 +330,9 @@ registerModule(
       scoreDetail: (s) => session.scoreDetail() || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
       scoreLine: (s) => session.scoreDetail() || `${s.rightCount} right so far.`,
       pointNote: (game, item) => `thinking games: ${item.kind}`,
-      onConfig: (c) => { cfgNow = c; },
+      onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
       init: (a) => { api = a; },
-      destroy: () => { session.destroy(); try { store?.destroy?.(); } catch { /* gone */ } },
+      destroy: () => { session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Thinking games', scoreLabel: 'Thinking games: right answers',

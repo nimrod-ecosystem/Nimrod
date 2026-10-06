@@ -100,6 +100,174 @@ export function rig(type, { saved = {}, reducedMotion = false, rand = () => 0, s
   };
 }
 
+// ---------------------------------------------------------------------------------------------------
+// THE LEVEL FOLLOWS THE PERSON (adaptive_play.js openPersonLadder, 2026-10-06): the same checks for every
+// game on the ladder, so each game's suite proves its own wiring.
+// ---------------------------------------------------------------------------------------------------
+/** A state handle that behaves like state.js's: subscribers hear every change, its own included. */
+export function liveRow(init = {}) {
+  let d = JSON.parse(JSON.stringify(init));
+  let writes = 0;
+  const subs = new Set();
+  const h = {
+    get: () => d,
+    set: (p) => { writes += 1; d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+    load: async () => d, flush: async () => {}, startPolling() { h.polling = true; }, destroy() { h.destroyed = true; },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); }, writes: () => writes, peek: () => d,
+  };
+  return h;
+}
+/** One person row per (person, key), shared by every mount given the same `people`: one person, many screens. */
+export function peopleRows(seed = {}) {
+  const rows = {};
+  const asked = [];
+  const make = (pid, key, opts) => { asked.push({ pid, key, opts }); return (rows[`${pid}:${key}`] ||= liveRow(seed[`${pid}:${key}`] || {})); };
+  return { make, rows, asked, row: (pid, key = 'ratings') => rows[`${pid}:${key}`] || null };
+}
+
+/**
+ *   mount({ saved, store, extra })  mounts the game, started, with `store` as the screen's `ratings` row and
+ *                                   `extra` merged into ctx last; returns a rig (quiz_test_rig `rig`)
+ *   game       the ladder's name for the game checked
+ *   saved      settings every mount needs (Math: its adaptive level)
+ */
+export async function personLadderChecks({ check, mount, name, game, saved = {} }) {
+  const at = (people, pid) => people.row(pid)?.get()?.ladder?.players?.[`person:${pid}`]?.games?.[game];
+  const row = (rating, floor, n) => ({ rating, n, floor, recent: [], review: {} });
+  const sessionOf = (r) => r.inst.impl.__session;
+  const play = (r, k) => {
+    const s = sessionOf(r);
+    for (let i = 0; i < k; i++) { const q = s.deal(game); if (!q) return; s.record({ item: q, right: true }); }
+  };
+  const open = (opts = {}) => mount({ saved: { ...saved, ...(opts.saved || {}) }, store: opts.screen || liveRow(),
+    extra: { ...(opts.person ? { personId: opts.person } : {}), ...(opts.people ? { makePersonState: opts.people.make } : {}) } });
+  const topOf = (r) => Math.max(1, ...sessionOf(r).allQuestions(game).map((q) => Math.floor(Number(q.level) || 1)));
+
+  // 1. TWO DASHBOARDS, ONE PERSON.
+  {
+    const people = peopleRows();
+    const screenA = liveRow();
+    const a = open({ person: 'pat', people, screen: screenA });
+    await sleep(30);
+    check(`${name}: the person's own row is opened ("ratings", in their scope), merging when a save is refused`,
+      people.asked.some((x) => x.pid === 'pat' && x.key === 'ratings' && typeof x.opts?.merge === 'function'),
+      JSON.stringify(people.asked.map((x) => x.key)));
+    play(a, 10);
+    await sleep(10);
+    const mine = at(people, 'pat');
+    check(`*** ${name}: ten answers: the level is kept WITH THE PERSON (their own row) ***`, mine?.n === 10, JSON.stringify(mine));
+    check(`*** ${name}: ...and not on the screen's row, which keeps the questions' ratings ***`,
+      !screenA.get().ladder?.players?.['person:pat'] && Object.keys(screenA.get().ladder?.questions || {}).length >= 1,
+      JSON.stringify(screenA.get().ladder?.players));
+    a.inst.destroy();
+    const b = open({ person: 'pat', people, screen: liveRow() });
+    await sleep(30);
+    const there = sessionOf(b).playerRow('person:pat', game);
+    check(`*** ${name}: the same person on ANOTHER dashboard picks up where they left off, not over ***`,
+      there.n === 10 && there.floor === mine?.floor && there.rating === mine?.rating, JSON.stringify([there, mine]));
+    b.inst.destroy();
+  }
+  // 2. MOVED ONCE, the one with more answers staying; typed-in players stay on the screen.
+  {
+    const people = peopleRows();
+    const screen = liveRow({ ladder: { v: 1, players: { 'person:mo': { name: '', games: { [game]: row(1500, 3, 80) } },
+      'name:bob': { name: 'Bob', games: { [game]: row(1100, 1, 4) } } }, questions: {}, extra: {} } });
+    const r = open({ person: 'mo', people, screen });
+    await sleep(30);
+    check(`*** ${name}: an existing screen row of theirs is moved to their own row ***`,
+      at(people, 'mo')?.n === 80 && at(people, 'mo').floor === 3, JSON.stringify(at(people, 'mo')));
+    check(`${name}: ...and taken off the screen's row (so it is not moved again); a typed-in player stays there`,
+      !screen.get().ladder.players['person:mo'] && screen.get().ladder.players['name:bob']?.games?.[game]?.n === 4,
+      JSON.stringify(screen.get().ladder.players));
+    r.inst.destroy();
+    const people2 = peopleRows({ 'cy:ratings': { ladder: { v: 1, players: { 'person:cy': { name: '', games: { [game]: row(1300, 3, 40) } } }, questions: {}, extra: {} } } });
+    const screen2 = liveRow({ ladder: { v: 1, players: { 'person:cy': { name: '', games: { [game]: row(1000, 1, 5) } } }, questions: {}, extra: {} } });
+    const r2 = open({ person: 'cy', people: people2, screen: screen2 });
+    await sleep(30);
+    check(`${name}: both have a row: the one with more answers (40) stays, not the screen's 5`,
+      at(people2, 'cy')?.n === 40 && !screen2.get().ladder.players['person:cy'], JSON.stringify(at(people2, 'cy')));
+    r2.inst.destroy();
+  }
+  // 3. PLAYERS TYPED IN BY NAME stay on the screen's row.
+  {
+    const people = peopleRows();
+    const screen = liveRow();
+    const t = open({ person: 'pat', people, screen, saved: { players: 'Ann, Bob' } });
+    await sleep(30);
+    play(t, 2);
+    await sleep(10);
+    const pl = screen.get().ladder?.players || {};
+    check(`*** ${name}: players typed in by name stay on the screen's row; nothing is written to the person ***`,
+      pl['name:ann']?.games?.[game]?.n === 1 && pl['name:bob']?.games?.[game]?.n === 1 && !at(people, 'pat'),
+      JSON.stringify([pl, people.row('pat')?.get()]));
+    t.inst.destroy();
+  }
+  // 4. "START GAMES AT", kept with the person.
+  {
+    const people = peopleRows({ 'pat:ratings': { start: 'hard' } });
+    const r = open({ person: 'pat', people, screen: liveRow() });
+    await sleep(30);
+    const top = topOf(r);
+    check(`*** ${name}: a person whose row says "hard" starts at the hardest level (${top}), on any screen ***`,
+      sessionOf(r).playerRow('person:pat', game).floor === top && sessionOf(r).windowFor('person:pat', game).floor === top,
+      JSON.stringify(sessionOf(r).playerRow('person:pat', game)));
+    check(`${name}: ...and the menu shows it (the panel's copy is brought in line with the person's row)`,
+      r.stored().personStart === 'hard', JSON.stringify(r.stored().personStart));
+    r.inst.destroy();
+    const pm = peopleRows({ 'pat:ratings': { start: 'medium' } });
+    const m = open({ person: 'pat', people: pm, screen: liveRow() });
+    await sleep(30);
+    const mid = Math.max(1, Math.round((1 + topOf(m)) / 2));
+    check(`${name}: "medium" is the middle level (${mid})`, sessionOf(m).playerRow('person:pat', game).floor === mid,
+      JSON.stringify(sessionOf(m).playerRow('person:pat', game)));
+    m.inst.destroy();
+  }
+  // 5. CHANGING IT IN THE MENU starts them again there, in this game and (by the mark) in every other.
+  {
+    const people = peopleRows({ 'pat:ratings': { ladder: { v: 1, players: { 'person:pat': { name: '',
+      games: { zz_other: row(1000, 1, 7) } } }, questions: {}, extra: {} } } });
+    const r = open({ person: 'pat', people, screen: liveRow() });
+    await sleep(30);
+    play(r, 3);
+    await sleep(10);
+    const top = topOf(r);
+    r.setCfg({ personStart: 'hard' });
+    await sleep(20);
+    const doc = people.row('pat').get();
+    const now = sessionOf(r).playerRow('person:pat', game);
+    check(`*** ${name}: changing "Start games at" writes it to the person and starts them again there (hard) ***`,
+      doc.start === 'hard' && !!doc.startMark && now.floor === top && now.n === 3 && now.recent.length === 0,
+      JSON.stringify([doc.start, doc.startMark, now]));
+    check(`${name}: ...a game of theirs not open here is marked to start again too (it carries the old mark)`,
+      doc.ladder.players['person:pat'].games.zz_other.mark !== doc.startMark
+      && sessionOf(r).playerRow('person:pat', 'zz_other').mark === doc.startMark
+      && sessionOf(r).playerRow('person:pat', 'zz_other').n === 7, JSON.stringify(doc.ladder.players['person:pat'].games.zz_other));
+    play(r, 1);
+    await sleep(10);
+    check(`${name}: ...and once they answer, the row keeps the mark, so it happens once per change`,
+      at(people, 'pat')?.mark === doc.startMark && at(people, 'pat')?.n === 4, JSON.stringify(at(people, 'pat')));
+    const marks = people.row('pat').get().startMark;
+    r.setCfg({ personStart: 'hard' });
+    await sleep(10);
+    check(`${name}: the same value again is not a second change`, people.row('pat').get().startMark === marks);
+    r.inst.destroy();
+  }
+  // 6. A SCREEN WITH NO PERSON: the panel's row, for its one player.
+  {
+    const r = open({ saved: { personStart: 'hard' }, screen: liveRow() });
+    await sleep(30);
+    check(`${name}: a screen with no person: the panel's "Start games at" starts its one player there`,
+      sessionOf(r).playerRow('player', game).floor === topOf(r), JSON.stringify(sessionOf(r).playerRow('player', game)));
+    play(r, 2);
+    r.setCfg({ personStart: 'easy' });
+    await sleep(10);
+    check(`${name}: ...and changing it starts that player again there`,
+      sessionOf(r).playerRow('player', game).floor === 1 && sessionOf(r).playerRow('player', game).n === 2,
+      JSON.stringify(sessionOf(r).playerRow('player', game)));
+    r.inst.destroy();
+  }
+}
+
 /**
  * THE FIVE `answerBy` CHECKS, the same for every quiz game (Mike, 2026-10-02 late: "Brain games shouldn't
  * be yes/no by default. You should be able to say the answer. Yes/no should be an option though."): the
