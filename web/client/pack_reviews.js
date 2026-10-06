@@ -46,7 +46,7 @@
 import { contestKey } from './contests.js';
 import { createEvents } from './events.js';
 import { authHeaders } from './auth.js';
-import { parsePack, itemSources, COMMON_KNOWLEDGE } from './packs.js';
+import { parsePack, itemSources, COMMON_KNOWLEDGE, difficultyLevel } from './packs.js';
 import { REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, REVIEW_ACTIONS } from './actions.js';
 
 export const REVIEWS_URL = '/api/account/reviews';
@@ -221,6 +221,10 @@ export function playableBank(pack, map, { includeUnreviewed = false, packId = ''
     // PASSED question plays with no review strip and says why under "Correct." like any pack question.
     const why = typeof item.explain === 'string' ? item.explain.trim() : '';
     if (why) row.explain = why;
+    // The item's difficulty as its starting level (packs.js difficultyLevel), so a PASSED question plays at
+    // its level like any pack question. Open ones carry it too; Trivia does not use it while reviewing.
+    const level = difficultyLevel(item.difficulty);
+    if (level) row.level = level;
     out.push(row);
   }
   return out;

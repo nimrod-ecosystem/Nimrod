@@ -27,7 +27,7 @@ decision for the next pass, not a guess made here.</p>
 <script type="module">
 import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS,
   itemSourceProblem, itemSourceProblems, itemSourceWarnings, itemSources, needsItemSources,
-  itemSourcesGrandfathered, ITEM_SOURCES_FROM } from '../packs.js';
+  itemSourcesGrandfathered, ITEM_SOURCES_FROM, difficultyLevel, DIFFICULTY_LEVELS } from '../packs.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -166,6 +166,12 @@ try {
     okDiff.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }];   // no difficulty at all
     check('...but difficulty is OPTIONAL — its absence is fine', validatePack(okDiff).length === 0,
       JSON.stringify(validatePack(okDiff)));
+    // 2026-10-05: the three words as the ladder's starting levels (Trivia's "questions at every level").
+    check('*** difficultyLevel: easy 1, medium 2, hard 3 — one level per word the validator accepts ***',
+      difficultyLevel('easy') === 1 && difficultyLevel('medium') === 2 && difficultyLevel('hard') === 3
+      && JSON.stringify(Object.keys(DIFFICULTY_LEVELS)) === '["easy","medium","hard"]');
+    check('...and null for none, or for a word the validator refuses', difficultyLevel(undefined) === null
+      && difficultyLevel('') === null && difficultyLevel('nightmare') === null);
 
     // The problems list NAMES the item, which matters the moment a pack has more than one.
     const two = clone(GATSBY);

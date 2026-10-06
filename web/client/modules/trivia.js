@@ -73,7 +73,10 @@ import { createTelemetry } from '../telemetry.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
-import { loadPack, itemSources } from '../packs.js';
+import { loadPack, itemSources, difficultyLevel } from '../packs.js';
+import { createAdaptiveSession, adaptiveSettings } from '../adaptive_play.js';
+import { RATING_DEFAULTS, LADDER_DEFAULTS, expected, levelOf, levelRating } from '../rating.js';
+import { ensureQuizStyle } from '../quiz_view.js';
 import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
          answerExplainField, answerExplainHtml, answerExplainOn, answerExplainText, ANSWER_EXPLAIN_DEFAULT } from '../answer_source.js';
 import { packsFor, packById } from '../pack_library.js';
@@ -218,8 +221,94 @@ export function packToTriviaBank(pack) {
     // there is one.
     const why = answerExplainText(it.explain);
     if (why) row.explain = why;
+    // `level` (2026-10-05): the item's `difficulty` as the level its rating starts at (packs.js
+    // difficultyLevel: easy 1, medium 2, hard 3). Only when it has one; see QUESTIONS AT EVERY LEVEL below.
+    const level = difficultyLevel(it.difficulty);
+    if (level) row.level = level;
     return row;
   });
+}
+
+// ---------------------------------------------------------------------------------------
+// *** QUESTIONS AT EVERY LEVEL (Mike, 2026-10-05: "a lot of questions at pretty much every level") ***
+// ---------------------------------------------------------------------------------------
+// The packs mark each item easy / medium / hard, and Trivia used to drop it: every question was dealt
+// at random to everybody. Now, when the bank carries levels, Trivia plays on THE LADDER the other
+// question games use (../adaptive_play.js, ../rating.js): each player has a rating and a floor, each
+// question a rating that STARTS at its level (levelRating: easy 1000, medium 1150, hard 1300) and is
+// moved by every answer, and Mike's per-level thresholds move the floor (rating.js thresholdsAt: 90% right
+// to step up / 75% wrong to step down at the easiest level, 70/50 at the hardest).
+//
+// WHAT IS NOT THE LADDER'S `deal`: the pick. `choose` there ranks questions by expected success and breaks
+// ties by id, which on a pack of several hundred questions with fresh (equal) ratings would deal the same
+// handful every sitting. So the pick is here (pickNear), by LEVEL, at random inside a level:
+//   1. Questions this player has not answered or skipped this sitting (the panel's life), and not already
+//      in this round.
+//   2. Of those, the level inside the player's window (poolLevels: floor .. floor + levelsAtOnce - 1) whose
+//      expected success for this player is nearest the ladder's target (80%). A new player at level 1 meets
+//      the easy ones first; their own rating decides when medium is nearer.
+//   3. When the window has nothing fresh left (a strong player who has seen every hard question), the
+//      NEAREST LEVEL OUTSIDE IT, by distance from the window; a tie goes to the level below. At the top that
+//      is simply the level below. ARGUED: below on a tie keeps the success rate up, which is the ladder's
+//      whole stance (aim at 80%, not 50%). AGAINST: somebody who emptied their window is clearly doing well,
+//      and a harder question would tell the ladder more. [Guess, on Mike's list.]
+//   4. Everything seen: the same order again over every question (repeats, nearest level first), so a
+//      round is never short because the player has been at it a while.
+// A question's level is read from its CURRENT rating (rating.js levelOf), so a "hard" question everybody
+// gets right drifts down a level by itself, which is the "play still moves questions" half.
+//
+// WHEN THE LADDER IS NOT USED, and the deal is exactly what it always was (a shuffled round):
+//   * a bank with no levels at all (a written bank, the word bank, an old pack). Nothing is rated either:
+//     ratings nobody reads would only grow the row.
+//   * while REVIEWING (../pack_reviews.js): with "Include unreviewed questions" on and open questions in
+//     play, the round is dealt open-first as before. A reviewer has to meet the hard questions too, and a
+//     floor at level 1 would hold them back. Who sees an unreviewed question does not change.
+// An unlevelled question in a levelled bank (a lesson-routed one) is level 1, the ladder's own convention.
+//
+// *** ITS OWN ROW, `ratings_trivia`, NOT THE SHARED `ratings` (adaptive_play.js LADDER_KEY). *** Argued:
+//   FOR sharing: one place for every game's ladder, which is what adaptive_play.js describes.
+//   AGAINST, and it decides it: what sharing buys is a question's rating learning from every game that
+//   meets it, and no other game meets a trivia question. What it costs: a session writes its WHOLE ladder
+//   on every answer, from what it loaded when it started, so two games open on one screen overwrite each
+//   other's progress; and a few hundred pack questions' ratings would ride in the row every other game
+//   rewrites on every answer. A player's trivia level is per game in either row. [Guess, on Mike's list.]
+export const TRIVIA_LADDER_KEY = 'ratings_trivia';
+export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}`;
+
+/** The level an item was written for: its `level`, else its `difficulty` (packs.js), else null. */
+export function itemLevel(item) {
+  const n = Math.floor(Number(item?.level));
+  if (Number.isFinite(n) && n >= 1) return n;
+  return difficultyLevel(item?.difficulty);
+}
+
+export const hasLevels = (bank) => (bank || []).some((b) => itemLevel(b) != null);
+
+/**
+ * ONE QUESTION FOR ONE PLAYER (steps 1-4 above). PURE.
+ *   cands         [{ id, item, level }]  level = the question's level NOW (from its rating)
+ *   lo, hi        the player's window (rating.js poolLevels)
+ *   playerRating  the player's rating, for which in-window level is nearest `target`
+ *   avoid         ids not to repeat if anything else is left (seen this sitting)
+ *   never         ids not to repeat unless nothing else exists at all (already in this round)
+ * Returns one of `cands`, or null when there are none.
+ */
+export function pickNear(cands = [], { lo = 1, hi = 1, playerRating = RATING_DEFAULTS.start, avoid = new Set(),
+  never = new Set(), target = LADDER_DEFAULTS.target, rand = Math.random, rating = {} } = {}) {
+  const list = (cands || []).filter((c) => c && c.item);
+  if (!list.length) return null;
+  const R = { ...RATING_DEFAULTS, ...(rating || {}) };
+  const notRound = list.filter((c) => !never.has(c.id));
+  const fresh = notRound.filter((c) => !avoid.has(c.id));
+  const from = fresh.length ? fresh : (notRound.length ? notRound : list);
+  const rank = (L) => (L >= lo && L <= hi
+    ? [0, Math.abs(expected(playerRating, levelRating(L, R), R.scale) - target), L]
+    : [1, L < lo ? lo - L : L - hi, L < lo ? 0 : 1]);
+  const cmp = (a, b) => { const x = rank(a), y = rank(b); return (x[0] - y[0]) || (x[1] - y[1]) || (x[2] - y[2]) || (a - b); };
+  const best = [...new Set(from.map((c) => c.level))].sort(cmp)[0];
+  const group = from.filter((c) => c.level === best);
+  const i = Math.floor(Number(rand()) * group.length);
+  return group[Math.max(0, Math.min(group.length - 1, Number.isFinite(i) ? i : 0))];
 }
 
 // Turn a bank into a round. Deterministic under an injected `rand`, the same way `wordforge`
@@ -373,6 +462,14 @@ const SETTINGS = [
   { key: 'includeWords', label: 'Also ask about the word bank', default: true,
     level: 'standard', onLabel: 'Yes', offLabel: 'Only written questions',
     note: 'a vocabulary row already holds everything a multiple-choice question needs' },
+  // *** THE LADDER'S ROWS (2026-10-05, QUESTIONS AT EVERY LEVEL above), the same rows, words and defaults as
+  // every other question game (../adaptive_play.js adaptiveSettings), so a caregiver who set them in Thinking
+  // games finds them here. Three starting levels, because a pack's words are three. Two left out: "Missed
+  // questions come back" (Trivia's pick does not use the ladder's spaced review, so the row would change
+  // nothing) and the AI-writer rows (Trivia's questions come from packs). Hidden for "Written questions",
+  // which carry no levels.
+  ...adaptiveSettings({ startLevels: 3, appliesWhen: (v) => v.contentSource !== 'bank' })
+    .filter((row) => row.key !== 'review'),
   // Mike, 2026-10-04. Per game (this panel's settings, like the score row), not per account: the same quiz on
   // a shared screen and on somebody's phone may want different amounts under the answer.
   // 2026-10-04: the item's own explanation, above the source line — so its row is above the source's row too.
@@ -534,6 +631,18 @@ registerModule(
     // resolves after destroy() would also call startPolling() and bring a destroyed handle back.
     let dead = false;
     let onClick = null;
+    // *** THE LADDER (QUESTIONS AT EVERY LEVEL, above). *** `ladder` is made in init(). `levelled`: this round
+    // is dealt by level (the bank has levels and nobody is reviewing). Then `deck` is the round's SLOTS, each
+    // filled as it goes up for whoever's turn it is (pickNext), from `roundPool`. `ladderBank` is what the
+    // ladder rates ({ id, level }), `idOf` a row's ladder id, `seenBy` each player's ids answered or skipped
+    // this sitting.
+    let ladder = null;
+    let ladderStore = null;
+    let levelled = false;
+    let roundPool = [];
+    let ladderBank = [];
+    let idOf = new Map();
+    const seenBy = {};
 
     // ---------------------------------------------------------------------------------------
     // *** SPEECH (2026-10-04): READ ALOUD THE WAY THE OTHER QUIZ GAMES DO (../quiz_view.js). ***
@@ -605,7 +714,9 @@ registerModule(
       return true;
     }
     // The question and the answers still in play (one already guessed is out of play, and out of the read).
-    const questionLines = () => (q ? [q.question, ...q.options.filter((_, i) => !misses.includes(i))] : []);
+    // With more than one player, "Ann, your turn." first (the ladder's own line, as in the other quiz games).
+    const questionLines = () => (q ? [levelled && ladder ? ladder.askPrefix() : '', q.question,
+      ...q.options.filter((_, i) => !misses.includes(i))] : []);
     const litLine = () => (q && cfg.sayChoice !== false ? q.options[highlight] : '');
     const AFTER_LINES = ['Next question', 'I think this question is wrong'];
     function rightLines() {
@@ -665,7 +776,7 @@ registerModule(
           <p class="tv-count">${at + 1} of ${deck.length}${own
             ? ` <span class="tv-score">· ${rightCount} right</span>` : ''}</p>
           ${held.length ? `<p class="tv-held" data-held>${heldNote()}</p>` : ''}
-          <h3 class="tv-q">${esc(q.question)}</h3>
+          <h3 class="tv-q">${turnChip(done)}${esc(q.question)}</h3>
           <ol class="tv-opts" data-opts>
             ${q.options.map((o, i) => {
               const right = done && i === q.correctIndex;
@@ -705,6 +816,15 @@ registerModule(
               : '')}
           ${reviewHtml()}
         </div>`;
+    }
+
+    // WHOSE TURN (the ladder's chip, as in the other quiz games): drawn only with more than one player, or with
+    // "Show each player's level" on. Before the answer it is whoever is answering; after, whoever just did.
+    function turnChip(done) {
+      if (!levelled || !ladder) return '';
+      const html = ladder.turnHtml({ phase: done ? 'answer' : 'ask' }, GAME);
+      if (html) ensureQuizStyle(mount.ownerDocument);
+      return html;
     }
 
     // *** "SHOW WHERE THE ANSWER COMES FROM" (Mike, 2026-10-04; ../answer_source.js). *** Drawn only in the
@@ -817,12 +937,54 @@ registerModule(
       reviews.pass({ question: q.question, answer: q.answer, packId: q.review.packId, place: reviewPlace() });
     }
 
-    function show(i) {
+    // ---- THE LADDER: the pick, the deal, the record (QUESTIONS AT EVERY LEVEL, above) ----
+    // A row's level NOW: from its rating (moved by play), capped at the top of what this bank has.
+    function candidates(pool, maxLevel) {
+      const out = contests ? contests.held() : null;
+      return pool.filter((b) => !(out && out.size && isHeldItem(b, out)) && !isFlaggedItem(b)).map((b) => {
+        const id = idOf.get(b) || triviaId(b);
+        const r = ladder.questionRow({ id, level: itemLevel(b) || 1 }).rating;
+        return { id, item: b, level: Math.min(levelOf(r), maxLevel) };
+      });
+    }
+    function pickNext() {
+      const p = ladder.currentPlayer();
+      const win = ladder.windowFor(p.id, GAME);
+      const never = new Set(deck.filter(Boolean).map((b) => idOf.get(b)));
+      const pick = pickNear(candidates(roundPool, win.maxLevel), { lo: win.lo, hi: win.hi,
+        playerRating: ladder.playerRow(p.id, GAME).rating, avoid: seenBy[p.id] || new Set(), never, rand });
+      return pick ? pick.item : null;
+    }
+    // Tells the ladder which question is up and for whom (its `deal`, handed the id: "deal THIS question").
+    function dealToLadder(row) {
+      const id = idOf.get(row);
+      if (id) ladder.deal(GAME, { again: id });
+    }
+    // One finished question: a right answer (clean, or after misses: "helped"), or a skip (counted as missed,
+    // as in every game on the ladder). Moves both ratings and, by Mike's thresholds, the player's floor.
+    // "Seen this sitting" is marked HERE, not when it went up: a question put up and replaced before anybody
+    // touched it (a round rebuilt as the screen's rows arrive) was not asked.
+    function recordToLadder(result) {
+      if (!levelled || !ladder) return;
+      const id = idOf.get(deck[at]);
+      const pid = ladder.dealt()?.player?.id;
+      if (!id || ladder.dealt()?.id !== id) return;
+      if (pid) (seenBy[pid] ||= new Set()).add(id);
+      try { ladder.record({ ...result, item: { id } }); } catch (err) { console.error('trivia: ladder', err); }
+    }
+
+    // `count: false` puts a question up again without counting it as asked (the ladder's saved rows arriving
+    // before anybody has touched the first question: see init()).
+    function show(i, { count = true } = {}) {
       // Counted when a question GOES UP, not when it is answered: a question somebody walked
       // away from was still asked, and a tally that only counted finished ones would read
       // "3 of 3" on a round with two abandoned questions in it.
-      askedCount += 1;
+      if (count) askedCount += 1;
       at = Math.max(0, Math.min(deck.length - 1, i));
+      if (levelled && ladder) {
+        if (!deck[at]) deck[at] = pickNext();
+        if (deck[at]) dealToLadder(deck[at]);
+      }
       q = makeQuestion(deck[at], bank, { choices: cfg.choices, rand });
       // Review: the control shows only for a question still OPEN on this account, with the setting on.
       // Read once, as it goes up, so a pass written elsewhere mid-question does not pull it out from under
@@ -973,9 +1135,14 @@ registerModule(
       // `streak` was already reset above on the press that missed.
       if (!misses.length) streak += 1;
       // `source` is what the totals group by, so it is the game's name and nothing else.
-      Promise.resolve(ledger?.award?.({ amount: worth(misses.length), source: GAME,
-                                        note: q.question }))
-        .catch((err) => console.error('trivia: points', err));
+      // With players on the ladder, "Right answers earn points for" decides whose answers pay (asked before
+      // the record below, while the question is still the ladder's dealt one).
+      if (!levelled || !ladder || ladder.allowAward()) {
+        Promise.resolve(ledger?.award?.({ amount: worth(misses.length), source: GAME,
+                                          note: q.question }))
+          .catch((err) => console.error('trivia: points', err));
+      }
+      recordToLadder({ right: true, misses: misses.length });
       render();
       say(rightLines());
     }
@@ -1034,6 +1201,9 @@ registerModule(
     function applyBank(next) {
       const changed = next.length !== bank.length;
       bank = next;
+      // What the ladder rates: every row with its id and the level it was written for (1 when none).
+      idOf = new Map(bank.map((b) => [b, triviaId(b)]));
+      ladderBank = bank.map((b) => ({ id: idOf.get(b), level: itemLevel(b) || 1 }));
       if (!deck.length || changed) newRound();
     }
 
@@ -1042,6 +1212,8 @@ registerModule(
       // question twice, or a pack question can also arrive from a lesson).
       const out = contests ? contests.held() : null;
       passIfPlayedThrough();
+      // Left unanswered (Skip): the ladder hears it as missed.
+      if (q && answered === null) recordToLadder({ skipped: true });
       let i = at + 1;
       // ...nor is one flagged wrong while reviewing (here, or on another device of the account).
       while (i < deck.length && ((out && out.size && isHeldItem(deck[i], out)) || isFlaggedItem(deck[i]))) i++;
@@ -1053,11 +1225,17 @@ registerModule(
     // at random ten at a time keeps re-asking questions already passed, and "play through and pass them"
     // becomes many more rounds than the pack has questions. Open ones first (shuffled among themselves),
     // then the round is filled from the rest as usual. With the setting off, nothing changes.
+    const openTest = () => {
+      const m = reviews.map();
+      return (b) => !!b?.review && (m.get(b.review.key)?.status || REVIEW_STATUS.OPEN) === REVIEW_STATUS.OPEN;
+    };
+    // Somebody is reviewing: the setting is on and open questions are in play (newRound deals by level otherwise).
+    const reviewingOpen = (pool) => !!(cfg.includeUnreviewed && reviews && pool.some(openTest()));
+
     function dealDeck(pool) {
       const opts = { roundLength: cfg.roundLength, rand };
       if (cfg.includeUnreviewed && reviews) {
-        const m = reviews.map();
-        const isOpen = (b) => !!b?.review && (m.get(b.review.key)?.status || REVIEW_STATUS.OPEN) === REVIEW_STATUS.OPEN;
+        const isOpen = openTest();
         const first = buildDeck(pool.filter(isOpen), opts);
         if (first.length) {
           return [...first, ...buildDeck(pool.filter((b) => !isOpen(b)),
@@ -1086,7 +1264,17 @@ registerModule(
         .filter((b) => !isFlaggedItem(b));
       const open = gate(playable, unlocked).open;
       held = lockedTopics(playable, unlocked, topics);
-      deck = dealDeck(open.length >= 4 ? open : playable);
+      const pool = open.length >= 4 ? open : playable;
+      // BY LEVEL when the bank has levels and nobody is reviewing (QUESTIONS AT EVERY LEVEL, above): the
+      // round's slots, filled one by one as each goes up. Otherwise the shuffled round, exactly as before.
+      levelled = !!ladder && hasLevels(pool) && !reviewingOpen(pool);
+      if (levelled) {
+        roundPool = pool;
+        deck = new Array(Math.min(Math.max(0, Math.floor(Number(cfg.roundLength) || 0)), pool.length)).fill(null);
+      } else {
+        roundPool = [];
+        deck = dealDeck(pool);
+      }
       if (!deck.length) { q = null; render(); return; }
       show(0);
     }
@@ -1099,8 +1287,10 @@ registerModule(
       __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
         highlight, streak, deck: deck.length, after, contested, reviewMark,
-                        question: q ? { ...q } : null, bank: bank.length }),
+                        question: q ? { ...q } : null, bank: bank.length,
+                        levelled, level: levelled && deck[at] ? itemLevel(deck[at]) : null }),
       __reviews: () => reviews,
+      __ladder: () => ladder,
       // THE LIVE "WHICH PACK" LIST (settings_fields.js `fieldsFor` reads this when the menu opens): the
       // built-in and loaded packs, then this ACCOUNT's review packs — only those with passed questions while
       // the setting is off, every one while it is on. Nothing until the reviews have loaded (the declared
@@ -1112,6 +1302,29 @@ registerModule(
         return { packId: [...TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })), ...extra] };
       },
       init() {
+        // THE LADDER, FIRST (QUESTIONS AT EVERY LEVEL, above), so the first round can be dealt by level. Its
+        // row is this screen's `ratings_trivia` (TRIVIA_LADDER_KEY, argued above), shared by every Trivia panel
+        // on it, with each player under their own id (adaptive_play.js parsePlayers: the screen's person, or a
+        // name from "Players").
+        // No spaced review and no writer here (see the settings rows). Its saved rows load in the background;
+        // if they land before anybody has touched the first question, that question is picked again from them,
+        // so a returning player's first question is at their level rather than a new player's.
+        try {
+          ladderStore = typeof ctx.makeState === 'function' ? ctx.makeState(TRIVIA_LADDER_KEY) : null;
+        } catch { ladderStore = null; }
+        try {
+          ladder = createAdaptiveSession({
+            cfg: () => ({ ...cfg, review: 'off', aiWrite: 'off' }),
+            bankFor: () => ladderBank,
+            store: ladderStore, rand, now,
+            personId: () => ctx.personId || null,
+            onChange: () => {
+              if (dead || !levelled || !q || answered !== null || misses.length || voiceOpen) return;
+              deck[at] = null;
+              show(at, { count: false });
+            },
+          });
+        } catch (err) { ladder = null; console.error('trivia: no ladder', err); }
         // THE REVIEWS, where the host offers them (the kiosk: ctx.makePackReviews). Loaded once and polled
         // slowly; a deck already dealt is not reshuffled when they land — the next round reads them.
         try {
@@ -1268,6 +1481,9 @@ registerModule(
         // THE TWO THAT LEAKED (see `dead`): rows this module opened itself, polling until now.
         if (sharedBank) { sharedBank.destroy?.(); sharedBank = null; }
         if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
+        // The ladder's row is opened here too (init), so it goes the same way. Saved on every answer already.
+        if (ladder) { ladder.destroy(); ladder = null; }
+        if (ladderStore) { ladderStore.flush?.(); ladderStore.destroy?.(); ladderStore = null; }
         // And the two streams Word Forge already closed and Trivia never did.
         if (ledger) { ledger.destroy?.(); ledger = null; }
         if (telemetry) { telemetry.destroy?.(); telemetry = null; }

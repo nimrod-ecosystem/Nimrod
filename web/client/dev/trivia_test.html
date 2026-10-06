@@ -41,7 +41,11 @@ import { mountModule, getManifest } from '../module.js';
 // Registered so the check below can compare this row against comet's, which is the precedent
 // it deliberately matches rather than inventing a second answer to one question.
 import '../modules/comet.js';
-import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS, packToTriviaBank } from '../modules/trivia.js';
+import { parseBank, buildDeck, makeQuestion, shuffle, DEFAULTS, packToTriviaBank,
+         pickNear, itemLevel, hasLevels, triviaId, TRIVIA_LADDER_KEY } from '../modules/trivia.js';
+import { difficultyLevel } from '../packs.js';
+import { thresholdsAt } from '../rating.js';
+import { REVIEW_STATUS, reviewKey } from '../pack_reviews.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import '../modules/trivia.js';
 import '../modules/scoreboard.js';
@@ -90,7 +94,10 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               // with one `store` are two panels on one profile (the contests log is per profile).
               store = {},
               // `ctx.output` (trivia.js SPEECH): what it says aloud goes here. Left out, it says nothing.
-              output = null } = {}) {
+              output = null,
+              // QUESTIONS AT EVERY LEVEL: `ctx.personId` (the screen's person), the ladder's row (a
+              // `memRow`, so a test can seed it and read what was saved), and `ctx.makePackReviews`.
+              personId = undefined, ladderRow = null, reviews = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -124,7 +131,9 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     ...(isScreen !== undefined ? { isScreen } : {}),
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
-    makeState: (key) => (key === 'settings' ? modeRow : sharedRow),
+    ...(personId !== undefined ? { personId } : {}),
+    ...(reviews ? { makePackReviews: () => reviews } : {}),
+    makeState: (key) => (key === 'settings' ? modeRow : (key === TRIVIA_LADDER_KEY && ladderRow ? ladderRow : sharedRow)),
     state: { get: () => stored, set: () => {}, flush: () => {},
              subscribe: (fn) => { sub = fn; fn(stored); return () => {}; } },
     // Each named stream keeps its own rows in `store` (so the contests log really holds what was
@@ -1215,6 +1224,229 @@ Shared Q | Shared A` });
       check('...and says whether it was right', typeof trial[1].correct === 'boolean');
     }
     r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** questions at every level (2026-10-05): a pack\'s difficulty is where a question starts ***');
+  {
+    // ---- the mapping, pure ----
+    check('*** difficultyLevel: easy 1, medium 2, hard 3; anything else null ***',
+      difficultyLevel('easy') === 1 && difficultyLevel('medium') === 2 && difficultyLevel('hard') === 3
+      && difficultyLevel(' Hard ') === 3 && difficultyLevel('expert') === null && difficultyLevel(undefined) === null);
+    const mapped = packToTriviaBank({ items: [
+      { question: 'E?', answers: ['a', 'b', 'c'], correct: 'a', difficulty: 'easy' },
+      { question: 'H?', answers: ['a', 'b', 'c'], correct: 'a', difficulty: 'hard' },
+      { question: 'N?', answers: ['a', 'b', 'c'], correct: 'a' },
+    ] });
+    check('*** packToTriviaBank carries the difficulty as `level`; an item with none carries nothing ***',
+      mapped[0].level === 1 && mapped[1].level === 3 && !('level' in mapped[2]), JSON.stringify(mapped));
+    check('itemLevel: a `level`, else a `difficulty`, else null; hasLevels says whether any row has one',
+      itemLevel({ level: 2 }) === 2 && itemLevel({ difficulty: 'medium' }) === 2 && itemLevel({}) === null
+      && itemLevel({ level: 0 }) === null && hasLevels(mapped) && !hasLevels(parseBank(BANK_TEXT)));
+    check('a question\'s ladder id is its question and answer (so a reviewed-then-passed copy keeps its rating)',
+      triviaId({ question: 'E?', answer: 'a' }) === triviaId({ question: 'E?', answer: 'a', wrong: ['z'] })
+      && triviaId({ question: 'E?', answer: 'a' }) !== triviaId({ question: 'E?', answer: 'b' }));
+
+    // ---- the pick, pure ----
+    const C = (level, n) => ({ id: `${level}-${n}`, item: { n }, level });
+    const cands = [1, 2, 3].flatMap((l) => [0, 1].map((n) => C(l, n)));
+    const ids = (lv) => new Set(cands.filter((c) => c.level === lv).map((c) => c.id));
+    const at = (o) => pickNear(cands, { rand: () => 0, ...o })?.level;
+    check('*** a new player (rating 1000, window 1..2): the easy level, the one nearest 80% expected ***',
+      at({ lo: 1, hi: 2, playerRating: 1000 }) === 1);
+    check('...a strong one in the same window (rating 1450): the harder level is nearer 80%, so medium',
+      at({ lo: 1, hi: 2, playerRating: 1450 }) === 2);
+    check('every easy one seen this sitting: the other level in the window', at({ lo: 1, hi: 2, avoid: ids(1) }) === 2);
+    check('*** at the top (window 3..3) with every hard one seen: the nearest level below, medium — not starved ***',
+      at({ lo: 3, hi: 3, playerRating: 1600, avoid: ids(3) }) === 2);
+    check('...and with medium seen too: easy',
+      at({ lo: 3, hi: 3, playerRating: 1600, avoid: new Set([...ids(3), ...ids(2)]) }) === 1);
+    check('a tie outside the window (window 2..2, both neighbours one away) goes to the level below',
+      at({ lo: 2, hi: 2, avoid: ids(2) }) === 1);
+    check('*** everything seen: it repeats rather than dealing nothing, from the window first ***',
+      at({ lo: 3, hi: 3, playerRating: 1600, avoid: new Set(cands.map((c) => c.id)) }) === 3);
+    check('a question already in this round is not dealt again while anything else is left',
+      pickNear(cands, { lo: 3, hi: 3, rand: () => 0, avoid: new Set(cands.map((c) => c.id)), never: new Set(['3-0']) })?.id === '3-1');
+    check('random inside the level, not the same one every time',
+      pickNear(cands, { lo: 1, hi: 1, rand: () => 0 })?.id === '1-0' && pickNear(cands, { lo: 1, hi: 1, rand: () => 0.99 })?.id === '1-1');
+    check('no candidates: null', pickNear([], {}) === null);
+
+    // ---- mounted ----
+    const memRow = (init = {}) => { let d = { ...init }; let writes = 0;
+      return { get: () => d, set: (p) => { writes += 1; d = { ...d, ...p }; }, load: async () => {}, flush: async () => {},
+        startPolling() {}, subscribe: () => () => {}, destroy() {}, writes: () => writes }; };
+    const LV = (d, n) => ({ question: `${d} question ${n}?`, answer: `${d} A${n}`,
+      wrong: [`${d} x${n}`, `${d} y${n}`, `${d} z${n}`], difficulty: d });
+    const BANK3 = [1, 2, 3, 4].flatMap((n) => ['easy', 'medium', 'hard'].map((d) => LV(d, n)));
+    const row = (rating, floor, n = 40) => ({ rating, n, floor, recent: [], review: {} });
+    const seeded = (players) => memRow({ ladder: { v: 1, players: Object.fromEntries(Object.entries(players)
+      .map(([pid, g]) => [pid, { name: '', games: { trivia: g } }])), questions: {}, extra: {} } });
+    const answerRight = (r) => r.host.querySelector(`[data-opt="${r.probe().question.correctIndex}"]`).click();
+    const next = (r) => r.host.querySelector('[data-next]').click();
+    // Plays `k` questions, each answered first time, and returns the level each was written for.
+    const play = (r, k) => { const out = []; for (let i = 0; i < k; i++) { out.push(r.probe().level); answerRight(r); next(r); } return out; };
+    const ladderOf = (r) => r.inst.impl.__ladder();
+    let baseAsked = null;   // how many a fresh panel counts as asked once it settles, nothing saved
+
+    {
+      const lr = memRow();
+      const r = rig({ saved: { bank: BANK3 }, personId: 'christine', ladderRow: lr });
+      await sleep(20);
+      baseAsked = r.inst.impl.__score().asked;
+      check('*** a levelled bank is dealt by level ***', r.probe().levelled === true, JSON.stringify(r.probe()));
+      check('...a round is still the round length ("1 of 10")', r.probe().deck === 10 && /1 of 10/.test(r.host.textContent));
+      const L = ladderOf(r);
+      check('*** a question starts at its level: easy 1000, medium 1150, hard 1300 (rating.js levelRating) ***',
+        L.questionRow({ id: triviaId(BANK3[0]), level: itemLevel(BANK3[0]) }).rating === 1000
+        && L.questionRow({ id: triviaId(BANK3[1]), level: itemLevel(BANK3[1]) }).rating === 1150
+        && L.questionRow({ id: triviaId(BANK3[2]), level: itemLevel(BANK3[2]) }).rating === 1300);
+      check('*** a new player starts at the easy end (level 1, Mike\'s 90% / 75% thresholds there) ***',
+        L.playerRow('person:christine', 'trivia').floor === 1
+        && Math.abs(L.thresholds('trivia', 'person:christine').up - 0.9) < 1e-9
+        && Math.abs(L.thresholds('trivia', 'person:christine').down - 0.75) < 1e-9,
+        JSON.stringify(L.thresholds('trivia', 'person:christine')));
+      check('...the same curve rating.js states for a three-level game (90/75, 80/62.5, 70/50)',
+        Math.abs(thresholdsAt(2, 3).up - 0.8) < 1e-9 && Math.abs(thresholdsAt(3, 3).down - 0.5) < 1e-9);
+      const levels = play(r, 10);
+      check('*** a new player\'s first four questions are the four easy ones ***',
+        JSON.stringify(levels.slice(0, 4)) === '[1,1,1,1]', JSON.stringify(levels));
+      check('...then medium (the rest of the window), then hard (nearest outside it), never a repeat in the round',
+        JSON.stringify(levels.slice(4)) === '[2,2,2,2,3,3]', JSON.stringify(levels));
+      const pr = L.playerRow('person:christine', 'trivia');
+      check('*** ten right at the easiest level: 100% is past 90%, so the floor stepped up to 2 ***',
+        pr.floor === 2 && pr.n === 10 && pr.rating > 1000, JSON.stringify(pr));
+      check('the next round deals from the new window (level 2 and up)', r.probe().level >= 2, String(r.probe().level));
+      const saved = lr.get().ladder;
+      check('*** it is saved, under the screen\'s person, in Trivia\'s own row ***',
+        !!saved?.players?.['person:christine']?.games?.trivia && lr.writes() >= 10, JSON.stringify(saved?.players));
+      check('a question answered right moved down from where it started (play moves questions)',
+        saved.questions[triviaId(BANK3[0])]?.rating < 1000, JSON.stringify(saved.questions[triviaId(BANK3[0])]));
+      r.inst.destroy();
+    }
+    {
+      // The hard end. Mike's row, saved before this panel opened: it lands after the first question went up
+      // (the load is async), and that untouched first question is picked again from it.
+      const lr = seeded({ 'person:mike': row(1500, 3, 80) });
+      const r = rig({ saved: { bank: BANK3 }, personId: 'mike', ladderRow: lr });
+      await sleep(20);
+      check('*** a player at the hard end is dealt hard questions (even the first one, once the saved row loads) ***',
+        r.probe().level === 3, JSON.stringify(r.probe().question?.question));
+      check('...without counting an extra question asked (the same count as a panel with nothing saved)',
+        r.inst.impl.__score().asked === baseAsked, JSON.stringify([r.inst.impl.__score(), baseAsked]));
+      const before = ladderOf(r).questionRow({ id: triviaId(r.probe().question), level: 3 }).rating;
+      const levels = play(r, 6);
+      check('*** all four hard ones, then — hard ones run out — the nearest level below (medium), not nothing ***',
+        JSON.stringify(levels) === '[3,3,3,3,2,2]', JSON.stringify(levels));
+      const firstHard = BANK3.find((b) => b.difficulty === 'hard' && ladderOf(r).ladder().questions[triviaId(b)]);
+      check('a hard question a strong player gets right drops only a little (it was expected)',
+        before === 1300 && ladderOf(r).questionRow({ id: triviaId(firstHard), level: 3 }).rating < 1300
+        && ladderOf(r).questionRow({ id: triviaId(firstHard), level: 3 }).rating > 1280);
+      r.inst.destroy();
+    }
+    {
+      // *** ONE LEVEL PER PERSON. *** Two people's rows in one screen's ladder: each is dealt at their own.
+      const players = { 'person:christine': row(1000, 1), 'person:mike': row(1500, 3) };
+      const a = rig({ saved: { bank: BANK3 }, personId: 'christine', ladderRow: seeded(players) });
+      await sleep(20);
+      const aLevel = a.probe().level;
+      a.inst.destroy();
+      const b = rig({ saved: { bank: BANK3 }, personId: 'mike', ladderRow: seeded(players) });
+      await sleep(20);
+      const bLevel = b.probe().level;
+      b.inst.destroy();
+      check('*** per person: the same ladder deals easy to one person and hard to the other ***',
+        aLevel === 1 && bLevel === 3, JSON.stringify({ aLevel, bLevel }));
+      // Taking turns on one screen ("Players": names), each at their own level.
+      const lr = seeded({ 'name:bob': row(1500, 3) });
+      const t = rig({ saved: { bank: BANK3, players: 'Ann, Bob' }, ladderRow: lr });
+      await sleep(20);
+      const ann = t.probe().level;
+      const annChip = t.host.querySelector('.tv-q [data-turn]')?.dataset.turn;
+      answerRight(t); next(t);
+      const bob = t.probe().level;
+      const bobChip = t.host.querySelector('.tv-q [data-turn]')?.dataset.turn;
+      check('*** two players taking turns: Ann (new) gets easy, Bob (at the top) gets hard ***',
+        ann === 1 && bob === 3, JSON.stringify({ ann, bob }));
+      check('...and the question says whose turn it is', annChip === 'name:ann' && bobChip === 'name:bob',
+        JSON.stringify({ annChip, bobChip }));
+      const L = ladderOf(t);
+      check('...and Ann\'s answer moved Ann\'s row, not Bob\'s', L.playerRow('name:ann', 'trivia').n === 1
+        && L.playerRow('name:bob', 'trivia').n === 40, JSON.stringify(L.ladder().players));
+      t.inst.destroy();
+    }
+    {
+      // A skip is a miss to the ladder, the same as every other game on it.
+      const r = rig({ saved: { bank: BANK3 }, personId: 'christine', ladderRow: memRow() });
+      await sleep(20);
+      r.bus.publish('trivia/skip');
+      const pr = ladderOf(r).playerRow('person:christine', 'trivia');
+      check('a skipped question counts as missed (one answer, scored 0)', pr.n === 1
+        && JSON.stringify(pr.recent) === '[0]', JSON.stringify(pr));
+      r.inst.destroy();
+    }
+    {
+      // *** NO LEVELS, NO CHANGE. *** A written bank deals the shuffled round it always did, and writes nothing.
+      const lr = memRow();
+      const bank = parseBank(`${BANK_TEXT}\nWhat is 2 + 2? | 4 | 3 | 5 | 6\nWhat colour is grass? | Green | Blue | Red | Grey`);
+      const r = rig({ bankText: null, saved: { bank }, personId: 'christine', ladderRow: lr, rand: () => 0.4 });
+      await sleep(20);
+      const want = buildDeck(bank, { roundLength: 10, rand: () => 0.4 });
+      check('*** a bank with no levels is not dealt by level ***', r.probe().levelled === false);
+      check('...the round is the same shuffle as before (buildDeck)', r.probe().deck === want.length
+        && r.probe().question.question === want[0].question, JSON.stringify([r.probe().question.question, want[0].question]));
+      answerRight(r);
+      check('...and nothing is written to the ladder', lr.writes() === 0 && !lr.get().ladder, JSON.stringify(lr.get()));
+      r.inst.destroy();
+    }
+    {
+      // *** REVIEWING IS UNCHANGED (pack_reviews.js). *** With "Include unreviewed questions" on and open questions
+      // in play, the round is dealt open-first as before, levels or not. Passed questions play by level.
+      const pack = { kind: 'trivia', name: 'Levels', items: BANK3.map((b) => ({ question: b.question,
+        answers: [b.answer, ...b.wrong], correct: b.answer, difficulty: b.difficulty })) };
+      const fakeReviews = (status) => {
+        const m = new Map(pack.items.map((it) => [reviewKey(it.question, it.correct), { status }]));
+        return { ready: Promise.resolve(), startPolling() {}, reload() {}, destroy() {}, map: () => m,
+          packById: () => pack, options: () => [], pass: async () => true, flag: async () => true, note() {} };
+      };
+      const reviewing = rig({ saved: { contentSource: 'pack', packId: 'review:levels', includeUnreviewed: true },
+        reviews: fakeReviews(REVIEW_STATUS.OPEN), personId: 'christine', ladderRow: memRow() });
+      await sleep(30);
+      check('*** reviewing: not dealt by level, every open question is in play as before ***',
+        reviewing.probe().levelled === false && reviewing.probe().bank === 12 && reviewing.probe().deck === 10,
+        JSON.stringify(reviewing.probe()));
+      check('...and the review strip is there, as before', !!reviewing.host.querySelector('[data-review]'));
+      reviewing.inst.destroy();
+      const passed = rig({ saved: { contentSource: 'pack', packId: 'review:levels' },
+        reviews: fakeReviews(REVIEW_STATUS.PASSED), personId: 'christine', ladderRow: memRow() });
+      await sleep(30);
+      check('*** passed questions from a review pack play by level (their difficulty rides through playableBank) ***',
+        passed.probe().levelled === true && passed.probe().level === 1 && !passed.host.querySelector('[data-review]'),
+        JSON.stringify(passed.probe()));
+      passed.inst.destroy();
+      const closed = rig({ bankText: BANK_TEXT, saved: { contentSource: 'pack', packId: 'review:levels' },
+        reviews: fakeReviews(REVIEW_STATUS.OPEN), personId: 'christine', ladderRow: memRow() });
+      await sleep(30);
+      check('*** the setting off and nothing passed: no unreviewed question is dealt (the bank plays, as before) ***',
+        closed.probe().bank === 3 && !/question \d\?/.test(closed.probe().question?.question || ''),
+        JSON.stringify(closed.probe().question));
+      closed.inst.destroy();
+    }
+    {
+      // The settings rows: the ladder's own, as in every other question game, minus the two Trivia cannot use.
+      const rows = getManifest('trivia').settings || [];
+      const keys = rows.map((f) => f.key);
+      check('*** the ladder\'s rows are offered: players, harder/easier by themselves, starting level, thresholds ***',
+        ['players', 'adapt', 'startLevel', 'moveUpAbove', 'moveDownBelow', 'upEasy', 'upHard', 'downEasy', 'downHard',
+          'judgeOver', 'levelsAtOnce', 'showLevel', 'pointsFor', 'turnLine'].every((k) => keys.includes(k)), JSON.stringify(keys));
+      check('...not "Missed questions come back" nor the AI writer (nothing here would read them)',
+        !keys.includes('review') && !keys.includes('aiWrite') && !keys.includes('aiWhenFewer'));
+      const start = rows.find((f) => f.key === 'startLevel');
+      check('a new player starts at level 1 by default, of three (a pack\'s three words)',
+        start.default === 1 && JSON.stringify(start.options.map((o) => o.value)) === '[1,2,3]', JSON.stringify(start));
+      check('hidden for "Written questions" (no levels there), shown for a pack',
+        rows.find((f) => f.key === 'adapt').appliesWhen({ contentSource: 'bank' }) === false
+        && rows.find((f) => f.key === 'adapt').appliesWhen({ contentSource: 'pack' }) === true);
+    }
   }
 
 } catch (e) {

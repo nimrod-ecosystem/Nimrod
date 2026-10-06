@@ -176,6 +176,15 @@ try {
     check('...and an item with none carries nothing (no empty string pretending to be one)',
       onX.filter((b) => !EXPLAIN[Q.findIndex((q) => q.question === b.question)]).every((b) => !('explain' in b)),
       JSON.stringify(onX.map((b) => b.explain)));
+    // 2026-10-05 (trivia.js QUESTIONS AT EVERY LEVEL): the difficulty rides along as the starting level, so a
+    // passed question plays at its level. The fixture carries none, so a copy says easy / hard.
+    const levelled = { ...fixturePack, items: fixturePack.items.map((it, i) => (i === 0 ? { ...it, difficulty: 'easy' }
+      : (i === 3 ? { ...it, difficulty: 'hard' } : it))) };
+    const onL = playableBank(levelled, m, { includeUnreviewed: true, packId: FIXTURE.id });
+    check('*** each dealt question carries its difficulty as `level` (easy 1, hard 3); none carries nothing ***',
+      onL.find((b) => b.question === Q[0].question)?.level === 1 && onL.find((b) => b.question === Q[3].question)?.level === 3
+      && !('level' in onL.find((b) => b.question === Q[2].question)) && on.every((b) => !('level' in b)),
+      JSON.stringify(onL.map((b) => b.level)));
   }
 
   section('*** the "Source:" line a reviewer reads ***');
