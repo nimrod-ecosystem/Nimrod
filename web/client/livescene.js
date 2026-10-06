@@ -6,7 +6,8 @@
 //
 // TWO CATEGORIES, and they compose:
 //   SCENE    a whole world behind everything: fall, steampunk, cyberpunk, cozy, winter, ocean
-//            (aquarium), night, nimrod. One at a time.
+//            (aquarium), night, nimrod - and (2026-10-05) spring, summer and a scene per holiday,
+//            from Design's seasons-holidays handoff. One at a time.
 //   OVERLAY  one small inhabitant that can sit on ANY scene. Any number. Three kinds:
 //              weather  rain, snow, leaves, petals, fog  (can follow the real forecast: live_weather.js)
 //              calm     fireflies, dog, moon (tonight's real phase), cat
@@ -26,7 +27,9 @@
 import { normalizeFlashLimit, minFlashPeriodMs } from './flash_limit.js';
 // THE SKY OUTSIDE (2026-10-05): which weather overlays and washes a scene gets for the time of day and the
 // weather. Data and pure functions; see `sky` in mountScene and setSceneSky below.
-import { skyLook, TINTS, TIMES, WEATHERS } from './seasons.js';
+import { skyLook, TINTS, TIMES, WEATHERS, seasonContext } from './seasons.js';
+// The seasons and holidays scenes (2026-10-05): Hanukkah lights as many candles as the real night.
+import { hanukkahNight } from './theme_schedule.js';
 
 // ---------------------------------------------------------------------------------------------
 // __lsh() — the whole "framework". JSX compiled with pragma `__lsh` lands here. Deliberately NOT
@@ -2098,6 +2101,483 @@ const GROUND_THEMES = {
   }
 };
 
+/* ---------------------------------------------------------------------------------------------
+   SEASONS AND HOLIDAYS - generated from Claude Design's seasonScenes.jsx (seasons-holidays handoff,
+   2026-10-05) by compiling its JSX against __lsh(), like everything above. Thirteen scenes: spring,
+   summer, newYear, lunarNewYear, valentines, stPatricks, easter, july4, halloween, diwali, harvest,
+   hanukkah, christmas. Merged into GROUND_THEMES below.
+   CODE'S CHANGES TO DESIGN'S SOURCE before compiling (sent back to Design, NOTES_FOR_DESIGN 2026-10-05):
+     * every traveller moves with `translate` in container units, not top/left (f546eca: a layout every
+       frame cost the bench a core): clouds, rising hearts and sky lanterns, bats, the sailboat; the water
+       shimmer slides as an element (transform) instead of repainting its background-position;
+     * PLACED, NOT PILED: with motion off, clouds, petals, snow, hearts and the sailboat sit where their
+       loop has them, not on a start line off screen (the !important start position in the motion rule
+       takes over when they move);
+     * the imports are gone: hanukkahNight comes from theme_schedule.js at the top of this file.
+   `render(ctx)`: ctx is { date, time, weather } (see mountScene). Hanukkah reads `date` for the night.
+   --------------------------------------------------------------------------------------------- */
+/* SEASONS AND HOLIDAYS: twelve more live scenes, merged into GROUND_THEMES by AacGround.jsx.
+ *
+ * Same rules as every other scene:
+ * - DEPTH: far things are small, hazed and soft, near things are big and dark. Haze sits between
+ *   the bands.
+ * - EVERYTHING MOVING IS DECORATION, and it all sits inside prefers-reduced-motion: no-preference.
+ * - The board tokens keep the cards readable; contrast is a warning for Code to measure, not a
+ *   blocker.
+ * - Each scene also carries `site`, a whole-site palette in the new colour names, so a holiday can
+ *   theme the whole page and not only the board.
+ *
+ * FIREWORKS ARE BLOOMS, NOT FLASHES. A burst grows and fades over about two seconds, is small
+ * against the sky, and repeats no faster than every 9 seconds. With the photosensitivity setting
+ * on (data-photosafe on the ground), they slow to a soft glow that never gets past half
+ * brightness.
+ *
+ * HALLOWEEN IS FRIENDLY. Smiling pumpkins, a few bats, a lit house on a hill. No skulls, no
+ * faces in the dark, nothing that jumps. A frightening screen in a room somebody can't leave is
+ * not a decoration. */
+
+const SEASON_CSS = `
+.ngs-cloud{border-radius:999px}
+.ngs-hang{transform-origin:top center}
+.ngs-flame{transform-origin:bottom center;border-radius:50% 50% 45% 45% / 62% 62% 38% 38%}
+@media (prefers-reduced-motion: no-preference){
+  .ngs-cloud{animation:ngsCloud linear infinite;left:-30% !important}
+  .ngs-twinkle{animation:ngsTwinkle ease-in-out infinite alternate}
+  .ngs-flame{animation:ngsFlame ease-in-out infinite alternate}
+  .ngs-rise{animation:ngsRise linear infinite;top:106% !important}
+  .ngs-bat{animation:ngsBat linear infinite;left:-12% !important;top:var(--y,22%) !important}
+  .ngs-burst{animation:ngsBurst ease-out infinite}
+  [data-photosafe] .ngs-burst{animation-name:ngsBurstSoft;animation-duration:16s!important}
+  .ngs-hang{animation:ngsHang ease-in-out infinite alternate}
+  .ngs-shimmer{animation:ngsShimmer linear infinite}
+  .ngs-sail{animation:ngsSail 140s linear infinite;left:-14% !important}
+  .ngs-bob{animation:ngsBob ease-in-out infinite alternate}
+}
+@keyframes ngsCloud{from{translate:0 0}to{translate:140cqw 0}}
+@keyframes ngsTwinkle{from{opacity:.35}to{opacity:1}}
+@keyframes ngsFlame{from{transform:scale(1,1)}to{transform:scale(.88,1.12)}}
+@keyframes ngsRise{from{translate:0 0;transform:translateX(0)}50%{transform:translateX(var(--sway,14px))}to{translate:0 -122cqh;transform:translateX(0)}}
+@keyframes ngsBat{0%,64%{translate:0 0;opacity:0}66%{opacity:1}80%{translate:55.11cqw -6cqh}96%{opacity:1}100%{translate:124cqw 0;opacity:0}}
+@keyframes ngsBurst{0%,58%{transform:scale(.15);opacity:0}62%{transform:scale(.55);opacity:.95}78%{transform:scale(1);opacity:.75}92%,100%{transform:scale(1.06);opacity:0}}
+@keyframes ngsBurstSoft{0%,40%{transform:scale(.6);opacity:0}60%{transform:scale(1);opacity:.45}90%,100%{transform:scale(1.02);opacity:0}}
+@keyframes ngsHang{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+@keyframes ngsShimmer{from{transform:translateX(0)}to{transform:translateX(240px)}}
+@keyframes ngsSail{0%{translate:0 0}100%{translate:126cqw 0}}
+@keyframes ngsBob{from{transform:translateY(0)}to{transform:translateY(-4px)}}
+`;
+
+const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+const svgUrl = (body, vb = '0 0 20 20') => `url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='${vb}'>${body}</svg>`)}")`;
+const HEART = (c) => svgUrl(`<path d='M10 18C4 13 1 10 1 6a4.5 4.5 0 0 1 9-1.6A4.5 4.5 0 0 1 19 6c0 4-3 7-9 12z' fill='${c}'/>`);
+const CLOVER = (c) => svgUrl(`<g fill='${c}'><circle cx='10' cy='5.5' r='4.2'/><circle cx='5.5' cy='10' r='4.2'/><circle cx='14.5' cy='10' r='4.2'/></g><path d='M10 11q1 5 4 8' stroke='${c}' stroke-width='1.6' fill='none'/>`);
+
+/* board tokens: the winter set on a dark ground, the cozy set on a light one */
+const DARK = (bg, card, line, lit, a = 0.8) => ({
+  '--ab-bg': bg, '--ab-card': card, '--ab-ink': '#eef3f6', '--ab-line': line, '--ab-lit': lit,
+  '--ab-sym-yes': '#bfe0c4', '--ab-sym-no': '#e8c0c4', '--ab-sym-need': '#e8d6a0',
+  '--ab-sym-hot': '#e8b394', '--ab-sym-cold': '#bfe0ee', '--ab-sym-love': '#e4b8cc',
+  '--ab-veil': hexA(bg, a),
+});
+const LIGHT = (lit, line = '#6f8676') => ({
+  '--ab-bg': '#f5f6f4', '--ab-card': '#ffffff', '--ab-ink': '#2f3a33', '--ab-line': line, '--ab-lit': lit,
+  '--ab-sym-yes': '#2c6e49', '--ab-sym-no': '#9e5449', '--ab-sym-need': '#8a5a12',
+  '--ab-sym-hot': '#a0461b', '--ab-sym-cold': '#14636A', '--ab-sym-love': '#9c3357',
+  '--ab-veil': 'rgba(255,255,255,.9)',
+});
+/* the whole-site palette, in the new names. dark = true means light text on a dark page. */
+const SITE = (dark, bg, surface, surfaceAlt, text, textSoft, border, accent, onAccent, link, onLink) => ({
+  dark, bg, surface, 'surface-alt': surfaceAlt, text, 'text-soft': textSoft, border, accent, 'on-accent': onAccent, link, 'on-link': onLink,
+});
+
+function makeSeasonScenes({ tree, haze, vignette, spread }) {
+  /* ---------- shared pieces ---------- */
+  const hill = (key, top, clip, fill, rim, blur) => [
+    __lsh("span", { key: key + 'r', style: { left: '-4%', right: '-4%', top: `calc(${top}% - 3px)`, bottom: 0, clipPath: clip, background: rim, filter: blur ? `blur(${blur}px)` : undefined } }),
+    __lsh("span", { key: key + 'f', style: { left: '-4%', right: '-4%', top: top + '%', bottom: 0, clipPath: clip, background: fill, filter: blur ? `blur(${blur}px)` : undefined } }),
+  ];
+  const glow = (key, l, t, w, h, c, dur = 22) => __lsh("span", { key: key, className: "ng-glow", style: { left: l + '%', top: t + '%', width: w + '%', height: h + '%', background: c, animationDuration: dur + 's' } });
+  const sun = (key, l, t, d, c, halo) => [glow(key + 'h', l - d * 1.2, t - d * 1.6, d * 3.4, d * 5, halo, 24),
+    __lsh("span", { key: key, style: { left: l + '%', top: t + '%', width: d + '%', aspectRatio: '1', borderRadius: '50%', background: c } })];
+  const cloud = (key, t, w, delay, dur, op = 0.9, c = '#ffffff') => (
+    __lsh("span", { key: key, className: "ngs-cloud", style: {
+      top: t + '%', width: w + '%', aspectRatio: '3.2', left: -30 + (140 * ((delay % dur) / dur)) + '%', opacity: op,
+      background: `radial-gradient(closest-side at 30% 65%,${c} 98%,transparent),radial-gradient(closest-side at 55% 40%,${c} 98%,transparent),radial-gradient(closest-side at 76% 66%,${c} 98%,transparent)`,
+      backgroundSize: '46% 80%,50% 96%,40% 70%', backgroundRepeat: 'no-repeat', backgroundPosition: '6% 100%,46% 0,94% 100%',
+      animationDuration: dur + 's', animationDelay: -delay + 's',
+    } })
+  );
+  const stars = (n, maxTop, seed = 3) => Array.from({ length: n }, (_, i) => (
+    __lsh("span", { key: 'st' + i, className: "ngs-twinkle", style: {
+      left: ((i * 73 + seed * 29) % 97) * 1.03 + '%', top: (((i * 41 + seed * 17) % 89) * maxTop) / 89 + '%', width: i % 5 ? 2 : 3, height: i % 5 ? 2 : 3,
+      borderRadius: '50%', background: '#f4f1dc', animationDuration: 3 + (i % 5) * 1.3 + 's', animationDelay: -(i * 0.7) + 's',
+    } })
+  ));
+  const fall = (key, n, colors, sizes = [4, 6, 9], shape = '50% 0 50% 0') => Array.from({ length: n }, (_, i) => {
+    const band = i % 3;
+    return (
+      __lsh("span", { key: key + i, className: "ng-seed", style: {
+        width: sizes[band], height: sizes[band] * 0.8, borderRadius: shape, left: spread(i, 7) + '%', top: (spread(i, 11) % 90) + '%',
+        background: colors[i % colors.length], opacity: [0.6, 0.8, 0.95][band], filter: band === 2 ? 'blur(.6px)' : undefined,
+        '--sway': (i % 2 ? 1 : -1) * (16 + (i % 5) * 10) + 'px', '--spin': 220 + (i % 4) * 90 + 'deg',
+        animationDuration: [22, 16, 11][band] + (i % 4) * 2 + 's', animationDelay: -(i * 1.3) + 's',
+      } })
+    );
+  });
+  const crown = (key, l, t, w, h, colors, blur = 1.4) => [[0, 22, 62, 70], [26, 0, 56, 64], [44, 26, 58, 66], [14, 40, 72, 58]].map(([x, y, cw, ch], i) => (
+    __lsh("span", { key: key + i, style: {
+      left: `calc(${l - w / 2}% + ${(x * w) / 100}%)`, top: `calc(${t}% + ${(y * h) / 100}%)`, width: (cw * w) / 100 + '%', height: (ch * h) / 100 + '%',
+      borderRadius: '50%', background: colors[i % colors.length], filter: `blur(${blur}px)`,
+    } })
+  ));
+  const fullTree = (key, l, top, base, w, trunk, dark, colors, opts = {}) => [
+    ...tree({ key, l, w, top: top + (base - top) * 0.35, base, color: trunk, dark, branches: 3, seed: opts.seed || 0, blur: opts.blur, opacity: opts.opacity }),
+    ...crown(key + 'c', l, top, opts.cw || w * 2.4, (base - top) * 0.62, colors, opts.blur ? opts.blur + 1 : 1.4),
+  ];
+  const flower = (key, l, t, s, head, stem = '#4d7a3a', shape = '42% 42% 50% 50% / 60% 60% 40% 40%', delay = 0) => (
+    __lsh("span", { key: key, className: "ng-kelp", style: { left: l + '%', top: t + '%', width: s / 9 + '%', aspectRatio: '1 / 3.2', animationDuration: 6 + (delay % 4) + 's', animationDelay: -delay + 's' } }, __lsh("span", { style: { position: 'absolute', left: '44%', width: '12%', top: '30%', bottom: 0, background: stem } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: 0, height: '36%', borderRadius: shape, background: head } }))
+  );
+  const water = (key, top, bottom, a, b, speed = 30) => [
+    __lsh("span", { key: key, style: { left: 0, right: 0, top: top + '%', height: bottom - top + '%', background: `linear-gradient(180deg,${a},${b})` } }),
+    __lsh("span", { key: key + 's', className: "ngs-shimmer", style: {
+      left: -240, right: 0, top: top + 1 + '%', height: bottom - top - 1 + '%', opacity: 0.55,
+      /* glints, not columns: short horizontal dashes, which is what light on moving water looks like */
+      backgroundImage: 'repeating-linear-gradient(90deg,transparent 0 46px,rgba(255,255,255,.34) 46px 74px,transparent 74px 150px),repeating-linear-gradient(90deg,transparent 0 20px,rgba(255,255,255,.2) 20px 34px,transparent 34px 96px)',
+      backgroundPosition: '0 0,37px 6px',
+      WebkitMaskImage: 'repeating-linear-gradient(180deg,#000 0 2px,transparent 2px 11px)', maskImage: 'repeating-linear-gradient(180deg,#000 0 2px,transparent 2px 11px)',
+      animationDuration: speed + 's',
+    } }),
+  ];
+  /* A firework: twelve rays from one point. The wrapper is what blooms, so the rays never animate
+     on their own. */
+  const burst = (key, l, t, size, color, delay, dur = 11) => (
+    __lsh("span", { key: key, className: "ngs-burst", style: { left: l + '%', top: t + '%', width: size + '%', aspectRatio: '1', marginLeft: -size / 2 + '%', animationDuration: dur + 's', animationDelay: -delay + 's', opacity: 0 } }, Array.from({ length: 12 }, (_, j) => (
+        __lsh("span", { key: j, style: { position: 'absolute', left: 'calc(50% - 1.5px)', top: 0, width: 3, height: '50%', transformOrigin: '50% 100%', transform: `rotate(${j * 30}deg)`, background: `linear-gradient(0deg,transparent 30%,${color} 70%,#fff 100%)`, borderRadius: 3 } })
+      )), __lsh("span", { style: { position: 'absolute', inset: '30%', borderRadius: '50%', background: color, filter: 'blur(10px)', opacity: 0.6 } }))
+  );
+  const skyline = (key, base, color, lit, n = 16, seed = 1, h = 22) => Array.from({ length: n }, (_, i) => {
+    const w = 4 + (spread(i, seed) % 5), ht = h * (0.45 + (spread(i, seed + 2) % 55) / 100), l = (i * 100) / n - 1;
+    return (
+      __lsh("span", { key: key + i, style: { left: l + '%', width: w + 2 + '%', top: base - ht + '%', bottom: 100 - base + '%', background: color } }, __lsh("span", { className: "ng-lit", style: {
+          position: 'absolute', inset: '8% 14% 6%', opacity: 0.7, animationDuration: 6 + (i % 5) * 3 + 's', animationDelay: -i + 's',
+          backgroundImage: `repeating-linear-gradient(0deg,transparent 0 5px,${lit} 5px 8px),repeating-linear-gradient(90deg,transparent 0 4px,${color} 4px 8px)`,
+          backgroundBlendMode: 'normal', WebkitMaskImage: `linear-gradient(180deg,#000 ${30 + (i % 4) * 15}%,transparent ${45 + (i % 4) * 15}%)`,
+        } }))
+    );
+  });
+  const house = (key, l, base, w, h, body, roof, lit, opts = {}) => (
+    __lsh("span", { key: key, style: { left: l + '%', width: w + '%', top: base - h + '%', height: h + '%' } }, __lsh("span", { style: { position: 'absolute', left: '-8%', right: '-8%', top: 0, height: '46%', background: roof, clipPath: 'polygon(50% 0,100% 100%,0 100%)' } }), opts.snow && __lsh("span", { style: { position: 'absolute', left: '-9%', right: '-9%', top: '-3%', height: '22%', background: '#eef3f6', clipPath: 'polygon(50% 0,72% 46%,50% 30%,28% 46%)' } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: '44%', bottom: 0, background: body } }), [[16, 56], [62, 56]].map(([x, y], i) => (
+        __lsh("span", { key: i, className: "ng-lit", style: { position: 'absolute', left: x + '%', top: y + '%', width: '22%', height: '18%', background: lit, boxShadow: `0 0 10px ${lit}`, animationDuration: 7 + i * 4 + 's' } })
+      )), __lsh("span", { style: { position: 'absolute', left: '40%', width: '20%', top: '70%', bottom: 0, background: opts.door || '#2a1a10' } }))
+  );
+  const pumpkin = (key, l, t, s, lit = true) => (
+    __lsh("span", { key: key, style: { left: l + '%', top: t + '%', width: s / 9 + '%', aspectRatio: '1.25' } }, lit && __lsh("span", { className: "ng-glow", style: { position: 'absolute', inset: '-40%', background: 'rgba(255,160,60,.55)', animationDuration: '6s' } }), __lsh("span", { style: { position: 'absolute', inset: 0, borderRadius: '48% 48% 44% 44%', background: 'radial-gradient(60% 70% at 40% 35%,#f59a3c,#d0661c 70%,#a8480f)', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.15)' } }), __lsh("span", { style: { position: 'absolute', inset: 0, borderRadius: '48% 48% 44% 44%', backgroundImage: 'repeating-linear-gradient(90deg,transparent 0 18%,rgba(120,40,0,.28) 18% 21%)' } }), __lsh("span", { style: { position: 'absolute', left: '44%', width: '12%', top: '-16%', height: '22%', background: '#5a6b2c', borderRadius: 3 } }), lit && [
+        __lsh("span", { key: "e1", style: { position: 'absolute', left: '22%', top: '30%', width: '18%', height: '18%', background: '#ffe08a', clipPath: 'polygon(50% 0,100% 100%,0 100%)' } }),
+        __lsh("span", { key: "e2", style: { position: 'absolute', left: '60%', top: '30%', width: '18%', height: '18%', background: '#ffe08a', clipPath: 'polygon(50% 0,100% 100%,0 100%)' } }),
+        __lsh("span", { key: "m", style: { position: 'absolute', left: '24%', right: '24%', top: '56%', height: '20%', background: '#ffe08a', borderRadius: '0 0 50% 50% / 0 0 100% 100%' } }),
+      ])
+  );
+  const bat = (key, y, delay, s = 30, dur = 34) => (
+    __lsh("span", { key: key, className: "ngs-bat", style: { width: s / 9 + '%', aspectRatio: '2', '--y': y + '%', top: y + '%', left: '-12%', opacity: 0, animationDuration: dur + 's', animationDelay: -delay + 's' } }, __lsh("span", { className: "ng-wing", style: { position: 'absolute', left: 0, width: '50%', top: 0, height: '100%', background: '#120e1c', clipPath: 'polygon(100% 40%,70% 10%,40% 30%,0 0,20% 60%,60% 80%,100% 70%)' } }), __lsh("span", { className: "ng-wing", style: { position: 'absolute', right: 0, width: '50%', top: 0, height: '100%', background: '#120e1c', clipPath: 'polygon(0 40%,30% 10%,60% 30%,100% 0,80% 60%,40% 80%,0 70%)', transformOrigin: 'left center' } }), __lsh("span", { style: { position: 'absolute', left: '42%', width: '16%', top: '30%', height: '50%', borderRadius: '50%', background: '#120e1c' } }))
+  );
+  const flame = (key, l, t, w, dur = 2.4, delay = 0) => [
+    __lsh("span", { key: key, style: { left: `calc(${l}% - ${w / 18}%)`, top: t + '%', width: w / 9 + '%', aspectRatio: '1 / 1.6', transform: 'translateY(-100%)' } }, __lsh("span", { className: "ng-glow", style: { position: 'absolute', left: '-200%', right: '-200%', top: '-120%', bottom: '-60%', background: 'rgba(255,190,90,.55)', filter: 'blur(10px)', animationDuration: dur * 3 + 's' } }), __lsh("span", { className: "ngs-flame", style: { position: 'absolute', inset: 0, background: 'radial-gradient(60% 70% at 50% 70%,#fff6c8,#ffc457 55%,#f08a2c)', animationDuration: dur + 's', animationDelay: -delay + 's' } })),
+  ];
+  const lantern = (key, l, t, s, c = '#d9332b', delay = 0) => (
+    __lsh("span", { key: key, className: "ngs-hang", style: { left: l + '%', top: t + '%', width: s / 9 + '%', aspectRatio: '1 / 1.5', animationDuration: 5 + (delay % 3) + 's', animationDelay: -delay + 's' } }, __lsh("span", { style: { position: 'absolute', left: '48%', width: 2, top: 0, height: '18%', background: '#3a1a10' } }), __lsh("span", { className: "ng-glow", style: { position: 'absolute', inset: '0 -30% -10%', background: 'rgba(255,120,80,.45)', animationDuration: '9s' } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: '18%', height: '62%', borderRadius: '40%', background: `radial-gradient(50% 60% at 50% 50%,#ffb38a,${c} 70%)`, backgroundImage: `repeating-linear-gradient(90deg,transparent 0 18%,rgba(90,10,0,.3) 18% 21%),radial-gradient(50% 60% at 50% 50%,#ffb38a,${c} 70%)` } }), __lsh("span", { style: { position: 'absolute', left: '22%', right: '22%', top: '14%', height: '8%', background: '#e2b45a' } }), __lsh("span", { style: { position: 'absolute', left: '22%', right: '22%', top: '78%', height: '8%', background: '#e2b45a' } }), __lsh("span", { style: { position: 'absolute', left: '46%', width: '8%', top: '86%', height: '14%', background: '#e2b45a' } }))
+  );
+  const string = (key, top, sag, colors, n = 18, delayStep = 0.6) => [
+    __lsh("span", { key: key, style: { left: '-2%', right: '-2%', top: top + '%', height: sag + '%', borderBottom: '2px solid rgba(30,20,10,.75)', borderRadius: '0 0 50% 50% / 0 0 100% 100%' } }),
+    ...Array.from({ length: n }, (_, i) => {
+      const x = (i + 0.5) / n, y = top + sag * (1 - Math.pow(2 * x - 1, 2));
+      return __lsh("span", { key: key + i, className: "ngs-twinkle", style: { left: x * 100 + '%', top: `calc(${y}% - 2px)`, width: 8, height: 11, marginLeft: -4, borderRadius: '50% 50% 45% 45%', background: colors[i % colors.length], boxShadow: `0 0 10px ${colors[i % colors.length]}`, animationDuration: 2.8 + (i % 4) * 0.9 + 's', animationDelay: -(i * delayStep) + 's' } });
+    }),
+  ];
+  const rising = (key, n, img, colors, sizes = [16, 24, 34]) => Array.from({ length: n }, (_, i) => {
+    const band = i % 3;
+    const dur = [34, 26, 19][band] + (i % 4) * 3;
+    return __lsh("span", { key: key + i, className: "ngs-rise", style: { left: spread(i, 5) + '%', top: 106 - 122 * (((i * 3.1) % dur) / dur) + '%', width: sizes[band] / 9 + '%', aspectRatio: '1', backgroundImage: img(colors[i % colors.length]), backgroundSize: 'contain', backgroundRepeat: 'no-repeat', opacity: [0.55, 0.75, 0.92][band], filter: band === 0 ? 'blur(1px)' : undefined, '--sway': (i % 2 ? 1 : -1) * (12 + i * 3) + 'px', animationDuration: [34, 26, 19][band] + (i % 4) * 3 + 's', animationDelay: -(i * 3.1) + 's' } });
+  });
+
+  /* ---------- the scenes ---------- */
+  const springMeadow = (H, extra) => [
+    ...sun('sun', 72, 8, 7, '#fff8de', 'rgba(255,244,210,.8)'),
+    cloud('c1', 10, 26, 10, 160), cloud('c2', 20, 18, 80, 200, 0.8), cloud('c3', 6, 14, 130, 240, 0.7),
+    ...hill('h1', H - 14, 'polygon(0 40%,12% 22%,26% 34%,42% 10%,58% 28%,74% 8%,88% 24%,100% 14%,100% 100%,0 100%)', '#a9c7b0', '#d8e8dc', 1.4),
+    haze('hz1', 'rgba(232,242,236,.55)', H - 12 + '%', '14%', 8),
+    ...[[8, 3], [20, 4], [33, 3], [60, 4], [82, 3], [94, 4]].flatMap(([l, w], i) => fullTree('ft' + i, l, H - 18, H - 2, w, '#7a6a58', '#5e5140', ['#d9e6c4', '#f2d6dc', '#e6e9c8'], { blur: 1, seed: i, cw: 7 })),
+    ...hill('h2', H, 'polygon(0 24%,20% 8%,46% 20%,70% 4%,100% 18%,100% 100%,0 100%)', 'linear-gradient(180deg,#9cc485,#7fb06c 60%,#6c9e5c)', '#bfdcaa'),
+    ...[[18, 6], [74, 7]].flatMap(([l, w], i) => fullTree('nt' + i, l, H - 30, H + 10, w, '#6b5a48', '#4e4234', ['#f4c6d2', '#f8dbe2', '#eeb3c4', '#fbe7ec'], { seed: i + 2, cw: 15 })),
+    ...extra,
+  ];
+
+  return {
+    spring: {
+      label: 'Spring', group: 'season',
+      ground: 'linear-gradient(180deg,#cfe6ef 0%,#e2eff0 46%,#eef3e4 70%)',
+      tokens: LIGHT('#4d7a3a'), halo: 'light', base: 'cozy',
+      site: SITE(false, '#f4f7ee', '#ffffff', '#eaf2e2', '#24392b', '#3e5444', '#d4e2cc', '#4d7a3a', '#ffffff', '#2f6d6a', '#ffffff'),
+      render: () => springMeadow(58, [
+        ...Array.from({ length: 30 }, (_, i) => {
+          const row = i % 3, l = (i * 37) % 100, t = 76 + row * 7;
+          return flower('tu' + i, l, t, [14, 20, 28][row], ['#e86a6a', '#f2b13c', '#e88aa8', '#f4ede0', '#b98ad8'][i % 5], '#4d7a3a', undefined, i * 0.7);
+        }),
+        ...fall('pe', 14, ['#fbe2e8', '#f4c6d2', '#ffffff'], [5, 7, 10]),
+        vignette('transparent', 'rgba(90,110,80,.18)'),
+      ]),
+    },
+
+    summer: {
+      label: 'Summer', group: 'season',
+      ground: 'linear-gradient(180deg,#5fb0e0 0%,#8cc8ea 30%,#c4e4f0 50%)',
+      tokens: LIGHT('#14636A'), halo: 'light', base: 'cozy',
+      site: SITE(false, '#f1f8fb', '#ffffff', '#e2f0f5', '#17323d', '#38535d', '#cfe2ea', '#14636A', '#ffffff', '#0f5a7a', '#ffffff'),
+      render: () => [
+        ...sun('sun', 18, 7, 8, '#fffbe6', 'rgba(255,250,220,.9)'),
+        cloud('c1', 8, 22, 30, 180), cloud('c2', 18, 30, 110, 220, 0.85), cloud('c3', 4, 16, 160, 200, 0.75),
+        ...hill('far', 40, 'polygon(0 60%,10% 40%,24% 52%,40% 30%,56% 48%,72% 26%,88% 44%,100% 34%,100% 100%,0 100%)', '#5b8a6a', '#88b29a', 1.2),
+        ...Array.from({ length: 20 }, (_, i) => __lsh("span", { key: 'tl' + i, style: { left: i * 5.2 - 1 + '%', top: 44 - (spread(i, 4) % 6) + '%', width: '6%', height: 8 + (spread(i, 4) % 6) + '%', borderRadius: '50% 50% 0 0', background: i % 2 ? '#3f6e50' : '#4a7c5a', filter: 'blur(1px)' } })),
+        ...water('lake', 50, 72, '#5aa6c8', '#3d86a8', 40),
+        __lsh("span", { key: "sail", className: "ngs-sail", style: { top: '52%', left: '30%', width: '6%', height: '9%' } }, __lsh("span", { style: { position: 'absolute', left: '10%', width: '46%', top: 0, height: '84%', background: '#fffaf0', clipPath: 'polygon(100% 0,100% 100%,0 100%)' } }), __lsh("span", { style: { position: 'absolute', left: '58%', width: '34%', top: '18%', height: '66%', background: '#e8833a', clipPath: 'polygon(0 0,100% 100%,0 100%)' } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: '84%', height: '16%', background: '#6b4a32', clipPath: 'polygon(0 0,100% 0,86% 100%,14% 100%)' } })),
+        ...hill('bank', 68, 'polygon(0 30%,18% 12%,40% 26%,60% 8%,82% 22%,100% 6%,100% 100%,0 100%)', 'linear-gradient(180deg,#7fb05a,#5f9446 60%,#4a7c3a)', '#a8cf7c'),
+        ...fullTree('tL', 8, 20, 78, 9, '#5e4a36', '#3f3224', ['#3f7a3a', '#4f8f44', '#5fa04e', '#356a32'], { cw: 26, seed: 1 }),
+        ...fullTree('tR', 92, 26, 80, 8, '#5e4a36', '#3f3224', ['#4f8f44', '#3f7a3a', '#64a852', '#356a32'], { cw: 22, seed: 2 }),
+        ...Array.from({ length: 22 }, (_, i) => __lsh("span", { key: 'rd' + i, className: "ng-kelp", style: { left: 30 + i * 2.6 + '%', top: 70 + (i % 3) * 3 + '%', width: 3, height: 26 + (i % 4) * 8, background: '#5a7a34', borderRadius: 3, animationDuration: 5 + (i % 4) + 's', animationDelay: -i * 0.4 + 's' } })),
+        ...Array.from({ length: 14 }, (_, i) => flower('wf' + i, spread(i, 9), 82 + (i % 3) * 4, 16 + (i % 3) * 5, ['#f2d24a', '#ffffff', '#e8833a', '#b98ad8'][i % 4], '#4d7a3a', '50%', i)),
+        vignette('transparent', 'rgba(40,80,90,.14)'),
+      ],
+    },
+
+    halloween: {
+      label: 'Halloween', group: 'holiday',
+      ground: 'linear-gradient(176deg,#151028 0%,#251a44 38%,#3a2a4e 56%,#1e1a2a 100%)',
+      tokens: DARK('#16121f', '#221a2e', '#a08ab8', '#f2a03c', 0.8), halo: 'dark', base: 'night',
+      site: SITE(true, '#16121f', '#221a2e', '#2c2238', '#f4eee6', '#d8cfe0', '#4a3c5c', '#f2a03c', '#1a1010', '#c9a8f0', '#16121f'),
+      render: () => [
+        ...stars(36, 38, 5),
+        glow('mh', 6, -6, 34, 46, 'rgba(255,200,120,.5)', 26),
+        __lsh("span", { key: "moon", style: { left: '14%', top: '6%', width: '15%', aspectRatio: '1', borderRadius: '50%', background: 'radial-gradient(circle at 40% 38%,#fff1c8,#f7c97a 60%,#e8a85a)' } }),
+        cloud('mc1', 26, 26, 40, 220, 0.22, '#5a4f80'), cloud('mc2', 32, 20, 140, 260, 0.18, '#5a4f80'),
+        ...hill('h1', 46, 'polygon(0 50%,14% 32%,30% 46%,52% 18%,70% 36%,86% 22%,100% 40%,100% 100%,0 100%)', '#221a36', '#3c2f58', 1),
+        house('house', 52, 52, 9, 14, '#120e1c', '#120e1c', '#ffbf5a'),
+        __lsh("span", { key: "tower", style: { left: '59.5%', top: '33%', width: '3%', height: '13%', background: '#120e1c' } }, __lsh("span", { style: { position: 'absolute', left: '-30%', right: '-30%', top: '-60%', height: '70%', background: '#120e1c', clipPath: 'polygon(50% 0,100% 100%,0 100%)' } }), __lsh("span", { className: "ng-lit", style: { position: 'absolute', left: '30%', width: '40%', top: '30%', height: '22%', background: '#ffbf5a', animationDuration: '9s' } })),
+        haze('hz', 'rgba(70,56,100,.45)', '50%', '16%', 10),
+        ...[[30, 7, 54, 70], [40, 5, 58, 70], [74, 6, 55, 72]].flatMap(([l, w, t, b], i) => tree({ key: 'bm' + i, l, w, top: t, base: b, color: '#2a2040', dark: '#1e1630', branches: 4, lean: (i % 2 ? 1 : -1) * 2, seed: i, blur: 0.6 })),
+        ...[[7, 16, 30], [93, 14, 34]].flatMap(([l, w, t], i) => tree({ key: 'bt' + i, l, w, top: t, base: 100, color: '#1a1226', dark: '#0e0a16', branches: 6, lean: (i % 2 ? -1 : 1) * 3, seed: i + 1 })),
+        ...hill('h2', 70, 'polygon(0 20%,24% 6%,50% 18%,76% 4%,100% 16%,100% 100%,0 100%)', '#18121f', '#2c2240'),
+        __lsh("span", { key: "mist", className: "ng-mist", style: { top: '64%', height: '14%', background: 'rgba(120,100,150,.25)', animationDuration: '30s' } }),
+        __lsh("span", { key: "fence", style: { left: '44%', width: '26%', top: '68%', height: '7%', backgroundImage: 'linear-gradient(0deg,transparent 30%,#120e1c 30% 40%,transparent 40% 66%,#120e1c 66% 76%,transparent 76%),repeating-linear-gradient(90deg,#120e1c 0 7px,transparent 7px 22px)', clipPath: 'polygon(0 20%,100% 0,100% 100%,0 100%)' } }),
+        pumpkin('p1', 16, 78, 90), pumpkin('p2', 28, 86, 64), pumpkin('p3', 58, 82, 80), pumpkin('p4', 70, 88, 50, false), pumpkin('p5', 36, 90, 44),
+        bat('b1', 20, 0), bat('b2', 26, 11, 22, 41), bat('b3', 16, 23, 26, 38),
+        vignette('transparent', 'rgba(8,6,14,.55)'),
+      ],
+    },
+
+    harvest: {
+      label: 'Harvest (Thanksgiving)', group: 'holiday',
+      ground: 'linear-gradient(180deg,#f0b46a 0%,#f2c98a 30%,#e8a868 50%)',
+      tokens: DARK('#2a1c10', '#3a2818', '#c9a070', '#f2c46a', 0.82), halo: 'dark', base: 'fall',
+      site: SITE(false, '#fbf3e6', '#ffffff', '#f4e6cf', '#3a2414', '#5c3f28', '#e6d2b4', '#a8561e', '#ffffff', '#7a4a1a', '#ffffff'),
+      render: () => [
+        ...sun('sun', 64, 30, 10, '#fff0c8', 'rgba(255,214,140,.9)'),
+        ...hill('far', 42, 'polygon(0 50%,16% 36%,34% 48%,52% 30%,70% 44%,88% 32%,100% 42%,100% 100%,0 100%)', '#b0703a', '#d89a5a', 1.2),
+        ...Array.from({ length: 14 }, (_, i) => __lsh("span", { key: 'tl' + i, style: { left: i * 7.4 + '%', top: 44 - (spread(i, 2) % 5) + '%', width: '7%', height: 7 + (spread(i, 2) % 5) + '%', borderRadius: '50% 50% 0 0', background: ['#a8481c', '#c46a2a', '#8a3e1a'][i % 3], filter: 'blur(1.2px)' } })),
+        haze('hz', 'rgba(255,214,150,.5)', '44%', '12%', 8),
+        __lsh("span", { key: "field", style: { left: 0, right: 0, top: '52%', bottom: 0, background: 'linear-gradient(180deg,#c8964a,#a87434 50%,#8a5a26)' } }),
+        __lsh("span", { key: "rows", style: { left: '-40%', right: '-40%', top: '52%', bottom: 0, backgroundImage: 'repeating-linear-gradient(90deg,transparent 0 28px,rgba(90,50,10,.28) 28px 34px)', transform: 'perspective(260px) rotateX(58deg)', transformOrigin: '50% 0' } }),
+        __lsh("span", { key: "barn", style: { left: '14%', top: '38%', width: '13%', height: '15%' } }, __lsh("span", { style: { position: 'absolute', left: '-6%', right: '-6%', top: 0, height: '40%', background: '#5a2418', clipPath: 'polygon(20% 0,80% 0,100% 100%,0 100%)' } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: '38%', bottom: 0, background: '#a83a26' } }), __lsh("span", { style: { position: 'absolute', left: '34%', width: '32%', top: '56%', bottom: 0, background: '#7a2618', border: '2px solid #f4e6cf', boxSizing: 'border-box', backgroundImage: 'linear-gradient(45deg,transparent 46%,#f4e6cf 46% 54%,transparent 54%),linear-gradient(-45deg,transparent 46%,#f4e6cf 46% 54%,transparent 54%)' } })),
+        ...[[40, 58, 7], [56, 60, 8], [80, 62, 9]].map(([l, t, w], i) => __lsh("span", { key: 'hb' + i, style: { left: l + '%', top: t + '%', width: w + '%', aspectRatio: '1.6', borderRadius: '30% 30% 12% 12%', background: 'repeating-radial-gradient(ellipse at 30% 50%,#e8c06a 0 4px,#c89a42 4px 7px)', boxShadow: 'inset 0 -6px 0 rgba(90,50,10,.3)' } })),
+        ...[[8, 66, 6], [92, 64, 5]].map(([l, t, w], i) => __lsh("span", { key: 'sh' + i, className: "ng-kelp", style: { left: l + '%', top: t + '%', width: w + '%', height: '22%', background: 'repeating-linear-gradient(90deg,#d8b468 0 3px,#b88e44 3px 6px)', clipPath: 'polygon(50% 0,100% 100%,0 100%)', animationDuration: 9 + i + 's' } })),
+        pumpkin('pk1', 30, 82, 54, false), pumpkin('pk2', 38, 88, 38, false), pumpkin('pk3', 66, 84, 60, false), pumpkin('pk4', 74, 90, 34, false),
+        ...fall('lf', 10, ['#c96a21', '#a8471c', '#d99a3f', '#8c5a1e'], [8, 11, 15]),
+        vignette('transparent', 'rgba(70,30,10,.3)'),
+      ],
+    },
+
+    christmas: {
+      label: 'Christmas', group: 'holiday',
+      ground: 'linear-gradient(176deg,#0e1430 0%,#1c2a52 34%,#3b4a68 52%,#8fa9bd 70%,#d8e2ea 100%)',
+      tokens: DARK('#141a2c', '#1e2638', '#8fa9bd', '#f2c94c', 0.8), halo: 'dark', base: 'winter',
+      site: SITE(true, '#141a2c', '#1e2638', '#252f44', '#f4f6f8', '#d4dce4', '#3a4660', '#c9483b', '#ffffff', '#9fd4b0', '#141a2c'),
+      render: () => {
+        const tiers = [[0, 34, 38], [22, 44, 52], [44, 56, 66]];
+        const lights = ['#ff6b5a', '#ffd36e', '#7fe0a0', '#7fc6ff'];
+        return [
+          ...stars(40, 40, 2),
+          __lsh("span", { key: "snow", style: { left: 0, right: 0, top: '62%', bottom: 0, background: 'linear-gradient(180deg,#a8bccb,#d8e2ea 50%,#f2f6f8)' } }),
+          ...[[4, 62, 8, 12], [16, 61, 7, 10], [30, 62, 9, 13], [80, 62, 8, 12], [91, 61, 9, 14]].map(([l, b, w, h], i) => house('hs' + i, l, b, w, h, ['#5a3a3a', '#3a4a5a', '#4a3a2a'][i % 3], '#2a2030', '#ffcf7a', { snow: true })),
+          haze('hz', 'rgba(200,214,226,.35)', '56%', '10%', 8),
+          ...[[22, 70], [76, 72]].map(([l, t], i) => __lsh("span", { key: 'lp' + i, style: { left: l + '%', top: t + '%', width: 4, height: '18%', background: '#1b2028' } }, __lsh("span", { className: "ng-glow", style: { position: 'absolute', left: -60, top: -50, width: 124, height: 110, background: 'rgba(255,214,140,.6)', animationDuration: '11s' } }), __lsh("span", { style: { position: 'absolute', left: -6, top: -4, width: 16, height: 12, borderRadius: 4, background: '#ffe8a8' } }))),
+          __lsh("span", { key: "tree", style: { left: '46%', top: '30%', width: '20%', height: '56%' } }, tiers.map(([t, h, w], i) => __lsh("span", { key: i, style: { position: 'absolute', left: (100 - w * 1.4) / 2 + '%', width: w * 1.4 + '%', top: t + '%', height: h + '%', background: ['#2f6a40', '#28603a', '#225634'][i], clipPath: 'polygon(50% 0,100% 100%,0 100%)' } })), __lsh("span", { style: { position: 'absolute', left: '44%', width: '12%', top: '88%', height: '12%', background: '#5a3a24' } }), tiers.flatMap(([t, h, w], ti) => Array.from({ length: 4 + ti * 2 }, (_, j) => {
+              const n = 4 + ti * 2, f = (j + 0.5) / n, y = t + h * (0.55 + 0.4 * ((j % 2) ? 0.7 : 0.4)), half = (w * 1.4 * (y - t) / h) / 2;
+              return __lsh("span", { key: 'l' + ti + j, className: "ngs-twinkle", style: { position: 'absolute', left: `calc(${50 - half + half * 2 * f}% - 4px)`, top: y + '%', width: 8, height: 8, borderRadius: '50%', background: lights[(j + ti) % 4], boxShadow: `0 0 8px ${lights[(j + ti) % 4]}`, animationDuration: 2.6 + ((j + ti) % 4) * 0.8 + 's', animationDelay: -(j * 0.5 + ti) + 's' } });
+            })), __lsh("span", { className: "ng-glow", style: { position: 'absolute', left: '30%', top: '-14%', width: '40%', height: '24%', background: 'rgba(255,220,120,.7)', animationDuration: '8s' } }), __lsh("span", { style: { position: 'absolute', left: '43%', top: '-6%', width: '14%', aspectRatio: '1', background: '#ffd36e', clipPath: 'polygon(50% 0,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)' } })),
+          ...[[38, 84, '#c9483b'], [62, 86, '#2f6d96'], [68, 82, '#e2b45a']].map(([l, t, c], i) => __lsh("span", { key: 'gf' + i, style: { left: l + '%', top: t + '%', width: '5%', aspectRatio: '1.2', background: c, backgroundImage: 'linear-gradient(90deg,transparent 44%,#f4f1e8 44% 56%,transparent 56%),linear-gradient(0deg,transparent 44%,#f4f1e8 44% 56%,transparent 56%)', borderRadius: 2 } })),
+          ...fall('sn', 26, ['#f4f8fa'], [2, 3, 5], '50%'),
+          vignette('transparent', 'rgba(10,14,30,.5)'),
+        ];
+      },
+    },
+
+    hanukkah: {
+      label: 'Hanukkah', group: 'holiday',
+      ground: 'linear-gradient(180deg,#1b2440 0%,#232e50 60%,#1a2238 100%)',
+      tokens: DARK('#141b30', '#1e2740', '#8fa9d6', '#ffd36e', 0.82), halo: 'dark', base: 'night',
+      site: SITE(true, '#141b30', '#1e2740', '#26304c', '#f2f5fa', '#d0d8e8', '#36426a', '#4a7ad0', '#ffffff', '#ffd36e', '#141b30'),
+      /* THE CANDLES ARE THE REAL NIGHT. On the fourth night of Hanukkah, four candles and the shamash
+         are lit. Candles are placed from the right and lit newest first, so night n lights the n
+         rightmost. Outside Hanukkah (a preview, or a pin) it shows all eight. */
+      render: ({ date } = {}) => {
+        const n = hanukkahNight(date || new Date()) || 8;
+        const slots = [0, 1, 2, 3, 'S', 4, 5, 6, 7];
+        return [
+          __lsh("span", { key: "win", style: { left: '22%', right: '22%', top: '8%', height: '58%', background: 'linear-gradient(180deg,#0c1228,#1a2a50 70%,#30466e)', overflow: 'hidden' } }, Array.from({ length: 22 }, (_, i) => __lsh("span", { key: 's' + i, className: "ngs-twinkle", style: { position: 'absolute', left: spread(i, 3) + '%', top: spread(i, 8) * 0.6 + '%', width: 2, height: 2, borderRadius: '50%', background: '#e8eef6', animationDuration: 3 + (i % 4) + 's' } })), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '22%', background: 'linear-gradient(180deg,#b8c8d8,#e6eef4)', borderRadius: '50% 50% 0 0 / 30% 30% 0 0' } }), Array.from({ length: 16 }, (_, i) => __lsh("span", { key: 'f' + i, className: "ng-seed", style: { position: 'absolute', left: spread(i, 4) + '%', width: 3, height: 3, borderRadius: '50%', background: '#f4f8fa', '--spin': '0deg', '--sway': (i % 2 ? 8 : -8) + 'px', animationDuration: 12 + (i % 4) * 3 + 's', animationDelay: -i * 1.4 + 's' } }))),
+          __lsh("span", { key: "frame", style: { left: '22%', right: '22%', top: '8%', height: '58%', border: '10px solid #e6e2d6', boxSizing: 'border-box' } }),
+          __lsh("span", { key: "mv", style: { left: 'calc(50% - 4px)', width: 8, top: '8%', height: '58%', background: '#e6e2d6' } }),
+          __lsh("span", { key: "mh", style: { left: '22%', right: '22%', top: '36%', height: 8, background: '#e6e2d6' } }),
+          __lsh("span", { key: "sill", style: { left: '18%', right: '18%', top: '66%', height: '4%', background: '#d8d2c2', boxShadow: '0 6px 10px rgba(0,0,0,.3)' } }),
+          __lsh("span", { key: "wall", style: { left: 0, right: 0, top: '70%', bottom: 0, background: 'linear-gradient(180deg,#2a3450,#1e263c)' } }),
+          glow('room', 28, 40, 44, 34, 'rgba(255,200,110,.32)', 16),
+          __lsh("span", { key: "men", style: { left: '31%', width: '38%', top: '46%', height: '20%' } }, __lsh("span", { style: { position: 'absolute', left: '40%', width: '20%', bottom: 0, height: '8%', background: '#c9cfd8', borderRadius: 4 } }), __lsh("span", { style: { position: 'absolute', left: '48%', width: '4%', bottom: '6%', height: '40%', background: '#c9cfd8' } }), __lsh("span", { style: { position: 'absolute', left: '4%', right: '4%', top: '46%', height: '5%', background: '#c9cfd8', borderRadius: 3 } }), slots.map((s, i) => {
+              const x = 6 + i * 11, shamash = s === 'S', lit = shamash || s >= 8 - n;
+              return (
+                __lsh("span", { key: 'c' + i, style: { position: 'absolute', left: x + '%', width: '4%', top: shamash ? '6%' : '22%', height: shamash ? '42%' : '26%' } }, __lsh("span", { style: { position: 'absolute', inset: 0, background: shamash ? '#f4f1e8' : '#7fa6e0', borderRadius: 2 } }), lit && __lsh("span", { className: "ngs-flame", style: { position: 'absolute', left: '-30%', right: '-30%', top: '-70%', height: '62%', background: 'radial-gradient(60% 70% at 50% 70%,#fff6c8,#ffc457 55%,#f08a2c)', animationDuration: 2 + (i % 3) * 0.4 + 's' } }))
+              );
+            })),
+          vignette('transparent', 'rgba(8,10,22,.55)'),
+        ];
+      },
+    },
+
+    newYear: {
+      label: "New Year's", group: 'holiday',
+      ground: 'linear-gradient(180deg,#05060f 0%,#0e1430 50%,#1a1a3a 70%)',
+      tokens: DARK('#0c0e1c', '#161a2c', '#8a92c0', '#ffd36e', 0.82), halo: 'dark', base: 'night',
+      site: SITE(true, '#0c0e1c', '#161a2c', '#1e2338', '#f4f4fa', '#d2d4e6', '#30365a', '#d9b34a', '#14100a', '#9ad4e8', '#0c0e1c'),
+      render: () => [
+        ...stars(30, 50, 7),
+        burst('f1', 22, 10, 18, '#ffd36e', 0), burst('f2', 50, 4, 22, '#7fe0d8', 3.7), burst('f3', 78, 12, 16, '#ff8ab0', 7.3), burst('f4', 36, 18, 12, '#f4f1e8', 5.2), burst('f5', 66, 20, 14, '#ffd36e', 9),
+        ...skyline('far', 62, '#1a1e36', 'rgba(255,214,140,.5)', 18, 4, 18),
+        ...skyline('near', 66, '#0e1020', 'rgba(255,220,150,.85)', 12, 2, 28),
+        ...water('river', 66, 100, '#141a34', '#080a16', 50),
+        ...[[22, '#ffd36e'], [50, '#7fe0d8'], [78, '#ff8ab0']].map(([l, c], i) => __lsh("span", { key: 'rf' + i, className: "ng-glow", style: { left: l - 8 + '%', top: '72%', width: '16%', height: '18%', background: hexA(c, 0.25), animationDuration: 11 + i * 3 + 's' } })),
+        vignette('transparent', 'rgba(4,4,12,.5)'),
+      ],
+    },
+
+    valentines: {
+      label: "Valentine's Day", group: 'holiday',
+      ground: 'linear-gradient(180deg,#f8dde2 0%,#f2c4cf 40%,#e8a8b8 64%)',
+      tokens: LIGHT('#9c3357', '#9c6a7a'), halo: 'light', base: 'cozy',
+      site: SITE(false, '#fdf3f5', '#ffffff', '#f8e4ea', '#3a1e28', '#5c3a46', '#efd2da', '#9c3357', '#ffffff', '#8a2a4a', '#ffffff'),
+      render: () => [
+        ...sun('sun', 44, 26, 12, '#fff2ea', 'rgba(255,232,224,.9)'),
+        cloud('c1', 12, 22, 40, 210, 0.7, '#fff3f5'), cloud('c2', 22, 16, 150, 240, 0.6, '#fff3f5'),
+        ...hill('h1', 50, 'polygon(0 40%,18% 20%,38% 36%,58% 14%,80% 30%,100% 16%,100% 100%,0 100%)', '#d896aa', '#ecc0cc', 1.2),
+        ...[[12, 3], [28, 2.6], [70, 3], [88, 2.6]].flatMap(([l, w], i) => fullTree('vt' + i, l, 40, 58, w, '#8a5a6a', '#6a4252', ['#f4c6d2', '#eeb3c4', '#fbe2e8'], { blur: 1, seed: i, cw: 8 })),
+        ...hill('h2', 66, 'polygon(0 22%,26% 6%,52% 20%,78% 4%,100% 16%,100% 100%,0 100%)', 'linear-gradient(180deg,#c9849a,#b06e86)', '#e2a8ba'),
+        ...rising('ht', 14, HEART, ['#e0587a', '#f28aa4', '#c93a62', '#ffffff']),
+        vignette('transparent', 'rgba(120,40,70,.14)'),
+      ],
+    },
+
+    stPatricks: {
+      label: "St Patrick's Day", group: 'holiday',
+      ground: 'linear-gradient(180deg,#a8d4ec 0%,#d2e8f0 46%)',
+      tokens: LIGHT('#2c6e49'), halo: 'light', base: 'cozy',
+      site: SITE(false, '#f2f8f2', '#ffffff', '#e2f0e4', '#173a24', '#365a42', '#cfe2d2', '#2c6e49', '#ffffff', '#1f6a52', '#ffffff'),
+      render: () => [
+        ...sun('sun', 80, 8, 7, '#fffbe6', 'rgba(255,250,220,.85)'),
+        __lsh("span", { key: "rainbow", style: { left: '6%', width: '66%', top: '10%', aspectRatio: '2', overflow: 'hidden', opacity: 0.6 } }, __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: 0, height: '200%', background: 'radial-gradient(circle closest-side,transparent 70%,#9a7ad0 70% 74%,#5a8ad8 74% 78%,#5ab07a 78% 82%,#f2d24a 82% 86%,#f2a03c 86% 90%,#e85a4a 90% 94%,transparent 94%)' } })),
+        cloud('c1', 8, 22, 20, 200), cloud('c2', 20, 16, 120, 230, 0.8),
+        ...hill('h1', 44, 'polygon(0 44%,16% 24%,34% 38%,54% 12%,74% 32%,90% 18%,100% 28%,100% 100%,0 100%)', '#6aa85a', '#9ccf86', 1),
+        ...hill('h2', 56, 'polygon(0 26%,22% 8%,48% 24%,72% 6%,100% 20%,100% 100%,0 100%)', '#4f9046', '#7fbc6a'),
+        __lsh("span", { key: "wall", style: { left: 0, right: 0, top: '66%', height: '5%', backgroundImage: 'radial-gradient(ellipse 18px 10px at 50% 60%,#a8aca6 96%,transparent),radial-gradient(ellipse 14px 8px at 50% 40%,#8f948e 96%,transparent)', backgroundSize: '34px 100%,26px 100%', backgroundPosition: '0 0,12px 0' } }),
+        ...hill('h3', 70, 'polygon(0 14%,30% 4%,62% 16%,100% 2%,100% 100%,0 100%)', 'linear-gradient(180deg,#3f8a3a,#2f7030)', '#5aa04c'),
+        __lsh("span", { key: "pot", style: { left: '66%', top: '72%', width: '6%', aspectRatio: '1.1' } }, __lsh("span", { style: { position: 'absolute', inset: '0 0 0 0', borderRadius: '0 0 40% 40%', background: '#2a2d33' } }), __lsh("span", { style: { position: 'absolute', left: '-6%', right: '-6%', top: '-4%', height: '26%', borderRadius: '50%', background: 'radial-gradient(circle at 30% 50%,#ffe08a 0 22%,#e2b43a 24% 46%,#f2d24a 48%)' } })),
+        ...Array.from({ length: 16 }, (_, i) => __lsh("span", { key: 'cl' + i, className: "ng-kelp", style: { left: spread(i, 6) + '%', top: 80 + (i % 3) * 5 + '%', width: [2.6, 3.4, 4.4][i % 3] + '%', aspectRatio: '1', backgroundImage: CLOVER(['#8fd97a', '#a8e890', '#6cc45a'][i % 3]), backgroundSize: 'contain', backgroundRepeat: 'no-repeat', animationDuration: 6 + (i % 4) + 's', animationDelay: -i * 0.6 + 's' } })),
+        vignette('transparent', 'rgba(30,80,40,.14)'),
+      ],
+    },
+
+    easter: {
+      label: 'Easter', group: 'holiday',
+      ground: 'linear-gradient(180deg,#d8eaf4 0%,#eef2e8 46%,#f2eedc 70%)',
+      tokens: LIGHT('#4d7a3a'), halo: 'light', base: 'cozy',
+      site: SITE(false, '#f8f6ee', '#ffffff', '#eef0e2', '#2a3424', '#485440', '#dfe2cf', '#6a5aa8', '#ffffff', '#3e6a8a', '#ffffff'),
+      render: () => springMeadow(60, [
+        ...Array.from({ length: 12 }, (_, i) => flower('df' + i, 6 + i * 8, 72 + (i % 2) * 4, 22, i % 2 ? '#f2d24a' : '#fff4c8', '#4d7a3a', '50% 50% 30% 30%', i)),
+        ...[[16, 86, 34, '#b8d8f0', '#f4f1e8'], [28, 90, 28, '#f6c8d8', '#fff'], [44, 84, 30, '#f2e08a', '#e8a8c8'], [62, 88, 36, '#c8e6b8', '#b8a8e8'], [76, 84, 28, '#d8c8f0', '#fff'], [86, 90, 32, '#f8d0a8', '#a8d8e8']].map(([l, t, s, a, b], i) => (
+          __lsh("span", { key: 'eg' + i, className: "ngs-bob", style: { left: l + '%', top: t + '%', width: s / 9 + '%', aspectRatio: '1 / 1.3', borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%', background: a, backgroundImage: i % 2 ? `repeating-linear-gradient(0deg,transparent 0 22%,${b} 22% 32%)` : `radial-gradient(circle,${b} 0 14%,transparent 16%)`, backgroundSize: i % 2 ? 'auto' : '40% 30%', boxShadow: 'inset -3px -4px 0 rgba(0,0,0,.08)', animationDuration: 3 + i * 0.4 + 's' } })
+        )),
+        ...Array.from({ length: 30 }, (_, i) => __lsh("span", { key: 'gr' + i, style: { left: i * 3.4 + '%', top: '92%', width: 10, height: 18 + (i % 3) * 6, background: '#6c9e5c', clipPath: 'polygon(50% 0,100% 100%,0 100%)' } })),
+        ...fall('pe', 8, ['#fbe2e8', '#ffffff'], [5, 7, 9]),
+      ]),
+    },
+
+    july4: {
+      label: 'Fourth of July', group: 'holiday',
+      ground: 'linear-gradient(180deg,#0c1430 0%,#1e2450 34%,#5a3a6a 52%,#c86a4a 62%)',
+      tokens: DARK('#10142a', '#1a2038', '#8a9ac8', '#ff6b5a', 0.82), halo: 'dark', base: 'night',
+      site: SITE(true, '#10142a', '#1a2038', '#222a46', '#f4f6fa', '#d2d8e8', '#323c64', '#c9483b', '#ffffff', '#8ab8ff', '#10142a'),
+      render: () => [
+        ...stars(24, 30, 9),
+        burst('f1', 26, 8, 20, '#ff6b5a', 0), burst('f2', 54, 2, 24, '#f4f1e8', 4), burst('f3', 80, 10, 18, '#7fa6ff', 7.6), burst('f4', 40, 16, 12, '#ff6b5a', 9.6), burst('f5', 68, 18, 12, '#f4f1e8', 2.2),
+        ...hill('far', 56, 'polygon(0 50%,12% 30%,28% 44%,46% 22%,64% 40%,80% 24%,100% 38%,100% 100%,0 100%)', '#1a1430', '#3a2a50', 1),
+        ...water('lake', 62, 100, '#2a2450', '#0c1024', 46),
+        ...[[26, '#ff6b5a'], [54, '#f4f1e8'], [80, '#7fa6ff']].map(([l, c], i) => __lsh("span", { key: 'rf' + i, className: "ng-glow", style: { left: l - 8 + '%', top: '66%', width: '16%', height: '22%', background: hexA(c, 0.22), animationDuration: 11 + i * 3 + 's' } })),
+        __lsh("span", { key: "dock", style: { left: '-4%', width: '46%', top: '84%', height: '5%', background: '#2a1e18', transform: 'skewX(-30deg)' } }),
+        ...[4, 14, 24, 34].map((l, i) => __lsh("span", { key: 'dp' + i, style: { left: l + '%', top: '86%', width: '1.4%', height: '14%', background: '#1e1612' } })),
+        ...Array.from({ length: 8 }, (_, i) => __lsh("span", { key: 'ff' + i, className: "ng-pulse", style: { left: 56 + spread(i, 3) * 0.4 + '%', top: 80 + (i % 4) * 4 + '%', width: 5, height: 5, background: '#f2e27a', boxShadow: '0 0 8px #f2e27a', animationDuration: 2.6 + (i % 3) + 's', animationDelay: -i + 's' } })),
+        vignette('transparent', 'rgba(6,8,20,.5)'),
+      ],
+    },
+
+    lunarNewYear: {
+      label: 'Lunar New Year', group: 'holiday',
+      ground: 'linear-gradient(180deg,#140a14 0%,#2a1222 46%,#3a1a24 70%)',
+      tokens: DARK('#1a0e14', '#26141c', '#c98a8a', '#ffc457', 0.82), halo: 'dark', base: 'night',
+      site: SITE(true, '#1a0e14', '#26141c', '#321a24', '#f8f0ea', '#e2d2cc', '#4a2a34', '#c9302b', '#ffffff', '#ffc457', '#1a0e14'),
+      render: () => [
+        ...stars(18, 30, 4),
+        __lsh("span", { key: "branch", style: { left: '-2%', top: '4%', width: '34%', height: '4px', background: '#3a1e18', transform: 'rotate(14deg)', transformOrigin: 'left' } }),
+        ...Array.from({ length: 12 }, (_, i) => __lsh("span", { key: 'pb' + i, style: { left: 2 + i * 2.6 + '%', top: 5 + i * 0.9 + (i % 2 ? -2 : 2) + '%', width: 10, height: 10, borderRadius: '50%', background: i % 3 ? '#f2a8c0' : '#fbe2e8', boxShadow: '0 0 6px rgba(242,168,192,.6)' } })),
+        ...[[0, 56, 22, 18], [24, 58, 18, 14], [76, 56, 26, 20]].map(([l, b, w, h], i) => (
+          __lsh("span", { key: 'rf' + i, style: { left: l + '%', width: w + '%', top: b - h + '%', height: h + '%' } }, __lsh("span", { style: { position: 'absolute', left: '-10%', right: '-10%', top: 0, height: '34%', background: '#120a10', clipPath: 'polygon(0 100%,4% 70%,14% 60%,30% 10%,70% 10%,86% 60%,96% 70%,100% 100%)' } }), __lsh("span", { style: { position: 'absolute', left: 0, right: 0, top: '32%', bottom: 0, background: '#1e1018' } }), __lsh("span", { className: "ng-lit", style: { position: 'absolute', left: '20%', right: '20%', top: '50%', height: '24%', background: 'repeating-linear-gradient(90deg,#ffb36a 0 12%,#1e1018 12% 16%)', animationDuration: 8 + i * 3 + 's' } }))
+        )),
+        __lsh("span", { key: "street", style: { left: 0, right: 0, top: '56%', bottom: 0, background: 'linear-gradient(180deg,#2a1218,#140a0e)' } }),
+        ...string('s1', 14, 10, ['#ffc457'], 0, 0),
+        ...Array.from({ length: 7 }, (_, i) => { const x = (i + 0.5) / 7; return lantern('la' + i, x * 100 - 2, 14 + 10 * (1 - Math.pow(2 * x - 1, 2)), 34, i % 3 === 1 ? '#e8502b' : '#d9332b', i); }),
+        ...string('s2', 30, 8, ['#ffc457'], 0, 0),
+        ...Array.from({ length: 5 }, (_, i) => { const x = (i + 0.5) / 5; return lantern('lb' + i, x * 100 - 2, 30 + 8 * (1 - Math.pow(2 * x - 1, 2)), 46, '#d9332b', i + 3); }),
+        ...rising('sl', 6, (c) => svgUrl(`<path d='M4 2h12l-2 16H6z' fill='${c}'/><rect x='7' y='12' width='6' height='5' fill='%23fff3c8' opacity='.8'/>`), ['#ffb36a', '#ffc457'], [12, 16, 22]),
+        vignette('transparent', 'rgba(10,4,8,.5)'),
+      ],
+    },
+
+    diwali: {
+      label: 'Diwali', group: 'holiday',
+      ground: 'linear-gradient(180deg,#120a1e 0%,#24123a 46%,#3a1a3a 70%)',
+      tokens: DARK('#170e22', '#24162e', '#c9a0c8', '#ffc457', 0.82), halo: 'dark', base: 'night',
+      site: SITE(true, '#170e22', '#24162e', '#2e1c3a', '#faf2ea', '#e6d6dc', '#48304e', '#e8833a', '#1a0e08', '#f2c4e8', '#170e22'),
+      render: () => [
+        ...stars(26, 40, 6),
+        burst('f1', 30, 10, 14, '#ffc457', 1), burst('f2', 72, 6, 16, '#f28ad0', 6),
+        ...string('s1', 6, 10, ['#ffc457', '#ff8a5a', '#f2e27a', '#f28ad0'], 22, 0.4),
+        __lsh("span", { key: "wall", style: { left: 0, right: 0, top: '44%', height: '22%', background: 'linear-gradient(180deg,#3a2240,#2a1830)' } }),
+        ...[16, 50, 84].map((l, i) => __lsh("span", { key: 'arch' + i, style: { left: l - 9 + '%', width: '18%', top: '30%', height: '36%', background: '#1e1028', borderRadius: '50% 50% 0 0 / 40% 40% 0 0', boxShadow: 'inset 0 0 0 6px #4a2a50' } }, __lsh("span", { className: "ng-glow", style: { position: 'absolute', inset: '20% 10% 0', background: 'rgba(255,170,90,.35)', animationDuration: 14 + i * 3 + 's' } }))),
+        __lsh("span", { key: "ledge", style: { left: 0, right: 0, top: '66%', height: '4%', background: '#5a3a4a' } }),
+        __lsh("span", { key: "floor", style: { left: 0, right: 0, top: '70%', bottom: 0, background: 'linear-gradient(180deg,#3a2430,#24141e)' } }),
+        __lsh("span", { key: "rangoli", style: { left: '50%', top: '80%', width: '30%', aspectRatio: '2.4', marginLeft: '-15%', borderRadius: '50%', background: 'repeating-conic-gradient(from 0deg,#e8502b 0 15deg,#ffc457 15deg 30deg,#f28ad0 30deg 45deg,#5ab0c8 45deg 60deg)', WebkitMaskImage: 'radial-gradient(closest-side,transparent 0 20%,#000 22% 44%,transparent 46% 54%,#000 56% 96%,transparent 98%)' } }),
+        ...Array.from({ length: 9 }, (_, i) => { const l = 6 + i * 11; return [__lsh("span", { key: 'dy' + i, style: { left: l - 1.6 + '%', top: '64.6%', width: '3.2%', aspectRatio: '2.3', background: '#b0602a', borderRadius: '0 0 50% 50% / 0 0 100% 100%' } }), ...flame('dyf' + i, l, 66, 10, 2.2 + (i % 3) * 0.3, i * 0.3)]; }).flat(),
+        ...Array.from({ length: 6 }, (_, i) => { const l = 18 + i * 13; return [__lsh("span", { key: 'dz' + i, style: { left: l - 2.2 + '%', top: '90.4%', width: '4.4%', aspectRatio: '2.3', background: '#a8521e', borderRadius: '0 0 50% 50% / 0 0 100% 100%' } }), ...flame('dzf' + i, l, 92, 13, 2.4 + (i % 3) * 0.3, i * 0.4)]; }).flat(),
+        vignette('transparent', 'rgba(10,4,14,.5)'),
+      ],
+    },
+  };
+}
+
+Object.assign(GROUND_THEMES, makeSeasonScenes({ tree, haze, vignette, spread }));
+
 /* NO HELPER FUNCTIONS HERE ON PURPOSE. Only exports starting with a capital letter reach the
    bundle's namespace, so a lowercase `groundIconBase()` is documentable but not callable — read
    the plain data fields instead: `GROUND_THEMES[theme].base` for the icon set (with `|| 'color'`)
@@ -2844,7 +3324,21 @@ const MOTION_CSS = `
 .ls .ng{position:absolute;inset:0}
 .ls.ls-still .ng, .ls.ls-still .ng *{animation-play-state:paused !important}
 .ls .ls-tint{inset:0;pointer-events:none}
+.ls .ls-ghost{position:absolute;inset:0;pointer-events:none}
+@media (prefers-reduced-motion: no-preference){.ls .ls-ghost{transition:opacity var(--ls-fade,3000ms) ease-in-out}}
+.ls .ls-ghost.ls-gone{opacity:0}
 `;
+
+/* *** A SCHEDULED CHANGE OF SCENE FADES (seasons, 2026-10-05). *** Design's decision 3: when the date changes
+   the look (midnight, a holiday starting), it changes slowly, not in one cut. The old world is copied, laid
+   over the new one, and faded out over FADE_MS. Only for a change the screen made by itself (`fade: true`,
+   from sky.js) - a person picking a theme sees it at once - and never when motion is "still" or the system
+   asks for less motion (then it is one cut, which is one change of brightness, not a flash). THREE SECONDS,
+   argued: long enough that nobody sees a jump, short enough to be over before anybody wonders what is
+   happening. A brightness change spread over 3 s is nowhere near a flash. The panels' colours change at the
+   start, in one step: they are solid, and two themes' panels are close enough that a cut there reads as a
+   change of mood, not a flicker. */
+export const FADE_MS = 3000;
 
 /** `{ time, weather }` with anything unknown dropped, or null when neither is known. */
 export function normalizeSky(sky) {
@@ -2858,7 +3352,7 @@ function injectCss(doc) {
   if (doc.getElementById('livescene-css')) return;
   const el = doc.createElement('style');
   el.id = 'livescene-css';
-  el.textContent = CSS + MOTION_CSS;
+  el.textContent = CSS + SEASON_CSS + MOTION_CSS;
   doc.head.append(el);
 }
 
@@ -2877,7 +3371,17 @@ function injectCss(doc) {
  * `data-sky-weather` on the `.ls` root, for a scene that draws its own night or rain. Omitted: no sky,
  * exactly as before. A scene mounted by syncScene (a page's theme) follows `setSceneSky` instead.
  */
-export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit, sky = null } = {}) {
+/*
+ * (2026-10-05, seasons) `date`: the day a scene that cares draws (Hanukkah's candles), as a Date or ms.
+ * Omitted: the moment the page's look is showing (seasons.js `at`, held by sky.js while a change waits for a
+ * calm moment), else now. Every scene's render is called with ONE object, { date, time, weather } - `time`
+ * and `weather` are the sky's (null without one) - so a scene that destructures it never meets a null.
+ * PHOTOSAFE: while the screen has a flash limit (the photosensitivity setting sets one; flash_limit.js), the
+ * `.ls` root carries `data-photosafe`, and the fireworks slow to a soft bloom at half brightness (SEASON_CSS).
+ * No limit, no attribute: the ruling that the flash limit applies only when that setting is on.
+ * `set({ ..., fade: true })` (a change the screen made by itself) fades a change of scene: see FADE_MS.
+ */
+export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'gentle', flashLimit, sky = null, date = null } = {}) {
   const doc = host.ownerDocument || document;
   injectCss(doc);
   const root = doc.createElement('div');
@@ -2889,7 +3393,12 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
   let systemReduced = !!mq?.matches;
   // `flashLimit`: the screen's limit (flash_limit.js) - a number or a getter, read on every render.
   // A host that passes nothing gets 3, the published ceiling.
-  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit, sky: normalizeSky(sky) };
+  let cfg = { scene, overlays: [].concat(overlays || []), motion, flashLimit, sky: normalizeSky(sky), date };
+  const dateNow = () => {
+    const d = cfg.date ?? seasonContext().at ?? Date.now();
+    const out = d instanceof Date ? new Date(d.valueOf()) : new Date(d);
+    return Number.isFinite(out.valueOf()) ? out : new Date();
+  };
   const limitNow = () => {
     try { return normalizeFlashLimit(typeof cfg.flashLimit === 'function' ? cfg.flashLimit() : cfg.flashLimit); }
     catch { return normalizeFlashLimit(undefined); }
@@ -2905,7 +3414,9 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     for (const [attr, v] of [['skyTime', cfg.sky?.time], ['skyWeather', cfg.sky?.weather]]) {
       if (v) root.dataset[attr] = v; else delete root.dataset[attr];
     }
-    const ng = __lsh('div', { className: 'ng' }, s.render(cfg.sky));
+    // (seasons) Photosafe while the screen has any flash limit; see above.
+    root.toggleAttribute('data-photosafe', Number.isFinite(limitNow()));
+    const ng = __lsh('div', { className: 'ng' }, s.render({ date: dateNow(), time: cfg.sky?.time || null, weather: cfg.sky?.weather || null }));
     // The shared layer's weather overlays join the scene's own, once each (a theme already wearing
     // rain does not get a second rain).
     const look = skyLook(cfg.scene, cfg.sky);
@@ -2943,9 +3454,24 @@ export function mountScene(host, { scene = 'nimrod', overlays = [], motion = 'ge
     get halo() { return (SCENES[cfg.scene] || SCENES.nimrod).halo; },
     get sky() { return cfg.sky ? { ...cfg.sky } : null; },
     set(next = {}) {
-      cfg = { ...cfg, ...next, overlays: [].concat(next.overlays ?? cfg.overlays) };
-      if ('sky' in next) cfg.sky = normalizeSky(next.sky);
+      const { fade, ...rest } = next;
+      const before = cfg.scene;
+      cfg = { ...cfg, ...rest, overlays: [].concat(rest.overlays ?? cfg.overlays) };
+      if ('sky' in rest) cfg.sky = normalizeSky(rest.sky);
+      // (seasons) A scheduled change of scene: keep a copy of the old world to fade out over the new one.
+      const ghost = fade && rest.scene && rest.scene !== before && motionOf(cfg.motion, systemReduced) !== 'still'
+        && root.firstElementChild ? root.firstElementChild.cloneNode(true) : null;
+      if (ghost) ghost.style.background = root.style.background;
       render();
+      if (ghost) {
+        ghost.classList.add('ls-ghost');
+        ghost.setAttribute('data-ghost', before);
+        root.append(ghost);
+        const win = doc.defaultView || globalThis;
+        // A timer, not a frame: a hidden page draws no frames. Reading a size first commits the start state.
+        win.setTimeout(() => { void ghost.offsetWidth; ghost.style.setProperty('--ls-fade', FADE_MS + 'ms'); ghost.classList.add('ls-gone'); }, 30);
+        win.setTimeout(() => ghost.remove(), FADE_MS + 400);
+      }
     },
     destroy() {
       mq?.removeEventListener?.('change', onMq);
@@ -2996,7 +3522,8 @@ export function setSceneSky(sky) {
 }
 
 // `flashLimit` (a number or a getter) is the screen's flash limit; omitted, the scene uses 3.
-export function syncScene(rootEl, theme, { motion, flashLimit } = {}) {
+// `fade` (seasons, 2026-10-05): a change the screen made by itself - fade the old world out (FADE_MS).
+export function syncScene(rootEl, theme, { motion, flashLimit, fade } = {}) {
   if (!rootEl) return;
   const doc = rootEl.ownerDocument || document;
   const isPage = rootEl === doc.documentElement;
@@ -3014,7 +3541,7 @@ export function syncScene(rootEl, theme, { motion, flashLimit } = {}) {
   }
   const opts = { scene: want, overlays: theme.overlays || [], ...(motion ? { motion } : {}),
     ...(flashLimit !== undefined ? { flashLimit } : {}), sky: PAGE_SKY };
-  if (had) had.set(opts);
+  if (had) had.set(fade ? { ...opts, fade: true } : opts);
   else {
     const s = mountScene(host, opts);
     // Pinned to the viewport at the very back of the page, behind every panel.
