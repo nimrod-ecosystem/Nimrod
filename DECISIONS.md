@@ -2298,3 +2298,14 @@ was Code's reading, and Mike corrected it.
    source for each item and a fact-check pass, and Mike reviews by playing.
 4. **The bench Pi runs the new site** (Mike, 2026-10-05). So the Pi side of the lock is built on the bench, not
    left as a plan.
+
+## Questions from every pool; Oscar's age; the lock helper stays off -- 2026-10-06
+
+Mike, live.
+
+1. **Trivia offers a choice to draw questions from all of the pools,** not just one pack at a time.
+2. **Oscar is 13.** The easy questions written on 2026-10-05 assumed school age. A 13-year-old needs easy questions
+   that read as teen-appropriate, and probably starts above level 1 (Code's reading, not Mike's ruling).
+3. **The bench's lock link to the Pi stays off.** *"Leave it off."* The Chromium local-network policy is not
+   applied, and the page passes `lockHelper=off`. The site-side lock works, but closing the dashboard while
+   unlocked still lets the kiosk service relaunch it.
