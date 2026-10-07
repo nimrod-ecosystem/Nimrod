@@ -29,6 +29,10 @@ secret (`--secret` or the NIMROD_SPEECH_SECRET environment variable), which the 
 first message - never in the address, where logs keep it. Use a Tailscale address, not 0.0.0.0. The
 refusal can be overridden only by `--no-secret-i-understand`, which exists for a closed test network.
 
+WHICH PAGES MAY CONNECT: pages from the person's Nimrod (https://nimrodecosystem.com and
+https://nimrod.onrender.com by default; `--allow-origin` or NIMROD_SPEECH_ORIGINS for a self-hosted one)
+and pages on this computer. Any other site is refused with 403 (service.py, "WHICH WEB PAGES").
+
 Port 8797: nothing else here uses it (checked 2026-09-30: 8000 the site's dev server, 8080 the Cici
 dashboard, 8765 the Cici session receiver on the desktop, 8770-8773 the media agents, 8791
 corpus_desk). `--port` and the screen's "address" setting both change it.
@@ -43,7 +47,7 @@ import sys
 from .backends import (MY_VOICE_DIR, MY_VOICE_PORT, NIMROD_FOLDER_FILE, VOICE_MODEL_SUBFOLDER, WAKE_REFRACTORY_S,
                        WAKE_THRESHOLD, WHISPER_FOLDER_FILES, ModelFolderError, check_whisper_folder, default_threads,
                        is_model_folder, make_backend, make_wake)
-from .service import MAX_UTTERANCE_S
+from .service import DEFAULT_SITES, MAX_UTTERANCE_S, site_list
 
 LOOPBACK = {'127.0.0.1', 'localhost', '::1'}
 
@@ -81,6 +85,11 @@ def parse(argv=None):
                    help='your Nimrod folder (the one the site set up). Without it, the first line of '
                         'speech_service/nimrod_folder.txt is used, if that file exists')
     p.add_argument('--host', default='127.0.0.1')
+    p.add_argument('--allow-origin', action='append', default=None, metavar='SITE[,SITE...]',
+                   help='the sites whose pages may use this service, e.g. https://nimrodecosystem.com; comma-'
+                        'separated or given more than once. REPLACES the default list ('
+                        + ', '.join(DEFAULT_SITES) + '; or NIMROD_SPEECH_ORIGINS). Pages on this computer itself '
+                        '(http://127.0.0.1, localhost) are always allowed; every other site is refused with 403.')
     p.add_argument('--port', type=int, default=None, help=f'default 8797 ({MY_VOICE_PORT} with --my-voice)')
     p.add_argument('--secret', default=os.environ.get('NIMROD_SPEECH_SECRET') or None)
     p.add_argument('--no-secret-i-understand', action='store_true')
@@ -149,6 +158,12 @@ def model_and_port(a):
     return (a.model or ('small.en' if a.backend == 'whisper' else None)), (a.port if a.port is not None else 8797)
 
 
+def allowed_sites(a) -> tuple:
+    """The sites whose pages may connect: --allow-origin, else NIMROD_SPEECH_ORIGINS, else DEFAULT_SITES."""
+    given = a.allow_origin or ([os.environ['NIMROD_SPEECH_ORIGINS']] if os.environ.get('NIMROD_SPEECH_ORIGINS') else [])
+    return site_list(given)
+
+
 def main(argv=None):
     a = parse(argv)
     if a.my_voice and a.backend != 'whisper':
@@ -210,6 +225,9 @@ def main(argv=None):
                      threshold=a.wake_threshold, refractory_s=a.wake_refractory_s, vad_threshold=a.wake_vad)
     names = ' + '.join(x.name for x in (backend, wake) if x is not None)
     print(f'speech service: {names} on ws://{a.host}:{a.port}/speech', file=sys.stderr)
+    sites, loopback = allowed_sites(a), not remote
+    print(f'speech service: pages allowed from {", ".join(sites) + " and " if sites else ""}this computer; '
+          'other sites get 403', file=sys.stderr)
     server = a.server
     if server == 'auto':
         try:
@@ -221,13 +239,15 @@ def main(argv=None):
     if server == 'fastapi':
         import uvicorn
         from .service import create_app
-        uvicorn.run(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s, wake=wake),
+        uvicorn.run(create_app(backend, secret=a.secret, max_utterance_s=a.max_utterance_s, wake=wake,
+                               sites=sites, loopback=loopback),
                     host=a.host, port=a.port, log_level='warning', ws_max_size=2 ** 20)
     else:
         from .service import serve_websockets
         try:
             asyncio.run(serve_websockets(backend, a.host, a.port, secret=a.secret,
-                                         max_utterance_s=a.max_utterance_s, wake=wake))
+                                         max_utterance_s=a.max_utterance_s, wake=wake,
+                                         sites=sites, loopback=loopback))
         except KeyboardInterrupt:
             pass
     return 0

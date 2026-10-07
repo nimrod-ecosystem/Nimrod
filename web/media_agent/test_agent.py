@@ -100,6 +100,61 @@ def check_kinds_agree():
           agent.AUDIO_EXTS <= agent.MEDIA_EXTS)
 
 
+def run_agent(root: Path, port: int, timeout: float = 20):
+    """Start a copy of the agent and wait for it to end: (exit code, what it printed). None when it kept running
+    (a second copy that started instead of stepping aside - the bug)."""
+    p = subprocess.Popen([sys.executable, str(AGENT), "--root", str(root), "--host", "127.0.0.1",
+                          "--port", str(port)], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    try:
+        out, _ = p.communicate(timeout=timeout)
+        return p.returncode, out
+    except subprocess.TimeoutExpired:
+        p.kill()
+        out, _ = p.communicate()
+        return None, out
+
+
+def double_start_tests(root: Path, tmp: Path, port: int, base: str, origin: str):
+    """ONE COPY PER PORT. A first agent is running on `port` for `root`."""
+    sys.path.insert(0, str(HERE))
+    import agent  # noqa: E402
+
+    code, out = run_agent(root, port)
+    check("*** double start: a second copy for the same folder steps aside (exit 0), saying it is already running ***",
+          code == 0 and "already running for this folder" in out, detail=f"code={code} out={out[-300:]!r}")
+    s, h, j = get_json(f"{base}/health")
+    check("double start: ...and the first copy still answers, unchanged",
+          s == 200 and h.get("Access-Control-Allow-Origin") == origin, detail=f"status={s}")
+
+    other = tmp / "other"
+    other.mkdir(exist_ok=True)
+    code, out = run_agent(other, port)
+    check("double start: another media agent (a different folder) on the port -> exit 3, said plainly",
+          code == agent.EXIT_PORT_TAKEN and "another media agent" in out, detail=f"code={code} out={out[-300:]!r}")
+
+    holder = socket.socket()
+    holder.bind(("127.0.0.1", 0))
+    holder.listen(1)
+    hport = holder.getsockname()[1]
+    try:
+        code, out = run_agent(root, hport, timeout=30)
+    finally:
+        holder.close()
+    check("double start: a port another program holds -> exit 3, 'in use by another program'",
+          code == agent.EXIT_PORT_TAKEN and "in use by another program" in out, detail=f"code={code} out={out[-300:]!r}")
+
+    # The decision on its own, with what answers on the port made up.
+    err = OSError("taken")
+    same = agent.already_running("127.0.0.1", 1, "abc", err, probe=lambda h, p: {"ok": True, "agent_id": "abc"})
+    diff = agent.already_running("127.0.0.1", 1, "abc", err, probe=lambda h, p: {"ok": True, "agent_id": "xyz"})
+    some = agent.already_running("127.0.0.1", 1, "abc", err, probe=lambda h, p: {})
+    none = agent.already_running("10.9.9.9", 1, "abc", err, probe=lambda h, p: None)
+    check("double start: same agent -> 0; another agent, another program, nothing at all -> 3, each said differently",
+          same[0] == 0 and diff[0] == some[0] == none[0] == agent.EXIT_PORT_TAKEN
+          and len({same[1], diff[1], some[1], none[1]}) == 4 and "could not listen on 10.9.9.9:1" in none[1],
+          detail=repr((same, diff, some, none)))
+
+
 def main():
     check_kinds_agree()
 
@@ -206,6 +261,8 @@ def main():
         # /list?album with traversal is rejected
         s, _, j = get_json(f"{base}/list?album=../")
         check("/list traversal album rejected", s in (403, 404), detail=f"status={s}")
+
+        double_start_tests(root, tmp, port, base, origin)
 
     finally:
         proc.terminate()

@@ -86,20 +86,28 @@ def plan_tests(tmp: Path):
     p = SV.plan(S.DEFAULTS, app, 'PY', data)
     check('plan: the defaults run the speech program alone', [x['name'] for x in p] == ['speech'])
     sp = p[0]
-    check('plan: speech is `-m speech_service --port 8797`, from the app folder (whisper, small.en: its own defaults)',
-          sp['argv'] == ['PY', '-m', 'speech_service', '--port', '8797'] and sp['cwd'] == str(app), sp['argv'])
+    check('plan: speech is `-m speech_service --port 8797`, from the app folder (whisper, small.en: its own defaults), '
+          'allowing the sites the status page allows',
+          sp['argv'] == ['PY', '-m', 'speech_service', '--port', '8797',
+                         '--allow-origin', 'https://nimrodecosystem.com,https://nimrod.onrender.com']
+          and sp['cwd'] == str(app), sp['argv'])
+    s1 = S.merged(S.DEFAULTS, {'platform': 'https://self.example/', 'alsoAllow': ['https://self.example', 'http://box:8000']})
+    a1 = SV.plan(s1, app, 'PY', data)[0]['argv']
+    check('plan: a self-hosted Nimrod is what the speech program allows (no repeats, no trailing slash)',
+          a1[a1.index('--allow-origin') + 1] == 'https://self.example,http://box:8000', a1)
     check('plan: the model is kept in the data folder (HF_HOME), so uninstalling removes it',
           sp['env']['HF_HOME'] == str(data / 'models'))
     s2 = S.merged(S.DEFAULTS, {'speech': {'modelsDir': str(tmp / 'hf'), 'model': 'base.en'}})
     p2 = SV.plan(s2, app, 'PY', data)[0]
     check('plan: a named model place and another model are passed on',
-          p2['env']['HF_HOME'] == str(tmp / 'hf') and p2['argv'][-2:] == ['--model', 'base.en'])
+          p2['env']['HF_HOME'] == str(tmp / 'hf') and p2['argv'][5:7] == ['--model', 'base.en'], p2['argv'])
     (tmp / 'models').mkdir(exist_ok=True)
     p3 = SV.plan(S.DEFAULTS, app, 'PY', data)[0]
     check('plan: a model that came in the package (beside app/) is used when no place is named',
           p3['env']['HF_HOME'] == str(tmp / 'models'))
     p4 = SV.plan(S.merged(S.DEFAULTS, {'speech': {'backend': 'fake'}}), app, 'PY', data)[0]
-    check('plan: another backend is passed on, with no model', p4['argv'][-2:] == ['--backend', 'fake'], p4['argv'])
+    check('plan: another backend is passed on, with no model', p4['argv'][5:7] == ['--backend', 'fake']
+          and '--model' not in p4['argv'], p4['argv'])
     s5 = S.merged(S.DEFAULTS, {'speech': {'on': False}, 'media': {'on': True}})
     p5 = SV.plan(s5, app, 'PY', data)
     check('plan: media on with no folder is listed, not started, and says why',
@@ -126,6 +134,16 @@ def origin_tests():
     check('*** status page: any other site may not ***',
           not ok('https://evil.example', st) and not ok('http://127.0.0.1.evil.example', st) and not ok('', st)
           and not ok('null', st) and not ok('https://nimrodecosystem.com.evil.example', st))
+    # The speech program runs on its own too (a Pi has no helper), so it keeps its own copy of the default
+    # sites and its own check. These fail if either drifts from the helper's.
+    from speech_service import service as SP
+    check('*** speech program: its default sites are the helper\'s platform + alsoAllow ***',
+          tuple(SV.allowed_sites(st)) == SP.DEFAULT_SITES, (SV.allowed_sites(st), SP.DEFAULT_SITES))
+    cases = ['https://nimrodecosystem.com', 'https://nimrodecosystem.com/', 'https://nimrod.onrender.com',
+             'http://127.0.0.1:8680', 'http://localhost:8000', 'http://[::1]:9', 'https://evil.example', 'null',
+             'http://127.0.0.1.evil.example', 'https://nimrodecosystem.com.evil.example', 'https://localhost:8000']
+    differ = [o for o in cases if ok(o, st) != SP.origin_allowed(o, SP.DEFAULT_SITES)]
+    check('*** speech program and status page agree on every site (a page with an Origin) ***', not differ, differ)
 
 
 # ---------------------------------------------------------------------- one part, restarted ----
@@ -171,6 +189,7 @@ def part_tests(tmp: Path):
     up[0] = True
     part.poll()
     check('part: the port answers -> running, note cleared', part.state == 'running' and part.note == '')
+    up[0] = False           # it stops, and its port goes quiet with it
     part.proc.code = 1
     t[0] = 10
     part.poll()
@@ -204,9 +223,36 @@ def part_tests(tmp: Path):
     check('part: media with no folder never starts, and says why', md.state == 'waiting' and len(procs) == 8
           and md.status()['note'] == 'no folder chosen yet', (md.state, len(procs)))
 
+    # ONE COPY PER PORT: something already answers on the part's port (a copy started by hand).
+    busy = [True]
+    bprocs = []
+    mspec = SV.plan(S.merged(S.DEFAULTS, {'speech': {'on': False}, 'media': {'on': True, 'folder': str(tmp)}}),
+                    tmp / 'app', 'PY', tmp / 'pdata')[0]
+    bp = SV.Part(mspec, tmp / 'logs', popen=lambda argv, **kw: (bprocs.append(argv), FakeProc())[1],
+                 clock=lambda: t[0], probe=lambda port: busy[0])
+    bp.start()
+    check('*** part: its port already answers -> no second copy is started; it waits and says why ***',
+          bprocs == [] and bp.proc is None and bp.state == 'waiting' and 'already in use' in bp.note
+          and 'second copy' in bp.note, (bprocs, bp.state, bp.note))
+    mlog = (tmp / 'logs' / 'media.log').read_text(encoding='utf-8')
+    check('part: ...with one line in its log', mlog.count('not starting: port 8770 is already in use') == 1, mlog[-300:])
+    t[0] += SV.PORT_BUSY_RECHECK_S
+    bp.poll()
+    check('part: still in use when it looks again -> still not started, and the log line is not repeated',
+          bprocs == [] and bp.state == 'waiting' and bp.restarts == 0
+          and (tmp / 'logs' / 'media.log').read_text(encoding='utf-8').count('not starting') == 1)
+    busy[0] = False
+    t[0] += SV.PORT_BUSY_RECHECK_S - 1
+    bp.poll()
+    check('part: ...not before the next look', bprocs == [])
+    t[0] += 1
+    bp.poll()
+    check('*** part: the other copy is gone -> the helper starts its own ***',
+          len(bprocs) == 1 and bp.state == 'starting' and bp.note == '', (bprocs, bp.state, bp.note))
+
     def bad_popen(argv, **kw):
         raise OSError('no such program')
-    b = SV.Part(spec, tmp / 'logs', popen=bad_popen, clock=lambda: t[0])
+    b = SV.Part(spec, tmp / 'logs', popen=bad_popen, clock=lambda: t[0], probe=lambda port: False)
     b.start()
     check('part: a part that cannot even start says so and tries again later', b.state == 'failed' and 'could not start' in b.note
           and b.next_at > t[0])
@@ -278,6 +324,23 @@ def live_tests(tmp: Path):
                   and hello.get('engine') == 'fake', hello)
         except Exception as err:  # noqa: BLE001
             check('live: the speech program says hello the way the site expects', False, repr(err))
+
+        # Which pages may use it: the real program, as the helper started it (FastAPI/uvicorn where installed).
+        def from_site(origin):
+            from websockets.sync.client import connect
+            from websockets.exceptions import InvalidStatus
+            try:
+                with connect(f'ws://127.0.0.1:{sport}/speech', origin=origin, open_timeout=5) as ws:
+                    ws.send(json.dumps({'type': 'hello', 'rate': 16000}))
+                    return json.loads(ws.recv(timeout=5)).get('kind')
+            except InvalidStatus as err:
+                return err.response.status_code
+            except Exception as err:  # noqa: BLE001
+                return repr(err)
+        got = from_site('https://evil.example')
+        check('*** live: a page from another site gets 403 from the speech program, and no socket ***', got == 403, got)
+        got = from_site('https://nimrodecosystem.com')
+        check('live: a page from the person\'s Nimrod gets its hello', got == 'hello', got)
         second = subprocess.Popen([sys.executable, '-m', 'nimrod_helper', 'run'], cwd=str(WEB), env=env,
                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         try:
