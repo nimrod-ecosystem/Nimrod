@@ -1058,10 +1058,12 @@ export const SPEECH_ON_FIELDS = [
   { key: 'speechEngine', label: 'What writes down what is said', kind: 'choice', default: 'local',
     level: 'standard',
     options: [
-      { value: 'local', label: 'A recogniser on this screen (the room’s sound stays here)' },
+      // 2026-10-07 (DECISIONS item 3): the speech program on this computer comes in the Nimrod helper, so the
+      // choice says so; and the browser's is called what people know it as, voice typing, with who hears it.
+      { value: 'local', label: 'The Nimrod helper on this computer (the room’s sound stays here)' },
       { value: 'remote1', label: 'Another computer (sends the room’s sound there)' },
       { value: 'remote2', label: 'A second other computer (sends the room’s sound there)' },
-      { value: 'browser', label: 'The browser’s own (sends the room’s sound to the browser’s maker)' },
+      { value: 'browser', label: 'This browser’s own voice typing (sends the room’s sound to the browser’s maker, such as Google)' },
     ] },
 ];
 

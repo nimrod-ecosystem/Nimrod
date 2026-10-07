@@ -183,7 +183,7 @@ export function voiceModelStatus({ total = 0, index = 0, exported = false, nimro
   const at = (step, text, extra = {}) => ({ step, done: false, text, haveFolder: step >= 5, ...extra });
   if (nimrod && nimrod.ok) {
     return on
-      ? at(6, `You have it, in its place, and “Use my own voice model” is on. If this screen says no recogniser is answering, start the speech service (step 6).`, { done: true })
+      ? at(6, `You have it, in its place, and “Use my own voice model” is on. If this screen says no speech program is running, start the speech service (step 6).`, { done: true })
       : at(6, 'You have it, in its place. Last step: start the speech service, then turn on “Use my own voice model”.');
   }
   if (picked && picked.ok) return at(5, `You have the converted folder (“${picked.name || 'the folder you checked'}”). Next: put its files in ${place}.`);
@@ -583,7 +583,7 @@ export function mountVoiceModel(root, {
     b.textContent = `Use my own voice model: ${vm.on ? 'On' : 'Off'}`;
     b.hidden = typeof save !== 'function';
     $('[data-use-note]').textContent = vm.on
-      ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no recogniser is answering.`
+      ? `On: your speech goes to ${vm.url}. If it is not running, this screen says no speech program is running.`
       : 'Off: your speech goes to the standard recogniser.';
     renderStatus();
   }

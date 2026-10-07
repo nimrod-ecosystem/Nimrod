@@ -1,0 +1,9 @@
+# What the helper's own Python carries on Windows (build_windows.py installs these into the package).
+# Pinned to the versions the speech program runs with on the project desktop (checked 2026-10-07), so the
+# package is what was tested. The media agent needs nothing beyond Python itself.
+faster-whisper==1.2.1
+ctranslate2==4.8.1
+fastapi==0.115.6
+uvicorn==0.34.0
+websockets==17.1
+numpy==2.4.4

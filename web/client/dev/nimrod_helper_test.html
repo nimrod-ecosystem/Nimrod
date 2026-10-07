@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>nimrod_helper — the helper as the site sees it</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>nimrod_helper — the helper as the site sees it (DECISIONS 2026-10-07 item 3)</h1>
+<p>The helper's page (its words, read as a visitor reads them), who receives the sound with the browser's own
+voice typing, the two probes (the speech program's hello, the helper's /status) with fakes, the ⚙ menu row that
+links to the page, and /helper.html as served. No microphone, no network beyond this server.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { HELPER_PAGE, HELPER_DOWNLOADS, HELPER_STATUS_PORT, helperStatusUrl, browserVoiceMaker, browserHasVoiceTyping,
+         browserVoiceLabel, probeSpeech, probeHelper, helperPageHTML, hereHTML, mountHelperPage } from '../nimrod_helper.js';
+import { ELSEWHERE_PAGES, HELPER_PAGE as LINKED, pageRow } from '../page_links.js';
+import { LOCAL_URL } from '../speech_engines.js';
+import { SPEECH_ON_FIELDS } from '../input_speech.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const line = document.createElement('div');
+  line.className = ok ? 'pass' : 'fail';
+  line.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(line);
+}
+const J = JSON.stringify;
+const text = (html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent.replace(/\s+/g, ' '); };
+
+(async () => {
+  try {
+    // ---- who receives the sound ----
+    const UA = {
+      chrome: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+      edge: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 Edg/141.0.0.0',
+      safari: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+      iosChrome: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/141.0 Mobile/15E148 Safari/604.1',
+      android: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36',
+      opera: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/120.0.0.0',
+      firefox: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0',
+      pi: 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+    };
+    check('*** voice typing: Chrome (and Chromium on a Pi, and Android Chrome) -> Google ***',
+      browserVoiceMaker(UA.chrome) === 'Google' && browserVoiceMaker(UA.pi) === 'Google' && browserVoiceMaker(UA.android) === 'Google');
+    check('voice typing: Edge -> Microsoft', browserVoiceMaker(UA.edge) === 'Microsoft');
+    check('voice typing: Safari, and any browser on an iPhone -> Apple', browserVoiceMaker(UA.safari) === 'Apple' && browserVoiceMaker(UA.iosChrome) === 'Apple');
+    check('voice typing: a browser we cannot name -> said without a name, never a guess',
+      browserVoiceMaker(UA.opera) === 'the browser’s maker' && browserVoiceMaker(UA.firefox) === 'the browser’s maker' && browserVoiceMaker('') === 'the browser’s maker');
+    check('voice typing: the row’s words, as asked for', browserVoiceLabel('Google') === 'Use this browser’s own voice typing (it sends what it hears to Google)');
+    check('voice typing: whether the browser has it at all', browserHasVoiceTyping({ webkitSpeechRecognition: function () {} }) === true
+      && browserHasVoiceTyping({}) === false && browserHasVoiceTyping(null) === false);
+    const eng = SPEECH_ON_FIELDS.find((f) => f.key === 'speechEngine');
+    check('settings: the recogniser choice names the helper, and the browser’s says it is voice typing and where the sound goes',
+      /Nimrod helper on this computer/.test(eng.options.find((o) => o.value === 'local').label)
+      && /voice typing.*sends.*maker/.test(eng.options.find((o) => o.value === 'browser').label) && eng.default === 'local', J(eng.options));
+
+    // ---- the speech probe: the screen's own WebSocket hello ----
+    function FakeWS(script) {
+      return class {
+        constructor(url) { this.url = url; this.sent = []; FakeWS.last = this; setTimeout(() => script(this), 0); }
+        send(m) { this.sent.push(m); }
+        close() { this.closed = true; }
+      };
+    }
+    const hello = await probeSpeech({ WebSocketImpl: FakeWS((ws) => { ws.onopen(); ws.onmessage({ data: J({ kind: 'hello', engine: 'faster-whisper:small.en' }) }); }) });
+    check('*** probe: a speech program that says hello is answering, and says which engine ***',
+      hello.answering === true && hello.engine === 'faster-whisper:small.en' && FakeWS.last.url === LOCAL_URL
+      && JSON.parse(FakeWS.last.sent[0]).type === 'hello' && FakeWS.last.closed, J(hello));
+    const shut = await probeSpeech({ WebSocketImpl: FakeWS((ws) => ws.onclose()) });
+    check('probe: nothing listening (the socket closes) -> not answering', shut.answering === false);
+    const t0 = Date.now();
+    const silent = await probeSpeech({ WebSocketImpl: FakeWS(() => {}), timeoutMs: 80 });
+    check('probe: something that never says hello (a model still loading) -> not answering, after the wait',
+      silent.answering === false && silent.why === 'no answer' && Date.now() - t0 >= 70, J(silent));
+    check('probe: no WebSocket at all -> not answering, no throw', (await probeSpeech({ WebSocketImpl: null })).answering === false);
+
+    // ---- the helper probe: its /status ----
+    const okFetch = async (url) => ({ ok: true, json: async () => ({ ok: true, helper: 'nimrod', version: '0.1.0',
+      parts: [{ name: 'speech', label: 'Speech program', state: 'starting', note: 'getting the speech model ready (about 500 MB, downloaded once)' }] }), url });
+    let asked = '';
+    const h = await probeHelper({ fetchImpl: async (u) => { asked = u; return okFetch(u); } });
+    check('*** probe: the helper’s /status on this computer -> running, with its parts ***',
+      h.running && h.version === '0.1.0' && h.parts[0].state === 'starting' && asked === `http://127.0.0.1:${HELPER_STATUS_PORT}/status`
+      && helperStatusUrl(9) === 'http://127.0.0.1:9/status', J(h));
+    check('probe: refused, offline, or not allowed to read it -> not running, no throw',
+      (await probeHelper({ fetchImpl: async () => { throw new TypeError('Failed to fetch'); } })).running === false
+      && (await probeHelper({ fetchImpl: async () => ({ ok: false }) })).running === false
+      && (await probeHelper({ fetchImpl: async () => ({ ok: true, json: async () => ({ ok: true }) }) })).running === false);
+
+    // ---- the page's words ----
+    const page = helperPageHTML({ maker: 'Google' });
+    const words = text(page);
+    check('*** page: the title Mike asked for ***', /^\s*Get the Nimrod helper for this computer/.test(words), words.slice(0, 80));
+    check('page: what it installs - the speech program, the media agent, its own Python - and where',
+      /The speech program\./.test(words) && /The media agent\./.test(words) && /Its own copy of Python/.test(words)
+      && /AppData\\Local\\Programs\\Nimrod Helper/.test(words) && /no administrator password/.test(words));
+    check('page: what it does - starts with Windows (and where to turn that off), this computer only, no microphone of its own',
+      /starts when you sign in to Windows/.test(words) && /Startup apps/.test(words) && /answers this computer only/i.test(words)
+      && /opens no microphone or camera of its own/.test(words));
+    check('*** page: what it hears and sees stays on the computer, and what it DOES fetch is said ***',
+      /What it hears and sees stays on this computer/.test(words) && /Nothing it hears or sees is sent to Nimrod or to anyone else/.test(words)
+      && /the speech model, once, from Hugging Face/.test(words) && /not what is in the folder/.test(words));
+    check('*** page: how to remove it, and what removing takes away ***',
+      /Settings, Apps, Installed apps, Nimrod helper, Uninstall/.test(words) && /Nothing of it is left behind/.test(words));
+    check('page: the no-install choice is on it, with who hears the sound, in the menu row’s own words',
+      /it sends what it hears to Google/.test(words) && words.includes('“Use this browser’s own voice typing (it sends what it hears to Google)”')
+      && /Nothing switches to it by itself/.test(words));
+    check('*** page: no download yet -> said plainly, no link that goes nowhere ***',
+      HELPER_DOWNLOADS.windows.url === '' ? (/The Windows download is not ready yet/.test(words) && !/href=""/.test(page)) : true);
+    const pub = text(helperPageHTML({ downloads: { windows: { url: '/downloads/NimrodHelperSetup.exe', signed: false } }, maker: 'Google' }));
+    const pubHtml = helperPageHTML({ downloads: { windows: { url: '/downloads/NimrodHelperSetup.exe', signed: false } } });
+    check('page: once a download is published - the link, and the honest SmartScreen line while it is unsigned',
+      /href="\/downloads\/NimrodHelperSetup\.exe"/.test(pubHtml) && /Windows protected your PC/.test(pub) && !/Windows download is not ready yet/.test(pub));
+    check('page: signed -> no SmartScreen line', !/Windows protected your PC/.test(text(helperPageHTML({ downloads: { windows: { url: '/x.exe', signed: true } } }))));
+    check('page: a browser with no voice typing is told so, not offered it',
+      /has no voice typing of its own/.test(text(helperPageHTML({ hasVoiceTyping: false }))) && !/it sends what it hears/.test(text(helperPageHTML({ hasVoiceTyping: false }))));
+    check('*** page: site copy never says "her screen" or names the person the project was first built for ***',
+      !/her screen|Christine|Cici/i.test(page + pub));
+    check('page: the status shown matches the probes',
+      /No speech program is answering/.test(text(hereHTML({ speech: { answering: false } })))
+      && /A speech program is answering/.test(text(hereHTML({ speech: { answering: true } })))
+      && /Speech program: starting \(getting the speech model ready/.test(text(hereHTML({ speech: { answering: false }, helper: h })))
+      && /not running here/.test(text(hereHTML({ speech: { answering: false }, helper: { running: false } }))));
+    check('page: a part’s note is escaped (the page never trusts what answers on a port)',
+      !/<b>x<\/b>/.test(hereHTML({ helper: { running: true, parts: [{ label: '<b>x</b>', state: 'running' }] } })));
+
+    // ---- mounted, with fakes ----
+    const box = document.createElement('main');
+    document.body.append(box);
+    const m = mountHelperPage(box, { probe: async () => ({ answering: false }), probeH: async () => ({ running: false, parts: [] }), maker: 'Google', hasVoiceTyping: true });
+    check('mounted: the page is there at once, checking', /Checking for a speech program/.test(box.textContent));
+    await m.ready;
+    check('mounted: then the answers replace "checking"', /No speech program is answering/.test(box.textContent) && /not running here/.test(box.textContent)
+      && !/Checking/.test(box.textContent));
+    box.remove();
+
+    // ---- the ⚙ menu row ----
+    check('menu: the page is one of the pages set up somewhere else, at the same address the helper page uses',
+      LINKED === HELPER_PAGE && HELPER_PAGE === '/helper.html' && ELSEWHERE_PAGES.helper?.path === HELPER_PAGE
+      && ELSEWHERE_PAGES.helper.label === 'Get the Nimrod helper for this computer…');
+    const opened = [];
+    const off = pageRow('helper', { open: (p) => opened.push(p) });
+    off.run();
+    const on = pageRow('helper', { isScreen: true, loc: { host: 'example.org', origin: 'https://example.org' } });
+    check('menu: off a screen it opens the page in a new tab; on a screen it shows the address',
+      J(opened) === J(['/helper.html']) && on.page === 'elsewhere:helper' && /example\.org\/helper\.html/.test(on.hint), J({ off, on }));
+
+    // ---- the page as served ----
+    const served = await fetch('/helper.html', { cache: 'no-store' }).then((r) => (r.ok ? r.text() : ''));
+    check('served: /helper.html is there and mounts the page from nimrod_helper.js',
+      /mountHelperPage/.test(served) && /from '\.\/nimrod_helper\.js'/.test(served) && /<title>[^<]*Get the Nimrod helper for this computer/.test(served));
+  } catch (e) {
+    check('unexpected error', false, String(e && e.stack || e));
+  }
+
+  const sum = document.getElementById('summary');
+  sum.textContent = `${passed} passed, ${failed} failed`;
+  sum.className = failed ? 'fail' : 'pass';
+  sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>
