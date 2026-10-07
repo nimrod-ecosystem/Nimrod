@@ -2398,3 +2398,46 @@ Mike, live, after playing the review packs.
 6. **The home/profile page's theme setting is the regular theme picker.** It's there because it's the first page
    people see. Panels default to a transparent background. A live theme by default where the device can take it,
    otherwise the Nimrod theme. Mike asked whether people would mind; Code is weighing both sides in the build.
+
+## Where a person's history is kept: their own system by default, with us as an option, capped -- 2026-10-07 (later)
+
+Mike, through chat (note BG item 1; row 2.58), after the play-history move (1d139b7) made the server refuse it outright.
+
+- **Supersedes, for HISTORY only, "Store of record = the platform's server-side per-user store"** (slices 1-2, above:
+  *"history -> append-only events"*). Mike: *"maybe make having us save it as an option if it's not going to take a lot
+  of space or cost us anything. It has to be scalable though."* And for game results and the talk board's words: *"I
+  would lean towards at least recommending they keep stuff like this in their own system."* The state half of that
+  entry (settings, playlists, themes, game saves: overwrite state on the server) is unchanged. (2026-10-07)
+- **State and history are two things.** State - levels, points, per item how often and when last played - is small,
+  bounded by the size of a library, and stays with us so it follows a person. History - every play, every answer,
+  every word - grows without end, and goes where the person chooses. Chat's split, built by Code. (2026-10-07)
+- **Where history can go, per person and per kind** (what played; game results; talk board words), on the person's
+  own row `history-place`: this device only; this device and the Data folder in their Nimrod folder; this device and
+  with us. The device copy is always kept, as the working copy. Per person rather than per screen because "with us" is
+  a consent about a person's records; the folder half is per device and the page says what each device does with
+  the choice. Code's call, argued in `history_place.js`; open to Mike. (2026-10-07)
+- **Defaults.** What played: this device (Mike ruled it, row 2.58). Game results and the talk board's words: the
+  site's full log, AS BEFORE, until Mike rules - the destinations are built and selectable, the default is not moved.
+  The case for moving them now is his "lean" and that game results are closer to a clinical record than a playlist;
+  the case against is that the progress views and the family's view across screens read that log today, and a quiet
+  move would lose both for anyone who never opens the page. Code's guess; Mike's call. (2026-10-07)
+- **With us is opt-in, enforced by the server, capped.** The server reads the person's own row on every write (never a
+  flag in the request) and refuses (403) unless that kind says "with us". It keeps history in its own table, NOT the
+  append-only event log, which cannot be capped or deleted from: at most 10,000 entries per person, every kind
+  together; past that the oldest (over + 1,000) are counted into a totals row per thing (how many, how many right,
+  first and last time) and deleted, and totals are capped at 2,000 names per person per kind ("(other)" past that).
+  One entry is at most 1 KiB. So a person costs at most ~10 MB and typically 1.5-3 MB, flat, whatever is added later -
+  Mike's "scalable" is the test. The event routes still refuse play history whatever a person chose. A person can
+  remove what is kept with us at any time, and removing the person removes it. Numbers argued in `storage_line.py`.
+  (2026-10-07)
+- **The Data folder is written by the page itself**, through the browser's File System Access API (Chrome and Edge),
+  as JSON lines per kind, per panel or screen, per month, rotated at 512 KiB. No helper needed. Nimrod does not delete
+  those files; they are the person's. A folder whose permission lapsed is skipped without asking and the page offers "Allow it again"; a
+  browser without the API is offered "with us". An empty device (a new one, a re-imaged screen) fills itself once
+  from the second place. (2026-10-07)
+- **The site says plainly where each kind lives** ("Where your history is kept", People tab), and when it is only on
+  one device, offers a second place in one line with a button - *"Only on this screen. A reset would lose it. Keep a
+  copy in your Nimrod folder?"* - never a dialog. (2026-10-07)
+- **Not built, planned:** the person's own cloud drive (Google Drive first) and their own always-on computer as places.
+  Google Drive needs a sign-in that lasts on a screen nobody types on; see Code's report for what that takes.
+  (2026-10-07)

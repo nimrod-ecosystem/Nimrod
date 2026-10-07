@@ -140,6 +140,11 @@ import { createChoiceMemory } from './choice_card.js';
 import { checkDeviceLook } from './user_folders.js';
 import { loadDeviceFonts } from './user_fonts.js';
 import { userFoldersPage, USER_FOLDER_ITEMS, USER_FOLDERS_PAGE, createDeviceLookRows } from './user_folders_page.js';
+// Where a person's history is kept (row 2.58, 2026-10-07): the host every player and game reaches as `ctx.history`,
+// and its page on the People tab.
+import { createHistoryHost, folderSink, serverSink } from './history_place.js';
+import { GAMEPLAY_STREAM } from './telemetry.js';
+import { historyPage, HISTORY_ITEMS, HISTORY_PAGE } from './history_page.js';
 import { applyZoomFocus, ZOOM_FOCUS_FIELD } from './zoom_focus.js';
 import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD, OTHERS_AVATAR_FIELDS } from './avatar_display.js';
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
@@ -1362,8 +1367,24 @@ export async function mountKiosk(root, {
     },
   };
 
+  // *** WHERE THE PERSON'S HISTORY IS KEPT (row 2.58, 2026-10-07; history_place.js). *** One host per screen: it
+  // reads the person's own `history-place` row (lazily - the person is resolved in the background), copies what
+  // played to their Nimrod folder or, opted in, to us, and routes game results and board words when the person has
+  // moved them off the site's log. Their default is the log, so until somebody chooses, nothing here changes them.
+  // No server half on a local backend (the suites, signed out): nothing can be kept with us there.
+  const historyHost = createHistoryHost({
+    personId: () => screenPersonNow(),
+    makePersonState: (pid, key) => (pid && profiles.personStateURL && !makeState
+      ? createState({ url: profiles.personStateURL(pid, key), user, cacheKey: `person:${user}:${pid}:${key}`, push })
+      : null),
+    folder: folderSink(),
+    server: !makeState && profiles.personHistoryURL ? serverSink({ urlFor: profiles.personHistoryURL, user }) : null,
+  });
+
   const childCtx = (mod) => ({
     bus, user, profileId,
+    // Where this person's history is kept (above): plays.js `panelPlays` copies through it.
+    history: historyHost,
     // *** THE SETTINGS PANEL (modules/settings.js) MOUNTS THIS SCREEN'S OWN MENU (2026-10-03). *** Mike: "The
     // settings module should be the same as the settings menu. There shouldn't be 2 different things." A promise
     // of the menu's handle drawn into `host` (`settingsMenuFor`): the same rows, tabs, levels and pages as ⚙.
@@ -1451,7 +1472,11 @@ export async function mountKiosk(root, {
     },
     ...(sources ? { sources } : {}),
     makeState: (key, opts) => stateFor(key, opts),
-    makeEvents: (key, opts) => eventsFor(key, opts),
+    // The shared game-results stream goes through the history host (history_place.js `route`): on the site's log as
+    // always unless the person chose another place for game results. Every other stream is untouched.
+    makeEvents: (key, opts) => (key === GAMEPLAY_STREAM
+      ? historyHost.route('games', eventsFor(key, opts), { key: profileId })
+      : eventsFor(key, opts)),
     // *** REVIEW BY PLAYING (pack_reviews.js). *** The ACCOUNT's review log - not this screen's, not the
     // person's: a question passed on a phone counts on every screen of the account - plus the packs waiting
     // for review. A local backend (the suites, signed out) keeps the log in its own store under `_account`.
@@ -1587,7 +1612,11 @@ export async function mountKiosk(root, {
     // (arrangement.js `switchPanel`).
     const rowKey = mod.stateKey || mod.id;
     const state = automation.wrapState(mod.id, withTypeLayer(stateFor(rowKey), mod.type), { manifest: getManifest(mod.type) });
-    const events = eventsFor(rowKey);
+    // The talk board's words go through the history host too (history_place.js `route`, kind `select` only): the
+    // site's log as always unless the person chose another place for them.
+    const events = mod.type === 'board'
+      ? historyHost.route('words', eventsFor(rowKey), { key: rowKey })
+      : eventsFor(rowKey);
     // `extendCtx`, NOT `{ ..., ...childCtx(mod) }`: a spread reads every getter on `childCtx` once and
     // hands the module the value it had at this instant, which is exactly what the getters exist to
     // avoid (a call panel mounted before the drive socket kept a null transport for good). 2026-09-30.
@@ -5304,6 +5333,8 @@ export async function mountKiosk(root, {
       // "Your own folders" (15eb6b3): fonts, colour looks, plugins on this device. (2026-10-03, from the
       // Settings panel's copy: its font and colour-look rows follow "How you choose things", like every list.)
       get [USER_FOLDERS_PAGE]() { return userFoldersPage({ chooseMode: chooseModeNow }); },
+      // "Where your history is kept" (row 2.58, 2026-10-07; history_page.js), on the People tab.
+      get [HISTORY_PAGE]() { return historyPage({ host: historyHost }); },
       // THE NIMROD GAME (unlocks.js, 2026-10-02): its settings page, on this screen's own rows and bus. Its id is
       // unlocks.js's GAME_SETTINGS_PAGE ('sc-game'), the id the guide asks for, since 2026-10-03 ('game' before).
       get [GAME_SETTINGS_PAGE]() {
@@ -5455,6 +5486,8 @@ export async function mountKiosk(root, {
       // site talks to, with a key kept on the server. Until now only the recommend window linked to it.)
       ...(complexity() !== 'essential' ? tagged([pageRow('search', { isScreen: !embedded })], 'devices', 3) : []),
       ...tagged(USER_FOLDER_ITEMS, 'screen', 2),
+      // Where this person's history is kept (history_page.js argues the People tab).
+      ...tagged(HISTORY_ITEMS, 'people', 3),
       // LETTING THE SCREEN FIX ITSELF, as an ordinary settings row. Turning recovery on used
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
       // bench first" has to mean in practice. Written to the same profile settings blob the
@@ -7501,6 +7534,7 @@ export async function mountKiosk(root, {
       try { micOwner.destroy(); } catch { /* already gone */ }
       try { markerState?.destroy?.(); } catch { /* already gone */ }
       try { deviceState?.destroy?.(); } catch { /* already gone */ }
+      try { historyHost.destroy(); } catch { /* already gone */ }
       try { push?.destroy(); } catch { /* already gone */ }
       runtime.destroy();
       stageEl.innerHTML = ''; mirrorEl.innerHTML = ''; clockEl.innerHTML = '';

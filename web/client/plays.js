@@ -19,6 +19,12 @@
 //     between two people who share it: a split by person here would look like privacy without being any.
 //   What a person loses by moving the record here, and why the helper file is not built yet: row 2.58's report.
 //
+// *** AND A SECOND PLACE, IF THE PERSON CHOOSES ONE (2026-10-07, later; history_place.js). *** Mike: "maybe make
+// having us save it as an option ... It has to be scalable though." This device stays the working copy the picker
+// reads. `ctx.history` copies it to the Data folder in their Nimrod folder (written by the page itself), or - opted
+// in - to us, capped per person (web/server/storage_line.py rule 4); and an EMPTY device (a new one, a re-imaged Pi)
+// fills itself from there once. The page "Where your history is kept" (history_page.js) says which, plainly.
+//
 // ROW SHAPE (the same event-like shape the server rows had, so playsOf/tally/statsFromPlays are unchanged):
 //   { kind: 'play', created_at: <ISO, this device's clock>, data: { source, id, panel?, screen?, title?, by? } }
 //     source   which player: 'youtube', 'spotify', 'photos', 'folder', ... (any id-shaped word; not a closed list)
@@ -186,10 +192,15 @@ export function rowFromServer(e, { source, panel = '', screen = null } = {}) {
 //   update(panel, fn)   -> applies fn(record) and saves, as ONE step (one IndexedDB transaction), resolving the
 //                          saved record. fn is synchronous: a transaction ends at the first outside await.
 //   all()               -> every panel's record (for a table over the whole device)
-const emptyRecord = (panel) => ({ k: panel, rows: [], moved: {} });
+// `sent` and `restored` (2026-10-07, history_place.js): how far this record has been copied to the person's second
+// place ({ folder: <ISO>, us: <ISO> }), and whether it was filled from there on an empty device. Kept on the record
+// so a reload, a closed tab or a lapsed folder permission never re-sends or loses track.
+const objOr = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
+const emptyRecord = (panel) => ({ k: panel, rows: [], moved: {}, sent: {} });
 const asRecord = (panel, r) => (r && Array.isArray(r.rows)
-  ? { k: panel, rows: r.rows, moved: (r.moved && typeof r.moved === 'object') ? r.moved : {} }
+  ? { k: panel, rows: r.rows, moved: objOr(r.moved), sent: objOr(r.sent), ...(r.restored ? { restored: true } : {}) }
   : emptyRecord(panel));
+export { asRecord as playRecord };
 
 /** Memory only: the suites, a page with no IndexedDB, and a panel with no identity to file plays under. */
 export function memoryPlayStore() {
@@ -300,6 +311,12 @@ export function createPlays({ store = memoryPlayStore(), bus = null, keepText = 
     return loads.get(key);
   }
 
+  // Read one panel's record again (after something else wrote the store: history_place.js filling an empty device).
+  async function reload(panel = '') {
+    const key = String(panel || '');
+    try { const rec = await store.get(key); if (rec) remember(key, rec); } catch (e) { console.error('plays: reload', e); }
+  }
+
   async function loadAll() {
     try { for (const rec of await store.all()) remember(rec.k, rec); }
     catch (e) { console.error('plays: load all', e); }
@@ -359,7 +376,9 @@ export function createPlays({ store = memoryPlayStore(), bus = null, keepText = 
   return {
     log,
     load,
+    reload,
     loadAll,
+    keep: cap,
     moveFromServer,
     subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
     get: () => ({ events: all() }),
@@ -405,12 +424,24 @@ export function panelPlays(ctx = {}, source) {
     const s = stats();
     for (const f of [...subs]) { try { f(s); } catch (e) { console.error('plays: panel subscriber', e); } }
   });
-  const ready = log.load(panel);
+  // WHERE THE HISTORY IS ALSO KEPT (2026-10-07, history_place.js): the device record is always the working copy
+  // the picker reads; `ctx.history` (the screen's host, when it has one) copies it to the person's second place -
+  // their Nimrod folder or, opted in, with us - and fills an empty device from there. Without a host: as before.
+  const history = panel && ctx.history && typeof ctx.history.sync === 'function' ? ctx.history : null;
+  const ready = log.load(panel).then(async () => {
+    if (!history || !log.store) return;
+    try {
+      if (await history.restore('plays', log.store, panel, { keep: log.keep })) await log.reload(panel);
+      history.sync('plays', log.store, panel);
+    } catch (e) { console.error(`${source}: history`, e); }
+  });
   const move = log.moveFromServer({ events: ctx.events || null, source, panel, screen });
   return {
     panel,
     source,
-    played: (id) => log.log({ source, id, panel, screen }).catch((e) => { console.error(`${source}: play log`, e); return null; }),
+    played: (id) => log.log({ source, id, panel, screen })
+      .then((data) => { if (data && history && log.store) history.sync('plays', log.store, panel, { soon: true }); return data; })
+      .catch((e) => { console.error(`${source}: play log`, e); return null; }),
     stats,
     rows: () => log.plays(filter),
     subscribe(fn) { subs.add(fn); try { fn(stats()); } catch (e) { console.error(e); } return () => subs.delete(fn); },

@@ -40,6 +40,7 @@ import claims as claim_rules
 import grants
 import links
 import provenance
+import storage_line  # only the history cap, so the privacy page states the number the server enforces
 
 log = logging.getLogger("nimrod")
 from datetime import datetime, timedelta, timezone
@@ -1076,6 +1077,9 @@ class _Store:
                 if row["home_id"]:
                     self._drop_copy_permissions(cur, row)
             cur.execute(self._q("DELETE FROM state WHERE user_id=? AND profile_id=?"), (account_id, scope))
+            # History they chose to keep here goes with them (2026-10-07): it is not the append-only log.
+            cur.execute(self._q("DELETE FROM history WHERE user_id=? AND person_id=?"), (account_id, person_id))
+            cur.execute(self._q("DELETE FROM history_totals WHERE user_id=? AND person_id=?"), (account_id, person_id))
             if mine:
                 self._drop_person_labels(cur, person_id)
             cur.execute(self._q("DELETE FROM people WHERE id=? AND account_id=?"), (person_id, account_id))
@@ -1376,6 +1380,21 @@ class _Store:
                             "when, and the name of the person on your login they chose as who "
                             "was reviewing - and the points it earned, on that person's screen.", True,
                             "when a module you added writes one"),
+        # 2026-10-07 (later): history kept with us is an OPT-IN, per person and per kind (storage_line.py rule 4).
+        "history":         ("Only if you choose \"With us\" in \"Where your history is kept\" for a person: "
+                            "what played on their screens (which photo, video or song, and when), their game "
+                            "results (right or wrong, how long it took), or the words chosen on their talk board "
+                            "- each kind only if you chose it for that kind. At most "
+                            f"{storage_line.HISTORY_MAX_ROWS:,} entries per person, "
+                            "all kinds together; past that the oldest are counted (see the next line) and "
+                            "removed. Choosing another place stops new entries; \"Remove what is kept with us\" "
+                            "deletes them, and removing the person deletes them too.", True,
+                            "when you choose \"With us\" for a person's history"),
+        "history_totals":  ("The counts that older history entries are rolled into once a person passes the "
+                            "cap: for each song, video, game topic or board word, how many times, how many "
+                            "right, and the first and last time. Only for history you chose to keep with us; "
+                            "removed with it.", True,
+                            "when history you chose to keep with us passes its cap"),
         "people":          ("The NAME you gave a person, so their screen can say who it is "
                             "for, and what you call them if you chose a name of your own for "
                             "anybody on your page (only the people using your login see that). This is the most personal "
@@ -1441,8 +1460,10 @@ class _Store:
         "browsing history",
         # Row 2.58: refused by storage_line.py (kind `play`, stream `plays`); kept by client/plays.js on the device.
         # The parenthesis comes out once remove_play_history.py has been run against this database.
-        "what played when - which photo, video or song - it is kept on the screen that played it (the "
-        "rows kept here before October 2026 are being removed)",
+        # 2026-10-07 (later): unless the person chose "With us" (the `history` line above says so).
+        "what played when - which photo, video or song - it is kept on the screen that played it, or in your "
+        "Nimrod folder, unless you choose to keep it with us (see \"history\" above; the rows kept in the log "
+        "here before October 2026 are being removed)",
         "advertising identifiers",
         "anything a module shows you that you did not save",
     ]
@@ -1998,6 +2019,147 @@ class _Store:
         return [{"id": r[0], "profile_id": r[1], "stream": r[2], "kind": r[3], "data": json.loads(r[4]),
                  "created_at": r[5]} for r in rows]
 
+    # ---------------------------------------------- history kept WITH US, opted in, capped
+    # Mike, 2026-10-07 (row 2.58): *"maybe make having us save it as an option if it's not going to take a
+    # lot of space or cost us anything. It has to be scalable though."* So the person's own device is the
+    # default, and this is the opt-in: a table, NOT the event log, because the event log is append-only by
+    # trigger (provenance.py's whole design) and a cap needs deletes. The rules (who may write, how big, the
+    # numbers) are storage_line.py's; app.py checks them before anything here runs.
+    #
+    # *** THE CAP AND THE ROLL-UP HAPPEN IN THE SAME TRANSACTION AS THE WRITE. *** A person never has more
+    # than `max_rows` rows once a write returns: over it, the oldest (over + `roll_batch`) are counted into
+    # history_totals (one row per thing: n, right answers, first and last time) and deleted. So the table is
+    # bounded per person whatever is added later, and nothing a person opted into is silently dropped - it
+    # becomes a count. Totals are bounded too (`totals_max` per person per stream; past it, "(other)").
+    def history_append(self, user_id: str, person_id: str, stream: str, rows: list[dict], *,
+                       group_of, max_rows: int, roll_batch: int, totals_max: int,
+                       scope_max: int = 64, other: str = "(other)") -> dict:
+        """Keep `rows` ({kind, data, at?, scope?}) for one person, then hold them to the cap.
+        Returns {"kept", "rolled", "rows"} - rows is the person's count after the write."""
+        ts = _now()
+        with self._tx() as cur:
+            for r in rows:
+                at = str(r.get("at") or ts)[:40]
+                scope = str(r.get("scope") or "")[:scope_max]
+                cur.execute(self._q(
+                    "INSERT INTO history(user_id, person_id, stream, scope, kind, data, at, created_at) "
+                    "VALUES(?,?,?,?,?,?,?,?)"),
+                    (user_id, person_id, stream, scope, r["kind"], json.dumps(r["data"]), at, ts))
+            cur.execute(self._q("SELECT COUNT(*) FROM history WHERE user_id=? AND person_id=?"), (user_id, person_id))
+            count = cur.fetchone()[0]
+            rolled = 0
+            if count > max_rows:
+                take = count - max_rows + roll_batch
+                cur.execute(self._q(
+                    "SELECT id, stream, kind, data, at FROM history WHERE user_id=? AND person_id=? "
+                    "ORDER BY id ASC LIMIT ?"), (user_id, person_id, take))
+                old = cur.fetchall()
+                rolled = self._roll_into_totals(cur, user_id, person_id, old, group_of=group_of,
+                                                totals_max=totals_max, other=other)
+                if old:
+                    cur.execute(self._q("DELETE FROM history WHERE user_id=? AND person_id=? AND id<=?"),
+                                (user_id, person_id, old[-1][0]))
+                count -= rolled
+        return {"kept": len(rows), "rolled": rolled, "rows": count}
+
+    def _roll_into_totals(self, cur, user_id, person_id, old, *, group_of, totals_max, other) -> int:
+        """Count rows (id, stream, kind, data, at) into history_totals. Returns how many were counted."""
+        groups: dict[tuple[str, str], dict] = {}
+        for _id, stream, kind, data, at in old:
+            try:
+                d = json.loads(data)
+            except (TypeError, ValueError):
+                d = {}
+            key = (stream, group_of(stream, kind, d))
+            g = groups.setdefault(key, {"n": 0, "hits": 0, "first": at, "last": at})
+            g["n"] += 1
+            if isinstance(d, dict) and d.get("correct") is True:
+                g["hits"] += 1
+            g["first"] = min(g["first"], at)
+            g["last"] = max(g["last"], at)
+        by_stream: dict[str, list] = {}
+        for (stream, grp), g in groups.items():
+            by_stream.setdefault(stream, []).append((grp, g))
+        for stream, items in by_stream.items():
+            cur.execute(self._q("SELECT grp FROM history_totals WHERE user_id=? AND person_id=? AND stream=?"),
+                        (user_id, person_id, stream))
+            have = {r[0] for r in cur.fetchall()}
+            room = max(0, totals_max - len(have - {other}))
+            folded: dict[str, dict] = {}
+            for grp, g in items:
+                if grp not in have and grp != other:
+                    if room > 0:
+                        room -= 1
+                        have.add(grp)
+                    else:
+                        grp = other
+                f = folded.setdefault(grp, {"n": 0, "hits": 0, "first": g["first"], "last": g["last"]})
+                f["n"] += g["n"]
+                f["hits"] += g["hits"]
+                f["first"] = min(f["first"], g["first"])
+                f["last"] = max(f["last"], g["last"])
+            for grp, f in folded.items():
+                cur.execute(self._q(
+                    "INSERT INTO history_totals(user_id, person_id, stream, grp, n, hits, first_at, last_at) "
+                    "VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(user_id, person_id, stream, grp) DO UPDATE SET "
+                    "n = history_totals.n + excluded.n, hits = history_totals.hits + excluded.hits, "
+                    "first_at = CASE WHEN excluded.first_at < history_totals.first_at "
+                    "THEN excluded.first_at ELSE history_totals.first_at END, "
+                    "last_at = CASE WHEN excluded.last_at > history_totals.last_at "
+                    "THEN excluded.last_at ELSE history_totals.last_at END"),
+                    (user_id, person_id, stream, grp, f["n"], f["hits"], f["first"], f["last"]))
+        return len(old)
+
+    def history_list(self, user_id: str, person_id: str, stream: str, *, scope: str | None = None,
+                     limit: int = 500) -> dict:
+        """The newest `limit` rows of one stream (oldest first, like list_events), its totals, and counts."""
+        sql = "SELECT id, scope, kind, data, at FROM history WHERE user_id=? AND person_id=? AND stream=?"
+        params: list = [user_id, person_id, stream]
+        if scope:
+            sql += " AND scope=?"
+            params.append(scope)
+        with self._tx() as cur:
+            cur.execute(self._q(sql + " ORDER BY id DESC LIMIT ?"), (*params, int(limit)))
+            rows = cur.fetchall()
+            cur.execute(self._q("SELECT COUNT(*) FROM history WHERE user_id=? AND person_id=? AND stream=?"),
+                        (user_id, person_id, stream))
+            total = cur.fetchone()[0]
+            cur.execute(self._q("SELECT grp, n, hits, first_at, last_at FROM history_totals "
+                                "WHERE user_id=? AND person_id=? AND stream=? ORDER BY n DESC, grp"),
+                        (user_id, person_id, stream))
+            totals = [{"group": r[0], "n": r[1], "hits": r[2], "first_at": r[3], "last_at": r[4]}
+                      for r in cur.fetchall()]
+        return {"rows": [{"id": r[0], "scope": r[1], "kind": r[2], "data": json.loads(r[3]), "at": r[4]}
+                         for r in rows][::-1],
+                "total": total, "totals": totals}
+
+    def history_counts(self, user_id: str, person_id: str) -> dict:
+        """Per stream: how many rows are kept, and how many older ones are counted in totals."""
+        out: dict[str, dict] = {}
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT stream, COUNT(*) FROM history WHERE user_id=? AND person_id=? GROUP BY stream"),
+                        (user_id, person_id))
+            for stream, n in cur.fetchall():
+                out.setdefault(stream, {"rows": 0, "counted": 0})["rows"] = n
+            cur.execute(self._q("SELECT stream, SUM(n) FROM history_totals WHERE user_id=? AND person_id=? "
+                                "GROUP BY stream"), (user_id, person_id))
+            for stream, n in cur.fetchall():
+                out.setdefault(stream, {"rows": 0, "counted": 0})["counted"] = int(n or 0)
+        return out
+
+    def history_delete(self, user_id: str, person_id: str, stream: str | None = None) -> dict:
+        """Remove a person's history kept here - one stream, or all of it - rows and totals. A hard delete."""
+        where = "user_id=? AND person_id=?" + (" AND stream=?" if stream else "")
+        params = (user_id, person_id, stream) if stream else (user_id, person_id)
+        with self._tx() as cur:
+            cur.execute(self._q(f"SELECT COUNT(*) FROM history WHERE {where}"), params)
+            rows = cur.fetchone()[0]
+            cur.execute(self._q(f"DELETE FROM history WHERE {where}"), params)
+            cur.execute(self._q(f"SELECT COUNT(*) FROM history_totals WHERE {where}"), params)
+            totals = cur.fetchone()[0]
+            cur.execute(self._q(f"DELETE FROM history_totals WHERE {where}"), params)
+        return {"rows": rows, "totals": totals}
+
     def rows_through(self, owner: str, visitor: str) -> list[str]:
         """The owner's rows that stand for the visitor's login: each row on the owner's page whose profile came
         through the visitor's login (its `source_id` is a row of theirs). What "Who can see my page: people I
@@ -2191,6 +2353,24 @@ class SQLiteStore(_Store):
                     user_id TEXT NOT NULL, profile_id TEXT NOT NULL, key TEXT NOT NULL,
                     data TEXT NOT NULL, version INTEGER NOT NULL, updated_at TEXT NOT NULL,
                     PRIMARY KEY (user_id, profile_id, key)
+                );
+
+                -- HISTORY KEPT WITH US, OPTED IN (2026-10-07; storage_line.py rule 4, history_append above).
+                -- NOT append-only, on purpose: it is capped per person, and the oldest rows are counted
+                -- into history_totals and deleted. `at` is when it happened (the device's clock); `scope`
+                -- is what the device files it under (a panel or a screen).
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id TEXT NOT NULL, person_id TEXT NOT NULL, stream TEXT NOT NULL,
+                    scope TEXT NOT NULL DEFAULT '', kind TEXT NOT NULL, data TEXT NOT NULL,
+                    at TEXT NOT NULL, created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS ix_history_person ON history(user_id, person_id, id);
+                CREATE INDEX IF NOT EXISTS ix_history_stream ON history(user_id, person_id, stream, scope, id);
+                CREATE TABLE IF NOT EXISTS history_totals (
+                    user_id TEXT NOT NULL, person_id TEXT NOT NULL, stream TEXT NOT NULL, grp TEXT NOT NULL,
+                    n INTEGER NOT NULL, hits INTEGER NOT NULL DEFAULT 0, first_at TEXT, last_at TEXT,
+                    PRIMARY KEY (user_id, person_id, stream, grp)
                 );
 
                 -- PROVENANCE COLUMNS (for_code.md 9f). Nullable, populated null, NEVER
@@ -2512,6 +2692,17 @@ class PostgresStore(_Store):
             "CREATE TABLE IF NOT EXISTS state (user_id TEXT NOT NULL, profile_id TEXT NOT NULL, key TEXT NOT NULL, "
             "data TEXT NOT NULL, version INTEGER NOT NULL, updated_at TEXT NOT NULL, "
             "PRIMARY KEY (user_id, profile_id, key))",
+
+            # History kept with us, opted in and capped - see the SQLite block. No append-only trigger: the
+            # cap deletes the oldest rows once they are counted into history_totals.
+            "CREATE TABLE IF NOT EXISTS history (id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, "
+            "person_id TEXT NOT NULL, stream TEXT NOT NULL, scope TEXT NOT NULL DEFAULT '', kind TEXT NOT NULL, "
+            "data TEXT NOT NULL, at TEXT NOT NULL, created_at TEXT NOT NULL)",
+            "CREATE INDEX IF NOT EXISTS ix_history_person ON history(user_id, person_id, id)",
+            "CREATE INDEX IF NOT EXISTS ix_history_stream ON history(user_id, person_id, stream, scope, id)",
+            "CREATE TABLE IF NOT EXISTS history_totals (user_id TEXT NOT NULL, person_id TEXT NOT NULL, "
+            "stream TEXT NOT NULL, grp TEXT NOT NULL, n INTEGER NOT NULL, hits INTEGER NOT NULL DEFAULT 0, "
+            "first_at TEXT, last_at TEXT, PRIMARY KEY (user_id, person_id, stream, grp))",
 
             "CREATE TABLE IF NOT EXISTS events (id BIGSERIAL PRIMARY KEY, user_id TEXT NOT NULL, "
             "profile_id TEXT NOT NULL, stream TEXT NOT NULL, kind TEXT NOT NULL, data TEXT NOT NULL, "

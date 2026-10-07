@@ -1016,6 +1016,83 @@ def append_person_event(person_id: str, stream: str, body: EventPost, request: R
     return result
 
 
+# ------------------------------------------- history kept WITH US, opted in (row 2.58)
+# Mike, 2026-10-07: "maybe make having us save it as an option if it's not going to take a lot of space or cost
+# us anything. It has to be scalable though." A person's history (what played, game results, the talk board's
+# words) is kept where THEY choose; "with us" is one choice, made in their own row (storage_line.HISTORY_KEY).
+# The server reads that row on every write - the opt-in is never a flag in the request - and holds the person
+# to the cap (db.py history_append). Reading and removing work whatever the choice is now, so somebody who
+# switches away can still see and delete what was kept.
+class HistoryPost(BaseModel):
+    rows: list[dict]
+
+
+def _history_target(user: str, person_id: str) -> tuple[str, str]:
+    """(account, person) the history lives under: the same row the person's own setting is read from."""
+    _check(person_id, ID_RE, "person id")
+    return _person_state_target(user, person_id, storage_line.HISTORY_KEY, write=False)
+
+
+def _history_refused(e: "storage_line.Refused", stream: str, n: int):
+    log.warning("storage line: refused history stream=%s status=%s rows=%s", stream, e.status, n)
+    raise HTTPException(status_code=e.status, detail=e.detail)
+
+
+@app.get("/api/people/{person_id}/history")
+def history_summary(person_id: str, user: str = Depends(current_user)):
+    """Where each kind of history is kept for this person, and how much is kept here."""
+    acct, pid = _history_target(user, person_id)
+    place = store.get_state(acct, person_scope(pid), storage_line.HISTORY_KEY).get("data") or {}
+    return {"place": place, "kept": store.history_counts(acct, pid),
+            "cap": {"rows": storage_line.HISTORY_MAX_ROWS, "row_bytes": storage_line.HISTORY_ROW_MAX_BYTES}}
+
+
+@app.get("/api/people/{person_id}/history/{stream}")
+def history_rows(person_id: str, stream: str, scope: str = "", limit: int = 500,
+                 user: str = Depends(current_user)):
+    _check(stream, ID_RE, "history stream")
+    try:
+        storage_line.history_kind(stream)
+    except storage_line.Refused as e:
+        raise HTTPException(status_code=e.status, detail=e.detail)
+    if scope:
+        _check(scope, ID_RE, "history scope")
+    acct, pid = _history_target(user, person_id)
+    return store.history_list(acct, pid, stream.lower(), scope=scope or None, limit=max(1, min(limit, 1000)))
+
+
+@app.post("/api/people/{person_id}/history/{stream}")
+def history_add(person_id: str, stream: str, body: HistoryPost, request: Request,
+                user: str = Depends(current_user)):
+    _check(stream, ID_RE, "history stream")
+    acct, pid = _history_target(user, person_id)
+    place = store.get_state(acct, person_scope(pid), storage_line.HISTORY_KEY).get("data") or {}
+    try:
+        storage_line.check_history(stream, body.rows, place)
+    except storage_line.Refused as e:
+        _history_refused(e, stream, len(body.rows or []))
+    result = store.history_append(
+        acct, pid, stream.lower(), body.rows, group_of=storage_line.group_of,
+        max_rows=storage_line.HISTORY_MAX_ROWS, roll_batch=storage_line.HISTORY_ROLL_BATCH,
+        totals_max=storage_line.HISTORY_TOTALS_MAX, scope_max=storage_line.HISTORY_SCOPE_MAX,
+        other=storage_line.OTHER_GROUP)
+    _push.publish(acct, f"/api/people/{person_id}/history/{stream}")
+    return result
+
+
+@app.delete("/api/people/{person_id}/history")
+def history_remove(person_id: str, stream: str = "", user: str = Depends(current_user)):
+    """Remove what is kept here for this person: one kind (`?stream=`) or all of it. Always allowed."""
+    if stream:
+        _check(stream, ID_RE, "history stream")
+        try:
+            storage_line.history_kind(stream)
+        except storage_line.Refused as e:
+            raise HTTPException(status_code=e.status, detail=e.detail)
+    acct, pid = _history_target(user, person_id)
+    return store.history_delete(acct, pid, stream.lower() or None)
+
+
 # ------------------------------------------------------- legacy per-USER aliases
 # What /api/user-state and /api/user-events meant before people existed. They now resolve
 # to the account's DEFAULT person, so a kiosk still running older cached code keeps

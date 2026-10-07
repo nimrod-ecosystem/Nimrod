@@ -205,6 +205,8 @@ export function createProfilesClient({ user, baseURL = '' }) {
     // they can hold it is true everywhere, and re-entering it per screen is exactly the
     // per-device toil this project exists to avoid.
     personStateURL: (personId, key) => `${baseURL}/api/people/${personId}/state/${key}`,
+    // History a person chose to keep WITH US (2026-10-07, history_place.js; opted in, capped). '' is the summary.
+    personHistoryURL: (personId, stream = '') => `${baseURL}/api/people/${personId}/history${stream ? `/${stream}` : ''}`,
 
     // ---- who may drive whose screens -------------------------------------
     // The OWNER's view of one person's grants.

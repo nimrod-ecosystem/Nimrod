@@ -438,7 +438,13 @@ const toTab = (m, id) => {
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
           'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin', 'set:barQuietMs', 'set:barShowsItself',
-          'person:start', 'screen-players'].includes(i.id));
+          'set:barWhilePlaying',   // bar while playing (comment below)
+          'person:start', 'screen-players', 'history-place'].includes(i.id));
+      // ('set:barWhilePlaying', 2026-10-07, bar while playing (row 2.65): "While a game is being played, the bar" under "The
+      // bar" on the Devices tab, beside the two bar-toggle rows. Outside the panel's lap; left out here DELIBERATELY so the
+      // old rows stay 40. dev/bar_toggle_test.html checks it is in the menu and what it does.)
+      // ('history-place', 2026-10-07, history_page.js: "Where your history is kept" on the People tab, a row that opens a
+      // page, like 'game' -- outside the panel's lap; left out here so the old rows stay 40.)
       // ('screen-players', 2026-10-06, player_picker.js: the Players tab's one row. Outside the panel's lap; left out here
       // DELIBERATELY, like 'person:start', so the old rows stay 40. Checked on its own above.)
       // ('person:start', 2026-10-06, adaptive_play.js usualStartField: the person's "Usual starting level for games" on the
