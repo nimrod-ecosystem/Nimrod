@@ -70,7 +70,9 @@ export const GUIDE_VERB_TOPICS = Object.freeze({
 // What an act may be. A closed set, so the suite can say an act is wrong rather than a press doing nothing.
 export const ACT_KINDS = Object.freeze(['menu-tab', 'settings-page', 'switch', 'host', 'tutorial', 'link', 'game-mode', 'guide']);
 // A `guide` act is one of his OWN views, not a message on the bus: `do` says which (modules/nimrod.js).
-export const GUIDE_DOS = Object.freeze(['talk', 'notes']);
+// 'wrap' (2026-10-07, row 2.54): wrap up a walkthrough (walkthrough_wrap.js). 'walkstart': mark where a walkthrough
+// starts, so the wrap-up can offer "since you started" (nothing is sent; it only keeps the time on the person's record).
+export const GUIDE_DOS = Object.freeze(['talk', 'notes', 'wrap', 'walkstart']);
 // *** A NODE MAY CARRY A FORM (2026-10-03, "Set up your guide / AI"). *** `form` names what modules/nimrod.js
 // draws between his words and the choices. A choice with `keep: true` keeps what is in the form as it goes on
 // ("Next"); a choice without it ("Skip this step") goes on and keeps nothing. Every step can be skipped, and
@@ -423,11 +425,31 @@ const NODES = [
     choices: withKeys([
       { label: 'Set up your AI first', to: 'ai-setup' },
       { label: 'See it as someone new', to: 'someone-new' },
+      { label: 'When you are done: wrap up the walkthrough', to: 'walk-wrap' },
       BACK_TO_START,
     ]),
     acts: [
+      { kind: 'guide', do: 'walkstart', label: 'Start a walkthrough now' },
       { kind: 'guide', do: 'notes', label: 'Open my notes' },
       { kind: 'guide', do: 'talk', label: 'Talk to my AI' },
+    ],
+  },
+  // ---- the end of the walk (2026-10-07, row 2.54): the AI sums it up and sorts the notes; then you go through
+  // what it made together, one line at a time, and save it as a file. modules/nimrod.js draws it (walkthrough_wrap.js).
+  {
+    id: 'walk-wrap', title: 'Wrap up the walkthrough',
+    say: 'When you are done, I can read your notes from the walk with your AI. It writes a short summary and sorts '
+      + 'what you said into three lists: for chat, for Code and for Design. Each line says which note it came from. '
+      + 'Then we go through it together, one line at a time: keep it, change it, move it or drop it. Your notes stay '
+      + 'exactly as you wrote them. At the end, save it as a file in a folder you pick. Only the notes you choose '
+      + 'are sent, and only when you press.',
+    choices: withKeys([
+      { label: 'Back to walking the site', to: 'notes-walk' },
+      BACK_TO_START,
+    ]),
+    acts: [
+      { kind: 'guide', do: 'wrap', label: 'Wrap up the walkthrough' },
+      { kind: 'guide', do: 'notes', label: 'Open my notes' },
     ],
   },
   // ---- "Try it as someone new" (2026-10-04, try_new.js): under the walk, not on the first question, so the

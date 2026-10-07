@@ -117,20 +117,27 @@ export function noteContextFrom({ scope = null, own = null, lastOther = null, pa
   const dashboard = short(h.dashboard) || DASHBOARD_BY_INTRO[intro] || (dashboardId ? `dashboard ${short(String(dashboardId))}` : '');
   // `path` is a pathname by contract; anything after ? or # is cut here too, whatever a caller passed.
   const page = short(String(path || '').split(/[?#]/)[0]);
-  return { dashboard, panel: p ? (p.title && p.title !== p.type ? `${p.title} (${p.type})` : p.type) : '', page };
+  // WHICH PERSON (2026-10-07, row 2.54 (e)): the host's name for who this screen is for, only when it knows one.
+  // Kept with the note; never sent to an AI by a wrap-up (walkthrough_wrap.js `placeForAI`).
+  const person = short(h.person);
+  return { dashboard, panel: p ? (p.title && p.title !== p.type ? `${p.title} (${p.type})` : p.type) : '', page, ...(person ? { person } : {}) };
 }
 
 /** "Dashboard: …; panel picked: …; page: …" — the line a note's context reads as. '' when there is none. */
 export function contextLine(c) {
   const o = c && typeof c === 'object' ? c : {};
-  return [o.dashboard && `dashboard: ${o.dashboard}`, o.panel && `panel picked: ${o.panel}`, o.page && `page: ${o.page}`]
-    .filter(Boolean).join('; ');
+  return [o.dashboard && `dashboard: ${o.dashboard}`, o.panel && `panel picked: ${o.panel}`, o.page && `page: ${o.page}`,
+    o.person && `person: ${o.person}`, o.trial === true && 'made as a test person'].filter(Boolean).join('; ');
 }
 
+// `person` and `trial` (2026-10-07) are only there when known / true: a note with neither reads as before.
 const cleanContext = (c) => {
   const o = c && typeof c === 'object' ? c : {};
   const out = { dashboard: short(o.dashboard), panel: short(o.panel), page: short(String(o.page || '').split(/[?#]/)[0]) };
-  return out.dashboard || out.panel || out.page ? out : null;
+  const person = short(o.person);
+  if (person) out.person = person;
+  if (o.trial === true) out.trial = true;
+  return out.dashboard || out.panel || out.page || out.person || out.trial ? out : null;
 };
 
 /** A note as kept: `{ id, at, where, text, context? }`, or null when there is nothing in it. */

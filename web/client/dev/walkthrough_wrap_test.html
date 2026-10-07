@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wrap up the walkthrough: the AI's summary and lists, reviewed one line at a time, saved as a file</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{position:relative;width:520px;height:640px;margin-top:12px;border:1px solid #ccc}
+</style>
+</head>
+<body>
+<h1>Wrap up the walkthrough: the AI's summary and lists, reviewed one line at a time, saved as a file</h1>
+<p>Row 2.54 (2026-10-07). Everything runs against a FAKE model and a FAKE folder: no AI is called and no file is
+written. Checked: sorting into the three lists, every line pointing back to its notes, an unreadable answer falling
+back to "not sorted yet", what is sent (only the chosen notes, never the person's name), each decision of the
+review, leaving and resuming, by press, switch and voice, the Markdown file, and saving it into a picked folder.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { GUIDE_NODES, GUIDE_VERB_TOPICS, GUIDE_DOS, treeProblems } from '../nimrod_guide_data.js';
+import { AI_STATE_KEY, SPEECH_TOPICS } from '../nimrod_ai.js';
+import { makeNote, cleanNotes, noteContextFrom, contextLine, stamp } from '../nimrod_notes.js';
+import * as W from '../walkthrough_wrap.js';
+import '../modules/nimrod.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+window.addEventListener('error', (e) => { failed++; out.append(Object.assign(document.createElement('div'),
+  { className: 'fail', textContent: 'FAIL  uncaught: ' + (e.error?.stack || e.message) })); });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 3000) => { const t = Date.now() + ms; while (Date.now() < t) { try { if (await fn()) return true; } catch { /* not yet */ } await sleep(15); } return false; };
+const J = (x) => JSON.stringify(x);
+const NAMES = /\bher screen|christine|cici/i;
+
+// ---- made-up notes: a walk by a made-up person, "Ruth Example" ----
+const T0 = Date.now() - 3 * 3600 * 1000;
+function mkNotes(count, { start = T0, person = 'Ruth Example', trialAt = -1 } = {}) {
+  const list = [];
+  for (let i = 0; i < count; i += 1) {
+    list.push(makeNote(`Note text ${i + 1}: the ${['clock', 'photos', 'settings'][i % 3]} bit should be bigger.`, {
+      at: start + i * 60000, where: 'Going through the site with your AI',
+      context: { dashboard: 'Start here', panel: 'Settings (settings)', page: '/kiosk.html', person, ...(i === trialAt ? { trial: true } : {}) } }));
+  }
+  return list;
+}
+const listFor = (n) => ['chat', 'code', 'design'][n % 3];
+
+// THE FAKE MODEL: ai.js's shape. Reads the note numbers out of what it was sent and sorts them by number.
+function sortingAI({ fail = new Set(), garbage = new Set(), extra = null, noAI = false } = {}) {
+  const calls = [];
+  return {
+    calls,
+    settings: () => ({ baseUrl: 'http://127.0.0.1:11434/v1', model: '' }), setSettings: (p) => p, hasKey: () => false, setKey: () => false,
+    listModels: async () => (noAI ? { ok: false, models: [], reason: 'Nothing answered.' } : { ok: true, models: ['fake-model'] }),
+    resolveModel: async () => (noAI ? { ok: false, model: null, models: [], reason: 'Nothing answered.' } : { ok: true, model: 'fake-model', models: ['fake-model'], fellBack: false }),
+    chat: async (msgs, opts) => {
+      calls.push({ msgs, opts });
+      if (noAI) return { ok: false, reason: 'Nothing answered.' };
+      if (/join short summaries/.test(msgs[0].content)) return { ok: true, text: J({ summary: 'One walk: bigger things wanted.' }), model: 'fake-model' };
+      const part = calls.filter((c) => !/join short summaries/.test(c.msgs[0].content)).length;
+      if (fail.has(part)) return { ok: false, reason: 'The model fell over.' };
+      if (garbage.has(part)) return { ok: true, text: 'Sure! Here are your lists: lots of good stuff.', model: 'fake-model' };
+      const nums = [...msgs[1].content.matchAll(/^Note (\d+) \(/gm)].map((m) => Number(m[1]));
+      const items = nums.map((n) => ({ list: listFor(n), text: `Line for note ${n}`, notes: [n] }));
+      if (extra) items.push(...extra(nums));
+      return { ok: true, text: '```json\n' + J({ summary: `Part ${part}.`, items }) + '\n```', model: 'fake-model' };
+    },
+  };
+}
+
+function fakeState(initial = {}) {
+  let data = JSON.parse(JSON.stringify(initial));
+  const subs = new Set();
+  return {
+    load: async () => ({ ...data }), get: () => ({ ...data }),
+    set(p) { data = { ...data, ...p }; for (const f of [...subs]) f({ ...data }); },
+    subscribe(f) { subs.add(f); return () => subs.delete(f); },
+    flush: async () => {}, destroy() {}, data: () => JSON.parse(JSON.stringify(data)),
+  };
+}
+function personStores() {
+  const made = {};
+  return { made, make: (pid, key, init = {}) => { made[`${pid}/${key}`] = made[`${pid}/${key}`] || fakeState(init); return made[`${pid}/${key}`]; } };
+}
+// A FAKE FOLDER: getFileHandle / createWritable / permission, the File System Access shape.
+function fakeDir(name = 'walkthroughs', { perm = 'granted', grant = 'granted' } = {}) {
+  const files = new Map();
+  return {
+    name, files, kind: 'directory', asked: 0,
+    async getFileHandle(n, opts) {
+      if (!files.has(n) && !opts?.create) { const e = new Error('not found'); e.name = 'NotFoundError'; throw e; }
+      return { kind: 'file', name: n, async createWritable() { let buf = ''; return { async write(t) { buf += t; }, async close() { files.set(n, buf); } }; } };
+    },
+    async queryPermission() { return perm; },
+    async requestPermission() { this.asked += 1; perm = grant; return grant; },
+  };
+}
+function fakeFolders(dir) {
+  const m = new Map();
+  const view = { picks: 0, showDirectoryPicker: async () => { view.picks += 1; return dir; } };
+  return { store: { get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); return true; }, del: async (k) => m.delete(k) }, view, map: m };
+}
+function box() { const b = document.createElement('div'); b.className = 'box'; document.body.append(b); return b; }
+async function mountGuide({ ai, person = 'ruth', ps = personStores(), personInit = null, bus = createBus(), extra = {} } = {}) {
+  const mount = box();
+  if (personInit) ps.make(person, AI_STATE_KEY, personInit);
+  const output = { said: [], say(t) { this.said.push(t); return `o${this.said.length}`; }, cancel() {} };
+  const inst = mountModule('nimrod', { mount, bus, state: fakeState(), events: null, output, user: null, profileId: 'p', personId: person,
+    instanceId: 'n1', ai, makePersonState: (pid, key) => ps.make(pid, key), ...extra });
+  await inst.init();
+  const q = (s) => mount.querySelector(s);
+  const doBtn = (what, id = null) => [...mount.querySelectorAll(`[data-ng-do="${what}"]`)].find((b) => id == null || b.dataset.ngId === id);
+  const probe = () => inst.impl.__probe();
+  const rec = () => ps.made[`${person}/${AI_STATE_KEY}`]?.data() || {};
+  return { mount, inst, q, doBtn, probe, rec, bus, ps, output, done: () => { inst.destroy(); mount.remove(); } };
+}
+const press = async (g, what, id = null) => { const b = g.doBtn(what, id); if (!b) throw new Error(`no button ${what}${id ? ` ${id}` : ''}`); b.click(); await sleep(20); };
+
+try {
+  // ============================================================================================
+  section('*** which notes: since the walkthrough started, since the last wrap-up, today, all, or a range ***');
+  {
+    const notes = mkNotes(6);
+    const c = W.rangeChoices(notes, { walkStartedAt: notes[2].at, lastWrapTo: notes[3].at, now: notes[5].at });
+    check('the walkthrough’s range first (from its start, inclusive), then since the last wrap-up, then all',
+      c[0].id === 'walk' && c[0].count === 4 && c.find((x) => x.id === 'last').count === 2 && c.find((x) => x.id === 'all').count === 6, J(c));
+    check('no start and no wrap-up yet: today and all are offered', J(W.rangeChoices(notes, { now: notes[5].at }).map((x) => x.id)).includes('all')
+      && !W.rangeChoices(notes, {}).some((x) => x.id === 'walk' || x.id === 'last'));
+    check('a range with no notes in it is not offered', !W.rangeChoices(notes, { lastWrapTo: notes[5].at + 1 }).some((x) => x.id === 'last'));
+    check('picked first and last note: exactly those and what is between', J(W.notesInRange(notes, { fromId: notes[1].id, toId: notes[3].id }).map((n) => n.id)) === J(notes.slice(1, 4).map((n) => n.id)));
+    check('picked the wrong way round still works', W.notesInRange(notes, { fromId: notes[4].id, toId: notes[2].id }).length === 3);
+  }
+
+  // ============================================================================================
+  section('*** each note carries where it was made: page, panel, which person, test person or not (e) ***');
+  {
+    const ctx1 = noteContextFrom({ path: '/kiosk.html?key=SECRET', host: { dashboard: 'Start here', person: 'Ruth Example' } });
+    check('the host’s person is kept with the note context; the page is the path only', ctx1.person === 'Ruth Example' && ctx1.page === '/kiosk.html', J(ctx1));
+    check('no person known: no person key (a note reads as before)', !('person' in noteContextFrom({ path: '/x', host: { dashboard: 'D' } })));
+    const n = makeNote('hello', { context: { dashboard: 'D', page: '/p', person: 'Ruth Example', trial: true } });
+    check('makeNote keeps the person and the test-person mark', n.context.person === 'Ruth Example' && n.context.trial === true);
+    check('cleanNotes keeps them too; a "trial" that is not true is not kept', cleanNotes([n])[0].context.trial === true
+      && !('trial' in cleanNotes([{ ...n, context: { ...n.context, trial: 'yes' } }])[0].context));
+    check('the context line says the person and “made as a test person”', /person: Ruth Example/.test(contextLine(n.context)) && /made as a test person/.test(contextLine(n.context)));
+  }
+
+  // ============================================================================================
+  section('*** what is sent: only the chosen notes, numbered; where they were made; never the person’s name ***');
+  {
+    const notes = mkNotes(3, { trialAt: 1 });
+    const msgs = W.wrapMessages(notes.map((note, i) => ({ n: i + 1, note })));
+    const all = msgs.map((m) => m.content).join('\n');
+    check('every chosen note’s words are in it, numbered', notes.every((x, i) => all.includes(`Note ${i + 1} (`) && all.includes(x.text)));
+    check('*** the person’s name is NOT sent ***', !/Ruth Example/.test(all));
+    check('where it was made is sent: the page, the panel picked, and the test-person mark', /page \/kiosk\.html/.test(all) && /panel picked: Settings/.test(all) && /made as a test person/.test(all));
+    check('it asks for JSON with a pointer back to the notes, and says not to invent anything', /"notes": \[3\]/.test(all) && /Do not invent/.test(all) && /JSON only/.test(all));
+    check('the three lists, with what goes in each', W.WRAP_LISTS.every((l) => all.includes(`"${l.id}" (${l.label})`)));
+    const many = mkNotes(25).map((note, i) => ({ n: i + 1, note }));
+    const b = W.batchesOf(many);
+    check(`notes go ${W.BATCH_NOTES} at a time (25 notes: 3 parts)`, b.length === 3 && b[0].length === W.BATCH_NOTES && b[2].length === 5);
+    const big = [{ n: 1, note: makeNote('x'.repeat(3900)) }, { n: 2, note: makeNote('y'.repeat(3900)) }, { n: 3, note: makeNote('z'.repeat(3900)) }, { n: 4, note: makeNote('w'.repeat(3900)) }];
+    check('and by size: long notes split sooner', W.batchesOf(big).length === 2);
+  }
+
+  // ============================================================================================
+  section('*** reading the answer: sorted, pointing back, and an unreadable answer falls back to “not sorted yet” ***');
+  {
+    const good = W.parseWrap('Here you go:\n```json\n' + J({ summary: 'A short walk.', items: [
+      { list: 'code', text: '- Fix the clock size', notes: [1] },
+      { list: 'Design', text: 'Bigger photos', notes: ['2', 1] },
+      { list: 'chat', text: 'Something nobody said', notes: [] },
+      { list: 'code', text: 'Pointer to a note not sent', notes: [9] },
+      { list: 'nonsense', text: 'Odd list', notes: [2] },
+    ] }) + '\n```', [1, 2, 3], { noteLine: (n) => `own words ${n}` });
+    check('read through prose and a fence; the summary kept', good.ok && good.summary === 'A short walk.');
+    check('lines go to their lists, with the note numbers they came from', J(good.items[0]) === J({ list: 'code', text: 'Fix the clock size', nums: [1] })
+      && good.items[1].list === 'design' && J(good.items[1].nums) === J([2, 1]), J(good.items.slice(0, 2)));
+    check('*** a line with no note behind it is kept but NOT in a list: “not sorted yet”, marked as having no note ***',
+      good.items[2].list === W.UNSORTED && good.items[2].unanchored === true && good.items[3].list === W.UNSORTED && good.items[3].unanchored === true);
+    check('a list the AI made up: not sorted yet, still pointing at its note', good.items[4].list === W.UNSORTED && J(good.items[4].nums) === J([2]));
+    check('*** a note the AI left out comes back as its own line, in its own words ***', good.items.some((i) => i.left && J(i.nums) === J([3]) && i.text === 'own words 3'));
+    const bad = W.parseWrap('I could not do that, sorry.', [1, 2], { noteLine: (n) => `own words ${n}` });
+    check('*** unreadable: not a failure: every note comes back unsorted, in its own words, with the reason ***',
+      !bad.ok && bad.items.length === 2 && bad.items.every((i) => i.list === W.UNSORTED && i.left) && /could not be read/.test(bad.reason));
+    const alt = W.parseWrap(J({ code: ['Fix it (note 1)'], design: [{ text: 'Look', notes: [2] }] }), [1, 2]);
+    check('the { chat, code, design } shape is read too', alt.ok && alt.items[0].list === 'code' && alt.items[1].list === 'design' && J(alt.items[1].nums) === J([2]));
+    const flood = W.parseWrap(J({ items: Array.from({ length: 99 }, (_, i) => ({ list: 'code', text: `L${i}`, notes: [1] })) }), [1]);
+    check(`a runaway answer is capped (${W.ITEMS_PER_NOTE} lines a note)`, flood.items.length === W.ITEMS_PER_NOTE);
+  }
+
+  // ============================================================================================
+  section('*** wrapUp: part by part, the summaries joined, a failed part unsorted, pointers become note ids ***');
+  {
+    const notes = mkNotes(25);
+    const snap = J(notes);
+    const ai = sortingAI({ fail: new Set([2]) });
+    const prog = [];
+    const r = await W.wrapUp(notes, { ai, model: 'fake-model', aiName: 'Pip', onProgress: (p) => prog.push(p) });
+    const rv = r.review;
+    check('three parts asked, then one call joining the summaries', ai.calls.length === 4 && /join short summaries/.test(ai.calls[3].msgs[0].content));
+    check('JSON was asked for, with an answer size the server allows', ai.calls[0].opts.json === true && ai.calls[0].opts.maxTokens === W.ANSWER_TOKENS && W.ANSWER_TOKENS <= 1024);
+    check('progress after each part', J(prog) === J([{ done: 1, total: 3 }, { done: 2, total: 3 }, { done: 3, total: 3 }]));
+    check('the joined summary, labelled as the AI’s (by: ai)', rv.summary.text === 'One walk: bigger things wanted.' && rv.by === 'ai' && rv.aiName === 'Pip');
+    const ids = new Set(notes.map((n) => n.id));
+    check('*** every line points back to real notes, by id ***', rv.items.every((i) => i.notes.length && i.notes.every((id) => ids.has(id))));
+    check('note numbers map to the right notes', rv.items.find((i) => i.text === 'Line for note 3').notes[0] === notes[2].id);
+    check('*** the part that failed: its 10 notes unsorted, in their own words, and the problem said ***',
+      rv.items.filter((i) => i.list === W.UNSORTED).length === 10 && rv.items.some((i) => i.left && i.text === W.noteAsLine(notes[12]))
+      && rv.problems.length === 1 && /notes 11 to 20/.test(rv.problems[0]));
+    check('the lists come in order: chat, code, design, then not sorted', J([...new Set(rv.items.map((i) => i.list))]) === J(['chat', 'code', 'design', 'unsorted']));
+    check('the notes themselves are untouched', J(notes) === snap);
+    const ctl = new AbortController();
+    const slow = { chat: async () => { ctl.abort(); return { ok: false, cancelled: true }; } };
+    const c = await W.wrapUp(notes, { ai: slow, signal: ctl.signal });
+    check('Stop: nothing kept, said as stopped', !c.ok && c.cancelled);
+    const g = await W.wrapUp(mkNotes(3), { ai: sortingAI({ garbage: new Set([1]) }) });
+    check('a whole answer unreadable: the wrap-up still opens, every note unsorted', g.ok && g.review.items.every((i) => i.list === W.UNSORTED) && g.review.items.length === 3 && !g.review.summary);
+  }
+
+  // ============================================================================================
+  section('*** the review: keep / change / move / drop, one at a time, and back and skip ***');
+  let reviewed = null;
+  {
+    const notes = mkNotes(4);
+    let r = (await W.wrapUp(notes, { ai: sortingAI() })).review;
+    const steps = W.reviewSteps(r);
+    check('the summary is the first step, then each line', steps[0].kind === 'summary' && steps.length === 1 + r.items.length);
+    check('the summary cannot be moved to a list', W.decide(r, 'move', 'code') === r);
+    r = W.decide(r, 'change', 'A better summary.');
+    check('changing the summary keeps it (with its first words kept too) and moves on', r.summary.text === 'A better summary.' && r.summary.was === 'Part 1.' && r.summary.state === 'kept' && r.cursor === 1);
+    const first = W.currentStep(r).item;
+    r = W.decide(r, 'keep');
+    check('keep: kept, and on to the next', r.items.find((i) => i.id === first.id).state === 'kept' && r.cursor === 2);
+    const second = W.currentStep(r).item;
+    r = W.decide(r, 'move', 'design');
+    const moved = r.items.find((i) => i.id === second.id);
+    check('move: in the new list, kept, and it remembers where it was', moved.list === 'design' && moved.wasList === second.list && moved.state === 'kept');
+    check('a list that is not one: nothing changes', W.decide(r, 'move', 'elsewhere') === r);
+    r = W.decide(r, 'next');
+    check('skip: on without deciding', W.currentStep(r).item.state === 'open' && r.cursor === 4);
+    r = W.decide(r, 'drop');
+    check('drop: left out, and back round to the one skipped', r.items.filter((i) => i.state === 'dropped').length === 1 && r.cursor === 3);
+    check('change with nothing in it does nothing', W.decide(r, 'change', '   ') === r);
+    r = W.decide(r, 'change', 'Bigger, please.');
+    check('change a line: new words, the old ones remembered, kept; all done now', W.progress(r).open === 0 && W.currentStep(r) === null
+      && r.items.some((i) => i.text === 'Bigger, please.' && i.was !== i.text));
+    const p = W.progress(r);
+    check('the count: kept, changed, moved, dropped', p.kept === 3 && p.changed === 1 && p.moved === 1 && p.dropped === 1, J(p));
+    r = W.decide(r, 'prev');
+    check('back from the end: the last line again, and it can be decided again', W.currentStep(r)?.kind === 'item' && W.decide(r, 'keep').items.length === r.items.length);
+    reviewed = { notes, r: W.decide(r, 'goto', W.reviewSteps(r).length) };
+    const resumed = W.cleanReview(JSON.parse(J(W.decide(r, 'goto', 2))));
+    check('*** saved and read back (resume): the same review, at the same place ***', resumed && resumed.cursor === 2 && J(resumed.items) === J(r.items) && resumed.summary.text === 'A better summary.');
+    check('a stored thing that is not a review reads as none', W.cleanReview({ v: 2 }) === null && W.cleanReview(null) === null);
+    const hand = W.handReview(notes);
+    check('by hand: no summary, every note one line in its own words, “not sorted yet”, pointing at itself',
+      !hand.summary && hand.by === 'hand' && hand.items.length === 4 && hand.items.every((i, k) => i.list === W.UNSORTED && i.notes[0] === notes[k].id && i.text === W.noteAsLine(notes[k])));
+  }
+
+  // ============================================================================================
+  section('*** by voice: “keep”, “drop”, “move to design”, “change it to …”, “back”, “skip” ***');
+  {
+    const P = W.parseReviewWords;
+    check('keep / drop', J(P('Keep.')) === J({ action: 'keep' }) && J(P('drop it')) === J({ action: 'drop' }));
+    check('move to a list, several ways', P('move to design')?.list === 'design' && P('Move it to the code list')?.list === 'code' && P('put it in chat')?.list === 'chat' && P('for design')?.list === 'design');
+    check('*** “change it to …” keeps the words as said (capitals and punctuation) ***', J(P('Change it to Make the clock Bigger, please.')) === J({ action: 'change', text: 'Make the clock Bigger, please.' }));
+    check('“change it” alone: open the line for new words', J(P('change it')) === J({ action: 'change', text: '' }));
+    check('back and skip', P('go back')?.action === 'prev' && P('skip')?.action === 'next');
+    check('a sentence that merely has “keep” in it is not a decision', P('I would keep the clock where it is') === null && P('') === null);
+  }
+
+  // ============================================================================================
+  section('*** the file: the summary and lists as the AI’s, note numbers, every note word for word ***');
+  {
+    const { notes, r } = reviewed;
+    const md = W.reviewToMarkdown(r, notes, { at: notes[3].at + 1000, aiLabel: 'Pip' });
+    check('a title with the date, and who sorted it', md.startsWith(`# Walkthrough, ${stamp(r.at).slice(0, 10)}`) && /Sorted by Pip/.test(md));
+    check('*** the summary is labelled as written by the AI (and changed in the review) ***', /## Summary \(written by the AI, changed in the review\)\n\nA better summary\./.test(md));
+    check('the three lists, each line with its note number', /## For chat/.test(md) && /## For Code/.test(md) && /## For Design/.test(md) && /\(note \d/.test(md));
+    check('what was moved and changed is said', /moved from For/.test(md) && /changed in the review/.test(md));
+    const dropped = r.items.find((i) => i.state === 'dropped');
+    check('a dropped line is not in the lists', !md.split('## The notes, word for word')[0].includes(`- ${dropped.text} (`));
+    check('*** every note, word for word, numbered, with where it was made ***', notes.every((n, i) => md.includes(`### Note ${i + 1}: ${stamp(n.at)}`) && md.includes(n.text))
+      && /person: Ruth Example/.test(md));
+    const gone = W.reviewToMarkdown(r, notes.slice(1));
+    check('a note deleted since: said, not silently missing', /### Note 1\n\n_This note was deleted after the wrap-up was made\._/.test(gone));
+    check('the file name: walkthrough_<date>.md, then _2, _3', W.walkthroughFileName(new Date(2026, 9, 7, 9).getTime()) === 'walkthrough_2026-10-07.md'
+      && W.walkthroughFileName(new Date(2026, 9, 7).getTime(), ['walkthrough_2026-10-07.md', 'walkthrough_2026-10-07_2.md']) === 'walkthrough_2026-10-07_3.md');
+  }
+
+  // ============================================================================================
+  section('*** saving into a folder the person picks, remembered on this device ***');
+  {
+    const dir = fakeDir('for_chat_walks');
+    const f = fakeFolders(dir);
+    const at = new Date(2026, 9, 7, 12).getTime();
+    const s1 = await W.saveToFolder('first', { store: f.store, view: f.view, at });
+    check('none remembered: the picker opens, the file is written, the folder is remembered', s1.ok && s1.picked && f.view.picks === 1
+      && dir.files.get('walkthrough_2026-10-07.md') === 'first' && f.map.get(W.WALK_FOLDER_KEY) === dir);
+    const s2 = await W.saveToFolder('first, again', { store: f.store, view: f.view, at, ownName: s1.name });
+    check('saving the same wrap-up again: no picker, its own file written over', s2.ok && !s2.picked && f.view.picks === 1 && s2.name === s1.name && dir.files.get(s1.name) === 'first, again');
+    const s3 = await W.saveToFolder('second', { store: f.store, view: f.view, at });
+    check('*** another wrap-up the same day: a new file (_2), the first never written over ***', s3.name === 'walkthrough_2026-10-07_2.md' && dir.files.get(s1.name) === 'first, again');
+    const other = fakeDir('elsewhere');
+    other.files.set('walkthrough_2026-10-07.md', 'somebody else’s');
+    f.view.showDirectoryPicker = async () => { f.view.picks += 1; return other; };
+    const s4 = await W.saveToFolder('picked', { store: f.store, view: f.view, at, pick: true, ownName: s1.name });
+    check('a newly picked folder: a file there with the same name is not written over', s4.ok && s4.name === 'walkthrough_2026-10-07_2.md' && other.files.get('walkthrough_2026-10-07.md') === 'somebody else’s');
+    const locked = fakeFolders(fakeDir('x', { perm: 'prompt', grant: 'denied' }));
+    await locked.store.put(W.WALK_FOLDER_KEY, fakeDir('x', { perm: 'prompt', grant: 'denied' }));
+    const s5 = await W.saveToFolder('t', { store: locked.store, view: locked.view, at });
+    check('the browser says no: not saved, and said why', !s5.ok && /did not let/.test(s5.reason));
+    const s6 = await W.saveToFolder('t', { store: fakeFolders(dir).store, view: {}, at });
+    check('a browser that cannot pick a folder: says to download instead', !s6.ok && /Download it instead/.test(s6.reason));
+    const cancel = await W.saveToFolder('t', { store: fakeFolders(dir).store, view: { showDirectoryPicker: async () => { const e = new Error('x'); e.name = 'AbortError'; throw e; } }, at });
+    check('the picker cancelled: nothing written, nothing remembered', !cancel.ok && cancel.cancelled);
+  }
+
+  // ============================================================================================
+  section('*** the guide: “Wrap up the walkthrough” at the end of the walk, and “Start a walkthrough now” ***');
+  {
+    check('the wrap-up step is reached from the walk, and opens the wrap-up', GUIDE_NODES['notes-walk'].choices.some((c) => c.to === 'walk-wrap')
+      && GUIDE_NODES['walk-wrap'].acts.some((a) => a.kind === 'guide' && a.do === 'wrap') && GUIDE_DOS.includes('wrap') && GUIDE_DOS.includes('walkstart'));
+    check('the walk has “Start a walkthrough now”', GUIDE_NODES['notes-walk'].acts.some((a) => a.do === 'walkstart'));
+    check('the tree is still whole (every choice leads somewhere, nothing runs by itself)', treeProblems().length === 0, J(treeProblems()));
+    check('the step says the notes stay as written, and only what is chosen is sent, on a press', /stay exactly as you wrote them/.test(GUIDE_NODES['walk-wrap'].say)
+      && /Only the notes you choose/.test(GUIDE_NODES['walk-wrap'].say) && !NAMES.test(GUIDE_NODES['walk-wrap'].say));
+  }
+
+  // ============================================================================================
+  section('*** in Nimrod: from the notes to the review, by press, switch and voice; left and picked up again; saved ***');
+  {
+    const notes = mkNotes(12);
+    const before = J(notes);
+    const ps = personStores();
+    const ai = sortingAI();
+    const dir = fakeDir('walks');
+    const folders = fakeFolders(dir);
+    let g = await mountGuide({ ai, ps, personInit: { notes }, extra: { walkFolders: folders } });
+    await until(() => g.probe().storeKind === 'person');
+    await press(g, 'notes');
+    await until(() => g.doBtn('wrap') && !g.doBtn('wrap').disabled);
+    check('the notes have “Wrap up the walkthrough”', /Wrap up the walkthrough/.test(g.doBtn('wrap')?.textContent || ''));
+    await press(g, 'wrap');
+    await until(() => g.probe().view === 'wrap' && g.probe().status.state === 'ok');
+    check('the wrap-up opens on “which notes”, with all 12 offered', g.probe().wrap.step === 'choose' && !!g.doBtn('wraprange', 'all'));
+    check('nothing was sent to the AI by opening it', ai.calls.length === 0);
+    await press(g, 'wraprange', 'all');
+    const send = g.q('[data-ng-sendline]').textContent;
+    check('*** before sending, the page says exactly what is sent: only these notes, not the name ***',
+      /only these 12 notes/.test(send) && /Not your name/.test(send) && /Sorting by hand sends nothing/.test(send), send);
+    const view = g.mount.querySelector('.ng-root').cloneNode(true);
+    for (const el of view.querySelectorAll('[data-ng-backends],[data-ng-help],[data-ng-info]')) el.remove();
+    check('the page’s own words: plain (no module, panel, dashboard, widget, grant, token, account), names nobody',
+      !/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i.test(view.textContent) && !NAMES.test(view.textContent), view.textContent.match(/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i)?.[0]);
+    await press(g, 'wrapgo');
+    await until(() => g.probe().wrap.step === 'review', 4000);
+    const rv = g.probe().review;
+    check('sorted by the AI: two parts (12 notes), the summaries joined', ai.calls.length === 3 && rv.summary.text === 'One walk: bigger things wanted.');
+    check('the review is on the person’s record already (nothing lost if the screen goes)', g.rec().walkReview?.id === rv.id);
+    check('the summary first, labelled as the AI’s', /The summary, written by Nimrod \(the AI\)/.test(g.q('[data-ng-step="summary"]')?.textContent || ''));
+    // A switch: the scan starts on Keep, and select presses it.
+    check('*** a switch’s scan starts on Keep ***', g.probe().stops[0] === 'Keep', J(g.probe().stops.slice(0, 3)));
+    g.bus.publish(GUIDE_VERB_TOPICS.select);
+    await sleep(30);
+    check('*** select (the switch) kept the summary; on to the first line ***', g.probe().review.summary.state === 'kept' && g.probe().review.cursor === 1);
+    const src = g.q('[data-ng-source]')?.textContent || '';
+    const it1 = g.probe().review.items[0];
+    check('*** the line shows the note it came from, word for word, beside it ***', src.includes(notes.find((n) => n.id === it1.notes[0]).text) && /Note \d+/.test(src));
+    check('the line is labelled as the AI’s, with its list', new RegExp(`${W.listLabel(it1.list)} · written by Nimrod \\(the AI\\)`).test(g.q('[data-ng-step="item"]').textContent));
+    await press(g, 'wrapmove', 'design');
+    check('a press: moved to For Design', g.probe().review.items.find((i) => i.id === it1.id).list === 'design');
+    await press(g, 'wrapchange');
+    g.q('[data-ng-field="wrapedit"]').value = 'Typed new words';
+    await press(g, 'wrapsavechange');
+    check('a press: changed to what was typed', g.probe().review.items.some((i) => i.text === 'Typed new words' && i.state === 'kept'));
+    // Voice.
+    await press(g, 'listen');
+    check('“Answer by voice” opens the dictation window', g.probe().listening === true);
+    const cur = () => W.currentStep(g.probe().review)?.item;
+    let id = cur().id;
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Drop it', dictation: true });
+    await sleep(30);
+    check('*** said “drop it”: dropped ***', g.probe().review.items.find((i) => i.id === id).state === 'dropped');
+    id = cur().id;
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'move to code', dictation: true });
+    await sleep(30);
+    check('*** said “move to code”: moved ***', g.probe().review.items.find((i) => i.id === id).list === 'code');
+    id = cur().id;
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Change it to The clock should be Huge.', dictation: true });
+    await sleep(30);
+    check('*** said “change it to …”: the new words, as said ***', g.probe().review.items.find((i) => i.id === id).text === 'The clock should be Huge.');
+    id = cur().id;
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'change it', dictation: true });
+    await sleep(30);
+    check('“change it” alone: the box opens and the next words are the new line', g.probe().wrap.editing === true && g.probe().nextAs === 'change');
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Said afterwards', dictation: true });
+    await sleep(30);
+    check('...and they are', g.probe().review.items.find((i) => i.id === id).text === 'Said afterwards');
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'what a lovely day', dictation: true });
+    await sleep(30);
+    check('words that are not a decision: nothing decided, and it says what it can hear', /Say keep, drop, move to/.test(g.probe().notice));
+    check('while reviewing by voice the line is read out', g.output.said.some((t) => /^For (chat|Code|Design)|Not sorted/.test(String(t))));
+    const at = g.probe().review.cursor;
+    // Leave, and come back on a new mount (another screen of the same person).
+    g.done();
+    g = await mountGuide({ ai, ps, extra: { walkFolders: folders } });
+    await until(() => g.probe().storeKind === 'person');
+    await press(g, 'notes');
+    await until(() => /Pick up the wrap-up/.test(g.doBtn('wrap')?.textContent || ''));
+    check('*** left and come back: the notes say “Pick up the wrap-up” with how far it got ***', /\d+ of \d+ looked at/.test(g.doBtn('wrap').textContent));
+    await press(g, 'wrap');
+    await until(() => g.probe().wrap.step === 'review');
+    check('*** picked up at the same line ***', g.probe().review.cursor === at && /Picking up where you left off/.test(g.probe().notice));
+    let guard = 0;
+    while (g.probe().wrap.step === 'review' && guard++ < 40) await press(g, 'wrapkeep');
+    check('keep the rest: all looked at, ready to save', g.probe().wrap.step === 'done' && /looked at/.test(g.q('[data-ng-wrapdone]').textContent));
+    await press(g, 'wrapsave');
+    await until(() => g.probe().review.savedAs);
+    const name = g.probe().review.savedAs;
+    const file = dir.files.get(name) || '';
+    check('*** saved into the picked folder as walkthrough_<date>.md ***', /^walkthrough_\d{4}-\d{2}-\d{2}(_\d+)?\.md$/.test(name) && folders.view.picks === 1 && file.length > 0, name);
+    check('the file: summary as the AI’s, the lists with notes, every note word for word', /## Summary \(written by the AI\)/.test(file) && /## For Code/.test(file)
+      && /The clock should be Huge\./.test(file) && notes.every((n) => file.includes(n.text)) && /\(note \d+/.test(file));
+    const rec = g.rec();
+    check('kept on the person’s record too: the finished wrap-up, and where the next one starts', rec.walkthroughs?.length === 1 && rec.walkthroughs[0].savedAs === name
+      && rec.lastWrapTo === notes.at(-1).at && rec.walkReview.savedAs === name);
+    check('*** the notes are exactly as they were ***', J(cleanNotes(rec.notes)) === J(cleanNotes(JSON.parse(before))));
+    await until(() => /Save in “walks”/.test(g.doBtn('wrapsave')?.textContent || ''));
+    check('the next save says which folder it remembers', /Save in “walks”/.test(g.doBtn('wrapsave').textContent));
+    await press(g, 'wrapsave');
+    await until(() => /Saved as/.test(g.probe().notice));
+    check('saving again: the same file, no picker', folders.view.picks === 1 && dir.files.size === 1);
+    let copied = null;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
+    await press(g, 'wrapcopy');
+    await until(() => copied);
+    check('Copy it: the same text as the file', copied.split('## Summary')[1] === dir.files.get(name).split('## Summary')[1]);
+    g.done();
+  }
+
+  // ============================================================================================
+  section('*** no AI set up: the page says how to set one up, and sorting by hand still works ***');
+  {
+    const notes = mkNotes(3);
+    const ps = personStores();
+    const g = await mountGuide({ ai: sortingAI({ noAI: true }), ps, personInit: { notes } });
+    await until(() => g.probe().storeKind === 'person');
+    await press(g, 'notes');
+    await until(() => g.doBtn('wrap'));
+    await press(g, 'wrap');
+    await until(() => g.probe().view === 'wrap' && g.probe().status.state === 'none');
+    check('it says how to set an AI up', !!g.q('[data-ng-help]') && /Ollama/.test(g.q('[data-ng-help]').textContent));
+    await press(g, 'wraprange', 'all');
+    await press(g, 'wrapgo');
+    await sleep(30);
+    check('pressing “Sort them with” anyway: not sorted, and it offers sorting by hand', g.probe().wrap.step === 'choose' && /sort them by hand/.test(g.probe().notice));
+    await press(g, 'wraphand');
+    const r = g.probe().review;
+    check('*** by hand: the same review, every note “not sorted yet” in its own words ***', g.probe().wrap.step === 'review' && r.by === 'hand' && r.items.length === 3 && r.items.every((i) => i.list === W.UNSORTED));
+    check('the line is labelled as the note’s own words', /your note’s own words/.test(g.q('[data-ng-step="item"]').textContent));
+    await press(g, 'wrapmove', 'code');
+    check('moved to For Code by a press', g.probe().review.items[0].list === 'code');
+    g.done();
+  }
+
+  // ============================================================================================
+  section('*** “Start a walkthrough now” (the guide) keeps the time, and the wrap-up offers “since you started” ***');
+  {
+    const ps = personStores();
+    const old = mkNotes(2, { start: Date.now() - 7200000 });
+    const g = await mountGuide({ ai: sortingAI(), ps, personInit: { notes: old } });
+    await until(() => g.probe().storeKind === 'person');
+    g.inst.impl.__probe();
+    // Walk to the node and press its act.
+    const nodeBtn = () => [...g.mount.querySelectorAll('[data-ng-tree]')].find((b) => b.dataset.ngTree === 'notes-walk');
+    await until(() => nodeBtn());
+    nodeBtn().click();
+    await until(() => g.probe().id === 'notes-walk');
+    const act = [...g.mount.querySelectorAll('[data-ng-act]')].find((b) => /Start a walkthrough now/.test(b.textContent));
+    act.click();
+    await until(() => g.rec().walkStartedAt > 0);
+    check('the time is kept on the person’s record, and he says so', g.rec().walkStartedAt > 0 && /Started at/.test(g.probe().words));
+    const fresh = makeNote('A note made after the start', { at: Date.now() + 5 });
+    g.ps.make('ruth', AI_STATE_KEY).set({ notes: [...old, fresh] });
+    g.done();
+    const g2 = await mountGuide({ ai: sortingAI(), ps });
+    await until(() => g2.probe().storeKind === 'person');
+    await press(g2, 'notes');
+    await until(() => g2.doBtn('wrap'));
+    await press(g2, 'wrap');
+    await until(() => g2.probe().view === 'wrap' && g2.probe().wrap.range);
+    check('*** the wrap-up offers “since you started the walkthrough” first, with just the new note ***', g2.probe().wrap.range.id === 'walk'
+      && /Since you started the walkthrough.*: 1/.test(g2.doBtn('wraprange', 'walk')?.textContent || ''), J(g2.probe().wrap.range));
+    g2.done();
+  }
+} catch (err) {
+  check('*** the run itself did not throw ***', false, String(err?.stack || err));
+}
+document.getElementById('summary').textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+document.getElementById('summary').className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>
