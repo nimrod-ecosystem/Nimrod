@@ -861,14 +861,22 @@ export async function exportPairs(dir, store, { personId, onlyReviewed = false }
 // `gs://<bucket>/data/` down; a person running it on their own computer points that cell at the `data`
 // folder written here instead.
 //
-//   <picked folder>/data/001/recording.wav   the pair's audio, 16 kHz mono 16-bit (the room's ear if two)
-//                       /001/phrase.txt      what was MEANT (the phrase read, or what a reviewer typed)
+//   <picked folder>/data/0/recording.wav     the pair's audio, 16 kHz mono 16-bit (the room's ear if two)
+//                       /0/phrase.txt        what was MEANT (the phrase read, or what a reviewer typed)
+//                       /1/...  up to N-1
 //                   /nimrod-export.json      folder -> recording, written LAST, outside data/
 //
-// NOT KNOWN (not read line by line): whether the notebook wants the numbers padded (001) or bare (1),
-// whether it expects a level between data/ and the numbers (the app's user or session), and whether it
-// strips a trailing newline. So: padded (sorts the same everywhere), one level, no trailing newline -
-// and nimrod-export.json maps each folder back to its recording, so a bad sample can be found and deleted.
+// *** home voice training (2026-10-07): THE NUMBERS ARE 0..N-1, BARE, WITH NO GAPS. *** The first version wrote
+// 001, 002, ... (padded, from 1) because the notebook's rule was "NOT KNOWN". The 2026-10-07 read (private repo
+// docs/for_chat/euphonia_read_20261007.md, section 7) answered it: the notebook counts the folders, then opens
+// `data/0`, `data/1`, ... with `str(i)` for i in range(count), and never checks a file exists. So a padded name,
+// a start at 1, or ONE gap (a recording whose audio could not be read) crashes it. Hence: a number is handed out
+// only when a sample has been written whole, and a sample that fails part-way has its half-written folder
+// removed where the browser allows it (the next sample reuses the number and overwrites both files anyway).
+// Still one level under data/, no trailing newline, and nimrod-export.json maps each folder back to its
+// recording, so a bad sample can be found and deleted. web/tools/train_my_voice.py (the home training script)
+// trains on the folders the index lists, so an older export's higher-numbered folders left in a re-used folder
+// are ignored by it; Euphonia's own notebook would count them, so an EMPTY folder is still best for that.
 // Only pairs with what was meant AND audio go in: a pair with no words is not a training sample. Nor a pair
 // cut where the screen started talking (`overlap`) that nobody has listened to yet: its words may run past
 // its audio (2026-10-04, screen_speech.js).
@@ -877,15 +885,15 @@ export const EUPHONIA_AUDIO = 'recording.wav';
 export const EUPHONIA_PHRASE = 'phrase.txt';
 export const EUPHONIA_INDEX = 'nimrod-export.json';
 
-/** The training samples among `pairs`, oldest first, numbered. which: 'meant' (default) | 'prompted'. Pure. */
+/** The training samples among `pairs`, oldest first, numbered 0..N-1 (bare, no gaps: the notebook's own rule,
+ * home voice training 2026-10-07). which: 'meant' (default) | 'prompted'. Pure. */
 export function euphoniaSamples(pairs = [], { which = 'meant', ear = 'room' } = {}) {
   const ok = (pairs || []).filter((p) => p && String(p.meant || '').trim() && (p.clips || []).length
     && (which !== 'prompted' || p.prompt) && !(p.overlap && !p.reviewed));
   ok.sort((a, b) => ((Number(a.at) || 0) - (Number(b.at) || 0)) || String(a.id).localeCompare(String(b.id)));
-  const width = Math.max(3, String(ok.length).length);
   return ok.map((p, i) => {
     const clip = p.clips.find((c) => c.ear === ear) || p.clips[0];
-    return { folder: String(i + 1).padStart(width, '0'), pairId: p.id, ear: clip.ear, phrase: String(p.meant).trim(),
+    return { folder: String(i), pairId: p.id, ear: clip.ear, phrase: String(p.meant).trim(),
              at: p.at, prompt: p.prompt || null };
   });
 }
@@ -898,8 +906,9 @@ async function writeFile(dir, name, data) {
 
 /**
  * Write `personId`'s training samples into `dir` (a folder somebody picked) in Euphonia's layout. Per sample
- * the audio first and phrase.txt second; the index last. Best into an EMPTY folder: an older export's
- * higher-numbered folders are not removed.
+ * the audio first and phrase.txt second; the index last. The folders are numbered as they are WRITTEN (home voice
+ * training, 2026-10-07), so one that fails leaves no gap: data/0..N-1 for the N written. An older export's
+ * higher-numbered folders are not removed (the index says which are this export's).
  */
 export async function exportEuphonia(dir, store, { personId, which = 'meant', ear = 'room' } = {}) {
   if (!dir) throw new Error('exportEuphonia: no folder');
@@ -908,18 +917,28 @@ export async function exportEuphonia(dir, store, { personId, which = 'meant', ea
   const done = [];
   const failed = [];
   for (const s of samples) {
+    const folder = String(done.length);
+    let made = false;
     try {
       const wav = await store.audio(s.pairId, s.ear);
       if (!wav) throw new Error('the recording has no audio');
-      const sub = await data.getDirectoryHandle(s.folder, { create: true });
+      const sub = await data.getDirectoryHandle(folder, { create: true });
+      made = true;
       await writeFile(sub, EUPHONIA_AUDIO, wav);
       await writeFile(sub, EUPHONIA_PHRASE, s.phrase);
-      done.push(s);
-    } catch (err) { console.error('voice export (Euphonia)', err); failed.push(s.pairId); }
+      done.push({ ...s, folder });
+    } catch (err) {
+      console.error('voice export (Euphonia)', err);
+      failed.push(s.pairId);
+      // Half written: take it away where the browser can, so a last folder with no phrase.txt is not left behind.
+      if (made && typeof data.removeEntry === 'function') { try { await data.removeEntry(folder, { recursive: true }); } catch { /* the next sample overwrites it */ } }
+    }
   }
   await writeFile(dir, EUPHONIA_INDEX, JSON.stringify({
-    kind: 'nimrod-euphonia-export', v: 1,
+    kind: 'nimrod-euphonia-export', v: 2,
     layout: `${EUPHONIA_DATA}/<number>/${EUPHONIA_AUDIO} + ${EUPHONIA_PHRASE}`,
+    // v2 (2026-10-07): numbered 0..count-1, bare, with no gaps. v1 was 001.. (padded, from 1).
+    numbering: '0..count-1', count: done.length,
     samples: done.map((s) => ({ folder: s.folder, pairId: s.pairId, ear: s.ear, at: s.at, phrase: s.phrase,
                                 promptIndex: s.prompt ? s.prompt.index : null })),
     failed,

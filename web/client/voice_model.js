@@ -10,9 +10,12 @@
 //   1. RECORD  here, with the screen's own recorder (voice_recording.js): a phrase is shown, the person
 //              reads it, the pair is saved with the phrase as what was meant, the next phrase comes up.
 //              Exported in the folder layout Euphonia's notebook reads (exportEuphonia).
-//   2. TRAIN   with Euphonia's own notebook, model set to openai/whisper-small.en (ours), data pointed at
-//              the exported folder instead of its Firebase bucket. Run by the person, where they choose.
-//   3. CONVERT with Euphonia's own command (convertCommand), into web/speech_service/my_voice_model/.
+//   2. TRAIN   at home, with web/tools/train_my_voice.py (home voice training, 2026-10-07): Euphonia's method
+//              without Colab - it reads the exported folder and writes the converted model straight into the
+//              Nimrod folder's "Voice model". NO LONGER EUPHONIA'S NOTEBOOK: run on Colab, as it is built to be,
+//              that uploads the recordings to Google. The page links the toolkit only as the method followed.
+//   3. CONVERT with Euphonia's own command (convertCommand), into web/speech_service/my_voice_model/ - done by the
+//              training script at its end; the command stays for a checkpoint made some other way.
 //   4. USE     `--my-voice` on its OWN port (serviceCommand), and this person's "Use my own voice
 //              model" switch, which points their "this screen" recogniser at it (speech_engines.js).
 //
@@ -56,9 +59,43 @@ import { SUBFOLDERS, readRootPath, joinPath, kindFolder, handleStore } from './u
 
 export const EUPHONIA = Object.freeze({
   repo: 'https://github.com/google/project-euphonia-app',
+  // Kept for reference, NOT linked from any page (home voice training, 2026-10-07): it runs on Google Colab, and
+  // there the recordings are uploaded to Google. The training script follows its method at home instead.
   notebook: 'https://github.com/google/project-euphonia-app/blob/main/training_colabs/Project_Euphonia_Finetuning.ipynb',
   phrases: 'https://github.com/google/project-euphonia-app/blob/main/assets/phrases.txt',
   licence: 'Apache-2.0',
+});
+
+// *** home voice training (2026-10-07): the training script, run in the project's web folder on the computer that
+// trains. `--check` reports what is missing and installs nothing; training reads the export and writes the
+// converted model into "<Nimrod folder>/Voice model"; `--score` compares the stock model and the new one on the
+// recordings training kept back. Pure.
+export const TRAIN_SCRIPT = 'tools/train_my_voice.py';
+export const trainCheckCommand = () => `py -3.13 ${TRAIN_SCRIPT} --check`;
+export function trainCommand({ data = '', root = '' } = {}) {
+  return `py -3.13 ${TRAIN_SCRIPT} --data ${q(data, '<the folder you exported to>')} --root ${q(root, NIMROD_ROOT_WORDS)}`;
+}
+export function scoreCommand({ data = '', root = '' } = {}) {
+  return `py -3.13 ${TRAIN_SCRIPT} --score --data ${q(data, '<the folder you exported to>')} --root ${q(root, NIMROD_ROOT_WORDS)}`;
+}
+// The training step's words, shared by the one-page view and the guided module, so the two never disagree.
+export const TRAIN_PLAIN = Object.freeze({
+  stays: 'The training script reads the folder you exported to and writes the finished model into your Nimrod folder’s '
+    + 'Voice model folder. It uploads nothing. The only thing it ever downloads is the standard Whisper model it starts '
+    + 'from (about 1 GB, once, and only when you add --allow-download). If the training computer is a different one, '
+    + 'copy the exported folder to it yourself (a USB stick, or your own network), and delete the copy there when you '
+    + 'are done.',
+  which: 'one with an NVIDIA graphics card with about 8 GB of graphics memory (12 GB is comfortable). Then it takes '
+    + 'minutes to under an hour. Without such a card it can use the processor if you add --cpu, but that takes hours.',
+  once: 'Python 3.13 and the packages the script names. Run this in the project’s web folder: it says what is missing '
+    + 'and the lines to install it, and installs nothing itself.',
+  after: 'It keeps about one recording in ten back and never trains on them. When it is done, compare the standard '
+    + 'recogniser and yours on those recordings, on the computer that runs the speech service:',
+  keep: 'Keep yours only if it makes fewer mistakes. If it does not, leave “Use my own voice model” off.',
+  whyNot: 'Why not the toolkit’s own training notebook: it runs on Google Colab, and used there it uploads your '
+    + 'recordings to Google. The script follows the same method, on your own computer.',
+  converted: 'If you trained with the training script, it has already converted the model and put it in your Voice '
+    + 'model folder: go on to step 5 to check it. The command below is for a checkpoint made some other way.',
 });
 // The speech service runs faster-whisper small.en; training from the same base keeps a personal model a
 // like-for-like swap. The notebook defaults to multilingual whisper-small; its model setting is free text.
@@ -170,7 +207,7 @@ export function describeModelCheck(r, name = 'That folder', { place = VOICE_PLAC
 export const STEPS = Object.freeze([
   'Record the phrases',
   'Export them',
-  'Train the model (on Euphonia’s notebook)',
+  'Train the model (at home, with the training script)',
   'Convert it',
   `Put the folder in ${VOICE_PLACE}`,
   'Start the speech service',
@@ -396,11 +433,12 @@ export function mountVoiceModel(root, {
   <div class="vm">
     <h3>Your own voice model</h3>
     <p>A speech recogniser trained on one person’s voice, so it understands that person better. You read about
-      100 short phrases aloud; Google’s Project Euphonia toolkit then fine-tunes (further trains) Whisper, the
-      recogniser this site’s speech service runs, on them. You run every step yourself, on computers you choose.
-      Nothing you record here is uploaded by this site: the recordings stay on this screen until you export them.</p>
-    <p class="vm-row">${link(EUPHONIA.repo, 'Project Euphonia toolkit (GitHub, Apache-2.0)')} ·
-      ${link(EUPHONIA.notebook, 'its training notebook')} · ${link(EUPHONIA.phrases, 'its 100 phrases')}</p>
+      100 short phrases aloud; a training script then fine-tunes (further trains) Whisper, the recogniser this site’s
+      speech service runs, on them, on your own computer. You run every step yourself, on computers you choose.
+      Nothing you record here is uploaded by this site: the recordings stay on this screen until you export them,
+      and then on your own computers.</p>
+    <p class="vm-row">${link(EUPHONIA.repo, 'The method this follows: Google’s Project Euphonia (GitHub, Apache-2.0)')} ·
+      ${link(EUPHONIA.phrases, 'its 100 phrases')}</p>
 
     <section class="vm-step" data-vm-status>
       <h4>Where you are</h4>
@@ -452,26 +490,30 @@ export function mountVoiceModel(root, {
         <span data-export-msg class="vm-soft" role="status" aria-live="polite"></span>
       </div>
       <p class="vm-soft">It makes a <code>${esc(EUPHONIA_DATA)}</code> folder with one numbered folder per phrase
-        (<code>${esc(EUPHONIA_DATA)}/001/${esc(EUPHONIA_AUDIO)}</code> and <code>${esc(EUPHONIA_PHRASE)}</code>), plus
+        (<code>${esc(EUPHONIA_DATA)}/0/${esc(EUPHONIA_AUDIO)}</code> and <code>${esc(EUPHONIA_PHRASE)}</code>), plus
         <code>nimrod-export.json</code> saying which recording is which. Every recording with what was meant goes
         in: the phrases you read, and any you typed in the review.</p>
     </section>
 
-    <section class="vm-step">
-      <h4>3. Train it, with Euphonia’s notebook</h4>
-      <p><b>What you need:</b> a Google account, to run the notebook free on Google Colab (Google’s notebooks that
-        run in your web browser, on a computer Google lends you with a graphics card), <b>or</b> a computer with a
-        graphics card (GPU) of its own. An ordinary laptop alone takes a very long time.</p>
-      <p>Open ${link(EUPHONIA.notebook, 'the training notebook')}. Set its model to <code>${esc(BASE_MODEL)}</code>
-        (type it; the list does not offer it), so the result matches the recogniser the speech service already
-        runs. Its data cell copies from a Firebase bucket: point it at the <code>${esc(EUPHONIA_DATA)}</code> folder
-        you exported instead. On your own computer, skip the three Colab-only cells (sign-in, Google Drive,
-        TensorBoard), and turn fp16 off if there is no graphics card.</p>
+    <section class="vm-step" data-vm-train>
+      <h4>3. Train it at home, with the training script</h4>
+      <p><b>Your recordings stay on your own computers.</b> ${esc(TRAIN_PLAIN.stays)}</p>
+      <p><b>Which computer:</b> ${esc(TRAIN_PLAIN.which)}</p>
+      <p><b>Once, on that computer:</b> ${esc(TRAIN_PLAIN.once)}</p>
+      <code data-cmd="train-check"></code>
+      <p><b>Then train</b>, in the same folder:</p>
+      <code data-cmd="train"></code>
+      <p class="vm-soft">It starts from <code>${esc(BASE_MODEL)}</code>, the recogniser the speech service already runs.
+        ${esc(TRAIN_PLAIN.after)}</p>
+      <code data-cmd="score"></code>
+      <p class="vm-soft">${esc(TRAIN_PLAIN.keep)}</p>
+      <p class="vm-soft">${esc(TRAIN_PLAIN.whyNot)} ${link(EUPHONIA.repo, 'The method it follows')}.</p>
     </section>
 
     <section class="vm-step">
       <h4>4. Convert it</h4>
-      <p>Training leaves a <b>checkpoint</b>: a folder named like <code>checkpoint-200</code>, holding
+      <p class="vm-soft">${esc(TRAIN_PLAIN.converted)}</p>
+      <p>Training some other way leaves a <b>checkpoint</b>: a folder named like <code>checkpoint-200</code>, holding
         <code>model.safetensors</code> - the trained model in the form training writes. The speech service cannot
         load that; converting makes the folder it can. <b>This is the step that makes your voice model
         folder.</b> It needs the ctranslate2 and transformers Python packages. Run this, with the checkpoint’s
@@ -529,6 +571,9 @@ export function mountVoiceModel(root, {
   };
   function renderCommands() {
     const pl = places();
+    $('[data-cmd="train-check"]').textContent = trainCheckCommand();
+    $('[data-cmd="train"]').textContent = trainCommand({ data: pl.recordings, root: pl.root });
+    $('[data-cmd="score"]').textContent = scoreCommand({ data: pl.recordings, root: pl.root });
     $('[data-cmd="convert"]').textContent = convertCommand({ folder: pl.voice });
     $('[data-cmd="serve"]').textContent = serviceCommand({ port: vm.port, root: pl.root });
     $('[data-vm-fill]').textContent = pl.known
