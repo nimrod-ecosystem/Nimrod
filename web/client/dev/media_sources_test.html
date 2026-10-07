@@ -114,6 +114,85 @@ async function loadsAsImage(url) {
       shown.join() === 'a.jpg,b.mp4,e.PNG', shown.join());
   }
 
+  // *** folder art (2026-10-07): AN SVG FROM A FOLDER IS LISTED, AND NOTHING IN IT RUNS IN THIS SITE. ***
+  // The security invariant over folder_source.js IMAGE_EXTS. A drawing that tries everything - an onload, a <script>,
+  // a picture from elsewhere - is listed, shown as a picture (nothing runs, nothing loads), and even opened as a page
+  // of its own (the worst case: somebody opens it in a tab) it has no site, so it cannot reach this page.
+  try {
+    const tag = `svgprobe${Date.now().toString(36)}`;
+    const probe = (why) => `${location.origin}/${tag}-${why}.png`;
+    const hostile = (why) => `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" `
+      + `onload="try{parent.__svgRan='onload ${why}'}catch(e){}">`
+      + `<script>try{parent.__svgRan='script ${why}'}catch(e){};try{fetch('${probe(why)}-fetch')}catch(e){}<\/script>`
+      + `<image href="${probe(why)}" width="10" height="10"/><rect width="10" height="10" fill="red"/></svg>`;
+    const tree = { 'evil.svg': hostile('img'), 'plain.txt': 'x' };
+    const fake = (t) => ({
+      kind: 'directory', name: 'Wallpapers',
+      async getDirectoryHandle() { throw new DOMException('none', 'NotFoundError'); },
+      async getFileHandle(n) {
+        if (!(n in t)) throw new DOMException('none', 'NotFoundError');
+        return { kind: 'file', name: n, getFile: async () => new File([t[n]], n, { type: n.endsWith('.svg') ? 'image/svg+xml' : 'text/plain' }) };
+      },
+      async *entries() { for (const n of Object.keys(t)) yield [n, await this.getFileHandle(n)]; },
+    });
+    const { entriesIn, fileUrlIn, isSvgFile } = await import('../folder_source.js');
+    const listed = (await entriesIn(fake(tree))).items;
+    check('folder art: an .svg in a folder is listed as a picture', listed.length === 1 && listed[0].name === 'evil.svg' && listed[0].kind === 'image', JSON.stringify(listed));
+    const got = await fileUrlIn(fake(tree), 'evil.svg');
+    check('*** folder art: a folder\'s SVG is handed out as a data: URL, never a blob: one (no site of its own) ***',
+      /^data:image\/svg\+xml/.test(got.url), got.url.slice(0, 40));
+    check('folder art: isSvgFile knows one by name or by type', isSvgFile({ name: 'A.SVG' }) && isSvgFile({ name: 'x', type: 'image/svg+xml' }) && !isSvgFile({ name: 'a.png', type: 'image/png' }));
+
+    delete window.__svgRan;
+    const im = new Image();
+    document.body.append(im);
+    const shownOk = await new Promise((res) => { im.onload = () => res(im.naturalWidth > 0); im.onerror = () => res(false); im.src = got.url; });
+    await new Promise((r) => setTimeout(r, 300));
+    const fetchedNames = () => performance.getEntriesByType('resource').map((e) => e.name).filter((n) => n.includes(tag));
+    check('folder art: ...it shows as a picture', shownOk);
+    check('*** folder art: as a picture its onload and its <script> never run ***', window.__svgRan === undefined, String(window.__svgRan));
+    check('*** folder art: ...and its picture from elsewhere is never fetched ***', fetchedNames().length === 0, fetchedNames().join(' '));
+    im.remove();
+
+    // The worst case: the same kind of URL opened as a page (an <iframe> here; a tab is the same document). A CONTROL
+    // first, so a pass below means something: the same drawing as a blob: URL DOES reach this page.
+    const frameOf = (url) => new Promise((res) => {
+      const f = document.createElement('iframe');
+      f.style.cssText = 'width:20px;height:20px;border:0';
+      f.onload = () => setTimeout(() => res(f), 300);
+      f.src = url;
+      document.body.append(f);
+    });
+    const ctrlUrl = URL.createObjectURL(new Blob([hostile('control')], { type: 'image/svg+xml' }));
+    const ctrl = await frameOf(ctrlUrl);
+    check('folder art (the control): the same drawing as a blob: URL, opened as a page, DOES run in this site',
+      /control/.test(String(window.__svgRan)), String(window.__svgRan));
+    ctrl.remove(); URL.revokeObjectURL(ctrlUrl);
+    delete window.__svgRan;
+    const asPage = await fileUrlIn(fake({ 'evil.svg': hostile('page') }), 'evil.svg');
+    const frame = await frameOf(asPage.url);
+    let reach = 'none';
+    try { reach = frame.contentDocument ? 'this site' : 'none'; } catch { reach = 'none'; }
+    check('*** folder art: the data: URL opened as a page cannot reach this site - not by script, not by onload ***',
+      window.__svgRan === undefined && reach === 'none', `ran=${window.__svgRan} reach=${reach}`);
+    frame.remove();
+
+    // A picture added from this device (device_pictures.js) is handed out the same way.
+    const { addDevicePicture, devicePictureUrl } = await import('../device_pictures.js');
+    const dbName = `nimrod-pictures-svgtest-${tag}`;
+    const ref = await addDevicePicture(new File([hostile('device')], 'evil.svg', { type: 'image/svg+xml' }), { dbName });
+    const dev = await devicePictureUrl(ref.path, { dbName });
+    check('*** folder art: an SVG added from this device is a data: URL too ***', /^data:image\/svg\+xml/.test(dev.url), dev.url.slice(0, 40));
+    try { indexedDB.deleteDatabase(dbName); } catch { /* left for the browser */ }
+
+    // And the inline route (an animated avatar) keeps nothing of it but the shape.
+    const { sanitizeSvg, svgMarkup } = await import('../svg_sanitize.js');
+    const clean = sanitizeSvg(hostile('inline'));
+    const markup = clean.ok ? svgMarkup(clean, { uid: 'svgt' }) : '';
+    check('*** folder art: drawn inline through svg_sanitize.js, no script, no handler and no outside address survive ***',
+      !/script|onload|href|svgprobe|parent/i.test(markup), markup.slice(0, 200));
+  } catch (e) { check('folder art: the hostile SVG checks threw', false, String((e && e.stack) || e)); }
+
   const client = createMediaSourcesClient({ user: USER });
   try {
     // Clean slate: remove any leftover TEST- sources from a prior run.

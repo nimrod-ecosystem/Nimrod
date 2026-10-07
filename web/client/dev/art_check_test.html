@@ -97,8 +97,11 @@ try {
     const t = artKitText();
     check('*** the kit text names every kind\'s folder, size and an example name ***',
       ART_KINDS.every((k) => t.includes(`Artwork/${k.folder}`) && t.includes(`${k.width} × ${k.height}`) && t.includes(k.example)), t.slice(0, 300));
-    check('*** says how a picture reaches the site (connect, then choose), that nothing is uploaded, and the SVG limit ***',
-      /Connect it for pictures/.test(t) && /Nothing is uploaded/.test(t) && /A folder does not list SVG files yet/.test(t) && /Add one from this device/.test(t));
+    // folder art (2026-10-07): the SVG limit is gone (a folder lists SVG), so the kit no longer sends anybody round it.
+    check('*** says how a picture reaches the site (connect, then choose), that nothing is uploaded, and no SVG limit any more ***',
+      /Connect it for pictures/.test(t) && /Nothing is uploaded/.test(t) && !/does not list SVG/.test(t) && !/Add one from this device/.test(t));
+    check('folder art: the kit says the Wallpaper panel shows Artwork/Wallpapers by itself',
+      /Wallpaper panel/.test(t) && /Artwork\/Wallpapers|Wallpapers folder/.test(t), t.slice(t.indexOf('WALLPAPERS'), t.indexOf('WALLPAPERS') + 400));
     check('*** says what is NOT read from files yet (trophies, room objects ...), and who answers for real people and brands ***',
       /NOT YET/.test(t) && /trophies/.test(t) && /Room objects/.test(t) && /brands/.test(t) && /gets close, not exact/.test(t));
     check('*** site words never name the person the project was first built for, nor "her screen" ***',
@@ -189,8 +192,9 @@ try {
   section('*** SVG: read by the same sanitizer the avatar uses ***');
   {
     const good = await checkArtFile(svgFile('avatar-sam.svg', GOOD_SVG), { folder: 'Avatars' });
-    check('*** a good SVG avatar: only the folder note (a folder does not list SVG yet; add it from this device) ***',
-      good.verdict === 'works' && good.notes.length === 1 && has(good, 'warn', /A folder does not list SVG files yet.*Add one from this device/) && good.facts.svg.eyes && good.facts.svg.mouth, texts(good));
+    // folder art (2026-10-07): a folder lists SVG files now, so the old "add it from this device" note is gone.
+    check('*** a good SVG avatar: ready, with no notes at all (a folder lists SVG now) ***',
+      good.verdict === 'ready' && good.notes.length === 0 && good.facts.svg.eyes && good.facts.svg.mouth, texts(good));
     const noParts = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace(/id="eyes"/, '').replace(/id="mouth"/, '')), { folder: 'Avatars' });
     check('*** no eyes/mouth groups: a tip that it will not blink or talk ***', has(noParts, 'tip', /will not blink or talk/), texts(noParts));
     const words = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('</svg>', '<text x="10" y="20">Sam</text><image href="https://example.com/a.png" width="10" height="10"/></svg>')), { folder: 'Avatars' });
@@ -207,8 +211,9 @@ try {
     check('*** a DOCTYPE: shown only as a still picture (it still shows; the sanitizer refuses to draw it inline) ***',
       dt.verdict === 'works' && has(dt, 'warn', /only as a still picture.*DOCTYPE/), texts(dt));
     const card = await checkArtFile(svgFile('card-x.svg', GOOD_SVG), { folder: 'Board cards' });
-    check('*** an SVG card: works only through "Add one from this device"; save it as PNG or WebP for the folder ***',
-      has(card, 'warn', /SVG works for board cards only when added with “Add one from this device”.*PNG or WebP/), texts(card));
+    check('*** folder art: an SVG card works (a folder lists it), but cards are best as PNG or WebP ***',
+      card.verdict === 'works' && has(card, 'warn', /SVG works, but board cards are best as PNG or WebP/)
+        && !has(card, 'warn', /Add one from this device/), texts(card));
     check('droppedWords: a script and a filter', J(droppedWords(['element script', 'handler', 'element feGaussianBlur'])) === J(['a script', 'a filter effect (blur or shadow)']));
   }
 

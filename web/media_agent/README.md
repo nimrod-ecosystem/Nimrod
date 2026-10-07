@@ -120,7 +120,8 @@ shared picker (`../client/rng.js`) keys play-stats on.
 Case-**insensitive** extension match (a past bug hid hundreds of `.JPG` files behind
 a case-sensitive filter — fixed here by design):
 
-- **images:** jpg jpeg png gif webp bmp heic heif avif
+- **images:** jpg jpeg png gif webp bmp heic heif avif svg (an SVG can carry script, so every
+  file is served with a `Content-Security-Policy: sandbox` header: opened on its own it runs nothing)
 - **videos:** mp4 mov webm m4v ogv
 - **audio:** mp3 m4a aac ogg oga opus wav flac (listed as `kind: "audio"`; the photo
   slideshow skips them, the music players use them)

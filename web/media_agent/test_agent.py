@@ -278,6 +278,11 @@ def main():
     album.mkdir()
     (album / "cliff.png").write_bytes(b"\x89PNG\r\n\x1a\nPNGDATA")         # image in album
     (tmp / "secret.txt").write_bytes(b"TOP SECRET should never be served") # outside root
+    # folder art (2026-10-07): an SVG drawing that tries everything - a script, an onload, a picture from elsewhere.
+    art = root / "art"
+    art.mkdir()
+    (art / "Hostile.SVG").write_bytes(b'<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"><script>alert(2)</script>'
+                                      b'<image href="http://evil.example/x.png"/></svg>')
 
     port = free_port()
     origin = "https://self.example"    # a site that is NOT on this computer: those are always allowed anyway
@@ -340,6 +345,20 @@ def main():
         anames = sorted(i["name"] for i in j.get("items", []))
         check("/list?album=trip lists the album's media", anames == ["cliff.png"], detail=repr(anames))
         check("album item path is nested", j["items"] and j["items"][0]["path"] == "trip/cliff.png")
+
+        # folder art: an .svg is listed as a picture, and served so it can never run as a page of the agent
+        s, h, j = get_json(f"{base}/list?album=art")
+        check("folder art: an .svg (any case) is listed as an image",
+              [(i["name"], i["kind"]) for i in j.get("items", [])] == [("Hostile.SVG", "image")], detail=repr(j))
+        s, h, body = get(f"{base}/files/art/Hostile.SVG", {"Origin": origin})
+        check("folder art: an .svg is served as image/svg+xml (what an <img> needs to show it)",
+              s == 200 and (h.get("Content-Type") or "").startswith("image/svg+xml"), detail=repr(h.get("Content-Type")))
+        csp = h.get("Content-Security-Policy") or ""
+        check("*** folder art: ...inside a sandbox - opened on its own it runs no script and loads nothing ***",
+              "sandbox" in csp and "default-src 'none'" in csp and "script-src" not in csp, detail=repr(csp))
+        s, h, _ = get(f"{base}/files/apple.jpg")
+        check("folder art: every file gets the same sandbox, not only an .svg",
+              "sandbox" in (h.get("Content-Security-Policy") or ""), detail=repr(h.get("Content-Security-Policy")))
 
         # /files/<rel> serves the real bytes with CORS
         s, h, body = get(f"{base}/files/apple.jpg", {"Origin": origin})

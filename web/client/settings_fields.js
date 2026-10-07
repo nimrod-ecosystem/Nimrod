@@ -360,6 +360,10 @@ export function normalizeField(raw = {}) {
     key, label, kind, level,
     default: raw.default,
     note: raw.note ? String(raw.note) : null,
+    // folder art (2026-10-07): A LIVE LINE ABOUT WHAT IS IN FORCE, from a mounted panel (`settingsChoices`), shown after
+    // the value on every kind of row - unlike `note`, which a row that can be stepped does not show. Only ever live; the
+    // Wallpaper panel's "Pictures from a folder" uses it to say why its folder is not showing ("needs permission again").
+    status: raw.status ? String(raw.status) : null,
     // WHERE THIS VALUE USED TO LIVE. A declaration rather than code, so the next unit change
     // is a line in a manifest instead of a migration script somebody has to remember to run
     // - and so the module, the settings menu and anything that later groups settings across
@@ -755,7 +759,7 @@ export function fieldItems(fields = [], {
       // way round to undo the answer.
       // The requirement rides in the hint, so it is visible WHERE THE SETTING IS SET rather
       // than only when it fails.
-      hint: [...says, f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]
+      hint: [...says, f.status, f.requires === 'direct' ? 'needs a direct connection (VPN)' : f.requires]   // folder art: status
         .filter(Boolean).join(' · '),
       // An editable text row is a real stop: a keyboard user reaches it with the same arrows. So is
       // a picture row: `select` opens the picker.
@@ -907,8 +911,11 @@ export function fieldsFor(manifest = null, instance = null) {
       // (row 2.57) A live entry may also be words for the row: `{ note }` and, on a secret, `{ emptyLabel }` -
       // what is in force for a value kept outside the panel's settings. Only those two; nothing else is copied.
       const words = v && !Array.isArray(v) && typeof v === 'object' && !v.sources
-        ? Object.fromEntries(['note', 'emptyLabel'].filter((k) => typeof v[k] === 'string').map((k) => [k, v[k]])) : null;
-      merged = words ? { ...d, ...words }
+        ? Object.fromEntries(['note', 'emptyLabel', 'status'].filter((k) => typeof v[k] === 'string').map((k) => [k, v[k]])) : null;
+      // folder art (2026-10-07): `{ options, status }` - live options AND a live line after the value (`status`, the Wallpaper
+      // panel's "Pictures from a folder" says there why its folder is not showing). Without `options` the words alone, as before.
+      const opts = words && Array.isArray(v.options) ? { options: v.options } : null;
+      merged = words ? { ...d, ...words, ...opts }
         : v && !Array.isArray(v) && typeof v === 'object' && v.sources
           ? { ...d, sources: v.sources } : { ...d, options: v };
     }

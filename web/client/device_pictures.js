@@ -32,7 +32,7 @@
 // that list is what `photos` reads, and adding a source there would change which source a new
 // photos panel adopts by itself. `media_sources.sourceById` finds it by id instead.
 
-import { kindOf } from './folder_source.js';
+import { kindOf, isSvgFile, svgDataUrl } from './folder_source.js';
 
 export const DEVICE_SOURCE_ID = 'device-pictures';
 export const DEVICE_SOURCE = Object.freeze({
@@ -116,6 +116,9 @@ export async function devicePictureUrl(path, { idb, dbName } = {}) {
     err.code = 'missing';
     throw err;
   }
+  // folder art (2026-10-07): an SVG kept here is handed out the way a folder's is - a data: URL, never a blob: one,
+  // so even opened on its own in a tab it runs nothing in this site (folder_source.js, the invariant over IMAGE_EXTS).
+  if (isSvgFile(row.blob, row.name || row.path)) return { url: await svgDataUrl(row.blob), release: () => {} };
   const url = URL.createObjectURL(row.blob);
   return { url, release: () => { try { URL.revokeObjectURL(url); } catch { /* gone */ } } };
 }

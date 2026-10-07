@@ -51,9 +51,97 @@ import {
   usableItems, nextItem, wallpaperMode,
 } from '../wallpaper.js';
 import { applyGrade } from '../lut.js';
+// folder art (2026-10-07): the Nimrod folder's Artwork/Wallpapers, read on this device.
+import { kindFolder, handleStore } from '../user_folders.js';
+import { entriesIn, fileUrlIn } from '../folder_source.js';
+import { ART_KINDS } from '../art_kit.js';
+import { SOURCE_RECHECK_MS } from '../media_sources.js';
+
+// ---------------------------------------------------------------------------------------
+// folder art: PICTURES FROM A FOLDER (2026-10-07)
+// ---------------------------------------------------------------------------------------
+//
+// Before this the panel played a folder only from a link parameter (`?wallpaperSource=`): no
+// settings row chose one. `sourceId` is now that row, "Pictures from a folder", with the same live
+// list of connected folders the Photos panel's "Photos from" offers, plus two of its own:
+//
+//   NIMROD_FOLDER  THE DEFAULT. Artwork/Wallpapers in the person's Nimrod folder (user_folders.js,
+//                  the folder the art kit tells people to save wallpapers in), read straight from the
+//                  folder on this device, with nothing to connect first.
+//   NO_FOLDER      the built-in moving colours only - for anybody who keeps pictures in that folder
+//                  for something else and wants this panel to leave them alone.
+//
+// THE DEFAULT, BOTH SIDES. For: the art kit already says "make a wallpaper, save it in
+// Artwork/Wallpapers"; a default that then ignores that folder makes the kit a two-step job
+// (connect it, then pick it here, then type the album). Nothing changes for anybody whose folder is
+// empty or who has no Nimrod folder - the ambient shows, exactly as before. Against: a panel set up
+// before today starts showing pictures by itself the day somebody saves one there, without anybody
+// choosing that on this panel. That is what the folder is for, and NO_FOLDER is one press away.
+// The Photos panel's own default (adopt the account's only source) was not copied: a wallpaper is
+// what shows when nothing else does, so pictures from an unrelated photo folder appearing in it would
+// be the bigger surprise.
+//
+// *** NEVER BLOCKS, NEVER SAYS ANYTHING ON SCREEN. *** No Nimrod folder, a folder whose permission
+// lapsed (it does after a restart, until somebody presses Allow in This screen, Your own folders), no
+// Wallpapers folder, an empty one: the built-in wallpaper shows, as it always did, and the reason is
+// one quiet line after the row's value, in the settings menu (`folderNote`, the row's live `status`). Only a lapsed permission is
+// re-checked by itself (every SOURCE_RECHECK_MS, the Photos panel's own number), because that is the
+// one case waiting on a press somewhere else; the rest are read again when the panel is shown.
+export const NIMROD_FOLDER = 'nimrod-folder';
+export const NO_FOLDER = 'none';
+// The kind's folder name from the art kit's own table, so the two cannot disagree.
+export const WALLPAPER_FOLDER = (ART_KINDS.find((k) => k.id === 'wallpaper') || {}).folder || 'Wallpapers';
+const WHERE = `Artwork/${WALLPAPER_FOLDER} in your Nimrod folder`;
+
+/**
+ * folder art: the pictures (and clips) in the Nimrod folder's Artwork/Wallpapers, names only - no file is
+ * read here. Never prompts, never throws. Resolves `{ status, dir, items }`, status one of
+ * 'ok' | 'empty' | 'none' (no Nimrod folder on this device) | 'permission' | 'missing' | 'error'.
+ */
+export async function readNimrodWallpapers({ store = handleStore(), names } = {}) {
+  const out = (status, dir = null, items = []) => ({ status, dir, items });
+  let k = null;
+  try { k = await kindFolder('artwork', { store, ...(names ? { names } : {}) }); } catch { return out('none'); }
+  if (!k || k.source === 'none') return out('none');
+  if (k.permission !== 'granted') return out('permission');
+  if (!k.dir) return out('missing');
+  let dir = null;
+  try { dir = await k.dir.getDirectoryHandle(WALLPAPER_FOLDER); } catch { return out('missing'); }
+  try {
+    const items = (await entriesIn(dir)).items
+      .filter((it) => it.kind === 'image' || it.kind === 'video')
+      .map((it) => ({ id: it.path, name: it.name, path: it.path, kind: it.kind }));
+    return out(items.length ? 'ok' : 'empty', dir, items);
+  } catch { return out('error'); }
+}
+
+/** folder art: the quiet line after "Pictures from a folder"'s value. Plain words; '' when there is nothing to say. Pure. */
+export function folderNote(choice, status, count = 0) {
+  const n = `${count} ${count === 1 ? 'picture' : 'pictures'}`;
+  if (choice === NO_FOLDER) return '';
+  if (choice === NIMROD_FOLDER) {
+    return {
+      ok: `${n} there.`,
+      empty: `${WHERE} is empty, so the built-in wallpaper shows. Save pictures there to see them here.`,
+      none: 'There is no Nimrod folder on this device, so the built-in wallpaper shows. Set one up in This screen, Your own folders.',
+      permission: 'Your Nimrod folder needs permission again: press Allow in This screen, Your own folders. Until then the built-in wallpaper shows.',
+      missing: `There is no ${WHERE}, so the built-in wallpaper shows. “Set up your Nimrod folder” in This screen, Your own folders makes it.`,
+      error: `${WHERE} could not be read just now, so the built-in wallpaper shows.`,
+    }[status] || '';
+  }
+  return {
+    ok: `${n} there.`,
+    empty: 'That folder has no pictures in it, so the built-in wallpaper shows.',
+    gone: 'That folder is not connected here any more, so the built-in wallpaper shows. Choose another, or connect it again in Media / Sources.',
+    permission: 'That folder needs permission again (Media / Sources). Until then the built-in wallpaper shows.',
+    missing: 'This device no longer has that folder, so the built-in wallpaper shows. Reconnect it in Media / Sources.',
+    album: 'That folder has no album by that name, so the built-in wallpaper shows.',
+    error: 'That folder could not be read just now, so the built-in wallpaper shows.',
+  }[status] || '';
+}
 
 const DEFAULTS = {
-  sourceId: '', album: '',
+  sourceId: NIMROD_FOLDER, album: '',
   // `theme` is the behaviour that existed before scenes — the ambient tinted by the profile's
   // own hue. Default so nothing anybody already set up looks different (A8).
   scene: 'theme',
@@ -97,6 +185,21 @@ export const SETTINGS = [
       { value: 300000, label: '5 minutes' },
       { value: 900000, label: '15 minutes' },
     ] },
+  // folder art (2026-10-07): where the pictures come from (the note above DEFAULTS argues the default). The
+  // declared options are the two that need no account; a mounted panel adds every connected folder
+  // (`settingsChoices`), the way the Photos panel's "Photos from" does, and the line under the row says why
+  // nothing is showing when nothing is.
+  { key: 'sourceId', label: 'Pictures from a folder', kind: 'choice', default: NIMROD_FOLDER, level: 'standard',
+    options: [
+      { value: NIMROD_FOLDER, label: 'Wallpapers in your Nimrod folder' },
+      { value: NO_FOLDER, label: 'None: just the built-in wallpaper' },
+    ] },
+  // A connected folder's subfolder. EDITABLE here, unlike the Photos panel's read-only Album, argued: there it is
+  // read-only because a name the folder does not have breaks the slideshow; here it only falls back to the built-in
+  // wallpaper and says so under the row above. Only shown for a connected folder (the two above have no albums).
+  { key: 'album', label: 'Album', kind: 'text', default: '', level: 'advanced', placeholder: 'Everything',
+    note: 'a folder inside the chosen one, such as Wallpapers',
+    appliesWhen: (v) => !!v && !!v.sourceId && v.sourceId !== NIMROD_FOLDER && v.sourceId !== NO_FOLDER },
 ];
 
 registerModule(
@@ -127,6 +230,13 @@ registerModule(
     let t0 = now();
     let layers = [];          // the two cross-fading media layers
     let front = 0;
+    // folder art: where the pictures come from now, for the line under the row; the connected folders, for its options.
+    const folderStore = ctx.folderStore || handleStore();
+    let folderState = { choice: NIMROD_FOLDER, status: 'none', count: 0 };
+    let knownSources = [];
+    let recheck = null;
+    let showSeq = 0;
+    const layerRelease = new Map();   // layer -> release() for a picture read out of the Nimrod folder
 
     // KEPT SEPARATE FROM `cfg.motion`, the same way comet.js and pond.js keep the system's
     // request apart from the saved setting: folding them makes the settings row lie.
@@ -178,7 +288,15 @@ registerModule(
     // MEDIA
     // ------------------------------------------------------------------------------------
 
+    // folder art: a picture read out of the Nimrod folder holds an object URL until its layer is emptied.
+    function releaseLayer(l) {
+      const r = layerRelease.get(l);
+      layerRelease.delete(l);
+      try { r?.(); } catch { /* gone */ }
+    }
+
     function clearLayer(l) {
+      releaseLayer(l);
       l.innerHTML = '';
       l.style.opacity = '0';
     }
@@ -189,8 +307,22 @@ registerModule(
       recent = [...recent, it.id].slice(-12);
       const back = layers[1 - front];
       if (!back) return;
+      const seq = ++showSeq;
+      // folder art: a connected folder's listing already carries `url` (an agent's did not need one: it was built
+      // here). The Nimrod folder's pictures are read one at a time, when shown, so a folder of fifty holds one.
+      const direct = it.url || (source.base_url ? mediaUrl(source.base_url, it.path) : '');
+      if (direct) { place(back, it, direct, null); return; }
+      if (!source.dir) return;
+      fileUrlIn(source.dir, it.path).then((got) => {
+        if (destroyed || seq !== showSeq || !got) { try { got?.release?.(); } catch { /* gone */ } return; }
+        place(back, it, got.url, got.release);
+      }).catch((e) => console.warn('wallpaper: a picture from the Nimrod folder', e));
+    }
+
+    function place(back, it, url, release) {
+      releaseLayer(back);
       back.innerHTML = '';
-      const url = mediaUrl(source.base_url, it.path);
+      if (release) layerRelease.set(back, release);
       if (it.kind === 'video') {
         const v = document.createElement('video');
         // Muted with no unmute — see the header of `wallpaper.js`. `playsInline` so iOS does
@@ -253,6 +385,7 @@ registerModule(
 
     async function ensureSource() {
       const sources = await client.list();
+      knownSources = Array.isArray(sources) ? sources : [];   // folder art: the row's live options
       if (cfg.sourceId) {
         const found = sources.find((s) => s.id === cfg.sourceId);
         if (found) return found;
@@ -276,19 +409,55 @@ registerModule(
       // something else has stopped; putting "source unreachable" in front of somebody who did
       // not ask for a wallpaper in the first place turns a calm screen into a fault report.
       // The ambient is always underneath, so every failure here has somewhere to land.
+      clearRecheck();
+      showSeq += 1;          // folder art: a picture still being read for the old listing lands on nothing
+      // folder art: '' (a panel saved before the row existed) means the default, like any unset row.
+      const choice = cfg.sourceId || NIMROD_FOLDER;
       try { src = await ensureSource(); }
       catch (e) { console.warn('wallpaper: sources', e); }
       if (seq !== loadSeq || destroyed) return;
-      if (!src) { source = null; items = []; render(); return; }
+      // folder art: the Nimrod folder's Artwork/Wallpapers (the default). Every way it can be unavailable lands on the
+      // built-in wallpaper, with the reason under the settings row; a lapsed permission is looked at again by itself.
+      if (!src && choice === NIMROD_FOLDER) {
+        let r = { status: 'error', dir: null, items: [] };
+        try { r = await readNimrodWallpapers({ store: folderStore }); }
+        catch (e) { console.warn('wallpaper: the Nimrod folder', e); }
+        if (seq !== loadSeq || destroyed) return;
+        source = r.dir ? { kind: 'nimrod', dir: r.dir } : null;
+        items = r.dir ? r.items : [];
+        folderState = { choice, status: r.status, count: items.length };
+        if (r.status === 'permission') armRecheck();
+        render();
+        if (pool().length) { advance(); startSwap(); }
+        return;
+      }
+      if (!src) {
+        source = null; items = [];
+        folderState = { choice, status: choice === NO_FOLDER ? 'ok' : 'gone', count: 0 };
+        render(); return;
+      }
       let listing = null;
+      let failed = null;
       try { listing = await resolveListing(src, cfg.album); }
-      catch (e) { console.warn('wallpaper: listing', e); }
+      catch (e) { console.warn('wallpaper: listing', e); failed = e; }
       if (seq !== loadSeq || destroyed) return;
       source = src;
       items = (listing?.items || []).filter((it) => it.kind === 'image' || it.kind === 'video');
+      const code = failed ? (['permission', 'missing', 'album'].includes(failed.code) ? failed.code : 'error') : null;
+      folderState = { choice, status: code || (items.length ? 'ok' : 'empty'), count: items.length };
       render();
       if (pool().length) { advance(); startSwap(); }
     }
+
+    // folder art: a lapsed permission comes back only when somebody presses Allow elsewhere; look again now and then.
+    function armRecheck() {
+      clearRecheck();
+      recheck = setTimer(() => {
+        recheck = null;
+        if (!destroyed) reload().catch((e) => console.warn('wallpaper: recheck', e));
+      }, SOURCE_RECHECK_MS);
+    }
+    function clearRecheck() { if (recheck != null) { clearTimer(recheck); recheck = null; } }
 
     function applyConfig() {
       startTick();
@@ -304,6 +473,20 @@ registerModule(
         currentId: current?.id || null,
         ticking: tick != null, swapping: swap != null,
         css: el('[data-ambient]')?.style.background || '',
+        folder: { ...folderState }, rechecking: recheck != null,   // folder art
+        shownSrc: layers.map((l) => l.querySelector('img,video')?.getAttribute('src') || ''),
+      }),
+
+      // folder art: the row's live options - the two of its own around every connected folder - and the line under it.
+      settingsChoices: () => ({
+        sourceId: {
+          options: [
+            { value: NIMROD_FOLDER, label: 'Wallpapers in your Nimrod folder' },
+            ...knownSources.filter((s) => s && s.id).map((s) => ({ value: s.id, label: s.label || s.base_url || s.id })),
+            { value: NO_FOLDER, label: 'None: just the built-in wallpaper' },
+          ],
+          status: folderNote(folderState.choice, folderState.status, folderState.count),
+        },
       }),
 
       init() {
@@ -340,13 +523,19 @@ registerModule(
       },
 
       onResize() { /* the layers are CSS-sized; nothing to recompute */ },
-      onHide() { stopTick(); stopSwap(); },
-      onShow() { applyConfig(); },
+      onHide() { stopTick(); stopSwap(); clearRecheck(); },
+      // folder art: shown again, a Nimrod folder that was not ready (set up, allowed or filled since) is read again.
+      onShow() {
+        applyConfig();
+        if ((cfg.sourceId || NIMROD_FOLDER) === NIMROD_FOLDER && folderState.status !== 'ok') {
+          reload().catch((e) => console.warn('wallpaper: reload', e));
+        }
+      },
 
       destroy() {
         destroyed = true;
         client.dispose();
-        stopTick(); stopSwap();
+        stopTick(); stopSwap(); clearRecheck();
         mq?.removeEventListener?.('change', onMq);
         for (const l of layers) { try { clearLayer(l); } catch { /* already gone */ } }
         layers = [];

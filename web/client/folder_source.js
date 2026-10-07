@@ -32,7 +32,13 @@ const STORE = 'folders';
 // agent's sets, and both sides check `dev/media_kinds.json` (one table, two languages). A folder
 // source and an agent source listing the same folder must give the same kinds, or a song plays
 // from one and not the other with nothing anywhere to say why.
-export const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif'];
+// folder art (2026-10-07): svg added, so a drawing made with the art kit (art_kit.js) can be picked from a folder.
+// *** THE SECURITY INVARIANT: AN SVG FROM A FOLDER NEVER RUNS ANYTHING IN THIS SITE. *** An .svg can carry
+// script. Here it is only ever handed out as a `data:` URL (`svgDataUrl` below), never a `blob:` one: in an <img>
+// or a CSS background nothing in it runs or loads, and even opened on its own in a tab a data: document has no
+// site of its own, so it cannot reach this page, its storage or its sign-in. A blob: URL would carry THIS site's
+// origin into that tab. Drawing one inline (an animated avatar) goes through svg_sanitize.js and nowhere else.
+export const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'heic', 'heif', 'avif', 'svg'];
 export const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'm4v', 'ogv'];
 // AUDIO (2026-09-30). Before this a music folder listed as EMPTY: an .mp3 was skipped here, so a
 // music favourite pointing at a folder and game music's folder mode found nothing to play.
@@ -64,6 +70,23 @@ export const kindOf = (name) => {
   if (AUDIO_EXTS.includes(e)) return 'audio';
   return null;
 };
+
+// folder art: is this file an SVG drawing? By name, or by type when the name has no extension.
+export const isSvgFile = (file, name = file && file.name) => extOf(name || '') === 'svg'
+  || String((file && file.type) || '').toLowerCase().startsWith('image/svg');
+
+/**
+ * folder art: an SVG file as a `data:` URL - see the invariant over IMAGE_EXTS. The type is set here, not taken from
+ * the file, so an <img> always reads it as a drawing (a file with no type would not show). Nothing to revoke.
+ */
+export function svgDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error || new Error('could not read the drawing'));
+    r.readAsDataURL(new Blob([file], { type: 'image/svg+xml' }));
+  });
+}
 
 export function isFolderPickerSupported() {
   return typeof window !== 'undefined' && typeof window.showDirectoryPicker === 'function';
@@ -261,6 +284,7 @@ export async function fileUrlIn(root, path, sourceId = '') {
   let file;
   try { file = await (await dir.getFileHandle(name)).getFile(); }
   catch { throw folderError('album', `no file "${path}"`, sourceId); }
+  if (isSvgFile(file, name)) return { url: await svgDataUrl(file), release: () => {} };   // folder art
   const url = URL.createObjectURL(file);
   return { url, release: () => { try { URL.revokeObjectURL(url); } catch { /* gone */ } } };
 }
@@ -357,8 +381,10 @@ export async function resolveFolderListing(source, album = '') {
     const k = kindOf(name);
     if (!k) continue;                                 // not media — the agent skips these too
     const file = await entry.getFile();
-    const url = URL.createObjectURL(file);
-    urls.push(url);
+    // folder art: an SVG is a data: URL (the invariant over IMAGE_EXTS); a file that cannot be read is skipped.
+    let url;
+    if (isSvgFile(file, name)) { try { url = await svgDataUrl(file); } catch { continue; } }
+    else { url = URL.createObjectURL(file); urls.push(url); }
     const path = album ? `${album}/${name}` : name;
     items.push({
       id: path,                                       // stable across sessions: rng.js keys play-stats on it
