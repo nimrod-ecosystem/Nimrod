@@ -533,7 +533,8 @@ export async function triviaPackRows({ reviews = null, includeUnreviewed = false
     .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
   const out = built.flat();
   if (reviews) {
-    await reviews.ready;
+    // The packs this needs (a lazy handle fetches them now; pack_reviews.js `want`), else the first load.
+    await (typeof reviews.want === 'function' ? reviews.want({ includeUnreviewed: !!includeUnreviewed }) : reviews.ready);
     const m = reviews.map();
     for (const entry of (typeof reviews.listing === 'function' ? reviews.listing() : []) || []) {
       if (!entry || entry.kind !== 'trivia') continue;
@@ -1493,6 +1494,9 @@ registerModule(
     async function readBank() {
       if (dead) return;
       const gen = ++bankGen;
+      // Reviewing (the setting on): every review pack, whatever plays now, so "Which pack" can offer each one
+      // with its count (settingsChoices). A lazy handle fetches them once (pack_reviews.js `want`).
+      if (reviews && cfg.includeUnreviewed) reviews.want?.({ includeUnreviewed: true });
       if (cfg.contentSource === 'all') {
         const rows = await allPacksBank();
         if (gen !== bankGen || dead) return;
@@ -1504,7 +1508,7 @@ registerModule(
       // reviews on this host) falls through to the bank, the same way an unreachable pack does.
       if (cfg.contentSource === 'pack' && isReviewPackId(cfg.packId)) {
         if (reviews) {
-          await reviews.ready;
+          await (typeof reviews.want === 'function' ? reviews.want({ includeUnreviewed: !!cfg.includeUnreviewed }) : reviews.ready);
           if (gen !== bankGen || dead) return;
           const pack = reviews.packById(cfg.packId);
           const items = pack ? playableBank(pack, reviews.map(),

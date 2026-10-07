@@ -371,43 +371,96 @@ export async function listUnreviewedPacks({ fetchImpl = (...a) => fetch(...a), u
 }
 
 /** Fetch and validate one listed pack (packs.js `parsePack`: a pack that fails validation never loads). */
-export async function loadReviewPack(entry, { fetchImpl = (...a) => fetch(...a) } = {}) {
-  const res = await fetchImpl(entry.url);
+export async function loadReviewPack(entry, { fetchImpl = (...a) => fetch(...a), signal } = {}) {
+  const res = await fetchImpl(entry.url, signal ? { signal } : undefined);
   if (!res.ok) throw new Error(`pack "${entry.url}" -> ${res.status}`);
   return parsePack(await res.text());
 }
 
+// *** A LOAD CUT OFF BECAUSE THE PAGE OR THE HANDLE WENT AWAY IS NOT A FAILURE (2026-10-07). *** The Modules page
+// suite failed about one run in two on "nothing the page logged as an error": each Trivia mounted there (a try,
+// then the same Trivia live) fetched every review pack (about fifty), the suite moved on and removed the page's
+// frame, and the browser cut each fetch still in flight - every one logged here as "did not load". Measured: all
+// of them came from a frame already removed. So a load is not reported once its handle is destroyed (its fetches
+// are aborted, `destroy` below) or its page is going (`pagehide`, or `window.closed`, which is what a removed
+// frame's window says). A 404, a pack that fails validation, or a network failure on a page still here are
+// reported as before.
+let pageLeaving = false;
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('pagehide', () => { pageLeaving = true; });
+  window.addEventListener('pageshow', () => { pageLeaving = false; });   // back from the back/forward cache
+}
+const pageGone = () => {
+  try { return pageLeaving || (typeof window !== 'undefined' && window.closed === true); } catch { return true; }
+};
+
 /**
- * Everything a reviewer's screen needs, loaded together: the listing, each listed pack, and the log.
+ * Everything a reviewer's screen needs: the listing, the listed packs, and the log.
  * `events` is any events handle (events.js's shape); without one it is made on the account's URL.
  * Returns the handle; `ready` resolves once the first load is in (whatever failed is simply empty).
+ *
+ * WHICH PACKS ARE FETCHED, AND WHEN (`lazy`, 2026-10-07). Left off (the review page, which shows them all):
+ * every listed pack, at once, as before. On (the kiosk, for Trivia and Quiz mix): `ready` brings in the listing,
+ * the log, and only the packs the log's PASSED questions name - everything that plays with "Include unreviewed
+ * questions" off, which is the default - and `want({ includeUnreviewed: true })` brings in the rest the first
+ * time something needs them. A passed question whose pack the log does not name, or names a pack no longer
+ * listed, could be in any of them, so then every pack is fetched. Argued: FOR always fetching all (one path,
+ * and "Which pack" knows every pack's counts at once). AGAINST, and it decides it: every Trivia and Quiz mix
+ * panel fetched every pack (about fifty files, over a megabyte) on every screen and page, for an account that
+ * may never have reviewed a question, and the ones still in flight when a panel or page closed were the errors
+ * above. `want` re-reads the log each time, so a question passed on another device has its pack fetched for the
+ * next round. Each pack is fetched once per handle (a failed one is not retried by asking again).
  */
 export function createPackReviews({ events = null, user, push = null, bus = null, pollMs = 30000,
-                                   listPacks = null, loadPack = null, fetchImpl = null } = {}) {
+                                   listPacks = null, loadPack = null, fetchImpl = null, lazy = false } = {}) {
   const log = events || createEvents({ url: REVIEWS_URL, user, push, pollMs, limit: 5000 });
   const f = fetchImpl || ((...a) => fetch(...a));
+  const gone = typeof AbortController === 'function' ? new AbortController() : null;
   const lister = listPacks || (() => listUnreviewedPacks({ fetchImpl: f, user }));
-  const loader = loadPack || ((entry) => loadReviewPack(entry, { fetchImpl: f }));
+  const loader = loadPack || ((entry) => loadReviewPack(entry, { fetchImpl: f, signal: gone?.signal }));
   let listing = [];
   const packs = new Map();
+  const loads = new Map();   // pack id -> its one load (settled, whatever happened)
   const subs = new Set();
   let dead = false;
   const map = () => reviewsFrom((log.get && log.get() && log.get().events) || []);
   const notify = () => { for (const fn of [...subs]) { try { fn(); } catch (err) { console.error('pack reviews: subscriber', err); } } };
   const offLog = log.subscribe ? log.subscribe(() => notify()) : null;
 
-  async function loadPacks() {
-    listing = (await lister()) || [];
-    await Promise.all(listing.map(async (entry) => {
-      if (packs.has(entry.id)) return;
-      try { packs.set(entry.id, await loader(entry)); }
-      catch (err) { console.error(`pack reviews: ${entry.url} did not load`, err); }
-    }));
+  let listed = null;
+  const listOnce = () => {
+    if (!listed) listed = Promise.resolve().then(() => lister()).then((l) => { listing = l || []; }).catch(() => {});
+    return listed;
+  };
+  const logLoaded = Promise.resolve().then(() => (log.load ? log.load() : null)).catch(() => {});
+  listOnce();
+  function loadOne(entry) {
+    if (!loads.has(entry.id)) {
+      loads.set(entry.id, Promise.resolve().then(() => loader(entry))
+        .then((pack) => { packs.set(entry.id, pack); })
+        .catch((err) => { if (!dead && !pageGone()) console.error(`pack reviews: ${entry.url} did not load`, err); }));
+    }
+    return loads.get(entry.id);
   }
-  const ready = Promise.all([
-    loadPacks().catch(() => {}),
-    Promise.resolve(log.load ? log.load() : null).catch(() => {}),
-  ]).then(() => { if (!dead) notify(); });
+  // The listed packs holding a PASSED question, or null when one names no listed pack (then any pack may hold it).
+  function passedPackIds() {
+    const listedIds = new Set(listing.map((e) => e && e.id));
+    const ids = new Set();
+    for (const r of map().values()) {
+      if (r.status !== REVIEW_STATUS.PASSED) continue;
+      if (!r.pack || !listedIds.has(r.pack)) return null;
+      ids.add(r.pack);
+    }
+    return ids;
+  }
+  async function want({ includeUnreviewed = false } = {}) {
+    // The log too, not only the listing: whoever asks reads what was flagged as soon as this resolves.
+    await Promise.all([listOnce(), logLoaded]);
+    if (dead) return;
+    const ids = lazy && !includeUnreviewed ? passedPackIds() : null;
+    await Promise.all(listing.filter((e) => e && (!ids || ids.has(e.id))).map(loadOne));
+  }
+  const ready = want().catch(() => {}).then(() => { if (!dead) notify(); });
 
   async function write(kind, data) {
     try {
@@ -471,6 +524,7 @@ export function createPackReviews({ events = null, user, push = null, bus = null
 
   return {
     ready,
+    want,
     listing: () => listing,
     packs: () => packs,
     packById: (id) => packs.get(id) || null,
@@ -527,6 +581,6 @@ export function createPackReviews({ events = null, user, push = null, bus = null
     reload: () => Promise.resolve(log.load ? log.load() : null).catch(() => {}),
     startPolling: () => log.startPolling?.(),
     subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
-    destroy: () => { dead = true; subs.clear(); offLog?.(); offRoot?.(); offRoot = null; points = null; log.destroy?.(); },
+    destroy: () => { dead = true; gone?.abort(); subs.clear(); offLog?.(); offRoot?.(); offRoot = null; points = null; log.destroy?.(); },
   };
 }

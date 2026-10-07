@@ -710,6 +710,70 @@ try {
     rn.inst.destroy();
   }
 
+  section('*** which packs are fetched (lazy), and a load cut off by a closing panel is not an error ***');
+  {
+    // The library_page suite failed about one run in two (2026-10-07): every Trivia fetched every review pack, and
+    // the ones in flight when the page's frame was removed were each logged as "did not load".
+    const OTHER = { ...FIXTURE, id: 'review:fixture-other' };
+    const counted = (rows, { lazy, fail = null } = {}) => {
+      const asked = [];
+      const h = createPackReviews({ events: fakeLog(rows), lazy, listPacks: async () => [FIXTURE, OTHER],
+        loadPack: async (e) => { asked.push(e.id); if (fail) throw fail; return fixturePack; } });
+      return { h, asked };
+    };
+    const passRow = (pack) => ({ id: 1, kind: 'pass', data: { key: Q[0].key, question: Q[0].question, answer: Q[0].answer, ...(pack ? { pack } : {}) } });
+    const eager = counted([], { lazy: false });
+    await eager.h.ready;
+    check('left eager (the review page): every listed pack is fetched', eager.asked.length === 2, eager.asked.join(','));
+    const none = counted([], { lazy: true });
+    await none.h.ready;
+    check('*** lazy, nothing passed yet: no pack is fetched until something needs one ***', none.asked.length === 0, none.asked.join(','));
+    await none.h.want({ includeUnreviewed: false });
+    check('...and playing with "Include unreviewed questions" off still needs none', none.asked.length === 0);
+    await none.h.want({ includeUnreviewed: true });
+    check('the setting on: every pack, once', none.asked.length === 2 && none.h.packById(FIXTURE.id) && none.h.packById(OTHER.id));
+    await none.h.want({ includeUnreviewed: true });
+    check('...and asked again, not fetched again', none.asked.length === 2);
+    const named = counted([passRow(FIXTURE.id)], { lazy: true });
+    await named.h.ready;
+    check('lazy: only the pack a passed question names', named.asked.join(',') === FIXTURE.id, named.asked.join(','));
+    const unnamed = counted([passRow('')], { lazy: true });
+    await unnamed.h.ready;
+    check('a passed question naming no listed pack could be in any: every pack', unnamed.asked.length === 2, unnamed.asked.join(','));
+    const { triviaPackRows } = await import('../modules/trivia.js');
+    const fresh = counted([passRow(FIXTURE.id)], { lazy: true });
+    const rows = await triviaPackRows({ reviews: fresh.h, includeUnreviewed: false });
+    const mine = rows.filter((x) => x.pool === FIXTURE.id).map((x) => x.question);
+    check('Trivia\'s "Every question pack" on a lazy handle plays the passed question, and only it',
+      mine.length === 1 && mine[0] === Q[0].question && fresh.asked.join(',') === FIXTURE.id, `${mine.join(' / ')} :: ${fresh.asked.join(',')}`);
+    const reviewing = await triviaPackRows({ reviews: fresh.h, includeUnreviewed: true });
+    check('...and with the setting on, it fetches the rest and deals the open ones too',
+      fresh.asked.length === 2 && reviewing.filter((x) => x.pool === FIXTURE.id).length > 1, fresh.asked.join(','));
+
+    const logged = [];
+    const orig = console.error;
+    console.error = (...a) => { logged.push(a.map(String).join(' ')); };
+    try {
+      const bad = counted([], { lazy: false, fail: new Error('pack "x" -> 404') });
+      await bad.h.ready;
+      check('*** a pack that really fails (a 404, bad JSON) is still reported ***',
+        logged.filter((l) => /did not load/.test(l)).length === 2, logged.join(' | '));
+      logged.length = 0;
+      let init = null;
+      let cut = null;
+      const h = createPackReviews({ events: fakeLog([]), listPacks: async () => [FIXTURE],
+        fetchImpl: (url, opts) => { init = opts; return new Promise((res, rej) => { cut = rej; }); } });
+      await sleep(20);
+      h.destroy();
+      check('destroying the handle aborts its pack fetches', !!init?.signal?.aborted);
+      cut?.(new DOMException('The user aborted a request.', 'AbortError'));
+      await sleep(20);
+      check('*** ...and the load it cut off is not logged as an error ***', !logged.length, logged.join(' | '));
+    } finally {
+      console.error = orig;
+    }
+  }
+
   section('what really waits for review (the server, packs_review/)');
   {
     const real = await listUnreviewedPacks();
