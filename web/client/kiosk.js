@@ -48,7 +48,12 @@ import {
 } from './transport_bar.js';
 // 2026-10-02: the bar's Pause / Play, a panel made bigger one level at a time, and a live call's controls.
 import { PRESETS as LAYOUT_PRESETS, withPreset, HUD_TYPES, addAsOverlay } from './layout.js';
-import { createLongPress } from './input_longpress.js';
+import { createLongPress, clampHoldMs } from './input_longpress.js';
+// bar toggle (2026-10-06): H shows or hides the bar; hidden that way, it stays hidden a while (bar_toggle.js).
+import {
+  BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl, createBarQuiet,
+  BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_KEY_HIDDEN, BAR_HOLD_SLOP_PX,
+} from './bar_toggle.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
@@ -157,7 +162,7 @@ import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
 import { mountCursor } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
-import { DEFAULT_BINDINGS, isTyping } from './input_keyboard.js';
+import { DEFAULT_BINDINGS, isTyping, keyControl } from './input_keyboard.js';
 import { attachDriveToBus } from './drive.js';
 import { createCallTransport, CALL_TRANSPORT_READY } from './call_transport.js';
 import { readConfig, writeConfig, bootPlan, markHopped, hasHopped,
@@ -458,7 +463,7 @@ export async function mountKiosk(root, {
                word. He was given the argument against it — a button called Home that does not
                take you home reads oddly — and chose Home anyway, which is his to choose.
                The title says what it actually does, which is where the precision belongs. -->
-          <button data-act="home" title="your screens, and the way out (H)">⌂ Home</button>
+          <button data-act="home" title="your screens, and the way out (S)">⌂ Home</button>
           <!-- BACK. The reverse of Next, and until now there was nothing here — see
                prevInPrimary below for why this waited on nothing new: photos, personal,
                educational, youtube, wordforge, trivia and interstitials already
@@ -1121,7 +1126,8 @@ export async function mountKiosk(root, {
       // The reviewing keys (W / O, pack_reviews.js) the same way: added in memory where the record does
       // not already use that key or bind that action. What a person set up wins.
       // (2026-10-05) ...and the lock's chord (screen_lock.js `missingLockBindings`), the same rule, on a real screen.
-      const review = [...missingReviewBindings(rec.bindings), ...(screenLock ? missingLockBindings(rec.bindings) : [])];
+      const review = [...missingReviewBindings(rec.bindings), ...(screenLock ? missingLockBindings(rec.bindings) : []),
+        ...missingBarToggleBindings(rec.bindings)];   // bar toggle: H, the same rule (bar_toggle.js)
       if (rec.bindings.some((b) => b && b.device === SPEECH_DEVICE)) {
         return review.length ? { ...s, [INPUTS_KEY]: { ...rec, bindings: [...rec.bindings, ...review] } } : s;
       }
@@ -3127,6 +3133,8 @@ export async function mountKiosk(root, {
     [HOLIDAYS_KEY]: ['display', 0], [SKY_FOLLOW_KEY]: ['display', 0],   // seasons and the sky (sky.js)
     ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['display', 0]])),   // seasons: one row per holiday
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
+    // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
+    [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
   // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
@@ -3567,6 +3575,10 @@ export async function mountKiosk(root, {
     ...(useDashboard ? [{ key: 'plainBarHoldMs', label: 'Hold a switch this long for the plain bar',
       kind: 'choice', level: 'essential', default: PLAIN_BAR_HOLD_DEFAULT_MS,
       options: [1000, 1500, 2000, 2500, 3000].map((ms) => ({ value: ms, label: `${ms / 1000} seconds` })) }] : []),
+    // bar toggle (2026-10-06; bar_toggle.js argues both rows and why there are two). The SCREEN's, beside the hold row:
+    // they are about the keys and the hands in front of this device, the same reason that row is the screen's.
+    { ...BAR_QUIET_FIELD, options: BAR_QUIET_FIELD.options.map((o) => ({ ...o })) },
+    { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
     // Hide = mute (ad7dc49): how long the "hidden panel: keep playing / mute / pause?" card waits.
     HIDE_ASK_TIMEOUT_FIELD,
     // STEP 6 STAGE 4: which way a real screen is put together (`dashboardPathFor`). `advanced`: it is a
@@ -4790,6 +4802,7 @@ export async function mountKiosk(root, {
       // panels" the hide question's wait on Sound. Each row's tab: SCREEN_FIELD_TABS, else This screen.)
       { kind: 'heading', id: 'look-head', label: 'How it looks', ...MENU_TAB.display(0) },
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
+      { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'hide-head', label: 'Hidden panels', ...MENU_TAB.audio(2) },
       ...fieldItems(SCREEN_FIELDS().map(normalizeField).filter(Boolean), {
         // (Stage 4: Colours shows -- and sets -- the theme of the dashboard that is SHOWING, `themeDoc`.
@@ -5774,6 +5787,8 @@ export async function mountKiosk(root, {
       ...REVIEW_KEY_BINDINGS,
       // Ctrl+Shift+L: lock / unlock this screen (2026-10-05, screen_lock.js). Not on an embed (nothing to lock).
       ...(screenLock ? LOCK_KEY_BINDINGS.map((b) => ({ ...b })) : []),
+      // bar toggle (2026-10-06): H shows or hides the bar (bar_toggle.js). Every screen, an embed's too.
+      ...BAR_TOGGLE_KEY_BINDINGS.map((b) => ({ ...b })),
     ],
     ignore: isKioskChrome,
     // Row 2.38: an unanswered `back` goes back a dashboard when there is one to go back to (`backUnhandled`).
@@ -6002,6 +6017,10 @@ export async function mountKiosk(root, {
   }
   function poke() {
     controlsEl.classList.remove('hidden');
+    // bar toggle: anything that pokes is somebody asking for the bar (the automatic reveals ask `autoPoke` first),
+    // so the key's quiet period is over. (`barQuiet` is declared below; a poke during boot, before it is, has none.)
+    controlsEl.classList.remove('k-bar-hidden');
+    try { barQuiet.show(); } catch { /* not declared yet: nothing to end */ }
     try { syncHelp(); } catch { /* declared above; never a reason for the bar not to come up */ }
     try { liftCorners(); } catch { /* a panel's corner above the bar; not load-bearing */ }
     armBarHide();
@@ -6031,6 +6050,95 @@ export async function mountKiosk(root, {
     }, wait);
   }
 
+  // *** BAR TOGGLE (2026-10-06; bar_toggle.js argues the key, the two settings and why nobody is stranded). ***
+  // The key shows or hides THE bar: a placed bar while it carries the bar (told as SHELL_STATE `barKeyHidden`, and it
+  // tucks itself away), else this file's own. Hidden by the key, nothing brings it back BY ITSELF for the screen's
+  // quiet period -- the automatic reveals (a touch, a key, the pointer near it, a switch press) ask `autoPoke` /
+  // `barMayPopUp` first. Anything that asks for the bar (`poke`, the plain bar's summons, the cat) still shows it.
+  const barQuiet = createBarQuiet({ settings: () => settings.get() || {} });
+  const placedBarEl = () => (useDashboard && plainBarState === 'off' ? kioskEl.querySelector('.tb-bar') : null);
+  function barShowing() {
+    const placed = placedBarEl();
+    if (placed) return placed.dataset.tucked !== '1';
+    if (controlsEl.classList.contains('k-bar-hidden')) return false;
+    // The plain bar on the dashboard path ignores `.hidden` (kiosk.css `.k-plain`: drawn while it is the bar).
+    return useDashboard ? plainBarState !== 'off' : !controlsEl.classList.contains('hidden');
+  }
+  const barMayPopUp = () => { try { return barQuiet.mayPopUp(); } catch { return true; } };
+  /** An automatic reveal: allowed while the bar is up (keeping it up) or when it may come up by itself. */
+  function autoPoke() {
+    if (!barShowing() && !barMayPopUp()) return false;
+    poke();
+    return true;
+  }
+  // The press that toggles must not also wake the bar first (it would then hide what it was asked to show).
+  const toggleBindings = () => { try { return runtime?.input?.listBindings?.() || []; } catch { return []; } };
+  const isBarToggleKey = (e) => { try { return isBarToggleControl(toggleBindings(), 'keyboard', keyControl(e)); } catch { return false; } };
+  const isBarToggleEdge = (device, control) => isBarToggleControl(toggleBindings(), device, control);
+  function hideBarByKey() {
+    barQuiet.hide();
+    clearTimeout(hideT); hideT = null;
+    try { toggleScreens(false); } catch { /* the picker hangs off the bar and goes with it, as on the auto-hide */ }
+    if (useDashboard) {
+      plainSummoned = false; clearTimeout(plainSummonT); plainSummonT = null;
+      syncPlainBar();
+      bus.publish(SHELL_STATE, { [BAR_KEY_HIDDEN]: true });
+    }
+    // This file's own bar, unless a placed bar carries the bar -- then the plain bar is left alone, so it still comes
+    // up by itself if that bar fails (the plain bar's own rule, `syncPlainBar`). Read AFTER a summoned one is let go.
+    if (!placedBarEl()) controlsEl.classList.add('hidden', 'k-bar-hidden');
+    try { liftCorners(); } catch { /* the corners come back down with it; not load-bearing */ }
+  }
+  function showBarByKey() {
+    barQuiet.show();
+    controlsEl.classList.remove('k-bar-hidden');
+    if (useDashboard) bus.publish(SHELL_STATE, { [BAR_KEY_HIDDEN]: false });
+    if (!placedBarEl()) poke();
+  }
+  function toggleBarByKey() {
+    if (torn) return;
+    if (barShowing()) hideBarByKey(); else showBarByKey();
+  }
+  offsScreen.push(bus.subscribe(BAR_TOGGLE_TOPIC, (p) => { try { p?.claim?.(); } catch { /* never stops the press */ } toggleBarByKey(); }));
+
+  // NOBODY STRANDED (bar_toggle.js): while the bar is hidden and may not come up by itself, HOLDING STILL on the
+  // screen for the plain bar's hold time brings it -- the touch-only person's way back. A tap is still a tap; a press
+  // that moves is a drag and is let go. The ring says what is happening, as for the switch hold.
+  let barHoldT = null, barRingT = null, barHoldAt = null;
+  function endBarHold() {
+    clearTimeout(barHoldT); clearTimeout(barRingT); barHoldT = null; barRingT = null;
+    if (barHoldAt) { barHoldAt = null; try { hideRing(); } catch { /* none drawn */ } }
+  }
+  function startBarHold(e) {
+    endBarHold();
+    if (torn || barShowing() || barMayPopUp()) return;
+    if (e && e.isPrimary === false) return;
+    const ms = clampHoldMs((settings.get() || {}).plainBarHoldMs);
+    barHoldAt = { x: e?.clientX ?? 0, y: e?.clientY ?? 0 };
+    const ringAfter = Math.min(250, ms);
+    barRingT = setTimeout(() => {
+      barRingT = null;
+      if (barHoldAt) showRing({ holdMs: ms, ringAfterMs: ringAfter, text: 'Keep holding for the bar' });
+    }, ringAfter);
+    barHoldT = setTimeout(() => {
+      barHoldT = null;
+      if (!barHoldAt) return;
+      endBarHold();
+      showBarByKey();
+    }, ms);
+  }
+  function moveBarHold(e) {
+    if (!barHoldAt) return;
+    if (Math.hypot((e.clientX ?? 0) - barHoldAt.x, (e.clientY ?? 0) - barHoldAt.y) > BAR_HOLD_SLOP_PX) endBarHold();
+  }
+  root.addEventListener('pointermove', moveBarHold, { passive: true });
+  for (const ev of ['pointerup', 'pointercancel']) root.addEventListener(ev, endBarHold, { passive: true });
+  offsScreen.push(() => {
+    endBarHold();
+    root.removeEventListener('pointermove', moveBarHold);
+    for (const ev of ['pointerup', 'pointercancel']) root.removeEventListener(ev, endBarHold);
+  });
+
   // *** MOUSEMOVE ONLY REVEALS THE BAR NEAR WHERE IT ACTUALLY LIVES. *** Mike, 2026-09-20:
   // "The transport bar seems to be always on in the kiosk. It should just pop up when you put
   // your cursor near the bottom center." Before this, ANY `mousemove` anywhere on the whole
@@ -6051,7 +6159,7 @@ export async function mountKiosk(root, {
   function pokeIfNearBar(e) {
     const r = controlsEl.getBoundingClientRect();
     if (e.clientX >= r.left - BAR_REVEAL_MARGIN_PX && e.clientX <= r.right + BAR_REVEAL_MARGIN_PX
-        && e.clientY >= r.top - BAR_REVEAL_MARGIN_PX) poke();
+        && e.clientY >= r.top - BAR_REVEAL_MARGIN_PX) autoPoke();   // bar toggle: unless the bar is to stay away
   }
   // *** `mousemove` ALONE MEANT NO TOUCH SCREEN COULD EVER SEE THIS BAR AGAIN. ***
   //
@@ -6107,11 +6215,14 @@ export async function mountKiosk(root, {
   let endWakePress = () => {};
   const pokeOnPress = (e) => {
     const wasHidden = controlsEl.classList.contains('hidden');
-    poke();
+    // bar toggle: held back while the key's quiet period runs (or "only when I ask"); then a hold brings it.
+    if (!autoPoke()) { startBarHold(e); return; }
     if (wasHidden && !controlsEl.classList.contains('hidden')) endWakePress = sitOutWakePress(controlsEl, e);
   };
+  // bar toggle: the toggle's own key does not wake the bar on its way to toggling it.
+  const pokeOnKey = (e) => { if (!isBarToggleKey(e)) autoPoke(); };
   root.addEventListener('pointerdown', pokeOnPress, { passive: true });
-  root.addEventListener('keydown', poke, { passive: true });
+  root.addEventListener('keydown', pokeOnKey, { passive: true });
   // Starts hidden, deliberately — it pops up on the first real interaction (a touch, a key)
   // or a mouse coming near it, rather than showing once at boot and then, per the note above,
   // effectively never actually leaving during ordinary use. The raw template has no `hidden`
@@ -6155,14 +6266,17 @@ export async function mountKiosk(root, {
     // a digit switched panels -- out from under the very field somebody was typing in.
     if (isTyping(e.target)) return;
     if (e.key >= '1' && e.key <= '9') { const i = Number(e.key) - 1; if (i < arr.stageDefs().length) showPrimary(i); else return; }
-    else if (e.key.toLowerCase() === 'h') { toggleScreens(); return; }
+    // bar toggle (2026-10-06): the screen picker moved from H to S ("your Screens"); H is the bar's key now, an
+    // ordinary binding (bar_toggle.js argues the move). It brings the bar it hangs off with it, as H's keydown did.
+    // Not with Ctrl / Alt / Meta: Ctrl+S is the browser's save, pressed by habit.
+    else if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) { poke(); toggleScreens(); return; }
     else if (e.key.toLowerCase() === 'c') toggleMirrorFull();
     else if (e.key.toLowerCase() === 'f') toggleFs();
     else if (e.key === '[') cycleMirrorSize(-1);
     else if (e.key === ']') cycleMirrorSize(1);
     else if (e.key === '\\') cycleMirrorCorner();
     else return;
-    poke();
+    autoPoke();   // bar toggle: a hotkey shows the bar as any key does, unless the bar is to stay away
   };
   window.addEventListener('keydown', onKey);
 
@@ -6220,6 +6334,9 @@ export async function mountKiosk(root, {
   function summonPlainBar() {
     if (!useDashboard || torn) return;
     try { syncHelp(); } catch { /* never a reason for the plain bar not to come up */ }
+    // bar toggle: summoning is asking for it -- whatever the key hid, the plain bar comes up, and the quiet period ends.
+    controlsEl.classList.remove('k-bar-hidden');
+    try { barQuiet.show(); } catch { /* not declared yet: nothing to end */ }
     plainSummoned = true;
     syncPlainBar();
     clearTimeout(plainSummonT);
@@ -6238,6 +6355,9 @@ export async function mountKiosk(root, {
         + '<span class="k-ring-text">Keep holding for the plain bar</span>';
       kioskEl.append(ringEl);
     }
+    // bar toggle: the screen hold says "for the bar"; the switch hold keeps its own words.
+    const ringText = ringEl.querySelector('.k-ring-text');
+    if (ringText) ringText.textContent = p?.text || 'Keep holding for the plain bar';
     ringEl.style.setProperty('--k-ring-ms', `${Math.max(0, (p?.holdMs || 1500) - (p?.ringAfterMs || 250))}ms`);
     ringEl.hidden = false;
     ringEl.classList.remove('k-ring-go');
@@ -6687,6 +6807,10 @@ export async function mountKiosk(root, {
           dockMenu, helpOn: () => helpOn(storage),
           // Home (2026-09-30): the host page's actions for the placed bar, and what its words need.
           host: hostPage, menuOpen: () => !!menu.isOpen(), barHeld: () => barHeld,
+          // bar toggle (2026-10-06): may the placed bar come up by itself, did the key hide it, and is this
+          // press the toggle's own (so it does not wake the bar it is about to toggle).
+          barMayPopUp: () => barMayPopUp(), barKeyHidden: () => { try { return barQuiet.hiddenByKey(); } catch { return false; } },
+          isBarToggleKey: (e) => isBarToggleKey(e), isBarToggleEdge: (device, control) => isBarToggleEdge(device, control),
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
           bigger: () => biggerState(),
@@ -6831,6 +6955,8 @@ export async function mountKiosk(root, {
     // See `holdBar` beside `poke()`.
     holdBar,
     barHeld: () => barHeld,
+    // bar toggle (2026-10-06): for a suite and a diagnostic page -- is the bar up, and the key's quiet period.
+    barToggle: () => ({ showing: barShowing(), mayPopUp: barMayPopUp(), holding: !!barHoldAt, ...barQuiet.probe() }),
     cameraOwner: () => cameraOwner,
     micOwner: () => micOwner,
     // WHAT THE MIC ARBITER WOULD ACTUALLY FALL BACK TO RIGHT NOW — exposed so a test can prove
@@ -7082,7 +7208,7 @@ export async function mountKiosk(root, {
       // The pointerdown/keydown pair were never detached here even before today - a real,
       // separate leak, fixed alongside this one since it is the exact same class of bug.
       root.removeEventListener('pointerdown', pokeOnPress);
-      root.removeEventListener('keydown', poke);
+      root.removeEventListener('keydown', pokeOnKey);   // bar toggle: was `poke`
       try { endWakePress(); } catch { /* none under way */ }
       clearTimeout(hideT);
       barHeld = false;

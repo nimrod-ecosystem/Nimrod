@@ -383,6 +383,9 @@
     border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px;z-index:var(--z-transport);
     transition:opacity .3s ease}
   .k-controls.hidden{opacity:0;pointer-events:none}
+  /* bar toggle (2026-10-06, bar_toggle.js): put away by its key. Over the plain bar's solid look too (`.k-plain` keeps
+     opacity 1 on purpose); `visibility`, not `display`, so the bar's own box still says where "near the bar" is. */
+  .kiosk > .k-controls.k-bar-hidden{visibility:hidden;pointer-events:none}
 
   /* THE SCREEN PICKER — a strip above the bar, never a scrim over the panels. See the long
      note on `toggleScreens` in kiosk.js for why it is a strip: a modal over her photographs is

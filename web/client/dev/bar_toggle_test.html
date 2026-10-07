@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>bar toggle — H shows or hides the bar, and hidden that way it stays hidden a while</title>
+<link rel="stylesheet" href="../modules.css">
+<link rel="stylesheet" href="../kiosk.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:18px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #root{position:relative;width:720px;height:560px;margin-top:16px;border:1px solid #ddd8b4;border-radius:10px;overflow:hidden}
+  #root .kiosk{position:absolute}
+  p{max-width:86ch}
+</style>
+</head>
+<body>
+<h1>bar toggle — H shows or hides the bar, and hidden that way it stays hidden a while</h1>
+<p>Mike, 2026-10-06: <i>“The transport bar keeps getting in the way. Maybe H should show/hide the transport bar and
+if you use it to hide the bar it doesn't pop up for another 30 seconds as default. Never pop up on its own should
+probably be an option for people that only want to use a hotkey.”</i> This mounts real screens (both bars: the
+screen's own, and the one a dashboard places) and presses the key, the screen and a switch. bar_toggle.js argues
+the design, including why nobody without a keyboard is left without the bar.</p>
+<p>Needs the server.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="root"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { createState } from '../state.js';
+import { SYSTEM_ACTIONS, SYSTEM_TOPICS } from '../actions.js';
+import { DEFAULT_BINDINGS } from '../input_keyboard.js';
+import {
+  BAR_TOGGLE_ACTION, BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl,
+  createBarQuiet, barQuietMsFrom, barSelfFrom, BAR_QUIET_DEFAULT_MS, BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_SELF_ASKED,
+} from '../bar_toggle.js';
+
+const USER = 'bartoggle-' + Math.floor(Math.random() * 1e6);
+const root = document.getElementById('root');
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn, ms = 6000) => { const end = Date.now() + ms; while (Date.now() < end) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; };
+const J = (x) => JSON.stringify(x);
+
+// Presses land INSIDE the screen and bubble out, the way a real one does: through the screen's own listeners
+// first, then the window's (where the keyboard joins the input bus). That order is the bug to catch: the key's
+// own keydown waking the bar a moment before the same key toggles it.
+const kioskEl = () => root.querySelector('.kiosk');
+const key = async (k, ms = 60) => {
+  kioskEl().dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true }));
+  kioskEl().dispatchEvent(new KeyboardEvent('keyup', { key: k, bubbles: true }));
+  await sleep(ms);
+};
+const down = (x = 300, y = 200) => kioskEl().dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: x, clientY: y, isPrimary: true, pointerId: 1 }));
+const up = (x = 300, y = 200) => kioskEl().dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y, isPrimary: true, pointerId: 1 }));
+const move = (x, y) => kioskEl().dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x, clientY: y, isPrimary: true, pointerId: 1 }));
+const tap = async (ms = 60) => { down(); up(); await sleep(ms); };
+const mouseNearBar = async (bar) => {
+  const r = bar.getBoundingClientRect();
+  kioskEl().dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + 4 }));
+  document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + 4 }));
+  await sleep(60);
+};
+
+(async () => {
+  // =====================================================================================
+  section('the pure parts: the quiet period, the settings, the binding');
+  {
+    let t = 1000;
+    let row = {};
+    const q = createBarQuiet({ settings: () => row, now: () => t });
+    check('nothing hidden: the bar may come up by itself', q.mayPopUp() && !q.hiddenByKey());
+    q.hide();
+    check(`hidden by the key: not by itself, for the default ${BAR_QUIET_DEFAULT_MS / 1000} s (Mike's number)`,
+      !q.mayPopUp() && q.hiddenByKey() && BAR_QUIET_DEFAULT_MS === 30000);
+    t += 29999; check('...still not at 29.999 s', !q.mayPopUp());
+    t += 2; check('...and after 30 s it may again (the next touch brings it; nothing pops up AT 30 s)', q.mayPopUp());
+    q.show(); row = { barQuietMs: 0 }; q.hide(); t += 1e9;
+    check('"Until I show it": not by itself, however long', !q.mayPopUp());
+    q.show(); check('...shown (the key, or anything asking for it): the quiet period is over', q.mayPopUp() && !q.hiddenByKey());
+    row = { barShowsItself: BAR_SELF_ASKED };
+    check('"only when I ask": never by itself, hidden by the key or not', !q.mayPopUp());
+    check('settings read defensively: junk is the default', barQuietMsFrom({ barQuietMs: 'x' }) === 30000
+      && barQuietMsFrom({ barQuietMs: -5 }) === 30000 && barQuietMsFrom({ barQuietMs: '60000' }) === 60000
+      && barSelfFrom({ barShowsItself: 'nonsense' }) === 'yes' && barSelfFrom(null) === 'yes');
+    check('the quiet row offers 10 s / 30 s / 1 min / 5 min / until I show it, 30 s by default',
+      J(BAR_QUIET_FIELD.options.map((o) => o.value)) === J([10000, 30000, 60000, 300000, 0]) && BAR_QUIET_FIELD.default === 30000
+      && /Until I show it/.test(BAR_QUIET_FIELD.options[4].label), J(BAR_QUIET_FIELD.options));
+    check('the bar-by-itself row: yes by default, or only when asked', BAR_SELF_FIELD.default === 'yes'
+      && J(BAR_SELF_FIELD.options.map((o) => o.value)) === J(['yes', 'asked']));
+    const act = SYSTEM_ACTIONS.find((a) => a.id === BAR_TOGGLE_ACTION);
+    check('a System action like the others (rebindable from Devices), its topic agreeing with bar_toggle.js',
+      !!act && act.topic === BAR_TOGGLE_TOPIC && act.group === 'System', J(act));
+    check('not one of the room\'s system/* topics (kiosk_test holds those equal to room_scene\'s)',
+      !Object.values(SYSTEM_TOPICS).includes(BAR_TOGGLE_TOPIC));
+    check('H by default', BAR_TOGGLE_KEY_BINDINGS.length === 1 && BAR_TOGGLE_KEY_BINDINGS[0].control === 'key:h');
+    check('H collides with no shipped keyboard default', !DEFAULT_BINDINGS.some((b) => b.control === 'key:h'));
+    check('a saved record with nothing on H gets H in memory', missingBarToggleBindings([{ id: 'x', actionId: 'a/b', device: 'keyboard', control: 'key:q' }]).length === 1);
+    check('...but not where the person put H to another use (theirs wins)', missingBarToggleBindings([{ id: 'x', actionId: 'a/b', device: 'keyboard', control: 'key:h' }]).length === 0);
+    check('...nor where they moved the toggle to another key or a switch', missingBarToggleBindings([{ id: 'x', actionId: BAR_TOGGLE_ACTION, device: 'switch:1', control: 'a' }]).length === 0);
+    check('which press IS the toggle: by device and control, from the bindings in force',
+      isBarToggleControl(BAR_TOGGLE_KEY_BINDINGS, 'keyboard', 'key:h') && !isBarToggleControl(BAR_TOGGLE_KEY_BINDINGS, 'keyboard', 'key:j')
+      && !isBarToggleControl([], 'keyboard', 'key:h'));
+  }
+
+  const profiles = createProfilesClient({ user: USER });
+  async function screenWith(name, extra = {}) {
+    const p = await profiles.create(name);
+    await profiles.addModule(p.id, 'photos');
+    await profiles.addModule(p.id, 'clock');
+    const full = await profiles.get(p.id);
+    const ids = (full.modules || []).map((m) => m.id);
+    const st = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+    await st.load();
+    st.set({ kiosk: { layout: { preset: 'main', slots: [ids[0], ids[1], null] } }, ...extra });
+    await st.flush(); st.destroy();
+    return p;
+  }
+
+  // =====================================================================================
+  section('*** the screen\'s own bar ***');
+  {
+    // 400 ms of quiet, so the suite can watch it end (the rows offer 10 s and up; the value is read the same way).
+    const p = await screenWith('BT-plain', { barQuietMs: 400 });
+    const bus = createBus();
+    const k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
+    const bar = () => root.querySelector('.k-controls');
+    const shown = () => !bar().classList.contains('hidden') && !bar().classList.contains('k-bar-hidden');
+    check('(setup) the bar starts hidden, as it always has', await until(() => !!bar()) && !shown() && k.barToggle().showing === false, J(k.barToggle()));
+    const binds = k.runtime.input.listBindings();
+    check('H is bound to the toggle on a screen with nothing saved', binds.some((b) => b.actionId === BAR_TOGGLE_ACTION && b.control === 'key:h'), J(binds.filter((b) => b.device === 'keyboard').map((b) => b.control)));
+
+    await key('h');
+    check('*** H on a hidden bar SHOWS it (its own keydown does not wake it a moment before toggling it shut) ***', shown(), bar().className);
+    await key('h');
+    check('*** H on a showing bar hides it ***', !shown() && bar().classList.contains('k-bar-hidden'), bar().className);
+    check('...and starts the quiet period', k.barToggle().hiddenByKey && !k.barToggle().mayPopUp, J(k.barToggle()));
+    await tap();
+    check('*** quiet: a touch does not bring it back ***', !shown(), bar().className);
+    await mouseNearBar(bar());
+    check('*** quiet: nor the pointer near it ***', !shown(), bar().className);
+    await key('x');
+    check('*** quiet: nor another key ***', !shown(), bar().className);
+    await key('h');
+    check('*** H again: back at once ***', shown(), bar().className);
+    await key('h');
+    await sleep(450);
+    await tap();
+    check('*** the quiet period over (400 ms here), a touch brings it back as before ***', shown(), J(k.barToggle()));
+    up();
+
+    // H no longer opens the screen picker; S does.
+    const picker = () => root.querySelector('[data-screens]');
+    await key('h'); await key('h');
+    check('H does not open the screen picker any more', picker()?.hidden !== false);
+    await key('s');
+    check('*** S opens it (the picker moved off H), with the bar it hangs off ***', picker()?.hidden === false && shown(), bar().className);
+    await key('s');
+    check('S again puts it away', picker()?.hidden !== false);
+    check('the Home button says (S)', /\(S\)/.test(bar().querySelector('[data-act="home"]')?.title || ''));
+
+    // Bound to anything: a switch.
+    k.runtime.input.addBinding({ id: 'test/bar-switch', actionId: BAR_TOGGLE_ACTION, device: 'switch:1', control: 'a', edge: 'press', role: 'universal', holdMs: 0, debounceMs: 0, lockoutMs: 0 });
+    const wasShown = shown();
+    k.runtime.input.down('switch:1', 'a'); k.runtime.input.up('switch:1', 'a'); await sleep(60);
+    check('*** a switch bound to the action toggles it too ***', shown() !== wasShown, `${wasShown} -> ${shown()}`);
+    k.runtime.input.down('switch:1', 'a'); k.runtime.input.up('switch:1', 'a'); await sleep(60);
+    check('...and back', shown() === wasShown);
+    k.runtime.input.removeBinding?.('test/bar-switch');
+
+    // THE SETTING, IN THE MENU: "only when I ask".
+    const row = (id) => k.menu.items().find((r) => r.id === id);
+    check('both rows are in the menu, on Devices', !!row('set:barQuietMs') && !!row('set:barShowsItself')
+      && row('set:barShowsItself').tab === 'devices' && row('set:barQuietMs').tab === 'devices',
+      J([row('set:barQuietMs')?.tab, row('set:barShowsItself')?.tab]));
+    k.menu.open(); k.menu.showTab('devices'); k.menu.focusRow('set:barShowsItself'); k.menu.select(); k.menu.close();
+    check('(setup) "only when I ask" chosen', await until(() => k.barToggle().self === 'asked', 3000), J(k.barToggle()));
+    if (shown()) await key('h');
+    await sleep(450);
+    await tap();
+    check('*** only when I ask: a touch long after the quiet period still does not bring it ***', !shown(), J(k.barToggle()));
+    await mouseNearBar(bar());
+    check('...nor the pointer near it', !shown());
+
+    // NOBODY STRANDED: hold still on the screen.
+    down(); move(304, 203);
+    check('(a hold starts: the screen is being held still)', k.barToggle().holding === true, J(k.barToggle()));
+    await sleep(400);
+    check('...the ring says what is happening, in words', /Keep holding for the bar/.test(root.querySelector('.k-ring:not([hidden])')?.textContent || ''),
+      root.querySelector('.k-ring')?.outerHTML || 'no ring');
+    await sleep(1300);
+    check('*** holding still for the hold time (1.5 s) brings the bar: the touch-only way back ***', shown(), J(k.barToggle()));
+    up(); await sleep(30);
+    check('...and the ring is gone', !root.querySelector('.k-ring:not([hidden])'));
+    await key('h');
+    down(); await sleep(100); move(360, 260); await sleep(1600);
+    check('a press that moves is a drag, not a hold: no bar', !shown());
+    up();
+    down(); await sleep(100); up(); await sleep(1600);
+    check('a tap is a tap: no bar', !shown());
+
+    // Asking for it still works in "only when I ask".
+    bus.publish(SYSTEM_TOPICS.modules, {});
+    await sleep(60);
+    check('*** asking for the bar (the room\'s Modules object, a bound system/modules) still brings it ***', shown());
+    k.destroy(); root.innerHTML = '';
+  }
+
+  // =====================================================================================
+  section('*** a dashboard\'s placed bar ***');
+  {
+    const p = await screenWith('BT-placed', { barQuietMs: 400 });
+    const bus = createBus();
+    const k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, dashboardDefault: true });
+    const tb = () => root.querySelector('.tb-bar');
+    const plain = () => root.querySelector('.k-controls');
+    check('(setup) the placed bar carries the bar, up in its row', await until(() => !!tb() && kioskEl().dataset.plainBar === 'off', 8000)
+      && tb().dataset.tucked !== '1', kioskEl()?.dataset.plainBar);
+    await key('h');
+    check('*** H puts the placed bar away (tucked, though it is not full screen) ***', tb().dataset.tucked === '1' && tb().style.visibility === 'hidden');
+    check('...and leaves the plain bar to its own rule (still off, not hidden by the key: it must come up if that bar fails)',
+      kioskEl().dataset.plainBar === 'off' && !plain().classList.contains('k-bar-hidden'));
+    await tap();
+    check('*** quiet: a touch does not bring it back ***', tb().dataset.tucked === '1');
+    await mouseNearBar(tb());
+    check('...nor the pointer near it', tb().dataset.tucked === '1');
+    await key('h');
+    check('*** H again: back at once ***', tb().dataset.tucked !== '1' && tb().style.visibility !== 'hidden');
+    await key('h');
+    await sleep(450); await tap();
+    check('*** the quiet period over, a touch brings it back ***', tb().dataset.tucked !== '1');
+    up();
+    await key('h');
+    await key('Escape');
+    check('*** Escape still summons the plain bar while the placed one is put away (asking is not popping up) ***',
+      kioskEl().dataset.plainBar === 'summoned' && !plain().classList.contains('k-bar-hidden'), kioskEl().dataset.plainBar);
+    await key('h');
+    check('H with the plain bar summoned puts the bars away', kioskEl().dataset.plainBar === 'off' && tb().dataset.tucked === '1', kioskEl().dataset.plainBar);
+    k.destroy(); root.innerHTML = '';
+  }
+
+  document.getElementById('summary').textContent = failed
+    ? `${failed} FAILED / ${passed} passed`
+    : `ALL PASS — ${passed} checks`;
+})().catch((e) => {
+  console.error(e);
+  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+});
+</script>
+</body>
+</html>
