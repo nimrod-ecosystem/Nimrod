@@ -391,6 +391,11 @@ async def main(names, shotdir=None):
             # A suite must not be judged against a permission prompt nobody can answer, and
             # several of these modules ask for a camera. Fake devices give them a real stream.
             '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream',
+            # navigator.webdriver = true: the site's "Best for this device" theme (client/theme_default.js, rule 4)
+            # gives a browser a program is driving the still Nimrod theme, so every suite sees the same default on
+            # every machine instead of a moving scene on a fast one and Nimrod on a slow one. A suite that wants the
+            # moving branch fakes its signals (theme_default.js pickStartingTheme / readDeviceSignals).
+            '--enable-automation',
             'about:blank']
     if not os.environ.get('SUITE_HEAD'):
         args.insert(1, '--headless=new')

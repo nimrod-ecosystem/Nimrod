@@ -117,7 +117,15 @@
      is the identical text-shadow fallback for when there is no surface left to read against. */
   .kiosk[data-panel-surface="veil"] .k-stage .k-mod{background:var(--board-veil,rgba(27,36,41,.72))}
   .kiosk[data-panel-surface="clear"] .k-stage .k-mod{background:transparent;
-    text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
+    text-shadow:var(--panel-halo,var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6)))}
+  /* (2026-10-07) `--panel-halo` is derived by theme.js `panelHalo`: a moving theme's own `--board-halo`, exactly;
+     on a still theme a halo the opposite of its words (the old dark halo smudged Nimrod light's dark words, and
+     clear is the default now).
+     AND WHAT A CLEAR PANEL SHOWS ON A STILL THEME IS THE THEME'S OWN PAGE COLOUR. kiosk.html paints its document
+     near-black (a full-bleed screen), so a clear panel over a theme with no scene showed dark green words on black.
+     The screen now wears `--bg` behind its panels while they are clear; a moving scene (drawn inside `.kiosk`, the
+     scene host) and a room still cover it, so they look as before. Not on an embed: there the page around it shows. */
+  .kiosk:not(.k-embed)[data-panel-surface="clear"]{background:var(--bg)}
   /* THE SAME SETTING, ONE PANEL AT A TIME (Mike, 2026-09-23: "change it at different levels...
      if you only want it for certain modules"). `data-panel-surface` on the INDIVIDUAL `.k-mod`
      (kiosk.js's `mountInstance`, only ever written for an explicit solid/veil/clear choice, never
@@ -129,7 +137,7 @@
   .kiosk .k-stage .k-mod[data-panel-surface="solid"]{background:var(--surface);text-shadow:none}
   .kiosk .k-stage .k-mod[data-panel-surface="veil"]{background:var(--board-veil,rgba(27,36,41,.72))}
   .kiosk .k-stage .k-mod[data-panel-surface="clear"]{background:transparent;
-    text-shadow:var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6))}
+    text-shadow:var(--panel-halo,var(--board-halo,0 1px 2px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.6)))}
   /* WHICH PANEL THE NEXT PRESS WILL ACT ON. Drawn on the CELL, outside the panel's own box, so
      it never covers the content — a ring over somebody's photograph would be the wrong trade.
      `outline` rather than `border` because a border would resize the cell and shift the grid

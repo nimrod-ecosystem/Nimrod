@@ -211,15 +211,18 @@ try {
   section('theme.js: "With the seasons" as a choice, and the new themes');
   {
     const L = listThemes();
-    check('*** listThemes offers "With the seasons", LAST, marked follows ***', L[L.length - 1].id === 'seasons' && L[L.length - 1].follows === true
-      && /seasons/i.test(L[L.length - 1].label), J(L[L.length - 1]));
+    // (2026-10-07: "Best for this device", theme_default.js, is the last choice now; "With the seasons" just before it.)
+    const S = L[L.length - 2];
+    check('*** listThemes offers "With the seasons" after every theme, marked follows, then "Best for this device" last ***',
+      S.id === 'seasons' && S.follows === true && /seasons/i.test(S.label)
+      && L[L.length - 1].id === 'device' && L[L.length - 1].follows === true, J(L.slice(-2)));
     const holidayIds = Object.keys(THEMES).filter((id) => THEMES[id].group === 'holiday');
     // (themes, 2026-10-06, deliberately reversed - Mike: "You should also be able to choose any of the seasonal ones at
     // any time." The holidays were left out of the list while it was stepped one press at a time; it is a gallery now.)
     check('*** the eleven holiday themes are in THEMES (so every theme check measures them) AND in the Theme list ***',
       holidayIds.length === 11 && holidayIds.every((id) => L.some((t) => t.id === id)), holidayIds.join());
     check('every real theme is listed first, in THEMES\' order, the default first; Spring and Summer among them',
-      J(L.slice(0, -1).map((t) => t.id)) === J(Object.keys(THEMES)) && L[0].id === 'default'
+      J(L.slice(0, -2).map((t) => t.id)) === J(Object.keys(THEMES)) && L[0].id === 'default'
       && L.some((t) => t.id === 'spring') && L.some((t) => t.id === 'summer'));
     check('*** every holiday in the schedule has a theme and a scene of that name ***',
       HOLIDAY_IDS.every((id) => THEMES[HOLIDAYS[id].scene]?.scene === HOLIDAYS[id].scene && SCENES[HOLIDAYS[id].scene]));

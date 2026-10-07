@@ -284,9 +284,17 @@ export const olderOf = (doc) => !(isObj0(doc) && doc[OLDER_KEY] === false);
 
 // (themes, 2026-10-06: "Theme", not "Colours", wherever a person reads it - Mike: "Colours should change to theme".
 // The keys stay `colours*`: they are code, and what is stored is the theme id, as it always was.)
+// *** ONE LIST OF THEMES (Mike, 2026-10-07: "The themes on the home/profile page should be the same as the regular
+// themes. I just wanted a setting there bc it's the first page people will see."). *** "Theme for my page" opens the
+// SAME theme gallery as the Theme tab and the Themes panel (choice_picker.js + theme_gallery.js: a still of every
+// theme, search, order, filters, the holidays, "With the seasons", "Best for this device"), plus "The usual theme"
+// first. It is a button on your own card at the top of the page (and on the edit card while editing), not a list
+// inside the edit card: it is the first page people see, so the setting is where they look first. What it sets is
+// unchanged: this page's own theme, shown to the people who can see it, by `pageColours` above.
 export const PAGE_LOOK_WORDS = Object.freeze({
   colours: 'Theme for my page',
   coloursNone: 'The usual theme',
+  coloursNoneHint: 'everyone sees your page in their own theme',
   coloursLine: 'People who can see your page see it in this theme, unless they use a theme for easier reading, like High contrast.',
   coloursOwn: 'You use High contrast, so you see your page in your own theme. People who can see your page see the theme you pick.',
   older: 'Let this page show older messages',

@@ -687,9 +687,11 @@ const toTab = (m, id) => {
       // reachable from the bedside menu, that reaches the document (`data-panel-surface`) and
       // not just the menu row — kiosk.css keys `.k-stage .k-mod`'s background off it.
       check('panel backgrounds is a screen setting too', !!byId['set:panelSurface'], rows.map((r) => r.id).join(','));
-      check('and it is solid by default — nobody’s screen changes until they pick it',
-        kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint === 'Solid'
-          && ds().panelSurface === 'solid',
+      // (2026-10-07, DELIBERATELY changed: Mike, "The default should be transparent background on panels." A screen
+      // that never picked is now clear; a saved choice stays as saved.)
+      check('and it is CLEAR by default (Mike, 2026-10-07) — only a screen that never picked',
+        kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint === 'Fully clear'
+          && ds().panelSurface === 'clear',
         JSON.stringify({ hint: kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds: ds().panelSurface }));
       check('the panel-backgrounds row is a stop on the one-button walk', walkTo('set:panelSurface'));
       const surfaceLap = [];
@@ -698,7 +700,7 @@ const toTab = (m, id) => {
         surfaceLap.push([kiosk.menu.items().find((r) => r.id === 'set:panelSurface')?.hint, ds().panelSurface]);
       }
       check('it cycles through all three, wraps home, and each step reaches the document',
-        JSON.stringify(surfaceLap) === JSON.stringify([['See-through', 'veil'], ['Fully clear', 'clear'], ['Solid', 'solid']]),
+        JSON.stringify(surfaceLap) === JSON.stringify([['Solid', 'solid'], ['See-through', 'veil'], ['Fully clear', 'clear']]),
         JSON.stringify(surfaceLap));
     }
     await press('Escape');
@@ -728,12 +730,22 @@ const toTab = (m, id) => {
       // through it: `.k-mod`'s own background, which panelSurface still correctly controls.
       check('*** the letterbox fill itself no longer paints its own colour ***',
         stageBg() === 'rgba(0, 0, 0, 0)' || stageBg() === 'transparent', stageBg());
-      const solidModBg = modBg();
-      check('solid (the default): .k-mod shows a real colour, unchanged from before this fix',
-        solidModBg !== 'rgba(0, 0, 0, 0)' && solidModBg !== 'transparent', solidModBg);
-
+      // (2026-10-07: clear is the default now, so solid is CHOSEN here first, then clear.)
       const settingsState2 = createState({ url: pbProfiles.stateURL(pbp.id, 'settings'), user: USER + '-photos-transparency' });
       await settingsState2.load().catch(() => {});
+      check('clear by default (2026-10-07): .k-mod is transparent before anybody picks', modBg() === 'rgba(0, 0, 0, 0)' || modBg() === 'transparent', modBg());
+      // ...and what shows through a clear panel on a still theme is the theme's own page colour, not kiosk.html's black.
+      const pageBg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+      const probeEl = document.createElement('div'); probeEl.style.background = pageBg; document.body.append(probeEl);
+      const want = getComputedStyle(probeEl).backgroundColor; probeEl.remove();
+      check('*** a clear panel on a still theme shows the theme’s page colour behind it (kiosk.css) ***',
+        !!pageBg && want !== 'rgba(0, 0, 0, 0)' && getComputedStyle(pbroot.querySelector('.kiosk')).backgroundColor === want, `${getComputedStyle(pbroot.querySelector('.kiosk')).backgroundColor} vs ${want}`);
+      settingsState2.set({ panelSurface: 'solid' });
+      await settingsState2.flush();
+      await sleep(100);
+      const solidModBg = modBg();
+      check('solid (chosen): .k-mod shows a real colour, unchanged from before this fix',
+        solidModBg !== 'rgba(0, 0, 0, 0)' && solidModBg !== 'transparent', solidModBg);
       settingsState2.set({ panelSurface: 'clear' });
       await settingsState2.flush();
       await sleep(100);

@@ -31,7 +31,7 @@
 // making a second one; and a screen somebody happened to NAME "My room" has no stamp and is never adopted.
 
 import { normalizeLayout } from './layout.js';
-import { THEMES, DEFAULT_THEME } from './theme.js';
+import { THEMES, DEFAULT_THEME, DEVICE_THEME, resolveThemeId } from './theme.js';
 import { ROOM_PRESETS, DEFAULT_PRESET as ROOM_DEFAULT_PRESET } from './room_presets.js';
 // The 3D room's presets (data only; its renderer is loaded by the arrangement when a dashboard has one).
 import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET } from './room3d.js';
@@ -167,9 +167,9 @@ export const CLASSIC_THEME = 'fall';
 //   settings   the settings PANEL (modules/settings.js), opened on its Theme page (`startPage`).
 //   devices    modules/devices.js: every device, and where each one is set up.
 //   Nimrod     modules/nimrod.js, saying Mike's words (`intro: 'landing'`).
-//   look       the plain Nimrod look: the default theme, solid panels. FOR: it is the first thing anybody
-//              sees, and four solid panels read as four things. AGAINST: it is the least pretty example;
-//              the rooms are one press away and Nimrod's first choices include the theme.
+//   look       (2026-10-07) the DEFAULT look: "Best for this device" and clear panels (argued at `people`).
+//              It was the plain Nimrod look, solid: four solid panels read as four things, but Mike's default
+//              now is a moving theme where the device can run it, and transparent panels.
 //
 // "Have there be a special tutorial dashboard you can always go to that has Nimrod and settings locked into
 // the bottom two slots." The same four, with Nimrod BL and the settings BR, both LOCKED (`locked`: on the
@@ -189,8 +189,16 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
   // *** YOUR PEOPLE: THE LANDING (Mike, 2026-10-04). *** "Starting out with a very simple profile page, like facebook
   // or something ... Maybe it can still be a dashboard if it's that simple? And yes, probably keep a Nimrod at the
   // bottom as a helper overlaid on the screen." One panel filling the window (modules/people.js) and Nimrod over it,
-  // small, bottom right (modules/helper.js, HELPER_SPOT). The plain Nimrod look, solid: it is read, not looked at.
-  // Not one of Home's cards (EXAMPLE_ORDER): it is where you land, as the tutorial is a place you go.
+  // small, bottom right (modules/helper.js, HELPER_SPOT). Not one of Home's cards (EXAMPLE_ORDER): it is where you
+  // land, as the tutorial is a place you go.
+  // *** ITS LOOK IS THE DEFAULT, NOT A LOOK OF ITS OWN (Mike, 2026-10-07: "I kind of want a live theme to be a
+  // default ... for less powerful devices it should be the Nimrod theme"; "The default should be transparent
+  // background on panels"). *** "Best for this device" (theme_default.js) and clear panels, here and on Start here
+  // and the tutorial, the three places anybody lands. It was the plain Nimrod look, solid ("it is read, not looked
+  // at"): AGAINST the change, cards read best on solid panels over a still page - but the cards draw their own
+  // surfaces, so a clear panel only shows the page or the scene AROUND them. The ready-made looks (Basic, Photos with
+  // a clock, Classic 2D, the rooms, the builder) keep their own: each is the look its name promises.
+  // (Made before 2026-10-07, a landing keeps the look it was made with: what is saved is never changed.)
   people: Object.freeze({
     key: 'people', label: 'Your people', name: 'Your people', kind: 'static', title: 'Your people',
     blurb: 'You and the people you keep in touch with, with big buttons to call them or leave them a message, and Nimrod at the bottom to help.',
@@ -202,7 +210,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
       preset: 'full', slots: ['people'],
       placed: [{ ref: 'helper', place: 'overlay', ...HELPER_SPOT, scan: false }],
     },
-    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+    settings: { theme: DEVICE_THEME, panelSurface: 'clear' },
   }),
   // *** PROFILE, NOT PICTURES, TOP LEFT (Mike, 2026-10-02 evening: "Four modules clockwise from top left:
   // Profile (I know I said photos before. Changing it.), settings, Devices, Nimrod/AI.") *** Clockwise from the
@@ -219,7 +227,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
       { ref: 'devices', type: 'devices' },
     ],
     layout: { preset: 'quad', slots: ['profile', 'settings', 'nimrod', 'devices'] },
-    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+    settings: { theme: DEVICE_THEME, panelSurface: 'clear' },   // the default look (see `people` above)
   }),
   tutorial: Object.freeze({
     key: 'tutorial', label: 'Tutorial', name: 'Tutorial', kind: 'static', title: 'The tutorial',
@@ -233,7 +241,7 @@ export const PREBUILT_DASHBOARDS = Object.freeze({
     ],
     layout: { preset: 'quad', slots: ['profile', 'devices', 'nimrod', 'settings'] },
     locked: ['nimrod', 'settings'],
-    settings: { theme: DEFAULT_THEME, panelSurface: 'solid' },
+    settings: { theme: DEVICE_THEME, panelSurface: 'clear' },   // the default look (see `people` above)
   }),
   room: Object.freeze({
     key: 'room', label: 'Room', name: 'My room', kind: 'room', title: 'The room',
@@ -531,7 +539,8 @@ export function recordProblems(rec, { knownTypes = null } = {}) {
     else if (k.clock && !RECORD_CLOCK_CORNERS.includes(k.clock.corner)) out.push(`clock corner ${k.clock.corner} is not one of ${RECORD_CLOCK_CORNERS.join('/')}`);
   }
   const s = rec.settings || {};
-  if (!s.theme || !THEMES[s.theme]) out.push(`theme ${s.theme} does not exist`);
+  // A theme, or a choice that is a rule (theme.js resolveThemeId: "With the seasons", "Best for this device").
+  if (!s.theme || resolveThemeId(s.theme) !== s.theme) out.push(`theme ${s.theme} does not exist`);
   if (!PANEL_SURFACES.includes(s.panelSurface)) out.push(`panel backgrounds ${s.panelSurface} is not one of ${PANEL_SURFACES.join('/')}`);
   return out;
 }

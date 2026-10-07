@@ -346,6 +346,12 @@ try {
   check('*** a plain arrival fills the window with Your people ***', await until(() => doc.body.classList.contains('is-land') && $('#stage .k-cell[data-kind="people"] [data-people-page]'), 45000),
     `land=${doc.body.classList.contains('is-land')} err=${doc.body.dataset.homeError || '-'}`);
   check('...for this person, by name ("You")', await until(() => /You/.test($('#stage [data-pp-card="self"]')?.textContent || ''), 8000));
+  // (2026-10-07) Waited for, not read once: the helper is placed over the page after the page itself is drawn, and a
+  // single read raced it (2 runs in 6 when the landing became "Best for this device").
+  const ovlAt = Date.now();
+  await until(() => { const o = $('#stage .k-placed-overlay [data-helper]'); return !!o && o.getBoundingClientRect().top > win.innerHeight / 2; }, 8000);
+  const ovlMs = Date.now() - ovlAt;
+  { const d = document.createElement('div'); d.textContent = `      (the helper was in place ${ovlMs} ms after the page)`; out.append(d); }
   const ovl = $('#stage .k-placed-overlay [data-helper]');
   check('*** Nimrod is over it, at the bottom: the helper overlay ***', !!ovl && ovl.getBoundingClientRect().top > win.innerHeight / 2);
   const stageText = $('#stage [data-pp-list]')?.textContent || '';

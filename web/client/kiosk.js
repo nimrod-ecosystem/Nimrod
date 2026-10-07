@@ -174,7 +174,9 @@ import { takePreviewLayout } from './preview.js';
 import { applyTheme, listThemes, DEFAULT_THEME, THEMES } from './theme.js';
 import { syncScene } from './livescene.js';
 // Seasons and the sky outside (2026-10-05): "With the seasons" and a wallpaper that follows the weather.
-import { paintedTheme, isFollowTheme } from './theme.js';
+import { paintedTheme, isFollowTheme, followsSeasons, DEVICE_THEME, isDeviceTheme } from './theme.js';
+// "Best for this device" (2026-10-07): the default theme, and why it picked what it did on this device.
+import { setDeviceHints, startingTheme, settleStartingTheme } from './theme_default.js';
 import { followSky, SKY_FIELD, HOLIDAY_FIELDS, SKY_FOLLOW_KEY, HOLIDAYS_KEY, holidayRowLabel } from './sky.js';
 import { sceneTakesSky, seasonsWhy, seasonContext } from './seasons.js';
 import { cachedFetch } from './cache.js';
@@ -1824,7 +1826,14 @@ export async function mountKiosk(root, {
   // surface look like over this theme's moving scene"), so this answers it once rather than
   // asking Design to calibrate a second, panel-specific color per theme. `solid` (today's only
   // behaviour) stays the default -- nobody's screen changes until they pick this.
+  // *** (2026-10-07) THE DEFAULT IS NOW `clear`. *** Mike: "The default should be transparent background on panels."
+  // A screen, a dashboard, a device and a person that never picked get clear panels; anything saved stays as saved.
+  // FOR clear over see-through: it is the word he used, and on a still theme the words sit on the theme's own page
+  // colour, which every theme already guarantees they read on. AGAINST: over a moving scene a clear panel has only
+  // the halo between its words and the scene, where see-through (Classic 2D's) keeps a tint behind them. The halo is
+  // now derived per theme (theme.js `panelHalo`), so the still themes no longer smudge; "See-through" is one press.
   const PANEL_SURFACES = ['solid', 'veil', 'clear'];
+  const PANEL_SURFACE_DEFAULT = 'clear';
   // THIS DEVICE's settings row (settings.js `createLocalRow`: this browser's storage, nothing leaves it) --
   // the `device` level of the chain (`levelLayers` below). Not on an embed. A change made here (the menu's
   // "Settings for: This device") is seen at once: the theme and the backgrounds re-resolve.
@@ -1850,11 +1859,11 @@ export async function mountKiosk(root, {
       const v = L[lv] && L[lv].panelSurface;
       if (PANEL_SURFACES.includes(v)) return v;
     }
-    return s && s.panelSurface;
+    return PANEL_SURFACES.includes(s && s.panelSurface) ? s.panelSurface : PANEL_SURFACE_DEFAULT;
   }
   function applyPanelSurface(s) {
     const v = shownPanelSurface(s);
-    kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : 'solid';
+    kioskEl.dataset.panelSurface = PANEL_SURFACES.includes(v) ? v : PANEL_SURFACE_DEFAULT;
     // The space between panels rides with the backgrounds: the same chain, the same callers (every place
     // that re-applies the look after a swap or a change calls this).
     const g = shownPanelGap(s);
@@ -1881,8 +1890,12 @@ export async function mountKiosk(root, {
   // nobody themed does not flash to another palette; AGAINST, "per dashboard" then means "per dashboard,
   // unless unset". Everywhere else (an embed, the classic path, a failed dashboard) it is the screen's
   // row, exactly as before. The menu's Colours row writes where this reads (`themeDoc`).
+  // (2026-10-07) NOBODY PICKED AT ANY LEVEL: "Best for this device" (theme_default.js) -- a moving theme where this
+  // device looks able and nothing asks for less movement, the Nimrod theme everywhere else. Not on an embed: an embed
+  // that never picked keeps the page around it (`applyKioskTheme` below).
   function shownTheme() {
-    return resolveLevel('theme', levelLayers(), { from: 'dashboard', order: LEVEL_ORDER }).value;
+    const v = resolveLevel('theme', levelLayers(), { from: 'dashboard', order: LEVEL_ORDER }).value;
+    return v ?? (embedded ? undefined : DEVICE_THEME);
   }
   function themeDoc() {
     if (!useDashboard || embedded || !dash) return settings;
@@ -1946,7 +1959,29 @@ export async function mountKiosk(root, {
   catch (err) { console.error('kiosk: master volume', err); master = null; }
   try { mixer = attachMixer({ audio, fx: fxLazy, read: readScreen, write: writeScreen }); }
   catch (err) { console.error('kiosk: mixer', err); mixer = null; }
+  // "BEST FOR THIS DEVICE" (2026-10-07, theme_default.js) asks this screen what the browser cannot know: its motion
+  // settings and flash limit (the faces' own context, avatarContextNow) and its "3D detail" row. Not from an embed:
+  // the hints are the page's, and an embed is a guest on somebody else's.
+  if (!embedded) {
+    try {
+      setDeviceHints({ motion: () => avatarContextNow(),
+        detail: () => (settings.get() || {})[DETAIL_FIELD.key] || deviceRow?.get?.()?.[DETAIL_FIELD.key] || 'auto' });
+    } catch (err) { console.error('kiosk: device hints', err); }
+  }
   applyKioskTheme(shownTheme());
+  // ...and the one measurement after the first look (theme_default.js `settleStartingTheme`): the battery, and the
+  // frames with the moving default up, the first time this device shows it. Only ever moves DOWN to Nimrod, and only
+  // while nobody has picked a theme (still "Best for this device" when it lands).
+  let deviceSettle = null;
+  if (!embedded && isDeviceTheme(shownTheme())) {
+    try {
+      deviceSettle = settleStartingTheme({ storage: storage || undefined, onChange: () => {
+        if (torn || !isDeviceTheme(shownTheme())) return;
+        applyKioskTheme(shownTheme(), { fade: true });
+        try { if (menu?.isOpen?.()) menu.refresh(); } catch { /* no menu yet */ }
+      } });
+    } catch (err) { console.error('kiosk: device theme', err); }
+  }
   // SEASONS AND THE SKY (2026-10-05; sky.js): the time of day, and the weather from a Weather panel on this
   // screen, reach the theme's scene; "With the seasons" turns over by itself (a new day, a holiday starting).
   // After the first theme, so the first sky lands on a scene that is there. Guarded: it must never stop the
@@ -3343,19 +3378,33 @@ export async function mountKiosk(root, {
   // comes next (seasons.js seasonsWhy: "Halloween is on, and it wins over the fall scene." / "Coming up: Fall on
   // Nov 1."). Design: "People trust a theme change more when it says why." Disabled, so it is read, never a
   // stop on the switch walk (the "This screen: <name>" row's shape). For the look SHOWING (seasons.js `at`).
+  // (2026-10-07) "Best for this device" says what it picked here and why, first ("Chosen because this device …",
+  // theme_default.js), the same disabled shape; when what it picked is "With the seasons", the seasons' own row follows.
   const seasonsWhyItems = () => {
-    if (!isFollowTheme(shownTheme())) return [];
+    const out = [];
+    const shown = shownTheme();
+    if (isDeviceTheme(shown)) {
+      try {
+        const p = startingTheme();
+        const name = String(listThemes().find((t) => t.id === p.theme)?.label || p.theme).split(' — ')[0];
+        out.push({ kind: 'item', id: 'device-why', disabled: true, label: `Best for this device: ${name}`,
+          hint: `${p.words} Pick any theme to change it.` });
+      } catch { /* nothing to say */ }
+    }
+    if (!followsSeasons(shown)) return out;
     try {
       const c = seasonContext();
       const w = seasonsWhy(new Date(c.at ?? Date.now()), c);
-      return [{ kind: 'item', id: 'seasons-why', disabled: true, label: w.reason, hint: w.next }];
-    } catch { return []; }
+      return [...out, { kind: 'item', id: 'seasons-why', disabled: true, label: w.reason, hint: w.next }];
+    } catch { return out; }
   };
   const LEVEL_LOOK_FIELDS = () => [
     // themes (2026-10-06): "Theme", not "Colours" (Mike: "Colours should change to theme"); the key is unchanged.
-    { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential',
+    // (2026-10-07) Each with its default, so the top level's "Following: the default — …" names what is in force:
+    // "Best for this device" and clear panels (theme_default.js; PANEL_SURFACE_DEFAULT above).
+    { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential', default: DEVICE_THEME,
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
-    { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard',
+    { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard', default: PANEL_SURFACE_DEFAULT,
       options: [{ value: 'solid', label: 'Solid' }, { value: 'veil', label: 'See-through' }, { value: 'clear', label: 'Fully clear' }] },
   ];
   const levelLabels = () => ({ module: levelName('module'), dashboard: levelName('dashboard'), screen: levelName('screen'),
@@ -3570,8 +3619,10 @@ export async function mountKiosk(root, {
     // panel's old Theme page drew, so that page is now this row's own list: the guide's 'sc-theme' opens it.)
     // (themes, 2026-10-06: called "Theme" now, on the Theme tab; its list is the theme gallery - a still of every
     // theme, the holidays included, with search, order and filters - and the Themes panel shows the same list.)
+    // (2026-10-07: the default is "Best for this device", theme_default.js; the row under this one says what it
+    // picked here and why.)
     { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential',
-      default: DEFAULT_THEME,
+      default: DEVICE_THEME,
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
     // *** HOW MUCH THIS MENU SHOWS — the switch, and its escape, in the same commit. ***
     //
@@ -3609,10 +3660,9 @@ export async function mountKiosk(root, {
       ] },
     // Mike, 2026-09-23: "I would make the backgrounds transparent/translucent wherever
     // possible." `standard`, not `essential`, matching `burnIn` above -- a preference, not a
-    // legibility escape hatch. `solid` default: see `applyPanelSurface`'s own comment on why
-    // this changes nobody's screen until they pick it.
+    // legibility escape hatch. (2026-10-07: the default is `clear`, PANEL_SURFACE_DEFAULT, argued there.)
     { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard',
-      default: 'solid',
+      default: PANEL_SURFACE_DEFAULT,
       options: [
         { value: 'solid', label: 'Solid' },
         { value: 'veil', label: 'See-through' },
@@ -3626,7 +3676,7 @@ export async function mountKiosk(root, {
     // (seasons, 2026-10-05) "Holiday looks" is now one row per holiday (sky.js HOLIDAY_FIELDS argues the eleven
     // stops), each naming its next dates ("Halloween look, Oct 25 to Oct 31"). A screen that saved the old
     // single "Off" shows them all off.
-    ...(isFollowTheme(shownTheme()) ? HOLIDAY_FIELDS.map((f) => ({ ...f,
+    ...(followsSeasons(shownTheme()) ? HOLIDAY_FIELDS.map((f) => ({ ...f,
       default: readScreen()[HOLIDAYS_KEY] === false ? false : f.default,
       label: (() => { try { return holidayRowLabel(f.holiday); } catch { return f.label; } })() })) : []),
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
@@ -7342,6 +7392,7 @@ export async function mountKiosk(root, {
     personKnown: () => personKnown,
     destroy() {
       torn = true;                 // before anything else — see the flag's declaration
+      try { deviceSettle?.cancel(); } catch { /* already done */ }   // "Best for this device": its one measurement
       try { personKnown.destroy(); } catch { /* already gone */ }   // its timer, and its listeners
       // The Settings panels' views of the menu go with the panels (their `destroy`); any left are let go here.
       for (const e of [...menuViews]) { try { e.view.destroy(); } catch { /* already gone */ } }

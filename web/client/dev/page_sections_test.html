@@ -28,10 +28,10 @@ import {
   videoOf, aboutText, libraryEntry, addableEntries, mergePageDoc,
   THEME_KEY, OLDER_KEY, DEFAULT_OLDER, ACCESS_THEMES, PAGE_LOOK_WORDS, themeOf, pageColours, olderOf,
 } from '../page_sections.js';
-import { THEMES, listThemes, applyTheme } from '../theme.js';
+import { THEMES, listThemes, applyTheme, paintedTheme } from '../theme.js';
 import { wearColours, viewerThemeOf } from '../page_visit.js';
 import { OLDER_WORDS } from '../page_visit.js';
-import { PEOPLE_TYPE, plainWordProblems } from '../people_page.js';
+import { PEOPLE_TYPE, PEOPLE_VERB_TOPICS, plainWordProblems } from '../people_page.js';
 import { ABOUT_SAVE_MS } from '../modules/people.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
@@ -404,24 +404,59 @@ try {
   // ============================================================================================
   section('*** Colours for my page, and Let this page show older messages (Mike, 2026-10-05) ***');
   box = newBox(375, 1400);
-  inst = mountModule(PEOPLE_TYPE, makeCtx(box));
+  const tbus = createBus();
+  inst = mountModule(PEOPLE_TYPE, makeCtx(box, { bus: tbus }));
   await inst.init();
   const look = () => inst.impl.__probe().look;
   const olderBtn = () => q('[data-pp-card="older"] [data-pp-act="older"]');
   check('(setup) the page, with See older messages live', await until(() => olderBtn() && olderBtn().getAttribute('aria-disabled') !== 'true', 8000) && look().older === true);
-  editBtn().click();
-  await until(() => !!q('[data-pp-colours]'), 3000);
-  const colSel = () => q('[data-pp-colours]');
-  check('*** in the card under You: "Colours for my page", the usual colours first, then every one of the site’s themes ***',
-    colSel()?.closest('label').textContent.includes(PAGE_LOOK_WORDS.colours)
-    && J([...colSel().options].map((o) => o.value)) === J(['', ...listThemes().map((t) => t.id)]) && colSel().value === ''
-    && colSel().options[0].textContent === PAGE_LOOK_WORDS.coloursNone, J([...(colSel()?.options || [])].map((o) => o.value)));
-  check('...saying who sees them', q('[data-pp-colours-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
-  colSel().value = 'warm'; colSel().dispatchEvent(new Event('change', { bubbles: true }));
+  // (2026-10-07, DELIBERATELY changed - Mike: "The themes on the home/profile page should be the same as the regular
+  // themes. I just wanted a setting there bc it's the first page people will see." The list of its own in the edit
+  // card is gone: "Theme for my page" is a button on your card that opens the site's one theme gallery.)
+  const themeBtn = () => q('[data-pp-card="self"] [data-pp-act="page-theme"], [data-pp-card="edit"] [data-pp-act="page-theme"]');
+  const selfActs = [...box.querySelectorAll('[data-pp-card="self"] [data-pp-act]')].map((b) => b.dataset.ppAct);
+  check('*** on your own card, right after Edit my page: "Theme for my page", live, saying "The usual theme" ***',
+    selfActs.indexOf('page-theme') === selfActs.indexOf('page-edit') + 1 && themeBtn()?.getAttribute('aria-disabled') !== 'true'
+    && themeBtn().textContent.includes(PAGE_LOOK_WORDS.colours) && themeBtn().textContent.includes(PAGE_LOOK_WORDS.coloursNone), J(selfActs));
+  const tp = () => inst.impl.__probe().themePicker;
+  themeBtn().click();
+  check('*** pressed: the SAME theme gallery as the Theme tab (stills, search, order, filters), "The usual theme" first ***',
+    await until(() => inst.impl.__probe().sheet === 'theme' && tp()?.gallery === true, 3000)
+    && tp().options === listThemes().length + 1 && tp().shown[0] === '' && listThemes().every((t) => tp().shown.includes(t.id))
+    && !!q('[data-pp-sheet="theme"] [data-chp-search]') && !!q('[data-pp-sheet="theme"] [data-chp-sort]') && !!q('[data-pp-sheet="theme"] [data-chp-filter="kind"][data-chp-val="holiday"]')
+    && tp().shown.includes('seasons') && tp().shown.includes('device'), J(tp()));
+  check('...saying who sees it', q('[data-pp-theme-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
+  check('...plain words in it', !pageWordProblems(q('[data-pp-sheet="theme"]').textContent).length, J(pageWordProblems(q('[data-pp-sheet="theme"]').textContent)));
+  q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]').click();
+  check('*** "With the seasons" for the page: saved, and worn (today’s look; it used to be offered and never worn) ***',
+    await until(async () => (await serverPage()).data.theme === 'seasons', 5000) && await until(() => q('.pp-root').dataset.pageColours === 'seasons', 3000)
+    && !inst.impl.__probe().sheet && q('.pp-root').style.getPropertyValue('--bg').trim().toLowerCase() === paintedTheme('seasons').vars['--bg'].toLowerCase(),
+    q('.pp-root').dataset.pageColours);
+  themeBtn().click();
+  await until(() => tp()?.gallery === true, 3000);
+  check('opened again: the page’s theme is the one marked', q('[data-pp-sheet="theme"] [data-chp-pick="seasons"]')?.getAttribute('aria-pressed') === 'true');
+  q('[data-pp-sheet="theme"] [data-chp-pick="warm"]').click();
   check('*** Warm: saved in the page record, and the page wears it ***',
     await until(async () => (await serverPage()).data.theme === 'warm', 5000) && await until(() => q('.pp-root').dataset.pageColours === 'warm', 3000)
     && q('.pp-root').style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.warm.vars['--bg'].toLowerCase()
     && getComputedStyle(q('.pp-root')).backgroundColor !== 'rgba(0, 0, 0, 0)' && look().colours === 'warm');
+  check('...and the button names it, with its colours', /Warm/.test(themeBtn().textContent) && themeBtn().querySelectorAll('.pp-theme-chips span').length >= 3);
+  themeBtn().click();
+  await until(() => tp()?.gallery === true, 3000);
+  q('[data-pp-sheet="theme"] [data-chp-act="cancel"]').click();
+  check('"Keep Warm" leaves it as it was', await until(() => !inst.impl.__probe().sheet, 2000) && look().theme === 'warm');
+  // A switch: the gallery's own rows (Keep, the Show chips, the rows of tiles), not every tile one by one.
+  themeBtn().click();
+  await until(() => tp()?.gallery === true, 3000);
+  tbus.publish(PEOPLE_VERB_TOPICS.select);   // the first press only shows where it is
+  tbus.publish(PEOPLE_VERB_TOPICS.next);
+  check('*** a switch walks the gallery by its rows: next lights a ROW ***', tp()?.litGroup != null && tp().lit.i === -1, J(tp()?.lit));
+  tbus.publish(PEOPLE_VERB_TOPICS.back);
+  check('...and back from the rows is Keep: the window closes, nothing changed', await until(() => !inst.impl.__probe().sheet, 2000) && look().theme === 'warm');
+  editBtn().click();
+  await until(() => !!q('[data-pp-card="edit"] [data-pp-act="page-theme"]'), 3000);
+  check('*** while editing, the same button is on the edit card (and not twice) ***', !!q('[data-pp-card="edit"] [data-pp-act="page-theme"]')
+    && !q('[data-pp-card="self"] [data-pp-act="page-theme"]') && q('[data-pp-colours-line]')?.textContent === PAGE_LOOK_WORDS.coloursLine);
   const oldSel = () => q('[data-pp-older]');
   check('*** "Let this page show older messages": On by default ***', oldSel()?.value === '1' && oldSel().closest('label').textContent.includes(PAGE_LOOK_WORDS.older));
   oldSel().value = '0'; oldSel().dispatchEvent(new Event('change', { bubbles: true }));

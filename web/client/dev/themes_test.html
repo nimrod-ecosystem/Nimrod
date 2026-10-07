@@ -35,7 +35,9 @@ import { THEME_GALLERY_DEFAULTS, THEME_FACETS, THEME_SORTS, THEME_KINDS, themeKi
   themeTextContrast, themeLightness, isPinnedOption, themeOptionText, stillDate, mountThemeStill, createStills,
   recentThemes, rememberThemePick, STILL_STAGE } from '../theme_gallery.js';
 import { mountChoicePicker } from '../choice_picker.js';
-import { THEMES, listThemes, TEXT_MIN } from '../theme.js';
+import { THEMES, listThemes, TEXT_MIN, resolveThemeId, isFollowTheme, followsSeasons, paintedTheme, panelHalo } from '../theme.js';
+import { THEME_DEFAULT_RULE, BECAUSE_WORDS, pickStartingTheme, whyWords, startingTheme, settleStartingTheme, probeFrames,
+  resetDeviceReadings } from '../theme_default.js';
 import { resolveSeasonal, HOLIDAY_IDS } from '../seasons.js';
 import { mountSettings } from '../settings.js';
 import { normalizeField, fieldItems } from '../settings_fields.js';
@@ -83,8 +85,9 @@ try {
   {
     const L = listThemes().map((t) => t.id);
     const holidays = ids.filter((id) => THEMES[id].group === 'holiday');
-    check('*** every theme is in the list, the eleven holidays included, and "With the seasons" still last ***',
-      ids.every((id) => L.includes(id)) && holidays.length === 11 && L[L.length - 1] === 'seasons', J(L));
+    // (2026-10-07) "Best for this device" (theme_default.js) is the last choice now, "With the seasons" just before it.
+    check('*** every theme is in the list, the eleven holidays included, then "With the seasons", then "Best for this device" last ***',
+      ids.every((id) => L.includes(id)) && holidays.length === 11 && L[L.length - 2] === 'seasons' && L[L.length - 1] === 'device', J(L));
     check('every holiday theme is still readable: its words reach the 4.5:1 floor on every surface (theme_test measures the rest)',
       holidays.every((id) => themeTextContrast(id) >= TEXT_MIN), J(holidays.map((id) => [id, +themeTextContrast(id).toFixed(2)])));
   }
@@ -236,6 +239,8 @@ try {
   // ======================================================================================
   section('THE GALLERY (choice_picker.js on a theme list)');
   {
+    // The choices that are rules, pinned first in every order and filter: "With the seasons", "Best for this device".
+    const PINS = ['seasons', 'device'];
     const st = stage();
     const store = fakeStorage();
     const got = [];
@@ -249,32 +254,32 @@ try {
       && st.querySelector('[data-chp-morebox]').hidden === true);
     check('the switch stops: Keep, then the "Show" chips, then the rows of tiles (box, list and button are not stops)',
       J(pr.rows.slice(0, 3)) === J(['actions', 'filters', 'grid']) && !st.querySelector('[data-chp-search][data-chp-stop]') && !st.querySelector('[data-chp-sort][data-chp-stop]'), J(pr.rows));
-    check(`*** it opens in the usual order: "With the seasons" first (a pin), then everyday, the seasons, the holidays in the year’s order ***`,
-      pr.sort === 'usual' && pr.shown[0] === 'seasons' && pr.shown[1] === 'default' && pr.shown.indexOf('spring') < pr.shown.indexOf('fall')
+    check(`*** it opens in the usual order: "With the seasons" and "Best for this device" first (pins), then everyday, the seasons, the holidays in the year’s order ***`,
+      pr.sort === 'usual' && J(pr.shown.slice(0, 2)) === J(PINS) && pr.shown[2] === 'default' && pr.shown.indexOf('spring') < pr.shown.indexOf('fall')
       && pr.shown.indexOf('fall') < pr.shown.indexOf('newYear') && pr.shown.indexOf('valentines') < pr.shown.indexOf('halloween')
       && pr.shown.at(-1) === 'christmas', J(pr.shown));
     st.querySelector('[data-chp-filter="kind"][data-chp-val="holiday"]').click();
     pr = p.__probe();
-    check('*** "Holidays": the eleven holidays (and the pinned "With the seasons") ***', pr.shown.length === 12 && pr.shown[0] === 'seasons'
-      && pr.shown.slice(1).every((id) => THEMES[id].group === 'holiday') && st.querySelector('[data-chp-val="holiday"]').getAttribute('aria-pressed') === 'true', J(pr.shown));
+    check('*** "Holidays": the eleven holidays (and the two pinned choices) ***', pr.shown.length === 11 + PINS.length && J(pr.shown.slice(0, 2)) === J(PINS)
+      && pr.shown.slice(PINS.length).every((id) => THEMES[id].group === 'holiday') && st.querySelector('[data-chp-val="holiday"]').getAttribute('aria-pressed') === 'true', J(pr.shown));
     st.querySelector('[data-chp-filter="kind"][data-chp-val="season"]').click();
-    check('"Seasons": spring, summer, fall, winter, in that order', J(p.__probe().shown.slice(1)) === J(['spring', 'summer', 'fall', 'winter']), J(p.__probe().shown));
+    check('"Seasons": spring, summer, fall, winter, in that order', J(p.__probe().shown.slice(PINS.length)) === J(['spring', 'summer', 'fall', 'winter']), J(p.__probe().shown));
     st.querySelector('[data-chp-filter="kind"][data-chp-val="all"]').click();
     st.querySelector('[data-chp-more]').click();
     check('Filters… shows the rest', st.querySelector('[data-chp-morebox]').hidden === false && st.querySelector('[data-chp-more]').getAttribute('aria-expanded') === 'true');
     const look = st.querySelector('[data-chp-facet="look"]');
     look.value = 'dark'; look.dispatchEvent(new Event('change', { bubbles: true }));
-    check('*** Dark: only dark themes ***', p.__probe().shown.slice(1).every((id) => isDarkTheme(id)) && p.__probe().shown.length > 5, J(p.__probe().shown));
+    check('*** Dark: only dark themes ***', p.__probe().shown.slice(PINS.length).every((id) => isDarkTheme(id)) && p.__probe().shown.length > 5, J(p.__probe().shown));
     const motion = st.querySelector('[data-chp-facet="motion"]');
     motion.value = 'still'; motion.dispatchEvent(new Event('change', { bubbles: true }));
-    check('Dark and Still: Dusk alone (plus the pin)', J(p.__probe().shown) === J(['seasons', 'dusk']), J(p.__probe().shown));
+    check('Dark and Still: Dusk alone (plus the pins)', J(p.__probe().shown) === J([...PINS, 'dusk']), J(p.__probe().shown));
     const read = st.querySelector('[data-chp-facet="read"]');
     look.value = 'any'; look.dispatchEvent(new Event('change', { bubbles: true }));
     read.value = 'easy'; read.dispatchEvent(new Event('change', { bubbles: true }));
-    check('Still and Easy to read: High contrast among them', p.__probe().shown.includes('contrast') && p.__probe().shown.slice(1).every((id) => isEasyToRead(id) && !isMovingTheme(id)), J(p.__probe().shown));
+    check('Still and Easy to read: High contrast among them', p.__probe().shown.includes('contrast') && p.__probe().shown.slice(PINS.length).every((id) => isEasyToRead(id) && !isMovingTheme(id)), J(p.__probe().shown));
     motion.value = 'moving'; motion.dispatchEvent(new Event('change', { bubbles: true }));
     look.value = 'light'; look.dispatchEvent(new Event('change', { bubbles: true }));
-    const none = p.__probe().shown.filter((id) => id !== 'seasons');
+    const none = p.__probe().shown.filter((id) => !PINS.includes(id));
     if (!none.length) {
       check('*** nothing matches: it says so, with "Show everything" ***', !!st.querySelector('[data-chp-none] [data-chp-clear]'));
       st.querySelector('[data-chp-clear]').click();
@@ -294,16 +299,16 @@ try {
     box.value = ''; box.dispatchEvent(new Event('input', { bubbles: true }));
     const sortSel = st.querySelector('[data-chp-sort]');
     sortSel.value = 'name'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
-    const byName = p.__probe().shown.slice(1).map((id) => THEMES[id].label);
+    const byName = p.__probe().shown.slice(PINS.length).map((id) => THEMES[id].label);
     check('By name', J(byName) === J([...byName].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))), J(byName.slice(0, 5)));
     sortSel.value = 'light'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
-    const lum = p.__probe().shown.slice(1).map(themeLightness);
+    const lum = p.__probe().shown.slice(PINS.length).map(themeLightness);
     check('*** Light to dark: the page gets darker all the way down ***', lum.every((v, i) => i === 0 || v <= lum[i - 1] + 1e-9), J(lum.map((v) => +v.toFixed(2))));
     st.querySelector('[data-chp-pick="halloween"]').click();
     st.querySelector('[data-chp-pick="steampunk"]').click();
     check('a pick reaches the host, and is remembered on this device for "Recently used"', J(got) === J(['halloween', 'steampunk']) && J(recentThemes(store)) === J(['steampunk', 'halloween']));
     sortSel.value = 'recent'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
-    check('*** Recently used: the last picked first ***', J(p.__probe().shown.slice(0, 3)) === J(['seasons', 'steampunk', 'halloween']), J(p.__probe().shown.slice(0, 4)));
+    check('*** Recently used: the last picked first ***', J(p.__probe().shown.slice(0, 4)) === J([...PINS, 'steampunk', 'halloween']), J(p.__probe().shown.slice(0, 5)));
     check('the stills were not drawn again by any of it', p.__probe().stills === listThemes().length, p.__probe().stills);
     p.setValue('night');
     check('*** setValue marks another as chosen without drawing the list again ***', st.querySelector('[data-chp-pick="night"]').getAttribute('aria-pressed') === 'true'
@@ -319,9 +324,9 @@ try {
     p.next(); p.select();
     check('next to the Show chips, select goes in', p.__probe().litGroup === 'filters' && p.__probe().lit.i === 0);
     p.next(); p.next(); p.next(); p.select();
-    check('*** a switch chooses "Holidays", and the light stays on the chip ***', J(p.__probe().filters.kind) === '"holiday"' && /Holidays/.test(p.__probe().litText) && p.__probe().shown.length === 12, J(p.__probe()));
-    p.back(); p.next(); p.select(); p.next(); p.select();
-    check('*** ...then out, down to the first row of tiles, in, one along, and takes it: a holiday ***', got2.length === 1 && THEMES[got2[0]]?.group === 'holiday', J(got2));
+    check('*** a switch chooses "Holidays", and the light stays on the chip ***', J(p.__probe().filters.kind) === '"holiday"' && /Holidays/.test(p.__probe().litText) && p.__probe().shown.length === 11 + PINS.length, J(p.__probe()));
+    p.back(); p.next(); p.select(); p.next(); p.next(); p.select();
+    check('*** ...then out, down to the first row of tiles, in, past the two pins, and takes it: a holiday ***', got2.length === 1 && THEMES[got2[0]]?.group === 'holiday', J(got2));
     check('"off": no stills drawn, the colour strip only', p.__probe().stills === 0 && !st.querySelector('[data-chp-still]') && !!st.querySelector('.chp-strip'));
     p.destroy();
     const plainList = mountChoicePicker(st, { key: 'font', options: Array.from({ length: 14 }, (_, i) => ({ value: `f${i}`, label: `F${i}` })) });
@@ -404,6 +409,94 @@ try {
   }
 
   // ======================================================================================
+  section('"BEST FOR THIS DEVICE" (theme_default.js): the default theme, from faked device signals');
+  {
+    resetDeviceReadings();
+    const R = THEME_DEFAULT_RULE;
+    const fast = { cores: 8, memoryGB: 8, cpu: { ms: 5, slow: false }, detail: 'auto' };
+    const pick = (extra) => pickStartingTheme({ ...fast, ...extra });
+    check('*** a capable device with nothing asking for less movement: "With the seasons" (a moving theme) ***',
+      pick({}).theme === 'seasons' && pick({}).live === true && pick({}).because === 'able', J(pick({})));
+    check('...and once a scene was measured running smoothly there, it says so', pick({ frames: { measured: true, fps: 60 } }).because === 'smooth');
+    const stillFor = [
+      ['the device asks for less motion (prefers-reduced-motion)', { reducedMotion: true }, 'reduced-motion'],
+      ['movement set to a minimum here (the site’s own setting)', { motionSetting: true }, 'motion-setting'],
+      ['a flash limit is set (3 a second)', { flashLimit: 3 }, 'flash-limit'],
+      ['a program is driving the browser', { automated: true }, 'automated'],
+      ['"3D detail on this device" set to light', { detail: 'proxy' }, 'light-detail'],
+      ['a phone or tablet (touch, no mouse)', { coarseOnly: true }, 'touch'],
+      ['the browser asks to save data', { saveData: true }, 'save-data'],
+      [`fewer than ${R.minCores} cores`, { cores: 2 }, 'few-cores'],
+      [`under ${R.minMemoryGB} GB of memory`, { memoryGB: 2 }, 'little-memory'],
+      ['room_lod.js’s timing calls it slow', { cpu: { ms: 45, slow: true } }, 'slow'],
+      [`on battery at ${R.lowBattery * 100}% or less`, { battery: { charging: false, level: R.lowBattery } }, 'low-battery'],
+      [`a scene measured under ${R.minFps} frames a second`, { frames: { measured: true, fps: R.minFps - 1 } }, 'not-smooth'],
+    ];
+    for (const [what, sig, because] of stillFor) {
+      const r = pick(sig);
+      check(`*** Nimrod when ${what} ***`, r.theme === 'default' && r.live === false && r.because === because, J(r));
+    }
+    check('*** the bench Pi 400 (4 cores, 4 GB, timed at 42-48 ms): Nimrod, by the timing, with no Pi check ***',
+      pickStartingTheme({ cores: 4, memoryGB: 4, cpu: { ms: 45, slow: true } }).because === 'slow');
+    check('no limit on flashing is not a limit (Infinity, null): still moving', pick({ flashLimit: Infinity }).live && pick({ flashLimit: null }).live);
+    check('plugged in, or battery above the line: still moving', pick({ battery: { charging: true, level: 0.05 } }).live && pick({ battery: { charging: false, level: 0.9 } }).live);
+    check('a signal the browser does not give (memory, cores, frames) does not count against the device', pickStartingTheme({}).live === true);
+    check('"3D detail: full" (somebody who knows) skips the hardware checks, not the motion ones',
+      pick({ detail: 'full', cores: 2, cpu: { slow: true } }).live === true && pick({ detail: 'full', reducedMotion: true }).live === false);
+    check('*** the reasons that protect somebody come first: less motion wins over everything ***',
+      pick({ reducedMotion: true, coarseOnly: true, cores: 2 }).because === 'reduced-motion');
+    check('*** every reason reads "Chosen because …", in plain words ***', Object.keys(BECAUSE_WORDS).every((k) => /^Chosen because .+\.$/.test(whyWords(k))
+      && !/\b(module|dashboard|panel|grant)s?\b/i.test(whyWords(k))), whyWords('touch'));
+    // Read from a browser: a faked window.
+    const fakeWin = ({ mm = {}, nav = {}, hidden = false } = {}) => ({
+      matchMedia: (q) => ({ matches: !!mm[q] }), navigator: { hardwareConcurrency: 8, deviceMemory: 8, ...nav },
+      document: { visibilityState: hidden ? 'hidden' : 'visible' }, requestAnimationFrame: (f) => setTimeout(() => f(performance.now()), 16),
+    });
+    const timed = () => { const st = fakeStorage(); st.setItem('nimrod:theme-device', J({ cpuMs: 5, cpuSlow: false })); return st; };
+    check('*** read from the browser: a fast desktop -> "With the seasons" ***', startingTheme({ win: fakeWin(), storage: timed() }).theme === 'seasons');
+    check('...prefers-reduced-motion -> Nimrod, with its reason', startingTheme({ win: fakeWin({ mm: { '(prefers-reduced-motion: reduce)': true } }), storage: timed() }).words === whyWords('reduced-motion'));
+    check('...a phone (coarse pointer, no fine one) -> Nimrod', startingTheme({ win: fakeWin({ mm: { '(pointer: coarse)': true } }), storage: timed() }).because === 'touch');
+    check('...a touch laptop (coarse AND a fine pointer) is not a phone', startingTheme({ win: fakeWin({ mm: { '(pointer: coarse)': true, '(any-pointer: fine)': true } }), storage: timed() }).live);
+    check('...navigator.webdriver -> Nimrod', startingTheme({ win: fakeWin({ nav: { webdriver: true } }), storage: timed() }).because === 'automated');
+    check('...the screen’s motion settings, handed over by the host (the flash limit, "movement to a minimum")',
+      startingTheme({ win: fakeWin(), storage: timed(), motion: () => ({ flashLimit: 3 }) }).because === 'flash-limit'
+      && startingTheme({ win: fakeWin(), storage: timed(), motion: () => ({ reduceMotion: true }) }).because === 'motion-setting'
+      && startingTheme({ win: fakeWin(), storage: timed(), motion: () => ({ flashLimit: Infinity }) }).live);
+    check('...the timing kept on this device is used, not taken again', startingTheme({ win: fakeWin(), storage: (() => { const st = fakeStorage(); st.setItem('nimrod:theme-device', J({ cpuMs: 45, cpuSlow: true })); return st; })() }).because === 'slow');
+    // The one measurement after the first look.
+    const st1 = timed();
+    let changed = null;
+    const s1 = settleStartingTheme({ win: fakeWin(), storage: st1, rule: { ...R, probeDelayMs: 0 }, probe: async () => ({ measured: true, fps: 22, median: 45 }), onChange: (p) => { changed = p; } });
+    const after1 = await s1.done;
+    check('*** frames measured too slow with the scene up: Nimrod, onChange told, and the measurement kept ***',
+      after1.theme === 'default' && after1.because === 'not-smooth' && changed?.theme === 'default' && JSON.parse(st1.getItem('nimrod:theme-device')).frames?.fps === 22, J({ after1, changed }));
+    const st2 = timed();
+    changed = null;
+    const after2 = await settleStartingTheme({ win: fakeWin(), storage: st2, rule: { ...R, probeDelayMs: 0 }, probe: async () => ({ measured: true, fps: 60, median: 16.7 }), onChange: (p) => { changed = p; } }).done;
+    check('...smooth: stays moving, nothing told, says "runs a moving scene smoothly"', after2.live && after2.because === 'smooth' && changed === null);
+    const st3 = timed();
+    let probed = false;
+    await settleStartingTheme({ win: fakeWin({ mm: { '(prefers-reduced-motion: reduce)': true } }), storage: st3, rule: { ...R, probeDelayMs: 0 }, probe: async () => { probed = true; return { measured: true, fps: 60 }; } }).done;
+    check('...a device already on Nimrod is never measured (and never handed a scene by itself)', !probed && !JSON.parse(st3.getItem('nimrod:theme-device')).frames);
+    check('*** a hidden page is not measured: no frames, nothing counted against the device ***', (await probeFrames({ win: fakeWin({ hidden: true }) })).measured === false);
+    const pf = await probeFrames({ win: fakeWin(), rule: { ...R, probeFrames: 12, probeMaxMs: 1000 } });
+    check('a visible page is measured: frames a second from the median gap', pf.measured === true && pf.fps > 20 && pf.fps < 90, J(pf));
+    // theme.js: the choice.
+    check('*** theme.js: "Best for this device" is a choice like "With the seasons" (resolveThemeId, isFollowTheme, listed last) ***',
+      resolveThemeId('device') === 'device' && isFollowTheme('device') && listThemes().at(-1).id === 'device' && THEMES.device === undefined);
+    check('...it paints what the device picks (seasons -> today’s season or holiday; default -> Nimrod), marked chosen: device',
+      paintedTheme('device', { device: 'default' }).id === 'default' && paintedTheme('device', { device: 'default' }).chosen === 'device'
+      && paintedTheme('device', { device: 'seasons' }).follows === 'seasons' && !!THEMES[paintedTheme('device', { device: 'seasons' }).id]);
+    check('...and follows the seasons only where it paints them (the holiday rows and the seasons line)',
+      followsSeasons('device', { device: 'seasons' }) && !followsSeasons('device', { device: 'default' }) && followsSeasons('seasons') && !followsSeasons('fall'));
+    // The halo behind words on a clear panel (the default panel background now).
+    check('*** a clear panel’s halo: a moving theme keeps its own; a still one gets the opposite of its words ***',
+      panelHalo(THEMES.fall) === THEMES.fall.vars['--board-halo'] && /255,255,255/.test(panelHalo(THEMES.default))
+      && /rgba\(0,0,0/.test(panelHalo(THEMES.dusk)) && /255,255,255/.test(panelHalo(THEMES.contrast)), J([panelHalo(THEMES.default), panelHalo(THEMES.dusk)]));
+    resetDeviceReadings();
+  }
+
+  // ======================================================================================
   section('A REAL SCREEN: Photos and the Themes panel; the ⚙ menu’s Theme tab');
   {
     const profiles = createProfilesClient({ user: USER });
@@ -414,6 +507,19 @@ try {
     const root = document.getElementById('root');
     const bus = createBus();
     kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams() });
+    // (2026-10-07) A screen nobody has picked a theme for: "Best for this device", and clear panels.
+    check('*** a new screen: its theme is "Best for this device", its panels clear ***', kiosk.shownTheme() === 'device'
+      && root.querySelector('.kiosk')?.dataset.panelSurface === 'clear', `${kiosk.shownTheme()} ${root.querySelector('.kiosk')?.dataset.panelSurface}`);
+    {
+      const want = startingTheme();
+      kiosk.menu.open(); kiosk.menu.showTab('theme');
+      const why = kiosk.menu.items().find((it) => it.id === 'device-why');
+      check('*** the Theme tab says what it picked here and why ("Chosen because this device …"), as a row nobody has to press ***',
+        !!why && why.disabled === true && why.label.startsWith('Best for this device: ') && why.hint.startsWith(want.words)
+        && kiosk.menu.visibleItems().some((it) => it.id === 'device-why'), J(why));
+      note(`(here: ${why?.label} — ${why?.hint})`);
+      kiosk.menu.close();
+    }
     const view = () => (kiosk.settingsViews?.() || []).find((v) => v.instanceId === th.id)?.view || null;
     check('*** the Themes panel is the screen’s own menu, opened on the Theme row’s list ***',
       await settled(() => view() && view().page() === '__choice' && view().pickerProbe()?.gallery === true, 8000), J(view()?.pickerProbe?.()));
