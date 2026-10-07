@@ -78,6 +78,8 @@ export const GAME = 'quiz_mix';
 export const GAMES = Object.freeze(['mix']);
 export const USE_KEYS = Object.freeze({
   trivia: 'useTrivia', math: 'useMath', words: 'useWords', spelling: 'useSpelling', brain: 'useBrain', think: 'useThink',
+  // Row 2.63 (Mike, 2026-10-07: Name that, Opposites, Rhyming "should be included in the overall pool").
+  name: 'useNameThat', wordgames: 'useWordGames',
 });
 
 export const LINES = Object.freeze({
@@ -113,6 +115,7 @@ export const DEFAULTS = Object.freeze({
   game: 'mix',
   rounds: 10,
   useTrivia: true, useMath: true, useWords: true, useSpelling: true, useBrain: true, useThink: true,
+  useNameThat: true, useWordGames: true,
   triviaFrom: 'all',
   repeatGame: false,
   boards: true,
@@ -148,6 +151,9 @@ const SETTINGS = [
   onOff('useSpelling', 'Spelling'),
   onOff('useBrain', 'Brain games'),
   onOff('useThink', 'Thinking games'),
+  onOff('useNameThat', 'Name that (animals, states, people)',
+    'Name that person plays each player\'s own recorded messages; a player with none gets another kind of question that turn.'),
+  onOff('useWordGames', 'Word games (opposites, rhyming, yes or no)'),
   { key: 'boards', label: 'Questions answered on a letter board', default: true, level: 'standard',
     onLabel: 'In the mix', offLabel: 'Left out', note: 'Spelling, and remembering the order of things.' },
   { key: 'repeatGame', label: 'The same game two rounds running', default: false, level: 'standard',
@@ -207,6 +213,7 @@ const CSS = `
 .qm-means{display:grid;gap:.3em;margin-top:.5em;text-align:start;color:var(--text)}
 .qm-mean{display:block}
 .qm-mean b{font-weight:800}
+.qm-opt .qm-mean{margin-top:.2em;font-size:.8em;font-weight:400;line-height:1.25}
 .qm-round{font-weight:700}
 .qm-table{margin:0 auto 1.5cqmin;padding:0;list-style:none;display:grid;gap:.6cqmin;font-size:clamp(14px,4.5cqmin,52px)}
 .qm-table li{display:flex;gap:1em;justify-content:space-between;min-width:12em}
@@ -271,8 +278,8 @@ function sharedRows(ctx) {
 
 registerModule(
   { type: GAME, title: 'Quiz mix', core: 'new',
-    description: 'Every kind of question in one game: trivia, math, words, spelling, brain and thinking games. Each '
-      + 'round a new kind; each player answers their own question at their own level.',
+    description: 'Every kind of question in one game: trivia, math, words, spelling, brain and thinking games, name '
+      + 'that, and the word games. Each round a new kind; each player answers their own question at their own level.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const rand = ctx.rand || Math.random;
@@ -616,8 +623,24 @@ registerModule(
       heardText: (v) => { const s = current?.source; const f = s?.adapter?.heardText; return typeof f === 'function' ? f(v) : String(v); },
       fromVoice: (it, heard) => call(it, 'fromVoice', it, heard, kcfg(srcOf(it))) ?? null,
       command: (cmd, it) => call(it, 'command', cmd, it, kcfg(srcOf(it))),
-      unknownLine: (v) => { const s = current?.source; const f = s?.adapter?.unknownLine; return typeof f === 'function' ? f(v, kcfg(s)) : ''; },
+      // The question on screen goes along as a third argument (Word games tells "not a yes or a no" from "a word it
+      // does not know" by it).
+      unknownLine: (v) => { const s = current?.source; const f = s?.adapter?.unknownLine; return typeof f === 'function' ? f(v, kcfg(s), current?.item || null) : ''; },
       choiceLabel: (it, v) => call(it, 'choiceLabel', it, v, kcfg(srcOf(it))) ?? String(v),
+      // ROW 2.63: Name that person (a clip that can be played again, a gentle miss) and the yes / no quiz. A source
+      // may answer `canReplay` and `missStyle` per question (question_kinds.js header); the mix asks with the question
+      // on screen. A getter, because the engine reads `canReplay` as a property.
+      get canReplay() {
+        const v = current?.source?.adapter?.canReplay;
+        try { return typeof v === 'function' ? !!v(current.item) : !!v; } catch { return false; }
+      },
+      missStyle: () => {
+        const s = current?.source;
+        const f = s?.adapter?.missStyle;
+        try { return typeof f === 'function' ? (f(kcfg(s), current.item) || 'standard') : 'standard'; } catch { return 'standard'; }
+      },
+      gentle: (it) => String(call(it, 'gentle', it, kcfg(srcOf(it))) || ''),
+      yesNo: (it) => !!call(it, 'yesNo', it),
     };
 
     // ---- the time to answer (off by default) ----
@@ -973,17 +996,49 @@ registerModule(
       return true;
     }
 
+    // THE LEFT OF THE PANEL (row 2.63): the current game's own `leftEl` when it has one (Name that person's clip,
+    // which must not be rebuilt or it would restart under the person watching), else its `left` markup. When the
+    // game drawing it changes, the left starts over, so one game's leftovers never show under another's question.
+    let leftBy = null;
+    let leftHtml = null;
     const view = {
       askHtml: (s) => (kview().askHtml ? kview().askHtml(s, kcfg(current?.source))
         : esc(String(call(s.item, 'ask', s.item, kcfg(srcOf(s.item))) || ''))),
-      left: (s) => (kview().left ? kview().left(s, kcfg(current?.source)) : ''),
+      leftEl(el, s, c, a) {
+        const src = current?.source || null;
+        if (src !== leftBy) {
+          leftBy = src;
+          leftHtml = null;
+          el.innerHTML = '';
+          delete el.dataset.kind;
+          try { src?.view?.onLeftReset?.(); } catch { /* none */ }
+        }
+        const v = kview();
+        if (v.leftEl) { try { return !!v.leftEl(el, s, kcfg(src), a); } catch (err) { console.error('quiz mix: left', err); return false; } }
+        const q = s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss';
+        const html = s.item && q && v.left ? String(v.left(s, kcfg(src)) || '') : '';
+        if (html !== leftHtml) { el.innerHTML = html; leftHtml = html; }
+        return !!html;
+      },
+      speechGate: () => { try { return !!kview().speechGate?.(); } catch { return false; } },
+      onReplay: (item, a) => { try { kview().onReplay?.(item, a); } catch (err) { console.error('quiz mix: replay', err); } },
+      onHide: () => { for (const s of sources.values()) { try { s.view?.onHide?.(); } catch { /* gone */ } } },
+      onShow: (a) => { try { kview().onShow?.(a); } catch { /* gone */ } },
       board: (s) => (kview().board ? kview().board(s, kcfg(current?.source)) : []),
       entryHtml: (s) => (kview().entryHtml ? kview().entryHtml(s, kcfg(current?.source)) : ''),
       pairHtml: (s) => (kview().pairHtml ? kview().pairHtml(s, kcfg(current?.source))
         : `<div class="wg-pair" data-pair>${esc(String(s.pair?.answer ?? '').toUpperCase())}</div>`),
       explainHtml: (s) => (kview().explainHtml ? kview().explainHtml(s, kcfg(current?.source)) : esc(s.pair?.explain || '')) + pointsHtml(),
       onKey: (k, a) => kview().onKey?.(k, a),
-      onDeal: (item, a) => { try { kview().onDeal?.(item, a); } catch (err) { console.error('quiz mix: deal view', err); } startClock(); },
+      onDeal: (item, a) => {
+        // Every other game hears that its turn is over (a clip still playing from one stops).
+        for (const s of sources.values()) {
+          if (s === current?.source) continue;
+          try { s.view?.onAway?.(); } catch { /* gone */ }
+        }
+        try { kview().onDeal?.(item, a); } catch (err) { console.error('quiz mix: deal view', err); }
+        startClock();
+      },
       turnHtml,
       onResult(r) {
         stopClock();

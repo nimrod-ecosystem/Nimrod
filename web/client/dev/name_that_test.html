@@ -23,10 +23,12 @@ aloud. Person's miss flow is gentle by default and a setting.</p>
 <div id="host"></div>
 
 <script type="module">
-import { harness, rig, sleep, answerByChecks } from './quiz_test_rig.js';
+import { harness, rig, sleep, answerByChecks, personLadderChecks } from './quiz_test_rig.js';
 import { getManifest } from '../module.js';
 import '../modules/name_that.js';
-import { GAME, GAMES, STATES, ANIMALS, LINES, DEFAULTS, personFromFileName } from '../modules/name_that.js';
+import { GAME, GAMES, STATES, ANIMALS, LINES, DEFAULTS, personFromFileName, ANIMAL_BANK, STATE_BANK, STATE_CAPITALS,
+  ladderGame } from '../modules/name_that.js';
+import { DIFFICULTY_LEVELS } from '../packs.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { auditFields } from '../settings_audit.js';
 import { normalizeField } from '../settings_fields.js';
@@ -248,6 +250,104 @@ try {
     p.inst.impl.hear({ text: p.probe().item.answer, confidence: 0.95 });
     check('person: saying the name is right', p.phase() === 'celebrate');
     p.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** HARDER LEVELS (row 2.63): every question has a difficulty, in the words question packs use ***');
+  {
+    const words = Object.keys(DIFFICULTY_LEVELS);
+    for (const [name, list] of [['animal', ANIMAL_BANK], ['state', STATE_BANK]]) {
+      check(`${name}: every question is very easy, easy, medium or hard, with its ladder level`,
+        list.every((q) => words.includes(q.difficulty) && q.level === DIFFICULTY_LEVELS[q.difficulty] && q.id), JSON.stringify(list.find((q) => !words.includes(q.difficulty))));
+      const have = words.filter((w) => list.some((q) => q.difficulty === w));
+      check(`*** ${name}: all four levels have questions (${have.join(', ')}) ***`, have.length === 4, have.join(','));
+      check(`${name}: every id is unique`, new Set(list.map((q) => q.id)).size === list.length);
+    }
+    check('each game on the ladder under its own name', GAMES.map(ladderGame).join() === 'name_animal,name_state,name_person');
+    check('the animal sounds are the easiest; what an animal looks like is the next level',
+      ANIMALS.find((a) => a.answer === 'cow').difficulty === 'very easy' && ANIMALS.find((a) => a.answer === 'elephant').difficulty === 'easy');
+    const badDecoys = ANIMALS.filter((a) => a.decoys && (a.decoys.length < 2 || a.decoys.some((d) => d === a.answer || !ANIMALS.some((x) => x.answer === d))));
+    check('*** every animal decoy is another animal in the game (so it is heard, and judged wrong) ***', badDecoys.length === 0, badDecoys.map((a) => a.answer).join(','));
+    check('medium and hard animals are offered beside animals easy to mix them up with', ANIMALS.filter((a) => ['medium', 'hard'].includes(a.difficulty)).every((a) => a.decoys));
+    check('hard states are asked from their CAPITAL', STATE_CAPITALS.length >= 45 && STATE_CAPITALS.every((s) => s.kind === 'capital' && s.difficulty === 'hard'));
+    check('*** no state is asked from a capital that names it (Oklahoma City, Indianapolis) ***',
+      STATE_CAPITALS.every((s) => !s.capital.toLowerCase().includes(s.answer.toLowerCase())));
+    check('the nickname questions are very easy to medium; fifty of them still', STATES.length === 50 && STATES.every((s) => s.kind === 'nickname' && s.level <= 3));
+    check('a capital question\'s hints never name the state', STATE_CAPITALS.every((s) => s.hints.every((h) => !h.toLowerCase().includes(s.answer.toLowerCase()))));
+  }
+
+  section('*** THE LADDER: each player at their own level (row 2.63) ***');
+  {
+    const ladderStore = () => { let d = {}; const subs = new Set(); return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+      load: async () => d, flush: async () => {}, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {} }; };
+    const L = (saved = {}, extra = {}, store = ladderStore()) => Object.assign(
+      rig('name_that', { saved: { answerBy: 'yesno', ...saved }, extra: { makeState: (k) => (k === 'ratings' ? store : null), ...extra } }),
+      { ladder: store, session: function () { return this.inst.impl.__session; } });
+    for (const g of ['animal', 'state']) {
+      const r = L({ game: g });
+      const lv = [];
+      for (let i = 0; i < 8; i++) { lv.push(r.probe().item.level); r.eng.skip(); }
+      check(`*** ${g}: a new player is asked very easy and easy questions only (levels ${[...new Set(lv)].join(',')}) ***`, lv.every((l) => l <= 2), lv.join(','));
+      r.inst.destroy();
+      const h = L({ game: g, startLevel: 4, adapt: false });
+      check(`*** ${g}: a player started at the hardest level is asked hard questions ***`, h.probe().item.difficulty === 'hard', JSON.stringify(h.probe().item));
+      h.inst.destroy();
+    }
+    const c = L({ game: 'state', startLevel: 4, adapt: false });
+    const it = c.probe().item;
+    check('*** a hard state: "Which state has X as its capital?", with the capital on the card ***',
+      c.said[0].startsWith(`Which state has ${it.capital} as its capital?`) && c.host.querySelector('.qz-card')?.textContent === it.capital, c.said[0]);
+    const region = STATES.filter((s) => s.region === it.region).map((s) => s.answer);
+    check('...and the other two names offered are from the same region', c.probe().candidates.every((n) => region.includes(n)), c.probe().candidates.join(','));
+    c.eng.hear({ text: it.answer, confidence: 0.95 });
+    check('...right: "X is the capital of Y."', c.last() === `Yes! ${it.capital} is the capital of ${it.answer}.`, c.last());
+    c.inst.destroy();
+    const a = L({ game: 'animal', startLevel: 4, adapt: false });
+    const ai = a.probe().item;
+    check('a hard animal is offered beside its own decoys', a.probe().candidates.filter((n) => n !== ai.answer).every((n) => ai.decoys.includes(n)), a.probe().candidates.join(','));
+    a.eng.hear({ text: ai.answer, confidence: 0.95 });
+    const row = a.session().playerRow(a.session().currentPlayer().id, 'name_animal');
+    check('a right answer goes on the ladder, once', row.n === 1, JSON.stringify(row));
+    a.inst.destroy();
+    const t = L({ game: 'animal', players: 'Ann, Bob' });
+    check('*** two players: "Ann, your turn." in front of the question, and her name on screen ***',
+      t.said[0].startsWith('Ann, your turn. ') && t.host.querySelector('.qz-turn')?.dataset.turn === 'name:ann', t.said[0]);
+    t.inst.destroy();
+    const m = getManifest(GAME);
+    for (const k of ['players', 'gameStart', 'adapt', 'startLevel'])
+      check(`the ladder's "${k}" row is in the settings`, m.settings.some((s) => s.key === k));
+  }
+
+  section('*** NAME THAT PERSON\'S TWO LEVELS: seeing them, then hearing them only (row 2.63) ***');
+  {
+    const md = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol - hello.mp3', 'Carol - hello.jpg', 'Dee.mp3'] });
+    const r = R({ game: 'person', startLevel: 2, adapt: false }, md.ctx);
+    await waitFor(() => md.played.length === 1);
+    const it = r.probe().item;
+    check('*** level 2: the message plays as SOUND ONLY (nothing of them on screen) ***', it.level === 2 && it.voiceOnly === true && md.played[0].voiceOnly === true, JSON.stringify(md.played[0]));
+    check('...and no picture is fetched for it', !md.played[0].pictureUrl);
+    md.end();
+    r.inst.destroy();
+    const md1 = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol - hello.mp3', 'Carol - hello.jpg', 'Dee.mp3'] });
+    const s = R({ game: 'person', levelsAtOnce: 1, adapt: false }, md1.ctx);
+    await waitFor(() => md1.played.length === 1);
+    const it1 = s.probe().item;
+    check('*** level 1: a video, or a voice WITH its picture ***', it1.level === 1 && md1.played[0].voiceOnly === false
+      && (md1.played[0].kind === 'video' || !!md1.played[0].pictureUrl), JSON.stringify(md1.played[0]));
+    const bank = s.inst.impl.__session.allQuestions('name_person');
+    check('a person heard only with no picture (Dee) has only the voice question; the others have both',
+      bank.filter((q) => q.answer === 'Dee').map((q) => q.level).join() === '2'
+      && ['Annie', 'Bob', 'Carol'].every((n) => bank.filter((q) => q.answer === n).map((q) => q.level).sort().join() === '1,2'), JSON.stringify(bank.map((q) => [q.answer, q.level])));
+    check('*** the ladder\'s question ids do not carry anybody\'s name ***', bank.every((q) => !/annie|bob|carol|dee/i.test(q.id)), bank.map((q) => q.id).join(','));
+    md1.end();
+    s.inst.destroy();
+  }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (row 2.63) ***');
+  for (const g of ['animal', 'state']) {
+    await personLadderChecks({ check, name: `Name that ${g}`, game: ladderGame(g), saved: { game: g },
+      mount: ({ saved, store, extra }) => rig('name_that', { saved: { answerBy: 'yesno', ...saved },
+        extra: { makeState: (k) => (k === 'ratings' ? store : null), ...extra } }) });
   }
 
   finish();

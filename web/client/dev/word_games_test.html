@@ -27,7 +27,9 @@ import { createBus } from '../bus.js';
 import { mountModule, getManifest } from '../module.js';
 import '../modules/word_games.js';
 import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
-         reasonFor, fill, normalize, createEngine } from '../modules/word_games.js';
+         reasonFor, fill, normalize, createEngine, wordBank, ladderGame, WORD_ADAPTER, candidatesOf } from '../modules/word_games.js';
+import { rig as quizRig, personLadderChecks } from './quiz_test_rig.js';
+import { DIFFICULTY_LEVELS } from '../packs.js';
 import { attachSpeech } from '../input_speech.js';
 import { answerByChecks } from './quiz_test_rig.js';
 import * as SP from '../input_speech.js';
@@ -96,6 +98,17 @@ function rig({ saved = {}, reducedMotion = false, rand = () => 0, store = {}, bu
   };
 }
 const wrongFor = (it) => it.wrong[0];
+// Since row 2.63 the questions are dealt off the ladder (each player's own level), so skipping until one
+// particular word comes up may never reach it. This deals THAT word next, through the ladder's own `again`.
+function dealWord(r, word) {
+  const s = r.inst.impl.__session;
+  const g = r.probe().game;
+  const id = wordBank(g).find((x) => x.word === word)?.id;
+  const deal = s.deal;
+  s.deal = (game, opts = {}) => deal(game, { ...opts, again: id });
+  try { r.eng.skip(); } finally { s.deal = deal; }
+  return r.probe().item;
+}
 
 (async () => {
 try {
@@ -479,8 +492,7 @@ try {
     // "Thanks for playing". "I'm done" still ends it.
     const go = OPPOSITES.find((o) => o.word === 'go' && o.accept.includes('stop'));
     const r = rig({ saved: { game: 'opposites' } });
-    let guard = 0;
-    while (r.probe().item !== go && guard++ < 200) r.eng.skip();
+    dealWord(r, 'go');
     r.eng.hear({ text: 'stop', confidence: 0.95 });
     check('*** "stop" to "the opposite of go": RIGHT, not the end of the game ***', !!go && r.phase() === 'celebrate', r.phase());
     r.timers.flush();
@@ -792,12 +804,141 @@ try {
     check('the opposites list has "yes" (the case below needs it)', !!yes);
     if (yes) {
       const s = rig({ saved: { game: 'opposites' } });
-      let guard = 0;
-      while (s.probe().item !== yes && guard++ < 200) s.eng.skip();
+      dealWord(s, 'yes');
       s.eng.hear({ text: 'no', confidence: 0.95 });
       check('*** yes / no shape: "no" to "the opposite of yes" is the ANSWER (right), not No to the offer ***', s.phase() === 'celebrate', s.last());
       s.inst.destroy();
     }
+  }
+
+  // =====================================================================================
+  section('*** HARDER LEVELS (row 2.63): every item has a difficulty, in the words question packs use ***');
+  {
+    const words = Object.keys(DIFFICULTY_LEVELS);
+    for (const [name, list] of [['opposites', OPPOSITES], ['rhyming', RHYMING], ['yesno', YES_NO]]) {
+      const bad = list.filter((it) => !words.includes(it.difficulty));
+      check(`${name}: every item is very easy, easy, medium or hard`, bad.length === 0, JSON.stringify(bad.slice(0, 2)));
+      const have = words.filter((w) => list.some((it) => it.difficulty === w));
+      check(`*** ${name}: all four levels have questions (${have.join(', ')}) ***`, have.length === 4, have.join(','));
+      const bank = wordBank(name);
+      check(`${name}: the ladder's bank is every item, each with its level (packs.js DIFFICULTY_LEVELS) and a unique id`,
+        bank.length === list.length && bank.every((b) => b.level === DIFFICULTY_LEVELS[b.difficulty] && b.game === name)
+        && new Set(bank.map((b) => b.id)).size === bank.length);
+    }
+    check('...and everything written before row 2.63 is the easiest ("very easy")',
+      OPPOSITES[0].difficulty === 'very easy' && RHYMING[0].difficulty === 'very easy' && YES_NO[0].difficulty === 'very easy');
+    check('each game on the ladder under its own name', ['opposites', 'rhyming', 'yesno'].map(ladderGame).join() === 'wg_opposites,wg_rhyming,wg_yesno');
+    // Rhyming's near misses: offered as wrong answers, so each must really NOT rhyme, and be a word the table knows.
+    const badDecoys = RHYMING.filter((r) => r.decoys && (r.decoys.length < 2 || r.decoys.some((d) => rhymes(r.word, d) !== false)));
+    check('*** every rhyming near miss (decoy) is in the table and does NOT rhyme ***', badDecoys.length === 0, badDecoys.map((r) => r.word).join(','));
+    check('medium and hard rhymes carry their near misses', RHYMING.filter((r) => ['medium', 'hard'].includes(r.difficulty)).every((r) => r.decoys));
+    const hard = RHYMING.filter((r) => r.difficulty === 'hard');
+    check('hard rhymes are two-syllable words (two vowels in the table)', hard.every((r) => PRONUNCIATIONS[r.word].filter((p) => /\d$/.test(p)).length === 2),
+      hard.map((r) => r.word).join(','));
+    const glove = wordBank('rhyming').find((b) => b.word === 'glove');
+    const offers = candidatesOf('rhyming', glove, () => 0.3);
+    check('a near-miss rhyme offers one real rhyme and exactly its two decoys', offers.length === 3
+      && offers.filter((w) => rhymes('glove', w) === true).length === 1 && ['move', 'stove'].every((d) => offers.includes(d)), offers.join(','));
+    const easy = RHYMING.filter((r) => r.difficulty === 'easy');
+    check('easy rhymes: the example is spelled differently from the prompt\'s ending (it has to be heard)',
+      easy.every((r) => r.word.slice(-2) !== r.example.slice(-2)), easy.filter((r) => r.word.slice(-2) === r.example.slice(-2)).map((r) => r.word).join(','));
+    const multi = OPPOSITES.filter((o) => o.difficulty === 'medium');
+    check('medium opposites: most accept more than one answer', multi.filter((o) => o.accept.length > 1).length >= multi.length / 2);
+  }
+
+  section('*** THE LADDER: each player at their own level, the result recorded once (row 2.63) ***');
+  {
+    const ladderStore = () => { let d = {}; const subs = new Set(); return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+      load: async () => d, flush: async () => {}, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {} }; };
+    const W = (saved = {}, opts = {}) => {
+      const store = opts.store || ladderStore();
+      const r = quizRig('word_games', { saved: { answerBy: 'yesno', ...saved }, ...opts,
+        extra: { makeState: (k) => (k === 'ratings' ? store : null), ...(opts.extra || {}) } });
+      return Object.assign(r, { ladder: store, session: () => r.inst.impl.__session });
+    };
+    for (const g of ['opposites', 'rhyming', 'yesno']) {
+      const r = W({ game: g });
+      const lv = [];
+      for (let i = 0; i < 8; i++) { lv.push(r.probe().item.level); r.eng.skip(); }
+      check(`*** ${g}: a new player is asked very easy and easy questions only (levels ${[...new Set(lv)].join(',')}) ***`, lv.every((l) => l <= 2), lv.join(','));
+      r.inst.destroy();
+      const h = W({ game: g, startLevel: 4, adapt: false });
+      check(`*** ${g}: a player started at the hardest level is asked hard questions ***`, h.probe().item.difficulty === 'hard', JSON.stringify(h.probe().item));
+      h.inst.destroy();
+    }
+    // A right answer and a shown answer, each recorded once on the player's ladder.
+    const r = W({ game: 'opposites' });
+    const pid = () => r.session().currentPlayer().id;
+    const row = () => r.session().playerRow(pid(), 'wg_opposites');
+    const it = r.probe().item;
+    r.eng.hear({ text: it.accept[0], confidence: 0.95 });
+    check('a right answer goes on the ladder: one answer counted', r.phase() === 'celebrate' && row().n === 1, JSON.stringify(row()));
+    r.eng.press('continue');
+    r.eng.press('continue');
+    check('...and only once, however often it is pressed', row().n === 1, JSON.stringify(row()));
+    const it2 = r.probe().item;
+    r.eng.hear({ text: it2.wrong[0], confidence: 0.95 });
+    r.eng.hear({ text: it2.wrong[1], confidence: 0.95 });
+    r.eng.press('reveal');
+    check('two misses and "hear the answer": recorded as a miss (two answers counted, the question due back)',
+      row().n === 2 && !!row().review?.[it2.id], JSON.stringify(row()));
+    check('...and the screen\'s row keeps each question\'s own rating', Object.keys(r.ladder.get().ladder?.questions || {}).length === 2);
+    r.inst.destroy();
+    // Skipped after a miss counts; skipped before any try does not.
+    const k = W({ game: 'opposites' });
+    k.eng.skip();
+    check('a skip before any try is not a result', !k.session().playerRow(k.session().currentPlayer().id, 'wg_opposites').n);
+    const kit = k.probe().item;
+    k.eng.hear({ text: kit.wrong[0], confidence: 0.95 });
+    k.eng.skip();
+    check('a skip after a miss is (it was hard)', k.session().playerRow(k.session().currentPlayer().id, 'wg_opposites').n === 1);
+    k.inst.destroy();
+    // Two players: whose turn it is is said and shown, and the next question is the next player's.
+    const t = W({ game: 'opposites', players: 'Ann, Bob' });
+    check('*** two players: "Ann, your turn." in front of the question ***', t.said[0]?.startsWith('Ann, your turn. What is the opposite of'), t.said[0]);
+    check('...and her name on screen', t.host.querySelector('.qz-turn')?.dataset.turn === 'name:ann');
+    t.eng.hear({ text: t.probe().item.accept[0], confidence: 0.95 });
+    check('each player\'s tally on the celebration', /Ann 1 · Bob 0/.test(t.host.querySelector('[data-score]')?.textContent || ''), t.host.querySelector('[data-score]')?.textContent);
+    t.timers.flush();
+    check('right: the next question is Bob\'s', t.last().startsWith('Bob, your turn.') && t.host.querySelector('.qz-turn')?.dataset.turn === 'name:bob', t.last());
+    t.inst.destroy();
+    const one = W({ game: 'opposites' });
+    check('one player: no name before the question, and no turn chip', one.said[0]?.startsWith('What is the opposite of') && !one.host.querySelector('.qz-turn'));
+    one.inst.destroy();
+    // The engine with no ladder handed to it is the engine as before (its own deck).
+    const bare = createEngine({ cfg: () => ({ ...DEFAULTS, game: 'opposites' }), rand: () => 0 });
+    bare.start();
+    check('the engine alone (no ladder): still asks from its own deck', !!bare.snapshot().item && bare.snapshot().phase === 'asking');
+    bare.destroy();
+
+    const m = getManifest('word_games');
+    for (const k2 of ['players', 'gameStart', 'adapt', 'startLevel'])
+      check(`the ladder's "${k2}" row is in the settings`, m.settings.some((s) => s.key === k2));
+    check('"A new player starts at level" offers the four levels', (m.settings.find((s) => s.key === 'startLevel')?.options || []).length === 4);
+  }
+
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (row 2.63) ***');
+  for (const g of ['opposites', 'rhyming', 'yesno']) {
+    await personLadderChecks({ check, name: `Word games (${g})`, game: ladderGame(g), saved: { game: g },
+      mount: ({ saved, store, extra }) => quizRig('word_games', { saved: { answerBy: 'yesno', ...saved },
+        extra: { makeState: (k) => (k === 'ratings' ? store : null), ...extra } }) });
+  }
+
+  section('Quiz mix\'s adapter asks, judges and hints exactly as this game does (row 2.63)');
+  {
+    const opp = wordBank('opposites').find((b) => b.word === 'big');
+    check('opposites: the question', WORD_ADAPTER.ask(opp, DEFAULTS) === 'What is the opposite of big?');
+    check('..."it\'s small" is right, a listed wrong one is a miss', WORD_ADAPTER.judge(opp, "it's small") === true && WORD_ADAPTER.judge(opp, 'tall') === false);
+    check('...the hint, then nothing (the second miss offers the answer)', WORD_ADAPTER.hint(opp, 1, DEFAULTS) === opp.hint && WORD_ADAPTER.hint(opp, 2, DEFAULTS) === '');
+    check('...the answer and its sentence', WORD_ADAPTER.answer(opp) === 'little' && WORD_ADAPTER.explain(opp, 'small', DEFAULTS) === 'small is the opposite of big.');
+    const rh = wordBank('rhyming').find((b) => b.word === 'go');
+    check('rhyming: a word the table does not know is not judged (null), not wrong', WORD_ADAPTER.judge(rh, 'zebra') === null && WORD_ADAPTER.judge(rh, 'snow') === true);
+    check('...and says so', /don't know that word/.test(WORD_ADAPTER.unknownLine('zebra', DEFAULTS, rh)));
+    const yn = wordBank('yesno').find((b) => b.answer === 'no');
+    check('yes / no: answered yes or no, and "Yes" / "No" on the buttons', WORD_ADAPTER.judge(yn, 'nope') === true && WORD_ADAPTER.judge(yn, 'yeah') === false
+      && WORD_ADAPTER.candidates(yn, DEFAULTS, () => 0).join() === 'yes,no' && WORD_ADAPTER.choiceLabel(yn, 'yes') === 'Yes');
+    check('...it marks itself as a yes / no question (quiz_flow.js `yesNo`), the others do not', WORD_ADAPTER.yesNo(yn) && !WORD_ADAPTER.yesNo(opp));
+    check('...anything else is not judged, and says it is a yes or a no', WORD_ADAPTER.judge(yn, 'banana') === null && /yes or a no/.test(WORD_ADAPTER.unknownLine('banana', DEFAULTS, yn)));
   }
 } catch (err) {
   check('the suite ran without throwing', false, String(err && err.stack || err));

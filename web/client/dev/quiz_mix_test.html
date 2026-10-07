@@ -414,6 +414,22 @@ try {
         `${w.phase()} ${lines.length}`);
       check('...and reads the others aloud', /Here is the answer\..*The others: /.test(w.last()), w.last());
     }
+    // Mike, 2026-10-07 (row 2.59, settled): a wrong guess shows what THAT answer means, and the guessing goes on.
+    w.timers.flush();
+    await until(() => w.phase() === 'asking');
+    {
+      const it3 = w.item();
+      const tileMeans = () => [...w.host.querySelectorAll('[data-pick]')].map((b) => b.querySelector('[data-mean]')?.textContent || '');
+      check('before a guess, no tile shows a meaning (it would give the answer away)', tileMeans().every((m) => m === ''), JSON.stringify(tileMeans()));
+      const wi = it3.options.findIndex((o) => o !== it3.answer);
+      w.host.querySelector(`[data-pick="${CSS.escape(it3.options[wi])}"]`)?.click();
+      const tm = tileMeans();
+      check('*** a wrong guess: THAT tile shows what it means, straight away, and no other tile does ***',
+        w.phase() === 'asking' && tm[wi] && tm[wi].length > 4 && tm.every((m, i) => i === wi || m === ''), JSON.stringify(tm));
+      check('...and the question is still open to another guess', w.phase() === 'asking' && w.host.querySelectorAll('[data-pick]').length === 4);
+      w.host.querySelector(`[data-pick="${CSS.escape(it3.answer)}"]`)?.click();
+      check('the right answer then lists every meaning', w.phase() === 'celebrate' && w.host.querySelectorAll('[data-means] [data-mean]').length === 4);
+    }
     check('the grade -> level map: very easy 1 .. hard 4', gradeLevel(4) === 1 && gradeLevel(6) === 2 && gradeLevel(8) === 3 && gradeLevel(10) === 4);
     w.inst.destroy();
     check('a spoken answer that names an option is that option', optionIn({ options: ['Paris', 'Rome'] }, 'I think it is paris') === 'Paris'
@@ -470,6 +486,120 @@ try {
     check('*** an open (unreviewed) one never does ***', asked.length > 0 && !asked.some((p) => p.startsWith('OPEN')), asked.join(' | '));
     check('its topic is the pack\'s name without the review tail', src.categories()[0]?.label === 'Moons', JSON.stringify(src.categories()));
     src.destroy();
+  }
+
+  // =====================================================================================
+  section('*** row 2.63: the word games in the mix, each player at their own level, on Word games\' own ladder ***');
+  {
+    const wg = M({ players: 'Ann', rounds: 0, ...ONLY('wordgames') });
+    await sleep(20);
+    const cats = new Set();
+    const lv = [];
+    let inCat = 0;
+    for (let i = 0; i < 9; i++) {
+      const c = cur(wg);
+      cats.add(c.cat.id);
+      if (`wg:${c.item.game}` === c.cat.id) inCat += 1;
+      lv.push(c.item.level);
+      answerRight(wg);
+      if (i === 0) check('a right answer: the celebration', wg.phase() === 'celebrate', wg.phase());
+      next(wg);
+    }
+    check('*** every round\'s question is from the round\'s game (opposites, rhyming, yes or no) ***', inCat === 9, String(inCat));
+    check('all three come up', cats.size === 3, [...cats].join());
+    check('*** a new player is asked very easy and easy questions ***', lv.every((l) => l <= 2), lv.join(','));
+    check('*** the answers are on Word games\' own ladder ("wg_..."), as Word games records them ***',
+      ['wg_opposites', 'wg_rhyming', 'wg_yesno'].every((g) => gameRow(wg.ratings, 'name:ann', g)?.n >= 1), JSON.stringify(wg.ratings.get().ladder?.players));
+    wg.inst.destroy();
+    // The yes / no quiz in the yes / no shape: the switches answer it directly (quiz_flow.js `yesNo`).
+    const y = M({ players: 'Ann', rounds: 0, ...ONLY('wordgames'), answerBy: 'yesno' });
+    await sleep(20);
+    for (let i = 0; i < 12 && cur(y).item.game !== 'yesno'; i++) { answerRight(y); next(y); }
+    const it = cur(y).item;
+    check('(a yes / no question came up)', it.game === 'yesno');
+    check('*** nothing is offered after a yes / no question ("Is it yes?" would be nonsense) ***', y.probe().candLine === '', y.probe().candLine);
+    y.eng.press(it.answer === 'yes' ? 'no' : 'yes');
+    check('the wrong switch: a miss', y.probe().misses === 1, y.last());
+    y.eng.press(it.answer === 'yes' ? 'yes' : 'no');
+    check('*** the right switch: right (Yes means yes, not "yes to the offer") ***', y.phase() === 'celebrate', y.phase());
+    y.inst.destroy();
+    // Opposites shown with their picture, as Word games shows them.
+    const o = M({ players: 'Ann', rounds: 0, ...ONLY('wordgames') });
+    await sleep(20);
+    for (let i = 0; i < 6 && cur(o).item.game !== 'opposites'; i++) { answerRight(o); next(o); }
+    check('opposites: the word on the left, in capitals, and its three answers to tap',
+      o.host.querySelector('.wg-pic b')?.textContent === cur(o).item.word.toUpperCase() && o.host.querySelectorAll('[data-pick]').length === 3,
+      o.host.querySelector('[data-left]')?.innerHTML.slice(0, 120));
+    o.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('*** row 2.63: Name that in the mix; a seat with no people is never asked Name that person ***');
+  {
+    // A screen's person with recorded messages (the media seams are injected: nothing reaches a network or a <video>).
+    const played = [];
+    let handlers = null;
+    const flat = ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'];
+    const media = {
+      sources: { list: async () => [{ id: 's1', label: 'Family', kind: 'agent', base_url: 'http://agent.test' }] },
+      resolveListing: async () => ({ albums: [], items: [] }),
+      listItemNames: async () => flat.map((n) => ({ path: n, name: n, kind: 'video' })),
+      resolveItemUrl: async (s, path) => ({ url: `blob:${path}`, release() {} }),
+      playClip: (h, clip, hd) => { handlers = hd; played.push(clip); return { stop: () => { handlers = null; } }; },
+    };
+    const endClip = () => { const h = handlers; handlers = null; h?.onEnded?.(); };
+    // Guests only: nobody has people, so Name that person is never a round.
+    const g = M({ players: 'Ann, Bob', rounds: 0, ...ONLY('name') }, { extra: media });
+    await sleep(40);
+    const gc = [];
+    for (let i = 0; i < 12; i++) { gc.push(`${cur(g).cat.id}/${cur(g).item.kind}`); answerRight(g); next(g); }
+    check('*** two guests (no messages of their own): animals and states only, never Name that person ***',
+      gc.every((x) => /^name:(animal|state)\//.test(x)) && !gc.some((x) => x.startsWith('name:person')), gc.join());
+    check('a state question is a state, an animal an animal', gc.every((x) => (x.startsWith('name:state') ? /\/(nickname|capital)$/.test(x) : true)), gc.join());
+    check('...on Name that\'s own ladder ("name_animal", "name_state")',
+      gameRow(g.ratings, 'name:ann', 'name_animal')?.n >= 1 && gameRow(g.ratings, 'name:ann', 'name_state')?.n >= 1, JSON.stringify(g.ratings.get().ladder?.players?.['name:ann']));
+    check('no message was played for a guest', played.length === 0);
+    g.inst.destroy();
+
+    // The screen's person (with messages) and a guest (none), one round of Name that person.
+    const r = M({ players: [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], rounds: 0, ...ONLY('name') },
+      { extra: { personId: 'pat', ...media } });
+    const ok = await until(() => r.mix().available.some((a) => a.id === 'name:person'));
+    check('the screen\'s person has messages from three people: Name that person is a round here', ok, JSON.stringify(r.mix().available.map((a) => a.id)));
+    let guard = 0;
+    while (!(cur(r)?.cat.id === 'name:person' && cur(r).player.id === 'person:pat') && guard++ < 40) {
+      if (cur(r)?.item?.clips) endClip();
+      answerRight(r); next(r);
+    }
+    check('(a Name that person turn came up for the screen\'s person)', cur(r)?.cat.id === 'name:person' && cur(r).player.id === 'person:pat',
+      `${cur(r)?.cat.id} ${cur(r)?.player.id}`);
+    await until(() => played.length > 0);
+    const item = cur(r).item;
+    check('*** their own people: a message plays first, and the question waits for it ***', played.length > 0 && Array.isArray(item.clips)
+      && !r.said.slice(-1)[0]?.includes('Who is this?'), r.last());
+    check('...a level-1 or level-2 question for a new player (seen, or heard only)', [1, 2].includes(item.level));
+    endClip();
+    check('*** the clip ends: "Who is this?" is said ***', /Who is this\?/.test(r.last()), r.last());
+    const wrong = r.probe().candidates.find((n) => n !== item.answer);
+    r.eng.answer(wrong);
+    check('*** a miss is GENTLE here too (Name that\'s default): whose message it was, never "incorrect" ***',
+      r.phase() === 'gentle' && /message/.test(r.last()) && !/incorrect/i.test(r.last()), `${r.phase()} ${r.last()}`);
+    check('"Listen again" is offered', r.eng.stops().some((s) => s.act === 'replay'));
+    const before = played.length;
+    r.eng.press('replay');
+    await until(() => played.length > before);
+    check('...and plays the message again', played.length > before);
+    endClip();
+    r.eng.press('onward');
+    check('*** then the guest\'s turn in the same round: NOT a person question (they have no people of their own) ***',
+      cur(r).player.id === 'name:ann' && cur(r).cat.id !== 'name:person' && !cur(r).item.clips,
+      `${cur(r).player.id} ${cur(r).cat.id}`);
+    check('...and the clip is not playing over the guest\'s question', !handlers);
+    check('*** the person question is on the screen\'s person\'s ladder in Name that, the id carrying no name ***',
+      !!r.ratings.get().ladder?.questions && Object.keys(r.ratings.get().ladder.questions).some((id) => /^person:/.test(id))
+      && !Object.keys(r.ratings.get().ladder.questions).some((id) => /annie|bob|carol/i.test(id)), JSON.stringify(Object.keys(r.ratings.get().ladder?.questions || {})));
+    r.inst.destroy();
+    check('the mix gone: no message left playing', !handlers);
   }
 
   // =====================================================================================
