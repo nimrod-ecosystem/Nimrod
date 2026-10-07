@@ -327,6 +327,64 @@ class Handler(SimpleHTTPRequestHandler):
         sys.stderr.write("  %s - %s\n" % (self.address_string(), fmt % args))
 
 
+# ------------------------------------------------------------------ one copy per port
+# TWO COPIES MUST NOT SHARE A PORT (found 2026-10-07). Python's HTTP server turns on SO_REUSEADDR, and on
+# Windows that lets a second program bind a port another is already listening on: two agents started by
+# hand, or one by hand and one by the Nimrod helper, both "start", and requests go to either one. So:
+#   * On Windows the agent binds with SO_EXCLUSIVEADDRUSE (Windows' own answer), so the second bind fails.
+#     Elsewhere SO_REUSEADDR is kept: there it never lets two programs listen on one port, and it lets an
+#     agent that systemd just restarted bind again straight away.
+#   * The second copy then asks whatever holds the port for /health, says in one line what it found, and
+#     exits: 0 when it is this same agent on this same folder (nothing is wrong, it is already running),
+#     EXIT_PORT_TAKEN when it is anything else (a person has something to fix).
+# THE PORT IS THE LOCK, not a pid file: a pid file outlives a crash and its number gets reused by some
+# other program; a port is let go by the system the moment its program ends, however it ends.
+EXIT_PORT_TAKEN = 3
+
+
+class AgentServer(ThreadingHTTPServer):
+    if sys.platform == "win32":
+        allow_reuse_address = False
+
+    def server_bind(self):
+        if sys.platform == "win32" and hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
+
+
+def who_holds(host: str, port: int, timeout: float = 1.5):
+    """What answers /health on host:port: its JSON, {} when something answers but not as a media agent,
+    or None when nothing answers at all."""
+    ask = "127.0.0.1" if host in ("", "0.0.0.0") else ("::1" if host == "::" else host)
+    try:
+        with socket.create_connection((ask, int(port)), timeout=timeout):
+            pass
+    except OSError:
+        return None
+    url_host = f"[{ask}]" if ":" in ask else ask
+    try:
+        with urllib.request.urlopen(f"http://{url_host}:{port}/health", timeout=timeout) as r:
+            j = json.loads(r.read().decode("utf-8"))
+            return j if isinstance(j, dict) else {}
+    except (OSError, ValueError):   # an HTTP error, no answer in time, not JSON: not a media agent
+        return {}
+
+
+def already_running(host: str, port: int, aid: str, err: OSError, probe=who_holds) -> tuple:
+    """The bind failed: (exit code, the one line to print)."""
+    there = probe(host, port)
+    if there and there.get("agent_id") and there.get("agent_id") == aid:
+        return 0, (f"media agent: not starting a second copy: this agent is already running for this folder "
+                   f"on port {port}.")
+    if there and there.get("agent_id"):
+        return EXIT_PORT_TAKEN, (f"media agent: not starting: another media agent (for a different folder) is "
+                                 f"already using port {port}. Stop it, or pass --port with a free one.")
+    if there is not None:
+        return EXIT_PORT_TAKEN, (f"media agent: not starting: port {port} is already in use by another program. "
+                                 f"Stop it, or pass --port with a free one.")
+    return EXIT_PORT_TAKEN, f"media agent: not starting: could not listen on {host}:{port} ({err})."
+
+
 # The platform origin the browser loads Nimrod from. The agent is fetched cross-origin
 # BY that page, so this is the only site that ever needs to be allowed.
 DEFAULT_ORIGIN = "https://nimrod.onrender.com"
@@ -531,7 +589,12 @@ def main(argv=None):
     def make_handler(*a, **kw):
         return Handler(*a, directory=str(ROOT.resolve()), **kw)
 
-    httpd = ThreadingHTTPServer((host, args.port), make_handler)
+    try:
+        httpd = AgentServer((host, args.port), make_handler)
+    except OSError as err:
+        code, line = already_running(host, args.port, AGENT_ID, err)
+        print(line, file=sys.stderr, flush=True)
+        return code
 
     # PAIR WHILE SERVING, NOT BEFORE IT. The browser probes the candidate addresses the
     # moment the code is claimed, so the agent has to be answering /health by then. Pair
@@ -559,7 +622,8 @@ def main(argv=None):
         print("\nstopped.")
     finally:
         httpd.server_close()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

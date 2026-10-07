@@ -37,6 +37,10 @@ from . import settings as S
 BACKOFF_S = (2, 5, 15, 60)
 # Up this long, and the next stop counts as a fresh one (the waits start again from the first).
 STABLE_S = 300
+# A part whose port something else already answers on is looked at again this often. 15 s: the look is one
+# connect to this computer (under a millisecond), and a hand-started copy that is closed is replaced within
+# 15 s instead of a minute.
+PORT_BUSY_RECHECK_S = 15
 # A part's log is moved aside past this size, so a part that fails every minute cannot fill the disk.
 LOG_MAX_BYTES = 2 * 1024 * 1024
 # The model faster-whisper downloads for `small.en`, as the Hugging Face cache names its folder. Used only
@@ -81,6 +85,9 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
         model = str(sp.get('model') or 'small.en') if backend == 'whisper' else ''
         if model and model != 'small.en':
             argv += ['--model', model]
+        # The same sites the status page allows (allowed_origin): the speech program refuses pages from any
+        # other site with 403. Passed every time, so these settings are the one list, not the program's own.
+        argv += ['--allow-origin', ','.join(allowed_sites(settings))]
         # A model that came IN the package (build_windows.py --with-model) sits beside app/; used unless the
         # settings name another place.
         bundled = app.parent / 'models'
@@ -109,6 +116,16 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
     return out
 
 
+def allowed_sites(settings: dict) -> list[str]:
+    """The person's Nimrod and the other addresses it is served at, from the settings, in order, no repeats."""
+    out = []
+    for a in [settings.get('platform') or ''] + list(settings.get('alsoAllow') or []):
+        a = str(a).strip().rstrip('/')
+        if a and a not in out:
+            out.append(a)
+    return out
+
+
 def allowed_origin(origin: str, settings: dict) -> bool:
     """May a page from `origin` read /status? The person's Nimrod, the other addresses it is served at, and
     pages on this computer itself. Anything else gets no CORS header (the browser then hides the answer)."""
@@ -117,8 +134,7 @@ def allowed_origin(origin: str, settings: dict) -> bool:
         return False
     if LOCAL_ORIGIN.match(o):
         return True
-    allow = [settings.get('platform') or ''] + list(settings.get('alsoAllow') or [])
-    return o in {str(a).rstrip('/') for a in allow if a}
+    return o in set(allowed_sites(settings))
 
 
 def rotate(log: Path) -> None:
@@ -157,6 +173,20 @@ class Part:
         log = self.logs / f'{self.name}.log'
         self.logs.mkdir(parents=True, exist_ok=True)
         rotate(log)
+        # ONE COPY PER PORT. Something already answers on this part's port (a copy started by hand, or one
+        # left running by an earlier helper): starting another would only fight it for the port (on Windows
+        # both can end up listening at once). So the helper leaves it alone, says so, and looks again shortly;
+        # when the port comes free, it starts its own.
+        port = self.spec.get('port')
+        if port and self.probe(port):
+            if self.note != self._busy_note(port):
+                self._log_line(log, f'not starting: port {port} is already in use (another copy is probably '
+                                    'running); checking again shortly')
+            self.proc = None
+            self.state = 'waiting'
+            self.note = self._busy_note(port)
+            self.next_at = self.clock() + PORT_BUSY_RECHECK_S
+            return
         env = {**os.environ, **(self.spec.get('env') or {})}
         flags = CREATE_NO_WINDOW if sys.platform == 'win32' else 0
         f = open(log, 'ab')
@@ -176,6 +206,19 @@ class Part:
         self.started_at = self.clock()
         self.state = 'starting'
         self.note = self._starting_note()
+
+    @staticmethod
+    def _busy_note(port) -> str:
+        return (f'port {port} is already in use on this computer, so the helper is not starting a second copy '
+                '(one may have been started by hand)')
+
+    @staticmethod
+    def _log_line(log: Path, text: str) -> None:
+        try:
+            with open(log, 'a', encoding='utf-8') as f:
+                f.write(f'\n--- {time.strftime("%Y-%m-%d %H:%M:%S")} {text}\n')
+        except OSError:
+            pass
 
     def _starting_note(self) -> str:
         if self.name == 'speech':

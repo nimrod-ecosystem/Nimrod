@@ -23,7 +23,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from speech_service.backends import FakeBackend, FakeWakeDetector, _Edge  # noqa: E402
 from speech_service.service import (  # noqa: E402
-    CLOSE_UNAUTHORISED, Session, create_app, secrets_match, serve_websockets)
+    CLOSE_UNAUTHORISED, DEFAULT_SITES, Session, create_app, origin_allowed, refusal, secrets_match,
+    serve_websockets, site_list)
 
 passed = 0
 failed = 0
@@ -211,15 +212,108 @@ async def wake_tests():
     check('a wake-only service never answers a final', not any(m['kind'] == 'final' for m in sent), sent)
 
 
+# ------------------------------------------------------------------ which pages may connect ----
+EVIL = 'https://evil.example'
+SITE = 'https://nimrodecosystem.com'
+WS_URL = 'ws://127.0.0.1:8797/speech'      # TestClient's own default host ("testserver") is not this computer
+
+
+def origin_tests():
+    check('origins: the person\'s Nimrod and its older address may connect (a trailing slash too)',
+          origin_allowed(SITE) and origin_allowed(SITE + '/') and origin_allowed('https://nimrod.onrender.com'))
+    check('origins: a page on this computer may (any port: the dev server)',
+          origin_allowed('http://localhost:8000') and origin_allowed('http://127.0.0.1:8680')
+          and origin_allowed('http://[::1]:5000') and origin_allowed('http://localhost'))
+    check('origins: no Origin at all (a program, not a web page) may, as the helper\'s status page serves it',
+          origin_allowed(None) and origin_allowed(''))
+    bad = [EVIL, 'http://127.0.0.1.evil.example', 'http://localhost.evil.example:8000', 'null',
+           SITE + '.evil.example', 'http://nimrodecosystem.com', 'https://localhost:8000', 'https://www.evil.example']
+    check('*** origins: any other site may not (look-alikes, http for https, "null") ***',
+          not any(origin_allowed(o) for o in bad), [o for o in bad if origin_allowed(o)])
+    check('origins: the default sites are the helper\'s (checked against its settings in test_helper.py)',
+          DEFAULT_SITES == ('https://nimrodecosystem.com', 'https://nimrod.onrender.com'))
+    check('origins: --allow-origin replaces the defaults (comma-separated, repeated, slashes trimmed)',
+          site_list(['https://a.example/, https://b.example', 'https://a.example']) == ('https://a.example', 'https://b.example')
+          and site_list(None) == DEFAULT_SITES and site_list([]) == DEFAULT_SITES)
+    check('origins: --allow-origin "" -> no site at all, only pages on this computer',
+          site_list(['']) == () and not origin_allowed(SITE, ()) and origin_allowed('http://localhost:8000', ()))
+    check('host: listening on this computer, a Host naming this computer goes on (or none at all)',
+          all(refusal(SITE, h) == '' for h in ('127.0.0.1:8797', 'localhost:8797', 'LOCALHOST', '[::1]:8797', None, '')))
+    check('*** host: listening on this computer, a Host naming another site is refused (DNS rebinding) ***',
+          'host' in refusal(None, 'evil.example:8797') and 'host' in refusal(None, '127.0.0.1.evil.example'))
+    check('host: listening on another address (Tailscale, with a secret), the name used is not checked',
+          refusal(SITE, 'desk:8797', loopback=False) == '' and 'origin' in refusal(EVIL, 'desk:8797', loopback=False))
+    import os
+    import speech_service.__main__ as cli
+    saved = os.environ.pop('NIMROD_SPEECH_ORIGINS', None)
+    try:
+        d = cli.allowed_sites(cli.parse([]))
+        f = cli.allowed_sites(cli.parse(['--allow-origin', 'https://a.example', '--allow-origin', 'https://b.example']))
+        os.environ['NIMROD_SPEECH_ORIGINS'] = 'https://env.example'
+        e = cli.allowed_sites(cli.parse([]))
+        fe = cli.allowed_sites(cli.parse(['--allow-origin', 'https://a.example']))
+    finally:
+        os.environ.pop('NIMROD_SPEECH_ORIGINS', None)
+        if saved is not None:
+            os.environ['NIMROD_SPEECH_ORIGINS'] = saved
+    check('command line: the defaults; --allow-origin (repeatable); else NIMROD_SPEECH_ORIGINS; the flag wins',
+          d == DEFAULT_SITES and f == ('https://a.example', 'https://b.example') and e == ('https://env.example',)
+          and fe == ('https://a.example',), (d, f, e, fe))
+
+
+def fastapi_origin_tests():
+    from fastapi.testclient import TestClient
+    from starlette.websockets import WebSocketDisconnect
+    app = create_app(FakeBackend(script=['hi']))
+    c = TestClient(app, base_url='http://127.0.0.1:8797')
+    r = c.get('/health', headers={'Origin': EVIL})
+    check('*** fastapi /health: another site -> 403, and no CORS header ***',
+          r.status_code == 403 and 'access-control-allow-origin' not in r.headers, (r.status_code, dict(r.headers)))
+    r = c.get('/health', headers={'Origin': SITE})
+    check('fastapi /health: the person\'s Nimrod -> 200, its Origin echoed (as the helper\'s status page does)',
+          r.status_code == 200 and r.headers.get('access-control-allow-origin') == SITE
+          and 'Origin' in r.headers.get('vary', ''), dict(r.headers))
+    r = c.options('/health', headers={'Origin': SITE, 'Access-Control-Request-Private-Network': 'true'})
+    check('fastapi /health: the private-network preflight is answered for an allowed site',
+          r.status_code == 204 and r.headers.get('access-control-allow-private-network') == 'true', dict(r.headers))
+    r = c.options('/health', headers={'Origin': EVIL, 'Access-Control-Request-Private-Network': 'true'})
+    check('fastapi /health: ...and refused for another', r.status_code == 403
+          and 'access-control-allow-private-network' not in r.headers)
+    r = c.get('/health', headers={'Host': 'evil.example:8797'})
+    check('fastapi /health: a Host that is not this computer -> 403 (DNS rebinding)', r.status_code == 403)
+    r = c.get('/health')
+    check('fastapi /health: no Origin (a program on this computer) -> 200', r.status_code == 200)
+
+    def ws_try(headers):
+        try:
+            with c.websocket_connect(WS_URL, headers=headers) as ws:
+                ws.send_text(json.dumps({'type': 'hello'}))
+                return ws.receive_json().get('kind')
+        except WebSocketDisconnect as err:
+            return f'refused {err.code}'
+    got = ws_try({'Origin': EVIL})
+    check('*** fastapi /speech: a page from another site never gets a socket ***', got == 'refused 1008', got)
+    got = ws_try({'Origin': SITE})
+    check('fastapi /speech: a page from the person\'s Nimrod does', got == 'hello', got)
+    got = ws_try({'Origin': 'http://localhost:8000'})
+    check('fastapi /speech: a page on this computer does', got == 'hello', got)
+    got = ws_try({'Origin': SITE, 'Host': 'evil.example:8797'})
+    check('fastapi /speech: a Host that is not this computer does not', got == 'refused 1008', got)
+    own = TestClient(create_app(FakeBackend(script=['hi']), sites=('https://self.example',)), base_url='http://127.0.0.1')
+    check('fastapi: a self-hosted list replaces the defaults',
+          own.get('/health', headers={'Origin': 'https://self.example'}).status_code == 200
+          and own.get('/health', headers={'Origin': SITE}).status_code == 403)
+
+
 # ------------------------------------------------------------------ FastAPI --------------------
 def fastapi_tests():
     from fastapi.testclient import TestClient
     app = create_app(FakeBackend(script=['nimrod please next']), secret='k')
-    c = TestClient(app)
+    c = TestClient(app, base_url='http://127.0.0.1:8797')
     h = c.get('/health').json()
     check('/health: up, which engine, whether a secret is needed - and nothing heard',
           h == {'ok': True, 'engine': 'fake', 'protocol': 1, 'secret': True, 'wake': []}, h)
-    with c.websocket_connect('/speech') as ws:
+    with c.websocket_connect(WS_URL) as ws:
         ws.send_text(json.dumps({'type': 'hello', 'secret': 'k'}))
         check('fastapi: hello', ws.receive_json()['kind'] == 'hello')
         ws.send_text(json.dumps({'type': 'begin', 'utteranceId': 'z'}))
@@ -230,7 +324,7 @@ def fastapi_tests():
         check('*** fastapi: binary audio in, partial then final out, under the same id ***',
               p['kind'] == 'partial' and f['kind'] == 'final' and f['utteranceId'] == 'z'
               and f['text'] == 'nimrod please next', (p, f))
-    with c.websocket_connect('/speech') as ws:
+    with c.websocket_connect(WS_URL) as ws:
         ws.send_text(json.dumps({'type': 'hello', 'secret': 'nope'}))
         e = ws.receive_json()
         check('fastapi: a wrong secret is refused', e['kind'] == 'error' and e['error'] == 'secret', e)
@@ -326,6 +420,23 @@ def websockets_tests():
     check('*** plain websockets, wake-only: hello lists the word; streamed frames -> one wake event ***',
           hello['engine'] == 'none' and hello['wake'] == ['hey_jarvis'] and ev['kind'] == 'wake'
           and ev['word'] == 'hey_jarvis' and ev['atMs'] == 520, (hello, ev))
+
+    # Which pages may connect, over a real socket (the Pi's server).
+    async def from_site(origin):
+        from websockets.asyncio.client import connect
+        from websockets.exceptions import InvalidStatus
+        try:
+            async with connect(f'ws://127.0.0.1:{port}/speech', origin=origin) as ws:
+                await ws.send(json.dumps({'type': 'hello', 'secret': 'pw'}))
+                return json.loads(await ws.recv()).get('kind')
+        except InvalidStatus as err:
+            return err.response.status_code
+    got = asyncio.run(from_site(EVIL))
+    check('*** plain websockets: a page from another site -> HTTP 403, no socket ***', got == 403, got)
+    got = asyncio.run(from_site(SITE))
+    check('plain websockets: a page from the person\'s Nimrod -> hello', got == 'hello', got)
+    got = asyncio.run(from_site('http://127.0.0.1:8000'))
+    check('plain websockets: a page on this computer -> hello', got == 'hello', got)
 
 
 def read_wav(p: Path) -> bytes:
@@ -698,7 +809,9 @@ if __name__ == '__main__':
     model_folder_tests()
     my_voice_tests()
     root_tests()
+    origin_tests()
     fastapi_tests()
+    fastapi_origin_tests()
     websockets_tests()
     print(f'\n{"ALL PASS" if not failed else "FAILED"} - {passed} passed, {failed} failed')
     if '--real-whisper' in sys.argv:
