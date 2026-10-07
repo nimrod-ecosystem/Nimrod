@@ -426,6 +426,12 @@ try {
       && mcqAdapter.hint(q, 2, {}) === 'it is not Madrid' && mcqAdapter.hint(q, 3, {}) === '');
     check('multiple choice: the answers are read after the question (not in the yes / no shape)',
       mcqAdapter.ask(q, { answerBy: 'choices' }) === 'Capital of France? Paris. Rome. Madrid. Oslo.' && mcqAdapter.ask(q, { answerBy: 'yesno' }) === 'Capital of France?');
+    // Mike, 2026-10-07: a spelling question's answers are spelled aloud, not said (spell_aloud.js).
+    const sq = { prompt: 'How do you spell the number 2?', options: ['Too', 'Two'], answer: 'Two', spell: true };
+    check('*** a spelling question (spell: true): its answers are read letter by letter, "Or" between ***',
+      mcqAdapter.ask(sq, { answerBy: 'choices' }) === 'How do you spell the number 2? T, O, O. Or T, W, O.'
+      && mcqAdapter.ask(sq, { answerBy: 'choices', spellPace: 'slow' }) === 'How do you spell the number 2? T. O. O. Or T. W. O.',
+      mcqAdapter.ask(sq, { answerBy: 'choices' }));
   }
 
   // =====================================================================================

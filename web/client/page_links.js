@@ -168,6 +168,21 @@ export function canOpenHere({ signedIn = false, browserWindow = false } = {}) {
 }
 
 /**
+ * May an ordinary link on this page (a question's source, say) open in a new tab? (Mike, 2026-10-07: "The
+ * source wiki links should be something I can click on that opens it in a new window.") Off a screen: yes.
+ * On a screen page: only by the "Open it here" rule above — signed in here AND an ordinary browser window —
+ * so a care-room kiosk still shows the words and the address. Resolves false on any doubt. Asks /api/me only
+ * on a screen that has a browser window around it, so a full-screen kiosk asks nothing.
+ */
+export async function linksOpenHere({ isScreen = false, signedIn = signedInHere, browserWindow = hasBrowserWindow } = {}) {
+  if (isScreen !== true) return true;
+  let win = false;
+  try { win = browserWindow() === true; } catch { win = false; }
+  if (!win) return false;
+  try { return canOpenHere({ signedIn: (await signedIn()) === true, browserWindow: win }); } catch { return false; }
+}
+
+/**
  * A ⚙ menu row for a page. Off a screen: `run` opens it in a new tab. On a screen: `page` opens the
  * address-and-code page in the menu (`elsewhereMenuPage`), whose Back is the menu's own.
  * `over` overrides any field (id, label, hint, tab...).

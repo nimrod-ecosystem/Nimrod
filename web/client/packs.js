@@ -101,6 +101,9 @@ function checkTriviaItem(it) {
   if (it.difficulty && !normalizeDifficulty(it.difficulty)) {
     bad.push(`difficulty must be very easy/easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
   }
+  // `spell` (2026-10-07, ../spell_aloud.js): true on a question whose answers are spellings, so a voice reads
+  // each answer letter by letter instead of saying it (saying it gives the right one away). Optional.
+  if (it.spell !== undefined && typeof it.spell !== 'boolean') bad.push('spell, if present, must be true or false');
   return bad;
 }
 

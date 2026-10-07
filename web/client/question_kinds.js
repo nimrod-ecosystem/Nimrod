@@ -42,6 +42,7 @@ import { pickQuestion, chanceOf } from './question_pick.js';
 import { packById } from './pack_library.js';
 import { topicName } from './pack_reviews.js';
 import { contestKey } from './contests.js';
+import { spelledOptions, spellPace } from './spell_aloud.js';
 import * as Brain from './modules/brain_games.js';
 import { BANKS as BRAIN_BANKS } from './brain_banks.js';
 import { BANKS as THINK_BANKS } from './think_banks.js';
@@ -227,8 +228,11 @@ export const mcqAdapter = Object.freeze({
   empty: () => 'There are no questions here yet.',
   // The answers are read after the question (Trivia reads them too): without them, a question is open-ended to
   // somebody who cannot read the tiles. In the yes / no shape each is offered on its own instead.
+  // A spelling question (`spell`, Trivia's pack items; spell_aloud.js, 2026-10-07) reads its answers letter by
+  // letter: said as words, the right one is the one the voice pronounces right. [Only this read: the yes / no
+  // offer and the switch walk say a candidate through lines that are also shown on screen; not yet split.]
   ask: (it, c) => (c.answerBy === 'yesno' || c.twoSwitch === 'yesno' ? asLine(it.prompt)
-    : [it.prompt, ...it.options].map(asLine).join(' ')),
+    : [it.prompt, ...(it.spell ? spelledOptions(it.options, { pace: spellPace(c) }) : it.options)].map(asLine).join(' ')),
   candidates: (it) => it.options.slice(),
   offer: (it, cand, c) => fill(c.offerOption || MCQ_LINES.offerOption, { candidate: cand }),
   judge(it, v) { const said = optionIn(it, v); return said == null ? null : said === it.answer; },
@@ -369,7 +373,7 @@ export function triviaSource(host) {
       const pool = rows.filter((r) => r.pool === pick.row.pool);
       const q = Trivia.makeQuestion(pick.row, pool.length >= 4 ? pool : rows, { choices: 4, rand: host.rand });
       const item = Object.freeze({ id: pick.id, kind: 'mcq', prompt: q.question, options: q.options, answer: q.answer,
-        explain: q.explain || '', source: 'trivia' });
+        explain: q.explain || '', source: 'trivia', ...(q.spell ? { spell: true } : {}) });
       return { item, game: Trivia.GAME, chance: chanceOf(prow.rating, pick.rating) };
     },
     record: (r) => session.record({ ...r, item: { id: r.item?.id } }),

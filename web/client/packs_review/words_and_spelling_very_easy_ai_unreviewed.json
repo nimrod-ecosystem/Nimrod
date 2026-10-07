@@ -292,6 +292,7 @@
       "correct": "Two",
       "difficulty": "very easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Two, too and to all sound the same but mean different things.",
       "source": {
         "ref": "common knowledge",
