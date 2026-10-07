@@ -402,6 +402,45 @@ try {
     kb2.remove();
   }
 
+  // ============================================================================================
+  section('*** row 2.61: the Spotify Client ID on its own, and the Redirect URI ready to copy ***');
+  {
+    const calls3 = [];
+    let s3 = { can_store: true, can_change: true, any: false, safe_search: 'strict', safe_search_options: ['strict', 'moderate', 'none'],
+      youtube: { set: false, last4: null, overrides: [] }, spotify: { set: false, last4: null, overrides: [] } };
+    const f3 = async (url, init) => {
+      const body = init?.body ? JSON.parse(init.body) : null;
+      calls3.push({ url, method: init?.method, body });
+      if (init?.method === 'PUT' && url.endsWith('/spotify')) {
+        s3 = { ...s3, spotify: { set: true, last4: body.client_id.slice(-4), search: !!body.client_secret, overrides: [] } };
+      }
+      return { ok: true, status: 200, json: async () => s3 };
+    };
+    const kb3 = document.createElement('div'); kb3.style.cssText = 'width:375px'; document.body.append(kb3);
+    const kp3 = mountSearchKeys(kb3, { fetchImpl: f3, headers: () => ({ 'X-Dev-User': 'k3' }), device: () => 'dev-3',
+      loc: { origin: 'https://example.org' } });
+    await kp3.ready;
+    const q3 = (s) => kb3.querySelector(s);
+    check('*** the Redirect URI is in a box of its own, with a Copy button ***',
+      q3('[data-sk-sp-callback]')?.value === `https://example.org/${SPOTIFY_CALLBACK_PAGE}` && q3('[data-sk-sp-callback]').readOnly
+      && !!q3('[data-sk-do="copy-callback"]'));
+    q3('[data-sk-do="copy-callback"]').click();
+    check('Copy says what happened (copied, or copy it by hand)',
+      await until(() => [SEARCH_KEYS_WORDS.copied, SEARCH_KEYS_WORDS.copyFailed].includes(q3('[data-sk-msg]')?.textContent || ''), 3000));
+    check('*** it says the Music player uses the Client ID saved here by itself, and that the secret may be left empty to play only ***',
+      /uses the Client ID saved here by itself/.test(q3('[data-sk-sp-both]')?.textContent || '') && /leave the secret empty/.test(q3('[data-sk-sp-both]').textContent));
+    q3('[data-sk-sp-id]').value = '0123456789abcdef0123456789abcdef';
+    q3('[data-sk-do="save-spotify"]').click();
+    check('*** the Client ID alone is sent (the secret empty), and the page says playing works and search needs the secret ***',
+      await until(() => /with no Client secret/.test(q3('[data-sk-status="spotify"]')?.textContent || ''), 3000)
+      && calls3.some((c) => c.method === 'PUT' && c.body?.client_id === '0123456789abcdef0123456789abcdef' && c.body.client_secret === ''), J(calls3));
+    const w3 = JSON.stringify(SEARCH_KEYS_WORDS) + kb3.textContent;
+    check('plain words still, and names nobody', !plainWordProblems(w3).length && !/\b(account|token|widget)s?\b/i.test(w3) && !/her screen|christine|cici/i.test(w3), J(plainWordProblems(w3)));
+    check('every target at least 44px', !small(kb3, 'input, button').length, small(kb3, 'input, button').join());
+    check('no sideways scroll at 375', kb3.scrollWidth <= 376, `${kb3.scrollWidth}`);
+    kb3.remove();
+  }
+
   section('*** row 2.57 against the real server: the nearest key wins, removing one goes back to the default ***');
   {
     const KU = `${BASE_USER}-keys`;

@@ -93,6 +93,8 @@ export function createSearchKeyClient({
   }
   const detail = (r, fallback) => (r && r.body && typeof r.body.detail === 'string' && r.body.detail) || fallback;
   const keep = (r) => { if (r.ok && r.body && typeof r.body === 'object' && r.body.youtube) last = r.body; return r; };
+  // (row 2.61) A Spotify Client ID may be saved with no secret (`save('spotify', { client_id })`): the Music panel's
+  // Connect needs nothing else, and search then says it needs the secret too.
 
   const api = {
     context: ctx,
@@ -127,6 +129,28 @@ export function createSearchKeyClient({
       if (!c.panel) return { ok: false, where: null };
       const r = await call('POST', `${KEYS_URL}/youtube/adopt`, { key, panel: c.panel, label: label('panel') || '' });
       if (r.ok) { last = r.body; await api.status(); }
+      return { ok: r.ok, where: r.ok ? r.body.where : null, message: r.ok ? '' : detail(r, '') };
+    },
+    /**
+     * (row 2.61) The Spotify Client ID in force from here, for the Music panel's Connect - the one value of these
+     * rows the server hands back (a Client ID is public by design in PKCE; recommend_search.py argues it). Never the
+     * secret. { clientId, level, search, canStore, canChange, signedIn, screenLevels } or null when the server could
+     * not be asked.
+     */
+    async spotifyClientId() {
+      const q = new URLSearchParams(ctx()).toString();
+      const r = await call('GET', `${KEYS_URL}/spotify/client_id${q ? `?${q}` : ''}`);
+      if (!r.ok || !r.body || typeof r.body !== 'object') return null;
+      const b = r.body;
+      return { clientId: typeof b.client_id === 'string' ? b.client_id : '', level: b.level || null,
+        search: b.search === true, canStore: b.can_store !== false, canChange: b.can_change !== false,
+        signedIn: b.signed_in === true, screenLevels: Array.isArray(b.screen_levels) ? b.screen_levels : [] };
+    },
+    /** (row 2.61) A Music panel's OLD Client ID (from its own settings), handed over once. { ok, where }. */
+    async adoptSpotify(clientId) {
+      const c = ctx();
+      if (!c.panel) return { ok: false, where: null };
+      const r = await call('POST', `${KEYS_URL}/spotify/adopt`, { client_id: clientId, panel: c.panel, label: label('panel') || '' });
       return { ok: r.ok, where: r.ok ? r.body.where : null, message: r.ok ? '' : detail(r, '') };
     },
     /**

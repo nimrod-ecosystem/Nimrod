@@ -43,8 +43,10 @@ import { createLocalMusic } from '../music_local.js';
 import { kindOf } from '../folder_source.js';
 import {
   createSpotify, completeLogin, playBody, pickDevice, base64url, PENDING_KEY, tokenKey,
-  SPOTIFY_SCOPES, SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
+  SPOTIFY_SCOPE_SETS, SCOPES_BEFORE_SPLIT, scopesFor, missingFeatures, FEATURE_WORDS,
+  SPOTIFY_AUTHORIZE_URL, SPOTIFY_TOKEN_URL, safeReturn,
 } from '../music_spotify.js';
+import { connectHelperHtml, callbackAccepted, copyText, CONNECT_WORDS, SPOTIFY_DASHBOARD_URL, SPOTIFY_DASHBOARD_ADDRESS } from '../spotify_connect.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
 import { createSpotifyPlayer, imageOf, SPOTIFY_MESSAGES, FIRST_LOOK_MS, END_SLACK_MS, IDLE_LOOK_MS } from '../music_spotify.js';
 import { createMusicPicker, statsFromCache, RECENT_CAP } from '../music_pick.js';
@@ -331,9 +333,9 @@ const FAVS = normalizeFavourites([
       const pending = JSON.parse(storage.getItem(PENDING_KEY));
       const expect = base64url(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pending.verifier))));
       check('sign-in goes to accounts.spotify.com/authorize', r.ok && `${u.origin}${u.pathname}` === SPOTIFY_AUTHORIZE_URL);
-      check('with response_type=code, S256, the two scopes, the redirect and a state',
+      check('with response_type=code, S256, ONLY the playing scopes (nothing else is on), the redirect and a state',
         u.searchParams.get('response_type') === 'code' && u.searchParams.get('code_challenge_method') === 'S256'
-        && u.searchParams.get('scope') === SPOTIFY_SCOPES.join(' ') && u.searchParams.get('redirect_uri') === 'https://nimrod.test/spotify_callback.html'
+        && u.searchParams.get('scope') === SPOTIFY_SCOPE_SETS.play.join(' ') && u.searchParams.get('redirect_uri') === 'https://nimrod.test/spotify_callback.html'
         && u.searchParams.get('state') === pending.state && u.searchParams.get('client_id') === 'abc123', went);
       check('*** the challenge is base64url(SHA-256(verifier)) and the verifier itself never leaves ***',
         u.searchParams.get('code_challenge') === expect && !went.includes(pending.verifier) && pending.verifier.length >= 43 && pending.verifier.length <= 128);
@@ -767,6 +769,8 @@ const FAVS = normalizeFavourites([
       const asked = [];
       const m = mountModule('music', ctxFor(h, 'mu5', { personId: null, makePersonState: null, state: st,
         setTimer: T3.setTimer, clearTimer: T3.clearTimer, spotifyFactory: () => c,
+        // (row 2.61) No server here: nothing saved, nothing can be saved.
+        searchKeys: { spotifyClientId: async () => null, save: async () => ({ ok: false }), adoptSpotify: async () => ({ ok: false }) },
         describeLink: async (l) => { asked.push(l); return { title: 'Dinner Jazz (from oEmbed)', thumb: 'https://i.scdn.co/image/pl' }; } }));
       m.init();
       await tick();
@@ -820,6 +824,244 @@ const FAVS = normalizeFavourites([
       check('*** stop: the steering ends and no timer is left ***', T3.live.size === 0 && c.log.at(-1)[0] === 'pause', J(c.log.slice(-3)));
       m.destroy();
       check('teardown: still no timer', T3.live.size === 0);
+    }
+
+    // ============================================================================================
+    section('*** row 2.61: ask only for the permissions in use ***');
+    {
+      check('playing alone asks for the two playing scopes', J(scopesFor({})) === J(['user-read-playback-state', 'user-modify-playback-state']));
+      check('*** shuffle on adds reading playlists, and nothing else ***',
+        J(scopesFor({ shuffle: true })) === J([...SPOTIFY_SCOPE_SETS.play, 'playlist-read-private']));
+      check('listening history only when a visualization asks (the hook): its two scopes',
+        J(scopesFor({ history: true })) === J([...SPOTIFY_SCOPE_SETS.play, ...SPOTIFY_SCOPE_SETS.history]) && !scopesFor({ shuffle: true }).some((s) => SPOTIFY_SCOPE_SETS.history.includes(s)));
+      check('a sign-in from before the split counts as having what it was asked for then (play + playlists)',
+        J(missingFeatures(SCOPES_BEFORE_SPLIT, { shuffle: true })) === '[]' && J(missingFeatures(SCOPES_BEFORE_SPLIT, { history: true })) === '["history"]');
+      check('every feature has words for "Connect again"', Object.keys(SPOTIFY_SCOPE_SETS).every((k) => typeof FEATURE_WORDS[k] === 'string'));
+
+      // The sign-in asks for what is on (`wants`), and the callback keeps what Spotify said it granted.
+      const storage = mem();
+      let went = null;
+      let wants = { shuffle: true };
+      const sp = createSpotify({ clientId: 'abc', redirectUri: 'https://nimrod.test/spotify_callback.html', storage,
+        navigate: (u) => { went = u; }, fetchFn: fakeSpotifyFetch(), wants: () => wants });
+      await sp.beginLogin({});
+      check('*** Connect with shuffle on asks for playing + playlists ***',
+        new URL(went).searchParams.get('scope') === [...SPOTIFY_SCOPE_SETS.play, 'playlist-read-private'].join(' '), went);
+      wants = { shuffle: false };
+      await sp.beginLogin({});
+      const pending = JSON.parse(storage.getItem(PENDING_KEY));
+      check('*** Connect with shuffle off asks for playing only ***', new URL(went).searchParams.get('scope') === SPOTIFY_SCOPE_SETS.play.join(' '));
+      const f = fakeSpotifyFetch({ [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'AT', refresh_token: 'RT', expires_in: 3600 } } });
+      await completeLogin(`?code=c&state=${pending.state}`, { storage, fetchFn: f });
+      check('with no scope in Spotify\'s answer, the sign-in keeps what was asked', J(JSON.parse(storage.getItem(tokenKey('abc'))).scopes) === J(SPOTIFY_SCOPE_SETS.play));
+      check('nothing missing while shuffle is off', J(sp.missingFor()) === '[]');
+      wants = { shuffle: true };
+      check('*** shuffle turned on after connecting: its permission is missing ***', J(sp.missingFor()) === '["shuffle"]');
+      const before = f.calls.length;
+      const t = await createSpotify({ clientId: 'abc', storage, fetchFn: f }).tracks(PL);
+      check('*** a playlist\'s songs are not asked for without the permission: "needs one more permission", nothing sent ***',
+        !t.ok && t.reason === 'needs-permission' && f.calls.length === before, J(t));
+      const al = await createSpotify({ clientId: 'abc', storage, fetchFn: fakeSpotifyFetch({
+        'GET https://api.spotify.com/v1/albums/4aawyAB9vmqN3uQ7FjRGTy/tracks': { json: { items: [tr(1), tr(2)], next: null } } }) }).tracks('spotify:album:4aawyAB9vmqN3uQ7FjRGTy');
+      check('an album\'s songs are public: listed with the playing permission alone', al.ok && al.tracks.length === 2);
+      // Connect again: Spotify answers with the scopes it granted.
+      await sp.beginLogin({});
+      const p2 = JSON.parse(storage.getItem(PENDING_KEY));
+      const f2 = fakeSpotifyFetch({ [`POST ${SPOTIFY_TOKEN_URL}`]: { json: { access_token: 'AT2', refresh_token: 'RT2', expires_in: 3600,
+        scope: 'user-read-playback-state user-modify-playback-state playlist-read-private' } } });
+      await completeLogin(`?code=c2&state=${p2.state}`, { storage, fetchFn: f2 });
+      check('*** after "Connect again" Spotify\'s own answer is kept, and nothing is missing ***',
+        J(JSON.parse(storage.getItem(tokenKey('abc'))).scopes) === J([...SPOTIFY_SCOPE_SETS.play, 'playlist-read-private']) && J(sp.missingFor()) === '[]');
+      const legacy = mem();
+      legacy.setItem(tokenKey('old'), JSON.stringify({ access: 'A', refresh: 'R', expiresAt: Date.now() + 3600e3 }));
+      check('a device connected before the split is not asked again for playlists',
+        J(createSpotify({ clientId: 'old', storage: legacy, wants: () => ({ shuffle: true }) }).missingFor()) === '[]');
+      check('not connected: nothing to ask again for', J(createSpotify({ clientId: 'zzz', storage: mem(), wants: () => ({ shuffle: true }) }).missingFor()) === '[]');
+      // The player falls back to Spotify's order and says why.
+      const c = fakeConnector();
+      c.tracks = async (uri) => { c.log.push(['tracks', uri]); return { ok: false, reason: 'needs-permission', feature: 'shuffle' }; };
+      const r = await createSpotifyPlayer({ spotify: c, picker: createMusicPicker() }).play({ uri: PL });
+      check('*** the player: the playlist plays in Spotify\'s order, with "Spotify needs one more permission" ***',
+        r.ok && r.order === 'spotify' && r.note === SPOTIFY_MESSAGES['needs-permission'] && /one more permission/.test(r.note) && /Connect again/.test(r.note), J(r));
+    }
+
+    // ============================================================================================
+    section('*** row 2.61: the Connect Spotify steps, and the Client ID entered once ***');
+    {
+      const cb = 'https://nimrod.test/spotify_callback.html';
+      const off = document.createElement('div');
+      off.innerHTML = connectHelperHtml({ callback: cb });
+      check('*** the steps: developer.spotify.com, Create app, the Redirect URI ready to copy, Web API, the Client ID ***',
+        /developer\.spotify\.com/.test(off.textContent) && /Create app/.test(off.textContent) && /Web API/.test(off.textContent)
+        && /Client ID/.test(off.textContent) && off.querySelector('[data-sp-callback]')?.value === cb && off.querySelector('[data-sp-callback]').readOnly
+        && !!off.querySelector('[data-act="sp-copy"][data-walk]') && !!off.querySelector('[data-act="sp-save"][data-walk]'), off.textContent.slice(0, 300));
+      const a = off.querySelector('[data-sp-dev-link]');
+      check('off a screen, developer.spotify.com is a link that opens a new tab', a?.getAttribute('href') === SPOTIFY_DASHBOARD_URL && a.target === '_blank' && /noopener/.test(a.rel));
+      check('it says Premium is needed, and how others are added', /Premium/.test(off.textContent) && /User Management/.test(off.textContent));
+      const scr = document.createElement('div');
+      scr.innerHTML = connectHelperHtml({ callback: cb, isScreen: true, colours: { dark: '#000000', light: '#ffffff' } });
+      check('*** on a screen: the address and a code to scan, and NO link (nothing opens on a screen) ***',
+        !scr.querySelector('a') && scr.querySelector('[data-sp-dev-address]')?.textContent === SPOTIFY_DASHBOARD_ADDRESS
+        && !!scr.querySelector('[data-sp-dev-qr] svg') && !!scr.querySelector('[data-sp-screen-note]'), scr.innerHTML.slice(0, 300));
+      const here = document.createElement('div');
+      here.innerHTML = connectHelperHtml({ callback: cb, isScreen: true, openHere: true });
+      check('a screen page that is somebody\'s signed-in computer also gets the link (page_links.js "Open it here")', !!here.querySelector('[data-sp-dev-link]'));
+      check('Spotify takes https or 127.0.0.1 only, and the steps say so otherwise',
+        callbackAccepted(cb) && callbackAccepted('http://127.0.0.1:8710/spotify_callback.html') && !callbackAccepted('http://localhost:8080/spotify_callback.html')
+        && (() => { const d = document.createElement('div'); d.innerHTML = connectHelperHtml({ callback: 'http://localhost:8080/spotify_callback.html' }); return !!d.querySelector('[data-sp-not-secure]'); })());
+      let wrote = null;
+      check('Copy puts the address on the clipboard', await copyText(cb, { clipboard: { writeText: async (s) => { wrote = s; } } }) && wrote === cb);
+      check('...and says so when it cannot', (await copyText(cb, { clipboard: { writeText: async () => { throw new Error('no'); } }, input: null })) === false);
+      const words = Object.values(CONNECT_WORDS).join(' ') + Object.values(FEATURE_WORDS).join(' ') + SPOTIFY_MESSAGES['needs-permission']
+        + SPOTIFY_MESSAGES['no-client-id'] + SPOTIFY_MESSAGES['signed-out'];
+      check('no new words name anybody or say "her screen"', !/her screen|christine|cici/i.test(words));
+
+      // The panel, with a fake server for the Client ID and a fake connector.
+      function fakeKeys({ clientId = '', level = 'account', canChange = true, saveStatus = 200 } = {}) {
+        const log = [];
+        let cur = { clientId, level: clientId ? level : null };
+        return {
+          log, last: () => null, context: () => ({ panel: 'mu7', device: 'dev-test' }),
+          async spotifyClientId() { log.push(['get']); return { clientId: cur.clientId, level: cur.level, search: false, canStore: true, canChange, signedIn: false, screenLevels: ['panel', 'device'] }; },
+          async save(provider, key, lvl) {
+            log.push(['save', provider, J(key), lvl]);
+            if (saveStatus !== 200) return { ok: false, status: saveStatus, message: 'not saved' };
+            cur = { clientId: key.client_id, level: lvl }; return { ok: true, message: 'Saved.' };
+          },
+          async adoptSpotify(id) {
+            log.push(['adopt', id]);
+            if (saveStatus !== 200) return { ok: false, where: null };
+            cur = { clientId: id, level: 'account' }; return { ok: true, where: 'account' };
+          },
+        };
+      }
+      const ID1 = '0123456789abcdef0123456789abcdef';
+      const ID2 = 'fedcba9876543210fedcba9876543210';
+      const made = [];
+      let missing = [];
+      let connected = false;
+      const conn = fakeConnector();
+      conn.connected = () => connected;
+      conn.missingFor = () => missing;
+      conn.beginLogin = async (o) => { conn.log.push(['login', J(o)]); return { ok: true }; };
+      const factory = (opts) => { made.push(opts); return conn; };
+      const h = document.getElementById('host');
+      const hq = (s) => h.querySelector(s);
+      const typeIn = (sel, v) => { const el = hq(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
+      const settle = async () => { for (let i = 0; i < 6; i++) await tick(); };
+
+      // 1. Nothing saved anywhere: the steps.
+      let keys = fakeKeys();
+      let st = fakeState({ spotifyOn: true });
+      let m = mountModule('music', ctxFor(h, 'mu7', { personId: null, makePersonState: null, state: st, searchKeys: keys, spotifyFactory: factory }));
+      m.init();
+      await settle();
+      hq('[data-act="edit"]').click();
+      await settle();
+      check('*** Spotify on with no Client ID: "Change the list" shows the Connect Spotify steps ***',
+        !!hq('[data-sp-setup] [data-sp-helper]') && keys.log.some((l) => l[0] === 'get') && /Connect Spotify/.test(h.textContent), h.textContent.slice(0, 300));
+      check('the return address in the box is this site\'s own /spotify_callback.html',
+        hq('[data-sp-callback]')?.value === `${location.origin}/spotify_callback.html`);
+      typeIn('[data-sp-id]', 'not an id');
+      hq('[data-act="sp-save"]').click();
+      await settle();
+      check('a Client ID of the wrong shape is said, and nothing is saved', /does not look like a Spotify Client ID/.test(h.textContent) && !keys.log.some((l) => l[0] === 'save'));
+      typeIn('[data-sp-id]', ` ${ID1} `);
+      hq('[data-act="sp-save"]').click();
+      await settle();
+      const sv = keys.log.find((l) => l[0] === 'save');
+      check('*** "Save and connect": the Client ID is saved ONCE, on the server, for the whole account, with no secret ***',
+        sv && sv[1] === 'spotify' && sv[2] === J({ client_id: ID1 }) && sv[3] === 'account', J(keys.log));
+      check('*** ...and it goes straight on to Spotify\'s sign-in, with the new Client ID ***',
+        conn.log.some((l) => l[0] === 'login') && made.at(-1)?.clientId === ID1 && typeof made.at(-1)?.wants === 'function', J({ log: conn.log.slice(-2), made: made.map((x) => x.clientId) }));
+      check('*** the connector is told which features are on: shuffle (on by default), no history ***',
+        J(made.at(-1).wants()) === J({ shuffle: true, history: false }));
+      check('nothing went into the panel\'s own settings', !st.get().spotifyClientId);
+      check('the steps are gone: Connect and "Change the Client ID", and which one is in use',
+        !hq('[data-sp-helper]') && !!hq('[data-act="spotify-connect"]') && !!hq('[data-act="sp-change-id"]') && /ending …cdef/.test(hq('[data-sp-where]')?.textContent || ''), h.textContent.slice(0, 400));
+      // Connected, then shuffle needs one more permission.
+      connected = true; missing = ['shuffle'];
+      hq('[data-act="close"]').click(); hq('[data-act="edit"]').click();
+      await settle();
+      check('*** connected, with a feature whose permission is missing: "Spotify needs one more permission" and "Connect again" ***',
+        /one more permission/.test(hq('[data-sp-more]')?.textContent || '') && /playlists/.test(hq('[data-sp-more]').textContent)
+        && hq('[data-act="spotify-connect"]')?.textContent === 'Connect again', h.textContent.slice(0, 400));
+      missing = [];
+      hq('[data-act="sp-change-id"]').click();
+      await settle();
+      check('"Change the Client ID" shows the steps again, with a way back', !!hq('[data-sp-helper]') && !!hq('[data-act="sp-keep-id"]'));
+      hq('[data-act="sp-keep-id"]').click();
+      await settle();
+      check('...and "Keep the saved Client ID" goes back', !hq('[data-sp-helper]'));
+      // The settings row: typed there, saved on the server; the row says which is in use.
+      const ch = m.impl.settingsChoices();
+      check('*** the settings row says which Client ID is in use, from the server ***', /ending …cdef/.test(ch.spotifyClientId.emptyLabel), J(ch));
+      check('the "saved for" row offers the same four places as the YouTube key', ch.spotifyClientIdFor.map((o) => o.value).join() === 'account,person,device,panel');
+      check('*** a Client ID typed in the settings row is taken by the panel (not stored in its settings) ***',
+        m.impl.settingsWrite('spotifyClientId', ID2) === true && m.impl.settingsWrite('volume', 50) === false);
+      await settle();
+      check('...and saved on the server', keys.log.filter((l) => l[0] === 'save').at(-1)?.[2] === J({ client_id: ID2 }) && !st.get().spotifyClientId);
+      check('an empty box keeps what is there', m.impl.settingsWrite('spotifyClientId', '') === true && keys.log.filter((l) => l[0] === 'save').length === 2);
+      m.destroy();
+
+      // 2. Already saved (the keys page): no steps, the panel uses it.
+      made.length = 0;
+      keys = fakeKeys({ clientId: ID1 });
+      m = mountModule('music', ctxFor(h, 'mu8', { personId: null, makePersonState: null, state: fakeState({ spotifyOn: true }), searchKeys: keys, spotifyFactory: factory }));
+      m.init();
+      await settle();
+      hq('[data-act="edit"]').click();
+      await settle();
+      check('*** a Client ID saved on the keys page is used here with nothing typed ***',
+        !hq('[data-sp-helper]') && made.at(-1)?.clientId === ID1 && /saved for the whole account/.test(hq('[data-sp-where]')?.textContent || ''), J(made.map((x) => x.clientId)));
+      m.destroy();
+
+      // 3. An older panel's own copy is handed over once, and emptied.
+      keys = fakeKeys();
+      const st3 = fakeState({ spotifyOn: true, spotifyClientId: ID2 });
+      m = mountModule('music', ctxFor(h, 'mu9', { personId: null, makePersonState: null, state: st3, searchKeys: keys, spotifyFactory: factory }));
+      m.init();
+      await settle();
+      check('*** an older panel\'s Client ID is handed to the server once, and the panel\'s copy emptied ***',
+        keys.log.filter((l) => l[0] === 'adopt').length === 1 && keys.log.find((l) => l[0] === 'adopt')[1] === ID2 && st3.get().spotifyClientId === '', J(keys.log));
+      m.destroy();
+
+      // 4. A screen nobody has signed in on: saved for this device, and said.
+      keys = fakeKeys({ canChange: false });
+      m = mountModule('music', ctxFor(h, 'mu10', { personId: null, makePersonState: null, state: fakeState({ spotifyOn: true }), searchKeys: keys, spotifyFactory: factory, isScreen: true }));
+      m.init();
+      await settle();
+      hq('[data-act="edit"]').click();
+      await settle();
+      check('*** on a screen the steps show the address and code, no link ***', !!hq('[data-sp-dev-address]') && !hq('[data-sp-dev-link]'));
+      typeIn('[data-sp-id]', ID1);
+      hq('[data-act="sp-save"]').click();
+      await settle();
+      check('*** a bare screen saves the Client ID for THIS DEVICE (not refused at the last step), and says so ***',
+        keys.log.find((l) => l[0] === 'save')?.[3] === 'device' && /saved for this device/.test(h.textContent), J(keys.log));
+      m.destroy();
+
+      // 5. A server that cannot keep keys: kept in the panel, as before.
+      keys = fakeKeys({ saveStatus: 503 });
+      const st5 = fakeState({ spotifyOn: true });
+      m = mountModule('music', ctxFor(h, 'mu11', { personId: null, makePersonState: null, state: st5, searchKeys: keys, spotifyFactory: factory }));
+      m.init();
+      await settle();
+      hq('[data-act="edit"]').click();
+      await settle();
+      typeIn('[data-sp-id]', ID1);
+      hq('[data-act="sp-save"]').click();
+      await settle();
+      check('a server that cannot keep keys: the Client ID is kept in this panel\'s settings, and said', st5.get().spotifyClientId === ID1 && /cannot keep keys/.test(h.textContent));
+      m.destroy();
+
+      // 6. Spotify off: nothing is asked of the server.
+      keys = fakeKeys();
+      m = mountModule('music', ctxFor(h, 'mu12', { personId: null, makePersonState: null, state: fakeState({}), searchKeys: keys }));
+      m.init();
+      await settle();
+      check('Spotify off: the panel does not ask for a Client ID', keys.log.length === 0);
+      m.destroy();
     }
 
     document.getElementById('summary').textContent =

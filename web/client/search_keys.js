@@ -25,6 +25,7 @@
 // to the main key, so the page says so and offers a sign-in link (an ordinary page: following a link here is fine).
 
 import { deviceId } from './output_remote.js';
+import { copyText } from './spotify_connect.js';
 
 export const SEARCH_KEYS_API = '/api/recommend/keys';
 // The Music panel's "Connect Spotify" comes back to this page (= music_spotify.js CALLBACK_PAGE; the suite checks they
@@ -71,13 +72,18 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
   ],
   spNote: 'Searching Spotify this way needs nobody to sign in to Spotify here, and plays nothing: it only finds the '
     + 'song’s link.',
+  // (row 2.61) The Client ID saved here IS the Music player's: entered once, read back by it.
   spBoth: 'Search needs both the Client ID and the Client secret. Playing music through the Music player’s Connect '
-    + 'Spotify needs only the Client ID (paste the same one in that player’s settings) and your own Spotify sign-in '
-    + 'on that device; the secret never goes there.',
+    + 'Spotify needs only the Client ID and your own Spotify sign-in on that device: the Music player uses the Client '
+    + 'ID saved here by itself, and the secret never goes there. To play without searching, leave the secret empty.',
+  spCallback: 'The Redirect URI to paste into Spotify:',
+  copy: 'Copy',
+  copied: 'Copied.',
+  copyFailed: 'Could not copy. Select the address and copy it by hand.',
   spId: 'Client ID',
-  spSecret: 'Client secret',
+  spSecret: 'Client secret (only for search)',
   save: 'Save the key',
-  saveBoth: 'Save both',
+  saveBoth: 'Save',
   check: 'Check the key',
   remove: 'Remove the key',
   saveFilter: 'Save this',
@@ -97,6 +103,8 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
     + 'but not changed.',
   signInLink: 'Sign in to change them',
   savedSP: (last4) => `Saved: the Client ID ends …${last4}. Paste new ones to replace them.`,
+  savedSPIdOnly: (last4) => `Saved: the Client ID ends …${last4}, with no Client secret. Playing works; search needs `
+    + 'the secret too.',
   cannotStore: 'This server is not set up to keep keys yet (it needs its NIMROD_AI_KEY_SECRET setting), so a key cannot be saved.',
   signIn: 'Sign in first: this page is for whoever these keys belong to.',
   unreachable: 'Could not reach this website’s server.',
@@ -228,8 +236,11 @@ export function mountSearchKeys(el, {
       ${own('youtube', yt)}
 
       <h2>${esc(W.spHeading)}</h2>
-      <p class="sk-status" data-sk-status="spotify">${esc(sp.set ? W.savedSP(sp.last4 || '') : W.none)}</p>
+      <p class="sk-status" data-sk-status="spotify">${esc(sp.set ? (sp.search === false ? W.savedSPIdOnly(sp.last4 || '') : W.savedSP(sp.last4 || '')) : W.none)}</p>
       ${steps(W.spSteps)}
+      <label for="sk-sp-cb">${esc(W.spCallback)}</label>
+      <div class="sk-row"><input id="sk-sp-cb" data-sk-sp-callback type="text" readonly value="${esc(callback)}" style="flex:1 1 14em;width:auto">
+        <button type="button" class="sk-btn" data-sk-do="copy-callback">${esc(W.copy)}</button></div>
       <p class="sk-muted">${esc(W.spNote)}</p>
       <p class="sk-muted" data-sk-sp-both>${esc(W.spBoth)}</p>
       <label for="sk-sp-id">${esc(W.spId)}</label>
@@ -251,6 +262,14 @@ export function mountSearchKeys(el, {
     const b = e.target.closest?.('[data-sk-do]');
     if (!b || b.disabled) return;
     const [what, which] = b.dataset.skDo.split('-');
+    if (what === 'copy' && which === 'callback') {
+      // (row 2.61) The Redirect URI, ready to paste into Spotify's Create app form.
+      copyText(callback, { input: el.querySelector('[data-sk-sp-callback]') }).then((ok) => {
+        msg = ok ? W.copied : W.copyFailed;
+        render();
+      });
+      return;
+    }
     if (what === 'save' && which === 'youtube') {
       const input = el.querySelector('[data-sk-yt]');
       const key = input ? input.value : '';
