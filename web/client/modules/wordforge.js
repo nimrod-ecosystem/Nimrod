@@ -3,7 +3,7 @@
 // A vocabulary game over a word bank. Three round types:
 //   define  — here's a word, which meaning is it?
 //   blank   — here's a sentence with a hole, which word fills it?
-//   better  — two sentences, which one is better writing? (and why)
+//   better  — two sentences, which is better writing? (and why)
 //
 // POINTS ARE UNDERSTANDING, NOT TIME SERVED. The game pays for correct answers and never
 // for minutes elapsed, so leaving it open on a second monitor earns nothing. Each point is
@@ -61,7 +61,15 @@ import { answerMarkHtml } from '../answer_mark.js';
 
 export const GAME = 'wordforge';
 
-const BETTER_PROMPT = 'Which sentence is better writing?';
+// What a sentence-pair question asks. Mike, 2026-10-07 (row 2.60): "Which sentence is better writing"
+// becomes "Which is better writing".
+export const BETTER_PROMPT = 'Which is better writing?';
+// *** THE CONTEST KEY KEEPS THE OLD WORDS, ON PURPOSE (row 2.60). *** A contest on a sentence pair is
+// keyed on this text plus the better sentence (`itemKey` below). Keyed on BETTER_PROMPT, the retitle
+// would have changed every pair's key, and every pair somebody already said was wrong would have come
+// straight back into the deck with nothing to say why. The key names the pair, not the words on the
+// screen, so it stays on the text the first contests were filed under, whatever the prompt says.
+export const BETTER_KEY_TEXT = 'Which sentence is better writing?';
 
 /**
  * The key a contest holds a DECK ITEM by (../contests.js explains the key). A pack/lesson question
@@ -69,11 +77,11 @@ const BETTER_PROMPT = 'Which sentence is better writing?';
  * both games. A WORD is keyed by the word and its meaning, not by the question it happened to be
  * asked as: the same word is asked two ways (what it means / fill the blank), and a contest about
  * either is a contest about that row of the bank. A sentence pair by its better sentence, since every
- * pair shares one prompt.
+ * pair shares one prompt (and on BETTER_KEY_TEXT, not the prompt shown, so a retitle orphans nothing).
  */
 export function itemKey(item) {
   if (!item) return '';
-  if (item.kind === 'better') return contestKey(BETTER_PROMPT, item.pair && item.pair.better);
+  if (item.kind === 'better') return contestKey(BETTER_KEY_TEXT, item.pair && item.pair.better);
   if (item.kind === 'given') return contestKey(item.question && item.question.question, item.question && item.question.answer);
   return contestKey(item.word && item.word.word, item.word && item.word.meaning);
 }
@@ -295,6 +303,7 @@ export function makeQuestion(item, words, rand = Math.random) {
       // Nothing to add per option here: `why` is already about the comparison, and both
       // options are the two halves it compares. A note repeating it would be noise.
       optionNotes: opts.map(() => null),
+      optionMeanings: opts.map(() => null),
     };
   }
 
@@ -313,22 +322,34 @@ export function makeQuestion(item, words, rand = Math.random) {
       band: null,
       explain: `“${q.answer}” is right.`,
       optionNotes: opts.map(() => null),
+      optionMeanings: opts.map(() => null),
     };
   }
 
   const w = item.word;
   const others = shuffle(words.filter((x) => x.word !== w.word), rand).slice(0, 3);
   const band = bandOf(w.grade);
+  // *** WHAT EVERY OPTION MEANS, SHOWN ON ITS BUTTON ONCE THE QUESTION IS ANSWERED (row 2.59). ***
+  // Mike, 2026-10-07: "When you get the answer right in word forge, it should show the definitions next
+  // to all the words on their buttons." Parallel to `options` by index, like `optionNotes`: each is the
+  // `{ word, meaning }` row that option came from, so a fill-the-blank button can show its word's
+  // meaning and a what-does-it-mean button can show whose meaning it is. Nothing new is stored: every
+  // option already came from a row of the deck. So the ROWS are shuffled, not their texts (the same
+  // permutation for the same rand: Fisher-Yates depends only on the length), and each option keeps its
+  // own row by position. Two words in a pack can share a meaning; a search by text would label both
+  // buttons with the first of them.
+  const dealt = shuffle([w, ...others], rand);
+  const meaningsOf = () => dealt.map((r) => ({ word: r.word, meaning: r.meaning }));
 
   if (item.kind === 'blank') {
     // Blank the word out of its own sentence; the options are words.
     const hole = w.sentence.replace(new RegExp(w.word, 'i'), '_____');
-    const opts = shuffle([w.word, ...others.map((o) => o.word)], rand);
+    const opts = dealt.map((r) => r.word);
     return {
       kind: 'blank',
       prompt: hole,
       options: opts,
-      answer: opts.indexOf(w.word),
+      answer: dealt.indexOf(w),
       concept: w.word,
       band,
       explain: `“${w.word}” means ${w.meaning}.`,
@@ -346,15 +367,16 @@ export function makeQuestion(item, words, rand = Math.random) {
         return other && other.word !== w.word
           ? `“${other.word}” means ${other.meaning}.` : null;
       }),
+      optionMeanings: meaningsOf(),
     };
   }
 
-  const opts = shuffle([w.meaning, ...others.map((o) => o.meaning)], rand);
+  const opts = dealt.map((r) => r.meaning);
   return {
     kind: 'define',
     prompt: `What does “${w.word}” mean?`,
     options: opts,
-    answer: opts.indexOf(w.meaning),
+    answer: dealt.indexOf(w),
     concept: w.word,
     band,
     explain: `“${w.word}” means ${w.meaning}. For example: ${w.sentence}`,
@@ -366,7 +388,30 @@ export function makeQuestion(item, words, rand = Math.random) {
       return other && other.word !== w.word
         ? `That is what “${other.word}” means.` : null;
     }),
+    // By the row each option was dealt from (see dealt above), so a shared meaning names the right word.
+    optionMeanings: meaningsOf(),
   };
+}
+
+/**
+ * The words line under an answered option's own text (row 2.59), or '' when it has none. A
+ * fill-the-blank button is a WORD, so it gets the word's meaning; a what-does-it-mean button is a
+ * MEANING, so it gets whose meaning it is. `kind` is the question's kind.
+ */
+export function meaningLine(kind, m) {
+  if (!m || !m.word || !m.meaning) return '';
+  return kind === 'define' ? `what “${m.word}” means` : `means ${m.meaning}`;
+}
+
+/**
+ * The other options' meanings as one spoken sentence each, for a place that reads answers aloud
+ * (Quiz mix; this panel itself does not speak). `answer` is the right option's index, left out
+ * because the explanation already said it. '' when there is nothing to add.
+ */
+export function othersSaid(q) {
+  const list = (q && q.optionMeanings) || [];
+  const lines = list.filter((m, i) => m && i !== q.answer).map((m) => `“${m.word}” means ${m.meaning}.`);
+  return lines.length ? `The others: ${lines.join(' ')}` : '';
 }
 
 // What an answer is worth. A wrong answer is NOT zero — see the header. Saying "I don't
@@ -863,7 +908,12 @@ registerModule(
         }
         if (mark) cls += ` is-${mark}`;
         const on = !answered && i === highlight ? ' data-on="1"' : '';
-        return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}${answerMarkHtml(mark)}</button>`;
+        // Row 2.59: once the question is over, however it ended (right, a wrong guess in 'reveal'
+        // mode, or "I don't know"), every button also says what its word means. Inside the button it
+        // was already on, so a switch user meets no new stop and nothing new to step past.
+        const ml = answered ? meaningLine(q.kind, (q.optionMeanings || [])[i]) : '';
+        const mean = ml ? `<span class="wf-mean" data-mean>${esc(ml)}</span>` : '';
+        return `<button class="${cls}" data-opt="${i}"${on} ${(answered || missed) ? 'disabled' : ''}>${esc(o)}${answerMarkHtml(mark)}${mean}</button>`;
       }).join('');
 
       let feedback = '';
@@ -887,16 +937,13 @@ registerModule(
           // A miss is a teaching moment: the explanation, then the points for taking it in.
           // Saying so plainly gets a different opening line from a wrong guess, but the
           // same explanation and the same points.
-          // *** AND WHAT THEY PICKED, WHEN THEY PICKED SOMETHING. ***
           //
-          // Only on a real guess: somebody who said "I don't know" did not choose a word, and
-          // telling them what the word they did not pick means would be answering a question
-          // they were honest enough not to ask.
-          const note = !answered.declared && answered.picked != null
-            ? (q.optionNotes || [])[answered.picked] : null;
+          // WHAT THE PICKED WORD MEANS is on its own button now (row 2.59, every option's meaning
+          // shown), so the separate "You picked: ..." line that used to sit here would say the same
+          // thing twice in a small panel. It was removed rather than kept beside the buttons.
+          // `optionNotes` still carries that sentence for anything that wants it in words.
           feedback = `<div class="wf-fb is-wrong">
                <b>${answered.declared ? 'Fair enough — here it is.' : 'Not quite.'}</b> ${esc(q.explain)}
-               ${note ? `<span class="wf-picked">You picked: ${esc(note)}</span>` : ''}
                <span class="wf-try">+${answered.award.total} for ${answered.declared ? 'asking' : 'the try'} — press “Got it” to bank it.</span>
              </div>
              ${afterStops('Got it')}`;

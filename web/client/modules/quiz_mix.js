@@ -204,6 +204,9 @@ const CSS = `
 .qz-pick.qm-opt{font-size:clamp(13px,3.6cqmin,42px);max-width:44cqw;white-space:normal;line-height:1.2}
 .wg-pair.qm-pair{font-size:clamp(16px,5cqmin,60px);text-transform:none}
 .qm-pts{display:inline-block;margin-inline-start:.4em;font-weight:800;color:var(--text)}
+.qm-means{display:grid;gap:.3em;margin-top:.5em;text-align:start;color:var(--text)}
+.qm-mean{display:block}
+.qm-mean b{font-weight:800}
 .qm-round{font-weight:700}
 .qm-table{margin:0 auto 1.5cqmin;padding:0;list-style:none;display:grid;gap:.6cqmin;font-size:clamp(14px,4.5cqmin,52px)}
 .qm-table li{display:flex;gap:1em;justify-content:space-between;min-width:12em}
@@ -606,6 +609,8 @@ registerModule(
       hint: (it, n) => String(call(it, 'hint', it, n, kcfg(srcOf(it))) || ''),
       answer: (it) => call(it, 'answer', it),
       explain: (it, answer) => String(call(it, 'explain', it, answer, kcfg(srcOf(it))) || ''),
+      // How long the answer must stay up for its explanation to be heard (Word Forge's meanings, row 2.59).
+      holdMs: (it) => Number(call(it, 'holdMs', it, kcfg(srcOf(it)))) || 0,
       maxEntry: (it) => call(it, 'maxEntry', it, kcfg(srcOf(it))),
       vocab: (it) => call(it, 'vocab', it, kcfg(srcOf(it))) || [],
       heardText: (v) => { const s = current?.source; const f = s?.adapter?.heardText; return typeof f === 'function' ? f(v) : String(v); },

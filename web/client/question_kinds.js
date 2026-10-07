@@ -399,6 +399,40 @@ export function triviaSource(host) {
 // Kept as the game "wordforge" on the person's `ratings` row. [Guess, on Mike's list.]
 export const WORDS_GAME = 'wordforge';
 export const gradeLevel = (grade) => { const g = Number(grade) || 8; return g <= 4 ? 1 : g <= 6 ? 2 : g <= 8 ? 3 : 4; };
+
+// *** WHAT EVERY ANSWER MEANT, AFTER A WORD FORGE QUESTION (row 2.59). *** Word Forge shows each option's meaning on
+// its button once the question is over; here the buttons are gone by then (the celebration or the shown answer takes
+// their place), so the same meanings are listed under the explanation, one line per answer, and the other answers'
+// meanings are read after the explanation, since this game reads its answers aloud. An item carries them as
+// `meanings`, parallel to `options` ({ word, meaning } each, Word Forge's `optionMeanings`), and `others`, the
+// sentence that is said.
+//
+// SPEAKING PACE, for how long the answer stays up while that is read: 145 words a minute and 450 ms to finish, the
+// numbers steps.js `holdMs` uses for the tour's narration ("deliberately slow: the audience includes people who need
+// it slower"). Not a setting, argued: the person's own knobs are already there (how long the celebration and the
+// shown answer stay, and a press moves on at once); this only stops the next question cutting a sentence off half way.
+// The case against: a fast listener waits a few seconds more on a word question unless they press.
+export const SPEAK_WPM = 145;
+export const SPEAK_PAD_MS = 450;
+export function speakingMs(text) {
+  const n = String(text || '').trim().split(/\s+/).filter(Boolean).length;
+  return n ? Math.round((n / SPEAK_WPM) * 60000 + SPEAK_PAD_MS) : 0;
+}
+export const wordsAdapter = Object.freeze({
+  ...mcqAdapter,
+  explain: (it) => [mcqAdapter.explain(it), it.others || ''].filter(Boolean).join(' '),
+  holdMs: (it, c) => speakingMs(wordsAdapter.explain(it, null, c)),
+});
+export const wordsView = Object.freeze({
+  ...mcqView,
+  explainHtml: (s) => {
+    const it = s.item || {};
+    const kind = it.wfKind || 'blank';
+    const lines = (it.meanings || []).map((m, i) => (m ? `<span class="qm-mean" data-mean="${i}"><b>${esc(it.options[i])}</b>: ${
+      esc(Forge.meaningLine(kind, m))}</span>` : '')).join('');
+    return `${esc(it.explain || '')}${lines ? `<span class="qm-means" data-means>${lines}</span>` : ''}`;
+  },
+});
 export function wordsSource(host) {
   let words = [];
   let bank = [];
@@ -430,11 +464,13 @@ export function wordsSource(host) {
       const kind = canBlank(w) && host.rand() < 0.5 ? 'blank' : 'define';
       const q = Forge.makeQuestion({ kind, word: w }, words, host.rand);
       const item = Object.freeze({ id: dealt.item.id, level: dealt.item.level, kind: 'mcq', prompt: q.prompt,
-        options: q.options, answer: q.options[q.answer], explain: q.explain || '', source: 'wordforge' });
+        options: q.options, answer: q.options[q.answer], explain: q.explain || '', source: 'wordforge',
+        wfKind: q.kind, meanings: Object.freeze((q.optionMeanings || []).map((m) => (m ? Object.freeze({ ...m }) : null))),
+        others: Forge.othersSaid(q) });
       return { ...dealt, item };
     },
     record: (r) => session.record({ ...r, item: { id: r.item?.id } }),
-    adapter: mcqAdapter, view: mcqView,
+    adapter: wordsAdapter, view: wordsView,
     cfg: () => ({ ...base(), ...MCQ_LINES, ...host.overrides() }),
     onConfig: (c) => rows.onConfig(c),
     destroy() { dead = true; session.destroy(); rows.destroy(); },
