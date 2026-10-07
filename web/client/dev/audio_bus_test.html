@@ -666,6 +666,39 @@ const video = { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY
       void stRows;
     }
 
+    section('*** spotify sdk: a source can ask to PAUSE rather than duck (Spotify through this page) ***');
+    {
+      const r = rig();
+      r.src('sp', { ...video, whenDucked: 'pause' });
+      r.src('bed', game);
+      r.src('cue', { tier: 'voice' });
+      r.bus.setActive('sp', true);
+      check('DUCK_MODES is duck and pause, duck first (the default)', JSON.stringify(AB.DUCK_MODES) === '["duck","pause"]');
+      check('a pausing source plays at full on its own', r.last('sp') === 1);
+      check('it says it pauses', r.bus.whenDucked('sp') === 'pause' && r.bus.whenDucked('bed') === 'duck' && r.bus.whenDucked('nope') === null);
+      r.bus.setActive('cue', true);
+      check('*** a spoken cue sends it to 0, not to the duck depth ***', r.last('sp') === 0, JSON.stringify(r.seen.sp));
+      r.bus.setActive('cue', false);
+      check('...and it comes back to full when the cue ends', r.last('sp') === 1);
+      r.bus.setFloor('media', 0.4);
+      r.bus.setActive('cue', true);
+      check('a channel floor does not lift the pause (a decision, not a volume)', r.last('sp') === 0);
+      r.bus.setActive('cue', false);
+      r.bus.setFloor('media', 0);
+      // Everything else on the bus is unchanged: a plain source in another group still ducks.
+      const r2 = rig();
+      r2.src('bed', game); r2.src('sp', { tier: 'media', whenDucked: 'pause' }); r2.src('cue', { tier: 'voice' });
+      r2.bus.setActive('bed', true); r2.bus.setActive('sp', true); r2.bus.setActive('cue', true);
+      check('*** a source that never asked still DUCKS beside it (others unchanged) ***', r2.last('bed') === DUCK_TO && r2.last('sp') === 0);
+      check('setWhenDucked changes it live: duck now gives the duck depth', r2.bus.setWhenDucked('sp', 'duck') === 'duck' && r2.last('sp') === DUCK_TO);
+      check('...and back to pause', r2.bus.setWhenDucked('sp', 'pause') === 'pause' && r2.last('sp') === 0);
+      check('a word it does not know changes nothing', r2.bus.setWhenDucked('sp', 'loud') === 'pause' && r2.bus.setWhenDucked('ghost', 'pause') === null);
+      r2.src('sp', { tier: 'media' });
+      check('re-registering without it keeps what it asked for', r2.bus.whenDucked('sp') === 'pause');
+      r2.bus.setActive('cue', false);
+      check('the master still turns a pausing source down like any other', (r2.bus.setMaster(0.5), r2.last('sp') === 0.5));
+    }
+
     document.getElementById('summary').textContent =
       failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
     document.getElementById('summary').className = failed === 0 ? 'pass' : 'fail';

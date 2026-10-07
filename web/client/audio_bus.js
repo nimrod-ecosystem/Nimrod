@@ -65,6 +65,16 @@ export const TIERS = { call: 100, talk: 80, voice: 80, media: 40, sfx: 20 };
 // watch-together was making.
 export const CALL_MODES = ['pause', 'duck'];
 
+// *** spotify sdk (2026-10-07): WHAT A SOURCE DOES WHEN IT WOULD BE DUCKED - PER SOURCE. ***
+// 'duck' (every source until now, and still the default): the tier rule above, a soft bed under the words.
+// 'pause': this source goes to 0 for as long as it would have been ducked, and comes back when the
+// higher tier ends. A DECISION like hush, so no channel floor lifts it. Asked for by Spotify playing
+// through this page (spotify_sdk.js): Spotify's developer policy says "Do not permit any device or
+// system to segue, mix, re-mix, or overlap" its content with other audio [developer.spotify.com/policy,
+// read 2026-10-07], which read literally rules out a bed under a spoken cue. A per-source default, not a
+// law: `setWhenDucked` changes it live, and nothing else on the bus changes.
+export const DUCK_MODES = Object.freeze(['duck', 'pause']);
+
 // Video outranks game music inside the `music` group.
 export const MUSIC_GROUP = 'music';
 export const VIDEO_PRIORITY = 10;
@@ -299,7 +309,9 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
 
       for (const s of active) {
         let level = 1;
-        if (s.tierP < topP) {                                                 // 1. duck
+        if (s.tierP < topP && s.whenDucked === 'pause') {                     // 1. (spotify sdk) pause, not duck
+          level = 0;
+        } else if (s.tierP < topP) {                                          // 1. duck
           // The deepest duck among the active sources ABOVE this one. Every one of them uses
           // the bus's depth unless it declared its own (a listening window ducks further than
           // a spoken cue: the microphone is trying to hear a person over the video).
@@ -338,8 +350,10 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     // `owner`: the module instance this source belongs to (module.js tags it from `ctx.instanceId`,
     // so a module never has to). It is what `muteOwner` mutes. Sticks across re-registers.
     // `within`: what that owner is inside, innermost first (module.js adds it for a module on a TV).
+    // `whenDucked` (spotify sdk): 'duck' (default) or 'pause' - see DUCK_MODES. Sticks across re-registers.
     register(id, { tier = 'media', group = null, groupPriority = null, onGain = null,
-                   duck = null, channel = null, silence = null, owner = null, within = null } = {}) {
+                   duck = null, channel = null, silence = null, owner = null, within = null,
+                   whenDucked = null } = {}) {
       if (!id) return null;
       let s = sources.get(id);
       if (!s) {
@@ -360,6 +374,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       if (s.gp == null) s.gp = 0;
       if (duck !== null) s.duck = duck;
       if (silence !== null) s.silence = !!silence;
+      if (DUCK_MODES.includes(whenDucked)) s.whenDucked = whenDucked;     // spotify sdk
       if (onGain) s.onGain = onGain;
       if (owner !== null && owner !== undefined && owner !== '') s.owner = String(owner);
       if (Array.isArray(within)) s.within = within.filter((w) => w != null && w !== '').map(String);
@@ -419,6 +434,16 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
     stop(id) { this.setActive(id, false); },
 
     unregister(id) { if (sources.delete(id)) recompute(); },
+
+    // (spotify sdk) Change what one source does when it would be ducked: 'duck' | 'pause'. Returns what is
+    // now in force ('duck' for a source that never said), or null for an unknown source.
+    setWhenDucked(id, mode) {
+      const s = sources.get(id);
+      if (!s) return null;
+      if (DUCK_MODES.includes(mode) && (s.whenDucked || 'duck') !== mode) { s.whenDucked = mode; recompute(); }
+      return s.whenDucked || 'duck';
+    },
+    whenDucked: (id) => (sources.has(id) ? (sources.get(id).whenDucked || 'duck') : null),
 
     // *** SEPARATE FROM THE DUCK ON PURPOSE. *** A duck is momentary and leaves a bed
     // audible; this is "stop, I am talking to somebody in this room". It silences media and
