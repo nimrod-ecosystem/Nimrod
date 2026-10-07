@@ -336,16 +336,24 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
         && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1);
       check('*** by default only the SETTINGS go online — not which boxes were ticked ***',
         saved.settings.layer?.flashLimitPerSecond === 3 && saved.settings.answers === undefined, JSON.stringify(saved.settings));
+      // *** STORAGE LINE (Mike, 2026-10-07): which boxes were ticked is health information and never goes online. ***
+      // An old caller still asking for them (`includeAnswers: true`) gets the settings alone.
       const saved2 = await saveOnline({ record: store.get(), library, acknowledged: true, includeAnswers: true });
-      check('the ticked boxes go online only when that is chosen too',
-        saved2.settings.answers?.conditions?.includes('stroke'));
+      check('*** storage line: even asked for, the ticked boxes and the conflict log do NOT go online ***',
+        saved2.settings.answers === undefined && saved2.settings.log === undefined
+          && JSON.stringify(Object.keys(saved2.settings)) === '["layer"]', JSON.stringify(saved2.settings));
       check('saving again updates the same one, not a second copy',
         saved2.id === saved.id && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1);
-      check('onlinePayload is the same rule, pure', onlinePayload(store.get()).answers === undefined
-        && onlinePayload(store.get(), { includeAnswers: true }).answers.conditions.includes('photosensitive'));
+      const pay = onlinePayload(store.get(), { includeAnswers: true });
+      check('*** onlinePayload is the same rule, pure: the layer and nothing else, whatever is passed ***',
+        JSON.stringify(Object.keys(pay)) === '["layer"]' && pay.layer.flashLimitPerSecond === 3
+          && !/photosensitive|stroke/.test(JSON.stringify(pay)), JSON.stringify(pay));
+      check('...and what went to the account names no box anywhere (the state write itself)',
+        state.writes > 0 && !/photosensitive|stroke|"answers"|"log"/.test(JSON.stringify(state.get())),
+        JSON.stringify(state.get()));
       const back = recordFromOnline(saved2);
-      check('what was saved online reads back into a record another device could apply',
-        back.layer.flashLimitPerSecond === 3 && back.answers.conditions.includes('stroke'));
+      check('what was saved online reads back into a record another device could apply (settings, no boxes)',
+        back.layer.flashLimitPerSecond === 3 && back.answers.conditions.length === 0);
       check('a record saved without answers reads back with empty answers, not a crash',
         recordFromOnline(saved).answers.conditions.length === 0 || recordFromOnline({ settings: { layer: {} } }).answers.conditions.length === 0);
     }
@@ -425,8 +433,10 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
       await new Promise((r) => setTimeout(r, 0));
       check('*** only "yes, save online" writes online — once ***',
         state.writes === 1 && library.listPresets(STARTING_DEFAULTS_PRESET_TYPE).length === 1, String(state.writes));
-      check('by default the ticked boxes did not go with it',
+      check('the ticked boxes did not go with it',
         library.listPresets(STARTING_DEFAULTS_PRESET_TYPE)[0].settings.answers === undefined);
+      check('*** storage line: there is no "also save which boxes were ticked" button to press ***',
+        !btn('includeAnswers') && !/which boxes were ticked:/i.test(stage.textContent));
 
       btn('putBack').click();
       check('*** "put back how it was" undoes the apply and tells the host ***',
@@ -603,8 +613,8 @@ const entry = (res, key) => res.entries.find((e) => e.key === key);
         JSON.stringify(log));
       check('...on THIS DEVICE, in the same record as the boxes', (JSON.parse(storage.getItem(DEVICE_KEY)).log || []).length === 2);
       check('...the answer is kept with the boxes, so reopening shows it', store.get().answers.resolved.theme === 'dusk');
-      check('the log goes online only with the boxes', onlinePayload(store.get()).log === undefined
-        && onlinePayload(store.get(), { includeAnswers: true }).log.length === 2);
+      check('*** storage line: the log never goes online (it names the boxes) ***', onlinePayload(store.get()).log === undefined
+        && onlinePayload(store.get(), { includeAnswers: true }).log === undefined);
       check('put back keeps the log (what was answered still happened)', store.putBack() && store.log().length === 2);
       store.forgetAnswers();
       check('"forget what was ticked" clears the log too (it names the boxes)', store.log().length === 0);

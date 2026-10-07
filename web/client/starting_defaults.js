@@ -35,9 +35,9 @@
 //   picker should show what was ticked, or the next person to open it re-answers from scratch;
 //   (3) "which box set this" (row 2.48 note c) needs the box.
 //   RECOMMENDATION, BUILT: keep the boxes ON THE DEVICE ONLY, next to the layer. ONLINE, only the
-//   settings go by default; the boxes go too only if somebody ticks that separately
-//   (`includeAnswers`). "Forget what was ticked" clears them from the device and keeps the
-//   settings. Note the settings still hint at a condition (a flash cap says something) - which is
+//   settings go. (Until 2026-10-07 the boxes could go too if somebody ticked that separately; the
+//   storage line Mike decided that day - no health checkboxes on the server - removed that choice.)
+//   "Forget what was ticked" clears them from the device and keeps the settings. Note the settings still hint at a condition (a flash cap says something) - which is
 //   why the online warning is shown for the settings-only save too.
 //
 // ---------------------------------------------------------------------------------------
@@ -71,8 +71,8 @@
 //   running exactly as it was, and everything else on the picker still works.
 //   WHERE THE LOG LIVES, argued: on the DEVICE, in the same record as the boxes. FOR the account
 //   instead: a family would see who chose what. AGAINST, and it wins for the default: the answer names
-//   the boxes, which are health data (the same reason the boxes stay on the device), and it goes online
-//   with them when somebody ticks "also save which boxes were ticked". Bounded to the last 50.
+//   the boxes, which are health data (the same reason the boxes stay on the device), so it never goes
+//   online (storage line, 2026-10-07). Bounded to the last 50.
 // No pair of today's boxes conflicts (each setting has one box, or boxes that agree); the mechanism is
 // built and tested now so the first conflicting row added to the table asks instead of guessing.
 
@@ -559,12 +559,15 @@ export function createDeviceStore({
 export const STARTING_DEFAULTS_PRESET_TYPE = 'startingDefaults';
 
 /**
- * What goes online. The settings by default; the ticked boxes - and the conflict log, which names
- * them - only when that is chosen too.
+ * What goes online: the resulting settings layer, and nothing else.
+ *
+ * *** STORAGE LINE (Mike, 2026-10-07, DECISIONS.md "what the server may hold"): the ticked boxes are
+ * health information about a person, so they - and the conflict log, which names them - stay on the
+ * device. *** Until 2026-10-07 an "Also save which boxes were ticked" choice sent them too; that
+ * choice is gone, and an old caller still passing `{ includeAnswers: true }` gets the layer alone.
  */
-export function onlinePayload(record, { includeAnswers = false } = {}) {
-  const r = normalizeRecord(record);
-  return includeAnswers ? { layer: r.layer, answers: r.answers, log: r.log } : { layer: r.layer };
+export function onlinePayload(record) {
+  return { layer: normalizeRecord(record).layer };
 }
 
 /**
@@ -572,8 +575,7 @@ export function onlinePayload(record, { includeAnswers = false } = {}) {
  * and only passes true once somebody has said yes to it. Updates the one existing
  * startingDefaults preset rather than piling up copies.
  */
-export async function saveOnline({ record, library, acknowledged = false, includeAnswers = false,
-  name = 'Starting settings' } = {}) {
+export async function saveOnline({ record, library, acknowledged = false, name = 'Starting settings' } = {}) {
   if (acknowledged !== true) throw new Error('saveOnline: the online warning has not been acknowledged');
   if (!library || typeof library.savePreset !== 'function') throw new Error('saveOnline: nowhere online to save');
   const existing = (library.listPresets?.(STARTING_DEFAULTS_PRESET_TYPE) || [])[0];
@@ -581,7 +583,7 @@ export async function saveOnline({ record, library, acknowledged = false, includ
     id: existing ? existing.id : null,
     type: STARTING_DEFAULTS_PRESET_TYPE,
     name,
-    settings: onlinePayload(record, { includeAnswers }),
+    settings: onlinePayload(record),
   });
 }
 
