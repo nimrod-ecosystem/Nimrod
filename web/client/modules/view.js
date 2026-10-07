@@ -124,6 +124,8 @@ import { watchPanelSound } from '../panel_sound.js';
 import { barPlaceFrom, cabinetSlot, CABINET_STRIP_STYLE, fitBarInto, unfitBar } from '../room_bar.js';
 // 2026-10-02: which panel a dashboard opens with being edited (edit_mode.js `editPanel`).
 import { editSettingsFrom } from '../edit_mode.js';
+// 2026-10-07, nested history: the shared game-results stream's name (the screen's history host routes it).
+import { GAMEPLAY_STREAM } from '../telemetry.js';
 
 // ---------------------------------------------------------------------------------------
 // *** ROW 2.38: A DASHBOARD INSIDE A DASHBOARD ("turtles all the way down"). ***
@@ -249,6 +251,21 @@ function dashboardFactory(ctx) {
     const childState = (id) => (makeState ? makeState(id, {}, viewId) : null);
     const childEvents = (id) => (makeEvents ? makeEvents(id, {}, viewId) : null);
 
+    // *** NESTED HISTORY (2026-10-07; history_place.js `route`). *** The screen's history host reaches every
+    // panel as `ctx.history` -- kiosk.js `childCtx` hands it, and a dashboard's children (and a dashboard inside
+    // a dashboard) inherit it through `extendCtx`, so there is still ONE host per screen. But the events handles
+    // here are this file's own, not the kiosk's `makeEvents`/`mountInstance`, so game results and a talk board's
+    // words in a dashboard's panels went straight to the site's log whatever the person chose. They go through
+    // the same host now: the shared game-results stream filed under this dashboard (as the kiosk files its own
+    // under the screen's), a board's words under its panel. A handle already routed (the kiosk's own
+    // `makeEvents`, which an embedded dashboard is handed) is passed through, never wrapped twice. No host
+    // (a test, a preview, home.js): exactly as before.
+    const history = ctx.history && typeof ctx.history.route === 'function' ? ctx.history : null;
+    const routeHistory = (kind, handle, key) => {
+      if (!history || !handle || handle.routed || !key) return handle;
+      try { return history.route(kind, handle, { key }) || handle; } catch (err) { console.error('view: history', err); return handle; }
+    };
+
     // *** AND THE SAME SCOPE FOR A CHILD THAT MAKES ITS OWN HANDLE (fixed 2026-08-31). ***
     //
     // `mountChild` spreads `...ctx`, so a child asking for a SHARED row by name — the way
@@ -262,9 +279,12 @@ function dashboardFactory(ctx) {
     // check written for the per-child handles above, which happened to also be the only thing
     // watching this. Worth noting for what it says about the seam rather than the bug: a
     // container that hands its own ctx down hands down the host's idea of scope with it.
+    // (2026-10-07: the shared game-results stream goes through the screen's history host -- NESTED HISTORY, above.)
     const childMakes = {
       ...(makeState ? { makeState: (key, opts = {}) => makeState(key, opts, viewId) } : {}),
-      ...(makeEvents ? { makeEvents: (key, opts = {}) => makeEvents(key, opts, viewId) } : {}),
+      ...(makeEvents ? { makeEvents: (key, opts = {}) => (key === GAMEPLAY_STREAM
+        ? routeHistory('games', makeEvents(key, opts, viewId), viewId)
+        : makeEvents(key, opts, viewId)) } : {}),
     };
 
     function destroyRec(rec) {
@@ -292,7 +312,9 @@ function dashboardFactory(ctx) {
           console.error('view: wrapState', err); state = raw;
         }
       }
-      const events = childEvents(def.stateKey || def.id);
+      // (A talk board's words through the screen's history host -- NESTED HISTORY, above; kiosk.js does the same.)
+      const rowKey = def.stateKey || def.id;
+      const events = def.type === 'board' ? routeHistory('words', childEvents(rowKey), rowKey) : childEvents(rowKey);
       // `extendCtx`, not a spread: the host's getters (`personId`, `callTransport`, `aim`...) stay
       // getters for the child, so a child mounted before a value arrives still sees it. 2026-09-30.
       const instance = mountModule(def.type, extendCtx(ctx, {

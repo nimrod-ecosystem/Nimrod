@@ -29,6 +29,11 @@ import {
 import { historyHtml, renderHistoryPage, HISTORY_ITEMS, HISTORY_PAGE } from '../history_page.js';
 import { memoryPlayStore, createPlays, panelPlays } from '../plays.js';
 import { ROOT_KEY } from '../user_folders.js';
+// Nested history (2026-10-07): a dashboard's panels, and a dashboard inside one, reach the screen's host.
+import { mountModule, registerModule, getManifest } from '../module.js';
+import { createBus } from '../bus.js';
+import '../modules/view.js';
+import { GAMEPLAY_STREAM } from '../telemetry.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -336,6 +341,110 @@ const T0 = Date.parse('2026-10-07T10:00:00Z');
     check('*** a fresh device fills the panel from the folder, and the picker sees it ***',
       handle2.rows().length === 1 && handle2.stats()['vid-1']?.n === 1, J(handle2.stats()));
     handle.destroy(); handle2.destroy();
+
+    section('nested history: a dashboard\'s panels, and a dashboard inside one, reach the same host');
+    {
+      // A probe game (asks for the shared game-results stream, as telemetry.js does) and a probe talk board (keeps the
+      // events handle its panel was given). The board is a probe registered under the real type: the routing is by
+      // type, and this page must not pull in the whole board. (Setup check: nothing registered the real one here.)
+      const boardWasThere = !!getManifest('board');
+      const probes = {};
+      registerModule({ type: 'hp_probe_game', title: 'Probe game', settings: [] },
+        (ctx) => ({ init() { probes[ctx.instanceId] = ctx.makeEvents(GAMEPLAY_STREAM); }, destroy() {} }));
+      registerModule({ type: 'board', title: 'Probe board', settings: [] },
+        (ctx) => ({ init() { probes[ctx.instanceId] = ctx.events; }, destroy() {} }));
+      check('(setup) no real talk board on this page, so the probe is the one mounted', !boardWasThere);
+      const records = {
+        OUT: { id: 'OUT', name: 'Outer', modules: [{ id: 'g-top', type: 'hp_probe_game' }, { id: 'nd', type: 'dashboard' }] },
+        IN: { id: 'IN', name: 'Inner', modules: [{ id: 'g-in', type: 'hp_probe_game' }, { id: 'b-in', type: 'board' }] },
+      };
+      const seed = {
+        OUT: { settings: { kiosk: { layout: { preset: 'side', slots: ['g-top', 'nd'] } } }, nd: { shows: 'IN' } },
+        IN: { settings: { kiosk: { layout: { preset: 'side', slots: ['g-in', 'b-in'] } } } },
+      };
+      const makeState = (key, _o, pid) => {
+        let data = ((seed[pid] || {})[key]) || {};
+        const subs = new Set();
+        return { load: () => Promise.resolve(), get: () => data,
+          set: (p) => { data = { ...data, ...p }; subs.forEach((f) => f(data)); return Promise.resolve(); },
+          subscribe: (f) => { subs.add(f); f(data); return () => subs.delete(f); }, startPolling() {}, destroy() {} };
+      };
+      // The site's log, per (dashboard, stream): what reached it is in `logged`.
+      const logged = [];
+      const makeEvents = (key, _o, pid) => ({
+        load: async () => ({ events: [], total: 0 }),
+        get: () => { const ev = logged.filter((x) => x.at === `${pid}:${key}`); return { events: ev, total: ev.length }; },
+        async append(kind, data) { logged.push({ at: `${pid}:${key}`, kind, data, created_at: new Date(Date.now() - 60000).toISOString() }); },
+        subscribe: () => () => {}, startPolling() {}, destroy() {},
+      });
+      const profilesFake = { get: async (id) => (records[id] ? JSON.parse(J(records[id])) : null) };
+      // ONE host, the screen's: a real one, its device copy in memory, and every route it is asked for counted.
+      const nrow = fakeRow({ games: 'device', words: 'device' });
+      const real = createHistoryHost({ personId: () => 'p-nest', makePersonState: (pid, key) => (key === HISTORY_KEY ? nrow : null) });
+      const nstore = memoryPlayStore();
+      const routes = [];
+      const shared = { ...real, route(kind, base, o = {}) { routes.push(`${kind}:${o.key}`); return real.route(kind, base, { ...o, store: nstore }); } };
+      const box = document.createElement('div');
+      box.style.cssText = 'position:relative;width:800px;height:450px';
+      document.body.append(box);
+      const bus = createBus();
+      const mountTop = (extra = {}) => {
+        const inst = mountModule('dashboard', {
+          mount: box, bus, rootBus: bus, viewId: 'OUT', user: 'u', personId: null,
+          makeState, makeEvents, profiles: profilesFake, storage: { getItem: () => null, setItem() {}, removeItem() {} },
+          nestLiveDepth: () => 1,
+          state: { get: () => ({}), set: () => Promise.resolve(), subscribe: () => () => {}, load: () => Promise.resolve(), startPolling() {}, destroy() {} },
+          ...extra,
+        });
+        inst.init();
+        return inst;
+      };
+      const settled = async (fn, ms = 6000) => {
+        const until = Date.now() + ms;
+        while (Date.now() < until) { try { if (fn()) return true; } catch { /* not yet */ } await new Promise((r) => setTimeout(r, 25)); }
+        return false;
+      };
+      let top = mountTop({ history: shared });
+      const up = await settled(() => probes['g-top'] && probes['g-in'] && probes['b-in']);
+      check('(setup) the outer game, the nested game and the nested board all mounted', up, J(Object.keys(probes)));
+      check('*** every one asked the SAME host (the one in ctx), filed as the kiosk files them: games under their dashboard, words under the panel ***',
+        routes.includes('games:OUT') && routes.includes('games:IN') && routes.includes('words:b-in'), J(routes));
+      check('their handles are the routed ones', probes['g-top']?.routed === 'games' && probes['g-in']?.routed === 'games' && probes['b-in']?.routed === 'words');
+      await probes['g-in'].load();
+      await probes['g-in'].append('trial', { game: 'probe', correct: true });
+      check('*** a game result inside a NESTED dashboard goes where the person chose (this device), not to the site\'s log ***',
+        !logged.some((x) => x.kind === 'trial') && (await nstore.get('gameplay:IN'))?.rows?.length === 1, J(logged));
+      await probes['b-in'].load();
+      await probes['b-in'].append('select', { word: 'hello' });
+      check('*** ...and so does a word on a talk board inside it ***',
+        !logged.some((x) => x.kind === 'select') && (await nstore.get('words:b-in'))?.rows?.[0]?.data?.word === 'hello');
+      await probes['g-top'].append('trial', { game: 'probe', correct: false });
+      check('a game in the screen\'s own dashboard too (the dashboard path, which also built its own handles)',
+        (await nstore.get('gameplay:OUT'))?.rows?.length === 1 && !logged.some((x) => x.kind === 'trial'));
+      nrow.set({ games: 'log' });
+      await probes['g-in'].append('trial', { game: 'probe', correct: true });
+      check('with game results left on the site\'s log (the default): the nested result goes to the log exactly as before',
+        logged.filter((x) => x.kind === 'trial').length === 1 && logged.find((x) => x.kind === 'trial').at === `IN:${GAMEPLAY_STREAM}`, J(logged));
+      check('a stream that is not history is never routed', !routes.some((r) => !/^(games|words):/.test(r)));
+      top.destroy();
+      // A host whose own makeEvents already routes the game stream (kiosk.js childCtx, handed to an embedded dashboard):
+      // passed through, never wrapped twice.
+      for (const k of Object.keys(probes)) delete probes[k];
+      routes.length = 0;
+      const kioskish = (key, o, pid) => (key === GAMEPLAY_STREAM ? shared.route('games', makeEvents(key, o, pid), { key: 'SCREEN' }) : makeEvents(key, o, pid));
+      top = mountTop({ history: shared, makeEvents: kioskish });
+      await settled(() => probes['g-top']);
+      check('*** a handle the host already routed is not routed again (the embedded kiosk\'s own makeEvents) ***',
+        routes.filter((r) => r.startsWith('games:')).every((r) => r === 'games:SCREEN') && routes.includes('games:SCREEN'), J(routes));
+      top.destroy();
+      // No host at all (a preview, home.js, the other suites): the handles are the dashboard's own, as before.
+      for (const k of Object.keys(probes)) delete probes[k];
+      top = mountTop();
+      await settled(() => probes['g-top'] && probes['b-in']);
+      check('no history host: nothing is routed, exactly as before', probes['g-top'] && !probes['g-top'].routed && probes['b-in'] && !probes['b-in'].routed);
+      top.destroy();
+      box.remove();
+    }
 
     section('the page: "Where your history is kept"');
     check('a menu row on its own page', HISTORY_ITEMS[0].page === HISTORY_PAGE && /history/.test(HISTORY_ITEMS[0].label));
