@@ -93,6 +93,41 @@ def check_origin_rules():
           == ("https://a.example", "https://b.example") and agent.site_list([""]) == () and agent.site_list(None) == ())
 
 
+def check_default_sites():
+    """PURE - no agent process. (2026-10-07.) The agent's default Nimrod is the helper's: nimrod_helper/settings.py
+    DEFAULTS is the one source, and the agent (one file, run on its own by the installers) keeps a copy. These fail
+    if the copy drifts from it, or from the speech program's (which test_helper.py already holds to the same)."""
+    sys.path.insert(0, str(HERE))
+    sys.path.insert(0, str(HERE.parent))
+    import agent  # noqa: E402
+    from nimrod_helper import settings as HS  # noqa: E402
+    from speech_service import service as SP  # noqa: E402
+
+    want = tuple([HS.DEFAULTS["platform"]] + list(HS.DEFAULTS["alsoAllow"]))
+    check("*** the agent's default --platform is the helper's platform (nimrodecosystem.com) ***",
+          agent.DEFAULT_ORIGIN == HS.DEFAULTS["platform"], detail=f"{agent.DEFAULT_ORIGIN} vs {HS.DEFAULTS['platform']}")
+    check("*** ...and its default sites are the helper's platform + alsoAllow, and the speech program's ***",
+          agent.DEFAULT_SITES == want == tuple(SP.DEFAULT_SITES), detail=f"{agent.DEFAULT_SITES} vs {want} vs {SP.DEFAULT_SITES}")
+    check("nothing given: the default Nimrod's addresses (the helper's list), never '*'",
+          agent.sites_for(None, agent.DEFAULT_ORIGIN) == want and "*" not in agent.sites_for(None, agent.DEFAULT_ORIGIN)
+          and agent.sites_for(None, agent.DEFAULT_ORIGIN + "/") == want)
+    check("a self-hosted --platform allows only itself",
+          agent.sites_for(None, "https://my-nimrod.example") == ("https://my-nimrod.example",))
+    check("--origin, or NIMROD_MEDIA_ORIGIN, replaces the default; --origin wins over the variable",
+          agent.sites_for(["https://a.example"], agent.DEFAULT_ORIGIN) == ("https://a.example",)
+          and agent.sites_for(None, agent.DEFAULT_ORIGIN, "https://b.example") == ("https://b.example",)
+          and agent.sites_for(["https://a.example"], agent.DEFAULT_ORIGIN, "https://b.example") == ("https://a.example",))
+    check("an empty NIMROD_MEDIA_ORIGIN (the installer's unset line) is the default, not 'no site'",
+          agent.sites_for(None, agent.DEFAULT_ORIGIN, "") == want)
+    sh = (HERE / "deploy" / "install-linux.sh").read_bytes()
+    check("*** the Linux installer no longer defaults to '*' (any website) ***",
+          b'ORIGIN="${2:-*}"' not in sh and b'ORIGIN="${2:-}"' in sh)
+    check("the Linux installer keeps LF line endings (CRLF breaks the shebang on a Pi)", b"\r" not in sh)
+    fx = (HERE / "make_test_fixtures.py").read_text(encoding="utf-8")
+    check("the fixtures hint no longer asks for --origin http://localhost:8000 (this computer is always allowed)",
+          "--origin http://localhost:8000" not in fx)
+
+
 CLIENT = HERE.parent / "client"
 KINDS_TABLE = CLIENT / "dev" / "media_kinds.json"
 FOLDER_SOURCE = CLIENT / "folder_source.js"
@@ -206,8 +241,10 @@ def page_tests(base: str, origin: str):
     s, h, _ = get(f"{base}/list", {"Origin": "http://localhost:8000"})
     check("a page on this computer (the dev server) may, its Origin echoed",
           s == 200 and h.get("Access-Control-Allow-Origin") == "http://localhost:8000", detail=f"status={s}")
-    s, h, _ = get(f"{base}/list", {"Origin": "https://nimrod.onrender.com"})
-    check("--origin replaces the --platform default (that site is not allowed here)", s == 403, detail=f"status={s}")
+    s1, _, _ = get(f"{base}/list", {"Origin": "https://nimrodecosystem.com"})
+    s2, _, _ = get(f"{base}/list", {"Origin": "https://nimrod.onrender.com"})
+    check("--origin replaces the --platform default (neither default address is allowed here)",
+          s1 == 403 and s2 == 403, detail=f"status={s1},{s2}")
     s, h, _ = get(f"{base}/files/apple.jpg")
     check("no Origin (an <img> load, a program) is served, with no CORS header needed",
           s == 200 and "Access-Control-Allow-Origin" not in h, detail=f"status={s}")
@@ -223,6 +260,7 @@ def page_tests(base: str, origin: str):
 def main():
     check_kinds_agree()
     check_origin_rules()
+    check_default_sites()
 
     tmp = Path(tempfile.mkdtemp(prefix="nimrod_media_"))
     root = tmp / "photos"

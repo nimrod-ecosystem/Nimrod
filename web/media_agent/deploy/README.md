@@ -9,9 +9,9 @@ The agent is configured from **environment variables** (CLI args still override)
 | Variable | Meaning | Default |
 |---|---|---|
 | `NIMROD_MEDIA_ROOT` | folder of photos/videos to serve | *(required)* |
-| `NIMROD_MEDIA_HOST` | bind address (`127.0.0.1` = localhost only) | `0.0.0.0` (installer sets `127.0.0.1`) |
+| `NIMROD_MEDIA_HOST` | bind address (`127.0.0.1` = localhost only) | `127.0.0.1` |
 | `NIMROD_MEDIA_PORT` | port to listen on | `8770` |
-| `NIMROD_MEDIA_ORIGIN` | CORS origin — your dashboard URL | `*` (lock it down in prod) |
+| `NIMROD_MEDIA_ORIGIN` | the sites whose pages may use it (comma-separated) | unset: `https://nimrodecosystem.com` and the older address of the same site; pages on this computer always |
 
 Set them in an `agent.env` file (copy `agent.env.example`).
 
@@ -19,8 +19,11 @@ Set them in an `agent.env` file (copy `agent.env.example`).
 
 ```bash
 cd web/media_agent/deploy
-sudo ./install-linux.sh /path/to/media-folder https://bedside.nimrodecosystem.com
+sudo ./install-linux.sh /path/to/media-folder
 ```
+
+(A second argument names other sites, for a Nimrod served somewhere else. Without it the
+agent allows the Nimrod site, as the helper does. It used to default to `*`, any website.)
 
 That writes `/etc/nimrod/agent.env`, installs `nimrod-media-agent.service` (with your
 python + agent path + login user), and enables + starts it. Then:
@@ -54,8 +57,8 @@ task launches it hidden at logon and restarts it if it stops. Check it with
   kiosk machine itself. Serving a different device? Pass
   `sudo NIMROD_MEDIA_HOST=0.0.0.0 ./install-linux.sh ...`, and prefer a private/tailnet
   address over `0.0.0.0` where you can.
-- **CORS:** set `NIMROD_MEDIA_ORIGIN` to your dashboard origin so only your site can
-  read the listing. `*` is for local testing only.
+- **Which sites:** a page from any other site is refused (403). Leave `NIMROD_MEDIA_ORIGIN`
+  unset for the Nimrod site; `*` lets every website you visit read the folder.
 - **Same device as the kiosk?** Then `base_url` for the media source is
   `http://localhost:8770` — an HTTPS page is allowed to fetch `http://localhost`, so it
   works even though the page is HTTPS.

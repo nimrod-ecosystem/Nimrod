@@ -34,7 +34,10 @@ DESIGN CHOICES:
 
 RUN IT:
     python agent.py --root "D:/Photos"
-    python agent.py --root ~/Pictures --port 8770 --origin http://localhost:8000
+    python agent.py --root ~/Pictures --port 8770 --platform https://my-nimrod.example
+
+(A page on this computer - the dev server on localhost - is always allowed, so --origin is only for a
+Nimrod served somewhere other than --platform.)
 
 Then point a Nimrod photos source at  http://<this-machine>:8770  (base_url), and
 optionally an album (a subfolder name). Ctrl+C to stop.
@@ -469,10 +472,30 @@ def already_running(host: str, port: int, aid: str, err: OSError, probe=who_hold
     return EXIT_PORT_TAKEN, f"media agent: not starting: could not listen on {host}:{port} ({err})."
 
 
-# The platform origin the browser loads Nimrod from. The agent is fetched cross-origin
-# BY that page, so this is the only site that ever needs to be allowed.
-DEFAULT_ORIGIN = "https://nimrod.onrender.com"
+# The platform origin the browser loads Nimrod from. The agent is fetched cross-origin BY that page.
+# (2026-10-07: nimrodecosystem.com, the address the site is served at today, NOT nimrod.onrender.com any
+# more. The helper already started this agent with --platform nimrodecosystem.com; only the agent run by
+# hand or by the Linux/Windows installers still allowed the older address alone, so a page loaded from the
+# site's real address got a 403 that looks exactly like a broken agent.)
+# MIRRORS nimrod_helper/settings.py DEFAULTS 'platform' + 'alsoAllow' and speech_service/service.py
+# DEFAULT_SITES - the helper's settings are the one source; test_agent.py fails if these drift. Copied, not
+# imported, for the reason in "WHICH WEB PAGES" above (one file, Python 3.8, runs without the helper).
+DEFAULT_ORIGIN = "https://nimrodecosystem.com"
+# The sites the default Nimrod is served at: the address above, and the older one that still serves the same
+# site. www.nimrodecosystem.com is not here: it only redirects (nimrod_helper/settings.py says so).
+DEFAULT_SITES = (DEFAULT_ORIGIN, "https://nimrod.onrender.com")
 AGENT_ID = ""
+
+
+def sites_for(origin_args, platform, env_origin: str = "") -> tuple:
+    """The sites whose pages may use the agent. --origin (or NIMROD_MEDIA_ORIGIN) when given - it REPLACES the
+    default; else --platform - and when that is the default Nimrod, every address it is served at (DEFAULT_SITES),
+    the same list the helper passes. A self-hosted --platform allows only itself."""
+    given = site_list(origin_args or [env_origin])
+    if given:
+        return given
+    own = site_list([platform])
+    return DEFAULT_SITES if own == (DEFAULT_ORIGIN,) else own
 
 
 # ---------------------------------------------------------------------- pairing
@@ -647,7 +670,8 @@ def main(argv=None):
     # a broken agent, and there is nothing on either console to say otherwise.
     ap.add_argument("--origin", action="append", default=None, metavar="SITE[,SITE...]",
                     help="the sites whose pages may use this agent (comma-separated or given more than "
-                         "once; defaults to --platform, which is the site the browser loads Nimrod from; "
+                         "once; defaults to --platform, which is the site the browser loads Nimrod from - "
+                         "for the default Nimrod, both addresses it is served at; "
                          "or NIMROD_MEDIA_ORIGIN). Pages on this computer itself (http://127.0.0.1, "
                          "localhost) are always allowed; every other site is refused with 403. '*' allows "
                          "any site, which you should not need.")
@@ -666,8 +690,7 @@ def main(argv=None):
     if not root.is_dir():
         ap.error(f"--root is not a folder: {root}")
     ROOT = root
-    SITES = (site_list(args.origin or [os.environ.get("NIMROD_MEDIA_ORIGIN", "")])
-             or site_list([args.platform]))
+    SITES = sites_for(args.origin, args.platform, os.environ.get("NIMROD_MEDIA_ORIGIN", ""))
     AGENT_ID = agent_id(root)
     host = "0.0.0.0" if args.lan else args.host
     CHECK_HOST = host in LOOPBACK
