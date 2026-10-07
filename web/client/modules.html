@@ -450,8 +450,10 @@
     .trystage :not([data-promoted-panel]) > .k-stage.k-grid > .k-cell{grid-area:auto!important}
 
     /* The Modules library's buttons get the 44px floor at a phone's width. (The Devices panel's rows used to need
-       a fix here too; its class clash with modules.css's microphone list is gone: it is .dvm-row now.) */
-    .trystage .lib-btn,.trystage .lib-chip,.trystage .lib-tools input,.trystage .lib-tools select{min-height:44px}
+       a fix here too; its class clash with modules.css's microphone list is gone: it is .dvm-row now.)
+       2026-10-06: .sf-chip too - the shared sort and filter chips (sort_filter.js), so the Theme picker's chips get the
+       same floor as the library's, which carry both classes. */
+    .trystage .lib-btn,.trystage .lib-chip,.trystage .sf-chip,.trystage .lib-tools input,.trystage .lib-tools select{min-height:44px}
   }
 </style>
 </head>
