@@ -31,6 +31,7 @@ import { createLessons, gate, lockedTopics, LESSON_TOPIC,
 import { CALC_KEYS, calcInit, calcPress, calcValue } from '../calc.js';
 import { createPorts } from '../ports.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
+import { createPlayWatch } from '../game_start.js';
 
 export const GAME = 'algebra';
 
@@ -377,6 +378,11 @@ function calculatorFactory(ctx) {
     let held = [];
     let ports = null;
     let score = null;          // the score contract (row 2.40), made in init()
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button, so from a press on it (a calculator
+    // key, Submit, "I don't know", Next, a switch's verb) until nobody has pressed for GAME_IDLE_MS. Never merely for
+    // being open. (The Beginner level is quiz_view.js's game and reports there.)
+    let plays = null;
+    let dead = false;
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -556,6 +562,12 @@ function calculatorFactory(ctx) {
         bus.subscribe('algebra/key', (k) => press(String(k)));
         bus.subscribe('algebra/submit', () => submit(false));
         bus.subscribe(LESSON_TOPIC, () => { lessons.load().catch(() => {}); });
+        // Being played: its keys and Submit, the switch verbs actions.js gives Math (`next` / `prev` / `skip` have no
+        // handler at this level, but a switch pressed at this panel is somebody at it), and a press on the panel. Not
+        // the `answer` port: a number arriving from a linked calculator was pressed THERE, and that panel reports it.
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: ['algebra/key', 'algebra/submit', 'algebra/next', 'algebra/prev', 'algebra/skip'],
+          mount, when: () => !dead });
 
         state.subscribe((s) => {
           const snap = s || {};
@@ -582,8 +594,10 @@ function calculatorFactory(ctx) {
         ]).then(() => { if (!problem) nextProblem(); });
       },
       onResize() {},
-      onHide() { state.flush(); },
+      onHide() { plays?.rest(); state.flush(); },
       destroy() {
+        dead = true;
+        if (plays) { plays.destroy(); plays = null; }
         if (score) { score.destroy(); score = null; }
         if (ports) { ports.dispose(); ports = null; }
         if (ledger) { ledger.destroy(); ledger = null; }

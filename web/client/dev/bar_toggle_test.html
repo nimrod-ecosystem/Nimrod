@@ -548,8 +548,11 @@ const mouseNearBar = async (bar) => {
   const NO_START = [
     ['trivia', 'trivia/next'], ['name_that', 'name_that/next'], ['spelling', 'spelling/next'],
     ['word_games', 'word_games/next'], ['wordforge', 'wordforge/next'], ['pressgame', 'pressgame/press'], ['comet', 'comet/spark'],
+    // Solitaire and Math above its Beginner level (the calculator game) have their own engines, not quiz_view.js's.
+    // A Math panel that never chose a level is at 'mixed', the calculator game; its press is a calculator key.
+    ['solitaire', 'solitaire/next'], ['algebra', 'algebra/key', '7'],
   ];
-  for (const [type, verb] of NO_START) {
+  for (const [type, verb, payload = {}] of NO_START) {
     const p = await profiles.create(`BT-nostart-${type}`);
     await profiles.addModule(p.id, type);
     const st = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
@@ -564,10 +567,11 @@ const mouseNearBar = async (bar) => {
     const id = () => (k.panels().find((x) => x.type === type) || {}).id;
     const ready = await until(() => !!id() && !!panel() && panel().childElementCount > 0, 15000);
     check(`${type}: (setup) open, "stays away until I ask" chosen`, ready &&k.barToggle().whilePlaying === 'away', J(k.barToggle()));
+    if (type === 'algebra') check('algebra: (setup) the calculator game, not the Beginner level', !!panel().querySelector('.algebra'), panel().innerHTML.slice(0, 120));
     await sleep(300);
     check(`${type}: *** open and not pressed: NOT being played (the bar as usual) ***`, k.barToggle().playing === false
       && k.barToggle().mayPopUp === true && !states.some((s) => s.id === id() && s.playing), J({ probe: k.barToggle(), states }));
-    bus.publish(verb, {});
+    bus.publish(verb, payload);
     check(`${type}: *** a press on it (${verb}): it says it is being played ***`,
       await until(() => k.barToggle().playing === true, 3000) && states.some((s) => s.id === id() && s.playing === true && !s.kind),
       J({ probe: k.barToggle(), states }));
