@@ -42,7 +42,11 @@ if (r.ok) {
   msg.textContent = 'Spotify is connected on this device. Going back…';
   setTimeout(() => location.replace(to), 1200);
 } else {
-  msg.textContent = SPOTIFY_MESSAGES[r.reason] || SPOTIFY_MESSAGES.failed;
+  // (row 2.61) A sign-in that did not finish (somebody pressed Cancel on Spotify's page, or it timed out) goes back by
+  // itself too, after long enough to read why. On a screen nobody may be there to press "Go back", and this page must
+  // not be where the screen stays. Ten seconds: two readings of one sentence; listed for Mike, not a setting.
+  msg.textContent = `${SPOTIFY_MESSAGES[r.reason] || SPOTIFY_MESSAGES.failed} Going back in a few seconds.`;
+  setTimeout(() => location.replace(to), 10000);
 }
 </script>
 </body>

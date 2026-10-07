@@ -12,6 +12,10 @@
 //     have Premium, and allows up to five authorised users. Fine for a family; not a public default.
 // So it is OFF, and with no client ID it is UNAVAILABLE and says how to get one.
 //
+// *** THE CLIENT ID IS ENTERED ONCE (row 2.61, after 2.57). *** It is kept with the account's Spotify key on the
+// server (recommend_search.py), typed on the keys page or in the Music panel, and the panel reads it back from there
+// (search_key.js `spotifyClientId`). This file is handed it; it never stores one.
+//
 // *** THE HOUSEHOLD'S OWN CLIENT ID, AND NO CLIENT SECRET ANYWHERE. *** Authorization Code with PKCE,
 // entirely in the browser: a random verifier stays on this device, Spotify is shown only its SHA-256
 // hash, and the code that comes back is useless without the verifier. There is no secret to leak
@@ -62,13 +66,45 @@ import { thumbOk } from './recommend.js';
 export const SPOTIFY_AUTHORIZE_URL = 'https://accounts.spotify.com/authorize';
 export const SPOTIFY_TOKEN_URL = 'https://accounts.spotify.com/api/token';
 export const SPOTIFY_API = 'https://api.spotify.com/v1';
-// The scopes the endpoints above need, and nothing else: no library, no profile, no email. The third,
-// `playlist-read-private`, is for row 2.55's weighted picker: Spotify lists a playlist's songs only to its
-// owner or a collaborator, and asks for this scope to do it [developer.spotify.com get-playlists-items, read
-// 2026-10-07]. A device connected before it was added is simply not given the list, and its playlists play in
-// Spotify's own order until somebody presses Disconnect and Connect again.
-export const SPOTIFY_SCOPES = Object.freeze(['user-read-playback-state', 'user-modify-playback-state',
+// *** ASK ONLY FOR WHAT IS TURNED ON (row 2.61, Mike 2026-10-07: the app route "as easy to connect as they
+// want"; chat note BE: ask for the history permissions when a visualization is turned on, not at first connect). ***
+// Each feature names the Spotify permissions ("scopes") it needs, and a sign-in asks for the features that are on
+// at that moment - nothing for a feature that is off, no library, no profile, no email:
+//   play     - always: see the speakers, start, pause and queue (the endpoints listed above).
+//   shuffle  - the site's weighted picker for a PLAYLIST (row 2.55): Spotify lists a playlist's songs only to its
+//              owner or a collaborator, and asks for `playlist-read-private` to do it [developer.spotify.com
+//              get-playlists-items, read 2026-10-07]. An album's songs are public and need nothing more.
+//   history  - listening history, for a visualization of it (row 2.62). NOTHING ASKS FOR IT YET: no visualization
+//              exists, so the Music panel always says it is off. This is the hook. The two scopes are Spotify's
+//              "recently played" and "top artists and tracks" [training knowledge - check developer.spotify.com's
+//              scopes page when the visualization is built].
+// A feature turned on AFTER connecting finds its permission missing (`missingFor`): it falls back (a playlist plays
+// in Spotify's own order) and the panel says "Spotify needs one more permission for this" with "Connect again".
+export const SPOTIFY_SCOPE_SETS = Object.freeze({
+  play: Object.freeze(['user-read-playback-state', 'user-modify-playback-state']),
+  shuffle: Object.freeze(['playlist-read-private']),
+  history: Object.freeze(['user-read-recently-played', 'user-top-read']),
+});
+// What a device connected BEFORE the split was given (2123e6e asked for these three at every connect). Its saved
+// sign-in carries no list of what was granted, so this is what it is taken to have.
+export const SCOPES_BEFORE_SPLIT = Object.freeze(['user-read-playback-state', 'user-modify-playback-state',
   'playlist-read-private']);
+/** The scopes a sign-in asks for, given which features are on: `play` always, then each one that is. PURE. */
+export function scopesFor(features = {}) {
+  const out = [...SPOTIFY_SCOPE_SETS.play];
+  for (const [name, list] of Object.entries(SPOTIFY_SCOPE_SETS)) {
+    if (name === 'play' || !features || features[name] !== true) continue;
+    for (const s of list) if (!out.includes(s)) out.push(s);
+  }
+  return out;
+}
+/** The features that are on but whose permission `granted` does not include, in SPOTIFY_SCOPE_SETS order. PURE. */
+export function missingFeatures(granted, features = {}) {
+  const have = new Set(Array.isArray(granted) ? granted : []);
+  return Object.keys(SPOTIFY_SCOPE_SETS).filter((name) => (name === 'play' || (features && features[name] === true))
+    && SPOTIFY_SCOPE_SETS[name].some((s) => !have.has(s)));
+}
+const scopeList = (s) => String(s || '').split(/\s+/).filter(Boolean);
 export const CALLBACK_PAGE = 'spotify_callback.html';
 export const PENDING_KEY = 'nimrod.spotify.pending';
 export const tokenKey = (clientId) => `nimrod.spotify.tokens.${clientId}`;
@@ -85,12 +121,11 @@ export const MAX_TRACKS = 500;
 
 export const SPOTIFY_MESSAGES = Object.freeze({
   // (row 2.55) Names the row it means, so nobody has to hunt the settings for it.
-  'no-client-id': 'Spotify is not set up here. It needs your household’s own Spotify client ID: '
-    + 'make an app at developer.spotify.com (the account that makes it needs Spotify Premium), add this '
-    + 'site’s Spotify callback address as a redirect URI, and paste the app’s client ID into the '
-    + '“Your household’s Spotify client ID” row of this panel’s settings.',
-  'signed-out': 'Spotify needs connecting on this device. Open the music panel’s settings and press '
-    + 'Connect Spotify.',
+  // (row 2.61) Both point at the "Connect Spotify" steps in the panel's "Change the list", where the Client ID is
+  // typed once and the Connect button is.
+  'no-client-id': 'Spotify is not set up here yet. Press “Change the list” and follow the Spotify steps: you make a '
+    + 'free Spotify app of your own (the Spotify login that makes it needs Premium) and paste its Client ID, once.',
+  'signed-out': 'Spotify needs connecting on this device. Press “Change the list”, then Connect Spotify.',
   'premium-needed': 'Spotify only lets other apps start music for Premium accounts.',
   'no-device': 'No Spotify speaker, phone or computer is switched on. Open Spotify on one of them first.',
   'device-not-found': 'That Spotify speaker is not switched on, or is called something else.',
@@ -106,6 +141,16 @@ export const SPOTIFY_MESSAGES = Object.freeze({
   'not-listable': 'Spotify only lists the songs of playlists you made or share, so this one plays in Spotify’s '
     + 'own order.',
   'no-tracks': 'Spotify gave no songs for this, so it plays in Spotify’s own order.',
+  // (row 2.61) A feature turned on after connecting, whose permission was not asked for then.
+  'needs-permission': 'Spotify needs one more permission to shuffle this playlist here, so it plays in Spotify’s own '
+    + 'order for now. Press “Connect again” under Spotify in “Change the list”.',
+});
+
+// What each feature's permission is for, in the words the panel's "Connect again" line uses (row 2.61).
+export const FEATURE_WORDS = Object.freeze({
+  play: 'starting and stopping music on your speakers',
+  shuffle: 'reading your playlists’ songs, so they can be shuffled here',
+  history: 'reading what you have listened to, for a picture of it',
 });
 
 export const callbackUrl = (loc = (typeof location !== 'undefined' ? location : null)) =>
@@ -192,10 +237,21 @@ export function createSpotify({
   // (2026-10-05, screen_lock.js) A LOCKED SCREEN DOES NOT START A SIGN-IN: `beginLogin` navigates this page to
   // Spotify's sign-in page, which is a way out of the screen and in to an account. A seam for the suites.
   isLocked = () => { try { return screenLockedHere(); } catch { return false; } },
+  // (row 2.61) Which features are on right now: { shuffle, history } (play is always on). Read when a sign-in starts
+  // and when a feature checks its permission.
+  wants = () => ({}),
 } = {}) {
   const id = String(clientId || '').trim();
   const store = safeStorage(storage);
   const tokens = () => (id ? store.get(tokenKey(id)) : null);
+  const wanted = () => { try { return wants() || {}; } catch { return {}; } };
+  // What this device's sign-in was given: Spotify's own `scope` answer, else what was asked, else (a sign-in from
+  // before the split) what every sign-in was asked for then.
+  const granted = () => {
+    const t = tokens();
+    if (!t) return [];
+    return Array.isArray(t.scopes) ? t.scopes : [...SCOPES_BEFORE_SPLIT];
+  };
 
   async function form(body) {
     let res;
@@ -217,6 +273,9 @@ export function createSpotify({
       refresh: body.refresh_token || prev?.refresh || null,
       expiresAt: now() + Math.max(0, Number(body.expires_in) || 3600) * 1000,
     };
+    // (row 2.61) A refresh may say which permissions the new token carries; when it does not, they are unchanged.
+    const sc = typeof body.scope === 'string' && body.scope.trim() ? scopeList(body.scope) : prev?.scopes;
+    if (Array.isArray(sc)) t.scopes = sc;
     store.set(tokenKey(id), t);
     return t;
   }
@@ -282,9 +341,18 @@ export function createSpotify({
     connected: () => !!(id && tokens()?.access),
     clientId: () => id,
     redirectUri: () => redirectUri,
+    /** (row 2.61) The permissions this device's sign-in carries ([] when not connected). */
+    granted: () => granted(),
+    /** (row 2.61) The features that are on (`wants`, or `features` given) whose permission is missing. [] when not
+     *  connected - there is nothing to ask again for until there is a sign-in. */
+    missingFor: (features = wanted()) => (id && tokens()?.access ? missingFeatures(granted(), features) : []),
 
-    /** Start signing in: remember a verifier on this device, then go to Spotify. */
-    async beginLogin({ returnTo = '/' } = {}) {
+    /**
+     * Start signing in: remember a verifier on this device, then go to Spotify. Asks for the permissions of the
+     * features on now (`features`, else `wants()`), and nothing else (row 2.61). Pressing it again later, with a
+     * feature newly on, is the "Connect again" - Spotify shows its consent page with the one more permission.
+     */
+    async beginLogin({ returnTo = '/', features = wanted() } = {}) {
       if (!id) return { ok: false, reason: 'no-client-id' };
       if (isLocked()) return { ok: false, reason: 'locked' };   // (2026-10-05, screen_lock.js)
       let verifier, challenge;
@@ -293,13 +361,14 @@ export function createSpotify({
         challenge = await challengeFor(verifier, cryptoImpl);
       } catch { return { ok: false, reason: 'not-secure' }; }
       const state = makeVerifier(cryptoImpl, 24);
-      store.set(PENDING_KEY, { clientId: id, redirectUri, verifier, state, returnTo: safeReturn(returnTo), at: now() });
+      const scopes = scopesFor(features);
+      store.set(PENDING_KEY, { clientId: id, redirectUri, verifier, state, returnTo: safeReturn(returnTo), at: now(), scopes });
       const url = `${SPOTIFY_AUTHORIZE_URL}?${new URLSearchParams({
-        response_type: 'code', client_id: id, scope: SPOTIFY_SCOPES.join(' '),
+        response_type: 'code', client_id: id, scope: scopes.join(' '),
         code_challenge_method: 'S256', code_challenge: challenge, redirect_uri: redirectUri, state,
       }).toString()}`;
       navigate(url);
-      return { ok: true, url };
+      return { ok: true, url, scopes };
     },
 
     /** Forget this device's Spotify sign-in. Spotify's own "remove access" is on the account page. */
@@ -347,6 +416,11 @@ export function createSpotify({
       const [, type, sid] = u.split(':');
       const path = type === 'playlist' ? `/playlists/${sid}/items` : type === 'album' ? `/albums/${sid}/tracks` : '';
       if (!path) return { ok: false, reason: 'no-tracks' };
+      // (row 2.61) A playlist's songs need the shuffle permission; a sign-in made with shuffle off does not carry it.
+      // Said, not asked of Spotify (which would answer 403, read as "not yours").
+      if (type === 'playlist' && id && tokens()?.access && missingFeatures(granted(), { shuffle: true }).includes('shuffle')) {
+        return { ok: false, reason: 'needs-permission', feature: 'shuffle' };
+      }
       const out = [];
       const seen = new Set();
       for (let offset = 0; offset < MAX_TRACKS; offset += TRACK_PAGE) {
@@ -429,9 +503,13 @@ export async function completeLogin(search, { storage = undefined, fetchFn = (..
   let body = null;
   try { body = await res.json(); } catch { body = null; }
   if (!body || !body.access_token) return { ok: false, reason: 'failed', returnTo };
+  // (row 2.61) What the sign-in was given: Spotify's `scope` answer when it sends one, else what was asked.
+  const scopes = typeof body.scope === 'string' && body.scope.trim() ? scopeList(body.scope)
+    : (Array.isArray(pending.scopes) ? pending.scopes : [...SCOPES_BEFORE_SPLIT]);
   store.set(tokenKey(pending.clientId), {
     access: body.access_token, refresh: body.refresh_token || null,
     expiresAt: now() + Math.max(0, Number(body.expires_in) || 3600) * 1000,
+    scopes,
   });
   return { ok: true, returnTo };
 }

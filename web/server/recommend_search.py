@@ -46,6 +46,19 @@ one over once, `adopt_youtube`), and the panel searches through here.
   WHO MAY CHANGE WHICH (argued in `_may_change`): the account's owner, signed in on that browser, anything. A
   screen nobody has signed in on: a key for that one panel or that one device (what it could already do when the
   panel kept its own key), never the account's or a person's, and never the filter.
+
+*** THE SPOTIFY CLIENT ID, ENTERED ONCE, AND READ BACK (row 2.61, Mike 2026-10-07). *** One Spotify app serves two
+things: search here (Client ID + Client secret, client credentials, on this server) and the Music panel's Connect
+(Client ID only, the person's own sign-in, PKCE in their browser; music_spotify.js). So the Client ID is kept in ONE
+place, the Spotify row above, whichever page it was typed on, and:
+  - it may be saved WITHOUT a secret (`set_spotify` with the secret blank). That row plays but does not search, and
+    says so (`search: false`). Saving the same Client ID again without a secret keeps the secret already there.
+  - the Music panel READS IT BACK (`GET /keys/spotify/client_id`), the one thing in these rows that ever leaves the
+    server. ARGUED: FOR keeping it sealed like the rest - one rule for the whole row. AGAINST, and it decides it: a
+    Client ID is public by design in PKCE. It is in the address of every Spotify sign-in this site starts, where
+    anybody at that browser can read it, and on its own it can neither search (that needs the secret) nor play
+    (that needs a person's own Spotify sign-in). Keeping it from the page would only mean a second copy in the
+    panel's settings - the two-copies problem row 2.57 removed for YouTube. The secret never leaves.
 """
 from __future__ import annotations
 
@@ -165,6 +178,16 @@ def clean_spotify(client_id, client_secret) -> tuple[str, str]:
     if i.lower() == s.lower():
         raise ValueError("The Client ID and the Client secret are the same - copy the secret from View client secret.")
     return i, s
+
+
+def clean_spotify_id(client_id) -> str:
+    """A Spotify Client ID on its own (row 2.61: the Music panel's Connect needs nothing else). PURE."""
+    i = re.sub(r"\s+", "", str(client_id or ""))
+    if not i:
+        raise ValueError("Paste the Client ID first.")
+    if not SPOTIFY_PART_RE.match(i):
+        raise ValueError("That does not look like a Spotify Client ID (32 letters and numbers).")
+    return i
 
 
 def clean_query(raw) -> str:
@@ -441,7 +464,12 @@ class SearchKeys:
         for lv, ref in self._chain(context):
             row = self._row(account, provider, lv, ref, o)
             if row.get("sealed"):
-                return {"level": lv, "last4": row.get("last4"), "label": row.get("label") or ""}
+                # `search: False` only for a Spotify Client ID saved without its secret (row 2.61), and only then
+                # present: every other key searches, and rows from before that carry no flag and had both.
+                out = {"level": lv, "last4": row.get("last4"), "label": row.get("label") or ""}
+                if row.get("search") is False:
+                    out["search"] = False
+                return out
         return None
 
     def _open(self, account: str, provider: str, context=None):
@@ -455,7 +483,9 @@ class SearchKeys:
         raise NotSetUp(provider)
 
     def have(self, account: str, context=None) -> set:
-        return {p for p in PROVIDERS if self.in_force(account, p, context)}
+        """The providers a search here can use. A Spotify Client ID saved without its secret plays but does not
+        search, so it is not counted - and the one in force is never skipped for a fuller one further up."""
+        return {p for p in PROVIDERS if (f := self.in_force(account, p, context)) and f.get("search", True)}
 
     # -- what the page sees: never a key
     def status(self, account: str, context=None) -> dict:
@@ -473,6 +503,7 @@ class SearchKeys:
                 parts.append({"level": lv, "ref": ref, "label": e.get("label") or "", "last4": e.get("last4"),
                               "set_at": e.get("set_at"), "here": ctx.get(lv) == ref})
             out[p] = {"set": on, "last4": row.get("last4") if on else None, "set_at": row.get("set_at") if on else None,
+                      "search": (row.get("search", True) is not False) if on else None,
                       "in_force": self.in_force(account, p, ctx), "overrides": parts}
         out["any"] = bool(out["youtube"]["in_force"] or out["spotify"]["in_force"])
         return out
@@ -501,13 +532,15 @@ class SearchKeys:
         return clean_label(label)
 
     def _seal(self, account: str, provider: str, payload: dict, last4: str, level: str = ACCOUNT,
-              ref: str | None = None, label="") -> None:
+              ref: str | None = None, label="", search: bool = True) -> None:
         if self.keybox is None:
             raise Refused(503, "This server is not set up to keep keys yet (NIMROD_AI_KEY_SECRET is not set).")
         level, ref = clean_where(level, ref)
         name = self._label_for(account, level, ref, label)
         sealed = self.keybox.seal(account, json.dumps({"p": provider, **payload}))
         row = {"sealed": sealed, "last4": last4, "set_at": self._now().isoformat()}
+        if not search:
+            row["search"] = False       # a Spotify Client ID with no secret (row 2.61): plays, does not search
         if level == ACCOUNT:
             self._put(account, KEY_ROWS[provider], row)
         else:
@@ -533,6 +566,10 @@ class SearchKeys:
 
     def set_spotify(self, account: str, client_id, client_secret, level: str = ACCOUNT, ref: str | None = None,
                     label="") -> dict:
+        if not re.sub(r"\s+", "", str(client_secret or "")):
+            # (row 2.61) The Client ID alone: what the Music panel's Connect needs.
+            self.set_spotify_id(account, client_id, level, ref, label)
+            return self.status(account)
         try:
             i, s = clean_spotify(client_id, client_secret)
         except ValueError as e:
@@ -540,6 +577,74 @@ class SearchKeys:
         # The last four shown are the CLIENT ID's: the id is not the secret, so nothing of the secret is kept clear.
         self._seal(account, "spotify", {"id": i, "secret": s}, i[-4:], level, ref, label)
         return self.status(account)
+
+    def _spotify_at(self, account: str, level: str, ref: str | None) -> dict | None:
+        """The Spotify pair saved at exactly this level (not the one in force), opened; None when there is none or
+        it will not open."""
+        row = self._row(account, "spotify", level, ref)
+        if not row.get("sealed"):
+            return None
+        try:
+            return self._open_row(account, "spotify", row)
+        except NotSetUp:
+            return None
+
+    def set_spotify_id(self, account: str, client_id, level: str = ACCOUNT, ref: str | None = None,
+                       label="") -> str:
+        """(row 2.61) Save a Spotify Client ID with no secret. {'saved' | 'same'}:
+          - the same Client ID already saved at this level: its secret is KEPT (it belongs to that app), and the row
+            is sealed again - nothing is lost by typing the ID twice;
+          - a different one: saved with no secret (the old secret belongs to the old app, so it goes with it), and
+            the row says it plays but does not search;
+          - a narrower level (panel, device, person) whose nearest saved Client ID is ALREADY this one: nothing is
+            saved ('same'). A copy there would carry no secret and would stop search from that place for no gain."""
+        try:
+            i = clean_spotify_id(client_id)
+        except ValueError as e:
+            raise Refused(400, str(e))
+        level, ref = clean_where(level, ref)
+        mine = self._spotify_at(account, level, ref)
+        if level != ACCOUNT and not mine:
+            have = self.client_id(account, {level: ref})
+            if have and have["client_id"] == i:
+                return "same"
+        secret = ((mine or {}).get("secret") or "") if (mine or {}).get("id") == i else ""
+        self._seal(account, "spotify", {"id": i, "secret": secret}, i[-4:], level, ref, label, search=bool(secret))
+        return "saved"
+
+    def adopt_spotify_id(self, account: str, raw, panel_ref, label="") -> dict:
+        """A Music panel's OLD Client ID, kept in its own settings before row 2.61, handed over once - exactly
+        `adopt_youtube`'s rule: the account's when it has none, nothing when it is the same, else kept for that one
+        panel. The panel then empties its own copy. {where: 'account' | 'same' | 'panel', ...status}."""
+        try:
+            i = clean_spotify_id(raw)
+        except ValueError as e:
+            raise Refused(400, str(e))
+        _lv, ref = clean_where("panel", panel_ref)
+        acct = self._row(account, "spotify", ACCOUNT, None)
+        where = "account"
+        if acct.get("sealed"):
+            where = "same" if (self._spotify_at(account, ACCOUNT, None) or {}).get("id") == i else "panel"
+        if where == "account":
+            self.set_spotify_id(account, i)
+        elif where == "panel":
+            self.set_spotify_id(account, i, "panel", ref, label)
+        return {"where": where, **self.status(account, {"panel": ref})}
+
+    def client_id(self, account: str, context=None) -> dict | None:
+        """(row 2.61) The Spotify Client ID in force from here - the nearest level that has one - for the Music
+        panel's Connect: {client_id, level, search}, or None. The ONE value from these rows that leaves the server;
+        the module header argues why. Never the secret."""
+        o = self._overrides(account, "spotify")
+        for lv, ref in self._chain(context):
+            row = self._row(account, "spotify", lv, ref, o)
+            if row.get("sealed"):
+                d = self._open_row(account, "spotify", row)
+                cid = d.get("id") if isinstance(d.get("id"), str) else ""
+                if not SPOTIFY_PART_RE.match(cid or ""):
+                    raise NotSetUp("spotify", "Your saved Spotify Client ID can no longer be opened. Paste it again.")
+                return {"client_id": cid, "level": lv, "search": row.get("search", True) is not False}
+        return None
 
     def adopt_youtube(self, account: str, raw, panel_ref, label="") -> dict:
         """A YouTube panel's OLD key, kept in its own settings before row 2.57, handed over once. It becomes the
@@ -601,6 +706,9 @@ class SearchKeys:
     # -- Spotify
     def _spotify_pass(self, account: str, *, fresh: bool = False, context=None) -> str:
         d = self._open(account, "spotify", context)
+        if not d.get("secret"):
+            raise NotSetUp("spotify", "Your Spotify Client ID is saved without its Client secret, so it can play but "
+                                      "not search. Add the Client secret to search Spotify too.")
         fp = hashlib.sha256(f"{d['id']}:{d['secret']}".encode()).hexdigest()[:16]
         slot = f"{account}|{fp}"
         with self._lock:
@@ -693,6 +801,12 @@ class SpotifyKeyPut(Where):
 
 class YouTubeAdopt(BaseModel):
     key: str = ""
+    panel: str = ""
+    label: str = ""
+
+
+class SpotifyAdopt(BaseModel):
+    client_id: str = ""
     panel: str = ""
     label: str = ""
 
@@ -797,6 +911,26 @@ def make_router(store, *, keybox=None) -> APIRouter:
         _may_change(request, user, _level(body.level))
         return _do(lambda: (keys.set_spotify(user, body.client_id, body.client_secret, body.level, body.ref, body.label),
                             _status(request, user, {body.level: body.ref}))[1])
+
+    @r.get("/keys/spotify/client_id")
+    def search_spotify_client_id(request: Request, panel: str = "", device: str = "", person: str = "",
+                                 user: str = Depends(current_user)):
+        """(row 2.61) The Spotify Client ID in force from here, for the Music panel's Connect: {client_id, level,
+        search, can_change, signed_in, screen_levels}; client_id '' when none is saved. A screen may read it (it is
+        what the screen signs in to Spotify with); the module header argues why it may leave the server at all."""
+        got = _do(lambda: keys.client_id(user, {"panel": panel, "device": device, "person": person}))
+        return {"client_id": (got or {}).get("client_id", ""), "level": (got or {}).get("level"),
+                "search": bool((got or {}).get("search")), "can_store": keys.keybox is not None,
+                "can_change": owner_here(request, user), "signed_in": signed_in_here(request, user),
+                "screen_levels": list(SCREEN_LEVELS)}
+
+    @r.post("/keys/spotify/adopt")
+    def search_adopt_spotify(body: SpotifyAdopt, request: Request, user: str = Depends(current_user)):
+        """A Music panel's old Client ID, handed over once (SearchKeys.adopt_spotify_id). Allowed from a screen for
+        the YouTube adopt's reason: it is already in that panel's own settings on this server."""
+        out = _do(lambda: keys.adopt_spotify_id(user, body.client_id, body.panel, body.label))
+        return {**out, "can_change": owner_here(request, user), "signed_in": signed_in_here(request, user),
+                "screen_levels": list(SCREEN_LEVELS)}
 
     @r.delete("/keys/{provider}")
     def search_clear_key(provider: str, request: Request, level: str = ACCOUNT, ref: str = "",

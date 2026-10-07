@@ -47,6 +47,20 @@
 // showing the Spotify rows only while the switch is on (`spotifyIsOn`). The speaker name stays advanced (blank
 // already works). The form now says when Spotify is off and has a "Turn Spotify on" button, as
 // does the panel next to that message.
+//
+// *** THE SPOTIFY APP ROUTE STAYS OPEN, AND IS AS EASY TO CONNECT AS THE PERSON WANTS (row 2.61, Mike 2026-10-07). ***
+// The embed (row 2.55) needs no setup; this route needs a Spotify app of the household's own, and gives playing on
+// another speaker, the playlist's songs for the weighted shuffle, and the song-info card. Three things make it easier:
+//   1. "CONNECT SPOTIFY" STEPS in "Change the list" (spotify_connect.js): make the app, the return address in a box
+//      with a Copy button, tick Web API, paste the Client ID, then Connect. Shown while no Client ID is saved, and on
+//      "Change the Client ID".
+//   2. THE CLIENT ID IS ENTERED ONCE (row 2.57's rule): it is kept with the account's Spotify key on the server
+//      (recommend_search.py), typed here or on the keys page, and read back from there (search_key.js
+//      `spotifyClientId`). The settings row is where it can also be typed; its box stays empty and it says which one
+//      is in use. An older panel's own copy is handed over once (`adoptOldId`).
+//   3. ASK ONLY FOR THE PERMISSIONS IN USE (music_spotify.js `SPOTIFY_SCOPE_SETS`): Connect asks for playing, plus
+//      reading playlists if the shuffle is on. A feature turned on later says "Spotify needs one more permission" with
+//      "Connect again". Listening history is asked for by nothing yet (`historyWanted`).
 
 import { registerModule } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
@@ -58,7 +72,10 @@ import {
   musicSpeechRoutes, DEFAULT_STARTERS, MAX_NAME,
 } from '../music_favourites.js';
 import { createLocalMusic, FOLDER_ORDERS } from '../music_local.js';
-import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, callbackUrl } from '../music_spotify.js';
+import { createSpotify, createSpotifyPlayer, SPOTIFY_MESSAGES, FEATURE_WORDS, callbackUrl } from '../music_spotify.js';
+import { connectHelperHtml, copyText, CONNECT_WORDS } from '../spotify_connect.js';
+import { createSearchKeyClient, KEY_LEVEL_WORDS } from '../search_key.js';
+import { themeQrColours, hasBrowserWindow } from '../page_links.js';
 import { createMusicPicker } from '../music_pick.js';
 import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
 import { authHeaders } from '../auth.js';
@@ -74,6 +91,7 @@ const DEFAULTS = {
   sayProblems: true,
   spotifyOn: false,
   spotifyClientId: '',
+  spotifyClientIdFor: 'account',
   spotifyDevice: '',
   spotifyShuffle: true,
   songInfo: false,
@@ -109,10 +127,23 @@ export const SETTINGS = [
     level: 'standard', onLabel: 'Say why, out loud', offLabel: 'Show it on the panel only' },
   { key: 'spotifyOn', label: 'Spotify', kind: 'toggle', default: false, level: 'standard',
     onLabel: 'On (needs Spotify Premium)', offLabel: 'Off' },
-  { key: 'spotifyClientId', label: 'Your household’s Spotify client ID', kind: 'text', default: '',
-    level: 'standard', appliesWhen: spotifyIsOn,
-    note: 'Make an app at developer.spotify.com with the account that has Premium, add this site’s '
-      + 'Spotify callback address as a redirect URI, and paste the app’s client ID here.' },
+  // (row 2.61) Typed here or in "Change the list" or on the keys page, and KEPT ON THE SERVER with the account's Spotify
+  // key, once (`settingsWrite` below). `secret: true` is not because a Client ID is secret (it is not); it is the
+  // settings menu's "kept somewhere else" behaviour - the box opens empty, an empty save keeps what is there, and the
+  // row shows the live words `settingsChoices` gives ("In use: ... ending …1234").
+  { key: 'spotifyClientId', label: 'Your household’s Spotify Client ID', kind: 'text', default: '',
+    level: 'standard', appliesWhen: spotifyIsOn, secret: true,
+    note: 'Typed once, kept on this site’s server with your Spotify key, and used by every music panel and the keys '
+      + 'page. “Change the list” has the steps to make the free Spotify app it comes from.' },
+  // Where a Client ID typed here is saved: the same four places as the YouTube key, the whole account first.
+  { key: 'spotifyClientIdFor', label: 'A Spotify Client ID typed here is saved for', kind: 'choice', default: 'account',
+    level: 'advanced', appliesWhen: spotifyIsOn,
+    options: [
+      { value: 'account', label: 'the whole account (every screen and search)' },
+      { value: 'person', label: 'this person only' },
+      { value: 'device', label: 'this device only' },
+      { value: 'panel', label: 'this panel only' },
+    ] },
   { key: 'spotifyShuffle', label: 'Spotify playlists and albums play', kind: 'toggle', default: true,
     level: 'standard', appliesWhen: spotifyIsOn,
     onLabel: 'Shuffled the way YouTube is (fewer repeats)', offLabel: 'In Spotify’s own order',
@@ -186,6 +217,8 @@ registerModule(
       try { personList?.destroy(); } catch { /* gone */ }
       personList = null;
       personFor = want;
+      // (row 2.61) A Client ID may be saved for this person: ask again, now that "here" names them.
+      if (want && cfg.spotifyOn && spIdState !== 'idle') loadClientId(true);
       if (want) {
         const pl = watchFavourites({ makePersonState: ctx.makePersonState, personId: want, onChange: adoptList });
         if (pl) {
@@ -230,16 +263,113 @@ registerModule(
     const picker = createMusicPicker({ events: ctx.events || null });
     const setT = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearT = ctx.clearTimer || ((id) => clearTimeout(id));
+
+    // ---- the Spotify Client ID, entered once (row 2.61) ------------------------------------------
+    // Kept on the server with the account's Spotify key; this panel asks which one is in force from here (this
+    // panel, this screen's person, this device, else the account's). `ctx.searchKeys` lets a suite hand in its own.
+    const deviceLabel = () => {
+      try { return String(navigator.userAgentData?.platform || navigator.platform || '').slice(0, 40); }
+      catch { return ''; }
+    };
+    const keyClient = ctx.searchKeys || createSearchKeyClient({
+      user: ctx.user,
+      context: () => ({ panel: instanceId, person: personFor || '' }),
+      label: (lv) => (lv === 'panel' ? 'Music' : lv === 'device' ? deviceLabel() : ''),
+    });
+    let spId = null;               // the server's last answer: { clientId, level, search, canStore, canChange, ... }
+    let spIdState = 'idle';        // 'idle' | 'loading' | 'done' (asked, answered or not)
+    let spIdAsk = null;
+    let spDraft = '';              // the Client ID box in the Connect steps
+    let spNote = '';               // what the last press in the steps said
+    let spChanging = false;        // "Change the Client ID" pressed: the steps show again
+    let adoptTried = false;
+    // No visualization reads listening history yet (row 2.62). When one exists it says so here, Connect asks for the
+    // history permission, and a device connected without it is asked to Connect again.
+    const historyWanted = () => false;
+    const wantsNow = () => ({ shuffle: cfg.spotifyShuffle !== false, history: historyWanted() });
+    // The Client ID this panel connects with: the server's, else (an older panel, or a server that cannot keep keys)
+    // the panel's own copy.
+    const clientIdNow = () => String(spId?.clientId || '').trim() || String(cfg.spotifyClientId || '').trim();
+
+    function loadClientId(force = false) {
+      if (dead || !cfg.spotifyOn) return Promise.resolve(null);
+      if (spIdAsk && !force) return spIdAsk;
+      if (spIdState === 'done' && !force) return Promise.resolve(spId);
+      spIdState = 'loading';
+      const ask = Promise.resolve().then(() => keyClient.spotifyClientId?.()).catch(() => null).then((r) => {
+        if (ask !== spIdAsk) return spId;
+        spIdAsk = null;
+        if (dead) return null;
+        if (r) spId = r;
+        spIdState = 'done';
+        render();
+        return spId;
+      });
+      spIdAsk = ask;
+      return ask;
+    }
+    // *** A CLIENT ID AN OLDER PANEL KEPT IN ITS OWN SETTINGS, HANDED OVER ONCE *** (recommend_search.py
+    // `adopt_spotify_id`, the YouTube key's rule): the account's when it has none, nothing more when it is the same,
+    // kept for this panel when it differs. Then the panel's own copy is emptied. Tried once a mount; a server that
+    // cannot keep keys leaves the panel's copy where it is, and the panel keeps using it.
+    function adoptOldId() {
+      const old = String(cfg.spotifyClientId || '').trim();
+      if (!old || adoptTried || dead || typeof keyClient.adoptSpotify !== 'function') return;
+      adoptTried = true;
+      Promise.resolve(keyClient.adoptSpotify(old)).then((r) => {
+        if (dead || !r || !r.ok) return;
+        state?.set?.({ spotifyClientId: '' });
+        loadClientId(true);
+      }).catch(() => { /* kept in the panel; used from there */ });
+    }
+    // Save a typed Client ID where the "saved for" row says (the whole account by default). A browser that may not
+    // change the account's (a screen nobody has signed in on) saves it for THIS DEVICE instead, and says so - rather
+    // than refusing at the last step. A server that cannot keep keys at all: kept in this panel's settings, as before.
+    async function saveClientId(raw) {
+      const id = String(raw == null ? '' : raw).replace(/\s+/g, '');
+      if (!/^[0-9a-f]{32}$/i.test(id)) {
+        spNote = id ? 'That does not look like a Spotify Client ID (32 letters and numbers).' : 'Paste the Client ID first.';
+        render();
+        return false;
+      }
+      let level = ['account', 'person', 'device', 'panel'].includes(cfg.spotifyClientIdFor) ? cfg.spotifyClientIdFor : 'account';
+      let fell = false;
+      if (spId && spId.canChange === false && !(spId.screenLevels || []).includes(level)) { level = 'device'; fell = true; }
+      spNote = 'Saving…';
+      render();
+      let r = null;
+      try { r = await keyClient.save('spotify', { client_id: id }, level); } catch { r = null; }
+      if (dead) return false;
+      if (r && r.ok) {
+        spNote = `Saved for ${KEY_LEVEL_WORDS[level] || level}.${fell ? ' Nobody has signed in on this browser, so it is '
+          + 'saved for this device; sign in to save it for the whole account.' : ''}`;
+        spId = { ...(spId || {}), clientId: id, level };
+        if (String(cfg.spotifyClientId || '').trim()) state?.set?.({ spotifyClientId: '' });
+        await loadClientId(true);
+        return true;
+      }
+      if (r && r.status === 503) {
+        state?.set?.({ spotifyClientId: id });
+        cfg = { ...cfg, spotifyClientId: id };
+        spNote = 'This site’s server cannot keep keys yet, so the Client ID is kept in this panel’s settings.';
+        render();
+        return true;
+      }
+      spNote = (r && r.message) || 'The Client ID was not saved.';
+      render();
+      return false;
+    }
+
     function spotifyFor() {
       if (!cfg.spotifyOn) {
         try { spotifyPlayer?.destroy(); } catch { /* gone */ }
         spotify = null; spotifyPlayer = null; spotifySig = ''; return null;
       }
-      const sig = String(cfg.spotifyClientId || '').trim();
+      const sig = clientIdNow();
       if (!spotify || sig !== spotifySig) {
         spotifySig = sig;
         try { spotifyPlayer?.destroy(); } catch { /* gone */ }
-        spotify = (ctx.spotifyFactory || createSpotify)({ clientId: sig, redirectUri: callbackUrl() });
+        spotify = (ctx.spotifyFactory || createSpotify)({ clientId: sig, redirectUri: callbackUrl(), wants: wantsNow });
         spotifyPlayer = createSpotifyPlayer({
           spotify, picker, setTimer: setT, clearTimer: clearT,
           shuffle: () => cfg.spotifyShuffle !== false,
@@ -379,6 +509,7 @@ registerModule(
         <p class="mu-now" data-now>${esc(now)}</p>
         ${songCardHtml()}
         ${why ? `<p class="mu-hint" data-order-note role="status">${esc(why)}</p>` : ''}
+        ${why && why === SPOTIFY_MESSAGES['needs-permission'] ? `<div class="mu-btns">${btn('spotify-connect', 'Connect again')}</div>` : ''}
         ${msg ? `<p class="mu-msg" data-msg role="status">${esc(msg)}</p>` : ''}
         ${status.reason === 'spotify-off' ? `<div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div>` : ''}
         ${status.asking ? `<div class="mu-ask" data-ask><p>${esc(messageFor('did-you-mean', status.asking))}</p>
@@ -400,18 +531,45 @@ registerModule(
               here, or with the “Spotify” row in this panel’s settings.</p>
             <div class="mu-btns">${btn('spotify-on', 'Turn Spotify on')}</div></div>` : '';
       }
+      loadClientId();
+      adoptOldId();
       const sp = spotifyFor();
-      const state = !sp || !sp.available() ? SPOTIFY_MESSAGES['no-client-id']
-        : sp.connected() ? 'Spotify is connected on this device.' : 'Spotify is not connected on this device yet.';
+      const id = clientIdNow();
+      // (row 2.61) No Client ID yet, or "Change the Client ID": the Connect steps.
+      if (!id || spChanging) {
+        if (!id && spIdState !== 'done') {
+          return `<div class="mu-spot" data-spotify><p class="mu-head">Spotify</p>
+            <p class="mu-hint" data-sp-checking>Checking for a saved Spotify Client ID…</p></div>`;
+        }
+        const isScreen = ctx.isScreen === true;
+        let win = false;
+        try { win = isScreen && hasBrowserWindow(); } catch { win = false; }
+        return `<div class="mu-spot" data-spotify data-sp-setup>
+            <p class="mu-head">Connect Spotify</p>
+            ${connectHelperHtml({ callback: callbackUrl(), isScreen, openHere: win && spId?.signedIn === true,
+              colours: rootEl ? themeQrColours(rootEl) : null, draftId: spDraft, note: spNote })}
+            ${id ? `<div class="mu-btns">${btn('sp-keep-id', 'Keep the saved Client ID')}</div>` : ''}
+          </div>`;
+      }
+      const connected = !!sp?.connected?.();
+      const line = connected ? 'Spotify is connected on this device.' : 'Spotify is not connected on this device yet.';
+      // (row 2.61) A feature turned on after connecting, whose permission that sign-in was not asked for.
+      const more = connected && typeof sp.missingFor === 'function' ? sp.missingFor(wantsNow()).filter((f) => f !== 'play') : [];
+      const where = spId?.clientId && spId.level
+        ? `Using the Client ID saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level}, ending …${esc(spId.clientId.slice(-4))}.`
+        : `Using the Client ID kept in this panel’s settings, ending …${esc(id.slice(-4))}.`;
       const devices = Array.isArray(spotifyDevices)
         ? (spotifyDevices.length ? `<ul class="mu-devs">${spotifyDevices.map((d) => `<li>${esc(d.name)}${d.active ? ' (playing now)' : ''}</li>`).join('')}</ul>`
           : '<p class="mu-hint">No Spotify speakers are switched on.</p>') : '';
       return `<div class="mu-spot" data-spotify>
           <p class="mu-head">Spotify</p>
-          <p class="mu-hint">${esc(state)}</p>
-          ${sp && sp.available() ? `<div class="mu-btns">${sp.connected()
-            ? btn('spotify-devices', 'Find speakers') + btn('spotify-disconnect', 'Disconnect Spotify')
-            : btn('spotify-connect', 'Connect Spotify')}</div>` : ''}
+          <p class="mu-hint" data-sp-state>${esc(line)}</p>
+          ${more.length ? `<p class="mu-msg" data-sp-more role="status">Spotify needs one more permission for this: ${esc(more.map((f) => FEATURE_WORDS[f] || f).join('; '))}. Connect again to allow it.</p>` : ''}
+          <div class="mu-btns">${connected
+            ? (more.length ? btn('spotify-connect', 'Connect again') : '') + btn('spotify-devices', 'Find speakers') + btn('spotify-disconnect', 'Disconnect Spotify')
+            : btn('spotify-connect', 'Connect Spotify')}${btn('sp-change-id', 'Change the Client ID')}</div>
+          <p class="mu-hint" data-sp-where>${where}</p>
+          ${spNote ? `<p class="mu-hint" data-sp-note role="status">${esc(spNote)}</p>` : ''}
           ${spotifyNote ? `<p class="mu-hint" role="status">${esc(spotifyNote)}</p>` : ''}
           ${devices}
         </div>`;
@@ -454,8 +612,8 @@ registerModule(
     function render() {
       if (dead || !rootEl) return;
       const had = mount.ownerDocument?.activeElement;
-      const focusSel = had && mount.contains(had) && had.matches?.('[data-fav-name],[data-fav-link],[data-fav-path]')
-        ? ['[data-fav-name]', '[data-fav-link]', '[data-fav-path]'].find((s) => had.matches(s)) : null;
+      const focusSel = had && mount.contains(had) && had.matches?.('[data-fav-name],[data-fav-link],[data-fav-path],[data-sp-id]')
+        ? ['[data-fav-name]', '[data-fav-link]', '[data-fav-path]', '[data-sp-id]'].find((s) => had.matches(s)) : null;
       rootEl.innerHTML = `<div class="mu" data-music data-view="${view}">${view === 'edit' ? editHtml() : mainHtml()}</div>`;
       if (focusSel) { const el = mount.querySelector(focusSel); el?.focus?.({ preventScroll: true }); }
       paintLit();
@@ -541,7 +699,31 @@ registerModule(
         render();
         return;
       }
+      // (row 2.61) The Connect steps.
+      if (a === 'sp-copy') {
+        const input = mount.querySelector('[data-sp-callback]');
+        copyText(callbackUrl(), { input }).then((ok) => {
+          if (dead) return;
+          spNote = ok ? CONNECT_WORDS.copied : CONNECT_WORDS.copyFailed;
+          render();
+        });
+        return;
+      }
+      if (a === 'sp-save') { saveAndConnect(); return; }
+      if (a === 'sp-change-id') { spChanging = true; spNote = ''; lit = -1; render(); return; }
+      if (a === 'sp-keep-id') { spChanging = false; spNote = ''; lit = -1; render(); return; }
       if (a.startsWith('spotify-')) { spotifyAct(a.slice(8)); }
+    }
+
+    // "Save and connect": the Client ID saved once (`saveClientId`), then straight on to Spotify's sign-in, asking
+    // only for the permissions of what is turned on.
+    async function saveAndConnect() {
+      const ok = await saveClientId(spDraft);
+      if (!ok || dead) return;
+      spDraft = '';
+      spChanging = false;
+      render();
+      await spotifyAct('connect');
     }
 
     function onClick(e) {
@@ -555,10 +737,12 @@ registerModule(
       else if (t.matches?.('[data-fav-path]')) draft.path = t.value;
       else if (t.matches?.('[data-fav-source]')) draft.sourceId = t.value;
       else if (t.matches?.('[data-fav-kind]')) draft.kind = t.value === 'folder' ? 'folder' : 'file';
+      else if (t.matches?.('[data-sp-id]')) spDraft = t.value;
     }
     function onKey(e) {
       if (view !== 'edit') return;
       if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); view = 'main'; render(); return; }
+      if (e.key === 'Enter' && e.target.matches?.('[data-sp-id]')) { e.preventDefault(); saveAndConnect(); return; }
       if (e.key === 'Enter' && e.target.matches?.('[data-fav-name],[data-fav-link],[data-fav-path]')) { e.preventDefault(); addFromDraft(); }
     }
 
@@ -571,6 +755,8 @@ registerModule(
       local.setOrder(FOLDER_ORDERS.includes(cfg.folderOrder) ? cfg.folderOrder : 'shuffle');
       ytPush();
       if (!personList) favs = normalizeFavourites(snap.favourites);
+      // (row 2.61) Only a panel with Spotify on asks the server for the Client ID.
+      if (cfg.spotifyOn) { loadClientId(); adoptOldId(); }
     }
 
     return {
@@ -578,6 +764,32 @@ registerModule(
         local: local.state(), leader: router.isLeader(), personList: !!personList,
         litAct: lit >= 0 ? walk()[lit]?.dataset.act : null, hasYt: !!yt }),
       router,
+      // (row 2.61) What the Client ID rows say: which one is in use from here, what the last save said, and what each
+      // "saved for" choice means. Read by the settings menu (settings_fields.js live words).
+      settingsChoices: () => {
+        const inUse = spId?.clientId
+          ? `In use: the one saved for ${KEY_LEVEL_WORDS[spId.level] || spId.level || 'here'}, ending …${spId.clientId.slice(-4)}`
+          : (String(cfg.spotifyClientId || '').trim() ? `In use: this panel’s own, ending …${String(cfg.spotifyClientId).trim().slice(-4)}`
+            : (spIdState === 'done' ? 'None saved yet' : 'Checking which one is in use…'));
+        const lv = cfg.spotifyClientIdFor || 'account';
+        const screenOnly = !!spId && spId.canChange === false && !(spId.screenLevels || []).includes(lv);
+        const base = SETTINGS.find((f) => f.key === 'spotifyClientId').note;
+        return {
+          spotifyClientId: { emptyLabel: inUse, note: [spNote, screenOnly ? 'Nobody has signed in on this browser, so '
+            + 'a Client ID typed here is saved for this device.' : '', base].filter(Boolean).join(' ') },
+          spotifyClientIdFor: SETTINGS.find((f) => f.key === 'spotifyClientIdFor').options
+            .map((o) => ({ value: o.value, label: KEY_LEVEL_WORDS[o.value] || o.label })),
+        };
+      },
+      // (row 2.61) A Client ID typed in the settings row goes to the server, never into this panel's settings (the
+      // host asks here first; `true` means "taken, store nothing"). An empty box keeps what is there.
+      settingsWrite(key, value) {
+        if (key !== 'spotifyClientId') return false;
+        const typed = String(value == null ? '' : value).trim();
+        if (!typed) return true;
+        saveClientId(typed);
+        return true;
+      },
       init() {
         let cssHref = '';
         try { cssHref = new URL('../music.css', import.meta.url).href; } catch { /* unstyled, still works */ }

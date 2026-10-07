@@ -38,3 +38,9 @@
 .mu-song > div{min-width:0}
 .mu-song-name{font-size:clamp(15px, 4.4cqmin, 34px);font-weight:700;color:var(--text-strong);overflow-wrap:anywhere}
 .mu-song-who{font-size:clamp(13px, 3.4cqmin, 26px);color:var(--text);overflow-wrap:anywhere}
+/* "Connect Spotify" (row 2.61, spotify_connect.js): the numbered steps, the return address and the Client ID box. */
+.mu-connect{display:flex;flex-direction:column;gap:6px}
+.mu-steps{margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:8px;font-size:clamp(13px, 3cqmin, 22px)}
+.mu-steps li{overflow-wrap:anywhere}
+.mu-steps .mu-row{margin-top:4px;align-items:center}
+.mu-steps a{color:var(--link)}

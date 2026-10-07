@@ -669,6 +669,73 @@ tok = [x for x in CALLS if x["url"] == S.SP_TOKEN]
 check("*** a device's own Spotify pair is the one asked for a pass from that device ***",
       tok and tok[0]["headers"].get("Authorization") == "Basic " + _b64.b64encode(f"{SP_ID2}:{SP_SECRET2}".encode()).decode())
 
+section("*** row 2.61: the Spotify Client ID entered once, on either page, and read back by the Music panel ***")
+SK_E = "srch-e"
+CID = f"{K}/spotify/client_id"
+check("the pure rule: a Client ID alone, whitespace stripped", S.clean_spotify_id(f" {SP_ID}\n") == SP_ID)
+for bad in ("", "short", "z" * 32):
+    try:
+        S.clean_spotify_id(bad)
+        check(f"refused client id {bad[:8]!r}", False, "accepted")
+    except ValueError as e:
+        check(f"refused client id {bad[:8]!r}, in words", bool(str(e)))
+j = c.get(CID, headers=H(SK_E)).json()
+check("nothing saved: the Music panel is told '' (and what this browser may change)",
+      j["client_id"] == "" and j["level"] is None and j["can_change"] is True and j["search"] is False, str(j))
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": ""}, headers=H(SK_E))
+st = r.json()
+check("*** the Client ID alone is saved (the secret left blank): it plays, it does not search, and the status says so ***",
+      r.status_code == 200 and st["spotify"]["set"] is True and st["spotify"]["search"] is False
+      and st["spotify"]["in_force"]["search"] is False and SP_ID not in r.text, r.text)
+check("*** the status still never carries the Client ID; the Music panel's own door does ***",
+      SP_ID not in c.get(K, headers=H(SK_E)).text and c.get(CID, headers=H(SK_E)).json()["client_id"] == SP_ID)
+CALLS.clear()
+r = c.post(SR, json={"q": "blue moon", "provider": "spotify"}, headers=H(SK_E))
+check("a Client ID with no secret is not offered to search, and nothing is asked of Spotify", r.status_code == 404 and CALLS == [], r.text)
+r = c.post(f"{K}/spotify/check", headers=H(SK_E))
+check("'Check the key' says the secret is missing, in words", r.status_code == 404 and "without its Client secret" in r.json()["detail"], r.text)
+c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": SP_SECRET}, headers=H(SK_E))
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": ""}, headers=H(SK_E))
+check("*** the same Client ID typed again without a secret (the Music panel) KEEPS the secret: search still works ***",
+      r.json()["spotify"]["search"] is True and c.post(SR, json={"q": "blue moon", "provider": "spotify"}, headers=H(SK_E)).status_code == 200, r.text)
+check("...and the secret never comes back on the Music panel's door",
+      SP_SECRET not in c.get(CID, headers=H(SK_E)).text and c.get(CID, headers=H(SK_E)).json()["search"] is True)
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID2, "client_secret": ""}, headers=H(SK_E))
+check("*** a DIFFERENT Client ID with no secret: the old secret goes with the old app ***",
+      r.json()["spotify"]["search"] is False and r.json()["spotify"]["last4"] == SP_ID2[-4:]
+      and c.get(CID, headers=H(SK_E)).json()["client_id"] == SP_ID2, r.text)
+c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": SP_SECRET}, headers=H(SK_E))
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": "", "level": "device", "ref": "dev-e"}, headers=H(SK_E))
+check("*** the same Client ID saved for one device that already uses it: nothing is copied there (search from it keeps working) ***",
+      r.status_code == 200 and r.json()["spotify"]["overrides"] == [] and c.get(CID, params={"device": "dev-e"}, headers=H(SK_E)).json()["level"] == "account", r.text)
+r = c.put(f"{K}/spotify", json={"client_id": SP_ID2, "client_secret": "", "level": "device", "ref": "dev-e"}, headers=H(SK_E))
+jd = c.get(CID, params={"device": "dev-e"}, headers=H(SK_E)).json()
+check("a different one for one device: that device's Connect uses it, every other place the account's",
+      jd["client_id"] == SP_ID2 and jd["level"] == "device" and c.get(CID, params={"device": "dev-f"}, headers=H(SK_E)).json()["client_id"] == SP_ID)
+check("another account is told nothing of this one's", c.get(CID, headers=H("srch-nobody")).json()["client_id"] == "")
+r = c.put(f"{K}/spotify", json={"client_id": "not-an-id", "client_secret": ""}, headers=H(SK_E))
+check("a Client ID of the wrong shape: 400 in words", r.status_code == 400 and "Client ID" in r.json()["detail"], r.text)
+# A panel's old Client ID, handed over once.
+SK_F = "srch-f"
+r = c.post(f"{K}/spotify/adopt", json={"client_id": SP_ID, "panel": "mu-old", "label": "Music"}, headers=H(SK_F))
+check("*** a Music panel's old Client ID, no default yet: it becomes the account's ***",
+      r.status_code == 200 and r.json()["where"] == "account" and c.get(CID, headers=H(SK_F)).json()["client_id"] == SP_ID, r.text)
+check("the same one from another panel: nothing more kept",
+      c.post(f"{K}/spotify/adopt", json={"client_id": SP_ID, "panel": "mu-old2"}, headers=H(SK_F)).json()["where"] == "same")
+r = c.post(f"{K}/spotify/adopt", json={"client_id": SP_ID2, "panel": "mu-old3"}, headers=H(SK_F))
+check("a different one: kept for that panel, the default untouched",
+      r.json()["where"] == "panel" and c.get(CID, params={"panel": "mu-old3"}, headers=H(SK_F)).json()["client_id"] == SP_ID2
+      and c.get(CID, headers=H(SK_F)).json()["client_id"] == SP_ID, r.text)
+os.environ["DEVICE_KEYS"] = f"{SK_F}:rec-screen-f-secret-for-tests"
+SCRF = {"X-Device-Key": "rec-screen-f-secret-for-tests"}
+jf = c.get(CID, headers=SCRF).json()
+check("*** a bare screen may READ the Client ID (it signs in to Spotify with it) and is told it cannot change the account's ***",
+      jf["client_id"] == SP_ID and jf["can_change"] is False and jf["screen_levels"] == ["panel", "device"], str(jf))
+check("...it cannot save the account's Client ID", c.put(f"{K}/spotify", json={"client_id": SP_ID2}, headers=SCRF).status_code == 403)
+check("...but may save one for its own device",
+      c.put(f"{K}/spotify", json={"client_id": SP_ID2, "level": "device", "ref": "dev-scr-f"}, headers=SCRF).status_code == 200)
+os.environ.pop("DEVICE_KEYS", None)
+
 section("search rate limit")
 S.search_limit.reset()
 codes = [c.post(SR, json={"q": "blue moon"}, headers=H(SK_A)).status_code for _ in range(S.search_limit.limit + 1)]
