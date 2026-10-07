@@ -39,7 +39,9 @@ PER_REQUEST = 10                 # questions per batch request: a long list drif
 MAX_COUNT = 200
 QUIZ_MAX_TOKENS = 16000
 OUT_DIR = Path(__file__).resolve().parent.parent / "client" / "packs_local"
-DIFFICULTIES = ("easy", "medium", "hard")
+# "very easy" (2026-10-06, Mike: "even easier questions for children"): the client's packs.js reads it as the
+# level below easy. Written with a space, the way packs.js writes it.
+DIFFICULTIES = ("very easy", "easy", "medium", "hard")
 
 SYSTEM = (
     "You write multiple-choice quiz questions for a website of games and learning used by people of every "
@@ -48,7 +50,8 @@ SYSTEM = (
     "exactly four answers: the correct one and three wrong ones of the same kind, plausible but clearly "
     "wrong to somebody who knows. Plain, short words. No trick questions, no 'all of the above', no "
     "questions about private individuals, nothing frightening or upsetting. For each, one plain sentence "
-    "saying why the answer is right. Mark each easy, medium or hard.\n\n"
+    "saying why the answer is right. Mark each very easy (a young child could answer it), easy, medium "
+    "or hard.\n\n"
     "Every question names its SOURCE: where a person could check that the answer is right. Prefer a named "
     "reference work and entry in `ref` (for example: Encyclopaedia Britannica, \"Giraffe\"; or the official "
     "state website for Ohio). Put a link in `url` only when you are confident that exact page exists; never "
@@ -132,7 +135,7 @@ def build_batch_requests(topic: str, count: int, model: str) -> list[dict]:
             "messages": [{"role": "user", "content":
                           f"Topic: {topic}\nWrite {k} questions on this topic. This is part {i + 1} of {len(parts)}; "
                           f"other parts are written separately, so pick a varied spread across the topic rather "
-                          f"than its most famous facts. Aim for a mix: about a third easy, a third medium, a third hard."}],
+                          f"than its most famous facts. Aim for a mix: a few very easy, then about a third each easy, medium and hard."}],
             "output_config": {"format": {"type": "json_schema", "schema": ITEM_SCHEMA}},
         }
         if model != "claude-haiku-4-5":

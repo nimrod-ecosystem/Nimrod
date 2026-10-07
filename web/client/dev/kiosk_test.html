@@ -424,7 +424,13 @@ const toTab = (m, id) => {
       // The lap is unchanged.)
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
-          'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin'].includes(i.id));
+          'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin', 'set:barQuietMs', 'set:barShowsItself',
+          'person:start'].includes(i.id));
+      // ('person:start', 2026-10-06, adaptive_play.js usualStartField: the person's "Usual starting level for games" on the
+      // People tab. Outside the panel's lap; left out here so the old rows stay 40.)
+      // ('set:barQuietMs' and 'set:barShowsItself', 2026-10-06, bar_toggle.js: "The bar" on the Devices tab -- how long the
+      // bar stays away after its key hides it, and whether it comes up by itself. Outside the panel's lap; left out here
+      // DELIBERATELY, like the lock's rows, so the old rows stay 40. dev/bar_toggle_test.html checks both are in the menu.)
       // ('screen-lock' and 'screen-lock-pin', 2026-10-05, screen_lock.js: "Lock this screen" and "Unlock PIN" at the top of
       // the This screen tab -- outside the panel's lap, like 'game'. Left out here DELIBERATELY so the old rows stay 40;
       // the lap is unchanged. dev/screen_lock_test.html walks them.)
@@ -438,6 +444,12 @@ const toTab = (m, id) => {
         lapStops.length === 14 && oldStops.length === 40 && oldStops.some((i) => i.id === 'set:pickUpVersions') && oldStops.some((i) => i.id === 'set:panelGap') && oldStops.some((i) => i.id === 'set:clockCorner') && lapStops.includes('subject-pick') && lapStops.includes('promote') && lapStops.includes('edit-panel')
         && lapStops.includes('set:autostart') && lapStops.includes('play-pause'),
         `lap ${lapStops.length}: ${lapStops.join(',')} | old ${oldStops.length}`);
+      {
+        const us = kiosk.menu.items().filter((i) => i.id === 'person:start' || i.id === 'games-start-head');
+        check('the person\'s "Usual starting level for games" is on the People tab, under "Games" (2026-10-06)',
+          us.length === 2 && us.every((i) => i.tab === 'people') && /Usual starting level for games/.test(us[1]?.label || ''),
+          JSON.stringify(us.map((i) => [i.id, i.tab, i.label])));
+      }
       // (2026-10-02, deliberately UNCHANGED: "Font on this device" / "Colour look" are rows of "Settings for:
       // This device" (kiosk.js `deviceLookRows`), not of this panel's tab or any tab of the panel's menu, so the
       // lap stays 14 and the old rows 34. "In the switch scan" is only on a PLACED panel; this stage's are not.

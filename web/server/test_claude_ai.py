@@ -321,6 +321,16 @@ check("*** only sound questions are kept: a repeat, a missing correct answer, du
       len(items) == 1 and len(dropped) == 4 and items[0]["ai_written"] is True, f"{items} {dropped}")
 check("a kept question carries its source, with the empty fields left out",
       items[0]["source"] == {"ref": "Ohio Revised Code 5.03"}, items[0].get("source"))
+# "very easy" (2026-10-06): offered in the schema and kept; a word nobody reads is dropped from the item, as before.
+ve, _ = Q.clean_items([
+    {"question": "What colour is the sky on a clear day?", "answers": ["Blue", "Green", "Red", "Black"], "correct": "Blue",
+     "difficulty": "very easy", "explain": "Sunlight scatters.", "source": SRC},
+    {"question": "Which is a fruit?", "answers": ["Apple", "Brick", "Chair", "Sock"], "correct": "Apple",
+     "difficulty": "extremely easy", "explain": "", "source": SRC},
+])
+check("*** 'very easy' is a difficulty the writer is offered and that is kept; an unknown word is not ***",
+      "very easy" in Q.ITEM_SCHEMA["properties"]["items"]["items"]["properties"]["difficulty"]["enum"] and ve[0].get("difficulty") == "very easy" and "difficulty" not in ve[1]
+      and "very easy" in Q.SYSTEM, ve)
 
 section("*** every question names its source (Mike, 2026-10-04): the schema asks, clean_items enforces ***")
 item_schema = Q.ITEM_SCHEMA["properties"]["items"]["items"]

@@ -230,9 +230,9 @@ registerModule(
     let unsubPlay = null;
     const sets = new Map();      // player id -> their set
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
-    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
-    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
     const store = ladderRows.store;
     let ladderSeen = false;
     const maxLetters = () =>Math.max(3, Math.floor(Number(cfgNow.maxLetters) || DEFAULTS.maxLetters));

@@ -312,7 +312,7 @@ try {
     r.inst.destroy();
   }
 
-  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (2026-10-06) ***');
   await personLadderChecks({ check, name: 'Word builder', game: GAME,
     mount: ({ saved, store, extra }) => R(saved, { store, extra }) });
 

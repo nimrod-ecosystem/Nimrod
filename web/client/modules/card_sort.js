@@ -269,9 +269,9 @@ registerModule(
     let pending = null;          // a card whose suit is asked and whose place is next
     const aces = () => (cfgNow.aces === 'high' ? 'high' : 'low');
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
-    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
-    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
     const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow,

@@ -287,10 +287,9 @@ export function beginnerSettings({ when = null, levelDefault = 'fixed', withScor
       onLabel: 'As soon as it has enough digits', offLabel: 'Only when Check is pressed' }),
     w({ key: 'boardScan', label: 'Number pad with a switch', kind: 'choice', default: 'rows', level: 'advanced',
       options: [{ value: 'rows', label: 'A row, then a number' }, { value: 'keys', label: 'One key at a time' }] }),
-    // "Start games at" ADVANCED here (standard in the other games), for the same 12-press budget: it made
-    // Beginner 13. Nothing is lost by it: the row is ONE value for the person across every game on the
-    // ladder, so it can be set from any of their other games' menus, and Math follows it either way.
-    // [On Mike's list.]
+    // "Start this game at" ADVANCED here (standard in the other games), for the same 12-press budget: it
+    // made Beginner 13. Little is lost by it: Math follows the person's usual starting level (People tab)
+    // unless it is given one of its own here. [On Mike's list.]
     ...adaptiveSettings({ appliesWhen: adaptive, startLevels: MATH_LEVELS.length, personStartLevel: 'advanced' }),
     ...flowSettings({ lines: LINES, labels: LINE_LABELS }).map((row) => w(row)),
   ];
@@ -308,9 +307,9 @@ export function beginnerMath({ type = GAME, title = 'Simple math', scoreLabel = 
     let api = null;
     const adaptive = () => (MATH_LEVEL_MODES.includes(cfgNow.mathLevel) ? cfgNow.mathLevel : defaults.mathLevel) === 'adaptive';
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
-    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
-    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
     const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow, bankFor: (g) => (g === RATING_GAME ? mathBank() : []), store, rand,

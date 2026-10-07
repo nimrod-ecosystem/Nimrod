@@ -53,7 +53,7 @@ import { createLessons, gate, lockedTopics, DEFAULT_TOPICS, LESSON_TOPIC,
          WORDFORGE_LESSON_QUESTIONS, createQuestMode, ALL_UNLOCKED } from '../lessons.js';
 import { parseBank as sharedBank } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
-import { loadPack } from '../packs.js';
+import { loadPack, normalizeDifficulty } from '../packs.js';
 import { packsFor, packById } from '../pack_library.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
@@ -127,13 +127,15 @@ export function bandOf(grade) {
 // medium=8, hard=10. A pack with no `difficulty` gets `medium` (8) — most useful default for
 // content nobody has graded, since it neither locks a word away from an average learner nor
 // pretends it is trivial.
-const DIFFICULTY_GRADE = { easy: 6, medium: 8, hard: 10 };
+// 2026-10-06, "very easy" (packs.js DIFFICULTY_LEVELS): 4, the same two-grade step below easy as between
+// the others. A guess, as the three above were; any spelling packs.js reads as very easy counts.
+const DIFFICULTY_GRADE = { 'very easy': 4, easy: 6, medium: 8, hard: 10 };
 export function packToWordBank(pack) {
   return (pack.items || []).map((it) => ({
     word: it.word,
     meaning: it.definition,
     sentence: it.example || `${it.word}.`,
-    grade: DIFFICULTY_GRADE[it.difficulty] || DIFFICULTY_GRADE.medium,
+    grade: DIFFICULTY_GRADE[normalizeDifficulty(it.difficulty)] || DIFFICULTY_GRADE.medium,
   }));
 }
 

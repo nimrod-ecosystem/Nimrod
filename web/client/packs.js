@@ -98,23 +98,37 @@ function checkTriviaItem(it) {
   else if (Array.isArray(it.answers) && !it.answers.includes(it.correct)) {
     bad.push('correct must be one of the listed answers');
   }
-  if (it.difficulty && !['easy', 'medium', 'hard'].includes(it.difficulty)) {
-    bad.push(`difficulty must be easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
+  if (it.difficulty && !normalizeDifficulty(it.difficulty)) {
+    bad.push(`difficulty must be very easy/easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
   }
   return bad;
 }
 
 // *** A PACK'S `difficulty` AS A LEVEL (2026-10-05). *** The ladder (rating.js / adaptive_play.js) counts
 // levels from 1, the easiest; a question's level is where its rating STARTS, and play moves it from there.
-// easy 1, medium 2, hard 3: one level per word, in order, so a question marked hard starts two levels
-// (300 rating points, about 85/15 odds at rating.js's numbers) above one marked easy. ARGUED against a
-// wider spread (easy 1, medium 3, hard 5): the gaps would be a guess about how much harder "medium" is,
-// while the ratings find the real gaps by play anyway; and three levels runs Mike's threshold curve
-// (rating.js thresholdsAt) from end to end the same way five do. Anything else (no difficulty, a word
-// this file does not know) is null: the caller decides what an unlevelled item means.
-export const DIFFICULTY_LEVELS = Object.freeze({ easy: 1, medium: 2, hard: 3 });
+// One level per word, in order, so a question marked hard starts two levels (300 rating points, about 85/15
+// odds at rating.js's numbers) above one marked easy. ARGUED against a wider spread (easy 1, medium 3, hard 5):
+// the gaps would be a guess about how much harder "medium" is, while the ratings find the real gaps by play
+// anyway. Anything else (no difficulty, a word this file does not know) is null: the caller decides what an
+// unlevelled item means.
+//
+// *** "VERY EASY" (Mike, 2026-10-06: "There should be even easier questions for children"). *** A
+// fourth word BELOW easy: very easy 1, easy 2, medium 3, hard 4. ARGUED against keeping easy at 1 and putting
+// very easy at 0: rating.js has no level below 1 (levelOf, poolLevels and stepFloor all floor at 1, in every
+// game), so a level 0 would change the ladder of every game to serve one. Shifting the words up one changes
+// what a stored trivia level NUMBER means, so Trivia keeps everybody steady itself (trivia.js TRIVIA_RATING:
+// its ratings are read on a scale whose level 2 sits where level 1 used to, so every question's stored rating
+// keeps its meaning, and a player's stored floor is moved up one, once). Nothing else reads these numbers.
+// Spelled "very easy" in a pack; "very_easy" and "veryeasy" (any case) are read as the same word.
+export const DIFFICULTY_LEVELS = Object.freeze({ 'very easy': 1, easy: 2, medium: 3, hard: 4 });
+export const DIFFICULTY_WORDS = Object.freeze(Object.keys(DIFFICULTY_LEVELS));
+/** A pack's difficulty word, spelled the way packs write it ('very easy' / 'easy' / 'medium' / 'hard'), or null. */
+export function normalizeDifficulty(d) {
+  const flat = String(d == null ? '' : d).trim().toLowerCase().replace(/[\s_-]+/g, '');
+  return DIFFICULTY_WORDS.find((w) => w.replace(/\s+/g, '') === flat) || null;
+}
 export function difficultyLevel(d) {
-  return DIFFICULTY_LEVELS[String(d == null ? '' : d).trim().toLowerCase()] || null;
+  return DIFFICULTY_LEVELS[normalizeDifficulty(d)] || null;
 }
 
 function checkWordsItem(it) {
@@ -140,8 +154,8 @@ function checkWordsItem(it) {
   if (it.example !== undefined && (typeof it.example !== 'string' || !it.example.trim())) {
     bad.push('example, if present, must be a non-empty string');
   }
-  if (it.difficulty && !['easy', 'medium', 'hard'].includes(it.difficulty)) {
-    bad.push(`difficulty must be easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
+  if (it.difficulty && !normalizeDifficulty(it.difficulty)) {
+    bad.push(`difficulty must be very easy/easy/medium/hard, got ${JSON.stringify(it.difficulty)}`);
   }
   return bad;
 }

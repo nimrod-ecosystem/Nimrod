@@ -35,19 +35,31 @@ export const EXTRA_CAP = 300;
 // The person's own row for every game on the ladder but Trivia (which keeps `ratings_trivia`): the
 // same name as the screen's row, in the person's scope (`openPersonLadder` below argues one row, not one per game).
 export const PERSON_LADDER_KEY = 'ratings';
-// The panel's copy of "Start games at" (the person's row is the truth; see `openPersonLadder`).
+// The panel's copy of the old one-for-every-game "Start games at" (269b6a5). No longer a row: it was a copy of
+// the person's usual start, so it is never read as a game's own (see `openPersonLadder`, 2026-10-06).
 export const PERSON_START_KEY = 'personStart';
-export const START_WORDS = Object.freeze(['easy', 'medium', 'hard']);
+// The panel's copy of "Start this game at": the person's own start in THIS game (the person's row is the truth).
+export const GAME_START_KEY = 'gameStart';
+// Its first choice: no start of its own in this game, so the person's usual one.
+export const START_USUAL = 'usual';
+export const START_WORDS = Object.freeze(['very easy', 'easy', 'medium', 'hard']);
+export const GAME_START_CHOICES = Object.freeze([START_USUAL, ...START_WORDS]);
+const startOptions = () => [{ value: 'very easy', label: 'Very easy questions' }, { value: 'easy', label: 'Easy questions' },
+  { value: 'medium', label: 'Medium questions' }, { value: 'hard', label: 'Hard questions' }];
 
 /**
- * "Easy" / "medium" / "hard" as a level, in a game whose hardest written level is `maxLevel`: the easiest,
- * the middle (rounded up), the hardest. With three levels that is 1 / 2 / 3, the same as Trivia's. Anything
- * else: null. Argued for "hard": FOR one below the top, a softer start. AGAINST, and it decides it: the
- * caregiver asked for hard, and a start that is too hard comes down by itself after a few answers.
+ * "Very easy" / "easy" / "medium" / "hard" as a level, in a game whose hardest written level is `maxLevel`:
+ * the easiest, the easiest, the middle (rounded up), the hardest. Anything else: null. Argued for "hard": FOR one
+ * below the top, a softer start. AGAINST, and it decides it: the caregiver asked for hard, and a start that is too
+ * hard comes down by itself after a few answers.
+ * "VERY EASY" IS LEVEL 1 TOO (2026-10-06). These games' level 1 is already the easiest anybody wrote; there is
+ * nothing below it to start at. ARGUED against moving "easy" up to level 2 so the two differ: a person whose start
+ * already says easy would then start a new game one level higher than before. Trivia, whose questions are marked
+ * very easy, easy, medium and hard, reads the words its own way (packs.js DIFFICULTY_LEVELS).
  */
 export function startWordLevel(word, maxLevel) {
   const top = Math.max(1, Math.floor(Number(maxLevel) || 1));
-  if (word === 'easy') return 1;
+  if (word === 'very easy' || word === 'easy') return 1;
   if (word === 'medium') return Math.max(1, Math.round((1 + top) / 2));
   if (word === 'hard') return top;
   return null;
@@ -109,16 +121,18 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
     w({ key: 'players', label: 'Players, in turn order', kind: 'text', default: '', level: 'standard',
       placeholder: 'One player',
       note: 'Names separated by commas ("Ann, Bob"). Each takes a turn and gets questions at their own level. Up to four.' }),
-    // THE PERSON'S OWN START, shared by every game on the ladder (openPersonLadder below). Standard: it is
-    // the one a caregiver setting up somebody new reaches for; "A new player starts at level" stays advanced.
-    // Trivia passes `personStart: false`: it has its own row, "Start trivia at", which can follow this one.
+    // THE PERSON'S OWN START IN THIS GAME (openPersonLadder below; Mike, 2026-10-06: "if they change it in a game
+    // mode that would more likely default to just affecting that user on that game"). Standard: it is the one a
+    // caregiver setting up somebody new reaches for; "A new player starts at level" stays advanced. Their usual
+    // start, for every game, is the person's own (usualStartField, on the People tab of the screen's menu).
+    // Trivia passes `personStart: false`: it has its own row, "Start trivia at", which works the same way.
     // `personStartLevel`: Math passes 'advanced' (its menu is at the press budget; see math_beginner.js).
-    ...(personStart ? [w({ key: PERSON_START_KEY, label: 'Start games at', kind: 'choice', default: 'easy', level: personStartLevel,
-      options: [{ value: 'easy', label: 'Easy questions' }, { value: 'medium', label: 'Medium questions' },
-                { value: 'hard', label: 'Hard questions' }],
-      note: 'For the person this screen is for, and kept with them: the same in every game like this one, and on '
-        + 'each of their screens. Changing it starts them again there in every game; after that, their answers '
-        + 'move them. Players typed in by name start at "A new player starts at level".' })] : []),
+    ...(personStart ? [w({ key: GAME_START_KEY, label: 'Start this game at', kind: 'choice', default: START_USUAL,
+      level: personStartLevel, options: [{ value: START_USUAL, label: 'Their usual starting level' }, ...startOptions()],
+      note: 'For the person this screen is for, in this game only, and kept with them on each of their screens. '
+        + '"Their usual starting level" is the person\'s own, set in this screen\'s settings on the People tab. '
+        + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
+        + 'start at "A new player starts at level".' })] : []),
     w({ key: 'adapt', label: 'Questions get harder and easier by themselves', default: true, level: 'standard',
       onLabel: 'Yes, for each player', offLabel: 'No, stay at the starting level' }),
     w({ key: 'startLevel', label: 'A new player starts at level', kind: 'choice', default: 1, level: 'advanced',
@@ -233,11 +247,15 @@ export function mergeLadder3(base, mine, theirs) {
     questions: merge3Keys(b.questions, m.questions, t.questions), extra };
 }
 
-/** state.js `merge(base, mine, theirs)` for a row holding a `ladder`: the ladder entry by entry, any other key whole. */
+/**
+ * state.js `merge(base, mine, theirs)` for a row holding a `ladder`: the ladder entry by entry, and each game's own
+ * start (`gameStarts`, openPersonLadder) game by game, so two games set at once keep both; any other key whole.
+ */
 export function ladderDocMerge(base, mine, theirs) {
   const b = base || {}, m = mine || {}, t = theirs || {};
   const data = merge3Keys(b, m, t);
   if (m.ladder || t.ladder) data.ladder = mergeLadder3(b.ladder, m.ladder, t.ladder);
+  if (m.gameStarts || t.gameStarts) data.gameStarts = merge3Keys(b.gameStarts, m.gameStarts, t.gameStarts);
   return { data, lost: [] };
 }
 export const LADDER_STATE_OPTIONS = Object.freeze({ merge: ladderDocMerge });
@@ -393,35 +411,106 @@ export function splitLadderStore({ shared = null, ownIds = () => [], ownFor = ()
 //   FOR one per game: a row a game alone writes, so no game ever has to merge with another.
 //   AGAINST, and it decides it: the merge (mergeLadder3) already makes sharing safe, entry by entry; the
 //   screen's own row is already shared the same way; one row is one place to look for a person's levels
-//   (and one row to name on the privacy page), and "Start games at" below is one value about all of
+//   (and one row to name on the privacy page), and the person's usual start below is one value about all of
 //   them, which belongs beside the rows it moves. Trivia keeps `ratings_trivia`: it already shipped there,
 //   and moving it would be a second one-time move for no gain. [Guess, on Mike's list.]
 //
-// *** ONE "START GAMES AT" PER PERSON, NOT ONE PER GAME; TRIVIA'S CAN FOLLOW IT OR OVERRIDE IT. *** Argued:
-//   FOR one per game: somebody can be quick at sums and slow at remembering an order.
-//   AGAINST, and it decides it: a caregiver setting up somebody new should answer "how hard should their
-//   games start?" once, not in six menus; the row shows the same value in every game's menu, so it reads
-//   as one setting; and the ladder moves each game apart from there after ten answers anyway. Trivia
-//   keeps "Start trivia at" (it shipped first, and quiz questions are a different kind of hard), now with
-//   "Where the other games start" as its first choice. [Guess, on Mike's list.]
-//   The words, not a level number: games have different numbers of levels (three to six), so "medium" is
-//   the middle of each (`startWordLevel`).
+// *** WHERE A GAME STARTS (Mike, 2026-10-06): "That's good for a starting point. Then each category/type/etc.
+// would adjust based on performance." And: "if they change it in a game mode that would more likely default to
+// just affecting that user on that game ... it would be in the settings for that game. Not the global
+// settings." *** So there are two, and the nearer one wins:
+//   1. "Start this game at", in a game's own menu: that person, in that game only (`gameStarts[gameKey]` on
+//      their row). Its first choice, "Their usual starting level", is no start of its own.
+//   2. "Usual starting level for games", the person's own (`start` on their row; `usualStartField`, shown on
+//      the People tab of the screen's menu): every game that has no start of its own for them.
+//   3. Neither: "A new player starts at level" (default 1, the easiest the game has).
+//   Trivia's "Start trivia at" is its (1), on its own row, and "Their usual starting level" is its first choice.
+//   The words, not a level number: games have different numbers of levels (three to six), so "medium" is the
+//   middle of each (`startWordLevel`).
 //
-// CHANGING IT STARTS THEM AGAIN THERE, IN EVERY ONE OF THESE GAMES, as Trivia's does. The person's row
-// gets the new start and a new `startMark`; any game row of theirs carrying an older mark (or none) is
-// read as starting at the new level, the next time that game deals to them, wherever it is open
-// (`createAdaptiveSession` `startMark`). Kept: how many they have answered, and what is due to come back.
-// A row moved in from a screen after the change carries no mark, so it starts at the chosen level too:
-// the caregiver's choice is the newer word. [Guess, on Mike's list.]
+// CHANGING EITHER STARTS THEM AGAIN THERE, in the games it decides, the next time each deals to them, wherever
+// it is open: a new mark (`startMark` / `gameStarts[game].mark`), and any game row of theirs carrying another
+// mark is read as starting at the new level (`createAdaptiveSession` `startMark`). Kept: how many they have
+// answered, and what is due to come back. So:
+//   * a game's own changed: that game starts again, no other.
+//   * the usual one changed: every game that FOLLOWS it starts again; a game with its own start of its own is
+//     left where it is. ARGUED against "only games not yet played" (the usual start as a pure first-time
+//     default): a caregiver who changes it is saying the games are pitched wrong NOW (Mike's own "starting
+//     point"), and a change that visibly does nothing in the games already played reads as broken; the cost
+//     (a few easy questions before the ladder moves them back up) is what a game's own start avoids for the
+//     game somebody wants left alone. [Guess, on Mike's list.]
+//   * a game set back to "Their usual starting level": that game starts again at the usual level.
+// A row moved in from a screen after a change carries no mark, so it starts at the chosen level too: the
+// caregiver's choice is the newer word. [Guess, on Mike's list.]
+//
+// WHAT 269b6a5 LEFT ON PANELS. Its one "Start games at" row was the person's usual start, copied into every
+// game's menu. That copy (`personStart`) is not read as a game's own: it would turn one choice into five. The
+// person's row still holds the value it was a copy of, as their usual start, so nobody moves.
 //
 // THE MENU ROW IS THE PANEL'S (settings rows are kept per panel), so, as in Trivia, the panel keeps a copy
 // and the person's row is the truth: a change made in the menu is written to the person; a change made on
-// another of their screens or games is copied back into the row so the menu shows it. A screen with no
-// person (or a host with no per-person rows): the row applies to its one unnamed player, on the panel,
-// in this game only.
+// another of their screens is copied back into the row so the menu shows it. A screen with no person (or a
+// host with no per-person rows): the row applies to its one unnamed player, on the panel, in this game only.
 let MARKS = 0;
 /** A start mark no other change has used (the time plus a count in this page). */
 export const newStartMark = () => `${Date.now().toString(36)}-${(MARKS += 1).toString(36)}`;
+
+/** The person's usual start, as a settings row over their own `ratings` row (`start`). Shown on the People tab. */
+export function usualStartField() {
+  return {
+    key: 'start', label: 'Usual starting level for games', kind: 'choice', default: 'very easy', level: 'standard',
+    options: startOptions(),
+    note: 'Where their question games start, in every game that has no starting level of its own for them '
+      + '("Start this game at", in each game\'s settings). Changing it starts them again there in those games; '
+      + 'after that, their answers move them, each game on its own.',
+  };
+}
+
+/**
+ * The person's usual start, read and set (the People tab's row). `makePersonState(personId, key, opts)` is the
+ * host's per-person seam. Returns null with no person or no seam; else { personId, field, values(), set(v),
+ * destroy() }. `set` writes the word with a new mark, which starts them again in the games that follow it.
+ */
+export function openUsualStart({ makePersonState = null, personId = null, onChange = () => {} } = {}) {
+  if (!personId || typeof makePersonState !== 'function') return null;
+  let handle = null;
+  try { handle = makePersonState(personId, PERSON_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
+  if (!handle) return null;
+  let dead = false;
+  let off = null;
+  const doc = () => { try { return handle.get?.() || {}; } catch { return {}; } };
+  // Told only when the start itself changed: the same row takes every game answer, and a menu redrawn on each
+  // of those would be redrawn for nothing.
+  let seen = null;
+  const tell = () => {
+    const now = `${doc().start ?? ''}|${doc().startMark ?? ''}`;
+    if (dead || now === seen) return;
+    seen = now;
+    try { onChange(); } catch { /* a host's own */ }
+  };
+  try { off = handle.subscribe?.(() => tell()) || null; } catch { off = null; }
+  Promise.resolve().then(() => handle.load?.()).catch(() => {}).then(() => {
+    if (dead) return;
+    try { handle.startPolling?.(); } catch { /* none */ }
+    tell();
+  });
+  return {
+    personId,
+    field: usualStartField(),
+    values: () => ({ start: START_WORDS.includes(doc().start) ? doc().start : 'very easy' }),
+    set(v) {
+      if (dead || !START_WORDS.includes(v)) return false;
+      if (doc().start === v) return false;          // the same word again is not a change
+      try { handle.set({ start: v, startMark: newStartMark() }); return true; } catch (err) { console.error('ladder: usual start', err); return false; }
+    },
+    flush: () => Promise.resolve().then(() => handle.flush?.()).catch(() => {}),
+    destroy() {
+      dead = true;
+      try { off?.(); } catch { /* none */ }
+      try { Promise.resolve(handle.flush?.()).catch(() => {}).then(() => handle.destroy?.()); } catch { /* gone */ }
+    },
+  };
+}
 
 /**
  * The ladder's store for one game panel, with the screen's person's rows kept with them.
@@ -430,17 +519,19 @@ export const newStartMark = () => `${Date.now().toString(36)}-${(MARKS += 1).toS
  * settings snapshot, and `destroy` when the panel goes.
  *   key         the screen's row (default the shared `ratings`)
  *   personKey   the person's own row (default `ratings`, in their scope)
- *   settingKey  the panel's copy of "Start games at"
+ *   gameKey     this game's name on the person's row, for its own start (each module passes its type)
+ *   settingKey  the panel's copy of "Start this game at"
  *   onChange()  the person's start changed (to redraw a level shown on screen)
  */
-export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LADDER_KEY, settingKey = PERSON_START_KEY,
-  onChange = () => {} } = {}) {
+export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LADDER_KEY, gameKey = 'game',
+  settingKey = GAME_START_KEY, onChange = () => {} } = {}) {
   const shared = openLadderStore(ctx, key);
   const handles = new Map();      // person id -> { handle, off }
   let session = null;
   let raw;                        // the panel's copy, as saved (undefined: never chosen)
   let seenRaw = false;
   let lastSeen = '|';
+  let lastCfg = {};
   let dead = false;
   const me = () => (ctx?.personId ? `person:${ctx.personId}` : null);
   const solo = () => me() || 'player';
@@ -459,15 +550,31 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
     ? splitLadderStore({ shared, ownIds: () => (me() ? [me()] : []), ownFor }) : null;
   const handle = () => (ctx?.personId ? handles.get(ctx.personId)?.handle || null : null);
   const doc = () => { try { return handle()?.get?.() || null; } catch { return null; } };
-  const personStart = () => { const s = doc()?.start; return START_WORDS.includes(s) ? s : null; };
-  const personMark = () => { const m = doc()?.startMark; return m == null || m === '' ? null : String(m); };
-  const rawWord = () => (START_WORDS.includes(raw) ? raw : null);
+  const word = (s) => (START_WORDS.includes(s) ? s : null);
+  const markStr = (m) => (m == null || m === '' ? null : String(m));
+  // The person's usual start (every game), and this game's own (null: none, so the usual one).
+  const usualStart = () => word(doc()?.start);
+  const usualMark = () => markStr(doc()?.startMark);
+  const own = () => { const g = doc()?.gameStarts?.[gameKey]; return g && typeof g === 'object' ? g : null; };
+  const ownStart = () => word(own()?.start);
+  const shownFor = () => (own() ? (ownStart() || START_USUAL) : null);   // what this game's row says, from their row
+  const rawWord = () => word(raw);
   const kept = () => !!(split && me() && handle());
+  // WHICH MARK THIS GAME'S ROW MUST CARRY. No start of its own: the usual one's (so a row already marked by
+  // 269b6a5's "Start games at" stays put). Its own: its own. Set back to "usual": both, so a change to
+  // either starts it again.
+  function effectiveMark() {
+    const o = own();
+    if (!o) return usualMark();
+    if (ownStart()) return markStr(o.mark);
+    return `${markStr(o.mark) || ''}|${usualMark() || ''}`;
+  }
+  const setOwn = (entry) => handle().set({ gameStarts: { ...(doc()?.gameStarts || {}), [gameKey]: entry } });
 
   function heard() {
     if (dead) return;
     syncToPanel();
-    const now = `${personStart() || ''}|${personMark() || ''}`;
+    const now = `${ownStart() || usualStart() || ''}|${effectiveMark() || ''}`;
     if (now !== lastSeen) { lastSeen = now; try { onChange(); } catch (err) { console.error('ladder: start', err); } }
   }
   // The person's row is the truth; the panel's copy is what the menu shows. A copy the person's row has never
@@ -475,11 +582,13 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
   function syncToPanel() {
     const h = handle();
     if (!h) return;
-    const s = personStart();
+    const s = shownFor();
     if (!s) {
       if (rawWord() && split && me()) {
         split.ownReady(me()).then(() => {
-          if (!dead && !personStart() && rawWord() && handle()) { try { handle().set({ start: raw }); } catch { /* next time */ } }
+          if (!dead && !own() && rawWord() && handle()) {
+            try { setOwn({ start: raw, mark: usualMark() }); } catch { /* next time */ }
+          }
         });
       }
       return;
@@ -488,40 +597,42 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
     raw = s;   // first, so the panel's own echo of this is not read as somebody changing it
     try { ctx.state.set({ [settingKey]: s }); } catch (err) { console.error('ladder: start copy', err); }
   }
-  // Somebody changed "Start games at" in the menu.
+  // Somebody changed "Start this game at" in the menu.
   async function apply(v) {
     if (kept()) {
       const pid = me();
       await split.ownReady(pid);
       if (dead || !handle()) return;
-      if (personStart() === v) return;     // a copy coming back from the person's row: nobody changed it
-      try { handle().set({ start: v, startMark: newStartMark() }); } catch (err) { console.error('ladder: start', err); }
+      if ((shownFor() || START_USUAL) === v) return;   // a copy coming back from the person's row: nobody changed it
+      try { setOwn({ start: v === START_USUAL ? null : v, mark: newStartMark() }); } catch (err) { console.error('ladder: start', err); }
       return;
     }
     // No row of their own here: the panel's, for its one player, in the games this panel deals.
     if (!session || dead) return;
     const pid = solo();
+    const lvl = v === START_USUAL ? (Number(lastCfg.startLevel) || 1) : v;
     for (const g of Object.keys(session.ladder()?.players?.[pid]?.games || {})) {
-      if ((session.allQuestions(g) || []).length) session.startAt(pid, g, v);
+      if ((session.allQuestions(g) || []).length) session.startAt(pid, g, lvl);
     }
   }
   return {
     store: split || shared,
-    /** The level word this player starts at: the person's own, else the panel's for its one player. */
+    /** The level word this player starts at: their own in this game, else their usual one; the panel's for its one player. */
     startFor(pid) {
       if (!pid) return null;
-      if (pid === me() && handle()) return personStart() || rawWord();
+      if (pid === me() && handle()) return ownStart() || (own() ? null : rawWord()) || usualStart();
       if (pid === solo()) return rawWord();
       return null;
     },
-    startMark: (pid) => (pid && pid === me() && handle() ? personMark() : null),
+    startMark: (pid) => (pid && pid === me() && handle() ? effectiveMark() : null),
     attach(s) { session = s || null; },
     onConfig(cfg) {
+      lastCfg = cfg || {};
       const v = cfg ? cfg[settingKey] : undefined;
       if (!seenRaw) { seenRaw = true; raw = v; syncToPanel(); return; }
       if (v === raw) return;
       raw = v;
-      if (START_WORDS.includes(v)) apply(v).catch((err) => console.error('ladder: start', err));
+      if (GAME_START_CHOICES.includes(v)) apply(v).catch((err) => console.error('ladder: start', err));
     },
     /** The person's own row's handle, once there is one (a suite reads it). */
     ownHandle: () => handle(),
@@ -566,16 +677,23 @@ export function mergeLadder(saved, local) {
  *   store            a state handle ({ load, get, set }) or null for memory only
  *   writer           async ({ game, level, examples, count, existing }) -> [{ id, level, ... }], or null
  *   personId()       the screen's person, for the one-player id
- *   startFor(pid, game)  where this player starts in this game: a level, a word ('easy' / 'medium' /
- *                    'hard', `startWordLevel` over the game's written levels), or null for the
+ *   startFor(pid, game)  where this player starts in this game: a level, a word ('very easy' / 'easy' /
+ *                    'medium' / 'hard', `startWordLevel` over the game's written levels), or null for the
  *                    `startLevel` setting (the screen's person's own start, kept with them)
  *   startMark(pid)   the mark of this player's last "start again" (openPersonLadder), or null. A row of
  *                    theirs with a different mark is read as starting again at `startFor`.
+ *   rowVersion       when set, every player row this session writes carries it as `lv`, and a stored row
+ *   upgradeRow(row)  without it is passed through `upgradeRow` when read (Trivia's levels, 2026-10-06: a row
+ *                    saved before "very easy" existed has its floor moved up one). Saved at its next answer;
+ *                    until then it is upgraded again on every read, from the same stored row, so the same.
  */
 export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], store = null, writer = null,
   now = () => Date.now(), rand = Math.random, personId = () => null, onChange = () => {}, rating = {},
-  startFor = () => null, startMark = () => null } = {}) {
+  startFor = () => null, startMark = () => null, rowVersion = null, upgradeRow = null } = {}) {
   const R = { ...RATING_DEFAULTS, ...(rating || {}) };
+  const stamp = rowVersion != null ? { lv: rowVersion } : {};
+  const upgraded = (r) => (rowVersion == null || r.lv === rowVersion ? r
+    : { ...(typeof upgradeRow === 'function' ? (upgradeRow(r) || r) : r), lv: rowVersion });
   let data = emptyLadder();
   // The row as this session last saw it (loaded, adopted or saved): the `base` of the merge above.
   let synced = emptyLadder();
@@ -660,9 +778,10 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     return r && Number.isFinite(r.rating) ? r : { rating: levelRating(q.level || 1, R), n: 0 };
   }
   function playerRow(pid, game) {
-    const r = data.players[pid]?.games?.[game];
+    const stored = data.players[pid]?.games?.[game];
     const mark = markOf(pid);
-    if (r && Number.isFinite(r.rating)) {
+    if (stored && Number.isFinite(stored.rating)) {
+      const r = upgraded(stored);
       if (mark == null || r.mark === mark) return r;
       // THEIR START WAS CHANGED since this row was last played (openPersonLadder): it starts again there,
       // as `startAt` does. Saved with the mark at their next answer, so this happens once per change.
@@ -670,7 +789,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
       return { ...r, rating: levelRating(s, R), floor: s, recent: [], mark };
     }
     const s = startLevel(pid, game);
-    return { rating: levelRating(s, R), n: 0, floor: s, recent: [], review: {}, ...(mark != null ? { mark } : {}) };
+    return { rating: levelRating(s, R), n: 0, floor: s, recent: [], review: {}, ...stamp, ...(mark != null ? { mark } : {}) };
   }
   function savePlayer(p, game, row) {
     const was = data.players[p.id] || { name: p.name, games: {} };
@@ -753,7 +872,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
       steps: REVIEW_SCHEDULES[c().review] ? c().review : 'standard' });
     if (entry) review[q.id] = entry; else delete review[q.id];
     savePlayer(p, game, { rating: r.player.rating, n: r.player.n, floor: step.floor, recent: step.recent, review,
-      ...(prow.mark != null ? { mark: prow.mark } : {}) });
+      ...stamp, ...(prow.mark != null ? { mark: prow.mark } : {}) });
     data.questions[q.id] = r.question;
     if (result.right) tally[p.id] = (tally[p.id] || 0) + 1;
     lastPlayer = p;
@@ -822,7 +941,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
      * Put this player at `level` in this game NOW: the floor there, the rating that level's, the answers
      * being judged cleared (they were judged at the old level). Kept: how many they have answered, and
      * what is due to come back. For an explicit change by a person (Trivia's "Start trivia at"), never by play.
-     * `level` may be a word ('easy' / 'medium' / 'hard'), read over this game's written levels.
+     * `level` may be a word ('very easy' / 'easy' / 'medium' / 'hard'), read over this game's written levels.
      */
     startAt(pid, game, level) {
       if (!pid || !game) return null;

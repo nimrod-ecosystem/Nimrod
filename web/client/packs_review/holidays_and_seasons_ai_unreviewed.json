@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Holidays and seasons (AI-written, not yet reviewed)",
-  "description": "59 questions on holidays & seasons, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 23 medium, 16 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "59 questions on holidays & seasons, written by Claude, spread across every level the game understands: 8 very easy, 12 easy, 23 medium, 16 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -24,7 +24,7 @@
         "October"
       ],
       "correct": "December",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "Christmas Day is December 25.",
       "source": {
@@ -33,7 +33,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: '25 December'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -48,7 +47,7 @@
         "Melons"
       ],
       "correct": "Pumpkins",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "A carved pumpkin with a candle inside is a jack-o'-lantern.",
       "source": {
@@ -57,7 +56,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'pumpkin'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -72,7 +70,7 @@
         "Winter"
       ],
       "correct": "Spring",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "Spring follows winter, when flowers start to bloom.",
       "source": {
@@ -81,7 +79,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'spring'; 'winter'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -96,7 +93,7 @@
         "New Year's Day"
       ],
       "correct": "Easter",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "The Easter Bunny is said to bring eggs at Easter.",
       "source": {
@@ -105,7 +102,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Easter'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -120,7 +116,7 @@
         "Trees"
       ],
       "correct": "Hearts",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "The heart shape stands for love.",
       "source": {
@@ -129,7 +125,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'heart'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -144,7 +139,7 @@
         "Fall"
       ],
       "correct": "Winter",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "Winter is the coldest time of year.",
       "source": {
@@ -153,7 +148,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'coldest'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -168,7 +162,7 @@
         "Trick or treat!"
       ],
       "correct": "Happy New Year!",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "At midnight, people wish each other a happy new year.",
       "source": {
@@ -176,7 +170,6 @@
         "note": "Universally known New Year's custom in English-speaking countries."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -191,7 +184,7 @@
         "Spring"
       ],
       "correct": "Summer",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Holidays & seasons",
       "explain": "Summer is the warmest time of year.",
       "source": {
@@ -200,7 +193,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'warmest'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"

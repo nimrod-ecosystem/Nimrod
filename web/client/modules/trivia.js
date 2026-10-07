@@ -73,9 +73,9 @@ import { createTelemetry } from '../telemetry.js';
 import { worth as mcqWorth } from '../mcq_scoring.js';
 import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
-import { loadPack, itemSources, difficultyLevel } from '../packs.js';
+import { loadPack, itemSources, difficultyLevel, DIFFICULTY_LEVELS } from '../packs.js';
 import { createAdaptiveSession, adaptiveSettings, openLadderStore, splitLadderStore, LADDER_STATE_OPTIONS,
-  PERSON_LADDER_KEY } from '../adaptive_play.js';
+  PERSON_LADDER_KEY, START_WORDS } from '../adaptive_play.js';
 import { RATING_DEFAULTS, LADDER_DEFAULTS, expected, levelOf, levelRating } from '../rating.js';
 import { ensureQuizStyle } from '../quiz_view.js';
 import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
@@ -233,7 +233,7 @@ export function packToTriviaBank(pack) {
     const why = answerExplainText(it.explain);
     if (why) row.explain = why;
     // `level` (2026-10-05): the item's `difficulty` as the level its rating starts at (packs.js
-    // difficultyLevel: easy 1, medium 2, hard 3). Only when it has one; see QUESTIONS AT EVERY LEVEL below.
+    // difficultyLevel: very easy 1, easy 2, medium 3, hard 4). Only when it has one; see QUESTIONS AT EVERY LEVEL below.
     const level = difficultyLevel(it.difficulty);
     if (level) row.level = level;
     return row;
@@ -246,9 +246,9 @@ export function packToTriviaBank(pack) {
 // The packs mark each item easy / medium / hard, and Trivia used to drop it: every question was dealt
 // at random to everybody. Now, when the bank carries levels, Trivia plays on THE LADDER the other
 // question games use (../adaptive_play.js, ../rating.js): each player has a rating and a floor, each
-// question a rating that STARTS at its level (levelRating: easy 1000, medium 1150, hard 1300) and is
-// moved by every answer, and Mike's per-level thresholds move the floor (rating.js thresholdsAt: 90% right
-// to step up / 75% wrong to step down at the easiest level, 70/50 at the hardest).
+// question a rating that STARTS at its level (levelRating over TRIVIA_RATING: very easy 850, easy 1000, medium
+// 1150, hard 1300) and is moved by every answer, and Mike's per-level thresholds move the floor (rating.js
+// thresholdsAt: 90% right to step up / 75% wrong to step down at the easiest level, 70/50 at the hardest).
 //
 // WHAT IS NOT THE LADDER'S `deal`: the pick. `choose` there ranks questions by expected success and breaks
 // ties by id, which on a pack of several hundred questions with fresh (equal) ratings would deal the same
@@ -274,7 +274,9 @@ export function packToTriviaBank(pack) {
 //   * while REVIEWING (../pack_reviews.js): with "Include unreviewed questions" on and open questions in
 //     play, the round is dealt open-first as before. A reviewer has to meet the hard questions too, and a
 //     floor at level 1 would hold them back. Who sees an unreviewed question does not change.
-// An unlevelled question in a levelled bank (a lesson-routed one) is level 1, the ladder's own convention.
+// An unlevelled question in a levelled bank (a lesson-routed one) is easy (UNLEVELLED): level 1, the ladder's own
+// convention, until very easy came in below it (2026-10-06). Argued: nobody said it was very easy, and easy is
+// where it always started.
 //
 // *** ITS OWN ROW, `ratings_trivia`, NOT THE SHARED `ratings` (adaptive_play.js LADDER_KEY). *** Argued:
 //   FOR sharing: one place for every game's ladder, which is what adaptive_play.js describes.
@@ -295,13 +297,9 @@ export function packToTriviaBank(pack) {
 // no person to keep it with. A host with no per-person rows (a test, the modules page) keeps everything on the
 // screen's row, as before.
 //
-// *** "START TRIVIA AT" (Mike, 2026-10-06: an older player should not start at the easy end), kept with the person too (`start`: easy / medium /
-// hard). *** DEFAULT EASY, argued:
-//   FOR medium: a capable teenager or adult answers about ten easy questions before the floor moves (90% of ten
-//   at the easiest level), which is a dull first few minutes.
-//   AGAINST, and it decides it: the ladder aims at 80% success, and a start that is too hard for a young child or
-//   somebody recovering from an injury is discouraging in a way ten easy questions are not; a person who should
-//   start higher is one setting away. [Guess, on Mike's list.]
+// *** "START TRIVIA AT" (Mike, 2026-10-06: an older player should not start at the easy end), kept with the person
+// too (`start`: very easy / easy / medium / hard, or 'same'). *** It is Trivia's own start for that person: the same
+// thing as "Start this game at" in the other games (adaptive_play.js openPersonLadder), on Trivia's own row.
 // CHANGING IT starts them again at that level, up OR down (adaptive_play.js `startAt`: floor and rating there,
 // the answers being judged cleared, everything else kept). Argued: FOR only for a new player, which the word
 // "start" suggests: a setting changed on somebody who has already played would otherwise change nothing,
@@ -311,19 +309,51 @@ export function packToTriviaBank(pack) {
 // is copied back into the row so the menu shows it. A screen with no person: the row applies to its one
 // unnamed player, on the panel.
 //
-// *** "WHERE THE OTHER GAMES START" (2026-10-06, the same day): THE FIRST CHOICE, AND THE DEFAULT. *** Every other
-// game on the ladder now keeps the person's level with them too, with ONE "Start games at" for all of them
-// (adaptive_play.js openPersonLadder argues one, not one per game). This row can follow it ('same') or override
-// it (easy / medium / hard). Default 'same', argued: FOR keeping 'easy': it is what shipped. AGAINST, and it
-// decides it: nobody has set either yet, so 'same' starts everybody exactly where 'easy' did until somebody sets
-// "Start games at", and then a caregiver who set it once is not surprised that Trivia ignored it. A person whose
-// row already says easy / medium / hard keeps it. Following it, a change to "Start games at" starts them again
-// in Trivia too (the same mark the other games read). [Guess, on Mike's list.]
+// *** "THEIR USUAL STARTING LEVEL" ('same'): THE FIRST CHOICE, AND THE DEFAULT. *** The person's usual start for
+// every question game (adaptive_play.js usualStartField, `start` on their `ratings` row, set on the People tab of
+// the screen's menu). Default 'same', argued: FOR a start of Trivia's own: quiz questions are a different kind of
+// hard. AGAINST, and it decides it: a caregiver who set the usual one once is not surprised that Trivia ignored it,
+// and Trivia's own is one choice away. A person whose row already says a word keeps it. Following it, a change to the
+// usual start starts them again in Trivia too (the same mark the other games read). [Guess, on Mike's list.]
+//
+// *** NOTHING SET ANYWHERE: VERY EASY (2026-10-06), the bottom ("A new player starts at level" 1). *** Argued:
+//   FOR easy: a capable teenager or adult answers about ten very easy questions before the floor moves (90% of
+//   ten at the easiest level), which is a dull first few minutes, and the packs hold few very easy questions.
+//   AGAINST, and it decides it: the ladder aims at 80% success, and a start that is too hard for a young child or
+//   somebody recovering from an injury is discouraging in a way ten easy questions are not; the bottom two levels
+//   are dealt together from the start ("Levels mixed together", 2), so easy questions come too; and a person who
+//   should start higher is one setting away, once, for every game. [Guess, on Mike's list.]
+//
+// *** VERY EASY MOVED EVERY LEVEL NUMBER UP ONE, AND NOBODY'S PROGRESS MOVES (2026-10-06). *** packs.js now counts
+// very easy 1, easy 2, medium 3, hard 4 (it argues why not a level 0). Two things were stored on the old numbers:
+//   * every question's RATING (an Elo number: an easy question started at 1000). TRIVIA_RATING reads ratings on a
+//     scale whose level 1 is 150 lower (850), so 1000 is still easy, 1150 medium, 1300 hard: no stored rating is
+//     touched, and a player's rating keeps its meaning against them. Only Trivia reads these questions' ratings.
+//   * every player's FLOOR (a level number). A row saved before this carries no `lv`; it is read with its floor up
+//     one (easy 1 -> 2), and saved with `lv: 2` at their next answer (createAdaptiveSession `rowVersion`). The
+//     same on a screen's row and a person's, so the one-time move between them still compares like with like.
+//   What does change: with four levels the threshold curve runs over four, so easy now steps up at 83% right (it
+//   was 90%), and very easy has the 90%. Also a panel that saved "A new player starts at level" 2 or 3 now means
+//   easy or medium for players typed in by name (it meant medium or hard); 1, the default, now means very easy.
 export const TRIVIA_LADDER_KEY = 'ratings_trivia';
 export const PERSON_START_KEY = 'personStart';
-export const START_LEVELS = Object.freeze(['easy', 'medium', 'hard']);
+export const START_LEVELS = START_WORDS;
 export const START_SAME = 'same';
 export const START_CHOICES = Object.freeze([START_SAME, ...START_LEVELS]);
+// Ratings read so that easy (level 2) sits where level 1 always sat (rating.js levelRating / levelOf).
+export const TRIVIA_RATING = Object.freeze({
+  start: RATING_DEFAULTS.start - (DIFFICULTY_LEVELS.easy - 1) * RATING_DEFAULTS.bandWidth,
+});
+// The level a question with no difficulty starts at (QUESTIONS AT EVERY LEVEL, above).
+export const UNLEVELLED = DIFFICULTY_LEVELS.easy;
+// The `lv` a player row saved on the four-level count carries; one without it is moved up (above).
+export const TRIVIA_LEVELS_VERSION = 2;
+/** A player row saved before "very easy": its floor moved up by the levels added below easy. PURE. */
+export function upgradeTriviaRow(row) {
+  if (!row || typeof row !== 'object') return row;
+  const f = Math.max(1, Math.floor(Number(row.floor) || 1));
+  return { ...row, floor: f + (DIFFICULTY_LEVELS.easy - 1) };
+}
 export const triviaId = (item) => `trivia:${contestKey(item?.question, item?.answer)}`;
 
 /** The level an item was written for: its `level`, else its `difficulty` (packs.js), else null. */
@@ -529,21 +559,21 @@ const SETTINGS = [
     note: 'a vocabulary row already holds everything a multiple-choice question needs' },
   // *** THE LADDER'S ROWS (2026-10-05, QUESTIONS AT EVERY LEVEL above), the same rows, words and defaults as
   // every other question game (../adaptive_play.js adaptiveSettings), so a caregiver who set them in Thinking
-  // games finds them here. Three starting levels, because a pack's words are three. Two left out: "Missed
+  // games finds them here. Four starting levels, because a pack's words are four (very easy, 2026-10-06). Two left out: "Missed
   // questions come back" (Trivia's pick does not use the ladder's spaced review, so the row would change
   // nothing) and the AI-writer rows (Trivia's questions come from packs). Hidden for "Written questions",
   // which carry no levels.
-  // (Its "Start games at" row is left out too: Trivia has its own, below, which can follow it.)
-  ...adaptiveSettings({ startLevels: 3, appliesWhen: (v) => v.contentSource !== 'bank', personStart: false })
+  // (Its "Start this game at" row is left out too: Trivia has its own, below, which works the same way.)
+  ...adaptiveSettings({ startLevels: 4, appliesWhen: (v) => v.contentSource !== 'bank', personStart: false })
     .filter((row) => row.key !== 'review'),
   // THE PERSON'S OWN START (THE LEVEL FOLLOWS THE PERSON, above). Standard, because it is the one a caregiver
   // setting up somebody new reaches for; the per-panel "A new player starts at level" stays advanced.
   { key: PERSON_START_KEY, label: 'Start trivia at', kind: 'choice', default: START_SAME, level: 'standard',
-    options: [{ value: START_SAME, label: 'Where the other games start' },
-              { value: 'easy', label: 'Easy questions' }, { value: 'medium', label: 'Medium questions' },
-              { value: 'hard', label: 'Hard questions' }],
-    note: 'For the person this screen is for, and kept with them, so it is the same on each of their screens. '
-      + '"Where the other games start" follows "Start games at" in the other question games. '
+    options: [{ value: START_SAME, label: 'Their usual starting level' },
+              { value: 'very easy', label: 'Very easy questions' }, { value: 'easy', label: 'Easy questions' },
+              { value: 'medium', label: 'Medium questions' }, { value: 'hard', label: 'Hard questions' }],
+    note: 'For the person this screen is for, in Trivia only, and kept with them on each of their screens. '
+      + '"Their usual starting level" is the person\'s own, set in this screen\'s settings on the People tab. '
       + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
       + 'start at "A new player starts at level".',
     appliesWhen: (v) => v.contentSource !== 'bank' },
@@ -735,8 +765,8 @@ registerModule(
       try { handle = ctx.makePersonState(id, TRIVIA_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
       let off = null;
       if (handle) { try { off = handle.subscribe?.(() => { if (!dead) syncStartToPanel(); }) || null; } catch { off = null; } }
-      // "WHERE THE OTHER GAMES START" (above): their "Start games at" is on the person's other ladder row.
-      // Read here, never written; listened to, so a change made in another game reaches this one.
+      // "THEIR USUAL STARTING LEVEL" (above): it is on the person's other ladder row (`start`, `startMark`).
+      // Read here, never written; listened to, so a change made on the People tab reaches this one.
       let games = null;
       let gamesReady = null;
       try { games = ctx.makePersonState(id, PERSON_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { games = null; }
@@ -756,7 +786,7 @@ registerModule(
       try { return h?.get?.() || null; } catch { return null; }
     };
     const personStartNow = () => { const s = personDoc()?.start; return START_CHOICES.includes(s) ? s : null; };
-    // Follows "Start games at": the person's row says 'same', or nothing yet (the row's default).
+    // Follows their usual start: the person's row says 'same', or nothing yet (the row's default).
     const followsGames = () => !START_LEVELS.includes(personStartNow());
     const gamesStartNow = () => { const s = gamesDoc()?.start; return START_LEVELS.includes(s) ? s : null; };
     const gamesMarkNow = () => { const m = gamesDoc()?.startMark; return m == null || m === '' ? null : String(m); };
@@ -778,7 +808,7 @@ registerModule(
       try { state.set({ [PERSON_START_KEY]: s }); } catch (err) { console.error('trivia: start copy', err); }
     }
     // Somebody changed "Start trivia at" in the menu: the person's row says so, and they start again there.
-    // 'same': where "Start games at" says, else "A new player starts at level".
+    // 'same': their usual starting level, else "A new player starts at level".
     async function applyPersonStart(v) {
       if (!START_CHOICES.includes(v) || !ladder) return;
       const pid = ctx.personId ? `person:${ctx.personId}` : null;
@@ -1093,8 +1123,8 @@ registerModule(
       const out = contests ? contests.held() : null;
       return pool.filter((b) => !(out && out.size && isHeldItem(b, out)) && !isFlaggedItem(b)).map((b) => {
         const id = idOf.get(b) || triviaId(b);
-        const r = ladder.questionRow({ id, level: itemLevel(b) || 1 }).rating;
-        return { id, item: b, level: Math.min(levelOf(r), maxLevel) };
+        const r = ladder.questionRow({ id, level: itemLevel(b) || UNLEVELLED }).rating;
+        return { id, item: b, level: Math.min(levelOf(r, TRIVIA_RATING), maxLevel) };
       });
     }
     function pickNext() {
@@ -1103,7 +1133,7 @@ registerModule(
       const never = new Set(deck.filter(Boolean).map((b) => idOf.get(b)));
       const pick = pickNear(candidates(roundPool, win.maxLevel), { lo: win.lo, hi: win.hi,
         playerRating: ladder.playerRow(p.id, GAME).rating, avoid: seenBy[p.id] || new Set(), never, rand,
-      poolOf: (c) => c.item?.pool || '' });
+        rating: TRIVIA_RATING, poolOf: (c) => c.item?.pool || '' });
       return pick ? pick.item : null;
     }
     // Tells the ladder which question is up and for whom (its `deal`, handed the id: "deal THIS question").
@@ -1401,7 +1431,7 @@ registerModule(
       bank = next;
       // What the ladder rates: every row with its id and the level it was written for (1 when none).
       idOf = new Map(bank.map((b) => [b, triviaId(b)]));
-      ladderBank = bank.map((b) => ({ id: idOf.get(b), level: itemLevel(b) || 1 }));
+      ladderBank = bank.map((b) => ({ id: idOf.get(b), level: itemLevel(b) || UNLEVELLED }));
       if (!deck.length || changed) newRound();
     }
 
@@ -1527,9 +1557,12 @@ registerModule(
             cfg: () => ({ ...cfg, review: 'off', aiWrite: 'off' }),
             bankFor: () => ladderBank,
             store, rand, now,
+            // VERY EASY MOVED EVERY LEVEL NUMBER UP ONE (above): ratings read on Trivia's scale, and a row saved
+            // before it has its floor moved up once.
+            rating: TRIVIA_RATING, rowVersion: TRIVIA_LEVELS_VERSION, upgradeRow: upgradeTriviaRow,
             personId: () => ctx.personId || null,
             // "Start trivia at": the person's own; on a screen with no person, the panel's, for its one player.
-            // Their own easy / medium / hard; else, following, where "Start games at" says.
+            // Their own word; else, following, their usual starting level.
             startFor: (pid) => {
               if (ctx.personId && pid === `person:${ctx.personId}`) {
                 return difficultyLevel(followsGames() ? gamesStartNow() : personStartNow());
@@ -1537,7 +1570,7 @@ registerModule(
               if (pid === 'player') return difficultyLevel(rawPersonStart);
               return null;
             },
-            // Following "Start games at", a change to it starts them again here too (adaptive_play.js `startMark`).
+            // Following their usual start, a change to it starts them again here too (adaptive_play.js `startMark`).
             startMark: (pid) => (ctx.personId && pid === `person:${ctx.personId}` && followsGames() ? gamesMarkNow() : null),
             onChange: () => firstAgain(),
           });
@@ -1547,7 +1580,7 @@ registerModule(
         if (splitStore && ctx.personId) {
           const pid = `person:${ctx.personId}`;
           splitStore.ownReady(pid).then(() => { if (!dead) syncStartToPanel(); });
-          // "Start games at" is on another row, which may land after the ladder: the first question is picked
+          // Their usual start is on another row, which may land after the ladder: the first question is picked
           // again from it, as it is when the ladder lands.
           const games = personHandles.get(ctx.personId)?.gamesReady;
           if (games) games.then(() => { if (!dead && followsGames() && gamesStartNow()) firstAgain(); });

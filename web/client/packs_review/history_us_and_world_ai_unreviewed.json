@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "History, US and world (AI-written, not yet reviewed)",
-  "description": "54 questions on history, written by Claude, spread across every level the game understands: 6 very easy (filed as easy, marked in `note`), 12 easy, 18 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "54 questions on history, written by Claude, spread across every level the game understands: 6 very easy, 12 easy, 18 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -24,7 +24,7 @@
         "Italy"
       ],
       "correct": "France",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "The statue was a gift of friendship from the people of France.",
       "source": {
@@ -33,7 +33,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'France'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -48,7 +47,7 @@
         "Yuri Gagarin"
       ],
       "correct": "Neil Armstrong",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "Neil Armstrong stepped onto the Moon in 1969.",
       "source": {
@@ -57,7 +56,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'first person to walk on the Moon'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -72,7 +70,7 @@
         "Benjamin Franklin"
       ],
       "correct": "Abraham Lincoln",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "Lincoln has been on the penny since 1909.",
       "source": {
@@ -81,7 +79,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Lincoln'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -96,7 +93,7 @@
         "Arctic Ocean"
       ],
       "correct": "Atlantic Ocean",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "Columbus sailed west from Spain across the Atlantic.",
       "source": {
@@ -105,7 +102,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Atlantic'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -120,7 +116,7 @@
         "Boat race"
       ],
       "correct": "Airplane flight",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "Orville and Wilbur Wright made the first controlled, sustained powered airplane flight in 1903.",
       "source": {
@@ -129,7 +125,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'airplane'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05",
@@ -145,7 +140,7 @@
         "Boston"
       ],
       "correct": "Washington, D.C.",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "History",
       "explain": "The White House is the president's home in Washington, D.C.",
       "source": {
@@ -154,7 +149,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Washington'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"

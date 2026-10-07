@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Science and nature (AI-written, not yet reviewed)",
-  "description": "65 questions on science & nature, written by Claude, spread across every level the game understands: 7 very easy (filed as easy, marked in `note`), 9 easy, 27 medium, 22 hard. A second writing pass on 2026-10-05 added 15 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 12 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "65 questions on science & nature, written by Claude, spread across every level the game understands: 7 very easy, 9 easy, 27 medium, 22 hard. A second writing pass on 2026-10-05 added 15 questions written to be quiz-night hard; an independent fact-check re-fetched every cited page, kept 12 of them as hard and moved the ones most adults would know to medium. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -24,7 +24,7 @@
         "Jupiter"
       ],
       "correct": "Earth",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "We live on Earth, the third planet from the Sun.",
       "source": {
@@ -32,7 +32,6 @@
         "note": "Universally known; every reader knows they live on Earth."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -47,7 +46,7 @@
         "Comet"
       ],
       "correct": "Star",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "The Sun is a star, the closest one to us.",
       "source": {
@@ -56,7 +55,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'star'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -71,7 +69,7 @@
         "Mud"
       ],
       "correct": "Lava",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "Melted rock that pours out of a volcano is called lava.",
       "source": {
@@ -80,7 +78,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'volcano'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -95,7 +92,7 @@
         "Rainbows"
       ],
       "correct": "Clouds",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "Rain is water that falls from clouds.",
       "source": {
@@ -103,7 +100,6 @@
         "note": "Universally known everyday weather fact."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -118,7 +114,7 @@
         "Fog"
       ],
       "correct": "Rainbow",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "Sunlight shining through raindrops makes a rainbow.",
       "source": {
@@ -127,7 +123,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'droplets'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -142,7 +137,7 @@
         "A shell"
       ],
       "correct": "A plant",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "Give a seed soil, water and light and it grows into a plant.",
       "source": {
@@ -151,7 +146,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'plant'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -166,7 +160,7 @@
         "A cloud"
       ],
       "correct": "The Moon",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Science & nature",
       "explain": "The Moon seems to change shape as we see more or less of its lit side.",
       "source": {
@@ -175,7 +169,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'Moon'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"

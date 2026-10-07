@@ -27,7 +27,7 @@ decision for the next pass, not a guess made here.</p>
 <script type="module">
 import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS,
   itemSourceProblem, itemSourceProblems, itemSourceWarnings, itemSources, needsItemSources,
-  itemSourcesGrandfathered, ITEM_SOURCES_FROM, difficultyLevel, DIFFICULTY_LEVELS } from '../packs.js';
+  itemSourcesGrandfathered, ITEM_SOURCES_FROM, difficultyLevel, DIFFICULTY_LEVELS, normalizeDifficulty } from '../packs.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -166,12 +166,30 @@ try {
     okDiff.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A' }];   // no difficulty at all
     check('...but difficulty is OPTIONAL — its absence is fine', validatePack(okDiff).length === 0,
       JSON.stringify(validatePack(okDiff)));
-    // 2026-10-05: the three words as the ladder's starting levels (Trivia's "questions at every level").
-    check('*** difficultyLevel: easy 1, medium 2, hard 3 — one level per word the validator accepts ***',
-      difficultyLevel('easy') === 1 && difficultyLevel('medium') === 2 && difficultyLevel('hard') === 3
-      && JSON.stringify(Object.keys(DIFFICULTY_LEVELS)) === '["easy","medium","hard"]');
+    // 2026-10-05: the words as the ladder's starting levels (Trivia's "questions at every level").
+    // 2026-10-06: "very easy" below easy (Mike: "even easier questions for children").
+    check('*** difficultyLevel: very easy 1, easy 2, medium 3, hard 4 — one level per word the validator accepts ***',
+      difficultyLevel('very easy') === 1 && difficultyLevel('easy') === 2 && difficultyLevel('medium') === 3
+      && difficultyLevel('hard') === 4
+      && JSON.stringify(Object.keys(DIFFICULTY_LEVELS)) === '["very easy","easy","medium","hard"]',
+      JSON.stringify(DIFFICULTY_LEVELS));
     check('...and null for none, or for a word the validator refuses', difficultyLevel(undefined) === null
-      && difficultyLevel('') === null && difficultyLevel('nightmare') === null);
+      && difficultyLevel('') === null && difficultyLevel('nightmare') === null && difficultyLevel('very hard') === null);
+    check('"very_easy", "veryeasy" and "Very Easy" are read as very easy; written back as "very easy"',
+      ['very_easy', 'veryeasy', ' Very Easy ', 'VERY-EASY'].every((w) => difficultyLevel(w) === 1 && normalizeDifficulty(w) === 'very easy')
+      && normalizeDifficulty('Hard') === 'hard' && normalizeDifficulty('extremely easy') === null);
+    const veryEasy = clone(GATSBY);
+    veryEasy.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A', difficulty: 'very easy' },
+      { question: 'y?', answers: ['A', 'B', 'C'], correct: 'A', difficulty: 'very_easy' }];
+    check('*** a pack item marked "very easy" (or "very_easy") is valid ***', validatePack(veryEasy).length === 0,
+      JSON.stringify(validatePack(veryEasy)));
+    const veryEasyWords = { schema: 'nimrod.pack.v1', kind: 'words', name: 'w', source: { name: 's' },
+      items: [{ word: 'cat', definition: 'a small animal', difficulty: 'very easy' }] };
+    check('...in a words pack too', validatePack(veryEasyWords).length === 0, JSON.stringify(validatePack(veryEasyWords)));
+    const veryHard = clone(GATSBY);
+    veryHard.items = [{ question: 'x?', answers: ['A', 'B', 'C'], correct: 'A', difficulty: 'very hard' }];
+    check('...and "very hard" is not a difficulty (refused, and the message names the four)', validatePack(veryHard).length > 0
+      && /very easy\/easy\/medium\/hard/.test(validatePack(veryHard).join(' ')), JSON.stringify(validatePack(veryHard)));
 
     // The problems list NAMES the item, which matters the moment a pack has more than one.
     const two = clone(GATSBY);
