@@ -1,0 +1,75 @@
+/* play_objects.css - the look of `modules/play_objects.js`: what played, as a stack of bricks, a pie, or posters.
+   Loaded by the module itself, from a <link> inside its own mount, as charts.css is.
+
+   THEME TOKENS ONLY - no literal colour in this file. The object usually stands on a room's wall with NO panel behind it
+   (it starts with its panel background clear), so every piece of text sits on its own small card of the theme's
+   --surface, or carries a halo of it (SVG text: `paint-order: stroke`), and reads on any wall, light or dark.
+
+   SIZE: container units (the box's own width), so the same object reads on a wall, in a slot, or full screen.
+   NOTHING MOVES: there is no animation or transition here at all; a poster's tilt is a still picture. */
+
+.po-wrap{width:100%;height:100%;container-type:inline-size;font-family:var(--font);color:var(--text)}
+.po-wrap *{box-sizing:border-box}
+.po{position:relative;width:100%;height:100%;min-height:140px;display:flex;flex-direction:column;align-items:center;
+  gap:clamp(4px, 1.6cqw, 12px)}
+
+.po-title,.po-key,.po-note,.po-empty{margin:0;padding:.2em .6em;border-radius:8px;background:var(--surface);
+  border:1px solid var(--border);text-align:center;max-width:100%}
+.po-title{font-size:clamp(12px, 4cqw, 30px);font-weight:800;color:var(--text-strong)}
+.po-key,.po-note{font-size:clamp(11px, 2.8cqw, 20px);color:var(--text-muted)}
+.po-empty{margin:auto 0;font-size:clamp(13px, 4cqw, 26px);color:var(--text-muted)}
+.po-body{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:flex-end;justify-content:center}
+
+.po-svg{display:block;width:100%;height:100%}
+.po-svg-value,.po-svg-label,.po-slice-num{font-family:var(--font);paint-order:stroke;stroke-linejoin:round}
+.po-svg-value{font-size:30px;font-weight:800;fill:var(--text-strong);stroke:var(--surface);stroke-width:7px}
+.po-svg-label{font-size:22px;font-weight:600;fill:var(--text);stroke:var(--surface);stroke-width:6px}
+.po-slice-num{font-size:26px;font-weight:800;fill:var(--surface);stroke:var(--text-strong);stroke-width:3px}
+.po-slice{stroke:var(--surface);stroke-width:2}
+.po-rest{stroke:var(--text-muted);stroke-width:1;stroke-dasharray:4 3}
+.po-plate{fill:var(--surface-alt);stroke:var(--border);stroke-width:2}
+.po-crust{fill:none;stroke:var(--accent-warm, var(--accent));stroke-width:7}
+
+.po-pie-wrap{width:100%;height:100%;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:center;
+  gap:clamp(4px, 2cqw, 16px)}
+.po-pie{flex:1 1 55%;min-width:0;height:100%;max-height:100%}
+.po-legend{list-style:none;margin:0;padding:.3em .5em;display:flex;flex-direction:column;gap:4px;flex:0 1 auto;min-width:0;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px}
+.po-legend li{display:flex;align-items:center;gap:6px;font-size:clamp(11px, 2.9cqw, 20px)}
+.po-sw{flex:none;width:1em;height:1em;border-radius:3px;border:1px solid var(--border)}
+.po-sw.po-rest{border-style:dashed;border-color:var(--text-muted)}
+.po-leg-label{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+.po-leg-value{flex:none;font-weight:700;color:var(--text-strong)}
+
+/* THE POSTER WALL. A name and a count on paper; no picture (the services' rules on art are unchecked). */
+.po-posters{list-style:none;margin:0;padding:clamp(4px, 1.5cqw, 12px);width:100%;align-self:stretch;display:grid;
+  grid-template-columns:repeat(var(--po-cols, 3), minmax(0, 1fr));gap:clamp(6px, 2.4cqw, 20px);align-content:center}
+.po-poster{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2em;
+  min-height:clamp(60px, 22cqw, 220px);padding:clamp(6px, 2cqw, 16px);padding-top:clamp(18px, 4cqw, 28px);text-align:center;background:var(--surface);
+  color:var(--text);border:1px solid var(--border);border-radius:4px;box-shadow:0 2px 6px var(--shadow, transparent);
+  rotate:-1.4deg}
+.po-poster:nth-child(even){rotate:1.1deg}
+.po-poster::before{content:"";position:absolute;top:5px;left:50%;width:10px;height:10px;margin-left:-5px;border-radius:50%;
+  background:var(--accent)}
+.po-rank{font-size:clamp(18px, 7cqw, 64px);font-weight:900;line-height:1;color:var(--text-strong)}
+.po-name{font-size:clamp(11px, 3.4cqw, 30px);font-weight:700;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:3;overflow:hidden}
+.po-count{font-size:clamp(10px, 2.6cqw, 20px);color:var(--text-muted)}
+
+/* THE READING. Always in the page for a screen reader; shown as a list over the object on a press. */
+.po-sr,.po-said{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);
+  clip-path:inset(50%);white-space:nowrap;border:0}
+.po-reading{position:absolute;inset:0;z-index:1;overflow:auto;padding:clamp(6px, 2cqw, 14px);background:var(--surface);
+  border:1px solid var(--border);border-radius:12px}
+.po-reading[hidden]{display:none}
+.po-table{width:100%;border-collapse:collapse;font-size:clamp(12px, 3.6cqw, 24px)}
+.po-table caption{text-align:left;font-weight:800;color:var(--text-strong);padding-bottom:4px}
+.po-table th,.po-table td{padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;color:var(--text)}
+.po-table thead th{font-size:.8em;color:var(--text-muted)}
+.po-table td{text-align:right;font-weight:800;color:var(--text-strong);white-space:nowrap}
+.po-table tbody th{font-weight:600;overflow-wrap:anywhere}
+.po-table td[colspan]{text-align:left;font-weight:600;color:var(--text-muted)}
+
+/* THE ONE PRESS: the whole object. Clear, above everything in it; its focus ring is the object's outline. */
+.po-hit{position:absolute;inset:0;z-index:2;margin:0;padding:0;border:0;border-radius:12px;background:transparent;cursor:pointer}
+.po-hit:focus-visible{outline:3px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}

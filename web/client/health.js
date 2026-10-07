@@ -156,6 +156,8 @@ export const HEALTH_EXPECT = {
   scoreboard:  { idle: true },
   // Charts of what played (row 2.62 step 2). It publishes nothing; a chart nobody presses is a chart doing its job.
   charts:      { idle: true },
+  // What played, as a stack, a pie or posters (row 2.62 step 4): the same - it publishes nothing, and is looked at.
+  play_objects: { idle: true },
   // A keypad and a display. It sends on its ports only when somebody presses a key, and nobody
   // pressing one for a while is not a fault - the same reasoning as `algebra` above.
   calculator:  { idle: true },

@@ -804,6 +804,20 @@ export const CATALOG = [
     note: 'Counted on this device from this screen’s own plays, and nothing is sent anywhere. Spotify plays are '
       + 'left out: Spotify’s developer rules say an app should not make listening statistics from them.',
   },
+  // Row 2.62 step 4: the same plays as things in a room (modules/play_objects.js). `watch`: looked at; one press reads it.
+  {
+    type: 'play_objects',
+    title: 'Plays as objects',
+    group: 'record',
+    use: 'watch',
+    lead: 'What played on this screen as things in a room: a stack of bricks for each, a pie, or posters on the wall.',
+    needs: 'Nothing to set up. Home’s Add has “Top played this week” as a stack, a pie or posters; on a room it goes '
+      + 'on the wall with no panel around it.',
+    why: 'The same plays the Charts panel counts, as something to look at across a room. Press it to hear what played '
+      + 'most and see it as a list. The bricks are the Nimrod brick, as it is printed.',
+    note: 'Counted on this device from this screen’s own plays, and nothing is sent anywhere. Spotify plays are left '
+      + 'out. Posters show names only: no covers or thumbnails until the services’ rules on showing them are checked.',
+  },
   // Row 2.44: the recordings voice_recording.js kept on this device, reviewed a pair at a time. `touch`: it
   // plays nothing until somebody presses Play, and left alone it is a list.
   {

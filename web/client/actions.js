@@ -635,6 +635,9 @@ export const MODULE_VERBS = {
   // list, Next view), `select` presses the lit one - and the first `select` with nothing lit SAYS the chart, so the
   // one thing somebody who cannot read the screen wants costs one press. No `back`: there is nothing to leave.
   charts:        { next: 'charts/next', prev: 'charts/prev', select: 'charts/select' },
+  // WHAT PLAYED, AS OBJECTS (row 2.62 step 4; modules/play_objects.js). The whole object is one press: `select` says it
+  // and shows it as a list (pressed again, the list goes); `back` puts the list away. Nothing to walk inside it.
+  play_objects:  { select: 'play_objects/select', back: 'play_objects/back' },
   // ROW 2.38. A dashboard placed INSIDE another (a billboard, a TV) is one thing to a switch: `select` goes
   // in (modules/view.js answers `dashboard/open`; the kiosk swaps the screen). `view` is its old name.
   // And a placed module that is a DOOR (`opens` on its placement) is routed as type `opens`

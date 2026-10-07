@@ -68,6 +68,20 @@
 import { DASHBOARD_GO_TOPIC } from './dashboard_nest.js';
 import { chooseLod, deviceCapability, budgetFor, LOD_DEFAULTS } from './room_lod.js';
 import { buildFor, buildUrls, lookOf, normalizeLook, tintedPicture } from './brick_builds.js';
+import { roomDriveOf, ROOM_DRIVE_KEYS } from './room_drive.js';
+
+// *** A PIECE AN AUTOMATION DRIVES (row 2.62 step 4, room_drive.js). *** `driveItem(id, row)` places ONE piece again:
+// moved across (% of its width) and toward you (% of its depth) on the floor, turned about its own foot, grown about it,
+// and its faces' colours shifted. Nothing else is touched -- not the recipe, not the walls, not a module on them. The
+// colour shift goes on each FACE, never on the box: a `filter` on a preserve-3d element flattens it into one plane.
+/** A piece's transform: where it stands, plus what drives it (room_drive.js). Pure. */
+export function boxTransform(f, view, row = null) {
+  const p = boxPlace(f, view);
+  const d = roomDriveOf(row);
+  if (!d.any) return `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
+  const x = p.x + (d.across / 100) * f.w, z = p.z + (d.down / 100) * f.d;
+  return `translate3d(${x}px, ${p.y}px, ${z}px)${d.turn ? ` rotateY(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale3d(${d.scale}, ${d.scale}, ${d.scale})` : ''}`;
+}
 
 export const OPENS_ACTION = 'dashboard.open';   // room_scene.js's name for the same press
 export const OPENS_MAX = 200;                    // layout.js OPENS_MAX: an id, not prose
@@ -453,6 +467,7 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
   const boxes = new Map();    // furniture id -> its element
   let lod = null;             // room_lod.js chooseLod's last answer: which level each piece is drawn at
   let scanId = null;          // the piece a host's scan is on (`focusTarget`), or null
+  const drives = new Map();   // row 2.62 step 4: piece id -> the driven numbers on it now. Memory only.
   const levelOf = (id) => (lod && lod.levels.get(id)) || 'full';
   const planNow = () => lodPlan(recipe, view, scale, o);
   const publish = (topic, payload) => { try { o.bus?.publish?.(topic, payload); } catch (err) { console.error('room3d: publish', topic, err); } };
@@ -473,14 +488,13 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
   // button's name, so a keyboard, a screen reader and Tab reach it); a press on ANY of its faces presses it.
   // `level` 'proxy' (room_lod.js): the front face alone -- the same place, colour, name and button.
   function buildBox(f, level = levelOf(f.id)) {
-    const p = boxPlace(f, view);
     const b = el('r3-box');
     b.dataset.object = f.id;
     b.dataset.lod = level;
     // The host's scan mark (`focusTarget`) outlives a redraw of this piece -- only while it is still a door.
     if (scanId === f.id && opensOf(f)) b.classList.add('is-scan');
     b.title = f.name;
-    b.style.transform = `translate3d(${p.x}px, ${p.y}px, ${p.z}px)`;
+    b.style.transform = boxTransform(f, view, drives.get(f.id) || null);
     const door = opensOf(f);
     const face = (cls, w, h, t, tag = 'div') => {
       const d = doc.createElement(tag);
@@ -522,7 +536,16 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       front.append(chip);
       b.addEventListener('click', (e) => { e.stopPropagation(); press(f.id); });
     }
+    paintDrive(b, f.id);
     return b;
+  }
+  /** The driven colour shift on each of a piece's faces, and the mark that it is driven (see the header's note). */
+  function paintDrive(b, id) {
+    const row = drives.get(id) || null;
+    const d = roomDriveOf(row);
+    const hue = d.hue == null ? '' : `hue-rotate(${d.hue}deg)`;
+    for (const face of b.querySelectorAll(':scope > .r3-bf')) if (face.style.filter !== hue) face.style.filter = hue;
+    if (row) b.dataset.driven = '1'; else delete b.dataset.driven;
   }
 
   function build() {
@@ -656,6 +679,28 @@ export function mountRoom3d(host, scene = {}, opts = {}) {
       boxes.set(id, b);
       return true;
     },
+    /**
+     * ROW 2.62 STEP 4 (room_drive.js): place piece `id` with these driven numbers (an empty row: as its recipe says),
+     * in place -- only its box's transform and its faces' colour change; nothing is rebuilt and the recipe is not
+     * changed. False for an id that is not a piece.
+     */
+    driveItem(id, row) {
+      if (destroyed) return false;
+      const f = recipe.furniture.find((x) => x.id === id);
+      if (!f) return false;
+      const keep = {};
+      for (const k of ROOM_DRIVE_KEYS) if (row && row[k] !== undefined && row[k] !== null && row[k] !== '') keep[k] = row[k];
+      if (roomDriveOf(keep).any) drives.set(id, keep); else drives.delete(id);
+      const b = boxes.get(id);
+      if (b) {
+        const t = boxTransform(f, view, drives.get(id) || null);
+        if (b.style.transform !== t) b.style.transform = t;
+        paintDrive(b, id);
+      }
+      return true;
+    },
+    /** What drives piece `id` now (a copy; {} when nothing does), or every driven piece's, by id. */
+    driven: (id) => (id ? { ...(drives.get(id) || {}) } : Object.fromEntries([...drives].map(([k, v]) => [k, { ...v }]))),
     /** Press a piece as a click on it does (a door publishes `dashboard/go`); null if it is not a door. */
     press,
     /** The doors' buttons, in READING ORDER: what a host walks with a switch (arrangement.js puts them in the

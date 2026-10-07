@@ -105,6 +105,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   solitaire: ['games'], brickbreaker: ['games'], rhythm: ['games'], sprint: ['tools'], quests: ['games', 'tracking'],
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
   charts: ['tracking', 'visual'],   // (2026-10-07, row 2.62) what played, drawn: keeping track, and something to look at
+  play_objects: ['tracking', 'visual'],   // (2026-10-07, row 2.62 step 4) the same, as a stack, a pie or posters in a room
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
   themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting
