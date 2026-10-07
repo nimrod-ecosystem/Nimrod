@@ -2350,3 +2350,33 @@ Mike, live, after deploying the seasons.
    - Any seasonal or holiday theme can be chosen at any time. This supersedes 71a3fa1's guess 4, which left holiday
      themes out of the list.
    - **There is a Themes module, and Theme is a tab in the settings menu.**
+
+## What the server may hold; summaries happen locally; one install package -- 2026-10-07
+
+Mike, through chat (inbox AY-BC; rows 2.54-2.58).
+
+1. **The storage line (row 2.58, decided).** *"I don't want anything from users on my server."*
+   - Nothing that is a person's content or body goes on the server: no pictures, audio, video, recordings,
+     voiceprints or health checkboxes.
+   - Small text the site needs across devices stays: settings, dashboards and encrypted keys.
+   - Anything the server holds today outside that line is to be listed for Mike before anything moves.
+2. **A walkthrough's summary is made locally, before chat** (row 2.54, correcting f72f6e5). Corpus Desk's ten-level
+   Clean up dial already does it (word for word down to one line). Port that dial rather than writing a new
+   summariser. His reason: he talks casually, and the summary is what goes to chat, so filler shouldn't cost
+   tokens.
+3. **The speech program comes in the one larger install package** (with the media agent and whatever else it
+   carries), not an installer of its own. *"We were already discussing a larger package for people to install.
+   If it's necessary for this then make it part of that package."* Voice with no install, the browser's own
+   recogniser (which sends audio to Google), is to be easy to find and plainly worded. When the site finds no
+   speech program, it says so and says how to get one.
+4. **Enter a key once (row 2.57).** One entry, from the YouTube settings or the media panel, is the default for
+   the account or person, overridable at any level. Under item 1 it may live on the server, encrypted, as the
+   search keys do.
+5. **Spotify (row 2.55):** plays with no Spotify screen, with an optional song-info overlay, and uses the shared
+   weighted picker (rng.js). YouTube, Spotify and the rest should work the same way: *"Maybe a universal media
+   player?"* (row H1's direction).
+6. **Who is speaking (row 2.56):** people who opt in are recognised by voice by any AI or game on the site.
+   Voiceprints stay on the device (item 1), so it is set up on each device or copied device to device, and it is
+   never used as a lock.
+7. **Open, waiting for Mike:** whether his walkthrough recordings are kept with their corrected text so his voice
+   can be learned ("Should Cici be learning my voice? I feel like this should be part of the corpus").
