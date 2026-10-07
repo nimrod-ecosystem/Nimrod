@@ -1367,8 +1367,7 @@ class _Store:
                             "answered and is not kept here.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "
-                            "when, a game result. It GROWS over time. Sensor readings, if you "
-                            "run a logger, arrive here too. When somebody checks a question "
+                            "when, a game result. It GROWS over time. When somebody checks a question "
                             "waiting for review: what they said about it (right, wrong, a note), "
                             "when, and the name of the person on your login they chose as who "
                             "was reviewing - and the points it earned, on that person's screen.", True,

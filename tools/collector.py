@@ -13,9 +13,17 @@ record's meaning belongs to whoever built the logger, and a pipe that insisted o
 understanding the payload would be dead on arrival with any manufacturer who already has a
 format — and they all already have one.
 
-    logger  --BLE-->  THIS  --HTTPS-->  a server  ------>  whoever is analyzing it
+    logger  --BLE-->  THIS  --HTTP(S)-->  the household's own machine  -->  whoever they share it with
                        |
                        +-- a spool file on local disk, which is the whole trick
+
+WHERE THE BYTES GO - THE HOUSEHOLD'S OWN MACHINE, NEVER THE NIMROD SITE. A logger's recording is a
+person's body, and the storage line Mike decided on 2026-10-07 (DECISIONS.md, "what the server may
+hold") keeps that off the Nimrod site: the site refuses event kind `device-blob` and stream
+`device-data` with a 400 (web/server/storage_line.py). So `server` below names a machine the household
+runs and controls - a computer at home, a small box on the same network - that accepts the POST shape
+`Uploader` sends. Left empty, which is the default, nothing is uploaded at all and the recordings stay
+in this box's spool. "The server" throughout this file means that machine.
 
 TWO POINTERS, MOVING INDEPENDENTLY. This is the design, and everything else follows.
 
@@ -84,8 +92,10 @@ class Settings:
     # a chair that just appeared is likely still there, so try again soon.
 
     # UPLOAD
-    server: str = ""                   # e.g. https://nimrod.onrender.com  ("" = spool only)
-    device_key: str = ""               # the account's device secret
+    # The HOUSEHOLD'S OWN machine (e.g. http://192.168.1.20:8080), never the Nimrod site, which refuses
+    # these rows (storage line, 2026-10-07 - see the top of this file). "" = spool only, nothing sent.
+    server: str = ""
+    device_key: str = ""               # the secret that machine expects, sent as X-Device-Key
     person_id: str = ""                # whose stream this is; "" -> the account stream
     stream: str = "device-data"
     upload_bytes: int = 16384          # bytes per POST
@@ -412,11 +422,12 @@ async def pull_once(link, spool: Spool, settings: Settings, *,
 # --------------------------------------------------------------------------- the upload
 
 class Uploader:
-    """Spool -> server, on its own schedule, with its own pointer.
+    """Spool -> the household's own machine, on its own schedule, with its own pointer.
 
-    Bytes go up base64 in an ordinary event, because the catching end already exists: the
-    append-only event stream plus device-key auth. No new endpoint, no new auth story, and
-    the server stores an opaque blob with a timestamp and a device id exactly as designed.
+    Bytes go up base64 in an event-shaped POST (kind `device-blob`), so the catching end is an
+    opaque blob with a timestamp and a device id. The catching end is the household's machine:
+    the Nimrod site refuses this kind and the `device-data` stream (storage line, 2026-10-07), and
+    that 400 is a rejection, so it is not retried (see `send_next`).
     """
 
     def __init__(self, settings: Settings, post=None):
@@ -586,8 +597,9 @@ def main(argv=None) -> int:
     ap.add_argument("--name", help="BLE name to look for")
     ap.add_argument("--address", help="exact BLE address (skips scanning)")
     ap.add_argument("--spool", help="where to keep the spool")
-    ap.add_argument("--server", help="https://... ; omit to spool without uploading")
-    ap.add_argument("--key", help="device key")
+    ap.add_argument("--server", help="the household's own machine (http://...), never the Nimrod site; "
+                                     "omit to spool without uploading")
+    ap.add_argument("--key", help="the secret that machine expects")
     ap.add_argument("--person", help="person id; omit for the account stream")
     ap.add_argument("--rounds", type=int, help="stop after N passes (default: forever)")
     ap.add_argument("--fake", type=int, metavar="BYTES",

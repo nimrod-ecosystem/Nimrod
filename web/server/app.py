@@ -42,6 +42,7 @@ import notes
 import pack_reviews
 import page_visits
 import recommend
+import storage_line  # storage line (row 2.58): what the state and event routes refuse to keep
 from version import deploy_commit, safe_code_version
 
 log = logging.getLogger("nimrod")
@@ -157,6 +158,28 @@ class EventPost(BaseModel):
     # needs a decided trust model, not a passthrough, so they stay unreachable for now.
     session_id: str | None = None
     producer_version: str | None = None
+
+
+# *** STORAGE LINE (Mike, 2026-10-07, row 2.58): nothing that is a person's content or body is kept here. ***
+# Every state PUT and event POST that takes a client's JSON passes one of these first: a size cap per row, no
+# picture/sound/video inside it, and no raw sensor recordings. The rules and the numbers: storage_line.py.
+# A refusal is logged by key or stream and size only - never the content - so a cap that turns out to catch
+# a legitimate write shows up in the server log instead of only as a save that quietly keeps failing.
+def _storage_line_state(key: str, data: dict) -> None:
+    try:
+        storage_line.check_state(data)
+    except storage_line.Refused as e:
+        log.warning("storage line: refused state key=%s status=%s bytes=%s", key, e.status, storage_line.row_bytes(data))
+        raise HTTPException(status_code=e.status, detail=e.detail)
+
+
+def _storage_line_event(stream: str, kind: str, data: dict) -> None:
+    try:
+        storage_line.check_event(stream, kind, data)
+    except storage_line.Refused as e:
+        log.warning("storage line: refused event stream=%s kind=%s status=%s bytes=%s", stream, kind, e.status,
+                    storage_line.row_bytes(data))
+        raise HTTPException(status_code=e.status, detail=e.detail)
 
 
 class SourceCreate(BaseModel):
@@ -659,6 +682,7 @@ def put_state(pid: str, key: str, body: StatePut, request: Request, user: str = 
     _check(pid, ID_RE, "profile id")
     _check(key, ID_RE, "state key")
     owned_profile(user, pid)
+    _storage_line_state(key, body.data)
     status, result = store.put_state(user, pid, key, body.data, body.base_version)
     if status == "conflict":
         # Stale write, rejected — nothing actually changed, so nobody is told it did.
@@ -953,6 +977,7 @@ def put_person_state(person_id: str, key: str, body: StatePut, request: Request,
     _check(person_id, ID_RE, "person id")
     _check(key, ID_RE, "state key")
     acct, pid = _person_state_target(user, person_id, key, write=True)
+    _storage_line_state(key, body.data)
     status, result = store.put_state(acct, person_scope(pid), key, body.data, body.base_version)
     if status == "conflict":
         return JSONResponse(status_code=409, content={"error": "version_conflict", **result})
@@ -982,6 +1007,7 @@ def append_person_event(person_id: str, stream: str, body: EventPost, request: R
     _check(stream, ID_RE, "event stream")
     _check(body.kind, ID_RE, "event kind")
     owned_person(user, person_id)
+    _storage_line_event(stream, body.kind, body.data)
     result = store.append_event(user, person_scope(person_id), stream, body.kind, body.data)
     # request.url.path is exactly the GET this same data lives at — self-referential on
     # purpose, so this can never drift out of sync with the URL a poller actually uses.
@@ -1003,6 +1029,7 @@ def get_user_state(key: str, user: str = Depends(current_user)):
 @app.put("/api/user-state/{key}")
 def put_user_state(key: str, body: StatePut, user: str = Depends(current_user)):
     _check(key, ID_RE, "state key")
+    _storage_line_state(key, body.data)
     scope = person_scope(store.ensure_default_person(user))
     status, result = store.put_state(user, scope, key, body.data, body.base_version)
     if status == "conflict":
@@ -1020,6 +1047,7 @@ def list_user_events(stream: str, limit: int = 50, user: str = Depends(current_u
 def append_user_event(stream: str, body: EventPost, request: Request,
                       user: str = Depends(current_user)):
     _check(stream, ID_RE, "event stream")
+    _storage_line_event(stream, body.kind, body.data)
     result = store.append_event(user, person_scope(store.ensure_default_person(user)),
                                 stream, body.kind, body.data)
     # Found 2026-09-17: this alias never published at all, so the kiosk's own mailbox
@@ -1050,6 +1078,7 @@ def append_event(pid: str, stream: str, body: EventPost, request: Request,
     if body.producer_version is not None:
         _check(body.producer_version, PRODUCER_RE, "producer version")
     owned_profile(user, pid)
+    _storage_line_event(stream, body.kind, body.data)
     result = store.append_event(
         user, pid, stream, body.kind, body.data,
         session_id=body.session_id, producer_version=body.producer_version,

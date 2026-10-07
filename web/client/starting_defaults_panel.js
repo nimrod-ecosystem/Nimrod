@@ -40,7 +40,6 @@ export function mountStartingDefaults(host, {
   let answers = copy(stored);
   const resultNow = () => defaultsFor(answers, { conditions });
   let warningOpen = false;
-  let includeAnswers = false;
   let cursorEl = null;
 
   const el = (tag, cls, text) => {
@@ -118,10 +117,12 @@ export function mountStartingDefaults(host, {
   warning.append(el('p', 'sd-warning-text', ONLINE_WARNING));
   warning.append(el('p', 'sd-warning-device',
     'Keeping it on this device only means it will not follow this person to another screen.'));
-  const includeBtn = button('includeAnswers', '');
+  // Storage line (2026-10-07): the settings go online, never which boxes were ticked - so there is no
+  // "also save which boxes were ticked" button here any more. The boxes stay on this device.
+  warning.append(el('p', 'sd-warning-boxes', 'Only the settings are saved online. Which boxes were ticked stays on this device.'));
   const yesBtn = button('onlineYes', 'Yes, save online');
   const noBtn = button('onlineNo', 'No, keep it on this device');
-  warning.append(includeBtn, yesBtn, noBtn);
+  warning.append(yesBtn, noBtn);
   root.append(warning);
 
   const status = el('p', 'sd-status', '');
@@ -184,8 +185,6 @@ export function mountStartingDefaults(host, {
       onlineBtn.textContent = 'Also save to the account (online)...';
       onlineBtn.title = '';
     }
-    includeBtn.textContent = `Also save which boxes were ticked: ${includeAnswers ? 'Yes' : 'No'}`;
-    includeBtn.setAttribute('aria-pressed', includeAnswers ? 'true' : 'false');
     warning.hidden = !warningOpen;
     deviceNote.textContent = store.persisted ? DEVICE_NOTE
       : `${DEVICE_NOTE} This browser is not keeping it: it will be gone when the page reloads.`;
@@ -194,7 +193,7 @@ export function mountStartingDefaults(host, {
 
   // ---------------------------------------------------------------- the cursor
   function stops() {
-    const all = warningOpen ? [includeBtn, yesBtn, noBtn] : [...root.querySelectorAll('button')];
+    const all = warningOpen ? [yesBtn, noBtn] : [...root.querySelectorAll('button')];
     return all.filter((b) => !b.disabled && !b.closest('[hidden]'));
   }
   function setCursor(b) {
@@ -247,19 +246,17 @@ export function mountStartingDefaults(host, {
       answers = { level: '', conditions: [], age: '', resolved: {} };
       say('What was ticked is no longer kept on this device. The settings stay as they are.');
     } else if (act === 'online') {
-      warningOpen = true; includeAnswers = false;
+      warningOpen = true;
       render(); setCursor(noBtn); return;
     } else if (act === 'onlineNo') {
       warningOpen = false;
       say('Kept on this device only.');
       render(); setCursor(onlineBtn.disabled ? null : onlineBtn); return;
-    } else if (act === 'includeAnswers') {
-      includeAnswers = !includeAnswers;
     } else if (act === 'onlineYes') {
       warningOpen = false;
       const record = store.get();
       render();
-      saveOnline({ record, library, acknowledged: true, includeAnswers })
+      saveOnline({ record, library, acknowledged: true })
         .then(() => { store.markSavedOnline(); say('Saved online, in the account.'); })
         .catch((e) => say(`Not saved online: ${e && e.message ? e.message : e}`));
       return;
