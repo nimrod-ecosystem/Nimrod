@@ -73,6 +73,12 @@ const HOLD_PULSE_MS = 15 * 60 * 1000;   // a held slideshow's "still here" (see 
 // Not settings: nobody choosing a slideshow's interval is served by tuning a cache.
 const KEEP_LAST = 50;
 const KEEP_WRITE_MS = 60 * 1000;
+// folder art (2026-10-07): the longest `data:` URL kept among the last pictures seen. 8 000 characters, argued: a small
+// drawing or icon fits, and fifty at most is 400 KB of the browser's few-MB cache; a folder's full SVG drawing (often
+// 20-300 KB) does not, and showing it again needs the folder anyway. Against: a big drawing is not in the fallback
+// when its folder cannot be read - it was not before today either (a folder's pictures were blob: URLs).
+const KEEP_DATA_URL_MAX = 8000;
+const keepableUrl = (u) => !/^blob:/.test(u) && !(/^data:/.test(u) && u.length > KEEP_DATA_URL_MAX);
 const albumOf = (path) => { const i = String(path).lastIndexOf('/'); return i < 0 ? '' : path.slice(0, i); };
 
 // WHAT THE SETTINGS MENU SHOWS.
@@ -777,9 +783,10 @@ registerModule(
       ? `photos-last:${user || 'anon'}:${personOf(ctx) || 'none'}:${ctx.instanceId}` : null);
 
     // Only pictures (a clip is rarely in the cache whole), only ones that really appeared, and never a
-    // folder's object URL (`blob:`), which dies with the page.
+    // folder's object URL (`blob:`), which dies with the page. folder art (2026-10-07): nor a big `data:` URL - a folder's
+    // SVG is a whole drawing in one (folder_source.js), and fifty of them would fill this device's small cache.
     function rememberSeen(item) {
-      if (keptMode || !item || item.kind !== 'image' || !item.url || /^blob:/.test(item.url)) return;
+      if (keptMode || !item || item.kind !== 'image' || !item.url || !keepableUrl(item.url)) return;
       const sid = item.sourceId || '';
       if (seen.some((s) => s.id === item.id && s.sourceId === sid)) return;
       seen.unshift({ id: item.id, url: item.url, name: item.name || '', path: item.path || item.id, sourceId: sid });
@@ -804,7 +811,7 @@ registerModule(
       const out = [];
       const ids = new Set();
       for (const it of [...seen, ...(Array.isArray(stored) ? stored : [])]) {
-        if (!it || !it.id || !it.url || /^blob:/.test(it.url) || ids.has(it.id)) continue;
+        if (!it || !it.id || !it.url || !keepableUrl(it.url) || ids.has(it.id)) continue;
         const src = rows.find((s) => s && s.id === it.sourceId);
         if (src && !mayShowSource(src, pid)) continue;
         ids.add(it.id);

@@ -64,13 +64,29 @@ from urllib.parse import unquote, urlparse, parse_qs
 # Media we recognize. Lower-cased comparison, so .JPG / .Jpg / .jpg all match.
 # MIRRORED in web/client/folder_source.js (IMAGE_EXTS / VIDEO_EXTS / AUDIO_EXTS). test_agent.py
 # reads that file and fails if the two drift, and both check web/client/dev/media_kinds.json.
-IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif", ".avif"}
+# .svg (2026-10-07, folder art): drawings made with the art kit. An SVG can carry script, so every file this agent
+# serves goes out with FILE_HEADERS below (a sandbox: opened on its own in a tab it runs nothing and fetches nothing).
+IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".heic", ".heif", ".avif", ".svg"}
 VIDEO_EXTS = {".mp4", ".mov", ".webm", ".m4v", ".ogv"}
 # Audio (2026-09-30), so a music folder is not listed as empty. .webm stays video (a container
 # the listing cannot see inside); the list and its reasons are in folder_source.js. Every
 # client consumer filters by kind - the photo slideshow shows image + video only.
 AUDIO_EXTS = {".mp3", ".m4a", ".aac", ".ogg", ".oga", ".opus", ".wav", ".flac"}
 MEDIA_EXTS = IMAGE_EXTS | VIDEO_EXTS | AUDIO_EXTS
+
+# folder art: *** A FILE FROM THE FOLDER NEVER RUNS AS A PAGE OF THIS AGENT. *** In an <img> or a <video> nothing in
+# a file runs whatever its headers say; these are for the other case - somebody opening a file's address on its own,
+# where an .svg (or an .html that happens to sit in the folder) would otherwise run script with this agent's own
+# address, able to read /list. `sandbox` gives the file no site at all and no script; `default-src 'none'` stops it
+# loading anything; images and media may still show themselves. Ignored by <img>/<video>/fetch, so nothing the site
+# does changes. (Not `nosniff`, argued: a cross-site <img> of a file whose type the computer does not know - a .heic
+# sent as application/octet-stream - can then be refused by the browser's opaque-response blocking.)
+FILE_HEADERS = (
+    ("Content-Security-Policy", "sandbox; default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'"),
+)
+# The type an .svg is served with, said here rather than left to the computer's own table (Windows reads it from the
+# registry, where a program can have changed it): an <img> shows an SVG only when it is sent as this.
+SVG_TYPE = "image/svg+xml"
 
 # Set once in main(); the handler reads them. Kept as globals because
 # BaseHTTPRequestHandler is instantiated per-request by the server.
@@ -314,7 +330,7 @@ class Handler(SimpleHTTPRequestHandler):
         try:
             st = os.fstat(f.fileno())
             size = st.st_size
-            ctype = self.guess_type(fs_path)
+            ctype = SVG_TYPE if fs_path.lower().endswith(".svg") else self.guess_type(fs_path)   # folder art
             rng = self._parse_range(self.headers.get("Range"), size)
 
             if rng is None and self.headers.get("Range"):
@@ -336,6 +352,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(length))
             self.send_header("Accept-Ranges", "bytes")
+            for name, value in FILE_HEADERS:   # folder art: the sandbox (above)
+                self.send_header(name, value)
             self.send_header("Last-Modified", self.date_time_string(int(st.st_mtime)))
             self.end_headers()
 

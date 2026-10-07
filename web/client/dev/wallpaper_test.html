@@ -64,6 +64,10 @@ import '../modules/personal.js';
 import '../modules/educational.js';
 import '../modules/wallpaper.js';
 import '../modules/director.js';
+// folder art (2026-10-07): "Pictures from a folder", defaulting to the Nimrod folder's Artwork/Wallpapers.
+import { SETTINGS as WP_SETTINGS, NIMROD_FOLDER, NO_FOLDER, WALLPAPER_FOLDER, readNimrodWallpapers, folderNote }
+  from '../modules/wallpaper.js';
+import { fieldsFor, fieldItems } from '../settings_fields.js';
 
 const params = new URLSearchParams(location.search);
 const USER = params.get('user') || 'wallpaper-test-user';
@@ -340,6 +344,141 @@ try {
 
     inst.destroy();
     check('destroy leaves nothing behind', host.innerHTML === '');
+  }
+
+  // =====================================================================================
+  section('*** folder art: pictures from a folder - the Nimrod folder\'s Artwork/Wallpapers by default ***');
+  {
+    // An in-memory Nimrod folder: { name: string (a file) | {...} (a folder) }, its permission settable.
+    const J = (x) => JSON.stringify(x);
+    const perm = { state: 'granted' };
+    const isDir = (v) => v && typeof v === 'object';
+    const nf = () => new DOMException('not found', 'NotFoundError');
+    const fakeDir = (name, tree) => ({
+      kind: 'directory', name,
+      async getDirectoryHandle(n) { if (!isDir(tree[n])) throw nf(); return fakeDir(n, tree[n]); },
+      async getFileHandle(n) {
+        if (!(n in tree) || isDir(tree[n])) throw nf();
+        return { kind: 'file', name: n, getFile: async () => new File([tree[n]], n, { type: n.endsWith('.svg') ? 'image/svg+xml' : 'image/png' }) };
+      },
+      async *entries() { for (const k of Object.keys(tree)) yield [k, isDir(tree[k]) ? fakeDir(k, tree[k]) : await this.getFileHandle(k)]; },
+      async queryPermission() { return perm.state; },
+      async requestPermission() { return perm.state; },
+    });
+    const storeOf = (root) => {
+      const m = new Map(root ? [['root', root]] : []);
+      return { get: async (k) => m.get(k) || null, put: async (k, h) => { m.set(k, h); }, del: async (k) => { m.delete(k); } };
+    };
+    // A drawing that tries to run: it must only ever be SHOWN (folder_source.js gives it a data: URL).
+    const HOSTILE = '<svg xmlns="http://www.w3.org/2000/svg" width="4" height="4" onload="try{parent.__wpSvgRan=1}catch(e){}">'
+      + '<script>try{parent.__wpSvgRan=2}catch(e){}<\/script><rect width="4" height="4" fill="#345"/></svg>';
+    const tree = { Artwork: { [WALLPAPER_FOLDER]: { 'wallpaper-lake.png': 'PNG', 'wallpaper-drawn.svg': HOSTILE, 'README.txt': 'x' } } };
+    const store = storeOf(fakeDir('Nimrod', tree));
+
+    const r = await readNimrodWallpapers({ store });
+    check('*** the Nimrod folder\'s Artwork/Wallpapers is read: its pictures, an .svg among them, and not its README ***',
+      r.status === 'ok' && r.items.map((i) => i.name).sort().join() === 'wallpaper-drawn.svg,wallpaper-lake.png', J(r.items));
+    check('no Nimrod folder on this device: "none"', (await readNimrodWallpapers({ store: storeOf(null) })).status === 'none');
+    perm.state = 'prompt';
+    check('*** a lapsed permission: "permission", and nothing is read ***', (await readNimrodWallpapers({ store })).status === 'permission');
+    perm.state = 'granted';
+    check('no Wallpapers folder in it: "missing"',
+      (await readNimrodWallpapers({ store: storeOf(fakeDir('Nimrod', { Artwork: {} })) })).status === 'missing');
+    check('an empty Wallpapers folder: "empty"',
+      (await readNimrodWallpapers({ store: storeOf(fakeDir('Nimrod', { Artwork: { [WALLPAPER_FOLDER]: {} } })) })).status === 'empty');
+
+    // The row and its words.
+    const row = WP_SETTINGS.find((f) => f.key === 'sourceId');
+    check('*** the row: "Pictures from a folder", defaulting to the Nimrod folder ***',
+      row && row.label === 'Pictures from a folder' && row.default === NIMROD_FOLDER
+        && row.options.some((o) => o.value === NO_FOLDER), J(row));
+    const words = ['ok', 'empty', 'none', 'permission', 'missing', 'error']
+      .map((s) => folderNote(NIMROD_FOLDER, s, 2))
+      .concat(['ok', 'empty', 'gone', 'permission', 'missing', 'album', 'error'].map((s) => folderNote('src-1', s, 1)));
+    check('every state has words, and every one but "ok" says the built-in wallpaper shows',
+      words.every(Boolean) && words.filter((w) => !/there\.$/.test(w)).every((w) => /built-in wallpaper shows/.test(w)), J(words));
+    check('a lapsed permission says where to press Allow', /Allow in This screen, Your own folders/.test(folderNote(NIMROD_FOLDER, 'permission')));
+    check('"None" has nothing to say', folderNote(NO_FOLDER, 'ok') === '');
+    check('*** site words: never "her screen", never a name ***', !/her screen|christine|cici/i.test(words.join(' ')));
+
+    // Mounted with that folder.
+    const host = document.getElementById('host2');
+    const T = fakeTimers();
+    let st = {};
+    let wpBus = null;
+    const mk = (s = {}) => {
+      st = s;
+      wpBus = createBus();
+      const inst = mountModule('wallpaper', {
+        mount: host, bus: wpBus,
+        state: { get: () => st, set: (p) => { st = { ...st, ...p }; }, subscribe: () => {} },
+        events: null, user: USER, folderStore: store, rand: mulberry32(7),
+        setTimer: T.setTimer, clearTimer: T.clearTimer, now: () => 0,
+      });
+      inst.init();
+      return inst;
+    };
+    delete window.__wpSvgRan;
+    let inst = mk();
+    await sleep(200);
+    let p = inst.impl.__probe();
+    check('*** with nothing chosen, it plays Artwork/Wallpapers from the Nimrod folder ***',
+      p.mode === 'media' && p.folder.status === 'ok' && p.folder.count === 2, J(p));
+    check('...a picture is on screen, read straight from the folder (a blob: or, for a drawing, a data: URL)',
+      p.shownSrc.some((s) => /^(blob|data):/.test(s)), J(p.shownSrc));
+    // Step through the pictures (the drawing too), then make sure nothing in the drawing ran.
+    const seenSrc = new Set(p.shownSrc.filter(Boolean));
+    for (let i = 0; i < 4; i += 1) {
+      wpBus.publish('wallpaper/next', {});
+      await sleep(150);
+      for (const s of inst.impl.__probe().shownSrc) if (s) seenSrc.add(s);
+    }
+    const drawn = [...seenSrc].filter((s) => /^data:image\/svg\+xml/.test(s));
+    const imgs = [...host.querySelectorAll('img')];
+    check('the drawing was shown, as an <img> with a data: URL (never a blob: one, never inline)',
+      drawn.length > 0 && !host.querySelector('svg'), [...seenSrc].map((s) => s.slice(0, 30)).join(' | '));
+    await Promise.all(imgs.map((im) => (im.complete ? null : new Promise((res) => { im.onload = im.onerror = res; }))));
+    await sleep(100);
+    check('*** a drawing in the folder is shown as a picture: its script and onload never run ***', window.__wpSvgRan === undefined, String(window.__wpSvgRan));
+    check('*** still nothing written on screen and nothing focusable ***',
+      host.textContent.trim() === '' && host.querySelectorAll('button,input,a,[tabindex]').length === 0, JSON.stringify(host.textContent.slice(0, 80)));
+    let fields = fieldsFor({ settings: WP_SETTINGS }, inst);
+    let f = fields.find((x) => x.key === 'sourceId');
+    check('the row offers the Nimrod folder and None (and any connected folder between them)',
+      f.options[0].value === NIMROD_FOLDER && f.options[f.options.length - 1].value === NO_FOLDER, J(f.options));
+    let items = fieldItems(fields, { values: st, level: 'standard' });
+    let hint = items.find((it) => /sourceId$/.test(it.id))?.hint || '';
+    check('*** the row says what is in force, quietly, after its value ***',
+      /Wallpapers in your Nimrod folder/.test(hint) && /2 pictures there/.test(hint), hint);
+    check('the Album row stays out of the way for the Nimrod folder (it has no albums)',
+      !items.some((it) => /album$/.test(it.id)) && fields.find((x) => x.key === 'album').appliesWhen(st) === false);
+    inst.destroy();
+
+    // The permission lapsed (it does after a restart until somebody presses Allow).
+    perm.state = 'prompt';
+    inst = mk();
+    await sleep(200);
+    p = inst.impl.__probe();
+    check('*** permission lapsed: the built-in wallpaper, nothing blocks, nothing on screen ***',
+      p.mode === 'ambient' && p.folder.status === 'permission' && host.textContent.trim() === '', J(p));
+    items = fieldItems(fieldsFor({ settings: WP_SETTINGS }, inst), { values: st, level: 'standard' });
+    hint = items.find((it) => /sourceId$/.test(it.id))?.hint || '';
+    check('...and the row says so, with where to press Allow', /needs permission again/.test(hint) && /Allow/.test(hint), hint);
+    check('...and it looks again by itself', p.rechecking === true);
+    perm.state = 'granted';
+    T.fireDue(); await sleep(200);
+    check('*** allowed again: the pictures come back without anybody touching the panel ***',
+      inst.impl.__probe().mode === 'media', J(inst.impl.__probe()));
+    inst.destroy();
+    check('destroy leaves no recheck running', inst.impl.__probe().rechecking === false);
+
+    // "None": the built-in wallpaper even with pictures there.
+    inst = mk({ sourceId: NO_FOLDER });
+    await sleep(200);
+    p = inst.impl.__probe();
+    check('*** "None: just the built-in wallpaper" leaves the folder alone ***', p.mode === 'ambient' && p.items === 0, J(p));
+    inst.destroy();
+    check('folder art: the drawing never ran, start to end', window.__wpSvgRan === undefined);
   }
 
   // =====================================================================================

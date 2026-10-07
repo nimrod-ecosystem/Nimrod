@@ -20,9 +20,8 @@
 //              square or 4:3, picked from the picture's own proportions (ASPECT_CUTOFF, the square root of 4/3).
 //   card       the AAC board's card picture (board_editor.js -> picture_picker.js; card_face.js): a SQUARE slot,
 //              `object-fit: contain`, with the card's word printed under it (modules.css `.ab-card .ab-img`).
-//   wallpaper  the Photos panel's "Photos from" + "Album" (a connected folder and one of its subfolders), full screen.
-//              (The Wallpaper panel can also play a folder, but only from a link parameter today - no settings row
-//              chooses its folder. Said on Mike's list, not hidden here.)
+//   wallpaper  the Wallpaper panel, which plays Artwork/Wallpapers by itself (its "Pictures from" row, folder art
+//              2026-10-07), and the Photos panel's "Photos from" + "Album" (a connected folder and one of its subfolders).
 // LEFT OUT, because nothing reads them from a file yet: room objects and furniture (drawn from code and the brick
 // models), a room's picture frames (preset pictures only - room_scene.js `pictureFor` has no host that supplies one),
 // a room's backdrop picture (room_backdrop.js takes a same-site path; nothing makes one), trophies and badges, theme
@@ -32,9 +31,8 @@
 // *** WHERE THE FILES GO, AND HOW THEY REACH THE SITE. *** `<your Nimrod folder>/Artwork/<the kind's folder>`, made by
 // "Set up your Nimrod folder". The Artwork folder is then "Connected for pictures" (a media source, a handle on this
 // device, nothing copied), and every picture picker can browse it a subfolder at a time; the Photos panel takes it with
-// Album = "Wallpapers". *** AN .svg IS NOT LISTED FROM A FOLDER TODAY *** (folder_source.js IMAGE_EXTS has no svg, and
-// the media agent mirrors that list), so an SVG avatar is added with the picker's "Add one from this device", which
-// keeps it in this browser. The kit says so in words; adding svg to the folder lists is on Mike's list, not done here.
+// Album = "Wallpapers". An .svg IS listed from a folder (folder art, 2026-10-07: folder_source.js IMAGE_EXTS and the
+// media agent both list it), and is only ever shown as a picture or through svg_sanitize.js - never run.
 //
 // No imports: user_folders.js reads this for the README, and must stay cheap to load.
 
@@ -104,7 +102,8 @@ export const ART_KINDS = Object.freeze([
   kind({
     id: 'wallpaper', folder: 'Wallpapers', prefix: 'wallpaper', title: 'Wallpaper', plural: 'Wallpapers',
     what: 'a full-screen picture, for a slideshow or a calm background',
-    use: 'a Photos panel’s settings: “Photos from” your Artwork folder, “Album” Wallpapers',
+    use: 'the Wallpaper panel, by itself (its “Pictures from” setting starts on this folder), or a Photos panel’s settings: '
+      + '“Photos from” your Artwork folder, “Album” Wallpapers',
     width: 1920, height: 1080, shapes: [[16, 9]], minSide: 720, maxSide: 3840,
     types: ['jpg', 'webp', 'png'], clear: 'no', maxBytes: 8 * MB,
     advice: 'Wide (16:9). Keep anything important away from the left and right edges: a taller screen cuts a little off the sides.',
@@ -193,8 +192,7 @@ export function artKitText(kinds = ART_KINDS) {
     L.push(`Name: ${k.example} - small letters, numbers and hyphens, starting with "${k.prefix}-".`);
     if (k.types.includes('svg')) {
       L.push('SVG: a square viewBox="0 0 512 512", no text and no pictures inside it. Put the eyes in a group with id="eyes"');
-      L.push('and the mouth in a group with id="mouth", and it blinks and talks. A folder does not list SVG files yet: add an');
-      L.push('SVG with "Add one from this device" in the picture chooser.');
+      L.push('and the mouth in a group with id="mouth", and it blinks and talks.');
     }
     L.push(`Ask: "${promptFor(k)}"`);
   }

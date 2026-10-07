@@ -291,11 +291,9 @@ export function judgeArt(f, k, opts = {}) {
   // 2. The right type for this kind?
   if (k) {
     const ext = f.ext === 'jpeg' ? 'jpg' : f.ext;
-    if (ext === 'svg' && !k.types.includes('svg')) {
-      warn(`An SVG works for ${k.plural.toLowerCase()} only when added with “Add one from this device”: a folder does not list SVG files yet. Save it as ${typesWords(k)} to use it from the ${ART_FOLDER} folder.`);
-    } else if (ext === 'svg') {
-      warn('A folder does not list SVG files yet: add this one with “Add one from this device” in the picture chooser.');
-    } else if (!k.types.includes(ext)) {
+    // folder art (2026-10-07): a folder lists SVG files now, so an SVG is judged like any other type - fine where the
+    // kind takes it, "works, but best as ..." where it does not (the branch below).
+    if (!k.types.includes(ext)) {
       const why = ext === 'jpg' && k.clear === 'wanted' ? ' A JPG cannot have a clear background.' : '';
       warn(`${typeName} works, but ${k.plural.toLowerCase()} are best as ${typesWords(k)}.${why}`);
     }
