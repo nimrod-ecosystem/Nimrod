@@ -31,7 +31,8 @@ import { pickQuestion, fitOf, turnPoints, ladderChooser, FIT_DEFAULTS, chanceOf 
 import { pick, mulberry32 } from '../rng.js';
 import { createAdaptiveSession, LADDER_KEY } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
-import { wordsAdapter, speakingMs, SPEAK_WPM } from '../question_kinds.js';
+import { wordsAdapter } from '../question_kinds.js';
+import { readingMs } from '../quiz_flow.js';
 import { SOURCE_IDS, BRAIN_CATEGORIES, THINK_CATEGORIES, optionIn, mcqAdapter, spellingBank, spellingLevel, gradeLevel,
   triviaSource } from '../question_kinds.js';
 import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
@@ -396,10 +397,20 @@ try {
       const others = it.options.map((o, i) => [o, i]).filter(([o]) => o !== it.answer);
       check('*** and reads the other three aloud after the explanation ***', /The others: /.test(w.last())
         && others.every(([, i]) => w.last().includes(`“${it.meanings[i].word}” means ${it.meanings[i].meaning}.`)), w.last());
-      check('*** the celebration stays long enough to hear it (a press still moves on sooner) ***',
-        wordsAdapter.holdMs(it) === speakingMs(wordsAdapter.explain(it)) && wordsAdapter.holdMs(it) > 3000, String(wordsAdapter.holdMs(it)));
-      check('the speaking pace is the tour narration\'s, 145 words a minute', SPEAK_WPM === 145 && speakingMs('') === 0
-        && speakingMs(Array(145).fill('word').join(' ')) === 60450);
+      // ROW 2.66 (Mike, 2026-10-07: "different amounts of information ... seemingly random durations ... There should
+      // be a next question button"): no clock of its own any more - the one wait, which follows the longer sentence.
+      check('*** row 2.66: no Word Forge clock of its own (its 10-13 s holdMs is gone); the one wait follows the words ***',
+        typeof wordsAdapter.holdMs !== 'function' && w.eng.snapshot().timerPending
+        && readingMs(w.last()) > readingMs('Yes! It is right.'), String(readingMs(w.last())));
+      const parts = [...w.host.querySelectorAll('.qz-after > [data-part]')].map((p) => p.dataset.part);
+      const order = ['question', 'answer', 'explain', 'more', 'source', 'points', 'next'];
+      check('*** the after-answer screen: its parts in the one order (question, answer, why, what the others meant, ..., Next) ***',
+        parts.slice(0, 4).join() === 'question,answer,explain,more' && parts[parts.length - 1] === 'next'
+        && parts.every((p, i) => i === 0 || order.indexOf(p) > order.indexOf(parts[i - 1])), parts.join());
+      check('*** a Next question button, lit for the switch ***', w.host.querySelector('[data-part="next"] [data-act="continue"]')?.textContent === 'Next question'
+        && w.host.querySelector('[data-act="continue"]')?.dataset.on === '1');
+      check('the heading says it was right; the question stays on screen above the answer', w.host.querySelector('.wg-ask')?.textContent.includes('Yes!')
+        && w.host.querySelector('[data-part="question"]')?.textContent === it.prompt, w.host.querySelector('[data-part="question"]')?.textContent);
     }
     // ...and after a miss, when the answer is shown ("hear the answer").
     w.timers.flush();
@@ -432,6 +443,18 @@ try {
     }
     check('the grade -> level map: very easy 1 .. hard 4', gradeLevel(4) === 1 && gradeLevel(6) === 2 && gradeLevel(8) === 3 && gradeLevel(10) === 4);
     w.inst.destroy();
+    // Row 2.66: taking turns, the button says whose turn is next is not the same player's.
+    {
+      const two = M({ players: 'Ann, Bob', ...ONLY('words') });
+      await until(() => two.phase() === 'asking');
+      two.host.querySelector(`[data-pick="${CSS.escape(two.item().answer)}"]`)?.click();
+      check('*** two players: the after-answer button reads "Next player" ***', two.phase() === 'celebrate'
+        && two.host.querySelector('[data-act="continue"]')?.textContent === 'Next player', two.host.querySelector('[data-act="continue"]')?.textContent);
+      two.publish(`${GAME}/select`);
+      await until(() => two.phase() === 'asking');
+      check('...and a switch press goes on to it', two.phase() === 'asking');
+      two.inst.destroy();
+    }
     check('a spoken answer that names an option is that option', optionIn({ options: ['Paris', 'Rome'] }, 'I think it is paris') === 'Paris'
       && optionIn({ options: ['Paris', 'Rome'] }, 'London') === null);
     check('*** a number answer: "12" tapped, or "twelve" said, is the option 12 (not lost to letters-only matching) ***',
@@ -548,8 +571,9 @@ try {
       playClip: (h, clip, hd) => { handlers = hd; played.push(clip); return { stop: () => { handlers = null; } }; },
     };
     const endClip = () => { const h = handlers; handlers = null; h?.onEnded?.(); };
-    // Guests only: nobody has people, so Name that person is never a round.
-    const g = M({ players: 'Ann, Bob', rounds: 0, ...ONLY('name') }, { extra: media });
+    // Guests only, asking about OUR OWN people only (`personWho: 'own'`, the mix as it was before known people came in,
+    // row 2.63): nobody has people, so Name that person is never a round.
+    const g = M({ players: 'Ann, Bob', rounds: 0, personWho: 'own', ...ONLY('name') }, { extra: media });
     await sleep(40);
     const gc = [];
     for (let i = 0; i < 12; i++) { gc.push(`${cur(g).cat.id}/${cur(g).item.kind}`); answerRight(g); next(g); }
@@ -562,7 +586,7 @@ try {
     g.inst.destroy();
 
     // The screen's person (with messages) and a guest (none), one round of Name that person.
-    const r = M({ players: [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], rounds: 0, ...ONLY('name') },
+    const r = M({ players: [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], rounds: 0, personWho: 'own', ...ONLY('name') },
       { extra: { personId: 'pat', ...media } });
     const ok = await until(() => r.mix().available.some((a) => a.id === 'name:person'));
     check('the screen\'s person has messages from three people: Name that person is a round here', ok, JSON.stringify(r.mix().available.map((a) => a.id)));
@@ -600,6 +624,51 @@ try {
       && !Object.keys(r.ratings.get().ladder.questions).some((id) => /annie|bob|carol/i.test(id)), JSON.stringify(Object.keys(r.ratings.get().ladder?.questions || {})));
     r.inst.destroy();
     check('the mix gone: no message left playing', !handlers);
+
+    // KNOWN PEOPLE AND CHARACTERS, the mix's default (row 2.63, Mike 2026-10-07: "Naming someone from their own pictures
+    // wouldn't be a challenge for most people"). Made-up rows in Trivia's shape; name_that_test checks the real packs.
+    const ROWS = [
+      { question: 'Who painted the blue barn?', answer: 'Ada Lane', wrong: ['Bo Ruiz', 'Cy Moss'], level: 2, answerKind: 'person' },
+      { question: 'Which puppet sings in the tin band?', answer: 'Tobo', wrong: ['Rilla', 'Mux'], level: 3, answerKind: 'character' },
+      { question: 'Who rode the red bike first?', answer: 'Eve Holt', wrong: ['Fin Ott', 'Gus Ray'], level: 4, answerKind: 'person' },
+    ];
+    const knownRows = { knownPeopleRows: async () => ROWS };
+    check('*** the mix asks about known people by default; our own people are a choice ***',
+      getManifest('quiz_mix').settings.find((s) => s.key === 'personWho')?.default === 'known');
+    const before2 = played.length;
+    const k = M({ players: 'Ann, Bob', rounds: 0, ...ONLY('name') }, { extra: { ...media, ...knownRows } });
+    await until(() => k.mix().available.some((a) => a.id === 'name:person'));
+    const kc = [];
+    for (let i = 0; i < 18; i++) {
+      kc.push(`${cur(k).cat.id}/${cur(k).item.kind || ''}`);
+      const it = cur(k).item;
+      if (it.kind === 'known') k.eng.answer(it.answer); else answerRight(k);
+      next(k);
+    }
+    check('*** two guests: Name that person IS a round now, about known people ***', kc.some((x) => x === 'name:person/known'), kc.join());
+    check('...every person question a known one, and no message played', kc.filter((x) => x.startsWith('name:person')).every((x) => x.endsWith('/known'))
+      && played.length === before2, kc.join());
+    check('...recorded on Name that person\'s ladder, under the question key (no name of anybody\'s own)',
+      gameRow(k.ratings, 'name:ann', 'name_person')?.n >= 1 || gameRow(k.ratings, 'name:bob', 'name_person')?.n >= 1,
+      JSON.stringify(k.ratings.get().ladder?.players));
+    k.inst.destroy();
+    // "Both": the screen's person's own people come in as the easiest; a guest still gets known people.
+    const bb = M({ players: [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], rounds: 0, personWho: 'both', ...ONLY('name') },
+      { extra: { personId: 'pat', ...media, ...knownRows } });
+    await until(() => bb.mix().available.some((a) => a.id === 'name:person'));
+    const seen = [];
+    for (let i = 0; i < 30; i++) {
+      const c = cur(bb);
+      if (!c) break;
+      seen.push(`${c.player.id}:${c.cat.id}:${c.item.kind === 'known' ? 'known' : (Array.isArray(c.item.clips) ? 'own' : 'other')}`);
+      if (Array.isArray(c.item.clips)) endClip();
+      if (c.item.kind === 'known') bb.eng.answer(c.item.answer); else answerRight(bb);
+      next(bb);
+    }
+    check('*** both: a guest\'s person questions are known people, never anybody\'s messages ***',
+      seen.filter((x) => x.startsWith('name:ann:name:person')).every((x) => x.endsWith(':known')), seen.join());
+    check('...and the screen\'s person gets their own people', seen.some((x) => x === 'person:pat:name:person:own'), seen.join());
+    bb.inst.destroy();
   }
 
   // =====================================================================================

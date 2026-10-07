@@ -26,9 +26,9 @@
 //      *** "WOULD YOU LIKE TO DO ANOTHER ONE?" IS GONE (Mike, 2026-10-02): "I don't think we should
 //      be asking if you want to do another one after each question. I think that was my original
 //      idea, but it ruins the flow of the game. They can just stop answering or ask the computer to
-//      stop." *** So a right answer celebrates for `celebrateMs` and the next question follows; a
-//      revealed answer stays up for `answerMs` and the next question follows; a press on either
-//      skips the wait. To stop: stop answering (the question simply waits - a game waiting for its
+//      stop." *** So a right answer celebrates, a revealed answer is shown, and the next question
+//      follows by itself - after THE WAIT AFTER AN ANSWER, below; a Next question button (or any
+//      press, or "next" said aloud) skips the wait. To stop: stop answering (the question simply waits - a game waiting for its
 //      input is the game, not a gate), or say a STOP_PHRASES phrase ("stop", "I'm done"), which ends
 //      the sitting with "Thanks for playing." and a Play again button.
 //      *** AND "ANOTHER ONE?" IS BACK AS A SETTING, OFF (Mike, 2026-10-02, the same day): "Yes. Skip
@@ -39,6 +39,33 @@
 //      default is Mike's "it ruins the flow". Nobody answering leaves the question waiting, as
 //      any question does - the input is the game, not a gate on something already running.
 //   5. every question can be answered by voice OR a switch.
+//
+// ---------------------------------------------------------------------------------------
+// THE WAIT AFTER AN ANSWER (row 2.66, Mike 2026-10-07, after playing Quiz mix)
+// ---------------------------------------------------------------------------------------
+// *"At each answer it shows different amounts of information and pauses for seemingly random
+// durations. There should be a next question button while it reads through what the options each
+// meant."* Before this there were three clocks: a celebration held 3 s (`celebrateMs`), a shown
+// answer 5 s (`answerMs`), and a Word Forge question in the mix 10 to 13 s (its adapter's `holdMs`,
+// speaking pace), none of them tied to how long the words on screen took to read - and no button.
+// Now ONE RULE, in `createAfterWait`, for every after-answer screen in every game on this engine and
+// in Word games' own engine:
+//   * the next question comes when what was said has FINISHED being said (the output bus reports
+//     it, `createSpeechWatch`), plus a beat (`afterBeatMs`, 2 s);
+//   * with nothing said aloud (speech off, or an output that cannot report), when it has been READ:
+//     the same words at a reading pace (`readWpm`, 160 a minute), plus the same beat;
+//   * either way never sooner than the reading time, so a voice that fails at once does not flash
+//     the answer past;
+//   * a Next question button on the screen (the switch's one stop, a tap, Enter, "next" said aloud)
+//     goes on at once;
+//   * `afterAnswer: 'press'` waits for Next and never goes on by itself - for a table that wants to
+//     talk about the answer. Off by default (Mike, 2026-10-02: the next question comes by itself).
+//     No fallback clock, argued: a question already waits for its answer however long it takes (a
+//     game waiting for its input is the game, CLAUDE.md "games are settled"), nothing that was
+//     running stops while it waits, and "next" said aloud reaches it as well as a switch does. The
+//     case for a fallback: a caregiver turns it on and leaves somebody who cannot press - but the
+//     same somebody cannot answer the questions either, and a fallback would cut a table's talk off.
+// The screens show the same parts in the same order (quiz_view.js `afterAnswerHtml`).
 //
 // *** AND ONE GAME MAY BE GENTLER, AS A SETTING. *** Name that person (row 2.45): missing a loved
 // one's name can hit harder than missing an opposite, so its adapter can declare `missStyle`
@@ -135,6 +162,17 @@ export const STOP_PHRASES = Object.freeze(['stop', 'stop it', 'stop playing', 's
   'enough', 'no more', 'quit', 'end the game']);
 export const isStop = (t) => STOP_PHRASES.includes(normalize(t));
 
+/**
+ * *** "NEXT", SAID ALOUD ON AN AFTER-ANSWER SCREEN (row 2.66). *** Whole utterances only, like the stop
+ * phrases. Heard only on the celebration and the shown answer - while a question is up, "next" is not
+ * listened for (it could be an answer). A table of the ways people say one thing, not a setting.
+ */
+export const NEXT_WORDS = Object.freeze(['next', 'next one', 'next question', 'next player', 'the next one',
+  'go on', 'carry on', 'continue', 'move on', 'ok next', 'okay next', 'next please']);
+export const isNext = (t) => NEXT_WORDS.includes(normalize(t));
+/** What the button on an after-answer screen says (an adapter's `nextLabel` can say "Next player"). */
+export const NEXT_LABEL = 'Next question';
+
 // The same numbers word_games ships, for the same reasons (its DEFAULTS say why each one is what
 // it is). Shared keys keep their word_games KIND too: `settings_audit` fails a key declared as two
 // kinds in two modules, and a caregiver who learned the row in one game finds it in the next.
@@ -142,11 +180,18 @@ export const FLOW_DEFAULTS = Object.freeze({
   unsureBelow: 0.7,
   missesBeforeOffer: 2,
   correctPoints: 1,
-  celebrateMs: 3000,
-  // How long a revealed answer ("Here is the answer. COLD is the opposite of HOT.") stays before the
-  // next question comes by itself. Longer than the celebration: it is a sentence to hear and a pair
-  // to look at, not a chime. A press moves on sooner. A setting (below), 2-15 seconds.
-  answerMs: 5000,
+  // THE WAIT AFTER AN ANSWER (the header; row 2.66). Replaces `celebrateMs` (3 s) and `answerMs` (5 s).
+  //   afterAnswer  'read' (go on by itself once it has been read) | 'press' (wait for Next).
+  //   afterBeatMs  the moment after the reading. 2 s, argued: the old celebration was 3 s with a ~2.5 s
+  //                line in it, so about half a second after the voice; the old shown answer was 5 s, about
+  //                2.5 s after. 2 s is a breath to look at the answer without the next question feeling
+  //                slow; a setting, 1 to 12 s.
+  //   readWpm      the reading pace when nothing is said aloud. 160 words a minute, argued: an easy pace
+  //                for reading aloud to oneself, slower than an adult's silent 200-250, because the people
+  //                this is for include slow readers; Slow (100) and Quick (220) are a setting away.
+  afterAnswer: 'read',
+  afterBeatMs: 2000,
+  readWpm: 160,
   // Ask "Would you like to do another one?" between questions. OFF (Mike, 2026-10-02: "Skip asking
   // as default"); THE FLOW, item 4.
   askAnother: false,
@@ -173,10 +218,27 @@ export function answerByField({ on = 'choices', level = 'standard', example = 'I
     ...(appliesWhen ? { appliesWhen } : {}) };
 }
 
-/** The "how long the answer stays" row, shared with word_games.js (its own SETTINGS list). */
-export const ANSWER_MS_FIELD = Object.freeze({ key: 'answerMs', label: 'How long a shown answer stays before the next question',
-  kind: 'number', default: 5000, level: 'advanced', min: 2000, max: 15000, step: 1000, displayScale: 1000,
-  unit: 'seconds', unitOne: 'second', note: 'A press moves on sooner.' });
+/**
+ * THE WAIT AFTER AN ANSWER's three rows (the header), shared with word_games.js (its own SETTINGS list).
+ * They replace "How long the celebration stays" and "How long a shown answer stays".
+ * ADVANCED, argued as `askAnother` is (below): FOR standard, Mike asked for "wait for Next" by name; AGAINST,
+ * and it wins for now: Math's standard menu sits at its 12-press budget (simple_math_test), and the default
+ * is Mike's own ruling. Choices, not number fields: a number from 1 to 12 s in half seconds is 23 presses on
+ * one switch, six choices are six. [On Mike's list: whether "After an answer" belongs in the standard menu.]
+ */
+const notPress = (v) => ((v && v.afterAnswer) || 'read') !== 'press';
+export const AFTER_ANSWER_FIELDS = Object.freeze([
+  Object.freeze({ key: 'afterAnswer', label: 'After an answer', kind: 'choice', default: 'read', level: 'advanced',
+    options: [{ value: 'read', label: 'Go on by itself, once it has been read' },
+              { value: 'press', label: 'Wait for Next' }],
+    note: 'Either way, Next goes on at once: the button, a press, or saying "next".' }),
+  Object.freeze({ key: 'afterBeatMs', label: 'After it has been read, wait', kind: 'choice', default: 2000, level: 'advanced',
+    options: [1000, 2000, 3000, 5000, 8000, 12000].map((v) => ({ value: v, label: `${v / 1000} second${v === 1000 ? '' : 's'}` })),
+    appliesWhen: notPress }),
+  Object.freeze({ key: 'readWpm', label: 'Reading time, when nothing is said aloud', kind: 'choice', default: 160, level: 'advanced',
+    options: [{ value: 100, label: 'Slow' }, { value: 160, label: 'Easy' }, { value: 220, label: 'Quick' }],
+    note: 'With the voice on, it waits for the voice to finish.', appliesWhen: notPress }),
+]);
 
 /**
  * The "another one?" row, shared with word_games.js. ADVANCED, argued. FOR standard: it changes the
@@ -213,10 +275,7 @@ export function flowSettings({ lines = {}, labels = {}, sayChoice = true } = {})
       note: 'Below this, it says what it thinks it heard and asks, instead of marking it wrong.' },
     { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 1,
       level: 'advanced', min: 0, max: 5, step: 1, note: 'A miss never costs anything.' },
-    { key: 'celebrateMs', label: 'How long the celebration stays', kind: 'number', default: 3000,
-      level: 'advanced', min: 1000, max: 6000, step: 500, displayScale: 1000,
-      unit: 'seconds', unitOne: 'second' },
-    { ...ANSWER_MS_FIELD },
+    ...AFTER_ANSWER_FIELDS.map((f) => ({ ...f })),
     ...Object.keys(allLines).map((key) => ({ key, label: labels[key] || FLOW_LINE_LABELS[key] || key,
       kind: 'text', default: allLines[key], level: 'advanced' })),
   ];
@@ -284,6 +343,104 @@ export function reasonFor(result = {}, heard = '', lines = FLOW_LINES) {
     .find((a) => a && a !== normalize(heard) && a !== normalize(UNKNOWN));
   if (alt && (r === '' || r === 'alternative')) return fill(lines.reasonAlternative, { alt });
   return null;
+}
+
+// ---------------------------------------------------------------------------------------
+// THE WAIT AFTER AN ANSWER (the header; row 2.66) - one function, used by every engine
+// ---------------------------------------------------------------------------------------
+
+/** How long `text` takes to read at `wpm` words a minute (0 for no words). */
+export function readingMs(text, wpm = FLOW_DEFAULTS.readWpm) {
+  const n = String(text == null ? '' : text).trim().split(/\s+/).filter(Boolean).length;
+  const w = Number(wpm) > 0 ? Number(wpm) : FLOW_DEFAULTS.readWpm;
+  return n ? Math.round((n / w) * 60000) : 0;
+}
+
+/**
+ * THE BACKSTOP, for a voice that never says it has finished: the words at a slow speaking pace (100 a
+ * minute) plus 10 s. Not a setting, argued: it is reached only when the speech channel's own report never
+ * arrives, which output_channels.js's 30 s watchdog already prevents on a real screen; it only keeps a
+ * broken voice from holding an answer up for ever.
+ */
+export const speechBackstopMs = (text) => readingMs(text, 100) + 10000;
+
+export const waitsForNext = (cfg) => !!cfg && cfg.afterAnswer === 'press';
+const beatOf = (cfg) => { const n = Number(cfg?.afterBeatMs); return Number.isFinite(n) && n >= 0 ? n : FLOW_DEFAULTS.afterBeatMs; };
+
+/**
+ * THE ONE RULE (the header). `start({ cfg, text, spoken, holdMs, onDone })` after a celebration or a shown
+ * answer: `text` is what was said (or would have been), `spoken` a promise for the end of saying it (or
+ * null when nothing is being said, or the end cannot be known), `holdMs` an adapter's least time, if any.
+ *   'press'   nothing is started: the screen waits for Next.
+ *   no voice  onDone after the reading time + the beat.
+ *   a voice   onDone the beat after the voice finishes, never before the reading time; the backstop if the
+ *             voice never reports.
+ * `stop()` cancels (a press, a new question); a voice finishing after that is ignored.
+ */
+export function createAfterWait({ setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id),
+  now = () => Date.now() } = {}) {
+  let t = null;
+  let token = 0;
+  const clear = () => { if (t !== null) { try { clearTimer(t); } catch { /* gone */ } t = null; } };
+  return {
+    start({ cfg = {}, text = '', spoken = null, holdMs = 0, onDone = () => {} } = {}) {
+      token += 1;
+      clear();
+      if (waitsForNext(cfg)) return 'press';
+      const mine = token;
+      const readMs = Math.max(readingMs(text, cfg.readWpm), Number(holdMs) > 0 ? Number(holdMs) : 0);
+      const beat = beatOf(cfg);
+      const go = () => { if (mine !== token) return; t = null; onDone(); };
+      if (!spoken || typeof spoken.then !== 'function') { t = setTimer(go, readMs + beat); return 'read'; }
+      const began = now();
+      t = setTimer(go, Math.max(readMs, speechBackstopMs(text)) + beat);
+      const heard = () => {
+        if (mine !== token) return;
+        clear();
+        t = setTimer(go, Math.max(0, readMs - (now() - began)) + beat);
+      };
+      spoken.then(heard, heard);
+      return 'speech';
+    },
+    stop() { token += 1; clear(); },
+    pending: () => t !== null,
+  };
+}
+
+/**
+ * WHEN A SAID LINE HAS FINISHED: the output bus tells a message's own `onReport` every outcome of it (output.js
+ * `emit`; the same records it publishes on `output/delivery`). `say(text, opts)` -> `{ id, done }`: `done`
+ * resolves when the SPEECH channel has finished the line (or dropped, cancelled or muted it); it is null when
+ * that cannot be known - an output that does not report (`reports`, a suite's fake voice), or a screen whose
+ * spoken lines are not routed to speech at all. A line superseded by a newer one resolves (with null) at once.
+ * A line put back in the queue by something more urgent ('preempted') has not ended.
+ */
+export function createSpeechWatch({ output = () => null } = {}) {
+  let want = null;
+  const end = (w, rec) => { if (w.over) return; w.over = true; if (want === w) want = null; w.resolve(rec); };
+  return {
+    say(text, opts = {}) {
+      let out = null;
+      try { out = typeof output === 'function' ? output() : output; } catch { out = null; }
+      if (!out || typeof out.say !== 'function') return { id: null, done: null };
+      if (want) end(want, null);
+      let route = null;
+      try { route = typeof out.getRouting === 'function' ? out.getRouting() : null; } catch { route = null; }
+      const watch = out.reports === true && !!route && Array.isArray(route.say) && route.say.includes('speech');
+      if (!watch) return { id: out.say(text, opts), done: null };
+      let resolve = null;
+      const done = new Promise((r) => { resolve = r; });
+      const w = { resolve, over: false };
+      want = w;
+      const onReport = (rec) => {
+        if (!rec || (rec.channel != null && rec.channel !== 'speech') || rec.reason === 'preempted') return;
+        end(w, rec);
+      };
+      const id = out.say(text, { ...opts, onReport });
+      return { id, done };
+    },
+    destroy() { if (want) end(want, null); },
+  };
 }
 
 // ---------------------------------------------------------------------------------------
@@ -464,7 +621,7 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //
 // Phases: 'idle', 'loading' (a game whose items are still arriving), 'empty' (nothing to ask —
 // the game says so plainly), 'asking', 'unsure', 'twoMiss', 'celebrate', 'answer' (a revealed
-// answer on screen for `answerMs`, then the next question), 'gentle' (the gentle miss: "That was
+// answer on screen, then the next question after THE WAIT AFTER AN ANSWER), 'gentle' (the gentle miss: "That was
 // X's message. Let's listen again?"), 'another' ("Would you like to do another one?" - only when
 // the `askAnother` setting is on, off by default since 2026-10-02), 'done' (somebody said stop).
 //
@@ -497,9 +654,11 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //                             again) instead of dealing one. Absent: a game goes on until somebody stops.
 //   doneLine(cfg)             what is said when the sitting ends ('' or absent: the `doneLine` setting)
 //   holdMs(item, cfg)         (2026-10-07, row 2.59) how long a celebration or a shown answer must stay
-//                             at the LEAST, for an explanation longer than the usual one line (Quiz mix's
-//                             Word Forge questions read every option's meaning). The longer of this and
-//                             `celebrateMs` / `answerMs` is used; a press still moves on sooner. Absent: 0.
+//                             at the LEAST. Since row 2.66 the wait follows the words themselves (THE WAIT
+//                             AFTER AN ANSWER), so no game supplies it any more; kept as a floor under the
+//                             reading time for one that shows more than it says. Absent: 0.
+//   nextLabel(item, cfg)      (row 2.66) what the Next button on an after-answer screen says ('' or absent:
+//                             "Next question"; Quiz mix with several players: "Next player").
 //   yesNo(item)               (2026-10-07, row 2.63) true when the question's own answers ARE yes and no (the
 //                             word games' yes / no quiz, inside Quiz mix): in the yes / no shape the Yes and
 //                             No stops answer "yes" and "no" directly, instead of judging an offered
@@ -514,9 +673,11 @@ export function createQuizEngine({
   games = {}, cfg = () => ({}), rand = Math.random,
   say = () => {}, award = () => {}, chime = () => {}, onChange = () => {}, publishGrammar = () => {},
   onReplay = () => {}, onDeal = () => {}, onResult = () => {},
-  setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id),
+  setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id), now = () => Date.now(),
 } = {}) {
   const c = () => ({ ...FLOW_DEFAULTS, ...(cfg() || {}) });
+  // THE WAIT AFTER AN ANSWER (the header): the celebration's and the shown answer's clock.
+  const after = createAfterWait({ setTimer, clearTimer, now });
   let gameId = null;
   let A = null;                // the adapter
   let deck = [];
@@ -582,6 +743,8 @@ export function createQuizEngine({
     if (phase === 'asking') { answers(); if (offerByVoice()) { add(YES_WORDS); add(NO_WORDS); } }
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
+    // After an answer: only "next" (and stop, below) - row 2.66's Next button, said aloud.
+    else if (phase === 'celebrate' || phase === 'answer') add(NEXT_WORDS);
     else if (phase === 'gentle') { add(YES_WORDS); add(NO_WORDS); add(['listen again', 'again']); }
     else if (phase === 'another') {
       add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]);
@@ -602,8 +765,17 @@ export function createQuizEngine({
     catch (err) { console.error('quiz: grammar', err); }
     onChange();
   }
-  const speak = (...lines) => { if (!dead) say(lines.filter(Boolean)); };
-  function stopTimer() { if (timer !== null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; } }
+  // What the host's `say` hands back (quiz_view.js: a promise for the end of the speech, or null) is passed on.
+  const speak = (...lines) => (dead ? null : say(lines.filter(Boolean)));
+  function stopTimer() {
+    after.stop();
+    if (timer !== null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; }
+  }
+  // After a celebration or a shown answer: on by itself once it has been read, or wait for Next (the header).
+  function waitAfter(line, spoken) {
+    after.start({ cfg: c(), text: line, spoken, holdMs: holdFor(), onDone: () => onward() });
+  }
+  const nextLabel = () => String(call('nextLabel', item, c()) || NEXT_LABEL);
 
   function resetQuestion() {
     misses = 0; hintsGiven = 0; feedback = null; unsure = null; revealed = false; pair = null;
@@ -694,10 +866,10 @@ export function createQuizEngine({
       catch (err) { console.error('quiz: award', err); }
     }
     report({ right: true, answer });
-    speak(fill(c().rightLine, { explain: pair.explain }));
+    const line = fill(c().rightLine, { explain: pair.explain });
+    const spoken = speak(line);
     try { chime(); } catch (err) { console.error('quiz: chime', err); }
-    const ms = Math.max(0, Number(c().celebrateMs) || FLOW_DEFAULTS.celebrateMs, holdFor());
-    timer = setTimer(() => { timer = null; onward(); }, ms);
+    waitAfter(line, spoken);
     changed();
   }
 
@@ -738,9 +910,8 @@ export function createQuizEngine({
     phase = 'answer';
     highlight = 0;
     feedback = null;
-    speak(fill(c().answerLine, { explain: pair.explain }));
-    const ms = Math.max(0, Number(c().answerMs) || FLOW_DEFAULTS.answerMs, holdFor());
-    timer = setTimer(() => { timer = null; onward(); }, ms);
+    const line = fill(c().answerLine, { explain: pair.explain });
+    waitAfter(line, speak(line));
     changed();
   }
 
@@ -907,13 +1078,21 @@ export function createQuizEngine({
   function hear(result = {}) {
     if (dead || !A || !result || typeof result !== 'object') return;
     voiceSeen = true;
-    if (phase === 'celebrate' || phase === 'answer' || phase === 'idle' || phase === 'loading' || phase === 'empty') { changed(); return; }
+    if (phase === 'idle' || phase === 'loading' || phase === 'empty') { changed(); return; }
     const raw = String(result.text == null ? '' : result.text).trim();
     const text = normalize(raw);
-    if (!raw || raw.toLowerCase() === UNKNOWN || (!text && !/\d/.test(raw)) || text === 'unk') return notCaught();
     const conf = Number(result.confidence);
     const confident = !result.nearMiss && result.confidence != null && Number.isFinite(conf)
       && conf >= Number(c().unsureBelow);
+    // AFTER AN ANSWER (row 2.66): "next" goes on, a stop phrase stops, and nothing else is answered - a
+    // "didn't catch that" would talk over the answer being read.
+    if (phase === 'celebrate' || phase === 'answer') {
+      if (confident && isNext(text)) return press('continue');
+      if (confident && saidStop(text)) return finish();
+      changed();
+      return;
+    }
+    if (!raw || raw.toLowerCase() === UNKNOWN || (!text && !/\d/.test(raw)) || text === 'unk') return notCaught();
     // "Stop" / "I'm done", said with confidence while a question waits: the sitting ends. Unsure,
     // it is not caught (a stop is not worth a "did you mean" - saying it again costs nothing).
     if (confident && phase !== 'done' && saidStop(text)) return finish();
@@ -967,6 +1146,9 @@ export function createQuizEngine({
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
+      // After an answer: the Next button, the switch's one stop (row 2.66). Any press goes on as before.
+      case 'celebrate':
+      case 'answer': return [{ act: 'continue', label: nextLabel() }];
       case 'gentle': return [{ act: 'replay', label: 'Listen again' }, { act: 'onward', label: 'Next one' }];
       case 'another': return [{ act: 'more', label: 'Yes' },
         ...(canReplay() ? [{ act: 'replay', label: 'Listen again' }] : []),
@@ -1118,7 +1300,10 @@ export function createQuizEngine({
       game: gameId, phase, item, misses, candidate: candidate(), candidates: cands.slice(), highlight,
       feedback: feedback ? { ...feedback } : null, unsure: unsure ? { ...unsure } : null,
       revealed, pair: pair ? { ...pair } : null, rightCount, asked, serial, voiceSeen,
-      askLine: item ? askLine() : '', candLine: item ? candLine() : '', timerPending: timer !== null,
+      askLine: item ? askLine() : '', candLine: item ? candLine() : '', timerPending: timer !== null || after.pending(),
+      // An after-answer screen waiting for Next (`afterAnswer: 'press'`), and what its button says.
+      waitsForNext: (phase === 'celebrate' || phase === 'answer') && waitsForNext(c()),
+      nextLabel: item ? nextLabel() : NEXT_LABEL,
       entry, entryMode: entryMode(), hintsGiven,
       hints: Array.from({ length: hintsGiven }, (_, i) => hintAt(i + 1)),
       canReplay: canReplay(),

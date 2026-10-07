@@ -47,6 +47,7 @@
         "Yuri Gagarin"
       ],
       "correct": "Neil Armstrong",
+      "answerKind": "person",
       "difficulty": "very easy",
       "category": "History",
       "explain": "Neil Armstrong stepped onto the Moon in 1969.",
@@ -70,6 +71,7 @@
         "Benjamin Franklin"
       ],
       "correct": "Abraham Lincoln",
+      "answerKind": "person",
       "difficulty": "very easy",
       "category": "History",
       "explain": "Lincoln has been on the penny since 1909.",
@@ -163,6 +165,7 @@
         "Alexander Hamilton"
       ],
       "correct": "Thomas Jefferson",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "History",
       "explain": "Jefferson wrote the first draft in 1776.",
@@ -209,6 +212,7 @@
         "Andrew Jackson"
       ],
       "correct": "Thomas Jefferson",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "History",
       "explain": "Mount Rushmore shows Washington, Jefferson, Theodore Roosevelt and Lincoln.",
@@ -255,6 +259,7 @@
         "Thomas Jefferson"
       ],
       "correct": "Abraham Lincoln",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "History",
       "explain": "Lincoln was president from 1861 to 1865.",
@@ -417,6 +422,7 @@
         "Harriet Quimby"
       ],
       "correct": "Amelia Earhart",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "Amelia Earhart made the flight in 1932.",
@@ -440,6 +446,7 @@
         "Queen Anne"
       ],
       "correct": "Queen Victoria",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "Victoria reigned from 1837 to 1901.",
@@ -486,6 +493,7 @@
         "Theodore Roosevelt"
       ],
       "correct": "Franklin D. Roosevelt",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "The New Deal was a set of programs begun by FDR.",
@@ -532,6 +540,7 @@
         "Galileo Galilei"
       ],
       "correct": "Johannes Gutenberg",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "Gutenberg's press made books much faster to produce.",
@@ -602,6 +611,7 @@
         "John Lewis"
       ],
       "correct": "Martin Luther King Jr.",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "Dr. King gave the speech at the March on Washington.",
@@ -718,6 +728,7 @@
         "Mother Teresa"
       ],
       "correct": "Marie Curie",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "History",
       "explain": "Marie Curie won the Nobel Prize in Physics in 1903.",
@@ -834,6 +845,7 @@
         "James Madison"
       ],
       "correct": "John Adams",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "John Adams moved in in 1800, before it was finished.",
@@ -903,6 +915,7 @@
         "Constantine"
       ],
       "correct": "Augustus",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Julius Caesar was never emperor; his heir Augustus was the first.",
@@ -949,6 +962,7 @@
         "Cleopatra"
       ],
       "correct": "Tutankhamun",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "The young pharaoh's tomb was full of golden treasures.",
@@ -1018,6 +1032,7 @@
         "James Monroe"
       ],
       "correct": "Thomas Jefferson",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Jefferson's government bought the territory in 1803.",
@@ -1064,6 +1079,7 @@
         "Elena Kagan"
       ],
       "correct": "Sandra Day O'Connor",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Sandra Day O'Connor joined the Court in 1981.",
@@ -1135,6 +1151,7 @@
         "John Cabot"
       ],
       "correct": "Vasco da Gama",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Vasco da Gama reached India in 1498.",
@@ -1181,6 +1198,7 @@
         "Harriet Tubman"
       ],
       "correct": "Clara Barton",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Clara Barton founded it in 1881.",
@@ -1227,6 +1245,7 @@
         "Augustus"
       ],
       "correct": "Hadrian",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Hadrian's Wall was begun in AD 122.",
@@ -1250,6 +1269,7 @@
         "Robert Peary"
       ],
       "correct": "Roald Amundsen",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "History",
       "explain": "Amundsen's Norwegian team reached the Pole in December 1911.",

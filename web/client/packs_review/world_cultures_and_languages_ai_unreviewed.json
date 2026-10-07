@@ -721,6 +721,7 @@
         "Sejong the Great"
       ],
       "correct": "Sejong the Great",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "World cultures & languages",
       "explain": "He wanted a script easier to learn than Chinese characters, which few people could read.",
@@ -816,6 +817,7 @@
         "Pocahontas"
       ],
       "correct": "Sequoyah",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "World cultures & languages",
       "explain": "By 1825, most Cherokees could read and write in it.",

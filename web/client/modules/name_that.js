@@ -52,9 +52,22 @@
 //           the Old Line State is not). hard: named from its CAPITAL instead ("Which state has
 //           Montpelier as its capital?"), offered beside states from the same region. Chat's outline
 //           and blank-map levels wait for Design's maps.
-//   PERSON  two levels, from what the messages already are: seeing them (a video, or a voice with its
-//           picture), then hearing them only (the same message with nothing on screen). Chat's older
-//           picture and "by relation" levels need data the messages do not carry yet.
+//   PERSON  the household's own people at the easiest levels, from what the messages already are: seeing
+//           them (a video, or a voice with its picture), then hearing them only (the same message with
+//           nothing on screen). Chat's older picture and "by relation" levels need data the messages do not
+//           carry yet. From easy up: KNOWN PEOPLE AND CHARACTERS (below).
+//
+// KNOWN PEOPLE AND CHARACTERS (row 2.63, Mike 2026-10-07, after playing Quiz mix: "Naming someone from their
+// own pictures wouldn't be a challenge for most people. More like who came up with the theory of relativity or
+// which character did this."). Text questions, from the question packs: every trivia question whose right answer
+// is a person or a character (`answerKind`, tagged by web/tools/tag_answer_kinds.py; 2026-10-07: 182 people and
+// 45 characters, 30 of the characters written for this). Drawn through Trivia's own `triviaPackRows`, so exactly
+// the questions Trivia would ask are asked here: the shipped packs, and a review pack's questions once somebody
+// has passed them. A question's level is its pack difficulty, but never below easy (`KNOWN_FLOOR`): very easy is
+// the household's own people. No pictures of famous people or characters: those carry rights (chat's note on
+// row 2.63), so a public-domain portrait is a later addition, not this one.
+// WHO IS ASKED ABOUT (`personWho`): both (the default here), only our own people (the game exactly as it was,
+// for somebody for whom naming their family IS the exercise, row 2.45), or only known people. Argued below.
 
 import { registerModule } from '../module.js';
 import { ownScoreField } from '../score_source.js';
@@ -65,6 +78,9 @@ import { flowSettings, answerByField, fill, esc, normalize, shuffle } from '../q
 import { quizModule, up } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { difficultyLevel } from '../packs.js';
+import { triviaPackRows } from './trivia.js';
+import { contestKey } from '../contests.js';
+import { answerSourceHtml } from '../answer_source.js';
 
 export const GAME = 'name_that';
 export const GAMES = ['animal', 'state', 'person'];
@@ -83,8 +99,11 @@ export const LINES = Object.freeze({
   askPerson: 'Who is this?',
   explainPerson: 'That was {name}.',
   gentleLine: "That was {name}'s message. Let's listen again?",
+  hintNotName: 'it is not {x}',
+  explainKnown: 'The answer is {name}.',
 });
 const LINE_LABELS = {
+  hintNotName: 'Known people: the first hint', explainKnown: 'Known people: the answer, when the question has no sentence of its own',
   offerLine: 'Offering one answer', hintFirst: 'Hint: the first letter', askState: 'State: the question',
   hintRegion: 'State: first hint', hintCapital: 'State: second hint', explainState: 'State: the answer',
   askCapital: 'State, from its capital: the question', explainCapital: 'State, from its capital: the answer',
@@ -102,12 +121,33 @@ export const DEFAULTS = Object.freeze({
   // row away, and two Yes / No switches get it whatever this says.
   answerBy: 'choices',
   personMiss: 'gentle',
+  // WHO NAME THAT PERSON ASKS ABOUT: 'both' (our own people at the easiest levels, known people and characters from
+  // easy up), 'own' (only our own people: the game as it was), 'known' (only known people and characters).
+  // 'both' BY DEFAULT HERE, argued: FOR, a screen with recorded messages keeps its family as the easy start, and a
+  // screen with none (most of them) now has a game at all instead of "connect a media source". AGAINST: somebody
+  // whose exercise is naming their own family meets famous people as soon as they do well; that is 'own', one row
+  // away. Quiz mix's default is 'known' instead (Mike's "wouldn't be a challenge for most people"). A guess on
+  // Mike's list.
+  personWho: 'both',
   sourceId: '',
   album: '',
   // The ladder's own defaults (adaptive_play.js argues each).
   ...ADAPTIVE_DEFAULTS,
   ...LINES,
 });
+
+/** "Name that person: who to ask about" (DEFAULTS argues it); Quiz mix offers the same row with its own default. */
+export const PERSON_WHO = Object.freeze(['both', 'own', 'known']);
+export const personWhoField = ({ on = 'both', appliesWhen = (v) => ((v && v.game) || 'animal') === 'person' } = {}) => ({
+  key: 'personWho', label: 'Name that person: who to ask about', kind: 'choice', default: on, level: 'standard',
+  options: [{ value: 'both', label: 'Our own people first, then known people and characters' },
+            { value: 'own', label: 'Only our own people (from recorded messages)' },
+            { value: 'known', label: 'Only known people and characters' }],
+  note: 'Known people and characters are questions from the question packs ("Who painted the Mona Lisa?"); '
+    + 'only questions somebody has checked are asked.',
+  ...(appliesWhen ? { appliesWhen } : {}) });
+const PERSON_WHO_FIELD = personWhoField();
+const whoOf = (v) => (PERSON_WHO.includes(v) ? v : 'both');
 
 const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: 'animal', level: 'essential',
@@ -120,6 +160,7 @@ const SETTINGS = [
     options: [{ value: 'gentle', label: 'Say whose message it was, and offer to listen again' },
               { value: 'standard', label: 'The usual: "That is incorrect", a hint, and again' }],
     note: 'Missing somebody’s name can feel worse than missing a word, so the default is gentle.' },
+  PERSON_WHO_FIELD,
   { key: 'sourceId', label: 'Name that person: messages from', kind: 'choice', default: '', level: 'standard',
     emptyLabel: 'No source connected' },
   { key: 'album', label: 'Name that person: folder', kind: 'text', default: '', level: 'standard',
@@ -669,11 +710,125 @@ export function createPersonGame(ctx, { personId = ctx?.personId || null, getApi
   };
 }
 
-/** Each game's questions for the ladder; `persons` is a createPersonGame (or null: no people). */
-export function nameBank(game, persons = null) {
+// ---------------------------------------------------------------------------------------
+// KNOWN PEOPLE AND CHARACTERS — the question packs' own, for any host (the header)
+// ---------------------------------------------------------------------------------------
+export const PERSON_KINDS = Object.freeze(['person', 'character']);
+// THE LOWEST LEVEL A KNOWN-PEOPLE QUESTION STARTS AT: 2, easy. A pack's "very easy" question about somebody famous
+// (the first person on the Moon) still needs knowing who that is, which is a step up from naming your own sister
+// from her video; very easy (level 1) is the household's own people. Not a setting, argued: it is where a question's
+// rating STARTS, and play moves it from there.
+export const KNOWN_FLOOR = 2;
+/** The ladder level a known-people question starts at: its pack level, never below KNOWN_FLOOR. */
+export const knownLevel = (row) => Math.max(KNOWN_FLOOR, Math.floor(Number(row?.level)) || difficultyLevel(row?.difficulty) || KNOWN_FLOOR);
+/** A known-people question: not one of a household's own (it has no clips). */
+export const isKnown = (it) => !!(it && it.kind === 'known');
+
+/**
+ * Every trivia row (Trivia's `triviaPackRows`: { question, answer, wrong, level, explain, sources, answerKind }) whose
+ * answer is a person or a character, as Name that person's questions. Its id is the same question key the
+ * "I think this question is wrong" log keys by (contests.js), so a held question can be left out by its id.
+ * Needs two wrong names beside the answer: Name that offers three.
+ */
+export function knownBank(rows) {
+  const seen = new Set();
+  const out = [];
+  for (const r of rows || []) {
+    if (!r || !PERSON_KINDS.includes(r.answerKind)) continue;
+    const answer = String(r.answer ?? r.correct ?? '').trim();
+    const question = String(r.question || '').trim();
+    const wrong = (Array.isArray(r.wrong) ? r.wrong : (r.answers || []))
+      .map((w) => String(w ?? '').trim()).filter((w) => w && normalize(w) !== normalize(answer));
+    if (!question || !answer || wrong.length < 2) continue;
+    const key = contestKey(question, answer);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const sources = Array.isArray(r.sources) ? r.sources : (Array.isArray(r.review?.sources) ? r.review.sources : []);
+    out.push(Object.freeze({ id: `known:${key}`, key, kind: 'known', answerKind: r.answerKind, level: knownLevel(r),
+      question, answer, wrong: Object.freeze(wrong), explain: String(r.explain || '').trim(), sources }));
+  }
+  return Object.freeze(out);
+}
+
+/** Every name this question can be answered with: the answer and its wrong ones. */
+const optionsOf = (it) => [it.answer, ...(it.wrong || [])];
+/** A known-people question, asked the Name that way: the question, three names, said, tapped or stepped through. */
+export const KNOWN_ADAPTER = Object.freeze({
+  ask: (it) => it.question,
+  // The answer and two of its wrong names, a different two each time it is asked.
+  candidates: (it, c, rand = Math.random) => shuffle([it.answer, ...shuffle(it.wrong, rand).slice(0, 2)], rand),
+  offer: (it, cand, c) => fill(c.offerLine, { candidate: cand }),
+  judge(it, v) {
+    const s = normalize(v);
+    if (!s) return null;
+    if (s === normalize(it.answer)) return true;
+    const m = matchName(v, optionsOf(it));
+    return m ? normalize(m) === normalize(it.answer) : false;
+  },
+  // A wrong name taken away, then the first letter.
+  hint: (it, n, c) => (n === 1 ? fill(c.hintNotName || LINES.hintNotName, { x: it.wrong[0] })
+    : n === 2 ? fill(c.hintFirst, { letter: up(it.answer[0]) }) : ''),
+  answer: (it) => it.answer,
+  explain: (it, answer, c) => it.explain || fill(c.explainKnown || LINES.explainKnown, { name: it.answer }),
+  vocab: (it) => optionsOf(it).map((n) => normalize(n)),
+  fromVoice: (it, { text }) => (text ? { value: matchName(text, optionsOf(it)) || text } : null),
+});
+/** The source line after the answer (answer_source.js), for a known-people question; '' for anything else. */
+export const knownSourceHtml = (it, { onScreen = true } = {}) => (isKnown(it) ? answerSourceHtml(it.sources, { onScreen }) : '');
+
+const NO_KNOWN = 'There are no questions about known people here yet. They come from the question packs once '
+  + 'somebody has checked them (Trivia, "Include unreviewed questions").';
+
+/**
+ * THE KNOWN PEOPLE, loaded once for a panel: Trivia's rows (`ctx.knownPeopleRows()` may stand in, for a suite),
+ * through the account's pack reviews (`ctx.makePackReviews`) so passed review questions count.
+ *   onChange()  loaded (or failed)
+ */
+export function createKnownPeople(ctx, { onChange = () => {} } = {}) {
+  let bank = Object.freeze([]);
+  let loading = false;
+  let started = false;
+  let dead = false;
+  let reviews = null;
+  function load() {
+    if (started || dead) return;
+    started = true;
+    loading = true;
+    let rows;
+    try {
+      if (typeof ctx?.knownPeopleRows === 'function') rows = ctx.knownPeopleRows();
+      else {
+        try { reviews = typeof ctx?.makePackReviews === 'function' ? ctx.makePackReviews() : null; } catch { reviews = null; }
+        rows = triviaPackRows({ reviews, includeUnreviewed: false });
+      }
+    } catch (err) { rows = Promise.reject(err); }
+    Promise.resolve(rows).then((list) => { if (!dead) bank = knownBank(list); })
+      .catch((err) => { console.error('name_that: known people', err); })
+      .finally(() => { if (dead) return; loading = false; try { onChange(); } catch (err) { console.error('name_that: known people', err); } });
+  }
+  return {
+    load,
+    bank: () => bank,
+    /** Not asked for yet, or still arriving. */
+    loading: () => !started || loading,
+    emptyText: () => NO_KNOWN,
+    destroy() { dead = true; try { reviews?.destroy?.(); } catch { /* gone */ } reviews = null; },
+  };
+}
+
+/**
+ * Each game's questions for the ladder. `persons` is a createPersonGame (or null: no people of our own), `known` a
+ * createKnownPeople (or null), `who` the `personWho` setting. Our own people only when there are two or more.
+ */
+export function nameBank(game, persons = null, known = null, who = 'both') {
   if (game === ladderGame('animal')) return ANIMAL_BANK;
   if (game === ladderGame('state')) return STATE_BANK;
-  if (game === ladderGame('person')) return persons ? persons.bank() : [];
+  if (game === ladderGame('person')) {
+    const w = whoOf(who);
+    const own = w !== 'known' && persons && persons.enough() ? persons.bank() : [];
+    const kn = w !== 'own' && known ? known.bank() : [];
+    return own.length ? [...own, ...kn] : kn;
+  }
   return [];
 }
 
@@ -686,13 +841,17 @@ function factory(ctx) {
   let api = null;
   let leftHtml = null;
   const persons = createPersonGame(ctx, { getApi: () => api, onPeople: () => api?.engine.refresh() });
+  const known = createKnownPeople(ctx, { onChange: () => api?.engine.refresh() });
+  // The person question being asked: our own (a clip) or a known person (text). Kept here, not read from the
+  // engine's snapshot, because the snapshot itself reads `canReplay` below.
+  let nowItem = null;
 
   // THE LADDER, opened exactly as Thinking games opens it (adaptive_play.js openPersonLadder): the screen's
   // person's level kept with them, their own start in this game, else their usual one.
   const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
   const session = createAdaptiveSession({
     cfg: () => cfgNow,
-    bankFor: (g) => nameBank(g, persons),
+    bankFor: (g) => nameBank(g, persons, known, cfgNow.personWho),
     store: ladderRows.store,
     rand,
     now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
@@ -709,31 +868,61 @@ function factory(ctx) {
   const games = {
     animal: { ...withTurn(ANIMAL_ADAPTER), items: () => deal('animal') },
     state: { ...withTurn(STATE_ADAPTER), items: () => deal('state') },
-    person: {
-      ...withTurn(persons.adapter),
-      items: () => {
-        if (persons.loading()) return null;
-        if (!persons.enough()) return [];
-        return deal('person');
-      },
-    },
+    person: personGame(),
   };
+  // NAME THAT PERSON: our own people (a clip, persons.adapter) and known people (text, KNOWN_ADAPTER) on one ladder,
+  // each question asked by its own kind. Built by hand rather than spread, so `canReplay` stays a live getter.
+  function personGame() {
+    const pick = (it) => (isKnown(it) ? KNOWN_ADAPTER : persons.adapter);
+    const fwd = (fn) => (it, ...rest) => { const f = pick(it)[fn]; return typeof f === 'function' ? f(it, ...rest) : undefined; };
+    const who = () => whoOf(cfgNow.personWho);
+    return {
+      ask: (it, c) => session.askPrefix() + (pick(it).ask(it, c) || ''),
+      candidates: fwd('candidates'), offer: fwd('offer'), judge: fwd('judge'), hint: fwd('hint'), answer: fwd('answer'),
+      explain: fwd('explain'), vocab: fwd('vocab'), fromVoice: fwd('fromVoice'),
+      gentle: (it, c) => persons.adapter.gentle(it, c),
+      // Only a message can be played again, and only missing one of our own is gentle.
+      get canReplay() { return !!nowItem && !isKnown(nowItem); },
+      missStyle: (c) => (isKnown(nowItem) ? 'standard' : persons.adapter.missStyle(c)),
+      empty: () => (who() === 'known' ? known.emptyText() : (persons.emptyText() || known.emptyText())),
+      items: () => {
+        const w = who();
+        // Our own people are read first when they are asked about at all: the first question of a sitting is not a
+        // famous person just because the messages had not arrived yet.
+        if (w !== 'known' && persons.loading()) return null;
+        const ownOk = w !== 'known' && persons.enough();
+        const knownOk = w !== 'own' && known.bank().length > 0;
+        if (!ownOk && !knownOk) {
+          const waiting = (w !== 'known' && persons.loading()) || (w !== 'own' && known.loading());
+          return waiting ? null : [];
+        }
+        const q = deal('person');
+        nowItem = q[0] || null;
+        return q;
+      },
+    };
+  }
 
   const view = {
     init(a) { api = a; },
     onConfig(cfg) {
       cfgNow = cfg;
       ladderRows.onConfig(cfg);
-      if (cfg.game === 'person') persons.load(cfg);
+      if (cfg.game === 'person') {
+        if (whoOf(cfg.personWho) !== 'known') persons.load(cfg);
+        if (whoOf(cfg.personWho) !== 'own') known.load();
+      }
     },
     onDeal(item, a) {
-      if (a.engine.game() !== 'person') { persons.away(); return; }
+      if (a.engine.game() !== 'person') { nowItem = null; persons.away(); return; }
+      nowItem = item || null;
+      // A known-people question has no clip: whatever was playing stops (persons.onDeal, for an item with none).
       persons.onDeal(item, a.rand);
     },
     onReplay() { persons.replay(); },
     speechGate: () => persons.speechGate(),
     leftEl(el, s, cfg) {
-      if (s.game === 'person') { leftHtml = null; return persons.leftEl(el, s); }
+      if (s.game === 'person' && !isKnown(s.item)) { leftHtml = null; return persons.leftEl(el, s); }
       if (el.dataset.kind === 'person') { el.innerHTML = ''; delete el.dataset.kind; }
       const q = s.item && (s.phase === 'asking' || s.phase === 'unsure' || s.phase === 'twoMiss');
       const html = q && s.game === 'state' ? stateCardHtml(s.item) : '';
@@ -745,9 +934,12 @@ function factory(ctx) {
     allowAward: () => session.allowAward(),
     scoreDetail: (s) => session.scoreDetail() || (s.asked ? `${s.rightCount} of ${s.asked}` : ''),
     scoreLine: (s) => session.scoreDetail() || `${s.rightCount} right so far.`,
-    pointNote: (game, item, answer) => (game === 'person' ? 'name that person: right' : `name that ${game}: ${answer}`),
+    // Our own people's names never reach the points log; a known person's may (it is the pack's answer).
+    pointNote: (game, item, answer) => (game === 'person' && !isKnown(item) ? 'name that person: right' : `name that ${game}: ${answer}`),
+    // Where a known-people question comes from, after the answer (answer_source.js; plain words on a screen).
+    sourceHtml: (s) => knownSourceHtml(s.item, { onScreen: ctx.isScreen === true }),
     settingsChoices: () => persons.settingsChoices(),
-    destroy() { persons.destroy(); session.destroy(); ladderRows.destroy(); },
+    destroy() { persons.destroy(); known.destroy(); session.destroy(); ladderRows.destroy(); },
     // Hidden: the clip stops (a message nobody is watching is a message missed). Shown again
     // mid-question: it plays again from the start, and the question follows it as before.
     onHide() { persons.away(); },
@@ -763,9 +955,9 @@ function factory(ctx) {
 
 registerModule(
   { type: GAME, title: 'Name that', core: 'new',
-    description: 'Name that animal, state, or person. Person plays the family’s own recorded '
-      + 'messages and asks who it is. Each player gets questions at their own level. Answer with a '
-      + 'switch, the screen, or aloud.',
+    description: 'Name that animal, state, or person. Person asks about well-known people and characters, '
+      + 'and can play the family’s own recorded messages and ask who it is. Each player gets questions at '
+      + 'their own level. Answer with a switch, the screen, or aloud.',
     // `local`: the animals and states are built in; the person game's clips come from a media
     // source on the person's own machine, exactly like Personal videos.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },

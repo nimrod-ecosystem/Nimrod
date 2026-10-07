@@ -27,7 +27,9 @@ decision for the next pass, not a guess made here.</p>
 <script type="module">
 import { validatePack, parsePack, loadPack, lengthTells, PACK_SCHEMA_VERSION, PACK_KINDS,
   itemSourceProblem, itemSourceProblems, itemSourceWarnings, itemSources, needsItemSources,
-  itemSourcesGrandfathered, ITEM_SOURCES_FROM, difficultyLevel, DIFFICULTY_LEVELS, normalizeDifficulty } from '../packs.js';
+  itemSourcesGrandfathered, ITEM_SOURCES_FROM, difficultyLevel, DIFFICULTY_LEVELS, normalizeDifficulty, ANSWER_KINDS } from '../packs.js';
+import { packToTriviaBank } from '../modules/trivia.js';
+import { playableBank } from '../pack_reviews.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -478,6 +480,28 @@ try {
     // something you get from your AI". Every one was replaced with a fetched page that says it; this holds the line.)
     check(`*** none rest on "common knowledge": every question names a page (${common} do) ***`,
       common === 0, String(common));
+
+    section('*** answerKind (row 2.63): what the right answer IS, for Name that person ***');
+    {
+      const one = (extra) => ({ ...GATSBY, items: [{ ...GATSBY.items[0], ...extra }] });
+      check('"person" and "character" are accepted', ANSWER_KINDS.join() === 'person,character'
+        && validatePack(one({ answerKind: 'person' })).length === 0 && validatePack(one({ answerKind: 'character' })).length === 0);
+      check('*** anything else is refused (a typo would be a question no game draws) ***',
+        validatePack(one({ answerKind: 'people' })).some((m) => /answerKind/.test(m)));
+      check('Trivia\'s rows carry it (packToTriviaBank), and a review pack\'s too (playableBank)',
+        packToTriviaBank(one({ answerKind: 'person' }))[0].answerKind === 'person'
+        && playableBank(one({ answerKind: 'character' }), new Map(), { includeUnreviewed: true })[0]?.answerKind === 'character');
+      // The shipped packs as web/tools/tag_answer_kinds.py tags them.
+      const cma = await loadPack('/packs/cma_art_trivia.json');
+      check('the shipped painters pack: every answer a person', cma.items.every((it) => it.answerKind === 'person'));
+      const pc = await loadPack('/packs_review/people_and_characters_ai_unreviewed.json');
+      const strict = itemSourceProblems(pc, { strict: true });
+      check(`*** the new characters pack (${pc.items.length}): AI-written, unreviewed, every item its own fetched page, all characters ***`,
+        needsItemSources(pc) && strict.length === 0 && pc.review?.status === 'unreviewed' && pc.items.length >= 24
+        && pc.items.every((it) => it.answerKind === 'character' && it.checked?.by && itemSources(it.source).some((s) => /^https:\/\//.test(s.url || ''))),
+        JSON.stringify(strict.slice(0, 3)));
+      check('...at every level', ['very easy', 'easy', 'medium', 'hard'].every((d) => pc.items.some((it) => it.difficulty === d)));
+    }
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

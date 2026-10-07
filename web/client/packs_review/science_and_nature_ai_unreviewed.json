@@ -855,6 +855,7 @@
         "Galileo Galilei"
       ],
       "correct": "Albert Einstein",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Science & nature",
       "explain": "Einstein published general relativity in 1915.",
@@ -1019,6 +1020,7 @@
         "Joseph Lister"
       ],
       "correct": "Alexander Fleming",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Science & nature",
       "explain": "Fleming noticed mould killing bacteria in a dish in his lab.",
@@ -1113,6 +1115,7 @@
         "Carl Linnaeus"
       ],
       "correct": "Charles Darwin",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Science & nature",
       "explain": "Darwin's book explained evolution by natural selection.",
@@ -1161,6 +1164,7 @@
         "Nicolaus Copernicus"
       ],
       "correct": "Isaac Newton",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Science & nature",
       "explain": "Newton set out his three laws of motion in 1687.",
@@ -1255,6 +1259,7 @@
         "Erwin Schrödinger"
       ],
       "correct": "Werner Heisenberg",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Science & nature",
       "explain": "Heisenberg stated the uncertainty principle in 1927.",
@@ -1279,6 +1284,7 @@
         "Michael Faraday"
       ],
       "correct": "Dmitri Mendeleev",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Science & nature",
       "explain": "Mendeleev arranged the elements by atomic weight and predicted elements not yet discovered, such as gallium, germanium and scandium.",
@@ -1374,6 +1380,7 @@
         "Antoine Lavoisier"
       ],
       "correct": "Henri Becquerel",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Science & nature",
       "explain": "Becquerel found that uranium salts fogged photographic plates; he shared the 1903 Nobel Prize with the Curies.",

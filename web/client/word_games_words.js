@@ -167,14 +167,16 @@ export function rhymesFor(word, table = PRONUNCIATIONS) {
 // a plausible near-miss, never an absurd or degrading one (PRINCIPLES §2, the rule trivia states
 // for its own distractors). `hint` is spoken after a miss, and never names the answer.
 //
-// HARDER, argued (chat's ideas on row 2.63: less common words, more than one right answer, then saying it
-// with no choices shown):
+// LEVELS: very easy and easy only. Above them the game asks WORD LOGIC instead (WORD_LOGIC, below).
 //   very easy  the first words anybody learns as pairs (hot / cold, up / down), most of them pictured.
 //   easy       everyday words a step further from the first ones (early / late, buy / sell), still one
 //              obvious answer.
-//   medium     less common words, and more than one answer counts (arrive: leave, depart or go), with
-//              near-miss offers that are the same kind of word (brave: strong or proud are wrong).
-//   hard       long, less common words (temporary / permanent, transparent / opaque).
+// *** WHY NOT HARDER OPPOSITES (Mike, 2026-10-07, after playing: "Maybe instead of trying to think of
+// opposites for harder levels, it could be logic questions?"). *** Until then medium and hard were rarer words
+// (arrive / depart, transparent / opaque). FOR keeping them: they are still opposites, so the game's name keeps
+// meaning what it asks. AGAINST, and it decides it: a rarer antonym tests vocabulary, which Word Forge already
+// does; reasoning about the same relation tests thinking, which is what a harder level of this game is for. The
+// rarer pairs were not thrown away: they are the hard analogies below ("arrive is to leave as ascend is to ...").
 // NOT a level: "no choices shown". The choices are how somebody on a switch answers at all, so hiding them
 // at a level would shut that person out of it. Whether choices are offered is how the game is answered
 // (`answerBy`), and stays the person's own setting at every level.
@@ -223,35 +225,87 @@ export const OPPOSITES = Object.freeze([
     { word: 'laugh', accept: ['cry'], wrong: ['smile', 'sing'], hint: "it's what tears come with" },
     { word: 'start', accept: ['finish', 'end', 'stop'], wrong: ['begin', 'go'], hint: "it's the last part of a race" },
   ]),
+]);
+
+// ---------------------------------------------------------------------------------------
+// WORD LOGIC — the Opposites game's harder levels (row 2.63, Mike 2026-10-07), on a ladder of its own
+// ---------------------------------------------------------------------------------------
+// The same kind of item as an opposite (`accept`, `wrong`, `hint`), but the question is its own sentence (`q`,
+// said and shown as written) and the answer its own sentence (`explain`). `form` says which kind of reasoning:
+//   turned   a statement turned round: "A door that is not open must be what?" Only pairs where NOT one really
+//            means the other (open / closed, on / off, odd / even), never a scale (not hot is not cold: it may
+//            be warm). The offers are the word itself (for somebody who missed the "not") and a word that may be
+//            true but need not be ("locked"), which is what "must be" rules out.
+//   analogy  "Hot is to cold as up is to what?" Medium: the relation is opposites. Hard: rarer opposites (the
+//            pairs Opposites used to ask at medium and hard), and other relations (part and whole, young and
+//            grown, where it lives, where somebody works, what kind of thing it is).
+//   order    three things put in order from two statements, and the one at an end asked for ("Ann is taller
+//            than Ben. Ben is taller than Cal. Who is the shortest?"). The names are made up.
+// NOT here, on purpose: "which word does not belong". Brain games already asks it ("Which one is different",
+// brain_banks.js ODD_WORDS, up to "a shared property rather than a kind"), and a second copy would rate the same
+// skill on two ladders.
+// Every answer is one word, so it can be said, and every offer is a word the game can hear (vocabOf).
+// Levels: medium and hard only (3 and 4 on the shared words); the easy levels of this game are Opposites itself.
+export const WORD_LOGIC = Object.freeze([
   ...tier('medium', [
-    { word: 'arrive', accept: ['leave', 'depart', 'go'], wrong: ['come', 'stay'], hint: "it's what a train does when it pulls out of the station" },
-    { word: 'ancient', accept: ['modern', 'new'], wrong: ['old', 'famous'], hint: "it's how this year's phones are" },
-    { word: 'brave', accept: ['scared', 'afraid', 'cowardly'], wrong: ['strong', 'proud'], hint: "it's how somebody feels hiding from a storm" },
-    { word: 'shallow', accept: ['deep'], wrong: ['wide', 'wet'], hint: "it's the far end of a swimming pool" },
-    { word: 'smooth', accept: ['rough', 'bumpy'], wrong: ['soft', 'flat'], hint: "it's how tree bark feels" },
-    { word: 'generous', accept: ['selfish', 'mean', 'stingy'], wrong: ['kind', 'rich'], hint: "it's somebody who never shares" },
-    { word: 'accept', accept: ['refuse', 'reject', 'decline'], wrong: ['allow', 'take'], hint: "it's saying no to a gift" },
-    { word: 'friend', accept: ['enemy', 'foe'], wrong: ['neighbour', 'cousin'], hint: "it's who you are fighting against" },
-    { word: 'whisper', accept: ['shout', 'yell', 'scream'], wrong: ['talk', 'sing'], hint: "it's what you do to call somebody far away" },
-    { word: 'victory', accept: ['defeat', 'loss'], wrong: ['game', 'prize'], hint: "it's what the losing team has" },
-    { word: 'question', accept: ['answer', 'reply'], wrong: ['quiz', 'problem'], hint: "it's what you give when somebody asks you something" },
-    { word: 'sharp', accept: ['blunt', 'dull'], wrong: ['pointed', 'thin'], hint: "it's a knife that will not cut" },
+    { form: 'turned', q: 'A door that is not open must be what?', accept: ['closed', 'shut'], wrong: ['open', 'locked'],
+      hint: 'a door is one or the other', explain: 'A door that is not open is closed.' },
+    { form: 'turned', q: 'A light that is not on must be what?', accept: ['off'], wrong: ['on', 'broken'],
+      hint: 'a switch has two ways', explain: 'A light that is not on is off.' },
+    { form: 'turned', q: 'Somebody who is not awake must be what?', accept: ['asleep', 'sleeping'], wrong: ['awake', 'tired'],
+      hint: 'think of bedtime', explain: 'Somebody who is not awake is asleep.' },
+    { form: 'turned', q: 'A whole number that is not even must be what?', accept: ['odd'], wrong: ['even', 'big'],
+      hint: 'think of one, three and five', explain: 'A whole number that is not even is odd.' },
+    { form: 'turned', q: 'Something that is not inside must be where?', accept: ['outside', 'out'], wrong: ['inside', 'under'],
+      hint: 'think of a door you have just gone through', explain: 'Something that is not inside is outside.' },
+    { form: 'turned', q: 'Two things that are not the same must be what?', accept: ['different'], wrong: ['same', 'equal'],
+      hint: 'think of a cat and a dog', explain: 'Two things that are not the same are different.' },
+    { form: 'turned', q: 'An answer that is not right must be what?', accept: ['wrong', 'incorrect'], wrong: ['right', 'hard'],
+      hint: 'a quiz marks every answer one of two ways', explain: 'An answer that is not right is wrong.' },
+    { form: 'analogy', q: 'Hot is to cold as up is to what?', accept: ['down'], wrong: ['high', 'over'],
+      hint: 'hot and cold are opposites', explain: 'Hot is the opposite of cold, and up is the opposite of down.' },
+    { form: 'analogy', q: 'Day is to night as summer is to what?', accept: ['winter'], wrong: ['spring', 'sun'],
+      hint: 'day and night are opposites', explain: 'Day is the opposite of night, and summer is the opposite of winter.' },
+    { form: 'analogy', q: 'Push is to pull as give is to what?', accept: ['take', 'receive'], wrong: ['send', 'share'],
+      hint: 'push and pull are opposites', explain: 'Push is the opposite of pull, and give is the opposite of take.' },
+    { form: 'analogy', q: 'Fast is to slow as loud is to what?', accept: ['quiet', 'soft'], wrong: ['noisy', 'fast'],
+      hint: 'fast and slow are opposites', explain: 'Fast is the opposite of slow, and loud is the opposite of quiet.' },
+    { form: 'analogy', q: 'Laugh is to cry as win is to what?', accept: ['lose'], wrong: ['play', 'beat'],
+      hint: 'laugh and cry are opposites', explain: 'Laugh is the opposite of cry, and win is the opposite of lose.' },
   ]),
   ...tier('hard', [
-    { word: 'expand', accept: ['contract', 'shrink'], wrong: ['explode', 'grow'], hint: "it's what a balloon does as the air comes out" },
-    { word: 'scarce', accept: ['plentiful', 'abundant', 'common'], wrong: ['rare', 'tiny'], hint: "it's when there is more than enough" },
-    { word: 'temporary', accept: ['permanent', 'lasting'], wrong: ['short', 'quick'], hint: "it's something that is meant to last for ever" },
-    { word: 'optimistic', accept: ['pessimistic', 'gloomy'], wrong: ['realistic', 'hopeful'], hint: "it's somebody who expects the worst" },
-    { word: 'transparent', accept: ['opaque'], wrong: ['clear', 'shiny'], hint: "it's a wall you cannot see through" },
-    { word: 'voluntary', accept: ['compulsory', 'mandatory', 'required', 'forced'], wrong: ['free', 'helpful'], hint: "it's something you have to do whether you like it or not" },
-    { word: 'ascend', accept: ['descend'], wrong: ['climb', 'rise'], hint: "it's going down the stairs" },
-    { word: 'maximum', accept: ['minimum'], wrong: ['average', 'total'], hint: "it's the very least something can be" },
-    { word: 'innocent', accept: ['guilty'], wrong: ['honest', 'free'], hint: "it's what a judge says somebody is who did the crime" },
-    { word: 'artificial', accept: ['natural', 'real'], wrong: ['fake', 'plastic'], hint: "it's how a flower that grew in the garden is" },
-    { word: 'cautious', accept: ['reckless', 'careless'], wrong: ['careful', 'slow'], hint: "it's somebody who takes silly risks" },
-    { word: 'vertical', accept: ['horizontal', 'flat'], wrong: ['upright', 'tall'], hint: "it's the way a bed lies on the floor" },
+    { form: 'analogy', q: 'Arrive is to leave as ascend is to what?', accept: ['descend'], wrong: ['climb', 'rise'],
+      hint: 'arrive and leave are opposites', explain: 'Arrive is the opposite of leave, and ascend is the opposite of descend.' },
+    { form: 'analogy', q: 'Expand is to shrink as maximum is to what?', accept: ['minimum'], wrong: ['average', 'total'],
+      hint: 'expand and shrink are opposites', explain: 'Expand is the opposite of shrink, and maximum is the opposite of minimum.' },
+    { form: 'analogy', q: 'Temporary is to permanent as transparent is to what?', accept: ['opaque'], wrong: ['clear', 'shiny'],
+      hint: 'temporary and permanent are opposites', explain: 'Temporary is the opposite of permanent, and transparent is the opposite of opaque.' },
+    { form: 'analogy', q: 'Generous is to selfish as cautious is to what?', accept: ['reckless', 'careless'], wrong: ['careful', 'slow'],
+      hint: 'generous and selfish are opposites', explain: 'Generous is the opposite of selfish, and cautious is the opposite of reckless.' },
+    { form: 'analogy', q: 'Finger is to hand as toe is to what?', accept: ['foot'], wrong: ['leg', 'nail'],
+      hint: 'a finger is part of a hand', explain: 'A finger is part of a hand, and a toe is part of a foot.' },
+    { form: 'analogy', q: 'Page is to book as petal is to what?', accept: ['flower'], wrong: ['tree', 'stem'],
+      hint: 'a page is part of a book', explain: 'A page is part of a book, and a petal is part of a flower.' },
+    { form: 'analogy', q: 'Puppy is to dog as lamb is to what?', accept: ['sheep'], wrong: ['goat', 'cow'],
+      hint: 'a puppy is a young dog', explain: 'A puppy is a young dog, and a lamb is a young sheep.' },
+    { form: 'analogy', q: 'Bird is to nest as bee is to what?', accept: ['hive', 'beehive'], wrong: ['flower', 'honey'],
+      hint: 'a bird lives in a nest', explain: 'A bird lives in a nest, and a bee lives in a hive.' },
+    { form: 'analogy', q: 'Doctor is to hospital as teacher is to what?', accept: ['school', 'classroom'], wrong: ['book', 'student'],
+      hint: 'a doctor works in a hospital', explain: 'A doctor works in a hospital, and a teacher works in a school.' },
+    { form: 'analogy', q: 'Apple is to fruit as carrot is to what?', accept: ['vegetable'], wrong: ['fruit', 'orange'],
+      hint: 'an apple is a kind of fruit', explain: 'An apple is a fruit, and a carrot is a vegetable.' },
+    { form: 'order', q: 'Ann is taller than Ben. Ben is taller than Cal. Who is the shortest?', accept: ['cal'], wrong: ['ann', 'ben'],
+      hint: 'put the three in a line, tallest first', explain: 'Ann is tallest, then Ben, then Cal, so Cal is the shortest.' },
+    { form: 'order', q: 'Dot is older than Ed. Fay is older than Dot. Who is the oldest?', accept: ['fay'], wrong: ['dot', 'ed'],
+      hint: 'put the three in a line, oldest first', explain: 'Fay is older than Dot, and Dot is older than Ed, so Fay is the oldest.' },
+    { form: 'order', q: 'Gus finished before Hal. Hal finished before Ivy. Who finished last?', accept: ['ivy'], wrong: ['gus', 'hal'],
+      hint: 'put the three in the order they finished', explain: 'Gus finished first, then Hal, then Ivy, so Ivy finished last.' },
+    { form: 'order', q: 'A box is heavier than a bag. The bag is heavier than a cup. Which is the lightest?', accept: ['cup'], wrong: ['box', 'bag'],
+      hint: 'put the three in order, heaviest first', explain: 'The box is heaviest, then the bag, then the cup, so the cup is the lightest.' },
   ]),
-]);
+].map((it) => Object.freeze({ ...it, logic: true })));
+/** A word-logic item (it asks its own sentence) rather than an opposite. */
+export const isLogic = (it) => !!(it && it.logic === true);
 
 // ---------------------------------------------------------------------------------------
 // RHYMING

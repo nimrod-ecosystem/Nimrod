@@ -881,6 +881,7 @@
         "Ernest Hemingway"
       ],
       "correct": "John Steinbeck",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Cars & transport",
       "explain": "He used the phrase in his 1939 novel The Grapes of Wrath.",
@@ -998,6 +999,7 @@
         "John Kemp Starley"
       ],
       "correct": "Karl Drais",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Cars & transport",
       "explain": "Riders pushed it along with their feet; in English it was called the dandy horse.",

@@ -186,6 +186,7 @@
         "Superman"
       ],
       "correct": "Superman",
+      "answerKind": "character",
       "difficulty": "very easy",
       "category": "Movies & TV",
       "explain": "In everyday life he is Clark Kent, a newspaper reporter.",
