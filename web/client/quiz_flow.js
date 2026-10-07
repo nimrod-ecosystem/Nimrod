@@ -492,6 +492,10 @@ export function createScanBoard(getRows, { mode = () => 'rows' } = {}) {
 //                             ('choices', the header); absent: the value itself
 //   demo(rand)                (quiz_view.js, not the engine) a question for the computer's demo, dealt
 //                             WITHOUT touching the ladder or anything else the real game keeps
+//   over(cfg)                 (Quiz mix, 2026-10-06) true when the game has run its course: asked before the
+//                             next question, it ends the sitting as "stop" does (the done line and Play
+//                             again) instead of dealing one. Absent: a game goes on until somebody stops.
+//   doneLine(cfg)             what is said when the sitting ends ('' or absent: the `doneLine` setting)
 //
 // `onResult` (added for row 2.45's adaptive games): called ONCE per question when it is finished —
 // `{ game, item, right, misses, hintsGiven, revealed, skipped, via }`. Right; answer heard after the
@@ -608,6 +612,8 @@ export function createQuizEngine({
     stopTimer();
     // Skipped after trying: a result (it was hard). Skipped before any try: nothing to report.
     if (item && phase === 'asking' && misses > 0) report({ skipped: true });
+    // The game has run its course (an adapter's `over`, the header): the sitting ends instead.
+    if (item && phase !== 'done' && call('over', c())) { finish(); return; }
     const items = call('items', c(), rand);
     if (items == null) { item = null; phase = 'loading'; feedback = null; changed(); return; }
     if (!items.length) {
@@ -737,7 +743,7 @@ export function createQuizEngine({
     highlight = 0;
     feedback = null;
     unsure = null;
-    speak(c().doneLine);
+    speak(String(call('doneLine', c()) || c().doneLine));
     changed();
   }
 

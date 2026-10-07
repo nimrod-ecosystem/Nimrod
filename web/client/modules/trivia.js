@@ -514,6 +514,50 @@ function loadPackCached(id) {
   return p;
 }
 
+/**
+ * EVERY PACK'S QUESTIONS, as rows (Trivia's "Every question pack"; also Quiz mix's trivia rounds). Each row carries
+ * `pool`, the pack it came from. Built-in packs always; a review pack (../pack_reviews.js, `reviews` is the
+ * account's handle or null) only as `playableBank` allows: passed questions, and open ones only with
+ * `includeUnreviewed`. The same question in two packs is one question.
+ */
+export async function triviaPackRows({ reviews = null, includeUnreviewed = false } = {}) {
+  const built = await Promise.all(packsFor('trivia').map((p) => loadPackCached(p.id)
+    .then((pack) => packToTriviaBank(pack).map((r) => ({ ...r, pool: p.id })))
+    .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
+  const out = built.flat();
+  if (reviews) {
+    await reviews.ready;
+    const m = reviews.map();
+    for (const entry of (typeof reviews.listing === 'function' ? reviews.listing() : []) || []) {
+      if (!entry || entry.kind !== 'trivia') continue;
+      const pack = reviews.packById(entry.id);
+      if (!pack) continue;
+      out.push(...playableBank(pack, m, { includeUnreviewed: !!includeUnreviewed, packId: entry.id })
+        .map((r) => ({ ...r, pool: entry.id })));
+    }
+  }
+  const seen = new Set();
+  return out.filter((r) => { const id = triviaId(r); if (seen.has(id)) return false; seen.add(id); return true; });
+}
+
+/**
+ * WHERE SOMEBODY STARTS IN TRIVIA, from their two rows (THE LEVEL FOLLOWS THE PERSON, above): `own` their
+ * `ratings_trivia` row ("Start trivia at"), `games` their `ratings` row (their usual start). Their own word, else
+ * (following) their usual one, as a Trivia level; null when neither says. PURE.
+ */
+export function triviaStartLevel(own, games) {
+  const mine = own?.start;
+  if (START_LEVELS.includes(mine)) return difficultyLevel(mine);
+  const usual = games?.start;
+  return START_LEVELS.includes(usual) ? difficultyLevel(usual) : null;
+}
+/** The mark a change to their usual start leaves, while they follow it (else null). PURE. */
+export function triviaStartMark(own, games) {
+  if (START_LEVELS.includes(own?.start)) return null;
+  const m = games?.startMark;
+  return m == null || m === '' ? null : String(m);
+}
+
 const SETTINGS = [
   ...(TRIVIA_PACKS.length ? [
     // 'all' FIRST: it is the default, and a switch walks a choice from the top.
@@ -807,18 +851,8 @@ registerModule(
       const h = typeof pid === 'string' && pid.startsWith('person:') ? personHandles.get(pid.slice(7))?.[which] : null;
       try { return h?.get?.() || null; } catch { return null; }
     };
-    const otherFollows = (pid) => !START_LEVELS.includes(otherDoc(pid, 'handle')?.start);
-    function otherStart(pid) {
-      const own = otherDoc(pid, 'handle')?.start;
-      if (START_LEVELS.includes(own)) return difficultyLevel(own);
-      const usual = otherDoc(pid, 'games')?.start;
-      return START_LEVELS.includes(usual) ? difficultyLevel(usual) : null;
-    }
-    function otherMark(pid) {
-      if (!otherFollows(pid)) return null;
-      const m = otherDoc(pid, 'games')?.startMark;
-      return m == null || m === '' ? null : String(m);
-    }
+    const otherStart = (pid) => triviaStartLevel(otherDoc(pid, 'handle'), otherDoc(pid, 'games'));
+    const otherMark = (pid) => triviaStartMark(otherDoc(pid, 'handle'), otherDoc(pid, 'games'));
     // Who is playing changed (the panel's Players row, or the screen's Players tab): their own rows are read in.
     let seenTriviaPeople = null;
     function triviaPlayersMoved() {
@@ -1406,26 +1440,7 @@ registerModule(
     // more rounds than anybody plays in a sitting, so dealing open-first is what gets them through.
     // A "pick which packs" choice is NOT here: the settings menu has no many-of-a-list row, and a row per pack
     // (about thirty) would swamp a menu walked one press at a time. [On Mike's list.]
-    async function allPacksBank() {
-      const built = await Promise.all(packsFor('trivia').map((p) => loadPackCached(p.id)
-        .then((pack) => packToTriviaBank(pack).map((r) => ({ ...r, pool: p.id })))
-        .catch((err) => { console.error(`trivia: pack "${p.id}" did not load`, err); return []; })));
-      const out = built.flat();
-      if (reviews) {
-        await reviews.ready;
-        const m = reviews.map();
-        for (const entry of (typeof reviews.listing === 'function' ? reviews.listing() : []) || []) {
-          if (!entry || entry.kind !== 'trivia') continue;
-          const pack = reviews.packById(entry.id);
-          if (!pack) continue;
-          out.push(...playableBank(pack, m, { includeUnreviewed: !!cfg.includeUnreviewed, packId: entry.id })
-            .map((r) => ({ ...r, pool: entry.id })));
-        }
-      }
-      // The same question in two packs is one question.
-      const seen = new Set();
-      return out.filter((r) => { const id = triviaId(r); if (seen.has(id)) return false; seen.add(id); return true; });
-    }
+    const allPacksBank = () => triviaPackRows({ reviews, includeUnreviewed: !!cfg.includeUnreviewed });
 
     async function readBank() {
       if (dead) return;

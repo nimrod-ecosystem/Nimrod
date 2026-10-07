@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quiz mix — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:absolute;left:-9999px;width:800px;height:450px}
+</style>
+</head>
+<body>
+<h1>Quiz mix (2026-10-06)</h1>
+<p>Every kind of question in one game. Each round a category drawn through the shared randomizer (rng.js); each
+player in turn gets their own question in it at their own level, off their own ladder in that game; the answer moves
+that ladder exactly as the game itself would. Settings, the table and its points, the economy points.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+
+<script type="module">
+import { harness, rig, sleep, liveRow, peopleRows } from './quiz_test_rig.js';
+import { getManifest, listManifests } from '../module.js';
+import '../modules/quiz_mix.js';
+import { GAME, DEFAULTS, LINES, USE_KEYS, pickRound, scoreWords, ROUND_TAU_HOURS } from '../modules/quiz_mix.js';
+import { pickQuestion, fitOf, turnPoints, ladderChooser, FIT_DEFAULTS, chanceOf } from '../question_pick.js';
+import { pick, mulberry32 } from '../rng.js';
+import { createAdaptiveSession, LADDER_KEY } from '../adaptive_play.js';
+import { levelRating } from '../rating.js';
+import { SOURCE_IDS, BRAIN_CATEGORIES, THINK_CATEGORIES, optionIn, mcqAdapter, spellingBank, spellingLevel, gradeLevel,
+  triviaSource } from '../question_kinds.js';
+import { TRIVIA_LADDER_KEY } from '../modules/trivia.js';
+import { auditFields, auditAcross } from '../settings_audit.js';
+import { normalizeField } from '../settings_fields.js';
+
+const { check, section, finish } = harness();
+
+// Every game in the mix is on by default; a section turns off what it is not about.
+const ONLY = (...ids) => Object.fromEntries(SOURCE_IDS.map((id) => [USE_KEYS[id], ids.includes(id)]));
+function M(saved = {}, opts = {}) {
+  const ratings = opts.ratings || liveRow();
+  const trivia = opts.trivia || liveRow();
+  const r = rig(GAME, { saved: { autostart: true, ...saved }, rand: opts.rand || mulberry32(7),
+    extra: { makeState: (k) => (k === LADDER_KEY ? ratings : k === TRIVIA_LADDER_KEY ? trivia : null), ...(opts.extra || {}) } });
+  return Object.assign(r, { ratings, trivia, mix: () => r.inst.impl.__mix(), item: () => r.probe().item });
+}
+const cur = (r) => r.mix().current;
+const rightOf = (r) => { const c = cur(r); return String(c.source.adapter.answer(c.item)); };
+const answerRight = (r) => { r.eng.answer(rightOf(r)); };
+const wrongOf = (r) => { const c = r.probe().candidates.map(String); return c.find((x) => x !== rightOf(r)); };
+const next = (r) => r.timers.flush();
+async function until(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await sleep(25); } return !!fn(); }
+const gameRow = (store, pid, game) => store.get()?.ladder?.players?.[pid]?.games?.[game];
+
+try {
+  // =====================================================================================
+  section('the round\'s category: rng.js, two steps (pure, seeded)');
+  {
+    const cats = [
+      { id: 'math', group: 'math', label: 'Numbers' },
+      ...BRAIN_CATEGORIES.map((c) => ({ ...c, id: `brain:${c.id}`, group: 'brain' })),
+      ...['Space', 'Art', 'Sport', 'Music', 'History', 'Animals', 'Food', 'Maps'].map((t) => ({ id: `trivia:${t}`, group: 'trivia', label: t })),
+    ];
+    const run = (seed, rounds = 60, repeatGame = false) => {
+      const rand = mulberry32(seed);
+      const h = { groupStats: {}, catStats: {}, groupRecent: [], catRecent: [] };
+      let last = null; const out = [];
+      for (let i = 0; i < rounds; i++) {
+        const now = i * 90000;   // a round about every minute and a half
+        const c = pickRound(cats, { last, ...h, now, rand, repeatGame });
+        out.push(c);
+        h.groupStats[c.group] = { n: (h.groupStats[c.group]?.n || 0) + 1, last: now };
+        h.catStats[c.id] = { n: (h.catStats[c.id]?.n || 0) + 1, last: now };
+        h.groupRecent.push(c.group); h.catRecent.push(c.id);
+        last = c;
+      }
+      return out;
+    };
+    const a = run(11), b = run(11);
+    check('*** the same seed draws the same rounds (seedable, as rng.js is) ***', a.map((c) => c.id).join() === b.map((c) => c.id).join());
+    check('a different seed draws different rounds', a.map((c) => c.id).join() !== run(12).map((c) => c.id).join());
+    const twice = a.filter((c, i) => i > 0 && c.group === a[i - 1].group).length;
+    check('*** by default never the same game two rounds running ***', twice === 0, `${twice} repeats`);
+    const perGroup = (list) => Object.fromEntries(['math', 'brain', 'trivia'].map((g) => [g, list.filter((c) => c.group === g).length]));
+    const pg = perGroup(a);
+    check('*** a game with eight categories does not crowd out a game with one (each game about a third) ***',
+      Object.values(pg).every((n) => n >= 14 && n <= 26), JSON.stringify(pg));
+    const tri = a.filter((c) => c.group === 'trivia');
+    check('inside a game, the topics rotate: every trivia topic comes up in 60 rounds', new Set(tri.map((c) => c.id)).size === 8,
+      [...new Set(tri.map((c) => c.id))].join());
+    const fresh = run(3, 3);
+    check('freshness: the first three rounds are three different games', new Set(fresh.map((c) => c.group)).size === 3, fresh.map((c) => c.id).join());
+    const rep = run(11, 60, true);
+    check('with "The same game two rounds running" on, it can happen', rep.some((c, i) => i > 0 && c.group === rep[i - 1].group));
+    check('one game with one category: that category, every round', pickRound([cats[0]], { last: cats[0] })?.id === 'math');
+    check('nothing available: null', pickRound([], {}) === null);
+    check('the recency clock is minutes, not days (0.25 h)', ROUND_TAU_HOURS === 0.25);
+  }
+
+  // =====================================================================================
+  section('the question\'s draw: the shared randomizer times how well it fits (pure)');
+  {
+    check('the fit is 1 on the target (80%) and falls away either side', fitOf(0.8) === 1 && fitOf(0.6) < 0.5 && fitOf(1) < 0.5
+      && Math.abs(fitOf(0.6) - fitOf(1)) < 1e-9 && fitOf(0.3) < 0.05, [fitOf(0.6), fitOf(0.3)].join());
+    check('an unknown chance is no opinion (1)', fitOf(null) === 1 && fitOf(undefined) === 1);
+    check('the target is the ladder\'s own', FIT_DEFAULTS.target === 0.8);
+    // rng.js's new `factor`: absent, nothing changes; present, it multiplies the weight.
+    const ids = ['a', 'b'];
+    const r0 = mulberry32(5), r1 = mulberry32(5);
+    const plain = Array.from({ length: 40 }, () => pick(ids, {}, { rand: r0 }));
+    const same = Array.from({ length: 40 }, () => pick(ids, {}, { rand: r1, factor: () => 1 }));
+    check('rng.js: a factor of 1 draws exactly as no factor', plain.join() === same.join());
+    const r2 = mulberry32(9);
+    const skew = Array.from({ length: 400 }, () => pick(ids, {}, { rand: r2, factor: (id) => (id === 'a' ? 9 : 1) }));
+    const na = skew.filter((x) => x === 'a').length;
+    check('rng.js: a factor of 9 against 1 draws that one about nine times in ten', na > 330 && na < 390, String(na));
+    // Questions near 80% for this player are drawn far more often than ones they would likely miss.
+    const pool = [...Array.from({ length: 5 }, (_, i) => ({ id: `easy${i}`, rating: 1000 })),
+      ...Array.from({ length: 5 }, (_, i) => ({ id: `hard${i}`, rating: 1450 }))];
+    const rr = mulberry32(21);
+    let hard = 0;
+    for (let i = 0; i < 300; i++) {
+      const q = pickQuestion(pool, { expectedOf: (c) => chanceOf(1240, c.rating), rand: rr });
+      if (q.id.startsWith('hard')) hard += 1;
+    }
+    check('*** difficulty: a player expected to get 80% of the easy ones and 23% of the hard ones gets the easy ones far more ***',
+      hard < 30, `${hard} hard of 300 (easy chance ${chanceOf(1240, 1000).toFixed(2)}, hard ${chanceOf(1240, 1450).toFixed(2)})`);
+    const seen = new Set();
+    const rs = mulberry32(4);
+    const stats = {};
+    const recent = [];
+    for (let i = 0; i < 5; i++) {
+      const q = pickQuestion(pool.slice(0, 5), { expectedOf: () => 0.8, rand: rs, stats, recent, now: i * 60000 });
+      seen.add(q.id); stats[q.id] = { n: 1, last: i * 60000 }; recent.push(q.id);
+    }
+    check('*** freshness and recency: five draws from five equal questions are five different questions ***', seen.size === 5, [...seen].join());
+    check('pickQuestion: nothing to draw from is null', pickQuestion([], {}) === null);
+    // The ladder's chooser seam (adaptive_play.js `deal(game, { player, chooser })`).
+    let asked = null;
+    const s = createAdaptiveSession({ cfg: () => ({ players: 'Ann, Bob' }), bankFor: () => [{ id: 'q1', level: 1 }, { id: 'q2', level: 1 }] });
+    const q = s.deal('g', { player: 'name:bob', chooser: (from, o) => { asked = o; return from.find((x) => x.id === 'q2'); } });
+    check('*** adaptive_play: deal to a GIVEN player, through a given chooser ***', q.id === 'q2' && s.dealt().player.id === 'name:bob'
+      && asked && Number.isFinite(asked.playerRating), JSON.stringify(s.dealt()?.player));
+    s.record({ item: q, right: true });
+    check('...and the answer goes on THAT player\'s row', s.playerRow('name:bob', 'g').n === 1 && s.playerRow('name:ann', 'g').n === 0);
+    const q2 = s.deal('g', { chooser: () => ({ id: 'not-in-the-pool' }) });
+    check('a chooser that returns something not in the pool: the ladder\'s own choice instead', !!q2 && ['q1', 'q2'].includes(q2.id));
+    const lc = ladderChooser({ rand: mulberry32(2) });
+    const got = lc([{ id: 'x', rating: 1000 }, { id: 'y', rating: 1000 }], { playerRating: 1000, recentIds: ['x'] });
+    check('ladderChooser: draws from the pool, honouring what was asked lately', got?.id === 'y', JSON.stringify(got));
+  }
+
+  // =====================================================================================
+  section('what a right answer is worth on the table (pure)');
+  {
+    check('a question they were expected to get (90%): 1', turnPoints({ right: true, chance: 0.9 }) === 1);
+    check('a toss-up (50%): 2', turnPoints({ right: true, chance: 0.5 }) === 2);
+    check('a stretch (20%): 3', turnPoints({ right: true, chance: 0.2 }) === 3);
+    check('right after a miss or a hint: 1', turnPoints({ right: true, chance: 0.2, misses: 1 }) === 1 && turnPoints({ right: true, chance: 0.2, hintsGiven: 1 }) === 1);
+    check('missed, shown or skipped: 0', turnPoints({ right: false, chance: 0.2 }) === 0 && turnPoints({ right: true, revealed: true }) === 0
+      && turnPoints({ skipped: true }) === 0);
+    check('"One for every right answer": 1 whatever the chance', turnPoints({ right: true, chance: 0.1, scoring: 'plain' }) === 1);
+    check('no chance known: 1', turnPoints({ right: true }) === 1);
+    check('scores in words', scoreWords([{ id: 'a', name: 'Ann' }, { id: 'b', name: 'Bob' }], { a: 3 }) === 'Ann 3, Bob 0');
+  }
+
+  // =====================================================================================
+  section('the settings');
+  {
+    const m = getManifest(GAME);
+    check('registered, on the new core, needs nothing', !!m && m.core === 'new' && m.dependsOn === 'local');
+    check('the title is plain: "Quiz mix"', m.title === 'Quiz mix');
+    const f = (k) => m.settings.find((s) => s.key === k);
+    check('*** every kind of question is in the mix by default, one row each ***',
+      SOURCE_IDS.every((id) => f(USE_KEYS[id])?.default === true && DEFAULTS[USE_KEYS[id]] === true), SOURCE_IDS.join());
+    check('trivia from "Every question pack" by default', f('triviaFrom')?.default === 'all' && f('triviaFrom').options[0].label === 'Every question pack');
+    check('rounds: 10 by default; 5 to 20, or no end', f('rounds')?.default === 10 && f('rounds').options.map((o) => o.value).join() === '5,10,15,20,0');
+    check('*** no timer by default; 20, 30 or 60 seconds as an option ***', f('answerTime')?.default === 0
+      && f('answerTime').options.map((o) => o.value).join() === '0,20,30,60');
+    check('a different game every round by default', f('repeatGame')?.default === false);
+    check('answering: say, tap or step by default; yes / no the option', f('answerBy')?.default === 'choices'
+      && f('answerBy').options.map((o) => o.value).join() === 'choices,yesno');
+    check('letter-board questions in by default, one row to leave them out', f('boards')?.default === true);
+    check('the table: "harder is worth more" by default; plain points the option', f('scoring')?.default === 'harder'
+      && f('scoring').options.map((o) => o.value).join() === 'harder,plain');
+    check('players: the shared picker ("This screen\'s players" when empty)', f('players')?.kind === 'players' && f('players').default === '');
+    check('it waits for Start', DEFAULTS.autostart === false && !!f('autostart'));
+    const fields = m.settings.map(normalizeField).filter(Boolean);
+    const errs = auditFields(fields, { type: GAME }).filter((x) => x.severity !== 'info');
+    check('the settings audit finds nothing to warn about', errs.length === 0, JSON.stringify(errs));
+    const byModule = Object.fromEntries(listManifests().filter((x) => Array.isArray(x.settings))
+      .map((x) => [x.type, x.settings.map(normalizeField).filter(Boolean)]));
+    const clash = auditAcross(byModule).filter((x) => x.severity === 'error');
+    check('*** no key is declared as a different kind than another module declares it ***', clash.length === 0, JSON.stringify(clash));
+    // This game's own rows (the shared rows - Start, the voice, the score - are checked where they live).
+    const mine = new Set(['players', 'rounds', 'triviaFrom', 'boards', 'repeatGame', 'scoring', 'answerTime', 'pointsFor', ...Object.values(USE_KEYS)]);
+    const words = JSON.stringify(m.settings.filter((s) => mine.has(s.key)).map((s) => [s.label, s.note, s.onLabel, s.offLabel,
+      (s.options || []).map((o) => o.label)])) + JSON.stringify(LINES) + m.description;
+    check('*** plain words: no module, dashboard, panel, grant, widget, account or token ***',
+      !/\b(module|dashboard|panel|grant|widget|account|token)s?\b/i.test(words), (words.match(/\b(module|dashboard|panel|grant|widget|account|token)s?\b/i) || [])[0]);
+    check('no copy names the person this was first built for', !/christine|cici|her screen/i.test(words));
+  }
+
+  // =====================================================================================
+  section('two players, one round: their OWN question at their OWN level, the same category');
+  {
+    // Bob has played a lot of Math (floor 5: times tables); Ann is new (counting).
+    const ratings = liveRow({ ladder: { v: 1, players: { 'name:bob': { name: 'Bob', games: { math: { rating: levelRating(5), n: 40, floor: 5, recent: [], review: {} } } } }, questions: {}, extra: {} } });
+    const r = M({ players: 'Ann, Bob', ...ONLY('math') }, { ratings });
+    await sleep(20);
+    check('started: round 1, Ann first', r.mix().round === 1 && cur(r)?.player.id === 'name:ann', JSON.stringify(r.mix().current?.player));
+    const annItem = r.item();
+    check('*** Ann gets a beginner question (level 1 or 2: counting, plus within 5) ***', [1, 2].includes(annItem.level), JSON.stringify(annItem));
+    check('the round and whose turn are on screen', /Round 1 of 10/.test(r.host.textContent) && !!r.host.querySelector('[data-turn="name:ann"]'));
+    check('*** the round and the turn are said before the question ***', /Round 1 of 10: Numbers\. Ann, your turn\./.test(r.said.join(' ')), r.last());
+    answerRight(r);
+    check('a right answer: the celebration, and points on the table for Ann', r.phase() === 'celebrate' && (r.mix().totals['name:ann'] || 0) >= 1,
+      JSON.stringify(r.mix().totals));
+    check('*** Ann\'s answer is on Ann\'s ladder in Math, exactly as Math records it ***', gameRow(ratings, 'name:ann', 'math')?.n === 1
+      && gameRow(ratings, 'name:bob', 'math')?.n === 40, JSON.stringify(ratings.get().ladder.players));
+    next(r);
+    const bobItem = r.item();
+    check('*** then Bob, in the SAME round and category ***', cur(r).player.id === 'name:bob' && r.mix().round === 1 && cur(r).cat.id === 'math');
+    check('*** Bob gets HIS level (5 or 6: times tables) ***', [5, 6].includes(bobItem.level), JSON.stringify(bobItem));
+    check('his turn is said, without the round again', /Bob, your turn\./.test(r.last()) && !/Round 1/.test(r.last()), r.last());
+    r.eng.answer(wrongOf(r));
+    r.eng.press('again');
+    answerRight(r);
+    check('Bob right after a miss: one point, and his ladder moves', r.mix().totals['name:bob'] === 1 && gameRow(ratings, 'name:bob', 'math')?.n === 41,
+      JSON.stringify([r.mix().totals, gameRow(ratings, 'name:bob', 'math')]));
+    check('the table on screen after an answer: "Ann n · Bob 1"', /Ann \d+ · Bob 1/.test(r.host.textContent), r.host.querySelector('[data-score]')?.textContent);
+    next(r);
+    check('*** then round 2, Ann first again ***', r.mix().round === 2 && cur(r).player.id === 'name:ann');
+    check('the scores are said as the new round starts', /The scores: Ann \d+, Bob 1\. Round 2 of 10/.test(r.said.join(' ')), r.last());
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('the screen\'s person: their answers are kept WITH THEM (their own row), a guest\'s on the screen\'s');
+  {
+    const people = peopleRows();
+    const ratings = liveRow();
+    const r = M({ players: [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], ...ONLY('brain') }, { ratings,
+      extra: { personId: 'pat', makePersonState: people.make } });
+    await sleep(30);
+    check('the person\'s own "ratings" row is opened, once (shared by every game in the mix), merging on a refused save',
+      people.asked.filter((x) => x.pid === 'pat' && x.key === 'ratings').length === 1
+      && typeof people.asked.find((x) => x.pid === 'pat' && x.key === 'ratings')?.opts?.merge === 'function',
+      JSON.stringify(people.asked.map((x) => `${x.pid}:${x.key}`)));
+    check('started with the screen\'s person\'s turn', cur(r)?.player?.id === 'person:pat',
+      `${r.phase()} ${JSON.stringify(r.mix().errors)} ${JSON.stringify(r.mix().available.map((a) => a.id))}`);
+    const g1 = cur(r).game;
+    answerRight(r);
+    await sleep(10);
+    const mine = people.row('pat')?.get()?.ladder?.players?.['person:pat']?.games?.[g1];
+    check(`*** the screen's person's answer is on THEIR row (${g1}) ***`, mine?.n === 1, JSON.stringify(people.row('pat')?.get()));
+    next(r);
+    const g2 = cur(r).game;
+    check('the guest plays the same game in the same round', cur(r).player.id === 'name:ann' && g2 === g1, `${g1} ${g2}`);
+    answerRight(r);
+    await sleep(10);
+    check('*** the guest\'s answer is on the screen\'s row, not the person\'s ***', gameRow(ratings, 'name:ann', g2)?.n === 1
+      && !people.row('pat').get().ladder.players['name:ann'], JSON.stringify(ratings.get().ladder?.players));
+    r.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('rounds and the end of a game; Play again');
+  {
+    const r = M({ players: 'Ann, Bob', rounds: 2, ...ONLY('math', 'think') });
+    await sleep(20);
+    const groups = [];
+    for (let i = 0; i < 4; i++) { groups.push(cur(r).cat.group); answerRight(r); if (i < 3) next(r); }
+    check('two rounds, two turns each: four questions, a game per round', groups.length === 4 && groups[0] === groups[1] && groups[2] === groups[3]
+      && groups[0] !== groups[2], groups.join());
+    next(r);
+    check('*** after the last turn of the last round the game ends ***', r.phase() === 'done' && r.mix().ended, r.phase());
+    check('*** the end is said with the final scores ***', /That is the end of the game\. Ann \d+, Bob \d+\./.test(r.last()), r.last());
+    check('the final table is on screen, highest first', !!r.host.querySelector('[data-table]')
+      && r.host.querySelectorAll('[data-table] li').length === 2, r.host.querySelector('[data-table]')?.outerHTML);
+    r.eng.press('restart');
+    check('*** Play again: a new game, round 1, scores at nothing ***', r.mix().round === 1 && Object.keys(r.mix().totals).length === 0
+      && r.phase() === 'asking' && cur(r).player.id === 'name:ann', JSON.stringify(r.mix().totals));
+    r.inst.destroy();
+    const e = M({ players: 'Ann', rounds: 0, ...ONLY('math') });
+    await sleep(20);
+    for (let i = 0; i < 25; i++) { answerRight(e); next(e); }
+    check('"No end": still going after 25 rounds', e.phase() === 'asking' && e.mix().round === 26, String(e.mix().round));
+    check('one player: no "your turn", just the round', /Round 26: Numbers\./.test(e.last()) && !/your turn/.test(e.last()), e.last());
+    e.inst.destroy();
+    const s = M({ players: 'Ann, Bob', rounds: 5, ...ONLY('math') });
+    await sleep(20);
+    s.inst.impl.hear({ text: 'stop', confidence: 0.95 });
+    check('"stop" ends it early', s.phase() === 'done' && !s.mix().ended);
+    s.eng.press('restart');
+    check('...and Play again starts a new game', s.mix().round === 1 && cur(s).player.id === 'name:ann');
+    s.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('settings honoured: which games, letter boards, answering, the table, points');
+  {
+    const r = M({ players: 'Ann', rounds: 0, ...ONLY('brain', 'spelling'), boards: false });
+    await sleep(20);
+    const cats = [];
+    for (let i = 0; i < 16; i++) { cats.push(cur(r).cat.id); answerRight(r); next(r); }
+    check('*** only the games in the mix: brain games here ***', cats.every((c) => c.startsWith('brain:')), cats.join());
+    check('*** letter boards left out: never spelling, never "remember the order" ***', !cats.includes('brain:order') && !cats.includes('spelling'), cats.join());
+    check('*** and never the same category two rounds running ***', cats.every((c, i) => i === 0 || c !== cats[i - 1]), cats.join());
+    r.inst.destroy();
+
+    const y = M({ players: 'Ann', ...ONLY('think'), answerBy: 'yesno' });
+    await sleep(20);
+    check('*** answering "yes / no": one answer offered at a time ***', y.probe().offers === 'yesno' && !!y.probe().candLine, y.last());
+    y.inst.destroy();
+
+    const p = M({ players: 'Ann, Bob', scoring: 'plain', ...ONLY('math') });
+    await sleep(20);
+    answerRight(p); next(p); answerRight(p);
+    check('"One for every right answer": 1 each', p.mix().totals['name:ann'] === 1 && p.mix().totals['name:bob'] === 1, JSON.stringify(p.mix().totals));
+    check('*** the screen\'s points: the first player\'s right answer pays, a visitor\'s does not (by default) ***',
+      p.points().length === 1, JSON.stringify(p.points()));
+    check('...as School points, the way every question game pays them', p.points()[0]?.data?.type === 'School', JSON.stringify(p.points()[0]));
+    p.inst.destroy();
+    const pa = M({ players: 'Ann, Bob', pointsFor: 'all', ...ONLY('math') });
+    await sleep(20);
+    answerRight(pa); next(pa); answerRight(pa);
+    check('"Every player": both pay', pa.points().length === 2, JSON.stringify(pa.points()));
+    pa.inst.destroy();
+
+    const t = M({ players: 'Ann, Bob', answerTime: 20, ...ONLY('math') });
+    await sleep(20);
+    check('*** a time limit shows its clock ***', t.host.querySelector('[data-clock]')?.dataset.clock === '20', t.host.querySelector('.wg-ask')?.innerHTML);
+    for (let i = 0; i < 25 && cur(t).player.id === 'name:ann'; i++) t.timers.flush();
+    check('*** when it runs out, the turn passes to the next player ***', cur(t).player.id === 'name:bob' && t.phase() === 'asking', cur(t)?.player.id);
+    check('...and a turn nobody tried moves nobody\'s ladder', !gameRow(t.ratings, 'name:ann', 'math'), JSON.stringify(t.ratings.get()));
+    t.inst.destroy();
+    const n = M({ players: 'Ann', ...ONLY('math') });
+    await sleep(20);
+    check('no time limit: no clock', !n.host.querySelector('[data-clock]'));
+    n.inst.destroy();
+    const none = M({ players: 'Ann', ...ONLY() });
+    await sleep(20);
+    check('nothing in the mix: it says so plainly', none.phase() === 'empty' && /Turn on another kind of question/.test(none.host.textContent), none.phase());
+    none.inst.destroy();
+  }
+
+  // =====================================================================================
+  section('every kind asks its own game\'s questions');
+  {
+    const sp = M({ players: 'Ann', ...ONLY('spelling') });
+    await sleep(20);
+    check('spelling: on the letter board, a word from Spelling\'s own list', sp.probe().entryMode === 'letters' && /^spelling:/.test(sp.item().id), JSON.stringify(sp.item()));
+    check('spelling\'s levels are by length (3 letters 1 .. 6 letters 4), every word has one', spellingLevel('cat') === 1 && spellingLevel('music') === 3
+      && spellingBank().every((w) => w.level >= 1 && w.level <= 4));
+    check('a new speller starts on the short words', sp.item().word.length <= 4, sp.item().word);
+    sp.eng.answer(rightOf(sp));
+    check('spelled right: Spelling\'s ladder ("spelling") hears it', sp.phase() === 'celebrate' && gameRow(sp.ratings, 'name:ann', 'spelling')?.n === 1);
+    sp.inst.destroy();
+
+    const th = M({ players: 'Ann', rounds: 0, ...ONLY('think') });
+    await sleep(20);
+    const kinds = new Set();
+    let inCat = 0;
+    for (let i = 0; i < 8; i++) {
+      kinds.add(cur(th).cat.id);
+      if (`think:${cur(th).item.kind}` === cur(th).cat.id) inCat += 1;
+      answerRight(th); next(th);
+    }
+    check('*** thinking: every round\'s question is of the round\'s exercise ***', inCat === 8, String(inCat));
+    check('thinking: all four exercises come up in eight rounds', kinds.size === 4, [...kinds].join());
+    th.inst.destroy();
+
+    const w = M({ players: 'Ann', ...ONLY('words') });
+    await until(() => w.phase() === 'asking');
+    const it = w.item();
+    check('*** Word Forge: what a word means (or which fills the gap), its own words, four answers ***', it?.kind === 'mcq'
+      && it.options.length === 4 && it.options.includes(it.answer) && /^wordforge:/.test(it.id), JSON.stringify(it));
+    check('the answers are tiles to tap', w.host.querySelectorAll('[data-pick]').length === 4);
+    w.host.querySelector(`[data-pick="${CSS.escape(it.answer)}"]`)?.click();
+    check('tapped right: Word Forge\'s ladder hears it', w.phase() === 'celebrate' && gameRow(w.ratings, 'name:ann', 'wordforge')?.n === 1, w.phase());
+    check('the grade -> level map: very easy 1 .. hard 4', gradeLevel(4) === 1 && gradeLevel(6) === 2 && gradeLevel(8) === 3 && gradeLevel(10) === 4);
+    w.inst.destroy();
+    check('a spoken answer that names an option is that option', optionIn({ options: ['Paris', 'Rome'] }, 'I think it is paris') === 'Paris'
+      && optionIn({ options: ['Paris', 'Rome'] }, 'London') === null);
+    check('*** a number answer: "12" tapped, or "twelve" said, is the option 12 (not lost to letters-only matching) ***',
+      optionIn({ options: ['11', '12', '13'] }, '12') === '12' && optionIn({ options: ['11', '12', '13'] }, 'twelve') === '12'
+      && optionIn({ options: ['1969', '1972'] }, '1969') === '1969');
+    const q = { prompt: 'Capital of France?', options: ['Paris', 'Rome', 'Madrid', 'Oslo'], answer: 'Paris' };
+    check('multiple choice: a hint takes a wrong one away, always leaving one wrong', mcqAdapter.hint(q, 1, {}) === 'it is not Rome'
+      && mcqAdapter.hint(q, 2, {}) === 'it is not Madrid' && mcqAdapter.hint(q, 3, {}) === '');
+    check('multiple choice: the answers are read after the question (not in the yes / no shape)',
+      mcqAdapter.ask(q, { answerBy: 'choices' }) === 'Capital of France? Paris. Rome. Madrid. Oslo.' && mcqAdapter.ask(q, { answerBy: 'yesno' }) === 'Capital of France?');
+  }
+
+  // =====================================================================================
+  section('trivia: every pack, a topic a round, on Trivia\'s own ladder');
+  {
+    const tr = M({ players: 'Ann', rounds: 0, ...ONLY('trivia') });
+    const ok = await until(() => tr.phase() === 'asking', 6000);
+    check('the packs load and a question is asked', ok, tr.phase());
+    const it = tr.item();
+    check('*** a trivia question: four answers, a topic as the round ***', it?.kind === 'mcq' && it.options.length >= 2 && /^trivia:/.test(cur(tr).cat.id)
+      && !!cur(tr).cat.label, JSON.stringify([it, cur(tr).cat]));
+    tr.eng.answer(it.answer);
+    await sleep(10);
+    const row = gameRow(tr.trivia, 'name:ann', 'trivia');
+    check('*** the answer is on Trivia\'s own row (ratings_trivia), as Trivia records it ***', row?.n === 1 && row.lv === 2, JSON.stringify(row));
+    check('...and not on the shared "ratings" row', !gameRow(tr.ratings, 'name:ann', 'trivia'));
+    const seen = new Set([cur(tr).cat.id]);
+    for (let i = 0; i < 6; i++) { next(tr); seen.add(cur(tr).cat.id); tr.eng.answer(rightOf(tr)); }
+    check('the topics rotate (several in seven rounds, never one twice running)', seen.size >= 3, [...seen].join() + ' | ' + JSON.stringify(tr.mix().available.map((a) => a.id)) + JSON.stringify(tr.mix().errors));
+    tr.inst.destroy();
+
+    // UNREVIEWED QUESTIONS NEVER LEAK INTO PLAY: a review pack with one passed and one open question.
+    const pack = { name: 'Moons (AI-written, not yet reviewed)', items: [
+      { question: 'PASSED: which planet has Titan?', correct: 'Saturn', answers: ['Saturn', 'Mars', 'Venus', 'Earth'], difficulty: 'easy' },
+      { question: 'OPEN: which planet has Io?', correct: 'Jupiter', answers: ['Jupiter', 'Mars', 'Venus', 'Earth'], difficulty: 'easy' }] };
+    const { reviewKey } = await import('../pack_reviews.js');
+    const reviews = { ready: Promise.resolve(), listing: () => [{ id: 'review:moons', kind: 'trivia' }], packById: () => pack,
+      map: () => new Map([[reviewKey(pack.items[0].question, 'Saturn'), { status: 'passed' }]]), destroy() {} };
+    const host = { ctx: { makePackReviews: () => reviews }, ladderCtx: {}, cfg: () => ({ triviaFrom: 'review:moons' }), overrides: () => ({}),
+      rand: mulberry32(3), now: () => 0, changed() {}, chooser: () => null, stats: () => ({}), recent: () => [], noteDeal() {}, contests: null };
+    const src = triviaSource(host);
+    await src.ready();
+    const asked = [];
+    for (let i = 0; i < 12; i++) { const d = src.dealFor({ id: 'player', name: '', index: 0 }, src.categories()[0]?.id); if (d) { asked.push(d.item.prompt); src.record({ item: d.item, right: true }); } }
+    check('*** a passed review question plays ***', asked.some((p) => p.startsWith('PASSED')), asked.join(' | '));
+    check('*** an open (unreviewed) one never does ***', asked.length > 0 && !asked.some((p) => p.startsWith('OPEN')), asked.join(' | '));
+    check('its topic is the pack\'s name without the review tail', src.categories()[0]?.label === 'Moons', JSON.stringify(src.categories()));
+    src.destroy();
+  }
+
+  // =====================================================================================
+  section('the same draw every time for the same seed (whole game)');
+  {
+    const play = (seed) => {
+      const r = M({ players: 'Ann, Bob', rounds: 0, ...ONLY('math', 'brain', 'think', 'spelling') }, { rand: mulberry32(seed) });
+      const out = [];
+      for (let i = 0; i < 12; i++) { out.push(`${cur(r).cat.id}/${cur(r).item.id}`); answerRight(r); next(r); }
+      r.inst.destroy();
+      return out;
+    };
+    const a = play(42); const b = play(42);
+    check('*** seeded: the same categories and the same questions, turn by turn ***', a.join() === b.join(), `${a.slice(0, 4).join()} vs ${b.slice(0, 4).join()}`);
+    const rounds = a.filter((_, i) => i % 2 === 0).map((x) => x.split('/')[0].split(':')[0]);
+    check('...and never the same game two rounds running', rounds.every((g, i) => i === 0 || g !== rounds[i - 1]), rounds.join());
+  }
+
+  section('the games it borrows from are still there (their own suites prove them)');
+  check('brain games, thinking games, spelling, trivia and Word Forge are registered beside it',
+    ['brain_games', 'think_games', 'spelling', 'trivia', 'wordforge'].every((t) => !!getManifest(t)));
+  finish();
+} catch (err) {
+  finish(err);
+}
+</script>
+</body>
+</html>

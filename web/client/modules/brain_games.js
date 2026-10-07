@@ -246,6 +246,194 @@ function ensureStyle(doc) {
 }
 
 // ---------------------------------------------------------------------------------------
+// THE QUESTIONS AND THEIR PICTURES, for any host (2026-10-06, Quiz mix)
+// ---------------------------------------------------------------------------------------
+// What a brain-games question IS - dealing one kind off the ladder, how it is asked, judged, hinted and drawn -
+// lifted out of the module unchanged, so Quiz mix (modules/quiz_mix.js) asks these same questions rather than a
+// copy of them. The module below keeps what is the module's own: rounds, the mix order, the demo, turns, points.
+//   session    the ladder (adaptive_play.js createAdaptiveSession)
+//   cfg()      the settings these read (the lines, quickLookMs)
+//   getApi()   quiz_view.js's api, once there is one (the quick look's timer, re-asking after Ready)
+export function createBrainPlay({ session, cfg = () => DEFAULTS, rand = Math.random, getApi = () => null, ctx = {} } = {}) {
+  let dealt = null;            // the question on screen
+  let studied = false;         // the order question: has the person said they are ready?
+  let hidden = false;          // quick look: the dots / things are hidden
+  let lookTimer = null;
+
+  function stopLook() {
+    if (lookTimer !== null) { try { getApi()?.clearTimer(lookTimer); } catch { /* gone */ } lookTimer = null; }
+  }
+  /** One question of `kind` off the ladder (`opts`: adaptive_play.js `deal`'s, e.g. the player). null: none. */
+  function dealKind(kind, opts = {}) {
+    stopLook();
+    const q = session.deal(ladderGame(kind), opts);
+    if (!q) { dealt = null; return null; }
+    studied = false;
+    hidden = false;
+    dealt = Object.freeze({ ...q });
+    return dealt;
+  }
+  function markStudied() {
+    if (!dealt || dealt.kind !== 'order' || studied) return false;
+    studied = true;
+    stopLook();
+    return true;
+  }
+  // QUICK LOOK: off by default. Never shorter than the screen's flash limit allows for one change.
+  function startLook(item) {
+    const api = getApi();
+    const ms = Number(cfg().quickLookMs) || 0;
+    if (!(ms > 0) || !api || (item.kind !== 'count' && item.kind !== 'order')) return;
+    let floor = 0;
+    try { floor = minFlashPeriodMs(flashLimit(ctx)) || 0; } catch { floor = 0; }
+    lookTimer = api.setTimer(() => {
+      lookTimer = null;
+      if (dealt !== item) return;
+      if (item.kind === 'order') { if (markStudied()) api.engine.press('repeat'); return; }
+      hidden = true;
+      api.render();
+    }, Math.max(ms, floor));
+  }
+
+  // Everything but `items` (the host deals) and the round's line under the answer (the module's own).
+  const adapter = {
+    empty: () => 'There are no questions for this game yet.',
+    entry: () => (dealt && dealt.kind === 'order' ? 'letters' : null),
+    ask(it, c) {
+      const pre = session.askPrefix();
+      if (it.kind === 'odd') return pre + fill(c.askOdd, { list: listWords(it.tiles) });
+      if (it.kind === 'count') return pre + c.askCount;
+      if (it.kind === 'next') return pre + fill(c.askNext, { list: it.seq.join(', ') });
+      return pre + (studied ? c.askPick : fill(c.askStudy, { list: it.seq.join(', ') }));
+    },
+    candidates(it, c, r) {
+      if (it.kind === 'odd') return uniq(it.tiles);
+      if (it.kind === 'count' || it.kind === 'next') return shuffle(numberOptions(answerOf(it)).map(String), r);
+      return [];
+    },
+    offer(it, cand, c) {
+      return it.kind === 'odd' ? fill(c.offerOdd, { candidate: cand }) : fill(c.offerNumber, { candidate: cand });
+    },
+    judge: (it, v) => judgeItem(it, v),
+    hint(it, n, c) {
+      if (it.kind === 'odd') {
+        if (n === 1) return fill(c.hintSame, { same: it.same });
+        if (n === 2) return fill(c.hintLetter, { letter: it.odd.charAt(0).toUpperCase() });
+        return '';
+      }
+      if (it.kind === 'count' || it.kind === 'next') {
+        const a = Number(answerOf(it));
+        const wrong = numberOptions(a).filter((x) => x !== a);
+        if (it.kind === 'next' && n === 1) return it.rule;
+        const x = wrong[it.kind === 'next' ? n - 2 : n - 1];
+        return x == null ? '' : fill(c.hintNot, { x });
+      }
+      if (n === 1) return fill(c.hintFirst, { x: it.seq[0] });
+      if (n === 2 && it.seq.length > 2) return fill(c.hintFirstTwo, { x: it.seq[0], y: it.seq[1] });
+      return '';
+    },
+    answer: (it) => answerOf(it),
+    explain(it, answer, c) {
+      if (it.kind === 'odd') return fill(c.explainOdd, { odd: it.odd, same: it.same });
+      if (it.kind === 'count') return fill(c.explainCount, { n: it.n });
+      if (it.kind === 'next') return fill(c.explainNext, { answer: it.answer, rule: it.rule });
+      return fill(c.explainOrder, { list: it.seq.join(', ') });
+    },
+    maxEntry: (it) => (it.kind === 'order' ? it.seq.length : 0),
+    vocab(it) {
+      if (it.kind === 'odd') return uniq(it.tiles);
+      if (it.kind === 'count' || it.kind === 'next') {
+        const a = Number(answerOf(it));
+        const out = [];
+        for (let x = Math.max(0, a - 5); x <= a + 5; x++) out.push(numberWord(x));
+        return out;
+      }
+      return studied ? [...it.picks, 'undo', 'back'] : [...READY];
+    },
+    heardText: (v) => {
+      const it = dealt;
+      if (it && it.kind === 'order') return namesOf(it, String(v)).join(', ');
+      return String(v);
+    },
+    fromVoice(it, { text, raw }, c) {
+      if (it.kind === 'count' || it.kind === 'next') { const n = parseNumber(raw); return n == null ? null : { value: String(n) }; }
+      if (it.kind === 'odd') return text ? { value: text } : null;
+      if (!studied) return READY.has(text) ? { command: 'ready' } : { note: c.studyFirstLine };
+      if (text === 'undo' || text === 'back') return { command: 'erase' };
+      const codes = codesFromSpeech(it, text);
+      if (!codes) return null;
+      return codes.length >= it.seq.length ? { value: codes.slice(0, it.seq.length) } : { append: codes };
+    },
+    command(cmd) {
+      if (cmd === 'ready') return markStudied() ? 'ask' : true;
+      return null;
+    },
+    unknownLine(value, c) {
+      if (dealt && dealt.kind === 'odd') return fill(c.notAnOption, { heard: value });
+      return c.notCaughtLine;
+    },
+  };
+
+  // ---- the pictures ----
+  const label = (name) => `${shapeSvg(name)}<span>${esc(name)}</span>`;
+  const tileBtn = (v, inner) => `<button type="button" class="qz-pick bb-tile" data-pick="${esc(v)}">${inner}</button>`;
+  const numberTiles = (s) => `<div class="qz-picks" data-choices>${(s.candidates || []).map((v) => `<button type="button" class="qz-pick" data-pick="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
+  const seqItem = (name, i, empty = false) => `<li${empty ? ' data-empty' : ''} data-slot="${i}">${empty ? '' : shapeSvg(name)}${empty ? '?' : esc(name)}<small>${i + 1}</small></li>`;
+  const view = {
+    askHtml(s) {
+      const it = s.item;
+      if (it.kind === 'odd') return esc('Which one is different?');
+      if (it.kind === 'count') return esc('How many dots?');
+      if (it.kind === 'next') return esc('What comes next?');
+      return esc(studied ? 'Pick them in the same order' : 'Remember these, in order');
+    },
+    left(s) {
+      const it = s.item;
+      if (it.kind === 'odd') {
+        return `<div class="bb-tiles" data-tiles>${it.tiles.map((t) => tileBtn(t, it.shapes ? label(t) : esc(t))).join('')}</div>`;
+      }
+      if (it.kind === 'count') {
+        const dots = hidden ? '<p class="bb-hidden" data-hidden>?</p>'
+          : `<div class="qz-dots" data-count data-dots>${it.rows.map((n) => `<div class="qz-dotrow">${'<span class="qz-dot"></span>'.repeat(n)}</div>`).join('')}</div>`;
+        return `<div class="bb-stack">${dots}${numberTiles(s)}</div>`;
+      }
+      if (it.kind === 'next') {
+        const seq = it.seq.map((x) => `<li>${esc(x)}</li>`).join('');
+        return `<div class="bb-stack"><ul class="bb-seq" data-seq>${seq}<li data-empty>?</li></ul>${numberTiles(s)}</div>`;
+      }
+      if (!studied) return `<ul class="bb-seq" data-study>${it.seq.map((x, i) => seqItem(x, i)).join('')}</ul>`;
+      const got = namesOf(it, s.entry);
+      return `<ul class="bb-seq" data-slots>${it.seq.map((_, i) => seqItem(got[i] || '', i, !got[i])).join('')}</ul>`;
+    },
+    board(s) {
+      const it = s.item;
+      if (!it || it.kind !== 'order') return [];
+      if (!studied) return [[{ view: 'ready', label: 'Ready' }]];
+      const used = new Set(String(s.entry || '').split(''));
+      const rows = it.picks.map((p, i) => ({ key: codeOf(i), label: p })).filter((k) => !used.has(k.key)).map((k) => [k]);
+      return [...rows, [{ cmd: 'erase', label: 'Undo' }]];
+    },
+    entryHtml: () => '',
+    onKey(k, a) {
+      if (k.view === 'ready' && markStudied()) a.engine.press('repeat');
+    },
+    onDeal(item) { startLook(item); },
+    pairHtml(s) {
+      const it = s.item;
+      if (it.kind === 'odd') return `<div class="wg-pair" data-pair>${shapeSvg(it.odd)}<span>${esc(it.odd.toUpperCase())}</span></div>`;
+      if (it.kind === 'order') return `<div class="wg-pair" data-pair>${esc(it.seq.join(', ').toUpperCase())}</div>`;
+      return `<div class="wg-pair" data-pair>${esc(answerOf(it))}</div>`;
+    },
+  };
+  return {
+    dealKind, adapter, view, markStudied, stopLook,
+    dealt: () => dealt,
+    state: () => ({ studied, hidden, dealt }),
+    ensureStyle: (doc) => ensureStyle(doc),
+  };
+}
+
+// ---------------------------------------------------------------------------------------
 // THE MODULE
 // ---------------------------------------------------------------------------------------
 registerModule(
@@ -257,10 +445,6 @@ registerModule(
     const rand = ctx.rand || Math.random;
     let cfgNow = { ...DEFAULTS };
     let api = null;
-    let dealt = null;            // the question on screen
-    let studied = false;         // the order question: has the person said they are ready?
-    let hidden = false;          // quick look: the dots / things are hidden
-    let lookTimer = null;
     let lastGame = null;
     let roundNo = -1;
     let roundAsked = 0;
@@ -284,14 +468,12 @@ registerModule(
       onChange: () => api?.render(),
     });
     ladderRows.attach(session);
+    // The questions themselves (createBrainPlay above): dealing, asking, judging, the pictures.
+    const play = createBrainPlay({ session, cfg: () => cfgNow, rand, getApi: () => api, ctx });
     const roundTotal = () => Math.max(1, Math.floor(Number(cfgNow.roundSize) || DEFAULTS.roundSize)) * session.players().length;
 
-    function stopLook() {
-      if (lookTimer !== null) { try { api?.clearTimer(lookTimer); } catch { /* gone */ } lookTimer = null; }
-    }
-
     function deal(gameId) {
-      stopLook();
+      play.stopLook();
       if (gameId !== lastGame) {
         lastGame = gameId; roundNo = -1; roundAsked = roundTotal();
         mixAsked = 0;
@@ -301,40 +483,14 @@ registerModule(
       const n = MIX_ORDER.length;
       const kind = gameId !== 'mix' ? gameId
         : MIX_ORDER[(mixStart + (cfgNow.mixBy === 'round' ? roundNo : mixAsked)) % n];
-      const q = session.deal(ladderGame(kind));
-      if (!q) { dealt = null; return []; }
+      const q = play.dealKind(kind);
+      if (!q) return [];
       roundAsked += 1;
       mixAsked += 1;
-      studied = false;
-      hidden = false;
-      dealt = Object.freeze({ ...q });
-      return [dealt];
-    }
-
-    function markStudied() {
-      if (!dealt || dealt.kind !== 'order' || studied) return false;
-      studied = true;
-      stopLook();
-      return true;
-    }
-
-    // QUICK LOOK: off by default. Never shorter than the screen's flash limit allows for one change.
-    function startLook(item) {
-      const ms = Number(cfgNow.quickLookMs) || 0;
-      if (!(ms > 0) || !api || (item.kind !== 'count' && item.kind !== 'order')) return;
-      let floor = 0;
-      try { floor = minFlashPeriodMs(flashLimit(ctx)) || 0; } catch { floor = 0; }
-      lookTimer = api.setTimer(() => {
-        lookTimer = null;
-        if (dealt !== item) return;
-        if (item.kind === 'order') { if (markStudied()) api.engine.press('repeat'); return; }
-        hidden = true;
-        api.render();
-      }, Math.max(ms, floor));
+      return [q];
     }
 
     const isRevealing = () => { try { return !!api?.engine.snapshot().revealed; } catch { return false; } };
-    const pickedNames = (it, entry) => namesOf(it, entry);
 
     // A demo question: straight from the banks, NEVER through the ladder (which would count it as asked,
     // move "recent", and could even start the question writer).
@@ -346,50 +502,11 @@ registerModule(
     }
 
     const adapterFor = (gameId) => ({
+      ...play.adapter,
       items: () => deal(gameId),
       demo: (r = rand) => demoItem(gameId, r),
-      empty: () => 'There are no questions for this game yet.',
-      entry: () => (dealt && dealt.kind === 'order' ? 'letters' : null),
-      ask(it, c) {
-        const pre = session.askPrefix();
-        if (it.kind === 'odd') return pre + fill(c.askOdd, { list: listWords(it.tiles) });
-        if (it.kind === 'count') return pre + c.askCount;
-        if (it.kind === 'next') return pre + fill(c.askNext, { list: it.seq.join(', ') });
-        return pre + (studied ? c.askPick : fill(c.askStudy, { list: it.seq.join(', ') }));
-      },
-      candidates(it, c, r) {
-        if (it.kind === 'odd') return uniq(it.tiles);
-        if (it.kind === 'count' || it.kind === 'next') return shuffle(numberOptions(answerOf(it)).map(String), r);
-        return [];
-      },
-      offer(it, cand, c) {
-        return it.kind === 'odd' ? fill(c.offerOdd, { candidate: cand }) : fill(c.offerNumber, { candidate: cand });
-      },
-      judge: (it, v) => judgeItem(it, v),
-      hint(it, n, c) {
-        if (it.kind === 'odd') {
-          if (n === 1) return fill(c.hintSame, { same: it.same });
-          if (n === 2) return fill(c.hintLetter, { letter: it.odd.charAt(0).toUpperCase() });
-          return '';
-        }
-        if (it.kind === 'count' || it.kind === 'next') {
-          const a = Number(answerOf(it));
-          const wrong = numberOptions(a).filter((x) => x !== a);
-          if (it.kind === 'next' && n === 1) return it.rule;
-          const x = wrong[it.kind === 'next' ? n - 2 : n - 1];
-          return x == null ? '' : fill(c.hintNot, { x });
-        }
-        if (n === 1) return fill(c.hintFirst, { x: it.seq[0] });
-        if (n === 2 && it.seq.length > 2) return fill(c.hintFirstTwo, { x: it.seq[0], y: it.seq[1] });
-        return '';
-      },
-      answer: (it) => answerOf(it),
       explain(it, answer, c) {
-        let line;
-        if (it.kind === 'odd') line = fill(c.explainOdd, { odd: it.odd, same: it.same });
-        else if (it.kind === 'count') line = fill(c.explainCount, { n: it.n });
-        else if (it.kind === 'next') line = fill(c.explainNext, { answer: it.answer, rule: it.rule });
-        else line = fill(c.explainOrder, { list: it.seq.join(', ') });
+        let line = play.adapter.explain(it, answer, c);
         // The last question of a round: its score, counting this answer if it was right.
         if (roundAsked >= roundTotal()) {
           const right = roundRight + (judgeItem(it, answer) === true && !isRevealing() ? 1 : 0);
@@ -397,93 +514,12 @@ registerModule(
         }
         return line;
       },
-      maxEntry: (it) => (it.kind === 'order' ? it.seq.length : 0),
-      vocab(it) {
-        if (it.kind === 'odd') return uniq(it.tiles);
-        if (it.kind === 'count' || it.kind === 'next') {
-          const a = Number(answerOf(it));
-          const out = [];
-          for (let x = Math.max(0, a - 5); x <= a + 5; x++) out.push(numberWord(x));
-          return out;
-        }
-        return studied ? [...it.picks, 'undo', 'back'] : [...READY];
-      },
-      heardText: (v) => {
-        const it = dealt;
-        if (it && it.kind === 'order') return namesOf(it, String(v)).join(', ');
-        return String(v);
-      },
-      fromVoice(it, { text, raw }, c) {
-        if (it.kind === 'count' || it.kind === 'next') { const n = parseNumber(raw); return n == null ? null : { value: String(n) }; }
-        if (it.kind === 'odd') return text ? { value: text } : null;
-        if (!studied) return READY.has(text) ? { command: 'ready' } : { note: c.studyFirstLine };
-        if (text === 'undo' || text === 'back') return { command: 'erase' };
-        const codes = codesFromSpeech(it, text);
-        if (!codes) return null;
-        return codes.length >= it.seq.length ? { value: codes.slice(0, it.seq.length) } : { append: codes };
-      },
-      command(cmd) {
-        if (cmd === 'ready') return markStudied() ? 'ask' : true;
-        return null;
-      },
-      unknownLine(value, c) {
-        if (dealt && dealt.kind === 'odd') return fill(c.notAnOption, { heard: value });
-        return c.notCaughtLine;
-      },
     });
     const games = Object.fromEntries(GAMES.map((g) => [g, adapterFor(g)]));
 
-    // ---- the view ----
-    const label = (name) => `${shapeSvg(name)}<span>${esc(name)}</span>`;
-    const tileBtn = (v, inner) => `<button type="button" class="qz-pick bb-tile" data-pick="${esc(v)}">${inner}</button>`;
-    const numberTiles = (s) => `<div class="qz-picks" data-choices>${(s.candidates || []).map((v) => `<button type="button" class="qz-pick" data-pick="${esc(v)}">${esc(v)}</button>`).join('')}</div>`;
-    const seqItem = (name, i, empty = false) => `<li${empty ? ' data-empty' : ''} data-slot="${i}">${empty ? '' : shapeSvg(name)}${empty ? '?' : esc(name)}<small>${i + 1}</small></li>`;
-
+    // ---- the view: the pictures are the play's; turns, rounds and points are this module's ----
     const view = {
-      askHtml(s) {
-        const it = s.item;
-        if (it.kind === 'odd') return esc('Which one is different?');
-        if (it.kind === 'count') return esc('How many dots?');
-        if (it.kind === 'next') return esc('What comes next?');
-        return esc(studied ? 'Pick them in the same order' : 'Remember these, in order');
-      },
-      left(s) {
-        const it = s.item;
-        if (it.kind === 'odd') {
-          return `<div class="bb-tiles" data-tiles>${it.tiles.map((t) => tileBtn(t, it.shapes ? label(t) : esc(t))).join('')}</div>`;
-        }
-        if (it.kind === 'count') {
-          const dots = hidden ? '<p class="bb-hidden" data-hidden>?</p>'
-            : `<div class="qz-dots" data-count data-dots>${it.rows.map((n) => `<div class="qz-dotrow">${'<span class="qz-dot"></span>'.repeat(n)}</div>`).join('')}</div>`;
-          return `<div class="bb-stack">${dots}${numberTiles(s)}</div>`;
-        }
-        if (it.kind === 'next') {
-          const seq = it.seq.map((x) => `<li>${esc(x)}</li>`).join('');
-          return `<div class="bb-stack"><ul class="bb-seq" data-seq>${seq}<li data-empty>?</li></ul>${numberTiles(s)}</div>`;
-        }
-        if (!studied) return `<ul class="bb-seq" data-study>${it.seq.map((x, i) => seqItem(x, i)).join('')}</ul>`;
-        const got = pickedNames(it, s.entry);
-        return `<ul class="bb-seq" data-slots>${it.seq.map((_, i) => seqItem(got[i] || '', i, !got[i])).join('')}</ul>`;
-      },
-      board(s) {
-        const it = s.item;
-        if (!it || it.kind !== 'order') return [];
-        if (!studied) return [[{ view: 'ready', label: 'Ready' }]];
-        const used = new Set(String(s.entry || '').split(''));
-        const rows = it.picks.map((p, i) => ({ key: codeOf(i), label: p })).filter((k) => !used.has(k.key)).map((k) => [k]);
-        return [...rows, [{ cmd: 'erase', label: 'Undo' }]];
-      },
-      entryHtml: () => '',
-      onKey(k, a) {
-        if (k.view === 'ready' && markStudied()) a.engine.press('repeat');
-      },
-      onDeal(item) { startLook(item); },
-      pairHtml(s) {
-        const it = s.item;
-        if (it.kind === 'odd') return `<div class="wg-pair" data-pair>${shapeSvg(it.odd)}<span>${esc(it.odd.toUpperCase())}</span></div>`;
-        if (it.kind === 'order') return `<div class="wg-pair" data-pair>${esc(it.seq.join(', ').toUpperCase())}</div>`;
-        return `<div class="wg-pair" data-pair>${esc(answerOf(it))}</div>`;
-      },
+      ...play.view,
       turnHtml: (s) => session.turnHtml(s, s.item ? ladderGame(s.item.kind) : null),
       onResult(r) {
         if (r.right) roundRight += 1;
@@ -494,14 +530,14 @@ registerModule(
       scoreLine: () => session.scoreDetail() || `${roundRight} of ${roundAsked} right this round.`,
       pointNote: (game, item) => `brain games: ${item.kind}`,
       onConfig: (c) => { cfgNow = c; ladderRows.onConfig(c); },
-      init(a) { api = a; ensureStyle(ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null)); },
-      destroy: () => { stopLook(); session.destroy(); ladderRows.destroy(); },
+      init(a) { api = a; play.ensureStyle(ctx.mount?.ownerDocument || (typeof document !== 'undefined' ? document : null)); },
+      destroy: () => { play.stopLook(); session.destroy(); ladderRows.destroy(); },
     };
 
     const inner = quizModule({ type: GAME, title: 'Brain games', scoreLabel: 'Brain games: right answers',
       games, defaults: DEFAULTS, gameKey: 'game', view, startGate: true, autostart: DEFAULTS.autostart })(ctx);
     inner.__session = session;
-    inner.__state = () => ({ studied, hidden, roundNo, roundAsked, roundRight, dealt });
+    inner.__state = () => ({ ...play.state(), roundNo, roundAsked, roundRight });
     return inner;
   },
 );

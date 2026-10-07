@@ -147,6 +147,8 @@ const view = {
   explainHtml: (s) => esc(`${up(s.pair.answer)}: ${spelledOut(s.pair.answer)}`),
   pointNote: (game, item) => `spelling: ${item.word}`,
 };
+// The question and its pictures, for another host to ask the same words (Quiz mix, modules/quiz_mix.js).
+export { adapter as SPELLING_ADAPTER, view as SPELLING_VIEW };
 
 registerModule(
   { type: GAME, title: 'Spelling', core: 'new',

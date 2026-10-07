@@ -72,6 +72,7 @@ import '../modules/helper.js';       // 2026-10-04: Nimrod at the bottom, over a
 import '../modules/edit_options.js'; // 2026-10-02: the panel editor's options (new core; described, so imported)
 import '../modules/themes.js';       // 2026-10-06: "Themes", the theme gallery as a panel (new core; described, so imported)
 import '../modules/brain_games.js';
+import '../modules/quiz_mix.js';     // 2026-10-06: Quiz mix, every kind of question round by round (new core)
 import '../modules/name_that.js';
 import '../modules/karaoke.js';
 import '../modules/solitaire.js';
@@ -183,8 +184,9 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-09-30: row 2.37's `note` and `solitaire` are built on the new core.
   // 2026-09-30: row 2.37 item 10's `brickbreaker` and `rhythm` are built on the new core.
   const PORTED = ['avatar', 'brain_games', 'brickbreaker', 'button', 'calculator', 'card_sort', 'devices', 'helper', 'karaoke', 'library', 'name_that', 'nimrod', 'note',
-    'options', 'people', 'profile', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'themes', 'think_games', 'voice_model', 'voice_review', 'weather', 'whats_new',
+    'options', 'people', 'profile', 'quiz_mix', 'rhythm', 'room', 'scoreboard', 'simple_math', 'solitaire', 'spelling', 'themes', 'think_games', 'voice_model', 'voice_review', 'weather', 'whats_new',
     'word_builder', 'word_games'];
+  // 2026-10-06: `quiz_mix` (Quiz mix, every kind of question round by round) is built on the new core.
   // 2026-10-06: `themes` (the theme gallery as a panel, the ⚙ menu's Theme row's list) is built on the new core.
   // 2026-10-04: `people` ("Your people", the landing) and `helper` (Nimrod at the bottom) are built on the new core.
   // 2026-10-04: `voice_model` (the voice-model steps, one at a time, in the AI set) is built on the new core.
@@ -195,7 +197,7 @@ section('*** coreReport — which core every module runs on, Task 4 of the conso
   // 2026-10-01: row 2.45's `think_games` (the SLP exercises) is built on the new core.
   // 2026-09-30: row 2.37's `weather` is built on the new core.
   // 2026-09-30: row 2.44's `voice_review` (the voice recordings kept on this screen) is built on the new core.
-  check('exactly thirty modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, card_sort, devices, helper, karaoke, library, name_that, nimrod, note, options, people, profile, rhythm, room, scoreboard, simple_math, solitaire, spelling, themes, think_games, voice_model, voice_review, weather, whats_new, word_builder and word_games',
+  check('exactly thirty-one modules in today’s real registry are on the new core: avatar, brain_games, brickbreaker, button, calculator, card_sort, devices, helper, karaoke, library, name_that, nimrod, note, options, people, profile, quiz_mix, rhythm, room, scoreboard, simple_math, solitaire, spelling, themes, think_games, voice_model, voice_review, weather, whats_new, word_builder and word_games',
     r.new.join(',') === PORTED.join(',') && r.legacy.length === manifests.length - PORTED.length,
     `legacy=${r.legacy.length} new=${r.new.join(',')} total=${manifests.length}`);
   check('counts match the arrays, not just each other', r.counts.legacy === r.legacy.length

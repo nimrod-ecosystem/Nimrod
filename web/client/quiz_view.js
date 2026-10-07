@@ -141,7 +141,8 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *                      onResult(r, api)   one finished question (quiz_flow.js `onResult`)
  *                      allowAward(p)      false keeps a right answer from paying points
  *                      scoreDetail(s), scoreLine(s)  the published detail / the panel's own line
- *                      onKey(k, api)      a board key carrying `view` (not `key`/`cmd`): the view's own }
+ *                      onKey(k, api)      a board key carrying `view` (not `key`/`cmd`): the view's own
+ *                      doneHtml(s, cfg)   more to show when the sitting has ended (Quiz mix's final table) }
  *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
  *                    drive the same moves (Math keeps `algebra/submit` answering as select)
  *   spec.startGate   true: open waiting for Start (the header). Absent = starts at once, as before.
@@ -548,7 +549,10 @@ export function quizModule(spec) {
         st = `<div class="wg-right" data-another>${shown}${btns(stops, s.highlight)}${scoreHtml(s)}</div>`;
       } else if (s.phase === 'done') {
         ask = esc(cfg.doneLine);
-        st = `<div class="wg-right">${scoreHtml(s)}${btns(stops, s.highlight)}</div>`;
+        // `view.doneHtml` (Quiz mix): what a finished game shows above Play again (its final table).
+        let done = '';
+        try { done = view.doneHtml ? String(view.doneHtml(s, cfg) || '') : ''; } catch (err) { console.error(`${type}: done`, err); }
+        st = `<div class="wg-right">${done}${scoreHtml(s)}${btns(stops, s.highlight)}</div>`;
       }
       let turn = '';
       try { turn = view.turnHtml ? String(view.turnHtml(s, cfg) || '') : ''; }
