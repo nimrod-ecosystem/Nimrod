@@ -309,6 +309,16 @@
 .chp [data-on="1"] { outline: 4px solid var(--scan-ring, var(--focus, var(--link, Highlight))); outline-offset: 2px; }
 .chp-row[data-on="1"] { background: var(--surface-alt, Canvas); }
 .chp-btn[data-on="1"]::before, .chp-tile[data-on="1"] .chp-name::before { content: "\25B8\00a0"; }
+/* (themes, 2026-10-06) A THEME GALLERY: each tile a still of the theme (theme_gallery.js draws it, at a panel's
+ * proportions, scaled to the tile) over a thin strip of its colours. The still's box is the theme's own until the
+ * still is drawn (`--surface-alt` of the page, a calm grey square, never a flash of white). The search, Order and
+ * Filters above the tiles are sort_filter.js's, the Modules library's own controls. */
+.chp-tile.chp-gal { justify-content: flex-start; padding: 5px; }
+.chp-still { position: relative; display: block; width: 100%; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden;
+  background: var(--surface-alt, Canvas); border: 1px solid var(--border, currentColor); }
+.chp-swatches.chp-strip { height: 10px; border-radius: 5px; }
+.chp-gallery .chp-tools { margin: 0; }
+.chp-gallery .sf-row { padding: 3px; }
 /* THE DIALOG, for a host that draws its rows itself (openChoiceDialog). */
 .chp-dialog { position: fixed; inset: 0; z-index: var(--z-menus, 1000); display: flex; align-items: center; justify-content: center;
   padding: 16px; background: color-mix(in srgb, var(--text, CanvasText) 35%, transparent); }

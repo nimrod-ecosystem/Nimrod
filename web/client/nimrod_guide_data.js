@@ -274,9 +274,10 @@ const NODES = [
   {
     id: 'theme', title: 'Your theme',
     say: 'Your theme is the colours and the look of everything: the background, the panels and the words. The '
-      + 'settings beside me are open on Theme: pick one and the whole dashboard changes. There are many more '
-      + 'settings in the settings menu, in tabs: sound, display, devices, people. Point at any setting and I '
-      + 'will tell you what it does.',
+      + 'settings beside me are open on Theme: each one shows a picture of how it looks, and the seasons and the '
+      + 'holidays are there too. Pick one and the whole dashboard changes. There are many more settings in the '
+      + 'settings menu, in tabs: sound, display, theme, devices, people. Point at any setting and I will tell you '
+      + 'what it does.',
     choices: withKeys([
       { label: 'Show me the settings menu’s tabs', to: 'settings-tabs' },
       { label: 'Make the panels see-through or solid', to: 'look' },
@@ -284,18 +285,19 @@ const NODES = [
     ]),
     acts: [
       { kind: 'settings-page', page: 'sc-theme', label: 'Show the themes', auto: true },
-      { kind: 'menu-tab', tab: 'display', label: 'Open the settings menu on Display' },
+      { kind: 'menu-tab', tab: 'theme', label: 'Open the settings menu on Theme' },
     ],
   },
   {
     id: 'settings-tabs', title: 'The settings menu',
     say: 'The settings menu opens from the gear on the bar. Its first tab is the panel you picked; then Sound, '
-      + 'Display, Devices and People. At the top, “Settings for” chooses which panel, and “How much this menu '
+      + 'Display, Theme, Devices and People. At the top, “Settings for” chooses which panel, and “How much this menu '
       + 'shows” keeps the rarer settings out of the way until you want them. A switch steps through the tabs '
       + 'from the Tab row, and you can say “next tab”.',
     choices: withKeys([
       { label: 'Sound', to: 'tab-audio' },
       { label: 'Display', to: 'tab-display' },
+      { label: 'Theme', to: 'theme' },
       { label: 'Devices', to: 'devices' },
       { label: 'People', to: 'tab-people' },
       BACK_TO_START,
@@ -311,8 +313,8 @@ const NODES = [
   },
   {
     id: 'tab-display', title: 'Display',
-    say: 'The Display tab has the colours, the panel backgrounds, and the slow drift that keeps a screen left on '
-      + 'all day from burning in.',
+    say: 'The Display tab has the panel backgrounds, the space between them, movement and flashing, and the slow '
+      + 'drift that keeps a screen left on all day from burning in. The theme has a tab of its own, next to it.',
     choices: withKeys([{ label: 'Another tab', to: 'settings-tabs' }, BACK_TO_START]),
     acts: [{ kind: 'menu-tab', tab: 'display', label: 'Open the Display tab' }],
   },

@@ -426,7 +426,9 @@ const logText = (r) => r.q('[data-log]').textContent;
         // 8 since 2026-10-02: "The settings menu" (its tabs and Switch module, actions.js MENU_ACTIONS).
         const { MENU_ACTIONS } = await import('../actions.js');
         check('*** the settings menu’s tabs and "Switch module" are pickable ***',
-          MENU_ACTIONS.length === 9 && MENU_ACTIONS.every((a) => vals(inGroup('The settings menu')).includes(a.id)));
+          // (themes, 2026-10-06: ten - "Settings menu: theme", the new Theme tab.)
+          // (players, 2026-10-06, deliberately: eleven - "Settings menu: players", the new Players tab.)
+          MENU_ACTIONS.length === 11 && MENU_ACTIONS.every((a) => vals(inGroup('The settings menu')).includes(a.id)));
         check('the groups come AFTER the everyday list, never before it',
           groups.length === 8 && groups.every((g) => g.previousElementSibling !== null));
         r.q('[data-new-action]').value = 'speech/near-miss-yes';

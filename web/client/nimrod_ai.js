@@ -331,8 +331,11 @@ export async function openAIStore(ctx) {
 // The built-in set is SAFE: it moves the guide and opens pages; nothing is changed or deleted.
 // ---------------------------------------------------------------------------------------------------
 const TAB_WORDS = { sound: 'audio', audio: 'audio', display: 'display', devices: 'devices', device: 'devices',
-  people: 'people', screen: 'screen', 'this-screen': 'screen', module: 'module', panel: 'module' };
-const TAB_LABELS = { module: 'this panel', audio: 'Sound', display: 'Display', devices: 'Devices', people: 'People', screen: 'This screen' };
+  people: 'people', screen: 'screen', 'this-screen': 'screen', module: 'module', panel: 'module',
+  theme: 'theme', themes: 'theme',   // themes (2026-10-06): the Theme tab
+  players: 'players', player: 'players' };   // players (2026-10-06): the Players tab
+const TAB_LABELS = { module: 'this panel', audio: 'Sound', display: 'Display', theme: 'Theme', devices: 'Devices', people: 'People',
+  players: 'Players', screen: 'This screen' };
 const PAGE_LABELS = { 'sc-theme': 'the themes', 'sc-mode': 'the game and learning settings', 'sc-device': 'this device' };
 
 function findNode(arg, nodes) {

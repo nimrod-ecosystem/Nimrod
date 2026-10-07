@@ -364,7 +364,9 @@ export const SWITCH_MODULE_TOPIC = 'shell/switch-module';
 //                        (so the Nimrod Game's lock is asked exactly as for a press).
 export const PANEL_LIST_TOPIC = 'shell/panel-list';
 export const PLACE_MODULE_TOPIC = 'shell/place-module';
-export const MENU_TAB_IDS = Object.freeze(['module', 'audio', 'display', 'devices', 'people', 'screen']);
+// (themes, 2026-10-06: 'theme', the Theme tab, beside Display.)
+// (players, 2026-10-06: 'players', the Players tab, after People.)
+export const MENU_TAB_IDS = Object.freeze(['module', 'audio', 'display', 'theme', 'devices', 'people', 'players', 'screen']);
 const menuTab = (tab, label) => ({ id: `menu/tab-${tab}`, label, topic: MENU_TAB_TOPIC, payload: { tab }, group: 'Settings menu' });
 export const MENU_ACTIONS = [
   { id: 'menu/next-tab', label: 'Settings menu: next tab', topic: MENU_TAB_TOPIC, payload: { dir: 1 }, group: 'Settings menu' },
@@ -372,8 +374,10 @@ export const MENU_ACTIONS = [
   menuTab('module', 'Settings menu: the selected panel'),
   menuTab('audio', 'Settings menu: sound'),
   menuTab('display', 'Settings menu: display'),
+  menuTab('theme', 'Settings menu: theme'),   // themes (2026-10-06)
   menuTab('devices', 'Settings menu: devices'),
   menuTab('people', 'Settings menu: people'),
+  menuTab('players', 'Settings menu: players'),   // players (2026-10-06)
   menuTab('screen', 'Settings menu: this screen'),
   { id: 'menu/switch-module', label: 'Switch the selected panel to another module', topic: SWITCH_MODULE_TOPIC, group: 'Settings menu' },
 ];
@@ -561,6 +565,9 @@ export const MODULE_VERBS = {
   // so a switch walks it with the menu's own four moves - next / prev the rows, select presses one (or steps
   // the tab row), back leaves a page or a list. Missing before, so a switch could not reach the panel at all.
   settings:      { next: 'settings/next', prev: 'settings/prev', select: 'settings/select', back: 'settings/back' },
+  // themes (2026-10-06): the Themes panel (modules/themes.js) is the ⚙ menu's theme gallery in a panel - its rows by
+  // next / prev, into a row and a tile by select, out of a row by back.
+  themes:        { next: 'themes/next', prev: 'themes/prev', select: 'themes/select', back: 'themes/back' },
   // THE MODULES LIBRARY (2026-10-02, library.js): next/prev walk its stops (one at a time, or a row at a time
   // with "Switch scanning: rows"), up/down a row of cards, select shows a thing then puts it here, back closes
   // the details (and, in another panel's place, puts that panel back).

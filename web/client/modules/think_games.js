@@ -208,6 +208,7 @@ registerModule(
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null,
       startFor: ladderRows.startFor, startMark: ladderRows.startMark,
+      playersHost: ladderRows.playersHost,   // players: the screen's players (player_picker.js)
       onChange: () => api?.render(),
       writer: async (req) => (await writeQuestions({ ai: getAI(), ...req })).items,
     });

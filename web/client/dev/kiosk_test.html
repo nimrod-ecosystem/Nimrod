@@ -396,8 +396,21 @@ const toTab = (m, id) => {
         'set:avatarMotion', 'set:masterVolume', 'edit-view', 'fullscreen', 'home', 'close'];
       const gone = BEFORE_4EDEEAE.filter((id) => !all.includes(id));
       check('*** tabs: every row the menu had before tabs (4edeeae, "The usual") is still in it ***', gone.length === 0, gone.join(','));
-      check('tabs: this screen offers The panel, Sound, Display, Devices, People and This screen (no host page here)',
-        tabsNow.map((t) => t.id).join() === 'module,audio,display,devices,people,screen', JSON.stringify(tabsNow));
+      // (themes, 2026-10-06, deliberately: a Theme tab beside Display - the Theme row, and the seasons rows when they
+      // show, moved there from Display. Mike: "its own themes module that is also a tab on the settings menu".)
+      // (players, 2026-10-06, deliberately: a Players tab after People - who is playing on this screen, the shared player
+      // picker. Mike: "Players should be its own tab in settings.")
+      check('tabs: this screen offers The panel, Sound, Display, Theme, Devices, People, Players and This screen (no host page here)',
+        tabsNow.map((t) => t.id).join() === 'module,audio,display,theme,devices,people,players,screen', JSON.stringify(tabsNow));
+      {
+        const pl = kiosk.menu.items().filter((i) => i.tab === 'players');
+        const row = pl.find((i) => i.id === 'screen-players');
+        check('*** players: the Players tab holds the screen\'s one "Players" row, which opens the player picker ***',
+          pl.length === 2 && !!row && !!row.players && row.players.follow === false && !row.disabled
+          && /Just/.test(row.hint || ''), JSON.stringify(pl.map((i) => [i.id, i.label, i.hint])));
+      }
+      check('*** themes: the Theme row is on the Theme tab, not Display ***',
+        (placed.get('set:theme') || []).join() === 'theme', JSON.stringify(placed.get('set:theme')));
       kiosk.menu.showTab('module');
       kiosk.menu.focusRow('tabs');
       const lapStops = [];
@@ -425,7 +438,9 @@ const toTab = (m, id) => {
       const oldStops = kiosk.menu.items().filter((i) => i.kind === 'item' && !i.disabled
         && !['tabs', 'subject-pick', 'switch-module', 'edit-panel', 'promote', 'game', 'user-folders', 'lesson-topics',
           'claude-page', 'reviews-page', 'screen-lock', 'screen-lock-pin', 'set:barQuietMs', 'set:barShowsItself',
-          'person:start'].includes(i.id));
+          'person:start', 'screen-players'].includes(i.id));
+      // ('screen-players', 2026-10-06, player_picker.js: the Players tab's one row. Outside the panel's lap; left out here
+      // DELIBERATELY, like 'person:start', so the old rows stay 40. Checked on its own above.)
       // ('person:start', 2026-10-06, adaptive_play.js usualStartField: the person's "Usual starting level for games" on the
       // People tab. Outside the panel's lap; left out here so the old rows stay 40.)
       // ('set:barQuietMs' and 'set:barShowsItself', 2026-10-06, bar_toggle.js: "The bar" on the Devices tab -- how long the

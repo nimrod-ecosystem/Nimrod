@@ -53,6 +53,7 @@ import { VERBS, verbTopic, MENU_TAB_TOPIC } from './actions.js';
 import { swatchesHTML } from './color_picker.js';
 import { mountPicturePicker } from './picture_picker.js';
 import { mountChoicePicker } from './choice_picker.js';
+import { mountPlayerPicker } from './player_picker.js';   // players (2026-10-06)
 import { normalizeField, fieldItems, fieldValue, displayValue, opensPicker, chooseModeOf, PICKER_OVER } from './settings_fields.js';
 
 // ---------------------------------------------------------------------------------
@@ -507,6 +508,9 @@ export function mountSettings(root, {
   // function returning one, read at every press - the host answers from the PERSON's row, where "How
   // you choose things" lives. Absent: 'point', so nobody steps through twelve themes unless they asked.
   chooseMode = 'point',
+  // players (2026-10-06): WHO THE PLAYER PICKER LISTS, read when a players row is pressed: a function returning
+  // `{ people, self, screenSeats, guests }` (player_picker.js mountPlayerPicker). Absent: guests only.
+  playerHost = null,
   // More options than this and a choice row opens the picker (in 'point'). Argued at PICKER_OVER.
   pickerOver = PICKER_OVER,
   documentRef = (typeof document !== 'undefined' ? document : null),
@@ -529,6 +533,8 @@ export function mountSettings(root, {
   // THE PICKER, while a picture row or a long choice row has it open (see "PICTURE ROWS" and "CHOICE
   // ROWS" below), or null. Either kind answers the same four moves.
   let picker = null;
+  // (themes) The row whose list stays open after a choice (openChoice's `stay`), or null.
+  let stayId = null;
   // An open page's own moves, when its `render` handed some back (see openPage), or null.
   let pageCtl = null;
   let items = [];
@@ -713,6 +719,12 @@ export function mountSettings(root, {
     // rather than floating under whatever row took its place.
     if (editing && !items.some((it) => it.id === editing.id && it.edit)) editing = null;
     paint();
+    // (themes) A list kept open after a choice (`stay`, the Themes panel) marks the value as it is NOW: a choice made
+    // in the ⚙ menu or on another screen shows here too.
+    if (picker && stayId && page === '__choice') {
+      const it = allItems.find((x) => x.id === stayId) || items.find((x) => x.id === stayId);
+      if (it && it.choice) { try { picker.setValue?.(it.choice.value); } catch { /* an old picker */ } }
+    }
   }
 
   const editInput = () => listEl.querySelector('[data-edit-input]');
@@ -739,7 +751,7 @@ export function mountSettings(root, {
       // cat, `game/cat_steps.js`) needs the name.
       // A row that OPENS a list (a long choice, a picture) says so before it is pressed: the marker for the
       // eye (settings.css `.st-opens`), `aria-haspopup` for a screen reader.
-      const opens = !it.disabled && (opensList(it) || !!it.picture);
+      const opens = !it.disabled && (opensList(it) || !!it.picture || !!it.players);   // players
       const row = `<button class="st-item${on ? ' on' : ''}${opens ? ' st-opens' : ''}" data-n="${n}" data-id="${esc(it.id)}" type="button"${dis}
         aria-current="${on ? 'true' : 'false'}"${it.edit ? ` aria-expanded="${isEditing ? 'true' : 'false'}"` : ''}${opens ? ' aria-haspopup="dialog"' : ''}>
         <span class="st-label">${esc(it.label)}</span>
@@ -876,7 +888,42 @@ export function mountSettings(root, {
   // `commit()` - the host's `onStep`, the one write path - and the list comes back on that row, showing it.
   // A person who steps ('step') never sees it: `select` steps the row, as it always has.
   // ---------------------------------------------------------------------------------
-  function openChoice(item) {
+  // (themes, 2026-10-06) `stay`: THE LIST STAYS OPEN AFTER A CHOICE - for a menu drawn in a panel whose whole job is
+  // that one list (the Themes panel, modules/themes.js: try a theme, see it on the screen, try another). Honoured
+  // only `asPanel`: the ⚙ menu is in front of everything, and a list there with no "Keep …" would be a list somebody
+  // cannot leave. The panel has no "Keep …" either (it is not in front of anything; its host has its own way out),
+  // and a change made anywhere else (the ⚙ menu, another screen) shows in it at the next repaint (`render`).
+  // players (2026-10-06): A PLAYERS ROW (settings_fields.js PLAYERS) opens the shared player picker where the other
+  // pickers open, driven by the same four moves; Done or a "Use" choice commits through the row's `commit()`.
+  function openPlayers(item) {
+    if (!item || !item.players) return null;
+    if (editing) editing = null;
+    if (picker) closePage();
+    page = '__players';
+    listEl.hidden = true;
+    pageEl.hidden = false;
+    pageEl.innerHTML = '<div data-page-body data-players-page></div>';
+    const id = item.id;
+    const fresh = items.find((x) => x.id === id) || item;
+    const host = safeCall(playerHost, {}) || {};
+    picker = mountPlayerPicker(pageEl.querySelector('[data-page-body]'), {
+      ...host,
+      ...fresh.players,
+      onPick: (v) => {
+        const it = items.find((x) => x.id === id) || allItems.find((x) => x.id === id) || fresh;
+        let wrote = false;
+        try { wrote = !!it.commit?.(v); } catch (err) { console.warn('settings: commit threw', err); }
+        closePage();
+        if (wrote) onSelect?.(it);
+        if (open) { render(); focusRow(id); grab(); }
+      },
+      onCancel: () => { closePage(); if (open) focusRow(id); grab(); },
+    });
+    grab();
+    return item;
+  }
+
+  function openChoice(item, { stay = false } = {}) {
     if (!item || !item.choice) return null;
     if (editing) editing = null;
     if (picker) closePage();
@@ -885,14 +932,22 @@ export function mountSettings(root, {
     pageEl.hidden = false;
     pageEl.innerHTML = '<div data-page-body data-choice-page></div>';
     const id = item.id;
+    const keep = !!(stay && asPanel);
+    stayId = keep ? id : null;
     // The row as it is NOW (a repaint may have rebuilt it since this one was drawn).
     const fresh = items.find((x) => x.id === id) || item;
     picker = mountChoicePicker(pageEl.querySelector('[data-page-body]'), {
       ...fresh.choice,
+      ...(keep ? { cancel: false } : {}),
       onPick: (v) => {
-        const it = items.find((x) => x.id === id) || fresh;
+        const it = items.find((x) => x.id === id) || allItems.find((x) => x.id === id) || fresh;
         let wrote = false;
         try { wrote = !!it.commit?.(v); } catch (err) { console.warn('settings: commit threw', err); }
+        if (keep) {
+          if (wrote) onSelect?.(it);
+          if (open) render();
+          return;
+        }
         closePage();
         if (wrote) onSelect?.(it);
         if (open) { render(); focusRow(id); grab(); }
@@ -927,6 +982,7 @@ export function mountSettings(root, {
     if (item.subjectPick) { stepSubject(1); render(); return item; }
     if (item.page) { openPage(item.page); return item; }
     if (item.picture) return openPicture(item);
+    if (item.players) return openPlayers(item);   // players
     // A long choice opens its list; a short one (or anybody stepping) falls through to `run()`, the step.
     if (opensList(item)) return openChoice(item);
     // A text row opens its box. `onSelect` is not told yet: nothing has been chosen until the
@@ -960,7 +1016,7 @@ export function mountSettings(root, {
 
   function select() {
     if (!open) return null;
-    if (picker) { picker.select(); return { id: page === '__choice' ? 'choice' : 'picture' }; }
+    if (picker) { picker.select(); return { id: page === '__choice' ? 'choice' : page === '__players' ? 'players' : 'picture' }; }
     if (page && pageCtl?.select) { pageCtl.select(); return { id: 'page' }; }
     if (page) { closePage(); return { id: 'page-back' }; }
     // Select while typing is "done": it saves, the same as Enter.
@@ -1017,6 +1073,7 @@ export function mountSettings(root, {
   }
 
   function closePage() {
+    stayId = null;
     if (picker) { const p = picker; picker = null; try { p.destroy(); } catch { /* already gone */ } }
     if (pageCtl) { const c = pageCtl; pageCtl = null; try { c.destroy?.(); } catch { /* already gone */ } }
     page = null;
@@ -1092,8 +1149,9 @@ export function mountSettings(root, {
   /** SHOW what row `id` holds (2026-10-03): its list (a choice or a picture), else its page, else the cursor
    *  on it - going to its tab first. It never STEPS a value, whatever the person's "How you choose things":
    *  somebody (Nimrod) asking the menu to show the themes is asking to see them, not to change one. Null when
-   *  there is no such row here. */
-  function openRow(id) {
+   *  there is no such row here. `{ stay: true }` (a menu drawn in a panel only): a list stays open after a choice
+   *  (openChoice's `stay`). */
+  function openRow(id, { stay = false } = {}) {
     if (!open || !id) return null;
     if (page) closePage();
     if (editing) editing = null;
@@ -1101,8 +1159,9 @@ export function mountSettings(root, {
     if (!focusRow(id)) return null;
     const it = items.find((x) => x.id === id);
     if (!it) return null;
-    if (it.choice && it.field) return openChoice(it);
+    if (it.choice && it.field) return openChoice(it, { stay });
     if (it.picture) return openPicture(it);
+    if (it.players) return openPlayers(it);   // players
     if (it.page) { openPage(it.page); return it; }
     return it;
   }

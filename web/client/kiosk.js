@@ -147,6 +147,8 @@ import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
 // The person's usual starting level for question games, on the People tab (2026-10-06, adaptive_play.js openUsualStart).
 import { openUsualStart } from './adaptive_play.js';
+// players (2026-10-06): who is playing on this screen, its own tab in the ⚙ menu (player_picker.js).
+import { SCREEN_PLAYERS_KEY, normalizeSeats, playersValueLabel, MAX_SEATS } from './player_picker.js';
 import { mountPackLoader } from './pack_loader.js';
 import { gameSettingsPage, GAME_SETTINGS_PAGE } from './unlocks.js';
 // "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
@@ -223,6 +225,7 @@ import './modules/pressgame.js';
 import './modules/call.js';
 import './modules/view.js';
 import './modules/settings.js';
+import './modules/themes.js';          // themes (2026-10-06): the theme gallery as a panel (the menu's Theme row's list)
 import './modules/nimrod.js';          // registers 'nimrod' (the guide, 2026-10-02)
 import './modules/devices.js';         // registers 'devices'
 import './modules/whats_new.js';       // registers 'whats_new' (patch notes)
@@ -1320,6 +1323,41 @@ export async function mountKiosk(root, {
   const menuViews = new Set();
   let viewSyncQueued = false;
 
+  // players (2026-10-06): WHO IS PLAYING ON THIS SCREEN, on the screen's own row (`screenPlayers`), set on the ⚙ menu's
+  // Players tab (`playersItems`) and read by every game whose own "Players" follows the screen (childCtx
+  // `screenPlayers`; adaptive_play.js resolvePlayers). Read lazily: `settings` and the people are declared below.
+  let playerPeople = null;                 // the people as the Players picker last listed them (names)
+  const screenPersonNow = () => { try { return personKnown.get().personId || personId || null; } catch { return null; } };
+  const screenPlayersHost = {
+    seats() {
+      let raw = null;
+      try { raw = (settings.get() || {})[SCREEN_PLAYERS_KEY]; } catch { raw = null; }
+      const seats = normalizeSeats(raw, { selfId: screenPersonNow(), max: MAX_SEATS });
+      // A person's name as this login knows them now, where the list has been read; else the name they were picked by.
+      return seats.map((s) => (s.kind === 'person' && Array.isArray(playerPeople)
+        ? { ...s, name: playerPeople.find((p) => p && p.id === s.id)?.name || s.name } : s));
+    },
+    self() {
+      let name = '';
+      try { name = (whoState && whoState.name) || ''; } catch { name = ''; }
+      return { id: screenPersonNow(), name };
+    },
+    subscribe(fn) {
+      const read = () => { try { return JSON.stringify((settings.get() || {})[SCREEN_PLAYERS_KEY] ?? null); } catch { return 'null'; } };
+      let sig = read();
+      let off = null;
+      try {
+        off = settings.subscribe?.(() => {
+          const now = read();
+          if (now === sig) return;
+          sig = now;
+          try { fn(); } catch (err) { console.error('kiosk: players', err); }
+        }) || null;
+      } catch { off = null; }
+      return () => { try { off?.(); } catch { /* gone */ } };
+    },
+  };
+
   const childCtx = (mod) => ({
     bus, user, profileId,
     // *** THE SETTINGS PANEL (modules/settings.js) MOUNTS THIS SCREEN'S OWN MENU (2026-10-03). *** Mike: "The
@@ -1462,6 +1500,11 @@ export async function mountKiosk(root, {
         cacheKey: `person:${user}:${pid}:${key}`, push, ...opts,
       });
     },
+    // players (2026-10-06): WHO IS PLAYING ON THIS SCREEN (the ⚙ menu's Players tab; player_picker.js). A game whose own
+    // "Players" says "This screen's players" reads these. `seats()`: in turn order, a person's name as this login
+    // knows them now; empty is the screen's person alone. `self()`: the screen's person. `subscribe(fn)`: told when
+    // the seats change.
+    screenPlayers: screenPlayersHost,
   });
 
   // *** "EVERY <MODULE> PANEL": THE MODULE LEVEL OF THE CHAIN (2026-10-02; settings.js "LEVELS"). ***
@@ -3090,9 +3133,11 @@ export async function mountKiosk(root, {
   //                 things, what hiding it does), then the screen's master and mixer, then Amplify.
   //   Display       Mike's "video": colours, backgrounds, burn-in, movement and flashing, the room, the
   //                 background's own settings, subtitles.
+  //   Theme         (themes, 2026-10-06) the theme and everything about it, moved out of Display (MENU_TAB_DEFS).
   //   Devices       spoken commands and what they listen with, the voice recording, how long a switch
   //                 is held for the plain bar, "what can I press" / "why nothing happened", connections.
   //   People        who this screen is for, and the intercom.
+  //   Players       (players, 2026-10-06) who is playing on this screen right now (MENU_TAB_DEFS).
   //   This page     a host page's own rows (Home's Save, Save as, History...): only on such a page.
   //   This screen   its name, the dashboard rows, Edit and the Map, when something stops working, and
   //                 where a cold boot lands.
@@ -3109,6 +3154,8 @@ export async function mountKiosk(root, {
   const MENU_TAB = {
     module: tagTab('module'), audio: tagTab('audio'), display: tagTab('display'), devices: tagTab('devices'),
     people: tagTab('people'), page: tagTab('page'), screen: tagTab('screen'),
+    theme: tagTab('theme'),   // themes (2026-10-06)
+    players: tagTab('players'),   // players (2026-10-06)
   };
   const MENU_TAB_DEFS = () => [
     // (2026-10-02: with a LEVEL chosen in "Settings for", the first tab is that level's -- "This screen".)
@@ -3121,17 +3168,29 @@ export async function mountKiosk(root, {
     })() },
     { id: 'audio', label: 'Sound' },
     { id: 'display', label: 'Display' },
+    // themes (2026-10-06; Mike: "its own themes module that is also a tab on the settings menu"). The Theme row (its
+    // list is the theme gallery, the same list the Themes panel shows), "why this look" under it while it follows the
+    // seasons, the holiday rows, and "Wallpaper follows the sky outside" - every row about the theme, moved here from
+    // Display, each still in exactly one place. Beside Display, where they were. AGAINST a "Theme…" row left on
+    // Display that opens this tab: a second door to one row is a stop on every Display lap for something one press
+    // along the tab row already reaches. At "Just the essentials" it is the Theme row alone (the others are standard).
+    { id: 'theme', label: 'Theme' },
     { id: 'devices', label: 'Devices' },
     { id: 'people', label: 'People' },
+    // players (2026-10-06; Mike: "Players should be its own tab in settings"). Who is playing on this screen right now,
+    // for every game that has players (a game can still pick its own, in its own "Players" row). Beside People: it is
+    // about people. AGAINST folding it into People: that tab is who the SCREEN is for and what follows them; this one
+    // changes from one game to the next, and a tab of its own is one press along the tab row from anywhere.
+    { id: 'players', label: 'Players' },
     { id: 'page', label: 'This page' },
     { id: 'screen', label: 'This screen' },
   ];
   // Which tab (and section) each of the screen's own rows is on.
   const SCREEN_FIELD_TABS = {
-    theme: ['display', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],
+    theme: ['theme', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],   // themes: theme on Theme
     [SMALL_CLOCK_KEY]: ['display', 0],
-    [HOLIDAYS_KEY]: ['display', 0], [SKY_FOLLOW_KEY]: ['display', 0],   // seasons and the sky (sky.js)
-    ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['display', 0]])),   // seasons: one row per holiday
+    [HOLIDAYS_KEY]: ['theme', 0], [SKY_FOLLOW_KEY]: ['theme', 0],   // seasons and the sky (sky.js); themes: on Theme
+    ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['theme', 0]])),   // seasons: one row per holiday; themes: on Theme
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
@@ -3286,7 +3345,8 @@ export async function mountKiosk(root, {
     } catch { return []; }
   };
   const LEVEL_LOOK_FIELDS = () => [
-    { key: 'theme', label: 'Colours', kind: 'choice', level: 'essential',
+    // themes (2026-10-06): "Theme", not "Colours" (Mike: "Colours should change to theme"); the key is unchanged.
+    { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential',
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
     { key: 'panelSurface', label: 'Panel backgrounds', kind: 'choice', level: 'standard',
       options: [{ value: 'solid', label: 'Solid' }, { value: 'veil', label: 'See-through' }, { value: 'clear', label: 'Fully clear' }] },
@@ -3501,7 +3561,9 @@ export async function mountKiosk(root, {
     // there.
     // (2026-10-03: its list -- every theme a tile in its own colours, choice_picker.js -- is what the Settings
     // panel's old Theme page drew, so that page is now this row's own list: the guide's 'sc-theme' opens it.)
-    { key: 'theme', label: 'Colours', kind: 'choice', level: 'essential',
+    // (themes, 2026-10-06: called "Theme" now, on the Theme tab; its list is the theme gallery - a still of every
+    // theme, the holidays included, with search, order and filters - and the Themes panel shows the same list.)
+    { key: 'theme', label: 'Theme', kind: 'choice', level: 'essential',
       default: DEFAULT_THEME,
       options: listThemes().map((t) => ({ value: t.id, label: t.label })) },
     // *** HOW MUCH THIS MENU SHOWS — the switch, and its escape, in the same commit. ***
@@ -3851,6 +3913,63 @@ export async function mountKiosk(root, {
     });
     return rows.length ? [{ kind: 'heading', id: 'games-start-head', label: 'Games', ...MENU_TAB.people(3) },
       ...rows.map((it) => ({ ...it, id: `person:${String(it.id || '').replace(/^set:/, '')}`, ...MENU_TAB.people(3) }))] : [];
+  }
+
+  // ---- players (2026-10-06): THE PLAYERS TAB (MENU_TAB_DEFS argues the tab; player_picker.js the picker) ----------
+  // ONE ROW, "Players", on the screen's own row (`screenPlayers`): a press opens the shared player picker (how many, and
+  // who sits where: this login's people, the people connected to it, guests). Empty is the screen's person alone, which
+  // is what every game did before, so nothing changes for anybody who never opens it. STANDARD, not essential: the
+  // games' own "Players" rows are standard, and a menu kept to the essentials is one kept short for the person at the
+  // screen, not one somebody sets a game up from. [A guess, on Mike's list.]
+  const SCREEN_PLAYERS_FIELD = Object.freeze({
+    key: SCREEN_PLAYERS_KEY, label: 'Players', kind: 'players', follow: false, max: MAX_SEATS, level: 'standard',
+    note: 'Every game with players uses these, unless its own “Players” picks others.',
+  });
+  // The picker's people: as the person this screen is for sees them (their own "I call them" first), kept for names.
+  function playerHostNow() {
+    const self = screenPlayersHost.self();
+    return {
+      self,
+      screenSeats: screenPlayersHost.seats(),
+      guests: playerGuestsOnScreen(),
+      people: profiles.people
+        ? () => Promise.resolve(self.id ? profiles.people(self.id) : profiles.people())
+          .catch(() => profiles.people())      // a host whose list takes no viewer: the login's names
+          .then((list) => { playerPeople = list || []; return playerPeople; })
+        : null,
+    };
+  }
+  // Guest names already used on this screen (its own players and every panel's), offered again without typing.
+  function playerGuestsOnScreen() {
+    const out = [];
+    const add = (v) => { for (const s of normalizeSeats(v)) if (s.kind === 'guest') out.push(s.name); };
+    try { add((settings.get() || {})[SCREEN_PLAYERS_KEY]); } catch { /* not yet */ }
+    for (const r of menuPanelRecs()) { try { add(r?.state?.get?.()?.players); } catch { /* a panel without state */ } }
+    return out;
+  }
+  // A players row's words, with the screen's person's name and the people's names as this login knows them now.
+  function withPlayerNames(rows) {
+    const selfName = screenPlayersHost.self().name;
+    return rows.map((it) => {
+      if (!it || !it.players) return it;
+      const words = playersValueLabel(it.players.value, { follow: it.players.follow, selfName, people: playerPeople });
+      const note = it.field?.note;
+      // (A row following "every <it> panel" keeps saying so.)
+      const h = typeof it.hint === 'string' ? it.hint : '';
+      const follow = h.startsWith('Following: ') && h.includes(' — ') ? h.slice(0, h.indexOf(' — ') + 3) : '';
+      return { ...it, hint: follow + [words, note].filter(Boolean).join(' · ') };
+    });
+  }
+  function playersItems() {
+    if (torn) return [];
+    const t = MENU_TAB.players;
+    const rows = fieldItems([normalizeField(SCREEN_PLAYERS_FIELD)], {
+      values: () => { try { return settings.get() || {}; } catch { return {}; } },
+      level: complexity(),
+      onStep: (key, value) => { try { settings.set({ [key]: value }); } catch (err) { console.error('kiosk: players', err); } },
+    });
+    return rows.length ? [{ kind: 'heading', id: 'players-head', label: 'Who is playing on this screen', ...t(0) },
+      ...withPlayerNames(rows).map((it) => ({ ...it, id: 'screen-players', ...t(0) }))] : [];
   }
 
   // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
@@ -4770,6 +4889,7 @@ export async function mountKiosk(root, {
   // is no second list anywhere; a row added here is in both.
   const menuOptions = {
     chooseMode: chooseModeNow,
+    playerHost: () => playerHostNow(),   // players: who the player picker lists
     person: () => whoState,
     // The row under the who heading. It says what is true and, where the account has people
     // to choose between, opens the picker. Then the person's Voice section (voiceItems, above).
@@ -4791,7 +4911,7 @@ export async function mountKiosk(root, {
           ? 'nobody yet — their bindings and voice come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
-    })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems()],
+    })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems(), ...playersItems()],   // players: its own tab
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -5004,6 +5124,8 @@ export async function mountKiosk(root, {
       }
       // "See reviews…" under "Include unreviewed questions" (Trivia's), 2026-10-04 (`withReviewsLink`).
       withReviewsLink(items);
+      // players: a game's "Players" row names the people as this login knows them.
+      items.splice(0, items.length, ...withPlayerNames(items));
       // PAUSE / PLAY for this panel (2026-10-02; `playPauseSelected` argues it): only on a panel that can.
       if (canPausePanel(rec)) {
         const paused = pausedPanels.has(rec.id);

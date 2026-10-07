@@ -61,6 +61,10 @@ import { lockWords, poolLabel, MODE_OPTIONS, POINTS_DISCLAIMER } from './unlocks
 import { registerAIAction } from './nimrod_ai.js';
 import { PANEL_LIST_TOPIC, PLACE_MODULE_TOPIC } from './actions.js';
 import { CLAUDE_PAGE, elsewhereHTML, themeQrColours } from './page_links.js';
+// (themes, 2026-10-06) The search, the order and the filters are the shared ones now (sort_filter.js): Mike, "use
+// the setup that the modules module has as the global for things we want to sort and filter". Same rules, same
+// markup, same look; the library keeps its own data attributes, its own switch scan and its own saved choices.
+import { filterWith, sortWith, byText, searchBoxHTML, selectHTML, chipsHTML, ensureSortFilterCss } from './sort_filter.js';
 
 export const LIBRARY_TYPE = 'library';
 export const LIBRARY_TITLE = 'Modules';
@@ -102,6 +106,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   progress: ['tracking'], calculator: ['tools'], reading_log: ['tracking'], scoreboard: ['tracking', 'games'],
   voice_review: ['tracking'], nimrod: ['tools', 'ai'], devices: ['tools'], whats_new: ['tools'], library: ['tools'],
   profile: ['people', 'ai'], voice_model: ['ai', 'tools'],
+  themes: ['visual', 'tools'],   // (2026-10-06) the theme picker as a panel: something to look at, and a setting
   people: ['people'], helper: ['ai', 'tools'],
 });
 export function categoriesFor(entry) {
@@ -204,8 +209,8 @@ export function brickItems(doc) {
 // So they are in the library, findable under AI and by search, as "settings pages": not for a panel's place
 // (like furniture, said rather than hidden), each with the one way in that fits where you are.
 // ---------------------------------------------------------------------------------------------------
-const MENU_TAB_WORDS = Object.freeze({ module: 'This panel', audio: 'Sound', display: 'Display', devices: 'Devices',
-  people: 'People', screen: 'This screen' });
+const MENU_TAB_WORDS = Object.freeze({ module: 'This panel', audio: 'Sound', display: 'Display', theme: 'Theme',
+  devices: 'Devices', people: 'People', screen: 'This screen' });
 export const menuTabWord = (tab) => MENU_TAB_WORDS[tab] || String(tab || '');
 const PAGE_WHY_NOT ='A settings page, not a panel: it is opened, not put on a dashboard.';
 export const AI_PAGES = Object.freeze([
@@ -250,28 +255,32 @@ export function haystack(it) {
   return [it.title, it.lead, it.why, it.needs, it.note, it.type, it.id, kindLabel(it.kind), ...(it.cats || []).map(catLabel)]
     .filter(Boolean).join(' ').toLowerCase();
 }
+// The two facets, as sort_filter.js takes them: a category is a TAG (decision 3), "asks of them" is the catalog's `use`.
+export const LIBRARY_FACETS = Object.freeze([
+  Object.freeze({ id: 'category', label: 'Categories', any: 'all', test: (it, v) => (it.cats || []).includes(v) }),
+  Object.freeze({ id: 'use', label: 'Asks of them', any: 'any', test: (it, v) => it.use === v }),
+]);
 /** Every typed word must appear somewhere in the item's words, any order, any case. */
 export function filterItems(items, { category = 'all', use = 'any', query = '' } = {}) {
-  const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
-  return (items || []).filter((it) => {
-    if (category && category !== 'all' && !(it.cats || []).includes(category)) return false;
-    if (use && use !== 'any' && it.use !== use) return false;
-    if (!words.length) return true;
-    const h = haystack(it);
-    return words.every((w) => h.includes(w));
-  });
+  return filterWith(items, { query, text: haystack, facets: LIBRARY_FACETS, picked: { category, use } });
 }
+// The orders, as sort_filter.js takes them. `usage` (the ctx): { recent: [type...] newest first, counts: { type: n } }.
+// Ties go by name.
+const byName = byText((it) => it.title);
+const recentRank = (it, usage) => {
+  const recent = Array.isArray(usage && usage.recent) ? usage.recent : [];
+  const i = it.type ? recent.indexOf(it.type) : -1;
+  return i < 0 ? Infinity : i;
+};
+const useCount = (it, usage) => (it.type && Number(((usage && usage.counts) || {})[it.type])) || 0;
+const LIBRARY_SORTS = Object.freeze([
+  Object.freeze({ id: 'name', compare: byName }),
+  Object.freeze({ id: 'recent', compare: (a, b, u) => (recentRank(a, u) - recentRank(b, u)) || byName(a, b) }),
+  Object.freeze({ id: 'most', compare: (a, b, u) => (useCount(b, u) - useCount(a, u)) || byName(a, b) }),
+]);
 /** `usage`: { recent: [type...] newest first, counts: { type: n } }. Ties go by name. */
 export function sortItems(items, sort = 'name', usage = {}) {
-  const recent = Array.isArray(usage && usage.recent) ? usage.recent : [];
-  const counts = (usage && usage.counts) || {};
-  const byName = (a, b) => String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' });
-  const rank = (it) => { const i = it.type ? recent.indexOf(it.type) : -1; return i < 0 ? Infinity : i; };
-  const n = (it) => (it.type && Number(counts[it.type])) || 0;
-  const list = [...(items || [])];
-  if (sort === 'recent') return list.sort((a, b) => (rank(a) - rank(b)) || byName(a, b));
-  if (sort === 'most') return list.sort((a, b) => (n(b) - n(a)) || byName(a, b));
-  return list.sort(byName);
+  return sortWith(items, sort, LIBRARY_SORTS, usage);
 }
 
 // ---------------------------------------------------------------------------------------------------
@@ -454,23 +463,14 @@ const CSS = `
   cursor:pointer;min-height:40px}
 .lib-btn[disabled]{opacity:.55;cursor:default}
 .lib-btn.primary{border-color:var(--accent);font-weight:600}
-.lib-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.lib-tools input[type=search]{flex:1 1 9em;min-width:7em;padding:7px 10px;border-radius:10px;border:1px solid var(--border);
-  background:var(--bg,var(--surface))}
-.lib-tools select{padding:7px 8px;border-radius:10px;border:1px solid var(--border);background:var(--bg,var(--surface));max-width:100%}
-.lib-more{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.lib-more[hidden]{display:none}
+/* (themes, 2026-10-06) The search box, the Order list, the Filters row, the chip rows and the chips are drawn by
+   sort_filter.js and wear its look (.sf-*, the rules that were here, moved there unchanged). */
 .lib-small{font-size:.85rem;color:var(--text-muted)}
-.lib-row{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;flex:0 0 auto;padding:2px 2px 4px;scrollbar-width:thin}
-.lib-row[hidden]{display:none}
 .lib-row .lib-label{align-self:center;flex:0 0 auto}
-/* CHOSEN (a pressed chip, the selected card) is a 2px edge INSIDE, in the theme's --focus -- its accent, made to
-   clear 3:1 on every surface (theme.js); the raw --accent measured 2.83:1 at worst, in default (2026-10-04). The switch
-   cursor (.is-scan, below) is a ring OUTSIDE, offset, in --scan-ring: on a light theme the two share a hue, and
-   inside-edge vs. outside-ring is what tells "chosen" from "lit". */
-.lib-chip{flex:0 0 auto;border:1px solid var(--border);background:var(--surface-alt,var(--surface));border-radius:999px;
-  padding:5px 12px;cursor:pointer;min-height:36px;min-width:44px;white-space:nowrap}
-.lib-chip[aria-pressed=true]{border-color:var(--focus, var(--accent));font-weight:600;box-shadow:inset 0 0 0 1px var(--focus, var(--accent))}
+/* CHOSEN (the selected card) is a 2px edge INSIDE, in the theme's --focus -- its accent, made to clear 3:1 on every
+   surface (theme.js); the raw --accent measured 2.83:1 at worst, in default (2026-10-04). The switch cursor (.is-scan,
+   below) is a ring OUTSIDE, offset, in --scan-ring: on a light theme the two share a hue, and inside-edge vs.
+   outside-ring is what tells "chosen" from "lit". A pressed chip is the same edge (sort_filter.js). */
 .lib-grid{flex:1 1 auto;min-height:0;overflow:auto;display:grid;gap:8px;align-content:start;padding:2px;
   grid-template-columns:repeat(auto-fill,minmax(min(100%,var(--lib-card,150px)),1fr))}
 .lib-card{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:1px solid var(--border);
@@ -508,6 +508,7 @@ export function mountLibrary(root, {
 } = {}) {
   const doc = root.ownerDocument;
   ensureCss(doc);
+  ensureSortFilterCss(doc);
   const win = doc.defaultView;
   let torn = false;
   const base = () => (typeof items === 'function' ? (items() || []) : [...(items || [])]);
@@ -551,20 +552,22 @@ export function mountLibrary(root, {
   el.dataset.mode = mode;
   el.innerHTML = `
     <div class="lib-head" data-lib-head></div>
-    <div class="lib-tools">
-      <input type="search" data-lib-q placeholder="Search" aria-label="Search the library">
-      <select data-lib-sort aria-label="Order">${SORTS.map((s) => `<option value="${s.id}">${esc(s.label)}</option>`).join('')}</select>
+    <div class="lib-tools sf-tools">
+      ${searchBoxHTML({ attr: 'data-lib-q', label: 'Search the library' })}
+      ${selectHTML({ attr: 'data-lib-sort', label: 'Order', options: SORTS })}
       <button type="button" class="lib-btn" data-lib-act="more" aria-expanded="false">Filters…</button>
     </div>
-    <div class="lib-more" data-lib-more hidden>
-      <label class="lib-small">Asks of them <select data-lib-use>${USE_FILTERS.map((u) => `<option value="${u.id}">${esc(u.label)}</option>`).join('')}</select></label>
-      <label class="lib-small">The game <select data-lib-mode ${gate ? '' : 'disabled'}>${MODE_OPTIONS.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join('')}</select></label>
-      <label class="lib-small">Switch scanning <select data-lib-scan><option value="follow">As you choose things</option><option value="off">One at a time</option><option value="rows">Rows, then items</option></select></label>
-      <label class="lib-small">Cards <select data-lib-size><option value="small">Small</option><option value="medium">Medium</option><option value="large">Large</option></select></label>
-      <span class="lib-small" data-lib-disclaimer></span>
+    <div class="lib-more sf-more" data-lib-more hidden>
+      <label class="lib-small sf-small">Asks of them ${selectHTML({ attr: 'data-lib-use', options: USE_FILTERS })}</label>
+      <label class="lib-small sf-small">The game ${selectHTML({ attr: 'data-lib-mode', options: MODE_OPTIONS.map(([id, label]) => ({ id, label })), disabled: !gate })}</label>
+      <label class="lib-small sf-small">Switch scanning ${selectHTML({ attr: 'data-lib-scan', options: [{ id: 'follow', label: 'As you choose things' },
+        { id: 'off', label: 'One at a time' }, { id: 'rows', label: 'Rows, then items' }] })}</label>
+      <label class="lib-small sf-small">Cards ${selectHTML({ attr: 'data-lib-size', options: [{ id: 'small', label: 'Small' }, { id: 'medium', label: 'Medium' },
+        { id: 'large', label: 'Large' }] })}</label>
+      <span class="lib-small sf-small" data-lib-disclaimer></span>
     </div>
-    <div class="lib-row" data-lib-recent></div>
-    <div class="lib-row" data-lib-cats role="toolbar" aria-label="Categories"></div>
+    <div class="lib-row sf-row" data-lib-recent></div>
+    <div class="lib-row sf-row" data-lib-cats role="toolbar" aria-label="Categories"></div>
     <div class="lib-small lib-note" data-lib-note role="status" aria-live="polite"></div>
     <div class="lib-grid" data-lib-grid role="listbox" aria-label="Everything you can put here"></div>
     <div class="lib-detail" data-lib-detail hidden></div>`;
@@ -632,9 +635,8 @@ export function mountLibrary(root, {
     const rEl = $('[data-lib-recent]');
     rEl.hidden = !rec.length;
     rEl.innerHTML = rec.length ? `<span class="lib-small lib-label">Recent</span>${rec.map(({ it, hint }) =>
-      `<button type="button" class="lib-chip" data-lib-key="${esc(it.key)}" data-lib-recent-key="${esc(it.key)}" title="${esc(hint)}">${esc(it.title)}${hint === 'what this panel was' ? ' (was)' : ''}</button>`).join('')}` : '';
-    $('[data-lib-cats]').innerHTML = CATEGORIES.map((c) =>
-      `<button type="button" class="lib-chip" data-lib-cat="${c.id}" aria-pressed="${p.category === c.id}">${esc(c.label)}</button>`).join('');
+      `<button type="button" class="lib-chip sf-chip" data-lib-key="${esc(it.key)}" data-lib-recent-key="${esc(it.key)}" title="${esc(hint)}">${esc(it.title)}${hint === 'what this panel was' ? ' (was)' : ''}</button>`).join('')}` : '';
+    $('[data-lib-cats]').innerHTML = chipsHTML({ options: CATEGORIES, value: p.category, cls: 'lib-chip', attrOf: (c) => `data-lib-cat="${esc(c.id)}"` });
     const list = visible();
     $('[data-lib-grid]').innerHTML = list.length ? list.map((it) => cardHtml(it, detail && detail.key === it.key)).join('')
       : `<div class="lib-empty">Nothing matches. <button type="button" class="lib-btn" data-lib-act="clear">Show everything</button></div>`;
