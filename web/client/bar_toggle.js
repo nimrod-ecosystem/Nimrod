@@ -102,6 +102,75 @@ export const BAR_SELF_FIELD = Object.freeze({
   ]),
 });
 
+// *** BAR WHILE PLAYING (row 2.65, 2026-10-07). *** Mike, after playing Quiz mix: *"Pretty much every game has the issue
+// of the transport bar being a bit annoying. Maybe have a deactivate transport bar when playing setting."* Two parts.
+//
+// 1. THE CAUSE, MEASURED (bar_toggle_test, "bar while playing"): a touch on a Quiz mix answer tile brought the screen's
+//    own bar up, and brought a placed bar (Home's, floated over the panels) back from tucked. Both bars came up on ANY
+//    pointerdown, so every answer was also a summons. THE RULE: a press that lands on a module's own control (a
+//    button, a link, a field: `MODULE_CONTROL_SELECTOR`) inside a panel is aimed at that control, so it does not bring
+//    the bar. Presses on a panel's own surface, the gaps, the edges, keys, a switch and the pointer near the bar (but
+//    not resting on a module's button) bring it as they did.
+//    FOR: the person was looking at the tile and pressing it; the bar sliding over the bottom of the game is noise, in a
+//      game or out of one (a calculator key, a keypad, a photo's arrows). It needs no setting and no "is this a game".
+//    AGAINST: a panel that is ALL buttons (a board, a keypad filling the screen) leaves a touch-only person no empty
+//      spot to tap. Answered by the hold below, which now starts on a module's button too while the bar is away: hold
+//      still 1.5 s (the screen's hold time) and the bar comes up. A held press still reaches the button when it lifts,
+//      as every press on it did before this, so a slow press loses nothing it had.
+//    The pointer resting on a module's button near the bottom does not bring the bar either (a mouse aiming at the
+//    bottom row of answers was the same summons as the tap). Moving it onto the gap below them still does.
+//
+// 2. MIKE'S SETTING: "While a game is being played, the bar: comes up as usual / stays away until I ask". A game is
+//    being played from Start until it pauses, ends or leaves the screen: the one signal games already raise
+//    (game_start.js `PLAY_STATE_TOPIC`, `playing: true` with no `kind`; a slideshow or a video says its own kind and
+//    does not count -- version_watch.js `playKindOf`, the same reading). The kiosk counts only panels still on the
+//    screen, so a game switched away without saying it stopped does not keep the bar away for ever. A live call ends
+//    it: a call is not a game, and its controls are on the bar.
+//    "Stays away" works exactly like "only when I ask" for as long as the game runs: the hold, H, Escape, the long
+//    switch press, the cat, and a live call still bring the bar (nobody stranded, the rule above).
+//    THE DEFAULT, ARGUED -- "comes up as usual":
+//      FOR "stays away": Mike's words ("pretty much every game"), and the ways back exist.
+//      FOR "as usual", and it wins for the default: part 1 removes the cause he hit (answering), so what is left of
+//        the bar coming up in a game is a tap off the buttons, a key or a switch. And the cost of "stays away" falls on
+//        the person who does not know about it: a visitor playing a game with somebody, or a carer reaching for Hush,
+//        taps and gets nothing, and the hold is not something a person finds by tapping. The player who is annoyed is
+//        the one who knows the setting is there; one row turns it on. [Mike's list: his call.]
+//      Not "on when the game fills the screen, off when it shares" (chat's middle): two rules where one would do, and
+//        a game on Home fills the window whether or not a visitor is the one playing it.
+export const BAR_PLAY_KEY = 'barWhilePlaying';
+export const BAR_PLAY_USUAL = 'usual';
+export const BAR_PLAY_AWAY = 'away';
+export const BAR_PLAY_FIELD = Object.freeze({
+  key: BAR_PLAY_KEY,
+  label: 'While a game is being played, the bar',
+  kind: 'choice', level: 'standard', default: BAR_PLAY_USUAL,
+  options: Object.freeze([
+    Object.freeze({ value: BAR_PLAY_USUAL, label: 'Comes up as usual' }),
+    Object.freeze({ value: BAR_PLAY_AWAY, label: 'Stays away until I ask (its key, or hold still on the screen)' }),
+  ]),
+});
+/** "While a game is being played", from a settings row: 'usual' (the default) or 'away'. */
+export function barPlayFrom(row) {
+  return row && row[BAR_PLAY_KEY] === BAR_PLAY_AWAY ? BAR_PLAY_AWAY : BAR_PLAY_USUAL;
+}
+
+// What a module's own control is: anything a press OPERATES. The same list screen_controls_test.html's `quietSpot`
+// avoids, plus the ARIA roles a module draws its own buttons with. A disabled button counts: a press on an answer
+// tile already answered was still aimed at the tile.
+export const MODULE_CONTROL_SELECTOR = 'button, a[href], input, select, textarea, label, summary, '
+  + '[role="button"], [role="link"], [role="checkbox"], [role="radio"], [role="switch"], [role="tab"], '
+  + '[role="menuitem"], [role="option"], [role="slider"], [contenteditable=""], [contenteditable="true"]';
+// The bars themselves, the one menu and the screens tray are the shell's, not a module's: a press there is somebody
+// using the bar, which keeps it up.
+const SHELL_CHROME_SELECTOR = '.k-controls, .tb-bar, [data-settings], [data-screens]';
+/** Whether a press on `target` lands on a module's own control inside a panel (`.k-mod`), not on the shell's chrome. */
+export function onModuleControl(target) {
+  const el = target && typeof target.closest === 'function' ? target : target?.parentElement;
+  if (!el || typeof el.closest !== 'function') return false;
+  const c = el.closest(MODULE_CONTROL_SELECTOR);
+  return !!c && !c.closest(SHELL_CHROME_SELECTOR) && !!c.closest('.k-mod');
+}
+
 /** The quiet period from a settings row, in ms. 0 = until the bar is shown again. */
 export function barQuietMsFrom(row) {
   const v = row && row[BAR_QUIET_KEY];
@@ -120,10 +189,12 @@ export function barSelfFrom(row) {
  *   mayPopUp()   may the bar come up BY ITSELF right now (a touch, a key, the pointer near it, a switch press)
  *   hiddenByKey() the key hid it and nothing has shown it since
  */
-export function createBarQuiet({ settings = () => ({}), now = () => Date.now() } = {}) {
+export function createBarQuiet({ settings = () => ({}), now = () => Date.now(), playing = () => false } = {}) {
   let hidden = false;
   let until = 0;
   const row = () => { try { return settings() || {}; } catch { return {}; } };
+  // bar while playing: is a game being played on this screen right now (the kiosk's reading of PLAY_STATE_TOPIC).
+  const gameOn = () => { try { return !!playing(); } catch { return false; } };
   return {
     hide() {
       const ms = barQuietMsFrom(row());
@@ -134,9 +205,11 @@ export function createBarQuiet({ settings = () => ({}), now = () => Date.now() }
     hiddenByKey: () => hidden,
     mayPopUp() {
       if (barSelfFrom(row()) === BAR_SELF_ASKED) return false;
+      if (barPlayFrom(row()) === BAR_PLAY_AWAY && gameOn()) return false;   // bar while playing
       return !(hidden && now() < until);
     },
     /** For a suite and a diagnostic page. */
-    probe: () => ({ hiddenByKey: hidden, until, self: barSelfFrom(row()), quietMs: barQuietMsFrom(row()) }),
+    probe: () => ({ hiddenByKey: hidden, until, self: barSelfFrom(row()), quietMs: barQuietMsFrom(row()),
+      whilePlaying: barPlayFrom(row()), playing: gameOn() }),
   };
 }

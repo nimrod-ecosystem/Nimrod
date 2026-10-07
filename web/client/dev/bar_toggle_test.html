@@ -39,6 +39,11 @@ import {
   BAR_TOGGLE_ACTION, BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl,
   createBarQuiet, barQuietMsFrom, barSelfFrom, BAR_QUIET_DEFAULT_MS, BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_SELF_ASKED,
 } from '../bar_toggle.js';
+// bar while playing (row 2.65)
+import { BAR_PLAY_FIELD, BAR_PLAY_AWAY, barPlayFrom, onModuleControl } from '../bar_toggle.js';
+import { PLAY_STATE_TOPIC } from '../game_start.js';
+import { CALL_CONTROLS_TOPIC } from '../actions.js';
+import { EDGE_TOPIC } from '../input.js';
 
 const USER = 'bartoggle-' + Math.floor(Math.random() * 1e6);
 const root = document.getElementById('root');
@@ -69,6 +74,45 @@ const down = (x = 300, y = 200) => kioskEl().dispatchEvent(new PointerEvent('poi
 const up = (x = 300, y = 200) => kioskEl().dispatchEvent(new PointerEvent('pointerup', { bubbles: true, clientX: x, clientY: y, isPrimary: true, pointerId: 1 }));
 const move = (x, y) => kioskEl().dispatchEvent(new PointerEvent('pointermove', { bubbles: true, clientX: x, clientY: y, isPrimary: true, pointerId: 1 }));
 const tap = async (ms = 60) => { down(); up(); await sleep(ms); };
+// bar while playing: a press the way the browser delivers one (screen_controls_test.html's `realPress`): each event goes
+// to whatever is AT the point; a mouse's click to what its press and release share; a touch's tap to the point at release.
+const commonAncestor = (a, b) => { for (let e = a; e; e = e.parentElement) if (e.contains(b)) return e; return null; };
+const centre = (el) => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; };
+async function realPress(x, y, pointerType = 'mouse') {
+  const opt = { bubbles: true, cancelable: true, composed: true, clientX: x, clientY: y, pointerType, isPrimary: true,
+    pointerId: pointerType === 'mouse' ? 1 : 7, button: 0, buttons: 1 };
+  const d = document.elementFromPoint(x, y);
+  if (!d) return { down: null, click: null };
+  d.dispatchEvent(new PointerEvent('pointerdown', opt));
+  await sleep(0);
+  const u = pointerType === 'mouse' ? document.elementFromPoint(x, y) : d;
+  u.dispatchEvent(new PointerEvent('pointerup', { ...opt, buttons: 0 }));
+  await sleep(0);
+  const c = pointerType === 'mouse' ? commonAncestor(d, u) : document.elementFromPoint(x, y);
+  c?.dispatchEvent(new MouseEvent('click', { ...opt, buttons: 0, detail: 1 }));
+  await sleep(30);
+  return { down: d, click: c };
+}
+const pressAt = (el, type) => { el.scrollIntoView({ block: 'nearest' }); return realPress(...centre(el), type); };
+// A spot inside `el` with nothing operable under it (screen_controls_test.html's `quietSpot`), from the centre out.
+const OPERABLE = 'button, a[href], input, select, textarea, label, summary, [role="button"], [contenteditable=""], [contenteditable="true"]';
+function quietSpot(el) {
+  el.scrollIntoView({ block: 'nearest' });
+  const r = el.getBoundingClientRect();
+  const pts = [];
+  for (let i = 1; i < 10; i++) for (let j = 1; j < 10; j++) pts.push([r.left + r.width * i / 10, r.top + r.height * j / 10]);
+  const [cx, cy] = centre(el);
+  pts.sort((a, b) => Math.hypot(a[0] - cx, a[1] - cy) - Math.hypot(b[0] - cx, b[1] - cy));
+  return pts.find(([x, y]) => { const at = document.elementFromPoint(x, y); return at && el.contains(at) && !at.closest(OPERABLE); }) || null;
+}
+const pressQuiet = async (el, type) => { const at = quietSpot(el); return at ? realPress(...at, type) : { down: null, click: null }; };
+// A game's own button on screen: an answer tile when the question has them, else any button of the game's panel. Quiz mix
+// mixes question kinds, and not every kind answers with tiles. Never Start, never a bar's.
+const gameButton = (scope) => {
+  const all = [...scope.querySelectorAll('button')].filter((b) => b.closest('.k-mod') && !b.closest('[data-start-overlay]')
+    && !b.closest('.k-controls, .tb-bar') && b.getClientRects().length > 0);
+  return all.find((b) => b.matches('[data-pick]')) || all[0] || null;
+};
 const mouseNearBar = async (bar) => {
   const r = bar.getBoundingClientRect();
   kioskEl().dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + r.width / 2, clientY: r.top + 4 }));
@@ -115,6 +159,27 @@ const mouseNearBar = async (bar) => {
     check('which press IS the toggle: by device and control, from the bindings in force',
       isBarToggleControl(BAR_TOGGLE_KEY_BINDINGS, 'keyboard', 'key:h') && !isBarToggleControl(BAR_TOGGLE_KEY_BINDINGS, 'keyboard', 'key:j')
       && !isBarToggleControl([], 'keyboard', 'key:h'));
+
+    // bar while playing (row 2.65): the setting, and what a module's own control is.
+    let playingNow = true;
+    let prow = {};
+    const pq = createBarQuiet({ settings: () => prow, now: () => 5000, playing: () => playingNow });
+    check('*** bar while playing: "comes up as usual" by default -- a game playing changes nothing ***',
+      BAR_PLAY_FIELD.default === 'usual' && barPlayFrom({}) === 'usual' && pq.mayPopUp(), J(pq.probe()));
+    prow = { barWhilePlaying: BAR_PLAY_AWAY };
+    check('*** "stays away until I ask": not by itself while a game is played ***', !pq.mayPopUp() && pq.probe().playing === true, J(pq.probe()));
+    playingNow = false;
+    check('...and as usual the moment it is not (paused, ended, gone)', pq.mayPopUp());
+    check('the row: two choices, the second saying how to ask', J(BAR_PLAY_FIELD.options.map((o) => o.value)) === J(['usual', 'away'])
+      && /hold still/.test(BAR_PLAY_FIELD.options[1].label) && barPlayFrom({ barWhilePlaying: 'junk' }) === 'usual');
+    const frag = document.createElement('div');
+    frag.innerHTML = '<div class="k-mod"><button id="t1"><svg><rect id="t1s"/></svg></button><div id="t2">q</div>'
+      + '<div role="button" id="t3">r</div><div class="tb-bar"><button id="t4">b</button></div>'
+      + '<button disabled id="t6">done</button></div><button id="t5">outside</button>';
+    const at = (id) => onModuleControl(frag.querySelector('#' + id));
+    check('*** a module\'s own control: a button in a panel, and what is drawn inside it ***', at('t1') && at('t1s') && at('t3') && at('t6'));
+    check('...not the panel\'s own surface, not a bar\'s button, not a button outside every panel',
+      !at('t2') && !at('t4') && !at('t5') && !onModuleControl(null) && !onModuleControl(document));
   }
 
   const profiles = createProfilesClient({ user: USER });
@@ -253,12 +318,237 @@ const mouseNearBar = async (bar) => {
     k.destroy(); root.innerHTML = '';
   }
 
+  // =====================================================================================
+  // BAR WHILE PLAYING (row 2.65, 2026-10-07). Mike, after playing Quiz mix: "Pretty much every game has the issue of the
+  // transport bar being a bit annoying. Maybe have a deactivate transport bar when playing setting." The presses here go
+  // where the browser sends them (`realPress`: whatever is AT the point), so a press on an answer tile reaches the bar's
+  // listeners exactly the way a finger's does.
+  section('*** bar while playing: a press on a game\'s own button is aimed at the button, not the bar ***');
+  {
+    const p = await profiles.create('BT-play');
+    await profiles.addModule(p.id, 'quiz_mix');
+    const bus = createBus();
+    const k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
+    const bar = () => root.querySelector('.k-controls');
+    const shown = () => !!bar() && !bar().classList.contains('hidden') && !bar().classList.contains('k-bar-hidden');
+    const panel = () => root.querySelector('.k-stage .k-mod');
+    check('(setup) Quiz mix waits for Start', await until(() => !!panel()?.querySelector('[data-start]'), 15000), panel()?.innerHTML.slice(0, 200));
+    panel().querySelector('[data-start]').click();          // a click alone: no pointerdown, so no bar either way
+    check('(setup) Start pressed: the game is on, with its own buttons', await until(() => k.barToggle().playing && !!gameButton(panel()), 15000), J(k.barToggle()));
+    check('(setup) the bar is put away', await until(() => !shown(), 5000), bar()?.className);
+    const tile = gameButton(panel());
+    let clicked = 0;
+    tile.addEventListener('click', () => { clicked += 1; });
+    const r1 = await pressAt(tile, 'touch');
+    check('*** THE CAUSE: a touch on an answer tile does not bring the bar ***', !shown(), `${bar().className} (down on ${r1.down?.className || r1.down?.tagName})`);
+    check('...and the touch answered: the tile had it', clicked === 1 || !tile.isConnected, `clicks ${clicked}`);
+    await until(() => !shown(), 4000);
+    const r2 = await pressQuiet(panel(), 'touch');
+    check('*** a touch on the panel\'s own surface (no button there) still brings it, as today ***', !!r2.down && shown(), `${r2.down?.className} ${bar().className}`);
+    check('Quiz mix, started, counts as a game being played; the setting is "as usual"', k.barToggle().playing === true
+      && k.barToggle().whilePlaying === 'usual', J(k.barToggle()));
+    // The pointer: resting on an answer near the bar is aiming at the answer; the gap beside it still brings the bar.
+    check('(setup) put away again', await until(() => !shown(), 5000));
+    await until(() => !!gameButton(panel()), 15000);   // the next question's buttons
+    const t3 = gameButton(panel());
+    const br = bar().getBoundingClientRect();
+    t3.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: br.left + br.width / 2, clientY: br.top + 4 }));
+    await sleep(60);
+    check('*** the pointer resting on an answer near the bar does not bring it ***', !shown(), bar().className);
+    await mouseNearBar(bar());
+    check('...the pointer near it on the screen itself still does', shown(), bar().className);
+    // NOBODY STRANDED: a panel that is all buttons leaves nowhere else to tap -- holding still on a button brings the bar.
+    check('(setup) put away again', await until(() => !shown(), 5000));
+    await until(() => !!gameButton(panel()), 15000);
+    const t4 = gameButton(panel());
+    const [hx, hy] = centre(t4);
+    const opt = { bubbles: true, clientX: hx, clientY: hy, isPrimary: true, pointerId: 7, pointerType: 'touch' };
+    t4.dispatchEvent(new PointerEvent('pointerdown', opt));
+    await sleep(300);
+    check('a quick press on a button: no bar (a hold has only started)', !shown() && k.barToggle().holding === true, J(k.barToggle()));
+    await sleep(1400);
+    check('*** held still on an answer for the hold time (1.5 s): the bar comes up ***', shown(), J(k.barToggle()));
+    t4.dispatchEvent(new PointerEvent('pointerup', opt));
+    k.destroy(); root.innerHTML = '';
+  }
+
+  section('*** bar while playing: the setting "stays away until I ask", the screen\'s own bar ***');
+  {
+    const p = await profiles.create('BT-play-away');
+    await profiles.addModule(p.id, 'quiz_mix');
+    const bus = createBus();
+    const k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus });
+    const bar = () => root.querySelector('.k-controls');
+    const shown = () => !!bar() && !bar().classList.contains('hidden') && !bar().classList.contains('k-bar-hidden');
+    const panel = () => root.querySelector('.k-stage .k-mod');
+    const row = k.menu.items().find((r) => r.id === 'set:barWhilePlaying');
+    check('*** the row is in the menu, on Devices under "The bar" ***', !!row && row.tab === 'devices'
+      && /While a game is being played/.test(row.label || ''), J(row && [row.tab, row.label]));
+    k.menu.open(); k.menu.showTab('devices'); k.menu.focusRow('set:barWhilePlaying'); k.menu.select(); k.menu.close();
+    check('(setup) "stays away until I ask" chosen', await until(() => k.barToggle().whilePlaying === 'away', 3000), J(k.barToggle()));
+    check('(setup) Quiz mix waits for Start', await until(() => !!panel()?.querySelector('[data-start]'), 15000));
+    check('waiting for Start is not playing', k.barToggle().playing === false && k.barToggle().mayPopUp === true, J(k.barToggle()));
+    await until(() => !shown(), 5000);
+    await pressQuiet(panel(), 'touch');
+    check('...so a touch off the buttons brings the bar as usual', shown());
+    panel().querySelector('[data-start]')?.click();   // (that touch may have started it: a waiting quiz starts on a press anywhere on it)
+    check('*** Start pressed: a game is being played ***', await until(() => k.barToggle().playing === true, 8000), J(k.barToggle()));
+    check('(setup) put away', await until(() => !shown(), 5000));
+    await pressQuiet(panel(), 'touch');
+    check('*** playing: a touch off the buttons does not bring it ***', !shown(), bar().className);
+    await key('x');
+    check('*** ...nor a key ***', !shown(), bar().className);
+    await mouseNearBar(bar());
+    check('*** ...nor the pointer near it ***', !shown(), bar().className);
+    // The ways to ask, every one of them.
+    const spot = quietSpot(panel());
+    const hopt = { bubbles: true, clientX: spot[0], clientY: spot[1], isPrimary: true, pointerId: 7, pointerType: 'touch' };
+    document.elementFromPoint(...spot).dispatchEvent(new PointerEvent('pointerdown', hopt));
+    await sleep(1700);
+    check('*** the hold brings it (nobody stranded) ***', shown(), J(k.barToggle()));
+    document.elementFromPoint(...spot)?.dispatchEvent(new PointerEvent('pointerup', hopt));
+    await key('h');
+    check('H puts it away', !shown());
+    await key('h');
+    check('*** H brings it ***', shown());
+    await key('h');
+    // Off the dashboard path Escape is the menu (input_keyboard.js default/menu), the way to everything the bar has.
+    await key('Escape');
+    check('*** Escape still opens the menu while a game is played ***', k.menu.isOpen());
+    k.menu.close();
+    if (shown()) await key('h');
+    check('(setup) put away before the call', !shown(), bar().className);
+    bus.publish(CALL_CONTROLS_TOPIC, { live: true, muted: false, cameraOff: false });
+    await sleep(60);
+    check('*** a live call brings it, and a call is not a game being played ***', shown() && k.barToggle().playing === false, J(k.barToggle()));
+    bus.publish(CALL_CONTROLS_TOPIC, { live: false });
+    await sleep(60);
+    check('the call over, the game is being played again', k.barToggle().playing === true, J(k.barToggle()));
+    // A game that says it stopped (paused, ended), and one that left the screen without saying so.
+    const reports = [];
+    const off = bus.subscribe(PLAY_STATE_TOPIC, (r) => reports.push(r));
+    bus.publish('quiz_mix/pause', {});
+    await sleep(100);
+    const paused = await until(() => k.barToggle().playing === false, 2000);
+    check('*** the game paused (it says so on the play-state topic): not being played, the bar as usual ***', paused
+      && k.barToggle().mayPopUp === true, J({ probe: k.barToggle(), reports }));
+    const gameId = reports.at(-1)?.id || 'none';
+    off?.();
+    bus.publish(PLAY_STATE_TOPIC, { id: gameId, playing: true });
+    check('(the game again)', await until(() => k.barToggle().playing === true, 1000));
+    bus.publish(PLAY_STATE_TOPIC, { id: gameId, playing: false });
+    bus.publish(PLAY_STATE_TOPIC, { id: 'a-panel-not-on-this-screen', playing: true });
+    await sleep(40);
+    check('*** a game on no panel of this screen does not count (one switched away never says it stopped) ***', k.barToggle().playing === false, J(k.barToggle()));
+    bus.publish(PLAY_STATE_TOPIC, { id: gameId, playing: true, kind: 'slideshow' });
+    await sleep(40);
+    check('...nor a slideshow or a video playing: those are not games', k.barToggle().playing === false, J(k.barToggle()));
+    k.destroy(); root.innerHTML = '';
+  }
+  // The placed bar, floated over the panels the way Home floats it (`host.barOver()`): it tucks itself away after the
+  // host's delay, and was brought back by every press -- the answer tiles' too.
+  const mem = () => { const m = new Map(); return { getItem: (x) => (m.has(x) ? m.get(x) : null), setItem: (x, v) => { m.set(x, String(v)); }, removeItem: (x) => { m.delete(x); } }; };
+  async function playScreen(name, extra = {}) {
+    const p = await profiles.create(name);
+    await profiles.addModule(p.id, 'quiz_mix');
+    if (Object.keys(extra).length) {
+      const st = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+      await st.load(); st.set(extra); await st.flush(); st.destroy();
+    }
+    return p;
+  }
+  async function mountOver(p, bus) {
+    const host = { barOver: () => true, barHideMs: () => 200, subscribe: () => () => {} };
+    return mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, embedded: true, dashboardModule: true,
+      storage: mem(), session: mem(), navigate: () => {}, reloadPage: () => {}, host });
+  }
+  async function startQuiz(scope, k) {
+    // Pressed again until the answers show: a Start drawn a moment before its panel listens can miss one click.
+    return until(() => {
+      if (k.barToggle().playing && gameButton(scope)) return true;   // (not the demo's tiles: those are before Start)
+      scope.querySelector('[data-start]')?.click();
+      return false;
+    }, 20000);
+  }
+  {
+    const p = await playScreen('BT-play-placed');
+    const bus = createBus();
+    const k = await mountOver(p, bus);
+    const tb = () => root.querySelector('.tb-bar');
+    const tucked = () => tb()?.dataset.tucked === '1';
+    check('(setup) the placed bar carries the bar, floated over the panels', await until(() => !!tb() && kioskEl().dataset.plainBar === 'off', 8000), kioskEl()?.dataset.plainBar);
+    check('(setup) Quiz mix started', await startQuiz(root, k));
+    check('(setup) it tucks itself away', await until(tucked, 3000));
+    const tile = gameButton(root);
+    await pressAt(tile, 'touch');
+    check('*** THE CAUSE, the placed bar: a touch on an answer tile does not bring it back ***', tucked());
+    await until(tucked, 3000);
+    const qp = root.querySelector('.k-dash .k-stage .k-mod');   // the game's panel
+    const r = await pressQuiet(qp, 'touch');
+    check('*** a touch on the panel\'s own surface still brings it ***', !!r.down && !tucked(),
+      J({ down: r.down ? `${r.down.tagName}.${r.down.className}` : null, panel: qp?.className, tucked: tucked() }));
+    check('(setup) tucked again', await until(tucked, 3000));
+    await until(() => !!gameButton(root), 15000);
+    const t4 = gameButton(root);
+    const [hx, hy] = centre(t4);
+    const opt = { bubbles: true, clientX: hx, clientY: hy, isPrimary: true, pointerId: 7, pointerType: 'touch' };
+    t4.dispatchEvent(new PointerEvent('pointerdown', opt));
+    await sleep(1700);
+    check('*** held still on an answer: the placed bar comes back (nobody stranded) ***', !tucked(), J(k.barToggle()));
+    t4.dispatchEvent(new PointerEvent('pointerup', opt));
+    check('a game in a dashboard\'s panel counts as being played', k.barToggle().playing === true, J(k.barToggle()));
+    k.destroy(); root.innerHTML = '';
+  }
+  section('*** bar while playing: "stays away until I ask", a dashboard\'s placed bar ***');
+  {
+    const p = await playScreen('BT-play-placed-away', { barWhilePlaying: BAR_PLAY_AWAY });
+    const bus = createBus();
+    const k = await mountOver(p, bus);
+    const tb = () => root.querySelector('.tb-bar');
+    const tucked = () => tb()?.dataset.tucked === '1';
+    check('(setup) the placed bar carries the bar', await until(() => !!tb() && kioskEl().dataset.plainBar === 'off', 8000));
+    check('(setup) Quiz mix started, and being played', await startQuiz(root, k) && await until(() => k.barToggle().playing === true, 5000), J(k.barToggle()));
+    check('(setup) tucked', await until(tucked, 3000));
+    const qp = () => root.querySelector('.k-dash .k-stage .k-mod');
+    await pressQuiet(qp(), 'touch');
+    check('*** playing: a touch off the buttons does not bring it back ***', tucked());
+    bus.publish(EDGE_TOPIC, { at: Date.now(), pressId: 9101, phase: 'down', device: 'switch:0', deviceClass: 'switch', control: 'button:0', bound: true, auto: false });
+    bus.publish(EDGE_TOPIC, { at: Date.now(), pressId: 9101, phase: 'up', device: 'switch:0', deviceClass: 'switch', control: 'button:0', bound: true, auto: false });
+    check('*** ...nor a switch press ***', tucked());
+    await key('x');
+    check('*** ...nor a key ***', tucked());
+    const spot = quietSpot(qp());
+    const hopt = { bubbles: true, clientX: spot[0], clientY: spot[1], isPrimary: true, pointerId: 7, pointerType: 'touch' };
+    document.elementFromPoint(...spot).dispatchEvent(new PointerEvent('pointerdown', hopt));
+    await sleep(1700);
+    check('*** the hold brings it ***', !tucked(), J(k.barToggle()));
+    document.elementFromPoint(...spot)?.dispatchEvent(new PointerEvent('pointerup', hopt));
+    await key('h');
+    check('H puts it away', tucked());
+    await key('h');
+    check('*** H brings it ***', !tucked());
+    await key('h');
+    await key('Escape');
+    check('*** Escape brings the plain bar ***', kioskEl().dataset.plainBar === 'summoned', kioskEl().dataset.plainBar);
+    await key('h');
+    check('(H puts the bars away)', tucked() && kioskEl().dataset.plainBar === 'off', kioskEl().dataset.plainBar);
+    bus.publish(CALL_CONTROLS_TOPIC, { live: true, muted: false, cameraOff: false });
+    await sleep(60);
+    check('*** a live call brings the placed bar, with its controls ***', !tucked() && !!tb().querySelector('[data-call-controls]:not([hidden])'),
+      J({ tucked: tucked(), probe: k.barToggle() }));
+    bus.publish(CALL_CONTROLS_TOPIC, { live: false });
+    k.destroy(); root.innerHTML = '';
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;
 })().catch((e) => {
   console.error(e);
-  document.getElementById('summary').textContent = `threw: ${e && e.message}`;
+  // (bar while playing: say where it threw and what had failed before, so a terminal run can see it)
+  const fails = [...out.querySelectorAll('.fail')].map((d) => d.textContent).join(' | ');
+  document.getElementById('summary').textContent = `threw: ${e && e.message} -- ${failed + 1} FAILED / ${passed} passed`
+    + `${fails ? ` [${fails}]` : ''} at ${String(e && e.stack || '').split('\n')[1] || ''} (last: ${out.lastElementChild?.textContent || ''})`;
 });
 </script>
 </body>

@@ -53,6 +53,7 @@ import { createLongPress, clampHoldMs } from './input_longpress.js';
 import {
   BAR_TOGGLE_TOPIC, BAR_TOGGLE_KEY_BINDINGS, missingBarToggleBindings, isBarToggleControl, createBarQuiet,
   BAR_QUIET_FIELD, BAR_SELF_FIELD, BAR_KEY_HIDDEN, BAR_HOLD_SLOP_PX,
+  BAR_PLAY_FIELD, onModuleControl,   // bar while playing (row 2.65)
 } from './bar_toggle.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_MIRROR,
@@ -3266,6 +3267,7 @@ export async function mountKiosk(root, {
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
+    [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
   };
   const tagged = (rows, tab, rank = 0) => rows.map((it) => ({ ...it, tab, rank }));
   // THE SUBJECT: the panel the menu's panel rows are about. The focused one unless "Settings for" was
@@ -3728,6 +3730,8 @@ export async function mountKiosk(root, {
     // they are about the keys and the hands in front of this device, the same reason that row is the screen's.
     { ...BAR_QUIET_FIELD, options: BAR_QUIET_FIELD.options.map((o) => ({ ...o })) },
     { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
+    // bar while playing (row 2.65; bar_toggle.js argues the default): the screen's too, for the same reason.
+    { ...BAR_PLAY_FIELD, options: BAR_PLAY_FIELD.options.map((o) => ({ ...o })) },
     // Hide = mute (ad7dc49): how long the "hidden panel: keep playing / mute / pause?" card waits.
     HIDE_ASK_TIMEOUT_FIELD,
     // STEP 6 STAGE 4: which way a real screen is put together (`dashboardPathFor`). `advanced`: it is a
@@ -6300,7 +6304,22 @@ export async function mountKiosk(root, {
   // tucks itself away), else this file's own. Hidden by the key, nothing brings it back BY ITSELF for the screen's
   // quiet period -- the automatic reveals (a touch, a key, the pointer near it, a switch press) ask `autoPoke` /
   // `barMayPopUp` first. Anything that asks for the bar (`poke`, the plain bar's summons, the cat) still shows it.
-  const barQuiet = createBarQuiet({ settings: () => settings.get() || {} });
+  // bar while playing (row 2.65; bar_toggle.js): a game is being played while a panel STILL ON THE SCREEN says it is
+  // playing (PLAY_STATE_TOPIC with no slideshow / video kind -- version_watch.js reads it the same way), and no call is
+  // live. Kept here, not with the version watch's copy: that one exists only off an embed, and Home is an embed.
+  const barGames = new Map();          // panel id -> true while it says a game is playing
+  offsScreen.push(bus.subscribe(PLAY_STATE_TOPIC, (p) => {
+    if (!p || !p.id) return;
+    if (p.playing && playKindOf(p) === 'game') barGames.set(p.id, true); else barGames.delete(p.id);
+  }));
+  function gamePlaying() {
+    if (callState || barGames.size === 0) return false;
+    let ids;
+    try { ids = new Set(menuPanelRecs().map((r) => r.id)); } catch { return false; }
+    for (const id of barGames.keys()) if (ids.has(id)) return true;
+    return false;
+  }
+  const barQuiet = createBarQuiet({ settings: () => settings.get() || {}, playing: gamePlaying });
   const placedBarEl = () => (useDashboard && plainBarState === 'off' ? kioskEl.querySelector('.tb-bar') : null);
   function barShowing() {
     const placed = placedBarEl();
@@ -6354,9 +6373,11 @@ export async function mountKiosk(root, {
     clearTimeout(barHoldT); clearTimeout(barRingT); barHoldT = null; barRingT = null;
     if (barHoldAt) { barHoldAt = null; try { hideRing(); } catch { /* none drawn */ } }
   }
-  function startBarHold(e) {
+  // bar while playing: `onControl` -- the press is on a module's own button, which does not bring the bar however it
+  // may come up, so the hold is the way to it there too (a panel that is all buttons has nowhere else to tap).
+  function startBarHold(e, onControl = false) {
     endBarHold();
-    if (torn || barShowing() || barMayPopUp()) return;
+    if (torn || barShowing() || (!onControl && barMayPopUp())) return;
     if (e && e.isPrimary === false) return;
     const ms = clampHoldMs((settings.get() || {}).plainBarHoldMs);
     barHoldAt = { x: e?.clientX ?? 0, y: e?.clientY ?? 0 };
@@ -6402,6 +6423,7 @@ export async function mountKiosk(root, {
   // mousemove case, which is the only one a "cursor near the bar" even describes.
   const BAR_REVEAL_MARGIN_PX = 140;
   function pokeIfNearBar(e) {
+    if (onModuleControl(e.target)) return;   // bar while playing: resting on a module's button near it is aiming at the button
     const r = controlsEl.getBoundingClientRect();
     if (e.clientX >= r.left - BAR_REVEAL_MARGIN_PX && e.clientX <= r.right + BAR_REVEAL_MARGIN_PX
         && e.clientY >= r.top - BAR_REVEAL_MARGIN_PX) autoPoke();   // bar toggle: unless the bar is to stay away
@@ -6460,6 +6482,9 @@ export async function mountKiosk(root, {
   let endWakePress = () => {};
   const pokeOnPress = (e) => {
     const wasHidden = controlsEl.classList.contains('hidden');
+    // bar while playing (row 2.65, measured: a touch on a Quiz mix answer tile brought the bar): a press on a module's
+    // own control is aimed at it -- no bar, and its 3 s is not stretched. Held still, it brings the bar (`startBarHold`).
+    if (onModuleControl(e.target)) { startBarHold(e, true); return; }
     // bar toggle: held back while the key's quiet period runs (or "only when I ask"); then a hold brings it.
     if (!autoPoke()) { startBarHold(e); return; }
     if (wasHidden && !controlsEl.classList.contains('hidden')) endWakePress = sitOutWakePress(controlsEl, e);
@@ -7201,7 +7226,7 @@ export async function mountKiosk(root, {
     holdBar,
     barHeld: () => barHeld,
     // bar toggle (2026-10-06): for a suite and a diagnostic page -- is the bar up, and the key's quiet period.
-    barToggle: () => ({ showing: barShowing(), mayPopUp: barMayPopUp(), holding: !!barHoldAt, ...barQuiet.probe() }),
+    barToggle: () => ({ showing: barShowing(), mayPopUp: barMayPopUp(), holding: !!barHoldAt, ...barQuiet.probe() }),   // (+ playing, whilePlaying: bar while playing)
     cameraOwner: () => cameraOwner,
     micOwner: () => micOwner,
     // WHAT THE MIC ARBITER WOULD ACTUALLY FALL BACK TO RIGHT NOW — exposed so a test can prove
