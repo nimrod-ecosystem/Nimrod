@@ -158,6 +158,63 @@ r = c.delete(f"{base}?stream=plays", headers=H)
 check("*** \"Remove what is kept with us\" deletes it: rows and totals ***",
       r.status_code == 200 and r.json()["rows"] == 6 and c.get(f"{base}/plays", headers=H).json()["total"] == 0, r.text)
 
+# ---------------------------------------------------------------- a person shown here from another account
+# (2026-10-07, nested-history follow-up.) A card on this login for somebody whose profile lives on ANOTHER login - one
+# this login handed over (a claim), or one another login shares here (a connection) - reaches its history through the
+# same person-state path as its setting (app.py _history_target -> _person_state_target -> claims.state_target): the
+# row on THIS login. So the "with us" the server honours is the one written to that row through the ordinary state
+# route, the rows land under it, and the other login's own choice and own record are untouched either way.
+section("a person shown on this login from another account: the same person-state path")
+A, B = "history-holder", "history-home"
+HA, HB = {"X-Dev-User": A}, {"X-Dev-User": B}
+a_me = c.get("/api/people", headers=HA).json()["people"][0]["id"]
+mom = c.post("/api/people", json={"name": "Mom"}, headers=HA).json()["id"]
+b_me = c.get("/api/people", headers=HB).json()["people"][0]["id"]
+tok = c.post(f"/api/people/{mom}/invites", json={}, headers=HA).json()["token"]
+acc = c.post("/api/invites/accept", json={"token": tok}, headers=HB)
+row_mom = appmod.store.person_row(mom)
+check("(setup) Mom took over her own profile: A's row for her now has its home on B's login",
+      acc.status_code == 200 and row_mom and row_mom.get("home_id") == b_me and row_mom["account_id"] == A, acc.text)
+b_cards = {p["name"]: p for p in c.get("/api/people", headers=HB).json()["people"]}
+card = next((p for p in b_cards.values() if p.get("reach") == a_me), None)
+check("(setup) ...and B's login shows A's person as a card of its own (a connection)", card is not None and card["id"] != a_me,
+      str(b_cards))
+
+
+def put_place(h, pid, data):
+    v = c.get(f"/api/people/{pid}/state/{sl.HISTORY_KEY}", headers=h).json().get("version", 0)
+    return c.put(f"/api/people/{pid}/state/{sl.HISTORY_KEY}", json={"data": data, "base_version": v}, headers=h)
+
+
+check("the history setting is not a profile key: the login holding the card writes it (no 403 as for a picture)",
+      sl.HISTORY_KEY not in appmod.claims.PROFILE_KEYS and put_place(HB, b_me, {"plays": "us"}).status_code == 200)
+r = c.post(f"/api/people/{mom}/history/plays", json={"rows": [PLAY]}, headers=HA)
+check("*** Mom chose \"with us\" on HER login; that does not open A's card for her: 403 ***", r.status_code == 403, r.text)
+check("*** A opts in on its own card for her, through the ordinary person-state route ***",
+      put_place(HA, mom, {"plays": "us"}).status_code == 200)
+r = c.post(f"/api/people/{mom}/history/plays", json={"rows": [dict(PLAY, scope="yt-1")]}, headers=HA)
+check("*** ...and the history route honours exactly that row: kept ***", r.status_code == 200 and r.json()["kept"] == 1, r.text)
+check("*** the rows are under A's card for her, not under her own login's record ***",
+      appmod.store.history_counts(A, mom).get("plays", {}).get("rows") == 1 and appmod.store.history_counts(B, b_me) == {})
+s = c.get(f"/api/people/{mom}/history", headers=HA).json()
+check("the summary through the card reads the same row the setting was written to",
+      s["place"] == {"plays": "us"} and s["kept"].get("plays", {}).get("rows") == 1, s)
+check("*** her own login still reads its own: nothing kept, its own choice unchanged ***",
+      c.get(f"/api/people/{b_me}/history", headers=HB).json()["kept"] == {}
+      and c.get(f"/api/people/{b_me}/state/{sl.HISTORY_KEY}", headers=HB).json()["data"] == {"plays": "us"})
+r = c.post(f"/api/people/{mom}/history/gameplay", json={"rows": [TRIAL]}, headers=HA)
+check("a kind the card's row did not choose is still refused", r.status_code == 403, r.text)
+r = c.post(f"/api/people/{card['id']}/history/plays", json={"rows": [PLAY]}, headers=HB)
+check("*** the other way round: B's card for A's person, not opted in on THAT row: 403 ***", r.status_code == 403, r.text)
+put_place(HB, card["id"], {"plays": "us"})
+r = c.post(f"/api/people/{card['id']}/history/plays", json={"rows": [PLAY]}, headers=HB)
+check("...opted in on it: kept under B's card, and A's own person has nothing kept",
+      r.status_code == 200 and appmod.store.history_counts(B, card["id"]).get("plays", {}).get("rows") == 1
+      and appmod.store.history_counts(A, a_me) == {}, r.text)
+check("*** neither login reaches the other's row through its own ids (404) ***",
+      c.get(f"/api/people/{b_me}/history", headers=HA).status_code == 404
+      and c.post(f"/api/people/{card['id']}/history/plays", json={"rows": [PLAY]}, headers=HA).status_code == 404)
+
 # ---------------------------------------------------------------- the cap and the roll-up
 section("the cap and the roll-up (db.py history_append), with small numbers")
 store = appmod.store
