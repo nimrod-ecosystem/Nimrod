@@ -76,6 +76,7 @@ import { createGameMusic } from '../game_music.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
+import { createPlayWatch } from '../game_start.js';
 
 // *** BUMP THIS WHENEVER A RECORDED FIELD IS ADDED OR CHANGES MEANING. ***
 // It rides on every row as `producer_version`, and it is what lets a reader in two years tell
@@ -346,6 +347,10 @@ registerModule(
     let ac = null, sfx = null;
     let music = null;
     const offs = [];
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): from a press, out of the menu, until nobody has pressed
+    // for GAME_IDLE_MS (longer than its longest wait, 40 s, so holding off through a wait is still playing). Never
+    // merely for being open.
+    let plays = null;
 
     // ---- the simulation clock, deliberately not the wall clock -----------------------
     // Everything that MOVES advances by the dt handed to step(), so the module can be driven
@@ -631,6 +636,7 @@ registerModule(
     // trial stream never opens with rows from a panel that was simply on the wall. That also
     // keeps `session_start` honest as the marker of "somebody sat down to this".
     function enterMenu() {
+      plays?.rest();      // back on its own start screen: nobody is playing it
       phase = 'menu'; phaseStart = simT; payoffDone = false; echoes = 0;
       frozenCharge = 0; goPaintedAt = null;
       askingExit = false;
@@ -1261,6 +1267,11 @@ registerModule(
         offs.push(bus.subscribe('pressgame/exit', () => exitGame()));
         // MEASUREMENT channel — separate subscription, never drives the game.
         offs.push(bus.subscribe(EDGE_TOPIC, onEdge));
+        // Being played: its presses (a tap on it, `pressgame/press`), after its own handlers, so the press that leaves
+        // the menu counts. Not the measurement channel: an edge is not this game's press until it is bound to one.
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: ['pressgame/press'], mount, when: () => phase !== 'menu' });
+        offs.push(() => { plays?.destroy(); plays = null; });
 
         // Stop animating when nobody can see it: a canvas running behind a hidden panel is
         // battery and heat on a Pi that is on 24/7, for a picture nobody is looking at.
@@ -1278,7 +1289,7 @@ registerModule(
       onResize() { resize(); },
       // A hidden panel humming to itself is battery and heat on a machine that is on 24/7,
       // for music nobody is in the room for.
-      onHide() { stopLoop(); try { music?.pause(); } catch { /* already quiet */ } },
+      onHide() { stopLoop(); plays?.rest(); try { music?.pause(); } catch { /* already quiet */ } },
 
       destroy() {
         stopLoop();

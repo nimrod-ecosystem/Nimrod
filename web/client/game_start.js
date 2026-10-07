@@ -173,6 +173,108 @@ export function createPlayReporter(bus, ctx, { kind = null } = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------------
+// *** "BEING PLAYED" MEANS SOMEBODY IS PLAYING IT: FROM A PRESS UNTIL NOBODY HAS PRESSED FOR A WHILE (2026-10-07). ***
+// The bar's "While a game is being played" (bar_toggle.js) reads PLAY_STATE_TOPIC, and so does the screen's version
+// watch, which holds a reload while a game is being played (version_watch.js). A game with a Start button said
+// "playing" from Start until it paused; a game WITHOUT one (Trivia, Name that, Spelling, Word games, Word Forge, the
+// press game, Comet) said nothing, so the bar's setting did nothing for them. Saying "playing" for as long as such a
+// game is OPEN would make the setting work and hold every reload for ever: a game left open on a screen in a care
+// room around the clock would never update.
+// SO: a press on the game (its own button, a switch's next / select, an answer said aloud) starts "being played", and
+// `idleMs` with no press ends it (`{ playing: false, rest: true }`), as do the sitting ending, the panel hiding and the
+// panel going. The next press starts it again. The games with a Start button use it too (quiz_view.js), so a game
+// somebody started and walked away from no longer holds a reload for ever either.
+//   AGAINST, and why it loses: the split instead (one flag for the bar, the old one for reloads). It still needs an
+//     idle rule for the bar ("being played" is not "open"), so it saves nothing, and a reload in the middle of a
+//     question somebody is answering is exactly what the reload hold is for.
+// `rest` TELLS THE BAR'S PAUSE / PLAY BUTTON TO STAY AS IT IS: a game nobody is pressing has not been paused, and a
+// "Play" on it would do nothing (kiosk.js). A real pause still says `playing: false` without it.
+//
+// *** THE IDLE TIME, AN ARGUED CONSTANT, NOT A SETTING: 5 MINUTES (`GAME_IDLE_MS`). ***
+//   Longer than any wait a game itself makes (the press game's longest wait is 40 s, an answer's wait is seconds), and
+//   than the screen's own "somebody pressed" hold (2 minutes), so a slow answer is still "being played". Short enough
+//   that a game somebody walked away from lets the bar come up by itself, and a new version arrive, within minutes.
+//   FOR a setting: somebody who takes longer than 5 minutes over one question. What they lose past it is small: a tap
+//   off the buttons brings the bar (the setting's "stays away" lapses), and a screen that picks up versions may
+//   reload. Nobody should have to have an opinion about this number. [On Mike's list.] A host can pass another
+//   (`ctx.gameIdleMs`: kiosk.js's `gameIdleMs`, for the suites).
+// ---------------------------------------------------------------------------------------------------
+export const GAME_IDLE_MS = 5 * 60 * 1000;
+
+/** The idle time for this panel: the host's `ctx.gameIdleMs` when it gives a positive number, else GAME_IDLE_MS. */
+export function gameIdleMsOf(ctx) {
+  let v = null;
+  try { v = Number(ctx?.gameIdleMs); } catch { v = null; }
+  return Number.isFinite(v) && v > 0 ? v : GAME_IDLE_MS;
+}
+
+/**
+ * The play state of one panel, told to the shell (PLAY_STATE_TOPIC), only when it changes.
+ *   active()   somebody pressed / answered: being played, until `idleMs` with no press
+ *   pause()    a real pause (the bar's Pause, "pause"): `playing: false` - also what a game waiting for Start says
+ *   rest()     the sitting ended, the panel hid, or nobody pressed: `playing: false, rest: true`
+ *   watch({ topics, mount, when })   calls active() on each of the game's own bus topics and each press or click on
+ *              its mount, while `when()` says it counts. Returns the way to stop watching (destroy() stops it too).
+ *   playing()  for a suite
+ *   destroy()  rests, stops the timer and the watching
+ */
+export function createPlayWatch(bus, ctx, { idleMs = null, setTimer = null, clearTimer = null } = {}) {
+  const ms = Number.isFinite(idleMs) && idleMs > 0 ? idleMs : gameIdleMsOf(ctx);
+  // The wall clock, NOT the game's own `ctx.setTimer`: this is the shell's bookkeeping, not part of the game, and a
+  // suite that drives a game's clock by hand (or checks "nothing is timed") must not find it there. A suite of this
+  // file passes its own.
+  const setT = setTimer || ((fn, t) => setTimeout(fn, t));
+  const clearT = clearTimer || ((id) => clearTimeout(id));
+  let last = null;            // 'play' | 'pause' | 'rest', what the shell was last told
+  let timer = null;
+  let dead = false;
+  const offs = [];
+  const send = (s) => {
+    last = s;
+    try {
+      bus?.publish?.(PLAY_STATE_TOPIC, { id: ctx?.instanceId || null, playing: s === 'play', ...(s === 'rest' ? { rest: true } : {}) });
+    } catch (err) { console.error('game: play state', err); }
+  };
+  const disarm = () => { if (timer != null) { try { clearT(timer); } catch { /* gone */ } timer = null; } };
+  const api = {
+    active() {
+      if (dead) return;
+      disarm();
+      timer = setT(() => { timer = null; api.rest(); }, ms);
+      if (last !== 'play') send('play');
+    },
+    pause() { disarm(); if (!dead && last !== 'pause') send('pause'); },
+    rest() { disarm(); if (last === 'play') send('rest'); },
+    playing: () => last === 'play',
+    watch({ topics = [], mount = null, when = () => true } = {}) {
+      const hit = () => { let ok = false; try { ok = !!when(); } catch { ok = false; } if (ok) api.active(); };
+      const mine = [];
+      for (const t of topics) {
+        if (!t) continue;
+        try { const off = bus?.subscribe?.(t, hit); if (typeof off === 'function') mine.push(off); } catch { /* no bus */ }
+      }
+      // Bubbling, not capture: the game's own listener (on the mount or deeper) has acted first, so `when` sees what
+      // the press did (Comet's first tap starts it, then counts). Removed on destroy: the mount is the host's element.
+      if (mount && typeof mount.addEventListener === 'function') {
+        for (const ev of ['pointerdown', 'click']) {
+          mount.addEventListener(ev, hit);
+          mine.push(() => mount.removeEventListener(ev, hit));
+        }
+      }
+      const stop = () => { for (const f of mine.splice(0)) { try { f(); } catch { /* gone */ } } };
+      offs.push(stop);
+      return stop;
+    },
+    destroy() {
+      api.rest();
+      dead = true;
+      for (const f of offs.splice(0)) { try { f(); } catch { /* gone */ } }
+    },
+  };
+  return api;
+}
+
+// ---------------------------------------------------------------------------------------------------
 // THE START BUTTON. One look for every game: a big button and one line, at the bottom of the panel, over
 // whatever is behind it (the demo, or the game's still first frame). Theme variables only.
 // The lit button rings in the theme's --scan-ring (3:1 on every surface in every theme, theme.js), not the raw

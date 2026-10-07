@@ -58,6 +58,7 @@ import { packsFor, packById } from '../pack_library.js';
 import { createContests, contestKey, CONTEST_TOPIC } from '../contests.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { answerMarkHtml } from '../answer_mark.js';
+import { createPlayWatch } from '../game_start.js';
 
 export const GAME = 'wordforge';
 
@@ -667,6 +668,9 @@ registerModule(
     // forever with a subscriber that held this panel's mount. A load landing after destroy() would
     // also have restarted a poll destroy() had stopped.
     let dead = false;
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button, so from a press on it until nobody
+    // has pressed for GAME_IDLE_MS. Never merely for being open (that would hold every new version for ever).
+    let plays = null;
 
     const el = (sel) => mount.querySelector(sel);
 
@@ -1094,6 +1098,9 @@ registerModule(
         // Skipping outright still has a home, so the old behaviour is not lost — it is just no
         // longer the only thing a switch can do.
         bus.subscribe('wordforge/skip', () => advance());
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: ['wordforge/answer', 'wordforge/next', 'wordforge/prev', 'wordforge/select', 'wordforge/skip'],
+          mount, when: () => !dead });
 
         // NAMED rather than inline, so a change to the SHARED bank row can re-run exactly the
         // same interpretation. Two code paths that both decide what a bank means is how they
@@ -1192,9 +1199,10 @@ registerModule(
       },
 
       onResize() {},
-      onHide() { state.flush(); },
+      onHide() { plays?.rest(); state.flush(); },
       destroy() {
         dead = true;
+        if (plays) { plays.destroy(); plays = null; }
         if (score) { score.destroy(); score = null; }
         if (contests) { contests.destroy(); contests = null; }
         if (ledger) { ledger.destroy(); ledger = null; }

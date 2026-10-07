@@ -350,14 +350,13 @@ function makeWatch(over = {}) {
     // Every scenario below is a screen that turned it ON (as the bench will).
     await setRow(P.id, { [PICK_UP_KEY]: true });
     // Each scenario mounts its own kiosk: a kiosk that reloaded is done (that page would be gone).
-    async function screen({ srv = fakeServer('base0001'), opts = {}, extra = {} } = {}) {
+    async function screen({ srv = fakeServer('base0001'), opts = {}, extra = {}, profileId = P.id, bus = createBus() } = {}) {
       const box = document.createElement('div');
       box.style.cssText = 'position:fixed;left:-9999px;top:0;width:1000px;height:700px';
       root.append(box);
       const reloads = [];
-      const bus = createBus();
       const k = await mountKiosk(box, {
-        user: USER, profileId: P.id, profiles, bus,
+        user: USER, profileId, profiles, bus,
         storage: memStore(), session: memStore(), navigate: () => {},
         reloadPage: () => { reloads.push(Date.now()); },
         recoveryTick: 0,
@@ -417,6 +416,71 @@ function makeWatch(over = {}) {
       s.bus.publish(PLAY_STATE_TOPIC, { id: s.panel(), playing: false });
       await s.k.versionWatch.check();
       check('the game over -> reloads', s.reloads.length === 1);
+      s.done();
+    }
+    // *** A GAME WITH NO START BUTTON, LEFT OPEN (2026-10-07, game_start.js createPlayWatch). *** It says it is being
+    // played from a press until nobody has pressed for the idle time (here 400 ms, `gameIdleMs`; 5 minutes for real),
+    // so it holds a reload while somebody plays it and never merely for being open.
+    {
+      const s = await screen({ extra: { gameIdleMs: 400 } });
+      const states = [];
+      const off = s.bus.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+      s.bus.publish('trivia/next', {});
+      check('(setup) a press on Trivia: it says it is being played', await until(() => states.some((p) => p.id === s.panel() && p.playing), 2000),
+        JSON.stringify(states));
+      const r = await deploy(s);
+      check('*** Trivia pressed a moment ago -> waits (game) ***', r === 'waiting' && s.k.versionWatch.state().reason === 'game'
+        && s.reloads.length === 0, `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      await sleep(550);
+      check('...nobody pressed for the idle time: it says so (rest)', states.some((p) => p.id === s.panel() && !p.playing && p.rest),
+        JSON.stringify(states));
+      await s.k.versionWatch.check();
+      check('*** ...and the reload goes ahead: an idle open game does not hold it past the idle time ***', s.reloads.length === 1,
+        JSON.stringify(s.k.versionWatch.state()));
+      off?.();
+      s.done();
+    }
+    {
+      // Spelling: an answer game whose question waits for a SPOKEN answer (its grammar stays open). Before 2026-10-07 that
+      // open grammar held every reload as 'dictation' for as long as the panel was open.
+      const PS = await profiles.create('TEST-version-watch-spelling');
+      await profiles.addModule(PS.id, 'spelling');
+      await setRow(PS.id, { [PICK_UP_KEY]: true });
+      const bus = createBus();
+      const grams = [];
+      bus.subscribe(SPEECH_GRAMMAR_TOPIC, (g) => grams.push(g));
+      const s = await screen({ profileId: PS.id, bus, extra: { gameIdleMs: 400 } });
+      const spell = () => (s.k.panels().find((x) => x.type === 'spelling') || {}).id;
+      check('(setup) Spelling is open, its question waiting for a spoken answer (an open grammar with words)',
+        await until(() => grams.some((g) => g.instanceId === spell() && g.open !== false && (g.words || []).length > 0), 6000),
+        JSON.stringify(grams.slice(-2)));
+      const r = await deploy(s);
+      check('*** an answer game left open, never pressed -> it reloads (its open question is not a dictation) ***',
+        r === 'acted' && s.reloads.length === 1, `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.done();
+      const bus2 = createBus();
+      const states = [];
+      bus2.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+      const s2 = await screen({ profileId: PS.id, bus: bus2, extra: { gameIdleMs: 400 } });
+      const spell2 = () => (s2.k.panels().find((x) => x.type === 'spelling') || {}).id;
+      bus2.publish('spelling/next', {});
+      check('(setup) a press on Spelling: being played', await until(() => states.some((p) => p.id === spell2() && p.playing), 2000),
+        JSON.stringify(states));
+      const r2 = await deploy(s2, 'next0002');
+      check('*** Spelling being played -> waits (game) ***', r2 === 'waiting' && s2.k.versionWatch.state().reason === 'game',
+        `${r2} ${JSON.stringify(s2.k.versionWatch.state())}`);
+      await sleep(550);
+      await s2.k.versionWatch.check();
+      check('*** ...nobody pressed for the idle time -> it reloads ***', s2.reloads.length === 1, JSON.stringify(s2.k.versionWatch.state()));
+      s2.done();
+    }
+    {
+      // A dictation window (no game) still holds by itself, with or without a panel id.
+      const s = await screen();
+      s.bus.publish(SPEECH_GRAMMAR_TOPIC, { source: 'nimrod-ai', instanceId: s.panel(), open: true, words: [], dictation: true });
+      const r = await deploy(s);
+      check('a dictation window on a panel still waits (dictation)', r === 'waiting' && s.k.versionWatch.state().reason === 'dictation',
+        `${r} ${JSON.stringify(s.k.versionWatch.state())}`);
       s.done();
     }
     {

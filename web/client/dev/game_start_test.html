@@ -23,6 +23,7 @@ import { harness } from './quiz_test_rig.js';
 import {
   autostartFields, attractFields, shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, demoReturnMs,
   ATTRACT_DEFAULTS, START_VOICE, startOverlayHtml, PLAY_STATE_TOPIC,
+  createPlayWatch, GAME_IDLE_MS, gameIdleMsOf,
 } from '../game_start.js';
 import {
   registerGameAgent, gameAgentFor, listGameAgents, askAgent, validAction, COMPUTER_AGENTS, COMPUTER,
@@ -84,6 +85,74 @@ try {
     check('"start" / "start the game" said aloud press play (a verb the speech layer can press)', v.start === 'play'
       && v['start the game'] === 'play' && Object.keys(PHRASES).includes('play'));
     check('*** "start" is NOT in the screen-wide table (it is a sound away from "stop") ***', !Object.values(PHRASES).flat().includes('start'));
+  }
+
+  section('*** BEING PLAYED: from a press until nobody presses for a while, never merely for being open (2026-10-07) ***');
+  {
+    check('the idle time: 5 minutes, longer than the screen\'s own 2-minute "somebody pressed" hold and any wait a game makes',
+      GAME_IDLE_MS === 5 * 60 * 1000);
+    check('a host may give another (the suites); anything not a positive number is the constant',
+      gameIdleMsOf({ gameIdleMs: 300 }) === 300 && gameIdleMsOf({}) === GAME_IDLE_MS && gameIdleMsOf({ gameIdleMs: 0 }) === GAME_IDLE_MS
+        && gameIdleMsOf({ gameIdleMs: 'x' }) === GAME_IDLE_MS && gameIdleMsOf(null) === GAME_IDLE_MS);
+    // A clock the test turns by hand.
+    let t = 0; const pending = new Map(); let nextId = 1;
+    const setTimer = (fn, ms) => { const id = nextId++; pending.set(id, { fn, at: t + ms }); return id; };
+    const clearTimer = (id) => { pending.delete(id); };
+    const advance = (ms) => { t += ms; for (const [id, x] of [...pending]) if (x.at <= t) { pending.delete(id); x.fn(); } };
+    const bus = createBus();
+    const got = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (p) => got.push(p));
+    const w = createPlayWatch(bus, { instanceId: 'g1', gameIdleMs: 1000 }, { setTimer, clearTimer });
+    check('*** open and never pressed: it says nothing (not "being played") ***', got.length === 0 && !w.playing());
+    w.active();
+    check('a press: { id, playing: true }', got.length === 1 && got[0].id === 'g1' && got[0].playing === true && !got[0].rest, JSON.stringify(got));
+    advance(600); w.active(); advance(600);
+    check('pressed again inside the idle time: still being played, said once', got.length === 1 && w.playing(), JSON.stringify(got));
+    advance(500);
+    check('*** nobody pressed for the idle time: { playing: false, rest: true } ***', got.length === 2 && got[1].playing === false
+      && got[1].rest === true && !w.playing(), JSON.stringify(got));
+    advance(5000);
+    check('...and said once', got.length === 2);
+    w.active();
+    check('a press again: being played again', got.length === 3 && got[2].playing === true);
+    w.pause();
+    check('*** a real pause says playing: false WITHOUT rest (the bar\'s Pause / Play follows a pause, not a rest) ***',
+      got.length === 4 && got[3].playing === false && !got[3].rest && pending.size === 0, JSON.stringify(got[3]));
+    w.rest();
+    check('resting a paused game says nothing more', got.length === 4);
+    w.pause();
+    check('pausing twice says it once', got.length === 4);
+    // Watching the game's own topics and its mount.
+    const mount = document.createElement('div');
+    const btn = document.createElement('button');
+    mount.append(btn); document.body.append(mount);
+    let counts = true;
+    const off = w.watch({ topics: ['g/next', 'speech/answer'], mount, when: () => counts });
+    bus.publish('g/next', {});
+    check('*** its own bus topic (a switch\'s next) is a press ***', got.length === 5 && got[4].playing === true, JSON.stringify(got.at(-1)));
+    advance(1000);
+    btn.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** a touch on it is a press ***', got.at(-1).playing === true && got.length === 7, JSON.stringify(got));
+    advance(1000);
+    btn.click();
+    check('...and a click (a key on its button) too', got.at(-1).playing === true && got.length === 9, JSON.stringify(got));
+    advance(1000);
+    counts = false;
+    bus.publish('speech/answer', { text: 'x' }); btn.click();
+    check('*** while `when` says it does not count (a menu, Start not yet pressed), a press is not playing ***', got.length === 10
+      && got.at(-1).rest === true, JSON.stringify(got));
+    counts = true;
+    off();
+    bus.publish('g/next', {}); btn.click();
+    check('watching stopped: nothing', got.length === 10);
+    w.watch({ topics: ['g/next'], mount });
+    bus.publish('g/next', {});
+    check('(watching again)', got.length === 11 && w.playing());
+    w.destroy();
+    check('*** destroyed while being played: it rests, and the timer is gone ***', got.length === 12 && got[11].rest === true && pending.size === 0);
+    bus.publish('g/next', {}); btn.click(); w.active();
+    check('...and nothing after it is destroyed (its listeners are off the host\'s element)', got.length === 12);
+    mount.remove();
   }
 
   section('*** THE AGENT INTERFACE: state in, action out ***');

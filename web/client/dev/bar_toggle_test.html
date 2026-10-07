@@ -540,6 +540,54 @@ const mouseNearBar = async (bar) => {
     k.destroy(); root.innerHTML = '';
   }
 
+  // *** THE GAMES WITH NO START BUTTON (2026-10-07, game_start.js createPlayWatch). *** They said nothing on the
+  // play-state topic, so "stays away until I ask" did nothing for them. Now each says it is being played from a press
+  // until nobody has pressed for the idle time (here 1.5 s, the kiosk's `gameIdleMs`; 5 minutes for real) - and never
+  // merely for being open, which would keep the bar away (and hold every new version) for as long as it is on a screen.
+  section('*** bar while playing: the games with no Start button make the setting work, and an idle one stops counting ***');
+  const NO_START = [
+    ['trivia', 'trivia/next'], ['name_that', 'name_that/next'], ['spelling', 'spelling/next'],
+    ['word_games', 'word_games/next'], ['wordforge', 'wordforge/next'], ['pressgame', 'pressgame/press'], ['comet', 'comet/spark'],
+  ];
+  for (const [type, verb] of NO_START) {
+    const p = await profiles.create(`BT-nostart-${type}`);
+    await profiles.addModule(p.id, type);
+    const st = createState({ url: profiles.stateURL(p.id, 'settings'), user: USER });
+    await st.load(); st.set({ barWhilePlaying: BAR_PLAY_AWAY }); await st.flush(); st.destroy();
+    const bus = createBus();
+    const states = [];
+    bus.subscribe(PLAY_STATE_TOPIC, (r) => states.push(r));
+    const k = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, gameIdleMs: 1500 });
+    const bar = () => root.querySelector('.k-controls');
+    const shown = () => !!bar() && !bar().classList.contains('hidden') && !bar().classList.contains('k-bar-hidden');
+    const panel = () => root.querySelector('.k-stage .k-mod');
+    const id = () => (k.panels().find((x) => x.type === type) || {}).id;
+    const ready = await until(() => !!id() && !!panel() && panel().childElementCount > 0, 15000);
+    check(`${type}: (setup) open, "stays away until I ask" chosen`, ready &&k.barToggle().whilePlaying === 'away', J(k.barToggle()));
+    await sleep(300);
+    check(`${type}: *** open and not pressed: NOT being played (the bar as usual) ***`, k.barToggle().playing === false
+      && k.barToggle().mayPopUp === true && !states.some((s) => s.id === id() && s.playing), J({ probe: k.barToggle(), states }));
+    bus.publish(verb, {});
+    check(`${type}: *** a press on it (${verb}): it says it is being played ***`,
+      await until(() => k.barToggle().playing === true, 3000) && states.some((s) => s.id === id() && s.playing === true && !s.kind),
+      J({ probe: k.barToggle(), states }));
+    if (shown()) await until(() => !shown(), 5000);
+    if (shown()) await key('h');
+    check(`${type}: (setup) the bar away`, !shown(), bar()?.className);
+    await pressQuiet(panel(), 'touch');
+    await key('x');
+    check(`${type}: *** being played: a touch on the panel and a key do not bring the bar ***`, !shown() && k.barToggle().playing === true,
+      J({ cls: bar()?.className, probe: k.barToggle() }));
+    const rested = await until(() => k.barToggle().playing === false, 6000);
+    check(`${type}: *** nobody pressed for the idle time: no longer being played (it said rest) ***`, rested
+      && states.some((s) => s.id === id() && s.playing === false && s.rest === true), J({ probe: k.barToggle(), states: states.slice(-3) }));
+    check(`${type}: ...and resting is not pausing: the bar's Pause / Play does not turn to "Play"`, k.playPause().paused === false,
+      J(k.playPause()));
+    await key('x');
+    check(`${type}: *** ...so a key brings the bar as usual again ***`, shown(), J({ cls: bar()?.className, probe: k.barToggle() }));
+    k.destroy(); root.innerHTML = '';
+  }
+
   document.getElementById('summary').textContent = failed
     ? `${failed} FAILED / ${passed} passed`
     : `ALL PASS — ${passed} checks`;
