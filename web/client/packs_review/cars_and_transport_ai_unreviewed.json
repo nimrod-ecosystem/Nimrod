@@ -4,7 +4,7 @@
   "name": "Cars & transport (AI-written, not yet reviewed)",
   "description": "44 questions on cars, trains, boats, planes and getting around (8 very easy, 10 easy, 16 medium, 10 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 44 of 44 written, fixed 9 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,14 +28,14 @@
       "category": "Cars & transport",
       "explain": "Many cars also carry a spare tire in the trunk.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: ordinary cars have four wheels; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Car",
+        "note": "Fetched 2026-10-07; the page says: 'have four wheels'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-06",
-        "fixed": "explain reworded (was an awkward fragment)"
+        "fixed": "explain reworded (was an awkward fragment); source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -51,13 +51,14 @@
       "category": "Cars & transport",
       "explain": "Planes use long, flat runways to speed up and slow down.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: planes take off and land at airports; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Airport",
+        "note": "Fetched 2026-10-07; the page says: 'a runway for a plane to take off and to land'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -73,13 +74,14 @@
       "category": "Cars & transport",
       "explain": "The heavy anchor digs into the sea floor and holds the ship in place.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: ships drop anchor to stay in place; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Anchor",
+        "note": "Fetched 2026-10-07; the page says: 'used to secure a vessel to the bed of a body of water to prevent the craft from drifting'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -95,13 +97,14 @@
       "category": "Cars & transport",
       "explain": "Passengers wait on the platform until the train pulls in.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: trains are boarded at stations; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Train_station",
+        "note": "Fetched 2026-10-07; the page says: 'a railway facility where trains stop to load or unload passengers'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -140,13 +143,14 @@
       "category": "Cars & transport",
       "explain": "Turning the wheel turns the front wheels of the car.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: a car is steered with the steering wheel; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Steering_wheel",
+        "note": "Fetched 2026-10-07; the page says: 'is a type of steering control in vehicles'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -162,13 +166,14 @@
       "category": "Cars & transport",
       "explain": "Boats float, so they can carry people across lakes, rivers and seas.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: boats travel on water; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Boat",
+        "note": "Fetched 2026-10-07; the page says: 'A boat is a watercraft'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -184,13 +189,14 @@
       "category": "Cars & transport",
       "explain": "The fuel comes out of a pump through a hose and nozzle.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: cars are refueled at gas stations; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Filling_station",
+        "note": "Fetched 2026-10-07; the page says: 'gas station'; 'is a facility that sells fuel and engine lubricants for motor vehicles'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

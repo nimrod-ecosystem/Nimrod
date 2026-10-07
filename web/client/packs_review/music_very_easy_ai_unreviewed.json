@@ -4,7 +4,7 @@
   "name": "Music - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on music, written by Claude on 2026-10-06 as the gentlest level of the 'Music' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 1 of them merely easy and took off their note, so the pack is 16 very easy, 1 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 15 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 2 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 15 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 2 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -51,13 +51,14 @@
       "category": "Music",
       "explain": "Drummers help keep the beat for the rest of the band.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday instrument everyone has seen played; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Drum",
+        "note": "Fetched 2026-10-07; the page says: 'Drums are usually played by striking with the hand, a beater attached to a pedal, or with one or two sticks'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -398,13 +399,14 @@
       "category": "Music",
       "explain": "Small ones that fit inside the ear are called earbuds.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday household object; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Headphones",
+        "note": "Fetched 2026-10-07; the page says: 'Headphones are a pair of small loudspeaker drivers worn on or around the head over a user's ears.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     }
   ]

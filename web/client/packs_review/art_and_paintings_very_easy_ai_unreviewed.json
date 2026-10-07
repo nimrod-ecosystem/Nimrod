@@ -4,7 +4,7 @@
   "name": "Art & Famous Paintings - very easy (AI-written, not yet reviewed)",
   "description": "17 very easy questions on art and famous paintings, written by Claude on 2026-10-06 as the gentlest level of the 'Art & Famous Paintings' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 3 of them merely easy and took off their note, so the pack is 14 very easy, 3 easy. The independent fact-check kept 17 of 17 written, fixed 5 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 10 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 10 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Art",
       "explain": "Orange sits between red and yellow on the color wheel.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Orange_(colour)",
+        "note": "Fetched 2026-10-07; the page says: 'In traditional colour theory, it is a secondary colour of pigments, produced by mixing yellow and red.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -50,13 +51,14 @@
       "category": "Art",
       "explain": "Violet and lavender are shades of purple.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Purple",
+        "note": "Fetched 2026-10-07; the page says: 'In the RYB color model historically used in the arts, purple is a secondary color created by combining red and blue pigments.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -72,13 +74,14 @@
       "category": "Art",
       "explain": "Adding more white makes a lighter gray.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Grey",
+        "note": "Fetched 2026-10-07; the page says: 'artists have traditionally created grey by mixing black and white in various proportions'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -118,13 +121,14 @@
       "category": "Art",
       "explain": "Brushes come in many sizes, from very fine to very wide.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday household and school object; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Paintbrush",
+        "note": "Fetched 2026-10-07; the page says: 'A paintbrush is a brush used to apply paint or ink.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -163,13 +167,14 @@
       "category": "Art",
       "explain": "Many erasers are made of rubber.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday school object; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Eraser",
+        "note": "Fetched 2026-10-07; the page says: 'erasers were invented to erase mistakes made with a pencil'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -185,13 +190,14 @@
       "category": "Art",
       "explain": "Sidewalk chalk is a thicker kind made for drawing outdoors.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday classroom object; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Blackboard",
+        "note": "Fetched 2026-10-07; the page says: 'A blackboard or a chalkboard is a reusable writing surface on which text or drawings are made with sticks of calcium sulphate or calcium carbonate, better known as chalk.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -207,13 +213,14 @@
       "category": "Art",
       "explain": "A frame protects the edges and helps a picture stand out.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: an everyday household object; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Picture_frame",
+        "note": "Fetched 2026-10-07; the page says: 'A picture frame is a protective and decorative edging for a picture, such as a painting or photograph.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {

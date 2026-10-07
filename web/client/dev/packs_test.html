@@ -474,8 +474,10 @@ try {
         pack.items.every((it) => it.checked && it.checked.by && !('sources' in it.checked)));
     }
     check(`all 192 starter questions carry a source (${own} of ${total})`, total === 192 && own === 192, `${own}/${total}`);
-    check(`...of which ${common} rest on "common knowledge" with the fact-check's reason (the rest name a page)`,
-      common > 0 && common < 192, String(common));
+    // (2026-10-07, Mike: no "common knowledge" sources - "a good way to reinforce the idea of checking the source on
+    // something you get from your AI". Every one was replaced with a fetched page that says it; this holds the line.)
+    check(`*** none rest on "common knowledge": every question names a page (${common} do) ***`,
+      common === 0, String(common));
   }
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

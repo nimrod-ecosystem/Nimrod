@@ -4,7 +4,7 @@
   "name": "Nature walks: plants, birds & trees (AI-written, not yet reviewed)",
   "description": "42 questions on what you see on a nature walk: plants, birds and trees (6 very easy, 12 easy, 12 medium, 12 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 42 of 44 written, fixed 12 and deleted 2. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
-    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 5 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 5 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing. On 2026-10-07 every item whose `source` said \"common knowledge\" was given a real source instead: a page fetched that day that states the fact, with the supporting phrase quoted in `source.note` (each such item's `checked.fixed` records the change).",
     "url": "",
     "licence": "unreviewed - not cleared to ship"
   },
@@ -28,13 +28,14 @@
       "category": "Nature walks",
       "explain": "Each acorn holds a seed that can grow into a new oak.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: acorns are the nuts of oak trees; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Acorn",
+        "note": "Fetched 2026-10-07; the page says: 'Nut of the oak tree'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -73,13 +74,14 @@
       "category": "Nature walks",
       "explain": "Most pines keep their needles all through the winter.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: pine leaves are called needles; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Pine",
+        "note": "Fetched 2026-10-07; the page says: 'The species are trees or shrubs with their leaves in bunches, usually of 2 to 5 needles.'"
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -95,13 +97,14 @@
       "category": "Nature walks",
       "explain": "Later each flower turns into a white puff of seeds.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: dandelions are a common yellow lawn flower; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Taraxacum_officinale",
+        "note": "Fetched 2026-10-07; the page says: 'The common dandelion is well-known for its yellow flower heads'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -117,13 +120,14 @@
       "category": "Nature walks",
       "explain": "Woodpeckers drill into wood to find insects and to make nest holes.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: woodpeckers peck at trees; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Woodpecker",
+        "note": "Fetched 2026-10-07; the page says: 'Their pecking serves mostly to aid their forage for insect prey in the trunks and branches of trees'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
@@ -139,13 +143,14 @@
       "category": "Nature walks",
       "explain": "Sunflower seeds are a favorite snack for people and birds alike.",
       "source": {
-        "ref": "common knowledge",
-        "note": "Universally known: sunflowers are tall with big yellow seed-filled heads; no citation needed."
+        "url": "https://en.wikipedia.org/wiki/Helianthus_annuus",
+        "note": "Fetched 2026-10-07; the page says: 'the domestic sunflower often possesses a single large flower head atop an unbranched stem'; 'The domesticated form of common sunflower is harvested for its edible seeds'."
       },
       "ai_written": true,
       "checked": {
         "by": "Claude (fact-check pass)",
-        "at": "2026-10-06"
+        "at": "2026-10-06",
+        "fixed": "source: common knowledge replaced with en.wikipedia.org (2026-10-07)"
       }
     },
     {
