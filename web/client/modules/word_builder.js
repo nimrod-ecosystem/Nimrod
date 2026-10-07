@@ -244,6 +244,7 @@ registerModule(
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null,
       startFor: ladderRows.startFor, startMark: ladderRows.startMark,
+      playersHost: ladderRows.playersHost,   // players: the screen's players (player_picker.js)
       onChange: () => { if (!ladderSeen) { ladderSeen = true; ladderArrived(); } api?.render(); },
     });
     ladderRows.attach(session);

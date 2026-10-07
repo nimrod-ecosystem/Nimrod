@@ -1635,6 +1635,20 @@ Shared Q | Shared A` });
       t.inst.destroy();
     }
     {
+      // players (2026-10-06, player_picker.js): somebody else PICKED from this login plays as themselves.
+      const people = peopleRows();
+      const screen = liveRow();
+      const t = rig({ saved: { bank: BANK3, players: [{ kind: 'self' }, { kind: 'person', id: 'sam', name: 'Sam' }] },
+        personId: 'pat', ladderRow: screen, makePersonState: people.make });
+      await sleep(30);
+      answerRight(t); next(t); answerRight(t); next(t);
+      await sleep(10);
+      check('*** players picked from this login: each one\'s Trivia level is kept with them (Pat\'s and Sam\'s own rows) ***',
+        prow(people, 'pat')?.n === 1 && prow(people, 'sam')?.n === 1 && !screen.get().ladder?.players?.['person:sam'],
+        JSON.stringify([prow(people, 'pat'), prow(people, 'sam'), screen.get().ladder?.players]));
+      t.inst.destroy();
+    }
+    {
       // *** "START TRIVIA AT": somebody older starts above the easy end. ***
       const rows = getManifest('trivia').settings || [];
       const st = rows.find((f) => f.key === PERSON_START_KEY);

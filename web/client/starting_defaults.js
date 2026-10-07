@@ -236,7 +236,7 @@ const THEME_WORDS = { contrast: 'High contrast' };
 
 export const SETTING_WORDS = Object.freeze({
   complexity: { label: 'How much the menu shows', say: (v) => COMPLEXITY_WORDS[v] || String(v) },
-  theme: { label: 'Colours', say: (v) => THEME_WORDS[v] || String(v) },
+  theme: { label: 'Theme', say: (v) => THEME_WORDS[v] || String(v) },   // (themes, 2026-10-06: was "Colours")
   // flash_limit.js's stored forms: a number, 'none', or 'wcag-2.3.1'. (Spelt here, not imported:
   // flash_limit.js imports this file, and a pure table should not need a cycle.)
   flashLimitPerSecond: { label: 'Flashing', say: (v) => {

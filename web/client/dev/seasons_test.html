@@ -214,10 +214,12 @@ try {
     check('*** listThemes offers "With the seasons", LAST, marked follows ***', L[L.length - 1].id === 'seasons' && L[L.length - 1].follows === true
       && /seasons/i.test(L[L.length - 1].label), J(L[L.length - 1]));
     const holidayIds = Object.keys(THEMES).filter((id) => THEMES[id].group === 'holiday');
-    check('*** the eleven holiday themes are in THEMES (so every theme check measures them) but NOT in the Colours list ***',
-      holidayIds.length === 11 && holidayIds.every((id) => !L.some((t) => t.id === id)), holidayIds.join());
-    check('every other real theme is listed first, in THEMES\' order, the default first; Spring and Summer among them',
-      J(L.slice(0, -1).map((t) => t.id)) === J(Object.keys(THEMES).filter((id) => THEMES[id].group !== 'holiday')) && L[0].id === 'default'
+    // (themes, 2026-10-06, deliberately reversed - Mike: "You should also be able to choose any of the seasonal ones at
+    // any time." The holidays were left out of the list while it was stepped one press at a time; it is a gallery now.)
+    check('*** the eleven holiday themes are in THEMES (so every theme check measures them) AND in the Theme list ***',
+      holidayIds.length === 11 && holidayIds.every((id) => L.some((t) => t.id === id)), holidayIds.join());
+    check('every real theme is listed first, in THEMES\' order, the default first; Spring and Summer among them',
+      J(L.slice(0, -1).map((t) => t.id)) === J(Object.keys(THEMES)) && L[0].id === 'default'
       && L.some((t) => t.id === 'spring') && L.some((t) => t.id === 'summer'));
     check('*** every holiday in the schedule has a theme and a scene of that name ***',
       HOLIDAY_IDS.every((id) => THEMES[HOLIDAYS[id].scene]?.scene === HOLIDAYS[id].scene && SCENES[HOLIDAYS[id].scene]));
@@ -653,9 +655,10 @@ try {
     const want = paintedTheme('seasons');
     const items = rowItems(kiosk);
     const ids = items.map((i) => i.id);
-    check('*** with the seasons: one row per holiday, eleven, on the Display tab; the old single row is gone ***',
+    // (themes, 2026-10-06, deliberately: the holiday rows moved with the Theme row to the new Theme tab.)
+    check('*** with the seasons: one row per holiday, eleven, on the Theme tab; the old single row is gone ***',
       HOLIDAY_FIELDS.every((fld) => ids.includes(`set:${fld.key}`)) && !ids.includes('set:holidayLooks')
-      && items.filter((i) => /^set:holiday/.test(i.id)).every((i) => i.tab === 'display'), ids.filter((i) => /^set:holiday/.test(i)).join());
+      && items.filter((i) => /^set:holiday/.test(i.id)).every((i) => i.tab === 'theme'), ids.filter((i) => /^set:holiday/.test(i)).join());
     const hrow = items.find((i) => i.id === 'set:holidayHalloween');
     check('...each names its next dates', hrow && /^Halloween look, /.test(hrow.label) && / to /.test(hrow.label), hrow?.label);
     const why = items.find((i) => i.id === 'seasons-why');

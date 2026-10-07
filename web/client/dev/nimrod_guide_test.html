@@ -318,9 +318,10 @@ try {
     check('*** ...and SHOWS the theme page in the settings panel by itself (settings-module/open sc-theme) ***',
       got.some((g) => g.topic === SETTINGS_OPEN_TOPIC && g.payload.page === 'sc-theme'));
     check('...but does NOT open the settings MENU by itself (it would take the scan)', !got.some((g) => g.topic === MENU_TAB_TOPIC));
-    const actBtn = [...mount.querySelectorAll('[data-ng-act]')].find((b) => /Display/.test(b.textContent));
+    // (themes, 2026-10-06: the theme has its own tab now, beside Display.)
+    const actBtn = [...mount.querySelectorAll('[data-ng-act]')].find((b) => /on Theme/.test(b.textContent));
     actBtn.click();
-    check('*** its button opens the settings menu on the Display tab ***', got.some((g) => g.topic === MENU_TAB_TOPIC && g.payload.tab === 'display'));
+    check('*** its button opens the settings menu on the Theme tab ***', got.some((g) => g.topic === MENU_TAB_TOPIC && g.payload.tab === 'theme'));
     check('the map follows: the theme open, you marked in it', q('.ng-tree [aria-current="true"]')?.textContent.includes('Your theme'));
     check('*** where he is is kept on his state (walk), not a setting ***', J(state.data().walk) === J([GUIDE_ROOT, 'theme']));
 

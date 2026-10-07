@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>themes — a still of every theme, sort and filter, every holiday, the Themes panel and the Theme tab — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{width:640px;margin:8px 0;border:1px dashed #999;position:relative;min-height:60px}
+  #root{width:1100px;height:640px;position:relative}
+  #show{width:760px;margin:12px 0;padding:10px;border:1px solid #999;background:#fff}
+</style>
+</head>
+<body>
+<h1>themes — Mike, 2026-10-06: "Colours should change to theme and show a still of what each one looks like"</h1>
+<p>The theme list is a gallery (<code>choice_picker.js</code> + <code>theme_gallery.js</code>): a still of each theme
+drawn from its own scene and palette, the Modules library's search, Order and Filters (<code>sort_filter.js</code>,
+shared with <code>library.js</code>, which is checked here to behave exactly as before), every holiday choosable at
+any time, a <b>Themes</b> panel (<code>modules/themes.js</code>) and a <b>Theme</b> tab in the ⚙ menu, built once.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+<div id="bare" class="stage" style="height:420px"></div>
+<div id="root"></div>
+<h2>The gallery, as the menu draws it (for a screenshot)</h2>
+<div id="show"></div>
+
+<script type="module">
+import { queryWords, matchesQuery, filterWith, sortWith, sortFilter, byText } from '../sort_filter.js';
+import { THEME_GALLERY_DEFAULTS, THEME_FACETS, THEME_SORTS, THEME_KINDS, themeKind, isDarkTheme, isMovingTheme, isEasyToRead,
+  themeTextContrast, themeLightness, isPinnedOption, themeOptionText, stillDate, mountThemeStill, createStills,
+  recentThemes, rememberThemePick, STILL_STAGE } from '../theme_gallery.js';
+import { mountChoicePicker } from '../choice_picker.js';
+import { THEMES, listThemes, TEXT_MIN } from '../theme.js';
+import { resolveSeasonal, HOLIDAY_IDS } from '../seasons.js';
+import { mountSettings } from '../settings.js';
+import { normalizeField, fieldItems } from '../settings_fields.js';
+import { libraryItems, filterItems, sortItems, haystack, CATEGORY_IDS, USE_FILTERS } from '../library.js';
+import { createBus } from '../bus.js';
+import { mountModule, getManifest } from '../module.js';
+import { verbTarget, verbTopic, MENU_TAB_IDS } from '../actions.js';
+import { CATALOG } from '../modules_catalog.js';
+import { HEALTH_EXPECT } from '../health.js';
+import { createProfilesClient } from '../profile.js';
+import { mountKiosk } from '../kiosk.js';
+import { stashPreviewLayout } from '../preview.js';
+import { THEMES_PANEL_VERBS, THEME_ROW_ID } from '../modules/themes.js';
+
+const USER = new URLSearchParams(location.search).get('user') || ('themes-' + Math.floor(Math.random() * 1e6));
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function note(t) { const d = document.createElement('div'); d.textContent = `      ${t}`; out.append(d); }
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function settled(fn, ms = 4000) { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (fn()) return true; } catch { /* not yet */ } await sleep(40); } return false; }
+function stage(h = null) { const d = document.createElement('div'); d.className = 'stage'; if (h) d.style.height = h; document.getElementById('stages').append(d); return d; }
+function fakeStorage() {
+  const m = new Map();
+  return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); },
+    removeItem: (k) => { m.delete(k); }, key: (i) => [...m.keys()][i] ?? null, get length() { return m.size; }, clear: () => m.clear() };
+}
+const seams = () => ({ storage: fakeStorage(), session: fakeStorage(), navigate: () => {}, reloadPage: () => {}, recoveryTick: 0 });
+const fakeState = (v = {}) => { let s = { ...v }; return { get: () => s, set: (p) => { s = { ...s, ...p }; }, subscribe: () => () => {}, load: async () => s, flush: async () => {} }; };
+const themeOpts = () => listThemes().map((t) => ({ value: t.id, label: t.label }));
+const ids = Object.keys(THEMES);
+
+let kiosk = null;
+try {
+  // ======================================================================================
+  section('EVERY THEME, CHOOSABLE AT ANY TIME (Mike: "choose any of the seasonal ones at any time")');
+  {
+    const L = listThemes().map((t) => t.id);
+    const holidays = ids.filter((id) => THEMES[id].group === 'holiday');
+    check('*** every theme is in the list, the eleven holidays included, and "With the seasons" still last ***',
+      ids.every((id) => L.includes(id)) && holidays.length === 11 && L[L.length - 1] === 'seasons', J(L));
+    check('every holiday theme is still readable: its words reach the 4.5:1 floor on every surface (theme_test measures the rest)',
+      holidays.every((id) => themeTextContrast(id) >= TEXT_MIN), J(holidays.map((id) => [id, +themeTextContrast(id).toFixed(2)])));
+  }
+
+  // ======================================================================================
+  section('WHAT KIND EACH THEME IS (theme_gallery.js, pure)');
+  {
+    const kinds = Object.fromEntries(['everyday', 'season', 'holiday'].map((k) => [k, ids.filter((id) => themeKind(id) === k)]));
+    check('*** the four seasons are Seasons, in any group (Fall and Winter came first, without one) ***',
+      J(kinds.season.slice().sort()) === J(['fall', 'spring', 'summer', 'winter']), J(kinds.season));
+    check('the eleven holidays are Holidays', kinds.holiday.length === 11 && HOLIDAY_IDS.length === 11, J(kinds.holiday));
+    check('everything else is Everyday (Nimrod, Dusk, High contrast, Warm, Forge, and the live worlds)',
+      kinds.everyday.length === ids.length - 15 && ['default', 'dusk', 'contrast', 'warm', 'forge', 'cyberpunk', 'night'].every((id) => kinds.everyday.includes(id)), J(kinds.everyday));
+    check('"With the seasons" is the follow choice, not a kind; a stranger is nothing', themeKind('seasons') === 'follow' && themeKind('nope') === null);
+    // DARK is MEASURED (the page's luminance), and must agree with every theme's own `dark` flag.
+    const disagree = ids.filter((id) => isDarkTheme(id) !== !!THEMES[id].dark);
+    check('*** light or dark is measured from the page colour, and agrees with every theme’s own dark flag ***', !disagree.length, J(disagree));
+    const darkMax = Math.max(...ids.filter((id) => THEMES[id].dark).map(themeLightness));
+    const lightMin = Math.min(...ids.filter((id) => !THEMES[id].dark).map(themeLightness));
+    check('...with room either side of the line (every dark page under .05, every light one over .6)', darkMax < 0.05 && lightMin > 0.6, `${darkMax} ${lightMin}`);
+    check('moving = it has a scene (the five plain ones are still)', ids.filter((id) => !isMovingTheme(id)).join() === 'default,dusk,contrast,warm,forge',
+      ids.filter((id) => !isMovingTheme(id)).join());
+    const easy = ids.filter((id) => isEasyToRead(id));
+    check(`*** "Easy to read" is ${THEME_GALLERY_DEFAULTS.easyAt}:1 words on every surface, both visions: High contrast is one ***`,
+      easy.includes('contrast') && easy.length < ids.length, J(easy));
+    note(`easy to read (${easy.length} of ${ids.length}): ${easy.join(', ')}`);
+    check('a theme is found by its kind and look in words', /holiday/.test(themeOptionText({ value: 'halloween', label: 'H' })) && /dark/.test(themeOptionText({ value: 'halloween', label: 'H' }))
+      && /still/.test(themeOptionText({ value: 'warm', label: 'W' })) && themeOptionText({ value: '__follow__', label: 'Follow' }).trim() === 'Follow');
+  }
+
+  // ======================================================================================
+  section('THE SHARED SEARCH, ORDER AND FILTERS (sort_filter.js, pure)');
+  {
+    check('words: lower case, empties dropped', J(queryWords('  Dark  CALM ')) === J(['dark', 'calm']));
+    check('every word, any order, any case', matchesQuery('Dusk (dark, calm)', 'calm DARK') && !matchesQuery('Dusk', 'dusk night') && matchesQuery('x', ''));
+    const items = [{ t: 'B', k: 'x' }, { t: 'a', k: 'y' }, { t: 'C', k: 'x' }, { t: 'pin', k: 'z', pin: true }];
+    const facets = [{ id: 'k', any: 'all', test: (it, v) => it.k === v }];
+    check('a facet narrows; its "any" narrows nothing', J(filterWith(items, { text: (i) => i.t, facets, picked: { k: 'x' } }).map((i) => i.t)) === J(['B', 'C'])
+      && filterWith(items, { facets, picked: { k: 'all' } }).length === 4);
+    check('a PINNED item no facet takes away (the search still does)', J(filterWith(items, { text: (i) => i.t, facets, picked: { k: 'x' }, pin: (i) => i.pin }).map((i) => i.t)) === J(['B', 'C', 'pin'])
+      && filterWith(items, { text: (i) => i.t, facets, picked: { k: 'x' }, pin: (i) => i.pin, query: 'zzz' }).length === 0);
+    const sorts = [{ id: 'name', compare: byText((i) => i.t) }];
+    check('an order sorts a copy; an unknown order is the first one', J(sortWith(items, 'nope', sorts).map((i) => i.t)) === J(['a', 'B', 'C', 'pin']) && items[0].t === 'B');
+    check('sortFilter is the two together', J(sortFilter(items, { text: (i) => i.t, facets, picked: { k: 'x' }, sort: 'name', sorts }).map((i) => i.t)) === J(['B', 'C']));
+  }
+
+  // ======================================================================================
+  section('*** THE MODULES LIBRARY ON THE SHARED RULES: NOTHING CHANGED (old code, inline, against the new) ***');
+  {
+    // The library's own filter and sort as they were before sort_filter.js (library.js at ed46ba4), copied here.
+    function oldFilter(items, { category = 'all', use = 'any', query = '' } = {}) {
+      const words = String(query || '').toLowerCase().split(/\s+/).filter(Boolean);
+      return (items || []).filter((it) => {
+        if (category && category !== 'all' && !(it.cats || []).includes(category)) return false;
+        if (use && use !== 'any' && it.use !== use) return false;
+        if (!words.length) return true;
+        const h = haystack(it);
+        return words.every((w) => h.includes(w));
+      });
+    }
+    function oldSort(items, sort = 'name', usage = {}) {
+      const recent = Array.isArray(usage && usage.recent) ? usage.recent : [];
+      const counts = (usage && usage.counts) || {};
+      const byName = (a, b) => String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' });
+      const rank = (it) => { const i = it.type ? recent.indexOf(it.type) : -1; return i < 0 ? Infinity : i; };
+      const n = (it) => (it.type && Number(counts[it.type])) || 0;
+      const list = [...(items || [])];
+      if (sort === 'recent') return list.sort((a, b) => (rank(a) - rank(b)) || byName(a, b));
+      if (sort === 'most') return list.sort((a, b) => (n(b) - n(a)) || byName(a, b));
+      return list.sort(byName);
+    }
+    const items = libraryItems({ bricks: { objects: [{ id: 'b1', title: 'Brick One', dims_mm: [40, 40, 40] }] } });
+    const usage = { recent: ['clock', 'photos', 'trivia'], counts: { photos: 5, clock: 2, board: 9 } };
+    const bad = [];
+    for (const category of [...CATEGORY_IDS, '', null]) {
+      for (const use of [...USE_FILTERS.map((u) => u.id), '']) {
+        for (const query of ['', 'game', 'look at', 'zzz', 'Photos PEOPLE']) {
+          const a = oldFilter(items, { category, use, query }).map((i) => i.key);
+          const b = filterItems(items, { category, use, query }).map((i) => i.key);
+          if (J(a) !== J(b)) bad.push(`filter ${category}/${use}/${query}`);
+        }
+      }
+    }
+    for (const s of ['name', 'recent', 'most', 'nonsense']) {
+      for (const u of [usage, {}, null]) {
+        if (J(oldSort(items, s, u).map((i) => i.key)) !== J(sortItems(items, s, u).map((i) => i.key))) bad.push(`sort ${s}/${J(u)}`);
+      }
+    }
+    check(`*** filterItems and sortItems give exactly what they gave before, over ${items.length} items and every filter and order ***`, !bad.length, bad.slice(0, 6).join('; '));
+  }
+
+  // ======================================================================================
+  section('A STILL OF EACH THEME (theme_gallery.js mountThemeStill)');
+  {
+    // A holiday's still is drawn on a day the schedule calls that holiday.
+    const now = new Date(2026, 9, 6, 12).valueOf();
+    const holidayThemes = ids.filter((id) => THEMES[id].group === 'holiday');
+    // (Each asked with only its own holiday kept: two can overlap - Valentine's 2027 falls inside Lunar New Year's week.)
+    const only = (id) => Object.fromEntries(HOLIDAY_IDS.map((h) => [h, (THEMES[id].scene === h) || (id === 'harvest' && h === 'thanksgiving')]));
+    const wrong = holidayThemes.filter((id) => resolveSeasonal(stillDate(id, now), { holidays: only(id) }).theme !== id);
+    check('*** a holiday’s still is drawn on a day inside that holiday (the schedule agrees, for all eleven) ***', !wrong.length,
+      J(wrong.map((id) => [id, stillDate(id, now).toDateString(), resolveSeasonal(stillDate(id, now), { holidays: only(id) }).theme])));
+    check('...any other theme is drawn for now', stillDate('fall', now).valueOf() === now);
+    const st = stage();
+    st.style.width = '200px';
+    const box = document.createElement('span');
+    box.className = 'chp-still';
+    st.append(box);
+    const plain = mountThemeStill(box, 'warm');
+    check('*** a plain theme: a small page in its palette (its ground, a panel, its words, its accent) ***',
+      plain && !box.querySelector('.ls') && box.querySelectorAll('.tg-card').length === 2
+      && box.querySelector('.tg-stage').style.background.length > 0, box.innerHTML.slice(0, 120));
+    plain.destroy();
+    check('destroy takes it away', !box.querySelector('.tg-stage'));
+    const live = mountThemeStill(box, 'cyberpunk');
+    const ls = box.querySelector('.ls');
+    check('*** a live theme: its own scene, held STILL (motion "still": every animation paused), with a panel over it ***',
+      !!ls && ls.classList.contains('ls-still') && ls.dataset.scene === 'cyberpunk' && box.querySelectorAll('.tg-card').length === 1, ls?.className);
+    const moving = [...ls.querySelectorAll('*')].filter((el) => { const cs = getComputedStyle(el); return cs.animationName !== 'none' && cs.animationPlayState !== 'paused'; });
+    check('...and nothing in it is moving', moving.length === 0, `${moving.length} running`);
+    const k = parseFloat((box.querySelector('.tg-stage').style.transform.match(/scale\(([\d.]+)\)/) || [])[1]);
+    check(`...drawn on a ${STILL_STAGE.width}×${STILL_STAGE.height} stage, scaled to the tile’s width`, Math.abs(k - box.clientWidth / STILL_STAGE.width) < 1e-6 && k > 0.4 && k < 0.6,
+      `${box.querySelector('.tg-stage').style.transform} for ${box.clientWidth}px`);
+    live.destroy();
+    const follow = mountThemeStill(box, 'seasons', { now });
+    check('"With the seasons": a still of what it paints today', !!follow && box.querySelector('.tg-stage')?.dataset.theme === 'seasons' && !!box.querySelector('.ls'));
+    follow.destroy();
+    // THE COST: every still at once, timed, and how many elements they make.
+    const t0 = performance.now();
+    const s = createStills({ mode: 'eager', now });
+    const boxes = [];
+    for (const id of [...ids, 'seasons']) { const b = document.createElement('span'); b.className = 'chp-still'; st.append(b); boxes.push(b); s.attach(b, id); }
+    const ms = performance.now() - t0;
+    check('every theme’s still draws (eager)', s.count() === ids.length + 1, s.count());
+    note(`COST: all ${s.count()} stills drawn in ${ms.toFixed(0)} ms here (${(ms / s.count()).toFixed(1)} ms each), ${s.nodes()} elements in all (${Math.round(s.nodes() / s.count())} each)`);
+    // Moving a still into a new box draws nothing again.
+    const nb = document.createElement('span'); nb.className = 'chp-still'; st.append(nb);
+    const before = s.count();
+    s.attach(nb, 'fall');
+    check('*** a still already drawn is MOVED into a new box, not drawn again (a search never redraws a scene) ***', s.count() === before && !!nb.querySelector('.tg-stage'));
+    s.destroy();
+    check('destroying the set lets every still go', !st.querySelector('.tg-stage'));
+    const off = createStills({ mode: 'off' });
+    off.attach(nb, 'fall');
+    check('"off": no stills at all (a device that should not draw scenes)', off.count() === 0 && off.mode() === 'off');
+    st.remove();
+  }
+
+  // ======================================================================================
+  section('THE GALLERY (choice_picker.js on a theme list)');
+  {
+    const st = stage();
+    const store = fakeStorage();
+    const got = [];
+    let p = mountChoicePicker(st, { key: 'theme', title: 'Theme', options: themeOpts(), value: 'dusk', stills: 'eager', storage: store, onPick: (v) => got.push(v) });
+    let pr = p.__probe();
+    check('*** a theme list is a gallery: every theme a tile, and every tile has its still ***', pr.gallery === true && pr.tiles === listThemes().length
+      && pr.stills === listThemes().length && st.querySelectorAll('[data-chp-still] .tg-stage').length === listThemes().length, J({ ...pr, shown: undefined, stillIds: undefined }));
+    check('...and keeps its colours as a strip under the still', [...st.querySelectorAll('[data-chp-pick]')].every((t) => t.querySelectorAll('.chp-strip .chp-chip').length >= 3));
+    check('*** the Modules library’s own controls: a search box, an Order list, a Filters… button (sort_filter.js) ***',
+      !!st.querySelector('input.sf-search[data-chp-search]') && !!st.querySelector('select.sf-select[data-chp-sort]') && !!st.querySelector('button.sf-btn[data-chp-more]')
+      && st.querySelector('[data-chp-morebox]').hidden === true);
+    check('the switch stops: Keep, then the "Show" chips, then the rows of tiles (box, list and button are not stops)',
+      J(pr.rows.slice(0, 3)) === J(['actions', 'filters', 'grid']) && !st.querySelector('[data-chp-search][data-chp-stop]') && !st.querySelector('[data-chp-sort][data-chp-stop]'), J(pr.rows));
+    check(`*** it opens in the usual order: "With the seasons" first (a pin), then everyday, the seasons, the holidays in the year’s order ***`,
+      pr.sort === 'usual' && pr.shown[0] === 'seasons' && pr.shown[1] === 'default' && pr.shown.indexOf('spring') < pr.shown.indexOf('fall')
+      && pr.shown.indexOf('fall') < pr.shown.indexOf('newYear') && pr.shown.indexOf('valentines') < pr.shown.indexOf('halloween')
+      && pr.shown.at(-1) === 'christmas', J(pr.shown));
+    st.querySelector('[data-chp-filter="kind"][data-chp-val="holiday"]').click();
+    pr = p.__probe();
+    check('*** "Holidays": the eleven holidays (and the pinned "With the seasons") ***', pr.shown.length === 12 && pr.shown[0] === 'seasons'
+      && pr.shown.slice(1).every((id) => THEMES[id].group === 'holiday') && st.querySelector('[data-chp-val="holiday"]').getAttribute('aria-pressed') === 'true', J(pr.shown));
+    st.querySelector('[data-chp-filter="kind"][data-chp-val="season"]').click();
+    check('"Seasons": spring, summer, fall, winter, in that order', J(p.__probe().shown.slice(1)) === J(['spring', 'summer', 'fall', 'winter']), J(p.__probe().shown));
+    st.querySelector('[data-chp-filter="kind"][data-chp-val="all"]').click();
+    st.querySelector('[data-chp-more]').click();
+    check('Filters… shows the rest', st.querySelector('[data-chp-morebox]').hidden === false && st.querySelector('[data-chp-more]').getAttribute('aria-expanded') === 'true');
+    const look = st.querySelector('[data-chp-facet="look"]');
+    look.value = 'dark'; look.dispatchEvent(new Event('change', { bubbles: true }));
+    check('*** Dark: only dark themes ***', p.__probe().shown.slice(1).every((id) => isDarkTheme(id)) && p.__probe().shown.length > 5, J(p.__probe().shown));
+    const motion = st.querySelector('[data-chp-facet="motion"]');
+    motion.value = 'still'; motion.dispatchEvent(new Event('change', { bubbles: true }));
+    check('Dark and Still: Dusk alone (plus the pin)', J(p.__probe().shown) === J(['seasons', 'dusk']), J(p.__probe().shown));
+    const read = st.querySelector('[data-chp-facet="read"]');
+    look.value = 'any'; look.dispatchEvent(new Event('change', { bubbles: true }));
+    read.value = 'easy'; read.dispatchEvent(new Event('change', { bubbles: true }));
+    check('Still and Easy to read: High contrast among them', p.__probe().shown.includes('contrast') && p.__probe().shown.slice(1).every((id) => isEasyToRead(id) && !isMovingTheme(id)), J(p.__probe().shown));
+    motion.value = 'moving'; motion.dispatchEvent(new Event('change', { bubbles: true }));
+    look.value = 'light'; look.dispatchEvent(new Event('change', { bubbles: true }));
+    const none = p.__probe().shown.filter((id) => id !== 'seasons');
+    if (!none.length) {
+      check('*** nothing matches: it says so, with "Show everything" ***', !!st.querySelector('[data-chp-none] [data-chp-clear]'));
+      st.querySelector('[data-chp-clear]').click();
+    } else {
+      note(`(light, moving and easy to read: ${none.join(', ')})`);
+      const box = st.querySelector('[data-chp-search]');
+      box.value = 'zzzz'; box.dispatchEvent(new Event('input', { bubbles: true }));
+      check('*** nothing matches: it says so, with "Show everything" ***', !!st.querySelector('[data-chp-none] [data-chp-clear]'));
+      st.querySelector('[data-chp-clear]').click();
+    }
+    pr = p.__probe();
+    check('"Show everything" clears every filter and the search', pr.shown.length === listThemes().length && J(pr.filters) === J({ kind: 'all', look: 'any', motion: 'any', read: 'any' }) && pr.query === '', J(pr.filters));
+    const box = st.querySelector('[data-chp-search]');
+    box.value = 'holiday dark'; box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('*** the search finds a theme by its kind and look, not only its name ("holiday dark") ***',
+      p.__probe().shown.length > 3 && p.__probe().shown.every((id) => THEMES[id].group === 'holiday' && isDarkTheme(id)), J(p.__probe().shown));
+    box.value = ''; box.dispatchEvent(new Event('input', { bubbles: true }));
+    const sortSel = st.querySelector('[data-chp-sort]');
+    sortSel.value = 'name'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
+    const byName = p.__probe().shown.slice(1).map((id) => THEMES[id].label);
+    check('By name', J(byName) === J([...byName].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))), J(byName.slice(0, 5)));
+    sortSel.value = 'light'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
+    const lum = p.__probe().shown.slice(1).map(themeLightness);
+    check('*** Light to dark: the page gets darker all the way down ***', lum.every((v, i) => i === 0 || v <= lum[i - 1] + 1e-9), J(lum.map((v) => +v.toFixed(2))));
+    st.querySelector('[data-chp-pick="halloween"]').click();
+    st.querySelector('[data-chp-pick="steampunk"]').click();
+    check('a pick reaches the host, and is remembered on this device for "Recently used"', J(got) === J(['halloween', 'steampunk']) && J(recentThemes(store)) === J(['steampunk', 'halloween']));
+    sortSel.value = 'recent'; sortSel.dispatchEvent(new Event('change', { bubbles: true }));
+    check('*** Recently used: the last picked first ***', J(p.__probe().shown.slice(0, 3)) === J(['seasons', 'steampunk', 'halloween']), J(p.__probe().shown.slice(0, 4)));
+    check('the stills were not drawn again by any of it', p.__probe().stills === listThemes().length, p.__probe().stills);
+    p.setValue('night');
+    check('*** setValue marks another as chosen without drawing the list again ***', st.querySelector('[data-chp-pick="night"]').getAttribute('aria-pressed') === 'true'
+      && st.querySelectorAll('[aria-pressed="true"][data-chp-pick]').length === 1 && /Keep Night/.test(st.querySelector('[data-chp-act="cancel"]').textContent));
+    p.destroy();
+    check('destroy lets the stills go', !st.querySelector('.tg-stage'));
+
+    // THE SWITCH: Keep, the Show chips, the tiles.
+    const got2 = [];
+    p = mountChoicePicker(st, { key: 'theme', options: themeOpts(), value: 'default', stills: 'off', onPick: (v) => got2.push(v) });
+    p.select();
+    check('a switch: the first select lights Keep', p.__probe().litGroup === 'actions');
+    p.next(); p.select();
+    check('next to the Show chips, select goes in', p.__probe().litGroup === 'filters' && p.__probe().lit.i === 0);
+    p.next(); p.next(); p.next(); p.select();
+    check('*** a switch chooses "Holidays", and the light stays on the chip ***', J(p.__probe().filters.kind) === '"holiday"' && /Holidays/.test(p.__probe().litText) && p.__probe().shown.length === 12, J(p.__probe()));
+    p.back(); p.next(); p.select(); p.next(); p.select();
+    check('*** ...then out, down to the first row of tiles, in, one along, and takes it: a holiday ***', got2.length === 1 && THEMES[got2[0]]?.group === 'holiday', J(got2));
+    check('"off": no stills drawn, the colour strip only', p.__probe().stills === 0 && !st.querySelector('[data-chp-still]') && !!st.querySelector('.chp-strip'));
+    p.destroy();
+    const plainList = mountChoicePicker(st, { key: 'font', options: Array.from({ length: 14 }, (_, i) => ({ value: `f${i}`, label: `F${i}` })) });
+    check('*** any other list is exactly what it was: no gallery, no Show chips ***', plainList.__probe().gallery === false && !st.querySelector('[data-chp-filter]') && !st.querySelector('.sf-tools'));
+    plainList.destroy();
+    const noGal = mountChoicePicker(st, { key: 'theme', gallery: false, options: themeOpts() });
+    check('`gallery: false` keeps a theme list plain', noGal.__probe().gallery === false && !st.querySelector('[data-chp-still]'));
+    noGal.destroy();
+    st.remove();
+  }
+  {
+    // LAZY: only the tiles in view draw, and more as the list scrolls (headless Chrome delivers IntersectionObserver).
+    const st = stage();
+    const p = mountChoicePicker(st, { key: 'theme', options: themeOpts(), stills: 'lazy' });
+    await settled(() => p.__probe().stills > 0, 3000);
+    const first = p.__probe().stills;
+    const grid = st.querySelector('[data-chp-results]');
+    grid.scrollTop = grid.scrollHeight;
+    await settled(() => p.__probe().stills > first, 3000);
+    const after = p.__probe().stills;
+    check(`*** lazy: the tiles in view draw first (${first} of ${listThemes().length}), more as the list scrolls (${after}) ***`,
+      first > 0 && first < listThemes().length && after > first, `${first} -> ${after}, mode ${p.__probe().stillMode}`);
+    p.destroy();
+    st.remove();
+  }
+
+  // ======================================================================================
+  section('THE MENU KEEPS A LIST OPEN FOR A PANEL (settings.js openRow { stay })');
+  {
+    const field = normalizeField({ key: 'theme', label: 'Theme', kind: 'choice', options: themeOpts() });
+    let row = { theme: 'default' };
+    const writes = [];
+    const mk = (asPanel) => {
+      const host = stage();
+      const m = mountSettings(host, { gated: false, inline: true, asPanel, subject: () => ({ type: 'x', title: 'X' }),
+        fields: () => fieldItems([field], { values: () => row, onStep: (k, v) => { writes.push(v); row = { ...row, [k]: v }; } }) });
+      m.open();
+      return { m, host };
+    };
+    const { m, host } = mk(true);
+    check('(setup) openRow with stay opens the gallery', !!m.openRow('set:theme', { stay: true }) && m.page() === '__choice' && m.pickerProbe()?.gallery === true);
+    check('...with no "Keep …": the panel is the list (it is not in front of anything)', !host.querySelector('[data-chp-act="cancel"]'));
+    host.querySelector('[data-chp-pick="winter"]').click();
+    check('*** a choice is written by the row’s own write, and the list STAYS open, marking it ***', J(writes) === J(['winter']) && m.page() === '__choice'
+      && host.querySelector('[data-chp-pick="winter"]').getAttribute('aria-pressed') === 'true');
+    row = { theme: 'ocean' };
+    m.refresh();
+    check('*** a change made elsewhere shows in the open list at the next repaint ***', host.querySelector('[data-chp-pick="ocean"]').getAttribute('aria-pressed') === 'true');
+    m.destroy();
+    const plain = mk(false);
+    plain.m.openRow('set:theme', { stay: true });
+    plain.host.querySelector('[data-chp-pick="fall"]').click();
+    check('*** in the ⚙ menu (not a panel) `stay` is ignored: a choice closes the list, as always ***', plain.m.page() === null && row.theme === 'fall');
+    plain.m.destroy();
+  }
+
+  // ======================================================================================
+  section('THE THEMES PANEL (modules/themes.js)');
+  {
+    const man = getManifest('themes');
+    check('registered, titled Themes, on the new core', !!man && man.title === 'Themes' && man.core === 'new', J(man));
+    check('*** a switch reaches it: the four moves (actions.js MODULE_VERBS) ***', ['next', 'prev', 'select', 'back'].every((v) => verbTarget('themes', v)?.topic === THEMES_PANEL_VERBS[v]));
+    check('described in the catalog (so the Modules library offers it) and says what its silence means',
+      CATALOG.some((c) => c.type === 'themes') && HEALTH_EXPECT.themes?.idle === true);
+    check('*** the ⚙ menu has a Theme tab id (switch, voice and the guide can name it) ***', MENU_TAB_IDS.includes('theme'));
+    const mount = document.getElementById('bare');
+    const bus = createBus();
+    const inst = mountModule('themes', { mount, bus, state: fakeState(), events: null, user: null, profileId: 'nobody', personId: null, instanceId: 'bare-themes' });
+    await inst.init();
+    const pr = inst.impl.__probe();
+    check('*** on its own (no screen): the gallery as a PREVIEW, and it says so ***', pr.mode === 'preview' && pr.picker?.gallery === true
+      && /colours this panel only/.test(mount.textContent), J({ mode: pr.mode }));
+    mount.querySelector('[data-chp-pick="halloween"]').click();
+    const pbox = mount.querySelector('[data-themes-preview]');
+    check('...a choice colours the panel’s own box, nothing else', pbox.style.getPropertyValue('--bg').trim().toLowerCase() === THEMES.halloween.vars['--bg'].toLowerCase()
+      && !document.documentElement.style.getPropertyValue('--bg'));
+    bus.publish(THEMES_PANEL_VERBS.select);
+    check('a switch move reaches its list', inst.impl.__probe().picker?.litGroup != null, J(inst.impl.__probe().picker?.lit));
+    inst.destroy();
+  }
+
+  // ======================================================================================
+  section('A REAL SCREEN: Photos and the Themes panel; the ⚙ menu’s Theme tab');
+  {
+    const profiles = createProfilesClient({ user: USER });
+    const p = await profiles.create('TEST-themes-panel');
+    const photos = await profiles.addModule(p.id, 'photos');
+    const th = await profiles.addModule(p.id, 'themes');
+    stashPreviewLayout(p.id, { preset: 'side', slots: [photos.id, th.id] });
+    const root = document.getElementById('root');
+    const bus = createBus();
+    kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams() });
+    const view = () => (kiosk.settingsViews?.() || []).find((v) => v.instanceId === th.id)?.view || null;
+    check('*** the Themes panel is the screen’s own menu, opened on the Theme row’s list ***',
+      await settled(() => view() && view().page() === '__choice' && view().pickerProbe()?.gallery === true, 8000), J(view()?.pickerProbe?.()));
+    const panel = () => root.querySelector(`[data-themes-root]`);
+    check('...every theme a tile, with no "Keep …" (it is the list, not a step on the way to one)',
+      view().pickerProbe().tiles === listThemes().length && !panel().querySelector('[data-chp-act="cancel"]'), J(view().pickerProbe().tiles));
+    panel().querySelector('[data-chp-pick="christmas"]').click();
+    check('*** a holiday chosen in the panel is the screen’s theme, any day of the year (the Theme row’s own write) ***',
+      await settled(() => kiosk.shownTheme() === 'christmas', 3000), String(kiosk.shownTheme()));
+    check('...and the list stays open, marking it', view().page() === '__choice'
+      && panel().querySelector('[data-chp-pick="christmas"]').getAttribute('aria-pressed') === 'true');
+    // The ⚙ menu: the Theme tab.
+    kiosk.menu.open();
+    check('*** the ⚙ menu has a Theme tab, beside Display ***', kiosk.menu.tabs().map((t) => t.id).join().includes('display,theme'), J(kiosk.menu.tabs()));
+    kiosk.menu.showTab('theme');
+    const rows = kiosk.menu.visibleItems().filter((it) => it.kind === 'item').map((it) => it.id);
+    check('...the Theme row is on it, called Theme', rows.includes(THEME_ROW_ID) && kiosk.menu.items().find((it) => it.id === THEME_ROW_ID)?.label === 'Theme', J(rows));
+    check('...and not on Display', (kiosk.menu.showTab('display'), !kiosk.menu.visibleItems().some((it) => it.id === THEME_ROW_ID)));
+    kiosk.menu.focusRow(THEME_ROW_ID); kiosk.menu.select();
+    check('*** its row opens the same gallery, showing the panel’s choice ***', kiosk.menu.page() === '__choice' && kiosk.menu.pickerProbe()?.gallery === true
+      && root.querySelector(':scope .kiosk > [data-settings] [data-chp-pick="christmas"]')?.getAttribute('aria-pressed') === 'true', J(kiosk.menu.pickerProbe()?.tiles));
+    root.querySelector(':scope .kiosk > [data-settings] [data-chp-pick="spring"]').click();
+    check('*** a choice in the ⚙ menu shows in the panel at once ***', await settled(() => kiosk.shownTheme() === 'spring'
+      && panel().querySelector('[data-chp-pick="spring"]')?.getAttribute('aria-pressed') === 'true', 3000), String(kiosk.shownTheme()));
+    // A LEVEL: "Settings for: This device" - its Theme row opens the gallery and writes the device's row.
+    kiosk.menu.setSubject('level:device');
+    kiosk.menu.showTab('module');
+    kiosk.menu.focusRow('level:device:theme'); kiosk.menu.select();
+    check('*** at a level ("This device") the Theme row opens the gallery, Follow first ***', kiosk.menu.page() === '__choice'
+      && kiosk.menu.pickerProbe()?.gallery === true && kiosk.menu.pickerProbe()?.shown?.[0] === '__follow__', J(kiosk.menu.pickerProbe()?.shown?.slice(0, 3)));
+    root.querySelector(':scope .kiosk > [data-settings] [data-chp-pick="night"]').click();
+    check('*** ...and a choice there is written at THAT level ***', kiosk.deviceRow?.().get?.().theme === 'night', J(kiosk.deviceRow?.().get?.()));
+    kiosk.menu.close();
+    // A switch walks the Themes panel.
+    root.querySelector(`[data-mods] .k-dot[data-id="${th.id}"]`)?.click();
+    await sleep(40);
+    bus.publish(verbTopic('select'));
+    await sleep(20);
+    check('*** a switch press reaches the Themes panel’s list ***', view().pickerProbe()?.litGroup != null, J(view().pickerProbe()?.lit));
+    // Pictures of it, for a screenshot: the ⚙ menu left open on its Theme tab's gallery over the screen, and the
+    // gallery on its own below.
+    kiosk.menu.open({ tab: 'theme' });
+    kiosk.menu.focusRow(THEME_ROW_ID); kiosk.menu.select();
+    const show = document.getElementById('show');
+    mountChoicePicker(show, { key: 'theme', title: 'Theme', options: themeOpts(), value: 'spring', stills: 'eager' });
+  }
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+
+await sleep(0);
+const s = document.getElementById('summary');
+s.textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

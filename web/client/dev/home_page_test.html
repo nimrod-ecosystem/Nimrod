@@ -993,7 +993,8 @@ try {
     // (2026-10-03: the settings panel IS the ⚙ menu now; its "Theme page" is the Colours row's own list, every
     // theme a tile in its colours.)
     check('*** the settings panel opened on its themes (the Colours list, a tile per theme) ***',
-      await until(() => /Colours/.test($('#stage [data-settings-root] [data-page] .chp-head')?.textContent || '')
+      // (themes, 2026-10-06: the row and its list are called "Theme" now.)
+      await until(() => /Theme/.test($('#stage [data-settings-root] [data-page] .chp-head')?.textContent || '')
         && $$('#stage [data-settings-root] [data-page] [data-chp-pick] .chp-chip').length >= 3, 8000));
     check('*** the info line along the bottom is put away while Nimrod is there saying it himself ***',
       await until(() => $('.nimrod-infoline')?.hidden === true, 4000));

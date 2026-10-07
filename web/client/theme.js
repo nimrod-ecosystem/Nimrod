@@ -252,8 +252,8 @@ export const THEMES = {
   },
   ...liveThemes(BASE),
   // Spring, Summer and a look for each holiday (Design's seasons-holidays handoff, 2026-10-05). The holiday
-  // ones carry `group: 'holiday'` and are left out of listThemes (see there); THEMES has them all, so every
-  // check that walks THEMES measures them, and applyTheme can paint one when its day comes.
+  // ones carry `group: 'holiday'`; since 2026-10-06 listThemes offers them too (see there). THEMES has them all, so
+  // every check that walks THEMES measures them, and applyTheme can paint one when its day comes.
   ...seasonThemes(BASE),
 };
 
@@ -546,11 +546,16 @@ export function refreshUserFont({ storage } = {}) {
 // [{id,label}] for building a picker. The follow choices ("With the seasons") come LAST, after every real
 // theme, marked `follows: true` - last so a list's first entry is still a real theme, and marked so a
 // picker that draws a theme's colours can ask `paintedTheme` for today's instead of THEMES.
-// (2026-10-05) A HOLIDAY theme (`group: 'holiday'`, live_themes.js seasonThemes) is not listed: it comes by
-// date through "With the seasons". live_themes.js argues it; the case for the opposite is there too.
+// (2026-10-06, Mike: "You should also be able to choose any of the seasonal ones at any time.") EVERY theme is
+// listed, the holiday ones included - they used to come only by date, through "With the seasons" (commit 71a3fa1,
+// guess 4), which kept a stepped list short. The list is no longer stepped by default (a long choice opens the
+// theme gallery, choice_picker.js, with a "Holidays" filter), so its length costs nobody a press; somebody who
+// wants Christmas all December, or the Halloween look all October, now just picks it. "With the seasons" stays,
+// last, as the choice that follows the date. A holiday theme picked by hand is that theme every day: it does not
+// switch itself off when the holiday ends (that is what "With the seasons" is for).
 export function listThemes() {
   return [
-    ...Object.entries(THEMES).filter(([, t]) => t.group !== 'holiday').map(([id, t]) => ({ id, label: t.label })),
+    ...Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label })),
     ...Object.entries(FOLLOW_THEMES).map(([id, t]) => ({ id, label: t.label, follows: true })),
   ];
 }

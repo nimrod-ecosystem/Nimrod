@@ -45,6 +45,8 @@ export const SUITES = [
   'picture_picker',
   // 2026-10-02: a long choice (themes, fonts, scenes) opens a list; a short one, or a person stepping, steps.
   'choice_picker',
+  // players (2026-10-06): one way to pick the players - how many, then people on this login, connected, or guests.
+  'player_picker',
   // R6: mounts and destroys every module six times and reports what does not come back. 23s here.
   'soak',
   // PRIORITY.md #8's voice-command set. Opens no microphone: the matcher is a pure function
@@ -154,6 +156,9 @@ export const SUITES = [
   'overlay',
   // 2026-10-05: "With the seasons" (and Halloween), and a live wallpaper that follows the time of day and the weather.
   'seasons',
+  // 2026-10-06 (themes): a still of every theme, the shared sort and filter, every holiday choosable, the Themes panel
+  // and the ⚙ menu's Theme tab. Mounts a real kiosk.
+  'themes',
   // 2026-10-05: lock this screen (Ctrl+Shift+L) - everything inside works, the ways out and the setup go; unlocked by a
   // person, the version reload and the recovery reload / reboot wait. Mounts real kiosks (needs the server).
   'screen_lock',

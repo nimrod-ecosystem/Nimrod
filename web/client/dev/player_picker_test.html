@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>player picker — one way to pick the players — test</title>
+<link rel="stylesheet" href="../settings.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .stage{width:640px;margin:8px 0;border:1px dashed #999;position:relative;min-height:60px}
+</style>
+</head>
+<body>
+<h1>player picker — Mike, 2026-10-06: "Picking the players will need to be a universal thing"</h1>
+<p>One shared player picker (<code>player_picker.js</code>): how many players, then who sits where, from the people on
+this login, the people connected to it, and guests, with search, an order and a "Show" filter. Asserted pure (the
+seats, an old typed list read as guests, the words), then the settings field it is (<code>settings_fields.js</code>
+kind <code>players</code>), then who plays (<code>adaptive_play.js resolvePlayers</code>, and a picked person's level
+kept with them, on this login), then the picker driven like a switch, then the settings menu opening it.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="stages"></div>
+
+<script type="module">
+import {
+  normalizeSeat, normalizeSeats, followsScreen, seatsLabel, playersValueLabel, peopleKind, pickerItems, seatFromItem,
+  placeSeat, nextGuestName, isJustSelf, mountPlayerPicker, openPlayersDialog, PLAYER_FACETS, PLAYER_SORTS,
+  MAX_SEATS, SCREEN_PLAYERS_KEY, FOLLOW_WORDS,
+} from '../player_picker.js';
+import { normalizeField, fieldItems, fieldValue, displayValue, fieldsFor, KINDS } from '../settings_fields.js';
+import { mountSettings } from '../settings.js';
+import { resolvePlayers, parsePlayers, adaptiveSettings, openPersonLadder, createAdaptiveSession, MAX_PLAYERS } from '../adaptive_play.js';
+import { filterWith } from '../sort_filter.js';
+import { listManifests } from '../module.js';
+// The games with players (each registers its manifest on import).
+import '../modules/trivia.js';
+import '../modules/brain_games.js';
+import '../modules/think_games.js';
+import '../modules/card_sort.js';
+import '../modules/word_builder.js';
+import '../modules/simple_math.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function stage() { const d = document.createElement('div'); d.className = 'stage'; document.getElementById('stages').append(d); return d; }
+
+// Made-up people, as /api/people sends them (claims.row_kind's words).
+const PEOPLE = [
+  { id: 'p-robin', name: 'Robin', kind: 'you' },
+  { id: 'p-juno', name: 'Juno', kind: 'mine' },
+  { id: 'p-kit', name: 'Kit', kind: 'joined' },
+  { id: 'p-ola', name: 'Ola', kind: 'connected', from: 'Ola' },
+  { id: 'p-tam', name: 'Tam', kind: 'shared', from: 'Ola' },
+];
+const SELF = { id: 'p-robin', name: 'Robin' };
+
+try {
+  // ======================================================================================
+  section('THE SEATS — pure');
+  {
+    check('a person whose id is the screen\'s person IS the screen\'s person (a self seat, never their id)',
+      J(normalizeSeat({ kind: 'person', id: 'p-robin', name: 'Robin' }, { selfId: 'p-robin' })) === J({ kind: 'self' }));
+    check('a person keeps their id and the name they were picked by',
+      J(normalizeSeat({ kind: 'person', id: 'p-juno', name: ' Juno ' })) === J({ kind: 'person', id: 'p-juno', name: 'Juno' }));
+    check('nothing usable is nothing', normalizeSeat({ kind: 'person' }) === null && normalizeSeat({ kind: 'guest', name: '  ' }) === null
+      && normalizeSeat(7) === null && normalizeSeat({ kind: 'robot' }) === null);
+    const legacy = normalizeSeats('Ann, Bob ;ann,\nCy');
+    check('*** AN OLD TYPED LIST ("Ann, Bob") READS AS GUESTS, in order, each once ***',
+      J(legacy) === J([{ kind: 'guest', name: 'Ann' }, { kind: 'guest', name: 'Bob' }, { kind: 'guest', name: 'Cy' }]), J(legacy));
+    check(`at most ${MAX_SEATS} (and a game may ask for fewer)`, normalizeSeats('a,b,c,d,e,f').length === MAX_SEATS
+      && normalizeSeats('a,b,c', { max: 2 }).length === 2 && MAX_SEATS === MAX_PLAYERS);
+    check('the same person twice is one seat', normalizeSeats([{ kind: 'person', id: 'x', name: 'X' }, { kind: 'person', id: 'x', name: 'X again' }]).length === 1);
+    check('followsScreen: absent, empty, blank text and an empty list hand the choice to the screen',
+      followsScreen(undefined) && followsScreen(null) && followsScreen('') && followsScreen('  ') && followsScreen([]));
+    check('...a typed list, or seats, are the game\'s own', !followsScreen('Ann') && !followsScreen([{ kind: 'self' }]));
+    check('isJustSelf', isJustSelf([{ kind: 'self' }]) && !isJustSelf([{ kind: 'self' }, { kind: 'guest', name: 'A' }]));
+    check('the words: a guest says so, a person by this login\'s name for them now',
+      seatsLabel([{ kind: 'self' }, { kind: 'person', id: 'p-juno', name: 'old' }, { kind: 'guest', name: 'Ann' }],
+        { selfName: 'Robin', people: PEOPLE }) === 'Robin, Juno, Ann (guest)');
+    check('the row\'s words: a game following the screen, just them, picked',
+      playersValueLabel('') === FOLLOW_WORDS.screen && playersValueLabel([{ kind: 'self' }], { selfName: 'Robin' }) === 'Just Robin'
+      && playersValueLabel([], { follow: false }) === FOLLOW_WORDS.self
+      && playersValueLabel('Ann, Bob') === 'Ann (guest), Bob (guest)');
+    check('where a person comes from: this login (you, mine, joined) or connected (connected, shared)',
+      PEOPLE.map(peopleKind).join() === 'login,login,login,connected,connected');
+    check('a guest with no name, for somebody who cannot type: Guest, then Guest 2',
+      nextGuestName([]) === 'Guest' && nextGuestName([{ kind: 'guest', name: 'Guest' }]) === 'Guest 2');
+    const swapped = placeSeat([{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], 0, { kind: 'guest', name: 'Ann' });
+    check('*** placing somebody already sitting MOVES them (a swap): nobody is ever in two seats ***',
+      J(swapped) === J([{ kind: 'guest', name: 'Ann' }, { kind: 'self' }]), J(swapped));
+    const items = pickerItems({ people: PEOPLE, guests: ['Lee', 'lee'], seats: [{ kind: 'guest', name: 'Ann' }], selfId: 'p-robin' });
+    const facet = PLAYER_FACETS[0];
+    const only = (v) => filterWith(items, { facets: PLAYER_FACETS, picked: { kind: v } }).map((x) => x.name);
+    check('the list: every person, every guest name once, and "A guest (no name)"',
+      items.length === PEOPLE.length + 2 + 1 && items.some((x) => x.type === 'newguest'), J(items.map((x) => x.name)));
+    check('*** "Show: On this login" / "Connected" / "Guests" (the shared sort_filter facet) ***',
+      only('login').join() === 'Robin,Juno,Kit' && only('connected').join() === 'Ola,Tam'
+      && only('guest').join() === 'Ann,Lee,A guest (no name)' && only(facet.any).length === items.length, J([only('login'), only('connected'), only('guest')]));
+    check('the screen\'s person is marked as such in the list', items.find((x) => x.id === 'p-robin')?.hint === 'this screen is theirs');
+    check('two orders: as on the people page (first), and by name', PLAYER_SORTS.map((s) => s.id).join() === 'listed,name');
+    check('a picked thing becomes a seat: the screen\'s own person becomes a self seat',
+      J(seatFromItem(items[0], { selfId: 'p-robin' })) === J({ kind: 'self' })
+      && seatFromItem(items.find((x) => x.type === 'newguest'), { seats: [{ kind: 'guest', name: 'Guest' }] }).name === 'Guest 2');
+  }
+
+  // ======================================================================================
+  section('THE SETTINGS FIELD — kind "players" (settings_fields.js)');
+  {
+    check('"players" is a kind', KINDS.includes('players'));
+    const f = normalizeField({ key: 'players', label: 'Players', kind: 'players', max: 3 });
+    check('it opens (a stop for a switch), never steps, and is not disabled', f.opens && !f.cycleable && f.max === 3 && f.follow === true);
+    check('its value: "" follows the screen; an old typed list reads as guests (read time only)',
+      fieldValue(f, {}) === '' && J(fieldValue(f, { players: 'Ann, Bob' })) === J([{ kind: 'guest', name: 'Ann' }, { kind: 'guest', name: 'Bob' }]));
+    check('its words', displayValue(f, '') === FOLLOW_WORDS.screen && displayValue(f, fieldValue(f, { players: 'Ann' })) === 'Ann (guest)');
+    const writes = [];
+    let vals = { players: 'Ann' };
+    const [it] = fieldItems([f], { values: () => vals, onStep: (k, v) => { writes.push([k, v]); vals = { ...vals, [k]: v }; } });
+    check('the row carries what the picker needs', it.players && it.players.follow === true && it.players.max === 3
+      && J(it.players.value) === J([{ kind: 'guest', name: 'Ann' }]) && !it.disabled);
+    check('commit: seats are written as seats', it.commit([{ kind: 'self' }, { kind: 'guest', name: 'Bo' }]) === true
+      && J(writes.at(-1)) === J(['players', [{ kind: 'self' }, { kind: 'guest', name: 'Bo' }]]));
+    check('commit: "" hands it back to the screen', it.commit('') === true && writes.at(-1)[1] === '');
+    check('commit: the same again is not a write; junk is refused', it.commit('') === false && it.commit(42) === false
+      && it.commit([]) === false && it.commit('Ann') === false, J(writes));
+    const g = normalizeField({ key: SCREEN_PLAYERS_KEY, kind: 'players', follow: false });
+    check('the screen\'s own field (follow: false) reads empty as "just the screen\'s person"',
+      J(fieldValue(g, {})) === '[]' && displayValue(g, []) === FOLLOW_WORDS.self);
+    const rows = adaptiveSettings({});
+    const pr = rows.find((r) => r.key === 'players');
+    check('*** every game\'s "Players" row is the shared picker now (adaptiveSettings), standard, up to four ***',
+      pr && pr.kind === 'players' && pr.level === 'standard' && pr.max === MAX_PLAYERS && pr.default === '', J(pr));
+    const games = listManifests().filter((m) => (fieldsFor(m) || []).some((x) => x.key === 'players'));
+    const bad = games.filter((m) => fieldsFor(m).find((x) => x.key === 'players').kind !== 'players').map((m) => m.type);
+    check(`every registered module with a "Players" row uses the picker (${games.map((m) => m.type).join(', ')})`,
+      ['trivia', 'brain_games', 'think_games', 'card_sort', 'word_builder'].every((t) => games.some((m) => m.type === t)) && !bad.length,
+      `${bad.join()} | ${games.map((m) => m.type).join()}`);
+  }
+
+  // ======================================================================================
+  section('WHO PLAYS — adaptive_play.js resolvePlayers');
+  {
+    check('*** an old typed list plays exactly as before (the same names, ids and order) ***',
+      J(resolvePlayers('Ann, Bob ,ann', { personId: 'p-robin' })) === J(parsePlayers('Ann, Bob ,ann', { personId: 'p-robin' })));
+    check('*** nothing set anywhere: the screen\'s person alone, unnamed - what an empty row always was ***',
+      J(resolvePlayers('', { personId: 'p-robin' })) === J([{ id: 'person:p-robin', name: '', index: 0 }])
+      && J(resolvePlayers('', {})) === J([{ id: 'player', name: '', index: 0 }]));
+    const host = { seats: () => [{ kind: 'self' }, { kind: 'person', id: 'p-ola', name: 'Ola' }, { kind: 'guest', name: 'Lee' }],
+      self: () => SELF };
+    const ps = resolvePlayers('', { personId: 'p-robin', host });
+    check('*** "This screen\'s players": the screen\'s person, a connected person AS THEMSELVES, a guest ***',
+      ps.map((p) => `${p.id}=${p.name}`).join() === 'person:p-robin=Robin,person:p-ola=Ola,name:lee=Lee', J(ps));
+    check('a game\'s own pick wins over the screen\'s', resolvePlayers([{ kind: 'guest', name: 'Zed' }, { kind: 'self' }], { personId: 'p-robin', host })
+      .map((p) => p.id).join() === 'name:zed,person:p-robin');
+    check('"Just the person this screen is for" is them alone', resolvePlayers([{ kind: 'self' }], { personId: 'p-robin', host }).length === 1);
+    check('a host that throws is the screen\'s person alone, never a broken game',
+      resolvePlayers('', { personId: 'p-robin', host: { seats: () => { throw new Error('x'); } } }).length === 1);
+  }
+
+  // ======================================================================================
+  section('A PICKED PERSON PLAYS AS THEMSELVES — their rows on this login (openPersonLadder)');
+  {
+    const liveRow = (init = {}) => { let d = JSON.parse(JSON.stringify(init)); const subs = new Set();
+      return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); }, load: async () => d,
+        flush: async () => {}, startPolling() {}, destroy() {}, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } }; };
+    const rows = {};
+    const asked = [];
+    const ctx = {
+      personId: 'p-robin',
+      makeState: () => (rows.screen ||= liveRow()),
+      // A CONNECTED person is reached through THIS login's row for them (`p-ola` here), never their home: the server's
+      // person state for that id is this login's own (claims.state_target).
+      makePersonState: (pid, key) => { asked.push(`${pid}:${key}`); return (rows[`${pid}:${key}`] ||= liveRow(pid === 'p-ola' ? { start: 'hard' } : {})); },
+      screenPlayers: { seats: () => [{ kind: 'self' }, { kind: 'person', id: 'p-ola', name: 'Ola' }], self: () => SELF, subscribe: () => () => {} },
+      state: { set() {} },
+    };
+    const lad = openPersonLadder(ctx, { gameKey: 'g' });
+    const BANK = [1, 2, 3].flatMap((lv) => [1, 2, 3, 4].map((n) => ({ id: `q${lv}-${n}`, level: lv })));
+    const s = createAdaptiveSession({ cfg: () => ({}), bankFor: () => BANK, store: lad.store, personId: () => 'p-robin',
+      startFor: lad.startFor, startMark: lad.startMark, playersHost: lad.playersHost });
+    lad.attach(s);
+    lad.onConfig({});
+    await sleep(20);
+    check('both players\' own rows are opened, the connected one\'s on this login\'s id',
+      asked.includes('p-robin:ratings') && asked.includes('p-ola:ratings'), J(asked));
+    check('*** the connected person starts at their own usual start here (hard: level 3) ***',
+      s.playerRow('person:p-ola', 'g').floor === 3, J(s.playerRow('person:p-ola', 'g')));
+    for (let i = 0; i < 2; i += 1) { const q = s.deal('g'); s.record({ item: q, right: true }); }
+    await sleep(10);
+    check('*** one answer each, each kept with them; nothing of theirs on the screen\'s row ***',
+      rows['p-robin:ratings'].get().ladder?.players?.['person:p-robin']?.games?.g?.n === 1
+      && rows['p-ola:ratings'].get().ladder?.players?.['person:p-ola']?.games?.g?.n === 1
+      && !Object.keys(rows.screen.get().ladder?.players || {}).length, J([rows['p-ola:ratings'].get(), rows.screen.get()]));
+    s.destroy(); lad.destroy();
+  }
+
+  // ======================================================================================
+  section('THE PICKER — driven like a switch');
+  {
+    const el = stage();
+    const picks = [];
+    let cancels = 0;
+    const p = mountPlayerPicker(el, { value: '', follow: true, self: SELF, people: PEOPLE, screenSeats: [{ kind: 'self' }],
+      guests: ['Lee'], onPick: (v) => picks.push(v), onCancel: () => { cancels += 1; } });
+    check('a game\'s own row, following the screen: Done / Keep, then "Use", and nothing else yet',
+      p.__probe().rows.join() === 'actions,mode' && p.__probe().mode === 'screen', J(p.__probe().rows));
+    check('"Use" says the three ways, the screen\'s person by name', /This screen’s players.*Just Robin.*Picked for this game/.test(el.textContent));
+    // Light "Use", go in, step to "Picked for this game", take it.
+    p.next(); p.next(); p.select(); p.next(); p.next(); p.select();
+    const pr = p.__probe();
+    check('*** "Picked for this game" shows the rows: how many, the seats, Show, the people ***',
+      pr.mode === 'game' && ['count', 'seats', 'filters', 'people'].every((g) => pr.rows.includes(g)), J(pr.rows));
+    check('...starting from the screen\'s players (Robin alone)', J(pr.seats) === J([{ kind: 'self' }]));
+    // How many: 2.
+    el.querySelector('[data-plp-count="2"]').click();
+    check('two players: a second, empty seat, and it is the one the next pick fills', p.__probe().seats.length === 2
+      && p.__probe().seats[1] === null && p.__probe().active === 1);
+    check('Done still works with a seat empty: it takes the filled ones', !el.querySelector('[data-plp-act="done"]').disabled);
+    // Show: Connected.
+    el.querySelector('[data-plp-filter="kind"][data-plp-val="connected"]').click();
+    check('*** "Show: Connected" lists only the people connected to this login ***',
+      J(p.__probe().shown) === J(['p-ola', 'p-tam']), J(p.__probe().shown));
+    el.querySelector('[data-plp-pick="p-ola"]').click();
+    check('picking Ola fills seat 2', J(p.__probe().seats[1]) === J({ kind: 'person', id: 'p-ola', name: 'Ola' }));
+    // Search (a keyboard's), then a guest typed in.
+    el.querySelector('[data-plp-filter="kind"][data-plp-val="all"]').click();
+    const box = el.querySelector('[data-plp-search]');
+    box.value = 'ju'; box.dispatchEvent(new Event('input', { bubbles: true }));
+    check('search: every word typed, anywhere in a name', J(p.__probe().shown) === J(['p-juno']), J(p.__probe().shown));
+    box.value = ''; box.dispatchEvent(new Event('input', { bubbles: true }));
+    el.querySelector('[data-plp-count="3"]').click();
+    const g = el.querySelector('[data-plp-guestname]');
+    g.value = 'Nell';
+    el.querySelector('[data-plp-guestform]').dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    check('a guest typed in sits in the seat being filled', J(p.__probe().seats[2]) === J({ kind: 'guest', name: 'Nell' }), J(p.__probe().seats));
+    // A switch user's guest: "A guest (no name)" - put Robin's seat to the guest by pressing seat 1 first.
+    el.querySelector('[data-plp-seat="0"]').click();
+    el.querySelector('[data-plp-pick="newguest"]').click();
+    check('*** "A guest (no name)" adds a guest without typing (Guest), in the seat pressed ***',
+      J(p.__probe().seats[0]) === J({ kind: 'guest', name: 'Guest' }), J(p.__probe().seats));
+    el.querySelector('[data-plp-pick="p-robin"]').click();
+    check('picking Robin again (the screen\'s person) takes the seat being filled', p.__probe().seats.some((s) => s && s.kind === 'self'));
+    el.querySelector('[data-plp-act="done"]').click();
+    check('*** Done hands back the seats, in turn order ***', picks.length === 1 && Array.isArray(picks[0]) && picks[0].length === 3
+      && picks[0].some((s) => s.kind === 'self') && picks[0].some((s) => s.id === 'p-ola'), J(picks));
+    p.destroy();
+
+    // "This screen's players" and "Just Robin" are chosen at once.
+    const el2 = stage();
+    const got = [];
+    const q = mountPlayerPicker(el2, { value: [{ kind: 'guest', name: 'Ann' }], self: SELF, people: PEOPLE, onPick: (v) => got.push(v) });
+    check('a game with its own pick opens on it', q.__probe().mode === 'game' && J(q.__probe().seats) === J([{ kind: 'guest', name: 'Ann' }]));
+    el2.querySelector('[data-plp-mode="screen"]').click();
+    el2.querySelector('[data-plp-mode="self"]').click();
+    check('*** "This screen\'s players" hands back "" and "Just Robin" hands back them alone ***', J(got) === J(['', [{ kind: 'self' }]]), J(got));
+    q.back();
+    check('back from the rows is "Keep it as it was"', true);
+    q.destroy();
+
+    // The screen's own row (no "Use"), a people list that fails, and none at all: said, and guests still work.
+    const el3 = stage();
+    const r = mountPlayerPicker(el3, { value: [], follow: false, self: SELF, people: () => Promise.reject(new Error('offline')) });
+    await sleep(10);
+    check('*** the screen\'s own row has no "Use" row; a list that will not load SAYS so, and guests still work ***',
+      !r.__probe().rows.includes('mode') && r.__probe().loadState === 'failed' && /could not be loaded \(offline\)\. Guests still work/.test(el3.textContent)
+      && J(r.__probe().shown) === J(['newguest']), el3.textContent.slice(0, 300));
+    r.destroy();
+    const el4 = stage();
+    const n = mountPlayerPicker(el4, { value: [], follow: false });
+    check('no people at all (signed out): says where they come from', /show here on a screen that is signed in/.test(el4.textContent));
+    n.destroy();
+    const el5 = stage();
+    let cancelled = 0;
+    const c = mountPlayerPicker(el5, { value: [], follow: false, max: 2, self: SELF, people: PEOPLE, onCancel: () => { cancelled += 1; } });
+    check('a game that takes up to two offers 1 and 2 and says so', el5.querySelectorAll('[data-plp-count]').length === 2
+      && /takes up to 2/.test(el5.textContent));
+    c.select(); c.select(); c.next(); c.select();
+    check('one switch: into Done / Keep, on to Keep, take it: nothing chosen', cancelled === 1, J(c.__probe()));
+    c.destroy();
+  }
+
+  // ======================================================================================
+  section('THE SETTINGS MENU OPENS IT — the same four moves');
+  {
+    const host = stage();
+    const writes = [];
+    let vals = {};
+    const field = normalizeField({ key: 'players', label: 'Players', kind: 'players' });
+    const menu = mountSettings(host, {
+      inline: true, gated: false, includeHome: false,
+      whoItems: () => fieldItems([field], { values: () => vals, onStep: (k, v) => { writes.push(v); vals = { ...vals, [k]: v }; } }),
+      playerHost: () => ({ self: SELF, people: PEOPLE, screenSeats: [{ kind: 'self' }, { kind: 'guest', name: 'Lee' }] }),
+    });
+    menu.open();
+    const row = [...host.querySelectorAll('.st-item')].find((b) => /Players/.test(b.textContent));
+    check('the row says it opens a list, and what it is set to', row && row.classList.contains('st-opens') && /This screen’s players/.test(row.textContent),
+      row && row.textContent);
+    row.click();
+    check('*** pressing it opens the player picker in the menu\'s page ***', !!host.querySelector('[data-player-picker]'));
+    host.querySelector('[data-plp-mode="game"]').click();
+    host.querySelector('[data-plp-act="done"]').click();
+    check('*** Done writes the seats through the row (the one write path), starting from the screen\'s players ***',
+      writes.length === 1 && J(writes[0]) === J([{ kind: 'self' }, { kind: 'guest', name: 'Lee' }]) && !host.querySelector('[data-player-picker]'),
+      J(writes));
+    const again = [...host.querySelectorAll('.st-item')].find((b) => /Players/.test(b.textContent));
+    check('the row then names them', /Lee \(guest\)/.test(again?.textContent || ''), again?.textContent);
+    again.click();
+    menu.back();
+    check('back in the picker\'s rows is Keep: the list comes back, nothing written', !host.querySelector('[data-player-picker]') && writes.length === 1);
+    menu.destroy?.();
+  }
+
+  // A host that draws rows itself (`run()`): a dialog over the page.
+  {
+    const vals = {};
+    const f = normalizeField({ key: 'players', kind: 'players' });
+    const [it] = fieldItems([f], { values: () => vals, onStep: (k, v) => { vals[k] = v; } });
+    it.run();
+    await sleep(50);
+    const dlg = document.querySelector('.chp-dialog [data-player-picker]');
+    check('run() on a host with no menu opens the picker as a dialog', !!dlg);
+    document.querySelector('.chp-dialog [data-plp-mode="self"]')?.click();
+    check('...and a choice there is written and closes it', J(vals.players) === J([{ kind: 'self' }]) && !document.querySelector('.chp-dialog'), J(vals));
+    const d = openPlayersDialog({ value: '', onPick: () => {} });
+    d.close();
+    check('openPlayersDialog closes cleanly', !document.querySelector('.chp-dialog'));
+  }
+} catch (err) {
+  check(`the suite itself threw: ${err && err.message}`, false, String(err && err.stack));
+}
+
+await sleep(0);
+const s = document.getElementById('summary');
+s.textContent = failed ? `${failed} FAILED / ${passed} passed` : `ALL PASS — ${passed} checks`;
+s.className = failed ? 'fail' : 'pass';
+</script>
+</body>
+</html>

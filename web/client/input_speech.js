@@ -301,6 +301,9 @@ export const ROUTES = {
     phrases: ['device settings', 'devices settings', 'switch settings', 'input settings'] },
   'menu-tab-people': { action: 'menu/tab-people', label: 'Settings menu: people',
     phrases: ['people settings', 'user settings', 'users settings', 'person settings'] },
+  // players (2026-10-06): the Players tab, who is playing on this screen.
+  'menu-tab-players': { action: 'menu/tab-players', label: 'Settings menu: players',
+    phrases: ['players settings', 'player settings', 'who is playing'] },
   'menu-tab-screen': { action: 'menu/tab-screen', label: 'Settings menu: this screen',
     phrases: ['screen settings', 'this screen settings'] },
   // "Switch module" (2026-10-02): the Modules library in the selected panel's place (kiosk.js openLibraryAt).

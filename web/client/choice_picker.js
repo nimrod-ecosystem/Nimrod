@@ -29,6 +29,15 @@
 import { THEMES, isFollowTheme, paintedTheme } from './theme.js';
 import { normalizeHex } from './color_picker.js';
 import { gridRows, filterByName } from './picture_picker.js';
+// (themes, 2026-10-06) A LIST OF THEMES IS A GALLERY. Mike: "Colours should change to theme and show a still of
+// what each one looks like. Probably sort and filter options... use the setup that the modules module has as the
+// global." So a theme list (the same test as its colour preview, below) draws each tile with a STILL of the theme
+// over its colour strip (theme_gallery.js), and above the tiles the Modules library's own search, Order and
+// Filters (sort_filter.js), plus one row of chips a switch can reach: Everything / Everyday / Seasons / Holidays.
+// Every other list is exactly what it was. `gallery: false` turns it off for a theme list that should stay plain.
+import { sortFilter, searchBoxHTML, selectHTML, chipsHTML, filtersButtonHTML, ensureSortFilterCss } from './sort_filter.js';
+import { THEME_GALLERY_DEFAULTS, THEME_FACETS, THEME_FACET_ANY, THEME_SORTS, themeOptionText, isPinnedOption,
+  createStills, recentThemes, rememberThemePick } from './theme_gallery.js';
 
 // *** TWO NUMBERS, EACH A DEFAULT AND EACH AN OPTION (Rule 1). ***
 //   columns    3   options per row, and so the cost of a row/column scan: rows + columns presses. Three
@@ -124,6 +133,15 @@ export function mountChoicePicker(root, {
   // Handle arrows, Enter and Escape itself. OFF where a host routes its keys here as verbs (the
   // settings menu), or every arrow moves twice. Escape is always handled (it is "leave", everywhere).
   keys = false,
+  // ---- (themes, 2026-10-06) THE GALLERY, for a list of themes (see the imports). ----
+  // `gallery`: undefined = on for a theme list, off otherwise; false = never; true = always (a theme list whose
+  // key does not say so). `stills`, `sort`: theme_gallery.js THEME_GALLERY_DEFAULTS argues both. `storage`: where
+  // "Recently used" is kept (this browser's, by default). `now`: the moment the stills are drawn for (a suite).
+  gallery = undefined,
+  stills = THEME_GALLERY_DEFAULTS.stills,
+  sort = THEME_GALLERY_DEFAULTS.sort,
+  storage = undefined,
+  now = undefined,
 } = {}) {
   if (!root) throw new Error('mountChoicePicker: a root element is required');
   ensureCss();
@@ -132,13 +150,25 @@ export function mountChoicePicker(root, {
   const cols = Math.max(1, Math.floor(Number(columns)) || CHOICE_PICKER_DEFAULTS.columns);
   const searchAt = Number.isFinite(Number(searchOver)) ? Number(searchOver) : CHOICE_PICKER_DEFAULTS.searchOver;
   const same = (a, b) => a === b || String(a) === String(b);
-  const current = opts.find((o) => same(o.value, value)) || null;
-  const keepText = cancelLabel || (current ? `Keep ${current.label}` : 'Cancel');
+  let current = opts.find((o) => same(o.value, value)) || null;
+  let keepText = cancelLabel || (current ? `Keep ${current.label}` : 'Cancel');
   let query = '';
   let lit = { g: -1, i: -1 };
   let dead = false;
+  // THE GALLERY: a list of themes, the test the colour preview uses, and at least one real theme in it.
+  const themeish = preview === 'theme' || (preview == null && THEME_KEY.test(String(key || '')));
+  const isGallery = gallery === true || (gallery !== false && themeish && opts.some((o) => THEMES[o.value]));
+  const picked = { ...THEME_FACET_ANY };
+  let sortId = THEME_SORTS.some((s) => s.id === sort) ? sort : THEME_GALLERY_DEFAULTS.sort;
+  let showMore = false;
+  const stillsOf = isGallery ? createStills({ mode: stills, now: now ?? Date.now(), win: root.ownerDocument?.defaultView || null }) : null;
+  if (isGallery) ensureSortFilterCss(root.ownerDocument);
 
   function shown() {
+    if (isGallery) {
+      return sortFilter(opts, { query, text: themeOptionText, facets: THEME_FACETS, picked, pin: isPinnedOption,
+        sort: sortId, sorts: THEME_SORTS, ctx: { recent: recentThemes(storage) } });
+    }
     // `filterByName` matches every word typed, any order, against a name and a path: the label is the
     // name, and the hint rides as the path so "dark" finds "Dusk (dark, calm)".
     const named = opts.map((o, n) => ({ n, name: o.label, path: o.hint || '' }));
@@ -148,6 +178,16 @@ export function mountChoicePicker(root, {
   function tile(o) {
     const on = same(o.value, value);
     const p = previewOf(o, { preview, key });
+    // A gallery tile: the still on top (drawn when it scrolls into view, `stillsOf`), the name, then the colours as a
+    // thin strip - kept for whoever chooses by contrast, which a picture of a scene does not show at a glance. An
+    // option that is not a theme ("Follow …") has neither, and says so by being a plain tile.
+    if (isGallery) {
+      const real = THEMES[o.value] || isFollowTheme(o.value);
+      return `<button type="button" class="chp-tile${real ? ' chp-gal' : ' chp-plain'}" data-chp-stop data-chp-pick="${esc(String(o.value))}"
+        aria-pressed="${on ? 'true' : 'false'}" title="${esc(o.label)}">${real && stills !== 'off'
+        ? `<span class="chp-still" data-chp-still="${esc(String(o.value))}" aria-hidden="true"></span>` : ''}<span class="chp-name">${esc(o.label)}</span>${
+        o.hint ? `<span class="chp-hint">${esc(o.hint)}</span>` : ''}${p && p.kind === 'swatch' ? previewHTML(p).replace('chp-swatches', 'chp-swatches chp-strip') : ''}</button>`;
+    }
     return `<button type="button" class="chp-tile${p ? '' : ' chp-plain'}" data-chp-stop data-chp-pick="${esc(String(o.value))}"
       aria-pressed="${on ? 'true' : 'false'}" title="${esc(o.label)}">${previewHTML(p)}<span class="chp-name">${esc(o.label)}</span>${
       o.hint ? `<span class="chp-hint">${esc(o.hint)}</span>` : ''}</button>`;
@@ -155,9 +195,35 @@ export function mountChoicePicker(root, {
 
   function resultsHTML() {
     const list = shown();
-    if (!list.length) return `<p class="chp-note" data-chp-none>Nothing here matches “${esc(query)}”.</p>`;
-    return gridRows(list, cols).map((r) => `<div class="chp-row chp-tiles" data-chp-group="grid" style="--chp-cols:${cols}">${
+    const none = `<p class="chp-note" data-chp-none>${query ? `Nothing here matches “${esc(query)}”.` : 'No theme matches these filters.'}${
+      isGallery ? ' <button type="button" class="sf-btn" data-chp-clear>Show everything</button>' : ''}</p>`;
+    if (!list.length) return none;
+    const rows = gridRows(list, cols).map((r) => `<div class="chp-row chp-tiles" data-chp-group="grid" style="--chp-cols:${cols}">${
       r.map(tile).join('')}</div>`).join('');
+    // (themes) Only the pinned choices left ("With the seasons", "Follow …"): they stay, and the note says no THEME
+    // matched, with the way back.
+    return isGallery && list.every(isPinnedOption) && opts.some((o) => !isPinnedOption(o)) ? rows + none : rows;
+  }
+
+  // THE GALLERY'S TOOLS: the library's search box, Order and Filters… (sort_filter.js), then the one row of chips a
+  // switch reaches ("Show": a stop, like the library's categories). The box, the list and the button are for a
+  // keyboard and a pointer and are not stops, as in the library.
+  function toolsHTML() {
+    const kind = THEME_FACETS.find((f) => f.id === 'kind');
+    const more = THEME_FACETS.filter((f) => f.id !== 'kind');
+    return `<div class="sf-tools chp-tools">${searchBoxHTML({ attr: 'data-chp-search', label: 'Search the themes', placeholder: 'Search',
+      value: query, extra: 'autocomplete="off" spellcheck="false"' })}${selectHTML({ attr: 'data-chp-sort', label: 'Order', options: THEME_SORTS, value: sortId })}${
+      filtersButtonHTML({ attr: 'data-chp-more', open: showMore })}</div>
+      <div class="sf-more" data-chp-morebox ${showMore ? '' : 'hidden'}>${more.map((f) => `<label class="sf-small">${
+        selectHTML({ attr: `data-chp-facet="${esc(f.id)}"`, label: f.label, options: f.options, value: picked[f.id] })}</label>`).join('')}</div>
+      <div class="chp-row sf-row" data-chp-group="filters" role="toolbar" aria-label="${esc(kind.label)}">${chipsHTML({ options: kind.options,
+        value: picked.kind, attrOf: (o) => `data-chp-stop data-chp-filter="kind" data-chp-val="${esc(o.id)}"` })}</div>`;
+  }
+
+  function attachStills() {
+    if (!stillsOf) return;
+    stillsOf.clearBoxes();
+    for (const box of root.querySelectorAll('[data-chp-still]')) stillsOf.attach(box, box.dataset.chpStill);
   }
 
   function fonts() {
@@ -173,12 +239,12 @@ export function mountChoicePicker(root, {
     const box = root.querySelector('[data-chp-search]');
     const hadFocus = !!box && typeof document !== 'undefined' && document.activeElement === box;
     const caret = hadFocus ? [box.selectionStart, box.selectionEnd] : null;
-    root.innerHTML = `<div class="chp" data-choice-picker>
+    root.innerHTML = `<div class="chp${isGallery ? ' chp-gallery' : ''}" data-choice-picker>
       ${title ? `<p class="chp-head">${esc(title)}</p>` : ''}
       ${cancel ? `<div class="chp-row chp-acts" data-chp-group="actions">
         <button type="button" class="chp-btn" data-chp-stop data-chp-act="cancel">${esc(keepText)}</button></div>` : ''}
-      ${opts.length > searchAt ? `<label class="chp-search">Search <input type="search" data-chp-search value="${esc(query)}"
-        autocomplete="off" spellcheck="false" placeholder="Type part of a name"></label>` : ''}
+      ${isGallery ? toolsHTML() : (opts.length > searchAt ? `<label class="chp-search">Search <input type="search" data-chp-search value="${esc(query)}"
+        autocomplete="off" spellcheck="false" placeholder="Type part of a name"></label>` : '')}
       <div class="chp-grid" data-chp-results>${resultsHTML()}</div>
     </div>`;
     if (hadFocus) {
@@ -187,27 +253,48 @@ export function mountChoicePicker(root, {
       if (caret) { try { el.setSelectionRange(caret[0], caret[1]); } catch { /* not a text box */ } }
     }
     fonts();
+    attachStills();
     paintLit();
   }
   function renderResults() {
     const el = root.querySelector('[data-chp-results]');
     if (!el) { render(); return; }
     el.innerHTML = resultsHTML();
+    // The "Show" chips say which is chosen (they are not redrawn: the switch's light may be on one).
+    for (const c of root.querySelectorAll('[data-chp-filter]')) {
+      c.setAttribute('aria-pressed', String(String(picked[c.dataset.chpFilter]) === c.dataset.chpVal));
+    }
     fonts();
+    attachStills();
     paintLit();
+  }
+  // A filter or an order changed: the results again, from the top of the list.
+  function refilter() {
+    renderResults();
+    try { root.querySelector('[data-chp-results]')?.scrollTo?.(0, 0); } catch { /* no layout */ }
   }
 
   // ------------------------------------------------------------------ actions
   function pick(raw) {
     const o = opts.find((x) => String(x.value) === String(raw));
     if (!o) return;
+    // (themes) A theme picked in a gallery is remembered on this device, for "Recently used".
+    if (isGallery && THEMES[o.value]) rememberThemePick(o.value, storage);
     try { onPick(o.value, o); } catch (err) { console.error('choice picker: onPick', err); }
   }
   function doCancel() { try { onCancel(); } catch (err) { console.error('choice picker: onCancel', err); } }
   function activate(el) {
     if (!el || dead) return;
     if (el.dataset.chpAct === 'cancel') { doCancel(); return; }
+    // (themes) A "Show" chip narrows the tiles; the light stays on the chip, so the next press can try another.
+    if (el.dataset.chpFilter) { picked[el.dataset.chpFilter] = el.dataset.chpVal; refilter(); return; }
     if ('chpPick' in el.dataset) pick(el.dataset.chpPick);
+  }
+  // (themes) Every filter back to "everything" and the search box emptied: the way out of "Nothing matches".
+  function clearAll() {
+    Object.assign(picked, THEME_FACET_ANY);
+    query = '';
+    render();
   }
 
   // ------------------------------------------------------------------ the scan (picture_picker.js's)
@@ -259,6 +346,14 @@ export function mountChoicePicker(root, {
   const on = (type, fn) => root.addEventListener(type, fn, { signal: gone.signal });
   on('click', (e) => {
     const t = e.target instanceof Element ? e.target : null;
+    // (themes) Filters… shows or hides the less used filters; "Show everything" clears them. Neither is a stop.
+    if (t?.closest('[data-chp-more]')) {
+      showMore = !showMore;
+      root.querySelector('[data-chp-morebox]')?.toggleAttribute('hidden', !showMore);
+      root.querySelector('[data-chp-more]')?.setAttribute('aria-expanded', String(showMore));
+      return;
+    }
+    if (t?.closest('[data-chp-clear]')) { clearAll(); return; }
     const el = t?.closest('[data-chp-stop]');
     if (!el || !root.contains(el) || el.disabled) return;
     activate(el);
@@ -267,6 +362,12 @@ export function mountChoicePicker(root, {
     if (!e.target?.matches?.('[data-chp-search]')) return;
     query = e.target.value || '';
     renderResults();
+  });
+  // (themes) The Order list and the filters behind "Filters…".
+  on('change', (e) => {
+    const t = e.target;
+    if (t?.matches?.('[data-chp-sort]')) { sortId = t.value; refilter(); return; }
+    if (t?.matches?.('[data-chp-facet]')) { picked[t.dataset.chpFacet] = t.value; refilter(); }
   });
   on('keydown', (e) => {
     const typing = e.target?.matches?.('input,textarea,select');
@@ -294,10 +395,22 @@ export function mountChoicePicker(root, {
     select,
     back,
     refresh: () => render(),
+    /** (themes, 2026-10-06) Mark `v` as the one in force without drawing the list again (a host that keeps the
+     *  list open after a choice: the Themes panel). The scroll, the search and the switch's light all stay. */
+    setValue(v) {
+      if (dead) return;
+      value = v;
+      current = opts.find((o) => same(o.value, v)) || null;
+      if (!cancelLabel) keepText = current ? `Keep ${current.label}` : 'Cancel';
+      for (const t of root.querySelectorAll('[data-chp-pick]')) t.setAttribute('aria-pressed', String(same(t.dataset.chpPick, v)));
+      const keep = root.querySelector('[data-chp-act="cancel"]');
+      if (keep) keep.textContent = keepText;
+    },
     destroy() {
       if (dead) return;
       dead = true;
       gone.abort();
+      try { stillsOf?.destroy(); } catch { /* gone */ }
       root.innerHTML = '';
     },
     __probe: () => {
@@ -315,6 +428,10 @@ export function mountChoicePicker(root, {
         litText: litEl ? litEl.textContent.trim().replace(/\s+/g, ' ') : null,
         search: !!root.querySelector('[data-chp-search]'),
         query,
+        // (themes) the gallery: whether it is one, its order and filters, and how many stills are drawn.
+        gallery: isGallery,
+        ...(isGallery ? { sort: sortId, filters: { ...picked }, stills: stillsOf.count(), stillIds: stillsOf.ids(),
+          stillMode: stillsOf.mode(), stillNodes: stillsOf.nodes() } : {}),
       };
     },
   };

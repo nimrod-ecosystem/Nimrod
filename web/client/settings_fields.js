@@ -106,6 +106,17 @@
 // page, loaded only when the row is pressed.
 //
 // ---------------------------------------------------------------------------------------
+// PLAYERS — ADDED 2026-10-06 (Mike: "Picking the players will need to be a universal thing").
+//
+// Who is playing, as seats (player_picker.js argues the seats). Like a picture row it is a stop that
+// OPENS a picker (`player_picker.js`, in the menu's page slot; a dialog for a host that only calls
+// `run()`), never a step. The value: '' hands the choice to the screen ("This screen's players"),
+// on a field that allows it (`follow`, default true: a game's own row); otherwise a list of seats.
+// An OLD TEXT VALUE ("Ann, Bob", the free-text row this replaces) is read as guests, at read time
+// only - like `legacy` and `aliases`, nothing stored is rewritten until somebody picks again.
+// `max`: the most players (default and ceiling player_picker.js MAX_SEATS).
+//
+// ---------------------------------------------------------------------------------------
 // WHAT THIS FILE MUST NEVER DO: WRITE.
 //
 // Nothing here calls `state.set()`. `stepValue` computes the next value and `fieldItems`
@@ -144,9 +155,11 @@
 
 // Most permissive last. A field shows when its own level is at or below the active one.
 import { DEFAULT_PALETTE, normalizeHex, normalizePalette, nearestColor, describeColor } from './color_picker.js';
+// players (2026-10-06): WHO IS PLAYING is its own kind, a stop that opens the shared player picker.
+import { normalizeSeats, followsScreen, playersValueLabel, MAX_SEATS } from './player_picker.js';
 
 export const LEVELS = ['essential', 'standard', 'advanced'];
-export const KINDS = ['toggle', 'choice', 'number', 'text', 'color', 'picture'];
+export const KINDS = ['toggle', 'choice', 'number', 'text', 'color', 'picture', 'players'];
 
 // A picture reference, or null. Shared by the reading below and the row's `commit`.
 const refOf = (x) => (x && typeof x === 'object' && x.sourceId && x.path
@@ -452,6 +465,13 @@ export function normalizeField(raw = {}) {
     // `settingsChoices`); otherwise the picker asks the registry itself.
     f.sources = raw.sources && typeof raw.sources.list === 'function' ? raw.sources : null;
     f.opens = true;
+  } else if (kind === 'players') {
+    // See PLAYERS in the header. Only ever this kind when declared - never inferred.
+    f.follow = raw.follow !== false;
+    const mx = Math.floor(Number(raw.max));
+    f.max = Number.isFinite(mx) && mx >= 1 ? Math.min(MAX_SEATS, mx) : MAX_SEATS;
+    f.default = f.follow ? '' : [];
+    f.opens = true;
   } else {
     f.default = raw.default === undefined ? '' : String(raw.default);
     // `secret: true` -- a key or token. Mike, 2026-09-28: "mask it". Anyone at a shared or bedside
@@ -552,6 +572,11 @@ export function fieldValue(field, values = {}) {
     // one it is the whole reference, or null.
     if (field.sourceKey) return raw === undefined || raw === null ? '' : String(raw);
     return refOf(raw);
+  }
+  if (field.kind === 'players') {
+    // '' (the screen's players) where the field allows it, else the seats; an old typed list reads as guests.
+    if (field.follow && followsScreen(raw)) return '';
+    return normalizeSeats(raw, { max: field.max });
   }
   return raw === undefined ? '' : String(raw);
 }
@@ -662,6 +687,7 @@ export function displayValue(field, value) {
     const name = String(path || '').split('/').pop();
     return name || field.emptyLabel;
   }
+  if (field.kind === 'players') return playersValueLabel(value, { follow: field.follow });
   return value === '' || value === undefined || value === null ? field.placeholder : String(value);
 }
 
@@ -735,6 +761,13 @@ export function fieldItems(fields = [], {
       field: f,
       value,
       run: () => {
+        if (f.kind === 'players' && onStep) {
+          // (players) The same, for the player picker: a dialog over the page, loaded only when pressed.
+          import('./player_picker.js').then((m) => m.openPlayersDialog({
+            ...item.players, onPick: (v) => { item.commit(v); },
+          })).catch((err) => console.warn('settings: could not open the player picker', err));
+          return;
+        }
         if (f.opens && onStep) {
           // A host that renders rows itself (and is not `settings.js`, which opens the picker in its
           // own pages) gets it as a dialog. Imported only now, so this file stays free of the page.
@@ -788,6 +821,16 @@ export function fieldItems(fields = [], {
             onStep(f.key, ref, f);
           }
           return true;
+        } else if (f.kind === 'players') {
+          // (players) '' (the screen's players, where the field allows it) or seats; nothing else is a value.
+          if (f.follow && (raw === '' || raw == null)) next = '';
+          else if (Array.isArray(raw)) {
+            next = normalizeSeats(raw, { max: f.max });
+            if (!next.length) return false;
+          } else return false;
+          if (JSON.stringify(next) === JSON.stringify(fieldValue(f, read() || {}))) return false;
+          onStep(f.key, next, f);
+          return true;
         } else {
           return false;
         }
@@ -809,7 +852,11 @@ export function fieldItems(fields = [], {
     }
     // What the picker needs to open on this row: what is chosen now, where to choose from, whether
     // "No picture" is offered, and its title (the row's own label, so it says what it is for).
-    if (f.opens) {
+    if (f.kind === 'players') {
+      // (players) What the player picker needs: what is chosen now, whether "This screen's players" is offered, the
+      // most players, and its title. Who the people are is the HOST's (settings.js `playerHost`): this file knows none.
+      item.players = { value, follow: f.follow, max: f.max, title: f.label };
+    } else if (f.opens) {
       item.picture = { value: pictureRef(f, read() || {}), sources: f.sources, allowNone: f.allowNone, title: f.label };
     }
     out.push(item);

@@ -140,7 +140,8 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
     for (let i = 0; i < k; i++) { const q = s.deal(game); if (!q) return; s.record({ item: q, right: true }); }
   };
   const open = (opts = {}) => mount({ saved: { ...saved, ...(opts.saved || {}) }, store: opts.screen || liveRow(),
-    extra: { ...(opts.person ? { personId: opts.person } : {}), ...(opts.people ? { makePersonState: opts.people.make } : {}) } });
+    extra: { ...(opts.person ? { personId: opts.person } : {}), ...(opts.people ? { makePersonState: opts.people.make } : {}),
+      ...(opts.extra || {}) } });
   const topOf = (r) => Math.max(1, ...sessionOf(r).allQuestions(game).map((q) => Math.floor(Number(q.level) || 1)));
   // The module's own name: the key of its own start on the person's row (adaptive_play.js openPersonLadder `gameKey`).
   const startKey = (() => { const t = open(); const k = t.type; t.inst.destroy(); return k; })();
@@ -286,6 +287,47 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
     check(`${name}: ...and changing it starts that player again there`,
       sessionOf(r).playerRow('player', game).floor === 1 && sessionOf(r).playerRow('player', game).n === 2,
       JSON.stringify(sessionOf(r).playerRow('player', game)));
+    r.inst.destroy();
+  }
+  // 7. players (2026-10-06, player_picker.js): SOMEBODY ELSE PICKED FROM THIS LOGIN plays as themselves - their own
+  // row, their own usual start - and a guest stays a name on the screen's row.
+  {
+    const people = peopleRows({ 'sam:ratings': { start: 'hard' } });
+    const screen = liveRow();
+    const r = open({ person: 'pat', people, screen,
+      saved: { players: [{ kind: 'self' }, { kind: 'person', id: 'sam', name: 'Sam' }, { kind: 'guest', name: 'Ann' }] } });
+    await sleep(30);
+    const ids = sessionOf(r).players().map((p) => p.id).join();
+    check(`*** ${name}: picked players: the screen's person, Sam as himself, and a guest, in turn order ***`,
+      ids === 'person:pat,person:sam,name:ann', ids);
+    const top = topOf(r);
+    check(`*** ${name}: Sam starts where HIS usual start says (hard: ${top}), not at a new player's level ***`,
+      sessionOf(r).playerRow('person:sam', game).floor === top, JSON.stringify(sessionOf(r).playerRow('person:sam', game)));
+    play(r, 3);
+    await sleep(10);
+    check(`*** ${name}: one answer each: Pat's and Sam's are kept with them, the guest's on the screen's row ***`,
+      at(people, 'pat')?.n === 1 && at(people, 'sam')?.n === 1 && screen.get().ladder?.players?.['name:ann']?.games?.[game]?.n === 1
+      && !screen.get().ladder.players['person:sam'] && !screen.get().ladder.players['person:pat'],
+      JSON.stringify([at(people, 'pat'), at(people, 'sam'), screen.get().ladder?.players]));
+    r.inst.destroy();
+  }
+  // 8. "THIS SCREEN'S PLAYERS": a game whose own row is left empty plays whoever the screen's Players tab says, and
+  // follows it when it changes; with nobody set there it is the screen's person alone, exactly as before.
+  {
+    let seats = [{ kind: 'self' }, { kind: 'person', id: 'sam', name: 'Sam' }];
+    const subs = new Set();
+    const host = { seats: () => seats, self: () => ({ id: 'pat', name: 'Pat' }), subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); } };
+    const people = peopleRows();
+    const r = open({ person: 'pat', people, screen: liveRow(), extra: { screenPlayers: host } });
+    await sleep(30);
+    const names = sessionOf(r).players().map((p) => `${p.id}=${p.name}`).join();
+    check(`*** ${name}: "This screen's players": the screen's two, named ***`, names === 'person:pat=Pat,person:sam=Sam', names);
+    seats = [];
+    for (const f of [...subs]) f();
+    await sleep(10);
+    const solo = sessionOf(r).players();
+    check(`${name}: the screen's players emptied: the screen's person alone, unnamed (nothing drawn about turns)`,
+      solo.length === 1 && solo[0].id === 'person:pat' && solo[0].name === '', JSON.stringify(solo));
     r.inst.destroy();
   }
 }

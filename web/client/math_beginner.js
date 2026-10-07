@@ -316,6 +316,7 @@ export function beginnerMath({ type = GAME, title = 'Simple math', scoreLabel = 
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
       personId: () => ctx.personId || null, onChange: () => api?.render(),
       startFor: ladderRows.startFor, startMark: ladderRows.startMark,
+      playersHost: ladderRows.playersHost,   // players: the screen's players (player_picker.js)
     });
     ladderRows.attach(session);
     const adapter = mathAdapter({

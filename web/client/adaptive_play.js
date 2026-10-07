@@ -20,15 +20,21 @@
 // WHO THE PLAYERS ARE. The `players` setting: names in turn order ("Ann, Bob"). Empty is one player,
 // the screen's own person, with nothing drawn about turns at all. Up to FOUR: a longer order is a
 // long wait between one person's turns, and four is as many distinct colours as the theme has.
+// *** players (2026-10-06): THE SHARED PLAYER PICKER (player_picker.js). *** `players` is now seats, picked from
+// the people on this login, the people connected to it, and guests; empty is "This screen's players" (the ⚙ menu's
+// Players tab, `ctx.screenPlayers`), which is the screen's person alone until somebody sets it. A picked person
+// plays AS THEMSELVES (`person:<id>`: their own rows, starts and usual start, `openPersonLadder`); a guest is a name,
+// `name:<x>`, as typed players always were; an old typed list reads as guests (`resolvePlayers`).
 
 import {
   RATING_DEFAULTS, LADDER_DEFAULTS, THRESHOLD_DEFAULTS, REVIEW_SCHEDULES, rateAnswer, levelRating, poolFor, poolLevels,
   stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf, thresholdsAt,
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
+import { normalizeSeats, followsScreen, MAX_SEATS } from './player_picker.js';   // players
 
 export const LADDER_KEY = 'ratings';
-export const MAX_PLAYERS = 4;
+export const MAX_PLAYERS = MAX_SEATS;
 // How many AI-written questions one game keeps on a screen. Old ones are dropped first. A bound,
 // so a writer left on for a year cannot grow the shared row without limit.
 export const EXTRA_CAP = 300;
@@ -118,9 +124,12 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
   personStartLevel = 'standard' } = {}) {
   const w = (row) => (appliesWhen ? { ...row, appliesWhen } : row);
   return [
-    w({ key: 'players', label: 'Players, in turn order', kind: 'text', default: '', level: 'standard',
-      placeholder: 'One player',
-      note: 'Names separated by commas ("Ann, Bob"). Each takes a turn and gets questions at their own level. Up to four.' }),
+    // players (2026-10-06): the shared player picker, in place of the free-text row (player_picker.js). Its value is
+    // '' ("This screen's players", set on the Players tab of the screen's menu) or the seats picked for this game; a
+    // list typed into the old row reads as guests. Standard: it is the row somebody sitting down with a friend wants.
+    w({ key: 'players', label: 'Players', kind: 'players', default: '', level: 'standard', max: MAX_PLAYERS,
+      note: 'Each takes a turn and gets questions at their own level. Somebody picked from this login plays as '
+        + 'themselves, at their own level; a guest is a name. Up to four.' }),
     // THE PERSON'S OWN START IN THIS GAME (openPersonLadder below; Mike, 2026-10-06: "if they change it in a game
     // mode that would more likely default to just affecting that user on that game"). Standard: it is the one a
     // caregiver setting up somebody new reaches for; "A new player starts at level" stays advanced. Their usual
@@ -131,8 +140,8 @@ export function adaptiveSettings({ ai = false, appliesWhen = null, startLevels =
       level: personStartLevel, options: [{ value: START_USUAL, label: 'Their usual starting level' }, ...startOptions()],
       note: 'For the person this screen is for, in this game only, and kept with them on each of their screens. '
         + '"Their usual starting level" is the person\'s own, set in this screen\'s settings on the People tab. '
-        + 'Changing it starts them again there; after that, their answers move them. Players typed in by name '
-        + 'start at "A new player starts at level".' })] : []),
+        + 'Changing it starts them again there; after that, their answers move them. Other people picked to play '
+        + 'start where their own settings say; guests start at "A new player starts at level".' })] : []),
     w({ key: 'adapt', label: 'Questions get harder and easier by themselves', default: true, level: 'standard',
       onLabel: 'Yes, for each player', offLabel: 'No, stay at the starting level' }),
     w({ key: 'startLevel', label: 'A new player starts at level', kind: 'choice', default: 1, level: 'advanced',
@@ -193,6 +202,41 @@ export function parsePlayers(text, { personId = null } = {}) {
   }
   if (out.length) return out;
   return [{ id: personId ? `person:${personId}` : 'player', name: '', index: 0 }];
+}
+
+/**
+ * players (2026-10-06): A GAME'S `players` VALUE -> [{ id, name, index, personId? }], in turn order.
+ *   value     '' / absent: the screen's players (`host.seats()`); seats; or an old typed string (guests)
+ *   personId  the screen's person
+ *   host      `ctx.screenPlayers` ({ seats(), self() }), or null on a host with none (the screen's person alone)
+ * The screen's person is `person:<id>` (or `player` on a screen with no person); somebody else picked from this
+ * login is `person:<their id>`; a guest is `name:<x>`, the id a typed name always had (`parsePlayers`), so a guest's
+ * level carries over. ONE PLAYER WHO IS THE SCREEN'S PERSON is exactly what an empty row always was: no name, so
+ * nothing about turns is drawn.
+ */
+export function resolvePlayers(value, { personId = null, host = null } = {}) {
+  const ask = (fn, d) => { try { const v = typeof fn === 'function' ? fn() : d; return v == null ? d : v; } catch { return d; } };
+  const raw = followsScreen(value) ? ask(host?.seats, []) : value;
+  // An old typed list is read exactly as it always was (the same names, ids and order).
+  if (typeof raw === 'string') return parsePlayers(raw, { personId });
+  let seats = normalizeSeats(raw, { selfId: personId, max: MAX_PLAYERS });
+  if (!seats.length) seats = [{ kind: 'self' }];
+  if (seats.length === 1 && seats[0].kind === 'self') {
+    return [{ id: personId ? `person:${personId}` : 'player', name: '', index: 0 }];
+  }
+  const selfName = String(ask(host?.self, {})?.name || '');
+  const out = [];
+  const seen = new Set();
+  for (const s of seats) {
+    let p;
+    if (s.kind === 'self') p = { id: personId ? `person:${personId}` : 'player', name: selfName || `Player ${out.length + 1}`, personId: personId || null };
+    else if (s.kind === 'person') p = { id: `person:${s.id}`, name: s.name || `Player ${out.length + 1}`, personId: s.id };
+    else p = { id: `name:${normalize(s.name).replace(/\s+/g, '-') || s.name.toLowerCase()}`, name: s.name };
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
+    out.push({ ...p, index: out.length });
+  }
+  return out;
 }
 
 export const emptyLadder = () => ({ v: 1, players: {}, questions: {}, extra: {} });
@@ -513,15 +557,22 @@ export function openUsualStart({ makePersonState = null, personId = null, onChan
 }
 
 /**
- * The ladder's store for one game panel, with the screen's person's rows kept with them.
- * Returns { store, startFor, startMark, attach(session), onConfig(cfg), flush, destroy }: hand `store`,
- * `startFor` and `startMark` to createAdaptiveSession, `attach` the session, call `onConfig` with every
- * settings snapshot, and `destroy` when the panel goes.
+ * The ladder's store for one game panel, with every picked person's rows kept with them.
+ * Returns { store, startFor, startMark, playersHost, attach(session), onConfig(cfg), flush, destroy }: hand `store`,
+ * `startFor`, `startMark` and `playersHost` to createAdaptiveSession, `attach` the session, call `onConfig` with
+ * every settings snapshot, and `destroy` when the panel goes.
  *   key         the screen's row (default the shared `ratings`)
  *   personKey   the person's own row (default `ratings`, in their scope)
  *   gameKey     this game's name on the person's row, for its own start (each module passes its type)
  *   settingKey  the panel's copy of "Start this game at"
- *   onChange()  the person's start changed (to redraw a level shown on screen)
+ *   onChange()  somebody's start changed, or who is playing did (to redraw what is on screen)
+ *
+ * players (2026-10-06): EVERY PICKED PERSON, not only the screen's. Somebody picked from this login (player_picker.js)
+ * is `person:<id>`, and their rows are kept with them exactly as the screen's person's are: in their own `ratings`
+ * row (on THIS login's row for them - a connected person's own home is never read or written, player_picker.js argues
+ * it), moved there once by `splitLadderStore`. Where each starts: "Start this game at" in this game's menu is the
+ * SCREEN'S PERSON'S (the panel's row, as before); everybody else picked starts at their own start in this game, else
+ * their usual one, both read from their row and set on their own screen's menu - never changed from here.
  */
 export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LADDER_KEY, gameKey = 'game',
   settingKey = GAME_START_KEY, onChange = () => {} } = {}) {
@@ -530,14 +581,25 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
   let session = null;
   let raw;                        // the panel's copy, as saved (undefined: never chosen)
   let seenRaw = false;
-  let lastSeen = '|';
+  let lastSeen = '';
   let lastCfg = {};
   let dead = false;
+  const playersHost = ctx?.screenPlayers || null;
   const me = () => (ctx?.personId ? `person:${ctx.personId}` : null);
   const solo = () => me() || 'player';
+  const idOf = (pid) => (typeof pid === 'string' && pid.startsWith('person:') ? pid.slice(7) : null);
+  // The people playing here now (their `person:<id>`s), and the screen's person always: their row is theirs to keep
+  // whether or not they play this round (a row of theirs on the screen's row still moves to them).
+  function ownIds() {
+    const ids = new Set(me() ? [me()] : []);
+    let ps = [];
+    try { ps = resolvePlayers(lastCfg?.players, { personId: ctx?.personId || null, host: playersHost }); } catch { ps = []; }
+    for (const p of ps) if (idOf(p.id)) ids.add(p.id);
+    return [...ids];
+  }
   function ownFor(pid) {
-    const id = ctx?.personId;
-    if (!id || pid !== `person:${id}` || typeof ctx.makePersonState !== 'function') return null;
+    const id = idOf(pid);
+    if (!id || typeof ctx?.makePersonState !== 'function' || !ownIds().includes(pid)) return null;
     if (handles.has(id)) return handles.get(id).handle;
     let handle = null;
     try { handle = ctx.makePersonState(id, personKey, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
@@ -547,36 +609,67 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
     return handle;
   }
   const split = ctx && typeof ctx.makePersonState === 'function'
-    ? splitLadderStore({ shared, ownIds: () => (me() ? [me()] : []), ownFor }) : null;
-  const handle = () => (ctx?.personId ? handles.get(ctx.personId)?.handle || null : null);
-  const doc = () => { try { return handle()?.get?.() || null; } catch { return null; } };
+    ? splitLadderStore({ shared, ownIds, ownFor }) : null;
+  const handleOf = (id) => (id ? handles.get(id)?.handle || null : null);
+  const docOf = (id) => { try { return handleOf(id)?.get?.() || null; } catch { return null; } };
+  const handle = () => handleOf(ctx?.personId);
+  const doc = () => docOf(ctx?.personId);
   const word = (s) => (START_WORDS.includes(s) ? s : null);
   const markStr = (m) => (m == null || m === '' ? null : String(m));
-  // The person's usual start (every game), and this game's own (null: none, so the usual one).
-  const usualStart = () => word(doc()?.start);
-  const usualMark = () => markStr(doc()?.startMark);
-  const own = () => { const g = doc()?.gameStarts?.[gameKey]; return g && typeof g === 'object' ? g : null; };
-  const ownStart = () => word(own()?.start);
+  // A person's usual start (every game), and this game's own (null: none, so the usual one).
+  const usualStartOf = (id) => word(docOf(id)?.start);
+  const usualMarkOf = (id) => markStr(docOf(id)?.startMark);
+  const ownOf = (id) => { const g = docOf(id)?.gameStarts?.[gameKey]; return g && typeof g === 'object' ? g : null; };
+  const ownStartOf = (id) => word(ownOf(id)?.start);
+  const usualStart = () => usualStartOf(ctx?.personId);
+  const usualMark = () => usualMarkOf(ctx?.personId);
+  const own = () => ownOf(ctx?.personId);
+  const ownStart = () => ownStartOf(ctx?.personId);
   const shownFor = () => (own() ? (ownStart() || START_USUAL) : null);   // what this game's row says, from their row
   const rawWord = () => word(raw);
   const kept = () => !!(split && me() && handle());
   // WHICH MARK THIS GAME'S ROW MUST CARRY. No start of its own: the usual one's (so a row already marked by
   // 269b6a5's "Start games at" stays put). Its own: its own. Set back to "usual": both, so a change to
   // either starts it again.
-  function effectiveMark() {
-    const o = own();
-    if (!o) return usualMark();
-    if (ownStart()) return markStr(o.mark);
-    return `${markStr(o.mark) || ''}|${usualMark() || ''}`;
+  function effectiveMarkOf(id) {
+    const o = ownOf(id);
+    if (!o) return usualMarkOf(id);
+    if (ownStartOf(id)) return markStr(o.mark);
+    return `${markStr(o.mark) || ''}|${usualMarkOf(id) || ''}`;
   }
   const setOwn = (entry) => handle().set({ gameStarts: { ...(doc()?.gameStarts || {}), [gameKey]: entry } });
 
+  // What a redraw depends on: each picked person's start, and who is playing.
+  const signature = () => ownIds().map((pid) => {
+    const id = idOf(pid);
+    return `${pid}=${ownStartOf(id) || usualStartOf(id) || ''}|${effectiveMarkOf(id) || ''}`;
+  }).join(',');
   function heard() {
     if (dead) return;
     syncToPanel();
-    const now = `${ownStart() || usualStart() || ''}|${effectiveMark() || ''}`;
+    const now = signature();
     if (now !== lastSeen) { lastSeen = now; try { onChange(); } catch (err) { console.error('ladder: start', err); } }
   }
+  // Who is playing changed (this panel's row, or the screen's Players tab): their own rows are opened and read in.
+  // Who plays, in turn order, and whose rows are open (before any settings arrive, it is what the first load opens).
+  const playersSig = () => {
+    let ps = [];
+    try { ps = resolvePlayers(lastCfg?.players, { personId: ctx?.personId || null, host: playersHost }); } catch { ps = []; }
+    return `${ps.map((p) => `${p.id}=${p.name}`).join(',')}|${ownIds().join(',')}`;
+  };
+  let seenPlayers = playersSig();
+  function playersMoved() {
+    if (dead) return;
+    const sig = playersSig();
+    if (sig === seenPlayers) return;
+    seenPlayers = sig;
+    try { split?.load()?.then?.(() => heard()); } catch { /* next time */ }
+    heard();
+    try { onChange(); } catch (err) { console.error('ladder: players', err); }   // the turn chips, at once
+  }
+  let offHost = null;
+  try { offHost = playersHost?.subscribe?.(() => playersMoved()) || null; } catch { offHost = null; }
+  lastSeen = signature();   // nothing known yet is not a change
   // The person's row is the truth; the panel's copy is what the menu shows. A copy the person's row has never
   // had (chosen on this panel before it knew the person) is given to the person, without starting them again.
   function syncToPanel() {
@@ -617,30 +710,42 @@ export function openPersonLadder(ctx, { key = LADDER_KEY, personKey = PERSON_LAD
   }
   return {
     store: split || shared,
+    /** Who is playing on this screen (`ctx.screenPlayers`), for createAdaptiveSession's `playersHost`. */
+    playersHost,
     /** The level word this player starts at: their own in this game, else their usual one; the panel's for its one player. */
     startFor(pid) {
       if (!pid) return null;
       if (pid === me() && handle()) return ownStart() || (own() ? null : rawWord()) || usualStart();
       if (pid === solo()) return rawWord();
+      // Somebody else picked from this login: their own start in this game, else their usual one (their row).
+      const id = idOf(pid);
+      if (id && handleOf(id)) return ownStartOf(id) || usualStartOf(id);
       return null;
     },
-    startMark: (pid) => (pid && pid === me() && handle() ? effectiveMark() : null),
+    startMark(pid) {
+      if (!pid) return null;
+      if (pid === me()) return handle() ? effectiveMarkOf(ctx.personId) : null;
+      const id = idOf(pid);
+      return id && handleOf(id) ? effectiveMarkOf(id) : null;
+    },
     attach(s) { session = s || null; },
     onConfig(cfg) {
       lastCfg = cfg || {};
+      playersMoved();
       const v = cfg ? cfg[settingKey] : undefined;
       if (!seenRaw) { seenRaw = true; raw = v; syncToPanel(); return; }
       if (v === raw) return;
       raw = v;
       if (GAME_START_CHOICES.includes(v)) apply(v).catch((err) => console.error('ladder: start', err));
     },
-    /** The person's own row's handle, once there is one (a suite reads it). */
-    ownHandle: () => handle(),
+    /** The person's own row's handle, once there is one (a suite reads it). `id`: another picked person's. */
+    ownHandle: (id = null) => (id ? handleOf(id) : handle()),
     flush: () => Promise.resolve().then(() => (split ? split.flush() : shared?.flush?.())).catch(() => {}),
     destroy() {
       dead = true;
       session = null;
       const quiet = (fn) => { try { Promise.resolve(fn()).catch(() => {}); } catch { /* gone */ } };
+      try { offHost?.(); } catch { /* none */ }
       try { split?.destroy(); } catch { /* gone */ }
       quiet(() => shared?.flush?.());
       quiet(() => shared?.destroy?.());
@@ -686,10 +791,12 @@ export function mergeLadder(saved, local) {
  *   upgradeRow(row)  without it is passed through `upgradeRow` when read (Trivia's levels, 2026-10-06: a row
  *                    saved before "very easy" existed has its floor moved up one). Saved at its next answer;
  *                    until then it is upgraded again on every read, from the same stored row, so the same.
+ *   playersHost      (players, 2026-10-06) the screen's players, `ctx.screenPlayers` ({ seats(), self() }), read
+ *                    when the `players` setting is '' ("This screen's players"); null: the screen's person alone
  */
 export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], store = null, writer = null,
   now = () => Date.now(), rand = Math.random, personId = () => null, onChange = () => {}, rating = {},
-  startFor = () => null, startMark = () => null, rowVersion = null, upgradeRow = null } = {}) {
+  startFor = () => null, startMark = () => null, rowVersion = null, upgradeRow = null, playersHost = null } = {}) {
   const R = { ...RATING_DEFAULTS, ...(rating || {}) };
   const stamp = rowVersion != null ? { lv: rowVersion } : {};
   const upgraded = (r) => (rowVersion == null || r.lv === rowVersion ? r
@@ -746,7 +853,7 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     } catch (err) { console.error('ladder: save', err); }
   }
 
-  const players = () => parsePlayers(c().players, { personId: personId() });
+  const players = () => resolvePlayers(c().players, { personId: personId(), host: playersHost });   // players
   const currentPlayer = () => { const ps = players(); return ps[turn % ps.length]; };
   // A word is read over the game's WRITTEN levels (its bank), not any AI-written above them, so "hard" is
   // the hardest level somebody wrote, the same on every screen.

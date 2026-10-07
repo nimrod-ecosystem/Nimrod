@@ -75,7 +75,7 @@ import { triviaPool } from '../bank.js';
 import { BANK_STATE, BANK_TOPIC } from './bank.js';
 import { loadPack, itemSources, difficultyLevel, DIFFICULTY_LEVELS } from '../packs.js';
 import { createAdaptiveSession, adaptiveSettings, openLadderStore, splitLadderStore, LADDER_STATE_OPTIONS,
-  PERSON_LADDER_KEY, START_WORDS } from '../adaptive_play.js';
+  PERSON_LADDER_KEY, START_WORDS, resolvePlayers } from '../adaptive_play.js';
 import { RATING_DEFAULTS, LADDER_DEFAULTS, expected, levelOf, levelRating } from '../rating.js';
 import { ensureQuizStyle } from '../quiz_view.js';
 import { answerSourceField, answerSourceHtml, answerSourceMode, answerSourceText, ANSWER_SOURCE_DEFAULT,
@@ -757,14 +757,25 @@ registerModule(
     const personHandles = new Map();
     let rawPersonStart;
     let seenRawStart = false;
+    // players (2026-10-06): EVERYBODY PICKED FROM THIS LOGIN plays as themselves (player_picker.js), each one's row kept
+    // with them as the screen's person's is (on this login's row for them). Their `person:<id>`s, and the screen's
+    // person's always (a row of theirs on the screen's row still moves to them).
+    function triviaPeople() {
+      const ids = new Set(ctx.personId ? [`person:${ctx.personId}`] : []);
+      let ps = [];
+      try { ps = resolvePlayers(cfg.players, { personId: ctx.personId || null, host: ctx.screenPlayers || null }); } catch { ps = []; }
+      for (const p of ps) if (String(p.id).startsWith('person:')) ids.add(p.id);
+      return [...ids];
+    }
     function personHandleFor(playerId) {
-      const id = ctx.personId;
-      if (!id || playerId !== `person:${id}` || typeof ctx.makePersonState !== 'function') return null;
+      const id = typeof playerId === 'string' && playerId.startsWith('person:') ? playerId.slice(7) : null;
+      if (!id || !triviaPeople().includes(playerId) || typeof ctx.makePersonState !== 'function') return null;
       if (personHandles.has(id)) return personHandles.get(id).handle;
       let handle = null;
       try { handle = ctx.makePersonState(id, TRIVIA_LADDER_KEY, { ...LADDER_STATE_OPTIONS }) || null; } catch { handle = null; }
       let off = null;
-      if (handle) { try { off = handle.subscribe?.(() => { if (!dead) syncStartToPanel(); }) || null; } catch { off = null; } }
+      // (players) The menu's "Start trivia at" is the screen's person's: only their row is copied back to it.
+      if (handle) { try { off = handle.subscribe?.(() => { if (!dead && id === ctx.personId) syncStartToPanel(); }) || null; } catch { off = null; } }
       // "THEIR USUAL STARTING LEVEL" (above): it is on the person's other ladder row (`start`, `startMark`).
       // Read here, never written; listened to, so a change made on the People tab reaches this one.
       let games = null;
@@ -790,6 +801,36 @@ registerModule(
     const followsGames = () => !START_LEVELS.includes(personStartNow());
     const gamesStartNow = () => { const s = gamesDoc()?.start; return START_LEVELS.includes(s) ? s : null; };
     const gamesMarkNow = () => { const m = gamesDoc()?.startMark; return m == null || m === '' ? null : String(m); };
+    // (players) Somebody else picked from this login: their own "Start trivia at" (on their Trivia row), else, following,
+    // their usual start (their games row). Read, never written from here: theirs is set on their own screen.
+    const otherDoc = (pid, which) => {
+      const h = typeof pid === 'string' && pid.startsWith('person:') ? personHandles.get(pid.slice(7))?.[which] : null;
+      try { return h?.get?.() || null; } catch { return null; }
+    };
+    const otherFollows = (pid) => !START_LEVELS.includes(otherDoc(pid, 'handle')?.start);
+    function otherStart(pid) {
+      const own = otherDoc(pid, 'handle')?.start;
+      if (START_LEVELS.includes(own)) return difficultyLevel(own);
+      const usual = otherDoc(pid, 'games')?.start;
+      return START_LEVELS.includes(usual) ? difficultyLevel(usual) : null;
+    }
+    function otherMark(pid) {
+      if (!otherFollows(pid)) return null;
+      const m = otherDoc(pid, 'games')?.startMark;
+      return m == null || m === '' ? null : String(m);
+    }
+    // Who is playing changed (the panel's Players row, or the screen's Players tab): their own rows are read in.
+    let seenTriviaPeople = null;
+    function triviaPlayersMoved() {
+      const sig = triviaPeople().join(',');
+      if (sig === seenTriviaPeople) return;
+      const first = seenTriviaPeople === null;
+      seenTriviaPeople = sig;
+      if (first || !splitStore) return;
+      try { splitStore.load()?.then?.(() => { if (!dead) firstAgainNow?.(); }); } catch { /* next time */ }
+    }
+    let firstAgainNow = null;
+    let offScreenPlayers = null;
     // The person's row is the truth; the panel's copy is what the menu shows. A copy the person's row has never
     // had (a value chosen on this panel before it knew the person) is given to the person, without moving them.
     function syncStartToPanel() {
@@ -1542,7 +1583,7 @@ registerModule(
         ladderStore = openLadderStore(ctx, TRIVIA_LADDER_KEY);
         let store = ladderStore;
         if (typeof ctx.makePersonState === 'function') {
-          splitStore = splitLadderStore({ shared: ladderStore, ownIds: () => (ctx.personId ? [`person:${ctx.personId}`] : []),
+          splitStore = splitLadderStore({ shared: ladderStore, ownIds: () => triviaPeople(),   // players: everybody picked
             ownFor: (pid) => personHandleFor(pid) });
           store = splitStore;
         }
@@ -1568,13 +1609,19 @@ registerModule(
                 return difficultyLevel(followsGames() ? gamesStartNow() : personStartNow());
               }
               if (pid === 'player') return difficultyLevel(rawPersonStart);
-              return null;
+              return otherStart(pid);   // players: somebody else picked from this login
             },
             // Following their usual start, a change to it starts them again here too (adaptive_play.js `startMark`).
-            startMark: (pid) => (ctx.personId && pid === `person:${ctx.personId}` && followsGames() ? gamesMarkNow() : null),
+            startMark: (pid) => (ctx.personId && pid === `person:${ctx.personId}` ? (followsGames() ? gamesMarkNow() : null)
+              : otherMark(pid)),
+            playersHost: ctx.screenPlayers || null,   // players: the screen's players (player_picker.js)
             onChange: () => firstAgain(),
           });
         } catch (err) { ladder = null; console.error('trivia: no ladder', err); }
+        // players: somebody picked (here, or on the screen's Players tab) has their own row read in when they join.
+        firstAgainNow = firstAgain;
+        triviaPlayersMoved();
+        try { offScreenPlayers = ctx.screenPlayers?.subscribe?.(() => { if (!dead) triviaPlayersMoved(); }) || null; } catch { offScreenPlayers = null; }
         // The person's row loads with the ladder (splitLadderStore.load); once it is in, the menu's copy of their
         // "Start trivia at" is brought in line with it (the person's row is the truth).
         if (splitStore && ctx.personId) {
@@ -1690,6 +1737,7 @@ registerModule(
             if (START_CHOICES.includes(rs)) applyPersonStart(rs).catch((err) => console.error('trivia: start', err));
           }
           topics = Array.isArray(snap.topics) && snap.topics.length ? snap.topics : DEFAULT_TOPICS;
+          triviaPlayersMoved();   // players
           readBank();
         });
         // *** AN EMPTIED BANK STAYS EMPTIED. ***
@@ -1754,6 +1802,7 @@ registerModule(
         if (lessonQ) { lessonQ.destroy?.(); lessonQ = null; }
         // The ladder's row is opened here too (init), so it goes the same way. Saved on every answer already.
         if (ladder) { ladder.destroy(); ladder = null; }
+        if (offScreenPlayers) { try { offScreenPlayers(); } catch { /* gone */ } offScreenPlayers = null; }   // players
         if (splitStore) { splitStore.destroy(); splitStore = null; }
         if (ladderStore) { ladderStore.flush?.(); ladderStore.destroy?.(); ladderStore = null; }
         // ...and the person's own row (THE LEVEL FOLLOWS THE PERSON), opened here too.

@@ -333,11 +333,10 @@ export const liveThemes = (BASE) => ({
 // Spring and Summer (beside Fall and Winter), and a theme for each holiday theme_schedule.js knows. Each
 // is an ordinary theme whose `scene` is the drawing of the same name in livescene.js.
 //
-//   group: 'season' | 'holiday'. theme.js's listThemes leaves the HOLIDAY ones out of the Colours list:
-//   they arrive by date through "With the seasons" (theme_schedule.js), and a list that every press walks
-//   one step through would otherwise double in length for looks that belong to a week of the year. ARGUED
-//   (a guess on Mike's list): FOR, the lap; AGAINST, somebody who wants Christmas all of December or the
-//   Halloween look all October - that is one line in listThemes, or a "pin" later.
+//   group: 'season' | 'holiday'. They arrive by date through "With the seasons" (theme_schedule.js), AND since
+//   2026-10-06 every one is in the Theme list too (Mike: "You should also be able to choose any of the seasonal
+//   ones at any time"). The old reason to leave the holidays out - a list every press walks one step through,
+//   doubled in length - went when a long list became a gallery with a "Holidays" filter (theme.js listThemes).
 //
 // TAGS, as above, with one more:
 //   // L  Design's value: season_palettes.json for the page, the scene's own board tokens for --board-*.

@@ -590,6 +590,19 @@ export const CATALOG = [
     note: 'Nothing here costs money. In the Nimrod Game some things unlock as you play; sandbox, one choice away, '
       + 'unlocks everything.',
   },
+  // 2026-10-06 (Mike: "its own themes module that is also a tab on the settings menu"): the theme gallery as a panel.
+  // `touch`: left alone it is a grid of pictures, and nothing waits on anybody.
+  {
+    type: 'themes',
+    title: 'Themes',
+    group: 'comfort',
+    use: 'touch',
+    lead: 'Every theme, each with a still of what it looks like, to choose the look of the screen.',
+    needs: 'Nothing.',
+    why: 'The everyday themes, the four seasons and every holiday, any of them at any time, with “With the seasons” '
+      + 'to follow the date instead. Search, order and filter them (light or dark, moving or still, easy to read) the '
+      + 'same way as Modules. The same list as the Theme tab in the ⚙ settings menu, so a choice in one shows in the other.',
+  },
   {
     type: 'whats_new',
     title: 'What’s new',

@@ -130,6 +130,8 @@ export const HEALTH_EXPECT = {
   whats_new:     { idle: true },
   // The Modules library (2026-10-02): a grid to look through; nobody looking is not a fault.
   library:       { idle: true },
+  // The Themes panel (2026-10-06): a gallery to look through; nobody looking is not a fault.
+  themes:        { idle: true },
   // 2026-10-02: the builder's place for the library, the panel editor's options, a profile card, card sort
   // (which waits for Start): each left alone is a thing to look at, not a fault.
   library_slot:  { idle: true },

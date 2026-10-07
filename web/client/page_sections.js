@@ -282,11 +282,13 @@ export const DEFAULT_OLDER = true;
 /** Does the page offer "See older messages"? PURE. Only an explicit false turns it off. */
 export const olderOf = (doc) => !(isObj0(doc) && doc[OLDER_KEY] === false);
 
+// (themes, 2026-10-06: "Theme", not "Colours", wherever a person reads it - Mike: "Colours should change to theme".
+// The keys stay `colours*`: they are code, and what is stored is the theme id, as it always was.)
 export const PAGE_LOOK_WORDS = Object.freeze({
-  colours: 'Colours for my page',
-  coloursNone: 'The usual colours',
-  coloursLine: 'People who can see your page see it in these colours, unless they use colours for easier reading, like High contrast.',
-  coloursOwn: 'You use High contrast, so you see your page in your own colours. People who can see your page see the colours you pick.',
+  colours: 'Theme for my page',
+  coloursNone: 'The usual theme',
+  coloursLine: 'People who can see your page see it in this theme, unless they use a theme for easier reading, like High contrast.',
+  coloursOwn: 'You use High contrast, so you see your page in your own theme. People who can see your page see the theme you pick.',
   older: 'Let this page show older messages',
   olderOn: 'On',
   olderOff: 'Off',
