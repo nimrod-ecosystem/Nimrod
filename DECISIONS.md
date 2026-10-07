@@ -2334,3 +2334,19 @@ docs/for_chat/question_ranking_design_20261006.md, for Mike and chat to discuss 
    "Never pop up on its own" is an option for people who only want the key. The key can be rebound like any
    other.
 8. **Oscar is 13** (logged above): questions and starting levels take that into account.
+
+## One way to pick players; Theme instead of Colours, with a still of each -- 2026-10-06 (evening)
+
+Mike, live, after deploying the seasons.
+
+1. **Picking the players is one shared piece that many modules use.** It replaces the older patient/moderator
+   chooser. You choose the number of players, then sort and filter by your own people, connected people's own
+   logins, and guests. *"So you can use someone's actual account for everything. That will be important for
+   having the right user settings and difficulty levels."* **Players is its own tab in the settings.**
+2. **"Colours" becomes "Theme",** and each theme shows a still of what it looks like, with sort and filter
+   options.
+   - *"We could maybe use the setup that the modules module has as the global for things we want to sort and
+     filter. Don't want to keep rebuilding that. Also, it's easier for the users if everything is consistent."*
+   - Any seasonal or holiday theme can be chosen at any time. This supersedes 71a3fa1's guess 4, which left holiday
+     themes out of the list.
+   - **There is a Themes module, and Theme is a tab in the settings menu.**
