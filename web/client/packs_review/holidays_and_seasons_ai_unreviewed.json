@@ -972,6 +972,7 @@
         "Harry Truman"
       ],
       "correct": "Franklin D. Roosevelt",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Holidays & seasons",
       "explain": "FDR signed it into law in 1941.",

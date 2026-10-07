@@ -185,6 +185,7 @@
         "Ray Charles"
       ],
       "correct": "Michael Jackson",
+      "answerKind": "person",
       "difficulty": "very easy",
       "category": "Music",
       "explain": "He was also famous as a dancer.",

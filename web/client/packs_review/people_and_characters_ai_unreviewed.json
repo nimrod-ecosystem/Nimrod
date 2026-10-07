@@ -1,0 +1,746 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "People and characters (AI-written, not yet reviewed)",
+  "description": "30 questions whose answer is a character from a story, a film, a cartoon or a myth, for Name that person (row 2.63): 4 very easy, 9 easy, 11 medium, 6 hard. Written because the question packs already held some 180 questions about real people but only about fifteen about characters. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-07, from its own knowledge plus the page each item cites: no API call. Every cited page was fetched on 2026-10-07 by a script that confirmed it loads and that its text contains the words named in the item's source note (a check that the page is about the fact, not a full fact-check). Then fact-checked item by item by a second, independent Claude pass on 2026-10-07 (every cited page re-fetched and read for the fact and for the wrong answers; `checked` keeps who checked it and what was fixed). No line is quoted from any work beyond a three-word catchphrase; each question describes what the character does instead. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-07",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which wooden puppet's nose grows longer when he tells a lie?",
+      "answers": [
+        "Pinocchio",
+        "Peter Pan",
+        "Aladdin",
+        "Popeye"
+      ],
+      "correct": "Pinocchio",
+      "answerKind": "character",
+      "difficulty": "very easy",
+      "category": "Stories",
+      "explain": "Pinocchio is the puppet whose nose grows when he lies.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pinocchio",
+        "title": "Wikipedia: Pinocchio",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'nose grows when he lies'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which fairy-tale girl leaves a glass slipper behind at the royal ball?",
+      "answers": [
+        "Cinderella",
+        "Snow White",
+        "Rapunzel",
+        "Goldilocks"
+      ],
+      "correct": "Cinderella",
+      "answerKind": "character",
+      "difficulty": "very easy",
+      "category": "Stories",
+      "explain": "Cinderella loses her glass slipper as she hurries from the prince's ball.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cinderella",
+        "title": "Wikipedia: Cinderella",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'glass slipper'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which bear loves honey and lives in the Hundred Acre Wood?",
+      "answers": [
+        "Winnie-the-Pooh",
+        "Paddington Bear",
+        "Yogi Bear",
+        "Baloo"
+      ],
+      "correct": "Winnie-the-Pooh",
+      "answerKind": "character",
+      "difficulty": "very easy",
+      "category": "Stories",
+      "explain": "Winnie-the-Pooh is A. A. Milne's honey-loving bear from the Hundred Acre Wood.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Winnie-the-Pooh",
+        "title": "Wikipedia: Winnie-the-Pooh",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Hundred Acre Wood'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which boy who never grows up lives in Neverland?",
+      "answers": [
+        "Peter Pan",
+        "Pinocchio",
+        "Oliver Twist",
+        "Tom Sawyer"
+      ],
+      "correct": "Peter Pan",
+      "answerKind": "character",
+      "difficulty": "very easy",
+      "category": "Stories",
+      "explain": "Peter Pan is the boy who never grows up, and Neverland is his home.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peter_Pan_(character)",
+        "title": "Wikipedia: Peter Pan (character)",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Neverland'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which girl from Kansas is carried by a cyclone to the Land of Oz?",
+      "answers": [
+        "Dorothy",
+        "Alice",
+        "Wendy",
+        "Heidi"
+      ],
+      "correct": "Dorothy",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "Dorothy Gale is blown from Kansas to Oz in The Wonderful Wizard of Oz.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dorothy_Gale",
+        "title": "Wikipedia: Dorothy Gale",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'raging cyclone'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which girl follows a White Rabbit down a rabbit hole into Wonderland?",
+      "answers": [
+        "Alice",
+        "Dorothy",
+        "Wendy",
+        "Goldilocks"
+      ],
+      "correct": "Alice",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "Alice falls down the rabbit hole in Lewis Carroll's Alice's Adventures in Wonderland.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alice%27s_Adventures_in_Wonderland",
+        "title": "Wikipedia: Alice's Adventures in Wonderland",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'falls through a rabbit hole'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which famous detective lives at 221B Baker Street in London?",
+      "answers": [
+        "Sherlock Holmes",
+        "Hercule Poirot",
+        "Miss Marple",
+        "Father Brown"
+      ],
+      "correct": "Sherlock Holmes",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "221B Baker Street is Sherlock Holmes's address in Arthur Conan Doyle's stories.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/221B_Baker_Street",
+        "title": "Wikipedia: 221B Baker Street",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Sherlock Holmes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which mouse starred in the 1928 cartoon Steamboat Willie?",
+      "answers": [
+        "Mickey Mouse",
+        "Jerry",
+        "Mighty Mouse",
+        "Stuart Little"
+      ],
+      "correct": "Mickey Mouse",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Film and TV",
+      "explain": "Steamboat Willie (1928) is considered Mickey Mouse's official debut.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Steamboat_Willie",
+        "title": "Wikipedia: Steamboat Willie",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Mickey Mouse'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "explain matched to the page"
+      }
+    },
+    {
+      "question": "Which green ogre lives in a swamp in a 2001 animated film?",
+      "answers": [
+        "Shrek",
+        "The Grinch",
+        "Oscar the Grouch",
+        "Donkey"
+      ],
+      "correct": "Shrek",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Film and TV",
+      "explain": "Shrek is the ogre who lives in a swamp in the 2001 film Shrek.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shrek_(character)",
+        "title": "Wikipedia: Shrek (character)",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Fictional ogre character'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which miser in A Christmas Carol is visited by spirits on Christmas Eve?",
+      "answers": [
+        "Ebenezer Scrooge",
+        "Jacob Marley",
+        "Bob Cratchit",
+        "Tiny Tim"
+      ],
+      "correct": "Ebenezer Scrooge",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "Ebenezer Scrooge is the miser of Charles Dickens's A Christmas Carol.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ebenezer_Scrooge",
+        "title": "Wikipedia: Ebenezer Scrooge",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'visited by three spirits'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which superhero is secretly the Gotham City millionaire Bruce Wayne?",
+      "answers": [
+        "Batman",
+        "Superman",
+        "Spider-Man",
+        "Iron Man"
+      ],
+      "correct": "Batman",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Film and TV",
+      "explain": "Bruce Wayne is the secret identity of Batman.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Batman",
+        "title": "Wikipedia: Batman",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Bruce Wayne'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which outlaw of Sherwood Forest robs from the rich to give to the poor?",
+      "answers": [
+        "Robin Hood",
+        "William Tell",
+        "Zorro",
+        "Dick Turpin"
+      ],
+      "correct": "Robin Hood",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "Robin Hood is the legendary outlaw of Sherwood Forest.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Robin_Hood",
+        "title": "Wikipedia: Robin Hood",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'robbed from the rich to give the poor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "wrong answer 'Little John' (also an outlaw of Sherwood) replaced with 'Dick Turpin'"
+      }
+    },
+    {
+      "question": "In The Wonderful Wizard of Oz, which character wants a brain?",
+      "answers": [
+        "Scarecrow",
+        "Tin Woodman",
+        "Cowardly Lion",
+        "Toto"
+      ],
+      "correct": "Scarecrow",
+      "answerKind": "character",
+      "difficulty": "easy",
+      "category": "Stories",
+      "explain": "The Scarecrow travels to the Wizard to ask for a brain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Scarecrow_(Oz)",
+        "title": "Wikipedia: Scarecrow (Oz)",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'he lacks a brain'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which cartoon caveman in The Flintstones is famous for shouting \"Yabba dabba doo\"?",
+      "answers": [
+        "Fred Flintstone",
+        "Barney Rubble",
+        "George Jetson",
+        "Mr. Slate"
+      ],
+      "correct": "Fred Flintstone",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Film and TV",
+      "explain": "Yabba dabba doo is the catchphrase of Fred Flintstone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fred_Flintstone",
+        "title": "Wikipedia: Fred Flintstone",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Yabba'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "In Charlotte's Web, what is the name of the pig that Charlotte the spider saves?",
+      "answers": [
+        "Wilbur",
+        "Templeton",
+        "Babe",
+        "Porky"
+      ],
+      "correct": "Wilbur",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Wilbur is the pig in E. B. White's Charlotte's Web.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Charlotte%27s_Web",
+        "title": "Wikipedia: Charlotte's Web",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'pig named Wilbur'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which sea captain hunts the white whale in Moby-Dick?",
+      "answers": [
+        "Captain Ahab",
+        "Captain Hook",
+        "Captain Nemo",
+        "Ishmael"
+      ],
+      "correct": "Captain Ahab",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Captain Ahab commands the Pequod in pursuit of the white whale.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Captain_Ahab",
+        "title": "Wikipedia: Captain Ahab",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'white whale'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which detective in Agatha Christie's novels is a Belgian with a neat moustache?",
+      "answers": [
+        "Hercule Poirot",
+        "Sherlock Holmes",
+        "Miss Marple",
+        "Inspector Maigret"
+      ],
+      "correct": "Hercule Poirot",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Hercule Poirot is Agatha Christie's Belgian detective.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hercule_Poirot",
+        "title": "Wikipedia: Hercule Poirot",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Belgian'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Who is the headmaster of Hogwarts in the first Harry Potter book?",
+      "answers": [
+        "Albus Dumbledore",
+        "Severus Snape",
+        "Minerva McGonagall",
+        "Argus Filch"
+      ],
+      "correct": "Albus Dumbledore",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Albus Dumbledore is the headmaster of Hogwarts.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Albus_Dumbledore",
+        "title": "Wikipedia: Albus Dumbledore",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Headmaster of Hogwarts'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which wizard sends Bilbo Baggins off with the dwarves in The Hobbit?",
+      "answers": [
+        "Gandalf",
+        "Merlin",
+        "Saruman",
+        "Radagast"
+      ],
+      "correct": "Gandalf",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Gandalf the wizard brings Bilbo along on the dwarves' quest in The Hobbit.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gandalf",
+        "title": "Wikipedia: Gandalf",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'hobbit Bilbo Baggins'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which boy floats down the Mississippi River on a raft with Jim in a Mark Twain novel?",
+      "answers": [
+        "Huckleberry Finn",
+        "Tom Sawyer",
+        "Oliver Twist",
+        "David Copperfield"
+      ],
+      "correct": "Huckleberry Finn",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Huck Finn and Jim travel the Mississippi by raft in Adventures of Huckleberry Finn.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Adventures_of_Huckleberry_Finn",
+        "title": "Wikipedia: Adventures of Huckleberry Finn",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'raft'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Who pulls the sword from the stone to prove he is the rightful king?",
+      "answers": [
+        "King Arthur",
+        "Merlin",
+        "Lancelot",
+        "Robin Hood"
+      ],
+      "correct": "King Arthur",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "In the legend, Arthur proves he is king by pulling the sword from the stone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Excalibur",
+        "title": "Wikipedia: Excalibur",
+        "note": "Fetched 2026-10-07 by the fact-check pass; the page text contains: 'proof of Arthur's lineage'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "source was a disambiguation page, now Excalibur; question no longer says \"king\" beside one king among the answers"
+      }
+    },
+    {
+      "question": "Which criminal mastermind is Sherlock Holmes's greatest enemy?",
+      "answers": [
+        "Professor Moriarty",
+        "Dr. Watson",
+        "Inspector Lestrade",
+        "Mycroft Holmes"
+      ],
+      "correct": "Professor Moriarty",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "Professor James Moriarty is Holmes's archenemy, a criminal mastermind.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Professor_Moriarty",
+        "title": "Wikipedia: Professor Moriarty",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'criminal mastermind'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "In Pride and Prejudice, which proud gentleman does Elizabeth Bennet marry?",
+      "answers": [
+        "Mr. Darcy",
+        "Mr. Bingley",
+        "Mr. Wickham",
+        "Mr. Collins"
+      ],
+      "correct": "Mr. Darcy",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "Elizabeth Bennet marries Fitzwilliam Darcy at the end of Pride and Prejudice.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fitzwilliam_Darcy",
+        "title": "Wikipedia: Mr. Darcy",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Elizabeth Bennet'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which prince of Denmark is the title character of a Shakespeare play?",
+      "answers": [
+        "Hamlet",
+        "Macbeth",
+        "Othello",
+        "Romeo"
+      ],
+      "correct": "Hamlet",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Hamlet, Prince of Denmark, is the hero of Shakespeare's play Hamlet.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Prince_Hamlet",
+        "title": "Wikipedia: Prince Hamlet",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'Prince of Denmark'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "difficulty hard -> medium (most adults know it)"
+      }
+    },
+    {
+      "question": "Which young boy tells most of the story in Treasure Island?",
+      "answers": [
+        "Jim Hawkins",
+        "Long John Silver",
+        "Ben Gunn",
+        "Billy Bones"
+      ],
+      "correct": "Jim Hawkins",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "Jim Hawkins narrates most of Robert Louis Stevenson's Treasure Island.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jim_Hawkins_(character)",
+        "title": "Wikipedia: Jim Hawkins (character)",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'narrator'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "In Little Women, which of the March sisters wants to be a writer?",
+      "answers": [
+        "Jo March",
+        "Meg March",
+        "Beth March",
+        "Amy March"
+      ],
+      "correct": "Jo March",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "Jo March, the second sister, dreams of becoming a writer.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Little_Women",
+        "title": "Wikipedia: Little Women",
+        "note": "Fetched 2026-10-07 by the fact-check pass; the page text contains: 'second-oldest of the four sisters'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "source: /wiki/Jo_March redirects to Little Women; cited directly"
+      }
+    },
+    {
+      "question": "What is the name of Don Quixote's loyal squire?",
+      "answers": [
+        "Sancho Panza",
+        "Rocinante",
+        "Dulcinea",
+        "Gil Blas"
+      ],
+      "correct": "Sancho Panza",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "Sancho Panza is Don Quixote's squire; Rocinante is his horse.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sancho_Panza",
+        "title": "Wikipedia: Sancho Panza",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'squire'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    },
+    {
+      "question": "Which hero of ancient myth performed twelve labours?",
+      "answers": [
+        "Hercules",
+        "Perseus",
+        "Theseus",
+        "Achilles"
+      ],
+      "correct": "Hercules",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Myths",
+      "explain": "The Twelve Labours are the deeds of Heracles, called Hercules by the Romans.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Labours_of_Hercules",
+        "title": "Wikipedia: Labours of Hercules",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'twelve labours'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "difficulty hard -> medium (most adults know it)"
+      }
+    },
+    {
+      "question": "In the legends of King Arthur, which wizard is his adviser?",
+      "answers": [
+        "Merlin",
+        "Gandalf",
+        "Lancelot",
+        "Mordred"
+      ],
+      "correct": "Merlin",
+      "answerKind": "character",
+      "difficulty": "medium",
+      "category": "Stories",
+      "explain": "Merlin is the wizard who advises Arthur in the legends.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Merlin",
+        "title": "Wikipedia: Merlin",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'advisor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07",
+        "fixed": "difficulty hard -> medium (most adults know it)"
+      }
+    },
+    {
+      "question": "Which detective did Edgar Allan Poe create in 1841, in what is widely called the first detective story?",
+      "answers": [
+        "C. Auguste Dupin",
+        "Sherlock Holmes",
+        "Hercule Poirot",
+        "Sam Spade"
+      ],
+      "correct": "C. Auguste Dupin",
+      "answerKind": "character",
+      "difficulty": "hard",
+      "category": "Stories",
+      "explain": "C. Auguste Dupin first appeared in Poe's 1841 story, widely considered the first detective fiction story.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/C._Auguste_Dupin",
+        "title": "Wikipedia: C. Auguste Dupin",
+        "note": "Fetched 2026-10-07 by the writing pass; the page text contains: 'first detective fiction story'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (independent fact-check pass)",
+        "at": "2026-10-07"
+      }
+    }
+  ]
+}

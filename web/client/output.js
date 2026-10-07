@@ -116,6 +116,10 @@ export function createOutputBus({
     };
     try { onDelivery?.(rec); } catch (err) { console.error('output log sink threw', err); }
     bus?.publish(DELIVERY_TOPIC, rec);
+    // The caller's own `onReport` (emit, below): every outcome of THIS message, on every channel it went to.
+    if (typeof item.onReport === 'function') {
+      try { item.onReport({ ...rec }); } catch (err) { console.error('output onReport threw', err); }
+    }
     return rec;
   }
 
@@ -153,7 +157,9 @@ export function createOutputBus({
 
     let result;
     try {
-      result = adapter.present({ ...item }, { done: () => finish({ delivered: true }) });
+      // The caller's `onReport` stays here: a channel is handed the message, not the caller's callback.
+      const { onReport: _mine, ...plain } = item;
+      result = adapter.present(plain, { done: () => finish({ delivered: true }) });
     } catch (err) {
       console.error(`output channel "${name}" threw`, err);
       finish({ reason: 'failed' });
@@ -232,8 +238,12 @@ export function createOutputBus({
 
   // ---- the front door -------------------------------------------------------------
 
+  // `onReport(rec)` (row 2.66, optional): told every outcome of THIS message - the same record `onDelivery` and
+  // DELIVERY_TOPIC get, channel by channel, including one that happens before `emit` returns (a voice that fails
+  // at once). It is how a game knows its answer has finished being said, with or without a bus (quiz_flow.js
+  // createSpeechWatch); a channel is never handed it.
   function emit({ verb = 'notify', text = '', source = null, data = null, ttlMs = null,
-                  priority = null, exclude = [] } = {}) {
+                  priority = null, exclude = [], onReport = null } = {}) {
     const v = VERBS.includes(verb) ? verb : 'notify';
     const item = {
       id: `o${++seq}`,
@@ -244,6 +254,7 @@ export function createOutputBus({
       at: now(),
       ttlMs: Number.isFinite(ttlMs) && ttlMs > 0 ? Number(ttlMs) : defaultTtlMs,
       preemptions: 0,
+      ...(typeof onReport === 'function' ? { onReport } : {}),
     };
 
     // `exclude` exists for exactly one caller: the remote receiver, re-emitting a
@@ -329,6 +340,8 @@ export function createOutputBus({
 
   return {
     emit, say, notify, alert, status,
+    // This bus calls a message's `onReport` (emit, above). A caller that needs it checks for this first.
+    reports: true,
     cancel,
     setRouting, getRouting: () => ({ ...route }),
     setMuted, isMuted: (name) => muted.has(name),

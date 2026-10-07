@@ -28,7 +28,7 @@
 
 import {
   RATING_DEFAULTS, LADDER_DEFAULTS, THRESHOLD_DEFAULTS, REVIEW_SCHEDULES, rateAnswer, levelRating, poolFor, poolLevels,
-  stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf, thresholdsAt,
+  stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf, thresholdsAt, judgeWindow,
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
 import { normalizeSeats, followsScreen, MAX_SEATS } from './player_picker.js';   // players
@@ -1060,6 +1060,18 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     thresholds(game, pid = currentPlayer().id) {
       const w = windowFor(pid, game);
       return thresholdsAt(w.floor, w.maxLevel, ladderOpts(w.maxLevel));
+    },
+    /**
+     * Would this player's recent answers in this game move them up, were there a level above? (`stepFloor`'s own rule,
+     * read without moving anything.) At the top of a game nothing moves, so this is how a game that hands over to
+     * another one at its top knows when (word_games.js THE HAND-OVER, row 2.63). Never with "Move by their answers" off.
+     */
+    wouldStepUp(pid, game) {
+      if (!pid || !game || c().adapt === false) return false;
+      const row = playerRow(pid, game);
+      const maxLevel = maxLevelOf(allQuestions(game));
+      const level = Math.min(Math.max(1, Math.floor(Number(row.floor) || 1)), maxLevel);
+      return judgeWindow(row.recent || [], { ...ladderOpts(maxLevel), level }) === 'up';
     },
     /**
      * Put this player at `level` in this game NOW: the floor there, the rating that level's, the answers

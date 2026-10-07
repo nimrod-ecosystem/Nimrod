@@ -27,14 +27,15 @@ import { createBus } from '../bus.js';
 import { mountModule, getManifest } from '../module.js';
 import '../modules/word_games.js';
 import { LINES, DEFAULTS, GAMES, ANSWER_TOPIC, GRAMMAR_TOPIC, PLAY_TOPIC, UNKNOWN,
-         reasonFor, fill, normalize, createEngine, wordBank, ladderGame, WORD_ADAPTER, candidatesOf } from '../modules/word_games.js';
+         reasonFor, fill, normalize, createEngine, wordBank, ladderGame, WORD_ADAPTER, WORD_VIEW, candidatesOf,
+         vocabOf, oppositesLadder, dealLadderOf, LOGIC_LADDER, OPPOSITES_LADDER } from '../modules/word_games.js';
 import { rig as quizRig, personLadderChecks } from './quiz_test_rig.js';
 import { DIFFICULTY_LEVELS } from '../packs.js';
 import { attachSpeech } from '../input_speech.js';
 import { answerByChecks } from './quiz_test_rig.js';
 import * as SP from '../input_speech.js';
 import { OPPOSITES, RHYMING, YES_NO, PRONUNCIATIONS, RHYME_OFFER_POOL, rhymes, rhymesFor,
-         rhymePart, hasPicture } from '../word_games_words.js';
+         rhymePart, hasPicture, WORD_LOGIC, isLogic } from '../word_games_words.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -170,7 +171,11 @@ try {
     check('*** "Would you like to do another one?" is the askAnother setting, OFF by default (Mike, 2026-10-02) ***',
       DEFAULTS.askAnother === false && LINES.anotherLine === 'Would you like to do another one?'
       && getManifest('word_games').settings.some((s) => s.key === 'askAnother' && s.default === false));
-    check('how long a shown answer stays is a setting', getManifest('word_games').settings.some((s) => s.key === 'answerMs' && s.kind === 'number'));
+    // Row 2.66: the celebration's and the shown answer's own clocks became quiz_flow.js's one wait, the same rows.
+    check('*** the wait after an answer: the same three rows as every answer game (no celebrateMs / answerMs) ***',
+      ['afterAnswer', 'afterBeatMs', 'readWpm'].every((k) => getManifest('word_games').settings.some((s) => s.key === k && s.kind === 'choice'))
+      && !getManifest('word_games').settings.some((s) => s.key === 'answerMs' || s.key === 'celebrateMs')
+      && DEFAULTS.afterAnswer === 'read' && !('celebrateMs' in DEFAULTS));
     const m = getManifest('word_games');
     const keys = (m.settings || []).map((s) => s.key);
     const missing = Object.keys(LINES).filter((k) => {
@@ -180,7 +185,7 @@ try {
     check('*** every spoken line is an editable text setting defaulting to its wording ***', missing.length === 0, missing.join(','));
     check('which game is a setting with all three', (m.settings.find((s) => s.key === 'game')?.options || [])
       .map((o) => o.value).join(',') === GAMES.join(','));
-    for (const k of ['unsureBelow', 'missesBeforeOffer', 'correctPoints', 'celebrateMs', 'sound', 'twoSwitch'])
+    for (const k of ['unsureBelow', 'missesBeforeOffer', 'correctPoints', 'afterBeatMs', 'sound', 'twoSwitch'])
       check(`${k} is a setting, not a constant`, keys.includes(k));
     check('built on the new core', m.core === 'new');
     const copy = Object.values(LINES).join(' ') + JSON.stringify([OPPOSITES, RHYMING, YES_NO]);
@@ -608,11 +613,21 @@ try {
     check('speech/answer on the bus reaches hear()', r.probe().misses === 1);
     bus.publish(`${ANSWER_TOPIC}#wg-1`, { text: it.accept[0], confidence: 0.95 });
     check('...and so does this instance’s own address', r.phase() === 'celebrate');
-    check('celebrating: the grammar closes (not listening over the chime)', grams[grams.length - 1].open === false);
+    // Row 2.66: celebrating, it listens for "next" (the Next button, said) and stop - and no answer words.
+    const gc = grams[grams.length - 1];
+    check('celebrating: the grammar holds only "next" and stop, no answer words', gc.open && gc.words.includes('next')
+      && gc.words.includes('stop') && !gc.words.includes(it.accept[0]), JSON.stringify(gc.words));
     const n = r.said.length;
     bus.publish(ANSWER_TOPIC, { text: 'cold', confidence: 0.95 });
-    check('...and a hearing now says nothing', r.said.length === n);
-    r.timers.flush();
+    check('...and any other hearing now says nothing (nothing over the answer being read)', r.said.length === n && r.phase() === 'celebrate');
+    check('*** the Next question button is on screen, the switch\'s one stop ***',
+      r.host.querySelector('[data-part="next"] [data-act="continue"]')?.textContent === 'Next question'
+      && r.eng.stops().map((x) => x.act).join() === 'continue');
+    const parts = [...r.host.querySelectorAll('.qz-after > [data-part]')].map((p) => p.dataset.part).join();
+    check('*** the same parts in the same order as every answer game (question, answer, why, points, Next) ***',
+      parts === 'question,answer,explain,points,next', parts);
+    bus.publish(ANSWER_TOPIC, { text: 'next', confidence: 0.95 });
+    check('*** "next" said aloud: the next question, now ***', r.phase() === 'asking');
     const ga = grams[grams.length - 1].words;
     check('the next question listens for its answers AND the ways to say stop', grams[grams.length - 1].open
       && ga.includes("i'm done") && ga.includes('stop playing') && ga.includes(UNKNOWN));
@@ -815,11 +830,14 @@ try {
   section('*** HARDER LEVELS (row 2.63): every item has a difficulty, in the words question packs use ***');
   {
     const words = Object.keys(DIFFICULTY_LEVELS);
-    for (const [name, list] of [['opposites', OPPOSITES], ['rhyming', RHYMING], ['yesno', YES_NO]]) {
+    // Opposites holds the two easy levels and word logic the two hard ones (row 2.63, Mike 2026-10-07): together, four.
+    const LEVELS = { opposites: ['very easy', 'easy'], wordlogic: ['medium', 'hard'] };
+    for (const [name, list] of [['opposites', OPPOSITES], ['wordlogic', WORD_LOGIC], ['rhyming', RHYMING], ['yesno', YES_NO]]) {
       const bad = list.filter((it) => !words.includes(it.difficulty));
       check(`${name}: every item is very easy, easy, medium or hard`, bad.length === 0, JSON.stringify(bad.slice(0, 2)));
       const have = words.filter((w) => list.some((it) => it.difficulty === w));
-      check(`*** ${name}: all four levels have questions (${have.join(', ')}) ***`, have.length === 4, have.join(','));
+      const want = LEVELS[name] || words;
+      check(`*** ${name}: its levels have questions (${have.join(', ')}) ***`, have.join() === want.join(), have.join(','));
       const bank = wordBank(name);
       check(`${name}: the ladder's bank is every item, each with its level (packs.js DIFFICULTY_LEVELS) and a unique id`,
         bank.length === list.length && bank.every((b) => b.level === DIFFICULTY_LEVELS[b.difficulty] && b.game === name)
@@ -842,8 +860,97 @@ try {
     const easy = RHYMING.filter((r) => r.difficulty === 'easy');
     check('easy rhymes: the example is spelled differently from the prompt\'s ending (it has to be heard)',
       easy.every((r) => r.word.slice(-2) !== r.example.slice(-2)), easy.filter((r) => r.word.slice(-2) === r.example.slice(-2)).map((r) => r.word).join(','));
-    const multi = OPPOSITES.filter((o) => o.difficulty === 'medium');
-    check('medium opposites: most accept more than one answer', multi.filter((o) => o.accept.length > 1).length >= multi.length / 2);
+    // WORD LOGIC (row 2.63): the Opposites game's harder levels.
+    check('word logic: at least ten questions at each of medium and hard', ['medium', 'hard'].every((d) => WORD_LOGIC.filter((w) => w.difficulty === d).length >= 10));
+    const wlBad = WORD_LOGIC.filter((w) => !w.q || !w.explain || !w.hint || !w.accept?.length || (w.wrong || []).length < 2
+      || w.wrong.some((x) => w.accept.includes(x)) || !isLogic(w) || ![...w.accept, ...w.wrong].every((x) => /^[a-z]+$/.test(x)));
+    check('*** word logic: every question has its sentence, an answer, two wrong offers that are not answers, one word each ***',
+      wlBad.length === 0, JSON.stringify(wlBad.slice(0, 2)));
+    const wlHints = WORD_LOGIC.filter((w) => w.accept.some((a) => new RegExp(`\\b${a}\\b`, 'i').test(w.hint)));
+    check('*** a word-logic hint never says the answer ***', wlHints.length === 0, wlHints.map((w) => w.q).join(' | '));
+    check('word logic: turned-round statements, analogies and putting three in order, all there',
+      ['turned', 'analogy', 'order'].every((f) => WORD_LOGIC.some((w) => w.form === f)));
+    check('*** word logic: no "which one does not belong" (Brain games asks it; no second copy) ***',
+      !WORD_LOGIC.some((w) => /belong|different|odd one/i.test(w.q)));
+    check('the rarer opposites Opposites used to ask are the hard analogies now', ['descend', 'opaque', 'minimum'].every((a) => WORD_LOGIC.some((w) => w.difficulty === 'hard' && w.accept.includes(a))));
+    const wb = wordBank('wordlogic');
+    check('word logic: its own bank, on its own ladder (wg_wordlogic), levels 3 and 4, unique ids',
+      wb.length === WORD_LOGIC.length && wb.every((b) => b.game === 'wordlogic' && (b.level === 3 || b.level === 4))
+      && new Set(wb.map((b) => b.id)).size === wb.length && LOGIC_LADDER === 'wg_wordlogic' && OPPOSITES_LADDER === 'wg_opposites');
+    check('...and the opposites ids are what they were (the very easy and easy progress is kept)',
+      wordBank('opposites').find((b) => b.word === 'hot')?.id === 'wg:opposites:hot' && wordBank('yesno')[0].id.startsWith('wg:yesno:is-a-lemon'));
+    check('the Opposites game hears every word-logic answer too (the grammar carries both lists)',
+      ['down', 'cal', 'descend', 'closed'].every((w) => vocabOf('opposites').includes(w)));
+  }
+
+  section('*** OPPOSITES, THEN WORD LOGIC: the hand-over between the two ladders (row 2.63) ***');
+  {
+    const ladderStore = () => { let d = {}; const subs = new Set(); return { get: () => d, set: (p) => { d = { ...d, ...p }; for (const f of [...subs]) f(d); },
+      load: async () => d, flush: async () => {}, subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); }, startPolling() {}, destroy() {} }; };
+    const W = (saved = {}, opts = {}) => {
+      const store = opts.store || ladderStore();
+      const r = quizRig('word_games', { saved: { answerBy: 'yesno', ...saved }, ...opts,
+        extra: { makeState: (k) => (k === 'ratings' ? store : null), ...(opts.extra || {}) } });
+      return Object.assign(r, { ladder: store, session: () => r.inst.impl.__session });
+    };
+    // A new player: opposites, on wg_opposites.
+    const a = W({ game: 'opposites' });
+    const s = a.session();
+    const pid = s.currentPlayer().id;
+    check('a new player is asked opposites (word logic waits above them)', !isLogic(a.probe().item) && s.dealt()?.game === 'wg_opposites', JSON.stringify(a.probe().item));
+    // Right answers at the top of Opposites: once its step-up rule would move them, the next question is word logic.
+    const answerRight = (r) => { const it = r.probe().item; r.eng.hear({ text: it.accept[0], confidence: 0.95 }); r.eng.press('continue'); };
+    let moved = -1;
+    for (let i = 0; i < 40 && moved < 0; i++) { answerRight(a); if (isLogic(a.probe().item)) moved = i; }
+    check('*** right answers all the way up Opposites: word logic comes next ***', moved > 0, String(moved));
+    check('...dealt off its own ladder (wg_wordlogic), started at its lowest level (medium)',
+      s.dealt()?.game === 'wg_wordlogic' && s.playerRow(pid, 'wg_wordlogic').floor === 3, JSON.stringify(s.playerRow(pid, 'wg_wordlogic')));
+    const oppN = s.playerRow(pid, 'wg_opposites').n;
+    const lit = a.probe().item;
+    check('a word-logic question asks its own sentence, with no picture', a.said[a.said.length - 1]?.includes(lit.q)
+      && a.host.querySelector('.wg-ask')?.textContent.includes(lit.q.slice(0, 12)) && !a.host.querySelector('.wg-pic'), a.last());
+    a.eng.hear({ text: lit.accept[0], confidence: 0.95 });
+    check('*** its answer is recorded on word logic, not on Opposites ***',
+      s.playerRow(pid, 'wg_wordlogic').n === 1 && s.playerRow(pid, 'wg_opposites').n === oppN, JSON.stringify([s.playerRow(pid, 'wg_wordlogic'), oppN]));
+    check('...and the right-answer screen shows its own explanation, and the answer alone (no "pair")',
+      a.phase() === 'celebrate' && a.host.textContent.includes(lit.explain) && a.host.querySelector('[data-pair]')?.textContent.trim() === lit.accept[0].toUpperCase(),
+      a.host.textContent.slice(0, 300));
+    a.eng.press('continue');
+    a.inst.destroy();
+    // Quiz mix's view of a word-logic question: the sentence, no picture, the answer alone.
+    const wl = wordBank('wordlogic')[0];
+    check('Quiz mix asks a word-logic question as its sentence, with no picture', WORD_VIEW.askHtml({ item: wl }, DEFAULTS).includes(wl.q.slice(0, 10))
+      && WORD_VIEW.left({ item: wl }) === '' && WORD_ADAPTER.judge(wl, `it is ${wl.accept[0]}`) === true && WORD_ADAPTER.judge(wl, wl.wrong[0]) === false
+      && WORD_ADAPTER.explain(wl, wl.accept[0], DEFAULTS) === wl.explain);
+    // Misses on word logic: down below its lowest level, back to Opposites, with Opposites' recent answers cleared.
+    const b = W({ game: 'opposites', startLevel: 3 });
+    const sb = b.session();
+    const pb = sb.currentPlayer().id;
+    check('a player started at medium begins on word logic', isLogic(b.probe().item) && sb.dealt()?.game === 'wg_wordlogic');
+    let back = -1;
+    for (let i = 0; i < 40 && back < 0; i++) {
+      const it = b.probe().item;
+      if (!isLogic(it)) { back = i; break; }
+      b.eng.hear({ text: it.wrong[0], confidence: 0.95 });
+      b.eng.hear({ text: it.wrong[1], confidence: 0.95 });
+      b.eng.press('reveal');
+      b.eng.press('continue');
+    }
+    check('*** missing word logic again and again moves them back to Opposites ***', back > 0 && !isLogic(b.probe().item), String(back));
+    check('...at the top of Opposites, its recent answers cleared (ten more there before word logic again)',
+      sb.playerRow(pb, 'wg_opposites').floor === 2 && (sb.playerRow(pb, 'wg_opposites').recent || []).length <= 1 && !sb.wouldStepUp(pb, 'wg_opposites'),
+      JSON.stringify(sb.playerRow(pb, 'wg_opposites')));
+    b.inst.destroy();
+    // A floor kept from before 2026-10-07 (Opposites had medium and hard then): already past easy, so word logic.
+    const store = ladderStore();
+    store.set({ ladder: { v: 1, players: { player: { name: '', games: { wg_opposites: { rating: 1300, n: 40, floor: 4, recent: [], review: {} } } } }, questions: {}, extra: {} } });
+    const c = W({ game: 'opposites' }, { store });
+    await sleep(30);          // the saved row arrives (store.load), then the next question is dealt
+    c.eng.skip();
+    check('*** a player whose Opposites level was medium or hard before goes straight to word logic ***', isLogic(c.probe().item), JSON.stringify(c.probe().item));
+    c.inst.destroy();
+    // The hand-over itself, without a module.
+    check('no ladder: Opposites as before', oppositesLadder(null, 'x') === 'wg_opposites' && dealLadderOf(null, 'rhyming', 'x') === 'wg_rhyming');
   }
 
   section('*** THE LADDER: each player at their own level, the result recorded once (row 2.63) ***');
@@ -918,8 +1025,8 @@ try {
   }
 
   section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (row 2.63) ***');
-  for (const g of ['opposites', 'rhyming', 'yesno']) {
-    await personLadderChecks({ check, name: `Word games (${g})`, game: ladderGame(g), saved: { game: g },
+  for (const g of ['opposites', 'wordlogic', 'rhyming', 'yesno']) {
+    await personLadderChecks({ check, name: `Word games (${g})`, game: ladderGame(g), saved: { game: g === 'wordlogic' ? 'opposites' : g },
       mount: ({ saved, store, extra }) => quizRig('word_games', { saved: { answerBy: 'yesno', ...saved },
         extra: { makeState: (k) => (k === 'ratings' ? store : null), ...extra } }) });
   }

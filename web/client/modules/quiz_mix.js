@@ -57,6 +57,7 @@ import { resolvePlayers, MAX_PLAYERS } from '../adaptive_play.js';
 import { packsFor } from '../pack_library.js';
 import { createContests } from '../contests.js';
 import { SOURCES, SOURCE_IDS, SOURCE_LABELS } from '../question_kinds.js';
+import { personWhoField } from './name_that.js';
 import { connectGameRoom, createRoomClient, codeWords, normalizeCode, endWords, CODE_LEN } from '../game_room.js';
 import { elsewhereQR, themeQrColours, pageAddress } from '../page_links.js';
 
@@ -116,6 +117,9 @@ export const DEFAULTS = Object.freeze({
   rounds: 10,
   useTrivia: true, useMath: true, useWords: true, useSpelling: true, useBrain: true, useThink: true,
   useNameThat: true, useWordGames: true,
+  // Name that person asks about known people and characters, not each player's own (row 2.63, Mike 2026-10-07:
+  // "Naming someone from their own pictures wouldn't be a challenge for most people"). 'both' is one row away.
+  personWho: 'known',
   triviaFrom: 'all',
   repeatGame: false,
   boards: true,
@@ -152,8 +156,10 @@ const SETTINGS = [
   onOff('useBrain', 'Brain games'),
   onOff('useThink', 'Thinking games'),
   onOff('useNameThat', 'Name that (animals, states, people)',
-    'Name that person plays each player\'s own recorded messages; a player with none gets another kind of question that turn.'),
-  onOff('useWordGames', 'Word games (opposites, rhyming, yes or no)'),
+    'Name that person asks about known people and characters; with our own people turned on, each player also gets '
+      + 'their own recorded messages at the easiest level.'),
+  personWhoField({ on: 'known', appliesWhen: (v) => v.useNameThat !== false }),
+  onOff('useWordGames', 'Word games (opposites and word logic, rhyming, yes or no)'),
   { key: 'boards', label: 'Questions answered on a letter board', default: true, level: 'standard',
     onLabel: 'In the mix', offLabel: 'Left out', note: 'Spelling, and remembering the order of things.' },
   { key: 'repeatGame', label: 'The same game two rounds running', default: false, level: 'standard',
@@ -616,7 +622,7 @@ registerModule(
       hint: (it, n) => String(call(it, 'hint', it, n, kcfg(srcOf(it))) || ''),
       answer: (it) => call(it, 'answer', it),
       explain: (it, answer) => String(call(it, 'explain', it, answer, kcfg(srcOf(it))) || ''),
-      // How long the answer must stay up for its explanation to be heard (Word Forge's meanings, row 2.59).
+      // A source's least time for its answer (quiz_flow.js `holdMs`). None has one since row 2.66: the one wait follows the words.
       holdMs: (it) => Number(call(it, 'holdMs', it, kcfg(srcOf(it)))) || 0,
       maxEntry: (it) => call(it, 'maxEntry', it, kcfg(srcOf(it))),
       vocab: (it) => call(it, 'vocab', it, kcfg(srcOf(it))) || [],
@@ -641,6 +647,8 @@ registerModule(
       },
       gentle: (it) => String(call(it, 'gentle', it, kcfg(srcOf(it))) || ''),
       yesNo: (it) => !!call(it, 'yesNo', it),
+      // The after-answer button (row 2.66): with several players taking turns, the next one is somebody else's.
+      nextLabel: () => (players().length > 1 ? 'Next player' : ''),
     };
 
     // ---- the time to answer (off by default) ----
@@ -1028,7 +1036,12 @@ registerModule(
       entryHtml: (s) => (kview().entryHtml ? kview().entryHtml(s, kcfg(current?.source)) : ''),
       pairHtml: (s) => (kview().pairHtml ? kview().pairHtml(s, kcfg(current?.source))
         : `<div class="wg-pair" data-pair>${esc(String(s.pair?.answer ?? '').toUpperCase())}</div>`),
-      explainHtml: (s) => (kview().explainHtml ? kview().explainHtml(s, kcfg(current?.source)) : esc(s.pair?.explain || '')) + pointsHtml(),
+      explainHtml: (s) => (kview().explainHtml ? kview().explainHtml(s, kcfg(current?.source)) : esc(s.pair?.explain || '')),
+      // The after-answer screen's other parts, each where every game puts it (quiz_view.js afterAnswerHtml, row 2.66):
+      // the other answers' meanings and the source from the game the question came from; the turn's points here.
+      moreHtml: (s) => (kview().moreHtml ? kview().moreHtml(s, kcfg(current?.source)) : ''),
+      sourceHtml: (s) => (kview().sourceHtml ? kview().sourceHtml(s, kcfg(current?.source)) : ''),
+      pointsHtml: () => pointsHtml().trim(),
       onKey: (k, a) => kview().onKey?.(k, a),
       onDeal: (item, a) => {
         // Every other game hears that its turn is over (a clip still playing from one stops).

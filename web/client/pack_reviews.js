@@ -277,6 +277,8 @@ export function playableBank(pack, map, { includeUnreviewed = false, packId = ''
     if (level) row.level = level;
     // `spell` (2026-10-07, spell_aloud.js): a spelling question, its answers read aloud letter by letter.
     if (item.spell === true) row.spell = true;
+    // `answerKind` (2026-10-07, row 2.63): 'person' or 'character' when the answer is one (Name that person draws these).
+    if (item.answerKind) row.answerKind = item.answerKind;
     out.push(row);
   }
   return out;

@@ -393,6 +393,7 @@
         "Ray Charles"
       ],
       "correct": "Bing Crosby",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "Music, TV and movies",
       "explain": "His record spent eleven weeks at the top of the Billboard charts that year.",

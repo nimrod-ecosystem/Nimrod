@@ -255,6 +255,7 @@
         "Benjamin Franklin"
       ],
       "correct": "George Washington",
+      "answerKind": "person",
       "difficulty": "very easy",
       "category": "History",
       "explain": "Washington's portrait has been in the center of the dollar since the 1869 design.",

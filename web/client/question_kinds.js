@@ -417,21 +417,13 @@ export const gradeLevel = (grade) => { const g = Number(grade) || 8; return g <=
 // `meanings`, parallel to `options` ({ word, meaning } each, Word Forge's `optionMeanings`), and `others`, the
 // sentence that is said.
 //
-// SPEAKING PACE, for how long the answer stays up while that is read: 145 words a minute and 450 ms to finish, the
-// numbers steps.js `holdMs` uses for the tour's narration ("deliberately slow: the audience includes people who need
-// it slower"). Not a setting, argued: the person's own knobs are already there (how long the celebration and the
-// shown answer stay, and a press moves on at once); this only stops the next question cutting a sentence off half way.
-// The case against: a fast listener waits a few seconds more on a word question unless they press.
-export const SPEAK_WPM = 145;
-export const SPEAK_PAD_MS = 450;
-export function speakingMs(text) {
-  const n = String(text || '').trim().split(/\s+/).filter(Boolean).length;
-  return n ? Math.round((n / SPEAK_WPM) * 60000 + SPEAK_PAD_MS) : 0;
-}
+// HOW LONG THE ANSWER STAYS UP while that is read: since row 2.66 the same rule as every other question (quiz_flow.js
+// THE WAIT AFTER AN ANSWER: until the voice has finished, or the words have been read, and a beat), so the longer
+// sentence simply takes longer. The speaking-pace `holdMs` this had (10 to 13 s, row 2.59) is gone: it was the third
+// clock Mike met as "pauses for seemingly random durations".
 export const wordsAdapter = Object.freeze({
   ...mcqAdapter,
   explain: (it) => [mcqAdapter.explain(it), it.others || ''].filter(Boolean).join(' '),
-  holdMs: (it, c) => speakingMs(wordsAdapter.explain(it, null, c)),
 });
 export const wordsView = Object.freeze({
   ...mcqView,
@@ -439,7 +431,7 @@ export const wordsView = Object.freeze({
   // 2026-10-07: "a wrong answer would only show you for that answer. You still keep guessing until you get it
   // right."). Only the guess just made: the shared engine keeps the last wrong answer heard, not every one, so a
   // second miss (which offers the answer) or "Try again" starts the tiles bare again. The full list comes with the
-  // answer (explainHtml below).
+  // answer (moreHtml below).
   left: (s) => {
     const it = s.item;
     const heard = s.phase === 'asking' && s.feedback?.kind === 'wrong' ? optionIn(it, s.feedback.heard) : null;
@@ -450,12 +442,14 @@ export const wordsView = Object.freeze({
       return `<button type="button" class="qz-pick qm-opt" data-pick="${esc(o)}" data-small>${esc(o)}${line}</button>`;
     }).join('')}</div>`;
   },
-  explainHtml: (s) => {
+  // The explanation, then (its own part of the after-answer screen, row 2.66) every answer's meaning.
+  explainHtml: (s) => esc(s.item?.explain || ''),
+  moreHtml: (s) => {
     const it = s.item || {};
     const kind = it.wfKind || 'blank';
     const lines = (it.meanings || []).map((m, i) => (m ? `<span class="qm-mean" data-mean="${i}"><b>${esc(it.options[i])}</b>: ${
       esc(Forge.meaningLine(kind, m))}</span>` : '')).join('');
-    return `${esc(it.explain || '')}${lines ? `<span class="qm-means" data-means>${lines}</span>` : ''}`;
+    return lines ? `<span class="qm-means" data-means>${lines}</span>` : '';
   },
 });
 export function wordsSource(host) {
@@ -516,6 +510,12 @@ export function wordsSource(host) {
 // family could play the screen's people); the messages are each seat's media sources' top folder, with no source or
 // folder setting in the mix (Name that's own panel has both; the case for adding them here: a family whose messages
 // sit in one folder of a source with photos in it).]
+// KNOWN PEOPLE AND CHARACTERS (row 2.63, Mike 2026-10-07: "Naming someone from their own pictures wouldn't be a
+// challenge for most people. More like who came up with the theory of relativity or which character did this.") In the
+// mix, Name that person asks about known people by default (the mix's `personWho`, 'known'): the question packs'
+// questions whose answer is a person or a character (name_that.js `createKnownPeople`), every seat alike, guests
+// included. 'both' adds each seat's own people as the easiest level, exactly as above. A question somebody said is
+// wrong ("I think this question is wrong") is held out, as in Trivia.
 export const NAME_CATEGORIES = Object.freeze([
   { id: 'animal', label: 'Name that animal' }, { id: 'state', label: 'Name that state' }, { id: 'person', label: 'Name that person' },
 ]);
@@ -543,13 +543,21 @@ export function nameSource(host) {
     try { return resolvePlayers(host.cfg().players, { personId: ctx.personId || null, host: ctx.screenPlayers || null }); }
     catch { return []; }
   };
+  const who = () => (Name.PERSON_WHO.includes(host.cfg().personWho) ? host.cfg().personWho : 'known');
+  const ownOn = () => who() !== 'known';
+  const knownOn = () => who() !== 'own';
+  const known = Name.createKnownPeople(ctx, { onChange: () => host.changed() });
+  if (knownOn()) known.load();
+  const heldKey = (it) => { try { const h = host.contests?.held?.(); return !!(h && h.size && h.has(it.key)); } catch { return false; } };
+  const knownHere = { bank: () => known.bank().filter((it) => !heldKey(it)) };
   const { cfg, rows, session } = ladderParts(host, { gameKey: Name.GAME, defaults: Name.DEFAULTS,
-    bankFor: (g) => Name.nameBank(g, dealingFor ? peopleOf(dealingFor) : null) });
+    bankFor: (g) => Name.nameBank(g, dealingFor && ownOn() ? peopleOf(dealingFor) : null, knownHere, who()) });
   const kindOfCat = (cat) => String(cat).replace(/^name:/, '');
-  const kindOf = (it) => (it && Array.isArray(it.clips) ? 'person'
+  const kindOf = (it) => (Name.isKnown(it) ? 'known' : it && Array.isArray(it.clips) ? 'person'
     : (it && (it.kind === 'nickname' || it.kind === 'capital') ? 'state' : 'animal'));
   const adapterOf = (it) => {
     const k = kindOf(it);
+    if (k === 'known') return Name.KNOWN_ADAPTER;
     if (k === 'person') return owner.get(it)?.adapter || null;
     return k === 'state' ? Name.STATE_ADAPTER : Name.ANIMAL_ADAPTER;
   };
@@ -558,16 +566,17 @@ export function nameSource(host) {
   return {
     id: 'name', label: 'Name that', session,
     categories: () => NAME_CATEGORIES.map((c) => ({ ...c, id: `name:${c.id}` })),
-    loading: () => localSeats().some((p) => !!peopleOf(p.id)?.loading()),
-    has: (cat) => (kindOfCat(cat) !== 'person' || localSeats().some((p) => !!peopleOf(p.id)?.enough())),
+    loading: () => (knownOn() && known.loading()) || (ownOn() && localSeats().some((p) => !!peopleOf(p.id)?.loading())),
+    has: (cat) => (kindOfCat(cat) !== 'person' || (knownOn() && knownHere.bank().length > 0)
+      || (ownOn() && localSeats().some((p) => !!peopleOf(p.id)?.enough()))),
     dealFor(player, cat) {
       const kind = kindOfCat(cat);
       if (kind !== 'person') return dealLadder(host, session, Name.ladderGame(kind), player);
-      const pg = peopleOf(player.id);
-      if (!pg || !pg.enough()) return null;
+      const pg = ownOn() ? peopleOf(player.id) : null;
+      if (!(pg && pg.enough()) && !(knownOn() && knownHere.bank().length)) return null;
       dealingFor = player.id;
       const d = dealLadder(host, session, Name.ladderGame('person'), player);
-      if (d) owner.set(d.item, pg);
+      if (d && !Name.isKnown(d.item)) owner.set(d.item, pg);
       return d;
     },
     record(r) {
@@ -609,10 +618,12 @@ export function nameSource(host) {
       onAway: () => others((x) => x.away()),
       onHide: () => others((x) => x.away()),
       onShow(api) { const it = api?.engine?.snapshot?.().item; if (it) owner.get(it)?.onShow(api); },
+      // Where a known-people question comes from, after the answer (plain words on a screen).
+      sourceHtml: (s) => Name.knownSourceHtml(s.item, { onScreen: ctx.isScreen === true }),
     },
     cfg,
-    onConfig: (c) => rows.onConfig(c),
-    destroy() { others((x) => x.destroy()); seats.clear(); session.destroy(); rows.destroy(); },
+    onConfig: (c) => { rows.onConfig(c); if (knownOn()) known.load(); },
+    destroy() { others((x) => x.destroy()); seats.clear(); known.destroy(); session.destroy(); rows.destroy(); },
   };
 }
 
@@ -622,8 +633,11 @@ export function nameSource(host) {
 // Word games' own questions and levels (modules/word_games.js `wordBank`), asked through its `WORD_ADAPTER` and
 // `WORD_VIEW`: built from the same pieces as that game's own engine, so a question is asked, judged and hinted here
 // exactly as there. The yes / no quiz is answered Yes or No directly (quiz_flow.js `yesNo`).
+// OPPOSITES, THEN WORD LOGIC (row 2.63): one category, dealt through Word games' own hand-over (word_games.js THE
+// HAND-OVER): opposites at the easy levels on `wg_opposites`, word logic above them on `wg_wordlogic`, so a player
+// here moves up and back exactly as in the game itself, and the answer is recorded on the ladder it was dealt from.
 export const WORD_GAME_CATEGORIES = Object.freeze([
-  { id: 'opposites', label: 'Opposites' }, { id: 'rhyming', label: 'Rhyming' }, { id: 'yesno', label: 'Yes or no' },
+  { id: 'opposites', label: 'Opposites and word logic' }, { id: 'rhyming', label: 'Rhyming' }, { id: 'yesno', label: 'Yes or no' },
 ]);
 export function wordGamesSource(host) {
   const { cfg, rows, session } = ladderParts(host, { gameKey: WG.GAME, defaults: WG.DEFAULTS,
@@ -634,8 +648,8 @@ export function wordGamesSource(host) {
     categories: () => WORD_GAME_CATEGORIES.map((c) => ({ ...c, id: `wg:${c.id}` })),
     loading: () => false,
     has: (cat) => WG.wordBank(kindOf(cat)).length > 0,
-    dealFor: (player, cat) => dealLadder(host, session, WG.ladderGame(kindOf(cat)), player),
-    record: (r) => session.record(r),
+    dealFor: (player, cat) => dealLadder(host, session, WG.dealLadderOf(session, kindOf(cat), player.id), player),
+    record: (r) => WG.recordWordResult(session, r),
     adapter: WG.WORD_ADAPTER, view: WG.WORD_VIEW, cfg,
     onConfig: (c) => rows.onConfig(c),
     destroy() { session.destroy(); rows.destroy(); },

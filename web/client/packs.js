@@ -104,8 +104,16 @@ function checkTriviaItem(it) {
   // `spell` (2026-10-07, ../spell_aloud.js): true on a question whose answers are spellings, so a voice reads
   // each answer letter by letter instead of saying it (saying it gives the right one away). Optional.
   if (it.spell !== undefined && typeof it.spell !== 'boolean') bad.push('spell, if present, must be true or false');
+  // `answerKind` (2026-10-07, row 2.63): what the right answer IS, when that is useful to another game: 'person' (a
+  // real person: Name that person asks these) or 'character' (somebody made up, in a story, film or myth: asked
+  // there too). Optional; tagged by web/tools/tag_answer_kinds.py. Anything else is refused, so a typo is not silently
+  // a question no game draws.
+  if (it.answerKind !== undefined && !ANSWER_KINDS.includes(it.answerKind)) {
+    bad.push(`answerKind, if present, must be one of ${ANSWER_KINDS.join(', ')}`);
+  }
   return bad;
 }
+export const ANSWER_KINDS = Object.freeze(['person', 'character']);
 
 // *** A PACK'S `difficulty` AS A LEVEL (2026-10-05). *** The ladder (rating.js / adaptive_play.js) counts
 // levels from 1, the easiest; a question's level is where its rating STARTS, and play moves it from there.

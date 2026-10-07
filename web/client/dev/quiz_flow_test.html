@@ -86,8 +86,14 @@ try {
       && QF.flowSettings().some((f) => f.key === 'askAnother' && f.default === false)
       && FLOW_LINES.anotherLine === 'Would you like to do another one?'
       && QF.flowSettings().some((f) => f.key === 'anotherLine' && f.kind === 'text'));
-    check('how long a shown answer stays is a setting (answerMs, 5 s)', QF.FLOW_DEFAULTS.answerMs === 5000
-      && QF.flowSettings().some((f) => f.key === 'answerMs' && f.kind === 'number'));
+    // Row 2.66: the three clocks (celebrateMs, answerMs, a game's holdMs) became ONE wait.
+    check('*** the wait after an answer is settings: go on once read (default) or wait for Next; the beat; the reading pace ***',
+      QF.FLOW_DEFAULTS.afterAnswer === 'read' && QF.FLOW_DEFAULTS.afterBeatMs === 2000 && QF.FLOW_DEFAULTS.readWpm === 160
+      && ['afterAnswer', 'afterBeatMs', 'readWpm'].every((k) => QF.flowSettings().some((f) => f.key === k && f.kind === 'choice'))
+      && QF.flowSettings().find((f) => f.key === 'afterAnswer').options.map((o) => o.value).join() === 'read,press');
+    check('...and the old per-screen clocks are gone (no celebrateMs / answerMs row or default)',
+      !('celebrateMs' in QF.FLOW_DEFAULTS) && !('answerMs' in QF.FLOW_DEFAULTS)
+      && !QF.flowSettings().some((f) => f.key === 'celebrateMs' || f.key === 'answerMs'));
     check('no line says she / her (site copy rule)', !/\b(she|her|hers|herself)\b/i.test(Object.values(FLOW_LINES).join(' ')));
   }
 
@@ -173,7 +179,8 @@ try {
     t.e.hear({ text: 'answer', confidence: 0.9 });
     check('(4) hear the answer - and nothing after it', t.phase() === 'answer'
       && t.last() === `Here is the answer. ${it.a} is right.`, t.last());
-    check('...shown on a timer, not behind a question', t.e.snapshot().timerPending && t.e.stops().length === 0);
+    check('...shown on a timer, not behind a question: its one stop is the Next button (row 2.66)', t.e.snapshot().timerPending
+      && t.e.stops().map((x) => `${x.act}:${x.label}`).join() === 'continue:Next question', JSON.stringify(t.e.stops()));
     check('*** nothing paid for any of it ***', t.paid.length === 0);
     const before = t.e.snapshot().serial;
     t.flush();
@@ -305,7 +312,7 @@ try {
     check('...Select is Yes', t3.phase() === 'celebrate');
   }
 
-  section('the grammar: right AND wrong words, and always [unk]; closed while celebrating');
+  section('the grammar: right AND wrong words, and always [unk]; only "next" and stop while celebrating');
   {
     const t = eng();
     t.e.start('toy');
@@ -313,7 +320,142 @@ try {
     check('open while asking', g.open && g.words.includes('blue') && g.words.includes('red'));
     check('*** always carries [unk] ***', g.words.includes(UNKNOWN));
     t.e.press('no'); t.e.press('yes');
-    check('closed while celebrating', t.grams[t.grams.length - 1].open === false);
+    const gc = t.grams[t.grams.length - 1];
+    check('celebrating (row 2.66): "next" and the ways to say stop, and no answer words', gc.open && gc.words.includes('next')
+      && gc.words.includes('stop') && gc.words.includes(UNKNOWN) && !gc.words.includes('blue') && !gc.words.includes('red'),
+      JSON.stringify(gc.words));
+  }
+
+  // =====================================================================================
+  section('*** THE WAIT AFTER AN ANSWER (row 2.66): one rule, a Next button, "next" aloud, and "wait for Next" ***');
+  {
+    // Timers that remember how long they were asked for.
+    const clock = () => { let id = 0; const p = new Map(); return { p,
+      set: (fn, ms) => { id += 1; p.set(id, { fn, ms }); return id; }, clear: (i) => p.delete(i),
+      only: () => [...p.values()].map((x) => x.ms), fire: () => { for (const [i, x] of [...p]) { p.delete(i); x.fn(); } } }; };
+    check('readingMs: words at a pace (4 words at 160 a minute = 1.5 s; none = 0)',
+      QF.readingMs('one two three four', 160) === 1500 && QF.readingMs('', 160) === 0 && QF.readingMs('a b', 0) === QF.readingMs('a b', 160));
+    // 1. Nothing said aloud: the reading time and the beat, as ONE timer.
+    let k = clock(); let done = 0;
+    let w = QF.createAfterWait({ setTimer: k.set, clearTimer: k.clear, now: () => 0 });
+    check('*** nothing said: one timer, reading time + the beat ***',
+      w.start({ cfg: QF.FLOW_DEFAULTS, text: 'one two three four', onDone: () => { done += 1; } }) === 'read'
+      && k.only().join() === '3500', k.only().join());
+    k.fire();
+    check('...then it goes on', done === 1);
+    w.start({ cfg: { ...QF.FLOW_DEFAULTS, afterBeatMs: 5000, readWpm: 100 }, text: 'one two three four five', onDone: () => {} });
+    check('the person\'s beat and reading pace are used (5 words at 100 = 3 s, + 5 s)', k.only().join() === '8000', k.only().join());
+    // 2. "Wait for Next": nothing runs at all.
+    k = clock(); w = QF.createAfterWait({ setTimer: k.set, clearTimer: k.clear });
+    check('*** "wait for Next": no clock at all ***', w.start({ cfg: { ...QF.FLOW_DEFAULTS, afterAnswer: 'press' }, text: 'x', onDone: () => {} }) === 'press'
+      && k.only().length === 0 && !w.pending());
+    // 3. A voice: the backstop runs; when the voice ends, the beat (never before the reading time).
+    k = clock(); let t0 = 0; done = 0;
+    w = QF.createAfterWait({ setTimer: k.set, clearTimer: k.clear, now: () => t0 });
+    let end; const spoken = new Promise((r) => { end = r; });
+    const text = 'one two three four five six seven eight';   // 3 s at 160
+    check('a voice: only the backstop runs while it speaks', w.start({ cfg: QF.FLOW_DEFAULTS, text, spoken, onDone: () => { done += 1; } }) === 'speech'
+      && k.only().join() === String(QF.speechBackstopMs(text) + 2000), k.only().join());
+    t0 = 6000; end({ delivered: true }); await null; await null;
+    check('*** the voice finished (after the reading time): the beat alone ***', k.only().join() === '2000', k.only().join());
+    k.fire();
+    check('...then it goes on, once', done === 1);
+    k = clock(); t0 = 0; w = QF.createAfterWait({ setTimer: k.set, clearTimer: k.clear, now: () => t0 });
+    let end2; w.start({ cfg: QF.FLOW_DEFAULTS, text, spoken: new Promise((r) => { end2 = r; }), onDone: () => {} });
+    t0 = 1000; end2(null); await null; await null;
+    check('*** a voice that stopped at once (1 s): still the rest of the reading time (2 s) + the beat ***', k.only().join() === '4000', k.only().join());
+    k = clock(); w = QF.createAfterWait({ setTimer: k.set, clearTimer: k.clear, now: () => 0 });
+    let end3; w.start({ cfg: QF.FLOW_DEFAULTS, text, spoken: new Promise((r) => { end3 = r; }), onDone: () => {} });
+    w.stop(); end3({}); await null; await null;
+    check('stopped (Next pressed): a voice ending afterwards starts nothing', k.only().length === 0 && !w.pending());
+
+    // 4. The engine: the Next button, "next" said aloud, stop, and anything else let go.
+    const t = eng();
+    t.e.start('toy');
+    t.e.hear({ text: t.e.snapshot().item.a, confidence: 0.95 });
+    const s1 = t.e.snapshot().serial;
+    check('right: celebrating, a clock running, the Next button its one stop', t.phase() === 'celebrate' && t.e.snapshot().timerPending
+      && t.e.stops().map((x) => x.act).join() === 'continue' && t.e.snapshot().nextLabel === 'Next question' && !t.e.snapshot().waitsForNext);
+    const n = t.said.length;
+    t.e.hear({ text: 'blue', confidence: 0.95 });
+    check('*** anything but "next" or stop, heard after an answer: nothing said over it, nothing changes ***',
+      t.said.length === n && t.phase() === 'celebrate', t.last());
+    t.e.hear({ text: 'next', confidence: 0.4 });
+    check('an unsure "next" is let go too', t.phase() === 'celebrate');
+    t.e.hear({ text: 'Next question', confidence: 0.9 });
+    check('*** "next question" said aloud: the next question, now ***', t.phase() === 'asking' && t.e.snapshot().serial === s1 + 1);
+    const wrongOne = t.e.snapshot().item.wrong2;
+    t.e.hear({ text: wrongOne, confidence: 0.95 }); t.e.hear({ text: wrongOne, confidence: 0.95 }); t.e.press('reveal');
+    check('two misses and "hear the answer": the shown answer', t.phase() === 'answer', t.phase());
+    t.e.hear({ text: "I'm done", confidence: 0.9 });
+    check('a stop phrase on a shown answer ends the sitting', t.phase() === 'done', t.phase());
+    // 5. Wait for Next.
+    const p = eng({}, { afterAnswer: 'press' });
+    p.e.start('toy');
+    p.e.hear({ text: p.e.snapshot().item.a, confidence: 0.95 });
+    check('*** "wait for Next": the celebration stays, no clock, and the screen says it is waiting ***', p.phase() === 'celebrate'
+      && !p.e.snapshot().timerPending && p.e.snapshot().waitsForNext);
+    p.flush();
+    check('...however long', p.phase() === 'celebrate');
+    p.e.select();
+    check('...until Next (a switch press)', p.phase() === 'asking' && p.e.snapshot().serial === 2);
+    // 6. A game's own label ("Next player").
+    const g2 = eng({}, {}, { toy: { ...TOY, nextLabel: () => 'Next player' } });
+    g2.e.start('toy');
+    g2.e.hear({ text: g2.e.snapshot().item.a, confidence: 0.95 });
+    check('an adapter\'s nextLabel names the button ("Next player")', g2.e.stops()[0].label === 'Next player' && g2.e.snapshot().nextLabel === 'Next player');
+    // 7. A say that reports its end: the engine waits for it.
+    let finishSpeech = null;
+    const v = eng({ say: () => new Promise((r) => { finishSpeech = r; }) });
+    v.e.start('toy');
+    finishSpeech = null;
+    v.e.hear({ text: v.e.snapshot().item.a, confidence: 0.95 });
+    check('the engine hands the voice\'s promise to the wait (celebrating, the backstop pending)', typeof finishSpeech === 'function' && v.e.snapshot().timerPending);
+  }
+
+  section('createSpeechWatch: when a said line has finished, from the output bus\'s own report (output.js onReport)');
+  {
+    const { createOutputBus } = await import('../output.js');
+    // A speech channel the suite finishes by hand.
+    const speaking = [];
+    const speechCh = { name: 'speech', concurrency: 1,
+      present(item, { done }) { speaking.push({ id: item.id, done, handed: Object.keys(item) }); return () => {}; } };
+    const out = createOutputBus({ channels: { speech: speechCh } });
+    check('the output bus says it reports', out.reports === true);
+    const sw = QF.createSpeechWatch({ output: () => out });
+    const a = sw.say('hello');
+    let got = null; a.done.then((r) => { got = r; });
+    check('the channel is handed the message, never the caller\'s callback', speaking[0].id === a.id && !speaking[0].handed.includes('onReport'));
+    await null;
+    check('not ended while it is still being said', got === null);
+    speaking[0].done(); await null;
+    check('*** ended when the speech channel has finished it ***', got && got.delivered === true && got.id === a.id && got.channel === 'speech');
+    // A voice that is over before `say` even returns.
+    const out2 = createOutputBus({ channels: { speech: { name: 'speech', present: (item, { done }) => { done(); return null; } } } });
+    const b = QF.createSpeechWatch({ output: () => out2 }).say('quick');
+    let gotB = null; b.done.then((r) => { gotB = r; }); await null;
+    check('*** a voice that finishes (or fails) at once is still caught ***', gotB && gotB.id === b.id);
+    // Something more urgent takes the voice: the line is put back, not ended; it ends when it is finally said.
+    const out3 = createOutputBus({ channels: { speech: speechCh } });
+    speaking.length = 0;
+    const sw3 = QF.createSpeechWatch({ output: () => out3 });
+    const p = sw3.say('my answer'); let gotP = null; p.done.then((r) => { gotP = r; });
+    out3.alert('something urgent');
+    await null;
+    check('a line put back in the queue by something more urgent (preempted) has not ended', gotP === null && speaking.length === 2);
+    speaking[1].done(); await null;
+    const again = speaking.find((x, i) => i >= 2 && x.id === p.id);
+    check('...it is said again after it', !!again && gotP === null);
+    again?.done(); await null;
+    check('...and ends then', gotP && gotP.delivered === true);
+    // A newer line, a screen with no speech, a fake voice.
+    const c1 = sw.say('one'); let r1 = 'x'; c1.done.then((r) => { r1 = r; });
+    sw.say('two'); await null;
+    check('a line superseded by a newer one ends (with nothing) at once', r1 === null);
+    out.setRouting({ say: ['screen'] });
+    check('spoken lines not routed to speech: the end cannot be known (null)', sw.say('x').done === null);
+    check('an output that does not report (a suite\'s fake voice): null', QF.createSpeechWatch({ output: () => ({ say: () => 'u1', getRouting: () => ({ say: ['speech'] }) }) }).say('x').done === null);
+    sw.destroy();
   }
 
   // =====================================================================================

@@ -14,6 +14,7 @@
       "question": "\"It is a truth universally acknowledged, that a single man in possession of a good fortune must be in want of a wife.\" — who wrote this opening line?",
       "answers": ["Jane Austen", "Charles Dickens", "Leo Tolstoy", "William Shakespeare"],
       "correct": "Jane Austen",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "Literature",
       "explain": "It's the opening line of Pride and Prejudice (1813)."
@@ -46,6 +47,7 @@
       "question": "Which author wrote: \"All the world's a stage, and all the men and women merely players\"?",
       "answers": ["William Shakespeare", "Jane Austen", "Charles Dickens", "Herman Melville"],
       "correct": "William Shakespeare",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "Literature",
       "explain": "The line is from Shakespeare's As You Like It, spoken by the character Jaques."

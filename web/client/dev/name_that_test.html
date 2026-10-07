@@ -27,7 +27,8 @@ import { harness, rig, sleep, answerByChecks, personLadderChecks } from './quiz_
 import { getManifest } from '../module.js';
 import '../modules/name_that.js';
 import { GAME, GAMES, STATES, ANIMALS, LINES, DEFAULTS, personFromFileName, ANIMAL_BANK, STATE_BANK, STATE_CAPITALS,
-  ladderGame } from '../modules/name_that.js';
+  ladderGame, knownBank, isKnown, KNOWN_ADAPTER, KNOWN_FLOOR, PERSON_KINDS, PERSON_WHO, knownSourceHtml } from '../modules/name_that.js';
+import { triviaPackRows } from '../modules/trivia.js';
 import { DIFFICULTY_LEVELS } from '../packs.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { auditFields } from '../settings_audit.js';
@@ -156,7 +157,7 @@ try {
   section('*** name that person: no messages yet is said plainly ***');
   {
     const none = media({ sources: [] });
-    const r = R({ game: 'person' }, none.ctx);
+    const r = R({ game: 'person', personWho: 'own' }, none.ctx);
     await waitFor(() => r.phase() === 'empty');
     check('no source: "empty", with what to do about it', r.phase() === 'empty'
       && /media source/i.test(r.host.textContent), r.host.textContent.slice(0, 200));
@@ -164,7 +165,7 @@ try {
     r.inst.destroy();
 
     const one = media({ flat: ['Annie - hello.mp4', 'Annie - again.mp4'] });
-    const o = R({ game: 'person' }, one.ctx);
+    const o = R({ game: 'person', personWho: 'own' }, one.ctx);
     await waitFor(() => o.phase() === 'empty');
     check('one person: needs at least two, and says so', o.phase() === 'empty' && /two people/i.test(o.host.textContent), o.host.textContent.slice(0, 200));
     o.inst.destroy();
@@ -173,7 +174,7 @@ try {
   section('*** name that person: the clip plays FIRST, and nothing talks over it ***');
   {
     const m = media({ flat: ['Annie - how we met.mp4', 'Bob - hello.mp4', 'Bob 2.mp4', 'notes.txt'], albums: { Carol: ['birthday.mp4'] } });
-    const r = R({ game: 'person' }, m.ctx);
+    const r = R({ game: 'person', personWho: 'own' }, m.ctx);
     await waitFor(() => m.played.length === 1);
     const it = r.probe().item;
     check('people from file names AND from a folder per person', ['Annie', 'Bob', 'Carol'].includes(it?.answer), it?.answer);
@@ -215,7 +216,7 @@ try {
   section('name that person set to the standard flow, and a clip that fails');
   {
     const m = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
-    const r = R({ game: 'person', personMiss: 'standard' }, m.ctx);
+    const r = R({ game: 'person', personWho: 'own', personMiss: 'standard' }, m.ctx);
     await waitFor(() => m.played.length === 1);
     m.fail();
     check('a clip that will not play does not strand the question: it is asked', /Who is this\?/.test(r.last()), r.last());
@@ -243,7 +244,7 @@ try {
     s.inst.destroy();
     // The person game: the clip first, then "Who is this?" with nothing offered after it.
     const md = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
-    const p = ship({ game: 'person' }, md.ctx);
+    const p = ship({ game: 'person', personWho: 'own' }, md.ctx);
     await waitFor(() => md.played.length === 1);
     md.end();
     check('person: when the clip ends, "Who is this?" and NO name offered', p.last() === LINES.askPerson && p.probe().offers === 'choices', p.last());
@@ -321,7 +322,7 @@ try {
   section('*** NAME THAT PERSON\'S TWO LEVELS: seeing them, then hearing them only (row 2.63) ***');
   {
     const md = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol - hello.mp3', 'Carol - hello.jpg', 'Dee.mp3'] });
-    const r = R({ game: 'person', startLevel: 2, adapt: false }, md.ctx);
+    const r = R({ game: 'person', personWho: 'own', startLevel: 2, adapt: false }, md.ctx);
     await waitFor(() => md.played.length === 1);
     const it = r.probe().item;
     check('*** level 2: the message plays as SOUND ONLY (nothing of them on screen) ***', it.level === 2 && it.voiceOnly === true && md.played[0].voiceOnly === true, JSON.stringify(md.played[0]));
@@ -329,7 +330,7 @@ try {
     md.end();
     r.inst.destroy();
     const md1 = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol - hello.mp3', 'Carol - hello.jpg', 'Dee.mp3'] });
-    const s = R({ game: 'person', levelsAtOnce: 1, adapt: false }, md1.ctx);
+    const s = R({ game: 'person', personWho: 'own', levelsAtOnce: 1, adapt: false }, md1.ctx);
     await waitFor(() => md1.played.length === 1);
     const it1 = s.probe().item;
     check('*** level 1: a video, or a voice WITH its picture ***', it1.level === 1 && md1.played[0].voiceOnly === false
@@ -341,6 +342,85 @@ try {
     check('*** the ladder\'s question ids do not carry anybody\'s name ***', bank.every((q) => !/annie|bob|carol|dee/i.test(q.id)), bank.map((q) => q.id).join(','));
     md1.end();
     s.inst.destroy();
+  }
+
+  section('*** KNOWN PEOPLE AND CHARACTERS (row 2.63, Mike 2026-10-07: "who came up with the theory of relativity or which character did this") ***');
+  {
+    // Made-up questions in the shape Trivia's rows have (triviaPackRows); the real packs are checked at the end.
+    const ROWS = [
+      { question: 'Who painted the blue barn?', answer: 'Ada Lane', wrong: ['Bo Ruiz', 'Cy Moss', 'Di Park'], level: 3, answerKind: 'person',
+        explain: 'Ada Lane painted the blue barn.', sources: [{ url: 'https://example.org/barn', title: 'Example' }] },
+      { question: 'Which puppet sings in the tin band?', answer: 'Tobo', wrong: ['Rilla', 'Mux'], level: 1, answerKind: 'character' },
+      { question: 'Who rode the red bike first?', answer: 'Eve Holt', wrong: ['Fin Ott', 'Gus Ray', 'Hal Ng'], level: 4, answerKind: 'person' },
+      { question: 'What colour is the barn?', answer: 'Blue', wrong: ['Red', 'Green', 'Grey'], level: 1 },
+      { question: 'Who only has one wrong name?', answer: 'Ivo Pell', wrong: ['Jo Wu'], level: 2, answerKind: 'person' },
+    ];
+    const bank = knownBank(ROWS);
+    check('only questions whose answer is a person or a character, with two wrong names at least', bank.length === 3
+      && bank.every((q) => isKnown(q) && PERSON_KINDS.includes(q.answerKind)), JSON.stringify(bank.map((q) => q.answer)));
+    check('*** a known-people question starts at easy at the lowest: very easy is our own people ***',
+      KNOWN_FLOOR === 2 && bank.find((q) => q.answer === 'Tobo').level === 2 && bank.find((q) => q.answer === 'Eve Holt').level === 4);
+    check('its id is the question key the "this question is wrong" log uses', bank.every((q) => q.id === `known:${q.key}`));
+    const ada = bank.find((q) => q.answer === 'Ada Lane');
+    check('judged by name: the whole name, a surname alone, a wrong name', KNOWN_ADAPTER.judge(ada, 'it was Ada Lane') === true
+      && KNOWN_ADAPTER.judge(ada, 'Lane') === true && KNOWN_ADAPTER.judge(ada, 'Bo Ruiz') === false && KNOWN_ADAPTER.judge(ada, '') === null);
+    const cands = KNOWN_ADAPTER.candidates(ada, DEFAULTS, () => 0.4);
+    check('three names offered: the answer and two of its wrong ones', cands.length === 3 && cands.includes('Ada Lane')
+      && cands.filter((c) => ada.wrong.includes(c)).length === 2, cands.join(','));
+    check('hints: a wrong name taken away, then the first letter', KNOWN_ADAPTER.hint(ada, 1, DEFAULTS) === 'it is not Bo Ruiz'
+      && KNOWN_ADAPTER.hint(ada, 2, DEFAULTS) === 'it starts with A');
+    check('its explanation is the pack\'s, else "The answer is X."', KNOWN_ADAPTER.explain(ada, 'Ada Lane', DEFAULTS) === ada.explain
+      && KNOWN_ADAPTER.explain(bank.find((q) => q.answer === 'Tobo'), '', DEFAULTS) === 'The answer is Tobo.');
+    check('the source line after the answer (plain words on a screen)', /Source: Example/.test(knownSourceHtml(ada)) && !/<a /.test(knownSourceHtml(ada))
+      && /<a /.test(knownSourceHtml(ada, { onScreen: false })));
+    const m = getManifest(GAME);
+    const who = m.settings.find((s) => s.key === 'personWho');
+    check('*** "who to ask about": both by default, only our own (the game as it was), or only known people ***',
+      who?.default === 'both' && (who.options || []).map((o) => o.value).join() === 'both,own,known' && PERSON_WHO.join() === 'both,own,known');
+    const known = { knownPeopleRows: async () => ROWS };
+
+    // No media source at all, the default: the game plays known people instead of saying "connect a source".
+    const none = media({ sources: [] });
+    const r = R({ game: 'person' }, { ...none.ctx, ...known });
+    await waitFor(() => r.probe().item && r.phase() === 'asking');
+    const it = r.probe().item;
+    check('*** no messages of our own: known people are asked, as text, no clip ***', isKnown(it) && none.played.length === 0
+      && r.said[0]?.startsWith(it.question), JSON.stringify([it, r.said[0]]));
+    check('...a new player gets easy ones first (level 2)', it.level === 2, String(it.level));
+    check('...no "Listen again", nothing on the left', !r.host.querySelector('[data-act="replay"]') && !r.host.querySelector('[data-media]'));
+    const wrong = r.probe().candidates.find((c) => c !== it.answer);
+    r.eng.hear({ text: wrong, confidence: 0.95 });
+    check('*** a miss on a known person is the usual flow, not the gentle one ***', /That is incorrect/.test(r.last()) && r.phase() !== 'gentle', r.last());
+    r.eng.hear({ text: it.answer, confidence: 0.95 });
+    check('right: celebrated, and recorded on Name that person\'s ladder', r.phase() === 'celebrate'
+      && r.inst.impl.__session.playerRow(r.inst.impl.__session.currentPlayer().id, 'name_person').n === 1);
+    r.inst.destroy();
+
+    // Our own people AND known people: both on one ladder.
+    const md = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
+    const b = R({ game: 'person', levelsAtOnce: 1, adapt: false }, { ...md.ctx, ...known });
+    await waitFor(() => md.played.length === 1);
+    check('*** both: a new player starts with our own people (very easy, a clip) ***', !isKnown(b.probe().item) && b.probe().item.level === 1);
+    const all = b.inst.impl.__session.allQuestions('name_person');
+    check('...and the ladder holds both kinds', all.some(isKnown) && all.some((q) => !isKnown(q)), String(all.length));
+    md.end();
+    b.inst.destroy();
+    const h = R({ game: 'person', startLevel: 4, adapt: false }, { ...media({ flat: ['Annie.mp4', 'Bob.mp4'] }).ctx, ...known });
+    await waitFor(() => h.probe().item);
+    check('...started at hard: a hard known-people question', isKnown(h.probe().item) && h.probe().item.answer === 'Eve Holt', JSON.stringify(h.probe().item));
+    h.inst.destroy();
+
+    // Only known people: messages present, never played.
+    const mk = media({ flat: ['Annie.mp4', 'Bob.mp4', 'Carol.mp4'] });
+    const k = R({ game: 'person', personWho: 'known' }, { ...mk.ctx, ...known });
+    await waitFor(() => k.probe().item);
+    for (let i = 0; i < 5; i++) { check(`known only, question ${i + 1}: a known person, no clip`, isKnown(k.probe().item) && mk.played.length === 0); k.eng.skip(); }
+    k.inst.destroy();
+
+    // The real packs, as Trivia reads them: the shipped ones carry tagged people (web/tools/tag_answer_kinds.py).
+    const real = knownBank(await triviaPackRows({ reviews: null }));
+    check(`*** the shipped packs' tagged people are drawn (${real.length}) ***`, real.length >= 12
+      && real.some((q) => q.answer === 'Jane Austen') && real.every((q) => q.level >= KNOWN_FLOOR), String(real.length));
   }
 
   section('*** THE LEVEL FOLLOWS THE PERSON, with "Start this game at" and their usual start (row 2.63) ***');

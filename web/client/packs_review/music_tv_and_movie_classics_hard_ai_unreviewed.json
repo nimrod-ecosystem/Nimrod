@@ -47,6 +47,7 @@
         "James Stewart"
       ],
       "correct": "Humphrey Bogart",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Bogart starred with Ingrid Bergman in the 1942 film.",
@@ -71,6 +72,7 @@
         "Charlie Watts"
       ],
       "correct": "Ringo Starr",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Ringo replaced Pete Best in August 1962.",
@@ -119,6 +121,7 @@
         "Martin Scorsese"
       ],
       "correct": "Steven Spielberg",
+      "answerKind": "person",
       "difficulty": "easy",
       "category": "Music, TV & movies",
       "explain": "Jaws made Spielberg famous.",
@@ -215,6 +218,7 @@
         "Sergei Rachmaninoff"
       ],
       "correct": "Pyotr Ilyich Tchaikovsky",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "The Nutcracker was first performed in 1892.",
@@ -239,6 +243,7 @@
         "Cole Porter"
       ],
       "correct": "Leonard Bernstein",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Bernstein wrote the music; Sondheim wrote the lyrics.",
@@ -358,6 +363,7 @@
         "Tony Bennett"
       ],
       "correct": "Mel Tormé",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Mel Tormé also co-wrote The Christmas Song.",
@@ -428,6 +434,7 @@
         "Spencer Tracy"
       ],
       "correct": "Gregory Peck",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Gregory Peck won the Academy Award for Best Actor for the role.",
@@ -452,6 +459,7 @@
         "Elizabeth Taylor"
       ],
       "correct": "Anne Bancroft",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Anne Bancroft played Mrs. Robinson opposite Dustin Hoffman.",
@@ -475,6 +483,7 @@
         "Zeppo"
       ],
       "correct": "Harpo",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Harpo never spoke on screen, communicating with a horn and whistles, and was also a fine harpist.",
@@ -663,6 +672,7 @@
         "Ray Charles"
       ],
       "correct": "Roy Orbison",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Roy Orbison was known as the Big O.",
@@ -687,6 +697,7 @@
         "Buddy Holly"
       ],
       "correct": "Carl Perkins",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Carl Perkins wrote it and released it in January 1956; Elvis Presley recorded his cover at the end of that month.",
@@ -735,6 +746,7 @@
         "Frank Morgan"
       ],
       "correct": "Jack Haley",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Jack Haley was the Tin Man; Ray Bolger played the Scarecrow and Bert Lahr the Cowardly Lion.",
@@ -758,6 +770,7 @@
         "Bernard Herrmann"
       ],
       "correct": "Max Steiner",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Max Steiner wrote the score, including the famous Tara's Theme.",
@@ -806,6 +819,7 @@
         "Franz Liszt"
       ],
       "correct": "Johann Strauss II",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Johann Strauss II wrote The Blue Danube in 1866-67.",
@@ -830,6 +844,7 @@
         "Jules Massenet"
       ],
       "correct": "Georges Bizet",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Music, TV & movies",
       "explain": "Bizet's Carmen opened in Paris in 1875.",
@@ -854,6 +869,7 @@
         "Maurice Ravel"
       ],
       "correct": "Claude Debussy",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Clair de lune is the third movement of Debussy's Suite bergamasque.",
@@ -972,6 +988,7 @@
         "Elmer Bernstein"
       ],
       "correct": "Henry Mancini",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Henry Mancini wrote the Pink Panther theme in 1963.",
@@ -995,6 +1012,7 @@
         "Ed Sullivan"
       ],
       "correct": "Steve Allen",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Steve Allen hosted The Tonight Show from 1954 to 1957.",
@@ -1019,6 +1037,7 @@
         "Dinah Washington"
       ],
       "correct": "Billie Holiday",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Saxophonist Lester Young nicknamed Billie Holiday 'Lady Day'.",
@@ -1042,6 +1061,7 @@
         "Count Basie"
       ],
       "correct": "Benny Goodman",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Music, TV & movies",
       "explain": "Clarinetist Benny Goodman led one of the most popular swing big bands and was called the King of Swing.",

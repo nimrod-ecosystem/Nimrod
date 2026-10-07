@@ -43,7 +43,10 @@
 //   4. after a right answer, or after hearing the answer: THE NEXT QUESTION, by itself. Mike retired
 //      "Would you like to do another one?" on 2026-10-02 ("it ruins the flow of the game. They can
 //      just stop answering or ask the computer to stop") - the same change as quiz_flow.js, item 4:
-//      a celebration for `celebrateMs`, a shown answer for `answerMs`, then the next question; "stop"
+//      a celebration or a shown answer, then the next question after quiz_flow.js's ONE wait (THE WAIT
+//      AFTER AN ANSWER, row 2.66: once it has been said or read, and a beat; a Next button; or
+//      "wait for Next", `afterAnswer`), drawn as every answer game draws it (quiz_view.js
+//      `afterAnswerHtml`); "stop"
 //      or "I'm done" (quiz_flow.js STOP_PHRASES, when it is not this question's own answer) ends it.
 //      Mike, the same day: "Yes. Skip asking as default." - so "another one?" is the `askAnother`
 //      setting (quiz_flow.js ASK_ANOTHER_FIELD), OFF; on, it is asked after the celebration and under
@@ -79,17 +82,18 @@ import { registerModule } from '../module.js';
 import { createPointsLedger } from '../points.js';
 import { symbolSvg } from '../aac_symbols.js';
 import {
-  OPPOSITES, RHYMING, YES_NO, YES_WORDS, NO_WORDS, PRONUNCIATIONS, RHYME_OFFER_POOL,
-  rhymes, rhymesFor, hasPicture, itemLevel,
+  OPPOSITES, RHYMING, YES_NO, YES_WORDS, NO_WORDS, PRONUNCIATIONS, RHYME_OFFER_POOL, WORD_LOGIC,
+  rhymes, rhymesFor, hasPicture, itemLevel, isLogic,
 } from '../word_games_words.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
-import { ensureQuizStyle } from '../quiz_view.js';
+import { ensureQuizStyle, afterAnswerHtml, verdictLine } from '../quiz_view.js';
 // *** THE PURE HELPERS LIVE IN quiz_flow.js NOW (row 2.45), and are re-exported below. *** Three
 // more answer games arrived with "the same miss flow as row 2.31", so the wording, `reasonFor`
 // (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
 // changed: word_games_test and quiz_flow_test both check these are the same functions.
 import {
-  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, FLOW_LINE_LABELS, STOP_PHRASES, ANSWER_MS_FIELD, ASK_ANOTHER_FIELD,
+  ANSWER_TOPIC, GRAMMAR_TOPIC, UNKNOWN, FLOW_LINES, FLOW_LINE_LABELS, STOP_PHRASES, ASK_ANOTHER_FIELD,
+  FLOW_DEFAULTS, AFTER_ANSWER_FIELDS, NEXT_WORDS, NEXT_LABEL, isNext, waitsForNext, createAfterWait, createSpeechWatch,
   answerByField, normalize, fill, esc, fillHtml, shuffle, isYes, isNo, isAgain, isReveal, isDone, isStop, reasonFor,
   defaultChime as sharedChime, STARS, CAT_URL,
 } from '../quiz_flow.js';
@@ -150,9 +154,10 @@ export const DEFAULTS = Object.freeze({
   // One point per right answer: points.js's atom is "roughly a minute of effort", and one short
   // question is less than that — the same one trivia pays for a first-guess answer.
   correctPoints: 1,
-  celebrateMs: 3000,
-  // How long a revealed answer stays before the next question comes by itself (quiz_flow.js argues it).
-  answerMs: ANSWER_MS_FIELD.default,
+  // THE WAIT AFTER AN ANSWER (row 2.66): quiz_flow.js's three, and its argument for each.
+  afterAnswer: FLOW_DEFAULTS.afterAnswer,
+  afterBeatMs: FLOW_DEFAULTS.afterBeatMs,
+  readWpm: FLOW_DEFAULTS.readWpm,
   // "Would you like to do another one?" between questions: off (item 4).
   askAnother: ASK_ANOTHER_FIELD.default,
   sound: true,
@@ -193,8 +198,11 @@ const LINE_LABELS = {
 
 const SETTINGS = [
   { key: 'game', label: 'Which game', kind: 'choice', default: DEFAULTS.game, level: 'essential',
-    options: [{ value: 'opposites', label: 'Opposites' }, { value: 'rhyming', label: 'Rhyming' },
-              { value: 'yesno', label: 'Yes or no' }] },
+    // "Opposites and word logic" (row 2.63): chat's suggested name, a guess on Mike's list. The value stays
+    // 'opposites', so saved panels and "computer please play opposites" are unchanged.
+    options: [{ value: 'opposites', label: 'Opposites and word logic' }, { value: 'rhyming', label: 'Rhyming' },
+              { value: 'yesno', label: 'Yes or no' }],
+    note: 'Opposites at the easy levels; above them, word puzzles such as "hot is to cold as up is to what?".' },
   answerByField({ on: 'choices', example: 'Is it COLD?',
     appliesWhen: (v) => ((v && v.game) || DEFAULTS.game) !== 'yesno' }),
   { key: 'showScore', label: 'Score', default: true, level: 'standard',
@@ -219,10 +227,7 @@ const SETTINGS = [
     note: 'Below this, it says what it thinks it heard and asks, instead of marking it wrong.' },
   { key: 'correctPoints', label: 'Points for a right answer', kind: 'number', default: 1,
     level: 'advanced', min: 0, max: 5, step: 1, note: 'A miss never costs anything.' },
-  { key: 'celebrateMs', label: 'How long the celebration stays', kind: 'number', default: 3000,
-    level: 'advanced', min: 1000, max: 6000, step: 500, displayScale: 1000,
-    unit: 'seconds', unitOne: 'second' },
-  { ...ANSWER_MS_FIELD },
+  ...AFTER_ANSWER_FIELDS.map((f) => ({ ...f })),
   // Players, "Start this game at", and how the level moves: the same rows every ladder game has. Four
   // starting levels, the four difficulties.
   ...adaptiveSettings({ ai: false, startLevels: 4 }),
@@ -234,7 +239,9 @@ const SETTINGS = [
 // THE QUESTIONS, PURE: what each game asks, offers, hints, accepts and says (shared by the engine
 // below and by Quiz mix, `WORD_ADAPTERS`)
 // ---------------------------------------------------------------------------------------
-const LISTS = Object.freeze({ opposites: OPPOSITES, rhyming: RHYMING, yesno: YES_NO });
+// `wordlogic` is not a game of its own on the menu: it is the Opposites game's harder levels (WORD_LOGIC; THE
+// HAND-OVER below), with a bank and a ladder of its own.
+const LISTS = Object.freeze({ opposites: OPPOSITES, rhyming: RHYMING, yesno: YES_NO, wordlogic: WORD_LOGIC });
 /** The game's name on the ladder (the `ratings` row): its own, so it never shares a level with another game. */
 export const ladderGame = (g) => `wg_${g}`;
 const slug = (s) => normalize(s).replace(/\s+/g, '-');
@@ -247,37 +254,44 @@ export function wordBank(game) {
   if (!LISTS[game]) return [];
   if (!BANK_CACHE[game]) {
     BANK_CACHE[game] = Object.freeze(LISTS[game].map((it) => Object.freeze({
-      ...it, game, level: itemLevel(it), id: `wg:${game}:${slug(game === 'yesno' ? it.q : it.word)}`,
+      ...it, game, level: itemLevel(it), id: `wg:${game}:${slug(it.q || it.word)}`,
     })));
   }
   return BANK_CACHE[game];
 }
 const yesNoOf = (t) => (isYes(t) ? 'yes' : isNo(t) ? 'no' : null);
+// A word-logic question is asked, offered and judged by what it is, whichever game dealt it (the Opposites game
+// deals both kinds; Quiz mix's items carry `game: 'wordlogic'`).
+const kindOf = (game, it) => (isLogic(it) ? 'wordlogic' : game);
 
 export function askLineOf(game, it, k) {
   if (!it) return '';
-  if (game === 'opposites') return fill(k.askOpposites, { word: it.word });
-  if (game === 'rhyming') return fill(k.askRhyming, { word: it.word });
+  const g = kindOf(game, it);
+  if (g === 'opposites') return fill(k.askOpposites, { word: it.word });
+  if (g === 'rhyming') return fill(k.askRhyming, { word: it.word });
   return it.q || '';
 }
 export function candLineOf(game, it, cand, k) {
   if (!cand || !it) return '';
-  if (game === 'opposites') return fill(k.candidateOpposites, { candidate: cand, word: it.word });
-  if (game === 'rhyming') return fill(k.candidateRhyming, { candidate: cand, word: it.word });
+  const g = kindOf(game, it);
+  if (g === 'opposites' || g === 'wordlogic') return fill(k.candidateOpposites, { candidate: cand, word: it.word || '' });
+  if (g === 'rhyming') return fill(k.candidateRhyming, { candidate: cand, word: it.word });
   return '';
 }
 export function hintOf(game, it, k) {
-  if (game === 'rhyming') return fill(k.hintRhyming, { sound: it.sound });
+  if (kindOf(game, it) === 'rhyming') return fill(k.hintRhyming, { sound: it.sound });
   return it.hint || '';
 }
 export function answerWordOf(game, it) {
-  if (game === 'opposites') return it.accept[0];
-  if (game === 'rhyming') return it.example;
+  const g = kindOf(game, it);
+  if (g === 'opposites' || g === 'wordlogic') return it.accept[0];
+  if (g === 'rhyming') return it.example;
   return it.answer;
 }
 export function explainOf(game, it, answer, k) {
-  if (game === 'opposites') return fill(k.explainOpposites, { answer, word: it.word });
-  if (game === 'rhyming') return fill(k.explainRhyming, { answer, word: it.word });
+  const g = kindOf(game, it);
+  if (g === 'opposites') return fill(k.explainOpposites, { answer, word: it.word });
+  if (g === 'rhyming') return fill(k.explainRhyming, { answer, word: it.word });
   return it.explain || '';
 }
 /**
@@ -285,7 +299,8 @@ export function explainOf(game, it, answer, k) {
  * `decoys` (the near misses, word_games_words.js) offers exactly those; otherwise two non-rhymes, pictured first.
  */
 export function candidatesOf(game, it, rand = Math.random) {
-  if (game === 'opposites') return shuffle([it.accept[0], ...(it.wrong || [])], rand);
+  game = kindOf(game, it);
+  if (game === 'opposites' || game === 'wordlogic') return shuffle([it.accept[0], ...(it.wrong || [])], rand);
   if (game === 'rhyming') {
     const all = rhymesFor(it.word);
     const pictured = all.filter(hasPicture);
@@ -303,8 +318,9 @@ export function candidatesOf(game, it, rand = Math.random) {
 }
 /** true / false, or null when it cannot be judged (a word the rhyme table does not know; not a yes or a no). */
 export function judgeWord(game, it, word) {
+  game = kindOf(game, it);
   if (game === 'yesno') { const a = yesNoOf(word); return a ? a === it.answer : null; }
-  if (game === 'opposites') return it.accept.includes(word);
+  if (game === 'opposites' || game === 'wordlogic') return it.accept.includes(word);
   return rhymes(it.word, word);
 }
 /**
@@ -313,7 +329,8 @@ export function judgeWord(game, it, word) {
  */
 export function extractWord(game, it, text) {
   const toks = text.split(' ').filter(Boolean);
-  if (game === 'opposites') {
+  game = kindOf(game, it);
+  if (game === 'opposites' || game === 'wordlogic') {
     if (it.accept.includes(text)) return text;
     const hit = toks.find((t) => it.accept.includes(t));
     return hit || (toks.length === 1 ? text : toks[toks.length - 1] || text);
@@ -327,10 +344,68 @@ export function extractWord(game, it, text) {
   return text;
 }
 /** Every word the game can hear as an answer (right AND wrong; a grammar-limited recogniser needs both). */
+// The Opposites game can deal a word-logic question too (THE HAND-OVER), so its words are both lists'.
 export function vocabOf(game) {
-  if (game === 'opposites') return [...new Set(OPPOSITES.flatMap((o) => [o.word, ...o.accept, ...(o.wrong || [])]))];
+  const words = (list) => list.flatMap((o) => [o.word, ...o.accept, ...(o.wrong || [])]).filter(Boolean);
+  if (game === 'opposites') return [...new Set([...words(OPPOSITES), ...words(WORD_LOGIC)])];
+  if (game === 'wordlogic') return [...new Set(words(WORD_LOGIC))];
   if (game === 'rhyming') return Object.keys(PRONUNCIATIONS);
   return [...YES_WORDS, ...NO_WORDS];
+}
+
+// ---------------------------------------------------------------------------------------
+// THE HAND-OVER: Opposites, then word logic (row 2.63, Mike 2026-10-07: "Maybe instead of trying to think of
+// opposites for harder levels, it could be logic questions?")
+// ---------------------------------------------------------------------------------------
+// The Opposites game is one game on the menu and two ladders underneath: `wg_opposites` (very easy and easy, its
+// levels 1 and 2, and everybody's progress there as it was) and `wg_wordlogic` (medium and hard, levels 3 and 4),
+// so word logic is counted as a branch of its own and can join the ranks tree (question_ranking_design_20261006.md)
+// without carrying the opposites answers with it. Which one a player is dealt from, decided per question:
+//   * ON WORD LOGIC when their word-logic floor is at its lowest written level or above. A new word-logic row starts
+//     where their start says (a person whose start is "medium" or "hard" begins there; a new player's default, the
+//     easiest, is below it, so they begin with opposites).
+//   * MOVED UP to word logic when they are at the top of Opposites and its step-up rule would move them up if there
+//     were a level above (the same rule, the same thresholds, as every move: adaptive_play.js `wouldStepUp`), or
+//     when their Opposites floor is ABOVE its top: kept from before 2026-10-07, when Opposites had medium and hard
+//     levels, so they were already past easy. Their word-logic row is started at its lowest level (`startAt`).
+//   * MOVED BACK when word logic's own step-down takes them below its lowest level (`recordWordResult`): they go on
+//     at the top of Opposites with its recent answers cleared, so ten more there are what moves them up again, not
+//     the answers that moved them up last time.
+// The hand-over needs the ladder (`session`); without one the engine plays its own deck of opposites, as before.
+export const OPPOSITES_LADDER = ladderGame('opposites');
+export const LOGIC_LADDER = ladderGame('wordlogic');
+const lowestLevel = (game) => wordBank(game).reduce((m, q) => Math.min(m, q.level), Infinity);
+const highestLevel = (game) => wordBank(game).reduce((m, q) => Math.max(m, q.level), 1);
+/** Which ladder the Opposites game deals this player's next question from (and moves them up, see above). */
+export function oppositesLadder(session, pid) {
+  if (!session || !wordBank('wordlogic').length) return OPPOSITES_LADDER;
+  const entry = lowestLevel('wordlogic');
+  try {
+    if (session.playerRow(pid, LOGIC_LADDER).floor >= entry) return LOGIC_LADDER;
+    const op = session.windowFor(pid, OPPOSITES_LADDER);
+    if (op.floor < op.maxLevel) return OPPOSITES_LADDER;
+    if (op.floor > op.maxLevel || session.wouldStepUp?.(pid, OPPOSITES_LADDER)) {
+      session.startAt(pid, LOGIC_LADDER, entry);
+      return LOGIC_LADDER;
+    }
+  } catch (err) { console.error('word_games: hand-over', err); }
+  return OPPOSITES_LADDER;
+}
+/** Record one finished question on the ladder it was dealt from, and move a player back to Opposites (above). */
+export function recordWordResult(session, result) {
+  if (!session) return null;
+  const dealt = session.dealt?.() || null;
+  const rec = session.record(result);
+  try {
+    if (dealt && dealt.game === LOGIC_LADDER && rec && rec.moved === 'down' && rec.floor < lowestLevel('wordlogic')) {
+      session.startAt(dealt.player.id, OPPOSITES_LADDER, highestLevel('opposites'));
+    }
+  } catch (err) { console.error('word_games: hand-back', err); }
+  return rec;
+}
+/** The ladder name a game deals from for this player ("opposites" goes through the hand-over). */
+export function dealLadderOf(session, game, pid) {
+  return game === 'opposites' ? oppositesLadder(session, pid) : ladderGame(game);
 }
 
 // ---------------------------------------------------------------------------------------
@@ -356,9 +431,11 @@ export function createEngine({
   cfg = () => DEFAULTS, rand = Math.random,
   say = () => {}, award = () => {}, chime = () => {}, onChange = () => {}, publishGrammar = () => {},
   setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id),
-  deal = null, onResult = () => {}, prefix = () => '',
+  deal = null, onResult = () => {}, prefix = () => '', now = () => Date.now(),
 } = {}) {
   const c = () => ({ ...DEFAULTS, ...(cfg() || {}) });
+  // THE WAIT AFTER AN ANSWER (row 2.66): quiz_flow.js's one rule, the same clock as every answer game.
+  const after = createAfterWait({ setTimer, clearTimer, now });
   let game = null;
   let deck = [];
   let at = -1;
@@ -429,6 +506,8 @@ export function createEngine({
     if (phase === 'asking') { answers(); if (offerByVoice()) { add(YES_WORDS); add(NO_WORDS); } }
     else if (phase === 'unsure') { answers(); add(YES_WORDS); add(NO_WORDS); add(['again', 'say it again']); }
     else if (phase === 'twoMiss') add(['try again', 'again', 'hear the answer', 'answer', 'tell me']);
+    // After an answer: only "next" (and stop) - the Next button said aloud (row 2.66).
+    else if (phase === 'celebrate' || phase === 'answer') add(NEXT_WORDS);
     else if (phase === 'another') { add(YES_WORDS); add(NO_WORDS); add(['done', "i'm done"]); }
     else if (phase === 'done') { add(YES_WORDS); add(['play again', 'again']); }
     else return [];
@@ -445,8 +524,13 @@ export function createEngine({
     catch (err) { console.error('word_games: grammar', err); }
     onChange();
   }
-  const speak = (...lines) => { if (!dead) say(lines.filter(Boolean)); };
-  function stopTimer() { if (timer !== null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; } }
+  // What the host's `say` hands back (a promise for the end of the speech, or null) is passed on (row 2.66).
+  const speak = (...lines) => (dead ? null : say(lines.filter(Boolean)));
+  function stopTimer() {
+    after.stop();
+    if (timer !== null) { try { clearTimer(timer); } catch { /* gone */ } timer = null; }
+  }
+  function waitAfter(line, spoken) { after.start({ cfg: c(), text: line, spoken, onDone: () => onward() }); }
 
   function nextItem() {
     stopTimer();
@@ -520,10 +604,10 @@ export function createEngine({
       catch (err) { console.error('word_games: award', err); }
     }
     report({ right: true, answer });
-    speak(fill(c().rightLine, { explain: pair.explain }));
+    const line = fill(c().rightLine, { explain: pair.explain });
+    const spoken = speak(line);
     try { chime(); } catch (err) { console.error('word_games: chime', err); }
-    const ms = Math.max(0, Number(c().celebrateMs) || DEFAULTS.celebrateMs);
-    timer = setTimer(() => { timer = null; onward(); }, ms);
+    waitAfter(line, spoken);
     changed();
   }
 
@@ -564,9 +648,8 @@ export function createEngine({
     phase = 'answer';
     highlight = 0;
     feedback = null;
-    speak(fill(c().answerLine, { explain: pair.explain }));
-    const ms = Math.max(0, Number(c().answerMs) || DEFAULTS.answerMs);
-    timer = setTimer(() => { timer = null; onward(); }, ms);
+    const line = fill(c().answerLine, { explain: pair.explain });
+    waitAfter(line, speak(line));
     changed();
   }
 
@@ -678,16 +761,23 @@ export function createEngine({
   function hear(result = {}) {
     if (dead || !game || !result || typeof result !== 'object') return;
     voiceSeen = true;
-    // Celebrating: not listening (the grammar is empty too), so nothing is said over the chime.
-    if (phase === 'celebrate' || phase === 'answer' || phase === 'idle') { changed(); return; }
+    if (phase === 'idle') { changed(); return; }
     const raw = String(result.text == null ? '' : result.text).trim();
     const text = normalize(raw);
-    if (!text || raw.toLowerCase() === UNKNOWN || text === 'unk') return notCaught();
     const conf = Number(result.confidence);
     // A NEAR MISS (note AO: what was heard was one sound off one of this game's words, and
     // input_speech.js sent the word it was near) is never sure, whatever the engine said.
     const confident = !result.nearMiss && result.confidence != null && Number.isFinite(conf)
       && conf >= Number(c().unsureBelow);
+    // After an answer (row 2.66): only "next" and stop are heard; anything else is let go, so nothing is said
+    // over the answer being read.
+    if (phase === 'celebrate' || phase === 'answer') {
+      if (confident && isNext(text)) return press('continue');
+      if (confident && saidStop(text)) return finish();
+      changed();
+      return;
+    }
+    if (!text || raw.toLowerCase() === UNKNOWN || text === 'unk') return notCaught();
     // "Stop" / "I'm done" with confidence, while a question waits: the sitting ends (item 4).
     if (confident && phase !== 'done' && saidStop(text)) return finish();
     switch (phase) {
@@ -722,6 +812,9 @@ export function createEngine({
       case 'unsure': return [{ act: 'confirm', label: 'Yes', heard: unsure?.heard || '' },
                              { act: 'reject', label: 'No' }, { act: 'again', label: 'Say it again' }];
       case 'twoMiss': return [{ act: 'again', label: 'Try again' }, { act: 'reveal', label: 'Hear the answer' }];
+      // After an answer: the Next button, the switch's one stop (row 2.66). Any press goes on, as before.
+      case 'celebrate':
+      case 'answer': return [{ act: 'continue', label: NEXT_LABEL }];
       case 'another': return [{ act: 'more', label: 'Yes' }, { act: 'finish', label: "No, I'm done" }];
       case 'done': return [{ act: 'restart', label: 'Play again' }];
       default: return [];
@@ -828,7 +921,8 @@ export function createEngine({
       game, phase, item, misses, candidate: candidate(), candidates: cands.slice(), highlight,
       feedback: feedback ? { ...feedback } : null, unsure: unsure ? { ...unsure } : null,
       revealed, pair: pair ? { ...pair } : null, rightCount, asked, serial, voiceSeen,
-      askLine: item ? askLine() : '', candLine: item ? candLine() : '', timerPending: timer !== null,
+      askLine: item ? askLine() : '', candLine: item ? candLine() : '', timerPending: timer !== null || after.pending(),
+      waitsForNext: (phase === 'celebrate' || phase === 'answer') && waitsForNext(c()),
       offers: game ? offers() : 'yesno',
       // The word the switch has lit, in the 'choices' shape (null otherwise).
       lit: (() => { if (phase !== 'asking') return null; const s = stops()[highlight]; return s && s.act === 'pick' ? s.value : null; })(),
@@ -853,7 +947,8 @@ export function picHtml(word, cls = 'wg-pic') {
   return `<figure class="${cls}"${svg ? ' data-has-pic' : ''}>${svg}<b>${esc(up(word))}</b></figure>`;
 }
 export function pairMarkup(game, word, answer) {
-  if (game === 'yesno') return `<div class="wg-pair" data-pair>${esc(up(answer))}</div>`;
+  // No word to pair it with (the yes / no quiz; a word-logic question, which asks a sentence): the answer alone.
+  if (game === 'yesno' || !word) return `<div class="wg-pair" data-pair>${esc(up(answer))}</div>`;
   const sep = game === 'opposites' ? ' ↔ ' : ' · ';
   const img = (w) => (hasPicture(w) ? symbolSvg(w) : '');
   return `<div class="wg-pair" data-pair>${img(word)}<span>${esc(up(word))}${sep}${esc(up(answer))}</span>${img(answer)}</div>`;
@@ -901,13 +996,15 @@ export const WORD_VIEW = Object.freeze({
   askHtml(s, c) {
     const it = s.item;
     const g = gameOfItem(it);
-    if (g === 'yesno') return esc(it.q);
+    if (g === 'yesno' || isLogic(it)) return esc(it.q);
     return fillHtml(g === 'opposites' ? lines(c).askOpposites : lines(c).askRhyming, { word: `<em>${esc(up(it.word))}</em>` });
   },
   left(s) {
     const it = s.item;
     const g = gameOfItem(it);
     if (g === 'yesno') return it.picture ? picHtml(it.picture) : '';
+    // Word logic: no picture (a picture of the answer would give it away; the question is a sentence).
+    if (isLogic(it)) return '';
     return picHtml(it.word);
   },
   pairHtml: (s) => pairMarkup(gameOfItem(s.item), s.item?.word || '', s.pair?.answer ?? ''),
@@ -915,7 +1012,7 @@ export const WORD_VIEW = Object.freeze({
 
 registerModule(
   { type: GAME, title: 'Word games', core: 'new',
-    description: 'Opposites, Rhyming and a Yes/No quiz, asked aloud with a picture. Answer with '
+    description: 'Opposites (and word logic as it gets harder), Rhyming and a Yes/No quiz, asked aloud with a picture. Answer with '
       + 'a switch, the screen, or (later) your voice.',
     // `local`: the words, pictures and rules are all in this build; nothing is fetched.
     dependsOn: 'local', importance: 'optional', settings: SETTINGS },
@@ -932,16 +1029,21 @@ registerModule(
       catch { return false; }
     };
 
+    // When a said line has finished (row 2.66: the wait after an answer follows the voice).
+    const speech = createSpeechWatch({ output: () => ctx.output });
+    // Returns a promise for the end of the speech, or null when it cannot be known.
     function say(lines) {
-      if (!cfg.speak) return;
+      if (!cfg.speak) return null;
       const text = lines.filter(Boolean).join(' ');
-      if (!text || !ctx.output?.say) return;
+      if (!text || !ctx.output?.say) return null;
       // The newest line supersedes the last one still queued (row 2.27): an answer given while
       // the question is still being read should not wait behind it.
       try {
         if (lastSpeech && ctx.output.cancel) ctx.output.cancel(lastSpeech);
-        lastSpeech = ctx.output.say(text, { source: GAME });
-      } catch (err) { console.error('word_games: say', err); }
+        const r = speech.say(text, { source: GAME });
+        lastSpeech = r.id;
+        return r.done;
+      } catch (err) { console.error('word_games: say', err); return null; }
     }
 
     // *** A HIDDEN OR REMOVED GAME IS NOT LISTENING. *** `input_speech.js` sends answers to the
@@ -1003,8 +1105,10 @@ registerModule(
       publishGrammar: (g) => announceGrammar(g),
       setTimer: typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms),
       clearTimer: typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (id) => clearTimeout(id),
-      deal: (g) => session.deal(ladderGame(g)),
-      onResult: (r) => { try { session.record(r); } catch (err) { console.error('word_games: ladder', err); } },
+      ...(typeof ctx.now === 'function' ? { now: ctx.now } : {}),
+      // Opposites deals through THE HAND-OVER (word logic above its easy levels), and records on the ladder it dealt from.
+      deal: (g) => session.deal(dealLadderOf(session, g, session.currentPlayer().id)),
+      onResult: (r) => { try { recordWordResult(session, r); } catch (err) { console.error('word_games: ladder', err); } },
       prefix: () => session.askPrefix(),
     });
 
@@ -1021,15 +1125,17 @@ registerModule(
       const stops = engine.stops();
       const motion = reducedMotion() ? 'reduce' : 'full';
       const q = (w) => `<q>${esc(w)}</q>`;
-      const askHtml = s.game === 'yesno' ? esc(it.q)
+      // A word-logic question (THE HAND-OVER) asks its own sentence, with no picture: the same as Quiz mix's view.
+      const logic = isLogic(it);
+      const askHtml = s.game === 'yesno' || logic ? esc(it.q)
         : fillHtml(s.game === 'opposites' ? cfg.askOpposites : cfg.askRhyming, { word: `<em>${esc(up(it.word))}</em>` });
       const picWord = s.game === 'yesno' ? it.picture : it.word;
-      const left = s.game === 'yesno' ? (it.picture ? pic(it.picture) : '') : pic(picWord);
+      const left = logic ? '' : s.game === 'yesno' ? (it.picture ? pic(it.picture) : '') : pic(picWord);
       // With two or more players, each one's tally ("Ann 3 · Bob 2"), as every ladder game shows it.
       const score = cfg.showScore ? `<p class="wg-count" data-score>${esc(session.scoreDetail() || `${s.rightCount} right so far.`)}</p>` : '';
       // Whose turn it is, in front of the question (nothing with one player, unless levels are shown).
       let turn = '';
-      try { turn = s.game ? String(session.turnHtml(s, ladderGame(s.game)) || '') : ''; } catch { turn = ''; }
+      try { turn = s.game ? String(session.turnHtml(s, logic ? LOGIC_LADDER : ladderGame(s.game)) || '') : ''; } catch { turn = ''; }
       let ask = askHtml;
       let mid = '';
       let foot = '';
@@ -1054,7 +1160,7 @@ registerModule(
           const lead = s.voiceSeen ? 'Or press your switch.' : 'Press your switch, or tap.';
           const offer = s.candidate
             ? ` ${fillHtml(s.game === 'opposites' ? cfg.candidateOpposites : cfg.candidateRhyming,
-              { candidate: `<b>${esc(up(s.candidate))}</b>`, word: `<b>${esc(up(it.word))}</b>` })}` : '';
+              { candidate: `<b>${esc(up(s.candidate))}</b>`, word: `<b>${esc(up(it.word || ''))}</b>` })}` : '';
           foot = `<div class="wg-foot"><span>${lead}${offer}</span>${btns(stops, s.highlight)}</div>`;
         }
       } else if (s.phase === 'unsure') {
@@ -1067,14 +1173,18 @@ registerModule(
         const wrong = f ? `<p class="wg-say wg-soft" data-feedback="wrong">${f.via === 'voice'
           ? fillHtml(cfg.wrongLine, { heard: q(f.heard) }) : esc(f.text)}</p>` : '';
         mid = `${left}<div class="wg-st" aria-live="polite">${wrong}<p class="wg-say" data-offer>${esc(cfg.twoMissLine)}</p>${btns(stops, s.highlight)}</div>`;
-      } else if (s.phase === 'celebrate') {
-        ask = 'Yes!';
-        mid = `<div class="wg-st wg-right" aria-live="polite"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p>${score}</div>`;
-        extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
-          + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
-      } else if (s.phase === 'answer') {
-        // The revealed answer, up for `answerMs`; the next question follows by itself (item 4).
-        mid = `<div class="wg-st wg-right" aria-live="polite">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${score}</div>`;
+      } else if (s.phase === 'celebrate' || s.phase === 'answer') {
+        // A right answer or a revealed one: the same parts in the same order as every answer game, and the
+        // Next button (quiz_view.js afterAnswerHtml, row 2.66); the next question follows by itself after
+        // quiz_flow.js's one wait, or on Next.
+        ask = esc(verdictLine(s.phase, cfg));
+        mid = `<div class="wg-st" aria-live="polite">${afterAnswerHtml({ phase: s.phase, question: askHtml,
+          answer: pairHtml(s), explain: explainHtml(s), points: score, next: stops[0]?.label || NEXT_LABEL,
+          waits: !!s.waitsForNext })}</div>`;
+        if (s.phase === 'celebrate') {
+          extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
+            + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
+        }
       } else if (s.phase === 'another') {
         // "Would you like to do another one?" (the `askAnother` setting, off by default), with a
         // revealed answer kept on screen above it.
@@ -1096,7 +1206,7 @@ registerModule(
     // on screen ("COLD is the opposite of HOT.") — spoken lines keep them lower case, because
     // some voices spell out a word written in capitals.
     function explainHtml(s) {
-      if (s.game === 'yesno') return esc(s.pair.explain);
+      if (s.game === 'yesno' || isLogic(s.item)) return esc(s.pair.explain);
       return fillHtml(s.game === 'opposites' ? cfg.explainOpposites : cfg.explainRhyming,
         { answer: esc(up(s.pair.answer)), word: esc(up(s.pair.word)) });
     }
@@ -1150,6 +1260,7 @@ registerModule(
         dead = true;
         reannounce();
         engine.destroy();
+        speech.destroy();
         try { session.destroy(); } catch { /* gone */ }
         try { ladderRows.destroy(); } catch { /* gone */ }
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }

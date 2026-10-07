@@ -488,6 +488,7 @@
         "Pythagoras"
       ],
       "correct": "Pythagoras",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Math facts",
       "explain": "Pythagoras was born around 570 BC.",
@@ -719,6 +720,7 @@
         "Zeno"
       ],
       "correct": "Euclid",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "The result is still called Euclid's theorem.",
@@ -835,6 +837,7 @@
         "René Descartes"
       ],
       "correct": "Robert Recorde",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "He chose two parallel lines because no two things could be more equal.",
@@ -859,6 +862,7 @@
         "William Jones"
       ],
       "correct": "William Jones",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "Leonhard Euler later made the symbol popular in works of 1736 and 1748.",
@@ -883,6 +887,7 @@
         "Hypatia"
       ],
       "correct": "Al-Khwarizmi",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "Around 825 AD he wrote a book whose title means 'Book of Indian computation.'",
@@ -907,6 +912,7 @@
         "Henri Poincaré"
       ],
       "correct": "Andrew Wiles",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "Mathematicians had tried to prove it for 358 years.",
@@ -930,6 +936,7 @@
         "Madhava"
       ],
       "correct": "Srinivasa Ramanujan",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "It is the smallest number that is the sum of two positive cubes in two different ways.",
@@ -954,6 +961,7 @@
         "Bhaskara"
       ],
       "correct": "Brahmagupta",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "His book treated zero as a number in its own right, not just a placeholder.",
@@ -978,6 +986,7 @@
         "Edmond Halley"
       ],
       "correct": "John Wallis",
+      "answerKind": "person",
       "difficulty": "hard",
       "category": "Math facts",
       "explain": "His first known use of the symbol was in 1655.",

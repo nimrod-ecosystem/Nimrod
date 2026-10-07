@@ -242,6 +242,8 @@ export function packToTriviaBank(pack) {
     if (level) row.level = level;
     // `spell` (2026-10-07, ../spell_aloud.js): its answers are spellings, read aloud letter by letter.
     if (it.spell === true) row.spell = true;
+    // `answerKind` (2026-10-07, row 2.63): 'person' or 'character' when the answer is one (Name that person draws these).
+    if (it.answerKind) row.answerKind = it.answerKind;
     return row;
   });
 }

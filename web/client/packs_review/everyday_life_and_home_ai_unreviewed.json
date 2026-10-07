@@ -556,6 +556,7 @@
         "Franklin D. Roosevelt"
       ],
       "correct": "Franklin D. Roosevelt",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Everyday life & home",
       "explain": "His portrait replaced the Winged Liberty, or \"Mercury,\" design.",
@@ -650,6 +651,7 @@
         "Janus"
       ],
       "correct": "Janus",
+      "answerKind": "character",
       "difficulty": "medium",
       "category": "Everyday life & home",
       "explain": "Janus was the god of beginnings and transitions.",
@@ -697,6 +699,7 @@
         "Mark Antony"
       ],
       "correct": "Julius Caesar",
+      "answerKind": "person",
       "difficulty": "medium",
       "category": "Everyday life & home",
       "explain": "It was the month of his birth, and was once called Quintilis.",

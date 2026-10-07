@@ -33,8 +33,8 @@
 import { createPointsLedger } from './points.js';
 import { createScoreSource, ownScoreMode, showOwnScore } from './score_source.js';
 import {
-  createQuizEngine, createScanBoard, ANSWER_TOPIC, GRAMMAR_TOPIC, FLOW_DEFAULTS,
-  esc, fillHtml, defaultChime, STARS, CAT_URL,
+  createQuizEngine, createScanBoard, createSpeechWatch, ANSWER_TOPIC, GRAMMAR_TOPIC, FLOW_DEFAULTS,
+  esc, fill, fillHtml, defaultChime, STARS, CAT_URL,
 } from './quiz_flow.js';
 import {
   shouldAutostart, panelAlone, createPlayReporter, demoLimitMs, ensureStartStyle, startOverlayHtml,
@@ -115,7 +115,48 @@ const CSS = `
 .qz-left-stack{display:grid;gap:2cqmin;justify-items:center}
 .qz-things{display:flex;flex-wrap:wrap;gap:1.5cqmin;justify-content:center}
 .qz-things .qz-card{font-size:clamp(16px,5.5cqmin,64px);padding:1.5cqmin 3cqmin}
+.qz-after{display:grid;gap:1.5cqmin;align-content:center;min-width:0}
+.qz-after > [data-part="question"]{font-weight:600}
+.qz-after > [data-part="more"],.qz-after > [data-part="source"]{font-size:clamp(13px,3.4cqmin,40px);max-width:90cqw}
+.qz-after > [data-part="points"]{display:grid;gap:.5cqmin;justify-items:center}
 `;
+
+/**
+ * *** EVERY AFTER-ANSWER SCREEN: THE SAME PARTS, IN THE SAME ORDER (row 2.66). *** Mike, 2026-10-07: "At each
+ * answer it shows different amounts of information." The heading says right or "here is the answer" (the
+ * verdict, `verdictLine`); under it, always in this order, each only when the game has it:
+ *   question  the question that was asked, so a shown answer is never without what it answers
+ *   answer    the answer itself (the game's `pairHtml`)
+ *   explain   the one line of why (the game's `explainHtml`)
+ *   more      what the other answers meant (Quiz mix's Word Forge questions; a view's `moreHtml`)
+ *   source    where it comes from, only ever here, after the answer (2026-10-07, c5dc43a; `sourceHtml`)
+ *   points    the points this answer earned and the running score
+ *   next      the Next question button (the switch's one stop; "Next player" with several players)
+ * Word games (its own engine) draws its screen with this too, so every answer game reads the same way.
+ * Every value is ready HTML; an empty one is left out.
+ */
+export function afterAnswerHtml({ phase = 'celebrate', question = '', answer = '', explain = '', more = '', source = '',
+  points = '', next = 'Next question', waits = false } = {}) {
+  const part = (name, html, tag = 'div', cls = '') => (html ? `<${tag}${cls ? ` class="${cls}"` : ''} data-part="${name}"${
+    name === 'explain' && phase === 'answer' ? ' data-revealed' : ''}>${html}</${tag}>` : '');
+  return `<div class="wg-right qz-after" data-after="${esc(phase)}"${waits ? ' data-waits' : ''}>`
+    + (phase === 'celebrate' ? '<div class="wg-ring" data-ring></div>' : '')
+    + part('question', question, 'p', 'wg-say wg-soft')
+    + (answer ? `<div data-part="answer">${answer}</div>` : '')
+    + part('explain', explain, 'p', 'wg-say wg-soft')
+    + part('more', more)
+    + part('source', source)
+    + part('points', points)
+    + (next ? `<div class="wg-btns" data-part="next"><button type="button" class="wg-btn" data-act="continue" data-stop="0" data-next data-on="1">${
+      esc(next)}</button></div>` : '')
+    + '</div>';
+}
+
+/** The heading of an after-answer screen: the person's own right / answer line, without the explanation. */
+export function verdictLine(phase, cfg = {}) {
+  const t = phase === 'celebrate' ? (cfg.rightLine ?? FLOW_DEFAULTS.rightLine) : (cfg.answerLine ?? FLOW_DEFAULTS.answerLine);
+  return fill(t, { explain: '' }).replace(/[\s,;:]+$/, '') || (phase === 'celebrate' ? 'Yes!' : 'Here is the answer.');
+}
 export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? document : null)) {
   if (!doc || doc.getElementById(STYLE_ID)) return;
   const el = doc.createElement('style');
@@ -149,7 +190,11 @@ export function ensureQuizStyle(doc = (typeof document !== 'undefined' ? documen
  *                      sheetHtml(s, cfg)    a layer of the view's own over the panel ('' = none), drawn on
  *                                           every render: Quiz mix's "Play together" bar and sheet
  *                      onClick(e, api)      a click, asked FIRST (before Start / the game): true = handled
- *                      onMove(move, api)    'next' | 'prev' | 'select' | 'skip', asked first: true = handled }
+ *                      onMove(move, api)    'next' | 'prev' | 'select' | 'skip', asked first: true = handled
+ *                      — added for row 2.66 (the after-answer screen's parts, `afterAnswerHtml`), each optional:
+ *                      moreHtml(s, cfg)     what the other answers meant
+ *                      sourceHtml(s, cfg)   where the answer comes from (shown only after the answer)
+ *                      pointsHtml(s, cfg)   the points this answer earned (Quiz mix's "+2 points for Ann") }
  *   spec.extraTopics { next: [...], prev: [...], select: [...], skip: [...] } — more bus topics that
  *                    drive the same moves (Math keeps `algebra/submit` answering as select)
  *   spec.startGate   true: open waiting for Start (the header). Absent = starts at once, as before.
@@ -202,21 +247,28 @@ export function quizModule(spec) {
       return ids.includes(c[gameKey]) ? c[gameKey] : (ids.includes(defaults[gameKey]) ? defaults[gameKey] : ids[0]);
     };
 
+    // When a said line has finished (row 2.66: the wait after an answer follows the voice). `ctx.output` is
+    // read each time: the kiosk builds it lazily.
+    const speech = createSpeechWatch({ output: () => ctx.output });
+    // Returns a promise for the end of the speech, or null when it cannot be known (quiz_flow.js createSpeechWatch).
     function speakNow(text) {
-      if (!text || !ctx.output?.say) return;
+      if (!text || !ctx.output?.say) return null;
       try {
         if (lastSpeech && ctx.output.cancel) ctx.output.cancel(lastSpeech);
-        lastSpeech = ctx.output.say(text, { source: type });
-      } catch (err) { console.error(`${type}: say`, err); }
+        const r = speech.say(text, { source: type });
+        lastSpeech = r.id;
+        return r.done;
+      } catch (err) { console.error(`${type}: say`, err); return null; }
     }
     function say(lines) {
       // NOTHING IS SAID BEFORE START, OR WHILE PAUSED. The real engine only runs after Start, so this is
       // the belt to that pair of braces: a paused game's timers move on silently.
-      if (!cfg.speak || dead || !begun || paused) return;
+      if (!cfg.speak || dead || !begun || paused) return null;
       const text = lines.filter(Boolean).join(' ');
-      if (!text) return;
-      if (gated()) { held.push(text); return; }
-      speakNow(text);
+      if (!text) return null;
+      // Held while a clip plays: said later, so its end is not known now (the reading time stands in).
+      if (gated()) { held.push(text); return null; }
+      return speakNow(text);
     }
     // The clip finished (or failed): say what was held, and open the grammar again.
     function release() {
@@ -268,7 +320,7 @@ export function quizModule(spec) {
       onReplay: (item) => view.onReplay?.(item, api),
       onDeal: (item) => view.onDeal?.(item, api),
       onResult: (r) => view.onResult?.(r, api),
-      setTimer, clearTimer,
+      setTimer, clearTimer, ...(typeof ctx.now === 'function' ? { now: ctx.now } : {}),
     });
 
     // The board, for an entry game: rows come from the view for the current question.
@@ -555,18 +607,20 @@ export function quizModule(spec) {
         const wrong = f ? `<p class="wg-say wg-soft" data-feedback="wrong">${f.via === 'voice'
           ? fillHtml(cfg.wrongLine, { heard: q(f.heard) }) : esc(f.text)}</p>` : '';
         st = `${wrong}<p class="wg-say" data-offer>${esc(cfg.twoMissLine)}</p>${btns(stops, s.highlight)}`;
-      } else if (s.phase === 'celebrate') {
-        ask = 'Yes!';
-        st = `<div class="wg-right"><div class="wg-ring" data-ring></div>${pairHtml(s)}<p class="wg-say wg-soft">${explainHtml(s)}</p>${scoreHtml(s)}</div>`;
-        extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
-          + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
+      } else if (s.phase === 'celebrate' || s.phase === 'answer') {
+        // A right answer, or a revealed one: the same parts in the same order (`afterAnswerHtml`), and the Next
+        // button. The next question follows by itself after THE WAIT AFTER AN ANSWER (quiz_flow.js), or on Next.
+        ask = esc(verdictLine(s.phase, cfg));
+        st = afterAnswerHtml({ phase: s.phase, question: askedHtml(s), answer: pairHtml(s), explain: explainHtml(s),
+          more: viewPart('moreHtml', s), source: viewPart('sourceHtml', s), points: viewPart('pointsHtml', s) + scoreHtml(s),
+          next: stops[0]?.label || s.nextLabel, waits: !!s.waitsForNext });
+        if (s.phase === 'celebrate') {
+          extra = STARS.map(([l, t], i) => `<span class="wg-star" style="left:${l}%;top:${t}%;animation-delay:${i * 60}ms"></span>`).join('')
+            + `<img class="wg-cat" src="${CAT_URL}" alt="">`;
+        }
       } else if (s.phase === 'gentle') {
         ask = esc(s.feedback?.text || '');
         st = `<div class="wg-right" data-gentle>${pairHtml(s)}${btns(stops, s.highlight)}</div>`;
-      } else if (s.phase === 'answer') {
-        // The revealed answer, up for `answerMs`; the next question follows by itself (no "another one?").
-        ask = view.askHtml ? view.askHtml(s, cfg) : esc(s.askLine);
-        st = `<div class="wg-right">${pairHtml(s)}<p class="wg-say wg-soft" data-revealed>${explainHtml(s)}</p>${scoreHtml(s)}</div>`;
       } else if (s.phase === 'another') {
         // "Would you like to do another one?" - only with the `askAnother` setting on (off by default).
         // A revealed answer stays on screen above it.
@@ -595,6 +649,16 @@ export function quizModule(spec) {
     function explainHtml(s) {
       if (view.explainHtml) return view.explainHtml(s, cfg);
       return esc(s.pair?.explain || '');
+    }
+    // A view's optional after-answer part (`moreHtml`, `sourceHtml`, `pointsHtml`; row 2.66), '' when it has none.
+    function viewPart(name, s) {
+      try { return typeof view[name] === 'function' ? String(view[name](s, cfg) || '') : ''; }
+      catch (err) { console.error(`${type}: ${name}`, err); return ''; }
+    }
+    // The question that was asked, on the after-answer screen. The view's own markup when it has one.
+    function askedHtml(s) {
+      try { return view.askHtml ? String(view.askHtml(s, cfg) || '') : esc(s.askLine); }
+      catch { return esc(s.askLine); }
     }
     function pairHtml(s) {
       if (!s.pair) return '';
@@ -700,6 +764,7 @@ export function quizModule(spec) {
         stopDemo();
         reannounce();
         engine.destroy();
+        speech.destroy();
         try { view.destroy?.(api); } catch { /* gone */ }
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
         lastSpeech = null;
