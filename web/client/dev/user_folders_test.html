@@ -105,9 +105,10 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const tree = { 'my notes.txt': 'mine' };
       const root = fakeDir('Nimrod', tree);
       const r1 = await ensureTree(root);
-      // 2026-10-04: eight folders, plain names (user_folders.js SUBFOLDERS argues each).
-      const eight = ['Pictures', 'Music', 'Videos', 'Fonts', 'Colour looks', 'Audio plugins', 'Voice model', 'Recordings'];
-      check('*** the tree: Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings ***',
+      // 2026-10-04: eight folders, plain names (user_folders.js SUBFOLDERS argues each). 2026-10-07: ten, with Artwork and Data
+      // (art_check_test.html checks those two, and the folders inside Artwork).
+      const eight = ['Pictures', 'Music', 'Videos', 'Fonts', 'Colour looks', 'Audio plugins', 'Voice model', 'Recordings', 'Artwork', 'Data'];
+      check('*** the tree: Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings, Artwork, Data ***',
         eight.every((n) => isDir(tree[n])) && J(r1.made) === J(eight) && J(Object.values(SUBFOLDERS)) === J(eight), J(Object.keys(tree)));
       check('*** every one has a README.txt saying what goes there ***', eight.every((n) => typeof tree[n]['README.txt'] === 'string' && tree[n]['README.txt'].length > 40),
         J(eight.map((n) => (tree[n]['README.txt'] || '').length)));
@@ -141,7 +142,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const view = { showDirectoryPicker: async (o) => { view.opts = o; return picked; } };
       const r3 = await pickRoot({ view, idb: null });
       check('picking asks for read+write under its own id, and makes the tree', view.opts.mode === 'readwrite'
-        && view.opts.id === 'nimrod-root' && r3.made.length === 8, J(view.opts));
+        && view.opts.id === 'nimrod-root' && r3.made.length === 10, J(view.opts));
       check('the root is remembered under its own key (fs_sink, not a new store)', ROOT_KEY === 'root'
         && J(await recallRoot({ idb: null })) === J({ handle: null, permission: 'unknown' }));
     }
@@ -393,7 +394,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
     });
     {
       const store = memStore();
-      check('eight kinds, the same as the root\'s subfolders', FOLDER_KINDS.join() === 'pictures,music,videos,fonts,luts,plugins,voice,recordings'
+      check('ten kinds, the same as the root\'s subfolders', FOLDER_KINDS.join() === 'pictures,music,videos,fonts,luts,plugins,voice,recordings,artwork,data'
         && J(FOLDER_KINDS) === J(Object.keys(SUBFOLDERS)) && kindKey('luts') === 'folder:luts');
       const none = await kindFolder('fonts', { store });
       check('nothing chosen: source none, no folder, no throw', none.source === 'none' && none.dir === null && none.permission === 'none', J(none));
@@ -483,7 +484,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       await settle();
       check('*** choosing the root: the browser\'s picker (read+write), the tree made, and the page says what it found ***',
         view.picks === 1 && view.opts.mode === 'readwrite' && 'Fonts' in rootTree && /Using “Nimrod”/.test(text())
-          && /Made Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings in it, each with a README\.txt/.test(text())
+          && /Made Pictures, Music, Videos, Fonts, Colour looks, Audio plugins, Voice model, Recordings, Artwork, Data in it, each with a README\.txt/.test(text())
           && /No font files in it yet/.test(text()), text().slice(0, 600));
       rootTree.Fonts['Lexend-Regular.ttf'] = new Uint8Array([1]);
       rootTree['Colour looks']['Film.cube'] = 'x';
@@ -863,8 +864,8 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const tree = { fonts: { 'Lexend-Regular.ttf': new Uint8Array([1]) }, luts: { 'Warm.cube': 'x' }, 'audio-plugins': {} };
       const root = fakeDir('Nimrod', tree);
       const r = await ensureTree(root);
-      check('*** setting up again makes only the five new folders; no "Fonts" beside "fonts" ***',
-        J(r.made) === J(['Pictures', 'Music', 'Videos', 'Voice model', 'Recordings']) && !('Fonts' in tree) && !('Colour looks' in tree)
+      check('*** setting up again makes only the seven new folders; no "Fonts" beside "fonts" ***',
+        J(r.made) === J(['Pictures', 'Music', 'Videos', 'Voice model', 'Recordings', 'Artwork', 'Data']) && !('Fonts' in tree) && !('Colour looks' in tree)
           && !('Audio plugins' in tree), J(Object.keys(tree)));
       check('the earlier names are known for the three kinds that had them', J(LEGACY_SUBFOLDERS.fonts) === J(['fonts'])
         && J(LEGACY_SUBFOLDERS.luts) === J(['luts']) && J(LEGACY_SUBFOLDERS.plugins) === J(['audio-plugins']));
@@ -883,8 +884,8 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const rootTree = {};
       const view = { picks: 0, showDirectoryPicker: async (o) => { view.picks++; view.opts = o; return fakeDir('Nimrod', rootTree); } };
       const a = await setUpRoot({ view, store });
-      check('*** no root yet: the picker opens (read+write), the root is remembered, all eight made ***',
-        a.ok && a.picked && view.picks === 1 && view.opts.mode === 'readwrite' && a.made.length === 8 && !!(await store.get(ROOT_KEY)), J({ ...a, handle: !!a.handle }));
+      check('*** no root yet: the picker opens (read+write), the root is remembered, all ten made ***',
+        a.ok && a.picked && view.picks === 1 && view.opts.mode === 'readwrite' && a.made.length === 10 && !!(await store.get(ROOT_KEY)), J({ ...a, handle: !!a.handle }));
       rootTree.Pictures['me.jpg'] = 'a photo';
       rootTree.Fonts['README.txt'] = 'mine';
       delete rootTree.Recordings;
@@ -903,7 +904,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
         !d.ok && d.permission === 'denied' && perm.requested?.mode === 'readwrite' && Object.keys(lapsedTree).length === 0 && view.picks === 1, J({ ...d, handle: !!d.handle }));
       perm.state = 'prompt'; perm.answer = 'granted';
       const e = await setUpRoot({ view, store });
-      check('...allowed: the tree is made in it', e.ok && e.made.length === 8 && 'Voice model' in lapsedTree);
+      check('...allowed: the tree is made in it', e.ok && e.made.length === 10 && 'Voice model' in lapsedTree);
     }
 
     section('*** every kind autopopulates from the root; a per-kind folder wins for that kind only ***');
@@ -995,7 +996,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
       const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
       check('*** before: "Set up your Nimrod folder…", saying it makes the eight with a README each, nothing to download ***',
         /Set up your Nimrod folder…/.test(btn('pick-root')?.textContent || '') && /README\.txt/.test(text()) && /nothing to download/.test(text())
-          && /Voice model, Recordings inside it/.test(text()), text().slice(0, 500));
+          && /Voice model, Recordings, Artwork, Data inside it/.test(text()), text().slice(0, 500));
       check('*** says folder access is per device and per browser: a second computer sets it up once too ***',
         /this device and this browser/.test(host.querySelector('[data-uf-per-device]')?.textContent || '') && /second computer/.test(text()));
       check('*** every kind is on the page, each with its place to save things and a Copy button ***',
@@ -1006,7 +1007,7 @@ window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); retur
           && /Point at the folder your music is already in/.test(btn('pick-kind', 'music')?.textContent || ''), text());
       btn('pick-root').click();
       await settle();
-      check('*** set up: the tree made, the page says so ***', view.picks === 1 && Object.keys(rootTree).length === 8 && /each with a README\.txt/.test(text()));
+      check('*** set up: the tree made, the page says so ***', view.picks === 1 && Object.keys(rootTree).length === 10 && /each with a README\.txt/.test(text()));
       check('*** now "Set up your Nimrod folder again" (adds only what is missing) and "Choose a different Nimrod folder…" ***',
         !!btn('set-up') && /adds only what is missing/.test(btn('set-up').textContent) && /Choose a different Nimrod folder/.test(btn('pick-root').textContent));
       delete rootTree.Videos;

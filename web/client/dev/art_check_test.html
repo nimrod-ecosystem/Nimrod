@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>art kit and checker — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>art kit and checker — row 2.64 (art_kit.js, art_check.js, the Artwork and Data folders)</h1>
+<p>The kit's table and text; the checker against real pictures drawn here (a clear background, a solid one, an AI's
+painted-on checkerboard, the wrong shape, too small, a JPG, a broken file, HEIC, SVGs good and bad); the folders made by
+"Set up your Nimrod folder"; the Artwork section of "Your own folders" checking a fake folder. Every request made while
+files are checked is counted: there must be none.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script>
+  window.addEventListener('error', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done && e.message) s.textContent = `threw: ${e.message} (${e.filename || ''}:${e.lineno || ''})`; });
+  window.addEventListener('unhandledrejection', (e) => { const s = document.getElementById('summary'); if (s && !s.dataset.done) s.textContent = `threw: ${e.reason && (e.reason.stack || e.reason.message) || e.reason}`; });
+</script>
+<script type="module">
+import { ART_KINDS, ART_FOLDER, ART_LOOK, artKitText, promptFor, artKind, sizeWords, NAME_RE } from '../art_kit.js';
+import { kindFor, readArtFacts, judgeArt, checkArtFile, checkArtFiles, checkArtFolder, looksLikeCheckerboard, summaryWords,
+  verdictWords, droppedWords, CHECK_DEFAULTS } from '../art_check.js';
+import { SUBFOLDERS, README, ART_INNER, ensureTree, setUpRoot, FOLDER_KINDS, POINTER_KINDS, ROOT_KEY } from '../user_folders.js';
+import { renderUserFolders, foundWords, scanFolder, CONNECT_WORDS, SAVE_WORDS, KIND_WORDS, artResultHtml } from '../user_folders_page.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (x) => JSON.stringify(x);
+const texts = (r) => (r.notes || []).map((n) => `${n.level}: ${n.text}`).join(' | ');
+const has = (r, level, re) => (r.notes || []).some((n) => n.level === level && re.test(n.text));
+
+// Nothing may leave the device.
+const realFetch = window.fetch;
+const fetched = [];
+window.fetch = (...a) => { fetched.push(String(a[0] && a[0].url || a[0])); return realFetch(...a); };
+const realXhr = XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open = function (...a) { fetched.push(`xhr ${a[1]}`); return realXhr.apply(this, a); };
+const realBeacon = navigator.sendBeacon?.bind(navigator);
+if (realBeacon) navigator.sendBeacon = (...a) => { fetched.push(`beacon ${a[0]}`); return realBeacon(...a); };
+
+// ---- pictures, drawn here ----
+async function picture(name, w, h, paint, type = 'image/png') {
+  const c = new OffscreenCanvas(w, h);
+  const g = c.getContext('2d');
+  paint(g, w, h);
+  const blob = await c.convertToBlob(type === 'image/jpeg' ? { type, quality: 0.9 } : { type });
+  return new File([blob], name, { type });
+}
+const dot = (g, w, h, r = 0.3) => { g.fillStyle = '#c0392b'; g.beginPath(); g.arc(w / 2, h / 2, Math.min(w, h) * r, 0, Math.PI * 2); g.fill(); };
+const solid = (colour) => (g, w, h) => { g.fillStyle = colour; g.fillRect(0, 0, w, h); dot(g, w, h); };
+const clearBg = (g, w, h) => dot(g, w, h);
+const checker = (sq = 16) => (g, w, h) => {
+  for (let y = 0; y < h; y += sq) for (let x = 0; x < w; x += sq) { g.fillStyle = ((x + y) / sq) % 2 ? '#cccccc' : '#ffffff'; g.fillRect(x, y, sq, sq); }
+  dot(g, w, h);
+};
+const svgFile = (name, text) => new File([text], name, { type: 'image/svg+xml' });
+const NS = 'xmlns="http://www.w3.org/2000/svg"';
+const GOOD_SVG = `<svg ${NS} viewBox="0 0 512 512"><circle cx="256" cy="256" r="200" fill="#f4c27a" stroke="#222" stroke-width="8"/>`
+  + '<g id="eyes"><circle cx="200" cy="220" r="20"/><circle cx="312" cy="220" r="20"/></g><g id="mouth"><path d="M200 330 Q256 380 312 330" stroke="#222" fill="none" stroke-width="10"/></g></svg>';
+
+(async () => {
+try {
+  // =====================================================================================================
+  section('*** the kit: four kinds, each one the site can take from a file today ***');
+  {
+    check('*** avatar, button, card, wallpaper - in that order ***', J(ART_KINDS.map((k) => k.id)) === J(['avatar', 'button', 'card', 'wallpaper']));
+    const a = artKind('avatar'), b = artKind('button'), c = artKind('card'), w = artKind('wallpaper');
+    check('*** avatar: 512 x 512, square, PNG/WebP/SVG, clear background, a circle ***',
+      a.width === 512 && a.height === 512 && J(a.shapes) === J([[1, 1]]) && J(a.types) === J(['png', 'webp', 'svg']) && a.clear === 'wanted' && a.circle);
+    check('*** button: 1024 x 768, 4:3 or square (the button frame\'s two shapes) ***', b.width === 1024 && b.height === 768 && J(b.shapes) === J([[4, 3], [1, 1]]) && b.clear === 'either');
+    check('*** card: 512 x 512, square, PNG or WebP, clear background, no words ***', c.width === 512 && J(c.shapes) === J([[1, 1]]) && J(c.types) === J(['png', 'webp'])
+      && c.clear === 'wanted' && /No words/.test(c.advice));
+    check('*** wallpaper: 1920 x 1080, 16:9, no clear parts ***', w.width === 1920 && w.height === 1080 && J(w.shapes) === J([[16, 9]]) && w.clear === 'no');
+    check('every kind has its own folder, prefix, example name (which fits the name rule) and a sentence for the AI',
+      ART_KINDS.every((k) => k.folder && k.prefix && NAME_RE.test(k.example.replace(/\.[a-z]+$/, '')) && k.example.startsWith(`${k.prefix}-`) && k.ask && k.use));
+    check('sizes said in words', sizeWords(b) === '1024 × 768 (or square)' && sizeWords(a) === '512 × 512');
+    const p = promptFor(c, 'a cup of tea');
+    check('*** the sentence for an AI: size, type, clear background, the thing, the advice, the look ***',
+      p.startsWith('Make a 512 × 512 PNG with a transparent background of a simple picture of a cup of tea') && p.includes(ART_LOOK) && /No words/.test(p), p);
+    check('a wallpaper is not asked for a transparent background', !/transparent/.test(promptFor(w)));
+    const t = artKitText();
+    check('*** the kit text names every kind\'s folder, size and an example name ***',
+      ART_KINDS.every((k) => t.includes(`Artwork/${k.folder}`) && t.includes(`${k.width} × ${k.height}`) && t.includes(k.example)), t.slice(0, 300));
+    check('*** says how a picture reaches the site (connect, then choose), that nothing is uploaded, and the SVG limit ***',
+      /Connect it for pictures/.test(t) && /Nothing is uploaded/.test(t) && /A folder does not list SVG files yet/.test(t) && /Add one from this device/.test(t));
+    check('*** says what is NOT read from files yet (trophies, room objects ...), and who answers for real people and brands ***',
+      /NOT YET/.test(t) && /trophies/.test(t) && /Room objects/.test(t) && /brands/.test(t) && /gets close, not exact/.test(t));
+    check('*** site words never name the person the project was first built for, nor "her screen" ***',
+      !/Christine|Cici|her screen/i.test(t + J(ART_KINDS) + ART_LOOK));
+  }
+
+  // =====================================================================================================
+  section('which kind a file is for: its folder, then its name');
+  {
+    check('*** in Avatars: an avatar (any case, at any depth) ***', kindFor({ name: 'sam.png', folder: 'Avatars' }).id === 'avatar'
+      && kindFor({ name: 'x.png', folder: 'Artwork/board cards' }).id === 'card' && kindFor({ name: 'Artwork/Wallpapers/lake.jpg' }).id === 'wallpaper');
+    check('*** by its name: card-drink.png ***', kindFor({ name: 'card-drink.png' }).id === 'card' && kindFor({ name: 'button_music.png' }).id === 'button');
+    check('the folder wins over the name', kindFor({ name: 'card-x.png', folder: 'Avatars' }).id === 'avatar');
+    check('neither: null', kindFor({ name: 'holiday.png', folder: 'Downloads' }) === null && kindFor({}) === null);
+    check('"avatarish.png" is not an avatar by name', kindFor({ name: 'avatarish.png' }) === null);
+  }
+
+  // =====================================================================================================
+  section('*** measuring real pictures, in this browser ***');
+  {
+    const good = await checkArtFile(await picture('avatar-sam.png', 512, 512, clearBg), { folder: 'Avatars' });
+    check('*** a 512 PNG with a clear background, in Avatars, named avatar-sam.png: ready, nothing to say ***',
+      good.verdict === 'ready' && good.notes.length === 0 && good.kind.id === 'avatar' && good.facts.width === 512 && good.facts.border === 1, texts(good));
+    check('verdict words', verdictWords(good) === 'Ready as an avatar.');
+
+    const boxed = await checkArtFile(await picture('card-cup.png', 512, 512, solid('#ffffff')), { folder: 'Board cards' });
+    check('*** a solid white background on a card: "no clear background", it still works ***',
+      boxed.verdict === 'works' && has(boxed, 'warn', /no clear background/), texts(boxed));
+    check('verdict words', verdictWords(boxed) === 'Works as a board card, but:');
+
+    const fake = await checkArtFile(await picture('card-tea.png', 512, 512, checker(16)), { folder: 'Board cards' });
+    check('*** an AI\'s painted-on checkerboard is caught and named ***', fake.facts.checker === true && has(fake, 'warn', /grey-and-white squares/), texts(fake));
+    const fake8 = await checkArtFile(await picture('card-tea.png', 1024, 1024, checker(8)), { folder: 'Board cards' });
+    check('...with smaller squares too', fake8.facts.checker === true, J(fake8.facts));
+    check('...and a plain light-grey background is NOT called a checkerboard', boxed.facts.checker === false
+      && (await readArtFacts(await picture('x.png', 256, 256, solid('#dddddd')))).checker === false);
+
+    const corners = await checkArtFile(await picture('avatar-wide.png', 512, 512, (g) => { g.fillStyle = '#3a6'; g.fillRect(2, 2, 508, 508); }), { folder: 'Avatars' });
+    check('*** an avatar that fills its corners (with a clear 2px edge): "cut off by the circle" ***',
+      corners.facts.border === 1 && corners.facts.outside > 0.1 && has(corners, 'warn', /circle/), texts(corners));
+
+    const shape = await checkArtFile(await picture('wallpaper-lake.png', 1536, 1024, solid('#2a6')), { folder: 'Wallpapers' });
+    check('*** 3:2 given for a wallpaper: the shape is said (1536 × 1024, 3:2; 16:9 wanted) ***',
+      has(shape, 'warn', /1536 × 1024, 3:2; wallpapers are 16:9/), texts(shape));
+    const near = await checkArtFile(await picture('wallpaper-near.png', 1792, 1024, solid('#2a6')), { folder: 'Wallpapers' });
+    check('*** an AI\'s own near size (1792 x 1024, 1.6 % off 16:9) passes ***', near.verdict === 'ready', texts(near));
+    const holes = await checkArtFile(await picture('wallpaper-holes.png', 1920, 1080, clearBg), { folder: 'Wallpapers' });
+    check('*** a wallpaper with clear parts: "shows as black" ***', has(holes, 'warn', /shows as black/), texts(holes));
+
+    const small = await checkArtFile(await picture('card-tiny.png', 100, 100, clearBg), { folder: 'Board cards' });
+    check('*** too small: "blurry", with the size to aim for ***', has(small, 'warn', /small \(100 × 100\).*blurry.*512 × 512/), texts(small));
+    const huge = await checkArtFile(await picture('avatar-huge.png', 3000, 3000, clearBg), { folder: 'Avatars' });
+    check('*** bigger than needed: works, "loads slowly" ***', huge.verdict === 'works' && has(huge, 'warn', /bigger than it needs to be/), texts(huge));
+
+    const jpg = await checkArtFile(await picture('card-jam.jpg', 512, 512, solid('#ffffff'), 'image/jpeg'), { folder: 'Board cards' });
+    check('*** a JPG card: "best as PNG or WebP. A JPG cannot have a clear background" ***',
+      has(jpg, 'warn', /JPG works, but board cards are best as PNG or WebP\. A JPG cannot have a clear background/), texts(jpg));
+    const jpgWall = await checkArtFile(await picture('wallpaper-sea.jpg', 1920, 1080, solid('#246'), 'image/jpeg'), { folder: 'Wallpapers' });
+    check('a JPG wallpaper: ready', jpgWall.verdict === 'ready', texts(jpgWall));
+
+    const broken = await checkArtFile(new File([new Uint8Array([1, 2, 3, 4, 5])], 'avatar-broken.png', { type: 'image/png' }), { folder: 'Avatars' });
+    check('*** a broken file: "will not work", could not be opened ***', broken.verdict === 'no' && has(broken, 'no', /could not be opened/), texts(broken));
+    const heic = await checkArtFile(new File([new Uint8Array([0, 0, 0, 24])], 'IMG_0001.HEIC'), { folder: 'Avatars' });
+    check('*** a HEIC: a phone format most browsers cannot show; save it as PNG ***', heic.verdict === 'no' && has(heic, 'no', /HEIC is a phone camera format.*PNG/), texts(heic));
+    const doc = await checkArtFile(new File(['hello'], 'notes.docx'), { folder: 'Avatars' });
+    check('not a picture at all: says so', doc.verdict === 'no' && has(doc, 'no', /not a picture the site can show \(\.docx\)/), texts(doc));
+    const readme = await checkArtFile(new File(['x'], 'README.txt'), { folder: 'Avatars' });
+    check('a text file is skipped, not failed', readme.verdict === 'skip');
+
+    const unknown = await checkArtFile(await picture('holiday.png', 800, 600, solid('#fff')));
+    check('*** no kind worked out: the generic check, and how to say which kind ***', unknown.unknown && unknown.verdict === 'ready'
+      && has(unknown, 'tip', /Which kind is it for\? Put it in one of the Artwork folders \(Avatars, Buttons, Board cards, Wallpapers\)/), texts(unknown));
+    const as = await checkArtFile(await picture('holiday.png', 800, 600, solid('#fff')), { kind: 'card' });
+    check('*** "Check as" a card: judged as a card ***', as.kind.id === 'card' && has(as, 'warn', /board cards are square/), texts(as));
+
+    const named = await checkArtFile(await picture('My Avatar.PNG', 512, 512, clearBg), { folder: 'Avatars' });
+    check('*** a name that does not fit: a tip, never a fault (still ready) ***', named.verdict === 'ready' && has(named, 'tip', /Name it like avatar-sam\.png/), texts(named));
+    check('...no name tip for a tidy name', !has(good, 'tip', /Name it/));
+
+    const btn43 = await checkArtFile(await picture('button-music.png', 1024, 768, solid('#fff')), { folder: 'Buttons' });
+    const btnSq = await checkArtFile(await picture('button-tea.png', 600, 600, clearBg), { folder: 'Buttons' });
+    const btnTall = await checkArtFile(await picture('button-tall.png', 600, 900, clearBg), { folder: 'Buttons' });
+    check('*** a button: 4:3 and square both ready, solid or clear; a tall one is fitted with space at the sides ***',
+      btn43.verdict === 'ready' && btnSq.verdict === 'ready' && has(btnTall, 'warn', /2:3; button pictures are 4:3 or square\. It is fitted inside/), [texts(btn43), texts(btnSq), texts(btnTall)].join(' // '));
+  }
+
+  // =====================================================================================================
+  section('*** SVG: read by the same sanitizer the avatar uses ***');
+  {
+    const good = await checkArtFile(svgFile('avatar-sam.svg', GOOD_SVG), { folder: 'Avatars' });
+    check('*** a good SVG avatar: only the folder note (a folder does not list SVG yet; add it from this device) ***',
+      good.verdict === 'works' && good.notes.length === 1 && has(good, 'warn', /A folder does not list SVG files yet.*Add one from this device/) && good.facts.svg.eyes && good.facts.svg.mouth, texts(good));
+    const noParts = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace(/id="eyes"/, '').replace(/id="mouth"/, '')), { folder: 'Avatars' });
+    check('*** no eyes/mouth groups: a tip that it will not blink or talk ***', has(noParts, 'tip', /will not blink or talk/), texts(noParts));
+    const words = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('</svg>', '<text x="10" y="20">Sam</text><image href="https://example.com/a.png" width="10" height="10"/></svg>')), { folder: 'Avatars' });
+    check('*** what is left out when drawn, in words: text, a picture inside it ***', has(words, 'warn', /Left out when it is drawn: words \(text\), a picture inside it/), texts(words));
+    const boxed = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('viewBox="0 0 512 512">', 'viewBox="0 0 512 512"><rect width="512" height="512" fill="#fff"/>')), { folder: 'Avatars' });
+    check('*** a full-size background rectangle: "a box will show around it" ***', has(boxed, 'warn', /solid background shape/), texts(boxed));
+    const pct = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('viewBox="0 0 512 512">', 'viewBox="0 0 512 512"><rect width="100%" height="100%" fill="none"/>')), { folder: 'Avatars' });
+    check('...but an unfilled one is not a background', !has(pct, 'warn', /solid background/), texts(pct));
+    const wide = await checkArtFile(svgFile('avatar-x.svg', GOOD_SVG.replace('0 0 512 512', '0 0 800 400')), { folder: 'Avatars' });
+    check('the SVG\'s shape is its viewBox (2:1, not square)', has(wide, 'warn', /2:1; avatars are square/), texts(wide));
+    const bad = await checkArtFile(svgFile('avatar-x.svg', '<svg <<<'), { folder: 'Avatars' });
+    check('*** a broken SVG: will not work, said why ***', bad.verdict === 'no' && has(bad, 'no', /not a well-formed SVG/), texts(bad));
+    const dt = await checkArtFile(svgFile('avatar-x.svg', `<!DOCTYPE svg><svg ${NS} viewBox="0 0 10 10"/>`), { folder: 'Avatars' });
+    check('*** a DOCTYPE: shown only as a still picture (it still shows; the sanitizer refuses to draw it inline) ***',
+      dt.verdict === 'works' && has(dt, 'warn', /only as a still picture.*DOCTYPE/), texts(dt));
+    const card = await checkArtFile(svgFile('card-x.svg', GOOD_SVG), { folder: 'Board cards' });
+    check('*** an SVG card: works only through "Add one from this device"; save it as PNG or WebP for the folder ***',
+      has(card, 'warn', /SVG works for board cards only when added with “Add one from this device”.*PNG or WebP/), texts(card));
+    check('droppedWords: a script and a filter', J(droppedWords(['element script', 'handler', 'element feGaussianBlur'])) === J(['a script', 'a filter effect (blur or shadow)']));
+  }
+
+  // =====================================================================================================
+  section('judging is pure: facts in, sentences out');
+  {
+    const base = { name: 'avatar-a.png', ext: 'png', bytes: 1000, decoded: true, width: 512, height: 512, alpha: true, border: 1, checker: false, outside: 0 };
+    check('the base facts: ready', judgeArt(base, artKind('avatar')).verdict === 'ready');
+    const big = judgeArt({ ...base, bytes: 3200000 }, artKind('avatar'));
+    check('*** over the kind\'s size: "3.2 MB ... under 1 MB" ***', has(big, 'warn', /It is 3\.2 MB: it works, but loads slowly\. Avatars work best under 1 MB/), texts(big));
+    const wallBig = judgeArt({ ...base, name: 'wallpaper-a.png', width: 1920, height: 1080, alpha: false, border: 0, bytes: 9000000 }, artKind('wallpaper'));
+    check('a big PNG wallpaper is told a JPG or WebP is much smaller', has(wallBig, 'warn', /a JPG or WebP is much smaller/), texts(wallBig));
+    check('no kind: only what is true of every kind', judgeArt({ ...base, border: 0 }, null).verdict === 'ready');
+    check('the defaults are what the header argues', J(CHECK_DEFAULTS) === J({ sample: 256, clearAlpha: 16, borderClear: 0.5, outsideMax: 0.02, maxFiles: 300 }));
+    check('the checkerboard test needs real squares (a flat colour is not one)', looksLikeCheckerboard(new Uint8ClampedArray(64 * 64 * 4).fill(255), 64, 64) === false);
+  }
+
+  // =====================================================================================================
+  section('*** many files: a picked list, a picked folder (its relative paths), a folder handle ***');
+  {
+    const a = await picture('sam.png', 512, 512, clearBg);
+    Object.defineProperty(a, 'webkitRelativePath', { value: 'Artwork/Avatars/sam.png' });
+    const b = await picture('lake.jpg', 1920, 1080, solid('#246'), 'image/jpeg');
+    Object.defineProperty(b, 'webkitRelativePath', { value: 'Artwork/Wallpapers/lake.jpg' });
+    const r = await checkArtFiles([a, b]);
+    check('*** a folder input\'s files: each one\'s folder says its kind ***', r.results.length === 2 && r.results[0].kind.id === 'avatar' && r.results[0].folder === 'Artwork/Avatars'
+      && r.results[1].kind.id === 'wallpaper', J(r.results.map((x) => [x.name, x.folder, x.kind && x.kind.id])));
+    const many = await checkArtFiles([a, b, a], { opts: { maxFiles: 2 } });
+    check('*** a cap: two checked, "1 more not checked" said ***', many.results.length === 2 && many.more === 1 && /and 1 more not checked/.test(summaryWords(many)), summaryWords(many));
+    check('"Check as" applies to every picked file', (await checkArtFiles([a], { kind: 'card' })).results[0].kind.id === 'card');
+
+    // A folder handle (in memory): Blob values are files.
+    const isDir = (v) => v && typeof v === 'object' && !(v instanceof Blob);
+    const fdir = (name, tree) => ({
+      kind: 'directory', name,
+      async *entries() { for (const k of Object.keys(tree)) yield [k, isDir(tree[k]) ? fdir(k, tree[k]) : { kind: 'file', name: k, getFile: async () => (tree[k] instanceof File ? tree[k] : new File([tree[k]], k)) }]; },
+      async getDirectoryHandle(n, o) { if (!(n in tree)) { if (o && o.create) tree[n] = {}; else throw new DOMException('nf', 'NotFoundError'); } return fdir(n, tree[n]); },
+      async getFileHandle(n, o) { if (!(n in tree)) { if (o && o.create) tree[n] = new Blob(['']); else throw new DOMException('nf', 'NotFoundError'); }
+        return { kind: 'file', name: n, getFile: async () => new File([tree[n]], n), createWritable: async () => { let s = ''; return { write: async (d) => { s += d; }, close: async () => { tree[n] = new Blob([s]); } }; } }; },
+      async queryPermission() { return 'granted'; }, async requestPermission() { return 'granted'; },
+    });
+    const evilName = '<img src=x onerror="window.__pwned=1">.png';
+    const art = {
+      'README.txt': new Blob(['the kit']),
+      Avatars: { 'avatar-sam.png': await picture('avatar-sam.png', 512, 512, clearBg), '.DS_Store': new Blob(['x']) },
+      'Board cards': { 'card-cup.png': await picture('card-cup.png', 512, 512, solid('#fff')), [evilName]: await picture(evilName, 512, 512, clearBg) },
+      Buttons: {}, Wallpapers: { deeper: { 'wallpaper-x.png': await picture('wallpaper-x.png', 10, 10, clearBg) } },
+      'loose.png': await picture('loose.png', 300, 300, clearBg),
+    };
+    const dir = fdir('Artwork', art);
+    const fr = await checkArtFolder(dir);
+    const names = fr.results.map((x) => x.name);
+    check('*** the Artwork folder: each kind\'s folder, README and dot-files left out, two levels down not read ***',
+      J(names) === J(['avatar-sam.png', evilName, 'card-cup.png', 'loose.png']) && fr.results[0].kind.id === 'avatar' && fr.results[2].kind.id === 'card' && fr.results[3].unknown, J(names));
+    check('summary in words', summaryWords(fr) === '4 checked: 3 ready, 1 works with notes.', summaryWords(fr));
+    check('an empty folder: "No pictures found to check."', summaryWords(await checkArtFolder(fdir('E', {}))) === 'No pictures found to check.');
+    check('*** a file name is escaped in the results ***', !/<img/.test(artResultHtml(fr.results[1])) && /&lt;img/.test(artResultHtml(fr.results[1])));
+
+    // =====================================================================================================
+    section('*** the tree: Artwork (with a folder per kind) and Data, made by "Set up your Nimrod folder" ***');
+    {
+      check('*** ten kinds: Artwork and Data after the eight ***', J(Object.values(SUBFOLDERS).slice(-2)) === J(['Artwork', 'Data'])
+        && SUBFOLDERS.artwork === ART_FOLDER && FOLDER_KINDS.length === 10 && !POINTER_KINDS.includes('artwork'));
+      check('Artwork holds a folder per kind of artwork', J(ART_INNER.artwork) === J(['Avatars', 'Buttons', 'Board cards', 'Wallpapers']));
+      const tree = {};
+      const root = fdir('Nimrod', tree);
+      const r1 = await ensureTree(root);
+      const readText = async (blob) => (blob instanceof Blob ? blob.text() : String(blob));
+      check('*** made: Artwork and Data, and the four folders inside Artwork (said as one: "Artwork") ***',
+        r1.made.includes('Artwork') && r1.made.includes('Data') && !r1.made.some((m) => m.includes('/'))
+          && ['Avatars', 'Buttons', 'Board cards', 'Wallpapers'].every((n) => isDir(tree.Artwork[n])), J(r1.made));
+      check('*** Artwork\'s README IS the art kit (the file to give an AI) ***', (await readText(tree.Artwork['README.txt'])) === artKitText() && README.artwork === artKitText());
+      const dataReadme = await readText(tree.Data['README.txt']);
+      check('*** Data\'s README: play history and exports, on this computer, nothing uploaded ***',
+        /play history/.test(dataReadme) && /export/.test(dataReadme) && /Nothing in this folder is uploaded/.test(dataReadme), dataReadme);
+      tree.Artwork.Avatars['avatar-me.png'] = new Blob(['x']);
+      delete tree.Artwork.Buttons;
+      const r2 = await ensureTree(root);
+      check('*** run again after Buttons was deleted: only "Artwork/Buttons" made, a picture untouched ***',
+        J(r2.made) === J(['Artwork/Buttons']) && isDir(tree.Artwork.Buttons) && tree.Artwork.Avatars['avatar-me.png'] instanceof Blob, J(r2.made));
+      const r3 = await ensureTree(root);
+      check('a third time: nothing', r3.made.length === 0);
+      check('no word naming the first user in the new READMEs', !/Christine|Cici|her screen/i.test(README.artwork + README.data));
+    }
+
+    // =====================================================================================================
+    section('*** the Artwork section of "Your own folders": the kit, Copy, the checker ***');
+    {
+      check('words for both kinds, and Artwork connects for pictures', KIND_WORDS.artwork && KIND_WORDS.data && SAVE_WORDS.artwork && SAVE_WORDS.data
+        && CONNECT_WORDS.artwork === 'pictures' && !CONNECT_WORDS.data);
+      const scan = await scanFolder('artwork', dir);
+      check('*** what is in Artwork, by kind\'s folder ***', foundWords('artwork', scan) === 'In it: 4 pictures (Avatars 1, Board cards 2, loose in Artwork 1).', foundWords('artwork', scan));
+      check('an empty Artwork says what to do', /art kit below/.test(foundWords('artwork', await scanFolder('artwork', fdir('A', { Avatars: {} })))));
+      check('Data counts its files', foundWords('data', await scanFolder('data', fdir('Data', { 'README.txt': new Blob(['x']), 'plays-2026-10.json': new Blob(['[]']) }))) === 'In it: 1 file.');
+
+      const rootTree = { Artwork: art, Data: {} };
+      const store = { m: new Map([[ROOT_KEY, fdir('Nimrod', rootTree)]]), async get(k) { return this.m.get(k) || null; }, async put(k, v) { this.m.set(k, v); }, async del(k) { this.m.delete(k); } };
+      const copied = [];
+      const added = [];
+      const host = document.createElement('div');
+      document.body.append(host);
+      const page = renderUserFolders(host, { view: { showDirectoryPicker: async () => { throw new Error('no picker in a test'); } }, store,
+        storage: { getItem: () => null, setItem() {}, removeItem() {} }, clipboard: { writeText: async (t) => { copied.push(t); } },
+        media: { add: async (h, label) => { added.push(label); return { label }; }, find: async () => null },
+        fontSet: { add() {} }, FontFaceImpl: class { constructor(family) { this.family = family; } async load() { return this; } } });
+      await page.ready;
+      const settle = async () => { for (let i = 0; i < 40; i++) await new Promise((r) => setTimeout(r, 10)); };
+      const text = () => host.textContent.replace(/\s+/g, ' ');
+      const btn = (act, kind) => host.querySelector(`[data-act="${act}"]${kind ? `[data-kind="${kind}"]` : ''}`);
+      check('*** the Artwork and Data sections are on the page ***', !!host.querySelector('[data-uf-section="artwork"]') && !!host.querySelector('[data-uf-section="data"]'));
+      check('*** the kit, one line per kind, with its folder ***', host.querySelectorAll('[data-uf-art-kinds] li').length === 4
+        && /Avatars: 512 × 512, square, PNG, WebP or SVG with a clear background - in Artwork\/Avatars/.test(text()), text().slice(text().indexOf('Make your own'), text().indexOf('Make your own') + 400));
+      check('*** what is not read yet, and the real-people line ***', /trophies/.test(host.querySelector('[data-uf-art-notyet]')?.textContent || '') && /brands/.test(text()));
+      check('*** the checker\'s buttons: pictures, a folder (every browser), the Artwork folder ***', !!btn('check-files') && !!btn('check-dir') && !!btn('check-artwork')
+        && !!host.querySelector('input[type=file][data-uf-art-files][multiple]') && host.querySelector('input[data-uf-art-dir]')?.hasAttribute('webkitdirectory'));
+      check('says nothing is uploaded', /Nothing is uploaded/.test(host.querySelector('[data-uf-art-checknote]')?.textContent || ''));
+      btn('copy-kit').click();
+      await settle();
+      check('*** "Copy the art kit" copies the kit ***', copied[copied.length - 1] === artKitText() && /Copied the art kit/.test(text()));
+      btn('connect', 'artwork')?.click();
+      await settle();
+      check('*** "Connect it for pictures": kept as a media folder, nothing copied ***', J(added) === J(['Artwork (your Nimrod folder)']) && /Nothing was copied/.test(text()), J(added));
+      fetched.length = 0;
+      btn('check-artwork').click();
+      await settle();
+      const results = host.querySelectorAll('[data-uf-art-result]');
+      check('*** "Check the Artwork folder": one result per picture, each with its verdict ***', results.length === 4
+        && [...results].some((r) => r.dataset.verdict === 'works' && /card-cup\.png/.test(r.textContent) && /no clear background/.test(r.textContent)), text().slice(-900));
+      check('*** a hostile file name is shown as text, never as markup ***', !host.querySelector('[data-uf-art-result] img') && window.__pwned !== 1);
+      check('the summary line', /4 checked:/.test(host.querySelector('[data-uf-art-summary]')?.textContent || ''));
+      const sel = host.querySelector('[data-uf-art-kind]');
+      sel.value = 'wallpaper';
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      await page.checkFiles([await picture('holiday.png', 800, 600, solid('#fff'))]);
+      await settle();
+      check('*** picked files, "Check as" Wallpaper: judged as a wallpaper, and the choice stays after the redraw ***',
+        /Works as a wallpaper/.test(text()) && /wallpapers are 16:9/.test(text()) && host.querySelector('[data-uf-art-kind]').value === 'wallpaper', text().slice(-500));
+      btn('clear-check').click();
+      await settle();
+      check('Clear the results', !host.querySelector('[data-uf-art-results]'));
+      check('*** NOTHING WAS REQUESTED while files were checked ***', fetched.length === 0, J(fetched));
+      page.destroy();
+      host.remove();
+    }
+  }
+} catch (err) {
+  check('the suite ran to the end without throwing', false, String(err && err.stack || err));
+}
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+})();
+</script>
+</body>
+</html>

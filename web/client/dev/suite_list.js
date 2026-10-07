@@ -43,6 +43,8 @@ export const SUITES = [
   'restart', 'rng', 'screen_pair', 'segment_heartbeat', 'sender', 'settings', 'settings_audit',
   // 2026-10-02: the one picture picker (recent, add from this device, a folder's thumbnails).
   'picture_picker',
+  // 2026-10-07 (row 2.64): the art kit (sizes, types, names, folders) and the checker that says what is wrong with a file.
+  'art_check',
   // 2026-10-02: a long choice (themes, fonts, scenes) opens a list; a short one, or a person stepping, steps.
   'choice_picker',
   // players (2026-10-06): one way to pick the players - how many, then people on this login, connected, or guests.
