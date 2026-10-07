@@ -31,6 +31,15 @@ deterministically. Also unit-tests the pure graphic renderer.</p>
 import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
+import { createPlays, memoryPlayStore } from '../plays.js';
+// A panel's plays kept in memory for the suite (plays.js; row 2.58: what played stays on the device, never the
+// server). `onPlay` hears each play as it is filed, the way these checks used to hear the `play` event.
+const recordingPlays = (onPlay = () => {}) => {
+  const p = createPlays({ store: memoryPlayStore() });
+  const log = p.log;
+  p.log = (raw) => { try { onPlay(raw); } catch { /* the suite's own recorder */ } return log(raw); };
+  return p;
+};
 import { createProfilesClient } from '../profile.js';
 import { mountModule } from '../module.js';
 import { pressControls } from './press_controls.js';
@@ -104,8 +113,9 @@ const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
 
     const bus = createBus();
     const host = document.getElementById('host');
+    const suitePlays = recordingPlays();
     const instance = mountModule('interstitials', {
-      mount: host, bus, state, events, user: USER, profileId: profile.id, speak: recSpeak,
+      mount: host, bus, state, events, user: USER, profileId: profile.id, speak: recSpeak, plays: suitePlays,
     });
     instance.init();
     await sleep(120);
@@ -114,8 +124,7 @@ const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
     check('module renders a first segment (graphic present)', (graphicCell()?.innerHTML || '').length > 0);
     check('first segment spoke its line', spoken.length >= 1, `spoken=${spoken.length}`);
 
-    await events.load();
-    const initialPlays = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    const initialPlays = suitePlays.plays().length;
     check('first segment logged a play event', initialPlays >= 1, `plays=${initialPlays}`);
 
     // let the profile settings load, then advance and confirm speak used the profile voice
@@ -147,11 +156,13 @@ const kindOf = Object.fromEntries(ITEMS.map((i) => [i.speak, i.kind]));
       `rate=${((sameKind / (spoken.length - 1)) * 100).toFixed(0)}%`);
 
     await sleep(400);
-    await events.load();
-    const plays = (events.get().events || []).filter((e) => e.kind === 'play');
+    const plays = suitePlays.plays();
     check('play history grew (append-only)', plays.length >= initialPlays + 18, `plays=${plays.length}`);
-    check('every play event carries id + numeric at',
-      plays.every((e) => e.data && e.data.id && Number.isFinite(e.data.at)));
+    check('every play carries its id and its time (kept on this device)',
+      plays.every((e) => e.data && e.data.id && Number.isFinite(Date.parse(e.created_at))));
+    await events.load();
+    check('*** nothing about what played went to the server (row 2.58) ***',
+      !(events.get().events || []).some((e) => e.kind === 'play'), JSON.stringify((events.get().events || []).map((e) => e.kind)));
 
     // skip advances without throwing
     const beforeSkip = spoken.length;

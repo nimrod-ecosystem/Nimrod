@@ -8,8 +8,8 @@
 //   * the SAME shared picker (rng.js) — freshness × recency × duration × channel-
 //     diversity — so long runs of one channel are broken up and shorter videos come
 //     round more often. `channel` is the diversity axis; `durationSec` feeds duration.
-//   * play history is APPEND-ONLY events; the picker's stats DERIVE from them
-//     (statsFromEvents) — no mutable store of record.
+//   * play history is kept ON THIS DEVICE (plays.js `panelPlays`, row 2.58: "the kind of data people
+//     should keep on their own system"); the picker's stats derive from those plays.
 //   * inputs are interchangeable via the bus: sinks on `youtube/next` / `youtube/prev`
 //     fed by its own buttons AND by the video ending AND by any other source.
 //
@@ -28,7 +28,8 @@ import { registerModule } from '../module.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from '../audio_bus.js';
 import { createWatchdog } from '../watchdog.js';
 import { pageActivity, RECENT_MS } from '../activity.js';
-import { pick, statsFromEvents } from '../rng.js';
+import { pick } from '../rng.js';
+import { panelPlays } from '../plays.js';
 import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
 import { followPerson } from '../person_known.js';
@@ -512,7 +513,9 @@ registerModule(
 
     let cfg = { ...DEFAULTS };
     let ids = [], byId = {}, channels = {}, durations = {};
-    let stats = {};                 // derived from play events
+    let stats = {};                 // derived from this panel's plays on this device
+    // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
+    const playLog = panelPlays(ctx, 'youtube');
     let recent = [];                // ids recently shown (in-memory, immediate)
     let history = [], histPos = -1; // for prev()
     let currentId = null;
@@ -935,7 +938,7 @@ registerModule(
       if (recent.length > RECENT_CAP) recent.shift();
       history = history.slice(0, histPos + 1);
       history.push(id); histPos = history.length - 1;
-      events.append('play', { id, at: Date.now() }).catch((e) => console.error('youtube: play log', e));
+      playLog.played(id);
     }
 
     // ---- WHEN IT OPENS (game_start.js; the rows on SETTINGS) ------------------------------------------
@@ -1001,13 +1004,6 @@ registerModule(
 
     function prev() {
       if (histPos > 0) { histPos -= 1; show(history[histPos], false); }
-    }
-
-    function deriveStats(cache) {
-      const plays = (cache.events || [])
-        .filter((e) => e.kind === 'play')
-        .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-      return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
     }
 
     /** `7` -> `07:00`, `17.5` -> `17:30`. Hours are stored as a number so the maths stays
@@ -1598,8 +1594,8 @@ registerModule(
           state.set({ shuffle: e.target.checked });
         });
 
-        // play history -> picker stats
-        events.subscribe((cache) => { stats = deriveStats(cache); });
+        // play history (this device) -> picker stats
+        playLog.subscribe((s) => { stats = s; });
 
         // config: adopt saved settings; seed from the query param once for a fresh
         // instance; (re)index + (re)render on every change.
@@ -1647,6 +1643,7 @@ registerModule(
       onHide() { active = false; clearStall(); state.flush(); },
       destroy() {
         destroyed = true;
+        playLog.destroy();
         clearTimer(pollTimer); pollTimer = null;
         clearTimer(tickTimer); tickTimer = null;
         clearTimer(graceTimer); graceTimer = null;

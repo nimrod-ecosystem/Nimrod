@@ -6,38 +6,30 @@
 //   * the same `pick()` with the same weights (rng.js DEFAULTS): freshness (played less, more likely),
 //     recency (played lately, less likely), duration (shorter, a little more often) and diversity (the same
 //     artist as the one just played is down-weighted, as YouTube does for the same channel);
-//   * the same history: append-only `play` events `{ id, at }` on the panel, and the counts DERIVED from them
-//     (`statsFromEvents`), never a separate store of record;
+//   * the same history: the panel's plays, kept ON THIS DEVICE (plays.js `panelPlays`, row 2.58), and the counts
+//     DERIVED from them, never a separate store of record;
 //   * the same short in-memory "just played" list (RECENT_CAP, youtube.js's twelve).
 // It is the piece a universal player (row H1) would share across every source; today Spotify uses it and
 // youtube.js still has its own copy of these few lines (listed for Mike rather than moved under a parallel edit).
 //
-// PURE apart from the `events` handle it is given; `now` and `rand` are injectable for the suites.
+// PURE apart from the `log` handle it is given; `now` and `rand` are injectable for the suites.
 
-import { pick, statsFromEvents, record } from './rng.js';
+import { pick, record } from './rng.js';
 
 // youtube.js's RECENT_CAP, the same number for the same reason: the in-memory "just played" window; the
 // picker's own hard exclusion (rng.js excludeLast / excludeFrac) works inside it.
 export const RECENT_CAP = 12;
 
-/** The play history in an events cache, as the picker's stats. youtube.js's `deriveStats`, the same rows. */
-export function statsFromCache(cache) {
-  const plays = (cache?.events || [])
-    .filter((e) => e && e.kind === 'play')
-    .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-  return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
-}
-
 /**
  * A picker over a pool of `{ id, channel?, durationSec? }`. Returns
  *   next(pool)    the id to play next (null for an empty pool)
- *   played(id, channel?)  count it: in memory now, and as a `play` event for next time
+ *   played(id, channel?)  count it: in memory now, and in the panel's plays for next time
  *   state()       { stats, recent } for the suites
  *   destroy()
- * `events` is the panel's events handle (`append(kind, data)`, `subscribe(fn(cache))`), or null to keep the
+ * `log` is the panel's plays (plays.js `panelPlays`: `subscribe(fn(stats))`, `played(id)`), or null to keep the
  * history in memory only.
  */
-export function createMusicPicker({ events = null, now = () => Date.now(), rand = Math.random } = {}) {
+export function createMusicPicker({ log = null, now = () => Date.now(), rand = Math.random } = {}) {
   let stats = {};
   let recent = [];
   let off = null;
@@ -46,7 +38,7 @@ export function createMusicPicker({ events = null, now = () => Date.now(), rand 
   // playing is never queued after itself).
   const channelOf = new Map();
   try {
-    off = events?.subscribe?.((cache) => { stats = statsFromCache(cache); }) || null;
+    off = log?.subscribe?.((s) => { stats = { ...(s || {}) }; }) || null;
   } catch { off = null; }
 
   return {
@@ -70,7 +62,7 @@ export function createMusicPicker({ events = null, now = () => Date.now(), rand 
       recent.push(id);
       if (recent.length > RECENT_CAP) recent.shift();
       try {
-        const p = events?.append?.('play', { id, at });
+        const p = log?.played?.(id);
         if (p && typeof p.catch === 'function') p.catch(() => { /* the in-memory count still stands */ });
       } catch { /* the in-memory count still stands */ }
     },

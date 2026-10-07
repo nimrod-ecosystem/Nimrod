@@ -29,7 +29,8 @@
 import { registerModule } from '../module.js';
 import { readWithLegacy } from '../settings_fields.js';
 import { createState } from '../state.js';
-import { pick, statsFromEvents } from '../rng.js';
+import { pick } from '../rng.js';
+import { panelPlays } from '../plays.js';
 import { speak as speakDefault, cancel as cancelSpeak } from '../voice.js';
 
 // The library is per-PROFILE data, so two people on one account get different segments.
@@ -162,7 +163,7 @@ registerModule(
     dependsOn: 'server', description: 'Gentle alphabet, counting and vocabulary, spoken aloud',
     settings: SETTINGS },
   (ctx) => {
-    const { mount, bus, state, events, user, profileId } = ctx;
+    const { mount, bus, state, user, profileId } = ctx;
     const speak = ctx.speak || speakDefault;                       // injectable (no audio in tests)
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
@@ -170,6 +171,8 @@ registerModule(
     let cfg = { ...DEFAULTS };
     let items = [], ids = [], byId = {}, kinds = {};
     let stats = {};
+    // Where the plays go (row 2.58): this device, never the server. The panel's old server rows come down once.
+    const playLog = panelPlays(ctx, 'educational');
     let recent = [], history = [], histPos = -1;
     let currentId = null;
     let endTimer = null;
@@ -241,7 +244,7 @@ registerModule(
         if (recent.length > RECENT_CAP) recent.shift();
         history = history.slice(0, histPos + 1);
         history.push(id); histPos = history.length - 1;
-        events.append('play', { id, at: Date.now() }).catch((e) => console.error('educational: play log', e));
+        playLog.played(id);
       }
       scheduleEnd(item);
     }
@@ -273,13 +276,6 @@ registerModule(
       if (!cfg.directed && (!currentId || !byId[currentId])) advance();   // standalone autostart
     }
 
-    function deriveStats(cache) {
-      const plays = (cache.events || [])
-        .filter((e) => e.kind === 'play')
-        .map((e) => ({ id: e.data?.id, at: e.data?.at || Date.parse(e.created_at) || 0 }));
-      return statsFromEvents(plays, { idKey: 'id', atKey: 'at' });
-    }
-
     return {
       init() {
         mount.innerHTML = `
@@ -303,7 +299,7 @@ registerModule(
         mount.querySelector('[data-next]').addEventListener('click', () => nav.emit('next'));
         mount.querySelector('[data-prev]').addEventListener('click', () => nav.emit('prev'));
 
-        events.subscribe((cache) => { stats = deriveStats(cache); });
+        playLog.subscribe((s) => { stats = s; });   // play history (this device) -> picker stats
 
         // read the profile's VOICE from its settings blob (self-contained; same pattern
         // the nimrod_95 module used — formalize via ctx when it's worth it).
@@ -335,6 +331,7 @@ registerModule(
       onResize() {},
       onHide() { cancelSay(); state.flush(); },
       destroy() {
+        playLog.destroy();
         clearEnd();
         cancelSay();
         if (settings) { settings.destroy(); settings = null; }

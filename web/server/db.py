@@ -1369,8 +1369,9 @@ class _Store:
                             "\"YouTube\"). What you search for is sent to YouTube or Spotify to be "
                             "answered and is not kept here.", False,
                             "when you change a setting"),
-        "events":          ("An append-only log of what a module did: which photo was shown "
-                            "when, a game result. It GROWS over time. When somebody checks a question "
+        # Row 2.58 (2026-10-07): which photo, video or song played when is no longer kept here (see NEVER_STORED).
+        "events":          ("An append-only log of what a module did: a game result, a card chosen on "
+                            "the talk board. It GROWS over time. When somebody checks a question "
                             "waiting for review: what they said about it (right, wrong, a note), "
                             "when, and the name of the person on your login they chose as who "
                             "was reviewing - and the points it earned, on that person's screen.", True,
@@ -1438,6 +1439,10 @@ class _Store:
         "your location - the device is never asked where it is (a town you type for "
         "Weather is a setting, listed above)",
         "browsing history",
+        # Row 2.58: refused by storage_line.py (kind `play`, stream `plays`); kept by client/plays.js on the device.
+        # The parenthesis comes out once remove_play_history.py has been run against this database.
+        "what played when - which photo, video or song - it is kept on the screen that played it (the "
+        "rows kept here before October 2026 are being removed)",
         "advertising identifiers",
         "anything a module shows you that you did not save",
     ]

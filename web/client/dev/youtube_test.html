@@ -35,6 +35,15 @@ picker (<code>rng.js</code>) → advance → append-only play log — is exercis
 import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
+import { createPlays, memoryPlayStore } from '../plays.js';
+// A panel's plays kept in memory for the suite (plays.js; row 2.58: what played stays on the device, never the
+// server). `onPlay` hears each play as it is filed, the way these checks used to hear the `play` event.
+const recordingPlays = (onPlay = () => {}) => {
+  const p = createPlays({ store: memoryPlayStore() });
+  const log = p.log;
+  p.log = (raw) => { try { onPlay(raw); } catch { /* the suite's own recorder */ } return log(raw); };
+  return p;
+};
 import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { fieldsFor, displayValue } from '../settings_fields.js';
@@ -300,9 +309,10 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
     const stub = makeStubPlayer();
     const bus = createBus();
     const host = document.getElementById('host');
+    const suitePlays = recordingPlays();
     const instance = mountModule('youtube', {
       mount: host, bus, state, events, user: USER, profileId: profile.id,
-      playerFactory: stub.factory,
+      playerFactory: stub.factory, plays: suitePlays,
     });
     instance.init();
     await sleep(60);
@@ -310,8 +320,7 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
     check('module loads a first video on mount', stub.current() !== null, `current=${stub.current()}`);
     check('first video is one of the playlist', PLAYLIST.some((v) => v.id === stub.current()));
 
-    await events.load();
-    const initialPlays = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    const initialPlays = suitePlays.plays().length;
     check('first shown video logged a play event', initialPlays >= 1, `plays=${initialPlays}`);
 
     // Drive advances by hand: coverage + no immediate repeat + channel diversity.
@@ -338,8 +347,7 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
 
     // ENDED (video finished) auto-advances via the bus, exactly like a Next.
     const loadsBefore = stub.loaded.length;
-    await events.load();
-    const playsBeforeEnd = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    const playsBeforeEnd = suitePlays.plays().length;
     stub.fireEnded();
     await sleep(30);
     check('video ENDED auto-advances (loads the next video)', stub.loaded.length === loadsBefore + 1,
@@ -354,11 +362,17 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       `beforePrev=${beforePrev} now=${stub.current()} expected=${lastForward}`);
 
     await sleep(500);
-    await events.load();
-    const plays = (events.get().events || []).filter((e) => e.kind === 'play');
+    const plays = suitePlays.plays();
     check('play history grew (append-only)', plays.length >= initialPlays + 20, `plays=${plays.length}`);
-    check('every play event carries id + numeric at',
-      plays.every((e) => e.data && e.data.id && Number.isFinite(e.data.at)));
+    check('every play carries its id and its time (kept on this device)',
+      plays.every((e) => e.data && e.data.id && Number.isFinite(Date.parse(e.created_at))));
+    await events.load();
+    check('*** nothing about what played went to the server (row 2.58) ***',
+      !(events.get().events || []).some((e) => e.kind === 'play'), JSON.stringify((events.get().events || []).map((e) => e.kind)));
+    let refusedPlay = null;
+    try { await events.append('play', { id: 'dQw4w9WgXcQ', at: Date.now() }); refusedPlay = false; }
+    catch (e) { refusedPlay = /400/.test(String(e?.status || e?.message || e)); }
+    check('*** the server refuses a play outright (storage line rule 4) ***', refusedPlay === true, String(refusedPlay));
     check('prev() did NOT log a play (replay, not a new play)',
       plays.length === playsBeforeEnd + 1, `plays=${plays.length} expected=${playsBeforeEnd + 1}`);
 

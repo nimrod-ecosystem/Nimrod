@@ -49,7 +49,8 @@ import {
 import { connectHelperHtml, callbackAccepted, copyText, CONNECT_WORDS, SPOTIFY_DASHBOARD_URL, SPOTIFY_DASHBOARD_ADDRESS } from '../spotify_connect.js';
 import { createMusicRouter, messageFor } from '../music_player.js';
 import { createSpotifyPlayer, imageOf, SPOTIFY_MESSAGES, FIRST_LOOK_MS, END_SLACK_MS, IDLE_LOOK_MS } from '../music_spotify.js';
-import { createMusicPicker, statsFromCache, RECENT_CAP } from '../music_pick.js';
+import { createMusicPicker, RECENT_CAP } from '../music_pick.js';
+import { createPlays, memoryPlayStore, panelPlays } from '../plays.js';
 import { pick, mulberry32, statsFromEvents } from '../rng.js';
 import { spotifyRef } from '../recommend.js';
 import { showsAtLevel } from '../settings_fields.js';
@@ -462,29 +463,37 @@ const FAVS = normalizeFavourites([
     {
       const pool = [{ id: 'a', channel: 'x', durationSec: 200 }, { id: 'b', channel: 'x', durationSec: 200 },
         { id: 'c', channel: 'y', durationSec: 200 }, { id: 'd', channel: 'z', durationSec: 400 }];
-      const cache = { events: [{ kind: 'play', data: { id: 'a', at: 1000 } }, { kind: 'play', data: { id: 'a', at: 2000 } },
-        { kind: 'held', data: { id: 'b' } }, { kind: 'play', data: { id: 'c' }, created_at: '1970-01-01T00:00:03Z' }] };
-      check('the play history is read from the same `play` rows the YouTube panel writes',
-        J(statsFromCache(cache)) === J({ a: { n: 2, last: 2000 }, c: { n: 1, last: 3000 } }), J(statsFromCache(cache)));
-      let fn = null;
-      const appended = [];
-      const events = { subscribe: (f) => { fn = f; return () => { fn = null; }; }, append: async (k, d) => { appended.push([k, d]); } };
-      const NOW = 10 * 3600e3;
-      const p = createMusicPicker({ events, now: () => NOW, rand: mulberry32(7) });
-      fn(cache);
+      // The panel's plays, as music.js makes them (plays.js panelPlays), over a memory store: a at 1s and 2s, c at 3s.
+      const NOW0 = 10 * 3600e3;
+      const times = [1000, 2000, 3000];
+      const plays = createPlays({ store: memoryPlayStore(), now: () => times.shift() ?? NOW0 });
+      const log = panelPlays({ plays, instanceId: 'music-1', profileId: 'screen-1' }, 'spotify');
+      await log.played('a'); await log.played('a'); await log.played('c');
+      const seeded = log.stats();
+      check('the play history is this panel\'s Spotify plays on this device (plays.js), counted as rng.js counts them',
+        J(seeded) === J({ a: { n: 2, last: 2000 }, c: { n: 1, last: 3000 } }), J(seeded));
+      const NOW = NOW0;
+      const p = createMusicPicker({ log, now: () => NOW, rand: mulberry32(7) });
       const got = p.next(pool);
-      const want = pick(pool.map((t) => t.id), statsFromCache(cache), { now: NOW, rand: mulberry32(7), recent: [],
+      const want = pick(pool.map((t) => t.id), seeded, { now: NOW, rand: mulberry32(7), recent: [],
         channels: { a: 'x', b: 'x', c: 'y', d: 'z' }, durations: { a: 200, b: 200, c: 200, d: 400 } });
       check('*** the same draw as rng.js `pick` with YouTube\'s inputs (freshness, recency, duration, channel) ***', got === want, J({ got, want }));
       p.played('c');
-      check('a played song is counted now and written as a `play` event for next time',
-        p.state().stats.c.n === 2 && p.state().recent.at(-1) === 'c' && appended[0][0] === 'play' && appended[0][1].id === 'c' && appended[0][1].at === NOW, J(appended));
+      await Promise.resolve();
+      const cRows = log.rows().filter((e) => e.data.id === 'c');
+      check('a played song is counted now and filed in the panel\'s plays on this device for next time',
+        p.state().stats.c.n === 2 && p.state().recent.at(-1) === 'c' && cRows.length === 2
+        && cRows.every((e) => e.data.source === 'spotify' && e.data.panel === 'music-1' && e.data.screen === 'screen-1'), J(cRows));
+      check('*** nothing Spotify supplied is kept with the play (its terms: cache, not keep) ***',
+        cRows.every((e) => J(Object.keys(e.data).sort()) === J(['id', 'panel', 'screen', 'source'])), J(cRows));
       for (let i = 0; i < 20; i++) p.played(`z${i}`);
       check('the "just played" list is YouTube\'s twelve', p.state().recent.length === RECENT_CAP && RECENT_CAP === 12);
       // Over many draws: the much-played song comes up least.
       const counts = { a: 0, b: 0, c: 0, d: 0 };
-      const heavy = createMusicPicker({ events: { subscribe: (f) => { f({ events: Array.from({ length: 8 }, () => ({ kind: 'play', data: { id: 'a', at: 1 } })) }); }, append: async () => {} },
-        rand: mulberry32(11), now: () => 1 + 3600e3 * 24 * 30 });
+      const heavyPlays = createPlays({ store: memoryPlayStore(), now: () => 1 });
+      const heavyLog = panelPlays({ plays: heavyPlays, instanceId: 'music-2' }, 'spotify');
+      for (let i = 0; i < 8; i++) await heavyLog.played('a');
+      const heavy = createMusicPicker({ log: heavyLog, rand: mulberry32(11), now: () => 1 + 3600e3 * 24 * 30 });
       for (let i = 0; i < 400; i++) counts[heavy.next(pool)]++;
       check('*** freshness: a song played eight times comes up far less than the others ***', counts.a < counts.b / 2 && counts.a < counts.c / 2, J(counts));
       const dv = createMusicPicker({ rand: mulberry32(2), now: () => NOW });
@@ -500,8 +509,12 @@ const FAVS = normalizeFavourites([
       for (let i = 0; i < 300; i++) dc2[dv2.next(full.filter((t) => t.id !== 'a'))]++;
       check('...and still when the song playing is left out of the next pool', dc2.b < dc2.c / 3, J(dc2));
       dv2.destroy();
-      heavy.destroy(); p.destroy(); dv.destroy();
-      check('destroy lets go of the events', fn === null);
+      heavy.destroy(); dv.destroy();
+      const before = p.state().stats.c.n;
+      p.destroy();
+      await log.played('c');
+      check('destroy lets go of the plays (a later play is not counted by a destroyed picker)', p.state().stats.c.n === before);
+      log.destroy(); heavyLog.destroy();
     }
 
     // A fake connector, so the player's steering is checked on its own; the timers are held and run by hand.

@@ -32,6 +32,15 @@
 import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
+import { createPlays, memoryPlayStore } from '../plays.js';
+// A panel's plays kept in memory for the suite (plays.js; row 2.58: what played stays on the device, never the
+// server). `onPlay` hears each play as it is filed, the way these checks used to hear the `play` event.
+const recordingPlays = (onPlay = () => {}) => {
+  const p = createPlays({ store: memoryPlayStore() });
+  const log = p.log;
+  p.log = (raw) => { try { onPlay(raw); } catch { /* the suite's own recorder */ } return log(raw); };
+  return p;
+};
 import { createProfilesClient } from '../profile.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { mountModule } from '../module.js';
@@ -116,7 +125,8 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
       bus.subscribe('segment/done', (p) => dones.push({ t: fakeNow, reason: p?.reason }));
       const inst = mountModule('personal', {
         mount: host, bus, state: { get: () => cfg, set: (p) => { cfg = { ...cfg, ...p }; }, subscribe: (f) => { f(cfg); return () => {}; }, flush() {} },
-        events: { append: (k) => { if (k === 'play') shows.push(fakeNow); return Promise.resolve(); }, subscribe() {}, load: () => Promise.resolve() },
+        events: { append: () => Promise.resolve(), subscribe() {}, load: () => Promise.resolve() },
+        plays: recordingPlays(() => shows.push(fakeNow)),
         user: 'personal-test-broken', profileId: 'p',
         sources: { list: async () => [source], add: async () => source, remove: async () => {} },
         resolveListing: async () => ({ items: [1, 2, 3, 4].map((i) => ({ id: 'b' + i, path: 'b' + i + '.mp4', name: 'b' + i, kind: 'video', url: 'data:,broken' + i })), albums: [], album: '' }),
@@ -309,7 +319,8 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     const host = document.getElementById('host');
     const segDone = [];
     bus.subscribe('segment/done', (p) => segDone.push(p));
-    const instance = mountModule('personal', { mount: host, bus, state, events, user: USER, profileId: profile.id });
+    const suitePlays = recordingPlays();
+    const instance = mountModule('personal', { mount: host, bus, state, events, user: USER, profileId: profile.id, plays: suitePlays });
     instance.init();
     await sleep(250);   // async source resolve + listing
 
@@ -322,9 +333,8 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     // 3. shows the subject name
     check('caption shows the speaker name', (host.querySelector('[data-name]')?.textContent || '').includes('Profile B'),
       `caption="${host.querySelector('[data-name]')?.textContent}"`);
-    // 4. play logged (append-only)
-    await events.load();
-    const plays0 = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    // 4. play logged (on this device)
+    const plays0 = suitePlays.plays().length;
     check('first clip logged a play event', plays0 >= 1, `plays=${plays0}`);
 
     // 5. advancing covers BOTH clips (only 2 items -> the picker weights by recency)
@@ -344,13 +354,14 @@ const vidSrc = (host) => vid(host)?.getAttribute('src') || null;
     check('standalone (autoAdvance) advances to the next clip on ended', vidSrc(host) !== before || seen.size === 2, `before=${before} now=${vidSrc(host)}`);
 
     // 7. prev() replays without logging a new play
-    await events.load();
-    const playsA = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    const playsA = suitePlays.plays().length;
     bus.publish('personal/prev');
     await sleep(20);
-    await events.load();
-    const playsB = (events.get().events || []).filter((e) => e.kind === 'play').length;
+    const playsB = suitePlays.plays().length;
     check('prev() replays without a new play event', playsB === playsA, `${playsA} -> ${playsB}`);
+    await events.load();
+    check('*** nothing about what played went to the server (row 2.58) ***',
+      !(events.get().events || []).some((e) => e.kind === 'play'));
 
     instance.destroy();
     check('destroy() cleans up without error', true);

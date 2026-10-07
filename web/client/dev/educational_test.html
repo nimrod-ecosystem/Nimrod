@@ -29,6 +29,15 @@ injected display timer, so the generated flow — content library → picker →
 import { createBus } from '../bus.js';
 import { createState } from '../state.js';
 import { createEvents } from '../events.js';
+import { createPlays, memoryPlayStore } from '../plays.js';
+// A panel's plays kept in memory for the suite (plays.js; row 2.58: what played stays on the device, never the
+// server). `onPlay` hears each play as it is filed, the way these checks used to hear the `play` event.
+const recordingPlays = (onPlay = () => {}) => {
+  const p = createPlays({ store: memoryPlayStore() });
+  const log = p.log;
+  p.log = (raw) => { try { onPlay(raw); } catch { /* the suite's own recorder */ } return log(raw); };
+  return p;
+};
 import { createProfilesClient } from '../profile.js';
 import { mountModule, getManifest } from '../module.js';
 import { pressControls } from './press_controls.js';
@@ -101,8 +110,9 @@ function fakeTimers(){
     const segDone = [];
     bus.subscribe('segment/done', (p) => segDone.push(p));
     const T = fakeTimers();
+    const suitePlays = recordingPlays();
     const instance = mountModule('educational', {
-      mount: host, bus, state, events, user: USER, profileId: profile.id,
+      mount: host, bus, state, events, user: USER, profileId: profile.id, plays: suitePlays,
       speak: (text, pref) => spoken.push({ text, pref }),
       setTimer: T.setTimer, clearTimer: T.clearTimer,
     });
@@ -120,8 +130,7 @@ function fakeTimers(){
     check('advance speaks the line', spoken.length >= 1, `spoken=${spoken.length}`);
     check('speak uses the PROFILE voice', spoken[spoken.length - 1]?.pref?.uri === 'test-voice', JSON.stringify(spoken[spoken.length - 1]?.pref));
     check('the display timer is armed', T.pending() === 1, `pending=${T.pending()}`);
-    await events.load();
-    check('first item logged a play event', (events.get().events || []).filter((e) => e.kind === 'play').length >= 1);
+    check('first item logged a play event', suitePlays.plays().length >= 1);
 
     // the display timer firing ends the segment (segment/done) and auto-advances
     const spokeBefore = spoken.length;
@@ -132,8 +141,10 @@ function fakeTimers(){
 
     // coverage + diversity over a run of advances
     for (let i = 0; i < 18; i++) { bus.publish('educational/next'); await sleep(8); }
+    const playIds = suitePlays.plays().map((e) => e.data?.id).filter(Boolean);
     await events.load();
-    const playIds = (events.get().events || []).filter((e) => e.kind === 'play').map((e) => e.data?.id).filter(Boolean);
+    check('*** nothing about what played went to the server (row 2.58) ***',
+      !(events.get().events || []).some((e) => e.kind === 'play'));
     const kinds = playIds.map(kindOf);
     check('coverage: more than one kind is used', new Set(kinds).size >= 2, `kinds=${[...new Set(kinds)].join(',')}`);
     let immediate = 0, sameKind = 0;

@@ -77,6 +77,7 @@ import { connectHelperHtml, copyText, CONNECT_WORDS } from '../spotify_connect.j
 import { createSearchKeyClient, KEY_LEVEL_WORDS } from '../search_key.js';
 import { themeQrColours, hasBrowserWindow } from '../page_links.js';
 import { createMusicPicker } from '../music_pick.js';
+import { panelPlays } from '../plays.js';
 import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
 import { authHeaders } from '../auth.js';
 import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor } from '../music_player.js';
@@ -258,9 +259,10 @@ registerModule(
     let spotifyPlayer = null;
     let spotifySig = '';
     let songNow = null;            // { name, artists, image } while the song-info card has something to show
-    // The site's own weighted picker for Spotify (row 2.55): one per panel, its play history in this panel's
-    // events, as the YouTube panel keeps its own.
-    const picker = createMusicPicker({ events: ctx.events || null });
+    // The site's own weighted picker for Spotify (row 2.55): one per panel. Its play history is this panel's plays
+    // ON THIS DEVICE (plays.js, row 2.58), as the YouTube panel keeps its own; the old server rows come down once.
+    const playLog = panelPlays(ctx, 'spotify');
+    const picker = createMusicPicker({ log: playLog });
     const setT = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearT = ctx.clearTimer || ((id) => clearTimeout(id));
 
@@ -825,6 +827,7 @@ registerModule(
         try { router.destroy(); } catch { /* gone */ }
         try { spotifyPlayer?.destroy(); } catch { /* gone */ }
         try { picker.destroy(); } catch { /* gone */ }
+        try { playLog.destroy(); } catch { /* gone */ }
         try { local.destroy(); } catch { /* gone */ }
         try { ytActive(false); audio?.unregister?.(YT_AUDIO); } catch { /* gone */ }
         try { yt?.destroy?.(); } catch { /* gone */ }

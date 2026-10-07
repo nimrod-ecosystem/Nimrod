@@ -15,6 +15,12 @@ check in front of them. These are the server's half of it - security invariants,
      (BASE64_RUN_MAX, argued below) - which is what such a thing looks like once it is text.
   3. EVERY ROW HAS A SIZE CAP: STATE_MAX_BYTES for a saved setting, EVENT_MAX_BYTES for an event.
      The cap is the backstop for whatever the two pattern rules cannot see (numbers in a list, say).
+  4. PLAY HISTORY IS REFUSED (Mike, 2026-10-07, row 2.58: "This is the kind of data people should keep on
+     their own system though"): which photo, video or song played when. Event kind `play` (what every
+     player appended to its panel's events: `{id, at}`) and stream `plays` (plays.js's shared stream, never
+     written to before this). They are kept on the device that played them now (client/plays.js). A
+     panel's stream is named by its instance id, so the kind is the only thing that says "a play".
+     The rows already here are removed by remove_play_history.py, which Mike runs.
 
 THE NUMBERS ARE DEFAULTS, ARGUED (Rule 1, 2026-09-11) - measured 2026-10-07, not guessed:
 
@@ -50,6 +56,8 @@ BASE64_RUN_MAX = 1024
 
 REFUSED_EVENT_KINDS = frozenset({"device-blob"})
 REFUSED_EVENT_STREAMS = frozenset({"device-data"})
+PLAY_HISTORY_KINDS = frozenset({"play"})
+PLAY_HISTORY_STREAMS = frozenset({"plays"})
 
 _MEDIA_PREFIXES = ("data:image/", "data:audio/", "data:video/")
 # One run of base64 (standard or URL-safe alphabet), with its padding. A plain character class, so
@@ -60,6 +68,8 @@ _RUN = re.compile(r"[A-Za-z0-9+/_-]+={0,2}")
 WRAP_MIN = 60
 
 SAY_KEEP_IT_HOME = "Pictures, sound, video and recordings stay on your own machine, not on this site."
+SAY_PLAYS_STAY_HOME = ("What played when (which photo, video or song) is kept on the screen that played it, not on "
+                       "this site.")
 
 
 class Refused(Exception):
@@ -145,6 +155,8 @@ def check_event(stream: str, kind: str, data) -> None:
         raise Refused(400, "Raw sensor recordings are not kept on this site. Keep them on the household's own "
                            "machine: point the collector's server setting there, or leave it empty and the "
                            "recordings stay in the collector's own spool.")
+    if (kind or "").lower() in PLAY_HISTORY_KINDS or (stream or "").lower() in PLAY_HISTORY_STREAMS:
+        raise Refused(400, SAY_PLAYS_STAY_HOME)
     size = row_bytes(data)
     if size > EVENT_MAX_BYTES:
         raise _too_big("event", size, EVENT_MAX_BYTES)
