@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Sports (AI-written, not yet reviewed)",
-  "description": "60 questions on sports, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 13 easy, 20 medium, 19 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "60 questions on sports, written by Claude, spread across every level the game understands: 8 very easy, 13 easy, 20 medium, 19 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -24,7 +24,7 @@
         "Eleven"
       ],
       "correct": "Five",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "Each basketball team plays five at a time.",
       "source": {
@@ -33,7 +33,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'five players'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -48,7 +47,7 @@
         "Golf"
       ],
       "correct": "Baseball",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "A home run lets the batter round all the bases.",
       "source": {
@@ -57,7 +56,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'baseball'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -72,7 +70,7 @@
         "Soccer"
       ],
       "correct": "Tennis",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "Wimbledon in London is the oldest tennis tournament.",
       "source": {
@@ -81,7 +79,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'tennis'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -96,7 +93,7 @@
         "Volleyball"
       ],
       "correct": "Ice hockey",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "Hockey players use sticks to hit a flat rubber puck.",
       "source": {
@@ -105,7 +102,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'ice hockey'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -120,7 +116,7 @@
         "A goal"
       ],
       "correct": "A hole",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "Golfers try to get the ball into the hole in as few shots as they can.",
       "source": {
@@ -129,7 +125,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'hole'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -144,7 +139,7 @@
         "Two"
       ],
       "correct": "Six",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "A touchdown scores six points.",
       "source": {
@@ -153,7 +148,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'six points'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -168,7 +162,7 @@
         "Hockey"
       ],
       "correct": "Basketball",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "A slam dunk is pushing the ball down through the hoop.",
       "source": {
@@ -177,7 +171,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'basketball'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -192,7 +185,7 @@
         "Hoop"
       ],
       "correct": "Net",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Sports",
       "explain": "In soccer you score by getting the ball into the net.",
       "source": {
@@ -201,7 +194,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'net'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"

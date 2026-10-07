@@ -140,6 +140,8 @@ import { createAvatarCache, avatarHtml, avatarMotionContext, AVATAR_MOTION_FIELD
 import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORDER } from './settings.js';
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf } from './settings_fields.js';
+// The person's usual starting level for question games, on the People tab (2026-10-06, adaptive_play.js openUsualStart).
+import { openUsualStart } from './adaptive_play.js';
 import { mountPackLoader } from './pack_loader.js';
 import { gameSettingsPage, GAME_SETTINGS_PAGE } from './unlocks.js';
 // "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
@@ -3815,6 +3817,30 @@ export async function mountKiosk(root, {
     ];
   }
 
+  // THE PERSON'S USUAL STARTING LEVEL FOR QUESTION GAMES (2026-10-06; adaptive_play.js openPersonLadder argues it).
+  // Mike: a start changed in a game's own menu is for that person in that game, "Not the global settings". This is
+  // the global one: the person's, on their own `ratings` row, for every game with no start of its own for them. On
+  // the People tab, under its own heading. Opened the first time the menu is built for this person.
+  let usualStart = null;
+  function usualStartItems() {
+    if (!personId || embedded || torn) return [];
+    if (usualStart?.personId !== personId) {
+      try { usualStart?.destroy(); } catch { /* gone */ }
+      try {
+        usualStart = openUsualStart({ makePersonState: childCtx({ id: 'games' }).makePersonState, personId,
+          onChange: () => { if (!torn) menu.refresh(); } });
+      } catch (err) { console.error('kiosk: usual starting level', err); usualStart = null; }
+    }
+    if (!usualStart) return [];
+    const rows = fieldItems([normalizeField(usualStart.field)], {
+      values: () => usualStart?.values() || {},
+      level: complexity(),
+      onStep: (key, value) => { try { usualStart?.set(value); } catch (err) { console.error('kiosk: usual starting level', err); } },
+    });
+    return rows.length ? [{ kind: 'heading', id: 'games-start-head', label: 'Games', ...MENU_TAB.people(3) },
+      ...rows.map((it) => ({ ...it, id: `person:${String(it.id || '').replace(/^set:/, '')}`, ...MENU_TAB.people(3) }))] : [];
+  }
+
   // ---- "SWITCH MODULE": THE MODULES LIBRARY IN THE PANEL'S PLACE (2026-10-02) ------------------------
   //
   // Mike: "modules on a dashboard should be as hot swappable as possible. Maybe a switch module button on
@@ -4753,7 +4779,7 @@ export async function mountKiosk(root, {
           ? 'nobody yet — their bindings and voice come with them'
           : `now: ${whoState?.name || '…'}`,
       }];
-    })()), ...voiceItems(), ...chooseModeItems()],
+    })()), ...voiceItems(), ...chooseModeItems(), ...usualStartItems()],
     // SCREEN-LEVEL SETTINGS. Written to the profile settings blob, which IS the screen level
     // of the inheritance chain — the same place the theme, the layout and the recovery policy
     // already live, so this adds a control over existing storage rather than a new home.
@@ -7125,6 +7151,7 @@ export async function mountKiosk(root, {
       try { offDashActions?.(); } catch { /* already gone */ } offDashActions = null;
       try { picker.destroy(); } catch { /* already gone */ }
       try { musicFavs?.destroy(); } catch { /* already gone */ } musicFavs = null;
+      try { usualStart?.destroy(); } catch { /* already gone */ } usualStart = null;   // the usual starting level's row
       try { audio?.destroy(); } catch { /* already gone */ }
       try { cameraOwner?.destroy(); } catch { /* already gone */ }
       try { cursor?.destroy(); } catch { /* already gone */ }

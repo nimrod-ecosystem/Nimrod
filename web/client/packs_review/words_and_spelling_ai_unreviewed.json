@@ -2,7 +2,7 @@
   "schema": "nimrod.pack.v1",
   "kind": "trivia",
   "name": "Words and spelling (AI-written, not yet reviewed)",
-  "description": "59 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy (filed as easy, marked in `note`), 12 easy, 21 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
+  "description": "59 questions on words & spelling, written by Claude, spread across every level the game understands: 8 very easy, 12 easy, 21 medium, 18 hard. Every question and answer needs checking by a person before anybody plays it.",
   "source": {
     "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-05, from its own knowledge plus the pages each item cites: no API call. Every cited page was fetched on 2026-10-05 by a script that confirmed it loads and that its text contains the answer or the key words named in the item's source note (a check that the page is about the fact, not a full fact-check). Items resting on no page say \"common knowledge\" and why. Then fact-checked item by item by a second Claude pass on 2026-10-05 (every cited page re-fetched and read for the fact; `checked` keeps who checked it and what was fixed; items that could not be made right, and near-duplicates of other packs, were deleted). A person still reviews it by playing.",
     "url": "",
@@ -24,7 +24,7 @@
         "Near"
       ],
       "correct": "Down",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "Up and down are opposites.",
       "source": {
@@ -32,7 +32,6 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -47,7 +46,7 @@
         "Slow"
       ],
       "correct": "Huge",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "Huge means very, very big.",
       "source": {
@@ -56,7 +55,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'large'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -71,7 +69,7 @@
         "Tired"
       ],
       "correct": "Glad",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "If you are glad, you are happy.",
       "source": {
@@ -80,7 +78,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'happy'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -95,7 +92,7 @@
         "Week"
       ],
       "correct": "Night",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "Day and night are opposites.",
       "source": {
@@ -103,7 +100,6 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -118,7 +114,7 @@
         "Freend"
       ],
       "correct": "Friend",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "Friend is spelled F-R-I-E-N-D.",
       "source": {
@@ -127,7 +123,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'friend'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -142,7 +137,7 @@
         "Sun"
       ],
       "correct": "Hat",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "Cat and hat end with the same sound.",
       "source": {
@@ -150,7 +145,6 @@
         "note": "Rhyme is self-evident from the sound of the words."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -165,7 +159,7 @@
         "Wait"
       ],
       "correct": "Begin",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "To begin is to start.",
       "source": {
@@ -174,7 +168,6 @@
         "note": "Fetched 2026-10-05 by the writing pass; the page text contains: 'start'."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"
@@ -189,7 +182,7 @@
         "Bright"
       ],
       "correct": "Closed",
-      "difficulty": "easy",
+      "difficulty": "very easy",
       "category": "Words & spelling",
       "explain": "A door is either open or closed.",
       "source": {
@@ -197,7 +190,6 @@
         "note": "Basic English opposites; known to any English speaker."
       },
       "ai_written": true,
-      "note": "very easy: the game only knows easy/medium/hard, so the gentlest questions are filed under easy and marked here",
       "checked": {
         "by": "Claude (fact-check pass)",
         "at": "2026-10-05"

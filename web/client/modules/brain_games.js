@@ -268,9 +268,9 @@ registerModule(
     let mixStart = 0;            // which kind a mix opens on (chosen when the game starts)
     let mixAsked = 0;            // questions dealt in this mix, for 'every question'
     // The screen's person's level is kept WITH THEM, the same on each of their screens, with their own
-    // "Start games at"; everybody else's stays on this screen's row; a refused save merges, entry by
+    // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
-    const ladderRows = openPersonLadder(ctx, { onChange: () => api?.render() });
+    const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
     const store = ladderRows.store;
     const session = createAdaptiveSession({
       cfg: () => cfgNow,

@@ -25,7 +25,9 @@ import { harness } from './quiz_test_rig.js';
 import * as R from '../rating.js';
 import { createAdaptiveSession, parsePlayers, mergeLadder, adaptiveSettings, ADAPTIVE_DEFAULTS, emptyLadder,
   EXTRA_CAP, mergeLadder3, ladderDocMerge, LADDER_STATE_OPTIONS, openLadderStore, openPersonLadder, startWordLevel,
-  START_WORDS, PERSON_LADDER_KEY, PERSON_START_KEY } from '../adaptive_play.js';
+  START_WORDS, PERSON_LADDER_KEY, PERSON_START_KEY, GAME_START_KEY, START_USUAL, usualStartField, openUsualStart }
+  from '../adaptive_play.js';
+import { liveRow, peopleRows } from './quiz_test_rig.js';
 import { createState } from '../state.js';
 import { createLocalBackend, clearLocalScope } from '../local_store.js';
 import { isOpenModel, buildWriterPrompt, parseWritten, checkWritten, writeQuestions } from '../question_writer.js';
@@ -398,13 +400,13 @@ try {
   }
 
   // =====================================================================================
-  section('*** EVERY GAME ON THE LADDER: THE LEVEL FOLLOWS THE PERSON, with "Start games at" (2026-10-06) ***');
+  section('*** EVERY GAME ON THE LADDER: THE LEVEL FOLLOWS THE PERSON (2026-10-06) ***');
   {
-    check('"easy" / "medium" / "hard" over a game\'s levels: the easiest, the middle, the hardest',
-      [3, 5, 6, 1].map((t) => START_WORDS.map((w) => startWordLevel(w, t)).join('/')).join(' ') === '1/2/3 1/3/5 1/4/6 1/1/1'
+    check('"very easy" / "easy" / "medium" / "hard" over a game\'s levels: the easiest, the easiest, the middle, the hardest',
+      [3, 5, 6, 1].map((t) => START_WORDS.map((w) => startWordLevel(w, t)).join('/')).join(' ') === '1/1/2/3 1/1/3/5 1/1/4/6 1/1/1/1'
       && startWordLevel('loud', 5) === null, [3, 5, 6, 1].map((t) => START_WORDS.map((w) => startWordLevel(w, t)).join('/')).join(' '));
-    check('the person\'s own row is named "ratings" (in their scope); the panel\'s copy is "personStart"',
-      PERSON_LADDER_KEY === 'ratings' && PERSON_START_KEY === 'personStart');
+    check('the person\'s own row is named "ratings" (in their scope); the panel\'s copy of a game\'s own start is "gameStart"',
+      PERSON_LADDER_KEY === 'ratings' && GAME_START_KEY === 'gameStart' && START_USUAL === 'usual' && PERSON_START_KEY === 'personStart');
 
     // ---- the mark: a change of start reaches a row nobody has open ----
     const bank = Array.from({ length: 15 }, (_, i) => ({ id: `m${i}`, level: 1 + (i % 5) }));
@@ -487,6 +489,146 @@ try {
   }
 
   // =====================================================================================
+  section('*** WHERE A GAME STARTS (Mike, 2026-10-06): a game\'s own start for the person, else their usual one, else the bottom ***');
+  {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const bank5 = Array.from({ length: 20 }, (_, i) => ({ id: `w${i}`, level: 1 + (i % 5) }));
+    // One game panel: its own menu row (a live panel state), the screen's row, and the person's rows from `people`.
+    const open = (people, game, { person = 'pat', saved = {} } = {}) => {
+      const st = liveRow(saved);
+      const ctx = { ...(person ? { personId: person } : {}), makeState: () => liveRow(), makePersonState: people.make, state: st };
+      const cfg = { ...ADAPTIVE_DEFAULTS };
+      const l = openPersonLadder(ctx, { gameKey: game });
+      const s = createAdaptiveSession({ cfg: () => ({ ...cfg, ...st.get() }), bankFor: () => bank5, store: l.store, rand: () => 0,
+        personId: () => person, startFor: l.startFor, startMark: l.startMark });
+      l.attach(s);
+      l.onConfig(st.get());
+      const off = st.subscribe((d) => l.onConfig(d));
+      const pid = person ? `person:${person}` : 'player';
+      return { l, s, st, pid, floor: () => s.playerRow(pid, game).floor, row: () => s.playerRow(pid, game),
+        answer: (k = 1) => { for (let i = 0; i < k; i++) s.record({ item: s.deal(game), right: true }); },
+        menu: (v) => st.set({ [GAME_START_KEY]: v }), close: () => { off(); s.destroy(); l.destroy(); } };
+    };
+    // 1. The usual start (hard) reaches every game with no start of its own; a game's own wins, in that game only.
+    const people = peopleRows({ 'pat:ratings': { start: 'hard', startMark: 'u1' } });
+    const brain = open(people, 'brain');
+    const think = open(people, 'think');
+    await sleep(30);
+    check('*** nothing of their own in either game: both start at their usual start (hard, the top here) ***',
+      brain.floor() === 5 && think.floor() === 5, `${brain.floor()} ${think.floor()}`);
+    brain.answer(2); think.answer(2);
+    await sleep(10);
+    const thinkBefore = JSON.stringify(think.row());
+    brain.menu('easy');
+    await sleep(30);
+    const doc = people.row('pat').get();
+    check('*** "Start this game at: easy" in Brain games: written to the person, for that game only ***',
+      doc.gameStarts?.brain?.start === 'easy' && !!doc.gameStarts.brain.mark && !doc.gameStarts.think && doc.start === 'hard',
+      JSON.stringify({ gameStarts: doc.gameStarts, start: doc.start }));
+    check('...and Brain games starts them again there (easy, level 1), their answers kept', brain.floor() === 1 && brain.row().n === 2,
+      JSON.stringify(brain.row()));
+    check('*** ...while Thinking games is left exactly where it was (their usual start did not change) ***',
+      JSON.stringify(think.row()) === thinkBefore, `${thinkBefore} -> ${JSON.stringify(think.row())}`);
+    // 2. The same person's Brain games on another screen shows its own start in the menu.
+    const brain2 = open(people, 'brain');
+    await sleep(30);
+    check('a Brain games panel on another screen shows "easy" in its menu (the person\'s row is the truth)',
+      brain2.st.get()[GAME_START_KEY] === 'easy' && brain2.floor() === 1, JSON.stringify(brain2.st.get()));
+    brain2.close();
+    // 3. The usual start changed (the People tab): games that follow it start again; a game with its own does not.
+    const usual = openUsualStart({ makePersonState: people.make, personId: 'pat' });
+    await sleep(10);
+    check('the People tab\'s row reads the usual start', usual?.values().start === 'hard', JSON.stringify(usual?.values()));
+    const brainRow = JSON.stringify(brain.row());
+    check('changing it writes the word and a new mark', usual.set('medium') === true
+      && people.row('pat').get().start === 'medium' && people.row('pat').get().startMark !== 'u1');
+    await sleep(10);
+    check('*** ...Thinking games (following it) starts them again at medium (level 3), answers kept ***',
+      think.floor() === 3 && think.row().n === 2, JSON.stringify(think.row()));
+    check('*** ...Brain games (its own start, easy) is left where it was ***', JSON.stringify(brain.row()) === brainRow,
+      `${brainRow} -> ${JSON.stringify(brain.row())}`);
+    const markNow = people.row('pat').get().startMark;
+    check('the same word again is not a change (no new mark)', usual.set('medium') === false && people.row('pat').get().startMark === markNow);
+    check('a word that is not a start is refused', usual.set('nightmare') === false && people.row('pat').get().start === 'medium');
+    // 4. Back to "Their usual starting level": that game starts again at the usual one.
+    brain.answer(1);
+    await sleep(10);
+    brain.menu(START_USUAL);
+    await sleep(30);
+    check('*** Brain games set back to "Their usual starting level": it starts again at the usual one (medium) ***',
+      brain.floor() === 3 && people.row('pat').get().gameStarts.brain.start == null, JSON.stringify(people.row('pat').get().gameStarts));
+    brain.answer(1);
+    await sleep(10);
+    usual.set('very easy');
+    await sleep(10);
+    check('...and from then on it follows the usual one again (very easy: level 1)', brain.floor() === 1 && think.floor() === 1,
+      `${brain.floor()} ${think.floor()}`);
+    brain.close(); think.close(); usual.destroy();
+    // 5. Nothing set anywhere: the bottom.
+    const fresh = peopleRows();
+    const f = open(fresh, 'brain');
+    await sleep(30);
+    check('*** nothing set anywhere: they start at the bottom (level 1) ***', f.floor() === 1);
+    const u2 = openUsualStart({ makePersonState: fresh.make, personId: 'pat' });
+    await sleep(10);
+    check('...and the People tab shows "very easy" for it', u2.values().start === 'very easy');
+    check('the People tab\'s row: very easy / easy / medium / hard, very easy by default, standard', (() => {
+      const fl = usualStartField();
+      return fl.default === 'very easy' && fl.level === 'standard' && JSON.stringify(fl.options.map((o) => o.value)) === JSON.stringify(START_WORDS);
+    })());
+    check('no person, or no per-person rows: nothing to show', openUsualStart({ makePersonState: fresh.make }) === null
+      && openUsualStart({ personId: 'pat' }) === null);
+    u2.destroy(); f.close();
+    // 6. 269b6a5's panel copy of "Start games at" is not read as a game's own.
+    const old = peopleRows({ 'pat:ratings': { start: 'hard', startMark: 'u1' } });
+    const o = open(old, 'brain', { saved: { [PERSON_START_KEY]: 'easy' } });
+    await sleep(30);
+    check('*** a panel still holding the old "Start games at: easy" copy: not taken as Brain games\' own; the usual start (hard) stands ***',
+      o.floor() === 5 && !old.row('pat').get().gameStarts, JSON.stringify(old.row('pat').get()));
+    o.close();
+    // 7. A screen with no person: "Start this game at" is the panel's, for its one player.
+    const none = open(peopleRows(), 'brain', { person: null, saved: { [GAME_START_KEY]: 'hard' } });
+    await sleep(20);
+    check('a screen with no person: the panel\'s own start (hard) for its one player', none.floor() === 5);
+    none.answer(1);
+    none.menu('medium');
+    await sleep(10);
+    check('...changing it starts that player again there (medium, 3)', none.floor() === 3 && none.row().n === 1, JSON.stringify(none.row()));
+    none.menu(START_USUAL);
+    await sleep(10);
+    check('...and "Their usual starting level" there is "A new player starts at level" (1)', none.floor() === 1);
+    none.close();
+    // 8. Two games setting their own start at once on one row: the merge keeps both.
+    const m = ladderDocMerge({ gameStarts: {} }, { gameStarts: { brain: { start: 'easy', mark: 'a' } } },
+      { gameStarts: { think: { start: 'hard', mark: 'b' } } });
+    check('*** the row\'s merge keeps two games\' own starts set at the same moment ***',
+      m.data.gameStarts?.brain?.start === 'easy' && m.data.gameStarts?.think?.start === 'hard', JSON.stringify(m.data));
+  }
+
+  // =====================================================================================
+  section('*** A ROW SAVED ON AN OLDER LEVEL COUNT IS MOVED ONCE (rowVersion / upgradeRow, Trivia\'s very easy) ***');
+  {
+    const store = memStore({ ladder: { v: 1, players: { 'person:pat': { name: '', games: { g: { rating: 1000, n: 30, floor: 1, recent: [1], review: {} } } } },
+      questions: {}, extra: {} } });
+    const s = createAdaptiveSession({ bankFor: () => BANK, store, rand: () => 0, personId: () => 'pat', rowVersion: 2,
+      upgradeRow: (r) => ({ ...r, floor: r.floor + 1 }) });
+    await new Promise((r) => setTimeout(r, 0));
+    const read = s.playerRow('person:pat', 'g');
+    check('*** a stored row with no `lv` is read with its floor moved up (1 -> 2); rating and answers as saved ***',
+      read.floor === 2 && read.lv === 2 && read.rating === 1000 && read.n === 30, JSON.stringify(read));
+    check('...the stored row itself is not touched until an answer', store.peek().ladder.players['person:pat'].games.g.floor === 1);
+    check('...and reading it again gives the same (never moved twice)', s.playerRow('person:pat', 'g').floor === 2);
+    s.record({ item: s.deal('g'), right: true });
+    const saved = store.peek().ladder.players['person:pat'].games.g;
+    check('*** the next answer saves it with `lv`, and it is read as saved from then on ***', saved.lv === 2
+      && s.playerRow('person:pat', 'g').floor === saved.floor && saved.floor >= 2, JSON.stringify(saved));
+    check('a new row carries `lv` from the start', s.playerRow('name:ann', 'g').lv === 2);
+    const plain = createAdaptiveSession({ bankFor: () => BANK, rand: () => 0 });
+    check('a game with no rowVersion writes no `lv` (nothing changes for it)', plain.playerRow('player', 'g').lv === undefined);
+    s.destroy(); plain.destroy();
+  }
+
+  // =====================================================================================
   section('*** THE QUESTION WRITER: an open model, off unless turned on ***');
   {
     check('Claude is refused as the writer (row 2.50)', !isOpenModel('claude-3-5-sonnet') && !isOpenModel('anthropic/claude') && !isOpenModel(''));
@@ -539,11 +681,14 @@ try {
     check('*** the curve\'s four ends are settings: 90% / 70% right, 75% / 50% wrong ***',
       ['upEasy', 'upHard', 'downEasy', 'downHard'].map((k) => rows.find((r) => r.key === k)?.default).join() === '0.9,0.7,0.75,0.5');
     check('the writer is off by default', rows.find((r) => r.key === 'aiWrite').default === 'off');
-    const st = rows.find((r) => r.key === PERSON_START_KEY);
-    check('*** "Start games at": easy / medium / hard, easy by default, a standard row ***', st && st.default === 'easy'
-      && JSON.stringify(st.options.map((o) => o.value)) === '["easy","medium","hard"]' && st.level === 'standard', JSON.stringify(st));
-    check('...left out for a game with its own (Trivia)', !adaptiveSettings({ personStart: false }).some((r) => r.key === PERSON_START_KEY));
-    const errs = auditFields(rows, { type: 'adaptive' }).filter((f) => f.severity === 'error');
+    const st = rows.find((r) => r.key === GAME_START_KEY);
+    check('*** "Start this game at": their usual starting level (the default), very easy, easy, medium, hard; a standard row ***',
+      st && st.label === 'Start this game at' && st.default === START_USUAL
+      && JSON.stringify(st.options.map((o) => o.value)) === '["usual","very easy","easy","medium","hard"]' && st.level === 'standard',
+      JSON.stringify(st));
+    check('...the old one-for-every-game "Start games at" row is gone', !rows.some((r) => r.key === PERSON_START_KEY));
+    check('...left out for a game with its own (Trivia)', !adaptiveSettings({ personStart: false }).some((r) => r.key === GAME_START_KEY));
+    const errs = auditFields([...rows, normalizeField(usualStartField())], { type: 'adaptive' }).filter((f) => f.severity === 'error');
     check('no audit errors', errs.length === 0, JSON.stringify(errs));
     check('no row says she / her', !/\b(she|her|hers|herself)\b/i.test(rows.map((r) => `${r.label} ${r.note || ''}`).join(' ')));
   }

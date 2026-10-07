@@ -181,8 +181,9 @@ try {
     const levelled = { ...fixturePack, items: fixturePack.items.map((it, i) => (i === 0 ? { ...it, difficulty: 'easy' }
       : (i === 3 ? { ...it, difficulty: 'hard' } : it))) };
     const onL = playableBank(levelled, m, { includeUnreviewed: true, packId: FIXTURE.id });
-    check('*** each dealt question carries its difficulty as `level` (easy 1, hard 3); none carries nothing ***',
-      onL.find((b) => b.question === Q[0].question)?.level === 1 && onL.find((b) => b.question === Q[3].question)?.level === 3
+    // (2026-10-06: very easy 1, so easy 2 and hard 4; packs.js DIFFICULTY_LEVELS.)
+    check('*** each dealt question carries its difficulty as `level` (easy 2, hard 4); none carries nothing ***',
+      onL.find((b) => b.question === Q[0].question)?.level === 2 && onL.find((b) => b.question === Q[3].question)?.level === 4
       && !('level' in onL.find((b) => b.question === Q[2].question)) && on.every((b) => !('level' in b)),
       JSON.stringify(onL.map((b) => b.level)));
   }

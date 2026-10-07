@@ -88,7 +88,7 @@ export function rig(type, { saved = {}, reducedMotion = false, rand = () => 0, s
   inst.init();
   const probe = () => inst.impl.__probe?.();
   return {
-    inst, host, bus, said, cancelled, timers, chimes, store, probe, grammars, scores, state,
+    type, inst, host, bus, said, cancelled, timers, chimes, store, probe, grammars, scores, state,
     eng: inst.impl.__engine, board: inst.impl.__board,
     last: () => said[said.length - 1] || '',
     points: () => (store.points || []),
@@ -142,6 +142,8 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
   const open = (opts = {}) => mount({ saved: { ...saved, ...(opts.saved || {}) }, store: opts.screen || liveRow(),
     extra: { ...(opts.person ? { personId: opts.person } : {}), ...(opts.people ? { makePersonState: opts.people.make } : {}) } });
   const topOf = (r) => Math.max(1, ...sessionOf(r).allQuestions(game).map((q) => Math.floor(Number(q.level) || 1)));
+  // The module's own name: the key of its own start on the person's row (adaptive_play.js openPersonLadder `gameKey`).
+  const startKey = (() => { const t = open(); const k = t.type; t.inst.destroy(); return k; })();
 
   // 1. TWO DASHBOARDS, ONE PERSON.
   {
@@ -202,17 +204,17 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
       JSON.stringify([pl, people.row('pat')?.get()]));
     t.inst.destroy();
   }
-  // 4. "START GAMES AT", kept with the person.
+  // 4. WHERE THIS GAME STARTS (2026-10-06): its own start for the person, else their usual one, kept with them.
   {
     const people = peopleRows({ 'pat:ratings': { start: 'hard' } });
     const r = open({ person: 'pat', people, screen: liveRow() });
     await sleep(30);
     const top = topOf(r);
-    check(`*** ${name}: a person whose row says "hard" starts at the hardest level (${top}), on any screen ***`,
+    check(`*** ${name}: a person whose usual start is "hard" starts at the hardest level (${top}), on any screen ***`,
       sessionOf(r).playerRow('person:pat', game).floor === top && sessionOf(r).windowFor('person:pat', game).floor === top,
       JSON.stringify(sessionOf(r).playerRow('person:pat', game)));
-    check(`${name}: ...and the menu shows it (the panel's copy is brought in line with the person's row)`,
-      r.stored().personStart === 'hard', JSON.stringify(r.stored().personStart));
+    check(`${name}: ...and the usual start is NOT copied into this game's own row (the menu still says their usual)`,
+      (r.stored().gameStart ?? 'usual') === 'usual' && !people.row('pat').get().gameStarts, JSON.stringify(r.stored()));
     r.inst.destroy();
     const pm = peopleRows({ 'pat:ratings': { start: 'medium' } });
     const m = open({ person: 'pat', people: pm, screen: liveRow() });
@@ -221,45 +223,65 @@ export async function personLadderChecks({ check, mount, name, game, saved = {} 
     check(`${name}: "medium" is the middle level (${mid})`, sessionOf(m).playerRow('person:pat', game).floor === mid,
       JSON.stringify(sessionOf(m).playerRow('person:pat', game)));
     m.inst.destroy();
+    const po = peopleRows({ 'pat:ratings': { start: 'hard', gameStarts: { [startKey]: { start: 'very easy', mark: 'own1' } } } });
+    const o = open({ person: 'pat', people: po, screen: liveRow() });
+    await sleep(30);
+    check(`*** ${name}: this game's own start for them (very easy) wins over their usual one (hard) ***`,
+      sessionOf(o).playerRow('person:pat', game).floor === 1, JSON.stringify(sessionOf(o).playerRow('person:pat', game)));
+    check(`${name}: ...and the menu shows it (the panel's copy is brought in line with the person's row)`,
+      o.stored().gameStart === 'very easy', JSON.stringify(o.stored().gameStart));
+    o.inst.destroy();
   }
-  // 5. CHANGING IT IN THE MENU starts them again there, in this game and (by the mark) in every other.
+  // 5. CHANGING IT IN THIS GAME'S MENU starts them again there, in this game only.
   {
-    const people = peopleRows({ 'pat:ratings': { ladder: { v: 1, players: { 'person:pat': { name: '',
+    const people = peopleRows({ 'pat:ratings': { start: 'easy', startMark: 'u1', ladder: { v: 1, players: { 'person:pat': { name: '',
       games: { zz_other: row(1000, 1, 7) } } }, questions: {}, extra: {} } } });
     const r = open({ person: 'pat', people, screen: liveRow() });
     await sleep(30);
     play(r, 3);
     await sleep(10);
     const top = topOf(r);
-    r.setCfg({ personStart: 'hard' });
+    r.setCfg({ gameStart: 'hard' });
     await sleep(20);
     const doc = people.row('pat').get();
     const now = sessionOf(r).playerRow('person:pat', game);
-    check(`*** ${name}: changing "Start games at" writes it to the person and starts them again there (hard) ***`,
-      doc.start === 'hard' && !!doc.startMark && now.floor === top && now.n === 3 && now.recent.length === 0,
-      JSON.stringify([doc.start, doc.startMark, now]));
-    check(`${name}: ...a game of theirs not open here is marked to start again too (it carries the old mark)`,
-      doc.ladder.players['person:pat'].games.zz_other.mark !== doc.startMark
-      && sessionOf(r).playerRow('person:pat', 'zz_other').mark === doc.startMark
-      && sessionOf(r).playerRow('person:pat', 'zz_other').n === 7, JSON.stringify(doc.ladder.players['person:pat'].games.zz_other));
+    check(`*** ${name}: "Start this game at: hard" is written to the person for THIS game and starts them again there ***`,
+      doc.gameStarts?.[startKey]?.start === 'hard' && !!doc.gameStarts[startKey].mark && now.floor === top && now.n === 3
+      && now.recent.length === 0, JSON.stringify([doc.gameStarts, now]));
+    check(`*** ${name}: ...their usual start, and another game of theirs, are left alone ***`,
+      doc.start === 'easy' && doc.startMark === 'u1' && Object.keys(doc.gameStarts).join() === startKey
+      && JSON.stringify(doc.ladder.players['person:pat'].games.zz_other) === JSON.stringify(row(1000, 1, 7)),
+      JSON.stringify({ start: doc.start, mark: doc.startMark, other: doc.ladder.players['person:pat'].games.zz_other }));
     play(r, 1);
     await sleep(10);
     check(`${name}: ...and once they answer, the row keeps the mark, so it happens once per change`,
-      at(people, 'pat')?.mark === doc.startMark && at(people, 'pat')?.n === 4, JSON.stringify(at(people, 'pat')));
-    const marks = people.row('pat').get().startMark;
-    r.setCfg({ personStart: 'hard' });
+      at(people, 'pat')?.mark === doc.gameStarts[startKey].mark && at(people, 'pat')?.n === 4, JSON.stringify(at(people, 'pat')));
+    const marks = people.row('pat').get().gameStarts[startKey].mark;
+    r.setCfg({ gameStart: 'hard' });
     await sleep(10);
-    check(`${name}: the same value again is not a second change`, people.row('pat').get().startMark === marks);
+    check(`${name}: the same value again is not a second change`, people.row('pat').get().gameStarts[startKey].mark === marks);
+    // Their usual start changed elsewhere (the People tab): this game has its own, so it stays.
+    const before = JSON.stringify(sessionOf(r).playerRow('person:pat', game));
+    people.row('pat').set({ start: 'medium', startMark: 'u2' });
+    await sleep(10);
+    check(`*** ${name}: their usual start changed: this game, with its own, is not moved ***`,
+      JSON.stringify(sessionOf(r).playerRow('person:pat', game)) === before, `${before} -> ${JSON.stringify(sessionOf(r).playerRow('person:pat', game))}`);
+    r.setCfg({ gameStart: 'usual' });
+    await sleep(20);
+    const mid = Math.max(1, Math.round((1 + top) / 2));
+    check(`*** ${name}: set back to "Their usual starting level": it starts again at the usual one (medium, ${mid}) ***`,
+      sessionOf(r).playerRow('person:pat', game).floor === mid && people.row('pat').get().gameStarts[startKey].start == null,
+      JSON.stringify([sessionOf(r).playerRow('person:pat', game), people.row('pat').get().gameStarts]));
     r.inst.destroy();
   }
   // 6. A SCREEN WITH NO PERSON: the panel's row, for its one player.
   {
-    const r = open({ saved: { personStart: 'hard' }, screen: liveRow() });
+    const r = open({ saved: { gameStart: 'hard' }, screen: liveRow() });
     await sleep(30);
-    check(`${name}: a screen with no person: the panel's "Start games at" starts its one player there`,
+    check(`${name}: a screen with no person: the panel's "Start this game at" starts its one player there`,
       sessionOf(r).playerRow('player', game).floor === topOf(r), JSON.stringify(sessionOf(r).playerRow('player', game)));
     play(r, 2);
-    r.setCfg({ personStart: 'easy' });
+    r.setCfg({ gameStart: 'easy' });
     await sleep(10);
     check(`${name}: ...and changing it starts that player again there`,
       sessionOf(r).playerRow('player', game).floor === 1 && sessionOf(r).playerRow('player', game).n === 2,
