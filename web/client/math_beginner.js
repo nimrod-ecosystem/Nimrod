@@ -182,6 +182,17 @@ const SYM = { add: '+', sub: '−', mul: '×' };
 const SUFFIX = { add: 'Add', sub: 'Sub', mul: 'Mul', count: 'Count' };
 const lineFor = (c, kind, op) => c[`${kind}${SUFFIX[op] || 'Add'}`];
 
+/**
+ * ONE DOT IS "THERE IS 1 DOT", NOT "THERE ARE 1 DOTS" (2026-10-07). Counting starts at one dot, and the line is a
+ * person's to edit (`explainCount`), so the template is left as written and the one case is mended in what it says:
+ * "are 1 dots" -> "is 1 dot", and any other "1 dots" -> "1 dot". Applied to the counting line only.
+ */
+export function oneDot(text, it) {
+  if (!it || it.op !== 'count' || Number(it.answer) !== 1) return text;
+  return String(text).replace(/\bare 1 dots\b/gi, (m) => (m[0] === 'A' ? 'Is 1 dot' : 'is 1 dot'))
+    .replace(/\b1 dots\b/gi, '1 dot');
+}
+
 /** The adapter, for a host that supplies `items` (fixed or adaptive) and an optional ask prefix. */
 export function mathAdapter({ items, prefix = () => '' } = {}) {
   return {
@@ -204,7 +215,7 @@ export function mathAdapter({ items, prefix = () => '' } = {}) {
       return '';
     },
     answer: (it) => String(it.answer),
-    explain: (it, answer, c) => fill(lineFor(c, 'explain', it.op), it),
+    explain: (it, answer, c) => oneDot(fill(lineFor(c, 'explain', it.op), it), it),
     maxEntry: () => 3,
     vocab: (it) => numberWords(Math.max(it.answer + 2, 20)),
     heardText: (v) => String(v),

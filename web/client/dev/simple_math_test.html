@@ -28,6 +28,7 @@ import '../modules/simple_math.js';
 import '../modules/algebra.js';
 import { GAME, LINES, DEFAULTS, makeProblems, padBoard, FOLDED_INTO, mathBank, MATH_LEVELS } from '../modules/simple_math.js';
 import { BEGINNER, BEGINNER_DEFAULTS_FOR_MATH } from '../modules/algebra.js';
+import { mathAdapter, oneDot } from '../math_beginner.js';
 import { LADDER_KEY } from '../adaptive_play.js';
 import { UNKNOWN, FLOW_LINES, numberWord } from '../quiz_flow.js';
 import { auditFields, walkCosts } from '../settings_audit.js';
@@ -215,6 +216,35 @@ try {
       r.inst.destroy();
       return ok;
     })());
+  }
+
+  section('*** counting one dot: "There is 1 dot.", not "There are 1 dots." ***');
+  {
+    const A = mathAdapter({ items: () => [] });
+    const c = { ...DEFAULTS };
+    const one = { op: 'count', a: 1, b: 0, answer: 1 };
+    const three = { op: 'count', a: 3, b: 0, answer: 3 };
+    check('*** one dot: singular ***', A.explain(one, '1', c) === 'There is 1 dot.', A.explain(one, '1', c));
+    check('three dots: plural, as written', A.explain(three, '3', c) === 'There are 3 dots.', A.explain(three, '3', c));
+    check('a line somebody rewrote is mended the same way ("You counted 1 dots" -> "1 dot")',
+      A.explain(one, '1', { ...c, explainCount: 'You counted {answer} dots!' }) === 'You counted 1 dot!');
+    check('...and their wording otherwise left alone', A.explain(three, '3', { ...c, explainCount: 'You counted {answer} dots!' }) === 'You counted 3 dots!');
+    check('a sum that comes to 1 is not touched ("2 minus 1 is 1.")',
+      A.explain({ op: 'sub', a: 2, b: 1, answer: 1 }, '1', c) === '2 minus 1 is 1.');
+    check('oneDot leaves anything but counting one alone', oneDot('There are 1 dots.', three) === 'There are 1 dots.'
+      && oneDot('There are 1 dots.', one) === 'There is 1 dot.');
+    // On the screen and in the voice, through the real game (the rig's dice always roll lowest: one dot).
+    const r = ship({ mathLevel: 'fixed', ops: 'count', maxNumber: 5 });
+    if (r.probe().item?.a === 1) {
+      r.inst.impl.__engine.hear({ text: 'one', confidence: 0.95 });
+      await sleep(10);
+      const shown = r.host.querySelector('[data-part="explain"]')?.textContent || '';
+      check('*** in the real game, a right "one": the screen says "There is 1 dot." ***', /There is 1 dot\./.test(shown) && !/1 dots/.test(shown), shown);
+      check('...and so does the voice', r.said.some((s) => /There is 1 dot\./.test(s)) && !r.said.some((s) => /1 dots/.test(s)), r.said.join(' | '));
+    } else {
+      check('(setup) a one-dot question', false, JSON.stringify(r.probe().item));
+    }
+    r.inst.destroy();
   }
 
   section('*** MATH, AT ITS BEGINNER LEVEL ***');
