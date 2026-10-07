@@ -70,6 +70,15 @@
 //     file. Each note carries the time, the guide's place, and `context` (dashboard, the panel picked, the
 //     page PATH — never the query, which on a screen carries its key). Opened from his bottom row, the N key
 //     (a setting, argued at GUIDE_SETTINGS), or GUIDE_TOPICS.notes from a host.
+//
+// *** WRAPPING UP A WALKTHROUGH (2026-10-07, row 2.54; the logic is walkthrough_wrap.js). *** A fourth view, 'wrap',
+// from the notes ("Wrap up the walkthrough") or the guide's "Wrap up the walkthrough" step: pick which notes (since
+// "Start a walkthrough now", since the last wrap-up, today, all, or first-to-last note); the device's AI writes a
+// summary and sorts them into For chat / For Code / For Design, each line pointing at its notes (or, with no AI or by
+// choice, every note comes in unsorted); then one line at a time - keep, change, move, drop - by press, the switch
+// (every button is a stop) or voice ("Answer by voice" opens the same dictation window as Talk); then a Markdown file
+// in a folder the person picks, remembered in this browser. The review is kept on the notes' record after every
+// decision, so it can be left and picked up again. The notes themselves are never changed by any of it.
 
 import { registerModule, getManifest } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
@@ -98,6 +107,13 @@ import {
 } from '../nimrod_notes.js';
 // "Try it as someone new": notes made as the test person go to the owner's record (try_new.js argues it).
 import { openTrialNotes, TRIAL_NOTE_MARK } from '../try_new.js';
+// Wrapping up a walkthrough (2026-10-07, row 2.54): the AI's summary and three lists, reviewed together, saved as a file.
+import {
+  WRAP_LISTS, UNSORTED, UNSORTED_LABEL, listLabel, rangeChoices, suggestedRange, notesInRange, batchesOf, wrapUp, handReview,
+  reviewSteps, currentStep, progress, decide, cleanReview, finishedRecord, addFinished, parseReviewWords, REVIEW_WORDS,
+  reviewToMarkdown, walkthroughFileName, saveToFolder, rememberedFolderName,
+} from '../walkthrough_wrap.js';
+import { handleStore } from '../user_folders.js';
 
 export const GUIDE_TYPE = 'nimrod';
 export const GUIDE_SOURCE = 'nimrod-guide';     // `source` on everything he says, for the output log
@@ -205,6 +221,9 @@ const STYLE = `
 .ng-elsewhere p{margin:0}
 .ng-elsewhere b{overflow-wrap:anywhere}
 .ng-elsewhere [data-elsewhere-note]{color:var(--text-muted)}
+.ng-src p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.ng-src small,.ng-card small{color:var(--text-muted)}
+.ng-card .ng-say{margin-top:4px}
 `;
 
 registerModule(
@@ -284,6 +303,15 @@ registerModule(
     let keyWin = null;         // the window the N key is heard on
     const titleOf = (type) => getManifest(type)?.title || '';
     const scopeEl = () => mount.closest?.('.kiosk') || mount.ownerDocument;
+    // ---- wrapping up a walkthrough (2026-10-07, row 2.54; walkthrough_wrap.js) ---------------------
+    // step: 'choose' (which notes, who sorts) | 'pick-from' | 'pick-to' | 'busy' | 'review' | 'done'
+    let wrap = { step: 'choose', range: null, pickFrom: '', busy: null, editing: false, folderName: '', exportText: '' };
+    let review = null;         // the review in hand; written to the notes' record after every decision
+    let wrapAbort = null;
+    let lastWrapStep = '';     // the step last drawn (render resets the switch's scan when it changes)
+    let folders = null;        // { store, view }: where the save folder is remembered (this device) and picked
+    const walkFolders = () => folders || (folders = ctx.walkFolders
+      || { store: handleStore(), view: mount.ownerDocument.defaultView || null });
 
     const stateGet = () => { try { return ctx.state?.get?.() || {}; } catch { return {}; } };
     const stateSet = (patch) => { try { ctx.state?.set?.(patch); } catch { /* a preview with no state */ } };
@@ -298,7 +326,11 @@ registerModule(
       try { saidId = ctx.output.say(text, { source: GUIDE_SOURCE }); } catch (err) { console.error('nimrod: say', err); }
     }
     function runAct(a) {
-      if (a?.kind === 'guide') { setView(a.do); return; }   // one of his own views: nothing on the bus
+      if (a?.kind === 'guide') {   // one of his own views: nothing on the bus
+        if (a.do === 'walkstart') { startWalk(); return; }
+        setView(a.do);
+        return;
+      }
       for (const m of actMessages(a)) publish(m.topic, m.payload);
       if (a?.kind === 'game-mode') game?.act(a);
     }
@@ -523,8 +555,11 @@ registerModule(
 
     // The dictation window on the speech layer (input_speech.js `dictation: true`).
     function announceGrammar() {
+      // Reviewing a wrap-up by voice is the same dictation window (so "change it to ..." can carry any words); the
+      // review's words are listed too, for a reader of the topic (the speech layer takes any words in dictation).
+      const reviewing = view === 'wrap';
       publish(SPEECH_TOPICS.grammar, { source: AI_SOURCE, instanceId: ctx.instanceId || null,
-        open: listening && !holding && !torn, words: [], dictation: true, phase: 'chat' });
+        open: listening && !holding && !torn, words: reviewing ? [...REVIEW_WORDS] : [], dictation: true, phase: reviewing ? 'review' : 'chat' });
     }
     function armIdle() {
       clearTimeout(idleTimer);
@@ -575,6 +610,7 @@ registerModule(
       // Opened by voice: ONE utterance, then the window shuts (only what followed "ask <name>" is sent).
       if (onceOnly) stopListening(); else armIdle();
       if (as === 'note') { voiceNote(t); return; }
+      if (view === 'wrap') { reviewHeard(t, as); return; }
       // A voice "yes" confirms a waiting action only in a window somebody opened with Talk, never in one a
       // spoken "ask <name>" opened: that window is for the question.
       const waiting = as ? [] : pending();
@@ -639,12 +675,16 @@ registerModule(
     }
 
     function setView(v) {
-      if (!['guide', 'talk', 'notes'].includes(v) || v === view) return;
+      if (!['guide', 'talk', 'notes', 'wrap'].includes(v) || v === view) return;
       view = v;
       cursor = 0;
       if (v === 'talk') {
         render();
         ensureStore().then(() => { render(); if (status.state === 'unchecked') checkStatus(); });
+      } else if (v === 'wrap') {
+        stopListening();
+        render();
+        ensureStore().then(() => openWrap()).catch(() => {});
       } else {
         stopListening();
         render();
@@ -674,7 +714,8 @@ registerModule(
     function keepNote(text) {
       const c = noteContext();
       // Made while trying it as someone new: said in the note's context, so a pasted list says which ones were.
-      if (notesHome && c) c.dashboard = `${c.dashboard ? `${c.dashboard} ` : ''}${TRIAL_NOTE_MARK}`;
+      // `trial` says the same as data (2026-10-07, row 2.54 (e)), so a wrap-up can tell the AI without reading words.
+      if (notesHome && c) { c.dashboard = `${c.dashboard ? `${c.dashboard} ` : ''}${TRIAL_NOTE_MARK}`; c.trial = true; }
       const n = makeNote(text, { where: nav.current().title, context: c });
       if (!n) { notice = 'The note is empty.'; render(); return false; }
       // The owner's list as it is now (another tab of theirs may have added one), plus this.
@@ -754,6 +795,177 @@ registerModule(
       if (!root.isConnected) return;
       e.preventDefault();      // the N must not land in the note box it is about to focus
       openNotes({ focus: true });
+    }
+
+    // ---- wrapping up a walkthrough (2026-10-07, row 2.54) ----------------------------------------------
+    // The AI's summary and three lists are a layer over the notes: the notes are never changed here. The review
+    // lives on the same record as the notes (`notesSink`), written after every decision, so it can be left and
+    // picked up again on any screen the person signs into.
+    const sinkRecord = () => { try { return notesSink()?.get?.() || {}; } catch { return {}; } };
+    function keepReview(r) { review = r; notesSink()?.set({ walkReview: r }); }
+    const wrapChoices = () => { const r = sinkRecord(); return rangeChoices(notes, { walkStartedAt: r.walkStartedAt, lastWrapTo: r.lastWrapTo }); };
+    function chosenNotes() {
+      const r = wrap.range;
+      if (!r) return [];
+      return r.id === 'pick' ? notesInRange(notes, { fromId: r.fromId, toId: r.toId }) : notesInRange(notes, { from: r.from });
+    }
+    function openWrap() {
+      if (torn) return;
+      if (!review) review = cleanReview(sinkRecord().walkReview);
+      if (wrap.step !== 'busy' && !wrap.step.startsWith('pick')) {
+        wrap.step = review && !review.savedAt ? (currentStep(review) ? 'review' : 'done') : 'choose';
+      }
+      // The range offered first: the walkthrough's, else since the last wrap-up, else today, else every note.
+      if (!wrap.range || (wrap.range.id !== 'pick' && !wrapChoices().some((c) => c.id === wrap.range.id))) wrap.range = suggestedRange(wrapChoices());
+      if (wrap.step === 'review' && review) notice = review.cursor > 0 ? 'Picking up where you left off.' : notice;
+      refreshFolderName();
+      render();
+      // Opening the wrap-up is a press: which AI answers is looked up (a list of models, or Claude's status - not billed).
+      if (status.state === 'unchecked') checkStatus();
+    }
+    function refreshFolderName() {
+      rememberedFolderName(walkFolders().store).then((name) => { if (!torn && name !== wrap.folderName) { wrap.folderName = name; render(); } }).catch(() => {});
+    }
+    /** "Start a walkthrough now": its time on the record, so the wrap-up can offer "since you started". */
+    function startWalk() {
+      ensureStore().then(() => {
+        if (torn) return;
+        const at = Date.now();
+        notesSink()?.set({ walkStartedAt: at });
+        gameNote(`Started at ${stamp(at).slice(11)}. When you are done, “Wrap up the walkthrough” takes the notes from here on.`, nav.id());
+      }).catch(() => {});
+    }
+    async function startWrap({ byHand = false } = {}) {
+      const chosen = chosenNotes();
+      if (!chosen.length) { notice = 'There are no notes in that range.'; render(); return; }
+      wrap.editing = false;
+      wrap.exportText = '';
+      if (byHand) {
+        keepReview(handReview(chosen));
+        wrap.step = 'review';
+        notice = 'Every note is here as you wrote it, not sorted yet: move each one to a list, or drop it.';
+        render();
+        return;
+      }
+      await ensureStore();
+      if (status.state !== 'ok') await checkStatus();
+      if (torn) return;
+      if (status.state !== 'ok') { notice = `No AI is answering (${statusText()}). You can still sort them by hand.`; render(); return; }
+      try { wrapAbort?.abort(); } catch { /* done */ }
+      wrapAbort = new AbortController();
+      wrap.busy = { done: 0, total: batchesOf(chosen.map((note, i) => ({ n: i + 1, note }))).length };
+      wrap.step = 'busy';
+      notice = '';
+      render();
+      const res = await wrapUp(chosen, { ai: ai(), model: status.model, aiName: aiP.name, signal: wrapAbort.signal,
+        onProgress: (p) => { wrap.busy = p; render(); } });
+      wrapAbort = null;
+      wrap.busy = null;
+      if (torn) return;
+      if (!res.ok) { wrap.step = 'choose'; notice = res.cancelled ? 'Stopped. Nothing was kept.' : res.reason; render(); return; }
+      keepReview(res.review);
+      wrap.step = 'review';
+      notice = res.review.problems.join(' ');
+      render();
+      sayStep();
+    }
+    /** One decision (walkthrough_wrap.js `decide`), kept at once. False when it changed nothing. */
+    function reviewDo(action, arg) {
+      if (!review) return false;
+      const next = decide(review, action, arg);
+      if (next === review) return false;
+      wrap.editing = false;
+      keepReview(next);
+      wrap.step = currentStep(next) ? 'review' : 'done';
+      notice = '';
+      if (wrap.step === 'done') refreshFolderName();
+      render();
+      sayStep();
+      return true;
+    }
+    // Reviewing by voice, the step is read out (through the same hold as a reply, so the screen does not hear
+    // itself) - only while listening: a person reading and pressing does not need the screen talking too.
+    function sayStep() {
+      if (!listening || view !== 'wrap' || !review) return;
+      const st = currentStep(review);
+      if (!st) { speakReply('That was the last one. Save it when you are ready.'); return; }
+      speakReply(st.kind === 'summary' ? `The summary: ${review.summary.text}` : `${listLabel(st.item.list)}: ${st.item.text}`);
+    }
+    function reviewHeard(t, as) {
+      if (as === 'change') { if (!reviewDo('change', t)) render(); return; }
+      if (wrap.step !== 'review' || !review) return;
+      const p = parseReviewWords(t);
+      if (!p) {
+        notice = `Heard “${t}”. Say keep, drop, move to chat, code or design, or change it to and the new words.`;
+        render();
+        return;
+      }
+      if (p.action === 'change' && !p.text) {
+        wrap.editing = true;
+        notice = 'Say the new words, or type them.';
+        render();
+        startListening({ once: 'change' });
+        return;
+      }
+      if (p.action === 'move') { reviewDo('move', p.list); return; }
+      reviewDo(p.action, p.text);
+    }
+    const lastNoteAt = (r) => {
+      const ids = new Set(r?.noteIds || []);
+      return notes.filter((x) => ids.has(x.id)).reduce((m, x) => Math.max(m, x.at), 0);
+    };
+    const wrapMarkdown = () => reviewToMarkdown(review, notes, { aiLabel: review?.aiName || aiP.name });
+    /** A save of any kind: the file's name kept with the review, and a copy of the result on the record. */
+    function markSaved(name, line) {
+      const at = Date.now();
+      const next = { ...review, savedAs: name || review.savedAs, savedAt: at };
+      review = next;
+      notesSink()?.set({ walkReview: next, walkthroughs: addFinished(sinkRecord().walkthroughs, finishedRecord(next, { at })),
+        lastWrapTo: lastNoteAt(next) || at, walkStartedAt: 0 });
+      notice = line;
+      render();
+    }
+    async function saveWalk({ pick = false } = {}) {
+      if (!review) return;
+      const { store: st, view: v } = walkFolders();
+      const r = await saveToFolder(wrapMarkdown(), { store: st, view: v, pick, ownName: review.savedAs });
+      if (torn) return;
+      if (!r.ok) { notice = r.reason; render(); return; }
+      wrap.folderName = r.folder || wrap.folderName;
+      markSaved(r.name, `Saved as ${r.name} in the folder “${r.folder}”. This browser remembers the folder for next time.`);
+    }
+    function downloadWalk() {
+      if (!review) return;
+      const text = wrapMarkdown();
+      const name = review.savedAs || walkthroughFileName();
+      try {
+        if (typeof ctx.saveFile === 'function') ctx.saveFile(name, text, 'text/markdown');
+        else {
+          const doc = mount.ownerDocument;
+          const win = doc.defaultView;
+          const url = win.URL.createObjectURL(new win.Blob([text], { type: 'text/markdown' }));
+          const a = doc.createElement('a');
+          a.href = url; a.download = name; a.hidden = true;
+          doc.body.append(a);
+          a.click();
+          a.remove();
+          win.setTimeout(() => { try { win.URL.revokeObjectURL(url); } catch { /* gone */ } }, 10000);
+        }
+        markSaved(name, `Saved as ${name} (your browser’s downloads).`);
+      } catch (err) {
+        console.error('nimrod: save the wrap-up', err);
+        notice = 'This browser would not save a file. Copy it instead.';
+        render();
+      }
+    }
+    async function copyWalk() {
+      if (!review) return;
+      wrap.exportText = wrapMarkdown();
+      let ok = false;
+      try { await root?.ownerDocument?.defaultView?.navigator?.clipboard?.writeText(wrap.exportText); ok = true; } catch { ok = false; }
+      if (torn) return;
+      if (ok) markSaved('', 'Copied. Paste it wherever you like.');
+      else { notice = 'Select the text below and copy it.'; render(); }
     }
 
     // ---- setting the AI up ---------------------------------------------------------------------------
@@ -1097,9 +1309,163 @@ registerModule(
         <div class="ng-btns">${btnHTML('copynotes', `Copy all notes${notes.length ? ` (${notes.length})` : ''}`, 'Put every note on the clipboard, dated, to paste anywhere.', notes.length ? '' : 'disabled')}
           ${btnHTML('exportfile', 'Save as a file (.md)', 'Save every note as a Markdown file in your downloads.', notes.length ? '' : 'disabled')}</div>
         ${exportText ? `<textarea class="ng-export" data-ng-export readonly aria-label="Your notes as text">${esc(exportText)}</textarea>` : ''}
+        <div class="ng-btns">${wrapButton()}</div>
         <p class="ng-status" data-ng-kept>${esc(WHERE_KEPT[store?.kind] || '')}</p>
         ${movedNote ? `<p class="ng-status" data-ng-moved>${esc(movedNote)}</p>` : ''}
         ${noteItems(notes)}`;
+    }
+
+    // "Wrap up the walkthrough", or picking up one left half way.
+    function wrapButton() {
+      const r = review || cleanReview(sinkRecord().walkReview);
+      if (r && !r.savedAt && currentStep(r)) {
+        const p = progress(r);
+        return btnHTML('wrap', `Pick up the wrap-up (${p.done} of ${p.total} looked at)`, 'Back to going through the summary and lists, where you left off.');
+      }
+      return btnHTML('wrap', 'Wrap up the walkthrough', `${aiP.name} sums up your notes and sorts them into three lists; then you go through them together and save a file.`,
+        notes.length ? '' : 'disabled');
+    }
+
+    // THE WRAP-UP (2026-10-07, row 2.54): choose the notes and who sorts them; then one line at a time; then save.
+    function sendLine(count) {
+      let s = {};
+      try { s = ai().settings() || {}; } catch { s = {}; }
+      const local = backend !== 'claude' && isLocalAddress(s.baseUrl || DEFAULT_BASE_URL);
+      const to = backend === 'claude' ? 'Claude (made by Anthropic), through this website’s server'
+        : local ? `the AI on this computer (${hostOf(s.baseUrl || DEFAULT_BASE_URL)})` : `the AI at ${hostOf(s.baseUrl)}`;
+      return `Sorting with the AI sends only these ${count} note${count === 1 ? '' : 's'}, to ${to}${local ? ', so nothing leaves this computer' : ''}. `
+        + 'For each note: its words, when it was written, and where on the site you were (the page and what was picked on it, '
+        + 'and whether it was a test person). Not your name, and nothing else. Sorting by hand sends nothing.';
+    }
+    function cautionLine() {
+      if (backend === 'claude') return 'Claude is quick and sorts well. It is paid for with the Claude key saved for this website, within its daily limit.';
+      if (backend === 'local') return 'An AI on this computer can take several minutes and will put some lines in the wrong list. You look at every line anyway.';
+      return '';
+    }
+    function sourceHTML(ids) {
+      const num = new Map((review?.noteIds || []).map((id, i) => [id, i + 1]));
+      const byId = new Map(notes.map((x) => [x.id, x]));
+      const rows = (ids || []).map((id) => {
+        const x = byId.get(id);
+        if (!x) return `<p><b>Note ${num.get(id) || '?'}</b>: deleted since.</p>`;
+        const c = contextLine(x.context);
+        return `<p><b>Note ${num.get(id)}</b> <small>${esc(stamp(x.at))}${c ? ` · ${esc(c)}` : ''}</small><br>${esc(x.text)}</p>`;
+      }).join('');
+      return rows ? `<div class="ng-box ng-src" data-ng-source><small>From your note${ids.length === 1 ? '' : 's'}, word for word:</small>${rows}</div>` : '';
+    }
+    function wrapHTML() {
+      const n = aiP.name;
+      const p = review ? progress(review) : null;
+      const sub = { choose: 'Which notes, and who sorts them', 'pick-from': 'Pick the first note', 'pick-to': 'Pick the last note',
+        busy: `${n} is reading your notes`, review: p ? `${Math.min(review.cursor + 1, p.total)} of ${p.total} · ${p.done} looked at` : '',
+        done: 'All looked at: save it' }[wrap.step] || '';
+      const head = `<div class="ng-head"><img src="${esc(catImageURL('talking'))}" alt="">
+          <div><b>Wrap up the walkthrough</b><div class="ng-where" data-ng-wrapstep="${esc(wrap.step)}">${esc(sub)}</div></div></div>`;
+      // While reviewing these go LAST, so a switch's scan starts on Keep and stays there line after line.
+      const nav = `<div class="ng-btns">${btnHTML('notes', '‹ Your notes', 'Back to your notes. Nothing here is lost: the review is kept as it is.')}
+          ${btnHTML('guide', 'The guide', 'Back to the guide’s choices.')}</div>`;
+      const note = notice ? `<p class="ng-status" data-ng-notice role="status">${esc(notice)}</p>` : '';
+      if (wrap.step === 'busy') {
+        const b = wrap.busy || { done: 0, total: 1 };
+        return `${head}${nav}<p class="ng-status" data-ng-wrapbusy role="status">Reading your notes: part ${Math.min(b.done + 1, b.total)} of ${b.total}…`
+          + `${backend === 'local' ? ' An AI on this computer can take a few minutes for each part.' : ''}</p>
+          <div class="ng-btns">${btnHTML('wrapstop', 'Stop', 'Stop sorting. Nothing is kept; your notes are untouched.')}</div>${note}`;
+      }
+      if (wrap.step === 'pick-from' || wrap.step === 'pick-to') {
+        const from = wrap.step === 'pick-to' ? notes.findIndex((x) => x.id === wrap.pickFrom) : 0;
+        const list = notes.slice(Math.max(0, from)).slice().reverse();
+        const doWhat = wrap.step === 'pick-from' ? 'wrapfrom' : 'wrapto';
+        const label = wrap.step === 'pick-from' ? 'Start here' : 'End here';
+        return `${head}${nav}<p class="ng-status">${wrap.step === 'pick-from' ? 'Press “Start here” on the first note of the walkthrough (newest at the top).' : 'Press “End here” on the last note, or take every note up to the newest.'}</p>
+          <div class="ng-btns">${wrap.step === 'pick-to' ? btnHTML('wrapto', 'Up to the newest note', 'Every note from the first one you picked to the newest.', 'data-ng-id=""') : ''}
+            ${btnHTML('wrapcancelpick', 'Cancel', 'Back without picking.')}</div>
+          <ul class="ng-notes" data-ng-picklist>${list.map((x) => `<li><small>${esc(stamp(x.at))}${x.where ? ` · ${esc(x.where)}` : ''}</small>
+            <div>${esc(x.text.length > 240 ? `${x.text.slice(0, 239)}…` : x.text)}</div>${btnHTML(doWhat, label, `${label}: the note of ${stamp(x.at)}.`, `data-ng-id="${esc(x.id)}"`)}</li>`).join('')}</ul>`;
+      }
+      if (wrap.step === 'review' && review) {
+        const st = currentStep(review);
+        if (!st) return `${head}${nav}${note}`;
+        const fromAI = review.by === 'ai';
+        let card = '';
+        let src = '';
+        let moves = '';
+        if (st.kind === 'summary') {
+          const s = review.summary;
+          card = `<div class="ng-card" data-ng-step="summary"><small>The summary, written by ${esc(review.aiName || n)} (the AI)${s.state !== 'open' ? ` · ${s.state === 'dropped' ? 'dropped' : (s.text !== s.was ? 'changed' : 'kept')}` : ''}</small>
+            <p class="ng-say" data-ng-line>${esc(s.text)}</p></div>`;
+          src = `<p class="ng-status">It is about notes 1 to ${review.noteIds.length}; each line after this shows the note it came from.</p>`;
+        } else {
+          const i = st.item;
+          const mark = i.state === 'open' ? '' : ` · ${i.state === 'dropped' ? 'dropped' : [i.text !== i.was && 'changed', i.list !== i.wasList && 'moved', 'kept'].filter(Boolean).join(', ')}`;
+          card = `<div class="ng-card" data-ng-step="item" data-ng-list="${esc(i.list)}"><small>${esc(listLabel(i.list))} · ${fromAI && !i.left ? `written by ${esc(review.aiName || n)} (the AI)` : 'your note’s own words'}${mark}</small>
+            <p class="ng-say" data-ng-line>${esc(i.text)}</p>
+            ${i.unanchored ? '<p class="ng-warn" data-ng-unanchored>The AI named no note for this line: check it against your notes, or drop it.</p>' : ''}
+            ${i.left && fromAI ? '<p class="ng-status" data-ng-left>The AI did not sort this note, so here are its own words.</p>' : ''}</div>`;
+          src = sourceHTML(i.notes);
+          moves = WRAP_LISTS.filter((l) => l.id !== i.list).map((l) => btnHTML('wrapmove', `Move to ${esc(l.label)}`, `Put this line in ${l.label}: ${l.help}.`, `data-ng-id="${esc(l.id)}"`)).join('');
+        }
+        const edit = wrap.editing ? `<div class="ng-draft" data-ng-wrapedit><label class="ng-status" for="ng-f-wrapedit">The new words</label>
+            <textarea id="ng-f-wrapedit" data-ng-field="wrapedit">${esc(st.kind === 'summary' ? review.summary.text : st.item.text)}</textarea>
+            <div class="ng-btns">${btnHTML('wrapsavechange', 'Save the change', 'Keep this line with the new words.')}${btnHTML('wrapcanceledit', 'Cancel', 'Leave the line as it was.')}</div></div>` : '';
+        return `${head}${card}${src}${edit}
+          <div class="ng-btns" data-ng-decide>${btnHTML('wrapkeep', 'Keep', 'Keep it as it is.')}
+            ${wrap.editing ? '' : btnHTML('wrapchange', 'Change', 'Change the words.')}${moves}
+            ${btnHTML('wrapdrop', 'Drop', 'Leave it out of the file. Your note itself is not touched.')}</div>
+          <div class="ng-btns">${btnHTML('wrapprev', '‹ Previous', 'Back one line.', review.cursor > 0 ? '' : 'disabled')}
+            ${btnHTML('wrapnext', 'Skip for now', 'On to the next line; this one waits.')}
+            ${btnHTML('listen', listening ? (nextAs === 'change' ? 'Listening for the new words… press to stop' : 'Listening… press to stop') : 'Answer by voice',
+              listening ? 'Stop listening.' : 'Say keep, drop, move to chat, code or design, or change it to and the new words.', `aria-pressed="${listening}"`)}</div>
+          <p class="ng-status" data-ng-voicetip>${listening ? 'Say keep, drop, move to chat, code or design, or “change it to” and the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”, then say keep, drop, move to …, or change it to ….'}</p>
+          ${listenHint ? `<p class="ng-status" data-ng-listenhint>${esc(listenHint)}</p>` : ''}
+          ${note}
+          <div class="ng-btns">${btnHTML('wrapnew', 'Start a new wrap-up', 'Choose notes again. This review is replaced only when the new one is made.')}</div>
+          ${nav}`;
+      }
+      if (wrap.step === 'done' && review) {
+        const counts = WRAP_LISTS.map((l) => `${l.label}: ${review.items.filter((i) => i.list === l.id && i.state !== 'dropped').length}`).join(' · ');
+        const uns = review.items.filter((i) => i.list === UNSORTED && i.state !== 'dropped').length;
+        const folder = wrap.folderName;
+        return `${head}${nav}<p class="ng-status" data-ng-wrapdone>All looked at. ${review.items.length} line${review.items.length === 1 ? '' : 's'}: ${p.kept} kept (${p.changed} changed, ${p.moved} moved), ${p.dropped} dropped.${review.summary ? ` The summary: ${review.summary.state === 'dropped' ? 'dropped' : (review.summary.text !== review.summary.was ? 'changed' : 'kept')}.` : ''}</p>
+          <p class="ng-status">${esc(counts)}${uns ? ` · ${UNSORTED_LABEL}: ${uns}` : ''}</p>
+          ${review.problems?.length ? `<ul class="ng-lines">${review.problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+          <p class="ng-status">The file has the summary, the three lists with the note each line came from, and every note word for word.</p>
+          <div class="ng-btns" data-ng-save>${btnHTML('wrapsave', folder ? `Save in “${esc(folder)}”` : 'Save in a folder…', folder ? `Saves the file in ${folder}, the folder this browser remembers.` : 'Pick a folder to save it in; this browser remembers it for next time.')}
+            ${folder ? btnHTML('wrappickfolder', 'Choose a different folder', 'Pick another folder to save it in, and remember that one.') : ''}
+            ${btnHTML('wrapdownload', 'Download it instead', 'Save the file in your browser’s downloads.')}
+            ${btnHTML('wrapcopy', 'Copy it', 'Put the whole file on the clipboard, to paste anywhere.')}</div>
+          ${review.savedAs ? `<p class="ng-status" data-ng-savedas>Saved as ${esc(review.savedAs)}.</p>` : ''}
+          ${note}
+          ${wrap.exportText ? `<textarea class="ng-export" data-ng-wrapexport readonly aria-label="The wrap-up as text">${esc(wrap.exportText)}</textarea>` : ''}
+          <div class="ng-btns">${btnHTML('wrapback', '‹ Back to the review', 'Look at the lines again.')}
+            ${btnHTML('wrapnew', 'Start a new wrap-up', 'Choose notes again.')}</div>`;
+      }
+      // choose
+      const choices = wrapChoices();
+      const r = wrap.range;
+      const chosen = chosenNotes();
+      const unfinished = review && !review.savedAt && currentStep(review);
+      const noAI = status.state === 'none' || status.state === 'needs-model';
+      const rangeBtns = choices.map((c) => btnHTML('wraprange', `${esc(c.label)}: ${c.count}`, `Wrap up these ${c.count} notes.`,
+        `data-ng-id="${esc(c.id)}" aria-pressed="${r?.id === c.id}"`)).join('');
+      return `${head}${nav}
+        ${notes.length ? '' : '<p class="ng-status">There are no notes yet. Make some on your walk (press N, or say the wake phrase and “make a note”), then come back.</p>'}
+        ${unfinished ? `<div class="ng-btns">${btnHTML('wrapresume', `Pick up the review you were doing (${progress(review).done} of ${progress(review).total} looked at)`, 'Back to it, where you left off.')}</div>
+          <p class="ng-status">Starting a new one replaces that review.</p>` : ''}
+        ${review && review.savedAt ? `<div class="ng-btns">${btnHTML('wrapreopen', `Open the last wrap-up again${review.savedAs ? ` (${esc(review.savedAs)})` : ''}`, 'Look at it again, or save it again.')}</div>` : ''}
+        ${notes.length ? `<p class="ng-status">Which notes:</p>
+        <div class="ng-btns" data-ng-ranges>${rangeBtns}
+          ${btnHTML('wrappick', `Pick the first and last note${r?.id === 'pick' ? `: ${chosen.length}` : ''}`, 'Choose exactly where the walkthrough starts and ends.', `aria-pressed="${r?.id === 'pick'}"`)}</div>
+        <p class="ng-status" data-ng-chosen>${chosen.length} note${chosen.length === 1 ? '' : 's'} chosen.</p>
+        <div class="ng-box" data-ng-wrapai>
+          <p class="ng-status" data-ng-status>Sorting with: ${esc(statusText())}</p>
+          ${backendRow()}
+          ${cautionLine() ? `<p class="ng-status">${esc(cautionLine())}</p>` : ''}
+          <p class="ng-status" data-ng-sendline>${esc(sendLine(chosen.length))}</p>
+        </div>
+        ${noAI ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
+        <div class="ng-btns">${btnHTML('wrapgo', `Sort them with ${esc(n)}`, `${n} writes a short summary and sorts the notes into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`, chosen.length ? '' : 'disabled')}
+          ${btnHTML('wraphand', 'Sort them by hand', 'No AI: every note comes in as it is, and you put each one in a list.', chosen.length ? '' : 'disabled')}</div>` : ''}
+        ${note}`;
     }
 
     function talkHTML(node) {
@@ -1177,7 +1543,10 @@ registerModule(
       // The note being edited is the draft itself (an action adding a line appends to what was typed).
       if ('draft' in kept && draft && !draft.busy) draft.text = kept.draft;
       delete kept.draft;
-      root.innerHTML = `${view === 'talk' ? talkHTML(node) : view === 'notes' ? notesHTML() : guideHTML(node)}
+      // A new step of the wrap-up starts the switch's scan from its first button (Keep, while reviewing).
+      const stepNow = view === 'wrap' ? wrap.step : '';
+      if (stepNow !== lastWrapStep) { cursor = 0; lastWrapStep = stepNow; }
+      root.innerHTML = `${view === 'talk' ? talkHTML(node) : view === 'notes' ? notesHTML() : view === 'wrap' ? wrapHTML() : guideHTML(node)}
         <div class="ng-info" data-ng-info data-hover-ignore role="status" aria-live="polite" ${prefs.hover ? '' : 'hidden'}>
           <b data-ng-info-title></b><span data-ng-info-text>${esc(INFO_IDLE)}</span></div>`;
       for (const el of root.querySelectorAll('[data-ng-field]')) {
@@ -1204,7 +1573,9 @@ registerModule(
         case 'tutorial': return 'Goes to the tutorial dashboard, where Nimrod and the settings always are.';
         case 'game-mode': return MODE_HELP[a.mode] || '';
         case 'guide': return a.do === 'notes' ? 'Opens your notes: write one, copy them all, or save them as a file.'
-          : `Talk it over with ${aiP.name}, typed or spoken.`;
+          : a.do === 'wrap' ? `${aiP.name} sums up your notes and sorts them into three lists; then you go through them together and save a file.`
+            : a.do === 'walkstart' ? 'Keeps the time now, so the wrap-up can take just the notes from here on. Nothing is sent.'
+              : `Talk it over with ${aiP.name}, typed or spoken.`;
         default: return '';
       }
     }
@@ -1215,6 +1586,32 @@ registerModule(
         case 'guide': setView('guide'); return;
         case 'notes': openNotes(); return;
         case 'savequick': saveQuick(); return;
+        // the wrap-up (2026-10-07, row 2.54)
+        case 'wrap': setView('wrap'); return;
+        case 'wraprange': { const c = wrapChoices().find((x) => x.id === id); if (c) { wrap.range = { id: c.id, from: c.from }; notice = ''; render(); } return; }
+        case 'wrappick': wrap.step = 'pick-from'; notice = ''; render(); return;
+        case 'wrapfrom': if (notes.some((x) => x.id === id)) { wrap.pickFrom = id; wrap.step = 'pick-to'; render(); } return;
+        case 'wrapto': wrap.range = { id: 'pick', fromId: wrap.pickFrom, toId: id || (notes.at(-1)?.id || '') }; wrap.step = 'choose'; render(); return;
+        case 'wrapcancelpick': wrap.step = 'choose'; render(); return;
+        case 'wrapgo': startWrap(); return;
+        case 'wraphand': startWrap({ byHand: true }); return;
+        case 'wrapstop': try { wrapAbort?.abort(); } catch { /* done */ } return;
+        case 'wrapresume': if (review) { wrap.step = currentStep(review) ? 'review' : 'done'; notice = ''; render(); } return;
+        case 'wrapreopen': if (review) { wrap.step = 'done'; notice = ''; refreshFolderName(); render(); } return;
+        case 'wrapnew': wrap.step = 'choose'; wrap.editing = false; notice = ''; if (listening) stopListening(); render(); return;
+        case 'wrapkeep': reviewDo('keep'); return;
+        case 'wrapdrop': reviewDo('drop'); return;
+        case 'wrapmove': reviewDo('move', id); return;
+        case 'wrapprev': reviewDo('prev'); return;
+        case 'wrapnext': reviewDo('next'); return;
+        case 'wrapback': if (review) { reviewDo('goto', Math.max(0, reviewSteps(review).length - 1)); } return;
+        case 'wrapchange': wrap.editing = true; render(); focusOn('wrapedit'); return;
+        case 'wrapcanceledit': wrap.editing = false; if (nextAs === 'change') nextAs = null; render(); return;
+        case 'wrapsavechange': { const ta = root?.querySelector('[data-ng-field="wrapedit"]'); if (!reviewDo('change', ta ? ta.value : '')) { notice = 'The new words are empty.'; render(); } return; }
+        case 'wrapsave': saveWalk(); return;
+        case 'wrappickfolder': saveWalk({ pick: true }); return;
+        case 'wrapdownload': downloadWalk(); return;
+        case 'wrapcopy': copyWalk(); return;
         case 'exportfile': exportFile(); return;
         case 'detect': detectOllama(); return;
         case 'stopdetect': try { detectAbort?.abort(); } catch { /* done */ } return;
@@ -1396,6 +1793,7 @@ registerModule(
         try { inflight?.abort(); } catch { /* done */ }
         try { detectAbort?.abort(); } catch { /* done */ }
         try { helloAbort?.abort(); } catch { /* done */ }
+        try { wrapAbort?.abort(); } catch { /* done */ }
         try { keyWin?.removeEventListener('keydown', onWindowKey); } catch { /* gone */ }
         try { focusWatch?.disconnect(); } catch { /* gone */ }
         try { game?.destroy(); } catch { /* gone */ }
@@ -1417,7 +1815,8 @@ registerModule(
         view, listening, holding, thinking, nextAs, onceOnly, status: { ...status }, ai: { ...aiP }, pending: pending(),
         log: chat.log(), notes: notes.map((x) => ({ ...x })), draft: draft ? { ...draft } : null, notice, listenHint,
         storeKind: store?.kind || null, detect: detect ? { ...detect } : null, hello: hello ? { ...hello } : null,
-        otherOpen, lastOther, context: noteContext(), backend, claudeCheck: claudeCheck ? { ...claudeCheck } : null }),
+        otherOpen, lastOther, context: noteContext(), backend, claudeCheck: claudeCheck ? { ...claudeCheck } : null,
+        wrap: { ...wrap }, review: review ? JSON.parse(JSON.stringify(review)) : null }),
       // For the suite: wait until every message sent so far is answered.
       __settled: () => sendChain,
     };

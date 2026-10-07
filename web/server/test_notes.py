@@ -334,6 +334,9 @@ section("the privacy page")
 d = c.get("/api/what-we-store").json()
 blob = repr(d)
 check("the state row's description mentions the name you sign notes with", "sign notes" in blob, blob[:300])
+# 2026-10-07 (row 2.54): the guide's notes and the walkthrough wrap-up are said, with what goes to the AI.
+check("...and the guide's notes, the walkthrough wrap-up, and that only the chosen notes go to the AI",
+      "Nimrod guide" in blob and "wrap up a walkthrough" in blob and "sends only the notes you chose" in blob, blob[:300])
 
 try:  # the throwaway database; a held SQLite file on Windows is left for the OS to clear
     import shutil

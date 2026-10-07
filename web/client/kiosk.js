@@ -1378,7 +1378,12 @@ export async function mountKiosk(root, {
     personKnown,
     rootBus: bus, instanceId: mod.id,
     // What a note made in Nimrod's notes says about where it was made (modules/nimrod.js noteContext).
-    noteContext: () => ({ dashboard: arr.profile()?.name || null }),
+    // `person` (2026-10-07, row 2.54): who this screen is for, when it knows (the people bar's name).
+    noteContext: () => {
+      let person = null;
+      try { person = (whoState && whoState.name) || null; } catch { person = null; }
+      return { dashboard: arr.profile()?.name || null, person };
+    },
     // The hosting page's word for the person looking (the `personHost` option): embedded only.
     personHost: embedded && personHost && typeof personHost === 'object' ? personHost : null,
     // *** THE OUTPUT BUS, WHICH THE KIOSK DID NOT HAVE. *** Exactly the gap input_runtime.js

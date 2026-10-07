@@ -131,6 +131,8 @@ export const SUITES = [
   'nimrod_ai',
   // 2026-10-04: "Try it as someone new" - a test person, fresh; Start over; Back to me; notes kept; Home in a frame.
   'try_new',
+  // 2026-10-07 (row 2.54): wrap up a walkthrough - the AI's summary and three lists, reviewed one line at a time, saved.
+  'walkthrough_wrap',
   // 2026-10-04: "Your people" - the landing as a very simple profile page; Nimrod at the bottom; the screen variant.
   'people_page',
   // 2026-10-04: "Edit my page" - Your people as sections you add, remove and move; About me and boxes from the library.

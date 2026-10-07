@@ -211,7 +211,7 @@ try {
       && /N key/.test(walk.say) && /save them as a file/.test(walk.say) && /Nothing is sent anywhere by itself/.test(walk.say)
       && walk.acts.some((a) => a.kind === 'guide' && a.do === 'notes'));
     check('...and short (Mike will read it when he is up): under 90 words', walk.say.split(/\s+/).length < 90, walk.say.split(/\s+/).length);
-    check('a guide act says nothing on the bus (it is one of his own views)', J(actMessages({ kind: 'guide', do: 'notes' })) === '[]' && J(GUIDE_DOS) === J(['talk', 'notes']));
+    check('a guide act says nothing on the bus (it is one of his own views)', J(actMessages({ kind: 'guide', do: 'notes' })) === '[]' && J(GUIDE_DOS) === J(['talk', 'notes', 'wrap', 'walkstart']));
     const bad = clone(GUIDE_NODES);
     bad.theme.choices[0].keep = true;
     bad['ai-name'].form = 'ai-nope';
