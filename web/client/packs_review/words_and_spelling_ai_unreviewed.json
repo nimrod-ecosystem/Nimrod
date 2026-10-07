@@ -116,6 +116,7 @@
       "correct": "Friend",
       "difficulty": "very easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Friend is spelled F-R-I-E-N-D.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/friend",
@@ -206,6 +207,7 @@
       "correct": "Because",
       "difficulty": "easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Because is spelled B-E-C-A-U-S-E.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/because",
@@ -275,6 +277,7 @@
       "correct": "Beautiful",
       "difficulty": "easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Beautiful has 'beau' at the start and one L at the end.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/beautiful",
@@ -321,6 +324,7 @@
       "correct": "Tomorrow",
       "difficulty": "easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Tomorrow has one M and two Rs.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/tomorrow",
@@ -367,6 +371,7 @@
       "correct": "Library",
       "difficulty": "easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Library has an R after the B: li-BRAR-y.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/library",
@@ -413,6 +418,7 @@
       "correct": "Calendar",
       "difficulty": "easy",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Calendar ends in -dar.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/calendar",
@@ -482,6 +488,7 @@
       "correct": "Necessary",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Necessary has one C and two Ss.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/necessary",
@@ -505,6 +512,7 @@
       "correct": "Separate",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "There's 'a rat' in sep-A-RAT-e.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/separate",
@@ -574,6 +582,7 @@
       "correct": "Rhythm",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Rhythm has no A, E, I, O or U: R-H-Y-T-H-M.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/rhythm",
@@ -621,6 +630,7 @@
       "correct": "Embarrass",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Embarrass has two Rs and two Ss.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/embarrass",
@@ -667,6 +677,7 @@
       "correct": "Definitely",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Definitely has 'finite' inside it: de-FINITE-ly.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/definitely",
@@ -737,6 +748,7 @@
       "correct": "Occasion",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Occasion has two Cs and one S.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/occasion",
@@ -760,6 +772,7 @@
       "correct": "Restaurant",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Restaurant ends in -aurant.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/restaurant",
@@ -806,6 +819,7 @@
       "correct": "Recommend",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Recommend has one C and two Ms.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/recommend",
@@ -852,6 +866,7 @@
       "correct": "February",
       "difficulty": "medium",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "February has an R after the B: Feb-RU-ary.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/February",
@@ -921,6 +936,7 @@
       "correct": "Accommodate",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Accommodate has two Cs and two Ms.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/accommodate",
@@ -967,6 +983,7 @@
       "correct": "Conscientious",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Conscientious is 'conscien' (from conscience) plus -tious.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/conscientious",
@@ -1014,6 +1031,7 @@
       "correct": "Millennium",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Millennium has two Ls and two Ns.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/millennium",
@@ -1060,6 +1078,7 @@
       "correct": "Liaison",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Liaison has an I on both sides of the A: li-AI-son.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/liaison",
@@ -1106,6 +1125,7 @@
       "correct": "Mischievous",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Mischievous has three syllables: MIS-chi-vous.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/mischievous",
@@ -1153,6 +1173,7 @@
       "correct": "Bureaucracy",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Bureaucracy starts with 'bureau'.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/bureaucracy",
@@ -1199,6 +1220,7 @@
       "correct": "Questionnaire",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Questionnaire has two Ns.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/questionnaire",
@@ -1245,6 +1267,7 @@
       "correct": "Pharaoh",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Pharaoh ends with -aoh.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/pharaoh",
@@ -1315,6 +1338,7 @@
       "correct": "Onomatopoeia",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Onomatopoeia ends in -poeia.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/onomatopoeia",
@@ -1362,6 +1386,7 @@
       "correct": "Handkerchief",
       "difficulty": "hard",
       "category": "Words & spelling",
+      "spell": true,
       "explain": "Handkerchief keeps the D: hand-ker-chief.",
       "source": {
         "url": "https://en.wiktionary.org/wiki/handkerchief",

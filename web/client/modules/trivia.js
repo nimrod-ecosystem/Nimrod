@@ -88,6 +88,8 @@ import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '..
 import { answerMarkHtml } from '../answer_mark.js';
 import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_TOPIC,
          REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, sourceHtml } from '../pack_reviews.js';
+import { linksOpenHere } from '../page_links.js';
+import { spellPaceField, spellPace, spellsAloud, spellAloud, spelledOptions, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
 
 export const GAME = 'trivia';
 
@@ -173,6 +175,8 @@ export const DEFAULTS = {
   sayChoice: true,
   // "Say where the answer comes from" — OFF, argued at its SETTINGS row.
   speakSource: false,
+  // A spelling question's answers, read letter by letter: how fast (2026-10-07; argued in ../spell_aloud.js).
+  spellPace: SPELL_PACE_DEFAULT,
 };
 
 // `question | answer | wrong | wrong | wrong | topic?`
@@ -236,6 +240,8 @@ export function packToTriviaBank(pack) {
     // difficultyLevel: very easy 1, easy 2, medium 3, hard 4). Only when it has one; see QUESTIONS AT EVERY LEVEL below.
     const level = difficultyLevel(it.difficulty);
     if (level) row.level = level;
+    // `spell` (2026-10-07, ../spell_aloud.js): its answers are spellings, read aloud letter by letter.
+    if (it.spell === true) row.spell = true;
     return row;
   });
 }
@@ -464,9 +470,10 @@ export function makeQuestion(item, bank, { choices = DEFAULTS.choices, rand = Ma
     : (Array.isArray(item.review?.sources) ? item.review.sources : []);
   // `explain` (2026-10-04): why the answer is right, for "Say why after the answer" — a pack item's (packToTriviaBank)
   // or a review-pack item's (playableBank). '' for a written bank row, which shows nothing.
+  // `spell` (2026-10-07): a spelling question, whose answers the voice reads letter by letter (SPEECH).
   return { question: item.question, answer: item.answer, options,
            correctIndex: options.indexOf(item.answer), source: item.source || '', sources,
-           explain: answerExplainText(item.explain) };
+           explain: answerExplainText(item.explain), spell: spellsAloud(item) };
 }
 
 const esc = (s) => String(s == null ? '' : s)
@@ -651,6 +658,9 @@ const SETTINGS = [
     onLabel: 'On', offLabel: 'Off',
     note: 'Reads the source line under the answer aloud, after why.',
     appliesWhen: (v) => v.speak !== false && answerSourceMode(v) !== 'off' },
+  // A spelling question's answers are read letter by letter (Mike, 2026-10-07); how fast is a row because the
+  // right gap depends on the listener. Advanced: the default is the way a person spells aloud. ../spell_aloud.js.
+  spellPaceField({ appliesWhen: (v) => v.speak !== false }),
   // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
   // rather than buried. A microphone that a person cannot easily find the switch for is a
   // microphone they cannot easily turn off. ***
@@ -921,6 +931,8 @@ registerModule(
     //   * A RIGHT ANSWER: "Correct.", then the explanation ("Say why after the answer"), then — only with "Say
     //     where the answer comes from" on — the source line as shown.
     //   * A CONTEST: the thank-you on screen. A person who cannot read pressed it and should hear it landed.
+    //   * A SPELLING QUESTION (`spell: true` on the pack item, 2026-10-07): every answer above is read letter by
+    //     letter, not said, until the answer is shown; then "Correct." and the word. ../spell_aloud.js.
     //
     // *** NOTHING IS SAID UNTIL SOMEBODY FIRST PRESSES OR TAPS THE GAME — ITS "START". *** game_start.js's
     // reason, exactly: a game that talks by itself talks to an empty room, and a home screen comes up at boot
@@ -970,12 +982,23 @@ registerModule(
     }
     // The question and the answers still in play (one already guessed is out of play, and out of the read).
     // With more than one player, "Ann, your turn." first (the ladder's own line, as in the other quiz games).
-    const questionLines = () => (q ? [levelled && ladder ? ladder.askPrefix() : '', q.question,
-      ...q.options.filter((_, i) => !misses.includes(i))] : []);
-    const litLine = () => (q && cfg.sayChoice !== false ? q.options[highlight] : '');
+    // *** A SPELLING QUESTION (q.spell; Mike, 2026-10-07): EACH ANSWER IS SPELLED, NOT SAID. *** "Saying the word
+    // makes it obvious bc the answer is the one it pronounces right." Letter by letter at the row's pace, "Or"
+    // between them, while the question is open: here and where the scan lands. ../spell_aloud.js argues it.
+    const spoken = (o) => (q && q.spell ? spellAloud(o, { pace: spellPace(cfg) }) : o);
+    const questionLines = () => {
+      if (!q) return [];
+      const open = q.options.filter((_, i) => !misses.includes(i));
+      return [levelled && ladder ? ladder.askPrefix() : '', q.question,
+        ...(q.spell ? spelledOptions(open, { pace: spellPace(cfg) }) : open)];
+    };
+    const litLine = () => (q && cfg.sayChoice !== false ? spoken(q.options[highlight]) : '');
     const AFTER_LINES = ['Next question', 'I think this question is wrong'];
     function rightLines() {
       const lines = ['Correct.'];
+      // Once the answer is on screen nothing is left to give away: a spelling question's answer is said as the
+      // word it is ("Correct. Rhythm."), which is what the letters were spelling.
+      if (q.spell) lines.push(q.answer);
       if (reviewMark === 'wrong') return lines;
       if (answerExplainOn(cfg)) lines.push(q.explain);
       if (cfg.speakSource === true) {
@@ -1087,8 +1110,25 @@ registerModule(
     // NOT WHILE THE REVIEW STRIP IS SHOWING: the strip already names the source, in full, in every state — the
     // same words twice in one panel is clutter, and the strip's version is the one with the reviewer's detail.
     function answerSourceLine() {
-      if (!q || q.reviewing) return '';
-      return answerSourceHtml(q.sources, { mode: answerSourceMode(cfg), onScreen: ctx.isScreen === true });
+      if (!q || q.reviewing || answered === null) return '';
+      return answerSourceHtml(q.sources, { mode: answerSourceMode(cfg), onScreen: !linksHere });
+    }
+
+    // *** WHERE A SOURCE IS A LINK (Mike, 2026-10-07: "something I can click on that opens it in a new
+    // window"). *** Off a screen, always. On a screen page, only when page_links.js `linksOpenHere` says this
+    // browser is signed in with the screen's account AND is an ordinary window — Mike's computer showing a
+    // screen page, not a care-room kiosk, which keeps the words and the address (and a code to scan in the
+    // strip). Starts as "not here" on a screen and is redrawn once the answer comes back. `ctx.pageLinks`
+    // ({ signedIn, browserWindow }) lets a harness answer for the browser.
+    let linksHere = ctx.isScreen !== true;
+    function checkLinksHere() {
+      if (linksHere) return;
+      const seam = ctx.pageLinks || {};
+      Promise.resolve(linksOpenHere({ isScreen: true,
+        ...(typeof seam.signedIn === 'function' ? { signedIn: seam.signedIn } : {}),
+        ...(typeof seam.browserWindow === 'function' ? { browserWindow: seam.browserWindow } : {}) }))
+        .then((yes) => { if (yes === true && !dead && !linksHere) { linksHere = true; if (q) render(); } })
+        .catch(() => { /* stays as words and an address */ });
     }
 
     // *** "SAY WHY AFTER THE ANSWER" (2026-10-04; ../answer_source.js). *** The item's own explanation, between
@@ -1110,14 +1150,22 @@ registerModule(
     // player's own, shorter line after the answer is answerSourceLine above, and steps aside for this.)
     function reviewHtml() {
       if (!q || !q.reviewing) return '';
-      // (On a real screen, ctx.isScreen, a source link is plain words with its host: no stray tab. page_links.js.)
+      // (On a real screen, ctx.isScreen, a source link is plain words with its host and an address to open
+      // elsewhere — unless `linksHere`, above: a signed-in computer in an ordinary window gets the link.)
       // THE EXPLANATION, FOR THE REVIEWER: once the question is answered (it names the answer), above the source,
       // labelled — it is one of the things being checked (the fact-check pass corrected ten). Shown whatever the
       // player's "Say why after the answer" says: reviewing is opted into, and a wrong "why" taught as fact is as
       // bad as a wrong answer. The player's own line (answerExplainLine) steps aside, so it is shown once.
-      const src = (answered !== null ? answerExplainHtml(q.explain,
-        { cls: 'tv-review-explain', attr: 'data-review-explain', label: 'Explanation:' }) : '')
-        + sourceHtml(q.review?.sources, { onScreen: ctx.isScreen === true });
+      // *** THE SOURCE, TOO, ONLY ONCE THE ANSWER IS SHOWN (Mike, 2026-10-07: "Don't show the source until it
+      // says what the correct answer is ... the source gives away the answer"). *** It used to show in every
+      // state, so a reviewer could check it before answering — but the player is at the same panel, and
+      // "science.nasa.gov/jupiter" under "Which planet has the Great Red Spot?" answers it. Not after ✗ either:
+      // ✗ leaves the question open on screen for the player (reviewWrong). Before the answer the strip is
+      // "Not yet reviewed ✓ fine ✗ wrong" and nothing else.
+      const src = answered !== null
+        ? answerExplainHtml(q.explain, { cls: 'tv-review-explain', attr: 'data-review-explain', label: 'Explanation:' })
+          + sourceHtml(q.review?.sources, { onScreen: !linksHere })
+        : '';
       if (reviewMark === 'wrong') {
         return `<div class="tv-review" data-review data-review-state="wrong">
             <p class="tv-review-said" role="status">${reviewFailed
@@ -1570,7 +1618,7 @@ registerModule(
       __score: () => ({ right: rightCount, asked: askedCount }),
       __worth: (spent) => worth(spent),
       __probe: () => ({ at, answered, misses: [...misses], worth: worth(misses.length), askedAt,
-        highlight, streak, deck: deck.length, after, contested, reviewMark,
+        highlight, streak, deck: deck.length, after, contested, reviewMark, linksHere,
                         question: q ? { ...q } : null, bank: bank.length,
                         levelled, level: levelled && deck[at] ? itemLevel(deck[at]) : null }),
       __reviews: () => reviews,
@@ -1595,6 +1643,8 @@ registerModule(
         // so a returning player's first question is at their level rather than a new player's.
         // THE LEVEL FOLLOWS THE PERSON (above): the screen's person's row goes in their own `ratings_trivia`,
         // where the host has per-person rows; everything else stays on this screen's.
+        // Whether a source may be a link on this screen page (answerSourceLine, above): asked once, in the background.
+        checkLinksHere();
         ladderStore = openLadderStore(ctx, TRIVIA_LADDER_KEY);
         let store = ladderStore;
         if (typeof ctx.makePersonState === 'function') {

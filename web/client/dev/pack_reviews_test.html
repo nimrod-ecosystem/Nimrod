@@ -87,7 +87,9 @@ const handleOn = (rows, bus = null) => createPackReviews({ events: fakeLog(rows)
 
 const BANK_TEXT = 'Bank question one? | A | B | C | D\nBank question two? | E | F | G | H\nBank question three? | I | J | K | L\nBank question four? | M | N | O | P';
 // `output`: what trivia says aloud goes here (trivia.js SPEECH). Left out, it says nothing, as before.
-function rig({ rows = [], saved = {}, reviews = undefined, output = null } = {}) {
+// `isScreen` / `pageLinks` (2026-10-07): a screen page, and what its browser says about itself (trivia.js
+// `linksHere`: signed in here, and an ordinary window). Left out, as a harness leaves them out.
+function rig({ rows = [], saved = {}, reviews = undefined, output = null, isScreen = undefined, pageLinks = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const bus = createBus();
@@ -103,6 +105,8 @@ function rig({ rows = [], saved = {}, reviews = undefined, output = null } = {})
       subscribe: () => () => {}, startPolling() {}, destroy() {} }),
     ...(handle ? { makePackReviews: () => handle } : {}),
     ...(output ? { output } : {}),
+    ...(isScreen !== undefined ? { isScreen } : {}),
+    ...(pageLinks ? { pageLinks } : {}),
   });
   inst.init();
   return { inst, host, bus, handle, probe: () => inst.impl.__probe(),
@@ -328,11 +332,12 @@ try {
       return exp.length > 0 && got.length === exp.length && exp.every((s, i) => (s.url
         ? got[i].querySelector(`a[href="${s.url}"][target="_blank"]`) : got[i].textContent.toLowerCase().includes(s.ref.toLowerCase())));
     };
-    check('*** the reviewer sees THIS question\'s source in the strip (a link they can open, or the reference) ***',
-      sourceShown(), `${r.shown()} :: ${r.host.querySelector('[data-review]')?.innerHTML}`);
-    check('*** ...and only in the strip: nothing about sources in what the player reads ***',
-      r.host.querySelectorAll('[data-review-source]').length === stripSources().length
-      && !/Source:/.test([...r.host.querySelectorAll('.tv-q, .tv-opts')].map((n) => n.textContent).join(' ')));
+    // Mike, 2026-10-07: "Don't show the source until it says what the correct answer is. ... the source gives away
+    // the answer." The strip used to name the source in every state; now it waits for the answer, like the player's.
+    check('*** before the answer: NO source anywhere, the strip included (it can name the answer) ***',
+      !r.host.querySelector('[data-review-source]') && !/Where this comes from|Source:/.test(r.host.textContent)
+      && /Not yet reviewed/.test(r.host.querySelector('[data-review]')?.textContent || ''),
+      `${r.shown()} :: ${r.host.querySelector('[data-review]')?.innerHTML}`);
     check('*** the control is not a stop in the player\'s walk: next walks only the answers ***', (() => {
       const seen = new Set();
       for (let i = 0; i < 8; i++) { r.bus.publish('trivia/next'); seen.add(r.probe().highlight); }
@@ -347,8 +352,14 @@ try {
       && rows[0].data.pack === FIXTURE.id, JSON.stringify(rows));
     check('...says so quietly, and leaves the question in play', /Marked fine/.test(r.host.querySelector('[data-review]').textContent)
       && r.shown() === first && r.probe().answered === null);
-    check('the source stays in the strip after ✓', sourceShown());
-    r.answer(); r.bus.publish('trivia/next');
+    check('*** ✓ before the answer still shows no source (the question is open for the player) ***',
+      !r.host.querySelector('[data-review-source]'), r.host.querySelector('[data-review]')?.innerHTML);
+    r.answer();
+    check('*** once answered, the reviewer sees THIS question\'s source in the strip (a link they can open, or the reference) ***',
+      sourceShown(), `${r.shown()} :: ${r.host.querySelector('[data-review]')?.innerHTML}`);
+    check('*** ...and only in the strip: no second "Source:" line for the player ***',
+      r.host.querySelectorAll('[data-review-source]').length === stripSources().length && !r.host.querySelector('[data-answer-source]'));
+    r.bus.publish('trivia/next');
     check('moving on after ✓ does not write a second pass', kinds(rows).join() === 'pass');
 
     section('passing by playing through');
@@ -371,14 +382,18 @@ try {
     await sleep(10);
     check('✗ writes a flag at once', rows.at(-1).kind === 'flag' && rows.at(-1).data.question === fourth);
     check('...and offers an optional "what is wrong" note', !!r.host.querySelector('[data-review-note]'));
-    check('*** the source stays beside the note box after ✗ (what the reviewer checks it against) ***', sourceShown());
+    check('*** ✗ before the answer: still no source (✗ leaves the question open on screen for the player) ***',
+      !r.host.querySelector('[data-review-source]'), r.host.querySelector('[data-review]')?.innerHTML);
     r.host.querySelector('[data-review-note]').value = 'two of these are right';
     r.host.querySelector('[data-review-save]').click();
     await sleep(10);
     check('the note is saved against that question', rows.at(-1).kind === 'note' && rows.at(-1).data.note === 'two of these are right'
       && rows.at(-1).data.key === reviewKey(fourth, rows.at(-2).data.answer));
     check('the question stays on screen for the player (the verdict is the reviewer\'s, not theirs)', r.shown() === fourth);
-    r.answer(); r.bus.publish('trivia/next');
+    r.answer();
+    check('*** answered after ✗: the source shows in the strip (what the reviewer checks it against) ***', sourceShown(),
+      r.host.querySelector('[data-review]')?.innerHTML);
+    r.bus.publish('trivia/next');
     check('*** a flagged question is not passed by playing it through afterwards ***',
       rows.filter((e) => e.data.question === fourth).every((e) => e.kind !== 'pass'));
 
@@ -485,15 +500,65 @@ try {
     await settle(rs);
     const seen = new Set();
     let allShown = true;
+    let noneBefore = true;
     for (let i = 0; i < 10 && seen.size < 5; i++) {
       const exp = itemSources(fixturePack.items.find((it) => it.question === rs.shown())?.source);
+      if (rs.host.querySelector('[data-review-source]')) noneBefore = false;
+      rs.answer();
       const got = [...rs.host.querySelectorAll('[data-review] [data-review-source]')];
       if (!(exp.length && got.length === exp.length)) allShown = false;
       seen.add(rs.shown());
-      rs.bus.publish('trivia/skip');
+      rs.bus.publish('trivia/next');
     }
-    check('all five fixture questions show their own source line(s)', allShown && seen.size === 5, [...seen].join(' / '));
+    check('all five fixture questions show their own source line(s), once answered', allShown && seen.size === 5, [...seen].join(' / '));
+    check('*** ...and none of them before its answer ***', noneBefore);
     rs.inst.destroy();
+  }
+
+  section('*** a source on a SCREEN page: a link only where a new tab can be closed (Mike, 2026-10-07) ***');
+  {
+    // "The source wiki links should be something I can click on that opens it in a new window." He was on a screen
+    // page on his own computer. page_links.js `linksOpenHere`: signed in here AND an ordinary browser window.
+    const urlOf = (text) => itemSources(fixturePack.items.find((it) => it.question === text)?.source).filter((s) => s.url);
+    const toUrlQ = (r) => { for (let i = 0; i < 6 && !urlOf(r.shown()).length; i++) r.bus.publish('trivia/skip'); return urlOf(r.shown()).length > 0; };
+    const yes = async () => true, no = async () => false;
+    const cases = [
+      { name: 'signed in, in an ordinary window (Mike\'s computer)', links: { signedIn: yes, browserWindow: () => true }, link: true },
+      { name: 'an ordinary window, not signed in', links: { signedIn: no, browserWindow: () => true }, link: false },
+      { name: 'signed in, full-screen (a kiosk)', links: { signedIn: yes, browserWindow: () => false }, link: false },
+    ];
+    for (const c of cases) {
+      const r = rig({ rows: [], saved: { includeUnreviewed: true, showSource: 'on' }, isScreen: true, pageLinks: c.links });
+      await settle(r);
+      check(`(${c.name}: a question with a web source is up)`, toUrlQ(r), r.shown());
+      r.answer();
+      await sleep(10);
+      const strip = r.host.querySelector('[data-review]');
+      const a = strip?.querySelector('a[data-review-source-link]');
+      check(`*** ${c.name}: ${c.link ? 'a link that opens a new tab, no address to copy' : 'words and an address, NOT a link'} ***`,
+        c.link ? (!!a && a.target === '_blank' && /noopener/.test(a.rel) && a.getAttribute('href') === urlOf(r.shown())[0].url
+                  && !strip.querySelector('[data-review-source-address]') && r.probe().linksHere === true)
+          : (!a && !!strip?.querySelector('[data-review-source-address]') && r.probe().linksHere === false),
+        strip?.innerHTML);
+      r.inst.destroy();
+    }
+    {
+      // The player's own line follows the same rule (a passed question, no strip): Mike's computer gets the link.
+      const rows = Q.map((q, i) => ({ id: i + 1, kind: 'pass', data: { key: q.key, question: q.question } }));
+      for (const c of [cases[0], cases[2]]) {
+        const r = rig({ rows, saved: { includeUnreviewed: false }, isScreen: true, pageLinks: c.links });
+        await settle(r);
+        toUrlQ(r);
+        check(`(${c.name}: the player's line, before the answer: nothing)`, !r.host.querySelector('[data-answer-source]'));
+        r.answer();
+        await sleep(10);
+        const ln = r.host.querySelector('[data-answer-source]');
+        const a = ln?.querySelector('a');
+        check(`*** the player's line, ${c.name}: ${c.link ? 'a link (new tab)' : 'plain words'} ***`,
+          !!ln && (c.link ? (!!a && a.target === '_blank') : !a), ln?.outerHTML || r.host.innerHTML.slice(0, 300));
+        r.inst.destroy();
+      }
+    }
   }
 
   section('*** "Say why after the answer" while reviewing: in the strip, after the answer, once ***');

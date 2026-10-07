@@ -27,7 +27,13 @@
 //   * A NAMED REFERENCE'S NOTE IS SHOWN ("Encyclopaedia Britannica — giraffe"): there it is usually the
 //     article, which is the useful half.
 //   * ON A SCREEN (ctx.isScreen) IT IS PLAIN TEXT WITH THE HOST — a tab opened on a screen is a stray page
-//     nobody there can close (page_links.js). Off a screen it is a link that opens a new tab.
+//     nobody there can close (page_links.js). Off a screen it is a link that opens a new tab. (2026-10-07,
+//     Mike: "The source wiki links should be something I can click on that opens it in a new window.") A
+//     screen page that is really somebody's computer — signed in, in an ordinary browser window, page_links.js
+//     `canOpenHere` — gets the link too: the caller works that out and passes `onScreen: false`.
+//   * NEVER BEFORE THE ANSWER IS SHOWN (Mike, 2026-10-07: "the source gives away the answer" — a NASA page
+//     about Jupiter under a question about the Great Red Spot). This file draws what it is handed; the caller
+//     draws it only once the right answer is on screen, and the reviewer's strip follows the same rule.
 //   * AN UNTITLED LINK SHOWS ITS HOST ONLY ("klobuchar.senate.gov"), not the whole address: the reviewer's
 //     strip shows the full address because a reviewer checks it; a player is not going to read a path.
 //   * READ ALOUD ONLY BY ITS OWN ROW, OFF (2026-10-04). Trivia reads aloud now (the question, "Correct.", the

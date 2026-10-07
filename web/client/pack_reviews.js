@@ -211,6 +211,9 @@ export const sourceUrls = (sources) => (Array.isArray(sources) ? sources : []).m
  * it): the same words as plain text, NOT a link, then the address to open on a phone or computer and a code to
  * scan. `key`: the question's review key, put on each link for review_points.js. `colours`: the code's colours
  * (default: this page's theme; null draws no code).
+ * WHEN to draw it is the caller's (2026-10-07): only once the right answer is shown, because a source can name
+ * the answer. A screen page on somebody's signed-in computer in an ordinary window may pass `onScreen: false`
+ * and get a link (page_links.js `linksOpenHere`).
  */
 export function sourceHtml(sources, { cls = 'tv-review-src', onScreen = false, key = '', colours } = {}) {
   const list = Array.isArray(sources) ? sources : [];
@@ -272,6 +275,8 @@ export function playableBank(pack, map, { includeUnreviewed = false, packId = ''
     // its level like any pack question. Open ones carry it too; Trivia does not use it while reviewing.
     const level = difficultyLevel(item.difficulty);
     if (level) row.level = level;
+    // `spell` (2026-10-07, spell_aloud.js): a spelling question, its answers read aloud letter by letter.
+    if (item.spell === true) row.spell = true;
     out.push(row);
   }
   return out;

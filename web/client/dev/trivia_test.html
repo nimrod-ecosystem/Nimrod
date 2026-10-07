@@ -57,6 +57,9 @@ import { SCORE_TOPIC, SCORE_ASK_TOPIC, SCORE_SHOWN_TOPIC } from '../score_source
 import { answerSourceMode, answerSourceHtml, answerSourceText,
          answerExplainOn, answerExplainHtml, answerExplainText } from '../answer_source.js';
 import { flowSettings } from '../quiz_flow.js';
+import { spellAloud, spelledOptions, spellPace, spellsAloud, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
+import { validatePack } from '../packs.js';
+import { linksOpenHere } from '../page_links.js';
 import { createAudioBus } from '../audio_bus.js';
 import { createOutputBus } from '../output.js';
 import { createSpeechChannel } from '../output_channels.js';
@@ -94,6 +97,9 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               // `ctx.isScreen` (kiosk.js: true on a real screen). Left out unless a test sets it,
               // the way a harness or the modules page leaves it out.
               isScreen = undefined,
+              // `ctx.pageLinks` ({ signedIn, browserWindow }): what a screen page's browser says about itself, for
+              // whether a source may be a link there (trivia.js `linksHere`). Left out unless a test sets it.
+              pageLinks = null,
               // Per-stream rows, SHARED between rigs that are handed the same object — two rigs
               // with one `store` are two panels on one profile (the contests log is per profile).
               store = {},
@@ -137,6 +143,7 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     mount: host, bus, rand, recorder,
     ...(output ? { output } : {}),
     ...(isScreen !== undefined ? { isScreen } : {}),
+    ...(pageLinks ? { pageLinks } : {}),
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
     ...(personId !== undefined ? { personId } : {}),
@@ -749,7 +756,8 @@ Shared Q | Shared A` });
     };
     const line = (r) => r.host.querySelector('[data-answer-source]');
     const one = async (extra, opts = {}) => { const r = rig({ saved: { bank: [ITEM(extra)], ...(opts.saved || {}) },
-      ...(opts.isScreen !== undefined ? { isScreen: opts.isScreen } : {}) }); await sleep(20); return r; };
+      ...(opts.isScreen !== undefined ? { isScreen: opts.isScreen } : {}),
+      ...(opts.pageLinks ? { pageLinks: opts.pageLinks } : {}) }); await sleep(20); return r; };
 
     const row = (getManifest('trivia').settings || []).find((f) => f.key === 'showSource');
     check('*** the row exists, in Mike\'s words, ON by default (row and DEFAULTS agree) ***',
@@ -788,6 +796,38 @@ Shared Q | Shared A` });
         !!line(r) && !line(r).querySelector('a') && line(r).textContent.trim() === 'Source: NASA (science.nasa.gov)',
         line(r)?.outerHTML);
       r.inst.destroy();
+    }
+    {
+      // Mike, 2026-10-07, on a screen page on his own computer: "The source wiki links should be something I can
+      // click on that opens it in a new window." page_links.js: signed in here AND an ordinary browser window.
+      const yes = async () => true, no = async () => false;
+      const mine = await one({ sources: NASA }, { isScreen: true, pageLinks: { signedIn: yes, browserWindow: () => true } });
+      check('(Mike\'s computer: the browser is signed in and an ordinary window)', mine.probe().linksHere === true);
+      check('*** before the answer: still nothing, link or not ***', !line(mine));
+      answerIt(mine);
+      const a = line(mine)?.querySelector('a');
+      check('*** a screen page on a signed-in computer in an ordinary window: a link that opens a new tab ***',
+        !!a && a.getAttribute('href') === NASA[0].url && a.target === '_blank' && /noopener/.test(a.rel), line(mine)?.outerHTML);
+      mine.inst.destroy();
+      for (const [name, links] of [['full-screen (a kiosk), signed in', { signedIn: yes, browserWindow: () => false }],
+        ['an ordinary window, not signed in', { signedIn: no, browserWindow: () => true }]]) {
+        const r = await one({ sources: NASA }, { isScreen: true, pageLinks: links });
+        answerIt(r);
+        check(`*** ${name}: plain words, no link ***`, !!line(r) && !line(r).querySelector('a') && r.probe().linksHere === false,
+          line(r)?.outerHTML);
+        r.inst.destroy();
+      }
+      let asked = 0;
+      const kiosk = await one({ sources: NASA }, { isScreen: true, pageLinks: { signedIn: async () => { asked++; return true; }, browserWindow: () => false } });
+      check('a full-screen kiosk does not even ask who is signed in', asked === 0);
+      kiosk.inst.destroy();
+      check('linksOpenHere: off a screen yes; on one only signed in AND a window; a failure is no',
+        (await linksOpenHere({ isScreen: false })) === true
+        && (await linksOpenHere({ isScreen: true, signedIn: yes, browserWindow: () => true })) === true
+        && (await linksOpenHere({ isScreen: true, signedIn: no, browserWindow: () => true })) === false
+        && (await linksOpenHere({ isScreen: true, signedIn: yes, browserWindow: () => false })) === false
+        && (await linksOpenHere({ isScreen: true, signedIn: async () => { throw new Error('x'); }, browserWindow: () => true })) === false
+        && (await linksOpenHere({ isScreen: true, signedIn: yes, browserWindow: () => { throw new Error('x'); } })) === false);
     }
     {
       const r = await one({ sources: [{ url: 'https://www.klobuchar.senate.gov/public/index.cfm/2024/12/a-long-path' }] }, { isScreen: true });
@@ -1083,6 +1123,82 @@ Shared Q | Shared A` });
       r.bus.publish('trivia/next');
       check('...and a scan step says nothing', out.said.length === n, JSON.stringify(out.said.slice(n)));
       r.inst.destroy();
+    }
+
+    // ---- a spelling question: each answer spelled, not said (Mike, 2026-10-07) ----
+    // "Which spelling is right should have the audio spell out each option instead of pronouncing it. Saying the
+    // word makes it obvious bc the answer is the one it pronounces right."
+    {
+      const SPELL_WHY = 'Rhythm has no A, E, I, O or U.';
+      const SPELLQ = { question: "Which spelling is right for the word meaning 'the beat in music'?", answer: 'Rhythm',
+        wrong: ['Rythm', 'Rhythym', 'Rhytm'], explain: SPELL_WHY, spell: true };
+      const asWord = (text, o) => new RegExp(`(^|[^A-Za-z])${o}([^A-Za-z]|$)`, 'i').test(text);
+      check('spellAloud: capitals, commas by default; a space, hyphen and apostrophe said as words',
+        spellAloud('Rhythm') === 'R, H, Y, T, H, M' && spellAloud('rhythm', { pace: 'slow' }) === 'R. H. Y. T. H. M'
+        && spellAloud("a lot") === 'A, space, L, O, T' && spellAloud("x-ray") === 'X, hyphen, R, A, Y'
+        && spellAloud("don't") === 'D, O, N, apostrophe, T' && spellAloud('') === '' && spellAloud(null) === '',
+        JSON.stringify([spellAloud('Rhythm'), spellAloud("a lot"), spellAloud("don't")]));
+      check('spelledOptions: "Or" before every answer after the first',
+        JSON.stringify(spelledOptions(['To', 'Two'])) === '["T, O","Or T, W, O"]', JSON.stringify(spelledOptions(['To', 'Two'])));
+      check('only an explicit spell: true counts', spellsAloud({ spell: true }) && !spellsAloud({ spell: 'yes' }) && !spellsAloud({})
+        && !spellsAloud(null));
+      check('the pace: steady by default, slow when chosen, anything else steady',
+        spellPace({}) === 'steady' && SPELL_PACE_DEFAULT === 'steady' && spellPace({ spellPace: 'slow' }) === 'slow'
+        && spellPace({ spellPace: 'fast' }) === 'steady' && DEFAULTS.spellPace === 'steady');
+      const paceRow = mine('spellPace');
+      check('*** the pace is a row: advanced, steady by default, offered only while something is said ***',
+        !!paceRow && paceRow.default === 'steady' && paceRow.level === 'advanced'
+        && JSON.stringify((paceRow.options || []).map((o) => o.value)) === '["steady","slow"]'
+        && has({}, 'spellPace') && !has({ speak: false }, 'spellPace'), JSON.stringify(paceRow));
+      check('*** a pack item\'s spell: true rides into the bank and onto the question; no field, no flag ***', (() => {
+        const m = packToTriviaBank({ items: [{ question: 'S?', answers: ['Two', 'Too', 'To'], correct: 'Two', spell: true },
+          { question: 'P?', answers: ['a', 'b', 'c'], correct: 'a' }] });
+        return m[0].spell === true && m[1].spell === undefined
+          && makeQuestion(m[0], m).spell === true && makeQuestion(m[1], m).spell === false;
+      })());
+      check('the pack loader accepts spell: true / false and refuses anything else', (() => {
+        const pack = (spell) => ({ schema: 'nimrod.pack.v1', kind: 'trivia', name: 'x', source: { name: 'test' },
+          items: [{ question: 'S?', answers: ['Two', 'Too', 'To'], correct: 'Two', spell }] });
+        return validatePack(pack(true)).length === 0 && validatePack(pack(false)).length === 0
+          && validatePack(pack('yes')).some((p) => /spell/.test(p));
+      })(), JSON.stringify(validatePack({ schema: 'nimrod.pack.v1', kind: 'trivia', name: 'x', source: { name: 'test' },
+        items: [{ question: 'S?', answers: ['Two', 'Too', 'To'], correct: 'Two', spell: 'yes' }] })));
+      {
+        const { r, out } = await one({}, [SPELLQ]);
+        r.bus.publish('trivia/next');
+        const q = r.probe().question;
+        const text = out.last();
+        const lit = q.options[r.probe().highlight];
+        check('*** the first press: the question, then every answer SPELLED, "Or" between, then the lit one spelled ***',
+          text === `${SPELLQ.question} ${spelledOptions(q.options).map((s) => `${s}.`).join(' ')} ${spellAloud(lit)}.`, text);
+        check('*** ...and no answer is said as a word (saying it gives the right one away) ***',
+          q.options.every((o) => !asWord(text, o)), text);
+        r.bus.publish('trivia/next');
+        check('a scan step spells the answer it lands on', out.last() === `${spellAloud(q.options[r.probe().highlight])}.`, out.last());
+        tap(r, wrongIdx(r));
+        check('a wrong press: the screen\'s words, then the lit one spelled',
+          out.last().startsWith('Not that one — try again.') && q.options.every((o) => !asWord(out.last(), o)), out.last());
+        tap(r, rightIdx(r));
+        check('*** once the answer is shown it may be said as a word: "Correct. Rhythm." and why ***',
+          out.last() === `Correct. Rhythm. ${SPELL_WHY}`, out.last());
+        r.inst.destroy();
+      }
+      {
+        const { r, out } = await one({ spellPace: 'slow', sayChoice: false }, [SPELLQ]);
+        r.bus.publish('trivia/next');
+        const q = r.probe().question;
+        check('*** the slow pace: a full stop after every letter, "Or" still marking each answer ***',
+          out.last() === `${SPELLQ.question} ${spelledOptions(q.options, { pace: 'slow' }).map((s) => `${s}.`).join(' ')}`
+          && /R\. H\. Y\. T\. H\. M\./.test(out.last()), out.last());
+        r.inst.destroy();
+      }
+      {
+        const { r, out } = await one({}, [{ ...SPELLQ, spell: undefined }]);
+        r.bus.publish('trivia/next');
+        check('the same question without the field is read as words, as before (nothing guessed from its wording)',
+          asWord(out.last(), 'Rhythm') && !out.last().includes('R, H'), out.last());
+        r.inst.destroy();
+      }
     }
 
     // ---- off ----
