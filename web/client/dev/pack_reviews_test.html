@@ -202,14 +202,31 @@ try {
     check('*** on a screen (onScreen): the same words, host visible, as plain text and NOT a link ***',
       !div.querySelector('a') && div.querySelector('[data-review-source-plain]')?.textContent === 'A <b>page</b> (example.org)'
       && !div.querySelector('b') && /p\. 4/.test(div.textContent), div.innerHTML);
-    div.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'), { onScreen: true });
-    check('...an untitled link on a screen shows the whole address, as text', !div.querySelector('a')
-      && div.querySelector('[data-review-source-plain]')?.textContent === 'https://www.example.org/untitled', div.innerHTML);
+    check('*** ...with the address to open on a phone or computer (no https://, no www.) ***',
+      div.querySelector('[data-review-source-address]')?.textContent === 'example.org/a?b=1&c=2'
+      && /On a phone or computer, open/.test(div.textContent), div.innerHTML);
+    div.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'), { onScreen: true, colours: { dark: '#000000', light: '#ffffff' } });
+    check('...an untitled link on a screen names the site, with the whole address under it, as text', !div.querySelector('a')
+      && div.querySelector('[data-review-source-plain]')?.textContent === 'example.org'
+      && div.querySelector('[data-review-source-address]')?.textContent === 'example.org/untitled', div.innerHTML);
+    check('*** ...and a code to scan beside it when the colours can draw one (none when they cannot) ***',
+      !!div.querySelector('[data-review-source-qr] svg')
+      && (() => { const d2 = document.createElement('div'); d2.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'), { onScreen: true, colours: null }); return !d2.querySelector('[data-review-source-qr]') && !!d2.querySelector('[data-review-source-address]'); })());
+    div.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'));
+    check('*** off a screen: "Where this comes from: <site>", opening a new tab, marked for review points ***',
+      div.textContent.trim() === 'Where this comes from: example.org' && div.querySelector('a')?.target === '_blank'
+      && div.querySelector('a').rel === 'noopener noreferrer' && div.querySelector('a').hasAttribute('data-review-source-link')
+      && !div.querySelector('a').hasAttribute('data-review-key'), div.innerHTML);
+    div.innerHTML = sourceHtml(itemSources('https://www.example.org/untitled'), { key: 'c-abc' });
+    check('...and carries the question\'s key where the page knows it', div.querySelector('a')?.getAttribute('data-review-key') === 'c-abc');
     div.innerHTML = sourceHtml(itemSources('Encyclopaedia Britannica, "Giraffe"'));
-    check('a reference is a plain line', div.querySelector('[data-review-source="ref"]')?.textContent === 'Source: Encyclopaedia Britannica, "Giraffe"');
+    check('a reference is a plain line', div.querySelector('[data-review-source="ref"]')?.textContent === 'Where this comes from: Encyclopaedia Britannica, "Giraffe"');
     div.innerHTML = sourceHtml(itemSources({ ref: 'common knowledge', note: 'taught to small children' }));
-    check('common knowledge shows its reason', /common knowledge/.test(div.textContent) && /taught to small children/.test(div.textContent)
-      && !!div.querySelector('[data-review-source="common"]'));
+    check('*** common knowledge says "Common knowledge" and its reason, with no link ***',
+      /Where this comes from: Common knowledge/.test(div.textContent) && /taught to small children/.test(div.textContent)
+      && !!div.querySelector('[data-review-source="common"]') && !div.querySelector('a'));
+    div.innerHTML = sourceHtml([{ url: 'javascript:alert(1)', title: 'x' }]);
+    check('only http(s) addresses ever become links', !div.querySelector('a'), div.innerHTML);
     div.innerHTML = sourceHtml([]);
     check('*** no source at all says so (a grandfathered pack\'s item: the one to check hardest) ***',
       div.querySelector('[data-review-source="none"]') && /none given/.test(div.textContent));
@@ -309,7 +326,7 @@ try {
       const exp = srcOf(r.shown());
       const got = stripSources();
       return exp.length > 0 && got.length === exp.length && exp.every((s, i) => (s.url
-        ? got[i].querySelector(`a[href="${s.url}"][target="_blank"]`) : got[i].textContent.includes(s.ref)));
+        ? got[i].querySelector(`a[href="${s.url}"][target="_blank"]`) : got[i].textContent.toLowerCase().includes(s.ref.toLowerCase())));
     };
     check('*** the reviewer sees THIS question\'s source in the strip (a link they can open, or the reference) ***',
       sourceShown(), `${r.shown()} :: ${r.host.querySelector('[data-review]')?.innerHTML}`);
@@ -439,7 +456,7 @@ try {
         const exp = itemSources(fixturePack.items.find((it) => it.question === q)?.source);
         const got = [...c.querySelectorAll('[data-review-source]')];
         return exp.length && got.length === exp.length
-          && exp.every((s, i) => (s.url ? got[i].querySelector(`a[href="${s.url}"]`) : got[i].textContent.includes(s.ref)));
+          && exp.every((s, i) => (s.url ? got[i].querySelector(`a[href="${s.url}"]`) : got[i].textContent.toLowerCase().includes(s.ref.toLowerCase())));
       });
     })(), page.innerHTML.slice(0, 600));
     page.querySelector('[data-rv-export]').click();

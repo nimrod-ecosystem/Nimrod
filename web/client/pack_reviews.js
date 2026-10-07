@@ -48,6 +48,10 @@ import { createEvents } from './events.js';
 import { authHeaders } from './auth.js';
 import { parsePack, itemSources, COMMON_KNOWLEDGE, difficultyLevel } from './packs.js';
 import { REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, REVIEW_ACTIONS } from './actions.js';
+import { themeQrColours } from './page_links.js';
+import { qrSVG } from './qr.js';
+import { createReviewPoints } from './review_points.js';
+import { PROFILE_SETTINGS_KEY } from './lessons.js';
 
 export const REVIEWS_URL = '/api/account/reviews';
 export const UNREVIEWED_URL = '/api/packs/unreviewed';
@@ -161,8 +165,34 @@ export function packItems(pack, map) {
 // is the REVIEWER's version (full address, the note, "none given"), drawn inside the review strip and on
 // /reviews.html. The player's own shorter line, after the answer, is answer_source.js (Mike, 2026-10-04:
 // "always show the source when the answer is given"), and it steps aside while this strip is showing.
+//
+// *** "WHERE THIS COMES FROM" (Mike, 2026-10-06: "For reviewing the questions it would be nice if it linked to the
+// wiki page and opened in another window"). *** The line leads with those words rather than "Source:" — plain
+// words for whoever is reviewing, a teenager doing it for schoolwork included. A link (only http/https) opens in
+// a NEW tab or window (`target="_blank"`, `rel="noopener noreferrer"`: the page opened cannot reach back into
+// this one, and the site it opens is not told where the reader came from), and its words are the page's title
+// with the site's name, or just the site's name — readable without opening it. Common knowledge says "Common
+// knowledge" and its reason, with no link. ON A SCREEN (page_links.js's rule) nothing opens: the line shows the
+// address to type on a phone or computer, and a code to scan beside it when the theme's colours can draw one.
+// Every link carries `data-review-source-link` (and `data-review-key` where the page knows the question), so
+// review_points.js can pay for opening it (its rule 6).
 const escHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hostOf = (url) => { try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; } };
+const isWebLink = (url) => /^https?:\/\/[^\s]+$/i.test(String(url || ''));
+export const SOURCE_LEAD = 'Where this comes from:';
+/** "en.wikipedia.org/wiki/Giraffe": an address as somebody would type it (no https://, no www.). */
+export function sourceAddress(url) {
+  try {
+    const u = new URL(url);
+    return `${u.hostname.replace(/^www\./, '')}${u.pathname === '/' ? '' : u.pathname}${u.search}${u.hash}`;
+  } catch { return String(url || ''); }
+}
+// The theme's code colours on this page (page_links.js `themeQrColours`), or null (then no code: the address is
+// the thing that always works).
+const pageQrColours = () => {
+  try { return typeof document !== 'undefined' && document.documentElement ? themeQrColours(document.documentElement) : null; }
+  catch { return null; }
+};
 
 /** One source as a plain line: "Title (host)", a reference, or "common knowledge — why". */
 export function sourceText(s) {
@@ -172,26 +202,43 @@ export function sourceText(s) {
   return `${s.ref || ''}${note}`;
 }
 
+/** The addresses of a list of sources that are web links (what review_points.js pays for opening). */
+export const sourceUrls = (sources) => (Array.isArray(sources) ? sources : []).map((s) => s && s.url).filter(isWebLink);
+
 /**
- * The "Source:" line(s) for a review screen, as HTML. A link opens in a new tab and its host is in the text,
- * so it can be read without opening it. No source at all says so — that is the question to check hardest.
- * `onScreen: true` (a real screen, ctx.isScreen; page_links.js argues it): the same words, host visible, as
- * plain text and NOT a link — a tab opened on a screen is a stray page nobody there can close.
+ * The "Where this comes from:" line(s) for a review screen, as HTML (see the note above). No source at all says
+ * so — that is the question to check hardest. `onScreen: true` (a real screen, ctx.isScreen; page_links.js argues
+ * it): the same words as plain text, NOT a link, then the address to open on a phone or computer and a code to
+ * scan. `key`: the question's review key, put on each link for review_points.js. `colours`: the code's colours
+ * (default: this page's theme; null draws no code).
  */
-export function sourceHtml(sources, { cls = 'tv-review-src', onScreen = false } = {}) {
+export function sourceHtml(sources, { cls = 'tv-review-src', onScreen = false, key = '', colours } = {}) {
   const list = Array.isArray(sources) ? sources : [];
   if (!list.length) {
-    return `<p class="${cls}" data-review-source="none">Source: none given — check this one against a source.</p>`;
+    return `<p class="${cls}" data-review-source="none">${SOURCE_LEAD} none given — check this one against a source.</p>`;
   }
+  const qrc = onScreen ? (colours === undefined ? pageQrColours() : colours) : null;
   return list.map((s) => {
     const note = s.note ? ` <span class="${cls}-note">— ${escHtml(s.note)}</span>` : '';
-    if (s.url) {
-      const label = s.title ? `${escHtml(s.title)} (${escHtml(hostOf(s.url))})` : escHtml(s.url);
-      if (onScreen) return `<p class="${cls}" data-review-source="url">Source: <span data-review-source-plain>${label}</span>${note}</p>`;
-      return `<p class="${cls}" data-review-source="url">Source: <a href="${escHtml(s.url)}" target="_blank" rel="noopener noreferrer">${label}</a>${note}</p>`;
+    if (s.url && isWebLink(s.url)) {
+      const label = s.title ? `${escHtml(s.title)} (${escHtml(hostOf(s.url))})` : escHtml(hostOf(s.url));
+      if (onScreen) {
+        const addr = sourceAddress(s.url);
+        let qr = '';
+        if (qrc) {
+          try { qr = qrSVG(s.url, { level: 'M', quiet: 4, dark: qrc.dark, light: qrc.light, title: `Scan to open ${addr}` }); }
+          catch (err) { console.error('pack reviews: source code', err); qr = ''; }
+        }
+        return `<p class="${cls}" data-review-source="url">${SOURCE_LEAD} <span data-review-source-plain>${label}</span>${note}`
+          + `<br><span class="${cls}-addr">On a phone or computer, open <strong data-review-source-address>${escHtml(addr)}</strong></span>`
+          + `${qr ? `<span data-review-source-qr style="display:block;width:min(120px,40%);margin:4px 0">${qr}</span>` : ''}</p>`;
+      }
+      return `<p class="${cls}" data-review-source="url">${SOURCE_LEAD} <a href="${escHtml(s.url)}" target="_blank" `
+        + `rel="noopener noreferrer" data-review-source-link${key ? ` data-review-key="${escHtml(key)}"` : ''}>${label}</a>${note}</p>`;
     }
-    const kind = String(s.ref || '').toLowerCase() === COMMON_KNOWLEDGE ? 'common' : 'ref';
-    return `<p class="${cls}" data-review-source="${kind}">Source: ${escHtml(s.ref)}${note}</p>`;
+    const common = String(s.ref || '').toLowerCase() === COMMON_KNOWLEDGE;
+    const words = common ? 'Common knowledge' : escHtml(s.ref || s.url || '');
+    return `<p class="${cls}" data-review-source="${common ? 'common' : 'ref'}">${SOURCE_LEAD} ${words}${note}</p>`;
   }).join('');
 }
 
@@ -367,15 +414,55 @@ export function createPackReviews({ events = null, user, push = null, bus = null
       return false;
     }
   }
-  const verdict = (kind) => ({ question, answer, packId = '', place = '', note = '' } = {}) => {
+  // *** REVIEW POINTS (review_points.js): a handle that has been told where to pay (`payInto`) pays once a
+  // verdict is SAVED — the same for a pass, a flag or "Fixed", whatever was said (its rule 3). One tracker per
+  // handle; `payInto` again replaces it.
+  let points = null;
+  let offRoot = null;
+  const payFor = async (key, question) => {
+    if (!points) return;
+    try { await points.decided(key, { question }); } catch (err) { console.error('pack reviews: points', err); }
+  };
+  // `person` (the review page's "Who is reviewing"): a person on this login. The server checks it and signs the
+  // row with their name; left out, the row is signed as it always was.
+  const verdict = (kind) => async ({ question, answer, packId = '', place = '', note = '', person = '' } = {}) => {
     const key = reviewKey(question, answer);
-    if (!key || !question) return Promise.resolve(false);
+    if (!key || !question) return false;
     const data = { key, question: String(question), answer: String(answer ?? '') };
     if (isReviewPackId(packId)) data.pack = packId;
     if (place) data.place = String(place).slice(0, 80);
     if (note) data.note = String(note);
-    return write(kind, data);
+    if (person) data.person = String(person);
+    const ok = await write(kind, data);
+    if (ok) await payFor(key, question);
+    return ok;
   };
+  /** Every source address of the question with this key, from the listed packs (review_points.js rule 6). */
+  function sourceUrlsOf(key) {
+    for (const pack of packs.values()) {
+      const hit = (pack?.items || []).find((it) => it && it.question && it.correct && reviewKey(it.question, it.correct) === key);
+      if (hit) return sourceUrls(itemSources(hit.source));
+    }
+    return [];
+  }
+  /** Every question still OPEN (not passed, not flagged) in the listed trivia packs, pack by pack, in pack order:
+   *  what the review page deals one at a time. `{ key, item, packId, packName, sources }`. */
+  function openQuestions() {
+    const out = [];
+    const seen = new Set();
+    const m = map();
+    for (const entry of listing) {
+      if (!entry || entry.kind !== 'trivia') continue;
+      const pack = packs.get(entry.id);
+      if (!pack) continue;
+      for (const { item, key, status } of packItems(pack, m)) {
+        if (status !== REVIEW_STATUS.OPEN || seen.has(key)) continue;
+        seen.add(key);
+        out.push({ key, item, packId: entry.id, packName: topicName(pack.name || entry.name), sources: itemSources(item.source) });
+      }
+    }
+    return out;
+  }
 
   return {
     ready,
@@ -387,15 +474,54 @@ export function createPackReviews({ events = null, user, push = null, bus = null
     status: (question, answer) => statusOf(map(), reviewKey(question, answer)),
     pass: verdict(REVIEW_KINDS.PASS),
     flag: verdict(REVIEW_KINDS.FLAG),
-    note: (key, text) => (key && String(text || '').trim()
-      ? write(REVIEW_KINDS.NOTE, { key, note: String(text).trim() }) : Promise.resolve(false)),
-    unflag: (key) => (key ? write(REVIEW_KINDS.UNFLAG, { key }) : Promise.resolve(false)),
+    note: (key, text, { person = '' } = {}) => (key && String(text || '').trim()
+      ? write(REVIEW_KINDS.NOTE, { key, note: String(text).trim(), ...(person ? { person: String(person) } : {}) })
+      : Promise.resolve(false)),
+    // "Fixed — ask it again" is a verdict too (review_points.js rule 3): it pays like a pass or a flag, once.
+    unflag: async (key, { person = '', question = '' } = {}) => {
+      if (!key) return false;
+      const ok = await write(REVIEW_KINDS.UNFLAG, { key, ...(person ? { person: String(person) } : {}) });
+      if (ok) await payFor(key, question || map().get(key)?.question || '');
+      return ok;
+    },
     options: (opts) => reviewPackOptions(listing, packs, map(), opts),
     flagged: () => flaggedList(listing, packs, map()),
+    openQuestions,
+    sourceUrlsOf,
     progress: (id) => (packs.get(id) ? packProgress(packs.get(id), map()) : null),
+    /**
+     * PAY REVIEWS DONE THROUGH THIS HANDLE INTO ONE SCREEN'S POINTS (review_points.js). `ledger`: that screen's
+     * points ledger; `makeState`: its maker (the settings document is read for the Nimrod Game's review numbers),
+     * or `settings` directly; `root`: an element whose source links count when opened (Trivia's panel, the review
+     * page). Returns the tracker (`shown`, `decided`, `opened`, `last`), or null without a ledger. Never throws.
+     */
+    payInto({ ledger = null, makeState = null, settings = null, root = null, now } = {}) {
+      offRoot?.(); offRoot = null; points = null;
+      if (!ledger) return null;
+      let st = settings;
+      let own = null;     // a settings handle made here is this handle's to close
+      try { if (!st && typeof makeState === 'function') own = st = makeState(PROFILE_SETTINGS_KEY); } catch { st = null; }
+      offRoot = () => { try { own?.destroy?.(); } catch { /* gone */ } };
+      try { points = createReviewPoints({ ledger, settings: st, sourcesOf: sourceUrlsOf, ...(now ? { now } : {}) }); }
+      catch (err) { console.error('pack reviews: no review points', err); points = null; return null; }
+      if (root && typeof root.addEventListener === 'function') {
+        // click covers a press, Enter on a focused link and a tap; auxclick a middle-button "open in a new tab".
+        const onOpen = (e) => {
+          const a = e.target && e.target.closest ? e.target.closest('a[data-review-source-link]') : null;
+          if (!a || !points) return;
+          points.opened(a.getAttribute('href') || '', a.getAttribute('data-review-key') || null);
+        };
+        root.addEventListener('click', onOpen);
+        root.addEventListener('auxclick', onOpen);
+        const closeOwn = offRoot;
+        offRoot = () => { root.removeEventListener('click', onOpen); root.removeEventListener('auxclick', onOpen); closeOwn(); };
+      }
+      return points;
+    },
+    points: () => points,
     reload: () => Promise.resolve(log.load ? log.load() : null).catch(() => {}),
     startPolling: () => log.startPolling?.(),
     subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
-    destroy: () => { dead = true; subs.clear(); offLog?.(); log.destroy?.(); },
+    destroy: () => { dead = true; subs.clear(); offLog?.(); offRoot?.(); offRoot = null; points = null; log.destroy?.(); },
   };
 }

@@ -1610,6 +1610,10 @@ registerModule(
         // so the points board and the progress dashboard pick this game up with no wiring at all.
         try { ledger = createPointsLedger({ makeEvents: ctx.makeEvents, bus }); }
         catch (err) { ledger = null; console.error('trivia: no points ledger', err); }
+        // REVIEW POINTS (../review_points.js, Mike 2026-10-06): a ✓ / ✗ here, and opening a question's source, pay
+        // THIS screen's points the way a right answer does — once per question. The reviews handle owns it, and its
+        // destroy() (below) takes it off again.
+        if (reviews && ledger) { try { reviews.payInto?.({ ledger, makeState: ctx.makeState, root: mount }); } catch (err) { console.error('trivia: review points', err); } }
         try {
           telemetry = createTelemetry({ makeEvents: ctx.makeEvents, bus });
           session = telemetry.session({ game: GAME, mode: 'practice' });

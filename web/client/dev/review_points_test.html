@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>review_points — points for reviewing questions — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host,#page{position:absolute;left:-9999px;width:600px}
+</style>
+</head>
+<body>
+<h1>review_points — points for reviewing questions</h1>
+<p>Mike, 2026-10-06: <i>"There should also be education points awarded for reviewing questions as well ... Maybe
+clicking on the wiki link gives points as well as the review."</i> The same points whatever the verdict, once per
+question per screen, only for a real look, the source's smaller amount only with a verdict, a daily cap; paid by
+Trivia's ✓ / ✗ and by the review page, to the person reviewing. Uses <code>dev/review_fixture_pack.json</code>;
+every name here is made up.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="host"></div>
+<div id="page"></div>
+
+<script type="module">
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import '../modules/trivia.js';
+import { createPackReviews, loadReviewPack, reviewKey } from '../pack_reviews.js';
+import { createPointsLedger, currencyOf } from '../points.js';
+import {
+  REVIEW_POINT_DEFAULTS, REVIEW_POINTS_SOURCE, GAME_SETTINGS_KEY, reviewPointPrefs, verdictPay, sourcePay,
+  verdictTag, sourceTag, createReviewPoints, paidWords,
+} from '../review_points.js';
+import { GAME_SETTINGS_KEY as UNLOCKS_GAME_KEY, GAME_DEFAULTS, gameSettingsFrom, gameSettingsHTML } from '../unlocks.js';
+import { mountReviewPage, payLine, pointsName, optionOrder } from '../review_page.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const J = JSON.stringify;
+
+const FIXTURE = { id: 'review:fixture', file: 'review_fixture_pack.json', url: '/dev/review_fixture_pack.json',
+  kind: 'trivia', name: 'Fixture colours (AI-written, not yet reviewed)', count: 5 };
+const fixturePack = await loadReviewPack(FIXTURE);
+const Q = fixturePack.items.map((it) => ({ question: it.question, answer: it.correct, key: reviewKey(it.question, it.correct) }));
+const GRASS = Q[0];      // source: a link (example.org/fixture/grass)
+const SKY = Q[1];        // source: a reference, no link
+
+// A clock a suite moves by hand.
+const clock = { t: Date.now() };
+const nowMs = () => clock.t;
+const tick = (s) => { clock.t += s * 1000; };
+
+// An in-memory events stream (events.js's shape): the server stamps id and created_at; so does this.
+function fakeStream(rows = []) {
+  const subs = new Set();
+  return {
+    rows,
+    load: async () => {}, get: () => ({ events: rows }),
+    append: async (kind, data) => {
+      rows.push({ id: rows.length + 1, kind, data: { ...data }, created_at: new Date(clock.t).toISOString() });
+      for (const fn of [...subs]) fn({ events: rows });
+    },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    startPolling() {}, destroy() {},
+  };
+}
+// The ACCOUNT's review log, faked as pack_reviews_test.html does (by/at stamped; `person` kept, as the server keeps it).
+function fakeLog(rows) {
+  const subs = new Set();
+  return {
+    load: async () => {}, get: () => ({ events: rows }),
+    append: async (kind, data) => {
+      rows.push({ id: rows.length + 1, kind, data: { ...data, by: data.person ? `person ${data.person}` : 'Tester', at: new Date(clock.t).toISOString() } });
+      for (const fn of [...subs]) fn();
+    },
+    subscribe: (fn) => { subs.add(fn); return () => subs.delete(fn); },
+    startPolling() {}, destroy() {},
+  };
+}
+const ledgerOn = (stream) => createPointsLedger({ makeEvents: () => stream });
+const settingsWith = (game = {}) => {
+  const doc = { [GAME_SETTINGS_KEY]: game };
+  return { load: async () => {}, get: () => doc, set(p) { Object.assign(doc, p); }, flush: async () => {},
+    subscribe: () => () => {}, startPolling() {}, destroy() {} };
+};
+const reviewPts = (rows) => rows.filter((e) => e.kind === 'points' && e.data.source === REVIEW_POINTS_SOURCE);
+const handleOn = (rows) => createPackReviews({ events: fakeLog(rows), listPacks: async () => [FIXTURE] });
+
+(async () => {
+try {
+  section('the numbers: defaults, settings, one home');
+  {
+    check('defaults: 1 a question, 0.5 for its source, 50 a day, 5 seconds',
+      J(REVIEW_POINT_DEFAULTS) === J({ reviewPoints: 1, reviewSourcePoints: 0.5, reviewDailyCap: 50, reviewMinSeconds: 5 }));
+    check('*** the key they live under is the Nimrod Game\'s own (unlocks.js) ***', GAME_SETTINGS_KEY === UNLOCKS_GAME_KEY);
+    check('the Nimrod Game\'s defaults carry them', Object.entries(REVIEW_POINT_DEFAULTS).every(([k, v]) => GAME_DEFAULTS[k] === v));
+    check('...and its reader keeps a saved choice (a setPrefs round trip cannot drop them)',
+      gameSettingsFrom({ [UNLOCKS_GAME_KEY]: { reviewPoints: 2, reviewDailyCap: 0 } }).reviewPoints === 2
+      && gameSettingsFrom({ [UNLOCKS_GAME_KEY]: { reviewPoints: 2, reviewDailyCap: 0 } }).reviewDailyCap === 0);
+    check('anything unusable is its default; 0 is a real choice (off / no limit / no wait)',
+      J(reviewPointPrefs({ reviewPoints: -1, reviewSourcePoints: 'x', reviewDailyCap: null, reviewMinSeconds: '' })) === J(REVIEW_POINT_DEFAULTS)
+      && reviewPointPrefs({ reviewMinSeconds: 0 }).reviewMinSeconds === 0);
+    const html = document.createElement('div');
+    html.innerHTML = gameSettingsHTML({ flags: { game: true, learning: true }, prefs: GAME_DEFAULTS, unlocked: new Set(), balances: {} });
+    check('*** the Nimrod Game page has the four rows, each a choice it already knows how to save ***',
+      !!html.querySelector('[data-review-points-rows]')
+      && ['reviewPoints', 'reviewSourcePoints', 'reviewDailyCap', 'reviewMinSeconds'].every((k) => html.querySelector(`select[data-game-pref="${k}"]`)));
+    html.innerHTML = gameSettingsHTML({ flags: { game: false, learning: false }, prefs: { ...GAME_DEFAULTS, reviewPoints: 0.75 }, unlocked: new Set(), balances: {} });
+    check('a saved number that is not one of the choices is still offered, selected', html.querySelector('select[data-game-pref="reviewPoints"]').value === '0.75');
+  }
+
+  section('*** the rules, pure ***');
+  {
+    const P = REVIEW_POINT_DEFAULTS;
+    check('a question looked at long enough pays the full amount', J(verdictPay({ key: 'c-1', prefs: P, lookedMs: 6000 })) === J({ amount: 1, reason: null }));
+    check('*** quicker than the wait: nothing, and says why ***', verdictPay({ key: 'c-1', prefs: P, lookedMs: 2000 }).reason === 'too-fast');
+    check('an unknown look time is not held against anybody', verdictPay({ key: 'c-1', prefs: P, lookedMs: null }).amount === 1);
+    const paid = [{ kind: 'points', data: { amount: 1, source: REVIEW_POINTS_SOURCE, tags: ['review', verdictTag('c-1')] }, created_at: new Date().toISOString() }];
+    check('*** once per question: a question that paid never pays again ***', verdictPay({ events: paid, key: 'c-1', prefs: P, lookedMs: 9000 }).reason === 'paid'
+      && verdictPay({ events: paid, key: 'c-2', prefs: P, lookedMs: 9000 }).amount === 1);
+    const today = (n) => Array.from({ length: n }, (_, i) => ({ kind: 'points', created_at: new Date().toISOString(),
+      data: { amount: 1, source: REVIEW_POINTS_SOURCE, tags: ['review', verdictTag(`c-x${i}`)] } }));
+    check('*** the daily cap: at the cap, nothing; just under it, only what is left ***',
+      verdictPay({ events: today(50), key: 'c-new', prefs: P, lookedMs: 9000 }).reason === 'cap'
+      && verdictPay({ events: today(50), key: 'c-new', prefs: { ...P, reviewPoints: 2, reviewDailyCap: 51 }, lookedMs: 9000 }).amount === 1);
+    check('cap 0 is no limit', verdictPay({ events: today(500), key: 'c-new', prefs: { ...P, reviewDailyCap: 0 }, lookedMs: 9000 }).amount === 1);
+    check('a setting of 0 pays nothing (off)', verdictPay({ key: 'c-1', prefs: { ...P, reviewPoints: 0 }, lookedMs: 9000 }).reason === 'off'
+      && sourcePay({ key: 'c-1', prefs: { ...P, reviewSourcePoints: 0 } }).reason === 'off');
+    check('the source pays its own smaller amount, once', sourcePay({ key: 'c-1', prefs: P }).amount === 0.5
+      && sourcePay({ events: [{ kind: 'points', data: { source: REVIEW_POINTS_SOURCE, tags: [sourceTag('c-1')] } }], key: 'c-1', prefs: P }).reason === 'paid');
+    check('the words: what it earned and for whom, or why not', paidWords({ amount: 1, source: { amount: 0.5 } }, { name: 'Robin' })
+      === '+1.5 points for Robin (0.5 of it for opening where it comes from).'
+      && /quicker than the wait/.test(paidWords({ amount: 0, reason: 'too-fast' })) && /all earned/.test(paidWords({ amount: 0, reason: 'cap' })));
+    check('the page\'s line says it is the same whatever the verdict', /the same whether you say it is right or wrong/.test(payLine(P, 'School points'))
+      && /0\.5 more for opening where it comes from/.test(payLine(P)) && /Up to 50 a day/.test(payLine(P)) && /5 seconds/.test(payLine(P)));
+    check('what the points are called follows the switches (the record is the same)', pointsName({ learningOn: true }) === 'School points'
+      && pointsName({ gameOn: true, learningOn: false }) === 'game points' && pointsName({}) === 'points');
+    check('options are shuffled the same way every time, and not with the right answer always first',
+      J(optionOrder('c-a', ['A', 'B', 'C', 'D'])) === J(optionOrder('c-a', ['A', 'B', 'C', 'D']))
+      && Q.some((q) => optionOrder(q.key, fixturePack.items.find((it) => it.question === q.question).answers)[0] !== q.answer));
+  }
+
+  section('the tracker: one screen\'s points');
+  {
+    const stream = fakeStream();
+    const t = createReviewPoints({ ledger: ledgerOn(stream), settings: settingsWith(), now: nowMs,
+      sourcesOf: (k) => (k === GRASS.key ? ['https://example.org/fixture/grass'] : []) });
+    await t.ready;
+    t.shown(GRASS.key); tick(6);
+    const r1 = await t.decided(GRASS.key, { question: GRASS.question });
+    const ev = reviewPts(stream.rows);
+    check('*** a verdict after a real look pays 1, as an ordinary School-currency award from "reviews" ***',
+      r1.amount === 1 && ev.length === 1 && ev[0].data.type === 'Bonus' && currencyOf(ev[0]) === 'school'
+      && ev[0].data.tags.includes(verdictTag(GRASS.key)) && /Reviewed a question: Fixture/.test(ev[0].data.note), J(ev));
+    check('no school MINUTES are claimed for a press', !('minutes' in ev[0].data));
+    const r2 = await t.decided(GRASS.key, { question: GRASS.question });
+    check('*** the same question again: nothing (once per question) ***', r2.reason === 'paid' && reviewPts(stream.rows).length === 1);
+    t.shown(SKY.key); tick(1);
+    const r3 = await t.decided(SKY.key, { question: SKY.question });
+    check('*** decided a second after it went up: no points, says why ***', r3.reason === 'too-fast' && reviewPts(stream.rows).length === 1);
+    await t.opened('https://example.org/fixture/grass');
+    check('*** a source opened AFTER its question\'s verdict pays its smaller amount then ***',
+      reviewPts(stream.rows).length === 2 && reviewPts(stream.rows)[1].data.amount === 0.5
+      && reviewPts(stream.rows)[1].data.tags.includes(sourceTag(GRASS.key)));
+    await t.opened('https://example.org/fixture/grass');
+    check('...and opening it again pays nothing more', reviewPts(stream.rows).length === 2);
+
+    // Before the verdict, and a click on its own.
+    const s2 = fakeStream();
+    const t2 = createReviewPoints({ ledger: ledgerOn(s2), settings: settingsWith(), now: nowMs,
+      sourcesOf: (k) => (k === GRASS.key ? ['https://example.org/fixture/grass'] : []) });
+    await t2.ready;
+    t2.shown(GRASS.key);
+    await t2.opened('https://example.org/fixture/grass');
+    check('*** a link opened with no verdict pays nothing (opening and leaving is not a review) ***', reviewPts(s2.rows).length === 0);
+    tick(8);
+    const r4 = await t2.decided(GRASS.key, { question: GRASS.question });
+    check('...the verdict that follows pays both: the review and the source', r4.amount === 1 && r4.source?.amount === 0.5
+      && reviewPts(s2.rows).reduce((n, e) => n + e.data.amount, 0) === 1.5);
+    // Trivia cannot say when a question went up: the look is timed from the previous verdict (or from the start).
+    const s3 = fakeStream();
+    const t3 = createReviewPoints({ ledger: ledgerOn(s3), settings: settingsWith(), now: nowMs });
+    await t3.ready;
+    const fast = await t3.decided('c-t1', { question: 'Q1?' });
+    tick(7);
+    const slow = await t3.decided('c-t2', { question: 'Q2?' });
+    check('with no "shown", the look is timed from the previous verdict (or the start)', fast.reason === 'too-fast' && slow.amount === 1);
+    // The cap, set low.
+    const s4 = fakeStream();
+    const t4 = createReviewPoints({ ledger: ledgerOn(s4), settings: settingsWith({ reviewDailyCap: 2, reviewMinSeconds: 0 }), now: nowMs });
+    await t4.ready;
+    for (let i = 0; i < 4; i++) await t4.decided(`c-cap${i}`, { question: `Q${i}?` });
+    check('*** a cap of 2: two reviews pay, the rest are saved without points ***',
+      reviewPts(s4.rows).length === 2 && t4.last().reason === 'cap', J(reviewPts(s4.rows).map((e) => e.data.amount)));
+  }
+
+  section('*** through the reviews handle: the verdict never changes the pay ***');
+  {
+    const rows = [];
+    const h = handleOn(rows);
+    await h.ready;
+    const stream = fakeStream();
+    const root = document.getElementById('host');
+    root.innerHTML = '';
+    const t = h.payInto({ ledger: ledgerOn(stream), settings: settingsWith({ reviewMinSeconds: 0 }), root, now: nowMs });
+    await t.ready;
+    await h.pass({ question: Q[0].question, answer: Q[0].answer, packId: FIXTURE.id });
+    await h.flag({ question: Q[1].question, answer: Q[1].answer, packId: FIXTURE.id });
+    const amounts = reviewPts(stream.rows).map((e) => e.data.amount);
+    check('*** a pass and a flag pay exactly the same ***', J(amounts) === J([1, 1]), J(amounts));
+    await h.unflag(Q[2].key, { question: Q[2].question });
+    check('"Fixed — ask it again" pays the same, once, for a question this screen had not been paid for',
+      rows.at(-1).kind === 'unflag' && reviewPts(stream.rows).length === 3);
+    await h.unflag(Q[1].key);
+    check('...and nothing for one it already paid for', reviewPts(stream.rows).length === 3);
+    check('the handle knows each question\'s source addresses (links only)',
+      J(h.sourceUrlsOf(Q[0].key)) === J(['https://example.org/fixture/grass']) && J(h.sourceUrlsOf(Q[1].key)) === J([])
+      && J(h.sourceUrlsOf(Q[4].key)) === J(['https://example.org/fixture/coal']));
+    root.innerHTML = `<p><a href="https://example.org/fixture/coal" target="_blank" data-review-source-link data-review-key="${Q[4].key}">coal</a></p>`;
+    root.addEventListener('click', (e) => { if (e.target.closest('a')) e.preventDefault(); }, true);
+    await h.pass({ question: Q[4].question, answer: Q[4].answer, packId: FIXTURE.id });
+    root.querySelector('a').dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    await sleep(20);
+    check('*** a source link clicked in the root counts (the handle listens there) ***',
+      reviewPts(stream.rows).some((e) => e.data.tags.includes(sourceTag(Q[4].key))));
+    check('a review row carries the person only when one is given', rows.every((e) => !('person' in e.data)));
+    await h.pass({ question: Q[3].question, answer: Q[3].answer, packId: FIXTURE.id, person: 'p-robin' });
+    check('...and does when given (the server checks and names them)', rows.at(-1).data.person === 'p-robin');
+    h.destroy();
+  }
+
+  section('*** in Trivia: ✓ and ✗ pay this screen\'s points (review by playing) ***');
+  {
+    const rows = [];
+    const host = document.getElementById('host');
+    host.innerHTML = '';
+    const bus = createBus();
+    const points = fakeStream();
+    const settings = settingsWith({ reviewMinSeconds: 0 });
+    const quiet = { get: () => ({}), set() {}, flush: async () => {}, load: async () => {}, startPolling() {},
+      subscribe: () => () => {}, destroy() {} };
+    const stored = { contentSource: 'pack', packId: FIXTURE.id, roundLength: 10, includeUnreviewed: true };
+    const handle = handleOn(rows);
+    const inst = mountModule('trivia', {
+      mount: host, bus, rand: () => 0,
+      makeState: (key) => (key === 'settings' ? settings : quiet),
+      state: { get: () => stored, set() {}, flush() {}, subscribe: (fn) => { fn(stored); return () => {}; } },
+      makeEvents: (name) => (name === 'points' ? points : fakeStream()),
+      makePackReviews: () => handle,
+    });
+    inst.init();
+    await handle.ready; await sleep(60);
+    host.addEventListener('click', (e) => { if (e.target.closest('a')) e.preventDefault(); }, true);
+    const shown = () => inst.impl.__probe().question?.question || '';
+    const first = shown();
+    check('(a fixture question is up, with the review strip)', first.startsWith('Fixture:') && !!host.querySelector('[data-review-fine]'), first);
+    host.querySelector('[data-review-fine]').click();
+    await sleep(30);
+    check('*** ✓ fine pays 1 into the panel\'s own points ***', reviewPts(points.rows).length === 1 && reviewPts(points.rows)[0].data.amount === 1,
+      J(points.rows));
+    inst.impl.__probe();
+    bus.publish('trivia/skip');
+    await sleep(10);
+    const second = shown();
+    const link = host.querySelector('[data-review] a[data-review-source-link]');
+    if (link) link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    host.querySelector('[data-review-wrong]').click();
+    await sleep(30);
+    const forSecond = reviewPts(points.rows).filter((e) => e.data.tags.some((t) => t.endsWith(reviewKey(second, rows.at(-1).data.answer))));
+    check('*** ✗ wrong pays the same 1 (plus the source\'s 0.5 when its link was opened) ***',
+      forSecond.reduce((n, e) => n + e.data.amount, 0) === (link ? 1.5 : 1), `${second} :: ${J(forSecond)}`);
+    host.querySelector('[data-review-wrong]')?.click();
+    await sleep(20);
+    check('pressing again pays nothing more', reviewPts(points.rows).filter((e) => e.data.tags.some((t) => t.startsWith('review:'))).length === 2);
+    inst.destroy();
+    check('the panel going away takes the points off the handle', handle.points() === null);
+  }
+
+  section('*** the review page: who is reviewing, one question at a time, their points ***');
+  {
+    try { localStorage.removeItem('nimrod.reviews.person'); } catch { /* none */ }
+    const rows = [];
+    const reviews = handleOn(rows);
+    const ledgers = {};
+    const who = {
+      people: async () => [{ id: 'p-robin', name: 'Robin' }, { id: 'p-sam', name: 'Sam' }],
+      screens: async (pid) => (pid === 'p-robin' ? [{ id: 's-home', name: 'Homework' }] : []),
+      ledgerFor: (sid) => { ledgers[sid] = ledgers[sid] || fakeStream(); return ledgerOn(ledgers[sid]); },
+      settingsFor: () => settingsWith({}),
+    };
+    const page = document.getElementById('page');
+    const pg = mountReviewPage(page, { reviews, who, now: () => new Date(clock.t) });
+    await reviews.ready; await sleep(60);
+    page.addEventListener('click', (e) => { if (e.target.closest('a')) e.preventDefault(); }, true);
+    const sel = page.querySelector('[data-rv-person]');
+    check('"Who is reviewing" lists the login\'s people, the first chosen', sel && sel.options.length === 2 && sel.value === 'p-robin');
+    check('...says where the points are kept, and what reviewing pays', /Points are kept on the screen “Homework”/.test(page.textContent)
+      && /the same whether you say it is right or wrong/.test(page.querySelector('[data-rv-pay]')?.textContent || ''));
+    const card = () => page.querySelector('[data-rv-deal]');
+    check('*** one question is up to check, with no verdict buttons until its answer is showing ***',
+      !!page.querySelector('[data-rv-question]') && !page.querySelector('[data-rv-right]') && !page.querySelector('[data-rv-wrong]')
+      && !card().querySelector('[data-review-source]'));
+    const q1 = pg.current();
+    page.querySelector('[data-rv-opt="0"]').click();
+    await sleep(5);
+    check('answering it shows the marked answer, where it comes from (a new-tab link), and the two verdicts',
+      !!page.querySelector('[data-rv-yours]') && !!page.querySelector('[data-rv-right]') && !!page.querySelector('[data-rv-wrong]')
+      && /Where this comes from:/.test(card().textContent)
+      && (q1.sources.some((s) => s.url) ? card().querySelector(`a[data-review-key="${q1.key}"][target="_blank"]`) : true));
+    tick(6);
+    page.querySelector('[data-rv-right]').click();
+    await sleep(40);
+    const last = rows.at(-1);
+    check('*** "Yes, it looks right" saves a pass signed by the person chosen ***', last.kind === 'pass' && last.data.person === 'p-robin'
+      && last.data.key === q1.key && last.data.place === 'the review page', J(last));
+    check('*** ...and pays THEIR screen 1 point, saying so ***', reviewPts(ledgers['s-home'].rows).length === 1
+      && /\+1 point for Robin/.test(page.querySelector('[data-rv-said]')?.textContent || ''), page.querySelector('[data-rv-said]')?.textContent);
+    page.querySelector('[data-rv-next]').click();
+    await sleep(5);
+    const q2 = pg.current();
+    check('"Next question" brings the next one up', q2 && q2.key !== q1.key);
+    page.querySelector('[data-rv-show]').click();
+    await sleep(5);
+    const l2 = card().querySelector('a[data-review-source-link]');
+    if (l2) l2.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    tick(6);
+    page.querySelector('[data-rv-wrong]').click();
+    await sleep(40);
+    const paid2 = reviewPts(ledgers['s-home'].rows).filter((e) => e.data.tags.some((t) => t.endsWith(q2.key)));
+    check('*** "No, something is wrong" saves a flag and pays the same (plus the source when it was opened) ***',
+      rows.at(-1).kind === 'flag' && rows.at(-1).data.person === 'p-robin'
+      && paid2.reduce((n, e) => n + e.data.amount, 0) === (l2 ? 1.5 : 1), J(paid2));
+    page.querySelector('[data-rv-note]').value = 'the made-up answer is wrong';
+    page.querySelector('[data-rv-save-note]').click();
+    await sleep(20);
+    check('the note is saved with the person', rows.at(-1).kind === 'note' && rows.at(-1).data.person === 'p-robin'
+      && !!page.querySelector('[data-rv-note-saved]'));
+    page.querySelector('[data-rv-next]').click();
+    await sleep(5);
+    const q3 = pg.current();
+    page.querySelector('[data-rv-skip]').click();
+    await sleep(5);
+    check('*** "Skip for now" saves nothing and pays nothing ***', rows.at(-1).kind === 'note' && pg.current()?.key !== q3.key
+      && reviewPts(ledgers['s-home'].rows).length === paid2.length + 1);
+    page.querySelector('[data-rv-show]').click();
+    page.querySelector('[data-rv-right]').click();
+    await sleep(40);
+    check('*** checked at once (no time to read it): saved, no points, and it says why ***', rows.at(-1).kind === 'pass'
+      && /No points for that one/.test(page.querySelector('[data-rv-said]')?.textContent || ''));
+    // Somebody with no screen of their own.
+    const choose = (id) => { const s = page.querySelector('[data-rv-person]'); s.value = id; s.dispatchEvent(new Event('change', { bubbles: true })); };
+    choose('p-sam');
+    await sleep(40);
+    check('*** a person with no screen: says plainly there is nowhere to keep points, and why ***',
+      /No points: Sam has no screen yet/.test(page.querySelector('[data-rv-no-points]')?.textContent || '') && !page.querySelector('[data-rv-pay]'));
+    page.querySelector('[data-rv-next]').click();
+    await sleep(5);
+    page.querySelector('[data-rv-show]').click();
+    tick(6);
+    page.querySelector('[data-rv-right]').click();
+    await sleep(40);
+    check('...their review still counts, signed with them; no screen\'s points change',
+      rows.at(-1).data.person === 'p-sam' && Object.keys(ledgers).length === 1, J(rows.at(-1)));
+    // Fixed — ask it again.
+    choose('p-robin');
+    await sleep(40);
+    const flagged = page.querySelector('[data-rv-unflag]');
+    check('(the question marked wrong is listed, signed by who flagged it)', !!flagged && /person p-robin/.test(page.textContent));
+    flagged.click();
+    await sleep(40);
+    check('"Fixed — ask it again" is saved with the person, and says what happened',
+      rows.at(-1).kind === 'unflag' && rows.at(-1).data.person === 'p-robin' && /Put back/.test(page.querySelector('[data-rv-fixed-said]')?.textContent || ''));
+    const words = [...page.querySelectorAll('[data-rv-who], [data-rv-deal]')].map((n) => n.textContent).join(' ');
+    check('*** plain words: none of the house\'s banned ones in what the reviewer reads ***',
+      !/\b(module|dashboard|panel|widget|account|token|grant)s?\b/i.test(words), (words.match(/\b(module|dashboard|panel|widget|account|token|grant)s?\b/ig) || []).join(','));
+    check('...and never names the person the site was first built for', !/Christine|Cici|her screen/i.test(page.textContent));
+    pg.destroy();
+    check('the page going away takes the points off the handle', reviews.points() === null);
+  }
+
+  section('the review page with nobody signed in');
+  {
+    const rows = [];
+    const reviews = handleOn(rows);
+    const page = document.getElementById('page');
+    const pg = mountReviewPage(page, { reviews });
+    await reviews.ready; await sleep(40);
+    check('it still reviews, and says choosing who (and points) needs a sign-in', !!page.querySelector('[data-rv-who-none]')
+      && !!page.querySelector('[data-rv-question]'));
+    page.querySelector('[data-rv-show]').click();
+    tick(6);
+    page.querySelector('[data-rv-right]').click();
+    await sleep(30);
+    check('...a review written there carries no person', rows.at(-1).kind === 'pass' && !('person' in rows.at(-1).data));
+    pg.destroy();
+  }
+} catch (err) {
+  check('the suite ran to the end', false, `${err.name}: ${err.message}\n${err.stack}`);
+}
+document.getElementById('summary').textContent = `${passed} passed, ${failed} failed`;
+})();
+</script>
+</body>
+</html>

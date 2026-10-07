@@ -37,6 +37,14 @@ TWO THINGS LIVE HERE, BOTH SMALL:
 WHO AND WHEN ARE THE SERVER'S, NEVER THE BROWSER'S: app.py stamps `by` (the account's display name for a
 signed-in device, or "a screen" for one signed in with a device key) and `at` (the server's clock). A
 browser can say WHERE ("place", e.g. which dashboard) - that is a fact it knows - but not who.
+
+WHICH PERSON ON THE LOGIN (Mike, 2026-10-06: "having Oscar review questions for his schoolwork"). The review
+page asks "Who is reviewing" among the login's own people and sends that person's id as `person`. It is a
+CHOICE among the login's own people, not a claim about who signed in - the same kind of fact as `place` - so
+app.py checks the id is one of this login's people and stamps THAT person's name as `by` (the name as the
+login knows it, from the server's row, never a name the browser typed). A row without `person` is stamped as
+before. A screen choosing a person is stamped `via: "a screen"` beside the name, so the log still says it
+came from a screen.
 """
 from __future__ import annotations
 
@@ -58,6 +66,7 @@ MAX_PLACE = 80
 MAX_PACK_FILE_BYTES = 2_000_000      # a 200-question pack is ~100 KB; anything this big is not one
 
 KEY_RE = re.compile(r"^c-[0-9a-z]{1,13}$")
+PERSON_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")   # app.py ID_RE's shape: a person id, nothing else
 PACK_ID_RE = re.compile(r"^review:[a-z0-9][a-z0-9_.-]{0,99}$")
 STEM_RE = re.compile(r"[^a-z0-9_.-]+")
 
@@ -154,4 +163,9 @@ def clean_review(kind: str, data: dict) -> dict:
     place = _text(data, "place", MAX_PLACE)
     if place:
         row["place"] = place
+    person = data.get("person")
+    if person not in (None, ""):
+        if not isinstance(person, str) or not PERSON_RE.match(person):
+            raise ValueError("person must be a person id")
+        row["person"] = person      # app.py checks it is one of this login's people, and names them
     return row

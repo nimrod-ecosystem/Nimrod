@@ -17,9 +17,10 @@
 </head>
 <body>
 <!--
-  THE REVIEW PAGE (review_page.js, pack_reviews.js). Which question packs wait for review, how far each has
-  got, and every question marked wrong while playing, with its note and "Export flagged". Its own page,
-  like claude.html. Colours come only from the theme (theme.js applyTheme), never from this file.
+  THE REVIEW PAGE (review_page.js, pack_reviews.js, review_points.js). Who is reviewing and where their points
+  go, one question at a time to check (with where it comes from, opening in a new tab), which question packs
+  wait for review, how far each has got, and every question marked wrong, with its note and "Export flagged".
+  Its own page, like claude.html. Colours come only from the theme (theme.js applyTheme), never from this file.
 -->
 <main id="root"></main>
 <p class="rv-foot"><a href="/home.html">Your dashboards</a></p>
@@ -29,20 +30,36 @@
   import { createProfilesClient, resolveTheme } from './profile.js';
   import { applyTheme, DEFAULT_THEME } from './theme.js';
   import { authHeaders } from './auth.js';
+  import { createEvents } from './events.js';
+  import { createState } from './state.js';
+  import { createPointsLedger } from './points.js';
+  import { PROFILE_SETTINGS_KEY } from './lessons.js';
 
   applyTheme(document.documentElement, DEFAULT_THEME);
   document.getElementById('rv-style').textContent = REVIEW_PAGE_STYLE;
-  (async () => {
-    try {
-      const me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null));
-      if (!me) return;
-      const theme = await resolveTheme(createProfilesClient({ user: me.user }), me.user);
-      if (theme) applyTheme(document.documentElement, theme);
-    } catch { /* offline or signed out -- the default theme already stands */ }
-  })();
   const reviews = createPackReviews({});
   reviews.startPolling();
-  mountReviewPage(document.getElementById('root'), { reviews });
+  const page = mountReviewPage(document.getElementById('root'), { reviews });
+  (async () => {
+    let me = null;
+    try { me = await fetch('/api/me', { headers: authHeaders() }).then((r) => (r.ok ? r.json() : null)); } catch { me = null; }
+    if (!me) return;   // signed out: the page still reviews; it cannot say who, and pays nobody
+    const profiles = createProfilesClient({ user: me.user });
+    // WHO IS REVIEWING (review_page.js): this login's own people ("you" and the people made here), not the
+    // cards of people whose profile lives on another login. Their points go on one of their screens.
+    page.setWho({
+      people: async () => (await profiles.people()).filter((p) => p.kind === 'you' || p.kind === 'mine' || !p.kind),
+      screens: (personId) => profiles.list(personId),
+      ledgerFor: (pid) => createPointsLedger({
+        makeEvents: (key, opts = {}) => createEvents({ url: profiles.eventsURL(pid, key), user: me.user, ...opts }),
+      }),
+      settingsFor: (pid) => createState({ url: profiles.stateURL(pid, PROFILE_SETTINGS_KEY), user: me.user }),
+    });
+    try {
+      const theme = await resolveTheme(profiles, me.user);
+      if (theme) applyTheme(document.documentElement, theme);
+    } catch { /* offline -- the default theme already stands */ }
+  })();
 </script>
 </body>
 </html>

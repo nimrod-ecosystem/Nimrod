@@ -2040,7 +2040,16 @@ def append_review(body: EventPost, request: Request, user: str = Depends(current
         data = pack_reviews.clean_review(body.kind, body.data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    data["by"] = "a screen" if via_device_key(request) else (_display_name(user) or "the account owner")
+    if data.get("person"):
+        # "Who is reviewing" (the review page): one of THIS login's people, named from the server's row.
+        who = store.get_person(user, data["person"])
+        if who is None:
+            raise HTTPException(status_code=400, detail="that person is not on this login")
+        data["by"] = (who.get("name") or "").strip() or "somebody on this login"
+        if via_device_key(request):
+            data["via"] = "a screen"
+    else:
+        data["by"] = "a screen" if via_device_key(request) else (_display_name(user) or "the account owner")
     data["at"] = _now_iso()
     result = store.append_event(user, ACCOUNT_SCOPE, pack_reviews.REVIEW_STREAM, body.kind, data)
     _push.publish(user, REVIEWS_PATH)
