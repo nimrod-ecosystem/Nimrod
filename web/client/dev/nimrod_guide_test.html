@@ -48,6 +48,7 @@ import '../modules/profile.js';
 import {
   CLAUDE_PAGE, REVIEWS_PAGE, ELSEWHERE_PAGES, ELSEWHERE_PAGE_PREFIX, pageAddress, pageURL, elsewhereLine, qrColours,
   pageRow, elsewhereMenuPage, elsewhereHTML,
+  canOpenHere, hasBrowserWindow, signedInHere, OPEN_HERE_WORDS,
 } from '../page_links.js';
 import { CLAUDE_SETTINGS_PAGE, AI_BACKEND_KEY } from '../nimrod_ai.js';
 
@@ -442,6 +443,37 @@ try {
     plain.innerHTML = elsewhereHTML('/claude.html', { loc, colours: null });
     check('no colours: the address alone, no code', !!plain.querySelector('[data-elsewhere-address]') && !plain.querySelector('svg'));
     themed.remove(); plain.remove();
+
+    // ---- row 2.57: "Open it here" on a screen page that is really somebody's computer ----
+    check('*** "Open it here" needs BOTH a sign-in on this browser and an ordinary browser window ***',
+      canOpenHere({ signedIn: true, browserWindow: true }) === true && canOpenHere({ signedIn: true, browserWindow: false }) === false
+      && canOpenHere({ signedIn: false, browserWindow: true }) === false && canOpenHere() === false);
+    check('a browser that cannot say what window it is in counts as not ordinary', hasBrowserWindow({}) === false
+      && hasBrowserWindow({ matchMedia: () => { throw new Error('x'); } }) === false
+      && hasBrowserWindow({ matchMedia: (q) => ({ matches: q === '(display-mode: browser)' }) }) === true);
+    check('signed in is what /api/me says, false on any doubt',
+      (await signedInHere({ fetchImpl: async () => ({ ok: true, json: async () => ({ signed_in: true }) }) })) === true
+      && (await signedInHere({ fetchImpl: async () => ({ ok: true, json: async () => ({ user: 'x' }) }) })) === false
+      && (await signedInHere({ fetchImpl: async () => { throw new Error('offline'); } })) === false);
+    const ohOpened = [];
+    const oh = box(); oh.style.cssText += ';--text:#111111;--bg:#fafafa';
+    elsewhereMenuPage('search', { loc, open: (p) => ohOpened.push(p), signedIn: async () => true, browserWindow: () => true }).render(oh);
+    await new Promise((r) => setTimeout(r, 30));
+    const ohBtn = oh.querySelector('[data-elsewhere-open]');
+    check('*** signed in, in an ordinary window: "Open it here" AND the address and the code ***',
+      !!ohBtn && ohBtn.textContent === OPEN_HERE_WORDS.button && oh.querySelector('[data-elsewhere-address]')?.textContent === 'example.org/search_keys.html'
+      && !!oh.querySelector('[data-elsewhere-qr] svg'), oh.innerHTML.slice(0, 300));
+    ohBtn?.click();
+    check('...pressed, it opens the keys page in a new tab (the screen page stays)', J(ohOpened) === J(['/search_keys.html']), J(ohOpened));
+    const kiosky = box();
+    elsewhereMenuPage('search', { loc, open: (p) => ohOpened.push(p), signedIn: async () => true, browserWindow: () => false }).render(kiosky);
+    const bare = box();
+    elsewhereMenuPage('search', { loc, open: (p) => ohOpened.push(p), signedIn: async () => false, browserWindow: () => true }).render(bare);
+    await new Promise((r) => setTimeout(r, 30));
+    check('*** a full-screen kiosk browser, even signed in: no button, the address and the code only (as before) ***',
+      !kiosky.querySelector('[data-elsewhere-open]') && /Nothing opens on this screen/.test(kiosky.textContent));
+    check('*** nobody signed in (a care-room screen): no button ***', !bare.querySelector('[data-elsewhere-open]') && /Nothing opens on this screen/.test(bare.textContent));
+    oh.remove(); kiosky.remove(); bare.remove();
 
     // ---- the guide's links, on a screen and off one ----
     const wrapOn = box(); wrapOn.style.cssText += ';--text:#111111;--bg:#fafafa';

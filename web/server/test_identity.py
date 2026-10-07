@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from fastapi import HTTPException  # noqa: E402
 from identity import (DEV_USER, _device_keys, current_user,  # noqa: E402
-                       set_device_key_lookup, set_device_key_touch)
+                       set_device_key_lookup, set_device_key_touch, signed_in_here)
 
 passed = 0
 failed = 0
@@ -125,6 +125,11 @@ def main():
     set_device_key_lookup(None)
     set_device_key_touch(None)
     setenv()
+
+    # --- row 2.57: a screen page on a browser the owner is signed in on ------------------------
+    check("signed in here: this account's own session", signed_in_here(FakeReq(session={"user": "kim"}), "kim"))
+    check("...not somebody else's session", not signed_in_here(FakeReq(session={"user": "lee"}), "kim"))
+    check("...not no session at all (a care-room screen nobody signs in on)", not signed_in_here(FakeReq(), "kim"))
     print(f"\n{passed} passed, {failed} failed")
     return 1 if failed else 0
 

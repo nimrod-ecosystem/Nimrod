@@ -533,6 +533,142 @@ check("*** removing: not set, and the row no longer holds a sealed key ***", r.s
 check("...Spotify still searches", c.post(SR, json={"q": "blue moon"}, headers=H(SK_A)).json()["searched"] == ["spotify"])
 check("removing a provider that is not one: 404", c.delete(f"{K}/vimeo", headers=H(SK_A)).status_code == 404)
 
+section("*** one key, entered once (row 2.57): the levels, pure ***")
+check("account (or nothing) is the default", S.clean_where("account", "x") == ("account", None) and S.clean_where("", "") == ("account", None))
+check("a panel, device or person needs which one", S.clean_where("Panel", " pnl-1 ") == ("panel", "pnl-1"))
+for lv, ref in (("room", "x"), ("panel", ""), ("device", "a b"), ("person", "x" * 81)):
+    try:
+        S.clean_where(lv, ref)
+        check(f"refused where {lv}/{ref[:10]!r}", False, "accepted")
+    except S.Refused as e:
+        check(f"refused where {lv}/{ref[:10]!r}, in words", e.status == 400 and bool(e.detail))
+check("a context keeps only good ids, in level order", S.clean_context({"device": "d-1", "panel": "bad id", "person": "", "x": "y"}) == {"device": "d-1"})
+check("the order a search looks in: panel, device, person, then the account", S.LEVELS == ("panel", "device", "person"))
+
+section("*** one key, entered once (row 2.57): the routes ***")
+YT2 = "AIza" + "SecondFakeKeyForTestsOnly_01234567"     # made up
+YT3 = "AIza" + "ThirdFakeKeyForTestsOnly_012345678"      # made up
+SK_C, SK_D = "srch-c", "srch-d"
+pc = c.get("/api/people", headers=H(SK_C)).json()["people"][0]["id"]
+c.patch(f"/api/people/{pc}", json={"name": "Pat"}, headers=H(SK_C))
+c.put(f"{K}/youtube", json={"key": YT_KEY}, headers=H(SK_C))
+
+
+def used_key(**ctx):
+    CALLS.clear()
+    r = c.post(SR, json={"q": "blue moon", "provider": "youtube", **ctx}, headers=H(SK_C))
+    yc = [x for x in CALLS if x["url"] == S.YT_SEARCH]
+    return (yc[0]["headers"].get("X-goog-api-key") if yc else None), r
+
+
+check("*** the account's key is the default everywhere: a panel and a device with none of their own use it ***",
+      used_key(panel="pnl-1", device="dev-1")[0] == YT_KEY)
+r = c.put(f"{K}/youtube", json={"key": YT2, "level": "device", "ref": "dev-1", "label": "Windows"}, headers=H(SK_C))
+check("a key saved for one device: the answer never carries it", r.status_code == 200 and YT2 not in r.text, r.text)
+check("*** that device now uses its own; another device still uses the default ***",
+      used_key(device="dev-1")[0] == YT2 and used_key(device="dev-2")[0] == YT_KEY)
+c.put(f"{K}/youtube", json={"key": YT3, "level": "panel", "ref": "pnl-1", "label": "YouTube"}, headers=H(SK_C))
+check("*** the nearest wins: a panel's own beats its device's ***", used_key(panel="pnl-1", device="dev-1")[0] == YT3
+      and used_key(panel="pnl-2", device="dev-1")[0] == YT2)
+r = c.put(f"{K}/youtube", json={"key": YT2, "level": "person", "ref": "nobody-here-1"}, headers=H(SK_C))
+check("a person who is not one of this account's: 404, nothing saved", r.status_code == 404, r.text)
+r = c.put(f"{K}/youtube", json={"key": YT2, "level": "person", "ref": pc, "label": "ignored"}, headers=H(SK_C))
+check("a person's key: labelled with the person's own name", r.status_code == 200
+      and any(o["level"] == "person" and o["label"] == "Pat" for o in r.json()["youtube"]["overrides"]), r.text)
+check("...and used for that person where no panel or device has one", used_key(person=pc, device="dev-9")[0] == YT2)
+st = c.get(K, params={"panel": "pnl-1", "device": "dev-1"}, headers=H(SK_C)).json()
+ov = {(o["level"], o["ref"]): o for o in st["youtube"]["overrides"]}
+check("*** the status: the key in force from here (the panel's), every particular key with its last four, and which are here ***",
+      st["youtube"]["in_force"] == {"level": "panel", "last4": YT3[-4:], "label": "YouTube"}
+      and ov[("device", "dev-1")]["here"] is True and ov[("panel", "pnl-1")]["here"] is True and ov[("person", pc)]["here"] is False
+      and ov[("device", "dev-1")]["label"] == "Windows", json.dumps(st)[:400])
+raw_row = json.dumps(appmod.store.get_state(SK_C, S.ACCOUNT_SCOPE, S.OVERRIDE_ROWS["youtube"])["data"])
+check("*** the particular keys are sealed too: none of them in the clear, in the row or the status ***",
+      all(k not in raw_row and k not in json.dumps(st) for k in (YT_KEY, YT2, YT3)))
+check("another account sees none of them", c.get(K, headers=H(SK_D)).json()["youtube"]["overrides"] == [])
+r = c.delete(f"{K}/youtube", params={"level": "device", "ref": "dev-1"}, headers=H(SK_C))
+check("*** removing a device's key = use the default again ***", r.status_code == 200 and used_key(device="dev-1")[0] == YT_KEY)
+check("...the account's default untouched", c.get(K, headers=H(SK_C)).json()["youtube"]["set"] is True)
+c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": SP_SECRET}, headers=H(SK_C))
+_ov = appmod.store.get_state(SK_C, S.ACCOUNT_SCOPE, S.OVERRIDE_ROWS["youtube"])
+_sp_sealed = appmod.store.get_state(SK_C, S.ACCOUNT_SCOPE, S.KEY_ROWS["spotify"])["data"]["sealed"]
+appmod.store.put_state(SK_C, S.ACCOUNT_SCOPE, S.OVERRIDE_ROWS["youtube"],
+                       {**_ov["data"], "panel:pnl-bad": {"sealed": _sp_sealed, "last4": "zzzz"}}, _ov["version"])
+k_used, r = used_key(panel="pnl-bad")
+check("*** a panel's key that will not open is SAID, never quietly swapped for the account's ***",
+      k_used is None and "Paste it again" in r.json()["problems"].get("youtube", ""), r.text)
+saved_max = S.MAX_OVERRIDES
+S.MAX_OVERRIDES = 2
+r = c.put(f"{K}/youtube", json={"key": YT2, "level": "device", "ref": "dev-x"}, headers=H(SK_C))
+check(f"*** a cap on particular keys: past it, 409 in words ***", r.status_code == 409 and "Remove some" in r.json()["detail"], r.text)
+check("...replacing one already there is not past the cap", c.put(f"{K}/youtube", json={"key": YT_KEY, "level": "panel", "ref": "pnl-1"}, headers=H(SK_C)).status_code == 200)
+S.MAX_OVERRIDES = saved_max
+
+section("*** who may change which: a bare screen, a screen with the owner signed in ***")
+import base64 as _b64s  # noqa: E402
+from itsdangerous import TimestampSigner  # noqa: E402
+
+
+def session_cookie(user):
+    signer = TimestampSigner(os.environ.get("SESSION_SECRET", "dev-only-insecure-change-me"))
+    return signer.sign(_b64s.b64encode(json.dumps({"user": user}).encode("utf-8"))).decode("utf-8")
+
+
+os.environ["DEVICE_KEYS"] = f"{SK_C}:rec-screen-c-secret-for-tests"
+SCR = {"X-Device-Key": "rec-screen-c-secret-for-tests"}
+st = c.get(K, headers=SCR).json()
+check("a bare screen: the status says it cannot change everything, and which levels it can", st["can_change"] is False
+      and st["signed_in"] is False and st["screen_levels"] == ["panel", "device"])
+r = c.put(f"{K}/youtube", json={"key": YT2}, headers=SCR)
+check("*** a bare screen cannot save the account's key: 403, saying to sign in or save it for this player or device ***",
+      r.status_code == 403 and r.json()["detail"] == S.SIGN_IN_FIRST, r.text)
+check("...nor a person's", c.put(f"{K}/youtube", json={"key": YT2, "level": "person", "ref": pc}, headers=SCR).status_code == 403)
+r = c.put(f"{K}/youtube", json={"key": YT2, "level": "panel", "ref": "pnl-scr"}, headers=SCR)
+check("*** ...but may save one for one panel (what it could always do in the panel's settings) ***", r.status_code == 200, r.text)
+check("...or one device", c.put(f"{K}/youtube", json={"key": YT2, "level": "device", "ref": "dev-scr"}, headers=SCR).status_code == 200)
+check("...and remove those", c.delete(f"{K}/youtube", params={"level": "device", "ref": "dev-scr"}, headers=SCR).status_code == 200)
+check("...but not remove the account's", c.delete(f"{K}/youtube", headers=SCR).status_code == 403)
+check("...or change the filter", c.put(f"{K}/settings", json={"safe_search": "none"}, headers=SCR).status_code == 403)
+cs = TestClient(appmod.app)
+cs.cookies.set("session", session_cookie(SK_C))
+st = cs.get(K, headers=SCR).json()
+check("*** the same screen page with the owner's own sign-in: it may change everything ***", st["can_change"] is True and st["signed_in"] is True)
+r = cs.put(f"{K}/youtube", json={"key": YT_KEY}, headers=SCR)
+check("...saving the account's key from it works", r.status_code == 200, r.text)
+check("/api/me says signed in there", cs.get("/api/me", headers=SCR).json().get("signed_in") is True)
+check("/api/me says not signed in on a bare screen", c.get("/api/me", headers=SCR).json().get("signed_in") is False)
+cs = TestClient(appmod.app)
+cs.cookies.set("session", session_cookie("google:somebody-else"))
+check("*** somebody ELSE's sign-in on that screen is not the owner: 403 ***",
+      cs.put(f"{K}/youtube", json={"key": YT2}, headers=SCR).status_code == 403)
+os.environ.pop("DEVICE_KEYS", None)
+
+section("*** a panel's old key, handed over once (adopt) ***")
+r = c.post(f"{K}/youtube/adopt", json={"key": YT2, "panel": "pnl-old", "label": "YouTube"}, headers=H(SK_D))
+check("*** no default yet: the panel's old key becomes the account's default ***", r.status_code == 200 and r.json()["where"] == "account"
+      and r.json()["youtube"]["set"] is True and YT2 not in r.text, r.text)
+r = c.post(f"{K}/youtube/adopt", json={"key": YT2, "panel": "pnl-old2"}, headers=H(SK_D))
+check("the same key from another panel: nothing more to keep", r.json()["where"] == "same" and r.json()["youtube"]["overrides"] == [])
+r = c.post(f"{K}/youtube/adopt", json={"key": YT3, "panel": "pnl-old3", "label": "YouTube"}, headers=H(SK_D))
+check("*** a DIFFERENT key: kept for that one panel, so it searches exactly as it did; the default is untouched ***",
+      r.json()["where"] == "panel" and r.json()["youtube"]["in_force"]["level"] == "panel"
+      and r.json()["youtube"]["last4"] == YT2[-4:], r.text)
+os.environ["DEVICE_KEYS"] = f"{SK_D}:rec-screen-d-secret-for-tests"
+r = c.post(f"{K}/youtube/adopt", json={"key": YT3, "panel": "pnl-old4"}, headers={"X-Device-Key": "rec-screen-d-secret-for-tests"})
+check("a screen may hand over a panel's old key (it only ever makes it harder to see)", r.status_code == 200 and r.json()["where"] == "panel", r.text)
+os.environ.pop("DEVICE_KEYS", None)
+check("a key of the wrong shape is not adopted", c.post(f"{K}/youtube/adopt", json={"key": "nope", "panel": "p"}, headers=H(SK_D)).status_code == 400)
+
+section("*** Spotify at a level too ***")
+SP_ID2, SP_SECRET2 = "1111111111abcdef0123456789abcdef", "2222222222543210fedcba9876543210"   # made up
+c.put(f"{K}/spotify", json={"client_id": SP_ID, "client_secret": SP_SECRET}, headers=H(SK_C))
+c.put(f"{K}/spotify", json={"client_id": SP_ID2, "client_secret": SP_SECRET2, "level": "device", "ref": "dev-sp"}, headers=H(SK_C))
+CALLS.clear()
+c.post(SR, json={"q": "blue moon", "provider": "spotify", "device": "dev-sp"}, headers=H(SK_C))
+tok = [x for x in CALLS if x["url"] == S.SP_TOKEN]
+check("*** a device's own Spotify pair is the one asked for a pass from that device ***",
+      tok and tok[0]["headers"].get("Authorization") == "Basic " + _b64.b64encode(f"{SP_ID2}:{SP_SECRET2}".encode()).decode())
+
 section("search rate limit")
 S.search_limit.reset()
 codes = [c.post(SR, json={"q": "blue moon"}, headers=H(SK_A)).status_code for _ in range(S.search_limit.limit + 1)]

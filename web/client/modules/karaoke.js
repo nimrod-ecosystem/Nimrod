@@ -40,7 +40,7 @@ export const DEFAULTS = Object.freeze({
 // The YouTube rows this panel shares, reused AS DECLARED so the two can never disagree about what a
 // key means. `presetId` is left out: its choices come from a mounted youtube instance's live list,
 // which this frame does not forward yet.
-const SHARED = ['apiKey', 'volume', 'volumeStep', 'heldNotifyMs'];
+const SHARED = ['apiKey', 'apiKeyFor', 'volume', 'volumeStep', 'heldNotifyMs'];
 const SETTINGS = [
   { key: 'framing', label: 'Show the "Sing along" heading', default: true, level: 'essential',
     onLabel: 'On', offLabel: 'Off (just the video)' },
@@ -201,6 +201,14 @@ registerModule(
         try { child?.destroy(); } catch (err) { console.error('karaoke: player', err); }
         child = null;
         while (childSubs.length) { try { childSubs.pop()(); } catch { /* gone */ } }
+      },
+      // (row 2.57) The key rows are the player's: a typed key goes to the server through it, and the
+      // rows' live words (which key is in use) are its words. Only the shared rows are forwarded.
+      settingsWrite: (k, v) => SHARED.includes(k) && child?.impl?.settingsWrite?.(k, v) === true,
+      settingsChoices: () => {
+        let c = {};
+        try { c = child?.impl?.settingsChoices?.() || {}; } catch { c = {}; }
+        return Object.fromEntries(Object.entries(c).filter(([k]) => SHARED.includes(k)));
       },
     };
   },

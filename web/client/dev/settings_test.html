@@ -970,6 +970,17 @@ section('*** secret text (an API key): masked on screen, never put in the page, 
   check('an ordinary text field is not secret, and shows its value',
     normalizeField({ key: 'c', kind: 'text' }).secret === false
     && displayValue(normalizeField({ key: 'c', kind: 'text' }), 'Hello') === 'Hello');
+  // Row 2.57: a key kept OUTSIDE the panel's settings (sealed on the server) - the mounted instance says what is in use.
+  const liveWords = fieldsFor({ settings: [{ key: 'apiKey', label: 'Key', kind: 'text', secret: true, note: 'declared' },
+    { key: 'pick', kind: 'choice', options: [{ value: 'a', label: 'A' }] }] },
+  { settingsChoices: () => ({ apiKey: { emptyLabel: 'In use: the account’s key, ending …4f2a', note: 'live note', other: 'x' }, pick: [{ value: 'b', label: 'B' }] }) });
+  const lk = liveWords.find((f) => f.key === 'apiKey');
+  check('*** an instance may give a secret row live words: what an empty row says, and its note ***',
+    displayValue(lk, '') === 'In use: the account’s key, ending …4f2a' && lk.note === 'live note' && !('other' in lk), JSON.stringify(lk));
+  check('...a stored secret still shows masked, not the words', displayValue(lk, 'AIzaSyD-abcdef1234') === '••••1234');
+  check('...and live OPTIONS for a choice are as before', liveWords.find((f) => f.key === 'pick').options[0].value === 'b');
+  check('an emptyLabel on a NON-secret text row is not taken (it shows its value or its placeholder)',
+    displayValue(normalizeField({ key: 'c', kind: 'text', emptyLabel: 'x' }), '') === 'Not set');
 }
 
 section('*** appliesWhen: a row that would do nothing right now is left out, its value kept ***');

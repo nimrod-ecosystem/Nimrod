@@ -5104,7 +5104,13 @@ export async function mountKiosk(root, {
         // dropped — which somebody debugs as a broken switch.
         values: () => rec.state.get() || {},
         level: complexity(),
-        onStep: (key, value) => { rec.state.set({ [key]: value }); },
+        // (row 2.57) A value the panel keeps somewhere else - a YouTube key, sealed on the server - is
+        // handed to the panel (`settingsWrite` returns true) and never stored in its settings.
+        onStep: (key, value) => {
+          let taken = false;
+          try { taken = (rec.instance?.impl || rec.instance)?.settingsWrite?.(key, value) === true; } catch (err) { console.error('kiosk: settingsWrite', err); }
+          if (!taken) rec.state.set({ [key]: value });
+        },
       };
       const items = fieldItems([
         ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),

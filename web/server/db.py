@@ -1363,7 +1363,10 @@ class _Store:
                             "as text only. And if you add a YouTube or Spotify key to search "
                             "for songs and videos by name: those keys, ENCRYPTED (never shown "
                             "back, only the last four characters), and which YouTube filter you "
-                            "chose. What you search for is sent to YouTube or Spotify to be "
+                            "chose. A key saved for one person, one device or one YouTube player "
+                            "rather than for everywhere is kept the same way, with a short note of "
+                            "where it is used (the person's name, the kind of computer, or "
+                            "\"YouTube\"). What you search for is sent to YouTube or Spotify to be "
                             "answered and is not kept here.", False,
                             "when you change a setting"),
         "events":          ("An append-only log of what a module did: which photo was shown "

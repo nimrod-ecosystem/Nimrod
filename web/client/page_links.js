@@ -25,14 +25,32 @@
 // WHAT COUNTS AS A SCREEN: the kiosk's own word (`ctx.isScreen`, kiosk.js: true on a real screen, false when
 // the kiosk is embedded in another page). The address comes from where this page is actually served
 // (screen_pair.js `siteHost`), never a hostname written down here.
+//
+// *** "OPEN IT HERE" ON A SCREEN PAGE THAT IS REALLY SOMEBODY'S COMPUTER (row 2.57, Mike 2026-10-07). *** On his
+// own computer, showing a screen page, the Devices row gave Mike only a code to scan: "it wants me to use my
+// phone". So the menu page also offers "Open it here" (a new tab, the screen page left as it was) when BOTH hold:
+//   1. THIS BROWSER IS SIGNED IN with the screen's own account (/api/me `signed_in`, server identity.signed_in_here).
+//      A care-room screen runs on the screen's key and nobody signs in on it; somebody signed in typed their way
+//      in, at a keyboard. It is also what the keys page needs to save anything from here.
+//   2. THE BROWSER HAS ITS OWN WINDOW AROUND THE PAGE - tabs and an address bar (`(display-mode: browser)`), so a
+//      new tab can be closed and the screen page is one tab away. A full-screen kiosk browser [training knowledge,
+//      to be checked on the bench: Chromium's --kiosk reports `display-mode: fullscreen`] has no tab strip, and a
+//      tab opened there covers the screen until somebody who knows the keys closes it - the CLAUDE.md invariant.
+// ARGUED, the alternatives: "it has a mouse or keyboard" (`pointer: fine`) - the bench and care-room Pis are Pi 400s,
+// a keyboard with a computer inside, and have a mouse; it cannot tell them from Mike's desk. "Never on a screen"
+// (before) - safe, and what sent Mike to his phone. The two checks together keep the care-room case exactly as it
+// was (address and code only) unless somebody has both signed in there AND left it in an ordinary window.
+// The address and the code stay on the page either way: they always work.
 
 import { siteHost } from './screen_pair.js';
 import { qrSVG } from './qr.js';
 import { contrast, TEXT_MIN } from './theme.js';
+import { authHeaders } from './auth.js';
 
 export const CLAUDE_PAGE = '/claude.html';     // = nimrod_ai.js CLAUDE_SETTINGS_PAGE (the suite checks they agree)
 export const REVIEWS_PAGE = '/reviews.html';
 export const SEARCH_KEYS_PAGE = '/search_keys.html';   // recommend.js's "Add a key" opens the same page
+export const HELPER_PAGE = '/helper.html';             // = nimrod_helper.js HELPER_PAGE (the suite checks they agree)
 
 // The pages, by key: what a row is called, the menu page's title on a screen, and the hint off one.
 export const ELSEWHERE_PAGES = Object.freeze({
@@ -42,7 +60,12 @@ export const ELSEWHERE_PAGES = Object.freeze({
     offHint: 'opens in a new tab: the packs waiting, how far each has got, every question marked wrong' }),
   search: Object.freeze({ path: SEARCH_KEYS_PAGE, label: 'Search songs and videos by name\u2026',
     title: 'Search songs and videos by name',
-    offHint: 'opens in a new tab: your own YouTube and Spotify keys, for finding something to recommend' }),
+    offHint: 'opens in a new tab: your own YouTube and Spotify keys, entered once, for every search by name' }),
+  // The one install package (DECISIONS 2026-10-07 item 3): shown in the Voice section when no speech program
+  // answers on this computer. A download is installed at a desk, never at a screen, so a screen shows the address.
+  helper: Object.freeze({ path: HELPER_PAGE, label: 'Get the Nimrod helper for this computer…',
+    title: 'Get the Nimrod helper for this computer',
+    offHint: 'opens in a new tab: what it installs, that what it hears stays on the computer, how to remove it' }),
 });
 // The menu page a screen's row opens instead (settings.js `page`): `elsewhere:<key>`.
 export const ELSEWHERE_PAGE_PREFIX = 'elsewhere:';
@@ -107,12 +130,41 @@ export function elsewhereQR(path, { loc = here(), colours = null } = {}) {
  * What a screen shows for a page: the address in words, the code beside it when it can be drawn, and what
  * did NOT happen ("nothing opens on this screen"). `data-elsewhere` carries the path for a suite.
  */
-export function elsewhereHTML(path, { loc = here(), colours = null, cls = 'pl-elsewhere' } = {}) {
+export function elsewhereHTML(path, { loc = here(), colours = null, cls = 'pl-elsewhere', openHere = false } = {}) {
   const qr = elsewhereQR(path, { loc, colours });
+  // (row 2.57) With "Open it here" (see the header): the button first, then the address and code as before.
+  const open = openHere
+    ? `<p><button type="button" class="pl-open-here" data-elsewhere-open style="min-height:44px;padding:8px 14px;font:inherit">${esc(OPEN_HERE_WORDS.button)}</button></p>`
+    : '';
   return `<div class="${esc(cls)}" data-elsewhere="${esc(path)}">
-    <p>On your phone or computer, open <b data-elsewhere-address>${esc(pageAddress(path, loc))}</b></p>
+    ${open}<p>${openHere ? 'Or, on your phone or another computer' : 'On your phone or computer'}, open <b data-elsewhere-address>${esc(pageAddress(path, loc))}</b></p>
     ${qr ? `<div data-elsewhere-qr style="width:min(180px,60%);margin:8px 0">${qr}</div>` : ''}
-    <p data-elsewhere-note>Nothing opens on this screen: it keeps showing what it was showing.</p></div>`;
+    <p data-elsewhere-note>${openHere ? esc(OPEN_HERE_WORDS.note) : 'Nothing opens on this screen: it keeps showing what it was showing.'}</p></div>`;
+}
+
+export const OPEN_HERE_WORDS = Object.freeze({
+  button: 'Open it here',
+  note: 'Open it here opens a new tab; this page stays as it was, one tab away.',
+});
+
+/** Does this browser have its own window around the page (tabs, an address bar)? False when it cannot tell. */
+export function hasBrowserWindow(win = (typeof window !== 'undefined' ? window : null)) {
+  try { return !!(win && win.matchMedia && win.matchMedia('(display-mode: browser)').matches); } catch { return false; }
+}
+
+/** Is this browser signed in with the screen's own account (/api/me `signed_in`)? False on any doubt. */
+export async function signedInHere({ fetchImpl = (...a) => fetch(...a), headers = () => authHeaders() } = {}) {
+  try {
+    const r = await fetchImpl('/api/me', { headers: headers(), credentials: 'same-origin' });
+    if (!r || !r.ok) return false;
+    const j = await r.json();
+    return !!(j && j.signed_in === true);
+  } catch { return false; }
+}
+
+/** "Open it here" is offered on a screen page only when both hold (see the header). PURE. */
+export function canOpenHere({ signedIn = false, browserWindow = false } = {}) {
+  return signedIn === true && browserWindow === true;
 }
 
 /**
@@ -128,12 +180,31 @@ export function pageRow(key, { isScreen = false, loc = here(), open = openPageTa
   return { ...base, hint: p.offHint, run: () => { open(p.path); }, ...over };
 }
 
-/** The menu page a screen's row opens: settings.js's `{ title, render(el) }`. */
-export function elsewhereMenuPage(key, { loc = here() } = {}) {
+/**
+ * The menu page a screen's row opens: settings.js's `{ title, render(el) }`. The address and code are drawn at
+ * once; "Open it here" joins them when this browser turns out to be signed in and in an ordinary window (row 2.57,
+ * the header). `signedIn` and `browserWindow` are injectable for a suite.
+ */
+export function elsewhereMenuPage(key, {
+  loc = here(), open = openPageTab, signedIn = signedInHere, browserWindow = hasBrowserWindow,
+} = {}) {
   const p = ELSEWHERE_PAGES[key];
   if (!p) return undefined;
   return {
     title: p.title,
-    render(el) { el.innerHTML = elsewhereHTML(p.path, { loc, colours: themeQrColours(el), cls: 'st-hint pl-elsewhere' }); },
+    render(el) {
+      const draw = (openHere) => {
+        el.innerHTML = elsewhereHTML(p.path, { loc, colours: themeQrColours(el), cls: 'st-hint pl-elsewhere', openHere });
+        el.querySelector('[data-elsewhere-open]')?.addEventListener('click', () => { open(p.path); });
+      };
+      draw(false);
+      let win = false;
+      try { win = browserWindow() === true; } catch { win = false; }
+      if (!win) return;
+      Promise.resolve(signedIn()).then((yes) => {
+        if (canOpenHere({ signedIn: yes === true, browserWindow: win }) && el.isConnected !== false
+            && el.querySelector(`[data-elsewhere="${p.path}"]`)) draw(true);
+      }).catch(() => { /* stays as drawn: the address and the code */ });
+    },
   };
 }
