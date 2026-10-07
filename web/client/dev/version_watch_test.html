@@ -474,6 +474,39 @@ function makeWatch(over = {}) {
       check('*** ...nobody pressed for the idle time -> it reloads ***', s2.reloads.length === 1, JSON.stringify(s2.k.versionWatch.state()));
       s2.done();
     }
+    // Solitaire and Math above its Beginner level (the calculator game) have their own engines: the same as Trivia above,
+    // each on its own screen. Open and never pressed reloads; pressed holds; idle past the idle time reloads.
+    for (const [type, verb, payload] of [['solitaire', 'solitaire/next', {}], ['algebra', 'algebra/key', '7']]) {
+      const PG = await profiles.create(`TEST-version-watch-${type}`);
+      await profiles.addModule(PG.id, type);
+      await setRow(PG.id, { [PICK_UP_KEY]: true });
+      const s = await screen({ profileId: PG.id, extra: { gameIdleMs: 400 } });
+      const gid = () => (s.k.panels().find((x) => x.type === type) || {}).id;
+      check(`(setup) ${type} is open`, await until(() => !!gid() && !!s.box.querySelector('.k-mod')?.childElementCount, 6000));
+      const r0 = await deploy(s, 'next0001');
+      check(`*** ${type} open, never pressed -> it reloads ***`, r0 === 'acted' && s.reloads.length === 1,
+        `${r0} ${JSON.stringify(s.k.versionWatch.state())}`);
+      s.done();
+      const bus2 = createBus();
+      const states = [];
+      bus2.subscribe(PLAY_STATE_TOPIC, (p) => states.push(p));
+      const s2 = await screen({ profileId: PG.id, bus: bus2, extra: { gameIdleMs: 400 } });
+      const gid2 = () => (s2.k.panels().find((x) => x.type === type) || {}).id;
+      await until(() => !!gid2() && !!s2.box.querySelector('.k-mod')?.childElementCount, 6000);
+      bus2.publish(verb, payload);
+      check(`(setup) a press on ${type} (${verb}): being played`, await until(() => states.some((p) => p.id === gid2() && p.playing), 2000),
+        JSON.stringify(states));
+      const r = await deploy(s2, 'next0002');
+      check(`*** ${type} pressed a moment ago -> waits (game) ***`, r === 'waiting' && s2.k.versionWatch.state().reason === 'game'
+        && s2.reloads.length === 0, `${r} ${JSON.stringify(s2.k.versionWatch.state())}`);
+      await sleep(550);
+      check(`...nobody pressed ${type} for the idle time: it says so (rest)`, states.some((p) => p.id === gid2() && !p.playing && p.rest),
+        JSON.stringify(states));
+      await s2.k.versionWatch.check();
+      check(`*** ...and the reload goes ahead: an idle open ${type} does not hold it past the idle time ***`, s2.reloads.length === 1,
+        JSON.stringify(s2.k.versionWatch.state()));
+      s2.done();
+    }
     {
       // A dictation window (no game) still holds by itself, with or without a panel id.
       const s = await screen();

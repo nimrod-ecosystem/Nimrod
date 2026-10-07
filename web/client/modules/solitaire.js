@@ -37,6 +37,7 @@ import {
   sources, pickable, cardsAt, canDraw, isWon, isStuck, allRevealed, homeCount, drawCount,
   encodeTurn, replay, AUTO_MODES,
 } from '../klondike.js';
+import { createPlayWatch } from '../game_start.js';
 
 export const GAME = 'solitaire';
 export const SCORE_LABEL = 'Solitaire: cards home';
@@ -160,6 +161,10 @@ registerModule(
     let rootEl = null;
     let stuckFor = null;       // the position `stuckVal` was worked out for (checked once per position)
     let stuckVal = false;
+    // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button, so from a press on it (a switch's
+    // next / prev / select / back / undo, a click on the table) until nobody has pressed for GAME_IDLE_MS, or the deal
+    // is won. Never merely for being open: a table left out must not keep the bar away, or hold a new version, for ever.
+    let plays = null;
 
     const game = () => snaps[snaps.length - 1];
     function stuckNow(g) {
@@ -416,6 +421,7 @@ registerModule(
 
       // the bar
       const won = isWon(g);
+      if (won) plays?.rest();      // the deal is won: nobody is playing it now, until a new game
       const stuck = !won && !picked && stuckNow(g);
       let line;
       if (won) line = `<span class="sol-won" data-won>You won! All 52 cards are home.</span>`;
@@ -503,6 +509,11 @@ registerModule(
         // A new deal, optionally a particular one ({ seed, draw }): used by the suite, and by anything
         // that wants to hand somebody the same deal again.
         bus.subscribe(`${GAME}/deal`, (p) => newGame(Number.isFinite(p?.seed) ? p.seed : null, p?.draw ?? null));
+        // Being played: its presses, watched after its own handlers, so the press that wins is seen won and the
+        // "New game" press after a win counts. Not `deal`: that is a program handing it a deal, not somebody playing.
+        plays = createPlayWatch(bus, ctx);
+        plays.watch({ topics: [`${GAME}/next`, `${GAME}/prev`, `${GAME}/select`, `${GAME}/back`, `${GAME}/undo`],
+          mount, when: () => !dead && !isWon(game()) });
 
         render();
         // Only the stats line changes each second, so only its text is touched: re-drawing the table
@@ -514,9 +525,10 @@ registerModule(
         }, 1000);
       },
       onResize() {},
-      onHide() { try { state?.flush?.(); } catch { /* nothing to do */ } },
+      onHide() { plays?.rest(); try { state?.flush?.(); } catch { /* nothing to do */ } },
       destroy() {
         dead = true;
+        if (plays) { plays.destroy(); plays = null; }
         mount.removeEventListener('click', onClick);
         if (ticker != null) { clearInterval(ticker); ticker = null; }
         try { if (lastSpeech && ctx.output?.cancel) ctx.output.cancel(lastSpeech); } catch { /* gone */ }
