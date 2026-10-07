@@ -108,6 +108,13 @@ check("a pack id that is not a review pack is refused",
 check("a pass needs the question it passes", raises(lambda: R.clean_review("pass", {"key": "c-1"})))
 check("a novel is refused", raises(lambda: R.clean_review("note", {"key": "c-1", "note": "x" * (R.MAX_NOTE + 1)})))
 check("text must be text", raises(lambda: R.clean_review("flag", {"key": "c-1", "question": ["Q"]})))
+check("a person id rides along (who is reviewing: app.py checks and names them)",
+      R.clean_review("pass", {"key": "c-1", "question": "Q", "person": "p_abc-1"})["person"] == "p_abc-1")
+check("...an empty one is the same as none",
+      "person" not in R.clean_review("pass", {"key": "c-1", "question": "Q", "person": ""}))
+check("...and anything that is not an id is refused",
+      raises(lambda: R.clean_review("pass", {"key": "c-1", "question": "Q", "person": "../x"}))
+      and raises(lambda: R.clean_review("pass", {"key": "c-1", "question": "Q", "person": 7})))
 
 section("the routes")
 DB = str(tmp / "reviews_test.db")
@@ -153,6 +160,25 @@ check("the screen (same account) reads the same log",
       len(c.get("/api/account/reviews", headers=SCREEN).json()["events"]) == 3)
 check("the review log is not a person's or a screen's stream (the claude key's scope is untouched)",
       c.get("/api/user-events/question-reviews", headers=A).json()["events"] == [])
+
+section("*** who is reviewing: one of the login's own people, named by the server ***")
+teen = c.post("/api/people", json={"name": "Robin"}, headers=A).json()
+r = c.post("/api/account/reviews", json={"kind": "pass", "data": {"key": "c-q3", "question": "Q3?", "answer": "b",
+                                                                  "person": teen["id"]}}, headers=A)
+check("a review for a person on this login is signed with THAT person's name, not the account's",
+      r.status_code == 200 and r.json()["data"]["by"] == "Robin" and r.json()["data"]["person"] == teen["id"]
+      and "via" not in r.json()["data"], r.text[:300])
+other = c.post("/api/people", json={"name": "Elsewhere"}, headers=B).json()
+r = c.post("/api/account/reviews", json={"kind": "pass", "data": {"key": "c-q4", "question": "Q4?",
+                                                                  "person": other["id"]}}, headers=A)
+check("*** another login's person is refused (400, plain words), and nothing is written ***",
+      r.status_code == 400 and "not on this login" in r.json()["detail"]
+      and not any(e["data"].get("key") == "c-q4" for e in c.get("/api/account/reviews", headers=A).json()["events"]),
+      r.text[:300])
+r = c.post("/api/account/reviews", json={"kind": "flag", "data": {"key": "c-q5", "question": "Q5?",
+                                                                  "person": teen["id"], "by": "forged"}}, headers=SCREEN)
+check("a screen choosing a person: their name, and the row still says it came from a screen",
+      r.status_code == 200 and r.json()["data"]["by"] == "Robin" and r.json()["data"]["via"] == "a screen", r.text[:300])
 
 print(f"\n{passed} passed, {failed} failed")
 sys.exit(1 if failed else 0)

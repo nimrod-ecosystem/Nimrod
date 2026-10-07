@@ -112,6 +112,7 @@ import { createPointsLedger, pointsEvents, pointsValue, currencyOf, fmtPoints, p
 import { PROFILE_SETTINGS_KEY } from './lessons.js';
 import { CATALOG } from './modules_catalog.js';
 import { createScoreSource } from './score_source.js';
+import { REVIEW_POINT_DEFAULTS, REVIEW_POINT_CHOICES, REVIEW_POINT_ROWS, reviewPointPrefs } from './review_points.js';
 
 export { POINTS_DISCLAIMER };
 
@@ -176,6 +177,10 @@ export const GAME_DEFAULTS = Object.freeze({
   unlockCost: 5,            // decision 5
   freeUnlocks: true,        // Mike: "Individual items should also be available for unlocks, if you don't want to use the points"
   schoolUnlocks: true,      // decision 8
+  // Points for reviewing questions (Mike, 2026-10-06): review_points.js argues each number. Kept here, beside the
+  // tour's, because they are the same kind of thing — what the screen's points pay for — and this page is where
+  // those are changed.
+  ...REVIEW_POINT_DEFAULTS,
 });
 export const TOUR_STEP_CHOICES = Object.freeze([0, 1, 2, 5]);
 export const UNLOCK_COST_CHOICES = Object.freeze([1, 2, 5, 10, 20, 50]);
@@ -187,6 +192,7 @@ export function gameSettingsFrom(values) {
     unlockCost: Math.max(1, n(raw.unlockCost, GAME_DEFAULTS.unlockCost)),
     freeUnlocks: isBool(raw.freeUnlocks) ? raw.freeUnlocks : GAME_DEFAULTS.freeUnlocks,
     schoolUnlocks: isBool(raw.schoolUnlocks) ? raw.schoolUnlocks : GAME_DEFAULTS.schoolUnlocks,
+    ...reviewPointPrefs(raw),
   };
 }
 
@@ -689,6 +695,19 @@ export function gameFlagRowsHTML(flags) {
   }).join('');
 }
 
+// "Points for reviewing questions" (review_points.js): four choices, the same kind of row as the tour's. A saved
+// number that is not one of the choices is still offered, so opening the page never changes it.
+function reviewPointRowsHTML(prefs, opt) {
+  return `<p class="st-label" style="margin-top:6px" data-review-points-rows>Reviewing questions</p>
+    <p class="st-hint" style="display:block;margin:0 0 6px">The same points whether a question is passed or marked wrong, once per question. A review done too quickly to be a real look still counts as a review, just without points.</p>
+    ${REVIEW_POINT_ROWS.map(([k, label, words]) => {
+    const cur = Number(prefs[k]);
+    const choices = REVIEW_POINT_CHOICES[k].includes(cur) ? REVIEW_POINT_CHOICES[k] : [...REVIEW_POINT_CHOICES[k], cur].sort((a, b) => a - b);
+    return `<label class="st-label" for="ng-${k}">${esc(label)}</label>
+    <select id="ng-${k}" data-game-pref="${k}" style="${SELECT_STYLE}">${opt(choices.map((n) => [n, words(n)]), cur)}</select>`;
+  }).join('')}`;
+}
+
 export function gameSettingsHTML(snap, { armed = null, catalog = CATALOG } = {}) {
   const s = snap || {};
   const flags = s.flags ? asFlags(s.flags) : asFlags(s.mode || DEFAULT_GAME_MODE);
@@ -727,6 +746,7 @@ export function gameSettingsHTML(snap, { armed = null, catalog = CATALOG } = {})
     <label class="st-label" for="ng-free">Unlock single things free</label>
     <select id="ng-free" data-game-pref="freeUnlocks" style="${SELECT_STYLE}">${opt([['true', 'Yes'], ['false', 'No — points or sandbox only']], String(prefs.freeUnlocks))}</select>
     ${schoolPref}
+    ${reviewPointRowsHTML(prefs, opt)}
     <p class="st-label" style="margin-top:6px">Locked things to build with</p>
     <div data-game-locked>${rows}</div>`;
 }
