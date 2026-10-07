@@ -434,15 +434,17 @@ const NODES = [
       { kind: 'guide', do: 'talk', label: 'Talk to my AI' },
     ],
   },
-  // ---- the end of the walk (2026-10-07, row 2.54): the AI sums it up and sorts the notes; then you go through
-  // what it made together, one line at a time, and save it as a file. modules/nimrod.js draws it (walkthrough_wrap.js).
+  // ---- the end of the walk (2026-10-07, row 2.54): the notes are cleaned up (Corpus Desk's dial, clean_up.js) and
+  // approved one by one; the AI sorts them; then you go through the lists together, one line at a time, and save it
+  // as a file. modules/nimrod.js draws it (walkthrough_wrap.js).
   {
     id: 'walk-wrap', title: 'Wrap up the walkthrough',
-    say: 'When you are done, I can read your notes from the walk with your AI. It writes a short summary and sorts '
-      + 'what you said into three lists: for chat, for Code and for Design. Each line says which note it came from. '
-      + 'Then we go through it together, one line at a time: keep it, change it, move it or drop it. Your notes stay '
-      + 'exactly as you wrote them. At the end, save it as a file in a folder you pick. Only the notes you choose '
-      + 'are sent, and only when you press.',
+    say: 'When you are done, the AI on this computer cleans up your notes from the walk, as much as you choose: from '
+      + 'word for word to one line each. You see each one beside your own words: use it, change it, or keep yours. '
+      + 'Then it sorts them into three lists: for chat, for Code and for Design, each line saying which note it came '
+      + 'from, and we go through them together: keep, change, move or drop. Your notes stay exactly as you wrote them. '
+      + 'At the end, save it as a file in a folder you pick. Only the notes you choose are sent, only when you press, '
+      + 'and to Claude only if you choose it.',
     choices: withKeys([
       { label: 'Back to walking the site', to: 'notes-walk' },
       BACK_TO_START,

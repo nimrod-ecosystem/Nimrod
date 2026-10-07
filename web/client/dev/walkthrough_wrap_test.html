@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Wrap up the walkthrough: the AI's summary and lists, reviewed one line at a time, saved as a file</title>
+<title>Wrap up the walkthrough: the notes cleaned up and approved, sorted into lists, reviewed one line at a time, saved</title>
 <link rel="stylesheet" href="../modules.css">
 <style>
   body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
@@ -14,11 +14,13 @@
 </style>
 </head>
 <body>
-<h1>Wrap up the walkthrough: the AI's summary and lists, reviewed one line at a time, saved as a file</h1>
-<p>Row 2.54 (2026-10-07). Everything runs against a FAKE model and a FAKE folder: no AI is called and no file is
-written. Checked: sorting into the three lists, every line pointing back to its notes, an unreadable answer falling
-back to "not sorted yet", what is sent (only the chosen notes, never the person's name), each decision of the
-review, leaving and resuming, by press, switch and voice, the Markdown file, and saving it into a picked folder.</p>
+<h1>Wrap up the walkthrough: the notes cleaned up and approved, sorted into lists, reviewed one line at a time, saved</h1>
+<p>Row 2.54 (2026-10-07), corrected the same day: the summary is Corpus Desk's ten-level Clean up dial (clean_up.js),
+run on the AI on this computer by default. Everything runs against FAKE models and a FAKE folder: no AI is called and no
+file is written. Checked: the ten levels and what each call sends; approving each cleaned note beside the note (use,
+change, keep mine, for all the rest, by press, switch and voice), approving while the rest are still being cleaned; the
+local AI by default and Claude only on a press, with the line saying the notes go to Anthropic; sorting the approved
+words into the three lists, every line pointing back to its notes; leaving and resuming; the Markdown file; saving it.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 
@@ -29,6 +31,7 @@ import { GUIDE_NODES, GUIDE_VERB_TOPICS, GUIDE_DOS, treeProblems } from '../nimr
 import { AI_STATE_KEY, SPEECH_TOPICS } from '../nimrod_ai.js';
 import { makeNote, cleanNotes, noteContextFrom, contextLine, stamp } from '../nimrod_notes.js';
 import * as W from '../walkthrough_wrap.js';
+import * as C from '../clean_up.js';
 import '../modules/nimrod.js';
 
 const out = document.getElementById('results');
@@ -53,35 +56,64 @@ const T0 = Date.now() - 3 * 3600 * 1000;
 function mkNotes(count, { start = T0, person = 'Ruth Example', trialAt = -1 } = {}) {
   const list = [];
   for (let i = 0; i < count; i += 1) {
-    list.push(makeNote(`Note text ${i + 1}: the ${['clock', 'photos', 'settings'][i % 3]} bit should be bigger.`, {
+    list.push(makeNote(`Note text ${i + 1}: um, the ${['clock', 'photos', 'settings'][i % 3]} bit should be, like, bigger.`, {
       at: start + i * 60000, where: 'Going through the site with your AI',
       context: { dashboard: 'Start here', panel: 'Settings (settings)', page: '/kiosk.html', person, ...(i === trialAt ? { trial: true } : {}) } }));
   }
   return list;
 }
 const listFor = (n) => ['chat', 'code', 'design'][n % 3];
+const isSort = (msgs) => /You sort the notes/.test(msgs[0].content);
+const levelOf = (msgs) => C.CLEAN_LEVELS.find((l) => msgs[0].content.startsWith(l.prompt))?.level || 0;
+// What the fake model gives back as a cleaned note: the level, then the note in capitals (so the original's own words
+// are never a part of it, and a file can be searched for one without finding the other).
+const fakeClean = (level, text) => `L${level}: ${text.toUpperCase()}`;
+const noteOf = (msgs) => msgs[1].content.split('Clean up this note:\n\n')[1] || '';
 
-// THE FAKE MODEL: ai.js's shape. Reads the note numbers out of what it was sent and sorts them by number.
-function sortingAI({ fail = new Set(), garbage = new Set(), extra = null, noAI = false } = {}) {
+// THE FAKE MODEL: ai.js's shape. Cleans (tells the level by the prompt it was sent) and sorts (reads the note numbers).
+// `hold(text)`: a clean call for that note waits for `release()` (or its signal), to test approving while cleaning.
+function fakeAI({ fail = new Set(), garbage = new Set(), extra = null, noAI = false, cleanFail = () => false, hold = () => false,
+                  baseUrl = 'http://127.0.0.1:11434/v1', model = '' } = {}) {
   const calls = [];
+  let open = null;
+  let gate = new Promise((r) => { open = r; });
   return {
-    calls,
-    settings: () => ({ baseUrl: 'http://127.0.0.1:11434/v1', model: '' }), setSettings: (p) => p, hasKey: () => false, setKey: () => false,
+    calls, release() { open(); gate = Promise.resolve(); },
+    sorts: () => calls.filter((c) => isSort(c.msgs)), cleans: () => calls.filter((c) => !isSort(c.msgs)),
+    settings: () => ({ baseUrl, model }), setSettings: (p) => p, hasKey: () => false, setKey: () => false,
     listModels: async () => (noAI ? { ok: false, models: [], reason: 'Nothing answered.' } : { ok: true, models: ['fake-model'] }),
     resolveModel: async () => (noAI ? { ok: false, model: null, models: [], reason: 'Nothing answered.' } : { ok: true, model: 'fake-model', models: ['fake-model'], fellBack: false }),
-    chat: async (msgs, opts) => {
+    chat: async (msgs, opts = {}) => {
       calls.push({ msgs, opts });
       if (noAI) return { ok: false, reason: 'Nothing answered.' };
-      if (/join short summaries/.test(msgs[0].content)) return { ok: true, text: J({ summary: 'One walk: bigger things wanted.' }), model: 'fake-model' };
-      const part = calls.filter((c) => !/join short summaries/.test(c.msgs[0].content)).length;
+      if (!isSort(msgs)) {
+        const text = noteOf(msgs);
+        if (hold(text)) {
+          await Promise.race([gate, new Promise((r) => opts.signal?.addEventListener?.('abort', r))]);
+          if (opts.signal?.aborted) return { ok: false, cancelled: true, reason: 'Cancelled.' };
+        } else await sleep(5);
+        if (cleanFail(text)) return { ok: false, reason: 'The model fell over.' };
+        return { ok: true, text: fakeClean(levelOf(msgs), text), model: 'fake-model' };
+      }
+      const part = calls.filter((c) => isSort(c.msgs)).length;
       if (fail.has(part)) return { ok: false, reason: 'The model fell over.' };
       if (garbage.has(part)) return { ok: true, text: 'Sure! Here are your lists: lots of good stuff.', model: 'fake-model' };
       const nums = [...msgs[1].content.matchAll(/^Note (\d+) \(/gm)].map((m) => Number(m[1]));
       const items = nums.map((n) => ({ list: listFor(n), text: `Line for note ${n}`, notes: [n] }));
       if (extra) items.push(...extra(nums));
-      return { ok: true, text: '```json\n' + J({ summary: `Part ${part}.`, items }) + '\n```', model: 'fake-model' };
+      return { ok: true, text: '```json\n' + J({ items }) + '\n```', model: 'fake-model' };
     },
   };
+}
+// "Claude, on this account" as nimrod_ai.js's client looks: no address, no key here. Counts every look and call.
+function fakeClaude() {
+  const f = fakeAI({});
+  return { ...f, backend: 'claude', looked: 0, settings: () => ({ backend: 'claude', baseUrl: '', model: 'claude-fake' }),
+    resolveModel: async function () { this.looked += 1; return { ok: true, model: 'claude-fake', models: ['claude-fake'], fellBack: false }; } };
+}
+function memStore(init = {}) {
+  const m = new Map(Object.entries(init));
+  return { map: m, getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => { m.set(k, String(v)); }, removeItem: (k) => { m.delete(k); } };
 }
 
 function fakeState(initial = {}) {
@@ -122,7 +154,7 @@ async function mountGuide({ ai, person = 'ruth', ps = personStores(), personInit
   if (personInit) ps.make(person, AI_STATE_KEY, personInit);
   const output = { said: [], say(t) { this.said.push(t); return `o${this.said.length}`; }, cancel() {} };
   const inst = mountModule('nimrod', { mount, bus, state: fakeState(), events: null, output, user: null, profileId: 'p', personId: person,
-    instanceId: 'n1', ai, makePersonState: (pid, key) => ps.make(pid, key), ...extra });
+    instanceId: 'n1', ai, makePersonState: (pid, key) => ps.make(pid, key), aiStorage: memStore(), ...extra });
   await inst.init();
   const q = (s) => mount.querySelector(s);
   const doBtn = (what, id = null) => [...mount.querySelectorAll(`[data-ng-do="${what}"]`)].find((b) => id == null || b.dataset.ngId === id);
@@ -131,8 +163,57 @@ async function mountGuide({ ai, person = 'ruth', ps = personStores(), personInit
   return { mount, inst, q, doBtn, probe, rec, bus, ps, output, done: () => { inst.destroy(); mount.remove(); } };
 }
 const press = async (g, what, id = null) => { const b = g.doBtn(what, id); if (!b) throw new Error(`no button ${what}${id ? ` ${id}` : ''}`); b.click(); await sleep(20); };
+const entry = (g, i) => g.probe().review.clean.notes[i];
 
 try {
+  // ============================================================================================
+  section('*** the Clean up dial, ported from Corpus Desk: ten levels, one written instruction each ***');
+  {
+    const L = C.CLEAN_LEVELS;
+    check('*** all ten levels, 1 to 10, in order ***', L.length === 10 && L.every((l, i) => l.level === i + 1));
+    check('every level is a different instruction, and none is empty', new Set(L.map((l) => l.prompt)).size === 10 && L.every((l) => l.prompt.trim().length > 40));
+    check('level 1 (word for word): only transcription noise; nothing else removed', /transcription noise/.test(L[0].prompt) && /do not remove anything else/i.test(L[0].prompt) && /as spoken/.test(L[0].prompt));
+    check('*** level 3 (tidy) REQUIRES fillers, false starts, self-corrections and repeats removed, and keeps every idea, uncertainty and order ***',
+      ['filler', 'false start', 'self-correction', 'repeat'].every((w) => L[2].prompt.toLowerCase().includes(w)) && /every IDEA/.test(L[2].prompt) && /uncertainty/i.test(L[2].prompt) && /order/.test(L[2].prompt));
+    check('level 2 leaves false starts and repeats (level 3 is where they go)', /Leave false starts/.test(L[1].prompt));
+    check('level 4 does everything level 3 does, and tightens', /everything level 3 does/.test(L[3].prompt));
+    check('level 5 condenses; asides may merge', /condens/i.test(L[4].prompt) && /may be merged/.test(L[4].prompt));
+    check('level 7: only asks and decisions; thinking aloud dropped', /asks and decisions/.test(L[6].prompt) && /thinking-aloud/.test(L[6].prompt));
+    check('level 8 is tighter than level 7; level 9 is not yet one line; level 10 is one line', /tighter/.test(L[7].prompt) && /not yet a single line/.test(L[8].prompt) && /ONE LINE/.test(L[9].prompt));
+    check('*** the shared rule: never add anything, never more formal, even at the shortest levels (their jokes and profanity are the voice) ***',
+      /Never add anything/.test(C.CLEAN_TAIL) && /more formal/.test(C.CLEAN_TAIL) && /even at the shortest levels/.test(C.CLEAN_TAIL) && /profanity/.test(C.CLEAN_TAIL));
+    check('the prompts speak of anybody ("they"), not of one man', L.every((l) => !/\b(he|his|him)\b/.test(l.prompt)) && !/\b(he|his)\b/.test(C.CLEAN_TAIL));
+    check('Corpus Desk’s own names kept beside the plain labels', L[0].deskName === 'VERBATIM' && L[2].deskName === 'TIDY' && L[9].deskName === 'ONE LINE' && L[2].label === 'Tidy');
+    check('the labels and help shown are plain words and name nobody', L.every((l) => !NAMES.test(l.label + l.help) && !/verbatim|condensed/i.test(l.label)));
+    check('*** the default is Corpus Desk’s: 3, Tidy ***', C.DEFAULT_CLEAN_LEVEL === 3 && C.levelLine(C.DEFAULT_CLEAN_LEVEL) === '3 of 10: Tidy');
+    check('the clamp: missing or unreadable is 3; out of range is the nearest end; numbers as text read; halves round',
+      C.cleanLevel(null) === 3 && C.cleanLevel('tidy') === 3 && C.cleanLevel(NaN) === 3 && C.cleanLevel(-3) === 1 && C.cleanLevel(99) === 10 && C.cleanLevel('5') === 5 && C.cleanLevel(6.6) === 7);
+    const st = memStore();
+    check('the device remembers the level (and unreadable storage is the default, not a throw)', C.readCleanLevel(st) === 3 && C.writeCleanLevel(8, st) === 8 && C.readCleanLevel(st) === 8
+      && C.readCleanLevel({ getItem() { throw new Error('no'); } }) === 3 && C.readCleanLevel(memStore({ [C.CLEAN_LEVEL_KEY]: 'x' })) === 3);
+    const m = C.cleanMessages('  um so the clock  ', { level: 7, context: 'page /kiosk.html; panel picked: Clock' });
+    check('*** what one clean up sends: the level’s instruction and the rule; where the note was made; the note ***',
+      m.length === 2 && m[0].content === L[6].prompt + C.CLEAN_TAIL && /Where this note was made, for context only: page \/kiosk\.html; panel picked: Clock/.test(m[1].content)
+      && m[1].content.endsWith('Clean up this note:\n\num so the clock'));
+    check('no context: no context line', !/Where this note/.test(C.cleanMessages('x').at(1).content));
+    check('the answer size follows the note, within its floor and ceiling (at most what the Claude door allows)', C.cleanTokens('') === C.CLEAN_TOKENS_MIN && C.cleanTokens('x'.repeat(30000)) === C.CLEAN_TOKENS_MAX && C.CLEAN_TOKENS_MAX <= 1024);
+    check('the model’s wrapping is taken off: a fence, or a “here is the cleaned version” line; the words inside are not touched',
+      C.readCleaned('```\nThe clock, bigger.\n```') === 'The clock, bigger.' && C.readCleaned('Here is the cleaned version:\n\nThe clock, bigger.\nAnd photos.') === 'The clock, bigger.\nAnd photos.'
+      && C.readCleaned('Here is the thing: the clock.') === 'Here is the thing: the clock.');
+    const ai = fakeAI();
+    const ok = await C.cleanText('um, the clock', { ai, model: 'fake-model', level: 5, context: 'page /x' });
+    check('*** cleanText: the cleaned words, from one call with the level’s prompt, a low temperature and an answer size ***',
+      ok.ok && ok.text === 'L5: UM, THE CLOCK' && ai.calls.length === 1 && ai.calls[0].opts.temperature === C.CLEAN_TEMPERATURE && ai.calls[0].opts.maxTokens === C.cleanTokens('um, the clock'));
+    const bad = await C.cleanText('x', { ai: { chat: async () => ({ ok: false, reason: 'Down.' }) } });
+    const empty = await C.cleanText('x', { ai: { chat: async () => ({ ok: true, text: '   ' }) } });
+    const thrown = await C.cleanText('x', { ai: { chat: async () => { throw new Error('boom'); } } });
+    check('a failure, an empty answer, a throw: not ok, with a reason; never an empty line in place of the note',
+      !bad.ok && bad.reason === 'Down.' && !empty.ok && /nothing/.test(empty.reason) && !thrown.ok && /boom/.test(thrown.reason));
+    const ctl = new AbortController(); ctl.abort();
+    check('cancelled; no AI; no words', (await C.cleanText('x', { ai, signal: ctl.signal })).cancelled === true
+      && !(await C.cleanText('x', {})).ok && !(await C.cleanText('  ', { ai })).ok);
+  }
+
   // ============================================================================================
   section('*** which notes: since the walkthrough started, since the last wrap-up, today, all, or a range ***');
   {
@@ -161,7 +242,7 @@ try {
   }
 
   // ============================================================================================
-  section('*** what is sent: only the chosen notes, numbered; where they were made; never the person’s name ***');
+  section('*** what is sent to sort: only the chosen notes, numbered; where they were made; never the person’s name; no summary asked ***');
   {
     const notes = mkNotes(3, { trialAt: 1 });
     const msgs = W.wrapMessages(notes.map((note, i) => ({ n: i + 1, note })));
@@ -170,7 +251,9 @@ try {
     check('*** the person’s name is NOT sent ***', !/Ruth Example/.test(all));
     check('where it was made is sent: the page, the panel picked, and the test-person mark', /page \/kiosk\.html/.test(all) && /panel picked: Settings/.test(all) && /made as a test person/.test(all));
     check('it asks for JSON with a pointer back to the notes, and says not to invent anything', /"notes": \[3\]/.test(all) && /Do not invent/.test(all) && /JSON only/.test(all));
+    check('*** the sorting writes no summary of its own (the clean up is the summary) ***', !/summary/i.test(all));
     check('the three lists, with what goes in each', W.WRAP_LISTS.every((l) => all.includes(`"${l.id}" (${l.label})`)));
+    check('*** the clean up’s context line never names the person either ***', !/Ruth Example/.test(W.placeForAI(notes[1])) && /made as a test person/.test(W.placeForAI(notes[1])));
     const many = mkNotes(25).map((note, i) => ({ n: i + 1, note }));
     const b = W.batchesOf(many);
     check(`notes go ${W.BATCH_NOTES} at a time (25 notes: 3 parts)`, b.length === 3 && b[0].length === W.BATCH_NOTES && b[2].length === 5);
@@ -179,24 +262,24 @@ try {
   }
 
   // ============================================================================================
-  section('*** reading the answer: sorted, pointing back, and an unreadable answer falls back to “not sorted yet” ***');
+  section('*** reading the sorting answer: sorted, pointing back, and an unreadable answer falls back to “not sorted yet” ***');
   {
-    const good = W.parseWrap('Here you go:\n```json\n' + J({ summary: 'A short walk.', items: [
+    const good = W.parseWrap('Here you go:\n```json\n' + J({ items: [
       { list: 'code', text: '- Fix the clock size', notes: [1] },
       { list: 'Design', text: 'Bigger photos', notes: ['2', 1] },
       { list: 'chat', text: 'Something nobody said', notes: [] },
       { list: 'code', text: 'Pointer to a note not sent', notes: [9] },
       { list: 'nonsense', text: 'Odd list', notes: [2] },
     ] }) + '\n```', [1, 2, 3], { noteLine: (n) => `own words ${n}` });
-    check('read through prose and a fence; the summary kept', good.ok && good.summary === 'A short walk.');
+    check('read through prose and a fence', good.ok);
     check('lines go to their lists, with the note numbers they came from', J(good.items[0]) === J({ list: 'code', text: 'Fix the clock size', nums: [1] })
       && good.items[1].list === 'design' && J(good.items[1].nums) === J([2, 1]), J(good.items.slice(0, 2)));
     check('*** a line with no note behind it is kept but NOT in a list: “not sorted yet”, marked as having no note ***',
       good.items[2].list === W.UNSORTED && good.items[2].unanchored === true && good.items[3].list === W.UNSORTED && good.items[3].unanchored === true);
     check('a list the AI made up: not sorted yet, still pointing at its note', good.items[4].list === W.UNSORTED && J(good.items[4].nums) === J([2]));
-    check('*** a note the AI left out comes back as its own line, in its own words ***', good.items.some((i) => i.left && J(i.nums) === J([3]) && i.text === 'own words 3'));
+    check('*** a note the AI left out comes back as its own line ***', good.items.some((i) => i.left && J(i.nums) === J([3]) && i.text === 'own words 3'));
     const bad = W.parseWrap('I could not do that, sorry.', [1, 2], { noteLine: (n) => `own words ${n}` });
-    check('*** unreadable: not a failure: every note comes back unsorted, in its own words, with the reason ***',
+    check('*** unreadable: not a failure: every note comes back unsorted, with the reason ***',
       !bad.ok && bad.items.length === 2 && bad.items.every((i) => i.list === W.UNSORTED && i.left) && /could not be read/.test(bad.reason));
     const alt = W.parseWrap(J({ code: ['Fix it (note 1)'], design: [{ text: 'Look', notes: [2] }] }), [1, 2]);
     check('the { chat, code, design } shape is read too', alt.ok && alt.items[0].list === 'code' && alt.items[1].list === 'design' && J(alt.items[1].nums) === J([2]));
@@ -205,18 +288,18 @@ try {
   }
 
   // ============================================================================================
-  section('*** wrapUp: part by part, the summaries joined, a failed part unsorted, pointers become note ids ***');
+  section('*** wrapUp (the sorting): part by part, no summary, a failed part unsorted, pointers become note ids ***');
   {
     const notes = mkNotes(25);
     const snap = J(notes);
-    const ai = sortingAI({ fail: new Set([2]) });
+    const ai = fakeAI({ fail: new Set([2]) });
     const prog = [];
     const r = await W.wrapUp(notes, { ai, model: 'fake-model', aiName: 'Pip', onProgress: (p) => prog.push(p) });
     const rv = r.review;
-    check('three parts asked, then one call joining the summaries', ai.calls.length === 4 && /join short summaries/.test(ai.calls[3].msgs[0].content));
+    check('three parts asked, and nothing else (no call to join summaries)', ai.calls.length === 3 && ai.calls.every((c) => isSort(c.msgs)));
     check('JSON was asked for, with an answer size the server allows', ai.calls[0].opts.json === true && ai.calls[0].opts.maxTokens === W.ANSWER_TOKENS && W.ANSWER_TOKENS <= 1024);
     check('progress after each part', J(prog) === J([{ done: 1, total: 3 }, { done: 2, total: 3 }, { done: 3, total: 3 }]));
-    check('the joined summary, labelled as the AI’s (by: ai)', rv.summary.text === 'One walk: bigger things wanted.' && rv.by === 'ai' && rv.aiName === 'Pip');
+    check('the lists are the AI’s (by: ai), with no summary', !rv.summary && rv.by === 'ai' && rv.aiName === 'Pip' && rv.sorted === true && rv.clean === null);
     const ids = new Set(notes.map((n) => n.id));
     check('*** every line points back to real notes, by id ***', rv.items.every((i) => i.notes.length && i.notes.every((id) => ids.has(id))));
     check('note numbers map to the right notes', rv.items.find((i) => i.text === 'Line for note 3').notes[0] === notes[2].id);
@@ -229,33 +312,101 @@ try {
     const slow = { chat: async () => { ctl.abort(); return { ok: false, cancelled: true }; } };
     const c = await W.wrapUp(notes, { ai: slow, signal: ctl.signal });
     check('Stop: nothing kept, said as stopped', !c.ok && c.cancelled);
-    const g = await W.wrapUp(mkNotes(3), { ai: sortingAI({ garbage: new Set([1]) }) });
-    check('a whole answer unreadable: the wrap-up still opens, every note unsorted', g.ok && g.review.items.every((i) => i.list === W.UNSORTED) && g.review.items.length === 3 && !g.review.summary);
+    const g = await W.wrapUp(mkNotes(3), { ai: fakeAI({ garbage: new Set([1]) }) });
+    check('a whole answer unreadable: the wrap-up still opens, every note unsorted', g.ok && g.review.items.every((i) => i.list === W.UNSORTED) && g.review.items.length === 3);
   }
 
   // ============================================================================================
-  section('*** the review: keep / change / move / drop, one at a time, and back and skip ***');
+  section('*** the clean up stage: every note cleaned, each approved beside its own words (use, change, keep mine, for all the rest) ***');
+  {
+    const notes = mkNotes(5);
+    const snap = J(notes);
+    let r = W.startReview(notes, { level: 7, who: 'local', aiName: 'Pip' });
+    check('a new wrap-up starts with the clean up: every note waiting, at the level picked, by the local AI', r.v === 2 && r.clean.level === 7 && r.who === 'local'
+      && r.clean.notes.length === 5 && r.clean.notes.every((e) => e.state === 'pending') && W.stageOf(r) === 'approve' && !r.sorted);
+    check('an unreadable level is the default; an unknown “who” is none', W.startReview(notes, { level: 'x' }).clean.level === 3 && W.startReview(notes, { who: 'elsewhere' }).who === '');
+    const ai = fakeAI({ cleanFail: (t) => /Note text 4:/.test(t) });
+    const seen = [];
+    const res = await W.cleanUpNotes(notes, { ai, model: 'fake-model', level: 7, isWaiting: (id) => r.clean.notes.find((e) => e.id === id)?.state === 'pending',
+      onNote: (id, x) => { seen.push(id); r = W.setCleaned(r, id, x); } });
+    check('*** each note cleaned on its own, in order, with the level’s prompt and where it was made, never the name ***', res.ok && J(seen) === J(notes.map((n) => n.id))
+      && ai.cleans().length === 5 && ai.cleans().every((c) => levelOf(c.msgs) === 7 && /Where this note was made/.test(c.msgs[1].content) && !/Ruth Example/.test(J(c.msgs))));
+    check('cleaned notes wait for a decision (open), holding what the model gave back', r.clean.notes[0].state === 'open' && r.clean.notes[0].cleaned === fakeClean(7, notes[0].text) && r.clean.model === 'fake-model');
+    check('*** a note that could not be cleaned keeps its own words, and the problem is said ***', r.clean.notes[3].state === 'mine' && /fell over/.test(r.clean.notes[3].failed)
+      && r.problems.some((p) => /Note 4 could not be cleaned up/.test(p)));
+    check('the note being approved is the first one', W.approveStep(r).index === 0);
+    check('“use this” before a note is cleaned does nothing', W.approve(W.startReview(notes), 'use') !== null && W.approve(W.startReview(notes), 'use').clean.notes[0].state === 'pending');
+    r = W.approve(r, 'use');
+    check('use this: the cleaned words, as cleaned; on to the next', r.clean.notes[0].state === 'used' && r.clean.notes[0].text === r.clean.notes[0].cleaned && W.approveStep(r).index === 1);
+    r = W.approve(r, 'use', '  The photos, bigger.\nAnd soon.  ');
+    check('use this with the words changed in the box: “changed”, the new words kept (line breaks too), the model’s kept beside them',
+      r.clean.notes[1].state === 'changed' && r.clean.notes[1].text === 'The photos, bigger.\nAnd soon.' && r.clean.notes[1].cleaned === fakeClean(7, notes[1].text));
+    check('use this with an empty box does nothing', W.approve(r, 'use', '   ') === r);
+    r = W.approve(r, 'mine');
+    check('keep mine: the note’s own words; the failed note 4 is skipped over (already decided)', r.clean.notes[2].state === 'mine' && W.approveStep(r).index === 4);
+    check('skip for now with no other note to decide: unchanged', W.approve(r, 'next') === r);
+    const back = W.approve(r, 'prev');
+    check('previous: back one note, and a decided note can be decided again', W.approveStep(back).index === 3 && W.approve(W.approve(back, 'prev'), 'use').clean.notes[2].state === 'used');
+    check('the count', J(W.cleanProgress(r)) === J({ total: 5, pending: 0, open: 1, used: 1, changed: 1, mine: 2, failed: 1, undecided: 1, decided: 4 }), J(W.cleanProgress(r)));
+    const allUse = W.approve(r, 'useall');
+    check('use the cleaned words for all the rest: done; on to sorting', allUse.clean.notes[4].state === 'used' && W.stageOf(allUse) === 'sort');
+    const words = W.approvedNotes(allUse, notes).map((n) => n.text);
+    check('*** what goes on to be sorted: the approved words (cleaned, changed, or the note’s own) ***', words[0] === fakeClean(7, notes[0].text) && words[1] === 'The photos, bigger.\nAnd soon.'
+      && words[2] === notes[2].text && words[3] === notes[3].text && words[4] === fakeClean(7, notes[4].text));
+    check('*** the notes themselves are untouched by all of it ***', J(notes) === snap);
+    // For all the rest, while some are still being cleaned.
+    let q = W.startReview(notes, { level: 3 });
+    q = W.setCleaned(q, notes[0].id, { ok: true, text: 'one' });
+    q = W.approve(q, 'useall');
+    check('use all while still cleaning: the cleaned one used now, the rest when they come back', q.clean.notes[0].state === 'used' && q.clean.notes[1].state === 'pending' && q.clean.auto === 'use');
+    q = W.setCleaned(q, notes[1].id, { ok: true, text: 'two' });
+    check('...and one coming back afterwards is used without asking', q.clean.notes[1].state === 'used' && q.clean.notes[1].text === 'two');
+    let m = W.approve(W.startReview(notes), 'mineall');
+    check('keep my words for all the rest: every note its own words, nothing left to clean', W.cleanProgress(m).pending === 0 && m.clean.notes.every((e) => e.state === 'mine') && W.stageOf(m) === 'sort');
+    check('a cleaned note coming back after it was decided changes nothing', W.setCleaned(m, notes[0].id, { ok: true, text: 'late' }) === m);
+    // Waiting notes not wanted any more are not cleaned (the person decided them while the clean up ran).
+    const ai2 = fakeAI();
+    let w = W.startReview(notes);
+    w = W.approve(w, 'mineall');
+    await W.cleanUpNotes(notes, { ai: ai2, isWaiting: (id) => w.clean.notes.find((e) => e.id === id)?.state === 'pending', onNote: () => {} });
+    check('*** notes kept as they are are never sent to be cleaned ***', ai2.calls.length === 0);
+    // Sorted after: the sorting's lists put into the same wrap-up.
+    const sorted = (await W.wrapUp(W.approvedNotes(allUse, notes), { ai: fakeAI(), model: 'fake-model' })).review;
+    const both = W.withSorted(allUse, sorted);
+    check('sorted: the lists join the same wrap-up, its clean up and problems kept', both.sorted && both.id === allUse.id && both.clean.level === 7 && both.items.length === 5
+      && W.stageOf(both) === 'review' && both.problems.some((p) => /Note 4/.test(p)));
+    check('the sorting line for a used note carries its cleaned words; it still points at the note', both.items.every((i) => i.notes.length === 1));
+    const hand = W.sortedByHand(allUse, notes);
+    check('sorted by hand after the clean up: every note one unsorted line in its approved words', hand.by === 'hand' && hand.sorted && hand.items.length === 5
+      && hand.items.every((i) => i.list === W.UNSORTED) && hand.items[1].text === 'The photos, bigger. And soon.');
+    // Kept and read back.
+    const stored = W.cleanReview(JSON.parse(J(W.approve(r, 'prev'))));
+    check('*** saved and read back mid-approval (resume): the same clean up, at the same note ***', stored && stored.v === 2 && W.stageOf(stored) === 'approve'
+      && W.approveStep(stored).index === 3 && J(stored.clean.notes) === J(r.clean.notes) && stored.clean.level === 7);
+    const odd = W.cleanReview({ ...JSON.parse(J(r)), clean: { ...r.clean, notes: [{ id: 'a', state: 'used', text: '' }, { id: 'b', state: 'open', cleaned: '' }, { id: 'c', state: 'weird' }] } });
+    check('a stored clean up that does not add up is made safe (used with no words: own words; open with nothing: waiting)', J(odd.clean.notes.map((e) => e.state)) === J(['mine', 'pending', 'pending']));
+  }
+
+  // ============================================================================================
+  section('*** the lists: keep / change / move / drop, one at a time, and back and skip; a wrap-up from before the correction still reads ***');
   let reviewed = null;
   {
     const notes = mkNotes(4);
-    let r = (await W.wrapUp(notes, { ai: sortingAI() })).review;
+    let r = (await W.wrapUp(notes, { ai: fakeAI() })).review;
     const steps = W.reviewSteps(r);
-    check('the summary is the first step, then each line', steps[0].kind === 'summary' && steps.length === 1 + r.items.length);
-    check('the summary cannot be moved to a list', W.decide(r, 'move', 'code') === r);
-    r = W.decide(r, 'change', 'A better summary.');
-    check('changing the summary keeps it (with its first words kept too) and moves on', r.summary.text === 'A better summary.' && r.summary.was === 'Part 1.' && r.summary.state === 'kept' && r.cursor === 1);
+    check('the steps are the lines (no summary step any more)', steps.length === r.items.length && steps.every((s) => s.kind === 'item'));
     const first = W.currentStep(r).item;
     r = W.decide(r, 'keep');
-    check('keep: kept, and on to the next', r.items.find((i) => i.id === first.id).state === 'kept' && r.cursor === 2);
+    check('keep: kept, and on to the next', r.items.find((i) => i.id === first.id).state === 'kept' && r.cursor === 1);
     const second = W.currentStep(r).item;
     r = W.decide(r, 'move', 'design');
     const moved = r.items.find((i) => i.id === second.id);
     check('move: in the new list, kept, and it remembers where it was', moved.list === 'design' && moved.wasList === second.list && moved.state === 'kept');
     check('a list that is not one: nothing changes', W.decide(r, 'move', 'elsewhere') === r);
     r = W.decide(r, 'next');
-    check('skip: on without deciding', W.currentStep(r).item.state === 'open' && r.cursor === 4);
+    check('skip: on without deciding', W.currentStep(r).item.state === 'open' && r.cursor === 3);
     r = W.decide(r, 'drop');
-    check('drop: left out, and back round to the one skipped', r.items.filter((i) => i.state === 'dropped').length === 1 && r.cursor === 3);
+    check('drop: left out, and back round to the one skipped', r.items.filter((i) => i.state === 'dropped').length === 1 && r.cursor === 2);
     check('change with nothing in it does nothing', W.decide(r, 'change', '   ') === r);
     r = W.decide(r, 'change', 'Bigger, please.');
     check('change a line: new words, the old ones remembered, kept; all done now', W.progress(r).open === 0 && W.currentStep(r) === null
@@ -266,38 +417,63 @@ try {
     check('back from the end: the last line again, and it can be decided again', W.currentStep(r)?.kind === 'item' && W.decide(r, 'keep').items.length === r.items.length);
     reviewed = { notes, r: W.decide(r, 'goto', W.reviewSteps(r).length) };
     const resumed = W.cleanReview(JSON.parse(J(W.decide(r, 'goto', 2))));
-    check('*** saved and read back (resume): the same review, at the same place ***', resumed && resumed.cursor === 2 && J(resumed.items) === J(r.items) && resumed.summary.text === 'A better summary.');
-    check('a stored thing that is not a review reads as none', W.cleanReview({ v: 2 }) === null && W.cleanReview(null) === null);
+    check('*** saved and read back (resume): the same review, at the same place ***', resumed && resumed.cursor === 2 && J(resumed.items) === J(r.items));
+    check('a stored thing that is not a review reads as none', W.cleanReview({ v: 3, id: 'x', items: [] }) === null && W.cleanReview(null) === null);
     const hand = W.handReview(notes);
-    check('by hand: no summary, every note one line in its own words, “not sorted yet”, pointing at itself',
-      !hand.summary && hand.by === 'hand' && hand.items.length === 4 && hand.items.every((i, k) => i.list === W.UNSORTED && i.notes[0] === notes[k].id && i.text === W.noteAsLine(notes[k])));
+    check('by hand: no clean up, every note one line in its own words, “not sorted yet”, pointing at itself',
+      !hand.clean && hand.by === 'hand' && hand.items.length === 4 && hand.items.every((i, k) => i.list === W.UNSORTED && i.notes[0] === notes[k].id && i.text === W.noteAsLine(notes[k])));
+    // A wrap-up made by f72f6e5 (v1, with the AI's own summary) left half way on somebody's record.
+    const v1 = { v: 1, id: 'w-old', at: notes[0].at, by: 'ai', model: 'm', aiName: 'Pip', noteIds: notes.map((n) => n.id),
+      summary: { text: 'An old summary.', was: 'An old summary.', state: 'open' }, items: hand.items.map((i) => ({ ...i })), cursor: 0, problems: [], savedAs: '', savedAt: 0 };
+    const old = W.cleanReview(JSON.parse(J(v1)));
+    check('*** a wrap-up from before the correction still reads: its summary first, then its lines; nothing to approve ***', old && old.v === 2 && !old.clean && old.sorted
+      && W.stageOf(old) === 'review' && W.reviewSteps(old)[0].kind === 'summary' && W.decide(old, 'change', 'Newer.').summary.text === 'Newer.');
   }
 
   // ============================================================================================
-  section('*** by voice: “keep”, “drop”, “move to design”, “change it to …”, “back”, “skip” ***');
+  section('*** by voice: “use this”, “keep mine”; “keep”, “drop”, “move to design”, “change it to …”, “back”, “skip” ***');
   {
     const P = W.parseReviewWords;
+    check('use this / keep mine (approving the clean up)', P('Use this.')?.action === 'use' && P('use it')?.action === 'use' && P('Keep mine')?.action === 'mine' && P('keep my words')?.action === 'mine');
     check('keep / drop', J(P('Keep.')) === J({ action: 'keep' }) && J(P('drop it')) === J({ action: 'drop' }));
     check('move to a list, several ways', P('move to design')?.list === 'design' && P('Move it to the code list')?.list === 'code' && P('put it in chat')?.list === 'chat' && P('for design')?.list === 'design');
     check('*** “change it to …” keeps the words as said (capitals and punctuation) ***', J(P('Change it to Make the clock Bigger, please.')) === J({ action: 'change', text: 'Make the clock Bigger, please.' }));
     check('“change it” alone: open the line for new words', J(P('change it')) === J({ action: 'change', text: '' }));
     check('back and skip', P('go back')?.action === 'prev' && P('skip')?.action === 'next');
     check('a sentence that merely has “keep” in it is not a decision', P('I would keep the clock where it is') === null && P('') === null);
+    check('the words listened for include the approval’s', W.REVIEW_WORDS.includes('use this') && W.REVIEW_WORDS.includes('keep mine'));
   }
 
   // ============================================================================================
-  section('*** the file: the summary and lists as the AI’s, note numbers, every note word for word ***');
+  section('*** the file: the lists with note numbers; the summary is the notes as approved; word for word only on a press ***');
   {
-    const { notes, r } = reviewed;
-    const md = W.reviewToMarkdown(r, notes, { at: notes[3].at + 1000, aiLabel: 'Pip' });
-    check('a title with the date, and who sorted it', md.startsWith(`# Walkthrough, ${stamp(r.at).slice(0, 10)}`) && /Sorted by Pip/.test(md));
-    check('*** the summary is labelled as written by the AI (and changed in the review) ***', /## Summary \(written by the AI, changed in the review\)\n\nA better summary\./.test(md));
+    const notes = mkNotes(3);
+    let r = W.startReview(notes, { level: 3 });
+    r = W.setCleaned(r, notes[0].id, { ok: true, text: fakeClean(3, notes[0].text), model: 'fake-model' });
+    r = W.setCleaned(r, notes[1].id, { ok: true, text: fakeClean(3, notes[1].text) });
+    r = W.setCleaned(r, notes[2].id, { ok: false, reason: 'Down.' });
+    r = W.approve(W.approve(r, 'use'), 'use', 'Changed words for two.');
+    r = W.withSorted(r, (await W.wrapUp(W.approvedNotes(r, notes), { ai: fakeAI(), model: 'fake-model' })).review);
+    while (W.currentStep(r)) r = W.decide(r, 'keep');
+    const md = W.reviewToMarkdown(r, notes, { at: notes[2].at + 1000, aiLabel: 'Pip' });
+    check('a title with the date; the clean up and who did it; who sorted', md.startsWith(`# Walkthrough, ${stamp(r.at).slice(0, 10)}`) && /Cleaned up at level 3 of 10: Tidy, by Pip \(fake-model\)/.test(md)
+      && /1 as cleaned, 1 changed by you, 1 in your own words/.test(md) && /Sorted by Pip/.test(md));
     check('the three lists, each line with its note number', /## For chat/.test(md) && /## For Code/.test(md) && /## For Design/.test(md) && /\(note \d/.test(md));
-    check('what was moved and changed is said', /moved from For/.test(md) && /changed in the review/.test(md));
-    const dropped = r.items.find((i) => i.state === 'dropped');
-    check('a dropped line is not in the lists', !md.split('## The notes, word for word')[0].includes(`- ${dropped.text} (`));
-    check('*** every note, word for word, numbered, with where it was made ***', notes.every((n, i) => md.includes(`### Note ${i + 1}: ${stamp(n.at)}`) && md.includes(n.text))
-      && /person: Ruth Example/.test(md));
+    check('*** the summary: every note as approved, each marked how ***', /## Summary: the notes cleaned up \(level 3 of 10: Tidy\)/.test(md)
+      && md.includes(fakeClean(3, notes[0].text)) && /_cleaned up, approved as it was\._/.test(md)
+      && md.includes('Changed words for two.') && /_cleaned up, then changed by you\._/.test(md)
+      && md.includes(notes[2].text) && /_your own words: it could not be cleaned up\._/.test(md));
+    check('*** by default the notes word for word are NOT in the file (less goes to chat) ***', !/## The notes, word for word/.test(md) && !md.includes(notes[0].text) && !md.includes(notes[1].text));
+    check('what went wrong is said', /## What went wrong while cleaning up or sorting/.test(md) && /Note 3 could not be cleaned up/.test(md));
+    const withOrig = W.reviewToMarkdown({ ...r, originals: true }, notes, { aiLabel: 'Pip' });
+    check('*** on a press, every note word for word is added at the end ***', /## The notes, word for word/.test(withOrig) && notes.every((n) => withOrig.split('## The notes, word for word')[1].includes(n.text)));
+    const { notes: hn, r: hr } = reviewed;
+    const hmd = W.reviewToMarkdown(hr, hn, { aiLabel: 'Pip' });
+    check('nothing cleaned up: the notes word for word, as before, with where they were made', /## The notes, word for word/.test(hmd) && hn.every((n, i) => hmd.includes(`### Note ${i + 1}: ${stamp(n.at)}`) && hmd.includes(n.text))
+      && /person: Ruth Example/.test(hmd) && !/## Summary/.test(hmd));
+    check('what was moved and changed is said', /moved from For/.test(hmd) && /changed in the review/.test(hmd));
+    const dropped = hr.items.find((i) => i.state === 'dropped');
+    check('a dropped line is not in the lists', !hmd.split('## The notes, word for word')[0].includes(`- ${dropped.text} (`));
     const gone = W.reviewToMarkdown(r, notes.slice(1));
     check('a note deleted since: said, not silently missing', /### Note 1\n\n_This note was deleted after the wrap-up was made\._/.test(gone));
     check('the file name: walkthrough_<date>.md, then _2, _3', W.walkthroughFileName(new Date(2026, 9, 7, 9).getTime()) === 'walkthrough_2026-10-07.md'
@@ -339,119 +515,179 @@ try {
       && GUIDE_NODES['walk-wrap'].acts.some((a) => a.kind === 'guide' && a.do === 'wrap') && GUIDE_DOS.includes('wrap') && GUIDE_DOS.includes('walkstart'));
     check('the walk has “Start a walkthrough now”', GUIDE_NODES['notes-walk'].acts.some((a) => a.do === 'walkstart'));
     check('the tree is still whole (every choice leads somewhere, nothing runs by itself)', treeProblems().length === 0, J(treeProblems()));
-    check('the step says the notes stay as written, and only what is chosen is sent, on a press', /stay exactly as you wrote them/.test(GUIDE_NODES['walk-wrap'].say)
-      && /Only the notes you choose/.test(GUIDE_NODES['walk-wrap'].say) && !NAMES.test(GUIDE_NODES['walk-wrap'].say));
+    const say = GUIDE_NODES['walk-wrap'].say;
+    check('the step says: cleaned up on this computer, approved beside your words, notes kept as written, sent only on a press, Claude only if chosen',
+      /AI on this computer cleans up your notes/.test(say) && /beside your own words/.test(say) && /stay exactly as you wrote them/.test(say)
+      && /Only the notes you choose/.test(say) && /Claude only if you choose it/.test(say) && !NAMES.test(say));
   }
 
   // ============================================================================================
-  section('*** in Nimrod: from the notes to the review, by press, switch and voice; left and picked up again; saved ***');
+  section('*** in Nimrod: the dial, the local AI by default, approving beside the note while the rest are cleaned, left and picked up, sorted, saved ***');
   {
-    const notes = mkNotes(12);
+    const notes = mkNotes(6);
     const before = J(notes);
     const ps = personStores();
-    const ai = sortingAI();
+    const ai = fakeAI({ hold: (t) => /Note text [56]:/.test(t) });
     const dir = fakeDir('walks');
     const folders = fakeFolders(dir);
-    let g = await mountGuide({ ai, ps, personInit: { notes }, extra: { walkFolders: folders } });
+    const storage = memStore();
+    let g = await mountGuide({ ai, ps, personInit: { notes }, extra: { walkFolders: folders, aiStorage: storage } });
     await until(() => g.probe().storeKind === 'person');
     await press(g, 'notes');
     await until(() => g.doBtn('wrap') && !g.doBtn('wrap').disabled);
     check('the notes have “Wrap up the walkthrough”', /Wrap up the walkthrough/.test(g.doBtn('wrap')?.textContent || ''));
     await press(g, 'wrap');
-    await until(() => g.probe().view === 'wrap' && g.probe().status.state === 'ok');
-    check('the wrap-up opens on “which notes”, with all 12 offered', g.probe().wrap.step === 'choose' && !!g.doBtn('wraprange', 'all'));
+    await until(() => g.probe().view === 'wrap' && g.probe().wrapStatus.state === 'ok');
+    check('the wrap-up opens on “which notes”, with all 6 offered', g.probe().wrap.step === 'choose' && !!g.doBtn('wraprange', 'all'));
     check('nothing was sent to the AI by opening it', ai.calls.length === 0);
+    check('*** the dial shows Corpus Desk’s default: 3 of 10, Tidy ***', /Clean up: 3 of 10: Tidy/.test(g.q('[data-ng-levelline]')?.textContent || '') && g.q('[data-ng-level]')?.value === '3');
+    check('*** the AI on this computer is chosen; Claude is offered, not chosen, and no line about Anthropic yet ***',
+      g.doBtn('wrapwho', 'local')?.getAttribute('aria-pressed') === 'true' && g.doBtn('wrapwho', 'claude')?.getAttribute('aria-pressed') === 'false'
+      && !g.q('[data-ng-claudeline]') && !g.doBtn('wrapwho', 'online'));
+    await press(g, 'wrapmore');
+    check('More: level 4, remembered on this device', g.probe().wrap.level === 4 && storage.getItem(C.CLEAN_LEVEL_KEY) === '4' && /4 of 10: Tidy, a little shorter/.test(g.q('[data-ng-levelline]').textContent));
+    const range = g.q('[data-ng-level]');
+    range.value = '9';
+    range.dispatchEvent(new Event('input', { bubbles: true }));
+    check('dragging the slider: its words change at once, without a redraw', /9 of 10: Two or three lines/.test(g.q('[data-ng-levelline]').textContent) && g.q('[data-ng-level]') === range);
+    range.dispatchEvent(new Event('change', { bubbles: true }));
+    await sleep(20);
+    check('let go: kept', g.probe().wrap.level === 9 && storage.getItem(C.CLEAN_LEVEL_KEY) === '9');
+    for (let i = 0; i < 6; i += 1) await press(g, 'wrapless');
+    check('Less, down to 3 again', g.probe().wrap.level === 3);
     await press(g, 'wraprange', 'all');
     const send = g.q('[data-ng-sendline]').textContent;
-    check('*** before sending, the page says exactly what is sent: only these notes, not the name ***',
-      /only these 12 notes/.test(send) && /Not your name/.test(send) && /Sorting by hand sends nothing/.test(send), send);
+    check('*** before sending, the page says exactly what is sent and where: only these notes, this computer, not the name ***',
+      /only these 6 notes/.test(send) && /AI on this computer/.test(send) && /nothing leaves this computer/.test(send) && /Not your name/.test(send) && /Sorting by hand sends nothing/.test(send), send);
     const view = g.mount.querySelector('.ng-root').cloneNode(true);
-    for (const el of view.querySelectorAll('[data-ng-backends],[data-ng-help],[data-ng-info]')) el.remove();
+    for (const el of view.querySelectorAll('[data-ng-help],[data-ng-info]')) el.remove();
     check('the page’s own words: plain (no module, panel, dashboard, widget, grant, token, account), names nobody',
       !/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i.test(view.textContent) && !NAMES.test(view.textContent), view.textContent.match(/\b(modules?|panels?|dashboards?|widgets?|grants?|tokens?|accounts?)\b/i)?.[0]);
     await press(g, 'wrapgo');
-    await until(() => g.probe().wrap.step === 'review', 4000);
-    const rv = g.probe().review;
-    check('sorted by the AI: two parts (12 notes), the summaries joined', ai.calls.length === 3 && rv.summary.text === 'One walk: bigger things wanted.');
-    check('the review is on the person’s record already (nothing lost if the screen goes)', g.rec().walkReview?.id === rv.id);
-    check('the summary first, labelled as the AI’s', /The summary, written by Nimrod \(the AI\)/.test(g.q('[data-ng-step="summary"]')?.textContent || ''));
-    // A switch: the scan starts on Keep, and select presses it.
-    check('*** a switch’s scan starts on Keep ***', g.probe().stops[0] === 'Keep', J(g.probe().stops.slice(0, 3)));
+    await until(() => g.probe().wrap.step === 'approve' && entry(g, 0).state === 'open');
+    check('*** “Clean up and sort”: the approval opens, and the record already has the wrap-up ***', g.rec().walkReview?.id === g.probe().review.id && g.probe().review.clean.level === 3);
+    const c0 = ai.cleans()[0];
+    check('*** the clean up went to the local AI at the dial’s level (3: its prompt and the rule), with the note and where it was made, not the name ***',
+      c0 && c0.msgs[0].content === C.CLEAN_LEVELS[2].prompt + C.CLEAN_TAIL && c0.msgs[1].content.includes(notes[0].text) && !/Ruth Example/.test(J(c0.msgs)));
+    check('*** beside each other: the note word for word, and the cleaned words in a box to change ***',
+      g.q('[data-ng-mine]').textContent.includes(notes[0].text) && g.q(`[data-ng-field="cleaned-${notes[0].id}"]`)?.value === fakeClean(3, notes[0].text)
+      && /Cleaned up by Nimrod · 3 of 10: Tidy/.test(g.q('[data-ng-cleaned]').textContent));
+    check('*** a switch’s scan starts on Use this ***', g.probe().stops[0] === 'Use this', J(g.probe().stops.slice(0, 3)));
     g.bus.publish(GUIDE_VERB_TOPICS.select);
     await sleep(30);
-    check('*** select (the switch) kept the summary; on to the first line ***', g.probe().review.summary.state === 'kept' && g.probe().review.cursor === 1);
-    const src = g.q('[data-ng-source]')?.textContent || '';
-    const it1 = g.probe().review.items[0];
-    check('*** the line shows the note it came from, word for word, beside it ***', src.includes(notes.find((n) => n.id === it1.notes[0]).text) && /Note \d+/.test(src));
-    check('the line is labelled as the AI’s, with its list', new RegExp(`${W.listLabel(it1.list)} · written by Nimrod \\(the AI\\)`).test(g.q('[data-ng-step="item"]').textContent));
-    await press(g, 'wrapmove', 'design');
-    check('a press: moved to For Design', g.probe().review.items.find((i) => i.id === it1.id).list === 'design');
-    await press(g, 'wrapchange');
-    g.q('[data-ng-field="wrapedit"]').value = 'Typed new words';
-    await press(g, 'wrapsavechange');
-    check('a press: changed to what was typed', g.probe().review.items.some((i) => i.text === 'Typed new words' && i.state === 'kept'));
-    // Voice.
+    check('select (the switch): used, on to note 2', entry(g, 0).state === 'used' && g.probe().review.clean.cursor === 1);
+    await until(() => entry(g, 1).state === 'open');
+    g.q(`[data-ng-field="cleaned-${notes[1].id}"]`).value = 'My own better words for two.';
+    await press(g, 'wrapuse');
+    check('a press, with the words changed in the box: “changed”, the new words kept', entry(g, 1).state === 'changed' && entry(g, 1).text === 'My own better words for two.');
+    await until(() => entry(g, 2).state === 'open');
+    await press(g, 'wrapmine');
+    check('Keep mine: the note’s own words', entry(g, 2).state === 'mine');
     await press(g, 'listen');
-    check('“Answer by voice” opens the dictation window', g.probe().listening === true);
-    const cur = () => W.currentStep(g.probe().review)?.item;
-    let id = cur().id;
-    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Drop it', dictation: true });
+    await until(() => entry(g, 3).state === 'open');
+    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Use this', dictation: true });
     await sleep(30);
-    check('*** said “drop it”: dropped ***', g.probe().review.items.find((i) => i.id === id).state === 'dropped');
-    id = cur().id;
-    g.bus.publish(SPEECH_TOPICS.answer, { text: 'move to code', dictation: true });
-    await sleep(30);
-    check('*** said “move to code”: moved ***', g.probe().review.items.find((i) => i.id === id).list === 'code');
-    id = cur().id;
-    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Change it to The clock should be Huge.', dictation: true });
-    await sleep(30);
-    check('*** said “change it to …”: the new words, as said ***', g.probe().review.items.find((i) => i.id === id).text === 'The clock should be Huge.');
-    id = cur().id;
-    g.bus.publish(SPEECH_TOPICS.answer, { text: 'change it', dictation: true });
-    await sleep(30);
-    check('“change it” alone: the box opens and the next words are the new line', g.probe().wrap.editing === true && g.probe().nextAs === 'change');
-    g.bus.publish(SPEECH_TOPICS.answer, { text: 'Said afterwards', dictation: true });
-    await sleep(30);
-    check('...and they are', g.probe().review.items.find((i) => i.id === id).text === 'Said afterwards');
+    check('*** said “use this”: used ***', entry(g, 3).state === 'used');
+    check('while approving by voice the next note is read out (or said to be still cleaning)', g.output.said.some((t) => /^Note \d(, cleaned up: L3:| is still being cleaned up)/.test(String(t))), J(g.output.said));
+    check('*** note 5 is still being cleaned: it says so, and Use this waits ***', entry(g, 4).state === 'pending' && !!g.q('[data-ng-pendingclean]') && g.doBtn('wrapuse').disabled
+      && /Still cleaning/.test(g.q('[data-ng-pendingclean]').textContent) && g.probe().cleaning);
     g.bus.publish(SPEECH_TOPICS.answer, { text: 'what a lovely day', dictation: true });
     await sleep(30);
-    check('words that are not a decision: nothing decided, and it says what it can hear', /Say keep, drop, move to/.test(g.probe().notice));
-    check('while reviewing by voice the line is read out', g.output.said.some((t) => /^For (chat|Code|Design)|Not sorted/.test(String(t))));
-    const at = g.probe().review.cursor;
-    // Leave, and come back on a new mount (another screen of the same person).
+    check('words that are not a decision: nothing decided, and it says what it can hear', /Say use this, or keep mine/.test(g.probe().notice));
+    // Leave mid-approval, and come back on a new mount (another screen of the same person).
     g.done();
-    g = await mountGuide({ ai, ps, extra: { walkFolders: folders } });
+    ai.release();
+    g = await mountGuide({ ai, ps, extra: { walkFolders: folders, aiStorage: storage } });
     await until(() => g.probe().storeKind === 'person');
     await press(g, 'notes');
     await until(() => /Pick up the wrap-up/.test(g.doBtn('wrap')?.textContent || ''));
-    check('*** left and come back: the notes say “Pick up the wrap-up” with how far it got ***', /\d+ of \d+ looked at/.test(g.doBtn('wrap').textContent));
+    check('*** left and come back: the notes say “Pick up the wrap-up” with how many are approved ***', /4 of 6 notes approved/.test(g.doBtn('wrap').textContent), g.doBtn('wrap').textContent);
     await press(g, 'wrap');
-    await until(() => g.probe().wrap.step === 'review');
-    check('*** picked up at the same line ***', g.probe().review.cursor === at && /Picking up where you left off/.test(g.probe().notice));
+    await until(() => g.probe().wrap.step === 'approve');
+    check('*** picked up at the same note; the two not cleaned yet are not cleaned by opening it ***', g.probe().review.clean.cursor === 4 && /Picking up where you left off/.test(g.probe().notice)
+      && entry(g, 4).state === 'pending' && !g.probe().cleaning && /Carry on cleaning \(2 left\)/.test(g.doBtn('wrapcleanmore')?.textContent || ''));
+    const cleansBefore = ai.cleans().length;
+    await press(g, 'wrapcleanmore');
+    await until(() => entry(g, 4).state === 'open' && entry(g, 5).state === 'open');
+    check('Carry on cleaning: the rest cleaned', ai.cleans().length === cleansBefore + 2);
+    await press(g, 'wrapuseall');
+    await until(() => g.probe().wrap.step === 'review', 4000);
+    check('*** use for all the rest: every note decided, and the sorting starts by itself ***', W.cleanProgress(g.probe().review).undecided === 0 && g.probe().review.sorted && ai.sorts().length === 1);
+    const sortText = ai.sorts()[0].msgs[1].content;
+    check('*** the sorting read the APPROVED words: cleaned, changed, or the note’s own; never a cleaned note that was turned down ***',
+      sortText.includes(fakeClean(3, notes[0].text)) && sortText.includes('My own better words for two.') && sortText.includes(notes[2].text)
+      && !sortText.includes(fakeClean(3, notes[2].text)) && !sortText.includes(notes[0].text) && !/Ruth Example/.test(sortText));
+    const it1 = g.probe().review.items[0];
+    const src = g.q('[data-ng-source]')?.textContent || '';
+    check('*** a line still shows the note it came from, word for word, beside it ***', src.includes(notes.find((n) => n.id === it1.notes[0]).text));
     let guard = 0;
     while (g.probe().wrap.step === 'review' && guard++ < 40) await press(g, 'wrapkeep');
     check('keep the rest: all looked at, ready to save', g.probe().wrap.step === 'done' && /looked at/.test(g.q('[data-ng-wrapdone]').textContent));
+    check('the word-for-word notes are off for the file, and the page says what the file holds', /word for word: off/.test(g.doBtn('wraporiginals')?.textContent || '')
+      && /every note as you approved it/.test(g.mount.textContent));
     await press(g, 'wrapsave');
     await until(() => g.probe().review.savedAs);
     const name = g.probe().review.savedAs;
-    const file = dir.files.get(name) || '';
-    check('*** saved into the picked folder as walkthrough_<date>.md ***', /^walkthrough_\d{4}-\d{2}-\d{2}(_\d+)?\.md$/.test(name) && folders.view.picks === 1 && file.length > 0, name);
-    check('the file: summary as the AI’s, the lists with notes, every note word for word', /## Summary \(written by the AI\)/.test(file) && /## For Code/.test(file)
-      && /The clock should be Huge\./.test(file) && notes.every((n) => file.includes(n.text)) && /\(note \d+/.test(file));
-    const rec = g.rec();
-    check('kept on the person’s record too: the finished wrap-up, and where the next one starts', rec.walkthroughs?.length === 1 && rec.walkthroughs[0].savedAs === name
-      && rec.lastWrapTo === notes.at(-1).at && rec.walkReview.savedAs === name);
-    check('*** the notes are exactly as they were ***', J(cleanNotes(rec.notes)) === J(cleanNotes(JSON.parse(before))));
-    await until(() => /Save in “walks”/.test(g.doBtn('wrapsave')?.textContent || ''));
-    check('the next save says which folder it remembers', /Save in “walks”/.test(g.doBtn('wrapsave').textContent));
+    let file = dir.files.get(name) || '';
+    check('*** saved into the picked folder; the summary is the approved notes; the raw notes are not in it ***', /^walkthrough_\d{4}-\d{2}-\d{2}(_\d+)?\.md$/.test(name) && folders.view.picks === 1
+      && /## Summary: the notes cleaned up \(level 3 of 10: Tidy\)/.test(file) && file.includes('My own better words for two.') && file.includes(fakeClean(3, notes[5].text))
+      && !file.includes(notes[0].text) && /## For Code/.test(file) && /\(note \d+/.test(file), name);
+    await press(g, 'wraporiginals');
     await press(g, 'wrapsave');
-    await until(() => /Saved as/.test(g.probe().notice));
-    check('saving again: the same file, no picker', folders.view.picks === 1 && dir.files.size === 1);
+    await until(() => (dir.files.get(name) || '').includes('## The notes, word for word'));
+    file = dir.files.get(name);
+    check('*** “also put in your notes word for word”: on, saved again: every note exactly as written is added ***', notes.every((n) => file.includes(n.text)) && folders.view.picks === 1 && dir.files.size === 1);
+    const rec = g.rec();
+    check('kept on the person’s record too: the finished wrap-up (with its level), and where the next one starts', rec.walkthroughs?.length === 1 && rec.walkthroughs[0].savedAs === name
+      && rec.walkthroughs[0].cleanLevel === 3 && rec.lastWrapTo === notes.at(-1).at && rec.walkReview.savedAs === name);
+    check('*** the notes are exactly as they were ***', J(cleanNotes(rec.notes)) === J(cleanNotes(JSON.parse(before))));
     let copied = null;
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { copied = t; } } });
     await press(g, 'wrapcopy');
     await until(() => copied);
-    check('Copy it: the same text as the file', copied.split('## Summary')[1] === dir.files.get(name).split('## Summary')[1]);
+    check('Copy it: the same text as the file', copied.split('## For chat')[1] === dir.files.get(name).split('## For chat')[1]);
+    g.done();
+  }
+
+  // ============================================================================================
+  section('*** Claude only on a press: the line says the notes go to Anthropic; the guide’s own choice does not decide it ***');
+  {
+    const notes = mkNotes(2);
+    const ps = personStores();
+    const local = fakeAI();
+    const claude = fakeClaude();
+    // The guide on this device answers with Claude; the wrap-up still starts on the AI on this computer.
+    const storage = memStore({ 'nimrod.ai.backend': 'claude' });
+    let g = await mountGuide({ ai: local, ps, personInit: { notes }, extra: { claudeAI: claude, aiStorage: storage } });
+    await until(() => g.probe().storeKind === 'person');
+    check('the guide here is set to Claude', g.probe().backend === 'claude');
+    await press(g, 'notes');
+    await until(() => g.doBtn('wrap'));
+    await press(g, 'wrap');
+    await until(() => g.probe().view === 'wrap' && g.probe().wrapStatus.state === 'ok');
+    check('*** the wrap-up opens on the AI on this computer, not on Claude, and Claude is not even looked up ***', g.probe().wrap.who === 'local'
+      && g.probe().wrapStatus.who === 'local' && claude.looked === 0 && claude.calls.length === 0);
+    await press(g, 'wraprange', 'all');
+    await press(g, 'wrapwho', 'claude');
+    await until(() => g.probe().wrapStatus.who === 'claude' && g.probe().wrapStatus.state === 'ok');
+    const line = g.q('[data-ng-claudeline]')?.textContent || '';
+    check('*** Claude pressed: a plain line that the notes go to Anthropic, and how to keep them here ***', /go to Anthropic/.test(line) && /keep them here/.test(line));
+    check('the sending line says Anthropic too, and no longer “nothing leaves this computer”', /Anthropic/.test(g.q('[data-ng-sendline]').textContent) && !/nothing leaves this computer/.test(g.q('[data-ng-sendline]').textContent));
+    await press(g, 'wrapgo');
+    await until(() => g.probe().wrap.step === 'approve' && entry(g, 0).state === 'open');
+    check('*** chosen: the clean up went to Claude, and nothing to the local AI ***', claude.cleans().length >= 1 && local.calls.length === 0 && g.probe().review.who === 'claude'
+      && /Cleaned up by Claude/.test(g.q('[data-ng-cleaned]').textContent));
+    await press(g, 'wrapnew');
+    await until(() => !g.probe().cleaning);
+    check('*** a new wrap-up starts on the AI on this computer again ***', g.probe().wrap.who === 'local' && !g.q('[data-ng-claudeline]') && !g.probe().cleaning);
+    g.done();
+    g = await mountGuide({ ai: fakeAI(), ps: personStores(), personInit: { notes }, extra: { claudeAI: fakeClaude(), aiStorage: storage } });
+    await until(() => g.probe().storeKind === 'person');
+    await press(g, 'notes');
+    await until(() => g.doBtn('wrap'));
+    await press(g, 'wrap');
+    await until(() => g.probe().view === 'wrap');
+    check('and a fresh screen does not remember Claude', g.probe().wrap.who === 'local');
     g.done();
   }
 
@@ -460,20 +696,20 @@ try {
   {
     const notes = mkNotes(3);
     const ps = personStores();
-    const g = await mountGuide({ ai: sortingAI({ noAI: true }), ps, personInit: { notes } });
+    const g = await mountGuide({ ai: fakeAI({ noAI: true }), ps, personInit: { notes } });
     await until(() => g.probe().storeKind === 'person');
     await press(g, 'notes');
     await until(() => g.doBtn('wrap'));
     await press(g, 'wrap');
-    await until(() => g.probe().view === 'wrap' && g.probe().status.state === 'none');
+    await until(() => g.probe().view === 'wrap' && g.probe().wrapStatus.state === 'none');
     check('it says how to set an AI up', !!g.q('[data-ng-help]') && /Ollama/.test(g.q('[data-ng-help]').textContent));
     await press(g, 'wraprange', 'all');
     await press(g, 'wrapgo');
     await sleep(30);
-    check('pressing “Sort them with” anyway: not sorted, and it offers sorting by hand', g.probe().wrap.step === 'choose' && /sort them by hand/.test(g.probe().notice));
+    check('pressing “Clean up and sort” anyway: nothing started, and it offers another AI or sorting by hand', g.probe().wrap.step === 'choose' && !g.probe().review && /sort them by hand/.test(g.probe().notice));
     await press(g, 'wraphand');
     const r = g.probe().review;
-    check('*** by hand: the same review, every note “not sorted yet” in its own words ***', g.probe().wrap.step === 'review' && r.by === 'hand' && r.items.length === 3 && r.items.every((i) => i.list === W.UNSORTED));
+    check('*** by hand: nothing cleaned up, every note “not sorted yet” in its own words ***', g.probe().wrap.step === 'review' && r.by === 'hand' && !r.clean && r.items.length === 3 && r.items.every((i) => i.list === W.UNSORTED));
     check('the line is labelled as the note’s own words', /your note’s own words/.test(g.q('[data-ng-step="item"]').textContent));
     await press(g, 'wrapmove', 'code');
     check('moved to For Code by a press', g.probe().review.items[0].list === 'code');
@@ -485,10 +721,8 @@ try {
   {
     const ps = personStores();
     const old = mkNotes(2, { start: Date.now() - 7200000 });
-    const g = await mountGuide({ ai: sortingAI(), ps, personInit: { notes: old } });
+    const g = await mountGuide({ ai: fakeAI(), ps, personInit: { notes: old } });
     await until(() => g.probe().storeKind === 'person');
-    g.inst.impl.__probe();
-    // Walk to the node and press its act.
     const nodeBtn = () => [...g.mount.querySelectorAll('[data-ng-tree]')].find((b) => b.dataset.ngTree === 'notes-walk');
     await until(() => nodeBtn());
     nodeBtn().click();
@@ -500,7 +734,7 @@ try {
     const fresh = makeNote('A note made after the start', { at: Date.now() + 5 });
     g.ps.make('ruth', AI_STATE_KEY).set({ notes: [...old, fresh] });
     g.done();
-    const g2 = await mountGuide({ ai: sortingAI(), ps });
+    const g2 = await mountGuide({ ai: fakeAI(), ps });
     await until(() => g2.probe().storeKind === 'person');
     await press(g2, 'notes');
     await until(() => g2.doBtn('wrap'));

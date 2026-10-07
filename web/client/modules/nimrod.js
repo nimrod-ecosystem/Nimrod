@@ -79,6 +79,12 @@
 // (every button is a stop) or voice ("Answer by voice" opens the same dictation window as Talk); then a Markdown file
 // in a folder the person picks, remembered in this browser. The review is kept on the notes' record after every
 // decision, so it can be left and picked up again. The notes themselves are never changed by any of it.
+// *** CORRECTED THE SAME DAY (Mike via chat note AY 1): THE SUMMARY IS CORPUS DESK'S CLEAN UP DIAL (clean_up.js). ***
+// Before sorting, every chosen note is cleaned up at the level picked on the dial (1 word for word ... 10 one line,
+// default 3, remembered on this device) and shown beside the person's own words: "Use this" (edited if they like) or
+// "Keep mine", note by note, or for all the rest at once. Approving can start while the later notes are still being
+// cleaned. The sorting then reads the approved words. WHO does both is the wrap-up's own choice, not the guide's:
+// the AI on this computer every time it opens; Claude only on a press, with a plain line that the notes go to Anthropic.
 
 import { registerModule, getManifest } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
@@ -112,7 +118,11 @@ import {
   WRAP_LISTS, UNSORTED, UNSORTED_LABEL, listLabel, rangeChoices, suggestedRange, notesInRange, batchesOf, wrapUp, handReview,
   reviewSteps, currentStep, progress, decide, cleanReview, finishedRecord, addFinished, parseReviewWords, REVIEW_WORDS,
   reviewToMarkdown, walkthroughFileName, saveToFolder, rememberedFolderName,
+  WRAP_WHO, DEFAULT_WHO, isWho, startReview, stageOf, cleanProgress, setCleaned, approveStep, approve, approvedNotes,
+  cleanUpNotes, withSorted, sortedByHand,
 } from '../walkthrough_wrap.js';
+// Corpus Desk's Clean up dial, ported (2026-10-07): the ten levels and the device's remembered one.
+import { levelInfo, levelLine, readCleanLevel, writeCleanLevel } from '../clean_up.js';
 import { handleStore } from '../user_folders.js';
 
 export const GUIDE_TYPE = 'nimrod';
@@ -224,6 +234,10 @@ const STYLE = `
 .ng-src p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 .ng-src small,.ng-card small{color:var(--text-muted)}
 .ng-card .ng-say{margin-top:4px}
+.ng-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));gap:8px}
+.ng-pair small{color:var(--text-muted)}
+.ng-pair textarea{margin-top:6px;min-height:8em}
+.ng-box input[type=range]{padding:0;border:0;background:none;accent-color:var(--highlight)}
 `;
 
 registerModule(
@@ -304,10 +318,18 @@ registerModule(
     const titleOf = (type) => getManifest(type)?.title || '';
     const scopeEl = () => mount.closest?.('.kiosk') || mount.ownerDocument;
     // ---- wrapping up a walkthrough (2026-10-07, row 2.54; walkthrough_wrap.js) ---------------------
-    // step: 'choose' (which notes, who sorts) | 'pick-from' | 'pick-to' | 'busy' | 'review' | 'done'
-    let wrap = { step: 'choose', range: null, pickFrom: '', busy: null, editing: false, folderName: '', exportText: '' };
+    // step: 'choose' (which notes, how much to clean up, who does it) | 'pick-from' | 'pick-to' | 'approve' (the
+    // clean up, note by note) | 'sort' (decided, not sorted yet) | 'busy' (sorting) | 'review' | 'done'
+    // `who`: WRAP_WHO, the local AI each time the wrap-up starts over; `level`: the Clean up dial, this device's.
+    let wrap = { step: 'choose', range: null, pickFrom: '', busy: null, editing: false, folderName: '', exportText: '',
+      who: DEFAULT_WHO, level: readCleanLevel(backendStore()) };
     let review = null;         // the review in hand; written to the notes' record after every decision
-    let wrapAbort = null;
+    let wrapAbort = null;      // the sorting in progress
+    let cleaning = null;       // the clean up in progress (AbortController), running while the person approves
+    // Which AI cleans and sorts (its own look-up, apart from the guide's `status`): { state, model, reason, who }.
+    let wrapStatus = { state: 'unchecked', model: '', reason: '', who: '' };
+    let deviceAI = null;       // this device's ai.js client (its own address, model and key), for 'local' or 'online'
+    let claudeAI = null;
     let lastWrapStep = '';     // the step last drawn (render resets the switch's scan when it changes)
     let folders = null;        // { store, view }: where the save folder is remembered (this device) and picked
     const walkFolders = () => folders || (folders = ctx.walkFolders
@@ -812,17 +834,90 @@ registerModule(
     function openWrap() {
       if (torn) return;
       if (!review) review = cleanReview(sinkRecord().walkReview);
-      if (wrap.step !== 'busy' && !wrap.step.startsWith('pick')) {
-        wrap.step = review && !review.savedAt ? (currentStep(review) ? 'review' : 'done') : 'choose';
+      if (wrap.step !== 'busy' && !wrap.step.startsWith('pick') && !(wrap.step === 'approve' && cleaning)) {
+        wrap.step = review && !review.savedAt ? stageOf(review) : 'choose';
       }
+      // Picking up a wrap-up half way: it carries on with the AI chosen for it (that choice was made by a press).
+      if (review && !review.savedAt && wrap.step !== 'choose' && isWho(review.who)) wrap.who = review.who;
       // The range offered first: the walkthrough's, else since the last wrap-up, else today, else every note.
       if (!wrap.range || (wrap.range.id !== 'pick' && !wrapChoices().some((c) => c.id === wrap.range.id))) wrap.range = suggestedRange(wrapChoices());
-      if (wrap.step === 'review' && review) notice = review.cursor > 0 ? 'Picking up where you left off.' : notice;
+      const picking = (wrap.step === 'review' && review?.cursor > 0) || (wrap.step === 'approve' && cleanProgress(review).decided > 0);
+      if (picking) notice = 'Picking up where you left off.';
       refreshFolderName();
       render();
-      // Opening the wrap-up is a press: which AI answers is looked up (a list of models, or Claude's status - not billed).
-      if (status.state === 'unchecked') checkStatus();
+      // Opening the wrap-up is a press: which AI answers is looked up (a list of models, or Claude's status - not
+      // billed). Nothing is cleaned or sorted until "Clean up and sort" (or "Carry on cleaning") is pressed.
+      if (wrapStatus.state === 'unchecked' || wrapStatus.who !== wrap.who) wrapCheck();
     }
+
+    // ---- who cleans and sorts (WRAP_WHO) ----
+    const devAI = () => deviceAI || (deviceAI = ctx.ai || createAI());
+    function devSettings() { try { return devAI().settings() || {}; } catch { return {}; } }
+    /** Does this device have an online address set up for its AI? Then "Your online AI" is offered too. */
+    const onlineOffered = () => !isLocalAddress(devSettings().baseUrl || DEFAULT_BASE_URL);
+    /** The client for `who`: this device's own when its address fits, else Ollama's own address on this computer. */
+    function wrapAI(who = wrap.who) {
+      if (who === 'claude') {
+        return claudeAI || (claudeAI = ctx.claudeAI || createClaudeAI({ ...(typeof ctx.serverFetch === 'function' ? { fetchImpl: ctx.serverFetch } : {}),
+          headers: () => authHeaders(ctx.user || undefined) }));
+      }
+      if (who === 'online') return onlineOffered() ? devAI() : null;
+      return onlineOffered() ? clientAt(OLLAMA_URL) : devAI();
+    }
+    async function wrapCheck() {
+      const who = wrap.who;
+      wrapStatus = { state: 'checking', model: '', reason: '', who };
+      render();
+      const c = wrapAI(who);
+      let s = {};
+      try { s = c?.settings?.() || {}; } catch { s = {}; }
+      let next;
+      if (!c) next = { state: 'none', model: '', reason: 'No online AI is set up on this device.', who };
+      // A remote address is never given a model by itself (checkStatus argues it): its list can hold paid models.
+      else if (who === 'online' && !s.model) next = { state: 'needs-model', model: '', reason: `Name the model to use at ${hostOf(s.baseUrl)} in “About ${aiP.name}”.`, who };
+      else {
+        let r;
+        try { r = await c.resolveModel(who === 'claude' ? '' : (s.model || '')); } catch (err) { r = { ok: false, reason: String(err?.message || err) }; }
+        if (!r?.ok) next = { state: 'none', model: '', reason: r?.reason || 'The AI did not answer.', who };
+        else if (r.fellBack && who === 'online') next = { state: 'needs-model', model: '', reason: `That service has no model called “${s.model}”.`, who };
+        else next = { state: 'ok', model: r.model, reason: '', who };
+      }
+      if (torn || wrap.who !== who) return wrapStatus;
+      wrapStatus = next;
+      render();
+      return wrapStatus;
+    }
+    function wrapStatusText() {
+      const st = wrapStatus;
+      switch (st.state) {
+        case 'checking': return 'Looking for the AI…';
+        case 'ok': {
+          if (st.who === 'claude') return `Claude (${st.model}), through this website’s server.`;
+          let s = {};
+          try { s = wrapAI(st.who)?.settings?.() || {}; } catch { s = {}; }
+          return st.who === 'online' ? `${st.model} at ${hostOf(s.baseUrl)}.` : `${st.model}, on this computer.`;
+        }
+        case 'needs-model': return st.reason;
+        case 'none': return `No AI is answering. ${st.reason}`;
+        default: return 'Not looked for yet.';
+      }
+    }
+    function setWho(id) {
+      if (!isWho(id) || (id === 'online' && !onlineOffered()) || id === wrap.who) return;
+      wrap.who = id;
+      notice = '';
+      wrapCheck();
+    }
+    function setLevel(v, { redraw = true } = {}) {
+      wrap.level = writeCleanLevel(v, backendStore());
+      if (redraw) { render(); return; }
+      // Dragging the dial: only its words change, so the drag is not interrupted by a redraw.
+      const line = root?.querySelector('[data-ng-levelline]');
+      const help = root?.querySelector('[data-ng-levelhelp]');
+      if (line) line.textContent = `Clean up: ${levelLine(wrap.level)}`;
+      if (help) help.textContent = levelInfo(wrap.level).help;
+    }
+    const wrapAIName = (who) => (who === 'claude' ? 'Claude' : aiP.name);
     function refreshFolderName() {
       rememberedFolderName(walkFolders().store).then((name) => { if (!torn && name !== wrap.folderName) { wrap.folderName = name; render(); } }).catch(() => {});
     }
@@ -835,12 +930,25 @@ registerModule(
         gameNote(`Started at ${stamp(at).slice(11)}. When you are done, “Wrap up the walkthrough” takes the notes from here on.`, nav.id());
       }).catch(() => {});
     }
+    function stopWrapWork() {
+      try { wrapAbort?.abort(); } catch { /* done */ }
+      try { cleaning?.abort(); } catch { /* done */ }
+    }
+    /** The AI chosen for this wrap-up, looked up if it is not yet; true when it answers. */
+    async function wrapReady(who) {
+      if (wrap.who !== who) wrap.who = who;
+      if (wrapStatus.state !== 'ok' || wrapStatus.who !== who) await wrapCheck();
+      return !torn && wrapStatus.state === 'ok' && wrapStatus.who === who;
+    }
+    const noAILine = () => `No AI is answering (${wrapStatusText()}). Choose another, or sort them by hand: that sends nothing.`;
+
     async function startWrap({ byHand = false } = {}) {
       const chosen = chosenNotes();
       if (!chosen.length) { notice = 'There are no notes in that range.'; render(); return; }
       wrap.editing = false;
       wrap.exportText = '';
       if (byHand) {
+        stopWrapWork();
         keepReview(handReview(chosen));
         wrap.step = 'review';
         notice = 'Every note is here as you wrote it, not sorted yet: move each one to a list, or drop it.';
@@ -848,26 +956,112 @@ registerModule(
         return;
       }
       await ensureStore();
-      if (status.state !== 'ok') await checkStatus();
-      if (torn) return;
-      if (status.state !== 'ok') { notice = `No AI is answering (${statusText()}). You can still sort them by hand.`; render(); return; }
-      try { wrapAbort?.abort(); } catch { /* done */ }
-      wrapAbort = new AbortController();
-      wrap.busy = { done: 0, total: batchesOf(chosen.map((note, i) => ({ n: i + 1, note }))).length };
-      wrap.step = 'busy';
+      const who = wrap.who;
+      if (!(await wrapReady(who))) { if (!torn) { notice = noAILine(); render(); } return; }
+      stopWrapWork();
+      keepReview(startReview(chosen, { level: wrap.level, who, aiName: wrapAIName(who) }));
+      wrap.step = 'approve';
       notice = '';
       render();
-      const res = await wrapUp(chosen, { ai: ai(), model: status.model, aiName: aiP.name, signal: wrapAbort.signal,
-        onProgress: (p) => { wrap.busy = p; render(); } });
-      wrapAbort = null;
-      wrap.busy = null;
+      runCleaning();
+    }
+
+    // THE CLEAN UP, in the background: each note's cleaned words are kept on the record as they come, so the person
+    // can approve note 1 while note 5 is being cleaned. Stopping keeps what was cleaned; "Carry on cleaning" does the rest.
+    async function runCleaning() {
+      if (!review?.clean || review.sorted || cleaning) return;
+      const id0 = review.id;
+      const who = isWho(review.who) ? review.who : wrap.who;
+      if (!(await wrapReady(who))) { if (!torn) { notice = noAILine(); render(); } return; }
+      if (torn || review?.id !== id0 || cleaning) return;
+      const ctl = new AbortController();
+      cleaning = ctl;
+      const list = notes.filter((n) => review.noteIds.includes(n.id));
+      render();
+      const pendingNow = (id) => review?.id === id0 && review.clean?.notes.find((x) => x.id === id)?.state === 'pending';
+      const res = await cleanUpNotes(list, { ai: wrapAI(who), model: wrapStatus.model, level: review.clean.level, signal: ctl.signal,
+        isWaiting: pendingNow,
+        onNote: (id, r) => {
+          if (torn || review?.id !== id0) return;
+          const was = approveStep(review)?.entry?.id;
+          keepReview(setCleaned(review, id, r));
+          render();
+          if (was === id) sayApprove();
+          afterApprove();
+        } });
+      if (cleaning === ctl) cleaning = null;
       if (torn) return;
-      if (!res.ok) { wrap.step = 'choose'; notice = res.cancelled ? 'Stopped. Nothing was kept.' : res.reason; render(); return; }
-      keepReview(res.review);
-      wrap.step = 'review';
+      if (res.cancelled && review?.id === id0 && cleanProgress(review).pending) notice = 'Cleaning stopped. What was cleaned is kept; “Carry on cleaning” does the rest.';
+      render();
+      afterApprove();
+    }
+    /** Every note decided: on to the sorting (the person asked for it with "Clean up and sort"). */
+    function afterApprove() {
+      if (!review || review.sorted || cleanProgress(review).undecided > 0 || wrapAbort) return;
+      startSorting();
+    }
+    async function startSorting() {
+      if (!review || review.sorted || wrapAbort) return;
+      const id0 = review.id;
+      const forSort = approvedNotes(review, notes);
+      if (!forSort.length) { notice = 'The notes of this wrap-up were deleted. Start a new one.'; wrap.step = 'sort'; render(); return; }
+      const who = isWho(review.who) ? review.who : wrap.who;
+      wrapAbort = new AbortController();      // held from here, so a second press cannot start a second sort
+      const ctl = wrapAbort;
+      wrap.step = 'busy';
+      wrap.busy = { done: 0, total: batchesOf(forSort.map((note, i) => ({ n: i + 1, note }))).length };
+      notice = '';
+      render();
+      if (!(await wrapReady(who)) || ctl.signal.aborted) {
+        if (wrapAbort === ctl) wrapAbort = null;
+        if (torn) return;
+        wrap.busy = null;
+        wrap.step = 'sort';
+        notice = ctl.signal.aborted ? 'Sorting stopped. Your approved notes are kept.' : noAILine();
+        render();
+        return;
+      }
+      const res = await wrapUp(forSort, { ai: wrapAI(who), model: wrapStatus.model, aiName: wrapAIName(who), signal: ctl.signal,
+        onProgress: (p) => { wrap.busy = p; render(); } });
+      if (wrapAbort === ctl) wrapAbort = null;
+      wrap.busy = null;
+      if (torn || review?.id !== id0) return;
+      if (!res.ok) {
+        wrap.step = 'sort';
+        notice = res.cancelled ? 'Sorting stopped. Your approved notes are kept: sort them again, or by hand.' : res.reason;
+        render();
+        return;
+      }
+      keepReview(withSorted(review, res.review));
+      wrap.step = stageOf(review);
       notice = res.review.problems.join(' ');
       render();
       sayStep();
+    }
+    /** One decision on the clean up (walkthrough_wrap.js `approve`), kept at once. False when it changed nothing. */
+    function approveDo(action, arg) {
+      if (!review?.clean || review.sorted) return false;
+      const next = approve(review, action, arg);
+      if (next === review) return false;
+      keepReview(next);
+      notice = '';
+      if (action === 'mineall') stopCleaningIfDone();
+      wrap.step = stageOf(review) === 'approve' ? 'approve' : wrap.step;
+      render();
+      sayApprove();
+      afterApprove();
+      return true;
+    }
+    function stopCleaningIfDone() { if (cleaning && !cleanProgress(review).pending) { try { cleaning.abort(); } catch { /* done */ } } }
+    function sayApprove() {
+      if (!listening || view !== 'wrap' || wrap.step !== 'approve' || !review) return;
+      const st = approveStep(review);
+      if (!st) return;
+      const k = st.index + 1;
+      const e = st.entry;
+      if (e.state === 'pending') { speakReply(`Note ${k} is still being cleaned up.`); return; }
+      if (e.failed) { speakReply(`Note ${k} could not be cleaned up, so your own words are used.`); return; }
+      speakReply(`Note ${k}, cleaned up: ${e.state === 'open' ? e.cleaned : e.text}`);
     }
     /** One decision (walkthrough_wrap.js `decide`), kept at once. False when it changed nothing. */
     function reviewDo(action, arg) {
@@ -891,7 +1085,20 @@ registerModule(
       if (!st) { speakReply('That was the last one. Save it when you are ready.'); return; }
       speakReply(st.kind === 'summary' ? `The summary: ${review.summary.text}` : `${listLabel(st.item.list)}: ${st.item.text}`);
     }
+    // Approving the clean up by voice: "use this", "keep mine", "change it to ..." (the new words are used), back, skip.
+    function approveHeard(t) {
+      const p = parseReviewWords(t);
+      const st = approveStep(review);
+      if (p?.action === 'use') { if (!approveDo('use')) { notice = 'This one is not cleaned up yet: say keep mine, or skip.'; render(); } return; }
+      if (p?.action === 'mine') { approveDo('mine'); return; }
+      if (p?.action === 'prev') { approveDo('prev'); return; }
+      if (p?.action === 'next') { approveDo('next'); return; }
+      if (p?.action === 'change' && p.text && st && st.entry.cleaned) { approveDo('use', p.text); return; }
+      notice = `Heard “${t}”. Say use this, or keep mine; or change it to and the new words.`;
+      render();
+    }
     function reviewHeard(t, as) {
+      if (wrap.step === 'approve' && review) { approveHeard(t); return; }
       if (as === 'change') { if (!reviewDo('change', t)) render(); return; }
       if (wrap.step !== 'review' || !review) return;
       const p = parseReviewWords(t);
@@ -1318,29 +1525,98 @@ registerModule(
     // "Wrap up the walkthrough", or picking up one left half way.
     function wrapButton() {
       const r = review || cleanReview(sinkRecord().walkReview);
-      if (r && !r.savedAt && currentStep(r)) {
-        const p = progress(r);
-        return btnHTML('wrap', `Pick up the wrap-up (${p.done} of ${p.total} looked at)`, 'Back to going through the summary and lists, where you left off.');
+      const stage = r && !r.savedAt ? stageOf(r) : '';
+      if (stage === 'approve') {
+        const c = cleanProgress(r);
+        return btnHTML('wrap', `Pick up the wrap-up (${c.decided} of ${c.total} notes approved)`, 'Back to approving the cleaned-up notes, where you left off.');
       }
-      return btnHTML('wrap', 'Wrap up the walkthrough', `${aiP.name} sums up your notes and sorts them into three lists; then you go through them together and save a file.`,
+      if (stage === 'sort') return btnHTML('wrap', 'Pick up the wrap-up (ready to sort)', 'Every note is approved: back to sort them into the lists.');
+      if (stage === 'review') {
+        const p = progress(r);
+        return btnHTML('wrap', `Pick up the wrap-up (${p.done} of ${p.total} looked at)`, 'Back to going through the lists, where you left off.');
+      }
+      return btnHTML('wrap', 'Wrap up the walkthrough', 'Clean up your notes on this computer, approve each one, sort them into three lists, go through them together and save a file.',
         notes.length ? '' : 'disabled');
     }
 
-    // THE WRAP-UP (2026-10-07, row 2.54): choose the notes and who sorts them; then one line at a time; then save.
+    // THE WRAP-UP (2026-10-07, row 2.54): choose the notes, how much to clean up and who does it; approve the cleaned
+    // notes; the lists, one line at a time; then save.
     function sendLine(count) {
+      const who = wrap.who;
       let s = {};
-      try { s = ai().settings() || {}; } catch { s = {}; }
-      const local = backend !== 'claude' && isLocalAddress(s.baseUrl || DEFAULT_BASE_URL);
-      const to = backend === 'claude' ? 'Claude (made by Anthropic), through this website’s server'
-        : local ? `the AI on this computer (${hostOf(s.baseUrl || DEFAULT_BASE_URL)})` : `the AI at ${hostOf(s.baseUrl)}`;
-      return `Sorting with the AI sends only these ${count} note${count === 1 ? '' : 's'}, to ${to}${local ? ', so nothing leaves this computer' : ''}. `
+      try { s = wrapAI(who)?.settings?.() || {}; } catch { s = {}; }
+      const to = who === 'claude' ? 'Anthropic, who make Claude, through this website’s server'
+        : who === 'online' ? `the AI at ${hostOf(s.baseUrl)}` : `the AI on this computer (${hostOf(s.baseUrl || DEFAULT_BASE_URL)})`;
+      return `Cleaning up and sorting sends only these ${count} note${count === 1 ? '' : 's'}, to ${to}${who === 'local' ? ', so nothing leaves this computer' : ''}. `
         + 'For each note: its words, when it was written, and where on the site you were (the page and what was picked on it, '
         + 'and whether it was a test person). Not your name, and nothing else. Sorting by hand sends nothing.';
     }
     function cautionLine() {
-      if (backend === 'claude') return 'Claude is quick and sorts well. It is paid for with the Claude key saved for this website, within its daily limit.';
-      if (backend === 'local') return 'An AI on this computer can take several minutes and will put some lines in the wrong list. You look at every line anyway.';
+      if (wrap.who === 'claude') return 'Claude is quick and sorts well. It is paid for with the Claude key saved for this website, within its daily limit.';
+      if (wrap.who === 'local') return 'An AI on this computer can take a while for each note, and will put some lines in the wrong list. You see every note and every line anyway.';
       return '';
+    }
+    // The dial: Corpus Desk's slider, 1 to 10, plus Less and More for a switch or a keyboard (a slider is not a stop).
+    function levelHTML() {
+      const L = wrap.level;
+      return `<div class="ng-box" data-ng-clean>
+          <p class="ng-say"><b data-ng-levelline>Clean up: ${esc(levelLine(L))}</b></p>
+          <p class="ng-status" data-ng-levelhelp>${esc(levelInfo(L).help)}</p>
+          <input type="range" min="1" max="10" step="1" value="${L}" data-ng-level aria-label="How much to clean up your notes: 1 is word for word, 10 is one line">
+          <div class="ng-btns">${btnHTML('wrapless', '‹ Less clean-up', 'Closer to word for word.', L <= 1 ? 'disabled' : '')}
+            ${btnHTML('wrapmore', 'More clean-up ›', 'Shorter, down to one line.', L >= 10 ? 'disabled' : '')}</div>
+          <p class="ng-status">Each note is cleaned up on its own and shown beside your words: use it, change it, or keep yours. Your notes themselves are never changed.</p>
+        </div>`;
+    }
+    function whoHTML() {
+      const opts = WRAP_WHO.filter((w) => w.id !== 'online' || onlineOffered());
+      return `<p class="ng-status">Who cleans up and sorts them:</p>
+        <div class="ng-btns" data-ng-who>${opts.map((w) => btnHTML('wrapwho', esc(w.label), w.help, `data-ng-id="${esc(w.id)}" aria-pressed="${wrap.who === w.id}"`)).join('')}</div>
+        ${wrap.who === 'claude' ? '<p class="ng-warn" data-ng-claudeline>Claude is chosen: the notes you chose go to Anthropic, who make Claude, to be cleaned up and sorted. Choose “The AI on this computer” to keep them here.</p>' : ''}`;
+    }
+    function approveHTML(head, nav, note) {
+      const st = approveStep(review);
+      const c = cleanProgress(review);
+      const L = review.clean.level;
+      const by = wrapAIName(review.who);
+      const tail = `<p class="ng-status" data-ng-cleanprogress>${c.decided} of ${c.total} decided${c.pending ? ` · ${c.pending} still to clean up` : ''}.</p>
+          <div class="ng-btns">${cleaning ? btnHTML('wrapstopclean', 'Stop cleaning', 'Stop cleaning up. What was cleaned is kept.')
+            : (c.pending ? btnHTML('wrapcleanmore', `Carry on cleaning (${c.pending} left)`, `Clean up the rest, with ${by}.`) : '')}
+            ${!c.undecided && !review.sorted ? btnHTML('wrapsort', 'Sort them now', 'Every note is decided: on to the lists.') : ''}</div>`;
+      if (!st) return `${head}<p class="ng-status">Every note is decided.</p>${tail}${note}${nav}`;
+      const e = st.entry;
+      const x = notes.find((n) => n.id === e.id);
+      const k = st.index + 1;
+      const ctxLine = x ? contextLine(x.context) : '';
+      const mark = { used: ' · using these', changed: ' · using your changed words', mine: ' · keeping your words', open: '', pending: '' }[e.state] || '';
+      const mine = x ? `<div class="ng-box ng-src" data-ng-mine><small>Note ${k} of ${c.total}, your words exactly${e.state === 'mine' ? ' · keeping these' : ''} · ${esc(stamp(x.at))}${ctxLine ? ` · ${esc(ctxLine)}` : ''}</small>
+            <p>${esc(x.text)}</p></div>`
+        : `<div class="ng-box ng-src" data-ng-mine><small>Note ${k} of ${c.total}</small><p>This note was deleted since.</p></div>`;
+      let right;
+      if (e.state === 'pending') {
+        right = `<p class="ng-status" data-ng-pendingclean role="status">${cleaning ? 'Still cleaning this one…' : 'Not cleaned up yet.'}</p>`;
+      } else if (e.failed) {
+        right = `<p class="ng-warn" data-ng-cleanfailed>It could not be cleaned up (${esc(e.failed)}), so your own words are used.</p>`;
+      } else {
+        right = `<textarea id="ng-f-cleaned-${esc(e.id)}" data-ng-field="cleaned-${esc(e.id)}" aria-label="The cleaned-up words: change them here if you like">${esc(e.state === 'open' ? e.cleaned : (e.text || e.cleaned))}</textarea>`;
+      }
+      const cleaned = `<div class="ng-box" data-ng-cleaned><small>Cleaned up by ${esc(by)} · ${esc(levelLine(L))}${mark}</small>${right}</div>`;
+      const canUse = e.state !== 'pending' && !e.failed && !!e.cleaned && !!x;
+      return `${head}<div class="ng-pair" data-ng-approve>${mine}${cleaned}</div>
+          <div class="ng-btns" data-ng-decide>${btnHTML('wrapuse', 'Use this', 'Use the cleaned-up words (with any change you made in the box).', canUse ? '' : 'disabled')}
+            ${btnHTML('wrapmine', 'Keep mine', 'Use your own words for this note, exactly as you wrote them.')}</div>
+          <div class="ng-btns">${btnHTML('wrapaprev', '‹ Previous', 'Back one note.', st.index > 0 ? '' : 'disabled')}
+            ${btnHTML('wrapanext', 'Skip for now', 'On to the next note; this one waits.')}
+            ${btnHTML('listen', listening ? 'Listening… press to stop' : 'Answer by voice',
+              listening ? 'Stop listening.' : 'Say use this, or keep mine; or change it to and the new words.', `aria-pressed="${listening}"`)}</div>
+          <div class="ng-btns">${btnHTML('wrapuseall', 'Use the cleaned-up words for all the rest', 'Every note not decided yet uses its cleaned-up words, including the ones still being cleaned.')}
+            ${btnHTML('wrapmineall', 'Keep my words for all the rest', 'Every note not decided yet keeps your own words, and is not cleaned up.')}</div>
+          ${tail}
+          <p class="ng-status" data-ng-voicetip>${listening ? 'Say use this, or keep mine; or “change it to” and the new words. “Back” and “skip” work too.' : 'By voice: press “Answer by voice”, then say use this, or keep mine.'}</p>
+          ${listenHint ? `<p class="ng-status" data-ng-listenhint>${esc(listenHint)}</p>` : ''}
+          ${note}
+          <div class="ng-btns">${btnHTML('wrapnew', 'Start a new wrap-up', 'Choose notes again. This one is replaced only when the new one is made.')}</div>
+          ${nav}`;
     }
     function sourceHTML(ids) {
       const num = new Map((review?.noteIds || []).map((id, i) => [id, i + 1]));
@@ -1356,20 +1632,33 @@ registerModule(
     function wrapHTML() {
       const n = aiP.name;
       const p = review ? progress(review) : null;
-      const sub = { choose: 'Which notes, and who sorts them', 'pick-from': 'Pick the first note', 'pick-to': 'Pick the last note',
-        busy: `${n} is reading your notes`, review: p ? `${Math.min(review.cursor + 1, p.total)} of ${p.total} · ${p.done} looked at` : '',
+      const c = review?.clean ? cleanProgress(review) : null;
+      const sub = { choose: 'Which notes, how much to clean up, and who does it', 'pick-from': 'Pick the first note', 'pick-to': 'Pick the last note',
+        approve: c ? `Approve the cleaned-up notes · ${c.decided} of ${c.total} decided` : '',
+        sort: 'Every note approved: sort them', busy: `${wrapAIName(review?.who || wrap.who)} is sorting your notes`,
+        review: p ? `${Math.min(review.cursor + 1, p.total)} of ${p.total} · ${p.done} looked at` : '',
         done: 'All looked at: save it' }[wrap.step] || '';
       const head = `<div class="ng-head"><img src="${esc(catImageURL('talking'))}" alt="">
           <div><b>Wrap up the walkthrough</b><div class="ng-where" data-ng-wrapstep="${esc(wrap.step)}">${esc(sub)}</div></div></div>`;
-      // While reviewing these go LAST, so a switch's scan starts on Keep and stays there line after line.
-      const nav = `<div class="ng-btns">${btnHTML('notes', '‹ Your notes', 'Back to your notes. Nothing here is lost: the review is kept as it is.')}
+      // While reviewing these go LAST, so a switch's scan starts on Keep (or Use this) and stays there note after note.
+      const nav = `<div class="ng-btns">${btnHTML('notes', '‹ Your notes', 'Back to your notes. Nothing here is lost: the wrap-up is kept as it is.')}
           ${btnHTML('guide', 'The guide', 'Back to the guide’s choices.')}</div>`;
       const note = notice ? `<p class="ng-status" data-ng-notice role="status">${esc(notice)}</p>` : '';
       if (wrap.step === 'busy') {
         const b = wrap.busy || { done: 0, total: 1 };
-        return `${head}${nav}<p class="ng-status" data-ng-wrapbusy role="status">Reading your notes: part ${Math.min(b.done + 1, b.total)} of ${b.total}…`
-          + `${backend === 'local' ? ' An AI on this computer can take a few minutes for each part.' : ''}</p>
-          <div class="ng-btns">${btnHTML('wrapstop', 'Stop', 'Stop sorting. Nothing is kept; your notes are untouched.')}</div>${note}`;
+        return `${head}${nav}<p class="ng-status" data-ng-wrapbusy role="status">Sorting your notes: part ${Math.min(b.done + 1, b.total)} of ${b.total}…`
+          + `${(review?.who || wrap.who) === 'local' ? ' An AI on this computer can take a few minutes for each part.' : ''}</p>
+          <div class="ng-btns">${btnHTML('wrapstop', 'Stop', 'Stop sorting. Your approved notes are kept; your notes themselves are untouched.')}</div>${note}`;
+      }
+      if (wrap.step === 'approve' && review?.clean) return approveHTML(head, nav, note);
+      if (wrap.step === 'sort' && review) {
+        const who = isWho(review.who) ? review.who : wrap.who;
+        return `${head}${nav}<p class="ng-status" data-ng-sortready>Every note is decided${c ? `: ${c.used} as cleaned up, ${c.changed} changed by you, ${c.mine} in your own words` : ''}. Next, the lists.</p>
+          <p class="ng-status" data-ng-status>Sorting with: ${esc(wrapStatus.who === who ? wrapStatusText() : 'Not looked for yet.')}</p>
+          <div class="ng-btns">${btnHTML('wrapsort', `Sort them with ${esc(wrapAIName(who))}`, `${wrapAIName(who)} sorts your approved notes into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`)}
+            ${btnHTML('wrapsorthand', 'Sort them by hand', 'No AI: every note comes in as you approved it, and you put each one in a list.')}
+            ${c ? btnHTML('wrapapproveback', '‹ Back to the notes', 'Look at the cleaned-up notes again.') : ''}</div>
+          ${note}`;
       }
       if (wrap.step === 'pick-from' || wrap.step === 'pick-to') {
         const from = wrap.step === 'pick-to' ? notes.findIndex((x) => x.id === wrap.pickFrom) : 0;
@@ -1397,10 +1686,10 @@ registerModule(
         } else {
           const i = st.item;
           const mark = i.state === 'open' ? '' : ` · ${i.state === 'dropped' ? 'dropped' : [i.text !== i.was && 'changed', i.list !== i.wasList && 'moved', 'kept'].filter(Boolean).join(', ')}`;
-          card = `<div class="ng-card" data-ng-step="item" data-ng-list="${esc(i.list)}"><small>${esc(listLabel(i.list))} · ${fromAI && !i.left ? `written by ${esc(review.aiName || n)} (the AI)` : 'your note’s own words'}${mark}</small>
+          card = `<div class="ng-card" data-ng-step="item" data-ng-list="${esc(i.list)}"><small>${esc(listLabel(i.list))} · ${fromAI && !i.left ? `written by ${esc(review.aiName || n)} (the AI)` : (review.clean ? 'the note as you approved it' : 'your note’s own words')}${mark}</small>
             <p class="ng-say" data-ng-line>${esc(i.text)}</p>
             ${i.unanchored ? '<p class="ng-warn" data-ng-unanchored>The AI named no note for this line: check it against your notes, or drop it.</p>' : ''}
-            ${i.left && fromAI ? '<p class="ng-status" data-ng-left>The AI did not sort this note, so here are its own words.</p>' : ''}</div>`;
+            ${i.left && fromAI ? `<p class="ng-status" data-ng-left>The AI did not sort this note, so here it is ${review.clean ? 'as you approved it' : 'in its own words'}.</p>` : ''}</div>`;
           src = sourceHTML(i.notes);
           moves = WRAP_LISTS.filter((l) => l.id !== i.list).map((l) => btnHTML('wrapmove', `Move to ${esc(l.label)}`, `Put this line in ${l.label}: ${l.help}.`, `data-ng-id="${esc(l.id)}"`)).join('');
         }
@@ -1428,7 +1717,12 @@ registerModule(
         return `${head}${nav}<p class="ng-status" data-ng-wrapdone>All looked at. ${review.items.length} line${review.items.length === 1 ? '' : 's'}: ${p.kept} kept (${p.changed} changed, ${p.moved} moved), ${p.dropped} dropped.${review.summary ? ` The summary: ${review.summary.state === 'dropped' ? 'dropped' : (review.summary.text !== review.summary.was ? 'changed' : 'kept')}.` : ''}</p>
           <p class="ng-status">${esc(counts)}${uns ? ` · ${UNSORTED_LABEL}: ${uns}` : ''}</p>
           ${review.problems?.length ? `<ul class="ng-lines">${review.problems.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
-          <p class="ng-status">The file has the summary, the three lists with the note each line came from, and every note word for word.</p>
+          <p class="ng-status">${review.clean
+            ? `The file has the three lists with the note each line came from, then the summary: every note as you approved it (cleaned up at ${esc(levelLine(review.clean.level))}, or in your words)${review.originals ? ', then every note word for word as well' : ''}.`
+            : 'The file has the three lists with the note each line came from, and every note word for word.'}</p>
+          ${review.clean ? `<div class="ng-btns">${btnHTML('wraporiginals', `Also put in your notes word for word: ${review.originals ? 'on' : 'off'}`,
+            'Off: the file has the cleaned-up notes only, so less goes to chat. On: your notes exactly as written are added at the end. Your notes themselves are kept either way.',
+            `aria-pressed="${review.originals}"`)}</div>` : ''}
           <div class="ng-btns" data-ng-save>${btnHTML('wrapsave', folder ? `Save in “${esc(folder)}”` : 'Save in a folder…', folder ? `Saves the file in ${folder}, the folder this browser remembers.` : 'Pick a folder to save it in; this browser remembers it for next time.')}
             ${folder ? btnHTML('wrappickfolder', 'Choose a different folder', 'Pick another folder to save it in, and remember that one.') : ''}
             ${btnHTML('wrapdownload', 'Download it instead', 'Save the file in your browser’s downloads.')}
@@ -1443,28 +1737,32 @@ registerModule(
       const choices = wrapChoices();
       const r = wrap.range;
       const chosen = chosenNotes();
-      const unfinished = review && !review.savedAt && currentStep(review);
-      const noAI = status.state === 'none' || status.state === 'needs-model';
+      const stage = review && !review.savedAt ? stageOf(review) : '';
+      const unfinished = stage && stage !== 'done';
+      const noAI = wrapStatus.who === wrap.who && (wrapStatus.state === 'none' || wrapStatus.state === 'needs-model');
       const rangeBtns = choices.map((c) => btnHTML('wraprange', `${esc(c.label)}: ${c.count}`, `Wrap up these ${c.count} notes.`,
         `data-ng-id="${esc(c.id)}" aria-pressed="${r?.id === c.id}"`)).join('');
+      const howFar = stage === 'approve' ? `${cleanProgress(review).decided} of ${cleanProgress(review).total} notes approved`
+        : stage === 'sort' ? 'ready to sort' : stage === 'review' ? `${progress(review).done} of ${progress(review).total} looked at` : '';
       return `${head}${nav}
         ${notes.length ? '' : '<p class="ng-status">There are no notes yet. Make some on your walk (press N, or say the wake phrase and “make a note”), then come back.</p>'}
-        ${unfinished ? `<div class="ng-btns">${btnHTML('wrapresume', `Pick up the review you were doing (${progress(review).done} of ${progress(review).total} looked at)`, 'Back to it, where you left off.')}</div>
-          <p class="ng-status">Starting a new one replaces that review.</p>` : ''}
+        ${unfinished ? `<div class="ng-btns">${btnHTML('wrapresume', `Pick up the wrap-up you were doing (${howFar})`, 'Back to it, where you left off.')}</div>
+          <p class="ng-status">Starting a new one replaces that one.</p>` : ''}
         ${review && review.savedAt ? `<div class="ng-btns">${btnHTML('wrapreopen', `Open the last wrap-up again${review.savedAs ? ` (${esc(review.savedAs)})` : ''}`, 'Look at it again, or save it again.')}</div>` : ''}
         ${notes.length ? `<p class="ng-status">Which notes:</p>
         <div class="ng-btns" data-ng-ranges>${rangeBtns}
           ${btnHTML('wrappick', `Pick the first and last note${r?.id === 'pick' ? `: ${chosen.length}` : ''}`, 'Choose exactly where the walkthrough starts and ends.', `aria-pressed="${r?.id === 'pick'}"`)}</div>
         <p class="ng-status" data-ng-chosen>${chosen.length} note${chosen.length === 1 ? '' : 's'} chosen.</p>
+        ${levelHTML()}
         <div class="ng-box" data-ng-wrapai>
-          <p class="ng-status" data-ng-status>Sorting with: ${esc(statusText())}</p>
-          ${backendRow()}
+          ${whoHTML()}
+          <p class="ng-status" data-ng-status>${esc(wrapStatus.who === wrap.who ? wrapStatusText() : 'Not looked for yet.')}</p>
           ${cautionLine() ? `<p class="ng-status">${esc(cautionLine())}</p>` : ''}
           <p class="ng-status" data-ng-sendline>${esc(sendLine(chosen.length))}</p>
         </div>
-        ${noAI ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
-        <div class="ng-btns">${btnHTML('wrapgo', `Sort them with ${esc(n)}`, `${n} writes a short summary and sorts the notes into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`, chosen.length ? '' : 'disabled')}
-          ${btnHTML('wraphand', 'Sort them by hand', 'No AI: every note comes in as it is, and you put each one in a list.', chosen.length ? '' : 'disabled')}</div>` : ''}
+        ${noAI && wrap.who === 'local' ? `<p class="ng-help" data-ng-help>${esc(connectHelp(n, ''))}</p>` : ''}
+        <div class="ng-btns">${btnHTML('wrapgo', `Clean up and sort them with ${esc(wrapAIName(wrap.who))}`, `Each note is cleaned up at ${levelLine(wrap.level)} and shown beside your words to approve; then they are sorted into ${WRAP_LISTS.map((l) => l.label).join(', ')}.`, chosen.length ? '' : 'disabled')}
+          ${btnHTML('wraphand', 'Sort them by hand', 'No AI and nothing cleaned up: every note comes in as it is, and you put each one in a list.', chosen.length ? '' : 'disabled')}</div>` : ''}
         ${note}`;
     }
 
@@ -1573,7 +1871,7 @@ registerModule(
         case 'tutorial': return 'Goes to the tutorial dashboard, where Nimrod and the settings always are.';
         case 'game-mode': return MODE_HELP[a.mode] || '';
         case 'guide': return a.do === 'notes' ? 'Opens your notes: write one, copy them all, or save them as a file.'
-          : a.do === 'wrap' ? `${aiP.name} sums up your notes and sorts them into three lists; then you go through them together and save a file.`
+          : a.do === 'wrap' ? 'Clean up your notes on this computer, approve each one, sort them into three lists, go through them together and save a file.'
             : a.do === 'walkstart' ? 'Keeps the time now, so the wrap-up can take just the notes from here on. Nothing is sent.'
               : `Talk it over with ${aiP.name}, typed or spoken.`;
         default: return '';
@@ -1596,9 +1894,45 @@ registerModule(
         case 'wrapgo': startWrap(); return;
         case 'wraphand': startWrap({ byHand: true }); return;
         case 'wrapstop': try { wrapAbort?.abort(); } catch { /* done */ } return;
-        case 'wrapresume': if (review) { wrap.step = currentStep(review) ? 'review' : 'done'; notice = ''; render(); } return;
+        case 'wrapresume': if (review) { wrap.step = stageOf(review); if (isWho(review.who)) wrap.who = review.who; notice = ''; render(); } return;
         case 'wrapreopen': if (review) { wrap.step = 'done'; notice = ''; refreshFolderName(); render(); } return;
-        case 'wrapnew': wrap.step = 'choose'; wrap.editing = false; notice = ''; if (listening) stopListening(); render(); return;
+        case 'wrapnew':
+          stopWrapWork();
+          wrap.step = 'choose'; wrap.editing = false; notice = '';
+          // Starting over starts on the AI on this computer again: a choice that sends notes away is made each time.
+          if (wrap.who !== DEFAULT_WHO) { wrap.who = DEFAULT_WHO; wrapCheck(); }
+          if (listening) stopListening();
+          render();
+          return;
+        // the clean up (Corpus Desk's dial)
+        case 'wrapwho': setWho(id); return;
+        case 'wrapless': setLevel(wrap.level - 1); return;
+        case 'wrapmore': setLevel(wrap.level + 1); return;
+        case 'wrapuse': {
+          const e = approveStep(review)?.entry;
+          const ta = e ? root?.querySelector(`[data-ng-field="cleaned-${e.id}"]`) : null;
+          if (!approveDo('use', ta ? ta.value : undefined)) { notice = ta && !ta.value.trim() ? 'The cleaned-up words are empty: type some, or keep yours.' : 'This one is not cleaned up yet.'; render(); }
+          return;
+        }
+        case 'wrapmine': approveDo('mine'); return;
+        case 'wrapaprev': approveDo('prev'); return;
+        case 'wrapanext': if (!approveDo('next')) { notice = 'This is the only note left to decide.'; render(); } return;
+        case 'wrapuseall': approveDo('useall'); return;
+        case 'wrapmineall': approveDo('mineall'); return;
+        case 'wrapstopclean': try { cleaning?.abort(); } catch { /* done */ } return;
+        case 'wrapcleanmore': runCleaning(); return;
+        case 'wrapsort': startSorting(); return;
+        case 'wrapsorthand':
+          if (review && !review.sorted) {
+            stopWrapWork();
+            keepReview(sortedByHand(review, notes));
+            wrap.step = stageOf(review);
+            notice = 'Every note is here as you approved it, not sorted yet: move each one to a list, or drop it.';
+            render();
+          }
+          return;
+        case 'wrapapproveback': if (review?.clean && !review.sorted) { keepReview(approve(review, 'goto', Math.max(0, review.clean.notes.length - 1))); wrap.step = 'approve'; notice = ''; render(); } return;
+        case 'wraporiginals': if (review?.clean) { keepReview({ ...review, originals: !review.originals }); wrap.exportText = ''; render(); } return;
         case 'wrapkeep': reviewDo('keep'); return;
         case 'wrapdrop': reviewDo('drop'); return;
         case 'wrapmove': reviewDo('move', id); return;
@@ -1691,6 +2025,12 @@ registerModule(
       cursor = Math.max(0, stops().indexOf(el));
       press(el);
     }
+    // The Clean up dial dragged (a range input is not a button: its words change as it moves, no redraw), and kept
+    // when let go.
+    function onInput(e) {
+      if (!(e.target instanceof Element) || !e.target.matches('[data-ng-level]')) return;
+      setLevel(e.target.value, { redraw: e.type === 'change' });
+    }
     function onKey(e) {
       // Enter in the message box sends it (Shift+Enter is not needed: it is one line).
       if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-ng-field="say"]')) {
@@ -1709,6 +2049,8 @@ registerModule(
         mount.append(style, root);
         root.addEventListener('click', onClick);
         root.addEventListener('keydown', onKey);
+        root.addEventListener('input', onInput);
+        root.addEventListener('change', onInput);
         try { await ctx.state?.load?.(); } catch { /* a preview, or offline: the defaults stand */ }
         if (torn) return;
         const s = stateGet();
@@ -1794,6 +2136,7 @@ registerModule(
         try { detectAbort?.abort(); } catch { /* done */ }
         try { helloAbort?.abort(); } catch { /* done */ }
         try { wrapAbort?.abort(); } catch { /* done */ }
+        try { cleaning?.abort(); } catch { /* done */ }
         try { keyWin?.removeEventListener('keydown', onWindowKey); } catch { /* gone */ }
         try { focusWatch?.disconnect(); } catch { /* gone */ }
         try { game?.destroy(); } catch { /* gone */ }
@@ -1806,6 +2149,8 @@ registerModule(
         try { notesHome?.destroy(); } catch { /* gone */ }
         root?.removeEventListener('click', onClick);
         root?.removeEventListener('keydown', onKey);
+        root?.removeEventListener('input', onInput);
+        root?.removeEventListener('change', onInput);
         mount.innerHTML = '';
         root = null;
       },
@@ -1816,7 +2161,8 @@ registerModule(
         log: chat.log(), notes: notes.map((x) => ({ ...x })), draft: draft ? { ...draft } : null, notice, listenHint,
         storeKind: store?.kind || null, detect: detect ? { ...detect } : null, hello: hello ? { ...hello } : null,
         otherOpen, lastOther, context: noteContext(), backend, claudeCheck: claudeCheck ? { ...claudeCheck } : null,
-        wrap: { ...wrap }, review: review ? JSON.parse(JSON.stringify(review)) : null }),
+        wrap: { ...wrap }, review: review ? JSON.parse(JSON.stringify(review)) : null, wrapStatus: { ...wrapStatus }, cleaning: !!cleaning,
+        sorting: !!wrapAbort }),
       // For the suite: wait until every message sent so far is answered.
       __settled: () => sendChain,
     };
