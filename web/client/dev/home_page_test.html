@@ -594,6 +594,36 @@ try {
   }
 
   // ============================================================================================
+  // 2026-10-06: TWO REBUILDS AT ONCE. The section after this one starts while closing the Transform windows (just
+  // above) may still be rebuilding the Home after its merge (modules.html endTransform), and its first Add can finish
+  // its writes before that rebuild has. Measured: home_embed.js answered the Add's rebuild at once, before any kiosk
+  // was up; the page put edit view back on a kiosk about to be torn down, the next pass booted one with its menu
+  // shut, the page left edit view -- and the Add tray was gone for the clock ("(setup) still Over the dashboard",
+  // about one run in three, with "Changing…" left in the hidden bar). Checked here on its own, on a preview screen
+  // in this page, so it does not depend on that timing.
+  section('*** two rebuilds at once: the second one waits for a kiosk that was started after it ***');
+  {
+    const { mountEmbeddedScreen } = await import('../home_embed.js');
+    const stage2 = document.createElement('div');
+    stage2.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;height:600px';
+    document.body.append(stage2);
+    const rec = { id: `rebuild-${USER}`, name: 'Two rebuilds', modules: [{ id: 'rb-counter', type: 'counter', position: 0 }] };
+    const e2 = await mountEmbeddedScreen({ stage: stage2, record: rec, layout: { preset: 'full', slots: ['rb-counter'] } });
+    const k0 = e2.kiosk;
+    const first = e2.rebuild();
+    const second = e2.rebuild();
+    await second;
+    const k2 = e2.kiosk;
+    check('*** a rebuild asked for during another one resolves with a kiosk up -- a new one, not the one before ***',
+      !!k0 && !!k2 && k2 !== k0, `before ${!!k0}, after ${!!k2}, same ${k2 === k0}`);
+    await first;
+    await sleep(300);
+    check('...and that kiosk is the one that stays (no pass after it tears it down)', !!k2 && e2.kiosk === k2);
+    e2.destroy();
+    stage2.remove();
+  }
+
+  // ============================================================================================
   // 2026-10-03, Mike: "Where are the overlays? I'd like to make a dashboard that's full screen photos with a small
   // clock overlay somewhere." Add has a "Put it" choice; Over the dashboard floats a module in a corner (layout.js
   // addAsOverlay), and a clock that way is the small corner clock. Undone at the end, so what follows is as it was.

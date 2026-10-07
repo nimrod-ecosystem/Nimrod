@@ -872,7 +872,7 @@ const HOME = {
   locked: [],            // instance ids this Home keeps in place (the tutorial's; home_profile.js isLocked)
   undo: HP.createUndo(),
   editBusy: false,
-  rebuilding: false,
+  rebuilding: 0,         // how many rebuildHome calls are waiting on the embed's rebuild (rebuildHome says why a count)
   // 2026-10-02: the edit bar BY SWITCH. `on`: the bar holds the scan (the kiosk's host seam); `level` and
   // `key`: where the cursor is (home_profile.js editScanStep); `resume`: Transform… handed the scan to the
   // edit windows, and the bar takes it back when they close.
@@ -2074,8 +2074,11 @@ async function restoreHome(snap) {
  *  key, so unsaved settings survive it; edit view is put back (a rebuilt kiosk starts with its menu shut). */
 async function rebuildHome() {
   if (!embed?.rebuild) return;
-  HOME.rebuilding = true;
-  try { await embed.rebuild(); } finally { HOME.rebuilding = false; }
+  // (2026-10-06: a count, not a flag. Two rebuilds can overlap -- Transform's closing one and an Add's -- and the
+  // first to finish cleared the flag while the other was still booting, so the menu watch (attachHomeEditing) took the new
+  // kiosk's shut menu for the person leaving edit view. home_embed.js `rebuild` has the measured case.)
+  HOME.rebuilding++;
+  try { await embed.rebuild(); } finally { HOME.rebuilding--; }
   const keep = HOME.editView;
   applyView(keep ? 'edit' : 'live');
   await attachHomeEditing();

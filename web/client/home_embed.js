@@ -49,6 +49,7 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
   let torn = false;
   let busy = false;
   let again = false;
+  let running = null;   // the rebuild in flight, so a second caller can wait for the one that covers it
 
   async function boot() {
     stage.innerHTML = '';
@@ -105,15 +106,26 @@ export async function mountEmbeddedScreen({ stage, user = null, profileId = null
 
   // One rebuild at a time, capped -- module_try.js's rule, for its reason (a kiosk that asks to be
   // rebuilt on every boot must not spin for ever on somebody's page).
-  async function rebuild() {
-    if (torn) return;
-    if (busy) { again = true; return; }
+  // *** A REBUILD ASKED FOR WHILE ONE IS RUNNING RESOLVES WHEN THE ONE THAT COVERS IT HAS BOOTED (2026-10-06). ***
+  // It used to return at once, before any kiosk was up. Measured on Home (home_page_test, about one run in three):
+  // closing the Transform windows after a merge rebuilds (modules.html endTransform); an Add pressed meanwhile
+  // finished its writes first, and its own rebuild came back straight away -- so the page put edit view back on a
+  // kiosk that was about to be torn down, and the second pass booted a new one with its menu shut. The page
+  // dropped out of edit view, its bar hidden with "Changing…" still in it. Now the caller waits for the extra
+  // pass its request set off.
+  function rebuild() {
+    if (torn) return Promise.resolve();
+    if (running) { again = true; return running; }
+    if (busy) { again = true; return Promise.resolve(); }   // the first boot is still running; it rebuilds after
     busy = true;
-    try {
-      let n = 0;
-      do { again = false; teardown(); await boot(); } while (again && !torn && ++n < 3);
-      again = false;
-    } finally { busy = false; }
+    running = (async () => {
+      try {
+        let n = 0;
+        do { again = false; teardown(); await boot(); } while (again && !torn && ++n < 3);
+        again = false;
+      } finally { busy = false; running = null; }
+    })();
+    return running;
   }
 
   busy = true;
