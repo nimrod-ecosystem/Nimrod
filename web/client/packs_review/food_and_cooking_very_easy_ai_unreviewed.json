@@ -1,0 +1,409 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Food and cooking - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on food and cooking, written by Claude on 2026-10-06 as the gentlest level of the 'Food and cooking' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 0 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 16 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 1 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What do we call a filling such as meat or cheese between two slices of bread?",
+      "answers": [
+        "A pizza",
+        "A sandwich",
+        "A taco",
+        "A pie"
+      ],
+      "correct": "A sandwich",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "It is named after an English nobleman, the Earl of Sandwich.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sandwich",
+        "title": "Wikipedia: Sandwich",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'used as a filling between slices of bread' and 'John Montagu, 4th Earl of Sandwich'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which fruit is pressed to make cider?",
+      "answers": [
+        "Lemons",
+        "Apples",
+        "Grapes",
+        "Limes"
+      ],
+      "correct": "Apples",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "There are more than 7,500 kinds of apples.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Apple",
+        "title": "Wikipedia: Apple",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'There are more than 7,500 cultivars of apples' and 'cider or apple juice production'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which fruit shares its name with its color?",
+      "answers": [
+        "Pear",
+        "Mango",
+        "Orange",
+        "Papaya"
+      ],
+      "correct": "Orange",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "The color was named after the fruit, not the other way around.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Orange_(colour)",
+        "title": "Wikipedia: Orange (colour)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is named after the fruit of the same name'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which kitchen appliance keeps food cold?",
+      "answers": [
+        "The toaster",
+        "The microwave",
+        "The dishwasher",
+        "The refrigerator"
+      ],
+      "correct": "The refrigerator",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "A refrigerator works by moving heat from inside it out into the room.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Refrigerator",
+        "title": "Wikipedia: Refrigerator",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'transfers heat from its inside to its external environment so that its inside is cooled'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which fruit has soft, fuzzy skin and a big pit?",
+      "answers": [
+        "Peach",
+        "Grape",
+        "Cherry",
+        "Strawberry"
+      ],
+      "correct": "Peach",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "A nectarine is a smooth-skinned kind of peach.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peach",
+        "title": "Wikipedia: Peach",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the glossy-skinned, non-fuzzy varieties are called nectarines' and 'the peach pit has a stony exterior'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is the juicy inside of most watermelons?",
+      "answers": [
+        "Blue",
+        "Red",
+        "Brown",
+        "Gray"
+      ],
+      "correct": "Red",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Watermelon is about 91 percent water.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Watermelon",
+        "title": "Wikipedia: Watermelon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The sweet, juicy flesh is usually deep red to pink' and 'Watermelon fruit is 91% water'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which crunchy vegetable is long, thin and grows under the ground?",
+      "answers": [
+        "Corn",
+        "Carrot",
+        "Celery",
+        "Cucumber"
+      ],
+      "correct": "Carrot",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Carrots also come in white, yellow, red and purple varieties.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Carrot",
+        "title": "Wikipedia: Carrot",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The carrot ( Daucus carota subsp. sativus ) is a root vegetable' and 'Heirloom variants may be white, yellow, red, purple, or black'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A hot dog is usually served in what?",
+      "answers": [
+        "A tortilla",
+        "A bowl",
+        "A bun",
+        "A cone"
+      ],
+      "correct": "A bun",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Hot dogs are also known as frankfurters or wieners.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hot_dog",
+        "title": "Wikipedia: Hot dog",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Sausage in a bun' and 'Frankfurter, frank, wiener'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which fruit has a hard shell, white flesh and watery juice inside?",
+      "answers": [
+        "Pineapple",
+        "Melon",
+        "Mango",
+        "Coconut"
+      ],
+      "correct": "Coconut",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Coconut milk is made from the white flesh, not the watery juice.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Coconut",
+        "title": "Wikipedia: Coconut",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'coconut water' and 'coconut milk from the flesh' and 'charcoal from the hard shell' and 'the edible white, fleshy part of the seed'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which utensil do you usually use to eat soup?",
+      "answers": [
+        "A spoon",
+        "A fork",
+        "A knife",
+        "Tongs"
+      ],
+      "correct": "A spoon",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "A spoon's bowl holds liquid that a fork would let drip through.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: soup is eaten with a spoon; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which seasoning usually sits beside salt on the dinner table?",
+      "answers": [
+        "Sugar",
+        "Pepper",
+        "Cinnamon",
+        "Flour"
+      ],
+      "correct": "Pepper",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Black pepper comes from the dried fruit of a flowering vine.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Black_pepper",
+        "title": "Wikipedia: Black pepper",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'often paired with salt and available on dining tables' and 'is a flowering vine in the family Piperaceae , cultivated for its fruit (the peppercorn ), which is usually dried'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which sweet topping is a favorite on pancakes?",
+      "answers": [
+        "Soy sauce",
+        "Mustard",
+        "Maple syrup",
+        "Vinegar"
+      ],
+      "correct": "Maple syrup",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "It is made by boiling down the sap of maple trees.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Maple_syrup",
+        "title": "Wikipedia: Maple syrup",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'toppings for pancakes' and 'Syrup made from the sap of maple trees' and 'boiled'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where do you bake a cake?",
+      "answers": [
+        "In the sink",
+        "In the oven",
+        "In the cupboard",
+        "In the dishwasher"
+      ],
+      "correct": "In the oven",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Ovens are also used to fire pottery and ceramics.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Oven",
+        "title": "Wikipedia: Oven",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Ovens are often used for cooking , usually baking' and 'Ovens are also used in the manufacturing of ceramics and pottery'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "S'mores are made with chocolate, graham crackers and which toasted treat?",
+      "answers": [
+        "Pretzels",
+        "Jelly beans",
+        "Popcorn",
+        "Marshmallows"
+      ],
+      "correct": "Marshmallows",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "The name comes from asking for \"some more.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/S%27more",
+        "title": "Wikipedia: S'more",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Confection of toasted marshmallow and chocolate' and 'Some Mores' and 'the contraction s'more'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which green vegetable looks like a bunch of little trees?",
+      "answers": [
+        "Broccoli",
+        "Corn",
+        "Potato",
+        "Onion"
+      ],
+      "correct": "Broccoli",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Its name comes from an Italian word for the flowering top of a cabbage.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Broccoli",
+        "title": "Wikipedia: Broccoli",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'arranged in a tree-like structure branching out from a thick stalk' and 'comes from the Italian plural of broccolo , which means' and 'the flowering crest of a cabbage'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which leafy green is the base of most green salads?",
+      "answers": [
+        "Celery",
+        "Lettuce",
+        "Parsley",
+        "Cabbage"
+      ],
+      "correct": "Lettuce",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Lettuce belongs to the same plant family as the daisy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lettuce",
+        "title": "Wikipedia: Lettuce",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The leaves are most often used raw in green salads' and 'Species of annual plant of the daisy family'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which sweet treat is often shaped like a ring with a hole in the middle?",
+      "answers": [
+        "Cupcake",
+        "Brownie",
+        "Doughnut",
+        "Muffin"
+      ],
+      "correct": "Doughnut",
+      "difficulty": "very easy",
+      "category": "Food and cooking",
+      "explain": "Doughnuts are made from dough that is deep-fried.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Doughnut",
+        "title": "Wikipedia: Doughnut",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Sweet food made from deep-fried dough' and 'Rings'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

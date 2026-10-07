@@ -1,0 +1,412 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Science and nature - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on science and nature, written by Claude on 2026-10-06 as the gentlest level of the 'Science and nature' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 2 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is wind?",
+      "answers": [
+        "Falling rain",
+        "Moving air",
+        "Flowing water",
+        "Floating dust"
+      ],
+      "correct": "Moving air",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Wind powers sailing ships across the oceans.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wind",
+        "title": "Wikipedia: Wind",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Natural movement of air' and 'Wind powers the voyages of sailing ships across Earth's oceans'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color are most tree leaves in summer?",
+      "answers": [
+        "Purple",
+        "Blue",
+        "Green",
+        "White"
+      ],
+      "correct": "Green",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Leaves are green because of a substance that soaks up light from the Sun.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Leaf",
+        "title": "Wikipedia: Leaf",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Leaves are mostly green in color due to the presence of a compound called chlorophyll' and 'absorbs light energy from the Sun'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the loud rumble you hear after a flash of lightning?",
+      "answers": [
+        "Thunder",
+        "Wind",
+        "Rain",
+        "Sleet"
+      ],
+      "correct": "Thunder",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "You see lightning first because light travels much faster than sound.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thunder",
+        "title": "Wikipedia: Thunder",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Sound caused by lightning' and 'the lightning is seen before the thunder is heard'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a thermometer measure?",
+      "answers": [
+        "Weight",
+        "Time",
+        "Distance",
+        "Temperature"
+      ],
+      "correct": "Temperature",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Many older thermometers used a thin line of mercury inside glass.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Thermometer",
+        "title": "Wikipedia: Thermometer",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'A thermometer is a device that measures temperature (the hotness or coldness of an object)' and 'Mercury thermometer (mercury-in-glass thermometer)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain no longer just restated the question; now adds the mercury-in-glass fact (page-supported)"
+      }
+    },
+    {
+      "question": "Which of these will a magnet pick up?",
+      "answers": [
+        "A wooden spoon",
+        "A steel paper clip",
+        "A rubber band",
+        "A paper cup"
+      ],
+      "correct": "A steel paper clip",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Magnets pull on metals such as iron and steel.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Magnet",
+        "title": "Wikipedia: Magnet",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a force that pulls on other ferromagnetic materials , such as iron , steel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does water turn into when it boils?",
+      "answers": [
+        "Ice",
+        "Oil",
+        "Steam",
+        "Sand"
+      ],
+      "correct": "Steam",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Steam is water that has turned into vapor.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Steam",
+        "title": "Wikipedia: Steam",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Steam is water vapor' and 'by boiling'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call it when ice turns into water?",
+      "answers": [
+        "Freezing",
+        "Boiling",
+        "Rusting",
+        "Melting"
+      ],
+      "correct": "Melting",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Scientists also call melting by another name, fusion.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Melting",
+        "title": "Wikipedia: Melting",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Melting , or fusion , is a physical process that results in the phase transition of a substance from a solid to a liquid' and 'Melting ice cubes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these floats on water?",
+      "answers": [
+        "A rock",
+        "A cork",
+        "A coin",
+        "A key"
+      ],
+      "correct": "A cork",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Cork comes from the bark of the cork oak tree.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cork_(material)",
+        "title": "Wikipedia: Cork (material)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Cork is an impermeable buoyant material' and 'Quercus suber (the cork oak)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call a sound that bounces back to you, like a shout in a canyon?",
+      "answers": [
+        "A whisper",
+        "A hum",
+        "An echo",
+        "A chirp"
+      ],
+      "correct": "An echo",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Hard surfaces such as walls and mountains bounce sound waves back.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Echo",
+        "title": "Wikipedia: Echo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'an echo is a reflection of sound' and 'Walls or other hard surfaces, such as mountains and privacy fences, reflect acoustic waves'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Clouds are made mostly of tiny drops of what?",
+      "answers": [
+        "Oil",
+        "Sand",
+        "Water",
+        "Salt"
+      ],
+      "correct": "Water",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Some clouds are made of tiny ice crystals instead.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cloud",
+        "title": "Wikipedia: Cloud",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'miniature liquid droplets , ice crystals' and 'Water , primarily, comprises the droplets'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these holds salty water?",
+      "answers": [
+        "A rain puddle",
+        "A mountain stream",
+        "The ocean",
+        "A snowbank"
+      ],
+      "correct": "The ocean",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Each liter of seawater holds about 35 grams of dissolved salt.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Seawater",
+        "title": "Wikipedia: Seawater",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'seawater in the world's oceans has a salinity of about 3.5%' and 'approximately 35 grams'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call balls of ice that fall from storm clouds?",
+      "answers": [
+        "Fog",
+        "Mist",
+        "Hail",
+        "Frost"
+      ],
+      "correct": "Hail",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Each ball of hail is called a hailstone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hail",
+        "title": "Wikipedia: Hail",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It consists of balls or irregular lumps of ice, each of which is called a hailstone'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call the line where the sky seems to meet the land or sea?",
+      "answers": [
+        "The horizon",
+        "The equator",
+        "The shoreline",
+        "The border"
+      ],
+      "correct": "The horizon",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "For someone standing at the water's edge, the horizon is only about 3 miles away.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Horizon",
+        "title": "Wikipedia: Horizon",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Apparent curve that separates earth from sky' and 'for an observer with eye level above sea level by 1.8 metres (6 ft) , the horizon is at a distance of about 4.8 kilometres (3 mi)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded ('a grown-up' -> 'someone standing at the water's edge'); note quotes the eye-height condition"
+      }
+    },
+    {
+      "question": "Which tool makes tiny things look bigger?",
+      "answers": [
+        "A ruler",
+        "A magnifying glass",
+        "A funnel",
+        "A scale"
+      ],
+      "correct": "A magnifying glass",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "A magnifying glass uses a curved lens to enlarge what you see.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Magnifying_glass",
+        "title": "Wikipedia: Magnifying glass",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A magnifying glass is a convex lens' and 'used to produce a magnified image of an object'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On a sunny day, what dark shape follows you along the ground?",
+      "answers": [
+        "A puddle",
+        "A rainbow",
+        "Your shadow",
+        "A cloud"
+      ],
+      "correct": "Your shadow",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "A shadow forms where your body blocks the sunlight.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shadow",
+        "title": "Wikipedia: Shadow",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Area where light is blocked by an object'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call the wet drops found on grass in the early morning?",
+      "answers": [
+        "Dew",
+        "Sleet",
+        "Sap",
+        "Spray"
+      ],
+      "correct": "Dew",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Dew forms as cool surfaces collect moisture from the air.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dew",
+        "title": "Wikipedia: Dew",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Droplets of water that form in the morning or evening' and 'As the exposed surface cools by radiating its heat, atmospheric moisture condenses'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call a large stream of fresh water flowing toward the sea?",
+      "answers": [
+        "A pond",
+        "A puddle",
+        "A river",
+        "A well"
+      ],
+      "correct": "A river",
+      "difficulty": "very easy",
+      "category": "Science & nature",
+      "explain": "Some rivers flow into lakes or into other rivers instead.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/River",
+        "title": "Wikipedia: River",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A river is a natural stream of fresh water' and 'such as an ocean , lake , or another river'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

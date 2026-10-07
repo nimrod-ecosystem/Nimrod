@@ -1,0 +1,408 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Art & Famous Paintings - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on art and famous paintings, written by Claude on 2026-10-06 as the gentlest level of the 'Art & Famous Paintings' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 3 of them merely easy and took off their note, so the pack is 14 very easy, 3 easy. The independent fact-check kept 17 of 17 written, fixed 5 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 10 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What color do you get by mixing red and yellow paint?",
+      "answers": [
+        "Purple",
+        "Orange",
+        "Brown",
+        "Pink"
+      ],
+      "correct": "Orange",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Orange sits between red and yellow on the color wheel.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Mixing red and blue paint makes which color?",
+      "answers": [
+        "Green",
+        "Yellow",
+        "Purple",
+        "Orange"
+      ],
+      "correct": "Purple",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Violet and lavender are shades of purple.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Mixing black and white paint makes which color?",
+      "answers": [
+        "Brown",
+        "Pink",
+        "Blue",
+        "Gray"
+      ],
+      "correct": "Gray",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Adding more white makes a lighter gray.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: basic paint mixing everyone learns young; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In painting, red, yellow and blue are called the what colors?",
+      "answers": [
+        "Primary",
+        "Pastel",
+        "Secondary",
+        "Neutral"
+      ],
+      "correct": "Primary",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Painters mix these three to make many other colors.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/RYB_color_model",
+        "title": "Wikipedia: RYB color model",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'red , yellow , and blue pigments are considered primary colors' and 'red, yellow, and blue are intermixed to create secondary color segments of orange, green, and purple'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the sentence that names red, yellow and blue as primary colors (old quote came from a CMY caption)"
+      }
+    },
+    {
+      "question": "What does a painter dip into paint to make strokes?",
+      "answers": [
+        "A hammer",
+        "A paintbrush",
+        "A spoon",
+        "A ruler"
+      ],
+      "correct": "A paintbrush",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Brushes come in many sizes, from very fine to very wide.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday household and school object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a stick of colored wax for drawing called?",
+      "answers": [
+        "A marker",
+        "A pen",
+        "A crayon",
+        "A quill"
+      ],
+      "correct": "A crayon",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Crayons are also called wax pastels.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Crayon",
+        "title": "Wikipedia: Crayon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Stick of pigmented wax for writing or drawing' and 'wax pastel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do you use to rub out pencil marks?",
+      "answers": [
+        "A stapler",
+        "A ruler",
+        "A glue stick",
+        "An eraser"
+      ],
+      "correct": "An eraser",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Many erasers are made of rubber.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday school object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do people write with on a blackboard?",
+      "answers": [
+        "Chalk",
+        "A ballpoint pen",
+        "A pencil",
+        "Glue"
+      ],
+      "correct": "Chalk",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Sidewalk chalk is a thicker kind made for drawing outdoors.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday classroom object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What goes around a painting before it hangs on a wall?",
+      "answers": [
+        "A ribbon",
+        "A lid",
+        "A frame",
+        "A fence"
+      ],
+      "correct": "A frame",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "A frame protects the edges and helps a picture stand out.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday household object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which famous painting shows a woman with a mysterious smile?",
+      "answers": [
+        "The Starry Night",
+        "Mona Lisa",
+        "American Gothic",
+        "The Great Wave"
+      ],
+      "correct": "Mona Lisa",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "It was painted by Leonardo da Vinci.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mona_Lisa",
+        "title": "Wikipedia: Mona Lisa",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'smiles so mysteriously' and 'Leonardo'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Many artists paint on a sturdy cloth called what?",
+      "answers": [
+        "Lace",
+        "Fleece",
+        "Satin",
+        "Canvas"
+      ],
+      "correct": "Canvas",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Canvas was once made from hemp and is now usually cotton or linen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Canvas",
+        "title": "Wikipedia: Canvas",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is popularly used by artists as a painting surface' and 'Although historically made from hemp , modern canvas is usually made of cotton , linen'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A painting of hills, trees and rivers is called a what?",
+      "answers": [
+        "Landscape",
+        "Portrait",
+        "Comic strip",
+        "Logo"
+      ],
+      "correct": "Landscape",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Landscape paintings often show a wide view of the outdoors.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Landscape_painting",
+        "title": "Wikipedia: Landscape painting",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'depiction in painting of natural scenery such as mountains, valleys, rivers, trees' and 'wide view'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A painting of a bowl of fruit and flowers is called a what?",
+      "answers": [
+        "Portrait",
+        "Still life",
+        "Seascape",
+        "Comic strip"
+      ],
+      "correct": "Still life",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "Painters also pick books, vases and glasses as still-life subjects.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Still_life",
+        "title": "Wikipedia: Still life",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'typically commonplace objects which are either natural (food, flowers' and 'books, vases'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (still life is a term most adults know, not almost everyone instantly)"
+      }
+    },
+    {
+      "question": "A large painting done right on a wall is called a what?",
+      "answers": [
+        "Postcard",
+        "Sticker",
+        "Doodle",
+        "Mural"
+      ],
+      "correct": "Mural",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "Murals can also be painted on ceilings.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mural",
+        "title": "Wikipedia: Mural",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'painted or applied directly to a wall, ceiling'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (mural is known to most adults, not instantly to almost everyone)"
+      }
+    },
+    {
+      "question": "What do you call an artist who makes statues?",
+      "answers": [
+        "A sculptor",
+        "A painter",
+        "A singer",
+        "A baker"
+      ],
+      "correct": "A sculptor",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "The word sculptor comes straight from Latin.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/sculptor",
+        "title": "Wiktionary: sculptor",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'an artist who produces sculpture' and 'Borrowed from Latin sculptor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain trimmed: the page supports a Latin origin for sculptor but says nothing about the word sculpture"
+      }
+    },
+    {
+      "question": "The great artist Michelangelo came from which country?",
+      "answers": [
+        "Sweden",
+        "Japan",
+        "Italy",
+        "Mexico"
+      ],
+      "correct": "Italy",
+      "difficulty": "easy",
+      "category": "Art",
+      "explain": "He was born in the Republic of Florence.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Michelangelo",
+        "title": "Wikipedia: Michelangelo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'was an Italian sculptor, painter' and 'born in the Republic of Florence'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (most adults know he was Italian; not instant for almost everyone)"
+      }
+    },
+    {
+      "question": "A potter shapes clay on a spinning what?",
+      "answers": [
+        "Ladder",
+        "Wheel",
+        "Shelf",
+        "Easel"
+      ],
+      "correct": "Wheel",
+      "difficulty": "very easy",
+      "category": "Art",
+      "explain": "Shaping clay on the wheel is called throwing.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Potter%27s_wheel",
+        "title": "Wikipedia: Potter's wheel",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a potter's wheel is a machine used in the shaping (known as throwing) of clay'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

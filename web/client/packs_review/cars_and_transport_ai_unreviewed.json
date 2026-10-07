@@ -1,0 +1,1033 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Cars & transport (AI-written, not yet reviewed)",
+  "description": "44 questions on cars, trains, boats, planes and getting around (8 very easy, 10 easy, 16 medium, 10 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 44 of 44 written, fixed 9 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 7 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "How many wheels does a typical car have?",
+      "answers": [
+        "Two",
+        "Three",
+        "Four",
+        "Six"
+      ],
+      "correct": "Four",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "Many cars also carry a spare tire in the trunk.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: ordinary cars have four wheels; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded (was an awkward fragment)"
+      }
+    },
+    {
+      "question": "Where do planes take off and land?",
+      "answers": [
+        "A harbor",
+        "An airport",
+        "A garage",
+        "A bus stop"
+      ],
+      "correct": "An airport",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "Planes use long, flat runways to speed up and slow down.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: planes take off and land at airports; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do sailors drop to keep a ship from drifting away?",
+      "answers": [
+        "A sail",
+        "A net",
+        "A flag",
+        "An anchor"
+      ],
+      "correct": "An anchor",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "The heavy anchor digs into the sea floor and holds the ship in place.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: ships drop anchor to stay in place; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where do you usually wait to catch a train?",
+      "answers": [
+        "At a train station",
+        "At a car wash",
+        "At a harbor",
+        "At a parking lot"
+      ],
+      "correct": "At a train station",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "Passengers wait on the platform until the train pulls in.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: trains are boarded at stations; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color are school buses in the United States?",
+      "answers": [
+        "Green",
+        "Purple",
+        "Brown",
+        "Yellow"
+      ],
+      "correct": "Yellow",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "The shade even has its own name: school bus yellow.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/School_bus_yellow",
+        "title": "Wikipedia: School bus yellow",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Color used on North American school buses'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which part of a car does the driver turn to change direction?",
+      "answers": [
+        "The door handle",
+        "The steering wheel",
+        "The mirror",
+        "The seat belt"
+      ],
+      "correct": "The steering wheel",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "Turning the wheel turns the front wheels of the car.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a car is steered with the steering wheel; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these travels on water?",
+      "answers": [
+        "A truck",
+        "A bus",
+        "A boat",
+        "A train"
+      ],
+      "correct": "A boat",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "Boats float, so they can carry people across lakes, rivers and seas.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: boats travel on water; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Where do drivers go to fill up their cars with fuel?",
+      "answers": [
+        "A bus stop",
+        "A car wash",
+        "A parking lot",
+        "A gas station"
+      ],
+      "correct": "A gas station",
+      "difficulty": "very easy",
+      "category": "Cars & transport",
+      "explain": "The fuel comes out of a pump through a hose and nozzle.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: cars are refueled at gas stations; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What shape is a stop sign in the United States?",
+      "answers": [
+        "Octagon",
+        "Triangle",
+        "Circle",
+        "Square"
+      ],
+      "correct": "Octagon",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Its eight-sided shape lets drivers recognize it even from the back.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Stop_sign",
+        "title": "Wikipedia: Stop sign",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'selected the octagonal shape that has been used in the United States ever since' and 'The unique eight-sided shape of the sign allows drivers facing the back of the sign to identify'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "London's underground railway is nicknamed what?",
+      "answers": [
+        "The Metro",
+        "The Tube",
+        "The Subway",
+        "The El"
+      ],
+      "correct": "The Tube",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Its first line opened in 1863 as the world's first underground passenger railway.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/London_Underground",
+        "title": "Wikipedia: London Underground",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: '\"The Tube\" and \"Tube station\" redirect here' and 'the Metropolitan Railway , which opened on 10 January 1863 as the world's first underground passenger railway'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain scoped to the first line (the page credits the 1863 Metropolitan Railway, not the whole network)"
+      }
+    },
+    {
+      "question": "What is the front part of a ship called?",
+      "answers": [
+        "The stern",
+        "The keel",
+        "The bow",
+        "The mast"
+      ],
+      "correct": "The bow",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "The back end of a ship is called the stern.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bow_(watercraft)",
+        "title": "Wikipedia: Bow (watercraft)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The bow ( / b aʊ / ) is the forward part of the hull of a ship or boat' and 'The aft end of the boat is the stern'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city is famous for its gondolas gliding along the canals?",
+      "answers": [
+        "Rome",
+        "Paris",
+        "Amsterdam",
+        "Venice"
+      ],
+      "correct": "Venice",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "A gondolier moves the flat-bottomed boat with a single oar.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gondola",
+        "title": "Wikipedia: Gondola",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a traditional, flat-bottomed Venetian rowing boat' and 'propelled by a gondolier, who uses a rowing oar'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Britain, what is a car's trunk called?",
+      "answers": [
+        "The boot",
+        "The bonnet",
+        "The bumper",
+        "The wing"
+      ],
+      "correct": "The boot",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Whatever you call it, it is the car's main storage space.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Trunk_(car)",
+        "title": "Wikipedia: Trunk (car)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The trunk ( American English ) or boot ( British English ) of a car is the vehicle's main storage or cargo compartment'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which carmaker uses a prancing horse as its symbol?",
+      "answers": [
+        "Lamborghini",
+        "Ferrari",
+        "Maserati",
+        "Fiat"
+      ],
+      "correct": "Ferrari",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "In Italian the symbol is called the Cavallino Rampante.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ferrari",
+        "title": "Wikipedia: Ferrari",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Ferrari's symbol is the \"Prancing Horse\" ( Italian : Cavallino Rampante'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which of these countries do people drive on the left?",
+      "answers": [
+        "The United States",
+        "France",
+        "The United Kingdom",
+        "Germany"
+      ],
+      "correct": "The United Kingdom",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Gibraltar, a British territory, drives on the right because it borders Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Left-_and_right-hand_traffic",
+        "title": "Wikipedia: Left- and right-hand traffic",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Left-hand traffic ( LHT )', 'The United Kingdom is LHT' and 'Gibraltar is RHT because of its land border with Spain'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which US city is famous for its cable cars climbing steep hills?",
+      "answers": [
+        "Seattle",
+        "Boston",
+        "Denver",
+        "San Francisco"
+      ],
+      "correct": "San Francisco",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "It is the world's last cable car system still worked by hand.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/San_Francisco_cable_car_system",
+        "title": "Wikipedia: San Francisco cable car system",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The San Francisco cable car system is the world's last manually operated cable car system'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Channel Tunnel links England with which country?",
+      "answers": [
+        "Belgium",
+        "France",
+        "The Netherlands",
+        "Ireland"
+      ],
+      "correct": "France",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Nicknamed the Chunnel, it opened in 1994.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Channel_Tunnel",
+        "title": "Wikipedia: Channel Tunnel",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'referred to as the Chunnel', 'connects Folkestone in the United Kingdom with Coquelles in northern France' and 'Opened in 1994'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Japan's famous high-speed trains are nicknamed what?",
+      "answers": [
+        "Rocket trains",
+        "Arrow trains",
+        "Bullet trains",
+        "Thunder trains"
+      ],
+      "correct": "Bullet trains",
+      "difficulty": "easy",
+      "category": "Cars & transport",
+      "explain": "Their Japanese name, Shinkansen, means new main line.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shinkansen",
+        "title": "Wikipedia: Shinkansen",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'new main line' and 'colloquially known in English as the bullet train'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which German engineer built what is widely seen as the first practical car?",
+      "answers": [
+        "Rudolf Diesel",
+        "Ferdinand Porsche",
+        "Robert Bosch",
+        "Carl Benz"
+      ],
+      "correct": "Carl Benz",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "His Patent-Motorwagen, patented in 1886, ran on three wheels.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Benz_Patent-Motorwagen",
+        "title": "Wikipedia: Benz Patent-Motorwagen",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'by the German engineer Carl Benz and is widely regarded as the first practical automobile', 'patent number DRP37435 in 1886' and 'these had three wheels'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Historic Route 66 ran between Santa Monica and which city?",
+      "answers": [
+        "Chicago",
+        "Denver",
+        "Dallas",
+        "Atlanta"
+      ],
+      "correct": "Chicago",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "It was also nicknamed the Main Street of America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/U.S._Route_66",
+        "title": "Wikipedia: U.S. Route 66",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Former US Highway between Chicago and Santa Monica' and 'the Main Street of America'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which supersonic jet carried airline passengers from 1976 to 2003?",
+      "answers": [
+        "Boeing 747",
+        "Concorde",
+        "Airbus A380",
+        "Douglas DC-3"
+      ],
+      "correct": "Concorde",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "It flew with British Airways and Air France.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Concorde",
+        "title": "Wikipedia: Concorde",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Concorde began scheduled flights with British Airways and Air France on 21 January 1976' and 'Retired 24 October 2003'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The famous Orient Express train linked Paris with which city?",
+      "answers": [
+        "Lisbon",
+        "Moscow",
+        "Istanbul",
+        "Madrid"
+      ],
+      "correct": "Istanbul",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "In those days the West usually called the city Constantinople.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Orient_Express",
+        "title": "Wikipedia: Orient Express",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: '(Paris–Istanbul)', 'terminal stations in Paris in the northwest and Istanbul in the southeast' and 'Constantinople , as the city was still commonly called in the west at the time'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractors Athens and Rome replaced: the page lists an Orient Express branch to Athens, and later Orient Express trains ran to Rome"
+      }
+    },
+    {
+      "question": "When talking about engines, what does RPM stand for?",
+      "answers": [
+        "Rotations per mile",
+        "Revolutions per minute",
+        "Rounds per motor",
+        "Revs per meter"
+      ],
+      "correct": "Revolutions per minute",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "A car's tachometer shows engine speed in thousands of RPM.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Revolutions_per_minute",
+        "title": "Wikipedia: Revolutions per minute",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Revolutions per minute (abbreviated rpm , RPM' and 'A car's tachometer marked in multiples of a thousand rpm'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What was the name of Charles Lindbergh's plane?",
+      "answers": [
+        "The Winnie Mae",
+        "The Silver Arrow",
+        "The Yankee Clipper",
+        "The Spirit of St. Louis"
+      ],
+      "correct": "The Spirit of St. Louis",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "In 1927 he flew it solo and nonstop from New York to Paris.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Spirit_of_St._Louis",
+        "title": "Wikipedia: Spirit of St. Louis",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Charles Lindbergh flew on May 20–21, 1927, on the first solo nonstop transatlantic flight from Long Island , New York, to Paris'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The name Volkswagen means what in English?",
+      "answers": [
+        "People's car",
+        "Fast wagon",
+        "Little beetle",
+        "Road king"
+      ],
+      "correct": "People's car",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "It comes from the German words Volk, people, and Wagen, wagon.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Volkswagen",
+        "title": "Wikipedia: Volkswagen",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The name Volkswagen derives from the German words Volk ( ' people ' ) and Wagen ( ' wagon ' ), meaning ' people's car ''."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Trans-Siberian Railway runs from Moscow to which Pacific port city?",
+      "answers": [
+        "Murmansk",
+        "Vladivostok",
+        "Novosibirsk",
+        "St. Petersburg"
+      ],
+      "correct": "Vladivostok",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "The railway spans the whole width of Russia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Trans-Siberian_Railway",
+        "title": "Wikipedia: Trans-Siberian Railway",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Railway network spanning Russia' and the infobox lists start 'Moscow Yaroslavsky' and end 'Vladivostok'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In boating and flying, what does a knot measure?",
+      "answers": [
+        "Depth",
+        "Distance",
+        "Speed",
+        "Weight"
+      ],
+      "correct": "Speed",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "One knot is one nautical mile per hour, a little faster than one mile per hour.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Knot_(unit)",
+        "title": "Wikipedia: Knot (unit)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The knot ( / n ɒ t / ) is a unit of speed equal to one nautical mile per hour' and 'approximately 1.151 mph'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On a ship, what is the left side called when facing forward?",
+      "answers": [
+        "Starboard",
+        "Keel",
+        "Deck",
+        "Port"
+      ],
+      "correct": "Port",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "The right side is called starboard.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Port_and_starboard",
+        "title": "Wikipedia: Port and starboard",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Port side and starboard side respectively refer to the left and right sides of the vessel, when aboard and facing the bow'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What was the early bicycle with a huge front wheel called?",
+      "answers": [
+        "The tandem",
+        "The penny-farthing",
+        "The tricycle",
+        "The recumbent"
+      ],
+      "correct": "The penny-farthing",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "It was popular in the 1870s and 1880s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Penny-farthing",
+        "title": "Wikipedia: Penny-farthing",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'an early type of bicycle distinguished by its large front wheel and comparatively small back wheel' and 'It was popular in the 1870s and 1880s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The famous 24-hour sports car race in France is held near which city?",
+      "answers": [
+        "Lyon",
+        "Nice",
+        "Marseille",
+        "Le Mans"
+      ],
+      "correct": "Le Mans",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "The race was first run in 1923.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/24_Hours_of_Le_Mans",
+        "title": "Wikipedia: 24 Hours of Le Mans",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is an endurance sports car race held annually near the city of Le Mans , France' and 'First run in 1923'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What was the Ford Model T's popular nickname?",
+      "answers": [
+        "Steel Sally",
+        "Tin Lizzie",
+        "Iron Molly",
+        "Little Henry"
+      ],
+      "correct": "Tin Lizzie",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "The Model T was built from 1908 to 1927.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ford_Model_T",
+        "title": "Wikipedia: Ford Model T",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Model T was colloquially known as the \" Tin Lizzie \"' and 'American car (1908–1927)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Tin Lizzie is widely recognized among four options"
+      }
+    },
+    {
+      "question": "Where did the two lines of the first transcontinental railroad meet in 1869?",
+      "answers": [
+        "Cheyenne, Wyoming",
+        "Denver, Colorado",
+        "Promontory Summit, Utah",
+        "Reno, Nevada"
+      ],
+      "correct": "Promontory Summit, Utah",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "A golden spike was driven there to join the two railroads.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Golden_spike",
+        "title": "Wikipedia: Golden spike",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'to connect the Central Pacific Railroad from Sacramento and the Union Pacific Railroad from Omaha on May 10, 1869, at Promontory Summit, Utah Territory'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: a standard US-history school fact, and the only non-city option stands out"
+      }
+    },
+    {
+      "question": "On an American freight train, what was the caboose mainly for?",
+      "answers": [
+        "Carrying the mail",
+        "Sheltering the crew at the rear",
+        "Storing coal for the engine",
+        "Carrying livestock"
+      ],
+      "correct": "Sheltering the crew at the rear",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "It also served as the conductor's office, with beds and a stove on long routes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Caboose",
+        "title": "Wikipedia: Caboose",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Cabooses provide shelter for crew (conductor and flagman) at the end of a train' and 'The caboose also served as the conductor's office, and on long routes, included sleeping accommodations and cooking facilities'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: the answer can be reasoned out by most adults; explain: dropped gendered 'his records', added sourced sleeping/cooking detail"
+      }
+    },
+    {
+      "question": "One popular theory says the name Jeep came from slurring which two letters?",
+      "answers": [
+        "JP",
+        "CP",
+        "GP",
+        "VP"
+      ],
+      "correct": "GP",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "GP may have stood for General Purpose or Government Purposes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jeep",
+        "title": "Wikipedia: Jeep",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The most widely held theory is that the military designation GP (for Government Purposes or General Purpose ) was slurred into the word Jeep'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In a Wankel rotary engine, the spinning rotor is roughly what shape?",
+      "answers": [
+        "A triangle",
+        "A square",
+        "A star",
+        "A circle"
+      ],
+      "correct": "A triangle",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "The engine is named after the German engineer Felix Wankel.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wankel_engine",
+        "title": "Wikipedia: Wankel engine",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Wankel engine's rotor is similar in shape to a Reuleaux triangle' and 'The concept was proven by German engineer Felix Wankel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On an international car sticker, which country does the letter D stand for?",
+      "answers": [
+        "Denmark",
+        "Germany",
+        "The Netherlands",
+        "Spain"
+      ],
+      "correct": "Germany",
+      "difficulty": "medium",
+      "category": "Cars & transport",
+      "explain": "D is for Deutschland, Germany's name in German.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/International_vehicle_registration_code",
+        "title": "Wikipedia: International vehicle registration code",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Germany D [ a ] For Deutschland'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: D for Deutschland is guessable by most adults"
+      }
+    },
+    {
+      "question": "North America's oldest subway tunnel, opened in 1897, is in which city?",
+      "answers": [
+        "New York",
+        "Philadelphia",
+        "Chicago",
+        "Boston"
+      ],
+      "correct": "Boston",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "It is the Tremont Street subway, still in use today.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tremont_Street_subway",
+        "title": "Wikipedia: Tremont Street subway",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Tremont Street subway in Boston's MBTA subway system is the oldest subway tunnel in North America' and 'Built 1897'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which author popularized calling Route 66 the Mother Road?",
+      "answers": [
+        "Jack Kerouac",
+        "John Steinbeck",
+        "Mark Twain",
+        "Ernest Hemingway"
+      ],
+      "correct": "John Steinbeck",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "He used the phrase in his 1939 novel The Grapes of Wrath.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/U.S._Route_66",
+        "title": "Wikipedia: U.S. Route 66",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the Mother Road , a term popularized by John Steinbeck 's novel The Grapes of Wrath (1939)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does the Plimsoll line painted on a ship's hull show?",
+      "answers": [
+        "Its top safe speed",
+        "Its country of registry",
+        "How deeply it may be loaded",
+        "Its passenger limit"
+      ],
+      "correct": "How deeply it may be loaded",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "Samuel Plimsoll came up with the marking in 1876.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Load_line_(watercraft)",
+        "title": "Wikipedia: Load line (watercraft)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The load line , also known as Plimsoll line , indicates the legal limit to which a ship may be loaded' and 'This marking was invented in 1876 by Samuel Plimsoll'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractors made plausible (were 'How old it is', 'Its home port' - too easy to rule out)"
+      }
+    },
+    {
+      "question": "Which steam locomotive won the 1829 Rainhill Trials in England?",
+      "answers": [
+        "Puffing Billy",
+        "Locomotion No. 1",
+        "Novelty",
+        "Rocket"
+      ],
+      "correct": "Rocket",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "Robert Stephenson designed and built it for the Liverpool and Manchester Railway's trials.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Stephenson%27s_Rocket",
+        "title": "Wikipedia: Stephenson's Rocket",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'It was built for and won the Rainhill Trials of the Liverpool and Manchester Railway (L&MR), held in October 1829' and 'Rocket was designed and built by Robert Stephenson'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain tightened to match the page (built for the L&MR's Rainhill Trials, by Robert Stephenson)"
+      }
+    },
+    {
+      "question": "A car's dashboard is named after a board on carriages that blocked what?",
+      "answers": [
+        "Cold wind",
+        "Bright sunlight",
+        "Splashing water",
+        "The horse's tail"
+      ],
+      "correct": "Splashing water",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "The older name for it, splash-board, was first recorded in 1826.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dashboard",
+        "title": "Wikipedia: Dashboard",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the driver is liable to be splashed by water thrown up. To protect against this, a splash-board was placed in front: the term is first documented in 1826' and 'The word dashboard (variants dasher or dash ) subsequently came into use'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is the navigation light on an airplane's left wingtip?",
+      "answers": [
+        "Green",
+        "White",
+        "Blue",
+        "Red"
+      ],
+      "correct": "Red",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "The right wingtip carries a green light, following the custom of ships.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Navigation_light",
+        "title": "Wikipedia: Navigation light",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Aircraft navigation lights follow the convention of marine vessels established a half-century earlier, with a red navigation light located on the left wingtip leading edge and a green light on the right wingtip leading edge'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Who invented the running machine, a pedal-less ancestor of the bicycle, in 1817?",
+      "answers": [
+        "Karl Drais",
+        "Pierre Michaux",
+        "Kirkpatrick Macmillan",
+        "John Kemp Starley"
+      ],
+      "correct": "Karl Drais",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "Riders pushed it along with their feet; in English it was called the dandy horse.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dandy_horse",
+        "title": "Wikipedia: Dandy horse",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The dandy horse is powered by the rider's feet on the ground instead of the pedals of later bicycles. It was invented by Karl Drais , who called it a Laufmaschine' and \"'running machine' in 1817\"."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Chicago O'Hare's airport code ORD comes from which earlier name?",
+      "answers": [
+        "Ordway Field",
+        "Oriole Field",
+        "Orchard Field",
+        "Ord Municipal Field"
+      ],
+      "correct": "Orchard Field",
+      "difficulty": "hard",
+      "category": "Cars & transport",
+      "explain": "In 1949 it was renamed after the aviator Edward Butch O'Hare.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/O%27Hare_International_Airport",
+        "title": "Wikipedia: O'Hare International Airport",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It was renamed Orchard Field Airport in the mid-1940s and assigned the IATA code ORD . In 1949, it was renamed after aviator Edward \"Butch\" O'Hare'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

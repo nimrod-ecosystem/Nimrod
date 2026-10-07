@@ -1,0 +1,395 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Words and spelling - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on words and spelling, written by Claude on 2026-10-06 as the gentlest level of the 'Words and spelling' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 1 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 16 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is the first letter of the alphabet?",
+      "answers": [
+        "B",
+        "A",
+        "Z",
+        "M"
+      ],
+      "correct": "A",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "That is why dictionaries begin with words that start with A.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the alphabet's order; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many letters are in the English alphabet?",
+      "answers": [
+        "24",
+        "28",
+        "26",
+        "30"
+      ],
+      "correct": "26",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "The word alphabet comes from alpha and beta, the first two Greek letters.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/English_alphabet",
+        "title": "Wikipedia: English alphabet",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'consisting of 26 letters'; 'the names of the first two letters in the Greek alphabet'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of tall?",
+      "answers": [
+        "Wide",
+        "Short",
+        "Heavy",
+        "Thin"
+      ],
+      "correct": "Short",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Tall and short usually describe height, like that of people or trees.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of happy?",
+      "answers": [
+        "Tired",
+        "Hungry",
+        "Busy",
+        "Sad"
+      ],
+      "correct": "Sad",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Other words for sad include unhappy and gloomy.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of wet?",
+      "answers": [
+        "Cold",
+        "Dry",
+        "Soft",
+        "Clean"
+      ],
+      "correct": "Dry",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Clothes go into a dryer to go from wet to dry.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of loud?",
+      "answers": [
+        "Quiet",
+        "Slow",
+        "Dark",
+        "Small"
+      ],
+      "correct": "Quiet",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Libraries usually ask visitors to keep quiet.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which word rhymes with moon?",
+      "answers": [
+        "Star",
+        "Sun",
+        "Spoon",
+        "Night"
+      ],
+      "correct": "Spoon",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Moon and spoon share the same 'oon' sound at the end.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday rhyme; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which word rhymes with bake?",
+      "answers": [
+        "Bread",
+        "Pie",
+        "Cook",
+        "Cake"
+      ],
+      "correct": "Cake",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Rhyming words end with the same sound, like bake, cake and lake.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday rhyme; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the plural of mouse?",
+      "answers": [
+        "Mices",
+        "Mice",
+        "Meese",
+        "Mousen"
+      ],
+      "correct": "Mice",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "It changes its vowel sound instead of adding an s.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a common everyday plural; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "Distractor 'Mouses' replaced with 'Mices' (dictionaries accept 'mouses' for computer mice, so it was arguably right)."
+      }
+    },
+    {
+      "question": "What is the plural of child?",
+      "answers": [
+        "Childs",
+        "Childes",
+        "Children",
+        "Childrens"
+      ],
+      "correct": "Children",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Kid is a casual word for child, and its plural is simply kids.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a common everyday plural; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the plural of foot?",
+      "answers": [
+        "Feet",
+        "Foots",
+        "Feets",
+        "Footes"
+      ],
+      "correct": "Feet",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Tooth changes the same way, becoming teeth.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a common everyday plural; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these letters is a vowel?",
+      "answers": [
+        "B",
+        "T",
+        "K",
+        "E"
+      ],
+      "correct": "E",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "The usual five vowels in English are A, E, I, O and U.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the vowels are taught in every first school year; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How do you spell the number 2?",
+      "answers": [
+        "Too",
+        "Two",
+        "To",
+        "Tow"
+      ],
+      "correct": "Two",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Two, too and to all sound the same but mean different things.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: spelling of a basic number; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which word means the same as small?",
+      "answers": [
+        "Little",
+        "Loud",
+        "Warm",
+        "Long"
+      ],
+      "correct": "Little",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "You can say a little dog or a small dog and mean the same thing.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of same-meaning words; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which word means the same as finish?",
+      "answers": [
+        "Start",
+        "Open",
+        "End",
+        "Grow"
+      ],
+      "correct": "End",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Many storybooks close with the words 'The End.'",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of same-meaning words; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of buy?",
+      "answers": [
+        "Pay",
+        "Sell",
+        "Spend",
+        "Shop"
+      ],
+      "correct": "Sell",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "Shops buy goods from makers and sell them to customers.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the opposite of smile?",
+      "answers": [
+        "Laugh",
+        "Wink",
+        "Grin",
+        "Frown"
+      ],
+      "correct": "Frown",
+      "difficulty": "very easy",
+      "category": "Words & spelling",
+      "explain": "A frown turns the corners of the mouth down.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a basic pair of opposites; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,413 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Books & Authors - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on books and authors, written by Claude on 2026-10-06 as the gentlest level of the 'Books & Authors' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 1 of them merely easy and took off their note, so the pack is 16 very easy, 1 easy. The independent fact-check kept 17 of 17 written, fixed 4 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 16 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 1 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "In Cinderella, what does she leave behind at the ball?",
+      "answers": [
+        "A red glove",
+        "A glass slipper",
+        "A pearl necklace",
+        "A silk scarf"
+      ],
+      "correct": "A glass slipper",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "Her fairy godmother turns a pumpkin into a golden carriage.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cinderella",
+        "title": "Wikipedia: Cinderella",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a delicate pair of glass slippers' and 'pumpkin into a golden carriage'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of Winnie-the-Pooh's gloomy donkey friend?",
+      "answers": [
+        "Piglet",
+        "Tigger",
+        "Eeyore",
+        "Rabbit"
+      ],
+      "correct": "Eeyore",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "He first appeared in the 1926 book Winnie-the-Pooh.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Eeyore",
+        "title": "Wikipedia: Eeyore",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'stuffed donkey created by the English author A. A. Milne', 'pessimistic' and 'debuting in Winnie-the-Pooh (1926)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now also quotes support for 'gloomy' (pessimistic)"
+      }
+    },
+    {
+      "question": "What was Sherlock Holmes's job?",
+      "answers": [
+        "Detective",
+        "Farmer",
+        "Banker",
+        "Sailor"
+      ],
+      "correct": "Detective",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "He was created by the British author Arthur Conan Doyle.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sherlock_Holmes",
+        "title": "Wikipedia: Sherlock Holmes",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a fictional detective created by British author Arthur Conan Doyle'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Goldilocks and the Three Bears, how many bears live in the house?",
+      "answers": [
+        "Two",
+        "Four",
+        "Five",
+        "Three"
+      ],
+      "correct": "Three",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "Each bear has its own bowl of porridge, chair and bed.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Goldilocks_and_the_Three_Bears",
+        "title": "Wikipedia: Goldilocks and the Three Bears",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Each bear has his own bowl of porridge , his own chair, and his own bed'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In The Three Little Pigs, the strongest house is made of what?",
+      "answers": [
+        "Straw",
+        "Sticks",
+        "Bricks",
+        "Paper"
+      ],
+      "correct": "Bricks",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "The wolf blows down the straw and stick houses but not the brick one.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Three_Little_Pigs",
+        "title": "Wikipedia: The Three Little Pigs",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'unable to destroy the third pig's house that is made of bricks'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Jack and the Beanstalk, what does Jack trade the family cow for?",
+      "answers": [
+        "A new hat",
+        "A fishing rod",
+        "A loaf of bread",
+        "Magic beans"
+      ],
+      "correct": "Magic beans",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "The beans grow into a beanstalk reaching up into the clouds.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Jack_and_the_Beanstalk",
+        "title": "Wikipedia: Jack and the Beanstalk",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'trades the family cow for a handful of magic beans' and 'reaching up into the clouds'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Peter Pan is famous as the boy who never does what?",
+      "answers": [
+        "Grows up",
+        "Sleeps",
+        "Smiles",
+        "Sings"
+      ],
+      "correct": "Grows up",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "He lives on the island of Neverland with the Lost Boys.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peter_Pan_(character)",
+        "title": "Wikipedia: Peter Pan (character)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'can fly and never grows up' and 'the mythical island of Neverland as the leader of the Lost Boys'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What happens to Pinocchio's nose when he tells a lie?",
+      "answers": [
+        "It turns red",
+        "It grows longer",
+        "It shrinks",
+        "It disappears"
+      ],
+      "correct": "It grows longer",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "Pinocchio is a wooden puppet who dreams of becoming a real boy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pinocchio",
+        "title": "Wikipedia: Pinocchio",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'his long nose, which grows when he lies' and 'he dreams of becoming a real boy'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Rapunzel is famous for her very long what?",
+      "answers": [
+        "Dress",
+        "Scarf",
+        "Hair",
+        "Veil"
+      ],
+      "correct": "Hair",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "In the fairy tale, she lets it down from a tower window.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rapunzel",
+        "title": "Wikipedia: Rapunzel",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'long golden hair', 'let down your hair' and 'fastens her long braided hair to a hook in the window'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the tower-window passage the explain relies on"
+      }
+    },
+    {
+      "question": "In the Dr. Seuss book, the Grinch tries to steal which holiday?",
+      "answers": [
+        "Easter",
+        "Halloween",
+        "Thanksgiving",
+        "Christmas"
+      ],
+      "correct": "Christmas",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "He sneaks into the town of Whoville on Christmas Eve.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/How_the_Grinch_Stole_Christmas!",
+        "title": "Wikipedia: How the Grinch Stole Christmas!",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'stealing Christmas gifts and decorations from the homes of the nearby town of Whoville on Christmas Eve'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the fable of the Tortoise and the Hare, who wins the race?",
+      "answers": [
+        "The hare",
+        "The tortoise",
+        "The fox",
+        "The owl"
+      ],
+      "correct": "The tortoise",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "The hare stops for a nap, and the slow but steady tortoise gets there first.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Tortoise_and_the_Hare",
+        "title": "Wikipedia: The Tortoise and the Hare",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'takes a nap midway through the race' and 'crawling slowly but steadily, has arrived before him'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Charlotte's Web, what kind of animal is Charlotte?",
+      "answers": [
+        "A mouse",
+        "A goose",
+        "A sheep",
+        "A spider"
+      ],
+      "correct": "A spider",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "She writes words in her web to help her friend.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Charlotte%27s_Web",
+        "title": "Wikipedia: Charlotte's Web",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a barn spider named Charlotte' and 'Charlotte writes messages in her web'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the novel Moby-Dick, what is Moby Dick?",
+      "answers": [
+        "A whale",
+        "A shark",
+        "A ship",
+        "An octopus"
+      ],
+      "correct": "A whale",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "Herman Melville's 1851 novel calls him the white whale.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Moby-Dick",
+        "title": "Wikipedia: Moby-Dick",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '1851 novel by Herman Melville' and 'The white whale'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In The Ugly Duckling, what does the little bird grow up to be?",
+      "answers": [
+        "A goose",
+        "An eagle",
+        "A swan",
+        "A chicken"
+      ],
+      "correct": "A swan",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "The story was written by Hans Christian Andersen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Ugly_Duckling",
+        "title": "Wikipedia: The Ugly Duckling",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Fairy tale by Hans Christian Andersen' and 'he had been not a duckling but a cygnet all this time'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the line that shows he grows up a swan (old quote was just the word 'swan')"
+      }
+    },
+    {
+      "question": "What does Mary Poppins famously carry with her?",
+      "answers": [
+        "An umbrella",
+        "A violin",
+        "A fishing pole",
+        "A lantern"
+      ],
+      "correct": "An umbrella",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "She is a magical nanny who looks after the Banks children.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mary_Poppins_(character)",
+        "title": "Wikipedia: Mary Poppins (character)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'parrot umbrella' and 'takes charge of the Banks children'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Paddington Bear loves sandwiches filled with what?",
+      "answers": [
+        "Peanut butter",
+        "Cheese",
+        "Tuna",
+        "Marmalade"
+      ],
+      "correct": "Marmalade",
+      "difficulty": "easy",
+      "category": "Books",
+      "explain": "He is usually shown in a duffel coat and an old hat.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Paddington_Bear",
+        "title": "Wikipedia: Paddington Bear",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'with his old hat, battered suitcase, duffel coat and love of marmalade sandwiches'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy; explain now from the article body (duffel coat, old hat) instead of a statue's image caption"
+      }
+    },
+    {
+      "question": "Which book do you use to look up what a word means?",
+      "answers": [
+        "An atlas",
+        "A dictionary",
+        "A cookbook",
+        "A diary"
+      ],
+      "correct": "A dictionary",
+      "difficulty": "very easy",
+      "category": "Books",
+      "explain": "Many dictionaries also show how to say each word.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: an everyday reference book; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

@@ -1,0 +1,1385 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "School subjects (grades 7-8) (AI-written, not yet reviewed)",
+  "description": "58 questions on grade 7-8 science, social studies and English language arts, for schoolwork review (3 very easy, 8 easy, 35 medium, 12 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 58 of 59 written, fixed 35 and deleted 1. The first fact-check left only 5 hard items standing, so two more small rounds of hard questions (15 items) were written by a separate pass and checked by fresh checkers; 7 of those survived as hard and 8 went to medium. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 55 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 3 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which punctuation mark goes at the end of a question?",
+      "answers": [
+        "Period",
+        "Comma",
+        "Colon",
+        "Question mark"
+      ],
+      "correct": "Question mark",
+      "difficulty": "very easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "A plain statement ends with a period instead.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: questions end with a question mark; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these words is an action word?",
+      "answers": [
+        "Jump",
+        "Lamp",
+        "Purple",
+        "Soft"
+      ],
+      "correct": "Jump",
+      "difficulty": "very easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Grammar books call action words verbs, like run, sing and swim.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: jump is an everyday action word; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractors Chair/Green replaced with Lamp/Purple (chair and green can also be verbs); explain now names verbs"
+      }
+    },
+    {
+      "question": "In what order are the words in a dictionary listed?",
+      "answers": [
+        "By length",
+        "Alphabetical",
+        "By age",
+        "Random"
+      ],
+      "correct": "Alphabetical",
+      "difficulty": "very easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Indexes at the back of books are ordered the same way.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: dictionaries are in alphabetical order; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many branches does the US federal government have?",
+      "answers": [
+        "Two",
+        "Four",
+        "Five",
+        "Three"
+      ],
+      "correct": "Three",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "They are the legislative, executive and judicial branches.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Federal_government_of_the_United_States",
+        "title": "Wikipedia: Federal government of the United States",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'composed of three distinct branches: legislative , executive , and judicial'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which part of speech names a person, place or thing?",
+      "answers": [
+        "Verb",
+        "Noun",
+        "Adjective",
+        "Adverb"
+      ],
+      "correct": "Noun",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "A proper noun names one particular person, place or thing.",
+      "source": {
+        "url": "https://simple.wikipedia.org/wiki/Noun",
+        "title": "Simple English Wikipedia: Noun",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'usually the name of something such as a person , place , thing , animal , or idea' and 'Proper Nouns: are specific (i.e., not generic) name for a particular person, place, or thing'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the general noun definition as well as the proper-noun line used by explain"
+      }
+    },
+    {
+      "question": "'She sings like a bird' is an example of what?",
+      "answers": [
+        "Metaphor",
+        "Simile",
+        "Alliteration",
+        "Onomatopoeia"
+      ],
+      "correct": "Simile",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Saying she is a bird, with no 'like' or 'as', would make it a metaphor.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Simile",
+        "title": "Wikipedia: Simile",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Similes compare two things explicitly, in English often using the words \"like\" or \"as\", whereas metaphors often create an implicit comparison (i.e., saying something \"is\" something else)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain de-capitalised; note now quotes the metaphor contrast explain relies on"
+      }
+    },
+    {
+      "question": "In the water cycle, what is it called when liquid water turns into vapor?",
+      "answers": [
+        "Condensation",
+        "Precipitation",
+        "Evaporation",
+        "Freezing"
+      ],
+      "correct": "Evaporation",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The sun's energy drives evaporation from oceans and lakes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Evaporation",
+        "title": "Wikipedia: Evaporation",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The sun (solar energy) drives evaporation of water from oceans , lakes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is land mostly surrounded by water but joined to the mainland on one side?",
+      "answers": [
+        "Island",
+        "Peninsula",
+        "Valley",
+        "Plateau"
+      ],
+      "correct": "Peninsula",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The Arabian Peninsula is the largest in the world.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Peninsula",
+        "title": "Wikipedia: Peninsula",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is connected to the mainland on only one side, and is mostly surrounded by water'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these energy sources is renewable?",
+      "answers": [
+        "Coal",
+        "Oil",
+        "Natural gas",
+        "Solar"
+      ],
+      "correct": "Solar",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Renewable sources are replenished by nature faster than people use them up.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Renewable_energy",
+        "title": "Wikipedia: Renewable energy",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The most widely used renewable energy types are solar energy'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which part of a plant or animal cell holds most of its DNA?",
+      "answers": [
+        "Cell membrane",
+        "Vacuole",
+        "Nucleus",
+        "Cytoplasm"
+      ],
+      "correct": "Nucleus",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The DNA inside it is organized into chromosomes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cell_nucleus",
+        "title": "Wikipedia: Cell nucleus",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The cell nucleus contains most of the cell's genetic material in the form of multiple linear DNA molecules organized into chromosomes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In plant cells, which organelle carries out photosynthesis?",
+      "answers": [
+        "Chloroplast",
+        "Mitochondrion",
+        "Nucleus",
+        "Vacuole"
+      ],
+      "correct": "Chloroplast",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Its green color comes from the pigment chlorophyll.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chloroplast",
+        "title": "Wikipedia: Chloroplast",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Plant organelle that conducts photosynthesis'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On the periodic table, what is a vertical column of elements called?",
+      "answers": [
+        "Period",
+        "Group",
+        "Isotope",
+        "Orbital"
+      ],
+      "correct": "Group",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "A horizontal row on the table is called a period.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Periodic_table",
+        "title": "Wikipedia: Periodic table",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'an ordered arrangement of the chemical elements into rows (\" periods \") and columns (\" groups \")'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain replaced: 'same group = same number of valence electrons' is not true table-wide (helium, transition metals), so explain now states the row/period contrast"
+      }
+    },
+    {
+      "question": "Newton's first law of motion is also called the principle of what?",
+      "answers": [
+        "Gravity",
+        "Acceleration",
+        "Inertia",
+        "Momentum"
+      ],
+      "correct": "Inertia",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Objects at rest stay at rest, and moving objects keep moving in a straight line, unless an unbalanced force acts on them.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Inertia",
+        "title": "Wikipedia: Inertia",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'also known as The Principle of Inertia' and 'Every body perseveres in its state of rest, or of uniform motion in a right line, unless it is compelled to change that state by forces impressed thereon'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain made textbook-accurate (straight line, unbalanced force)"
+      }
+    },
+    {
+      "question": "What is the energy an object has because it is moving?",
+      "answers": [
+        "Potential energy",
+        "Kinetic energy",
+        "Chemical energy",
+        "Nuclear energy"
+      ],
+      "correct": "Kinetic energy",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The word kinetic comes from the Greek kinesis, meaning motion.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kinetic_energy",
+        "title": "Wikipedia: Kinetic energy",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the form of energy that it possesses due to its motion'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which type of rock forms when existing rock is changed by heat and pressure?",
+      "answers": [
+        "Igneous",
+        "Sedimentary",
+        "Volcanic",
+        "Metamorphic"
+      ],
+      "correct": "Metamorphic",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Marble and slate are both metamorphic rocks.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Metamorphic_rock",
+        "title": "Wikipedia: Metamorphic rock",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Rock that was subjected to heat and pressure'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Gregor Mendel worked out the basic rules of heredity by studying which plant?",
+      "answers": [
+        "Sunflowers",
+        "Corn",
+        "Pea plants",
+        "Roses"
+      ],
+      "correct": "Pea plants",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "He followed seven traits, such as plant height, pod shape and flower color.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gregor_Mendel",
+        "title": "Wikipedia: Gregor Mendel",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Mendel worked with seven characteristics of pea plants'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many US senators does each state have?",
+      "answers": [
+        "One",
+        "Two",
+        "Three",
+        "Four"
+      ],
+      "correct": "Two",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Senators serve staggered six-year terms.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_Senate",
+        "title": "Wikipedia: United States Senate",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'represented by two senators who serve staggered six-year terms'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (most adults know two per state)"
+      }
+    },
+    {
+      "question": "What is the system that lets each branch of government limit the others?",
+      "answers": [
+        "Federalism",
+        "Due process",
+        "Checks and balances",
+        "Popular sovereignty"
+      ],
+      "correct": "Checks and balances",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It is meant to keep any one branch from gaining more power than the others.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Separation_of_powers_under_the_United_States_Constitution",
+        "title": "Wikipedia: Separation of powers under the United States Constitution",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The system of checks and balances makes it so that no one branch of government has more power than another'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the short opening introduction of the US Constitution called?",
+      "answers": [
+        "The Preamble",
+        "The Charter",
+        "The Declaration",
+        "The Ratification"
+      ],
+      "correct": "The Preamble",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It was mainly written by Gouverneur Morris of Pennsylvania.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Preamble_to_the_United_States_Constitution",
+        "title": "Wikipedia: Preamble to the United States Constitution",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a brief introductory statement of the Constitution 's fundamental purposes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Ancient Mesopotamia grew up around which two rivers?",
+      "answers": [
+        "Nile and Jordan",
+        "Indus and Ganges",
+        "Tigris and Euphrates",
+        "Danube and Rhine"
+      ],
+      "correct": "Tigris and Euphrates",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The region roughly matches modern Iraq.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mesopotamia",
+        "title": "Wikipedia: Mesopotamia",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'situated within the Tigris–Euphrates river system'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a chain or cluster of islands called?",
+      "answers": [
+        "Delta",
+        "Fjord",
+        "Lagoon",
+        "Archipelago"
+      ],
+      "correct": "Archipelago",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Indonesia is the largest archipelago country in the world.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Archipelago",
+        "title": "Wikipedia: Archipelago",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'is a chain, cluster, or collection of islands' and 'The largest archipelago country in the world is Indonesia'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded to match the page ('largest archipelago country')"
+      }
+    },
+    {
+      "question": "In 'She ran quickly,' what part of speech is 'quickly'?",
+      "answers": [
+        "Adjective",
+        "Adverb",
+        "Verb",
+        "Pronoun"
+      ],
+      "correct": "Adverb",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Adverbs often tell how, when, where or how often something happens.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Adverb",
+        "title": "Wikipedia: Adverb",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'generally modifies a verb'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the central message or main idea of a story called?",
+      "answers": [
+        "Setting",
+        "Plot",
+        "Theme",
+        "Conflict"
+      ],
+      "correct": "Theme",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Along with plot, character and setting, theme is a core part of fiction.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Theme_(narrative)",
+        "title": "Wikipedia: Theme (narrative)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Central topic, subject, or message within a narrative'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Repeating the starting sound in 'Peter Piper picked' is called what?",
+      "answers": [
+        "Rhyme",
+        "Onomatopoeia",
+        "Alliteration",
+        "Assonance"
+      ],
+      "correct": "Alliteration",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It usually repeats consonant sounds, like the p in Peter, Piper and picked.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alliteration",
+        "title": "Wikipedia: Alliteration",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Alliteration is the repetition of syllable -initial consonant sounds between nearby words' and 'A common example is \" Peter Piper picked a peck of pickled peppers \"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractor 'Repetition' replaced with 'Assonance' (alliteration IS repetition, so it was arguably right); explain no longer restates the question"
+      }
+    },
+    {
+      "question": "A story told using 'I' and 'me' is written in which point of view?",
+      "answers": [
+        "First person",
+        "Second person",
+        "Third person limited",
+        "Third person omniscient"
+      ],
+      "correct": "First person",
+      "difficulty": "easy",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Jane Eyre is a classic example of a first-person narrative.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/First-person_narrative",
+        "title": "Wikipedia: First-person narrative",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'using first-person grammar such as \"I\", \"me\", \"my\", and \"myself\"' and Jane Eyre 'is known as \"the classic example of first-person narrative\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy; note now also quotes the Jane Eyre line explain uses"
+      }
+    },
+    {
+      "question": "'The leaves danced in the breeze' is an example of what?",
+      "answers": [
+        "Simile",
+        "Hyperbole",
+        "Personification",
+        "Alliteration"
+      ],
+      "correct": "Personification",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It gives a human action, dancing, to something that is not human.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Personification",
+        "title": "Wikipedia: Personification",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Personification is the representation of any thing, being, or abstraction as a person or with person-like qualities' and, as a literary device, it is common for 'elements of the natural world, such as trees'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "example changed from 'the old car groaned' (groan is an ordinary dictionary sense for creaking machines) to a clear-cut one with no alliteration; explain no longer copies the definition"
+      }
+    },
+    {
+      "question": "'I've told you a million times' is an example of what?",
+      "answers": [
+        "Hyperbole",
+        "Metaphor",
+        "Personification",
+        "Simile"
+      ],
+      "correct": "Hyperbole",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Tall tales about Paul Bunyan rely heavily on it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hyperbole",
+        "title": "Wikipedia: Hyperbole",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'is the use of exaggeration as a rhetorical device' and 'the American tall tale about Paul Bunyan relies heavily on hyperbole'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "note now quotes the Paul Bunyan line explain uses"
+      }
+    },
+    {
+      "question": "Which tiny cell part builds proteins?",
+      "answers": [
+        "Mitochondrion",
+        "Lysosome",
+        "Vacuole",
+        "Ribosome"
+      ],
+      "correct": "Ribosome",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Ribosomes can float free in the cell or sit on the rough endoplasmic reticulum.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ribosome",
+        "title": "Wikipedia: Ribosome",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Ribosomes are minute particles consisting of RNA and associated proteins that function to synthesize proteins'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "'For every action there is an equal and opposite reaction' is which of Newton's laws?",
+      "answers": [
+        "First law",
+        "Second law",
+        "Third law",
+        "Law of gravitation"
+      ],
+      "correct": "Third law",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The action and reaction forces always act on two different objects.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Newton%27s_laws_of_motion",
+        "title": "Wikipedia: Newton's laws of motion",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'To every action there is always opposed an equal reaction' and 'the \"action\" and \"reaction\" apply to different bodies'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (the third-law slogan is widely known); note now quotes the law itself"
+      }
+    },
+    {
+      "question": "An element's atomic number is the number of what in each of its atoms?",
+      "answers": [
+        "Neutrons",
+        "Protons",
+        "Electron shells",
+        "Molecules"
+      ],
+      "correct": "Protons",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "In an atom with no charge, it also equals the number of electrons.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Atomic_number",
+        "title": "Wikipedia: Atomic number",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Number of protons found in the nucleus of an atom' and 'In an ordinary uncharged atom, the atomic number is also equal to the number of electrons'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium; note quotes the electrons line explain uses"
+      }
+    },
+    {
+      "question": "What is the loss of water vapor from a plant's leaves called?",
+      "answers": [
+        "Respiration",
+        "Germination",
+        "Pollination",
+        "Transpiration"
+      ],
+      "correct": "Transpiration",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Most of the water vapor escapes through tiny leaf pores called stomata.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Transpiration",
+        "title": "Wikipedia: Transpiration",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'its evaporation from aerial parts, such as leaves , stems and flowers' and 'leaves the plant by diffusion through the stomata'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain swapped from 'passive, no energy' (contestable at school level) to the stomata fact"
+      }
+    },
+    {
+      "question": "What are the different versions of the same gene called?",
+      "answers": [
+        "Alleles",
+        "Chromosomes",
+        "Genomes",
+        "Gametes"
+      ],
+      "correct": "Alleles",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The word is short for 'allelomorph', meaning 'other form'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Allele",
+        "title": "Wikipedia: Allele",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'describe variant forms of a gene' and 'The word \"allele\" is a short form of \"allelomorph\" (\"other form\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "note now quotes the allelomorph line explain uses"
+      }
+    },
+    {
+      "question": "What kind of plate boundary forms where two tectonic plates move apart?",
+      "answers": [
+        "Convergent",
+        "Divergent",
+        "Transform",
+        "Subduction"
+      ],
+      "correct": "Divergent",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Most active ones lie under the sea as mid-ocean ridges.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Divergent_boundary",
+        "title": "Wikipedia: Divergent boundary",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'between two tectonic plates that are moving away from each other' and 'Most active divergent plate boundaries occur between oceanic plates and exist as mid-oceanic ridges'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (answerable from 'diverge'); explain says 'most active', as the page does"
+      }
+    },
+    {
+      "question": "Weathering breaks rock down. What is carrying the pieces somewhere else called?",
+      "answers": [
+        "Deposition",
+        "Compaction",
+        "Erosion",
+        "Cementation"
+      ],
+      "correct": "Erosion",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Weathering, unlike erosion, involves no movement.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Erosion",
+        "title": "Wikipedia: Erosion",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Erosion is distinct from weathering which involves no movement'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (erosion is a widely known word)"
+      }
+    },
+    {
+      "question": "What did England's Magna Carta of 1215 mainly do?",
+      "answers": [
+        "Created the first Parliament",
+        "Limited the king's power",
+        "Made England a republic",
+        "Ended the feudal system"
+      ],
+      "correct": "Limited the king's power",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "King John sealed it at Runnymede, near Windsor.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Magna_Carta",
+        "title": "Wikipedia: Magna Carta",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Magna Carta reflected other legal documents of its time ... which made broadly similar statements of rights and limitations on the powers of the Crown' and 'sealed by King John of England at Runnymede , near Windsor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (purpose can be reasoned out); note quotes the line about Magna Carta itself and the Runnymede line explain uses"
+      }
+    },
+    {
+      "question": "How many amendments make up the US Bill of Rights?",
+      "answers": [
+        "Five",
+        "Twelve",
+        "Ten",
+        "Twenty-seven"
+      ],
+      "correct": "Ten",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Congress first sent the states twelve proposed amendments.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_Bill_of_Rights",
+        "title": "Wikipedia: United States Bill of Rights",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'First ten amendments to the U.S. Constitution' and 'Congress approved twelve articles of amendment on September 25, 1789, and submitted them to the states'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (ten is widely known); note quotes the twelve-proposed line explain uses"
+      }
+    },
+    {
+      "question": "Which article of the US Constitution sets up Congress?",
+      "answers": [
+        "Article I",
+        "Article II",
+        "Article III",
+        "Article V"
+      ],
+      "correct": "Article I",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It makes Congress two houses: the House of Representatives and the Senate.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Article_One_of_the_United_States_Constitution",
+        "title": "Wikipedia: Article One of the United States Constitution",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Article One of the Constitution of the United States establishes the legislative branch' and 'Congress is a bicameral legislature consisting of the House of Representatives and the Senate'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "note now quotes the two-houses line explain uses"
+      }
+    },
+    {
+      "question": "Which ancient writing system is named for its wedge-shaped marks?",
+      "answers": [
+        "Hieroglyphs",
+        "Cuneiform",
+        "Runes",
+        "Linear B"
+      ],
+      "correct": "Cuneiform",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It was first developed to write the Sumerian language of southern Mesopotamia.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cuneiform",
+        "title": "Wikipedia: Cuneiform",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'named for the characteristic wedge-shaped impressions' and 'originally developed to write the Sumerian language of southern Mesopotamia'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "note now quotes the Sumerian line explain uses"
+      }
+    },
+    {
+      "question": "What is a narrow strip of land joining two larger land areas called?",
+      "answers": [
+        "Peninsula",
+        "Strait",
+        "Isthmus",
+        "Delta"
+      ],
+      "correct": "Isthmus",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The word comes from the Greek for 'neck'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Isthmus",
+        "title": "Wikipedia: Isthmus",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'from Ancient Greek ἰσθμός isthmós ' neck ' ) [ 2 ] is a narrow piece of land connecting two larger areas'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "note now quotes the 'neck' etymology explain uses; difficulty: hard -> medium (the fact-check's stated move; 'isthmus of Panama' is a widely heard phrase)"
+      }
+    },
+    {
+      "question": "In grammar, what is an independent clause?",
+      "answers": [
+        "A clause that cannot stand alone",
+        "A phrase with no verb",
+        "A clause that can stand alone as a sentence",
+        "A list joined by commas"
+      ],
+      "correct": "A clause that can stand alone as a sentence",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It has a subject and a predicate and makes sense by itself.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Independent_clause",
+        "title": "Wikipedia: Independent clause",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'is a clause that can stand by itself as a simple sentence' and 'contains a subject and a predicate and makes sense by itself'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (the word 'independent' gives it away)"
+      }
+    },
+    {
+      "question": "Which mark can join two related complete sentences without 'and' or 'but'?",
+      "answers": [
+        "Comma",
+        "Hyphen",
+        "Apostrophe",
+        "Semicolon"
+      ],
+      "correct": "Semicolon",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Its strength falls between a comma and a period.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Semicolon",
+        "title": "Wikipedia: Semicolon",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'The most common use of the semicolon is to join two independent clauses without using a conjunction' and 'the semicolon falls between terminal marks and the comma'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (most adults know the semicolon); note quotes the strength line explain uses"
+      }
+    },
+    {
+      "question": "In Freytag's pyramid, which part of a plot comes right after the climax?",
+      "answers": [
+        "Rising action",
+        "Exposition",
+        "Falling action",
+        "Inciting incident"
+      ],
+      "correct": "Falling action",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Freytag himself called this part the 'return or fall'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Plot_(narrative)",
+        "title": "Wikipedia: Plot (narrative)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Falling action (return or fall)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (other options all precede the climax, so 'falling' can be reasoned out)"
+      }
+    },
+    {
+      "question": "The root 'chron', as in chronology, means what?",
+      "answers": [
+        "Color",
+        "Time",
+        "Light",
+        "Sound"
+      ],
+      "correct": "Time",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It comes from the Greek word khronos.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/List_of_Greek_and_Latin_roots_in_English/A%E2%80%93G",
+        "title": "Wikipedia: List of Greek and Latin roots in English (A-G)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'chron- [ 73 ] time Greek χρόνος ( khrónos )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (chronology/chronological make it widely known)"
+      }
+    },
+    {
+      "question": "Which cell organelle is the main site for making lipids?",
+      "answers": [
+        "Lysosome",
+        "Nucleolus",
+        "Smooth endoplasmic reticulum",
+        "Centriole"
+      ],
+      "correct": "Smooth endoplasmic reticulum",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It is called smooth because, unlike the rough kind, it has no ribosomes on its surface.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Endoplasmic_reticulum",
+        "title": "Wikipedia: Endoplasmic reticulum",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'The SER lacks ribosomes and functions in lipid synthesis' and 'studded with protein-manufacturing ribosomes giving it a \"rough\" appearance (hence its name)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note: added the phrase that supports the explain (why rough/smooth)"
+      }
+    },
+    {
+      "question": "What is the term for an organism's set of observable traits?",
+      "answers": [
+        "Genotype",
+        "Phenotype",
+        "Karyotype",
+        "Genome"
+      ],
+      "correct": "Phenotype",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The word comes from Greek roots meaning 'to appear, show' and 'type'.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Phenotype",
+        "title": "Wikipedia: Phenotype",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the set of observable characteristics or traits of an organism' and 'to appear, show'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: genotype/phenotype is a familiar pair, a 50/50 for most adults"
+      }
+    },
+    {
+      "question": "On the Mohs hardness scale, what number is quartz?",
+      "answers": [
+        "5",
+        "6",
+        "8",
+        "7"
+      ],
+      "correct": "7",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Of the scale's ten reference minerals, only topaz, corundum and diamond are harder.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mohs_scale",
+        "title": "Wikipedia: Mohs scale",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '6 Orthoclase 7 Quartz 8 Topaz 9 Corundum 10 Diamond'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the minimum age to serve in the US House of Representatives?",
+      "answers": [
+        "18",
+        "21",
+        "25",
+        "30"
+      ],
+      "correct": "25",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "A representative must also have been a US citizen for at least seven years.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/United_States_House_of_Representatives",
+        "title": "Wikipedia: United States House of Representatives",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'be at least twenty-five (25) years old; (2) have been a citizen of the United States for the past seven years'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city was the capital of the Aztec Empire?",
+      "answers": [
+        "Cuzco",
+        "Teotihuacan",
+        "Chichen Itza",
+        "Tenochtitlan"
+      ],
+      "correct": "Tenochtitlan",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It was built on an island in Lake Texcoco, where central Mexico City stands today.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tenochtitlan",
+        "title": "Wikipedia: Tenochtitlan",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the capital of the expanding Aztec Empire', 'built on an island in what was then Lake Texcoco' and 'ruins of Tenochtitlan are in the historic center of the Mexican capital'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Tenochtitlan is widely recognized as the Aztec capital once shown"
+      }
+    },
+    {
+      "question": "King Hammurabi, famous for his law code, ruled which ancient city?",
+      "answers": [
+        "Babylon",
+        "Ur",
+        "Nineveh",
+        "Memphis"
+      ],
+      "correct": "Babylon",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "His laws were carved on a tall basalt stone slab now kept in the Louvre.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Code_of_Hammurabi",
+        "title": "Wikipedia: Code of Hammurabi",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Hammurabi , sixth king of the First Dynasty of Babylon', 'inscribed on a basalt stele' and 'The stele now resides in the Louvre Museum'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Babylon is the famous, guessable option for Hammurabi"
+      }
+    },
+    {
+      "question": "In 'My sister, a pilot, travels often,' what is 'a pilot'?",
+      "answers": [
+        "A gerund",
+        "An appositive",
+        "A direct object",
+        "An infinitive"
+      ],
+      "correct": "An appositive",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "An appositive renames the noun beside it, and one that adds extra information sits between commas.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Apposition",
+        "title": "Wikipedia: Apposition",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the element identifying the other is called the appositive' and 'non-restrictive appositives are typically set off by commas'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "When the audience knows something a character does not, what is it called?",
+      "answers": [
+        "Foreshadowing",
+        "Verbal irony",
+        "Flashback",
+        "Dramatic irony"
+      ],
+      "correct": "Dramatic irony",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "It lets the audience see a character's words or actions working against them.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Irony",
+        "title": "Wikipedia: Irony",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Dramatic irony provides the audience with information of which characters are unaware' and 'recognize their words and actions as counter-productive'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: dramatic irony is a commonly known term"
+      }
+    },
+    {
+      "question": "How many syllables does a line of iambic pentameter usually have?",
+      "answers": [
+        "8",
+        "10",
+        "12",
+        "14"
+      ],
+      "correct": "10",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Each line is five iambs, an unstressed syllable followed by a stressed one, as Shakespeare used.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Iambic_pentameter",
+        "title": "Wikipedia: Iambic pentameter",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'lines in iambic pentameter usually contain ten syllables', 'five iambic feet in a row' and 'Shakespeare famously used iambic pentameter'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: reasonable from 'penta' = five and the two-beat da-DUM iamb"
+      }
+    },
+    {
+      "question": "Which layer of the Sun do we see as its visible surface?",
+      "answers": [
+        "Corona",
+        "Photosphere",
+        "Chromosphere",
+        "Convection zone"
+      ],
+      "correct": "Photosphere",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Its name comes from the Greek word 'phos', meaning light.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Photosphere",
+        "title": "Wikipedia: Photosphere",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the photosphere is typically used to describe the Sun 's or another star 's visual surface' and 'phos , photos meaning \"light\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the first stage of mitosis?",
+      "answers": [
+        "Metaphase",
+        "Anaphase",
+        "Prophase",
+        "Telophase"
+      ],
+      "correct": "Prophase",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "During prophase, the cell's loose DNA condenses into visible chromosomes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Prophase",
+        "title": "Wikipedia: Prophase",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the first stage of cell division in both mitosis and meiosis' and 'The main occurrences in prophase are the condensation of the chromatin'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: PMAT is a well-remembered mnemonic and 'pro-' (before) points to first"
+      }
+    },
+    {
+      "question": "In 'Swimming is fun,' what is the word 'swimming'?",
+      "answers": [
+        "An infinitive",
+        "An adverb",
+        "An adjective",
+        "A gerund"
+      ],
+      "correct": "A gerund",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "A gerund is an -ing verb form that works as a noun, here the subject.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gerund",
+        "title": "Wikipedia: Gerund",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Swimming is fun. (gerund as subject of the sentence)' and 'functions as a noun'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractor 'A participle' -> 'An adjective' (modern grammars treat -ing forms as gerund-participles, so 'participle' was arguably right); level hard -> medium: with participle gone, gerund is the obvious pick for anyone who remembers the term"
+      }
+    },
+    {
+      "question": "The Federalist Papers were published under which shared pen name?",
+      "answers": [
+        "Publius",
+        "Cato",
+        "Brutus",
+        "Junius"
+      ],
+      "correct": "Publius",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "Hamilton, Madison and Jay wrote all 85 essays under that one name.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Federalist_Papers",
+        "title": "Wikipedia: The Federalist Papers",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a collection of 85 articles and essays written by Alexander Hamilton , James Madison , and John Jay under the collective pseudonym Publius'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Mansa Musa, famous for his gold, ruled which West African empire?",
+      "answers": [
+        "Ghana",
+        "Mali",
+        "Songhai",
+        "Benin"
+      ],
+      "correct": "Mali",
+      "difficulty": "medium",
+      "category": "School subjects (grades 7-8)",
+      "explain": "The Mali Empire reached its largest size during his reign.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mansa_Musa",
+        "title": "Wikipedia: Mansa Musa",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Mansa of the Mali Empire , which reached its territorial peak during his reign' and 'Mali had amassed a large reserve of gold'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium: Mansa Musa of Mali is widely known from 'richest person ever' stories"
+      }
+    },
+    {
+      "question": "Which scientist is best remembered for the theory of continental drift?",
+      "answers": [
+        "Charles Lyell",
+        "James Hutton",
+        "Harry Hess",
+        "Alfred Wegener"
+      ],
+      "correct": "Alfred Wegener",
+      "difficulty": "hard",
+      "category": "School subjects (grades 7-8)",
+      "explain": "He suggested in 1912 that the continents slowly drift around the Earth.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Alfred_Wegener",
+        "title": "Wikipedia: Alfred Wegener",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'most remembered as the originator of the continental drift hypothesis by suggesting in 1912 that the continents are slowly drifting around the Earth'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

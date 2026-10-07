@@ -1,0 +1,413 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Ohio & Cleveland - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on ohio and cleveland, written by Claude on 2026-10-06 as the gentlest level of the 'Ohio & Cleveland' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 3 of them merely easy and took off their note, so the pack is 14 very easy, 3 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Which river runs through downtown Cleveland?",
+      "answers": [
+        "Ohio River",
+        "Cuyahoga River",
+        "Mississippi River",
+        "Hudson River"
+      ],
+      "correct": "Cuyahoga River",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The same river also flows through Akron and Cuyahoga Falls.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cuyahoga_River",
+        "title": "Wikipedia: Cuyahoga River",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Cities Cleveland , Akron , Cuyahoga Falls , Kent'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color are the Cleveland Browns' helmets?",
+      "answers": [
+        "Green",
+        "Blue",
+        "Red",
+        "Orange"
+      ],
+      "correct": "Orange",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The Browns' helmets famously carry no team logo.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cleveland_Browns",
+        "title": "Wikipedia: Cleveland Browns",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the orange, logo-less helmet continues as the primary trademark of the Cleveland Browns'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The nut of Ohio's state tree is said to look like the eye of which animal?",
+      "answers": [
+        "A deer",
+        "An owl",
+        "A horse",
+        "A cat"
+      ],
+      "correct": "A deer",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Folklore also says carrying one of the nuts brings good luck.",
+      "source": {
+        "url": "https://ohiostatebuckeyes.com/what-is-a-buckeye/",
+        "title": "Ohio State Buckeyes: What Is A Buckeye?",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'comes from the official state tree of Ohio' and 'resembles the eye of a deer and carrying one brings good luck'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which baseball team plays in Cincinnati?",
+      "answers": [
+        "Royals",
+        "Reds",
+        "Orioles",
+        "Brewers"
+      ],
+      "correct": "Reds",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The Reds play in Major League Baseball's National League.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cincinnati_Reds",
+        "title": "Wikipedia: Cincinnati Reds",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Cincinnati Reds are an American professional baseball team based in Cincinnati' and 'member club of the National League'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of Cincinnati's pro football team?",
+      "answers": [
+        "Steelers",
+        "Lions",
+        "Bengals",
+        "Colts"
+      ],
+      "correct": "Bengals",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The Bengals play in the NFL's AFC North division.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cincinnati_Bengals",
+        "title": "Wikipedia: Cincinnati Bengals",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Cincinnati Bengals are a professional American football team based in Cincinnati' and 'American Football Conference (AFC) North division'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Cleveland's famous section of Browns fans is called the Dawg what?",
+      "answers": [
+        "House",
+        "Yard",
+        "Pen",
+        "Pound"
+      ],
+      "correct": "Pound",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The Dawg Pound bleachers sit behind the east end zone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dawg_Pound",
+        "title": "Wikipedia: Dawg Pound",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Dawg Pound is the name of the bleacher section behind the east end zone'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which river forms Ohio's southern border?",
+      "answers": [
+        "Ohio River",
+        "Cuyahoga River",
+        "Hudson River",
+        "Missouri River"
+      ],
+      "correct": "Ohio River",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The Ohio River also forms the southern border of Indiana and Illinois.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ohio_River",
+        "title": "Wikipedia: Ohio River",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the river is the southern border of Ohio, Indiana, and Illinois'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Cleveland's baseball team is named after statues that stand on what?",
+      "answers": [
+        "A church",
+        "A bridge",
+        "A courthouse",
+        "A museum"
+      ],
+      "correct": "A bridge",
+      "difficulty": "easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The eight 1932 Art Deco statues, the Guardians of Traffic, stand on the Hope Memorial Bridge.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cleveland_Guardians",
+        "title": "Wikipedia: Cleveland Guardians",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'eight 1932 Art Deco sculptures by Henry Hering on the city's Hope Memorial Bridge' and 'which is adjacent to Progressive Field'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly for a Cleveland resident (the Guardians name dates only from 2021-22); explain reworded (old 'stand right next to the ballpark' overstated; it is the bridge that is adjacent)"
+      }
+    },
+    {
+      "question": "What are the school colors of Ohio State?",
+      "answers": [
+        "Blue and gold",
+        "Green and white",
+        "Scarlet and gray",
+        "Orange and black"
+      ],
+      "correct": "Scarlet and gray",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Ohio State's teams play in the Big Ten Conference.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ohio_State_Buckeyes",
+        "title": "Wikipedia: Ohio State Buckeyes",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Colors Scarlet and gray' and 'Conference Big Ten (primary)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Ohio State's big yearly football rivalry, called The Game, is against which school?",
+      "answers": [
+        "Michigan",
+        "Notre Dame",
+        "Penn State",
+        "Alabama"
+      ],
+      "correct": "Michigan",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The game has usually been played at the end of the regular season since 1935.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Michigan%E2%80%93Ohio_State_football_rivalry",
+        "title": "Wikipedia: Michigan–Ohio State football rivalry",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'referred to as The Game by some followers' and 'The game has been played at the end of the regular season since 1935'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which Ohio city is nicknamed the Queen City?",
+      "answers": [
+        "Toledo",
+        "Dayton",
+        "Cincinnati",
+        "Akron"
+      ],
+      "correct": "Cincinnati",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Cincinnati's other nicknames include Cincy and the Paris of America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cincinnati",
+        "title": "Wikipedia: Cincinnati",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Nicknames: Cincy, The Queen City, Paris of America'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Cincinnati chili is traditionally served on top of what?",
+      "answers": [
+        "Spaghetti",
+        "Rice",
+        "Toast",
+        "Potatoes"
+      ],
+      "correct": "Spaghetti",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Adding shredded cheese on top makes the popular three-way.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cincinnati_chili",
+        "title": "Wikipedia: Cincinnati chili",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Spiced meat sauce used as a topping for spaghetti' and 'The most popular order is a \"three-way\", which adds shredded cheese'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Many Clevelanders proudly call their city by which short nickname?",
+      "answers": [
+        "The Lake",
+        "The Land",
+        "The Rock",
+        "The Bay"
+      ],
+      "correct": "The Land",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The name grew out of Cleveland-made hip-hop music in the 1990s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nicknames_of_Cleveland",
+        "title": "Wikipedia: Nicknames of Cleveland",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '\"The Land\" – A term originating in Cleveland-made hip-hop music in the 1990s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Akron was once called the Rubber Capital of the World for making what?",
+      "answers": [
+        "Tires",
+        "Glass",
+        "Steel beams",
+        "Pottery"
+      ],
+      "correct": "Tires",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Goodyear, Firestone, Goodrich and General Tire all had headquarters there.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Akron,_Ohio",
+        "title": "Wikipedia: Akron, Ohio",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Akron became a center of rubber and tire manufacturing; it was the headquarters of B.F. Goodrich , Firestone , General Tire , and Goodyear'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Toledo is nicknamed the ___ City.",
+      "answers": [
+        "Steel",
+        "Glass",
+        "Forest",
+        "Garden"
+      ],
+      "correct": "Glass",
+      "difficulty": "easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Toledo has a long history of making windows, bottles and windshields.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Toledo,_Ohio",
+        "title": "Wikipedia: Toledo, Ohio",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Toledo is known as the Glass City because of its long history of glass manufacturing, including windows , bottles , windshields'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly for a Cleveland resident"
+      }
+    },
+    {
+      "question": "What sport do the Cleveland Monsters play?",
+      "answers": [
+        "Ice hockey",
+        "Soccer",
+        "Baseball",
+        "Basketball"
+      ],
+      "correct": "Ice hockey",
+      "difficulty": "easy",
+      "category": "Ohio & Cleveland",
+      "explain": "The team was called the Lake Erie Monsters until 2016.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cleveland_Monsters",
+        "title": "Wikipedia: Cleveland Monsters",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'The Cleveland Monsters are a professional ice hockey team based in Cleveland' and '2007–2016 Lake Erie Monsters'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly for a Cleveland resident (minor-league team); explain replaced: NHL affiliation (Columbus Blue Jackets) can change, so it was time-sensitive; source note updated"
+      }
+    },
+    {
+      "question": "Cleveland's Playhouse Square is best known for what?",
+      "answers": [
+        "Sports stadiums",
+        "Farmers' markets",
+        "Theaters",
+        "Car factories"
+      ],
+      "correct": "Theaters",
+      "difficulty": "very easy",
+      "category": "Ohio & Cleveland",
+      "explain": "Its theaters were built in the early 1920s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Playhouse_Square",
+        "title": "Wikipedia: Playhouse Square",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Playhouse Square is a theater district in downtown Cleveland' and 'Constructed in a span of 19 months in the early 1920s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

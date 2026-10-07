@@ -1,0 +1,393 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Inventions & Everyday Things - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on inventions and everyday things, written by Claude on 2026-10-06 as the gentlest level of the 'Inventions & Everyday Things' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 0 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 0 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 17 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What do you look at to tell the time?",
+      "answers": [
+        "A scale",
+        "A clock",
+        "A ruler",
+        "A compass"
+      ],
+      "correct": "A clock",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Most clocks show the hours with a short hand and the minutes with a long hand.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a stapler do?",
+      "answers": [
+        "Erases pencil marks",
+        "Fastens papers together",
+        "Holds pens",
+        "Folds letters"
+      ],
+      "correct": "Fastens papers together",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Each staple is a thin bent wire that folds flat on the back of the paper.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday office tool; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a clothes iron used for?",
+      "answers": [
+        "Polishing shoes",
+        "Cutting hair",
+        "Smoothing wrinkles out of clothes",
+        "Watering plants"
+      ],
+      "correct": "Smoothing wrinkles out of clothes",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Many irons can also puff out steam to help loosen creases.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday household appliance; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do you use to unlock a door?",
+      "answers": [
+        "A key",
+        "A spoon",
+        "A comb",
+        "A pen"
+      ],
+      "correct": "A key",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Many key rings hold keys for a home, a car and a mailbox.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a microwave oven do?",
+      "answers": [
+        "Washes dishes",
+        "Keeps food frozen",
+        "Heats food quickly",
+        "Grinds coffee"
+      ],
+      "correct": "Heats food quickly",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Many people use one to warm up leftovers or pop popcorn.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday kitchen appliance; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a mirror used for?",
+      "answers": [
+        "Hearing music",
+        "Seeing your reflection",
+        "Warming your hands",
+        "Measuring rain"
+      ],
+      "correct": "Seeing your reflection",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Most mirrors are glass with a shiny metal coating on the back.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday household object; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a toaster do to bread?",
+      "answers": [
+        "Freezes it",
+        "Slices it",
+        "Washes it",
+        "Browns it"
+      ],
+      "correct": "Browns it",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "The toast pops up when it is done.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday appliance; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What are scissors used for?",
+      "answers": [
+        "Cutting",
+        "Gluing",
+        "Painting",
+        "Measuring"
+      ],
+      "correct": "Cutting",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Scissors have two blades that slide past each other.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday tool; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which machine dries wet laundry with warm, tumbling air?",
+      "answers": [
+        "A dishwasher",
+        "A clothes dryer",
+        "An oven",
+        "A freezer"
+      ],
+      "correct": "A clothes dryer",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "A lint trap in the dryer catches fluff from the clothes.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday appliance; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is a telephone used for?",
+      "answers": [
+        "Cooking food",
+        "Drying dishes",
+        "Talking to people far away",
+        "Growing plants"
+      ],
+      "correct": "Talking to people far away",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Phone is the short form of the word telephone.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday device; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a doorbell do?",
+      "answers": [
+        "Turns on the porch light",
+        "Lets you know someone is at the door",
+        "Opens the garage",
+        "Plays the radio"
+      ],
+      "correct": "Lets you know someone is at the door",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Pressing the button outside sounds a chime inside the house.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday household fixture; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a camera do?",
+      "answers": [
+        "Plays music",
+        "Makes coffee",
+        "Takes pictures",
+        "Heats food"
+      ],
+      "correct": "Takes pictures",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "A camera's lens gathers light to make the picture.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday device; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does an electric fan do?",
+      "answers": [
+        "Blows air to cool you",
+        "Heats the room",
+        "Makes ice",
+        "Plays music"
+      ],
+      "correct": "Blows air to cool you",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "A ceiling fan hangs overhead and spins slowly.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday appliance; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a TV remote control let you do?",
+      "answers": [
+        "Clean the screen",
+        "Move the TV",
+        "Change the channel",
+        "Plug in the TV"
+      ],
+      "correct": "Change the channel",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Most remote controls run on small batteries.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday device; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do you use a needle and thread for?",
+      "answers": [
+        "Painting",
+        "Sewing",
+        "Cooking",
+        "Gardening"
+      ],
+      "correct": "Sewing",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "The thread passes through a tiny hole in the needle called the eye.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday household skill; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a light switch do?",
+      "answers": [
+        "Opens a window",
+        "Fills the tub",
+        "Starts the oven",
+        "Turns a light on and off"
+      ],
+      "correct": "Turns a light on and off",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Flipping the switch closes or opens the electric circuit to the light.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday household fixture; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does a calculator help you do?",
+      "answers": [
+        "Write letters",
+        "Do math",
+        "Boil water",
+        "Wash dishes"
+      ],
+      "correct": "Do math",
+      "difficulty": "very easy",
+      "category": "Inventions",
+      "explain": "Simple calculators add, subtract, multiply and divide.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: everyday device; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

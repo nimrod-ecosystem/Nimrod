@@ -1,0 +1,411 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "The Human Body & Health - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on the human body and health, written by Claude on 2026-10-06 as the gentlest level of the 'The Human Body & Health' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 15 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 2 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Counting the thumb, how many fingers are on one hand?",
+      "answers": [
+        "Four",
+        "Six",
+        "Five",
+        "Ten"
+      ],
+      "correct": "Five",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "That makes ten fingers in all on two hands.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: a hand has four fingers and a thumb; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which part of the body do you hear with?",
+      "answers": [
+        "Your nose",
+        "Your ears",
+        "Your knees",
+        "Your fingers"
+      ],
+      "correct": "Your ears",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Your ears also help you keep your balance.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ear",
+        "title": "Wikipedia: Ear",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'an ear is the organ that enables hearing and (in mammals ) body balance'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "How many senses are people traditionally said to have?",
+      "answers": [
+        "Three",
+        "Seven",
+        "Ten",
+        "Five"
+      ],
+      "correct": "Five",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "The five are sight, hearing, smell, touch and taste.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sense",
+        "title": "Wikipedia: Sense",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The five major senses that most higher organisms have are: Sight (vision), Hearing (audition), Smell (Olfaction), Touch (Somatosensation), and Taste (Gustation)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do people brush twice a day to keep their smile healthy?",
+      "answers": [
+        "Their shoes",
+        "Their teeth",
+        "Their eyebrows",
+        "Their nails"
+      ],
+      "correct": "Their teeth",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Most toothpaste contains fluoride, which helps build strong tooth enamel.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Toothpaste",
+        "title": "Wikipedia: Toothpaste",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'brushing the teeth' and 'The additional fluoride in toothpaste has beneficial effects on the formation of dental enamel and bones'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain no longer mentions cavities (tooth decay = illness rule); now the fluoride/enamel fact, page-supported"
+      }
+    },
+    {
+      "question": "Which joint bends in the middle of your arm?",
+      "answers": [
+        "The shoulder",
+        "The elbow",
+        "The hip",
+        "The knuckle"
+      ],
+      "correct": "The elbow",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "The elbow sits between the upper arm and the forearm.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Elbow",
+        "title": "Wikipedia: Elbow",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The elbow is the region between the upper arm and the forearm'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which joint connects your foot to your leg?",
+      "answers": [
+        "The hip",
+        "The knuckle",
+        "The shoulder",
+        "The ankle"
+      ],
+      "correct": "The ankle",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "The ankle is actually made up of three joints working together.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ankle",
+        "title": "Wikipedia: Ankle",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the area where the foot and the leg meet' and 'The ankle includes three joints'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which joint connects your hand to your arm?",
+      "answers": [
+        "The wrist",
+        "The knee",
+        "The hip",
+        "The shoulder"
+      ],
+      "correct": "The wrist",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "The wrist contains eight small bones called carpals.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Wrist",
+        "title": "Wikipedia: Wrist",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Part of the arm between the lower arm and the hand' and 'the carpus or carpal bones, the complex of eight bones'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractor 'The toe' (not a joint) -> 'The shoulder' (same kind)"
+      }
+    },
+    {
+      "question": "Which of these drinks has no calories?",
+      "answers": [
+        "Lemonade",
+        "Plain water",
+        "Orange juice",
+        "A milkshake"
+      ],
+      "correct": "Plain water",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Water also helps your body keep a normal temperature.",
+      "source": {
+        "url": "https://www.cdc.gov/healthy-weight-growth/water-healthy-drinks/index.html",
+        "title": "CDC: About Water and Healthier Drinks",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Water has no calories, so replacing sugary drinks with plain water' and 'Water helps your body: Keep a normal temperature'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "rewritten: 'best for hydration' was not stated by the page and arguable (coffee was a distractor; the page lists plain coffee as a healthier choice); now 'which drink has no calories', which the CDC page states"
+      }
+    },
+    {
+      "question": "A big yawn is often a sign that you are what?",
+      "answers": [
+        "Thirsty",
+        "Sleepy",
+        "Itchy",
+        "Cold"
+      ],
+      "correct": "Sleepy",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Seeing someone else yawn can make you yawn too.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yawn",
+        "title": "Wikipedia: Yawn",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is commonly associated with tiredness , stress , sleepiness' and 'yawning is often triggered by the perception that others are yawning'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do people wear to block bright sunshine on a summer day?",
+      "answers": [
+        "Earmuffs",
+        "Mittens",
+        "Sunglasses",
+        "A scarf"
+      ],
+      "correct": "Sunglasses",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Good sunglasses block the Sun's ultraviolet (UV) rays.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sunglasses",
+        "title": "Wikipedia: Sunglasses",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'wearing sunglasses that block ultraviolet radiation (UV) whenever a person is in the sunlight'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What should you wash your hands with to get them clean?",
+      "answers": [
+        "Sugar and water",
+        "Soap and water",
+        "Flour and water",
+        "Oil and vinegar"
+      ],
+      "correct": "Soap and water",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Scrub for 20 seconds, about as long as humming \"Happy Birthday\" twice.",
+      "source": {
+        "url": "https://www.cdc.gov/clean-hands/about/index.html",
+        "title": "CDC: About Handwashing",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Scrub your hands for at least 20 seconds' and 'Hum the “Happy Birthday” song from beginning to end twice'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What are the short hairs along the edges of your eyelids called?",
+      "answers": [
+        "Eyebrows",
+        "Freckles",
+        "Eyelashes",
+        "Whiskers"
+      ],
+      "correct": "Eyelashes",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Eyelashes help keep dust out of your eyes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Eyelash",
+        "title": "Wikipedia: Eyelash",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Lines the edges of the eyelids, heightening protection of the eye from dust and debris'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the rounded back part of your foot called?",
+      "answers": [
+        "The heel",
+        "The toe",
+        "The arch",
+        "The sole"
+      ],
+      "correct": "The heel",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "The heel is shaped by one large bone called the heel bone.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Heel",
+        "title": "Wikipedia: Heel",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Back of the foot' and 'It is based on the projection of one bone, the calcaneus or heel bone'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which curved bones wrap around your chest?",
+      "answers": [
+        "Knuckles",
+        "Kneecaps",
+        "Ribs",
+        "Toes"
+      ],
+      "correct": "Ribs",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Most people have 12 pairs of ribs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rib_cage",
+        "title": "Wikipedia: Rib cage",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A typical human thoracic cage consists of 12 pairs of ribs'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "When you are cold, why does your body shiver?",
+      "answers": [
+        "To help you sleep",
+        "To warm you up",
+        "To make you hungry",
+        "To help you hear"
+      ],
+      "correct": "To warm you up",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Shivering muscles shake in tiny movements that create warmth.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shivering",
+        "title": "Wikipedia: Shivering",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Skeletal muscles begin to shake in small movements, creating warmth by expending energy'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On a hot day, what does your skin make to help you cool off?",
+      "answers": [
+        "Tears",
+        "Goosebumps",
+        "Freckles",
+        "Sweat"
+      ],
+      "correct": "Sweat",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "As sweat dries on your skin, it carries heat away.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Perspiration",
+        "title": "Wikipedia: Perspiration",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Evaporation of sweat from the skin surface has a cooling effect'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these is a form of exercise?",
+      "answers": [
+        "Napping",
+        "Swimming",
+        "Watching TV",
+        "Reading"
+      ],
+      "correct": "Swimming",
+      "difficulty": "very easy",
+      "category": "Human Body",
+      "explain": "Swimming works the arms and legs at the same time.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: swimming is a familiar form of exercise using arms and legs; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

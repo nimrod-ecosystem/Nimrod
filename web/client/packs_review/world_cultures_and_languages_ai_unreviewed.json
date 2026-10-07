@@ -1,0 +1,1018 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "World cultures & languages (AI-written, not yet reviewed)",
+  "description": "43 questions on world cultures and languages (6 very easy, 12 easy, 13 medium, 12 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 43 of 44 written, fixed 10 and deleted 1. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 43 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What does \"hola\" mean in English?",
+      "answers": [
+        "Goodbye",
+        "Hello",
+        "Thank you",
+        "Please"
+      ],
+      "correct": "Hello",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "\"Hola\" is the everyday Spanish word for hello or hi.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/hola",
+        "title": "Wiktionary: hola",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Borrowed from Spanish hola' and 'hola ( informal ) Hello , hi , hey'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "\"Merci\" means \"thank you\" in which language?",
+      "answers": [
+        "Spanish",
+        "German",
+        "French",
+        "Italian"
+      ],
+      "correct": "French",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "It shares its origin with the English word \"mercy.\"",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/merci",
+        "title": "Wiktionary: merci",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Borrowed from French merci ( “ thank you ” ) . Doublet of mercy'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Besides hello and goodbye, the Hawaiian word \"aloha\" also means what?",
+      "answers": [
+        "Ocean",
+        "Love",
+        "Sunshine",
+        "Flower"
+      ],
+      "correct": "Love",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "It grew from an older Polynesian greeting that also meant love and compassion.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Aloha",
+        "title": "Wikipedia: Aloha",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Hawaiian word for love, affection, peace, compassion, and mercy', 'the modern common salutation at meeting; parting' and 'evolved from the Proto-Polynesian greeting *qarofa , [ 19 ] which also meant \"love, pity, or compassion\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "rewritten: 'which state' version duplicated the sibling us_states 'Aloha State' item; now asks the word's meaning; level very easy -> easy"
+      }
+    },
+    {
+      "question": "The kimono is the traditional dress of which country?",
+      "answers": [
+        "Japan",
+        "China",
+        "Korea",
+        "Thailand"
+      ],
+      "correct": "Japan",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "A kimono is worn with the left side wrapped over the right.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kimono",
+        "title": "Wikipedia: Kimono",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a traditional Japanese garment and the national dress of Japan' and 'worn left side wrapped over right'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The kilt is a traditional garment from which country?",
+      "answers": [
+        "Spain",
+        "Scotland",
+        "Sweden",
+        "Poland"
+      ],
+      "correct": "Scotland",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "A kilt is a knee-length wool wrap with heavy pleats.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kilt",
+        "title": "Wikipedia: Kilt",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Originating in the Scottish Highland dress for men' and 'a wrap-around knee-length skirt, made of twill -woven worsted wool with heavy pleats'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note now quotes the lead (old quote came from the Irish-kilt section)"
+      }
+    },
+    {
+      "question": "What is the main language spoken in Mexico?",
+      "answers": [
+        "Portuguese",
+        "French",
+        "Spanish",
+        "English"
+      ],
+      "correct": "Spanish",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "Spanish is used by the vast majority of people in Mexico.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mexico",
+        "title": "Wikipedia: Mexico",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Spanish is the de facto national language spoken by the vast majority of the population'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "\"Danke\" means \"thank you\" in which language?",
+      "answers": [
+        "Russian",
+        "German",
+        "Spanish",
+        "Greek"
+      ],
+      "correct": "German",
+      "difficulty": "very easy",
+      "category": "World cultures & languages",
+      "explain": "It is short for \"ich danke dir,\" meaning \"I thank you.\"",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/danke",
+        "title": "Wiktionary: danke",
+        "note": "Fetched 2026-10-06 by the writing pass; the German section of the page text contains: 'Ellipsis of ich danke dir ( “ I thank you ” )' and 'danke thanks , thank you'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which language do people say \"arigato\" to thank someone?",
+      "answers": [
+        "Chinese",
+        "Korean",
+        "Vietnamese",
+        "Japanese"
+      ],
+      "correct": "Japanese",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "The fuller, more polite form is \"arigatō gozaimasu.\"",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/%E3%81%82%E3%82%8A%E3%81%8C%E3%81%A8%E3%81%86",
+        "title": "Wiktionary: ありがとう (arigatō)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Interjection [ edit ] ありがとう • ( arigatō )', 'an expression of thankfulness : thank you' and 'The full form is ありがとうございます ( arigatō gozaimasu )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The flamenco dance comes from which country?",
+      "answers": [
+        "Mexico",
+        "Spain",
+        "Portugal",
+        "Argentina"
+      ],
+      "correct": "Spain",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "It grew up among Andalusian and Roma people, with guitar, clapping and castanets.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flamenco",
+        "title": "Wikipedia: Flamenco",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Cultural origins Calé Roma , Andalusian people , late 18th century, Spain Typical instruments Vocals clapping guitar castanets'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which country is the sari a traditional women's garment?",
+      "answers": [
+        "Japan",
+        "Peru",
+        "India",
+        "Sweden"
+      ],
+      "correct": "India",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "A sari is one long, unstitched piece of cloth draped around the body.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sari",
+        "title": "Wikipedia: Sari",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'This article is about the Indian garment', 'women's garment in the Indian subcontinent' and 'un-stitched stretch of woven fabric arranged over the body'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "\"Ciao\" is an everyday greeting in which language?",
+      "answers": [
+        "Italian",
+        "Spanish",
+        "Greek",
+        "Dutch"
+      ],
+      "correct": "Italian",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "In Italian, \"ciao\" works for both hello and goodbye.",
+      "source": {
+        "url": "https://en.wiktionary.org/wiki/ciao",
+        "title": "Wiktionary: ciao",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Borrowed from Italian ciao ( “ hello, goodbye ” )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Samba music and dance come from which country?",
+      "answers": [
+        "Cuba",
+        "Colombia",
+        "Jamaica",
+        "Brazil"
+      ],
+      "correct": "Brazil",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "Samba became one of the main symbols of Brazilian national identity.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Samba",
+        "title": "Wikipedia: Samba",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'samba has achieved major projection throughout Brazil and has become one of the main symbols of Brazilian national identity'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Matryoshka dolls, wooden dolls that nest inside each other, come from which country?",
+      "answers": [
+        "Germany",
+        "Russia",
+        "Norway",
+        "Turkey"
+      ],
+      "correct": "Russia",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "The first set of these nesting dolls was made in the 1890s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Matryoshka_doll",
+        "title": "Wikipedia: Matryoshka doll",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'also known as a Russian stacking doll , nesting doll' and 'The first Russian nested doll set was made during the 1890s'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Origami is the Japanese art of folding what?",
+      "answers": [
+        "Cloth",
+        "Wire",
+        "Paper",
+        "Leaves"
+      ],
+      "correct": "Paper",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "The best-known origami model is the paper crane.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Origami",
+        "title": "Wikipedia: Origami",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Japanese art of paper folding' and 'The best-known origami model is the Japanese paper crane'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The stage show Riverdance is based on traditional dance from which country?",
+      "answers": [
+        "Scotland",
+        "Wales",
+        "Ireland",
+        "Norway"
+      ],
+      "correct": "Ireland",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "It began as a short interval act at the 1994 Eurovision Song Contest.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Riverdance",
+        "title": "Wikipedia: Riverdance",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'consists mainly of traditional Irish music and dance' and 'it originated as an interval act during the Eurovision Song Contest 1994'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Igloos, houses built from blocks of snow, were traditionally made by which Arctic people?",
+      "answers": [
+        "The Inuit",
+        "The Sami",
+        "The Maasai",
+        "The Navajo"
+      ],
+      "correct": "The Inuit",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "Only some Inuit groups, in parts of Arctic Canada and Greenland, traditionally built snow igloos.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Igloo",
+        "title": "Wikipedia: Igloo",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Although igloos are often associated with all Inuit , they were traditionally used only by the people of Canada's Central Arctic and the Qaanaaq area of Greenland'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "reworded question and explain: the page says igloos were built only by some Inuit groups, not all"
+      }
+    },
+    {
+      "question": "The didgeridoo, a long wooden wind instrument, comes from which country?",
+      "answers": [
+        "New Zealand",
+        "South Africa",
+        "Indonesia",
+        "Australia"
+      ],
+      "correct": "Australia",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "Players use circular breathing to keep its deep drone going.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Didgeridoo",
+        "title": "Wikipedia: Didgeridoo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The didgeridoo was developed by Aboriginal peoples of northern Australia' and 'a continuous drone while using a special breathing technique called circular breathing'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Along with Uruguay, which country is the birthplace of the tango?",
+      "answers": [
+        "Brazil",
+        "Argentina",
+        "Chile",
+        "Spain"
+      ],
+      "correct": "Argentina",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "It grew up around the Río de la Plata, and UNESCO lists it as heritage of both countries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tango",
+        "title": "Wikipedia: Tango",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Origin Río de la Plata ( Argentina and Uruguay ) Tango UNESCO Intangible Cultural Heritage Country Argentina, Uruguay'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In which city is the original Oktoberfest held?",
+      "answers": [
+        "Berlin",
+        "Vienna",
+        "Munich",
+        "Hamburg"
+      ],
+      "correct": "Munich",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "The first Oktoberfest, in 1810, celebrated a royal wedding.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Oktoberfest",
+        "title": "Wikipedia: Oktoberfest",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'This article is about the original festival in Munich' and 'The first Oktoberfest was held on 12 October 1810 to celebrate the wedding of Crown Prince Ludwig'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "dropped 'each year' (the page notes cancelled years)"
+      }
+    },
+    {
+      "question": "The hanbok is the traditional clothing of which people?",
+      "answers": [
+        "Korean",
+        "Japanese",
+        "Chinese",
+        "Vietnamese"
+      ],
+      "correct": "Korean",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "A woman's hanbok pairs a top called a jeogori with a skirt called a chima.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hanbok",
+        "title": "Wikipedia: Hanbok",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the traditional clothing of the Korean people' and 'For women, traditional hanbok consists of the jeogori (top) and the chima (skirt)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The word \"safari\" comes from Swahili. What does it mean?",
+      "answers": [
+        "Wild animal",
+        "Grassland",
+        "Journey",
+        "Campfire"
+      ],
+      "correct": "Journey",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "The Swahili word itself came from the Arabic \"safar,\" also meaning journey.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Safari",
+        "title": "Wikipedia: Safari",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Swahili word safari means \"journey\", originally from the Arabic noun'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which way is Arabic written?",
+      "answers": [
+        "Left to right",
+        "Top to bottom",
+        "Bottom to top",
+        "Right to left"
+      ],
+      "correct": "Right to left",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "It is written in a joined-up, cursive style, with letters changing shape as they connect.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Arabic_script",
+        "title": "Wikipedia: Arabic script",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The script is written from right to left in a cursive style, in which most of the letters are written in slightly different forms according to whether they stand alone or are joined'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded to match the page (letters change form when joined)"
+      }
+    },
+    {
+      "question": "The Hebrew word \"shalom\" means what?",
+      "answers": [
+        "Peace",
+        "Bread",
+        "Family",
+        "Home"
+      ],
+      "correct": "Peace",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "People also use it to say hello and goodbye.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Shalom",
+        "title": "Wikipedia: Shalom",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a Hebrew word meaning peace and can be used idiomatically to mean hello and goodbye'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Chinese New Year is also known by what other name?",
+      "answers": [
+        "The Lantern Festival",
+        "The Spring Festival",
+        "The Moon Festival",
+        "The Dragon Festival"
+      ],
+      "correct": "The Spring Festival",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "The celebrations close on the fifteenth day with the Lantern Festival.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chinese_New_Year",
+        "title": "Wikipedia: Chinese New Year",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Chinese New Year , also known as the Spring Festival' and 'The fifteenth day of the new year is celebrated as the Lantern Festival'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What are the two official languages of Canada?",
+      "answers": [
+        "English and Spanish",
+        "French and Inuktitut",
+        "English and French",
+        "English and Gaelic"
+      ],
+      "correct": "English and French",
+      "difficulty": "easy",
+      "category": "World cultures & languages",
+      "explain": "Several Indigenous languages, such as Cree and Inuktitut, are official in the Northwest Territories.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Languages_of_Canada",
+        "title": "Wikipedia: Languages of Canada",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Languages of Canada Official English and French Semi-official Northwest Territories : Cree' and lists 'Inuktitut' among them."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy"
+      }
+    },
+    {
+      "question": "The cozy feeling called \"hygge\" is a big part of which country's identity?",
+      "answers": [
+        "Sweden",
+        "Finland",
+        "Denmark",
+        "Iceland"
+      ],
+      "correct": "Denmark",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "Norwegian has the same word, but there it is simply an everyday word for cozy.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hygge",
+        "title": "Wikipedia: Hygge",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Danish concept of cosiness and comfort' and 'the emphasis specifically on \"hygge\" as an important part of cultural identity is mostly Danish; in Norway \"hygge\" is just a word, similar in status to \"cozy.\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The giant stone figures called moai stand on which island?",
+      "answers": [
+        "Tahiti",
+        "Easter Island",
+        "Fiji",
+        "Samoa"
+      ],
+      "correct": "Easter Island",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "They were carved by the Rapa Nui people between about 1250 and 1500.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Moai",
+        "title": "Wikipedia: Moai",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'carved from stone by the Rapa Nui people , on Rapa Nui (Easter Island) in eastern Polynesia between the years 1250 and 1500'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The German word \"kindergarten\" literally means what?",
+      "answers": [
+        "Little school",
+        "Children's garden",
+        "Play house",
+        "Small class"
+      ],
+      "correct": "Children's garden",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "The teacher Friedrich Fröbel coined the word in 1840.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kindergarten",
+        "title": "Wikipedia: Kindergarten",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It comes from terms Kind ('child') and Garten ('garden'), literally meaning \"garden of children\"' and 'which was coined in 1840 by pedagogue Friedrich Fröbel'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Fado, a traditional style of song, comes from which country?",
+      "answers": [
+        "Spain",
+        "Italy",
+        "Greece",
+        "Portugal"
+      ],
+      "correct": "Portugal",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "Its history can be traced back to Lisbon in the 1820s.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fado",
+        "title": "Wikipedia: Fado",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Fado, urban popular song of Portugal' and 'a music genre which can be traced to the 1820s in Lisbon , Portugal'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain no longer says it 'took shape' then (page: traced to the 1820s, probably older)"
+      }
+    },
+    {
+      "question": "Switzerland's national languages are German, French, Italian and which other?",
+      "answers": [
+        "Flemish",
+        "Ladin",
+        "Romansh",
+        "Occitan"
+      ],
+      "correct": "Romansh",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "Romansh is an official language in the canton of Grisons, in the east.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Languages_of_Switzerland",
+        "title": "Wikipedia: Languages of Switzerland",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Switzerland has four official national languages: German, French, Italian and Romansh' and 'Romansh is an official language in the trilingual Canton of Grisons'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which king created the Hangul alphabet in the 1440s?",
+      "answers": [
+        "Taejo",
+        "Gwanggaeto the Great",
+        "Jeongjo",
+        "Sejong the Great"
+      ],
+      "correct": "Sejong the Great",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "He wanted a script easier to learn than Chinese characters, which few people could read.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hangul",
+        "title": "Wikipedia: Hangul",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'because its difficulty contributed to high illiteracy , Joseon king Sejong the Great' and 'moved to create Hangul . The script was announced around late 1443 to early 1444'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Zulu and Xhosa, the word \"ubuntu\" means what?",
+      "answers": [
+        "Freedom",
+        "Humanity",
+        "Homeland",
+        "Harvest"
+      ],
+      "correct": "Humanity",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "It is sometimes summed up as \"I am because we are.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ubuntu_philosophy",
+        "title": "Wikipedia: Ubuntu philosophy",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'meaning ' humanity ' in some Bantu languages , such as Zulu and Xhosa' and '\"Ubuntu\" is sometimes translated as \"I am because we are\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question now states what the page states (means 'humanity' in Zulu and Xhosa), not 'usually translated'"
+      }
+    },
+    {
+      "question": "Besides a neutral tone, how many main tones does Mandarin Chinese have?",
+      "answers": [
+        "Three",
+        "Five",
+        "Four",
+        "Six"
+      ],
+      "correct": "Four",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "Changing a syllable's pitch can turn it into a different word.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Standard_Chinese_phonology",
+        "title": "Wikipedia: Standard Chinese phonology",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'In addition to the four main tones, there is a neutral tone' and 'the pitch contour of a syllable is used to distinguish words from each other'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (four tones is widely known)"
+      }
+    },
+    {
+      "question": "What is a haka?",
+      "answers": [
+        "A Hawaiian flower garland",
+        "A Japanese short poem",
+        "A Māori ceremonial dance",
+        "A Scottish wool cloth"
+      ],
+      "correct": "A Māori ceremonial dance",
+      "difficulty": "medium",
+      "category": "World cultures & languages",
+      "explain": "Haka are often performed by a group, with stamping and strong movements.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Haka",
+        "title": "Wikipedia: Haka",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'are a variety of ceremonial dances in Maoli, Maohi, and Māori culture' and 'haka are often performed by a group, with vigorous movements and stamping'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (haka is widely known through rugby)"
+      }
+    },
+    {
+      "question": "Who created the Cherokee writing system in the early 1800s?",
+      "answers": [
+        "Sequoyah",
+        "Sacagawea",
+        "Tecumseh",
+        "Pocahontas"
+      ],
+      "correct": "Sequoyah",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "By 1825, most Cherokees could read and write in it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Cherokee_syllabary",
+        "title": "Wikipedia: Cherokee syllabary",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a syllabary invented by Sequoyah in the late 1810s and early 1820s to write the Cherokee language' and 'By 1825, the majority of Cherokees could read and write'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which European language is not related to any other known language?",
+      "answers": [
+        "Hungarian",
+        "Finnish",
+        "Albanian",
+        "Basque"
+      ],
+      "correct": "Basque",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "It is spoken around the western Pyrenees, in parts of France and Spain.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Basque_language",
+        "title": "Wikipedia: Basque language",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Basque is Europe 's only known language isolate (with no relation to any other known languages)' and 'a region that straddles the westernmost Pyrenees in adjacent parts of southwestern France and northern Spain'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Japanese word \"karaoke\" literally means what?",
+      "answers": [
+        "Empty orchestra",
+        "Sing along",
+        "Happy voice",
+        "Night music"
+      ],
+      "correct": "Empty orchestra",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "It joins \"kara,\" meaning empty, with a shortened Japanese form of \"orchestra.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Karaoke",
+        "title": "Wikipedia: Karaoke",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Clipped compound of Japanese kara ( 空 ; translation ... empty ) and ōkesutora ( オーケストラ ; translation ... orchestra )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The word \"robot\" first came from which language?",
+      "answers": [
+        "German",
+        "Czech",
+        "Russian",
+        "Japanese"
+      ],
+      "correct": "Czech",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "It was introduced in Karel Čapek's 1920 play R.U.R.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Robot",
+        "title": "Wikipedia: Robot",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The term robot came from the Czech language' and 'The word robot was introduced to the public by the Czech interwar writer Karel Čapek in his play R.U.R. (Rossum's Universal Robots) , published in 1920'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "English got \"chocolate,\" \"tomato\" and \"avocado\" from which language?",
+      "answers": [
+        "Quechua",
+        "Taíno",
+        "Nahuatl",
+        "Guarani"
+      ],
+      "correct": "Nahuatl",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "The country names Mexico, Guatemala and Nicaragua also come from Nahuatl.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nahuatl",
+        "title": "Wikipedia: Nahuatl",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'English has also absorbed words of Nahuatl origin , including avocado' (list includes 'chocolate' and 'tomato') and 'The names of several countries, Mexico , Guatemala , and Nicaragua , derive from Nahuatl'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Kente, a cloth hand-woven in bright strips, comes from which country?",
+      "answers": [
+        "Kenya",
+        "Nigeria",
+        "Morocco",
+        "Ghana"
+      ],
+      "correct": "Ghana",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "Asante tradition says it began in the town of Bonwire.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Kente_cloth",
+        "title": "Wikipedia: Kente cloth",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is made of hand-woven strips of silk and cotton' and 'According to Asante oral tradition, it originated from Bonwire in the Ashanti Region of Ghana'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Gamelan, an ensemble of mostly metal percussion, is traditional music of which country?",
+      "answers": [
+        "Thailand",
+        "Indonesia",
+        "India",
+        "The Philippines"
+      ],
+      "correct": "Indonesia",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "It belongs to the Javanese, Sundanese and Balinese peoples.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Gamelan",
+        "title": "Wikipedia: Gamelan",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the traditional ensemble music of the Javanese , Sundanese , and Balinese peoples of Indonesia , made up predominantly of percussive instruments' and 'The most common instruments used are metallophones'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Nowruz, the Iranian New Year, falls on which day of the year?",
+      "answers": [
+        "The winter solstice",
+        "The summer solstice",
+        "The autumn equinox",
+        "The spring equinox"
+      ],
+      "correct": "The spring equinox",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "A calendar reform by Omar Khayyam fixed the new year at the spring equinox.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Nowruz",
+        "title": "Wikipedia: Nowruz",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is a festival based on the Northern Hemisphere spring equinox' and 'the Iranian calendar was reformed by Omar Khayyam to fix the beginning of the calendar year, i.e., Nowruz, at the vernal equinox'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Japanese word \"emoji\" combines words meaning what?",
+      "answers": [
+        "Emotion and icon",
+        "Picture and character",
+        "Smile and face",
+        "Small and message"
+      ],
+      "correct": "Picture and character",
+      "difficulty": "hard",
+      "category": "World cultures & languages",
+      "explain": "Its likeness to the English word \"emotion\" is pure coincidence.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Emoji",
+        "title": "Wikipedia: Emoji",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The word emoji comes from Japanese e ( 絵 ; 'picture') + moji ( 文字 ; 'character')' and 'the resemblance to the English words emotion and emoticon is purely coincidental'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

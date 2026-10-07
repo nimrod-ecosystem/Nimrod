@@ -1,0 +1,413 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Geography of the world - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on geography of the world, written by Claude on 2026-10-06 as the gentlest level of the 'Geography of the world' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 3 of them merely easy and took off their note, so the pack is 14 very easy, 3 easy. The independent fact-check kept 17 of 17 written, fixed 3 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "What is the highest mountain in the world?",
+      "answers": [
+        "Mount Kilimanjaro",
+        "Mont Blanc",
+        "Mount Everest",
+        "Pikes Peak"
+      ],
+      "correct": "Mount Everest",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Measured from sea level, no peak on Earth rises higher than Everest.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mount_Everest",
+        "title": "Wikipedia: Mount Everest",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the highest mountain on Earth above sea level'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which country borders the United States to the south?",
+      "answers": [
+        "Canada",
+        "Mexico",
+        "Brazil",
+        "Peru"
+      ],
+      "correct": "Mexico",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "The Rio Grande forms part of the border between the two countries.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mexico",
+        "title": "Wikipedia: Mexico",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'bordering the United States of America to the north' and 'Rio Grande , which serves as a natural eastern border with the United States'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which country has a red maple leaf on its flag?",
+      "answers": [
+        "Japan",
+        "Switzerland",
+        "Ireland",
+        "Canada"
+      ],
+      "correct": "Canada",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Canada adopted its Maple Leaf flag in 1965.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Flag_of_Canada",
+        "title": "Wikipedia: Flag of Canada",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'one red maple leaf centred on the white band' and 'Adopted February 15, 1965'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What covers most of the Earth's surface?",
+      "answers": [
+        "Water",
+        "Sand",
+        "Forest",
+        "Ice"
+      ],
+      "correct": "Water",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "About 71 percent of Earth's surface is covered by water.",
+      "source": {
+        "url": "https://www.usgs.gov/special-topics/water-science-school/science/how-much-water-there-earth",
+        "title": "USGS Water Science School: How Much Water is There on Earth?",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'About 71 percent of the Earth's surface is water-covered'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "London is the capital of which country?",
+      "answers": [
+        "Ireland",
+        "France",
+        "United Kingdom",
+        "Australia"
+      ],
+      "correct": "United Kingdom",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "London is the capital of both England and the United Kingdom.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/London",
+        "title": "Wikipedia: London",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital of England and the United Kingdom'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Amsterdam is the capital of which country?",
+      "answers": [
+        "Belgium",
+        "The Netherlands",
+        "Denmark",
+        "Sweden"
+      ],
+      "correct": "The Netherlands",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Amsterdam is famous for its many canals.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Amsterdam",
+        "title": "Wikipedia: Amsterdam",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and largest city of the Netherlands' and 'Aerial view of the canals of Amsterdam'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly; also thins the run of six capital questions"
+      }
+    },
+    {
+      "question": "Most of the Amazon rainforest is in which country?",
+      "answers": [
+        "Mexico",
+        "Egypt",
+        "India",
+        "Brazil"
+      ],
+      "correct": "Brazil",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "About 60 percent of the Amazon rainforest lies in Brazil.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Amazon_rainforest",
+        "title": "Wikipedia: Amazon rainforest",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The majority of the forest, 60%, is in Brazil'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the point at the very top of the globe called?",
+      "answers": [
+        "The North Pole",
+        "The South Pole",
+        "The Equator",
+        "The North Star"
+      ],
+      "correct": "The North Pole",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "The North Pole sits in the middle of the Arctic Ocean, on floating sea ice.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/North_Pole",
+        "title": "Wikipedia: North Pole",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Northernmost point on Earth' and 'the North Pole is located in the middle of the Arctic Ocean'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do we call a piece of land with water all around it?",
+      "answers": [
+        "A valley",
+        "An island",
+        "A canyon",
+        "A desert"
+      ],
+      "correct": "An island",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "An island is completely surrounded by water and is smaller than a continent.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Island",
+        "title": "Wikipedia: Island",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a piece of land, distinct from a continent, completely surrounded by water'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which is the largest continent?",
+      "answers": [
+        "Africa",
+        "Europe",
+        "Asia",
+        "Australia"
+      ],
+      "correct": "Asia",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Asia also has more people than any other continent.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Asia",
+        "title": "Wikipedia: Asia",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the largest continent' and 'Population 4,695,000,000 (2021; 1st )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly (Africa is a common wrong guess)"
+      }
+    },
+    {
+      "question": "Beijing is the capital of which country?",
+      "answers": [
+        "China",
+        "Japan",
+        "South Korea",
+        "Thailand"
+      ],
+      "correct": "China",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Beijing is home to China's main national government buildings.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Beijing",
+        "title": "Wikipedia: Beijing",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'as the capital of China, Beijing houses all of the important national governmental'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Leaning Tower of Pisa is in which country?",
+      "answers": [
+        "Spain",
+        "Greece",
+        "France",
+        "Italy"
+      ],
+      "correct": "Italy",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Repair work finished in 2001 cut the tower's lean to about 4 degrees.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Leaning_Tower_of_Pisa",
+        "title": "Wikipedia: Leaning Tower of Pisa",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Bell tower in Pisa, Italy' and 'which reduced the tilt to 3.97 degree'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Mount Fuji is in which country?",
+      "answers": [
+        "China",
+        "Japan",
+        "Nepal",
+        "Italy"
+      ],
+      "correct": "Japan",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Fuji is the highest mountain in Japan.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mount_Fuji",
+        "title": "Wikipedia: Mount Fuji",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'It is the highest mountain in Japan'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which country takes up the mainland of a whole continent?",
+      "answers": [
+        "Brazil",
+        "Canada",
+        "Australia",
+        "Greenland"
+      ],
+      "correct": "Australia",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Australia is also the flattest and driest inhabited continent.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Australia",
+        "title": "Wikipedia: Australia",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a country comprising the mainland of the Australian continent' and 'the world's flattest and driest inhabited continent'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Moscow is the capital of which country?",
+      "answers": [
+        "Russia",
+        "Poland",
+        "Germany",
+        "Sweden"
+      ],
+      "correct": "Russia",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Moscow sits on the Moskva River and is also Russia's largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Moscow",
+        "title": "Wikipedia: Moscow",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is the capital and largest city of Russia , situated on the Moskva River'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Lisbon is the capital of which country?",
+      "answers": [
+        "Portugal",
+        "Spain",
+        "Greece",
+        "Austria"
+      ],
+      "correct": "Portugal",
+      "difficulty": "easy",
+      "category": "Geography",
+      "explain": "Lisbon sits on the Atlantic, on the western edge of the Iberian Peninsula.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lisbon",
+        "title": "Wikipedia: Lisbon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and largest city of Portugal' and 'The city lies on the Atlantic Ocean in the western part of the Iberian Peninsula'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (note removed): most adults know it, but not instantly (Spain is a tempting wrong answer); also thins the capital questions"
+      }
+    },
+    {
+      "question": "Dublin is the capital of which country?",
+      "answers": [
+        "Scotland",
+        "Ireland",
+        "Wales",
+        "Iceland"
+      ],
+      "correct": "Ireland",
+      "difficulty": "very easy",
+      "category": "Geography",
+      "explain": "Dublin is also Ireland's largest city.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dublin",
+        "title": "Wikipedia: Dublin",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Capital and largest city of Ireland'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

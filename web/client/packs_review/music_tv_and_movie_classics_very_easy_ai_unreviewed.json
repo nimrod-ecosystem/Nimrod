@@ -1,0 +1,412 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Music, TV and movie classics - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on music, tv and movie classics, written by Claude on 2026-10-06 as the gentlest level of the 'Music, TV and movie classics' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The fact-check judged 1 of them merely easy and took off their note, so the pack is 16 very easy, 1 easy. The independent fact-check kept 17 of 17 written, fixed 2 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 17 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; none rests on common knowledge. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "In The Wizard of Oz, Dorothy follows a road made of what color bricks?",
+      "answers": [
+        "Red",
+        "Yellow",
+        "Green",
+        "White"
+      ],
+      "correct": "Yellow",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "She follows it to the Emerald City to see the Wizard.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1939_film)",
+        "title": "Wikipedia: The Wizard of Oz (1939 film)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the Wizard in the Emerald City' and 'Dorothy sets out down the yellow brick road'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Lucille Ball, star of I Love Lucy, was famous for what hair color?",
+      "answers": [
+        "Black",
+        "Gray",
+        "Red",
+        "White"
+      ],
+      "correct": "Red",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "In 1953, 44 million viewers watched Lucy Ricardo welcome her baby on the show.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lucille_Ball",
+        "title": "Wikipedia: Lucille Ball",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'an Anglo-American redhead' and '44 million viewers watching Lucy Ricardo welcome little Ricky'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the name of Elvis Presley's famous home?",
+      "answers": [
+        "Neverland",
+        "Graceland",
+        "Tara",
+        "Monticello"
+      ],
+      "correct": "Graceland",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "Its iron front gate is shaped like sheet music, with musical notes on it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Graceland",
+        "title": "Wikipedia: Graceland",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Home of Elvis Presley in Memphis, Tennessee' and 'wrought-iron front gate shaped like a book of sheet music, along with green colored musical notes'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain changed: 'Memphis, Tennessee' gave away the sibling us_states draft's Graceland-state question"
+      }
+    },
+    {
+      "question": "What is the name of Mickey Mouse's pet dog?",
+      "answers": [
+        "Snoopy",
+        "Lassie",
+        "Toto",
+        "Pluto"
+      ],
+      "correct": "Pluto",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "Unlike most Disney characters, Pluto acts like a real dog.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Pluto_(Disney)",
+        "title": "Wikipedia: Pluto (Disney)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'He is Mickey Mouse 's pet' and 'Unlike most of the Disney characters, Pluto is not anthropomorphic'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What can Dumbo the elephant do with his big ears?",
+      "answers": [
+        "Swim",
+        "Whistle",
+        "Fly",
+        "Paint"
+      ],
+      "correct": "Fly",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The Disney film is based on the story Dumbo, the Flying Elephant.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dumbo",
+        "title": "Wikipedia: Dumbo",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'capable of flying by using his ears as wings' and 'Dumbo, the Flying Elephant'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Disney's Snow White, how many dwarfs are there?",
+      "answers": [
+        "Seven",
+        "Five",
+        "Six",
+        "Nine"
+      ],
+      "correct": "Seven",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "Disney released the film in 1937.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Snow_White_and_the_Seven_Dwarfs_(1937_film)",
+        "title": "Wikipedia: Snow White and the Seven Dwarfs (1937 film)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Snow White and the Seven Dwarfs' and '1937 American'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What kind of animal is Bambi?",
+      "answers": [
+        "A rabbit",
+        "A deer",
+        "A fox",
+        "A horse"
+      ],
+      "correct": "A deer",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "His friends include Thumper the rabbit and Flower the skunk.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bambi",
+        "title": "Wikipedia: Bambi",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Bambi , a white-tailed deer' and 'Thumper (a pink-nosed cottontail rabbit ) and Flower (a skunk )'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Beatles came from which country?",
+      "answers": [
+        "Australia",
+        "Canada",
+        "United States",
+        "England"
+      ],
+      "correct": "England",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The band formed in the city of Liverpool.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Beatles",
+        "title": "Wikipedia: The Beatles",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'English rock band' and 'Liverpool'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Fred Astaire was famous for what?",
+      "answers": [
+        "Dancing",
+        "Painting",
+        "Baseball",
+        "Cooking"
+      ],
+      "correct": "Dancing",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "He often danced on film with Ginger Rogers.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Fred_Astaire",
+        "title": "Wikipedia: Fred Astaire",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'American dancer and actor' and 'Astaire and Ginger Rogers'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The Flintstones cartoon family lives in which time?",
+      "answers": [
+        "The Space Age",
+        "The Wild West",
+        "The Stone Age",
+        "The Middle Ages"
+      ],
+      "correct": "The Stone Age",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The family even has a pet dinosaur named Dino.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Flintstones",
+        "title": "Wikipedia: The Flintstones",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'romanticized Stone Age setting' and 'their pet dinosaur, Dino'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What does Yogi Bear love to take from campers?",
+      "answers": [
+        "Fishing rods",
+        "Picnic baskets",
+        "Tents",
+        "Flashlights"
+      ],
+      "correct": "Picnic baskets",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "He lives in Jellystone Park with his friend Boo-Boo.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yogi_Bear",
+        "title": "Wikipedia: Yogi Bear",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'steal picnic baskets from campers' and 'Jellystone Park' and 'Boo-Boo Bear'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the cartoon Tom and Jerry, what animal is Jerry?",
+      "answers": [
+        "A cat",
+        "A dog",
+        "A bird",
+        "A mouse"
+      ],
+      "correct": "A mouse",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The cartoons were first made in 1940 at the MGM studio.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Tom_and_Jerry",
+        "title": "Wikipedia: Tom and Jerry",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a cat named Tom and a mouse named Jerry' and 'Created in 1940 as the MGM cartoon studio'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "At the start of each show, Mister Rogers changed into what?",
+      "answers": [
+        "A sweater",
+        "A bow tie",
+        "A raincoat",
+        "A cowboy hat"
+      ],
+      "correct": "A sweater",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "He also swapped his dress shoes for blue sneakers.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mister_Rogers%27_Neighborhood",
+        "title": "Wikipedia: Mister Rogers' Neighborhood",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'grabs a cardigan zipper sweater to put on' and 'grabs a pair of blue sneakers'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What did the Lone Ranger wear over his eyes?",
+      "answers": [
+        "Sunglasses",
+        "A mask",
+        "Goggles",
+        "A blindfold"
+      ],
+      "correct": "A mask",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "He rode the Old West with his friend Tonto.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lone_Ranger",
+        "title": "Wikipedia: Lone Ranger",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'masked former Texas Ranger' and 'American Old West with his Native American friend Tonto'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On the TV show Mister Ed, what kind of animal could talk?",
+      "answers": [
+        "A dog",
+        "A cat",
+        "A parrot",
+        "A horse"
+      ],
+      "correct": "A horse",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The show ran from 1961 to 1966.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mister_Ed",
+        "title": "Wikipedia: Mister Ed",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a talking horse' and 'CBS from October 1, 1961, to February 6, 1966'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "On The Andy Griffith Show, what was Andy's job?",
+      "answers": [
+        "Sheriff",
+        "Mail carrier",
+        "Farmer",
+        "Teacher"
+      ],
+      "correct": "Sheriff",
+      "difficulty": "very easy",
+      "category": "Music, TV and movies",
+      "explain": "The show was first filmed in black and white and later in color.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/The_Andy_Griffith_Show",
+        "title": "Wikipedia: The Andy Griffith Show",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the widowed sheriff of Mayberry' and 'black and white and 90 in color'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which singer made White Christmas a hit in 1942?",
+      "answers": [
+        "Elvis Presley",
+        "Johnny Cash",
+        "Bing Crosby",
+        "Ray Charles"
+      ],
+      "correct": "Bing Crosby",
+      "difficulty": "easy",
+      "category": "Music, TV and movies",
+      "explain": "His record spent eleven weeks at the top of the Billboard charts that year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/White_Christmas_(song)",
+        "title": "Wikipedia: White Christmas (song)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'In 1942 alone, Crosby's recording spent eleven weeks on top of the Billboard charts'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level very easy -> easy (well known to most adults, not instant for almost everyone)"
+      }
+    }
+  ]
+}

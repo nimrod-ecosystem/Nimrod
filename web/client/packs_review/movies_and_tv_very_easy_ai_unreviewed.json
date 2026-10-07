@@ -1,0 +1,410 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Movies & TV - very easy (AI-written, not yet reviewed)",
+  "description": "17 very easy questions on movies and tv, written by Claude on 2026-10-06 as the gentlest level of the 'Movies & TV' review pack: things almost everyone knows, in one short plain sentence, worded for adults. They are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 17 of 17 written, fixed 1 and deleted 0. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 16 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 1 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "In Toy Story, what kind of toy is Buzz Lightyear?",
+      "answers": [
+        "A cowboy",
+        "A pirate",
+        "A space ranger",
+        "A firefighter"
+      ],
+      "correct": "A space ranger",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "He was named after the astronaut Buzz Aldrin.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Buzz_Lightyear",
+        "title": "Wikipedia: Buzz Lightyear",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'space ranger action figure' and 'named after American astronaut Buzz Aldrin'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question reworded (was the awkward 'is a toy of what?')"
+      }
+    },
+    {
+      "question": "In Finding Nemo, what color is Dory the fish?",
+      "answers": [
+        "Blue",
+        "Orange",
+        "Pink",
+        "Purple"
+      ],
+      "correct": "Blue",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Dory is a blue tang from the Great Barrier Reef.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dory_(Finding_Nemo)",
+        "title": "Wikipedia: Dory (Finding Nemo)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Dory is a fictional blue tang fish' and 'Home Great Barrier Reef'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Star Wars, what color is the wise Jedi Master Yoda?",
+      "answers": [
+        "Red",
+        "Green",
+        "Blue",
+        "Gray"
+      ],
+      "correct": "Green",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "He first appeared in the 1980 film The Empire Strikes Back.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Yoda",
+        "title": "Wikipedia: Yoda",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'He is a small, green, elderly humanoid alien' and 'He first appeared in the 1980 film The Empire Strikes Back'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Frozen, what is the name of the friendly snowman?",
+      "answers": [
+        "Sven",
+        "Kristoff",
+        "Olaf",
+        "Hans"
+      ],
+      "correct": "Olaf",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Elsa creates him with her magic.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Olaf_(Frozen)",
+        "title": "Wikipedia: Olaf (Frozen)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Species Snowman' and 'Elsa (creator)'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Shrek, what is the name of the princess Shrek marries?",
+      "answers": [
+        "Aurora",
+        "Jasmine",
+        "Ariel",
+        "Fiona"
+      ],
+      "correct": "Fiona",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Her parents are surprised that their daughter married an ogre.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Princess_Fiona",
+        "title": "Wikipedia: Princess Fiona",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'their daughter married an ogre'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "SpongeBob SquarePants lives in what kind of house?",
+      "answers": [
+        "A pineapple",
+        "A shell",
+        "A boat",
+        "A teapot"
+      ],
+      "correct": "A pineapple",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "He works as a fry cook at the Krusty Krab.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/SpongeBob_SquarePants",
+        "title": "Wikipedia: SpongeBob SquarePants",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'lives in a submerged pineapple' and 'works as a fry cook at the Krusty Krab'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the movie Cars, what is Lightning McQueen?",
+      "answers": [
+        "A fire truck",
+        "A race car",
+        "A school bus",
+        "A tractor"
+      ],
+      "correct": "A race car",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "He is red and wears the number 95.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Lightning_McQueen",
+        "title": "Wikipedia: Lightning McQueen",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'red race car with the number 95'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which superhero is called the Man of Steel?",
+      "answers": [
+        "Batman",
+        "Spider-Man",
+        "Aquaman",
+        "Superman"
+      ],
+      "correct": "Superman",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "In everyday life he is Clark Kent, a newspaper reporter.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Superman",
+        "title": "Wikipedia: Superman",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Man of Steel' and 'Clark works as a newspaper journalist'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which city does Batman protect?",
+      "answers": [
+        "Gotham City",
+        "Metropolis",
+        "Springfield",
+        "Hill Valley"
+      ],
+      "correct": "Gotham City",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Batman's everyday name is Bruce Wayne.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Batman",
+        "title": "Wikipedia: Batman",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Batman usually works solo in Gotham City' and 'Alter ego Bruce Wayne'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In the movie Up, what lifts Carl's house into the sky?",
+      "answers": [
+        "A rocket",
+        "A helicopter",
+        "Balloons",
+        "A giant kite"
+      ],
+      "correct": "Balloons",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Carl ties helium balloons to his house and flies it to Venezuela.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Up_(2009_film)",
+        "title": "Wikipedia: Up (2009 film)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'attaching numerous helium balloons to his house, travels to Venezuela'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Ratatouille, Remy the rat dreams of becoming a what?",
+      "answers": [
+        "Singer",
+        "Pilot",
+        "Painter",
+        "Chef"
+      ],
+      "correct": "Chef",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "The film is set mostly in Paris.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Ratatouille_(film)",
+        "title": "Wikipedia: Ratatouille (film)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'dreams of becoming a chef' and 'Set mostly in Paris'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Beauty and the Beast, what does Belle love to do?",
+      "answers": [
+        "Read books",
+        "Play tennis",
+        "Sail boats",
+        "Climb mountains"
+      ],
+      "correct": "Read books",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "The Beast gives Belle his huge library.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Belle_(Disney)",
+        "title": "Wikipedia: Belle (Disney)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'her love of books' and 'Belle is gifted the Beast's library'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Aladdin, where does the Genie live?",
+      "answers": [
+        "In a castle",
+        "In a lamp",
+        "In a tree",
+        "In a boat"
+      ],
+      "correct": "In a lamp",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Robin Williams gave the Genie his voice in the 1992 film.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Genie_(Disney)",
+        "title": "Wikipedia: Genie (Disney)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Genie of the Lamp' and 'Robin Williams (1992'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "In Despicable Me, what are Gru's little yellow helpers called?",
+      "answers": [
+        "Smurfs",
+        "Minions",
+        "Gremlins",
+        "Trolls"
+      ],
+      "correct": "Minions",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "They speak their own language, called Minionese.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Minions_(Despicable_Me)",
+        "title": "Wikipedia: Minions (Despicable Me)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'yellow capsule-shaped creatures' and 'Leader Gru' and 'Language Minionese'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What salty snack do people often eat at the movies?",
+      "answers": [
+        "Popcorn",
+        "Soup",
+        "Oatmeal",
+        "Salad"
+      ],
+      "correct": "Popcorn",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Movie theaters often sell it by the bucket.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: the everyday snack of a trip to the cinema; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "The gold statue given at the Academy Awards is nicknamed what?",
+      "answers": [
+        "Emmy",
+        "Grammy",
+        "Tony",
+        "Oscar"
+      ],
+      "correct": "Oscar",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "The statuettes are plated in 24-karat gold.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Academy_Awards",
+        "title": "Wikipedia: Academy Awards",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Oscar statuette' and '24-karat gold'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Hollywood, the home of American movies, is in which state?",
+      "answers": [
+        "New York",
+        "California",
+        "Texas",
+        "Ohio"
+      ],
+      "correct": "California",
+      "difficulty": "very easy",
+      "category": "Movies & TV",
+      "explain": "Hollywood is a neighborhood of the city of Los Angeles.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Hollywood,_Los_Angeles",
+        "title": "Wikipedia: Hollywood, Los Angeles",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'is a neighborhood in Central Los Angeles , California' and 'synonymous with the American film industry'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    }
+  ]
+}

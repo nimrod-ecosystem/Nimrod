@@ -1,0 +1,992 @@
+{
+  "schema": "nimrod.pack.v1",
+  "kind": "trivia",
+  "name": "Nature walks: plants, birds & trees (AI-written, not yet reviewed)",
+  "description": "42 questions on what you see on a nature walk: plants, birds and trees (6 very easy, 12 easy, 12 medium, 12 hard), written by Claude on 2026-10-06; the very easy ones are marked easy with a note \"very easy\" until the very easy level lands. The independent fact-check kept 42 of 44 written, fixed 12 and deleted 2. Every question and answer needs checking by a person before anybody plays it.",
+  "source": {
+    "name": "Written by hand by Claude Code (claude-opus-5-5, Anthropic) on 2026-10-06, from its own knowledge plus the pages each item cites: no API call. 37 items cite a page the writing pass fetched on 2026-10-06 and quote the phrase on it that supports the fact; 5 rest on \"common knowledge\" (genuinely universal everyday facts), each with the reason. Then fact-checked item by item by a separate Claude pass on 2026-10-06 that did not write them (every cited page re-fetched and read for the fact, every answer, wrong answer, explanation and level checked; `checked` keeps who checked it and what was fixed; items that could not be made right, and duplicates of other packs, were deleted). Very easy items are marked difficulty \"easy\" with \"note\": \"very easy\" until the very easy level lands. A person still reviews it by playing.",
+    "url": "",
+    "licence": "unreviewed - not cleared to ship"
+  },
+  "generated": "2026-10-06",
+  "ai_written": true,
+  "review": {
+    "status": "unreviewed",
+    "how": "Check every question, answer and explanation. Fix or delete what is wrong, set status to 'reviewed' with your name and the date, then move the file to packs/ and list it in pack_library.js."
+  },
+  "items": [
+    {
+      "question": "Acorns grow on which kind of tree?",
+      "answers": [
+        "Pine",
+        "Oak",
+        "Palm",
+        "Apple"
+      ],
+      "correct": "Oak",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "Each acorn holds a seed that can grow into a new oak.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: acorns are the nuts of oak trees; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is a male cardinal?",
+      "answers": [
+        "Blue",
+        "Yellow",
+        "Red",
+        "Green"
+      ],
+      "correct": "Red",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "The female is a duller brownish color but has the same crest.",
+      "source": {
+        "url": "https://www.audubon.org/field-guide/bird/northern-cardinal",
+        "title": "Audubon Field Guide: Northern Cardinal",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The male Northern Cardinal is unmistakable, our only red bird with a crest' and 'The female is duller, but shares a crest'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Pine trees have long, thin leaves called what?",
+      "answers": [
+        "Petals",
+        "Needles",
+        "Thorns",
+        "Feathers"
+      ],
+      "correct": "Needles",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "Most pines keep their needles all through the winter.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: pine leaves are called needles; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is a dandelion flower?",
+      "answers": [
+        "Purple",
+        "Blue",
+        "Red",
+        "Yellow"
+      ],
+      "correct": "Yellow",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "Later each flower turns into a white puff of seeds.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: dandelions are a common yellow lawn flower; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A woodpecker pecks holes in what?",
+      "answers": [
+        "Rocks",
+        "Trees",
+        "Sand",
+        "Ice"
+      ],
+      "correct": "Trees",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "Woodpeckers drill into wood to find insects and to make nest holes.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: woodpeckers peck at trees; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tall flower has a big yellow head full of seeds?",
+      "answers": [
+        "Tulip",
+        "Rose",
+        "Sunflower",
+        "Lily"
+      ],
+      "correct": "Sunflower",
+      "difficulty": "very easy",
+      "category": "Nature walks",
+      "explain": "Sunflower seeds are a favorite snack for people and birds alike.",
+      "source": {
+        "ref": "common knowledge",
+        "note": "Universally known: sunflowers are tall with big yellow seed-filled heads; no citation needed."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What color is an American robin's egg?",
+      "answers": [
+        "White",
+        "Brown",
+        "Blue",
+        "Pink"
+      ],
+      "correct": "Blue",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "The shade even has its own name: robin egg blue.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Robin_egg_blue",
+        "title": "Wikipedia: Robin egg blue",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'approximating the shade of the eggs laid by the American robin'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question grammar; source moved to the Robin egg blue page, which states the eggs' color directly"
+      }
+    },
+    {
+      "question": "Which crested blue backyard bird is known for its loud calls?",
+      "answers": [
+        "Blue jay",
+        "Eastern bluebird",
+        "Indigo bunting",
+        "Tree swallow"
+      ],
+      "correct": "Blue jay",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Its best-known sound is a loud, almost gull-like scream.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Blue_jay",
+        "title": "Wikipedia: Blue jay",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'predominantly blue, with a white chest and underparts, and a blue crest' and 'a loud, almost gull -like scream'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "source note quote corrected to the page's exact text"
+      }
+    },
+    {
+      "question": "Counting the rings in a tree trunk tells you what?",
+      "answers": [
+        "Its height",
+        "Its age",
+        "Its weight",
+        "Its species"
+      ],
+      "correct": "Its age",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Trees in places with seasons usually add one ring each year.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dendrochronology",
+        "title": "Wikipedia: Dendrochronology",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'produce one growth-ring each year' and 'reflects the age of the tree'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Mushrooms belong to which group of living things?",
+      "answers": [
+        "Plants",
+        "Animals",
+        "Bacteria",
+        "Fungi"
+      ],
+      "correct": "Fungi",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "A mushroom is the spore-bearing part of a fungus that pops up above ground.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mushroom",
+        "title": "Wikipedia: Mushroom",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Spore-bearing fruiting body of a fungus'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which big bird often flies in a honking, V-shaped flock?",
+      "answers": [
+        "Bald eagle",
+        "Canada goose",
+        "Wild turkey",
+        "Great blue heron"
+      ],
+      "correct": "Canada goose",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Their V-shaped flocks overhead are a sign of the changing seasons.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Canada_goose",
+        "title": "Wikipedia: Canada goose",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'flying in a V-shaped formation signal the transitions into spring and autumn' and 'The honk refers to the call of the male Canada goose'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Washington, D.C., holds a famous festival for which tree's blossoms?",
+      "answers": [
+        "Apple",
+        "Magnolia",
+        "Dogwood",
+        "Cherry"
+      ],
+      "correct": "Cherry",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "The trees were a 1912 gift from the mayor of Tokyo.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/National_Cherry_Blossom_Festival",
+        "title": "Wikipedia: National Cherry Blossom Festival",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a spring celebration in Washington, D.C., commemorating the March 27, 1912, gift of Japanese cherry trees from Mayor Yukio Ozaki of Tokyo City'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What is the process plants use to turn sunlight into food?",
+      "answers": [
+        "Pollination",
+        "Photosynthesis",
+        "Germination",
+        "Evaporation"
+      ],
+      "correct": "Photosynthesis",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Plants convert light energy into chemical energy they can use to grow.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Photosynthesis",
+        "title": "Wikipedia: Photosynthesis",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'convert light energy —typically from sunlight —into the chemical energy necessary to fuel their metabolism'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tree's winged seeds spin down like little helicopters?",
+      "answers": [
+        "Apple",
+        "Oak",
+        "Maple",
+        "Willow"
+      ],
+      "correct": "Maple",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "The seeds come in pairs, each attached to a flat, papery wing.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Maple",
+        "title": "Wikipedia: Maple",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: '\"maple keys\", \"helicopters\", \"whirlybirds\"' and 'These seeds occur in distinctive pairs'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "distractor Pine replaced with Oak (pine seeds are winged as well)"
+      }
+    },
+    {
+      "question": "Which tree is known for white bark that peels like paper?",
+      "answers": [
+        "Birch",
+        "Walnut",
+        "Cedar",
+        "Elm"
+      ],
+      "correct": "Birch",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Paper birch bark makes an excellent fire starter, even when wet.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Betula_papyrifera",
+        "title": "Wikipedia: Betula papyrifera (paper birch)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'Paper birch is named after the tree's thin white bark, which often peels in paper -like layers' and 'Its bark is an excellent fire starter; it ignites at high temperatures even when wet'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain reworded to match the page ('excellent fire starter', not 'catches fire easily')"
+      }
+    },
+    {
+      "question": "Which fall garden flower is often called \"mums\" for short?",
+      "answers": [
+        "Marigolds",
+        "Chrysanthemums",
+        "Petunias",
+        "Geraniums"
+      ],
+      "correct": "Chrysanthemums",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "Most chrysanthemum species come from East Asia, chiefly China.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Chrysanthemum",
+        "title": "Wikipedia: Chrysanthemum",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'sometimes abbreviated to mums or chrysanths' and 'Most species originate from East Asia, and the center of diversity is in China'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain tightened to what the page says (most species from East Asia; diversity centered in China)"
+      }
+    },
+    {
+      "question": "Trees that shed all their leaves each year are called what?",
+      "answers": [
+        "Coniferous",
+        "Evergreen",
+        "Deciduous",
+        "Tropical"
+      ],
+      "correct": "Deciduous",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "The opposite, keeping leaves all year round, is called evergreen.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Deciduous",
+        "title": "Wikipedia: Deciduous",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Plants that shed leaves seasonally' and 'The converse of deciduous is evergreen'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which backyard bird is bright yellow with black wings in summer?",
+      "answers": [
+        "House sparrow",
+        "Mourning dove",
+        "American goldfinch",
+        "Tufted titmouse"
+      ],
+      "correct": "American goldfinch",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "In winter goldfinches fade to yellowish-brown or gray.",
+      "source": {
+        "url": "https://www.audubon.org/field-guide/bird/american-goldfinch",
+        "title": "Audubon Field Guide: American Goldfinch",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'distinctively bright yellow with black wings, tail, and forehead' and 'Winter birds vary from yellowish-brown to gray'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which small black-capped bird is named after its own call?",
+      "answers": [
+        "Chickadee",
+        "Nuthatch",
+        "Junco",
+        "Titmouse"
+      ],
+      "correct": "Chickadee",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "The black-capped chickadee is the state bird of Maine and Massachusetts.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Black-capped_chickadee",
+        "title": "Wikipedia: Black-capped chickadee",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'its chick-a-dee-dee-dee call, from which it derives its name' and 'state bird of Maine and Massachusetts'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Monarch butterfly caterpillars feed on which plant?",
+      "answers": [
+        "Clover",
+        "Ivy",
+        "Milkweed",
+        "Thistle"
+      ],
+      "correct": "Milkweed",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "A new caterpillar first eats its own egg case, then starts on milkweed leaves.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Monarch_butterfly",
+        "title": "Wikipedia: Monarch butterfly",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The larva or caterpillar eats its egg case and begins to feed on milkweed'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "A mushroom sprouts from a root-like web of threads called what?",
+      "answers": [
+        "Moss",
+        "Lichen",
+        "Plankton",
+        "Mycelium"
+      ],
+      "correct": "Mycelium",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "Its branching threads are called hyphae and can carry water through the soil.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Mycelium",
+        "title": "Wikipedia: Mycelium",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'a root-like structure of a fungus consisting of a mass of branching, thread-like hyphae' and 'Networks of mycelia can transport water'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which prized wild mushroom has a honeycomb-patterned cap?",
+      "answers": [
+        "Morel",
+        "Shiitake",
+        "Portobello",
+        "Puffball"
+      ],
+      "correct": "Morel",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "Boyne City, Michigan, holds a National Morel Mushroom Festival every spring.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Morchella",
+        "title": "Wikipedia: Morchella",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'These distinctive fungi have a honeycomb appearance due to the network of ridges with pits composing their caps' and 'Every spring, hundreds of morel enthusiasts gather in Boyne City, Michigan for the National Morel Mushroom Festival'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which North American bird is best known for copying other birds' songs?",
+      "answers": [
+        "Mourning dove",
+        "Northern mockingbird",
+        "Tufted titmouse",
+        "House finch"
+      ],
+      "correct": "Northern mockingbird",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "It can even imitate squeaky wheels and car alarms.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Northern_mockingbird",
+        "title": "Wikipedia: Northern mockingbird",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'the northern mockingbird is the species best known in North America for doing so' and 'unoiled wheels and even car alarms'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (most adults know mockingbirds mimic)"
+      }
+    },
+    {
+      "question": "Which tree's nuts come in a husk that stains your hands dark?",
+      "answers": [
+        "American beech",
+        "Sweetgum",
+        "Hazelnut",
+        "Black walnut"
+      ],
+      "correct": "Black walnut",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "Its roots release juglone, so tomatoes and apples do poorly planted near it.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Juglans_nigra",
+        "title": "Wikipedia: Juglans nigra (black walnut)",
+        "note": "Fetched 2026-10-06 by the fact-check pass; the page text contains: 'cause walnuts to stain cars, sidewalks, porches, and patios, in addition to the hands of anyone attempting to shell them' and 'Apples, tomatoes, pines, and birch are poisoned by juglone, and as a precaution, should not be planted in proximity to a black walnut'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "explain replaced: hair-dye claim is tagged 'better source needed' and contradicted on the page"
+      }
+    },
+    {
+      "question": "Which big tree's bark flakes off in patches of gray, white and brown?",
+      "answers": [
+        "White oak",
+        "Sycamore",
+        "Black cherry",
+        "Red maple"
+      ],
+      "correct": "Sycamore",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "Sycamore bark is stiffer than most, so it breaks off as the trunk grows.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Platanus_occidentalis",
+        "title": "Wikipedia: Platanus occidentalis (American sycamore)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'its mottled bark that flakes off in large, irregular masses, leaving the surface mottled and gray, greenish-white, and brown' and 'sycamore bark is more rigid and less elastic than the bark of other trees'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "What do gardeners call a plant that lives for more than two years?",
+      "answers": [
+        "Annual",
+        "Biennial",
+        "Perennial",
+        "Bulb"
+      ],
+      "correct": "Perennial",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "The word comes from Latin roots meaning \"through the year.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Perennial_plant",
+        "title": "Wikipedia: Perennial",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Plant that lives for more than two years' and 'perennial ( per- + -ennial , \"through the year\")'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which yellow wildflower has a dark brown, dome-shaped center?",
+      "answers": [
+        "Queen Anne's lace",
+        "Chicory",
+        "Black-eyed Susan",
+        "Purple coneflower"
+      ],
+      "correct": "Black-eyed Susan",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "It is also called yellow coneflower and blooms in late summer and early fall.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Rudbeckia_hirta",
+        "title": "Wikipedia: Rudbeckia hirta",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'commonly called black-eyed Susan and yellow coneflower', 'yellow ray florets circling conspicuous brown or black, dome-shaped cone' and 'appearing in late summer and early autumn'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question no longer claims a name origin the page does not state"
+      }
+    },
+    {
+      "question": "The Baltimore oriole is the state bird of which state?",
+      "answers": [
+        "Virginia",
+        "Delaware",
+        "Pennsylvania",
+        "Maryland"
+      ],
+      "correct": "Maryland",
+      "difficulty": "easy",
+      "category": "Nature walks",
+      "explain": "It is also the namesake of Baltimore's baseball team.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Baltimore_oriole",
+        "title": "Wikipedia: Baltimore oriole",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Baltimore oriole is the state bird of Maryland , and the namesake and mascot for the Baltimore Orioles baseball team'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level medium -> easy (Baltimore is in Maryland; near self-answering)"
+      }
+    },
+    {
+      "question": "What do botanists call a dry fruit with a flat, papery wing?",
+      "answers": [
+        "Drupe",
+        "Samara",
+        "Pome",
+        "Catkin"
+      ],
+      "correct": "Samara",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "Samaras are also nicknamed keys, wingnuts or whirligigs.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Samara_(fruit)",
+        "title": "Wikipedia: Samara (fruit)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A samara ... is a winged achene' (with 'a flattened wing of fibrous, papery tissue') and 'A samara is sometimes called a key [2] and is often referred to as a wingnut , helicopter , whirlybird , whirligig'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Ohio's buckeye tree belongs to the same genus as which tree?",
+      "answers": [
+        "Sweet chestnut",
+        "Beech",
+        "Horse chestnut",
+        "Linden"
+      ],
+      "correct": "Horse chestnut",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "In the genus Aesculus, European and Asian species are horse chestnuts and American ones are buckeyes.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Aesculus",
+        "title": "Wikipedia: Aesculus",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The European and Asian species are known as horse-chestnut or horse chestnut , and the North American species as buckeye'. (Wikipedia: Aesculus glabra also fetched: 'The Ohio buckeye is the state tree of Ohio'.)"
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which pigments give fall leaves their red and purple colors?",
+      "answers": [
+        "Carotenoids",
+        "Chlorophylls",
+        "Anthocyanins",
+        "Melanins"
+      ],
+      "correct": "Anthocyanins",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "Unlike the yellow pigments, these are not in the leaf all summer but are made near its end.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Autumn_leaf_color",
+        "title": "Wikipedia: Autumn leaf color",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The reds, the purples, the pinks, and their blended combinations that decorate autumn foliage come from another group of pigments in the cells called anthocyanins . Unlike the carotenoids, these pigments are not present in the leaf throughout the growing season, but are actively produced towards the end of summer.'"
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which is the only hummingbird that breeds in eastern North America?",
+      "answers": [
+        "Ruby-throated hummingbird",
+        "Rufous hummingbird",
+        "Anna's hummingbird",
+        "Calliope hummingbird"
+      ],
+      "correct": "Ruby-throated hummingbird",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "It beats its wings more than 50 times per second while hovering.",
+      "source": {
+        "url": "https://www.audubon.org/field-guide/bird/ruby-throated-hummingbird",
+        "title": "Audubon Field Guide: Ruby-throated Hummingbird",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The Ruby-throated Hummingbird is the only breeding hummingbird in eastern North America' and 'beats its wings more than 50 times per second'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium (ruby-throated is the one name most adults know)"
+      }
+    },
+    {
+      "question": "Which state's state bird is the common loon?",
+      "answers": [
+        "Wisconsin",
+        "Michigan",
+        "Maine",
+        "Minnesota"
+      ],
+      "correct": "Minnesota",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "The loon also appears on Canada's one-dollar coin, the \"loonie.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Common_loon",
+        "title": "Wikipedia: Common loon",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'it was designated the state bird of Minnesota' and 'it appears on Canadian currency, including the one-dollar \"loonie\" coin'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Utah's state bird is a gull named after which state?",
+      "answers": [
+        "Nevada",
+        "California",
+        "Oregon",
+        "Idaho"
+      ],
+      "correct": "California",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "A monument in Salt Lake City honors the gull.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/California_gull",
+        "title": "Wikipedia: California gull",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The California gull is the state bird of Utah' and 'A monument in Salt Lake City commemorates this'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which native tree's fruit is nicknamed the \"wild banana\"?",
+      "answers": [
+        "Persimmon",
+        "Mulberry",
+        "Serviceberry",
+        "Pawpaw"
+      ],
+      "correct": "Pawpaw",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "Its fruit has a creamy, banana-like texture and flavor.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Asimina_triloba",
+        "title": "Wikipedia: Asimina triloba (pawpaw)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'A. triloba is often called wild banana, Indiana banana, or prairie banana because of its creamy banana-like texture and flavor'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Birders remember which owl's call as \"Who cooks for you?\"",
+      "answers": [
+        "Barn owl",
+        "Barred owl",
+        "Snowy owl",
+        "Eastern screech-owl"
+      ],
+      "correct": "Barred owl",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "That call has earned it the nickname \"old eight-hooter.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Barred_owl",
+        "title": "Wikipedia: Barred owl",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The most common mnemonic device for remembering the call is \"Who cooks for you, who cooks for you all.\"' and 'sometimes colloquially referred to as \"old eight-hooter\"'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tree grows leaves in three different shapes, often on one branch?",
+      "answers": [
+        "Sweetgum",
+        "Sassafras",
+        "Black cherry",
+        "Hackberry"
+      ],
+      "correct": "Sassafras",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "In fall its leaves turn shades of yellow.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Sassafras_albidum",
+        "title": "Wikipedia: Sassafras albidum",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'They come in three different shapes, all of which can be on the same branch' and 'In fall, they turn to shades of yellow'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which tree is the state tree of Indiana?",
+      "answers": [
+        "Eastern hemlock",
+        "Sweetgum",
+        "Tulip tree",
+        "American elm"
+      ],
+      "correct": "Tulip tree",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "It is also the state tree of Kentucky and Tennessee.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Liriodendron_tulipifera",
+        "title": "Wikipedia: Liriodendron tulipifera (tulip tree)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The tulip tree is the state tree of Indiana , Kentucky , and Tennessee'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which of these conifers turns yellow and drops its needles each fall?",
+      "answers": [
+        "White pine",
+        "Eastern hemlock",
+        "Blue spruce",
+        "Tamarack"
+      ],
+      "correct": "Tamarack",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "It is a larch, and its cones are the smallest of any larch, under an inch long.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Larix_laricina",
+        "title": "Wikipedia: Larix laricina (tamarack)",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Prior to falling off in the autumn, the leaves turn bright yellow' and 'The cones are the smallest of any larch, only 1–2.3 cm'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "question says 'of these' (bald cypress and western larch also drop needles); explain size tightened"
+      }
+    },
+    {
+      "question": "Which woodland wildflower is named for white blooms shaped like pants?",
+      "answers": [
+        "Dutchman's breeches",
+        "Lady's slipper",
+        "Trout lily",
+        "Wild ginger"
+      ],
+      "correct": "Dutchman's breeches",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "It grows in rich woods across eastern North America.",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Dicentra_cucullaria",
+        "title": "Wikipedia: Dicentra cucullaria",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The common name Dutchman's breeches derives from their white flowers that look like white breeches' and 'native to rich woods of eastern North America'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which frilly mushroom is also called \"hen-of-the-woods\"?",
+      "answers": [
+        "Shiitake",
+        "Maitake",
+        "Chanterelle",
+        "Portobello"
+      ],
+      "correct": "Maitake",
+      "difficulty": "hard",
+      "category": "Nature walks",
+      "explain": "Its Japanese name, maitake, means \"dancing mushroom.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Grifola_frondosa",
+        "title": "Wikipedia: Grifola frondosa",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'Grifola frondosa , also known as hen-of-the-woods , sheep's head , ram's head , or maitake ( 舞茸 , \"dancing mushroom\") in Japanese'."
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06"
+      }
+    },
+    {
+      "question": "Which flower's name comes from \"day's eye,\" since it opens each morning?",
+      "answers": [
+        "Marigold",
+        "Tulip",
+        "Poppy",
+        "Daisy"
+      ],
+      "correct": "Daisy",
+      "difficulty": "medium",
+      "category": "Nature walks",
+      "explain": "Geoffrey Chaucer called it the \"eye of the day.\"",
+      "source": {
+        "url": "https://en.wikipedia.org/wiki/Bellis_perennis",
+        "title": "Wikipedia: Bellis perennis",
+        "note": "Fetched 2026-10-06 by the writing pass; the page text contains: 'The name \"daisy\" ... is considered a corruption of \"day's eye\", [8] because the whole head closes at night and opens in the morning. Geoffrey Chaucer called it \"eye of the day\".'"
+      },
+      "ai_written": true,
+      "checked": {
+        "by": "Claude (fact-check pass)",
+        "at": "2026-10-06",
+        "fixed": "level hard -> medium ('day's eye' sounds out the answer)"
+      }
+    }
+  ]
+}
