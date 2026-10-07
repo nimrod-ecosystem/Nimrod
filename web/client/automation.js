@@ -21,6 +21,11 @@
 //              verb   { kind:'verb', up, down?, step?, start?, wrap? }  a switch steps a value.
 //              clock  { kind:'clock', points?, tickMs? }  a time-of-day curve.
 //              lfo    { kind:'lfo', shape?, periodMs?, tickMs? }  a sine or triangle wave.
+//              data   { kind:'data', query?, win?, what?, tickMs?, range? }  WHAT'S BEEN PLAYED on this screen
+//                     (row 2.62 step 3): a number from play_charts.js `playNumber` - how many plays, plays of
+//                     the most played thing, or how many different things - over today / this week / this month
+//                     / all time, for every player or one. Read from THIS DEVICE's record only (plays.js; no
+//                     server call), again when a play lands and once every `tickMs`. See `dataRangeFor`.
 //   map      input range -> the setting's own min/max, a curve, smoothing, and what happens when
 //            the source goes quiet. See `normalizeMap`.
 //
@@ -63,10 +68,11 @@ import { MASTER_DEFAULTS } from './master_volume.js';
 import { floorKey } from './mixer.js';
 import { CHANNELS } from './audio_bus.js';
 import { FLASH_LIMIT_DEFAULT, FRAME_MS, minFlashPeriodMs, normalizeFlashLimit } from './flash_limit.js';
+import { NUMBER_QUERIES, WINDOWS as DATA_WINDOWS, playNumber } from './play_charts.js';
 
 const ID_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
-export const SOURCE_KINDS = ['bus', 'link', 'verb', 'clock', 'lfo'];
+export const SOURCE_KINDS = ['bus', 'link', 'verb', 'clock', 'lfo', 'data'];
 export const CURVES = ['linear', 'ease-in', 'ease-out', 'steps', 'peak'];
 export const LFO_SHAPES = ['sine', 'triangle'];
 export const QUIET = ['hold', 'release'];
@@ -109,7 +115,31 @@ export const AUTOMATION_DEFAULTS = Object.freeze({
   peakCenter: 0.5,
   peakWidth: 0.1,
   steps: 4,
+  // WHAT'S BEEN PLAYED (row 2.62 step 3). The question a new data rule asks: how many plays this week, every
+  // player - the chart module's own first view ("Top played this week"), so the two start on the same days.
+  dataQuery: 'plays',
+  dataWin: 'week',
+  dataWhat: 'all',
+  // How often a data rule reads the device's record again BY ITSELF, besides every play as it lands: once a
+  // minute. For "today" turning over at midnight, and for plays another tab on this device made (each tab keeps
+  // its own copy in memory - plays.js "KNOWN BOUNDS"). The same minute modules/charts.js REFRESH_MS re-reads on;
+  // one IndexedDB read a minute. Overridable per rule (`tickMs`), never under a second.
+  dataTickMs: 60000,
+  // What a data rule's number is read across when the rule does not say (its "lowest / highest"): 0 up to about
+  // TEN PLAYS A DAY over the window - 10 today, 70 this week, 300 this month. Argued: FOR a fixed 0..1 like the
+  // other sources: one rule for all. AGAINST, and it wins: a count is never 0..1, so every new rule would be at
+  // its top after one play. Ten a day is a guess at "a good day" for music and videos; a photo frame logs a play
+  // per photo and passes it in an hour, which is why the editor shows the range and steps it. "All time" has no
+  // natural top; 1000 is a hundred days of that, a slow fill that is still moving after months.
+  dataRanges: Object.freeze({ today: Object.freeze([0, 10]), week: Object.freeze([0, 70]),
+    month: Object.freeze([0, 300]), all: Object.freeze([0, 1000]) }),
 });
+
+/** The default lowest / highest for a data rule over this window (AUTOMATION_DEFAULTS.dataRanges). */
+export function dataRangeFor(win) {
+  const r = AUTOMATION_DEFAULTS.dataRanges[win] || AUTOMATION_DEFAULTS.dataRanges[AUTOMATION_DEFAULTS.dataWin];
+  return [r[0], r[1]];
+}
 
 // ---------------------------------------------------------------------------------------
 // THE GUARDS. What automation may never do, beyond a field's own declared range.
@@ -197,8 +227,10 @@ export function lfoMinPeriodMs(limit = FLASH_LIMIT_DEFAULT, tickMs = AUTOMATION_
 export function eventFloorMs(limit = FLASH_LIMIT_DEFAULT) {
   return Math.ceil(minFlashPeriodMs(limit));
 }
+// (2026-10-07) A DATA source is gated too: it is an event source (a play lands, a minute passes), and a count can
+// reverse - at midnight "today" drops to 0, and a slideshow of quick plays then pushes it up again. Fail shut.
 export function eventFloorApplies(source, rawDecl = null) {
-  if (!source || !['bus', 'link', 'verb'].includes(source.kind)) return false;
+  if (!source || !['bus', 'link', 'verb', 'data'].includes(source.kind)) return false;
   return !(rawDecl && rawDecl.visual === false);
 }
 
@@ -251,6 +283,14 @@ export function normalizeSource(raw) {
       .sort((a, b) => a[0] - b[0]);
     const tickMs = Math.max(1000, num(raw.tickMs, D.clockTickMs));
     return { kind, points: pts.length ? pts : D.clockPoints.map((p) => [...p]), tickMs, range: [0, 1] };
+  }
+  if (kind === 'data') {
+    const query = NUMBER_QUERIES.includes(raw.query) ? raw.query : D.dataQuery;
+    const win = DATA_WINDOWS.includes(raw.win) ? raw.win : D.dataWin;
+    // Any id-shaped player name (plays.js: not a closed list); 'all' is every player but the ones left out.
+    const what = typeof raw.what === 'string' && ID_RE.test(raw.what.trim()) ? raw.what.trim() : D.dataWhat;
+    const tickMs = Math.max(1000, num(raw.tickMs, D.dataTickMs));
+    return { kind, query, win, what, tickMs, range: normalizeRange(raw.range, dataRangeFor(win)) };
   }
   // lfo
   const tickMs = Math.max(16, num(raw.tickMs, D.lfoTickMs));
@@ -367,6 +407,19 @@ function rawDecls(manifest) {
   return Array.isArray(d) ? d : [];
 }
 
+// *** THE HOST'S OWN NUMBERS ON A PANEL (2026-10-07, row 2.62's question: "whether an object's own position, scale
+// and rotation can be bound today"). *** `extra`: declarations a HOST adds to every panel it mounts - panel_drive.js's
+// size, turn, colour shift and move, which the host (not the module) applies to the panel's box. They sit on the same
+// state handle, so they are driven exactly like a module's own setting: an overlay in memory, the base untouched. A
+// module's own key always wins a clash (a module declaring `driveScale` keeps it). Absent: nothing changes.
+function withExtra(decls, norm, extra) {
+  const list = Array.isArray(extra) ? extra.filter((d) => d && typeof d.key === 'string' && d.key) : [];
+  if (!list.length) return { decls, norm };
+  const have = new Set(norm.map((f) => f.key));
+  const add = list.filter((d) => !have.has(d.key));
+  return { decls: [...decls, ...add], norm: [...norm, ...add.map(normalizeField).filter(Boolean)] };
+}
+
 // ---------------------------------------------------------------------------------------
 // CAN THIS SETTING BE DRIVEN? `{ ok, why }` - the reason is what the editor shows beside a row it
 // will not offer, because a row that is simply missing sends people hunting for it.
@@ -390,9 +443,9 @@ export function bindable(field, raw = null, guards = DEFAULT_GUARDS) {
  * THE EDITOR'S LIST: every declared setting of a module, with whether it can be driven and why
  * not. `fields` may be passed instead of a manifest (the screen's own settings row).
  */
-export function bindableSettings(manifest = null, instance = null, { fields = null, guards = DEFAULT_GUARDS } = {}) {
-  const decls = fields || rawDecls(manifest);
-  const norm = fields ? fields.map(normalizeField).filter(Boolean) : fieldsFor(manifest, instance);
+export function bindableSettings(manifest = null, instance = null, { fields = null, guards = DEFAULT_GUARDS, extra = null } = {}) {
+  const { decls, norm } = withExtra(fields || rawDecls(manifest),
+    fields ? fields.map(normalizeField).filter(Boolean) : fieldsFor(manifest, instance), extra);
   return norm.map((f) => {
     const raw = decls.find((d) => d && d.key === f.key) || null;
     const b = bindable(f, raw, guards);
@@ -408,6 +461,13 @@ export function bindableSettings(manifest = null, instance = null, { fields = nu
 //   now / setTimer / clearTimer   injectable, so a test runs the clock by hand.
 //   onChange    (list) => void, after a binding is added or removed by hand - the host saves it.
 //   onStatus    (id, status) => void, optional: 'running', 'waiting for its panel', 'not bindable: ...'.
+//   plays       this device's plays (plays.js `devicePlays()`: `get()`, `subscribe()`, `loadAll()`), or a getter for
+//               it, read only when a data rule starts - a screen with no data rule never opens the record.
+//   screen      the screen whose plays are counted (its profile id), or a getter. A screen's plays only, as every
+//               chart counts (modules/charts.js argues it); with no screen a data rule counts nothing (0) rather
+//               than the whole device's - it fails shut on whose listening it shows.
+//   extraFields the host's own numbers on every panel (`withExtra` above; panel_drive.js), bindable like a
+//               module's own. The editor reads them back with `extraFields()`.
 // ---------------------------------------------------------------------------------------
 export function createAutomation({
   bus = null,
@@ -420,7 +480,13 @@ export function createAutomation({
   // The screen's flash limit (flash_limit.js): a number or a function read on every LFO tick, so a
   // changed setting applies to a running wave. Missing or broken reads as no limit (flash_limit.js).
   flashLimit = FLASH_LIMIT_DEFAULT,
+  plays = null,
+  screen = null,
+  extraFields = null,
 } = {}) {
+  const extra = Array.isArray(extraFields) ? extraFields.filter((d) => d && typeof d.key === 'string' && d.key) : [];
+  const playsNow = () => { try { return typeof plays === 'function' ? plays() : plays; } catch { return null; } };
+  const screenNow = () => { try { const s = typeof screen === 'function' ? screen() : screen; return s ? String(s) : null; } catch { return null; } };
   const limitNow = () => {
     try { return normalizeFlashLimit(typeof flashLimit === 'function' ? flashLimit() : flashLimit); }
     catch { return FLASH_LIMIT_DEFAULT; }
@@ -632,9 +698,41 @@ export function createAutomation({
         r.tick = after(read, src.tickMs);
       };
       read();
+    } else if (src.kind === 'data') {
+      // WHAT'S BEEN PLAYED. Read from what is already in memory now; again (once, however many rows changed) after
+      // the record changes - a play landing, a panel's record loading; and every `tickMs`, which first reloads the
+      // whole device's record (another tab's plays, and "today" turning over). Nothing here writes the record.
+      const log = playsNow();
+      const count = () => {
+        const who = screenNow();
+        if (!who || !log || typeof log.get !== 'function') return 0;
+        let events = [];
+        try { events = log.get()?.events || []; } catch { events = []; }
+        const n = playNumber(events, { query: src.query, win: src.win, what: src.what, screen: who, now: now() });
+        return Number.isFinite(n) ? n : 0;
+      };
+      let queued = false;
+      const soon = () => {
+        if (queued) return;
+        queued = true;
+        Promise.resolve().then(() => { queued = false; if (!r.stopped && !dead) input(count()); });
+      };
+      if (log && typeof log.subscribe === 'function') {
+        try { const off = log.subscribe(() => soon()); if (typeof off === 'function') r.offs.push(off); } catch { /* no live nudge */ }
+      }
+      const reread = () => {
+        r.tick = after(reread, src.tickMs);
+        if (log && typeof log.loadAll === 'function') {
+          Promise.resolve().then(() => log.loadAll()).catch(() => {}).then(() => soon());
+        } else soon();
+      };
+      input(count());
+      r.tick = after(reread, src.tickMs);
+      if (log && typeof log.loadAll === 'function') Promise.resolve().then(() => log.loadAll()).catch(() => {}).then(() => soon());
     }
 
     r.stop = () => {
+      r.stopped = true;
       r.offs.forEach((off) => { try { off(); } catch { /* gone */ } });
       r.offs.length = 0;
       for (const k of ['tick', 'smooth', 'trail', 'quiet', 'gateTrail']) { cancel(r[k]); r[k] = null; }
@@ -724,8 +822,8 @@ export function createAutomation({
    */
   function wrapState(instance, handle, { manifest = null, fields = null } = {}) {
     if (!handle || !instance) return handle;
-    const decls = fields || rawDecls(manifest);
-    const norm = fields ? fields.map(normalizeField).filter(Boolean) : fieldsFor(manifest, null);
+    const { decls, norm } = withExtra(fields || rawDecls(manifest),
+      fields ? fields.map(normalizeField).filter(Boolean) : fieldsFor(manifest, null), extra);
     const prior = targets.get(instance);
     const t = { handle, fields: new Map(norm.map((f) => [f.key, f])),
                 raw: new Map(decls.filter((d) => d && d.key).map((d) => [d.key, d])),
@@ -788,5 +886,7 @@ export function createAutomation({
     // The period an LFO binding is ACTUALLY running at (its own, or slower under the flash limit).
     lfoPeriod: (id) => runners.get(id)?.periodMs ?? null,
     flashLimit: () => limitNow(),
+    // The host's own numbers on every panel (panel_drive.js), for the editor's list of what can be driven.
+    extraFields: () => extra.slice(),
   };
 }

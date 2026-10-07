@@ -121,6 +121,7 @@ import { mapLoader } from '../dashboard_map.js';
 import { DASHBOARD_GO_TOPIC, NEST_OPEN_TOPIC, nestMode, nestLiveDepthFrom, NEST_LIVE_DEPTH_KEY } from '../dashboard_nest.js';
 // 2026-10-02: a panel's own sound (its volume, its room, a TV's things), and where the bar sits in a room.
 import { watchPanelSound } from '../panel_sound.js';
+import { watchPanelDrive } from '../panel_drive.js';
 import { barPlaceFrom, cabinetSlot, CABINET_STRIP_STYLE, fitBarInto, unfitBar } from '../room_bar.js';
 // 2026-10-02: which panel a dashboard opens with being edited (edit_mode.js `editPanel`).
 import { editSettingsFrom } from '../edit_mode.js';
@@ -291,6 +292,7 @@ function dashboardFactory(ctx) {
       if (!rec) return;
       try { rec.instance.destroy(); } catch { /* noop */ }
       try { rec.offSound?.(); } catch { /* noop */ }
+      try { rec.offDrive?.(); } catch { /* noop */ }
       try { rec.state?.destroy?.(); } catch { /* noop */ }
       try { rec.events?.destroy?.(); } catch { /* noop */ }
     }
@@ -339,11 +341,13 @@ function dashboardFactory(ctx) {
       });
       // THIS PANEL'S OWN SOUND (panel_sound.js): the same rows, applied the same way as the kiosk's panels.
       const offSound = watchPanelSound(ctx.audio, def.id, state);
+      // ITS DRIVEN SIZE, TURN, COLOUR AND MOVE (panel_drive.js, row 2.62): the same keys, applied the same way.
+      const offDrive = watchPanelDrive(host, state);
       instance.init();
       state?.startPolling?.();
       events?.startPolling?.();
       return { instance, state, events, type: def.type, id: def.id,
-               title: instance.manifest?.title, el: host, offSound, ...(def.stateKey ? { stateKey: def.stateKey } : {}) };
+               title: instance.manifest?.title, el: host, offSound, offDrive, ...(def.stateKey ? { stateKey: def.stateKey } : {}) };
     }
 
     // THE HOST'S HEALTH WATCH, if it handed one in. A watch must never break a mount.

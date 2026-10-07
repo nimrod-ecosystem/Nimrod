@@ -97,6 +97,8 @@ import { mapLoader } from './dashboard_map.js';
 import { attachMasterVolume, MASTER_FIELDS } from './master_volume.js';
 import { createMixerFx } from './mixer_fx.js';
 import { watchPanelSound, PANEL_VOLUME_FIELD, ROOM_SOUND_FIELD, NESTED_MUTED_KEY, nestedMutedFrom } from './panel_sound.js';
+import { PANEL_DRIVE_FIELDS, watchPanelDrive } from './panel_drive.js';
+import { devicePlays } from './plays.js';
 import { BAR_PLACE_FIELD } from './room_bar.js';
 // 2026-10-02: Switch module puts the Modules library in the panel's place (see `openLibraryAt`).
 import { LIBRARY_TYPE } from './library.js';
@@ -1323,6 +1325,12 @@ export async function mountKiosk(root, {
     bus,
     // The slow wave's shortest period follows the screen's flash limit, re-read every tick.
     flashLimit: flashLimitNow,
+    // Row 2.62 step 3: "what's been played" - this device's own record, counted for THIS screen only (the same
+    // filter the Charts panel uses). A getter, so a screen with no data rule never opens the record.
+    plays: () => devicePlays(),
+    screen: () => profileId,
+    // Row 2.62's question: a panel's own size, turn, colour shift and move, drivable on every panel (panel_drive.js).
+    extraFields: PANEL_DRIVE_FIELDS,
     onChange: (list) => { try { settings.set({ automations: list }); } catch (err) { console.error('kiosk: automations save', err); } },
   });
 
@@ -1647,15 +1655,19 @@ export async function mountKiosk(root, {
     // THIS PANEL'S OWN SOUND (panel_sound.js, 2026-10-02): its volume, "sound like it's in the room", and on
     // a TV the things on it - kept on the same row, applied to the bus here, cleared when it goes.
     const offSound = watchPanelSound(audio, mod.id, state);
+    // THIS PANEL'S DRIVEN SIZE, TURN, COLOUR AND MOVE (panel_drive.js, row 2.62): only ever set by an automation
+    // rule (an overlay on the wrapped `state`), applied to this panel's box on top of wherever it was placed.
+    const offDrive = watchPanelDrive(host, state);
     instance.init();
     state.startPolling(); events.startPolling();
-    return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host, offSound,
+    return { instance, state, events, type: mod.type, id: mod.id, title: instance.manifest.title, el: host, offSound, offDrive,
       ...(mod.stateKey ? { stateKey: mod.stateKey } : {}) };
   }
   function destroyRec(rec) {
     if (!rec) return;
     try { rec.instance.destroy(); } catch { /* noop */ }
     try { rec.offSound?.(); } catch { /* noop */ }
+    try { rec.offDrive?.(); } catch { /* noop */ }
     rec.state.destroy?.(); rec.events.destroy?.();
   }
 
