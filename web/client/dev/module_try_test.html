@@ -291,8 +291,10 @@ const host = document.getElementById('host');
     {
       const profiles = createProfilesClient({ user: USER });
       const before = await resolveTheme(profiles, USER);
-      check('an account that has never touched "Colours" resolves to null, not a guess',
-        before === null, JSON.stringify(before));
+      // (2026-10-07, DELIBERATELY changed: was null. Now the default RULE, "Best for this device" (theme_default.js) -
+      // still not a guess at a theme: which one it paints is decided on the device that shows it.)
+      check('an account that has never touched the Theme resolves to "Best for this device" (the default rule), not to a theme',
+        before === 'device', JSON.stringify(before));
 
       // Same key/shape kiosk.js's own SCREEN_FIELDS "theme" row writes.
       const settings = createState({ url: profiles.stateURL(live.profileId, 'settings'), user: USER });

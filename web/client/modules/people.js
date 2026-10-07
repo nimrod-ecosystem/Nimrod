@@ -123,6 +123,8 @@ import {
   mountPageVisit, mountOlderMessages, VISIT_WORDS, OLDER_WORDS, wearColours, viewerThemeOf, wantsMoreContrast, knownThemes,
 } from '../page_visit.js';
 import { listThemes } from '../theme.js';
+// "Theme for my page" (2026-10-07): the same theme gallery as the Theme tab and the Themes panel.
+import { mountChoicePicker, previewOf } from '../choice_picker.js';
 
 // The site's own things a page box can hold, loaded the first time one is on a page (page_sections.js SECTION_LIBRARY).
 const BOX_LOADERS = Object.freeze({
@@ -205,6 +207,10 @@ const STYLE = `
 .pp-field textarea{min-height:8rem;resize:vertical}
 .pp-field small{font-weight:400;color:var(--text-muted)}
 .pp-lib{display:flex;flex-direction:column;gap:10px;padding:12px;max-width:46rem;margin:0 auto}
+.pp-btn[data-pp-act="page-theme"]{border-color:var(--accent)}
+.pp-theme-chips{display:flex;gap:4px;margin-top:6px}
+.pp-theme-chips span{width:1.3rem;height:1.3rem;border-radius:6px;border:1px solid var(--border)}
+.pp-theme{display:flex;flex-direction:column;gap:10px;padding:12px;max-width:60rem;margin:0 auto}
 `;
 
 registerModule(
@@ -386,6 +392,9 @@ registerModule(
           reason: me.id ? '' : 'Sign in to have a picture of your own.', short: me.id ? '' : 'Sign in first' }, 'self'));
       }
       btns.push(editButton());
+      // "Theme for my page" (page_sections.js PAGE_LOOK_WORDS argues where): right after Edit my page, off a screen (a
+      // page's theme is not worn on a screen). While editing, it is on the edit card just below instead.
+      if (!isScreen() && !editing) btns.push(themeButton('self'));
       // "Shared with" (claim.js): the logins with your card on their page. Off a screen, once your people are read.
       if (!isScreen() && me.id && Number.isFinite(me.holders)) btns.push(holdersButton({ ...me, kind: 'you' }, 'self'));
       // Ask Nimrod taken off the page: More comes here, so the person's settings stay one press away.
@@ -565,24 +574,41 @@ registerModule(
       return card('edit', `<h2 class="pp-h" data-pp-editing>${esc(EDIT_WORDS.editing)}</h2><p class="pp-note">${esc(EDIT_WORDS.intro)}</p>
         <div class="pp-btns">${btns.join('')}</div>${whoHTML()}${lookHTML()}`, ' pp-edit');
     }
-    // "Colours for my page" and "Let this page show older messages" (page_sections.js argues both): keys of the page
+    // "Theme for my page" and "Let this page show older messages" (page_sections.js argues both): keys of the page
     // record beside "Who can see my page", written the same way.
+    // (2026-10-07) The theme is a BUTTON that opens the site's one theme gallery (`openThemePicker`), not a list of
+    // its own here: Mike, "The themes on the home/profile page should be the same as the regular themes."
     function lookHTML() {
       const W = PAGE_LOOK_WORDS;
-      const cur = themeOf(pageDoc);
-      let themes = [];
-      try { themes = listThemes(); } catch { themes = []; }
-      const opts = [{ id: '', label: W.coloursNone }, ...themes];
-      // A theme this version does not have (a newer site chose it) is kept, and named as such, not quietly swapped.
-      if (cur && !opts.some((t) => t.id === cur)) opts.push({ id: cur, label: EDIT_WORDS.newer });
-      const own = colourState().viewerKeepsOwn && cur;
+      const own = colourState().viewerKeepsOwn && themeOf(pageDoc);
       const older = olderOf(pageDoc);
       return `<div class="pp-fields" data-pp-look-row>
-          <label class="pp-field">${esc(W.colours)}<select data-pp-colours>${opts.map((t) => `<option value="${esc(t.id)}"${t.id === cur ? ' selected' : ''}>${esc(t.label)}</option>`).join('')}</select>
-            <small data-pp-colours-line>${esc(own ? W.coloursOwn : W.coloursLine)}</small></label>
+          <div class="pp-field" data-pp-colours-field>${themeButton('edit')}
+            <small data-pp-colours-line>${esc(own ? W.coloursOwn : W.coloursLine)}</small></div>
           <label class="pp-field">${esc(W.older)}<select data-pp-older><option value="1"${older ? ' selected' : ''}>${esc(W.olderOn)}</option><option value="0"${older ? '' : ' selected'}>${esc(W.olderOff)}</option></select>
             <small>${esc(W.olderLine)}</small></label>
         </div>`;
+    }
+    // The theme's name as the gallery shows it (the part before " — "), "The usual theme" for none, and for a theme
+    // this version does not have (a newer site chose it), that said rather than a bare id.
+    function pageThemeName(id) {
+      if (!id) return PAGE_LOOK_WORDS.coloursNone;
+      let t = null;
+      try { t = listThemes().find((x) => x.id === id) || null; } catch { t = null; }
+      return t ? String(t.label).split(' — ')[0] : EDIT_WORDS.newer;
+    }
+    // The button: "Theme for my page", the theme's name under it, and its colours as four small chips (choice_picker.js
+    // previewOf, the gallery's own strip). Live wherever the page can be changed; dimmed with why otherwise.
+    function themeButton(key) {
+      const cur = themeOf(pageDoc);
+      const ok = canEdit();
+      const html = button({ act: 'page-theme', label: PAGE_LOOK_WORDS.colours, short: pageThemeName(cur), enabled: ok,
+        reason: ok ? '' : EDIT_WORDS.signInWhy }, key);
+      let p = null;
+      try { p = cur ? previewOf({ value: cur }, { preview: 'theme' }) : null; } catch { p = null; }
+      if (!p || p.kind !== 'swatch') return html;
+      const chips = `<span class="pp-theme-chips" aria-hidden="true">${p.colors.map((c) => `<span style="background:${esc(c)}"></span>`).join('')}</span>`;
+      return html.replace(/<\/button>$/, `${chips}</button>`);
     }
     // Which colours this page wears for whoever is looking (page_sections.js pageColours). The viewer's own colours are
     // read from around the page (the element it is mounted in), not from the page itself.
@@ -1000,7 +1026,6 @@ registerModule(
       else if (t.matches('[data-pp-sec-size]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { size: BOX_SIZES[t.value] ? t.value : DEFAULT_BOX_SIZE }));
       else if (t.matches('[data-pp-seen]')) writePage(updateSection(pageDoc, t.dataset.ppSecId, { [SEEN_KEY]: t.value === 'visitors' ? 'visitors' : 'me' }));
       else if (t.matches('[data-pp-who]')) writeWho({ [WHO_KEY]: WHO_CHOICES.includes(t.value) ? t.value : 'me' });
-      else if (t.matches('[data-pp-colours]')) writeWho({ [THEME_KEY]: themeOf({ [THEME_KEY]: t.value }) });
       else if (t.matches('[data-pp-older]')) writeWho({ [OLDER_KEY]: t.value !== '0' });
     }
     // "Who can see my page" and the people picked, the page's colours and its older messages: keys of the page record
@@ -1030,6 +1055,7 @@ registerModule(
       if (!root) return;
       for (const el of root.querySelectorAll('.is-scan')) el.classList.remove('is-scan');
       if (!scanning) return;
+      if (sheet?.kind === 'theme') return;   // the gallery lights its own rows (choice_picker.js)
       if (sheet) { const s = sheetStops(); if (s.length) s[stepCursor(cursor.at, s.length, 0)].classList.add('is-scan'); return; }
       if (scanModeOf(chooseMode()) === 'rows') {
         const cs = cards();
@@ -1047,7 +1073,14 @@ registerModule(
       pokeClose();
       // The first verb only shows where the cursor is (the calculator's rule: a select nobody can see the target of
       // should not press something).
-      if (!scanning) { scanning = true; paintCursor(); if (v !== 'back') return; }
+      if (!scanning) { scanning = true; paintCursor(); if (v !== 'back' && sheet?.kind !== 'theme') return; }
+      // "Theme for my page": the gallery's own row-and-column walk (choice_picker.js); its back from the rows is Keep.
+      if (sheet?.kind === 'theme' && sheet.child && typeof sheet.child.next === 'function') {
+        const g = sheet.child;
+        if (v === 'next') g.next(); else if (v === 'prev') g.prev(); else if (v === 'select') g.select();
+        else if (v === 'back') g.back();
+        return;
+      }
       if (sheet) {
         const s = sheetStops();
         if (v === 'back') { closeSheet(); return; }
@@ -1102,6 +1135,7 @@ registerModule(
         case 'page-edit': startEditing(); return;
         case 'page-done': stopEditing(); return;
         case 'page-add': openLibrary(); return;
+        case 'page-theme': openThemePicker(); return;
         case 'show-people': addKind('people'); return;
         case 'put-back': putBack(); return;
         case 'sec-up': moveSec(secId, -1); return;
@@ -1200,6 +1234,33 @@ registerModule(
       }));
       await inst.init();
       return inst;
+    }
+    // "THEME FOR MY PAGE" (2026-10-07): the site's one theme gallery (choice_picker.js, theme_gallery.js) in a window
+    // over the page, with "The usual theme" first. A choice is written to the page record (`writeWho`, beside "Who can
+    // see my page") and the window closes, so the page is seen in it at once. "Keep …" or Back leaves it as it was.
+    // A switch walks the gallery's own rows (its `next`/`prev`/`select`/`back`, see `verb`), not every tile in turn.
+    function openThemePicker() {
+      if (!canEdit()) return;
+      const W = PAGE_LOOK_WORDS;
+      const cur = themeOf(pageDoc);
+      const host = openSheet('theme', W.colours);
+      const own = colourState().viewerKeepsOwn && cur;
+      host.innerHTML = `<div class="pp-theme"><p class="pp-note" data-pp-theme-line>${esc(own ? W.coloursOwn : W.coloursLine)}</p>
+        <div data-pp-theme-list></div></div>`;
+      let themes = [];
+      try { themes = listThemes(); } catch { themes = []; }
+      const options = [{ value: '', label: W.coloursNone, hint: W.coloursNoneHint }, ...themes.map((t) => ({ value: t.id, label: t.label }))];
+      // A theme this version does not have (a newer site chose it) is kept, and named as such, not quietly swapped.
+      if (cur && !options.some((o) => o.value === cur)) options.push({ value: cur, label: EDIT_WORDS.newer });
+      const mine = sheet;
+      try {
+        sheet.child = mountChoicePicker(host.querySelector('[data-pp-theme-list]'), {
+          title: '', key: 'theme', preview: 'theme', value: cur, options, cancel: true,
+          onPick: (v) => { if (sheet !== mine) return; closeSheet({ quiet: true }); writeWho({ [THEME_KEY]: themeOf({ [THEME_KEY]: v }) }); },
+          onCancel: () => { if (sheet === mine) closeSheet(); },
+        });
+      } catch (err) { console.error('people: themes', err); host.textContent = 'The themes could not be shown here just now.'; }
+      paintCursor();
     }
     async function openNimrod() {
       const host = openSheet('nimrod', 'Nimrod');
@@ -1499,6 +1560,8 @@ registerModule(
         visit: sheet?.kind === 'visit' && sheet.child ? { status: sheet.child.status(), sections: sheet.child.sections(), noteOpen: sheet.child.noteOpen(),
           colours: sheet.child.colours(), pageTheme: sheet.child.pageTheme() } : null,
         look: { colours: worn, theme: themeOf(pageDoc), older: olderOf(pageDoc), olderHere: prefs.olderHere !== false },
+        // "Theme for my page": the gallery's own probe while its window is open (choice_picker.js).
+        themePicker: sheet?.kind === 'theme' ? sheet.child?.__probe?.() || null : null,
         older: sheet?.kind === 'older' && sheet.child ? { status: sheet.child.status(), rows: sheet.child.rows(), more: sheet.child.hasMore() } : null,
         who: whoOf(pageDoc), picked: pickedOf(pageDoc),
         page: { sections: viewSections(pageDoc, { isScreen: isScreen() }).map((s) => ({ kind: s.kind, id: s.id, known: s.known })), editing,

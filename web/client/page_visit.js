@@ -25,7 +25,7 @@ import { mountRecommendedVideo } from './recommend.js';
 import { mountNoteVisit } from './note_visit.js';
 import { whenOf, whenWords } from './modules/note.js';
 import { boxHeight, videoOf, aboutText, pageColours, ACCESS_THEMES } from './page_sections.js';
-import { THEMES, applyTheme, listThemes } from './theme.js';
+import { THEMES, applyTheme, listThemes, resolveThemeId } from './theme.js';
 
 // ---- "Colours for my page" (2026-10-05; the rule is page_sections.js pageColours) ----------------------------------
 const norm = (v) => String(v || '').trim().toLowerCase();
@@ -55,7 +55,9 @@ const WORN = new WeakMap();
  */
 export function wearColours(el, id) {
   if (!el?.style) return '';
-  const want = id && THEMES[id] ? id : '';
+  // (2026-10-07) A theme, or a choice that is a rule ("With the seasons": today's look; "Best for this device": what
+  // it picks on the device looking). It was THEMES only, so "With the seasons" was offered for a page and never worn.
+  const want = id && resolveThemeId(id) === id ? id : '';
   const prev = WORN.get(el);
   if ((prev?.id || '') === want) return want;
   if (prev) {

@@ -28,6 +28,7 @@ import { cachedFetch } from './cache.js';
 import { createState } from './state.js';
 import { getManifest, seedFromSibling } from './module.js';
 import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
+import { DEVICE_THEME } from './theme_default.js';
 
 // A starter profile so a fresh account "just works": photos, the camera mirror, the
 // clock, and the Lineup director (rotates youtube / personal videos / educational).
@@ -69,11 +70,14 @@ export async function ensureProfile(profiles, user, wantProfile = null, { person
 // already opened against one SPECIFIC profile (`kiosk.html?profile=<id>`) with that profile's
 // own settings state already loaded, so it reads `.theme` off that directly rather than
 // re-resolving "which profile" the way this helper does for a page with no profile of its own.
+// (2026-10-07) A screen that never picked: "Best for this device" (theme.js DEVICE_THEME, theme_default.js), the
+// same default the screen itself wears, so a page and the screen it reads agree. Was null (the page kept the
+// Nimrod theme it had already applied).
 export async function resolveTheme(profiles, user) {
   const profileId = await ensureProfile(profiles, user);
   const settings = createState({ url: profiles.stateURL(profileId, 'settings'), user });
   await settings.load();
-  return (settings.get() || {}).theme || null;
+  return (settings.get() || {}).theme || DEVICE_THEME;
 }
 
 export function createProfilesClient({ user, baseURL = '' }) {

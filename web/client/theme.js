@@ -58,6 +58,9 @@ import { syncScene } from './livescene.js';
 import { FOLLOW_THEMES, isFollowThemeId, resolveSeasonal, seasonContext } from './seasons.js';
 // User folders (867a7ff): a font the device's own folder supplies goes in front of the theme's stack.
 import { userFontStack, USER_FONTS_EVENT } from './user_fonts.js';
+// "Best for this device" (2026-10-07, theme_default.js): the default, a choice that is a rule like "With the seasons".
+import { DEVICE_THEME, DEVICE_THEME_LABEL, isDeviceTheme, startingTheme } from './theme_default.js';
+export { DEVICE_THEME, isDeviceTheme };
 
 const SYSTEM_FONT =
   '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif';
@@ -263,11 +266,23 @@ export const DEFAULT_THEME = 'default';
 // in THEMES or a follow theme ("With the seasons", seasons.js FOLLOW_THEMES) - kept as itself, so it is
 // what gets saved and what a picker shows. What it PAINTS today is `paintedThemeId` / `paintedTheme`.
 export function resolveThemeId(id) {
-  return id && (THEMES[id] || isFollowThemeId(id)) ? id : DEFAULT_THEME;
+  return id && (THEMES[id] || isFollowThemeId(id) || isDeviceTheme(id)) ? id : DEFAULT_THEME;
 }
 
-/** Is `id` a choice that picks a theme by a rule (the date), rather than a theme itself? */
-export const isFollowTheme = (id) => isFollowThemeId(id);
+/** Is `id` a choice that picks a theme by a rule (the date, or the device), rather than a theme itself? */
+export const isFollowTheme = (id) => isFollowThemeId(id) || isDeviceTheme(id);
+
+/**
+ * The choice "Best for this device" stands for HERE, now (theme_default.js): "seasons" or "default". Any other
+ * choice is itself. `device` overrides the device's answer (a suite).
+ */
+export function deviceChoice(id, { device } = {}) {
+  if (!isDeviceTheme(id)) return id;
+  if (device) return device;
+  try { return startingTheme().theme; } catch { return DEFAULT_THEME; }
+}
+/** Does this choice follow the seasons right now? ("Best for this device" does where it paints them.) */
+export const followsSeasons = (id, opts) => isFollowThemeId(deviceChoice(id, opts));
 
 /**
  * *** WHAT A CHOICE PAINTS, NOW. *** For an ordinary theme, that theme. For "With the seasons", the
@@ -278,7 +293,13 @@ export const isFollowTheme = (id) => isFollowThemeId(id);
  * Returns the THEMES entry as a new object, plus `id` (the painted theme) and, for a follow choice,
  * `follows` (the choice) and `season` (what resolveSeasonal said). Always a real theme: `.vars` is there.
  */
-export function paintedTheme(id, { now, lat, holidays } = {}) {
+// (2026-10-07) "Best for this device" paints what the device's rule picks (theme_default.js), marked `chosen: 'device'`.
+// `device`: the rule's answer, given (a suite).
+export function paintedTheme(id, { now, lat, holidays, device } = {}) {
+  if (isDeviceTheme(id)) {
+    const to = deviceChoice(id, { device });
+    return { ...paintedTheme(isDeviceTheme(to) ? DEFAULT_THEME : to, { now, lat, holidays }), chosen: DEVICE_THEME };
+  }
   const choice = resolveThemeId(id);
   if (!isFollowThemeId(choice)) return { ...THEMES[choice], id: choice };
   const ctx = { ...seasonContext(), ...(lat !== undefined ? { lat } : {}), ...(holidays !== undefined ? { holidays } : {}) };
@@ -453,6 +474,25 @@ export function scanRingColor(vars) {
   return focusColor(vars);
 }
 
+/**
+ * *** THE HALO BEHIND WORDS ON A CLEAR PANEL, DERIVED FROM THE THEME'S OWN WORDS (2026-10-07). ***
+ *
+ * A clear panel has no surface of its own, so kiosk.css puts a halo behind its words. It drew `--board-halo`, which
+ * Design tuned for the board over each MOVING scene - and which BASE gives every still theme as a DARK halo, made for
+ * the board's light words. On Nimrod (light) that put a dark smudge round dark green words. Clear panels were rare
+ * enough nobody saw it; as the default (Mike: "The default should be transparent background on panels") everybody
+ * would. So: a theme with a scene keeps its tuned `--board-halo`, exactly; a still theme gets a halo the opposite of
+ * its words - light round dark words, dark round light ones - using the two halos Design already wrote (the light
+ * one is the light live themes' own). Measured from `--text`, so a new theme gets the right one with no bookkeeping.
+ */
+const HALO_LIGHT = '0 1px 2px rgba(255,255,255,.95), 0 0 7px rgba(255,255,255,.85)';
+const HALO_DARK = '0 1px 2px rgba(0,0,0,.85), 0 0 6px rgba(0,0,0,.6)';
+export function panelHalo(theme) {
+  const v = theme?.vars || {};
+  if (theme?.scene && v['--board-halo']) return v['--board-halo'];
+  return onColor(v['--text'] || '#000000') === ON_LIGHT ? HALO_LIGHT : HALO_DARK;
+}
+
 /** Whichever of light or dark text reads better on `bg`. Pure, so the suite can check it. */
 export function onColor(bg) {
   return contrast(ON_LIGHT, bg) >= contrast(ON_DARK, bg) ? ON_LIGHT : ON_DARK;
@@ -468,8 +508,8 @@ export const ACCENT_VARS = ['--accent', '--link', '--accent-warm-deep'];
 // (2026-10-05) A follow choice ("With the seasons") paints today's theme for it (`paintedTheme`), and the
 // id RETURNED is that painted theme's, so every caller's `THEMES[applyTheme(...)]` is still a real theme.
 // `now`/`lat`/`holidays` pass through to paintedTheme, for a suite.
-export function applyTheme(rootEl, id, { flashLimit, now, lat, holidays } = {}) {
-  const theme = paintedTheme(id, { now, lat, holidays });
+export function applyTheme(rootEl, id, { flashLimit, now, lat, holidays, device } = {}) {
+  const theme = paintedTheme(id, { now, lat, holidays, device });
   const resolved = theme.id;
   const vars = theme.vars;
   for (const [k, v] of Object.entries(vars)) rootEl.style.setProperty(k, v);
@@ -486,6 +526,8 @@ export function applyTheme(rootEl, id, { flashLimit, now, lat, holidays } = {}) 
   rootEl.style.setProperty('--focus', focusColor(vars));
   // The switch-scan ring (see scanRingColor), the same way and for the same reason.
   rootEl.style.setProperty('--scan-ring', scanRingColor(vars));
+  // The halo behind words on a FULLY CLEAR panel (kiosk.css `panelSurface: clear`, the default since 2026-10-07).
+  rootEl.style.setProperty('--panel-halo', panelHalo(theme));
   // *** `color-scheme`, NOT JUST OUR OWN CSS VARS. *** This is the one thing a theme controls
   // that our own stylesheet cannot override: the browser's OWN chrome for native form controls
   // (`<input type="time">`'s spinner and clock icon, scrollbars, and everything else this
@@ -553,10 +595,12 @@ export function refreshUserFont({ storage } = {}) {
 // wants Christmas all December, or the Halloween look all October, now just picks it. "With the seasons" stays,
 // last, as the choice that follows the date. A holiday theme picked by hand is that theme every day: it does not
 // switch itself off when the holiday ends (that is what "With the seasons" is for).
+// (2026-10-07) "Best for this device" (theme_default.js) last of all: the default, and the way back to it.
 export function listThemes() {
   return [
     ...Object.entries(THEMES).map(([id, t]) => ({ id, label: t.label })),
     ...Object.entries(FOLLOW_THEMES).map(([id, t]) => ({ id, label: t.label, follows: true })),
+    { id: DEVICE_THEME, label: DEVICE_THEME_LABEL, follows: true },
   ];
 }
 

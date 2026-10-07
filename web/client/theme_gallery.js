@@ -25,7 +25,7 @@
 //   per opening; the scenes themselves were measured on the bench Pi 400 (design note 34) and none needed a
 //   lighter build.
 
-import { THEMES, isFollowTheme, paintedTheme, luminance, worstContrast, onColor } from './theme.js';
+import { THEMES, isFollowTheme, isDeviceTheme, paintedTheme, luminance, worstContrast, onColor } from './theme.js';
 import { mountScene } from './livescene.js';
 import { HOLIDAYS, holidayWindow } from './seasons.js';
 import { byText } from './sort_filter.js';
@@ -105,7 +105,8 @@ export const isEasyToRead = (id, at = THEME_GALLERY_DEFAULTS.easyAt) => themeTex
 export function themeWords(id) {
   const k = themeKind(id);
   if (!k) return '';
-  return [KIND_WORDS[k], k === 'season' ? 'seasons' : '', k === 'holiday' ? 'holidays' : '',
+  // "Best for this device" (theme_default.js) follows the device, not the date.
+  return [isDeviceTheme(id) ? 'default suits this device automatic' : KIND_WORDS[k], k === 'season' ? 'seasons' : '', k === 'holiday' ? 'holidays' : '',
     isDarkTheme(id) ? 'dark' : 'light', isMovingTheme(id) ? 'moving scene' : 'still plain',
     isEasyToRead(id) ? 'easy to read high contrast' : ''].filter(Boolean).join(' ');
 }
