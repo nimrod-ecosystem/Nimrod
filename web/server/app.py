@@ -34,7 +34,8 @@ from game_rooms import SWEEP_S as GAME_SWEEP_S, GameRooms
 from push import PushHub, StreamTickets
 from grants import (DEFAULT_TTL_DAYS, GRANT_ROLES, MAX_TTL_DAYS, may_drive,
                     normalize_kind, normalize_role)
-from identity import current_user, optional_user, set_device_key_lookup, set_device_key_touch, via_device_key
+from identity import (current_user, optional_user, set_device_key_lookup, set_device_key_touch, signed_in_here,
+                      via_device_key)
 import claims
 import claude_ai
 import links
@@ -2348,8 +2349,10 @@ def api_dev_test_pages():
 @app.get("/api/me")
 def api_me(request: Request, user: str = Depends(current_user)):
     # `display_name`: what this account's notes are signed with ('' = "Someone"). See notes.py.
+    # `signed_in` (row 2.57): this browser carries this account's own sign-in, even if it is showing a screen page
+    # (identity.signed_in_here). page_links.js offers "Open it here" on a screen page only when it is true.
     return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK,
-            "display_name": _display_name(user)}
+            "display_name": _display_name(user), "signed_in": signed_in_here(request, user)}
 
 
 def _safe_next(path: str | None) -> str | None:

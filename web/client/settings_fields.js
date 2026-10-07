@@ -479,6 +479,9 @@ export function normalizeField(raw = {}) {
     // EMPTY (the value is never put into the page), and saving an empty box keeps what is there.
     f.secret = raw.secret === true;
     f.placeholder = String(raw.placeholder || (f.secret ? 'Type a new one to replace it' : 'Not set'));
+    // What an EMPTY secret row says instead of "Not set" (row 2.57): a key kept somewhere else (sealed on the
+    // server) is not in this row at all, and the row should say what IS in use, from the mounted instance.
+    if (f.secret && typeof raw.emptyLabel === 'string' && raw.emptyLabel.trim()) f.emptyLabel = raw.emptyLabel.trim();
     // STILL SAID, on every text row (see the header's TEXT section): a switch cannot type.
     f.why = 'needs a keyboard';
     // ...but a keyboard and a mouse can, so the menu gives them a box. `readOnly` below undoes
@@ -658,7 +661,7 @@ export function displayValue(field, value) {
   if (!field) return '';
   if (field.secret) {
     const v = String(value ?? '');
-    return v ? `\u2022\u2022\u2022\u2022${v.length > 8 ? v.slice(-4) : ''}` : 'Not set';
+    return v ? `\u2022\u2022\u2022\u2022${v.length > 8 ? v.slice(-4) : ''}` : (field.emptyLabel || 'Not set');
   }
   if (field.kind === 'toggle') return value ? field.onLabel : field.offLabel;
   if (field.kind === 'choice') {
@@ -901,8 +904,13 @@ export function fieldsFor(manifest = null, instance = null) {
     let merged = d;
     if (Object.prototype.hasOwnProperty.call(live, d.key)) {
       const v = live[d.key];
-      merged = v && !Array.isArray(v) && typeof v === 'object' && v.sources
-        ? { ...d, sources: v.sources } : { ...d, options: v };
+      // (row 2.57) A live entry may also be words for the row: `{ note }` and, on a secret, `{ emptyLabel }` -
+      // what is in force for a value kept outside the panel's settings. Only those two; nothing else is copied.
+      const words = v && !Array.isArray(v) && typeof v === 'object' && !v.sources
+        ? Object.fromEntries(['note', 'emptyLabel'].filter((k) => typeof v[k] === 'string').map((k) => [k, v[k]])) : null;
+      merged = words ? { ...d, ...words }
+        : v && !Array.isArray(v) && typeof v === 'object' && v.sources
+          ? { ...d, sources: v.sources } : { ...d, options: v };
     }
     const f = normalizeField(merged);
     if (f) out.push(f);

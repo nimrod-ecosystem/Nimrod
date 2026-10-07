@@ -552,51 +552,98 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
     //
     // Driven through an injected `fetch`, so none of this touches the network or anybody's key.
     {
-      // *** THE NO-KEY PATH FIRST. It is the one almost everybody will hit, and the one most
-      // likely to be left as a silent no-op. *** Nothing must go out over the wire without a
-      // key, so the fetch used here FAILS the check if it is ever called.
-      let called = 0;
-      const noFetch = () => { called += 1; throw new Error('must not be called'); };
-      const r0 = await searchVideos('cats', { apiKey: '', fetchFn: noFetch });
-      check('*** with no key, search does not call out at all ***', called === 0, `called=${called}`);
-      check('...and says so rather than failing silently', r0.error === 'no-key', JSON.stringify(r0));
-      const blank = await searchVideos('   ', { apiKey: 'k', fetchFn: noFetch });
-      check('an empty query does not call out either', called === 0 && blank.error === null,
-        `called=${called} ${JSON.stringify(blank)}`);
-
-      // The happy path, against a canned Data API response.
-      const canned = {
-        ok: true,
-        json: async () => ({ items: [
-          { id: { videoId: 'abc12345678' },
-            snippet: { title: 'A cat', channelTitle: 'Chan' } },
-          { id: { kind: 'youtube#channel' }, snippet: { title: 'not a video' } },
-        ] }),
+      // *** ROW 2.57: THE SEARCH GOES THROUGH THIS SITE'S SERVER, WITH THE KEY SAVED THERE. ***
+      // The browser never holds a key now, so nothing here passes one: a fake server answers
+      // the way /api/recommend/search does, and every request it sees is recorded.
+      const seen = [];
+      const fakeServer = (answer) => async (url, init) => {
+        seen.push({ url, init, body: init && init.body ? JSON.parse(init.body) : null });
+        return answer(url, init);
       };
-      let seenUrl = '';
+      const blank = await searchVideos('   ', { fetchFn: fakeServer(() => { throw new Error('must not be called'); }) });
+      check('an empty query does not call out at all', seen.length === 0 && blank.error === null, JSON.stringify(blank));
+      const r0 = await searchVideos('cats', { fetchFn: fakeServer(() => ({ status: 404, json: async () => ({ detail: 'There is no YouTube key saved yet, so there is nothing to search with.' }) })) });
+      check('*** no key saved anywhere: says so (no-key) rather than failing silently ***', r0.error === 'no-key', JSON.stringify(r0));
       const r1 = await searchVideos('cats', {
-        apiKey: 'KEY123', fetchFn: async (u) => { seenUrl = u; return canned; },
+        context: { panel: 'pnl-t1' },
+        fetchFn: fakeServer(() => ({ status: 200, json: async () => ({ searched: ['youtube'], problems: {}, results: [
+          { provider: 'youtube', kind: 'video', id: 'abc12345678', title: 'A cat', by: 'Chan' },
+          { provider: 'spotify', kind: 'song', id: '4uLU6hMCjMI75M1A2tKUQC', title: 'not a video' },
+        ] }) })),
       });
-      check('search returns the videos', r1.items.length === 1 && r1.items[0].id === 'abc12345678',
-        JSON.stringify(r1.items));
+      const sent = seen[seen.length - 1];
+      check('*** it asks THIS SITE (/api/recommend/search), never Google, and sends no key ***',
+        sent.url === '/api/recommend/search' && sent.init.method === 'POST' && !/key/i.test(JSON.stringify(sent.body || {}).replace(/"q"/, ''))
+        && !/googleapis/.test(sent.url), JSON.stringify(sent.body));
+      check('...for YouTube, with where it is asked from (this panel, this device) so the nearest key wins',
+        sent.body.provider === 'youtube' && sent.body.q === 'cats' && sent.body.panel === 'pnl-t1' && !!sent.body.device, JSON.stringify(sent.body));
+      check('search returns the videos', r1.items.length === 1 && r1.items[0].id === 'abc12345678', JSON.stringify(r1.items));
       check('...with the real title and channel, which is the gain over pasting a link',
-        r1.items[0].title === 'A cat' && r1.items[0].channel === 'Chan',
-        JSON.stringify(r1.items[0]));
-      check('*** a result that is not a video is dropped rather than added as a broken id ***',
-        r1.items.every((i) => i.id), JSON.stringify(r1.items));
-      check('the query is escaped into the URL', /[?&]q=cats(&|$)/.test(seenUrl), seenUrl);
-      check('...and it asks for videos only', /type=video/.test(seenUrl), seenUrl);
+        r1.items[0].title === 'A cat' && r1.items[0].channel === 'Chan', JSON.stringify(r1.items[0]));
+      check('*** a result that is not a YouTube video is dropped rather than added as a broken id ***', r1.items.every((i) => i.id && i.id.length === 11));
+      // A refused key is named, in the server's own words, because "search failed" is the message that wastes an evening.
+      const r2 = await searchVideos('cats', { fetchFn: fakeServer(() => ({ status: 200, json: async () => ({ results: [], problems: { youtube: 'YouTube did not accept your key.' } }) })) });
+      check('a refused key says it was the key, in the server’s words', r2.error === 'key-refused' && r2.message === 'YouTube did not accept your key.', JSON.stringify(r2));
+      const r3 = await searchVideos('cats', { fetchFn: fakeServer(() => { throw new Error('offline'); }) });
+      check('...and being offline is not reported as a bad key', r3.error === 'failed', JSON.stringify(r3));
+      const r4 = await searchVideos('cats', { fetchFn: fakeServer(() => ({ status: 429, json: async () => ({ detail: 'That is a lot of searches in a minute - wait a moment.' }) })) });
+      check('too many searches in a minute: said, not called a bad key', r4.error === 'busy', JSON.stringify(r4));
 
-      // A refused key is named, because "search failed" is the message that wastes an evening.
-      const r2 = await searchVideos('cats', {
-        apiKey: 'KEY123', fetchFn: async () => ({ ok: false, status: 403 }),
-      });
-      check('a refused key says it was the key', r2.error === 'key-refused', JSON.stringify(r2));
-      const r3 = await searchVideos('cats', {
-        apiKey: 'KEY123', fetchFn: async () => { throw new Error('offline'); },
-      });
-      check('...and being offline is not reported as a bad key', r3.error === 'failed',
-        JSON.stringify(r3));
+      // *** THE PANEL'S KEY ROWS (row 2.57): typed once, handed to the server, never kept here. ***
+      {
+        const calls = [];
+        let st = { youtube: { set: true, last4: '4f2a', in_force: { level: 'account', last4: '4f2a' }, overrides: [] },
+          spotify: { set: false, overrides: [] }, can_change: true, screen_levels: ['panel', 'device'] };
+        const fakeKeys = {
+          context: () => ({ panel: 'pnl-k', device: 'dev-k' }),
+          last: () => st,
+          status: async () => { calls.push(['status']); return st; },
+          save: async (p, k, lv) => { calls.push(['save', p, k, lv]); return { ok: true }; },
+          adopt: async (k) => { calls.push(['adopt', k]); return { ok: true, where: 'account' }; },
+          searchYouTube: async () => ({ items: [], error: null, message: '' }),
+        };
+        const OLD = 'AIza' + 'MadeUpOldPanelKeyForThisSuite_0123';   // made up, never a real key
+        let rowK = { apiKey: OLD, playlist: [] };
+        const subsK = new Set();
+        const stK = { load: async () => rowK, get: () => rowK, set: (p) => { rowK = { ...rowK, ...p }; subsK.forEach((f) => f(rowK)); return Promise.resolve(); },
+          subscribe: (f) => { subsK.add(f); f(rowK); return () => subsK.delete(f); }, flush: () => Promise.resolve(), startPolling() {}, destroy() {} };
+        const hostK = document.createElement('div'); document.body.append(hostK);
+        const instK = mountModule('youtube', { mount: hostK, bus: createBus(), state: stK,
+          events: { load: async () => {}, get: () => ({ events: [] }), append: async () => {}, subscribe: () => () => {}, startPolling() {}, destroy() {} },
+          user: USER, instanceId: 'pnl-k', playerFactory: makeStubPlayer().factory, searchKeys: fakeKeys });
+        instK.init();
+        await sleep(60);
+        check('*** a key an older panel kept in its own settings is handed to the server once, then emptied here ***',
+          calls.filter((c) => c[0] === 'adopt').length === 1 && calls.find((c) => c[0] === 'adopt')[1] === OLD && rowK.apiKey === '', JSON.stringify({ calls, rowK }));
+        const words = instK.impl.settingsChoices().apiKey;
+        check('*** the key row says which key is in use (no box to read a key back from) ***',
+          words && /In use: the account’s key, ending …4f2a/.test(words.emptyLabel), JSON.stringify(words));
+        const keyField = fieldsFor(getManifest('youtube'), instK).find((f) => f.key === 'apiKey');
+        check('...and the menu row shows those words where it used to say "Not set"',
+          /In use: the account’s key/.test(displayValue(keyField, '')), displayValue(keyField, ''));
+        const NEW = 'AIza' + 'MadeUpTypedKeyForThisSuite_01234567';      // made up
+        check('*** a typed key is TAKEN by the panel (the host stores nothing) and saved for the whole account by default ***',
+          instK.impl.settingsWrite('apiKey', `  ${NEW} `) === true && rowK.apiKey !== NEW, JSON.stringify(rowK));
+        await sleep(20);
+        check('...sent once, to the server, for the account', JSON.stringify(calls.filter((c) => c[0] === 'save')) === JSON.stringify([['save', 'youtube', NEW, 'account']]), JSON.stringify(calls));
+        await stK.set({ apiKeyFor: 'device' });
+        instK.impl.settingsWrite('apiKey', NEW);
+        await sleep(20);
+        check('*** with "saved for: this device only", it is saved for this device ***', calls.filter((c) => c[0] === 'save').pop()?.[3] === 'device', JSON.stringify(calls));
+        check('an empty box keeps what is there (taken, nothing sent)', instK.impl.settingsWrite('apiKey', '   ') === true
+          && calls.filter((c) => c[0] === 'save').length === 2);
+        check('any other row is the host’s to store as before', instK.impl.settingsWrite('volume', 50) === false);
+        const forOpts = instK.impl.settingsChoices().apiKeyFor;
+        check('"saved for" says what is saved at each level', forOpts.length === 4 && /ending …4f2a/.test(forOpts[0].label)
+          && /none saved/.test(forOpts.find((o) => o.value === 'device').label), JSON.stringify(forOpts));
+        st = { ...st, can_change: false };
+        await stK.set({ apiKeyFor: 'account' });
+        instK.impl.settingsWrite('apiKey', NEW);   // the answer after a save is the server's latest (now: a bare screen)
+        await sleep(20);
+        check('*** on a screen nobody has signed in on, the row says what it can save (this device or panel) ***',
+          /Nobody has signed in on this browser/.test(instK.impl.settingsChoices().apiKey.note), instK.impl.settingsChoices().apiKey.note);
+        instK.destroy(); hostK.remove();
+      }
 
       // *** AND THROUGH THE PANEL, because a function nobody can reach is not a feature. ***
       const host5 = document.createElement('div');

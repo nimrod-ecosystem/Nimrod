@@ -33,6 +33,7 @@ import { createHeldSignal } from '../held.js';
 import { createPresetLibrary } from '../presets.js';
 import { followPerson } from '../person_known.js';
 import { flashLimit, failureBackoffMs } from '../flash_limit.js';
+import { createSearchKeyClient, keyInForceWords, keyAtLevelWords, KEY_LEVEL_WORDS } from '../search_key.js';
 import {
   autostartFields, shouldAutostart, panelAlone, createPlayReporter, ensureStartStyle, startOverlayHtml,
 } from '../game_start.js';
@@ -131,10 +132,31 @@ export const SETTINGS = [
   // is also the honest level for it: a Google Cloud API key is not something a caregiver has
   // lying around, and search is the only thing that uses it — everything else in this module
   // works without one.
-  { key: 'apiKey', label: 'YouTube API key (for searching)', kind: 'text', default: '',
+  //
+  // *** ENTERED ONCE, KEPT ON THE SERVER (row 2.57; search_key.js argues it). *** This row is
+  // still where a key is TYPED, but it is no longer KEPT here: the panel hands what is typed to
+  // the server (`settingsWrite` below), which keeps it encrypted for the level `apiKeyFor` names -
+  // the whole account by default, so every YouTube panel and "Recommend a song or video" use it.
+  // The row then says which key is in use ("the account's key, ending …4f2a"), live, and the box
+  // stays empty. A key an older panel kept here is handed over once (`adoptOldKey`).
+  { key: 'apiKey', label: 'YouTube key (for searching)', kind: 'text', default: '',
     level: 'advanced', secret: true,
-    note: 'Only needed to search from this panel. Get one from Google Cloud, and restrict it '
-      + 'to this site. Searching sends what you type to Google; nothing else here does.' },
+    note: 'Typed once, kept encrypted on this site’s server and never shown again; every YouTube '
+      + 'panel and search uses it. Get one from Google Cloud (YouTube Data API v3). Searching '
+      + 'sends what you type to YouTube; nothing else here does.' },
+  // WHERE A TYPED KEY IS SAVED. A CHOICE (so a switch can step it), the account first: Mike's
+  // "entering it in either place should set it as the default everywhere". The narrower ones are
+  // for a person, a device or one panel that should search on a different key (a household
+  // member's own, a test key). Going back to the default is removing the narrower key, on the
+  // keys page (Devices: "Search songs and videos by name…"), which lists every one.
+  { key: 'apiKeyFor', label: 'A key typed above is saved for', kind: 'choice', default: 'account',
+    level: 'advanced',
+    options: [
+      { value: 'account', label: 'the whole account (every screen and search)' },
+      { value: 'person', label: 'this person only' },
+      { value: 'device', label: 'this device only' },
+      { value: 'panel', label: 'this panel only' },
+    ] },
   { key: 'heldNotifyMs', label: 'If someone pauses it, let people know after', kind: 'choice',
     default: 21600000, level: 'standard',
     options: [
@@ -321,37 +343,21 @@ function esc(v) {
  * Google, but a search sends WHAT SOMEBODY TYPED, which is different in kind on a site whose
  * pitch is that your media never leaves your machine. That sentence is in the UI, not only here.
  *
- * `fetchFn` is injected the same way `playerFactory` and `nowDate` are, so the suite drives this
- * with no network and no key of anybody's.
+ * *** THROUGH THE SERVER NOW (row 2.57). *** It used to ask Google from the browser with the
+ * panel's own copy of the key in the address. It now asks this site's server
+ * (/api/recommend/search), which uses the nearest key saved for this panel, device, person or
+ * account and never hands it to the page - search_key.js argues it. Same answer shape as before:
+ * `{ items: [{ id, title, channel }], error, message }`, `message` being the server's own words.
+ *
+ * `client` (a search_key.js client, which knows where "here" is) or `fetchFn` is injected the same
+ * way `playerFactory` and `nowDate` are, so the suite drives this with no network and nobody's key.
  */
-export async function searchVideos(query, { apiKey, fetchFn = fetch, max = 10 } = {}) {
+export async function searchVideos(query, { client = null, fetchFn = undefined, context = {}, user = null } = {}) {
   const q = String(query || '').trim();
-  if (!q) return { items: [], error: null };
-  if (!apiKey) return { items: [], error: 'no-key' };
-  const url = 'https://www.googleapis.com/youtube/v3/search'
-    + `?part=snippet&type=video&maxResults=${Math.max(1, Math.min(25, max))}`
-    + `&q=${encodeURIComponent(q)}&key=${encodeURIComponent(apiKey)}`;
-  try {
-    const res = await fetchFn(url);
-    if (!res || !res.ok) {
-      // 403 is overwhelmingly "quota exhausted" or "key not enabled for this API", and both are
-      // things the person can fix — so they are named rather than reported as a number.
-      return { items: [], error: res && res.status === 403 ? 'key-refused' : 'failed' };
-    }
-    const body = await res.json();
-    const items = (body && Array.isArray(body.items) ? body.items : [])
-      .map((it) => ({
-        id: it && it.id && it.id.videoId,
-        title: (it && it.snippet && it.snippet.title) || '',
-        channel: (it && it.snippet && it.snippet.channelTitle) || '',
-      }))
-      .filter((it) => it.id);
-    return { items, error: null };
-  } catch {
-    // Offline, blocked, or a CSP that does not allow googleapis. Not distinguishable from here
-    // and not worth pretending otherwise.
-    return { items: [], error: 'failed' };
-  }
+  if (!q) return { items: [], error: null, message: '' };
+  const c = client || createSearchKeyClient({ user, context: () => context,
+    ...(fetchFn ? { fetchImpl: fetchFn } : {}) });
+  try { return await c.searchYouTube(q); } catch { return { items: [], error: 'failed', message: '' }; }
 }
 
 function loadIframeApi() {
@@ -536,6 +542,62 @@ registerModule(
     // Injected so the suite can search with no network and nobody's key -- the same seam
     // `playerFactory` and `nowDate` use.
     const search = ctx.searchVideos || searchVideos;
+    // *** THE KEY, KEPT ON THE SERVER (row 2.57; search_key.js argues it). *** Where "here" is, for
+    // the nearest saved key: this panel, this screen's person (once the screen knows it), this
+    // browser. `keyStatus` is the server's last answer, which the menu's rows read synchronously;
+    // `keyMsg` is what the last save said. `ctx.searchKeys` lets a suite hand in its own client.
+    let keyPerson = null;
+    const deviceLabel = () => {
+      try { return String(navigator.userAgentData?.platform || navigator.platform || '').slice(0, 40); }
+      catch { return ''; }
+    };
+    const keyClient = ctx.searchKeys || createSearchKeyClient({
+      user,
+      context: () => ({ panel: ctx.instanceId || '', person: keyPerson || '' }),
+      label: (lv) => (lv === 'panel' ? 'YouTube' : lv === 'device' ? deviceLabel() : ''),
+    });
+    let keyStatus = null;
+    let keyMsg = '';
+    let adopting = null;
+    // The key row's words: which key is in use from here (in place of "Not set" - the box is always
+    // empty now), what the last save said, and on a screen nobody has signed in on, what it can save.
+    const API_KEY_NOTE = SETTINGS.find((f) => f.key === 'apiKey').note;
+    function keyRowWords() {
+      const inUse = keyInForceWords(keyStatus, 'youtube');
+      const emptyLabel = keyStatus ? (inUse ? `In use: ${inUse}` : 'None saved yet') : 'Checking which key is in use…';
+      const lv = cfg.apiKeyFor || 'account';
+      const screenOnly = !!keyStatus && keyStatus.can_change === false
+        && !(keyStatus.screen_levels || []).includes(lv);
+      const note = [keyMsg,
+        screenOnly ? 'Nobody has signed in on this browser, so a key typed here can be saved for this device '
+          + 'or this panel (the next row), or for the whole account once you sign in.' : '',
+        API_KEY_NOTE].filter(Boolean).join(' ');
+      return { emptyLabel, note };
+    }
+    const refreshKeys = () => Promise.resolve(keyClient.status())
+      .then((s) => { if (s && !destroyed) keyStatus = s; return s; })
+      .catch(() => null);
+    // *** A KEY AN OLDER PANEL KEPT IN ITS OWN SETTINGS, HANDED OVER ONCE. *** It becomes the
+    // account's key when the account has none; if the account's is the same key nothing more is
+    // kept; if it is a different one it is kept for this panel alone, so the panel searches exactly
+    // as it did (recommend_search.adopt_youtube). Then the panel's own copy is emptied. Tried when
+    // the panel's settings arrive and again before a search, until it works.
+    function adoptOldKey(raw) {
+      const k = String(raw || '').trim();
+      if (!k) return Promise.resolve(null);
+      if (adopting) return adopting;
+      adopting = Promise.resolve(keyClient.adopt(k)).then((r) => {
+        if (r && r.ok && !destroyed) {
+          state.set({ apiKey: '' });
+          keyStatus = keyClient.last() || keyStatus;
+          keyMsg = r.where === 'panel'
+            ? 'The key this panel kept is now kept on the server, for this panel.'
+            : 'The key this panel kept is now the account’s key, kept on the server.';
+        }
+        return r;
+      }).catch(() => null).finally(() => { adopting = null; });
+      return adopting;
+    }
     const setTimer = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearTimer = ctx.clearTimer || ((id) => clearTimeout(id));
     // Only the failure backoff reads this clock.
@@ -1036,10 +1098,13 @@ registerModule(
     // actually do about it, because "search failed" is the message that wastes somebody's
     // evening.
     const SEARCH_MSG = {
-      'no-key': 'Searching needs a YouTube API key. Add one in this panel’s advanced settings, '
-        + 'or paste a video link above.',
-      'key-refused': 'Google refused that key — usually the daily quota, or the key not having '
-        + 'the YouTube Data API enabled.',
+      // (row 2.57) One key for the whole account now, typed in this panel's settings or on the
+      // keys page; the server's own sentence is shown instead when it sends one.
+      'no-key': 'Searching needs a YouTube key. Type one in this panel’s advanced settings (it is '
+        + 'then used by every YouTube panel), or paste a video link above.',
+      'key-refused': 'YouTube refused the key — usually the day’s searches are used up, or the key '
+        + 'does not have YouTube Data API v3 turned on.',
+      busy: 'That is a lot of searches in a minute. Wait a moment and try again.',
       failed: 'Could not reach YouTube. You can still paste a video link above.',
     };
 
@@ -1049,9 +1114,14 @@ registerModule(
       if (!box) return;
       if (!String(q).trim()) { box.textContent = ''; return; }
       box.textContent = 'Searching…';
-      const { items, error } = await search(q, { apiKey: (cfg.apiKey || '').trim() });
+      // An old key still in this panel's settings goes to the server first, so the search can use it.
+      if (String(cfg.apiKey || '').trim()) await adoptOldKey(cfg.apiKey);
+      const { items, error, message } = await search(q, { client: keyClient });
       box.innerHTML = '';
-      if (error) { box.textContent = SEARCH_MSG[error] || SEARCH_MSG.failed; return; }
+      if (error) {
+        box.textContent = (error === 'no-key' ? SEARCH_MSG['no-key'] : message) || SEARCH_MSG[error] || SEARCH_MSG.failed;
+        return;
+      }
       if (!items.length) { box.textContent = 'Nothing found.'; return; }
       for (const it of items) {
         const row = document.createElement('div');
@@ -1535,6 +1605,8 @@ registerModule(
         // instance; (re)index + (re)render on every change.
         state.subscribe((s) => {
           cfg = { ...DEFAULTS, ...s };
+          // (row 2.57) A key an older panel kept here goes to the server once, then leaves.
+          if (String(cfg.apiKey || '').trim()) adoptOldKey(cfg.apiKey);
           if (seedFromQuery()) return;   // set() re-enters this subscriber with the seeded list
           applyConfig();
         });
@@ -1566,7 +1638,9 @@ registerModule(
           });
           lib.startPolling?.();
         };
-        offPerson = followPerson(ctx, usePresets);
+        // (row 2.57) The same answer says whose key is nearest: the server is asked which key is in
+        // use from here now, and again when the screen learns (or changes) its person.
+        offPerson = followPerson(ctx, (pid) => { keyPerson = pid || null; refreshKeys(); usePresets(pid); });
 
       },
       onResize() {},
@@ -1597,7 +1671,31 @@ registerModule(
         presetId: knownPresets
           .filter((p) => p && p.type === 'youtube')
           .map((p) => ({ value: p.id, label: p.name })),
+        // (row 2.57) What the key rows say, from the server's last answer: which key is in use from
+        // here, what the last save said, and what is saved at each level.
+        apiKey: keyRowWords(),
+        apiKeyFor: SETTINGS.find((f) => f.key === 'apiKeyFor').options.map((o) => ({
+          value: o.value,
+          label: `${KEY_LEVEL_WORDS[o.value] || o.label}${keyStatus ? ` — ${o.value === 'person' && !keyPerson
+            ? 'this screen has no person yet' : keyAtLevelWords(keyStatus, 'youtube', o.value, keyClient.context())}` : ''}`,
+        })),
       }),
+
+      // *** A TYPED KEY GOES TO THE SERVER, NEVER INTO THIS PANEL'S SETTINGS (row 2.57). *** The host
+      // (kiosk.js) asks here before it stores a row's value; `true` means "taken, store nothing". An
+      // empty box keeps what is there, as every secret row does.
+      settingsWrite(key, value) {
+        if (key !== 'apiKey') return false;
+        const typed = String(value == null ? '' : value).trim();
+        if (!typed) return true;
+        const level = cfg.apiKeyFor || 'account';
+        keyMsg = 'Saving…';
+        Promise.resolve(keyClient.save('youtube', typed, level)).then((r) => {
+          keyMsg = r && r.ok ? `Saved for ${KEY_LEVEL_WORDS[level] || level}.` : ((r && r.message) || 'The key was not saved.');
+          keyStatus = keyClient.last() || keyStatus;
+        }).catch(() => { keyMsg = 'The key was not saved.'; });
+        return true;
+      },
     };
   },
 );

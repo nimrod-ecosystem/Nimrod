@@ -171,6 +171,18 @@ def via_device_key(request: Request) -> bool:
     return _match_device_key(request.headers.get("X-Device-Key")) is not None
 
 
+def signed_in_here(request: Request, user: str) -> bool:
+    """True when this browser ALSO carries a signed-in session for the same account `user`.
+
+    Row 2.57 (2026-10-07). A browser that once opened a screen page keeps that screen's key and sends it on
+    every request, so `via_device_key` alone cannot tell a care-room screen nobody signs in on from the owner's
+    own computer showing a screen page. A sign-in can: somebody typed their way in on this browser. A session
+    for a DIFFERENT account than the screen's is not the owner of this one, so it does not count.
+    """
+    sess = _session_user(request)
+    return bool(sess) and sess == user
+
+
 def current_user(request: Request) -> str:
     # A valid device secret (unattended kiosk) always wins — works in dev + prod.
     user = _match_device_key(request.headers.get("X-Device-Key"))

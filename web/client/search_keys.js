@@ -17,17 +17,32 @@
 // for finding songs. Somebody who only wants search should not have to read about Claude spending to get it, and
 // the recommend window can link straight here.
 
+//
+// *** ONE KEY, ENTERED ONCE (row 2.57). *** The YouTube key saved here is now THE key: a YouTube player's own search
+// (modules/youtube.js) uses it too, and a key typed in a player's settings lands here. A person, a device or one
+// player may have a key of its own (search_key.js); this page lists every one, with "Use the main key instead"
+// to take it away. On a browser that is set up as a screen and nobody has signed in on, the server refuses changes
+// to the main key, so the page says so and offers a sign-in link (an ordinary page: following a link here is fine).
+
+import { deviceId } from './output_remote.js';
+
 export const SEARCH_KEYS_API = '/api/recommend/keys';
+// The Music panel's "Connect Spotify" comes back to this page (= music_spotify.js CALLBACK_PAGE; the suite checks they
+// agree). Written here rather than imported so this page does not load the music player to show one address.
+export const SPOTIFY_CALLBACK_PAGE = 'spotify_callback.html';
+export const SIGN_IN_HREF = '/auth/login?next=/search_keys.html';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // Every word this page can show, in one place, so the suite can hold them to the plain-word rule.
 export const SEARCH_KEYS_WORDS = Object.freeze({
   title: 'Search for songs and videos by name',
-  intro: 'When you recommend a song or video to one of your people, you can paste a link. With your own YouTube or '
-    + 'Spotify key you can search by name instead. The keys are yours: searches count against your own free '
-    + 'allowance, and nobody else’s searches use them.',
+  intro: 'With your own YouTube or Spotify key you can search by name: when you recommend a song or video to one of '
+    + 'your people, and (YouTube) in a YouTube player’s own settings on your screens. The keys are yours: searches '
+    + 'count against your own free allowance, and nobody else’s searches use them.',
   kept: 'Each key is sent once, kept encrypted, and never shown again: only its last four characters.',
+  once: 'Enter the YouTube key once, here or in any YouTube player’s settings: every screen and search of yours then '
+    + 'uses it.',
   ytHeading: 'YouTube',
   ytSteps: [
     'Go to console.cloud.google.com and sign in with a Google login.',
@@ -44,14 +59,21 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
   ytFilterHelp: 'Strict is the starting choice: a recommendation lands on somebody else’s page.',
   filters: { strict: 'Strict: hide videos YouTube marks as not for everyone', moderate: 'Moderate', none: 'Off: no filter' },
   spHeading: 'Spotify',
+  // (row 2.57) The Redirect URI step names this site's own Spotify return address, so the SAME Spotify app serves
+  // search here AND the Music player's "Connect Spotify" (which needs only the Client ID). `{callback}` is filled
+  // in from where the page is served.
   spSteps: [
     'Go to developer.spotify.com and sign in with your Spotify login.',
-    'Press Create app. Give it any name and description. Spotify asks for a Redirect URI: put http://127.0.0.1:8080/ '
-      + '(this site never uses it). Tick Web API, agree to Spotify’s terms, and save.',
+    'Press Create app. Give it any name and description. Spotify asks for a Redirect URI: put {callback} (the Music '
+      + 'player’s Connect Spotify comes back there; search does not use it). Tick Web API, agree to Spotify’s terms, '
+      + 'and save.',
     'Open the app’s Settings. Copy the Client ID, then press View client secret and copy that too.',
   ],
   spNote: 'Searching Spotify this way needs nobody to sign in to Spotify here, and plays nothing: it only finds the '
     + 'song’s link.',
+  spBoth: 'Search needs both the Client ID and the Client secret. Playing music through the Music player’s Connect '
+    + 'Spotify needs only the Client ID (paste the same one in that player’s settings) and your own Spotify sign-in '
+    + 'on that device; the secret never goes there.',
   spId: 'Client ID',
   spSecret: 'Client secret',
   save: 'Save the key',
@@ -61,6 +83,19 @@ export const SEARCH_KEYS_WORDS = Object.freeze({
   saveFilter: 'Save this',
   none: 'No key saved yet.',
   savedYT: (last4) => `A key is saved, ending …${last4}. Paste a new one to replace it.`,
+  // (row 2.57) Keys for one person, one device or one YouTube player, and how to go back to the main one.
+  ownHeading: 'Keys for one person, device or player',
+  ownIntro: 'These are used instead of the main key in that one place. Remove one and that place uses the main key '
+    + 'again.',
+  ownWho: (o, here) => (o.level === 'person' ? `For ${o.label || 'one person'}`
+    : o.level === 'device' ? `On ${here ? 'this device' : 'one device'}${o.label ? ` (${o.label})` : ''}`
+      : `One YouTube player on a screen${here ? ' (this one)' : ''}`),
+  ownEnding: (last4) => `ending …${last4}`,
+  useMain: 'Use the main key instead',
+  usingMain: 'Removed. That place uses the main key again.',
+  screenOnly: 'This browser is set up as a screen and nobody has signed in on it, so the main keys can be read here '
+    + 'but not changed.',
+  signInLink: 'Sign in to change them',
   savedSP: (last4) => `Saved: the Client ID ends …${last4}. Paste new ones to replace them.`,
   cannotStore: 'This server is not set up to keep keys yet (it needs its NIMROD_AI_KEY_SECRET setting), so a key cannot be saved.',
   signIn: 'Sign in first: this page is for whoever these keys belong to.',
@@ -92,6 +127,10 @@ export const SEARCH_KEYS_STYLE = `
 .sk-btn:focus-visible,.sk-card input:focus-visible,.sk-card select:focus-visible,.sk-card a:focus-visible{outline:3px solid var(--focus, var(--accent));outline-offset:2px}
 .sk-card a{color:var(--link)}
 .sk-msg{margin:.5em 0;padding:8px 10px;border-radius:10px;border:1px solid var(--border)}
+.sk-own-h{font-size:1rem;margin:1.2em 0 .3em}
+.sk-own{list-style:none;margin:0;padding:0}
+.sk-own li{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin:.4em 0}
+.sk-own li span{overflow-wrap:anywhere}
 `;
 
 const W = SEARCH_KEYS_WORDS;
@@ -100,10 +139,16 @@ const W = SEARCH_KEYS_WORDS;
  * Draw the page into `el`. `fetchImpl` and `headers` are injectable (a suite passes a fake server).
  * Returns { refresh, ready, state() }.
  */
-export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers = () => ({}) } = {}) {
+export function mountSearchKeys(el, {
+  fetchImpl = (...a) => fetch(...a), headers = () => ({}), device = () => deviceId(),
+  loc = (typeof location !== 'undefined' ? location : null),
+} = {}) {
   let st = null;
   let msg = '';
   let busy = false;
+  // This browser's own id, so a key saved "for this device" (in a player's settings) is marked "this device".
+  const here = () => { try { return String(device() || ''); } catch { return ''; } };
+  const callback = loc && loc.origin && loc.origin !== 'null' ? `${loc.origin}/${SPOTIFY_CALLBACK_PAGE}` : `this site’s /${SPOTIFY_CALLBACK_PAGE}`;
 
   async function call(method, path = '', body) {
     let h = {};
@@ -119,7 +164,8 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
   }
 
   async function refresh() {
-    const r = await call('GET');
+    const d = here();
+    const r = await call('GET', d ? `?device=${encodeURIComponent(d)}` : '');
     if (r.ok) st = r.body;
     else msg = r.status === 401 ? W.signIn : r.detail;
     render();
@@ -131,7 +177,18 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
     try { await fn(); } finally { busy = false; render(); }
   }
 
-  const steps = (list) => `<ol class="sk-steps">${list.map((s) => `<li>${esc(s)}</li>`).join('')}</ol>`;
+  const steps = (list) => `<ol class="sk-steps">${list.map((s) => `<li>${esc(String(s).replace('{callback}', callback))}</li>`).join('')}</ol>`;
+  // (row 2.57) The keys saved for one person, device or player, each with its way back to the main key.
+  const own = (provider, p) => {
+    const list = (p && Array.isArray(p.overrides) ? p.overrides : []);
+    if (!list.length) return '';
+    return `<h3 class="sk-own-h">${esc(W.ownHeading)}</h3><p class="sk-muted">${esc(W.ownIntro)}</p>
+      <ul class="sk-own" data-sk-own="${esc(provider)}">${list.map((o) => {
+        const isHere = o.level === 'device' && o.ref === here();
+        return `<li><span>${esc(W.ownWho(o, isHere || o.here))}, ${esc(W.ownEnding(o.last4 || ''))}</span>
+          <button type="button" class="sk-btn" data-sk-do="unset-${esc(provider)}" data-level="${esc(o.level)}" data-ref="${esc(o.ref)}" ${busy ? 'disabled' : ''}>${esc(W.useMain)}</button></li>`;
+      }).join('')}</ul>`;
+  };
 
   function render() {
     if (!st) {
@@ -150,9 +207,11 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
       <p class="sk-muted">${esc(W.kept)}</p>
       ${st.can_store ? '' : `<p class="sk-msg" data-sk-warn>${esc(W.cannotStore)}</p>`}
       ${msg ? `<p class="sk-msg" data-sk-msg role="status">${esc(msg)}</p>` : ''}
+      ${st.can_change === false ? `<p class="sk-msg" data-sk-screen>${esc(W.screenOnly)} <a href="${SIGN_IN_HREF}" data-sk-sign-in>${esc(W.signInLink)}</a></p>` : ''}
 
       <h2>${esc(W.ytHeading)}</h2>
       <p class="sk-status" data-sk-status="youtube">${esc(yt.set ? W.savedYT(yt.last4 || '') : W.none)}</p>
+      <p class="sk-muted" data-sk-once>${esc(W.once)}</p>
       ${steps(W.ytSteps)}
       <p class="sk-muted">${esc(W.ytQuota)}</p>
       <label for="sk-yt">${esc(W.ytLabel)}</label>
@@ -166,11 +225,13 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
       <select id="sk-filter" data-sk-filter>${opts}</select>
       <p class="sk-muted">${esc(W.ytFilterHelp)}</p>
       <div class="sk-row"><button type="button" class="sk-btn" data-sk-do="save-filter" ${dis}>${esc(W.saveFilter)}</button></div>
+      ${own('youtube', yt)}
 
       <h2>${esc(W.spHeading)}</h2>
       <p class="sk-status" data-sk-status="spotify">${esc(sp.set ? W.savedSP(sp.last4 || '') : W.none)}</p>
       ${steps(W.spSteps)}
       <p class="sk-muted">${esc(W.spNote)}</p>
+      <p class="sk-muted" data-sk-sp-both>${esc(W.spBoth)}</p>
       <label for="sk-sp-id">${esc(W.spId)}</label>
       <input id="sk-sp-id" data-sk-sp-id type="text" autocomplete="off" spellcheck="false">
       <label for="sk-sp-secret">${esc(W.spSecret)}</label>
@@ -180,6 +241,7 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
         ${sp.set ? `<button type="button" class="sk-btn" data-sk-do="check-spotify" ${dis}>${esc(W.check)}</button>
         <button type="button" class="sk-btn" data-sk-do="remove-spotify" ${dis}>${esc(W.remove)}</button>` : ''}
       </div>
+      ${own('spotify', sp)}
     </div>`;
   }
 
@@ -217,6 +279,13 @@ export function mountSearchKeys(el, { fetchImpl = (...a) => fetch(...a), headers
       act(async () => {
         const r = await call('DELETE', `/${which}`);
         if (r.ok) { st = r.body; msg = W.removedMsg(NAME[which]); } else msg = r.detail;
+      });
+    } else if (what === 'unset' && NAME[which]) {
+      // A key for one person, device or player: removed, so that place uses the main key again.
+      const q = new URLSearchParams({ level: b.dataset.level || '', ref: b.dataset.ref || '' }).toString();
+      act(async () => {
+        const r = await call('DELETE', `/${which}?${q}`);
+        if (r.ok) { await refresh(); msg = W.usingMain; } else msg = r.detail;
       });
     } else if (what === 'check' && NAME[which]) {
       act(async () => {

@@ -26,7 +26,9 @@ import {
   recommendationsURL, markURL, mountRecommend, recThumbHTML, recElsewhereHTML,
   SEARCH_KEYS_URL, SEARCH_URL, SEARCH_KEYS_PAGE, spotifyRef, SPOTIFY_TYPES,
 } from '../recommend.js';
-import { mountSearchKeys, SEARCH_KEYS_WORDS, SEARCH_KEYS_API } from '../search_keys.js';
+import { mountSearchKeys, SEARCH_KEYS_WORDS, SEARCH_KEYS_API, SIGN_IN_HREF, SPOTIFY_CALLBACK_PAGE } from '../search_keys.js';
+import { createSearchKeyClient, keyInForceWords } from '../search_key.js';
+import { CALLBACK_PAGE } from '../music_spotify.js';
 import { PEOPLE_TYPE, plainWordProblems, PEOPLE_SETTINGS } from '../people_page.js';
 import { createProfilesClient } from '../profile.js';
 import { createState } from '../state.js';
@@ -355,6 +357,72 @@ try {
   check('every target at least 44px', !small(kbox, 'input, select, button').length, small(kbox, 'input, select, button').join());
   check('no sideways scroll at 375', kbox.scrollWidth <= 376, `${kbox.scrollWidth}`);
   kbox.remove();
+
+  // ============================================================================================
+  section('*** row 2.57: one key, entered once - the keys page lists keys for one person, device or player ***');
+  {
+    const calls2 = [];
+    let s2 = { can_store: true, can_change: false, any: true, safe_search: 'strict', safe_search_options: ['strict', 'moderate', 'none'],
+      youtube: { set: true, last4: '4f2a', in_force: { level: 'account', last4: '4f2a' }, overrides: [
+        { level: 'device', ref: 'dev-this', label: 'Windows', last4: '1111', here: false },
+        { level: 'panel', ref: 'pnl-9', label: 'YouTube', last4: '2222', here: false },
+        { level: 'person', ref: 'p-1', label: 'Pat', last4: '3333', here: false }] },
+      spotify: { set: false, last4: null, overrides: [] } };
+    const f2 = async (url, init) => {
+      calls2.push({ url, method: init?.method });
+      if (init?.method === 'DELETE') s2 = { ...s2, youtube: { ...s2.youtube, overrides: s2.youtube.overrides.filter((o) => !url.includes(`ref=${o.ref}`)) } };
+      return { ok: true, status: 200, json: async () => s2 };
+    };
+    const kb2 = document.createElement('div'); kb2.style.cssText = 'width:375px'; document.body.append(kb2);
+    const kp2 = mountSearchKeys(kb2, { fetchImpl: f2, headers: () => ({ 'X-Dev-User': 'k2' }), device: () => 'dev-this',
+      loc: { origin: 'https://example.org' } });
+    await kp2.ready;
+    const q2 = (s) => kb2.querySelector(s);
+    check('*** it says the YouTube key is entered once and used everywhere ***', q2('[data-sk-once]')?.textContent === SEARCH_KEYS_WORDS.once);
+    check('it asks for the status for THIS device, so a key saved for it is marked', calls2[0]?.url === `${SEARCH_KEYS_API}?device=dev-this`, J(calls2[0]));
+    const items = [...kb2.querySelectorAll('[data-sk-own="youtube"] li')].map((li) => li.textContent.replace(/\s+/g, ' ').trim());
+    check('*** each key for one person, device or player, in plain words, with its last four ***',
+      items.length === 3 && /^On this device \(Windows\), ending …1111/.test(items[0]) && /^One YouTube player on a screen, ending …2222/.test(items[1])
+      && /^For Pat, ending …3333/.test(items[2]), J(items));
+    check('*** a browser that is a screen nobody signed in on: it says so, with a sign-in link back to this page ***',
+      /nobody has signed in on it/.test(q2('[data-sk-screen]')?.textContent || '') && q2('[data-sk-sign-in]')?.getAttribute('href') === SIGN_IN_HREF);
+    check('*** one Spotify app for both: the Redirect URI step names this site’s own Spotify return address ***',
+      kb2.textContent.includes(`https://example.org/${SPOTIFY_CALLBACK_PAGE}`) && SPOTIFY_CALLBACK_PAGE === CALLBACK_PAGE
+      && /needs only the Client ID/.test(q2('[data-sk-sp-both]')?.textContent || ''));
+    kb2.querySelector('[data-sk-own="youtube"] li:nth-child(2) [data-sk-do="unset-youtube"]').click();
+    check('*** "Use the main key instead": that one key removed (level and which), the rest kept ***',
+      await until(() => kb2.querySelectorAll('[data-sk-own="youtube"] li').length === 2, 3000)
+      && calls2.some((c) => c.method === 'DELETE' && c.url === `${SEARCH_KEYS_API}/youtube?level=panel&ref=pnl-9`)
+      && /main key again/.test(q2('[data-sk-msg]')?.textContent || ''), J(calls2));
+    const w2 = JSON.stringify(SEARCH_KEYS_WORDS) + kb2.textContent;
+    check('plain words still (no module, dashboard, panel, grant, account, token, widget), and names nobody',
+      !plainWordProblems(w2).length && !/\b(account|token|widget)s?\b/i.test(w2) && !/her screen|christine|cici/i.test(w2), J(plainWordProblems(w2)));
+    check('every new target at least 44px', !small(kb2, 'button').length, small(kb2, 'button').join());
+    check('no sideways scroll at 375', kb2.scrollWidth <= 376, `${kb2.scrollWidth}`);
+    kb2.remove();
+  }
+
+  section('*** row 2.57 against the real server: the nearest key wins, removing one goes back to the default ***');
+  {
+    const KU = `${BASE_USER}-keys`;
+    const kc = createSearchKeyClient({ user: KU, context: () => ({ panel: 'pnl-real', device: 'dev-real' }) });
+    const s0 = await kc.status();
+    check('(setup) the server can keep keys (NIMROD_AI_KEY_SECRET is set for this run)', s0 && s0.can_store === true, J(s0));
+    const MADE_UP_1 = 'AIza' + 'MadeUpKeyForTheRecommendSuite_0001';   // made up, never a real key
+    const MADE_UP_2 = 'AIza' + 'MadeUpKeyForTheRecommendSuite_0002';
+    const a1 = await kc.save('youtube', MADE_UP_1, 'account');
+    const s1 = kc.last();
+    check('*** a key saved for everywhere is the one in force for this panel and device ***', a1.ok
+      && s1?.youtube?.in_force?.level === 'account' && keyInForceWords(s1) === 'the account’s key, ending …0001', J(s1?.youtube));
+    const a2 = await kc.save('youtube', MADE_UP_2, 'panel');
+    check('*** this panel’s own key wins here ***', a2.ok && kc.last()?.youtube?.in_force?.level === 'panel'
+      && keyInForceWords(kc.last()) === 'this panel’s own key, ending …0002', J(kc.last()?.youtube));
+    check('...and the answer never carries either key', !JSON.stringify(kc.last()).includes(MADE_UP_1) && !JSON.stringify(kc.last()).includes(MADE_UP_2));
+    await kc.clear('youtube', 'panel');
+    check('*** removed: this panel uses the default again ***', kc.last()?.youtube?.in_force?.level === 'account', J(kc.last()?.youtube));
+    await kc.clear('youtube', 'account');
+    check('...and with that removed too, nothing is in force', kc.last()?.youtube?.in_force === null && kc.last()?.any === false, J(kc.last()?.youtube));
+  }
 
   // ============================================================================================
   section('(setup) Pat and Robin on one account; Sam ticks Pat for messages; Lee does not');
