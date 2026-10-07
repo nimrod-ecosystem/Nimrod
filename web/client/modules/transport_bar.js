@@ -51,6 +51,7 @@ import {
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
+import { BAR_KEY_HIDDEN } from '../bar_toggle.js';
 
 // How near the pointer has to come to bring a tucked bar back: the kiosk's own rule for its bar
 // (kiosk.js BAR_REVEAL_MARGIN_PX, Mike 2026-09-20: "pop up when you put your cursor near"), not a new
@@ -171,6 +172,20 @@ registerModule(
         if (root.contains(doc()?.activeElement)) return;
         setTucked(true);
       }, ms);
+    }
+    // *** BAR TOGGLE (2026-10-06; bar_toggle.js). *** The screen's key can put this bar away (SHELL_STATE
+    // `barKeyHidden`), wherever it sits, and then for the screen's quiet period -- or for good, on "only when I ask"
+    // -- nothing brings it back BY ITSELF: the reveals below that are not somebody asking ask `mayPop` first. No
+    // shell (a suite, a preview without one): it comes up as it always did.
+    const mayPop = () => { try { return typeof ctx.shell?.barMayPopUp === 'function' ? !!ctx.shell.barMayPopUp() : true; } catch { return true; } };
+    const keyHidden = () => { try { return !!ctx.shell?.barKeyHidden?.(); } catch { return false; } };
+    const toggleKey = (e) => { try { return !!ctx.shell?.isBarToggleKey?.(e); } catch { return false; } };
+    const toggleEdge = (e) => { try { return !!ctx.shell?.isBarToggleEdge?.(e?.device, e?.control); } catch { return false; } };
+    /** A reveal nobody asked for: not while the bar is put away and may not come up by itself. */
+    function autoReveal() {
+      if (tucked && !mayPop()) return false;
+      reveal();
+      return true;
     }
 
     // What the host's own group shows, read fresh at every draw.
@@ -337,6 +352,10 @@ registerModule(
           if ('bigger' in s) bigger = s.bigger || null;
           if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
+          // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
+          if (BAR_KEY_HIDDEN in s) {
+            if (s[BAR_KEY_HIDDEN]) { clearTimeout(hideT); hideT = null; setTucked(true); } else reveal();
+          }
         });
         if (typeof off2 === 'function') offs.push(off2);
         const offCall = say?.subscribe?.(CALL_CONTROLS_TOPIC, (s) => { callState = s && s.live ? { ...s } : null; draw(); });
@@ -349,7 +368,7 @@ registerModule(
             const off3 = host.subscribe(() => {
               draw();
               const over = overHost();
-              if (over !== wasOver) { wasOver = over; reveal(); }
+              if (over !== wasOver) { wasOver = over; autoReveal(); }   // bar toggle: unless put away by its key
             });
             if (typeof off3 === 'function') offs.push(off3);
           } catch (err) { console.error('transport bar: host subscribe', err); }
@@ -358,13 +377,14 @@ registerModule(
         // bar, and must not get in the way of a press a panel is about to receive.
         const d = doc();
         if (d) {
-          const onFs = () => { reveal(); draw(); };
+          const onFs = () => { autoReveal(); draw(); };   // bar toggle: was reveal()
           // A press that brings a tucked bar back is not also a press ON it (2026-10-02, late; transport_bar.js
           // `sitOutWakePress`): the bar sits the rest of that press out, and it stays with what was under it.
           const onAny = (e) => {
             if (!tucked && !hideT) return;
+            if (e?.type === 'keydown' && toggleKey(e)) return;   // bar toggle: that key toggles; it does not wake first
             const was = tucked;
-            reveal();
+            if (!autoReveal()) return;                           // bar toggle: put away by its key, and staying away
             if (was && !tucked && e?.type === 'pointerdown' && root) endWakePress = sitOutWakePress(root, e);
           };
           const onMove = (e) => {
@@ -372,7 +392,7 @@ registerModule(
             const r = root?.getBoundingClientRect?.();
             if (!r) return;
             if (e.clientX >= r.left - REVEAL_MARGIN_PX && e.clientX <= r.right + REVEAL_MARGIN_PX
-                && e.clientY >= r.top - REVEAL_MARGIN_PX) reveal();
+                && e.clientY >= r.top - REVEAL_MARGIN_PX) autoReveal();   // bar toggle: was reveal()
           };
           d.addEventListener('fullscreenchange', onFs);
           for (const ev of ['pointerdown', 'keydown']) d.addEventListener(ev, onAny, { capture: true, passive: true });
@@ -384,10 +404,14 @@ registerModule(
           });
         }
         // A switch pressed (any bound or unbound control's physical edge) counts as "anything".
-        const off4 = say?.subscribe?.(EDGE_TOPIC, (e) => { if (e?.phase === 'down' && (tucked || hideT)) reveal(); });
+        // (bar toggle: not the toggle's own switch, and not while the bar is to stay away.)
+        const off4 = say?.subscribe?.(EDGE_TOPIC, (e) => { if (e?.phase === 'down' && (tucked || hideT) && !toggleEdge(e)) autoReveal(); });
         if (typeof off4 === 'function') offs.push(off4);
         draw();
-        reveal();
+        // bar toggle: a bar mounted while the key has it put away (a screen swap) starts put away; on "only when I
+        // ask", one that would tuck itself away (full screen, floated over the panels) starts tucked, not popped up.
+        if (keyHidden() || (!mayPop() && inFull())) setTucked(true);
+        else reveal();
       },
       onResize() {},
       onHide() {},

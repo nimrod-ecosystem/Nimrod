@@ -180,6 +180,12 @@ export const SYSTEM_ACTIONS = [
   // setup go. NOT a spoken route (anybody in the room can speak), and not on the remote-drive allowlist, for
   // the reason the rest of this list is not.
   { id: 'system/screen-lock', label: 'Lock or unlock this screen', topic: 'system/screen-lock', group: 'System' },
+  // bar toggle (2026-10-06; bar_toggle.js BAR_TOGGLE_ACTION, the same string, written out here so this file imports
+  // nothing). H by default, movable to any key or switch from Devices. Hiding the bar with it keeps it from coming
+  // up by itself for a while (the screen's setting). Not a system/* topic of the room's (kiosk_test holds
+  // SYSTEM_TOPICS equal to room_scene's ROOM_ACTIONS), and not on the remote-drive allowlist, for the reason the rest
+  // of this list is not.
+  { id: 'system/bar-toggle', label: 'Show or hide the bar', topic: 'system/bar-toggle', group: 'System' },
 ];
 
 // *** HOLDING ON A ROOM OBJECT (pet an animal, room-add-ons §9) IS ITS OWN ACTION, NOT A LONG PRESS. ***
